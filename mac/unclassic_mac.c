@@ -22,6 +22,9 @@
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
 
+#ifdef UNC_SINK_TEST
+#include "mac_mocks.h"      /* Linux-backed Toolbox mocks (test build) */
+#else
 #include <Dialogs.h>
 #include <Devices.h>
 #include <Events.h>
@@ -36,6 +39,7 @@
 #include <ToolUtils.h>
 #include <Traps.h>
 #include <Windows.h>
+#endif
 
 #include "unclassic.h"
 
@@ -57,6 +61,7 @@
 /* Runtime environment checks                                         */
 /* ------------------------------------------------------------------ */
 
+#ifndef UNC_SINK_TEST
 static Boolean gHasWNE;
 
 static Boolean TrapAvailable(short trap)
@@ -66,6 +71,7 @@ static Boolean TrapAvailable(short trap)
     return NGetTrapAddress((uint16_t)trap, tt) !=
            NGetTrapAddress(_Unimplemented, kToolboxTrapType);
 }
+#endif
 
 /* ------------------------------------------------------------------ */
 /* UncIO over the File Manager                                        */
@@ -143,6 +149,7 @@ typedef struct {
     long      lastTicks;
 } Progress;
 
+#ifndef UNC_SINK_TEST
 static void ProgressPump(Progress *pr)
 {
     EventRecord ev;
@@ -191,6 +198,7 @@ static int prog_tick(void *ctx, uint32_t done, uint32_t total)
     }
     return pr->cancelled ? 0 : 1;
 }
+#endif
 
 /* ------------------------------------------------------------------ */
 /* Disk sink: HFS files, both forks, then catalog info                */
@@ -372,6 +380,7 @@ static int sink_end(void *ctx, int status)
 /* Extraction driver                                                  */
 /* ------------------------------------------------------------------ */
 
+#ifndef UNC_SINK_TEST
 static void ShowNote(short alrtID, const unsigned char *msg)
 {
     ParamText(msg, "\p", "\p", "\p");
@@ -436,6 +445,7 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name)
 
     FSClose(mio.refNum);
     FlushVol(NULL, vRefNum);   /* persist all output before returning */
+    FlushVol(NULL, vRefNum);   /* persist all output before returning */
     if (pr.dlg) DisposeDialog(pr.dlg);
 
     if (pr.cancelled)
@@ -488,3 +498,5 @@ int main(void)
     }
     return 0;
 }
+
+#endif

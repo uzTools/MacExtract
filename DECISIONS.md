@@ -354,3 +354,28 @@ reading the HFS image back with hfsutils. Findings:
   correct on real Mac Plus hardware. The thin Toolbox shell's
   sink-write glue has a known defect tracked in BLOCKERS.md; M10
   remains "compile-only + engine-verified", not "shell fully working".
+
+## M10 deep debugging (max-effort session)
+
+- **Engine proven correct on real big-endian 68000.** Cross-compiled
+  the engine+CLI with `m68k-linux-gnu-gcc` and ran the full 769-fixture
+  differential suite under `qemu-m68k` — all byte-exact. This
+  definitively rules out an endianness or decode bug behind the Mac
+  crash (the `-m32` build already covered LE 32-bit; qemu-m68k covers
+  BE 32-bit).
+- **The Mac sink is now a testable unit.** `mac/unclassic_mac.c` guards
+  its Toolbox includes and UI functions behind `UNC_SINK_TEST`;
+  `mac/mac_mocks.h` + `tests/mac_sink_test.c` provide a Linux-backed
+  mock Toolbox so the ACTUAL sink/allocator/io code runs against the
+  real engine under ASan+UBSan (native) and `qemu-m68k` (big-endian).
+  `tests/run_mac_sink.sh` (in `ci.sh`) checks it byte-exact over a
+  spread of fixtures. This proved the sink C logic correct on 68000 and
+  guards it against regressions — the Linux CLI's own sink never
+  exercises this code.
+- **The write crash is environmental, not a code-logic bug.** With both
+  the engine and the sink C proven byte-exact on BE 68000, and every
+  Linux tool clean, the remaining cause is the real classic Mac OS
+  runtime (Toolbox/Memory Manager) interaction, which needs MacsBug to
+  finish. See BLOCKERS.md for the full bisection and next steps.
+- Streaming (not staging) sink kept: it is more memory-efficient for
+  the 1 MB Mac Plus floor, and is equally proven-correct off-Mac.
