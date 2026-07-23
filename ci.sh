@@ -37,4 +37,7 @@ echo "=== variant 3: release build (warnings are errors) ==="
 make BUILD=build/rel CFLAGS="-O2 -Werror" all >/dev/null || fail "release build"
 ./build/rel/unit_tests || fail "unit tests (release)"
 
+echo "=== variant 4: Retro68 Mac shell (compile-only, optional) ==="
+sh tools/build_mac.sh || fail "mac build"
+
 echo "CI: all green"

@@ -273,3 +273,26 @@ Non-obvious decisions, most recent last.
   under fuzz is "clean error, no crash/hang/sanitizer trip", which is
   exactly what the robustness suite asserts, extended to structurally
   wild inputs (splices of two archives, magic-prefixed garbage).
+
+## M10
+
+- **Built with Retro68's open-source Multiversal Interfaces** (the
+  toolchain at /opt/Retro68-build; the m68k half was built here with
+  `build-toolchain.bash --no-ppc`). API differences from Apple's
+  Universal Interfaces handled: trap types are
+  kToolboxTrapType/kOSTrapType, `DirCreate` exists only as
+  PBDirCreateSync, `GetApplLimit` glue is absent (LMGetApplLimit
+  low-memory accessor used instead), and `ioDirMask` is defined
+  locally (ioFlAttrib bit 4, Inside Macintosh: Files).
+- **`unclassic.dsk` is a mountable HFS image, not a bootable one:**
+  booting needs a System file, which cannot be redistributed. The
+  image mounts in Mini vMac; drag the app onto any System 6..9 boot
+  disk (MANUAL_TESTS.md).
+- **Compile-only means compile-only:** the application has never
+  executed; MANUAL_TESTS.md is the runtime checklist, including the
+  known-risk items (SFReply working-directory semantics, DialogSelect
+  button behavior, 'SIZE' partition vs Arsenic's memory needs).
+- **The engine compiled for m68k without a single change** — the M0
+  discipline (no libc, no unaligned access, callbacks for everything,
+  C99 with 32-bit arithmetic) held from the first decoder to the
+  last.
