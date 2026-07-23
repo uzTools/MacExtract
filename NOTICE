@@ -1,0 +1,24 @@
+unclassic — a universal unarchiver for Classic Mac OS formats
+Licensed under LGPL-2.1-or-later (see LICENSE).
+
+This project's decoders are transcriptions/ports of algorithms from:
+
+  * XADMaster — the engine of The Unarchiver, by Dag Ågren (MacPaw).
+    https://github.com/MacPaw/XADMaster — LGPL-2.1.
+    StuffIt (classic + SIT5 + Arsenic), Compact Pro, PackIt, BinHex,
+    MacBinary and related handles were used as the primary reference.
+    Files that transcribe XADMaster code carry a
+    "Source: reference/XADMaster/<file>" comment.
+
+  * macutils, by Dik T. Winter et al. (descended from Allan G. Weber's
+    unsit and D. J. Perry's unstuffit) — public-domain-ish late-80s C,
+    used as a secondary reference for the oldest formats.
+
+  * "Stuffit Method 15 compression format" by Matthew T. Russotto —
+    the only public specification of the StuffIt 5 "Arsenic"
+    (BWT + MTF + arithmetic coding) method.
+    http://www.russotto.net/arseniccomp.html
+
+Thanks to the maintainers of fileformats.archiveteam.org for format
+documentation, and to the Info-Mac and Macintosh Garden archives for
+the historical software that forms the test corpus.

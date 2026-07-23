@@ -1,0 +1,14 @@
+# Build outputs
+build/
+*.o
+*.a
+unclassic
+
+# Fixture archives are copyrighted software — never committed.
+# Only manifests + SOURCES.md (provenance) are tracked.
+fixtures/*
+!fixtures/manifests/
+!fixtures/SOURCES.md
+
+# Reference material is fetched by tools/fetch_references.sh, not committed.
+reference/

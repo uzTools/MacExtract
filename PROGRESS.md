@@ -1,0 +1,15 @@
+# PROGRESS.md — milestone status
+
+| Milestone | Status | Notes |
+|---|---|---|
+| M0 scaffold | **DONE** | build matrix (ASan/UBSan/alignment, -m32, release -Werror), unit harness, diff/robustness harnesses, corpus+manifest tooling, empty engine sniffs gracefully |
+| M1 MacBinary + AppleSingle/Double | todo | |
+| M2 BinHex 4 | todo | |
+| M3 PackIt | todo | |
+| M4 Compact Pro | todo | |
+| M5 StuffIt classic 0–3 | todo | |
+| M6 StuffIt method 13 (+corpus methods) | todo | |
+| M7 SIT5 + Arsenic | todo | |
+| M8 zip/gzip/tar/.Z | todo | |
+| M9 CLI polish & hardening | todo | |
+| M10 Retro68 Mac app (stretch) | todo | |

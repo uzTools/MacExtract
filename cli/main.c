@@ -1,0 +1,489 @@
+/*
+ * unclassic CLI — Linux frontend for libunclassic.
+ *
+ * Commands:
+ *   unclassic l <file>            list entries
+ *   unclassic x <file>            extract
+ *   unclassic t <file>            test (decode + CRC check, no output)
+ * Options:
+ *   -o <dir>       output directory (default .)
+ *   --budget <N>   allocation cap in bytes (simulate a small Mac)
+ *   --raw-names    emit raw MacRoman bytes instead of UTF-8 names
+ *   -f <format>    force format (name from `unclassic formats`)
+ *
+ * The CLI is the only place libc I/O and malloc are used; the engine
+ * sees callbacks only.
+ *
+ * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ */
+#include "unclassic.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <errno.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+
+/* ------------------------------------------------------------------ */
+/* File-backed UncIO                                                  */
+/* ------------------------------------------------------------------ */
+
+typedef struct {
+    FILE    *f;
+    uint32_t size;
+} FileIO;
+
+static int32_t fio_read(void *ctx, void *buf, int32_t len)
+{
+    FileIO *io = (FileIO *)ctx;
+    size_t r = fread(buf, 1, (size_t)len, io->f);
+    if (r == 0 && ferror(io->f)) return -1;
+    return (int32_t)r;
+}
+
+static int fio_seek(void *ctx, uint32_t pos)
+{
+    FileIO *io = (FileIO *)ctx;
+    return fseek(io->f, (long)pos, SEEK_SET) == 0 ? 0 : -1;
+}
+
+static uint32_t fio_tell(void *ctx)
+{
+    FileIO *io = (FileIO *)ctx;
+    return (uint32_t)ftell(io->f);
+}
+
+static uint32_t fio_size(void *ctx)
+{
+    FileIO *io = (FileIO *)ctx;
+    return io->size;
+}
+
+/* ------------------------------------------------------------------ */
+/* Budgeted allocator with high-water tracking                        */
+/* Each block is prefixed with its size so free() can account.        */
+/* ------------------------------------------------------------------ */
+
+typedef struct {
+    uint32_t budget;     /* 0 = unlimited */
+    uint32_t used;
+    uint32_t high_water;
+    uint32_t failed;     /* count of refused allocations */
+} BudgetAlloc;
+
+#define BA_HDR 16  /* keep payload 16-byte aligned */
+
+static void *ba_alloc(void *ctx, uint32_t size)
+{
+    BudgetAlloc *ba = (BudgetAlloc *)ctx;
+    uint8_t *p;
+    if (size == 0 || size > 0x7FFFFFFFu - BA_HDR) return NULL;
+    if (ba->budget && ba->used + size > ba->budget) {
+        ba->failed++;
+        return NULL;
+    }
+    p = (uint8_t *)malloc(size + BA_HDR);
+    if (!p) return NULL;
+    memcpy(p, &size, sizeof size);
+    ba->used += size;
+    if (ba->used > ba->high_water) ba->high_water = ba->used;
+    return p + BA_HDR;
+}
+
+static void ba_free(void *ctx, void *ptr)
+{
+    BudgetAlloc *ba = (BudgetAlloc *)ctx;
+    uint8_t *p = (uint8_t *)ptr - BA_HDR;
+    uint32_t size;
+    memcpy(&size, p, sizeof size);
+    ba->used -= size;
+    free(p);
+}
+
+/* ------------------------------------------------------------------ */
+/* MacRoman → UTF-8 (CLI-side nicety; the engine speaks raw bytes).   */
+/* Table: Unicode mappings for 0x80–0xFF from the standard Apple      */
+/* MacRoman layout (as used by Python's mac_roman codec / XADMaster   */
+/* XADStringCFString). Verified round-trip in tests.                  */
+/* ------------------------------------------------------------------ */
+
+static const uint16_t macroman_high[128] = {
+    0x00C4,0x00C5,0x00C7,0x00C9,0x00D1,0x00D6,0x00DC,0x00E1,
+    0x00E0,0x00E2,0x00E4,0x00E3,0x00E5,0x00E7,0x00E9,0x00E8,
+    0x00EA,0x00EB,0x00ED,0x00EC,0x00EE,0x00EF,0x00F1,0x00F3,
+    0x00F2,0x00F4,0x00F6,0x00F5,0x00FA,0x00F9,0x00FB,0x00FC,
+    0x2020,0x00B0,0x00A2,0x00A3,0x00A7,0x2022,0x00B6,0x00DF,
+    0x00AE,0x00A9,0x2122,0x00B4,0x00A8,0x2260,0x00C6,0x00D8,
+    0x221E,0x00B1,0x2264,0x2265,0x00A5,0x00B5,0x2202,0x2211,
+    0x220F,0x03C0,0x222B,0x00AA,0x00BA,0x03A9,0x00E6,0x00F8,
+    0x00BF,0x00A1,0x00AC,0x221A,0x0192,0x2248,0x2206,0x00AB,
+    0x00BB,0x2026,0x00A0,0x00C0,0x00C3,0x00D5,0x0152,0x0153,
+    0x2013,0x2014,0x201C,0x201D,0x2018,0x2019,0x00F7,0x25CA,
+    0x00FF,0x0178,0x2044,0x20AC,0x2039,0x203A,0xFB01,0xFB02,
+    0x2021,0x00B7,0x201A,0x201E,0x2030,0x00C2,0x00CA,0x00C1,
+    0x00CB,0x00C8,0x00CD,0x00CE,0x00CF,0x00CC,0x00D3,0x00D4,
+    0xF8FF,0x00D2,0x00DA,0x00DB,0x00D9,0x0131,0x02C6,0x02DC,
+    0x00AF,0x02D8,0x02D9,0x02DA,0x00B8,0x02DD,0x02DB,0x02C7,
+};
+
+/* Encode one Unicode code point as UTF-8 into out (max 3 bytes here). */
+static int utf8_put(char *out, unsigned cp)
+{
+    if (cp < 0x80) { out[0] = (char)cp; return 1; }
+    if (cp < 0x800) {
+        out[0] = (char)(0xC0 | (cp >> 6));
+        out[1] = (char)(0x80 | (cp & 0x3F));
+        return 2;
+    }
+    out[0] = (char)(0xE0 | (cp >> 12));
+    out[1] = (char)(0x80 | ((cp >> 6) & 0x3F));
+    out[2] = (char)(0x80 | (cp & 0x3F));
+    return 3;
+}
+
+/* Convert raw entry name to a filesystem-safe name in out.
+ * mac_encoding: nonzero → treat as MacRoman, else pass through.
+ * '/' is replaced by ':' (the inverse of the classic Mac swap;
+ * matches what unar does on Linux). */
+static void name_to_fs(const uint8_t *name, uint32_t len, int mac_encoding,
+                       int raw, char *out, size_t outsz)
+{
+    size_t o = 0;
+    uint32_t i;
+    for (i = 0; i < len && o + 4 < outsz; i++) {
+        uint8_t b = name[i];
+        if (b == '/') { out[o++] = ':'; continue; }
+        if (b < 0x80 || raw || !mac_encoding) { out[o++] = (char)b; continue; }
+        o += (size_t)utf8_put(out + o, macroman_high[b - 0x80]);
+    }
+    if (o == 0) { out[o++] = '_'; }
+    out[o] = 0;
+}
+
+/* ------------------------------------------------------------------ */
+/* Disk sink                                                          */
+/* ------------------------------------------------------------------ */
+
+typedef struct {
+    const char *outdir;
+    int         list_only;
+    int         test_only;
+    int         raw_names;
+    int         mac_encoding;   /* names are MacRoman */
+    int         verbose;
+    FILE       *data_f, *rsrc_f;
+    char        cur_path[1024];
+    UncEntryInfo cur;
+    uint32_t    data_written, rsrc_written;
+    int         entries, errors;
+} DiskSink;
+
+static void fourcc_str(uint32_t v, char out[5])
+{
+    int i;
+    for (i = 0; i < 4; i++) {
+        uint8_t b = (uint8_t)(v >> (24 - 8 * i));
+        out[i] = (b >= 32 && b < 127) ? (char)b : '?';
+    }
+    out[4] = 0;
+}
+
+/* mkdir -p for the directory part of path (below outdir). */
+static void mkdirs_for(char *path)
+{
+    char *p;
+    for (p = path + 1; *p; p++) {
+        if (*p == '/') {
+            *p = 0;
+            mkdir(path, 0777);
+            *p = '/';
+        }
+    }
+}
+
+static int sink_begin(void *ctx, const UncEntryInfo *info)
+{
+    DiskSink *s = (DiskSink *)ctx;
+    char name[512];
+
+    s->cur = *info;
+    s->data_written = s->rsrc_written = 0;
+    s->entries++;
+
+    name_to_fs(info->name, info->name_len, s->mac_encoding, s->raw_names,
+               name, sizeof name);
+
+    if (s->list_only) {
+        char t[5], c[5];
+        fourcc_str(info->type, t);
+        fourcc_str(info->creator, c);
+        if (info->is_dir)
+            printf("d %10s %10s %-9s %s\n", "-", "-", "-", name);
+        else {
+            char dsz[16], rsz[16];
+            if (info->data_size == UNC_SIZE_UNKNOWN) snprintf(dsz, sizeof dsz, "?");
+            else snprintf(dsz, sizeof dsz, "%u", info->data_size);
+            if (info->rsrc_size == UNC_SIZE_UNKNOWN) snprintf(rsz, sizeof rsz, "?");
+            else snprintf(rsz, sizeof rsz, "%u", info->rsrc_size);
+            printf("f %10s %10s %4s/%-4s %s\n", dsz, rsz, t, c, name);
+        }
+        return 1; /* skip data */
+    }
+
+    if (s->test_only) return 0;
+
+    snprintf(s->cur_path, sizeof s->cur_path, "%s/%s", s->outdir, name);
+    if (info->is_dir) {
+        mkdirs_for(s->cur_path);
+        mkdir(s->cur_path, 0777);
+        return 1;
+    }
+    mkdirs_for(s->cur_path);
+    return 0;
+}
+
+static FILE *sink_open_fork(DiskSink *s, UncFork fork)
+{
+    char path[1100];
+    if (fork == UNC_FORK_DATA)
+        snprintf(path, sizeof path, "%s", s->cur_path);
+    else
+        snprintf(path, sizeof path, "%s.rsrc", s->cur_path);
+    return fopen(path, "wb");
+}
+
+static int sink_write(void *ctx, UncFork fork, const void *buf, int32_t len)
+{
+    DiskSink *s = (DiskSink *)ctx;
+    FILE **fp;
+    if (s->test_only) {
+        if (fork == UNC_FORK_DATA) s->data_written += (uint32_t)len;
+        else s->rsrc_written += (uint32_t)len;
+        return 0;
+    }
+    fp = (fork == UNC_FORK_DATA) ? &s->data_f : &s->rsrc_f;
+    if (!*fp) {
+        *fp = sink_open_fork(s, fork);
+        if (!*fp) {
+            fprintf(stderr, "unclassic: cannot create output for %s: %s\n",
+                    s->cur_path, strerror(errno));
+            return -1;
+        }
+    }
+    if (len > 0 && fwrite(buf, 1, (size_t)len, *fp) != (size_t)len) return -1;
+    if (fork == UNC_FORK_DATA) s->data_written += (uint32_t)len;
+    else s->rsrc_written += (uint32_t)len;
+    return 0;
+}
+
+static int sink_end(void *ctx, int status)
+{
+    DiskSink *s = (DiskSink *)ctx;
+    char name[512];
+
+    if (!s->test_only && !s->list_only) {
+        /* An entry with a data fork of size 0 still gets an empty file. */
+        if (!s->cur.is_dir && !s->data_f && s->cur_path[0] && status == UNC_OK) {
+            FILE *f = sink_open_fork(s, UNC_FORK_DATA);
+            if (f) s->data_f = f;
+        }
+        if (s->data_f) { fclose(s->data_f); s->data_f = NULL; }
+        if (s->rsrc_f) { fclose(s->rsrc_f); s->rsrc_f = NULL; }
+    }
+
+    name_to_fs(s->cur.name, s->cur.name_len, s->mac_encoding, s->raw_names,
+               name, sizeof name);
+
+    if (status != UNC_OK) {
+        s->errors++;
+        fprintf(stderr, "unclassic: %s: %s\n", name, unc_strerror(status));
+    } else if (s->verbose && !s->list_only) {
+        printf("  %s (%u data, %u rsrc)\n", name, s->data_written, s->rsrc_written);
+    }
+    s->cur_path[0] = 0;
+    return 0;
+}
+
+/* ------------------------------------------------------------------ */
+/* Progress                                                           */
+/* ------------------------------------------------------------------ */
+
+static int prog_tick(void *ctx, uint32_t done, uint32_t total)
+{
+    (void)ctx; (void)done; (void)total;
+    return 1;
+}
+
+/* ------------------------------------------------------------------ */
+/* main                                                               */
+/* ------------------------------------------------------------------ */
+
+static UncFormat format_by_name(const char *s)
+{
+    UncFormat f;
+    for (f = (UncFormat)1; f < UNC_FORMAT__COUNT; f++)
+        if (strcmp(unc_format_name(f), s) == 0) return f;
+    return UNC_FORMAT_UNKNOWN;
+}
+
+static void usage(void)
+{
+    fprintf(stderr,
+        "usage: unclassic <l|x|t|sniff> [options] <file>\n"
+        "  l      list archive contents\n"
+        "  x      extract\n"
+        "  t      test integrity (decode, verify CRCs, discard output)\n"
+        "  sniff  print the detected format\n"
+        "options:\n"
+        "  -o <dir>       output directory (default .)\n"
+        "  --budget <N>   allocation cap in bytes\n"
+        "  --raw-names    keep raw MacRoman bytes in filenames\n"
+        "  --stats        print allocator statistics\n"
+        "  -f <format>    force format\n"
+        "  -v             verbose\n");
+}
+
+int main(int argc, char **argv)
+{
+    const char *cmd, *file = NULL, *outdir = ".", *force = NULL;
+    int raw_names = 0, verbose = 0, stats = 0;
+    uint32_t budget = 0;
+    int i;
+
+    FileIO fio;
+    BudgetAlloc ba;
+    DiskSink sink;
+    UncIO io;
+    UncAlloc al;
+    UncSink sk;
+    UncProgress prog;
+    UncOptions opt;
+    UncFormat fmt;
+    int ret;
+    struct stat st;
+
+    if (argc < 3) { usage(); return 2; }
+    cmd = argv[1];
+
+    for (i = 2; i < argc; i++) {
+        if (strcmp(argv[i], "-o") == 0 && i + 1 < argc) outdir = argv[++i];
+        else if (strcmp(argv[i], "--budget") == 0 && i + 1 < argc)
+            budget = (uint32_t)strtoul(argv[++i], NULL, 0);
+        else if (strcmp(argv[i], "--raw-names") == 0) raw_names = 1;
+        else if (strcmp(argv[i], "--stats") == 0) stats = 1;
+        else if (strcmp(argv[i], "-f") == 0 && i + 1 < argc) force = argv[++i];
+        else if (strcmp(argv[i], "-v") == 0) verbose = 1;
+        else if (argv[i][0] == '-') { usage(); return 2; }
+        else file = argv[i];
+    }
+    if (!file) { usage(); return 2; }
+
+    memset(&fio, 0, sizeof fio);
+    fio.f = fopen(file, "rb");
+    if (!fio.f) {
+        fprintf(stderr, "unclassic: %s: %s\n", file, strerror(errno));
+        return 1;
+    }
+    if (stat(file, &st) == 0) fio.size = (uint32_t)st.st_size;
+    else fio.size = UNC_SIZE_UNKNOWN;
+
+    io.ctx = &fio;
+    io.read = fio_read;
+    io.seek = fio_seek;
+    io.tell = fio_tell;
+    io.size = fio_size;
+
+    memset(&ba, 0, sizeof ba);
+    ba.budget = budget;
+    al.ctx = &ba;
+    al.alloc = ba_alloc;
+    al.free = ba_free;
+
+    memset(&sink, 0, sizeof sink);
+    sink.outdir = outdir;
+    sink.raw_names = raw_names;
+    sink.verbose = verbose;
+
+    sk.ctx = &sink;
+    sk.begin_entry = sink_begin;
+    sk.write = sink_write;
+    sk.end_entry = sink_end;
+
+    prog.ctx = NULL;
+    prog.tick = prog_tick;
+
+    memset(&opt, 0, sizeof opt);
+
+    if (force) {
+        fmt = format_by_name(force);
+        if (fmt == UNC_FORMAT_UNKNOWN) {
+            fprintf(stderr, "unclassic: unknown format '%s'\n", force);
+            return 2;
+        }
+    } else {
+        fmt = unc_sniff(&io);
+    }
+
+    /* Mac formats carry MacRoman names; zip/tar/gzip do not. */
+    switch (fmt) {
+    case UNC_FORMAT_ZIP: case UNC_FORMAT_TAR:
+    case UNC_FORMAT_GZIP: case UNC_FORMAT_COMPRESS_Z:
+        sink.mac_encoding = 0; break;
+    default:
+        sink.mac_encoding = 1; break;
+    }
+
+    if (strcmp(cmd, "sniff") == 0) {
+        printf("%s\n", unc_format_name(fmt));
+        fclose(fio.f);
+        return fmt == UNC_FORMAT_UNKNOWN ? 1 : 0;
+    }
+
+    if (fmt == UNC_FORMAT_UNKNOWN) {
+        fprintf(stderr, "unclassic: %s: format not recognized\n", file);
+        fclose(fio.f);
+        return 1;
+    }
+    if (!unc_format_extractable(fmt)) {
+        fprintf(stderr, "unclassic: %s: recognized as %s, which v1 cannot extract\n",
+                file, unc_format_name(fmt));
+        fclose(fio.f);
+        return 1;
+    }
+
+    if (strcmp(cmd, "l") == 0) {
+        opt.list_only = 1;
+        sink.list_only = 1;
+    } else if (strcmp(cmd, "t") == 0) {
+        opt.test_only = 1;
+        sink.test_only = 1;
+    } else if (strcmp(cmd, "x") == 0) {
+        mkdir(outdir, 0777);
+    } else {
+        usage();
+        fclose(fio.f);
+        return 2;
+    }
+
+    if (verbose || strcmp(cmd, "l") == 0)
+        fprintf(stderr, "%s: %s\n", file, unc_format_name(fmt));
+
+    ret = unc_extract_as(fmt, &io, &sk, &al, &prog, &opt);
+    fclose(fio.f);
+
+    if (stats)
+        fprintf(stderr, "alloc: high-water %u bytes, %u refused\n",
+                ba.high_water, ba.failed);
+
+    if (ret != UNC_OK) {
+        fprintf(stderr, "unclassic: %s: %s\n", file, unc_strerror(ret));
+        return 1;
+    }
+    if (sink.errors) {
+        fprintf(stderr, "unclassic: %d of %d entries failed\n",
+                sink.errors, sink.entries);
+        return 1;
+    }
+    return 0;
+}
