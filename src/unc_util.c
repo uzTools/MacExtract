@@ -190,3 +190,34 @@ uint32_t unc_crc32(uint32_t crc, const uint8_t *buf, int32_t len)
         crc = (crc >> 8) ^ unc_crc32_table[(crc ^ buf[i]) & 0xFF];
     return crc;
 }
+
+/* ------------------------------------------------------------------ */
+/* Buffered byte-wise input                                           */
+/* ------------------------------------------------------------------ */
+
+void unc_bufin_init(UncBufIn *b, UncIO *io, UncProgressState *ps,
+                    uint8_t *storage, uint32_t cap)
+{
+    b->io = io;
+    b->ps = ps;
+    b->buf = storage;
+    b->cap = cap;
+    b->len = b->pos = 0;
+    b->err = UNC_OK;
+}
+
+int unc_bufin_next_slow(UncBufIn *b)
+{
+    int32_t r;
+    if (b->err != UNC_OK) return -1;   /* sticky */
+    r = b->io->read(b->io->ctx, b->buf, (int32_t)b->cap);
+    if (r < 0)  { b->err = UNC_ERR_IO; return -1; }
+    if (r == 0) { b->err = UNC_ERR_TRUNCATED; return -1; }
+    b->len = (uint32_t)r;
+    b->pos = 0;
+    if (b->ps) {
+        int e = unc_progress_add(b->ps, (uint32_t)r);
+        if (e != UNC_OK) { b->err = e; return -1; }
+    }
+    return b->buf[b->pos++];
+}

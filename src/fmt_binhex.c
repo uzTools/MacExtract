@@ -1,0 +1,346 @@
+/*
+ * fmt_binhex.c — BinHex 4.0 (.hqx) decoder.
+ *
+ * A BinHex file is 7-bit mail-safe text: a banner line
+ * "(This file must be converted with BinHex ...)", then a ':',
+ * a 6-bit-encoded stream (64-char alphabet, ':' terminates), with a
+ * 0x90-marker RLE applied *inside* the decoded byte stream.
+ *
+ * Decoded layout:
+ *   u8  namelen (1..63)     name bytes (MacRoman)
+ *   u8  version
+ *   u32 type, u32 creator, u16 finderflags
+ *   u32 datalen, u32 rsrclen
+ *   u16 header CRC          (CRC-16/XMODEM over everything above)
+ *   datalen bytes of data fork, u16 CRC
+ *   rsrclen bytes of rsrc fork, u16 CRC
+ *
+ * Everything transcribed from:
+ *   Source: reference/XADMaster/XADBinHexParser.m — LGPL, see NOTICE.
+ * (Alphabet string, RLE semantics incl. "count==1 is illegal",
+ * banner scanning, ':'-after-whitespace start condition, fork CRCs
+ * computed over the fully decoded stream.)
+ *
+ * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
+ */
+#include "unc_internal.h"
+
+/* The 64-character BinHex alphabet, index = 6-bit value.
+ * Source: reference/XADMaster/XADBinHexParser.m (GetBits). */
+static const char bh_alphabet[65] =
+    "!\"#$%&'()*+,-012345689@ABCDEFGHIJKLMNPQRSTUVXYZ[`abcdefhijklmpqr";
+
+static const char bh_banner[40] = "(This file must be converted with BinHex";
+
+/* How far into the file we are willing to look for the banner when
+ * sniffing (XADMaster inspects the first 8 KB). */
+#define BH_SNIFF_LIMIT 8192
+
+/* ------------------------------------------------------------------ */
+/* Probe: banner within the head buffer, then EOL, whitespace, ':'.   */
+/* ------------------------------------------------------------------ */
+
+int unc_binhex_probe(const uint8_t *head, int32_t len, UncIO *io)
+{
+    /* The banner can sit deep inside mail headers/digests, so scan up
+     * to BH_SNIFF_LIMIT bytes (XADMaster inspects 8 KB too): first the
+     * sniff head we were given, then onward from the io handle with a
+     * rolling 40-byte window. */
+    uint8_t window[40];
+    uint8_t chunk[256];
+    int32_t have = 0, w = 0, scanned = 0, pos = 0, clen = 0, cpos = 0;
+    int found = 0;
+
+    /* Earlier probes may have moved the position; continue after head. */
+    if (io->seek(io->ctx, (uint32_t)len) < 0) return 0;
+
+    while (!found && scanned < BH_SNIFF_LIMIT) {
+        int ch;
+        int32_t i;
+        if (pos < len) {
+            ch = head[pos++];
+        } else {
+            if (cpos >= clen) {
+                clen = io->read(io->ctx, chunk, (int32_t)sizeof chunk);
+                if (clen <= 0) break;
+                cpos = 0;
+            }
+            ch = chunk[cpos++];
+        }
+        scanned++;
+        window[w] = (uint8_t)ch;
+        w = (w + 1) % 40;
+        if (have < 40) have++;
+        if (have == 40) {
+            for (i = 0; i < 40; i++)
+                if (window[(w + i) % 40] != (uint8_t)bh_banner[i]) break;
+            if (i == 40) found = 1;
+        }
+    }
+    return found;
+}
+
+/* ------------------------------------------------------------------ */
+/* Decoder state                                                      */
+/* ------------------------------------------------------------------ */
+
+typedef struct BhDec {
+    UncBufIn in;
+    uint8_t  lut[256];    /* char -> 6-bit value, 0xFF = invalid, 0xFE = ':' */
+    uint32_t phase;       /* decoded-byte counter mod 3 */
+    uint8_t  prev_bits;
+    int      eof;         /* saw terminating ':' */
+    /* RLE layer */
+    uint8_t  rle_byte;
+    uint32_t rle_num;
+    int      err;         /* sticky decoder error */
+} BhDec;
+
+static void bh_init(BhDec *d, UncCtx *c, uint8_t *storage, uint32_t cap)
+{
+    uint32_t i;
+    unc_bufin_init(&d->in, c->io, &c->ps, storage, cap);
+    for (i = 0; i < 256; i++) d->lut[i] = 0xFF;
+    for (i = 0; i < 64; i++) d->lut[(uint8_t)bh_alphabet[i]] = (uint8_t)i;
+    d->lut[':'] = 0xFE;
+    d->phase = 0;
+    d->prev_bits = 0;
+    d->eof = 0;
+    d->rle_byte = 0;
+    d->rle_num = 0;
+    d->err = UNC_OK;
+}
+
+/* Next 6-bit group; invalid characters (line breaks etc.) are skipped,
+ * ':' ends the stream. Returns -1 on end/error with d->err set. */
+static int bh_get_bits(BhDec *d)
+{
+    for (;;) {
+        int ch = unc_bufin_next(&d->in);
+        uint8_t v;
+        if (ch < 0) { d->err = d->in.err; return -1; }
+        v = d->lut[ch];
+        if (v == 0xFF) continue;
+        if (v == 0xFE) { d->eof = 1; d->err = UNC_ERR_TRUNCATED; return -1; }
+        return v;
+    }
+}
+
+/* Next byte of the 6-bit layer (pre-RLE). */
+static int bh_decode_byte(BhDec *d)
+{
+    int bits1, bits2;
+    switch (d->phase++ % 3) {
+    case 0:
+        bits1 = bh_get_bits(d);
+        if (bits1 < 0) return -1;
+        bits2 = bh_get_bits(d);
+        if (bits2 < 0) return -1;
+        d->prev_bits = (uint8_t)bits2;
+        return ((bits1 << 2) | (bits2 >> 4)) & 0xFF;
+    case 1:
+        bits1 = d->prev_bits;
+        bits2 = bh_get_bits(d);
+        if (bits2 < 0) return -1;
+        d->prev_bits = (uint8_t)bits2;
+        return ((bits1 << 4) | (bits2 >> 2)) & 0xFF;
+    default:
+        bits1 = d->prev_bits;
+        bits2 = bh_get_bits(d);
+        if (bits2 < 0) return -1;
+        return ((bits1 << 6) | bits2) & 0xFF;
+    }
+}
+
+/* Next fully decoded byte (post-RLE). 0x90 <count>: count==0 emits a
+ * literal 0x90; count==1 is illegal; else the previous byte repeats
+ * count-1 more times. */
+static int bh_next(BhDec *d)
+{
+    int byte, count;
+    if (d->err != UNC_OK) return -1;
+    if (d->rle_num) {
+        d->rle_num--;
+        return d->rle_byte;
+    }
+    byte = bh_decode_byte(d);
+    if (byte < 0) return -1;
+    if (byte != 0x90) {
+        d->rle_byte = (uint8_t)byte;
+        return byte;
+    }
+    count = bh_decode_byte(d);
+    if (count < 0) return -1;
+    if (count == 0) {
+        d->rle_byte = 0x90;
+        return 0x90;
+    }
+    if (count == 1) { d->err = UNC_ERR_CORRUPT; return -1; }
+    d->rle_num = (uint32_t)count - 2;
+    return d->rle_byte;
+}
+
+/* ------------------------------------------------------------------ */
+/* Extraction                                                         */
+/* ------------------------------------------------------------------ */
+
+/* Scan the raw input for the banner; position after end of that line.
+ * Returns UNC_OK or UNC_ERR_FORMAT. */
+static int bh_find_banner(UncBufIn *in)
+{
+    uint8_t window[40];
+    uint32_t have = 0, w = 0, scanned = 0;
+    int ch;
+
+    /* Rolling comparison without shifting: circular buffer holding the
+     * last 40 bytes; oldest byte lives at index w. */
+    for (;;) {
+        uint32_t i = 0;
+        ch = unc_bufin_next(in);
+        if (ch < 0) return UNC_ERR_FORMAT;
+        window[w] = (uint8_t)ch;
+        w = (w + 1) % 40;
+        if (have < 40) have++;
+        if (have == 40) {
+            for (i = 0; i < 40; i++)
+                if (window[(w + i) % 40] != (uint8_t)bh_banner[i]) break;
+            if (i == 40) break;
+        }
+        if (++scanned > 4 * BH_SNIFF_LIMIT) return UNC_ERR_FORMAT;
+    }
+    do {
+        ch = unc_bufin_next(in);
+        if (ch < 0) return UNC_ERR_FORMAT;
+    } while (ch != '\n' && ch != '\r');
+    return UNC_OK;
+}
+
+/* Position the 6-bit decoder start: ':' preceded by line break or
+ * whitespace (source: resetByteStream in the reference). */
+static int bh_find_colon(UncBufIn *in)
+{
+    int prev = '\n', curr;
+    for (;;) {
+        curr = unc_bufin_next(in);
+        if (curr < 0) return UNC_ERR_FORMAT;
+        if (curr == ':' && (prev == '\n' || prev == '\r' ||
+                            prev == '\t' || prev == ' '))
+            return UNC_OK;
+        prev = curr;
+    }
+}
+
+/* Decode `size` bytes to the sink fork, then verify the trailing CRC.
+ * Returns UNC_OK / UNC_ERR_CRC / decoder error. */
+static int bh_fork(UncCtx *c, BhDec *d, UncFork fork, uint32_t size,
+                   uint8_t *obuf, uint32_t ocap)
+{
+    uint32_t left = size;
+    uint16_t crc = 0;
+    int b1, b2;
+
+    while (left > 0) {
+        uint32_t n = 0;
+        while (n < ocap && n < left) {
+            int b = bh_next(d);
+            if (b < 0) return d->err != UNC_OK ? d->err : UNC_ERR_TRUNCATED;
+            obuf[n++] = (uint8_t)b;
+        }
+        crc = unc_crc16_xmodem(crc, obuf, (int32_t)n);
+        if (!c->opt.test_only && !c->opt.list_only &&
+            c->sink->write(c->sink->ctx, fork, obuf, (int32_t)n) < 0)
+            return UNC_ERR_SINK;
+        left -= n;
+    }
+    b1 = bh_next(d);
+    b2 = bh_next(d);
+    if (b1 < 0 || b2 < 0) return UNC_ERR_TRUNCATED;
+    if ((uint16_t)((b1 << 8) | b2) != crc) return UNC_ERR_CRC;
+    return UNC_OK;
+}
+
+int unc_binhex_extract(UncCtx *c)
+{
+    BhDec d;
+    UncEntryInfo e;
+    uint8_t hdr[64 + 20];
+    uint8_t *iobuf, *obuf;
+    uint32_t iocap = 4096, ocap = 4096;
+    uint32_t namelen, datalen, rsrclen, i;
+    uint16_t hcrc;
+    int err, sret, b;
+
+    iobuf = (uint8_t *)unc_alloc(c->al, iocap + ocap);
+    if (!iobuf) return UNC_ERR_MEM;
+    obuf = iobuf + iocap;
+
+    bh_init(&d, c, iobuf, iocap);
+
+    err = bh_find_banner(&d.in);
+    if (err == UNC_OK) err = bh_find_colon(&d.in);
+    if (err != UNC_OK) goto out;
+
+    /* Header: namelen, name, version, type, creator, flags, lens, CRC. */
+    b = bh_next(&d);
+    if (b < 0) { err = UNC_ERR_FORMAT; goto out; }
+    namelen = (uint32_t)b;
+    if (namelen < 1 || namelen > 63) { err = UNC_ERR_FORMAT; goto out; }
+    hdr[0] = (uint8_t)namelen;
+    for (i = 0; i < namelen + 19; i++) {
+        b = bh_next(&d);
+        if (b < 0) { err = UNC_ERR_TRUNCATED; goto out; }
+        hdr[1 + i] = (uint8_t)b;
+    }
+    b = bh_next(&d);
+    if (b < 0) { err = UNC_ERR_TRUNCATED; goto out; }
+    hcrc = (uint16_t)(b << 8);
+    b = bh_next(&d);
+    if (b < 0) { err = UNC_ERR_TRUNCATED; goto out; }
+    hcrc |= (uint16_t)b;
+    if (unc_crc16_xmodem(0, hdr, (int32_t)(namelen + 20)) != hcrc) {
+        err = UNC_ERR_CRC;
+        goto out;
+    }
+
+    unc_entry_clear(&e);
+    unc_entry_set_name(&e, hdr + 1, namelen);
+    /* hdr[1+namelen] is the version byte (ignored, per reference). */
+    e.type         = unc_get_u32be(hdr + 1 + namelen + 1);
+    e.creator      = unc_get_u32be(hdr + 1 + namelen + 5);
+    e.finder_flags = unc_get_u16be(hdr + 1 + namelen + 9);
+    datalen = unc_get_u32be(hdr + 1 + namelen + 11);
+    rsrclen = unc_get_u32be(hdr + 1 + namelen + 15);
+    e.data_size = datalen;
+    e.rsrc_size = rsrclen;
+
+    /* Sanity: 6-bit coding expands 3 bytes to 4 chars; decoded output
+     * can never exceed input*3/4 unless RLE is present, but RLE caps
+     * expansion at 255x. Just cap against something sane. */
+    if (c->ps.total != UNC_SIZE_UNKNOWN) {
+        uint32_t cap255 = c->ps.total > 0x00FFFFFFu ? 0xFFFFFFFEu
+                                                    : c->ps.total * 255u;
+        if (datalen > cap255 || rsrclen > cap255) {
+            err = UNC_ERR_CORRUPT;
+            goto out;
+        }
+    }
+
+    sret = c->sink->begin_entry(c->sink->ctx, &e);
+    if (sret < 0) { err = UNC_ERR_SINK; goto out; }
+    if (sret > 0) { err = UNC_OK; goto out; }
+
+    err = UNC_OK;
+    if (!c->opt.list_only) {
+        err = bh_fork(c, &d, UNC_FORK_DATA, datalen, obuf, ocap);
+        if (err == UNC_OK)
+            err = bh_fork(c, &d, UNC_FORK_RSRC, rsrclen, obuf, ocap);
+    }
+
+    if (c->sink->end_entry(c->sink->ctx, err) < 0) { err = UNC_ERR_SINK; goto out; }
+    if (err != UNC_ERR_SINK && err != UNC_ERR_ABORTED && err != UNC_ERR_IO)
+        err = UNC_OK;
+
+out:
+    unc_free(c->al, iobuf);
+    return err;
+}

@@ -153,7 +153,7 @@ int unc_macbinary_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_macbinary_extract(UncCtx *c);
 int unc_applesingle_probe(const uint8_t *head, int32_t len, UncFormat *out);
 int unc_appledouble_extract(UncCtx *c, UncFormat which);
-int unc_binhex_probe(const uint8_t *head, int32_t len);
+int unc_binhex_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_binhex_extract(UncCtx *c);
 int unc_packit_probe(const uint8_t *head, int32_t len);
 int unc_packit_extract(UncCtx *c);

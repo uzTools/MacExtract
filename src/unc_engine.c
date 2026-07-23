@@ -117,7 +117,7 @@ UncFormat unc_sniff(UncIO *io)
     if (unc_macbinary_probe(head, len, io)) return UNC_FORMAT_MACBINARY;
 
     /* BinHex last: it scans for a banner amid mail garbage. */
-    if (unc_binhex_probe(head, len))    return UNC_FORMAT_BINHEX;
+    if (unc_binhex_probe(head, len, io)) return UNC_FORMAT_BINHEX;
 
     return UNC_FORMAT_UNKNOWN;
 }

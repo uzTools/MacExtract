@@ -152,7 +152,8 @@ typedef struct UncEntryInfo {
 typedef struct UncSink {
     void *ctx;
     /* Called once per entry before any writes. Return 0 to accept,
-     * nonzero to skip this entry (engine seeks past it), <0 to abort. */
+     * >0 to skip this entry (its data is not decoded and end_entry is
+     * not called for it), <0 to abort the archive. */
     int (*begin_entry)(void *ctx, const UncEntryInfo *info);
     /* Decoded bytes for one fork. Return 0 on success, <0 on failure. */
     int (*write)(void *ctx, UncFork fork, const void *buf, int32_t len);

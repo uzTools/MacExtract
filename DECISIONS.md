@@ -64,3 +64,15 @@ Non-obvious decisions, most recent last.
   `derived:unar-nr:<parent>` in SOURCES.md), giving per-layer ground
   truth for nested chains without replicating unar's name-based
   recursion.
+
+## M2
+
+- **BinHex sniffing reads beyond the 512-byte head:** real Info-Mac
+  .hqx files bury the banner after mail headers/digest preambles
+  (observed at offset 1270). The probe streams up to 8 KB (the same
+  window XADMaster inspects) with a rolling 40-byte comparison.
+- **Filename sanitization differences are normalized in the harness,
+  not imitated:** for '/' in Mac filenames unar-on-Linux emits '_' while
+  unclassic emits ':' (the classic Mac swap). `run_diff.py` maps
+  [:/] → '_' on both sides, per path component. The engine still emits
+  raw bytes.

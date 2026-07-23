@@ -22,7 +22,7 @@ IMPLEMENTED = {
     "MacBinary": "MacBinary",              # M1
     "AppleSingle": "AppleSingle",          # M1
     "AppleDouble": "AppleDouble",          # M1
-    # "BinHex": "BinHex 4",                # M2
+    "BinHex": "BinHex 4",                  # M2
     # "PackIt": "PackIt",                  # M3
     # "Compact Pro": "Compact Pro",        # M4
     # "StuffIt": "StuffIt",                # M5/M6
@@ -33,7 +33,11 @@ IMPLEMENTED = {
 
 
 def norm(name):
-    return unicodedata.normalize("NFC", name)
+    # NFC-normalize, and neutralize path-separator sanitization
+    # differences: classic Mac names may contain '/', which unar writes
+    # as '_' and unclassic as ':' — map all three to '_' on both sides.
+    n = unicodedata.normalize("NFC", name)
+    return n.replace(":", "_").replace("/", "_")
 
 
 def sha256_file(path):
@@ -44,15 +48,20 @@ def sha256_file(path):
     return h.hexdigest()
 
 
+def normpath(path):
+    """norm() each path component, preserving directory separators."""
+    return "/".join(norm(c) for c in path.split("/"))
+
+
 def collect_outputs(tmp):
     """Map normalized relative path -> full path for files and dirs."""
     files, dirs = {}, set()
     for root, ds, fs in os.walk(tmp):
         rel = os.path.relpath(root, tmp)
         for d in ds:
-            dirs.add(norm(os.path.normpath(os.path.join(rel, d))))
+            dirs.add(normpath(os.path.normpath(os.path.join(rel, d))))
         for f in fs:
-            p = norm(os.path.normpath(os.path.join(rel, f)))
+            p = normpath(os.path.normpath(os.path.join(rel, f)))
             files[p] = os.path.join(root, f)
     return files, dirs
 
@@ -69,7 +78,7 @@ def parse_listing(out):
             continue
         tc = parts[3]
         if len(tc) == 9 and tc[4] == "/":
-            meta[norm(parts[4])] = (tc[:4], tc[5:])
+            meta[normpath(parts[4])] = (tc[:4], tc[5:])
     return meta
 
 
@@ -87,7 +96,7 @@ def check_fixture(unclassic, man, verbose):
         listing = parse_listing(lr.stdout.decode("utf-8", "replace"))
 
         for e in man["entries"]:
-            name = norm(e["name"])
+            name = normpath(e["name"])
             if e.get("is_dir"):
                 if name not in dirs and name not in files:
                     problems.append(f"missing dir: {name!r}")
@@ -109,7 +118,7 @@ def check_fixture(unclassic, man, verbose):
                 problems.append(f"{name!r}: rsrc sha mismatch")
             if "type" in e and name in listing:
                 t, c = listing[name]
-                if t != e["type"] or ("creator" in e and c != e["creator"]):
+                if t != e["type"] or (e.get("creator") and c != e["creator"]):
                     problems.append(
                         f"{name!r}: type/creator {t}/{c} != "
                         f"{e['type']}/{e.get('creator')}")

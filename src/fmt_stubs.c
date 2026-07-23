@@ -16,10 +16,6 @@
 #define UNC_STUB_EXTRACT(fn) \
     int fn(UncCtx *c) { (void)c; return UNC_ERR_UNSUPPORTED; }
 
-/* M2 */
-UNC_STUB_PROBE(unc_binhex_probe)
-UNC_STUB_EXTRACT(unc_binhex_extract)
-
 /* M3 */
 UNC_STUB_PROBE(unc_packit_probe)
 UNC_STUB_EXTRACT(unc_packit_extract)
