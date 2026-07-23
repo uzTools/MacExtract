@@ -176,6 +176,20 @@ def restore():
         if url.startswith("derived:"):
             deferred.append((name, sha, url))
             continue
+        if url.startswith("synthetic:"):
+            # url form: synthetic:<script> <args...>; the script must
+            # accept -o <path> and be deterministic.
+            cmd = url.split(":", 1)[1].split()
+            r = subprocess.run(
+                [sys.executable, os.path.join(ROOT, cmd[0])] + cmd[1:] +
+                ["-o", path], capture_output=True)
+            if (r.returncode == 0 and os.path.exists(path)
+                    and sha256_bytes(open(path, "rb").read()) == sha):
+                ok += 1
+            else:
+                print(f"  synth failed or hash mismatch: {name}")
+                bad += 1
+            continue
         try:
             blob = fetch(url)
         except Exception as e:

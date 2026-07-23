@@ -23,7 +23,7 @@ IMPLEMENTED = {
     "AppleSingle": "AppleSingle",          # M1
     "AppleDouble": "AppleDouble",          # M1
     "BinHex": "BinHex 4",                  # M2
-    # "PackIt": "PackIt",                  # M3
+    "PackIt": "PackIt",                    # M3
     # "Compact Pro": "Compact Pro",        # M4
     # "StuffIt": "StuffIt",                # M5/M6
     # "StuffIt 5": "StuffIt 5",            # M7

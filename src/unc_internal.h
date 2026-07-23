@@ -96,6 +96,7 @@ typedef struct UncBufIn {
     uint32_t          cap;
     uint32_t          len;   /* valid bytes in buf */
     uint32_t          pos;   /* read cursor */
+    uint32_t          lenfed; /* total bytes pulled from io so far */
     int               err;   /* sticky: UNC_OK until EOF/error */
 } UncBufIn;
 
@@ -111,6 +112,59 @@ static inline int unc_bufin_next(UncBufIn *b)
     if (b->pos < b->len) return b->buf[b->pos++];
     return unc_bufin_next_slow(b);
 }
+
+/* ------------------------------------------------------------------ */
+/* MSB-first bit reader over UncBufIn                                 */
+/* (Classic Mac compressors emit bits high-to-low within each byte;   */
+/* source: reference/macutils/macunpack/de_huffman.c getbit_be and    */
+/* reference/XADMaster/CSInputBuffer.h.)                              */
+/* ------------------------------------------------------------------ */
+
+typedef struct UncBitIn {
+    UncBufIn *in;
+    uint32_t  bitbuf;   /* up to 24 buffered bits, right-aligned */
+    int32_t   nbits;
+    int       err;      /* sticky */
+} UncBitIn;
+
+void unc_bitin_init(UncBitIn *b, UncBufIn *in);
+/* Next single bit (0/1), or -1 with err set. */
+int unc_bitin_bit(UncBitIn *b);
+/* Next n bits (n <= 24) as an MSB-first integer, or -1 with err set. */
+int32_t unc_bitin_bits(UncBitIn *b, int n);
+/* Discard buffered bits up to the next byte boundary. */
+void unc_bitin_align(UncBitIn *b);
+/* Bytes consumed from the underlying io up to the current bit
+ * position (byte-aligned reads only; call unc_bitin_align first). */
+uint32_t unc_bitin_bytepos(const UncBitIn *b);
+
+/* ------------------------------------------------------------------ */
+/* Bit-serialized Huffman (prefix) trees                              */
+/* Used by PackIt and StuffIt method 3: serialized depth-first, one   */
+/* bit per node — 1 = leaf followed by 8 value bits, 0 = internal     */
+/* node (zero branch first, then one branch).                         */
+/* Source: reference/XADMaster/XADStuffItHuffmanHandle.m (parseTree)  */
+/* and reference/macutils/macunpack/de_huffman.c (read_sub_tree).     */
+/* ------------------------------------------------------------------ */
+
+/* macutils sizes its node pool at 515 "because StuffIt Classic needs
+ * more than the needed 511"; internal nodes only need child slots. */
+#define UNC_HUFF_MAX_INTERNAL 320
+
+typedef struct UncHuff {
+    /* child[side][node]: value >= 0 is a node index, < 0 is a leaf
+     * holding symbol -(value+1). */
+    int16_t child[2][UNC_HUFF_MAX_INTERNAL];
+    int16_t nnodes;
+    int16_t root;       /* node index, or negative leaf code */
+} UncHuff;
+
+/* Build from the serialized form. Iterative (explicit stack), caps
+ * the node count; returns UNC_OK or UNC_ERR_CORRUPT/bit error. */
+int unc_huff_read_tree(UncHuff *h, UncBitIn *bi);
+
+/* Decode one symbol (0..255), or -1 with bi->err/corrupt. */
+int unc_huff_decode(const UncHuff *h, UncBitIn *bi);
 
 /* ------------------------------------------------------------------ */
 /* CRC primitives (per-format tables live with their decoders)        */

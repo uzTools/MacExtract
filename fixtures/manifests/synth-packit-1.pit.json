@@ -1,0 +1,54 @@
+{
+ "entries": [
+  {
+   "creator": "ttxt",
+   "data_sha256": "bce67d668eecaefe8388c8778498050bfcfba4366b254e8b358c683310fcd31a",
+   "data_size": 50,
+   "name": "AppÃ©",
+   "rsrc_sha256": "86ae7ab599141628b49c10fcf685ad5ccc9711bbcdab5211fc2df21d1daafdc9",
+   "rsrc_size": 1500,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "e4c2aff8a80453d5a7009c358ccc723781fa84a439224bc1c0a2b1f062d0fdad",
+   "data_size": 2000,
+   "name": "Compressed Doc",
+   "rsrc_sha256": "b745ddb6985a3d01389dc4bbbef9764a8bfa9ed87a7255065fcce4aa21d4ef5e",
+   "rsrc_size": 400,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "bc00453f7622091291839cead6e519db621e1bf5c7b6ebcb53a2b67807b4f464",
+   "data_size": 300,
+   "name": "Read Me",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "empty.rsrc only",
+   "rsrc_sha256": "20e466efe657e9aa81a580287615b56f11d8f5609edad828ea73ec10b56a0a86",
+   "rsrc_size": 120,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "7fb638fe6a8de3603d5fe85dcec0f41371f4bb55a21964244cd96e1b7466fce3",
+   "data_size": 700,
+   "name": "one-symbol",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "synth-packit-1.pit",
+ "format": "PackIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "97e30f742867f12346937fae54cb9b274328602a5a9ee6801810e5e004183879",
+ "size": 3385
+}

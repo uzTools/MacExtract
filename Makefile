@@ -32,7 +32,7 @@ $(BUILD)/zlib_%.o: third_party/zlib/%.c | $(BUILD)
 $(CLI_BIN): cli/main.c $(ENGINE_OBJ) $(THIRD_OBJ) | $(BUILD)
 	$(CC) $(WARN) $(CFLAGS) $(INC) cli/main.c $(ENGINE_OBJ) $(THIRD_OBJ) -o $@
 
-$(TEST_BIN): tests/unit_main.c $(ENGINE_OBJ) $(THIRD_OBJ) | $(BUILD)
+$(TEST_BIN): tests/unit_main.c tests/unit_formats.c $(ENGINE_OBJ) $(THIRD_OBJ) | $(BUILD)
 	$(CC) $(WARN) $(CFLAGS) $(INC) -Isrc tests/unit_main.c $(ENGINE_OBJ) $(THIRD_OBJ) -o $@
 
 test: all

@@ -203,6 +203,7 @@ void unc_bufin_init(UncBufIn *b, UncIO *io, UncProgressState *ps,
     b->buf = storage;
     b->cap = cap;
     b->len = b->pos = 0;
+    b->lenfed = 0;
     b->err = UNC_OK;
 }
 
@@ -215,6 +216,7 @@ int unc_bufin_next_slow(UncBufIn *b)
     if (r == 0) { b->err = UNC_ERR_TRUNCATED; return -1; }
     b->len = (uint32_t)r;
     b->pos = 0;
+    b->lenfed += (uint32_t)r;
     if (b->ps) {
         int e = unc_progress_add(b->ps, (uint32_t)r);
         if (e != UNC_OK) { b->err = e; return -1; }

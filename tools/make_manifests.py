@@ -70,7 +70,9 @@ def lsar_metadata(fixture):
         out = subprocess.run(
             ["lsar", "-j", "-nr", "-e", "macintosh", fixture],
             capture_output=True, timeout=60)
-        data = json.loads(out.stdout.decode("utf-8", "replace"))
+        # strict=False: lsar's JSON may contain raw control characters
+        # (e.g. binary XADNextSolidEntry keys in PackIt archives).
+        data = json.loads(out.stdout.decode("utf-8", "replace"), strict=False)
     except Exception:
         return None, {}
     fmt = data.get("lsarFormatName")
@@ -110,6 +112,34 @@ def build_manifest(fixture_path, verbose=False):
                 entries.append({"name": p, "is_dir": True})
             for f in sorted(files):
                 if f.endswith(".rsrc"):
+                    # A ".rsrc" sidecar with no data-fork file beside it
+                    # is a real entry whose data fork is empty (unar
+                    # writes nothing for a 0-byte data fork, e.g.
+                    # PackIt resource-only entries) — synthesize the
+                    # empty data fork below via the orphan branch.
+                    if f[:-len(".rsrc")] in files:
+                        continue
+                    base = f[:-len(".rsrc")]
+                    p = norm(os.path.normpath(os.path.join(rel, base)))
+                    ent = {
+                        "name": p,
+                        "data_size": 0,
+                        "data_sha256": hashlib.sha256(b"").hexdigest(),
+                        "rsrc_size": 0,
+                        "rsrc_sha256": hashlib.sha256(b"").hexdigest(),
+                    }
+                    rsrc, typ, creator = parse_appledouble(
+                        os.path.join(root, f))
+                    if rsrc is not None:
+                        ent["rsrc_size"] = len(rsrc)
+                        ent["rsrc_sha256"] = hashlib.sha256(rsrc).hexdigest()
+                        if typ:
+                            ent["type"] = typ
+                        if creator:
+                            ent["creator"] = creator
+                    if "type" not in ent and p in meta and meta[p][0]:
+                        ent["type"], ent["creator"] = meta[p][0], meta[p][1]
+                    entries.append(ent)
                     continue
                 full = os.path.join(root, f)
                 p = norm(os.path.normpath(os.path.join(rel, f)))

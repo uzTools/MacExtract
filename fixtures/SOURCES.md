@@ -326,6 +326,7 @@ Each line records how to re-fetch one. Use `tools/harvest.py --restore`.
 | derived-PICMeUp.sit | 130c4c624e4ef940a3f25ba2b57897b6e830fc443c64aee3003d456f93acb761 | 44571 | derived:unar-nr:picmeup.sit |
 | derived-PKG_Translator.sit | 56c5e58f0471fee6da7901323d50cdce3ac871dcc5cb394f33d6045926a1727b | 39820 | derived:unar-nr:pkgtranslator.sit |
 | derived-PUP__Decryptor_v2.0.sit | bb8b5992c2d68f7e456acc3b80a63a528e6ec9c99b7de5cb62ff694436f48e09 | 11475 | derived:unar-nr:pup-decryptor-20.hqx |
+| derived-PackIt.pit | fe0b4cc3785cd5fb23172d4c8a221cbf88278dc4e1cfd1de954b1a0d5e4958ac | 61843 | derived:unar-nr:packit.pit_.bin |
 | derived-Password.sit | 19cd7db52e232efb799a091a9dcbeab7884d94b650072cba1406b7e9dd7fade6 | 7504 | derived:unar-nr:password.sit |
 | derived-Pcal2.96.cpt | 20e08ee085f778607c689dd78a72e0769361cf7b3362baffa0f6148a1d615d0d | 29506 | derived:unar-nr:pcal296.cpt |
 | derived-People_Lister_1.1-Sv.sit | 04c03d4ae92cab7f2a5d379f530ed049f35d176ee4dc5dc8794b2e9bf52933ec | 162393 | derived:unar-nr:people-lister-11-sv.hqx |
@@ -640,6 +641,7 @@ Each line records how to re-fetch one. Use `tools/harvest.py --restore`.
 | orbit-3d-10.hqx | 79b2752d548915017bbd3267e3ad170699e1e49bfcabf9fff9b27d077e80eaee | 238681 | http://www.nic.funet.fi/index/info-mac/sci/orbit-3d-10.hqx |
 | orbmazez.cpt | 2c32237f255f408cb91201aafccb1a4e8ae65322def14f6d02f64b583df5d231 | 203136 | http://www.nic.funet.fi/pub/mac/games/orbmazez.cpt |
 | otc-fm-68k-glue.hqx | e22609669b5cc331f70e88bad4f367d3a55575f5715fae542f84115f6cf75b79 | 287052 | http://www.nic.funet.fi/index/info-mac/dev/otc-fm-68k-glue.hqx |
+| packit.pit_.bin | 34ca0afcc6feae8e7aae7df4a948e6544d1f0958c2b930bd3edcb1cd0187fbe4 | 62080 | https://old.mac.gdn/apps/packit.pit_.bin |
 | packit13.bin | 65da4e1d658e82f3f9cdfec79c37607a1cb7bb69ddc5044fcf5a30a9be603691 | 29952 | http://www.nic.funet.fi/pub/mac/arcers/packit13.bin |
 | password.sit | a69d533976d266deb624799cdef1353ffdf139b872f597856516e1261935e1ab | 7632 | http://www.nic.funet.fi/pub/mac/appl/password.sit |
 | pc-errors-and-help-11-hc.hqx | abf5e77a7aa148269db620412eaa5af5d966538812884f504620ceb85667780b | 82841 | http://www.nic.funet.fi/index/info-mac/info/pc-errors-and-help-11-hc.hqx |
@@ -734,6 +736,9 @@ Each line records how to re-fetch one. Use `tools/harvest.py --restore`.
 | super-disk-utility.hqx | ee2806e14cd7faab4a82c01db40b4d2a46ea75b176e3acc48bb58ba0e3c321f3 | 27199 | http://www.nic.funet.fi/index/info-mac/cmp/super-disk-utility.hqx |
 | superboomerangfixer.cpt | a2cfb0018c8d9760d090ab00abc1aaec8aa671d3c702db26a0a83e179069807f | 5248 | http://www.nic.funet.fi/pub/mac/appl/superboomerangfixer.cpt |
 | swapmap.bin | 8961fd04be131f99e0483596613df4582d7c388d7139b6917a2fbb8a732c1966 | 1148 | http://www.nic.funet.fi/pub/mac/fkey/swapmap.bin |
+| synth-packit-1.pit | 97e30f742867f12346937fae54cb9b274328602a5a9ee6801810e5e004183879 | 3385 | synthetic:tools/synth_pit.py --seed 1 |
+| synth-packit-2.pit | 8c9fbb2e5a777c11937624ed5ed6885c59b730d27d8092a9dc7a9c0f6d877f7a | 3367 | synthetic:tools/synth_pit.py --seed 2 |
+| synth-packit-3.pit | 3102287e41ab3fa714b8a2a0a62e00319773b95f7333f169dbb7769c1e5c35f5 | 3381 | synthetic:tools/synth_pit.py --seed 3 |
 | syserrtable30.sit | d120343c034a72ab548824b63edef21572181505c8a6e3952a20397dfc4838fb | 24496 | http://www.nic.funet.fi/pub/mac/da/syserrtable30.sit |
 | systemidle.sit | 99dcc13a87539f6fb212d43221a1eca6a96ab89804706ddb8bee5bc7b6eddfca | 18923 | http://www.nic.funet.fi/pub/mac/da/systemidle.sit |
 | tads.cpt | 2f9241c98bbc293bee3f6a3950972648645ffac6a30500cca9c5f4d5ecab5672 | 177280 | http://www.nic.funet.fi/pub/mac/games/tads.cpt |

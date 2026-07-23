@@ -16,10 +16,6 @@
 #define UNC_STUB_EXTRACT(fn) \
     int fn(UncCtx *c) { (void)c; return UNC_ERR_UNSUPPORTED; }
 
-/* M3 */
-UNC_STUB_PROBE(unc_packit_probe)
-UNC_STUB_EXTRACT(unc_packit_extract)
-
 /* M4 */
 int unc_cpt_probe(const uint8_t *h, int32_t l, UncIO *io)
 { (void)h; (void)l; (void)io; return 0; }
