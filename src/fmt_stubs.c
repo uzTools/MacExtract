@@ -16,10 +16,6 @@
 #define UNC_STUB_EXTRACT(fn) \
     int fn(UncCtx *c) { (void)c; return UNC_ERR_UNSUPPORTED; }
 
-/* M7 */
-UNC_STUB_PROBE(unc_sit5_probe)
-UNC_STUB_EXTRACT(unc_sit5_extract)
-
 /* M8 */
 UNC_STUB_PROBE(unc_zip_probe)
 UNC_STUB_EXTRACT(unc_zip_extract)

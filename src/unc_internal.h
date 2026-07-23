@@ -297,6 +297,19 @@ int unc_cpt_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_cpt_extract(UncCtx *c);
 int unc_sit_probe(const uint8_t *head, int32_t len);       /* classic */
 int unc_sit_extract(UncCtx *c);
+
+/* One StuffIt fork: seek to `at`, decode `complen` -> `outlen` bytes
+ * with the given method, verify the CRC-16/ARC (`wantcrc`; method 15
+ * verifies its own internal CRC-32 instead). Shared by the classic
+ * and SIT5 containers. Returns a per-entry status. */
+int unc_sit_decode_fork(UncCtx *c, UncFork fork, uint32_t at,
+                        uint32_t complen, uint32_t outlen, int method,
+                        uint16_t wantcrc, uint8_t *iobuf, uint32_t iocap,
+                        uint8_t *obuf, uint32_t ocap);
+
+/* Arsenic (method 15) core, in sit_arsenic.c. */
+int unc_arsenic_decode(UncBufIn *in, UncAlloc *al, uint32_t outlen,
+                       int (*put)(void *ctx, uint8_t b), void *pctx);
 int unc_sit5_probe(const uint8_t *head, int32_t len);
 int unc_sit5_extract(UncCtx *c);
 int unc_zip_probe(const uint8_t *head, int32_t len);

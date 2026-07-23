@@ -647,11 +647,19 @@ out:
     return err;
 }
 
-/* Decode one fork. Returns per-entry status. */
-static int sit_fork(UncCtx *c, UncFork fork, uint32_t at, uint32_t complen,
-                    uint32_t outlen, int method, uint16_t wantcrc,
-                    uint8_t *iobuf, uint32_t iocap,
-                    uint8_t *obuf, uint32_t ocap)
+/* Method 15 put callback: byte into the SitFork staging buffer. */
+static int sit_arsenic_put(void *ctx, uint8_t b)
+{
+    SitFork *f = (SitFork *)ctx;
+    return sit_put(f, b);
+}
+
+/* Decode one fork (shared with the SIT5 container). Returns a
+ * per-entry status. */
+int unc_sit_decode_fork(UncCtx *c, UncFork fork, uint32_t at,
+                        uint32_t complen, uint32_t outlen, int method,
+                        uint16_t wantcrc, uint8_t *iobuf, uint32_t iocap,
+                        uint8_t *obuf, uint32_t ocap)
 {
     UncBufIn in;
     SitFork f;
@@ -679,10 +687,15 @@ static int sit_fork(UncCtx *c, UncFork fork, uint32_t at, uint32_t complen,
     case 5:  err = sit_lzah_fork(&f, &in, outlen, c->al); break;
     case 8:  err = sit_mw_fork(&f, &in, outlen, c->al); break;
     case 13: err = sit13_fork(&f, &in, outlen, c->al); break;
+    case 15: err = unc_arsenic_decode(&in, c->al, outlen,
+                                      sit_arsenic_put, &f); break;
     default: return UNC_ERR_UNSUPPORTED;
     }
     if (err == UNC_OK) err = sit_flush(&f);
-    if (err == UNC_OK && f.crc != wantcrc) err = UNC_ERR_CRC;
+    /* Method 15 carries its own CRC-32, checked inside the decoder;
+     * the header CRC-16 field is not meaningful for it. */
+    if (err == UNC_OK && (method & 0x0f) != 15 && f.crc != wantcrc)
+        err = UNC_ERR_CRC;
     return err;
 }
 
@@ -801,11 +814,13 @@ int unc_sit_extract(UncCtx *c)
                     (fsize != UNC_SIZE_UNKNOWN && start + rcomp + dcomp > fsize)) {
                     est = UNC_ERR_TRUNCATED;   /* forks extend past EOF */
                 } else {
-                    est = sit_fork(c, UNC_FORK_RSRC, start, rcomp, rlen,
+                    est = unc_sit_decode_fork(c, UNC_FORK_RSRC, start,
+                                   rcomp, rlen,
                                    (int)rmeth, unc_get_u16be(hdr + 100),
                                    iobuf, iocap, obuf, ocap);
                     if (est == UNC_OK)
-                        est = sit_fork(c, UNC_FORK_DATA, start + rcomp,
+                        est = unc_sit_decode_fork(c, UNC_FORK_DATA,
+                                       start + rcomp,
                                        dcomp, dlen, (int)dmeth,
                                        unc_get_u16be(hdr + 102),
                                        iobuf, iocap, obuf, ocap);

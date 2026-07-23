@@ -9,7 +9,7 @@
 | M4 Compact Pro | **DONE** | 106 fixtures byte-exact (RLE + LZH+RLE, nested folders, index-CRC probe); 2 fixtures excluded as oracle-undecidable (.rsrc name collisions); full-corpus diff 514/514, robustness 5140/5140 |
 | M5 StuffIt classic 0–3 | **DONE** | committed with M6 (corpus interleaves methods; see DECISIONS.md); container walk + folder tree, per-fork CRC-16/ARC; method 1 pinned by unit tests (absent from corpus) |
 | M6 StuffIt method 13 (+corpus methods) | **DONE** | 211 StuffIt fixtures byte-exact. Per-entry method coverage: LZ+Huffman(13) 970 entries/115 fixtures, Compress(2) 330/90, Huffman(3) 38/24, None(0) 13/7, LZAH(5) 1/1, MW(8) 3/1; method 1 unit-only; 6 fixtures excluded as oracle-undecidable/buggy |
-| M7 SIT5 + Arsenic | todo | |
+| M7 SIT5 + Arsenic | **DONE** | 31 SIT5 fixtures byte-exact (methods 0/13/15); Arsenic BWT+MTF+RLE+arithmetic coder with internal CRC-32; all real archives use 512 KB blocks; peak mem min 0.64 MB / median 1.0 MB / max 2.6 MB (lazy transform sizing) |
 | M8 zip/gzip/tar/.Z | todo | |
 | M9 CLI polish & hardening | todo | |
 | M10 Retro68 Mac app (stretch) | todo | |

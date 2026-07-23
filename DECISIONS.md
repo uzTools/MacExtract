@@ -192,3 +192,34 @@ Non-obvious decisions, most recent last.
   derived-020_Simulator.sit). Five more fixtures dropped as
   .rsrc-collision undecidable (BitMap11, The_Journal, TogSndVol,
   Unzip101, unshar_1.11).
+
+## M7
+
+- **SIT5 entry-header CRC is not verified** (XADStuffIt5Parser reads
+  and ignores it; per-entry sync is re-checked by the 0xA5A5A5A5 id on
+  every header, and fork CRCs still guard the data). Russotto's doc
+  describes the CRC but the oracle never enforces it.
+- **Second-block prefix is 14 bytes** (u16 flags, u16 ?, u32 type,
+  u32 creator, u16 finderflags) followed by a 22-byte (entry v1) or
+  18-byte (v2+) skip — found the hard way after assuming 16.
+- **SIT5's "mystery entries"** (datalen 0xFFFFFFFF after every
+  directory) are skipped without consuming an entry slot, exactly as
+  XADStuffIt5Parser does; directory parentage is tracked by header
+  offset, not nesting order (bounded map, 256 dirs / 16 KB of path
+  pool — overflowing dirs degrade to root-relative paths rather than
+  failing).
+- **Arsenic transform vector is sized to the actual block fill**, not
+  the declared block size. Every real SIT5 fixture declares 512 KB
+  blocks (blockbits 19) even for 3 KB payloads; allocating
+  4 x blocksize up front would pin every extraction at ~2.6 MB.
+  With lazy sizing the corpus measures: min 0.64 MB, median 1.0 MB,
+  max 2.6 MB (fixtures that genuinely fill their blocks). A 1 MB
+  Mac Plus can therefore expand small Arsenic archives but will
+  cleanly refuse large ones per entry (UNC_ERR_MEM) — by design.
+- **Arsenic CRC-32 is internal to the stream** (read from the final
+  block's end marker, compared against ~crc of the output); the SIT5
+  header CRC-16 field is meaningless for method 15 and is skipped,
+  as in XADMaster.
+- **No synthetic Arsenic unit fixture:** producing one would require
+  writing an arithmetic *encoder*; coverage comes from 31 real SIT5
+  fixtures plus their 310 corruption variants.
