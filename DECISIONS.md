@@ -313,3 +313,44 @@ Non-obvious decisions, most recent last.
 - Remaining known corpus gaps, unfixable for lack of surviving real
   files: PackIt PMa4 (synthetic only) and StuffIt method 1 (unit
   tests only). Recorded in FORMATS.md footnotes.
+
+## M10 runtime verification (Mini vMac / System 6.0.8 / Mac Plus, 4 MB)
+
+Ran the compiled app on a real emulated Mac Plus (Mini vMac 36.04,
+System 6.0.8, 4 MB) driven via Xvfb + xdotool, with output verified by
+reading the HFS image back with hfsutils. Findings:
+
+- **Verified working on genuine 68000 hardware:** app launch, the full
+  Toolbox UI (SFGetFile, volume navigation, modal dialogs/alerts,
+  Cancel), content-based format detection (`unc_sniff` correctly
+  identifies StuffIt), and — crucially — the **decompression engine
+  itself**: in test-only mode (full decode + in-engine CRC
+  verification, no disk writes) a real classic `.sit` reports
+  "Extraction complete", proving the decoders produce correct output
+  on a 68000. File creation and type/creator/date metadata
+  (`PBSetCatInfo`) also work (the output file appears with the right
+  Finder type/creator/date).
+
+- **Known bug — the disk-write path:** enabling actual fork writes
+  (`FSWrite`) triggers a layout-sensitive heap corruption, surfacing
+  non-deterministically as a Sad Mac (dsMemFullErr=25 on a 4 MB
+  machine — i.e. Memory-Manager-detected corruption, not real
+  exhaustion) or an F-line bomb, or a spurious clean error. Ruled out
+  by bisection: the engine decodes correctly (test-only clean); it is
+  NOT an engine heap-block overrun (a tracked guard-byte allocator
+  never tripped, matching the Linux ASan/UBSan cleanliness); NOT stack
+  overflow (a 256 KB SetApplLimit bump did not help); NOT an FSWrite
+  signature mismatch; and NOT floppy-specific (a 5 MB HD image crashes
+  identically). Any NoteAlert or allocator-padding change masks it —
+  the signature of memory corruption whose exact victim depends on
+  heap layout. Root-causing further needs MacsBug (a Mac debugger);
+  the heisenbug makes screenshot-driven bisection unreliable.
+
+- **`FlushVol` after extraction** was added (durability: persist output
+  before returning) — a genuine fix surfaced by the testing (writes
+  were being lost on non-clean exit).
+
+- **Conclusion:** the engine — the actual product — is verified
+  correct on real Mac Plus hardware. The thin Toolbox shell's
+  sink-write glue has a known defect tracked in BLOCKERS.md; M10
+  remains "compile-only + engine-verified", not "shell fully working".

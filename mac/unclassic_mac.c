@@ -435,6 +435,7 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name)
     ret = unc_extract(&io, &sk, &al, &prog, &opt);
 
     FSClose(mio.refNum);
+    FlushVol(NULL, vRefNum);   /* persist all output before returning */
     if (pr.dlg) DisposeDialog(pr.dlg);
 
     if (pr.cancelled)

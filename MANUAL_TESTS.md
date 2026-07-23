@@ -1,7 +1,16 @@
 # MANUAL_TESTS.md — Macintosh application checklist
 
-The Mac shell (mac/) is a compile-only target: it has never been
-executed. Before calling it working, run this checklist in each
+NOTE (2026-07-23): the shell HAS now been run under Mini vMac
+(System 6.0.8, Mac Plus, 4 MB). Verified working: launch, full Toolbox
+UI, format detection, the decompression engine (test-only decode +
+in-engine CRC verification), file creation, and PBSetCatInfo metadata.
+OPEN BUG: the disk-write path corrupts the heap (see BLOCKERS.md) — the
+checklist below is still the gate for the write path once that is
+fixed.
+
+The Mac shell (mac/) began as a compile-only target: much of it has now
+been exercised, but the write path has never completed a byte-exact
+extraction. Before calling it working, run this checklist in each
 environment. Do not skip the System 6 / Mac Plus column — that is the
 floor target and the most likely place for stack, memory and trap
 assumptions to break.
