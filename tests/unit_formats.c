@@ -465,6 +465,123 @@ static void test_cpt(void)
           != UNC_OK || cap.count == 0 || cap.status[0] != UNC_OK);
 }
 
+/* ------------------------------------------------------------------ */
+/* M5: StuffIt classic container + RLE90 (method 1 is absent from the */
+/* harvested corpus, so it is pinned here).                           */
+/* ------------------------------------------------------------------ */
+
+static uint16_t crc16arc_ref(const uint8_t *p, uint32_t n)
+{
+    /* Independent bitwise CRC-16/ARC for cross-checking the table. */
+    uint16_t crc = 0;
+    uint32_t i;
+    int j;
+    for (i = 0; i < n; i++) {
+        crc ^= p[i];
+        for (j = 0; j < 8; j++)
+            crc = (crc & 1) ? (uint16_t)((crc >> 1) ^ 0xA001) : (uint16_t)(crc >> 1);
+    }
+    return crc;
+}
+
+/* One-entry StuffIt archive; data fork uses `method` with `comp`
+ * given; rsrc fork empty (method 0). */
+static uint32_t sit_synth(uint8_t *out, const char *name, int method,
+                          const uint8_t *comp, uint32_t clen,
+                          const uint8_t *plain, uint32_t plen)
+{
+    uint8_t *h = out + 22;
+    uint32_t n = (uint32_t)strlen(name);
+    uint32_t total = 22 + 112 + clen;
+    uint16_t crc;
+
+    memset(out, 0, total);
+    memcpy(out, "SIT!", 4);
+    out[5] = 1;                        /* numfiles */
+    put32(out + 6, total);
+    memcpy(out + 10, "rLau", 4);
+
+    h[0] = 0;                          /* rsrc: method 0 */
+    h[1] = (uint8_t)method;            /* data method */
+    h[2] = (uint8_t)n;
+    memcpy(h + 3, name, n);
+    memcpy(h + 66, "TEXTttxt", 8);
+    put32(h + 84, 0);                  /* rsrclen */
+    put32(h + 88, plen);               /* datalen */
+    put32(h + 92, 0);                  /* rsrc comp len */
+    put32(h + 96, clen);               /* data comp len */
+    /* fork CRCs: rsrc over nothing (0), data over decoded bytes */
+    crc = unc_crc16_arc(0, plain, (int32_t)plen);
+    h[102] = (uint8_t)(crc >> 8); h[103] = (uint8_t)crc;
+    crc = unc_crc16_arc(0, h, 110);
+    h[110] = (uint8_t)(crc >> 8); h[111] = (uint8_t)crc;
+    memcpy(h + 112, comp, clen);
+    return total;
+}
+
+static void test_sit(void)
+{
+    /* RLE90: "A"x6 -> 'A' 0x90 0x06; literal 0x90 -> 0x90 0x00. */
+    static const uint8_t comp[] = { 'A', 0x90, 0x06, 'B', 'C', 0x90, 0x00, 'D' };
+    static const uint8_t plain[] = { 'A','A','A','A','A','A','B','C',0x90,'D' };
+    uint8_t arc[256];
+    uint32_t len;
+    MemIO m;
+    UncIO io;
+    UncAlloc al;
+    UncSink sk;
+    CapSink cap;
+
+    /* Table vs independent bitwise CRC-16/ARC + check value. */
+    CHECK(unc_crc16_arc(0, (const uint8_t *)"123456789", 9) == 0xBB3D);
+    CHECK(crc16arc_ref((const uint8_t *)"123456789", 9) == 0xBB3D);
+
+    len = sit_synth(arc, "rle test", 1, comp, sizeof comp,
+                    plain, sizeof plain);
+    test_make_memio(&io, &m, arc, len);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_SIT);
+
+    test_make_alloc(&al);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_SIT, &io, &sk, &al, NULL, NULL) == UNC_OK);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+    CHECK(cap.info[0].method_data == 1);
+    CHECK(cap.dlen[0] == sizeof plain);
+    CHECK(memcmp(cap.data[0], plain, sizeof plain) == 0);
+
+    /* Flip a data byte -> per-entry CRC error. */
+    arc[22 + 112 + 3] ^= 0x01;
+    test_make_memio(&io, &m, arc, len);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_SIT, &io, &sk, &al, NULL, NULL) == UNC_OK);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_ERR_CRC);
+    arc[22 + 112 + 3] ^= 0x01;
+
+    /* Corrupt entry header -> walk stops with a corrupt error. */
+    arc[25] ^= 0xFF;
+    test_make_memio(&io, &m, arc, len);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_SIT, &io, &sk, &al, NULL, NULL)
+          == UNC_ERR_CORRUPT);
+    arc[25] ^= 0xFF;
+
+    /* Encrypted method flag -> reported, not decoded. */
+    {
+        uint8_t enc[256];
+        uint32_t elen = sit_synth(enc, "enc", 1, comp, sizeof comp,
+                                  plain, sizeof plain);
+        uint16_t crc;
+        enc[22 + 1] |= 0x80;   /* data method: encrypted */
+        crc = unc_crc16_arc(0, enc + 22, 110);
+        enc[22 + 110] = (uint8_t)(crc >> 8);
+        enc[22 + 111] = (uint8_t)crc;
+        test_make_memio(&io, &m, enc, elen);
+        cap_make(&sk, &cap);
+        CHECK(unc_extract_as(UNC_FORMAT_SIT, &io, &sk, &al, NULL, NULL) == UNC_OK);
+        CHECK(cap.count == 1 && cap.status[0] == UNC_ERR_ENCRYPTED);
+    }
+}
+
 void run_format_tests(void)
 {
     test_macbinary();
@@ -474,4 +591,5 @@ void run_format_tests(void)
     test_packit();
     test_canon();
     test_cpt();
+    test_sit();
 }

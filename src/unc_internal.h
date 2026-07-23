@@ -128,14 +128,21 @@ typedef struct UncBitIn {
     UncBufIn *in;
     uint32_t  bitbuf;   /* up to 24 buffered bits, right-aligned */
     int32_t   nbits;
+    int       le;       /* LSB-first bit order within each byte
+                         * (StuffIt method 13; everything else is MSB) */
     int       err;      /* sticky */
 } UncBitIn;
 
 void unc_bitin_init(UncBitIn *b, UncBufIn *in);
+void unc_bitin_init_le(UncBitIn *b, UncBufIn *in);
 /* Next single bit (0/1), or -1 with err set. */
 int unc_bitin_bit(UncBitIn *b);
-/* Next n bits (n <= 24) as an MSB-first integer, or -1 with err set. */
+/* Next n bits (n <= 24) as an MSB-first integer, or -1 with err set.
+ * (MSB mode only.) */
 int32_t unc_bitin_bits(UncBitIn *b, int n);
+/* Next n bits assembled LSB-first (first bit read = bit 0), n <= 24.
+ * (LE mode only; CSInputNextBitStringLE semantics.) */
+int32_t unc_bitin_bits_le(UncBitIn *b, int n);
 /* Discard buffered bits up to the next byte boundary. */
 void unc_bitin_align(UncBitIn *b);
 /* Bytes consumed from the underlying io up to the current bit
@@ -181,11 +188,12 @@ int unc_huff_decode(const UncHuff *h, UncBitIn *bi);
 /* ------------------------------------------------------------------ */
 
 #define UNC_CANON_MAX_SYMS 384
-#define UNC_CANON_MAX_BITS 15
+#define UNC_CANON_MAX_BITS 31   /* method-13 tables reach 18; the
+                                 * serialized form could go higher */
 
 typedef struct UncCanon {
     uint16_t count[UNC_CANON_MAX_BITS + 1]; /* codes per bit length */
-    uint16_t first[UNC_CANON_MAX_BITS + 1]; /* first code value per length */
+    uint32_t first[UNC_CANON_MAX_BITS + 1]; /* first code value per length */
     int16_t  sym[UNC_CANON_MAX_SYMS];       /* symbols in (len,sym) order */
     int16_t  maxlen;
 } UncCanon;
@@ -198,6 +206,32 @@ int unc_canon_build(UncCanon *c, const uint8_t *lengths, int32_t nsyms);
 int unc_canon_decode(const UncCanon *c, UncBitIn *bi);
 
 /* ------------------------------------------------------------------ */
+/* Unix compress(1)-compatible LZW (see unc_lzw.c)                    */
+/* StuffIt method 2 (14-bit, block mode) and .Z (params from header). */
+/* ------------------------------------------------------------------ */
+
+typedef struct UncLzw {
+    UncBufIn *in;
+    uint8_t  *mem;          /* single allocation, see unc_lzw_init */
+    uint16_t *parent;       /* [maxsymbols] */
+    uint8_t  *chr;          /* [maxsymbols] */
+    uint8_t  *chain;        /* [maxsymbols] reversed-chain staging */
+    uint32_t  bitbuf;       /* LSB-first bit accumulator */
+    int32_t   nbits;
+    int32_t   maxsymbols, numsymbols, reserved;
+    int32_t   prevsymbol;
+    int32_t   symbolsize;   /* current code width in bits */
+    uint32_t  symbolcounter;
+    int32_t   chainlen, chainpos;
+    int       blockmode;
+} UncLzw;
+
+int  unc_lzw_init(UncLzw *z, UncAlloc *al, UncBufIn *in,
+                  int maxbits, int blockmode);
+void unc_lzw_free(UncLzw *z, UncAlloc *al);
+int32_t unc_lzw_read(UncLzw *z, uint8_t *out, int32_t want);
+
+/* ------------------------------------------------------------------ */
 /* CRC primitives (per-format tables live with their decoders)        */
 /* ------------------------------------------------------------------ */
 
@@ -206,6 +240,12 @@ int unc_canon_decode(const UncCanon *c, UncBitIn *bi);
  * Source: reference/XADMaster/CRC.m (XADCalculateCRC/XADCRCTable) and
  * reference/macutils/crc/ — LGPL, see NOTICE. */
 uint16_t unc_crc16_xmodem(uint16_t crc, const uint8_t *buf, int32_t len);
+
+/* CRC-16/ARC: poly 0xA001 (reflected), init 0, no final xor.
+ * Used by StuffIt classic (header + fork CRCs).
+ * Source: reference/XADMaster/CRC.m (XADCRCTable_a001).
+ * Check value: 0xBB3D over "123456789". */
+uint16_t unc_crc16_arc(uint16_t crc, const uint8_t *buf, int32_t len);
 
 /* CRC-32 (IEEE, reflected, poly 0x04C11DB7 => table 0xEDB88320,
  * init 0xFFFFFFFF, final xor 0xFFFFFFFF handled by caller).

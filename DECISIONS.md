@@ -143,3 +143,52 @@ Non-obvious decisions, most recent last.
 - **`UncBufIn.limit`** bounds every compressed fork substream so
   corrupt streams cannot read into unrelated bytes — mirrors
   XADMaster's bounded sub-handles.
+
+## M5+M6 (committed together)
+
+- **M5 and M6 land in one commit:** the corpus interleaves methods —
+  almost every classic .sit carries method 13 next to methods 0/2/3 —
+  so an M5-only build cannot pass the full StuffIt differential suite,
+  and CI must be green at every commit. Methods 0/1/2/3 were still
+  built and validated first (211-fixture suite + unit tests), then
+  13/5/8 added.
+- **CRC-16/ARC** (reflected 0xA001, init 0) added for StuffIt header
+  and fork CRCs; pinned against an independent bitwise implementation
+  and the 0xBB3D check value in unit tests.
+- **LZW lives in unc_lzw.c** (compress(1)-compatible, LSB-first
+  codes): StuffIt method 2 is compress with 14-bit codes + block mode
+  (XADStuffItParser passes flags 0x8e), and M8's .Z reuses the same
+  decoder with header-supplied parameters. Compress quirks preserved:
+  width grows at power-of-two table sizes; a clear code discards the
+  rest of its 8-code group.
+- **Method 13 fixed tables are machine-transcribed**
+  (tools/gen_sit13_tables.py -> src/sit13_tables.h) from
+  XADStuffIt13Handle.m — 3,270 table entries hand-copying of which
+  would certainly have introduced errors. The generated header is
+  committed so the build does not require reference/.
+- **Method 13 is the one little-endian-bit-order format** in the
+  classic Mac family; UncBitIn grew an LE mode instead of a second
+  reader type. Found the hard way: UncCanon.first[] must be 32-bit —
+  17-bit canonical codes overflow uint16 exactly at the point the
+  method-13 "second" code needs them (dynamic codes reach length 17+,
+  fixed tables reach 18).
+- **Method 5 ("LZAH") transcribed from XADLZHDynamicHandle** — the
+  handle the oracle actually runs — including its LHarc-style window
+  preload (value runs + ramps + zeros + spaces), not from the disabled
+  libxad SIT_lzah in the same file (all-spaces window, different
+  offset coding). XADMaster's own TODO doubts the preload; our
+  fixtures decode byte-exact against the oracle either way it settles.
+- **Method 1 (RLE90) has no corpus fixture**; it is pinned by unit
+  tests (including the 0x90 0x01 illegal-count case, per
+  XADRLE90Handle).
+- **StuffIt entry-header CRC failures abort the walk**
+  (UNC_ERR_CORRUPT): headers chain by compressed lengths, so a bad
+  header leaves no way to locate the next entry (XADStuffItParser
+  raises a checksum exception at the same point).
+- **`~`-name oracle bug generalized:** GNUstep unar can silently write
+  the AppleDouble container INTO the data-fork filename (no warning
+  printed). make_manifests.py now rejects any data fork that begins
+  with the AppleDouble magic and has no sidecar (caught
+  derived-020_Simulator.sit). Five more fixtures dropped as
+  .rsrc-collision undecidable (BitMap11, The_Journal, TogSndVol,
+  Unzip101, unshar_1.11).

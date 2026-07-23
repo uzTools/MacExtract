@@ -155,6 +155,20 @@ def build_manifest(fixture_path, verbose=False):
                     continue
                 full = os.path.join(root, f)
                 p = norm(os.path.normpath(os.path.join(rel, f)))
+                # GNUstep unar can silently write the AppleDouble
+                # container INTO the data-fork filename when it cannot
+                # form the ".rsrc" sidecar name (seen with leading-'~'
+                # names, not always accompanied by a "cannot append
+                # extension" warning). A data fork that begins with the
+                # AppleDouble magic and has no sidecar next to it is
+                # that bug, not ground truth.
+                if not os.path.exists(full + ".rsrc"):
+                    with open(full, "rb") as fh:
+                        if fh.read(4) == b"\x00\x05\x16\x07":
+                            print(f"  oracle UNRELIABLE on {name} "
+                                  f"(AppleDouble written as data fork: {p!r})",
+                                  file=sys.stderr)
+                            return None
                 ent = {
                     "name": p,
                     "data_size": os.path.getsize(full),

@@ -19,7 +19,14 @@ void unc_bitin_init(UncBitIn *b, UncBufIn *in)
     b->in = in;
     b->bitbuf = 0;
     b->nbits = 0;
+    b->le = 0;
     b->err = UNC_OK;
+}
+
+void unc_bitin_init_le(UncBitIn *b, UncBufIn *in)
+{
+    unc_bitin_init(b, in);
+    b->le = 1;
 }
 
 int unc_bitin_bit(UncBitIn *b)
@@ -31,6 +38,11 @@ int unc_bitin_bit(UncBitIn *b)
         b->nbits = 8;
     }
     b->nbits--;
+    if (b->le) {
+        int bit = (int)(b->bitbuf & 1u);
+        b->bitbuf >>= 1;
+        return bit;
+    }
     return (int)((b->bitbuf >> b->nbits) & 1u);
 }
 
@@ -41,6 +53,18 @@ int32_t unc_bitin_bits(UncBitIn *b, int n)
         int bit = unc_bitin_bit(b);
         if (bit < 0) return -1;
         v = (v << 1) | bit;
+    }
+    return v;
+}
+
+int32_t unc_bitin_bits_le(UncBitIn *b, int n)
+{
+    int32_t v = 0;
+    int i;
+    for (i = 0; i < n; i++) {
+        int bit = unc_bitin_bit(b);
+        if (bit < 0) return -1;
+        v |= (int32_t)bit << i;
     }
     return v;
 }
@@ -159,7 +183,7 @@ int unc_canon_build(UncCanon *c, const uint8_t *lengths, int32_t nsyms)
     code = 0;
     space = 0;
     for (l = 1; l <= c->maxlen; l++) {
-        c->first[l] = (uint16_t)code;
+        c->first[l] = code;
         code = (code + c->count[l]) << 1;
         space = (space << 1) + c->count[l];
         if (space > (1u << l)) return UNC_ERR_CORRUPT;
