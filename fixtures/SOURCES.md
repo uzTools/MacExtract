@@ -325,6 +325,7 @@ Each line records how to re-fetch one. Use `tools/harvest.py --restore`.
 | derived-Nuntius1.1a2.src.sea | 85ddeff5bf66f3e25344c073f62385efcdd8288a5d3f30677d7296abc448b010 | 254268 | derived:unar-nr:nuntius11a2src.sea |
 | derived-OTCFM68KGlue.sit | 1edf18fc538aa359a256c9b310db21392fdaddf566aea02f6b9f7605ca3d36c0 | 211763 | derived:unar-nr:otc-fm-68k-glue.hqx |
 | derived-Orbit3d_1.0..sit | 48f0baad32d3dc6eb3578353b8a2f4d6a05be6f8ea0a3aff9fb064240b6cdebc | 177396 | derived:unar-nr:orbit-3d-10.hqx |
+| derived-PCCTS.tar | d1457236fa0361b88edeec1be61e598b0144a6db9053f7166efce29df19ae075 | 286720 | derived:unar-nr:PCCTS.tar.gz |
 | derived-PC_Errors___Help_1.1.sit | e8f31efc779214740622d0dafbd349ebdd0440748f6f752a88cd724349db2eb7 | 60440 | derived:unar-nr:pc-errors-and-help-11-hc.hqx |
 | derived-PFPv1.5.sea | 6eb8ab2ff4a9e432210ad2b329faf759e51b0c39dab32d0e0676a32c7e7ea1f8 | 49495 | derived:unar-nr:privacy-for-pals-15.hqx |
 | derived-PICMeUp.sit | 130c4c624e4ef940a3f25ba2b57897b6e830fc443c64aee3003d456f93acb761 | 44571 | derived:unar-nr:picmeup.sit |
@@ -475,6 +476,7 @@ Each line records how to re-fetch one. Use `tools/harvest.py --restore`.
 | derived-orbmazez.cpt | 9e394eac82f83e255098c37275a9e1cad443e7d6c12491104bf6f8dbac167030 | 202914 | derived:unar-nr:orbmazez.cpt |
 | derived-playground.sea | 2ec928457440e5983742bd93b2c64cc5201010275b5b039020a8d9a4e9c38637 | 72366 | derived:unar-nr:playground.sea |
 | derived-pointingdevice.sit | f42704f2f0f32392586956455754d45cd0b2937e1c44f366f538cbd392dadb19 | 7507 | derived:unar-nr:pointingdevice.sit |
+| derived-popper-1.7.tar | cc1e1a08902653bf2885af00e8090f55d977469be9adda4e6391eb667d79caae | 174080 | derived:unar-nr:popper-1.7.tar.Z |
 | derived-powercm1.0j.sit | b3c5f02930f70f09e45ead9d6c74d680f3d986a98e5a1cd98f7a1dda4cb03c99 | 11367 | derived:unar-nr:power-cm-10-jp.hqx |
 | derived-resforkkiller.sit | 452c74b5d1291dc0dedec7a45211ddb0d19d458bb6fd9d8881f7416db62924d0 | 39781 | derived:unar-nr:resfork-killer-20.hqx |
 | derived-seasons_greetings.sit | 8cc2e3f647d6f2c69ef2e655562f98981525994a975af928dbce23551500d6a1 | 77966 | derived:unar-nr:seasons-greetings.hqx |

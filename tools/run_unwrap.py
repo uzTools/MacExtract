@@ -19,6 +19,7 @@ CHAINS = [
     ("boogers-152.hqx", "derived-boogers152.sit.json"),           # BinHex -> SIT
     ("synth-exo-tar-Z.tar.Z", "synth-exo-tar.tar.json"),          # .Z -> tar
     ("Ultimate_Copland_1.1.sit.bin", "derived-Ultimate_Copland_1.1.sit.1.json"),
+    ("popper-1.7.tar.Z", "derived-popper-1.7.tar.json"),   # real 1990 .Z -> v7 tar
 ]
 
 

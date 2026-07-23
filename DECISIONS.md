@@ -296,3 +296,20 @@ Non-obvious decisions, most recent last.
   discipline (no libc, no unaligned access, callbacks for everything,
   C99 with 32-bit arithmetic) held from the first decoder to the
   last.
+
+## M9 follow-up (real-tar coverage)
+
+- **"Tested against known files" audit found the tar gap:** the only
+  oracle-verified tar was synthetic; real tars in the corpus were only
+  checked as .Z/.gz payload bytes. Deriving them as fixtures exposed
+  two real bugs: (1) the probe demanded the "ustar" magic, rejecting
+  every pre-POSIX v7 tar — and XADTarParser recognizes v7 only by
+  *filename*, which our content-only rule forbids, so our v7 probe
+  demands structure instead (checksum + octal field syntax + printable
+  NUL-terminated name); (2) v7 marks directories only by a trailing
+  '/' in the name (there is no '5' typeflag), and "./" name prefixes
+  are routine — both now handled, and both 1990 tars
+  (popper-1.7, PCCTS) extract byte-exact.
+- Remaining known corpus gaps, unfixable for lack of surviving real
+  files: PackIt PMa4 (synthetic only) and StuffIt method 1 (unit
+  tests only). Recorded in FORMATS.md footnotes.

@@ -223,14 +223,46 @@ static int tar_checksum_ok(const uint8_t *h)
     return stored == uns || stored == sig;   /* GNU tolerates signed sums */
 }
 
+/* An octal header field: octal digits terminated/padded by NUL or
+ * space (leading spaces allowed), or all NUL. */
+static int tar_field_ok(const uint8_t *p, int32_t n)
+{
+    int32_t i = 0;
+    while (i < n && p[i] == ' ') i++;
+    while (i < n && p[i] >= '0' && p[i] <= '7') i++;
+    while (i < n && (p[i] == 0 || p[i] == ' ')) i++;
+    return i == n;
+}
+
 int unc_tar_probe(const uint8_t *head, int32_t len)
 {
+    int32_t i;
     if (len < 512) return 0;
-    /* "ustar" magic (POSIX "ustar\0" or old-GNU "ustar ") + checksum. */
-    if (head[257] != 'u' || head[258] != 's' || head[259] != 't' ||
-        head[260] != 'a' || head[261] != 'r')
-        return 0;
-    return tar_checksum_ok(head);
+    if (!tar_checksum_ok(head)) return 0;
+
+    /* POSIX/old-GNU: "ustar" magic at 257 plus the checksum. */
+    if (head[257] == 'u' && head[258] == 's' && head[259] == 't' &&
+        head[260] == 'a' && head[261] == 'r')
+        return 1;
+
+    /* Pre-POSIX v7 tar has NO magic. XADTarParser falls back to the
+     * *filename* for these, which our content-only rule forbids, so
+     * we demand structure instead: a valid checksum plus well-formed
+     * v7 fields (see DECISIONS.md M9/M10 follow-up).
+     *   - name: NUL-terminated printable, non-empty
+     *   - mode/uid/gid/size/mtime: octal fields
+     *   - typeflag: NUL or '0'..'7' */
+    if (head[0] == 0) return 0;
+    for (i = 0; i < 100 && head[i]; i++)
+        if (head[i] < 0x20 || head[i] == 0x7F) return 0;
+    if (i == 100) return 0;                    /* name not terminated */
+    if (!tar_field_ok(head + 100, 8)) return 0;   /* mode  */
+    if (!tar_field_ok(head + 108, 8)) return 0;   /* uid   */
+    if (!tar_field_ok(head + 116, 8)) return 0;   /* gid   */
+    if (!tar_field_ok(head + 124, 12)) return 0;  /* size  */
+    if (!tar_field_ok(head + 136, 12)) return 0;  /* mtime */
+    if (head[156] != 0 && (head[156] < '0' || head[156] > '7')) return 0;
+    return 1;
 }
 
 int unc_tar_extract(UncCtx *c)
@@ -249,7 +281,7 @@ int unc_tar_extract(UncCtx *c)
     for (;;) {
         int64_t size;
         uint32_t datalen, padded;
-        int typeflag, zero = 1, sret, est;
+        int typeflag, zero = 1, sret, est, isdir;
         int32_t i;
         UncEntryInfo e;
         uint8_t path[256];
@@ -281,15 +313,41 @@ int unc_tar_extract(UncCtx *c)
             path[plen++] = '/';
         }
         for (i = 0; i < 100 && h[i]; i++) path[plen++] = h[i];
+        /* Directory: typeflag '5' (ustar) or a trailing '/' in the
+         * name (the only marking pre-POSIX v7 tar has). */
+        isdir = typeflag == '5' ||
+                (plen > 0 && path[plen - 1] == '/');
         /* Strip the trailing '/' of directory names. */
         while (plen > 0 && path[plen - 1] == '/') plen--;
+        /* Drop "." components ("./name" prefixes are routine in v7
+         * tars; GNU tar and unar both strip them on extraction). */
+        {
+            uint32_t r = 0, w = 0, cs = 0;
+            for (r = 0; r <= plen; r++) {
+                if (r == plen || path[r] == '/') {
+                    if (r - cs == 1 && path[cs] == '.')
+                        w = w > 0 ? w - 1 : 0;   /* drop ".", undo sep */
+                    if (r < plen && w > 0 && path[w - 1] != '/')
+                        path[w++] = '/';
+                    cs = r + 1;
+                } else path[w++] = path[r];
+            }
+            plen = w;
+            while (plen > 0 && path[plen - 1] == '/') plen--;
+        }
+        if (plen == 0 && isdir) {
+            /* The "./" root entry itself: nothing to create. */
+            if (pos + 512 + padded < pos) { err = UNC_ERR_CORRUPT; break; }
+            pos += 512 + padded;
+            continue;
+        }
 
         unc_entry_clear(&e);
         unc_entry_set_path(&e, path, plen);
         e.mod_date = 0;
         e.rsrc_size = 0;
 
-        if (typeflag == '5') {
+        if (isdir) {
             e.is_dir = 1;
             e.data_size = 0;
             sret = c->sink->begin_entry(c->sink->ctx, &e);
@@ -298,7 +356,7 @@ int unc_tar_extract(UncCtx *c)
                 err = UNC_ERR_SINK;
                 break;
             }
-        } else if (typeflag == '0' || typeflag == 0) {
+        } else if (typeflag == '0' || typeflag == 0) {   /* regular file */
             e.data_size = datalen;
             e.comp_data_size = datalen;
             sret = c->sink->begin_entry(c->sink->ctx, &e);

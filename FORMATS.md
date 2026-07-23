@@ -19,7 +19,7 @@ whole corpus for that format (engine allocations only, via
 | Zip | extract | store, deflate; others & encrypted per-entry errors | 3 fixtures (+2 PKZIP-1.x corpus-only) | 66 KB | full |
 | Gzip | extract | deflate | 3 fixtures | 51 KB | full |
 | Unix compress (.Z) | extract | LZW ≤16 bit | 4 fixtures | 268 KB | full |
-| Tar (ustar/v7) | extract | — (links reported unsupported) | 1 fixture + unit tests | 8 KB | full |
+| Tar (ustar/v7) | extract | — (links reported unsupported) | 3 fixtures (2 real 1990 v7 tars) + unit tests | 8 KB | full |
 | StuffIt X (.sitx) | detect only | — | — | — | — |
 | DiskDoubler (DD, DDAR, DDA2) | detect only | — | 4 sniffed | — | — |
 | Now Compress | detect only | — | 1 sniffed | — | — |

@@ -1,0 +1,212 @@
+{
+ "entries": [
+  {
+   "data_sha256": "0b68b5473ae667cf604aedb5f0be2b0a4eda00cb5c76a5cd2fb1b4b99e3b77fc",
+   "data_size": 2456,
+   "name": "Makefile",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "22140684603ca3c79fc233b395576c486c08ad38d9d875e59196b7a019db0aac",
+   "data_size": 11340,
+   "name": "README",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "3bba326a5ef4ee10d898e89d2f3cb09d39defb53ab53bfa545ac03bbb7bf000c",
+   "data_size": 36110,
+   "name": "pop3.rfc1081",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "d9b2880344320ef952ec093943e2789d3b853f3047d2f3f0bb7038916131b994",
+   "data_size": 24805,
+   "name": "pop3e.rfc1082",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "bffa66fefa81480ce404d254aab3280b329b9b114062146c064d3c25247b3a50",
+   "data_size": 1814,
+   "name": "pop_dele.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "d4d1860c52cb7c83c52b9892101829006f1373da6a798966445ee2d9173e99ac",
+   "data_size": 4194,
+   "name": "pop_dropcopy.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "a9bd268cadea28cb94c9ffa927b2f65029c641a35b9954b96f075dee82a15dd1",
+   "data_size": 3698,
+   "name": "pop_dropinfo.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "d9f2d3487287f2978c90505b02c59d2d2b6d3f74b1a8b7e70f25048f00106fb1",
+   "data_size": 3576,
+   "name": "pop_get_command.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "9706b83dbd8b1d885943ce18ae857a02428a8f55fe190cc3c6131e794f379416",
+   "data_size": 1877,
+   "name": "pop_get_subcommand.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "864b9a23c11c6ca44505b1f85935684050c16f2d38f690987560cd1feae40850",
+   "data_size": 5811,
+   "name": "pop_init.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "c22eb5e2b3e4c1552eece89e07e20bd7aec04b1765e143dc13ccc57580c08366",
+   "data_size": 641,
+   "name": "pop_last.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "05537be99d7b52531bf4b6e973c6b5ec1ddda3f6ebcd82c488e039685b21529a",
+   "data_size": 1999,
+   "name": "pop_list.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "572617146dfc64b428af5d0f7395085bed4e146535d590964d3e0b4adcf73e90",
+   "data_size": 1200,
+   "name": "pop_log.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "d84957e9433e24335322ade4be2a68ab9a6b82fea172f2a8b989b505be8ee077",
+   "data_size": 673,
+   "name": "pop_lower.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "872b87a4ba5f56deea1ae1a40ee206c33b5c66a5ad384efae5ec6f3cc3ba0134",
+   "data_size": 2109,
+   "name": "pop_msg.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "51f57393d35785c1519f668b94ec215186a93f2f9c49f42946562892056ab1ff",
+   "data_size": 1800,
+   "name": "pop_parse.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "56cf1afe25181a2afae19e91fe973b787dc44c1433519d328a15cecbad4d1e21",
+   "data_size": 2105,
+   "name": "pop_pass.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "94d4c92775b37c28600a43b2e9ce4c5b70665f994abeab050fe20643dd162691",
+   "data_size": 648,
+   "name": "pop_quit.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "f9ee4e8ebe721dc14149c8a07ebb9ae3d8d8b37e494f3f0429f332508d14d489",
+   "data_size": 1103,
+   "name": "pop_rset.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "b2484febc255eb7869fb99ddffacc4ccf7e2dbe986df2ae517ce52741f19aaec",
+   "data_size": 3584,
+   "name": "pop_send.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "a8601b9790c775930a2ad5a5793095f359149db3cba342ae37901b9848bfc20b",
+   "data_size": 676,
+   "name": "pop_stat.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "2e5d9b67ef249bf0e3145884face8f6327e8e90920c560b5a884e58322c0c345",
+   "data_size": 6561,
+   "name": "pop_updt.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "95efa754e0d75ee10ffaf8c646f269ee9efaa1293211828be8e2832d43bf47c1",
+   "data_size": 789,
+   "name": "pop_user.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "7d644d9ccaeefdc80a7717dfdba77695c2d4b7711917c56d6c248ebba5cdc5a6",
+   "data_size": 3150,
+   "name": "pop_xmit.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "9685dc10731041e3aa6fe73c3fadea3df41a3fde407e54f9fa00c63c9e73f0c6",
+   "data_size": 1029,
+   "name": "pop_xtnd.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "066ec707a9b70c031f354589df8617de66a2ae5ff9648068ca3396cb2bae331a",
+   "data_size": 6396,
+   "name": "popper.8",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "5b00f1d7274e1b0e9477c992f789415c3dde8c6b32c83d3b56d26679de0a4da6",
+   "data_size": 3012,
+   "name": "popper.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "92c43dcec5e12a00059543176acbf25f18a10a4133903075779bf81e2719bc92",
+   "data_size": 8410,
+   "name": "popper.h",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "171322f0c68b64b16f021483da80c9bbc09b9bb5cc19ae1ff49444836574e815",
+   "data_size": 461,
+   "name": "version.h",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  }
+ ],
+ "fixture": "derived-popper-1.7.tar",
+ "format": "Tar",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "cc1e1a08902653bf2885af00e8090f55d977469be9adda4e6391eb667d79caae",
+ "size": 174080
+}
