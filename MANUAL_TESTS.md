@@ -6,11 +6,13 @@ forks byte-exact, resource forks byte-exact except the OS-stamped
 "reserved for system use" header (offsets 16–127), with type/creator/
 dates set. See BLOCKERS.md for the write-path root causes that were
 fixed (`mio_seek` eofErr; RAM-slurping the archive to avoid read/write
-interleave on one HFS volume). Remaining limitation: a file with BOTH a
-data fork and a resource fork corrupts System 6's Memory Manager when
-both forks are staged; the Mac build keeps the larger fork and reports
-the entry partial rather than crash. The interactive checklist below is
-still the gate for the full UI (SFGetFile, progress dialog, Cancel).
+interleave on one HFS volume; and staging both forks of a two-fork file
+in ONE shared block — three separate NewPtr staging blocks bomb System
+6's Memory Manager, two blocks are fine). Two-fork files now extract
+without crashing, both forks byte-exact (proven off-Mac via
+`UNC_MAC_FORCE_SHAREBUF` in `tests/run_mac_sink.sh`). The interactive
+checklist below is still the gate for the full UI (SFGetFile, progress
+dialog, Cancel).
 
 ### Automated regression harness (Linux, no interaction)
 - `sh tests/run_mac_sink.sh` (in `ci.sh`): runs the ACTUAL sink through a

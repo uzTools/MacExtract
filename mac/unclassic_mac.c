@@ -270,7 +270,8 @@ typedef struct {
     Ptr          dataBuf, rsrcBuf;   /* whole-fork RAM staging */
     uint32_t     dataLen, dataCap, rsrcLen, rsrcCap;
     int          bufErr;
-    int          dropData, dropRsrc; /* fork skipped on this Mac (see below) */
+    int          dropData, dropRsrc; /* fork dropped (unknown-size fallback) */
+    int          sharedBuf;          /* dataBuf+rsrcBuf are ONE NewPtr block */
 } MacSink;
 
 /* One engine path component -> Pascal Str63: undo the '/'->':' swap,
@@ -385,33 +386,51 @@ static int sink_begin(void *ctx, const UncEntryInfo *info)
         }
     }
     s->dropData = s->dropRsrc = 0;
-#ifndef UNC_SINK_TEST
-    /* Staging BOTH forks of one file in RAM at once (two large NewPtr
-     * blocks alongside the archive buffer) corrupts System 6's Memory
-     * Manager and crashes the app with a bad-opcode system error — even
-     * though the identical logic is byte-exact under ASan and qemu-m68k,
-     * and either fork alone extracts perfectly. As a graceful fallback,
-     * a two-fork file keeps only its LARGER fork (the primary content);
-     * the smaller fork is dropped and the entry reported as partial.
-     * See BLOCKERS.md. The mock/Linux builds (no such bug) keep both. */
-    if (info->data_size != UNC_SIZE_UNKNOWN && info->data_size &&
-        info->rsrc_size != UNC_SIZE_UNKNOWN && info->rsrc_size) {
-        if (info->rsrc_size >= info->data_size) s->dropData = 1;
-        else                                    s->dropRsrc = 1;
-    }
+    s->sharedBuf = 0;
+    {
+        int dgood = (info->data_size != UNC_SIZE_UNKNOWN && info->data_size);
+        int rgood = (info->rsrc_size != UNC_SIZE_UNKNOWN && info->rsrc_size);
+        /* The single-shared-block path is the real Mac path; UNC_SINK_TEST
+         * normally uses per-fork blocks, but UNC_MAC_FORCE_SHAREBUF forces
+         * the shared path so the mock can prove it byte-exact too. */
+#if !defined(UNC_SINK_TEST) || defined(UNC_MAC_FORCE_SHAREBUF)
+        /* CRITICAL for the real Mac: staging both forks of one file in TWO
+         * separate NewPtr blocks (a third non-relocatable block alongside
+         * the archive buffer) corrupts System 6's Memory Manager and crashes
+         * the app with a bad-opcode system error — even though the identical
+         * logic is byte-exact under ASan and qemu-m68k, and a single-fork
+         * file (two blocks total) is flawless. So when both fork sizes are
+         * known, hold BOTH forks in ONE contiguous block (data region then
+         * resource region): total block count stays at two, exactly like the
+         * working single-fork case. If a size is unknown (can't pre-size a
+         * shared block), fall back to keeping only the larger fork. See
+         * BLOCKERS.md. Mock/Linux builds (no bug) always use per-fork blocks. */
+        if (dgood && rgood) {
+            long total = (long)info->data_size + (long)info->rsrc_size;
+            Ptr block = NewPtr(total);
+            if (!block) return -1;
+            s->dataBuf = block;
+            s->dataCap = info->data_size;
+            s->rsrcBuf = block + info->data_size;
+            s->rsrcCap = info->rsrc_size;
+            s->sharedBuf = 1;
+            return 0;
+        }
+        if (dgood && info->rsrc_size == UNC_SIZE_UNKNOWN) s->dropRsrc = 1;
+        if (rgood && info->data_size == UNC_SIZE_UNKNOWN) s->dropData = 1;
 #endif
-
-    /* Pre-size the RAM staging buffers to the known fork sizes (avoids
-     * grow-and-copy during decode). Failure fails the entry cleanly. */
-    if (info->data_size != UNC_SIZE_UNKNOWN && info->data_size && !s->dropData) {
-        s->dataBuf = NewPtr((long)info->data_size);
-        if (!s->dataBuf) return -1;
-        s->dataCap = info->data_size;
-    }
-    if (info->rsrc_size != UNC_SIZE_UNKNOWN && info->rsrc_size && !s->dropRsrc) {
-        s->rsrcBuf = NewPtr((long)info->rsrc_size);
-        if (!s->rsrcBuf) return -1;
-        s->rsrcCap = info->rsrc_size;
+        /* Pre-size each fork's staging buffer to its known size (avoids
+         * grow-and-copy during decode). Failure fails the entry cleanly. */
+        if (dgood && !s->dropData) {
+            s->dataBuf = NewPtr((long)info->data_size);
+            if (!s->dataBuf) return -1;
+            s->dataCap = info->data_size;
+        }
+        if (rgood && !s->dropRsrc) {
+            s->rsrcBuf = NewPtr((long)info->rsrc_size);
+            if (!s->rsrcBuf) return -1;
+            s->rsrcCap = info->rsrc_size;
+        }
     }
     return 0;
 }
@@ -439,9 +458,13 @@ static int sink_write(void *ctx, UncFork fork, const void *buf, int32_t len)
         return 0;                    /* fork dropped on this Mac */
     if (s->bufErr) return -1;
     if (*fl + (uint32_t)len > *fc) {
-        /* Unknown-size fork (nothing pre-allocated): grow it. */
+        /* A shared block is fixed-size (both fork regions are packed into
+         * it) and must not grow (it would break the other region); a
+         * known-size fork should never overrun, but fail cleanly if so. */
         uint32_t ncap = *fc ? *fc : 8192;
         Ptr nb;
+        if (s->sharedBuf) { s->bufErr = 1; return -1; }
+        /* Unknown-size fork (nothing pre-allocated): grow it. */
         while (ncap < *fl + (uint32_t)len) ncap *= 2;
         nb = NewPtr((long)ncap);
         if (!nb) { s->bufErr = 1; return -1; }
@@ -504,8 +527,15 @@ static int sink_end(void *ctx, int status)
         if (status == UNC_OK && (s->dropData || s->dropRsrc))
             status = UNC_ERR_SINK;
     }
-    if (s->dataBuf) { DisposePtr(s->dataBuf); s->dataBuf = NULL; }
-    if (s->rsrcBuf) { DisposePtr(s->rsrcBuf); s->rsrcBuf = NULL; }
+    /* When sharedBuf is set, rsrcBuf points inside dataBuf's single block;
+     * dispose that one block exactly once. */
+    if (s->sharedBuf) {
+        if (s->dataBuf) DisposePtr(s->dataBuf);
+        s->dataBuf = s->rsrcBuf = NULL;
+    } else {
+        if (s->dataBuf) { DisposePtr(s->dataBuf); s->dataBuf = NULL; }
+        if (s->rsrcBuf) { DisposePtr(s->rsrcBuf); s->rsrcBuf = NULL; }
+    }
 
     if (status == UNC_OK && !s->cur.is_dir) {
         /* Set type/creator, Finder flags and dates. */

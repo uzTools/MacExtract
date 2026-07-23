@@ -20,10 +20,18 @@ FIXTURES="derived-ASCbeep.sit derived-apple.art.sit alpha401.cpt \
           derived-Compact_Pro_Package derived-resforkkiller.sit \
           derived-PackIt.pit synth-exo-tar.tar"
 
-verify() {  # <runner...> ; reads $FIXTURES
+# Two-fork files (non-empty data AND resource fork). On a real Mac these
+# take the single-shared-block staging path (mac/unclassic_mac.c) — two
+# separate NewPtr staging blocks crash System 6's Memory Manager. Forced
+# on here (UNC_MAC_FORCE_SHAREBUF) so that path is proven byte-exact.
+BOTHFORK_FIXTURES="3d_windows.sea.bin compact-pro-134.bin \
+                   ACInfo_Comm.sit.bin bitmap11.sit.bin"
+
+verify() {  # <runner...> [mode] [fixture-list] ; defaults to $FIXTURES
     runner="$1"
-    mode="$2"   # empty = file-backed mio_*; "ram" = slurp-to-RAM xio_* path
-    for fx in $FIXTURES; do
+    mode="$2"        # empty = file-backed mio_*; "ram" = slurp-to-RAM xio_*
+    list="${3:-$FIXTURES}"
+    for fx in $list; do
         [ -f "fixtures/$fx" ] || continue
         [ -f "fixtures/manifests/$fx.json" ] || continue
         out="$(mktemp -d)"
@@ -43,6 +51,14 @@ verify ./build/mac_sink_asan
 verify ./build/mac_sink_asan ram   # exercise the Mac app's RAM-slurp/xio_* path
 echo "mac-sink: native OK (file + RAM paths)"
 
+echo "mac-sink: native x86-64, two-fork single-shared-block staging path"
+gcc -std=gnu99 -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all \
+    -DUNC_MAC_FORCE_SHAREBUF -Iinclude -Isrc -Ithird_party/zlib \
+    tests/mac_sink_test.c src/*.c third_party/zlib/*.c -o build/mac_sink_sharebuf
+verify ./build/mac_sink_sharebuf "" "$BOTHFORK_FIXTURES"
+verify ./build/mac_sink_sharebuf ram "$BOTHFORK_FIXTURES"
+echo "mac-sink: shared-block OK (both forks byte-exact)"
+
 if command -v m68k-linux-gnu-gcc >/dev/null 2>&1 && command -v qemu-m68k >/dev/null 2>&1; then
     echo "mac-sink: big-endian m68k (qemu)"
     m68k-linux-gnu-gcc -std=gnu99 -O2 -static -mcpu=68000 \
@@ -51,6 +67,11 @@ if command -v m68k-linux-gnu-gcc >/dev/null 2>&1 && command -v qemu-m68k >/dev/n
     verify "qemu-m68k build/mac_sink_m68k"
     verify "qemu-m68k build/mac_sink_m68k" ram
     echo "mac-sink: m68k big-endian OK (file + RAM paths)"
+    m68k-linux-gnu-gcc -std=gnu99 -O2 -static -mcpu=68000 -DUNC_MAC_FORCE_SHAREBUF \
+        -Iinclude -Isrc -Ithird_party/zlib \
+        tests/mac_sink_test.c src/*.c third_party/zlib/*.c -o build/mac_sink_sb68
+    verify "qemu-m68k build/mac_sink_sb68" "" "$BOTHFORK_FIXTURES"
+    echo "mac-sink: m68k shared-block OK (both forks byte-exact)"
 else
     echo "mac-sink: m68k cross-toolchain absent, skipping big-endian check"
 fi

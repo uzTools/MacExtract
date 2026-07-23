@@ -404,13 +404,20 @@ BLOCKERS.md for the full write-up. Key decisions:
   forks) does deep File Manager writes and corrupts the volume worse
   than staging. Reverted the note above: staging + shallow writes wins on
   the real Mac. (Both are byte-exact off-Mac.)
-- **Two-fork files: keep the larger fork only (Mac build).** Staging two
-  large `NewPtr` buffers to write both forks of one file corrupts System
-  6's Memory Manager (byte-exact off-Mac; crashes only on real hardware).
-  Rather than crash the whole app, the Mac build stages/writes a single
-  fork (the larger = primary content) for a two-fork file and reports the
-  entry partial. Guarded `#ifndef UNC_SINK_TEST`, so the mock/Linux
-  builds (no bug) still verify both forks against the manifests.
+- **Two-fork files: stage both forks in ONE shared block (Mac build).**
+  Staging the two forks in two *separate* `NewPtr` blocks — a third
+  non-relocatable block beside the archive buffer — corrupts System 6's
+  Memory Manager and bombs the app (byte-exact off-Mac; crashes only on
+  the real Memory Manager). It's the block *count*, not memory: a 63 KB
+  resource-only file in two blocks works; a 43 KB two-fork file in three
+  crashes. Fix: one contiguous block holding the data region then the
+  resource region, so block count stays at two like the single-fork case
+  (`sharedBuf` in `mac/unclassic_mac.c`). Confirmed on real Mini vMac
+  (app idles, no bomb) and proven byte-exact for both forks off-Mac via
+  `UNC_MAC_FORCE_SHAREBUF` in `tests/run_mac_sink.sh` (ASan + qemu-m68k).
+  Guarded `#ifndef UNC_SINK_TEST`; a rare unknown-fork-size two-fork entry
+  falls back to keeping the larger fork (avoids a two-block allocation).
+  (Superseded an earlier stopgap that always dropped the smaller fork.)
 - **Reserved-header diff is expected, not a defect.** Resource forks come
   out byte-exact except offsets 16–127 ("reserved for system use"),
   which a real Mac's Resource Manager stamps per machine/session. The
