@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "274f09393bbbbfcf2507378dd6e95250dc652f25a8e448ff15180cf550923feb",
+   "data_size": 25356,
+   "name": "Diamond 4.2.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "diamond42demo.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "de334167fe87e39837cb20beb5fbd2b35f1c30c41d676b6023478828954a89f5",
+ "size": 25484
+}

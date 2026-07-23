@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "ef0888464861888ff4c25d6841d9952a17951bf01b621ac66375462383c3c8bd",
+   "data_size": 28680,
+   "name": "INITLoader.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "initloader.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "202a9f8f3c94c986fc24bfc324496b80f9421abadf3cdfe4cf51fc09e48b1008",
+ "size": 28928
+}

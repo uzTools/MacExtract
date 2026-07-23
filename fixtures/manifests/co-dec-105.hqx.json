@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "aust",
+   "data_sha256": "de5ea05507eb101bc6d654a4369500c00ae12703f51dfc4cfb34bce99f6f0efa",
+   "data_size": 36477,
+   "name": "CoDec105.sea",
+   "rsrc_sha256": "1602385fb0a4989f44a856614c5f8c6087f7b05ebf28bbfffc5ab1f24dca18ea",
+   "rsrc_size": 18302,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "co-dec-105.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "2760c712f39397ce0d270d4832c62140577504772b90c49b2c49eb597b417006",
+ "size": 74496
+}

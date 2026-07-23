@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "18e2c9b441116b9608643f51b74dfd142385306a4eaccd46a47dfcf4ef2e0ea4",
+   "data_size": 94229,
+   "name": "CC Converter 1.3.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "cc-converter-13.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "18dd0effcb5767acf71683f88d89be1f528317ae336e57e213094a8b07d6373c",
+ "size": 128540
+}

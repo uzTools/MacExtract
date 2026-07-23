@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "EXTR",
+   "data_sha256": "a7e7c7febe35c2214849ed21cd9aa2f510f6dea77dceb85943199875de6df2b9",
+   "data_size": 196157,
+   "name": "TPattDemo.sea",
+   "rsrc_sha256": "0cfd3837fa2c14b4b5eda41090a518c2826e1481877148d5d6471bf17cd9f126",
+   "rsrc_size": 13121,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "tpattdemo.sea",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "b81ce9de4aed9a53ea5510dba0bd076af3be75a53adb641aa9c614b338c8d688",
+ "size": 209536
+}

@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "4b2009f57721007c3504f61edb0e076136fe8b812fbb1f856120c628d0293e34",
+   "data_size": 94401,
+   "name": "XShelf_1.0.dmg.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT5"
+  }
+ ],
+ "fixture": "x-shelf-10.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "30f90941e9e8d7ea866dd3d481fb2ea6bcdc7a4ce69dec2ca2c0b2f0215ae2f0",
+ "size": 128964
+}

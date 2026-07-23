@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "d6c77680a0d0d2739e34cc69ab86d434b9069b155b968f423c31affeff3e552c",
+   "data_size": 17769,
+   "name": "MacCPIO_v0.2.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "mac-cpio-02.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "14523a7483cab0652fdb512f93a146b3756ebb8b8903ee1b8ff1fea8a5ad500d",
+ "size": 25154
+}

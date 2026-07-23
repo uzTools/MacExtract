@@ -1,0 +1,31 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "BootBlocker"
+  },
+  {
+   "creator": "MSWD",
+   "data_sha256": "cbfd53b2277945f6636d401d41cfdc9e91344af5ae54fef40264de368f62e287",
+   "data_size": 5120,
+   "name": "BootBlocker/BootBlocker Docs",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "WDBN"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "011e96dd0896a9994635b497d4d75d720603459a4e5f27d9e4121b8a4820f998",
+   "data_size": 3219,
+   "name": "BootBlocker/BootBlocker Docs.TXT",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-Bootblocker.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "c4b7542c736d1c2ae22d445d41f188900a11db73e45041d169d550457498a710",
+ "size": 27577
+}

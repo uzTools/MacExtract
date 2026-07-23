@@ -1,0 +1,31 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "Compact Pro F-1.51"
+  },
+  {
+   "creator": "CPCT",
+   "data_sha256": "ca8946a0373142067e3922cafcda5a370655dd0f90f2207236f2b1d77ad83eb2",
+   "data_size": 104599,
+   "name": "Compact Pro F-1.51/Compact Pro",
+   "rsrc_sha256": "652c84ab7b0e7cb10ff613424569074e7f48e19d3a4239d5cbdbef8b78d43ba2",
+   "rsrc_size": 99832,
+   "type": "APPL"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "1c6e50aee6551599d639d759d05d6eee5061624018ff8561229b947044c45342",
+   "data_size": 4484,
+   "name": "Compact Pro F-1.51/Quoi de nouveau ?",
+   "rsrc_sha256": "f43a4fcfd29e773121db57d3b8f0b4edf495c5728ade20261c092a28c4173ff3",
+   "rsrc_size": 286,
+   "type": "ttro"
+  }
+ ],
+ "fixture": "derived-Compact_Pro_Package__French_",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "d2e24fed5b6d986009c08305a1f075026edbe2aefab19b002fa6f756a08865ff",
+ "size": 166805
+}

@@ -1,0 +1,270 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "ACMDS"
+  },
+  {
+   "is_dir": true,
+   "name": "LaTeX"
+  },
+  {
+   "creator": "ALFA",
+   "data_sha256": "f6902f3e94becc74645f294c4931e8e2a2b2aa313b72f572b6550e19bcb62382",
+   "data_size": 18224,
+   "name": "AlphaBits",
+   "rsrc_sha256": "152a5bcb795c832a7b98e3a65f93ba1838b2e21d0fa8e0dffbb8cde95b9af9d6",
+   "rsrc_size": 540,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ALFA",
+   "data_sha256": "e455e154c2b966e228dd968e702f007c292cfa9084a9e9b3f926fb26f908792b",
+   "data_size": 29006,
+   "name": "Changes",
+   "rsrc_sha256": "6f58d52342979279d75dd812fbfff51a32406a7e6e3d93fefa29f435145d6cfd",
+   "rsrc_size": 560,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ALFA",
+   "data_sha256": "5ccb0d0bd4da62a7dd0fc01a643ce08fdb7691ddb0711ef5ee2823805360638d",
+   "data_size": 527,
+   "name": "README",
+   "rsrc_sha256": "8361a23512918aec083a477307204e7615f01434ec2b03b268e9778afa0655fd",
+   "rsrc_size": 360,
+   "type": "TEXT"
+  },
+  {
+   "is_dir": true,
+   "name": "ACMDS/acmds.new"
+  },
+  {
+   "creator": "ALFA",
+   "data_sha256": "d3efd0d8276966d56b9210f740549ac515370082fca50dd13b27e6e0839cb759",
+   "data_size": 968,
+   "name": "ACMDS/ACMDs ReadMe",
+   "rsrc_sha256": "bd85a17e074276273d47e911c9d9a085dda1aa4a0d1bda4ba88f4def7de2576d",
+   "rsrc_size": 357,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ALFA",
+   "data_sha256": "e01f9aaeebdfefe4615b3e555ff991b4b6c5010fbe452fa8cb01be8773fb93d1",
+   "data_size": 4319,
+   "name": "ACMDS/Comment Box.c",
+   "rsrc_sha256": "c4be4695c0acc3dab275c31ad394759eebb5ea411005feda5cb62764390b05dc",
+   "rsrc_size": 357,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ALFA",
+   "data_sha256": "5e615d69b1dd93f14368c160f09155834e111d4358e7fdde2c90b969d185a20b",
+   "data_size": 2834,
+   "name": "ACMDS/Delay.c",
+   "rsrc_sha256": "900a279c7667c08f3af847c0db3e84edd28050c224d16d516b6d29eb3b68da18",
+   "rsrc_size": 357,
+   "type": "TEXT"
+  },
+  {
+   "creator": "KAHL",
+   "data_sha256": "1b14fe9c49c3996938115cdba3106d9d65ba337d35684cfe73229f78b88764e0",
+   "data_size": 116,
+   "name": "ACMDS/OpenTC.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ALFA",
+   "data_sha256": "ecb48c5bcf700f66e34dc7b9ee366cbfdf5517395f1ea794045593bc18486cfe",
+   "data_size": 3141,
+   "name": "ACMDS/Rot13.c",
+   "rsrc_sha256": "632ec39b4cb6798d5a9b5c0d7458afef6ec558d65cb5352010ca62c75f47a1b7",
+   "rsrc_size": 357,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ALFA",
+   "data_sha256": "f531db5ed20b2bfcf31f30d7dca14a076c2be68e3020d16f17935a26452078a5",
+   "data_size": 383,
+   "name": "ACMDS/SndPlay Macros",
+   "rsrc_sha256": "c91165b811b238f1f5ad03ba08bdaa8a85c3c1a4237e015d4ddc074aca1beedd",
+   "rsrc_size": 357,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ALFA",
+   "data_sha256": "aba660fa2fea396ff4fec932d4680e5bc4019405f53cd60867654263bd39064d",
+   "data_size": 4095,
+   "name": "ACMDS/SndPlay.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ALFA",
+   "data_sha256": "c9723436d991615807d41eda3013f83ca40d5560ae98652189301ee8de32888e",
+   "data_size": 4972,
+   "name": "ACMDS/StringToC.c",
+   "rsrc_sha256": "39e7c08109950077f8f679ca7243b17b8aeba2e27ae790d0b255b0777a51cfd1",
+   "rsrc_size": 357,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ALFA",
+   "data_sha256": "46622fde0ede0c81e6fe431fdd036624d17589b00260d0058c4e78f856048e80",
+   "data_size": 5192,
+   "name": "ACMDS/Think Files.c",
+   "rsrc_sha256": "8130a2b2298e874c040ae66e1ad8f37efa3c7b3a4af4aa42d0b553a8efb09700",
+   "rsrc_size": 357,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ALFA",
+   "data_sha256": "0c216586169b80c6e6986f2aa7865766fff2f9652f70e489fa8236e8f982b92a",
+   "data_size": 595,
+   "name": "ACMDS/Time_Date Macros",
+   "rsrc_sha256": "ebf6a338ea8f43102336e5fd3e6fe5d9df0cc7408d10751082af998cd2312aaa",
+   "rsrc_size": 357,
+   "type": "TEXT"
+  },
+  {
+   "data_sha256": "53e705d7ff13529522a66c03be52bdf08a1034805be9eb410cb7aa8b3d918f5e",
+   "data_size": 3835,
+   "name": "ACMDS/Time_Date.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "creator": "ALFA",
+   "data_sha256": "c6f90839fbbdfb953a7c754450d3cd614fa9054e7b9cfd7164ebfb2ca6c6f7eb",
+   "data_size": 3214,
+   "name": "ACMDS/UnComment Box.c",
+   "rsrc_sha256": "bb55623341776702590072e8c5fb048ed6de3ed480f79a64e7c9e68bba3f28bb",
+   "rsrc_size": 357,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ALFA",
+   "data_sha256": "ba7115224ba5523abde0c84148f1928a6539e1c5a2c331aee4127a27797075a8",
+   "data_size": 2541,
+   "name": "ACMDS/dir.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ALFA",
+   "data_sha256": "85711c752b202d61a5298c55effb1243f2c7b33599e8e89b93c58d17215c68c3",
+   "data_size": 540,
+   "name": "ACMDS/loopMacro",
+   "rsrc_sha256": "e1dd813f81701f70193ce9451336baf7005ec11bf1f851615a5a1f4f1a122bfd",
+   "rsrc_size": 357,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ALFA",
+   "data_sha256": "802dbc96c2062da9ef4e17eec8c6162c7f88562c730d04175385b816c847f58e",
+   "data_size": 2231,
+   "name": "ACMDS/wc ACMD.c",
+   "rsrc_sha256": "c90210c7261d803298a4e947574463475e5230500c34ac6400f33417787223a1",
+   "rsrc_size": 357,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ALFA",
+   "data_sha256": "f730350f5d113473b44c3c42040b3bda07fe9fda64609fecd8e4417112da1dd3",
+   "data_size": 339,
+   "name": "ACMDS/acmds.new/define.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ALFA",
+   "data_sha256": "a18bc09171caec01b78fce6cffe89e0234cc9e0e7798cc0f1fba7d4e2bb0ea38",
+   "data_size": 2768,
+   "name": "ACMDS/acmds.new/fill.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ALFA",
+   "data_sha256": "e2ae5391b3f292bb627bbb2a2b7a5158260881d8ccb1fdcf8c69164ca956de06",
+   "data_size": 4634,
+   "name": "ACMDS/acmds.new/sort.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "is_dir": true,
+   "name": "LaTeX/Dewar Macros"
+  },
+  {
+   "is_dir": true,
+   "name": "LaTeX/Wright Macros"
+  },
+  {
+   "creator": "ALFA",
+   "data_sha256": "83d32ebbe14665bbbf92a8869884a61da4e380724b970e366cc02075918e0215",
+   "data_size": 390,
+   "name": "LaTeX/README",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ALFA",
+   "data_sha256": "efdc4cf444f4ef38cd3e5784b2df05cb0581746898905f72a06675a95ca8e50f",
+   "data_size": 3776,
+   "name": "LaTeX/Using MPW",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ALFA",
+   "data_sha256": "15a2462dfbdca017435c512e1b74772db25f47e44ca8ca80ebf7c403051a4c53",
+   "data_size": 5074,
+   "name": "LaTeX/Wright Macros/BibTeX-Macros",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ALFA",
+   "data_sha256": "adaed2fdd2cd2bbc37abcc75be5f99bcfb552f47bff3fd6695a8cad1755e45bb",
+   "data_size": 5678,
+   "name": "LaTeX/Wright Macros/LaTeX-Macros",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ALFA",
+   "data_sha256": "3e1f325b89a966c4923de95eb7aaa486103ab3350bd479b08f0e719ad3093f7d",
+   "data_size": 6008,
+   "name": "LaTeX/Wright Macros/wrightMacros",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ALFA",
+   "data_sha256": "87207ba9932a35f24474c19ff5b9747284590f3af5e29ba7d573189c17b341e3",
+   "data_size": 8141,
+   "name": "LaTeX/Dewar Macros/dewarLatex",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-alpha4.01.cpt",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "dfcc1d76e69ef118a7cb4339602b60c46f9d8eea347a3ab89501d4396b4531ec",
+ "size": 198749
+}

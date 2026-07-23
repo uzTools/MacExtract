@@ -1,0 +1,22 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "Cico 1.0 ƒ"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "1c230bf09da2ef9f1e823182cb838563febee1c3fb640f83de362df9c5eda3a8",
+   "data_size": 2304,
+   "name": "Cico 1.0 ƒ/Readme",
+   "rsrc_sha256": "f04de6bbaeea2465a62c8cd1671fb589d90bcb34c12274af291c8d8ab3bd40b4",
+   "rsrc_size": 332,
+   "type": "ttro"
+  }
+ ],
+ "fixture": "derived-Cico_1.0__.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "a93607989c322ae4a4d5ecf1e24211a8821d91a0442afb5da41d5bb664680c54",
+ "size": 7702
+}

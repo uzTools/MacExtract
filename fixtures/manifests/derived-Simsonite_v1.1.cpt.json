@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "MSWD",
+   "data_sha256": "d9773c8bdd97858b65b61c8c01854302e0d566014e5cef4b14aefdea57d82e07",
+   "data_size": 1879,
+   "name": "Simsonite 1.1 Read Me",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-Simsonite_v1.1.cpt",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "4e217850c3ced18e07bd34f11326799fc51a92cc469a2326129f326e7227f5b8",
+ "size": 4414
+}

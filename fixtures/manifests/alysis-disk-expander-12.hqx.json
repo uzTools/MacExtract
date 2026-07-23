@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "alyS",
+   "data_sha256": "795fddf196ab6d83088e7bed621b448a7f092a7de1b1344f50f9dfc86e5b6695",
+   "data_size": 37688,
+   "name": "Disk Expander .X",
+   "rsrc_sha256": "e0c5d9f5cba19a3a2438500fa51ed51a6269adb75e35bd631c56d8b3f9f49047",
+   "rsrc_size": 7624,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "alysis-disk-expander-12.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "0556786ab17a4d18aed6cb268455281f05ff965d6186bf4e7038395e0cef6dd8",
+ "size": 62549
+}

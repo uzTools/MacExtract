@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "1c21fff97e82a6563c0b5da0ed6358d34b9c3935b862418c020731a22dcaf1b6",
+   "data_size": 6079,
+   "name": "Clutter.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "clutter.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "121fbf065c74698b473bf5e6002b9f98dddced34e36cca8d5f0c5e2ee56a8e0d",
+ "size": 6207
+}

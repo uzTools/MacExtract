@@ -1,0 +1,44 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "extractpc1.02 Folder"
+  },
+  {
+   "is_dir": true,
+   "name": "extractpc1.02 Folder/EXTRACT.EXE Folder"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "ee7cb960c8fbe8cc8cf03548d6a71e4c1fb228e395d563ece251b01fdc26852f",
+   "data_size": 480,
+   "name": "extractpc1.02 Folder/DISCLAIM",
+   "rsrc_sha256": "fb842eeda95907576f6a1941a94ed0b317730701c8c4737a33a0c33f6d87a0f5",
+   "rsrc_size": 332,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "32eb4ff32f9de383063750ea31ef19a4cbc236d8743e9e8c7fc97016f1b8b021",
+   "data_size": 9853,
+   "name": "extractpc1.02 Folder/EXTRACT.DOC",
+   "rsrc_sha256": "7ee952e3fd01b6a92df03fa8ea7b14f69010ed7cfe6220884ca42d7351a68bdb",
+   "rsrc_size": 332,
+   "type": "TEXT"
+  },
+  {
+   "creator": "BIN ",
+   "data_sha256": "1eabe0e2abfb50a6b924e3523c16fae57c60fd15f4d90b8b7d5c1bd456a0c26a",
+   "data_size": 48546,
+   "name": "extractpc1.02 Folder/EXTRACT.EXE",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "????"
+  }
+ ],
+ "fixture": "derived-extractpc1.02_Folder.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "3d8f51319f0bb86c12cc73d2cfd845d99b5d26f594c233048aa6bab0af337127",
+ "size": 33239
+}

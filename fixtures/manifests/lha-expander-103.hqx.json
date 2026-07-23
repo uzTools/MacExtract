@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "????",
+   "data_sha256": "474367151a5428a628f34c3a12c1094237e16b822a921ad1a0a1b9b0c3ad5516",
+   "data_size": 79182,
+   "name": "LHA Expander 1.0.3.sea",
+   "rsrc_sha256": "f29132ea2a52ffe5935d3d2f415ae7a7643899c5617989c9c095de9ccda76dd1",
+   "rsrc_size": 10217,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "lha-expander-103.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "12dcf9e5cc5a830e24dc5339dd33a483d63322149ef44754652796219193cff0",
+ "size": 121325
+}

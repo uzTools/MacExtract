@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "CPCT",
+   "data_sha256": "f3bc7a1a2e9a269b695d126e57ab6dd7adfda2c81918d805063b746ba24727e9",
+   "data_size": 150033,
+   "name": "MacPost-Client-SW-1.0b6.cpt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "PACT"
+  }
+ ],
+ "fixture": "macpostclient10b6sw.cpt",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "959ef166d16dc01daf51bd2e53cba66adb46d7ad8e95366ff8250604f30674e3",
+ "size": 150272
+}

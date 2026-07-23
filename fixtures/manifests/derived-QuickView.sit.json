@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "KAHL",
+   "data_sha256": "c0c672e24321aeeaeefd8f95cded701d9dfaf147d07600dc143cf4daa7cf7ce3",
+   "data_size": 1478,
+   "name": "QuickView.readme",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-QuickView.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "f34a9fc4a718d479f7d98d6bbabbe13d936be0463b7b8731e0e07cb9b33fa5e2",
+ "size": 13235
+}

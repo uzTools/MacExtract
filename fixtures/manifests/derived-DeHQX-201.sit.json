@@ -1,0 +1,22 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "DeHQX-201"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "730da26a75fc72bf196cb75637d238eb39465d91c0958eaa7a984e8711c0347c",
+   "data_size": 15753,
+   "name": "DeHQX-201/DeHQX Documentation",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-DeHQX-201.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "c0d79cf7547b79c2f40caf46b31a5c2934d3a94ad463b4cc9d5637343750180a",
+ "size": 27868
+}

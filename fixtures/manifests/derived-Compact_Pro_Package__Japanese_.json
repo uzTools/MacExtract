@@ -1,0 +1,40 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "Compact Pro J-1.51"
+  },
+  {
+   "creator": "CPCT",
+   "data_sha256": "ca8946a0373142067e3922cafcda5a370655dd0f90f2207236f2b1d77ad83eb2",
+   "data_size": 104599,
+   "name": "Compact Pro J-1.51/Compact Pro",
+   "rsrc_sha256": "dc76e71492dbcf38da15cdb87e76d06f54551c41f32164c42eadf122db83c9b5",
+   "rsrc_size": 98692,
+   "type": "APPL"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "2e9be2d5d63f1eb8dda158dcd1fe3109736d549557aadbb74329d70275117b6d",
+   "data_size": 2803,
+   "name": "Compact Pro J-1.51/What's New?",
+   "rsrc_sha256": "04592330f6d5dc745ffffbf5ec32ea99c53633864b08fc9163b7254b376ff6a2",
+   "rsrc_size": 286,
+   "type": "ttro"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "10881c57746abf7584c78af3dcf4fda79118bf1472ef0e1e57fa67f5740f038c",
+   "data_size": 298,
+   "name": "Compact Pro J-1.51/ÇÕÇ∂ÇﬂÇ…Ç®ì«Ç›Ç≠ÇæÇ≥Ç¢",
+   "rsrc_sha256": "491fdcaf819d196ebced38493ffb30db2aaa4aef7463d28fcb01a41c13998d78",
+   "rsrc_size": 286,
+   "type": "ttro"
+  }
+ ],
+ "fixture": "derived-Compact_Pro_Package__Japanese_",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "02cabd108437a21c7838316033da5557e563db8cf31e8d3d8a14b58bedef9632",
+ "size": 157368
+}

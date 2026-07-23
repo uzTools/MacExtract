@@ -1,0 +1,40 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "MacGzip"
+  },
+  {
+   "creator": "MATL",
+   "data_sha256": "3003bfa54647a4ee455a41a9ea0a84bdb2c330dbe60865150f074e4a85051efb",
+   "data_size": 434,
+   "name": "MacGzip/Readme.txt",
+   "rsrc_sha256": "59d28b5e269683c2ec88ef6927601f75853f079420bf31a6b85a0285cbc7a085",
+   "rsrc_size": 457,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MATL",
+   "data_sha256": "36785a759838ef026f346bcc67506f36510cf298c7b24a60f82442d3daed6356",
+   "data_size": 1331,
+   "name": "MacGzip/gunzip.m",
+   "rsrc_sha256": "a12edd60a7ceda58918213698cb1be8c35b04d8bb5def771c8812b68531c4184",
+   "rsrc_size": 457,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MATL",
+   "data_sha256": "6e72f6b650e318d1727f57e65e73503bef39812aec346f6651410659171eba08",
+   "data_size": 1084,
+   "name": "MacGzip/gzip.m",
+   "rsrc_sha256": "d1e50e7105db373728a99d8b95c67d6477aaf238da7e72ae4e5e149cd016fdc5",
+   "rsrc_size": 457,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-MacGzip.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "b8caca9f8c99bc7668750e2af096b54fdd91ecd3e73278e81ef2de2a2a699e37",
+ "size": 4618
+}

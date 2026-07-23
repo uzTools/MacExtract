@@ -1,0 +1,22 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "Robert's Text Cleanup"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "77f2d070a2edaf4d2959fba3209a5ba1959d7888209e71a967c6e785e7a3911e",
+   "data_size": 3298,
+   "name": "Robert's Text Cleanup/Read Me",
+   "rsrc_sha256": "b2554f25eda58ff406b6ab3e758b4d5bc5a588730551dca12b9116515d464573",
+   "rsrc_size": 1332,
+   "type": "ttro"
+  }
+ ],
+ "fixture": "derived-Robert_s_Text_Cleanup.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "4df95148cda6aa7b1ffcef7b4a4c5ccb0553be60a25a41397bbe40a45650db90",
+ "size": 55457
+}

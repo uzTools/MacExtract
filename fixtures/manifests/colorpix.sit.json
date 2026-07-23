@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "59c5af8e1f606e1761a7683b582fe3dba6628015d975a162decf5c8ee5dc39a3",
+   "data_size": 6997,
+   "name": "ColorPix.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "colorpix.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "52d67318a65b5ebf9722e8e851e508b5d7d8e0b36d705fa544099bd70f4720e5",
+ "size": 7125
+}

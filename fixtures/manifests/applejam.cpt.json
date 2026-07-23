@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "CPCT",
+   "data_sha256": "d5b20caebea1880d4157858e650d6006121e46486412365cf680d510e55c1400",
+   "data_size": 43545,
+   "name": "Apple Jam.cpt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "PACT"
+  }
+ ],
+ "fixture": "applejam.cpt",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "c595f6c984c6e92de0c7678011602e3683fadc4f3b7872dec197f7c5ab459982",
+ "size": 43776
+}

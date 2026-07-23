@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "WILD",
+   "data_sha256": "d64020f4c3cc4417be5977fc2381a04f2a41363ec87fdb63fe4c78c914bb90cb",
+   "data_size": 40960,
+   "name": "1.2Eudora-QA",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "STAK"
+  }
+ ],
+ "fixture": "eudora12qa.bin",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "46a3853abe8cf0b4b815c9c319645f8adf2bc3839f5c9dd35db0bf168099fb00",
+ "size": 41088
+}

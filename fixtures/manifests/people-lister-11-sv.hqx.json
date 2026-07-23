@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "04c03d4ae92cab7f2a5d379f530ed049f35d176ee4dc5dc8794b2e9bf52933ec",
+   "data_size": 162393,
+   "name": "People Lister 1.1-Sv.sit",
+   "rsrc_sha256": "4da07df27481f42beeec815fa70a7909d6b0608fafac09eef87980d2a8daba39",
+   "rsrc_size": 326,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "people-lister-11-sv.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "b401ed3f9a6fe51b22a9f5f3f2a56f45051cb13876c5fa81d1f685a6f7a3dbe8",
+ "size": 221688
+}

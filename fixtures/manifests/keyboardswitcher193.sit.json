@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "4cb8beb7b9b72c31a66cc88f8878d20f14eb4af5f6115c05b81982b8f4676b67",
+   "data_size": 41284,
+   "name": "KySw-1.9.3.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "keyboardswitcher193.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "4b2b135db689abfc3d96f6eeabc6f917e29a2f9a4877b5cbe9261c787cdfd6c3",
+ "size": 41472
+}

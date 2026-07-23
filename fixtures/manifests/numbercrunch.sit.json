@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "6ff63c324909bda777ad0b6c5dffed149d4aed312fe79069430a0bc33e3fc934",
+   "data_size": 65787,
+   "name": "NumberCrunch.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "numbercrunch.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "272a823d3156a70bed11719f0bb40c6324c5fcf1c63f955d8f92b662b4fb63c4",
+ "size": 65915
+}

@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "f42704f2f0f32392586956455754d45cd0b2937e1c44f366f538cbd392dadb19",
+   "data_size": 7507,
+   "name": "pointingdevice.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "pointingdevice.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "f14ebedf90b40b3a0154393cacc9835bf778307225fde12c6cb5377459115a87",
+ "size": 7680
+}

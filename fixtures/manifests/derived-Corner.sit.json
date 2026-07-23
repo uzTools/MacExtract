@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "MACA",
+   "data_sha256": "96d1614955640720be1015151f5e1a1a8d03643a3ebd5c7f8d81fa25b212a3c0",
+   "data_size": 3938,
+   "name": "Corner.doc",
+   "rsrc_sha256": "40c4419f4380a999d50d031a60542325c2b0fb621b5981105a6336c73c70cbf0",
+   "rsrc_size": 814,
+   "type": "WORD"
+  }
+ ],
+ "fixture": "derived-Corner.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "5005538e8894828048366914542766cb7957c1faa5736fc8116d070b4a07f147",
+ "size": 5707
+}

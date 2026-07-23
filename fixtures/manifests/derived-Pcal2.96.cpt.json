@@ -1,0 +1,27 @@
+{
+ "entries": [
+  {
+   "creator": "????",
+   "data_sha256": "b67029fa12593a0b7eba64477cfef239ad7b6fb3020051b1edea46dc38963423",
+   "data_size": 7712,
+   "name": "PCal docs (text-only)",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "PCAL",
+   "data_sha256": "6cfc3996261567dc5d84c0f70efb95a887408e4d60f4ff6a4444ab637d1d0faa",
+   "data_size": 392,
+   "name": "Sample Events",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-Pcal2.96.cpt",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "20e08ee085f778607c689dd78a72e0769361cf7b3362baffa0f6148a1d615d0d",
+ "size": 29506
+}

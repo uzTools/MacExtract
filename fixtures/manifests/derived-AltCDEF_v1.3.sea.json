@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "MACA",
+   "data_sha256": "9080c36ed864e50b4b3208af4c075fb1f8430075509e54dfba78014858402f2b",
+   "data_size": 10480,
+   "name": "AAAReadMe.AltCDEF",
+   "rsrc_sha256": "9cd98a54c9f7b0a730b158f3245d085314cef62b59320b46ce1261d8811bcc38",
+   "rsrc_size": 820,
+   "type": "WORD"
+  }
+ ],
+ "fixture": "derived-AltCDEF_v1.3.sea",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "c5e9e24fb6886b3a757576767ef791e1cb1539b34cee867875dbbfa4e3279954",
+ "size": 29752
+}

@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "MACA",
+   "data_sha256": "10e953f9e410df27f49b7b600a4dc3550de53298814f0f4df595d9dbc476e97f",
+   "data_size": 2561,
+   "name": "Cubist ReadMe",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-Cubist.cpt",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "660abc7784310dcf66045de429546954c5f563f0c04a4e92a58c1aec7d4723e8",
+ "size": 9773
+}

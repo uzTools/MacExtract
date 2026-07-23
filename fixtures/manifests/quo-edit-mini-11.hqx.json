@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "4b9cdd81c88b5361f473a31b23a86063da29faaeb98f93f3bd34cbcded9e1b33",
+   "data_size": 40558,
+   "name": "QuoEdit mini 1.1.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT5"
+  }
+ ],
+ "fixture": "quo-edit-mini-11.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "a37d60e6876b8e6a2e3ccd1e83666040b96dd5cf487a80bbea65c60df084da11",
+ "size": 55743
+}

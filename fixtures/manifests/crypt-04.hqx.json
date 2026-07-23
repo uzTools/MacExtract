@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "5f6284f5c909a47fd09f87cc3a24545c35b79f4ad691815fae2a55941ce7b34f",
+   "data_size": 27832,
+   "name": "Crypt-04.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "crypt-04.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "9e0885b5e6d4bd986647bd5d728d7a776060a6815dc675cb2c37cb35c1e14a99",
+ "size": 38895
+}

@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "ttxt",
+   "data_sha256": "3a397757a549399ac7d00e85aca2da0cf8a4f70dec39e63a3ab876f5c20bf051",
+   "data_size": 17163,
+   "name": "Speed Beep 2.0 Info",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "ttro"
+  }
+ ],
+ "fixture": "derived-Speed_Beep.sea",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "d77fe4af2947c7cbf8ae60b09de9018749658ac0359b9927b21271b2d47cb4c0",
+ "size": 39129
+}

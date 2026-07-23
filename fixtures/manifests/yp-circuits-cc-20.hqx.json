@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "91d5f35cbecb15b62f90a07239b256480b10e3b38140b950bc83af654d638f47",
+   "data_size": 203171,
+   "name": "YP Circuits CC ƒ.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT5"
+  }
+ ],
+ "fixture": "yp-circuits-cc-20.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "8bbf095eb14d4261d9ee93dbd81a165981bc68b65eb39dd2a2a8be4043955637",
+ "size": 277425
+}

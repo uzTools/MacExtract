@@ -1,0 +1,22 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "Ultimate Copland 1.1"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "5dd20e058214fcad9ccbaa488650601a3310f354cac2c4e165cc0b272b78e11e",
+   "data_size": 4737,
+   "name": "Ultimate Copland 1.1/Ultimate Read Me",
+   "rsrc_sha256": "e4950d56982f6dbdd077c88f62e6021012e375c4961ad7c7f8ed3efb3f6100c5",
+   "rsrc_size": 22140,
+   "type": "ttro"
+  }
+ ],
+ "fixture": "derived-Ultimate_Copland_1.1.sit.1",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "d68f7bc1d369fff7d1361b9e50c54347fb51188b02ea5fced5ad3c7e52a55d6e",
+ "size": 154432
+}

@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "8cc2e3f647d6f2c69ef2e655562f98981525994a975af928dbce23551500d6a1",
+   "data_size": 77966,
+   "name": "seasons_greetings.sit",
+   "rsrc_sha256": "af0704c957ca6e831e9d1fe1bd870d2d6f15fe5147cf336e0f81725f8ab1fbb7",
+   "rsrc_size": 286,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "seasons-greetings.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "1ec6b2cf4b081f46ef81905ac21ecdba71c062a9e2845a767eae8b69f3edcbf3",
+ "size": 106441
+}

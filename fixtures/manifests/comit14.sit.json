@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "f6e6e67251c9f0ef9a7af89af0a4a9117c9a64c32193be3a0a1d5b661f5112b6",
+   "data_size": 204926,
+   "name": "ComIT14.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "comit14.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "c969999debde048c127d5d21b7832e9cdddde160694b9d7acdedb687e4b42846",
+ "size": 205056
+}

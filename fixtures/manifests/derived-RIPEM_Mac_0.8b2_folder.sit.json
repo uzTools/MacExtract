@@ -1,0 +1,74 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "RIPEM Mac 0.8b2 folder"
+  },
+  {
+   "is_dir": true,
+   "name": "RIPEM Mac 0.8b2 folder/BBEdit folder"
+  },
+  {
+   "is_dir": true,
+   "name": "RIPEM Mac 0.8b2 folder/QuicKeys folder"
+  },
+  {
+   "creator": "R*ch",
+   "data_sha256": "9dedb1c4e0d1496ff209f124319a89b1f27202240b5e3ae9aefe5fca68cac6ea",
+   "data_size": 7098,
+   "name": "RIPEM Mac 0.8b2 folder/Bootstrap",
+   "rsrc_sha256": "65e7155b64b72d5c3f780cceb3ea426fead8a693de672c5d9c850e60c6238eb8",
+   "rsrc_size": 670,
+   "type": "TEXT"
+  },
+  {
+   "creator": "R*ch",
+   "data_sha256": "63f33856b3c527fe8c153f47dd9b8451430567dce90f42ce9c5a9e8114531bc5",
+   "data_size": 1907,
+   "name": "RIPEM Mac 0.8b2 folder/Change History",
+   "rsrc_sha256": "fde112cd606915c6982bf8096a9472ce5a87c91cfa62afa25b56b8a539cdcf1c",
+   "rsrc_size": 670,
+   "type": "TEXT"
+  },
+  {
+   "creator": "R*ch",
+   "data_sha256": "66ef272c06e0e741cd7c2f457a20a5a8e798cb9c7c1eb35580057a13a99738a1",
+   "data_size": 3402,
+   "name": "RIPEM Mac 0.8b2 folder/For users of previous versions",
+   "rsrc_sha256": "d99b5a0aec146e0155f0894b5c587ffb699e80f3f02ed0da2bbae657ca5d3bb1",
+   "rsrc_size": 664,
+   "type": "TEXT"
+  },
+  {
+   "creator": "R*ch",
+   "data_sha256": "0c60a2cc41cf6b1b5e22820e18213eaafe8c0ff8f7ef1a3ae288c7369e509fb5",
+   "data_size": 3083,
+   "name": "RIPEM Mac 0.8b2 folder/Readme",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "is_dir": true,
+   "name": "RIPEM Mac 0.8b2 folder/QuicKeys folder/QuicKeys Extension"
+  },
+  {
+   "is_dir": true,
+   "name": "RIPEM Mac 0.8b2 folder/QuicKeys folder/QuicKeys Sequences"
+  },
+  {
+   "creator": "Qky2",
+   "data_sha256": "4f69a8fe0025bd645540f2c34819c866ae3bb4af57a89c1fb99ff17475000633",
+   "data_size": 5370,
+   "name": "RIPEM Mac 0.8b2 folder/QuicKeys folder/QuicKeys Sequences/RIPEM Mac QuicKeys",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "KEYS"
+  }
+ ],
+ "fixture": "derived-RIPEM_Mac_0.8b2_folder.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "71b0254320dcf6d7674d459a2e1a81fcdaac1a9f03308753ef8a20922dbb8c65",
+ "size": 136377
+}

@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "3b134349f68755f76922eef521b09c1b3da4719bf99c9008945c6c1c2b88411f",
+   "data_size": 270231,
+   "name": "Mews 1.4.1.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "mews141.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "56f3bd92deb2b86284ffd206b824d9ee291616adf7f0a99f98de84f758a20eb5",
+ "size": 270359
+}

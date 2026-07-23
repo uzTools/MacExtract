@@ -1,0 +1,49 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "Decode da Code 1.5"
+  },
+  {
+   "creator": "lkDe",
+   "data_sha256": "846c4df8519953b40317dae9483f0aa0e4d83a3c629b09ff9d9d41039e1af700",
+   "data_size": 66427,
+   "name": "Decode da Code 1.5/Decode da Code",
+   "rsrc_sha256": "649e2ca125a4a72b8ac330ff968a6dd871ead9d0b4edbe00ddf2f60bb83affc6",
+   "rsrc_size": 58253,
+   "type": "APPL"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "5c3be02041d26d4a9f6746cfac20d13cb49ae432c330c823eb45534343da5909",
+   "data_size": 8165,
+   "name": "Decode da Code 1.5/Decode da Code User Manual",
+   "rsrc_sha256": "d85ef6baa1747a548f2afab907e0aea239d19cfa81c97d219c51f9d3af09fce2",
+   "rsrc_size": 3026,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "10ae04b439f96d46217f19a397c0eed43f49a12210bab1036e8bb8160a1a7e4c",
+   "data_size": 2576,
+   "name": "Decode da Code 1.5/How to Register",
+   "rsrc_sha256": "20615a8bf18da0aeec5bd5aef918a70afefef9d9105ad37dc0259027da3c6afd",
+   "rsrc_size": 952,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "1b17c364b23ca8dccd69122e1a2656a8a83290c17f09a5e10bfa37df8b31b99a",
+   "data_size": 3877,
+   "name": "Decode da Code 1.5/Read Me Decode da Code",
+   "rsrc_sha256": "66dd98d0865ab8d1f4c5723d5318047d889a8ce00e667b8f31ebc8b09393f4c2",
+   "rsrc_size": 2126,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-Decode_da_Code_1.5.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "58a2aac7af4c3aaa85a9f17513b418d044b55731cf59141e017d813654842c4a",
+ "size": 111565
+}

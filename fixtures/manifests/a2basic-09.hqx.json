@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "40c2812b8e73d7af2f83633eee725bdee7188101944809a889c0a8fe7b191855",
+   "data_size": 152942,
+   "name": "a2basic.dmg.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT5"
+  }
+ ],
+ "fixture": "a2basic-09.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "d816141f402065424ee8564a963163abaeea9ae13b5b7ca71d54825b5729bf46",
+ "size": 209212
+}

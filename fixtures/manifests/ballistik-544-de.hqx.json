@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "878f33a375cee4ec8dc212b0f3b377ff1bb0a1777afd7cc8827d238edfea7c0d",
+   "data_size": 169093,
+   "name": "Ballistik (german) ƒ.sit",
+   "rsrc_sha256": "a7ea337b68f5dc8042d11b367510e3ee70e07c5efd315c95802f435d0734ed03",
+   "rsrc_size": 286,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "ballistik-544-de.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "83c76b0a15a3e626ab6652e19cf264c765308893b3c7d15192316b35d3707f8c",
+ "size": 230896
+}

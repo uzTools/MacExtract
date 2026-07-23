@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "MPS ",
+   "data_sha256": "f915b0eae516ee7d561a71dc8530d35e87bf8a467fb2dda1a37ce43186548af3",
+   "data_size": 61,
+   "name": "MessageLog",
+   "rsrc_sha256": "b7a2f63e49e35f0ff1e24461eb43132a70b804c356194eecefda55439582ceb7",
+   "rsrc_size": 414,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-messages.1.2.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "6ca7017ee1166756387e202ac0dda13e03b7320ae147991cf1f962f3ac21a448",
+ "size": 25935
+}

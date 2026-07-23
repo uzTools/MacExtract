@@ -1,0 +1,22 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "Pict2Pict ƒ"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "9d5894f6b73b07319c66297ece716d89fd191e407cf9c79d1f8c9b915827e538",
+   "data_size": 905,
+   "name": "Pict2Pict ƒ/Pict2Pict docs",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-Pict2Pict_0.6.3.cpt",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "142a82704106fc63be15b9a4271543daefabc0c4a2149483226582f33be0a2ff",
+ "size": 7188
+}

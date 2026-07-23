@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "6e0fb2f2754b61138fc6c12f2d9e73c51df16a34f73bb017ccf73a61f955c942",
+   "data_size": 51808,
+   "name": "MacLHa 2.00.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "maclha200.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "8b3e35f2178869044b916ce224a630e9700c60a44075b297f2290d8ef8d6de28",
+ "size": 51968
+}

@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "8fecd9de0bdb7b729d4c7757f998724107c8e617538b1036c5864d5b0b503be5",
+   "data_size": 66779,
+   "name": "WhereSIT 1.4",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "wheresit14.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "eae10e91450de017c85fefa97172d1d832a28eb795d197d06dbd6904b8b094dc",
+ "size": 66907
+}

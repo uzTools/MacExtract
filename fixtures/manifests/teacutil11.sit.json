@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "e95259a40fc0f9a008485be8aa7a1a62cbc56c023eb90a63b23c171862637bce",
+   "data_size": 12633,
+   "name": "Teac Utility 1.1 .sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "teacutil11.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "80d334ead63db303403af85a642efd7b5c5d02ad357e69f472fefed3f6e8afa5",
+ "size": 12761
+}

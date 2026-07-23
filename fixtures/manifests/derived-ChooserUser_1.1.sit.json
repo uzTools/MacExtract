@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "MACA",
+   "data_sha256": "bd0d127048271a81957b292dbdd9b1671fe4f1d62282d3457afe568c4a437482",
+   "data_size": 9544,
+   "name": "ChooserUser 1.1 Docs",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "WORD"
+  }
+ ],
+ "fixture": "derived-ChooserUser_1.1.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "6d5a273d04806cda9f2e2c3e87053d017121c7d3cb599c5872673c25fc1f30af",
+ "size": 21432
+}

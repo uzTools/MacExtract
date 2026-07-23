@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "aust",
+   "data_sha256": "6eb8ab2ff4a9e432210ad2b329faf759e51b0c39dab32d0e0676a32c7e7ea1f8",
+   "data_size": 49495,
+   "name": "PFPv1.5.sea",
+   "rsrc_sha256": "28cd798ffa562826db7824b715ef59eb25fc51e309f47b8f1c07ebab88006f02",
+   "rsrc_size": 16397,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "privacy-for-pals-15.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "77dcbd764c53b862860f0ffbc6c4e173395d8f1dc06673d2c4c909a834596319",
+ "size": 89557
+}

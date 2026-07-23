@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "13ac9ece7ed0e65447bed9f320f3d799bf63844e811d676e8598a0550c51e224",
+   "data_size": 82408,
+   "name": "The Journal 0.9.1.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "thejournal091.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "c33317af4cf5d2d39098195f9c368d14f5cb13e6b8ecd64a4a80df61c99bb749",
+ "size": 82560
+}

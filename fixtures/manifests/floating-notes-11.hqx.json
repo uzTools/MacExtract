@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "2ee48248b5e16ee6706bb9847ab7c6ce23aca5160802ee868138304cbf122a1d",
+   "data_size": 205334,
+   "name": "FloatingNotes.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT5"
+  }
+ ],
+ "fixture": "floating-notes-11.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "e7dc8d69806565c3fa8c216c13f0cde76292bdd4bcd12f1e3ac9bc484ebf8b19",
+ "size": 279989
+}

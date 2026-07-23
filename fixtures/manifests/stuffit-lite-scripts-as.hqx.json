@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "865d574e7b1ff723f47daa8ea96dfb2ee236767612436443db22e969a335f354",
+   "data_size": 20075,
+   "name": "StuffIt AppleScripts.sit",
+   "rsrc_sha256": "5f47a444e79a9c176ce1ce4138a8eb420e9e4763526bd5149f538c088ccca120",
+   "rsrc_size": 326,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "stuffit-lite-scripts-as.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "3e74b175519f261463f0fe691d24adebd5253c88442ccc9474e25bed4bd5fc2a",
+ "size": 28836
+}

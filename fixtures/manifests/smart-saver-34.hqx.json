@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "66d8aec00e94922aa3ffeb956a9c4eea2fee38d88d0f96d1484ab30cc932458c",
+   "data_size": 102438,
+   "name": "SmartSaver.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT5"
+  }
+ ],
+ "fixture": "smart-saver-34.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "51cdd0bf7b361a1a2ad518c314641ca72e4cd4a04b2898f45207595b4e7321ed",
+ "size": 139762
+}

@@ -1,0 +1,22 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "Jobs Quote"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "63eb0fd489b962c39cf8d9970bee8ea90408df220546669664333d7ebb481dd1",
+   "data_size": 954,
+   "name": "Jobs Quote/Read Me",
+   "rsrc_sha256": "b0828b367c320d93add2f052db9ed9c4a9725cf6835a1476e7676e33ff60d6be",
+   "rsrc_size": 3796,
+   "type": "ttro"
+  }
+ ],
+ "fixture": "derived-Jobs_Quote.sit",
+ "format": "StuffIt 5",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "b46b662d25dcc139477b558e8ca05fe58043cc472abcc66b474e662c8e9cafd8",
+ "size": 23896
+}

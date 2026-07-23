@@ -1,0 +1,53 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "Newer1.1.1"
+  },
+  {
+   "is_dir": true,
+   "name": "Newer1.1.1/Sample Command Files"
+  },
+  {
+   "creator": "MSWD",
+   "data_sha256": "7fac6a1c7cd17ccb82a6ea33469ad9e92ed8bf8915edf562f5fc1a825746a0ef",
+   "data_size": 5632,
+   "name": "Newer1.1.1/Newer 1.1.1 Release Notes",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "WDBN"
+  },
+  {
+   "creator": "MSWD",
+   "data_sha256": "3da2d86cba6153d9057d6ca41ee8975e0204add39465779ea335b60f2256812f",
+   "data_size": 75264,
+   "name": "Newer1.1.1/Newer Doc",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "WDBN"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "71eb18295813d75de2d79802352459160c339deacb2d9aec8ac58dfcbff00da2",
+   "data_size": 4364,
+   "name": "Newer1.1.1/Read me too",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "\u0000\u0000\u0000\u0000",
+   "data_sha256": "9c10964d68eccaa6eb3e69a29aaca6c84035848c173623e3a182d4adf257715e",
+   "data_size": 27,
+   "name": "Newer1.1.1/Sample Command Files/See Get Info on these files",
+   "rsrc_sha256": "87e612b6e611e7ca7f8791158bfb7ca6217f2f427d0c18a4a0f49e1172ba44af",
+   "rsrc_size": 438,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-Newer1.1.1.cpt",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "31841008cfed967ddf929422a2b67fccb814b6798bacbf5d84db44820eedd479",
+ "size": 69414
+}

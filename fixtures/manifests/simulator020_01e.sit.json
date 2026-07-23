@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "c191286d63f2b7a672e4bbc3bcdf1ba92b1d581b72823588fc8a62046f0c2080",
+   "data_size": 13415,
+   "name": "020 Simulator.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "simulator020_01e.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "deb6bfd64c5d30c89a907be9b6266f425b1ff84fba1ab7d9da05d99f6792dff5",
+ "size": 13568
+}

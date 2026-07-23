@@ -1,0 +1,27 @@
+{
+ "entries": [
+  {
+   "creator": "????",
+   "data_sha256": "c7b6ed7e22e3667e521804c42c120722f62f11af07fc2e6a9790b1968f309ca6",
+   "data_size": 12197,
+   "name": "DandStoQIF2.c",
+   "rsrc_sha256": "a15ffeae8975f9c9212a4c8d97f85e3b103cedc9cccffc4dc4e30197daf9cb6a",
+   "rsrc_size": 430,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MACA",
+   "data_sha256": "b33c8614b685eddaf6e6c439479aa5846cd11443b7f8a4a6b618cc79e55122f9",
+   "data_size": 8721,
+   "name": "README",
+   "rsrc_sha256": "41787b90ad1906252a46ae590cdb481975373ca432f185785e452d99e1cd0130",
+   "rsrc_size": 286,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-DandStoQIF2.sea",
+ "format": "DiskDoubler",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "936e6d8715776addb0870bedf3b35e811cf2b94f8e31f3feb6c41cb69b4d58a1",
+ "size": 30562
+}

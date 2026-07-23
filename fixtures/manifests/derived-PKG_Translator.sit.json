@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "ttxt",
+   "data_sha256": "bb2930ed0bbcd08fc1bbbebf69fb523cce2b605312f0ec561a39e3b88cd89b50",
+   "data_size": 12288,
+   "name": "About AppleLink Translator",
+   "rsrc_sha256": "d6b8574484c5295b20a2d2098e4c64f90f39493ec11fa53686a8961fbf87db06",
+   "rsrc_size": 478,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-PKG_Translator.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "56c5e58f0471fee6da7901323d50cdce3ac871dcc5cb394f33d6045926a1727b",
+ "size": 39820
+}

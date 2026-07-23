@@ -1,0 +1,22 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "ZkandiSys 7.0"
+  },
+  {
+   "creator": "MACA",
+   "data_sha256": "8eb6f5555b0910634d77b6de6df872cbb13f1ef3b52fe89c3277747871c4479d",
+   "data_size": 10702,
+   "name": "ZkandiSys 7.0/ZkandiSys Ohjeet",
+   "rsrc_sha256": "8dfcf0aabb83c8b686360c1271ba9bec8d517149fe2b658e3a14cb583851aaf9",
+   "rsrc_size": 1078,
+   "type": "WORD"
+  }
+ ],
+ "fixture": "derived-ZkandiSys_7.0.sea",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "958c906c49effe44ed1f2a439356795704c9199aac1b3e867e495931f1301b7b",
+ "size": 7719
+}

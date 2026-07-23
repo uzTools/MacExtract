@@ -1,0 +1,253 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "PuzzleGetter 0.8"
+  },
+  {
+   "is_dir": true,
+   "name": "PuzzleGetter 0.8/PuzzleGetter ReadMe.rtfd"
+  },
+  {
+   "is_dir": true,
+   "name": "PuzzleGetter 0.8/PuzzleGetter.app"
+  },
+  {
+   "is_dir": true,
+   "name": "PuzzleGetter 0.8/PuzzleGetter.app/Contents"
+  },
+  {
+   "is_dir": true,
+   "name": "PuzzleGetter 0.8/PuzzleGetter.app/Contents/MacOS"
+  },
+  {
+   "is_dir": true,
+   "name": "PuzzleGetter 0.8/PuzzleGetter.app/Contents/Resources"
+  },
+  {
+   "data_sha256": "463826ade5d7f0b3c7e24b72ff06fcd49ca2a613f5d77bad988cb4fac672fae4",
+   "data_size": 962,
+   "name": "PuzzleGetter 0.8/PuzzleGetter.app/Contents/Info.plist",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "28e0a861ed3ff6121b7782d072e0d593af2ef6418f1f1afe29619c7cda1c58b7",
+   "data_size": 8,
+   "name": "PuzzleGetter 0.8/PuzzleGetter.app/Contents/PkgInfo",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "3ffbbea0e7157611151e447e005ec4f3841e0258ea5ecdca9cbfdaa268dc8037",
+   "data_size": 311,
+   "name": "PuzzleGetter 0.8/PuzzleGetter.app/Contents/pbdevelopment.plist",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "is_dir": true,
+   "name": "PuzzleGetter 0.8/PuzzleGetter.app/Contents/Resources/English.lproj"
+  },
+  {
+   "is_dir": true,
+   "name": "PuzzleGetter 0.8/PuzzleGetter.app/Contents/Resources/Scripts"
+  },
+  {
+   "data_sha256": "8d501c43fd8f417683339b8c4300438c15f08420190f1502aaff6cd14af76699",
+   "data_size": 35152,
+   "name": "PuzzleGetter 0.8/PuzzleGetter.app/Contents/Resources/PuzzleGetter.icns",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "creator": "ToyS",
+   "data_sha256": "9b298e50b081d6ea4de72ce0603e11241ea846f28ff72b4b188de5bd48474980",
+   "data_size": 11340,
+   "name": "PuzzleGetter 0.8/PuzzleGetter.app/Contents/Resources/Scripts/Cape Cod Sunday.scpt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "osas"
+  },
+  {
+   "creator": "ToyS",
+   "data_sha256": "62b651bcb033db4cfa03f95a60a3eb897411a92c9438cc48a2e02f46a31a4ef7",
+   "data_size": 3354,
+   "name": "PuzzleGetter 0.8/PuzzleGetter.app/Contents/Resources/Scripts/Creater Type.scpt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "osas"
+  },
+  {
+   "creator": "ToyS",
+   "data_sha256": "86b25279093ebd105cc6e3df4babb5a0074cc19d95d39157c0e4fafa5856e814",
+   "data_size": 8386,
+   "name": "PuzzleGetter 0.8/PuzzleGetter.app/Contents/Resources/Scripts/CrosSynergy.scpt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "osas"
+  },
+  {
+   "creator": "ToyS",
+   "data_sha256": "44a3ef73ca38360525d54337494d5d1db6a1b57f0bd17857ac26bfc322073ed2",
+   "data_size": 8720,
+   "name": "PuzzleGetter 0.8/PuzzleGetter.app/Contents/Resources/Scripts/CrossCanada.scpt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "osas"
+  },
+  {
+   "creator": "ToyS",
+   "data_sha256": "6274b7d816fecbcda5e99145b654ac2fd091002c32dd8ebf3285e37249c83c27",
+   "data_size": 2074,
+   "name": "PuzzleGetter 0.8/PuzzleGetter.app/Contents/Resources/Scripts/Download destination.scpt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "osas"
+  },
+  {
+   "creator": "ToyS",
+   "data_sha256": "899d1665843c1a28394e75a8dcca006bc88bdfbc79a1a10bf509c0dd12935bee",
+   "data_size": 8382,
+   "name": "PuzzleGetter 0.8/PuzzleGetter.app/Contents/Resources/Scripts/LA Times.scpt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "osas"
+  },
+  {
+   "creator": "ToyS",
+   "data_sha256": "7372a8884b4df2370e757106f6283542cc717f01b0a859b4afab070959e50212",
+   "data_size": 8536,
+   "name": "PuzzleGetter 0.8/PuzzleGetter.app/Contents/Resources/Scripts/NY Times Classic.scpt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "osas"
+  },
+  {
+   "creator": "ToyS",
+   "data_sha256": "c5dd011bd1cd1b2c268b89fe0c4f2385cd053fb3bab4a575d31cb577ee1a6af9",
+   "data_size": 8490,
+   "name": "PuzzleGetter 0.8/PuzzleGetter.app/Contents/Resources/Scripts/National Post.scpt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "osas"
+  },
+  {
+   "creator": "ToyS",
+   "data_sha256": "05e4bde86cacfba7c74ff6b174a8a83c95c3801140843e33801bd4c8c3361c60",
+   "data_size": 3412,
+   "name": "PuzzleGetter 0.8/PuzzleGetter.app/Contents/Resources/Scripts/Puzzle Getter.scpt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "osas"
+  },
+  {
+   "creator": "ToyS",
+   "data_sha256": "1923b7d78487834423ae6da4a77d8c4c0192da55ecfc0a8f99cb1de9ac52501f",
+   "data_size": 10590,
+   "name": "PuzzleGetter 0.8/PuzzleGetter.app/Contents/Resources/Scripts/Sydney Morning Herald.scpt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "osas"
+  },
+  {
+   "creator": "ToyS",
+   "data_sha256": "4c0664e7bd401cec1b87ba3840f88c6e8f88ebb141635f3c7b5db642bb3a4198",
+   "data_size": 10840,
+   "name": "PuzzleGetter 0.8/PuzzleGetter.app/Contents/Resources/Scripts/Thinks.com.scpt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "osas"
+  },
+  {
+   "creator": "ToyS",
+   "data_sha256": "75439c725bc8cece303b1f123f9f1ffc442567c3db3de40db8ec27922532fba6",
+   "data_size": 10692,
+   "name": "PuzzleGetter 0.8/PuzzleGetter.app/Contents/Resources/Scripts/USA Today.scpt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "osas"
+  },
+  {
+   "creator": "ToyS",
+   "data_sha256": "3f0f8301b76f607cb8c56a38cf657176ab5cd1e7a9608e5995761a543ea0b39a",
+   "data_size": 10862,
+   "name": "PuzzleGetter 0.8/PuzzleGetter.app/Contents/Resources/Scripts/Washington Post Sunday.scpt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "osas"
+  },
+  {
+   "is_dir": true,
+   "name": "PuzzleGetter 0.8/PuzzleGetter.app/Contents/Resources/English.lproj/MainMenu.nib"
+  },
+  {
+   "data_sha256": "16036915bc2e990f1d4eb4d7bcfa95b204641b8d3fc8f6a3f72288ffdb4a6976",
+   "data_size": 532,
+   "name": "PuzzleGetter 0.8/PuzzleGetter.app/Contents/Resources/English.lproj/InfoPlist.strings",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "e9c13890d0b8166ac446f6e0199331c0b27d0e866254c17cc05ee7b2421a8e64",
+   "data_size": 110,
+   "name": "PuzzleGetter 0.8/PuzzleGetter.app/Contents/Resources/English.lproj/MainMenu.nib/classes.nib",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "f96f916b3aff84e4c8a0561d2d6b22f4f90545d06dc058bb13cdd705b1a1829b",
+   "data_size": 278,
+   "name": "PuzzleGetter 0.8/PuzzleGetter.app/Contents/Resources/English.lproj/MainMenu.nib/data.dependency",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "67ae6946a6d486708ef44b1e4d87975edbee5a536b0ed77683ca5141068fcb4f",
+   "data_size": 509,
+   "name": "PuzzleGetter 0.8/PuzzleGetter.app/Contents/Resources/English.lproj/MainMenu.nib/info.nib",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "0b23f0324ced3cc37d881bcdf6843deabdccc38be4bde09d46f2c5056cca11dc",
+   "data_size": 10299,
+   "name": "PuzzleGetter 0.8/PuzzleGetter.app/Contents/Resources/English.lproj/MainMenu.nib/objects.nib",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "1dc1881f1e772b38e4bb6220aa711c03b2f02c6482c01dc42c9c342d8f7b4331",
+   "data_size": 21512,
+   "name": "PuzzleGetter 0.8/PuzzleGetter.app/Contents/MacOS/PuzzleGetter",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "PuzzleGetter 0.8/PuzzleGetter ReadMe.rtfd/.typeAttributes.dict",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "f9bd74d361ea54a6639f4377fa575377fe62edfa1d4834239ba0eac97f1f8aaa",
+   "data_size": 8569,
+   "name": "PuzzleGetter 0.8/PuzzleGetter ReadMe.rtfd/TXT.rtf",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "7e7d73aa153653d6d7335738a9e75dd5bff7d109d642bcf5110a32896985194e",
+   "data_size": 65730,
+   "name": "PuzzleGetter 0.8/PuzzleGetter ReadMe.rtfd/puzzleGetter_icon.tiff",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  }
+ ],
+ "fixture": "derived-PuzzleGetter_0.8.sit",
+ "format": "StuffIt 5",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "2d39e630fed1bc3152c47f92a334025db20aa2c2dea226d8c16848e3adb9bca1",
+ "size": 92510
+}

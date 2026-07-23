@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "90d1b6a5a27144a3f0271c5ae8f1d6444392193b70d3272a6fd30a7d9a765a90",
+   "data_size": 7087,
+   "name": "Snow.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "snow.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "f6828e9cdc4df90bd8969f13d1718fc3443e98f8075c2c8b73f2f9ef3c9be8c1",
+ "size": 7296
+}

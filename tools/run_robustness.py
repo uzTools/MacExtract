@@ -35,7 +35,8 @@ def main():
     args = ap.parse_args()
 
     mandir = os.path.join(FIXDIR, "manifests")
-    manifests = sorted(os.listdir(mandir)) if os.path.isdir(mandir) else []
+    manifests = sorted(f for f in os.listdir(mandir)
+                       if f.endswith(".json")) if os.path.isdir(mandir) else []
 
     tested = bad = 0
     for mf in manifests:

@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "MSWD",
+   "data_sha256": "bb01033d82d2920b38641915b3e72caeaaa11926785e760eb2d997007102a0f8",
+   "data_size": 1540,
+   "name": "naff.readme",
+   "rsrc_sha256": "e28e8f25e2a3abf1ac4dcd3fb9e308388adb47010d9901ed43da7b94a7cff239",
+   "rsrc_size": 574,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-naffs7.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "1ffabbaaf3526907456d933f48b391b0c85399513c21b274afa44e3d4f51bfb8",
+ "size": 8439
+}

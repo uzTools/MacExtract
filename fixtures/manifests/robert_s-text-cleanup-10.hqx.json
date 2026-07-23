@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "4df95148cda6aa7b1ffcef7b4a4c5ccb0553be60a25a41397bbe40a45650db90",
+   "data_size": 55457,
+   "name": "Robert's Text Cleanup.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "robert_s-text-cleanup-10.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "2b2960ec1d9bc617d5526bdad2911ac4cbc08a77cb8b676d602ed74fef576eae",
+ "size": 73817
+}

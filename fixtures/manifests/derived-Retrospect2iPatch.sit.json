@@ -1,0 +1,22 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "Retrospect2iPatch"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "3f8230610f506c06b08a2fed138577e47930a701f6c2685091a6e79c04ac8104",
+   "data_size": 1215,
+   "name": "Retrospect2iPatch/ReadMe",
+   "rsrc_sha256": "a681b1e3d171d8f64b1c7cf560104e4c40fd81cfec34e89d6e87a322178e8569",
+   "rsrc_size": 332,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-Retrospect2iPatch.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "6a7925fc96289e1561c233c70849e6cab32de419e2cda70951590f0666d3aa89",
+ "size": 28161
+}

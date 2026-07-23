@@ -1,0 +1,27 @@
+{
+ "entries": [
+  {
+   "creator": "KAHL",
+   "data_sha256": "2972b8881cb35f92cebc57f51d71a4ad5afae066330099bed24f42365a190b3c",
+   "data_size": 4323,
+   "name": "About CommentFKEY",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "KAHL",
+   "data_sha256": "89986041329499d1a107b67437313e55189a5ebe9c21f107b07d96d2652c0589",
+   "data_size": 13543,
+   "name": "comment.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-CommentFKEY.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "929837294b8f30978dbcc8315cd7ef67f192647c07e85008f97fe44149b205b0",
+ "size": 14269
+}

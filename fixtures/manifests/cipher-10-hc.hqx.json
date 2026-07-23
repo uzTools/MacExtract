@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "4fffd4623ccef5c944a012c2fe88f54dea5477fe7e2dfc133e5abd1cb607d541",
+   "data_size": 20840,
+   "name": "Cipher10.sit",
+   "rsrc_sha256": "9e44f9d442f05a0f059bb1b8a2f7a6713fbe55bae1a4cf6b28f3ea375e811f9f",
+   "rsrc_size": 326,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "cipher-10-hc.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "9cfb1d4b75608e1c979dc09b4ba343e4a9d6d1ea673a89b8d530a7187f324470",
+ "size": 29425
+}

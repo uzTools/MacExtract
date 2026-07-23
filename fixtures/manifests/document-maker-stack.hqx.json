@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "8bb5cf7e9b216ae7e956e35da23221fe8a9c9409bdc19d07fffe23ca8f672ec1",
+   "data_size": 51534,
+   "name": "DocumentMakerStack.sit",
+   "rsrc_sha256": "ff0b1da25928381b23360a41047e51a96627a6f4b3c4ba4f55807b21e1c1ae01",
+   "rsrc_size": 326,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "document-maker-stack.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "976ca0b3106aeafa386ee26932ed9bbd32dcd7822c65d52b2d26aa219e423dde",
+ "size": 71044
+}

@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "c945c7c25c81f35e8b7b2d6ab9fa8b64772337bf9bc878d0d73ea16d93092d67",
+   "data_size": 135412,
+   "name": "SpaceSaver 5.0.1 Updater.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "space-saver-update-501.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "0749e612336bda1591667bd27a8ca9c7f9c39b5bf105071a0b76fe8d13fa2532",
+ "size": 184587
+}

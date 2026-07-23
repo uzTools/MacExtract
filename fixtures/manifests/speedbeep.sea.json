@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "EXTR",
+   "data_sha256": "d77fe4af2947c7cbf8ae60b09de9018749658ac0359b9927b21271b2d47cb4c0",
+   "data_size": 39129,
+   "name": "Speed Beep.sea",
+   "rsrc_sha256": "616b0cf4f36ef25cf83d370af8364d11a32c1eeef0487907724b8192d36f30ec",
+   "rsrc_size": 13121,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "speedbeep.sea",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "1acf2056d0977bad4b3f98e8b95fcb1eec05509c2cbc9e7f31d43bb153c78f28",
+ "size": 52480
+}

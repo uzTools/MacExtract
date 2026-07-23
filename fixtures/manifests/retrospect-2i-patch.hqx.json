@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "6a7925fc96289e1561c233c70849e6cab32de419e2cda70951590f0666d3aa89",
+   "data_size": 28161,
+   "name": "Retrospect2iPatch.sit",
+   "rsrc_sha256": "ee9d9fc59af5e01db66997da6179cf0dbbe43579534cc1f0649d8f0b8132fe97",
+   "rsrc_size": 326,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "retrospect-2i-patch.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "821fb33a816f112765f44a5924c760831ed0facd457a8d8ed41589102dd6a445",
+ "size": 39354
+}

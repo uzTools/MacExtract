@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "844593e3803297d7b8c96038b9fc804623b230e37f3122ae4f8ddec0cddb68bc",
+   "data_size": 69635,
+   "name": "TranslatorPackage_v1.52.doc.sit",
+   "rsrc_sha256": "bed097c0cb7adbfed5e4c5a8890fb1b09503e87a9f09754b9c9b9332fdd08b21",
+   "rsrc_size": 326,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "translator-package-152-docs.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "ca1f75597142cf9ed2401e25a6a404e1920f0f9c234ee70989baab3c0ec00595",
+ "size": 97625
+}

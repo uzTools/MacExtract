@@ -1,0 +1,40 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "TSV Source"
+  },
+  {
+   "creator": "MACA",
+   "data_sha256": "d87995f8a0e0ce09c2c37d83d7c74098751ea2c0a57d4bba77930b9d1a68b37e",
+   "data_size": 3686,
+   "name": "TSV Info",
+   "rsrc_sha256": "82d7ae3ffbc80d3d7ae9554b8035b34a9617327d298bad51afb3ee3bb5bb1fbd",
+   "rsrc_size": 856,
+   "type": "WORD"
+  },
+  {
+   "creator": "KAHL",
+   "data_sha256": "eb01f3ce75886ef7d1c176dae68a1fcc02dd3bab7c9e9237647c9ec53f615f4e",
+   "data_size": 14337,
+   "name": "TSV Source/Quik FKEY Installer.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "KAHL",
+   "data_sha256": "e89f7295d07613fe7d36cf36745d30fdec42ac54a523d33b2296d69244ed55cc",
+   "data_size": 8736,
+   "name": "TSV Source/TogSndVol3.2.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-TogSndVol.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "f83e9a3a41e41239e5b6a88b595c5c90ddf5178ea4d59c57695a6a1ea844a8f3",
+ "size": 31362
+}

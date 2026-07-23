@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "AlYS",
+   "data_sha256": "d8a2b9033f2be1d11dce6a51cf6d8d3a0e7f838ef6f8ec486668cea3ccfacedd",
+   "data_size": 14078,
+   "name": "SD! Utilities.x",
+   "rsrc_sha256": "e756b7eb6feac5ec17528e8e35774a446387b4dbb041b97d1c902c7c5e70820e",
+   "rsrc_size": 5442,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "super-disk-utility.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "ee2806e14cd7faab4a82c01db40b4d2a46ea75b176e3acc48bb58ba0e3c321f3",
+ "size": 27199
+}

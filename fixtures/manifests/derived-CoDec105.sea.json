@@ -1,0 +1,22 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "CoDec ƒ"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "cd9dbb7d8f4e3c88973a21c6487f9ae06c60fd77d2fe06008446a34e2ad6a441",
+   "data_size": 7135,
+   "name": "CoDec ƒ/Read Me",
+   "rsrc_sha256": "8ff9d7fdb798c16cad21028e581efdf7b1b1c4db9299b99ae0dcc5bc27da22ed",
+   "rsrc_size": 24786,
+   "type": "ttro"
+  }
+ ],
+ "fixture": "derived-CoDec105.sea",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "de5ea05507eb101bc6d654a4369500c00ae12703f51dfc4cfb34bce99f6f0efa",
+ "size": 36477
+}

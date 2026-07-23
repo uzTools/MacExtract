@@ -1,0 +1,40 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "NiftyDrag1.4e"
+  },
+  {
+   "creator": "MOSS",
+   "data_sha256": "0757a562f69c37880811e02c11bad35ec0da95d3b05b75fc6ed5cf03d0416213",
+   "data_size": 944,
+   "name": "NiftyDrag1.4e/Go to URL.html",
+   "rsrc_sha256": "4b37c06ae3a3690d1bdc0d3bd78024220f5b8d377cfbf16563d3c65e83b8ca73",
+   "rsrc_size": 318,
+   "type": "TEXT"
+  },
+  {
+   "creator": "VIS3",
+   "data_sha256": "cf624581408b6eeed4f8dd555268181980b3dd71cf622e3a6b71a6c3c005fc05",
+   "data_size": 3071,
+   "name": "NiftyDrag1.4e/Installer",
+   "rsrc_sha256": "64af867c59e4f5145c34b305d120ea3a9c09fe7df846b0a9c085e3cdcdb9aa33",
+   "rsrc_size": 111056,
+   "type": "APPL"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "2e03180ce9124d1baa9d8bcc0c5f367be88b9ce90f5b63b102867f8d5ad36ba4",
+   "data_size": 2598,
+   "name": "NiftyDrag1.4e/User'sGuide",
+   "rsrc_sha256": "ed2d6dc10bf862fc7b90948ef93f6d57f68e92acf1c9fd27597b0c38094d5c51",
+   "rsrc_size": 830,
+   "type": "ttro"
+  }
+ ],
+ "fixture": "derived-NiftyDrag1.4e.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "3a5c4fa0776ca2d90c07a347420738d961e94a9723a799c3941e7be8348f0d46",
+ "size": 63585
+}

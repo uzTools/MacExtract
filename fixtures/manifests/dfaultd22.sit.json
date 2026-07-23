@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "143cbdddf6e75eb36fd2d2d129c67a5066feaf3f91fad42291334ee4f922dde6",
+   "data_size": 42753,
+   "name": "DFaultD 2.2.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "dfaultd22.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "9a54c17416d677637611b92d37ed5d6bbf30cd77b6715d987c5c93d66387d785",
+ "size": 43008
+}

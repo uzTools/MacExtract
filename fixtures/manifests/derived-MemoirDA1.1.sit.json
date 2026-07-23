@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "MACA",
+   "data_sha256": "e96608efb35bea120e95c4e97def2033c2e2191bbc50adccce0b24d5a154dde5",
+   "data_size": 2653,
+   "name": "Memoir Docs",
+   "rsrc_sha256": "16248b3d523bf85c19e084fa3785c08e037fb87af9a7a99b5a957e6dc9c4d8cb",
+   "rsrc_size": 351,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-MemoirDA1.1.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "88c31fc8d7dfa16c62976eb2c1fa9ea745ae470496badada7bfd11fe8e628c6e",
+ "size": 5676
+}

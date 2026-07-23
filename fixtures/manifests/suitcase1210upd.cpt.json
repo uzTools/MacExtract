@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "CPCT",
+   "data_sha256": "c2f105d8cb5b8fe712f04db8bdc96d1584699949c1b6f4c39d180613a0c3db64",
+   "data_size": 33583,
+   "name": "Suitcase II Updater 1.2.10.cpt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "PACT"
+  }
+ ],
+ "fixture": "suitcase1210upd.cpt",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "9d898a39239689c7e9ef768ca8b3cfb1db228fedd4a6d32e8dd4f20e60bb87ea",
+ "size": 33792
+}

@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "bb8b5992c2d68f7e456acc3b80a63a528e6ec9c99b7de5cb62ff694436f48e09",
+   "data_size": 11475,
+   "name": "PUP™ Decryptor v2.0.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "pup-decryptor-20.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "221de4fd12bdca2010566278fde6853f83c70eb5d6d370a5ef8e703afcc8fbb7",
+ "size": 16132
+}

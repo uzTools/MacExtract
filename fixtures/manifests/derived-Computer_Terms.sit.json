@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "WILD",
+   "data_sha256": "ee7df0d8ce3c11bc1333f11b21a58371762415f26fade7c70b88adcbdda3e32b",
+   "data_size": 57728,
+   "name": "Computer Terms",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "STAK"
+  }
+ ],
+ "fixture": "derived-Computer_Terms.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "2be9f92b83b1a2e5ae64416c1a0fbfc16f6e7394a4044f6fda7973c157f8d919",
+ "size": 22503
+}

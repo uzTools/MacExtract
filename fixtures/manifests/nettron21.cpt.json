@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "CPCT",
+   "data_sha256": "90e72e8d90650d8339f05299781f155bbc66293a9ae1fe76f42633f34d59ce31",
+   "data_size": 100349,
+   "name": "Tron2.1.cpt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "PACT"
+  }
+ ],
+ "fixture": "nettron21.cpt",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "b4ce5d0e4fb9fd7bfc80a0e555bcee81401538b3830a4103dd1a9d5e65bd96cb",
+ "size": 100480
+}

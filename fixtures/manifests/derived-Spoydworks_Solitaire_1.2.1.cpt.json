@@ -1,0 +1,22 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "SpoydWorks Solitairie 1.2.1 ƒ"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "98a3825346e7ffba9a490bfb3212eb3f916eb510f503bd51eb0ea60f97e9082c",
+   "data_size": 1078,
+   "name": "SpoydWorks Solitairie 1.2.1 ƒ/SpoydWorks Changes (TeachText)",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-Spoydworks_Solitaire_1.2.1.cpt",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "982776f0b8b7981e5695526517d4d5a3903bb4111067f2323af6c819eb334c07",
+ "size": 56194
+}

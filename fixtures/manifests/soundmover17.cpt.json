@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "CPCT",
+   "data_sha256": "24b76d2df67a5295747f2c1c3c60a6020d7c3ff95887030df38a897e21ef69b5",
+   "data_size": 89906,
+   "name": "soundmover1.7.cpt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "PACT"
+  }
+ ],
+ "fixture": "soundmover17.cpt",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "bc257adf48cf7c98cd4485dd74c3efd81b316ac53a9debda6e2c3f612ad40887",
+ "size": 90112
+}

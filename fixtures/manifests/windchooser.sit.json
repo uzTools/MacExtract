@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "0c91dde254f196caf4cc5c7f0741cc9afa84c947c91c646bd2eec42f3611e8d6",
+   "data_size": 23641,
+   "name": "WindChooser.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "windchooser.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "d7c06c519403a7741c21830116888e76717f240a8128541f95ca15e5e64ece41",
+ "size": 23769
+}

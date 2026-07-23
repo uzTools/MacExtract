@@ -1,0 +1,22 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "DocSaver ƒ"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "9c14da8de4ba66773fbc8c591130102265309a3eadd3c5450e1ee7feb35d0ee1",
+   "data_size": 4054,
+   "name": "DocSaver ƒ/Read Me",
+   "rsrc_sha256": "733734984a3c967f7ee58f8d8d9f45f12fdc17a49fe19dec0e2450e29bee4c6e",
+   "rsrc_size": 7722,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-DocSaver__.sit.1",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "a65b64534194cb9a49e4c81c4203b8c2ed5337d8e172198732ebb754a2724ce4",
+ "size": 8645
+}

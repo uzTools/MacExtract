@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "29861b601255b60dccebfdbb1fd71a3160fa5659341aa64beb3f688fd2b7b28a",
+   "data_size": 20935,
+   "name": "CRLF-120-sit",
+   "rsrc_sha256": "2f9829cd530a523c426ce0ceb3f52ea712c47e449f9dc2e549ce0c3514f89b60",
+   "rsrc_size": 326,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "crlf-120.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "b73c2797e675f8ada198d2ea5c2406267f760d8273d06aa377a5a2a5b36bb344",
+ "size": 30212
+}

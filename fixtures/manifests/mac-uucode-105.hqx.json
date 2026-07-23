@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "07d5cccf3a8839a43134470da8bb995f18e6f802f9ec7a7590d3b5c2f1d5e1a8",
+   "data_size": 20533,
+   "name": "MACUUCODE1.0.5 Folder.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "mac-uucode-105.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "d1846267417975cd6ffefa45ac8f78f9a79c8fec88936c57616ac0aa614fc55b",
+ "size": 28084
+}

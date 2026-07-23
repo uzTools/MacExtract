@@ -1,0 +1,98 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "Download Time Calculator 1.2"
+  },
+  {
+   "is_dir": true,
+   "name": "Download Time Calculator 1.2/Cenic's Software Products"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "e8d4f83fd7ba951f329855879bcbe831b8c7ac5cac4228e132266f60cd038b49",
+   "data_size": 3225,
+   "name": "Download Time Calculator 1.2/Read Me!",
+   "rsrc_sha256": "ecc2223d605b2e60f9a3b7d212c8c4c7cb06ccd5f7b639366f3789a16bd921d6",
+   "rsrc_size": 932,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "982892da7fb4046e9a7f9f47fdcbda3372184e93903f03a44459bcb355c363c6",
+   "data_size": 1148,
+   "name": "Download Time Calculator 1.2/Registration Form",
+   "rsrc_sha256": "d35cc8218a3fb2bc6b8de2b390262ad9659b8149353e94e9ec56bcc1beb91703",
+   "rsrc_size": 352,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "07291393cf13a42e5d84cdd14e4cd39d5439386f447e0183ce65476f73a5ee77",
+   "data_size": 1878,
+   "name": "Download Time Calculator 1.2/Cenic's Software Products/Cenic's Software Order form",
+   "rsrc_sha256": "39e979f99731652d4f256f41366ec11d74be8dd9462e7cb210d82501c34c35d1",
+   "rsrc_size": 372,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "b331cee6c9bc7f00b14dde9bf09bf14b1554c96938f98b9392b402394b0fad83",
+   "data_size": 1385,
+   "name": "Download Time Calculator 1.2/Cenic's Software Products/Download Time Calculator 1.2",
+   "rsrc_sha256": "f8b30f95a271497807cfaff9e8bf9670d8b66a371a150fe45ac6f4dd1679081c",
+   "rsrc_size": 532,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "f9c212a13f4ee694e90a0e0cf50771816fe9d1e1733d41320070b8c921d7ffbd",
+   "data_size": 1553,
+   "name": "Download Time Calculator 1.2/Cenic's Software Products/Magic File 1.1",
+   "rsrc_sha256": "b8f519bdcbcc3ad7a2eca054060ced60abd4d3c973a4bc3922b86aa7407ac963",
+   "rsrc_size": 532,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "9c86a975333ce37c2b2f51a6accedf49df19a759bada62ac2d36f1d6b271762e",
+   "data_size": 1561,
+   "name": "Download Time Calculator 1.2/Cenic's Software Products/SimpleText AutoTyper 1.1",
+   "rsrc_sha256": "3c6015a767810ab5b0d87e8344e0d5e5cd05830a21a5a9ccdaee393347207b9a",
+   "rsrc_size": 532,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "93598f1ecb6db88e2e9c6a696e6d16b188ce3e83ba3dd4887b71a6a47caddfee",
+   "data_size": 2119,
+   "name": "Download Time Calculator 1.2/Cenic's Software Products/SimpleText AutoTyper 1.2",
+   "rsrc_sha256": "f19f60f9b447bd12f57e424209b6e9a887f5bdd7bc3e2c85a61b516325796b1f",
+   "rsrc_size": 592,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "7f22f01bb7685e78f904bf1438b224dc450533fba59aaf5e0fecfe69233b3e55",
+   "data_size": 1621,
+   "name": "Download Time Calculator 1.2/Cenic's Software Products/Space Game 1.0 A2",
+   "rsrc_sha256": "6c7f1576c9882f77814e40c3459b01dc05847b54ef8e08028cd12761ad308327",
+   "rsrc_size": 652,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "37171de574db1e0d33a419948b3a755b96daaef0423e3d97ced3fd4ef99d1648",
+   "data_size": 1159,
+   "name": "Download Time Calculator 1.2/Cenic's Software Products/Trolls 1.2",
+   "rsrc_sha256": "484811285186151a4e61932f9c2709b1c0b6c431990c01ec36683fa7be556718",
+   "rsrc_size": 572,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-download-time-calculator.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "4d7b9ff7751bf2fc832d965e7cf1a6db247b84d088e7dc8c341b52a02583e4d8",
+ "size": 79817
+}

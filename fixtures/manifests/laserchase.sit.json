@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "cea227e285989f86fc77027f21d7ad48355815c4073d71abc6e64022d4b1a21e",
+   "data_size": 25197,
+   "name": "LaserChase!.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "laserchase.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "3a25c6f02d82d22007c89d27625e354460c255748337b054911840de0c561301",
+ "size": 25344
+}

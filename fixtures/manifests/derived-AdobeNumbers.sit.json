@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "MACA",
+   "data_sha256": "eb290200ec6083f87e7128299c297653b658991df929f3d55c8af01350ef7cbf",
+   "data_size": 2060,
+   "name": "About AdobeNumbers 1.0",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-AdobeNumbers.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "213630e36fd8373f00de3027d102ee3b02e1d7f92de466ccb08b3c4a46931ea3",
+ "size": 8934
+}

@@ -1,0 +1,16 @@
+{
+ "entries": [
+  {
+   "data_sha256": "a030d2ef98a6eee1c325c7b24f7c5651a5e8d8e6ba5c421d43e21c6f75817cde",
+   "data_size": 1851907,
+   "name": "EasyFind.dmg",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  }
+ ],
+ "fixture": "derived-EasyFind.dmg.sit",
+ "format": "StuffIt 5",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "99a499c0d2d23d3a5a999d74ededcf5b2d49b5c9fcdfa238aa6239a000e607db",
+ "size": 210029
+}

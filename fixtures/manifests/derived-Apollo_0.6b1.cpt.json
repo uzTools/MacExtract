@@ -1,0 +1,36 @@
+{
+ "entries": [
+  {
+   "creator": "ttxt",
+   "data_sha256": "35c12878c0f4656e016c3f8421cf366cd6e64d36ad1dcec6e3c87b63bf696a00",
+   "data_size": 1053,
+   "name": "About Apollo converter…",
+   "rsrc_sha256": "518db8ac136aef0846b04caa7a81bd87f6388d80c11c5cb803217f39eb360aa8",
+   "rsrc_size": 2586,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "30866543cfd7b3bf9da47c21577d84a1fafac446e759aaa31c605e1e112cca3f",
+   "data_size": 12133,
+   "name": "About Apollo…",
+   "rsrc_sha256": "8f64509c9418bc12fc2e8f0badf1debf206cd341b9e18b4e096b7aea52857545",
+   "rsrc_size": 39014,
+   "type": "TEXT"
+  },
+  {
+   "creator": "KAHL",
+   "data_sha256": "1d378ec3f59ffd5a89ae4c016251b4d13031c7fe8aedf0d9e999bc9df3642ee8",
+   "data_size": 1274,
+   "name": "Version history",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-Apollo_0.6b1.cpt",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "0c57c7a14d7ff2d1b07d4b2cd5843ab1fd2093f786364a75a1e9b124cf76b4d3",
+ "size": 58809
+}

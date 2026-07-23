@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "48ec38accef3973f7818dd008b3c3f0e546836a120d32093c4bada744e24c780",
+   "data_size": 71269,
+   "name": "Manager10b1.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "macpostmanager10b1.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "2354011d3cb0896469015a30876f67949feb5f48ea69f491dd75e60f110907d5",
+ "size": 71424
+}

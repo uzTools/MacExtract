@@ -1,0 +1,22 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "Drop Text 1.5 ƒ"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "869d6a734a8f05f0fcd86278a7e31b986eff3a674b548171bb84ed30d9325d1b",
+   "data_size": 5691,
+   "name": "Drop Text 1.5 ƒ/Drop Text - Read Me",
+   "rsrc_sha256": "76510b31e83b547f8bd2f3d703fe836d0b682b9858abcd6033682586bfed7fc9",
+   "rsrc_size": 332,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-Drop_Text_1.5__.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "acd5f09abb1c0347747071740b985f1323877268d4e4588d32e6c39c99e5d923",
+ "size": 23865
+}

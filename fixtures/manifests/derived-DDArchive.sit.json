@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "MSWD",
+   "data_sha256": "45e714d32ed333d33fa45e66c0f3cc2226696013fdbece23e334c46df86f7df4",
+   "data_size": 582,
+   "name": "DD Description",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-DDArchive.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "fa729630c531798ce278849ea72aefb7a3d2ad57e4602e221a489103721e8ade",
+ "size": 35408
+}

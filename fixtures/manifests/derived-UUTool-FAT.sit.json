@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "BSWU",
+   "data_sha256": "87cd5895ba11314ea96404854fbcd457377c49bbbf0cae5f1d49fbdd6961cd62",
+   "data_size": 61935,
+   "name": "UUTool-FAT",
+   "rsrc_sha256": "716bef66c23726962c7c3986dcbf3feed66693b092ca55315ce01a407ec327c4",
+   "rsrc_size": 73956,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "derived-UUTool-FAT.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "e41e1f5e0d2703f14676daa6fdd9f6a0da01cc600df4855599738836fa7aae10",
+ "size": 64480
+}

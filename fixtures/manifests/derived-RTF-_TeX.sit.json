@@ -1,0 +1,49 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "RTF->TeX ƒ"
+  },
+  {
+   "creator": "MSWD",
+   "data_sha256": "bc286d0e444b6349df144d7b434d3309f901aa73bd460dd2a37a05c7330085d0",
+   "data_size": 9044,
+   "name": "RTF->TeX ƒ/RTF",
+   "rsrc_sha256": "74a292769239f665077f4283a339fd06d5034d9901fe9668ae3827462328dbb8",
+   "rsrc_size": 444,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MSWD",
+   "data_sha256": "4a4a05171f17ff43467ff92845038e9a126ce0d7207abdb063dbdb20296114b4",
+   "data_size": 29696,
+   "name": "RTF->TeX ƒ/RTF->TEX Document",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "WDBN"
+  },
+  {
+   "creator": "*TEX",
+   "data_sha256": "600332a7630fa84de7552e1afc630dc7bf79695967419438827b5b7630296908",
+   "data_size": 6958,
+   "name": "RTF->TeX ƒ/RTF.tex",
+   "rsrc_sha256": "dfe748a588182ebbf301ceea297fa6902ae32c653d43b4ec39a794e86bf16354",
+   "rsrc_size": 8426,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "2487d4109f61f333172af9639b30ad2e0fb23cb60a6f2bfced95ea9eea9df939",
+   "data_size": 7765,
+   "name": "RTF->TeX ƒ/RTF.tex1",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-RTF-_TeX.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "7b071cb4f9a32ada5204862511976c7788affccdb4df1bb8709d2b6c4cbbf5f6",
+ "size": 99217
+}

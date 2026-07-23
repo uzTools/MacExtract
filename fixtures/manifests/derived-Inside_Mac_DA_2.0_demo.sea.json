@@ -1,0 +1,27 @@
+{
+ "entries": [
+  {
+   "creator": "MACA",
+   "data_sha256": "5610124dc0861188926d3b3a7a4844e8494d0f332f2fb83e7a7a7300af29fdc6",
+   "data_size": 20952,
+   "name": "I-Mac Doc",
+   "rsrc_sha256": "f6791bef1b7e4db0a31df637adbd86c1ef458eb7495f2dfdb79380980abb234e",
+   "rsrc_size": 826,
+   "type": "WORD"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "67fdcbafc8071747aeecf28e4f40364a44dae07936c9f14e8d09a212d4e77e09",
+   "data_size": 80792,
+   "name": "Manual",
+   "rsrc_sha256": "1149ec07cb23b46e1c4265d308190729116446282089bc75625ce6eb9bb750d6",
+   "rsrc_size": 39350,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-Inside_Mac_DA_2.0_demo.sea",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "81b610816967b7144b5be100a369f6ae29b2a11cfbb9b857b8427e9d832d17ea",
+ "size": 69156
+}

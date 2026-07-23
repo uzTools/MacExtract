@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "8bfeb8a611f6e1327228bdcf14500819bf2cd542983688e0c316d1b527b3d5f9",
+   "data_size": 113524,
+   "name": "SignalEditor V1.21.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "signaleditor121.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "b039ddd55577c453a02d5b2b34d43cb2fffd41690b92255d73758f3d7d5fe397",
+ "size": 113652
+}

@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "5e22dc9b1c1f307f4cefabe68a527bbadf331321c3c71cdbac0d09745c8785c1",
+   "data_size": 22924,
+   "name": "GREPFileRename 1.01ƒ.sit",
+   "rsrc_sha256": "eddd5d8d1d68b3d08e8adabadd31be889e7da99e4dd8a981f791c0a5ef7ef69d",
+   "rsrc_size": 326,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "grepfile-rename-101.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "96f048fa3e801f257cc05e90ec1633bede1b7e0d95ee7e31baece14064eacc9f",
+ "size": 33292
+}

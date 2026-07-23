@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "0269f36ec028e622927599c43a2f2a99e7de38bea540fb4dc5c9b065e0df87c4",
+   "data_size": 48069,
+   "name": "SitRep2.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "sitrep2.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "f2e95a57f590d1d5f6a2fc65bda8c295b2277c6418743c08ac2cbb3fb97c4ad0",
+ "size": 48256
+}

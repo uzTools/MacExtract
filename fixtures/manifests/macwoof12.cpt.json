@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "CPCT",
+   "data_sha256": "01b599898314fea963f1e80d96790fe7617786779c9669788b3522d9c7521ec5",
+   "data_size": 175029,
+   "name": "MacWoof 1.2.cpt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "PACT"
+  }
+ ],
+ "fixture": "macwoof12.cpt",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "0d18c27620680be6ce947b899f82c294da692a6b7a51d6c22f4fd7144c34cf34",
+ "size": 175232
+}

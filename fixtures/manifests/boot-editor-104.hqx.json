@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "399cc671fdc180a794c7a41e437c23c298a9af92f0daf9a1d2a6816a2d9e03f3",
+   "data_size": 47669,
+   "name": "Boot Editor 1.0.4 ƒ.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "boot-editor-104.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "c83db5d48e77086c5d1dd8fbf05ed35b9e50905ad7fd5cfa734a88f699cda643",
+ "size": 64878
+}

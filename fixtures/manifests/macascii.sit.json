@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "7205d9ef742a800830d103faf6e667ff54295e3b316e5246587a4763a78236bf",
+   "data_size": 35031,
+   "name": "Mac ASCII.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "macascii.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "c0916f46a63d95d71dabbf3a782d989ef9f7ed56e89ba7c07ce52712a6292aa8",
+ "size": 35159
+}

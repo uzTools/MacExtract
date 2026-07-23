@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "30ba4977e435242d055cfc8469fcb29a0d81921942b760151d332bfd48e89825",
+   "data_size": 5113,
+   "name": "ExtraDAs.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "extradas.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "7d6484ebeab4a1b3b78aa3744868f476725557007c4e0f90c2b0755b9b33d5ae",
+ "size": 5248
+}

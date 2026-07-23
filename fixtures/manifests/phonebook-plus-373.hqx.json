@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "3a55671833005c9a75443d9305631d2a0c5d9e96458717c79207422b2660509f",
+   "data_size": 220907,
+   "name": "Phonebook Plus.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT5"
+  }
+ ],
+ "fixture": "phonebook-plus-373.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "ac1ebe1abd6d11302a3e7b52faeac233cb3fbf8051813806e3dead220090920a",
+ "size": 301334
+}

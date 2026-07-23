@@ -1,0 +1,93 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "TypoTapps_PlusTapps 2.0 Ordner"
+  },
+  {
+   "is_dir": true,
+   "name": "TypoTapps_PlusTapps 2.0 Ordner/Sherlock-PlugIns"
+  },
+  {
+   "is_dir": true,
+   "name": "TypoTapps_PlusTapps 2.0 Ordner/Tastaturabbildungen"
+  },
+  {
+   "creator": "MOSS",
+   "data_sha256": "960b769f6a8b9b28130d00cb4c48d635784524a4e02e1bd2064d1b12c31a6879",
+   "data_size": 27,
+   "name": "TypoTapps_PlusTapps 2.0 Ordner/www.cybercenter.de",
+   "rsrc_sha256": "886d14dd5ae3d055099d06f120824be990fd0444ba416d55d317b10c0d3534f7",
+   "rsrc_size": 2670,
+   "type": "URL "
+  },
+  {
+   "creator": "MOSS",
+   "data_sha256": "6ba9f8b969aba6afcbacecf10a389695c517a6c02b1e5bbb71e2863fefb6ff72",
+   "data_size": 23,
+   "name": "TypoTapps_PlusTapps 2.0 Ordner/www.dasauge.de",
+   "rsrc_sha256": "886d14dd5ae3d055099d06f120824be990fd0444ba416d55d317b10c0d3534f7",
+   "rsrc_size": 2670,
+   "type": "URL "
+  },
+  {
+   "creator": "MOSS",
+   "data_sha256": "1dc393e44c71ac9009248df33589d906c72455d3eb2f10b7647c3d47d9a2c27e",
+   "data_size": 25,
+   "name": "TypoTapps_PlusTapps 2.0 Ordner/www.zeramedia.de",
+   "rsrc_sha256": "886d14dd5ae3d055099d06f120824be990fd0444ba416d55d317b10c0d3534f7",
+   "rsrc_size": 2670,
+   "type": "URL "
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "0cd4b312e8f40950d176a263d71d4d0d0688873ca7570179dcf90cac5671f414",
+   "data_size": 54224,
+   "name": "TypoTapps_PlusTapps 2.0 Ordner/Tastaturabbildungen/PlusTapps™ Tastaturabbildung",
+   "rsrc_sha256": "cd53c9bb27351995019aa8e53710122b61313fc3a0092575d05a590daa53d4e7",
+   "rsrc_size": 862,
+   "type": "PICT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "f155cc0d8839d5034d7995bb7c874a4f6ff7e94874328756c9f06ffa2c5fd78b",
+   "data_size": 54158,
+   "name": "TypoTapps_PlusTapps 2.0 Ordner/Tastaturabbildungen/TypoTapps™ Tastaturabbildung",
+   "rsrc_sha256": "3a722f5dcce034118b1b40ce176dabecd6f3b74392cb22c53273eff40d4b10da",
+   "rsrc_size": 862,
+   "type": "PICT"
+  },
+  {
+   "creator": "fndf",
+   "data_sha256": "c7c1df7a3bb84274bcd23fee4f76bee354b314fc79638d9e426decb39196e622",
+   "data_size": 842,
+   "name": "TypoTapps_PlusTapps 2.0 Ordner/Sherlock-PlugIns/CYBERCENTER.DE.src",
+   "rsrc_sha256": "33c265909acb6361094c1e4c512d5c40d3fbebc715271e77d08cb7c8f40073de",
+   "rsrc_size": 2842,
+   "type": "issp"
+  },
+  {
+   "creator": "fndf",
+   "data_sha256": "e7a12614b005d51766a24456e842bb30af9aa04a7c34629fbccdc3878e955bd8",
+   "data_size": 709,
+   "name": "TypoTapps_PlusTapps 2.0 Ordner/Sherlock-PlugIns/DAS AUGE.src",
+   "rsrc_sha256": "e35d7a76f708a4cbd748141f2d5d880be507c93d7881ff30b77db0b62e9e1160",
+   "rsrc_size": 458,
+   "type": "issp"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "3dfd6f4069c519778c5e8589172fb6014c94f7a321a07b4ea05b1966e472b17c",
+   "data_size": 3112,
+   "name": "TypoTapps_PlusTapps 2.0 Ordner/Sherlock-PlugIns/Über die Sherlock-PlugIns",
+   "rsrc_sha256": "4d8a38744521e8abbd4ed06da9e5564de183bd673942e4a42e239901e6af420e",
+   "rsrc_size": 632,
+   "type": "ttro"
+  }
+ ],
+ "fixture": "derived-TypoTapps_PlusTapps_2.0.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "88c393afc5c54fe3a93d76ffee1982cbe63ad40162a5b51b89534766847c4dcf",
+ "size": 208872
+}

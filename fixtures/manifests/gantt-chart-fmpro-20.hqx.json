@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "7d8de1ea93529f665f6b75cd79d08c00734a7958a6e6b486752de44587f6bf02",
+   "data_size": 112862,
+   "name": "Gantt Chart.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "gantt-chart-fmpro-20.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "a9745f7e71416c4b536634abc180ff07fd5a1ac3b409926aaa39bc78d3efec07",
+ "size": 159327
+}

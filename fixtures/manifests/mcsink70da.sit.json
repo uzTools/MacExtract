@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "933d02d3db53333324fbcd535bc6a9c53ae2170ad305f20eb94ceb9867c05a93",
+   "data_size": 73747,
+   "name": "McSink70_da.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "mcsink70da.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "07cd55cfb6025c1a7ca465a3e55e41223179bad167a69c6e18f1cbf1bc5070cb",
+ "size": 73984
+}

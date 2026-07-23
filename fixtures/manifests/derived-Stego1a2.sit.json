@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "MSWD",
+   "data_sha256": "f97cd77902f4695338818efd277cd4852b876150f76ff7a0051c96e0cf80dad2",
+   "data_size": 6120,
+   "name": "Stego 1.0a2 Readme",
+   "rsrc_sha256": "b6b632ebce42c13441b564d0127c43dfbb7e99abc95c30a062f35601aebdd26e",
+   "rsrc_size": 336,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-Stego1a2.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "dff7cbfd033fa19e38a65ef688d1c430c28bdd4d328114e216f519c118bf2a7c",
+ "size": 195759
+}

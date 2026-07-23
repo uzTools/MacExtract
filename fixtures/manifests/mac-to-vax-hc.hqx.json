@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "EXTR",
+   "data_sha256": "b6750bca379b266b3e55fb594243fd54e0311b2f880876e4ffc94597352ba6ac",
+   "data_size": 41151,
+   "name": "macToVax.sea",
+   "rsrc_sha256": "05b1da645c91321759fbcd9b0e480c09e6d53b729c0513bd440910f6414a2513",
+   "rsrc_size": 12538,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "mac-to-vax-hc.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "e48aee5958d394457a7c1206dc76536809addd38be0cf5df8cb7853377fa3086",
+ "size": 73136
+}

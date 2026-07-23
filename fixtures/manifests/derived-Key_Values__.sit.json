@@ -1,0 +1,22 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "Key Values ƒ"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "2e2e363e9958152df6270c818299ba281052a1702c9532996556e01f4c0e7a15",
+   "data_size": 3319,
+   "name": "Key Values ƒ/Read Me",
+   "rsrc_sha256": "7b0fa92520929423afd4c6d1d080faf0a892a7ccbeebe27451221c79fc646976",
+   "rsrc_size": 7602,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-Key_Values__.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "d36ea155b050d712a4a4cd7782d5c6b4618a0f8006d747ebf39de175c486e7ef",
+ "size": 7585
+}

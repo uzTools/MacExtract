@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "d72dc35f24f467312ab8085032d50df78190a66cc063f9860768aad6b04a79de",
+   "data_size": 14776,
+   "name": "DeArj.sit",
+   "rsrc_sha256": "142620bfcc044006a38896e7aa91cf6893be170c32284b0820461bd987bbfb3b",
+   "rsrc_size": 310,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "de-arj.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "660e1ba7ef963a15a3fd2cfdfd1629a20fa88c5b820a49d53408bd45d49f0424",
+ "size": 20897
+}

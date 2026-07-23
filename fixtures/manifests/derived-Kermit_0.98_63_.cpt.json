@@ -1,0 +1,58 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "Original Distribution files"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "5b9394ad5bfda7edbd7f6f84c06a827a065f1d0c86bd192792d88a6e4b42e343",
+   "data_size": 467,
+   "name": "Files Here.txt",
+   "rsrc_sha256": "2c2f80a8ef0a5167f0aa37ae72c82582286ea9d4e68c7b3d9b2f9ff4dd5b37be",
+   "rsrc_size": 438,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MDPL",
+   "data_sha256": "a66395ab5a0debd6256ceddfbc63b5b7818d4e7b35488a513aa435e304b2d8c1",
+   "data_size": 4840,
+   "name": "Kermit Keymaps PICT",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "PICT"
+  },
+  {
+   "creator": "MSWD",
+   "data_sha256": "471004d871dbf1ab313b5adaeac8d5fa0022c2f2375dae82a46183f5e9072b2a",
+   "data_size": 12800,
+   "name": "MacKermit Documentation",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "WDBN"
+  },
+  {
+   "creator": "MSWD",
+   "data_sha256": "176526713fc7a5767126a35d21fcbed1fbdbc2190db9b524b01092e052b9216a",
+   "data_size": 59392,
+   "name": "Original Distribution files/ckmker.doc",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "WDBN"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "17432d68ead81054e293bfeadc98f8fa63ff212f0415f635c48c6aaaead8435c",
+   "data_size": 92609,
+   "name": "Original Distribution files/ckmker.ps",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-Kermit_0.98_63_.cpt",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "8b31986324ecf1a13a9d660edd4ab8c20005e04c9f7ff006272a56c326c702c0",
+ "size": 145343
+}

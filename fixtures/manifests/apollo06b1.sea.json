@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "EXTR",
+   "data_sha256": "0c57c7a14d7ff2d1b07d4b2cd5843ab1fd2093f786364a75a1e9b124cf76b4d3",
+   "data_size": 58809,
+   "name": "Apollo 0.6b1.cpt",
+   "rsrc_sha256": "7f3213300255a3495fe760a18e56a7faa26942a678e375a9d84c92fd5b67938a",
+   "rsrc_size": 13121,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "apollo06b1.sea",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "6ef8dcdd2f8d0663502eb6d7ee19e2f28fac42bc8320b71e9ca5c65d5e922e74",
+ "size": 72192
+}

@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "02a16f7a6006909d63372c2dbe120f68ada510dd425a2002bc50152a38f23e5c",
+   "data_size": 40086,
+   "name": "DeluxeConv.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "deluxeconv.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "86bd2b3595f8f9b6522aba2ca2257b30ded593b3b061a9c21d5e4d4297eb3dda",
+ "size": 40214
+}

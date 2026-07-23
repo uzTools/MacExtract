@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "CPCT",
+   "data_sha256": "44387619a865b638f59ad86b118443db22a0587229125d184dbb6c87ddd3637d",
+   "data_size": 99385,
+   "name": "’bot docs.MacWrite.cpt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "PACT"
+  }
+ ],
+ "fixture": "botdocs.cpt",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "5bce782fc78252424442b632775fbc48418006e50ff63ccf525b9405dfcb5ecf",
+ "size": 99584
+}

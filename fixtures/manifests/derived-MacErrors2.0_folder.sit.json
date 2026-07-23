@@ -1,0 +1,31 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "MacErrors2.0 folder"
+  },
+  {
+   "creator": "MERR",
+   "data_sha256": "909db797b13647520ac7bb83a01c7e4c0d9f2b67305006ed38e0db18b550177c",
+   "data_size": 11019,
+   "name": "MacErrors2.0 folder/MacErrors",
+   "rsrc_sha256": "ee1811bd032be83d8ef5130b01621c1cf079c587f836643b9e0a4fc894b515ef",
+   "rsrc_size": 93447,
+   "type": "APPL"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "ac69f1b029028da51f106c974fbbe5659516cc50b046a9c3f115b88008d706e7",
+   "data_size": 6976,
+   "name": "MacErrors2.0 folder/MacErrors ReadMe",
+   "rsrc_sha256": "20a22a9c6060c96804fea1e4aa328f5e109e98e7544b2adec4f2398d554d9151",
+   "rsrc_size": 852,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-MacErrors2.0_folder.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "e5f0e5822b9cca7b96a458546710ac37e5f5177e87b65f418598c1f9108249be",
+ "size": 44098
+}

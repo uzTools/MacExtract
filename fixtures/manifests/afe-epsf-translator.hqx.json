@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "15bf33eac575b377e160fafc71b9423149b70f3ccf5006fcb6a8c1772ad76849",
+   "data_size": 23640,
+   "name": "EPSF AFE.sit",
+   "rsrc_sha256": "784672e5db6079ecfc76a516f6a27d59c7ce75c9bc7622f3d8b5593ae9fe6473",
+   "rsrc_size": 326,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "afe-epsf-translator.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "2f141192c3915771b1b57bf757532d46105f05368e24dd5c76113e973eaa6e45",
+ "size": 33547
+}

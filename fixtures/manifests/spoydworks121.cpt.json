@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "CPCT",
+   "data_sha256": "982776f0b8b7981e5695526517d4d5a3903bb4111067f2323af6c819eb334c07",
+   "data_size": 56194,
+   "name": "Spoydworks Solitaire 1.2.1.cpt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "PACT"
+  }
+ ],
+ "fixture": "spoydworks121.cpt",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "7f17a7c8e85e8b48c4c054b7765f04fdb67915e93340e612fd26712bb9d1bd77",
+ "size": 56448
+}

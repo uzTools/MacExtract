@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "CPCT",
+   "data_sha256": "928767658fcd982daf2f765b90e352dee7560e95e115937d887d779917236e4b",
+   "data_size": 64007,
+   "name": "Møire 3.22.cpt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "PACT"
+  }
+ ],
+ "fixture": "moire322.cpt",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "9a165388e90e306ce957fc4f2e93dc1ac7ecc95ddd6e13b3f4e8dbf087819374",
+ "size": 64256
+}

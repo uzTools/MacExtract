@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "EXTR",
+   "data_sha256": "f568dd1fb26a604c7ef4a46c9529ddaf906aab9b42985a3a30b5f2dc916a7e5a",
+   "data_size": 285495,
+   "name": "XferIt 1.5b4.sea",
+   "rsrc_sha256": "2616d962b35b7ad2d1cdd15531b77b384f39a7a2c8313530f289736fd5c583bf",
+   "rsrc_size": 13121,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "xferit15b4.sea",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "566e46f98f8aa479697b533e78707ff39dc9bb377deb69cb437f016e52562e3f",
+ "size": 298880
+}

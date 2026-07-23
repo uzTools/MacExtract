@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "2be9f92b83b1a2e5ae64416c1a0fbfc16f6e7394a4044f6fda7973c157f8d919",
+   "data_size": 22503,
+   "name": "Computer Terms.sit",
+   "rsrc_sha256": "31d1169ca2e6d9d394debf2803cd3dc523cf5a906bbd125d003a5afb2e7c2563",
+   "rsrc_size": 326,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "computer-terms-hc.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "bd323a0ffdf2fd3ad675b4cf3cbdb24bdb102f41221bdae2c75570fbb0595c71",
+ "size": 31284
+}

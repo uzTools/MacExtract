@@ -1,0 +1,40 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "Infinity Rasterizer 1.2 ƒ"
+  },
+  {
+   "creator": "Rstr",
+   "data_sha256": "8664f694652df859931786a575bd6c9aa5720b33c19907c56e33d06953e2da70",
+   "data_size": 63383,
+   "name": "Infinity Rasterizer 1.2 ƒ/Rasterizer 1.2",
+   "rsrc_sha256": "137ade3ba941fa6d3e14ad11e253fffc9053235e277dd94ddfd5fa9a207c5986",
+   "rsrc_size": 9436,
+   "type": "APPL"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "8a0f2d46d289138ab4c0715da768fae1cdc5a9e9cddc430ccc339d2296ead23b",
+   "data_size": 2710,
+   "name": "Infinity Rasterizer 1.2 ƒ/Rasterizer Read-me",
+   "rsrc_sha256": "41698ab34a47379a8077ada12e427117008335e0ab24ce788ad394847dbfe9eb",
+   "rsrc_size": 992,
+   "type": "ttro"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "b2269ab8f75df55c47e4d47b13370ace44f251bdda14b02901a3f3afa6b77ea6",
+   "data_size": 322,
+   "name": "Infinity Rasterizer 1.2 ƒ/Version History",
+   "rsrc_sha256": "2bd369236611e7a9281e16da8929238ac085787d4ecff41c779d124c647d5498",
+   "rsrc_size": 552,
+   "type": "ttro"
+  }
+ ],
+ "fixture": "derived-Infinity_Rasterizer_1.2__.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "efde7c642d3ce82c41b4ff3cf7330975d986ee1b54cb400d7a8fa9c9f30fbfce",
+ "size": 31248
+}

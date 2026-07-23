@@ -1,0 +1,27 @@
+{
+ "entries": [
+  {
+   "creator": "MACA",
+   "data_sha256": "3c925d0bdc0a7a2cb639c4cb66ead596bdb69fc25606b2f9e6c40e74fde5313e",
+   "data_size": 98990,
+   "name": "Basic Tutorial — MacWrite",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "WORD"
+  },
+  {
+   "creator": "MACA",
+   "data_sha256": "6b6905d0ec6b1fac526183a3abafda1e4b468860f82f3198e388276ae140ef39",
+   "data_size": 155574,
+   "name": "’bot Documentation - MacWrite",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "WORD"
+  }
+ ],
+ "fixture": "derived-_bot_docs.MacWrite.cpt",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "44387619a865b638f59ad86b118443db22a0587229125d184dbb6c87ddd3637d",
+ "size": 99385
+}

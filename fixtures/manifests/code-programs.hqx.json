@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "957cd26c22e61ef51426b6808eca9b0bc00e7ce07d942e4806b7068392e4b12b",
+   "data_size": 60666,
+   "name": "Code Programs.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "code-programs.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "5a5bd35c672498a9f7799a738f862b8a8de03dd1776f8f5c745ffd701595093b",
+ "size": 82993
+}

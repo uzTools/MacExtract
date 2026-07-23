@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "cb71017c794a30cd089d13e0029c579ee9b1e7ad4dd7d5e097df3fa9b8ba3ed4",
+   "data_size": 105791,
+   "name": "TransData.sit",
+   "rsrc_sha256": "5a8da487b229b705bab9fca4bbcf2f3ae54eaf61a601630e154cc7d0d8c9cc53",
+   "rsrc_size": 412,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "trans-data.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "0eccead1f168adfa7d515e9facb37d2a0cad7db0f5cd3ecbc88b09f67bcbc00e",
+ "size": 145295
+}

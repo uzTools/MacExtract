@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "36aca58d8aa38586c451a329f1a644cb36402061bc53c0c9a2d5915fb12792da",
+   "data_size": 100771,
+   "name": "Multi-station-320.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "multistation320.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "3d1d302dd2b27151e7c03574890664ad406d9ca007be2df734f1b3f03386aacd",
+ "size": 100899
+}

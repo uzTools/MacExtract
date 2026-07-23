@@ -1,0 +1,31 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "SmartSaver"
+  },
+  {
+   "creator": "MSWD",
+   "data_sha256": "a1883f23943f76bb937ca3102d9df67d3336cd7d1bb266b45d94a7c5644a4a8f",
+   "data_size": 88064,
+   "name": "SmartSaver/SmartManual.doc",
+   "rsrc_sha256": "e2731e3e90b9df06047bf38fe545a74a6e3eebebff02411b16f80625930ab978",
+   "rsrc_size": 322,
+   "type": "W8BN"
+  },
+  {
+   "creator": "BDS_",
+   "data_sha256": "1dc065dc567d89c3b6e064f6aa158ff3c573fd4068e537892c56272cc35c5c0d",
+   "data_size": 107536,
+   "name": "SmartSaver/SmartSaver 3.4",
+   "rsrc_sha256": "082ef3490af4949fed7624f6b80463672a7bb9372a544fd2e80dfb8472038578",
+   "rsrc_size": 34509,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "derived-SmartSaver.sit",
+ "format": "StuffIt 5",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "66d8aec00e94922aa3ffeb956a9c4eea2fee38d88d0f96d1484ab30cc932458c",
+ "size": 102438
+}

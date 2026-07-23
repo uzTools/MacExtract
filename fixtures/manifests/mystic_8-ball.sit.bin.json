@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "e8e80cb6fd3a491072028c5af9d8021590d9d9be6b9cd6b9b05b8df4f190c130",
+   "data_size": 219363,
+   "name": "Mystic 8-Ball.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "mystic_8-ball.sit.bin",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "0c5ee245fdfae554c4fe0ef17f2892c3ac36201d180986d5d1df7688ea06bc35",
+ "size": 219520
+}

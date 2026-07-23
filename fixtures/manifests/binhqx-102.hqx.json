@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "CPCT",
+   "data_sha256": "92cf45aaece130741ae84da5a9fe367643ae699415560b4cd9c874b37a833ad5",
+   "data_size": 23924,
+   "name": "BinHqx_DA_1.02.cpt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "PACT"
+  }
+ ],
+ "fixture": "binhqx-102.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "c633f8e60a769fb5f9baf4d73a180fb2935e23762c5c24859603d9bdb1ef57d0",
+ "size": 33857
+}

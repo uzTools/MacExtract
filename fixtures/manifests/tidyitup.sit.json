@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "5a0359c8f2543a842c6e130511eee32c44448c95984fde7cd8ed3d38107c76e8",
+   "data_size": 77826,
+   "name": "tidyitup.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "tidyitup.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "b09bed60afcb8098ef5e9b97e7849b3a1724b003c3c7c10837864ca23fcf1b9c",
+ "size": 77954
+}

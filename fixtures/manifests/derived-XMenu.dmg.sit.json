@@ -1,0 +1,16 @@
+{
+ "entries": [
+  {
+   "data_sha256": "27077fd25d2844dbe48a8a6aa7b1bac7fc570d8130c2fb746c32bbe032b27a52",
+   "data_size": 1122819,
+   "name": "XMenu.dmg",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  }
+ ],
+ "fixture": "derived-XMenu.dmg.sit",
+ "format": "StuffIt 5",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "a6b0f57d15c449044254bb40067227fb8caa4a623c767fa9c42e4f1a175d77f3",
+ "size": 110807
+}

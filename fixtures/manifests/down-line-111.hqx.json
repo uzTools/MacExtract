@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "da18648dc10756bbc4f1e66f524586c08cc9a24ead4faebdac1af5ea06b3ad4d",
+   "data_size": 85144,
+   "name": "DL111.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "down-line-111.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "04fa063aec0af3558434cc0556244da92f79e5decbe01d4e0e85515c0979da12",
+ "size": 116518
+}

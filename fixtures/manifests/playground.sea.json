@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "EXTR",
+   "data_sha256": "2ec928457440e5983742bd93b2c64cc5201010275b5b039020a8d9a4e9c38637",
+   "data_size": 72366,
+   "name": "playground.sea",
+   "rsrc_sha256": "1571d1be686b44c77071ded6c0bd50ba3ba6d1387f9b40d93792d8bb461c52f6",
+   "rsrc_size": 13121,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "playground.sea",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "ae9fef554876285d951ca19f358eb23580af74b64ae074572dbb34abf1574969",
+ "size": 85760
+}

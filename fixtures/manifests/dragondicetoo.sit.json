@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "c4518481765c98f4fba81b4bdadac4e033b90a28089202c508c31dbc28d13874",
+   "data_size": 3642,
+   "name": "DDT.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "dragondicetoo.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "9b25f7cc03e8f8396ad3b9bcfcc8d6eb2d6641b9e9ec1aab949b46c79b802172",
+ "size": 3840
+}

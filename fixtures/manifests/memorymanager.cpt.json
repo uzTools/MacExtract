@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "CPCT",
+   "data_sha256": "a5bc08e8f01a295e2235e796a943cfa61acae321e2bbfcf75823a56d045047d6",
+   "data_size": 14013,
+   "name": "Memory Manager INIT.cpt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "PACT"
+  }
+ ],
+ "fixture": "memorymanager.cpt",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "088d8bce4df2cb3dfa60fe9bd0c3311bf3fa127bd077fcd0b26dc1fce48c056a",
+ "size": 14208
+}

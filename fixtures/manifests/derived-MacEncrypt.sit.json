@@ -1,0 +1,40 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "MacEncrypt ƒ"
+  },
+  {
+   "creator": "MSWD",
+   "data_sha256": "372385fe9cb65c260fd55faaa02fd66788cc04c67dbe50056c2b5d55bf6add75",
+   "data_size": 23552,
+   "name": "MacEncrypt ƒ/MacEncrypt Doc",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "WDBN"
+  },
+  {
+   "creator": "MSWD",
+   "data_sha256": "dc35836e9cb9ef306e0dff753e42d8462070aa7d5d62ca1dec7cd2e248891f02",
+   "data_size": 17791,
+   "name": "MacEncrypt ƒ/MacEncrypt Doc (Text)",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "66b5188a68485c4d72676e93559b0c296cd4928279a6801d832a85bf4296e451",
+   "data_size": 1847,
+   "name": "MacEncrypt ƒ/Read Me",
+   "rsrc_sha256": "26b339fa89ec38f96d638c8d1e194b89a80e7a6080c1e18e2e3a40c64603238e",
+   "rsrc_size": 336,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-MacEncrypt.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "4eb00267b5a1b4f7741b9605278c61c0bc363a80f6ce48bcd0b62b167eb26db9",
+ "size": 31359
+}

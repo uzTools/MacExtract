@@ -1,0 +1,27 @@
+{
+ "entries": [
+  {
+   "creator": "MSWD",
+   "data_sha256": "44bf55f0140980504e0864a50224154b418bf8df070920fb3f5edb6286e0ef34",
+   "data_size": 6255,
+   "name": "docs.text",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "SPNT",
+   "data_sha256": "b1caed95a0aeb004084d0fb78fda0ebf6b0bb1c535b5c93704ded5e235dcfa6b",
+   "data_size": 4479,
+   "name": "kb template",
+   "rsrc_sha256": "a2328b01d368ed204cb64a010d85c68398ad0feade9b824f9d801861fb667fd0",
+   "rsrc_size": 3584,
+   "type": "PICT"
+  }
+ ],
+ "fixture": "derived-Multi-station-320.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "36aca58d8aa38586c451a329f1a644cb36402061bc53c0c9a2d5915fb12792da",
+ "size": 100771
+}

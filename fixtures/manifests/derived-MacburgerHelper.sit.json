@@ -1,0 +1,1262 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/extras"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/ikthusian@aol.com"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/members.aol.com_ikthusian"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "5dbbf6ca182eff5f7a1a82e227558d712717c62f400e822e858c079d9ae6c0b8",
+   "data_size": 2349,
+   "name": "MacburgerHelper/READ ME",
+   "rsrc_sha256": "ce4490ab6ef20a8bd0212a0f1a99044aaddbb874287329021d1e058b03fc8142",
+   "rsrc_size": 2916,
+   "type": "TEXT"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p001"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p002"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p003"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p004"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p005"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p006"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p007"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p008"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p009"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p010"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p011"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p012"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p013"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p014"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p015"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p016"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p017"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p018"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p019"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p020"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p021"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p022"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p023"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p024"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p025"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p026"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p027"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p028"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p029"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p030"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p031"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p032"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p033"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p034"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p035"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p036"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p037"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p038"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p039"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p040"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p041"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p042"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p043"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p044"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p045"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p046"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p047"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p048"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p049"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p050"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p051"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p052"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p053"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p054"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p055"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p056"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p057"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p058"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p059"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p060"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p061"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p062"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p063"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p064"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p065"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p066"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p067"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p068"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p069"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p070"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p071"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p072"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p073"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p074"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p075"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p076"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p077"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p078"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p079"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p080"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p081"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p082"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p083"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p084"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p085"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p086"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p087"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p088"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p089"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p090"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p091"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p092"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p093"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p094"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p095"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p096"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p097"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p098"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p099"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p100"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p101"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p102"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p103"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p104"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p105"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p106"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p107"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p108"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p109"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p110"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p111"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p112"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p113"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/patterns/p114"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/extras/ex01"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/extras/ex02"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/extras/ex03"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/extras/ex04"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/extras/ex05"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/extras/ex06"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/extras/ex07"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/extras/ex08"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/extras/ex09"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/extras/ex10"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/extras/ex11"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/extras/ex12"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/extras/ex13"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/extras/ex14"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/extras/ex15"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/extras/ex16"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/extras/ex17"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3201"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3202"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3203"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3204"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3205"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3206"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3207"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3208"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3209"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3210"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3211"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3212"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3213"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3214"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3215"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3216"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3217"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3218"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3219"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3220"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3221"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3222"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3223"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3224"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3225"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3226"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3227"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3228"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3229"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3230"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3231"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3232"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3233"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3234"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3235"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3236"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3237"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3238"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3239"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3240"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3241"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3242"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3243"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3244"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3245"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3246"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3247"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3248"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3249"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3250"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3251"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3252"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3253"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3254"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3255"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3256"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3257"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3258"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3259"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3260"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3261"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3262"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3263"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3264"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3265"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3266"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3267"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3268"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3269"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3270"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3271"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3272"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3273"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3274"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3275"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3276"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3277"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/32x32/3278"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1601"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1602"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1603"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1604"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1605"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1606"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1607"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1608"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1609"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1610"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1611"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1612"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1613"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1614"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1615"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1616"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1617"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1618"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1619"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1620"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1621"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1622"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1623"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1624"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1625"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1626"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1627"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1628"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1629"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1630"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1631"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1632"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1633"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1634"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1635"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1636"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1637"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1638"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1639"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1640"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1641"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1642"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1643"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1644"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1645"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1646"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1647"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1648"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1649"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1650"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1651"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1652"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1653"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1654"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1655"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1656"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1657"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1658"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1659"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1660"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1661"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1662"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1663"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1664"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1665"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1666"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1667"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1668"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1669"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1670"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1671"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1672"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1673"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1674"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1675"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1676"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1677"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1678"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1679"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1680"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1681"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1682"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1683"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1684"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1685"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1686"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1687"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1688"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1689"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1690"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1691"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1692"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1693"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1694"
+  },
+  {
+   "is_dir": true,
+   "name": "MacburgerHelper/16x16/1695"
+  }
+ ],
+ "fixture": "derived-MacburgerHelper.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "35241a56996b01dc4a052356dab4837141ecb15764fa6625cd29a20934c445dc",
+ "size": 259379
+}

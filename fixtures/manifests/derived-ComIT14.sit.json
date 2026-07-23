@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "EDIT",
+   "data_sha256": "785e3c848c590ec48030c8306103e1834e2c804f1acff7aeb2d476e99b7720e5",
+   "data_size": 6846,
+   "name": "ComIT -- READ ME!",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-ComIT14.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "f6e6e67251c9f0ef9a7af89af0a4a9117c9a64c32193be3a0a1d5b661f5112b6",
+ "size": 204926
+}

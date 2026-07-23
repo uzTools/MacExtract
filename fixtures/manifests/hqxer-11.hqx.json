@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "d3dd99682721886f9e37ba18885a36d64ce1d35c5a414d46959f77365c32da6e",
+   "data_size": 36433,
+   "name": "HQXer 1.1.sit",
+   "rsrc_sha256": "4a19b7c2647583e0f39cf8541d85c5b287c93ecaa97f7d74b1c2d1cd5c9bcd5f",
+   "rsrc_size": 326,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "hqxer-11.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "990bd57e5a8eb156934c1409a0ec42442d95e1bb5b2169ae668398b0d8e59ccb",
+ "size": 50667
+}

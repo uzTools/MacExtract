@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "c79aa78ce2540e97f36aa77b10bbfc428d468ad632b2402026b021fa9a46a463",
+   "data_size": 84049,
+   "name": "Sniffles 2.0.sit.1",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT5"
+  }
+ ],
+ "fixture": "sniffles-20.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "2291f52199aa9c888a5c5934dd709cbb4243ae5bfec43605e74c452b3aeefcab",
+ "size": 113572
+}

@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "MACA",
+   "data_sha256": "942503fba6516514fea2ecda1aa57f835fad8ade22b12740ac23d9fa2a904ed2",
+   "data_size": 63562,
+   "name": "FI22.DOC (MW)",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "WORD"
+  }
+ ],
+ "fixture": "derived-FI22.CPT",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "95105dfa32dece351b2c4514a1871c0d72593e92d4ee65ffb011a6e679100daf",
+ "size": 48172
+}

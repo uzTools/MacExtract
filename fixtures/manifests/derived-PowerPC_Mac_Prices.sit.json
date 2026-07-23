@@ -1,0 +1,27 @@
+{
+ "entries": [
+  {
+   "creator": "BOBO",
+   "data_sha256": "d46953ad7d4def7e5a4328e0d29eb629c55e0a959397608ee3bb8572691a26f9",
+   "data_size": 8088,
+   "name": "PPC $$.CW",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "CWWP"
+  },
+  {
+   "creator": "TBB5",
+   "data_sha256": "19f94fb3d372b2df262789d3339ef05dc522657831fb397b69987b3845097282",
+   "data_size": 3853,
+   "name": "PPC $$.txt",
+   "rsrc_sha256": "56304bbd0a0a08922516562abdaba4a3bc9c63041d1c0effff1cdb947b876e60",
+   "rsrc_size": 538,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-PowerPC_Mac_Prices.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "bd3f511032cada7e24fc8fcf540daa1a1f703aa46a7703370f816a1c41e47eda",
+ "size": 4669
+}

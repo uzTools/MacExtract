@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "EXTR",
+   "data_sha256": "3ffd453b3a8c37c6ff7b3ccc8196a01d9003634081233260afeb014e82e7401a",
+   "data_size": 101255,
+   "name": "TouchBASE.cpt",
+   "rsrc_sha256": "7a757dc01b20c2408bdd326b7c85d051151e409fd71911fa03ca64c16a3f1d36",
+   "rsrc_size": 12961,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "touchbase.cpt",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "dd3ea76220cebd8746d896ae34c88020e7047392bcc9ec40408faf640833679d",
+ "size": 114560
+}

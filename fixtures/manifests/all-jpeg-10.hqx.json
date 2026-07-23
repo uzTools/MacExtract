@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "3d6287d0d9f83914a9fe2eeb2c3407a643dc9241a9abf43503e3b10e7261233f",
+   "data_size": 13302,
+   "name": "All JPEG1.0fat.sit",
+   "rsrc_sha256": "f593e09dfba5de29e48be09da7c38e50ef0c705794c97de2deebccebea4ac248",
+   "rsrc_size": 326,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "all-jpeg-10.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "f25e564b820b1d0ae62ca4996f218dca3fae7691347a8498f398af6461106487",
+ "size": 19394
+}

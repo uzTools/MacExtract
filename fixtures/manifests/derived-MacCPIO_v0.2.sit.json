@@ -1,0 +1,31 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "MacCPIO_v0.2 Folder"
+  },
+  {
+   "creator": "KAHL",
+   "data_sha256": "b6d989f769c9f5b2df4d36e62c992384f3ffd17e24d4131b62521871024b782d",
+   "data_size": 2213,
+   "name": "MacCPIO_v0.2 Folder/MacCPIO.txt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MSWD",
+   "data_sha256": "5ab96843834fbe0a9d3c0151d6d8bff8b09378037be506f367c8133c7028b8f9",
+   "data_size": 4608,
+   "name": "MacCPIO_v0.2 Folder/MacCPIO.word",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "WDBN"
+  }
+ ],
+ "fixture": "derived-MacCPIO_v0.2.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "d6c77680a0d0d2739e34cc69ab86d434b9069b155b968f423c31affeff3e552c",
+ "size": 17769
+}

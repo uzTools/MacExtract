@@ -1,0 +1,27 @@
+{
+ "entries": [
+  {
+   "creator": "MSWD",
+   "data_sha256": "82fc0a2a503b70e5407440da9b5cd6b6e187e0ee1a17b6f1300bf8f76c3d7a09",
+   "data_size": 10752,
+   "name": "SitRep doc.",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "WDBN"
+  },
+  {
+   "creator": "MSWD",
+   "data_sha256": "33b9a36e5e53f2db1209f25f891e8d40dcf178e072e4996d119eb5016bd570bc",
+   "data_size": 5917,
+   "name": "SitRep doc. (TEXT)",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-SitRep2.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "0269f36ec028e622927599c43a2f2a99e7de38bea540fb4dc5c9b065e0df87c4",
+ "size": 48069
+}

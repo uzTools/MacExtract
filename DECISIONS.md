@@ -45,3 +45,22 @@ Non-obvious decisions, most recent last.
   engine and makes over-budget behavior mechanically testable.
 - **`unc_skip` rejects offset wraparound** (`pos + len < pos`) as
   corrupt: all offsets are 32-bit by design (HFS caps files at 2 GB).
+
+## M1
+
+- **Oracle output is not blindly trusted:** `unar` (GNUstep build)
+  mishandles resource forks when it cannot append `.rsrc` to a name
+  (leading `~`, seen with `lipservice.bin` — our extraction was correct,
+  the oracle's was not). `make_manifests.py` now refuses to build a
+  manifest when unar prints `cannot append extension`; such fixtures
+  stay in the corpus for robustness testing only.
+- **MacBinary II/III CRC fallback:** XADMaster also accepts a
+  CRC-16/USB-style checksum (reflected poly 0xA001, init/xor 0xFFFF)
+  from buggy encoders; transcribed as a bitwise loop rather than a
+  second table (runs over 124 bytes, speed irrelevant).
+- **Envelope fixtures are "derived" corpus entries:** the payload of
+  each BinHex/MacBinary fixture is extracted with the oracle and
+  registered as its own fixture (`derived-*`, provenance
+  `derived:unar-nr:<parent>` in SOURCES.md), giving per-layer ground
+  truth for nested chains without replicating unar's name-based
+  recursion.

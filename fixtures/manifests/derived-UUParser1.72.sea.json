@@ -1,0 +1,31 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "UUParser 1.72 ƒ"
+  },
+  {
+   "creator": "MSWD",
+   "data_sha256": "806ab72fa7c5192934b7f3d50090317f5e37f96269400428518d55d0163864bc",
+   "data_size": 36352,
+   "name": "UUParser 1.72 ƒ/UUParser Docs (WORD)",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "WDBN"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "1c410152fe2ac68786842d04b9a7c6654afc633dcf28e20338181a055c72b8d4",
+   "data_size": 2054,
+   "name": "UUParser 1.72 ƒ/UUParser README",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "ttro"
+  }
+ ],
+ "fixture": "derived-UUParser1.72.sea",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "486c22b090e5029f5cd66133375168b35dd8c8ff174d4c73f598a5ab6a603e11",
+ "size": 66272
+}

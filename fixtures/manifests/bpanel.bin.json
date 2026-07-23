@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "CPCT",
+   "data_sha256": "49992c4b798f2d1a268053f9343989215a8b393a363f31c93981348d78fa5b53",
+   "data_size": 11705,
+   "name": "B-Panel",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "PACT"
+  }
+ ],
+ "fixture": "bpanel.bin",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "7f3548d6eb0ba865204047b062c4d69561cad1e3ac92eb4b9ffac0798218e543",
+ "size": 11904
+}

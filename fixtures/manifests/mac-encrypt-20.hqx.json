@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "4eb00267b5a1b4f7741b9605278c61c0bc363a80f6ce48bcd0b62b167eb26db9",
+   "data_size": 31359,
+   "name": "MacEncrypt.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "mac-encrypt-20.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "5acfbd2e527b2a4404b4bb6079fa426c794114127885382429fe022c75b07581",
+ "size": 44082
+}

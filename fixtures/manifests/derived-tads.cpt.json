@@ -1,0 +1,85 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "TADS Run-Time System"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "8b9975c9a6e1e3660cc34ab40620c4de88e9b477781e3dbc18cc2eca126574e7",
+   "data_size": 56490,
+   "name": "TADS Run-Time System/ADV.T",
+   "rsrc_sha256": "0ba831b6c7db13db9a58e196a9502babd1462ca9c808990a47dff291def04c9e",
+   "rsrc_size": 428,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "3d407dd5a0fa91557ffbe10d55d844df1fa042941fe50b3b1cb70247a03f6844",
+   "data_size": 19911,
+   "name": "TADS Run-Time System/DITCH.DOC",
+   "rsrc_sha256": "2548ef601936114f4ae72d56549486cefde895a8379c3a0cf0ee7ea83f43f264",
+   "rsrc_size": 428,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "6860ccd32a4fe2bbcd269dc59add8170636ebcbe73c787cc6495cd5a96fbcda1",
+   "data_size": 118637,
+   "name": "TADS Run-Time System/DITCH.T",
+   "rsrc_sha256": "4038c4a4367b51986abb76ca9df827b7f984dcda2d67d6144f60fe8adb42021c",
+   "rsrc_size": 428,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "57e570485413d6a37e0972182a6de0f6e146bf60395e6d1e46166dc00ea3725a",
+   "data_size": 8685,
+   "name": "TADS Run-Time System/LICENSE.DOC",
+   "rsrc_sha256": "f3e914989191d2d3e827ed18da0bde8ef90dda40377e927431837b801e91b66d",
+   "rsrc_size": 428,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "ae21e5ea345c9ea947700ab9da8ad8dbaeb2b87e47fb7ef7efe767f54008fa44",
+   "data_size": 2512,
+   "name": "TADS Run-Time System/READ.ME",
+   "rsrc_sha256": "49c5f31ae094657e14b2671e8fd16b1af9e3039a8a395154ee7bd3ae4c47c8cc",
+   "rsrc_size": 428,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "9b3c77c3851d1789333ed462128b89a57f3c44f5cd815f7aef52d518bae7aa4d",
+   "data_size": 12584,
+   "name": "TADS Run-Time System/STD.T",
+   "rsrc_sha256": "348dca750590a527fb2a3f9b041039b9a18d59456e5b96559f9b3a153036d917",
+   "rsrc_size": 428,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "7c6ff037d8bc6a83379ef497cc457d2a6374842cbb4556f7df3f1cd43d6d8e06",
+   "data_size": 632,
+   "name": "TADS Run-Time System/TRIVIAL.T",
+   "rsrc_sha256": "c72d31309301e17ab1711d4a80803395bf685fb7b6ffef31a275cfc197e31191",
+   "rsrc_size": 286,
+   "type": "TEXT"
+  },
+  {
+   "creator": "EDIT",
+   "data_sha256": "eafceec573aca39f25023b7362db71fe7d3bc6d7ff9eda96fc5647fffe3991fc",
+   "data_size": 581,
+   "name": "TADS Run-Time System/tads..doc",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-tads.cpt",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "ab616d48d594a08d252cd76567b0045e3d8179e992ec42dbcf08581b31de227a",
+ "size": 177084
+}

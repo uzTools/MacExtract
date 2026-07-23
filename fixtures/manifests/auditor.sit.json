@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "9f81b711ea950fe0295cac39877fd735e68f437f899bf3f5235838683a1f07a8",
+   "data_size": 20876,
+   "name": "Auditor.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "auditor.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "6460940b507768302cdf039a2c5ca5c7600c4944750f46c223bcbd3216bae48c",
+ "size": 21004
+}

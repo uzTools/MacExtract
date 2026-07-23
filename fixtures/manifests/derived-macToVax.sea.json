@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "WILD",
+   "data_sha256": "3f1e052da9b2fa79d0bf28d7da85cd24d0c91ef2893d322d1dc499d38cbe5cbc",
+   "data_size": 57344,
+   "name": "macToVax",
+   "rsrc_sha256": "2fad43f85ed884f860619e218bca4f194ab2b9051ec81d4f1df208d2d670ae36",
+   "rsrc_size": 39703,
+   "type": "STAK"
+  }
+ ],
+ "fixture": "derived-macToVax.sea",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "b6750bca379b266b3e55fb594243fd54e0311b2f880876e4ffc94597352ba6ac",
+ "size": 41151
+}

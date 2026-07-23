@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "EXTR",
+   "data_sha256": "ae883b5d4cabd1d414d656d49f7ec7b37fe6df52671d467e8a7b1fc7d88604d7",
+   "data_size": 9891,
+   "name": "SitExpand 1.01.sea",
+   "rsrc_sha256": "3be33772436a461cff3e8c2bab0d57772b4b523d9564d4489c1b6ded451ab31f",
+   "rsrc_size": 13083,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "sitexpand101.sea",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "26ddd9a5390446bebcb2f11196a38e7a1ecd7222a7e6e0d19bbef960f263575c",
+ "size": 23296
+}

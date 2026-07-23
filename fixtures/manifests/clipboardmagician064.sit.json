@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "3bc1474058aafde2ec818ff6ad3799529d66c1d169ffad3445e51f70989e1f2b",
+   "data_size": 134144,
+   "name": "clipboard magician.0.64.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "clipboardmagician064.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "5d616d957b1478cf36ea8dcfe70bea17d4b5cac84b79dd96243ec6fbebc7cccd",
+ "size": 134272
+}

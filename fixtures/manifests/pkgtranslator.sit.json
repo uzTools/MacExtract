@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "56c5e58f0471fee6da7901323d50cdce3ac871dcc5cb394f33d6045926a1727b",
+   "data_size": 39820,
+   "name": "PKG Translator.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "pkgtranslator.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "db42f459776c3bc5de3f9228da482cf7c9377788705fcbcc75a9cc17cc29348a",
+ "size": 40064
+}

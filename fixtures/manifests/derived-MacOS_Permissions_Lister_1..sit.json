@@ -1,0 +1,31 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "MacOS Permissions Lister 1.01"
+  },
+  {
+   "creator": "ToyS",
+   "data_sha256": "915def6f24d5aeb8e7cd8c768ed8b248a49f960d7028ab4e9d7d3e21e048d366",
+   "data_size": 3757,
+   "name": "MacOS Permissions Lister 1.01/MacOSPermissionsLister1.01 text",
+   "rsrc_sha256": "e29d89c48083eb0e647b308d2ad8b7d5a9acd8fa566633fdf887cfaa4eaaf4fb",
+   "rsrc_size": 1191,
+   "type": "TEXT"
+  },
+  {
+   "creator": "R*ch",
+   "data_sha256": "32287745bd5eb82666bf394eab6f2df86c1e9752d654764ab3abb9dc5b2b692b",
+   "data_size": 1863,
+   "name": "MacOS Permissions Lister 1.01/ReadMe",
+   "rsrc_sha256": "26f2c7be9a346086e265639fb29cb9b96d46a607bd89d19c850e87df3ca2b06c",
+   "rsrc_size": 1454,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-MacOS_Permissions_Lister_1..sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "ca8bca5ea42d4c8f29013f9b3f77ef998715492fdb0fdc1455bdb1cd4300a723",
+ "size": 8301
+}

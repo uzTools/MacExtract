@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "MACA",
+   "data_sha256": "1c787cf3edf09702c352947fe4ce21ce25f6d4acfa63ccf387590d7cd7bf7753",
+   "data_size": 6148,
+   "name": "WindChooser docs (write)",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "WORD"
+  }
+ ],
+ "fixture": "derived-WindChooser.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "0c91dde254f196caf4cc5c7f0741cc9afa84c947c91c646bd2eec42f3611e8d6",
+ "size": 23641
+}

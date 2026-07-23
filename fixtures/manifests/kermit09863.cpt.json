@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "CPCT",
+   "data_sha256": "8b31986324ecf1a13a9d660edd4ab8c20005e04c9f7ff006272a56c326c702c0",
+   "data_size": 145343,
+   "name": "Kermit 0.98(63).cpt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "PACT"
+  }
+ ],
+ "fixture": "kermit09863.cpt",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "cd4b04c4cecb0a33425e229cafa7429295e57bfe800512430c0efcebf042f745",
+ "size": 145536
+}

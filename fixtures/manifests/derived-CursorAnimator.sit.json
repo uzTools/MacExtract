@@ -1,0 +1,118 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "Cursor Collection"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "a1831d5883383135ae59b38fd8c0673e3e50828f995bc3a4433ca20853e062cf",
+   "data_size": 7615,
+   "name": "Read Me",
+   "rsrc_sha256": "4e6eb5bd0a8bdda7ea3bf24d2318262d606aaf291db7c9732ddb983aa07bcffd",
+   "rsrc_size": 8660,
+   "type": "ttro"
+  },
+  {
+   "is_dir": true,
+   "name": "Cursor Collection/ALF’s Cursors"
+  },
+  {
+   "is_dir": true,
+   "name": "Cursor Collection/Adam’s Cursors"
+  },
+  {
+   "is_dir": true,
+   "name": "Cursor Collection/Anonymous"
+  },
+  {
+   "is_dir": true,
+   "name": "Cursor Collection/Apple’s Cursors"
+  },
+  {
+   "is_dir": true,
+   "name": "Cursor Collection/Dave’s Cursors"
+  },
+  {
+   "is_dir": true,
+   "name": "Cursor Collection/David’s Cursors"
+  },
+  {
+   "is_dir": true,
+   "name": "Cursor Collection/Donald’s Cursors"
+  },
+  {
+   "is_dir": true,
+   "name": "Cursor Collection/Eric’s Cursors"
+  },
+  {
+   "is_dir": true,
+   "name": "Cursor Collection/George’s Cursors"
+  },
+  {
+   "is_dir": true,
+   "name": "Cursor Collection/Herb’s Cursors"
+  },
+  {
+   "is_dir": true,
+   "name": "Cursor Collection/Jim’s Cursors"
+  },
+  {
+   "is_dir": true,
+   "name": "Cursor Collection/Mike’s Cursors"
+  },
+  {
+   "is_dir": true,
+   "name": "Cursor Collection/Norbert’s Cursors"
+  },
+  {
+   "is_dir": true,
+   "name": "Cursor Collection/Trader’s Cursors"
+  },
+  {
+   "is_dir": true,
+   "name": "Cursor Collection/Wes’s Cursors"
+  },
+  {
+   "is_dir": true,
+   "name": "Cursor Collection/Willi’s Cursors"
+  },
+  {
+   "data_sha256": "94e3da3c92f7e914afcc725fb29acf9c5ad2b28343f1f5947693de47051b4b0c",
+   "data_size": 2162,
+   "name": "Cursor Collection/Jim’s Cursors/Day_Knight docs",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "creator": "MACA",
+   "data_sha256": "f80c46b7d16e688f8226b5cce49c84f7e735c117206d8d3a8a70cbe0d983a845",
+   "data_size": 3387,
+   "name": "Cursor Collection/Jim’s Cursors/MoonCursor2 Doc",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "is_dir": true,
+   "name": "Cursor Collection/ALF’s Cursors/Arrow Replacements"
+  },
+  {
+   "is_dir": true,
+   "name": "Cursor Collection/ALF’s Cursors/Crosshair Replacements"
+  },
+  {
+   "is_dir": true,
+   "name": "Cursor Collection/ALF’s Cursors/Text Replacements"
+  },
+  {
+   "is_dir": true,
+   "name": "Cursor Collection/ALF’s Cursors/Watch Replacements"
+  }
+ ],
+ "fixture": "derived-CursorAnimator.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "d8ecbf7e3c950c4e3cf9856a5550b4f2c204ba033e350e3b0ab0bef1947ee356",
+ "size": 112384
+}

@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "MACA",
+   "data_sha256": "f4083beb0cba96d52ac285a84d57acaeecb25ec62bcba4d1e55f588412c0b9ad",
+   "data_size": 4890,
+   "name": "About these Blackouts",
+   "rsrc_sha256": "d61df02930a689da9fd1c39777ae59b6126aa2378d244f726c740593a156eca3",
+   "rsrc_size": 814,
+   "type": "WORD"
+  }
+ ],
+ "fixture": "derived-Blackouts.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "8ea1bf900836435731fbea3e5b7339e12d19f627fb65505d22c03c20a6c5e8d5",
+ "size": 46974
+}

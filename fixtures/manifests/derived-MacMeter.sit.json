@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "MACA",
+   "data_sha256": "6d57ce4e6abd9d74245eec9490da83568b9f868c134e70ca36d0b638c3c546b2",
+   "data_size": 39356,
+   "name": "About MacMeter 1.0",
+   "rsrc_sha256": "5cd36ac34fcea7a5441379c85280b1a5f24ec6ffb675c500b09a999386857377",
+   "rsrc_size": 730,
+   "type": "WORD"
+  }
+ ],
+ "fixture": "derived-MacMeter.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "3b4af6c47e7d206d8fcfca91159a6e345d0824d5c66ffb231b1348cb90764b9e",
+ "size": 49157
+}

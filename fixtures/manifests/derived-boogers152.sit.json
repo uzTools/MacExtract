@@ -1,0 +1,22 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "boogers1.5.2ƒ"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "4c25a325e8169301d12deea3aa9a991b284c65356321e690f59614b78d0e94af",
+   "data_size": 743,
+   "name": "boogers1.5.2ƒ/read_boogers.txt",
+   "rsrc_sha256": "143c367f3b58fdf97841f2378382b187f61b1ce1a636eb09f6e89b12b7267c45",
+   "rsrc_size": 332,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-boogers152.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "fafe54ae39d9c83a73055d711dffb8589b27577a840dbf806a2ca99a22427180",
+ "size": 141169
+}

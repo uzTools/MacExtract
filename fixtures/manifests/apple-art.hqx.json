@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "e8af509a77c3256d986c3a46bf44e83c3ebd75d0b59d8a45a6609268e7861188",
+   "data_size": 145596,
+   "name": "apple.art.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "apple-art.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "b997468857402a74ef6aaef508bbd1db67ffc4b02e0f48b96722815ff46e8bd6",
+ "size": 198339
+}

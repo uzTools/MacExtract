@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "MACA",
+   "data_sha256": "85b71307b791e563d88f20fa90d79dc4300a2b7d383c7c0e03b5e0d653a71615",
+   "data_size": 4704,
+   "name": "Quill.doc",
+   "rsrc_sha256": "cac29f295242a42fa1f08cc98a67988c580ba535505baf5745957598cbb3dae1",
+   "rsrc_size": 784,
+   "type": "WORD"
+  }
+ ],
+ "fixture": "derived-Quill1.20.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "a06a91129e0043c4e69e68b395d058d4eb7df97272d912c46b4a22ef18ff5300",
+ "size": 16207
+}

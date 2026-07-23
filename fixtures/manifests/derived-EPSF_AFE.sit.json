@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "BOBO",
+   "data_sha256": "69acade3023e697585d2e4bd6ccc7c369f7ca24247ae1e66c09719342611f60f",
+   "data_size": 14753,
+   "name": "EPSF (IBMpc to Mac).doc -cw",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "CWWP"
+  }
+ ],
+ "fixture": "derived-EPSF_AFE.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "15bf33eac575b377e160fafc71b9423149b70f3ccf5006fcb6a8c1772ad76849",
+ "size": 23640
+}

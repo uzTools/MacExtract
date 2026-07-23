@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "3a66f8b7b19e6e22ba562995aec8ef1f0375b41216da5020aa34de4652a069a9",
+   "data_size": 179696,
+   "name": "Star Gate Installer.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "star-gate-132.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "f2d5866cff05861f1bdc7ba24afd6b0eb7eec3fbc187d4024b0ed2207450bbf5",
+ "size": 244944
+}

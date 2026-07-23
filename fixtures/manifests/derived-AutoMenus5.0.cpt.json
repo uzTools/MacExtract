@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "ttxt",
+   "data_sha256": "865dfdfb80cabd39a6d7c46d98579c420656c92b03be8df923e7346c332d9c67",
+   "data_size": 1737,
+   "name": "AutoMenus 5.0 Release Notes",
+   "rsrc_sha256": "f6efec97b49834b7ac2d45678786d03dfdb77d18ac4d0a59de9b55db7966c45e",
+   "rsrc_size": 1104,
+   "type": "ttro"
+  }
+ ],
+ "fixture": "derived-AutoMenus5.0.cpt",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "82946512cbfd75c8264752ed12c65188e331ce38c5726f94a24a17db22b0e82f",
+ "size": 15819
+}

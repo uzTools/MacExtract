@@ -1,0 +1,36 @@
+{
+ "entries": [
+  {
+   "creator": "BOBO",
+   "data_sha256": "813176597b9c53cf926fe87d2922acc434a3d2594778c23cf66ce55b52a8ec2e",
+   "data_size": 43546,
+   "name": "Huh?",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "PICT"
+  },
+  {
+   "creator": "WILD",
+   "data_sha256": "5df219a2cf55027643194ae9ca523f24d53b5785b3d687b76e59f3767515f3b2",
+   "data_size": 505408,
+   "name": "Mac FAQ 3.6",
+   "rsrc_sha256": "e5ea1043458b595511912911581d0c24d9e00d9cc6c218c43525cc91a2e799d9",
+   "rsrc_size": 22280,
+   "type": "STAK"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "7cf1a8bfaf2020b0a2c8c4a8103002ed5ae3b2ad77b1598981d963503718d502",
+   "data_size": 1171,
+   "name": "READ ME generic",
+   "rsrc_sha256": "b69d9a6ca7aeec73cf9c538d5ac6bec5347f6bc916c5fdddaaf3e21ee0ef991a",
+   "rsrc_size": 1500,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-mac.faq-36.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "4332e5d32a3e470ba2a7a2b299fcba03f15c6542242533f40774c86ee3f049e7",
+ "size": 221547
+}

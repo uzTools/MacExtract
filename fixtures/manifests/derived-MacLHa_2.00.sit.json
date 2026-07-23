@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "YoED",
+   "data_sha256": "b6281622e979dca5cc801d068a13d86237cf77ac07e65ed420be982ed44706f2",
+   "data_size": 10975,
+   "name": "MacLHa.doc",
+   "rsrc_sha256": "d2d1900e740881171b343d0a935a5a5ba5ea1b0d3b6f60616fbd83b8a6a46bb5",
+   "rsrc_size": 350,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-MacLHa_2.00.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "6e0fb2f2754b61138fc6c12f2d9e73c51df16a34f73bb017ccf73a61f955c942",
+ "size": 51808
+}

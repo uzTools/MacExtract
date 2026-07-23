@@ -1,0 +1,36 @@
+{
+ "entries": [
+  {
+   "creator": "MACA",
+   "data_sha256": "287bdbafe5d4744c9883c8e7c9c0fab980c715451905348799a9514f7f6155b0",
+   "data_size": 40198,
+   "name": "FastEnvelope 2.0 Manual.text",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "78226f4014048f93d89f5f73fcaea189d694112906faf0fda1ec656cf16044c7",
+   "data_size": 5402,
+   "name": "QuickStart!",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "9819c330558b56480d6df85e1c9e2b1a924bbb363b0575364d596e66aa4f9cd5",
+   "data_size": 843,
+   "name": "What's New",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-FastEnvelope.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "40416c0ee97f8c6cc1576066f32db68e12c65dc35ff09fb0ff95287d67bf302c",
+ "size": 212997
+}

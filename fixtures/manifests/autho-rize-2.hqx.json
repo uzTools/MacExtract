@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "d051838fb78dd9874289312f92557814f9320260bad1600f58ce738fce2e53fa",
+   "data_size": 181621,
+   "name": "AuthoRize 2.0.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT5"
+  }
+ ],
+ "fixture": "autho-rize-2.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "d165caa515f62b144311284d2a43d3eb11d7b02e805697084cd6e5ea66cdae8c",
+ "size": 247051
+}

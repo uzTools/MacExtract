@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "CPCT",
+   "data_sha256": "4a21e85e17770adc0800e598bf69ddb532e8aaf591220d024a69874781934bc6",
+   "data_size": 6700,
+   "name": "MountImage 1.2b2.cpt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "PACT"
+  }
+ ],
+ "fixture": "mountimage12b2.cpt",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "0d17315471922400555ae29d203854ea74c0b87fcd97a9daa9d5d0d83b15f545",
+ "size": 6912
+}

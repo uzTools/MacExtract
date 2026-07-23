@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "8ca15c0847496ac0bb84fc294579f021bc0837b2e872d66d7e3274873e0640fb",
+   "data_size": 79662,
+   "name": "LetterGothic-EGG-0_Rel_4.1c.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "letter-gothic-egg-0.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "2df19003fcd61691e35a179edfdc7a1d43ecefb0e3ba4f8cdaeb3a03edb84865",
+ "size": 109974
+}

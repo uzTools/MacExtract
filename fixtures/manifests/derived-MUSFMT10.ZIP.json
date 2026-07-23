@@ -1,0 +1,212 @@
+{
+ "entries": [
+  {
+   "data_sha256": "eeeefc228aaa989d4bf621311ef05f7782fba63d63df40cdc6d3a211162f14c3",
+   "data_size": 3027,
+   "name": "00README.TXT",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "241086e6a2567a4512345c3b29dcbe5aec8ce2ca2a166a9dedf5c1a1d278499c",
+   "data_size": 6348,
+   "name": "669-FORM.TXT",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "5cb71c454eab12bafe1a8351dc76a21a21044a1e9a3e28674f20e90157523224",
+   "data_size": 10507,
+   "name": "DMF-EFX.TXT",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "912058f5a9e1b50c7798b4a04bbd31f8d42d8d5f0370e36cc90e28d0b2b5b8c7",
+   "data_size": 2863,
+   "name": "DMF-EFX2.TXT",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "bb5e162218f0961aa2bea452b153713415488cd0220b43de158158c886943ffe",
+   "data_size": 10544,
+   "name": "DMF-FORM.TXT",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "47d35e1687a1e69d4faf2cf5fefdadab4166ce0f414300518e91099d320ed450",
+   "data_size": 18679,
+   "name": "FAR-FORM.TXT",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "bacec2a673d64bee61804870ecf9c80ad9e4e248ac2f39781e244516f21ca30c",
+   "data_size": 2404,
+   "name": "FTK-FORM.TXT",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "3568210fddadea8cf0a65cdb86e438065dcf91c77ab0cf36987e20f29e98676d",
+   "data_size": 84125,
+   "name": "MED-EFX.TXT",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "285f644705f7b4326580ad16915e13b1f16a617c8645c6c02d4d404067d105c4",
+   "data_size": 27479,
+   "name": "MED-FORM.TXT",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "d3d452aa93d73f70661af671e0654d4a9e1b5ae08c2701434417f744a89c5292",
+   "data_size": 29104,
+   "name": "MID-FRM1.TXT",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "aefab781eab45a520e131ce9a91ee2f05e0850f18d9bb6f0459047c1786d9693",
+   "data_size": 8914,
+   "name": "MID-FRM2.TXT",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "4e52619792a546ea9fe3ded234c061fa8dd1e36f356b2b42a2ce8071396e1493",
+   "data_size": 12517,
+   "name": "MID-FRM3.TXT",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "3c308c94ac188ee178b79dfe30ff373665ced5a9e21b86f3e783976fce39a93a",
+   "data_size": 8607,
+   "name": "MID-FRM4.TXT",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "5e983cd38dad279b078ccdc9816b8453a54c9111b70fe9ee695a5b34ad618de8",
+   "data_size": 27734,
+   "name": "MIDIPRIM.TXT",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "051b9cc04a12a1e850ca86c35de7050e558bc887620d54300658bf8024204733",
+   "data_size": 19787,
+   "name": "MOD-FORM.TXT",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "55436d82ec2d446e1d0b4a720191d764bc4f7829b3b1d319b808ff40be11f175",
+   "data_size": 45534,
+   "name": "MTM-EFX.TXT",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "2dcc86e7b9271b298ee49de6588d22222bc31b1aff1c8b0b22819b03c8712a8c",
+   "data_size": 4431,
+   "name": "MTM-FORM.TXT",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "c319a9fa2d6fc10d05148ebda1f9dfdb4d648bbb3411f69b9a9a79c5d8fddc23",
+   "data_size": 12930,
+   "name": "OKT-FORM.TXT",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "f40c223db2121b527d3273e80f11841c51d804ffa890f00e79ff321954c0f94c",
+   "data_size": 1573,
+   "name": "OKT-FRM2.TXT",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "a45be8ffd2ed5a7e10d9ba511cc446311934f9920c9fc74d5ddae2e86a3072e7",
+   "data_size": 20179,
+   "name": "P16-FORM.TXT",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "3832b78b290482c83f1cd9dc7e278818af085ab88cc0aa92d0bc88c67d8577cd",
+   "data_size": 4220,
+   "name": "ROL-FORM.TXT",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "be9491e4ed30861e4711208a2ffeb52bf3e96dfa767351e9f94f5d12e1ba97d0",
+   "data_size": 57396,
+   "name": "S3M-EFX.TXT",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "e1b8fa9ce3bdb3f1f45f4f37a0960fdea3f1993affa857030941b1cf6f49d505",
+   "data_size": 17502,
+   "name": "S3M-FORM.TXT",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "3b73423b9b3042eb8e16fb3b33750f93de7d30be0dde3568590c0751c81a635e",
+   "data_size": 8186,
+   "name": "SSS-FORM.TXT",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "1dbf6935ef33e838100f9ef3421f2fe9e7d6e2d23472efc938336668ed28f7c4",
+   "data_size": 4444,
+   "name": "STAR-FRM.TXT",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "d37d45d23a392658494ef810b2ae129ee224bea75eec4d11d1c7f9b15e15348a",
+   "data_size": 445,
+   "name": "TT-FORM.TXT",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "bb3c52fe469dc2d02335152f5f870d99602707ddef2d3cd23e5693fa4b7684fb",
+   "data_size": 51134,
+   "name": "ULT-EFX.TXT",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "36ed8b27f318e8df5a77200979f6c1a7c3024a911c1579aa826b77b01b4e34bc",
+   "data_size": 8712,
+   "name": "ULT-FORM.TXT",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "5a695e77ba66cbcca04321989130120392175654ca3b427b83f5b1c26f79c2d6",
+   "data_size": 855,
+   "name": "WOW-FORM.TXT",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  }
+ ],
+ "fixture": "derived-MUSFMT10.ZIP",
+ "format": "Zip",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "cac2ccf0d994b8d987dd2f020c6f06cda29810613a4bb32ceb60afdeac424352",
+ "size": 171960
+}

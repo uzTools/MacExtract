@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "d68f7bc1d369fff7d1361b9e50c54347fb51188b02ea5fced5ad3c7e52a55d6e",
+   "data_size": 154432,
+   "name": "Ultimate Copland 1.1.sit.1",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "Ultimate_Copland_1.1.sit.bin",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "a9f92aa7f9c761144b70e3744593c9c8c628dcdc4e5aec40f103597ea1f36681",
+ "size": 154624
+}

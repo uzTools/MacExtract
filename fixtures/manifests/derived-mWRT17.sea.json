@@ -1,0 +1,62 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "miniWRITER 1.7 ƒ"
+  },
+  {
+   "is_dir": true,
+   "name": "miniWRITER 1.7 ƒ/docs.mw"
+  },
+  {
+   "creator": "MACA",
+   "data_sha256": "a361c1f27e9dc2df0c5e9920a8dd993645aa6b03d1ee387f01228f53ea95a426",
+   "data_size": 1584,
+   "name": "miniWRITER 1.7 ƒ/Read Me First (mWRT 1.7)",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "WORD"
+  },
+  {
+   "creator": "MACA",
+   "data_sha256": "08be192111e3e4df2d1ad847b436cc3b9ef70d2d8fd5c108e9dfc50cfa4ba1cd",
+   "data_size": 247,
+   "name": "miniWRITER 1.7 ƒ/mWRT-Business Envelope",
+   "rsrc_sha256": "e12c517d1ed3667c223ce4edba643f55f1697733db58d09c0b9d4613aeaefc79",
+   "rsrc_size": 356,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MACA",
+   "data_sha256": "d6036579f20d1a71b2aa3c1faf4f66f2c8569e7b3a6e95933dd3b84a0d257331",
+   "data_size": 202,
+   "name": "miniWRITER 1.7 ƒ/mWRT-Personal Envelope",
+   "rsrc_sha256": "5ec881d1ed8c169dc337f8ca3a7e5624194a162ce41fd1d949c35e636df4e380",
+   "rsrc_size": 356,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MACA",
+   "data_sha256": "e56690875bb083872ec13bbfc36416133bfc62e08b5be40729e8d212056c24cf",
+   "data_size": 20442,
+   "name": "miniWRITER 1.7 ƒ/docs.mw/miniWRITER.appendix",
+   "rsrc_sha256": "4bbd3d0d9b29e0b98faf71f98728a3ce27672fc2093239bf50de1e6dd7f5e66c",
+   "rsrc_size": 690,
+   "type": "WORD"
+  },
+  {
+   "creator": "MACA",
+   "data_sha256": "de09a203d25011a0b0124e7ae57b8f0cef16b31cfc65764449dba1e8a585eaa6",
+   "data_size": 57524,
+   "name": "miniWRITER 1.7 ƒ/docs.mw/miniWRITER.doc",
+   "rsrc_sha256": "3930c6d0b2959fdf3e16410e49613ad8663a9cca620a91ee45f375b361ee26d6",
+   "rsrc_size": 730,
+   "type": "WORD"
+  }
+ ],
+ "fixture": "derived-mWRT17.sea",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "8405eca950400a6e127c2d7f827b9f4ff9a656c2050fd18aee8994c5edbe3e73",
+ "size": 62571
+}

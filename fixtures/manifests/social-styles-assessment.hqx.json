@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "9414558705877ed0f145dc27f74386331e82d88b019a42b71061efbf5d941388",
+   "data_size": 78792,
+   "name": "SocStylev1.fp3.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "social-styles-assessment.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "7d76c5d6ad3f10b7698c46e63a78cf2380a60365cc3275fd86b6a104e55f7119",
+ "size": 107806
+}

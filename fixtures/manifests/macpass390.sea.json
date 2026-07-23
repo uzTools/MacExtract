@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "DSEA",
+   "data_sha256": "d1a2b1d13ba72ba9fbc4b01b06c743cb8df94bda2b810b453678c52fed317bab",
+   "data_size": 155792,
+   "name": "MacPass390.sea",
+   "rsrc_sha256": "5c23fdee65aa773b1aeae82ec9f8bf5d87b1ccb7a90b7daed9feca2eac6ba185",
+   "rsrc_size": 10245,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "macpass390.sea",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "7538d57f9f674ce6eda6d7c251c04cea83de52bf9cb8ea3648eee856e616d84c",
+ "size": 166400
+}

@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "EXTR",
+   "data_sha256": "81b610816967b7144b5be100a369f6ae29b2a11cfbb9b857b8427e9d832d17ea",
+   "data_size": 69156,
+   "name": "Inside Mac DA 2.0 demo.sea",
+   "rsrc_sha256": "1f89ae5370ead7e355e480cdb93c0a818ecd6e43bab31bcc783cb0a8cbb40267",
+   "rsrc_size": 13121,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "insidemacda20demo.sea",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "970e9a4a500eef5d3e8eaf642b7f04ba880585cf7ff47f8da3d531b89ba82ecf",
+ "size": 82560
+}

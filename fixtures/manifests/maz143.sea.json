@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "DSEA",
+   "data_sha256": "fd4d2b1035dd46b2a2001b07a2d51429c71c2bd42c6a1245b43ad98440cc4cf0",
+   "data_size": 50277,
+   "name": "MAZv143.sea",
+   "rsrc_sha256": "0d82b66596eed3f5cb87c51c25259821126923cccceef91014cb580ad76b3423",
+   "rsrc_size": 10245,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "maz143.sea",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "578265d5e965b48277f940cff989b88ac4a44047d486201519277d2104e03ed4",
+ "size": 60800
+}

@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "a6bdf42307fc398bb54f6de8b7aef0704988ab04f6e9f67a875824d05f93d158",
+   "data_size": 67928,
+   "name": "Script Palette.sit.1",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "script-palette.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "d33ecb505186de18a3789cd55626f9e9ccd1a32262b4292177cc178c7cbd153d",
+ "size": 92955
+}

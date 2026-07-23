@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "770df3b9da24b51e0dbd5ccf58998cff170f5266fca9c95b2f6103aea526513c",
+   "data_size": 16427,
+   "name": "LZWRes.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "lzwres.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "9f44e4f121aa03ef14d287235474c8f85c05f051dd15a05124856da59d0256ac",
+ "size": 16555
+}

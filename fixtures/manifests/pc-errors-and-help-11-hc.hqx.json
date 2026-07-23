@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "e8f31efc779214740622d0dafbd349ebdd0440748f6f752a88cd724349db2eb7",
+   "data_size": 60440,
+   "name": "PC Errors & Help 1.1.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "pc-errors-and-help-11-hc.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "abf5e77a7aa148269db620412eaa5af5d966538812884f504620ceb85667780b",
+ "size": 82841
+}

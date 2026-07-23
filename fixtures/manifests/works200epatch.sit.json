@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "2e8c7292c1272592ec60f637c415fd41ce990a0ae48d66682250be3a4717cfe0",
+   "data_size": 7713,
+   "name": "Works 2.00e Patch.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "works200epatch.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "4efa0a7921663dd91893e474b4c1286938cb93f047faa8a3af6532ff49a5041a",
+ "size": 7936
+}

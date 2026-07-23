@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "CPCT",
+   "data_sha256": "c89fe2def2cbd68e85915ff3d09f74d64b082105625a58016b4afe63d3fbed57",
+   "data_size": 189596,
+   "name": "ZTerm9.cpt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "PACT"
+  }
+ ],
+ "fixture": "zterm09.cpt",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "92a3c7cd2dc665787d23029cc57bc18b9ee0c098da05cedf0212c63cdeacd3f3",
+ "size": 189824
+}

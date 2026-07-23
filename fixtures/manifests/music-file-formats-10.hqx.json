@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "ZIP ",
+   "data_sha256": "cac2ccf0d994b8d987dd2f020c6f06cda29810613a4bb32ceb60afdeac424352",
+   "data_size": 171960,
+   "name": "MUSFMT10.ZIP",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "ZIP "
+  }
+ ],
+ "fixture": "music-file-formats-10.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "4ac412a3d65982a6e8bc1ffb9ca11c67b50781c9fd00667da1ecc04e73d58652",
+ "size": 234735
+}

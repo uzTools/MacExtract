@@ -1,0 +1,22 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "3D Windows \u0006"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "607a72240e56bb37d87bfa3f00e7bc4baabac903c0fa7f79132308e3e9bd418f",
+   "data_size": 2410,
+   "name": "3D Windows \u0006/3D Windows Readme",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-3d_windows.sea",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "e42bdad41407625cf3324f43d29ac473007f2dc206b5cfa974e31a92139f7b37",
+ "size": 8395
+}

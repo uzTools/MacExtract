@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "e5f0e5822b9cca7b96a458546710ac37e5f5177e87b65f418598c1f9108249be",
+   "data_size": 44098,
+   "name": "MacErrors2.0 folder.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "mac-errors-20.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "43c96ecc737a27592df5ecc4b232b4d8639fc8e10f4a39a3968f303744813bb7",
+ "size": 59889
+}

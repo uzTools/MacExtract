@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "MACA",
+   "data_sha256": "4249e1f18f2db14ea8162030faf71a4e0d3abac480dd73e991432009024ae22e",
+   "data_size": 9472,
+   "name": "FCB Inspector 1.1 Docs",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "WORD"
+  }
+ ],
+ "fixture": "derived-FCB_Inspector_1.1.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "464a4d04fed779e6200778c6348cbc7aa942e0bb0f25651cbd39d1771fae86be",
+ "size": 16599
+}

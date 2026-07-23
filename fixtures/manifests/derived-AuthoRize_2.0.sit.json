@@ -1,0 +1,142 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "AuthoRize 2.0"
+  },
+  {
+   "is_dir": true,
+   "name": "AuthoRize 2.0/Tutorial Solution"
+  },
+  {
+   "creator": "FMP5",
+   "data_sha256": "5cd50b9e04a35c4fa347a90e82918770297e495d10b2dcff4094ea4d0009c583",
+   "data_size": 14336,
+   "name": "AuthoRize 2.0/Alerts.fp5",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "FMP5"
+  },
+  {
+   "creator": "FMP5",
+   "data_sha256": "83641155dfb518250e93cb4720131ae912efc1280a1b256c06b6647f3b1cb5e3",
+   "data_size": 52224,
+   "name": "AuthoRize 2.0/Customers.fp5",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "FMP5"
+  },
+  {
+   "creator": "FMP5",
+   "data_sha256": "415bb2cabde96dd08f18e75f0827ead46171b6713e847771324a96cabde36ad1",
+   "data_size": 17408,
+   "name": "AuthoRize 2.0/QuickInit.fp5",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "FMP5"
+  },
+  {
+   "creator": "FMP5",
+   "data_sha256": "93db2fbc3d6324b5a4a3613c05e8230eff0264cc1f8205d0f096f9ac3391ee29",
+   "data_size": 177152,
+   "name": "AuthoRize 2.0/ReadMe.fp5",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "FMP5"
+  },
+  {
+   "creator": "FMP5",
+   "data_sha256": "0539882ae518db92690f48f27d10f6af1500ef18a32114a1a94edd9ac5b5038f",
+   "data_size": 162816,
+   "name": "AuthoRize 2.0/Registration.fp5",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "FMP5"
+  },
+  {
+   "creator": "FMP5",
+   "data_sha256": "bebc15703fc4485ec8db1324eca901dc384030855f83f2ea66d89197c2b56fcf",
+   "data_size": 161792,
+   "name": "AuthoRize 2.0/Response.fp5",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "FMP5"
+  },
+  {
+   "creator": "FMP5",
+   "data_sha256": "fe054d674dde1cb31a6614d407ebea9f99f1bed72002f556dbb1a5fc52b15198",
+   "data_size": 51200,
+   "name": "AuthoRize 2.0/Solutions.fp5",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "FMP5"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "dd4b01737faeb2446d1a8f11e30bcc63dcaeb43996ec8d504ff909fdf5b54a1e",
+   "data_size": 213,
+   "name": "AuthoRize 2.0/demo email",
+   "rsrc_sha256": "90e93cc0879135d1368b58992d2e8eb6721edfb73508a470df6aad0d30589e0c",
+   "rsrc_size": 332,
+   "type": "TEXT"
+  },
+  {
+   "is_dir": true,
+   "name": "AuthoRize 2.0/Tutorial Solution/supplier folder"
+  },
+  {
+   "is_dir": true,
+   "name": "AuthoRize 2.0/Tutorial Solution/user folder"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "3b3a52d5359b59c04de524a1b0b3bb3e0bb90492bf069b90c9ff17123a4aa455",
+   "data_size": 1437,
+   "name": "AuthoRize 2.0/Tutorial Solution/Readme.txt",
+   "rsrc_sha256": "d4249f18d9151265ad871226e21d7842a30d85e85127806ee6176f0ef7322057",
+   "rsrc_size": 332,
+   "type": "TEXT"
+  },
+  {
+   "creator": "FMP5",
+   "data_sha256": "6b5c99ba817c3c3e22834ad7993582d59f6cef92dd691cebcda28b0eebf882ba",
+   "data_size": 162816,
+   "name": "AuthoRize 2.0/Tutorial Solution/user folder/Registration.fp5",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "FMP5"
+  },
+  {
+   "creator": "FMP5",
+   "data_sha256": "b439e88fc9d6ae46a0ff8d8a5b5b41f65c62c07184b57e86a40d153f2bee315c",
+   "data_size": 19456,
+   "name": "AuthoRize 2.0/Tutorial Solution/user folder/Testprog.fp5",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "FMP5"
+  },
+  {
+   "creator": "FMP5",
+   "data_sha256": "5c1458ecfaf4f429bb724d01a214bdf043fc5b452cd6e8ee989783c3d02a2c41",
+   "data_size": 19456,
+   "name": "AuthoRize 2.0/Tutorial Solution/supplier folder/QuickInit.fp5",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "FMP5"
+  },
+  {
+   "creator": "FMP5",
+   "data_sha256": "bf5ed9777bb66a7010940dea273d2efe89b1da54e004b5053c00bd2c98c61a3e",
+   "data_size": 162816,
+   "name": "AuthoRize 2.0/Tutorial Solution/supplier folder/Response.fp5",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "FMP5"
+  }
+ ],
+ "fixture": "derived-AuthoRize_2.0.sit",
+ "format": "StuffIt 5",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "d051838fb78dd9874289312f92557814f9320260bad1600f58ce738fce2e53fa",
+ "size": 181621
+}

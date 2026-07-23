@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "868faea3776b84abddc51660032f179238b673f8b6be4722d088543a5563f5fc",
+   "data_size": 217507,
+   "name": "Cool Tools ƒ.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT5"
+  }
+ ],
+ "fixture": "cool-tools-101.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "c9e41245a15cf196f8b03ff287c752e0eab7b99df8b2e48dc566ff31cc90bbda",
+ "size": 297154
+}

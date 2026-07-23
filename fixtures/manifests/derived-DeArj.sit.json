@@ -1,0 +1,22 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "DeArjƒ"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "9d7875d6ffa2f521b62af2c90699c44946fd3868ce07947c04430f5857fa82b5",
+   "data_size": 944,
+   "name": "DeArjƒ/ReadMe",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-DeArj.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "d72dc35f24f467312ab8085032d50df78190a66cc063f9860768aad6b04a79de",
+ "size": 14776
+}

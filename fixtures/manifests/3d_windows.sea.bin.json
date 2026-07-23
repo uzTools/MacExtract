@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "EXTR",
+   "data_sha256": "e42bdad41407625cf3324f43d29ac473007f2dc206b5cfa974e31a92139f7b37",
+   "data_size": 8395,
+   "name": "3d_windows.sea",
+   "rsrc_sha256": "1e9a0d39a28262bb9429e59da5a570eb381c3bb8fa3db7ccb5d8c05007a5b154",
+   "rsrc_size": 13057,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "3d_windows.sea.bin",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "20b67325eac7d8e3943af5c1c1034a86b513d1f717b1dbb348c7ad8f4111ddf5",
+ "size": 21760
+}

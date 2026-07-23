@@ -1,0 +1,44 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "spinning brain ƒ"
+  },
+  {
+   "is_dir": true,
+   "name": "spinning brain ƒ/Other Samples"
+  },
+  {
+   "creator": "nX^n",
+   "data_sha256": "afc88bd16b9f701b25d78f3a714ce786a977303beaf37c325144bfd66c429ede",
+   "data_size": 36473,
+   "name": "spinning brain ƒ/How to use…",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "nX^d"
+  },
+  {
+   "creator": "nX^n",
+   "data_sha256": "47f0c33dbf336b2b8b94edd920f1bf6872f7602d846c480b2d184f3a7f570890",
+   "data_size": 99131,
+   "name": "spinning brain ƒ/Spinning Brain. An inter…",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "nX^d"
+  },
+  {
+   "creator": "EDIT",
+   "data_sha256": "68b8b8b1aeddb826f1da652f1f46e088b47e06738caac5fc4f1b83c8781de21d",
+   "data_size": 420,
+   "name": "spinning brain ƒ/spinning-brain-docs..doc",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-Education7.1.cpt",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "2dc051415ab02da4a0075f749a78fa33ff8279295b3b872135c9935cbcde1ac2",
+ "size": 85072
+}

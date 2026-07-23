@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "3a92d4019eba411b871a26174b6f33ecff893422a0224c48692f4dbc4c182279",
+   "data_size": 93806,
+   "name": "MooMooEncode 1.7 Folder.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "moo-moo-encode-17.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "95ed7c7b7f4c9d6427056f2421b6f4638854a2bf9aa286f22178d76cfc6a8bfe",
+ "size": 128396
+}

@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "b2290cfd24ea13ae9159b36b0669a1629c4d2854da6ad87339ee7f6672f10dae",
+   "data_size": 5967,
+   "name": "MacWeek Index.txt.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "macweek-reviews-93.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "6cd9591e415e7ce2aaf6391da7828a32dc8bdbc4f46e486aa8f7c8fa0aed9be9",
+ "size": 9037
+}

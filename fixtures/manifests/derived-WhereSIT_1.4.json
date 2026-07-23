@@ -1,0 +1,27 @@
+{
+ "entries": [
+  {
+   "creator": "MSWD",
+   "data_sha256": "d2033454ff6ed9c58616028aca187f9bec5e9b13a5826ca5de87b174cdb194ca",
+   "data_size": 5632,
+   "name": "WSitAdd1.4.wd4",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "WDBN"
+  },
+  {
+   "creator": "MSWD",
+   "data_sha256": "28815bcbf43b61876a9b4759022b919986d24eafa07875e0bbc58b58c8605162",
+   "data_size": 35840,
+   "name": "WhereSIT docs.wd4",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "WDBN"
+  }
+ ],
+ "fixture": "derived-WhereSIT_1.4",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "8fecd9de0bdb7b729d4c7757f998724107c8e617538b1036c5864d5b0b503be5",
+ "size": 66779
+}

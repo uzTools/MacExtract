@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "18f2175de3845b71b0a1893ff0c188f02bbe4f42024d5d2bc3524a2f9dcb0d3a",
+   "data_size": 55949,
+   "name": "Black Box 1.5.Sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "blackbox15.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "2653a93eeb575c316263596df6922182c9aeca36fa56652abc038e83f4eb9081",
+ "size": 56077
+}

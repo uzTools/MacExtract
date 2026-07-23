@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "8f0327452e821601f4c19fc511427c01abe1b5f8d2b4720833dc16507929e1df",
+   "data_size": 22430,
+   "name": "MacAClock101.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "macaclock101.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "088546f3dbb374f264daf8e3184561101ea9b9fdb9c0c3950a466030081ffb51",
+ "size": 22656
+}

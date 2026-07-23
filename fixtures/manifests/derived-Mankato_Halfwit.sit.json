@@ -1,0 +1,30 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "Mankato Halfwit"
+  },
+  {
+   "is_dir": true,
+   "name": "Mankato Halfwit/Postscript Type1"
+  },
+  {
+   "is_dir": true,
+   "name": "Mankato Halfwit/TrueType"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "c91e7c4a53ca40630de2003082c3ba54988d28d82291c9a5356300ef12d81004",
+   "data_size": 1508,
+   "name": "Mankato Halfwit/ Read Me, Please!",
+   "rsrc_sha256": "f47a7c82aea4407f8d1a4452b4ce14aec3df7da39e50442449860a9d33137200",
+   "rsrc_size": 2652,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-Mankato_Halfwit.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "6d4f40a05a09a96669a5c80757520c7717e1c36d0e0633d54a12112b4046079e",
+ "size": 76402
+}

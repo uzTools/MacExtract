@@ -1,0 +1,279 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "BitMap"
+  },
+  {
+   "is_dir": true,
+   "name": "BitMap/411 files"
+  },
+  {
+   "is_dir": true,
+   "name": "BitMap/Examples"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "b7e207a6cce44d8ec9c734fe115e0a4312c16ac2d9a1cf5a92aad5f42caea719",
+   "data_size": 13635,
+   "name": "BitMap/BitMap.c",
+   "rsrc_sha256": "452516b0bfe3a52744e2381ea47105afb35cf16216c69ad5aa4517fad021afd0",
+   "rsrc_size": 574,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "5a2b38b1731393e3df6ed8d0dc48f93ca5305b45a57665e657636ae100485d8e",
+   "data_size": 8021,
+   "name": "BitMap/BitMap.h",
+   "rsrc_sha256": "0344e74697ad934a8c7f65743c767e8b638764739392c31639e3cdbeefc92cb8",
+   "rsrc_size": 878,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "885c3dea59c610f0ee9cd6a2826bf42a7a05230d71efcf908b9b260556f203fd",
+   "data_size": 47252,
+   "name": "BitMap/BitMap.txt",
+   "rsrc_sha256": "b95a6d9671404cceeedb427c6aeb5a788a903ac2fa1b4caf049f1233fc77291b",
+   "rsrc_size": 1020,
+   "type": "TEXT"
+  },
+  {
+   "is_dir": true,
+   "name": "BitMap/Examples/Digraph"
+  },
+  {
+   "is_dir": true,
+   "name": "BitMap/Examples/PaintBucket"
+  },
+  {
+   "is_dir": true,
+   "name": "BitMap/Examples/Rotation"
+  },
+  {
+   "is_dir": true,
+   "name": "BitMap/Examples/Rotation/obj"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "b7e207a6cce44d8ec9c734fe115e0a4312c16ac2d9a1cf5a92aad5f42caea719",
+   "data_size": 13635,
+   "name": "BitMap/Examples/Rotation/BitMap.c",
+   "rsrc_sha256": "f3f4badf798563bd86a738afcfb2fae2ecca3a83f3f9c6bd38fa8a5cf5bbacb8",
+   "rsrc_size": 574,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "5a2b38b1731393e3df6ed8d0dc48f93ca5305b45a57665e657636ae100485d8e",
+   "data_size": 8021,
+   "name": "BitMap/Examples/Rotation/BitMap.h",
+   "rsrc_sha256": "ccab5ae56fca7fde7e0f25dd5568db9c5263df8eef96b7ff4abc46a5fbcf4391",
+   "rsrc_size": 878,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "96dcc57523fdbef73dd56e192e2714b0df5fdf533c01e598a13b2c3b5179fdde",
+   "data_size": 1554,
+   "name": "BitMap/Examples/Rotation/MakeFile",
+   "rsrc_sha256": "6006c1cdf554adee54a4f081c4480f60b0f05ad2ceb8f4911b806df3e7dbf833",
+   "rsrc_size": 428,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "2523c0352af4dd7417e63f8cd36bd578add9972ad01545f8321e61344ee4eb61",
+   "data_size": 616,
+   "name": "BitMap/Examples/Rotation/ReadMe",
+   "rsrc_sha256": "4b87433cc52c2602771cf0ccb94deaa39900bc7f8b89e802f95b286131a3993c",
+   "rsrc_size": 428,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "dee6b079ed31e8208030c5e25e02200067e66f3ad1ab44efb78bbe739568c091",
+   "data_size": 10116,
+   "name": "BitMap/Examples/Rotation/Rotation",
+   "rsrc_sha256": "93596f04a229f3e8ade75fb069062a475729f347081d180b48a361afb615ce48",
+   "rsrc_size": 11581,
+   "type": "APPL"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "7596895ffbc5589fa0780ced0e8a23aed71df3873862f6c1cebc0e5745951342",
+   "data_size": 10376,
+   "name": "BitMap/Examples/Rotation/Rotation.c",
+   "rsrc_sha256": "fe17eac924f69ab9c87e0c2b406563103abf56235770c9a84ce9e4d47a3c1f0c",
+   "rsrc_size": 428,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "ba4ee0ec80bc1cf205d64f2d99b6a53016430d03495bd89e1e23beb2fd835df7",
+   "data_size": 1135,
+   "name": "BitMap/Examples/Rotation/Rotation.r",
+   "rsrc_sha256": "20bd2fb02c23ea0c7d3f39bae8fdad4156c1e9c59da3c0a5321f173cd35c9fdc",
+   "rsrc_size": 428,
+   "type": "TEXT"
+  },
+  {
+   "is_dir": true,
+   "name": "BitMap/Examples/PaintBucket/obj"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "b7e207a6cce44d8ec9c734fe115e0a4312c16ac2d9a1cf5a92aad5f42caea719",
+   "data_size": 13635,
+   "name": "BitMap/Examples/PaintBucket/BitMap.c",
+   "rsrc_sha256": "829088c29f02c807b24a8674c88bbb40563a018621c554f082a17c45cccc9f3c",
+   "rsrc_size": 574,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "5a2b38b1731393e3df6ed8d0dc48f93ca5305b45a57665e657636ae100485d8e",
+   "data_size": 8021,
+   "name": "BitMap/Examples/PaintBucket/BitMap.h",
+   "rsrc_sha256": "ccab5ae56fca7fde7e0f25dd5568db9c5263df8eef96b7ff4abc46a5fbcf4391",
+   "rsrc_size": 878,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "8b9dc3990da6649701d0129059b9b5170a0682cbd211d2084e990df17b60c9fd",
+   "data_size": 1630,
+   "name": "BitMap/Examples/PaintBucket/MakeFile",
+   "rsrc_sha256": "232d4b0ce13656d86702bc8bb1b1b17669d774efe329a908892a53631cc6d695",
+   "rsrc_size": 428,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "406207fef51f72c4fa49877b21a58998a01a15b892cb390f7482877a144a7605",
+   "data_size": 8612,
+   "name": "BitMap/Examples/PaintBucket/PaintBucket",
+   "rsrc_sha256": "e172900e54632329638def4d066c47c44cb7a7dbb0c920f61ac27b10125746e5",
+   "rsrc_size": 18461,
+   "type": "APPL"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "4e844ebfc59ba8c5b03470440c83ea0aca24da1f40a00b7ae9a06c58900a791b",
+   "data_size": 11497,
+   "name": "BitMap/Examples/PaintBucket/PaintBucket.c",
+   "rsrc_sha256": "f643c5fa53fd75aa8e7b60a914a3c45b460836a61e600d49481644e3d19a1445",
+   "rsrc_size": 428,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "be908ff6ecf17da9048e4b04edb7f68ab793b71a15d09b38c0e81ea65e86e2ff",
+   "data_size": 1160,
+   "name": "BitMap/Examples/PaintBucket/PaintBucket.r",
+   "rsrc_sha256": "79066e813561b4264e688b6d7bf172efbe32262167540cf0241d2330e7a36b53",
+   "rsrc_size": 428,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "d7db6d0a1b08f13847e9409d6f40d0c328b262cd7b160b94e5d329f6f7d31703",
+   "data_size": 657,
+   "name": "BitMap/Examples/PaintBucket/ReadMe",
+   "rsrc_sha256": "de1045f9123fadb2fb674992c371076ba544f93f25bfbbe6b8edec91a7250e9f",
+   "rsrc_size": 428,
+   "type": "TEXT"
+  },
+  {
+   "is_dir": true,
+   "name": "BitMap/Examples/Digraph/obj"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "b7e207a6cce44d8ec9c734fe115e0a4312c16ac2d9a1cf5a92aad5f42caea719",
+   "data_size": 13635,
+   "name": "BitMap/Examples/Digraph/BitMap.c",
+   "rsrc_sha256": "f3f4badf798563bd86a738afcfb2fae2ecca3a83f3f9c6bd38fa8a5cf5bbacb8",
+   "rsrc_size": 574,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "5a2b38b1731393e3df6ed8d0dc48f93ca5305b45a57665e657636ae100485d8e",
+   "data_size": 8021,
+   "name": "BitMap/Examples/Digraph/BitMap.h",
+   "rsrc_sha256": "ccab5ae56fca7fde7e0f25dd5568db9c5263df8eef96b7ff4abc46a5fbcf4391",
+   "rsrc_size": 878,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "68ab3f13c84840b363a988c2e9b6c0f76400e75c272f6b4a1b30b24bab2a612e",
+   "data_size": 9296,
+   "name": "BitMap/Examples/Digraph/Digraph",
+   "rsrc_sha256": "6b6b1cc19a8dfb43c80fb8c9f0dda705452eb2eafd7811903271672916942510",
+   "rsrc_size": 16542,
+   "type": "APPL"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "30c9195597d6a2fdfcda8d637d869d3adb28ac13316acdd13e0f67d532cc5ba5",
+   "data_size": 13969,
+   "name": "BitMap/Examples/Digraph/Digraph.c",
+   "rsrc_sha256": "932bc0095f5b5c04294c8fe181e3a08c99abeef2b9e3d424e0be2ec936d1f68d",
+   "rsrc_size": 428,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "005282925330d44c10b91a829bdca1432aa65bfae7f70dcc40125083d1e4acc3",
+   "data_size": 1134,
+   "name": "BitMap/Examples/Digraph/Digraph.r",
+   "rsrc_sha256": "ce09f463777ee776277eaa949b07790fc4a794fec88eafb422220377987d5cc1",
+   "rsrc_size": 428,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "6e0274ef22cbfca4043e7cdd12759e3482c266bd05b0df4647f2288b408930df",
+   "data_size": 1537,
+   "name": "BitMap/Examples/Digraph/MakeFile",
+   "rsrc_sha256": "c01eb54bc675ea2db2c71395011b26c07e90813424ba5495bed3f759410cfda4",
+   "rsrc_size": 428,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "3f401253acb3003fde80712c3f838234ae49ad935bc36d6a354348a81f0686db",
+   "data_size": 912,
+   "name": "BitMap/Examples/Digraph/ReadMe",
+   "rsrc_sha256": "0a5fa7205a7933c1dbad827895a246ee7a81b5213c23069f2a27dcfeafd8eba8",
+   "rsrc_size": 428,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "097c86ddd37d129378a94d7bbc6458e5892f199d16babef4843f09196b8e111d",
+   "data_size": 41367,
+   "name": "BitMap/411 files/BitMapHelp",
+   "rsrc_sha256": "9ef0b75b6fa4ab82be702564bb7fe49381bfeac8bf057ee40e1dcd348e99742a",
+   "rsrc_size": 428,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "76350d17d9d355571a58c03ba1a7607e12afe7f2ec02ca44cdb37f6589882a7e",
+   "data_size": 3072,
+   "name": "BitMap/411 files/BitMapHelp.index",
+   "rsrc_sha256": "e074aac747b3b26c6da33fd17e843ebbd3649315105385126624f0d8d229d8f7",
+   "rsrc_size": 286,
+   "type": "btre"
+  }
+ ],
+ "fixture": "derived-BitMap11.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "9f882fc9d5d195a0454b8c375a66a5ef24cc072d2381e08018d5c022da90264e",
+ "size": 125096
+}

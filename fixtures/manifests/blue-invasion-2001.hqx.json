@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "22a5e0aab49f89657f895c96e1e1fd6e49ab030202809daf9f85b35e8e250b4c",
+   "data_size": 14761,
+   "name": "Blue_Invasion_2001 Folder.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "blue-invasion-2001.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "5bc8579e67c33b59ee828f4aa047f73165d1c6f26e96430fde4d1bb06cad67ab",
+ "size": 21164
+}

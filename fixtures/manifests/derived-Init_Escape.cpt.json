@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "JWrt",
+   "data_sha256": "ad541db3d7ee0306a211f3c797d1a718df496d6e73ea35270df305a742eab2a7",
+   "data_size": 3911,
+   "name": "Read me",
+   "rsrc_sha256": "678f832760c96df2e054850fbfd2bb8a36479e071851350b926ee3e6254677c3",
+   "rsrc_size": 1306,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-Init_Escape.cpt",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "473c72c801f830c3125cda22afb0b781a3dc6f2714e8d43caf0c668178151bd3",
+ "size": 13709
+}

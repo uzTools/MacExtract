@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "ttxt",
+   "data_sha256": "6d22a9631e436f225d1af2e8949df1d7ad5d7673dffb5876233d11c2489cdde0",
+   "data_size": 1293,
+   "name": "Read Me First - Diamond v4.2",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-Diamond_4.2.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "274f09393bbbbfcf2507378dd6e95250dc652f25a8e448ff15180cf550923feb",
+ "size": 25356
+}

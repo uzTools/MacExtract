@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "CPCT",
+   "data_sha256": "92381875b6bc6df2f4295698892bdf83793b5b8264f63eb4466713602af72c23",
+   "data_size": 216104,
+   "name": "MacPost-Server-10b6.cpt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "PACT"
+  }
+ ],
+ "fixture": "macpostserver10b6.cpt",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "d105d1ba00b62a04ea01f273d1831498d99adcee0713b2d1c84e9843142e35a5",
+ "size": 216320
+}

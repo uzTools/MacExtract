@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "0e69441f46a94986766bcddf3be5b93a23e038020f2d2dad9dc7b426b954bba8",
+   "data_size": 12573,
+   "name": "DEF.sit",
+   "rsrc_sha256": "a31129245b8458129c1c8217a107fed27cf7e1aa3da234f593637d180e8e574c",
+   "rsrc_size": 324,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "desktopexpressfix.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "f638e886ef52f478908b45cf5d20e5099cf0b96bbddb65767597969f8daceaed",
+ "size": 13184
+}

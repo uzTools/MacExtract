@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "a7baef01895430b28498b5da61ecac6bdc938f9c96ccec05690eddc4e8b44ec2",
+   "data_size": 7739,
+   "name": "ResHandler2.1.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "reshandler21.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "0753594ba3b2560f3269c929bd982a22ed975cf2f0124f5e7bab645785b4ae5d",
+ "size": 7867
+}

@@ -1,0 +1,795 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "MacVogl-alpha1"
+  },
+  {
+   "is_dir": true,
+   "name": "MacVogl-alpha1/examples"
+  },
+  {
+   "is_dir": true,
+   "name": "MacVogl-alpha1/fonts"
+  },
+  {
+   "creator": "KAHL",
+   "data_sha256": "753c2ca6f30a3752f18d6f8fc113ff6f6ff085cdbad7815ac0bef859855b7562",
+   "data_size": 7254,
+   "name": "MacVogl-alpha1/MacII.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "15098f09ac21d2a16e87c22d2672d9b27a766336ef23f17128b938ea50e076c9",
+   "data_size": 4278,
+   "name": "MacVogl-alpha1/README",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "d0c95ecfdac1742015927a6044e591be6c37636e685a339bbaa880fe8cba73b4",
+   "data_size": 6899,
+   "name": "MacVogl-alpha1/arcs.c",
+   "rsrc_sha256": "5418b158cca63e76c3ec5c08036640451abdc11e2897848eaafbad017fe36e7f",
+   "rsrc_size": 482,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "2f1373e3dc248ba15c77eefff982b83cb827065bb916f802d133b83e8e90c49a",
+   "data_size": 2051,
+   "name": "MacVogl-alpha1/attr.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "b098fefac392fef9cfcf52b8bc60a4dd2b6385ff6d40bc0fc09b3b4b81ebe8e2",
+   "data_size": 2018,
+   "name": "MacVogl-alpha1/buffer.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "e91688d3b2457eaee38646c35fcc390f1c682a4b287c674b87797e6abe6af72c",
+   "data_size": 256,
+   "name": "MacVogl-alpha1/check.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "746a6b20a3e97085f8614e6d133c4e795be5f4f9d0c526c5c2afc28a4ddd0808",
+   "data_size": 2917,
+   "name": "MacVogl-alpha1/clip.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "4ef08be010e9fbe4f4abfa6e069e636cdea6d05520649275ef8295e10acc5db6",
+   "data_size": 4695,
+   "name": "MacVogl-alpha1/curves.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "b94d64ca1dae0689255bf7c4ff56e735bea14110962c5c439b22b876afbd620b",
+   "data_size": 4697,
+   "name": "MacVogl-alpha1/draw.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "2d12bd7efdb28bf55c4b11843ad27d31f0ee513006523c5cb0801e69a6e51283",
+   "data_size": 10240,
+   "name": "MacVogl-alpha1/drivers.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "60737065f0cdbd36d9ce37ec68e1aee12ce8f6fb2796dc369c87582084777c30",
+   "data_size": 909,
+   "name": "MacVogl-alpha1/fdisp.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "e381fb50e824b0b72b284e4002653fca575ea69db581a5f2b59eed51deb49643",
+   "data_size": 4303,
+   "name": "MacVogl-alpha1/fhtext.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "caccb0737758d128becf28b30a2b680a0fd13b18570aba073a680a32b5dce042",
+   "data_size": 1709,
+   "name": "MacVogl-alpha1/fvodevice.h",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "7c63f5eddc1a755a26fbf697ccd31cef24bd90f3c272f318f9d0fd47c1e67e6c",
+   "data_size": 455,
+   "name": "MacVogl-alpha1/fvogl.h",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "3f221d16aa5e2a5f836761332d3c2388b8220586f6fdd5b802f54d8ce24efd47",
+   "data_size": 860,
+   "name": "MacVogl-alpha1/getchar.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "570b352aa3ec2da0bdaf872071cd9d3871b16c20fa197dd9f50f5eb60695b201",
+   "data_size": 478,
+   "name": "MacVogl-alpha1/getgp.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "41901dc0704bb147f3973219a8a91a4ef48892374e7fe87f559d6aac23644542",
+   "data_size": 4029,
+   "name": "MacVogl-alpha1/h2v.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "341f3c2ca907741637f001b0a0d85b1100c0eaac6b6f5c7d7d3f1fea86954927",
+   "data_size": 8776,
+   "name": "MacVogl-alpha1/h2v.h",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "3409c592315df4afb51e470169b05c8e8be48cb407872237b8aa81f1bdfd5812",
+   "data_size": 331,
+   "name": "MacVogl-alpha1/halloc.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "663d9aab3e01a6374335e12efdf6fb6c55aade86b2a72e65f2a603671de459dc",
+   "data_size": 2081,
+   "name": "MacVogl-alpha1/hdisp.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "7424f2fb25511cb1a12da2d2852cc736f14b5010ef71170306a97b8e5e325be2",
+   "data_size": 12147,
+   "name": "MacVogl-alpha1/htext.c",
+   "rsrc_sha256": "a29c5190da87da68ca84b6e66155a3a897e60e6e36974bdb0d18ee5ea949672c",
+   "rsrc_size": 332,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "73396732f293ace5cf90a8078caea232bf3b8cedbb666d34a3506596c10c84e3",
+   "data_size": 1789,
+   "name": "MacVogl-alpha1/mapping.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "2b40aa724a8b797707bc710426dcbb3a05e7392a5d691d603f75f7a8c18d9d5c",
+   "data_size": 6625,
+   "name": "MacVogl-alpha1/matrix.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "3ef57495117723a53a73b0f7da90cf04872b26bb8ef29fef19906785dd60c708",
+   "data_size": 3201,
+   "name": "MacVogl-alpha1/move.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "1269a9377130939f81b40fd9d8cd230f4e313b2deb9fdac03a29a78fe454b9f0",
+   "data_size": 819,
+   "name": "MacVogl-alpha1/newtoken.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "1269a9377130939f81b40fd9d8cd230f4e313b2deb9fdac03a29a78fe454b9f0",
+   "data_size": 819,
+   "name": "MacVogl-alpha1/newtokens.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "ab386741f0c83e038eb955bdce502661a49601fd5183cba5c7df76b7a81af33f",
+   "data_size": 7822,
+   "name": "MacVogl-alpha1/objects.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "7566ba39aa31e1d845d7f22b442432053f14f5bb4b074f1fc4e1060bb3b463e1",
+   "data_size": 9384,
+   "name": "MacVogl-alpha1/patches.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "53f544380d893ead95bba7fada53a41c5eded91b33c31afd45f7cad6d5f860fe",
+   "data_size": 1352,
+   "name": "MacVogl-alpha1/points.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "2b2b7b0d30102351b2126238973b3f8fa2ebda20e59e010dc84bffd0caf925e9",
+   "data_size": 18238,
+   "name": "MacVogl-alpha1/polygons.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "cb5260876b542c5d6a0f428fb082fe7703d0ec72ce1783817282c4e12879e9af",
+   "data_size": 1063,
+   "name": "MacVogl-alpha1/pref.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "e907f00a2820f1cd2d1659751510252e2c588cdd566534155213b2b1f64214f3",
+   "data_size": 7695,
+   "name": "MacVogl-alpha1/queue.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "886824118bd0237f6e7bb9aa498c002c106d56422df5b331069eb6e82950883b",
+   "data_size": 1568,
+   "name": "MacVogl-alpha1/rect.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "871f7473429b4498e1d6f1670f57c6e23b8d45669f0abaa524b4b91f6db56f48",
+   "data_size": 873,
+   "name": "MacVogl-alpha1/scale.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "cc00e62889cdbd7d1db8e39888f825fc78c824b05f0f87658355d7cfd8b47184",
+   "data_size": 14062,
+   "name": "MacVogl-alpha1/sun.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "f8aa8e8cb10028579b09909bf277a2dbdf7f347dff06d92cc0c1c4bd28dfb511",
+   "data_size": 1546,
+   "name": "MacVogl-alpha1/tensor.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "fc55eb18ef33f9247a5274b9f38667dc7cf3099e8134b0f3aa0ee90cb3557258",
+   "data_size": 3921,
+   "name": "MacVogl-alpha1/text.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "6f178f25e12d63a17aa3587735c508555127cf087463e57f7eece4f2f6a0e51d",
+   "data_size": 4757,
+   "name": "MacVogl-alpha1/trans.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "373af1facd058f3311b64f7fcafaeb82639c3707fac4feedef02b6d8c35a7f63",
+   "data_size": 312,
+   "name": "MacVogl-alpha1/valloc.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "0729cd735e36c433b292523284626670b21d59557847b2b3286ad25df6d339ec",
+   "data_size": 2988,
+   "name": "MacVogl-alpha1/vcalls.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "5db742f7c5ea78f42a4c13fa1fc4f13fe495d38dd8d05de5843976fc8c5917c5",
+   "data_size": 5984,
+   "name": "MacVogl-alpha1/viewing.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "01650074a8b3083a17053cdb2d7b923722ea077a2c238298c0d7aa0a4271798b",
+   "data_size": 3700,
+   "name": "MacVogl-alpha1/viewp.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "4ca63469dfd69132985205003e1d637b9a37b46787c15b96c3498457d707648d",
+   "data_size": 1716,
+   "name": "MacVogl-alpha1/vodevice.h",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "d8220b884268a87705ad3d21a27d6779df66d790535365da231b6940f5f6e326",
+   "data_size": 11690,
+   "name": "MacVogl-alpha1/vogl.h",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "ffd8bf29e6369f6b4b6e4a8c11fc5b3396ce221c36b4cde07b8e88bd409a4873",
+   "data_size": 456,
+   "name": "MacVogl-alpha1/yobbarays.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "643e1292c84cfb9edd49da19f1b1ccc7e187172fa5ebdaf66da56e4bf79cd69d",
+   "data_size": 8576,
+   "name": "MacVogl-alpha1/fonts/astrology",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "d6444ce1caf1a9c4423423e48e11898fa52d3328de4b3627133a183e1a3af79d",
+   "data_size": 4292,
+   "name": "MacVogl-alpha1/fonts/cursive",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "d3b325c1bba2ac6602fee6688d8aace175e22c51c363a503cbb313c7c820a3f6",
+   "data_size": 5726,
+   "name": "MacVogl-alpha1/fonts/cyrillic",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "f65a6972efc28aa921a12721ef5a8ffc1c7e9d83ef8c77233f4a0dce07ad010c",
+   "data_size": 2836,
+   "name": "MacVogl-alpha1/fonts/futura.l",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "f75277015ecc043eacc63de5089b0b09b2263a04bce007123a86c5677ba65062",
+   "data_size": 5196,
+   "name": "MacVogl-alpha1/fonts/futura.m",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "d0de6043e23d580db1d72e1e3030623e55a1c3cdcbed1bb791192c20ea420a07",
+   "data_size": 9414,
+   "name": "MacVogl-alpha1/fonts/gothic.eng",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "f470d7dbb63ba1d6561c7a12921a90b1f4884825846acac1f5420a02bbd0950b",
+   "data_size": 9648,
+   "name": "MacVogl-alpha1/fonts/gothic.ger",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "64b413bb4358f44f0b6f74b0cde16d4f2fad39fd53099ab89a794aa6ee40f112",
+   "data_size": 7728,
+   "name": "MacVogl-alpha1/fonts/gothic.ita",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "1ab2e695674d12aaf6b0066e0d1626fe8903a90193a4abf873cc5ffbd7f12497",
+   "data_size": 3086,
+   "name": "MacVogl-alpha1/fonts/greek",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "3b4a94e99651502868265dc7ccb656f6fe8d92aa444ec7d527a1ce1deb8ff723",
+   "data_size": 1218,
+   "name": "MacVogl-alpha1/fonts/markers",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "11e0af9c2fe201ea0a3899f33c1fd83b42c51074397945e94dd0d3d1eeca0807",
+   "data_size": 3070,
+   "name": "MacVogl-alpha1/fonts/math.low",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "037498e8ccccc47cbe07b7d395bec1a0672455104b83df916446da1ee7fb75df",
+   "data_size": 2960,
+   "name": "MacVogl-alpha1/fonts/math.upp",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "194fcbfdd30b2f762704501555b562f54be0bf6f7c6508a5cd811a687c23361f",
+   "data_size": 3034,
+   "name": "MacVogl-alpha1/fonts/meteorology",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "982214283cf04c9af6058e4665135d26d02f2231ff2939600c21fce9aa2c977d",
+   "data_size": 6280,
+   "name": "MacVogl-alpha1/fonts/music",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "f1eecc7fccdf225218602a658dfe07d3b05dadc61e97a944be1d478c3f29d289",
+   "data_size": 5958,
+   "name": "MacVogl-alpha1/fonts/script",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "2b4c0f0230b139c181fde409903631df00c464756906704b7178ecb1e59bd607",
+   "data_size": 4190,
+   "name": "MacVogl-alpha1/fonts/symbolic",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "acb13692690765c4c2fcf1565732cef12b450bf180019d1b2f8aea441999d6a4",
+   "data_size": 5082,
+   "name": "MacVogl-alpha1/fonts/times.g",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "6471308074d94eecacb1284c484350f30fb18b0dcda0668d7a3af5e8bdc2e6ea",
+   "data_size": 5242,
+   "name": "MacVogl-alpha1/fonts/times.i",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "a19d7e6cdaf08dde087738499b464423623c385b1b8bcc59cf9a292ad747301d",
+   "data_size": 8096,
+   "name": "MacVogl-alpha1/fonts/times.ib",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "7bf3eaa30effa190c3cd482c00119afb3c86d87fe49776eb4f9cccb900e4e358",
+   "data_size": 4994,
+   "name": "MacVogl-alpha1/fonts/times.r",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "fd17c423b3da7102a9c1a270d71524be954cb4c7203752918937c69e8f1397a6",
+   "data_size": 8388,
+   "name": "MacVogl-alpha1/fonts/times.rb",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "920295a4c49de234648bd12429bba436e68b7b195fe98b9cb1b2a10ed148de15",
+   "data_size": 2491,
+   "name": "MacVogl-alpha1/examples/balls.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "b683b37e78b693944589b3a2b9eb78aede9f6925f374fe4fae4db8b5384e934f",
+   "data_size": 2569,
+   "name": "MacVogl-alpha1/examples/circtxt.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "fabdd4e38059f3a1ae3b0b9a97b9dcf7008c93771bcbf7fd8f7e3be82070c891",
+   "data_size": 8747,
+   "name": "MacVogl-alpha1/examples/cube.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "908b6b739f441aae8a3892b24f45cc81a322fbc410d04563de8d171262ebbf04",
+   "data_size": 3372,
+   "name": "MacVogl-alpha1/examples/curves.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "cd1fc8e34fce162695b3138b047d3ef46459c0e522d2edd89675972d73acc0a9",
+   "data_size": 3225,
+   "name": "MacVogl-alpha1/examples/lcube.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "f26ceaa5c1dd1a300ac769ca31f8af69f664c69c220345489b1460aa9cd2fbdb",
+   "data_size": 6004,
+   "name": "MacVogl-alpha1/examples/lights.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "d0357b37c0a93adaeb34008ee90a5147c5535f717cd6aac6bb6919d0db1b4dcb",
+   "data_size": 1379,
+   "name": "MacVogl-alpha1/examples/loc.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "ff099e10cce8722dc6d74f3868885251e098efe2f31ef81116794c1fd9720ef6",
+   "data_size": 3211,
+   "name": "MacVogl-alpha1/examples/moretxt.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "5e723036df8f3627d779a3ae1966070fd44381f7ac7595eb215384a698cee6be",
+   "data_size": 2266,
+   "name": "MacVogl-alpha1/examples/moretxt2.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "5d1ccb7b5029d5bf753bf6356a21483668f4ead3886f4f5f9f1ed4c87627c7c2",
+   "data_size": 2834,
+   "name": "MacVogl-alpha1/examples/objvws.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "8122003f314c07d6ed1414dd13ad4eb99e0d6db5ae7b4c69f0d7c33e6d7978a8",
+   "data_size": 5020,
+   "name": "MacVogl-alpha1/examples/patches.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "047f5e8a8ec660648ba25133c99f1d2dc3f3968adcba1a4d6e1ef5483a71141d",
+   "data_size": 2941,
+   "name": "MacVogl-alpha1/examples/poly.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "fef7013bb02c91136e467202a7460749a7651a41ac619458a34d5cfa11911560",
+   "data_size": 3597,
+   "name": "MacVogl-alpha1/examples/shapes.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "2efb36c0a4390dae0f2cb6b8aec41ea60ba4e2f105325adc7cbe6f3a3b126e15",
+   "data_size": 1443,
+   "name": "MacVogl-alpha1/examples/simple.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "97f3b54fc889a9a88f5c6f826f5efb4ef6f6269509134d5f5206e00b4692b15f",
+   "data_size": 872,
+   "name": "MacVogl-alpha1/examples/sinewave.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "731f4bcc6a92e1475d16e14ab5529010738ae793bb0233bea2d5c0c15c604835",
+   "data_size": 14120,
+   "name": "MacVogl-alpha1/examples/teapot.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "18b5c07812053203476f668126e29fbf2421cd467ff45c545e5931ceedc97fc4",
+   "data_size": 2839,
+   "name": "MacVogl-alpha1/examples/tetra.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "5f4200e9b3f5593f1dea0e52024ae5af3b64ca39ff2303c859334366d0b8439c",
+   "data_size": 1060,
+   "name": "MacVogl-alpha1/examples/trivial.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "bcfe8811dfcb71dcdcc1c5dfa00546083446b5fa2f4c2eaa7061b447af71861a",
+   "data_size": 3404,
+   "name": "MacVogl-alpha1/examples/views.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "c1bd90b16183c6c618e7c992aa2acf7f0ed298fdff6242d1e31c42805bc2e5d6",
+   "data_size": 2527,
+   "name": "MacVogl-alpha1/examples/world.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-macvoglalpha1.cpt",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "a04ad5e1a82d16e3b1267d08010e780770ab7000d72a1f5148d8ecab6b6cf7a8",
+ "size": 184229
+}

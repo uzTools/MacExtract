@@ -1,0 +1,62 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "Ascii Converter 1.0"
+  },
+  {
+   "is_dir": true,
+   "name": "Ascii Converter 1.0/Examples"
+  },
+  {
+   "creator": "ASci",
+   "data_sha256": "40a3a93d71906fdfcd9cdaadc08829444c4e28e74b8d86077157f43332f417f1",
+   "data_size": 12764,
+   "name": "Ascii Converter 1.0/Ascii Converter FAT",
+   "rsrc_sha256": "a4706d31c4ae5a1e7aca7c7e0e9a0e19e5b122ec864f63a573346d8028c42836",
+   "rsrc_size": 117215,
+   "type": "APPL"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "db1519bcac21707866f24f23cb7c6a7707c885a0389ea7ad443b749da77fee3b",
+   "data_size": 1374,
+   "name": "Ascii Converter 1.0/ReadMe",
+   "rsrc_sha256": "ef50e982cb21ebb7daa9086922a753ab1c55173bbe7aa9354b03844c4960ed10",
+   "rsrc_size": 33385,
+   "type": "ttro"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "b4eb9e95c63024303fb7d4278ab3c7a428727a1aff95d7cee4bc58137d00cfbb",
+   "data_size": 51294,
+   "name": "Ascii Converter 1.0/Examples/Win95-faq.txt (it)",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "514308b7936ac5ddbf350ee340859a45b2df8736321d47038ceb1353fcdd322e",
+   "data_size": 10420,
+   "name": "Ascii Converter 1.0/Examples/mfc.txt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "d336da4f9f5e33ddd9bbf52f32cae2889004caf973c91f2a3f2aacb8df38fd29",
+   "data_size": 9470,
+   "name": "Ascii Converter 1.0/Examples/ram.txt (it)",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-AsciiConverter.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "5312a7b1729d5ac3a5eda821782281608da0bb1111818e588fd244e0f4f5eb21",
+ "size": 115051
+}

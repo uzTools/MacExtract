@@ -1,0 +1,22 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "Jam folder"
+  },
+  {
+   "creator": "MACA",
+   "data_sha256": "20ccef35c3e9fc199ec715eaad146194806af644a26e1dec5bedf1c3c40e5057",
+   "data_size": 10636,
+   "name": "Jam folder/Jammin Docs!",
+   "rsrc_sha256": "ad6b1e7bf774375652fd71571b212eaf17397b83bbd831f6c5492beee3f4710f",
+   "rsrc_size": 772,
+   "type": "WORD"
+  }
+ ],
+ "fixture": "derived-Apple_Jam.cpt",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "d5b20caebea1880d4157858e650d6006121e46486412365cf680d510e55c1400",
+ "size": 43545
+}

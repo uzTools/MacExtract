@@ -1,0 +1,36 @@
+{
+ "entries": [
+  {
+   "creator": "PJMM",
+   "data_sha256": "26f570bf0f6ea1e3461a6babf759e680b4bdc9f3b9e44cbf375328af36a6c152",
+   "data_size": 3683,
+   "name": "ColorPix Main.pas",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "PJMM",
+   "data_sha256": "40c880e946ff6a95c98fa2d48d90a41d86470c37707a3233997fa7f3ed6abfcb",
+   "data_size": 54,
+   "name": "FKey Tester",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "PJMM",
+   "data_sha256": "f99cd7ea046bbeea6abf3ca4e3a5db5345d76036b5e50b8f613bf262ab9c3dca",
+   "data_size": 1873,
+   "name": "IntToStr.pas",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-ColorPix.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "59c5af8e1f606e1761a7683b582fe3dba6628015d975a162decf5c8ee5dc39a3",
+ "size": 6997
+}

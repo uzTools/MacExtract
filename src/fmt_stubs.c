@@ -16,15 +16,6 @@
 #define UNC_STUB_EXTRACT(fn) \
     int fn(UncCtx *c) { (void)c; return UNC_ERR_UNSUPPORTED; }
 
-/* M1 */
-int unc_macbinary_probe(const uint8_t *h, int32_t l, UncIO *io)
-{ (void)h; (void)l; (void)io; return 0; }
-UNC_STUB_EXTRACT(unc_macbinary_extract)
-int unc_applesingle_probe(const uint8_t *h, int32_t l, UncFormat *out)
-{ (void)h; (void)l; (void)out; return 0; }
-int unc_appledouble_extract(UncCtx *c, UncFormat which)
-{ (void)c; (void)which; return UNC_ERR_UNSUPPORTED; }
-
 /* M2 */
 UNC_STUB_PROBE(unc_binhex_probe)
 UNC_STUB_EXTRACT(unc_binhex_extract)

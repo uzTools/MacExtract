@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "STi0",
+   "data_sha256": "0b230018f5cd1c3bcd2e0502dc57ad3a6878cdd2cc354327876d65476ba3902b",
+   "data_size": 7033,
+   "name": "SpaceSaver 5.0.1 Updater",
+   "rsrc_sha256": "f814646391e673b5f2ea71bf74bb1ac1583a6d464a02c8df795e06f02c13d583",
+   "rsrc_size": 145141,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "derived-SpaceSaver_5.0.1_Updater.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "c945c7c25c81f35e8b7b2d6ab9fa8b64772337bf9bc878d0d73ea16d93092d67",
+ "size": 135412
+}

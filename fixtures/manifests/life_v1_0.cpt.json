@@ -1,0 +1,22 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "Life v1.0"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "0024e2cce2d58e5151636292b3a0636b0de4c0936fd3e777f3caab06926e7c6e",
+   "data_size": 633,
+   "name": "Life v1.0/Readme",
+   "rsrc_sha256": "8498c4b88fb540cf25551819fc80a9409aad9b329a8bb2814d41bb29dfd82de6",
+   "rsrc_size": 612,
+   "type": "ttro"
+  }
+ ],
+ "fixture": "life_v1_0.cpt",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "a142d55e1153054d207a7dc6792c01ebf1d287cd0c125a2169af8cb45f6c4574",
+ "size": 45394
+}

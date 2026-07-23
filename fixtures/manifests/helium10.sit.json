@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "1c78a081482189ab50c25ba813ef552942e98fa2190ebe94fb0556e661351239",
+   "data_size": 26951,
+   "name": "Helium 1.0.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "helium10.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "aa5c2e4def8a8aeb5b63183ca37b117078f384c41debf01ec0db57751474e898",
+ "size": 27136
+}

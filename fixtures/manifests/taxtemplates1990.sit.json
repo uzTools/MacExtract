@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "938badfcf34ae99021babe0efc7b1d79ef808922f3896b2d50fb049e70c29bbd",
+   "data_size": 30312,
+   "name": "TaxTemplates1990.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "taxtemplates1990.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "8883da64cea6e12ef5b97237b2e11cf5513b2a07e5fa260d2cbfd15cd1809c87",
+ "size": 30464
+}

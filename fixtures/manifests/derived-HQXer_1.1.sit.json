@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "WPC2",
+   "data_sha256": "e08095a9690be4684f9c09e65462c6ea0b14bb44b7ee95c29cd8bc5d915059d8",
+   "data_size": 11264,
+   "name": "HQXer Documentation",
+   "rsrc_sha256": "742c2b243b4bd4edd81e989d9c8710652f5d09489d6736fab302c26d5e3a6773",
+   "rsrc_size": 2249,
+   "type": "WPD2"
+  }
+ ],
+ "fixture": "derived-HQXer_1.1.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "d3dd99682721886f9e37ba18885a36d64ce1d35c5a414d46959f77365c32da6e",
+ "size": 36433
+}

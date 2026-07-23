@@ -1,0 +1,45 @@
+{
+ "entries": [
+  {
+   "creator": "uRAR",
+   "data_sha256": "4bcdbeb1fb294a9e092d9826cc78a294cbbe4871e1222df7659bc1f5aca01fae",
+   "data_size": 71999,
+   "name": "MacUnRAR 1.1 Fat",
+   "rsrc_sha256": "a6d9e9f28c5a7a74c65a77e62ea57c2aeab9c1f2eeca3ff518f236d9d6bc229c",
+   "rsrc_size": 79281,
+   "type": "APPL"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "14451b1bc941a6ee1d2fb439f97fe2ab8bbc59ccae1c55d9d782626719af409b",
+   "data_size": 1611,
+   "name": "license.txt",
+   "rsrc_sha256": "532dd234acbebbfa6ea6eedff47cd64627f5660ce332717c57b07753442ffbff",
+   "rsrc_size": 410,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "9fbae73362ce15b4a651cb03e3fba0b258362a211c9ad68d8f07a6fe7c913cd6",
+   "data_size": 1669,
+   "name": "lisez-moi",
+   "rsrc_sha256": "adbbbe7cab80433bc5f0a01b1baec3dfd2854e7a4a881f2a0be907e4fe2ce3e6",
+   "rsrc_size": 1698,
+   "type": "ttro"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "a83e82481da1f5b4435caf98e8798e7f300096239a6041b8953f789c24ef9c2c",
+   "data_size": 1633,
+   "name": "readme",
+   "rsrc_sha256": "3205c408fcc1fbac3590a9ae7f9a1943d094baab62e1582b51818fc1e0fc8ae5",
+   "rsrc_size": 1678,
+   "type": "ttro"
+  }
+ ],
+ "fixture": "derived-MacUnRAR11.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "67ee6d7b86933295162106cd76785b2df76537f2b0042875df31da6551e467fe",
+ "size": 79374
+}

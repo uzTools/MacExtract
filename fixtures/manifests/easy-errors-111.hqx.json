@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "ff877dd5e3fda1d53240b424bee663cdaa58fa5833ce7427c6ed62ecadc40536",
+   "data_size": 45954,
+   "name": "Easy Errors 1.11.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "easy-errors-111.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "6740ec06af102c0df877bb381175315bda17f26929b8e4619777993568d4c823",
+ "size": 62742
+}

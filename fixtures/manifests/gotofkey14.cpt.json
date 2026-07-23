@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "CPCT",
+   "data_sha256": "123a6f97f08d1b6fb3f0630b8deca6918afa19e61accd3a7c45c2945c76181b6",
+   "data_size": 3340,
+   "name": "gotofkey14.cpt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "PACT"
+  }
+ ],
+ "fixture": "gotofkey14.cpt",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "3bff0923dea9e99d926c94ac0ea68885d2d52b26c3986704e88e61882de2beb3",
+ "size": 3584
+}

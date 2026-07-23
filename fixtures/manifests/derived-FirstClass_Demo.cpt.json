@@ -1,0 +1,54 @@
+{
+ "entries": [
+  {
+   "creator": "ttxt",
+   "data_sha256": "c63c4e66d56bacbc4b64380a541a7543e551aaef64f8bd50e492a6228b3bb1a6",
+   "data_size": 5166,
+   "name": "A Tour of FirstClass",
+   "rsrc_sha256": "a7c29f057f940bc29e9b9520c63853f7b1758d30fc5e5c5fbc97f5c0f326a1f2",
+   "rsrc_size": 38834,
+   "type": "TEXT"
+  },
+  {
+   "creator": "FCut",
+   "data_sha256": "20ca3800094acdeaa6ca83417ca81b72ce21f470a7088d0af9bf5979d9a68bd3",
+   "data_size": 216298,
+   "name": "FirstClass Data",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "FCbu"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "da17ad250d277928a7799f2f87919abe4f8218b70d1803ce2f8dd857085e1c02",
+   "data_size": 10305,
+   "name": "FirstClass Features",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "3980bc8cc9cf3b70613fc60d776fa8d10605de46b846945b9f61bf96a5282816",
+   "data_size": 2467,
+   "name": "Read Me First",
+   "rsrc_sha256": "f6d4f0134cdd5c2ae97c27418a894df117c1c93ede6dcfb52730e2a782c94362",
+   "rsrc_size": 822,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "2b2ef020685d78a49ddd2cfb7af7149864d241d83c3a93bc14e47f57299c99b1",
+   "data_size": 2261,
+   "name": "SoftArc Online",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-FirstClass_Demo.cpt",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "d151afcfc580281fab9ec006438268ca9f5f36b4104f7b972b44b3e1c289cc6c",
+ "size": 248879
+}

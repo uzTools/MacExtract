@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "WILD",
+   "data_sha256": "a00767eb44fb617b392a8bff6bb506cc8eb8593092b93f294db56724d3bb512c",
+   "data_size": 65536,
+   "name": "Cipher",
+   "rsrc_sha256": "a2c9dec25a72813cd2e0074a51da2df8252f32d3d595cfeeebf4ec63e5c4dd47",
+   "rsrc_size": 1214,
+   "type": "STAK"
+  }
+ ],
+ "fixture": "derived-Cipher10.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "4fffd4623ccef5c944a012c2fe88f54dea5477fe7e2dfc133e5abd1cb607d541",
+ "size": 20840
+}

@@ -1,0 +1,22 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "Domino v1.4"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "8d7ca1abb75a5b23a1d748a3fd0957d4b27ad2eb3140680291a782f3088b7f15",
+   "data_size": 1045,
+   "name": "Domino v1.4/ReadMe_Leerme",
+   "rsrc_sha256": "dc1d7001ee1682e4751bdf68ee59ff33c7952973879a8df8094c667b5a4f9791",
+   "rsrc_size": 25462,
+   "type": "ttro"
+  }
+ ],
+ "fixture": "derived-Domino_v1.4.sit",
+ "format": "StuffIt 5",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "ce98273f691d383e8eede9945d74c7be05f4c2ffc68f1df64bdf0c4181b4e660",
+ "size": 161906
+}

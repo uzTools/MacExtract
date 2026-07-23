@@ -1,0 +1,27 @@
+{
+ "entries": [
+  {
+   "creator": "PJMM",
+   "data_sha256": "25c54e950836c05038c9c6b9893033cb1f8abb77edb97246677d4863aefb9208",
+   "data_size": 5754,
+   "name": "Diddle.p",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "PJMM",
+   "data_sha256": "eddf314d6c873e8ac5d1e21a02b7f1fc69ef0cdbc833d377fe2569a091ca49c4",
+   "data_size": 352,
+   "name": "fkeydebug.p",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-Diddle.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "01745d45bdb0858aa970946cf33cd0aa5dd4cad226faefbec5a5ce2d81f5599e",
+ "size": 7274
+}

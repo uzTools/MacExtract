@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "130c4c624e4ef940a3f25ba2b57897b6e830fc443c64aee3003d456f93acb761",
+   "data_size": 44571,
+   "name": "PICMeUp.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "picmeup.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "e145a4d77af73ab7b257ec59a9045bf0baaa1a443884d147ac527161c98c51e6",
+ "size": 44800
+}

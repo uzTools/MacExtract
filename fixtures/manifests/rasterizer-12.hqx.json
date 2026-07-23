@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "efde7c642d3ce82c41b4ff3cf7330975d986ee1b54cb400d7a8fa9c9f30fbfce",
+   "data_size": 31248,
+   "name": "Infinity Rasterizer 1.2 ƒ.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "rasterizer-12.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "9c91cd0d77b34057989752cf586f79f616e0bf5e45b0d8bd8f6fff05b642904c",
+ "size": 42901
+}

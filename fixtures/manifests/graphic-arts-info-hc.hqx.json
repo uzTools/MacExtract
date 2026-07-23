@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "5f71a7a9b0db0faadf3d292e21e962b4b6edd1a1f024432c400902656e48af27",
+   "data_size": 66513,
+   "name": "InfoStack folder.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "graphic-arts-info-hc.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "695101b7d6021e71b23853f13a11f0f8a05319d23b4adc7a012ae2235005fefc",
+ "size": 91611
+}

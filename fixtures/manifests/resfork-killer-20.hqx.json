@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "452c74b5d1291dc0dedec7a45211ddb0d19d458bb6fd9d8881f7416db62924d0",
+   "data_size": 39781,
+   "name": "resforkkiller.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT5"
+  }
+ ],
+ "fixture": "resfork-killer-20.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "8748948c11d4e4a6a79ffd534e6821120edf0b5816d24fbc81bd93feb9567d7e",
+ "size": 53736
+}

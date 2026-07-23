@@ -1,0 +1,45 @@
+{
+ "entries": [
+  {
+   "creator": "WILD",
+   "data_sha256": "20e6155e38482a746e999a3e5e57e0af647995e39fe5ce5e71dd6545e70a775c",
+   "data_size": 73792,
+   "name": "Mews 1.4",
+   "rsrc_sha256": "528439733c057d5890252485702e5aeb94d3dc93e5ece9dc40c22b137f90b57a",
+   "rsrc_size": 44543,
+   "type": "STAK"
+  },
+  {
+   "creator": "nX^n",
+   "data_sha256": "7bc348c709029a3367338461090a60aab5601c17b509e54e015fa166da7df6a4",
+   "data_size": 267508,
+   "name": "Mews doc.WD",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "nX^n",
+   "data_sha256": "ca7b97fc5035a157c8015afa50ea395e73ccc7ba4a3458dbbd15f87898be1755",
+   "data_size": 157322,
+   "name": "Mews doc.WN",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "nX^d"
+  },
+  {
+   "creator": "EDIT",
+   "data_sha256": "d84dddf89fb38f71ea24f05497c52c238ce47fa8bb0922671e7f3447cbd8cda8",
+   "data_size": 997,
+   "name": "README",
+   "rsrc_sha256": "e4338db73b64261a01b862b681337ce52a124f34a3cc03d6b75bc4ef742c4b72",
+   "rsrc_size": 708,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-Mews_1.4.1.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "3b134349f68755f76922eef521b09c1b3da4719bf99c9008945c6c1c2b88411f",
+ "size": 270231
+}

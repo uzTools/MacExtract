@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "EXTR",
+   "data_sha256": "bb4a1ce83a5f5d91ffd9c177a8a5475dafb382e62e19cf350290716deacc10a5",
+   "data_size": 33204,
+   "name": "Alias-Assassin-1.0.6.sea",
+   "rsrc_sha256": "32b64ecd1c27000c35b82c0c8c68bf301625da640f0bb32aa763761583d2e1c4",
+   "rsrc_size": 13121,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "aliasassassin106.sea",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "7f11326b908314d5112c6ffdb1d60ef035ec2937915bdfc3bee4b2c2052ab882",
+ "size": 46592
+}

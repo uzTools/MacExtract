@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "7e3f04e8fcf9fff4c0353ef69167b77894e30449d69a4e21b7401a211d85c58e",
+   "data_size": 152120,
+   "name": "The Lingo Library 1.5 Mac.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT5"
+  }
+ ],
+ "fixture": "lingo-library-15.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "f87c994cb8b922d9e5db71a5e81ededfe9e9eef51cb98d43ca012b39de7243b5",
+ "size": 205025
+}

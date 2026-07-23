@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "CPCT",
+   "data_sha256": "3fcfbdcafa0f5179b6f894953e25e68159175f8ebb3f76a799f7c6ad7b457166",
+   "data_size": 3309,
+   "name": "MacROT13.cpt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "PACT"
+  }
+ ],
+ "fixture": "mac-rot13.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "7f7c3b0c634ac8b0bced9eddbcb26dfb12802c78fadc026c931a4b001e1c6ad7",
+ "size": 4731
+}

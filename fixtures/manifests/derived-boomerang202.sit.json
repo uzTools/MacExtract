@@ -1,0 +1,22 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "Boomerang 2.0.2"
+  },
+  {
+   "creator": "MACA",
+   "data_sha256": "80ad908936c1c57943b14d7175142fcaef772f4507a5658920305177d5f2c44f",
+   "data_size": 682,
+   "name": "Boomerang 2.0.2/Read Me",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-boomerang202.sit",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "3ccc43c2115d807f4e724132b1ca7e10521210ac492f2ffce15cfd52632138b7",
+ "size": 48219
+}

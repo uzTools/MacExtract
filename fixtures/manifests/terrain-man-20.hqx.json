@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "DSE2",
+   "data_sha256": "1a9b2d376f3f145e35169d0375620dffe3f7c83d0f32990c351a87309fa71408",
+   "data_size": 167771,
+   "name": "Terrainman 2.0 ƒ.sea",
+   "rsrc_sha256": "74d7312ac92d6b557c950ba977ae52826b4bc1ff64aa0f3e6200ba7e5a1b3ad1",
+   "rsrc_size": 9512,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "terrain-man-20.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "1a1907d7a0afcab5727b104980aabe9e15c6a03afa41894b271ab6fb02a4d301",
+ "size": 242463
+}

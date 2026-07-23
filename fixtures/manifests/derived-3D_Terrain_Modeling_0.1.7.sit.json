@@ -1,0 +1,31 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "3D Terrain Modeling 0.1.7"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "e430196c073a632b6175e4e21a34e28e6fd9c33b24f90c81dc25c88a421fe9db",
+   "data_size": 244243,
+   "name": "3D Terrain Modeling 0.1.7/3D v0.1.7",
+   "rsrc_sha256": "223e6776f335d9852134609618acfe94e155e1599e92d2c0f1f1c71c413329a3",
+   "rsrc_size": 228982,
+   "type": "APPL"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "5ee8225d925098a4e49691b0413c7924c15f652233cfedbb343cae028f8199ae",
+   "data_size": 338,
+   "name": "3D Terrain Modeling 0.1.7/Read me",
+   "rsrc_sha256": "5c20f69ff08c8d6ea8f881bbafb5584900ff99756fecb5fca9e4b9ff5692e9f7",
+   "rsrc_size": 352,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-3D_Terrain_Modeling_0.1.7.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "e5a1529de71e9f14e724ebd75136aec24276ac04b8e18194734c609c7bbb5d83",
+ "size": 164711
+}

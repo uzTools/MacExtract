@@ -1,0 +1,45 @@
+{
+ "entries": [
+  {
+   "creator": "MACA",
+   "data_sha256": "adfcd2937a4ca63bed3db960d4d1d6c595cad69f9e74705cab0c87f980a4e3b9",
+   "data_size": 2752,
+   "name": "1.0 READ ME FIRST (MW)",
+   "rsrc_sha256": "e99108845db7906c02c7c0fef3a606b7e09dcfb254cbd5a74c6cc7c1578acdd7",
+   "rsrc_size": 820,
+   "type": "WORD"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "35c50537f2490b1cd559235a3a95559f8d692d210c700ff4d12e433aa2c8ae46",
+   "data_size": 1977,
+   "name": "1.0 READ ME FIRST (TT)",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MACA",
+   "data_sha256": "37259b2d574f3ef90841b2d42beee9ebe0ea91f89601fcd55e84945ed24844ea",
+   "data_size": 44878,
+   "name": "AutoSqueeze Manual (MW)",
+   "rsrc_sha256": "a47a22ea781d79c3ac25b4ec05bdf621259b608089a0b7f4d8d8518a3e071beb",
+   "rsrc_size": 820,
+   "type": "WORD"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "cd18c75d32a48cd0430129df956dd7c6a54136dc920348e746af0943721d3233",
+   "data_size": 9887,
+   "name": "AutoSqueeze Manual (TT)",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-AutoSqueeze.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "1cf1247ed19063d84d213467524fbbf861dbd868482cc1a4ab5b8a8584436e6c",
+ "size": 65601
+}

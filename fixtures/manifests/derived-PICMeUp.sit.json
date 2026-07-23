@@ -1,0 +1,27 @@
+{
+ "entries": [
+  {
+   "creator": "MACA",
+   "data_sha256": "4eeb785a542aa3c4fdbcabfc3d66a7b91f110caa35de04bc834061db7f82082a",
+   "data_size": 13364,
+   "name": "PICMeUp Docs MacWrite",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "WORD"
+  },
+  {
+   "creator": "MSWD",
+   "data_sha256": "d678202de3f4b1c2c26b703dcd360957e778431bef2a901dceb7656ae00c448d",
+   "data_size": 17408,
+   "name": "PICMeUp Docs Word",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "WDBN"
+  }
+ ],
+ "fixture": "derived-PICMeUp.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "130c4c624e4ef940a3f25ba2b57897b6e830fc443c64aee3003d456f93acb761",
+ "size": 44571
+}

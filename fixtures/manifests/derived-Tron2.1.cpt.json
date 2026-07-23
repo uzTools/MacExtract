@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "PEDT",
+   "data_sha256": "17c3f17bcb808685908f494c6e24b2bb4774a4398f3483140452c69e93ca3e0e",
+   "data_size": 410,
+   "name": "doc",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-Tron2.1.cpt",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "90e72e8d90650d8339f05299781f155bbc66293a9ae1fe76f42633f34d59ce31",
+ "size": 100349
+}

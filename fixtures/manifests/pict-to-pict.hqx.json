@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "CPCT",
+   "data_sha256": "142a82704106fc63be15b9a4271543daefabc0c4a2149483226582f33be0a2ff",
+   "data_size": 7188,
+   "name": "Pict2Pict 0.6.3.cpt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "PACT"
+  }
+ ],
+ "fixture": "pict-to-pict.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "dbc47ca731fd0193fd90b8c31060298d035c71e01e1cbae03c2afb510807d89b",
+ "size": 10511
+}

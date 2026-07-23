@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "d36ea155b050d712a4a4cd7782d5c6b4618a0f8006d747ebf39de175c486e7ef",
+   "data_size": 7585,
+   "name": "Key Values ƒ.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "key-values.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "a90350f49f9813382df4909ad3d73227273a0254881052f2259da7ee9ad511b4",
+ "size": 11155
+}

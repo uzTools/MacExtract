@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "MSWD",
+   "data_sha256": "119476b670e4b6b690209dd1645fa94f992c4b286a20b57159523ea829fc9487",
+   "data_size": 13683,
+   "name": "MacWeek Index.txt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-MacWeek_Index.txt.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "b2290cfd24ea13ae9159b36b0669a1629c4d2854da6ad87339ee7f6672f10dae",
+ "size": 5967
+}

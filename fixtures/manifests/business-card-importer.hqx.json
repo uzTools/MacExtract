@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "865190468893a31e03eb39c080197bee436beda8073e32c293f810cbde19d2a9",
+   "data_size": 118143,
+   "name": "BCI 1.0.sit",
+   "rsrc_sha256": "c373d08c0d0875195a2f7c43008625095f9df696cfc004b1a923449eeba7ff1c",
+   "rsrc_size": 326,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "business-card-importer.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "1d5fb366cc2e19c6abbcb77955e60078c8d126155292286fa2112cb2afb67d58",
+ "size": 161461
+}

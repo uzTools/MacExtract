@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "FWRT",
+   "data_sha256": "e78ddd1702d3db6b26077cde1131087626c55d8ce620057938c979095842c4c3",
+   "data_size": 54816,
+   "name": "Demo Manual V1.6",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "FWRT"
+  }
+ ],
+ "fixture": "derived-EmpireBuilderDemo.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "2683df40fc33603e60a0017eae5a1e981ec44db5d7c5970f335d2c9ed9add2f9",
+ "size": 278294
+}

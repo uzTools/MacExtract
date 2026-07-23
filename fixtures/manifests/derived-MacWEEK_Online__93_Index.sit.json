@@ -1,0 +1,31 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "MacWEEK Online '93 Index"
+  },
+  {
+   "creator": "ezVu",
+   "data_sha256": "c951ca82e80e85d1c2139995680d4d7483a352e2500599be82060b7f74733820",
+   "data_size": 971,
+   "name": "MacWEEK Online '93 Index/1993Articles.EasyView",
+   "rsrc_sha256": "70195a55bc0dc94f8943a6681897c8161555a3344e926edfd0cfeb9f8f196585",
+   "rsrc_size": 822,
+   "type": "IndX"
+  },
+  {
+   "creator": "MSWD",
+   "data_sha256": "b328e906cb6bedab774ed0b7fe922b511ed0a1f1b0b97b0ec8f99afb19c3cee2",
+   "data_size": 241806,
+   "name": "MacWEEK Online '93 Index/MacWEEK Forum '93 article index",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-MacWEEK_Online__93_Index.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "4adc87a7d79ade25070ac1e3f75994ab6cfbe7f0c0aeb2107dc44f054340f169",
+ "size": 77370
+}

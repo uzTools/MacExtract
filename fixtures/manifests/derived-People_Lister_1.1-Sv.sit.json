@@ -1,0 +1,76 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "People Lister 1.1 (sv) ƒ"
+  },
+  {
+   "creator": "PLïT",
+   "data_sha256": "e575e7582f6c22012782594709e6adc517c713040e76cea1ee23e6b4af4b7975",
+   "data_size": 2096,
+   "name": "People Lister 1.1 (sv) ƒ/Exempelfil",
+   "rsrc_sha256": "b4c0ff21fd267e6aeb7f7d285bafab62548345debac24884a28e86b729b81721",
+   "rsrc_size": 362,
+   "type": "PloÇ"
+  },
+  {
+   "creator": "PLbt",
+   "data_sha256": "6e70805677e3eeb340fd3d7f463ba3a90ad8c2129eeb5241f725170df1753800",
+   "data_size": 12418,
+   "name": "People Lister 1.1 (sv) ƒ/Födelsedagskoll 1.1",
+   "rsrc_sha256": "fbec5d8880bc378d023fce6930c4643921b2bc67c6da58b1f9506cb5aee1fba3",
+   "rsrc_size": 13062,
+   "type": "APPL"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "3a849c0584f2be270d3752d7f05efa4960504f5992ba0118e3c636e98e79bc4e",
+   "data_size": 9925,
+   "name": "People Lister 1.1 (sv) ƒ/Hur man använder People Lister",
+   "rsrc_sha256": "d2ee6fc4d5d845de13e8a051fa92c6e1d5f0ee394bd55ea100684626235cc638",
+   "rsrc_size": 1492,
+   "type": "TEXT"
+  },
+  {
+   "creator": "PLïT",
+   "data_sha256": "b165bde93a2d979bd1bef64288d144998207680715b00cd0285b592b0951fb4b",
+   "data_size": 130992,
+   "name": "People Lister 1.1 (sv) ƒ/People Lister 1.1-Sv",
+   "rsrc_sha256": "ff1f6808ce5fdc9c1d4c3093bb56d256c401862d2c9905a60f87e7c8b64b8426",
+   "rsrc_size": 153624,
+   "type": "APPL"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "be42a9c2a45454b52198b4b5dc9a560ce9f5f7605079f937836638f125a98cba",
+   "data_size": 5773,
+   "name": "People Lister 1.1 (sv) ƒ/People Lister Läs mig!",
+   "rsrc_sha256": "e639ca385a2f64ecee96ec2bbaf21f1308a3bac2f2b1bc82f1c69296202764a5",
+   "rsrc_size": 1552,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "11fb7ec2c8fc0eb5c58e19ab14a33d0c52b46c64aa363b7da6e60f357420b085",
+   "data_size": 1458,
+   "name": "People Lister 1.1 (sv) ƒ/People Lister Starta här!",
+   "rsrc_sha256": "acf2b5f603f63410af02de8709ca51fd3e7cafb0adafc86113a182c2945f10f1",
+   "rsrc_size": 812,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "a513347f9674f56b112180d114b25c17f9ff18f5614c4d27c3a4421e39bf38e8",
+   "data_size": 3018,
+   "name": "People Lister 1.1 (sv) ƒ/Versionshistoria",
+   "rsrc_sha256": "13fa8305e32aa144381c10f845db7a90065d699f52624aef27f59c662040901a",
+   "rsrc_size": 772,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-People_Lister_1.1-Sv.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "04c03d4ae92cab7f2a5d379f530ed049f35d176ee4dc5dc8794b2e9bf52933ec",
+ "size": 162393
+}

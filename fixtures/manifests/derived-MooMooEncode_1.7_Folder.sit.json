@@ -1,0 +1,22 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "MooMooEncode 1.7 Folder"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "07f5c27ddcff7a11ea64d7335a4bcdc850b4029a965a7730a0e94205f856780d",
+   "data_size": 15175,
+   "name": "MooMooEncode 1.7 Folder/MooMooEncode 1.7 - README",
+   "rsrc_sha256": "cb80ced0eddc73cc607099578353e565353b524f6d9cebad6f22182215310f3a",
+   "rsrc_size": 4654,
+   "type": "ttro"
+  }
+ ],
+ "fixture": "derived-MooMooEncode_1.7_Folder.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "3a92d4019eba411b871a26174b6f33ecff893422a0224c48692f4dbc4c182279",
+ "size": 93806
+}

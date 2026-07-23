@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "f83e9a3a41e41239e5b6a88b595c5c90ddf5178ea4d59c57695a6a1ea844a8f3",
+   "data_size": 31362,
+   "name": "TogSndVol.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "togsndvol.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "6e2377bea2a6ad0575a17cadfb1da03a3cb4ed09aa537f12967f5a23ffe722b9",
+ "size": 31616
+}

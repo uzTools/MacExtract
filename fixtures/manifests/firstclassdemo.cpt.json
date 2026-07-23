@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "CPCT",
+   "data_sha256": "d151afcfc580281fab9ec006438268ca9f5f36b4104f7b972b44b3e1c289cc6c",
+   "data_size": 248879,
+   "name": "FirstClass Demo.cpt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "PACT"
+  }
+ ],
+ "fixture": "firstclassdemo.cpt",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "0cfd5001062f36b0295ecf68f741803c3c9716a2c2f8db1753fcd9085b7deedc",
+ "size": 249088
+}

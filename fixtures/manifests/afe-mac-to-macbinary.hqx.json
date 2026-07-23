@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "CPCT",
+   "data_sha256": "6a06491a23d99e914f59ec2059c6ad9db2c9465b2a7ef0a9eee72fb74fc1564e",
+   "data_size": 8714,
+   "name": "Mac2MB.cpt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "PACT"
+  }
+ ],
+ "fixture": "afe-mac-to-macbinary.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "68ebbad7ab4428d3c137a09dc90033da1fcfff353a79cd876fe637130848f077",
+ "size": 12223
+}

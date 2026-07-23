@@ -1,0 +1,40 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "QuickConverter 1.5 ƒ"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "84438d3582b3143957e8d43e8adf4b9b0583fe34775caaf786a3e71bad3abf6d",
+   "data_size": 1889,
+   "name": "QuickConverter 1.5 ƒ/Read Me",
+   "rsrc_sha256": "bbc876f9866cc12ffd557b22b679181fab53c342b7cb8beb8306971f17397cf3",
+   "rsrc_size": 35576,
+   "type": "ttro"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "02f2d97bd8f572e2d6a184f2ec080dfc93be6a05efabe3fea711cdd83e90162d",
+   "data_size": 596,
+   "name": "QuickConverter 1.5 ƒ/Sample Exported File",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "INTU",
+   "data_sha256": "1a5c1f2b66513b26ddef5e8c829b38ca2484f77f2e36a6a1f6380c88d060daf0",
+   "data_size": 11558,
+   "name": "QuickConverter 1.5 ƒ/Sample Quicken File",
+   "rsrc_sha256": "f566f0c56782df75925b3e00efe752484a92fd304b2c753d770255711c86a891",
+   "rsrc_size": 5502,
+   "type": "BDAT"
+  }
+ ],
+ "fixture": "derived-QuickConverter.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "18b89e64e3699a2aa7d6ecbba72da73d82fc4556703bad1cfcd397ccc091ad98",
+ "size": 32745
+}

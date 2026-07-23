@@ -1,0 +1,22 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "The Perfect Word!"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "442512f336a7a6c2f6d2737196ca10c91ac2af1c35c82cfd26c7fdb710735938",
+   "data_size": 2503,
+   "name": "The Perfect Word!/The Perfect Word--Read me!",
+   "rsrc_sha256": "cda3f0e59e7f9ab135e7c89742bb83d63f1cc53c82861c7e1942b9c913ff8bc0",
+   "rsrc_size": 332,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-ThePerfectWord.cpt.sea",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "63cfc9bc31f9cc46d4d718f1d1c9f393910fe34ee7b429bca8c117426b4523e1",
+ "size": 4293
+}

@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "f7253e280cdf69cff0f0f29dfc939a48341f929af7c453f3821a81f949708499",
+   "data_size": 15448,
+   "name": "BaseToBase 1.0.SIT",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "basetobase10.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "1445f11419dde1a7ee51cad5bd6ebff6ba9008ad7139b2a1b58d05c0d8266fd4",
+ "size": 15576
+}

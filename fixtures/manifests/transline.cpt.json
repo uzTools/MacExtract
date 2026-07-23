@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "CPCT",
+   "data_sha256": "db7b2fd7689f0b8ec8a7c5aff962f7c4de16f72afc1c0af6b4d011a786ee9d35",
+   "data_size": 29820,
+   "name": "TransLine.cpt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "PACT"
+  }
+ ],
+ "fixture": "transline.cpt",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "c59359a4d1af905790fc636e542b31e80aeb782d54dc3baf1c72bf59e6ea33b6",
+ "size": 29948
+}

@@ -1,0 +1,36 @@
+{
+ "entries": [
+  {
+   "creator": "STrk",
+   "data_sha256": "b98a2cc4d1583c6933828425c1277a45fd0ec5fb423cfae5cc2d559c1fbfb287",
+   "data_size": 78762,
+   "name": "FYC",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "????"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "631f5821e17c117bf8b3931f60c87f2ddd913c302ecf9c48bd37a3a55bef9457",
+   "data_size": 1735,
+   "name": "SoundTracker Documentation",
+   "rsrc_sha256": "ff2e933056d15fbff554953463c6a4ae08804aac46d7e688bd5d0774f544deec",
+   "rsrc_size": 4530,
+   "type": "ttro"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "365721b6a779048b657a2618f14aa1cb941cd8ecbc17bb66329f2f06906d84c8",
+   "data_size": 3865,
+   "name": "SoundTracker Translations",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-SoundTracker.cpt",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "ca6294096bfadf23031e0714f1e6636c83cc58d1455278cc6c69a0d2e56aefb1",
+ "size": 97171
+}

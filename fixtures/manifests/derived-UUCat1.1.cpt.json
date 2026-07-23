@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "ttxt",
+   "data_sha256": "dc23f217ffbe2df1f02a7c430036ab016a38759f4f7dd6a06d27ba89bc2e9bc0",
+   "data_size": 3744,
+   "name": "uucat.dox",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "ttro"
+  }
+ ],
+ "fixture": "derived-UUCat1.1.cpt",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "f6e19336d00cae6abd239cdef9693c9285dc2ac8bfffd3717ebdfc5ee2a2a51f",
+ "size": 33703
+}

@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "ttxt",
+   "data_sha256": "4faba2714eb85d3fc1ae695b0675e02010630e8979c4ecb542ca7e3459bea2a7",
+   "data_size": 6903,
+   "name": "SignalEditor doc 1.21",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-SignalEditor_V1.21.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "8bfeb8a611f6e1327228bdcf14500819bf2cd542983688e0c316d1b527b3d5f9",
+ "size": 113524
+}

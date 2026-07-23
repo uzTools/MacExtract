@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "ddsk",
+   "data_sha256": "c6bca402d6452453baece35d432d3809241d6db20690123f8672d9b12d403ad1",
+   "data_size": 98961,
+   "name": "XShelf_1.0.dmg",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "devi"
+  }
+ ],
+ "fixture": "derived-XShelf_1.0.dmg.sit",
+ "format": "StuffIt 5",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "4b2009f57721007c3504f61edb0e076136fe8b812fbb1f856120c628d0293e34",
+ "size": 94401
+}

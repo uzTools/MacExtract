@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "f1e2a31287fe93be113eacd220f3ceb93a33e4a1b952b9e783820885ad176a8c",
+   "data_size": 131923,
+   "name": "Berkeley Packet Monitor.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT5"
+  }
+ ],
+ "fixture": "berkeley-packet-monitor-10.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "5bbe9787c1eab5fccb5562bec4ec795018acab5d2597d799860900ca7c8451d9",
+ "size": 178537
+}

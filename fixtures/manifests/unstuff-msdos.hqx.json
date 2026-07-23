@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "aust",
+   "data_sha256": "44ee43f380dd62f27499aa728de41094bae0112d7a83ce353c4f73ef4290c8a3",
+   "data_size": 80789,
+   "name": "UnStuff_PC™ Install",
+   "rsrc_sha256": "1dbf08f8b1b0db15398b4e14049f12c7bf357f38bd01928bbcc7670045dd67a5",
+   "rsrc_size": 16397,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "unstuff-msdos.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "0b1b2193684ee5c797a33eaaa4feb173bd9613a22c5c9ca3cbff95863496ecff",
+ "size": 132737
+}

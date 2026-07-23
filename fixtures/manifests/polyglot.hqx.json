@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "9ef80d0f5e21287a6c07d13b9229c12025a81e86b697356144c0512aa52bc3c6",
+   "data_size": 80382,
+   "name": "Polyglot.dmg.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT5"
+  }
+ ],
+ "fixture": "polyglot.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "ad37186562a2bec7ac502603ea5c4c4e1154513a31c3670d6e4883310c2e4a3c",
+ "size": 110400
+}

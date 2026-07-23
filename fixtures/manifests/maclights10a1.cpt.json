@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "CPCT",
+   "data_sha256": "f67a94d57537ec0a29f800a81908d4ecf8016dac99820ddfd7fddcb6f60a5a38",
+   "data_size": 12725,
+   "name": "MacLights v1.0a1.cpt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "PACT"
+  }
+ ],
+ "fixture": "maclights10a1.cpt",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "2d2eadff27ed8e8d7c8818c4bb1e68cbb923a77df9331ecb59ad6914bd41bcdf",
+ "size": 12928
+}

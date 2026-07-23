@@ -1,0 +1,196 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "Database"
+  },
+  {
+   "is_dir": true,
+   "name": "Mailboxes"
+  },
+  {
+   "is_dir": true,
+   "name": "Update Users"
+  },
+  {
+   "creator": "EDIT",
+   "data_sha256": "74187a74ef65494e83555ca4c4966ed991f7e8d0d4fffc7385c342f39abedb70",
+   "data_size": 106,
+   "name": "Alias",
+   "rsrc_sha256": "330670e49b1e4839fdf779e7a015c662bc25635d2d07124b8bde12183b90bd97",
+   "rsrc_size": 348,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MWII",
+   "data_sha256": "cb3ca54775b17c8112dbb3aaf3ae523127a9416b37da28f73adff6cda7e0bc14",
+   "data_size": 4999,
+   "name": "README.txt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MACA",
+   "data_sha256": "7ec3d18e177c1bd9d696e4e40e40db13e060cf6964fd7aa5bcb7a72499e3a850",
+   "data_size": 69130,
+   "name": "Server Install.mw5",
+   "rsrc_sha256": "d4de7c2f0f7bf1c51e577d5a34fd4b88335c5a28653a1131ea3288a5f406911a",
+   "rsrc_size": 808,
+   "type": "WORD"
+  },
+  {
+   "creator": "mcPT",
+   "data_sha256": "e3316a7572296f0f7c24e651727e61f9052a842d9dce20ad8ffa0c8110dd6027",
+   "data_size": 5266,
+   "name": "Server Release Notes",
+   "rsrc_sha256": "38466e718478f2bde63adaba3b1af20860b140507228cf760d2be8c474849deb",
+   "rsrc_size": 313,
+   "type": "TEXT"
+  },
+  {
+   "creator": "mcPT",
+   "data_sha256": "17c1aa285347dec3e778c27fd6ab76cca2d60d8ad7b41561dc95ab44b8de8ae6",
+   "data_size": 554,
+   "name": "Update Users/Update Users README",
+   "rsrc_sha256": "472dc80b543b3ce8394b2260c1b62b9c4cb89d34fbd87c4f8189b9677f311a3c",
+   "rsrc_size": 375,
+   "type": "TEXT"
+  },
+  {
+   "is_dir": true,
+   "name": "Mailboxes/To AT Server"
+  },
+  {
+   "creator": "EDIT",
+   "data_sha256": "5cf2330df6108487a2d27d4c865bd75717751f1f2455ee857151ab604ee5a70d",
+   "data_size": 82,
+   "name": "Mailboxes/Broadcast",
+   "rsrc_sha256": "9950f1ed6b06226893d39b04b6016010b3651bcb0a87be373376f431b58875eb",
+   "rsrc_size": 444,
+   "type": "TEXT"
+  },
+  {
+   "creator": "EDIT",
+   "data_sha256": "9db9121cb8b67c115186350c5bfcbdd2e013887dc50b3ae020a100247cd957ff",
+   "data_size": 43,
+   "name": "Mailboxes/Delete User",
+   "rsrc_sha256": "686d1d52800df388fb166104bd8daa8a9f44f343e65bda2ed0ae09407050a1c3",
+   "rsrc_size": 348,
+   "type": "TEXT"
+  },
+  {
+   "creator": "EDIT",
+   "data_sha256": "70560ccbee92dd5b8837650c70e494d98a1362306f108eae519f8ea329a54260",
+   "data_size": 35,
+   "name": "Mailboxes/Get Statistics",
+   "rsrc_sha256": "9060199548d915e0696ce75072a121346ce2b627b5f4310212bc9c77f2e389c8",
+   "rsrc_size": 348,
+   "type": "TEXT"
+  },
+  {
+   "creator": "EDIT",
+   "data_sha256": "07a9e1a090a293bf591827d4c19fcb58b13de96288ab298a6ee7089b83151937",
+   "data_size": 85,
+   "name": "Mailboxes/New Realuser",
+   "rsrc_sha256": "306e5c8ba0a033b552c9c392b983a184f6d724b5e0ae84111365ed95aa0b6ba2",
+   "rsrc_size": 348,
+   "type": "TEXT"
+  },
+  {
+   "creator": "EDIT",
+   "data_sha256": "bcf6e6622983de9f10fba3b3bfde39fe489457fe949cea73c0ddbaef37cc08a8",
+   "data_size": 50,
+   "name": "Mailboxes/New User",
+   "rsrc_sha256": "98c11e7f706c71323766a403993bd47b5f4f160f9342c9d03cbefe6f000d5482",
+   "rsrc_size": 348,
+   "type": "TEXT"
+  },
+  {
+   "creator": "EDIT",
+   "data_sha256": "055a1954ee430b67e9ef96e041ce6e299c491b5d139e91e646b9b0174a587c60",
+   "data_size": 26,
+   "name": "Mailboxes/Purge",
+   "rsrc_sha256": "03ef9169223cb0d4fb85c15019c02d80215cbb57892d639c0eed1f2ec0fd7a46",
+   "rsrc_size": 348,
+   "type": "TEXT"
+  },
+  {
+   "creator": "EDIT",
+   "data_sha256": "80b0fd1d17fdbee7c3d2f81d28d84d87d51af4ddb960b09ad1fc5b59210ed080",
+   "data_size": 37,
+   "name": "Mailboxes/Reset Statistics",
+   "rsrc_sha256": "861f8618eb699513ff370ffe8976302fcb1f8a8466c4d0a840cdd396c115277e",
+   "rsrc_size": 348,
+   "type": "TEXT"
+  },
+  {
+   "creator": "EDIT",
+   "data_sha256": "ff6136da319cac74a6066b2f8465a2f879cb59d4dbea65007dd89069fb87117d",
+   "data_size": 61,
+   "name": "Mailboxes/Set Password",
+   "rsrc_sha256": "ccf25e67f8bc400fbc24741eb546fc897ba9f0e808930e69321bd6d716a54477",
+   "rsrc_size": 444,
+   "type": "TEXT"
+  },
+  {
+   "creator": "EDIT",
+   "data_sha256": "6c493c55b293de7ad194421d6b6f69ae763a91256793eb09aa2144bf83b40765",
+   "data_size": 57,
+   "name": "Mailboxes/Set Realname",
+   "rsrc_sha256": "3aa73d2b7ff0025320841b9e29a4b324f7f167b3e70caa817b60f4edbffd551c",
+   "rsrc_size": 348,
+   "type": "TEXT"
+  },
+  {
+   "creator": "EDIT",
+   "data_sha256": "7c82749ce59e0e5f6b67e71ccc377cea39e51dda44a7363255e9595cc8a132ad",
+   "data_size": 32,
+   "name": "Mailboxes/User Backup",
+   "rsrc_sha256": "6025ff81567220fa347fcfa945a79dfc877e3359a6bdd8c3f65e33e40a2f38fe",
+   "rsrc_size": 348,
+   "type": "TEXT"
+  },
+  {
+   "creator": "EDIT",
+   "data_sha256": "c37f830ecfbb5c3a554be438186e1bf49c7c922a9159f73b08de2ce9166e7e92",
+   "data_size": 36,
+   "name": "Mailboxes/To AT Server/MBX_8cbaa7",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Database/Mail Index",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "????"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Database/Sequence Number",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "????"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Database/Users",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "????"
+  }
+ ],
+ "fixture": "derived-MacPost-Server-10b6.cpt",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "92381875b6bc6df2f4295698892bdf83793b5b8264f63eb4466713602af72c23",
+ "size": 216104
+}

@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "f097f514a00fa45d6dbcf5e9dfb5dd5be4d4432b5ebb947280324100ac8f9a85",
+   "data_size": 43094,
+   "name": "uuundo10.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "uu-undo-10.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "fbb3bdbd27380a9a8e4a45ce5b809a6915a31d8a5f549528fbef9095d7e884db",
+ "size": 59617
+}

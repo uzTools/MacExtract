@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "784f28bf62c229a2681c1722a4b32ee46395257d9b25956fc3bfcd39cbbef224",
+   "data_size": 143253,
+   "name": "Poly2.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "poly2.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "692f686d3549021f221634fd59193dc509d350a09d6c3cad63ad4c942799731c",
+ "size": 143488
+}

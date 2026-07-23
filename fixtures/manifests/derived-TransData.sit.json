@@ -1,0 +1,66 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "TransData™ 1.2 ƒ"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "9a652aaf3c86611dc676ec45dbad63086b14eae83d9587a716e3f2aed8f0974d",
+   "data_size": 652,
+   "name": "Read me",
+   "rsrc_sha256": "8401febfed764ed058c82050edd33ec5ef438f8465c50cf8baedaa442d09349d",
+   "rsrc_size": 332,
+   "type": "TEXT"
+  },
+  {
+   "is_dir": true,
+   "name": "TransData™ 1.2 ƒ/Examples"
+  },
+  {
+   "is_dir": true,
+   "name": "TransData™ 1.2 ƒ/Examples/Sample Data"
+  },
+  {
+   "creator": "Maui",
+   "data_sha256": "a0de08925cae308e1361a594b00a324a302497f621a83388090002e0743e6db8",
+   "data_size": 90,
+   "name": "TransData™ 1.2 ƒ/Examples/Sample Fixed-Length filer",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "HAWI"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "0173048b430c108a002934d0f4681f783edfc7666d7aead67870cd6b85551a23",
+   "data_size": 198,
+   "name": "TransData™ 1.2 ƒ/Examples/Sample Data/Sample Fixed Length",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "QLII",
+   "data_sha256": "5f919f794e0544cd5b6940e43cfb18b254be6a11222af3f4c4153c82b244fef5",
+   "data_size": 5203,
+   "name": "TransData™ 1.2 ƒ/Examples/Sample Data/Sample comma delimited",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "PSI2",
+   "data_sha256": "e3cc7501259db2d2c48e1329cb97f768e2cc18378e9e9343350c5f249340de86",
+   "data_size": 1445,
+   "name": "TransData™ 1.2 ƒ/Examples/Sample Data/Sample tab-delimeted",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-TransData.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "cb71017c794a30cd089d13e0029c579ee9b1e7ad4dd7d5e097df3fa9b8ba3ed4",
+ "size": 105791
+}

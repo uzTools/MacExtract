@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "8596f2bd02e9e259f9b043f8671ac8b24dac327462489704d2348f367b5b341e",
+   "data_size": 124327,
+   "name": "Archive.sitx",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SITX"
+  }
+ ],
+ "fixture": "country-song-generator-101.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "dbe70412da75750343e0f03fcd015327d5574779248b0e87fcccea458ca081e4",
+ "size": 172313
+}

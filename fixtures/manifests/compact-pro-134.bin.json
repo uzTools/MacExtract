@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "EXTR",
+   "data_sha256": "10705c82196a2f7b1056aa83e09fea369be7ca67f288fc762643878dd894b592",
+   "data_size": 111719,
+   "name": "Compact Pro Package",
+   "rsrc_sha256": "6c4e3c657adcdd05833fab8ec2e8ed0e1caabe3b54e64ae5eb4af500be91fa33",
+   "rsrc_size": 12578,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "compact-pro-134.bin",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "82898a6200a2d35bfa004e70892268c7c133be7f6e581c4617d5fc364ffb9cbe",
+ "size": 124544
+}

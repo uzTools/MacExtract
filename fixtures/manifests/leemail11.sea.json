@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "EXTR",
+   "data_sha256": "7d84a612b7835affdf5f82dca1db1ba17009c81a3220100825b5b9b202a0e47a",
+   "data_size": 69744,
+   "name": "LeeMail1.1.sea",
+   "rsrc_sha256": "043c0561619e759a511e285fd6bdfefb1117f64b6a8c6eb37b9f9af39691782b",
+   "rsrc_size": 13121,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "leemail11.sea",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "e49f6dd548f5108bbaf61fcd510053364ac53069a40c0cbc6983a2a6e367aef1",
+ "size": 83072
+}

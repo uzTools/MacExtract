@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "3a8aa1c616c6df481c1dd82f33ce6ffdc020e714e4f2f89719e377cb1943ad46",
+   "data_size": 84532,
+   "name": "unshar 1.11 folder.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "unshar-111.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "e5a06a9a11bcdb6d8c9389340265f3e32a7405d3d59d4c2413bff4c8a98ecceb",
+ "size": 115223
+}

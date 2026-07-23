@@ -1,0 +1,16 @@
+{
+ "entries": [
+  {
+   "data_sha256": "815587ec5dd0a06062263c4f9dc6603aa55f7b06918d143baa93e6c891ec2e91",
+   "data_size": 205019,
+   "name": "a2basic.dmg",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  }
+ ],
+ "fixture": "derived-a2basic.dmg.sit",
+ "format": "StuffIt 5",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "40c2812b8e73d7af2f83633eee725bdee7188101944809a889c0a8fe7b191855",
+ "size": 152942
+}

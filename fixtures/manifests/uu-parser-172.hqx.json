@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "EXTR",
+   "data_sha256": "486c22b090e5029f5cd66133375168b35dd8c8ff174d4c73f598a5ab6a603e11",
+   "data_size": 66272,
+   "name": "UUParser1.72.sea",
+   "rsrc_sha256": "b056710a78634d6a8d0f30798a589ef572917f234e1225183792f36c80199211",
+   "rsrc_size": 12538,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "uu-parser-172.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "93e86b61f6f66601080781db15abd2ccd85908fc7a5ced3c2eec85473b04ca1c",
+ "size": 109415
+}

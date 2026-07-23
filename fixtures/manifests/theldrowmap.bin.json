@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "WILD",
+   "data_sha256": "745d991f90ebe9db7389502ff492718a2523ee324790f808fc403172091cc12e",
+   "data_size": 38432,
+   "name": "Theldrow Map",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "STAK"
+  }
+ ],
+ "fixture": "theldrowmap.bin",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "9b6f734435c10b003682933414c06e3a683feea4bd5f23058720c1add7fb82f2",
+ "size": 38560
+}

@@ -1,0 +1,40 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "TextConverter 1.0.1"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "ff171ad9604ce93b3b7c8bad9c53189cc97c12e21a310499d5af494916294e3b",
+   "data_size": 1040,
+   "name": "TextConverter 1.0.1/How to Register",
+   "rsrc_sha256": "ddc4b9fdb518c72e690178c8b83c8e6c471fb5fd22ae39d920370b8bef2389e5",
+   "rsrc_size": 887,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "d5897ac6b85d65a4612e5f741c7d5dbea76c03b9492264ec59113dd941b15766",
+   "data_size": 92673,
+   "name": "TextConverter 1.0.1/Quadra 800.logo",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "2cc688da284fffe3e20c1d4896f847b984b23fba548e457240402636d9db36e8",
+   "data_size": 9949,
+   "name": "TextConverter 1.0.1/ReadMe",
+   "rsrc_sha256": "302c639edf01ac48c02792fa8084f9704225e55da7b7e51940703203f8b1b71c",
+   "rsrc_size": 3338,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-TextConverter_1.0.1.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "6995841ec93105d8cd171122c0172849f4083ed92b277a713f268905918fd7c4",
+ "size": 121602
+}

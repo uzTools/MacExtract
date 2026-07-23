@@ -1,0 +1,102 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "Jump Start! 1.4 ƒ"
+  },
+  {
+   "is_dir": true,
+   "name": "Jump Start! 1.4 ƒ/Blurbs ƒ"
+  },
+  {
+   "is_dir": true,
+   "name": "Jump Start! 1.4 ƒ/Jump Start! Folder"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "8758c331cff8c9ecc840d51390220a06d5e92c528d577e4f05e38b170b17390e",
+   "data_size": 951,
+   "name": "Jump Start! 1.4 ƒ/Important!!!",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "e3c6ea0c7837db5c64c9b1337393848ed8f84426d6df74edee1605d141613e77",
+   "data_size": 2002,
+   "name": "Jump Start! 1.4 ƒ/Jump Start! Order Form",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MACA",
+   "data_sha256": "69159d83ef8c1cf17730f2fe8256dca4c00e3eb15d908a31c00c68350486f3eb",
+   "data_size": 3496,
+   "name": "Jump Start! 1.4 ƒ/Jump Start! Order Form.MW",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "WORD"
+  },
+  {
+   "creator": "MACA",
+   "data_sha256": "fa374d6fa2a3ff46de9363d7eb3d041dd244bf029c1fcbadb9c21d3a03108369",
+   "data_size": 23480,
+   "name": "Jump Start! 1.4 ƒ/Jump Start! Read Me!",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "WORD"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "7c3e60844ae48cd8666cae51230a38c22528260ba46e5725e921d57d45b4cef4",
+   "data_size": 693,
+   "name": "Jump Start! 1.4 ƒ/Blurbs ƒ/Finder 7 Menus! Blurb",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "c599320872f52549964f800643274693c8b7d9590af8d6a17f49d447736ad8c0",
+   "data_size": 901,
+   "name": "Jump Start! 1.4 ƒ/Blurbs ƒ/IGS Array UNIT Blurb",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "51f2db66f778bbae386c4fccb9855273f38db63eacf181cbe084454dfe556f96",
+   "data_size": 1817,
+   "name": "Jump Start! 1.4 ƒ/Blurbs ƒ/IGS Pascal Source Kit! Blurb",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "c4a9d386ee7c61a5cfdd135c82b6f15ac2a015cd0154a5c150794e0f1172c411",
+   "data_size": 1670,
+   "name": "Jump Start! 1.4 ƒ/Blurbs ƒ/Jump Start! Blurb",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "df99bfe77f09d6c8b15eac32cfd995b0d68ab8bf8085ad8540339d82d5bcc634",
+   "data_size": 1335,
+   "name": "Jump Start! 1.4 ƒ/Blurbs ƒ/Playin' Possum Blurb",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-Jump_Start_1.4.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "1a8154f8c77e011f574daa254c4a3011c66e37f0312994da0d2a83567babaaae",
+ "size": 33927
+}

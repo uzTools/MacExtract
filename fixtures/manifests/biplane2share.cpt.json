@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "CPCT",
+   "data_sha256": "057f6ff55e5e0acfd1a131540ec4bdcfc4d87c036a7f6f25a76eb81e638c0d1a",
+   "data_size": 106873,
+   "name": "BiPlane™ 2 Share.cpt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "PACT"
+  }
+ ],
+ "fixture": "biplane2share.cpt",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "af236af8a8822d48d1895b93acd262ad0912ab378c56471dc6383298bb457634",
+ "size": 107008
+}

@@ -1,0 +1,27 @@
+{
+ "entries": [
+  {
+   "creator": "MSWD",
+   "data_sha256": "c80dc14a5edece4e06e3826a7e99da5f04f39811de2dc61ac63de5c3388eec35",
+   "data_size": 10240,
+   "name": "SystemIdle-Doc.Word",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "WDBN"
+  },
+  {
+   "creator": "MACA",
+   "data_sha256": "fb7e9d54d45738bb5518a8ec12c70ea9d8d441ff398682db214a8b44971dfab8",
+   "data_size": 6552,
+   "name": "SystemIdle-Doc.Write",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "WORD"
+  }
+ ],
+ "fixture": "derived-SystemIdle.Sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "8fd96d72fad3f599710b187834dd57fcd24fcc103491a47119d07556198603f2",
+ "size": 18509
+}

@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "4332e5d32a3e470ba2a7a2b299fcba03f15c6542242533f40774c86ee3f049e7",
+   "data_size": 221547,
+   "name": "mac.faq-36.sit",
+   "rsrc_sha256": "2eecc3732636c32c43b84dc97c9fe4f1c15cc4e436fb0df8e92f81ac16ca4ec3",
+   "rsrc_size": 326,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "mac-faq-36.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "dd022672d9330cd796f5d7b8ea0bc3ee05ea76a35ab289d3044aa2973b0e2501",
+ "size": 301633
+}

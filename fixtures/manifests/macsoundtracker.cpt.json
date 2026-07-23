@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "CPCT",
+   "data_sha256": "ca6294096bfadf23031e0714f1e6636c83cc58d1455278cc6c69a0d2e56aefb1",
+   "data_size": 97171,
+   "name": "SoundTracker.cpt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "PACT"
+  }
+ ],
+ "fixture": "macsoundtracker.cpt",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "dab608c08f5da1ea8876b6a3524fa19567f5fc1e5544fed0decce330314e2644",
+ "size": 97408
+}

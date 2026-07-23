@@ -1,0 +1,22 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "Code Programs ƒ"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "fcbb84a23fad1c6bb5368ce812883dc251eb50c132740c1a2625cd726dbee9fb",
+   "data_size": 1825,
+   "name": "ReadMe",
+   "rsrc_sha256": "eaa0083e52fc63618ee41b4910bce00e7b1d05032f6934492d5fae83cb221917",
+   "rsrc_size": 1142,
+   "type": "ttro"
+  }
+ ],
+ "fixture": "derived-Code_Programs.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "957cd26c22e61ef51426b6808eca9b0bc00e7ce07d942e4806b7068392e4b12b",
+ "size": 60666
+}

@@ -1,0 +1,49 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "Weather 2.2"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "addadac1e5186daf2f32b6a8a72cabb977d582c91f8916106ca21de68115787d",
+   "data_size": 11793,
+   "name": "Weather 2.2/Calendar Archives",
+   "rsrc_sha256": "d48d818e099543964fcf2d4c20f6dbf2562d842b5f1730bc9f370d64c50bca2d",
+   "rsrc_size": 332,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "9c7f42535aed5d4e436fa030605d9fb6c806910f1e9a55d474addcf649a4daaa",
+   "data_size": 12939,
+   "name": "Weather 2.2/Calendar Backups",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "WILD",
+   "data_sha256": "3d54952cbfb5464d3e070d55f41c649379f279cabdc2a4ef07d3953dd09904c4",
+   "data_size": 443232,
+   "name": "Weather 2.2/Weather",
+   "rsrc_sha256": "8a34a4a235289a195a96df6bc3f6eb3cd453b7a681cdd1fb24de399a031b9c1b",
+   "rsrc_size": 23322,
+   "type": "STAK"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "3b7f7e2e47f44f01a8f164e6f5b48fd6e183b49073b3ae7a696aa153368ff3fc",
+   "data_size": 4496,
+   "name": "Weather 2.2/Weather Blurb",
+   "rsrc_sha256": "0800bbe57859b4d22d2e29e251abc4cb03cae192346986a124545040435e3082",
+   "rsrc_size": 2440,
+   "type": "ttro"
+  }
+ ],
+ "fixture": "derived-Weather_2.2.sit",
+ "format": "StuffIt 5",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "94b3b797f33e48cb17c72ae422030ec3173bdcc540a93ea52e53e0c38338b99d",
+ "size": 175817
+}

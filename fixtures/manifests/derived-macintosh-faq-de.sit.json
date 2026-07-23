@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "R*ch",
+   "data_sha256": "e97306cd1d1cf1266d0c988e2c16f235f1a4edeefd22b4c70de381791a0da342",
+   "data_size": 147679,
+   "name": "macintosh-faq-de",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-macintosh-faq-de.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "b0d80c5f4ae22693dc3dcfceaaa3571acf76717c008b7c26667956bbddc6af6f",
+ "size": 54015
+}

@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "b5acdf7aa03ffbb8ec52cc80ec8a07a0496bbfb1245a4d8a84356947a2214e2b",
+   "data_size": 1974,
+   "name": "Fractional Widths.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "fractionalwidths.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "5de5761a43db7cdb763a0028bdab32635cc1d06969a7f6d18803dec7893a1dea",
+ "size": 2102
+}

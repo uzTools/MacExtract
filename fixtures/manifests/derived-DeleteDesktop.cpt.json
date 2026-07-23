@@ -1,0 +1,49 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "Source Code"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "08ec5367ad7965846b89d544f99047c6ef29dc6a8a79ae7712483d05fd7d449c",
+   "data_size": 1397,
+   "name": "Read Me • DeleteDesktop",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "4c50928779684b14ab8d259ac188ef4454f4b23585f1adfe720eed822b59e385",
+   "data_size": 861,
+   "name": "Source Code/DeleteDesktop.c",
+   "rsrc_sha256": "ba2a0a5a783b84f72519b9a88179c708c15cbb610ccec5e9418b50baa312e250",
+   "rsrc_size": 428,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "578c77ade2dcb405c75c0a957cf7798d4dd1c320f54f6f491e2b271922163bef",
+   "data_size": 601,
+   "name": "Source Code/DeleteDesktop.make",
+   "rsrc_sha256": "26dd02017f1da15e61408861c95dc06fd2130cbe1a0505532d63e022c3295470",
+   "rsrc_size": 428,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "53f2332542d24ccb07dfa1820aadc1cb2f9832b65224682acdcb8ea8da0ad099",
+   "data_size": 321,
+   "name": "Source Code/DeleteDesktop.r",
+   "rsrc_sha256": "4ad23751f211cbc54ddf62e95af38732332bc9cc567d985df025dd4c112c8284",
+   "rsrc_size": 428,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-DeleteDesktop.cpt",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "a7fe929bb42faf105c41804a1f3763512621da1f4e2a45ca140299a1b69520e7",
+ "size": 4366
+}

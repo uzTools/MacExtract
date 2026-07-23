@@ -1,0 +1,70 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "FloatingNotes Carbon ∆í"
+  },
+  {
+   "is_dir": true,
+   "name": "FloatingNotes Carbon ∆í/Register FloatingNotes"
+  },
+  {
+   "creator": "SPFL",
+   "data_sha256": "8fc2027a0a37de3c999a0d81da138981ac4c41c8fb213c4eb039e30111c90c05",
+   "data_size": 402495,
+   "name": "FloatingNotes Carbon ∆í/FloatingNotes Carbon 1.1",
+   "rsrc_sha256": "2fa57f04567f95b5ae7af8110d02e2d84c75d4fc9c07924d0a2cc0d5b9d9a3bc",
+   "rsrc_size": 21826,
+   "type": "APPL"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "5a1297549ba5b5dfe44086d75a4b96031c7893d557b886da2d42df028ad15c72",
+   "data_size": 286,
+   "name": "FloatingNotes Carbon ∆í/New for v1.1",
+   "rsrc_sha256": "ae567134989d6014313c2fd7a0867ccf3bd5639f0999967988fa2b641c8b8215",
+   "rsrc_size": 352,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "074f5f82512544d9646ad3ee4279fc7f773c153beefff220763f2fe827f15882",
+   "data_size": 953,
+   "name": "FloatingNotes Carbon ∆í/Read Me First",
+   "rsrc_sha256": "a880189d672061d4b4f307854d31a6db084379727cfd875ed0650e137ceb8797",
+   "rsrc_size": 552,
+   "type": "TEXT"
+  },
+  {
+   "is_dir": true,
+   "name": "FloatingNotes Carbon ∆í/Register FloatingNotes/Mail or Fax"
+  },
+  {
+   "is_dir": true,
+   "name": "FloatingNotes Carbon ∆í/Register FloatingNotes/On the internet"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "21a168a97c94e77c2ef2dfffb7ca81e11666b82bb966959197a287b9fa8d40a5",
+   "data_size": 215,
+   "name": "FloatingNotes Carbon ∆í/Register FloatingNotes/How to register",
+   "rsrc_sha256": "923b265cd2e92b9737e5916607918a0bac28af518d91fefdd1f96073490843dd",
+   "rsrc_size": 432,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "15090aa77b82e8ca22ce0f619028f8f4ec4655053c9f323a198fd604c985d14e",
+   "data_size": 14620,
+   "name": "FloatingNotes Carbon ∆í/Register FloatingNotes/On the internet/Open to Register FloatingNotes",
+   "rsrc_sha256": "ab989cc269930d0e03542d2ef9b97218eff5bcbe392c4bff6cb765ec4eba84bd",
+   "rsrc_size": 23573,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "derived-FloatingNotes.sit",
+ "format": "StuffIt 5",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "2ee48248b5e16ee6706bb9847ab7c6ce23aca5160802ee868138304cbf122a1d",
+ "size": 205334
+}

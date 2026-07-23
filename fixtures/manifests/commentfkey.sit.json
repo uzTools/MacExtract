@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "929837294b8f30978dbcc8315cd7ef67f192647c07e85008f97fe44149b205b0",
+   "data_size": 14269,
+   "name": "CommentFKEY.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "commentfkey.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "ed03f183d3e234674805472a1afc64e2d9de002f2a040d615090d5ed590ee36f",
+ "size": 14397
+}

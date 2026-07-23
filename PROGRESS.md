@@ -3,7 +3,7 @@
 | Milestone | Status | Notes |
 |---|---|---|
 | M0 scaffold | **DONE** | build matrix (ASan/UBSan/alignment, -m32, release -Werror), unit harness, diff/robustness harnesses, corpus+manifest tooling, empty engine sniffs gracefully |
-| M1 MacBinary + AppleSingle/Double | todo | |
+| M1 MacBinary + AppleSingle/Double | **DONE** | 195 oracle fixtures byte-exact (data+rsrc+type/creator); 1950 corrupt variants clean; found & excluded a GNUstep oracle bug on `~`-prefixed names |
 | M2 BinHex 4 | todo | |
 | M3 PackIt | todo | |
 | M4 Compact Pro | todo | |

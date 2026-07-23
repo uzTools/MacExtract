@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "R*ch",
+   "data_sha256": "0edfdb8a6501fe1fe5f081635e3ac5364c4ab28f26eeffa57aa38aba44d14c25",
+   "data_size": 25661,
+   "name": "extension-to-type-3.txt",
+   "rsrc_sha256": "f3ce74714a2be24cc66da66a25e1323a489012a463810957e303cdab27d66040",
+   "rsrc_size": 670,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-extension-to-type-3.txt.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "a38aee8fbff1c35745aa013da28d901cde04291a18e709921fdc5f1ce252b521",
+ "size": 8040
+}

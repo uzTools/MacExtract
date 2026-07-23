@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "CPCT",
+   "data_sha256": "d5200b3c88ef6467bb9d3f80871b8af2b113e1ff36ca1ed56765d411c92f2545",
+   "data_size": 863,
+   "name": "keyAhead.cpt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "PACT"
+  }
+ ],
+ "fixture": "keyahead.cpt",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "1402154140ce179ca859e6ec9a45c00c2cb0f636406dddcfc87b61ddd605fb1d",
+ "size": 1024
+}

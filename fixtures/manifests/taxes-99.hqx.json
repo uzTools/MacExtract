@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "d30750c6e10ff94975521c548d886c783b957fefeb562965119867d1f03414a7",
+   "data_size": 31450,
+   "name": "TAXES99 Folder.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "taxes-99.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "c526de590e270b081222719c4b36038787b900b7288a2f20bf0ab0f51838f816",
+ "size": 44154
+}

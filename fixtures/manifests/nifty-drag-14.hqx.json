@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "3a5c4fa0776ca2d90c07a347420738d961e94a9723a799c3941e7be8348f0d46",
+   "data_size": 63585,
+   "name": "NiftyDrag1.4e.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "nifty-drag-14.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "32b37af8f07701eae087ef97240ce840e5610f95c1b5c4d67e8bb26f0f7e93b5",
+ "size": 86841
+}

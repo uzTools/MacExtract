@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "097830aeb4a00713cb150cf6f1dc0795dacd66e5904bac460101318495bbf4ae",
+   "data_size": 130365,
+   "name": "Chiron v2.4 Release ƒ.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "chiron-24.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "b16efe355022ee55639df11c41ef99ba8690a0bce506f87be760b79a540f74c6",
+ "size": 179266
+}

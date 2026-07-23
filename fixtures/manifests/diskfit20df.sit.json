@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "b9f79f94549fab89744133304333b557800716127947d206a94d92162ec92bb3",
+   "data_size": 208763,
+   "name": "DiskFit 2.0df.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "diskfit20df.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "552687f3d00eed5e8c46c1c1978bb0d1dc2090c3563aa710215f6fc0fea5c46e",
+ "size": 208896
+}

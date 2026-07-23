@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "aae8499109aae8d23b99c4bd0e256310a5dc46e121cca46596a857fbadb5ff71",
+   "data_size": 186530,
+   "name": "beaver-0.85.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "beaver085.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "8161a159f13eab378413496d306011f48384afc060991517bf69a6a9a2b3c455",
+ "size": 186658
+}

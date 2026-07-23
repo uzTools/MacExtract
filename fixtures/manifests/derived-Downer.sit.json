@@ -1,0 +1,22 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "Downerƒ"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "0a9d092108cd6a3d17c55006bfbf7819afb84411f76b44748da4cc7bfcbc766f",
+   "data_size": 1033,
+   "name": "Downerƒ/ReadMe",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-Downer.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "530de031940bd516ae46a3a1121bf524b8b4ed5bb95c4c2de19b53a2216461d5",
+ "size": 4224
+}

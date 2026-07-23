@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "a0596913f7a8f52983248c8417248314776f0c0a86bba219f235dc69bda39221",
+   "data_size": 3701,
+   "name": "ScrollbarPattern.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "scrollbarpattern.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "97c904616883f449d785b70570ab165ee43f2f8f4e74a3ed52427955d208cae7",
+ "size": 3829
+}

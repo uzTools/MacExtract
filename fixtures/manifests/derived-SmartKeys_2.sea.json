@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "MACA",
+   "data_sha256": "dc246be169487c6fbeb5de7fd064c7fa29dfe4c62e9bd5b8ff85ac8506febdec",
+   "data_size": 22476,
+   "name": "SmartKeys 2 Docs",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "WORD"
+  }
+ ],
+ "fixture": "derived-SmartKeys_2.sea",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "3bb38233b4395f6b5a1443f7846976c728d7887936cbce86a90ecfa487d8e2fe",
+ "size": 26658
+}

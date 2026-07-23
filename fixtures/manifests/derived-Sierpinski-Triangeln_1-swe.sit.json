@@ -1,0 +1,22 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "Sierpinski-Triangeln 1.0"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "5f4dd1c2eafd334785e88946391506cae0804660b6dac623dc1ee1eaf741863e",
+   "data_size": 1667,
+   "name": "Sierpinski-Triangeln 1.0/Läs mig om du vill",
+   "rsrc_sha256": "28866eb828320e8bcacdea81a0888f4fe25f0ae8cfce88127543692d1a46df5a",
+   "rsrc_size": 732,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-Sierpinski-Triangeln_1-swe.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "38b4cee885741059f6c887184403d188247262720800a55449df0da4d5aa6c6e",
+ "size": 6505
+}

@@ -1,0 +1,31 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "Executable pack"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "1eddbfa943dd071beb7d26a8c394362a33c4f38f28f18f74b94b5622faaab199",
+   "data_size": 2441,
+   "name": "Executable pack/README.MAC",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "d77c06abad79d3ce9f639ca65413a507dc00c8006d5c8a5115be61eadb474b41",
+   "data_size": 50054,
+   "name": "Executable pack/ZOO.MAN",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-MacZOO2.1.cpt",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "58856060a09124189900076f56978544504569001e60a69fbf1834847a4db7e9",
+ "size": 61641
+}

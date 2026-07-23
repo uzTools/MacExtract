@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "8ea1bf900836435731fbea3e5b7339e12d19f627fb65505d22c03c20a6c5e8d5",
+   "data_size": 46974,
+   "name": "Blackouts.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "blackouts.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "18e48fd61dbe6a0e44b652ccc0f1f97871706a51bc0193c0fb7eb1ff11b025f8",
+ "size": 47102
+}

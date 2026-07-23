@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "CPCT",
+   "data_sha256": "73426899a46190921b6c72d8dd64fecd5d2a8679554cbaa0002486b3b582d3ed",
+   "data_size": 7512,
+   "name": "WorkstoWorks.cpt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "PACT"
+  }
+ ],
+ "fixture": "afe-appleworks-msworks.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "85e18bb2ed1774b399244bc8cca6227a005b77f46ccce2ced65f5ed2f27dd558",
+ "size": 11004
+}

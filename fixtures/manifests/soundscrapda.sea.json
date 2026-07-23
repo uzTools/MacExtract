@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "EXTR",
+   "data_sha256": "d9f8adb71b2243f1ace698bbfffb00811780a034d9fda086dd1fa5b886e05e6f",
+   "data_size": 15198,
+   "name": "Sound Scrap DA.sea",
+   "rsrc_sha256": "0e5e57774f9d7e6bd2eb907ef279d778f2fb7409661804e5379d6d4f87e3cdcf",
+   "rsrc_size": 13121,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "soundscrapda.sea",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "906253d62c4282958cd5a9e0a1e33ca7367807e6aa535edd5ed819c6d7288c8f",
+ "size": 28544
+}

@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "1fa51df300bb345b689ab5adc1037ece46130bc15c91504548628c2b09d527ed",
+   "data_size": 11941,
+   "name": "ttxt XTND.sit",
+   "rsrc_sha256": "f5b40da186e6fd6e6d621fe8745ad8bd08522fa5f45638ab164e5818ed6be9d0",
+   "rsrc_size": 326,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "teachtext-simpletext-20-xtnd.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "aa1abe82fb5002995c96a98ce635ac0bbd2d51006c21443e73722bd9586a51d2",
+ "size": 17375
+}

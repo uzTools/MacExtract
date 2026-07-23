@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "EXTR",
+   "data_sha256": "19d5181959a206c41f94f210af895fd3dc8d6c7bcbcb8ecb5bd741178ba26fcf",
+   "data_size": 151405,
+   "name": "Remember? V2.1.2.SEA",
+   "rsrc_sha256": "7e0c03124ca640bec3ec584ccd218483167d384c5882caa06f1be00e48f8f63a",
+   "rsrc_size": 13121,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "remember212.sea",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "5d3c83c5e4f271b5adf63e9c39285864874ce4d001d06ab10448c586089f4a38",
+ "size": 164736
+}

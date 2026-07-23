@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "EXTR",
+   "data_sha256": "6e95c66039a297994c32ced59fd94f74ba399a473051241d41264bbbe00a65ca",
+   "data_size": 134551,
+   "name": "Finder Sounds 1.3.sea",
+   "rsrc_sha256": "38f269b597e9f66b3c253fe746e1d0b1ed93474edbe36b6a89cab71feeb7fd11",
+   "rsrc_size": 12961,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "findersounds13.sea",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "7a15312221788dc67464bf4cea57b10588939851af39f1e32a128e265bb4b13b",
+ "size": 147840
+}

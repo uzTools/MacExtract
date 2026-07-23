@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "CPCT",
+   "data_sha256": "b3a9495324e8f9e5249ad442d05f35dc0c42b1bcab8f4c06976dbe93b555b97f",
+   "data_size": 48928,
+   "name": "FI22B1.cpt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "PACT"
+  }
+ ],
+ "fixture": "flashit22b1.cpt",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "aa2378c5134f8cd849778058f252e15a0c131ec8ecdad035cff7187aa131c51f",
+ "size": 49056
+}

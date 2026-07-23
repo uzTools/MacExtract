@@ -1,0 +1,22 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "DL111"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "f76fd1a747da2181b67ad1e349be4feb6edbc9d99426dc78d6af1df6a44859b9",
+   "data_size": 8330,
+   "name": "DL111/DL 1.1.1 Rel Notes",
+   "rsrc_sha256": "d50b9f43ca03013be896cb421e4ed2d4343b2df093143dcdc2a7b77e20544e40",
+   "rsrc_size": 2075,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-DL111.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "da18648dc10756bbc4f1e66f524586c08cc9a24ead4faebdac1af5ea06b3ad4d",
+ "size": 85144
+}

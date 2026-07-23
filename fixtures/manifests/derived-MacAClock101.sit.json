@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "ttxt",
+   "data_sha256": "babfcd3e45df61a53d04d27b00b0f56dc99a5ce5206a2ea95d3f90555e735733",
+   "data_size": 3555,
+   "name": "ReadMe.MacAClock",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-MacAClock101.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "8f0327452e821601f4c19fc511427c01abe1b5f8d2b4720833dc16507929e1df",
+ "size": 22430
+}

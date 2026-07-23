@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "EXTR",
+   "data_sha256": "cb7efd116045d65a510691abb784760e8b133c097f394b58d5e97c5a9e9aaa8a",
+   "data_size": 72253,
+   "name": "Termulator 2.03.sea",
+   "rsrc_sha256": "c9419e17ef9f5edd9f19426e0c6aa14a970362c82c9a180f753d01a06a803695",
+   "rsrc_size": 13121,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "termulator203.sea",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "64a48d65501208cf51b54f293b86b503987dc9f74d889ca159a6eaa0a9f525d0",
+ "size": 85632
+}

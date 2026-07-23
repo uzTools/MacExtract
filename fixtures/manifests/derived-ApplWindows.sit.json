@@ -1,0 +1,22 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "ApplWindows"
+  },
+  {
+   "creator": "MSWD",
+   "data_sha256": "eafc111cee0cf205e3b249bfe0b961d915f45a33977574005db3ef0ce32d2b2a",
+   "data_size": 42496,
+   "name": "ApplWindows/ApplWindows 2.0.2 (MS Word)",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "WDBN"
+  }
+ ],
+ "fixture": "derived-ApplWindows.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "7023debc334a3812cd173aef669f0dce2515b0e4f85b93a5a08b3f416a99b8c3",
+ "size": 35472
+}

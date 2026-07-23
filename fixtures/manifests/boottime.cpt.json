@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "CPCT",
+   "data_sha256": "427e2b266af86e4d74790bb1cd913b7440c5fa5e5a11789a0929cae0e14517af",
+   "data_size": 6457,
+   "name": "BootTime.cpt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "PACT"
+  }
+ ],
+ "fixture": "boottime.cpt",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "68acf05d6d20477781f14ec4190f3d4a535ab0cb9690b1cf092dad9663fcba96",
+ "size": 6656
+}

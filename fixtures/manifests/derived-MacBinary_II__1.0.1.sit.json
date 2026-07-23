@@ -1,0 +1,40 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "MacBinary II+ 1.0.1"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "30453cda043c68f8e88bd1697033aaf8a6f6ca70dff934211477689fe0ac22d4",
+   "data_size": 7343,
+   "name": "MacBinary II+ 1.0.1/MacBinary II Standard",
+   "rsrc_sha256": "d8ad6b182ca2905fe699f61abceb3006cb914cdccc15c3cdbf6c29dfe0263b51",
+   "rsrc_size": 428,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "a41a4606246bc9c7c61d8274dd8e9f2697498bafe0ad964e9d99dbbfa830aa66",
+   "data_size": 4862,
+   "name": "MacBinary II+ 1.0.1/MacBinary II+ Documentation",
+   "rsrc_sha256": "1a1eb21fd9e70d4f1126e688419fc559bf5741d24a0f7b9fa9fa839e6e277765",
+   "rsrc_size": 336,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "02fa34529bc6bd7961ae0007420a0488896380030c5ba698d46c0d9d752b42fd",
+   "data_size": 4601,
+   "name": "MacBinary II+ 1.0.1/MacBinary II+ Prelim Spec",
+   "rsrc_sha256": "d432e8c1550468383752da2ee4c6b8678a43d76c1e309f175bb686e6bf216498",
+   "rsrc_size": 428,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-MacBinary_II__1.0.1.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "960255fce6f59861a1d02909e143adfd4d386449c7476d07366c4aeac57c06d1",
+ "size": 18041
+}

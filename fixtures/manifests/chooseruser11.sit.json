@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "6d5a273d04806cda9f2e2c3e87053d017121c7d3cb599c5872673c25fc1f30af",
+   "data_size": 21432,
+   "name": "ChooserUser 1.1.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "chooseruser11.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "2c09e34a98e1a3038ee39ae7582ba0350a50110ad864dcd7f8e7e438936b0a47",
+ "size": 21560
+}

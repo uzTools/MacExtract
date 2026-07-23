@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "MSWD",
+   "data_sha256": "067f7c5373715a0e0f5e1f82fe98d6a6b555d367f4282ee6f0bc49cca40416d1",
+   "data_size": 2130,
+   "name": "Fractional Width Key Docs",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-Fractional_Widths.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "b5acdf7aa03ffbb8ec52cc80ec8a07a0496bbfb1245a4d8a84356947a2214e2b",
+ "size": 1974
+}

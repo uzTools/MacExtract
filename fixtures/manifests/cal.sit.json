@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "dc36fb48cd392d63c0311f0015e08d910368da5fab62cc94cf1cdc54f08cd628",
+   "data_size": 50205,
+   "name": "Cal.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "cal.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "0f7688111c132f9864d4a6fedd62d33977752b71adbe3b9e232ddb3513d91c05",
+ "size": 50333
+}

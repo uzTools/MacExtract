@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "EXTR",
+   "data_sha256": "802707468917e501c6eb92aff6c29d709721db3ebc9fc8e3b34365f57f19fb05",
+   "data_size": 21191,
+   "name": "Data Parser 4.1.sea",
+   "rsrc_sha256": "1fc8b11f38b0dae4b9ac498ddf3228496886c74d30bb588ce2a6915659e05452",
+   "rsrc_size": 12961,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "data-parser-41-hc.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "c1dd2a17794ebaf62d5a4fbd0798589351c2b92b2b1efa3bfcd341f6502f5649",
+ "size": 47918
+}

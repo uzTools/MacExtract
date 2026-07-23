@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "3d8f51319f0bb86c12cc73d2cfd845d99b5d26f594c233048aa6bab0af337127",
+   "data_size": 33239,
+   "name": "extractpc1.02 Folder.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "extract-pc-102.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "1e3a840f22805c1f1204841e258e99598107f653963a2ccb457258429f3a511f",
+ "size": 45203
+}

@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "158bc5660b090129698dc29e61d2be33fcc90f2b3007bcd1075f0676fd37b687",
+   "data_size": 23628,
+   "name": "TIFF AFE.sit",
+   "rsrc_sha256": "5bf35e14288f201b0ed6b5eadbea3737023a5ddca081727fb770394f412d1eb6",
+   "rsrc_size": 326,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "afe-tiff-translator.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "69245deba30ef403190db7c91ee2ca32775aeacd23369b49473345468191c1a3",
+ "size": 33372
+}

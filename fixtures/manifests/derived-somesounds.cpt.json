@@ -1,0 +1,76 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "Sounds"
+  },
+  {
+   "creator": "SFX!",
+   "data_sha256": "e172e7d7659f1e6dac2394ec944d8ed53180b5c9821b120baf3865349e4c2a0e",
+   "data_size": 27840,
+   "name": "Sounds/Bad disk",
+   "rsrc_sha256": "18ab5f46d35324e2d2fdf754ca0439232c0359e8db761ae156c0ddaa819969af",
+   "rsrc_size": 470,
+   "type": "FSSD"
+  },
+  {
+   "creator": "SFX!",
+   "data_sha256": "b5eb65fc11d0deeb11c56418c544619d719987429b0269185f4a5a83f41fe382",
+   "data_size": 30848,
+   "name": "Sounds/Beep sound",
+   "rsrc_sha256": "f269b10196211d81185d07d50b516efb1d51f5fb12cd196ffeccbf614267b82d",
+   "rsrc_size": 470,
+   "type": "FSSD"
+  },
+  {
+   "creator": "SFX!",
+   "data_sha256": "dc2ca9c0e89937d1094ee745bb93e40a3b5badac41e5c151e6f75ba3b23879fb",
+   "data_size": 5152,
+   "name": "Sounds/Disk eject",
+   "rsrc_sha256": "3383f5b252972a8ecb37b30dce108b8fccffe93936306de1b5058ac8602233c0",
+   "rsrc_size": 470,
+   "type": "FSSD"
+  },
+  {
+   "creator": "SFX!",
+   "data_sha256": "ad8857d90667e77eb31f9d83e762793ad569296fb2c82a200e90c90a40534d61",
+   "data_size": 11520,
+   "name": "Sounds/Disk insert ",
+   "rsrc_sha256": "6dc43334bfe4ec97e5067d0e85c8a017a0a8bc0b420155a1bc03f8c5d25eeefd",
+   "rsrc_size": 470,
+   "type": "FSSD"
+  },
+  {
+   "creator": "SFX!",
+   "data_sha256": "9d27e8ab5d7ba9081560d11bde03ebfa9b6b0080afabec0db8f3dfcb3de77812",
+   "data_size": 1028,
+   "name": "Sounds/Key click",
+   "rsrc_sha256": "15701e8a81116d56a62e1b2da92851107171a84656212f9f143538192821f809",
+   "rsrc_size": 470,
+   "type": "FSSD"
+  },
+  {
+   "creator": "SFX!",
+   "data_sha256": "270b0c07fffb8b90edaa1a750d2cf21af7143828cc71ce87280dd9d6e125c5c9",
+   "data_size": 18545,
+   "name": "Sounds/ShutDown sound",
+   "rsrc_sha256": "1f1a81f773afa3c717ce51dbe2cf47ae6ca2c89fc20eb5f3b8bf46a26fbb553a",
+   "rsrc_size": 470,
+   "type": "FSSD"
+  },
+  {
+   "creator": "SFX!",
+   "data_sha256": "4e29f05e4bd986399560abc5958f2a4ee57229f99723c982ded6fe4333048132",
+   "data_size": 35916,
+   "name": "Sounds/Startup sound",
+   "rsrc_sha256": "b384661752bec56c00b8156cab5a6a5263712c35ed59478f3b4e3f05dc475c93",
+   "rsrc_size": 470,
+   "type": "FSSD"
+  }
+ ],
+ "fixture": "derived-somesounds.cpt",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "7e5f0bca551a9859ab2b1298a050f1b8222ee7bae5d1dfc946c878b3a684d5d8",
+ "size": 109294
+}

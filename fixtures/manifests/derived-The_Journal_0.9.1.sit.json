@@ -1,0 +1,120 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "cdev"
+  },
+  {
+   "is_dir": true,
+   "name": "install DRVR INIT"
+  },
+  {
+   "is_dir": true,
+   "name": "journal Driver"
+  },
+  {
+   "creator": "KAHL",
+   "data_sha256": "74c481a582ee5fd777f642aa3f7ffd75eb70e2f704d6130e5081826fbe19e3cf",
+   "data_size": 2177,
+   "name": "README",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "KAHL",
+   "data_sha256": "24217256e2d08073b14d85d31b42df830409569394b498c758c61b0bbd4e0a89",
+   "data_size": 7880,
+   "name": "README FIRST",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "KAHL",
+   "data_sha256": "5487acd2fda8cb947bb019f8c3d23002f95f837e5b49c0c8db0eab29de1dee2b",
+   "data_size": 17437,
+   "name": "journal Driver/journalDriver.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "KAHL",
+   "data_sha256": "244d21ea080a4625bf295666936be170df4b4f511ab74b8925c1cc7571f1bb68",
+   "data_size": 6423,
+   "name": "journal Driver/journalDriver.h",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "KAHL",
+   "data_sha256": "b710e155cdb9b8cd32b97cf8a46710a552ad904969ac291b4d990b0358ff398b",
+   "data_size": 1012,
+   "name": "journal Driver/journalDriverInclude.h",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "KAHL",
+   "data_sha256": "b99da9e7d6ab8503a2cad2ae2f8f2c317fc6f5aba4da13a4aedb593a0f897d71",
+   "data_size": 15114,
+   "name": "install DRVR INIT/driver.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "KAHL",
+   "data_sha256": "00acf7354a240d96a9a040c0139fd76c995b236a2af85f26577acd5bc8e6067d",
+   "data_size": 1167,
+   "name": "install DRVR INIT/driver.h",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "KAHL",
+   "data_sha256": "92a7e82b9f2c46e663e13269aa198058db8c99f2c6f789c109fad393a1a6b213",
+   "data_size": 1166,
+   "name": "install DRVR INIT/installJournalDriver.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "KAHL",
+   "data_sha256": "d2bad33d355654ed41439d11363fee02e61e8b00ba31f8922645e1ce7541864d",
+   "data_size": 80,
+   "name": "install DRVR INIT/installJournalDriver.h",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "KAHL",
+   "data_sha256": "33c37703fe8ea3ba7116a214ee06eb47d14dabf45f84891c26d117c458e33b4d",
+   "data_size": 11818,
+   "name": "cdev/Journal cdev.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "KAHL",
+   "data_sha256": "afeb2f43b3c8f1e3759eb972a64f8f58641165bb86d84e66dd6f5d3be7ee80ae",
+   "data_size": 1997,
+   "name": "cdev/Journal cdev.h",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-The_Journal_0.9.1.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "13ac9ece7ed0e65447bed9f320f3d799bf63844e811d676e8598a0550c51e224",
+ "size": 82408
+}

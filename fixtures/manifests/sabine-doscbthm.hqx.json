@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "744aceae203bcf195d88d73d3774e44d5113bc96abf6b8c354f8c59bc8aec68f",
+   "data_size": 14571,
+   "name": "Sabine Doscbthm.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT5"
+  }
+ ],
+ "fixture": "sabine-doscbthm.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "5d5f39175e6dd3d80e654de3fb32c2c77324eff95254fd9f5363aaac12ef0fc1",
+ "size": 20853
+}

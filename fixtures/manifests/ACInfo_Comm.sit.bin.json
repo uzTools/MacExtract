@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "e142c1131f3d5c0a63d58a3cf91be090e143cf4488d78d01a6461d8024ae0e08",
+   "data_size": 158830,
+   "name": "ACInfo Comm.sit",
+   "rsrc_sha256": "bf92db721627ba69e1f62bbcc149a4e047ec19705c2fa68bc503bfafbde4fd64",
+   "rsrc_size": 326,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "ACInfo_Comm.sit.bin",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "e6b0745c08f0a10c07634f70533ea6829b32fe61e694dd6eade2ea5e8e75ef8d",
+ "size": 159360
+}

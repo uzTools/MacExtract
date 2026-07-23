@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "01745d45bdb0858aa970946cf33cd0aa5dd4cad226faefbec5a5ce2d81f5599e",
+   "data_size": 7274,
+   "name": "Diddle.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "diddle.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "a5635815b0dd11fe73d9770ec18dfd2f7a517bcb545947c95e4386eea7ad1aa4",
+ "size": 7402
+}

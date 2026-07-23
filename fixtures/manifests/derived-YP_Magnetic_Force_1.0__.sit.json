@@ -1,0 +1,40 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "YP Magnetic Force 1.0 ƒ"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "39cb5e55037809783b23f0ccf70beb9234877ab982ff78d0e03cc17e87a2ba70",
+   "data_size": 2181,
+   "name": "YP Magnetic Force 1.0 ƒ/How to Order",
+   "rsrc_sha256": "abe37922ed68399993a382ad6e73f4db7eb2582fb4d7083bb0d8db9761b87f00",
+   "rsrc_size": 1192,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "a305bea5af429563f3bdf1df474d53ee6bf9c003a42994769ee3b612444917af",
+   "data_size": 2351,
+   "name": "YP Magnetic Force 1.0 ƒ/Other Products",
+   "rsrc_sha256": "45cd8315fba555eb37a9b34a2ec589be1d9625c4579f623577f7a9bc477fe9f0",
+   "rsrc_size": 82929,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "663b31fd0128205414b6a18ec454f09ff362a984cfb1af17313a7d89f066214c",
+   "data_size": 8687,
+   "name": "YP Magnetic Force 1.0 ƒ/User's Guide",
+   "rsrc_sha256": "e79fd268d9911f5931c05ce99869db245566df76375b4cff191470862ce784ca",
+   "rsrc_size": 111435,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-YP_Magnetic_Force_1.0__.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "c5b87e06f92bf14dab271fbed179c7adebc2d4a28d01146b3d1dec531337bca4",
+ "size": 190283
+}

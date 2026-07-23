@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "VIS3",
+   "data_sha256": "02c4a392088b348ef160494a40b77409173eaaa303151b1666be1143cc27c717",
+   "data_size": 122294,
+   "name": "Star Gate Installer",
+   "rsrc_sha256": "cf313bc3a5a605a947b35ef4c4196d40c3ea2f622de7579af8982a1d0fe80838",
+   "rsrc_size": 111246,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "derived-Star_Gate_Installer.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "3a66f8b7b19e6e22ba562995aec8ef1f0375b41216da5020aa34de4652a069a9",
+ "size": 179696
+}

@@ -1,0 +1,35 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "Stuff Stuff ƒ"
+  },
+  {
+   "is_dir": true,
+   "name": "Stuff Stuff ƒ/Expand"
+  },
+  {
+   "creator": "R*ch",
+   "data_sha256": "7404f8c89f6f5a9e5fbb9b99d0360c97f53cbb7daedefad13bc13bb074175857",
+   "data_size": 1321,
+   "name": "Stuff Stuff ƒ/Readme",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "R*ch",
+   "data_sha256": "18011452671380370390203c0ac063fc03a6a288013c01bb724253185bab08e4",
+   "data_size": 1347,
+   "name": "Stuff Stuff ƒ/Stuff and Hex Readme",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-Stuff_Stuff__.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "7e12a905a17c127299a936d51dabe4aa1359e9dd8496d50619627a4f0b8d46c7",
+ "size": 35272
+}

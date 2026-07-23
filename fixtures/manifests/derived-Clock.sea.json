@@ -1,0 +1,22 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "\"…Just a Clock\""
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "444ce2f63b6727056b20d863275977901bf402ac35275e09f6bf4b11f85cfe2e",
+   "data_size": 560,
+   "name": "\"…Just a Clock\"/\"..A Clock\" Read Me...",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "ttro"
+  }
+ ],
+ "fixture": "derived-Clock.sea",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "1e5e5261c359b8c07d30070b9d9b7442cfc57ab42774fdfb2e7ab0cd66c1a770",
+ "size": 13699
+}

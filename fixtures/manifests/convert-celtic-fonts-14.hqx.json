@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "d61458acc026aa9f1460d34b7847a0d8373733a89b426c2cbfab72fbccce5138",
+   "data_size": 12406,
+   "name": "Convert Celtic Fonts 1.4.sit",
+   "rsrc_sha256": "47cf84d48ab87b5e97417b929cae6b8a8fde9302e70cbf26bcdef5c3b78c6399",
+   "rsrc_size": 326,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "convert-celtic-fonts-14.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "0c4a3ba2dd91d27b29081d09ed160b9d614519c2770548858edbd7610916c2f7",
+ "size": 17670
+}

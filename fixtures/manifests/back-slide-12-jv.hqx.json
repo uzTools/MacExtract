@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "25ea952d09dbe1642c9077deb93b76aa9b55a800d9c9b5ebd6e8f9df5c7e51ae",
+   "data_size": 87064,
+   "name": "back-slide-12.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "back-slide-12-jv.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "9d478b310d02871cf7271705f0cd8f3ba45e1de25c63dfde00afb78efc172a90",
+ "size": 117679
+}

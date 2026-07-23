@@ -1,0 +1,35 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "BCI 1.0"
+  },
+  {
+   "is_dir": true,
+   "name": "BCI 1.0/Business_Card_Importer folder"
+  },
+  {
+   "creator": "kl03",
+   "data_sha256": "74ce97b84d11b18f5137691348879fbdc4760b872518182f3b786b9ec21f0621",
+   "data_size": 16384,
+   "name": "BCI 1.0/Business_Card_Importer folder/John Endres",
+   "rsrc_sha256": "4119e7466f152a91f4874022d6a935eb9441158c419b04c45bed2defd6fe57a6",
+   "rsrc_size": 572,
+   "type": "bust"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "9044e8ed8e034f2667abc5c034f6259dede415822d9728283e4a28a4f102cde3",
+   "data_size": 878,
+   "name": "BCI 1.0/Business_Card_Importer folder/Read Me",
+   "rsrc_sha256": "060dff7807abbd282d9885cde1db95bf98c75e0f1c769a326316684709206748",
+   "rsrc_size": 452,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-BCI_1.0.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "865190468893a31e03eb39c080197bee436beda8073e32c293f810cbde19d2a9",
+ "size": 118143
+}

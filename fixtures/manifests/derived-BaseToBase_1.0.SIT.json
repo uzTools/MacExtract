@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "MACA",
+   "data_sha256": "f945ff1704bbfeb3cb52cc1cbb0a904894239740a9645af0f27624541ea2c945",
+   "data_size": 11124,
+   "name": "BaseToBase ∂",
+   "rsrc_sha256": "e1b8fda149d186728500dcf656a6393215c94fa8c9f26179d07320a70c2aae95",
+   "rsrc_size": 772,
+   "type": "WORD"
+  }
+ ],
+ "fixture": "derived-BaseToBase_1.0.SIT",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "f7253e280cdf69cff0f0f29dfc939a48341f929af7c453f3821a81f949708499",
+ "size": 15448
+}

@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "ttxt",
+   "data_sha256": "702918df43b6dd2e0742a717a568c17b2be04300986d2ceff27d16b42d128d3c",
+   "data_size": 10130,
+   "name": "1.2 Release notes",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-MacWoof_1.2.cpt",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "01b599898314fea963f1e80d96790fe7617786779c9669788b3522d9c7521ec5",
+ "size": 175029
+}

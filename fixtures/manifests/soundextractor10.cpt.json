@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "CPCT",
+   "data_sha256": "a0fc88e78f091cea6f5b0c5623e6b27efdedc7ee18d1c98878c0785166f0ebd8",
+   "data_size": 13799,
+   "name": "SoundExtractor.cpt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "PACT"
+  }
+ ],
+ "fixture": "soundextractor10.cpt",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "07f4b4b87302654f9ac425ff80c1bc7dfc057f85b0e5b589f16c935e77aadcaf",
+ "size": 13952
+}

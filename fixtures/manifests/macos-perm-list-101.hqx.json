@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "ca8bca5ea42d4c8f29013f9b3f77ef998715492fdb0fdc1455bdb1cd4300a723",
+   "data_size": 8301,
+   "name": "MacOS Permissions Lister 1..sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "macos-perm-list-101.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "e504af6eb4a58d2d5e1fa3b8dc948180f0b7362306f66f37715821a145ddce5a",
+ "size": 12239
+}

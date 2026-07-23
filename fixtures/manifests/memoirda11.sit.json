@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "88c31fc8d7dfa16c62976eb2c1fa9ea745ae470496badada7bfd11fe8e628c6e",
+   "data_size": 5676,
+   "name": "MemoirDA1.1.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "memoirda11.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "e6e58ffeff90d1c624facb86c9d71b4bbd486b6fda479b08fdf2af1724d0eb55",
+ "size": 5888
+}

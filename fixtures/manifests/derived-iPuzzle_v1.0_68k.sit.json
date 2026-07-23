@@ -1,0 +1,22 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "iPuzzle v1.0 68k"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "d0a8e6d207f998e1799093024c044e508b3488137467fc7a11d91ff673c04c91",
+   "data_size": 1538,
+   "name": "iPuzzle v1.0 68k/ReadMe",
+   "rsrc_sha256": "a092e4b64bee22c568239ee20423d9175d252612a9d7848f04e9a4720df2f8c6",
+   "rsrc_size": 3076,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-iPuzzle_v1.0_68k.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "840bb3ae4157b3cd0f24cb13d88e3a387c75d1f78f7efea6f023aefea6a6d8b7",
+ "size": 66114
+}

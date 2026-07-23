@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "d7a7c85c55d604d860501bc0acd3953a5706d34ab9982d354046f8565ab988ed",
+   "data_size": 5259,
+   "name": "Mac to VGA Adapters 1.0.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "mac-to-vga-adapters-10.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "3f57a44bccbc9ecafe0297b3a3348210cdfb65defc05cf2f57c652214fbe6b1d",
+ "size": 7428
+}

@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "41d971d935998f2b8fa7a489bc4fc5df00a7992fba8377d8e49b49b4edc4b1a9",
+   "data_size": 16843,
+   "name": "ASCbeep.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "ascbeep.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "1873c9fdd955cdda0c1ffa397278fad1df1174378f6ce636e1171c2c388d0628",
+ "size": 16971
+}

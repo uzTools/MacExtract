@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "EXTR",
+   "data_sha256": "7adf78991a97f5e8ffbbb42934c3fab243f73261fcc53937e01cff3fbda681da",
+   "data_size": 156901,
+   "name": "Compact Pro Package (German)",
+   "rsrc_sha256": "a2389603980afbc8a2c13e533c26630fe6a941d08a4094be04b8beaba3fccdd2",
+   "rsrc_size": 13292,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "compact-pro-151-de.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "5b32f06e163d2d78afe1652aec6216455daf36f4f5ff6704e8a1f767d55f494d",
+ "size": 231927
+}

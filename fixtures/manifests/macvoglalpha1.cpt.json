@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "CPCT",
+   "data_sha256": "a04ad5e1a82d16e3b1267d08010e780770ab7000d72a1f5148d8ecab6b6cf7a8",
+   "data_size": 184229,
+   "name": "macvoglalpha1.cpt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "PACT"
+  }
+ ],
+ "fixture": "macvoglalpha1.cpt",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "f6fa4d8e535b50dd4e132c7c8b670e98a741741a808834cdd1bd39a22e3d418d",
+ "size": 184448
+}

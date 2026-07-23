@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "c85238508568d778e3d438c5ea29d83422cd2bbfed9398a57741ec105d4a3299",
+   "data_size": 47624,
+   "name": "Privacy & Encryption.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "privacy-encryption.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "05c7056cdabcb617b5f6f7a6d378391ac047e3813abb03108fad2ea207a5f2dd",
+ "size": 65791
+}

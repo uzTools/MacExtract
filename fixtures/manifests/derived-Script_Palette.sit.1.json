@@ -1,0 +1,17 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "Script Palette"
+  },
+  {
+   "is_dir": true,
+   "name": "Script Palette/Plug-ins"
+  }
+ ],
+ "fixture": "derived-Script_Palette.sit.1",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "a6bdf42307fc398bb54f6de8b7aef0704988ab04f6e9f67a875824d05f93d158",
+ "size": 67928
+}

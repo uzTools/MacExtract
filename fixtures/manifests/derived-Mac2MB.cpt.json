@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "TPLM",
+   "data_sha256": "44807774054cc46d795ea5da63d4cf5ba973d28b30bdaeae98e739a37c2b8259",
+   "data_size": 3166,
+   "name": "Mac to MacBinary Documentation",
+   "rsrc_sha256": "1f85625076e6696b97ea8d9fb0fe94d2ca9ce32ce77b07b537168b791459b708",
+   "rsrc_size": 402,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-Mac2MB.cpt",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "6a06491a23d99e914f59ec2059c6ad9db2c9465b2a7ef0a9eee72fb74fc1564e",
+ "size": 8714
+}

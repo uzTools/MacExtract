@@ -1,0 +1,22 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "Delta Image 0.9b8"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "74f14e351178c3ebd01fb528d9788838b89c4ffa9779d19edd2f0624b9082cb7",
+   "data_size": 10654,
+   "name": "Delta Image 0.9b8/∆î Documentation",
+   "rsrc_sha256": "2a3efbe947778f3a21ad44fc0e9f604ebd3c8336806c034559c2a7851b0a4143",
+   "rsrc_size": 932,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-Delta_Image_0.9b8.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "9421259a55ceaf24a0c7026aca25684297ffae3b91bb55a9b25afd51235b7185",
+ "size": 24993
+}

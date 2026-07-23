@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "67ee6d7b86933295162106cd76785b2df76537f2b0042875df31da6551e467fe",
+   "data_size": 79374,
+   "name": "MacUnRAR11.sit",
+   "rsrc_sha256": "37ecfca2869780ad5f94b537d3fce6495b66ca51e76c298eb4eb3d8d7d57f7bd",
+   "rsrc_size": 378,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "mac-unrar-11.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "da871f94ff89013dfca782ee002dfe529ba96d915b6dbbd47fece8c982de98c8",
+ "size": 108437
+}

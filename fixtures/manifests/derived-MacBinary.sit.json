@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "MACA",
+   "data_sha256": "63ede29f2ac7172f157536b63a3a85074704dbebe0c520cd93c8caf7255d5830",
+   "data_size": 3820,
+   "name": "MacBinary.doc",
+   "rsrc_sha256": "635dff1d765545f598488431e15273c84092635006ffaa2d9ff1bfe96a0ff04e",
+   "rsrc_size": 769,
+   "type": "WORD"
+  }
+ ],
+ "fixture": "derived-MacBinary.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "34b218fbb2c8ee79df87c6dea8a7888af4d6bf41acddb12e7ed3971a47e7bd7b",
+ "size": 18833
+}

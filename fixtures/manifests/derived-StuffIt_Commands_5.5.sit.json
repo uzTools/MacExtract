@@ -1,0 +1,27 @@
+{
+ "entries": [
+  {
+   "creator": "ttxt",
+   "data_sha256": "7c657559dbdafbbc10155ec826a83d49cba55fa488bce4582f360837bcfd2596",
+   "data_size": 4742,
+   "name": "StuffIt Commands Dictionary",
+   "rsrc_sha256": "c89fe63071100661cc3862ea9b80a3ca7c6298b7ed48fa2ea0fa63c66dc19f2c",
+   "rsrc_size": 6352,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "74ef5b8044acff5f617fb1161fd4096d08d2ac5e0c4093950d75f1de45b834e4",
+   "data_size": 11138,
+   "name": "StuffIt Commands Read Me",
+   "rsrc_sha256": "b420f8b3dc2939ff3a91125e7dbb222da74860d1946b37f0ac3927d44e9983e2",
+   "rsrc_size": 932,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-StuffIt_Commands_5.5.sit",
+ "format": "StuffIt 5",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "889be4400dfeee2174cedcb3886ed071c142d83510590c15e78e3643c00b93ae",
+ "size": 67008
+}

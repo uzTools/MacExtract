@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "CPCT",
+   "data_sha256": "95105dfa32dece351b2c4514a1871c0d72593e92d4ee65ffb011a6e679100daf",
+   "data_size": 48172,
+   "name": "FI22.CPT",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "PACT"
+  }
+ ],
+ "fixture": "fi22.cpt",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "d103bc67a6b0b3a071fe878560c587caf5286e17b965230e90b3dda85be37629",
+ "size": 48384
+}

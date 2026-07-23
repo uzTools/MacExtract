@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "ttxt",
+   "data_sha256": "4ee8995c82e43ade8a5cd29b7f02b23358e69196622e7e8cd78403b0df0dcef8",
+   "data_size": 2142,
+   "name": "TouchBASE Demo.ReadMe",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-TouchBASE.cpt",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "3ffd453b3a8c37c6ff7b3ccc8196a01d9003634081233260afeb014e82e7401a",
+ "size": 101255
+}

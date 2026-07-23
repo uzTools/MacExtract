@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "c16ddfc403361bbb27d9aa0281f4d328bfdcd0a88b878e54ab9e2a424352923d",
+   "data_size": 66069,
+   "name": "RWAsm Folder.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT5"
+  }
+ ],
+ "fixture": "rwasm-202.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "7550c2a0d9c0e592d8c9eb012bf6b1e6af1a82a8cd1bc2ddde6985ab40d71572",
+ "size": 89399
+}

@@ -1,0 +1,57 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "LetterGothic-EGG-0_Rel_4.1c"
+  },
+  {
+   "is_dir": true,
+   "name": "LetterGothic-EGG-0_Rel_4.1c/LetterGothic-EGG-0 - TTF"
+  },
+  {
+   "is_dir": true,
+   "name": "LetterGothic-EGG-0_Rel_4.1c/LetterGothic-EGG-0 - Type 1"
+  },
+  {
+   "creator": "MSWD",
+   "data_sha256": "9b55332fc53dc9b17b0148abab31d1a95e1a18c2b774678e9320491358c8d038",
+   "data_size": 2266,
+   "name": "LetterGothic-EGG-0_Rel_4.1c/LetterGothic-0_Cover.txt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MSWD",
+   "data_sha256": "3e60a45666db9bc53364f1d1e0b8d239819492ef789b86fb9e902346ea52f35d",
+   "data_size": 11021,
+   "name": "LetterGothic-EGG-0_Rel_4.1c/LetterGothic-EGG-0_Rel_Note.txt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MSWD",
+   "data_sha256": "d343f55b5468e488fa69efb0777afbfbc18adbb73c926a73c4bf563e55fd7876",
+   "data_size": 14336,
+   "name": "LetterGothic-EGG-0_Rel_4.1c/LetterGothic-EGG-0_Rel_Note.wrd",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "WDBN"
+  },
+  {
+   "creator": "MSWD",
+   "data_sha256": "90294c1901c84b7832ac69d39aad26195cd6867251bdaca844088cef8366edfe",
+   "data_size": 7729,
+   "name": "LetterGothic-EGG-0_Rel_4.1c/LetterGothic-EGG-0_Summary.txt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-LetterGothic-EGG-0_Rel_4.1c.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "8ca15c0847496ac0bb84fc294579f021bc0837b2e872d66d7e3274873e0640fb",
+ "size": 79662
+}

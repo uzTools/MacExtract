@@ -1,0 +1,262 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "Berkeley Packet Monitor"
+  },
+  {
+   "is_dir": true,
+   "name": "Berkeley Packet Monitor/Berkeley Packet Monitor.app"
+  },
+  {
+   "data_sha256": "785e2eaea9797ba9ef06b7fe45012ee6abb2ce7b8a7262118f5e741c9879c1a6",
+   "data_size": 6148,
+   "name": "Berkeley Packet Monitor/.DS_Store",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "62f59d0b1c334d0d6849fbfc56ea7540bc4e7c1f802f582187447f4ffcbaf288",
+   "data_size": 1285,
+   "name": "Berkeley Packet Monitor/ReadMe!.rtf",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "is_dir": true,
+   "name": "Berkeley Packet Monitor/Berkeley Packet Monitor.app/Contents"
+  },
+  {
+   "data_sha256": "69677e72897890372fda74284faa3c6bd741503cf1670090571a52deef1a8298",
+   "data_size": 6148,
+   "name": "Berkeley Packet Monitor/Berkeley Packet Monitor.app/.DS_Store",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "is_dir": true,
+   "name": "Berkeley Packet Monitor/Berkeley Packet Monitor.app/Contents/MacOS"
+  },
+  {
+   "is_dir": true,
+   "name": "Berkeley Packet Monitor/Berkeley Packet Monitor.app/Contents/Resources"
+  },
+  {
+   "data_sha256": "98f45702c7cec9768af482319b24d50af68c742e98c41cda48e8679d7f8029ab",
+   "data_size": 6148,
+   "name": "Berkeley Packet Monitor/Berkeley Packet Monitor.app/Contents/.DS_Store",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "9680e01e832486d0776d1315e4ea98766b0152d42eedf72feb22bf8d1b84223d",
+   "data_size": 835,
+   "name": "Berkeley Packet Monitor/Berkeley Packet Monitor.app/Contents/Info.plist",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "ce1a2bbb4b3d711961d1f908f9552ecff2ec2ef27c4f8384efe77f008590c193",
+   "data_size": 8,
+   "name": "Berkeley Packet Monitor/Berkeley Packet Monitor.app/Contents/PkgInfo",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "is_dir": true,
+   "name": "Berkeley Packet Monitor/Berkeley Packet Monitor.app/Contents/Resources/English.lproj"
+  },
+  {
+   "data_sha256": "656a90c0a52ec8cdb5f1bfde3e4223b4b1c6e2b278ed327271749846e5b1fee1",
+   "data_size": 12292,
+   "name": "Berkeley Packet Monitor/Berkeley Packet Monitor.app/Contents/Resources/.DS_Store",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "49f8f80db3a262b17b6bce6f60e13ab3ddf9dfcdc751828e74ec0ba585a8f715",
+   "data_size": 14760,
+   "name": "Berkeley Packet Monitor/Berkeley Packet Monitor.app/Contents/Resources/BPFCode",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "fc5687c7080cfcd71716b4c6fe7ae693dae36d3e5a609378e47948a0fd684279",
+   "data_size": 17472,
+   "name": "Berkeley Packet Monitor/Berkeley Packet Monitor.app/Contents/Resources/BPMBoxStatus1.tiff",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "2f75aae3f20ab0090a6be79ccb7525f76ff253df3d16327f1405b1ab90ad1b00",
+   "data_size": 17384,
+   "name": "Berkeley Packet Monitor/Berkeley Packet Monitor.app/Contents/Resources/BPMBoxStatus2.tiff",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "d754c0d5041a2cc031a31821b6369089bba4e14b5c022a3492d2c0d60331eba5",
+   "data_size": 20956,
+   "name": "Berkeley Packet Monitor/Berkeley Packet Monitor.app/Contents/Resources/BPMBoxStatus3.tiff",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "32e4811a14f7b0874ab7c82780cb39b89e98db50202563c4101f36bcc91b0077",
+   "data_size": 25840,
+   "name": "Berkeley Packet Monitor/Berkeley Packet Monitor.app/Contents/Resources/BPMGlobe.tiff",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "9eeafbbcac6f0a967a5b774e7669fce32af221e70d3f105a9524ce2a9417e737",
+   "data_size": 177,
+   "name": "Berkeley Packet Monitor/Berkeley Packet Monitor.app/Contents/Resources/Berkeley Packet Monitor_Prefix.pch",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "is_dir": true,
+   "name": "Berkeley Packet Monitor/Berkeley Packet Monitor.app/Contents/Resources/English.lproj/BPMPreferences.nib"
+  },
+  {
+   "is_dir": true,
+   "name": "Berkeley Packet Monitor/Berkeley Packet Monitor.app/Contents/Resources/English.lproj/MainMenu.nib"
+  },
+  {
+   "is_dir": true,
+   "name": "Berkeley Packet Monitor/Berkeley Packet Monitor.app/Contents/Resources/English.lproj/RegistrationWindow.nib"
+  },
+  {
+   "data_sha256": "f36c914317cabcfd9255e8f5394673448214a1c1fbe20fcfa912e9fc90fc6ab6",
+   "data_size": 12292,
+   "name": "Berkeley Packet Monitor/Berkeley Packet Monitor.app/Contents/Resources/English.lproj/.DS_Store",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "abf7639f2d369101b2320c95c3763ac79bea368342e20d36f361208643df1842",
+   "data_size": 37084,
+   "name": "Berkeley Packet Monitor/Berkeley Packet Monitor.app/Contents/Resources/English.lproj/BerkeleyPacketMonitor.icns",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "e1a54d2e494649effe14dc4d602302a7b04cb68ca78e1500ca1541f33b10f411",
+   "data_size": 568,
+   "name": "Berkeley Packet Monitor/Berkeley Packet Monitor.app/Contents/Resources/English.lproj/InfoPlist.strings",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "faf4cfff86560743abd045ee6cd6267010872f51f271a44449b8c58aeb4213a0",
+   "data_size": 4458,
+   "name": "Berkeley Packet Monitor/Berkeley Packet Monitor.app/Contents/Resources/English.lproj/click01.wav",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "35c8861ff7537f9293dd5f5f7922186d5e4e11f28e63e36393bc24458216435a",
+   "data_size": 11352,
+   "name": "Berkeley Packet Monitor/Berkeley Packet Monitor.app/Contents/Resources/English.lproj/click05.wav",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "2760ee1519ecc7453d9a90d87fc65d1a860686a1fb5b3a7187da078171223034",
+   "data_size": 20552,
+   "name": "Berkeley Packet Monitor/Berkeley Packet Monitor.app/Contents/Resources/English.lproj/display02.wav",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "a091b85538acb5fa07d3e6109e51e01ed0bfa1840e28525629e2bbe5bd54cdc2",
+   "data_size": 641,
+   "name": "Berkeley Packet Monitor/Berkeley Packet Monitor.app/Contents/Resources/English.lproj/RegistrationWindow.nib/classes.nib",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "f307db110b94ff2d3c5d658c368e360c384bc8afc1236bba3bc434febb7f5894",
+   "data_size": 451,
+   "name": "Berkeley Packet Monitor/Berkeley Packet Monitor.app/Contents/Resources/English.lproj/RegistrationWindow.nib/info.nib",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "eaad528e9c890e470a4ca0d70356d0db610e4877cdf33787dc3cac6db7e91bfb",
+   "data_size": 3209,
+   "name": "Berkeley Packet Monitor/Berkeley Packet Monitor.app/Contents/Resources/English.lproj/RegistrationWindow.nib/objects.nib",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "c7cd83f4d03dcb5958c28cf07a90c0d3b667bb8641738a8ceac4cb698f7968ec",
+   "data_size": 2469,
+   "name": "Berkeley Packet Monitor/Berkeley Packet Monitor.app/Contents/Resources/English.lproj/MainMenu.nib/classes.nib",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "4e7ba3b98ac2f3d1b8f9f963c71d36bc36adf2b7adaf5821b21a8d89c39fdb81",
+   "data_size": 587,
+   "name": "Berkeley Packet Monitor/Berkeley Packet Monitor.app/Contents/Resources/English.lproj/MainMenu.nib/info.nib",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "ce8a2e5ee14ef6fe0dc5507b7761411d463614d3341da96dfb8cb5be104d4c65",
+   "data_size": 33383,
+   "name": "Berkeley Packet Monitor/Berkeley Packet Monitor.app/Contents/Resources/English.lproj/MainMenu.nib/keyedobjects.nib",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "e4b10b250f15377529946de33e699a24e26f0117d401822ffede9e5821051d6e",
+   "data_size": 3067,
+   "name": "Berkeley Packet Monitor/Berkeley Packet Monitor.app/Contents/Resources/English.lproj/BPMPreferences.nib/classes.nib",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "68ef29f4c1475d6d77ee1a9f281d1e915940b7b6875dc36dbae007a653dd8dc9",
+   "data_size": 383,
+   "name": "Berkeley Packet Monitor/Berkeley Packet Monitor.app/Contents/Resources/English.lproj/BPMPreferences.nib/info.nib",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "a9a28f3e7683c935aa4a64e09761fdfcbbe5952b877d4d1a6c7b5ddcc4cb9118",
+   "data_size": 11609,
+   "name": "Berkeley Packet Monitor/Berkeley Packet Monitor.app/Contents/Resources/English.lproj/BPMPreferences.nib/keyedobjects.nib",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "79da1c83b1edef350b9f71ede0d530113ab5d647cc20d20dc3bb8adab8033cda",
+   "data_size": 5787,
+   "name": "Berkeley Packet Monitor/Berkeley Packet Monitor.app/Contents/Resources/English.lproj/BPMPreferences.nib/objects.nib",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "05a76428313116c7dfd1a9bfc9ed7a05225c8fc64a0a17c7debc29e78a011e2c",
+   "data_size": 6148,
+   "name": "Berkeley Packet Monitor/Berkeley Packet Monitor.app/Contents/MacOS/.DS_Store",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "fe0074f2ac418a319e42d36627ff6434dcc28df25e36bdd00938e97037e4ebdf",
+   "data_size": 88808,
+   "name": "Berkeley Packet Monitor/Berkeley Packet Monitor.app/Contents/MacOS/Berkeley Packet Monitor",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  }
+ ],
+ "fixture": "derived-Berkeley_Packet_Monitor.sit",
+ "format": "StuffIt 5",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "f1e2a31287fe93be113eacd220f3ceb93a33e4a1b952b9e783820885ad176a8c",
+ "size": 131923
+}

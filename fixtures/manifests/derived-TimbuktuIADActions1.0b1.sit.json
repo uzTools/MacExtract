@@ -1,0 +1,71 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "Timbuktu IAD Actions"
+  },
+  {
+   "is_dir": true,
+   "name": "Timbuktu IAD Actions/images"
+  },
+  {
+   "creator": "udog",
+   "data_sha256": "335d27c0545edff48080a2047438f3834ca6a1376ce1cfa34a8ca158dd872a8d",
+   "data_size": 2444,
+   "name": "Timbuktu IAD Actions/ReadMe.shtml",
+   "rsrc_sha256": "b7e5e5a1c5059f8d583e8d358274be83dfa262bef6602b5d0e66bd3128d522c4",
+   "rsrc_size": 1454,
+   "type": "TEXT"
+  },
+  {
+   "creator": "GKON",
+   "data_sha256": "a8a9d882ccf397750243bdc832e47dd59f8dda67562207a827a789e9debe8eb7",
+   "data_size": 6301,
+   "name": "Timbuktu IAD Actions/images/dialog1.gif",
+   "rsrc_sha256": "c92009280c3b78c98602264e9a3ef1d7575ebb87c7b7f5f941ef7fd5a59eba53",
+   "rsrc_size": 19446,
+   "type": "GIFf"
+  },
+  {
+   "creator": "GKON",
+   "data_sha256": "d3e65c3ff6cb27e2cf738bd13f9d81da5ff1702f9e01ebfa12340fe0f937de9d",
+   "data_size": 10756,
+   "name": "Timbuktu IAD Actions/images/dialog2.gif",
+   "rsrc_sha256": "fb15dc5f632fd8104d7aca06b097bfcda9b9ff90a536ba79a0c3e0e931991c92",
+   "rsrc_size": 38304,
+   "type": "GIFf"
+  },
+  {
+   "creator": "GKON",
+   "data_sha256": "bc3ec759e333154d4512443e724c3d2a1c63269d3f87cd0e6bfd9e1b2324a135",
+   "data_size": 3090,
+   "name": "Timbuktu IAD Actions/images/menu.gif",
+   "rsrc_sha256": "2107f0b2dccfe1a3b69f051c3de065923580b42cae39a4d056cdebe98fe415a9",
+   "rsrc_size": 16114,
+   "type": "GIFf"
+  },
+  {
+   "creator": "GKON",
+   "data_sha256": "fea1a8e0099f4490fb23f99c82ff013d4d799cbdc9dffb4789c312675d8e02d6",
+   "data_size": 3251,
+   "name": "Timbuktu IAD Actions/images/menu2.gif",
+   "rsrc_sha256": "06b38ef7ed43103ad21f83d283122f4f4428ca4878bd26188b381812abaa56dc",
+   "rsrc_size": 17632,
+   "type": "GIFf"
+  },
+  {
+   "creator": "GKON",
+   "data_sha256": "cab2b62729951e772d71b25b3b0d186c62f83ad637db990d67f0a325b1ef90a2",
+   "data_size": 2053,
+   "name": "Timbuktu IAD Actions/images/menu3.gif",
+   "rsrc_sha256": "5bf2d0809f44dfcff3c0e630b97420538100f06adad09d7dfa9395f5383dbe93",
+   "rsrc_size": 22258,
+   "type": "GIFf"
+  }
+ ],
+ "fixture": "derived-TimbuktuIADActions1.0b1.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "16095e53c45a2a1315b700b26750050cdc4d45c788cb618e5e729e0b36dd5851",
+ "size": 74189
+}

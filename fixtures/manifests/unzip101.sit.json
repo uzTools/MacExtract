@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "b6c169b039b875459864c3490ca9fa188808a0e27b8bfffb01f4163ac23e00d5",
+   "data_size": 72818,
+   "name": "Unzip101.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "unzip101.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "ceba1c3f655af025169a7dec22043ab9e7a0b64bf75d54ab0e60faa0c923e150",
+ "size": 72946
+}

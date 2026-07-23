@@ -1,0 +1,22 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "Orb Mazez 1.0b2"
+  },
+  {
+   "creator": "EDIT",
+   "data_sha256": "26c8fe228e7591c5f84b10ea3d007d80dc94bb53840e5351f64708ed6558f63a",
+   "data_size": 1837,
+   "name": "Orb Mazez 1.0b2/orb-mazez-10b2..doc",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-orbmazez.cpt",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "9e394eac82f83e255098c37275a9e1cad443e7d6c12491104bf6f8dbac167030",
+ "size": 202914
+}

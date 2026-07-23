@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "WILD",
+   "data_sha256": "0d881160af5bed0d9d5936838fea7db609add2d2f0bf281105e8895a76dadbfe",
+   "data_size": 6944,
+   "name": "Export",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "STAK"
+  }
+ ],
+ "fixture": "derived-Export.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "522af809d657160b4e190a17d1e47066004080e9bc6c8e3234e82ba82e55bd9d",
+ "size": 1615
+}

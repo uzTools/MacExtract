@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "EXTR",
+   "data_sha256": "b7968b78fb60b633f08cc51b338a4f417d2b7edc1fb9032a19498c8fc0d4f555",
+   "data_size": 110913,
+   "name": "zkanditerm-30.sea",
+   "rsrc_sha256": "24e5dda92b016c483bb218e48ad69f11cf066592c6e27379b6f7dc25cb113481",
+   "rsrc_size": 13273,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "zkanditerm30.sea",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "cc3c0f6a62a08331be36afde48ea79a8b50a8a4b1234bf00736c32863f83306e",
+ "size": 124416
+}

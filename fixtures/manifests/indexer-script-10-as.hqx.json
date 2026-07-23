@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "d17316906120658c91e512eaf0e823efd5e9fa9919d6d995db54b4f732c34a7d",
+   "data_size": 14204,
+   "name": "Indexer Script 1.0.sit",
+   "rsrc_sha256": "cbdcbaa03625f70fea24e7fe98473ca0d09111004f99d16859c050c92416c3f8",
+   "rsrc_size": 338,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "indexer-script-10-as.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "ffd96e62ff6b3ebc5ad6a498ac5425e9321aa4ea8b89016ef24bb8e8a451caa3",
+ "size": 19867
+}

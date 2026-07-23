@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "EXTR",
+   "data_sha256": "1e5e5261c359b8c07d30070b9d9b7442cfc57ab42774fdfb2e7ab0cd66c1a770",
+   "data_size": 13699,
+   "name": "Clock.sea",
+   "rsrc_sha256": "104a8aecdce5d8379a1543d2b5ef5d7b5eee3a3818e4f3a1893f4d21a35e36b9",
+   "rsrc_size": 13273,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "clock.sea",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "6a7d3d4009638597bbb48021f914cb7cafadda39a3f25e81f8bf02adc3222644",
+ "size": 27264
+}

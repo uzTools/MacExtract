@@ -1,0 +1,40 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "Gantt Chart"
+  },
+  {
+   "creator": "R*ch",
+   "data_sha256": "e18eec7e122be8b6cae61131407151e6ad1efed4ffe85dc793144b75e132f1f3",
+   "data_size": 3611,
+   "name": "Gantt Chart/Gantt 2.0 README",
+   "rsrc_sha256": "accbbe762af94eaee873cde8b9bce3e1dc5a5be14627d7b908aa13141324d1f8",
+   "rsrc_size": 1454,
+   "type": "TEXT"
+  },
+  {
+   "creator": "FMP3",
+   "data_sha256": "6d39b3e8e228efe83dac8b11989929d31bd3f22c176f9a522ed4400a80237dd5",
+   "data_size": 600064,
+   "name": "Gantt Chart/Gantt Chart 2.0",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "FMP3"
+  },
+  {
+   "creator": "FMP3",
+   "data_sha256": "a05f614e92c54f41d65d0d6b9528b9a3bba4460c26f576b274b3834ce7d59b97",
+   "data_size": 79872,
+   "name": "Gantt Chart/Gantt Source",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "FMP3"
+  }
+ ],
+ "fixture": "derived-Gantt_Chart.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "7d8de1ea93529f665f6b75cd79d08c00734a7958a6e6b486752de44587f6bf02",
+ "size": 112862
+}

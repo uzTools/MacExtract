@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "R*ch",
+   "data_sha256": "17e020a0409642b6822529bc098602037e170b546443b8c833b1f790978b73a5",
+   "data_size": 25462,
+   "name": "macs_in_mixed_network.txt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-macs_in_mixed_network.txt.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "c0a714963b327e6d8240deb538f04014d79ef6543a361b6f44256ba7f5c70761",
+ "size": 10871
+}

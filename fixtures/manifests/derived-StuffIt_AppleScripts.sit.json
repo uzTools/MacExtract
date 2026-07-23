@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "ttxt",
+   "data_sha256": "7905821098d2765db030cffa6928f63849f0f778c60b6b1f75acc4af3bd6e4ea",
+   "data_size": 824,
+   "name": "StuffIt AppleScripts About",
+   "rsrc_sha256": "ac480d3ae031d79c3944a84a5afe178ff4cf7e7083a5ea9876e1c302e7b052e2",
+   "rsrc_size": 648,
+   "type": "ttro"
+  }
+ ],
+ "fixture": "derived-StuffIt_AppleScripts.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "865d574e7b1ff723f47daa8ea96dfb2ee236767612436443db22e969a335f354",
+ "size": 20075
+}

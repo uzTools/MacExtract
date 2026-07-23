@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "EXTR",
+   "data_sha256": "958c906c49effe44ed1f2a439356795704c9199aac1b3e867e495931f1301b7b",
+   "data_size": 7719,
+   "name": "ZkandiSys 7.0.sea",
+   "rsrc_sha256": "192d6005feb91086eebf04a899d36e06c0ac27f7d4e00c34f53473a5160befa4",
+   "rsrc_size": 13121,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "zkandisys70.sea",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "a5d67bece18fa302a651a2968e87219755f756f490f49dfc1445f290ba8774dd",
+ "size": 21120
+}

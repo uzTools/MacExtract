@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "c0d79cf7547b79c2f40caf46b31a5c2934d3a94ad463b4cc9d5637343750180a",
+   "data_size": 27868,
+   "name": "DeHQX-201.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "dehqx-201.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "68223463c1f9f92e7f9825063cce41fe75c9cc143729a1adea2faa5fed778903",
+ "size": 38830
+}

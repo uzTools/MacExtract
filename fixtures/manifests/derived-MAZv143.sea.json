@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "MACA",
+   "data_sha256": "5696887fed3106f4ad7b17e06cbda82185b5e8aaaa03cb1460f217ec1bb2497d",
+   "data_size": 57078,
+   "name": "MaxAppleZoom Doc",
+   "rsrc_sha256": "72192fff557fb7b465b2d866d709cf42038528596d0f6ebb2cba348308ac073a",
+   "rsrc_size": 990,
+   "type": "WORD"
+  }
+ ],
+ "fixture": "derived-MAZv143.sea",
+ "format": "DiskDoubler",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "fd4d2b1035dd46b2a2001b07a2d51429c71c2bd42c6a1245b43ad98440cc4cf0",
+ "size": 50277
+}

@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "MACA",
+   "data_sha256": "016ec5fe30f9976ba49160441f5c4e54f5e737101359a165f23f0edd05438ca0",
+   "data_size": 28914,
+   "name": "BinHqx DA Docs (MW)",
+   "rsrc_sha256": "3343b7f1581e86a9a145df9680ce1535a59bf5527951568adfc05f24b430caa9",
+   "rsrc_size": 730,
+   "type": "WORD"
+  }
+ ],
+ "fixture": "derived-BinHqx_DA_1.02.cpt",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "92cf45aaece130741ae84da5a9fe367643ae699415560b4cd9c874b37a833ad5",
+ "size": 23924
+}

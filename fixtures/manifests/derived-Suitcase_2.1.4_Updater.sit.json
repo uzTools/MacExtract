@@ -1,0 +1,22 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "Suitcase 2.1.4 Updater ƒ"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "fe8fc4f516f30d4275a375b37aa885e76e8b0cd87a23eeb29f200bcf60d2e135",
+   "data_size": 3177,
+   "name": "Suitcase 2.1.4 Updater ƒ/Suitcase News (2.1.4)",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "ttro"
+  }
+ ],
+ "fixture": "derived-Suitcase_2.1.4_Updater.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "55264b52590b0e06091af5b65229451446994c697ea6afa154eff9b30ada2103",
+ "size": 49740
+}

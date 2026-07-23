@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "MWII",
+   "data_sha256": "0a140da72b06b18dc9d53a3a716ebaaa6f2f3bcfb5c9040807116b50876a9393",
+   "data_size": 1465,
+   "name": "EE Notes",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-Easy_Envelopes_Plus_1.5c.Sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "d803711e44f9965a18730c40134821137fd89ac9d891292db75535a772e5a3e0",
+ "size": 64819
+}

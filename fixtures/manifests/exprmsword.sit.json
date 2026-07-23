@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "b74e6086033e689b3bb19d0f5617e2191e9e7c549de333b58ca59ae88dd0e03a",
+   "data_size": 7218,
+   "name": "Expr<->MSWord.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "exprmsword.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "c9aac4acbfa738939d62bcc2471ed2cccf98d78cddcd4bf4c60d998a63c57c4d",
+ "size": 7346
+}

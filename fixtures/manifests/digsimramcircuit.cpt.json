@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "CPCT",
+   "data_sha256": "61f3fbe26433a570cc0f96b93770900105ca05dae77b73e8f0fba300648acf95",
+   "data_size": 4397,
+   "name": "DigSim RAM Circuit.cpt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "PACT"
+  }
+ ],
+ "fixture": "digsimramcircuit.cpt",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "499174402a8c35433bf8247664257909a02c488a2b6284635868fa96156b96c4",
+ "size": 4608
+}

@@ -95,6 +95,13 @@ def build_manifest(fixture_path, verbose=False):
             print(f"  oracle FAILED on {name}: {r.stderr.decode()[:200]}",
                   file=sys.stderr)
             return None
+        # GNUstep can silently mishandle resource forks for names it
+        # cannot append ".rsrc" to (e.g. leading '~'); such output is
+        # not trustworthy ground truth (observed: lipservice.bin).
+        if b"cannot append extension" in r.stderr:
+            print(f"  oracle UNRELIABLE on {name} (fork path bug), skipping",
+                  file=sys.stderr)
+            return None
         entries = []
         for root, dirs, files in os.walk(tmp):
             rel = os.path.relpath(root, tmp)

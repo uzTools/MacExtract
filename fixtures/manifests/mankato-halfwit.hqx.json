@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "6d4f40a05a09a96669a5c80757520c7717e1c36d0e0633d54a12112b4046079e",
+   "data_size": 76402,
+   "name": "Mankato Halfwit.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "mankato-halfwit.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "884ef2677be0c7eb4feab70777536b7022bc9084ddf46cb0580ad586e45bea96",
+ "size": 104063
+}

@@ -1,0 +1,22 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "Chiron v2.4 Release ƒ"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "f84828ee6818e29e747d9d8792d17a4ee8c7370fcc1ef1bf327a1d3b0a2f6ea8",
+   "data_size": 2131,
+   "name": "Chiron v2.4 Release ƒ/Read Me",
+   "rsrc_sha256": "1e6b11d8703b3fc5a5fc0207064ab42c85c3b47bdffdaa49ba9ad52b2e268a78",
+   "rsrc_size": 612,
+   "type": "ttro"
+  }
+ ],
+ "fixture": "derived-Chiron_v2.4_Release__.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "097830aeb4a00713cb150cf6f1dc0795dacd66e5904bac460101318495bbf4ae",
+ "size": 130365
+}

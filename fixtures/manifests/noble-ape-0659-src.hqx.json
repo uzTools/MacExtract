@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "0290e854565305c5b07f49de0c4d53b7a4ebb800e08ed799f84caf89cfd8d844",
+   "data_size": 193095,
+   "name": "nobleape0659src.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT5"
+  }
+ ],
+ "fixture": "noble-ape-0659-src.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "13add3c00d58ab903a15cb9be01355677a0ef626a855e06d4d46560a4c398611",
+ "size": 260965
+}

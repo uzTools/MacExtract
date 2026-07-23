@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "48f0baad32d3dc6eb3578353b8a2f4d6a05be6f8ea0a3aff9fb064240b6cdebc",
+   "data_size": 177396,
+   "name": "Orbit3d 1.0..sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT5"
+  }
+ ],
+ "fixture": "orbit-3d-10.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "79b2752d548915017bbd3267e3ad170699e1e49bfcabf9fff9b27d077e80eaee",
+ "size": 238681
+}

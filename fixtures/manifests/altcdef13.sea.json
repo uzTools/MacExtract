@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "EXTR",
+   "data_sha256": "c5e9e24fb6886b3a757576767ef791e1cb1539b34cee867875dbbfa4e3279954",
+   "data_size": 29752,
+   "name": "AltCDEF v1.3.sea",
+   "rsrc_sha256": "369e6c1f30630cdba4af244a7d4fff57534495bd962cfa91096c85e7afbb612f",
+   "rsrc_size": 13121,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "altcdef13.sea",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "9bec1cb8570a039191d5f8106ff005fffbcc2863f216ba3004c3340d3dc3b02e",
+ "size": 43136
+}

@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "7b071cb4f9a32ada5204862511976c7788affccdb4df1bb8709d2b6c4cbbf5f6",
+   "data_size": 99217,
+   "name": "RTF->TeX.sit",
+   "rsrc_sha256": "008d83abd6cb66e791b726a90b64b2d1ec21dae3b0799468606adcca61f1a9cc",
+   "rsrc_size": 324,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "rtf-to-tex-101.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "bf70e4e38d042384d3da09737a6722fefd52b41e96fc52c3c06cb58f2c1e5b8c",
+ "size": 138100
+}

@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "621749aae60b2865b5323b0df70a238d6de190f7c303d44ff302bc0134e0afc7",
+   "data_size": 15787,
+   "name": "Power Macintosh PRs.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "ppc-press-releases-94-03-14.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "2bc0fc2edf3bcef364cccc59e24616ae3295ab9fd68d4cc3e54c25e508f13d8b",
+ "size": 22024
+}

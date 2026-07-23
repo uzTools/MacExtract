@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "GDEX",
+   "data_sha256": "2fdbc855b0dd054519df2b5f25e05b003e808c2bb69a9ca50abaf338a80b2d09",
+   "data_size": 550408,
+   "name": "Consultants DB",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "GDEX"
+  }
+ ],
+ "fixture": "derived-Guy_s_Mac_Consultants.cpt",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "54cb9f5735b3609d6f0f5da6eb8b0de2151031f7e24f48bb3a1e59f31ea94b85",
+ "size": 94671
+}

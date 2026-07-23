@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "6995841ec93105d8cd171122c0172849f4083ed92b277a713f268905918fd7c4",
+   "data_size": 121602,
+   "name": "TextConverter 1.0.1.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "text-converter-101.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "ad523a87e1b121ce94657e75caa34b47a67c5f71a3dfb2ba6b115fefd489be47",
+ "size": 165546
+}

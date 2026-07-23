@@ -1,0 +1,40 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "CRLF v1.2"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "9bc9dac9f08677d2ea4d7bc004064454cf15fb6e283341971af36029f1fd4e85",
+   "data_size": 603,
+   "name": "CRLF v1.2/List-Canada",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "2bac637f0bdd966d1efcbabbf9f6421c37dda075c41a240fb874cff7dbb32d6f",
+   "data_size": 586,
+   "name": "CRLF v1.2/List-Japan",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "31c85a03425af243b14ac7c0bdbe4ddb09ad96a15d3330353135d6ecdef43c1b",
+   "data_size": 5986,
+   "name": "CRLF v1.2/ReadMe - CRLF",
+   "rsrc_sha256": "f5815efd3304dc0289a7a556f92b47486e4659672b2aeb875effc02123dddacf",
+   "rsrc_size": 350,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-CRLF-120-sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "29861b601255b60dccebfdbb1fd71a3160fa5659341aa64beb3f688fd2b7b28a",
+ "size": 20935
+}

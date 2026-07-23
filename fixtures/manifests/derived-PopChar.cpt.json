@@ -1,0 +1,22 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "PopChar 1.10 ƒ"
+  },
+  {
+   "creator": "MACA",
+   "data_sha256": "ecffe69f1441ab22e3c0e0596dfcef389efc486281b682b975fe89d8609a4b51",
+   "data_size": 34678,
+   "name": "PopChar 1.10 ƒ/PopChar.doc",
+   "rsrc_sha256": "1e9a2a0fb8bf58610b0d09d3375e29ab7883a063fef2ac74ad9f023270384604",
+   "rsrc_size": 814,
+   "type": "WORD"
+  }
+ ],
+ "fixture": "derived-PopChar.cpt",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "8e3fa975f7012274c4f00d9b50a0976cb0a7e96dc8f15cf14b786dfcf302f942",
+ "size": 26699
+}

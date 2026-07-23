@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "b440139b502e9156b25cb8cfb6bd8b93787cb0f6c5bc41a533d39d02a26c8e5e",
+   "data_size": 11410,
+   "name": "XBitmap.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "x-bitmap.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "0660dba7422c8e6bba5fd9ecd6e37bd8230cb82ea0fc90737e72d74c53c5915b",
+ "size": 15884
+}

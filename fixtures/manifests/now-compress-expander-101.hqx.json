@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "NCse",
+   "data_sha256": "8e8993b925a9d3270cba7d58d769562fc85158a1db72cd9b1d8244905cbba8f9",
+   "data_size": 61824,
+   "name": "Expand Now 1.0.1.sea",
+   "rsrc_sha256": "06d196cf7396753e4a95ba003d58520b5a5b9413669c909f312e1e00346e56ff",
+   "rsrc_size": 26502,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "now-compress-expander-101.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "be1596a1ff6d0ffc3b1074264223da4fc89b8397710e4113760eea4c9a8df206",
+ "size": 120498
+}

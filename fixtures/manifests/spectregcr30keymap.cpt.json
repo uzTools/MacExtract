@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "CPCT",
+   "data_sha256": "70d0046f02751d6a8dec7acf7394e8c8181a5620fe9d1e5c2096fc1167a9da7d",
+   "data_size": 6158,
+   "name": "SpectreGCR3.0keymap.cpt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "PACT"
+  }
+ ],
+ "fixture": "spectregcr30keymap.cpt",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "f1df64e4dff5e1ec91be95cf78ec02c70e61adfa69a78791a992e04be04de2e3",
+ "size": 6400
+}

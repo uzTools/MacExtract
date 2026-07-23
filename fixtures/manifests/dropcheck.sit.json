@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "6148433c243bc8385fd6cc7600fdc355257cc5b388ab7c975b3385510a05f125",
+   "data_size": 124186,
+   "name": "DropCheck.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "dropcheck.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "1cd3d7beca26504b929a91a49dd194e00686cc501e5e08f8df61533f5bbbefa1",
+ "size": 124416
+}

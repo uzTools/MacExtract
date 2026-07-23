@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "CPCT",
+   "data_sha256": "38c23a36792f2b69354895880617ef5fcbef72fad83db13fdf93598ed30ec824",
+   "data_size": 12239,
+   "name": "StopWatch11.cpt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "PACT"
+  }
+ ],
+ "fixture": "stopwatch11.cpt",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "f9640d22eae055508aef447d49a80da3bebdef490b72114b7d9405fa14842b26",
+ "size": 12416
+}

@@ -1,0 +1,45 @@
+{
+ "entries": [
+  {
+   "creator": "mcPT",
+   "data_sha256": "4d917203b473c36200b44979755e371dfa6c01caaf6fad9b99cadfeda204befb",
+   "data_size": 632,
+   "name": "Listener Release Notes",
+   "rsrc_sha256": "f7546985d6f3f983a611af4eba2dfbf47abfce1c8f04600f1f6dd06002eb31b1",
+   "rsrc_size": 313,
+   "type": "TEXT"
+  },
+  {
+   "creator": "mcPT",
+   "data_sha256": "53a56bf48194f98eb7a2e4f1956c022117f5c0b986248b1428698019ee7b5441",
+   "data_size": 6143,
+   "name": "MacPost Release Notes",
+   "rsrc_sha256": "68b73a1ed1243a31c284cf73ceaed02f57ab59b61b3901e3affcf70b90bba065",
+   "rsrc_size": 313,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MACA",
+   "data_sha256": "267aaec749cde4591bcf6feafc8d5a04b7ec4d2f4468f5859123540e1ae6a5ad",
+   "data_size": 202620,
+   "name": "MacPost User´s Guide.mw5\r",
+   "rsrc_sha256": "21fb1dbc4388e16dca6f0c7ba170efdde2192a0a8b3b795edd7db3a144e049b0",
+   "rsrc_size": 808,
+   "type": "WORD"
+  },
+  {
+   "creator": "MWII",
+   "data_sha256": "cb3ca54775b17c8112dbb3aaf3ae523127a9416b37da28f73adff6cda7e0bc14",
+   "data_size": 4999,
+   "name": "README.txt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-MacPost-Client-US-1.0b6.cpt",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "27fd94e030b3dde1cf49da489ad8abd133dad2fc9996025acff109fafb8c390c",
+ "size": 171258
+}

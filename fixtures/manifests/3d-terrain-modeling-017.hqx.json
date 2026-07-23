@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "e5a1529de71e9f14e724ebd75136aec24276ac04b8e18194734c609c7bbb5d83",
+   "data_size": 164711,
+   "name": "3D Terrain Modeling 0.1.7.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "3d-terrain-modeling-017.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "0cbcf4293e5ae055fb8ddc0cf14e7316cd1de25010679aaba6763556b099fb21",
+ "size": 224099
+}

@@ -1,0 +1,32 @@
+{
+ "entries": [
+  {
+   "creator": "ttxt",
+   "data_sha256": "3043216b6c54a95f57e7170b6834daf0d122a4e926a0c84a514bb0ebd9aa9be1",
+   "data_size": 1243,
+   "name": "Important release note",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "data_sha256": "dcb2fec6101dc3b6c2475d551fdc8a966161c52450c1257cd70d45055038e1f2",
+   "data_size": 21529,
+   "name": "PMail_Mac v2 notes",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "9e0943d9c40db4107cdb15d8ec35f7da3a4302b409ab1de0f41da98b3078f8c9",
+   "data_size": 10735,
+   "name": "Pmail_Mac v2 Manuals",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  }
+ ],
+ "fixture": "pmailmac.sea",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "2698c114dc096fa90e80f831f9a48154fc2aeff789044adefd4d537eb45f35c0",
+ "size": 138135
+}

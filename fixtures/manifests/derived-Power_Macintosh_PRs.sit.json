@@ -1,0 +1,48 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "Power Macintosh PRs 3_14 folder"
+  },
+  {
+   "data_sha256": "0dd7127e7b6385e636aa2fa0b8fa4c18e35803cdfd896206eaf1feb2fd29e2a5",
+   "data_size": 15857,
+   "name": "Power Macintosh PRs 3_14 folder/Apple Debuts Power Mac 3_14_94",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "5d677eaa59b35c0eac8b177105294b1301595d2718612be454ba37af6bb557fa",
+   "data_size": 5228,
+   "name": "Power Macintosh PRs 3_14 folder/Apple Hi-Perf 20\" Mon 3_14_94",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "7e7c8939855ab3b468b7a3bbbe996654134d73c02d41049b18babb963288002d",
+   "data_size": 3179,
+   "name": "Power Macintosh PRs 3_14 folder/Apple To DOS_Windows 3_9_94",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "7d43f24eb1764a73ae841d2fb15bcbf274569fc2b47c95c44d4fa9099c515ba9",
+   "data_size": 5710,
+   "name": "Power Macintosh PRs 3_14 folder/Hundreds of Opt Apps 3_14_94",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "24e19bd7f441685b201898b682fbd0936a2cd627207ba3059865011b0c254ba5",
+   "data_size": 5569,
+   "name": "Power Macintosh PRs 3_14 folder/Widespread Support 3_14_94",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  }
+ ],
+ "fixture": "derived-Power_Macintosh_PRs.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "621749aae60b2865b5323b0df70a238d6de190f7c303d44ff302bc0134e0afc7",
+ "size": 15787
+}

@@ -1,0 +1,53 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "DataConverter ƒ"
+  },
+  {
+   "is_dir": true,
+   "name": "DataConverter ƒ/Tutorial"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "be0a7984304549d7db9b6c4b54813053db8932287fe26b0e3a6c8cc324faaa57",
+   "data_size": 4415,
+   "name": "DataConverter ƒ/READ ME",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "ttro"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "a75138e83677d98e82b8e46934df59898177816b4c3623c4c38d887b38963728",
+   "data_size": 3496,
+   "name": "DataConverter ƒ/Tutorial/DataConverter Tutorial",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "ttro"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "f9c06c6f9914d061e30d6022ff052e82ad77402e2bf242433893ea396fb43e40",
+   "data_size": 258,
+   "name": "DataConverter ƒ/Tutorial/Sample Data",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "Dcvr",
+   "data_sha256": "30729bb8abb227b388c2aa5dd69c17f9456cef5b2baa82cf8a3b3af0329db521",
+   "data_size": 2500,
+   "name": "DataConverter ƒ/Tutorial/Sample Settings",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "STTG"
+  }
+ ],
+ "fixture": "derived-DataConverter__.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "835e81b51023be4dffe503c6234888663ccb93809005f85677b0af375213d578",
+ "size": 38727
+}

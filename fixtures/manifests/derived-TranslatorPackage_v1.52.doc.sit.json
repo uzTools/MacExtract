@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "MSWD",
+   "data_sha256": "5d526427a1235a8732071fc872ff6310eadeb672320df5377b7a612ef2a32237",
+   "data_size": 196608,
+   "name": "Translator Package.doc",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "WDBN"
+  }
+ ],
+ "fixture": "derived-TranslatorPackage_v1.52.doc.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "844593e3803297d7b8c96038b9fc804623b230e37f3122ae4f8ddec0cddb68bc",
+ "size": 69635
+}

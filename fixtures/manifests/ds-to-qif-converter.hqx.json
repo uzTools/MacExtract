@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "DSEA",
+   "data_sha256": "936e6d8715776addb0870bedf3b35e811cf2b94f8e31f3feb6c41cb69b4d58a1",
+   "data_size": 30562,
+   "name": "DandStoQIF2.sea",
+   "rsrc_sha256": "98335d51f053701de78c77ba9c34995827d8d507e9896aa6098a69382e1cb5f4",
+   "rsrc_size": 8448,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "ds-to-qif-converter.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "d40ff4c81bc07fb6d4d911c9d64ee77aefa4394417cbae254ffcd511aeba9a5d",
+ "size": 53304
+}

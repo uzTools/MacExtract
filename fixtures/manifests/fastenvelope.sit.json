@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "40416c0ee97f8c6cc1576066f32db68e12c65dc35ff09fb0ff95287d67bf302c",
+   "data_size": 212997,
+   "name": "FastEnvelope.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "fastenvelope.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "de1a1b4e67d4f24e1aa964f0bcbdcb0bfb9097beb87ddd75c4d34bab31fa57c1",
+ "size": 213248
+}

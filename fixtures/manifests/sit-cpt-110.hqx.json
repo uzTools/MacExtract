@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "CPCT",
+   "data_sha256": "92ad62f40ce899362037fe2c5324ea42c0d720d58d3fb735d7d4971547f884a9",
+   "data_size": 18386,
+   "name": "SitToCpt v1.10.cpt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "PACT"
+  }
+ ],
+ "fixture": "sit-cpt-110.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "5eef9f2bdf2937b9fbbed1a325947e05255cca2306df557919762a6edfcd8bb1",
+ "size": 25386
+}

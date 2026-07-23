@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "CPCT",
+   "data_sha256": "4190bae2df03e3cf59542be8dace95d5a81091ba53c9b1fd03a08db1481a7535",
+   "data_size": 104643,
+   "name": "RECIPE10.CPT",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "PACT"
+  }
+ ],
+ "fixture": "recipe10.cpt",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "423f4e0ec1931f96c7feb990c2c1564cbd0496d54e6a1a3fd08fdb93a4d87365",
+ "size": 104832
+}

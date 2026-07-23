@@ -1,0 +1,36 @@
+{
+ "entries": [
+  {
+   "creator": "MPS ",
+   "data_sha256": "ae5bb8957de3261e9ebe3b359181a2bf3c74ad25c3f47d21703978895aca5c7b",
+   "data_size": 1045,
+   "name": "ssave.c",
+   "rsrc_sha256": "7b54e2f5bdfc680e295bfcf1b21b7d087d19e8ecdd8e1545254883b46ee68bbf",
+   "rsrc_size": 534,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "b1750a0c50095de4be41ad150174a607a0a3f50e302a27a23f9f526ca82bae4d",
+   "data_size": 412,
+   "name": "ssave.c.o",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "OBJ "
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "ffbf82144588077e6f99a2537a612b9870c769a19b5054213b3ac587a107322b",
+   "data_size": 523,
+   "name": "ssaveFKEY.make",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-ssaveFKEY.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "39618d34be3252421877223fb9b019344eb97844615561a50e911baa76e21537",
+ "size": 2888
+}

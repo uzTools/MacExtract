@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "dff7cbfd033fa19e38a65ef688d1c430c28bdd4d328114e216f519c118bf2a7c",
+   "data_size": 195759,
+   "name": "Stego1a2.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "stego-10a2.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "48148ad84064299a79915b94b0a48cfd74228a1b6a742a760cd793abbb55af6c",
+ "size": 267178
+}

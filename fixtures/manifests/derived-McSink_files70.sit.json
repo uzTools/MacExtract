@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "McSk",
+   "data_sha256": "505f35d73b27172292024436e1ce420286f3d04c7a731263cd820328bf1f1f6c",
+   "data_size": 20935,
+   "name": "McSink V7.0 Changes",
+   "rsrc_sha256": "9a299a4d27d0d26e6323205bbaa0b1c1d4e8c5b5e7ab580127b64f3c9ef9adca",
+   "rsrc_size": 574,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-McSink_files70.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "5a71e67a52ff16ef4ea6939a30532a2e6f9d00746646fe4449bc613281105327",
+ "size": 44817
+}

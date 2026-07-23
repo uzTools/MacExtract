@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "CPCT",
+   "data_sha256": "2dc051415ab02da4a0075f749a78fa33ff8279295b3b872135c9935cbcde1ac2",
+   "data_size": 85072,
+   "name": "Education7.1.cpt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "PACT"
+  }
+ ],
+ "fixture": "education71.cpt",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "6d228f0d86edcb1687909a96ae985feba78242ee3d829cecdf21c00962d06725",
+ "size": 85248
+}

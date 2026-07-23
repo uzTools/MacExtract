@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "6ca7017ee1166756387e202ac0dda13e03b7320ae147991cf1f962f3ac21a448",
+   "data_size": 25935,
+   "name": "messages.1.2.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "messages12.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "8cc74d59b38a0d122f7a2dd66661374f691efeb70a815fd75423e55ce8506669",
+ "size": 26063
+}

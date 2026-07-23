@@ -1,0 +1,31 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "TAXES99 Folder"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "37ba18147c33fd24a750d365e9770734961a379a1b615ebebf9551a216e8d9e1",
+   "data_size": 1447,
+   "name": "TAXES99 Folder/README",
+   "rsrc_sha256": "6db8eb7930c2068b2e88c4f63fc454bfb73e6f978334e4fe1f71e6cc0271c936",
+   "rsrc_size": 2716,
+   "type": "TEXT"
+  },
+  {
+   "creator": "XCEL",
+   "data_sha256": "415d040f1d813565dad001d2f96555431dacb85bcc81512b13179e7f1b595329",
+   "data_size": 94477,
+   "name": "TAXES99 Folder/TAXABDM1.xls",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "XLS "
+  }
+ ],
+ "fixture": "derived-TAXES99_Folder.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "d30750c6e10ff94975521c548d886c783b957fefeb562965119867d1f03414a7",
+ "size": 31450
+}

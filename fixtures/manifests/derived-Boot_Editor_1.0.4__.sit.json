@@ -1,0 +1,22 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "Boot Editor 1.0.4 ƒ"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "b758aca47e2506c2fdd5ffdadd384e324aef935e574ab1139b123c48ecb999bb",
+   "data_size": 806,
+   "name": "Boot Editor 1.0.4 ƒ/Boot Editor Doc",
+   "rsrc_sha256": "791e19338ca9fc2c47aadd378b2aa1bb82173b1c77c10e1dd11ee1385411310f",
+   "rsrc_size": 632,
+   "type": "ttro"
+  }
+ ],
+ "fixture": "derived-Boot_Editor_1.0.4__.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "399cc671fdc180a794c7a41e437c23c298a9af92f0daf9a1d2a6816a2d9e03f3",
+ "size": 47669
+}

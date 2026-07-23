@@ -1,0 +1,22 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "Memory Mgr Init Folder"
+  },
+  {
+   "creator": "MSWD",
+   "data_sha256": "d578b23e11c5859d8ed974a11b723f3476fee8e535f9439556f54132b7fa3148",
+   "data_size": 19456,
+   "name": "Memory Mgr Init Folder/MM Bug - Technical Stuff",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "WDBN"
+  }
+ ],
+ "fixture": "derived-Memory_Manager_INIT.cpt",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "a5bc08e8f01a295e2235e796a943cfa61acae321e2bbfcf75823a56d045047d6",
+ "size": 14013
+}

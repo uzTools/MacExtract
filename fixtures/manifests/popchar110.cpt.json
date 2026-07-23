@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "CPCT",
+   "data_sha256": "8e3fa975f7012274c4f00d9b50a0976cb0a7e96dc8f15cf14b786dfcf302f942",
+   "data_size": 26699,
+   "name": "PopChar.cpt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "PACT"
+  }
+ ],
+ "fixture": "popchar110.cpt",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "d880df7c2617b181005a7bbdfd44a7305c44def6edfbf3b2de875da86ac83252",
+ "size": 26880
+}

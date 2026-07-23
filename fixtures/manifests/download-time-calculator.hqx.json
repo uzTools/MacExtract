@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "4d7b9ff7751bf2fc832d965e7cf1a6db247b84d088e7dc8c341b52a02583e4d8",
+   "data_size": 79817,
+   "name": "download-time-calculator.sit",
+   "rsrc_sha256": "f7e3a756fa7ca4defd5eddd6288b68359f705cbf5841fdfdc9d47b185d93b94c",
+   "rsrc_size": 1319,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "download-time-calculator.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "4db76c462c169a9566a8cc8ccbbc3e7383f6b3a4d879fe803c8bc6592e011a23",
+ "size": 110748
+}

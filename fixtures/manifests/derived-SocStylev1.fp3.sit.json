@@ -1,0 +1,40 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "SocStylev1.fp3"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "f2d3699a88812df493babfc62edda19519b0ed78c612af22a74c0b785ffcc29d",
+   "data_size": 887,
+   "name": "SocStylev1.fp3/Abstract_SS",
+   "rsrc_sha256": "d1649ae4f1026a90766f4a0b4ab7937f49f1b16dcf625252cb1f0335a9d222fd",
+   "rsrc_size": 412,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "98ad3777a03b46079b7f123fda37a457341166cff73f985069952bcd601b999c",
+   "data_size": 4170,
+   "name": "SocStylev1.fp3/ReadMe_SS",
+   "rsrc_sha256": "e0497427c8d04e4fbd62d645acb90f28fca2c181837233aa7920781b9ab489d5",
+   "rsrc_size": 2936,
+   "type": "TEXT"
+  },
+  {
+   "creator": "FMP3",
+   "data_sha256": "c7574bfa70ec22c417c18b83db62736c1d112b0cd976aa77e2e492c8cc2e8986",
+   "data_size": 110592,
+   "name": "SocStylev1.fp3/SocStyle.fp3",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "FMP3"
+  }
+ ],
+ "fixture": "derived-SocStylev1.fp3.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "9414558705877ed0f145dc27f74386331e82d88b019a42b71061efbf5d941388",
+ "size": 78792
+}

@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "ce8b0d8d34b1b1756fee648ddf4aa012009527d835b8752d40243ffeae574e3a",
+   "data_size": 29780,
+   "name": "tar.sit",
+   "rsrc_sha256": "763a84d1227ee775e8fa22f2c9e7f885a841b61cefc89588ff366465f9e2eb3d",
+   "rsrc_size": 326,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "tar-40b.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "16a01e28e5d34e055f46f35f3cd60b789743fd981e874093ab40712e2c5014f6",
+ "size": 41282
+}

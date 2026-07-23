@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "38b4cee885741059f6c887184403d188247262720800a55449df0da4d5aa6c6e",
+   "data_size": 6505,
+   "name": "Sierpinski-Triangeln 1-swe.sit",
+   "rsrc_sha256": "99e9f9a542e00afb0b521b8d91c35fae0659d3b499f8580f2aca3d64c96a6af9",
+   "rsrc_size": 286,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "sierpinski-triangeln-1-swe.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "37d7e6398f4c842c366be18788c4a590672d94bd57781b6c383c53afaf449d58",
+ "size": 10240
+}

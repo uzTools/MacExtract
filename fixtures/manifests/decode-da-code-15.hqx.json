@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "58a2aac7af4c3aaa85a9f17513b418d044b55731cf59141e017d813654842c4a",
+   "data_size": 111565,
+   "name": "Decode da Code 1.5.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "decode-da-code-15.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "6e536a25c5ddf2b8e7c29da5a0482c7db6bcd1c8da4b02632f7040ca1b6a0da0",
+ "size": 154418
+}

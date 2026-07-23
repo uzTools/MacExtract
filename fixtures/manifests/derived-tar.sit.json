@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "ttxt",
+   "data_sha256": "e46f485674103592c72ae2bb6c51752f66928a2e4b60c1c1bd08e3d2c9b2ed9b",
+   "data_size": 9532,
+   "name": "Tar Manual",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "ttro"
+  }
+ ],
+ "fixture": "derived-tar.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "ce8b0d8d34b1b1756fee648ddf4aa012009527d835b8752d40243ffeae574e3a",
+ "size": 29780
+}

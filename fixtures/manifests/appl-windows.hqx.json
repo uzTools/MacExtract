@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "7023debc334a3812cd173aef669f0dce2515b0e4f85b93a5a08b3f416a99b8c3",
+   "data_size": 35472,
+   "name": "ApplWindows.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "appl-windows.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "3ebbc1f23bb1cab7215df80a78c59b622a4fe4099d17e6c019e86fd9cb5c65da",
+ "size": 49224
+}

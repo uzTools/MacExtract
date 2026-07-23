@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "a06a91129e0043c4e69e68b395d058d4eb7df97272d912c46b4a22ef18ff5300",
+   "data_size": 16207,
+   "name": "Quill1.20.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "quill120.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "3262dcd768adce76c38e4b2ecaed9a56427d50eee19e5f83aaa7c910f76da6b9",
+ "size": 16384
+}

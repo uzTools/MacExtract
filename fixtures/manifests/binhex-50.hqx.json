@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "EXTR",
+   "data_sha256": "e7305afd1ad19d0261526ac6ddb6194927d34d6f2d534a6d59c2e143cfd4f2e1",
+   "data_size": 5007,
+   "name": "BinHex 5.0.sea",
+   "rsrc_sha256": "b0e9417bc5a055b37694e2848b71170874dd3b3af7ca1323f5f0b443ed6ffc4f",
+   "rsrc_size": 12538,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "binhex-50.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "4b83a448b3c56f0f216d74ed4819e1d340b0e46cf95ce561a468f5075746b3a5",
+ "size": 24206
+}

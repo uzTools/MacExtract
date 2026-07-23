@@ -1,0 +1,43 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "BeaverGate 0.85"
+  },
+  {
+   "is_dir": true,
+   "name": "BeaverGate 0.85/Contents go with QM Administor"
+  },
+  {
+   "is_dir": true,
+   "name": "BeaverGate 0.85/Install with QM Forms"
+  },
+  {
+   "is_dir": true,
+   "name": "BeaverGate 0.85/Put contents in QA folder"
+  },
+  {
+   "creator": "MSWD",
+   "data_sha256": "f220e6e302c2448adaa4910d152ab5c052aa1edb8c58a0bd8d20c4d7a708527e",
+   "data_size": 46592,
+   "name": "BeaverGate 0.85/BeaverGate 0.85 docs MS Word",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "WDBN"
+  },
+  {
+   "creator": "MLTM",
+   "data_sha256": "19da032c58f1a4d6bed7d7963fc06571c4b914bc716b0ec80f9a92f1a054623b",
+   "data_size": 1144,
+   "name": "BeaverGate 0.85/Install with QM Forms/BeaverGate 0.85 QM form",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "MLTP"
+  }
+ ],
+ "fixture": "derived-beaver-0.85.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "aae8499109aae8d23b99c4bd0e256310a5dc46e121cca46596a857fbadb5ff71",
+ "size": 186530
+}

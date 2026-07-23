@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "a65b64534194cb9a49e4c81c4203b8c2ed5337d8e172198732ebb754a2724ce4",
+   "data_size": 8645,
+   "name": "DocSaver ƒ.sit.1",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "doc-saver-10.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "5f224c2e576c975e2b1434ce461de28405bf28b17b66a1e83762e368e7f31ef1",
+ "size": 12329
+}

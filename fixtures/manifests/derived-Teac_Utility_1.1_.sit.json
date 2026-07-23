@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "ttxt",
+   "data_sha256": "984e631bb827691eb7cbfd6203c377b0e33154cb92f3c67c40b2b2bb9ba5fa55",
+   "data_size": 2932,
+   "name": "About Teac Utility 1.1",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-Teac_Utility_1.1_.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "e95259a40fc0f9a008485be8aa7a1a62cbc56c023eb90a63b23c171862637bce",
+ "size": 12633
+}

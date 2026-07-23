@@ -1,0 +1,67 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "BUS-dokument"
+  },
+  {
+   "creator": "MSWD",
+   "data_sha256": "360c82f1c86496dd878270c6fd3f349169ec2d1ed8c7ab4dde491e37fbf6de13",
+   "data_size": 82944,
+   "name": "BUS med Mac allmänt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "WDBN"
+  },
+  {
+   "creator": "MSWD",
+   "data_sha256": "80cf79149922df2b2744c13a459d7035e361a5c674f0001b1f2c289ad9020618",
+   "data_size": 82944,
+   "name": "BUS med Mac på KTH",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "WDBN"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "0e974da5c0602fc52aabdb5c9b44ef4be2d8d7a9841e83858f1fee493dc18aee",
+   "data_size": 21177,
+   "name": "Engelsk handbok 1",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "f054b511e3776a6cd2f2f06de5ac84b9cbc05007693cfe7b82db6ebe094f8e7e",
+   "data_size": 28631,
+   "name": "Engelsk handbok 2",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MSWD",
+   "data_sha256": "f4f45c1ea20ec0024ff3970a9bab9fd3f8fa4b337c5d71ac118d212556fe515a",
+   "data_size": 51200,
+   "name": "Kort MacKermit-handledning",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "WDBN"
+  },
+  {
+   "creator": "MSWD",
+   "data_sha256": "b8798515215b77ead28136f7c416c508ba592da8d3b83c9f711252db831f5111",
+   "data_size": 27648,
+   "name": "Teknisk information (N2A)",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "WDBN"
+  }
+ ],
+ "fixture": "derived-MacKermit_N2A.cmp",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "d01aeedc16fc2c52ed11a00f02459fcb48ac1de8bdf73430ac1667cddf25bfa0",
+ "size": 219212
+}

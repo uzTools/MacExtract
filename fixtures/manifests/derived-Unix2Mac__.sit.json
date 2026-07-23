@@ -1,0 +1,80 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "Unix2Mac ƒ"
+  },
+  {
+   "is_dir": true,
+   "name": "Unix2Mac ƒ/Test files"
+  },
+  {
+   "creator": "MSWD",
+   "data_sha256": "6040eeb4c70ae6765653b88c9203a0accdcb44e28f451f64170b87ad3f2c8448",
+   "data_size": 1315,
+   "name": "Unix2Mac ƒ/README",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "UxMc",
+   "data_sha256": "3870562166ca9747ed81381fe10190c8ef3adfe165b2c39ac617b52e9ca8c72e",
+   "data_size": 55321,
+   "name": "Unix2Mac ƒ/Unix2Mac",
+   "rsrc_sha256": "3856b51027276da5e3220fde05831f5246eee0ed03ee7fafb0f9333d29efaf81",
+   "rsrc_size": 39959,
+   "type": "APPL"
+  },
+  {
+   "creator": "MW2J",
+   "data_sha256": "68a8f2da1be348d3540f495c3f59db8ac2fcc49e68811763bbedf25fed7ecefd",
+   "data_size": 1081,
+   "name": "Unix2Mac ƒ/Ç®ì«Ç›Ç≠ÇæÇ≥Ç¢",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "8ded834d856b03826567062db41954e33cc766d9eddee8ce5881215a45185899",
+   "data_size": 654,
+   "name": "Unix2Mac ƒ/Test files/TEST.JIS",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "977cd849bcc42f1cf5e1ee634b16a17ceafdb4961acf20a772952f4773441bc4",
+   "data_size": 1934,
+   "name": "Unix2Mac ƒ/Test files/TEST.MIXED",
+   "rsrc_sha256": "6b5deec16a2e452d3052b0987e6a94d328bd42400b17a66f30299167499c3a86",
+   "rsrc_size": 332,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "93d0fbc72af4da9a925d12b36313eb31120ad6b90a35fbe48f043b5b2b6e544b",
+   "data_size": 654,
+   "name": "Unix2Mac ƒ/Test files/TEST.Shift JIS",
+   "rsrc_sha256": "17a001f2ed92a1d1a5e71fb4ecb0b39b0d7865968bbca44892ca010494b8beb6",
+   "rsrc_size": 332,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MW2J",
+   "data_sha256": "099b20e2ab4dcd716cfad8445b95439b310fe95f78f9cb757be205791491bc51",
+   "data_size": 189,
+   "name": "Unix2Mac ƒ/Test files/Ç®ì«Ç›Ç≠ÇæÇ≥Ç¢",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-Unix2Mac__.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "a588e1190a90558297376b6adca1f8d7d7581302428aefcd154a4ffb9e5a2718",
+ "size": 51720
+}

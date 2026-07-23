@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "DSE2",
+   "data_sha256": "400153442550e009da1033e0c6f69142a7936a769fd912066c9621fa068f771a",
+   "data_size": 123399,
+   "name": "DD Expand.sea",
+   "rsrc_sha256": "e0a7bd8f796a10ae338547b8d556bcf2255bed7ef32a5b34d18886989bc65e1a",
+   "rsrc_size": 9458,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "dd-expand-40.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "5485390004eff5861ca665de401f12dd8dfa3e9b8ff591a983c8a108be761f7c",
+ "size": 181395
+}

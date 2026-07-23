@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "MWII",
+   "data_sha256": "b254ddb2fc49a128158a6740cbd83f51e7de3d42ee36cee6b92460feefc9d5c4",
+   "data_size": 1806,
+   "name": "Summary",
+   "rsrc_sha256": "4fc1efbd72a259db78e92378d9181a8698c079852df6717dae623d362ada77bb",
+   "rsrc_size": 1356,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-TransLine.cpt",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "db7b2fd7689f0b8ec8a7c5aff962f7c4de16f72afc1c0af6b4d011a786ee9d35",
+ "size": 29820
+}

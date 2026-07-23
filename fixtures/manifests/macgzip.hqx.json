@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "b8caca9f8c99bc7668750e2af096b54fdd91ecd3e73278e81ef2de2a2a699e37",
+   "data_size": 4618,
+   "name": "MacGzip.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "macgzip.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "fdf2e87dd961fe972f3c788e9b1f29b566b8daaa7b1e5d91294b4797e9d6cd78",
+ "size": 6509
+}

@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "8cef3e7ce79a43b67f547c3fc3514ac3f5ae6ca186d7e01a1f1d1dc5dce16c58",
+   "data_size": 19223,
+   "name": "Extractor.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "extractor-121.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "3b3015df4f8716ed032e5c509ee54e08cffc62cd822a2d6f7435bda091d1cce7",
+ "size": 26316
+}

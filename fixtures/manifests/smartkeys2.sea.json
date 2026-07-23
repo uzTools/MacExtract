@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "EXTR",
+   "data_sha256": "3bb38233b4395f6b5a1443f7846976c728d7887936cbce86a90ecfa487d8e2fe",
+   "data_size": 26658,
+   "name": "SmartKeys 2.sea",
+   "rsrc_sha256": "54b5a150269ff2b00463c6b68655b7d6a674160cbb3db22ddd7f5cc8d4c006eb",
+   "rsrc_size": 13121,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "smartkeys2.sea",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "b0173040cb29c5a823672a4ec47b324dec08ece7f96b4fd6c4b38899a962e3cd",
+ "size": 40064
+}

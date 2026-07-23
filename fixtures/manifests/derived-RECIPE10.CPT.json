@@ -1,0 +1,129 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "The Recipe Box"
+  },
+  {
+   "is_dir": true,
+   "name": "The Recipe Box/Recipes"
+  },
+  {
+   "is_dir": true,
+   "name": "The Recipe Box/Reference Texts"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "10c3c1dcf23ddd2eeff54a0a449d376f9b5bc50fc7d5f79a2669438356c10d13",
+   "data_size": 27774,
+   "name": "The Recipe Box/Recipe Box Documentation",
+   "rsrc_sha256": "94d7fbb578cbf442d4ed3e5379c8d8352f4db8731f528d851d1ba9207185edc8",
+   "rsrc_size": 1992,
+   "type": "TEXT"
+  },
+  {
+   "creator": "dosa",
+   "data_sha256": "e021c3ad5256f2f56225845189e50b97f267af3911adc80a146f26b7a78ca472",
+   "data_size": 3535,
+   "name": "The Recipe Box/Reference Texts/BAC.TXT",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "dosa",
+   "data_sha256": "bb44e950b52e28853092114140cdce89dde853b5ee8298fd361a578c3b0a46a6",
+   "data_size": 1353,
+   "name": "The Recipe Box/Reference Texts/EQUALS.TXT",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "dosa",
+   "data_sha256": "2abcdfa62cdc6f7cd11fcfc04e68e829e2992c3d13344c1725d3f75a4d49a189",
+   "data_size": 1415,
+   "name": "The Recipe Box/Reference Texts/FATS.TXT",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "dosa",
+   "data_sha256": "7463921cf557aa96bcc99edb6f3e40b4064765f134cdd2c3a5c24eb0986ce5b1",
+   "data_size": 1400,
+   "name": "The Recipe Box/Reference Texts/PYRAMID.TXT",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ˇˇˇØ",
+   "data_sha256": "8b2017140f90f9d8d3041fb7a75ce40c66e236a157b639bbf8649630c12057b1",
+   "data_size": 13950,
+   "name": "The Recipe Box/Recipes/CALORIES.DAT",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "\u0000U¶®"
+  },
+  {
+   "creator": "ˇˇˇØ",
+   "data_sha256": "bb4b29f107ebf9fd8c854ee33221f781f84df5b17be2af9553377bc53b154e7f",
+   "data_size": 15250,
+   "name": "The Recipe Box/Recipes/CHAPTER.0",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "\u0000U¶®"
+  },
+  {
+   "creator": "ˇˇˇØ",
+   "data_sha256": "27124795c059c98ac54ee6cfc923e9b287266c5d0e0ebcbfe9bb23a888407efc",
+   "data_size": 13040,
+   "name": "The Recipe Box/Recipes/CHAPTER.1",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "\u0000U¶®"
+  },
+  {
+   "creator": "ˇˇˇØ",
+   "data_sha256": "ee229719821544ba971ce76b5b8d5cf5ce18a69161c3675b9ca6300b6b2038ac",
+   "data_size": 1700,
+   "name": "The Recipe Box/Recipes/GROCERY.DAT",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "\u0000U¶®"
+  },
+  {
+   "creator": "ˇˇˇØ",
+   "data_sha256": "bf78c8f15a43e029bb144cc5d01cee3eb88cd07560f20220de448e9e0cdf1ba4",
+   "data_size": 56,
+   "name": "The Recipe Box/Recipes/INDEX.BOX",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "\u0000U¶®"
+  },
+  {
+   "creator": "ˇˇˇØ",
+   "data_sha256": "2a27b76be482c77bb095232f0acc0cb5dddbb36f1ece07fa4e2649be6483167f",
+   "data_size": 13185,
+   "name": "The Recipe Box/Recipes/ITEMS.DAT",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "\u0000U¶®"
+  },
+  {
+   "creator": "ˇˇˇØ",
+   "data_sha256": "c025c2d52f5bcf4e980ebf5929acdfe2887fc4e55ca712af65bdb6336591d3fb",
+   "data_size": 600,
+   "name": "The Recipe Box/Recipes/MEALS.DAT",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "\u0000U¶®"
+  }
+ ],
+ "fixture": "derived-RECIPE10.CPT",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "4190bae2df03e3cf59542be8dace95d5a81091ba53c9b1fd03a08db1481a7535",
+ "size": 104643
+}

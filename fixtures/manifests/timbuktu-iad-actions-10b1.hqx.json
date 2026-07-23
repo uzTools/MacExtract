@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "16095e53c45a2a1315b700b26750050cdc4d45c788cb618e5e729e0b36dd5851",
+   "data_size": 74189,
+   "name": "TimbuktuIADActions1.0b1.sit",
+   "rsrc_sha256": "e68fa7c7b1910e41d208e7895e0f6537cef2a663671f4c90d55df249debaf477",
+   "rsrc_size": 286,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "timbuktu-iad-actions-10b1.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "c923e10718bda091d20171be700e82cb61a819aab023d3ee3c0be86c9dc90ad0",
+ "size": 101436
+}

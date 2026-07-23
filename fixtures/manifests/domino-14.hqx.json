@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "ce98273f691d383e8eede9945d74c7be05f4c2ffc68f1df64bdf0c4181b4e660",
+   "data_size": 161906,
+   "name": "Domino v1.4.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT5"
+  }
+ ],
+ "fixture": "domino-14.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "18b2aa3289829284f90c42dd0e37d6ef3e27358e02317b73b12d68c0adc75294",
+ "size": 220280
+}

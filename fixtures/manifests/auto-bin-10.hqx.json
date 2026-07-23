@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "aHQX",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "AutoBin 1.0",
+   "rsrc_sha256": "917ef2da1e8d8019012a741fa64a464a9312508459f7505823b35344df2e3697",
+   "rsrc_size": 17673,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "auto-bin-10.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "72c35a9e55bf3ae876baf606faa3e315f7fd578b1b6eda0b2a46a75b2d5ebdfe",
+ "size": 24539
+}

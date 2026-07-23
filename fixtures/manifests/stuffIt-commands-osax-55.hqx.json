@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "889be4400dfeee2174cedcb3886ed071c142d83510590c15e78e3643c00b93ae",
+   "data_size": 67008,
+   "name": "StuffIt Commands 5.5.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT5"
+  }
+ ],
+ "fixture": "stuffIt-commands-osax-55.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "c43ca3a3087fcd17e7df4b888c343c8875527c9f8c575e22170d03d929030d92",
+ "size": 91923
+}

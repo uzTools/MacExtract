@@ -1,0 +1,31 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "Blue_Invasion_2001 Folder"
+  },
+  {
+   "creator": "SIT!",
+   "data_sha256": "ab4af8473a4bdae901532f31b7ec5b91a8ab7c868cc44e9b877b82d708140813",
+   "data_size": 13820,
+   "name": "Blue_Invasion_2001 Folder/Blue Invasion.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT5"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "f56a20cd15b06d263787a4871dbbb14010a963c2aa0dc5809edee264ab050104",
+   "data_size": 725,
+   "name": "Blue_Invasion_2001 Folder/README",
+   "rsrc_sha256": "3cd8549c13616077f21041a40a3cf94bdb3598715735adf5d0dabe65758b2355",
+   "rsrc_size": 512,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-Blue_Invasion_2001_Folder.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "22a5e0aab49f89657f895c96e1e1fd6e49ab030202809daf9f85b35e8e250b4c",
+ "size": 14761
+}

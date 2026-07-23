@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "aust",
+   "data_sha256": "64f7b874bc3b3d280b95380d0f97b4efa5f7e4d21a654a36b19c3e2a03fcafcc",
+   "data_size": 70223,
+   "name": "UnStuffIt™.sea",
+   "rsrc_sha256": "f971197c725b5b272e7f962aa8ffaa20bbbe819bad5df1eac3b743feb72b3efd",
+   "rsrc_size": 18262,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "unstuffit-307.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "3b4239294fb26c70f3f8ed5f1495d5e58f02650ba900d83ab464d38a74764022",
+ "size": 120846
+}

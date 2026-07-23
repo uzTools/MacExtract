@@ -1,0 +1,31 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "Look Mom, No Hands! 1.5.1"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "9eb03b570805f5cda04c163bc3234b89cd5abb8274ce828d494a4e41da42aeab",
+   "data_size": 7916,
+   "name": "Look Mom, No Hands! 1.5.1/Lies Mich- Look Mom, No Hands!",
+   "rsrc_sha256": "c9cba5ee1b0e5f4622f2751ff0898483bdf2a3a925099e1ee6f34e20fe44c895",
+   "rsrc_size": 4714,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "c872e76c544382b21aa5369c548ccb5f4e1995c2988772067ce0abd0621efee6",
+   "data_size": 7211,
+   "name": "Look Mom, No Hands! 1.5.1/ReadMe - Look Mom, No Hands!",
+   "rsrc_sha256": "08faf8e47c912ee9c41bbf896647ef2700f9f711d29ca79ff97768e8afa97b11",
+   "rsrc_size": 4794,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-Look_Mom__No_Hands__1.5.1.s.1",
+ "format": "StuffIt 5",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "916e118cda3ec16a0eef3ffdc55ab6b92b7077c6dbd13f757395e6de32b99b26",
+ "size": 66579
+}

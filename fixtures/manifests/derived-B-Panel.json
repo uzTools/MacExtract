@@ -1,0 +1,22 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "B–Panel 1.0 Folder"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "13f81c9e900950c907292ff495337964882a3d6a88d6df83bef95631968f8cd7",
+   "data_size": 1150,
+   "name": "B–Panel 1.0 Folder/B–Panel docs",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "ttro"
+  }
+ ],
+ "fixture": "derived-B-Panel",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "49992c4b798f2d1a268053f9343989215a8b393a363f31c93981348d78fa5b53",
+ "size": 11705
+}

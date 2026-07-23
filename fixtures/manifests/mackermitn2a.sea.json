@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "EXTR",
+   "data_sha256": "d01aeedc16fc2c52ed11a00f02459fcb48ac1de8bdf73430ac1667cddf25bfa0",
+   "data_size": 219212,
+   "name": "MacKermit_N2A.cmp",
+   "rsrc_sha256": "86d09bc57faa7870ca1430aec183ddb4ca043c241a1505de4ce23194ac099ee8",
+   "rsrc_size": 12961,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "mackermitn2a.sea",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "02746a01386d2dcd24580a89ea87cadc49aef2e6fc78e12e4ffb49880fa0fc56",
+ "size": 232448
+}

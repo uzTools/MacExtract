@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "EXTR",
+   "data_sha256": "54cb9f5735b3609d6f0f5da6eb8b0de2151031f7e24f48bb3a1e59f31ea94b85",
+   "data_size": 94671,
+   "name": "Guy's Mac Consultants.cpt",
+   "rsrc_sha256": "696b6126d2f71fcde945572c9df0ddaccfd53a0ca9272b07bef408152621f470",
+   "rsrc_size": 12961,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "guysmacconsultants.sea",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "98741a984fb178c14505e9e2182362f8073d94c9b7a7f970729509c0b6aacf78",
+ "size": 107904
+}

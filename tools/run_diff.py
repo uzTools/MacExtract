@@ -19,7 +19,9 @@ FIXDIR = os.path.join(ROOT, "fixtures")
 # lsar format name -> our format name; grown as milestones land.
 # Only fixtures whose format appears here are asserted on.
 IMPLEMENTED = {
-    # "MacBinary": "MacBinary",            # M1
+    "MacBinary": "MacBinary",              # M1
+    "AppleSingle": "AppleSingle",          # M1
+    "AppleDouble": "AppleDouble",          # M1
     # "BinHex": "BinHex 4",                # M2
     # "PackIt": "PackIt",                  # M3
     # "Compact Pro": "Compact Pro",        # M4
@@ -126,7 +128,8 @@ def main():
     args = ap.parse_args()
 
     mandir = os.path.join(FIXDIR, "manifests")
-    manifests = sorted(os.listdir(mandir)) if os.path.isdir(mandir) else []
+    manifests = sorted(f for f in os.listdir(mandir)
+                       if f.endswith(".json")) if os.path.isdir(mandir) else []
 
     ran = passed = skipped_fmt = skipped_missing = 0
     fails = []

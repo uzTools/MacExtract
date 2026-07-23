@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "464a4d04fed779e6200778c6348cbc7aa942e0bb0f25651cbd39d1771fae86be",
+   "data_size": 16599,
+   "name": "FCB Inspector 1.1.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "fcb_inspector11.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "bb965514985b8d7fa987cd313c28df02d733cf645c0e0a1ce1ea33da7d2029c4",
+ "size": 16768
+}

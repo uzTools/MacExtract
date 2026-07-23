@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "18b89e64e3699a2aa7d6ecbba72da73d82fc4556703bad1cfcd397ccc091ad98",
+   "data_size": 32745,
+   "name": "QuickConverter.sit",
+   "rsrc_sha256": "a612ae8f7c345c9e16daa5af67584a2e3229434a39514aab032f034f29d8eaf7",
+   "rsrc_size": 326,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "quick-converter-15.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "33915201dcf2cd400a9cda3d3b33693c2a8f6e0e2c95ad80788b2376a4ecdb45",
+ "size": 45679
+}

@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "ce47fb589b7076a0794b3ead24a14673db1d71ae5d3fe2c69b6ba7e1a1bd2a92",
+   "data_size": 24020,
+   "name": "ResMasterDA.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "resmaster.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "eecfa4a0bec1aaa9914629a8bebfe4175dda500abf8d3399e74d7b841f233c38",
+ "size": 24148
+}

@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "CPCT",
+   "data_sha256": "12772045f44004b4293b9b67f5851639070f30ca1d997be8a70a261c066ed27a",
+   "data_size": 130880,
+   "name": "GNU Chess 3.0.cpt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "PACT"
+  }
+ ],
+ "fixture": "gnuchess30.cpt",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "dbddc5465d8487f35ca971452fcd174323eafa7090a37e10f0739b4e865c6519",
+ "size": 131072
+}

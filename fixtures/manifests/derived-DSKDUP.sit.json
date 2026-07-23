@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "ttxt",
+   "data_sha256": "6e6c4443a1cd8af1f634bcb1e449b04bc96eba3c93c73b01488ba4ec4e4c51cb",
+   "data_size": 2835,
+   "name": "Read Me - DiskDup+",
+   "rsrc_sha256": "6db650c88ef5e351226f72517676949bfa5e4cda0c7f4f884c427b48d11912f2",
+   "rsrc_size": 1301,
+   "type": "ttro"
+  }
+ ],
+ "fixture": "derived-DSKDUP.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "050206aca439e8909c8e06c562d6a36b9440bd7998c57b05292cfa0446853207",
+ "size": 14049
+}

@@ -1,0 +1,49 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "SplitsVille 1.0.1 ƒ"
+  },
+  {
+   "creator": "MSIE",
+   "data_sha256": "8f5c3b307a1fd973da3bfc0bb0fe8c4e2355ab892796334533914eb7dae98b32",
+   "data_size": 505,
+   "name": "SplitsVille 1.0.1 ƒ/Register online.html",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "0b12c64267d1416906908f5a6e4f94928e95801e0ca50f16c029ba8e4d3be676",
+   "data_size": 3494,
+   "name": "SplitsVille 1.0.1 ƒ/Register via Kagi readme",
+   "rsrc_sha256": "b14fc09e32c0667b71c7481ffb9f625296ee0108e7be06a839f69b95e8ce0ee9",
+   "rsrc_size": 612,
+   "type": "ttro"
+  },
+  {
+   "creator": "KDT2",
+   "data_sha256": "0459132701cfdbf8995f749fbd2ca2d89612c06e6e2a44886a277dd3a3b490b1",
+   "data_size": 71165,
+   "name": "SplitsVille 1.0.1 ƒ/SplitsVille 1.0.1",
+   "rsrc_sha256": "6b6594f0a8a8414756244a5c0518296c6ef427f3ae20f647ed63534602d12e84",
+   "rsrc_size": 79287,
+   "type": "APPL"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "49806c64689eab3c009205359f24bcab19596eb086c296b6715b06494e722f74",
+   "data_size": 4950,
+   "name": "SplitsVille 1.0.1 ƒ/SplitsVille Readme",
+   "rsrc_sha256": "7b2f4d4dc8a61f34d567820074f831ba3ef35818d76136d425fc692b51914ca8",
+   "rsrc_size": 86372,
+   "type": "ttro"
+  }
+ ],
+ "fixture": "derived-SplitsVille_1.0.1__.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "4ad27fccf5aaf9ea45da009f415c691f6576715b5b6f2acb71e5e738072466e4",
+ "size": 163672
+}

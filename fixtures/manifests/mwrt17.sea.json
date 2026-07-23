@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "EXTR",
+   "data_sha256": "8405eca950400a6e127c2d7f827b9f4ff9a656c2050fd18aee8994c5edbe3e73",
+   "data_size": 62571,
+   "name": "mWRT17.sea",
+   "rsrc_sha256": "754924329946b0280d1f4d3b3e82e581214da8f495370edbc8d5d605ae649066",
+   "rsrc_size": 13121,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "mwrt17.sea",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "6f2708eadd610b97d63bb252ea9dbd986bc291d29c67825ac05eb26370653200",
+ "size": 75904
+}

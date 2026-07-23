@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "a93607989c322ae4a4d5ecf1e24211a8821d91a0442afb5da41d5bb664680c54",
+   "data_size": 7702,
+   "name": "Cico 1.0 ƒ.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "cico-10.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "5e5a131e61f10830bf87fc8711348ce220f2f04bb02042af2bdca8bffa4a53c5",
+ "size": 10535
+}

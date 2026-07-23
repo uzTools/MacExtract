@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "ttxt",
+   "data_sha256": "b5d6ba2ac6618654aa288c65c0045e66ca7769ee360135a2f72f2aaa21fd5d82",
+   "data_size": 3759,
+   "name": "Expr <-> MS Word doc.",
+   "rsrc_sha256": "7fbe0d3e10ca9bacf35de7118f5c39a45858f821ac65b9bfd01b57bfdc7cae17",
+   "rsrc_size": 5051,
+   "type": "ttro"
+  }
+ ],
+ "fixture": "derived-Expr_-_MSWord.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "b74e6086033e689b3bb19d0f5617e2191e9e7c549de333b58ca59ae88dd0e03a",
+ "size": 7218
+}

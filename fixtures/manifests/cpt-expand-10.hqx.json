@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "EXTR",
+   "data_sha256": "67762a0b248efab189ed6a49bc633c6a6b6215a4f67342eb3e5b2f7401b32535",
+   "data_size": 9886,
+   "name": "CptExpand_1.00.SEA",
+   "rsrc_sha256": "9fbc44fd355ae819e2cc8aee6e7e16068c79f765cb84d545839e789604778092",
+   "rsrc_size": 13083,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "cpt-expand-10.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "9672277128ca92ffc1bd724676dc7d00e277b86691319733c3105216d8816fcb",
+ "size": 31858
+}

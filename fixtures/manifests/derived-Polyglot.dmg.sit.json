@@ -1,0 +1,16 @@
+{
+ "entries": [
+  {
+   "data_sha256": "dc35be75706ec843257ce68c6089dee2b4a50f2adeac5fcc0be12dc85f8593ab",
+   "data_size": 107686,
+   "name": "Polyglot.dmg",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  }
+ ],
+ "fixture": "derived-Polyglot.dmg.sit",
+ "format": "StuffIt 5",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "9ef80d0f5e21287a6c07d13b9229c12025a81e86b697356144c0512aa52bc3c6",
+ "size": 80382
+}

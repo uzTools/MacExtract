@@ -1,0 +1,35 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "Indexer"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "75ba134ae7a8dbfc6aff54f036106b3e3b5f07520b40864d337622013e8aa966",
+   "data_size": 2445,
+   "name": "ReadMe",
+   "rsrc_sha256": "89935e315ef09d83b4e1fdd0daed7177588bb9d184d9ea442aa085c4e1deccd0",
+   "rsrc_size": 772,
+   "type": "TEXT"
+  },
+  {
+   "is_dir": true,
+   "name": "Indexer/GTQScriptingLibrary1.2"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "03231ac75a8845b276468b898c697426746ef8627969f86b1500d3ea90ea8333",
+   "data_size": 12264,
+   "name": "Indexer/!AntiVirus Index",
+   "rsrc_sha256": "3752faeac91ce36fd112d9b7a58e25af2a7fe7bac137c8b13182772db86f1df3",
+   "rsrc_size": 332,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-Indexer_Script_1.0.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "d17316906120658c91e512eaf0e823efd5e9fa9919d6d995db54b4f732c34a7d",
+ "size": 14204
+}

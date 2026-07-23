@@ -84,6 +84,35 @@ typedef struct UncProgressState {
 int unc_progress_add(UncProgressState *ps, uint32_t n);
 
 /* ------------------------------------------------------------------ */
+/* Buffered byte-wise input reader                                    */
+/* Many decoders consume input a byte at a time; UncBufIn batches the */
+/* io->read calls and drives the progress pump on each refill.        */
+/* ------------------------------------------------------------------ */
+
+typedef struct UncBufIn {
+    UncIO            *io;
+    UncProgressState *ps;    /* may be NULL */
+    uint8_t          *buf;   /* caller-provided storage */
+    uint32_t          cap;
+    uint32_t          len;   /* valid bytes in buf */
+    uint32_t          pos;   /* read cursor */
+    int               err;   /* sticky: UNC_OK until EOF/error */
+} UncBufIn;
+
+void unc_bufin_init(UncBufIn *b, UncIO *io, UncProgressState *ps,
+                    uint8_t *storage, uint32_t cap);
+
+/* Returns next byte (0..255), or -1 with b->err set to
+ * UNC_ERR_TRUNCATED (EOF), UNC_ERR_IO, or UNC_ERR_ABORTED. */
+int unc_bufin_next_slow(UncBufIn *b);
+
+static inline int unc_bufin_next(UncBufIn *b)
+{
+    if (b->pos < b->len) return b->buf[b->pos++];
+    return unc_bufin_next_slow(b);
+}
+
+/* ------------------------------------------------------------------ */
 /* CRC primitives (per-format tables live with their decoders)        */
 /* ------------------------------------------------------------------ */
 

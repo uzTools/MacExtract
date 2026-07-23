@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "ttxt",
+   "data_sha256": "906ab3b903263081f51735cb6bc16e8208cb1f42f1d4083d309483dd2fdc1035",
+   "data_size": 1440,
+   "name": "Odometer Help",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-SCSIOdometer_v1.2.cpt",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "beb97bfef28c0bb9dc6863e98d48aa2528360e0b4951cd93f21de283259df4be",
+ "size": 10263
+}

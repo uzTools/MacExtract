@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "c4b7542c736d1c2ae22d445d41f188900a11db73e45041d169d550457498a710",
+   "data_size": 27577,
+   "name": "Bootblocker.sit",
+   "rsrc_sha256": "1ec3035197e8234f4bb97e276aab766ec766c537d9f0718f2cba7b0e512470d7",
+   "rsrc_size": 326,
+   "type": "SITD"
+  }
+ ],
+ "fixture": "bootblocker.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "8854dc5bfdd8bfd6bb311d16c4ed3bdb76dae7acb8ea7119071739315f6ea130",
+ "size": 28160
+}

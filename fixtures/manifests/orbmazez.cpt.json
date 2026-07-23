@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "CPCT",
+   "data_sha256": "9e394eac82f83e255098c37275a9e1cad443e7d6c12491104bf6f8dbac167030",
+   "data_size": 202914,
+   "name": "orbmazez.cpt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "PACT"
+  }
+ ],
+ "fixture": "orbmazez.cpt",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "2c32237f255f408cb91201aafccb1a4e8ae65322def14f6d02f64b583df5d231",
+ "size": 203136
+}

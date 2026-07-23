@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "AOqc",
+   "data_sha256": "26245d25a4322f35b7a4eab287a78a5df22dbce629357d380ffb213162986d39",
+   "data_size": 950,
+   "name": "MacLights v1.0a1 doc",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-MacLights_v1.0a1.cpt",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "f67a94d57537ec0a29f800a81908d4ecf8016dac99820ddfd7fddcb6f60a5a38",
+ "size": 12725
+}

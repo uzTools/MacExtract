@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "MSWD",
+   "data_sha256": "5b848e3a674f0d4f7612fcc30ddacc9809e709cff0a1271efd15aab39c6bcc3e",
+   "data_size": 3467,
+   "name": "config.tel",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-Telnet2.4tcp.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "6a8163f96b70bea7ab2264fcd293219f1aa91ff05482f2dacca8573ed379b02e",
+ "size": 172616
+}

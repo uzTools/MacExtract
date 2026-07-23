@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "34b218fbb2c8ee79df87c6dea8a7888af4d6bf41acddb12e7ed3971a47e7bd7b",
+   "data_size": 18833,
+   "name": "MacBinary.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "mac-binary-101.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "4ca78281bde038438235cce1a7b092b9bad34f5a9edaefea1b55526b4771fe2a",
+ "size": 27556
+}

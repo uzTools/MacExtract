@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "EXTR",
+   "data_sha256": "1c964f9187c560defaefccdd0ec9cdf26d489ba20a6142d75b560be9b72e439e",
+   "data_size": 31617,
+   "name": "CEtoolbox.sea",
+   "rsrc_sha256": "11c9218ad73db578bbe35604f2b3f5a9492b029ada8be44608904464d3537c14",
+   "rsrc_size": 12961,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "cetoolbox.sea",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "7de8eb1d4a4d328010c326c813fad8aa34fbc6f7529a0da6cb1f1994e766c5c2",
+ "size": 44928
+}

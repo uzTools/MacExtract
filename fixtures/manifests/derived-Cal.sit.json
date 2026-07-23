@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "MACA",
+   "data_sha256": "0fbf358292978ce0512b704747ac2e800d9fb71d140bdbd439a5eec600859fce",
+   "data_size": 2739,
+   "name": "Cal.Intro",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-Cal.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "dc36fb48cd392d63c0311f0015e08d910368da5fab62cc94cf1cdc54f08cd628",
+ "size": 50205
+}
