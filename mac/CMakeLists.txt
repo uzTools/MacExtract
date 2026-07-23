@@ -27,9 +27,10 @@ target_include_directories(unclassic PRIVATE
 )
 
 # Plain 68000 floor: no 68020+ instructions.
-target_compile_options(unclassic PRIVATE -mcpu=68000 -Os
-                       -Wno-multichar)
-# Keep the segment small; strip unused code aggressively.
-set_target_properties(unclassic PROPERTIES COMPILE_OPTIONS
-                      "-ffunction-sections;-mcpu=68000;-Os")
+target_compile_options(unclassic PRIVATE -mcpu=68000 -Os -Wno-multichar
+                       -ffunction-sections
+                       # UNC_MAC_AUTOTEST builds a headless self-driving variant
+                       # (no SFGetFile/alerts) used by the Mini vMac harness in
+                       # tools/; see MANUAL_TESTS.md. Normal builds omit it.
+                       $<$<BOOL:$ENV{UNC_MAC_AUTOTEST}>:-DUNC_MAC_AUTOTEST>)
 target_link_options(unclassic PRIVATE -Wl,-gc-sections)

@@ -12,3 +12,4 @@ fixtures/*
 
 # Reference material is fetched by tools/fetch_references.sh, not committed.
 reference/
+build-mac-*/

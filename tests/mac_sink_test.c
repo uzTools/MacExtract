@@ -128,8 +128,15 @@ OSErr FSClose(short ref)
 }
 OSErr SetFPos(short ref, short mode, long off)
 {
-    (void)mode;
+    off_t end;
     if (ref < 0 || ref >= MAX_OPEN || !gFiles[ref].used) return -1;
+    end = lseek(gFiles[ref].fd, 0, SEEK_END);
+    if (mode == fsFromLEOF) {                 /* seek relative to EOF (append) */
+        return lseek(gFiles[ref].fd, end + off, SEEK_SET) < 0 ? -1 : noErr;
+    }
+    /* fsFromStart: replicate the real File Manager — seeking past EOF returns
+     * eofErr (but still positions at EOF), exercising the sink's handling. */
+    if (off > end) { return eofErr; }
     return lseek(gFiles[ref].fd, off, SEEK_SET) < 0 ? -1 : noErr;
 }
 OSErr GetFPos(short ref, long *pos)
@@ -152,6 +159,7 @@ OSErr SetEOF(short ref, long eof)
     if (ref < 0 || ref >= MAX_OPEN || !gFiles[ref].used) return -1;
     return ftruncate(gFiles[ref].fd, eof) < 0 ? -1 : noErr;
 }
+OSErr FlushVol(ConstStringPtr v, short r) { (void)v; (void)r; return noErr; }
 OSErr PBGetCatInfoSync(CInfoPBRec *pb) { (void)pb; return noErr; }
 OSErr PBSetCatInfoSync(CInfoPBRec *pb) { (void)pb; return noErr; }
 OSErr PBDirCreateSync(HParamBlockRec *pb)
@@ -199,8 +207,30 @@ int main(int argc, char **argv)
     mio.refNum = (short)srcslot;
     mio.size = (long)st.st_size;
 
-    io.ctx = &mio; io.read = mio_read; io.seek = mio_seek;
-    io.tell = mio_tell; io.size = mio_size;
+    /* Default: file-backed mio_* IO. If argv[3]=="ram", exercise the exact
+     * RAM-slurp + xio_* path the real Mac app uses (RunExtract), which the
+     * file-backed path never covers. */
+    {
+        static MemIO mem;   /* static so it stays valid through the call */
+        if (argc >= 4 && strcmp(argv[3], "ram") == 0) {
+            Ptr abuf = NewPtr((long)st.st_size);
+            long remaining = (long)st.st_size, off = 0;
+            long c;
+            while (remaining > 0) {
+                c = remaining;
+                if (FSRead(mio.refNum, &c, abuf + off) != noErr && c <= 0) break;
+                off += c; remaining -= c;
+            }
+            mem.data = (const uint8_t *)abuf;
+            mem.size = (uint32_t)st.st_size;
+            mem.pos = 0;
+            io.ctx = &mem; io.read = xio_read; io.seek = xio_seek;
+            io.tell = xio_tell; io.size = xio_size;
+        } else {
+            io.ctx = &mio; io.read = mio_read; io.seek = mio_seek;
+            io.tell = mio_tell; io.size = mio_size;
+        }
+    }
 
     ma.budget = FreeMem() - kMemReserve;
     al.ctx = &ma; al.alloc = mal_alloc; al.free = mal_free;

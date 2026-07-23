@@ -35,9 +35,11 @@ typedef void          *WindowPtr;
 #define eofErr       (-39)
 #define dupFNErr     (-48)
 #define fnfErr       (-43)
+#define ioErr        (-36)
 #define fsRdPerm     1
 #define fsWrPerm     2
 #define fsFromStart  1
+#define fsFromLEOF   2
 #define true  1
 #define false 0
 
@@ -109,5 +111,6 @@ OSErr SetEOF(short ref, long eof);
 OSErr PBGetCatInfoSync(CInfoPBRec *pb);
 OSErr PBSetCatInfoSync(CInfoPBRec *pb);
 OSErr PBDirCreateSync(HParamBlockRec *pb);
+OSErr FlushVol(ConstStringPtr volName, short vRefNum);
 
 #endif /* MAC_MOCKS_H */

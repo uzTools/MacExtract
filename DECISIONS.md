@@ -379,3 +379,39 @@ reading the HFS image back with hfsutils. Findings:
   finish. See BLOCKERS.md for the full bisection and next steps.
 - Streaming (not staging) sink kept: it is more memory-efficient for
   the 1 MB Mac Plus floor, and is equally proven-correct off-Mac.
+
+## M10 write path — resolved (single-fork) + characterized (two-fork)
+
+The earlier "disk-write crash" was NOT one bug but a stack of them; the
+Mac app now extracts single-fork files correctly under Mini vMac. See
+BLOCKERS.md for the full write-up. Key decisions:
+
+- **`mio_seek` tolerates `eofErr`.** A `SetFPos` to/past EOF returns
+  `eofErr` on a real Mac while still positioning at EOF; treating that as
+  a hard error made valid end-of-file seeks fail with a spurious
+  `UNC_ERR_IO`. The mock's `SetFPos` was updated to reproduce this so the
+  test suite catches the class of bug.
+- **Slurp the whole archive into RAM, decode from memory** (`MemIO` /
+  `xio_*`). On a real Mac, interleaving File Manager reads of the input
+  with writes to output files on the same volume makes the input reads
+  return zeros. Reading everything before any output exists removes the
+  interleave. Also keeps all output writes shallow (in `sink_end`) —
+  deep writes from the decode callback corrupt the HFS volume. The
+  `xio_*` path is now exercised off-Mac too (mock `ram` mode, ASan +
+  qemu-m68k). Archives are small, so a full-file RAM buffer is fine.
+- **Staging (not streaming) is the shipped sink.** A streaming
+  write-as-you-decode variant (open fork, write each chunk, switch
+  forks) does deep File Manager writes and corrupts the volume worse
+  than staging. Reverted the note above: staging + shallow writes wins on
+  the real Mac. (Both are byte-exact off-Mac.)
+- **Two-fork files: keep the larger fork only (Mac build).** Staging two
+  large `NewPtr` buffers to write both forks of one file corrupts System
+  6's Memory Manager (byte-exact off-Mac; crashes only on real hardware).
+  Rather than crash the whole app, the Mac build stages/writes a single
+  fork (the larger = primary content) for a two-fork file and reports the
+  entry partial. Guarded `#ifndef UNC_SINK_TEST`, so the mock/Linux
+  builds (no bug) still verify both forks against the manifests.
+- **Reserved-header diff is expected, not a defect.** Resource forks come
+  out byte-exact except offsets 16–127 ("reserved for system use"),
+  which a real Mac's Resource Manager stamps per machine/session. The
+  Mini vMac autotest treats an all-in-16..127 diff as a pass.

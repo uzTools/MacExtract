@@ -1,16 +1,34 @@
 # MANUAL_TESTS.md — Macintosh application checklist
 
-NOTE (2026-07-23): the shell HAS now been run under Mini vMac
-(System 6.0.8, Mac Plus, 4 MB). Verified working: launch, full Toolbox
-UI, format detection, the decompression engine (test-only decode +
-in-engine CRC verification), file creation, and PBSetCatInfo metadata.
-OPEN BUG: the disk-write path corrupts the heap (see BLOCKERS.md) — the
-checklist below is still the gate for the write path once that is
-fixed.
+NOTE (2026-07-23): the shell runs under Mini vMac (System 6.0.8, Mac
+Plus, 4 MB) and now **extracts single-fork files correctly** — data
+forks byte-exact, resource forks byte-exact except the OS-stamped
+"reserved for system use" header (offsets 16–127), with type/creator/
+dates set. See BLOCKERS.md for the write-path root causes that were
+fixed (`mio_seek` eofErr; RAM-slurping the archive to avoid read/write
+interleave on one HFS volume). Remaining limitation: a file with BOTH a
+data fork and a resource fork corrupts System 6's Memory Manager when
+both forks are staged; the Mac build keeps the larger fork and reports
+the entry partial rather than crash. The interactive checklist below is
+still the gate for the full UI (SFGetFile, progress dialog, Cancel).
 
-The Mac shell (mac/) began as a compile-only target: much of it has now
-been exercised, but the write path has never completed a byte-exact
-extraction. Before calling it working, run this checklist in each
+### Automated regression harness (Linux, no interaction)
+- `sh tests/run_mac_sink.sh` (in `ci.sh`): runs the ACTUAL sink through a
+  mock Toolbox against the engine, byte-exact vs. the oracle manifests,
+  natively (ASan+UBSan) and under `qemu-m68k` — both the file-backed IO
+  path and the RAM-slurp `xio_*` path (`ram` mode). This is the
+  authoritative proof of the sink logic on the target word size/endian.
+- A headless Mini vMac harness (build with `-DUNC_MAC_AUTOTEST`) drives
+  the real System 6 File Manager: it finds a "Test" HFS volume, extracts
+  `:archive.sit` into it, writes a `DONE` marker (forces the volume
+  commit before the emulator is killed), and idles. The host then mounts
+  the image with `hfsutils` and diffs the forks with
+  `tools/verify_forks.py` / `tools/analyze_forks.py` (an all-in-16..127
+  resource-fork diff counts as a pass — see above). Use a **pristine**
+  boot image per run: repeated boot+kill cycles corrupt it, and a
+  first-boot Desktop rebuild is slow enough to throw off UI timing.
+
+Before calling the interactive app working, run this checklist in each
 environment. Do not skip the System 6 / Mac Plus column — that is the
 floor target and the most likely place for stack, memory and trap
 assumptions to break.
