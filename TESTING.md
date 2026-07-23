@@ -72,3 +72,20 @@ can read it.
 ```
 ./ci.sh          # full matrix; must be green before every commit
 ```
+
+## M9 additions
+
+4. **Envelope unwrap tests** (`tools/run_unwrap.py`, in CI): chained
+   fixtures (.sit.bin, .sit.hqx, .tar.Z) extracted with auto-unwrap
+   must match the inner layer's manifest exactly, with the
+   intermediate file removed. The single-layer diff harness passes
+   `-nr` to disable unwrapping.
+5. **Budget sweep** (`tools/run_budget.py`): the whole corpus under
+   `--budget 409600` (a small Mac). Everything verifies fully except
+   StuffIt 5/Arsenic (512 KB blocks → clean per-entry "out of
+   memory"); results in FORMATS.md.
+6. **Fuzzing** (`tools/fuzz.py`): seeded, reproducible
+   mutation/splice/magic-garbage cases through `unclassic t` under the
+   sanitizer build; nonzero exits are fine, signals/sanitizer
+   aborts/hangs fail. 4,000 cases at M9; every CI run does a 150-case
+   smoke.

@@ -253,3 +253,23 @@ Non-obvious decisions, most recent last.
 - **tar acceptance requires a valid header checksum** (unsigned, or
   signed for old GNU tars); link/device/GNU-extension entries are
   reported per-entry as unsupported rather than silently skipped.
+
+## M9
+
+- **Auto-unwrap lives in the CLI, not the engine.** The engine stays a
+  one-container-at-a-time streaming machine; the CLI re-sniffs the
+  single extracted file of an envelope format (MacBinary, BinHex,
+  AppleSingle/Double, gzip, .Z), extracts in place (depth ≤ 8) and
+  deletes the intermediate (+ its .rsrc sidecar) only after the inner
+  layer succeeded. `-nr` disables; the diff harness uses it because
+  manifests describe exactly one layer.
+- **Detect-only probes completed** from XADMaster recognizers:
+  StuffIt X, DiskDoubler (all three magics incl. 'DDA2', with header
+  CRCs), Now Compress (byte-sum checksum), LZH/LArc. DiskCopy 4.2 is
+  NOT detected: no reference implementation exists in the cloned
+  sources and the no-invented-format-details rule wins over
+  completeness.
+- **The fuzzer treats exit codes 0 and 1 as success** — the contract
+  under fuzz is "clean error, no crash/hang/sanitizer trip", which is
+  exactly what the robustness suite asserts, extended to structurally
+  wild inputs (splices of two archives, magic-prefixed garbage).

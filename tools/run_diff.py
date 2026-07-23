@@ -88,7 +88,7 @@ def check_fixture(unclassic, man, verbose):
     fx = os.path.join(FIXDIR, man["fixture"])
     problems = []
     with tempfile.TemporaryDirectory() as tmp:
-        r = subprocess.run([unclassic, "x", "-o", tmp, fx],
+        r = subprocess.run([unclassic, "x", "-nr", "-o", tmp, fx],
                            capture_output=True, timeout=300)
         if r.returncode != 0:
             problems.append(f"exit {r.returncode}: {r.stderr.decode()[:300]}")

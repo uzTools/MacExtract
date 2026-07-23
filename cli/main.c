@@ -187,6 +187,9 @@ typedef struct {
     UncEntryInfo cur;
     uint32_t    data_written, rsrc_written;
     int         entries, errors;
+    /* For envelope auto-unwrap: shape of what was extracted. */
+    int         file_count, dir_count;
+    char        last_ok_path[1024];
 } DiskSink;
 
 /* Render a type/creator code for the listing. High bytes are MacRoman
@@ -318,6 +321,13 @@ static int sink_end(void *ctx, int status)
     } else if (s->verbose && !s->list_only) {
         printf("  %s (%u data, %u rsrc)\n", name, s->data_written, s->rsrc_written);
     }
+    if (s->cur.is_dir) s->dir_count++;
+    else {
+        s->file_count++;
+        if (status == UNC_OK && s->cur_path[0])
+            snprintf(s->last_ok_path, sizeof s->last_ok_path, "%s",
+                     s->cur_path);
+    }
     s->cur_path[0] = 0;
     return 0;
 }
@@ -356,6 +366,7 @@ static void usage(void)
         "  -o <dir>       output directory (default .)\n"
         "  --budget <N>   allocation cap in bytes\n"
         "  --raw-names    keep raw MacRoman bytes in filenames\n"
+        "  -nr            do not auto-unwrap envelope layers (.sit.hqx, ...)\n"
         "  --stats        print allocator statistics\n"
         "  -f <format>    force format\n"
         "  -v             verbose\n");
@@ -378,6 +389,8 @@ int main(int argc, char **argv)
     UncOptions opt;
     UncFormat fmt;
     int ret;
+    int no_recurse = 0, depth = 0;
+    char curfile[1024], delfile[1024];
     struct stat st;
 
     if (argc < 3) { usage(); return 2; }
@@ -388,6 +401,7 @@ int main(int argc, char **argv)
         else if (strcmp(argv[i], "--budget") == 0 && i + 1 < argc)
             budget = (uint32_t)strtoul(argv[++i], NULL, 0);
         else if (strcmp(argv[i], "--raw-names") == 0) raw_names = 1;
+        else if (strcmp(argv[i], "-nr") == 0) no_recurse = 1;
         else if (strcmp(argv[i], "--stats") == 0) stats = 1;
         else if (strcmp(argv[i], "-f") == 0 && i + 1 < argc) force = argv[++i];
         else if (strcmp(argv[i], "-v") == 0) verbose = 1;
@@ -395,7 +409,11 @@ int main(int argc, char **argv)
         else file = argv[i];
     }
     if (!file) { usage(); return 2; }
+    snprintf(curfile, sizeof curfile, "%s", file);
+    delfile[0] = 0;
 
+nextlayer:
+    file = curfile;
     memset(&fio, 0, sizeof fio);
     fio.f = fopen(file, "rb");
     if (!fio.f) {
@@ -513,6 +531,58 @@ int main(int argc, char **argv)
         fprintf(stderr, "unclassic: %d of %d entries failed\n",
                 sink.errors, sink.entries);
         return 1;
+    }
+
+    /* This layer extracted cleanly: the previous layer's envelope file
+     * (if any) is no longer needed. */
+    if (delfile[0]) {
+        char rp[1100];
+        remove(delfile);
+        snprintf(rp, sizeof rp, "%s.rsrc", delfile);
+        remove(rp);
+        delfile[0] = 0;
+    }
+
+    /* Envelope auto-unwrap (real-world files are chained: .sit.hqx,
+     * .cpt.bin, .tar.Z ...): when an envelope format yielded exactly
+     * one file, sniff it and extract in place. -nr disables. */
+    if (strcmp(cmd, "x") == 0 && !no_recurse && depth < 8 &&
+        (fmt == UNC_FORMAT_MACBINARY || fmt == UNC_FORMAT_BINHEX ||
+         fmt == UNC_FORMAT_APPLESINGLE || fmt == UNC_FORMAT_APPLEDOUBLE ||
+         fmt == UNC_FORMAT_GZIP || fmt == UNC_FORMAT_COMPRESS_Z) &&
+        sink.file_count == 1 && sink.dir_count == 0 &&
+        sink.last_ok_path[0]) {
+        FILE *pf = fopen(sink.last_ok_path, "rb");
+        if (pf) {
+            FileIO pio_f;
+            UncIO pio;
+            UncFormat pfmt;
+            struct stat pst;
+            memset(&pio_f, 0, sizeof pio_f);
+            pio_f.f = pf;
+            pio_f.size = stat(sink.last_ok_path, &pst) == 0
+                         ? (uint32_t)pst.st_size : UNC_SIZE_UNKNOWN;
+            pio.ctx = &pio_f;
+            pio.read = fio_read;
+            pio.seek = fio_seek;
+            pio.tell = fio_tell;
+            pio.size = fio_size;
+            pfmt = unc_sniff(&pio);
+            fclose(pf);
+            if (pfmt != UNC_FORMAT_UNKNOWN && unc_format_extractable(pfmt)) {
+                if (verbose)
+                    fprintf(stderr, "unwrapping: %s (%s)\n",
+                            sink.last_ok_path, unc_format_name(pfmt));
+                snprintf(delfile, sizeof delfile, "%s", sink.last_ok_path);
+                snprintf(curfile, sizeof curfile, "%s", sink.last_ok_path);
+                depth++;
+                force = NULL;
+                sink.file_count = sink.dir_count = 0;
+                sink.last_ok_path[0] = 0;
+                sink.entries = sink.errors = 0;
+                goto nextlayer;
+            }
+        }
     }
     return 0;
 }

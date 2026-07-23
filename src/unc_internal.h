@@ -336,6 +336,7 @@ int unc_tar_extract(UncCtx *c);
 int unc_sitx_probe(const uint8_t *head, int32_t len);
 int unc_diskcopy_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_nowcompress_probe(const uint8_t *head, int32_t len);
+int unc_diskdoubler_probe(const uint8_t *head, int32_t len);
 int unc_lzh_probe(const uint8_t *head, int32_t len);
 
 #endif /* UNC_INTERNAL_H */

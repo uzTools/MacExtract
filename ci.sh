@@ -20,6 +20,8 @@ make BUILD=build/san \
 ./build/san/unit_tests || fail "unit tests (sanitizers)"
 UNCLASSIC=build/san/unclassic sh tests/run_diff.sh || fail "diff tests (sanitizers)"
 UNCLASSIC=build/san/unclassic sh tests/run_robustness.sh || fail "robustness tests (sanitizers)"
+python3 tools/run_unwrap.py build/san/unclassic || fail "envelope unwrap tests"
+python3 tools/fuzz.py -n 150 --seed 7 --unclassic build/san/unclassic || fail "fuzz smoke"
 
 echo "=== variant 2: 32-bit (-m32) ==="
 if echo 'int main(void){return 0;}' | gcc -m32 -x c - -o build/m32probe 2>/dev/null; then

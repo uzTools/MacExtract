@@ -48,6 +48,7 @@ typedef enum UncFormat {
 
     /* Detect-only (named so a UI can tell the user what the file is) */
     UNC_FORMAT_SITX,          /* .sitx — StuffIt X (unsupported v1)   */
+    UNC_FORMAT_DISKDOUBLER,   /* DiskDoubler (unsupported v1)         */
     UNC_FORMAT_DISKCOPY,      /* .image — DiskCopy 4.2 disk image     */
     UNC_FORMAT_NOWCOMPRESS,   /* Now Compress archive                 */
     UNC_FORMAT_LZH,           /* .lzh/.lha                            */

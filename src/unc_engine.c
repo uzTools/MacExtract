@@ -29,6 +29,7 @@ static const UncFormatDesc unc_formats[] = {
     { UNC_FORMAT_COMPRESS_Z,  "Unix compress",   1 },
     { UNC_FORMAT_TAR,         "Tar",             1 },
     { UNC_FORMAT_SITX,        "StuffIt X",       0 },
+    { UNC_FORMAT_DISKDOUBLER, "DiskDoubler",     0 },
     { UNC_FORMAT_DISKCOPY,    "DiskCopy image",  0 },
     { UNC_FORMAT_NOWCOMPRESS, "Now Compress",    0 },
     { UNC_FORMAT_LZH,         "LZH",             0 },
@@ -104,6 +105,7 @@ UncFormat unc_sniff(UncIO *io)
     if (unc_zip_probe(head, len))       return UNC_FORMAT_ZIP;
     if (unc_lzh_probe(head, len))       return UNC_FORMAT_LZH;
     if (unc_nowcompress_probe(head, len)) return UNC_FORMAT_NOWCOMPRESS;
+    if (unc_diskdoubler_probe(head, len)) return UNC_FORMAT_DISKDOUBLER;
 
     {
         UncFormat asd = UNC_FORMAT_UNKNOWN;
