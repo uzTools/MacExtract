@@ -14,6 +14,24 @@
    "type": "TEXT"
   },
   {
+   "creator": "pZIP",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "UnZip 1.01",
+   "rsrc_sha256": "b610397f992121071e85e3c9f5f025efbb715cf0c63db903147151858df1978d",
+   "rsrc_size": 47390,
+   "type": "APPL"
+  },
+  {
+   "creator": "KAHL",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Source/UnZip.π",
+   "rsrc_sha256": "4dae6250922e088c4fdb047c8f242b50b489470ec27eb5f647fa5c8e3ba5c67a",
+   "rsrc_size": 7048,
+   "type": "PROJ"
+  },
+  {
    "creator": "KAHL",
    "data_sha256": "c41e9fcd55f57d01d20a5b70c3965d4cccded4f766b83878b9d9f88aa144fdbd",
    "data_size": 9541,

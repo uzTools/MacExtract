@@ -10,6 +10,33 @@
    "type": "TEXT"
   },
   {
+   "creator": "DMOV",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "FastEnvelope 2.0.1sw",
+   "rsrc_sha256": "ec35bc9fa6ced10a5c0a9701c6740f13975d6ad99cccc8d246ebc241e0f1d2af",
+   "rsrc_size": 145801,
+   "type": "DFIL"
+  },
+  {
+   "creator": "VFE2",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "FastEnvelope.Envelopes",
+   "rsrc_sha256": "0c37aad2cea166f4efbf5a7070d3dd84fda53a10261d4f25550214c7387c2821",
+   "rsrc_size": 58970,
+   "type": "VFEL"
+  },
+  {
+   "creator": "VHED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "FastEnvelope.Help",
+   "rsrc_sha256": "e0f877aed629a5ce6ff74c3b4e84e1b2fcc8b7ada73e9a2b14204fa74f3aaad2",
+   "rsrc_size": 27875,
+   "type": "VHLP"
+  },
+  {
    "creator": "ttxt",
    "data_sha256": "78226f4014048f93d89f5f73fcaea189d694112906faf0fda1ec656cf16044c7",
    "data_size": 5402,

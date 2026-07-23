@@ -3,6 +3,33 @@
   {
    "is_dir": true,
    "name": "Ballistik (german) ƒ"
+  },
+  {
+   "creator": "Dk@P",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Ballistik (german) ƒ/Ballistik.doc",
+   "rsrc_sha256": "08c21e18f03853258b5f17da307791d80cef580d2b6c4956d3140134bed5d1f3",
+   "rsrc_size": 107703,
+   "type": "APPL"
+  },
+  {
+   "creator": "BLLS",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Ballistik (german) ƒ/Ballistik",
+   "rsrc_sha256": "f11069a532be55d158161619147317981303b80f711c3e64c7fbf4cce136afbe",
+   "rsrc_size": 338904,
+   "type": "APPL"
+  },
+  {
+   "creator": "\u0000\u0000\u0000\u0000",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Ballistik (german) ƒ/Icon\r",
+   "rsrc_sha256": "3b3a8f33f7297575f8b005750526337db1813b29af411eacb6fdb72a15391dc8",
+   "rsrc_size": 2704,
+   "type": "\u0000\u0000\u0000\u0000"
   }
  ],
  "fixture": "derived-Ballistik__german___.sit",

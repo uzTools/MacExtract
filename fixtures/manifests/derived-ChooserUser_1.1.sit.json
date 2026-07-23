@@ -8,6 +8,15 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "WORD"
+  },
+  {
+   "creator": "CHSR",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "ChooserUser 1.1",
+   "rsrc_sha256": "9ab550a16edc83b201bd301c944d7a0c2c193681620d0cd50f45e41f2f04596b",
+   "rsrc_size": 26041,
+   "type": "cdev"
   }
  ],
  "fixture": "derived-ChooserUser_1.1.sit",

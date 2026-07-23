@@ -62,6 +62,15 @@
    "rsrc_sha256": "322e6e8fd57c947237b1dea53fe64c7bc165976087307de852ce79211ba6def2",
    "rsrc_size": 784,
    "type": "WORD"
+  },
+  {
+   "creator": "DSIM",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "DigSim 2.8",
+   "rsrc_sha256": "8f3f893435fa63ead36e5462eb752c671ba82009d14380feb5dbc48a2142f228",
+   "rsrc_size": 44202,
+   "type": "APPL"
   }
  ],
  "fixture": "derived-DigSim_2.8.cpt",

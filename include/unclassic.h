@@ -122,10 +122,12 @@ typedef struct UncAlloc {
 typedef enum UncFork { UNC_FORK_DATA = 0, UNC_FORK_RSRC = 1 } UncFork;
 
 typedef struct UncEntryInfo {
-    /* Filename: raw bytes as stored in the archive (MacRoman for Mac
-     * formats), NUL-terminated. May contain '/' separators for zip/tar
-     * paths; Mac-format names never do (':' is the Mac separator and is
-     * preserved as-is if present in path-bearing containers). */
+    /* Filename: a '/'-separated path of raw name components (MacRoman
+     * for Mac formats), NUL-terminated. '/' is ALWAYS a path separator:
+     * in Mac-format components the engine applies the classic
+     * reversible '/'->':' swap (':' cannot occur in an HFS name, '/'
+     * can), so a raw '/' never leaks into a component. zip/tar paths
+     * pass through unchanged ('/' is genuinely their separator). */
     uint8_t  name[UNC_NAME_MAX + 1];
     uint16_t name_len;
 

@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "Ch…o",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Chello",
+   "rsrc_sha256": "3b3181ed277b4d8886b91467a40de5faf6a67b56a61206b0c97ac0dc4926e958",
+   "rsrc_size": 91814,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "chello.bin",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "840bf87a8d27420d8f81ebbc096c35fc6142bda22302f2efc316821624be3d56",
+ "size": 92032
+}

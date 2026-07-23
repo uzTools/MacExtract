@@ -14,6 +14,15 @@
    "type": "TEXT"
   },
   {
+   "creator": "MACS",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "NiftyDrag1.4e/Icon\r",
+   "rsrc_sha256": "61b90cbc366b73ed18d7abac48d8adfbf5433ca245016ab0c102974f2c76829f",
+   "rsrc_size": 286,
+   "type": "icon"
+  },
+  {
    "creator": "VIS3",
    "data_sha256": "cf624581408b6eeed4f8dd555268181980b3dd71cf622e3a6b71a6c3c005fc05",
    "data_size": 3071,

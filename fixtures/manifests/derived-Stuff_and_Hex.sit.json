@@ -21,6 +21,15 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
+  },
+  {
+   "creator": "$@@@",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Stuff and Hex ƒ/Stuff and Hex ƒ",
+   "rsrc_sha256": "7c0956ee8fae7a714195b08d2ac3eae1a25f8d15715e89b16e108d215520120f",
+   "rsrc_size": 31809,
+   "type": "APPL"
   }
  ],
  "fixture": "derived-Stuff_and_Hex.sit",

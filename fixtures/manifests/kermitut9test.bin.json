@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "KR09",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Kermit_UT_9",
+   "rsrc_sha256": "6e4f131d9c641b23cc52e61310c0296577c75a1307e008aaf6f943915737660d",
+   "rsrc_size": 303582,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "kermitut9test.bin",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "cdb283305a8dafb563f948ab0387954d4d5488735ca88ab355c96c02781cb08b",
+ "size": 303744
+}

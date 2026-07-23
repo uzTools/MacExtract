@@ -5,6 +5,15 @@
    "name": "Executable pack"
   },
   {
+   "creator": "MZoo",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Executable pack/MacZOO 2.1",
+   "rsrc_sha256": "2921c732507e691f2cbd2c0ed412dc342fb40e621c467f9cd69efbc42bfbac53",
+   "rsrc_size": 79265,
+   "type": "APPL"
+  },
+  {
    "creator": "????",
    "data_sha256": "1eddbfa943dd071beb7d26a8c394362a33c4f38f28f18f74b94b5622faaab199",
    "data_size": 2441,

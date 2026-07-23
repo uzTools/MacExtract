@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "$$^$",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "AlwaysFract",
+   "rsrc_sha256": "95d88a9b9387fcc8ab037dde59cd7d6a484f86b1245203faceba129d92961f99",
+   "rsrc_size": 1295,
+   "type": "INIT"
+  }
+ ],
+ "fixture": "alwaysfract.bin",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "a37c8ddad42c8e76e44ecb265875fafb64a06c72aeffde76ca9086cfc125f887",
+ "size": 1423
+}

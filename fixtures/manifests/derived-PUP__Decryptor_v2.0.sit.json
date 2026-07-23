@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "PUP ",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "PUP™ Decryptor v2.0",
+   "rsrc_sha256": "fa77492a133247e9ea435286eae39004430cbc2d612c2a5e02a9dddbb27894d7",
+   "rsrc_size": 21592,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "derived-PUP__Decryptor_v2.0.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "bb8b5992c2d68f7e456acc3b80a63a528e6ec9c99b7de5cb62ff694436f48e09",
+ "size": 11475
+}

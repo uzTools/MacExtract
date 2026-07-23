@@ -8,6 +8,15 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
+  },
+  {
+   "creator": "CSSA",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "ComIT™ 1.4",
+   "rsrc_sha256": "ecd7e5c8bedc39a0aefbcd172480e6a35115da41d57f8b2dd9121d89d5cf7176",
+   "rsrc_size": 233037,
+   "type": "APPL"
   }
  ],
  "fixture": "derived-ComIT14.sit",

@@ -5,6 +5,15 @@
    "name": "Downerƒ"
   },
   {
+   "creator": "Rdow",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Downerƒ/Downer",
+   "rsrc_sha256": "4a00d061a4cf62bfdf0737f51bc0098d92e90304fdec4f36c36c11f6862cc715",
+   "rsrc_size": 8111,
+   "type": "cdev"
+  },
+  {
    "creator": "ttxt",
    "data_sha256": "0a9d092108cd6a3d17c55006bfbf7819afb84411f76b44748da4cc7bfcbc766f",
    "data_size": 1033,

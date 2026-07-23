@@ -1,6 +1,15 @@
 {
  "entries": [
   {
+   "creator": "eNpB",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "StopWatch 1.1",
+   "rsrc_sha256": "24c4d69120e717548ff126c08e2d1b8d13079b9f197256f60fb9443e35f0d548",
+   "rsrc_size": 19284,
+   "type": "APPL"
+  },
+  {
    "creator": "ttxt",
    "data_sha256": "58ef947266c12fa2df3c0d508b9928b366b7897cd8c580c1a57ffe63da0a8bab",
    "data_size": 4164,

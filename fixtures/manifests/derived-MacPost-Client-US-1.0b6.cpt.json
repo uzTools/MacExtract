@@ -11,6 +11,15 @@
   },
   {
    "creator": "mcPT",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Listener",
+   "rsrc_sha256": "a493a236863e70b86a5d3df7903222058541d6abfdb8fdcc4a2fe211e68a9497",
+   "rsrc_size": 28288,
+   "type": "INIT"
+  },
+  {
+   "creator": "mcPT",
    "data_sha256": "53a56bf48194f98eb7a2e4f1956c022117f5c0b986248b1428698019ee7b5441",
    "data_size": 6143,
    "name": "MacPost Release Notes",
@@ -26,6 +35,15 @@
    "rsrc_sha256": "21fb1dbc4388e16dca6f0c7ba170efdde2192a0a8b3b795edd7db3a144e049b0",
    "rsrc_size": 808,
    "type": "WORD"
+  },
+  {
+   "creator": "mcPT",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "MacPost",
+   "rsrc_sha256": "236a139d8de5c7ca9b8e46fc08f1d80fe118b4d27b8200004e6f8f196b83bdff",
+   "rsrc_size": 149554,
+   "type": "APPL"
   },
   {
    "creator": "MWII",

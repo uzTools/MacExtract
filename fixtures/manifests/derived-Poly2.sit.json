@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "POLY",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Polyominoes",
+   "rsrc_sha256": "0b43f8adae98804d78a5aaf38262877bde2ea221b88812c4878e596988303eb1",
+   "rsrc_size": 168746,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "derived-Poly2.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "784f28bf62c229a2681c1722a4b32ee46395257d9b25956fc3bfcd39cbbef224",
+ "size": 143253
+}

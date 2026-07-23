@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "cArD",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Privacy & Encryption",
+   "rsrc_sha256": "859833266e067e0276becb156fada656fc4a9796e4a827a886337fbf28b7960d",
+   "rsrc_size": 80862,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "derived-Privacy___Encryption.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "c85238508568d778e3d438c5ea29d83422cd2bbfed9398a57741ec105d4a3299",
+ "size": 47624
+}

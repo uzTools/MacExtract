@@ -14,6 +14,15 @@
    "type": "TEXT"
   },
   {
+   "creator": "KR09",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Kermit 0.98(63)",
+   "rsrc_sha256": "7493755e62fd7293c2c927612e3c908c908c1e4cffcfd3b5dbb32549266aee92",
+   "rsrc_size": 128600,
+   "type": "APPL"
+  },
+  {
    "creator": "MDPL",
    "data_sha256": "a66395ab5a0debd6256ceddfbc63b5b7818d4e7b35488a513aa435e304b2d8c1",
    "data_size": 4840,
@@ -30,6 +39,78 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "WDBN"
+  },
+  {
+   "creator": "KR09",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "PRIME Settings",
+   "rsrc_sha256": "228f13f0735175501340cdc9b46814a99dbec1a7858795389cd891013467bbf0",
+   "rsrc_size": 1698,
+   "type": "KERS"
+  },
+  {
+   "creator": "KR09",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "RICEVM1 2400 TN3270 Style",
+   "rsrc_sha256": "9fd1c53d6f20559c28f4a0e4d5ce6225841299cb98e759259602194189158312",
+   "rsrc_size": 1750,
+   "type": "KERS"
+  },
+  {
+   "creator": "KR09",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "RICEVM1 2400 TinCan Style",
+   "rsrc_sha256": "c9c548595bf9a6adf21faf34f71ca3e5ca08bce106ac28be58f48c068ca3ae7b",
+   "rsrc_size": 1752,
+   "type": "KERS"
+  },
+  {
+   "creator": "KR09",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "RICEVM1 DTI TN3270 Style",
+   "rsrc_sha256": "155f5d642aebf30f747504434df07a0fd8698af6dd69c3299e1eca0fe5a3cd95",
+   "rsrc_size": 1750,
+   "type": "KERS"
+  },
+  {
+   "creator": "KR09",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "RICEVM1 DTI TinCan Style",
+   "rsrc_sha256": "fab83709c8b3ff87597d654461b872e8e05c8284d947adb2ac900ea44fd7ca30",
+   "rsrc_size": 1752,
+   "type": "KERS"
+  },
+  {
+   "creator": "KR09",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "UNIX Style - modem 1200",
+   "rsrc_sha256": "4ac71f3898f74b319b9feb7c14d54f9fe5ca648e284b3f3e96703255fc963e0d",
+   "rsrc_size": 1318,
+   "type": "KERS"
+  },
+  {
+   "creator": "KR09",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "UNIX Style - modem 2400",
+   "rsrc_sha256": "af6d515ed154fdc9a2c8e42eba0839697e1e25e91a995e69557606b36d395a09",
+   "rsrc_size": 1318,
+   "type": "KERS"
+  },
+  {
+   "creator": "KR09",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "UNIX Style - modem 9600",
+   "rsrc_sha256": "0c5ad35f2834a350356420263983364db4d0f9f8e4d3e71bbff05a07b78ad317",
+   "rsrc_size": 1318,
+   "type": "KERS"
   },
   {
    "creator": "MSWD",

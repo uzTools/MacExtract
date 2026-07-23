@@ -8,6 +8,15 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "ttro"
+  },
+  {
+   "creator": "KUCI",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Speed Beep 2.0",
+   "rsrc_sha256": "73eb203745ab000d1a412c149b8e4c8ef3e4b437986d229caa669bc7eb1bc345",
+   "rsrc_size": 67280,
+   "type": "cdev"
   }
  ],
  "fixture": "derived-Speed_Beep.sea",

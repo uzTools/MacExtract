@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": " He ",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Helium 1.0",
+   "rsrc_sha256": "ec2445f2307dea3d9dbc0ffe9e2f88d11f078e6a7b175036d3ca797267cde8f5",
+   "rsrc_size": 36897,
+   "type": "cdev"
+  }
+ ],
+ "fixture": "derived-Helium_1.0.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "1c78a081482189ab50c25ba813ef552942e98fa2190ebe94fb0556e661351239",
+ "size": 26951
+}

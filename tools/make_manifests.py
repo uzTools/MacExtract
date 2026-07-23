@@ -88,6 +88,18 @@ def lsar_metadata(fixture):
 def build_manifest(fixture_path, verbose=False):
     name = os.path.basename(fixture_path)
     fmt, meta = lsar_metadata(fixture_path)
+    # Undecidable ground truth: if the archive contains both an entry
+    # "X" and an entry "X.rsrc" (THINK C project resources are named
+    # like that), the ".rsrc" AppleDouble sidecar convention — used by
+    # unar and unclassic alike — cannot represent both on disk: one
+    # clobbers the other. Refuse to build a manifest; the fixture
+    # stays in the corpus for robustness testing.
+    for n in meta:
+        if n + ".rsrc" in meta:
+            print(f"  oracle UNDECIDABLE on {name} "
+                  f"(.rsrc sidecar collision: {n!r}), skipping",
+                  file=sys.stderr)
+            return None
     with tempfile.TemporaryDirectory() as tmp:
         r = subprocess.run(
             ["unar", "-nr", "-D", "-f", "-q", "-k", "visible",
@@ -203,6 +215,12 @@ def main():
         m = build_manifest(fx)
         if m is None:
             failed += 1
+            # A stale manifest for an oracle-unreliable fixture is
+            # worse than none: drop it.
+            if os.path.exists(out):
+                os.unlink(out)
+                print(f"  removed stale manifest for {os.path.basename(fx)}",
+                      file=sys.stderr)
             continue
         with open(out, "w") as f:
             json.dump(m, f, indent=1, ensure_ascii=False, sort_keys=True)

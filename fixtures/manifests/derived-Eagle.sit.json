@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "movr",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Eagle",
+   "rsrc_sha256": "a5989ca2e875f576e42ba745ae115618ed2d8b1b74872997f80b50193cb8b8be",
+   "rsrc_size": 46588,
+   "type": "sfil"
+  }
+ ],
+ "fixture": "derived-Eagle.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "93437fa7539bd958f9bb3f79aba4ef86ccdcc559aee5e847e5c8625cfc53fe8d",
+ "size": 27933
+}

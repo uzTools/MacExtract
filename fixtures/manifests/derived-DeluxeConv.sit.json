@@ -17,6 +17,15 @@
    "rsrc_sha256": "1719424b9db1a77e10ed562fd7b6923f0b673ce2768fc9eeb87c9fe35fd8dbca",
    "rsrc_size": 730,
    "type": "WORD"
+  },
+  {
+   "creator": "DLXC",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "DeluxeConv",
+   "rsrc_sha256": "51b95bffb23d66d098d125fd963d28e273bbc531bb0c71ab58807ee579e3122d",
+   "rsrc_size": 37954,
+   "type": "APPL"
   }
  ],
  "fixture": "derived-DeluxeConv.sit",

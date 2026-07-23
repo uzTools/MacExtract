@@ -57,6 +57,24 @@
    "type": "OBJ "
   },
   {
+   "creator": "Doug",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "OTCFM68KGlue/Libraries/OTCFM68KGlue.dbg.rsrc",
+   "rsrc_sha256": "6f0072d07c54341ee84a96d410eb9d0a28ad2ef671c1b4aedb0480f1f410145c",
+   "rsrc_size": 29947,
+   "type": "RSRC"
+  },
+  {
+   "creator": "Doug",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "OTCFM68KGlue/Libraries/OTCFM68KGlue.rls.rsrc",
+   "rsrc_sha256": "f4d0b1487f817966c63fa3d7b17438ab481db186bd04185349743074ee5c74df",
+   "rsrc_size": 22432,
+   "type": "RSRC"
+  },
+  {
    "creator": "CWIE",
    "data_sha256": "93a71ca4747a043f81c43a8388f0a8dd23505fbeccc59e87384d153014d88417",
    "data_size": 14870,

@@ -10,6 +10,24 @@
    "type": "TEXT"
   },
   {
+   "creator": "DMOV",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Clipboard magician DA",
+   "rsrc_sha256": "897258b8ca0dcc5bc22682eef34ce6d51fcbf01b16944ba2683a1a5fe3c96848",
+   "rsrc_size": 17228,
+   "type": "DFIL"
+  },
+  {
+   "creator": "ACHM",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Magic Wand",
+   "rsrc_sha256": "1917f067f2b3e601d965339d3797c5b12e8112f069b6416fec9fa336e90d487c",
+   "rsrc_size": 134925,
+   "type": "CNVM"
+  },
+  {
    "creator": "PJMM",
    "data_sha256": "c1d4777fe47f72fa5670aaa6aeafa4806b99f7e4eb934f78b721db3a5e10aed6",
    "data_size": 1715,

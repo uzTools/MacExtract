@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "DDAP",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "DDExpand™-301",
+   "rsrc_sha256": "4a0145991f46f3ae8c7dfb93bc8fb0a397670e5323a5c69ee229c55702a6f0cd",
+   "rsrc_size": 82347,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "ddexpand301.bin",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "1857fcd6ac8895d1f010244e7bca64d69c4c40208cd259c0d1a4595148c43831",
+ "size": 82560
+}

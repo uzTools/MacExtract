@@ -23,6 +23,15 @@
    "type": "TEXT"
   },
   {
+   "creator": "MACS",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "IbacomSecurity1.0/Icon\r",
+   "rsrc_sha256": "35e778ef97b1eca6f2a9643184ff43dded1bd70ef2da714fd1c7b577b4aa5be7",
+   "rsrc_size": 486,
+   "type": "icon"
+  },
+  {
    "creator": "GoMk",
    "data_sha256": "c106060a00f8a4820be5ae8facff9482dba0dfdf54f878a232f904217b5b42c7",
    "data_size": 8813,
@@ -30,6 +39,15 @@
    "rsrc_sha256": "91117010ac042919e7020b21cd9063554f30672af3975c94c225d1b23ddd83cf",
    "rsrc_size": 286,
    "type": "TEXT"
+  },
+  {
+   "creator": "Regi",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "IbacomSecurity1.0/Register IbacomSecurity",
+   "rsrc_sha256": "bb0de178115d4b5efc9ff06df944b9982d7f3bfd29827a30a63bdf4aaddcc5c2",
+   "rsrc_size": 103710,
+   "type": "APPL"
   }
  ],
  "fixture": "derived-IbacomSecurity1.0.sit",

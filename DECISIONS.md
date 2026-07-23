@@ -107,3 +107,39 @@ Non-obvious decisions, most recent last.
 - **Manifest builder synthesizes entries for orphan `.rsrc` sidecars**
   (resource-only entries: unar writes nothing for a 0-byte data fork,
   so the data file is absent and only `<name>.rsrc` exists).
+
+## M4
+
+- **Path model settled for hierarchical containers:**
+  `UncEntryInfo.name` is a '/'-separated path. Mac name components get
+  the classic reversible '/'→':' swap inside the engine (':' cannot
+  occur in an HFS name, '/' can — so nothing is lost), and zip/tar
+  paths will pass through natively. The CLI now treats '/' strictly as
+  a separator and defuses '.'/'..' components; final on-disk names are
+  unchanged for the single-entry formats.
+- **CPT probe verifies the full index CRC** (as XADMaster's recognizer
+  does): the 1-byte magic (0x01) is far too weak alone. The extractor
+  then trusts the index and relies on per-file CRCs, avoiding a second
+  full pass.
+- **Index parsed via per-entry `unc_read_at`, no index preload:** the
+  container interleaves index walking with fork decoding; random
+  access keeps peak memory at ~17 KB (io + staging + 8 KB window)
+  regardless of entry count.
+- **LZH block padding transcribed from XADMaster**, not macutils:
+  macutils' eager 16-bit refill implicitly skips 2–3 padding bytes at
+  each 0x1FFF0-cost block boundary; XADCompactProLZHHandle expresses
+  the same thing explicitly (align; skip 3 if odd bytes consumed since
+  the previous trees, else 2) which fits our lazy bit reader.
+- **RLE quirks preserved bit-for-bit** from macutils cpt_outch: an
+  0x81 that would be the final output byte is a literal; 0x81 0x81
+  emits a literal 0x81 while staying escaped; 0x81 0x82 0x00 is a
+  literal "0x81 0x82". The 106-fixture corpus exercises all of them.
+- **Oracle output can be structurally undecidable:** archives holding
+  both "X" and "X.rsrc" as real entries (THINK C projects) cannot be
+  represented with the ".rsrc"-sidecar convention — one clobbers the
+  other, for unar and for us. make_manifests.py detects the collision
+  in lsar metadata and refuses (derived-BootTime.cpt,
+  derived-GNU_Chess_3.0.cpt stay corpus-only).
+- **`UncBufIn.limit`** bounds every compressed fork substream so
+  corrupt streams cannot read into unrelated bytes — mirrors
+  XADMaster's bounded sub-handles.

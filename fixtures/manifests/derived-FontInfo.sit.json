@@ -17,6 +17,15 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "WDBN"
+  },
+  {
+   "creator": "DMOV",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "FontInfo",
+   "rsrc_sha256": "882363dbdca253ab252ea4c96cc68f9351394385657416570662886bb6f33655",
+   "rsrc_size": 7057,
+   "type": "DFIL"
   }
  ],
  "fixture": "derived-FontInfo.sit",

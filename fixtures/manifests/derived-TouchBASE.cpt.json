@@ -8,6 +8,24 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
+  },
+  {
+   "creator": "DMOV",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "TouchBASE Demo",
+   "rsrc_sha256": "871db1a4e4c71530b31f52140234b8afaccbf5d2f3da87f778eeb6318d62a5a7",
+   "rsrc_size": 204966,
+   "type": "DFIL"
+  },
+  {
+   "creator": "\u0000\u0000\u0000\u0000",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "TouchBASE Prefs",
+   "rsrc_sha256": "6575a02f34c85225079a7decae5435f42ac915571c127b338db5ad5ab1b61b1a",
+   "rsrc_size": 5248,
+   "type": "\u0000\u0000\u0000\u0000"
   }
  ],
  "fixture": "derived-TouchBASE.cpt",

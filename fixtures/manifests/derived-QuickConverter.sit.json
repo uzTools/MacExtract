@@ -5,6 +5,24 @@
    "name": "QuickConverter 1.5 ƒ"
   },
   {
+   "creator": "\u0000\u0000\u0000\u0000",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "QuickConverter 1.5 ƒ/Icon\r",
+   "rsrc_sha256": "2cd2eddf80ddbed972522dc2a1d53ba1f9c4cac6100d58bd94884a26ca5c5efe",
+   "rsrc_size": 2704,
+   "type": "\u0000\u0000\u0000\u0000"
+  },
+  {
+   "creator": "QCon",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "QuickConverter 1.5 ƒ/QuickConverter 1.5",
+   "rsrc_sha256": "60402c941d47d1cd8ac04ba154c02d453748b13f97b46d3c6d310aea49993830",
+   "rsrc_size": 22883,
+   "type": "APPL"
+  },
+  {
    "creator": "ttxt",
    "data_sha256": "84438d3582b3143957e8d43e8adf4b9b0583fe34775caaf786a3e71bad3abf6d",
    "data_size": 1889,

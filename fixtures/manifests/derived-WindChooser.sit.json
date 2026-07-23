@@ -8,6 +8,15 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "WORD"
+  },
+  {
+   "creator": "WnCh",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "WindChooser",
+   "rsrc_sha256": "1ba0e417268db08dd6fea7de030a7985d9aaf58999c18ec5179f466503b3a79b",
+   "rsrc_size": 28312,
+   "type": "cdev"
   }
  ],
  "fixture": "derived-WindChooser.sit",

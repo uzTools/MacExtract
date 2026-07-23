@@ -5,6 +5,15 @@
    "name": "UUParser 1.72 ƒ"
   },
   {
+   "creator": "JSRL",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "UUParser 1.72 ƒ/UUParser 1.72",
+   "rsrc_sha256": "10e346fbe1d3835021a74c05043fa5b12a665ea6b52fbbdf48df3459081811a3",
+   "rsrc_size": 105126,
+   "type": "APPL"
+  },
+  {
    "creator": "MSWD",
    "data_sha256": "806ab72fa7c5192934b7f3d50090317f5e37f96269400428518d55d0163864bc",
    "data_size": 36352,

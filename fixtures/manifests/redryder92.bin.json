@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "RRYD",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Red Ryder 9.2",
+   "rsrc_sha256": "e00f35e3d1482ab1354a8129c9cd796f7dcdbb3c944026dcaf0a709680eb44bd",
+   "rsrc_size": 178192,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "redryder92.bin",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "faf770e41283c5c8dd5e68ef69424524e33585c460b467decc4ce45d05cacdd3",
+ "size": 178320
+}

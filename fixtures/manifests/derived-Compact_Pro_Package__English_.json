@@ -14,6 +14,15 @@
    "type": "APPL"
   },
   {
+   "creator": "cArD",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Compact Pro 1.51/Compact Pro User's Guide",
+   "rsrc_sha256": "b1329cfc73e981903055aba4ffdd2ab35396bfe610d03138903b4c4ddf76b3b5",
+   "rsrc_size": 109809,
+   "type": "APPL"
+  },
+  {
    "creator": "ttxt",
    "data_sha256": "2e9be2d5d63f1eb8dda158dcd1fe3109736d549557aadbb74329d70275117b6d",
    "data_size": 2803,

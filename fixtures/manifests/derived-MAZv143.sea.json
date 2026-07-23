@@ -1,6 +1,15 @@
 {
  "entries": [
   {
+   "creator": "NaOH",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "\u0001MaxAppleZoom",
+   "rsrc_sha256": "b59e379b8eebf59c822f961988eba82754f285445edade0ef4d1894aa1279052",
+   "rsrc_size": 39089,
+   "type": "cdev"
+  },
+  {
    "creator": "MACA",
    "data_sha256": "5696887fed3106f4ad7b17e06cbda82185b5e8aaaa03cb1460f217ec1bb2497d",
    "data_size": 57078,

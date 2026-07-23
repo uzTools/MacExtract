@@ -97,6 +97,10 @@ typedef struct UncBufIn {
     uint32_t          len;   /* valid bytes in buf */
     uint32_t          pos;   /* read cursor */
     uint32_t          lenfed; /* total bytes pulled from io so far */
+    uint32_t          limit; /* max bytes to pull from io (default ~0u):
+                              * bounds a substream (e.g. one compressed
+                              * fork) so corrupt data cannot read past
+                              * its end into unrelated bytes */
     int               err;   /* sticky: UNC_OK until EOF/error */
 } UncBufIn;
 
@@ -167,6 +171,33 @@ int unc_huff_read_tree(UncHuff *h, UncBitIn *bi);
 int unc_huff_decode(const UncHuff *h, UncBitIn *bi);
 
 /* ------------------------------------------------------------------ */
+/* Canonical (code-length) Huffman codes                              */
+/* Codes assigned in (length, symbol) order, shortest code all-zeros; */
+/* MSB-first. Compact Pro serializes 4-bit lengths and permits        */
+/* incomplete trees ("Compactor allows unused trailing codes").       */
+/* Source: reference/XADMaster/XADPrefixCode.m                        */
+/* (initWithLengths:shortestCodeIsZeros:YES) and                      */
+/* reference/macutils/macunpack/cpt.c (cpt_readHuff) — LGPL, NOTICE.  */
+/* ------------------------------------------------------------------ */
+
+#define UNC_CANON_MAX_SYMS 384
+#define UNC_CANON_MAX_BITS 15
+
+typedef struct UncCanon {
+    uint16_t count[UNC_CANON_MAX_BITS + 1]; /* codes per bit length */
+    uint16_t first[UNC_CANON_MAX_BITS + 1]; /* first code value per length */
+    int16_t  sym[UNC_CANON_MAX_SYMS];       /* symbols in (len,sym) order */
+    int16_t  maxlen;
+} UncCanon;
+
+/* Build from per-symbol code lengths (0 = unused). Incomplete codes
+ * are allowed; over-subscribed ones return UNC_ERR_CORRUPT. */
+int unc_canon_build(UncCanon *c, const uint8_t *lengths, int32_t nsyms);
+
+/* Decode one symbol, or -1 with bi->err set / on an invalid code. */
+int unc_canon_decode(const UncCanon *c, UncBitIn *bi);
+
+/* ------------------------------------------------------------------ */
 /* CRC primitives (per-format tables live with their decoders)        */
 /* ------------------------------------------------------------------ */
 
@@ -188,6 +219,17 @@ uint32_t unc_crc32(uint32_t crc, const uint8_t *buf, int32_t len);
 
 void unc_entry_clear(UncEntryInfo *e);
 int  unc_entry_set_name(UncEntryInfo *e, const uint8_t *name, uint32_t len);
+
+/* Set e->name to an already-formed '/'-separated path verbatim (no
+ * component swap: the bytes were produced by unc_entry_path_append or
+ * come from a format whose names natively use '/', like zip/tar). */
+void unc_entry_set_path(UncEntryInfo *e, const uint8_t *path, uint32_t len);
+
+/* Append one Mac path component to e->name ('/'-separated path),
+ * applying the classic reversible '/'->':' swap to the component
+ * (':' cannot occur in an HFS name, '/' can — see DECISIONS.md M4).
+ * Truncates at UNC_NAME_MAX. */
+void unc_entry_path_append(UncEntryInfo *e, const uint8_t *comp, uint32_t len);
 
 /* ------------------------------------------------------------------ */
 /* Per-format sniffers and extractors                                 */

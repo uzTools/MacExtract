@@ -14,12 +14,48 @@
   },
   {
    "creator": "EDIT",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "AT Server.log",
+   "rsrc_sha256": "f26123d5c097a68d225b26f7b5360188d418d45f7e9a9a01917dcdeda7e1ac9d",
+   "rsrc_size": 348,
+   "type": "TEXT"
+  },
+  {
+   "creator": "mpAS",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "AT Server",
+   "rsrc_sha256": "a369d7ccfa0b7af87dcc3199d1fb64a73a09edb5a470f7c454b8ef27131c37e7",
+   "rsrc_size": 96016,
+   "type": "APPL"
+  },
+  {
+   "creator": "EDIT",
    "data_sha256": "74187a74ef65494e83555ca4c4966ed991f7e8d0d4fffc7385c342f39abedb70",
    "data_size": 106,
    "name": "Alias",
    "rsrc_sha256": "330670e49b1e4839fdf779e7a015c662bc25635d2d07124b8bde12183b90bd97",
    "rsrc_size": 348,
    "type": "TEXT"
+  },
+  {
+   "creator": "MPMU",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Manager",
+   "rsrc_sha256": "76cee96351e098b267d8ee856b9350e7168c2ffeb56b39d5c5bbc5ab62562c69",
+   "rsrc_size": 110877,
+   "type": "APPL"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Preferences",
+   "rsrc_sha256": "600f4ac51aa3b13f67461b877c199440f38e953332abd967877e8d4f07b0160f",
+   "rsrc_size": 451,
+   "type": "rsrc"
   },
   {
    "creator": "MWII",
@@ -29,6 +65,42 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
+  },
+  {
+   "creator": "EDIT",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "SMTP Client.log",
+   "rsrc_sha256": "3411bf3c9cf0e35a9fea1bf58c4cb4db03f637e4db4563621dc8d3fb06c7a01f",
+   "rsrc_size": 348,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPSC",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "SMTP Client",
+   "rsrc_sha256": "2705e99cfc3d357273a458ebbf9db34223a4ab2760c2ccb3cfc9ee70b46bba75",
+   "rsrc_size": 55603,
+   "type": "APPL"
+  },
+  {
+   "creator": "EDIT",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "SMTP Server.log",
+   "rsrc_sha256": "88a60b132ad83faadf12fdb8c740f12fa19f1c0809ee5978f21584ff2ab827af",
+   "rsrc_size": 348,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPSS",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "SMTP Server",
+   "rsrc_sha256": "e1c8ba6b228478077f5ba0feaf563196eeff859f008a79c8a0f80708666c5349",
+   "rsrc_size": 55987,
+   "type": "APPL"
   },
   {
    "creator": "MACA",
@@ -56,6 +128,15 @@
    "rsrc_sha256": "472dc80b543b3ce8394b2260c1b62b9c4cb89d34fbd87c4f8189b9677f311a3c",
    "rsrc_size": 375,
    "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Update Users/Update Users",
+   "rsrc_sha256": "c2098aab0e2eac5d4663ba8ad3a7412d11e14cfb0726c47a16905bdd472ec5dc",
+   "rsrc_size": 22188,
+   "type": "APPL"
   },
   {
    "is_dir": true,

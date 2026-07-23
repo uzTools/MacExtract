@@ -5,6 +5,15 @@
    "name": "Life v1.0"
   },
   {
+   "creator": "????",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Life v1.0/Life v1.0",
+   "rsrc_sha256": "f84ee74e125603a0fb218b80fb0d16b57d1f5c7c55e5eb2b33b579b257065a84",
+   "rsrc_size": 96353,
+   "type": "APPL"
+  },
+  {
    "creator": "ttxt",
    "data_sha256": "0024e2cce2d58e5151636292b3a0636b0de4c0936fd3e777f3caab06926e7c6e",
    "data_size": 633,

@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "DMOV",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "AT View",
+   "rsrc_sha256": "893c4cf896ebfe999eeeb0d48bf513110d054c329c670224bb1cd0891d7f6713",
+   "rsrc_size": 17151,
+   "type": "DFIL"
+  }
+ ],
+ "fixture": "derived-AT_View.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "5846254c591f2119655690591d881fd0ddd9d26d9979cdbe788c43082a1934f0",
+ "size": 9784
+}

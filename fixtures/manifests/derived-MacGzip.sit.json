@@ -30,6 +30,24 @@
    "rsrc_sha256": "d1e50e7105db373728a99d8b95c67d6477aaf238da7e72ae4e5e149cd016fdc5",
    "rsrc_size": 457,
    "type": "TEXT"
+  },
+  {
+   "creator": "ToyS",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "MacGzip/gzip",
+   "rsrc_sha256": "28cae4e2fd35999a792e58930dc099728458eafd3f8754b6f21ee9583c845357",
+   "rsrc_size": 1538,
+   "type": "osas"
+  },
+  {
+   "creator": "ToyS",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "MacGzip/mat2front",
+   "rsrc_sha256": "b6e56de7008f78132ce066cc2989a670b9159e6ba481345ba97ee0524e5925af",
+   "rsrc_size": 1371,
+   "type": "osas"
   }
  ],
  "fixture": "derived-MacGzip.sit",

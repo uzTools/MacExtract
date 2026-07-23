@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "DMOV",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Set Volume",
+   "rsrc_sha256": "3425301ab506fbd89a8bf7462587637a6a22c61256ac4904a837df386991e1e2",
+   "rsrc_size": 4411,
+   "type": "DFIL"
+  }
+ ],
+ "fixture": "derived-Set_Volume.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "d0a38859be3c83fa9b58ead9947b2b6ff1ead0f701b9eee6ecc6fac4ec554663",
+ "size": 3541
+}

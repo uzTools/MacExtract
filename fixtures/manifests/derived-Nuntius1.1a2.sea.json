@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "nNNn",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Nuntius1.1a2",
+   "rsrc_sha256": "55dee032327a32d48fdfa5722bd5b5857e29c14e1ff6f3551637bdaab74d1b94",
+   "rsrc_size": 589469,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "derived-Nuntius1.1a2.sea",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "a34b83a3db3c6e4a3d80755e17f9339b5a84e22ff52ee761e5ee136066ef93b9",
+ "size": 257205
+}

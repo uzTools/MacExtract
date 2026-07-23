@@ -8,6 +8,15 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
+  },
+  {
+   "creator": "DMOV",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Adobe Vols by Number",
+   "rsrc_sha256": "7822e2a7ebe75dfd12179436116b698705bb5f26ad9255d6e0be0513d7e7bc60",
+   "rsrc_size": 13240,
+   "type": "DFIL"
   }
  ],
  "fixture": "derived-AdobeNumbers.sit",

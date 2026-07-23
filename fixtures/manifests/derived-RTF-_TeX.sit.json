@@ -23,6 +23,15 @@
    "type": "WDBN"
   },
   {
+   "creator": "BRFJ",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "RTF->TeX ƒ/RTF->TeX",
+   "rsrc_sha256": "9a773eaafdd5e249e402c8c8598259f815efd2a234af902fe70a00bc1ac01195",
+   "rsrc_size": 109157,
+   "type": "APPL"
+  },
+  {
    "creator": "*TEX",
    "data_sha256": "600332a7630fa84de7552e1afc630dc7bf79695967419438827b5b7630296908",
    "data_size": 6958,

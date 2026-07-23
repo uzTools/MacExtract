@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "????",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Works v2.00b Patcher",
+   "rsrc_sha256": "e31146c4eebcb6b61393fcaee28d461f403776d9caee864b0a4e65811a727305",
+   "rsrc_size": 8565,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "works200bupd.bin",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "8de5ae9057c2d3b41f8c093b7ab964281a8824352bc1b73d13965428672071ee",
+ "size": 8693
+}

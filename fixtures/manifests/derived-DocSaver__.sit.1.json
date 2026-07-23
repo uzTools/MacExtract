@@ -5,6 +5,15 @@
    "name": "DocSaver ƒ"
   },
   {
+   "creator": "dplt",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "DocSaver ƒ/DocSaver",
+   "rsrc_sha256": "e2c2445efb5bc8fdcebb47fab7a5a7b4651f1e1d0985b11fc9abf70b26853885",
+   "rsrc_size": 7666,
+   "type": "APPL"
+  },
+  {
    "creator": "ttxt",
    "data_sha256": "9c14da8de4ba66773fbc8c591130102265309a3eadd3c5450e1ee7feb35d0ee1",
    "data_size": 4054,

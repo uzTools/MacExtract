@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "S12A",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Suitcase II Updater 1.2.10",
+   "rsrc_sha256": "70a417b14247d07c02b9b7a45e18b11a38fbce17b332665686a117744d6ffbb9",
+   "rsrc_size": 54650,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "derived-Suitcase_II_Updater_1.2.10.cpt",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "c2f105d8cb5b8fe712f04db8bdc96d1584699949c1b6f4c39d180613a0c3db64",
+ "size": 33583
+}

@@ -27,6 +27,15 @@
    "type": "FMP5"
   },
   {
+   "creator": "MACS",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "AuthoRize 2.0/Icon\r",
+   "rsrc_sha256": "b4ccba8737911217ab3af2c57a2e2cddf313f320e2f7058a322a00692ac99887",
+   "rsrc_size": 2606,
+   "type": "icon"
+  },
+  {
    "creator": "FMP5",
    "data_sha256": "415bb2cabde96dd08f18e75f0827ead46171b6713e847771324a96cabde36ad1",
    "data_size": 17408,

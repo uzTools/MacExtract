@@ -1,6 +1,15 @@
 {
  "entries": [
   {
+   "creator": "mXCk",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "MacAClock",
+   "rsrc_sha256": "cb3f7f4c2e9520f82b201a988b4ffc6b85cdef2656401c62ef29fbf3292b401c",
+   "rsrc_size": 26949,
+   "type": "APPL"
+  },
+  {
    "creator": "ttxt",
    "data_sha256": "babfcd3e45df61a53d04d27b00b0f56dc99a5ce5206a2ea95d3f90555e735733",
    "data_size": 3555,

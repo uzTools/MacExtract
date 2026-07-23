@@ -8,6 +8,15 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Scrollbar Pattern Editor",
+   "rsrc_sha256": "4912f9c37dc09c932486f47ca9c278a119337fd1c77bc728bb6d32aa1644f8d8",
+   "rsrc_size": 3469,
+   "type": "APPL"
   }
  ],
  "fixture": "derived-ScrollbarPattern.sit",

@@ -1,6 +1,15 @@
 {
  "entries": [
   {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "GOTO FKEY 1.4",
+   "rsrc_sha256": "c7b983a40e12218cf88de377a0d40fff7ed11b23468e7989ce7b75006b065266",
+   "rsrc_size": 3546,
+   "type": "FKEY"
+  },
+  {
    "creator": "ttxt",
    "data_sha256": "9cf41cc8117a5c09f27908666ebc1748f87dafc5cdc967b62be9284da0f763a5",
    "data_size": 1188,

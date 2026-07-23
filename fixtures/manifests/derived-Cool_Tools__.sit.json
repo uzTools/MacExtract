@@ -7,6 +7,78 @@
   {
    "is_dir": true,
    "name": "Cool Tools ∆í/UltraClip Folder"
+  },
+  {
+   "creator": "eSRD",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cool Tools ∆í/Cool Tools doc",
+   "rsrc_sha256": "c5b40f1f764eca9f447b2e5f53a252ca9673d3fb7d9bf67c66d7586011131f15",
+   "rsrc_size": 206582,
+   "type": "APPL"
+  },
+  {
+   "creator": "aplt",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cool Tools ∆í/Liberate Desktops 2.0",
+   "rsrc_sha256": "40b3888fb5438665142d4929fc2728a9e94f5b5b77fba04f0215425c25c426cb",
+   "rsrc_size": 9859,
+   "type": "APPL"
+  },
+  {
+   "creator": "aplt",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cool Tools ∆í/Quote UnQuote 2.0",
+   "rsrc_sha256": "8f1bfdf316c342f8d25c1a41cb04ef1703309fc11b59ac91267d08ae8c9e02a6",
+   "rsrc_size": 13507,
+   "type": "APPL"
+  },
+  {
+   "creator": "dplt",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cool Tools ∆í/Selector 2.0.1",
+   "rsrc_sha256": "7b3364205c3ebbba57bf6bfc3cc191cf0abe89f21ceae96ab54e8c32d8dd4ec5",
+   "rsrc_size": 67436,
+   "type": "APPL"
+  },
+  {
+   "creator": "ToyS",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cool Tools ∆í/Show Document 2.0",
+   "rsrc_sha256": "cc0c104baee7f75c388661376c24f57ba6e2a004eeb31c6006fbc24be42d75d0",
+   "rsrc_size": 6985,
+   "type": "osas"
+  },
+  {
+   "creator": "dplt",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cool Tools ∆í/SuperAlias 2.0",
+   "rsrc_sha256": "b61966d6c59ab07dd09d1400f632abe327ef03a4a3f02513ace9344cb7ee6250",
+   "rsrc_size": 10700,
+   "type": "APPL"
+  },
+  {
+   "creator": "aplt",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cool Tools ∆í/UltraClip 2.0",
+   "rsrc_sha256": "3e763f283f25da10eebd9ed14233ca7108ae9775e3d322a8ede30a7b4c1576e3",
+   "rsrc_size": 33982,
+   "type": "APPL"
+  },
+  {
+   "creator": "drag",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cool Tools ∆í/UltraClip Folder/Editing clips",
+   "rsrc_sha256": "60b6f89d2f8b694359d7ac91c7b64a3d59b4b15bdd733189076d54dcd1c883c1",
+   "rsrc_size": 659,
+   "type": "clpt"
   }
  ],
  "fixture": "derived-Cool_Tools__.sit",

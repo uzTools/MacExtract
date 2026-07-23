@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "Bad!",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "B.A.D.",
+   "rsrc_sha256": "e059ebc81c9f6dbddc3b4d43b4bf4075b6b2f9181bf117e135eae46edbdac0f2",
+   "rsrc_size": 10952,
+   "type": "INIT"
+  }
+ ],
+ "fixture": "bad.bin",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "f6c481b57d69fc112f0596dc686a62b2d9601d3224c6b0ea8ff38e1ba41d31ea",
+ "size": 11136
+}

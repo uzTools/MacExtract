@@ -142,18 +142,28 @@ static int utf8_put(char *out, unsigned cp)
     return 3;
 }
 
-/* Convert raw entry name to a filesystem-safe name in out.
- * mac_encoding: nonzero → treat as MacRoman, else pass through.
- * '/' is replaced by ':' (the inverse of the classic Mac swap;
- * matches what unar does on Linux). */
+/* Convert an engine entry path to a filesystem path in out.
+ * The engine guarantees '/' is always a path separator (Mac name
+ * components already carry the classic '/'->':' swap, and ':' is
+ * POSIX-legal in a filename). mac_encoding: nonzero → components are
+ * MacRoman, else pass through. "." and ".." components are defused. */
 static void name_to_fs(const uint8_t *name, uint32_t len, int mac_encoding,
                        int raw, char *out, size_t outsz)
 {
-    size_t o = 0;
+    size_t o = 0, comp = 0;    /* comp = start of current component */
     uint32_t i;
-    for (i = 0; i < len && o + 4 < outsz; i++) {
-        uint8_t b = name[i];
-        if (b == '/') { out[o++] = ':'; continue; }
+    for (i = 0; i <= len && o + 5 < outsz; i++) {
+        uint8_t b = i < len ? name[i] : (uint8_t)'/'; /* virtual final sep */
+        if (b == '/') {
+            size_t cl = o - comp;
+            /* Defuse ".", ".." and empty components. */
+            if (cl == 0 && i < len) continue;
+            if ((cl == 1 && out[comp] == '.') ||
+                (cl == 2 && out[comp] == '.' && out[comp + 1] == '.'))
+                out[o++] = '_';
+            if (i < len) { out[o++] = '/'; comp = o; }
+            continue;
+        }
         if (b < 0x80 || raw || !mac_encoding) { out[o++] = (char)b; continue; }
         o += (size_t)utf8_put(out + o, macroman_high[b - 0x80]);
     }
@@ -179,14 +189,21 @@ typedef struct {
     int         entries, errors;
 } DiskSink;
 
-static void fourcc_str(uint32_t v, char out[5])
+/* Render a type/creator code for the listing. High bytes are MacRoman
+ * (decoded to UTF-8 like filenames); whitespace-class bytes become '?'
+ * so the listing stays column-parseable. out must hold >= 13 bytes. */
+static void fourcc_str(uint32_t v, char *out)
 {
     int i;
+    size_t o = 0;
     for (i = 0; i < 4; i++) {
         uint8_t b = (uint8_t)(v >> (24 - 8 * i));
-        out[i] = (b >= 32 && b < 127) ? (char)b : '?';
+        if (b >= 0x80) { o += (size_t)utf8_put(out + o, macroman_high[b - 0x80]); }
+        else if (b == '\t' || b == '\n' || b == '\v' || b == '\f' || b == '\r')
+            out[o++] = '?';
+        else out[o++] = (char)b;
     }
-    out[4] = 0;
+    out[o] = 0;
 }
 
 /* mkdir -p for the directory part of path (below outdir). */
@@ -215,7 +232,7 @@ static int sink_begin(void *ctx, const UncEntryInfo *info)
                name, sizeof name);
 
     if (s->list_only) {
-        char t[5], c[5];
+        char t[13], c[13];
         fourcc_str(info->type, t);
         fourcc_str(info->creator, c);
         if (info->is_dir)

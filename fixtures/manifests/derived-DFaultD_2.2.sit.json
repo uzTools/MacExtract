@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "DFD2",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "DFaultD 2.2",
+   "rsrc_sha256": "66b74aa0c3ace64f4fa7d3d31862b7f0952a635fd5b5b5fcd82e8169e13962a2",
+   "rsrc_size": 67259,
+   "type": "cdev"
+  }
+ ],
+ "fixture": "derived-DFaultD_2.2.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "143cbdddf6e75eb36fd2d2d129c67a5066feaf3f91fad42291334ee4f922dde6",
+ "size": 42753
+}

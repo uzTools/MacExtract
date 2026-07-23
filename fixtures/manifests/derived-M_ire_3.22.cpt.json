@@ -9,6 +9,15 @@
    "name": "Møire 3.22 ƒ/After Dark Module"
   },
   {
+   "creator": "MøiR",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Møire 3.22 ƒ/Møire 3.22",
+   "rsrc_sha256": "4a82bfb8a080469edbe005260187ef12d9eaddc6e37f13208d98b0417467ccc2",
+   "rsrc_size": 31972,
+   "type": "cdev"
+  },
+  {
    "creator": "MACA",
    "data_sha256": "b255cab51b464ce75470e845fd9ffd7cb353cf5e4ee369944310e99d0d7411ac",
    "data_size": 61948,
@@ -27,6 +36,15 @@
    "type": "WORD"
   },
   {
+   "creator": "????",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Møire 3.22 ƒ/Møire cdev => INIT",
+   "rsrc_sha256": "e3bed6da9ad2ca0ee2b52b36cc5b39c85b860d538cc6ba397e6c3dbcf8cec169",
+   "rsrc_size": 6086,
+   "type": "APPL"
+  },
+  {
    "creator": "MACA",
    "data_sha256": "97def3c53133c384c726abbdae788a166a9035cc065958b8d1996b65edd0f42c",
    "data_size": 3384,
@@ -34,6 +52,15 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "WORD"
+  },
+  {
+   "creator": "ADrk",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Møire 3.22 ƒ/After Dark Module/Møire 3.10.1 (After Dark)",
+   "rsrc_sha256": "1cecf2a0838df27d0f1b89fb66f367809fc79ae94b880a75c3f3bdf64f4865de",
+   "rsrc_size": 8669,
+   "type": "ADgm"
   }
  ],
  "fixture": "derived-M_ire_3.22.cpt",

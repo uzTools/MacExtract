@@ -8,6 +8,15 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
+  },
+  {
+   "creator": "LZW&",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "LZWRes",
+   "rsrc_sha256": "7415aa2541d14728ffa1b05b91b47427b3ca04d5306e5eeae1d2e1e5790a26d4",
+   "rsrc_size": 22986,
+   "type": "APPL"
   }
  ],
  "fixture": "derived-LZWRes.sit",

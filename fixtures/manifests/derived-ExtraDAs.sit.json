@@ -8,6 +8,15 @@
    "rsrc_sha256": "31c1fea7f8421f1e385e9c8593bc8b6b5b337471d3b061e1194747efe49426fd",
    "rsrc_size": 2296,
    "type": "TEXT"
+  },
+  {
+   "creator": "X†DA",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Extra DAs",
+   "rsrc_sha256": "d04b4f86f11344c8341a86f145a45741a49033b18861fbf501894a7a3dd92e43",
+   "rsrc_size": 3505,
+   "type": "APPL"
   }
  ],
  "fixture": "derived-ExtraDAs.sit",

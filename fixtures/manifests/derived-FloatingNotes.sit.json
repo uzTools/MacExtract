@@ -18,6 +18,15 @@
    "type": "APPL"
   },
   {
+   "creator": "\u0000\u0000\u0000\u0000",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "FloatingNotes Carbon ∆í/Icon\r",
+   "rsrc_sha256": "caff25732b6964703e600a21e8b2911d48b95bede26243a1d124ffaaa4e8af7e",
+   "rsrc_size": 2640,
+   "type": "\u0000\u0000\u0000\u0000"
+  },
+  {
    "creator": "ttxt",
    "data_sha256": "5a1297549ba5b5dfe44086d75a4b96031c7893d557b886da2d42df028ad15c72",
    "data_size": 286,
@@ -59,6 +68,15 @@
    "name": "FloatingNotes Carbon ∆í/Register FloatingNotes/On the internet/Open to Register FloatingNotes",
    "rsrc_sha256": "ab989cc269930d0e03542d2ef9b97218eff5bcbe392c4bff6cb765ec4eba84bd",
    "rsrc_size": 23573,
+   "type": "APPL"
+  },
+  {
+   "creator": "Regi",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "FloatingNotes Carbon ∆í/Register FloatingNotes/Mail or Fax/Register",
+   "rsrc_sha256": "86f6c2a27e413ab376b41f5d36dd8f57e5444541262c02f3308b6c2a6d565206",
+   "rsrc_size": 103542,
    "type": "APPL"
   }
  ],

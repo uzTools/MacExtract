@@ -40,6 +40,24 @@
    "type": "TEXT"
   },
   {
+   "creator": "cArD",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "RIPEM Mac 0.8b2 folder/RIPEM Mac User's Guide",
+   "rsrc_sha256": "0e9db1246bcd49637fb7b0437ac1739acdf1b1790255831a7c2d4b284a7d65c4",
+   "rsrc_size": 125944,
+   "type": "APPL"
+  },
+  {
+   "creator": "PEM2",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "RIPEM Mac 0.8b2 folder/RIPEM Mac",
+   "rsrc_sha256": "164ae0b1af9e138061630941669b3427e88647e64fe349d73b45d2e7fff23bdc",
+   "rsrc_size": 133560,
+   "type": "APPL"
+  },
+  {
    "creator": "R*ch",
    "data_sha256": "0c60a2cc41cf6b1b5e22820e18213eaafe8c0ff8f7ef1a3ae288c7369e509fb5",
    "data_size": 3083,
@@ -64,6 +82,51 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "KEYS"
+  },
+  {
+   "creator": "RMLa",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "RIPEM Mac 0.8b2 folder/QuicKeys folder/QuicKeys Extension/RIPEM Mac Launch QK",
+   "rsrc_sha256": "00051a54afba502abb130ae4f702a4385995514ea79c11cebf69c887557065d2",
+   "rsrc_size": 2915,
+   "type": "QKex"
+  },
+  {
+   "creator": "R*ch",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "RIPEM Mac 0.8b2 folder/BBEdit folder/RIPEM Mac Decrypt",
+   "rsrc_sha256": "0817b31a0b3d63c1a8b03140d5def8b0fac3b6234178106adb2d56a5b0ea6a60",
+   "rsrc_size": 2005,
+   "type": "BBXT"
+  },
+  {
+   "creator": "R*ch",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "RIPEM Mac 0.8b2 folder/BBEdit folder/RIPEM Mac Encrypt",
+   "rsrc_sha256": "153187b53b62e35d7695d5c5cd42855dbf3829743b964bc617ff546fac3e4e99",
+   "rsrc_size": 2039,
+   "type": "BBXT"
+  },
+  {
+   "creator": "R*ch",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "RIPEM Mac 0.8b2 folder/BBEdit folder/RIPEM Mac Sign (Plain)",
+   "rsrc_sha256": "a230b55ab8f8a3519582c420b1d66c39223c38ba710c40b6889efa9c079ad278",
+   "rsrc_size": 2044,
+   "type": "BBXT"
+  },
+  {
+   "creator": "R*ch",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "RIPEM Mac 0.8b2 folder/BBEdit folder/RIPEM Mac Sign (Recode)",
+   "rsrc_sha256": "b7376fe5b5630abc23cef3f0fcfffb80ff545108f378fdcaa3c4d29ac5702675",
+   "rsrc_size": 2045,
+   "type": "BBXT"
   }
  ],
  "fixture": "derived-RIPEM_Mac_0.8b2_folder.sit",

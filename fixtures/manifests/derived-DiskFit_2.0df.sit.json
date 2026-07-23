@@ -1,0 +1,27 @@
+{
+ "entries": [
+  {
+   "creator": "DZT4",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "DiskFit 2.0-df",
+   "rsrc_sha256": "fcb7229b72e9c08258176d600062a500234be7ff5d81b327bcff54d96325db84",
+   "rsrc_size": 247120,
+   "type": "APPL"
+  },
+  {
+   "creator": "DZT4",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "DiskFit.df.Help",
+   "rsrc_sha256": "65ad331152aebc5518510cacd32675993443b5d5472e38f3fd8c080ff99e3d86",
+   "rsrc_size": 90723,
+   "type": "HEL4"
+  }
+ ],
+ "fixture": "derived-DiskFit_2.0df.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "b9f79f94549fab89744133304333b557800716127947d206a94d92162ec92bb3",
+ "size": 208763
+}

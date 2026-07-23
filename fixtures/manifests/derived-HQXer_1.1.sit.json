@@ -8,6 +8,15 @@
    "rsrc_sha256": "742c2b243b4bd4edd81e989d9c8710652f5d09489d6736fab302c26d5e3a6773",
    "rsrc_size": 2249,
    "type": "WPD2"
+  },
+  {
+   "creator": "HQXr",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "HQXer",
+   "rsrc_sha256": "0b83b161883cfaad3e61e66cca7a85feb506ce62f00af4c270eb791aba2ea183",
+   "rsrc_size": 60768,
+   "type": "APPL"
   }
  ],
  "fixture": "derived-HQXer_1.1.sit",

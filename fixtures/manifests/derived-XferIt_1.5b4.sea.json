@@ -9,6 +9,15 @@
    "name": "XferIt 1.5b4/documentation"
   },
   {
+   "creator": "XFex",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "XferIt 1.5b4/XferDrop",
+   "rsrc_sha256": "c95f554dccd999f47c5e7399c9006092046da3902d6fb41119dd785be3821630",
+   "rsrc_size": 6603,
+   "type": "INIT"
+  },
+  {
    "creator": "XFUR",
    "data_sha256": "5572905e2c9b778c74ad382cb4c40426178f446f1a98fea481eef02548f6ed8d",
    "data_size": 264,

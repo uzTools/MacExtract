@@ -1,6 +1,15 @@
 {
  "entries": [
   {
+   "creator": "????",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "UnArjMac",
+   "rsrc_sha256": "6063e6f0e310c944dc37af793744bdbf624de93432d2e6d5c6cf4bfe03d6b5a0",
+   "rsrc_size": 34628,
+   "type": "APPL"
+  },
+  {
    "creator": "McSk",
    "data_sha256": "dde75e4f61de29057bbcb4135c86fef3b2149023f06495f356d061d95ccc2faf",
    "data_size": 11344,

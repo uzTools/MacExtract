@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "altw",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "AltWDEF",
+   "rsrc_sha256": "1b6f5d131136f3b92a6b368b004c30331ba224ce19b32b75c37526c4e621df29",
+   "rsrc_size": 31714,
+   "type": "cdev"
+  }
+ ],
+ "fixture": "altwdef.bin",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "9e605686b934dbd98f63ba216aeefe7dc0da91e06d067b2ba8dad6c3c70273fc",
+ "size": 31842
+}

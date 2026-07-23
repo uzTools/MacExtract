@@ -8,6 +8,15 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "WORD"
+  },
+  {
+   "creator": "FCBi",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "FCB Inspector",
+   "rsrc_sha256": "730ca813b257ab91262c8833dee9b4a43e96140e9362270fe8aa17417f3c2374",
+   "rsrc_size": 18061,
+   "type": "cdev"
   }
  ],
  "fixture": "derived-FCB_Inspector_1.1.sit",

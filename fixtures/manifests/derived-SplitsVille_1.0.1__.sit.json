@@ -5,6 +5,15 @@
    "name": "SplitsVille 1.0.1 ƒ"
   },
   {
+   "creator": "MACS",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "SplitsVille 1.0.1 ƒ/Icon\r",
+   "rsrc_sha256": "40dc81615e0c31b2e4fe653a3c1a41e50530dcf64a4b2428ff8ae6b5770863b6",
+   "rsrc_size": 286,
+   "type": "icon"
+  },
+  {
    "creator": "MSIE",
    "data_sha256": "8f5c3b307a1fd973da3bfc0bb0fe8c4e2355ab892796334533914eb7dae98b32",
    "data_size": 505,
@@ -14,6 +23,15 @@
    "type": "TEXT"
   },
   {
+   "creator": "Regi",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "SplitsVille 1.0.1 ƒ/Register via  Kagi",
+   "rsrc_sha256": "6abffc71dac9f24f2e904e257705b79a7299c769faa7622f29c670e945bd5697",
+   "rsrc_size": 103522,
+   "type": "APPL"
+  },
+  {
    "creator": "ttxt",
    "data_sha256": "0b12c64267d1416906908f5a6e4f94928e95801e0ca50f16c029ba8e4d3be676",
    "data_size": 3494,
@@ -21,6 +39,15 @@
    "rsrc_sha256": "b14fc09e32c0667b71c7481ffb9f625296ee0108e7be06a839f69b95e8ce0ee9",
    "rsrc_size": 612,
    "type": "ttro"
+  },
+  {
+   "creator": "KDT3",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "SplitsVille 1.0.1 ƒ/SV_Reassembler_1.0.1",
+   "rsrc_sha256": "1278ee80fc6a0ebd3f76935b9f8d86f7e797f146f945cb42af81c7249a4413b9",
+   "rsrc_size": 34834,
+   "type": "APPL"
   },
   {
    "creator": "KDT2",

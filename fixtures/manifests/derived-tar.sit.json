@@ -8,6 +8,15 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "ttro"
+  },
+  {
+   "creator": "TAR ",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "tar",
+   "rsrc_sha256": "2eaf3fd9c03f887167ac42cff3e0fd30b2259777a4b7b429d504825312999b2e",
+   "rsrc_size": 46073,
+   "type": "APPL"
   }
  ],
  "fixture": "derived-tar.sit",

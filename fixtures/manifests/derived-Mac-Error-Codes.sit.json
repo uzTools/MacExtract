@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "Dk@P",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Mac-Error-Codes",
+   "rsrc_sha256": "1c5c2f47c5621bb7756520b700264e8d184cfe3f722a5edbe0935aa51aff3ee1",
+   "rsrc_size": 136750,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "derived-Mac-Error-Codes.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "2be098185334a02d7ffd4d63cc4c8b62bc664e50f4aeb775334d7e6cc1e909ab",
+ "size": 54727
+}

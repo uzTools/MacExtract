@@ -8,6 +8,96 @@
    "rsrc_sha256": "d61df02930a689da9fd1c39777ae59b6126aa2378d244f726c740593a156eca3",
    "rsrc_size": 814,
    "type": "WORD"
+  },
+  {
+   "creator": "_Lss",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "BounceBox",
+   "rsrc_sha256": "814712dda3e6510cc8eeb96924dbc96e36f09550a98852d45c4b6bfd4a5b3710",
+   "rsrc_size": 3954,
+   "type": "Dark"
+  },
+  {
+   "creator": "_Lss",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Clock",
+   "rsrc_sha256": "8913b18b4c1af870b470f0c35d176f3917aef2e18111f6894fd52fda18dfbb76",
+   "rsrc_size": 5633,
+   "type": "Dark"
+  },
+  {
+   "creator": "_Lss",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Fireworks",
+   "rsrc_sha256": "3abf2ceb9ef2174f84258c7f8bfb106fe3ac5c63e8a2e8cc79ceb0209116ce08",
+   "rsrc_size": 4964,
+   "type": "Dark"
+  },
+  {
+   "creator": "_Lss",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Galaxy",
+   "rsrc_sha256": "09ef195cd57d05a96ddfaa3c89a99b58d3ff322e19e4301ae60ae8bbc297e5e5",
+   "rsrc_size": 4997,
+   "type": "Dark"
+  },
+  {
+   "creator": "_Lss",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "LEDs",
+   "rsrc_sha256": "73307c38e9623e2673ded9c59c6a19a61f5526fccdf8c1063d82c49b845a9ef5",
+   "rsrc_size": 4158,
+   "type": "Dark"
+  },
+  {
+   "creator": "_Lss",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Moire",
+   "rsrc_sha256": "959b6edb71572c358f002984fbc4319dc7766c61f3ad81cc28ba9333031684b8",
+   "rsrc_size": 4776,
+   "type": "Dark"
+  },
+  {
+   "creator": "_Lss",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Rain",
+   "rsrc_sha256": "9d043c085f5403c7b132887543a75de9826c3ebc6c15cc936daa4506b6c18107",
+   "rsrc_size": 4336,
+   "type": "Dark"
+  },
+  {
+   "creator": "_Lss",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Stars",
+   "rsrc_sha256": "6dca1b611aed5170550a678778b4c0557b3b0e34ab1cfb4c4d9f191d462b06a3",
+   "rsrc_size": 5336,
+   "type": "Dark"
+  },
+  {
+   "creator": "_Lss",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "String",
+   "rsrc_sha256": "9e097e760ea25c7dcecaddd472a7ebcdb6f8320c45f831635b4c407f600b3a15",
+   "rsrc_size": 5601,
+   "type": "Dark"
+  },
+  {
+   "creator": "_Lss",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "ZoomRect",
+   "rsrc_sha256": "d005a2bd40f857b96a45f82e38dda2597fa474eb39202c745c282e782271bb50",
+   "rsrc_size": 4670,
+   "type": "Dark"
   }
  ],
  "fixture": "derived-Blackouts.sit",

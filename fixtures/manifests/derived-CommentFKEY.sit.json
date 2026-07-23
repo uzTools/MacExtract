@@ -10,6 +10,24 @@
    "type": "TEXT"
   },
   {
+   "creator": "????",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "CommentFKEY",
+   "rsrc_sha256": "e18755b141fd4897cf38a2bb2d52f71e2c3572f3e1b70f29aa21e10c93d0169c",
+   "rsrc_size": 4712,
+   "type": "????"
+  },
+  {
+   "creator": "KAHL",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "comment key proj",
+   "rsrc_sha256": "098090700582c079c99619310b7a32ebbd6bbebb3f88e4545a0db074abbff7a7",
+   "rsrc_size": 4872,
+   "type": "PROJ"
+  },
+  {
    "creator": "KAHL",
    "data_sha256": "89986041329499d1a107b67437313e55189a5ebe9c21f107b07d96d2652c0589",
    "data_size": 13543,

@@ -32,6 +32,15 @@
    "type": "TEXT"
   },
   {
+   "creator": "MACS",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Decode da Code 1.5/Icon\r",
+   "rsrc_sha256": "2cc85de2b79e2e70a9cbf49b9ef3fac3ed57917a4894eb1f87eaf8cb419f3cae",
+   "rsrc_size": 286,
+   "type": "icon"
+  },
+  {
    "creator": "ttxt",
    "data_sha256": "1b17c364b23ca8dccd69122e1a2656a8a83290c17f09a5e10bfa37df8b31b99a",
    "data_size": 3877,
@@ -39,6 +48,15 @@
    "rsrc_sha256": "66dd98d0865ab8d1f4c5723d5318047d889a8ce00e667b8f31ebc8b09393f4c2",
    "rsrc_size": 2126,
    "type": "TEXT"
+  },
+  {
+   "creator": "Regi",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Decode da Code 1.5/Register",
+   "rsrc_sha256": "79e9491562147cd158f34749ef333228abc8aa5c1d1329f655ab5cfb2131d7e2",
+   "rsrc_size": 103618,
+   "type": "APPL"
   }
  ],
  "fixture": "derived-Decode_da_Code_1.5.sit",

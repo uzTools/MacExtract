@@ -5,6 +5,15 @@
    "name": "Sound Extractor ƒ"
   },
   {
+   "creator": "SXtr",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Sound Extractor ƒ/SoundExtractor 1.0",
+   "rsrc_sha256": "637574e8fb0d62ef460bb07981a955c4a99bc2d3893de71a6c6a1b9a85e50955",
+   "rsrc_size": 21222,
+   "type": "APPL"
+  },
+  {
    "creator": "ttxt",
    "data_sha256": "c3ff589517d7cd558c162a957a7893dadae84cdb4b0e21b1be74f02b76fc2fa1",
    "data_size": 2178,

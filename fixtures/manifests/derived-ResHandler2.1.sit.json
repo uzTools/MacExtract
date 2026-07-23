@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "SPFK",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Resource Handler 2.1.Fkey",
+   "rsrc_sha256": "9664401145fbea65b1ea2e232703a0a4c73cbcf72d292f7b1d363e65c045d2a9",
+   "rsrc_size": 10529,
+   "type": "FKEY"
+  }
+ ],
+ "fixture": "derived-ResHandler2.1.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "a7baef01895430b28498b5da61ecac6bdc938f9c96ccec05690eddc4e8b44ec2",
+ "size": 7739
+}

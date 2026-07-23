@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "Yamr",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Yammer",
+   "rsrc_sha256": "a5e57a750f084151680325e899e21d04a94fd59e2e9bc915fc8e4ba795afb356",
+   "rsrc_size": 17611,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "yammer.bin",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "bfcdedd3d3be1dc95ebd498765e74b5f14c865a6d65e11c53a31b124da88ad8a",
+ "size": 17792
+}

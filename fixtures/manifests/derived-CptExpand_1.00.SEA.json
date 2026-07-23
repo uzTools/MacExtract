@@ -12,6 +12,15 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
+  },
+  {
+   "creator": "CPCT",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "CptExpand ƒ/CptExpand",
+   "rsrc_sha256": "4417ee69c20c9f196b9ca6111d450b360494c5d3d1a3f7bb759722503694c87b",
+   "rsrc_size": 13515,
+   "type": "APPL"
   }
  ],
  "fixture": "derived-CptExpand_1.00.SEA",

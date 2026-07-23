@@ -14,6 +14,15 @@
    "type": "APPL"
   },
   {
+   "creator": "MACS",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "3D Terrain Modeling 0.1.7/Icon\r",
+   "rsrc_sha256": "09ab3db624883fc19877fb88209581620b9230cb90a5fe05277cdb1a0d6ab74f",
+   "rsrc_size": 286,
+   "type": "icon"
+  },
+  {
    "creator": "ttxt",
    "data_sha256": "5ee8225d925098a4e49691b0413c7924c15f652233cfedbb343cae028f8199ae",
    "data_size": 338,

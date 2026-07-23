@@ -30,6 +30,15 @@
    "rsrc_sha256": "d432e8c1550468383752da2ee4c6b8678a43d76c1e309f175bb686e6bf216498",
    "rsrc_size": 428,
    "type": "TEXT"
+  },
+  {
+   "creator": "MB2P",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "MacBinary II+ 1.0.1/MacBinary II+",
+   "rsrc_sha256": "ad0477a7e52b65667dcf117d049bd32b6a5b17a193935c1acda1840070d07927",
+   "rsrc_size": 18183,
+   "type": "APPL"
   }
  ],
  "fixture": "derived-MacBinary_II__1.0.1.sit",

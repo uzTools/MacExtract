@@ -1,0 +1,36 @@
+{
+ "entries": [
+  {
+   "creator": "mpCd",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "\u0001\u0001!MacPassword™",
+   "rsrc_sha256": "597fd3df6cb85c1e976eac05f00d3e8e7ac0f07932a227ddc35b508858260023",
+   "rsrc_size": 98212,
+   "type": "cdev"
+  },
+  {
+   "creator": "mpCu",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "!MacPassword™ Utility",
+   "rsrc_sha256": "ca028df0923d751ebe807b55d1231ec993e48f697d77c4ac53abc774beaaf91e",
+   "rsrc_size": 26576,
+   "type": "APPL"
+  },
+  {
+   "creator": "Dk@P",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "MacPassword ™ Demo Manual",
+   "rsrc_sha256": "d825861977742e101c18c68fdb80ba153a99092b5293c5f0bb6d4ec1a42e60b9",
+   "rsrc_size": 227037,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "derived-MacPass390.sea",
+ "format": "DiskDoubler",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "d1a2b1d13ba72ba9fbc4b01b06c743cb8df94bda2b810b453678c52fed317bab",
+ "size": 155792
+}

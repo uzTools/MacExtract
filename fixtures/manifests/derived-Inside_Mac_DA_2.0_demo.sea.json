@@ -10,6 +10,15 @@
    "type": "WORD"
   },
   {
+   "creator": "DMOV",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Inside Mac",
+   "rsrc_sha256": "2157569903d26dbe81c92a58f4d073e3a9bac31194a63a19d92cc73cf16fd38d",
+   "rsrc_size": 62605,
+   "type": "DFIL"
+  },
+  {
    "creator": "MPS ",
    "data_sha256": "67fdcbafc8071747aeecf28e4f40364a44dae07936c9f14e8d09a212d4e77e09",
    "data_size": 80792,

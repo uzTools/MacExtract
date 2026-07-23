@@ -26,6 +26,15 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "WDBN"
+  },
+  {
+   "creator": "NTim",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Network Time",
+   "rsrc_sha256": "6f8de0ec50b307beb073c7eed088eff5e661d9539241a1d9ca66015f0f508b74",
+   "rsrc_size": 45001,
+   "type": "cdev"
   }
  ],
  "fixture": "derived-Network_Time_1.0.1.sit",

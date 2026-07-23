@@ -9,6 +9,15 @@
    "name": "BCI 1.0/Business_Card_Importer folder"
   },
   {
+   "creator": "BCIM",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "BCI 1.0/Business_Card_Importer folder/Business Card Importer",
+   "rsrc_sha256": "d4c98612857bb270b2f1a3834bd0328271c3c5ab8c0965dc95257e93b7f7b614",
+   "rsrc_size": 241322,
+   "type": "APPL"
+  },
+  {
    "creator": "kl03",
    "data_sha256": "74ce97b84d11b18f5137691348879fbdc4760b872518182f3b786b9ec21f0621",
    "data_size": 16384,

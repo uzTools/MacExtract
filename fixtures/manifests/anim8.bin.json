@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "ANIM",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Anim-8™",
+   "rsrc_sha256": "c06f619a13793d2cc11960995a1adbdae138aa4255c6c66c218f8340d69b3700",
+   "rsrc_size": 29570,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "anim8.bin",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "af7b060e31c327fce0a0e4de6535a3c178d88be563352027ebb62f2105aa3786",
+ "size": 29698
+}

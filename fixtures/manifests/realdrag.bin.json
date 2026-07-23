@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "RDRG",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Real DRAG",
+   "rsrc_sha256": "c34195af521cfd88d425bf622434965ee4b6d4ce368a341dfb61a5897624bd9a",
+   "rsrc_size": 6489,
+   "type": "INIT"
+  }
+ ],
+ "fixture": "realdrag.bin",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "eea72f7b0fe7e5bddc78531b9fe15ee837ee59ae574b6e6c746b4370f4ee139e",
+ "size": 6656
+}

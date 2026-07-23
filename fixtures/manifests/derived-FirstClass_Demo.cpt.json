@@ -19,6 +19,15 @@
    "type": "FCbu"
   },
   {
+   "creator": "ENdo",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "FirstClass Demo",
+   "rsrc_sha256": "a9c4aef7fb6e367e64ef7e1801678806403a1a57f497ee92d8d9c4e0d6300ba4",
+   "rsrc_size": 329569,
+   "type": "APPL"
+  },
+  {
    "creator": "ttxt",
    "data_sha256": "da17ad250d277928a7799f2f87919abe4f8218b70d1803ce2f8dd857085e1c02",
    "data_size": 10305,
@@ -26,6 +35,15 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Install FirstClass Demo",
+   "rsrc_sha256": "4878b4649c40e98ac1ac86bd2c13432c0aba681cbce47458f6175aae3bedf414",
+   "rsrc_size": 21626,
+   "type": "APPL"
   },
   {
    "creator": "ttxt",

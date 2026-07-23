@@ -8,6 +8,15 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "CWWP"
+  },
+  {
+   "creator": "RMFT",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "EPSF (IBMpc to Mac)",
+   "rsrc_sha256": "eac95233cc0efa206cd757a0f5913cee8d736d1e3ab7b33597ee902b8cb68f92",
+   "rsrc_size": 60862,
+   "type": "VISA"
   }
  ],
  "fixture": "derived-EPSF_AFE.sit",

@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "WPPP",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "PSIWP",
+   "rsrc_sha256": "739a1aab7eafa91ebc61fbaf8145d633fe7b337cdb82ff959186a80c21db724e",
+   "rsrc_size": 71858,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "psiwp16.bin",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "3d6153193f52a70b6754a96c5e46f8ac28144c1cf2faa85072d248e0fb7dbfdd",
+ "size": 72064
+}

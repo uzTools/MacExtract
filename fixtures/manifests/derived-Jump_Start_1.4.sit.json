@@ -49,6 +49,15 @@
    "type": "WORD"
   },
   {
+   "creator": "hack",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Jump Start! 1.4 ƒ/Jump Start!",
+   "rsrc_sha256": "d79be5578d462c41588c9f3ab8a30cdcf8f94ebfd0bfed95243db7ffe937d304",
+   "rsrc_size": 21219,
+   "type": "cdev"
+  },
+  {
    "creator": "ttxt",
    "data_sha256": "7c3e60844ae48cd8666cae51230a38c22528260ba46e5725e921d57d45b4cef4",
    "data_size": 693,

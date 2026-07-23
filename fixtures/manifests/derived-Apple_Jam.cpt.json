@@ -12,6 +12,15 @@
    "rsrc_sha256": "ad6b1e7bf774375652fd71571b212eaf17397b83bbd831f6c5492beee3f4710f",
    "rsrc_size": 772,
    "type": "WORD"
+  },
+  {
+   "creator": "TELE",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Jam folder/”Apple-Jam”",
+   "rsrc_sha256": "5304c731d96f8e818aed9285a514ea5bd1c3a3ea19e786939194a51853384b27",
+   "rsrc_size": 74203,
+   "type": "APPL"
   }
  ],
  "fixture": "derived-Apple_Jam.cpt",

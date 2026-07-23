@@ -5,6 +5,24 @@
    "name": "Cico 1.0 ƒ"
   },
   {
+   "creator": "DiCo",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cico 1.0 ƒ/Cico",
+   "rsrc_sha256": "fc179d71dbda4dc83230a31175976b4abbec446e23aac52e277cec2a62583979",
+   "rsrc_size": 10167,
+   "type": "APPL"
+  },
+  {
+   "creator": "Gubb",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cico 1.0 ƒ/Icon\r",
+   "rsrc_sha256": "690527b1bdec2715d80a1170863bf9a53e22add958f3d37420db9ffdf3498241",
+   "rsrc_size": 2712,
+   "type": "Gubb"
+  },
+  {
    "creator": "ttxt",
    "data_sha256": "1c230bf09da2ef9f1e823182cb838563febee1c3fb640f83de362df9c5eda3a8",
    "data_size": 2304,

@@ -19,6 +19,24 @@
    "type": "TEXT"
   },
   {
+   "creator": "ApoL",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Apollo 0.6b1",
+   "rsrc_sha256": "777a83e9935400da651eba703f15097c8d40f1e5b1f9d75befbd015f5351adf2",
+   "rsrc_size": 55741,
+   "type": "INIT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Apollo converter",
+   "rsrc_sha256": "215f58655af1ef96f7617e4001713fd5eb83681017a61cc166fe8d2f49362333",
+   "rsrc_size": 8513,
+   "type": "APPL"
+  },
+  {
    "creator": "KAHL",
    "data_sha256": "1d378ec3f59ffd5a89ae4c016251b4d13031c7fe8aedf0d9e999bc9df3642ee8",
    "data_size": 1274,

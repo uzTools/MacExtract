@@ -8,6 +8,15 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "WDBN"
+  },
+  {
+   "creator": "Ther",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "LeeMail 1.1",
+   "rsrc_sha256": "38bcd230de84e997118a240af7409ba6f3a6acf2d54db05e27f17ce82ae78040",
+   "rsrc_size": 128329,
+   "type": "APPL"
   }
  ],
  "fixture": "derived-LeeMail1.1.sea",

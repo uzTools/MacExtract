@@ -145,6 +145,15 @@
    "type": "TEXT"
   },
   {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Nuntius.ResEdit",
+   "rsrc_sha256": "fbdf41725611d7ee20c189f5d06505922975e101d481de588752a788852eaa1c",
+   "rsrc_size": 17787,
+   "type": "rsrc"
+  },
+  {
    "creator": "MPS ",
    "data_sha256": "eecae5c48706d9f7dfc9affb4e51d142086bd6d03654fea7a7f86dc9f2f108bf",
    "data_size": 1754,
@@ -152,6 +161,15 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Old Nuntius icons",
+   "rsrc_sha256": "312e41a33bd964b7dbae83c66eb063fa96fd87f5f1818796c6bacc83f44b7f2a",
+   "rsrc_size": 5198,
+   "type": "rsrc"
   },
   {
    "creator": "MPS ",

@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "PSPT",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Works-Works Transporter",
+   "rsrc_sha256": "45a6f044143aa1d7fa50be72d09b7a474368e07edf604330216cf48cbe349d5d",
+   "rsrc_size": 11449,
+   "type": "VISA"
+  }
+ ],
+ "fixture": "derived-WorkstoWorks.cpt",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "73426899a46190921b6c72d8dd64fecd5d2a8679554cbaa0002486b3b582d3ed",
+ "size": 7512
+}

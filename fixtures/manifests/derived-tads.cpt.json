@@ -59,6 +59,24 @@
    "type": "TEXT"
   },
   {
+   "creator": "TADS",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "TADS Run-Time System/TADS Compiler",
+   "rsrc_sha256": "6d23c059088b57040f3d4fef748084c09e124ac4a4536c3db6e0e48e558d8a4c",
+   "rsrc_size": 125406,
+   "type": "APPL"
+  },
+  {
+   "creator": "TADR",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "TADS Run-Time System/TADS Run-Time System",
+   "rsrc_sha256": "b1c16a21493e744113e6ed8922fd5993f413dd3b5a4eb2941ec8802acb206f03",
+   "rsrc_size": 89204,
+   "type": "APPL"
+  },
+  {
    "creator": "MPS ",
    "data_sha256": "7c6ff037d8bc6a83379ef497cc457d2a6374842cbb4556f7df3f1cd43d6d8e06",
    "data_size": 632,

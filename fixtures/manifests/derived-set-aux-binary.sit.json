@@ -12,6 +12,15 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
+  },
+  {
+   "creator": "CTC1",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "set-aux-binary 1.0/set-aux-binary",
+   "rsrc_sha256": "fb318558bb0e9a01fb950af5dc9057ea40933f1b84d81402f9d91356ed457b7f",
+   "rsrc_size": 5448,
+   "type": "APPL"
   }
  ],
  "fixture": "derived-set-aux-binary.sit",

@@ -1,6 +1,15 @@
 {
  "entries": [
   {
+   "creator": "DMOV",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "BinHqx 1.02",
+   "rsrc_sha256": "3accfb5b0af752f5022cd210c5cb89f8233841b6b401386a7837a2174a77bec5",
+   "rsrc_size": 22666,
+   "type": "DFIL"
+  },
+  {
    "creator": "MACA",
    "data_sha256": "016ec5fe30f9976ba49160441f5c4e54f5e737101359a165f23f0edd05438ca0",
    "data_size": 28914,

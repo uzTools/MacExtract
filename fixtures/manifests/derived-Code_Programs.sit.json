@@ -5,6 +5,24 @@
    "name": "Code Programs ƒ"
   },
   {
+   "creator": "DEcd",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "DeCodeIt",
+   "rsrc_sha256": "03152f401649652c1f585071372859b39fd288b47f5f5ed52d634765b406a1d3",
+   "rsrc_size": 42686,
+   "type": "APPL"
+  },
+  {
+   "creator": "ENcd",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "EnCodeIt",
+   "rsrc_sha256": "fca3babc6a927275fda17a31216d198b56a35db33276fc495964474146e52a46",
+   "rsrc_size": 43260,
+   "type": "APPL"
+  },
+  {
    "creator": "ttxt",
    "data_sha256": "fcbb84a23fad1c6bb5368ce812883dc251eb50c132740c1a2625cd726dbee9fb",
    "data_size": 1825,

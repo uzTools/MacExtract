@@ -5,6 +5,15 @@
    "name": "Domino v1.4"
   },
   {
+   "creator": "DoMi",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Domino v1.4/Domino",
+   "rsrc_sha256": "05d1b1c0b4c61ff18d6b16e3c0d48a8824e9e63c93cdcdf5f65803e674a44e04",
+   "rsrc_size": 630868,
+   "type": "APPL"
+  },
+  {
    "creator": "ttxt",
    "data_sha256": "8d7ca1abb75a5b23a1d748a3fd0957d4b27ad2eb3140680291a782f3088b7f15",
    "data_size": 1045,

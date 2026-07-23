@@ -8,6 +8,15 @@
    "rsrc_sha256": "7fbe0d3e10ca9bacf35de7118f5c39a45858f821ac65b9bfd01b57bfdc7cae17",
    "rsrc_size": 5051,
    "type": "ttro"
+  },
+  {
+   "creator": "CWFK",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Expr <-> MS Word.FKEY",
+   "rsrc_sha256": "c003b67c260d84a36d35802e1f3637be408ad1043c29c7266cf9d8ff6da42a0c",
+   "rsrc_size": 1367,
+   "type": "FKEY"
   }
  ],
  "fixture": "derived-Expr_-_MSWord.sit",

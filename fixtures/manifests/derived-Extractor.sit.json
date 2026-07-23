@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "EXTC",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Extractor",
+   "rsrc_sha256": "1406ee04279f53c9cd453ef51ac6ced28597409225dc6d09fcb6c17e42620eec",
+   "rsrc_size": 34666,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "derived-Extractor.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "8cef3e7ce79a43b67f547c3fc3514ac3f5ae6ca186d7e01a1f1d1dc5dce16c58",
+ "size": 19223
+}

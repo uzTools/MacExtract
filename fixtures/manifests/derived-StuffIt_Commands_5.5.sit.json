@@ -17,6 +17,15 @@
    "rsrc_sha256": "b420f8b3dc2939ff3a91125e7dbb222da74860d1946b37f0ac3927d44e9983e2",
    "rsrc_size": 932,
    "type": "TEXT"
+  },
+  {
+   "creator": "ascr",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "StuffIt Commands",
+   "rsrc_sha256": "7e5a46e06876573031dfc2446d146dacd1b15da2fd4e4c1d7ec7fa80d8e6a5b3",
+   "rsrc_size": 191745,
+   "type": "osax"
   }
  ],
  "fixture": "derived-StuffIt_Commands_5.5.sit",

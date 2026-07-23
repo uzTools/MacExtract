@@ -36,36 +36,62 @@
    "type": "TEXT"
   },
   {
+   "creator": "Regi",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "YP Circuits CC ÔæÑ/Register F",
+   "rsrc_sha256": "1df472f228cbfe6b1cf2eb9a0a7b90a566d65ea203023dd776fd56797bf8915e",
+   "rsrc_size": 96986,
+   "type": "APPL"
+  },
+  {
+   "creator": "yPdC",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "YP Circuits CC ÔæÑ/YP Circuits CC 2.0",
+   "rsrc_sha256": "b65eaedf5897aa1c894abf42de870f77ecbec4a1827a198b0c214bf080169004",
+   "rsrc_size": 371916,
+   "type": "APPL"
+  },
+  {
+   "creator": "yPdC",
    "data_sha256": "01b7971a71d868d9bf764a0b9bf47dc4fcf960d419ab74a314dee34e5aa64317",
    "data_size": 1388,
    "name": "YP Circuits CC ÔæÑ/Fichiers Exemples/3 RÂ∏Çistances en parallÁ≤õe",
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
+   "rsrc_size": 0,
+   "type": "CirC"
   },
   {
+   "creator": "yPdC",
    "data_sha256": "b554de8746de5ede6d75a815e6fc1c15198531e4dcfedd2f1ff521367044c6ac",
    "data_size": 1388,
    "name": "YP Circuits CC ÔæÑ/Fichiers Exemples/3 RÂ∏Çistances en sÂ±çie",
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
+   "rsrc_size": 0,
+   "type": "CirC"
   },
   {
+   "creator": "yPdC",
    "data_sha256": "9faad390f9929ad1ef65a9e5a5d853833d5af2e520e2feb214c57c6580ad44cd",
    "data_size": 1388,
    "name": "YP Circuits CC ÔæÑ/Fichiers Exemples/Kirchoff, 2 mailles",
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
+   "rsrc_size": 0,
+   "type": "CirC"
   },
   {
+   "creator": "yPdC",
    "data_sha256": "608c870b0c91a28a72ff34587a8c7a8d32e731823119f4a77fb800a7fd476d91",
    "data_size": 1388,
    "name": "YP Circuits CC ÔæÑ/Fichiers Exemples/Kirchoff, 3 mailles",
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
+   "rsrc_size": 0,
+   "type": "CirC"
   }
  ],
  "fixture": "derived-YP_Circuits_CC__.sit",
- "format": null,
+ "format": "StuffIt 5",
  "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
  "sha256": "91d5f35cbecb15b62f90a07239b256480b10e3b38140b950bc83af654d638f47",
  "size": 203171

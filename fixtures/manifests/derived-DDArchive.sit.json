@@ -8,6 +8,15 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
+  },
+  {
+   "creator": "ZIVI",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "DiskDoubler™",
+   "rsrc_sha256": "2d11b591db35106f16cff7c7e102de93b07fe07f6101cb4a8a8e3bc5e1b53fe1",
+   "rsrc_size": 44381,
+   "type": "INIT"
   }
  ],
  "fixture": "derived-DDArchive.sit",

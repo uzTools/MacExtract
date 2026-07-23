@@ -1,0 +1,27 @@
+{
+ "entries": [
+  {
+   "creator": "DMOV",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Sound Scrap DA",
+   "rsrc_sha256": "246143163d7fdd72ecd17276cbb73ed10cb32bbfa99cabcba9c67115fa3a96ad",
+   "rsrc_size": 5580,
+   "type": "DFIL"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "SoundScrap",
+   "rsrc_sha256": "cc62490485ed5145bc7a98898b06b85b906d57b0aaa12b3162fcdb0e5910a150",
+   "rsrc_size": 21610,
+   "type": "rsrc"
+  }
+ ],
+ "fixture": "derived-Sound_Scrap_DA.sea",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "d9f8adb71b2243f1ace698bbfffb00811780a034d9fda086dd1fa5b886e05e6f",
+ "size": 15198
+}

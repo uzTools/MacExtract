@@ -8,6 +8,15 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "WORD"
+  },
+  {
+   "creator": "SKEY",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "SmartKeys 2",
+   "rsrc_sha256": "453eeebd8d3eb36c8870c1cfe01e95df75720af7d592c6ac40b178c99a769eef",
+   "rsrc_size": 42888,
+   "type": "cdev"
   }
  ],
  "fixture": "derived-SmartKeys_2.sea",

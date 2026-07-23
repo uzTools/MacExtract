@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "????",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "12-24FKEY",
+   "rsrc_sha256": "4f663fd40011ca68280f00430446828e0360b9941894462c423b25b878c6d90e",
+   "rsrc_size": 434,
+   "type": "????"
+  }
+ ],
+ "fixture": "12x24fkey.bin",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "c90c11f10b1724b679b4db0495f2a8740f7f57c6d7abae3e8dd87dcb1c25c836",
+ "size": 562
+}

@@ -9,6 +9,24 @@
    "name": "•Draw 5.1/•Draw Templates"
   },
   {
+   "creator": "DMOV",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "•Draw 5.1/\u0014Draw",
+   "rsrc_sha256": "8d52aaed7d551878f2c50e33d02231cd65313da28fdfb82da9efcd3f25217889",
+   "rsrc_size": 52931,
+   "type": "DFIL"
+  },
+  {
+   "creator": "•Drw",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "•Draw 5.1/\u0014Drawer",
+   "rsrc_sha256": "01ffa91756ca51f388f5f9d44f031004e4bdfeda137366999c8abff401ca6d95",
+   "rsrc_size": 10478,
+   "type": "APPL"
+  },
+  {
    "creator": "MACA",
    "data_sha256": "330a181727b58a870a8bea3dc82c676e6dcdfe987ac66620132fc163c2d737b3",
    "data_size": 53858,

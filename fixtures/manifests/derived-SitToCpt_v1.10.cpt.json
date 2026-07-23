@@ -8,6 +8,15 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
+  },
+  {
+   "creator": "CPT1",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "SitToCpt",
+   "rsrc_sha256": "eb1fa7306c4807cb6a6cf3f1af46ebd03c12848e91c2ad4569b78f9ac1423124",
+   "rsrc_size": 31095,
+   "type": "APPL"
   }
  ],
  "fixture": "derived-SitToCpt_v1.10.cpt",

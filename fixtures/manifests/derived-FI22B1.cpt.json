@@ -8,6 +8,15 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "WORD"
+  },
+  {
+   "creator": "nt00",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Flash-It 2.2b1",
+   "rsrc_sha256": "47be178bd1585449e2aa6f7b7bd2536cc174177a604acce7c9eca22360a81dda",
+   "rsrc_size": 39572,
+   "type": "cdev"
   }
  ],
  "fixture": "derived-FI22B1.cpt",

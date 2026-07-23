@@ -5,6 +5,15 @@
    "name": "QuoVadis ∫"
   },
   {
+   "creator": "QVDS",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "QuoVadis ∫/QuoVadis?",
+   "rsrc_sha256": "eef64f24544fd470e1c84ce34ebdacd8615bd8aa1942c905de6d92fe6eec9153",
+   "rsrc_size": 73823,
+   "type": "APPL"
+  },
+  {
    "creator": "MWII",
    "data_sha256": "562a717ca76c04f08da7f3655c8d44ceed8f994e8c52b6e5ba7d72bf75d02bea",
    "data_size": 10240,

@@ -14,6 +14,15 @@
    "type": "APPL"
   },
   {
+   "creator": "cArD",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Compact Pro F-1.51/Compact Pro Guide d’utilisation",
+   "rsrc_sha256": "dcaeb1995f3a7bacf6dc2b37b89643dbf666a988483ae18f99f00f221e39fda9",
+   "rsrc_size": 131193,
+   "type": "APPL"
+  },
+  {
    "creator": "ttxt",
    "data_sha256": "1c6e50aee6551599d639d759d05d6eee5061624018ff8561229b947044c45342",
    "data_size": 4484,

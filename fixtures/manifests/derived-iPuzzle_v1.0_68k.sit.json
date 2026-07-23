@@ -5,6 +5,15 @@
    "name": "iPuzzle v1.0 68k"
   },
   {
+   "creator": "MACS",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "iPuzzle v1.0 68k/Icon\r",
+   "rsrc_sha256": "a9058b89e31dcc32597ed15af8775db18fb145c1144a463e8d5f0da37c1dd8e4",
+   "rsrc_size": 2670,
+   "type": "icon"
+  },
+  {
    "creator": "ttxt",
    "data_sha256": "d0a8e6d207f998e1799093024c044e508b3488137467fc7a11d91ff673c04c91",
    "data_size": 1538,
@@ -12,6 +21,15 @@
    "rsrc_sha256": "a092e4b64bee22c568239ee20423d9175d252612a9d7848f04e9a4720df2f8c6",
    "rsrc_size": 3076,
    "type": "TEXT"
+  },
+  {
+   "creator": "iPuz",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "iPuzzle v1.0 68k/iPuzzle v1.0 68k",
+   "rsrc_sha256": "dd5d04611187cfb3651b23a586226de90565771b2e131772ee6322344704063a",
+   "rsrc_size": 139479,
+   "type": "APPL"
   }
  ],
  "fixture": "derived-iPuzzle_v1.0_68k.sit",

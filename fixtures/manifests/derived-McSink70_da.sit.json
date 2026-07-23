@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "DMOV",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "McSink DA V7.0A",
+   "rsrc_sha256": "d615ed85fe0a2c3acea5e8f7e81ef97fc8b458cc8482b67acb73e858a3aee70b",
+   "rsrc_size": 94762,
+   "type": "DFIL"
+  }
+ ],
+ "fixture": "derived-McSink70_da.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "933d02d3db53333324fbcd535bc6a9c53ae2170ad305f20eb94ceb9867c05a93",
+ "size": 73747
+}

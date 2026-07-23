@@ -12,6 +12,15 @@
    "rsrc_sha256": "28866eb828320e8bcacdea81a0888f4fe25f0ae8cfce88127543692d1a46df5a",
    "rsrc_size": 732,
    "type": "TEXT"
+  },
+  {
+   "creator": "CMW•",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Sierpinski-Triangeln 1.0/Sierpinski-Triangeln 1.0",
+   "rsrc_sha256": "1a9b87d6d1d60ad799fb34d3c205ac84b409231de7f47a6615ec65acbd0bacd9",
+   "rsrc_size": 10920,
+   "type": "APPL"
   }
  ],
  "fixture": "derived-Sierpinski-Triangeln_1-swe.sit",

@@ -8,6 +8,15 @@
    "rsrc_sha256": "352ee79947eafdf018202521c3104691e818615f62395171a153acdc9da72546",
    "rsrc_size": 574,
    "type": "TEXT"
+  },
+  {
+   "creator": "dSEA",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "DeSEA 1.0",
+   "rsrc_sha256": "c09b47a1d07bd8849a8d7e9562194feee4a09d6f7079159adc53f7fc00744a1d",
+   "rsrc_size": 19436,
+   "type": "APPL"
   }
  ],
  "fixture": "derived-DeSEA_1.0.sit",

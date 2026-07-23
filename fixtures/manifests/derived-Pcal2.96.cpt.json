@@ -1,6 +1,15 @@
 {
  "entries": [
   {
+   "creator": "PCAL",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "PCal 2.96",
+   "rsrc_sha256": "e5ed8238a99dceb1fa84d3bbd08db2f196fda220814bfd60f3043e70201cc2e6",
+   "rsrc_size": 48146,
+   "type": "APPL"
+  },
+  {
    "creator": "????",
    "data_sha256": "b67029fa12593a0b7eba64477cfef239ad7b6fb3020051b1edea46dc38963423",
    "data_size": 7712,

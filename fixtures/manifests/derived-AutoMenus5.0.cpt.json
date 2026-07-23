@@ -8,6 +8,15 @@
    "rsrc_sha256": "f6efec97b49834b7ac2d45678786d03dfdb77d18ac4d0a59de9b55db7966c45e",
    "rsrc_size": 1104,
    "type": "ttro"
+  },
+  {
+   "creator": "ATMN",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "AutoMenus",
+   "rsrc_sha256": "300cf86af1596e1718b051b0dea40f6c6ee72ed2e878351b779024c79218e3a6",
+   "rsrc_size": 26917,
+   "type": "cdev"
   }
  ],
  "fixture": "derived-AutoMenus5.0.cpt",

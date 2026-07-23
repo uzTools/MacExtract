@@ -17,6 +17,15 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
+  },
+  {
+   "creator": "SITR",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "SitReport",
+   "rsrc_sha256": "1ee3c1b4b0ba96a9dbf39caa687b4b9ab59f179441c405013eaa9b9d016ba377",
+   "rsrc_size": 55896,
+   "type": "APPL"
   }
  ],
  "fixture": "derived-SitRep2.sit",

@@ -338,6 +338,133 @@ static void test_packit(void)
     CHECK(cap.count == 1 && cap.status[0] == UNC_ERR_TRUNCATED);
 }
 
+/* ------------------------------------------------------------------ */
+/* M4: canonical Huffman + Compact Pro                                */
+/* ------------------------------------------------------------------ */
+
+static void test_canon(void)
+{
+    /* Lengths: A=1, B=2, C=3, D=3 -> codes 0, 10, 110, 111. */
+    uint8_t lens[4] = { 1, 2, 3, 3 };
+    UncCanon cn;
+    uint8_t buf[4];
+    MemIO m;
+    UncIO io;
+    uint8_t storage[8];
+    UncBufIn in;
+    UncBitIn bi;
+
+    CHECK(unc_canon_build(&cn, lens, 4) == UNC_OK);
+    /* Bits: 0 10 110 111 -> 0101 1011 1... = 0x5B 0x80 */
+    buf[0] = 0x5B; buf[1] = 0x80;
+    test_make_memio(&io, &m, buf, 2);
+    unc_bufin_init(&in, &io, NULL, storage, sizeof storage);
+    unc_bitin_init(&bi, &in);
+    CHECK(unc_canon_decode(&cn, &bi) == 0);
+    CHECK(unc_canon_decode(&cn, &bi) == 1);
+    CHECK(unc_canon_decode(&cn, &bi) == 2);
+    CHECK(unc_canon_decode(&cn, &bi) == 3);
+
+    /* Incomplete code (Compact Pro allows it): A=1, B=2; '11' invalid. */
+    lens[0] = 1; lens[1] = 2; lens[2] = 0; lens[3] = 0;
+    CHECK(unc_canon_build(&cn, lens, 4) == UNC_OK);
+    buf[0] = 0xC0;   /* bits 11... */
+    test_make_memio(&io, &m, buf, 1);
+    unc_bufin_init(&in, &io, NULL, storage, sizeof storage);
+    unc_bitin_init(&bi, &in);
+    CHECK(unc_canon_decode(&cn, &bi) == -1);
+
+    /* Over-subscribed code -> rejected at build time. */
+    lens[0] = 1; lens[1] = 1; lens[2] = 1;
+    CHECK(unc_canon_build(&cn, lens, 3) == UNC_ERR_CORRUPT);
+}
+
+/* Build a one-entry RLE-only Compact Pro archive around `comp`. */
+static uint32_t cpt_synth(uint8_t *out, const uint8_t *comp, uint32_t clen,
+                          const uint8_t *plain, uint32_t plen)
+{
+    uint32_t off = 8 + clen, crc;
+    uint8_t *ix = out + off;
+    uint8_t *e;
+
+    out[0] = 1; out[1] = 1; out[2] = out[3] = 0;
+    put32(out + 4, off);
+    memcpy(out + 8, comp, clen);
+
+    /* index: u32 crc, u16 nentries, u8 commentlen, one file entry */
+    ix[4] = 0; ix[5] = 1;          /* nentries = 1 */
+    ix[6] = 0;                     /* no comment */
+    e = ix + 7;
+    e[0] = 4; memcpy(e + 1, "test", 4);
+    memset(e + 5, 0, 45);
+    e[5] = 1;                      /* volume */
+    put32(e + 6, 8);               /* fileoffs */
+    memcpy(e + 10, "TEXTttxt", 8); /* type + creator */
+    crc = unc_crc32(0xFFFFFFFFu, plain, (int32_t)plen);
+    put32(e + 28, crc);            /* fileCRC (rsrc empty + data) */
+    /* flags 0 (@32), rsrclen 0 (@34), datalen (@38), rcomp 0, dcomp */
+    put32(e + 38, plen);
+    put32(e + 46, clen);
+    crc = unc_crc32(0xFFFFFFFFu, ix + 4, 3 + 50);
+    put32(ix, crc);                /* index CRC */
+    return off + 7 + 50;
+}
+
+static void test_cpt(void)
+{
+    /* RLE stream exercising the escape corners:
+     *   A B <81 82 05>=4xB C <81 82 00>=lit 81 82 <81>D=lit 81 D */
+    static const uint8_t comp[] = { 0x41, 0x42, 0x81, 0x82, 0x05, 0x43,
+                                    0x81, 0x82, 0x00, 0x81, 0x44 };
+    static const uint8_t plain[] = { 0x41, 0x42, 0x42, 0x42, 0x42, 0x42,
+                                     0x43, 0x81, 0x82, 0x81, 0x44 };
+    uint8_t arc[256];
+    uint32_t len = cpt_synth(arc, comp, sizeof comp, plain, sizeof plain);
+    MemIO m;
+    UncIO io;
+    UncAlloc al;
+    UncSink sk;
+    CapSink cap;
+
+    test_make_memio(&io, &m, arc, len);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_COMPACTPRO);
+
+    test_make_alloc(&al);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_COMPACTPRO, &io, &sk, &al, NULL, NULL)
+          == UNC_OK);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+    CHECK(cap.info[0].name_len == 4 && memcmp(cap.info[0].name, "test", 4) == 0);
+    CHECK(cap.info[0].type == 0x54455854u);
+    CHECK(cap.dlen[0] == sizeof plain);
+    CHECK(memcmp(cap.data[0], plain, sizeof plain) == 0);
+    CHECK(cap.rlen[0] == 0);
+
+    /* Flip a payload byte -> per-entry CRC error, archive still walks. */
+    arc[9] ^= 0x01;
+    test_make_memio(&io, &m, arc, len);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_COMPACTPRO, &io, &sk, &al, NULL, NULL)
+          == UNC_OK);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_ERR_CRC);
+    arc[9] ^= 0x01;
+
+    /* Payload corruption must also de-recognize the file? No: the
+     * index CRC does not cover file data, so sniff still matches. But
+     * an index bit flip must fail the probe. */
+    arc[len - 3] ^= 0xFF;
+    test_make_memio(&io, &m, arc, len);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_UNKNOWN);
+    arc[len - 3] ^= 0xFF;
+
+    /* Truncated inside the file data -> engine must not produce a
+     * silently-OK entry. */
+    test_make_memio(&io, &m, arc, 12);   /* cut inside file data */
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_COMPACTPRO, &io, &sk, &al, NULL, NULL)
+          != UNC_OK || cap.count == 0 || cap.status[0] != UNC_OK);
+}
+
 void run_format_tests(void)
 {
     test_macbinary();
@@ -345,4 +472,6 @@ void run_format_tests(void)
     test_bitin();
     test_huffman_tree();
     test_packit();
+    test_canon();
+    test_cpt();
 }

@@ -5,6 +5,33 @@
    "name": "Infinity Rasterizer 1.2 ƒ"
   },
   {
+   "creator": "drag",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Infinity Rasterizer 1.2 ƒ/French Touch Tech Support",
+   "rsrc_sha256": "85e883eb30eb56f63af8ac8fa38bf884da2ba78a9ccca648bc8dbfa044447557",
+   "rsrc_size": 699,
+   "type": "ilma"
+  },
+  {
+   "creator": "drag",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Infinity Rasterizer 1.2 ƒ/French Touch Web Site",
+   "rsrc_sha256": "e337296d17de7e7ead6fb8290abe856019429cf86279fe30442da49cca95af45",
+   "rsrc_size": 462,
+   "type": "ilht"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Infinity Rasterizer 1.2 ƒ/Icon\r",
+   "rsrc_sha256": "426aba141bbcdfa5aecbb376dc9d67a6843609446b89b9321df63ed7195c907f",
+   "rsrc_size": 1894,
+   "type": "TEXT"
+  },
+  {
    "creator": "Rstr",
    "data_sha256": "8664f694652df859931786a575bd6c9aa5720b33c19907c56e33d06953e2da70",
    "data_size": 63383,
@@ -21,6 +48,15 @@
    "rsrc_sha256": "41698ab34a47379a8077ada12e427117008335e0ab24ce788ad394847dbfe9eb",
    "rsrc_size": 992,
    "type": "ttro"
+  },
+  {
+   "creator": "drag",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Infinity Rasterizer 1.2 ƒ/Rasterizer web page",
+   "rsrc_sha256": "8ff94e35117aecca8ac9a3479b918801ba632d0fb2e685424fba3bfbce71d42c",
+   "rsrc_size": 510,
+   "type": "ilht"
   },
   {
    "creator": "ttxt",

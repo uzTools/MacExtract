@@ -8,6 +8,15 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
+  },
+  {
+   "creator": "DMOV",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "TEAC Utility 1.1",
+   "rsrc_sha256": "3e81a5b0fba6fb9bca8775c76985d9b8db974276e1adacb2ebe9d7676fc01c39",
+   "rsrc_size": 17551,
+   "type": "DFIL"
   }
  ],
  "fixture": "derived-Teac_Utility_1.1_.sit",

@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "M8Bl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Mystic 8-Ball",
+   "rsrc_sha256": "3edf56ab695b982682171b8a437db9a471064da33687aba62f0ceb291e21e588",
+   "rsrc_size": 268592,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "derived-Mystic_8-Ball.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "e8e80cb6fd3a491072028c5af9d8021590d9d9be6b9cd6b9b05b8df4f190c130",
+ "size": 219363
+}

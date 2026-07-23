@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "DMOV",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Chooser+ 2.0",
+   "rsrc_sha256": "7b3b2e9ac417d9069c476fe283f784d56c473bb41352e238633c3845d7c29d3f",
+   "rsrc_size": 86782,
+   "type": "DFIL"
+  }
+ ],
+ "fixture": "derived-Chooser_2.0.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "ad3ac2fa144c55c87f2cf047f86b4bae0c3ba9b80a6bf70d95dc0c7bbee6e69d",
+ "size": 47212
+}

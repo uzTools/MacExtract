@@ -5,6 +5,51 @@
    "name": "Ultimate Copland 1.1"
   },
   {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Ultimate Copland 1.1/Ultimate Aaron",
+   "rsrc_sha256": "3b7f26e09c4e76bc4b859c277c447881795ce97deeb8eb8f299ffab7caf87419",
+   "rsrc_size": 45676,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Ultimate Copland 1.1/Ultimate Apple Menu Options",
+   "rsrc_sha256": "1cf487c75af07922ac6cadf4560c13ab79c7d3049f4cad9bef7123063954bd59",
+   "rsrc_size": 7342,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Ultimate Copland 1.1/Ultimate Finder",
+   "rsrc_sha256": "ee2a107326e10deba4e764a32dc421cd040b4fb5332418425628bd3247b92818",
+   "rsrc_size": 9182,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Ultimate Copland 1.1/Ultimate General Controls",
+   "rsrc_sha256": "e4ec1ae97944ecd5a8aedd35912acac0a34ec58dd94440a440b7ab9ad49f588c",
+   "rsrc_size": 14770,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Ultimate Copland 1.1/Ultimate Launcher",
+   "rsrc_sha256": "e0eb9f7629b74f68a4cd75845e0f56078747eb7062713572d02165a99aaebed6",
+   "rsrc_size": 2670,
+   "type": "rsrc"
+  },
+  {
    "creator": "ttxt",
    "data_sha256": "5dd20e058214fcad9ccbaa488650601a3310f354cac2c4e165cc0b272b78e11e",
    "data_size": 4737,
@@ -12,6 +57,33 @@
    "rsrc_sha256": "e4950d56982f6dbdd077c88f62e6021012e375c4961ad7c7f8ed3efb3f6100c5",
    "rsrc_size": 22140,
    "type": "ttro"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Ultimate Copland 1.1/Ultimate SimpleText",
+   "rsrc_sha256": "e813029063d143341ecaf90fc0e56e1ae93b8bbb96204bd89428b43fc94aeb46",
+   "rsrc_size": 10030,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Ultimate Copland 1.1/Ultimate System 7.5 Update",
+   "rsrc_sha256": "c33d26254a6b4b0f7c0fce059d91e720f7c14aaa7b84dfef9f7f1ecfaaf8aa73",
+   "rsrc_size": 240910,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Ultimate Copland 1.1/Ultimate System",
+   "rsrc_sha256": "1e0c48c0ae4d3615f9b4637ecf815cdfa9b0f534b01e034ea6a0421b6d394709",
+   "rsrc_size": 101260,
+   "type": "rsrc"
   }
  ],
  "fixture": "derived-Ultimate_Copland_1.1.sit.1",

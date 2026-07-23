@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "DMOV",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "NilMinder",
+   "rsrc_sha256": "5db7cb648766b8fc5b93dd7f3a320f0ef0a881ba0856ff6a7c6eca4e1b9dc6c1",
+   "rsrc_size": 19701,
+   "type": "DFIL"
+  }
+ ],
+ "fixture": "nilminder.bin",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "79290e946e78d0ba9b834156331d474e7052bb5539b684bc2d4f8640d9fc8166",
+ "size": 19829
+}

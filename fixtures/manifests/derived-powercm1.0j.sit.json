@@ -5,6 +5,15 @@
    "name": "PowerCM 1.0J"
   },
   {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "PowerCM 1.0J/Icon\r",
+   "rsrc_sha256": "f6a1a7980c9360ecb9e27b1d19eb0b82b02ba0f36a4e6ee990a63d0ae87fea2d",
+   "rsrc_size": 2670,
+   "type": "rsrc"
+  },
+  {
    "creator": "PwrC",
    "data_sha256": "391d8e83e904629a40a657bd40fd111b3a74dd27aa5f3722e51a55f03e946062",
    "data_size": 12310,

@@ -5,6 +5,15 @@
    "name": "Source Code"
   },
   {
+   "creator": "ddTf",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "DeleteDesktop",
+   "rsrc_sha256": "d87bd54ba244c0fc5d9fde9b451b2d671c4c853fe15d347a28941e66db316a06",
+   "rsrc_size": 875,
+   "type": "INIT"
+  },
+  {
    "creator": "ttxt",
    "data_sha256": "08ec5367ad7965846b89d544f99047c6ef29dc6a8a79ae7712483d05fd7d449c",
    "data_size": 1397,

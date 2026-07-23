@@ -8,6 +8,15 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
+  },
+  {
+   "creator": "MCLT",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "MacLights",
+   "rsrc_sha256": "5ccbfbf1247c6627ac070a1cb4eff969e583c2581dbc9d49c426f1b123422b33",
+   "rsrc_size": 30295,
+   "type": "cdev"
   }
  ],
  "fixture": "derived-MacLights_v1.0a1.cpt",

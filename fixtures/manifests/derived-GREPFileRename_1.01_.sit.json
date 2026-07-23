@@ -3,6 +3,24 @@
   {
    "is_dir": true,
    "name": "GREPFileRename 1.0ƒ"
+  },
+  {
+   "creator": "cArD",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "GREPFileRename 1.01 ReadMe",
+   "rsrc_sha256": "65346ce19fd83bb31fdff9a952d6965547c6e062f2486e24850ae0146b035fb6",
+   "rsrc_size": 37546,
+   "type": "APPL"
+  },
+  {
+   "creator": "dplt",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "GREPFileRename 1.01",
+   "rsrc_sha256": "a64476348969c87963b5c5ca721415a8dfd0f207e7d4da48715305ceaf97cbba",
+   "rsrc_size": 18663,
+   "type": "APPL"
   }
  ],
  "fixture": "derived-GREPFileRename_1.01_.sit",

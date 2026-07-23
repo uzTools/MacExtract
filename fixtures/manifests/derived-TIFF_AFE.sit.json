@@ -8,6 +8,15 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "CWWP"
+  },
+  {
+   "creator": "RMFT",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "TIFF (IBMpc to Mac)",
+   "rsrc_sha256": "7db1db7185a2da7c742410c3183fa5b1d711959c85871bba8de2f1974ac9d33d",
+   "rsrc_size": 59099,
+   "type": "VISA"
   }
  ],
  "fixture": "derived-TIFF_AFE.sit",

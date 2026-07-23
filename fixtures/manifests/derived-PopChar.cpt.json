@@ -12,6 +12,15 @@
    "rsrc_sha256": "1e9a2a0fb8bf58610b0d09d3375e29ab7883a063fef2ac74ad9f023270384604",
    "rsrc_size": 814,
    "type": "WORD"
+  },
+  {
+   "creator": "©Pop",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "PopChar 1.10 ƒ/PopChar",
+   "rsrc_sha256": "fe399f2a9261d0ca15170d5fd6a34578fcdc7d1e31083c5aa29ff3a2b44040a4",
+   "rsrc_size": 14406,
+   "type": "cdev"
   }
  ],
  "fixture": "derived-PopChar.cpt",

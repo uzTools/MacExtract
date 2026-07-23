@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "mK†!",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "spconfig reset",
+   "rsrc_sha256": "d6ea5125d6e2d69f36d284057a2d84d655c6cb146390d93d65cd213170efd16f",
+   "rsrc_size": 1933,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "spconfig_reset.bin",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "9069491795ee6412ac3a4e323595afb2ef9c4599935c3856e5128abd1d4e80c8",
+ "size": 2061
+}

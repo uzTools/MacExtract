@@ -5,6 +5,15 @@
    "name": "Chiron v2.4 Release ƒ"
   },
   {
+   "creator": "Dk@P",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Chiron v2.4 Release ƒ/Chiron v2.4",
+   "rsrc_sha256": "26700e9e472198157a03cb68e938c9710b8e4c22f0cffe8c88d8997bcbcd9260",
+   "rsrc_size": 433006,
+   "type": "APPL"
+  },
+  {
    "creator": "ttxt",
    "data_sha256": "f84828ee6818e29e747d9d8792d17a4ee8c7370fcc1ef1bf327a1d3b0a2f6ea8",
    "data_size": 2131,

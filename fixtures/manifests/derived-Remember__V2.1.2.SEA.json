@@ -27,6 +27,24 @@
    "type": "ttro"
   },
   {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Remember? V2.1.2/Rem? 2.1.2 ResEdit Templates",
+   "rsrc_sha256": "51c422a75617e1024be65d25fe1295c3444183022ef3473170be1ecdd3cdcc28",
+   "rsrc_size": 2697,
+   "type": "rsrc"
+  },
+  {
+   "creator": "DMOV",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Remember? V2.1.2/Remember? DA",
+   "rsrc_sha256": "be322098528f8749c32f57107658c82c6602362072bd39e44e76f487ffcaeae6",
+   "rsrc_size": 79776,
+   "type": "DFIL"
+  },
+  {
    "creator": "MACA",
    "data_sha256": "77cd581104e345f1f8b93a07c2b8bbac41ee8e6f4fd7ff5247ad5cf1b95fdef1",
    "data_size": 152278,
@@ -34,6 +52,15 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "WORD"
+  },
+  {
+   "creator": "Rem?",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Remember? V2.1.2/Remember? Startup",
+   "rsrc_sha256": "30fef7850ec6642c6809d6fee4cc02d85001fff9d8498fed384efc97c7c531f7",
+   "rsrc_size": 31062,
+   "type": "INIT"
   },
   {
    "creator": "Rem?",

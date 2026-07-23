@@ -1,6 +1,15 @@
 {
  "entries": [
   {
+   "creator": "TRDS",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Timelord",
+   "rsrc_sha256": "b1ce777c35c289fad5e1e439aa6bba25ed31cee280d26306fd933e6560b94451",
+   "rsrc_size": 11705,
+   "type": "cdev"
+  },
+  {
    "creator": "MSWD",
    "data_sha256": "3d89129d61d78cdf3a08c366b2d949e6745927b369504bb11c1c64fbde083888",
    "data_size": 53,
@@ -17,6 +26,15 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
+  },
+  {
+   "creator": "TMLD",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "tardis",
+   "rsrc_sha256": "40c54fc69bf71c7d890e8855a74b063df1a3564d7e74cd9a6bafb45e5a193b93",
+   "rsrc_size": 5730,
+   "type": "RDEV"
   }
  ],
  "fixture": "derived-tardis.cpt",

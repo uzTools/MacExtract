@@ -30,6 +30,33 @@
    "rsrc_sha256": "302c639edf01ac48c02792fa8084f9704225e55da7b7e51940703203f8b1b71c",
    "rsrc_size": 3338,
    "type": "TEXT"
+  },
+  {
+   "creator": "Regi",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "TextConverter 1.0.1/Register",
+   "rsrc_sha256": "497927781fee0e7fa73eb2eb20e7eee60728115b7bc87939826383e57d95869e",
+   "rsrc_size": 94321,
+   "type": "APPL"
+  },
+  {
+   "creator": "TxCv",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "TextConverter 1.0.1/Text Converter 1.0.1",
+   "rsrc_sha256": "662703ccb8eb4e750ac3a76d508edcc454d4bf0437cf16e9200ced324d138d15",
+   "rsrc_size": 37697,
+   "type": "APPL"
+  },
+  {
+   "creator": "Dk@P",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "TextConverter 1.0.1/TextConverter user guide",
+   "rsrc_sha256": "4c55339e2705f960ca09da8def5acdc48971fb3f6b11c812300b56cdd4c6aa75",
+   "rsrc_size": 99393,
+   "type": "APPL"
   }
  ],
  "fixture": "derived-TextConverter_1.0.1.sit",

@@ -10,6 +10,24 @@
    "type": "TEXT"
   },
   {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "ColorPix.FKEY",
+   "rsrc_sha256": "e10fb65e14d3d35cf74ae8e2ae7e50460e5a013aa3a823ed44fb0013acdface4",
+   "rsrc_size": 3061,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "ColorPix.resources",
+   "rsrc_sha256": "ec9064bb05733732e52e7cc72641b412fb3fcd0f47598414ef1030242a133e8a",
+   "rsrc_size": 854,
+   "type": "rsrc"
+  },
+  {
    "creator": "PJMM",
    "data_sha256": "40c880e946ff6a95c98fa2d48d90a41d86470c37707a3233997fa7f3ed6abfcb",
    "data_size": 54,

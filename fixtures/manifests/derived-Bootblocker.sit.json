@@ -5,6 +5,15 @@
    "name": "BootBlocker"
   },
   {
+   "creator": "blkr",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "BootBlocker/\u0001\u0001\u0001BootBlocker",
+   "rsrc_sha256": "94a4182cdbf2c656b89f46bd8ae1ca53e16d6411854291796de1d0252e1fee4c",
+   "rsrc_size": 41600,
+   "type": "cdev"
+  },
+  {
    "creator": "MSWD",
    "data_sha256": "cbfd53b2277945f6636d401d41cfdc9e91344af5ae54fef40264de368f62e287",
    "data_size": 5120,

@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "Manx",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "XBitmap",
+   "rsrc_sha256": "fafbd8337ffa5636de8cb6dc631e640c4f99bb4b4915b2ac18e33bc334a20721",
+   "rsrc_size": 15216,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "derived-XBitmap.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "b440139b502e9156b25cb8cfb6bd8b93787cb0f6c5bc41a533d39d02a26c8e5e",
+ "size": 11410
+}

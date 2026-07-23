@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "MENUSELECT 2.5 FKEY",
+   "rsrc_sha256": "d6c06ab440ce4c84ddedfcd8b2314f6b0758e0501b122c9f1d839f41b4d7fe19",
+   "rsrc_size": 1719,
+   "type": "rsrc"
+  }
+ ],
+ "fixture": "menuselect25.bin",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "2cf99b870a1e3f2ebabec23969db3dafc82818022dac8cd8b084f47f9a5c76da",
+ "size": 1847
+}

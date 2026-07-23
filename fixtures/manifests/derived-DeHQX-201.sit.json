@@ -12,6 +12,15 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
+  },
+  {
+   "creator": "PnLh",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "DeHQX-201/DeHQX",
+   "rsrc_sha256": "8083e0ee3582b48129e2d3ea18337681a43d94a143f77b4a0108c2cb0799fc3e",
+   "rsrc_size": 36416,
+   "type": "APPL"
   }
  ],
  "fixture": "derived-DeHQX-201.sit",

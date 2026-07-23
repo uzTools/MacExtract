@@ -122,3 +122,71 @@ int unc_huff_decode(const UncHuff *h, UncBitIn *bi)
     }
     return -(cur + 1);
 }
+
+/* ------------------------------------------------------------------ */
+/* Canonical (code-length) Huffman codes                              */
+/* Codes assigned in (length, symbol) order, shortest code all-zeros, */
+/* decoded MSB-first. Sources:                                        */
+/*   reference/XADMaster/XADPrefixCode.m (initWithLengths:...         */
+/*   shortestCodeIsZeros:YES) and                                     */
+/*   reference/macutils/macunpack/cpt.c (cpt_readHuff: sort by        */
+/*   (BitLength, Value) then assign codes; "Compactor allows unused   */
+/*   trailing codes in its Huffman tree", i.e. incomplete codes are   */
+/*   legal and pad out the deep end) — LGPL, see NOTICE.              */
+/* ------------------------------------------------------------------ */
+
+int unc_canon_build(UncCanon *c, const uint8_t *lengths, int32_t nsyms)
+{
+    int32_t i, l;
+    uint32_t code, space;
+    uint16_t idx[UNC_CANON_MAX_BITS + 1];
+
+    if (nsyms > UNC_CANON_MAX_SYMS) return UNC_ERR_CORRUPT;
+
+    for (l = 0; l <= UNC_CANON_MAX_BITS; l++) c->count[l] = 0;
+    c->maxlen = 0;
+    for (i = 0; i < nsyms; i++) {
+        int len = lengths[i];
+        if (len == 0) continue;
+        if (len > UNC_CANON_MAX_BITS) return UNC_ERR_CORRUPT;
+        c->count[len]++;
+        if (len > c->maxlen) c->maxlen = (int16_t)len;
+    }
+
+    /* First code value at each length (canonical, all-zeros start),
+     * and over-subscription check. Incomplete codes are allowed:
+     * leftover code space simply decodes as invalid. */
+    code = 0;
+    space = 0;
+    for (l = 1; l <= c->maxlen; l++) {
+        c->first[l] = (uint16_t)code;
+        code = (code + c->count[l]) << 1;
+        space = (space << 1) + c->count[l];
+        if (space > (1u << l)) return UNC_ERR_CORRUPT;
+    }
+
+    /* Symbol table in (length, symbol) order. */
+    idx[1] = 0;
+    for (l = 1; l < c->maxlen; l++)
+        idx[l + 1] = (uint16_t)(idx[l] + c->count[l]);
+    for (i = 0; i < nsyms; i++) {
+        int len = lengths[i];
+        if (len) c->sym[idx[len]++] = (int16_t)i;
+    }
+    return UNC_OK;
+}
+
+int unc_canon_decode(const UncCanon *c, UncBitIn *bi)
+{
+    uint32_t code = 0, base = 0;
+    int l;
+    for (l = 1; l <= c->maxlen; l++) {
+        int bit = unc_bitin_bit(bi);
+        if (bit < 0) return -1;
+        code = (code << 1) | (uint32_t)bit;
+        if (code - c->first[l] < c->count[l])
+            return c->sym[base + (code - c->first[l])];
+        base += c->count[l];
+    }
+    return -1;   /* invalid (possibly "unused trailing") code */
+}

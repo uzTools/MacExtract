@@ -12,6 +12,15 @@
    "rsrc_sha256": "116a0f273a6ebebc7366cf1766492ffd720568dbb45bb8f8210d98262f73fe60",
    "rsrc_size": 632,
    "type": "ttro"
+  },
+  {
+   "creator": "ThSQ",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "The 25th Square ƒ/The 25th Square",
+   "rsrc_sha256": "138dced329a921733826a3799b7e3e83ba5d838a6f10876541dfa317d15a4b2c",
+   "rsrc_size": 156996,
+   "type": "APPL"
   }
  ],
  "fixture": "derived-The_25th_Square102.cpt",

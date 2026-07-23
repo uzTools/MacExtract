@@ -13,6 +13,24 @@
    "name": "TypoTapps_PlusTapps 2.0 Ordner/Tastaturabbildungen"
   },
   {
+   "creator": "Dk@P",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "TypoTapps_PlusTapps 2.0 Ordner/Dokumentation",
+   "rsrc_sha256": "353cedfb7333aab3fb05390f809f1eec3e205c818ee85ccf78d74b72bb69e311",
+   "rsrc_size": 409732,
+   "type": "APPL"
+  },
+  {
+   "creator": "\u0000\u0000\u0000\u0000",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "TypoTapps_PlusTapps 2.0 Ordner/Icon\r",
+   "rsrc_sha256": "d3697edec0c7a14b8319e52693cf9f1bf2844d3fb4df1b4f890b72218405c8f2",
+   "rsrc_size": 2670,
+   "type": "\u0000\u0000\u0000\u0000"
+  },
+  {
    "creator": "MOSS",
    "data_sha256": "960b769f6a8b9b28130d00cb4c48d635784524a4e02e1bd2064d1b12c31a6879",
    "data_size": 27,
@@ -38,6 +56,33 @@
    "rsrc_sha256": "886d14dd5ae3d055099d06f120824be990fd0444ba416d55d317b10c0d3534f7",
    "rsrc_size": 2670,
    "type": "URL "
+  },
+  {
+   "creator": "movr",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "TypoTapps_PlusTapps 2.0 Ordner/zeramedia PlusTapps™",
+   "rsrc_sha256": "f47ec37f0d6d32dc323f4ad2955a3eb3f1f1c0333180ad70b39a1e5c745cd153",
+   "rsrc_size": 5674,
+   "type": "kfil"
+  },
+  {
+   "creator": "movr",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "TypoTapps_PlusTapps 2.0 Ordner/zeramedia TypoTapps™",
+   "rsrc_sha256": "9f155a0ca0a8e0c851ec6bf0d6743e8b7274f7df7eb3dba39fbf8989c60fa961",
+   "rsrc_size": 5674,
+   "type": "kfil"
+  },
+  {
+   "creator": "MACS",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "TypoTapps_PlusTapps 2.0 Ordner/Tastaturabbildungen/Icon\r",
+   "rsrc_sha256": "3fb11acf1b22c17b610770dc246c38cc1cf0b2e51bb04f0fcced7986fdc69caa",
+   "rsrc_size": 2606,
+   "type": "icon"
   },
   {
    "creator": "ttxt",
@@ -74,6 +119,15 @@
    "rsrc_sha256": "e35d7a76f708a4cbd748141f2d5d880be507c93d7881ff30b77db0b62e9e1160",
    "rsrc_size": 458,
    "type": "issp"
+  },
+  {
+   "creator": "MACS",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "TypoTapps_PlusTapps 2.0 Ordner/Sherlock-PlugIns/Icon\r",
+   "rsrc_sha256": "0c5cc17abdd56673afee52ca11b77b83a708ea1979e64ba3ada0786fa50d1ed6",
+   "rsrc_size": 6306,
+   "type": "icon"
   },
   {
    "creator": "ttxt",

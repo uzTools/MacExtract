@@ -26,6 +26,15 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
+  },
+  {
+   "creator": "STrk",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "The SoundTracker 0.9",
+   "rsrc_sha256": "4a02a095fa7ecde87491891dab2dad7a62a64d7c4294e861d9545017a868287a",
+   "rsrc_size": 67341,
+   "type": "APPL"
   }
  ],
  "fixture": "derived-SoundTracker.cpt",

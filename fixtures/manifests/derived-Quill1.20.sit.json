@@ -8,6 +8,15 @@
    "rsrc_sha256": "cac29f295242a42fa1f08cc98a67988c580ba535505baf5745957598cbb3dae1",
    "rsrc_size": 784,
    "type": "WORD"
+  },
+  {
+   "creator": "DMOV",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Quill",
+   "rsrc_sha256": "29f3a85123e8457b0806bfdfe61918056eeab83fa4bdd61197faac7022a40559",
+   "rsrc_size": 18033,
+   "type": "DFIL"
   }
  ],
  "fixture": "derived-Quill1.20.sit",

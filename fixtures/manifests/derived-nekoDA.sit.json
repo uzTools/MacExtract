@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "DMOV",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "nekoDA",
+   "rsrc_sha256": "80ad1aef7d170f8a3560923c90eb7b3926ddcdc5b4f912126e4c5c2526ea7055",
+   "rsrc_size": 16979,
+   "type": "DFIL"
+  }
+ ],
+ "fixture": "derived-nekoDA.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "30860bd9ed630b791da8a7a375be34f75c750d955eddad72ecf239d131d9be3a",
+ "size": 12788
+}

@@ -1,6 +1,15 @@
 {
  "entries": [
   {
+   "creator": "DMOV",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Memoir DA 1.1",
+   "rsrc_sha256": "82c5ea0b022e8bdde77f383cebc7bcbe6c6932ed74b5769b7622425589691448",
+   "rsrc_size": 4641,
+   "type": "DFIL"
+  },
+  {
    "creator": "MACA",
    "data_sha256": "e96608efb35bea120e95c4e97def2033c2e2191bbc50adccce0b24d5a154dde5",
    "data_size": 2653,

@@ -13,6 +13,24 @@
    "name": "’bot 1.0 Folder/Tutorial"
   },
   {
+   "creator": "’bAr",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "’bot 1.0 Folder/’bot Arena 1.0",
+   "rsrc_sha256": "b75865675e852804a68dcd50e71790befdffecab108860604901f3ace5c0f7df",
+   "rsrc_size": 124147,
+   "type": "APPL"
+  },
+  {
+   "creator": "’bDv",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "’bot 1.0 Folder/’bot Developer 1.0",
+   "rsrc_sha256": "6c715470cde8f479d8071b074875ba74fb7a789aa30ef3b131736818b86ffe5c",
+   "rsrc_size": 121147,
+   "type": "APPL"
+  },
+  {
    "creator": "MSWD",
    "data_sha256": "fba4bce33f4f16c75e7c3322209a9833091323366e4d1815138375c7deecb93a",
    "data_size": 130560,

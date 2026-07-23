@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "XFRM",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "XForm1.0b",
+   "rsrc_sha256": "5277a9ee976f41d7d8d71a1017626d7f265d42f939a7c8575cdb29a9c60b5536",
+   "rsrc_size": 68099,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "xform10b.bin",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "cb635ae6ced3a4c423e2bb1ff934be351508a442d17e3b8cd5de0f4add728d3b",
+ "size": 68227
+}

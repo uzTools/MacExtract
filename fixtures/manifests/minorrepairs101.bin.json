@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "MRp1",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Minor•Repairs 1.01",
+   "rsrc_sha256": "69a57ee7ad33b39bf9df6942e3123e3adbc4a6cf461417e2b1b54bccafbb1e10",
+   "rsrc_size": 6196,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "minorrepairs101.bin",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "a9364be4eed36a2058693572afc21488c839d064596d4c9fe4536d71f41a3e0b",
+ "size": 6400
+}

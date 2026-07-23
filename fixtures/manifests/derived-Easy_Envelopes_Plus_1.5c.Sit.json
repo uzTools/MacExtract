@@ -8,6 +8,24 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
+  },
+  {
+   "creator": "DMOV",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Easy Envelopes Plus 1.5c",
+   "rsrc_sha256": "194647578391d0745886194d7089a3b62cdee980f3c075f9231c8e5ecdc8f072",
+   "rsrc_size": 33941,
+   "type": "DFIL"
+  },
+  {
+   "creator": "DocR",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Easy Envelopes Plus Docs",
+   "rsrc_sha256": "11c6aab173fad503787dbc533fe14e5d9b06bf6e27310903e4b3e8e92a70bbdf",
+   "rsrc_size": 57703,
+   "type": "APPL"
   }
  ],
  "fixture": "derived-Easy_Envelopes_Plus_1.5c.Sit",

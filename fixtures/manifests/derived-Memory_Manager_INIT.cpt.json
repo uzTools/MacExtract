@@ -12,6 +12,15 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "WDBN"
+  },
+  {
+   "creator": "KaAR",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Memory Mgr Init Folder/MMInit",
+   "rsrc_sha256": "526e8f007d8283a08853fef190dd5458f9ddf3aeac71d95210d21cfcc853ba6a",
+   "rsrc_size": 12258,
+   "type": "INIT"
   }
  ],
  "fixture": "derived-Memory_Manager_INIT.cpt",

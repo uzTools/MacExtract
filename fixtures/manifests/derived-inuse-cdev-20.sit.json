@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "InUs",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "InUse cdev 2.0",
+   "rsrc_sha256": "b5645cf8e0e03b647ea00c052dc8a37ee12f38e5115acdbf83c158f58271edd5",
+   "rsrc_size": 13412,
+   "type": "cdev"
+  }
+ ],
+ "fixture": "derived-inuse-cdev-20.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "d915fdef6412500c293f0a5e62a9586177ed28cbaadb30b84dd7c370c8178597",
+ "size": 8882
+}

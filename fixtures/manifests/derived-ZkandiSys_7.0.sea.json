@@ -5,6 +5,15 @@
    "name": "ZkandiSys 7.0"
   },
   {
+   "creator": "MACS",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "ZkandiSys 7.0/ZkandiSys 7.0",
+   "rsrc_sha256": "d7496d1a35140c3fe7d1819f7d53e167988757deb07182bf974b9397233c59e4",
+   "rsrc_size": 3376,
+   "type": "zsys"
+  },
+  {
    "creator": "MACA",
    "data_sha256": "8eb6f5555b0910634d77b6de6df872cbb13f1ef3b52fe89c3277747871c4479d",
    "data_size": 10702,

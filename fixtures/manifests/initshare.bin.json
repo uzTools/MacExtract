@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "INSH",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "INITShare",
+   "rsrc_sha256": "67d12528c360e8a28dcc668866e1850d5cf2320d011ce46fc1c28b15dc7486af",
+   "rsrc_size": 2572,
+   "type": "cdev"
+  }
+ ],
+ "fixture": "initshare.bin",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "7f724cbc42e896010135830050f64f4703880a7d5aeefde70222815283ec2229",
+ "size": 2700
+}

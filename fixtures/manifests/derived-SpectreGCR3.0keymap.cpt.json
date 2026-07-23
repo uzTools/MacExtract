@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "DMOV",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Spectre GCR 3.0 keyboard map",
+   "rsrc_sha256": "e6e6189d1488d9324cf2fd3546bcfffffcf8b550f347f669924d5bf357ce860c",
+   "rsrc_size": 12340,
+   "type": "DFIL"
+  }
+ ],
+ "fixture": "derived-SpectreGCR3.0keymap.cpt",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "70d0046f02751d6a8dec7acf7394e8c8181a5620fe9d1e5c2096fc1167a9da7d",
+ "size": 6158
+}

@@ -8,6 +8,33 @@
    "rsrc_sha256": "b7a2f63e49e35f0ff1e24461eb43132a70b804c356194eecefda55439582ceb7",
    "rsrc_size": 414,
    "type": "TEXT"
+  },
+  {
+   "creator": "DMOV",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Messages DA",
+   "rsrc_sha256": "de8da030970f21f321af6d11d07dc5041efbfe4c21d340b293d2759807a29639",
+   "rsrc_size": 15194,
+   "type": "DFIL"
+  },
+  {
+   "creator": "mail",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Messages",
+   "rsrc_sha256": "183f6d8cc9a905e5e8ac3ad4917902b52244bbf6eb330fb2658bf4453a895d33",
+   "rsrc_size": 17886,
+   "type": "cdev"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "myICON",
+   "rsrc_sha256": "1b52ddccd88d8436e47ae22ddcf3013cc2710388db9a27744d4b42f93876a8b5",
+   "rsrc_size": 438,
+   "type": "????"
   }
  ],
  "fixture": "derived-messages.1.2.sit",

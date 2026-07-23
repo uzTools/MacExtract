@@ -5,6 +5,24 @@
    "name": "Compact Pro 1.34"
   },
   {
+   "creator": "cArD",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Compact Pro 1.34/Compact Pro User's Guide",
+   "rsrc_sha256": "6f2c941353c2983355e5ac2943c43a6c39d55f8cf5260df4d1f07125c5c6dd1c",
+   "rsrc_size": 132264,
+   "type": "APPL"
+  },
+  {
+   "creator": "CPCT",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Compact Pro 1.34/Compact Pro",
+   "rsrc_sha256": "03806f0a26b71e003bc1876b633e78cc23bc30729ec4ee92050e6388927134d5",
+   "rsrc_size": 96122,
+   "type": "APPL"
+  },
+  {
    "creator": "ttxt",
    "data_sha256": "b3b51937cc62de751ed4be30042b1cdbc531ce13e00728ba71e5e75e35c68ad6",
    "data_size": 1867,

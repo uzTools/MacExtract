@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "R2ka",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "keyAhead",
+   "rsrc_sha256": "8086a0170f39b3b89235a1fd892bc2b29728df0917b15e16c1adb6afbdf493b5",
+   "rsrc_size": 1233,
+   "type": "INIT"
+  }
+ ],
+ "fixture": "derived-keyAhead.cpt",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "d5200b3c88ef6467bb9d3f80871b8af2b113e1ff36ca1ed56765d411c92f2545",
+ "size": 863
+}

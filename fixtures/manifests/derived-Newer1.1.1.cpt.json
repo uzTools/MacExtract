@@ -27,12 +27,66 @@
    "type": "WDBN"
   },
   {
+   "creator": "GTNW",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Newer1.1.1/Newer",
+   "rsrc_sha256": "d4c6ee131423674e441966f16afe5df6230c267cdb48873098367abd6dc1fb86",
+   "rsrc_size": 59212,
+   "type": "APPL"
+  },
+  {
    "creator": "ttxt",
    "data_sha256": "71eb18295813d75de2d79802352459160c339deacb2d9aec8ac58dfcbff00da2",
    "data_size": 4364,
    "name": "Newer1.1.1/Read me too",
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "GTNW",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Newer1.1.1/Sample Command Files/Backup Changes",
+   "rsrc_sha256": "2243e6e7b4ab632449990c26445de4bbab885bff843ddb6c4a315d7354c3593e",
+   "rsrc_size": 641,
+   "type": "TEXT"
+  },
+  {
+   "creator": "GTNW",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Newer1.1.1/Sample Command Files/Backup",
+   "rsrc_sha256": "f0feb7b28807b164a57b8e45c803f3b38b201f4a2b5da48fbaf8e1b2f97849c0",
+   "rsrc_size": 564,
+   "type": "TEXT"
+  },
+  {
+   "creator": "GTNW",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Newer1.1.1/Sample Command Files/Bkup4Merge",
+   "rsrc_sha256": "63758a0a6cd9751cdccf8b8cb1f29b4f2e14da31f037dee5ad552374360e5c5c",
+   "rsrc_size": 574,
+   "type": "TEXT"
+  },
+  {
+   "creator": "GTNW",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Newer1.1.1/Sample Command Files/Merge",
+   "rsrc_sha256": "a1422fd98998bd7e402902ff66230e261b4181cb19e263fdaabd498af820bfbc",
+   "rsrc_size": 630,
+   "type": "TEXT"
+  },
+  {
+   "creator": "GTNW",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Newer1.1.1/Sample Command Files/Restore",
+   "rsrc_sha256": "f9a0b7020b9aa9cf17ebc78d713efdd938cb59f5f8dbf1fc3da3af1b8ea86ea2",
+   "rsrc_size": 568,
    "type": "TEXT"
   },
   {

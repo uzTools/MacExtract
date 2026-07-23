@@ -12,6 +12,15 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "ttro"
+  },
+  {
+   "creator": "ßπnl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "B–Panel 1.0 Folder/◊B–Panel",
+   "rsrc_sha256": "20fbd08b12f6e42259cbc38b57df7b57764565f04d00aa5a6f297284a0a98561",
+   "rsrc_size": 18884,
+   "type": "cdev"
   }
  ],
  "fixture": "derived-B-Panel",

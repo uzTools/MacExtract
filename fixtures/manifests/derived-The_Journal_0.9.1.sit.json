@@ -31,6 +31,24 @@
    "type": "TEXT"
   },
   {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "journal Driver/Journal Driver",
+   "rsrc_sha256": "3a646caec59c882c7076b439bd5e76d6c60d1709a07d390854abbb2586bea021",
+   "rsrc_size": 6807,
+   "type": "rsrc"
+  },
+  {
+   "creator": "KAHL",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "journal Driver/Journal Driver.π",
+   "rsrc_sha256": "7a113159f79213c9888abad05d7740bec82d09f99855cb3307447bf23e13f797",
+   "rsrc_size": 5134,
+   "type": "PROJ"
+  },
+  {
    "creator": "KAHL",
    "data_sha256": "5487acd2fda8cb947bb019f8c3d23002f95f837e5b49c0c8db0eab29de1dee2b",
    "data_size": 17437,
@@ -56,6 +74,24 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "install DRVR INIT/Journal INIT",
+   "rsrc_sha256": "2eb1df477b8122f5beb2f8c3d8d3f805a1d8b7bc2fd2f4568e546b3b611ce2cc",
+   "rsrc_size": 5375,
+   "type": "rsrc"
+  },
+  {
+   "creator": "KAHL",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "install DRVR INIT/Journal INIT.π",
+   "rsrc_sha256": "124d7011859cad1a64d692e87fce89ef10b195ef89018e88ba7199939bda431a",
+   "rsrc_size": 4872,
+   "type": "PROJ"
   },
   {
    "creator": "KAHL",
@@ -92,6 +128,24 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
+  },
+  {
+   "creator": "JrNl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "cdev/ The Journal",
+   "rsrc_sha256": "08d7cb005dc48554b16c9baf0e32ee1c7cf16e9b9e2d6ccf176c2e2cbc8af5a4",
+   "rsrc_size": 23933,
+   "type": "cdev"
+  },
+  {
+   "creator": "KAHL",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "cdev/Journal cdev π",
+   "rsrc_sha256": "c0f1bd60c1e4de5b54521b6ebba4d2aaeea7c1b2360cd5dca77b6de5af36f04f",
+   "rsrc_size": 5238,
+   "type": "PROJ"
   },
   {
    "creator": "KAHL",

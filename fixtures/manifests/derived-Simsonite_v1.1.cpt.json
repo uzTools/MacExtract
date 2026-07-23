@@ -8,6 +8,15 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
+  },
+  {
+   "creator": "DM42",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Simsonite",
+   "rsrc_sha256": "2a953dce563494aace16b3be3b000f355a5f5095cb0320e47331a30f214b7a47",
+   "rsrc_size": 4866,
+   "type": "APPL"
   }
  ],
  "fixture": "derived-Simsonite_v1.1.cpt",

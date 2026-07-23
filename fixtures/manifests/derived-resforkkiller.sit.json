@@ -30,6 +30,15 @@
    "rsrc_size": 0
   },
   {
+   "creator": "MACS",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "ResFork Killer/www.darkeagle.com.webloc",
+   "rsrc_sha256": "0dd3b8e2f9e0306a0db03004728f9ba15dffadff191d446ab8a15f8ca6cffcd4",
+   "rsrc_size": 456,
+   "type": "ilht"
+  },
+  {
    "is_dir": true,
    "name": "ResFork Killer/ResFork Killer.app/Contents"
   },
@@ -39,6 +48,15 @@
    "name": "ResFork Killer/ResFork Killer.app/.DS_Store",
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
+  },
+  {
+   "creator": "MACS",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "ResFork Killer/ResFork Killer.app/Icon\r",
+   "rsrc_sha256": "f137342b00d1a19e4b589358b2bf4f1ceda0382acc1e439aedf0d0dbb209bb49",
+   "rsrc_size": 286,
+   "type": "icon"
   },
   {
    "is_dir": true,

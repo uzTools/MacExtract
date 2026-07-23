@@ -12,6 +12,15 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "ttro"
+  },
+  {
+   "creator": "Flck",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "\"…Just a Clock\"/\"It's Just a Clock\"",
+   "rsrc_sha256": "6ea01b1995e8e4505a61585b6a80bd904a88e8da21d5b73ebe1aed7fbbe84939",
+   "rsrc_size": 28617,
+   "type": "APPL"
   }
  ],
  "fixture": "derived-Clock.sea",

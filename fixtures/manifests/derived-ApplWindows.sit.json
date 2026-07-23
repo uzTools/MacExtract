@@ -12,6 +12,15 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "WDBN"
+  },
+  {
+   "creator": "ApWi",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "ApplWindows/ApplWindows",
+   "rsrc_sha256": "b48ebd72fd35ac8d95d679f25cd349aac42fb82ca440eeb4664b1e42743458b9",
+   "rsrc_size": 40367,
+   "type": "cdev"
   }
  ],
  "fixture": "derived-ApplWindows.sit",

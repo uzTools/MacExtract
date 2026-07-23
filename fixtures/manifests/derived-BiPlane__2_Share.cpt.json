@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "BIPL",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "BiPlane™ 2.0 Shareware",
+   "rsrc_sha256": "00e944819c82536fd866949b565be361b94d58d8524078fbfecd9c5e3c179a67",
+   "rsrc_size": 224293,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "derived-BiPlane__2_Share.cpt",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "057f6ff55e5e0acfd1a131540ec4bdcfc4d87c036a7f6f25a76eb81e638c0d1a",
+ "size": 106873
+}

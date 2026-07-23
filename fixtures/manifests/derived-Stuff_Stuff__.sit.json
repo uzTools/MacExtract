@@ -9,6 +9,24 @@
    "name": "Stuff Stuff ƒ/Expand"
   },
   {
+   "creator": "$@@@",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Stuff Stuff ƒ/Both",
+   "rsrc_sha256": "26655f5ee21376c618017d83223e097d83ebb30fdc873e5a4d1d7a6d31ec420c",
+   "rsrc_size": 34251,
+   "type": "APPL"
+  },
+  {
+   "creator": "%)(&",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Stuff Stuff ƒ/Hex",
+   "rsrc_sha256": "0e4012a73d8c75cc0fa5c1a747a89ea8eace41838e6f313d3915e7fadf49285e",
+   "rsrc_size": 17675,
+   "type": "APPL"
+  },
+  {
    "creator": "R*ch",
    "data_sha256": "7404f8c89f6f5a9e5fbb9b99d0360c97f53cbb7daedefad13bc13bb074175857",
    "data_size": 1321,
@@ -25,6 +43,24 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
+  },
+  {
+   "creator": "$@@@",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Stuff Stuff ƒ/Stuff",
+   "rsrc_sha256": "8dabe81bf939c90feb166c1a71dd5376d426cc1ef166fd35e07d6503ad8b7511",
+   "rsrc_size": 30948,
+   "type": "APPL"
+  },
+  {
+   "creator": "\u0000\u0000\u0000\u0000",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Stuff Stuff ƒ/Expand/Icon\r",
+   "rsrc_sha256": "4bdd50f8f6373e3be989ed26b5bb371d11eb183c1eb3ab5aadb9959b09f21514",
+   "rsrc_size": 2670,
+   "type": "\u0000\u0000\u0000\u0000"
   }
  ],
  "fixture": "derived-Stuff_Stuff__.sit",

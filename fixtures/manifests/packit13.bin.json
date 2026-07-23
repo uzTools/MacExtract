@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "PIT ",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "PackIt III (V1.3)",
+   "rsrc_sha256": "8836dbc531af3e60329b8da7b6a9054b0368eef88406b4f1d4385d6c86146144",
+   "rsrc_size": 29772,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "packit13.bin",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "65da4e1d658e82f3f9cdfec79c37607a1cb7bb69ddc5044fcf5a30a9be603691",
+ "size": 29952
+}

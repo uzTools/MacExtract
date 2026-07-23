@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "rSCR",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Reverse Screen INIT",
+   "rsrc_sha256": "a3e3c5cf7ae026e9171dc3173a9e60c291e3f37e78fe7af5bd360c2eab497bd2",
+   "rsrc_size": 1816,
+   "type": "INIT"
+  }
+ ],
+ "fixture": "reversescreen.bin",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "3ff8c666221f707d4262a4542f9082a535ba693ae28bfdc30c6c5fbc0a495f44",
+ "size": 1944
+}

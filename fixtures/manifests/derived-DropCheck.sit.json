@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "RQDC",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "DropCheck",
+   "rsrc_sha256": "44959a1fa3e3a1524300ded7c0916856279c18763cf0461329b1f2936b167722",
+   "rsrc_size": 154160,
+   "type": "cdev"
+  }
+ ],
+ "fixture": "derived-DropCheck.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "6148433c243bc8385fd6cc7600fdc355257cc5b388ab7c975b3385510a05f125",
+ "size": 124186
+}

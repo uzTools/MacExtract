@@ -18,6 +18,24 @@
    "type": "ttro"
   },
   {
+   "creator": "R*ch",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "RWAsm Folder/RW Hardware Edit",
+   "rsrc_sha256": "d3189c93efce81953cf0558cf4f89387012f3b185618682d4e2de6ac3a624912",
+   "rsrc_size": 3221,
+   "type": "BBXT"
+  },
+  {
+   "creator": "R*ch",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "RWAsm Folder/RWasm",
+   "rsrc_sha256": "1a911e7eefcc9d1f586e45528a18a2a82d25b3e9e96c672d3c4d2591228f2756",
+   "rsrc_size": 26380,
+   "type": "BBXT"
+  },
+  {
    "creator": "MOSS",
    "data_sha256": "8305ebd8003e2c41722289dd2df9991d56c0f4349ae94d225959f9d67e813383",
    "data_size": 7879,
@@ -74,6 +92,15 @@
    "rsrc_sha256": "359dbde48e195b1acd16cbe14924ac207e450ab5d675905653fbbc66417bc8d4",
    "rsrc_size": 410,
    "type": "TEXT"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "RWAsm Folder/Source Code/src/RWasm.rsrc",
+   "rsrc_sha256": "b3abeb0425f1dd36dee49eb2dcec3970507a125204f0841daff47071a9b6ea88",
+   "rsrc_size": 1749,
+   "type": "rsrc"
   },
   {
    "creator": "CWIE",

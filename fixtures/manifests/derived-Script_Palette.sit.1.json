@@ -7,6 +7,132 @@
   {
    "is_dir": true,
    "name": "Script Palette/Plug-ins"
+  },
+  {
+   "creator": "MACS",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Script Palette/Icon\r",
+   "rsrc_sha256": "4d6248d71d4e750c10283a7932b8e05d51429138d70ea8c57d6221536c1f9292",
+   "rsrc_size": 9197,
+   "type": "icon"
+  },
+  {
+   "creator": "&SP1",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Script Palette/Script Palette 1.0",
+   "rsrc_sha256": "95a0f35065146fa4d210555c7bb3d2841c33c9afcd30949c3f4d5dbcace124aa",
+   "rsrc_size": 80659,
+   "type": "APPL"
+  },
+  {
+   "creator": "ToyS",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Script Palette/Plug-ins/DD Dlog",
+   "rsrc_sha256": "a8b3c10b2ff74d01e063268fcf6ce0ad6ac5529426a91749e60f6d3d98830f8a",
+   "rsrc_size": 3184,
+   "type": "osas"
+  },
+  {
+   "creator": "ToyS",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Script Palette/Plug-ins/DD Palette",
+   "rsrc_sha256": "081b77ddd550cf9505eeded4e1b373e2f577f0a76249b792d1cdbf25173d312f",
+   "rsrc_size": 3414,
+   "type": "osas"
+  },
+  {
+   "creator": "ToyS",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Script Palette/Plug-ins/DD Uninst.",
+   "rsrc_sha256": "1dfe1fceef5f9f5eafd4f4a3156a6fe473c3f9c49c7f96b5ec78b5f63ac5bbea",
+   "rsrc_size": 2270,
+   "type": "osas"
+  },
+  {
+   "creator": "ToyS",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Script Palette/Plug-ins/Dlog alert",
+   "rsrc_sha256": "40f3e02b5a23ec4f8c2d535b489a4e8b289786dc21ec662fa12e742cf1fcbc6e",
+   "rsrc_size": 2282,
+   "type": "osas"
+  },
+  {
+   "creator": "ToyS",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Script Palette/Plug-ins/Dlog msg.",
+   "rsrc_sha256": "ad7c6473165499632da375eb81d2b1c16703180e9d9239043ffd3e2a2c94896a",
+   "rsrc_size": 2304,
+   "type": "osas"
+  },
+  {
+   "creator": "ToyS",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Script Palette/Plug-ins/Dlog stop",
+   "rsrc_sha256": "2e6f86e09e33fc6167a3599765ec5dcc590e6db9acc5dd898c149f8c1160951e",
+   "rsrc_size": 2278,
+   "type": "osas"
+  },
+  {
+   "creator": "ToyS",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Script Palette/Plug-ins/If… else",
+   "rsrc_sha256": "33060d4b20e6581e6e4e02c3e92250ec5bb16067f0cfb64174cf5398251a7c7c",
+   "rsrc_size": 2584,
+   "type": "osas"
+  },
+  {
+   "creator": "ToyS",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Script Palette/Plug-ins/Ref to file",
+   "rsrc_sha256": "9b6d7cdb53900de9801e3568078241dedb306e5dffba431bbdb0c944f8037e5f",
+   "rsrc_size": 2748,
+   "type": "osas"
+  },
+  {
+   "creator": "ToyS",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Script Palette/Plug-ins/Ref to folder",
+   "rsrc_sha256": "e5e81301881e7fc3d789b52aaa230a47c1324f84de27ad94d6f2a46c9a103f30",
+   "rsrc_size": 2752,
+   "type": "osas"
+  },
+  {
+   "creator": "ToyS",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Script Palette/Plug-ins/Repeat",
+   "rsrc_sha256": "5be9548e2f4e04c0add2f83a0b6ca2f9aa2e7308f3b46191addc44df954b9b9f",
+   "rsrc_size": 2428,
+   "type": "osas"
+  },
+  {
+   "creator": "ToyS",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Script Palette/Plug-ins/Try",
+   "rsrc_sha256": "ee76015b42f057441282e49fcfc6ef4d65a6a1f7f6d29cf3c944b2ddab3670f2",
+   "rsrc_size": 2592,
+   "type": "osas"
+  },
+  {
+   "creator": "ToyS",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Script Palette/Plug-ins/•Quit",
+   "rsrc_sha256": "500ec590cbe90942c8ff02f5027ab5ab451657d38bd9aae3ec27dd66bc731e75",
+   "rsrc_size": 1850,
+   "type": "osas"
   }
  ],
  "fixture": "derived-Script_Palette.sit.1",

@@ -5,6 +5,33 @@
    "name": "Boomerang 2.0.2"
   },
   {
+   "creator": "bMRN",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Boomerang 2.0.2/Boomerang Help",
+   "rsrc_sha256": "00a471865d79983e5746529b95b400f2b143d637cd14d9173173704a7e2e11d4",
+   "rsrc_size": 27763,
+   "type": "bMHL"
+  },
+  {
+   "creator": "bMRN",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Boomerang 2.0.2/Boomerang Prefs",
+   "rsrc_sha256": "bc7b222a0844809f8a68e3d036adfec549a223e4fa37a5cbbdea9f412a2d0efe",
+   "rsrc_size": 7929,
+   "type": "bMDT"
+  },
+  {
+   "creator": "bMRN",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Boomerang 2.0.2/Boomerang",
+   "rsrc_sha256": "c0b09bc155e675951a36a1937290489a04a600a4cc5fa30676afb13aed1141eb",
+   "rsrc_size": 57858,
+   "type": "cdev"
+  },
+  {
    "creator": "MACA",
    "data_sha256": "80ad908936c1c57943b14d7175142fcaef772f4507a5658920305177d5f2c44f",
    "data_size": 682,
@@ -12,6 +39,15 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Boomerang 2.0.2/Toggle Bmrn.FKEY",
+   "rsrc_sha256": "0955b38deb8c4c002da14fce120d7d78a2c53e3e6fc053ba9348edcee75538eb",
+   "rsrc_size": 570,
+   "type": "FKEY"
   }
  ],
  "fixture": "derived-boomerang202.sit",

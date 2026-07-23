@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "mROT",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "MacROT13",
+   "rsrc_sha256": "99d6b89733a5a12bc2cd85128b46880fc4e20b00269266abd581c81bd278e08e",
+   "rsrc_size": 5594,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "derived-MacROT13.cpt",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "3fcfbdcafa0f5179b6f894953e25e68159175f8ebb3f76a799f7c6ad7b457166",
+ "size": 3309
+}

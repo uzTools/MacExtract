@@ -8,6 +8,24 @@
    "rsrc_sha256": "1f85625076e6696b97ea8d9fb0fe94d2ca9ce32ce77b07b537168b791459b708",
    "rsrc_size": 402,
    "type": "TEXT"
+  },
+  {
+   "creator": "PSPT",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Mac to MacBinary",
+   "rsrc_sha256": "484b212bd274b849d3479dd84fe09e58064cdcaa4a6607007760eed1daa90f06",
+   "rsrc_size": 16474,
+   "type": "VISA"
+  },
+  {
+   "creator": "PSPT",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "MacBinary to Mac",
+   "rsrc_sha256": "63d2cfff1408cb76534c7752c2fcaa2d183904e7d362f69eac301abe892be2d2",
+   "rsrc_size": 16740,
+   "type": "VISA"
   }
  ],
  "fixture": "derived-Mac2MB.cpt",

@@ -8,6 +8,15 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
+  },
+  {
+   "creator": "DMOV",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "ResMaster",
+   "rsrc_sha256": "2bcbbc9f7877ce705ee6a8772154b0449e70ea32857cf1b2273a401a26a37b1b",
+   "rsrc_size": 32444,
+   "type": "DFIL"
   }
  ],
  "fixture": "derived-ResMasterDA.sit",

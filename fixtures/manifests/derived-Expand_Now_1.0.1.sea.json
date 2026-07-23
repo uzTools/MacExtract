@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "NCdc",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Expand Now",
+   "rsrc_sha256": "a54a93c3f58354dc4b02e52476ab422bbedf7ffcf994b3e8f2fb522e766c5b95",
+   "rsrc_size": 88942,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "derived-Expand_Now_1.0.1.sea",
+ "format": "Now Compress",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "8e8993b925a9d3270cba7d58d769562fc85158a1db72cd9b1d8244905cbba8f9",
+ "size": 61824
+}

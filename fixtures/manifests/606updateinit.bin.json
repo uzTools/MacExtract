@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "MACS",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": " 6.0.6 Update INIT",
+   "rsrc_sha256": "339ce366844f8607a3a81ddcde3954380f8fe5c51870462638be9be4ff2b39b7",
+   "rsrc_size": 759,
+   "type": "INIT"
+  }
+ ],
+ "fixture": "606updateinit.bin",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "0f3c22b8216966afc30b17659b923b19076e37251371e402aba259864af2cd5d",
+ "size": 887
+}

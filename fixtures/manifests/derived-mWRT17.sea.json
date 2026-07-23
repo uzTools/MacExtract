@@ -18,6 +18,15 @@
    "type": "WORD"
   },
   {
+   "creator": "DMOV",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "miniWRITER 1.7 ƒ/imageWRITER font",
+   "rsrc_sha256": "988666cca959b7664c1f6461c095ea0b8c25db868901782aed0ea466a4d71568",
+   "rsrc_size": 3256,
+   "type": "FFIL"
+  },
+  {
    "creator": "MACA",
    "data_sha256": "08be192111e3e4df2d1ad847b436cc3b9ef70d2d8fd5c108e9dfc50cfa4ba1cd",
    "data_size": 247,
@@ -34,6 +43,15 @@
    "rsrc_sha256": "5ec881d1ed8c169dc337f8ca3a7e5624194a162ce41fd1d949c35e636df4e380",
    "rsrc_size": 356,
    "type": "TEXT"
+  },
+  {
+   "creator": "mWRT",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "miniWRITER 1.7 ƒ/miniWRITER",
+   "rsrc_sha256": "3b6bb35e94de2c91caaaffc195315314d9055e4d5c419b3352791ff3a7b38368",
+   "rsrc_size": 38237,
+   "type": "dfil"
   },
   {
    "creator": "MACA",

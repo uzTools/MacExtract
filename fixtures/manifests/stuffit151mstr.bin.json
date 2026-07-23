@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "StuffIt 1.5.1 mstr",
+   "rsrc_sha256": "735cf33947f2b906e2fb2c2e496a8ebd108d38dbdbee045dda082e0a5565efa9",
+   "rsrc_size": 365,
+   "type": "rsrc"
+  }
+ ],
+ "fixture": "stuffit151mstr.bin",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "2a79f66987528aece87ba95f6b81e45b64c0e15b1f7694db164aa23252be4a3d",
+ "size": 493
+}

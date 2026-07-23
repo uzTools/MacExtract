@@ -18,6 +18,15 @@
    "type": "TEXT"
   },
   {
+   "creator": "etto",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "SoundMover1.7 ƒ/IBeep2",
+   "rsrc_sha256": "70a005d42658b2620bb2122c77159c335701a66cb16e1787ad7f404d4596485c",
+   "rsrc_size": 10523,
+   "type": "cdev"
+  },
+  {
    "creator": "ttxt",
    "data_sha256": "9c9ed6d03d31fe17dd562a6e8ca5c95fd5cd67ae0d5e9a9753b263fff3b825cc",
    "data_size": 26734,
@@ -25,6 +34,24 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
+  },
+  {
+   "creator": "SMOV",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "SoundMover1.7 ƒ/Sound Mover",
+   "rsrc_sha256": "04c61f8a154abb0fceb5cf1dc2da18f3ba77e639cde66d04b9ae7bec7d3bce02",
+   "rsrc_size": 59615,
+   "type": "APPL"
+  },
+  {
+   "creator": "Ssnd",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "SoundMover1.7 ƒ/StartupSndInit",
+   "rsrc_sha256": "dc212edbf71c65614727d925d6cf21f4b662df156fe113b5a368ba21ab4529c9",
+   "rsrc_size": 1932,
+   "type": "INIT"
   },
   {
    "creator": "ttxt",
@@ -43,6 +70,15 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
+  },
+  {
+   "creator": "ett3",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "SoundMover1.7 ƒ/SndControl/SndControl",
+   "rsrc_sha256": "fc0d81b0a0a0868966450b6104b854c76a51d3b856ccf97d54d6a204d10602b8",
+   "rsrc_size": 37618,
+   "type": "cdev"
   }
  ],
  "fixture": "derived-soundmover1.7.cpt",

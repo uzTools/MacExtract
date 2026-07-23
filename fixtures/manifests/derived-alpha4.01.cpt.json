@@ -10,6 +10,15 @@
   },
   {
    "creator": "ALFA",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Alpha.4.01",
+   "rsrc_sha256": "d330f51cf1ae309317c7081ca3c23235443c5070167f20884e1346ea34c3ece6",
+   "rsrc_size": 283927,
+   "type": "APPL"
+  },
+  {
+   "creator": "ALFA",
    "data_sha256": "f6902f3e94becc74645f294c4931e8e2a2b2aa313b72f572b6550e19bcb62382",
    "data_size": 18224,
    "name": "AlphaBits",
@@ -182,6 +191,24 @@
    "type": "TEXT"
   },
   {
+   "creator": "KAHL",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "ACMDS/acmds.new/define",
+   "rsrc_sha256": "f37533378dda95a840113ba14e33846888ca71c5077bc1f69d1c6f0ba04061d6",
+   "rsrc_size": 5294,
+   "type": "PROJ"
+  },
+  {
+   "creator": "KAHL",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "ACMDS/acmds.new/fill π",
+   "rsrc_sha256": "b82e5047dd7a6e9d3ec2e1333110352fa7b63d30638b651ba2d213e81e2e22c3",
+   "rsrc_size": 4978,
+   "type": "PROJ"
+  },
+  {
    "creator": "ALFA",
    "data_sha256": "a18bc09171caec01b78fce6cffe89e0234cc9e0e7798cc0f1fba7d4e2bb0ea38",
    "data_size": 2768,
@@ -189,6 +216,15 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
+  },
+  {
+   "creator": "KAHL",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "ACMDS/acmds.new/sort π",
+   "rsrc_sha256": "6da54d6d71d7c7e3430ff6505ad58fe0c4ffc73bbcc47c10ef8a652143422c8d",
+   "rsrc_size": 5704,
+   "type": "PROJ"
   },
   {
    "creator": "ALFA",

@@ -17,6 +17,15 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "WORD"
+  },
+  {
+   "creator": "DMOV",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "SystemIdle",
+   "rsrc_sha256": "43cfd0fa1e3a8f10f79778f114c4310550aeba0b5883dc018852928966417695",
+   "rsrc_size": 12591,
+   "type": "DFIL"
   }
  ],
  "fixture": "derived-SystemIdle.Sit",

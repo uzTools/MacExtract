@@ -5,6 +5,15 @@
    "name": "TAXES99 Folder"
   },
   {
+   "creator": "MACS",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "TAXES99 Folder/Icon\r",
+   "rsrc_sha256": "40dc81615e0c31b2e4fe653a3c1a41e50530dcf64a4b2428ff8ae6b5770863b6",
+   "rsrc_size": 286,
+   "type": "icon"
+  },
+  {
    "creator": "ttxt",
    "data_sha256": "37ba18147c33fd24a750d365e9770734961a379a1b615ebebf9551a216e8d9e1",
    "data_size": 1447,

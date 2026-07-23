@@ -1,6 +1,15 @@
 {
  "entries": [
   {
+   "creator": "LDBR",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Init Escape",
+   "rsrc_sha256": "fefd655eab1c9e4587f110cd615fb31855b1db4ce2adf642507e57f75e48cf79",
+   "rsrc_size": 18639,
+   "type": "INIT"
+  },
+  {
    "creator": "JWrt",
    "data_sha256": "ad541db3d7ee0306a211f3c797d1a718df496d6e73ea35270df305a742eab2a7",
    "data_size": 3911,

@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "NCSA",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "telnet",
+   "rsrc_sha256": "9972d446760ea489dc514942ce4f95373dd22b84217d15d42bdb6843a580d92a",
+   "rsrc_size": 284510,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "sliptelnet.bin",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "cc616579c55a39b39ea379a3fcb064e47f64de737f69d42c0f87ef2104c3ce8b",
+ "size": 284638
+}

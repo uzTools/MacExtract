@@ -1,6 +1,15 @@
 {
  "entries": [
   {
+   "creator": "OPT2",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": " SCSIOdometer",
+   "rsrc_sha256": "b9e10d20f1705de3a9dababc35f8e2a62fa3e5eebf4512f5ff3cebd05908f7cf",
+   "rsrc_size": 21298,
+   "type": "cdev"
+  },
+  {
    "creator": "ttxt",
    "data_sha256": "906ab3b903263081f51735cb6bc16e8208cb1f42f1d4083d309483dd2fdc1035",
    "data_size": 1440,

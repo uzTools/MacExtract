@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "bpas",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "IIfx Serial Switch",
+   "rsrc_sha256": "51bc5ef3fb04d60200b08f1fd940f5031f4d19948a4617ea5a25defe24a3e164",
+   "rsrc_size": 3052,
+   "type": "cdev"
+  }
+ ],
+ "fixture": "IIfxserialswitch.bin",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "6180632670c941bf1f5576c0d707b3998f0dd819f2fd2edd2c8210d7e5f98f6b",
+ "size": 3180
+}

@@ -10,6 +10,15 @@
    "type": "XLBN"
   },
   {
+   "creator": "mime",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Macros",
+   "rsrc_sha256": "9a6a1dcb78f471665984c82a88c9402f603f0a9b5ccc7d59e9f75148d40449b4",
+   "rsrc_size": 2392,
+   "type": "mcod"
+  },
+  {
    "creator": "MSWD",
    "data_sha256": "20785b570b3befcd570d00ba63f5416112b4dd254cecab320c48d401c04cf762",
    "data_size": 4096,

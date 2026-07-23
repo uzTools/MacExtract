@@ -8,6 +8,24 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
+  },
+  {
+   "creator": "Dk@P",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "MacWoof 1.2",
+   "rsrc_sha256": "ca3eb7f8f08390d42ae5bb14c434adc4b407bbc3844ff1b7094a3d0b6bceca86",
+   "rsrc_size": 174099,
+   "type": "APPL"
+  },
+  {
+   "creator": "SRC7",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "MacWoof",
+   "rsrc_sha256": "b616416bafd6b92ecdfce9b14c1b93e125f572b54f07f90568f0af677153a357",
+   "rsrc_size": 204551,
+   "type": "APPL"
   }
  ],
  "fixture": "derived-MacWoof_1.2.cpt",

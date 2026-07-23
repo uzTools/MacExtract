@@ -70,12 +70,36 @@ void unc_entry_clear(UncEntryInfo *e)
 
 int unc_entry_set_name(UncEntryInfo *e, const uint8_t *name, uint32_t len)
 {
+    /* Mac name component: apply the classic reversible '/'->':' swap
+     * (':' cannot occur in an HFS name, '/' can), so '/' in e->name is
+     * always a path separator. zip/tar set e->name directly. */
     uint32_t i;
     if (len > UNC_NAME_MAX) len = UNC_NAME_MAX; /* truncate, keep going */
-    for (i = 0; i < len; i++) e->name[i] = name[i];
+    for (i = 0; i < len; i++)
+        e->name[i] = name[i] == '/' ? (uint8_t)':' : name[i];
     e->name[len] = 0;
     e->name_len = (uint16_t)len;
     return UNC_OK;
+}
+
+void unc_entry_set_path(UncEntryInfo *e, const uint8_t *path, uint32_t len)
+{
+    uint32_t i;
+    if (len > UNC_NAME_MAX) len = UNC_NAME_MAX;
+    for (i = 0; i < len; i++) e->name[i] = path[i];
+    e->name[len] = 0;
+    e->name_len = (uint16_t)len;
+}
+
+void unc_entry_path_append(UncEntryInfo *e, const uint8_t *comp, uint32_t len)
+{
+    uint32_t o = e->name_len;
+    uint32_t i;
+    if (o > 0 && o < UNC_NAME_MAX) e->name[o++] = '/';
+    for (i = 0; i < len && o < UNC_NAME_MAX; i++)
+        e->name[o++] = comp[i] == '/' ? (uint8_t)':' : comp[i];
+    e->name[o] = 0;
+    e->name_len = (uint16_t)o;
 }
 
 /* ------------------------------------------------------------------ */
@@ -204,14 +228,18 @@ void unc_bufin_init(UncBufIn *b, UncIO *io, UncProgressState *ps,
     b->cap = cap;
     b->len = b->pos = 0;
     b->lenfed = 0;
+    b->limit = 0xFFFFFFFFu;
     b->err = UNC_OK;
 }
 
 int unc_bufin_next_slow(UncBufIn *b)
 {
     int32_t r;
+    uint32_t want = b->cap;
     if (b->err != UNC_OK) return -1;   /* sticky */
-    r = b->io->read(b->io->ctx, b->buf, (int32_t)b->cap);
+    if (b->limit - b->lenfed < want) want = b->limit - b->lenfed;
+    if (want == 0) { b->err = UNC_ERR_TRUNCATED; return -1; }
+    r = b->io->read(b->io->ctx, b->buf, (int32_t)want);
     if (r < 0)  { b->err = UNC_ERR_IO; return -1; }
     if (r == 0) { b->err = UNC_ERR_TRUNCATED; return -1; }
     b->len = (uint32_t)r;

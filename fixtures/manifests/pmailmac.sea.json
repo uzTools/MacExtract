@@ -17,6 +17,24 @@
    "rsrc_size": 0
   },
   {
+   "creator": "PMdh",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Pegasus Mail",
+   "rsrc_sha256": "f0c92a5113bbd303ce920660f4752c1ab5c53b4b67e9b479405d198478ff5db3",
+   "rsrc_size": 221644,
+   "type": "APPL"
+  },
+  {
+   "creator": "PCdh",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Pmail Config",
+   "rsrc_sha256": "0f01521ef01bf007898022ef4545758fff4eb68672e6ea2afedd192aca0d76fe",
+   "rsrc_size": 20192,
+   "type": "APPL"
+  },
+  {
    "data_sha256": "9e0943d9c40db4107cdb15d8ec35f7da3a4302b409ab1de0f41da98b3078f8c9",
    "data_size": 10735,
    "name": "Pmail_Mac v2 Manuals",

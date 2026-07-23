@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "DDAP",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "DD Expand",
+   "rsrc_sha256": "b2bea4172e2835c87963cd69f3d2dceadaa09786fe2b68399e0a2a366bec3835",
+   "rsrc_size": 270362,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "derived-DD_Expand.sea",
+ "format": "DiskDoubler",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "400153442550e009da1033e0c6f69142a7936a769fd912066c9621fa068f771a",
+ "size": 123399
+}

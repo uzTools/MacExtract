@@ -51,6 +51,15 @@
    "type": "TEXT"
   },
   {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "nobleape0659src/src/mac/platform.rsrc",
+   "rsrc_sha256": "5a89523caffc4735fa4cd1b095683ac3f0090a888628f13361402b600aa4c06f",
+   "rsrc_size": 7684,
+   "type": "rsrc"
+  },
+  {
    "creator": "CWIE",
    "data_sha256": "5aad369c68c71b55a12792fab0849924785493cb09c7404118777e76e4b8f1e2",
    "data_size": 11789,
@@ -112,6 +121,15 @@
    "rsrc_sha256": "1a36a4d0853a23e7f0a6735b3eb6025dcbc2576b7f6059cb1a31ae3acf4416bd",
    "rsrc_size": 396,
    "type": "TEXT"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "nobleape0659src/src/glut/glutform.rsrc",
+   "rsrc_sha256": "330a03ef8927f154d2b241e80f0bf9138d341a343bb7d7211fde8d191ebf6ac1",
+   "rsrc_size": 7654,
+   "type": "rsrc"
   },
   {
    "creator": "CWIE",

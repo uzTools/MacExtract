@@ -5,6 +5,15 @@
    "name": "CRLF v1.2"
   },
   {
+   "creator": "CRLF",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "CRLF v1.2/CRLF 1.2",
+   "rsrc_sha256": "7a2910c2ebaffe8dbae5d059b069c4c64f4df975e36fda01c3d6130779cbe559",
+   "rsrc_size": 34418,
+   "type": "APPL"
+  },
+  {
    "creator": "ttxt",
    "data_sha256": "9bc9dac9f08677d2ea4d7bc004064454cf15fb6e283341971af36029f1fd4e85",
    "data_size": 603,

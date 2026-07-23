@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "PYRO",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Crumble 1.0",
+   "rsrc_sha256": "3208768d24e0d83401ce8f220d57cf7a3873f7a9791e064b4c31efc4381d7551",
+   "rsrc_size": 3112,
+   "type": "PMod"
+  }
+ ],
+ "fixture": "crumble10.bin",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "bb0b9440356dfaee3714c381a49b283a80e12e61d43ccc8b36eaef065c76c283",
+ "size": 3240
+}

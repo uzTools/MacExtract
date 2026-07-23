@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "DMOV",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Client DA 1.3.0",
+   "rsrc_sha256": "b61da7b301c00c27e6a43ea5daad7c84112b1e4d62a310266c49dea090ddcfeb",
+   "rsrc_size": 25068,
+   "type": "DFIL"
+  }
+ ],
+ "fixture": "derived-Client_DA.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "360d7848eec570f2777897bb1d9552b45f837aa1e9574833eef61771cd9e7041",
+ "size": 18353
+}

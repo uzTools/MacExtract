@@ -409,6 +409,15 @@
    "type": "TEXT"
   },
   {
+   "creator": "KAHL",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "MacVogl-alpha1/vogl.proj",
+   "rsrc_sha256": "719261dfd3a0e5b0aecf93bb3a2440f35d166e587e3ca8aae5f9cf30e7358a40",
+   "rsrc_size": 18264,
+   "type": "PROJ"
+  },
+  {
    "creator": "????",
    "data_sha256": "ffd8bf29e6369f6b4b6e4a8c11fc5b3396ce221c36b4cde07b8e88bd409a4873",
    "data_size": 456,
@@ -605,6 +614,15 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "MacVogl-alpha1/examples/Cube.vogl",
+   "rsrc_sha256": "679eab9ade9bd01e7d59fb2dfaab374ceeaa010248c63ad5e2f31fed6099130f",
+   "rsrc_size": 52372,
+   "type": "APPL"
   },
   {
    "creator": "????",

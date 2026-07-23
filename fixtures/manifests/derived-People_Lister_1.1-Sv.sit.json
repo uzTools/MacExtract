@@ -50,6 +50,15 @@
    "type": "TEXT"
   },
   {
+   "creator": "PLsv",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "People Lister 1.1 (sv) ƒ/People Lister Modul 1.1",
+   "rsrc_sha256": "963be6e1fd845c81988297e9863713e6c148992b081ab4c6473cc998bdb1a519",
+   "rsrc_size": 13196,
+   "type": "sdev"
+  },
+  {
    "creator": "ttxt",
    "data_sha256": "11fb7ec2c8fc0eb5c58e19ab14a33d0c52b46c64aa363b7da6e60f357420b085",
    "data_size": 1458,

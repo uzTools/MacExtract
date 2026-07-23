@@ -12,6 +12,15 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "ttro"
+  },
+  {
+   "creator": "S214",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Suitcase 2.1.4 Updater ƒ/Suitcase Updater 2.1.4",
+   "rsrc_sha256": "bdeaaad8bea22e0239bf29af1bd329060bfba909117250710e687351f23e2e6d",
+   "rsrc_size": 80034,
+   "type": "APPL"
   }
  ],
  "fixture": "derived-Suitcase_2.1.4_Updater.sit",

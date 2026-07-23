@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "JLBR",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "broadcastv20.bin",
+   "rsrc_sha256": "17e65c0029b443ab6bde252ace781009d6652c9c16bed6cce67dd651c34d7e3e",
+   "rsrc_size": 36213,
+   "type": "RDEV"
+  }
+ ],
+ "fixture": "broadcastv20.bin",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "f54611b7685cc121f443783b9de40c0184fac14c2bc62c9118f29229a86fb37c",
+ "size": 36352
+}

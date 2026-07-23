@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "DMOV",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Sabine Doscbthm",
+   "rsrc_sha256": "991b1ef1754efa82136fa018a8cd3d7a06d72d6188ec6c8766b0b53559ac5832",
+   "rsrc_size": 29688,
+   "type": "FFIL"
+  }
+ ],
+ "fixture": "derived-Sabine_Doscbthm.sit",
+ "format": "StuffIt 5",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "744aceae203bcf195d88d73d3774e44d5113bc96abf6b8c354f8c59bc8aec68f",
+ "size": 14571
+}

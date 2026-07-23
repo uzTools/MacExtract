@@ -23,6 +23,15 @@
    "type": "BFHF"
   },
   {
+   "creator": "TPAT",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "ThoughtPattern™ DEMO",
+   "rsrc_sha256": "e328dadac38861e25f35f8b36b6aa582c3bd5c8d5e6a8db9b1e58b7eba29ac32",
+   "rsrc_size": 375560,
+   "type": "APPL"
+  },
+  {
    "is_dir": true,
    "name": "Samples/Sample Import from another DB"
   },

@@ -12,6 +12,15 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
+  },
+  {
+   "creator": "SIT!",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "SitExpand ƒ/SitExpand",
+   "rsrc_sha256": "ef3e24e7b176e31a176be26a924ea2055583504d036471c211f5ba0a6dee9028",
+   "rsrc_size": 13407,
+   "type": "APPL"
   }
  ],
  "fixture": "derived-SitExpand_1.01.sea",

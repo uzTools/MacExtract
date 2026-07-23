@@ -23,6 +23,15 @@
    "type": "TUST"
   },
   {
+   "creator": "TULR",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Termulator/Termulator 2.03",
+   "rsrc_sha256": "d9434e6e74f69a05a9f288e4fadfbb81327faba49d3575584a27ec03a88dc800",
+   "rsrc_size": 103429,
+   "type": "APPL"
+  },
+  {
    "creator": "MACA",
    "data_sha256": "e647ca3ac6c11839b3e7029e238f07c4fc4abfd5b2ad6a258d75871895280fae",
    "data_size": 25332,

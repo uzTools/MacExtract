@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "AlAs",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Alias Assassin 1.0.6",
+   "rsrc_sha256": "a1e564481c928481316c2080d2e5931dd07ef0934d1ad3deabf061b64ebf5c24",
+   "rsrc_size": 74412,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "derived-Alias-Assassin-1.0.6.sea",
+ "format": "Compact Pro",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "bb4a1ce83a5f5d91ffd9c177a8a5475dafb382e62e19cf350290716deacc10a5",
+ "size": 33204
+}

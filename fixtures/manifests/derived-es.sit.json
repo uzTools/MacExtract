@@ -1,6 +1,15 @@
 {
  "entries": [
   {
+   "creator": "CSAV",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "CrashSaver Init",
+   "rsrc_sha256": "2caa6e81d8e2199df6f083a1dba47210533734ffe406fd1f7be5c091c09809d3",
+   "rsrc_size": 812,
+   "type": "INIT"
+  },
+  {
    "creator": "MACA",
    "data_sha256": "e692167b1bd93e240a9da4446340f28d3ebd946fff445ed40977599e14bcbf5b",
    "data_size": 500,
@@ -8,6 +17,15 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
+  },
+  {
+   "creator": "ADBb",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "P Key",
+   "rsrc_sha256": "81a568b488c9948847337e31ceebf32c83f0c187c9ec9e7303a3b927b30cc8e4",
+   "rsrc_size": 1986,
+   "type": "INIT"
   }
  ],
  "fixture": "derived-es.sit",

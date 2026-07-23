@@ -5,6 +5,15 @@
    "name": "Delta Image 0.9b8"
   },
   {
+   "creator": "MOoD",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Delta Image 0.9b8/∆î 0.9ß8",
+   "rsrc_sha256": "a55f8bdf79151f430292516197d4996ea9a0a47ee3aa112b09314a5bebc4297a",
+   "rsrc_size": 63531,
+   "type": "APPL"
+  },
+  {
    "creator": "ttxt",
    "data_sha256": "74f14e351178c3ebd01fb528d9788838b89c4ffa9779d19edd2f0624b9082cb7",
    "data_size": 10654,

@@ -9,11 +9,29 @@
    "name": "800-SAY-WHAT 3.0.1J/800-Say-What 3.0.1.app"
   },
   {
+   "creator": "MACS",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "800-SAY-WHAT 3.0.1J/Icon\r",
+   "rsrc_sha256": "a3a8303eae50c263ce9617c75d1f2808bb210f191a9feda543c4b083d84c086e",
+   "rsrc_size": 51781,
+   "type": "icon"
+  },
+  {
    "data_sha256": "b73eec2eeeb0bacbf4628230c0aa3165adc0a23d0c78cf21b89a6b9e074f3766",
    "data_size": 5543,
    "name": "800-SAY-WHAT 3.0.1J/Ë™≠„Çì„Å¶„Çô‰∏ã„Åï„ÅÑ.rtf",
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
+  },
+  {
+   "creator": "MACS",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "800-SAY-WHAT 3.0.1J/„Ç™„É≥„É©„Ç§„É≥Ë≥ºÂÖ•",
+   "rsrc_sha256": "ff945a5787a3d1fa4d75e182233c19ad942c33f89a8838e762d30421fd1776d7",
+   "rsrc_size": 476,
+   "type": "ilht"
   },
   {
    "creator": "\u0000\u0000\u0000\u0000",

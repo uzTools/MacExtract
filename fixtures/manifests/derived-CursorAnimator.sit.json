@@ -5,6 +5,15 @@
    "name": "Cursor Collection"
   },
   {
+   "creator": "cAni",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "CursorAnimator 1.2",
+   "rsrc_sha256": "3a9f2577bc6ab64e18388d4c8d36482c15e38f16cbe157235a9fdd8df1f2199c",
+   "rsrc_size": 24761,
+   "type": "cdev"
+  },
+  {
    "creator": "ttxt",
    "data_sha256": "a1831d5883383135ae59b38fd8c0673e3e50828f995bc3a4433ca20853e062cf",
    "data_size": 7615,
@@ -78,11 +87,209 @@
    "name": "Cursor Collection/Willi’s Cursors"
   },
   {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/Willi’s Cursors/Arrow II",
+   "rsrc_sha256": "48a19d9ac70eb28eab8b4aaa5dd7a532c14e455d724547119cec7bff8017e0af",
+   "rsrc_size": 515,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/Willi’s Cursors/Arrow",
+   "rsrc_sha256": "323a9dfc1e67eb56316041e07140e4f0f1023e0121f40d22cc12ae9844dc6a70",
+   "rsrc_size": 512,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/Willi’s Cursors/Cross",
+   "rsrc_sha256": "d1a413ef35940281d87294fbdb52e015c3ff590f4750f353a3c3ab06c7602b5e",
+   "rsrc_size": 680,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/Willi’s Cursors/Crystal",
+   "rsrc_sha256": "df6e6d5fc2d7cb2f48f7376c505323f365f3b8edbe380d63b83e2f216c6554e5",
+   "rsrc_size": 1914,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/Willi’s Cursors/Grindmill",
+   "rsrc_sha256": "3d01df7b200ab03bb8a12a037eeb16594c2b029fc537053d53f2e037bb9e3e25",
+   "rsrc_size": 1395,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/Willi’s Cursors/IBeam",
+   "rsrc_sha256": "b11a0d91076857111415b53e343f309f73491077a45c81c412fd2c54320fe5be",
+   "rsrc_size": 872,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/Willi’s Cursors/Metamorphosis II",
+   "rsrc_sha256": "b09a8024b16f962b0cb9f1bb4db841c3c310867c19b84da96bfc1c3045d89d89",
+   "rsrc_size": 1629,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/Willi’s Cursors/PendelUhr",
+   "rsrc_sha256": "bdd9ed1fb692ed6f52bb3c959df3d3e8406176f1c6e6ea4c0149bbbbff0c25ae",
+   "rsrc_size": 2473,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/Willi’s Cursors/Plus",
+   "rsrc_sha256": "adbdbe135ea019c51d86ce065e2636ea0ea3f535fc95ddb2e37f10493e194ac8",
+   "rsrc_size": 503,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/Willi’s Cursors/Sanduhr",
+   "rsrc_sha256": "211544eab51f571c719a045546e319feeaef61cb17b23ba92fd67731af6dba95",
+   "rsrc_size": 1208,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/Willi’s Cursors/Working",
+   "rsrc_sha256": "20ac2e1dcfa1e960059283899d885d00e5acdb1c3f8d968912207cfe7427ca1b",
+   "rsrc_size": 2097,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/Wes’s Cursors/Dynamic Cursor",
+   "rsrc_sha256": "f47b5cc4e495e9f193d88e9e551619cded1a3e53c6cd958a36af2596e94f37dc",
+   "rsrc_size": 946,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/Trader’s Cursors/Arc",
+   "rsrc_sha256": "b6cd31475636f8596f8f3570540430fbe8f5225e12188d86c84240b27c072b57",
+   "rsrc_size": 1030,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/Trader’s Cursors/Digital clock",
+   "rsrc_sha256": "065f04673aff1e97336d9b291573742d27bf2b9ed91cac1d1b3220ec48bbe3f3",
+   "rsrc_size": 1128,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/Trader’s Cursors/Fireworks",
+   "rsrc_sha256": "2461e1bf90decee597a5cac9d3025f243eab3da9bf282519b392ddbba54c1d87",
+   "rsrc_size": 952,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/Trader’s Cursors/Hourglass",
+   "rsrc_sha256": "8cd5d2661c617da42b5cca282887e7b50d39fd428a649aa95c4fdbcb9f6e25b0",
+   "rsrc_size": 1036,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/Trader’s Cursors/Jumping Jack",
+   "rsrc_sha256": "fd21f286db6de050a5df77ac0ea2128bcdb9a64ad11cde32ee2f244b82703f3d",
+   "rsrc_size": 863,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/Trader’s Cursors/Sine wave",
+   "rsrc_sha256": "0b9ad55b46b2583b7b1934beac18f780e31a47ee92ac70fef92e39ad8ee1060e",
+   "rsrc_size": 860,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/Trader’s Cursors/Stopwatch",
+   "rsrc_sha256": "84ad8f5d61f55a42285ede8a77c0adeada37096758bf451294a7e4f4bef4c4c5",
+   "rsrc_size": 1036,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/Norbert’s Cursors/Crosshair from Ball&Stick",
+   "rsrc_sha256": "d2aba84f11e54e7465e53aabac631084c6126ccf8dd7f16aedc6c2d83d2ee1e9",
+   "rsrc_size": 420,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/Mike’s Cursors/D-Nut",
+   "rsrc_sha256": "13ed3241130c924cfc3bfbd21556218984c20179203b9df24bbbbf0be59cbba2",
+   "rsrc_size": 1571,
+   "type": "rsrc"
+  },
+  {
    "data_sha256": "94e3da3c92f7e914afcc725fb29acf9c5ad2b28343f1f5947693de47051b4b0c",
    "data_size": 2162,
    "name": "Cursor Collection/Jim’s Cursors/Day_Knight docs",
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/Jim’s Cursors/Day_Night",
+   "rsrc_sha256": "44a3cc48ce9f9c3d87a82e717a49aa0c01d8f6baa4010ac156d138ef772ea215",
+   "rsrc_size": 2146,
+   "type": "rsrc"
   },
   {
    "creator": "MACA",
@@ -92,6 +299,402 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/Jim’s Cursors/MoonCursor2",
+   "rsrc_sha256": "e46dd46b91b8eb4fae0a9691b1841551914eea8c426f02f273f196e6948e54d5",
+   "rsrc_size": 2838,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/Herb’s Cursors/UFO",
+   "rsrc_sha256": "faf23837d3a1a7e86e7d8fb4462fd9aac83fdc00956f440d68d0ed37fe7f87ff",
+   "rsrc_size": 942,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/George’s Cursors/Sexy",
+   "rsrc_sha256": "78f278ced2f10409fd594047428e20ab5eefbb37c13ded600c0a33da36f5a869",
+   "rsrc_size": 511,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/Eric’s Cursors/Yin&Yang",
+   "rsrc_sha256": "7c14c739fc48a51e232e07be5ee02435ad40e7f02e8c1e4c107f4ba493032913",
+   "rsrc_size": 1035,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/Donald’s Cursors/Timer",
+   "rsrc_sha256": "72e71a7fd05690079b0f4361bd02c08274ef82016273c17d307986658f5f206b",
+   "rsrc_size": 1384,
+   "type": "rsrc"
+  },
+  {
+   "creator": "\u0000\u0000\u0000\u0000",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/David’s Cursors/Abstract cursor",
+   "rsrc_sha256": "5f617553e047a91800a9ddb5b02e224a2bae7fbfbceaccdba20a12a9465133a4",
+   "rsrc_size": 2539,
+   "type": "\u0000\u0000\u0000\u0000"
+  },
+  {
+   "creator": "\u0000\u0000\u0000\u0000",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/David’s Cursors/Another Spinning Arrow",
+   "rsrc_sha256": "01cfad927c0353b0134c104f552caaa7d8035561e4d58d7301f0208297848541",
+   "rsrc_size": 1081,
+   "type": "\u0000\u0000\u0000\u0000"
+  },
+  {
+   "creator": "\u0000\u0000\u0000\u0000",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/David’s Cursors/Bar Graph",
+   "rsrc_sha256": "0fd56488d12289acc6d0b4a0171126f27749567b0f956c7bfd724edb73727cfe",
+   "rsrc_size": 2456,
+   "type": "\u0000\u0000\u0000\u0000"
+  },
+  {
+   "creator": "\u0000\u0000\u0000\u0000",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/David’s Cursors/Bouncing Ross",
+   "rsrc_sha256": "45d28c9b76da873719fa9fb2089f3df9ef32c68576890f8d7a6995fbe363e6f5",
+   "rsrc_size": 1868,
+   "type": "\u0000\u0000\u0000\u0000"
+  },
+  {
+   "creator": "\u0000\u0000\u0000\u0000",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/David’s Cursors/Bouncing happy face",
+   "rsrc_sha256": "49b3278218dbdb673a0020c74c5b23840da517ffb4df949efd7600f31bbcc87a",
+   "rsrc_size": 1622,
+   "type": "\u0000\u0000\u0000\u0000"
+  },
+  {
+   "creator": "\u0000\u0000\u0000\u0000",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/David’s Cursors/Circle in",
+   "rsrc_sha256": "99c27d2fefac2d4f933783a1a5955c7aec6e0896a8bd3629c828fdf9645cb52e",
+   "rsrc_size": 1696,
+   "type": "\u0000\u0000\u0000\u0000"
+  },
+  {
+   "creator": "\u0000\u0000\u0000\u0000",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/David’s Cursors/Circle out",
+   "rsrc_sha256": "1f94b6d099c1279e7c4c6124c592058e5433287faa54565fd5213648a1718057",
+   "rsrc_size": 1697,
+   "type": "\u0000\u0000\u0000\u0000"
+  },
+  {
+   "creator": "\u0000\u0000\u0000\u0000",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/David’s Cursors/Cityscape",
+   "rsrc_sha256": "f461d04704f38fd93ffc48823035f445b12819b0c44252ff5212ac763c3d7154",
+   "rsrc_size": 4468,
+   "type": "\u0000\u0000\u0000\u0000"
+  },
+  {
+   "creator": "\u0000\u0000\u0000\u0000",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/David’s Cursors/Dissolve cursor",
+   "rsrc_sha256": "7e48d6df2a044301f354d5418b9715e319f3acf7de38edb2293d1c75b9218bb9",
+   "rsrc_size": 1863,
+   "type": "\u0000\u0000\u0000\u0000"
+  },
+  {
+   "creator": "\u0000\u0000\u0000\u0000",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/David’s Cursors/Eyesore, Mac, Disk",
+   "rsrc_sha256": "32e4e55b770659bac2fb189ace33aa545b06eeaf4cc69045c97b67120db384a3",
+   "rsrc_size": 1941,
+   "type": "\u0000\u0000\u0000\u0000"
+  },
+  {
+   "creator": "\u0000\u0000\u0000\u0000",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/David’s Cursors/Happy & sad",
+   "rsrc_sha256": "4767bc2fea2c175a839399b4bf599a41f9510d5caf834db3ec6ded16b5bb89be",
+   "rsrc_size": 1532,
+   "type": "\u0000\u0000\u0000\u0000"
+  },
+  {
+   "creator": "\u0000\u0000\u0000\u0000",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/David’s Cursors/Masturbating LH",
+   "rsrc_sha256": "1bc4880d07c4d1c6bb5094e53f97e2f3f3c5f6e8193c336d30be685edb12588c",
+   "rsrc_size": 1158,
+   "type": "\u0000\u0000\u0000\u0000"
+  },
+  {
+   "creator": "\u0000\u0000\u0000\u0000",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/David’s Cursors/Masturbating",
+   "rsrc_sha256": "a929982e816ecd31a1cd8ec64d22394ddc9b4b0003079eaaa671cebb16d062ee",
+   "rsrc_size": 1155,
+   "type": "\u0000\u0000\u0000\u0000"
+  },
+  {
+   "creator": "\u0000\u0000\u0000\u0000",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/David’s Cursors/Natshpflt cursor",
+   "rsrc_sha256": "2eafbaa55bcd54fe8f3f1b8785b9206eb7f613ec861d97d84d1bc2c6a91e6e12",
+   "rsrc_size": 2536,
+   "type": "\u0000\u0000\u0000\u0000"
+  },
+  {
+   "creator": "\u0000\u0000\u0000\u0000",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/David’s Cursors/Rotating Ross",
+   "rsrc_sha256": "4db8cd233bd55faf89177e9c0003c247b8ee8c7f34a6d7afcc4bd3af37086459",
+   "rsrc_size": 1784,
+   "type": "\u0000\u0000\u0000\u0000"
+  },
+  {
+   "creator": "\u0000\u0000\u0000\u0000",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/David’s Cursors/Scroll arrows",
+   "rsrc_sha256": "1de89866d8317775743973d50d0aa420b2fb96c7d5a5be491b914686a20d11fd",
+   "rsrc_size": 512,
+   "type": "\u0000\u0000\u0000\u0000"
+  },
+  {
+   "creator": "\u0000\u0000\u0000\u0000",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/David’s Cursors/Spinning Arrow",
+   "rsrc_sha256": "2c32116b10c77ffdbb71e11f545a5c184e4c7d09eeead39a3d9c945cce87115b",
+   "rsrc_size": 1073,
+   "type": "\u0000\u0000\u0000\u0000"
+  },
+  {
+   "creator": "\u0000\u0000\u0000\u0000",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/David’s Cursors/Spiral cursor",
+   "rsrc_sha256": "260cba0e4065d30229eb84fcdafae135f4d1cf83010c1db67ccb0256faf78fff",
+   "rsrc_size": 1777,
+   "type": "\u0000\u0000\u0000\u0000"
+  },
+  {
+   "creator": "\u0000\u0000\u0000\u0000",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/David’s Cursors/The scream",
+   "rsrc_sha256": "99e161f4f948c8930a8c2797342d39ed2033fa15fa7f4754d04a82d3fe1547e0",
+   "rsrc_size": 1697,
+   "type": "\u0000\u0000\u0000\u0000"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/David’s Cursors/Vibrating arrow",
+   "rsrc_sha256": "5bf80e000ed33a61c58a7e0c1ae75b7f176dd2f416205b905591ce2e54da17ea",
+   "rsrc_size": 570,
+   "type": "rsrc"
+  },
+  {
+   "creator": "\u0000\u0000\u0000\u0000",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/David’s Cursors/rotating happy face",
+   "rsrc_sha256": "3bac4f5ab0a5b49c669dfefcd55cf1339af7c02342d0895276de149543916a6c",
+   "rsrc_size": 1790,
+   "type": "\u0000\u0000\u0000\u0000"
+  },
+  {
+   "creator": "\u0000\u0000\u0000\u0000",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/Dave’s Cursors/Boing! Cursor",
+   "rsrc_sha256": "76600df9c4f686552605f69743c9549ece792a555c0f034a54077c59cdc8561e",
+   "rsrc_size": 2097,
+   "type": "\u0000\u0000\u0000\u0000"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/Apple’s Cursors/BeachBall",
+   "rsrc_sha256": "f38c23ab3a86b46554e5e2558984ff1ebbb89c544fbead55ffcffa1cbd40fa28",
+   "rsrc_size": 684,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/Apple’s Cursors/DogCow",
+   "rsrc_sha256": "24431dcaf33be9b3ac733927b906aded19d79f6caa87266db3ee5fa2a2e82e5f",
+   "rsrc_size": 1233,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/Apple’s Cursors/Fingers",
+   "rsrc_sha256": "99d53ed03e65dd55c3b15cba96a1051bcd749aa56ef638f95747497f3587baba",
+   "rsrc_size": 880,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/Apple’s Cursors/Watch",
+   "rsrc_sha256": "e87ed588d0e1587f0c09604f1bf9ebf6d724ad65dc8003c8bdb87f8bc5e35c2d",
+   "rsrc_size": 1270,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/Apple’s Cursors/World",
+   "rsrc_sha256": "c8e38e435b20075c2719d90bd9a2a6a17f2cb3ceb903b05095cb4ccbde695c2b",
+   "rsrc_size": 3136,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/Anonymous/Arc II",
+   "rsrc_sha256": "54cbaaa8b81380e9856622a5953cba441c79780be6427ba180d6d8e8e2373494",
+   "rsrc_size": 1737,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/Anonymous/Blocks",
+   "rsrc_sha256": "5ee9e30a040a4e929a897ba93a31b2b96b1c25857afcdbe685a0b8894a194f4f",
+   "rsrc_size": 857,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/Anonymous/Drip",
+   "rsrc_sha256": "7baa16532030a07e3a2650d8851c1c17ae4a604e5868e517114497933e2c3bd9",
+   "rsrc_size": 1383,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/Anonymous/HeloCar",
+   "rsrc_sha256": "f45d307104c17512b07ed5f0e996d1e9ca411e9a7483aa9ed1728d9c3839b363",
+   "rsrc_size": 528,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/Anonymous/Hourglass II",
+   "rsrc_sha256": "c43e6519a61e5a6c042564da7b80b784b119d8010aef97d030ce061b39a0d643",
+   "rsrc_size": 1127,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/Anonymous/PacMan",
+   "rsrc_sha256": "4372b3a76b7e4f668afbb63d7e116be789f1857e36e823babdb9fbb188cf172b",
+   "rsrc_size": 505,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/Anonymous/Rods",
+   "rsrc_sha256": "93d20c07ebea81183280557282ab94f4b4f7c9a7ac77c24e3f3a5cf7154e16e8",
+   "rsrc_size": 855,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/Anonymous/Rotating Cube",
+   "rsrc_sha256": "4a4a9a96a2f5685d6a7d7c523d7ddaf54d3238270919ad9e9573504d58121601",
+   "rsrc_size": 2272,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/Anonymous/StreetBounce",
+   "rsrc_sha256": "e8cc1981b023fc1c2faba6c7d53c2b63ec2ca35405b2033b68c5034bd851b57a",
+   "rsrc_size": 1039,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/Anonymous/Wafer",
+   "rsrc_sha256": "d9d28c2793865565b27df288f2f70619e7bda6762e4289150f3cc7ee61646d20",
+   "rsrc_size": 1736,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/Anonymous/Wait",
+   "rsrc_sha256": "8a0881bb19c0a50688bc360fff98bfb444b2c345a3f244e8f384869dceeb28d9",
+   "rsrc_size": 679,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/Anonymous/Yin&Yang II",
+   "rsrc_sha256": "1e5917cd146247be90af1fba57116b944871ca4d0e79eb6fd5d1fad4a5eb892d",
+   "rsrc_size": 2270,
+   "type": "rsrc"
   },
   {
    "is_dir": true,
@@ -108,6 +711,150 @@
   {
    "is_dir": true,
    "name": "Cursor Collection/ALF’s Cursors/Watch Replacements"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/ALF’s Cursors/Watch Replacements/1 Trapped Molecule",
+   "rsrc_sha256": "07e2c8dc574194d6af99407ec0914f5399018bf0cc664cf69ea86b6d2190eba9",
+   "rsrc_size": 5093,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/ALF’s Cursors/Watch Replacements/Grid Race",
+   "rsrc_sha256": "a5d411fa595e3757b5ceb2923ef2910b353421f8932b2de399f450c249e4474e",
+   "rsrc_size": 5896,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/ALF’s Cursors/Watch Replacements/Hold On",
+   "rsrc_sha256": "ecd6dabd2c22d3901b6942b30c09a4944a1699d8584531a7a12d5ec650377025",
+   "rsrc_size": 4474,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/ALF’s Cursors/Watch Replacements/Metamorphosis",
+   "rsrc_sha256": "d35569e86a3703c023afe0229fd74df7bffafd710f5efe5b36956d7f3f695c4c",
+   "rsrc_size": 1626,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/ALF’s Cursors/Watch Replacements/Radar",
+   "rsrc_sha256": "f4d2e5d6780c6545cd4522f6d5a036074066e1924e463d9b9965d5386f5776bb",
+   "rsrc_size": 3232,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/ALF’s Cursors/Watch Replacements/Small Arrow & Beachball",
+   "rsrc_sha256": "1c45bb550883fb39ad888b818b90e8836a3992b8a68bf35c5f99ba46498792ca",
+   "rsrc_size": 698,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/ALF’s Cursors/Watch Replacements/Small Arrow & Circle",
+   "rsrc_sha256": "14d32b627d6cf54190d1ba4d9e77ff25336a123356fb4964c3c65687c3f62839",
+   "rsrc_size": 3071,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/ALF’s Cursors/Watch Replacements/Small Arrow & Clock",
+   "rsrc_sha256": "7068daa62c53fe76dd35f8d74d70578c68775d4c9542e026297650a33b83e26a",
+   "rsrc_size": 1046,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/ALF’s Cursors/Text Replacements/Caret",
+   "rsrc_sha256": "64874590762a16065bc9fc748f95f6cde7b3355b7c7fbbe50d79eaf562d0b67b",
+   "rsrc_size": 416,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/ALF’s Cursors/Text Replacements/Double Caret",
+   "rsrc_sha256": "3167cc8bfe2ea538a269649505f33f7a5ca7ffe30920614d512341cbfcdabada",
+   "rsrc_size": 511,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/ALF’s Cursors/Crosshair Replacements/Rotating Crosshair",
+   "rsrc_sha256": "1dcb6a43c3a3cd199308cfac056fd54538e1b261dd2fe01f8b17209f03462ef6",
+   "rsrc_size": 693,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/ALF’s Cursors/Arrow Replacements/Left-handed Arrow",
+   "rsrc_sha256": "5500dea565799120b3782afa73581ac95857de2ab911abd82d56d2e5bd1efdf0",
+   "rsrc_size": 428,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/ALF’s Cursors/Arrow Replacements/Long Finger",
+   "rsrc_sha256": "0ca13a8e0e2f89f90a0da7f2e1bbf5354dee25e468067e846042ce1fa2b1006d",
+   "rsrc_size": 422,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/ALF’s Cursors/Arrow Replacements/Mouse",
+   "rsrc_sha256": "5ca45bcdb17d535a3d96eae37dd776c7599ccb6e584f69f514930f8b66ec97c3",
+   "rsrc_size": 504,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/ALF’s Cursors/Arrow Replacements/Small Arrow",
+   "rsrc_sha256": "12d6a798c2b4a6e4b14c2ff6a34745f8f6865f8ccc7ab9b88ad3ec6e36597c5f",
+   "rsrc_size": 422,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Cursor Collection/Adam’s Cursors/New Wave",
+   "rsrc_sha256": "24090fee4f6e695b6e0d8e4edb42745386767437f50b98dd96685ff6fa0ab0ae",
+   "rsrc_size": 1572,
+   "type": "rsrc"
   }
  ],
  "fixture": "derived-CursorAnimator.sit",

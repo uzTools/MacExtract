@@ -22,6 +22,15 @@
    "type": "TEXT"
   },
   {
+   "creator": "zTRM",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "ZTerm ƒ/ZPhoneList",
+   "rsrc_sha256": "aadbe7e883f685e604776722a478ce0f31f3d161e5c4adf9f58775a07ed029be",
+   "rsrc_size": 2387,
+   "type": "zPHO"
+  },
+  {
    "creator": "ttxt",
    "data_sha256": "43b22f212917f9d7bd3f0e495eb8311af1d29f7c5138ca7f1e8bedab7d61d0e9",
    "data_size": 1641,
@@ -47,6 +56,15 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
+  },
+  {
+   "creator": "zTRM",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "ZTerm ƒ/ZTerm 0.9",
+   "rsrc_sha256": "ac4e19e2b8b0b99de1e78a7175ccda7981a5c47947364d524024419026c03d73",
+   "rsrc_size": 201586,
+   "type": "APPL"
   },
   {
    "creator": "MACA",
@@ -76,6 +94,15 @@
    "type": "TEXT"
   },
   {
+   "creator": "movr",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "ZTerm ƒ/System 7 & MacPlus/ZTerm Keyboard",
+   "rsrc_sha256": "a63c101d1b949d7a12da068f00df2aa10068eca578c71899fce7c6b4a743e657",
+   "rsrc_size": 1987,
+   "type": "kfil"
+  },
+  {
    "creator": "ttxt",
    "data_sha256": "9af4bed8fb569ca29a9b08a7e65d96f78e4fbd477cd57d5c9abe36e59060c271",
    "data_size": 1451,
@@ -83,6 +110,33 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
+  },
+  {
+   "creator": "movr",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "ZTerm ƒ/Sounds/connect",
+   "rsrc_sha256": "d72c5670483a75ab0195bde1a930fb2d9e38b3d62458177b34adb6dd40b9bfeb",
+   "rsrc_size": 12702,
+   "type": "sfil"
+  },
+  {
+   "creator": "movr",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "ZTerm ƒ/Sounds/filedone",
+   "rsrc_sha256": "04b4a033a0e81bac2f637aeb7d0bfa04da6a1b7f22de260cd7795ec379a97410",
+   "rsrc_size": 14555,
+   "type": "sfil"
+  },
+  {
+   "creator": "movr",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "ZTerm ƒ/Sounds/termbell",
+   "rsrc_sha256": "0b1891edd4ce878702ae5f735a808b5fcaafe32e41910ff12d3ac6c074480bb8",
+   "rsrc_size": 965,
+   "type": "sfil"
   }
  ],
  "fixture": "derived-ZTerm9.cpt",

@@ -26,6 +26,15 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
+  },
+  {
+   "creator": "FKEY",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "ssaveFKEY",
+   "rsrc_sha256": "1278b4a3a267d08013450dc777cdea94f5c59dc9898c27e10a4ef1ef2c7c55ed",
+   "rsrc_size": 756,
+   "type": "FKEY"
   }
  ],
  "fixture": "derived-ssaveFKEY.sit",

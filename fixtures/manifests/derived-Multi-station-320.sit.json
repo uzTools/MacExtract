@@ -1,6 +1,15 @@
 {
  "entries": [
   {
+   "creator": "CJWL",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Multi-Station",
+   "rsrc_sha256": "28d93fa24d1dca20fb8d53d6b8f7590d386afbdc673b7b9cdbd031b59fc8747e",
+   "rsrc_size": 155583,
+   "type": "APPL"
+  },
+  {
    "creator": "MSWD",
    "data_sha256": "44bf55f0140980504e0864a50224154b418bf8df070920fb3f5edb6286e0ef34",
    "data_size": 6255,

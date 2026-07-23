@@ -12,6 +12,15 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
+  },
+  {
+   "creator": "spwS",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "SpoydWorks Solitairie 1.2.1 ƒ/SpoydWorks Solitaire 1.2.1",
+   "rsrc_sha256": "c0957128e787c68b8118248b069ef6d27dceb4f8cb96f60128c9e525473c95dc",
+   "rsrc_size": 147885,
+   "type": "APPL"
   }
  ],
  "fixture": "derived-Spoydworks_Solitaire_1.2.1.cpt",
