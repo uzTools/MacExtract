@@ -1,0 +1,45 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "bin"
+  },
+  {
+   "is_dir": true,
+   "name": "docs"
+  },
+  {
+   "data_sha256": "944d759a8ff1c6367f61721f455db242cfa5de7c0873ee4c6f927e50fcf65d1b",
+   "data_size": 540,
+   "name": "README.txt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "debe473cfdd9d005111e7bda9630ff4d760f7aff4423ebf63f3448504fccbfac",
+   "data_size": 2200,
+   "name": "docs/manual.txt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "8d24cb8b59fe12609a5eee44df66a017a500449e2c5610998c11ea6a0082eae3",
+   "data_size": 3000,
+   "name": "bin/blob.dat",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "e5a00aa9991ac8a5ee3109844d84a55583bd20572ad3ffcd42792f3c36b183ad",
+   "data_size": 2048,
+   "name": "bin/zeros.dat",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  }
+ ],
+ "fixture": "synth-exo-zip-store.zip",
+ "format": "Zip",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "2902496bae5852f8be45dcdc4c7f191166327a87f584deba6193f0d027834c43",
+ "size": 8384
+}

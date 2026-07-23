@@ -582,6 +582,168 @@ static void test_sit(void)
     }
 }
 
+/* ------------------------------------------------------------------ */
+/* M8: gzip / tar / zip (deflate "stored block" built by hand from    */
+/* RFC 1951/1952 and the PKWARE APPNOTE / POSIX ustar specs).         */
+/* ------------------------------------------------------------------ */
+
+static void put32le(uint8_t *p, uint32_t v)
+{
+    p[0] = (uint8_t)v; p[1] = (uint8_t)(v >> 8);
+    p[2] = (uint8_t)(v >> 16); p[3] = (uint8_t)(v >> 24);
+}
+
+static void test_gzip(void)
+{
+    /* gzip header + one stored deflate block + CRC/ISIZE trailer. */
+    static const char *payload = "hello, gzip world";
+    uint8_t arc[128];
+    uint32_t n = (uint32_t)strlen(payload), len, crc;
+    MemIO m;
+    UncIO io;
+    UncAlloc al;
+    UncSink sk;
+    CapSink cap;
+
+    memset(arc, 0, sizeof arc);
+    arc[0] = 0x1F; arc[1] = 0x8B; arc[2] = 8;   /* magic + deflate */
+    /* flg=0, mtime=0, xfl=0, os=255 */
+    arc[9] = 255;
+    arc[10] = 0x01;                              /* final stored block */
+    arc[11] = (uint8_t)n; arc[12] = (uint8_t)(n >> 8);
+    arc[13] = (uint8_t)~n; arc[14] = (uint8_t)(~n >> 8);
+    memcpy(arc + 15, payload, n);
+    crc = unc_crc32(0xFFFFFFFFu, (const uint8_t *)payload, (int32_t)n)
+          ^ 0xFFFFFFFFu;
+    put32le(arc + 15 + n, crc);
+    put32le(arc + 19 + n, n);
+    len = 23 + n;
+
+    test_make_memio(&io, &m, arc, len);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_GZIP);
+    test_make_alloc(&al);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_GZIP, &io, &sk, &al, NULL, NULL) == UNC_OK);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+    CHECK(cap.dlen[0] == n && memcmp(cap.data[0], payload, n) == 0);
+
+    /* Flip a payload bit -> CRC error. */
+    arc[16] ^= 1;
+    test_make_memio(&io, &m, arc, len);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_GZIP, &io, &sk, &al, NULL, NULL) == UNC_OK);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_ERR_CRC);
+    arc[16] ^= 1;
+}
+
+static void test_tar(void)
+{
+    uint8_t arc[512 * 4];
+    static const char *payload = "tar file contents\n";
+    uint32_t n = (uint32_t)strlen(payload), sum = 0;
+    int i;
+    MemIO m;
+    UncIO io;
+    UncAlloc al;
+    UncSink sk;
+    CapSink cap;
+
+    memset(arc, 0, sizeof arc);
+    memcpy(arc, "dir1/file.txt", 13);
+    memcpy(arc + 100, "0000644", 7);
+    memcpy(arc + 108, "0000000", 7);
+    memcpy(arc + 116, "0000000", 7);
+    snprintf((char *)arc + 124, 12, "%011o", n);
+    memcpy(arc + 136, "00000000000", 11);
+    arc[156] = '0';
+    memcpy(arc + 257, "ustar", 5);
+    arc[263] = '0'; arc[264] = '0';
+    memset(arc + 148, ' ', 8);
+    for (i = 0; i < 512; i++) sum += arc[i];
+    snprintf((char *)arc + 148, 8, "%06o", sum);
+    arc[155] = ' ';
+    memcpy(arc + 512, payload, n);
+    /* two zero blocks already present (arc is zeroed) */
+
+    test_make_memio(&io, &m, arc, sizeof arc);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_TAR);
+    test_make_alloc(&al);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_TAR, &io, &sk, &al, NULL, NULL) == UNC_OK);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+    CHECK(cap.info[0].name_len == 13);
+    CHECK(memcmp(cap.info[0].name, "dir1/file.txt", 13) == 0);
+    CHECK(cap.dlen[0] == n && memcmp(cap.data[0], payload, n) == 0);
+
+    /* Corrupt checksum -> no longer recognized / clean error. */
+    arc[148] ^= 1;
+    test_make_memio(&io, &m, arc, sizeof arc);
+    CHECK(unc_sniff(&io) != UNC_FORMAT_TAR);
+    arc[148] ^= 1;
+}
+
+static void test_zip(void)
+{
+    /* One stored entry: LFH + data + central dir + EOCD. */
+    static const char *payload = "zip stored data";
+    static const char *name = "f.txt";
+    uint8_t arc[256];
+    uint32_t n = (uint32_t)strlen(payload), nl = (uint32_t)strlen(name);
+    uint32_t crc, lfh = 0, cd, eocd, len;
+    MemIO m;
+    UncIO io;
+    UncAlloc al;
+    UncSink sk;
+    CapSink cap;
+
+    memset(arc, 0, sizeof arc);
+    crc = unc_crc32(0xFFFFFFFFu, (const uint8_t *)payload, (int32_t)n)
+          ^ 0xFFFFFFFFu;
+
+    /* local file header */
+    memcpy(arc, "PK\x03\x04", 4);
+    arc[4] = 20;
+    put32le(arc + 14, crc);
+    put32le(arc + 18, n);
+    put32le(arc + 22, n);
+    arc[26] = (uint8_t)nl;
+    memcpy(arc + 30, name, nl);
+    memcpy(arc + 30 + nl, payload, n);
+    cd = 30 + nl + n;
+
+    memcpy(arc + cd, "PK\x01\x02", 4);
+    put32le(arc + cd + 16, crc);
+    put32le(arc + cd + 20, n);
+    put32le(arc + cd + 24, n);
+    arc[cd + 28] = (uint8_t)nl;
+    put32le(arc + cd + 42, lfh);
+    memcpy(arc + cd + 46, name, nl);
+    eocd = cd + 46 + nl;
+
+    memcpy(arc + eocd, "PK\x05\x06", 4);
+    arc[eocd + 8] = 1; arc[eocd + 10] = 1;       /* entry counts */
+    put32le(arc + eocd + 12, eocd - cd);         /* cd size */
+    put32le(arc + eocd + 16, cd);                /* cd offset */
+    len = eocd + 22;
+
+    test_make_memio(&io, &m, arc, len);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_ZIP);
+    test_make_alloc(&al);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_ZIP, &io, &sk, &al, NULL, NULL) == UNC_OK);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+    CHECK(cap.info[0].name_len == nl);
+    CHECK(cap.dlen[0] == n && memcmp(cap.data[0], payload, n) == 0);
+
+    /* Unknown method -> clean per-entry unsupported. */
+    arc[cd + 10] = 99;
+    test_make_memio(&io, &m, arc, len);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_ZIP, &io, &sk, &al, NULL, NULL) == UNC_OK);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_ERR_UNSUPPORTED);
+    arc[cd + 10] = 0;
+}
+
 void run_format_tests(void)
 {
     test_macbinary();
@@ -592,4 +754,7 @@ void run_format_tests(void)
     test_canon();
     test_cpt();
     test_sit();
+    test_gzip();
+    test_tar();
+    test_zip();
 }

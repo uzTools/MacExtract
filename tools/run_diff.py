@@ -27,8 +27,10 @@ IMPLEMENTED = {
     "Compact Pro": "Compact Pro",          # M4
     "StuffIt": "StuffIt",                  # M5/M6
     "StuffIt 5": "StuffIt 5",              # M7
-    # "Zip": "Zip", "gzip": "Gzip",        # M8
-    # "Tar": "Tar", "Compress": "Unix compress",
+    "Zip": "Zip",                          # M8
+    "Gzip": "Gzip",
+    "Tar": "Tar",
+    "Compress": "Unix compress",
 }
 
 

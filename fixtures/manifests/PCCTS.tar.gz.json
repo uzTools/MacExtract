@@ -1,0 +1,16 @@
+{
+ "entries": [
+  {
+   "data_sha256": "d1457236fa0361b88edeec1be61e598b0144a6db9053f7166efce29df19ae075",
+   "data_size": 286720,
+   "name": "PCCTS.tar",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  }
+ ],
+ "fixture": "PCCTS.tar.gz",
+ "format": "Gzip",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "7174d13afe287ff7c6f28affa70b78c3679fa5171fe5a63b051b2cf91efb184a",
+ "size": 63807
+}

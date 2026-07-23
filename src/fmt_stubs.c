@@ -16,16 +16,6 @@
 #define UNC_STUB_EXTRACT(fn) \
     int fn(UncCtx *c) { (void)c; return UNC_ERR_UNSUPPORTED; }
 
-/* M8 */
-UNC_STUB_PROBE(unc_zip_probe)
-UNC_STUB_EXTRACT(unc_zip_extract)
-UNC_STUB_PROBE(unc_gzip_probe)
-UNC_STUB_EXTRACT(unc_gzip_extract)
-UNC_STUB_PROBE(unc_compressz_probe)
-UNC_STUB_EXTRACT(unc_compressz_extract)
-UNC_STUB_PROBE(unc_tar_probe)
-UNC_STUB_EXTRACT(unc_tar_extract)
-
 /* Detect-only */
 UNC_STUB_PROBE(unc_sitx_probe)
 int unc_diskcopy_probe(const uint8_t *h, int32_t l, UncIO *io)

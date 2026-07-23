@@ -1,0 +1,16 @@
+{
+ "entries": [
+  {
+   "data_sha256": "4ffe34b9e63d1f0d7ffc8e731ea38f9145f28256bcd2052743d3be68d228c2e1",
+   "data_size": 73728,
+   "name": "a2ps.V4.3.tar",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  }
+ ],
+ "fixture": "a2ps.V4.3.tar.Z",
+ "format": "Compress",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "2a5121c2fc9329533b7ba08bb56d1ec18a0e44a3a110932ba8f57c3a159c9147",
+ "size": 30255
+}

@@ -1,0 +1,16 @@
+{
+ "entries": [
+  {
+   "data_sha256": "cc1e1a08902653bf2885af00e8090f55d977469be9adda4e6391eb667d79caae",
+   "data_size": 174080,
+   "name": "popper-1.7.tar",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  }
+ ],
+ "fixture": "popper-1.7.tar.Z",
+ "format": "Compress",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "8a914d24bfdcf507ec1dc8c2f4ad58ad8f8a25a075792aaaba3b3997d1b9b349",
+ "size": 59323
+}

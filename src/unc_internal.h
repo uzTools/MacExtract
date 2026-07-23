@@ -310,6 +310,17 @@ int unc_sit_decode_fork(UncCtx *c, UncFork fork, uint32_t at,
 /* Arsenic (method 15) core, in sit_arsenic.c. */
 int unc_arsenic_decode(UncBufIn *in, UncAlloc *al, uint32_t outlen,
                        int (*put)(void *ctx, uint8_t b), void *pctx);
+
+/* Raw-deflate decode via vendored zlib (unc_inflate.c). Decodes one
+ * complete deflate stream from `in`, leaving the reader positioned on
+ * the first byte after it. maxout: expected output size cap, or
+ * UNC_SIZE_UNKNOWN. *crc (if non-NULL) is updated as CRC-32 over the
+ * output. Output chunks go to emit(). */
+int unc_inflate_raw(UncBufIn *in, UncAlloc *al,
+                    uint8_t *obuf, uint32_t ocap,
+                    uint32_t maxout, uint32_t *produced, uint32_t *crc,
+                    int (*emit)(void *ctx, const uint8_t *p, int32_t n),
+                    void *ectx);
 int unc_sit5_probe(const uint8_t *head, int32_t len);
 int unc_sit5_extract(UncCtx *c);
 int unc_zip_probe(const uint8_t *head, int32_t len);

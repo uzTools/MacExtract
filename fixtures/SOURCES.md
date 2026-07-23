@@ -9,13 +9,17 @@ Each line records how to re-fetch one. Use `tools/harvest.py --restore`.
 | 25thSquare102.cpt | 270c9f7827ccf3fca3dddf5cd6b66e9118fe972196b104e7d9c8692b8d1d53b7 | 79232 | http://www.nic.funet.fi/pub/mac/games/25thSquare102.cpt |
 | 3d-terrain-modeling-017.hqx | 0cbcf4293e5ae055fb8ddc0cf14e7316cd1de25010679aaba6763556b099fb21 | 224099 | http://www.nic.funet.fi/index/info-mac/sci/3d-terrain-modeling-017.hqx |
 | 3d_windows.sea.bin | 20b67325eac7d8e3943af5c1c1034a86b513d1f717b1dbb348c7ad8f4111ddf5 | 21760 | http://www.nic.funet.fi/pub/mac/extension/3d_windows.sea.bin |
+| 4acalc.zip | af4577079f8c07cd50ad4f97ab5553db01cda2b7e490c1411f855d82f993fd73 | 10422 | http://www.nic.funet.fi/pub/msdos/windows/util/4acalc.zip |
+| 4alnch11.zip | 8c1706562eeab887a29d76c795dadd893e9f4c0f50ab7be55e7772712ab519dd | 41702 | http://www.nic.funet.fi/pub/msdos/windows/util/4alnch11.zip |
 | 606updateinit.bin | 0f3c22b8216966afc30b17659b923b19076e37251371e402aba259864af2cd5d | 887 | http://www.nic.funet.fi/pub/mac/init/606updateinit.bin |
 | 800saywhat-301-jp.hqx | 00dfbc3f9405caa2fc46e4a515568c5ec5c5adc9ea0cbecb42f33ffa7bcde9b9 | 123700 | http://www.nic.funet.fi/index/info-mac/info/800saywhat-301-jp.hqx |
 | ACInfo_Comm.sit.bin | e6b0745c08f0a10c07634f70533ea6829b32fe61e694dd6eade2ea5e8e75ef8d | 159360 | http://www.nic.funet.fi/pub/mac/comm/ACInfo_Comm.sit.bin |
 | IIfxserialswitch.bin | 6180632670c941bf1f5576c0d707b3998f0dd819f2fd2edd2c8210d7e5f98f6b | 3180 | http://www.nic.funet.fi/pub/mac/cdev/IIfxserialswitch.bin |
+| PCCTS.tar.gz | 7174d13afe287ff7c6f28affa70b78c3679fa5171fe5a63b051b2cf91efb184a | 63807 | http://www.nic.funet.fi/pub/unix/tools/PCCTS.tar.gz |
 | Player-Pro410.sit.bin | 27137daa4cb5984276961f3f636e7c6471945c9431b38a4d5ae41312e649a704 | 196608 | http://www.nic.funet.fi/pub/mac/sound/Player-Pro410.sit.bin |
 | Ultimate_Copland_1.1.sit.bin | a9f92aa7f9c761144b70e3744593c9c8c628dcdc4e5aec40f103597ea1f36681 | 154624 | http://www.nic.funet.fi/pub/mac/extension/Ultimate_Copland_1.1.sit.bin |
 | a2basic-09.hqx | d816141f402065424ee8564a963163abaeea9ae13b5b7ca71d54825b5729bf46 | 209212 | http://www.nic.funet.fi/index/info-mac/cmp/a2basic-09.hqx |
+| a2ps.V4.3.tar.Z | 2a5121c2fc9329533b7ba08bb56d1ec18a0e44a3a110932ba8f57c3a159c9147 | 30255 | http://www.nic.funet.fi/pub/unix/tools/a2ps.V4.3.tar.Z |
 | adobenumbers.sit | 23ab6b58f20071efda4d07cd33be20c513000610a056a0c1c9c6a22bf418dd2b | 9062 | http://www.nic.funet.fi/pub/mac/da/adobenumbers.sit |
 | afe-appleworks-msworks.hqx | 85e18bb2ed1774b399244bc8cca6227a005b77f46ccce2ced65f5ed2f27dd558 | 11004 | http://www.nic.funet.fi/index/info-mac/cmp/afe-appleworks-msworks.hqx |
 | afe-epsf-translator.hqx | 2f141192c3915771b1b57bf757532d46105f05368e24dd5c76113e973eaa6e45 | 33547 | http://www.nic.funet.fi/index/info-mac/cmp/afe-epsf-translator.hqx |
@@ -657,6 +661,7 @@ Each line records how to re-fetch one. Use `tools/harvest.py --restore`.
 | poly2.sit | 692f686d3549021f221634fd59193dc509d350a09d6c3cad63ad4c942799731c | 143488 | http://www.nic.funet.fi/pub/mac/games/poly2.sit |
 | polyglot.hqx | ad37186562a2bec7ac502603ea5c4c4e1154513a31c3670d6e4883310c2e4a3c | 110400 | http://www.nic.funet.fi/index/info-mac/dev/polyglot.hqx |
 | popchar110.cpt | d880df7c2617b181005a7bbdfd44a7305c44def6edfbf3b2de875da86ac83252 | 26880 | http://www.nic.funet.fi/pub/mac/cdev/popchar110.cpt |
+| popper-1.7.tar.Z | 8a914d24bfdcf507ec1dc8c2f4ad58ad8f8a25a075792aaaba3b3997d1b9b349 | 59323 | http://www.nic.funet.fi/pub/mac/comm/popper-1.7.tar.Z |
 | power-cm-10-jp.hqx | 0c8caae3af78cf3b24d9ec6acd2c679b1b67310998659d17cf25bbc32fdf9ac6 | 15764 | http://www.nic.funet.fi/index/info-mac/gui/power-cm-10-jp.hqx |
 | ppc-mac-prices.hqx | 37bf4bd6114fe1ab590b23c58c6e53c74f5c041919f05a895b146be81e7f0eb3 | 8304 | http://www.nic.funet.fi/index/info-mac/info/ppc-mac-prices.hqx |
 | ppc-press-releases-94-03-14.hqx | 2bc0fc2edf3bcef364cccc59e24616ae3295ab9fd68d4cc3e54c25e508f13d8b | 22024 | http://www.nic.funet.fi/index/info-mac/info/ppc-press-releases-94-03-14.hqx |
@@ -736,6 +741,13 @@ Each line records how to re-fetch one. Use `tools/harvest.py --restore`.
 | super-disk-utility.hqx | ee2806e14cd7faab4a82c01db40b4d2a46ea75b176e3acc48bb58ba0e3c321f3 | 27199 | http://www.nic.funet.fi/index/info-mac/cmp/super-disk-utility.hqx |
 | superboomerangfixer.cpt | a2cfb0018c8d9760d090ab00abc1aaec8aa671d3c702db26a0a83e179069807f | 5248 | http://www.nic.funet.fi/pub/mac/appl/superboomerangfixer.cpt |
 | swapmap.bin | 8961fd04be131f99e0483596613df4582d7c388d7139b6917a2fbb8a732c1966 | 1148 | http://www.nic.funet.fi/pub/mac/fkey/swapmap.bin |
+| synth-exo-Z.Z | f11f802daae22d9df385686b78cbd06026e1ff6ae0467ff7b6c803ee29204df5 | 488 | synthetic:tools/synth_exo.py --kind Z |
+| synth-exo-gz-named.gz | 06cf163df204ed7bb5a8d70af55316def25bd4b171cacf268125cea36ab266ea | 99 | synthetic:tools/synth_exo.py --kind gz-named |
+| synth-exo-gz.gz | 78773b077a911bfe6f73f2c83aab4062f9691d411f9b7a011a7be5bdab6d1498 | 81 | synthetic:tools/synth_exo.py --kind gz |
+| synth-exo-tar-Z.tar.Z | 34aa448a4b609264c4aa7a683c4c54ffcfa321b8ecbaa54a45d14df1901dfd88 | 5465 | synthetic:tools/synth_exo.py --kind tar-Z |
+| synth-exo-tar.tar | 964880c4f1f66495fad65f67d8e948a86dd55c64854d94b6a287754e4b7e865d | 20480 | synthetic:tools/synth_exo.py --kind tar |
+| synth-exo-zip-deflate.zip | 7b6dcc8cd9d64e25b771d13049c12b8f04a24f4464d9578b178006d89918f179 | 3709 | synthetic:tools/synth_exo.py --kind zip-deflate |
+| synth-exo-zip-store.zip | 2902496bae5852f8be45dcdc4c7f191166327a87f584deba6193f0d027834c43 | 8384 | synthetic:tools/synth_exo.py --kind zip-store |
 | synth-packit-1.pit | 97e30f742867f12346937fae54cb9b274328602a5a9ee6801810e5e004183879 | 3385 | synthetic:tools/synth_pit.py --seed 1 |
 | synth-packit-2.pit | 8c9fbb2e5a777c11937624ed5ed6885c59b730d27d8092a9dc7a9c0f6d877f7a | 3367 | synthetic:tools/synth_pit.py --seed 2 |
 | synth-packit-3.pit | 3102287e41ab3fa714b8a2a0a62e00319773b95f7333f169dbb7769c1e5c35f5 | 3381 | synthetic:tools/synth_pit.py --seed 3 |

@@ -223,3 +223,33 @@ Non-obvious decisions, most recent last.
 - **No synthetic Arsenic unit fixture:** producing one would require
   writing an arithmetic *encoder*; coverage comes from 31 real SIT5
   fixtures plus their 310 corruption variants.
+
+## M8
+
+- **zlib 1.3.1 vendored unmodified** (inflate subset only) into
+  third_party/zlib; allocation is routed through UncAlloc via
+  z_stream zalloc/zfree, so the engine's no-libc rule holds. Raw mode
+  (-15): gzip/zip framing, CRCs and trailers are our own code.
+- **Synthetic exogenous fixtures are encoded by independent reference
+  implementations** — Info-ZIP zip, GNU gzip, GNU tar, ncompress —
+  which is stronger ground truth than hand-built streams
+  (tools/synth_exo.py; deterministic via TZ=UTC, fixed mtimes,
+  gzip -n, tar --sort/--owner/--group/--mtime, zip -X). Plus
+  real-world era files: PCCTS.tar.gz, popper-1.7.tar.Z,
+  a2ps.V4.3.tar.Z from funet.
+- **4acalc.zip / 4alnch11.zip (PKZIP 1.x, method Implode) stay
+  corpus-only:** even unar fails on them, so there is no oracle
+  manifest; they exercise our clean per-entry
+  "unsupported method" path and the robustness harness.
+- **gzip/.Z carry no entry name; unar derives it from the archive
+  filename (minus extension), ignoring even an embedded FNAME.** The
+  engine gained UncOptions.name_hint so frontends can supply the same
+  convention; content-only sniffing is unaffected.
+- **Zip is parsed from the central directory** (EOCD scanned in the
+  last 66,000 bytes), with per-entry data offsets taken from each
+  local header (their name/extra sizes can differ from the CD's).
+  Methods other than store/deflate and encrypted entries are clean
+  per-entry errors. zip64 is out of scope (HFS-era corpus).
+- **tar acceptance requires a valid header checksum** (unsigned, or
+  signed for old GNU tars); link/device/GNU-extension entries are
+  reported per-entry as unsupported rather than silently skipped.

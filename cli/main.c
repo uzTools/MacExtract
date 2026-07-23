@@ -469,6 +469,18 @@ int main(int argc, char **argv)
         return 1;
     }
 
+    /* Name hint for name-less formats (gzip, .Z): archive basename
+     * minus its last extension, unar-style. */
+    {
+        const char *base = strrchr(file, '/');
+        const char *dot;
+        base = base ? base + 1 : file;
+        dot = strrchr(base, '.');
+        opt.name_hint = (const uint8_t *)base;
+        opt.name_hint_len = (uint16_t)(dot && dot != base ? (size_t)(dot - base)
+                                                          : strlen(base));
+    }
+
     if (strcmp(cmd, "l") == 0) {
         opt.list_only = 1;
         sink.list_only = 1;

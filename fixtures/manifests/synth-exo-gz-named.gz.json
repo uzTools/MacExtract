@@ -1,0 +1,16 @@
+{
+ "entries": [
+  {
+   "data_sha256": "debe473cfdd9d005111e7bda9630ff4d760f7aff4423ebf63f3448504fccbfac",
+   "data_size": 2200,
+   "name": "synth-exo-gz-named",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  }
+ ],
+ "fixture": "synth-exo-gz-named.gz",
+ "format": "Gzip",
+ "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "sha256": "06cf163df204ed7bb5a8d70af55316def25bd4b171cacf268125cea36ab266ea",
+ "size": 99
+}

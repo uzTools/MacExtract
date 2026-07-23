@@ -187,6 +187,12 @@ typedef struct UncOptions {
     uint8_t list_only;
     /* If nonzero: verify CRCs by decoding but discard output. */
     uint8_t test_only;
+    /* Fallback entry name for formats that store none (gzip, .Z):
+     * conventionally the archive filename minus its last extension
+     * (what unar does). May be NULL; the engine then emits an empty
+     * name. Raw bytes, not necessarily NUL-terminated. */
+    const uint8_t *name_hint;
+    uint16_t       name_hint_len;
 } UncOptions;
 
 /* ------------------------------------------------------------------ */
