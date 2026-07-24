@@ -45,12 +45,18 @@ resource 'DITL' (130, purgeable) {
     }
 };
 
-/* MultiFinder/System 7 friendliness; System 6 Finder ignores it. */
+/* MultiFinder/System 7 friendliness; System 6 Finder ignores it (there the
+ * app just gets all free RAM). Preferred 4 MB lets the engine use a large
+ * runtime budget on a roomy machine (Arsenic/SIT5 needs ~2.6 MB); minimum
+ * 400 KB still launches on a small Mac, where big blocks fail per-entry
+ * ("block too large for memory budget") rather than refusing to run. The
+ * actual budget is derived at runtime from FreeMem(), so ONE binary adapts
+ * from a 1 MB Plus to a G3. */
 resource 'SIZE' (-1) {
     reserved, acceptSuspendResumeEvents, reserved,
     canBackground, doesActivateOnFGSwitch, backgroundAndForeground,
     dontGetFrontClicks, ignoreChildDiedEvents, not32BitCompatible,
     notHighLevelEventAware, onlyLocalHLEvents, notStationeryAware,
     dontUseTextEditServices, reserved, reserved, reserved,
-    768 * 1024, 512 * 1024
+    4096 * 1024, 400 * 1024
 };

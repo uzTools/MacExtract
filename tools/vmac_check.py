@@ -48,8 +48,13 @@ def expected_aggregate(manifest_path):
                        capture_output=True, timeout=180)
         nfiles = sdc = sdl = src = srl = 0
         for root, _d, files in os.walk(tmp):
+            fileset = set(files)
             for f in files:
-                if f.endswith(".rsrc"):
+                # A "<X>.rsrc" is the CLI's resource sidecar for data file <X>
+                # ONLY if <X> also exists here; otherwise it's an archive entry
+                # whose own name ends in ".rsrc" (a real data file — e.g.
+                # RWasm.rsrc). Getting this wrong miscounts and mis-CRCs.
+                if f.endswith(".rsrc") and f[:-5] in fileset:
                     continue
                 p = os.path.join(root, f)
                 data = open(p, "rb").read()
@@ -72,7 +77,18 @@ def main():
         print("FAIL: no valid result grid on screen (app bombed or miscalibrated)")
         return 1
     nfiles, ret, errors, sdc, sdl, src, srl, peak = got
+    ret_s = ret - (1 << 32) if ret >= (1 << 31) else ret   # signed
     enf, esdc, esdl, esrc, esrl = expected_aggregate(manifest)
+
+    # A detect-only or otherwise-unsupported format yields 0 files from the
+    # SAME engine's Linux CLI. Then the only correct behaviour on the Mac is to
+    # also extract nothing — consistent refusal, not a byte match.
+    if enf == 0:
+        ok = (nfiles == 0)
+        tag = "PASS" if ok else "FAIL"
+        print(f"{tag} (unsupported by engine): Mac nfiles={nfiles} ret={ret_s}, "
+              f"CLI nfiles=0; peak {peak/1024.0:.1f} KB")
+        return 0 if ok else 1
 
     checks = [
         ("nfiles", nfiles, enf),

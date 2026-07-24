@@ -49,7 +49,10 @@ gcc -std=gnu99 -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all \
     tests/mac_sink_test.c src/*.c third_party/zlib/*.c -o build/mac_sink_asan
 verify ./build/mac_sink_asan
 verify ./build/mac_sink_asan ram   # exercise the Mac app's RAM-slurp/xio_* path
-echo "mac-sink: native OK (file + RAM paths)"
+# Cmd-. / per-entry-error cleanup: sink_end must delete the file an aborted
+# entry created in sink_begin (no partial output left behind).
+./build/mac_sink_asan --cancel "$(mktemp -d)" || { echo "mac-sink: cancel-cleanup FAILED"; exit 1; }
+echo "mac-sink: native OK (file + RAM paths + cancel cleanup)"
 
 echo "mac-sink: native x86-64, two-fork single-shared-block staging path"
 gcc -std=gnu99 -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all \

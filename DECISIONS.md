@@ -422,3 +422,43 @@ BLOCKERS.md for the full write-up. Key decisions:
   out byte-exact except offsets 16–127 ("reserved for system use"),
   which a real Mac's Resource Manager stamps per machine/session. The
   Mini vMac autotest treats an all-in-16..127 diff as a pass.
+
+## M10 (real Mini vMac) — the decisions that actually made it run
+
+- **The Mac never ran because Retro68's HOpen glue is broken on System 6.**
+  `HOpen()` returns `noErr` but never writes back the file refNum, so
+  `GetEOF`/`FSRead` then operate on garbage: the archive slurps as 0 bytes and
+  the whole extraction fails as `UNC_ERR_FORMAT`, silently. `HOpenDF` returns
+  `paramErr`. This was invisible off-Mac — the qemu mock calls the sink
+  directly and never touches the glue. **Fix:** drive the File Manager through
+  explicit HFS param blocks (`PBHOpenSync`/`PBHOpenRFSync`/`PBHCreateSync`/
+  `PBHDeleteSync`) via `MyOpenFork`/`MyHCreate`/`MyHDelete`, reading back
+  `pb.ioParam.ioRefNum` ourselves. This unblocked EVERYTHING; the earlier
+  "two-fork crash" investigation was all confounded by it (see BLOCKERS.md).
+- **On-screen result channel, not disk.** Mini vMac's write-back of a mounted
+  image to its host file is lazy and PARTIAL (commits one fork but not the
+  other), so the autotest can't be read off the Out volume. Instead the app
+  CRC-32s both forks on-Mac (resource fork with the OS-stamped reserved header
+  16..127 masked) and paints an 8-value aggregate straight to the framebuffer
+  (`qd.screenBits`, `at_report`); the host decodes a screenshot
+  (`tools/decode_grid.py` + `tools/vmac_check.py`, referenced against
+  `unclassic x -nr`). QuickDraw (NewWindow/EraseRect) bombs after any File
+  Manager activity, so the framebuffer poke is deliberate; `HideCursor()` first
+  so the cursor's saved background can't stamp the desktop over the grid.
+- **Arsenic block sizes are 128 KB (dominant) / 256 KB / 512 KB, not "always
+  512 KB".** Measured via `unclassic x --stats` across the 31-fixture SIT5
+  corpus: 14 use 128 KB, 9 use 256 KB, 8 use 512 KB; peak heap ≈ 5× block =
+  0.64–2.6 MB. Every Arsenic entry exceeds 400 KB, so Arsenic is a ≥4 MB-machine
+  tier — works on a 4 MB 68000, refuses cleanly on a 1 MB Plus. FORMATS.md
+  updated (an earlier note wrongly claimed 512 KB was universal).
+- **'SIZE' resource: 4 MB preferred / 400 KB minimum.** The engine budget is
+  already derived at runtime from `FreeMem()`, so one binary adapts from a
+  1 MB Plus (small files only) to a G3. On System 6 without MultiFinder the
+  SIZE is ignored and the app gets all free RAM anyway.
+- **Cancel/error removes the partial file.** An entry creates its file in
+  `sink_begin` before decoding; on a Cmd-. cancel or per-entry failure
+  `sink_end` now `MyHDelete`s it, so no empty/incomplete output is left behind.
+- **DiskCopy 4.2 stays detect-not-implemented.** No reference is available
+  offline (XADMaster has no DiskCopy parser, reference/notes has no page, the
+  network is refused), and rule #3 forbids inventing the magic/header from
+  memory. The `UNC_FORMAT_DISKCOPY` name exists; the probe never matches.

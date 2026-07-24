@@ -32,5 +32,15 @@ target_compile_options(unclassic PRIVATE -mcpu=68000 -Os -Wno-multichar
                        # UNC_MAC_AUTOTEST builds a headless self-driving variant
                        # (no SFGetFile/alerts) used by the Mini vMac harness in
                        # tools/; see MANUAL_TESTS.md. Normal builds omit it.
-                       $<$<BOOL:$ENV{UNC_MAC_AUTOTEST}>:-DUNC_MAC_AUTOTEST>)
+                       $<$<BOOL:$ENV{UNC_MAC_AUTOTEST}>:-DUNC_MAC_AUTOTEST>
+                       # UNC_AT_META: autotest reports the first file's on-Mac
+                       # type/creator/Finder-flags instead of the CRC aggregate
+                       # (the "launches by double-click" E2E check).
+                       $<$<BOOL:$ENV{UNC_AT_META}>:-DUNC_AT_META>
+                       # UNC_AT_SEPARATE_BLOCKS: force the two-separate-NewPtr
+                       # staging path (re-tests the old "3 blocks bomb" claim).
+                       $<$<BOOL:$ENV{UNC_AT_SEPARATE_BLOCKS}>:-DUNC_AT_SEPARATE_BLOCKS>
+                       # UNC_AT_NOCRC: skip the on-Mac fork read-back (isolate a
+                       # write-path crash from a read-back crash).
+                       $<$<BOOL:$ENV{UNC_AT_NOCRC}>:-DUNC_AT_NOCRC>)
 target_link_options(unclassic PRIVATE -Wl,-gc-sections)

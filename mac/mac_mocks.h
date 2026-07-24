@@ -118,6 +118,7 @@ OSErr HOpenRF(short vref, long dir, ConstStr255Param name, SignedByte perm, shor
 OSErr PBHOpenSync(HParamBlockRec *pb);
 OSErr PBHOpenRFSync(HParamBlockRec *pb);
 OSErr PBHCreateSync(HParamBlockRec *pb);
+OSErr PBHDeleteSync(HParamBlockRec *pb);
 OSErr FSRead(short ref, long *count, void *buf);
 OSErr FSWrite(short ref, long *count, const void *buf);
 OSErr FSClose(short ref);

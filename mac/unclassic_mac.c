@@ -400,6 +400,19 @@ static OSErr MyHCreate(short vol, long dir, ConstStr255Param name)
     return PBHCreateSync(&pb);
 }
 
+/* Delete a file — used to remove the partial output of an entry that was
+ * cancelled or failed (the file was created in sink_begin before decoding). */
+static OSErr MyHDelete(short vol, long dir, ConstStr255Param name)
+{
+    HParamBlockRec pb;
+    long z;
+    for (z = 0; z < (long)sizeof pb; z++) ((char *)&pb)[z] = 0;
+    pb.ioParam.ioNamePtr = (StringPtr)name;
+    pb.ioParam.ioVRefNum = vol;
+    pb.fileParam.ioDirID = dir;
+    return PBHDeleteSync(&pb);
+}
+
 static int sink_begin(void *ctx, const UncEntryInfo *info)
 {
     MacSink *s = (MacSink *)ctx;
@@ -450,18 +463,16 @@ static int sink_begin(void *ctx, const UncEntryInfo *info)
         /* The single-shared-block path is the real Mac path; UNC_SINK_TEST
          * normally uses per-fork blocks, but UNC_MAC_FORCE_SHAREBUF forces
          * the shared path so the mock can prove it byte-exact too. */
-#if !defined(UNC_SINK_TEST) || defined(UNC_MAC_FORCE_SHAREBUF)
-        /* CRITICAL for the real Mac: staging both forks of one file in TWO
-         * separate NewPtr blocks (a third non-relocatable block alongside
-         * the archive buffer) corrupts System 6's Memory Manager and crashes
-         * the app with a bad-opcode system error — even though the identical
-         * logic is byte-exact under ASan and qemu-m68k, and a single-fork
-         * file (two blocks total) is flawless. So when both fork sizes are
-         * known, hold BOTH forks in ONE contiguous block (data region then
-         * resource region): total block count stays at two, exactly like the
-         * working single-fork case. If a size is unknown (can't pre-size a
-         * shared block), fall back to keeping only the larger fork. See
-         * BLOCKERS.md. Mock/Linux builds (no bug) always use per-fork blocks. */
+#if (!defined(UNC_SINK_TEST) || defined(UNC_MAC_FORCE_SHAREBUF)) && !defined(UNC_AT_SEPARATE_BLOCKS)
+        /* Stage both forks of one file in ONE contiguous block (data region
+         * then resource region). This is retained as marginally more
+         * heap-friendly (one fewer non-relocatable block beside the archive
+         * buffer), NOT because separate blocks fail: the old belief that two
+         * separate NewPtr staging blocks bomb System 6's Memory Manager was a
+         * confound of the broken HOpen glue that made every open fail (see
+         * BLOCKERS.md). With that fixed, UNC_AT_SEPARATE_BLOCKS forces two
+         * separate blocks and a two-fork file still extracts byte-exact on a
+         * real Mac. Mock/Linux builds use per-fork blocks. */
         if (dgood && rgood) {
             long total = (long)info->data_size + (long)info->rsrc_size;
             Ptr block = NewPtr(total);
@@ -612,10 +623,14 @@ static int sink_end(void *ctx, int status)
             pb.hFileInfo.ioDirID = s->curDirID;  /* PBGetCatInfo clobbers it */
             PBSetCatInfoSync(&pb);
         }
-    }
 #ifdef UNC_MAC_AUTOTEST
-    if (!s->cur.is_dir) unc_at_record(s->vRefNum, s->curDirID, s->curName);
+        unc_at_record(s->vRefNum, s->curDirID, s->curName);   /* success only */
 #endif
+    } else if (!s->cur.is_dir) {
+        /* Cancelled or failed: remove the empty/partial file this entry
+         * created in sink_begin, so no incomplete output is left behind. */
+        MyHDelete(s->vRefNum, s->curDirID, s->curName);
+    }
     if (status != UNC_OK) s->errors++;
     return 0;
 }
@@ -920,8 +935,10 @@ int main(void)
         int e;
         for (e = 0; e < gATnrec; e++) {
             uint32_t dc = 0, rc = 0; long dl = 0, rl = 0;
+#ifndef UNC_AT_NOCRC   /* skip the read-back to isolate write vs read crashes */
             at_fork_crc(outVol, gATrec[e].dir, gATrec[e].name, 0, &dc, &dl);
             at_fork_crc(outVol, gATrec[e].dir, gATrec[e].name, 1, &rc, &rl);
+#endif
             sumDataCRC += dc; totalDataLen += dl;
             sumRsrcCRC += rc; totalRsrcLen += rl;
         }
@@ -933,6 +950,25 @@ int main(void)
         vals[5] = sumRsrcCRC;
         vals[6] = (uint32_t)totalRsrcLen;
         vals[7] = (uint32_t)gPeakUsage;
+#ifdef UNC_AT_META
+        /* E2E "launches by double-click" check: overwrite errors/CRC slots with
+         * the first file's on-Mac Finder info — should be the archive's
+         * type/creator with the inited bit (0x0100) CLEARED, which is exactly
+         * what makes the Finder treat an extracted APPL as launchable. */
+        if (gATnrec > 0) {
+            CInfoPBRec pb; Str63 nm;
+            BlockMoveData(gATrec[0].name, nm, gATrec[0].name[0] + 1);
+            pb.hFileInfo.ioNamePtr = nm;
+            pb.hFileInfo.ioVRefNum = outVol;
+            pb.hFileInfo.ioDirID = gATrec[0].dir;
+            pb.hFileInfo.ioFDirIndex = 0;
+            if (PBGetCatInfoSync(&pb) == noErr) {
+                vals[2] = (uint32_t)pb.hFileInfo.ioFlFndrInfo.fdType;
+                vals[3] = (uint32_t)pb.hFileInfo.ioFlFndrInfo.fdCreator;
+                vals[4] = (uint32_t)(uint16_t)pb.hFileInfo.ioFlFndrInfo.fdFlags;
+            }
+        }
+#endif
         at_report(vals, 8);
     }
     (void)entries;

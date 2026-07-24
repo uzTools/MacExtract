@@ -125,6 +125,14 @@ OSErr PBHCreateSync(HParamBlockRec *pb)
     close(fd);
     return noErr;
 }
+OSErr PBHDeleteSync(HParamBlockRec *pb)
+{
+    char path[800], rpath[820];
+    full_path(pb->fileParam.ioDirID, pb->ioParam.ioNamePtr, path, sizeof path);
+    snprintf(rpath, sizeof rpath, "%s.rsrc", path);
+    unlink(rpath);                     /* resource-fork sidecar, if any */
+    return unlink(path) == 0 ? noErr : fnfErr;
+}
 
 OSErr FSRead(short ref, long *count, void *buf)
 {
@@ -221,6 +229,28 @@ int main(int argc, char **argv)
     struct stat st;
     int ret;
 
+    if (argc >= 2 && strcmp(argv[1], "--cancel") == 0) {
+        /* Cmd-. / per-entry error cleanup: an entry creates its file in
+         * sink_begin (before decoding); on a cancel or failure sink_end must
+         * delete it so no empty/partial output is left behind. */
+        MacSink s; UncEntryInfo info; char path[900];
+        int made, gone;
+        snprintf(gOutDir, sizeof gOutDir, "%s", argc >= 3 ? argv[2] : "/tmp/cancel_out");
+        mkdir(gOutDir, 0755);
+        snprintf(gDirs[0], sizeof gDirs[0], "%s", gOutDir);
+        memset(&s, 0, sizeof s); s.vRefNum = 1; s.rootDirID = 0;
+        memset(&info, 0, sizeof info);
+        memcpy(info.name, "canceltest", 10); info.name_len = 10;
+        info.data_size = 100; info.rsrc_size = 0; info.is_dir = 0;
+        sink_begin(&s, &info);
+        snprintf(path, sizeof path, "%s/canceltest", gOutDir);
+        made = (access(path, F_OK) == 0);
+        sink_end(&s, UNC_ERR_ABORTED);
+        gone = (access(path, F_OK) != 0);
+        fprintf(stderr, "cancel-cleanup: file_created=%d removed_on_abort=%d\n",
+                made, gone);
+        return (made && gone) ? 0 : 1;
+    }
     if (argc < 3) { fprintf(stderr, "usage: %s <archive> <outdir>\n", argv[0]); return 2; }
     snprintf(gOutDir, sizeof gOutDir, "%s", argv[2]);
     mkdir(gOutDir, 0755);

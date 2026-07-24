@@ -1,34 +1,37 @@
 # MANUAL_TESTS.md — Macintosh application checklist
 
-NOTE (2026-07-23): the shell runs under Mini vMac (System 6.0.8, Mac
-Plus, 4 MB) and now **extracts single-fork files correctly** — data
-forks byte-exact, resource forks byte-exact except the OS-stamped
-"reserved for system use" header (offsets 16–127), with type/creator/
-dates set. See BLOCKERS.md for the write-path root causes that were
-fixed (`mio_seek` eofErr; RAM-slurping the archive to avoid read/write
-interleave on one HFS volume; and staging both forks of a two-fork file
-in ONE shared block — three separate NewPtr staging blocks bomb System
-6's Memory Manager, two blocks are fine). Two-fork files now extract
-without crashing, both forks byte-exact (proven off-Mac via
-`UNC_MAC_FORCE_SHAREBUF` in `tests/run_mac_sink.sh`). The interactive
-checklist below is still the gate for the full UI (SFGetFile, progress
-dialog, Cancel).
+NOTE (2026-07-24): the shell runs under Mini vMac (System 6.0.8, 4 MB
+Mac Plus, a true 68000) and **extracts correctly — single-fork,
+two-fork, and multi-file — with both forks verified byte-exact ON THE
+MAC ITSELF** (40/44 corpus fixtures across all twelve formats; the other
+four are the largest and merely slow on the 68000). Data forks match
+exactly; resource forks match except the OS-stamped "reserved for system
+use" header (offsets 16–127); type/creator and the cleared inited flag
+are confirmed on-Mac so an extracted `APPL` launches by double-click.
+The real root cause of the long saga was a **broken Retro68 `HOpen`
+glue** (returns noErr but never sets the refNum) — see BLOCKERS.md; fixed
+by driving the File Manager through explicit HFS param blocks. The
+interactive app was driven under Mini vMac up to **SFGetFile** (launches,
+shows the picker, lists the archive — captured); the full modal
+click-through (Open → progress → result; Cancel) is the checklist below.
 
 ### Automated regression harness (Linux, no interaction)
 - `sh tests/run_mac_sink.sh` (in `ci.sh`): runs the ACTUAL sink through a
   mock Toolbox against the engine, byte-exact vs. the oracle manifests,
-  natively (ASan+UBSan) and under `qemu-m68k` — both the file-backed IO
-  path and the RAM-slurp `xio_*` path (`ram` mode). This is the
-  authoritative proof of the sink logic on the target word size/endian.
-- A headless Mini vMac harness (build with `-DUNC_MAC_AUTOTEST`) drives
-  the real System 6 File Manager: it finds a "Test" HFS volume, extracts
-  `:archive.sit` into it, writes a `DONE` marker (forces the volume
-  commit before the emulator is killed), and idles. The host then mounts
-  the image with `hfsutils` and diffs the forks with
-  `tools/verify_forks.py` / `tools/analyze_forks.py` (an all-in-16..127
-  resource-fork diff counts as a pass — see above). Use a **pristine**
-  boot image per run: repeated boot+kill cycles corrupt it, and a
-  first-boot Desktop rebuild is slow enough to throw off UI timing.
+  natively (ASan+UBSan) and under `qemu-m68k` — the file-backed IO path,
+  the RAM-slurp `xio_*` path, the shared-block two-fork path, AND the
+  Cmd-. cancel cleanup (`--cancel`). Authoritative proof of the sink
+  logic on the target word size/endian.
+- The on-Mac autotest (build with `-DUNC_MAC_AUTOTEST`) drives the real
+  System 6 File Manager: it finds HFS volumes "In"/"Out", extracts
+  `In:archive.sit` onto Out, reads both forks back through the File
+  Manager, CRC-32s them, and **paints the result to the framebuffer**
+  (Mini vMac's disk write-back is too lazy/partial to read off the Out
+  volume). The host decodes a screenshot (`tools/decode_grid.py`) and
+  cross-checks against the Linux engine (`tools/vmac_check.py`). Use a
+  **pristine** boot image per run, and boot the emulator as a child of a
+  long-running process (a launcher that backgrounds it and exits takes it
+  down via SIGHUP — a dead X window reads as a false "black-screen crash").
 
 Before calling the interactive app working, run this checklist in each
 environment. Do not skip the System 6 / Mac Plus column — that is the
