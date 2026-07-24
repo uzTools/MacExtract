@@ -34,9 +34,12 @@ detected by content (never by filename) and unwrapped automatically.
 | Robustness (truncated/bit-flipped) | ✅ clean per-entry errors, no crash/hang/sanitizer trip | shares the same engine |
 | Interactive UI | — | SFGetFile → progress dialog (Cancel / Cmd-.) → result alert; Cmd-. removes partial output |
 
-**Runs on a 1 MB Mac Plus (the floor target)** for everything **except
-StuffIt 5 / Arsenic**, whose BWT blocks need 0.64–2.6 MB and so require a
-~4 MB machine — they fail cleanly per entry on 1 MB rather than crashing.
+On-Mac verification ran under Mini vMac configured as a **4 MB** Mac Plus.
+By the measured per-fixture peak heap, it **runs on the 1 MB Mac Plus floor
+target** for everything **except StuffIt 5 / Arsenic**, whose BWT blocks need
+0.64–2.6 MB and so require a ~4 MB machine — they fail cleanly per entry on
+1 MB rather than crashing (the M9 `--budget 400 KB` corpus run exercises that
+refusal path). A real 1 MB-emulator pass is a manual test (MANUAL_TESTS.md).
 The engine derives its memory budget from `FreeMem()` at runtime (and a
 `SIZE` resource of 4 MB preferred / 400 KB minimum), so one binary adapts
 from a Plus to a G3. Get the app onto a bare Mac with the bootstrap
