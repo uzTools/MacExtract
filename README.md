@@ -25,6 +25,29 @@ raw bytes), along with type/creator codes, Finder flags and dates in
 listings. Nested envelopes — `.sit.hqx`, `.cpt.bin`, `.tar.Z` — are
 detected by content (never by filename) and unwrapped automatically.
 
+## Status — v0.1 (honest capability matrix)
+
+| | Linux CLI | Mac app (System 6 → OS 9) |
+|---|---|---|
+| Extraction, all 12 formats | ✅ byte-exact vs `unar` (771 fixtures, both forks, in CI) | ✅ verified byte-exact **on real System 6.0.8 / 68000** (Mini vMac): 40/44 sampled fixtures across every format; the other 4 are the largest and merely slow on a 7 MHz 68000 |
+| Both forks + type/creator/dates | ✅ | ✅ (resource fork exact bar the OS-stamped reserved header 16–127; extracted `APPL` launches by double-click) |
+| Robustness (truncated/bit-flipped) | ✅ clean per-entry errors, no crash/hang/sanitizer trip | shares the same engine |
+| Interactive UI | — | SFGetFile → progress dialog (Cancel / Cmd-.) → result alert; Cmd-. removes partial output |
+
+**Runs on a 1 MB Mac Plus (the floor target)** for everything **except
+StuffIt 5 / Arsenic**, whose BWT blocks need 0.64–2.6 MB and so require a
+~4 MB machine — they fail cleanly per entry on 1 MB rather than crashing.
+The engine derives its memory budget from `FreeMem()` at runtime (and a
+`SIZE` resource of 4 MB preferred / 400 KB minimum), so one binary adapts
+from a Plus to a G3. Get the app onto a bare Mac with the bootstrap
+distribution — `tools/make_dist.sh` builds an uncompressed MacBinary and an
+800K disk image (a machine with no unarchiver can't open a `.sit`).
+
+**Detect-only** (v1 names but does not extract): StuffIt X, DiskDoubler,
+Now Compress, LZH. **Out of scope (v1):** compression, encrypted archives
+(detected → "unsupported, encrypted"), multi-segment archives (detected),
+disk images. DiskCopy 4.2 is named but not yet detected (no open reference).
+
 ## Building
 
 ```
