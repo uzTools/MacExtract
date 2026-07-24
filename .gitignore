@@ -12,4 +12,8 @@ fixtures/*
 
 # Reference material is fetched by tools/fetch_references.sh, not committed.
 reference/
+build-mac/
 build-mac-*/
+
+# Python bytecode
+tools/__pycache__/

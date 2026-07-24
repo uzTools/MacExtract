@@ -100,6 +100,32 @@ OSErr HOpen(short v, long d, ConstStr255Param n, SignedByte p, short *ref)
 OSErr HOpenRF(short v, long d, ConstStr255Param n, SignedByte p, short *ref)
 { (void)v; (void)p; return do_open(d, n, ".rsrc", ref); }
 
+/* Param-block File Manager calls — the real Mac shell uses these (the H-glue
+ * is broken on System 6); the mock exercises the same code path. */
+OSErr PBHOpenSync(HParamBlockRec *pb)
+{
+    short ref = 0;
+    OSErr e = do_open(pb->fileParam.ioDirID, pb->ioParam.ioNamePtr, NULL, &ref);
+    pb->ioParam.ioRefNum = ref;
+    return e;
+}
+OSErr PBHOpenRFSync(HParamBlockRec *pb)
+{
+    short ref = 0;
+    OSErr e = do_open(pb->fileParam.ioDirID, pb->ioParam.ioNamePtr, ".rsrc", &ref);
+    pb->ioParam.ioRefNum = ref;
+    return e;
+}
+OSErr PBHCreateSync(HParamBlockRec *pb)
+{
+    char path[800]; int fd;
+    full_path(pb->fileParam.ioDirID, pb->ioParam.ioNamePtr, path, sizeof path);
+    fd = open(path, O_CREAT | O_EXCL | O_WRONLY, 0644);
+    if (fd < 0) return dupFNErr;
+    close(fd);
+    return noErr;
+}
+
 OSErr FSRead(short ref, long *count, void *buf)
 {
     ssize_t r;

@@ -163,6 +163,8 @@ static uint32_t xio_size(void *ctx) { return ((MemIO *)ctx)->size; }
 
 typedef struct {
     long budget;    /* remaining bytes the engine may hold */
+    long initial;   /* starting budget (set at init) */
+    long lowmark;   /* lowest budget ever seen => peak = initial - lowmark */
 } MacAlloc;
 
 static void *mal_alloc(void *ctx, uint32_t size)
@@ -174,6 +176,7 @@ static void *mal_alloc(void *ctx, uint32_t size)
     if (p == NULL) return NULL;
     *(long *)p = (long)size;
     a->budget -= (long)size + 16;
+    if (a->budget < a->lowmark) a->lowmark = a->budget;  /* track peak usage */
     return p + 16;
 }
 
@@ -243,6 +246,24 @@ static int prog_tick(void *ctx, uint32_t done, uint32_t total)
         }
     }
     return pr->cancelled ? 0 : 1;
+}
+#endif
+
+#ifdef UNC_MAC_AUTOTEST
+/* Autotest-only: the sink records each extracted file (folder id + leaf
+ * name) so main() can CRC its forks back through the File Manager after
+ * extraction. */
+#define AT_MAXREC 128
+static struct { long dir; Str63 name; } gATrec[AT_MAXREC];
+static int   gATnrec;
+static short gATrecVol;   /* main sets this; sink records only for it */
+static void unc_at_record(short vol, long dir, ConstStr255Param name)
+{
+    int i;
+    if (vol != gATrecVol || gATnrec >= AT_MAXREC) return;
+    gATrec[gATnrec].dir = dir;
+    for (i = 0; i <= name[0]; i++) gATrec[gATnrec].name[i] = name[i];
+    gATnrec++;
 }
 #endif
 
@@ -342,6 +363,43 @@ static OSErr EnsureDir(short vRefNum, long parent, Str63 name, long *dirID)
     return err;
 }
 
+/* ------------------------------------------------------------------ */
+/* File Manager via explicit HFS param blocks                         */
+/* ------------------------------------------------------------------ */
+/* The high-level HOpen/HOpenRF/HCreate GLUE is broken in this Retro68 build
+ * on System 6: HOpen returns noErr but never writes back the file refNum
+ * (so GetEOF/FSRead then operate on garbage and the whole extraction silently
+ * fails), and HOpenDF returns paramErr. Drive the traps through param blocks
+ * we fill in ourselves. Field layout: Multiversal CIncludes HParamBlockRec. */
+static OSErr MyOpenFork(short vol, long dir, ConstStr255Param name,
+                        SignedByte perm, int rsrc, short *refOut)
+{
+    HParamBlockRec pb;
+    long z;
+    OSErr err;
+    *refOut = 0;
+    for (z = 0; z < (long)sizeof pb; z++) ((char *)&pb)[z] = 0;
+    pb.ioParam.ioNamePtr = (StringPtr)name;
+    pb.ioParam.ioVRefNum = vol;
+    pb.ioParam.ioPermssn = perm;
+    pb.fileParam.ioDirID = dir;
+    err = rsrc ? PBHOpenRFSync(&pb) : PBHOpenSync(&pb);
+    *refOut = pb.ioParam.ioRefNum;   /* the glue's missing step */
+    return err;
+}
+
+/* Create a file (type/creator are stamped later by sink_end). */
+static OSErr MyHCreate(short vol, long dir, ConstStr255Param name)
+{
+    HParamBlockRec pb;
+    long z;
+    for (z = 0; z < (long)sizeof pb; z++) ((char *)&pb)[z] = 0;
+    pb.ioParam.ioNamePtr = (StringPtr)name;
+    pb.ioParam.ioVRefNum = vol;
+    pb.fileParam.ioDirID = dir;
+    return PBHCreateSync(&pb);
+}
+
 static int sink_begin(void *ctx, const UncEntryInfo *info)
 {
     MacSink *s = (MacSink *)ctx;
@@ -377,8 +435,7 @@ static int sink_begin(void *ctx, const UncEntryInfo *info)
         Str63 base;
         BlockMoveData(s->curName, base, s->curName[0] + 1);
         for (attempt = 0; ; attempt++) {
-            err = HCreate(s->vRefNum, s->curDirID, s->curName,
-                          0x3F3F3F3FL, 0x3F3F3F3FL);   /* '????' */
+            err = MyHCreate(s->vRefNum, s->curDirID, s->curName);
             if (err == noErr) break;
             if (err != dupFNErr || attempt >= 9) return -1;
             BlockMoveData(base, s->curName, base[0] + 1);
@@ -488,9 +545,8 @@ static OSErr StageFlush(MacSink *s, UncFork fork)
     OSErr err;
 
     if (fl == 0) return noErr;
-    err = fork == UNC_FORK_DATA
-        ? HOpen(s->vRefNum, s->curDirID, s->curName, fsWrPerm, &ref)
-        : HOpenRF(s->vRefNum, s->curDirID, s->curName, fsWrPerm, &ref);
+    err = MyOpenFork(s->vRefNum, s->curDirID, s->curName, fsWrPerm,
+                     fork == UNC_FORK_RSRC, &ref);
     if (err != noErr) return err;
     SetEOF(ref, (long)fl);
     SetFPos(ref, fsFromStart, 0);
@@ -557,6 +613,9 @@ static int sink_end(void *ctx, int status)
             PBSetCatInfoSync(&pb);
         }
     }
+#ifdef UNC_MAC_AUTOTEST
+    if (!s->cur.is_dir) unc_at_record(s->vRefNum, s->curDirID, s->curName);
+#endif
     if (status != UNC_OK) s->errors++;
     return 0;
 }
@@ -566,12 +625,16 @@ static int sink_end(void *ctx, int status)
 /* ------------------------------------------------------------------ */
 
 #ifndef UNC_SINK_TEST
-/* Core extraction: open the archive at (vRefNum,dirID,name) and extract
- * into the same folder. Returns the unc_extract status; fills *entries
- * and *errors from the sink. prog may be NULL (no progress UI). This is
- * shared by the interactive app and the on-Mac autotest so both drive
- * the identical code path. */
-static int RunExtract(short vRefNum, long dirID, ConstStr255Param name,
+static long gPeakUsage;   /* engine heap high-water mark from the last RunExtract */
+
+/* Core extraction: open the archive at (inVol,inDir,name) and extract into
+ * (outVol,outDir). The interactive app passes the same volume/folder for
+ * both (extract next to the archive); the autotest uses a separate output
+ * volume. Returns the unc_extract status; fills *entries and *errors from the
+ * sink, and gPeakUsage with the engine's peak heap use. prog may be NULL.
+ * Shared by the interactive app and the on-Mac autotest. */
+static int RunExtract(short inVol, long inDir, ConstStr255Param name,
+                      short outVol, long outDir,
                       UncProgress *prog, int *entries, int *errors)
 {
     UncIO io;
@@ -591,7 +654,7 @@ static int RunExtract(short vRefNum, long dirID, ConstStr255Param name,
 
     /* --- Slurp the whole archive into RAM, then close it. All input
      *     reads happen here, before any output file exists. --- */
-    err = HOpen(vRefNum, dirID, name, fsRdPerm, &refNum);
+    err = MyOpenFork(inVol, inDir, name, fsRdPerm, 0, &refNum);
     if (err != noErr) return UNC_ERR_IO;
     fileSize = 0;
     GetEOF(refNum, &fileSize);
@@ -627,12 +690,14 @@ static int RunExtract(short vRefNum, long dirID, ConstStr255Param name,
     /* Budget the engine against memory remaining AFTER the archive buffer. */
     ma.budget = FreeMem() - kMemReserve;
     if (ma.budget < 32L * 1024) ma.budget = 32L * 1024;
+    ma.initial = ma.budget;      /* for peak-usage = initial - lowmark */
+    ma.lowmark = ma.budget;
     al.ctx = &ma;
     al.alloc = mal_alloc;
     al.free = mal_free;
 
-    sink.vRefNum = vRefNum;
-    sink.rootDirID = dirID;
+    sink.vRefNum = outVol;
+    sink.rootDirID = outDir;
     sink.entries = sink.errors = 0;
     sink.pr = NULL;
     sk.ctx = &sink;
@@ -646,10 +711,11 @@ static int RunExtract(short vRefNum, long dirID, ConstStr255Param name,
     opt.name_hint_len = name[0];
 
     ret = unc_extract(&io, &sk, &al, prog, &opt);
+    gPeakUsage = ma.initial - ma.lowmark;   /* engine heap high-water mark */
 
     DisposePtr(archiveBuf);
-    FlushVol(NULL, vRefNum);   /* persist all output before returning */
-    FlushVol(NULL, vRefNum);
+    FlushVol(NULL, outVol);    /* persist all output before returning */
+    FlushVol(NULL, outVol);
     *entries = sink.entries;
     *errors = sink.errors;
     return ret;
@@ -688,9 +754,133 @@ static OSErr FindVol(ConstStr255Param want, short *vref)
     return nsvErr;
 }
 
+/* CRC-32 (IEEE, reflected — the zlib/PNG polynomial), computed on the Mac
+ * by reading a fork back through the File Manager. Comparing this against a
+ * host-side CRC of the same fork tells whether a mismatch is the decoder
+ * writing wrong bytes (on-Mac CRC already wrong) or the harness ferrying
+ * them wrong (on-Mac CRC right, host CRC wrong). */
+static uint32_t at_crc32_update(uint32_t crc, const uint8_t *p, long n)
+{
+    long i; int k;
+    crc = ~crc;
+    for (i = 0; i < n; i++) {
+        crc ^= p[i];
+        for (k = 0; k < 8; k++)
+            crc = (crc >> 1) ^ (0xEDB88320u & (uint32_t)(-(int32_t)(crc & 1)));
+    }
+    return ~crc;
+}
+
+/* CRC-32 one fork of a file, reading it back through the File Manager.
+ * For the resource fork, the real Resource Manager stamps machine/session
+ * data into the "reserved for system use" area (bytes 16..127); no off-Mac
+ * tool reproduces it, so those bytes are ZEROED before CRCing (the host
+ * oracle masks the same range) — otherwise every resource fork would
+ * spuriously mismatch. Returns 0 and sets *crc/*len; -1 on open failure. */
+static int at_fork_crc(short vol, long dir, ConstStr255Param name,
+                       int rsrc, uint32_t *crc, long *len)
+{
+    short ref;
+    OSErr err;
+    static char buf[4096];
+    uint32_t c = 0;
+    long total = 0;
+
+    err = MyOpenFork(vol, dir, name, fsRdPerm, rsrc, &ref);
+    if (err != noErr) return -1;
+    SetFPos(ref, fsFromStart, 0);
+    for (;;) {
+        long cnt = (long)sizeof buf;
+        OSErr rerr = FSRead(ref, &cnt, buf);
+        if (cnt > 0) {
+            if (rsrc && total < 128) {          /* mask reserved header 16..127 */
+                long i;
+                for (i = 0; i < cnt; i++) {
+                    long off = total + i;
+                    if (off >= 16 && off < 128) buf[i] = 0;
+                }
+            }
+            c = at_crc32_update(c, (const uint8_t *)buf, cnt);
+            total += cnt;
+        }
+        if (rerr != noErr || cnt <= 0) break;   /* eofErr ends it */
+    }
+    FSClose(ref);
+    *crc = c;
+    *len = total;
+    return 0;
+}
+
+/* ---- On-screen result channel -------------------------------------------
+ * Mini vMac's write-back of a mounted disk image to its host backing file is
+ * lazy and PARTIAL — it reliably commits neither both forks of a file nor
+ * small trailing files, so the host cannot read results off the Out volume.
+ * The screen, being the framebuffer, is captured EXACTLY by a screenshot.
+ * So the app paints its results as a black/white bit grid the host decodes.
+ * Three solid calibration squares at known screen positions let the host map
+ * Mac-screen coords to screenshot pixels regardless of the emulator window
+ * offset/scale. Bit order: 16-bit sync 0xA55A (MSB first), then each 32-bit
+ * value MSB first, row-major across AT_GRID_COLS columns. */
+#define AT_GRID_COLS  16
+#define AT_CELL_X0    96     /* Mac-screen px of the grid's first cell */
+#define AT_CELL_Y0    72
+#define AT_CELL_PITCH 14
+#define AT_CELL_FILL  10
+
+/* Fill a screen rect black(1) or white(0) by poking the framebuffer bits
+ * directly. Mac 1bpp bitmap: bit set = black. No QuickDraw, no allocation. */
+static void at_fill(Ptr base, long rb, int x0, int y0, int x1, int y1, int black)
+{
+    int x, y;
+    for (y = y0; y < y1; y++) {
+        unsigned char *row = (unsigned char *)base + (long)y * rb;
+        for (x = x0; x < x1; x++) {
+            unsigned char m = (unsigned char)(0x80 >> (x & 7));
+            if (black) row[x >> 3] |= m;
+            else       row[x >> 3] &= (unsigned char)~m;
+        }
+    }
+}
+
+static void at_cell(Ptr base, long rb, int idx, int bit)
+{
+    int col = idx % AT_GRID_COLS, row = idx / AT_GRID_COLS;
+    int x = AT_CELL_X0 + col * AT_CELL_PITCH;
+    int y = AT_CELL_Y0 + row * AT_CELL_PITCH;
+    if (bit) at_fill(base, rb, x, y, x + AT_CELL_FILL, y + AT_CELL_FILL, 1);
+}
+
+static void at_report(const uint32_t *vals, int nvals)
+{
+    /* Write STRAIGHT to the screen framebuffer. QuickDraw drawing (NewWindow,
+     * EraseRect on the WMgr port, ...) reliably bombs when called after the
+     * File Manager has run — "out of memory" despite megabytes free — some
+     * System 6 heap/QuickDraw interaction we don't need to untangle. Poking
+     * the 1bpp framebuffer needs zero allocation and cannot fail. */
+    Ptr base = qd.screenBits.baseAddr;
+    long rb = (long)(qd.screenBits.rowBytes & 0x3FFF);
+    long h = qd.screenBits.bounds.bottom - qd.screenBits.bounds.top;
+    long k, n;
+    int i, b, idx = 0;
+
+    HideCursor();      /* stop the cursor's save/restore from stamping its old
+                          (desktop-pattern) background back over the grid */
+    n = h * rb;                                 /* erase whole screen to white */
+    for (k = 0; k < n; k++) ((unsigned char *)base)[k] = 0;
+
+    at_fill(base, rb, 24, 32, 48, 56, 1);       /* calibration TL (36,44)  */
+    at_fill(base, rb, 464, 32, 488, 56, 1);     /* calibration TR (476,44) */
+    at_fill(base, rb, 24, 288, 48, 312, 1);     /* calibration BL (36,300) */
+
+    for (b = 15; b >= 0; b--) at_cell(base, rb, idx++, (0xA55A >> b) & 1);
+    for (i = 0; i < nvals; i++)
+        for (b = 31; b >= 0; b--)
+            at_cell(base, rb, idx++, (int)((vals[i] >> b) & 1u));
+}
+
 int main(void)
 {
-    short vref;
+    short inVol, outVol;
     int ret, entries, errors;
 
     SetApplLimit((Ptr)((long)LMGetApplLimit() - kStackBump));
@@ -707,28 +897,54 @@ int main(void)
     FlushEvents(everyEvent, 0);
     gHasWNE = TrapAvailable(_WaitNextEvent);
 
-    /* Extract archive.sit from the Test volume into its root. The output on
-     * Test is the only ground truth the harness inspects; no breadcrumbs
-     * are written. */
-    if (FindVol("\pTest", &vref) != noErr) {
-        for (;;) SystemTask();
-    }
-    ret = RunExtract(vref, fsRtDirID, "\parchive.sit", NULL, &entries, &errors);
-    (void)ret; (void)entries; (void)errors;
+    /* Input archive is on the "In" volume; extract onto a SEPARATE "Out"
+     * volume. */
+    if (FindVol("\pIn", &inVol) != noErr)  { for (;;) SystemTask(); }
+    if (FindVol("\pOut", &outVol) != noErr) { for (;;) SystemTask(); }
 
-    /* Write a completion marker to the SAME volume and flush. Besides
-     * signalling "done", touching the Test volume here forces Mini vMac to
-     * commit its catalog to the backing image before the host kills the
-     * emulator (a plain FlushVol after the extraction alone was not enough
-     * to survive the kill). */
+    gATrecVol = outVol;   /* sink records each output file here (see below) */
+    ret = RunExtract(inVol, fsRtDirID, "\parchive.sit",
+                     outVol, fsRtDirID, NULL, &entries, &errors);
+
+    /* Read every extracted file's forks back through the real File Manager,
+     * CRC-32 each, and aggregate into an ORDER-INDEPENDENT summary: file
+     * count, summed data-fork CRC + total bytes, summed resource-fork CRC
+     * (reserved header masked) + total bytes, and the engine's peak heap.
+     * The host recomputes the same eight numbers from the oracle and
+     * compares. Summing per-file CRCs scales to any file count within one
+     * fixed-size on-screen grid; a single file makes the sums its own CRCs. */
     {
-        short r;
-        HCreate(vref, fsRtDirID, "\pDONE", 0x74747874L, 0x54455854L);
-        if (HOpen(vref, fsRtDirID, "\pDONE", fsWrPerm, &r) == noErr) FSClose(r);
+        uint32_t sumDataCRC = 0, sumRsrcCRC = 0;
+        long totalDataLen = 0, totalRsrcLen = 0;
+        uint32_t vals[8];
+        int e;
+        for (e = 0; e < gATnrec; e++) {
+            uint32_t dc = 0, rc = 0; long dl = 0, rl = 0;
+            at_fork_crc(outVol, gATrec[e].dir, gATrec[e].name, 0, &dc, &dl);
+            at_fork_crc(outVol, gATrec[e].dir, gATrec[e].name, 1, &rc, &rl);
+            sumDataCRC += dc; totalDataLen += dl;
+            sumRsrcCRC += rc; totalRsrcLen += rl;
+        }
+        vals[0] = (uint32_t)gATnrec;
+        vals[1] = (uint32_t)ret;
+        vals[2] = (uint32_t)errors;
+        vals[3] = sumDataCRC;
+        vals[4] = (uint32_t)totalDataLen;
+        vals[5] = sumRsrcCRC;
+        vals[6] = (uint32_t)totalRsrcLen;
+        vals[7] = (uint32_t)gPeakUsage;
+        at_report(vals, 8);
     }
-    FlushVol(NULL, vref);
+    (void)entries;
 
-    for (;;) SystemTask();
+    /* Idle forever. The host reads the result off the SCREEN (a screenshot),
+     * not the disk — no write-back needed, so the emulator can just be
+     * killed once the grid has been captured. */
+    for (;;) {
+        EventRecord ev;
+        if (gHasWNE) WaitNextEvent(everyEvent, &ev, 60, NULL);
+        else { SystemTask(); }
+    }
     return 0;
 }
 
@@ -758,7 +974,9 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name)
     prog.ctx = &pr;
     prog.tick = prog_tick;
 
-    ret = RunExtract(vRefNum, dirID, name, &prog, &entries, &errors);
+    /* Interactive: extract next to the archive (same volume/folder). */
+    ret = RunExtract(vRefNum, dirID, name, vRefNum, dirID,
+                     &prog, &entries, &errors);
 
     if (pr.dlg) DisposeDialog(pr.dlg);
 

@@ -88,7 +88,21 @@ typedef struct HFileParam {
     short      ioFDirIndex;
     long       ioDirID;
 } HFileParam;
-typedef union HParamBlockRec { HFileParam fileParam; } HParamBlockRec;
+/* IOParam overlaps HFileParam's prefix (ioNamePtr/ioVRefNum at the same
+ * offsets); ioRefNum/ioPermssn stay before ioDirID so the two views don't
+ * clobber each other in MyOpenFork/MyHCreate. */
+typedef struct HIOParam {
+    Ptr        ioCompletion;
+    StringPtr  ioNamePtr;
+    short      ioVRefNum;
+    short      ioRefNum;
+    char       ioVersNum;
+    char       ioPermssn;
+} HIOParam;
+typedef union HParamBlockRec {
+    HFileParam fileParam;
+    HIOParam   ioParam;
+} HParamBlockRec;
 
 /* Toolbox calls, implemented in tests/mac_sink_test.c. */
 Ptr  NewPtr(Size n);
@@ -101,6 +115,9 @@ void NumToString(long v, StringPtr s);
 OSErr HCreate(short vref, long dir, ConstStr255Param name, OSType cr, OSType ty);
 OSErr HOpen(short vref, long dir, ConstStr255Param name, SignedByte perm, short *ref);
 OSErr HOpenRF(short vref, long dir, ConstStr255Param name, SignedByte perm, short *ref);
+OSErr PBHOpenSync(HParamBlockRec *pb);
+OSErr PBHOpenRFSync(HParamBlockRec *pb);
+OSErr PBHCreateSync(HParamBlockRec *pb);
 OSErr FSRead(short ref, long *count, void *buf);
 OSErr FSWrite(short ref, long *count, const void *buf);
 OSErr FSClose(short ref);

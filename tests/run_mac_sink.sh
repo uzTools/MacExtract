@@ -60,6 +60,18 @@ verify ./build/mac_sink_sharebuf ram "$BOTHFORK_FIXTURES"
 echo "mac-sink: shared-block OK (both forks byte-exact)"
 
 if command -v m68k-linux-gnu-gcc >/dev/null 2>&1 && command -v qemu-m68k >/dev/null 2>&1; then
+    # NOTE on the 68000 alignment guarantee: qemu-m68k's default CPU is
+    # 68020+, which silently tolerates unaligned access, so it does NOT
+    # prove 68000 alignment. `qemu-m68k -cpu m68000` DOES fault on unaligned
+    # access (address error) like real hardware, but the prebuilt static
+    # m68k-linux-gnu libc is compiled for 68020+ and its memcpy/memset do
+    # unaligned block moves, so -cpu m68000 aborts inside libc (false
+    # positive) before reaching our code. The engine's own multi-byte reads
+    # all go through byte-wise big-endian helpers, so alignment is enforced
+    # mechanically by the native `-fsanitize=alignment` build (ci.sh variant
+    # 1) and holds by construction; on the real Mac, Retro68's libc is
+    # 68000-clean. qemu here therefore checks big-endian/32-bit word size,
+    # and Mini vMac in Plus config is the real-runtime 68000 oracle.
     echo "mac-sink: big-endian m68k (qemu)"
     m68k-linux-gnu-gcc -std=gnu99 -O2 -static -mcpu=68000 \
         -Iinclude -Isrc -Ithird_party/zlib \
