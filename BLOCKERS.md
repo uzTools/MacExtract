@@ -97,6 +97,28 @@ investigation drew wrong conclusions. Corrected here:
 - `pkill -9` never lets the emulator flush; use a fresh pristine boot image
   per run (repeated boot+kill cycles corrupt System 6's writes to it).
 
+### Open items from the on-Mac corpus replay
+
+Both surfaced while recording the 1 MB Mac Plus results (see FORMATS.md).
+Neither blocks the engine — both fixtures are byte-exact off-Mac and in CI —
+but neither is explained, so neither is claimed as an accepted tier.
+
+- **`derived-RWAsm_Folder.sit` fails on a 4 MB Mac Plus.** All 38 entries
+  error out at a 643.2 KB peak. It is not a timeout (the run completed) and
+  not a budget refusal (4 MB leaves ample headroom, and sibling Arsenic
+  fixtures with larger blocks pass on the same machine). At 1 MB the same
+  fixture refuses cleanly on every entry, as expected. Only the 4 MB
+  behaviour is anomalous. Not re-run since; needs one.
+- **`popper-1.7.tar.Z` and `PCCTS.tar.gz` fail at 1 MB only.** Both are the
+  largest-output fixtures of their format (174 KB / 280 KB of tar payload);
+  both pass at 4 MB with *identical* peak heap, so the decoder is not over
+  budget. `popper-1.7.tar.Z` returns `UNC_ERR_SINK` (-9): the failure is in
+  the Mac app's File Manager writes under 1 MB memory pressure, not in the
+  engine. The harness is byte-identical between the two runs (same 1440 KB
+  output volume, same disk set — only the emulator's RAM differs), so this
+  is a real RAM-dependent limit of the *shell*, and the likely suspect is
+  File Manager / HFS cache headroom rather than the engine budget.
+
 ### Detect-only gap
 
 DiskCopy 4.2 is named in `unc_sniff` but not detected: no reference is
