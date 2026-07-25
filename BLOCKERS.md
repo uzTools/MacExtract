@@ -119,9 +119,12 @@ but neither is explained, so neither is claimed as an accepted tier.
   is a real RAM-dependent limit of the *shell*, and the likely suspect is
   File Manager / HFS cache headroom rather than the engine budget.
 
-### Detect-only gap
+### Detect-only gap — RESOLVED
 
-DiskCopy 4.2 is named in `unc_sniff` but not detected: no reference is
-available offline (XADMaster has no DiskCopy parser, reference/notes has no
-page, the network is refused), and rule #3 forbids inventing the format
-from memory. Left as `UNC_FORMAT_DISKCOPY` with a probe that never matches.
+DiskCopy 4.2 was long named in `unc_sniff` but never detected, because no
+reference was available offline (XADMaster has no DiskCopy parser) and
+rule #3 forbids inventing a format from memory. A reference was since
+obtained (`reference/notes/DiskCopy42.md`, from the DiscFerret wiki) and the
+probe is now real: it matches a synthetic 800K GCR image and a real one,
+with 0 false positives across 803 fixtures. Still detect-only — disk images
+remain out of scope for v1, and extraction returns cleanly unsupported.
