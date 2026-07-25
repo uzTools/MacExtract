@@ -462,3 +462,31 @@ BLOCKERS.md for the full write-up. Key decisions:
   offline (XADMaster has no DiskCopy parser, reference/notes has no page, the
   network is refused), and rule #3 forbids inventing the magic/header from
   memory. The `UNC_FORMAT_DISKCOPY` name exists; the probe never matches.
+- **The "broken Retro68 `HOpen` glue" root cause is WITHDRAWN.** M10's write-up
+  (BLOCKERS.md, commit 22e806b) blamed Retro68: "`HOpen` returns `noErr` but
+  never writes back the refNum on System 6". Building the standalone minimal
+  reproduction that was supposed to go upstream (`tools/retro68-hopen-repro/`)
+  disproved it. On the same System 6.0.8 / Mac Plus / Mini vMac / Retro68
+  `335fa54f6d` setup, ten cases all pass: `HOpen` writes the refNum every time
+  and matches a hand-filled `PBHOpenSync` exactly — with a poisoned stack, with
+  a real vRefNum and non-zero dirID, with `fsWrPerm`, with `HOpenRF`, and
+  across volumes (the app's own pattern). A theory that the glue's
+  uninitialised `ioMisc` was to blame was also tested and disproved: poisoning
+  `ioMisc` with `0xA3A3A3A2` still opens and reads correctly.
+  Consequence: the param-block rewrite (`MyOpenFork`/`MyHCreate`) is kept
+  because it demonstrably works, but its justification is now "it zeroes the
+  whole param block", not "the glue is broken". **The true root cause of the
+  original failure is unestablished and is deliberately not being chased
+  further** — the shell is verified byte-exact on-Mac as it stands, and a
+  wrong explanation in the docs is worse than an admitted gap. Rule: a
+  root cause that has never been reduced to a minimal reproduction is a
+  hypothesis, not a finding.
+- **No upstream issue was filed.** Two things blocked it. (a) The headline
+  finding is false, per the entry above, and filing it would have sent a wrong
+  bug report to a third-party project. (b) This environment has no `gh` CLI and
+  no GitHub credentials, so it could not post one regardless. What survives is
+  small but real — `HOpenDF` returns `paramErr` on System 6 because
+  `PBHOpenDFSync` issues a System 7 trap and, unlike the non-hierarchical
+  `OpenDF` beside it, has no fallback; plus the latent uninitialised-`ioMisc`
+  inconsistency. Written up ready to post in
+  `tools/retro68-hopen-repro/ISSUE.md`.

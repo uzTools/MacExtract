@@ -8,23 +8,44 @@ extracts real Classic-Mac files correctly — single-fork, two-fork, and
 multi-file — with both forks **verified byte-exact ON THE MAC ITSELF**. The
 engine and Linux CLI (M0–M9) were never affected.
 
-### The real root cause (and the fix)
+### The fix (and a WITHDRAWN root cause)
 
-**Retro68's high-level `HOpen` glue is broken on System 6:** it returns
-`noErr` but never writes back the file refNum, so `GetEOF`/`FSRead` then
-run on garbage — the input archive slurps as **0 bytes** and the whole
-extraction fails as `UNC_ERR_FORMAT`, silently. `HOpenDF` returns
-`paramErr`. Nothing could open a file, so nothing ever extracted.
+**Fix that worked:** drive the File Manager through explicit HFS param
+blocks — `PBHOpenSync` / `PBHOpenRFSync` / `PBHCreateSync` /
+`PBHDeleteSync` via the helpers `MyOpenFork` / `MyHCreate` / `MyHDelete`,
+each zeroing the whole `HParamBlockRec` before filling it in. This
+unblocked everything at once and is what ships.
 
-This was invisible off-Mac: the qemu-m68k mock (`tests/run_mac_sink.sh`)
-calls the sink directly and never touches the real Toolbox glue, so only
-Mini vMac exposes it.
+**WITHDRAWN 2026-07-25 — "Retro68's `HOpen` glue is broken on System 6:
+returns `noErr` but never writes back the refNum."** This was recorded here
+and in the commit message for 22e806b as the root cause. It is **wrong**.
+A standalone minimal reproduction (`tools/retro68-hopen-repro/`) was built
+to hand upstream and, run on the same System 6.0.8 / Mac Plus / Mini vMac
+setup against the same Retro68 build, it does not reproduce: across ten
+cases `HOpen` writes the refNum every time and agrees exactly with a
+hand-filled `PBHOpenSync` — including with a real vRefNum, a non-zero
+dirID, write permission, a deliberately poisoned stack, and a cross-volume
+open (the shape this app actually uses). See that directory's README for
+the result table.
 
-**Fix:** drive the File Manager through explicit HFS param blocks —
-`PBHOpenSync` / `PBHOpenRFSync` / `PBHCreateSync` / `PBHDeleteSync` via the
-helpers `MyOpenFork` / `MyHCreate` / `MyHDelete`, reading back
-`pb.ioParam.ioRefNum` ourselves (the step the glue skips). This unblocked
-everything at once.
+So switching to explicit param blocks fixed the app for some *other*
+reason — most likely that `MyOpenFork`/`MyHCreate` zero the entire param
+block, whereas the surrounding pre-fix code passed partly-uninitialised
+state. **The true root cause is not established.** It is not being chased
+further: the app is verified byte-exact on-Mac as it stands, and the honest
+statement is "the param-block rewrite fixed it; we do not know precisely
+which field mattered."
+
+The only real (and minor) upstream finding that survived is that
+`HOpenDF` returns `paramErr` on System 6, because `PBHOpenDFSync` issues a
+System 7 trap and — unlike the non-hierarchical `OpenDF` in the same glue
+file — has no fallback. Written up in
+`tools/retro68-hopen-repro/ISSUE.md`; not filed (no GitHub credentials in
+this environment).
+
+The off-Mac blind spot is still real: the qemu-m68k mock
+(`tests/run_mac_sink.sh`) calls the sink directly and never touches the
+Toolbox glue, so only Mini vMac exercises that layer at all.
 
 ### How it's verified (on the Mac, not just off it)
 
