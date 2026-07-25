@@ -287,16 +287,10 @@ int main(void)
         verr = PBHGetVInfoSync(&vpb);
         if (verr == noErr)
             vref = vpb.volumeParam.ioVRefNum;
-
+        (void)verr;
+        /* The mounted volumes, including which one is the default, are
+         * listed by the enumeration further down (vol[1], vol[2], ...). */
         gRow++;
-        line[0] = 0;
-        AppendStr(line, "default volume: err=");
-        AppendNum(line, verr);
-        AppendStr(line, " vRefNum=");
-        AppendNum(line, vref);
-        AppendStr(line, " name=");
-        for (i = 1; i <= volname[0] && i < 28; i++) line[++line[0]] = volname[i];
-        PrintLine(line);
 
         ref = 0x5A5A;
         DirtyStack();
