@@ -1,0 +1,309 @@
+#!/usr/bin/env python3
+"""run.py — replay fixtures through the Mac shell on an emulated Mac Plus.
+
+For each fixture this builds three disk images, boots a stripped System 6.0.8
+straight into the UNC_MAC_AUTOTEST build of the Mac application (no Finder, no
+mouse automation — see mkboot.py), waits for the app to paint its result grid
+on the framebuffer, screenshots it, and cross-checks the decoded aggregate
+against the same engine's Linux output (tools/vmac_check.py).
+
+    In        1440 KB floppy holding the fixture, named "archive.sit"
+              (the autotest build opens exactly that name)
+    Out       1440 KB empty floppy, the extraction target
+    boot      the System 6.0.8 hard disk
+
+Prerequisites: tools/vmac/setup.sh (once), Xvfb, ImageMagick, hfsutils.
+
+    tools/vmac/run.py fixtures/adobenumbers.sit
+    tools/vmac/run.py --mem 1M --json out.json fixtures/*.sit
+
+WALL CLOCK IS NOT MAC PLUS TIME: the emulator is built "all out", i.e. as fast
+as the host allows, so --timeout bounds host seconds and says nothing about how
+long a real 7 MHz 68000 would take. Correctness results are speed-independent;
+timing claims must not be drawn from this harness.
+"""
+import argparse, json, os, shutil, signal, subprocess, sys, tempfile, time
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+REPO = os.path.dirname(os.path.dirname(HERE))
+sys.path.insert(0, os.path.join(REPO, "tools"))
+from decode_grid import decode                                # noqa: E402
+
+VMAC_HOME = os.environ.get("UNC_VMAC_HOME", os.path.join(REPO, "build", "vmac"))
+# Mini vMac's X window is always titled "minivmac", whatever -n the build used,
+# and is exactly the 512x342 Mac screen with no border.
+EMU_WINDOW_NAME = "minivmac"
+FLOPPY_KB = 1440           # a real 1.44 MB floppy; Mini vMac mounts it as one
+ARCHIVE_NAME = "archive.sit"
+
+# Non-result statuses the app can paint in the grid's `ret` slot. Kept in step
+# with the kAt* codes in mac/unclassic_mac.c.
+AT_RUNNING = -1000         # alive, still working — keep waiting
+AT_STATUS = {-1000: "app alive, extraction not finished",
+             -1001: 'no volume named "In" mounted (bad disk set)',
+             -1002: 'no volume named "Out" mounted (bad disk set)'}
+
+
+def signed32(v):
+    return v - (1 << 32) if v >= (1 << 31) else v
+
+
+def sh(*argv, **kw):
+    return subprocess.run(argv, check=True, capture_output=True, text=True,
+                          errors="surrogateescape", **kw)
+
+
+def make_floppy(path, volname, payload=None, size_kb=FLOPPY_KB):
+    """Create a fresh HFS floppy image, optionally with one data-fork file."""
+    with open(path, "wb") as f:
+        f.truncate(size_kb * 1024)
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+    try:
+        subprocess.run(["hformat", "-l", volname, path],
+                       check=True, capture_output=True, env=env)
+        if payload:
+            subprocess.run(["hmount", path], check=True, capture_output=True, env=env)
+            # -r: raw copy, data fork only. The archive is a plain byte stream;
+            # its type/creator are irrelevant because the app opens it by name.
+            subprocess.run(["hcopy", "-r", payload, f"{volname}:{ARCHIVE_NAME}"],
+                           check=True, capture_output=True, env=env)
+            subprocess.run(["humount", path], check=True, capture_output=True, env=env)
+    finally:
+        shutil.rmtree(env["HOME"], ignore_errors=True)
+
+
+def build_autotest_app():
+    """Build the UNC_MAC_AUTOTEST application, returning its MacBinary path."""
+    bdir = os.path.join(REPO, "build", "mac-autotest")
+    env = dict(os.environ, UNC_MAC_AUTOTEST="1")
+    toolchain = os.environ.get("RETRO68", "/opt/Retro68-build/toolchain")
+    cmakefile = os.path.join(toolchain, "m68k-apple-macos", "cmake",
+                             "retro68.toolchain.cmake")
+    if not os.path.exists(cmakefile):
+        raise SystemExit(f"run: no Retro68 toolchain at {toolchain} "
+                         f"(set RETRO68)")
+    subprocess.run(["cmake", "-B", bdir, "-S", os.path.join(REPO, "mac"),
+                    f"-DCMAKE_TOOLCHAIN_FILE={cmakefile}",
+                    "-DCMAKE_BUILD_TYPE=Release"],
+                   check=True, capture_output=True, env=env)
+    subprocess.run(["cmake", "--build", bdir, "--", "-j", str(os.cpu_count())],
+                   check=True, capture_output=True, env=env)
+    return os.path.join(bdir, "unclassic.bin")
+
+
+def build_boot_image(appbin, dest):
+    stock = os.path.join(VMAC_HOME, "System6.hfv")
+    if not os.path.exists(stock):
+        raise SystemExit("run: no System6.hfv — run tools/vmac/setup.sh first")
+    sh(sys.executable, os.path.join(HERE, "mkboot.py"), stock, appbin, dest)
+
+
+class Display:
+    """A private Xvfb. Each run gets its own so runs cannot see, or steal
+    input focus from, each other."""
+
+    def __init__(self):
+        self._win = None
+        for n in range(90, 200):
+            if os.path.exists(f"/tmp/.X{n}-lock"):
+                continue
+            self.num = n
+            # Depth 24: Mini vMac's X11 glue picks a visual it can XPutImage
+            # into, and on an 8-bit Xvfb the very first PutImage dies with
+            # BadMatch, taking the emulator with it a few seconds after boot.
+            self.proc = subprocess.Popen(
+                ["Xvfb", f":{n}", "-screen", "0", "800x600x24", "-nolisten", "tcp"],
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            for _ in range(200):                    # wait for it to accept clients
+                time.sleep(0.05)
+                if subprocess.run(["xdotool", "getdisplaygeometry"],
+                                  env=dict(os.environ, DISPLAY=f":{n}"),
+                                  capture_output=True).returncode == 0:
+                    return
+            self.close()
+        raise SystemExit("run: no free X display")
+
+    @property
+    def name(self):
+        return f":{self.num}"
+
+    def window(self):
+        """X id of the emulator window, or None if it is not up yet.
+
+        Capturing the root window instead would work only by luck: with no
+        window manager the emulator lands at an arbitrary offset inside the
+        800x600 root, and decode_grid.py seeds its search for the calibration
+        squares at Mac coordinates with only +-16 px of slack, so an offset
+        screenshot decodes as "no grid at all"."""
+        if self._win:
+            return self._win
+        r = subprocess.run(["xdotool", "search", "--name", EMU_WINDOW_NAME],
+                           env=dict(os.environ, DISPLAY=self.name),
+                           capture_output=True, text=True)
+        ids = r.stdout.split()
+        self._win = ids[-1] if ids else None
+        return self._win
+
+    def screenshot(self, path):
+        """Capture the emulator window alone; returns False until it exists."""
+        win = self.window()
+        if not win:
+            return False
+        subprocess.run(["import", "-display", self.name, "-window", win,
+                        "-silent", path], check=True, capture_output=True)
+        return True
+
+    def close(self):
+        self.proc.terminate()
+        try:
+            self.proc.wait(timeout=10)
+        except subprocess.TimeoutExpired:
+            self.proc.kill()
+
+
+def run_one(fixture, mem, timeout, poll, workdir, bootimg, keep_png=None):
+    """Boot the Mac on one fixture. Returns (values or None, seconds, png)."""
+    emu = os.path.join(VMAC_HOME, f"mv-{mem}", "minivmac")
+    rom = os.path.join(VMAC_HOME, "vMac.ROM")
+    if not os.path.exists(emu):
+        raise SystemExit(f"run: no emulator at {emu} — run tools/vmac/setup.sh")
+
+    boot = os.path.join(workdir, "boot.hfv")
+    indsk = os.path.join(workdir, "in.dsk")
+    outdsk = os.path.join(workdir, "out.dsk")
+    png = os.path.join(workdir, "screen.png")
+    shutil.copyfile(bootimg, boot)          # every run starts from a pristine
+    make_floppy(indsk, "In", payload=fixture)   # image: System 6 writes to the
+    make_floppy(outdsk, "Out")                  # boot volume as it goes
+
+    dpy = Display()
+    started = time.time()
+    vals = None
+    try:
+        # start_new_session: the emulator must not share our process group, or
+        # a stray signal to the group takes it down mid-write.
+        proc = subprocess.Popen([emu, "-r", rom, boot, indsk, outdsk],
+                                env=dict(os.environ, DISPLAY=dpy.name),
+                                stdout=subprocess.DEVNULL,
+                                stderr=subprocess.DEVNULL,
+                                start_new_session=True)
+        # Park the host pointer away from the result grid. Mini vMac drives the
+        # Mac cursor from it, and the cursor's saved background can stamp the
+        # desktop pattern back over cells the app has already painted.
+        subprocess.run(["xdotool", "mousemove", "780", "580"],
+                       env=dict(os.environ, DISPLAY=dpy.name),
+                       capture_output=True)
+        deadline = started + timeout
+        while time.time() < deadline:
+            time.sleep(poll)
+            if proc.poll() is not None:
+                break                        # emulator died; take a last look
+            if not dpy.screenshot(png):
+                continue                     # emulator window not mapped yet
+            got = decode(png)
+            if got is not None:
+                # A grid whose ret slot says "running" means the app is up and
+                # the extraction is simply not done — keep waiting, but
+                # remember it so a timeout can say "alive but slow" instead of
+                # the far vaguer "no grid".
+                vals = got
+                if signed32(got[1]) != AT_RUNNING:
+                    break
+    finally:
+        elapsed = time.time() - started
+        try:
+            os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+        except (ProcessLookupError, PermissionError):
+            pass
+        if keep_png and os.path.exists(png):
+            shutil.copyfile(png, keep_png)
+        dpy.close()
+    return vals, elapsed, png
+
+
+def check(fixture, png, manifest_dir):
+    """Cross-check the on-screen grid against the Linux engine's output."""
+    man = os.path.join(manifest_dir, os.path.basename(fixture) + ".json")
+    if not os.path.exists(man):
+        return None, f"no oracle manifest for {os.path.basename(fixture)}"
+    r = subprocess.run([sys.executable, os.path.join(REPO, "tools", "vmac_check.py"),
+                        man, png], capture_output=True, text=True)
+    return r.returncode == 0, (r.stdout + r.stderr).strip()
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__,
+                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("fixtures", nargs="*",
+                    help="paths to fixtures; omit when using --list")
+    ap.add_argument("--list", dest="listfile",
+                    help="file of fixture names, one per line, '#' comments "
+                         "(see tools/vmac/sample.txt)")
+    ap.add_argument("--mem", default="4M", choices=("4M", "1M"),
+                    help="emulated RAM; 1M is the project's floor target")
+    ap.add_argument("--timeout", type=float, default=300.0,
+                    help="host seconds to wait for a result grid (not Mac time)")
+    ap.add_argument("--poll", type=float, default=5.0,
+                    help="host seconds between screenshots")
+    ap.add_argument("--json", help="write per-fixture results here")
+    ap.add_argument("--pngdir", help="keep each run's final screenshot here")
+    args = ap.parse_args()
+
+    fixtures = list(args.fixtures)
+    if args.listfile:
+        for line in open(args.listfile):
+            name = line.split("#")[0].strip()
+            if name:
+                fixtures.append(os.path.join(REPO, "fixtures", name))
+    if not fixtures:
+        ap.error("no fixtures given (pass paths, or --list)")
+    missing = [f for f in fixtures if not os.path.exists(f)]
+    if missing:
+        raise SystemExit("run: fixtures not present: " + ", ".join(missing))
+
+    appbin = build_autotest_app()
+    bootimg = os.path.join(VMAC_HOME, "boot-autotest.hfv")
+    build_boot_image(appbin, bootimg)
+    if args.pngdir:
+        os.makedirs(args.pngdir, exist_ok=True)
+    manifest_dir = os.path.join(REPO, "fixtures", "manifests")
+
+    results, npass = [], 0
+    for fixture in fixtures:
+        name = os.path.basename(fixture)
+        workdir = tempfile.mkdtemp(prefix="vmacrun-")
+        keep = os.path.join(args.pngdir, name + ".png") if args.pngdir else None
+        try:
+            vals, secs, png = run_one(fixture, args.mem, args.timeout,
+                                      args.poll, workdir, bootimg, keep)
+            status = AT_STATUS.get(signed32(vals[1])) if vals else None
+            if vals is None:
+                verdict, detail = "NOGRID", (
+                    f"nothing decodable within {args.timeout:.0f}s — the app "
+                    f"never painted its 'alive' grid, so it did not launch "
+                    f"or bombed before starting")
+            elif signed32(vals[1]) == AT_RUNNING:
+                verdict, detail = "TIMEOUT", (
+                    f"app alive but still extracting after {args.timeout:.0f}s")
+            elif status:
+                verdict = "SETUP"
+                detail = f"{status}; {vals[0]} volume(s) mounted"
+            else:
+                ok, detail = check(fixture, png, manifest_dir)
+                verdict = "PASS" if ok else "FAIL"
+            print(f"{verdict:8s} {name:44s} {secs:6.1f}s  {detail}", flush=True)
+            npass += verdict == "PASS"
+            results.append(dict(fixture=name, mem=args.mem, verdict=verdict,
+                                seconds=round(secs, 1), detail=detail,
+                                values=vals))
+        finally:
+            shutil.rmtree(workdir, ignore_errors=True)
+
+    print(f"\n{npass}/{len(fixtures)} PASS at {args.mem}")
+    if args.json:
+        json.dump(results, open(args.json, "w"), indent=1)
+    return 0 if npass == len(fixtures) else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -51,6 +51,7 @@ Mount the image in Mini vMac next to a System 6.0.8 boot disk and double-click
 the application. It creates its own 512-byte test file next to itself, so it
 needs nothing else on the disk, and prints one line per case.
 
-`tools/../../../` note: the harness used here is
-`scratchpad/vmac/runrepro.sh` in the working environment; any Mini vMac with a
-Mac Plus ROM works.
+`tools/vmac/setup.sh` puts a suitable Mini vMac, a Mac Plus ROM and a System
+6.0.8 image in `build/vmac/`; any Mini vMac with a Mac Plus ROM works. Unlike
+the fixture replays, this one has to be read off the screen by eye — it prints
+text rather than the machine-readable grid `tools/vmac/run.py` decodes.

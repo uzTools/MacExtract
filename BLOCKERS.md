@@ -52,19 +52,19 @@ Toolbox glue, so only Mini vMac exercises that layer at all.
 The autotest build (`-DUNC_MAC_AUTOTEST`) CRC-32s BOTH forks after reading
 them back through the real File Manager and paints the aggregate straight
 to the framebuffer; the host decodes a screenshot and cross-checks against
-the same engine's Linux output (`tools/vmac_check.py`). Result: **40/44
-corpus fixtures byte-exact across all twelve formats**; the extracted
-metadata (type/creator, inited-flag cleared) is confirmed on-Mac so an
-extracted `APPL` launches by double-click. The other four are the largest
-fixtures (~1 MB output) and extract correctly but slowly on the 7 MHz
-68000, overrunning the automated poll (one confirmed complete at 185 s);
-their logic is proven byte-exact off-Mac (CI differential + qemu-m68k mock
-cover them). See FORMATS.md.
+the same engine's Linux output (`tools/vmac_check.py`). Result: **44/44
+sampled fixtures byte-exact across all twelve formats at 4 MB, 37/44 at
+1 MB**; the extracted metadata (type/creator, inited-flag cleared) is
+confirmed on-Mac so an extracted `APPL` launches by double-click. The whole
+harness is committed in `tools/vmac/` — see FORMATS.md for the tables and
+`tools/vmac/README.md` for how to re-run it.
 
-### Earlier "root causes" that were confounded by the glue bug
+### Earlier "root causes" that turned out to be confounded
 
-The `HOpen` glue silently broke every open, so the long "two-fork crash"
-investigation drew wrong conclusions. Corrected here:
+Every open silently failed for the whole of the "two-fork crash"
+investigation, so it drew wrong conclusions. (The cause of those failures is
+the withdrawn attribution above; what is certain is that they happened.)
+Corrected here:
 
 - **"THREE non-relocatable staging blocks bomb the Memory Manager" — FALSE.**
   Re-tested with the glue fixed (`UNC_AT_SEPARATE_BLOCKS` forces two
@@ -82,6 +82,22 @@ investigation drew wrong conclusions. Corrected here:
   (SIGHUP), and a dead X window reads as pure black. Booting the emulator
   as a child of the long-running batch fixed it; the fixture extracts fine.
 
+### Replacing the Finder has a consequence: nothing mounts disks
+
+The autotest application is installed as the boot **shell** (the boot
+blocks' shell name, offset 0x1A, is rewritten from `Finder`), so it is the
+only thing running. A disk inserted after startup then never mounts: the
+disk-inserted event is posted, but the volume is only mounted when somebody
+asks, and normally that somebody is the Finder. Measured, not assumed — the
+volume walk saw exactly one volume (the boot disk) after 30 seconds of
+waiting, with the emulator's In and Out images both present and the same
+images mounting fine when the Finder was left as shell.
+
+Fixed by calling `PBMountVol` on each drive number before looking for the
+volume (`MountAllDrives`). This affects only the autotest build; the
+interactive application relies on Standard File, which does its own disk
+handling.
+
 ### Real test-harness lessons (not app bugs)
 
 - **Mini vMac's disk write-back to the host image is lazy and PARTIAL** —
@@ -97,27 +113,29 @@ investigation drew wrong conclusions. Corrected here:
 - `pkill -9` never lets the emulator flush; use a fresh pristine boot image
   per run (repeated boot+kill cycles corrupt System 6's writes to it).
 
-### Open items from the on-Mac corpus replay
+### Open items from the on-Mac corpus replay — both CLOSED 2026-07-25
 
-Both surfaced while recording the 1 MB Mac Plus results (see FORMATS.md).
-Neither blocks the engine — both fixtures are byte-exact off-Mac and in CI —
-but neither is explained, so neither is claimed as an accepted tier.
+Both were re-run on a rebuilt, and this time **committed**, Mini vMac
+harness (`tools/vmac/`; the original was never checked in and its working
+directory is gone).
 
-- **`derived-RWAsm_Folder.sit` fails on a 4 MB Mac Plus.** All 38 entries
-  error out at a 643.2 KB peak. It is not a timeout (the run completed) and
-  not a budget refusal (4 MB leaves ample headroom, and sibling Arsenic
-  fixtures with larger blocks pass on the same machine). At 1 MB the same
-  fixture refuses cleanly on every entry, as expected. Only the 4 MB
-  behaviour is anomalous. Not re-run since; needs one.
-- **`popper-1.7.tar.Z` and `PCCTS.tar.gz` fail at 1 MB only.** Both are the
-  largest-output fixtures of their format (174 KB / 280 KB of tar payload);
-  both pass at 4 MB with *identical* peak heap, so the decoder is not over
-  budget. `popper-1.7.tar.Z` returns `UNC_ERR_SINK` (-9): the failure is in
-  the Mac app's File Manager writes under 1 MB memory pressure, not in the
-  engine. The harness is byte-identical between the two runs (same 1440 KB
-  output volume, same disk set — only the emulator's RAM differs), so this
-  is a real RAM-dependent limit of the *shell*, and the likely suspect is
-  File Manager / HFS cache headroom rather than the engine budget.
+- **`derived-RWAsm_Folder.sit` "fails on a 4 MB Mac Plus" — DOES NOT
+  REPRODUCE.** It extracts all 38 entries byte-exact, at the same 643.2 KB
+  peak the failing run reported. The whole 44-fixture sample is now 44/44 at
+  4 MB, which also clears the four fixtures previously recorded as timing
+  out. What differed cannot be established, because the harness that
+  produced the old numbers does not exist any more. Closed as
+  not-reproducible, not as fixed.
+- **`popper-1.7.tar.Z` and `PCCTS.tar.gz` at 1 MB — ROOT-CAUSED.** Both
+  reproduce, and the cause is not File Manager or HFS cache headroom: **the
+  Mac sink stages each whole fork in a `NewPtr` block before writing it.**
+  All File Manager writes happen at shallow depth in `sink_end`, never from
+  inside the decode callback, so a fork is accumulated in RAM first. The
+  shell's peak is therefore `archive + engine peak + largest output fork`,
+  and these two fixtures have the sample's largest output forks (174 KB and
+  287 KB). At 1 MB the staging `NewPtr` fails and the entry reports
+  `UNC_ERR_SINK`; the engine's own peak heap is identical to the passing
+  4 MB run. Recorded as a documented limit of the shell in FORMATS.md.
 
 ### Detect-only gap — RESOLVED
 

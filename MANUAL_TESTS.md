@@ -3,8 +3,8 @@
 NOTE (2026-07-25): the shell runs under Mini vMac (System 6.0.8, Mac
 Plus, a true 68000) and **extracts correctly — single-fork, two-fork,
 and multi-file — with both forks verified byte-exact ON THE MAC ITSELF**
-(40/44 corpus fixtures at 4 MB across all twelve formats; the other four
-are the largest and merely slow on the 68000). Data forks match exactly;
+(44/44 sampled fixtures at 4 MB across all twelve formats, 37/44 at
+1 MB). Data forks match exactly;
 resource forks match except the 112-byte "reserved for system use" area
 of the resource file header (offsets 16–127), which is masked identically
 on both sides — see DECISIONS.md. For the 1 MB Mac Plus results, see the
@@ -49,16 +49,25 @@ Done interactively in the emulator, each step captured:
   the RAM-slurp `xio_*` path, the shared-block two-fork path, AND the
   Cmd-. cancel cleanup (`--cancel`). Authoritative proof of the sink
   logic on the target word size/endian.
-- The on-Mac autotest (build with `-DUNC_MAC_AUTOTEST`) drives the real
-  System 6 File Manager: it finds HFS volumes "In"/"Out", extracts
-  `In:archive.sit` onto Out, reads both forks back through the File
-  Manager, CRC-32s them, and **paints the result to the framebuffer**
-  (Mini vMac's disk write-back is too lazy/partial to read off the Out
-  volume). The host decodes a screenshot (`tools/decode_grid.py`) and
-  cross-checks against the Linux engine (`tools/vmac_check.py`). Use a
-  **pristine** boot image per run, and boot the emulator as a child of a
-  long-running process (a launcher that backgrounds it and exits takes it
-  down via SIGHUP — a dead X window reads as a false "black-screen crash").
+- **`tools/vmac/run.py` — the on-Mac replay, scripted end to end.** It
+  boots a stripped System 6.0.8 straight into the `-DUNC_MAC_AUTOTEST`
+  build (no Finder, no simulated double-click), which finds the HFS
+  volumes "In"/"Out", extracts `In:archive.sit` onto Out, reads both forks
+  back through the real File Manager, CRC-32s them, and **paints the
+  result to the framebuffer** (Mini vMac's disk write-back is too
+  lazy/partial to read off the Out volume). The host decodes a screenshot
+  (`tools/decode_grid.py`) and cross-checks against the Linux engine
+  (`tools/vmac_check.py`):
+
+      tools/vmac/setup.sh                                       # once
+      tools/vmac/run.py --list tools/vmac/sample.txt            # 4 MB
+      tools/vmac/run.py --list tools/vmac/sample.txt --mem 1M   # floor target
+
+  It is not part of `ci.sh` (downloads, an X server, minutes per fixture).
+  Read `tools/vmac/README.md` before changing it — several of its
+  arrangements exist to work around emulator behaviour, not by preference.
+  Note that the emulator runs **all out**, so its wall-clock times say
+  nothing about a real 7 MHz 68000.
 
 Before calling the interactive app working, run this checklist in each
 environment. Do not skip the System 6 / Mac Plus column — that is the

@@ -1,0 +1,80 @@
+# tools/vmac/sample.txt — the fixtures replayed on the emulated Mac Plus.
+#
+# Committed rather than generated at run time so that a 4 MB run and a 1 MB
+# run months apart compare like for like, and so the per-fixture tables in
+# FORMATS.md name a set anyone can reproduce.
+#
+# Selection rule: for each of the twelve formats, the smallest, largest and
+# two intermediate fixtures by file size (the size spread is what exercises
+# the memory budget), plus every fixture named individually in FORMATS.md or
+# BLOCKERS.md.
+#
+# Run:  tools/vmac/run.py --list tools/vmac/sample.txt [--mem 1M]
+
+# BinHex
+export-hc.hqx                              # 3127 B
+crypt-04.hqx                               # 38895 B
+down-line-111.hqx                          # 116518 B
+macburger-helper.hqx                       # 306651 B
+
+# Compact Pro
+derived-keyAhead.cpt                       # 863 B
+derived-BinHqx_DA_1.02.cpt                 # 23924 B
+derived-Education7.1.cpt                   # 85072 B
+derived-XferIt_1.5b4.sea                   # 285495 B
+
+# Compress
+synth-exo-Z.Z                              # 488 B
+synth-exo-tar-Z.tar.Z                      # 5465 B
+a2ps.V4.3.tar.Z                            # 30255 B
+popper-1.7.tar.Z                           # 59323 B
+
+# DiskDoubler
+derived-DandStoQIF2.sea                    # 30562 B
+derived-MAZv143.sea                        # 50277 B
+derived-DD_Expand.sea                      # 123399 B
+derived-MacPass390.sea                     # 155792 B
+
+# Gzip
+synth-exo-gz.gz                            # 81 B
+synth-exo-gz-named.gz                      # 99 B
+PCCTS.tar.gz                               # 63807 B
+
+# MacBinary
+stuffit151mstr.bin                         # 493 B
+nilminder.bin                              # 19829 B
+macpostmanager10b1.sit                     # 71424 B
+kermitut9test.bin                          # 303744 B
+
+# Now Compress
+derived-Expand_Now_1.0.1.sea               # 61824 B
+
+# PackIt
+synth-packit-2.pit                         # 3367 B
+synth-packit-3.pit                         # 3381 B
+synth-packit-1.pit                         # 3385 B
+derived-PackIt.pit                         # 61843 B
+
+# StuffIt
+derived-Export.sit                         # 1615 B
+derived-Auditor.sit                        # 20876 B
+derived-SNDPatchV2.sit                     # 64383 B
+derived-EmpireBuilderDemo.sit              # 278294 B
+
+# StuffIt 5
+derived-KeyGraphics.sit                    # 4611 B
+derived-RWAsm_Folder.sit                   # 66069 B
+derived-PuzzleGetter_0.8.sit               # 92510 B
+derived-a2basic.dmg.sit                    # 152942 B
+derived-Library_ISBN_Barcoder.sit          # 202454 B
+derived-Troi-ClipSave-Plug-in1.1.sit       # 221991 B
+
+# Tar
+synth-exo-tar.tar                          # 20480 B
+derived-popper-1.7.tar                     # 174080 B
+derived-PCCTS.tar                          # 286720 B
+
+# Zip
+synth-exo-zip-deflate.zip                  # 3709 B
+synth-exo-zip-store.zip                    # 8384 B
+derived-MUSFMT10.ZIP                       # 171960 B

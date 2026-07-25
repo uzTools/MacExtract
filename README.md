@@ -29,45 +29,47 @@ detected by content (never by filename) and unwrapped automatically.
 
 | | Linux CLI | Mac app (System 6 → OS 9) |
 |---|---|---|
-| Extraction, all 12 formats | ✅ byte-exact vs `unar` (771 fixtures, both forks, in CI) | ✅ verified byte-exact **on real System 6.0.8 / 68000** (Mini vMac): 39/44 sampled fixtures at 4 MB, 36/44 at 1 MB — see the tier table below |
+| Extraction, all 12 formats | ✅ byte-exact vs `unar` (771 fixtures, both forks, in CI) | ✅ verified byte-exact **on real System 6.0.8 / 68000** (Mini vMac): 44/44 sampled fixtures at 4 MB, 37/44 at 1 MB — see the tier table below |
 | Both forks + type/creator/dates | ✅ | ✅ (resource fork exact bar the OS-stamped reserved header 16–127; extracted `APPL` launches by double-click) |
 | Robustness (truncated/bit-flipped) | ✅ clean per-entry errors, no crash/hang/sanitizer trip | shares the same engine |
 | Interactive UI | — | SFGetFile → progress dialog (Cancel / Cmd-.) → result alert; Cmd-. removes partial output |
 
 ### What runs on which machine
 
-The corpus sample was replayed on-Mac **twice**: once on a 4 MB Mac Plus and
-once on a **1 MB** Mac Plus, the project's floor target. Both runs verify
-CRC-32 of both forks on the Mac itself. Per format:
+The 44-fixture sample in `tools/vmac/sample.txt` was replayed on-Mac
+**twice**: once on a 4 MB Mac Plus and once on a **1 MB** Mac Plus, the
+project's floor target. Both runs verify CRC-32 of both forks on the Mac
+itself; both are reproducible with `tools/vmac/run.py`. Per format:
 
-| Format | 1 MB Mac Plus | Notes |
-|---|---|---|
-| MacBinary I/II/III | ✅ 4/4 | 8 KB peak |
-| BinHex 4 (.hqx) | ✅ 4/4 | 8 KB |
-| Tar | ✅ 3/3 | 8 KB |
-| PackIt (.pit) | ✅ 4/4 | 9 KB |
-| Compact Pro (.cpt) | ✅ 5/5 | 19 KB; the 285 KB SEA needs ~3 min on a 7 MHz 68000 |
-| Zip | ✅ 3/3 | 12–65 KB |
-| StuffIt classic (.sit) | ✅ 5/5 | 72–75 KB |
-| Gzip | ⚠️ 2/3 | the 280 KB-payload `.tar.gz` fails at 1 MB only |
-| Unix compress (.Z) | ⚠️ 2/3 | the 174 KB-payload `.tar.Z` fails at 1 MB only |
-| DiskDoubler / Now Compress | ✅ detect-only | no allocation |
-| **StuffIt 5 / Arsenic** | ❌ **needs 4 MB** | 0/6 — refuses cleanly per entry |
+| Format | 4 MB | 1 MB Mac Plus | Engine peak heap |
+|---|---|---|---|
+| MacBinary I/II/III | ✅ 4/4 | ✅ 4/4 | 8 KB |
+| BinHex 4 (.hqx) | ✅ 4/4 | ✅ 4/4 | 8 KB |
+| Tar | ✅ 3/3 | ✅ 3/3 | 8 KB |
+| PackIt (.pit) | ✅ 4/4 | ✅ 4/4 | 9 KB |
+| Compact Pro (.cpt) | ✅ 4/4 | ✅ 4/4 | 19 KB |
+| Zip | ✅ 3/3 | ✅ 3/3 | 12–65 KB |
+| StuffIt classic (.sit) | ✅ 4/4 | ✅ 4/4 | 72–75 KB |
+| DiskDoubler / Now Compress | ✅ detect-only | ✅ detect-only | none |
+| Gzip | ✅ 3/3 | ⚠️ 2/3 | 51 KB |
+| Unix compress (.Z) | ✅ 4/4 | ⚠️ 3/4 | 268 KB |
+| **StuffIt 5 / Arsenic** | ✅ 6/6 | ⚠️ **1/6** | 0.6–1.8 MB |
 
-**StuffIt 5 / Arsenic requires a ~4 MB machine.** Its BWT blocks need
-0.64–2.6 MB (block + 4×-block transform vector), which a 1 MB Plus cannot
-give. This is a designed, accepted tier, not a crash: all six sampled
-fixtures decline **per entry** and leave the rest of the archive alone. The
-budget rejects the block at request time, so five of the six never allocate
-more than 35.5 KB.
+**StuffIt 5 / Arsenic mostly wants a 4 MB machine.** Its BWT blocks need
+block + a 4×-block transform vector, so an entry costs 0.6 MB and up
+depending on the block size the archive declares. At 1 MB the engine
+declines the entries it cannot afford — **per entry**, leaving the rest of
+the archive alone — which is why one sampled fixture extracts completely,
+two extract most of their entries, and three refuse every entry. Where the
+budget rejects the block at request time nothing is allocated at all
+(35.5 KB peak).
 
-The two ⚠️ rows are **not** an engine budget limit — both fixtures pass at
-4 MB with *identical* peak heap, and the failing one returns `UNC_ERR_SINK`,
-i.e. the Mac shell's File Manager writes gave out under 1 MB memory
-pressure. Not yet root-caused; tracked in [BLOCKERS.md](BLOCKERS.md). One
-StuffIt 5 fixture also fails at 4 MB for reasons the run does not explain —
-same file, tracked in the same place. Everything listed here is byte-exact
-off-Mac and in CI regardless.
+**The two ⚠️ exogenous rows are a limit of the Mac shell, not the engine.**
+The shell stages each whole output fork in RAM before writing it, so it
+needs `archive + engine peak + largest output fork`; both fixtures have
+~174–287 KB output forks and the staging allocation fails at 1 MB
+(`UNC_ERR_SINK`). The engine's own peak heap is identical to the passing
+4 MB run. Everything listed here is byte-exact off-Mac and in CI regardless.
 
 The engine derives its memory budget from `FreeMem()` at runtime (and a
 `SIZE` resource of 4 MB preferred / 400 KB minimum), so one binary adapts

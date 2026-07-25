@@ -38,13 +38,13 @@ fixtures, dominant), 256 KB (9), 512 KB (8)** — so 512 KB is a minority
 tier, not universal. Resulting peak heap: **min 0.64 MB (128 KB block) /
 mean 1.23 MB / max 2.6 MB (512 KB block)**. EVERY Arsenic entry exceeds a
 400 KB budget, so all fail cleanly per entry ("block too large for memory
-budget") under the M9 400 KB cap. On a **1 MB Mac Plus** (~600 KB engine
-budget) even the smallest 128 KB-block archive (0.64 MB) is out of reach,
-so Arsenic is effectively a **≥4 MB machine** feature — an accepted,
-documented tier. The 1 MB half of this is confirmed on-Mac for all six
-Arsenic fixtures in the sample (clean per-entry refusal, see below); the
-4 MB half is confirmed for two of the six, with three more too slow to
-finish the automated poll and one (`RWAsm_Folder`) an open failure.
+budget") under the M9 400 KB cap. On a **1 MB Mac Plus** Arsenic is a
+partial feature: the six Arsenic fixtures in the on-Mac sample split into
+one that extracts completely, two that extract most of their entries and
+refuse the rest, and three that refuse every entry — the boundary is the
+block size each archive declares, not the archive's size. All six extract
+byte-exact at 4 MB. See the two Mini vMac sections below for the
+per-fixture outcomes.
 
 ## Envelope auto-unwrap
 
@@ -76,20 +76,24 @@ result — painted to the framebuffer, read from a screenshot — is
 cross-checked against the same engine's Linux output (`tools/vmac_check.py`,
 `tools/decode_grid.py`).
 
-**39/44 byte-exact PASS** — data forks exact, resource forks exact bar the
-OS-stamped reserved header (bytes 16–127). Of the five that did not pass:
+**44/44 byte-exact PASS** — data forks exact, resource forks exact bar the
+OS-stamped reserved header (bytes 16–127). The sample is
+`tools/vmac/sample.txt`; reproduce with
 
-- **Four timed out, not failed.** They are the corpus's LARGEST fixtures
-  (~1 MB of output: three StuffIt 5 / Arsenic + one big Compact Pro SEA);
-  they extract correctly but the decode is slow on a 7 MHz 68000 and
-  overran the automated poll (XferIt confirmed complete at 185 s). Their
-  logic is proven byte-exact off-Mac — the CI differential suite and the
-  qemu-m68k mock cover these exact fixtures.
-- **One is a genuine on-Mac failure:** `derived-RWAsm_Folder.sit`
-  (StuffIt 5, 38 entries) reports an error on every entry at a 643.2 KB
-  peak, i.e. it neither completed nor refused cleanly for a reason the
-  4 MB run explains. It passes off-Mac. **Unexplained — open item**, not a
-  documented tier; see the 1 MB section below, where it refuses cleanly.
+    tools/vmac/setup.sh                              # once
+    tools/vmac/run.py --list tools/vmac/sample.txt   # 4 MB
+
+An earlier record of this run reported 39/44 — four timeouts and one
+unexplained failure (`derived-RWAsm_Folder.sit`, errors on all 38 entries).
+Neither survives on the rebuilt harness: all four "timeouts" complete, and
+RWAsm_Folder extracts its 38 entries byte-exact at the same 643.2 KB peak
+the failing run reported. The old harness was not committed and no longer
+exists, so what differed cannot be established; the numbers here are the
+ones that reproduce.
+
+Note that the emulator now runs **all out** rather than at Mac Plus speed,
+so this harness measures correctness only — **no timing claim about a 7 MHz
+68000 can be drawn from it**, including the previously recorded "185 s".
 
 On-Mac engine peak heap (high-water mark) by format, matching the Linux
 `--stats` figures:
@@ -110,44 +114,45 @@ On-Mac engine peak heap (high-water mark) by format, matching the Linux
 
 The same 44-fixture sample was replayed on a Mini vMac built for **1 MB of
 RAM** — the project's floor target — one boot per fixture, same on-Mac
-CRC-32 verification. The engine budget is derived from `FreeMem` at startup
-(~600 KB on this machine).
+CRC-32 verification (`tools/vmac/run.py --mem 1M --list tools/vmac/sample.txt`).
+The engine budget is derived from `FreeMem` at startup.
 
-**36/44 byte-exact PASS.** The eight non-passing fixtures fall into two
-groups, and every one of them passes at 4 MB:
+**37/44 byte-exact PASS.** The seven that do not pass split into two causes,
+and all seven pass at 4 MB:
 
 | Fixture | Format | Outcome at 1 MB | Peak heap |
 |---|---|---|---|
-| derived-KeyGraphics.sit | StuffIt 5 | clean per-entry refusal (1/1 entries) | 547.6 KB |
-| derived-RWAsm_Folder.sit | StuffIt 5 | clean per-entry refusal (38/38 entries) | 35.5 KB |
-| derived-PuzzleGetter_0.8.sit | StuffIt 5 | clean per-entry refusal (25/26 entries) | 35.5 KB |
+| derived-RWAsm_Folder.sit | StuffIt 5 | 36 of 38 entries byte-exact, 2 refused | 595.7 KB |
+| derived-PuzzleGetter_0.8.sit | StuffIt 5 | 11 of 26 entries byte-exact, 15 refused | 560.9 KB |
 | derived-a2basic.dmg.sit | StuffIt 5 | clean per-entry refusal (1/1 entries) | 35.5 KB |
 | derived-Library_ISBN_Barcoder.sit | StuffIt 5 | clean per-entry refusal (34/34 entries) | 35.5 KB |
 | derived-Troi-ClipSave-Plug-in1.1.sit | StuffIt 5 | clean per-entry refusal (13/13 entries) | 35.5 KB |
-| popper-1.7.tar.Z | Compress | `UNC_ERR_SINK` (-9) — File Manager write failed | 268.0 KB |
+| popper-1.7.tar.Z | Compress | `UNC_ERR_SINK` (-9) — staging allocation failed | 268.0 KB |
 | PCCTS.tar.gz | Gzip | one per-entry error, archive return 0 | 51.0 KB |
 
-**The six StuffIt 5 / Arsenic refusals are the expected, accepted tier**
-(see † above): every Arsenic entry needs ≥0.64 MB, which a 1 MB Mac cannot
-give, so the engine declines per entry and the rest of the archive is
-unaffected. Note the peak heap: five of the six top out at **35.5 KB**,
-because the budget rejects the block allocation *at request time* — the
-oversized buffer is never allocated. KeyGraphics reaches 547.6 KB before
-being refused, so the refusal point depends on the declared block size.
+**The five StuffIt 5 / Arsenic outcomes are the expected, accepted tier**
+(see † above): an Arsenic entry needs ≥0.64 MB for its block, which a 1 MB
+Mac cannot always give, so the engine declines *that entry* and carries on —
+which is why two of the five still extract most of their archive. Where the
+peak reads **35.5 KB** the budget rejected the block *at request time* and
+the oversized buffer was never allocated; where it reads ~0.6 MB the archive
+declares small enough blocks to allocate and the entries succeed.
+`derived-KeyGraphics.sit`, previously recorded as refusing at 1 MB, now
+passes (656.8 KB peak) — the boot volume is stripped to System + Finder,
+which leaves the application more heap than the earlier, unrecorded setup.
 
-**The two exogenous failures are a different, undocumented case.** Both are
-the largest-output fixtures of their format (174 KB and 280 KB of tar
-payload) and both decode fine at 4 MB with identical peak heap — so this is
-not the decoder running out of budget. `popper-1.7.tar.Z` returns
-`UNC_ERR_SINK`, i.e. the *sink* (the Mac app's File Manager writes), not the
-engine, failed under 1 MB memory pressure. **Not yet root-caused — open
-item.** The harness is otherwise identical between the two runs (same
-1440 KB output volume, same disks; only the emulator's RAM differs), so the
-difference is real and attributable to RAM.
+**The two exogenous failures have a different and now-known cause: the Mac
+sink stages each whole fork in RAM.** File Manager writes happen at shallow
+depth in `sink_end`, never from inside the decode callback, so every fork is
+accumulated in a `NewPtr` block first. Peak RAM for the *shell* is therefore
 
-Reproduce with `batch_corpus_1m.sh` (whole sample) and `retry_1m.sh`
-(re-runs anything with no result grid at a longer poll, so a slow-but-correct
-extraction is distinguishable from a refusal or a bomb).
+    archive size + engine peak heap + largest single output fork
+
+and these two fixtures have the largest output forks in the sample (174 KB
+and 287 KB). At 1 MB that staging allocation fails and the entry reports
+`UNC_ERR_SINK`; the engine itself is well inside budget, with the same peak
+heap as the passing 4 MB run. This is a limit of the Mac shell, not of the
+engine, and it bounds the file size a 1 MB machine can extract.
 
 What unblocked all of this was rewriting the File Manager calls to use
 explicit, fully-zeroed HFS param blocks. This was originally attributed to a

@@ -508,3 +508,27 @@ BLOCKERS.md for the full write-up. Key decisions:
   mapOffset are both >= 128, so a non-standard layout fails loudly instead of
   being silently papered over. Swept across the corpus: 1545/1545 resource
   forks have the standard layout, 0 non-standard.
+- **The on-Mac harness is committed and fetches its copyrighted inputs, rather
+  than shipping them.** Every "runs on real System 6" claim in this repository
+  used to rest on a working directory that was never checked in and no longer
+  exists, so nothing could be re-run, disputed or debugged — and two of the
+  three open items in BLOCKERS.md were unreproducible for exactly that reason.
+  `tools/vmac/` now scripts the whole thing. It follows the `fixtures/` rule for
+  the two Apple-copyrighted inputs it needs (a Mac Plus ROM and a System 6.0.8
+  image): fetch by URL, verify by SHA-256, never commit. The 44-fixture sample
+  it replays is committed as a plain list (`tools/vmac/sample.txt`) so that a
+  4 MB run and a 1 MB run months apart compare like for like.
+- **The emulator runs "all out", so the harness measures correctness only.**
+  Mini vMac's speed is a compile-time option; building it at 1x would make each
+  fixture take Mac Plus time and the sweep impractical, and correctness is
+  speed-independent. The cost is that no timing claim about a 7 MHz 68000 can
+  come from this harness — the previously recorded "185 s for XferIt" has been
+  struck rather than restated, since the 1x setup that produced it is gone.
+- **The autotest application always reports what it is doing, even when it has
+  nothing to report.** It paints a grid with `ret = -1000` before starting work
+  and `-1001`/`-1002` when the In/Out volume is missing. Without that, a
+  screenshot with no grid was ambiguous between "never launched", "bombed" and
+  "still decoding", and the harness could only report a timeout — which is
+  precisely how a broken disk set once looked like a slow decoder. The codes
+  sit far outside the engine's `UNC_ERR_*` range so they cannot be confused
+  with a result.

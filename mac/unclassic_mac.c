@@ -384,7 +384,7 @@ static OSErr MyOpenFork(short vol, long dir, ConstStr255Param name,
     pb.ioParam.ioPermssn = perm;
     pb.fileParam.ioDirID = dir;
     err = rsrc ? PBHOpenRFSync(&pb) : PBHOpenSync(&pb);
-    *refOut = pb.ioParam.ioRefNum;   /* the glue's missing step */
+    *refOut = pb.ioParam.ioRefNum;
     return err;
 }
 
@@ -749,6 +749,12 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
 #define fsRtDirID 2L
 #define nsvErr    (-35)
 
+/* How many volumes the last FindVol walk saw. Reported in the failure grid:
+ * "1" means only the boot disk ever mounted, which is a harness problem
+ * (disk set, insertion), whereas "3" would mean the disks are all there and
+ * the names are wrong. Without it the two look identical from the host. */
+static int gATnvols;
+
 /* Locate a mounted volume by name; return its real vRefNum. */
 static OSErr FindVol(ConstStr255Param want, short *vref)
 {
@@ -760,13 +766,56 @@ static OSErr FindVol(ConstStr255Param want, short *vref)
         pb.volumeParam.ioNamePtr = nm;
         pb.volumeParam.ioVRefNum = 0;
         pb.volumeParam.ioVolIndex = idx;
-        if (PBHGetVInfoSync(&pb) != noErr) return nsvErr;
+        if (PBHGetVInfoSync(&pb) != noErr) { gATnvols = idx - 1; return nsvErr; }
         if (EqualString(nm, want, false, false)) {
             *vref = pb.volumeParam.ioVRefNum;
             return noErr;
         }
     }
+    gATnvols = idx - 1;
     return nsvErr;
+}
+
+/* Mount whatever is sitting in the floppy drives.
+ *
+ * This application replaces the Finder as the boot shell, and that turns out
+ * to matter: a disk inserted after startup is announced with a disk-inserted
+ * event, but the volume is only mounted when SOMEBODY asks, and normally that
+ * somebody is the Finder. With the Finder gone, the emulator's In and Out
+ * images stay unmounted forever — measured, not assumed: the volume walk saw
+ * exactly one volume (the boot disk) after 30 seconds of waiting.
+ *
+ * So ask, by drive number. Errors are ignored on purpose: an empty drive
+ * answers nsDrvErr and an already-mounted one volOnLinErr, and neither is a
+ * problem. */
+static void MountAllDrives(void)
+{
+    ParamBlockRec pb;
+    short drv;
+    long z;
+    for (drv = 1; drv <= 8; drv++) {
+        for (z = 0; z < (long)sizeof pb; z++) ((char *)&pb)[z] = 0;
+        pb.volumeParam.ioVRefNum = drv;      /* drive number, not a vRefNum */
+        (void)PBMountVol(&pb);
+    }
+}
+
+/* As FindVol, but mounts the drives first and waits for the volume to turn up.
+ *
+ * The wait is still needed on top of the mount: the application is the boot
+ * shell, so it starts the instant the System is up, which can be before the
+ * emulator has finished inserting all its images. */
+#define kVolWaitTicks 1800L   /* 30 s of Mac time, i.e. many boots' worth */
+
+static OSErr FindVolWait(ConstStr255Param want, short *vref)
+{
+    long deadline = TickCount() + kVolWaitTicks;
+    for (;;) {
+        MountAllDrives();
+        if (FindVol(want, vref) == noErr) return noErr;
+        if ((long)(TickCount() - deadline) >= 0) return nsvErr;
+        SystemTask();
+    }
 }
 
 /* CRC-32 (IEEE, reflected — the zlib/PNG polynomial), computed on the Mac
@@ -909,6 +958,50 @@ static void at_report(const uint32_t *vals, int nvals)
             at_cell(base, rb, idx++, (int)((vals[i] >> b) & 1u));
 }
 
+/* Idle so the host can screenshot the framebuffer, then kill the emulator. */
+static void at_idle(void)
+{
+    for (;;) {
+        EventRecord ev;
+        if (gHasWNE) WaitNextEvent(everyEvent, &ev, 60, NULL);
+        else SystemTask();
+    }
+}
+
+/* Statuses that are NOT engine results, reported in vals[1] where a finished
+ * run reports the engine's return code. They sit far outside the engine's
+ * UNC_ERR_* range — a handful of small negatives — so the host can never
+ * mistake one for the other.
+ *
+ * kAtRunning is painted before any work starts, and matters more than it
+ * looks: without it a host screenshot showing no grid is ambiguous between
+ * "the application never launched", "it bombed" and "it is still decoding",
+ * and the harness can only report a timeout and leave the reader guessing.
+ * With it, a decodable grid means the app is alive. */
+#define kAtRunning   (-1000)   /* alive, extraction not finished yet */
+#define kAtNoInVol   (-1001)   /* no volume named "In" is mounted    */
+#define kAtNoOutVol  (-1002)   /* no volume named "Out" is mounted   */
+
+static void at_status(int code)
+{
+    uint32_t vals[8];
+    int i;
+    for (i = 0; i < 8; i++) vals[i] = 0;
+    vals[1] = (uint32_t)code;
+    at_report(vals, 8);
+}
+
+static void at_fail(int code)
+{
+    uint32_t vals[8];
+    int i;
+    for (i = 0; i < 8; i++) vals[i] = 0;
+    vals[0] = (uint32_t)gATnvols;    /* how many volumes were actually mounted */
+    vals[1] = (uint32_t)code;
+    at_report(vals, 8);
+    at_idle();
+}
+
 int main(void)
 {
     short inVol, outVol;
@@ -928,10 +1021,16 @@ int main(void)
     FlushEvents(everyEvent, 0);
     gHasWNE = TrapAvailable(_WaitNextEvent);
 
+    at_status(kAtRunning);   /* "I am alive" — see the kAt* codes above */
+
     /* Input archive is on the "In" volume; extract onto a SEPARATE "Out"
-     * volume. */
-    if (FindVol("\pIn", &inVol) != noErr)  { for (;;) SystemTask(); }
-    if (FindVol("\pOut", &outVol) != noErr) { for (;;) SystemTask(); }
+     * volume. A missing volume used to spin here forever, which on the host
+     * side is indistinguishable from a slow extraction or a bombed app — the
+     * harness would just time out and blame the engine. Report it instead:
+     * the grid is the only channel off this machine, so a setup failure has
+     * to travel down it too. */
+    if (FindVolWait("\pIn", &inVol) != noErr)   at_fail(kAtNoInVol);
+    if (FindVolWait("\pOut", &outVol) != noErr) at_fail(kAtNoOutVol);
 
     gATrecVol = outVol;   /* sink records each output file here (see below) */
     ret = RunExtract(inVol, fsRtDirID, "\parchive.sit",
@@ -992,11 +1091,7 @@ int main(void)
     /* Idle forever. The host reads the result off the SCREEN (a screenshot),
      * not the disk — no write-back needed, so the emulator can just be
      * killed once the grid has been captured. */
-    for (;;) {
-        EventRecord ev;
-        if (gHasWNE) WaitNextEvent(everyEvent, &ev, 60, NULL);
-        else { SystemTask(); }
-    }
+    at_idle();
     return 0;
 }
 
