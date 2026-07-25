@@ -787,11 +787,26 @@ static uint32_t at_crc32_update(uint32_t crc, const uint8_t *p, long n)
 }
 
 /* CRC-32 one fork of a file, reading it back through the File Manager.
- * For the resource fork, the real Resource Manager stamps machine/session
- * data into the "reserved for system use" area (bytes 16..127); no off-Mac
- * tool reproduces it, so those bytes are ZEROED before CRCing (the host
- * oracle masks the same range) — otherwise every resource fork would
- * spuriously mismatch. Returns 0 and sets *crc/*len; -1 on open failure. */
+ *
+ * For the resource fork, bytes 16..127 are ZEROED before CRCing. That range
+ * is the 112-byte "reserved for system use" area of the 256-byte resource
+ * FILE header (Inside Macintosh: More Macintosh Toolbox, Resource Manager):
+ *
+ *     0..3     offset to resource data      12..15   length of resource map
+ *     4..7     offset to resource map       16..127  reserved, SYSTEM     <-- masked
+ *     8..11    length of resource data      128..255 reserved, APPLICATION
+ *
+ * The System 6 Resource Manager stamps session scratch into the system area
+ * and no off-Mac tool reproduces it, so an unmasked CRC would make every
+ * resource fork mismatch spuriously. Masking is safe because nothing points
+ * into that range — resources are reached only via the offsets in bytes
+ * 0..15 and the map. The application area at 128..255 is NOT masked: it
+ * holds real content (THINK C's copyright notice, for one) and must still
+ * match byte-exact. tools/vmac_check.py masks exactly the same range on the
+ * host side. Returns 0 and sets *crc/*len; -1 on open failure. */
+#define kRsrcSysReservedBeg  16    /* first byte of the system-reserved area */
+#define kRsrcSysReservedEnd  128   /* one past its last byte (112 bytes)     */
+
 static int at_fork_crc(short vol, long dir, ConstStr255Param name,
                        int rsrc, uint32_t *crc, long *len)
 {
@@ -808,11 +823,12 @@ static int at_fork_crc(short vol, long dir, ConstStr255Param name,
         long cnt = (long)sizeof buf;
         OSErr rerr = FSRead(ref, &cnt, buf);
         if (cnt > 0) {
-            if (rsrc && total < 128) {          /* mask reserved header 16..127 */
+            if (rsrc && total < kRsrcSysReservedEnd) {
                 long i;
                 for (i = 0; i < cnt; i++) {
                     long off = total + i;
-                    if (off >= 16 && off < 128) buf[i] = 0;
+                    if (off >= kRsrcSysReservedBeg && off < kRsrcSysReservedEnd)
+                        buf[i] = 0;
                 }
             }
             c = at_crc32_update(c, (const uint8_t *)buf, cnt);

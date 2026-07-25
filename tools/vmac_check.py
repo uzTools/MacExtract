@@ -9,13 +9,15 @@ extraction should produce:
   ret == 0       (UNC_OK) and errors == 0
   sumDataCRC     sum mod 2^32 of each data fork's CRC-32
   totalDataLen   sum of data-fork lengths
-  sumRsrcCRC     sum of each resource fork's CRC-32, reserved header (bytes
-                 16..127) masked to 0 — the OS stamps that region per session
+  sumRsrcCRC     sum of each resource fork's CRC-32 with bytes 16..127 — the
+                 112-byte "reserved for system use" area of the resource file
+                 header — masked to 0; see mask_reserved() below for why that
+                 is safe and what is deliberately NOT masked
   totalRsrcLen   sum of resource-fork lengths
 
 Prints PASS/FAIL and the engine's on-Mac peak heap use. Exit 0 iff PASS.
 """
-import sys, os, zlib, json, subprocess, tempfile, shutil
+import sys, os, zlib, json, struct, subprocess, tempfile, shutil
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from decode_grid import decode
@@ -32,9 +34,52 @@ def crc(b):
     return zlib.crc32(b) & 0xFFFFFFFF
 
 
+# ---- the resource-fork reserved-header mask ------------------------------
+#
+# A resource fork begins with a 256-byte resource FILE header (Inside
+# Macintosh: More Macintosh Toolbox, Resource Manager, "Resource file
+# format"), laid out as:
+#
+#     offset  size  content
+#     0       4     offset from start of fork to the resource DATA
+#     4       4     offset from start of fork to the resource MAP
+#     8       4     length of the resource data
+#     12      4     length of the resource map
+#     16      112   reserved for SYSTEM use      <-- masked
+#     128     128   reserved for APPLICATION use
+#
+# Only the 112-byte system area is masked. The System 6 Resource Manager
+# stamps that region with machine/session scratch when it touches the file,
+# and nothing off-Mac reproduces it, so an unmasked CRC would make every
+# resource fork mismatch spuriously. Nothing in the fork ever points into it:
+# resources are reached exclusively through the four offsets in bytes 0..15
+# and the map, so zeroing it cannot hide a difference in any actual resource.
+#
+# The 128-byte application area at 128..255 is deliberately NOT masked — it
+# carries real content (e.g. THINK C writes its copyright notice there) and
+# must still compare byte-exact.
+RSRC_SYS_RESERVED = (16, 128)          # [start, end) — 112 bytes
+
+
 def mask_reserved(rsrc):
+    """Zero the resource fork's system-reserved header bytes 16..127.
+
+    Refuses to mask anything that is not provably header padding: if the
+    fork's own dataOffset/mapOffset say a resource starts inside the range
+    we are about to zero, the layout is not the standard one and masking
+    could hide a real mismatch, so the fork is returned untouched and the
+    comparison is left to fail loudly.
+    """
+    lo, hi = RSRC_SYS_RESERVED
+    if len(rsrc) < 16:
+        return rsrc                      # too short to have a header at all
+    data_off, map_off = struct.unpack(">II", rsrc[:8])
+    # Both regions must start at or after the end of the masked range for the
+    # mask to be pure padding. A standard fork has data_off == 256.
+    if data_off < hi or map_off < hi:
+        return rsrc
     b = bytearray(rsrc)
-    for i in range(16, min(128, len(b))):
+    for i in range(lo, min(hi, len(b))):
         b[i] = 0
     return bytes(b)
 

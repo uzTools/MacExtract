@@ -490,3 +490,21 @@ BLOCKERS.md for the full write-up. Key decisions:
   `OpenDF` beside it, has no fallback; plus the latent uninitialised-`ioMisc`
   inconsistency. Written up ready to post in
   `tools/retro68-hopen-repro/ISSUE.md`.
+- **The on-Mac resource-fork mask is bytes 16..127 and it is header padding,
+  not a fudge.** The autotest compares resource forks by CRC, and the System 6
+  Resource Manager stamps session scratch into part of the header, so a raw CRC
+  would mismatch every time. The masked range is exactly the 112-byte "reserved
+  for system use" area of the 256-byte resource FILE header (Inside Macintosh:
+  More Macintosh Toolbox, Resource Manager) — verified on a real fixture: `AT
+  View.rsrc` has dataOffset=256, mapOffset=16805, do+dl==mo and mo+ml==filesize,
+  so bytes 16..255 are pure padding, split 112 system / 128 application.
+  Note this is the resource *file* header, not the resource *map* header (whose
+  own reserved area is the 22 bytes at mapOffset, per
+  reference/XADMaster/XADResourceFork.m).
+  Two deliberate limits keep the mask honest: (a) bytes 128..255, the
+  application-reserved area, are NOT masked — they carry real content (THINK C
+  writes its copyright notice there) and must still match byte-exact; (b)
+  `mask_reserved()` refuses to mask at all unless the fork's own dataOffset and
+  mapOffset are both >= 128, so a non-standard layout fails loudly instead of
+  being silently papered over. Swept across the corpus: 1545/1545 resource
+  forks have the standard layout, 0 non-standard.
