@@ -126,16 +126,17 @@ directory is gone).
   out. What differed cannot be established, because the harness that
   produced the old numbers does not exist any more. Closed as
   not-reproducible, not as fixed.
-- **`popper-1.7.tar.Z` and `PCCTS.tar.gz` at 1 MB — ROOT-CAUSED.** Both
-  reproduce, and the cause is not File Manager or HFS cache headroom: **the
-  Mac sink stages each whole fork in a `NewPtr` block before writing it.**
-  All File Manager writes happen at shallow depth in `sink_end`, never from
-  inside the decode callback, so a fork is accumulated in RAM first. The
-  shell's peak is therefore `archive + engine peak + largest output fork`,
-  and these two fixtures have the sample's largest output forks (174 KB and
-  287 KB). At 1 MB the staging `NewPtr` fails and the entry reports
-  `UNC_ERR_SINK`; the engine's own peak heap is identical to the passing
-  4 MB run. Recorded as a documented limit of the shell in FORMATS.md.
+- **`popper-1.7.tar.Z` and `PCCTS.tar.gz` at 1 MB — ROOT-CAUSED AND
+  FIXED.** Both reproduced, and the cause was not File Manager or HFS cache
+  headroom: the Mac sink accumulated each whole fork in a `NewPtr` block
+  before writing it, so the shell needed `archive + engine peak + largest
+  output fork`, and these two have the sample's largest output forks (174 KB
+  and 287 KB). The sink now writes each chunk straight through as the engine
+  produces it, and the shell's RAM use no longer depends on output size at
+  all. Both fixtures are byte-exact at 1 MB; the sweep went 37/44 -> 39/44,
+  with only StuffIt 5 budget refusals left. The old path stays buildable as
+  `UNC_MAC_STAGE_WRITES` and both are byte-exact through the qemu-m68k mock
+  in CI.
 
 ### Detect-only gap — RESOLVED
 

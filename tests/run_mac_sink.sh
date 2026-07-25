@@ -20,10 +20,9 @@ FIXTURES="derived-ASCbeep.sit derived-apple.art.sit alpha401.cpt \
           derived-Compact_Pro_Package derived-resforkkiller.sit \
           derived-PackIt.pit synth-exo-tar.tar"
 
-# Two-fork files (non-empty data AND resource fork). On a real Mac these
-# take the single-shared-block staging path (mac/unclassic_mac.c) — two
-# separate NewPtr staging blocks crash System 6's Memory Manager. Forced
-# on here (UNC_MAC_FORCE_SHAREBUF) so that path is proven byte-exact.
+# Two-fork files (non-empty data AND resource fork) — the case where the
+# data and resource paths can disagree, so every write variant is proven
+# byte-exact against these as well as against $FIXTURES.
 BOTHFORK_FIXTURES="3d_windows.sea.bin compact-pro-134.bin \
                    ACInfo_Comm.sit.bin bitmap11.sit.bin"
 
@@ -54,13 +53,24 @@ verify ./build/mac_sink_asan ram   # exercise the Mac app's RAM-slurp/xio_* path
 ./build/mac_sink_asan --cancel "$(mktemp -d)" || { echo "mac-sink: cancel-cleanup FAILED"; exit 1; }
 echo "mac-sink: native OK (file + RAM paths + cancel cleanup)"
 
-echo "mac-sink: native x86-64, two-fork single-shared-block staging path"
+# The alternative write path. The default streams each chunk straight to the
+# File Manager; UNC_MAC_STAGE_WRITES accumulates whole forks in RAM and writes
+# them in sink_end, which is what the shell used to do. Both must be
+# byte-exact, and the staging path has two sub-variants of its own
+# (UNC_MAC_FORCE_SHAREBUF packs both forks into one block).
+echo "mac-sink: native x86-64, staging write path (+ shared block)"
 gcc -std=gnu99 -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all \
-    -DUNC_MAC_FORCE_SHAREBUF -Iinclude -Isrc -Ithird_party/zlib \
+    -DUNC_MAC_STAGE_WRITES -Iinclude -Isrc -Ithird_party/zlib \
+    tests/mac_sink_test.c src/*.c third_party/zlib/*.c -o build/mac_sink_stage
+verify ./build/mac_sink_stage
+verify ./build/mac_sink_stage "" "$BOTHFORK_FIXTURES"
+gcc -std=gnu99 -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all \
+    -DUNC_MAC_STAGE_WRITES -DUNC_MAC_FORCE_SHAREBUF \
+    -Iinclude -Isrc -Ithird_party/zlib \
     tests/mac_sink_test.c src/*.c third_party/zlib/*.c -o build/mac_sink_sharebuf
 verify ./build/mac_sink_sharebuf "" "$BOTHFORK_FIXTURES"
 verify ./build/mac_sink_sharebuf ram "$BOTHFORK_FIXTURES"
-echo "mac-sink: shared-block OK (both forks byte-exact)"
+echo "mac-sink: staging + shared-block OK (both forks byte-exact)"
 
 if command -v m68k-linux-gnu-gcc >/dev/null 2>&1 && command -v qemu-m68k >/dev/null 2>&1; then
     # NOTE on the 68000 alignment guarantee: qemu-m68k's default CPU is
@@ -82,11 +92,13 @@ if command -v m68k-linux-gnu-gcc >/dev/null 2>&1 && command -v qemu-m68k >/dev/n
     verify "qemu-m68k build/mac_sink_m68k"
     verify "qemu-m68k build/mac_sink_m68k" ram
     echo "mac-sink: m68k big-endian OK (file + RAM paths)"
-    m68k-linux-gnu-gcc -std=gnu99 -O2 -static -mcpu=68000 -DUNC_MAC_FORCE_SHAREBUF \
+    verify "qemu-m68k build/mac_sink_m68k" "" "$BOTHFORK_FIXTURES"
+    m68k-linux-gnu-gcc -std=gnu99 -O2 -static -mcpu=68000 \
+        -DUNC_MAC_STAGE_WRITES -DUNC_MAC_FORCE_SHAREBUF \
         -Iinclude -Isrc -Ithird_party/zlib \
         tests/mac_sink_test.c src/*.c third_party/zlib/*.c -o build/mac_sink_sb68
     verify "qemu-m68k build/mac_sink_sb68" "" "$BOTHFORK_FIXTURES"
-    echo "mac-sink: m68k shared-block OK (both forks byte-exact)"
+    echo "mac-sink: m68k both write paths OK (both forks byte-exact)"
 else
     echo "mac-sink: m68k cross-toolchain absent, skipping big-endian check"
 fi

@@ -17,7 +17,7 @@ minutes per fixture. It is a deliberate, on-demand check.
 
 | file | role |
 |---|---|
-| `setup.sh` | fetch + build the emulator, the ROM and a System 6.0.8 image into `$UNC_VMAC_HOME` (default `build/vmac/`) |
+| `setup.sh` | fetch + build the emulator, the ROM and a System 6.0.8 image into `$UNC_VMAC_HOME` (default `~/.cache/unclassic/vmac/`) |
 | `mkboot.py` | strip that image to System + Finder and make it boot straight into the application |
 | `run.py` | build the disks, boot, screenshot, decode, check |
 

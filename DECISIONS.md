@@ -532,3 +532,17 @@ BLOCKERS.md for the full write-up. Key decisions:
   precisely how a broken disk set once looked like a slow decoder. The codes
   sit far outside the engine's `UNC_ERR_*` range so they cannot be confused
   with a result.
+- **The Mac sink writes each chunk straight to the File Manager; it no longer
+  stages whole forks in RAM.** Staging cost the shell `archive + engine peak +
+  largest output fork`, which is what stopped a 1 MB Mac Plus extracting the
+  two largest-output fixtures in the sample — a limit on *output size*, which
+  is a strange thing for a floor-target machine to have. The comment that
+  justified staging said writes from the deep decode callback corrupt HFS, but
+  that dates from the period BLOCKERS.md records as confounded, so it was
+  re-tested rather than trusted: streaming is byte-exact through the mock
+  (native ASan/UBSan and big-endian qemu-m68k) and on a real System 6.0.8 Mac
+  Plus, 44/44 at 4 MB and 39/44 at 1 MB, where the only remaining failures are
+  StuffIt 5 memory-budget refusals. Deep writes are safe here for a concrete
+  reason: the archive is slurped into RAM first, so no File Manager READ is
+  ever interleaved with the writes on the same volume. The staging path stays
+  buildable as `UNC_MAC_STAGE_WRITES` and CI proves both byte-exact.

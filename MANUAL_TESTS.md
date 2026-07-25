@@ -3,7 +3,7 @@
 NOTE (2026-07-25): the shell runs under Mini vMac (System 6.0.8, Mac
 Plus, a true 68000) and **extracts correctly — single-fork, two-fork,
 and multi-file — with both forks verified byte-exact ON THE MAC ITSELF**
-(44/44 sampled fixtures at 4 MB across all twelve formats, 37/44 at
+(44/44 sampled fixtures at 4 MB across all twelve formats, 39/44 at
 1 MB). Data forks match exactly;
 resource forks match except the 112-byte "reserved for system use" area
 of the resource file header (offsets 16–127), which is masked identically
@@ -46,9 +46,10 @@ Done interactively in the emulator, each step captured:
 - `sh tests/run_mac_sink.sh` (in `ci.sh`): runs the ACTUAL sink through a
   mock Toolbox against the engine, byte-exact vs. the oracle manifests,
   natively (ASan+UBSan) and under `qemu-m68k` — the file-backed IO path,
-  the RAM-slurp `xio_*` path, the shared-block two-fork path, AND the
-  Cmd-. cancel cleanup (`--cancel`). Authoritative proof of the sink
-  logic on the target word size/endian.
+  the RAM-slurp `xio_*` path, BOTH write paths (streaming, and the older
+  whole-fork staging under `UNC_MAC_STAGE_WRITES`, including its
+  shared-block variant), AND the Cmd-. cancel cleanup (`--cancel`).
+  Authoritative proof of the sink logic on the target word size/endian.
 - **`tools/vmac/run.py` — the on-Mac replay, scripted end to end.** It
   boots a stripped System 6.0.8 straight into the `-DUNC_MAC_AUTOTEST`
   build (no Finder, no simulated double-click), which finds the HFS

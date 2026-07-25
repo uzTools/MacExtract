@@ -42,5 +42,10 @@ target_compile_options(unclassic PRIVATE -mcpu=68000 -Os -Wno-multichar
                        $<$<BOOL:$ENV{UNC_AT_SEPARATE_BLOCKS}>:-DUNC_AT_SEPARATE_BLOCKS>
                        # UNC_AT_NOCRC: skip the on-Mac fork read-back (isolate a
                        # write-path crash from a read-back crash).
-                       $<$<BOOL:$ENV{UNC_AT_NOCRC}>:-DUNC_AT_NOCRC>)
+                       $<$<BOOL:$ENV{UNC_AT_NOCRC}>:-DUNC_AT_NOCRC>
+                       # UNC_MAC_STAGE_WRITES: go back to accumulating each
+                       # whole fork in RAM and writing it in sink_end. The
+                       # default streams straight to the File Manager; this
+                       # keeps the older path buildable for comparison.
+                       $<$<BOOL:$ENV{UNC_MAC_STAGE_WRITES}>:-DUNC_MAC_STAGE_WRITES>)
 target_link_options(unclassic PRIVATE -Wl,-gc-sections)

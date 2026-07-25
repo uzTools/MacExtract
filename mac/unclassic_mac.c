@@ -279,20 +279,26 @@ typedef struct {
     UncEntryInfo cur;
     int          entries, errors;
     Progress    *pr;
-    /* Streaming write: each fork is written straight to disk as the engine
-     * delivers its chunks — no whole-fork RAM staging. Only ONE fork is
-     * ever open at a time; when the engine switches forks (data -> resource)
-     * the open fork is closed and the volume flushed before the next opens.
-     * This is what makes both-fork files work on a real Mac: two big
-     * simultaneous staging buffers were observed to corrupt the heap/HFS
-     * catalog. Deep File Manager writes are safe here because the whole
-     * archive has already been slurped into RAM, so no File Manager READ is
-     * ever interleaved with these writes. See BLOCKERS.md / DECISIONS.md. */
+#ifndef UNC_MAC_STAGE_WRITES
+    /* Streaming write path: each chunk goes straight to disk as the engine
+     * delivers it, so the shell never holds a whole fork in RAM. Exactly one
+     * fork is open at a time; switching forks closes and flushes the open one
+     * first, and the byte position of each is remembered so a fork can be
+     * reopened if the engine comes back to it. */
+    short        openRef;            /* refNum of the open fork, 0 if none  */
+    int          openIsRsrc;         /* which fork openRef refers to        */
+    uint32_t     dataPos, rsrcPos;   /* bytes written to each fork so far   */
+    int          wrErr;              /* a write failed; fail the entry      */
+#else
+    /* Staging write path: forks are accumulated in RAM and written in
+     * sink_end at shallow depth. Costs the shell one whole fork of RAM,
+     * which is what bounds the file size a 1 MB machine can extract. */
     Ptr          dataBuf, rsrcBuf;   /* whole-fork RAM staging */
     uint32_t     dataLen, dataCap, rsrcLen, rsrcCap;
     int          bufErr;
     int          dropData, dropRsrc; /* fork dropped (unknown-size fallback) */
     int          sharedBuf;          /* dataBuf+rsrcBuf are ONE NewPtr block */
+#endif
 } MacSink;
 
 /* One engine path component -> Pascal Str63: undo the '/'->':' swap,
@@ -422,9 +428,16 @@ static int sink_begin(void *ctx, const UncEntryInfo *info)
 
     s->cur = *info;
     s->entries++;
+#ifndef UNC_MAC_STAGE_WRITES
+    s->openRef = 0;
+    s->openIsRsrc = 0;
+    s->dataPos = s->rsrcPos = 0;
+    s->wrErr = 0;
+#else
     s->dataBuf = s->rsrcBuf = NULL;
     s->dataLen = s->dataCap = s->rsrcLen = s->rsrcCap = 0;
     s->bufErr = 0;
+#endif
 
     /* Walk the '/'-separated engine path, creating directories. */
     for (i = 0; i <= info->name_len; i++) {
@@ -455,6 +468,9 @@ static int sink_begin(void *ctx, const UncEntryInfo *info)
             BumpName(s->curName, attempt + 1);
         }
     }
+#ifndef UNC_MAC_STAGE_WRITES
+    return 0;                        /* nothing to pre-allocate: we stream */
+#else
     s->dropData = s->dropRsrc = 0;
     s->sharedBuf = 0;
     {
@@ -501,6 +517,7 @@ static int sink_begin(void *ctx, const UncEntryInfo *info)
         }
     }
     return 0;
+#endif  /* !UNC_MAC_STAGE_WRITES */
 }
 
 /* Trap-free byte copy for the deep decode-callback depth. */
@@ -509,13 +526,84 @@ static void ByteCopy(const uint8_t *src, uint8_t *dst, uint32_t n)
     while (n--) *dst++ = *src++;
 }
 
-/* Deep decode callback: only stage into RAM (a plain memcpy — no Toolbox
- * call). All File Manager writes happen later, at shallow depth, in
- * sink_end. Writing forks from this deep, heap-fragile context corrupts a
- * real Mac's HFS volume. */
+#ifndef UNC_MAC_STAGE_WRITES
+
+/* Close the fork currently open, if any, and commit it. */
+static OSErr StreamClose(MacSink *s)
+{
+    OSErr err = noErr;
+    if (s->openRef) {
+        err = FSClose(s->openRef);
+        s->openRef = 0;
+        FlushVol(NULL, s->vRefNum);   /* commit before anything else opens */
+    }
+    return err;
+}
+
+/* Make <fork> the open one, positioned where its last write left off.
+ *
+ * Only one fork is ever open at a time. That is deliberate rather than
+ * incidental: it keeps the File Manager's per-file state simple and matches
+ * the way the staging path wrote its forks, one after the other. Remembering
+ * each fork's position means the engine may interleave forks freely — the
+ * fork is simply reopened and repositioned.
+ *
+ * Deep File Manager writes are safe here for a specific reason: the whole
+ * archive has already been slurped into RAM (see the MemIO comment above),
+ * so no File Manager READ is ever interleaved with these writes on the same
+ * volume. Verified on a real 68000 Mac Plus under System 6.0.8 — the
+ * 44-fixture sample is byte-exact at 4 MB and only the Arsenic
+ * memory-budget refusals fail at 1 MB (tools/vmac/run.py). */
+static OSErr StreamSelect(MacSink *s, int isRsrc)
+{
+    OSErr err;
+    uint32_t pos;
+    if (s->openRef && s->openIsRsrc == isRsrc) return noErr;
+    err = StreamClose(s);
+    if (err != noErr) return err;
+    err = MyOpenFork(s->vRefNum, s->curDirID, s->curName, fsWrPerm,
+                     isRsrc, &s->openRef);
+    if (err != noErr) { s->openRef = 0; return err; }
+    s->openIsRsrc = isRsrc;
+    pos = isRsrc ? s->rsrcPos : s->dataPos;
+    return SetFPos(s->openRef, fsFromStart, (long)pos);
+}
+
+#endif  /* !UNC_MAC_STAGE_WRITES */
+
+/* Deep decode callback: writes straight through to the File Manager. With
+ * UNC_MAC_STAGE_WRITES it instead only copies into RAM (a plain memcpy, no
+ * Toolbox call) and sink_end does the writing at shallow depth. */
 static int sink_write(void *ctx, UncFork fork, const void *buf, int32_t len)
 {
     MacSink *s = (MacSink *)ctx;
+#ifndef UNC_MAC_STAGE_WRITES
+    uint32_t *pos = fork == UNC_FORK_DATA ? &s->dataPos : &s->rsrcPos;
+    uint32_t off = 0, todo = (uint32_t)len;
+
+    if (len <= 0) return 0;
+    if (s->wrErr) return -1;
+    if (StreamSelect(s, fork == UNC_FORK_RSRC) != noErr) {
+        s->wrErr = 1;
+        return -1;
+    }
+    /* Write in bounded pieces: FSWrite takes a byte count, and keeping it
+     * small bounds how much the File Manager does per call in this deep,
+     * cooperative context. */
+    while (todo > 0) {
+        long count = (long)(todo < 8192u ? todo : 8192u);
+        long want = count;
+        if (FSWrite(s->openRef, &count, (Ptr)((const char *)buf + off)) != noErr
+            || count != want) {
+            s->wrErr = 1;
+            return -1;
+        }
+        off += (uint32_t)want;
+        todo -= (uint32_t)want;
+        *pos += (uint32_t)want;
+    }
+    return 0;
+#else
     Ptr *fb      = fork == UNC_FORK_DATA ? &s->dataBuf : &s->rsrcBuf;
     uint32_t *fl = fork == UNC_FORK_DATA ? &s->dataLen : &s->rsrcLen;
     uint32_t *fc = fork == UNC_FORK_DATA ? &s->dataCap : &s->rsrcCap;
@@ -543,8 +631,10 @@ static int sink_write(void *ctx, UncFork fork, const void *buf, int32_t len)
     ByteCopy((const uint8_t *)buf, (uint8_t *)(*fb + *fl), (uint32_t)len);
     *fl += (uint32_t)len;
     return 0;
+#endif  /* !UNC_MAC_STAGE_WRITES */
 }
 
+#ifdef UNC_MAC_STAGE_WRITES
 /* Write one staged fork to disk (shallow depth, in sink_end). Resource
  * fork opens via HOpenRF; both open one at a time. */
 static OSErr StageFlush(MacSink *s, UncFork fork)
@@ -576,11 +666,19 @@ static OSErr StageFlush(MacSink *s, UncFork fork)
     FlushVol(NULL, s->vRefNum);   /* commit this fork before the next opens */
     return err;
 }
+#endif  /* !UNC_MAC_STAGE_WRITES */
 
 static int sink_end(void *ctx, int status)
 {
     MacSink *s = (MacSink *)ctx;
 
+#ifndef UNC_MAC_STAGE_WRITES
+    /* Everything is already on disk; just close the fork left open. The
+     * close must happen even on failure, or the refNum leaks and the next
+     * entry's open can fail for want of file-control blocks. */
+    if (StreamClose(s) != noErr && status == UNC_OK) status = UNC_ERR_SINK;
+    if (s->wrErr && status == UNC_OK) status = UNC_ERR_SINK;
+#else
     if (s->bufErr && status == UNC_OK) status = UNC_ERR_MEM;
 
     /* Flush the staged forks to disk, at shallow depth, one fork open at a
@@ -603,6 +701,7 @@ static int sink_end(void *ctx, int status)
         if (s->dataBuf) { DisposePtr(s->dataBuf); s->dataBuf = NULL; }
         if (s->rsrcBuf) { DisposePtr(s->rsrcBuf); s->rsrcBuf = NULL; }
     }
+#endif
 
     if (status == UNC_OK && !s->cur.is_dir) {
         /* Set type/creator, Finder flags and dates. */

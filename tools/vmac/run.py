@@ -29,7 +29,12 @@ REPO = os.path.dirname(os.path.dirname(HERE))
 sys.path.insert(0, os.path.join(REPO, "tools"))
 from decode_grid import decode                                # noqa: E402
 
-VMAC_HOME = os.environ.get("UNC_VMAC_HOME", os.path.join(REPO, "build", "vmac"))
+# Deliberately NOT under build/: `make clean` removes that whole tree, which
+# would silently throw away ~80 MB of downloads and both emulator builds.
+DEFAULT_VMAC_HOME = os.path.join(
+    os.environ.get("XDG_CACHE_HOME", os.path.expanduser("~/.cache")),
+    "unclassic", "vmac")
+VMAC_HOME = os.environ.get("UNC_VMAC_HOME", DEFAULT_VMAC_HOME)
 # Mini vMac's X window is always titled "minivmac", whatever -n the build used,
 # and is exactly the 512x342 Mac screen with no border.
 EMU_WINDOW_NAME = "minivmac"
@@ -72,10 +77,18 @@ def make_floppy(path, volname, payload=None, size_kb=FLOPPY_KB):
         shutil.rmtree(env["HOME"], ignore_errors=True)
 
 
-def build_autotest_app():
-    """Build the UNC_MAC_AUTOTEST application, returning its MacBinary path."""
-    bdir = os.path.join(REPO, "build", "mac-autotest")
+def build_autotest_app(defines=()):
+    """Build the UNC_MAC_AUTOTEST application, returning its MacBinary path.
+
+    `defines` are extra UNC_* build switches (mac/CMakeLists.txt turns each
+    into a -D). Each combination gets its own build directory, because CMake
+    reads these from the environment at CONFIGURE time — reusing one directory
+    would silently keep the first combination for ever."""
+    tag = "-".join(["autotest"] + sorted(d.lower() for d in defines))
+    bdir = os.path.join(REPO, "build", "mac-" + tag)
     env = dict(os.environ, UNC_MAC_AUTOTEST="1")
+    for d in defines:
+        env[d] = "1"
     toolchain = os.environ.get("RETRO68", "/opt/Retro68-build/toolchain")
     cmakefile = os.path.join(toolchain, "m68k-apple-macos", "cmake",
                              "retro68.toolchain.cmake")
@@ -247,6 +260,10 @@ def main():
                     help="host seconds between screenshots")
     ap.add_argument("--json", help="write per-fixture results here")
     ap.add_argument("--pngdir", help="keep each run's final screenshot here")
+    ap.add_argument("-D", dest="defines", action="append", default=[],
+                    metavar="UNC_...",
+                    help="extra build switch for the application, e.g. "
+                         "-D UNC_MAC_STAGE_WRITES (repeatable)")
     args = ap.parse_args()
 
     fixtures = list(args.fixtures)
@@ -261,8 +278,13 @@ def main():
     if missing:
         raise SystemExit("run: fixtures not present: " + ", ".join(missing))
 
-    appbin = build_autotest_app()
-    bootimg = os.path.join(VMAC_HOME, "boot-autotest.hfv")
+    appbin = build_autotest_app(args.defines)
+    # Private to this invocation. A shared path would let a second run.py
+    # rewrite the boot image while this one is copying it, which shows up as
+    # an emulator that dies seconds after launch — a confusing way to
+    # discover that two sweeps were overlapping.
+    bootdir = tempfile.mkdtemp(prefix="vmacboot-")
+    bootimg = os.path.join(bootdir, "boot-autotest.hfv")
     build_boot_image(appbin, bootimg)
     if args.pngdir:
         os.makedirs(args.pngdir, exist_ok=True)
@@ -299,6 +321,7 @@ def main():
         finally:
             shutil.rmtree(workdir, ignore_errors=True)
 
+    shutil.rmtree(bootdir, ignore_errors=True)
     print(f"\n{npass}/{len(fixtures)} PASS at {args.mem}")
     if args.json:
         json.dump(results, open(args.json, "w"), indent=1)

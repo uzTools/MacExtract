@@ -5,9 +5,11 @@
 # copyrighted material (the Mac Plus ROM, System 6.0.8) that must NOT be
 # committed — exactly the rule fixtures/ follows. So this script fetches by
 # URL and verifies by SHA-256 instead, and drops it all in a work directory
-# outside the repository tree:
+# outside the repository tree. NOT under build/: `make clean` removes that
+# whole tree, and re-downloading 80 MB because someone ran the test suite is
+# not a reasonable thing to do to anybody.
 #
-#   $UNC_VMAC_HOME   (default: build/vmac/)
+#   $UNC_VMAC_HOME   (default: ~/.cache/unclassic/vmac/)
 #     vMac.ROM          128 KB Macintosh Plus ROM (checksum 4D1F8172)
 #     System6.hfv       20 MB System 6.0.8 hard-disk image
 #     mv-4M/minivmac    emulator built for a 4 MB Mac Plus
@@ -20,7 +22,7 @@
 set -e
 cd "$(dirname "$0")/../.."
 REPO=$(pwd)
-VMAC_HOME=${UNC_VMAC_HOME:-$REPO/build/vmac}
+VMAC_HOME=${UNC_VMAC_HOME:-${XDG_CACHE_HOME:-$HOME/.cache}/unclassic/vmac}
 mkdir -p "$VMAC_HOME"
 cd "$VMAC_HOME"
 

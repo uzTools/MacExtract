@@ -29,7 +29,7 @@ detected by content (never by filename) and unwrapped automatically.
 
 | | Linux CLI | Mac app (System 6 → OS 9) |
 |---|---|---|
-| Extraction, all 12 formats | ✅ byte-exact vs `unar` (771 fixtures, both forks, in CI) | ✅ verified byte-exact **on real System 6.0.8 / 68000** (Mini vMac): 44/44 sampled fixtures at 4 MB, 37/44 at 1 MB — see the tier table below |
+| Extraction, all 12 formats | ✅ byte-exact vs `unar` (771 fixtures, both forks, in CI) | ✅ verified byte-exact **on real System 6.0.8 / 68000** (Mini vMac): 44/44 sampled fixtures at 4 MB, 39/44 at 1 MB — see the tier table below |
 | Both forks + type/creator/dates | ✅ | ✅ (resource fork exact bar the OS-stamped reserved header 16–127; extracted `APPL` launches by double-click) |
 | Robustness (truncated/bit-flipped) | ✅ clean per-entry errors, no crash/hang/sanitizer trip | shares the same engine |
 | Interactive UI | — | SFGetFile → progress dialog (Cancel / Cmd-.) → result alert; Cmd-. removes partial output |
@@ -50,9 +50,9 @@ itself; both are reproducible with `tools/vmac/run.py`. Per format:
 | Compact Pro (.cpt) | ✅ 4/4 | ✅ 4/4 | 19 KB |
 | Zip | ✅ 3/3 | ✅ 3/3 | 12–65 KB |
 | StuffIt classic (.sit) | ✅ 4/4 | ✅ 4/4 | 72–75 KB |
+| Gzip | ✅ 3/3 | ✅ 3/3 | 51 KB |
+| Unix compress (.Z) | ✅ 4/4 | ✅ 4/4 | 268 KB |
 | DiskDoubler / Now Compress | ✅ detect-only | ✅ detect-only | none |
-| Gzip | ✅ 3/3 | ⚠️ 2/3 | 51 KB |
-| Unix compress (.Z) | ✅ 4/4 | ⚠️ 3/4 | 268 KB |
 | **StuffIt 5 / Arsenic** | ✅ 6/6 | ⚠️ **1/6** | 0.6–1.8 MB |
 
 **StuffIt 5 / Arsenic mostly wants a 4 MB machine.** Its BWT blocks need
@@ -64,12 +64,11 @@ two extract most of their entries, and three refuse every entry. Where the
 budget rejects the block at request time nothing is allocated at all
 (35.5 KB peak).
 
-**The two ⚠️ exogenous rows are a limit of the Mac shell, not the engine.**
-The shell stages each whole output fork in RAM before writing it, so it
-needs `archive + engine peak + largest output fork`; both fixtures have
-~174–287 KB output forks and the staging allocation fails at 1 MB
-(`UNC_ERR_SINK`). The engine's own peak heap is identical to the passing
-4 MB run. Everything listed here is byte-exact off-Mac and in CI regardless.
+**Output size does not cost the shell any RAM.** Each chunk is written
+straight to the File Manager as the engine produces it, so a 1 MB machine
+extracts a 287 KB file as happily as a 2 KB one — the only memory that
+scales with the archive is the engine's own working set, listed above.
+Everything here is byte-exact off-Mac and in CI as well.
 
 The engine derives its memory budget from `FreeMem()` at runtime (and a
 `SIZE` resource of 4 MB preferred / 400 KB minimum), so one binary adapts

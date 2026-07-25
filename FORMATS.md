@@ -117,8 +117,8 @@ RAM** — the project's floor target — one boot per fixture, same on-Mac
 CRC-32 verification (`tools/vmac/run.py --mem 1M --list tools/vmac/sample.txt`).
 The engine budget is derived from `FreeMem` at startup.
 
-**37/44 byte-exact PASS.** The seven that do not pass split into two causes,
-and all seven pass at 4 MB:
+**39/44 byte-exact PASS**, and every fixture that does not pass is a StuffIt 5
+memory-budget refusal — the documented tier. All five pass at 4 MB:
 
 | Fixture | Format | Outcome at 1 MB | Peak heap |
 |---|---|---|---|
@@ -127,8 +127,6 @@ and all seven pass at 4 MB:
 | derived-a2basic.dmg.sit | StuffIt 5 | clean per-entry refusal (1/1 entries) | 35.5 KB |
 | derived-Library_ISBN_Barcoder.sit | StuffIt 5 | clean per-entry refusal (34/34 entries) | 35.5 KB |
 | derived-Troi-ClipSave-Plug-in1.1.sit | StuffIt 5 | clean per-entry refusal (13/13 entries) | 35.5 KB |
-| popper-1.7.tar.Z | Compress | `UNC_ERR_SINK` (-9) — staging allocation failed | 268.0 KB |
-| PCCTS.tar.gz | Gzip | one per-entry error, archive return 0 | 51.0 KB |
 
 **The five StuffIt 5 / Arsenic outcomes are the expected, accepted tier**
 (see † above): an Arsenic entry needs ≥0.64 MB for its block, which a 1 MB
@@ -141,18 +139,16 @@ declares small enough blocks to allocate and the entries succeed.
 passes (656.8 KB peak) — the boot volume is stripped to System + Finder,
 which leaves the application more heap than the earlier, unrecorded setup.
 
-**The two exogenous failures have a different and now-known cause: the Mac
-sink stages each whole fork in RAM.** File Manager writes happen at shallow
-depth in `sink_end`, never from inside the decode callback, so every fork is
-accumulated in a `NewPtr` block first. Peak RAM for the *shell* is therefore
-
-    archive size + engine peak heap + largest single output fork
-
-and these two fixtures have the largest output forks in the sample (174 KB
-and 287 KB). At 1 MB that staging allocation fails and the entry reports
-`UNC_ERR_SINK`; the engine itself is well inside budget, with the same peak
-heap as the passing 4 MB run. This is a limit of the Mac shell, not of the
-engine, and it bounds the file size a 1 MB machine can extract.
+**`popper-1.7.tar.Z` and `PCCTS.tar.gz` used to fail here and no longer do.**
+The Mac sink previously accumulated each whole output fork in a `NewPtr`
+block and wrote it in `sink_end`, so the shell needed `archive + engine peak
++ largest output fork` — and those two fixtures have the sample's largest
+output forks (174 KB and 287 KB), which a 1 MB machine could not spare. The
+sink now writes each chunk straight to the File Manager as the engine
+produces it, so **the shell's own RAM use no longer depends on output size
+at all**. Both fixtures are byte-exact at 1 MB, with the engine's peak heap
+unchanged. The old path is still buildable (`UNC_MAC_STAGE_WRITES`) and both
+are byte-exact through the qemu-m68k mock in CI.
 
 What unblocked all of this was rewriting the File Manager calls to use
 explicit, fully-zeroed HFS param blocks. This was originally attributed to a
