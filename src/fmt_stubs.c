@@ -53,13 +53,58 @@ int unc_diskdoubler_probe(const uint8_t *head, int32_t len)
     return 0;
 }
 
-/* DiskCopy 4.2: no implementation exists in the available references
- * (XADMaster's DiskCopy support lives outside the cloned sources), so
- * per the no-invented-format-details rule this probe never matches. */
+/* DiskCopy 4.2 disk image — DETECT ONLY (disk images are out of scope for
+ * v1; naming the format lets a UI tell the user what the file is).
+ *
+ * Header is 84 bytes, big-endian:
+ *   0x00  1   Pascal length of the image name (<= 63)
+ *   0x01  63  image name, NUL-padded
+ *   0x40  4   data size, bytes, of the block at 0x54
+ *   0x44  4   tag size, bytes, of the block after the data
+ *   0x48  4   data checksum        0x4C  4  tag checksum
+ *   0x50  1   disk encoding        0x51  1  format byte
+ *   0x52  2   magic "private word", always 0x0100
+ *
+ * Source: reference/notes/DiskCopy42.md (transcribed from
+ * discferret.com/wiki/Apple_DiskCopy_4.2; XADMaster has no DiskCopy parser).
+ *
+ * The magic word alone is only 16 bits and would false-positive freely, so
+ * the probe also requires a sane name length and an encoding byte whose
+ * disk type matches the declared data size. The format byte at 0x51 is NOT
+ * checked: 0x22 is shared by 800K GCR, 720K MFM and 1440K MFM, so it
+ * discriminates nothing. */
 int unc_diskcopy_probe(const uint8_t *h, int32_t l, UncIO *io)
 {
-    (void)h; (void)l; (void)io;
-    return 0;
+    uint32_t data_size, tag_size;
+    uint8_t encoding;
+
+    (void)io;
+    if (l < 84) return 0;
+    if (unc_get_u16be(h + 0x52) != 0x0100) return 0;
+    if (h[0] > 63) return 0;                     /* Pascal name length */
+
+    data_size = unc_get_u32be(h + 0x40);
+    tag_size  = unc_get_u32be(h + 0x44);
+    encoding  = h[0x50];
+
+    /* Data size must be the one this encoding implies. */
+    switch (encoding) {
+        case 0x00: if (data_size !=  409600u) return 0; break;  /* 400K GCR  */
+        case 0x01: if (data_size !=  819200u) return 0; break;  /* 800K GCR  */
+        case 0x02: if (data_size !=  737280u) return 0; break;  /* 720K MFM  */
+        case 0x03: if (data_size != 1474560u) return 0; break;  /* 1440K MFM */
+        default:   return 0;
+    }
+
+    /* Tags: 12 bytes per 512-byte sector on the GCR formats, or absent. The
+     * MFM formats can never carry them — a PC 720K/1.44M sector has no room
+     * beyond its 512 bytes — so there tag_size must be 0. */
+    if (encoding <= 0x01) {
+        if (tag_size != 0 && tag_size != (data_size / 512u) * 12u) return 0;
+    } else {
+        if (tag_size != 0) return 0;
+    }
+    return 1;
 }
 
 /* LZH/LHA: "-lh?-" (lzh) or "-lz?-" (larc) method id at offset 2.

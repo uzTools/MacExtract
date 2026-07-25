@@ -744,6 +744,80 @@ static void test_zip(void)
     arc[cd + 10] = 0;
 }
 
+/* DiskCopy 4.2 is DETECT-ONLY: unc_sniff must name it, and extraction must
+ * refuse cleanly rather than pretend. The probe is deliberately strict (the
+ * magic word is only 16 bits), so also check that each guard rejects. */
+static void test_diskcopy(void)
+{
+    uint8_t h[128];
+    UncIO io;
+    MemIO m;
+    int i;
+
+    /* Minimal valid 800K GCR header: name, dataSize 819200, tags 19200. */
+    for (i = 0; i < (int)sizeof h; i++) h[i] = 0;
+    h[0] = 4;                                    /* Pascal name length */
+    h[1] = 'D'; h[2] = 'i'; h[3] = 's'; h[4] = 'k';
+    h[0x40] = 0x00; h[0x41] = 0x0C; h[0x42] = 0x80; h[0x43] = 0x00;  /* 819200 */
+    h[0x44] = 0x00; h[0x45] = 0x00; h[0x46] = 0x4B; h[0x47] = 0x00;  /*  19200 */
+    h[0x50] = 0x01;                              /* GCR CLV dsdd (800K) */
+    h[0x51] = 0x22;                              /* format byte, not checked */
+    h[0x52] = 0x01; h[0x53] = 0x00;              /* magic "private word" */
+
+    test_make_memio(&io, &m, h, sizeof h);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_DISKCOPY);
+
+    /* A tagless GCR image is equally valid. */
+    h[0x44] = h[0x45] = h[0x46] = h[0x47] = 0;
+    test_make_memio(&io, &m, h, sizeof h);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_DISKCOPY);
+
+    /* 1440K MFM, which can never carry tags. */
+    h[0x40] = 0x00; h[0x41] = 0x16; h[0x42] = 0x80; h[0x43] = 0x00;  /* 1474560 */
+    h[0x50] = 0x03;
+    test_make_memio(&io, &m, h, sizeof h);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_DISKCOPY);
+    h[0x47] = 0x0C;                              /* ...so any tag size is wrong */
+    test_make_memio(&io, &m, h, sizeof h);
+    CHECK(unc_sniff(&io) != UNC_FORMAT_DISKCOPY);
+    h[0x47] = 0x00;
+
+    /* Encoding must agree with the declared data size. */
+    h[0x50] = 0x01;                              /* says 800K, size says 1440K */
+    test_make_memio(&io, &m, h, sizeof h);
+    CHECK(unc_sniff(&io) != UNC_FORMAT_DISKCOPY);
+    h[0x50] = 0x03;
+
+    /* Unknown encoding, over-long Pascal name, wrong magic: all rejected. */
+    h[0x50] = 0x07;
+    test_make_memio(&io, &m, h, sizeof h);
+    CHECK(unc_sniff(&io) != UNC_FORMAT_DISKCOPY);
+    h[0x50] = 0x03;
+
+    h[0] = 64;
+    test_make_memio(&io, &m, h, sizeof h);
+    CHECK(unc_sniff(&io) != UNC_FORMAT_DISKCOPY);
+    h[0] = 4;
+
+    h[0x53] = 0x01;
+    test_make_memio(&io, &m, h, sizeof h);
+    CHECK(unc_sniff(&io) != UNC_FORMAT_DISKCOPY);
+    h[0x53] = 0x00;
+
+    /* Detect-only: it is named, but extracting it is refused cleanly. */
+    {
+        UncAlloc al;
+        UncSink sk;
+        CapSink cap;
+        test_make_memio(&io, &m, h, sizeof h);
+        test_make_alloc(&al);
+        cap_make(&sk, &cap);
+        CHECK(unc_extract_as(UNC_FORMAT_DISKCOPY, &io, &sk, &al, NULL, NULL)
+              == UNC_ERR_UNSUPPORTED);
+        CHECK(cap.count == 0);
+    }
+}
+
 void run_format_tests(void)
 {
     test_macbinary();
@@ -757,4 +831,5 @@ void run_format_tests(void)
     test_gzip();
     test_tar();
     test_zip();
+    test_diskcopy();
 }
