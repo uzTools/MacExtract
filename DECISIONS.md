@@ -688,3 +688,34 @@ The method is worth keeping: a per-entry histogram over the whole corpus costs
 one instrumented build and a minute, and it answers "what do we actually
 have?" in a way that reading old notes does not. It is the same technique that
 overturned the Arsenic block-size claim earlier the same day.
+
+## 2026-08-01 — testing a working directory without a Finder
+
+`SFReply.vRefNum` with `dirID` 0 had been listed as untested since M10, and
+two attempts to reach it by driving System 7's Finder produced nothing but
+mis-aimed double-clicks. The attempts were the wrong shape.
+
+**`UNC_AT_WD`**: the autotest build makes its own working directory over a
+subfolder with `PBOpenWD`, calls `RunExtract` with `(vRefNum = that WD,
+dirID = 0)` — byte for byte the call `ExtractOne()` makes with what Standard
+File returns — and counts the files in the folder against the files in the
+volume root. No Finder, no Standard File, no screen coordinates, five seconds
+a run, and it works identically on System 6 and System 7 so the two can be
+compared.
+
+Passes on both: 3 entries, 3 files in the folder, 0 in the root, with
+wdRefNums of -32717 and -32701 — negative and outside the volume range, so
+genuine working directory references and not volume refNums that happened to
+work.
+
+The general lesson, and it is the second time this session: **when a UI test
+is hard to drive, ask what the UI actually hands the code, and hand it the
+same thing directly.** The Finder was never the thing under test; it was
+scenery, and expensive scenery — ten minutes a run and a coordinate hunt each
+time the desktop layout changed. What mattered fits in forty lines and needs
+no screen at all.
+
+The empty-root assertion is the whole test. Every earlier harness here
+extracted into a volume ROOT, where the working directory and the root are
+the same directory — so none of them could have caught a mistake in this
+code, however many times they ran.

@@ -87,7 +87,8 @@ distribution — `tools/make_dist.sh` builds an uncompressed MacBinary and an
 | System 6.0.8, 1 MB | 44-fixture corpus | ✅ 39/44 — the 5 are StuffIt 5 budget refusals |
 | System 7.0.1, 4 MB | 44-fixture corpus | ✅ 44/44, same peak heap as 6.0.8 |
 | System 7.0.1, 1 MB | boot probe | ⚠️ System 7 needs 2 MB and does not boot — not an application fault |
-| System 7 interactive UI | — | ❌ **not run** |
+| System 7 interactive UI | — | ❌ **not run** (the Finder-driven path; the working-directory semantics behind it ARE tested, below) |
+| System 6.0.8 + 7.0.1 | working-directory extraction (`SFReply.vRefNum` + `dirID` 0) | ✅ output lands in the working directory, nothing in the volume root |
 | Mac OS 8 / 9 | — | ❌ **not run**; `tools/vmac/os9.py` boots OS 9 and mounts a disk, and stops there |
 
 Everything above is **emulation**. No physical Macintosh has ever run this

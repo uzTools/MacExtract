@@ -277,6 +277,39 @@ def check_cancel(vals):
                 f"{files} file(s) on the volume")
 
 
+def check_wd(vals):
+    """Verdict for a UNC_AT_WD run.
+
+    The application extracted through a WORKING DIRECTORY refNum with dirID 0
+    — the shape SFGetFile hands it — into a subfolder of the Out volume. The
+    files belong in that subfolder. If the working directory were mishandled
+    they would land in the volume ROOT instead, which is precisely what no
+    earlier harness here could detect, because they all extracted into a root
+    to begin with."""
+    entries, ret, errors = vals[0], signed32(vals[1]), vals[2]
+    root_files, sub_files, wdref = vals[3], vals[4], signed32(vals[5])
+    errs = signed32(vals[6])
+    derr, werr = errs >> 16, (errs & 0xFFFF)
+    if werr >= 0x8000:
+        werr -= 0x10000
+    if derr or werr:
+        return None, (f"setup failed: DirCreate={derr}, OpenWD={werr} — no "
+                      f"working directory was made, so nothing was tested")
+    if ret != 0 or errors:
+        return False, f"extraction failed: ret={ret}, {errors} entry error(s)"
+    if entries == 0:
+        return None, "no entries extracted — pick a fixture with content"
+    if root_files:
+        return False, (f"WRONG DIRECTORY: {root_files} file(s) landed in the "
+                       f"volume ROOT instead of the working directory "
+                       f"(wdRefNum {wdref}); {sub_files} landed correctly")
+    ok = sub_files == entries
+    return ok, (f"{'output landed in the working directory' if ok else 'COUNT MISMATCH'}: "
+                f"{entries} entr{'y' if entries == 1 else 'ies'} extracted, "
+                f"{sub_files} file(s) in the folder, {root_files} in the root "
+                f"(wdRefNum {wdref})")
+
+
 def check(fixture, png, manifest_dir):
     """Cross-check the on-screen grid against the Linux engine's output."""
     man = os.path.join(manifest_dir, os.path.basename(fixture) + ".json")
@@ -373,6 +406,9 @@ def main():
             elif status:
                 verdict = "SETUP"
                 detail = f"{status}; {vals[0]} volume(s) mounted"
+            elif "UNC_AT_WD" in args.defines:
+                ok, detail = check_wd(vals)
+                verdict = "PASS" if ok else ("SETUP" if ok is None else "FAIL")
             elif "UNC_AT_CANCEL" in args.defines:
                 ok, detail = check_cancel(vals)
                 verdict = "PASS" if ok else ("SETUP" if ok is None else "FAIL")

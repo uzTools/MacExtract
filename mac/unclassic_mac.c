@@ -1117,10 +1117,13 @@ static int at_cancel_tick(void *ctx, uint32_t done, uint32_t total)
     return gATnrec >= 1 ? 0 : 1;      /* 0 = stop */
 }
 
-/* Count the items directly in a volume's root. `dirs` matters as a guard:
- * this walks one level only, so a non-zero directory count means the file
- * count is partial and the host must not draw conclusions from it. */
-static void at_count_root(short vol, int *files, int *dirs)
+#endif  /* UNC_AT_CANCEL */
+
+#if defined(UNC_AT_CANCEL) || defined(UNC_AT_WD)
+/* Count the items directly in one directory. `dirs` matters as a guard: this
+ * walks one level only, so a non-zero directory count means the file count is
+ * partial and the host must not draw conclusions from it. */
+static void at_count_dir(short vol, long dir, int *files, int *dirs)
 {
     CInfoPBRec pb;
     Str63 nm;
@@ -1131,14 +1134,14 @@ static void at_count_root(short vol, int *files, int *dirs)
         for (z = 0; z < (long)sizeof pb; z++) ((char *)&pb)[z] = 0;
         pb.hFileInfo.ioNamePtr = nm;
         pb.hFileInfo.ioVRefNum = vol;
-        pb.hFileInfo.ioDirID = fsRtDirID;
+        pb.hFileInfo.ioDirID = dir;
         pb.hFileInfo.ioFDirIndex = idx;
         if (PBGetCatInfoSync(&pb) != noErr) return;   /* past the last item */
         if (pb.hFileInfo.ioFlAttrib & ioDirMask) (*dirs)++;
         else                                     (*files)++;
     }
 }
-#endif  /* UNC_AT_CANCEL */
+#endif
 
 static void at_fail(int code)
 {
@@ -1195,12 +1198,72 @@ int main(void)
         prog.tick = at_cancel_tick;
         ret = RunExtract(inVol, fsRtDirID, "\parchive.sit",
                          outVol, fsRtDirID, &prog, &entries, &errors);
-        at_count_root(outVol, &files, &dirs);
+        at_count_dir(outVol, fsRtDirID, &files, &dirs);
         for (i = 0; i < 8; i++) vals[i] = 0;
         vals[0] = (uint32_t)gATnrec;   /* entries that completed successfully */
         vals[1] = (uint32_t)ret;       /* expect UNC_ERR_ABORTED (-8)         */
         vals[2] = (uint32_t)files;     /* files actually on the Out volume    */
         vals[3] = (uint32_t)dirs;      /* must be 0, or the count is partial  */
+        vals[7] = (uint32_t)gPeakUsage;
+        at_report(vals, 8);
+        at_idle();
+    }
+#endif
+
+#ifdef UNC_AT_WD
+    /* Where does the output land when the caller passes a WORKING DIRECTORY?
+     *
+     * This is the shape the interactive application actually uses: SFGetFile
+     * hands back `SFReply.vRefNum`, which on System 7 and later is a working
+     * directory reference rather than a plain volume refNum, and the app
+     * passes it to the File Manager with dirID 0. OPEN_ITEMS.md has carried
+     * that as untested code since M10, and it could not be tested by any
+     * earlier harness here: every one of them extracted into a volume ROOT,
+     * where the working directory and the root are the same directory and a
+     * mistake has nowhere to show itself.
+     *
+     * So make a real working directory over a real subfolder with PBOpenWD —
+     * no Finder, no Standard File, no screen coordinates — extract through it,
+     * and count what landed where. The files belong in the folder; the root
+     * must hold nothing but the folder itself. */
+    {
+        WDPBRec wpb;
+        Str63 folder;
+        long z, dirID = 0;
+        short wdRef = 0;
+        OSErr derr, werr;
+        int rootFiles = 0, rootDirs = 0, subFiles = 0, subDirs = 0;
+        uint32_t vals[8];
+        int i;
+
+        for (i = 0; i < 8; i++) vals[i] = 0;
+        folder[0] = 6;
+        folder[1] = 'W'; folder[2] = 'D'; folder[3] = 'T';
+        folder[4] = 'e'; folder[5] = 's'; folder[6] = 't';
+        derr = MyDirCreate(outVol, fsRtDirID, folder, &dirID);
+
+        for (z = 0; z < (long)sizeof wpb; z++) ((char *)&wpb)[z] = 0;
+        wpb.ioNamePtr  = NULL;
+        wpb.ioVRefNum  = outVol;
+        wpb.ioWDDirID  = dirID;
+        wpb.ioWDProcID = 0x756E6331L;         /* 'unc1', any distinct signature */
+        werr = PBOpenWDSync(&wpb);
+        wdRef = wpb.ioVRefNum;                /* the WD refNum, as SFGetFile returns */
+
+        /* dirID 0 with a working-directory refNum: exactly ExtractOne(). */
+        ret = RunExtract(inVol, fsRtDirID, "\parchive.sit",
+                         wdRef, 0, NULL, &entries, &errors);
+
+        at_count_dir(outVol, fsRtDirID, &rootFiles, &rootDirs);
+        at_count_dir(outVol, dirID, &subFiles, &subDirs);
+
+        vals[0] = (uint32_t)entries;      /* entries the sink reported      */
+        vals[1] = (uint32_t)ret;
+        vals[2] = (uint32_t)errors;
+        vals[3] = (uint32_t)rootFiles;    /* MUST be 0 — output is not here */
+        vals[4] = (uint32_t)subFiles;     /* MUST equal entries             */
+        vals[5] = (uint32_t)(short)wdRef;
+        vals[6] = (uint32_t)((derr << 16) | (werr & 0xFFFF));
         vals[7] = (uint32_t)gPeakUsage;
         at_report(vals, 8);
         at_idle();

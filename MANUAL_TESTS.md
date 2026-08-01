@@ -38,14 +38,32 @@ Manager that honours the `SIZE` partition.
 
 - **The interactive UI.** Only the headless autotest build was replayed. The
   Finder-driven path (`--e2e`) has run on 6.0.8 only.
-- **`SFReply` working-directory semantics.** The test for it is designed and
-  committed — `tools/vmac/interactive.py --wd` puts the archive in a SUBFOLDER
-  and checks the extraction lands beside it rather than at the volume root,
-  which is the only arrangement where a mishandled working directory is
-  visible at all — but it has **not produced a result**. Two attempts failed
-  on Finder automation under an unfamiliar System 7 desktop layout, not on
-  anything about the application. `OPEN_ITEMS.md` keeps this open.
+- **`SFReply` working-directory semantics: now TESTED, and passing.** See the
+  section below — `run.py -D UNC_AT_WD` settles it without a Finder.
 - **The `SIZE` partition under the Process Manager.** Still never exercised.
+
+### Working directories, 2026-08-01 (System 6.0.8 AND System 7.0.1, 4 MB)
+
+`tools/vmac/run.py -D UNC_AT_WD` with `derived-EmpireBuilderDemo.sit`.
+
+The application takes `SFReply.vRefNum` from Standard File and hands it to the
+File Manager with `dirID` 0. On System 7 and later that refNum is a **working
+directory**, not a volume — untested code since M10, and untestable by any
+harness here until now, because they all extracted into a volume ROOT where
+the working directory and the root are the same directory.
+
+This build makes a real working directory over a real subfolder with
+`PBOpenWD`, extracts through it exactly as `ExtractOne()` does, and counts
+what landed where. No Finder, no Standard File, no screen coordinates.
+
+| system | wdRefNum | entries | in the folder | in the root |
+|---|---|---|---|---|
+| System 6.0.8 | -32717 | 3 | 3 | 0 |
+| System 7.0.1 | -32701 | 3 | 3 | 0 |
+
+The refNums are negative and outside the volume range, i.e. genuine working
+directory references rather than volume refNums that happened to work. The
+root column is the one that matters: nothing leaked out of the folder.
 
 ### End to end from the Finder, 2026-08-01 (System 6.0.8, 4 MB, 1x)
 

@@ -47,6 +47,11 @@ target_compile_options(unclassic PRIVATE -mcpu=68000 -Os -Wno-multichar
                        # and reports what the volume actually holds, proving an
                        # aborted entry leaves no partial file behind.
                        $<$<BOOL:$ENV{UNC_AT_CANCEL}>:-DUNC_AT_CANCEL>
+                       # UNC_AT_WD: extract through a WORKING DIRECTORY made
+                       # with PBOpenWD (vRefNum = WD, dirID = 0), which is the
+                       # shape SFGetFile hands the interactive app on System 7
+                       # and later, and report where the files actually landed.
+                       $<$<BOOL:$ENV{UNC_AT_WD}>:-DUNC_AT_WD>
                        # UNC_MAC_STAGE_WRITES: go back to accumulating each
                        # whole fork in RAM and writing it in sink_end. The
                        # default streams straight to the File Manager; this

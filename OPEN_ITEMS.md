@@ -113,18 +113,27 @@ here because it is the largest genuine unknown.**
   interactive UI has never been driven there, and with it the two things the
   tier exists for — `SFReply.vRefNum` as a working-directory reference, and
   the `SIZE` partition under the Process Manager.
-- **`SFReply` working directory: test designed, no result.**
-  `tools/vmac/interactive.py --wd` is committed and does the right thing on
-  paper — archive in a SUBFOLDER, navigate in with SFGetFile, then check
-  whether the output landed beside the archive or at the volume root. That
-  arrangement matters: **every previous on-Mac run put the archive at the
-  volume root, where the working directory and the root are the same
-  directory and a mistake cannot show itself.** Two runs failed on Finder
-  automation under System 7's unfamiliar desktop layout — nothing was learned
-  about the application either way. A better route exists and is not yet
-  built: a `UNC_AT_WD` autotest mode that makes its own working directory with
-  `PBOpenWD` and reports where the files went, needing no Finder and no
-  screen coordinates at all.
+- **`SFReply` working-directory semantics: CLOSED 2026-08-01.** The code path
+  OPEN_ITEMS has carried as untested since M10 — `SFReply.vRefNum` passed to
+  the File Manager with `dirID` 0, which on System 7 and later is a working
+  directory rather than a volume — now has a deterministic test, and it
+  passes on both systems.
+
+  `tools/vmac/run.py -D UNC_AT_WD` makes a real working directory over a real
+  subfolder with `PBOpenWD`, extracts through it exactly as `ExtractOne()`
+  does, and counts what landed where. **The output must be in the folder and
+  the volume root must be empty** — and the root is the whole point: every
+  earlier harness here extracted into a volume root, where the working
+  directory and the root are the same directory, so no amount of testing
+  could have caught a mistake.
+
+  | system | wdRefNum | entries | in the folder | in the root |
+  |---|---|---|---|---|
+  | System 6.0.8 | -32717 | 3 | 3 | 0 |
+  | System 7.0.1 | -32701 | 3 | 3 | 0 |
+
+  It needs no Finder, no Standard File and no screen coordinates, which is
+  why it worked where two attempts at driving System 7's Finder did not.
 - **Mac OS 9: still never run, but no longer blocked.** The `WaitNextEvent`
   branch, `SFReply.vRefNum` as a System 7+ working-directory reference, HFS+
   names and the `SIZE` partition under a real Process Manager remain untested
