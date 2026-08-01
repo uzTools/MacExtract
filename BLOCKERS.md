@@ -53,7 +53,7 @@ The autotest build (`-DUNC_MAC_AUTOTEST`) CRC-32s BOTH forks after reading
 them back through the real File Manager and paints the aggregate straight
 to the framebuffer; the host decodes a screenshot and cross-checks against
 the same engine's Linux output (`tools/vmac_check.py`). Result: **44/44
-sampled fixtures byte-exact across all twelve formats at 4 MB, 37/44 at
+sampled fixtures byte-exact across all twelve formats at 4 MB, 39/44 at
 1 MB**; the extracted metadata (type/creator, inited-flag cleared) is
 confirmed on-Mac so an extracted `APPL` launches by double-click. The whole
 harness is committed in `tools/vmac/` — see FORMATS.md for the tables and
@@ -104,14 +104,65 @@ handling.
   it can commit one fork of a file but not the other — so results cannot be
   read off the Out volume. Verification is done ON-SCREEN instead (the app
   paints results to the framebuffer, read from a screenshot).
-- **QuickDraw drawing (NewWindow/EraseRect) bombs "out of memory" when
+- ~~**QuickDraw drawing (NewWindow/EraseRect) bombs "out of memory" when
   called after any File Manager activity**, despite megabytes free — so the
-  result grid is written by poking `qd.screenBits` directly.
+  result grid is written by poking `qd.screenBits` directly.~~ **WITHDRAWN
+  2026-08-01 — does not reproduce; see the section immediately below.** It
+  was never a harness lesson either: it was filed as one, which is how a
+  claim that would have meant the shipped interactive build was broken sat
+  here unexamined.
 - **`HideCursor()` before drawing**, or the cursor's saved background
   stamps the desktop pattern back over the grid; park the host pointer off
   the grid before the app draws.
 - `pkill -9` never lets the emulator flush; use a fresh pristine boot image
   per run (repeated boot+kill cycles corrupt System 6's writes to it).
+
+### "QuickDraw bombs after File Manager activity" — WITHDRAWN 2026-08-01
+
+**It does not reproduce, in any of twelve configurations.** The minimal
+reproduction is `tools/quickdraw-repro/` — a standalone Retro68 application
+that runs `NewWindow` + `EraseRect` + `DrawString` before File Manager work
+and again immediately after it, on the same System 6.0.8 / Mac Plus / Mini
+vMac setup, and writes its log by poking the framebuffer through its own 5x7
+font so that the report cannot depend on the thing being tested. Every
+QuickDraw call succeeded with `MemError() == 0`, including `GetNewDialog` (the
+route the shipped application actually takes), `EraseRect` on the Window
+Manager port (named in the claim), eight interleaved rounds, and the same
+while holding a 200 KB non-relocatable `NewPtr`. The table is in that
+directory's README.
+
+Both proposed explanations are also disproved:
+
+- **Master-pointer heap fragmentation.** `MaxApplZone` and 12x `MoreMasters`
+  were already in the application when the claim was made (`a707db3`), so
+  their absence cannot explain it — and *removing* them does not produce the
+  failure either. With no `MaxApplZone` the heap is ungrown and `FreeMem()`
+  reports **2 KB**, and QuickDraw still allocates every window cleanly,
+  because the Memory Manager grows the zone on demand.
+- **Running as the boot shell in place of the Finder.** The same repro
+  binary, double-clicked from a normal Finder desktop (`mkboot.py --finder`),
+  behaves identically. On System 6 without MultiFinder, launching an
+  application unloads the Finder anyway, so the heap it inherits is nearly the
+  same — the two arrangements' `FreeMem()` figures agree.
+
+Independently: the shipped application itself has now been driven end to end
+from a real Finder desktop (`tools/vmac/interactive.py --e2e`, MANUAL_TESTS.md)
+— SFGetFile, a progress dialog and two alerts, all after the File Manager has
+opened, read and written files — with no sign of the reported failure.
+
+Where the claim came from cannot be established: it entered in commit
+`22e806b`, during the period this file records as confounded (every File
+Manager open was silently failing), and that working directory is gone. The
+lesson is the one already in CLAUDE.md — a root cause that has never been
+reduced to a minimal reproduction is a hypothesis, not a finding — with a
+corollary: **filing a hypothesis under "test-harness lessons" hides it.** This
+one implied the shipped interactive build was broken (SFGetFile, then a
+progress dialog, then an alert, is File Manager followed by QuickDraw) and
+nobody noticed, because it was written down as a note about the harness.
+
+`at_report()` still pokes the framebuffer and still should — it needs no
+allocation, cannot fail, and is the only channel that survives a bomb — but
+that is now its stated reason.
 
 ### Open items from the on-Mac corpus replay — both CLOSED 2026-07-25
 

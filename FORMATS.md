@@ -15,7 +15,7 @@ whole corpus for that format (engine allocations only, via
 | PackIt (.pit) | extract | store, Huffman; encrypted detected | 4 fixtures (1 real + 3 synthetic PMa4) | 9 KB | full |
 | Compact Pro (.cpt) | extract | RLE, LZH+RLE | 106 fixtures | 19 KB | full |
 | StuffIt classic (.sit) | extract | 0 store, 1 RLE90*, 2 LZW, 3 Huffman, 5 LZAH, 8 MW, 13 LZSS+Huffman; encrypted detected | 211 fixtures | 76 KB | full |
-| StuffIt 5 (.sit) | extract | 0, 13, 15 Arsenic; encrypted detected | 31 fixtures | 0.64–2.6 MB† | per-entry refusal (all Arsenic entries > 400 KB) |
+| StuffIt 5 (.sit) | extract | 0, 13, 15 Arsenic; encrypted detected | 31 fixtures | 0.63–2.53 MB† | per-entry refusal (all Arsenic entries > 400 KB) |
 | Zip | extract | store, deflate; others & encrypted per-entry errors | 3 fixtures (+2 PKZIP-1.x corpus-only) | 66 KB | full |
 | Gzip | extract | deflate | 3 fixtures | 51 KB | full |
 | Unix compress (.Z) | extract | LZW ≤16 bit | 4 fixtures | 268 KB | full |
@@ -29,22 +29,46 @@ whole corpus for that format (engine allocations only, via
 \* method 1 does not occur in the harvested corpus; pinned by unit
 tests transcribed from XADRLE90Handle.
 
-† Arsenic block sizes are NOT uniform (an earlier note here wrongly said
-"always 512 KB"). The block is `1 << (v+9)` with `v` read from the
-stream; peak memory ≈ 5× block (the block plus a 4×-block inverse-BWT
-transform vector, allocated at full size regardless of payload). Across
-the 31-fixture StuffIt 5 corpus the declared blocks are **128 KB (14
-fixtures, dominant), 256 KB (9), 512 KB (8)** — so 512 KB is a minority
-tier, not universal. Resulting peak heap: **min 0.64 MB (128 KB block) /
-mean 1.23 MB / max 2.6 MB (512 KB block)**. EVERY Arsenic entry exceeds a
-400 KB budget, so all fail cleanly per entry ("block too large for memory
-budget") under the M9 400 KB cap. On a **1 MB Mac Plus** Arsenic is a
-partial feature: the six Arsenic fixtures in the on-Mac sample split into
-one that extracts completely, two that extract most of their entries and
-refuse the rest, and three that refuse every entry — the boundary is the
-block size each archive declares, not the archive's size. All six extract
-byte-exact at 4 MB. See the two Mini vMac sections below for the
-per-fixture outcomes.
+† **Every real Arsenic block is 512 KB.** The block size is `1 << (v+9)`
+with `v` read from the stream, so other sizes are legal, but across the
+31-fixture StuffIt 5 corpus **all 484 Arsenic streams — one per compressed
+fork — declare 512 KB** (`v` = 10, blockbits 19). Measured directly by
+instrumenting the point where `sit_arsenic.c` reads `v`, not inferred.
+
+A note here previously claimed the blocks were "128 KB (14 fixtures,
+dominant), 256 KB (9), 512 KB (8)". That was **wrong**, and the way it
+went wrong is worth keeping: it was inferred from peak heap via
+"peak ≈ 5× block", which does not hold, because only the *block* is
+allocated at its declared size —
+
+    peak  =  ~35 KB parser state  +  512 KB block  +  4 × actual block fill
+
+— the inverse-BWT transform vector is sized to how much of the block the
+entry actually fills (`transform = numbytes * 4`, `sit_arsenic.c:327`),
+which is exactly what lets a small Arsenic entry fit a small budget. A
+fixture peaking at 0.64 MB is therefore a 512 KB block holding ~24 KB,
+not a 128 KB block; dividing by five turned every small payload into an
+imaginary small block. Peak heap can never recover the declared block
+size, so the claim was not just false but unmeasurable that way.
+
+Measured peak heap over the corpus (`unclassic t --stats`): **min
+0.63 MB / median 0.97 MB / mean 1.23 MB / max 2.53 MB**, the maximum
+being the entries that genuinely fill a 512 KB block (35 KB + 512 KB +
+2048 KB). EVERY Arsenic entry exceeds a 400 KB budget, so all fail
+cleanly per entry ("block too large for memory budget") under the M9
+400 KB cap.
+
+On a **1 MB Mac Plus** Arsenic is a partial feature: the six Arsenic
+fixtures in the on-Mac sample split into one that extracts completely,
+two that extract most of their entries and refuse the rest, and three
+that refuse every entry. The boundary is **the size of the archive**,
+not the block size (which never varies): the shell slurps the archive
+into RAM before extracting and budgets the engine against what is left,
+so a bigger archive leaves less room for the 512 KB block. The six line
+up monotonically by archive size — 4.6 KB extracts fully, 66 KB and
+92 KB extract most entries, and 153 KB, 202 KB and 222 KB cannot afford
+the block at all. All six extract byte-exact at 4 MB. See the two Mini
+vMac sections below for the per-fixture outcomes.
 
 ## Envelope auto-unwrap
 
@@ -56,8 +80,12 @@ the intermediate deleted (`-nr` disables; depth ≤ 8). Verified chains:
 
 ## Hardening
 
-- Differential: 771 fixtures byte-exact against `unar` manifests
-  (both forks + type/creator), `./ci.sh`.
+- Differential: 769 fixtures byte-exact against `unar` manifests
+  (both forks + type/creator), `./ci.sh`. That is every committed
+  manifest whose format the engine extracts: 774 manifests less the 5
+  detect-only DiskDoubler/Now Compress ones the harness skips. (A
+  headline figure of 771 stood here for a while; `run_diff.py` prints
+  the number it actually ran, and it is 769.)
 - Robustness: 10 truncation/bit-flip variants per fixture — no
   crashes, hangs, or sanitizer trips under
   ASan+UBSan+`-fsanitize=alignment` (`-fno-sanitize-recover=all`).
@@ -77,7 +105,12 @@ cross-checked against the same engine's Linux output (`tools/vmac_check.py`,
 `tools/decode_grid.py`).
 
 **44/44 byte-exact PASS** — data forks exact, resource forks exact bar the
-OS-stamped reserved header (bytes 16–127). The sample is
+OS-stamped reserved header (bytes 16–127). Re-run 2026-08-01 and reproduced,
+with a caveat about the harness rather than the Mac: two fixtures came back
+`EMUDIED` on the first pass — the emulator PROCESS exited within five seconds,
+before the application could paint anything — and both passed on an immediate
+re-run. That verdict now exists precisely so this is not mistaken for a
+Mac-side failure again (`tools/vmac/README.md`). The sample is
 `tools/vmac/sample.txt`; reproduce with
 
     tools/vmac/setup.sh                              # once
@@ -107,7 +140,7 @@ On-Mac engine peak heap (high-water mark) by format, matching the Linux
 | Gzip | 51 KB |
 | StuffIt classic | 72–75 KB |
 | Unix compress (.Z) | 268 KB |
-| StuffIt 5 (Arsenic) | 0.64–2.6 MB (block-size dependent — see †) |
+| StuffIt 5 (Arsenic) | 0.63–2.53 MB (block *fill* dependent — see †) |
 | DiskDoubler / Now Compress | detect-only — no allocation, cleanly not extracted |
 
 ## Floor target verification (Mini vMac — System 6.0.8, **1 MB** Mac Plus, 68000)
@@ -118,7 +151,9 @@ CRC-32 verification (`tools/vmac/run.py --mem 1M --list tools/vmac/sample.txt`).
 The engine budget is derived from `FreeMem` at startup.
 
 **39/44 byte-exact PASS**, and every fixture that does not pass is a StuffIt 5
-memory-budget refusal — the documented tier. All five pass at 4 MB:
+memory-budget refusal — the documented tier. Re-run 2026-08-01: 39/44 again,
+the same five fixtures, and the same per-fixture entry counts and peak heaps
+as the table below, to the tenth of a kilobyte. All five pass at 4 MB:
 
 | Fixture | Format | Outcome at 1 MB | Peak heap |
 |---|---|---|---|
@@ -129,15 +164,24 @@ memory-budget refusal — the documented tier. All five pass at 4 MB:
 | derived-Troi-ClipSave-Plug-in1.1.sit | StuffIt 5 | clean per-entry refusal (13/13 entries) | 35.5 KB |
 
 **The five StuffIt 5 / Arsenic outcomes are the expected, accepted tier**
-(see † above): an Arsenic entry needs ≥0.64 MB for its block, which a 1 MB
-Mac cannot always give, so the engine declines *that entry* and carries on —
-which is why two of the five still extract most of their archive. Where the
-peak reads **35.5 KB** the budget rejected the block *at request time* and
-the oversized buffer was never allocated; where it reads ~0.6 MB the archive
-declares small enough blocks to allocate and the entries succeed.
-`derived-KeyGraphics.sit`, previously recorded as refusing at 1 MB, now
-passes (656.8 KB peak) — the boot volume is stripped to System + Finder,
-which leaves the application more heap than the earlier, unrecorded setup.
+(see † above): every Arsenic entry needs a 512 KB block plus four bytes of
+transform vector per byte the block actually holds, which a 1 MB Mac cannot
+always give, so the engine declines *that entry* and carries on — which is
+why two of the five still extract most of their archive. Where the peak
+reads **35.5 KB** the budget rejected the 512 KB block *at request time* and
+the buffer was never allocated, leaving only the parser's own state; where it
+reads ~0.6 MB the block was affordable and the entries succeed.
+
+The ordering is set by archive size, because the shell slurps the archive
+into RAM first and budgets the engine against the remainder: 4.6 KB
+(`derived-KeyGraphics.sit`) leaves room to spare, 66 KB and 92 KB leave
+enough for the block but not for large fills, and 153 KB, 202 KB and 222 KB
+do not leave enough for the block at all. Note the peaks in the table above
+*fall* as the archives get bigger, which is this effect and not a property of
+the archives. `derived-KeyGraphics.sit`, previously recorded as refusing at
+1 MB, now passes (656.8 KB peak) — the boot volume is stripped to System +
+Finder, which leaves the application more heap than the earlier, unrecorded
+setup.
 
 **`popper-1.7.tar.Z` and `PCCTS.tar.gz` used to fail here and no longer do.**
 The Mac sink previously accumulated each whole output fork in a `NewPtr`

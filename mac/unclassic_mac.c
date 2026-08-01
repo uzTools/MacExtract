@@ -372,11 +372,20 @@ static OSErr EnsureDir(short vRefNum, long parent, Str63 name, long *dirID)
 /* ------------------------------------------------------------------ */
 /* File Manager via explicit HFS param blocks                         */
 /* ------------------------------------------------------------------ */
-/* The high-level HOpen/HOpenRF/HCreate GLUE is broken in this Retro68 build
- * on System 6: HOpen returns noErr but never writes back the file refNum
- * (so GetEOF/FSRead then operate on garbage and the whole extraction silently
- * fails), and HOpenDF returns paramErr. Drive the traps through param blocks
- * we fill in ourselves. Field layout: Multiversal CIncludes HParamBlockRec. */
+/* Drive the traps through param blocks we fill in ourselves, zeroing the whole
+ * block first. This is what made the Mac shell work at all, after a long
+ * period in which every open silently failed.
+ *
+ * It was attributed to Retro68's high-level HOpen/HOpenRF glue ("returns noErr
+ * but never writes back the refNum on System 6"). That attribution is
+ * WITHDRAWN: tools/retro68-hopen-repro/ tests exactly that against a
+ * hand-filled PBHOpenSync on the same setup and they agree in all ten cases.
+ * The honest statement is that zeroing the whole param block fixed it and we
+ * do not know which field mattered; the one real glue finding that survives is
+ * that HOpenDF returns paramErr on System 6 (PBHOpenDFSync issues a System 7
+ * trap with no fallback), which is why nothing here calls it.
+ *
+ * Field layout: Multiversal CIncludes HParamBlockRec. */
 static OSErr MyOpenFork(short vol, long dir, ConstStr255Param name,
                         SignedByte perm, int rsrc, short *refOut)
 {
@@ -485,7 +494,7 @@ static int sink_begin(void *ctx, const UncEntryInfo *info)
          * heap-friendly (one fewer non-relocatable block beside the archive
          * buffer), NOT because separate blocks fail: the old belief that two
          * separate NewPtr staging blocks bomb System 6's Memory Manager was a
-         * confound of the broken HOpen glue that made every open fail (see
+         * confound of the period when every open silently failed (see
          * BLOCKERS.md). With that fixed, UNC_AT_SEPARATE_BLOCKS forces two
          * separate blocks and a two-fork file still extracts byte-exact on a
          * real Mac. Mock/Linux builds use per-fork blocks. */
@@ -1031,11 +1040,17 @@ static void at_cell(Ptr base, long rb, int idx, int bit)
 
 static void at_report(const uint32_t *vals, int nvals)
 {
-    /* Write STRAIGHT to the screen framebuffer. QuickDraw drawing (NewWindow,
-     * EraseRect on the WMgr port, ...) reliably bombs when called after the
-     * File Manager has run — "out of memory" despite megabytes free — some
-     * System 6 heap/QuickDraw interaction we don't need to untangle. Poking
-     * the 1bpp framebuffer needs zero allocation and cannot fail. */
+    /* Write STRAIGHT to the screen framebuffer: it needs zero allocation,
+     * cannot fail, and keeps reporting when the machine is in a state where
+     * the Toolbox cannot be trusted — which is exactly when the harness most
+     * needs an answer.
+     *
+     * This used to say QuickDraw "reliably bombs when called after the File
+     * Manager has run". That was never reduced to a reproduction, and it is
+     * WRONG: tools/quickdraw-repro/ runs NewWindow/EraseRect/DrawString,
+     * GetNewDialog and an EraseRect on the WMgr port immediately after 64 KB
+     * of File Manager writes, on System 6.0.8 / Mac Plus, in twelve
+     * configurations, and every call succeeds with MemError() == 0. */
     Ptr base = qd.screenBits.baseAddr;
     long rb = (long)(qd.screenBits.rowBytes & 0x3FFF);
     long h = qd.screenBits.bounds.bottom - qd.screenBits.bounds.top;

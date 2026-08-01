@@ -212,10 +212,18 @@ Non-obvious decisions, most recent last.
   the declared block size. Every real SIT5 fixture declares 512 KB
   blocks (blockbits 19) even for 3 KB payloads; allocating
   4 x blocksize up front would pin every extraction at ~2.6 MB.
-  With lazy sizing the corpus measures: min 0.64 MB, median 1.0 MB,
-  max 2.6 MB (fixtures that genuinely fill their blocks). A 1 MB
-  Mac Plus can therefore expand small Arsenic archives but will
-  cleanly refuse large ones per entry (UNC_ERR_MEM) — by design.
+  With lazy sizing the corpus measures: min 0.63 MB, median 0.97 MB,
+  mean 1.23 MB, max 2.53 MB (fixtures that genuinely fill their
+  blocks). A 1 MB Mac Plus can therefore expand small Arsenic archives
+  but will cleanly refuse large ones per entry (UNC_ERR_MEM) — by
+  design.
+  **RE-CONFIRMED 2026-08-01, against a later entry that contradicted
+  it.** The M10 entry below ("Arsenic block sizes are 128 KB
+  (dominant) / 256 KB / 512 KB, not 'always 512 KB'") was the wrong one
+  of the pair: instrumenting the point where `sit_arsenic.c` reads the
+  block-size field shows all 484 Arsenic streams across the 31-fixture
+  corpus — one per compressed fork — declaring 512 KB, without exception. This entry stands; only
+  the precision of its figures has been sharpened.
 - **Arsenic CRC-32 is internal to the stream** (read from the final
   block's end marker, compared against ~crc of the output); the SIT5
   header CRC-16 field is meaningless for method 15 and is skipped,
@@ -269,6 +277,12 @@ Non-obvious decisions, most recent last.
   NOT detected: no reference implementation exists in the cloned
   sources and the no-invented-format-details rule wins over
   completeness.
+  **[SUPERSEDED 2026-07-25 — the DiskCopy 4.2 half only.]** A reference
+  was later obtained (`reference/notes/DiskCopy42.md`, from the
+  DiscFerret wiki) and the probe is now real: `unc_diskcopy_probe`
+  (`src/fmt_stubs.c:76`) matches a synthetic 800K GCR image and a real
+  one, with 0 false positives across 803 fixtures. Still detect-only —
+  disk images remain out of scope for v1. The rest of this entry stands.
 - **The fuzzer treats exit codes 0 and 1 as success** — the contract
   under fuzz is "clean error, no crash/hang/sanitizer trip", which is
   exactly what the robustness suite asserts, extended to structurally
@@ -292,6 +306,13 @@ Non-obvious decisions, most recent last.
   executed; MANUAL_TESTS.md is the runtime checklist, including the
   known-risk items (SFReply working-directory semantics, DialogSelect
   button behavior, 'SIZE' partition vs Arsenic's memory needs).
+  **[SUPERSEDED — true when written, false since the M10 runtime
+  sections below.]** The application runs on a real System 6.0.8 Mac
+  Plus under Mini vMac and extracts byte-exact (44/44 sampled fixtures
+  at 4 MB, 39/44 at 1 MB), and its interactive UI has been driven end to
+  end (`tools/vmac/interactive.py`, MANUAL_TESTS.md). Of the three
+  known-risk items listed here, only the System 7+ `SFReply`
+  working-directory semantics remain untested — see OPEN_ITEMS.md.
 - **The engine compiled for m68k without a single change** — the M0
   discipline (no libc, no unaligned access, callbacks for everything,
   C99 with 32-bit arithmetic) held from the first decoder to the
@@ -331,7 +352,12 @@ reading the HFS image back with hfsutils. Findings:
   (`PBSetCatInfo`) also work (the output file appears with the right
   Finder type/creator/date).
 
-- **Known bug — the disk-write path:** enabling actual fork writes
+- **[SUPERSEDED — the whole of this bisection was confounded. See BLOCKERS.md
+  "Earlier 'root causes' that turned out to be confounded": every File Manager
+  open was silently failing throughout, so the observations below are real but
+  the conclusions drawn from them are not. The write path works and is verified
+  byte-exact on-Mac.]**
+  Known bug — the disk-write path: enabling actual fork writes
   (`FSWrite`) triggers a layout-sensitive heap corruption, surfacing
   non-deterministically as a Sad Mac (dsMemFullErr=25 on a 4 MB
   machine — i.e. Memory-Manager-detected corruption, not real
@@ -354,6 +380,8 @@ reading the HFS image back with hfsutils. Findings:
   correct on real Mac Plus hardware. The thin Toolbox shell's
   sink-write glue has a known defect tracked in BLOCKERS.md; M10
   remains "compile-only + engine-verified", not "shell fully working".
+  **[SUPERSEDED — the shell is fully working and verified byte-exact
+  on-Mac; see the M10 sections below.]**
 
 ## M10 deep debugging (max-effort session)
 
@@ -372,7 +400,10 @@ reading the HFS image back with hfsutils. Findings:
   spread of fixtures. This proved the sink C logic correct on 68000 and
   guards it against regressions — the Linux CLI's own sink never
   exercises this code.
-- **The write crash is environmental, not a code-logic bug.** With both
+- **[SUPERSEDED — "environmental" was as far as this reasoning could get, and
+  it was wrong: the cause was in unclassic's own File Manager calls, and the
+  param-block rewrite fixed it. See the M10 sections below.]**
+  The write crash is environmental, not a code-logic bug. With both
   the engine and the sink C proven byte-exact on BE 68000, and every
   Linux tool clean, the remaining cause is the real classic Mac OS
   runtime (Toolbox/Memory Manager) interaction, which needs MacsBug to
@@ -399,12 +430,21 @@ BLOCKERS.md for the full write-up. Key decisions:
   deep writes from the decode callback corrupt the HFS volume. The
   `xio_*` path is now exercised off-Mac too (mock `ram` mode, ASan +
   qemu-m68k). Archives are small, so a full-file RAM buffer is fine.
-- **Staging (not streaming) is the shipped sink.** A streaming
+- **[SUPERSEDED — streaming is the shipped sink; see "The Mac sink writes each
+  chunk straight to the File Manager" at the end of this file. The volume
+  corruption reported here dates from the confounded period (BLOCKERS.md) and
+  did not survive re-testing.]**
+  Staging (not streaming) is the shipped sink. A streaming
   write-as-you-decode variant (open fork, write each chunk, switch
   forks) does deep File Manager writes and corrupts the volume worse
   than staging. Reverted the note above: staging + shallow writes wins on
   the real Mac. (Both are byte-exact off-Mac.)
-- **Two-fork files: stage both forks in ONE shared block (Mac build).**
+- **[SUPERSEDED — "three blocks bomb the Memory Manager" is FALSE; re-tested
+  with `UNC_AT_SEPARATE_BLOCKS` once the opens were fixed, and a two-fork file
+  extracts byte-exact with three blocks (BLOCKERS.md). The shared block is
+  still what the staging path does — it is harmless and marginally more
+  heap-friendly — but the justification below is not why.]**
+  Two-fork files: stage both forks in ONE shared block (Mac build).
   Staging the two forks in two *separate* `NewPtr` blocks — a third
   non-relocatable block beside the archive buffer — corrupts System 6's
   Memory Manager and bombs the app (byte-exact off-Mac; crashes only on
@@ -425,7 +465,10 @@ BLOCKERS.md for the full write-up. Key decisions:
 
 ## M10 (real Mini vMac) — the decisions that actually made it run
 
-- **The Mac never ran because Retro68's HOpen glue is broken on System 6.**
+- **[WITHDRAWN 2026-07-25 — see "The 'broken Retro68 HOpen glue' root cause is
+  WITHDRAWN" at the end of this section. The fix below is kept and still ships;
+  only the explanation is retracted.]**
+  ~~The Mac never ran because Retro68's HOpen glue is broken on System 6.~~
   `HOpen()` returns `noErr` but never writes back the file refNum, so
   `GetEOF`/`FSRead` then operate on garbage: the archive slurps as 0 bytes and
   the whole extraction fails as `UNC_ERR_FORMAT`, silently. `HOpenDF` returns
@@ -442,15 +485,31 @@ BLOCKERS.md for the full write-up. Key decisions:
   16..127 masked) and paints an 8-value aggregate straight to the framebuffer
   (`qd.screenBits`, `at_report`); the host decodes a screenshot
   (`tools/decode_grid.py` + `tools/vmac_check.py`, referenced against
-  `unclassic x -nr`). QuickDraw (NewWindow/EraseRect) bombs after any File
-  Manager activity, so the framebuffer poke is deliberate; `HideCursor()` first
-  so the cursor's saved background can't stamp the desktop over the grid.
-- **Arsenic block sizes are 128 KB (dominant) / 256 KB / 512 KB, not "always
-  512 KB".** Measured via `unclassic x --stats` across the 31-fixture SIT5
+  `unclassic x -nr`). ~~QuickDraw (NewWindow/EraseRect) bombs after any File
+  Manager activity, so the framebuffer poke is deliberate~~ — **that
+  justification is WITHDRAWN 2026-08-01: it does not reproduce
+  (`tools/quickdraw-repro/`, twelve configurations, every QuickDraw call clean
+  with `MemError()==0`).** The framebuffer poke is kept for the reason that
+  does hold: it needs no allocation, cannot fail, and is the only channel that
+  still reports when the machine is in a state where the Toolbox cannot be
+  trusted. `HideCursor()` first so the cursor's saved background can't stamp
+  the desktop over the grid.
+- **[WITHDRAWN 2026-08-01 — this entry is wrong. See the M7 entry it tried to
+  correct.]** ~~Arsenic block sizes are 128 KB (dominant) / 256 KB / 512 KB, not
+  "always 512 KB". Measured via `unclassic x --stats` across the 31-fixture SIT5
   corpus: 14 use 128 KB, 9 use 256 KB, 8 use 512 KB; peak heap ≈ 5× block =
-  0.64–2.6 MB. Every Arsenic entry exceeds 400 KB, so Arsenic is a ≥4 MB-machine
-  tier — works on a 4 MB 68000, refuses cleanly on a 1 MB Plus. FORMATS.md
-  updated (an earlier note wrongly claimed 512 KB was universal).
+  0.64–2.6 MB.~~ All 484 Arsenic streams in the corpus declare **512 KB**; the
+  M7 entry was right all along. The mistake was the method: `--stats` reports
+  peak heap, and peak is `~35 KB parser state + 512 KB block + 4 × actual block
+  fill`, not `5 × block`, because the transform vector is lazily sized (which is
+  what the M7 entry says). Dividing a peak by five therefore reads every
+  small payload as a small block — 0.64 MB is a 512 KB block holding ~24 KB,
+  not a 128 KB block. Peak heap cannot recover the declared block size at all;
+  the field has to be read where `sit_arsenic.c` reads it, which is what was
+  done to settle this. What survives: every Arsenic entry exceeds 400 KB, so
+  Arsenic is a ≥4 MB-machine tier — works on a 4 MB 68000, mostly refuses
+  cleanly on a 1 MB Plus, and there the boundary is the *archive's* size (it is
+  slurped into RAM before the engine gets its budget), not the block size.
 - **'SIZE' resource: 4 MB preferred / 400 KB minimum.** The engine budget is
   already derived at runtime from `FreeMem()`, so one binary adapts from a
   1 MB Plus (small files only) to a G3. On System 6 without MultiFinder the
@@ -462,6 +521,12 @@ BLOCKERS.md for the full write-up. Key decisions:
   offline (XADMaster has no DiskCopy parser, reference/notes has no page, the
   network is refused), and rule #3 forbids inventing the magic/header from
   memory. The `UNC_FORMAT_DISKCOPY` name exists; the probe never matches.
+  **[SUPERSEDED 2026-07-25 — the probe is now real.]** A reference did become
+  available (`reference/notes/DiskCopy42.md`, from the DiscFerret wiki), so the
+  rule stopped biting: `unc_diskcopy_probe` (`src/fmt_stubs.c:76`) matches a
+  synthetic 800K GCR image and a real one, 0 false positives across 803
+  fixtures. Still detect-only, because disk images are out of scope for v1.
+  See BLOCKERS.md "Detect-only gap — RESOLVED".
 - **The "broken Retro68 `HOpen` glue" root cause is WITHDRAWN.** M10's write-up
   (BLOCKERS.md, commit 22e806b) blamed Retro68: "`HOpen` returns `noErr` but
   never writes back the refNum on System 6". Building the standalone minimal
@@ -546,3 +611,43 @@ BLOCKERS.md for the full write-up. Key decisions:
   reason: the archive is slurped into RAM first, so no File Manager READ is
   ever interleaved with the writes on the same volume. The staging path stays
   buildable as `UNC_MAC_STAGE_WRITES` and CI proves both byte-exact.
+
+## 2026-08-01 — two claims reduced to reproductions, both disproved
+
+- **"QuickDraw bombs after any File Manager activity" is FALSE**
+  (`tools/quickdraw-repro/`). It had been filed in BLOCKERS.md under "real
+  test-harness lessons (not app bugs)", which is what let it sit unexamined:
+  as stated it meant the shipped interactive build was broken, because that
+  build's path is SFGetFile -> a progress dialog -> a result alert, i.e. File
+  Manager followed by QuickDraw. A standalone Retro68 application now runs
+  `NewWindow`/`EraseRect`/`DrawString`, `GetNewDialog`+`DrawDialog` and an
+  `EraseRect` on the Window Manager port immediately after 64 KB of File
+  Manager writes, a read-back and a catalogue walk, in twelve configurations
+  on the same System 6.0.8 / Mac Plus / Mini vMac setup. **Every call
+  succeeded with `MemError() == 0`.** Both suggested causes are disproved
+  too: `MaxApplZone` + 12x `MoreMasters` were already present when the claim
+  was made, and *removing* them does not produce the failure (with no
+  `MaxApplZone` the heap is ungrown, `FreeMem()` reports 2 KB, and QuickDraw
+  still allocates cleanly because the Memory Manager grows the zone on
+  demand); and launching the same binary from a normal Finder desktop instead
+  of installing it as the boot shell behaves identically. `at_report()` keeps
+  poking the framebuffer, for the reason that survives: no allocation, cannot
+  fail, and it is the only channel that still reports when the Toolbox cannot
+  be trusted.
+- **The reporting channel cannot be the thing under test.** `qd_repro` writes
+  its log to the framebuffer through its own 5x7 font, and carries a row of
+  marker squares in the top eight scan lines — where System 6's centred system
+  error dialog cannot cover them — so a bomb still says which probe was
+  running. `decode_log.py` reads that log back to ASCII by matching each glyph
+  against the same table parsed out of the C source, so the sweep is
+  self-checking without the screenshots ceasing to be the primary evidence.
+- **`mkboot.py --finder`**: leave the boot blocks alone and put the
+  application at the volume root, so it has to be double-clicked like any
+  other application. Every on-Mac result until now came from the app installed
+  as the boot *shell*, which is a materially different environment (nothing
+  mounts disks, no other process competes for the heap), and "does this happen
+  in a normal application?" could not be asked without it.
+- **All 484 Arsenic streams in the corpus declare 512 KB blocks.** See the
+  withdrawn M10 entry above: peak heap cannot be divided by five to recover a
+  block size, because the transform vector is sized to the actual block fill.
+  Measured by instrumenting the read of the block-size field itself.

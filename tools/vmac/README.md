@@ -24,6 +24,10 @@ minutes per fixture. It is a deliberate, on-demand check.
 | `os9.py` | boot Mac OS 9 on emulated PowerPC with the application attached — **incomplete**, see below |
 | `mkapmdisk.py` | build an Apple-partitioned transfer disk that Mac OS on PowerPC will mount |
 
+`tools/quickdraw-repro/` is a sibling that reuses `mkboot.py` and this
+directory's `Display`/emulator plumbing to answer one narrow question about
+System 6's Toolbox. It is where `mkboot.py --finder` came from.
+
 The verification halves live one directory up because they are useful on their
 own: `tools/decode_grid.py` (screenshot → eight numbers) and
 `tools/vmac_check.py` (those numbers vs. the oracle).
@@ -43,6 +47,13 @@ rewritten from `Finder` to `unclassic`, so the ROM hands control straight to
 the application. No Finder, no synthetic double-click, no mouse automation —
 the machine boots into the test and nothing else runs.
 
+That is a materially different environment, and it is worth naming: nothing
+mounts disks (see BLOCKERS.md), and no other process competes for the heap.
+`mkboot.py --finder` is the other arrangement — Finder left as the shell, the
+application at the volume root, launched by double-clicking it — for questions
+that only make sense outside the boot-shell setup. `tools/quickdraw-repro/`
+uses it.
+
 **The System Folder is stripped to System + Finder.** The stock image ships
 with a dozen INITs and cdevs; on the 1 MB floor-target machine that is the
 difference between a result and a dead machine, and it would make peak-heap
@@ -53,6 +64,14 @@ paints a grid with `ret = -1000` ("running"); a missing `In`/`Out` volume paints
 `-1001`/`-1002`. So the host can tell *never launched* from *still decoding*
 from *bad disk set* — which a bare timeout cannot. `run.py` reports those as
 `NOGRID`, `TIMEOUT` and `SETUP` respectively, distinct from a real `FAIL`.
+
+**`EMUDIED` means the host failed, not the Mac.** The emulator process
+occasionally exits within a few seconds of launch — twice in an 88-run sweep
+here — and both fixtures passed on an immediate re-run. That used to be
+reported as `NOGRID` with the text "nothing decodable within 300s", which
+reads like a Mac-side bug and is wrong on the elapsed time as well; it is now
+its own verdict. **Re-run an `EMUDIED` fixture before drawing any conclusion
+from it.**
 
 **Wall-clock time is not Mac Plus time — except in the 1x build.** `setup.sh`
 produces three emulators: `mv-4M` and `mv-1M` run *all out*, as fast as the

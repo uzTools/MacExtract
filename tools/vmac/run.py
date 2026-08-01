@@ -176,7 +176,13 @@ class Display:
 
 
 def run_one(fixture, mem, timeout, poll, workdir, bootimg, keep_png=None):
-    """Boot the Mac on one fixture. Returns (values or None, seconds, png)."""
+    """Boot the Mac on one fixture.
+
+    Returns (values or None, seconds, png, emulator-exited). The last one
+    matters: a run that ends because the EMULATOR went away is not the same
+    as one that ran out of time, and reporting both as "nothing decodable
+    within <timeout>s" sent one reader looking for a Mac-side bug over what
+    was a five-second host-side flake."""
     emu = os.path.join(VMAC_HOME, f"mv-{mem}", "minivmac")
     rom = os.path.join(VMAC_HOME, "vMac.ROM")
     if not os.path.exists(emu):
@@ -193,6 +199,7 @@ def run_one(fixture, mem, timeout, poll, workdir, bootimg, keep_png=None):
     dpy = Display()
     started = time.time()
     vals = None
+    died = False
     try:
         # start_new_session: the emulator must not share our process group, or
         # a stray signal to the group takes it down mid-write.
@@ -211,6 +218,7 @@ def run_one(fixture, mem, timeout, poll, workdir, bootimg, keep_png=None):
         while time.time() < deadline:
             time.sleep(poll)
             if proc.poll() is not None:
+                died = True
                 break                        # emulator died; take a last look
             if not dpy.screenshot(png):
                 continue                     # emulator window not mapped yet
@@ -232,7 +240,7 @@ def run_one(fixture, mem, timeout, poll, workdir, bootimg, keep_png=None):
         if keep_png and os.path.exists(png):
             shutil.copyfile(png, keep_png)
         dpy.close()
-    return vals, elapsed, png
+    return vals, elapsed, png, died
 
 
 def check_cancel(vals):
@@ -321,10 +329,16 @@ def main():
         workdir = tempfile.mkdtemp(prefix="vmacrun-")
         keep = os.path.join(args.pngdir, name + ".png") if args.pngdir else None
         try:
-            vals, secs, png = run_one(fixture, args.mem, args.timeout,
-                                      args.poll, workdir, bootimg, keep)
+            vals, secs, png, died = run_one(fixture, args.mem, args.timeout,
+                                            args.poll, workdir, bootimg, keep)
             status = AT_STATUS.get(signed32(vals[1])) if vals else None
-            if vals is None:
+            if vals is None and died:
+                verdict, detail = "EMUDIED", (
+                    f"the emulator process exited after {secs:.0f}s with no "
+                    f"grid painted — a host-side failure (X server, disk "
+                    f"images, a stray signal), not a Mac-side result. Re-run "
+                    f"this fixture before reading anything into it")
+            elif vals is None:
                 verdict, detail = "NOGRID", (
                     f"nothing decodable within {args.timeout:.0f}s — the app "
                     f"never painted its 'alive' grid, so it did not launch "
