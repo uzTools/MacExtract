@@ -148,7 +148,14 @@ here, but it is not the same as silicon. Specifically unverified:
 
 Never run above System 6. The binary is 68k-only and would execute
 under the 68LC040 emulator on a PowerPC Mac; that whole layer is
-untested. Specifically unverified:
+untested.
+
+`tools/vmac/os9.py` is a partial harness for closing this: Mac OS 9.2
+boots to the Finder under `qemu-system-ppc -M mac99,via=pmu` (about four
+minutes, headless, screenshots via QEMU's monitor), and a transfer disk
+from `tools/vmac/mkapmdisk.py` carrying the application and an archive
+mounts on its desktop. Launching the application and driving it is NOT
+implemented, so everything below is still unverified:
 
 - **The runtime trap checks actually taking the modern path.**
   `gHasWNE = TrapAvailable(_WaitNextEvent)` selects `WaitNextEvent` over

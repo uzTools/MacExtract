@@ -21,6 +21,8 @@ minutes per fixture. It is a deliberate, on-demand check.
 | `mkboot.py` | strip that image to System + Finder and make it boot straight into the application |
 | `run.py` | build the disks, boot, screenshot, decode, check |
 | `interactive.py` | drive the real UI (SFGetFile, progress dialog, Cancel, Cmd-.) and photograph each step |
+| `os9.py` | boot Mac OS 9 on emulated PowerPC with the application attached — **incomplete**, see below |
+| `mkapmdisk.py` | build an Apple-partitioned transfer disk that Mac OS on PowerPC will mount |
 
 The verification halves live one directory up because they are useful on their
 own: `tools/decode_grid.py` (screenshot → eight numbers) and
@@ -94,3 +96,25 @@ rather than editing the expected hash.
 visual), ImageMagick (`import`, `convert`), `xdotool`, `hfsutils`
 (`hformat`/`hmount`/`hcopy`, shipped with Retro68), and a Retro68 toolchain
 in `$RETRO68` or `/opt/Retro68-build/toolchain`.
+
+## Mac OS 9 — a partial harness, not a result
+
+`os9.py` boots Mac OS 9.2 under `qemu-system-ppc -M mac99,via=pmu`, headless,
+screenshotting through QEMU's own monitor rather than an X server. Two things
+are established, both from screenshots:
+
+- Mac OS 9.2 reaches the Finder desktop in this configuration, in about four
+  minutes of host time.
+- A transfer disk built by `mkapmdisk.py`, holding the application and one
+  archive, **mounts** and appears on the desktop.
+
+Driving the Finder from there — open the volume, launch the application, work
+its UI — is **not implemented**, so nothing about the application on Mac OS 9
+is verified yet. Do not read the existence of this harness as a claim that the
+binary runs there.
+
+`mkapmdisk.py` clones its partition map and drivers from a disk Mac OS 9
+already mounts and repoints only the `Apple_HFS` entry. A map built by hand
+from the format documentation — correct-looking DDR, correct-looking entries,
+status word copied off a real disk — was silently ignored: no volume, no
+error, nothing to debug. Cloning a known-good head worked first time.

@@ -95,9 +95,15 @@ here because it is the largest genuine unknown.**
 - **Real 68k hardware: never run.** No genuine floppy I/O, no real media errors
   mid-write, no real 8 KB stack underneath a real ROM's own usage. The
   per-entry I/O error path has never seen an actual I/O failure.
-- **Mac OS 9: never run.** The `WaitNextEvent` branch, `SFReply.vRefNum` as a
-  System 7+ working-directory reference, HFS+ names, and the `SIZE` partition
-  under a real Process Manager are all untested code.
+- **Mac OS 9: still never run, but no longer blocked.** The `WaitNextEvent`
+  branch, `SFReply.vRefNum` as a System 7+ working-directory reference, HFS+
+  names and the `SIZE` partition under a real Process Manager remain untested
+  code. `tools/vmac/os9.py` gets as far as: Mac OS 9.2 boots to the Finder
+  under `qemu-system-ppc -M mac99,via=pmu`, and a transfer disk carrying the
+  application and an archive mounts on its desktop. **Launching the
+  application and driving it is not implemented**, which is where the
+  verification would actually happen — so this is a harness, not a result,
+  and the row stays open.
 - **The interactive application: CLOSED 2026-08-01 for System 6.**
   `tools/vmac/interactive.py` now drives the real UI under an emulator built
   for authentic Mac Plus timing and photographs each step: SFGetFile,
