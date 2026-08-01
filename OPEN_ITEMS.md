@@ -191,10 +191,14 @@ file until someone with a Mac Plus runs the checklist.
   extraction, and `tools/vmac/timing.txt` names the set to measure. A small
   fixture came out at boot 10 s + extract 2 s. But a 306 KB BinHex did not
   finish in fifteen minutes at 1x, twice, and this environment cannot
-  distinguish "the host is not sustaining 1x" from "the on-Mac path really is
-  that slow" — see BLOCKERS.md for the full write-up and the calibration that
-  would settle it. **"Runs on a Mac Plus" is proven; "is usable on a Mac Plus"
-  is still not, and no number has been published rather than a bad one.**
+  distinguish the two candidate explanations at the time. **It can now:**
+  decode cost measured on Linux shows that fixture is one of the CHEAPEST per
+  byte — 3x cheaper than one that completes in ~134 s at 1x — so the
+  non-completion was an artifact of the run, not a slow code path. The
+  surviving problem is purely environmental: this host cannot run Mini vMac at
+  a faithful 1x while also screenshotting it. A machine with a spare core
+  would produce the whole table in an hour. Relative per-format cost IS now
+  published (FORMATS.md), along with the single authentic 1x anchor.
 - **Out of scope by the brief, and still out:** compression, StuffIt X
   (`.sitx`), encrypted archives, multi-segment archives, disk-image extraction,
   Now Compress, and LZH *extraction* — LZH was the optional half of M8 and is

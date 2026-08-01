@@ -110,6 +110,37 @@ the intermediate deleted (`-nr` disables; depth ≤ 8). Verified chains:
 - 32-bit `-m32` build runs the full suite (68000 discipline: no
   unaligned access, no recursion, 32-bit arithmetic in hot paths).
 
+## Relative decode cost per format (Linux, same engine)
+
+Absolute Mac Plus timings are still missing (BLOCKERS.md says why), but the
+engine's *relative* cost is a property of the code and transfers to any CPU as
+a ratio. Measured with `unclassic t`, best of three, on the release build:
+
+| Fixture | Format | In KB | Out KB | ms | in KB/s |
+|---|---|---|---|---|---|
+| kermitut9test.bin | MacBinary | 297 | 296 | 0.6 | 485,802 |
+| derived-PCCTS.tar | Tar | 280 | 231 | 0.6 | 439,603 |
+| derived-PackIt.pit | PackIt (stored) | 60 | 60 | 0.7 | 85,110 |
+| macburger-helper.hqx | BinHex | 299 | 253 | 2.9 | 102,708 |
+| derived-MUSFMT10.ZIP | Zip (deflate) | 168 | 498 | 3.9 | 42,704 |
+| popper-1.7.tar.Z | Compress | 58 | — | 2.0 | 29,526 |
+| PCCTS.tar.gz | Gzip | 62 | — | 2.0 | 31,162 |
+| derived-EmpireBuilderDemo.sit | StuffIt (13) | 272 | 407 | 9.0 | 30,204 |
+| derived-XferIt_1.5b4.sea | Compact Pro | 279 | 926 | 18.2 | 15,351 |
+| derived-KeyGraphics.sit | StuffIt 5 (Arsenic) | 5 | 33 | 1.6 | 2,859 |
+
+The ordering is the useful part: envelope formats (MacBinary, tar) are
+essentially a copy; BinHex costs a few times that; the real compressors —
+StuffIt 13 and Compact Pro's LZH — are 15-30x the cost of a copy per input
+byte; and Arsenic is in a class of its own, two orders of magnitude off the
+top of the table, which is consistent with its memory profile.
+
+**This is not a Mac Plus timing.** It says a Compact Pro archive costs roughly
+six times what a BinHex of the same size costs, on any CPU. The one authentic
+1x measurement that exists — `derived-EmpireBuilderDemo.sit`, ~134 s for
+278 KB — is in the StuffIt-13 row, so the ratios can be used to reason about
+the others, cautiously and from a single anchor.
+
 ## Real-hardware verification (Mini vMac — System 6.0.8, 4 MB Mac Plus, 68000)
 
 The Retro68 Mac shell was replayed against a 44-fixture sample spanning all

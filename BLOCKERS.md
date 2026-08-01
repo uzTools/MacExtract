@@ -193,21 +193,33 @@ What failed: **`macburger-helper.hqx` (306 KB BinHex) did not finish in over
 fifteen minutes of wall clock at 1x, on two separate attempts.** On a real
 Mac Plus that decode should be a minute or two.
 
-Two explanations, and this attempt **cannot tell them apart**:
+Two explanations were possible, and one is now **ruled out**:
 
-1. The host is not sustaining 1x. This is a single-core container also running
-   the screenshot loop, and the first attempt polled every 3 s with a pure
-   Python grid decoder over 175k pixels — which starves the emulator it is
-   measuring. Coarsening to 10 s did not rescue it, but does not clear it
-   either.
-2. The on-Mac path really is that slow for large inputs, which would be a
-   genuine and important finding — precisely the thing a timing sweep exists
-   to discover.
+1. The host is not sustaining 1x — a single contended core also running the
+   screenshot loop, with the first attempt polling every 3 s through a
+   pure-Python decoder over 175k pixels. **This is the surviving
+   explanation.**
+2. ~~The on-Mac path really is that slow for large inputs~~ — **disproved
+   2026-08-01.** Decode cost was measured on Linux, where the engine is the
+   same code and the clock is trustworthy: `macburger-helper.hqx` takes
+   **2.9 ms** for 299 KB, one of the *cheapest* fixtures per byte and about
+   3x cheaper than `derived-EmpireBuilderDemo.sit` (9.0 ms) — which DID
+   complete at 1x, in ~134 s. A fixture three times cheaper than one that
+   finishes in 134 s cannot honestly take more than 900 s on the same
+   machine; the two figures disagree by a factor of roughly twenty. The
+   non-completion is an artifact of that run, not a property of the code.
 
-Telling them apart needs a **calibration workload of known duration** on the
-same emulator — boot time is the obvious candidate, and the 10 s boot measured
-above is *faster* than a real Mac Plus, which argues against (1) and is why
-this is not being written off as host contention. It was not carried through.
+So there is no lurking usability defect, and the remaining problem is purely
+one of environment: **this host cannot be trusted to run Mini vMac at a
+faithful 1x while also screenshotting it.** A machine with a spare core, or a
+harness that reads the result without polling the framebuffer, would settle
+the whole table in an hour.
+
+What can be said with evidence today, and is: the engine's RELATIVE cost per
+format is measured and reproducible (FORMATS.md), and one authentic 1x point
+exists — `derived-EmpireBuilderDemo.sit`, 278 KB in and 417 KB out, took
+**~134 s** of Mac Plus time end to end, with the machine booting in ~16 s.
+One point is not a table, so it stays out of the README's claims.
 
 **Until it is, no number goes in the README.** A fabricated or
 contention-inflated figure would be worse than the current honest absence, and

@@ -94,9 +94,18 @@ distribution — `tools/make_dist.sh` builds an uncompressed MacBinary and an
 Everything above is **emulation**. No physical Macintosh has ever run this
 binary: not a real Mac Plus at 1 MB, not an LC475 (68040), not an iMac G3.
 Emulation is evidence, not proof. See [MANUAL_TESTS.md](MANUAL_TESTS.md) for
-the full untested list, and note there is still **no timing data at all** —
-the sweeps run the emulator flat out, so "runs on a Mac Plus" is shown and
-"is usable on a Mac Plus" is not.
+the full untested list.
+
+**How long does it take?** One authentic 7 MHz measurement exists:
+`derived-EmpireBuilderDemo.sit`, a 278 KB StuffIt yielding 417 KB, took
+**~134 s** on an emulated Mac Plus at true speed, with the machine booting in
+~16 s. That is one point, not a table — a full sweep at 1x could not be
+completed here (BLOCKERS.md). What *is* measured is the engine's relative cost
+per format (FORMATS.md): envelope formats like MacBinary and tar are barely
+more than a copy, BinHex a few times that, StuffIt 13 and Compact Pro's LZH
+15-30x a copy, and StuffIt 5's Arsenic in a class of its own. So a StuffIt
+archive of a few hundred KB is minutes on a Plus, not seconds and not hours —
+and a Compact Pro one of the same size is several times worse.
 
 **Detect-only** (v1 names but does not extract): StuffIt X, DiskDoubler,
 Now Compress, LZH, DiskCopy 4.2. **Out of scope (v1):** compression,
