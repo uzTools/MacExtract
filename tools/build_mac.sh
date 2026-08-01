@@ -1,5 +1,5 @@
 #!/bin/sh
-# build_mac.sh — cross-compile the Macintosh shell (M10, compile-only).
+# build_mac.sh — cross-compile the Macintosh shell.
 #
 # Locates a Retro68 toolchain via (in order): $RETRO68, m68k-apple-macos-gcc
 # in PATH, or /opt/Retro68-build/toolchain. Skips gracefully when absent.
@@ -30,4 +30,5 @@ cmake -B build/mac -S mac \
       -DCMAKE_BUILD_TYPE=Release >/dev/null
 cmake --build build/mac -- -j"$(nproc)"
 ls -la build/mac/unclassic.APPL build/mac/unclassic.bin build/mac/unclassic.dsk
-echo "mac: OK (compile-only; see MANUAL_TESTS.md before claiming it runs)"
+echo "mac: OK — this only proves it compiles. tools/vmac/run.py replays fixtures"
+echo "mac: on a real emulated Mac Plus; MANUAL_TESTS.md is the runtime checklist."

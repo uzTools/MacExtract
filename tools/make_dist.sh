@@ -12,15 +12,20 @@
 #                    SheepShaver, then drag the app onto your startup disk.
 #   README.txt     — the two paragraphs above, for the download.
 #
-# Run tools/build_mac.sh first (needs a Retro68 toolchain). See MANUAL_TESTS.md.
+# Builds the application first (needs a Retro68 toolchain). See MANUAL_TESTS.md.
 set -e
 cd "$(dirname "$0")/.."
 
+# Build rather than pick up whatever is lying around. The first version of
+# this script copied an existing build/, and the distribution silently went
+# stale by a whole sink rewrite: the shipped .bin and .dsk still staged each
+# output fork in RAM long after the tree had moved to streaming writes.
+sh tools/build_mac.sh
+
 SRC=build/mac
-[ -f "$SRC/unclassic.bin" ] || SRC=build-mac
 if [ ! -f "$SRC/unclassic.bin" ] || [ ! -f "$SRC/unclassic.dsk" ]; then
-    echo "make_dist: build the Mac app first (tools/build_mac.sh) — missing"
-    echo "make_dist:   $SRC/unclassic.bin / unclassic.dsk"
+    echo "make_dist: no Mac build at $SRC — a Retro68 toolchain is required"
+    echo "make_dist: (tools/build_mac.sh says where to get one)"
     exit 1
 fi
 
@@ -56,3 +61,24 @@ TXT
 
 echo "make_dist: wrote dist/unclassic.bin ($(wc -c < dist/unclassic.bin) B),"
 echo "make_dist:       dist/unclassic.dsk ($(wc -c < dist/unclassic.dsk) B), dist/README.txt"
+
+# Cheap proof that the two artifacts carry the same application: the .dsk's
+# copy round-trips back to a MacBinary whose resource fork — which is the
+# whole of an APPL — matches the one in dist/unclassic.bin byte for byte.
+HOME_SAVE=$HOME
+HOME=$(mktemp -d); export HOME
+hmount dist/unclassic.dsk >/dev/null
+hcopy -m "unclassic:unclassic" "$HOME/roundtrip.bin"
+humount >/dev/null
+python3 - "$HOME/roundtrip.bin" <<'PY'
+import sys
+a = open(sys.argv[1], 'rb').read()
+b = open('dist/unclassic.bin', 'rb').read()
+rl = int.from_bytes(b[87:91], 'big')
+same = a[128:128 + rl] == b[128:128 + rl]
+print(f"make_dist: .dsk round-trip: {rl} B resource fork, "
+      f"{'identical' if same else 'DIFFERENT'} to the MacBinary")
+sys.exit(0 if same else 1)
+PY
+rm -rf "$HOME"
+HOME=$HOME_SAVE; export HOME
