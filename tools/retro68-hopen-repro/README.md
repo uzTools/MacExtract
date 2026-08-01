@@ -10,6 +10,13 @@ by "Retro68's `HOpen` glue returns `noErr` but never writes back the refNum".
 it — see `DECISIONS.md` in the repository root — and doubles as a regression
 test for the glue.
 
+Case 11 was added on 2026-08-01 for a second reason. The upstream write-up in
+`ISSUE.md` claimed that `HOpenDF` lacks a `paramErr` fallback "unlike the
+non-hierarchical `OpenDF` beside it". That was a misreading: the fallback is in
+`FSOpen`, and `OpenDF` calls `PBOpenDFSync` bare exactly as `HOpenDF` does.
+Rather than re-read `glue.c` a third time, case 11 runs plain `OpenDF` on the
+machine — and it fails identically. **The bug is two functions, not one.**
+
 ## Results
 
 System 6.0.8, Mac Plus (68000), Mini vMac 36.04, Retro68 `335fa54f6d`:
@@ -24,6 +31,7 @@ System 6.0.8, Mac Plus (68000), Mini vMac 36.04, Retro68 `335fa54f6d`:
 | 6 | `HOpen`, real vRefNum, write | `err=0 ref=378 eof=512 got=4` | ok |
 | 7 | `HOpenRF`, real vRefNum, write | `err=0 ref=378 eof=0 rdErr=-39` | ok (no resource fork) |
 | 8 | `HOpenDF`, real vRefNum, read | `err=-50` | **bug** |
+| 11 | `OpenDF`, plain, default volume | `err=-50 ref=2` | **bug** |
 | 9 | `HOpen`, other volume | `err=-43` | ok, matches 10 |
 | 10 | `PBHOpenSync`, other volume | `err=-43` | ok, matches 9 |
 
@@ -31,6 +39,18 @@ System 6.0.8, Mac Plus (68000), Mini vMac 36.04, Retro68 `335fa54f6d`:
 block everywhere. Cases 9/10 look for `System` at the root of the boot volume,
 where it does not live (it is inside the System Folder), so `fnfErr` is correct
 — the point is that glue and param block return the *same* thing.
+
+Case 11 addresses the same file, on the same default volume, that cases 1-4
+open with `err=0`, so its `paramErr` is the `_OpenDF` trap being absent rather
+than anything about the file. Both `OpenDF` and `HOpenDF` are unusable on
+System 6.
+
+**Run it the way this table was produced**: the application on the root of a
+volume, launched by double-clicking it, so the default directory is that root.
+Cases 5-10 address `fsRtDirID` explicitly and report `fnfErr` instead if the
+application is installed elsewhere — as the boot shell, for instance, where the
+default directory is the System Folder. Cases 1-4 and 11 use the default
+directory and are unaffected.
 
 The two real (minor) findings are described at the top of `hopen_repro.c` and
 in `ISSUE.md`, which is a ready-to-post upstream issue.

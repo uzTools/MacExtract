@@ -550,11 +550,14 @@ BLOCKERS.md for the full write-up. Key decisions:
   finding is false, per the entry above, and filing it would have sent a wrong
   bug report to a third-party project. (b) This environment has no `gh` CLI and
   no GitHub credentials, so it could not post one regardless. What survives is
-  small but real — `HOpenDF` returns `paramErr` on System 6 because
-  `PBHOpenDFSync` issues a System 7 trap and, unlike the non-hierarchical
-  `OpenDF` beside it, has no fallback; plus the latent uninitialised-`ioMisc`
-  inconsistency. Written up ready to post in
-  `tools/retro68-hopen-repro/ISSUE.md`.
+  small but real — **both `OpenDF` and `HOpenDF`** return `paramErr` on
+  System 6, because the `_OpenDF` trap is System 7 and neither falls back the
+  way `FSOpen` in the same file does; plus the latent uninitialised-`ioMisc`
+  inconsistency in the three H-variants. Written up ready to post in
+  `tools/retro68-hopen-repro/ISSUE.md`. **Corrected 2026-08-01**: that
+  write-up named only `HOpenDF`, and said `OpenDF` "already has the fallback".
+  It does not — `FSOpen` does. Settled by running it (case 11), not by reading
+  `glue.c` again, which is how the first version of this went wrong.
 - **The on-Mac resource-fork mask is bytes 16..127 and it is header padding,
   not a fudge.** The autotest compares resource forks by CRC, and the System 6
   Resource Manager stamps session scratch into part of the header, so a raw CRC

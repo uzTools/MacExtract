@@ -16,12 +16,16 @@
  *
  * WHAT IS ACTUALLY WRONG (small, and both in multiversal/custom/glue.c)
  * --------------------------------------------------------------------
- * 1. HOpenDF() returns paramErr (-50) on System 6, because PBHOpenDFSync
- *    issues the _HOpenDF trap, which is System 7 and later. The sibling
- *    NON-hierarchical glue in the same file already handles exactly this,
- *    with the comment "OpenDF not implemented, so use regular Open" and a
- *    fallback to PBOpenSync. The hierarchical variant has no such fallback,
- *    so HOpenDF is simply unusable below System 7. (Case 8.)
+ * 1. BOTH OpenDF() and HOpenDF() return paramErr (-50) on System 6, because
+ *    the _OpenDF trap is System 7 and later and neither falls back. Only
+ *    FSOpen() in the same file handles it, with the comment "OpenDF not
+ *    implemented, so use regular Open" and a fallback to PBOpenSync.
+ *    (Cases 8 and 11.)
+ *
+ *    Corrected 2026-08-01: this said the fallback was in OpenDF() and only
+ *    the hierarchical variant lacked it. It is in FSOpen(); OpenDF() is bare,
+ *    exactly like HOpenDF(). Case 11 exists because that was the second wrong
+ *    reading of this one source file, and the answer was on the machine.
  *
  * 2. HOpen/HOpenRF/HOpenDF declare an HParamBlockRec as an uninitialised
  *    stack local and set only four fields; ioMisc is left as stack garbage.
@@ -44,6 +48,7 @@
  *   6  HOpen   vref, wr      err=0   ref=378  eof=512  got=4     ok
  *   7  HOpenRF vref, wr      err=0   ref=378  eof=0    rdErr=-39 ok (no rsrc fork)
  *   8  HOpenDF vref, rd      err=-50                             BUG (1) above
+ *   11 OpenDF  (plain)       err=-50 ref=2                       BUG (1) above
  *   9  HOpen   other volume  err=-43                             ok, matches 10
  *   10 PB      other volume  err=-43                             ok, matches 9
  *
@@ -54,7 +59,9 @@
  * The four cases 1-4 vary only the stack contents and ioMisc, to test the
  * uninitialised-field theory; 5-8 use a real vRefNum, a real dirID and write
  * permission, as an application actually would; 9-10 cross volumes, which is
- * what unclassic does (archive on one disk, output on another).
+ * what unclassic does (archive on one disk, output on another); 11 is the
+ * non-hierarchical OpenDF, addressing the default volume exactly as 1-4 do,
+ * so its paramErr cannot be confused with a missing file.
  *
  * Build and run instructions: README.md in this directory.
  */
@@ -311,6 +318,20 @@ int main(void)
         DirtyStack();
         err = HOpenDF(vref, fsRtDirID, TESTFILE, fsRdPerm, &ref);
         Report("8 HOpenDF vref,rd :", err, ref);
+
+        /* --- case 11: the NON-hierarchical OpenDF ---------------------
+         * Added after the first write-up of case 8 claimed that the plain
+         * OpenDF "already has the fallback" and only the H-variant lacks
+         * it. It does not: reading glue.c, the fallback is in FSOpen, and
+         * OpenDF calls PBOpenDFSync bare, exactly as HOpenDF does. That
+         * makes this the control that decides whether the bug is one
+         * function or two — and it is not a question to answer by
+         * inspection, in a repository that has twice filed a wrong reading
+         * of this same file. */
+        ref = 0x5A5A;
+        DirtyStack();
+        err = OpenDF(TESTFILE, 0, &ref);
+        Report("11 OpenDF (plain) :", err, ref);
 
         /* --- cases 9..10: CROSS-VOLUME open ---------------------------
          * The app that hit this opens a file on a volume that is NOT the

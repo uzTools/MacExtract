@@ -167,11 +167,16 @@ file until someone with a Mac Plus runs the checklist.
   either. The general lesson is now in BLOCKERS.md: a hypothesis filed under
   "harness lessons" gets read as settled and nobody re-examines it. **This
   file is the place to look for others of the same shape.**
-- **The Retro68 `HOpenDF` bug was never filed.** `PBHOpenDFSync` issues a
-  System 7 trap and, unlike the non-hierarchical `OpenDF` beside it, has no
-  fallback, so `HOpenDF` returns `paramErr` on System 6. Written up ready to
-  post in `tools/retro68-hopen-repro/ISSUE.md`; not submitted because this
-  environment has no GitHub credentials (`BLOCKERS.md:43`).
+- **The Retro68 `OpenDF`/`HOpenDF` bug is still not filed.** The `_OpenDF`
+  trap is System 7, and neither `OpenDF` nor `HOpenDF` falls back to a plain
+  open when it returns `paramErr`, so both are unusable on System 6; `FSOpen`
+  in the same file does fall back. Measured, cases 8 and 11 of
+  `tools/retro68-hopen-repro/`. Written up ready to post in that directory's
+  `ISSUE.md`; **still not submitted, because this environment has no GitHub
+  credentials** — the network reaches github.com but an unauthenticated POST
+  to the issues API returns 401. Filing it needs a human with an account.
+  (Corrected 2026-08-01: the write-up previously blamed only `HOpenDF`, on a
+  misreading of which function holds the fallback.)
 - **The true root cause of the original "every open fails" saga is unknown.**
   Rewriting the File Manager calls as fully-zeroed HFS param blocks fixed it;
   which field mattered was never established, and the `HOpen`-glue attribution

@@ -1,7 +1,8 @@
 # Ready-to-post upstream issue (github.com/autc04/Retro68)
 
-Not filed from this environment: there is no `gh` CLI and no GitHub credentials
-here. Post it manually if you want it upstream. Reproduction code:
+Not filed from this environment: there is no `gh` CLI and no GitHub
+credentials here (an unauthenticated POST to the issues API returns 401).
+Post it manually if you want it upstream. Reproduction code:
 `tools/retro68-hopen-repro/`.
 
 Scope note: this is a *small* issue. The much larger claim this investigation
@@ -9,25 +10,52 @@ started from — "`HOpen` returns `noErr` without writing the refNum on System 6
 — was tested across ten cases and **does not reproduce**; it has been withdrawn
 (see `DECISIONS.md`). Please do not file that part.
 
+**Corrected 2026-08-01, before filing.** The first draft of this write-up said
+the bug was that `HOpenDF` lacks a fallback "unlike the non-hierarchical
+`OpenDF` in the same file, which already has it". That is wrong, and it was
+wrong in the direction that would have understated the bug: the fallback is in
+**`FSOpen`**, and `OpenDF` calls `PBOpenDFSync` bare exactly as `HOpenDF` does.
+Case 11 was added to the reproduction to settle it on the machine rather than
+by reading, and plain `OpenDF` returns `paramErr` too. So this is two broken
+functions, not one. Reading `glue.c` carelessly is how this project got the
+first, withdrawn claim wrong as well.
+
 ---
 
-**Title:** `HOpenDF` unusable on System 6 (returns paramErr); non-hierarchical
-`OpenDF` already has the fallback
+**Title:** `OpenDF` and `HOpenDF` are unusable on System 6 (return paramErr);
+`FSOpen` has the fallback they need
 
 **Body:**
 
-`multiversal/custom/glue.c` defines both `OpenDF` and `HOpenDF`. The
-non-hierarchical one already knows that the `_OpenDF` trap does not exist
-before System 7 and falls back:
+`multiversal/custom/glue.c` has three entry points that reach the `_OpenDF`
+trap. Only one of them copes with that trap not existing before System 7.
+
+`FSOpen` does it correctly:
 
 ```c
+    // Try newer OpenDF first, because it does not open drivers
+    err = PBOpenDFSync(&pb);
+    if(err == paramErr)
     {
         // OpenDF not implemented, so use regular Open.
         err = PBOpenSync(&pb);
     }
 ```
 
-The hierarchical one has no such fallback:
+`OpenDF` does not:
+
+```c
+pascal OSErr OpenDF(ConstStr255Param fileName, short vRefNum, short *refNum)
+{
+    ...
+    err = PBOpenDFSync(&pb);
+
+    *refNum = pb.ioParam.ioRefNum;
+    return err;
+}
+```
+
+and neither does `HOpenDF`:
 
 ```c
 pascal OSErr HOpenDF(INTEGER vref, LONGINT dirid, ConstStringPtr name,
@@ -44,27 +72,42 @@ pascal OSErr HOpenDF(INTEGER vref, LONGINT dirid, ConstStringPtr name,
 }
 ```
 
-so on System 6 every `HOpenDF` call fails with `paramErr` (-50). Suggested fix
-is the same shape as `OpenDF`: fall back to `PBHOpenSync` when `PBHOpenDFSync`
-returns `paramErr`.
+so on System 6 **every `OpenDF` and `HOpenDF` call fails with `paramErr`
+(-50)**, measured, on a file that `HOpen` and a hand-filled `PBHOpenSync` open
+successfully in the same run:
 
-Second, smaller point in the same three functions: `HOpen`, `HOpenRF` and
+```
+1  HOpen   dirty stack   err=0   ref=378  eof=512  got=4     ok
+4  PB      ioMisc=junk   err=0   ref=378  eof=512  got=4     ok
+8  HOpenDF vref, rd      err=-50                             BUG
+11 OpenDF  (plain)       err=-50                             BUG
+```
+
+Case 11 opens the same file, on the same default volume, that cases 1-4 open
+without trouble, so this is the trap being absent rather than the file being
+missing — and `paramErr` is exactly what `FSOpen`'s own fallback tests for.
+
+Suggested fix is the shape `FSOpen` already uses: fall back to `PBOpenSync` /
+`PBHOpenSync` when the DF call returns `paramErr`.
+
+Second, smaller point, in the hierarchical functions: `HOpen`, `HOpenRF` and
 `HOpenDF` declare `HParamBlockRec pb;` as an uninitialised stack local and fill
 in only `ioVRefNum`, `ioDirID`, `ioNamePtr` and `ioPermssn`. `ioMisc` is left as
 stack garbage, and for `_Open`/`PBHOpen` `ioMisc` is an *input* — a pointer to
 an optional access path buffer, or NULL to use the volume buffer (Inside
-Macintosh: Files, `PBHOpen`). `OpenDF()` and `OpenRF()` in the same file do set
-`pb.ioParam.ioMisc = NULL`; the H-variants do not.
+Macintosh: Files, `PBHOpen`). `FSOpen()`, `OpenDF()` and `OpenRF()` in the same
+file all set `pb.ioParam.ioMisc = NULL`; the three H-variants do not.
 
 In practice System 6.0.8 tolerates the garbage — I deliberately poisoned
-`ioMisc` with `0xA3A3A3A2` and the open still succeeded and read correctly — so
-this is a latent inconsistency rather than an observed failure. Still worth
-zeroing for the same reason the non-H versions do.
+`ioMisc` with `0xA3A3A3A2` and the open still succeeded and read correctly
+(case 4 above) — so this is a latent inconsistency rather than an observed
+failure. Still worth zeroing for the same reason the non-H versions do.
 
 **Environment:** System 6.0.8, Mac Plus (68000), Mini vMac 36.04, Retro68 at
-`335fa54f6d`, `-mcpu=68000 -Os`.
+`335fa54f6d` ("update multiversal", 2026-06-06), `-mcpu=68000 -Os`.
 
 **Reproduction:** `hopen_repro.c` (attached / linked). It creates its own
-512-byte test file next to the application, then runs ten open cases and prints
-`err`, `refNum`, `GetEOF` and a 4-byte `FSRead` for each. Case 8 is `HOpenDF`;
-cases 1 and 4 are the `ioMisc` probes. Full result table in the README.
+512-byte test file next to the application, then runs eleven open cases and
+prints `err`, `refNum`, `GetEOF` and a 4-byte `FSRead` for each. Cases 8 and 11
+are the two `paramErr` bugs; cases 1 and 4 are the `ioMisc` probes. Full result
+table in the README.

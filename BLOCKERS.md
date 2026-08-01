@@ -36,12 +36,19 @@ further: the app is verified byte-exact on-Mac as it stands, and the honest
 statement is "the param-block rewrite fixed it; we do not know precisely
 which field mattered."
 
-The only real (and minor) upstream finding that survived is that
-`HOpenDF` returns `paramErr` on System 6, because `PBHOpenDFSync` issues a
-System 7 trap and — unlike the non-hierarchical `OpenDF` in the same glue
-file — has no fallback. Written up in
-`tools/retro68-hopen-repro/ISSUE.md`; not filed (no GitHub credentials in
-this environment).
+The only real (and minor) upstream finding that survived is that **both
+`OpenDF` and `HOpenDF` return `paramErr` on System 6**, because the `_OpenDF`
+trap is System 7 and neither has a fallback. `FSOpen`, in the same glue file,
+does have one. Written up in `tools/retro68-hopen-repro/ISSUE.md`; not filed
+(no GitHub credentials in this environment — an unauthenticated POST to the
+issues API returns 401).
+
+That write-up said, until 2026-08-01, that `HOpenDF` was the odd one out
+"unlike the non-hierarchical `OpenDF` beside it". **Wrong**: the fallback is in
+`FSOpen`, and `OpenDF` is broken in exactly the same way. Case 11 was added to
+the reproduction to settle it on the machine instead of by reading the file,
+and plain `OpenDF` returns `paramErr` too. Twice now, a claim about this one
+source file has been wrong because it was read rather than run.
 
 The off-Mac blind spot is still real: the qemu-m68k mock
 (`tests/run_mac_sink.sh`) calls the sink directly and never touches the
