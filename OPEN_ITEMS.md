@@ -63,13 +63,16 @@ is now proven; the chrome is not. Folded into item 3.
 
 ---
 
-## 2. The `v0.1` tag is 10 commits behind and now misinforms
+## 2. The `v0.1` tag was 10 commits behind and misinformed
 
-**Status: the repository states something untrue to anyone who checks out the
-tag.**
+**Status: CLOSED 2026-08-01 by tagging `v0.2`.** `v0.1` is left where it is —
+it is a historical marker and moving a tag rewrites what someone else may
+already have fetched. `UNC_VERSION` and the README status heading now read
+0.2 to match.
 
-`v0.1` points at `ba492ac` (`bd3323e v0.1: clarify 1 MB claim ...`). Since
-then, three commits changed the headline results. The tagged tree still says:
+The problem it had: `v0.1` points at `ba492ac` (`bd3323e v0.1: clarify 1 MB
+claim ...`), and three later commits changed the headline results. The tagged
+tree still says:
 
 | Tagged at v0.1 | True on master |
 |---|---|
@@ -79,8 +82,8 @@ then, three commits changed the headline results. The tagged tree still says:
 | shell RAM limited by largest output fork | streaming; output size costs the shell nothing |
 | "185 s on a 7 MHz 68000" | struck — the 1x setup that produced it is gone |
 
-**To close:** tag `v0.2` at the current head, or re-tag, so the released marker
-matches the released claims.
+Anyone reading `v0.1` should treat its Mac numbers as superseded and use
+`v0.2` or later.
 
 ---
 

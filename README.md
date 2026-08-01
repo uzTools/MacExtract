@@ -25,7 +25,7 @@ raw bytes), along with type/creator codes, Finder flags and dates in
 listings. Nested envelopes — `.sit.hqx`, `.cpt.bin`, `.tar.Z` — are
 detected by content (never by filename) and unwrapped automatically.
 
-## Status — v0.1 (honest capability matrix)
+## Status — v0.2 (honest capability matrix)
 
 | | Linux CLI | Mac app (System 6 → OS 9) |
 |---|---|---|
