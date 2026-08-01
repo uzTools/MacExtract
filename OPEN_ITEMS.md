@@ -105,6 +105,26 @@ here because it is the largest genuine unknown.**
 - **Real 68k hardware: never run.** No genuine floppy I/O, no real media errors
   mid-write, no real 8 KB stack underneath a real ROM's own usage. The
   per-entry I/O error path has never seen an actual I/O failure.
+- **System 7: the corpus passes, the UI is untested.** 2026-08-01: the
+  44-fixture sample runs 44/44 byte-exact on System 7.0.1 at 4 MB
+  (`tools/vmac/run.py --system Sys7.img`), with peak heap identical to 6.0.8.
+  At 1 MB System 7 does not boot at all — it wants 2 MB — so the 1 MB floor
+  target is System 6 and only System 6. **Still open on System 7:** the
+  interactive UI has never been driven there, and with it the two things the
+  tier exists for — `SFReply.vRefNum` as a working-directory reference, and
+  the `SIZE` partition under the Process Manager.
+- **`SFReply` working directory: test designed, no result.**
+  `tools/vmac/interactive.py --wd` is committed and does the right thing on
+  paper — archive in a SUBFOLDER, navigate in with SFGetFile, then check
+  whether the output landed beside the archive or at the volume root. That
+  arrangement matters: **every previous on-Mac run put the archive at the
+  volume root, where the working directory and the root are the same
+  directory and a mistake cannot show itself.** Two runs failed on Finder
+  automation under System 7's unfamiliar desktop layout — nothing was learned
+  about the application either way. A better route exists and is not yet
+  built: a `UNC_AT_WD` autotest mode that makes its own working directory with
+  `PBOpenWD` and reports where the files went, needing no Finder and no
+  screen coordinates at all.
 - **Mac OS 9: still never run, but no longer blocked.** The `WaitNextEvent`
   branch, `SFReply.vRefNum` as a System 7+ working-directory reference, HFS+
   names and the `SIZE` partition under a real Process Manager remain untested

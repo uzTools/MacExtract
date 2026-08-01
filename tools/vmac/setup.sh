@@ -12,6 +12,7 @@
 #   $UNC_VMAC_HOME   (default: ~/.cache/unclassic/vmac/)
 #     vMac.ROM          128 KB Macintosh Plus ROM (checksum 4D1F8172)
 #     System6.hfv       20 MB System 6.0.8 hard-disk image
+#     Sys7.img          10 MB System 7.0.1 hard-disk image (the System 7 tier)
 #     mv-4M/minivmac    emulator built for a 4 MB Mac Plus
 #     mv-1M/minivmac    emulator built for a 1 MB Mac Plus (the floor target)
 #
@@ -41,6 +42,17 @@ ROM_SHA=dd908e2b65772a6b1f0c859c24e9a0d3dcde17b1c6a24f4abd8955846d7895e7
 SYS_URL=https://archive.org/download/system-6_202607/System6.hfv
 SYS_SHA=6be139b315cb61f0b482f0ef1deb35ff35a5ae2a35e04d407f5bd1d4b333d749
 
+# A stock System 7.0.1 hard-disk image, for the System 7 tier. 7.0.1 rather
+# than 7.1 because 7.1 survives only as floppy sets and a beta ISO, and
+# installing from emulated floppies is hours of GUI automation for a system
+# that differs in nothing this project tests. What matters is that this is
+# System 7 and not 6: Standard File hands back a WORKING DIRECTORY reference
+# rather than a volume refNum, and the Process Manager is always running, so
+# the 'SIZE' partition governs the launch. Neither is reachable on 6.0.8.
+# Mini vMac's Mac Plus supports up to 7.5.5, so this runs on the same 68000.
+SYS7_URL=https://archive.org/download/AppleMacintoshSystem701/System7_0_1.img
+SYS7_SHA=068cdf59dd8254546f94231cbb591cd522826083a039b4545670458017925543
+
 check() { echo "$2  $1" | sha256sum -c - >/dev/null 2>&1; }
 
 fetch() {   # fetch <url> <dest> <sha256>
@@ -55,7 +67,8 @@ fetch() {   # fetch <url> <dest> <sha256>
 }
 
 fetch "$MV_URL"  minivmac.src.tgz "$MV_SHA"
-fetch "$SYS_URL" System6.hfv      "$SYS_SHA"
+fetch "$SYS_URL"  System6.hfv     "$SYS_SHA"
+fetch "$SYS7_URL" Sys7.img       "$SYS7_SHA"
 
 if [ -f vMac.ROM ] && check vMac.ROM "$ROM_SHA"; then
     echo "have vMac.ROM"

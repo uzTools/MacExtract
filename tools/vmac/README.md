@@ -2,13 +2,21 @@
 
 Everything in FORMATS.md and MANUAL_TESTS.md that claims the Macintosh shell
 "runs on real System 6" was produced by this harness. It boots the Retro68
-application on Mini vMac emulating a **68000 Mac Plus under System 6.0.8**,
-extracts one fixture per boot, and cross-checks the result against the same
-engine's Linux output.
+application on Mini vMac emulating a **68000 Mac Plus under System 6.0.8 or
+System 7.0.1**, extracts one fixture per boot, and cross-checks the result
+against the same engine's Linux output.
 
     tools/vmac/setup.sh                                  # once
     tools/vmac/run.py fixtures/adobenumbers.sit          # 4 MB machine
     tools/vmac/run.py --mem 1M fixtures/adobenumbers.sit # 1 MB floor target
+    tools/vmac/run.py --system Sys7.img ...              # the System 7 tier
+
+`--system` picks the boot system: `System6.hfv` (6.0.8, the floor target) or
+`Sys7.img` (7.0.1). System 7 is where `SFReply.vRefNum` becomes a working
+directory and the Process Manager starts honouring the `SIZE` partition, so it
+is a different set of code paths, not just a different splash screen. It also
+needs 2 MB: `--system Sys7.img --mem 1M` does not boot, and that is the
+system's floor, not the application's.
 
 Nothing here runs in `./ci.sh`: it needs ~80 MB of downloads, an X server and
 minutes per fixture. It is a deliberate, on-demand check.
@@ -22,6 +30,7 @@ minutes per fixture. It is a deliberate, on-demand check.
 | `run.py` | build the disks, boot, screenshot, decode, check |
 | `interactive.py` | drive the real UI (SFGetFile, progress dialog, Cancel, Cmd-.) and photograph each step |
 | `os9.py` | boot Mac OS 9 on emulated PowerPC with the application attached — **incomplete**, see below |
+| `mountcheck.py` | boot a system image with disks attached and photograph the desktop — "does this mount?", and "does this system boot at all?" |
 | `mkapmdisk.py` | build an Apple-partitioned transfer disk that Mac OS on PowerPC will mount |
 
 `tools/quickdraw-repro/` is a sibling that reuses `mkboot.py` and this
@@ -105,6 +114,7 @@ because two of the three are Apple's copyrighted property:
 | `minivmac.src.tgz` 36.04 | gryphel.com | GPL-2 emulator source, built locally |
 | `vMac.ROM` | Internet Archive `mac_rom_archive_-_as_of_8-19-2011`, member `4D1F8172 - MacPlus v3.ROM` | Macintosh Plus ROM — **Apple copyright** |
 | `System6.hfv` | Internet Archive `system-6_202607` | System 6.0.8 — **Apple copyright** |
+| `Sys7.img` | Internet Archive `AppleMacintoshSystem701` | System 7.0.1 — **Apple copyright** |
 
 If a hash ever fails to match, the upstream file changed: check it by hand
 rather than editing the expected hash.

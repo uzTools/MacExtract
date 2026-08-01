@@ -29,7 +29,7 @@ detected by content (never by filename) and unwrapped automatically.
 
 | | Linux CLI | Mac app (System 6 → OS 9) |
 |---|---|---|
-| Extraction, all 12 formats | ✅ byte-exact vs `unar` (769 fixtures, both forks, in CI) | ✅ verified byte-exact **on real System 6.0.8 / 68000** (Mini vMac): 44/44 sampled fixtures at 4 MB, 39/44 at 1 MB — see the tier table below |
+| Extraction, all 12 formats | ✅ byte-exact vs `unar` (769 fixtures, both forks, in CI) | ✅ verified byte-exact **on real System 6.0.8 and System 7.0.1 / 68000** (Mini vMac): 44/44 sampled fixtures at 4 MB on each, 39/44 at 1 MB on 6.0.8 — see the tier tables below |
 | Both forks + type/creator/dates | ✅ | ✅ (resource fork exact bar the OS-stamped reserved header 16–127; extracted `APPL` launches by double-click) |
 | Robustness (truncated/bit-flipped) | ✅ clean per-entry errors, no crash/hang/sanitizer trip | shares the same engine |
 | Interactive UI | — | ✅ driven end to end on System 6: launched from the Finder → SFGetFile (Drive switches volumes) → progress dialog (Cancel / Cmd-.) → result alert; a cancel removes the partial output, and an extracted application launches by double-click |
@@ -79,8 +79,23 @@ from a Plus to a G3. Get the app onto a bare Mac with the bootstrap
 distribution — `tools/make_dist.sh` builds an uncompressed MacBinary and an
 800K disk image (a machine with no unarchiver can't open a `.sit`).
 
-Untested: real 68k hardware and Mac OS 9 on PowerPC — both emulator-only so
-far. See [MANUAL_TESTS.md](MANUAL_TESTS.md).
+### Which systems this has actually run on
+
+| System | What was run | Result |
+|---|---|---|
+| System 6.0.8, 4 MB | 44-fixture corpus + the interactive UI end to end | ✅ 44/44; UI driven from the Finder, extracted `APPL` launches |
+| System 6.0.8, 1 MB | 44-fixture corpus | ✅ 39/44 — the 5 are StuffIt 5 budget refusals |
+| System 7.0.1, 4 MB | 44-fixture corpus | ✅ 44/44, same peak heap as 6.0.8 |
+| System 7.0.1, 1 MB | boot probe | ⚠️ System 7 needs 2 MB and does not boot — not an application fault |
+| System 7 interactive UI | — | ❌ **not run** |
+| Mac OS 8 / 9 | — | ❌ **not run**; `tools/vmac/os9.py` boots OS 9 and mounts a disk, and stops there |
+
+Everything above is **emulation**. No physical Macintosh has ever run this
+binary: not a real Mac Plus at 1 MB, not an LC475 (68040), not an iMac G3.
+Emulation is evidence, not proof. See [MANUAL_TESTS.md](MANUAL_TESTS.md) for
+the full untested list, and note there is still **no timing data at all** —
+the sweeps run the emulator flat out, so "runs on a Mac Plus" is shown and
+"is usable on a Mac Plus" is not.
 
 **Detect-only** (v1 names but does not extract): StuffIt X, DiskDoubler,
 Now Compress, LZH, DiskCopy 4.2. **Out of scope (v1):** compression,

@@ -105,10 +105,10 @@ def build_autotest_app(defines=()):
     return os.path.join(bdir, "unclassic.bin")
 
 
-def build_boot_image(appbin, dest):
-    stock = os.path.join(VMAC_HOME, "System6.hfv")
+def build_boot_image(appbin, dest, system="System6.hfv"):
+    stock = os.path.join(VMAC_HOME, system)
     if not os.path.exists(stock):
-        raise SystemExit("run: no System6.hfv — run tools/vmac/setup.sh first")
+        raise SystemExit(f"run: no {system} — run tools/vmac/setup.sh first")
     sh(sys.executable, os.path.join(HERE, "mkboot.py"), stock, appbin, dest)
 
 
@@ -287,6 +287,12 @@ def main():
                          "(see tools/vmac/sample.txt)")
     ap.add_argument("--mem", default="4M", choices=("4M", "1M"),
                     help="emulated RAM; 1M is the project's floor target")
+    ap.add_argument("--system", default="System6.hfv",
+                    help="system image under $UNC_VMAC_HOME. The default is "
+                         "System 6.0.8, the floor target; Sys7.img is the "
+                         "System 7.0.1 tier, where Standard File returns a "
+                         "working-directory refNum and the Process Manager "
+                         "honours the 'SIZE' partition")
     ap.add_argument("--timeout", type=float, default=300.0,
                     help="host seconds to wait for a result grid (not Mac time)")
     ap.add_argument("--poll", type=float, default=5.0,
@@ -318,7 +324,7 @@ def main():
     # discover that two sweeps were overlapping.
     bootdir = tempfile.mkdtemp(prefix="vmacboot-")
     bootimg = os.path.join(bootdir, "boot-autotest.hfv")
-    build_boot_image(appbin, bootimg)
+    build_boot_image(appbin, bootimg, args.system)
     if args.pngdir:
         os.makedirs(args.pngdir, exist_ok=True)
     manifest_dir = os.path.join(REPO, "fixtures", "manifests")
@@ -357,14 +363,15 @@ def main():
                 verdict = "PASS" if ok else "FAIL"
             print(f"{verdict:8s} {name:44s} {secs:6.1f}s  {detail}", flush=True)
             npass += verdict == "PASS"
-            results.append(dict(fixture=name, mem=args.mem, verdict=verdict,
+            results.append(dict(fixture=name, mem=args.mem,
+                                system=args.system, verdict=verdict,
                                 seconds=round(secs, 1), detail=detail,
                                 values=vals))
         finally:
             shutil.rmtree(workdir, ignore_errors=True)
 
     shutil.rmtree(bootdir, ignore_errors=True)
-    print(f"\n{npass}/{len(fixtures)} PASS at {args.mem}")
+    print(f"\n{npass}/{len(fixtures)} PASS at {args.mem} on {args.system}")
     if args.json:
         json.dump(results, open(args.json, "w"), indent=1)
     return 0 if npass == len(fixtures) else 1

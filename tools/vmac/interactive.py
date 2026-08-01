@@ -236,6 +236,87 @@ FINDER_APP_ICON = (240, 110)
 FINDER_EXTRACTED_APPL = (367, 104)
 
 
+# The working-directory phase's own coordinates. SF_SUBFOLDER_ROW is the row
+# the folder occupies in SFGetFile's list; FINDER_FOLDER_ICON is that folder on
+# the Finder desktop afterwards. Both measured off this phase's screenshots.
+SF_SUBFOLDER_ROW = (150, 137)
+
+# Finder icon positions differ between the two system images, because each
+# remembers its own window placement: System 6.0.8 opens the volume window at
+# the top left, System 7.0.1 near the bottom of the screen. Measured off
+# wd-2-volume.png for each. They are a table rather than constants because
+# this is a look-and-adjust loop by nature — the first System 7 attempt
+# clicked bare desktop with System 6 coordinates and launched nothing.
+WD_ICONS = {
+    "System6.hfv": {"app": (240, 110), "folder": (66, 106)},
+    "Sys7.img":    {"app": (222, 313), "folder": (157, 313)},
+}
+
+
+def phase_wd(args, appbin, workdir, shot):
+    """Does the extraction land beside the archive, or at the volume root?
+
+    Standard File hands back `SFReply.vRefNum`, and the application passes it
+    to the File Manager with `dirID` 0. On System 7 and later that refNum is a
+    WORKING DIRECTORY reference rather than a plain volume refNum, which
+    OPEN_ITEMS.md has listed as untested code since M10 — and it could not
+    have been tested before now, because every previous run put the archive at
+    the volume ROOT, where the working directory and the root are the same
+    directory and a mistake has nowhere to show.
+
+    So: archive inside a folder, navigate into the folder in SFGetFile, and
+    look at where the output actually landed.
+    """
+    stock = os.path.join(R.VMAC_HOME, args.system)
+    bootimg = os.path.join(workdir, "boot-wd.hfv")
+    R.sh(sys.executable, os.path.join(HERE, "mkboot.py"), stock, appbin, bootimg,
+         "--finder", "--data", f"{args.fixture}:Archives:archive.sit")
+
+    icons = WD_ICONS.get(args.system)
+    if icons is None:
+        raise SystemExit(f"interactive: no Finder icon positions known for "
+                         f"{args.system} — run once, look at wd-2-volume.png, "
+                         f"and add them to WD_ICONS")
+    mac = Mac(bootimg, args.emu, workdir)
+    try:
+        if mac.settle(os.path.join(args.outdir, ".settle.png"),
+                      interval=5.0, timeout=args.boot_timeout) is None:
+            raise SystemExit("interactive: the machine never reached the Finder")
+        shot(mac, "wd-1-desktop.png")
+
+        mac.click(*FINDER_VOLUME_ICON, double=True)       # open the boot volume
+        time.sleep(4.0)
+        shot(mac, "wd-2-volume.png")                      # Archives + unclassic
+
+        mac.click(*icons["app"], double=True)             # launch unclassic
+        time.sleep(args.launch_wait)
+        shot(mac, "wd-3-sfgetfile.png")                   # at the volume root
+
+        mac.click(*SF_SUBFOLDER_ROW, double=True)         # descend into Archives
+        time.sleep(3.0)
+        shot(mac, "wd-4-in-folder.png")                   # now inside it
+
+        mac.click(*SF_FIRST_ROW)                          # the archive
+        mac.key("Return")
+        mac.settle(os.path.join(args.outdir, ".settle.png"),
+                   interval=5.0, timeout=args.complete_timeout)
+        shot(mac, "wd-5-complete.png")
+        mac.key("Return")                                 # dismiss the alert
+        time.sleep(2.0)
+        mac.command_key("period")                         # quit to the Finder
+        time.sleep(args.launch_wait)
+        shot(mac, "wd-6-root-after.png")   # the ROOT: must NOT hold the output
+
+        mac.click(*icons["folder"], double=True)          # open Archives
+        time.sleep(5.0)
+        shot(mac, "wd-7-folder-after.png") # the FOLDER: must hold the output
+    finally:
+        mac.close()
+    print("interactive: wd-6 is the volume root, wd-7 is the folder the archive")
+    print("interactive: was in. The extracted files belong in wd-7 and must be")
+    print("interactive: absent from wd-6.")
+
+
 def phase_e2e(args, appbin, workdir, shot):
     """The user's whole story, in one boot, with the FINDER left in place.
 
@@ -250,7 +331,7 @@ def phase_e2e(args, appbin, workdir, shot):
         open -> progress dialog -> "Extraction complete." -> quit ->
         double-click the extracted application
     """
-    stock = os.path.join(R.VMAC_HOME, "System6.hfv")
+    stock = os.path.join(R.VMAC_HOME, args.system)
     bootimg = os.path.join(workdir, "boot-e2e.hfv")
     R.sh(sys.executable, os.path.join(HERE, "mkboot.py"), stock, appbin, bootimg,
          "--finder", "--data", f"{args.fixture}:archive.sit")
@@ -327,6 +408,18 @@ def main():
     ap.add_argument("--launch-wait", type=float, default=25.0,
                     help="seconds to allow a Finder double-click to open an "
                          "application (Mac Plus speed)")
+    ap.add_argument("--system", default="System6.hfv",
+                    help="system image under $UNC_VMAC_HOME (System6.hfv or "
+                         "Sys7.img)")
+    ap.add_argument("--wd", action="store_true",
+                    help="the working-directory phase: put the archive in a "
+                         "SUBFOLDER, navigate into it with SFGetFile, and "
+                         "check the extraction lands beside the archive rather "
+                         "than at the volume root. On System 7 and later "
+                         "SFReply.vRefNum is a working-directory reference, "
+                         "and this is the only arrangement that can tell a "
+                         "mishandled one from a correct one — at the volume "
+                         "root the two are the same directory.")
     ap.add_argument("--e2e", action="store_true",
                     help="run the Finder end-to-end phase INSTEAD of the "
                          "cancel phases: launch by double-click, navigate "
@@ -339,15 +432,23 @@ def main():
     appbin = build_interactive_app()
     workdir = tempfile.mkdtemp(prefix="vmac-interactive-")
     bootimg = os.path.join(workdir, "boot-interactive.hfv")
-    stock = os.path.join(R.VMAC_HOME, "System6.hfv")
+    stock = os.path.join(R.VMAC_HOME, args.system)
     if not os.path.exists(stock):
-        raise SystemExit("interactive: no System6.hfv — run tools/vmac/setup.sh")
+        raise SystemExit(f"interactive: no {args.system} — run tools/vmac/setup.sh")
 
     def shot(mac, name):
         # e2e shots are upscaled: they are read for Finder icon positions and
         # for dialog text, not decoded, and a 512x342 1bpp screen is hard work
         # at native size.
         mac.shot(os.path.join(args.outdir, name), scale="200%" if args.e2e else None)
+
+    if args.wd:
+        try:
+            phase_wd(args, appbin, workdir, shot)
+        finally:
+            shutil.rmtree(workdir, ignore_errors=True)
+        print(f"interactive: screenshots in {args.outdir} — LOOK AT THEM.")
+        return 0
 
     if args.e2e:
         try:

@@ -143,6 +143,39 @@ On-Mac engine peak heap (high-water mark) by format, matching the Linux
 | StuffIt 5 (Arsenic) | 0.63–2.53 MB (block *fill* dependent — see †) |
 | DiskDoubler / Now Compress | detect-only — no allocation, cleanly not extracted |
 
+## System 7 tier (Mini vMac — System 7.0.1, 4 MB Mac Plus, 68000)
+
+Until 2026-08-01 every on-Mac result in this repository came from one point of
+the System 6 → Mac OS 9 range the project claims: System 6.0.8. This is the
+second point.
+
+**System 7.0.1, not 7.1.** 7.1 survives on the mirrors only as floppy disk
+sets and a beta ISO, and installing from emulated floppies is hours of GUI
+automation for a system that differs in nothing this project exercises. What
+matters is that it is System 7 rather than 6, because two things only exist
+above System 6: Standard File returns a **working-directory** reference in
+`SFReply.vRefNum` rather than a plain volume refNum, and the Process Manager
+is always running, so the `SIZE` partition governs the launch. Mini vMac's
+Mac Plus supports up to 7.5.5, so this is the same 68000 as every other row.
+
+**44/44 byte-exact PASS at 4 MB** — the same committed sample, the same on-Mac
+CRC-32 read-back, the same twelve formats:
+
+    tools/vmac/run.py --system Sys7.img --list tools/vmac/sample.txt
+
+Engine peak heap is **identical to System 6.0.8 on every fixture** (e.g.
+`derived-RWAsm_Folder.sit` 643.2 KB, `derived-Library_ISBN_Barcoder.sit`
+1810.8 KB, `derived-PuzzleGetter_0.8.sit` 710.6 KB), which is the expected
+result — the engine allocates through the same callback and never asks the
+system for anything — but it had never been shown.
+
+**System 7.0.1 does not run at 1 MB at all.** A 1 MB probe painted nothing in
+180 s: not a failed extraction, a system that cannot boot. System 7 wants 2 MB
+and the floor-target machine has half of it. This is not a defect in the
+application and there is no 1 MB row for this tier — **the 1 MB floor target
+is System 6, and only System 6.** The application's own memory floor is
+unchanged and is still demonstrated by the 39/44 System 6.0.8 run below.
+
 ## Floor target verification (Mini vMac — System 6.0.8, **1 MB** Mac Plus, 68000)
 
 The same 44-fixture sample was replayed on a Mini vMac built for **1 MB of

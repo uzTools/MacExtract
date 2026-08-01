@@ -14,6 +14,39 @@ The earlier claim that this was caused by a **broken Retro68 `HOpen`
 glue** has been **withdrawn** — a standalone minimal reproduction
 (`tools/retro68-hopen-repro/`) disproved it. See BLOCKERS.md.
 
+### System 7.0.1, 2026-08-01 — a second system tier, corpus only
+
+Every on-Mac result before this one came from System 6.0.8. This is the first
+time the binary has been run anywhere else in the System 6 → Mac OS 9 range
+the project claims.
+
+**What was run:** the committed 44-fixture sample, on a stripped System 7.0.1
+boot volume, 4 MB Mac Plus, same on-Mac CRC-32 read-back of both forks.
+
+    tools/vmac/run.py --system Sys7.img --list tools/vmac/sample.txt
+
+**Result: 44/44 byte-exact**, with engine peak heap identical to System 6.0.8
+on every fixture. **1 MB: the system does not boot** — a probe painted nothing
+in 180 s, which is System 7 needing 2 MB, not a fault in the application.
+
+7.0.1 rather than 7.1 because 7.1 survives on the mirrors only as floppy sets
+and a beta ISO. Both are System 7; what the tier is for is the two things
+System 6 cannot reach — a working-directory `SFReply.vRefNum`, and a Process
+Manager that honours the `SIZE` partition.
+
+**NOT run on System 7, and therefore not claimed:**
+
+- **The interactive UI.** Only the headless autotest build was replayed. The
+  Finder-driven path (`--e2e`) has run on 6.0.8 only.
+- **`SFReply` working-directory semantics.** The test for it is designed and
+  committed — `tools/vmac/interactive.py --wd` puts the archive in a SUBFOLDER
+  and checks the extraction lands beside it rather than at the volume root,
+  which is the only arrangement where a mishandled working directory is
+  visible at all — but it has **not produced a result**. Two attempts failed
+  on Finder automation under an unfamiliar System 7 desktop layout, not on
+  anything about the application. `OPEN_ITEMS.md` keeps this open.
+- **The `SIZE` partition under the Process Manager.** Still never exercised.
+
 ### End to end from the Finder, 2026-08-01 (System 6.0.8, 4 MB, 1x)
 
 `tools/vmac/interactive.py --e2e` with `derived-ScrollbarPattern.sit`. Unlike

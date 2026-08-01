@@ -26,15 +26,19 @@ import run as R                                              # noqa: E402
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("images", nargs="+", help="disk images to attach")
+    ap.add_argument("images", nargs="*", help="disk images to attach")
     ap.add_argument("-o", "--outdir", default="vmac-shots")
     ap.add_argument("--emu", default="mv-4M", help="emulator build to boot")
+    ap.add_argument("--boot", default="System6.hfv",
+                    help="boot image under $UNC_VMAC_HOME (default the stock "
+                         "System 6.0.8). Point it at another system to check "
+                         "that the system itself boots on this machine.")
     ap.add_argument("--settle", type=float, default=40.0,
                     help="seconds to allow for boot and for the Finder to "
                          "mount everything")
     args = ap.parse_args()
 
-    stock = os.path.join(R.VMAC_HOME, "System6.hfv")
+    stock = os.path.join(R.VMAC_HOME, args.boot)
     rom = os.path.join(R.VMAC_HOME, "vMac.ROM")
     emu = os.path.join(R.VMAC_HOME, args.emu, "minivmac")
     for p in (stock, rom, emu):

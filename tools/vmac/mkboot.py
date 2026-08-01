@@ -22,7 +22,8 @@ Usage:
 builds unclassic's); its resource fork is what makes it an application, so it
 is copied in MacBinary mode.
 
---data copies a host file into the volume ROOT as a plain data fork. The
+--data copies a host file into the volume as a plain data fork. MACNAME may
+name subfolders ("Archives:archive.sit"), which are created as needed. The
 interactive driver uses it to put an archive where SFGetFile will list it: the
 interactive application extracts next to the archive, so that volume has to be
 writable, and the boot volume is the one SFGetFile opens on by default.
@@ -211,7 +212,15 @@ def main():
             hfs.run("hcopy", "-m", appbin, hfs.path(SYS_FOLDER, app_name))
             verify_stripped(hfs, KEEP | {app_name})
         for host, macname in extras:
-            hfs.run("hcopy", "-r", host, hfs.path(macname))
+            # MACNAME may name subfolders, "Archives:archive.sit". Create them:
+            # putting the archive somewhere OTHER than the volume root is the
+            # only arrangement in which a mishandled working-directory refNum
+            # is visible at all — at the root, "the WD" and "the root" are the
+            # same directory and a bug cannot show itself.
+            parts = macname.split(":")
+            for i in range(1, len(parts)):
+                hfs.run("hmkdir", hfs.path(*parts[:i]), check=False)
+            hfs.run("hcopy", "-r", host, hfs.path(*parts))
     finally:
         hfs.close()
     if finder:
