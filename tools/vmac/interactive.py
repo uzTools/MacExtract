@@ -17,13 +17,30 @@ repeated identically.
 
     tools/vmac/interactive.py fixtures/derived-EmpireBuilderDemo.sit -o /tmp/shots
 
-Steps captured, in order:
+Two phases, because they need different machines.
+
+The default one installs the application as the boot shell (as every other
+harness here does) and concentrates on cancelling:
 
     1-launched.png    application is up, SFGetFile listing the archive
     2-extracting.png  progress dialog, part way through
-    3-cancelled.png   the alert after Cmd-.
+    3-cancelled.png   the alert after the Cancel button
     4-back.png        back at SFGetFile, ready for another file
+    6-cmd-period.png  the same cancel reached by Cmd-. instead
     5-complete.png    a second run allowed to finish: the success alert
+
+`--e2e` keeps the FINDER instead, and follows the user's whole story — which
+needs a Finder at both ends, to launch the application and then to launch what
+the application extracted:
+
+    e2e-1-desktop.png               booted to the Finder
+    e2e-2-volume.png                boot volume open, showing the application
+    e2e-3-sfgetfile.png             launched by double-click
+    e2e-4-other-volume.png          Drive switched to the second volume
+    e2e-5-back-to-boot.png          Drive switched back
+    e2e-6-complete.png              "Extraction complete."
+    e2e-7-back-in-finder.png        quit; the extracted files are in the window
+    e2e-8-extracted-app-running.png the extracted APPL, double-clicked
 
 Mini vMac maps the host Alt key to the Mac Command key; see command_key() for
 why the chord is sent as an explicit hold rather than an xdotool chord.
@@ -57,7 +74,7 @@ def build_interactive_app():
 class Mac:
     """A booted Mini vMac with keyboard and mouse."""
 
-    def __init__(self, bootimg, emudir, workdir):
+    def __init__(self, bootimg, emudir, workdir, extra=()):
         emu = os.path.join(R.VMAC_HOME, emudir, "minivmac")
         rom = os.path.join(R.VMAC_HOME, "vMac.ROM")
         if not os.path.exists(emu):
@@ -65,7 +82,7 @@ class Mac:
         boot = os.path.join(workdir, "boot.hfv")
         shutil.copyfile(bootimg, boot)
         self.dpy = R.Display()
-        self.proc = subprocess.Popen([emu, "-r", rom, boot],
+        self.proc = subprocess.Popen([emu, "-r", rom, boot, *extra],
                                      env=dict(os.environ, DISPLAY=self.dpy.name),
                                      stdout=subprocess.DEVNULL,
                                      stderr=subprocess.DEVNULL,
@@ -137,10 +154,13 @@ class Mac:
         self._xdo("mousemove", "790", "590")
         time.sleep(0.3)
 
-    def shot(self, path):
+    def shot(self, path, scale=None):
         self.park()
         for _ in range(40):
             if self.dpy.screenshot(path):
+                if scale:
+                    subprocess.run(["convert", path, "-scale", scale, path],
+                                   check=True, capture_output=True)
                 return
             time.sleep(0.5)
         raise SystemExit("interactive: could not screenshot the emulator")
@@ -193,6 +213,97 @@ SF_FIRST_ROW = (150, 137)
 # in ProgressPump), so both are exercised.
 PROGRESS_CANCEL = (342, 138)
 
+# Standard File's Drive button, one row above Open — the row that a mis-aimed
+# click once landed on by accident (see above). With two volumes mounted it
+# cycles between them, which is the volume-navigation checklist item.
+# Measured off e2e-3-sfgetfile.png; the dialog is placed by the application at
+# SFGetFile's `where` (82, 90), so this moves if that does.
+SF_DRIVE = (377, 192)
+
+# The Finder, in --e2e mode. Coordinates measured off the numbered screenshots
+# that mode writes; they are stable because the boot image is rebuilt
+# identically each run, and re-measuring them from the shots is the fix if the
+# volume's contents ever change.
+FINDER_VOLUME_ICON = (480, 40)      # boot disk, top right of the desktop
+# Fourth of the four items in the open volume window, whose order is
+# System Folder, archive.sit, an empty folder mkboot.py cannot delete, then
+# the application. Measured off e2e-2-volume.png.
+FINDER_APP_ICON = (240, 110)
+# The extracted application, sixth and last item once the run has finished
+# (System Folder, archive.sit, that empty folder, unclassic, then the two
+# entries of derived-ScrollbarPattern.sit). Measured off e2e-7; a different
+# fixture puts it somewhere else.
+FINDER_EXTRACTED_APPL = (367, 104)
+
+
+def phase_e2e(args, appbin, workdir, shot):
+    """The user's whole story, in one boot, with the FINDER left in place.
+
+    Everything else here runs the application as the boot shell, which is not
+    how anyone uses it and which cannot answer two of the checklist items at
+    all: the Finder has to exist for the application to be double-clicked, and
+    it has to exist afterwards for an EXTRACTED application to be
+    double-clicked. Standard File's Drive button needs a second volume, so one
+    is mounted.
+
+        launch from the Finder -> SFGetFile -> Drive (volume navigation) ->
+        open -> progress dialog -> "Extraction complete." -> quit ->
+        double-click the extracted application
+    """
+    stock = os.path.join(R.VMAC_HOME, "System6.hfv")
+    bootimg = os.path.join(workdir, "boot-e2e.hfv")
+    R.sh(sys.executable, os.path.join(HERE, "mkboot.py"), stock, appbin, bootimg,
+         "--finder", "--data", f"{args.fixture}:archive.sit")
+    # A second volume, so Drive has somewhere to go. Its contents do not
+    # matter; that SFGetFile switches to it and back is the point.
+    second = os.path.join(workdir, "second.dsk")
+    R.make_floppy(second, "Second")
+
+    mac = Mac(bootimg, args.emu, workdir, extra=(second,))
+    try:
+        if mac.settle(os.path.join(args.outdir, ".settle.png"),
+                      interval=5.0, timeout=args.boot_timeout) is None:
+            raise SystemExit("interactive: the machine never reached the Finder")
+        shot(mac, "e2e-1-desktop.png")
+
+        mac.click(*FINDER_VOLUME_ICON, double=True)      # open the boot volume
+        time.sleep(4.0)
+        shot(mac, "e2e-2-volume.png")
+
+        mac.click(*FINDER_APP_ICON, double=True)         # launch unclassic
+        time.sleep(args.launch_wait)
+        shot(mac, "e2e-3-sfgetfile.png")
+
+        mac.click(*SF_DRIVE)                             # -> the other volume
+        time.sleep(2.0)
+        shot(mac, "e2e-4-other-volume.png")
+        mac.click(*SF_DRIVE)                             # -> back again
+        time.sleep(2.0)
+        shot(mac, "e2e-5-back-to-boot.png")
+
+        mac.click(*SF_FIRST_ROW)
+        mac.key("Return")                                # Open -> extraction
+        elapsed = mac.settle(os.path.join(args.outdir, ".settle.png"),
+                             interval=5.0, timeout=args.complete_timeout)
+        shot(mac, "e2e-6-complete.png")
+        mac.key("Return")                                # dismiss the alert
+        time.sleep(2.0)
+
+        # Cmd-. is Standard File's Cancel; the application's SFGetFile loop
+        # ends on !reply.good, so this is how it quits back to the Finder.
+        mac.command_key("period")
+        time.sleep(args.launch_wait)
+        shot(mac, "e2e-7-back-in-finder.png")
+
+        mac.click(*FINDER_EXTRACTED_APPL, double=True)   # launch what we made
+        time.sleep(args.launch_wait)
+        shot(mac, "e2e-8-extracted-app-running.png")
+    finally:
+        mac.close()
+    print(f"interactive: e2e extraction settled after "
+          f"~{elapsed if elapsed is None else round(elapsed)}s of emulated "
+          f"Mac Plus time")
+
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
@@ -213,6 +324,15 @@ def main():
     ap.add_argument("--complete-timeout", type=float, default=900.0,
                     help="seconds to allow the second run to finish (Mac Plus "
                          "speed: minutes, not seconds)")
+    ap.add_argument("--launch-wait", type=float, default=25.0,
+                    help="seconds to allow a Finder double-click to open an "
+                         "application (Mac Plus speed)")
+    ap.add_argument("--e2e", action="store_true",
+                    help="run the Finder end-to-end phase INSTEAD of the "
+                         "cancel phases: launch by double-click, navigate "
+                         "volumes with Drive, extract to completion, quit, "
+                         "then double-click the application that was "
+                         "extracted. Needs a fixture containing an APPL.")
     args = ap.parse_args()
 
     os.makedirs(args.outdir, exist_ok=True)
@@ -222,13 +342,25 @@ def main():
     stock = os.path.join(R.VMAC_HOME, "System6.hfv")
     if not os.path.exists(stock):
         raise SystemExit("interactive: no System6.hfv — run tools/vmac/setup.sh")
+
+    def shot(mac, name):
+        # e2e shots are upscaled: they are read for Finder icon positions and
+        # for dialog text, not decoded, and a 512x342 1bpp screen is hard work
+        # at native size.
+        mac.shot(os.path.join(args.outdir, name), scale="200%" if args.e2e else None)
+
+    if args.e2e:
+        try:
+            phase_e2e(args, appbin, workdir, shot)
+        finally:
+            shutil.rmtree(workdir, ignore_errors=True)
+        print(f"interactive: screenshots in {args.outdir} — LOOK AT THEM.")
+        return 0
+
     # The archive goes on the boot volume: the application extracts next to it,
     # so it must be writable, and SFGetFile opens on the boot volume.
     R.sh(sys.executable, os.path.join(HERE, "mkboot.py"), stock, appbin, bootimg,
          "--data", f"{args.fixture}:archive.sit")
-
-    def shot(mac, name):
-        mac.shot(os.path.join(args.outdir, name))
 
     # Phase 1: cancel part way through. Fresh boot, so the volume holds
     # nothing but the archive and anything visible afterwards was left by

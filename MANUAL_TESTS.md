@@ -14,6 +14,33 @@ The earlier claim that this was caused by a **broken Retro68 `HOpen`
 glue** has been **withdrawn** — a standalone minimal reproduction
 (`tools/retro68-hopen-repro/`) disproved it. See BLOCKERS.md.
 
+### End to end from the Finder, 2026-08-01 (System 6.0.8, 4 MB, 1x)
+
+`tools/vmac/interactive.py --e2e` with `derived-ScrollbarPattern.sit`. Unlike
+every other on-Mac run here, this one leaves the **Finder** in place instead of
+installing the application as the boot shell — which is the only way to launch
+the application the way a person does, and the only way to launch what it
+extracted. A second volume is mounted so Standard File's Drive button has
+somewhere to go. Confirmed from the screenshots, in one session:
+
+- **Launched by double-clicking it in the Finder.** SFGetFile comes up on the
+  boot volume, listing `archive.sit`, `unclassic` and the System Folder.
+- **Volume navigation works.** Drive switches the listing to the second volume
+  (`Second`, showing only its Desktop file) and back to `Macintosh`, with the
+  archive re-selected.
+- **Result alert**: "Extraction complete." after ~11 s of emulated Mac Plus
+  time for this small archive.
+- **Quits cleanly to the Finder on Cmd-.** in SFGetFile, and the volume window
+  then shows six items — the four it started with plus the archive's two
+  entries.
+- **The extracted application has an application icon** in the Finder, so
+  type/creator and the Finder inited flag were applied.
+- **The extracted application launches by double-click** and draws its splash
+  screen ("Scrollbar Pattern Editor — a simple little utility by Andrew
+  McGeachie"). This is the test that exercises type/creator, the inited flag
+  and resource-fork integrity together: the application *is* its resource
+  fork, so it could not launch if a single byte were wrong.
+
 ### Re-driven on 2026-08-01 against the streaming sink (System 6.0.8, 4 MB, 1x)
 
 `tools/vmac/interactive.py` drives the real application under an emulator
@@ -53,7 +80,9 @@ step was captured; the items above supersede the cancel-related ones.
   at the time, `EB Sounds`, was deleted rather than left truncated, and
   the third was never started.
 - Cancelling SFGetFile quits cleanly back to the Finder.
-- **An extracted application actually runs.** `derived-ScrollbarPattern.sit`
+- **An extracted application actually runs** (re-confirmed 2026-08-01 against
+  the streaming sink, scripted — see the section above).
+  `derived-ScrollbarPattern.sit`
   was extracted onto an HFS volume; the Finder showed
   `Scrollbar Pattern Editor` with an application icon (so type/creator
   and the inited flag were applied), and double-clicking it **launched
@@ -117,6 +146,17 @@ Everything claimed above was observed under **Mini vMac only**. Two of
 the three target environments have never been exercised at all. Nothing
 below is a known failure; it is simply unverified, and should not be
 described as working until someone runs it.
+
+Three things, specifically, and none of them can be closed from here:
+
+1. **Real 68k hardware** — any physical Mac Plus, SE or Classic.
+2. **A real Mac Plus with a real 1 MB of RAM.** The 1 MB figures in
+   FORMATS.md come from an emulated 1 MB machine with a stripped System
+   Folder; a real one has INITs, a real ROM's own memory use, and less
+   free heap than any number recorded here.
+3. **Mac OS 9 on PowerPC**, where the binary runs under the 68LC040
+   emulator. `tools/vmac/os9.py` boots that machine and mounts a disk with
+   the application on it, and stops there.
 
 ### Real 68k hardware (Mac Plus / SE / Classic, System 6.0.x)
 
@@ -182,6 +222,14 @@ implemented, so everything below is still unverified:
 
 - Build: see mac/CMakeLists.txt header. Import `unclassic.dsk` (or the
   .bin) into the target system; copy the application to the boot disk.
+- The bootstrap distribution is built by `tools/make_dist.sh`, which builds
+  the application rather than picking up an old one, and checks that the
+  800K image and the MacBinary carry the same resource fork byte for byte.
+  **`dist/unclassic.dsk` mounts on System 6.0.8** — confirmed 2026-08-01 by
+  `tools/vmac/mountcheck.py dist/unclassic.dsk`, which boots the stock system
+  with the image attached and photographs the desktop; the `unclassic` volume
+  appears below the boot disk. hfsutils reading an image is not evidence that
+  a Mac will mount it.
 - Bring test archives over as MacBinary (.bin) files — ImportFl or
   similar drops the wrapper; unclassic itself can unwrap MacBinary if
   the file arrives with a flattened fork.
@@ -190,7 +238,12 @@ implemented, so everything below is still unverified:
 
 Launch & UI
 - [ ] Application launches; SFGetFile appears immediately.
+      (System 6: confirmed 2026-08-01, launched by double-click from a real
+      Finder desktop — `tools/vmac/interactive.py --e2e`.)
 - [ ] Cancel in SFGetFile quits cleanly to Finder.
+      (System 6: confirmed 2026-08-01 by the same run, via Cmd-.)
+- [ ] Standard File's Drive button switches volumes and back.
+      (System 6: confirmed 2026-08-01 with a second volume mounted.)
 - [ ] During extraction the progress dialog shows and repaints when
       covered/uncovered (System 6: by desk accessories).
 - [ ] Cancel button stops extraction promptly (< 1 s); already-completed
