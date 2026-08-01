@@ -15,10 +15,10 @@ Ranked by how much it matters. Each item says what would close it.
 
 ---
 
-## 1. Cancel with partial output is untested under streaming writes
+## 1. Cancel with partial output was untested under streaming writes
 
-**Status: a real hole, introduced 2026-07-25 with the streaming-write change
-(04bfeb9), cheap to close.**
+**Status: CLOSED 2026-08-01. Kept here because the reasoning is worth
+retaining, and because one narrower gap remains (see the end of this item).**
 
 The Mac sink used to accumulate each whole fork in RAM and write it in
 `sink_end`. It now writes each chunk straight through as the engine produces
@@ -43,9 +43,23 @@ the fork is closed before the partial file is deleted. But "looks correct" is
 exactly what the staging-era comments claimed, and BLOCKERS.md is a record of
 where that led.
 
-**To close:** extend the `--cancel` mock case to write a chunk to each fork
-before aborting, and assert the file is gone; then re-drive the interactive
-cancel on Mini vMac and update the note at `MANUAL_TESTS.md:163`.
+**What closed it**, on both write paths and both memory sizes:
+
+- The mock `--cancel` case now runs two scenarios — abort with no data, and
+  abort after 4100 bytes to the data fork plus 64 to the resource fork, which
+  is past the 4 KB write chunk so the fork is genuinely open and non-empty.
+  Both write paths run it in `ci.sh` (`tests/run_mac_sink.sh`).
+- A new on-Mac mode, `tools/vmac/run.py -D UNC_AT_CANCEL`, aborts the real
+  application once one entry has completed — so the cancel lands inside a
+  later entry — and then counts what the Out volume actually holds. Files
+  present must equal entries completed. Confirmed on a real System 6.0.8 Mac
+  Plus at **4 MB and 1 MB** with `derived-EmpireBuilderDemo.sit`: 1 entry
+  completed, 1 file on the volume, `ret == UNC_ERR_ABORTED`.
+
+**Still open, narrower:** the interactive UI around the cancel — the progress
+dialog, the Cancel button's hit-testing, the "Extraction cancelled." alert —
+has not been re-driven by hand since the sink rewrite. The cleanup it triggers
+is now proven; the chrome is not. Folded into item 3.
 
 ---
 

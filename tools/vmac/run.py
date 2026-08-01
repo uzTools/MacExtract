@@ -44,6 +44,7 @@ ARCHIVE_NAME = "archive.sit"
 # Non-result statuses the app can paint in the grid's `ret` slot. Kept in step
 # with the kAt* codes in mac/unclassic_mac.c.
 AT_RUNNING = -1000         # alive, still working — keep waiting
+UNC_ERR_ABORTED = -8       # include/unclassic.h
 AT_STATUS = {-1000: "app alive, extraction not finished",
              -1001: 'no volume named "In" mounted (bad disk set)',
              -1002: 'no volume named "Out" mounted (bad disk set)'}
@@ -234,6 +235,30 @@ def run_one(fixture, mem, timeout, poll, workdir, bootimg, keep_png=None):
     return vals, elapsed, png
 
 
+def check_cancel(vals):
+    """Verdict for a UNC_AT_CANCEL run.
+
+    The application aborts once one entry has completed, so the cancel lands
+    inside a later entry. The question is whether that entry left anything on
+    the volume, and the grid answers it directly: files actually present must
+    equal the entries that completed. `dirs` guards the count — the on-Mac
+    walk is one level deep, so anything but a flat archive makes it partial."""
+    completed, ret, files, dirs = vals[0], signed32(vals[1]), vals[2], vals[3]
+    if dirs:
+        return None, (f"archive is not flat ({dirs} folder(s) at the root) — "
+                      f"the file count is partial, pick a flat fixture")
+    if ret != UNC_ERR_ABORTED:
+        return False, (f"expected UNC_ERR_ABORTED ({UNC_ERR_ABORTED}), "
+                       f"got {ret} — the run did not actually cancel")
+    if completed < 1:
+        return False, ("cancelled before any entry completed — nothing was "
+                       "proven; use an archive with more entries")
+    ok = files == completed
+    return ok, (f"{'no partial output' if ok else 'PARTIAL OUTPUT LEFT'}: "
+                f"{completed} entr{'y' if completed == 1 else 'ies'} completed, "
+                f"{files} file(s) on the volume")
+
+
 def check(fixture, png, manifest_dir):
     """Cross-check the on-screen grid against the Linux engine's output."""
     man = os.path.join(manifest_dir, os.path.basename(fixture) + ".json")
@@ -310,6 +335,9 @@ def main():
             elif status:
                 verdict = "SETUP"
                 detail = f"{status}; {vals[0]} volume(s) mounted"
+            elif "UNC_AT_CANCEL" in args.defines:
+                ok, detail = check_cancel(vals)
+                verdict = "PASS" if ok else ("SETUP" if ok is None else "FAIL")
             else:
                 ok, detail = check(fixture, png, manifest_dir)
                 verdict = "PASS" if ok else "FAIL"

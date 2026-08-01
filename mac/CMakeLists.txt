@@ -43,6 +43,10 @@ target_compile_options(unclassic PRIVATE -mcpu=68000 -Os -Wno-multichar
                        # UNC_AT_NOCRC: skip the on-Mac fork read-back (isolate a
                        # write-path crash from a read-back crash).
                        $<$<BOOL:$ENV{UNC_AT_NOCRC}>:-DUNC_AT_NOCRC>
+                       # UNC_AT_CANCEL: autotest aborts the extraction part-way
+                       # and reports what the volume actually holds, proving an
+                       # aborted entry leaves no partial file behind.
+                       $<$<BOOL:$ENV{UNC_AT_CANCEL}>:-DUNC_AT_CANCEL>
                        # UNC_MAC_STAGE_WRITES: go back to accumulating each
                        # whole fork in RAM and writing it in sink_end. The
                        # default streams straight to the File Manager; this

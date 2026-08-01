@@ -232,24 +232,50 @@ int main(int argc, char **argv)
     if (argc >= 2 && strcmp(argv[1], "--cancel") == 0) {
         /* Cmd-. / per-entry error cleanup: an entry creates its file in
          * sink_begin (before decoding); on a cancel or failure sink_end must
-         * delete it so no empty/partial output is left behind. */
-        MacSink s; UncEntryInfo info; char path[900];
-        int made, gone;
+         * delete it, so no empty or partial output is left behind.
+         *
+         * Two cases, and the SECOND is the one that matters. Aborting before
+         * any data arrives was the only case the default write path could
+         * produce back when whole forks were staged in RAM and written in
+         * sink_end. Now that writes stream straight through, a cancel
+         * normally lands with bytes ALREADY on disk and a fork still open —
+         * sink_end has to close it before it can delete the file. Testing
+         * only the no-data case would leave that entirely uncovered. */
+        static const struct { const char *what; int bytes; } cases[] = {
+            { "abort before any data",  0    },
+            { "abort mid-write",        4100 },   /* > one 4 KB write chunk */
+        };
+        char path[900];
+        size_t c;
+        int ok = 1;
         snprintf(gOutDir, sizeof gOutDir, "%s", argc >= 3 ? argv[2] : "/tmp/cancel_out");
         mkdir(gOutDir, 0755);
         snprintf(gDirs[0], sizeof gDirs[0], "%s", gOutDir);
-        memset(&s, 0, sizeof s); s.vRefNum = 1; s.rootDirID = 0;
-        memset(&info, 0, sizeof info);
-        memcpy(info.name, "canceltest", 10); info.name_len = 10;
-        info.data_size = 100; info.rsrc_size = 0; info.is_dir = 0;
-        sink_begin(&s, &info);
-        snprintf(path, sizeof path, "%s/canceltest", gOutDir);
-        made = (access(path, F_OK) == 0);
-        sink_end(&s, UNC_ERR_ABORTED);
-        gone = (access(path, F_OK) != 0);
-        fprintf(stderr, "cancel-cleanup: file_created=%d removed_on_abort=%d\n",
-                made, gone);
-        return (made && gone) ? 0 : 1;
+        for (c = 0; c < sizeof cases / sizeof cases[0]; c++) {
+            MacSink s; UncEntryInfo info;
+            int made, wrote = 1, gone;
+            static char chunk[4100];
+            memset(&s, 0, sizeof s); s.vRefNum = 1; s.rootDirID = 0;
+            memset(&info, 0, sizeof info);
+            memcpy(info.name, "canceltest", 10); info.name_len = 10;
+            info.data_size = 100; info.rsrc_size = 0; info.is_dir = 0;
+            sink_begin(&s, &info);
+            snprintf(path, sizeof path, "%s/canceltest", gOutDir);
+            made = (access(path, F_OK) == 0);
+            if (cases[c].bytes) {
+                memset(chunk, 0xA5, sizeof chunk);
+                /* Both forks: the resource fork is opened separately, so a
+                 * cancel can find either one of them open. */
+                wrote = sink_write(&s, UNC_FORK_DATA, chunk, cases[c].bytes) == 0
+                     && sink_write(&s, UNC_FORK_RSRC, chunk, 64) == 0;
+            }
+            sink_end(&s, UNC_ERR_ABORTED);
+            gone = (access(path, F_OK) != 0);
+            fprintf(stderr, "cancel-cleanup [%s]: created=%d wrote=%d removed=%d\n",
+                    cases[c].what, made, wrote, gone);
+            if (!(made && wrote && gone)) ok = 0;
+        }
+        return ok ? 0 : 1;
     }
     if (argc < 3) { fprintf(stderr, "usage: %s <archive> <outdir>\n", argv[0]); return 2; }
     snprintf(gOutDir, sizeof gOutDir, "%s", argv[2]);

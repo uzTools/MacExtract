@@ -64,6 +64,15 @@ Done interactively in the emulator, each step captured:
       tools/vmac/run.py --list tools/vmac/sample.txt            # 4 MB
       tools/vmac/run.py --list tools/vmac/sample.txt --mem 1M   # floor target
 
+  `-D UNC_AT_CANCEL` switches it to the cancel-cleanup check: the app aborts
+  once one entry has completed — so the cancel lands inside a LATER entry,
+  with that file already created and already written to — and then counts
+  what the volume actually holds. Files present must equal entries
+  completed, i.e. the aborted entry left nothing behind. Confirmed at 4 MB
+  and 1 MB on 2026-08-01 with `derived-EmpireBuilderDemo.sit` (a flat
+  3-entry archive; the walk is one level deep, and the app reports the
+  root's folder count so a non-flat archive cannot be mistaken for a pass).
+
   It is not part of `ci.sh` (downloads, an X server, minutes per fixture).
   Read `tools/vmac/README.md` before changing it — several of its
   arrangements exist to work around emulator behaviour, not by preference.
@@ -160,7 +169,12 @@ Launch & UI
       entries remain, the entry being written is deleted rather than left
       truncated, and the app returns to SFGetFile without damage.
 - [ ] Cmd-. behaves exactly like the Cancel button.
-      (Both confirmed under Mini vMac 2026-07-25; recheck per environment.)
+      (Both confirmed under Mini vMac 2026-07-25, against the older
+      stage-then-write sink. The cleanup itself was re-verified on-Mac
+      against the streaming sink on 2026-08-01 by the automated
+      `-D UNC_AT_CANCEL` run below, at 4 MB and 1 MB; what is NOT re-driven
+      since that change is the interactive UI around it — the dialog, the
+      Cancel button hit-testing and the alert.)
 - [ ] Under MultiFinder / System 7+ / OS 9: the app yields (other apps
       stay responsive while extracting; WaitNextEvent path).
 

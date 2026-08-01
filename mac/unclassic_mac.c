@@ -1090,6 +1090,41 @@ static void at_status(int code)
     at_report(vals, 8);
 }
 
+#ifdef UNC_AT_CANCEL
+/* Abort as soon as ONE entry has completed, so the cancel lands inside a
+ * later entry — the case that matters now that writes stream straight to
+ * disk, because the in-flight file already exists and already has bytes in
+ * it. (Aborting before any data arrives was the only shape the old
+ * stage-then-write path could produce, and it proves much less.) */
+static int at_cancel_tick(void *ctx, uint32_t done, uint32_t total)
+{
+    (void)ctx; (void)done; (void)total;
+    return gATnrec >= 1 ? 0 : 1;      /* 0 = stop */
+}
+
+/* Count the items directly in a volume's root. `dirs` matters as a guard:
+ * this walks one level only, so a non-zero directory count means the file
+ * count is partial and the host must not draw conclusions from it. */
+static void at_count_root(short vol, int *files, int *dirs)
+{
+    CInfoPBRec pb;
+    Str63 nm;
+    short idx;
+    long z;
+    *files = *dirs = 0;
+    for (idx = 1; idx < 512; idx++) {
+        for (z = 0; z < (long)sizeof pb; z++) ((char *)&pb)[z] = 0;
+        pb.hFileInfo.ioNamePtr = nm;
+        pb.hFileInfo.ioVRefNum = vol;
+        pb.hFileInfo.ioDirID = fsRtDirID;
+        pb.hFileInfo.ioFDirIndex = idx;
+        if (PBGetCatInfoSync(&pb) != noErr) return;   /* past the last item */
+        if (pb.hFileInfo.ioFlAttrib & ioDirMask) (*dirs)++;
+        else                                     (*files)++;
+    }
+}
+#endif  /* UNC_AT_CANCEL */
+
 static void at_fail(int code)
 {
     uint32_t vals[8];
@@ -1132,6 +1167,31 @@ int main(void)
     if (FindVolWait("\pOut", &outVol) != noErr) at_fail(kAtNoOutVol);
 
     gATrecVol = outVol;   /* sink records each output file here (see below) */
+
+#ifdef UNC_AT_CANCEL
+    /* Cancel-cleanup mode: abort the extraction and check that the entry that
+     * was in flight left NOTHING behind on the volume. See at_cancel_tick. */
+    {
+        UncProgress prog;
+        int files = 0, dirs = 0;
+        uint32_t vals[8];
+        int i;
+        prog.ctx = NULL;
+        prog.tick = at_cancel_tick;
+        ret = RunExtract(inVol, fsRtDirID, "\parchive.sit",
+                         outVol, fsRtDirID, &prog, &entries, &errors);
+        at_count_root(outVol, &files, &dirs);
+        for (i = 0; i < 8; i++) vals[i] = 0;
+        vals[0] = (uint32_t)gATnrec;   /* entries that completed successfully */
+        vals[1] = (uint32_t)ret;       /* expect UNC_ERR_ABORTED (-8)         */
+        vals[2] = (uint32_t)files;     /* files actually on the Out volume    */
+        vals[3] = (uint32_t)dirs;      /* must be 0, or the count is partial  */
+        vals[7] = (uint32_t)gPeakUsage;
+        at_report(vals, 8);
+        at_idle();
+    }
+#endif
+
     ret = RunExtract(inVol, fsRtDirID, "\parchive.sit",
                      outVol, fsRtDirID, NULL, &entries, &errors);
 

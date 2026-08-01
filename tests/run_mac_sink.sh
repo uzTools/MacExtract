@@ -64,6 +64,8 @@ gcc -std=gnu99 -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all \
     tests/mac_sink_test.c src/*.c third_party/zlib/*.c -o build/mac_sink_stage
 verify ./build/mac_sink_stage
 verify ./build/mac_sink_stage "" "$BOTHFORK_FIXTURES"
+./build/mac_sink_stage --cancel "$(mktemp -d)" || {
+    echo "mac-sink: staging cancel-cleanup FAILED"; exit 1; }
 gcc -std=gnu99 -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all \
     -DUNC_MAC_STAGE_WRITES -DUNC_MAC_FORCE_SHAREBUF \
     -Iinclude -Isrc -Ithird_party/zlib \
