@@ -8,7 +8,7 @@ This is **not** BLOCKERS.md. That file records milestones that could not be
 completed and investigations that went wrong; it currently reports no open
 blockers, and that is accurate. Everything here is either deliberate scope,
 unverified-but-probably-fine, or a small hole worth closing — none of it stops
-the engine or the CLI, which are byte-exact against the oracle across 771
+the engine or the CLI, which are byte-exact against the oracle across 769
 fixtures in `./ci.sh`.
 
 Ranked by how much it matters. Each item says what would close it.
@@ -56,10 +56,12 @@ where that led.
   Plus at **4 MB and 1 MB** with `derived-EmpireBuilderDemo.sit`: 1 entry
   completed, 1 file on the volume, `ret == UNC_ERR_ABORTED`.
 
-**Still open, narrower:** the interactive UI around the cancel — the progress
-dialog, the Cancel button's hit-testing, the "Extraction cancelled." alert —
-has not been re-driven by hand since the sink rewrite. The cleanup it triggers
-is now proven; the chrome is not. Folded into item 3.
+**That narrower gap is closed too.** The interactive UI around the cancel — the
+progress dialog, the Cancel button's hit-testing, the "Extraction cancelled."
+alert — has now been re-driven against the streaming binary
+(`tools/vmac/interactive.py`, 2026-08-01): the dialog live at 13%, both cancel
+routes reaching the alert, and SFGetFile afterwards listing exactly the one
+entry that had completed.
 
 ---
 
@@ -85,6 +87,14 @@ tree still says:
 Anyone reading `v0.1` should treat its Mac numbers as superseded and use
 `v0.2` or later.
 
+**And `v0.2` in turn is superseded by `v0.3`**, for the same reason in a
+different place: it states that Arsenic block sizes are a 128/256/512 KB mix
+(they are all 512 KB), that BLOCKERS.md's 1 MB tally is 37/44 (it is 39/44),
+and that QuickDraw bombs after File Manager activity (it does not). All three
+are corrected in `v0.3`. The pattern is now twice-observed and worth naming:
+**a tag freezes the documentation's errors along with its code**, and this
+repository's errors have all been in the documentation.
+
 ---
 
 ## 3. Verified in an emulator, never on hardware
@@ -105,12 +115,15 @@ here because it is the largest genuine unknown.**
   verification would actually happen — so this is a harness, not a result,
   and the row stays open.
 - **The interactive application: CLOSED 2026-08-01 for System 6.**
-  `tools/vmac/interactive.py` now drives the real UI under an emulator built
-  for authentic Mac Plus timing and photographs each step: SFGetFile,
-  the progress dialog repainting (caught at 13% and 16%), the Cancel button,
-  Cmd-., the partial-output cleanup visible in the file list, and the success
-  alert. It is not self-checking — the screenshots are the result — but the
-  driving is repeatable. Still unexercised above System 6 (see below).
+  `tools/vmac/interactive.py` drives the real UI under an emulator built for
+  authentic Mac Plus timing and photographs each step: SFGetFile, the progress
+  dialog repainting (caught at 13% and 16%), the Cancel button, Cmd-., the
+  partial-output cleanup visible in the file list, and the success alert.
+  `--e2e` adds the two things that need a Finder at both ends — launching the
+  application by double-click, and double-clicking the application it
+  extracted — plus volume navigation through Standard File's Drive button. It
+  is not self-checking; the screenshots are the result, and the driving is
+  what is repeatable. Still unexercised above System 6 (see below).
 
 **To close:** the OS 9 half is being attempted under QEMU PowerPC. The real
 hardware half **cannot be closed here at all** — it needs physical silicon,
@@ -121,8 +134,9 @@ file until someone with a Mac Plus runs the checklist.
 
 ## 4. Capability gaps that are deliberate, but still gaps
 
-- **StuffIt 5 / Arsenic on a 1 MB machine: 1 of 6 sampled fixtures.** A block
-  needs 0.6–2.6 MB (block + a 4x-block inverse-BWT vector), so the floor-target
+- **StuffIt 5 / Arsenic on a 1 MB machine: 1 of 6 sampled fixtures.** An entry
+  needs 0.63–2.53 MB (a 512 KB block, plus an inverse-BWT vector of four bytes
+  per byte the block actually holds), so the floor-target
   machine mostly cannot do StuffIt 5. The engine declines per entry and leaves
   the rest of the archive alone, which is the designed behaviour and is
   documented in FORMATS.md — but it is the one format the "runs on a Mac Plus"
@@ -141,6 +155,18 @@ file until someone with a Mac Plus runs the checklist.
 
 ## 5. Loose ends
 
+- **A hypothesis filed as a fact, found and killed 2026-08-01.** BLOCKERS.md
+  carried "QuickDraw drawing bombs out of memory when called after any File
+  Manager activity" under *test-harness lessons (not app bugs)* — which is
+  where it hid, because as stated it meant the shipped interactive build was
+  broken (SFGetFile, then a progress dialog, then an alert, is File Manager
+  followed by QuickDraw). It does not reproduce: `tools/quickdraw-repro/`,
+  twelve configurations on a real System 6.0.8 Mac Plus, every QuickDraw call
+  clean with `MemError() == 0`. Neither suggested cause (master-pointer
+  fragmentation; running as the boot shell instead of under the Finder) holds
+  either. The general lesson is now in BLOCKERS.md: a hypothesis filed under
+  "harness lessons" gets read as settled and nobody re-examines it. **This
+  file is the place to look for others of the same shape.**
 - **The Retro68 `HOpenDF` bug was never filed.** `PBHOpenDFSync` issues a
   System 7 trap and, unlike the non-hierarchical `OpenDF` beside it, has no
   fallback, so `HOpenDF` returns `paramErr` on System 6. Written up ready to

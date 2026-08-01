@@ -25,14 +25,14 @@ raw bytes), along with type/creator codes, Finder flags and dates in
 listings. Nested envelopes — `.sit.hqx`, `.cpt.bin`, `.tar.Z` — are
 detected by content (never by filename) and unwrapped automatically.
 
-## Status — v0.2 (honest capability matrix)
+## Status — v0.3 (honest capability matrix)
 
 | | Linux CLI | Mac app (System 6 → OS 9) |
 |---|---|---|
-| Extraction, all 12 formats | ✅ byte-exact vs `unar` (771 fixtures, both forks, in CI) | ✅ verified byte-exact **on real System 6.0.8 / 68000** (Mini vMac): 44/44 sampled fixtures at 4 MB, 39/44 at 1 MB — see the tier table below |
+| Extraction, all 12 formats | ✅ byte-exact vs `unar` (769 fixtures, both forks, in CI) | ✅ verified byte-exact **on real System 6.0.8 / 68000** (Mini vMac): 44/44 sampled fixtures at 4 MB, 39/44 at 1 MB — see the tier table below |
 | Both forks + type/creator/dates | ✅ | ✅ (resource fork exact bar the OS-stamped reserved header 16–127; extracted `APPL` launches by double-click) |
 | Robustness (truncated/bit-flipped) | ✅ clean per-entry errors, no crash/hang/sanitizer trip | shares the same engine |
-| Interactive UI | — | SFGetFile → progress dialog (Cancel / Cmd-.) → result alert; Cmd-. removes partial output |
+| Interactive UI | — | ✅ driven end to end on System 6: launched from the Finder → SFGetFile (Drive switches volumes) → progress dialog (Cancel / Cmd-.) → result alert; a cancel removes the partial output, and an extracted application launches by double-click |
 
 ### What runs on which machine
 
@@ -55,14 +55,17 @@ itself; both are reproducible with `tools/vmac/run.py`. Per format:
 | DiskDoubler / Now Compress | ✅ detect-only | ✅ detect-only | none |
 | **StuffIt 5 / Arsenic** | ✅ 6/6 | ⚠️ **1/6** | 0.6–1.8 MB |
 
-**StuffIt 5 / Arsenic mostly wants a 4 MB machine.** Its BWT blocks need
-block + a 4×-block transform vector, so an entry costs 0.6 MB and up
-depending on the block size the archive declares. At 1 MB the engine
-declines the entries it cannot afford — **per entry**, leaving the rest of
-the archive alone — which is why one sampled fixture extracts completely,
-two extract most of their entries, and three refuse every entry. Where the
-budget rejects the block at request time nothing is allocated at all
-(35.5 KB peak).
+**StuffIt 5 / Arsenic mostly wants a 4 MB machine.** Every real Arsenic
+block is 512 KB, and an entry needs that block plus four bytes of
+inverse-BWT transform vector for each byte the block actually holds — so
+an entry costs 0.6 MB and up, rising with how much data it carries. At
+1 MB the engine declines the entries it cannot afford — **per entry**,
+leaving the rest of the archive alone — which is why one sampled fixture
+extracts completely, two extract most of their entries, and three refuse
+every entry. Which of the three you get follows the size of the archive,
+because the shell reads it into RAM before the engine gets its budget.
+Where the budget rejects the block at request time nothing is allocated at
+all (35.5 KB peak).
 
 **Output size does not cost the shell any RAM.** Each chunk is written
 straight to the File Manager as the engine produces it, so a 1 MB machine
@@ -123,7 +126,7 @@ Mac OS 9):
   ≤ 16 KB of input;
 - per-entry memory-budget failures, never per-archive;
 - every size field sanity-capped before use; corrupt input produces
-  clean per-entry errors (7,710 corruption variants + seeded fuzzing
+  clean per-entry errors (7,690 corruption variants + seeded fuzzing
   in CI).
 
 ## Provenance
