@@ -152,4 +152,5 @@ reference/            read-only reference sources (repopulated by
 third_party/zlib      vendored zlib 1.3.1 (inflate subset)
 DECISIONS.md          engineering decision log
 FORMATS.md            support matrix, peak memory, coverage
+OPEN_ITEMS.md         what is missing, unverified, or out of scope
 ```
