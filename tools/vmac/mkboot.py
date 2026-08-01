@@ -15,16 +15,26 @@ Takes the stock image fetched by setup.sh and produces a boot volume that
      straight into the test.
 
 Usage:
-    mkboot.py <stock.hfv> <unclassic.bin> <out.hfv> [--data FILE:MACNAME]...
+    mkboot.py <stock.hfv> <app.bin> <out.hfv> [--data FILE:MACNAME]...
+              [--app-name NAME] [--finder]
 
-<unclassic.bin> is the MacBinary produced by the Retro68 build (tools/vmac/
-run.py builds it); its resource fork is what makes it an application, so it is
-copied in MacBinary mode.
+<app.bin> is the MacBinary produced by a Retro68 build (tools/vmac/run.py
+builds unclassic's); its resource fork is what makes it an application, so it
+is copied in MacBinary mode.
 
 --data copies a host file into the volume ROOT as a plain data fork. The
 interactive driver uses it to put an archive where SFGetFile will list it: the
 interactive application extracts next to the archive, so that volume has to be
 writable, and the boot volume is the one SFGetFile opens on by default.
+
+--app-name sets the application's name on the volume (default "unclassic"),
+which is also the boot-block shell name.
+
+--finder leaves the Finder as the boot shell and puts the application at the
+volume ROOT, so it has to be launched by double-clicking it like any other
+application. Replacing the Finder is a big change to the environment — nothing
+mounts disks, no other process competes for the heap — and some questions can
+only be answered outside it, so this is the arrangement for those.
 """
 import os, re, shutil, subprocess, sys, tempfile
 
@@ -32,7 +42,7 @@ import os, re, shutil, subprocess, sys, tempfile
 # 12 characters, always followed by one space and then the item's name.
 LISTING_DATE = re.compile(r"[A-Z][a-z]{2} [ \d]\d (?: \d{4}|\d\d:\d\d) (.+)$")
 
-APP_NAME = "unclassic"          # must match the boot-block shell name below
+DEFAULT_APP = "unclassic"       # also the boot-block shell name, below
 SYS_FOLDER = "System Folder"
 KEEP = {"System", "Finder"}     # everything else in the System Folder goes
 
@@ -139,15 +149,15 @@ def rmtree(hfs, path):
         hfs.run("hrmdir", d, check=False)
 
 
-def verify_stripped(hfs):
+def verify_stripped(hfs, expect):
     """The property that decides how much RAM the boot costs: System 6 loads
     INITs, cdevs and drivers from the FILES sitting directly in the System
-    Folder. Assert that only the OS and our application remain there."""
+    Folder. Assert that only the OS — plus the application, when it is the
+    boot shell and so has to live in the blessed folder — remains there."""
     files = {name for isdir, name in hfs.ls(hfs.path(SYS_FOLDER)) if not isdir}
-    want = KEEP | {APP_NAME}
-    if files != want:
+    if files != expect:
         raise SystemExit(f"mkboot: System Folder holds {sorted(files)}, "
-                         f"expected {sorted(want)}")
+                         f"expected {sorted(expect)}")
 
 
 def patch_boot_blocks(image, shell_name):
@@ -168,6 +178,8 @@ def patch_boot_blocks(image, shell_name):
 def main():
     argv = sys.argv[1:]
     extras = []
+    app_name = DEFAULT_APP
+    finder = False
     while "--data" in argv:
         i = argv.index("--data")
         spec = argv[i + 1]
@@ -176,6 +188,13 @@ def main():
             raise SystemExit(f"mkboot: --data wants FILE:MACNAME, got {spec!r}")
         extras.append((host, macname))
         del argv[i:i + 2]
+    if "--app-name" in argv:
+        i = argv.index("--app-name")
+        app_name = argv[i + 1]
+        del argv[i:i + 2]
+    if "--finder" in argv:
+        finder = True
+        argv.remove("--finder")
     if len(argv) != 3:
         raise SystemExit(__doc__)
     stock, appbin, out = argv
@@ -183,15 +202,23 @@ def main():
     hfs = HFS(out)
     try:
         strip_system_folder(hfs)
-        # The shell application is looked up in the blessed (System) folder.
-        hfs.run("hcopy", "-m", appbin, hfs.path(SYS_FOLDER, APP_NAME))
-        verify_stripped(hfs)
+        if finder:
+            # At the ROOT, where the Finder's volume window shows it.
+            hfs.run("hcopy", "-m", appbin, hfs.path(app_name))
+            verify_stripped(hfs, KEEP)
+        else:
+            # The shell application is looked up in the blessed (System) folder.
+            hfs.run("hcopy", "-m", appbin, hfs.path(SYS_FOLDER, app_name))
+            verify_stripped(hfs, KEEP | {app_name})
         for host, macname in extras:
             hfs.run("hcopy", "-r", host, hfs.path(macname))
     finally:
         hfs.close()
-    patch_boot_blocks(out, APP_NAME)
-    print(f"mkboot: {out} boots straight into {APP_NAME}")
+    if finder:
+        print(f"mkboot: {out} boots to the Finder; {app_name} is at the root")
+    else:
+        patch_boot_blocks(out, app_name)
+        print(f"mkboot: {out} boots straight into {app_name}")
 
 
 if __name__ == "__main__":
