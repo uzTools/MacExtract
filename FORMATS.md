@@ -14,7 +14,7 @@ whole corpus for that format (engine allocations only, via
 | BinHex 4 (.hqx) | extract | RLE90 | 179 fixtures | 8 KB | full |
 | PackIt (.pit) | extract | store, Huffman; encrypted detected | 4 fixtures (1 real + 3 synthetic PMa4) | 9 KB | full |
 | Compact Pro (.cpt) | extract | RLE, LZH+RLE | 106 fixtures | 19 KB | full |
-| StuffIt classic (.sit) | extract | 0 store, 1 RLE90*, 2 LZW, 3 Huffman, 5 LZAH, 8 MW, 13 LZSS+Huffman; encrypted detected | 211 fixtures | 76 KB | full |
+| StuffIt classic (.sit) | extract | 0 store, 1 RLE90*, 2 LZW, 3 Huffman, 5 LZAH, 8 MW, 13 LZSS+Huffman; 6 fixed-Huffman NOT implemented‡; encrypted detected | 211 fixtures | 76 KB | full |
 | StuffIt 5 (.sit) | extract | 0, 13, 15 Arsenic; encrypted detected | 31 fixtures | 0.63–2.53 MB† | per-entry refusal (all Arsenic entries > 400 KB) |
 | Zip | extract | store, deflate; others & encrypted per-entry errors | 3 fixtures (+2 PKZIP-1.x corpus-only) | 66 KB | full |
 | Gzip | extract | deflate | 3 fixtures | 51 KB | full |
@@ -26,8 +26,24 @@ whole corpus for that format (engine allocations only, via
 | LZH/LHA (-lh?-, -lz?-) | detect only | — | — | — | — |
 | DiskCopy 4.2 (.image) | detect only | — | synthetic 800K GCR + real 800K image; 0 false positives in 803 fixtures | — | — |
 
-\* method 1 does not occur in the harvested corpus; pinned by unit
-tests transcribed from XADRLE90Handle.
+\* **Method 1 does occur** — once, a 470-byte resource fork in
+`derived-New_Python.sit` — contrary to what this footnote said until
+2026-08-01. The engine extracts that whole archive cleanly, every CRC-16
+verified, so method 1 *is* exercised against a real file. What it has no
+ORACLE coverage for is the same fixture: `unar` fails on it ("Attempted to
+read more data than was available" on `It's A Bit Runny Sir`), so
+`make_manifests.py` refuses a manifest and the differential suite never sees
+it. Method 1 is therefore pinned by unit tests transcribed from
+XADRLE90Handle *plus* one real archive checked against its own checksums —
+not by the oracle.
+
+‡ **Method 6, "Fixed Huffman", is present in the corpus and NOT implemented.**
+`derived-INITLoader.sit` carries one 34,818-byte method-6 fork; the engine
+returns a clean per-entry "recognized but unsupported". The name comes from
+`reference/XADMaster/XADStuffItParser.m:284`; XADMaster does not implement it
+either (`//case 6: fixed huffman`, line 319), which is why that fixture has no
+manifest and why the gap went unnamed here until 2026-08-01. One fixture, one
+fork, in a corpus of 344 StuffIt archives.
 
 † **Every real Arsenic block is 512 KB.** The block size is `1 << (v+9)`
 with `v` read from the stream, so other sizes are legal, but across the

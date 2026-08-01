@@ -207,9 +207,20 @@ file until someone with a Mac Plus runs the checklist.
   which field mattered was never established, and the `HOpen`-glue attribution
   was withdrawn after a minimal repro disproved it. BLOCKERS.md says so
   plainly. Not being chased — the app is verified byte-exact as it stands.
-- **StuffIt method 1 (RLE) is unit-test-only.** No corpus fixture uses it, so
-  it is pinned by hand-built vectors rather than by the oracle
-  (`PROGRESS.md:10`).
+- **StuffIt method 1 (RLE90): the claim that no corpus fixture uses it was
+  WRONG.** Measured 2026-08-01 by instrumenting the method byte:
+  `derived-New_Python.sit` has one 470-byte method-1 resource fork, and the
+  engine extracts that archive cleanly with every CRC-16 verified. It has no
+  ORACLE coverage because `unar` fails on that same archive, so no manifest
+  exists. Closing it properly still needs a method-1 archive `unar` can read.
+- **StuffIt method 6, "fixed Huffman", is not implemented — and was never
+  named.** `derived-INITLoader.sit` carries one 34,818-byte method-6 fork;
+  the engine returns a clean per-entry "recognized but unsupported", which is
+  correct behaviour, but no document mentioned the method existed. XADMaster
+  does not implement it either (`XADStuffItParser.m:319`), so there is no
+  oracle to check an implementation against and no second fixture to test one
+  on. One fork in 344 StuffIt archives — worth naming, not obviously worth
+  implementing.
 - **Six StuffIt and two Compact Pro fixtures are excluded** as
   oracle-undecidable or oracle-buggy (`PROGRESS.md:9`, `PROGRESS.md:11`). They
   are not known failures; the oracle cannot adjudicate them.

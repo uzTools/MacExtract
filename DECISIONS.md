@@ -654,3 +654,37 @@ BLOCKERS.md for the full write-up. Key decisions:
   withdrawn M10 entry above: peak heap cannot be divided by five to recover a
   block size, because the transform vector is sized to the actual block fill.
   Measured by instrumenting the read of the block-size field itself.
+
+## 2026-08-01 — what the corpus actually contains, measured rather than recalled
+
+The two "known corpus gaps" were re-examined by instrumenting the format
+readers (the method byte in `fmt_sit.c`, the block magic in `fmt_packit.c`)
+and scanning all 802 fixtures, instead of trusting the note that recorded
+them. One of the two was not a gap at all.
+
+- **StuffIt method 1 is in the corpus.** `derived-New_Python.sit`, one 470-byte
+  resource fork. FORMATS.md and PROGRESS.md had said for months that method 1
+  "does not occur in the harvested corpus". It does; the engine decodes that
+  archive end to end with every CRC-16 passing. What is genuinely missing is
+  ORACLE coverage, because `unar` fails on that archive ("Attempted to read
+  more data than was available"), so `make_manifests.py` correctly refuses a
+  manifest and the differential suite never sees it. The corrected claim is
+  narrower and stronger than the one it replaces: method 1 is exercised on a
+  real file, just not adjudicated by a second implementation.
+- **StuffIt method 6 exists, is unimplemented, and had never been named.**
+  `derived-INITLoader.sit`, one 34,818-byte fork. The engine returns
+  `UNC_ERR_UNSUPPORTED` per entry, which is the right behaviour, but no
+  document in this repository mentioned that method 6 was a thing. It is
+  "Fixed Huffman" per `reference/XADMaster/XADStuffItParser.m:284`, and
+  XADMaster does not implement it either — `//case 6: fixed huffman` at line
+  319 — so there is neither an oracle to validate an implementation against
+  nor a second fixture to test one on.
+- **The PackIt PMa4 gap stands.** All nine PMa4 blocks in the corpus come from
+  the three `synth-packit-*.pit` archives; the only real PackIt fixture,
+  `derived-PackIt.pit`, is four stored (`PMag`) blocks. The Huffman path still
+  has no real-world file behind it.
+
+The method is worth keeping: a per-entry histogram over the whole corpus costs
+one instrumented build and a minute, and it answers "what do we actually
+have?" in a way that reading old notes does not. It is the same technique that
+overturned the Arsenic block-size claim earlier the same day.
