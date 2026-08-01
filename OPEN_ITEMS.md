@@ -134,6 +134,21 @@ here because it is the largest genuine unknown.**
 
   It needs no Finder, no Standard File and no screen coordinates, which is
   why it worked where two attempts at driving System 7's Finder did not.
+- **The `SIZE` partition has still never governed a launch.** 4 MB preferred /
+  400 KB minimum, and on System 6 without MultiFinder it is simply ignored, so
+  it has never done anything. System 7 always runs the Process Manager, which
+  is why that tier exists — but the on-Mac harness installs the application as
+  the boot SHELL, and whether a shell's SIZE partition is honoured the way a
+  Finder launch's is has not been established, so the System 7 sweep does not
+  settle it either.
+
+  The sharp test, for whoever picks this up: build with a deliberately small
+  preferred partition (~600 KB — enough to launch, not enough for a 512 KB
+  Arsenic block plus overhead) and run `derived-KeyGraphics.sit`, which needs
+  ~656 KB and passes at 4 MB today. If `SIZE` governs, that entry is refused;
+  if it is ignored, the run passes. One fixture, one boot, binary answer. It
+  needs a way to vary the `SIZE` resource per build — `mac/unclassic.r` has
+  the values hard-coded — which is the only real work in it.
 - **Mac OS 9: still never run, but no longer blocked.** The `WaitNextEvent`
   branch, `SFReply.vRefNum` as a System 7+ working-directory reference, HFS+
   names and the `SIZE` partition under a real Process Manager remain untested
