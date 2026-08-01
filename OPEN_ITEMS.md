@@ -162,10 +162,15 @@ file until someone with a Mac Plus runs the checklist.
   documented in FORMATS.md — but it is the one format the "runs on a Mac Plus"
   claim does not really cover. Closing it means a fundamentally lower-memory
   inverse BWT, not a bug fix.
-- **No timing data at all.** The Mini vMac builds run "all out", so the harness
-  measures correctness only. "Runs on a Mac Plus" is proven; "is usable on a
-  Mac Plus" is not. Closing it means a third emulator build at `-speed z` and a
-  small timing sweep.
+- **No timing data at all — attempted 2026-08-01, and it did not work.** The
+  1x emulator exists, `run.py --emu` selects it, `run.py` now splits boot from
+  extraction, and `tools/vmac/timing.txt` names the set to measure. A small
+  fixture came out at boot 10 s + extract 2 s. But a 306 KB BinHex did not
+  finish in fifteen minutes at 1x, twice, and this environment cannot
+  distinguish "the host is not sustaining 1x" from "the on-Mac path really is
+  that slow" — see BLOCKERS.md for the full write-up and the calibration that
+  would settle it. **"Runs on a Mac Plus" is proven; "is usable on a Mac Plus"
+  is still not, and no number has been published rather than a bad one.**
 - **Out of scope by the brief, and still out:** compression, StuffIt X
   (`.sitx`), encrypted archives, multi-segment archives, disk-image extraction,
   Now Compress, and LZH *extraction* — LZH was the optional half of M8 and is

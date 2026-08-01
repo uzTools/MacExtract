@@ -82,6 +82,15 @@ reads like a Mac-side bug and is wrong on the elapsed time as well; it is now
 its own verdict. **Re-run an `EMUDIED` fixture before drawing any conclusion
 from it.**
 
+**Timing has been attempted and is not settled.** `run.py --emu mv-4M-1x`
+runs the authentic build and splits boot from extraction (the app paints its
+"alive" grid before touching a disk, so the harness can see where work
+starts), and `timing.txt` is the set to measure. It has not produced a usable
+table: a 306 KB BinHex did not finish in fifteen minutes at 1x. Read the
+BLOCKERS.md section before trying again — in particular, **do not poll every
+few seconds**, because decoding a 512x342 grid in Python steals the CPU from
+the emulator you are timing.
+
 **Wall-clock time is not Mac Plus time — except in the 1x build.** `setup.sh`
 produces three emulators: `mv-4M` and `mv-1M` run *all out*, as fast as the
 host allows, which is what the fixture sweeps use because correctness does not

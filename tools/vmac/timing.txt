@@ -1,0 +1,35 @@
+# tools/vmac/timing.txt — the fixtures timed at authentic Mac Plus speed.
+#
+# The correctness sweeps run the emulator all out, which says nothing about
+# how long anything takes. This list is for the other question, the one a
+# user actually asks: if I drop a .sit on a Mac Plus, do I wait one minute or
+# twenty? It is deliberately SMALL — one fixture per format, chosen large
+# rather than typical so the number is an upper bound people can plan
+# around — because at 1x each fixture costs its real Mac Plus time and the
+# full 44 would take all day.
+#
+# Run:  tools/vmac/run.py --emu mv-4M-1x --poll 3 --timeout 900 \
+#           --list tools/vmac/timing.txt --json timing.json
+#
+# run.py splits boot from extraction (it can see the "alive" grid the app
+# paints before it touches a disk), so the extract column is the archive
+# alone.
+
+# --- one per format, the largest of that format in sample.txt -------------
+macburger-helper.hqx                       # BinHex        306651 B
+derived-XferIt_1.5b4.sea                   # Compact Pro   285495 B
+popper-1.7.tar.Z                           # Compress       59323 B
+PCCTS.tar.gz                               # Gzip           63807 B
+kermitut9test.bin                          # MacBinary     303744 B
+derived-PackIt.pit                         # PackIt         61843 B
+derived-EmpireBuilderDemo.sit              # StuffIt       278294 B
+derived-KeyGraphics.sit                    # StuffIt 5      4611 B (Arsenic)
+derived-PCCTS.tar                          # Tar           286720 B — largest
+derived-MUSFMT10.ZIP                       # Zip           171960 B
+
+# --- detect-only, so these measure the sniff and nothing else -------------
+derived-MacPass390.sea                     # DiskDoubler   155792 B
+derived-Expand_Now_1.0.1.sea               # Now Compress   61824 B
+
+# --- a small archive, for the other end of the range ----------------------
+derived-Export.sit                         # StuffIt         1615 B

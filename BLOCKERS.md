@@ -171,6 +171,48 @@ nobody noticed, because it was written down as a note about the harness.
 allocation, cannot fail, and is the only channel that survives a bomb — but
 that is now its stated reason.
 
+### Timing on a 7 MHz Mac Plus — NOT MEASURED, and why
+
+**No timing numbers were produced, and none are published.** This is the one
+claim the project makes loudest ("runs on a Mac Plus") and the one it has
+never quantified; an attempt on 2026-08-01 failed, and the failure is worth
+recording so the next attempt does not repeat it.
+
+What works and is committed:
+
+- `mv-4M-1x`, the authentic 7 MHz build, already existed.
+- `run.py --emu` now selects it, and `run.py` **splits boot from extraction**:
+  the application paints its `kAtRunning` grid before touching a disk, so the
+  gap between the first decodable grid and the final one is the extraction
+  alone. Proven on a small fixture: `derived-Export.sit` (1615 B StuffIt)
+  came out as **boot 10 s + extract 2 s**.
+- `tools/vmac/timing.txt` is the representative set — one fixture per format,
+  chosen large, plus a small one for the other end.
+
+What failed: **`macburger-helper.hqx` (306 KB BinHex) did not finish in over
+fifteen minutes of wall clock at 1x, on two separate attempts.** On a real
+Mac Plus that decode should be a minute or two.
+
+Two explanations, and this attempt **cannot tell them apart**:
+
+1. The host is not sustaining 1x. This is a single-core container also running
+   the screenshot loop, and the first attempt polled every 3 s with a pure
+   Python grid decoder over 175k pixels — which starves the emulator it is
+   measuring. Coarsening to 10 s did not rescue it, but does not clear it
+   either.
+2. The on-Mac path really is that slow for large inputs, which would be a
+   genuine and important finding — precisely the thing a timing sweep exists
+   to discover.
+
+Telling them apart needs a **calibration workload of known duration** on the
+same emulator — boot time is the obvious candidate, and the 10 s boot measured
+above is *faster* than a real Mac Plus, which argues against (1) and is why
+this is not being written off as host contention. It was not carried through.
+
+**Until it is, no number goes in the README.** A fabricated or
+contention-inflated figure would be worse than the current honest absence, and
+this repository has enough retracted numbers already.
+
 ### Open items from the on-Mac corpus replay — both CLOSED 2026-07-25
 
 Both were re-run on a rebuilt, and this time **committed**, Mini vMac

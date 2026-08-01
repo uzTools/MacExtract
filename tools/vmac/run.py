@@ -175,7 +175,8 @@ class Display:
             self.proc.kill()
 
 
-def run_one(fixture, mem, timeout, poll, workdir, bootimg, keep_png=None):
+def run_one(fixture, mem, timeout, poll, workdir, bootimg, keep_png=None,
+            emu_dir=None):
     """Boot the Mac on one fixture.
 
     Returns (values or None, seconds, png, emulator-exited). The last one
@@ -183,7 +184,7 @@ def run_one(fixture, mem, timeout, poll, workdir, bootimg, keep_png=None):
     as one that ran out of time, and reporting both as "nothing decodable
     within <timeout>s" sent one reader looking for a Mac-side bug over what
     was a five-second host-side flake."""
-    emu = os.path.join(VMAC_HOME, f"mv-{mem}", "minivmac")
+    emu = os.path.join(VMAC_HOME, emu_dir or f"mv-{mem}", "minivmac")
     rom = os.path.join(VMAC_HOME, "vMac.ROM")
     if not os.path.exists(emu):
         raise SystemExit(f"run: no emulator at {emu} — run tools/vmac/setup.sh")
@@ -200,6 +201,11 @@ def run_one(fixture, mem, timeout, poll, workdir, bootimg, keep_png=None):
     started = time.time()
     vals = None
     died = False
+    # When the app first paints ANY grid it is alive and has not started work
+    # (it paints kAtRunning before touching a disk). The gap between that and
+    # the final grid is the extraction alone, with the boot excluded — which
+    # is the only number worth quoting on a 1x machine.
+    t_alive = None
     try:
         # start_new_session: the emulator must not share our process group, or
         # a stray signal to the group takes it down mid-write.
@@ -224,6 +230,8 @@ def run_one(fixture, mem, timeout, poll, workdir, bootimg, keep_png=None):
                 continue                     # emulator window not mapped yet
             got = decode(png)
             if got is not None:
+                if t_alive is None:
+                    t_alive = time.time()
                 # A grid whose ret slot says "running" means the app is up and
                 # the extraction is simply not done — keep waiting, but
                 # remember it so a timeout can say "alive but slow" instead of
@@ -240,7 +248,9 @@ def run_one(fixture, mem, timeout, poll, workdir, bootimg, keep_png=None):
         if keep_png and os.path.exists(png):
             shutil.copyfile(png, keep_png)
         dpy.close()
-    return vals, elapsed, png, died
+    boot = (t_alive - started) if t_alive else None
+    extract = (time.time() - t_alive) if t_alive else None
+    return vals, elapsed, png, died, boot, extract
 
 
 def check_cancel(vals):
@@ -296,7 +306,14 @@ def main():
     ap.add_argument("--timeout", type=float, default=300.0,
                     help="host seconds to wait for a result grid (not Mac time)")
     ap.add_argument("--poll", type=float, default=5.0,
-                    help="host seconds between screenshots")
+                    help="host seconds between screenshots. This is also the "
+                         "granularity of the timing split, so lower it for a "
+                         "1x run")
+    ap.add_argument("--emu", default=None,
+                    help="emulator build under $UNC_VMAC_HOME; defaults to "
+                         "mv-<mem>, which runs ALL OUT. Pass mv-4M-1x for "
+                         "authentic 7 MHz Mac Plus timing — the only build a "
+                         "timing claim may be drawn from")
     ap.add_argument("--json", help="write per-fixture results here")
     ap.add_argument("--pngdir", help="keep each run's final screenshot here")
     ap.add_argument("-D", dest="defines", action="append", default=[],
@@ -335,8 +352,9 @@ def main():
         workdir = tempfile.mkdtemp(prefix="vmacrun-")
         keep = os.path.join(args.pngdir, name + ".png") if args.pngdir else None
         try:
-            vals, secs, png, died = run_one(fixture, args.mem, args.timeout,
-                                            args.poll, workdir, bootimg, keep)
+            vals, secs, png, died, boot, extract = run_one(
+                fixture, args.mem, args.timeout, args.poll, workdir, bootimg,
+                keep, args.emu)
             status = AT_STATUS.get(signed32(vals[1])) if vals else None
             if vals is None and died:
                 verdict, detail = "EMUDIED", (
@@ -361,12 +379,19 @@ def main():
             else:
                 ok, detail = check(fixture, png, manifest_dir)
                 verdict = "PASS" if ok else "FAIL"
-            print(f"{verdict:8s} {name:44s} {secs:6.1f}s  {detail}", flush=True)
+            timing = ""
+            if boot is not None and extract is not None:
+                timing = f" [boot {boot:.0f}s + extract {extract:.0f}s]"
+            print(f"{verdict:8s} {name:44s} {secs:6.1f}s{timing}  {detail}",
+                  flush=True)
             npass += verdict == "PASS"
             results.append(dict(fixture=name, mem=args.mem,
                                 system=args.system, verdict=verdict,
-                                seconds=round(secs, 1), detail=detail,
-                                values=vals))
+                                emu=args.emu or f"mv-{args.mem}",
+                                seconds=round(secs, 1),
+                                boot_s=round(boot, 1) if boot else None,
+                                extract_s=round(extract, 1) if extract else None,
+                                detail=detail, values=vals))
         finally:
             shutil.rmtree(workdir, ignore_errors=True)
 
