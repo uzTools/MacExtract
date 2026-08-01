@@ -98,14 +98,18 @@ here because it is the largest genuine unknown.**
 - **Mac OS 9: never run.** The `WaitNextEvent` branch, `SFReply.vRefNum` as a
   System 7+ working-directory reference, HFS+ names, and the `SIZE` partition
   under a real Process Manager are all untested code.
-- **The interactive application has not been re-driven on-Mac since the sink
-  rewrite.** Only the `-DUNC_MAC_AUTOTEST` build has been replayed
-  (`tools/vmac/run.py`), and it uses neither SFGetFile, nor the progress
-  dialog, nor the alerts. The sink itself is shared and is covered; the UI
-  around it is not.
+- **The interactive application: CLOSED 2026-08-01 for System 6.**
+  `tools/vmac/interactive.py` now drives the real UI under an emulator built
+  for authentic Mac Plus timing and photographs each step: SFGetFile,
+  the progress dialog repainting (caught at 13% and 16%), the Cancel button,
+  Cmd-., the partial-output cleanup visible in the file list, and the success
+  alert. It is not self-checking — the screenshots are the result — but the
+  driving is repeatable. Still unexercised above System 6 (see below).
 
-**To close:** run the `MANUAL_TESTS.md` checklist on a real Mac Plus and on
-OS 9. Nothing here can be closed on Linux.
+**To close:** the OS 9 half is being attempted under QEMU PowerPC. The real
+hardware half **cannot be closed here at all** — it needs physical silicon,
+and no amount of emulation substitutes for it. That row should stay in this
+file until someone with a Mac Plus runs the checklist.
 
 ---
 

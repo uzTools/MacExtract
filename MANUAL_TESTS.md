@@ -14,9 +14,30 @@ The earlier claim that this was caused by a **broken Retro68 `HOpen`
 glue** has been **withdrawn** — a standalone minimal reproduction
 (`tools/retro68-hopen-repro/`) disproved it. See BLOCKERS.md.
 
+### Re-driven on 2026-08-01 against the streaming sink (System 6.0.8, 4 MB, 1x)
+
+`tools/vmac/interactive.py` drives the real application under an emulator
+built for authentic 7 MHz timing and photographs every step. Confirmed from
+the screenshots:
+
+- **SFGetFile** comes up listing the archive on the boot volume.
+- **Progress dialog** repaints live — caught mid-run at 13% and 16%.
+- **The Cancel button** stops it: "Extraction cancelled." alert.
+- **Cmd-.** does the same, by the other route (the keyDown check in
+  ProgressPump rather than Dialog Manager hit-testing).
+- **Partial output is removed, still.** After cancelling, SFGetFile lists
+  exactly `Demo Manual V1.6` — the one entry that had finished — and no
+  trace of `EB Sounds`, the entry that was being written. This is the
+  behaviour the streaming rewrite put at risk, seen in the file list rather
+  than inferred.
+- **Extraction completes**: "Extraction complete." after ~134 s of emulated
+  Mac Plus time for `derived-EmpireBuilderDemo.sit` (278 KB in, 417 KB out,
+  3 entries); the machine boots in ~16 s.
+
 ### Driven end to end on 2026-07-25 (System 6.0.8, Mini vMac)
 
-Done interactively in the emulator, each step captured:
+Done interactively by hand, before the sink was rewritten to stream. Each
+step was captured; the items above supersede the cancel-related ones.
 
 - Application launches from the Finder; **SFGetFile** appears and lists
   the archive.
@@ -169,12 +190,8 @@ Launch & UI
       entries remain, the entry being written is deleted rather than left
       truncated, and the app returns to SFGetFile without damage.
 - [ ] Cmd-. behaves exactly like the Cancel button.
-      (Both confirmed under Mini vMac 2026-07-25, against the older
-      stage-then-write sink. The cleanup itself was re-verified on-Mac
-      against the streaming sink on 2026-08-01 by the automated
-      `-D UNC_AT_CANCEL` run below, at 4 MB and 1 MB; what is NOT re-driven
-      since that change is the interactive UI around it — the dialog, the
-      Cancel button hit-testing and the alert.)
+      (Both re-confirmed against the streaming sink on 2026-08-01 by
+      `tools/vmac/interactive.py`, at authentic Mac Plus speed — see below.)
 - [ ] Under MultiFinder / System 7+ / OS 9: the app yields (other apps
       stay responsive while extracting; WaitNextEvent path).
 

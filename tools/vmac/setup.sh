@@ -75,14 +75,14 @@ fi
 # Mini vMac's setup tool emits a shell script that writes the config headers
 # and a Makefile; -speed a is "all out" (see run.py --speed for why the
 # default is NOT authentic 1x).
-build_mv() {    # build_mv <dir> <memsize>
+build_mv() {    # build_mv <dir> <memsize> <speed>
     [ -x "$1/minivmac" ] && { echo "have $1/minivmac"; return 0; }
     rm -rf "$1"
     mkdir -p "$1"
     tar xzf minivmac.src.tgz -C "$1" --strip-components=1
     ( cd "$1"
       gcc -o setup_t setup/tool.c
-      ./setup_t -t lx64 -m Plus -mem "$2" -speed a -as 0 -bg 1 \
+      ./setup_t -t lx64 -m Plus -mem "$2" -speed "$3" -as 0 -bg 1 \
                 -sound 0 -magnify 0 -drives 6 -n "unclassic-$2" > setup.sh
       bash setup.sh >/dev/null
       make >/dev/null 2>&1 )
@@ -90,7 +90,17 @@ build_mv() {    # build_mv <dir> <memsize>
     echo "built $1/minivmac"
 }
 
-build_mv mv-4M 4M
-build_mv mv-1M 1M
+# 'a' = all out, as fast as the host allows: what the fixture sweeps use,
+# because correctness does not depend on speed and 44 fixtures x 2 memory
+# sizes at Mac Plus speed would take all day.
+build_mv mv-4M 4M a
+build_mv mv-1M 1M a
+
+# 'z' = 1x, authentic 7 MHz Mac Plus timing. Needed for anything that has to
+# observe the machine WHILE it works — the progress dialog and Cmd-. cancel
+# are invisible at all-out speed, because the extraction is over before a
+# screenshot can be taken — and it is the only build any timing claim may be
+# drawn from.
+build_mv mv-4M-1x 4M z
 
 echo "setup: ready in $VMAC_HOME"

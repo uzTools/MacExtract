@@ -20,6 +20,7 @@ minutes per fixture. It is a deliberate, on-demand check.
 | `setup.sh` | fetch + build the emulator, the ROM and a System 6.0.8 image into `$UNC_VMAC_HOME` (default `~/.cache/unclassic/vmac/`) |
 | `mkboot.py` | strip that image to System + Finder and make it boot straight into the application |
 | `run.py` | build the disks, boot, screenshot, decode, check |
+| `interactive.py` | drive the real UI (SFGetFile, progress dialog, Cancel, Cmd-.) and photograph each step |
 
 The verification halves live one directory up because they are useful on their
 own: `tools/decode_grid.py` (screenshot → eight numbers) and
@@ -51,10 +52,27 @@ paints a grid with `ret = -1000` ("running"); a missing `In`/`Out` volume paints
 from *bad disk set* — which a bare timeout cannot. `run.py` reports those as
 `NOGRID`, `TIMEOUT` and `SETUP` respectively, distinct from a real `FAIL`.
 
-**Wall-clock time here is not Mac Plus time.** The emulator is built "all out",
-i.e. as fast as the host CPU allows, so `--timeout` bounds host seconds only.
-Correctness results are speed-independent; **do not derive timing claims about
-a 7 MHz 68000 from this harness.**
+**Wall-clock time is not Mac Plus time — except in the 1x build.** `setup.sh`
+produces three emulators: `mv-4M` and `mv-1M` run *all out*, as fast as the
+host allows, which is what the fixture sweeps use because correctness does not
+depend on speed and 44 fixtures x 2 memory sizes at Mac Plus speed would take
+all day. `mv-4M-1x` runs at authentic 7 MHz timing and is the **only** build a
+timing claim may be drawn from. `interactive.py` defaults to it, because at
+all-out speed the extraction is over before the progress dialog can be
+photographed and Cmd-. has nothing left to cancel.
+
+**`interactive.py` is not self-checking, by design.** It guarantees the same
+clicks in the same order and writes a numbered screenshot per step; judging
+them is the reader's job. Two lessons are baked into it, both of which
+produced confident-looking nonsense first:
+
+- *Press buttons with Return, not coordinates.* Clicking SFGetFile's Open at a
+  measured point hit **Drive** one row up, switched to an empty volume, and
+  made every later screenshot meaningless while still "succeeding".
+- *Set X input focus explicitly.* With no window manager nothing assigns it,
+  so key events go to the root window. Mouse clicks are delivered by position
+  and work anyway — which makes it look like the Mac ignores one particular
+  key rather than receiving none.
 
 ## The downloads, and why none of them are committed
 

@@ -15,11 +15,16 @@ Takes the stock image fetched by setup.sh and produces a boot volume that
      straight into the test.
 
 Usage:
-    mkboot.py <stock.hfv> <unclassic.bin> <out.hfv>
+    mkboot.py <stock.hfv> <unclassic.bin> <out.hfv> [--data FILE:MACNAME]...
 
-<unclassic.bin> is the MacBinary produced by the UNC_MAC_AUTOTEST build
-(tools/vmac/run.py builds it); its resource fork is what makes it an
-application, so it is copied in MacBinary mode.
+<unclassic.bin> is the MacBinary produced by the Retro68 build (tools/vmac/
+run.py builds it); its resource fork is what makes it an application, so it is
+copied in MacBinary mode.
+
+--data copies a host file into the volume ROOT as a plain data fork. The
+interactive driver uses it to put an archive where SFGetFile will list it: the
+interactive application extracts next to the archive, so that volume has to be
+writable, and the boot volume is the one SFGetFile opens on by default.
 """
 import os, re, shutil, subprocess, sys, tempfile
 
@@ -161,9 +166,19 @@ def patch_boot_blocks(image, shell_name):
 
 
 def main():
-    if len(sys.argv) != 4:
+    argv = sys.argv[1:]
+    extras = []
+    while "--data" in argv:
+        i = argv.index("--data")
+        spec = argv[i + 1]
+        host, _, macname = spec.partition(":")
+        if not macname:
+            raise SystemExit(f"mkboot: --data wants FILE:MACNAME, got {spec!r}")
+        extras.append((host, macname))
+        del argv[i:i + 2]
+    if len(argv) != 3:
         raise SystemExit(__doc__)
-    stock, appbin, out = sys.argv[1:4]
+    stock, appbin, out = argv
     shutil.copyfile(stock, out)
     hfs = HFS(out)
     try:
@@ -171,6 +186,8 @@ def main():
         # The shell application is looked up in the blessed (System) folder.
         hfs.run("hcopy", "-m", appbin, hfs.path(SYS_FOLDER, APP_NAME))
         verify_stripped(hfs)
+        for host, macname in extras:
+            hfs.run("hcopy", "-r", host, hfs.path(macname))
     finally:
         hfs.close()
     patch_boot_blocks(out, APP_NAME)
