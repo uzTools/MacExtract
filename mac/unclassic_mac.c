@@ -830,8 +830,25 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
 
     opt.list_only = 0;
     opt.test_only = 0;
+    /* Fallback name for formats that store none (gzip, .Z). The contract in
+     * unclassic.h is "the archive filename minus its LAST extension", which
+     * is what unar does and what cli/main.c passes; this used to pass the
+     * whole name, so opening `foo.gz` on a Mac wrote a file called `foo.gz`
+     * — colliding with the archive itself, hence `foo.gz~1` — where every
+     * other implementation writes `foo`. Found 2026-08-02 by the Mac OS 9
+     * harness, which compares output NAMES; the Mini vMac harness compares
+     * CRCs and counts and so could not see it.
+     *
+     * A leading dot is not an extension (`.foo` stays `.foo`), matching the
+     * `dot != base` test in the CLI. */
     opt.name_hint = name + 1;            /* Pascal string body */
     opt.name_hint_len = name[0];
+    {
+        int i;
+        for (i = (int)name[0]; i > 1; i--) {
+            if (name[i] == '.') { opt.name_hint_len = (uint16_t)(i - 1); break; }
+        }
+    }
 
     ret = unc_extract(&io, &sk, &al, prog, &opt);
     gPeakUsage = ma.initial - ma.lowmark;   /* engine heap high-water mark */
