@@ -373,7 +373,52 @@ guest at all — five mouse primitives measured at exactly zero effect, cursor
 pinned to screen corners. See BLOCKERS.md, and `tools/vmac/os9probe.py` for
 the measurement.
 
-**Still not covered here:** HFS+ (every OS 9 extraction so far landed on the
-HFS transfer volume, not the HFS+ boot volume), and the `SIZE` partition made
-to bite under the Process Manager. Both are one run each and neither is
-blocked. Real PowerPC silicon, like real 68k silicon, remains untouched.
+### Onto HFS+ (the same machine, the boot volume instead of the transfer disk)
+
+Everything above extracts onto the transfer volume, which is HFS. The OS 9
+boot volume is HFS+, so `--hfsplus` renames it to `Out` from the keyboard and
+runs the **autotest** build against it: the extraction lands on HFS+, and the
+application CRC-32s both forks after reading them back through the File
+Manager, exactly as the Mini vMac tiers do.
+
+    tools/vmac/os9.py fixtures/derived-Berkeley_Packet_Monitor.sit \
+                      -o <dir> --hfsplus
+
+| fixture | files | data | rsrc | peak heap | result |
+|---|---|---|---|---|---|
+| `derived-Berkeley_Packet_Monitor.sit` | 31 | 372,301 B | — | 779.1 KB | ✅ CRC + length identical to Linux |
+| `derived-XferIt_1.5b4.sea` | 10 | 679,423 B | 268,752 B | 18.8 KB | ✅ CRC + length identical to Linux |
+
+Both report `ret=0` with zero per-entry errors, and every output **name** on
+HFS+ is exactly what the 31-character rule predicts — including the one entry
+in the Berkeley fixture whose name is 34 characters and must be truncated. A
+68k application reaching HFS+ through the classic File Manager is capped at 31
+characters just as it is on HFS, so HFS+ changes nothing here; that is the
+result, and it was worth measuring rather than assuming.
+
+Two things make this tier trustworthy:
+
+- **The answer comes back as a file, not off the screen.** `at_report()` pokes
+  1bpp pixels straight at the framebuffer — the right channel on a Mac Plus,
+  and invisible on OS 9's 32-bit screen (confirmed by screenshot: the desktop
+  is untouched after the run finishes). `at_report_file()` writes the same
+  values, plus every output name, to the plain-HFS input volume. That is what
+  made HFS+ reachable at all: the output volume was never the obstacle, the
+  reporting channel was.
+- **That the output really landed on HFS+ is measured.** The boot volume is
+  HFS+ inside an HFS wrapper, and hfsutils can see only the wrapper. After the
+  run the wrapper still contains exactly one file,
+  `Where_have_all_my_files_gone?` — so none of those 41 files went to plain
+  HFS. A signature word was considered and rejected: the classic File Manager
+  reports `'BD'` for an HFS+ volume for compatibility, so a negative would
+  prove nothing.
+
+One corroboration falls out of it: the Mac's **unmasked** resource-fork CRC
+equals Linux's **masked** one, so Mac OS 9 leaves the 112-byte reserved header
+area alone where System 6 stamps it — the same thing the byte-level comparison
+found on the HFS tier.
+
+**Still not covered here:** names HFS+ permits that HFS does not (probably
+unreachable through the classic File Manager at all, which is itself unproven),
+and the `SIZE` partition made to bite under the Process Manager. Real PowerPC
+silicon, like real 68k silicon, remains untouched.

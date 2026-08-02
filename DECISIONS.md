@@ -829,3 +829,43 @@ The near-miss is the point
 and is why it is written down: a FAIL from a young harness is a claim about
 the harness until it is shown to be a claim about the target. That is the same
 error as reading a cause into a timeout, arriving from the opposite direction.
+
+## 2026-08-02 — the reporting channel, not the volume, was what blocked HFS+
+
+"Extraction has never touched an HFS+ volume" sat in MANUAL_TESTS.md from M10
+onwards, and it read like a missing capability: no HFS+ writer in this
+environment, no way to prepare such a volume. It was not that at all.
+
+The autotest build finds its volumes **by name** — `In` and `Out`. The Mac OS 9
+boot volume is HFS+. Renaming it to `Out` in the Finder, from the keyboard,
+points the existing binary at HFS+ with no code change whatsoever. The real
+obstacle was in the other direction: `at_report()` writes 1bpp pixels straight
+at the framebuffer, which is the best possible channel on a Mac Plus and
+completely invisible on OS 9's 32-bit screen. The output volume was never the
+problem. **The answer channel was**, and nothing had said so, because the row
+was filed under what could not be written rather than what could not be read.
+
+So `at_report_file()` writes the same values to a file on the plain-HFS INPUT
+volume — the one the harness built, so the one it can always read, whatever
+the volume under test happens to be. It carries every output NAME as well as
+the aggregate, because an aggregate is precisely what cannot answer a question
+about names, and names are most of what HFS+ might have changed.
+
+Two things went the way this project keeps going, and both are worth keeping:
+
+- **Two screen-based completion detectors were written before the artifact
+  was.** First "wait for the screen to change", then "wait for it to go black,
+  since at_report zeroes the framebuffer". Both ran to their full 240 s
+  timeout on a run that had already succeeded — eight minutes of waiting for
+  proxies that could not fire, on a run that takes two. Polling the host's
+  copy of the transfer image for the report FILE finds it in ~20 s. **Wait for
+  the artifact, not for a sign of the artifact.**
+- **"It landed on HFS+" was nearly left as an inference.** The obvious check —
+  ask the File Manager for the volume's signature — is worthless here: the
+  classic API answers `'BD'` for an HFS+ volume for compatibility, so a
+  negative proves nothing. The check that does work needs no guest code at
+  all: hfsutils can see only the volume's HFS wrapper, so if the output were
+  on plain HFS it would be visible there. It is not; the wrapper still holds
+  its single placeholder file. A signature read at a fixed offset is exactly
+  what produced the withdrawn "the boot volume is plain HFS" claim, so making
+  the same read the basis of the fix would have been a poor joke.

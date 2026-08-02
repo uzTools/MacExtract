@@ -321,11 +321,18 @@ need for the reserved-header masking System 6 requires.
 
 Still unverified on Mac OS 9:
 
-- **HFS+ volumes.** Every OS 9 run extracted onto the *transfer*
-  volume, which is HFS. Long names, the 31-character truncation rule
-  and the collision-suffix logic have still never met an HFS+ volume,
-  nor names that HFS+ permits and HFS does not. The boot volume is
-  HFS+, so this is reachable by extracting there instead.
+- ~~**HFS+ volumes.**~~ **Done 2026-08-02** —
+  `tools/vmac/os9.py --hfsplus` renames the HFS+ boot volume to `Out`
+  from the keyboard and runs the autotest build against it, so the
+  extraction lands on HFS+. 31 files byte-identical to the Linux
+  engine by CRC and length, `ret=0`, and every name exactly as the
+  31-character rule predicts. That the volume really is HFS+ is
+  measured: hfsutils sees only its HFS wrapper, and the wrapper still
+  holds nothing but `Where_have_all_my_files_gone?`.
+  **What is left of this row:** names that HFS+ permits and HFS does
+  not. Through the classic File Manager a 68k application is capped at
+  31 characters on either filesystem, so those cases may be
+  unreachable from this binary — unproven either way.
 - **Files larger than the HFS 2 GB cap**, and the engine's 32-bit-only
   arithmetic against them.
 - **The 'SIZE' resource made to bite under the Process Manager.** The

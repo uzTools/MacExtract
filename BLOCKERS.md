@@ -380,10 +380,28 @@ rather than counting towards it. "Nothing changed for a while" is a proxy for
 
 ### What is still open on Mac OS 9
 
-- **HFS+.** The transfer volume is HFS, so long names, the 31-character
-  truncation rule and the collision-suffix logic still have not met an HFS+
-  volume. The boot volume *is* HFS+, so this is reachable now — extract onto
-  it rather than onto the transfer volume — but it has not been done.
+- ~~**HFS+.**~~ **Done the same day.** `--hfsplus` renames the HFS+ boot
+  volume to `Out` from the keyboard and runs the autotest build against it;
+  two fixtures, 41 files, 1,051,724 data bytes and 268,752 resource-fork
+  bytes, CRCs and lengths identical to the Linux engine, and every name
+  exactly as the 31-character rule predicts.
+
+  The obstacle was never the output volume — it was the ANSWER. `at_report()`
+  pokes 1bpp pixels at the framebuffer, which is invisible on OS 9's 32-bit
+  screen; a screenshot after a finished run shows an untouched desktop. So
+  `at_report_file()` now writes the same values, and every output name, to the
+  plain-HFS input volume. Two screen-based completion detectors were tried
+  first and both ran to their full 240 s timeout on a run that had already
+  succeeded — twice the cost of the run itself, spent watching proxies that
+  could not fire. Polling for the report FILE finds it in ~20 s.
+
+  That the output landed on HFS+ is measured, not inferred: hfsutils sees only
+  the volume's HFS wrapper, and after the run that wrapper still holds exactly
+  `Where_have_all_my_files_gone?`. Reading `ioVSigWord` was considered and
+  rejected — the classic File Manager answers `'BD'` for an HFS+ volume for
+  compatibility, so a negative would have meant nothing, and a signature read
+  at a fixed offset is exactly what produced the withdrawn "plain HFS" claim
+  above.
 - **The `SIZE` partition under OS 9's Process Manager.** The application
   launches, so the partition is honoured enough to run; it has not been tested
   against a fixture large enough to make the refusal bite, which is what the

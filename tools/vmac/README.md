@@ -159,6 +159,7 @@ the application and checks what it wrote:
     os9.py --setup                                       # fetch the 2 GB image
     os9.py fixtures/derived-DDT.sit -o shots/ --launch    # one fixture
     os9.py --list os9sample.txt -o shots/ --launch        # the format sample
+    os9.py fixtures/foo.sit -o shots/ --hfsplus           # extract onto HFS+
 
 An idle host reaches the Finder desktop in ~110 s. Every fixture boots its own
 pristine copy of the master image — Mac OS 9 writes to its boot volume as it
@@ -171,6 +172,15 @@ position. Typing selects an icon by name, Cmd-Down opens it, Cmd-Q quits — no
 coordinates, no double-click threshold. `os9probe.py` is kept as a diagnostic;
 run it if clicking or typing ever appears to stop working, because it answers
 "which link broke?" in one boot instead of inferring it from a non-event.
+
+**`--hfsplus` writes to a volume the host cannot read.** The boot volume is
+HFS+; renaming it to `Out` in the Finder is enough to point the *autotest*
+build at it, since that build finds its volumes by name. The result comes back
+through `at_report_file()` — a small file on the plain-HFS input volume
+carrying the same values `at_report()` would paint, plus every output name,
+because the framebuffer grid is invisible on a 32-bit screen. That the output
+really landed on HFS+ is checked by mounting the volume's HFS *wrapper*: if
+the files were on plain HFS they would be visible there, and they are not.
 
 **The result is checked off the disk image, not off the screen.** Mini vMac
 needs the on-screen CRC grid; QEMU does not, because the transfer volume is a

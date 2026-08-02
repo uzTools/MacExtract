@@ -182,12 +182,40 @@ here because it is the largest genuine unknown.**
   the Standard File path, and the whole Toolbox File Manager layer now run on
   a real Process Manager on PowerPC, not just on System 6. **What it did
   not:** see the two rows below.
-- **Mac OS 9: HFS+ is still untouched.** Every OS 9 extraction so far went to
-  the *transfer* volume, which is HFS — so long names, the 31-character
-  truncation rule and the collision-suffix logic have still never met an HFS+
-  volume, and neither have names HFS+ permits that HFS does not. The boot
-  volume IS HFS+ (`drEmbedSigWord = 'H+'`), so this is now reachable by
-  extracting there instead; it needs a run, not a new capability.
+- **Mac OS 9 on HFS+: CLOSED 2026-08-02.** `tools/vmac/os9.py --hfsplus`
+  renames the HFS+ boot volume to `Out` from the keyboard and runs the
+  autotest build against it, so the extraction lands on HFS+ rather than on
+  the HFS transfer volume. `derived-Berkeley_Packet_Monitor.sit`: 31 files,
+  `ret=0`, `errors=0`, data CRC sum and byte count identical to the Linux
+  engine, peak heap 779.1 KB — and all 31 names exactly as the 31-character
+  rule predicts, including the one entry whose name is 34 characters long and
+  has to be truncated.
+
+  Two things about it are worth keeping:
+
+  * **The report comes back as a FILE, not off the screen.** `at_report()`
+    pokes 1bpp pixels straight at the framebuffer, which is the right channel
+    on a Mac Plus and invisible on Mac OS 9's 32-bit screen — confirmed by
+    screenshot: the desktop is untouched after the app has finished. That is
+    the real reason HFS+ stayed untested long after the application ran on
+    OS 9; the output volume was never the problem, the ANSWER channel was.
+    `at_report_file()` writes the same values, plus every output NAME, to the
+    plain-HFS input volume, which the host can read whatever the output
+    volume is.
+  * **That the output volume is HFS+ is measured, not assumed.** The boot
+    volume is HFS+ inside an HFS wrapper, and hfsutils can see only the
+    wrapper. After the run the wrapper still holds exactly one file,
+    `Where_have_all_my_files_gone?` — so none of the 31 files went to plain
+    HFS. Reading a signature word was considered and rejected: the classic
+    File Manager reports `'BD'` for an HFS+ volume for compatibility, so a
+    negative there would prove nothing, and misreading a signature at a fixed
+    offset is exactly how the "the boot volume is plain HFS" claim went wrong
+    in the first place.
+
+  **Still open on HFS+:** names that HFS+ permits and HFS does not. A 68k
+  application reaching HFS+ through the classic File Manager is limited to 31
+  characters either way, so the interesting cases may not be reachable at all
+  from this binary — which is itself worth establishing rather than assuming.
 - **Mac OS 9: the `SIZE` partition has not been made to bite there.** The
   application launches under the Process Manager, so the partition is honoured
   enough to run. What has not been repeated on OS 9 is the System 6/7
