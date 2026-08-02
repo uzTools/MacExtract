@@ -162,6 +162,13 @@ here because it is the largest genuine unknown.**
   So offline writes to that volume are impossible here and the idea is dead,
   not merely untried. See BLOCKERS.md.
 
+  **Attempted 2026-08-02, not achieved**: one boot, no screenshot, because the
+  harness slept a fixed 260 s for a boot this host does not finish in that
+  time. `Qemu.settle()` now waits for the screen to stop changing instead, so
+  the next attempt starts from a harness that reports what happened rather than
+  producing nothing. Each iteration costs 15+ minutes here, and the Finder
+  route needs three or four.
+
   What remains is the original plan: Finder automation through QEMU
   screendumps, with `mkapmdisk.py`'s transfer volume (HFS, and it already
   mounts) carrying the application. One thing does improve — the volume really

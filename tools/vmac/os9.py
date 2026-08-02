@@ -107,6 +107,31 @@ class Qemu:
             self.mon("mouse_button 0", 0.15)
         time.sleep(0.8)
 
+    def settle(self, scratch, interval=20.0, timeout=1200.0, stable=2):
+        """Screenshot until the screen stops changing; return seconds waited.
+
+        Replaces a fixed sleep. The fixed wait was 260 s "because OS 9 takes
+        about four minutes to reach the Finder here", which was true on the
+        machine that measured it and false on a loaded one — the boot simply
+        had not finished when the screenshot was taken, and the run produced
+        nothing at all rather than saying why. Booting is exactly the kind of
+        thing whose duration is a property of the host, not of the guest, so
+        it should be waited for and not predicted."""
+        started = time.time()
+        prev, same = None, 0
+        while time.time() - started < timeout:
+            time.sleep(interval)
+            if self.proc.poll() is not None:
+                return None                       # qemu died; caller reports
+            if not self.shot(scratch):
+                continue
+            cur = open(scratch, "rb").read()
+            same = same + 1 if cur == prev else 0
+            prev = cur
+            if same >= stable - 1:
+                return time.time() - started
+        return None
+
     def close(self):
         try:
             os.killpg(os.getpgid(self.proc.pid), 9)
@@ -185,9 +210,12 @@ def main():
                          "(use when verify_disk() reports drift)")
     ap.add_argument("--setup", action="store_true", help="fetch the Mac OS 9 disk")
     ap.add_argument("-o", "--outdir", default="os9-shots")
-    ap.add_argument("--boot-wait", type=float, default=260.0,
-                    help="host seconds before the first screenshot; OS 9 takes "
-                         "about four minutes to reach the Finder here")
+    ap.add_argument("--boot-wait", type=float, default=1800.0,
+                    help="host seconds to allow for the desktop to SETTLE (the "
+                         "harness waits for the screen to stop changing rather "
+                         "than sleeping a fixed time). Four minutes is the "
+                         "best case on an idle machine; a loaded one takes "
+                         "much longer, so this bound is generous on purpose")
     args = ap.parse_args()
 
     if args.setup:
@@ -213,8 +241,19 @@ def main():
     boot = boot_copy(args.outdir)
     q = Qemu([boot, xfer], os.path.join(args.outdir, "mon.sock"))
     try:
-        time.sleep(args.boot_wait)
+        scratch = os.path.join(args.outdir, ".settle.png")
+        waited = q.settle(scratch, timeout=args.boot_wait)
+        if waited is None:
+            raise SystemExit(
+                f"os9: the screen never stopped changing within "
+                f"{args.boot_wait:.0f}s, or qemu exited. On a loaded host this "
+                f"boot takes considerably longer than the four minutes the "
+                f"docstring quotes; raise --boot-wait rather than assuming the "
+                f"guest is broken.")
+        print(f"os9: desktop settled after ~{waited:.0f}s")
         print(q.shot(os.path.join(args.outdir, "desktop.png")))
+        if os.path.exists(scratch):
+            os.remove(scratch)
     finally:
         q.close()
     print("os9: the transfer volume should be on the desktop. Driving the "

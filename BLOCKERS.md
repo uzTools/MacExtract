@@ -230,6 +230,23 @@ tools, no `mount.hfsplus`, and the kernel has no hfsplus module
 Items idea is not merely unproven — **it cannot be done here at all**, by any
 route that writes the boot volume offline.
 
+**Attempted 2026-08-02 and not achieved.** One boot was driven to see the
+desktop and measure icon positions, which is the first of three or four
+iterations the Finder route needs. It produced no screenshot: the harness
+slept a fixed 260 s ("about four minutes to reach the Finder here") and this
+host is nowhere near that fast, so the shot was taken mid-boot and the run
+was killed by its outer timeout before anything was written. Two harness
+weaknesses, both now fixed:
+
+- **The fixed sleep is gone.** `Qemu.settle()` screenshots until the screen
+  stops changing, the same approach `interactive.py` uses, so the boot is
+  waited for rather than predicted. Default bound raised to 1800 s.
+- **QEMU is started with `start_new_session=True`**, so when the driver is
+  killed by a timeout the emulator survives as an orphan. One was left running
+  and had to be killed by hand. Not fixed — the flag is deliberate (a stray
+  signal to the process group must not take the emulator down mid-write) — but
+  it is now written down, and `run.py` has the same property.
+
 What that leaves for getting the application launched on Mac OS 9:
 
 - Finder automation through QEMU screendumps — the original plan, and still
