@@ -30,7 +30,7 @@ application) and the icon positions in a freshly opened window are not known
 in advance, so it wants the same
 screenshot-look-adjust loop the System 6 driver went through.
 """
-import argparse, os, socket, subprocess, sys, time
+import argparse, os, shutil, socket, subprocess, sys, time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
@@ -43,6 +43,10 @@ DISK = os.path.join(QEMU_HOME, "MacOS9.img")
 # Archive. Apple's copyright, so it is fetched and hashed like everything else
 # under fixtures/ — never committed.
 DISK_URL = "https://archive.org/download/mac-os9/MacOS9.img"
+# archive.org publishes a SHA-1 per file; setup.sh hashes everything it fetches
+# and this did not, which is how the local copy drifted from upstream without
+# anyone noticing. See verify_disk().
+DISK_SHA1 = "a6e39e049d99c56d0a2c08bf2631079f6f14bd56"
 
 
 class Qemu:
@@ -110,13 +114,64 @@ class Qemu:
             pass
 
 
-def setup():
+def sha1(path):
+    import hashlib
+    h = hashlib.sha1()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def verify_disk(fatal=True):
+    """Is the master image still the one upstream published?
+
+    It matters more here than it looks. Mac OS 9 writes to its boot volume as a
+    matter of course — Desktop DB, temporary items, the "unmounted cleanly"
+    flag — so a single boot leaves the image different from what was fetched,
+    and a QEMU run that is killed rather than shut down leaves it dirty. That
+    is why nothing may boot this file directly; see boot_copy()."""
+    got = sha1(DISK)
+    if got == DISK_SHA1:
+        return True
+    msg = (f"os9: {DISK} does not match the published SHA-1\n"
+           f"os9:   want {DISK_SHA1}\n"
+           f"os9:   got  {got}\n"
+           f"os9: it has been written to — re-fetch it with --setup --force")
+    if fatal:
+        raise SystemExit(msg)
+    print(msg)
+    return False
+
+
+def boot_copy(workdir):
+    """A throwaway copy of the master image to actually boot.
+
+    tools/vmac/run.py has done this since M10 ("every run starts from a
+    pristine image: System 6 writes to the boot volume as it goes"), and
+    BLOCKERS.md records that repeated boot-and-kill cycles corrupt it. That
+    lesson was never carried over here: os9.py booted the master in place, so
+    every run quietly damaged the one artifact it depends on, and there was no
+    hash to notice."""
+    dst = os.path.join(workdir, "boot.img")
+    print(f"os9: copying the master image to {dst} (2 GB; the master is never booted)")
+    shutil.copyfile(DISK, dst)
+    return dst
+
+
+def setup(force=False):
     os.makedirs(QEMU_HOME, exist_ok=True)
-    if os.path.exists(DISK):
-        print(f"have {DISK}")
-        return
+    if os.path.exists(DISK) and not force:
+        if verify_disk(fatal=False):
+            print(f"have {DISK}")
+            return
+        raise SystemExit("os9: refusing to overwrite silently — pass --force")
     print(f"fetching {DISK_URL} (2 GB)")
     subprocess.run(["curl", "-fsSL", "-o", DISK + ".part", DISK_URL], check=True)
+    got = sha1(DISK + ".part")
+    if got != DISK_SHA1:
+        raise SystemExit(f"os9: SHA-1 mismatch on the download: got {got}, "
+                         f"want {DISK_SHA1} — check upstream by hand")
     os.rename(DISK + ".part", DISK)
     print(f"os9: ready — {DISK}")
 
@@ -125,6 +180,9 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("fixture", nargs="?", help="archive to put on the transfer disk")
+    ap.add_argument("--force", action="store_true",
+                    help="with --setup, re-fetch even if a copy is present "
+                         "(use when verify_disk() reports drift)")
     ap.add_argument("--setup", action="store_true", help="fetch the Mac OS 9 disk")
     ap.add_argument("-o", "--outdir", default="os9-shots")
     ap.add_argument("--boot-wait", type=float, default=260.0,
@@ -133,7 +191,7 @@ def main():
     args = ap.parse_args()
 
     if args.setup:
-        setup()
+        setup(args.force)
         return 0
     if not args.fixture:
         ap.error("give a fixture, or --setup")
@@ -151,7 +209,9 @@ def main():
          "--macbinary", f"{appbin}:unclassic",
          "--data", f"{args.fixture}:archive.sit")
 
-    q = Qemu([DISK, xfer], os.path.join(args.outdir, "mon.sock"))
+    verify_disk()
+    boot = boot_copy(args.outdir)
+    q = Qemu([boot, xfer], os.path.join(args.outdir, "mon.sock"))
     try:
         time.sleep(args.boot_wait)
         print(q.shot(os.path.join(args.outdir, "desktop.png")))

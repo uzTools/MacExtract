@@ -171,6 +171,59 @@ nobody noticed, because it was written down as a note about the harness.
 allocation, cannot fail, and is the only channel that survives a bomb — but
 that is now its stated reason.
 
+### The Mac OS 9 harness was damaging its own disk image
+
+Found 2026-08-02, while looking for a way to launch the application on OS 9
+without driving the Finder. Two defects in `tools/vmac/os9.py`, and the second
+hid the first:
+
+- **It booted the MASTER image in place** (`Qemu([DISK, xfer], ...)`). Mac OS 9
+  writes to its boot volume as a matter of course — Desktop DB, temporary
+  items, the "unmounted cleanly" flag — and a QEMU process that is killed
+  rather than shut down leaves the volume dirty. So every run quietly altered
+  the one artifact the harness depends on.
+- **It never hashed the image.** `setup.sh` fetches everything by URL *and
+  verifies by SHA-256*; `os9.py` only checked that the file existed. With no
+  hash, the drift was invisible.
+
+This lesson was already in this file for Mini vMac — "use a fresh pristine boot
+image per run (repeated boot+kill cycles corrupt System 6's writes to it)" —
+and `tools/vmac/run.py` has copied its boot image since M10. It was simply
+never carried across to the OS 9 harness.
+
+Confirmed rather than assumed: archive.org publishes a SHA-1 per file, and the
+local image did not match it (`2eb3f07c…` against the published `a6e39e04…`).
+The volume also reads back flagged hardware-locked with the
+"unmounted-cleanly" bit CLEAR, which is what an interrupted boot leaves behind.
+Some of that drift is mine — an `hmount` during the same investigation opened
+it read-write — and the rest predates this session; the point is that nothing
+could tell the two apart, which is the actual defect.
+
+**Fixed:** `os9.py` now records the published SHA-1, verifies before every run,
+copies the master to a throwaway before booting, and `--setup --force`
+re-fetches. The damaged image was re-downloaded and re-verified.
+
+### Mac OS 9 without driving the Finder — the route to try
+
+Reconnaissance from the same investigation, so the next attempt does not start
+with icon-hunting in QEMU screendumps:
+
+- **The OS 9 boot volume is plain HFS**, signature `BD`, not HFS+ — so
+  `hfsutils` can read and (with the lock bit cleared on a copy) write it.
+- **Mac OS 9 has a `Startup Items` folder.** Anything in
+  `System Folder:Startup Items:` launches at boot. Dropping the autotest build
+  there on a COPY removes Finder automation from the problem completely: no
+  double-clicks, no coordinates, no screenshot-look-adjust loop.
+- **The reporting channel has to change for OS 9.** `at_report()` pokes a 1bpp
+  framebuffer; OS 9 here runs 32-bit colour, so the bit grid would decode as
+  noise. But QEMU, unlike Mini vMac, writes its disk images back reliably —
+  the reason the grid exists at all does not apply — so on OS 9 the autotest
+  can simply write its numbers to a file and the host can read them off the
+  volume afterwards.
+
+That is a bounded piece of work with no GUI automation in it, which is a
+different proposition from where this stood.
+
 ### Timing on a 7 MHz Mac Plus — NOT MEASURED, and why
 
 **No timing numbers were produced, and none are published.** This is the one

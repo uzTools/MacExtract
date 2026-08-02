@@ -149,7 +149,23 @@ here because it is the largest genuine unknown.**
   if it is ignored, the run passes. One fixture, one boot, binary answer. It
   needs a way to vary the `SIZE` resource per build — `mac/unclassic.r` has
   the values hard-coded — which is the only real work in it.
-- **Mac OS 9: still never run, but no longer blocked.** The `WaitNextEvent`
+- **Mac OS 9: still never run — and the harness was damaging its own disk
+  image.** Found 2026-08-02: `os9.py` booted the master 2 GB image in place and
+  never hashed it, so every run altered the one artifact it depends on and
+  nothing could tell. Both fixed (copy-before-boot, published SHA-1 verified
+  before every run, `--setup --force` to re-fetch); the drifted image was
+  re-downloaded. The same lesson had been in BLOCKERS.md for Mini vMac since
+  M10 and was never carried across.
+
+  The route to actually launching it, from the same investigation: the OS 9
+  boot volume is plain **HFS** (not HFS+), so hfsutils can write to a copy, and
+  Mac OS 9 has a **`Startup Items`** folder — put the autotest build there and
+  it launches at boot with no Finder automation at all. The one thing that must
+  change is the reporting channel: `at_report()` pokes a 1bpp framebuffer and
+  OS 9 runs 32-bit colour here, but QEMU writes its disk images back reliably
+  (unlike Mini vMac, which is the only reason the bit grid exists), so on OS 9
+  the results can simply be written to a file and read off the volume.
+- **Mac OS 9 detail: still never run, but no longer blocked.** The `WaitNextEvent`
   branch, `SFReply.vRefNum` as a System 7+ working-directory reference, HFS+
   names and the `SIZE` partition under a real Process Manager remain untested
   code. `tools/vmac/os9.py` gets as far as: Mac OS 9.2 boots to the Finder
