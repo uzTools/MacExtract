@@ -97,16 +97,24 @@ binary: not a real Mac Plus at 1 MB, not an LC475 (68040), not an iMac G3.
 Emulation is evidence, not proof. See [MANUAL_TESTS.md](MANUAL_TESTS.md) for
 the full untested list.
 
-**How long does it take?** One authentic 7 MHz measurement exists:
-`derived-EmpireBuilderDemo.sit`, a 278 KB StuffIt yielding 417 KB, took
-**~134 s** on an emulated Mac Plus at true speed, with the machine booting in
-~16 s. That is one point, not a table — a full sweep at 1x could not be
-completed here (BLOCKERS.md). What *is* measured is the engine's relative cost
-per format (FORMATS.md): envelope formats like MacBinary and tar are barely
-more than a copy, BinHex a few times that, StuffIt 13 and Compact Pro's LZH
-15-30x a copy, and StuffIt 5's Arsenic in a class of its own. So a StuffIt
-archive of a few hundred KB is minutes on a Plus, not seconds and not hours —
-and a Compact Pro one of the same size is several times worse.
+**How long does it take on a real Mac Plus?** Measured at authentic 7 MHz
+(Mini vMac 1x, System 6.0.8), eight fixtures across eight formats:
+
+| Archive size | Extraction |
+|---|---|
+| a few KB (any format) | **under 5 s** |
+| 278 KB StuffIt → 417 KB out | **~134 s** |
+
+The machine itself takes ~10 s to boot into the application, so for small
+archives the boot dominates and the extraction is barely noticeable. Per-format
+figures and the relative decode costs are in [FORMATS.md](FORMATS.md);
+Arsenic (StuffIt 5) is in a class of its own and mostly wants a 4 MB machine
+anyway.
+
+One fixture is a documented outlier: a 306 KB BinHex has never finished at 1x,
+even on an idle host, though a 304 KB MacBinary extracts fine and the same
+BinHex is among the *cheapest* fixtures per byte off-Mac. It is an open
+question, written up in BLOCKERS.md rather than smoothed over.
 
 **Detect-only** (v1 names but does not extract): StuffIt X, DiskDoubler,
 Now Compress, LZH, DiskCopy 4.2. **Out of scope (v1):** compression,

@@ -110,6 +110,43 @@ the intermediate deleted (`-nr` disables; depth ≤ 8). Verified chains:
 - 32-bit `-m32` build runs the full suite (68000 discipline: no
   unaligned access, no recursion, 32-bit arithmetic in hot paths).
 
+## Measured on a 7 MHz Mac Plus (Mini vMac 1x, System 6.0.8, 4 MB)
+
+The first absolute timings this project has ever had. `run.py --emu mv-4M-1x`
+separates boot from extraction — the application paints its "alive" grid
+before touching a disk — so the extract column is the archive alone. Poll
+interval 5 s, so that column is quantised to 5 s; it is an upper bound at this
+resolution, not a stopwatch.
+
+| Fixture | Format | In | Boot | Extract |
+|---|---|---|---|---|
+| derived-Export.sit | StuffIt | 1.6 KB | 10 s | 5 s |
+| synth-packit-2.pit | PackIt | 3.4 KB | 10 s | 5 s |
+| derived-keyAhead.cpt | Compact Pro | 0.9 KB | 10 s | <5 s |
+| export-hc.hqx | BinHex | 3.1 KB | 10 s | 5 s |
+| stuffit151mstr.bin | MacBinary | 0.5 KB | 10 s | <5 s |
+| synth-exo-zip-store.zip | Zip | 8.4 KB | 10 s | 5 s |
+| synth-exo-tar.tar | Tar | 20 KB | 10 s | 5 s |
+| synth-exo-gz.gz | Gzip | 0.1 KB | 10 s | <5 s |
+
+**8/8, and the shape is the useful part: for small archives the BOOT dominates
+and extraction is seconds.** A stripped System 6.0.8 reaches the application in
+about 10 s; everything in this table then extracts in under five. The one
+larger 1x measurement that exists — `derived-EmpireBuilderDemo.sit`, 278 KB in
+and 417 KB out — took **~134 s**. So a few kilobytes is instant, a quarter of a
+megabyte is a couple of minutes.
+
+**One fixture does not fit and is unexplained.** `macburger-helper.hqx`
+(306 KB BinHex, 253 KB out) has never completed at 1x — twice past 15 minutes,
+the second time on an idle host (load average 0.4) with nothing else running.
+That rules out the host contention originally blamed for it. It is also the
+*cheapest* fixture per byte on Linux (2.9 ms, FORMATS.md below), and
+`kermitut9test.bin` at 304 KB extracts fine in the all-out sweeps, so neither
+size nor format explains it. **Treat it as an open question about the
+application, not about the harness** — it is the one piece of evidence that
+something on the Mac path scales badly, and it deserves a run with the progress
+callback instrumented rather than another guess.
+
 ## Relative decode cost per format (Linux, same engine)
 
 Absolute Mac Plus timings are still missing (BLOCKERS.md says why), but the

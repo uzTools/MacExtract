@@ -231,7 +231,15 @@ file until someone with a Mac Plus runs the checklist.
   documented in FORMATS.md — but it is the one format the "runs on a Mac Plus"
   claim does not really cover. Closing it means a fundamentally lower-memory
   inverse BWT, not a bug fix.
-- **No timing data at all — attempted 2026-08-01, and it did not work.** The
+- **Timing: MEASURED 2026-08-02 for small archives; one outlier open.** Eight
+  fixtures across eight formats at authentic 1x, 8/8: boot ~10 s, every
+  extraction under 5 s, plus the 278 KB StuffIt anchor at ~134 s (FORMATS.md,
+  README). The earlier diagnosis that this host "cannot be trusted to run 1x"
+  was wrong and is corrected — an idle machine measures fine. What remains is
+  one genuine outlier, `macburger-helper.hqx`, which has never finished at 1x
+  and is not explained by size or format; chase it with the progress callback
+  instrumented.
+- ~~**No timing data at all — attempted 2026-08-01, and it did not work.**~~ The
   1x emulator exists, `run.py --emu` selects it, `run.py` now splits boot from
   extraction, and `tools/vmac/timing.txt` names the set to measure. A small
   fixture came out at boot 10 s + extract 2 s. But a 306 KB BinHex did not
