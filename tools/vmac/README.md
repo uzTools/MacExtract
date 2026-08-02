@@ -34,6 +34,7 @@ minutes per fixture. It is a deliberate, on-demand check.
 | `os9sample.txt` | the fixtures replayed on Mac OS 9 — one per format, since each costs a whole boot |
 | `mountcheck.py` | boot a system image with disks attached and photograph the desktop — "does this mount?", and "does this system boot at all?" |
 | `mkapmdisk.py` | build an Apple-partitioned transfer disk that Mac OS on PowerPC will mount |
+| `checkdisk.py` | verify a run by READING its Out volume — both forks, and the names the on-screen grid cannot carry |
 
 `tools/quickdraw-repro/` is a sibling that reuses `mkboot.py` and this
 directory's `Display`/emulator plumbing to answer one narrow question about
@@ -45,13 +46,21 @@ own: `tools/decode_grid.py` (screenshot → eight numbers) and
 
 ## Why it works the way it does
 
-**Results come off the SCREEN, not off the disk.** Mini vMac's write-back of a
-mounted image to its host file is lazy and partial — it will commit one fork of
-a file and not the other — so the extracted files cannot be read back on the
-host. The framebuffer, however, is captured exactly by a screenshot. So the app
-paints its results as a black/white bit grid (three calibration squares, a sync
-word, eight 32-bit values) and the host decodes that. See `at_report()` in
-`mac/unclassic_mac.c`.
+**Results come off the SCREEN — and, since 2026-08-02, off the disk as well.**
+The app paints its results as a black/white bit grid (three calibration
+squares, a sync word, eight 32-bit values) which a screenshot captures exactly;
+see `at_report()` in `mac/unclassic_mac.c`. That is what `run.py` decodes.
+
+The reason it was the *only* channel used to be a claim that Mini vMac's
+write-back is "lazy and partial — it will commit one fork of a file and not the
+other", so extracted files could not be read back on the host. **That does not
+reproduce and is withdrawn** (BLOCKERS.md): the whole sample was replayed with
+`--keep-disks` and every Out volume read back byte-exact, both forks, names
+included — 44/44. See "Checking a run off the disk" at the end of this file.
+
+The grid stays: it is proven, it needs nothing of the volume, and it reports
+liveness and setup failures that a disk cannot. What it cannot do is carry a
+NAME, which is why `checkdisk.py` now exists beside it.
 
 **The app is the boot shell.** The boot blocks' shell name (offset 0x1A) is
 rewritten from `Finder` to `unclassic`, so the ROM hands control straight to
@@ -196,3 +205,35 @@ already mounts and repoints only the `Apple_HFS` entry. A map built by hand
 from the format documentation — correct-looking DDR, correct-looking entries,
 status word copied off a real disk — was silently ignored: no volume, no
 error, nothing to debug. Cloning a known-good head worked first time.
+
+## Checking a run off the disk instead of off the screen
+
+`run.py` reads its result from the framebuffer: the application paints a grid
+of a file count, two summed CRC-32s and two summed lengths, and the host
+decodes it. That works, and it is blind to one thing — **a summed CRC cannot
+carry a filename**, so no run.py verdict has ever depended on an output NAME.
+A real defect in the gzip/.Z fallback name lived in the corpus for weeks
+because of it.
+
+That was not a necessary limitation. BLOCKERS.md had claimed since M10 that
+Mini vMac's write-back is "lazy and PARTIAL — it can commit one fork of a file
+but not the other", so the Out volume could not be trusted. It does not
+reproduce:
+
+    run.py --keep-disks --list sample.txt      # keep each run's disk images
+    checkdisk.py /tmp/vmacrun-*/               # read them back
+
+**44/44 byte-exact**, both forks, names and folder structure included, over
+the committed sample — including `derived-RWAsm_Folder.sit` at 38 files and 73
+forks, an 8-bit `spinning brain ƒ` folder, a MacRoman `Appé`, and a
+`.DS_Store`.
+
+`checkdisk.py` identifies each run's fixture from the `in.dsk` beside the
+`out.dsk`, so it needs no bookkeeping, and it feeds the reference extraction a
+copy named `archive.sit` — the name the Mac saw — because gzip and .Z derive
+their output name from the archive's filename.
+
+Two hfsutils traps it hit, both worth knowing before writing anything similar:
+`hls` **hides names beginning with a dot** unless given `-a`, and every path
+argument must be encoded as **MacRoman**, not UTF-8, or any 8-bit name is a
+file that does not exist.

@@ -103,6 +103,12 @@ can read it.
    hfsutils and **both forks of every output file are compared byte for
    byte** against `unclassic x -nr`.
 
+9. **Reading the Mini vMac Out volume** (`tools/vmac/run.py --keep-disks`
+   then `tools/vmac/checkdisk.py /tmp/vmacrun-*/`): the same comparison
+   layer 8 does, on the System 6/7 tier — both forks byte for byte,
+   plus names and folder structure, read off the floppy image after the
+   run. **44/44 on the committed sample.**
+
 **What each layer can see is not the same, and that matters.** Layer 7
 compares a count, two summed CRC-32s and two summed lengths. A summed
 CRC cannot carry a filename, so layer 7 has never checked an output
@@ -113,3 +119,9 @@ Mac shell's fallback name for gzip/.Z (BLOCKERS.md, DECISIONS.md).
 
 An aggregate check cannot fail on a property it never aggregates. When
 adding a harness, write down what it is blind to.
+
+Layer 9 exists because that blind spot turned out to be self-inflicted.
+BLOCKERS.md had said since M10 that Mini vMac's write-back was "lazy and
+PARTIAL — it can commit one fork of a file but not the other", so results
+"cannot be read off the Out volume". It does not reproduce; the claim is
+withdrawn. The screen channel was never wrong, only unnecessarily blind.

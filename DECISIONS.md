@@ -483,9 +483,12 @@ BLOCKERS.md for the full write-up. Key decisions:
   `PBHDeleteSync`) via `MyOpenFork`/`MyHCreate`/`MyHDelete`, reading back
   `pb.ioParam.ioRefNum` ourselves. This unblocked EVERYTHING; the earlier
   "two-fork crash" investigation was all confounded by it (see BLOCKERS.md).
-- **On-screen result channel, not disk.** Mini vMac's write-back of a mounted
-  image to its host file is lazy and PARTIAL (commits one fork but not the
-  other), so the autotest can't be read off the Out volume. Instead the app
+- **On-screen result channel, not disk.** [The justification below is
+  WITHDRAWN 2026-08-02 — it does not reproduce; see "the Out volume can be read
+  after all" at the end of this file. The channel itself is kept and still
+  ships.] ~~Mini vMac's write-back of a mounted image to its host file is lazy
+  and PARTIAL (commits one fork but not the other), so the autotest can't be
+  read off the Out volume.~~ The app
   CRC-32s both forks on-Mac (resource fork with the OS-stamped reserved header
   16..127 masked) and paints an 8-value aggregate straight to the framebuffer
   (`qd.screenBits`, `at_report`); the host decodes a screenshot
@@ -936,3 +939,52 @@ Two things worth keeping:
   a claim already withdrawn as confounded, in the same bullet list, from the
   same week. That was enough reason to re-test it, and it took one afternoon
   against a cost paid on every 1 MB extraction for months.
+
+## 2026-08-02 — the Out volume can be read after all, so names are checkable
+
+Three claims from the confounded period have now fallen in one day. This is
+the third and the one that cost the most, because of what it forced rather
+than what it broke.
+
+BLOCKERS.md, under *test-harness lessons*:
+
+> Mini vMac's disk write-back to the host image is lazy and PARTIAL — it can
+> commit one fork of a file but not the other — so results cannot be read off
+> the Out volume. Verification is done ON-SCREEN instead.
+
+So the System 6 and 7 tiers verify through the framebuffer grid: a file count,
+two summed CRC-32s, two summed lengths. That is a fine check of BYTES and
+structurally incapable of checking a NAME, because a name does not survive
+being summed into a CRC total. Which is exactly how the gzip/.Z fallback-name
+defect — `foo.gz` extracting to `foo.gz~1` — sat in the corpus for weeks while
+44 fixtures passed twice a day, until the Mac OS 9 harness read a directory
+and saw it immediately.
+
+It does not reproduce. `run.py --keep-disks` keeps each run's images and
+`tools/vmac/checkdisk.py` reads them: **44/44 byte-exact, both forks, names and
+folder structure included.** The decisive fixture is
+`derived-RWAsm_Folder.sit` — 38 files and **73 forks**, dozens of them with
+both forks non-empty, which is precisely the case the claim named as
+impossible. An 8-bit folder name (`spinning brain ƒ`), a MacRoman `Appé` and a
+`.DS_Store` all survive too.
+
+The grid is kept. It is proven, it needs nothing of the volume, and it reports
+liveness and setup failures that a disk cannot — `checkdisk.py` is an addition,
+not a replacement. What changes is that the primary tier is no longer blind to
+the one property the OS 9 tier had to catch for it.
+
+**Its first verdict was 38/44, and all six failures were the checker's own.**
+`hls` hides names beginning with a dot without `-a`; every hfsutils path
+argument must be MacRoman bytes, not the UTF-8 subprocess encodes by default;
+and `<X>.rsrc` is a sidecar only when `<X>` exists beside it, which
+vmac_check.py documents and which this had to learn again. Fixed, and 44/44 on
+the SAME captured images — the Mac's output never changed, only the reading of
+it. That is the second time in one day a young harness's FAIL turned out to be
+a claim about the harness; it is worth expecting.
+
+The lesson underneath all three withdrawals is the same and is now well
+evidenced: **a workaround outlives the claim that justified it, and takes the
+capability it displaced with it.** Nobody re-examined the screen channel for
+months because it worked. It was not wrong — it was unnecessarily blind, and
+nothing recorded that difference until TESTING.md was made to say what each
+layer cannot see.

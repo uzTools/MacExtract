@@ -107,10 +107,33 @@ handling.
 
 ### Real test-harness lessons (not app bugs)
 
-- **Mini vMac's disk write-back to the host image is lazy and PARTIAL** —
+- ~~**Mini vMac's disk write-back to the host image is lazy and PARTIAL** —
   it can commit one fork of a file but not the other — so results cannot be
-  read off the Out volume. Verification is done ON-SCREEN instead (the app
-  paints results to the framebuffer, read from a screenshot).
+  read off the Out volume.~~ **WITHDRAWN 2026-08-02 — it does not reproduce.**
+  The whole 44-fixture sample was replayed with `run.py --keep-disks` and
+  every Out volume then read on the host with `tools/vmac/checkdisk.py`:
+  **44/44 byte-exact, both forks, names and folder structure included.**
+  `derived-RWAsm_Folder.sit` alone is 38 files and **73 forks**, i.e. dozens of
+  files with both forks non-empty — exactly the case the claim said could not
+  survive. `derived-Education7.1.cpt` (an 8-bit `spinning brain ƒ` folder),
+  `synth-packit-2.pit` (a MacRoman `Appé`) and `derived-Troi-ClipSave-Plug-in1.1.sit`
+  (a `.DS_Store`) all read back intact too.
+
+  This is the third claim from the confounded period to fall, and the most
+  expensive, because of what it forced: verification went through the
+  framebuffer CRC grid instead, and **a summed CRC cannot carry a name**. That
+  is why the System 6 and 7 tiers have never compared an output NAME, and why
+  the gzip/.Z fallback-name defect sat in the corpus for weeks until the Mac
+  OS 9 harness — which reads its volume — caught it on its first sweep.
+
+  What is tested is exactly the Out floppy after a completed run. It says
+  nothing about the boot volume across repeated boot-and-kill cycles, which is
+  a different claim in the bullet below and is left alone; the harness uses a
+  pristine boot image per run regardless, which costs nothing.
+
+  The screen channel stays as it is — it works, `decode_grid.py` is proven, and
+  `checkdisk.py` is an addition rather than a replacement. What changes is that
+  the primary tier can now be checked on names as well as bytes.
 - ~~**QuickDraw drawing (NewWindow/EraseRect) bombs "out of memory" when
   called after any File Manager activity**, despite megabytes free — so the
   result grid is written by poking `qd.screenBits` directly.~~ **WITHDRAWN
