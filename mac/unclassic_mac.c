@@ -158,6 +158,63 @@ static uint32_t xio_tell(void *ctx) { return ((MemIO *)ctx)->pos; }
 static uint32_t xio_size(void *ctx) { return ((MemIO *)ctx)->size; }
 
 /* ------------------------------------------------------------------ */
+/* UncIO straight off the input file — the default                     */
+/*                                                                    */
+/* The archive used to be slurped whole into a NewPtr block first, on  */
+/* the grounds that reading the input while output files are created   */
+/* on the same volume makes the reads return zeros. That claim came    */
+/* from the confounded period (BLOCKERS.md) and does NOT reproduce:    */
+/* UNC_AT_INTERLEAVE reads a 278 KB file three ways on one volume —    */
+/* undisturbed, and twice more with 67 file creations interleaved,     */
+/* sequentially and seeking before every read — and gets the same      */
+/* CRC-32 every time, at 4 MB and at 1 MB. The bullet directly after   */
+/* it in DECISIONS.md ("deep writes corrupt the volume") was already   */
+/* withdrawn for the same reason.                                     */
+/*                                                                    */
+/* It matters on the floor target: the buffer was subtracted from the */
+/* engine's budget before extraction began, so on a 1 MB Mac Plus a    */
+/* 278 KB archive cost the engine 278 KB it could otherwise have used. */
+/*                                                                    */
+/* Every read positions explicitly with SetFPos rather than trusting   */
+/* the file mark, which is the exact shape the reproduction exercised. */
+/* Build with UNC_MAC_SLURP_ARCHIVE to get the old path back.          */
+/* ------------------------------------------------------------------ */
+
+typedef struct {
+    short    refNum;
+    uint32_t size;
+    uint32_t pos;
+} FileIO;
+
+static int32_t fio_read(void *ctx, void *buf, int32_t len)
+{
+    FileIO *f = (FileIO *)ctx;
+    uint32_t avail = f->size - f->pos;
+    uint32_t n = (len <= 0) ? 0
+               : ((uint32_t)len < avail ? (uint32_t)len : avail);
+    long cnt;
+    OSErr err;
+
+    if (n == 0) return 0;
+    if (SetFPos(f->refNum, fsFromStart, (long)f->pos) != noErr) return 0;
+    cnt = (long)n;
+    err = FSRead(f->refNum, &cnt, buf);
+    if (cnt < 0) cnt = 0;
+    f->pos += (uint32_t)cnt;
+    /* eofErr with bytes delivered is a normal short read, not a failure. */
+    if (err != noErr && err != eofErr) return (int32_t)cnt;
+    return (int32_t)cnt;
+}
+static int fio_seek(void *ctx, uint32_t pos)
+{
+    FileIO *f = (FileIO *)ctx;
+    f->pos = (pos > f->size) ? f->size : pos;   /* clamp, like SetFPos@EOF */
+    return 0;
+}
+static uint32_t fio_tell(void *ctx) { return ((FileIO *)ctx)->pos; }
+static uint32_t fio_size(void *ctx) { return ((FileIO *)ctx)->size; }
+
+/* ------------------------------------------------------------------ */
 /* UncAlloc over NewPtr with a budget                                 */
 /* ------------------------------------------------------------------ */
 
@@ -762,6 +819,7 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
 {
     UncIO io;
     MemIO mem;
+    FileIO fio;
     MacAlloc ma;
     UncAlloc al;
     MacSink sink;
@@ -775,14 +833,17 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
 
     *entries = *errors = 0;
 
-    /* --- Slurp the whole archive into RAM, then close it. All input
-     *     reads happen here, before any output file exists. --- */
+    /* --- Open the archive and read from it as the engine asks. The file
+     *     stays open for the whole extraction, including while output files
+     *     are created on the same volume; UNC_AT_INTERLEAVE established that
+     *     this is safe (see FileIO above). --- */
     err = MyOpenFork(inVol, inDir, name, fsRdPerm, 0, &refNum);
     if (err != noErr) return UNC_ERR_IO;
     fileSize = 0;
     GetEOF(refNum, &fileSize);
     if (fileSize <= 0) { FSClose(refNum); return UNC_ERR_FORMAT; }
 
+#ifdef UNC_MAC_SLURP_ARCHIVE
     archiveBuf = NewPtr(fileSize);
     if (archiveBuf == NULL) { FSClose(refNum); return UNC_ERR_MEM; }
 
@@ -809,8 +870,22 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
     io.seek = xio_seek;
     io.tell = xio_tell;
     io.size = xio_size;
+#else
+    archiveBuf = NULL;
+    fio.refNum = refNum;
+    fio.size = (uint32_t)fileSize;
+    fio.pos = 0;
+    io.ctx = &fio;
+    io.read = fio_read;
+    io.seek = fio_seek;
+    io.tell = fio_tell;
+    io.size = fio_size;
+#endif
 
-    /* Budget the engine against memory remaining AFTER the archive buffer. */
+    /* Budget the engine against the free heap. With the archive read straight
+     * off disk there is no buffer to subtract first, so on the floor target
+     * the engine now gets the archive's size back — which is what decided
+     * which StuffIt 5 entries it could afford. */
     ma.budget = FreeMem() - kMemReserve;
     if (ma.budget < 32L * 1024) ma.budget = 32L * 1024;
     ma.initial = ma.budget;      /* for peak-usage = initial - lowmark */
@@ -853,7 +928,11 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
     ret = unc_extract(&io, &sk, &al, prog, &opt);
     gPeakUsage = ma.initial - ma.lowmark;   /* engine heap high-water mark */
 
+#ifdef UNC_MAC_SLURP_ARCHIVE
     DisposePtr(archiveBuf);
+#else
+    FSClose(refNum);           /* held open for the whole extraction */
+#endif
     FlushVol(NULL, outVol);    /* persist all output before returning */
     FlushVol(NULL, outVol);
     *entries = sink.entries;
@@ -1315,6 +1394,19 @@ int main(void)
 
     if (FindVolWait("\pOut", &outVol) != noErr) at_fail(kAtNoOutVol);
 
+#ifdef UNC_AT_SAMEVOL
+    /* Extract onto the volume the archive is ON, which is what the
+     * interactive application actually does — it writes next to the archive —
+     * and what no autotest run has ever done, because this harness has always
+     * had a separate "Out" volume. That difference is exactly where the
+     * withdrawn "interleaving reads with writes on ONE volume corrupts the
+     * read" claim lived, so with the archive now read from the file rather
+     * than slurped into RAM, the same-volume case has to be shown byte-exact
+     * rather than assumed. Everything else — the read-back CRC of both forks,
+     * the grid — is unchanged. */
+    outVol = inVol;
+#endif
+
     gATrecVol = outVol;   /* sink records each output file here (see below) */
 
 #ifdef UNC_AT_CANCEL
@@ -1336,6 +1428,155 @@ int main(void)
         vals[2] = (uint32_t)files;     /* files actually on the Out volume    */
         vals[3] = (uint32_t)dirs;      /* must be 0, or the count is partial  */
         vals[7] = (uint32_t)gPeakUsage;
+        at_report(vals, 8);
+        at_report_file(vals, 8);
+        at_idle();
+    }
+#endif
+
+#ifdef UNC_AT_INTERLEAVE
+    /* Does reading a file while CREATING files on the same volume corrupt the
+     * read?
+     *
+     * DECISIONS.md has claimed since M10 that it does — "interleaving File
+     * Manager reads of the input with writes to output files on the same
+     * volume makes the input reads return zeros" — and that claim is why
+     * RunExtract() slurps the entire archive into RAM with one NewPtr before
+     * the engine is given any budget at all. On the 1 MB floor target that
+     * buffer is subtracted from the engine's budget first, which is why which
+     * StuffIt 5 fixtures fail there depends on how big the ARCHIVE is rather
+     * than on what it contains.
+     *
+     * It has never been reduced to a reproduction, and it is suspect for a
+     * specific reason: the bullet immediately after it in the same list —
+     * "deep writes from the decode callback corrupt the HFS volume" — comes
+     * from the same investigation and has already been WITHDRAWN, because it
+     * dates from the period when every File Manager open was silently failing
+     * (BLOCKERS.md) and did not survive re-testing. "Reads start returning
+     * zeros" is exactly what that confound looks like.
+     *
+     * So: read the same file twice on the same volume and compare.
+     *
+     *   pass A   read it end to end, nothing else happening   -> crcA
+     *   pass B   read it in chunks, creating and writing a NEW
+     *            file on that same volume between every chunk  -> crcB
+     *
+     * crcA == crcB and the same byte count means the interleave is harmless
+     * and the RAM slurp is buying nothing. Different means the claim is real
+     * and finally has a repro. Either way it stops being a hypothesis. */
+    {
+        static char rbuf[4096];
+        uint32_t crcA = 0, crcB = 0, crcC = 0;
+        long lenA = 0, lenB = 0, lenC = 0;
+        int rounds = 0;
+        OSErr rerrA = noErr, rerrB = noErr, werr = noErr;
+        short ref;
+        uint32_t vals[8];
+        int i;
+
+        for (i = 0; i < 8; i++) vals[i] = 0;
+
+        /* Pass A: the control. Nothing touches the volume while it runs. */
+        if (MyOpenFork(inVol, fsRtDirID, "\parchive.sit", fsRdPerm, 0,
+                       &ref) == noErr) {
+            for (;;) {
+                long cnt = (long)sizeof rbuf;
+                rerrA = FSRead(ref, &cnt, rbuf);
+                if (cnt > 0) {
+                    crcA = at_crc32_update(crcA, (const uint8_t *)rbuf, cnt);
+                    lenA += cnt;
+                }
+                if (rerrA != noErr || cnt <= 0) break;
+            }
+            FSClose(ref);
+        }
+
+        /* Pass B: the same read, with catalog-changing writes in between.
+         * A fresh file every round, on the volume being read from — the
+         * shape an extraction has when output lands beside the archive. */
+        if (MyOpenFork(inVol, fsRtDirID, "\parchive.sit", fsRdPerm, 0,
+                       &ref) == noErr) {
+            for (;;) {
+                long cnt = (long)sizeof rbuf;
+                Str63 nm;
+                short oref;
+                rerrB = FSRead(ref, &cnt, rbuf);
+                if (cnt > 0) {
+                    crcB = at_crc32_update(crcB, (const uint8_t *)rbuf, cnt);
+                    lenB += cnt;
+                }
+                if (rerrB != noErr || cnt <= 0) break;
+
+                nm[0] = 5;
+                nm[1] = 'i'; nm[2] = 'l';
+                nm[3] = (unsigned char)('0' + (rounds / 100) % 10);
+                nm[4] = (unsigned char)('0' + (rounds / 10) % 10);
+                nm[5] = (unsigned char)('0' + rounds % 10);
+                (void)MyHDelete(inVol, fsRtDirID, nm);
+                if (MyHCreate(inVol, fsRtDirID, nm) == noErr &&
+                    MyOpenFork(inVol, fsRtDirID, nm, fsWrPerm, 0,
+                               &oref) == noErr) {
+                    long wn = 512;
+                    OSErr e2 = FSWrite(oref, &wn, rbuf);
+                    if (e2 != noErr && werr == noErr) werr = e2;
+                    FSClose(oref);
+                } else if (werr == noErr) {
+                    werr = ioErr;
+                }
+                rounds++;
+            }
+            FSClose(ref);
+        }
+
+        /* Pass C: the shape a replacement would actually have. A file-backed
+         * UncIO does not read sequentially — it seeks, because the engine
+         * walks indexes and forks in whatever order the container demands. So
+         * position explicitly with SetFPos before every read, still creating
+         * files on the same volume in between. If a "file mark" were what the
+         * interleave disturbs, this is the case that would either suffer from
+         * it or be immune to it, and either answer is worth having before
+         * writing the replacement. */
+        if (MyOpenFork(inVol, fsRtDirID, "\parchive.sit", fsRdPerm, 0,
+                       &ref) == noErr) {
+            long pos = 0;
+            for (;;) {
+                long cnt = (long)sizeof rbuf;
+                Str63 nm;
+                short oref;
+                if (SetFPos(ref, fsFromStart, pos) != noErr) break;
+                if (FSRead(ref, &cnt, rbuf) != noErr && cnt <= 0) break;
+                if (cnt <= 0) break;
+                crcC = at_crc32_update(crcC, (const uint8_t *)rbuf, cnt);
+                lenC += cnt;
+                pos += cnt;
+
+                nm[0] = 5;
+                nm[1] = 's'; nm[2] = 'k';
+                nm[3] = (unsigned char)('0' + (lenC / 40960) % 10);
+                nm[4] = (unsigned char)('0' + (lenC / 4096) % 10);
+                nm[5] = (unsigned char)('0' + (lenC / 409) % 10);
+                (void)MyHDelete(inVol, fsRtDirID, nm);
+                if (MyHCreate(inVol, fsRtDirID, nm) == noErr &&
+                    MyOpenFork(inVol, fsRtDirID, nm, fsWrPerm, 0,
+                               &oref) == noErr) {
+                    long wn = 512;
+                    (void)FSWrite(oref, &wn, rbuf);
+                    FSClose(oref);
+                }
+            }
+            FSClose(ref);
+        }
+
+        vals[0] = (uint32_t)lenA;        /* bytes read with nothing else going on */
+        vals[1] = 0;                     /* not an engine run; keep out of AT_* range */
+        vals[2] = (uint32_t)lenB;        /* bytes read while writing the same volume */
+        vals[3] = crcA;
+        vals[4] = crcB;
+        vals[5] = (uint32_t)(((uint32_t)(uint16_t)werr << 16) |
+                             (uint32_t)(rounds & 0xFFFF));
+        vals[6] = crcC;                  /* same, but seeking before every read */
+        vals[7] = (uint32_t)lenC;
+        (void)rerrA; (void)rerrB;
         at_report(vals, 8);
         at_report_file(vals, 8);
         at_idle();

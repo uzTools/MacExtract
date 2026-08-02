@@ -56,9 +56,27 @@ target_compile_options(unclassic PRIVATE -mcpu=68000 -Os -Wno-multichar
                        # shape SFGetFile hands the interactive app on System 7
                        # and later, and report where the files actually landed.
                        $<$<BOOL:$ENV{UNC_AT_WD}>:-DUNC_AT_WD>
+                       # UNC_AT_INTERLEAVE: read a file twice on one volume,
+                       # the second time while creating files on that same
+                       # volume between chunks, and compare the two CRCs. Tests
+                       # the claim the whole-archive RAM slurp exists to avoid.
+                       $<$<BOOL:$ENV{UNC_AT_INTERLEAVE}>:-DUNC_AT_INTERLEAVE>
+                       # UNC_AT_SAMEVOL: extract onto the volume the archive
+                       # is on, as the interactive app does, instead of onto a
+                       # separate "Out" volume. The read-back CRC check is
+                       # unchanged, so this proves the same-volume case
+                       # byte-exact rather than assuming it.
+                       $<$<BOOL:$ENV{UNC_AT_SAMEVOL}>:-DUNC_AT_SAMEVOL>
                        # UNC_MAC_STAGE_WRITES: go back to accumulating each
                        # whole fork in RAM and writing it in sink_end. The
                        # default streams straight to the File Manager; this
                        # keeps the older path buildable for comparison.
-                       $<$<BOOL:$ENV{UNC_MAC_STAGE_WRITES}>:-DUNC_MAC_STAGE_WRITES>)
+                       $<$<BOOL:$ENV{UNC_MAC_STAGE_WRITES}>:-DUNC_MAC_STAGE_WRITES>
+                       # UNC_MAC_SLURP_ARCHIVE: go back to reading the whole
+                       # archive into one NewPtr block before extracting. The
+                       # default reads it off the file as the engine asks,
+                       # which on the floor target hands the engine back the
+                       # archive's size in budget; this keeps the older path
+                       # buildable for comparison.
+                       $<$<BOOL:$ENV{UNC_MAC_SLURP_ARCHIVE}>:-DUNC_MAC_SLURP_ARCHIVE>)
 target_link_options(unclassic PRIVATE -Wl,-gc-sections)
