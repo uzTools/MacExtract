@@ -402,10 +402,11 @@ rather than counting towards it. "Nothing changed for a while" is a proxy for
   compatibility, so a negative would have meant nothing, and a signature read
   at a fixed offset is exactly what produced the withdrawn "plain HFS" claim
   above.
-- **The `SIZE` partition under OS 9's Process Manager.** The application
-  launches, so the partition is honoured enough to run; it has not been tested
-  against a fixture large enough to make the refusal bite, which is what the
-  System 6/7 comparison did with `derived-KeyGraphics.sit`.
+- ~~**The `SIZE` partition under OS 9's Process Manager.**~~ **Done the same
+  day.** A 600 KB partition against `derived-KeyGraphics.sit` (~656 KB): one
+  entry refused, nothing written, `ret == UNC_OK`, peak heap **35.5 KB** —
+  identical to System 7.0.1, on a 512 MB machine. The partition governs, not
+  the RAM, and the block was declined at request time.
 - **Real PowerPC hardware**, like real 68k hardware, remains untouched.
 
 ### Timing on a 7 MHz Mac Plus — MEASURED, after three wrong write-ups

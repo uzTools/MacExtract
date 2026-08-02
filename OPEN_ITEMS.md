@@ -216,11 +216,15 @@ here because it is the largest genuine unknown.**
   application reaching HFS+ through the classic File Manager is limited to 31
   characters either way, so the interesting cases may not be reachable at all
   from this binary — which is itself worth establishing rather than assuming.
-- **Mac OS 9: the `SIZE` partition has not been made to bite there.** The
-  application launches under the Process Manager, so the partition is honoured
-  enough to run. What has not been repeated on OS 9 is the System 6/7
-  comparison that made the memory refusal actually happen
-  (`derived-KeyGraphics.sit` against a 600 KB partition). One run.
+- **Mac OS 9: the `SIZE` partition — CLOSED 2026-08-02, and it bites.** Built
+  with a 600 KB preferred partition and run against `derived-KeyGraphics.sit`,
+  which needs ~656 KB: **1 entry refused, 0 files written, `ret == UNC_OK`,
+  peak heap 35.5 KB** — the same figure System 7.0.1 produced, on a machine
+  with 512 MB of RAM. The partition governs, not the hardware, and 35.5 KB is
+  parser state alone, so the 512 KB block was rejected at request time rather
+  than allocated and failed over. `os9.py --hfsplus --expect-refusal`, which
+  passes only if the Linux engine extracts the fixture AND the Mac declines
+  it — a negative test that cannot pass on an empty archive.
 - **The interactive application: CLOSED 2026-08-01 for System 6.**
   `tools/vmac/interactive.py` drives the real UI under an emulator built for
   authentic Mac Plus timing and photographs each step: SFGetFile, the progress

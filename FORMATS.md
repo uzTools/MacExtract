@@ -418,7 +418,17 @@ equals Linux's **masked** one, so Mac OS 9 leaves the 112-byte reserved header
 area alone where System 6 stamps it — the same thing the byte-level comparison
 found on the HFS tier.
 
-**Still not covered here:** names HFS+ permits that HFS does not (probably
-unreachable through the classic File Manager at all, which is itself unproven),
-and the `SIZE` partition made to bite under the Process Manager. Real PowerPC
+### The `SIZE` partition under OS 9's Process Manager
+
+Built with a 600 KB preferred partition and run against
+`derived-KeyGraphics.sit`, which needs ~656 KB: **1 entry refused, 0 files,
+`ret == UNC_OK`, peak heap 35.5 KB** — the same figure System 7.0.1 gives, on
+a machine with 512 MB of RAM. The partition governs, not the hardware, and
+35.5 KB is parser state alone: the 512 KB Arsenic block was declined at
+request time, never allocated. Method and the three-system table in
+MANUAL_TESTS.md.
+
+**Still not covered here:** names HFS+ permits that HFS does not — probably
+unreachable through the classic File Manager at all, since it caps at 31
+characters on either filesystem, but that is unproven either way. Real PowerPC
 silicon, like real 68k silicon, remains untouched.

@@ -91,6 +91,8 @@ distribution — `tools/make_dist.sh` builds an uncompressed MacBinary and an
 | System 7.0.1 | the `SIZE` partition under the Process Manager | ✅ honoured — a 600 KB partition makes the engine decline an entry that needs 656 KB, cleanly; System 6 ignores `SIZE` and passes the same entry |
 | System 6.0.8 + 7.0.1 | working-directory extraction (`SFReply.vRefNum` + `dirID` 0) | ✅ output lands in the working directory, nothing in the volume root |
 | Mac OS 9.2, 512 MB (QEMU PowerPC, 68LC040 emulation) | 13-fixture format sample, launched from a real Finder | ✅ 13/13 byte-exact — both forks of 32 files compared **off the disk image**, names and folders included |
+| Mac OS 9.2 | extraction onto an **HFS+** volume | ✅ 41 files byte-exact by CRC and length; every name as the 31-character rule predicts. That it really landed on HFS+ is measured, not inferred |
+| Mac OS 9.2 | the `SIZE` partition under the Process Manager | ✅ a 600 KB partition makes the engine decline a 656 KB entry cleanly, peak heap 35.5 KB — the same as System 7.0.1, on a 512 MB machine |
 | Mac OS 8 | — | ❌ **not run** (9.2 is the only system above 7 that has been) |
 
 Everything above is **emulation**. No physical Macintosh has ever run this

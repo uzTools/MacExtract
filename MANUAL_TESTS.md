@@ -58,14 +58,26 @@ the stock partition.
     sed -i 's/4096 \* 1024, 400 \* 1024/600 * 1024, 400 * 1024/' mac/unclassic.r
     tools/vmac/run.py --system Sys7.img fixtures/derived-KeyGraphics.sit
     tools/vmac/run.py               fixtures/derived-KeyGraphics.sit
+    tools/vmac/os9.py fixtures/derived-KeyGraphics.sit \
+                      -o <dir> --hfsplus --expect-refusal
     git checkout mac/unclassic.r        # the edit is temporary, on purpose
 
-**Result — same binary, same fixture, same 4 MB machine:**
+**Result — same binary, same fixture:**
 
 | System | Outcome | Engine peak heap |
 |---|---|---|
-| System 7.0.1 | **1 entry refused, 0 files** | 35.5 KB |
-| System 6.0.8 | 1 file, byte-exact | 656.8 KB |
+| System 7.0.1 (4 MB) | **1 entry refused, 0 files** | 35.5 KB |
+| Mac OS 9.2 (512 MB) | **1 entry refused, 0 files** | 35.5 KB |
+| System 6.0.8 (4 MB) | 1 file, byte-exact | 656.8 KB |
+
+Mac OS 9 added 2026-08-02, and the figure it produced is **the same 35.5 KB**
+System 7 did — on a machine with 512 MB of RAM, which is the point: the
+partition governs, not the hardware. `--expect-refusal` states the expectation
+so the run is self-checking rather than a number to be interpreted by eye; it
+passes only when the Linux engine DOES extract the fixture, the Mac writes
+nothing, the archive itself returns `UNC_OK`, and an entry is counted as
+refused. Without that first condition a negative test would pass just as
+happily on an empty archive.
 
 So **the Process Manager honours `SIZE` and System 6 ignores it**, exactly as
 the resource's comment always claimed and nothing had ever shown. The 35.5 KB
