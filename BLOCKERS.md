@@ -244,8 +244,38 @@ established, and what is not:
 - **The volume will not open, so the application has never been launched.**
   The click lands — the Finder comes to the front — but no window opens.
 
-The obstacle is the click primitive, not the coordinates, and it has now
-failed in both directions:
+**ROOT CAUSE FOUND 2026-08-02, and it was neither of the things the first two
+fixes chased.** `info mice` on the running guest reports:
+
+    * Mouse #2: QEMU HID Mouse
+
+`mac99`'s default pointer is an **ADB mouse, which is RELATIVE**. The
+monitor's `mouse_move X Y` applies X and Y as a *delta*, so the 0..32767
+absolute coordinates this harness computes slam the pointer into a screen
+corner — and every click lands on bare desktop. That is why the Finder came
+forward but nothing ever opened, and why the failure looked exactly like a
+mis-measured icon or a mistimed double-click.
+
+The fix is two parts, and the second is easy to miss: add `-device usb-tablet`
+**and select it**, because QEMU leaves the relative mouse active. Verified
+directly against `info mice`, without waiting for an OS 9 boot:
+
+    before   * Mouse #2: QEMU HID Mouse
+    after      Mouse #2: QEMU HID Mouse
+             * Mouse #3: QEMU HID Tablet (absolute)
+
+`Qemu.use_absolute_pointer()` does this at start-up, parses the index rather
+than assuming it, and refuses to continue if the active pointer is still
+relative — so this class of failure reports itself instead of looking like a
+coordinate problem.
+
+**What is verified: the pointer mechanism. What is NOT: that the volume now
+opens and the application launches.** That needs a full boot, and boots cost
+20-60 minutes on this host. The click timing below was also corrected along
+the way and is likewise unverified end to end.
+
+The earlier click investigation, kept because the reasoning is sound even
+though it was chasing the wrong thing:
 
 - Originally `click(double=True)` sent four `mouse_button` commands as four
   separate `mon()` calls. `mon()` sleeps 0.3 s before sending so the monitor

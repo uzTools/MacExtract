@@ -30,7 +30,7 @@ application) and the icon positions in a freshly opened window are not known
 in advance, so it wants the same
 screenshot-look-adjust loop the System 6 driver went through.
 """
-import argparse, os, shutil, socket, subprocess, sys, time
+import argparse, os, re, shutil, socket, subprocess, sys, time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
@@ -59,8 +59,19 @@ DISK_SHA1 = "a6e39e049d99c56d0a2c08bf2631079f6f14bd56"
 
 class Qemu:
     def __init__(self, disks, monitor):
+        # -device usb-tablet is not cosmetic: it is the only reason clicking
+        # can work at all. mac99's default pointer is an ADB mouse, which is
+        # RELATIVE — `info mice` duly reports "QEMU HID Mouse" — so the
+        # monitor's `mouse_move X Y` applies X and Y as a DELTA, and the
+        # 0..32767 absolute coordinates this harness computes slam the pointer
+        # into a screen corner. Every click then lands on bare desktop. Three
+        # attempts to open a volume failed exactly that way, and the symptom
+        # (the Finder comes forward, nothing opens) looks identical to a
+        # mis-measured icon or a too-slow double click, which is what the first
+        # two fixes chased. A USB tablet is an absolute device.
         argv = ["qemu-system-ppc", "-M", "mac99,via=pmu", "-m", "512",
                 "-boot", "c", "-g", "1024x768x32", "-display", "none",
+                "-device", "usb-tablet",
                 "-monitor", f"unix:{monitor},server,nowait"]
         for i, d in enumerate(disks):
             argv += ["-drive", f"file={d},format=raw,media=disk,index={i}"]
@@ -83,6 +94,60 @@ class Qemu:
                 raise SystemExit("os9: qemu exited:\n" + self.proc.stdout.read())
             time.sleep(0.5)
         raise SystemExit("os9: qemu monitor never came up")
+
+    def use_absolute_pointer(self):
+        """Make the USB tablet the ACTIVE pointer.
+
+        Adding -device usb-tablet is necessary and not sufficient. QEMU keeps
+        the original relative ADB mouse selected, and `info mice` shows which
+        with a leading '*':
+
+            Mouse #3: QEMU HID Tablet (absolute)
+          * Mouse #2: QEMU HID Mouse          <- still the active one
+
+        `mouse_move` goes to the ACTIVE device, so without this the absolute
+        coordinates are still applied as deltas and every click still lands in
+        a corner. Verified against `info mice` rather than assumed, because the
+        symptom of getting it wrong is indistinguishable from a bad icon
+        coordinate — which cost three boots to work out the first time."""
+        reply = self.ask("info mice")
+        index = None
+        for line in reply.splitlines():
+            if "(absolute)" in line:
+                m = re.search(r"Mouse #(\d+)", line)
+                if m:
+                    index = m.group(1)
+                    break
+        if index is None:
+            raise SystemExit("os9: qemu reports no absolute pointing device; "
+                             "clicking cannot work. Is -device usb-tablet "
+                             "still on the command line?\n" + reply)
+        self.mon(f"mouse_set {index}")
+        after = self.ask("info mice")
+        if not any(l.strip().startswith("*") and "(absolute)" in l
+                   for l in after.splitlines()):
+            raise SystemExit("os9: mouse_set did not take; the active pointer "
+                             "is still relative:\n" + after)
+        return index
+
+    def ask(self, cmd, wait=1.2):
+        """Send a monitor command and return its reply, stripped of the
+        terminal escapes the HMP echoes back."""
+        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        s.connect(self.mon_path)
+        time.sleep(0.4)
+        try:
+            s.recv(65536)
+        except OSError:
+            pass
+        s.sendall((cmd + "\n").encode())
+        time.sleep(wait)
+        try:
+            out = s.recv(1 << 16).decode(errors="replace")
+        except OSError:
+            out = ""
+        s.close()
+        return re.sub(r"\x1b\[[0-9;]*[A-Za-z]|[\x00-\x08\x0b-\x1f]", "", out)
 
     def mon(self, cmd, wait=1.2):
         s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
@@ -118,14 +183,13 @@ class Qemu:
         single clicks, the volume never opened, and the failure looked like a
         mis-measured icon coordinate rather than a broken primitive."""
         self.mon(f"mouse_move {int(x * 32767 / 1024)} {int(y * 32767 / 768)}", 0.5)
-        # One connection, but with DELIBERATE gaps between the button events.
-        # Both extremes fail: four separate mon() calls put ~0.9 s between the
-        # two clicks (past the Mac's ~0.5 s double-click threshold, so the
-        # Finder sees two single clicks), while writing all four events at
-        # once puts them microseconds apart and the guest — which samples the
-        # mouse once per VBL, 60 Hz — can miss the transitions entirely.
-        # 60 ms down/up and 180 ms between clicks is inside the threshold and
-        # comfortably above one frame.
+        # One connection, with deliberate gaps between the button events:
+        # 60 ms down/up, 180 ms between clicks — inside the Mac's ~0.5 s
+        # double-click threshold and above one 60 Hz input frame. This timing
+        # was NOT what broke the Finder clicks (the pointer was in the wrong
+        # place entirely; see usb-tablet above), but the original four separate
+        # mon() calls really did put ~0.9 s between clicks, which would have
+        # bitten the moment the pointer was fixed.
         s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         s.connect(self.mon_path)
         time.sleep(0.3)
@@ -301,6 +365,7 @@ def main():
     boot = boot_copy(args.outdir)
     q = Qemu([boot, xfer], os.path.join(args.outdir, "mon.sock"))
     try:
+        print(f"os9: absolute pointer is mouse #{q.use_absolute_pointer()}")
         scratch = os.path.join(args.outdir, ".settle.png")
         waited = q.settle(scratch, timeout=args.boot_wait)
         if waited is None:

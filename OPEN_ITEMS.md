@@ -166,13 +166,17 @@ here because it is the largest genuine unknown.**
   away.** Established directly: Mac OS 9.2 boots to the Finder here (20-45
   min, not the four the old note claimed), the transfer volume mounts beside
   the boot volume, and the desktop coordinates are measured and correct. What
-  fails is the double-click itself: the volume never opens, though the click
-  lands and brings the Finder forward. The primitive was too SLOW (0.9 s
-  between clicks, past the Mac's threshold) and then, after a fix, too FAST
-  (one write, arriving inside a single 60 Hz input frame). It now uses
-  deliberate 60/180 ms gaps on one connection — **unverified**, because a
-  boot costs ~50 minutes on this host. Everything ahead of the click is
-  known-good, so the next attempt is a single run.
+  failed was the pointer, not the click: `info mice` shows `mac99`'s default
+  is a **relative** ADB mouse, so `mouse_move` with absolute coordinates was
+  applied as a delta and slammed the pointer into a corner. Every click landed
+  on bare desktop — which looks exactly like a mis-measured icon, and cost
+  three boots and two wrong "fixes" (click too slow, then too fast) to
+  identify. Now fixed with `-device usb-tablet` **plus** `mouse_set`, since
+  QEMU leaves the relative mouse active; `Qemu.use_absolute_pointer()` checks
+  `info mice` before and after and refuses to run if the active pointer is
+  still relative. **The pointer mechanism is verified against `info mice`; that
+  the volume opens and the application launches is NOT** — that needs a full
+  boot, at 20-60 minutes each here.
 
   What remains is the original plan: Finder automation through QEMU
   screendumps, with `mkapmdisk.py`'s transfer volume (HFS, and it already
