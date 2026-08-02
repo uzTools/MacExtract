@@ -134,21 +134,16 @@ here because it is the largest genuine unknown.**
 
   It needs no Finder, no Standard File and no screen coordinates, which is
   why it worked where two attempts at driving System 7's Finder did not.
-- **The `SIZE` partition has still never governed a launch.** 4 MB preferred /
-  400 KB minimum, and on System 6 without MultiFinder it is simply ignored, so
-  it has never done anything. System 7 always runs the Process Manager, which
-  is why that tier exists — but the on-Mac harness installs the application as
-  the boot SHELL, and whether a shell's SIZE partition is honoured the way a
-  Finder launch's is has not been established, so the System 7 sweep does not
-  settle it either.
-
-  The sharp test, for whoever picks this up: build with a deliberately small
-  preferred partition (~600 KB — enough to launch, not enough for a 512 KB
-  Arsenic block plus overhead) and run `derived-KeyGraphics.sit`, which needs
-  ~656 KB and passes at 4 MB today. If `SIZE` governs, that entry is refused;
-  if it is ignored, the run passes. One fixture, one boot, binary answer. It
-  needs a way to vary the `SIZE` resource per build — `mac/unclassic.r` has
-  the values hard-coded — which is the only real work in it.
+- **The `SIZE` partition: CLOSED 2026-08-02, and it works.** 4 MB preferred /
+  400 KB minimum had never governed a launch, because System 6 without
+  MultiFinder ignores it and that was the only system ever tested. Rebuilt with
+  a 600 KB preferred partition and run on both systems with
+  `derived-KeyGraphics.sit`, which needs ~656 KB: **System 7.0.1 refused the
+  entry (peak 35.5 KB — parser state only, the block rejected at request time);
+  System 6.0.8 passed with 656.8 KB.** Same binary, same fixture, same 4 MB
+  machine. The Process Manager honours the partition, System 6 ignores it, and
+  the engine's per-entry refusal behaves correctly when it bites. Method in
+  MANUAL_TESTS.md.
 - **Mac OS 9: still never run — and the harness was damaging its own disk
   image.** Found 2026-08-02: `os9.py` booted the master 2 GB image in place and
   never hashed it, so every run altered the one artifact it depends on and

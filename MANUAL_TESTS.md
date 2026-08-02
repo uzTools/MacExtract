@@ -42,6 +42,42 @@ Manager that honours the `SIZE` partition.
   section below — `run.py -D UNC_AT_WD` settles it without a Finder.
 - **The `SIZE` partition under the Process Manager.** Still never exercised.
 
+### The 'SIZE' partition, 2026-08-02 — first time it has ever done anything
+
+4 MB preferred / 400 KB minimum has been in `mac/unclassic.r` since M10 and had
+never governed a launch: System 6 without MultiFinder ignores `SIZE` outright,
+and every on-Mac run until now was on System 6. System 7 always runs the
+Process Manager, so the System 7 tier finally makes the question askable.
+
+**The experiment.** Rebuild with a deliberately small preferred partition —
+enough to launch, not enough for a 512 KB Arsenic block plus its transform
+vector — and run a fixture that needs more than that and is known to pass at
+4 MB. `derived-KeyGraphics.sit` needs ~656 KB and passes on both systems with
+the stock partition.
+
+    sed -i 's/4096 \* 1024, 400 \* 1024/600 * 1024, 400 * 1024/' mac/unclassic.r
+    tools/vmac/run.py --system Sys7.img fixtures/derived-KeyGraphics.sit
+    tools/vmac/run.py               fixtures/derived-KeyGraphics.sit
+    git checkout mac/unclassic.r        # the edit is temporary, on purpose
+
+**Result — same binary, same fixture, same 4 MB machine:**
+
+| System | Outcome | Engine peak heap |
+|---|---|---|
+| System 7.0.1 | **1 entry refused, 0 files** | 35.5 KB |
+| System 6.0.8 | 1 file, byte-exact | 656.8 KB |
+
+So **the Process Manager honours `SIZE` and System 6 ignores it**, exactly as
+the resource's comment always claimed and nothing had ever shown. The 35.5 KB
+peak is the diagnostic: it is parser state alone, meaning the budget rejected
+the 512 KB block *at request time* and the buffer was never allocated — the
+documented per-entry refusal, reached through a route that had never been
+exercised. No crash, no hang; the application declines the entry and stops.
+
+The 656.8 KB on System 6 is the same figure the 44/44 sweep records for that
+fixture, which is the control: nothing about the binary changed but the
+partition it was given.
+
 ### Working directories, 2026-08-01 (System 6.0.8 AND System 7.0.1, 4 MB)
 
 `tools/vmac/run.py -D UNC_AT_WD` with `derived-EmpireBuilderDemo.sit`.
