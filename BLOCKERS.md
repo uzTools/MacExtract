@@ -203,26 +203,47 @@ could tell the two apart, which is the actual defect.
 copies the master to a throwaway before booting, and `--setup --force`
 re-fetches. The damaged image was re-downloaded and re-verified.
 
-### Mac OS 9 without driving the Finder — the route to try
+### Mac OS 9 — the boot volume is HFS+, and offline writes are not possible here
 
-Reconnaissance from the same investigation, so the next attempt does not start
-with icon-hunting in QEMU screendumps:
+**This section replaces one written earlier the same day that said the volume
+was "plain HFS, signature BD, not HFS+" and proposed dropping the application
+into `System Folder:Startup Items:` with hfsutils to avoid Finder automation.
+That was wrong**, and wrong in the way this repository keeps being wrong: a
+signature was read at a fixed offset and the conclusion drawn without checking
+the field that qualifies it.
 
-- **The OS 9 boot volume is plain HFS**, signature `BD`, not HFS+ — so
-  `hfsutils` can read and (with the lock bit cleared on a copy) write it.
-- **Mac OS 9 has a `Startup Items` folder.** Anything in
-  `System Folder:Startup Items:` launches at boot. Dropping the autotest build
-  there on a COPY removes Finder automation from the problem completely: no
-  double-clicks, no coordinates, no screenshot-look-adjust loop.
-- **The reporting channel has to change for OS 9.** `at_report()` pokes a 1bpp
-  framebuffer; OS 9 here runs 32-bit colour, so the bit grid would decode as
-  noise. But QEMU, unlike Mini vMac, writes its disk images back reliably —
-  the reason the grid exists at all does not apply — so on OS 9 the autotest
-  can simply write its numbers to a file and the host can read them off the
-  volume afterwards.
+The volume is **HFS+ inside an HFS wrapper**:
 
-That is a bounded piece of work with no GUI automation in it, which is a
-different proposition from where this stood.
+    wrapper MDB signature   0x4244 'BD'      <- what the earlier claim read
+    drEmbedSigWord          0x482B 'H+'      <- what it failed to read
+    embedded volume header  'H+' at byte 966656 of the partition
+
+The tell was in plain sight: the wrapper's root directory contains exactly one
+file, `Where_have_all_my_files_gone?`, which is the placeholder Apple puts in
+an HFS wrapper. hfsutils mounts the WRAPPER and reports an almost empty disk;
+the actual System Folder is in the embedded HFS+ volume, which hfsutils cannot
+read or write at all.
+
+**And there is no HFS+ writer in this environment**: no `hfsplus`/`hfsprogs`
+tools, no `mount.hfsplus`, and the kernel has no hfsplus module
+(`/proc/filesystems` has no entry, `modprobe hfsplus` fails). So the Startup
+Items idea is not merely unproven — **it cannot be done here at all**, by any
+route that writes the boot volume offline.
+
+What that leaves for getting the application launched on Mac OS 9:
+
+- Finder automation through QEMU screendumps — the original plan, and still
+  the only one available in this container. `mkapmdisk.py` already builds a
+  transfer volume (HFS, so writable with hfsutils) that mounts on the OS 9
+  desktop; what is missing is opening it and double-clicking, which needs the
+  screenshot-look-adjust loop.
+- Or installing HFS+ tooling, which would reopen the Startup Items route and
+  remove GUI automation from the problem entirely.
+
+One thing does improve: because the volume really is **HFS+**, the "HFS+ long
+filenames, and names HFS+ permits that HFS does not" row in MANUAL_TESTS.md is
+genuinely reachable on this image once the application can be run there. It is
+blocked on the same thing, not on a different one.
 
 ### Timing on a 7 MHz Mac Plus — NOT MEASURED, and why
 

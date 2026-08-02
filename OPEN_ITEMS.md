@@ -157,14 +157,24 @@ here because it is the largest genuine unknown.**
   re-downloaded. The same lesson had been in BLOCKERS.md for Mini vMac since
   M10 and was never carried across.
 
-  The route to actually launching it, from the same investigation: the OS 9
-  boot volume is plain **HFS** (not HFS+), so hfsutils can write to a copy, and
-  Mac OS 9 has a **`Startup Items`** folder — put the autotest build there and
-  it launches at boot with no Finder automation at all. The one thing that must
-  change is the reporting channel: `at_report()` pokes a 1bpp framebuffer and
-  OS 9 runs 32-bit colour here, but QEMU writes its disk images back reliably
-  (unlike Mini vMac, which is the only reason the bit grid exists), so on OS 9
-  the results can simply be written to a file and read off the volume.
+  **A route proposed earlier the same day has been withdrawn.** It claimed the
+  OS 9 boot volume was plain HFS, so the application could be dropped into
+  `System Folder:Startup Items:` with hfsutils and launched with no Finder
+  automation. The volume is **HFS+ inside an HFS wrapper**
+  (`drEmbedSigWord = 'H+'`; hfsutils sees only the wrapper, whose root holds
+  the single placeholder file `Where_have_all_my_files_gone?`), and this
+  environment has **no HFS+ writer at all** — no hfsprogs, no kernel module.
+  So offline writes to that volume are impossible here and the idea is dead,
+  not merely untried. See BLOCKERS.md.
+
+  What remains is the original plan: Finder automation through QEMU
+  screendumps, with `mkapmdisk.py`'s transfer volume (HFS, and it already
+  mounts) carrying the application. One thing does improve — the volume really
+  being HFS+ means the "HFS+ long filenames" row is reachable on this image
+  once the app can be run there, blocked on the same thing rather than a
+  second one. If the reporting channel ever matters: `at_report()` pokes a
+  1bpp framebuffer and OS 9 runs 32-bit colour, but QEMU writes its images
+  back reliably, so results could be written to a file instead of the screen.
 - **Mac OS 9 detail: still never run, but no longer blocked.** The `WaitNextEvent`
   branch, `SFReply.vRefNum` as a System 7+ working-directory reference, HFS+
   names and the `SIZE` partition under a real Process Manager remain untested
