@@ -384,6 +384,24 @@ def main():
             # HFS+ inside an HFS wrapper and nothing in this environment can
             # write HFS+, so the application cannot be placed in Startup
             # Items offline. See BLOCKERS.md.
+            # HYPOTHESIS, NOT A CONFIRMED FIX (see BLOCKERS.md): every
+            # attempt so far ended with the Finder in front and nothing
+            # opened. The Mac OS Setup Assistant launches itself a little
+            # AFTER the desktop settles — every boot, because this harness
+            # correctly boots a pristine copy each time, so the assistant is
+            # never marked done — and it takes the foreground. In classic Mac
+            # OS the first click in an INACTIVE application only activates it;
+            # the click is not passed on. A double-click would therefore be
+            # spent activating the Finder, leaving one click on the icon,
+            # which selects rather than opens.
+            #
+            # So: click empty desktop first to give the Finder the foreground,
+            # then double-click the volume. This has NOT been observed to work
+            # — it is the third hypothesis for this one symptom, and the first
+            # two (click too slow, pointer relative) were each confirmed real
+            # defects that turned out not to be the whole story.
+            q.click(700, 600)                     # empty desktop: activate Finder
+            time.sleep(3)
             q.click(*XFER_VOLUME_ICON, double=True)
             time.sleep(20)
             print(q.shot(os.path.join(args.outdir, "volume.png")))

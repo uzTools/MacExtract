@@ -269,10 +269,31 @@ than assuming it, and refuses to continue if the active pointer is still
 relative — so this class of failure reports itself instead of looking like a
 coordinate problem.
 
-**What is verified: the pointer mechanism. What is NOT: that the volume now
-opens and the application launches.** That needs a full boot, and boots cost
-20-60 minutes on this host. The click timing below was also corrected along
-the way and is likewise unverified end to end.
+**What is verified: the pointer mechanism. What is NOT: that the volume opens
+and the application launches — a fifth boot with the absolute pointer active
+still ended with nothing open.**
+
+So there is at least one more cause. The fifth run's screenshot shows what the
+earlier ones did not: **the Mac OS Setup Assistant is frontmost.** It launches
+itself shortly AFTER the desktop settles — on every boot, because this harness
+correctly boots a pristine copy each time and the assistant is therefore never
+marked done — and it takes the foreground. In classic Mac OS **the first click
+in an inactive application only activates it**; the click is not passed
+through. A double-click aimed at a desktop icon while another application is
+frontmost is therefore spent activating the Finder, leaving a single click on
+the icon, which selects rather than opens. That matches every observation:
+the Finder comes forward, the icon does not open.
+
+`os9.py` now clicks empty desktop first and then double-clicks. **This is a
+hypothesis and is labelled as one in the code.** It is the THIRD explanation
+for this single symptom; the first two — a double-click spanning 0.9 s, and a
+relative pointer receiving absolute coordinates — were both real defects, both
+fixed, and neither was sufficient. Do not treat the next one as settled
+either until a screenshot shows a window.
+
+A cheaper route exists and is worth trying first: get rid of the Setup
+Assistant instead of working around it, by clicking its close box, or by
+finding whether the image can be made to skip it.
 
 The earlier click investigation, kept because the reasoning is sound even
 though it was chasing the wrong thing:

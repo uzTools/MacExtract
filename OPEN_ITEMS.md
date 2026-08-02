@@ -174,9 +174,17 @@ here because it is the largest genuine unknown.**
   identify. Now fixed with `-device usb-tablet` **plus** `mouse_set`, since
   QEMU leaves the relative mouse active; `Qemu.use_absolute_pointer()` checks
   `info mice` before and after and refuses to run if the active pointer is
-  still relative. **The pointer mechanism is verified against `info mice`; that
-  the volume opens and the application launches is NOT** — that needs a full
-  boot, at 20-60 minutes each here.
+  still relative. **The pointer mechanism is verified; the launch is not** — a
+  fifth boot with the absolute pointer still opened nothing.
+
+  The current hypothesis, labelled as one: the **Mac OS Setup Assistant**
+  launches shortly after the desktop settles (every boot, because the harness
+  correctly starts from a pristine copy) and takes the foreground, and in
+  classic Mac OS the first click in an inactive application only activates it.
+  The double-click is therefore spent activating the Finder. `os9.py` now
+  clicks bare desktop first. **Untested.** Five boots, three explanations, two
+  of them confirmed real defects that were not sufficient — treat the third
+  the same way until a screenshot shows an open window.
 
   What remains is the original plan: Finder automation through QEMU
   screendumps, with `mkapmdisk.py`'s transfer volume (HFS, and it already
