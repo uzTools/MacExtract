@@ -203,7 +203,10 @@ could tell the two apart, which is the actual defect.
 copies the master to a throwaway before booting, and `--setup --force`
 re-fetches. The damaged image was re-downloaded and re-verified.
 
-### Mac OS 9 — the boot volume is HFS+, and offline writes are not possible here
+### Mac OS 9 — RESOLVED: the application runs there, driven by the keyboard
+
+(The boot volume is HFS+ and offline writes to it are impossible here, which is
+why the Finder had to be automated at all. That part still stands.)
 
 **This section replaces one written earlier the same day that said the volume
 was "plain HFS, signature BD, not HFS+" and proposed dropping the application
@@ -230,115 +233,162 @@ tools, no `mount.hfsplus`, and the kernel has no hfsplus module
 Items idea is not merely unproven — **it cannot be done here at all**, by any
 route that writes the boot volume offline.
 
-**Attempted 2026-08-02 across four boots and NOT achieved.** What is now
-established, and what is not:
+**ACHIEVED 2026-08-02, on the sixth boot — the application runs on Mac OS 9.2
+and its output is byte-exact.** It is driven from the KEYBOARD. Five earlier
+boots were spent trying to make the mouse work, and the mouse cannot work
+here at all.
 
-- **Mac OS 9.2 boots to the Finder** under `qemu-system-ppc -M mac99,via=pmu`
-  on this host — seen directly, repeatedly. (The image is 9.2, not the 9.0.4
-  the task named.) It takes 20-45 minutes here, not the four minutes the old
-  note claimed, and the time varies a lot with host load.
-- **The transfer volume mounts.** Both `untitled` (boot) and `unclassic`
-  (transfer, carrying the application and an archive) appear on the desktop.
-- **The desktop icon coordinates are measured and correct**: `unclassic` sits
-  at (974, 117) on the 1024x768 screen; `XFER_VOLUME_ICON` is (974, 120).
-- **The volume will not open, so the application has never been launched.**
-  The click lands — the Finder comes to the front — but no window opens.
+What runs, and what checks it:
 
-**ROOT CAUSE FOUND 2026-08-02, and it was neither of the things the first two
-fixes chased.** `info mice` on the running guest reports:
+    tools/vmac/os9.py fixtures/derived-DDT.sit -o <dir> --launch
+    tools/vmac/os9.py --list tools/vmac/os9sample.txt -o <dir> --launch
 
-    * Mouse #2: QEMU HID Mouse
+`launch_by_keyboard()` quits the Setup Assistant with Cmd-Q, selects the
+transfer volume by typing `unc`, opens it with Cmd-Down, selects and launches
+the application the same way, presses Return in SFGetFile (which opens with
+`archive.sit` already selected) and Return again on the result alert. No
+coordinates, no double-click timing, no pointer. It worked first try.
 
-`mac99`'s default pointer is an **ADB mouse, which is RELATIVE**. The
-monitor's `mouse_move X Y` applies X and Y as a *delta*, so the 0..32767
-absolute coordinates this harness computes slam the pointer into a screen
-corner — and every click lands on bare desktop. That is why the Finder came
-forward but nothing ever opened, and why the failure looked exactly like a
-mis-measured icon or a mistimed double-click.
+`verify_output()` then does something the System 6 harness cannot: the
+transfer volume is a plain file on the host, so after the emulator is gone the
+extracted forks are lifted straight out of it with hfsutils (`hcopy -m`, both
+forks in one MacBinary) and compared **byte for byte** against the same
+engine's Linux output. That is a stronger check than the framebuffer CRC grid
+Mini vMac needs, it needs no pixel decoding, and it doubles as the check on
+whether the guest flushed — an unflushed volume fails to mount or comes up
+short, rather than passing silently.
 
-The fix is two parts, and the second is easy to miss: add `-device usb-tablet`
-**and select it**, because QEMU leaves the relative mouse active. Verified
-directly against `info mice`, without waiting for an OS 9 boot:
+**13/13 on `tools/vmac/os9sample.txt`**: 32 files, 712,481 data bytes and
+309,358 resource-fork bytes, all byte-exact, names and folder structure
+included. The table is in FORMATS.md. Two entries in it are not extractions:
+`derived-DandStoQIF2.sea` sniffs as DiskDoubler, which is detect-only by the
+brief, and passes because the Mac declines it cleanly ("This file could not be
+extracted") and the Linux engine declines it too — agreement on nothing being
+written is a result, not an absence of one.
 
-    before   * Mouse #2: QEMU HID Mouse
-    after      Mouse #2: QEMU HID Mouse
-             * Mouse #3: QEMU HID Tablet (absolute)
+### The new harness found a real bug on its first sweep — FIXED
 
-`Qemu.use_absolute_pointer()` does this at start-up, parses the index rather
-than assuming it, and refuses to continue if the active pointer is still
-relative — so this class of failure reports itself instead of looking like a
-coordinate problem.
+`synth-exo-Z.Z` and `synth-exo-gz.gz` failed: the Mac wrote `archive.sit~1`
+where Linux wrote `archive`, same 2200 bytes either way. Both fixtures are in
+`tools/vmac/sample.txt` and both had been passing under Mini vMac.
 
-**What is verified: the pointer mechanism. What is NOT: that the volume opens
-and the application launches — a fifth boot with the absolute pointer active
-still ended with nothing open.**
+They passed there because **the Mini vMac check cannot see names.** It compares
+`nfiles`, summed CRC-32s and summed lengths off the screen; a name does not
+survive being summed. The OS 9 check reads the volume, so it compares names
+without anyone deciding it should.
 
-So there is at least one more cause. The fifth run's screenshot shows what the
-earlier ones did not: **the Mac OS Setup Assistant is frontmost.** It launches
-itself shortly AFTER the desktop settles — on every boot, because this harness
-correctly boots a pristine copy each time and the assistant is therefore never
-marked done — and it takes the foreground. In classic Mac OS **the first click
-in an inactive application only activates it**; the click is not passed
-through. A double-click aimed at a desktop icon while another application is
-frontmost is therefore spent activating the Finder, leaving a single click on
-the icon, which selects rather than opens. That matches every observation:
-the Finder comes forward, the icon does not open.
+The bug was in the Mac shell. `unclassic.h` defines `name_hint` — the fallback
+name for the formats that store none, gzip and .Z — as *the archive filename
+minus its last extension*, which is what `cli/main.c` passes and what unar
+does. `RunExtract()` passed the whole name. So opening `foo.gz` on a Mac wrote
+`foo.gz`, colliding with the archive beside it, hence `foo.gz~1` — on every
+system, not just OS 9. Fixed in `mac/unclassic_mac.c` with the CLI's rule, a
+leading dot not counting as an extension.
 
-`os9.py` now clicks empty desktop first and then double-clicks. **This is a
-hypothesis and is labelled as one in the code.** It is the THIRD explanation
-for this single symptom; the first two — a double-click spanning 0.9 s, and a
-relative pointer receiving absolute coordinates — were both real defects, both
-fixed, and neither was sufficient. Do not treat the next one as settled
-either until a screenshot shows a window.
+**An aggregate check cannot fail on a property it never aggregates**, and
+nothing recorded that on-Mac names were unverified, because the harness looked
+exhaustive: twelve formats, both forks, byte-exact. It was exhaustive about
+bytes.
 
-A cheaper route exists and is worth trying first: get rid of the Setup
-Assistant instead of working around it, by clicking its close box, or by
-finding whether the image can be made to skip it.
+### The pointer does not work in this guest — measured, not inferred
 
-The earlier click investigation, kept because the reasoning is sound even
-though it was chasing the wrong thing:
+`tools/vmac/os9probe.py` exists because four boots had been spent inferring
+causes from a single non-observation: "the volume did not open". That is the
+`macburger-helper.hqx` mistake in another costume — an outcome that did not
+happen tells you nothing about which link in the chain broke. So the probe
+measures the primitive instead, on targets whose response is unambiguous, and
+runs the whole ladder in one boot. Results:
 
-- Originally `click(double=True)` sent four `mouse_button` commands as four
-  separate `mon()` calls. `mon()` sleeps 0.3 s before sending so the monitor
-  banner can arrive, which put roughly **0.9 s between the two clicks** — past
-  the Mac's ~0.5 s double-click threshold, so the Finder saw two single
-  clicks.
-- Sending all four events in one write fixed that and broke the other end:
-  they arrive microseconds apart and the guest samples the mouse once per VBL
-  (60 Hz), so the transitions can be missed entirely. Same symptom.
-- It now sends them on one connection with deliberate 60 ms down/up gaps and
-  180 ms between clicks — inside the threshold, above one frame. **That
-  version has not been run**; a verification boot costs ~50 minutes here and
-  was not started.
+| # | probe | changed | verdict |
+|---|---|---|---|
+| 0 | pointer moves at all (whole screen) | 64 px | yes |
+| 1 | held press pulls a menu bar title down | 0.0000 | **no** |
+| 2 | release rolls it back up | 0.0000 | — |
+| 3 | click on bare desktop changes the app menu | 0.0000 | **no** |
+| 4 | single click highlights the volume icon | 0.0000 | **no** |
+| 5 | double click opens the volume | 0.0000 | **no** |
+| 6 | Cmd-Q changes the front application | 0.2662 | yes |
+| 7 | typing `unc` highlights the volume icon | 0.1553 | yes |
+| 8 | Cmd-Down opens the volume window | 0.1284 | yes |
+| 9 | the application launches | 0.0677 | yes |
+| 10 | extraction runs and reports | 0.0954 | yes |
 
-So the next attempt is ONE run, not three. Everything ahead of the click is
-known-good and measured.
+Every mouse probe is **exactly** zero and every keyboard probe works. Probe 0
+is the one that explains it: the 64 pixels it changed are the arrow cursor
+itself, and enumerating them locates the two clusters at (0..8, 0..13) and
+(1022..1023, 766..767) — the cursor bitmap in one screen corner and then the
+other. It appears **only in the extreme corners**. The pointer was then parked
+at three positions on bare desktop in turn — (200,600), (800,600), (500,400) —
+and both consecutive diffs are uniformly black, mean 0 and maximum 0, not one
+pixel: the cursor did not move between any of them. So `mouse_move` does not
+position the cursor in this guest, and clicks land wherever it is pinned.
 
-Two harness weaknesses were fixed along the way:
+Probe 4 is the one every earlier attempt skipped. A single click that only
+SELECTS separates "the coordinate is wrong" from "the double-click is wrong",
+and those two had been conflated in every write-up. It is zero as well, which
+rules out both.
 
-- **The fixed sleep is gone.** `Qemu.settle()` screenshots until the screen
-  stops changing, the same approach `interactive.py` uses, so the boot is
-  waited for rather than predicted. Default bound raised to 1800 s.
-- **QEMU is started with `start_new_session=True`**, so when the driver is
-  killed by a timeout the emulator survives as an orphan. One was left running
-  and had to be killed by hand. Not fixed — the flag is deliberate (a stray
-  signal to the process group must not take the emulator down mid-write) — but
-  it is now written down, and `run.py` has the same property.
+**What is NOT established** is the mechanism. The natural reading is that Mac
+OS 9 binds QEMU's `usb-tablet` but treats its absolute reports as relative
+deltas, which would saturate at the corners exactly as observed — but that is
+a hypothesis, it has no minimal reproduction, and nothing in this project may
+be written down as a finding without one. What is a finding is the behaviour:
+the pointer cannot be positioned, so nothing here uses it.
 
-What that leaves for getting the application launched on Mac OS 9:
+### Three explanations for one symptom, and why all three were the wrong shape
 
-- Finder automation through QEMU screendumps — the original plan, and still
-  the only one available in this container. `mkapmdisk.py` already builds a
-  transfer volume (HFS, so writable with hfsutils) that mounts on the OS 9
-  desktop; what is missing is opening it and double-clicking, which needs the
-  screenshot-look-adjust loop.
-- Or installing HFS+ tooling, which would reopen the Startup Items route and
-  remove GUI automation from the problem entirely.
+Superseded, kept because the pattern is the point:
 
-One thing does improve: because the volume really is **HFS+**, the "HFS+ long
-filenames, and names HFS+ permits that HFS does not" row in MANUAL_TESTS.md is
-genuinely reachable on this image once the application can be run there. It is
-blocked on the same thing, not on a different one.
+1. **The double click was too slow.** True and real: `click(double=True)` sent
+   four `mouse_button` commands as four `mon()` calls, each sleeping 0.3 s
+   first, putting ~0.9 s between clicks against the Mac's ~0.5 s threshold.
+   Fixed. Not sufficient.
+2. **The pointer was relative.** True and real: `mac99`'s default is an ADB
+   mouse, `info mice` says so, and absolute coordinates fed to it are applied
+   as deltas. `-device usb-tablet` plus `mouse_set` was added, and
+   `use_absolute_pointer()` verifies against `info mice` rather than assuming.
+   Not sufficient — and now known not to help at all, because the guest does
+   not use the tablet either.
+3. **The Setup Assistant holds the foreground.** True, and confirmed by
+   screenshot: it launches on every boot (the harness correctly starts from a
+   pristine copy, so it is never marked done) and takes the front. Quitting it
+   is a real and necessary step, which `launch_by_keyboard()` does first. Not
+   sufficient either.
+
+Three consecutive real defects, each fixed, none of them the answer. All three
+were about *clicking* — and clicking was never going to work. The probe that
+asked "does a press land at all?" cost one boot and answered it. **Measure the
+primitive before theorising about the compound.**
+
+### And the boot time was host load written down as a guest property
+
+This section said 20-45 minutes, having earlier said four. On an idle host the
+desktop settles in **~110 s**, measured twice in the same afternoon. Both
+earlier figures were real measurements of a loaded machine and a lucky one,
+recorded as facts about Mac OS 9. `settle()` waits for the screen to stop
+changing and for the Finder's menu bar to be present, so no figure is needed;
+`--boot-wait` only bounds the wait.
+
+`settle()` gained that menu-bar check after it announced a settled desktop 43 s
+into a boot. The cause was `shot()` returning its path unconditionally once the
+PPM existed, so a failed `convert` still read as success: a caller passed a
+directory instead of a file, every screenshot silently failed, and two empty
+buffers compared equal. Two fixes: `shot()` now verifies the converted file
+exists and is non-empty, and a screenshot that did not happen resets stability
+rather than counting towards it. "Nothing changed for a while" is a proxy for
+"ready", and a proxy is not the thing.
+
+### What is still open on Mac OS 9
+
+- **HFS+.** The transfer volume is HFS, so long names, the 31-character
+  truncation rule and the collision-suffix logic still have not met an HFS+
+  volume. The boot volume *is* HFS+, so this is reachable now — extract onto
+  it rather than onto the transfer volume — but it has not been done.
+- **The `SIZE` partition under OS 9's Process Manager.** The application
+  launches, so the partition is honoured enough to run; it has not been tested
+  against a fixture large enough to make the refusal bite, which is what the
+  System 6/7 comparison did with `derived-KeyGraphics.sit`.
+- **Real PowerPC hardware**, like real 68k hardware, remains untouched.
 
 ### Timing on a 7 MHz Mac Plus — MEASURED, after three wrong write-ups
 

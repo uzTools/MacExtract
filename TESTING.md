@@ -89,3 +89,27 @@ can read it.
    sanitizer build; nonzero exits are fine, signals/sanitizer
    aborts/hangs fail. 4,000 cases at M9; every CI run does a 150-case
    smoke.
+
+## On-Mac layers (not in `ci.sh` — they need an emulator)
+
+7. **Mini vMac replay** (`tools/vmac/run.py`, System 6.0.8 and 7.0.1 on a
+   Mac Plus): the autotest build CRC-32s both forks after reading them
+   back through the real File Manager and paints an aggregate to the
+   framebuffer; the host decodes the screenshot and compares against the
+   same engine's Linux output (`tools/vmac_check.py`).
+8. **Mac OS 9 replay** (`tools/vmac/os9.py --launch`, QEMU PowerPC): the
+   application is launched from the Finder by keyboard, and afterwards
+   the transfer volume — a plain file on the host — is mounted with
+   hfsutils and **both forks of every output file are compared byte for
+   byte** against `unclassic x -nr`.
+
+**What each layer can see is not the same, and that matters.** Layer 7
+compares a count, two summed CRC-32s and two summed lengths. A summed
+CRC cannot carry a filename, so layer 7 has never checked an output
+NAME and cannot be made to fail on one. Layer 8 compares names as a
+side effect of reading a directory, and on its first sweep it failed two
+fixtures that layer 7 had been passing for weeks — a real defect in the
+Mac shell's fallback name for gzip/.Z (BLOCKERS.md, DECISIONS.md).
+
+An aggregate check cannot fail on a property it never aggregates. When
+adding a harness, write down what it is blind to.

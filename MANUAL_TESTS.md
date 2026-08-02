@@ -229,21 +229,24 @@ assumptions to break.
 
 ## Still untested — what is NOT known to work
 
-Everything claimed above was observed under **Mini vMac only**. Two of
-the three target environments have never been exercised at all. Nothing
-below is a known failure; it is simply unverified, and should not be
-described as working until someone runs it.
+Everything claimed above was observed under **emulation only** — Mini
+vMac for System 6 and 7, QEMU for Mac OS 9. Nothing below is a known
+failure; it is simply unverified, and should not be described as
+working until someone runs it.
 
-Three things, specifically, and none of them can be closed from here:
+Two things, specifically, and neither can be closed from here:
 
 1. **Real 68k hardware** — any physical Mac Plus, SE or Classic.
 2. **A real Mac Plus with a real 1 MB of RAM.** The 1 MB figures in
    FORMATS.md come from an emulated 1 MB machine with a stripped System
    Folder; a real one has INITs, a real ROM's own memory use, and less
    free heap than any number recorded here.
-3. **Mac OS 9 on PowerPC**, where the binary runs under the 68LC040
-   emulator. `tools/vmac/os9.py` boots that machine and mounts a disk with
-   the application on it, and stops there.
+
+(**Mac OS 9 on PowerPC** was the third entry here until 2026-08-02.
+`tools/vmac/os9.py --launch` now boots it, launches the application
+under the 68LC040 emulator and checks both forks of what it writes; see
+below for what that did and did not close. Real PowerPC silicon is
+still untouched.)
 
 ### Real 68k hardware (Mac Plus / SE / Classic, System 6.0.x)
 
@@ -273,37 +276,66 @@ here, but it is not the same as silicon. Specifically unverified:
 
 ### Mac OS 9 on PowerPC
 
-Never run above System 6. The binary is 68k-only and would execute
-under the 68LC040 emulator on a PowerPC Mac; that whole layer is
-untested.
+**Run, and passing, since 2026-08-02.** The binary is 68k-only and
+executes under the 68LC040 emulator on a PowerPC Mac. That whole layer
+now runs:
 
-`tools/vmac/os9.py` is a partial harness for closing this: Mac OS 9.2
-boots to the Finder under `qemu-system-ppc -M mac99,via=pmu` (about four
-minutes, headless, screenshots via QEMU's monitor), and a transfer disk
-from `tools/vmac/mkapmdisk.py` carrying the application and an archive
-mounts on its desktop. Launching the application and driving it is NOT
-implemented, so everything below is still unverified:
+    tools/vmac/os9.py --setup                                  # once
+    tools/vmac/os9.py --list tools/vmac/os9sample.txt \
+                      -o <dir> --launch
 
-- **The runtime trap checks actually taking the modern path.**
-  `gHasWNE = TrapAvailable(_WaitNextEvent)` selects `WaitNextEvent` over
-  `GetNextEvent`+`SystemTask`; only the System 6 branch has ever run.
-  Cooperative yielding to other applications during a long extraction
-  is therefore unverified.
-- **`SFReply.vRefNum` as a working-directory reference.** On System 7
-  and later this is a WDRefNum rather than a true volume refNum, and the
-  code passes it with `dirID` 0. It behaves correctly on System 6; that
-  extraction lands next to the archive on OS 9 has not been confirmed.
-- **HFS+ volumes.** All testing used HFS. Long names, the 31-character
-  truncation rule and the collision-suffix logic have never met an HFS+
-  volume, nor names that HFS+ permits and HFS does not.
+Each fixture gets its own boot of Mac OS 9.2 under
+`qemu-system-ppc -M mac99,via=pmu` from a pristine copy of the master
+image (~110 s to the desktop on an idle host; `settle()` waits for the
+Finder's menu bar rather than sleeping a fixed time). A transfer disk
+from `tools/vmac/mkapmdisk.py` carries the application and one archive.
+
+**The Finder is driven from the keyboard, not the mouse.** Cmd-Q quits
+the Mac OS Setup Assistant, which is frontmost on every boot; typing
+`unc` selects the transfer volume and Cmd-Down opens it; the same two
+keystrokes launch the application; Return opens the pre-selected
+archive in SFGetFile and Return again dismisses the result alert. The
+pointer is unusable in this guest — five separate mouse probes measured
+exactly zero effect, and the cursor never leaves the screen corners.
+See BLOCKERS.md for the measurements and for the five boots spent
+before anyone measured them.
+
+**How it is checked.** The transfer volume is a plain file on the host,
+so `verify_output()` lifts both forks of every extracted file out of it
+with hfsutils after the emulator exits (`hcopy -m`, one MacBinary per
+file) and compares them byte for byte against the same engine's Linux
+output — `unclassic x -nr`, single-level, for the same reason
+`tools/vmac_check.py` uses it. No framebuffer decoding is involved, and
+a volume the guest failed to flush shows up as a failed mount rather
+than as a silent pass. Results in FORMATS.md.
+
+Closed by that run: the `WaitNextEvent` branch (`gHasWNE =
+TrapAvailable(_WaitNextEvent)` takes the modern path on OS 9, where
+only the System 6 branch had ever run), Standard File and the whole
+Toolbox File Manager layer under a real Process Manager, and
+`SFReply.vRefNum` as a System 7+ working-directory reference — output
+lands on the archive's own volume, which is what the harness then reads
+back. Extraction of a resource fork is included: `derived-DDT.sit`
+carries a 3504-byte resource fork and it compares byte-exact, with no
+need for the reserved-header masking System 6 requires.
+
+Still unverified on Mac OS 9:
+
+- **HFS+ volumes.** Every OS 9 run extracted onto the *transfer*
+  volume, which is HFS. Long names, the 31-character truncation rule
+  and the collision-suffix logic have still never met an HFS+ volume,
+  nor names that HFS+ permits and HFS does not. The boot volume is
+  HFS+, so this is reachable by extracting there instead.
 - **Files larger than the HFS 2 GB cap**, and the engine's 32-bit-only
   arithmetic against them.
-- **The 'SIZE' resource under a real MultiFinder/Process Manager.** On
-  System 6 without MultiFinder the SIZE partition is ignored and the app
-  simply gets the free heap, which is the only case tested. The 400 KB
-  minimum / 4 MB preferred pair has never actually governed a launch.
+- **The 'SIZE' resource made to bite under the Process Manager.** The
+  application launches on OS 9, so the partition is honoured enough to
+  run it. The System 6/7 comparison that forced the memory refusal (a
+  600 KB partition against `derived-KeyGraphics.sit`) has not been
+  repeated there.
 - MacRoman filename display, and 8-bit characters in names, above
   System 6.
+- **Real PowerPC hardware.** As with 68k, an emulator is not silicon.
 
 ## Setup
 

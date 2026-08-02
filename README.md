@@ -29,7 +29,7 @@ detected by content (never by filename) and unwrapped automatically.
 
 | | Linux CLI | Mac app (System 6 → OS 9) |
 |---|---|---|
-| Extraction, all 12 formats | ✅ byte-exact vs `unar` (769 fixtures, both forks, in CI) | ✅ verified byte-exact **on real System 6.0.8 and System 7.0.1 / 68000** (Mini vMac): 44/44 sampled fixtures at 4 MB on each, 39/44 at 1 MB on 6.0.8 — see the tier tables below |
+| Extraction, all 12 formats | ✅ byte-exact vs `unar` (769 fixtures, both forks, in CI) | ✅ verified byte-exact on **System 6.0.8, System 7.0.1 and Mac OS 9.2**: 44/44 sampled fixtures at 4 MB on each of 6.0.8 and 7.0.1 (Mini vMac, a true 68000), 39/44 at 1 MB on 6.0.8, and 13/13 on OS 9.2 under the 68LC040 emulator — see the tier tables below |
 | Both forks + type/creator/dates | ✅ | ✅ (resource fork exact bar the OS-stamped reserved header 16–127; extracted `APPL` launches by double-click) |
 | Robustness (truncated/bit-flipped) | ✅ clean per-entry errors, no crash/hang/sanitizer trip | shares the same engine |
 | Interactive UI | — | ✅ driven end to end on System 6: launched from the Finder → SFGetFile (Drive switches volumes) → progress dialog (Cancel / Cmd-.) → result alert; a cancel removes the partial output, and an extracted application launches by double-click |
@@ -90,7 +90,8 @@ distribution — `tools/make_dist.sh` builds an uncompressed MacBinary and an
 | System 7 interactive UI | — | ❌ **not run** (the Finder-driven path; the working-directory semantics behind it ARE tested, below) |
 | System 7.0.1 | the `SIZE` partition under the Process Manager | ✅ honoured — a 600 KB partition makes the engine decline an entry that needs 656 KB, cleanly; System 6 ignores `SIZE` and passes the same entry |
 | System 6.0.8 + 7.0.1 | working-directory extraction (`SFReply.vRefNum` + `dirID` 0) | ✅ output lands in the working directory, nothing in the volume root |
-| Mac OS 8 / 9 | — | ❌ **not run**; `tools/vmac/os9.py` boots OS 9 and mounts a disk, and stops there |
+| Mac OS 9.2, 512 MB (QEMU PowerPC, 68LC040 emulation) | 13-fixture format sample, launched from a real Finder | ✅ 13/13 byte-exact — both forks of 32 files compared **off the disk image**, names and folders included |
+| Mac OS 8 | — | ❌ **not run** (9.2 is the only system above 7 that has been) |
 
 Everything above is **emulation**. No physical Macintosh has ever run this
 binary: not a real Mac Plus at 1 MB, not an LC475 (68040), not an iMac G3.

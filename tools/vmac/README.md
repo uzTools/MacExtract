@@ -29,7 +29,9 @@ minutes per fixture. It is a deliberate, on-demand check.
 | `mkboot.py` | strip that image to System + Finder and make it boot straight into the application |
 | `run.py` | build the disks, boot, screenshot, decode, check |
 | `interactive.py` | drive the real UI (SFGetFile, progress dialog, Cancel, Cmd-.) and photograph each step |
-| `os9.py` | boot Mac OS 9 on emulated PowerPC with the application attached — **incomplete**, see below |
+| `os9.py` | boot Mac OS 9 on emulated PowerPC, launch the application from the keyboard, and check both forks of what it wrote — see below |
+| `os9probe.py` | diagnostic: which input primitives actually reach the Mac OS 9 guest? Not part of any suite |
+| `os9sample.txt` | the fixtures replayed on Mac OS 9 — one per format, since each costs a whole boot |
 | `mountcheck.py` | boot a system image with disks attached and photograph the desktop — "does this mount?", and "does this system boot at all?" |
 | `mkapmdisk.py` | build an Apple-partitioned transfer disk that Mac OS on PowerPC will mount |
 
@@ -83,7 +85,9 @@ an orphaned `qemu-system-ppc`, and two orphaned `Xvfb` displays. Check with
 interrupted sweep; they cost CPU the next emulator needs. Both harnesses now
 turn SIGTERM and SIGINT into a `SystemExit`, so the signal unwinds and the
 existing cleanup runs; verified by interrupting a 1x run with a live emulator
-and finding nothing left over.
+and finding nothing left over, and again on 2026-08-02 by interrupting an
+`os9.py --list` sweep mid-boot — it printed "interrupted by signal 15" and
+left zero `qemu-system-ppc` behind.
 
 **`EMUDIED` means the host failed, not the Mac.** The emulator process
 occasionally exits within a few seconds of launch — twice in an 88-run sweep
@@ -146,21 +150,36 @@ visual), ImageMagick (`import`, `convert`), `xdotool`, `hfsutils`
 (`hformat`/`hmount`/`hcopy`, shipped with Retro68), and a Retro68 toolchain
 in `$RETRO68` or `/opt/Retro68-build/toolchain`.
 
-## Mac OS 9 — a partial harness, not a result
+## Mac OS 9
 
 `os9.py` boots Mac OS 9.2 under `qemu-system-ppc -M mac99,via=pmu`, headless,
-screenshotting through QEMU's own monitor rather than an X server. Two things
-are established, both from screenshots:
+screenshotting through QEMU's own monitor rather than an X server, launches
+the application and checks what it wrote:
 
-- Mac OS 9.2 reaches the Finder desktop in this configuration, in about four
-  minutes of host time.
-- A transfer disk built by `mkapmdisk.py`, holding the application and one
-  archive, **mounts** and appears on the desktop.
+    os9.py --setup                                       # fetch the 2 GB image
+    os9.py fixtures/derived-DDT.sit -o shots/ --launch    # one fixture
+    os9.py --list os9sample.txt -o shots/ --launch        # the format sample
 
-Driving the Finder from there — open the volume, launch the application, work
-its UI — is **not implemented**, so nothing about the application on Mac OS 9
-is verified yet. Do not read the existence of this harness as a claim that the
-binary runs there.
+An idle host reaches the Finder desktop in ~110 s. Every fixture boots its own
+pristine copy of the master image — Mac OS 9 writes to its boot volume as it
+goes — and `--keep-boot` is off by default because each copy is 2 GB.
+
+**The Finder is driven from the keyboard.** The pointer does not work in this
+guest: `os9probe.py` measured five mouse primitives at exactly 0.0000 effect
+each, and located the cursor only ever in screen corners, never at a requested
+position. Typing selects an icon by name, Cmd-Down opens it, Cmd-Q quits — no
+coordinates, no double-click threshold. `os9probe.py` is kept as a diagnostic;
+run it if clicking or typing ever appears to stop working, because it answers
+"which link broke?" in one boot instead of inferring it from a non-event.
+
+**The result is checked off the disk image, not off the screen.** Mini vMac
+needs the on-screen CRC grid; QEMU does not, because the transfer volume is a
+plain host file. After the emulator exits, `verify_output()` lifts the
+Apple_HFS partition out, mounts it with hfsutils, pulls each extracted file
+off as MacBinary (`hcopy -m`, which is the only way to get a resource fork
+through hfsutils) and compares **both forks byte for byte** against
+`unclassic x -nr`. A mismatch names the file and the fork; a volume the guest
+never flushed fails to mount rather than passing quietly.
 
 `mkapmdisk.py` clones its partition map and drivers from a disk Mac OS 9
 already mounts and repoints only the `Apple_HFS` entry. A map built by hand

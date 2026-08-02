@@ -313,3 +313,67 @@ explicit, fully-zeroed HFS param blocks. This was originally attributed to a
 broken Retro68 `HOpen` glue; **that attribution has been withdrawn** — a
 standalone minimal reproduction (`tools/retro68-hopen-repro/`) disproved it.
 See DECISIONS.md and BLOCKERS.md.
+
+## Mac OS 9 tier (QEMU PowerPC — Mac OS 9.2, `mac99`, 512 MB, 68LC040 emulation)
+
+The third and last point of the System 6 → Mac OS 9 range the project claims,
+and the only one where the 68k binary does not run on a 68k CPU: Mac OS 9.2 on
+emulated PowerPC executes it through the **68LC040 emulator** built into the
+system. Nothing above System 7 had ever run it.
+
+**13/13 byte-exact** — `tools/vmac/os9sample.txt`, one fixture per format,
+each in its own boot from a pristine copy of the master image:
+
+    tools/vmac/os9.py --setup                                   # once
+    tools/vmac/os9.py --list tools/vmac/os9sample.txt -o <dir> --launch
+
+| fixture | format | files | data bytes | rsrc bytes | result |
+|---|---|---|---|---|---|
+| `export-hc.hqx` | BinHex | 1 | 1,615 | 0 | ✅ byte-exact |
+| `derived-keyAhead.cpt` | Compact Pro | 1 | 0 | 1,233 | ✅ byte-exact |
+| `synth-exo-Z.Z` | compress | 1 | 2,200 | 0 | ✅ byte-exact |
+| `synth-exo-gz.gz` | gzip | 1 | 2,200 | 0 | ✅ byte-exact |
+| `stuffit151mstr.bin` | MacBinary | 1 | 0 | 365 | ✅ byte-exact |
+| `synth-packit-2.pit` | PackIt | 5 | 3,050 | 2,020 | ✅ byte-exact |
+| `derived-Export.sit` | StuffIt | 1 | 6,944 | 0 | ✅ byte-exact |
+| `derived-DDT.sit` | StuffIt with a resource fork | 2 | 1,473 | 3,504 | ✅ byte-exact |
+| `derived-KeyGraphics.sit` | StuffIt 5 / Arsenic | 1 | 0 | 33,484 | ✅ byte-exact |
+| `derived-XferIt_1.5b4.sea` | Compact Pro self-extracting | 10 | 679,423 | 268,752 | ✅ byte-exact |
+| `derived-DandStoQIF2.sea` | DiskDoubler: must REFUSE | 0 | — | — | ✅ declined, as Linux does |
+| `synth-exo-tar.tar` | tar | 4 | 7,788 | 0 | ✅ byte-exact |
+| `synth-exo-zip-deflate.zip` | zip | 4 | 7,788 | 0 | ✅ byte-exact |
+
+**13/13**, 32 files, 712,481 data bytes and 309,358 resource-fork bytes compared.
+
+Two things differ from the Mini vMac tiers, and both make this check stronger
+rather than weaker:
+
+- **The result is read off the disk, not the screen.** The transfer volume is
+  a file on the host, so after the emulator exits both forks of every
+  extracted file are lifted out with hfsutils and compared **byte for byte**
+  against `unclassic x -nr`. The Mini vMac tiers compare an on-screen CRC-32
+  aggregate because getting a floppy back out mid-run is awkward; nothing here
+  needs that.
+- **Output names, folder structure and 8-bit characters are compared.** A
+  summed CRC cannot carry a name, so the System 6 and 7 tiers have never
+  checked one and cannot be made to fail on one. This tier does, and its first
+  sweep immediately caught a real Mac-shell defect in the gzip/.Z fallback
+  name — now fixed (BLOCKERS.md, DECISIONS.md). `derived-XferIt_1.5b4.sea`
+  alone lands 10 files three folders deep, and PackIt's `Appé` is a MacRoman
+  name that has to survive the round trip.
+
+**The sample is small on purpose.** Each fixture costs a whole boot (~110 s on
+an idle host, plus a 2 GB image copy), where Mini vMac replays a 44-fixture set
+inside one boot. So this samples for breadth of format; the memory-budget
+spread that `sample.txt` exists to exercise is a 1 MB question, and this
+machine has 512 MB.
+
+**The Finder is driven from the keyboard.** The pointer does not work in this
+guest at all — five mouse primitives measured at exactly zero effect, cursor
+pinned to screen corners. See BLOCKERS.md, and `tools/vmac/os9probe.py` for
+the measurement.
+
+**Still not covered here:** HFS+ (every OS 9 extraction so far landed on the
+HFS transfer volume, not the HFS+ boot volume), and the `SIZE` partition made
+to bite under the Process Manager. Both are one run each and neither is
+blocked. Real PowerPC silicon, like real 68k silicon, remains untouched.

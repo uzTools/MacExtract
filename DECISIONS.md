@@ -719,3 +719,113 @@ The empty-root assertion is the whole test. Every earlier harness here
 extracted into a volume ROOT, where the working directory and the root are
 the same directory — so none of them could have caught a mistake in this
 code, however many times they ran.
+
+## 2026-08-02 — driving the Mac OS 9 Finder with the keyboard, not the mouse
+
+Getting the application to launch on Mac OS 9 took six boots. Five of them
+were spent on the mouse.
+
+The symptom never varied: the volume did not open. Three explanations were
+published against it, each a real defect, each fixed, none of them the answer
+— a double click spanning 0.9 s, an ADB pointer being fed absolute
+coordinates, and the Setup Assistant holding the foreground. All three are
+explanations of *clicking*, because the symptom was read as "the click was
+wrong" rather than "something in the chain broke".
+
+`tools/vmac/os9probe.py` broke the loop by measuring primitives instead of
+outcomes, cheapest first, on targets that answer unambiguously: does a held
+press pull a menu bar title down? does a single click merely SELECT the icon?
+does the cursor go where it is sent? Eleven probes, one boot. Every mouse
+probe changed exactly 0.0000 of its watched rectangle; every keyboard probe
+worked; and the cursor-locating probe found the pointer only ever in screen
+corners, never at any requested position.
+
+So the decision is: **the Finder is driven from the keyboard.** Type to select
+by name, Cmd-Down to open, Cmd-Q to quit. No coordinates to measure, no
+double-click threshold to hit, nothing to re-measure when the desktop layout
+changes. It worked first try and it is what `launch_by_keyboard()` does.
+
+Two lessons, and the second is the one worth carrying:
+
+- **Measure the primitive before theorising about the compound.** An outcome
+  that did not happen names no link in the chain. This is the same mistake as
+  the `macburger-helper.hqx` timeout, which was written up as an anomaly three
+  times before anyone instrumented the byte counter.
+- **A fix that is real is not thereby sufficient.** Three consecutive
+  confirmed defects were fixed and the thing still did not work. Each fix felt
+  like progress and each was published as a root cause. The habit that stops
+  this is refusing to call anything a root cause until the symptom is gone.
+
+## 2026-08-02 — checking Mac OS 9 output through the disk image, not the screen
+
+Mini vMac's harness CRC-32s both forks on the Mac and paints the aggregate to
+the framebuffer, because getting a floppy back out of Mini vMac mid-run is
+awkward. That machinery — `at_report()`, the on-screen grid, `decode_grid.py`
+— was the obvious thing to reuse on Mac OS 9, and it would have been the wrong
+thing: it exists to work around a constraint OS 9 does not have.
+
+The OS 9 transfer volume is a plain file on the host. So `verify_output()`
+waits for the emulator to exit and then reads it: the Apple_HFS partition is
+lifted out at the offset `mkapmdisk.py` wrote it at, hfsutils mounts it, and
+`hcopy -m` pulls each extracted file off as MacBinary — which is how both
+forks come across in one file, since hfsutils cannot copy a resource fork on
+its own. The forks are then compared byte for byte with `unclassic x -nr`.
+
+This is strictly stronger than the screen grid: it compares bytes rather than
+a CRC of them, it needs no pixel decoding, it reports which file and which
+fork differed, and it cannot be defeated by a 1bpp report routine meeting a
+32-bit colour screen. It also answers a question nobody had asked — whether
+the guest flushed its writes before being killed — because an unflushed volume
+fails to mount or comes up a file short instead of passing quietly.
+
+The general form: **when the environment changes, re-ask what the workaround
+was working around.** The framebuffer channel was a good answer to Mini vMac's
+constraint and a bad answer to QEMU's.
+
+**It found a real bug within one run of being written**, which is the argument
+for it. The on-screen grid reports `nfiles`, summed CRCs and summed lengths —
+it has never compared a single output NAME, and could not, because a name does
+not survive being summed into a CRC total. The first OS 9 sweep failed on
+`synth-exo-Z.Z` and `synth-exo-gz.gz`: the Mac wrote `archive.sit~1` where
+Linux wrote `archive`. Both fixtures are in `sample.txt` and both had been
+passing on Mini vMac for weeks.
+
+The cause was in the Mac shell, not the harness. `unclassic.h` documents
+`name_hint` — the fallback name for formats that store none, gzip and .Z — as
+"the archive filename minus its last extension"; `cli/main.c` strips the
+extension, and `RunExtract()` passed the whole Pascal string. So opening
+`foo.gz` on any Mac wrote a file called `foo.gz`, which collided with the
+archive sitting beside it and became `foo.gz~1`, where every other
+implementation writes `foo`. Fixed in `mac/unclassic_mac.c` with the same
+rule the CLI uses, including "a leading dot is not an extension".
+
+The lesson is about what a test is blind to rather than about the bug: **an
+aggregate check cannot fail on a property it never aggregates.** Nobody had
+written down that on-Mac names were unverified, because the harness looked
+thorough — twelve formats, both forks, byte-exact. It was thorough about
+bytes.
+
+**And then the new checker's own first verdict was wrong, in the same shape.**
+It reported 7/11, and all four failures were its blind spots rather than the
+Mac's:
+
+- it listed only the volume ROOT, so `synth-exo-tar.tar` — which extracts to
+  `README.txt`, `bin/` and `docs/` — looked like one file of four, with the
+  other three "MISSING". The Mac had written all four, correctly, in folders;
+- it read HFS names as UTF-8. They are MacRoman, so PackIt's `Appé` compared
+  unequal to itself. `run_diff.py` has decoded and NFC-normalized for exactly
+  this reason for months;
+- it treated "the Mac wrote nothing" as failure. For `derived-DandStoQIF2.sea`
+  nothing is the CORRECT answer — the engine sniffs it as DiskDoubler, which
+  is detect-only by the brief, and the app duly says "This file could not be
+  extracted". Linux writes nothing either. Agreement on nothing is a pass, and
+  it verifies the refusal path.
+
+All three are fixed, and re-running the checker over the SAME captured volumes
+turned 7/11 into 11/11 without the Mac doing anything differently — its output
+never changed, only the reading of it. (Two further fixtures, a StuffIt 5 and
+a 285 KB self-extracting archive, were added and run afterwards, for 13/13.)
+The near-miss is the point
+and is why it is written down: a FAIL from a young harness is a claim about
+the harness until it is shown to be a claim about the target. That is the same
+error as reading a cause into a timeout, arriving from the opposite direction.

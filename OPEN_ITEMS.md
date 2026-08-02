@@ -110,9 +110,12 @@ here because it is the largest genuine unknown.**
   (`tools/vmac/run.py --system Sys7.img`), with peak heap identical to 6.0.8.
   At 1 MB System 7 does not boot at all — it wants 2 MB — so the 1 MB floor
   target is System 6 and only System 6. **Still open on System 7:** the
-  interactive UI has never been driven there, and with it the two things the
-  tier exists for — `SFReply.vRefNum` as a working-directory reference, and
-  the `SIZE` partition under the Process Manager.
+  interactive UI has never been driven there. That used to carry the two
+  things the tier exists for with it — `SFReply.vRefNum` as a
+  working-directory reference, and the `SIZE` partition under the Process
+  Manager — but both are now tested directly, without a Finder, in the two
+  entries below. What remains undriven is the UI itself: SFGetFile, the
+  progress dialog and the alert, on System 7 specifically.
 - **`SFReply` working-directory semantics: CLOSED 2026-08-01.** The code path
   OPEN_ITEMS has carried as untested since M10 — `SFReply.vRefNum` passed to
   the File Manager with `dirID` 0, which on System 7 and later is a working
@@ -144,65 +147,52 @@ here because it is the largest genuine unknown.**
   machine. The Process Manager honours the partition, System 6 ignores it, and
   the engine's per-entry refusal behaves correctly when it bites. Method in
   MANUAL_TESTS.md.
-- **Mac OS 9: still never run — and the harness was damaging its own disk
-  image.** Found 2026-08-02: `os9.py` booted the master 2 GB image in place and
-  never hashed it, so every run altered the one artifact it depends on and
-  nothing could tell. Both fixed (copy-before-boot, published SHA-1 verified
-  before every run, `--setup --force` to re-fetch); the drifted image was
-  re-downloaded. The same lesson had been in BLOCKERS.md for Mini vMac since
-  M10 and was never carried across.
+- **Mac OS 9: CLOSED 2026-08-02 — the application runs there, and its output
+  is byte-exact.** `tools/vmac/os9.py --launch` boots Mac OS 9.2 under
+  `qemu-system-ppc -M mac99,via=pmu`, launches the 68k application from the
+  transfer volume through the 68LC040 emulator, extracts, and then compares
+  **both forks** of everything it wrote against the same engine's Linux
+  output. Results in FORMATS.md; method in MANUAL_TESTS.md.
 
-  **A route proposed earlier the same day has been withdrawn.** It claimed the
-  OS 9 boot volume was plain HFS, so the application could be dropped into
-  `System Folder:Startup Items:` with hfsutils and launched with no Finder
-  automation. The volume is **HFS+ inside an HFS wrapper**
-  (`drEmbedSigWord = 'H+'`; hfsutils sees only the wrapper, whose root holds
-  the single placeholder file `Where_have_all_my_files_gone?`), and this
-  environment has **no HFS+ writer at all** — no hfsprogs, no kernel module.
-  So offline writes to that volume are impossible here and the idea is dead,
-  not merely untried. See BLOCKERS.md.
+  Three things about how it was closed are worth keeping:
 
-  **Attempted 2026-08-02 over four boots, not achieved — but now one run
-  away.** Established directly: Mac OS 9.2 boots to the Finder here (20-45
-  min, not the four the old note claimed), the transfer volume mounts beside
-  the boot volume, and the desktop coordinates are measured and correct. What
-  failed was the pointer, not the click: `info mice` shows `mac99`'s default
-  is a **relative** ADB mouse, so `mouse_move` with absolute coordinates was
-  applied as a delta and slammed the pointer into a corner. Every click landed
-  on bare desktop — which looks exactly like a mis-measured icon, and cost
-  three boots and two wrong "fixes" (click too slow, then too fast) to
-  identify. Now fixed with `-device usb-tablet` **plus** `mouse_set`, since
-  QEMU leaves the relative mouse active; `Qemu.use_absolute_pointer()` checks
-  `info mice` before and after and refuses to run if the active pointer is
-  still relative. **The pointer mechanism is verified; the launch is not** — a
-  fifth boot with the absolute pointer still opened nothing.
+  * **It is driven from the keyboard, and the mouse does not work here at
+    all.** `tools/vmac/os9probe.py` measured eleven primitives in one boot:
+    all five mouse probes changed exactly 0.0000 of the screen, all five
+    keyboard probes worked, and locating the cursor by diffing screenshots
+    found it only ever in the extreme corners, never at any of three
+    requested positions. Typing selects by name in the Finder and Cmd-Down
+    opens the selection, which needs no coordinates and no double-click
+    timing. It worked first try.
+  * **Five boots were spent on the mouse before that probe was written.**
+    Three separate real defects were found and fixed — a 0.9 s double click,
+    a relative ADB pointer fed absolute coordinates, the Setup Assistant
+    holding the foreground — and none of them was the answer, because all
+    three were about clicking. Every one was inferred from the same
+    non-observation, "the volume did not open". See BLOCKERS.md; the general
+    lesson is that a non-observation names no link in the chain, and it is
+    the same lesson `macburger-helper.hqx` taught three times.
+  * **The check does not go through the framebuffer.** The transfer volume is
+    a file on the host, so the extracted forks are lifted out with hfsutils
+    after the emulator exits and compared byte for byte. That is stronger
+    than the on-screen CRC grid Mini vMac needs, and it doubles as proof the
+    guest flushed: an unflushed volume fails to mount rather than passing.
 
-  The current hypothesis, labelled as one: the **Mac OS Setup Assistant**
-  launches shortly after the desktop settles (every boot, because the harness
-  correctly starts from a pristine copy) and takes the foreground, and in
-  classic Mac OS the first click in an inactive application only activates it.
-  The double-click is therefore spent activating the Finder. `os9.py` now
-  clicks bare desktop first. **Untested.** Five boots, three explanations, two
-  of them confirmed real defects that were not sufficient — treat the third
-  the same way until a screenshot shows an open window.
-
-  What remains is the original plan: Finder automation through QEMU
-  screendumps, with `mkapmdisk.py`'s transfer volume (HFS, and it already
-  mounts) carrying the application. One thing does improve — the volume really
-  being HFS+ means the "HFS+ long filenames" row is reachable on this image
-  once the app can be run there, blocked on the same thing rather than a
-  second one. If the reporting channel ever matters: `at_report()` pokes a
-  1bpp framebuffer and OS 9 runs 32-bit colour, but QEMU writes its images
-  back reliably, so results could be written to a file instead of the screen.
-- **Mac OS 9 detail: still never run, but no longer blocked.** The `WaitNextEvent`
-  branch, `SFReply.vRefNum` as a System 7+ working-directory reference, HFS+
-  names and the `SIZE` partition under a real Process Manager remain untested
-  code. `tools/vmac/os9.py` gets as far as: Mac OS 9.2 boots to the Finder
-  under `qemu-system-ppc -M mac99,via=pmu`, and a transfer disk carrying the
-  application and an archive mounts on its desktop. **Launching the
-  application and driving it is not implemented**, which is where the
-  verification would actually happen — so this is a harness, not a result,
-  and the row stays open.
+  **What this closed in the untested-code list:** the `WaitNextEvent` branch,
+  the Standard File path, and the whole Toolbox File Manager layer now run on
+  a real Process Manager on PowerPC, not just on System 6. **What it did
+  not:** see the two rows below.
+- **Mac OS 9: HFS+ is still untouched.** Every OS 9 extraction so far went to
+  the *transfer* volume, which is HFS — so long names, the 31-character
+  truncation rule and the collision-suffix logic have still never met an HFS+
+  volume, and neither have names HFS+ permits that HFS does not. The boot
+  volume IS HFS+ (`drEmbedSigWord = 'H+'`), so this is now reachable by
+  extracting there instead; it needs a run, not a new capability.
+- **Mac OS 9: the `SIZE` partition has not been made to bite there.** The
+  application launches under the Process Manager, so the partition is honoured
+  enough to run. What has not been repeated on OS 9 is the System 6/7
+  comparison that made the memory refusal actually happen
+  (`derived-KeyGraphics.sit` against a 600 KB partition). One run.
 - **The interactive application: CLOSED 2026-08-01 for System 6.**
   `tools/vmac/interactive.py` drives the real UI under an emulator built for
   authentic Mac Plus timing and photographs each step: SFGetFile, the progress
@@ -302,9 +292,11 @@ file until someone with a Mac Plus runs the checklist.
   open when it returns `paramErr`, so both are unusable on System 6; `FSOpen`
   in the same file does fall back. Measured, cases 8 and 11 of
   `tools/retro68-hopen-repro/`. Written up ready to post in that directory's
-  `ISSUE.md`; **still not submitted, because this environment has no GitHub
-  credentials** — the network reaches github.com but an unauthenticated POST
-  to the issues API returns 401. Filing it needs a human with an account.
+  `ISSUE.md`; **deliberately not submitted, and no future session should
+  submit it.** The maintainer of this project will post it from his own
+  account — that is a standing instruction, not a limitation to work around.
+  (It is also not technically possible from here: the network reaches
+  github.com but an unauthenticated POST to the issues API returns 401.)
   (Corrected 2026-08-01: the write-up previously blamed only `HOpenDF`, on a
   misreading of which function holds the fallback.)
 - **The true root cause of the original "every open fails" saga is unknown.**
