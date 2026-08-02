@@ -1,4 +1,4 @@
-# OPEN_ITEMS.md — what is missing, as of 2026-08-01
+# OPEN_ITEMS.md — what is missing, as of 2026-08-02
 
 A standing audit of the gaps in this project: things not done, things done but
 not verified, and things the repository currently asserts more confidently than
@@ -265,6 +265,24 @@ file until someone with a Mac Plus runs the checklist.
   either. The general lesson is now in BLOCKERS.md: a hypothesis filed under
   "harness lessons" gets read as settled and nobody re-examines it. **This
   file is the place to look for others of the same shape.**
+- **A report that DECISIONS.md was truncated is FALSE.** Checked 2026-08-02
+  after it was raised: the file is intact at 656 lines, the working tree is
+  byte-identical to HEAD, and the sentence said to be cut off — "The earlier
+  disk-write crash was NOT one bug but" — is line 416, the opening of a
+  mid-file section, and continues normally. Recorded because the natural
+  response to that report is to "restore" the section, which would destroy
+  correct history; `git diff HEAD DECISIONS.md` and `tail` answer it in
+  seconds.
+- **The harness leaks orphan processes when a run is killed.** Both
+  `tools/vmac/run.py` and `tools/vmac/os9.py` start their emulator with
+  `start_new_session=True`, deliberately — a stray signal to the process group
+  must not take an emulator down mid-write — but the consequence is that when
+  the driver is killed by a timeout, its cleanup `finally` does not run and
+  the child survives. Observed twice on 2026-08-02: an orphaned
+  `qemu-system-ppc`, and two orphaned `Xvfb` displays left by earlier Mini
+  vMac runs. Harmless singly, but they accumulate across a long unattended
+  sweep and compete for the CPU the emulator needs. Not fixed: the right fix
+  is a signal handler, and it was not attempted here.
 - **The Retro68 `OpenDF`/`HOpenDF` bug is still not filed.** The `_OpenDF`
   trap is System 7, and neither `OpenDF` nor `HOpenDF` falls back to a plain
   open when it returns `paramErr`, so both are unusable on System 6; `FSOpen`
