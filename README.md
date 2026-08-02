@@ -88,7 +88,7 @@ distribution — `tools/make_dist.sh` builds an uncompressed MacBinary and an
 | System 6.0.8, 1 MB | 44-fixture corpus | ✅ 40/44 — the 4 are StuffIt 5 budget refusals, and 3 of those now extract most of their entries |
 | System 7.0.1, 4 MB | 44-fixture corpus | ✅ 44/44, same peak heap as 6.0.8 |
 | System 7.0.1, 1 MB | boot probe | ⚠️ System 7 needs 2 MB and does not boot — not an application fault |
-| System 7 interactive UI | — | ❌ **not run** (the Finder-driven path; the working-directory semantics behind it ARE tested, below) |
+| Interactive UI above System 6 | — | ⚪ **out of scope by choice** — System 6 is the UI's target and it is driven end to end there; the paths the higher tiers exist for are tested directly, below |
 | System 7.0.1 | the `SIZE` partition under the Process Manager | ✅ honoured — a 600 KB partition makes the engine decline an entry that needs 656 KB, cleanly; System 6 ignores `SIZE` and passes the same entry |
 | System 6.0.8 + 7.0.1 | working-directory extraction (`SFReply.vRefNum` + `dirID` 0) | ✅ output lands in the working directory, nothing in the volume root |
 | Mac OS 9.2, 512 MB (QEMU PowerPC, 68LC040 emulation) | 13-fixture format sample, launched from a real Finder | ✅ 13/13 byte-exact — both forks of 32 files compared **off the disk image**, names and folders included |

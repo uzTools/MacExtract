@@ -36,8 +36,14 @@ Manager that honours the `SIZE` partition.
 
 **NOT run on System 7, and therefore not claimed:**
 
-- **The interactive UI.** Only the headless autotest build was replayed. The
-  Finder-driven path (`--e2e`) has run on 6.0.8 only.
+- **The interactive UI — and it is not going to be.** System 6 is the UI's
+  target (decided 2026-08-02); only the headless autotest build is replayed
+  above it, and the Finder-driven path (`--e2e`) runs on 6.0.8 only. What that
+  leaves unexercised, stated so it is not mistaken for tested: `ProgressPump()`
+  branches on `gHasWNE`, and the cancel routes inside it — Cmd-., the Cancel
+  button via `DialogSelect`, the dialog repainting — have only ever run on the
+  `GetNextEvent` side. Mac OS 9 runs the `WaitNextEvent` side, but only where
+  nothing is cancelled.
 - **`SFReply` working-directory semantics: now TESTED, and passing.** See the
   section below — `run.py -D UNC_AT_WD` settles it without a Finder.
 - **The `SIZE` partition under the Process Manager.** Still never exercised.

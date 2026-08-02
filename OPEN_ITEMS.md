@@ -109,13 +109,23 @@ here because it is the largest genuine unknown.**
   44-fixture sample runs 44/44 byte-exact on System 7.0.1 at 4 MB
   (`tools/vmac/run.py --system Sys7.img`), with peak heap identical to 6.0.8.
   At 1 MB System 7 does not boot at all — it wants 2 MB — so the 1 MB floor
-  target is System 6 and only System 6. **Still open on System 7:** the
-  interactive UI has never been driven there. That used to carry the two
-  things the tier exists for with it — `SFReply.vRefNum` as a
-  working-directory reference, and the `SIZE` partition under the Process
-  Manager — but both are now tested directly, without a Finder, in the two
-  entries below. What remains undriven is the UI itself: SFGetFile, the
-  progress dialog and the alert, on System 7 specifically.
+  target is System 6 and only System 6.
+
+  **The interactive UI above System 6 is DELIBERATE SCOPE, not an open item**
+  (decided 2026-08-02). System 6 is the UI's target; it is driven end to end
+  there and the appearance and behaviour on 7 and 9 are not being chased. The
+  two things the System 7 tier actually exists for are tested directly and
+  without a Finder — `SFReply.vRefNum` as a working-directory reference, and
+  the `SIZE` partition under the Process Manager — in the entries below.
+
+  Named so it is not mistaken for tested: `ProgressPump()`
+  (`mac/unclassic_mac.c`) branches on `gHasWNE`, and the cancel routes inside
+  it — Cmd-., the Cancel button through `DialogSelect`, and the dialog
+  repainting — have only ever been driven on the `GetNextEvent` side, i.e. on
+  System 6. The Mac OS 9 runs exercise the `WaitNextEvent` side, but only on
+  the happy path, where nothing is cancelled. The engine and sink semantics of
+  a cancel are covered independently: unit tests, both write paths through the
+  qemu-m68k mock in `ci.sh`, and `UNC_AT_CANCEL` on-Mac at 4 MB and 1 MB.
 - **`SFReply` working-directory semantics: CLOSED 2026-08-01.** The code path
   OPEN_ITEMS has carried as untested since M10 — `SFReply.vRefNum` passed to
   the File Manager with `dirID` 0, which on System 7 and later is a working
