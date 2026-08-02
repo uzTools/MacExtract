@@ -47,6 +47,10 @@ target_compile_options(unclassic PRIVATE -mcpu=68000 -Os -Wno-multichar
                        # and reports what the volume actually holds, proving an
                        # aborted entry leaves no partial file behind.
                        $<$<BOOL:$ENV{UNC_AT_CANCEL}>:-DUNC_AT_CANCEL>
+                       # UNC_AT_PROGRESS: paint the engine's progress into the
+                       # result grid as it runs, so a run that never finishes
+                       # can still be interrogated by screenshot.
+                       $<$<BOOL:$ENV{UNC_AT_PROGRESS}>:-DUNC_AT_PROGRESS>
                        # UNC_AT_WD: extract through a WORKING DIRECTORY made
                        # with PBOpenWD (vRefNum = WD, dirID = 0), which is the
                        # shape SFGetFile hands the interactive app on System 7

@@ -340,85 +340,49 @@ filenames, and names HFS+ permits that HFS does not" row in MANUAL_TESTS.md is
 genuinely reachable on this image once the application can be run there. It is
 blocked on the same thing, not on a different one.
 
-### Timing on a 7 MHz Mac Plus — NOT MEASURED, and why
+### Timing on a 7 MHz Mac Plus — MEASURED, after three wrong write-ups
 
-**No timing numbers were produced, and none are published.** This is the one
-claim the project makes loudest ("runs on a Mac Plus") and the one it has
-never quantified; an attempt on 2026-08-01 failed, and the failure is worth
-recording so the next attempt does not repeat it.
+Absolute 1x timings now exist for every format sampled (FORMATS.md). Getting
+there took four attempts, and the three failed ones are kept because the
+mistake behind all of them was identical.
 
-What works and is committed:
+`run.py --emu mv-4M-1x` separates boot from extraction: the application paints
+its "alive" grid before touching a disk, so the gap between the first
+decodable grid and the last is the archive alone. Small archives extract in
+under 5 s on a machine that takes ~10 s to boot; `derived-EmpireBuilderDemo.sit`
+(278 KB in, 417 KB out) takes ~134 s.
 
-- `mv-4M-1x`, the authentic 7 MHz build, already existed.
-- `run.py --emu` now selects it, and `run.py` **splits boot from extraction**:
-  the application paints its `kAtRunning` grid before touching a disk, so the
-  gap between the first decodable grid and the final one is the extraction
-  alone. Proven on a small fixture: `derived-Export.sit` (1615 B StuffIt)
-  came out as **boot 10 s + extract 2 s**.
-- `tools/vmac/timing.txt` is the representative set — one fixture per format,
-  chosen large, plus a small one for the other end.
+**`macburger-helper.hqx` was written up three times as an anomaly and is not
+one.** It extracts in **150 s** (boot 30 s), one file, 259,379 bytes out,
+byte-exact. The published explanations, in order, were:
 
-What failed: **`macburger-helper.hqx` (306 KB BinHex) did not finish in over
-fifteen minutes of wall clock at 1x, on two separate attempts.** On a real
-Mac Plus that decode should be a minute or two.
+1. **host contention** — the first attempt ran alongside CI and a second
+   emulator, and polled every 3 s through a pure-Python decoder over a
+   175k-pixel grid. Real, and it did wreck that run. Disproved as *the* cause
+   by an idle host, where it still did not finish.
+2. **the on-Mac path scales badly** — the strongest claim, and wrong.
+3. **the autotest's CRC read-back** — disproved with `-D UNC_AT_NOCRC`, and
+   irrelevant once (2) fell.
 
-Two explanations were possible, and one is now **ruled out**:
+What actually settled it was `UNC_AT_PROGRESS`, which paints the engine's byte
+counter into the result grid as it runs, so a run that has *not* finished can
+still be interrogated — screenshot it and read where it got to:
 
-1. The host is not sustaining 1x — a single contended core also running the
-   screenshot loop, with the first attempt polling every 3 s through a
-   pure-Python decoder over 175k pixels. **This is the surviving
-   explanation.**
-2. ~~The on-Mac path really is that slow for large inputs~~ — **disproved
-   2026-08-01.** Decode cost was measured on Linux, where the engine is the
-   same code and the clock is trustworthy: `macburger-helper.hqx` takes
-   **2.9 ms** for 299 KB, one of the *cheapest* fixtures per byte and about
-   3x cheaper than `derived-EmpireBuilderDemo.sit` (9.0 ms) — which DID
-   complete at 1x, in ~134 s. A fixture three times cheaper than one that
-   finishes in 134 s cannot honestly take more than 900 s on the same
-   machine; the two figures disagree by a factor of roughly twenty. The
-   non-completion is an artifact of that run, not a property of the code.
+    t+~7 min     49,152 / 306,651   (16%)
+    t+~9 min     98,304 / 306,651   (32%)
+    t+11 min    303,104 / 306,651   (99%)   <- 205 KB in the last 100 s
 
-~~So there is no lurking usability defect, and the remaining problem is purely
-one of environment: this host cannot be trusted to run Mini vMac at a faithful
-1x while also screenshotting it.~~ **HALF WITHDRAWN 2026-08-02.**
+The rate is wildly non-uniform: slow through the first third, then most of the
+archive in under two minutes. Every fixed timeout I chose expired during the
+slow phase and looked exactly like a hang.
 
-Blaming host contention does not survive the obvious test. With the machine
-idle — load average 0.4, no CI, no second emulator — `macburger-helper.hqx`
-STILL did not finish in fifteen minutes, while eight other fixtures across
-eight formats measured cleanly at 1x in the same session (8/8; boot ~10 s,
-every extraction under 5 s; table in FORMATS.md). Contention was real and did
-wreck the first attempt, but it was never the reason this one fixture hangs.
+**The lesson, and it cost three write-ups: a timeout expiring is not a
+measurement.** It reports that something did not finish inside a number I
+picked, and nothing at all about why — yet each time I read a cause into it and
+published one. The instrument that answered it in a single run was twenty
+lines, and the data it needed was already flowing through a callback the
+engine has had since M0.
 
-So the part that stands is that the harness and 1x are fine; the part that
-falls is the diagnosis. **`macburger-helper.hqx` is a genuine outlier, not an
-artifact** — and since it is the cheapest fixture per byte on Linux while
-`kermitut9test.bin` at 304 KB extracts fine, neither size nor format explains
-it. It is the single best piece of evidence that something in the on-Mac path
-scales badly.
-
-**Bisection so far, one step done.** The obvious suspect was the autotest's
-on-Mac CRC read-back: it reads every extracted fork back through the File
-Manager, and the ~134 s `EmpireBuilderDemo` anchor does NOT include that phase,
-because that figure came from the *interactive* build which has no read-back.
-Not the answer: re-run at 1x with `-D UNC_AT_NOCRC`, which skips the read-back
-entirely, and the fixture still did not finish in ~35 minutes. **So the cost is
-in extraction itself, not in verification.**
-
-Remaining suspects, in the order worth testing: the RAM slurp of a 306 KB
-archive on a 4 MB machine (does it thrash?), the BinHex probe's rolling
-8 KB-window scan, and the streaming writes of 253 KB of output. The progress
-callback fires every 8-16 KB and is the cheap instrument — have it paint a
-counter to the framebuffer and watch where it stops advancing. Do not guess a
-fourth time; this write-up has already been wrong twice.
-
-What can be said with evidence today: the engine's relative cost per format,
-an absolute 1x table of eight fixtures, and the
-`derived-EmpireBuilderDemo.sit` anchor (278 KB in, 417 KB out, ~134 s, machine
-booting in ~10-16 s). All in FORMATS.md, summarised in the README.
-
-**Until it is, no number goes in the README.** A fabricated or
-contention-inflated figure would be worse than the current honest absence, and
-this repository has enough retracted numbers already.
 
 ### Open items from the on-Mac corpus replay — both CLOSED 2026-07-25
 

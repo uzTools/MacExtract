@@ -1143,6 +1143,34 @@ static void at_count_dir(short vol, long dir, int *files, int *dirs)
 }
 #endif
 
+#ifdef UNC_AT_PROGRESS
+/* Paint the engine's progress into the result grid as it goes, so a run that
+ * never finishes can still be interrogated: screenshot it at intervals and
+ * see whether `done` is advancing, crawling, or stopped, and at what byte.
+ *
+ * This exists for one fixture. macburger-helper.hqx (306 KB BinHex) has never
+ * completed at 1x, on an idle host, with the CRC read-back disabled — while a
+ * 304 KB MacBinary and a 278 KB StuffIt both extract fine, and the same
+ * archive is among the CHEAPEST fixtures per byte off-Mac. Two confident
+ * explanations for it have already been wrong (host contention, then the
+ * read-back), so this measures instead of guessing: the callback already fires
+ * every 8-16 KB of input, which is all the resolution needed to tell "slow"
+ * from "stuck". */
+static int at_prog_tick(void *ctx, uint32_t done, uint32_t total)
+{
+    uint32_t vals[8];
+    int i;
+    (void)ctx;
+    for (i = 0; i < 8; i++) vals[i] = 0;
+    vals[0] = done;                      /* input bytes consumed so far   */
+    vals[1] = (uint32_t)kAtRunning;      /* still working — not a result  */
+    vals[2] = total;                     /* input bytes expected          */
+    vals[7] = (uint32_t)gPeakUsage;
+    at_report(vals, 8);
+    return 1;                            /* keep going */
+}
+#endif
+
 static void at_fail(int code)
 {
     uint32_t vals[8];
@@ -1270,8 +1298,18 @@ int main(void)
     }
 #endif
 
+#ifdef UNC_AT_PROGRESS
+    {
+        UncProgress prog;
+        prog.ctx = NULL;
+        prog.tick = at_prog_tick;
+        ret = RunExtract(inVol, fsRtDirID, "\parchive.sit",
+                         outVol, fsRtDirID, &prog, &entries, &errors);
+    }
+#else
     ret = RunExtract(inVol, fsRtDirID, "\parchive.sit",
                      outVol, fsRtDirID, NULL, &entries, &errors);
+#endif
 
     /* Read every extracted file's forks back through the real File Manager,
      * CRC-32 each, and aggregate into an ORDER-INDEPENDENT summary: file

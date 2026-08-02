@@ -104,6 +104,7 @@ the full untested list.
 |---|---|
 | a few KB (any format) | **under 5 s** |
 | 278 KB StuffIt → 417 KB out | **~134 s** |
+| 306 KB BinHex → 253 KB out | **~150 s** |
 
 The machine itself takes ~10 s to boot into the application, so for small
 archives the boot dominates and the extraction is barely noticeable. Per-format
@@ -111,10 +112,8 @@ figures and the relative decode costs are in [FORMATS.md](FORMATS.md);
 Arsenic (StuffIt 5) is in a class of its own and mostly wants a 4 MB machine
 anyway.
 
-One fixture is a documented outlier: a 306 KB BinHex has never finished at 1x,
-even on an idle host, though a 304 KB MacBinary extracts fine and the same
-BinHex is among the *cheapest* fixtures per byte off-Mac. It is an open
-question, written up in BLOCKERS.md rather than smoothed over.
+So the rule of thumb is: a few kilobytes is instant, a few hundred kilobytes is
+two to three minutes. Nothing sampled behaves worse than that.
 
 **Detect-only** (v1 names but does not extract): StuffIt X, DiskDoubler,
 Now Compress, LZH, DiskCopy 4.2. **Out of scope (v1):** compression,

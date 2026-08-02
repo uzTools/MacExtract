@@ -128,6 +128,7 @@ resolution, not a stopwatch.
 | synth-exo-zip-store.zip | Zip | 8.4 KB | 10 s | 5 s |
 | synth-exo-tar.tar | Tar | 20 KB | 10 s | 5 s |
 | synth-exo-gz.gz | Gzip | 0.1 KB | 10 s | <5 s |
+| macburger-helper.hqx | BinHex | 306 KB | 30 s | **150 s** |
 
 **8/8, and the shape is the useful part: for small archives the BOOT dominates
 and extraction is seconds.** A stripped System 6.0.8 reaches the application in
@@ -136,16 +137,12 @@ larger 1x measurement that exists — `derived-EmpireBuilderDemo.sit`, 278 KB in
 and 417 KB out — took **~134 s**. So a few kilobytes is instant, a quarter of a
 megabyte is a couple of minutes.
 
-**One fixture does not fit and is unexplained.** `macburger-helper.hqx`
-(306 KB BinHex, 253 KB out) has never completed at 1x — twice past 15 minutes,
-the second time on an idle host (load average 0.4) with nothing else running.
-That rules out the host contention originally blamed for it. It is also the
-*cheapest* fixture per byte on Linux (2.9 ms, FORMATS.md below), and
-`kermitut9test.bin` at 304 KB extracts fine in the all-out sweeps, so neither
-size nor format explains it. **Treat it as an open question about the
-application, not about the harness** — it is the one piece of evidence that
-something on the Mac path scales badly, and it deserves a run with the progress
-callback instrumented rather than another guess.
+**The large BinHex is not an anomaly.** `macburger-helper.hqx` was written up
+three times as one — it never finished inside the timeouts chosen for it — and
+it simply takes 150 s. Instrumenting the engine's byte counter
+(`-D UNC_AT_PROGRESS`) showed why the timeouts misled: the rate is very
+non-uniform, 16% of the input in the first seven minutes and the last 205 KB
+in a hundred seconds. See BLOCKERS.md.
 
 ## Relative decode cost per format (Linux, same engine)
 
