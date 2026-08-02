@@ -1,0 +1,44 @@
+# tools/vmac/os9sample.txt — the fixtures replayed on emulated Mac OS 9.2.
+#
+# Deliberately much smaller than sample.txt, which is the Mac Plus set. Each
+# fixture here costs a whole boot of Mac OS 9 (~110 s on an idle host, plus a
+# 2 GB image copy), where the Mini vMac harness replays a whole set inside one
+# boot. So this samples for BREADTH OF FORMAT, not for the memory-budget
+# spread that sample.txt exists to exercise: the 1 MB floor is a System 6
+# question and the OS 9 machine has 512 MB.
+#
+# Selection rule: the smallest fixture of each format, plus three cases the
+# size-ordered pick would have missed —
+#
+#   derived-DDT.sit          the smallest fixture carrying a real RESOURCE
+#                            fork, which is what the whole M10 File Manager
+#                            saga was about and what a data-fork-only sample
+#                            never touches;
+#   derived-XferIt_1.5b4.sea a self-extracting archive, and at 285 KB by far
+#                            the largest thing here;
+#   derived-DandStoQIF2.sea  DiskDoubler, which is DETECT-ONLY by the brief.
+#                            The correct outcome is a clean refusal with
+#                            nothing written, and that is checked: the harness
+#                            passes it only when the Mac and the Linux engine
+#                            BOTH produce nothing. Most `.sea` fixtures in the
+#                            corpus turn out to be DiskDoubler or Now Compress
+#                            rather than StuffIt, which the extension hides.
+#
+# Run:  tools/vmac/os9.py --list tools/vmac/os9sample.txt -o <dir> --launch
+#
+# Every entry is checked byte-for-byte, both forks, against the same engine's
+# Linux output — see verify_output() in os9.py. Results in FORMATS.md.
+
+export-hc.hqx                              # BinHex, 3127 B
+derived-keyAhead.cpt                       # Compact Pro, 863 B
+synth-exo-Z.Z                              # compress, 488 B
+synth-exo-gz.gz                            # gzip, 81 B
+stuffit151mstr.bin                         # MacBinary, 493 B
+synth-packit-2.pit                         # PackIt, 3367 B
+derived-Export.sit                         # StuffIt, 1615 B
+derived-DDT.sit                            # StuffIt with a resource fork, 3642 B
+derived-KeyGraphics.sit                    # StuffIt 5 / Arsenic, 4611 B
+derived-XferIt_1.5b4.sea                   # Compact Pro self-extracting, 285495 B
+derived-DandStoQIF2.sea                    # DiskDoubler: must REFUSE, 30562 B
+synth-exo-tar.tar                          # tar, 20480 B
+synth-exo-zip-deflate.zip                  # zip, 3709 B
