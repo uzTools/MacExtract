@@ -74,13 +74,16 @@ paints a grid with `ret = -1000` ("running"); a missing `In`/`Out` volume paints
 from *bad disk set* — which a bare timeout cannot. `run.py` reports those as
 `NOGRID`, `TIMEOUT` and `SETUP` respectively, distinct from a real `FAIL`.
 
-**A killed run leaves its emulator behind.** Both `run.py` and `os9.py` start
+**A killed run used to leave its emulator behind — fixed.** Both `run.py` and `os9.py` start
 the emulator with `start_new_session=True` on purpose — a stray signal to the
 process group must not take it down mid-write — so a driver killed by a
 `timeout` never reaches its cleanup and the child survives. Seen twice:
 an orphaned `qemu-system-ppc`, and two orphaned `Xvfb` displays. Check with
 `pgrep -x minivmac`, `pgrep -f qemu-system`, `pgrep -x Xvfb` after any
-interrupted sweep; they cost CPU the next emulator needs.
+interrupted sweep; they cost CPU the next emulator needs. Both harnesses now
+turn SIGTERM and SIGINT into a `SystemExit`, so the signal unwinds and the
+existing cleanup runs; verified by interrupting a 1x run with a live emulator
+and finding nothing left over.
 
 **`EMUDIED` means the host failed, not the Mac.** The emulator process
 occasionally exits within a few seconds of launch — twice in an 88-run sweep

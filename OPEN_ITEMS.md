@@ -281,8 +281,13 @@ file until someone with a Mac Plus runs the checklist.
   the child survives. Observed twice on 2026-08-02: an orphaned
   `qemu-system-ppc`, and two orphaned `Xvfb` displays left by earlier Mini
   vMac runs. Harmless singly, but they accumulate across a long unattended
-  sweep and compete for the CPU the emulator needs. Not fixed: the right fix
-  is a signal handler, and it was not attempted here.
+  sweep and compete for the CPU the emulator needs — which is the same
+  contention that made the 1x timing measurement unusable. **FIXED 2026-08-02**:
+  both harnesses now install a SIGTERM/SIGINT handler that raises `SystemExit`,
+  so a signal unwinds normally and the existing `finally` cleanup runs.
+  Demonstrated rather than assumed — a 1x run was interrupted with a live
+  emulator, printed "interrupted by signal 15", and left zero `minivmac` and
+  zero `Xvfb` processes behind.
 - **The Retro68 `OpenDF`/`HOpenDF` bug is still not filed.** The `_OpenDF`
   trap is System 7, and neither `OpenDF` nor `HOpenDF` falls back to a plain
   open when it returns `paramErr`, so both are unusable on System 6; `FSOpen`

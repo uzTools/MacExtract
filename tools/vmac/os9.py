@@ -30,11 +30,29 @@ application) and the icon positions in a freshly opened window are not known
 in advance, so it wants the same
 screenshot-look-adjust loop the System 6 driver went through.
 """
-import argparse, os, re, shutil, socket, subprocess, sys, time
+import argparse, os, re, shutil, signal, socket, subprocess, sys, time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import run as R                                              # noqa: E402
+
+
+def _die_cleanly(signum, frame):
+    """Turn a signal into a normal unwind so `finally` blocks run.
+
+    Both harnesses start their emulator with start_new_session=True, on
+    purpose: a stray signal to the process group must not take it down
+    mid-write. The cost is that a driver killed by a `timeout` never reaches
+    its cleanup and the emulator survives as an orphan — observed repeatedly,
+    including two Xvfb displays and a qemu-system-ppc that had to be killed by
+    hand, all of them competing for the CPU the next run needs. Raising
+    SystemExit instead of dying in place lets the existing cleanup do its job.
+    """
+    raise SystemExit(f"interrupted by signal {signum}")
+
+
+signal.signal(signal.SIGTERM, _die_cleanly)
+signal.signal(signal.SIGINT, _die_cleanly)
 
 QEMU_HOME = os.path.join(os.path.dirname(R.VMAC_HOME), "qemu-ppc")
 
