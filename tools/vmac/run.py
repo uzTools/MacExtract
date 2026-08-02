@@ -328,6 +328,49 @@ def check_wd(vals):
                 f"(wdRefNum {wdref})")
 
 
+def check_interleave(vals):
+    """Verdict for a UNC_AT_INTERLEAVE run.
+
+    Reads one file twice on one volume — once undisturbed, once with a new
+    file created and written on that same volume between every chunk — and
+    compares the two CRC-32s.
+
+    **PASS here means the interleave is HARMLESS**, i.e. the claim that reads
+    go to zeros while the same volume is being written does NOT reproduce, and
+    the whole-archive RAM slurp in RunExtract() is buying nothing. FAIL means
+    the claim is real and finally has a reproduction. Say which way round it
+    is in the text, because a bare PASS/FAIL on a negative test is exactly the
+    kind of thing that gets read backwards a month later."""
+    len_a, len_b, len_c = vals[0], vals[2], vals[7]
+    crc_a, crc_b, crc_c = vals[3], vals[4], vals[6]
+    rounds = vals[5] & 0xFFFF
+    werr = vals[5] >> 16
+    werr = werr - 0x10000 if werr >= 0x8000 else werr
+    if len_a == 0:
+        return None, "read nothing at all — the input file was not opened"
+    if rounds == 0:
+        return None, "no interleaved writes happened, so nothing was tested"
+    if werr:
+        return None, (f"could not create the interleaved files (err {werr}) — "
+                      f"the volume, not the read, is what failed")
+    seq_ok = (crc_a == crc_b) and (len_a == len_b)
+    seek_ok = (crc_a == crc_c) and (len_a == len_c)
+    if seq_ok and seek_ok:
+        return True, (f"interleave is HARMLESS: {len_a} B, CRC {crc_a:08x}, "
+                      f"read identically three ways — undisturbed, and twice "
+                      f"more with {rounds} file creations on the same volume "
+                      f"in between (sequential, and seeking before every "
+                      f"read) — so the RAM slurp is not needed for this")
+    which = []
+    if not seq_ok:
+        which.append(f"sequential {len_b} B CRC {crc_b:08x}")
+    if not seek_ok:
+        which.append(f"seeking {len_c} B CRC {crc_c:08x}")
+    return False, (f"interleave CORRUPTS the read, so the slurp is justified: "
+                   f"undisturbed {len_a} B CRC {crc_a:08x} vs "
+                   + "; ".join(which) + f" over {rounds} rounds")
+
+
 def check(fixture, png, manifest_dir):
     """Cross-check the on-screen grid against the Linux engine's output."""
     man = os.path.join(manifest_dir, os.path.basename(fixture) + ".json")
@@ -429,6 +472,9 @@ def main():
                 verdict = "PASS" if ok else ("SETUP" if ok is None else "FAIL")
             elif "UNC_AT_CANCEL" in args.defines:
                 ok, detail = check_cancel(vals)
+                verdict = "PASS" if ok else ("SETUP" if ok is None else "FAIL")
+            elif "UNC_AT_INTERLEAVE" in args.defines:
+                ok, detail = check_interleave(vals)
                 verdict = "PASS" if ok else ("SETUP" if ok is None else "FAIL")
             else:
                 ok, detail = check(fixture, png, manifest_dir)
