@@ -230,13 +230,40 @@ tools, no `mount.hfsplus`, and the kernel has no hfsplus module
 Items idea is not merely unproven — **it cannot be done here at all**, by any
 route that writes the boot volume offline.
 
-**Attempted 2026-08-02 and not achieved.** One boot was driven to see the
-desktop and measure icon positions, which is the first of three or four
-iterations the Finder route needs. It produced no screenshot: the harness
-slept a fixed 260 s ("about four minutes to reach the Finder here") and this
-host is nowhere near that fast, so the shot was taken mid-boot and the run
-was killed by its outer timeout before anything was written. Two harness
-weaknesses, both now fixed:
+**Attempted 2026-08-02 across four boots and NOT achieved.** What is now
+established, and what is not:
+
+- **Mac OS 9.2 boots to the Finder** under `qemu-system-ppc -M mac99,via=pmu`
+  on this host — seen directly, repeatedly. (The image is 9.2, not the 9.0.4
+  the task named.) It takes 20-45 minutes here, not the four minutes the old
+  note claimed, and the time varies a lot with host load.
+- **The transfer volume mounts.** Both `untitled` (boot) and `unclassic`
+  (transfer, carrying the application and an archive) appear on the desktop.
+- **The desktop icon coordinates are measured and correct**: `unclassic` sits
+  at (974, 117) on the 1024x768 screen; `XFER_VOLUME_ICON` is (974, 120).
+- **The volume will not open, so the application has never been launched.**
+  The click lands — the Finder comes to the front — but no window opens.
+
+The obstacle is the click primitive, not the coordinates, and it has now
+failed in both directions:
+
+- Originally `click(double=True)` sent four `mouse_button` commands as four
+  separate `mon()` calls. `mon()` sleeps 0.3 s before sending so the monitor
+  banner can arrive, which put roughly **0.9 s between the two clicks** — past
+  the Mac's ~0.5 s double-click threshold, so the Finder saw two single
+  clicks.
+- Sending all four events in one write fixed that and broke the other end:
+  they arrive microseconds apart and the guest samples the mouse once per VBL
+  (60 Hz), so the transitions can be missed entirely. Same symptom.
+- It now sends them on one connection with deliberate 60 ms down/up gaps and
+  180 ms between clicks — inside the threshold, above one frame. **That
+  version has not been run**; a verification boot costs ~50 minutes here and
+  was not started.
+
+So the next attempt is ONE run, not three. Everything ahead of the click is
+known-good and measured.
+
+Two harness weaknesses were fixed along the way:
 
 - **The fixed sleep is gone.** `Qemu.settle()` screenshots until the screen
   stops changing, the same approach `interactive.py` uses, so the boot is

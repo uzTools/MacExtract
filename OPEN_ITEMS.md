@@ -162,12 +162,17 @@ here because it is the largest genuine unknown.**
   So offline writes to that volume are impossible here and the idea is dead,
   not merely untried. See BLOCKERS.md.
 
-  **Attempted 2026-08-02, not achieved**: one boot, no screenshot, because the
-  harness slept a fixed 260 s for a boot this host does not finish in that
-  time. `Qemu.settle()` now waits for the screen to stop changing instead, so
-  the next attempt starts from a harness that reports what happened rather than
-  producing nothing. Each iteration costs 15+ minutes here, and the Finder
-  route needs three or four.
+  **Attempted 2026-08-02 over four boots, not achieved — but now one run
+  away.** Established directly: Mac OS 9.2 boots to the Finder here (20-45
+  min, not the four the old note claimed), the transfer volume mounts beside
+  the boot volume, and the desktop coordinates are measured and correct. What
+  fails is the double-click itself: the volume never opens, though the click
+  lands and brings the Finder forward. The primitive was too SLOW (0.9 s
+  between clicks, past the Mac's threshold) and then, after a fix, too FAST
+  (one write, arriving inside a single 60 Hz input frame). It now uses
+  deliberate 60/180 ms gaps on one connection — **unverified**, because a
+  boot costs ~50 minutes on this host. Everything ahead of the click is
+  known-good, so the next attempt is a single run.
 
   What remains is the original plan: Finder automation through QEMU
   screendumps, with `mkapmdisk.py`'s transfer volume (HFS, and it already

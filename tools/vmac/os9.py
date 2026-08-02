@@ -37,6 +37,14 @@ sys.path.insert(0, HERE)
 import run as R                                              # noqa: E402
 
 QEMU_HOME = os.path.join(os.path.dirname(R.VMAC_HOME), "qemu-ppc")
+
+# Desktop icon positions on the settled 1024x768 Mac OS 9 desktop, measured
+# off desktop.png. Volumes stack down the right-hand edge in mount order: the
+# boot disk ("untitled") first, then the transfer volume ("unclassic").
+XFER_VOLUME_ICON = (974, 120)
+# The application inside the transfer volume's window, once opened. Measured
+# off volume.png — re-measure it there if the volume's contents change.
+XFER_APP_ICON = (60, 100)
 DISK = os.path.join(QEMU_HOME, "MacOS9.img")
 
 # A pre-installed Mac OS 9.2 disk, Apple-partitioned, from the Internet
@@ -100,11 +108,40 @@ class Qemu:
 
     def click(self, x, y, double=False):
         """Click at 1024x768 screen coordinates. QEMU's absolute pointer uses
-        a 0..32767 space on both axes regardless of the guest resolution."""
+        a 0..32767 space on both axes regardless of the guest resolution.
+
+        The button events go down ONE monitor connection in a single write.
+        They used to be four separate mon() calls, and mon() sleeps 0.3 s
+        before sending so the monitor's banner can arrive — which put roughly
+        0.9 s between the two clicks of a "double click". The classic Mac
+        double-click threshold is about half that, so the Finder saw two
+        single clicks, the volume never opened, and the failure looked like a
+        mis-measured icon coordinate rather than a broken primitive."""
         self.mon(f"mouse_move {int(x * 32767 / 1024)} {int(y * 32767 / 768)}", 0.5)
-        for _ in range(2 if double else 1):
-            self.mon("mouse_button 1", 0.15)
-            self.mon("mouse_button 0", 0.15)
+        # One connection, but with DELIBERATE gaps between the button events.
+        # Both extremes fail: four separate mon() calls put ~0.9 s between the
+        # two clicks (past the Mac's ~0.5 s double-click threshold, so the
+        # Finder sees two single clicks), while writing all four events at
+        # once puts them microseconds apart and the guest — which samples the
+        # mouse once per VBL, 60 Hz — can miss the transitions entirely.
+        # 60 ms down/up and 180 ms between clicks is inside the threshold and
+        # comfortably above one frame.
+        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        s.connect(self.mon_path)
+        time.sleep(0.3)
+        try:
+            s.recv(65536)
+        except OSError:
+            pass
+        for i in range(2 if double else 1):
+            if i:
+                time.sleep(0.18)
+            s.sendall(b"mouse_button 1\n")
+            time.sleep(0.06)
+            s.sendall(b"mouse_button 0\n")
+            time.sleep(0.06)
+        time.sleep(0.6)
+        s.close()
         time.sleep(0.8)
 
     def settle(self, scratch, interval=20.0, timeout=1200.0, stable=2):
@@ -125,12 +162,27 @@ class Qemu:
                 return None                       # qemu died; caller reports
             if not self.shot(scratch):
                 continue
-            cur = open(scratch, "rb").read()
+            cur = self._body(scratch)
             same = same + 1 if cur == prev else 0
             prev = cur
             if same >= stable - 1:
                 return time.time() - started
         return None
+
+    @staticmethod
+    def _body(path):
+        """The screen BELOW the menu bar, as raw pixels.
+
+        Comparing whole frames does not work on Mac OS 9: the menu bar carries
+        a clock, so two shots a minute apart are never byte-identical and a
+        settled desktop never looks settled. The first version of settle() hung
+        until its timeout on a machine that had in fact reached the Finder
+        minutes earlier. Everything this harness cares about — volume icons,
+        windows, dialogs — is below the menu bar."""
+        out = subprocess.run(["convert", path, "-crop", "1024x748+0+20",
+                              "+repage", "-depth", "8", "rgb:-"],
+                             capture_output=True)
+        return out.stdout
 
     def close(self):
         try:
@@ -210,6 +262,14 @@ def main():
                          "(use when verify_disk() reports drift)")
     ap.add_argument("--setup", action="store_true", help="fetch the Mac OS 9 disk")
     ap.add_argument("-o", "--outdir", default="os9-shots")
+    ap.add_argument("--launch", action="store_true",
+                    help="after the desktop settles, open the transfer volume "
+                         "and double-click the application. Coordinates are at "
+                         "the top of this file and were measured off the "
+                         "screenshots this mode writes")
+    ap.add_argument("--launch-wait", type=float, default=120.0,
+                    help="seconds to allow the application to open; the 68k "
+                         "emulator makes this slower than a native launch")
     ap.add_argument("--boot-wait", type=float, default=1800.0,
                     help="host seconds to allow for the desktop to SETTLE (the "
                          "harness waits for the screen to stop changing rather "
@@ -252,6 +312,23 @@ def main():
                 f"guest is broken.")
         print(f"os9: desktop settled after ~{waited:.0f}s")
         print(q.shot(os.path.join(args.outdir, "desktop.png")))
+
+        if args.launch:
+            # Open the transfer volume and launch the application from it.
+            # There is no way to avoid the Finder here: the boot volume is
+            # HFS+ inside an HFS wrapper and nothing in this environment can
+            # write HFS+, so the application cannot be placed in Startup
+            # Items offline. See BLOCKERS.md.
+            q.click(*XFER_VOLUME_ICON, double=True)
+            time.sleep(20)
+            print(q.shot(os.path.join(args.outdir, "volume.png")))
+            q.click(*XFER_APP_ICON, double=True)
+            time.sleep(args.launch_wait)
+            print(q.shot(os.path.join(args.outdir, "launched.png")))
+            print("os9: launched.png is the result. SFGetFile on screen means "
+                  "the 68k binary runs under the 68LC040 emulator; anything "
+                  "else — a crash dialog, an unchanged window — is the "
+                  "finding.")
         if os.path.exists(scratch):
             os.remove(scratch)
     finally:
