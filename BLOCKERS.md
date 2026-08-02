@@ -394,8 +394,22 @@ falls is the diagnosis. **`macburger-helper.hqx` is a genuine outlier, not an
 artifact** — and since it is the cheapest fixture per byte on Linux while
 `kermitut9test.bin` at 304 KB extracts fine, neither size nor format explains
 it. It is the single best piece of evidence that something in the on-Mac path
-scales badly. Chase it with the progress callback instrumented; this write-up
-has now guessed twice and been wrong twice.
+scales badly.
+
+**Bisection so far, one step done.** The obvious suspect was the autotest's
+on-Mac CRC read-back: it reads every extracted fork back through the File
+Manager, and the ~134 s `EmpireBuilderDemo` anchor does NOT include that phase,
+because that figure came from the *interactive* build which has no read-back.
+Not the answer: re-run at 1x with `-D UNC_AT_NOCRC`, which skips the read-back
+entirely, and the fixture still did not finish in ~35 minutes. **So the cost is
+in extraction itself, not in verification.**
+
+Remaining suspects, in the order worth testing: the RAM slurp of a 306 KB
+archive on a 4 MB machine (does it thrash?), the BinHex probe's rolling
+8 KB-window scan, and the streaming writes of 253 KB of output. The progress
+callback fires every 8-16 KB and is the cheap instrument — have it paint a
+counter to the framebuffer and watch where it stops advancing. Do not guess a
+fourth time; this write-up has already been wrong twice.
 
 What can be said with evidence today: the engine's relative cost per format,
 an absolute 1x table of eight fixtures, and the

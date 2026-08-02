@@ -237,8 +237,13 @@ file until someone with a Mac Plus runs the checklist.
   README). The earlier diagnosis that this host "cannot be trusted to run 1x"
   was wrong and is corrected — an idle machine measures fine. What remains is
   one genuine outlier, `macburger-helper.hqx`, which has never finished at 1x
-  and is not explained by size or format; chase it with the progress callback
-  instrumented.
+  and is not explained by size or format. **One bisection step done**: it is
+  not the autotest's CRC read-back — `-D UNC_AT_NOCRC` skips that entirely and
+  the fixture still did not finish in ~35 minutes, so the cost is in
+  extraction, not verification. Next suspects: the RAM slurp of a 306 KB
+  archive on a 4 MB machine, the BinHex probe's rolling 8 KB window, and the
+  253 KB of streaming output. Instrument the progress callback rather than
+  guessing (BLOCKERS.md).
 - ~~**No timing data at all — attempted 2026-08-01, and it did not work.**~~ The
   1x emulator exists, `run.py --emu` selects it, `run.py` now splits boot from
   extraction, and `tools/vmac/timing.txt` names the set to measure. A small
