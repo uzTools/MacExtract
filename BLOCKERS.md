@@ -378,17 +378,29 @@ Two explanations were possible, and one is now **ruled out**:
    machine; the two figures disagree by a factor of roughly twenty. The
    non-completion is an artifact of that run, not a property of the code.
 
-So there is no lurking usability defect, and the remaining problem is purely
-one of environment: **this host cannot be trusted to run Mini vMac at a
-faithful 1x while also screenshotting it.** A machine with a spare core, or a
-harness that reads the result without polling the framebuffer, would settle
-the whole table in an hour.
+~~So there is no lurking usability defect, and the remaining problem is purely
+one of environment: this host cannot be trusted to run Mini vMac at a faithful
+1x while also screenshotting it.~~ **HALF WITHDRAWN 2026-08-02.**
 
-What can be said with evidence today, and is: the engine's RELATIVE cost per
-format is measured and reproducible (FORMATS.md), and one authentic 1x point
-exists — `derived-EmpireBuilderDemo.sit`, 278 KB in and 417 KB out, took
-**~134 s** of Mac Plus time end to end, with the machine booting in ~16 s.
-One point is not a table, so it stays out of the README's claims.
+Blaming host contention does not survive the obvious test. With the machine
+idle — load average 0.4, no CI, no second emulator — `macburger-helper.hqx`
+STILL did not finish in fifteen minutes, while eight other fixtures across
+eight formats measured cleanly at 1x in the same session (8/8; boot ~10 s,
+every extraction under 5 s; table in FORMATS.md). Contention was real and did
+wreck the first attempt, but it was never the reason this one fixture hangs.
+
+So the part that stands is that the harness and 1x are fine; the part that
+falls is the diagnosis. **`macburger-helper.hqx` is a genuine outlier, not an
+artifact** — and since it is the cheapest fixture per byte on Linux while
+`kermitut9test.bin` at 304 KB extracts fine, neither size nor format explains
+it. It is the single best piece of evidence that something in the on-Mac path
+scales badly. Chase it with the progress callback instrumented; this write-up
+has now guessed twice and been wrong twice.
+
+What can be said with evidence today: the engine's relative cost per format,
+an absolute 1x table of eight fixtures, and the
+`derived-EmpireBuilderDemo.sit` anchor (278 KB in, 417 KB out, ~134 s, machine
+booting in ~10-16 s). All in FORMATS.md, summarised in the README.
 
 **Until it is, no number goes in the README.** A fabricated or
 contention-inflated figure would be worse than the current honest absence, and
