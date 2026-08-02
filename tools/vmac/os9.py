@@ -720,6 +720,296 @@ def verify_output(xfer, fixture, workdir):
     return ok, lines
 
 
+# ---- HFS+ : extracting onto a volume the host cannot read ----------------
+#
+# Everything above extracts onto the transfer volume, which is HFS, so nothing
+# in this project has ever written to HFS+ — the row MANUAL_TESTS.md has
+# carried since M10. The OS 9 boot volume IS HFS+, and no tool in this
+# environment can read it, which is why the answer has to come back another
+# way: the AUTOTEST build reads both forks back through the File Manager on
+# the Mac, CRC-32s them, and now also writes that plus every output NAME to a
+# file on the plain-HFS input volume (at_report_file in mac/unclassic_mac.c).
+#
+# It finds its volumes by name — "In" and "Out" — so pointing it at HFS+ needs
+# no new code at all: rename the boot volume to `Out` in the Finder, from the
+# keyboard, and the same autotest binary that runs on a Mac Plus writes to
+# HFS+ instead.
+
+def read_report(path):
+    """Parse the autotest file report. Returns (vals, [(dirID, name), ...])."""
+    b = open(path, "rb").read()
+    u32 = lambda o: int.from_bytes(b[o:o + 4], "big")
+    if len(b) < 12 or b[:4] != b"UNCR":
+        raise SystemExit(f"os9: {path} is not an autotest report")
+    if u32(4) != 1:
+        raise SystemExit(f"os9: report version {u32(4)}, expected 1")
+    n = u32(8)
+    vals = [u32(12 + 4 * i) for i in range(n)]
+    o = 12 + 4 * n
+    nrec = u32(o)
+    o += 4
+    recs = []
+    for _ in range(nrec):
+        dirid = u32(o)
+        o += 4
+        ln = b[o]
+        o += 1
+        recs.append((dirid, b[o:o + ln].decode("mac_roman")))
+        o += ln
+    return vals, recs
+
+
+def mac_leaf(name):
+    """A CLI output filename as the Mac shell would write it.
+
+    ComponentToStr63() in mac/unclassic_mac.c: undo the engine's '/'->':'
+    swap and cap at 31 characters. That cap is the whole reason this run
+    exists — HFS+ permits 255-character names, but a 68k application reaching
+    it through the classic File Manager is still limited to 31, and whether
+    that holds on HFS+ had never been checked."""
+    return name.replace(":", "/")[:31] or "_"
+
+
+def report_present(xfer, workdir):
+    """Has the Mac written its report file yet?
+
+    Read from the HOST's copy of the transfer image while the guest is still
+    running: QEMU's writeback cache means a flushed guest write is visible
+    here. A torn read just reads as "not yet" and the loop tries again; the
+    verdict always comes from the read after the emulator has exited."""
+    home = os.path.join(workdir, "pollhome")
+    os.makedirs(home, exist_ok=True)
+    env = dict(os.environ, HOME=home)
+    try:
+        hfs = hfs_partition(xfer, os.path.join(workdir, ".poll.hfs"))
+    except OSError:
+        return False
+    if subprocess.run(["hmount", hfs], capture_output=True,
+                      env=env).returncode != 0:
+        return False
+    out = subprocess.run(["hls", "-1"], capture_output=True, env=env).stdout
+    subprocess.run(["humount"], capture_output=True, env=env)
+    return b"report" in out
+
+
+def wrapper_names(boot, workdir):
+    """The root listing of the boot volume's HFS WRAPPER, or None.
+
+    This is what turns "we extracted onto HFS+" from an inference into a
+    measurement. The OS 9 boot volume is HFS+ inside an HFS wrapper; hfsutils
+    can only see the wrapper, whose root holds one placeholder file. If the
+    application had really written to a plain HFS volume, its output would be
+    visible here. It is not — so the output went to the embedded HFS+ volume.
+
+    Reading a claim off a signature word was tried instead and rejected: the
+    classic File Manager reports 'BD' for an HFS+ volume for compatibility, so
+    a negative there would mean nothing. This test has no such ambiguity, and
+    misreading a signature at a fixed offset is precisely how the "the boot
+    volume is plain HFS" claim went wrong in the first place (BLOCKERS.md)."""
+    home = os.path.join(workdir, "wraphome")
+    os.makedirs(home, exist_ok=True)
+    env = dict(os.environ, HOME=home)
+    # hfsutils takes a partition number, so the 2 GB image needs no copy.
+    if subprocess.run(["hmount", boot, "1"], capture_output=True,
+                      env=env).returncode != 0:
+        return None
+    out = subprocess.run(["hls", "-1"], capture_output=True, env=env)
+    subprocess.run(["humount"], capture_output=True, env=env)
+    return [l.decode("mac_roman") for l in out.stdout.split(b"\n") if l.strip()]
+
+
+def run_hfsplus(fixture, outdir, args):
+    """Extract onto the HFS+ boot volume; verify through the report file."""
+    os.makedirs(outdir, exist_ok=True)
+    sys.path.insert(0, HERE)
+    from run import build_autotest_app                       # noqa: E402
+    appbin = build_autotest_app()
+
+    # The volume MUST be called "In": that is the name the autotest build
+    # looks for (FindVolWait). "Out" is the boot volume, renamed in the Finder
+    # once the desktop is up.
+    xfer = os.path.join(outdir, "transfer.img")
+    R.sh(sys.executable, os.path.join(HERE, "mkapmdisk.py"), DISK, xfer,
+         "32", "In",
+         "--macbinary", f"{appbin}:unclassic",
+         "--data", f"{fixture}:archive.sit")
+
+    verify_disk()
+    boot = boot_copy(outdir)
+    q = Qemu([boot, xfer], os.path.join(outdir, "mon.sock"))
+    try:
+        scratch = os.path.join(outdir, ".settle.png")
+        waited = q.settle(scratch, timeout=args.boot_wait)
+        if waited is None:
+            raise SystemExit("os9: never reached the Finder desktop")
+        print(f"os9: desktop settled after ~{waited:.0f}s")
+
+        def shot(tag):
+            p = os.path.join(outdir, tag + ".png")
+            q.shot(p)
+            return p
+
+        shot("20-desktop")
+        q.key("meta_l-q", "ret")                  # quit the Setup Assistant
+        time.sleep(4)
+        shot("21-assistant-quit")
+
+        # Rename the boot volume `untitled` -> `Out`. Return on a selected
+        # icon opens its name for editing with the whole name selected, so
+        # typing replaces it; Return again commits. Classic Mac OS lets the
+        # startup volume be renamed, unlike later systems.
+        q.key("u", "n", "t")                      # select `untitled`
+        time.sleep(1)
+        q.key("ret")                              # open the name for editing
+        time.sleep(2)
+        q.key("shift-o", "u", "t")                # type `Out`
+        q.key("ret")                              # commit
+        time.sleep(3)
+        shot("22-renamed")
+
+        # Launch the autotest app off the In volume.
+        q.key("i", "n", "meta_l-down")            # open the In volume
+        frac, secs = q.wait_change(os.path.join(outdir, "22-renamed.png"),
+                                   WINDOW_RECT, scratch, timeout=60.0)
+        print(f"os9: In volume opened ({frac:.4f} changed in {secs:.0f}s)")
+        shot("23-in-open")
+        q.key("u", "n", "c", "meta_l-down")       # launch `unclassic`
+
+        # Wait for the REPORT FILE, not for anything on the screen.
+        #
+        # The autotest build paints nothing — no window, no dialog — and its
+        # framebuffer grid is invisible here (see at_report_file). The first
+        # version of this waited for the screen to change and then for it to
+        # go black, and both timed out at their full 240 s on a run that had
+        # in fact succeeded: eight minutes of waiting for proxies that could
+        # not fire. QEMU's writeback cache makes the guest's writes visible in
+        # the host's copy of the disk, so the harness can simply watch for the
+        # artifact it is actually waiting for.
+        started = time.time()
+        seen = False
+        while time.time() - started < args.launch_wait:
+            time.sleep(10)
+            if report_present(xfer, outdir):
+                seen = True
+                print(f"os9: report file written after "
+                      f"~{time.time() - started:.0f}s")
+                break
+        if not seen:
+            print(f"os9: no report file after {args.launch_wait:.0f}s — "
+                  f"continuing, the read-back below is the verdict")
+        shot("24-reported")
+        if os.path.exists(scratch):
+            os.remove(scratch)
+    finally:
+        q.close()
+
+    # Before the boot copy is thrown away: what can a plain-HFS tool see on
+    # the volume that was just written to?
+    wrapper = wrapper_names(boot, outdir)
+    if not args.keep_boot:
+        try:
+            os.remove(boot)
+        except OSError:
+            pass
+
+    return verify_hfsplus(xfer, fixture, outdir, wrapper)
+
+
+def verify_hfsplus(xfer, fixture, workdir, wrapper=None):
+    """Read the report off the In volume and compare with the Linux engine."""
+    lines, ok = [], True
+    hfs = hfs_partition(xfer, os.path.join(workdir, "xfer.hfs"))
+    home = os.path.join(workdir, "hfshome")
+    os.makedirs(home, exist_ok=True)
+    env = dict(os.environ, HOME=home)
+    if subprocess.run(["hmount", hfs], capture_output=True,
+                      env=env).returncode != 0:
+        return False, ["cannot mount the In volume"]
+    rep = os.path.join(workdir, "report")
+    c = subprocess.run(["hcopy", "-r", "report", rep], capture_output=True,
+                       env=env)
+    subprocess.run(["humount"], capture_output=True, env=env)
+    if c.returncode != 0:
+        return False, ["the Mac wrote no report file — it never reached the "
+                       "end of a run (screenshots in " + workdir + ")"]
+
+    vals, recs = read_report(rep)
+    nfiles, ret, errors, sdc, sdl, src, srl, peak = vals[:8]
+    ret = ret - (1 << 32) if ret >= (1 << 31) else ret
+    for code, what in ((-1001, 'no volume named "In"'),
+                       (-1002, 'no volume named "Out" — the Finder rename of '
+                               'the boot volume did not take')):
+        if ret == code:
+            return False, [f"the application reported: {what}"]
+
+    ref = os.path.join(workdir, "linux-out")
+    shutil.rmtree(ref, ignore_errors=True)
+    os.makedirs(ref)
+    cli = os.path.join(R.REPO, "build", "rel", "unclassic")
+    subprocess.run([cli, "x", "-nr", fixture, "-o", ref], capture_output=True)
+
+    sys.path.insert(0, os.path.join(R.REPO, "tools"))
+    from vmac_check import aggregate_dir                      # noqa: E402
+    want_names = []
+    enf, esdc, esdl, esrc, esrl = aggregate_dir(ref, want_names)
+
+    lines.append(f"engine ret={ret} errors={errors}, peak heap "
+                 f"{peak/1024.0:.1f} KB")
+    for label, got, want in (("files", nfiles, enf),
+                             ("data CRC sum", sdc, esdc),
+                             ("data bytes", sdl, esdl),
+                             ("rsrc CRC sum", src, esrc),
+                             ("rsrc bytes", srl, esrl)):
+        same = got == want
+        ok = ok and same
+        lines.append(f"  {label:>13}: Mac {got}  Linux {want}"
+                     f"{'' if same else '   <- MISMATCH'}")
+    if ret != 0 or errors:
+        ok = False
+        lines.append("  the engine did not return UNC_OK with zero per-entry "
+                     "errors")
+
+    # Names, which no aggregate can carry — and the point of an HFS+ run.
+    got_names = sorted(n for _d, n in recs)
+    exp_names = sorted(mac_leaf(n) for n in want_names)
+    if got_names == exp_names:
+        lines.append(f"  {len(got_names)} name(s) on HFS+ exactly as the "
+                     f"31-character rule predicts")
+    else:
+        ok = False
+        lines.append(f"  NAME MISMATCH on HFS+")
+        for g, e in zip(got_names, exp_names):
+            if g != e:
+                lines.append(f"    Mac {g!r}  expected {e!r}")
+    trunc = [n for n in want_names if len(n) > 31]
+    if trunc:
+        lines.append(f"  {len(trunc)} name(s) were longer than 31 characters "
+                     f"and had to be truncated, e.g. {trunc[0]!r}")
+
+    # Was the output volume really HFS+? Measured, not assumed.
+    if wrapper is None:
+        ok = False
+        lines.append("  cannot confirm the output volume was HFS+: the boot "
+                     "image's HFS wrapper would not mount")
+    else:
+        leaked = sorted(set(got_names) & set(wrapper))
+        placeholder = [w for w in wrapper if "my_files_gone" in w]
+        if leaked:
+            ok = False
+            lines.append(f"  the output is visible in the plain-HFS WRAPPER "
+                         f"({', '.join(leaked[:3])}) — it did not go to HFS+")
+        elif not placeholder:
+            ok = False
+            lines.append(f"  the boot volume does not look like an HFS+ "
+                         f"wrapper (root: {wrapper}); the HFS+ claim is "
+                         f"unproven")
+        else:
+            lines.append(f"  output volume confirmed HFS+: the HFS wrapper "
+                         f"still holds only {placeholder[0]!r}, so none of "
+                         f"these {len(got_names)} files went to plain HFS")
+    return ok, lines
+
+
 def sha1(path):
     import hashlib
     h = hashlib.sha1()
@@ -866,6 +1156,12 @@ def main():
                     help="a file of fixture names, one per line, '#' comments "
                          "ignored — the same format as tools/vmac/sample.txt. "
                          "Each gets its own boot from a pristine image")
+    ap.add_argument("--hfsplus", action="store_true",
+                    help="extract onto the HFS+ BOOT volume instead of the "
+                         "HFS transfer volume, by renaming it to `Out` in the "
+                         "Finder and running the autotest build. The result "
+                         "comes back as a report FILE on the input volume, "
+                         "because nothing on this host can read HFS+")
     ap.add_argument("--keep-boot", action="store_true",
                     help="keep each run's 2 GB boot copy instead of deleting "
                          "it (a sweep would otherwise need 2 GB per fixture)")
@@ -913,14 +1209,23 @@ def main():
 
     os.makedirs(args.outdir, exist_ok=True)
     sys.path.insert(0, HERE)
-    from interactive import build_interactive_app
-    appbin = build_interactive_app()
+    appbin = None
+    if not args.hfsplus:            # --hfsplus builds the autotest app instead
+        from interactive import build_interactive_app
+        appbin = build_interactive_app()
 
     results = []
     for fixture in fixtures:
         name = os.path.basename(fixture)
         out = args.outdir if len(fixtures) == 1 else os.path.join(args.outdir, name)
-        ok, _ = run_one(fixture, appbin, out, args)
+        if args.hfsplus:
+            ok, lines = run_hfsplus(fixture, out, args)
+            print(f"\nos9: {'PASS' if ok else 'FAIL'} — {name} onto HFS+")
+            for l in lines:
+                print("os9: " + l)
+            print(f"os9: screenshots in {out}")
+        else:
+            ok, _ = run_one(fixture, appbin, out, args)
         results.append((name, ok))
 
     if len(results) > 1:

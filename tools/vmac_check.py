@@ -84,6 +84,39 @@ def mask_reserved(rsrc):
     return bytes(b)
 
 
+def aggregate_dir(root_dir, names=None):
+    """(nfiles, sumDataCRC, totalDataLen, sumRsrcCRC, totalRsrcLen) for a tree
+    of CLI output.
+
+    Split out of expected_aggregate() so the Mac OS 9 harness can use the same
+    arithmetic on its own reference directory — the two tiers must agree on
+    what "the expected aggregate" means, and having it in one place is the only
+    way that stays true. `names`, if given, is a list the leaf filenames are
+    appended to, for harnesses that also compare names."""
+    nfiles = sdc = sdl = src = srl = 0
+    for root, _d, files in os.walk(root_dir):
+        fileset = set(files)
+        for f in files:
+            # A "<X>.rsrc" is the CLI's resource sidecar for data file <X>
+            # ONLY if <X> also exists here; otherwise it's an archive entry
+            # whose own name ends in ".rsrc" (a real data file — e.g.
+            # RWasm.rsrc). Getting this wrong miscounts and mis-CRCs.
+            if f.endswith(".rsrc") and f[:-5] in fileset:
+                continue
+            p = os.path.join(root, f)
+            data = open(p, "rb").read()
+            nfiles += 1
+            if names is not None:
+                names.append(f)
+            sdc = (sdc + crc(data)) & 0xFFFFFFFF
+            sdl += len(data)
+            rp = p + ".rsrc"
+            rsrc = open(rp, "rb").read() if os.path.exists(rp) else b""
+            src = (src + crc(mask_reserved(rsrc))) & 0xFFFFFFFF
+            srl += len(rsrc)
+    return nfiles, sdc, sdl, src, srl
+
+
 def expected_aggregate(manifest_path):
     man = json.load(open(manifest_path))
     fixture = os.path.join(os.path.dirname(manifest_path), "..", man["fixture"])
@@ -91,26 +124,7 @@ def expected_aggregate(manifest_path):
     try:
         subprocess.run([CLI, "x", "-nr", fixture, "-o", tmp],
                        capture_output=True, timeout=180)
-        nfiles = sdc = sdl = src = srl = 0
-        for root, _d, files in os.walk(tmp):
-            fileset = set(files)
-            for f in files:
-                # A "<X>.rsrc" is the CLI's resource sidecar for data file <X>
-                # ONLY if <X> also exists here; otherwise it's an archive entry
-                # whose own name ends in ".rsrc" (a real data file — e.g.
-                # RWasm.rsrc). Getting this wrong miscounts and mis-CRCs.
-                if f.endswith(".rsrc") and f[:-5] in fileset:
-                    continue
-                p = os.path.join(root, f)
-                data = open(p, "rb").read()
-                nfiles += 1
-                sdc = (sdc + crc(data)) & 0xFFFFFFFF
-                sdl += len(data)
-                rp = p + ".rsrc"
-                rsrc = open(rp, "rb").read() if os.path.exists(rp) else b""
-                src = (src + crc(mask_reserved(rsrc))) & 0xFFFFFFFF
-                srl += len(rsrc)
-        return nfiles, sdc, sdl, src, srl
+        return aggregate_dir(tmp)
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 
