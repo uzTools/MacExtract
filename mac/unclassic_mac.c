@@ -1113,6 +1113,83 @@ static void at_idle(void)
 #define kAtNoInVol   (-1001)   /* no volume named "In" is mounted    */
 #define kAtNoOutVol  (-1002)   /* no volume named "Out" is mounted   */
 
+/* ---- the same report, as a FILE ------------------------------------
+ *
+ * at_report() paints 1bpp pixels straight at the framebuffer. On a Mac Plus
+ * that is the best channel there is — no allocation, cannot fail, works when
+ * the Toolbox cannot be trusted. On Mac OS 9 it is useless: the screen is
+ * 32-bit colour, so the bits land as noise and the host has nothing to
+ * decode. That is the reason HFS+ stayed untested long after the application
+ * itself ran there — the output volume can be anything, but the ANSWER had to
+ * come back through a screen the host could read.
+ *
+ * So the same values also go to a file, on a volume chosen by the caller —
+ * in practice the plain-HFS input volume, which the host can read with
+ * hfsutils however exotic the OUTPUT volume is.
+ *
+ * The file carries the output NAMES as well as the aggregate, because the
+ * aggregate is exactly what cannot answer a question about names, and names
+ * are most of what changes on HFS+ (see TESTING.md on what each layer is
+ * blind to).
+ *
+ * Format — big-endian, written and read byte-wise, nothing aligned:
+ *
+ *     0   4   'UNCR'
+ *     4   4   version, 1
+ *     8   4   nvals
+ *     12  4*n the values at_report would paint
+ *     ..  4   number of recorded output files
+ *     ..      per file: 4 dirID, 1 name length, that many MacRoman bytes
+ */
+static short gATreportVol;         /* 0 = no file report wanted */
+
+static void at_put32(unsigned char *p, uint32_t v)
+{
+    p[0] = (unsigned char)(v >> 24);
+    p[1] = (unsigned char)(v >> 16);
+    p[2] = (unsigned char)(v >> 8);
+    p[3] = (unsigned char)v;
+}
+
+static void at_wr(short refNum, const void *p, long n)
+{
+    long count = n;
+    (void)FSWrite(refNum, &count, p);
+}
+
+static void at_report_file(const uint32_t *vals, int nvals)
+{
+    unsigned char w[4];
+    short refNum;
+    int i;
+
+    if (gATreportVol == 0) return;
+    /* Written in small pieces rather than built in one buffer: 128 records of
+     * a Str63 is over 8 KB, and this application runs inside a 4 KB call-depth
+     * budget on an 8 KB stack. */
+    (void)MyHDelete(gATreportVol, fsRtDirID, "\preport");
+    if (MyHCreate(gATreportVol, fsRtDirID, "\preport") != noErr) return;
+    if (MyOpenFork(gATreportVol, fsRtDirID, "\preport", fsWrPerm, 0,
+                   &refNum) != noErr) return;
+
+    at_put32(w, 0x554E4352UL); at_wr(refNum, w, 4);       /* 'UNCR' */
+    at_put32(w, 1UL);          at_wr(refNum, w, 4);
+    at_put32(w, (uint32_t)nvals); at_wr(refNum, w, 4);
+    for (i = 0; i < nvals; i++) {
+        at_put32(w, vals[i]);
+        at_wr(refNum, w, 4);
+    }
+    at_put32(w, (uint32_t)gATnrec);
+    at_wr(refNum, w, 4);
+    for (i = 0; i < gATnrec; i++) {
+        at_put32(w, (uint32_t)gATrec[i].dir);
+        at_wr(refNum, w, 4);
+        at_wr(refNum, gATrec[i].name, (long)gATrec[i].name[0] + 1);
+    }
+    FSClose(refNum);
+    FlushVol(NULL, gATreportVol);      /* the host reads this off the image */
+}
+
 static void at_status(int code)
 {
     uint32_t vals[8];
@@ -1196,6 +1273,7 @@ static void at_fail(int code)
     vals[0] = (uint32_t)gATnvols;    /* how many volumes were actually mounted */
     vals[1] = (uint32_t)code;
     at_report(vals, 8);
+    at_report_file(vals, 8);
     at_idle();
 }
 
@@ -1227,6 +1305,14 @@ int main(void)
      * the grid is the only channel off this machine, so a setup failure has
      * to travel down it too. */
     if (FindVolWait("\pIn", &inVol) != noErr)   at_fail(kAtNoInVol);
+
+    /* The file report goes to the INPUT volume, deliberately. It is the one
+     * the harness built, so the harness knows it can read it; the output
+     * volume is whatever is under test, and on the Mac OS 9 HFS+ run that is
+     * a volume no tool on the host can open. Set before "Out" is looked up,
+     * so a missing output volume reports itself down this channel too. */
+    gATreportVol = inVol;
+
     if (FindVolWait("\pOut", &outVol) != noErr) at_fail(kAtNoOutVol);
 
     gATrecVol = outVol;   /* sink records each output file here (see below) */
@@ -1251,6 +1337,7 @@ int main(void)
         vals[3] = (uint32_t)dirs;      /* must be 0, or the count is partial  */
         vals[7] = (uint32_t)gPeakUsage;
         at_report(vals, 8);
+        at_report_file(vals, 8);
         at_idle();
     }
 #endif
@@ -1311,6 +1398,7 @@ int main(void)
         vals[6] = (uint32_t)((derr << 16) | (werr & 0xFFFF));
         vals[7] = (uint32_t)gPeakUsage;
         at_report(vals, 8);
+        at_report_file(vals, 8);
         at_idle();
     }
 #endif
@@ -1377,6 +1465,7 @@ int main(void)
         }
 #endif
         at_report(vals, 8);
+        at_report_file(vals, 8);
     }
     (void)entries;
 
