@@ -3,7 +3,7 @@
 NOTE (2026-07-25): the shell runs under Mini vMac (System 6.0.8, Mac
 Plus, a true 68000) and **extracts correctly — single-fork, two-fork,
 and multi-file — with both forks verified byte-exact ON THE MAC ITSELF**
-(44/44 sampled fixtures at 4 MB across all twelve formats, 39/44 at
+(44/44 sampled fixtures at 4 MB across all twelve formats, 40/44 at
 1 MB). Data forks match exactly;
 resource forks match except the 112-byte "reserved for system use" area
 of the resource file header (offsets 16–127), which is masked identically
@@ -89,6 +89,46 @@ exercised. No crash, no hang; the application declines the entry and stops.
 The 656.8 KB on System 6 is the same figure the 44/44 sweep records for that
 fixture, which is the control: nothing about the binary changed but the
 partition it was given.
+
+### The archive RAM slurp, 2026-08-02 — the claim behind it does not reproduce
+
+`RunExtract()` used to read the whole archive into one `NewPtr` block before
+the engine got a budget, because DECISIONS.md had claimed since M10 that
+reading the input while output files are created on the same volume makes the
+reads return zeros. It had no reproduction, and the bullet directly after it in
+the same list had already been withdrawn as an artefact of the confounded
+period.
+
+    tools/vmac/run.py -D UNC_AT_INTERLEAVE fixtures/derived-EmpireBuilderDemo.sit
+    tools/vmac/run.py -D UNC_AT_INTERLEAVE --mem 1M fixtures/derived-EmpireBuilderDemo.sit
+    tools/vmac/run.py -D UNC_AT_INTERLEAVE fixtures/derived-PCCTS.tar
+
+Reads one file three ways on ONE volume and compares CRC-32s: undisturbed; in
+4 KB chunks with a fresh file created and written on that same volume between
+every chunk; and again seeking explicitly with `SetFPos` before each read,
+which is the shape a file-backed reader has.
+
+| run | bytes | CRC | rounds |
+|---|---|---|---|
+| `derived-EmpireBuilderDemo.sit`, 4 MB | 278,294 | 05746998 | 67 |
+| `derived-EmpireBuilderDemo.sit`, 1 MB | 278,294 | 05746998 | 67 |
+| `derived-PCCTS.tar`, 4 MB | 286,720 | 8f448a65 | 70 |
+
+Identical all three ways in every run. The claim is withdrawn and the archive
+is now read from the file as the engine asks, which hands the engine back the
+archive's own size on the floor target — 39/44 to 40/44 at 1 MB, and three of
+the four remaining failures went from refusing everything to extracting most
+of it. `UNC_MAC_SLURP_ARCHIVE` rebuilds the old path.
+
+**And the same-volume case is now covered, which it never was.** Every
+autotest run in this project's history used a separate `In` and `Out` volume,
+while the interactive application writes next to the archive — one volume,
+which is exactly where the withdrawn claim lived:
+
+    tools/vmac/run.py -D UNC_AT_SAMEVOL --list tools/vmac/sample.txt
+
+**44/44 byte-exact at 4 MB**, output landing on the volume being read from,
+with the usual on-Mac read-back CRC of both forks.
 
 ### Working directories, 2026-08-01 (System 6.0.8 AND System 7.0.1, 4 MB)
 

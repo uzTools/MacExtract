@@ -245,14 +245,25 @@ file until someone with a Mac Plus runs the checklist.
 
 ## 4. Capability gaps that are deliberate, but still gaps
 
-- **StuffIt 5 / Arsenic on a 1 MB machine: 1 of 6 sampled fixtures.** An entry
-  needs 0.63–2.53 MB (a 512 KB block, plus an inverse-BWT vector of four bytes
-  per byte the block actually holds), so the floor-target
-  machine mostly cannot do StuffIt 5. The engine declines per entry and leaves
-  the rest of the archive alone, which is the designed behaviour and is
-  documented in FORMATS.md — but it is the one format the "runs on a Mac Plus"
-  claim does not really cover. Closing it means a fundamentally lower-memory
-  inverse BWT, not a bug fix.
+- **StuffIt 5 / Arsenic on a 1 MB machine: 2 of 6 sampled fixtures fully, 3
+  more partially.** An entry needs 0.63–2.53 MB (a 512 KB block, plus an
+  inverse-BWT vector of four bytes per byte the block actually holds), so the
+  floor-target machine cannot always do StuffIt 5. The engine declines per
+  entry and leaves the rest of the archive alone, which is the designed
+  behaviour and is documented in FORMATS.md.
+
+  **Improved 2026-08-02** by removing the whole-archive RAM slurp, which had
+  been taking the archive's own size out of the engine's budget before
+  extraction began: 39/44 to 40/44 overall, and of the four that still fail,
+  three now extract most of their entries where they previously refused every
+  one (0 of 34 → 31 of 34; 0 of 13 → 6 of 13; 11 of 26 → 25 of 26). Only
+  `derived-a2basic.dmg.sit`, whose single entry is simply too big, still
+  refuses outright.
+
+  Closing the rest means a fundamentally lower-memory inverse BWT, not a bug
+  fix — and note the floor is hard: the 512 KB block alone is most of what a
+  1 MB machine has free, so even a zero-overhead transform would not fit the
+  largest entries.
 - **Timing: MEASURED 2026-08-02, and closed.** Eight
   fixtures across eight formats at authentic 1x, 8/8: boot ~10 s, every
   extraction under 5 s, plus the 278 KB StuffIt anchor at ~134 s (FORMATS.md,

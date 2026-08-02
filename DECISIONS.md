@@ -422,11 +422,16 @@ BLOCKERS.md for the full write-up. Key decisions:
   a hard error made valid end-of-file seeks fail with a spurious
   `UNC_ERR_IO`. The mock's `SetFPos` was updated to reproduce this so the
   test suite catches the class of bug.
-- **Slurp the whole archive into RAM, decode from memory** (`MemIO` /
+- **[SUPERSEDED 2026-08-02 — the archive is now read straight off the file;
+  see "The archive is no longer slurped into RAM" at the end of this file.
+  The interleaving claim below is from the confounded period and does NOT
+  reproduce: `UNC_AT_INTERLEAVE` reads a file three ways on one volume with
+  67 file creations in between and gets the same CRC every time.]**
+  ~~**Slurp the whole archive into RAM, decode from memory** (`MemIO` /
   `xio_*`). On a real Mac, interleaving File Manager reads of the input
   with writes to output files on the same volume makes the input reads
   return zeros. Reading everything before any output exists removes the
-  interleave. Also keeps all output writes shallow (in `sink_end`) —
+  interleave.~~ Also keeps all output writes shallow (in `sink_end`) —
   deep writes from the decode callback corrupt the HFS volume. The
   `xio_*` path is now exercised off-Mac too (mock `ram` mode, ASan +
   qemu-m68k). Archives are small, so a full-file RAM buffer is fine.
@@ -869,3 +874,65 @@ Two things went the way this project keeps going, and both are worth keeping:
   its single placeholder file. A signature read at a fixed offset is exactly
   what produced the withdrawn "the boot volume is plain HFS" claim, so making
   the same read the basis of the fix would have been a poor joke.
+
+## 2026-08-02 — the archive is no longer slurped into RAM
+
+`RunExtract()` used to `NewPtr(fileSize)` and read the whole archive in before
+the engine was given any budget. That cost landed entirely on the floor
+target: on a 1 MB Mac Plus a 278 KB archive took 278 KB away from the engine
+before extraction started, which is why README had to explain that *which*
+StuffIt 5 entries fail there follows the size of the archive rather than what
+is in it.
+
+The justification, from M10, was that "interleaving File Manager reads of the
+input with writes to output files on the same volume makes the input reads
+return zeros". It was never reduced to a reproduction, and it was suspect for
+a specific reason: **the very next bullet in the same list** — "deep writes
+from the decode callback corrupt the HFS volume" — came from the same
+investigation and had already been withdrawn, because it dates from the period
+when every File Manager open was silently failing and it did not survive
+re-testing. "Reads start returning zeros" is exactly what that confound looks
+like.
+
+`UNC_AT_INTERLEAVE` settles it. It reads one file three ways on one volume and
+compares CRC-32s: undisturbed; in chunks with a fresh file created and written
+on that same volume between every chunk; and again seeking explicitly with
+`SetFPos` before every read, which is the shape a file-backed reader actually
+has. **Identical every time** — 278,294 B / CRC 05746998 over 67 rounds, and
+286,720 B / CRC 8f448a65 on a second fixture, at 4 MB and at 1 MB. The claim is
+withdrawn.
+
+So the default is now a `FileIO` that seeks and reads as the engine asks, with
+the input file held open across the whole extraction. `UNC_MAC_SLURP_ARCHIVE`
+keeps the old path buildable, the same way `UNC_MAC_STAGE_WRITES` keeps the
+pre-streaming sink.
+
+Measured on a real System 6.0.8 Mac Plus:
+
+| run | before | after |
+|---|---|---|
+| 44-fixture sample, 4 MB | 44/44 | 44/44 |
+| 44-fixture sample, **1 MB** | 39/44 | **40/44** |
+| same sample, 4 MB, **output on the archive's own volume** | never run | **44/44** |
+
+The 1 MB gain is one fixture, but the change under it is bigger than the tally
+shows: three of the four that still fail went from refusing everything to
+extracting most of it — `derived-Library_ISBN_Barcoder.sit` 0 of 34 entries to
+**31 of 34**, `derived-Troi-ClipSave-Plug-in1.1.sit` 0 of 13 to **6 of 13**,
+`derived-PuzzleGetter_0.8.sit` 11 of 26 to **25 of 26**. Each got back exactly
+the budget its own archive had been occupying.
+
+Two things worth keeping:
+
+- **The same-volume case had never been tested at all.** Every autotest run in
+  this project's history used a separate `In` and `Out` volume, while the
+  interactive application writes next to the archive — one volume. That is
+  precisely where the withdrawn claim lived, so the fix could not be trusted
+  until it was covered: `UNC_AT_SAMEVOL` points the output at the input's
+  volume and the read-back CRC does the rest. 44/44. **A harness can be
+  thorough and still have never once assumed the shape the shipped program
+  uses.**
+- **A claim's neighbours are evidence about it.** This one sat directly beside
+  a claim already withdrawn as confounded, in the same bullet list, from the
+  same week. That was enough reason to re-test it, and it took one afternoon
+  against a cost paid on every 1 MB extraction for months.

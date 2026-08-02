@@ -74,17 +74,21 @@ being the entries that genuinely fill a 512 KB block (35 KB + 512 KB +
 cleanly per entry ("block too large for memory budget") under the M9
 400 KB cap.
 
-On a **1 MB Mac Plus** Arsenic is a partial feature: the six Arsenic
-fixtures in the on-Mac sample split into one that extracts completely,
-two that extract most of their entries and refuse the rest, and three
-that refuse every entry. The boundary is **the size of the archive**,
-not the block size (which never varies): the shell slurps the archive
-into RAM before extracting and budgets the engine against what is left,
-so a bigger archive leaves less room for the 512 KB block. The six line
-up monotonically by archive size — 4.6 KB extracts fully, 66 KB and
-92 KB extract most entries, and 153 KB, 202 KB and 222 KB cannot afford
-the block at all. All six extract byte-exact at 4 MB. See the two Mini
-vMac sections below for the per-fixture outcomes.
+On a **1 MB Mac Plus** Arsenic is a partial feature: of the six Arsenic
+fixtures in the on-Mac sample, two extract completely, three extract
+most of their entries and refuse the rest, and one refuses its single
+entry. All six extract byte-exact at 4 MB.
+
+Until 2026-08-02 the boundary was **the size of the archive** rather
+than anything about the archive's contents, because the shell read the
+whole thing into RAM before the engine got a budget — so a 202 KB
+archive had 202 KB less to work with. That is gone: the archive is read
+from the file as the engine asks for it, and every fixture got its own
+size back in budget. The effect was large. `derived-Library_ISBN_Barcoder.sit`
+went from refusing all 34 entries to extracting 31 of them, and
+`derived-RWAsm_Folder.sit` from 36 of 38 to all 38. See the two Mini vMac
+sections below for the per-fixture outcomes, and DECISIONS.md for why the
+slurp existed and why it does not any more.
 
 ## Envelope auto-unwrap
 
@@ -255,7 +259,7 @@ system for anything — but it had never been shown.
 and the floor-target machine has half of it. This is not a defect in the
 application and there is no 1 MB row for this tier — **the 1 MB floor target
 is System 6, and only System 6.** The application's own memory floor is
-unchanged and is still demonstrated by the 39/44 System 6.0.8 run below.
+unchanged and is still demonstrated by the 40/44 System 6.0.8 run below.
 
 ## Floor target verification (Mini vMac — System 6.0.8, **1 MB** Mac Plus, 68000)
 
@@ -264,38 +268,39 @@ RAM** — the project's floor target — one boot per fixture, same on-Mac
 CRC-32 verification (`tools/vmac/run.py --mem 1M --list tools/vmac/sample.txt`).
 The engine budget is derived from `FreeMem` at startup.
 
-**39/44 byte-exact PASS**, and every fixture that does not pass is a StuffIt 5
-memory-budget refusal — the documented tier. Re-run 2026-08-01: 39/44 again,
-the same five fixtures, and the same per-fixture entry counts and peak heaps
-as the table below, to the tenth of a kilobyte. All five pass at 4 MB:
+**40/44 byte-exact PASS**, and every fixture that does not pass is a StuffIt 5
+memory-budget refusal — the documented tier. Re-run twice on 2026-08-02 with
+the same four fixtures and the same per-fixture counts and peak heaps. All
+four pass at 4 MB:
 
 | Fixture | Format | Outcome at 1 MB | Peak heap |
 |---|---|---|---|
-| derived-RWAsm_Folder.sit | StuffIt 5 | 36 of 38 entries byte-exact, 2 refused | 595.7 KB |
-| derived-PuzzleGetter_0.8.sit | StuffIt 5 | 11 of 26 entries byte-exact, 15 refused | 560.9 KB |
-| derived-a2basic.dmg.sit | StuffIt 5 | clean per-entry refusal (1/1 entries) | 35.5 KB |
-| derived-Library_ISBN_Barcoder.sit | StuffIt 5 | clean per-entry refusal (34/34 entries) | 35.5 KB |
-| derived-Troi-ClipSave-Plug-in1.1.sit | StuffIt 5 | clean per-entry refusal (13/13 entries) | 35.5 KB |
+| derived-RWAsm_Folder.sit | StuffIt 5 | **all 38 entries byte-exact** | 643.2 KB |
+| derived-PuzzleGetter_0.8.sit | StuffIt 5 | 25 of 26 entries byte-exact, 1 refused | 639.2 KB |
+| derived-Library_ISBN_Barcoder.sit | StuffIt 5 | 31 of 34 entries byte-exact, 3 refused | 623.1 KB |
+| derived-Troi-ClipSave-Plug-in1.1.sit | StuffIt 5 | 6 of 13 entries byte-exact, 7 refused | 607.6 KB |
+| derived-a2basic.dmg.sit | StuffIt 5 | clean per-entry refusal (1/1 entries) | 547.6 KB |
 
-**The five StuffIt 5 / Arsenic outcomes are the expected, accepted tier**
+**This improved on 2026-08-02 when the shell stopped slurping the archive
+into RAM.** It used to read the whole archive into one `NewPtr` block before
+the engine was given a budget, so the archive's own size came off the top:
+`derived-Library_ISBN_Barcoder.sit` is 202 KB and could not afford a single
+entry, and the table read 39/44 with three fixtures refusing *everything*.
+The engine now reads from the file as it goes, each archive gets its own size
+back, and three of the four remaining failures went from refusing everything
+to extracting most of it — 0 of 34 to 31 of 34, 0 of 13 to 6 of 13, 11 of 26
+to 25 of 26. The claim that made the slurp necessary did not survive a
+reproduction; see DECISIONS.md and `UNC_AT_INTERLEAVE`.
+
+**The four StuffIt 5 / Arsenic outcomes are the expected, accepted tier**
 (see † above): every Arsenic entry needs a 512 KB block plus four bytes of
 transform vector per byte the block actually holds, which a 1 MB Mac cannot
-always give, so the engine declines *that entry* and carries on — which is
-why two of the five still extract most of their archive. Where the peak
-reads **35.5 KB** the budget rejected the 512 KB block *at request time* and
-the buffer was never allocated, leaving only the parser's own state; where it
-reads ~0.6 MB the block was affordable and the entries succeed.
+always give, so the engine declines *that entry* and carries on. Where the
+peak reads **35.5 KB** the budget rejected the 512 KB block *at request time*
+and the buffer was never allocated, leaving only the parser's own state;
+`derived-a2basic.dmg.sit` is now the only fixture that refuses everything, and
+its single entry is simply too large for the machine.
 
-The ordering is set by archive size, because the shell slurps the archive
-into RAM first and budgets the engine against the remainder: 4.6 KB
-(`derived-KeyGraphics.sit`) leaves room to spare, 66 KB and 92 KB leave
-enough for the block but not for large fills, and 153 KB, 202 KB and 222 KB
-do not leave enough for the block at all. Note the peaks in the table above
-*fall* as the archives get bigger, which is this effect and not a property of
-the archives. `derived-KeyGraphics.sit`, previously recorded as refusing at
-1 MB, now passes (656.8 KB peak) — the boot volume is stripped to System +
-Finder, which leaves the application more heap than the earlier, unrecorded
-setup.
 
 **`popper-1.7.tar.Z` and `PCCTS.tar.gz` used to fail here and no longer do.**
 The Mac sink previously accumulated each whole output fork in a `NewPtr`

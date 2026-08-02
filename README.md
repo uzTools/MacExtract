@@ -29,7 +29,7 @@ detected by content (never by filename) and unwrapped automatically.
 
 | | Linux CLI | Mac app (System 6 → OS 9) |
 |---|---|---|
-| Extraction, all 12 formats | ✅ byte-exact vs `unar` (769 fixtures, both forks, in CI) | ✅ verified byte-exact on **System 6.0.8, System 7.0.1 and Mac OS 9.2**: 44/44 sampled fixtures at 4 MB on each of 6.0.8 and 7.0.1 (Mini vMac, a true 68000), 39/44 at 1 MB on 6.0.8, and 13/13 on OS 9.2 under the 68LC040 emulator — see the tier tables below |
+| Extraction, all 12 formats | ✅ byte-exact vs `unar` (769 fixtures, both forks, in CI) | ✅ verified byte-exact on **System 6.0.8, System 7.0.1 and Mac OS 9.2**: 44/44 sampled fixtures at 4 MB on each of 6.0.8 and 7.0.1 (Mini vMac, a true 68000), 40/44 at 1 MB on 6.0.8, and 13/13 on OS 9.2 under the 68LC040 emulator — see the tier tables below |
 | Both forks + type/creator/dates | ✅ | ✅ (resource fork exact bar the OS-stamped reserved header 16–127; extracted `APPL` launches by double-click) |
 | Robustness (truncated/bit-flipped) | ✅ clean per-entry errors, no crash/hang/sanitizer trip | shares the same engine |
 | Interactive UI | — | ✅ driven end to end on System 6: launched from the Finder → SFGetFile (Drive switches volumes) → progress dialog (Cancel / Cmd-.) → result alert; a cancel removes the partial output, and an extracted application launches by double-click |
@@ -53,19 +53,20 @@ itself; both are reproducible with `tools/vmac/run.py`. Per format:
 | Gzip | ✅ 3/3 | ✅ 3/3 | 51 KB |
 | Unix compress (.Z) | ✅ 4/4 | ✅ 4/4 | 268 KB |
 | DiskDoubler / Now Compress | ✅ detect-only | ✅ detect-only | none |
-| **StuffIt 5 / Arsenic** | ✅ 6/6 | ⚠️ **1/6** | 0.6–1.8 MB |
+| **StuffIt 5 / Arsenic** | ✅ 6/6 | ⚠️ **2/6** | 0.6–1.8 MB |
 
 **StuffIt 5 / Arsenic mostly wants a 4 MB machine.** Every real Arsenic
 block is 512 KB, and an entry needs that block plus four bytes of
 inverse-BWT transform vector for each byte the block actually holds — so
 an entry costs 0.6 MB and up, rising with how much data it carries. At
 1 MB the engine declines the entries it cannot afford — **per entry**,
-leaving the rest of the archive alone — which is why one sampled fixture
-extracts completely, two extract most of their entries, and three refuse
-every entry. Which of the three you get follows the size of the archive,
-because the shell reads it into RAM before the engine gets its budget.
-Where the budget rejects the block at request time nothing is allocated at
-all (35.5 KB peak).
+leaving the rest of the archive alone — which is why two sampled fixtures
+extract completely, three extract most of their entries, and only one
+refuses everything. Where the budget rejects the block at request time
+nothing is allocated at all (35.5 KB peak). This got better on 2026-08-02:
+the shell used to read the whole archive into RAM before the engine was
+given a budget, so a big archive starved it; now it reads from the file as
+it goes and each archive gets its own size back.
 
 **Output size does not cost the shell any RAM.** Each chunk is written
 straight to the File Manager as the engine produces it, so a 1 MB machine
@@ -84,7 +85,7 @@ distribution — `tools/make_dist.sh` builds an uncompressed MacBinary and an
 | System | What was run | Result |
 |---|---|---|
 | System 6.0.8, 4 MB | 44-fixture corpus + the interactive UI end to end | ✅ 44/44; UI driven from the Finder, extracted `APPL` launches |
-| System 6.0.8, 1 MB | 44-fixture corpus | ✅ 39/44 — the 5 are StuffIt 5 budget refusals |
+| System 6.0.8, 1 MB | 44-fixture corpus | ✅ 40/44 — the 4 are StuffIt 5 budget refusals, and 3 of those now extract most of their entries |
 | System 7.0.1, 4 MB | 44-fixture corpus | ✅ 44/44, same peak heap as 6.0.8 |
 | System 7.0.1, 1 MB | boot probe | ⚠️ System 7 needs 2 MB and does not boot — not an application fault |
 | System 7 interactive UI | — | ❌ **not run** (the Finder-driven path; the working-directory semantics behind it ARE tested, below) |

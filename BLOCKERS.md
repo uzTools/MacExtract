@@ -60,7 +60,7 @@ The autotest build (`-DUNC_MAC_AUTOTEST`) CRC-32s BOTH forks after reading
 them back through the real File Manager and paints the aggregate straight
 to the framebuffer; the host decodes a screenshot and cross-checks against
 the same engine's Linux output (`tools/vmac_check.py`). Result: **44/44
-sampled fixtures byte-exact across all twelve formats at 4 MB, 39/44 at
+sampled fixtures byte-exact across all twelve formats at 4 MB, 40/44 at
 1 MB**; the extracted metadata (type/creator, inited-flag cleared) is
 confirmed on-Mac so an extracted `APPL` launches by double-click. The whole
 harness is committed in `tools/vmac/` — see FORMATS.md for the tables and
