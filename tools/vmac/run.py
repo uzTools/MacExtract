@@ -410,6 +410,8 @@ def main():
                          "timing claim may be drawn from")
     ap.add_argument("--json", help="write per-fixture results here")
     ap.add_argument("--pngdir", help="keep each run's final screenshot here")
+    ap.add_argument("--keep-disks", action="store_true",
+                    help="do not delete the run's In/Out disk images, so\n                         the host can look at what the Mac actually\n                         wrote instead of only at the on-screen grid")
     ap.add_argument("-D", dest="defines", action="append", default=[],
                     metavar="UNC_...",
                     help="extra build switch for the application, e.g. "
@@ -493,7 +495,10 @@ def main():
                                 extract_s=round(extract, 1) if extract else None,
                                 detail=detail, values=vals))
         finally:
-            shutil.rmtree(workdir, ignore_errors=True)
+            if args.keep_disks:
+                print(f"         disks kept in {workdir}", flush=True)
+            else:
+                shutil.rmtree(workdir, ignore_errors=True)
 
     shutil.rmtree(bootdir, ignore_errors=True)
     print(f"\n{npass}/{len(fixtures)} PASS at {args.mem} on {args.system}")
