@@ -31,9 +31,17 @@ byte-for-byte check of the output:
     wrote straight out of the transfer image and compares them against the
     same engine's Linux output.
 
-What is still NOT covered here: HFS+ (the transfer volume is HFS, so long
-names and the HFS+ specifics are untouched), and the SIZE partition under the
-Process Manager on this system. See OPEN_ITEMS.md.
+  * `--hfsplus` extracts onto the HFS+ BOOT volume instead, by renaming it to
+    `Out` from the keyboard and running the autotest build, which finds its
+    volumes by name. The answer comes back as a report FILE on the plain-HFS
+    input volume, because `at_report()`'s 1bpp framebuffer grid is invisible
+    on a 32-bit screen — that reporting channel, not the filesystem, is what
+    kept HFS+ untested for so long.
+
+What is still NOT covered here: names HFS+ permits that HFS does not (a 68k
+application reaching it through the classic File Manager is capped at 31
+characters either way, so they may be unreachable at all — unproven), and real
+PowerPC silicon. See OPEN_ITEMS.md.
 """
 import argparse, os, re, shutil, signal, socket, subprocess, sys, time
 import unicodedata
@@ -912,11 +920,18 @@ def run_hfsplus(fixture, outdir, args):
         except OSError:
             pass
 
-    return verify_hfsplus(xfer, fixture, outdir, wrapper)
+    return verify_hfsplus(xfer, fixture, outdir, wrapper,
+                          expect_refusal=args.expect_refusal)
 
 
-def verify_hfsplus(xfer, fixture, workdir, wrapper=None):
-    """Read the report off the In volume and compare with the Linux engine."""
+def verify_hfsplus(xfer, fixture, workdir, wrapper=None, expect_refusal=False):
+    """Read the report off the In volume and compare with the Linux engine.
+
+    `expect_refusal` inverts the verdict for the memory-budget test: the run
+    PASSES when the Mac declines the entry and writes nothing, provided the
+    Linux engine DOES extract it. Without that second half the test would pass
+    on an empty or broken archive, which is the usual way a negative test
+    quietly stops testing anything."""
     lines, ok = [], True
     hfs = hfs_partition(xfer, os.path.join(workdir, "xfer.hfs"))
     home = os.path.join(workdir, "hfshome")
@@ -955,6 +970,25 @@ def verify_hfsplus(xfer, fixture, workdir, wrapper=None):
 
     lines.append(f"engine ret={ret} errors={errors}, peak heap "
                  f"{peak/1024.0:.1f} KB")
+
+    if expect_refusal:
+        # The SIZE-partition test: the application was given a partition too
+        # small for this fixture's block, and the CORRECT outcome is a clean
+        # per-entry refusal — UNC_OK for the archive, a counted error for the
+        # entry, nothing written. A tiny peak heap is the diagnostic that the
+        # block was rejected at REQUEST time rather than allocated and then
+        # failed over: parser state only.
+        checks = [("the Linux engine does extract this fixture", enf > 0),
+                  ("the Mac wrote nothing", nfiles == 0),
+                  ("the archive itself did not fail (ret == UNC_OK)", ret == 0),
+                  ("at least one entry was counted as refused", errors >= 1)]
+        for what, good in checks:
+            ok = ok and good
+            lines.append(f"  {'ok  ' if good else 'NO  '} {what}")
+        lines.append(f"  Linux extracts {enf} file(s), {esdl + esrl} bytes; "
+                     f"the Mac declined with a peak heap of {peak/1024.0:.1f} KB")
+        return ok, lines
+
     for label, got, want in (("files", nfiles, enf),
                              ("data CRC sum", sdc, esdc),
                              ("data bytes", sdl, esdl),
@@ -1162,6 +1196,12 @@ def main():
                          "Finder and running the autotest build. The result "
                          "comes back as a report FILE on the input volume, "
                          "because nothing on this host can read HFS+")
+    ap.add_argument("--expect-refusal", action="store_true",
+                    help="with --hfsplus: PASS when the Mac DECLINES the "
+                         "archive and writes nothing, provided the Linux "
+                         "engine extracts it. For the SIZE-partition test, "
+                         "where a clean per-entry refusal is the correct "
+                         "outcome — see MANUAL_TESTS.md")
     ap.add_argument("--keep-boot", action="store_true",
                     help="keep each run's 2 GB boot copy instead of deleting "
                          "it (a sweep would otherwise need 2 GB per fixture)")
