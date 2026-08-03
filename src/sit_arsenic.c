@@ -210,9 +210,10 @@ typedef struct Arsenic {
     ArsMtf     mtf;
     UncBitIn   bi;
 
-    uint8_t   *block;       /* [blocksize] */
+    uint8_t   *block;       /* [blockcap], grown on demand up to blocksize */
     uint32_t  *transform;   /* [transform_cap] inverse-BWT vector */
-    uint32_t   blocksize;
+    uint32_t   blocksize;   /* the DECLARED block size, 1 << blockbits */
+    uint32_t   blockcap;    /* what is actually allocated right now */
     uint32_t   transform_cap;
     int32_t    blockbits;
 
@@ -246,6 +247,56 @@ static void ars_inverse_bwt(uint32_t *transform, const uint8_t *block,
     }
 }
 
+/* Starting capacity for a block. Small enough that a tiny entry costs almost
+ * nothing, large enough that ordinary entries need only a few doublings. */
+#define ARS_BLOCK_INITIAL 8192u
+
+/* Grow a->block so it can hold `need` bytes, doubling, never past the
+ * declared block size.
+ *
+ * Every real Arsenic block declares 512 KB (measured: all 484 streams in the
+ * corpus), but most hold far less — a fixture peaking at 643 KB on a 1 MB Mac
+ * was a 512 KB allocation holding 24 KB. Allocating the declared size up front
+ * therefore spent half a megabyte to store nothing, and on the floor target
+ * that was the difference between an entry being affordable and being refused:
+ * the budget saw 35 KB parser + 512 KB block + 4 bytes per byte actually
+ * decoded, so only ~37 KB of real data fit in a ~700 KB heap.
+ *
+ * Growing instead makes the cost proportional to the data: ~35 KB + capacity +
+ * 4x fill. The transform vector has been sized to the fill since M9 for the
+ * same reason; this is the other half of it.
+ *
+ * The transient during a growth is old + new = 1.5x the new capacity, which is
+ * below the later peak of capacity + 4x fill, so growing never sets the high
+ * water mark. There is no realloc in the allocator API by design (see
+ * DECISIONS.md), hence alloc-copy-free. */
+static int ars_block_reserve(Arsenic *a, UncAlloc *al, uint32_t need)
+{
+    uint8_t *nb;
+    uint32_t cap, i;
+
+    if (need <= a->blockcap) return UNC_OK;
+    if (need > a->blocksize) return UNC_ERR_CORRUPT;   /* caller checks too */
+
+    cap = a->blockcap ? a->blockcap : ARS_BLOCK_INITIAL;
+    while (cap < need) {
+        if (cap > a->blocksize / 2) { cap = a->blocksize; break; }
+        cap *= 2;
+    }
+    /* blockbits is 4 bits from the stream, so a declared block can be as
+     * small as 512 bytes — smaller than the starting capacity. Never allocate
+     * more than the format says the block can hold. */
+    if (cap > a->blocksize) cap = a->blocksize;
+
+    nb = (uint8_t *)unc_alloc(al, cap);
+    if (!nb) return UNC_ERR_MEM;                       /* per-entry, not fatal */
+    for (i = 0; i < a->numbytes; i++) nb[i] = a->block[i];
+    unc_free(al, a->block);
+    a->block = nb;
+    a->blockcap = cap;
+    return UNC_OK;
+}
+
 static int ars_read_block(Arsenic *a, UncAlloc *al)
 {
     int32_t sel, symbol;
@@ -276,6 +327,10 @@ static int ars_read_block(Arsenic *a, UncAlloc *al)
             }
             if (a->numbytes + zerocount > a->blocksize) return UNC_ERR_CORRUPT;
             {
+                int rerr = ars_block_reserve(a, al, a->numbytes + zerocount);
+                if (rerr != UNC_OK) return rerr;
+            }
+            {
                 uint8_t z = ars_mtf_decode(&a->mtf, 0);
                 uint32_t i;
                 for (i = 0; i < zerocount; i++) a->block[a->numbytes + i] = z;
@@ -292,6 +347,10 @@ static int ars_read_block(Arsenic *a, UncAlloc *al)
         }
 
         if (a->numbytes >= a->blocksize) return UNC_ERR_CORRUPT;
+        {
+            int rerr = ars_block_reserve(a, al, a->numbytes + 1);
+            if (rerr != UNC_OK) return rerr;
+        }
         a->block[a->numbytes++] = ars_mtf_decode(&a->mtf, symbol);
     }
 
@@ -369,8 +428,10 @@ int unc_arsenic_decode(UncBufIn *in, UncAlloc *al, uint32_t outlen,
     a->blockbits = v + 9;
     a->blocksize = 1u << a->blockbits;
 
-    a->block = (uint8_t *)unc_alloc(al, a->blocksize);
-    if (!a->block) { err = UNC_ERR_MEM; goto out; }
+    /* Deliberately NOT allocated at a->blocksize; ars_block_reserve() grows it
+     * to whatever the blocks actually hold. */
+    a->block = NULL;
+    a->blockcap = 0;
     a->transform = NULL;
     a->transform_cap = 0;
 
