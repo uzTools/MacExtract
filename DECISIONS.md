@@ -1028,3 +1028,55 @@ liability proportional to what it forces.** The write-back claim cost the most
 because it displaced a capability (reading names off the volume) rather than
 because it was wrong about anything. When one is found, the question worth
 asking first is not "is it true?" but "what does it stop us doing?".
+
+## 2026-08-03 — the Arsenic block is grown, not assumed
+
+StuffIt 5 was the one format the "runs on a Mac Plus" claim did not really
+cover: 2 of 6 sampled fixtures extracted fully at 1 MB, three partially, one
+not at all. Every write-up of it — including several of mine — described the
+floor as hard, on the grounds that an Arsenic block is 512 KB and a 1 MB Mac
+has about 700 KB of free heap, so there was nothing to win.
+
+That reasoning was wrong in a way worth recording, because it was wrong about
+which number mattered. **512 KB is what the block DECLARES, not what it
+holds.** `blockbits` comes from the stream and every real Arsenic stream in the
+corpus declares 512 KB, but the fill varies enormously: the fixture that peaked
+at 643.2 KB on a 1 MB machine was a 512 KB allocation holding **24 KB**. The
+transform vector has been sized to the actual fill since M9 for exactly this
+reason; the block itself was still allocated at the declared size in
+`ars_decode_init`, and nobody had asked why.
+
+So `ars_block_reserve()` grows the block on demand, doubling from 8 KB, capped
+at the declared size. Peak becomes `~35 KB parser + capacity + 4x fill`
+instead of `~35 KB + 512 KB + 4x fill`. Measured on the corpus:
+
+| fixture | before | after |
+|---|---|---|
+| `derived-RWAsm_Folder.sit` | 643 KB | **163 KB** |
+| `derived-KeyGraphics.sit` | 656 KB | **176 KB** |
+| `derived-PuzzleGetter_0.8.sit` | 710 KB | **262 KB** |
+| `derived-Troi-ClipSave-Plug-in1.1.sit` | 1034 KB | **650 KB** |
+| `derived-a2basic.dmg.sit` | 1319 KB | 1063 KB |
+| `derived-Library_ISBN_Barcoder.sit` | 1810 KB | 1810 KB |
+
+The last row is the shape of the result, not a failure of it: that fixture's
+blocks really do hold ~316 KB, so doubling lands on 512 KB and nothing is
+saved. The win is exactly proportional to how much of the declared block goes
+unused, which is what it should be.
+
+Two details that keep it honest:
+
+- **Growing never sets the high-water mark.** During a growth both buffers are
+  live, `old + new = 1.5x new`, and the later peak is `capacity + 4x fill`.
+  Since 1.5x capacity < 5x fill for any fill worth having, the transient is
+  never the peak — so the saving is real rather than moved.
+- **The declared size is still enforced.** `blockbits` is 4 bits from the
+  stream, so a block can legally declare as little as 512 bytes — smaller than
+  the starting capacity — and the reserve clamps to it. The pre-existing
+  corruption checks against `blocksize` are untouched; capacity is an
+  allocation strategy, never a format bound.
+
+The general form is one this repository keeps meeting from new angles: **a
+number that comes from the data is not a number you have to budget for.** The
+same mistake in the other direction — treating the archive's size as a cost the
+engine must carry — was the RAM slurp removed the day before.

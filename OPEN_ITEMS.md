@@ -81,25 +81,25 @@ rather than repeated.
 
 ## 5. Capability gaps that are deliberate, but still gaps
 
-- **StuffIt 5 / Arsenic on a 1 MB machine: 2 of 6 sampled fixtures fully, 3
-  more partially.** An entry needs 0.63–2.53 MB (a 512 KB block, plus an
-  inverse-BWT vector of four bytes per byte the block actually holds), so the
-  floor-target machine cannot always do StuffIt 5. The engine declines per
-  entry and leaves the rest of the archive alone, which is the designed
-  behaviour and is documented in FORMATS.md.
+- **StuffIt 5 / Arsenic on a 1 MB machine: 3 of 6 sampled fixtures fully, the
+  other 3 missing exactly one entry each.** An entry needs its block plus four
+  bytes of transform vector per byte the block holds, so an entry whose block
+  genuinely fills 512 KB needs ~2.5 MB and a 1 MB machine cannot give it. The
+  engine declines that entry and carries on, which is the designed behaviour.
 
-  **Improved 2026-08-02** by removing the whole-archive RAM slurp, which had
-  been taking the archive's own size out of the engine's budget before
-  extraction began: 39/44 to 40/44 overall, and of the four that still fail,
-  three now extract most of their entries where they previously refused every
-  one (0 of 34 → 31 of 34; 0 of 13 → 6 of 13; 11 of 26 → 25 of 26). Only
-  `derived-a2basic.dmg.sit`, whose single entry is simply too big, still
-  refuses outright.
+  **Closed as far as it can be** (2026-08-03). Two changes took the sample from
+  39/44 to 41/44, both about not paying for memory the data does not use: the
+  shell no longer reads the whole archive into RAM before the engine gets a
+  budget, and the Arsenic block is grown to what it actually holds rather than
+  allocated at its declared 512 KB. `derived-RWAsm_Folder.sit` went from
+  595.7 KB to 163.2 KB for the same 38 byte-exact entries.
 
-  Closing the rest means a fundamentally lower-memory inverse BWT, not a bug
-  fix — and note the floor is hard: the 512 KB block alone is most of what a
-  1 MB machine has free, so even a zero-overhead transform would not fit the
-  largest entries.
+  What is left is not a bug and not addressable by allocating better: those
+  three entries each really do fill a 512 KB block, and 512 KB + 2 MB of
+  transform vector does not fit in ~700 KB. Closing them would need a
+  fundamentally different inverse BWT — a sampled or blockwise one that trades
+  time for memory — which is a real design change, on a 7 MHz machine where the
+  time is already the scarce resource.
 - **Timing: MEASURED 2026-08-02, and closed.** Eight
   fixtures across eight formats at authentic 1x, 8/8: boot ~10 s, every
   extraction under 5 s, plus the 278 KB StuffIt anchor at ~134 s (FORMATS.md,

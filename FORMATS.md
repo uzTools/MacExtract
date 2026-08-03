@@ -15,7 +15,7 @@ whole corpus for that format (engine allocations only, via
 | PackIt (.pit) | extract | store, Huffman; encrypted detected | 4 fixtures (1 real + 3 synthetic PMa4) | 9 KB | full |
 | Compact Pro (.cpt) | extract | RLE, LZH+RLE | 106 fixtures | 19 KB | full |
 | StuffIt classic (.sit) | extract | 0 store, 1 RLE90*, 2 LZW, 3 Huffman, 5 LZAH, 8 MW, 13 LZSS+Huffman; 6 fixed-Huffman NOT implemented‡; encrypted detected | 211 fixtures | 76 KB | full |
-| StuffIt 5 (.sit) | extract | 0, 13, 15 Arsenic; encrypted detected | 31 fixtures | 0.63–2.53 MB† | per-entry refusal (all Arsenic entries > 400 KB) |
+| StuffIt 5 (.sit) | extract | 0, 13, 15 Arsenic; encrypted detected | 31 fixtures | 0.16–2.53 MB† | 11 of 31 fixtures extract FULLY; the rest refuse per entry |
 | Zip | extract | store, deflate; others & encrypted per-entry errors | 3 fixtures (+2 PKZIP-1.x corpus-only) | 66 KB | full |
 | Gzip | extract | deflate | 3 fixtures | 51 KB | full |
 | Unix compress (.Z) | extract | LZW ≤16 bit | 4 fixtures | 268 KB | full |
@@ -68,16 +68,32 @@ imaginary small block. Peak heap can never recover the declared block
 size, so the claim was not just false but unmeasurable that way.
 
 Measured peak heap over the corpus (`unclassic t --stats`): **min
-0.63 MB / median 0.97 MB / mean 1.23 MB / max 2.53 MB**, the maximum
+0.16 MB / median 0.60 MB / mean 0.96 MB / max 2.53 MB**, the maximum
 being the entries that genuinely fill a 512 KB block (35 KB + 512 KB +
-2048 KB). EVERY Arsenic entry exceeds a 400 KB budget, so all fail
-cleanly per entry ("block too large for memory budget") under the M9
-400 KB cap.
+2048 KB). **11 of the 31 fixtures now extract completely under a 400 KB
+budget**, and 18 fit the ~700 KB a 1 MB Mac Plus has free.
 
-On a **1 MB Mac Plus** Arsenic is a partial feature: of the six Arsenic
-fixtures in the on-Mac sample, two extract completely, three extract
-most of their entries and refuse the rest, and one refuses its single
-entry. All six extract byte-exact at 4 MB.
+Those figures improved on 2026-08-03, when the block stopped being allocated
+at its DECLARED size. `blockbits` says 512 KB on every real stream, but the
+fill varies enormously — the fixture that peaked at 643 KB was a 512 KB
+allocation holding 24 KB — so the block is now grown on demand
+(`ars_block_reserve`) and peak is `~35 KB parser + capacity + 4x fill` rather
+than `~35 KB + 512 KB + 4x fill`. The previous figures were min 0.63 / median
+0.97 / mean 1.23 MB with **every** entry over a 400 KB budget. Nothing about
+the format or the decoder changed; only what is allocated to hold it. See
+DECISIONS.md.
+
+On a **1 MB Mac Plus** Arsenic is no longer mostly out of reach. It got there
+in two steps, both of which were about not paying for memory the data does not
+use rather than about the decoder:
+
+- **2026-08-02** — the shell stopped reading the whole archive into RAM before
+  the engine was given a budget, so each archive got its own size back.
+- **2026-08-03** — the Arsenic block stopped being allocated at its declared
+  512 KB and is grown to what each block actually holds, which is often a
+  small fraction of it.
+
+All six extract byte-exact at 4 MB.
 
 Until 2026-08-02 the boundary was **the size of the archive** rather
 than anything about the archive's contents, because the shell read the
@@ -259,7 +275,7 @@ system for anything — but it had never been shown.
 and the floor-target machine has half of it. This is not a defect in the
 application and there is no 1 MB row for this tier — **the 1 MB floor target
 is System 6, and only System 6.** The application's own memory floor is
-unchanged and is still demonstrated by the 40/44 System 6.0.8 run below.
+unchanged and is still demonstrated by the 41/44 System 6.0.8 run below.
 
 ## Floor target verification (Mini vMac — System 6.0.8, **1 MB** Mac Plus, 68000)
 
@@ -268,38 +284,34 @@ RAM** — the project's floor target — one boot per fixture, same on-Mac
 CRC-32 verification (`tools/vmac/run.py --mem 1M --list tools/vmac/sample.txt`).
 The engine budget is derived from `FreeMem` at startup.
 
-**40/44 byte-exact PASS**, and every fixture that does not pass is a StuffIt 5
-memory-budget refusal — the documented tier. Re-run twice on 2026-08-02 with
-the same four fixtures and the same per-fixture counts and peak heaps. All
-four pass at 4 MB:
+**41/44 byte-exact PASS.** Every fixture that does not pass is a StuffIt 5
+memory-budget refusal, and each of the three now misses exactly **one** entry —
+the one whose block genuinely fills. All three pass at 4 MB:
 
 | Fixture | Format | Outcome at 1 MB | Peak heap |
 |---|---|---|---|
-| derived-RWAsm_Folder.sit | StuffIt 5 | **all 38 entries byte-exact** | 643.2 KB |
-| derived-PuzzleGetter_0.8.sit | StuffIt 5 | 25 of 26 entries byte-exact, 1 refused | 639.2 KB |
-| derived-Library_ISBN_Barcoder.sit | StuffIt 5 | 31 of 34 entries byte-exact, 3 refused | 623.1 KB |
-| derived-Troi-ClipSave-Plug-in1.1.sit | StuffIt 5 | 6 of 13 entries byte-exact, 7 refused | 607.6 KB |
-| derived-a2basic.dmg.sit | StuffIt 5 | clean per-entry refusal (1/1 entries) | 547.6 KB |
+| derived-KeyGraphics.sit | StuffIt 5 | all 1 entry byte-exact | 176.8 KB |
+| derived-RWAsm_Folder.sit | StuffIt 5 | **all 38 entries byte-exact** | 163.2 KB |
+| derived-PuzzleGetter_0.8.sit | StuffIt 5 | **all 26 entries byte-exact** | 262.6 KB |
+| derived-Library_ISBN_Barcoder.sit | StuffIt 5 | 33 of 34 entries, 1 refused | 419.6 KB |
+| derived-Troi-ClipSave-Plug-in1.1.sit | StuffIt 5 | 12 of 13 entries, 1 refused | 474.0 KB |
+| derived-a2basic.dmg.sit | StuffIt 5 | clean per-entry refusal (1/1 entries) | 419.6 KB |
 
-**This improved on 2026-08-02 when the shell stopped slurping the archive
-into RAM.** It used to read the whole archive into one `NewPtr` block before
-the engine was given a budget, so the archive's own size came off the top:
-`derived-Library_ISBN_Barcoder.sit` is 202 KB and could not afford a single
-entry, and the table read 39/44 with three fixtures refusing *everything*.
-The engine now reads from the file as it goes, each archive gets its own size
-back, and three of the four remaining failures went from refusing everything
-to extracting most of it — 0 of 34 to 31 of 34, 0 of 13 to 6 of 13, 11 of 26
-to 25 of 26. The claim that made the slurp necessary did not survive a
-reproduction; see DECISIONS.md and `UNC_AT_INTERLEAVE`.
+**This tier moved twice in two days, both times by not paying for memory the
+data does not use.** On 2026-08-02 the shell stopped reading the whole archive
+into RAM before the engine got a budget (39/44 → 40/44). On 2026-08-03 the
+Arsenic block stopped being allocated at its declared 512 KB and is grown to
+what each block actually holds (40/44 → 41/44). The peaks in the table are the
+clearest measure: `derived-RWAsm_Folder.sit` went from 595.7 KB at the start of
+this to **163.2 KB**, for the same 38 byte-exact entries.
 
-**The four StuffIt 5 / Arsenic outcomes are the expected, accepted tier**
-(see † above): every Arsenic entry needs a 512 KB block plus four bytes of
-transform vector per byte the block actually holds, which a 1 MB Mac cannot
-always give, so the engine declines *that entry* and carries on. Where the
-peak reads **35.5 KB** the budget rejected the 512 KB block *at request time*
-and the buffer was never allocated, leaving only the parser's own state;
-`derived-a2basic.dmg.sit` is now the only fixture that refuses everything, and
-its single entry is simply too large for the machine.
+**The three remaining refusals are the expected, accepted tier** (see †
+above): an Arsenic entry needs its block plus four bytes of transform vector
+per byte the block holds, and an entry whose block really does fill 512 KB
+needs about 2.5 MB, which a 1 MB Mac cannot give. The engine declines *that
+entry* and carries on, which is why two of the three still deliver 33 of 34
+and 12 of 13 files. `derived-a2basic.dmg.sit` refuses everything only because
+everything is one entry.
 
 
 **`popper-1.7.tar.Z` and `PCCTS.tar.gz` used to fail here and no longer do.**

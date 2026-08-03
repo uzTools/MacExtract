@@ -3,7 +3,7 @@
 NOTE (2026-07-25): the shell runs under Mini vMac (System 6.0.8, Mac
 Plus, a true 68000) and **extracts correctly — single-fork, two-fork,
 and multi-file — with both forks verified byte-exact ON THE MAC ITSELF**
-(44/44 sampled fixtures at 4 MB across all twelve formats, 40/44 at
+(44/44 sampled fixtures at 4 MB across all twelve formats, 41/44 at
 1 MB). Data forks match exactly;
 resource forks match except the 112-byte "reserved for system use" area
 of the resource file header (offsets 16–127), which is masked identically

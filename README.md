@@ -29,7 +29,7 @@ detected by content (never by filename) and unwrapped automatically.
 
 | | Linux CLI | Mac app (System 6 → OS 9) |
 |---|---|---|
-| Extraction, all 12 formats | ✅ byte-exact vs `unar` (769 fixtures, both forks, in CI) | ✅ verified byte-exact on **System 6.0.8, System 7.0.1 and Mac OS 9.2**: 44/44 sampled fixtures at 4 MB on each of 6.0.8 and 7.0.1 (Mini vMac, a true 68000), 40/44 at 1 MB on 6.0.8, and 13/13 on OS 9.2 under the 68LC040 emulator — see the tier tables below |
+| Extraction, all 12 formats | ✅ byte-exact vs `unar` (769 fixtures, both forks, in CI) | ✅ verified byte-exact on **System 6.0.8, System 7.0.1 and Mac OS 9.2**: 44/44 sampled fixtures at 4 MB on each of 6.0.8 and 7.0.1 (Mini vMac, a true 68000), 41/44 at 1 MB on 6.0.8, and 13/13 on OS 9.2 under the 68LC040 emulator — see the tier tables below |
 | Both forks + type/creator/dates | ✅ | ✅ (resource fork exact bar the OS-stamped reserved header 16–127; extracted `APPL` launches by double-click) |
 | Robustness (truncated/bit-flipped) | ✅ clean per-entry errors, no crash/hang/sanitizer trip | shares the same engine |
 | Interactive UI | — | ✅ driven end to end on System 6: launched from the Finder → SFGetFile (Drive switches volumes) → progress dialog (Cancel / Cmd-.) → result alert; a cancel removes the partial output, and an extracted application launches by double-click |
@@ -53,7 +53,7 @@ itself; both are reproducible with `tools/vmac/run.py`. Per format:
 | Gzip | ✅ 3/3 | ✅ 3/3 | 51 KB |
 | Unix compress (.Z) | ✅ 4/4 | ✅ 4/4 | 268 KB |
 | DiskDoubler / Now Compress | ✅ detect-only | ✅ detect-only | none |
-| **StuffIt 5 / Arsenic** | ✅ 6/6 | ⚠️ **2/6** | 0.6–1.8 MB |
+| **StuffIt 5 / Arsenic** | ✅ 6/6 | ⚠️ **3/6** | 0.16–1.8 MB |
 
 **StuffIt 5 / Arsenic mostly wants a 4 MB machine.** Every real Arsenic
 block is 512 KB, and an entry needs that block plus four bytes of
@@ -85,7 +85,7 @@ distribution — `tools/make_dist.sh` builds an uncompressed MacBinary and an
 | System | What was run | Result |
 |---|---|---|
 | System 6.0.8, 4 MB | 44-fixture corpus + the interactive UI end to end | ✅ 44/44; UI driven from the Finder, extracted `APPL` launches |
-| System 6.0.8, 1 MB | 44-fixture corpus | ✅ 40/44 — the 4 are StuffIt 5 budget refusals, and 3 of those now extract most of their entries |
+| System 6.0.8, 1 MB | 44-fixture corpus | ✅ 41/44 — the 3 are StuffIt 5 budget refusals, each now missing exactly one entry |
 | System 7.0.1, 4 MB | 44-fixture corpus | ✅ 44/44, same peak heap as 6.0.8 |
 | System 7.0.1, 1 MB | boot probe | ⚠️ System 7 needs 2 MB and does not boot — not an application fault |
 | Interactive UI above System 6 | — | ⚪ **out of scope by choice** — System 6 is the UI's target and it is driven end to end there; the paths the higher tiers exist for are tested directly, below |

@@ -9,7 +9,7 @@ every system the project claims:
 | tier | result |
 |---|---|
 | System 6.0.8, 4 MB Mac Plus (Mini vMac, a true 68000) | 44/44 sampled fixtures |
-| System 6.0.8, **1 MB** — the floor target | 40/44; the four are StuffIt 5 budget refusals |
+| System 6.0.8, **1 MB** — the floor target | 41/44; the three are StuffIt 5 budget refusals, each missing one entry |
 | System 7.0.1, 4 MB | 44/44 |
 | Mac OS 9.2 (QEMU PowerPC, 68LC040 emulation) | 13/13, plus HFS+ and the `SIZE` partition |
 
