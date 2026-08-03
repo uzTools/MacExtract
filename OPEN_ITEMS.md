@@ -116,7 +116,56 @@ rather than repeated.
 
 ---
 
-## 6. Loose ends
+## 6. Specified and ready to do: size the LZW table from the input
+
+**Attempted 2026-08-03, reverted, and worth finishing.** `.Z` is the second
+largest peak in the format matrix at a flat **274,432 B**, and it is flat
+regardless of input: `compress(1)` writes `maxbits=16` by default whatever it
+compressed, so a 488-byte `.Z` allocates 256 KB for a table it fills a few
+hundred entries of. `unc_lzw_init` allocates `(1 << maxbits) * 4` — the
+DECLARED ceiling, exactly the mistake the Arsenic block had.
+
+**What was tried and why it failed.** Growing the table on demand (doubling,
+as `ars_block_reserve` does) measured:
+
+    synth-exo-Z.Z          274,432 -> 18,432 B
+    synth-exo-tar-Z.tar.Z  274,432 -> 61,440 B
+    a2ps.V4.3.tar.Z        274,432 -> 208,896 B
+    popper-1.7.tar.Z       274,432 -> 405,504 B      <- WORSE
+
+The last row is the lesson: a copy-based growth has an unavoidable
+`old + new` transient, and where the table IS the whole allocation that
+transient becomes the peak. Arsenic escaped this only because its transform
+vector (4x the fill) dominates the later peak. **Copy-based growth can never
+beat a single allocation for a file that fills most of its table** — that is
+arithmetic, not a tuning problem, so do not retry it.
+
+**The design that does work, and was half-implemented when the session ended.**
+Size the table ONCE, from the input: every input code defines at most one new
+symbol and codes are at least 9 bits wide, so
+
+    symbols <= 256 + reserved + insize * 8 / 9
+
+However large `maxbits` claims. No transient, one allocation, strictly better
+than today in every case — `popper-1.7.tar.Z` would be ~211 KB rather than
+274 KB, and the 488-byte fixture ~2.8 KB.
+
+Concretely:
+
+- add a `uint32_t insize` parameter to `unc_lzw_init` (0 = unknown, keep
+  today's behaviour);
+- `fmt_exo.c` passes `c->io->size(c->io->ctx) - 3` (less the 3-byte header);
+- `fmt_sit.c:143` (StuffIt method 2, maxbits 14) passes the entry's compressed
+  size if it has one, else 0;
+- keep a growth path as a **safety net** so an under-estimated bound is still
+  correct rather than an overflow — it should never fire with a correct bound.
+
+Verify with `unclassic t --stats` on the four `.Z` fixtures and the two
+`.tar.Z` chains, then `./ci.sh`, then the 1 MB sweep. Nothing currently fails
+because of this, so it is an efficiency change, not a fix — treat a regression
+in any peak as disqualifying, which is what killed the first attempt.
+
+## 7. Loose ends
 
 - **StuffIt method 1 (RLE90): the claim that no corpus fixture uses it was
   WRONG.** Measured 2026-08-01 by instrumenting the method byte:

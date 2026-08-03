@@ -33,6 +33,49 @@ It runs on all three systems the project claims: **System 6.0.8 and System 7.0.1
 
 Read them at the start of every session. Where these files disagree with each other, treat it as a bug to fix, not a fact to choose from.
 
+## Where to start (handoff, 2026-08-03)
+
+The repository is on GitHub as a **private** repo, `main`, tagged through
+`v0.4`. Working tree clean, `./ci.sh` green, nothing in flight.
+
+**Read OPEN_ITEMS.md first.** It is organised around what is actually open,
+and section 6 is a fully specified task with its measurements, its failed
+first attempt and the design that works — that is the best next piece of work.
+Everything else open is either impossible in this environment (real 68k or
+PowerPC silicon), the maintainer's to do (the Retro68 report), or deliberate
+scope.
+
+**The one habit that produced everything valuable this week.** Nearly every
+real gain came from re-testing a claim the repository was already making,
+rather than from new features:
+
+- Two claims from the M10 "confounded period" turned out to be false and were
+  each costing something concrete — one forced the whole archive into RAM
+  (39/44 → 40/44 at the floor target when removed), the other forced
+  verification through a channel that cannot see filenames (which is how a
+  real gzip/.Z naming bug survived for weeks).
+- The Arsenic block was allocated at its DECLARED 512 KB rather than what it
+  holds (40/44 → 41/44, and `derived-RWAsm_Folder.sit` went 595.7 KB → 163.2 KB
+  for the same output).
+
+So: **when something looks like a hard floor, check whether the number you are
+budgeting for is a number the data actually needs.** And when a claim has no
+reproduction, treat its neighbours as suspect too — that is literally how the
+last two were found.
+
+**Traps this environment sets, all of which cost real time here:**
+
+- A test that passes may not be testing anything. The cursor experiment
+  "passed" twice while the pointer was outside the emulator window, and again
+  while the drag ran between grid rows. Establish that a test can fail before
+  believing that it passed.
+- `pgrep -f "some command"` matches the watching shell itself, so an
+  `until ! pgrep ...` loop never exits. Use `kill -0 <captured pid>`.
+- The Mac OS 9 pointer does not work at all; drive that guest from the
+  keyboard. Mini vMac's mouse is fine.
+- An emulator run is minutes; do not poll it every few seconds, and do not
+  read a timeout as a measurement of anything.
+
 ## Rules
 
 - **Never invent format details.** Magic numbers, header layouts and algorithm parameters come from a reference implementation or spec, with a `/* Source: ... */` comment. Never guess from memory. `reference/` is read-only and never modified; `tools/fetch_references.sh` repopulates it.
