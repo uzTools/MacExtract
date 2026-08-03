@@ -386,73 +386,38 @@ here, but it is not the same as silicon. Specifically unverified:
 
 ### Mac OS 9 on PowerPC
 
-**Run, and passing, since 2026-08-02.** The binary is 68k-only and
-executes under the 68LC040 emulator on a PowerPC Mac. That whole layer
-now runs:
+**Run, and passing, since 2026-08-02** — the 68k binary executes under the
+68LC040 emulator on Mac OS 9.2. Results in FORMATS.md, the harness in
+`tools/vmac/README.md`, the history in BLOCKERS.md.
 
     tools/vmac/os9.py --setup                                  # once
     tools/vmac/os9.py --list tools/vmac/os9sample.txt \
-                      -o <dir> --launch
+                      -o <dir> --launch                        # 13/13 byte-exact
+    tools/vmac/os9.py fixtures/foo.sit -o <dir> --hfsplus      # onto HFS+
 
-Each fixture gets its own boot of Mac OS 9.2 under
-`qemu-system-ppc -M mac99,via=pmu` from a pristine copy of the master
-image (~110 s to the desktop on an idle host; `settle()` waits for the
-Finder's menu bar rather than sleeping a fixed time). A transfer disk
-from `tools/vmac/mkapmdisk.py` carries the application and one archive.
+The Finder is driven from the **keyboard**: the pointer does not work in this
+guest (measured — five mouse primitives at exactly 0.0000 effect). Results come
+back through the disk image, not the screen: `at_report()`'s 1bpp grid is
+invisible on a 32-bit screen, so `at_report_file()` writes the values and every
+output name to the plain-HFS input volume.
 
-**The Finder is driven from the keyboard, not the mouse.** Cmd-Q quits
-the Mac OS Setup Assistant, which is frontmost on every boot; typing
-`unc` selects the transfer volume and Cmd-Down opens it; the same two
-keystrokes launch the application; Return opens the pre-selected
-archive in SFGetFile and Return again dismisses the result alert. The
-pointer is unusable in this guest — five separate mouse probes measured
-exactly zero effect, and the cursor never leaves the screen corners.
-See BLOCKERS.md for the measurements and for the five boots spent
-before anyone measured them.
+Closed by these runs: the `WaitNextEvent` branch, Standard File and the Toolbox
+File Manager layer under a real Process Manager, `SFReply.vRefNum` as a
+System 7+ working directory, extraction onto HFS+, and the `SIZE` partition
+(a 600 KB partition declines a 656 KB entry at 35.5 KB peak — the same figure
+System 7 gives, on a 512 MB machine).
 
-**How it is checked.** The transfer volume is a plain file on the host,
-so `verify_output()` lifts both forks of every extracted file out of it
-with hfsutils after the emulator exits (`hcopy -m`, one MacBinary per
-file) and compares them byte for byte against the same engine's Linux
-output — `unclassic x -nr`, single-level, for the same reason
-`tools/vmac_check.py` uses it. No framebuffer decoding is involved, and
-a volume the guest failed to flush shows up as a failed mount rather
-than as a silent pass. Results in FORMATS.md.
+Still unverified on OS 9:
 
-Closed by that run: the `WaitNextEvent` branch (`gHasWNE =
-TrapAvailable(_WaitNextEvent)` takes the modern path on OS 9, where
-only the System 6 branch had ever run), Standard File and the whole
-Toolbox File Manager layer under a real Process Manager, and
-`SFReply.vRefNum` as a System 7+ working-directory reference — output
-lands on the archive's own volume, which is what the harness then reads
-back. Extraction of a resource fork is included: `derived-DDT.sit`
-carries a 3504-byte resource fork and it compares byte-exact, with no
-need for the reserved-header masking System 6 requires.
+- **Names HFS+ permits that HFS does not.** Through the classic File Manager a
+  68k application is capped at 31 characters on either filesystem, so these may
+  be unreachable from this binary at all — unproven either way.
+- **Files larger than the HFS 2 GB cap**, and the engine's 32-bit arithmetic
+  against them.
+- **MacRoman filename display and 8-bit characters** above System 6 — the
+  bytes are checked, the appearance is not.
+- **Real PowerPC silicon.** As with 68k, an emulator is not hardware.
 
-Still unverified on Mac OS 9:
-
-- ~~**HFS+ volumes.**~~ **Done 2026-08-02** —
-  `tools/vmac/os9.py --hfsplus` renames the HFS+ boot volume to `Out`
-  from the keyboard and runs the autotest build against it, so the
-  extraction lands on HFS+. 31 files byte-identical to the Linux
-  engine by CRC and length, `ret=0`, and every name exactly as the
-  31-character rule predicts. That the volume really is HFS+ is
-  measured: hfsutils sees only its HFS wrapper, and the wrapper still
-  holds nothing but `Where_have_all_my_files_gone?`.
-  **What is left of this row:** names that HFS+ permits and HFS does
-  not. Through the classic File Manager a 68k application is capped at
-  31 characters on either filesystem, so those cases may be
-  unreachable from this binary — unproven either way.
-- **Files larger than the HFS 2 GB cap**, and the engine's 32-bit-only
-  arithmetic against them.
-- **The 'SIZE' resource made to bite under the Process Manager.** The
-  application launches on OS 9, so the partition is honoured enough to
-  run it. The System 6/7 comparison that forced the memory refusal (a
-  600 KB partition against `derived-KeyGraphics.sit`) has not been
-  repeated there.
-- MacRoman filename display, and 8-bit characters in names, above
-  System 6.
-- **Real PowerPC hardware.** As with 68k, an emulator is not silicon.
 
 ## Setup
 
