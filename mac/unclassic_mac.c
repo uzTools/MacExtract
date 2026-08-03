@@ -1153,8 +1153,12 @@ static void at_report(const uint32_t *vals, int nvals)
     long k, n;
     int i, b, idx = 0;
 
+#ifndef UNC_AT_NOHIDECURSOR
     HideCursor();      /* stop the cursor's save/restore from stamping its old
-                          (desktop-pattern) background back over the grid */
+                          (desktop-pattern) background back over the grid.
+                          UNC_AT_NOHIDECURSOR builds without it so the claim
+                          can be tested instead of inherited. */
+#endif
     n = h * rb;                                 /* erase whole screen to white */
     for (k = 0; k < n; k++) ((unsigned char *)base)[k] = 0;
 

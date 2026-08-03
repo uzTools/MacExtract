@@ -67,6 +67,10 @@ target_compile_options(unclassic PRIVATE -mcpu=68000 -Os -Wno-multichar
                        # unchanged, so this proves the same-volume case
                        # byte-exact rather than assuming it.
                        $<$<BOOL:$ENV{UNC_AT_SAMEVOL}>:-DUNC_AT_SAMEVOL>
+                       # UNC_AT_NOHIDECURSOR: draw the result grid WITHOUT
+                       # hiding the cursor first, to test the claim that the
+                       # cursor's saved background stamps over the grid.
+                       $<$<BOOL:$ENV{UNC_AT_NOHIDECURSOR}>:-DUNC_AT_NOHIDECURSOR>
                        # UNC_MAC_STAGE_WRITES: go back to accumulating each
                        # whole fork in RAM and writing it in sink_end. The
                        # default streams straight to the File Manager; this

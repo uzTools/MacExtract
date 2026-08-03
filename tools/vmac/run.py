@@ -235,7 +235,11 @@ def run_one(fixture, mem, timeout, poll, workdir, bootimg, keep_png=None,
         # Park the host pointer away from the result grid. Mini vMac drives the
         # Mac cursor from it, and the cursor's saved background can stamp the
         # desktop pattern back over cells the app has already painted.
-        subprocess.run(["xdotool", "mousemove", "780", "580"],
+        # UNC_VMAC_PARK overrides the position so the claim above can be
+        # TESTED rather than merely obeyed: park the pointer inside the grid
+        # and see whether the decode still succeeds.
+        park = os.environ.get("UNC_VMAC_PARK", "780,580").split(",")
+        subprocess.run(["xdotool", "mousemove", park[0], park[1]],
                        env=dict(os.environ, DISPLAY=dpy.name),
                        capture_output=True)
         deadline = started + timeout
