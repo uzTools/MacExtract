@@ -18,7 +18,7 @@ whole corpus for that format (engine allocations only, via
 | StuffIt 5 (.sit) | extract | 0, 13, 15 Arsenic; encrypted detected | 31 fixtures | 0.16–2.53 MB† | 11 of 31 fixtures extract FULLY; the rest refuse per entry |
 | Zip | extract | store, deflate; others & encrypted per-entry errors | 3 fixtures (+2 PKZIP-1.x corpus-only) | 66 KB | full |
 | Gzip | extract | deflate | 3 fixtures | 51 KB | full |
-| Unix compress (.Z) | extract | LZW ≤16 bit | 4 fixtures | 268 KB | full |
+| Unix compress (.Z) | extract | LZW ≤16 bit | 4 fixtures | 219 KB§ | full |
 | Tar (ustar/v7) | extract | — (links reported unsupported) | 3 fixtures (2 real 1990 v7 tars) + unit tests | 8 KB | full |
 | StuffIt X (.sitx) | detect only | — | — | — | — |
 | DiskDoubler (DD, DDAR, DDA2) | detect only | — | 4 sniffed | — | — |
@@ -105,6 +105,28 @@ went from refusing all 34 entries to extracting 31 of them, and
 `derived-RWAsm_Folder.sit` from 36 of 38 to all 38. See the two Mini vMac
 sections below for the per-fixture outcomes, and DECISIONS.md for why the
 slurp existed and why it does not any more.
+
+§ **The `.Z` peak used to be a flat 274,432 B for every input, and is now
+sized from the input.** MEASURED 2026-08-03. `compress(1)` writes
+`maxbits=16` by default whatever it compressed, so a 488-byte `.Z` declared a
+65,536-entry table it filled a few hundred entries of, and `unc_lzw_init`
+allocated the DECLARED ceiling — the same mistake the Arsenic block had. Every
+input code defines at most one new symbol and codes are at least 9 bits wide,
+so `symbols <= 256 + reserved + insize * 8 / 9` bounds the table however large
+`maxbits` claims:
+
+| fixture | in | was | now |
+|---|---|---|---|
+| `synth-exo-Z.Z` | 488 B | 274,432 B | 15,044 B |
+| `synth-exo-tar-Z.tar.Z` | 5,465 B | 274,432 B | 32,740 B |
+| `a2ps.V4.3.tar.Z` | 30,255 B | 274,432 B | 120,880 B |
+| `popper-1.7.tar.Z` | 59,323 B | 274,432 B | 224,232 B |
+
+StuffIt classic method 2 is bounded the same way from the entry's compressed
+size; 50 fixtures improved corpus-wide, none regressed, and the sampled
+StuffIt classic peaks are unchanged because none of them is method-2 bound.
+On-Mac figures agree with Linux to a constant 32 B of shell overhead. See
+DECISIONS.md for why the table is sized once rather than grown.
 
 ## Envelope auto-unwrap
 
@@ -240,7 +262,7 @@ On-Mac engine peak heap (high-water mark) by format, matching the Linux
 | Zip | 12–65 KB |
 | Gzip | 51 KB |
 | StuffIt classic | 72–75 KB |
-| Unix compress (.Z) | 268 KB |
+| Unix compress (.Z) | 15–219 KB§ |
 | StuffIt 5 (Arsenic) | 0.63–2.53 MB (block *fill* dependent — see †) |
 | DiskDoubler / Now Compress | detect-only — no allocation, cleanly not extracted |
 

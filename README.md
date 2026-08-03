@@ -51,7 +51,7 @@ itself; both are reproducible with `tools/vmac/run.py`. Per format:
 | Zip | ✅ 3/3 | ✅ 3/3 | 12–65 KB |
 | StuffIt classic (.sit) | ✅ 4/4 | ✅ 4/4 | 72–75 KB |
 | Gzip | ✅ 3/3 | ✅ 3/3 | 51 KB |
-| Unix compress (.Z) | ✅ 4/4 | ✅ 4/4 | 268 KB |
+| Unix compress (.Z) | ✅ 4/4 | ✅ 4/4 | 15–219 KB |
 | DiskDoubler / Now Compress | ✅ detect-only | ✅ detect-only | none |
 | **StuffIt 5 / Arsenic** | ✅ 6/6 | ⚠️ **3/6** | 0.16–1.8 MB |
 

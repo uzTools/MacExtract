@@ -136,11 +136,12 @@ static int sit_rle90(SitFork *f, UncBufIn *in, uint32_t outlen)
 
 /* Method 2: compress LZW, 14-bit codes, block mode (flags 0x8e in
  * XADStuffItParser.m). */
-static int sit_lzw(SitFork *f, UncBufIn *in, uint32_t outlen, UncAlloc *al)
+static int sit_lzw(SitFork *f, UncBufIn *in, uint32_t outlen, uint32_t complen,
+                   UncAlloc *al)
 {
     UncLzw z;
     uint32_t left = outlen;
-    int err = unc_lzw_init(&z, al, in, 14, 1);
+    int err = unc_lzw_init(&z, al, in, 14, 1, complen);
     if (err != UNC_OK) return err;
     while (left > 0) {
         uint32_t space = f->ocap - f->olen;
@@ -682,7 +683,7 @@ int unc_sit_decode_fork(UncCtx *c, UncFork fork, uint32_t at,
     switch (method & 0x0f) {
     case 0:  err = sit_store(&f, &in, outlen); break;
     case 1:  err = sit_rle90(&f, &in, outlen); break;
-    case 2:  err = sit_lzw(&f, &in, outlen, c->al); break;
+    case 2:  err = sit_lzw(&f, &in, outlen, complen, c->al); break;
     case 3:  err = sit_huffman(&f, &in, outlen, c->al); break;
     case 5:  err = sit_lzah_fork(&f, &in, outlen, c->al); break;
     case 8:  err = sit_mw_fork(&f, &in, outlen, c->al); break;

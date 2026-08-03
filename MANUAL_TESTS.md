@@ -14,6 +14,36 @@ The earlier claim that this was caused by a **broken Retro68 `HOpen`
 glue** has been **withdrawn** — a standalone minimal reproduction
 (`tools/retro68-hopen-repro/`) disproved it. See BLOCKERS.md.
 
+### The LZW table bound, 2026-08-03 — three builds, because one proves nothing
+
+`unc_lzw_init` sizes its table from the input rather than from `maxbits`
+(DECISIONS.md, FORMATS.md footnote §). The safety net that catches an
+under-estimated bound never runs in normal operation, so it is only ever
+exercised deliberately. Re-run all three — the third is what makes the other
+two mean anything:
+
+    # 1. the bound never under-estimates: hard-disable growth
+    #    (make lzw_grow return UNC_ERR_MEM as its first statement)
+    UNCLASSIC=build/never/unclassic sh tests/run_diff.sh      # expect 769/769
+
+    # 2. the safety net is correct: force it to run on every stream
+    make BUILD=build/tiny CFLAGS="-O1 -g \
+        -fsanitize=address,undefined,alignment -fno-sanitize-recover=all \
+        -DUNC_LZW_TINY_TABLE" all
+    UNCLASSIC=build/tiny/unclassic sh tests/run_diff.sh       # expect 769/769
+
+    # 3. these fixtures CAN fail on this code: starve the table AND
+    #    skip the add instead of growing
+    UNCLASSIC=build/probe/unclassic sh tests/run_diff.sh      # expect 675/769
+
+`UNC_LZW_TINY_TABLE` is committed and forces the initial capacity to 258.
+Steps 1 and 3 are one-line local edits and are deliberately NOT build flags:
+each makes the engine wrong on purpose, and a flag that ships wrong behaviour
+is a flag somebody eventually sets. **Step 3 is the point.** Steps 1 and 2 both
+report 769/769 — the same number a build that ignored the input entirely would
+report — so without a demonstrated failure they distinguish nothing. 94 of the
+769 fixtures reach the LZW path (4 `.Z`, the rest StuffIt classic method 2).
+
 ### System 7.0.1, 2026-08-01 — a second system tier, corpus only
 
 Every on-Mac result before this one came from System 6.0.8. This is the first

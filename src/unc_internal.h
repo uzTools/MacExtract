@@ -212,12 +212,17 @@ int unc_canon_decode(const UncCanon *c, UncBitIn *bi);
 
 typedef struct UncLzw {
     UncBufIn *in;
+    UncAlloc *al;           /* kept for the growth safety net */
     uint8_t  *mem;          /* single allocation, see unc_lzw_init */
-    uint16_t *parent;       /* [maxsymbols] */
-    uint8_t  *chr;          /* [maxsymbols] */
-    uint8_t  *chain;        /* [maxsymbols] reversed-chain staging */
+    uint16_t *parent;       /* [capsymbols] */
+    uint8_t  *chr;          /* [capsymbols] */
+    uint8_t  *chain;        /* [capsymbols] reversed-chain staging */
     uint32_t  bitbuf;       /* LSB-first bit accumulator */
     int32_t   nbits;
+    /* maxsymbols is the DECLARED ceiling (1 << maxbits) and governs
+     * decode semantics — code-width growth and the table-full point —
+     * so it must not be lowered. capsymbols is what is allocated. */
+    int32_t   capsymbols;
     int32_t   maxsymbols, numsymbols, reserved;
     int32_t   prevsymbol;
     int32_t   symbolsize;   /* current code width in bits */
@@ -226,8 +231,11 @@ typedef struct UncLzw {
     int       blockmode;
 } UncLzw;
 
+/* insize is the compressed size of the stream in bytes, or 0 when it is
+ * not known; it only sizes the initial allocation and never changes the
+ * decoded output. See unc_lzw.c. */
 int  unc_lzw_init(UncLzw *z, UncAlloc *al, UncBufIn *in,
-                  int maxbits, int blockmode);
+                  int maxbits, int blockmode, uint32_t insize);
 void unc_lzw_free(UncLzw *z, UncAlloc *al);
 int32_t unc_lzw_read(UncLzw *z, uint8_t *out, int32_t want);
 

@@ -171,7 +171,12 @@ int unc_compressz_extract(UncCtx *c)
     if (!c->opt.list_only) {
         unc_bufin_init(&in, c->io, &c->ps, iobuf, iocap);
         if (c->io->seek(c->io->ctx, 3) < 0) { err = UNC_ERR_IO; goto out; }
-        est = unc_lzw_init(&z, c->al, &in, maxbits, blockmode);
+        {   /* Size the table from the stream, less the 3-byte header. */
+            uint32_t insize = c->io->size(c->io->ctx);
+            insize = (insize == UNC_SIZE_UNKNOWN || insize < 3)
+                   ? 0 : insize - 3;
+            est = unc_lzw_init(&z, c->al, &in, maxbits, blockmode, insize);
+        }
         if (est == UNC_OK) {
             for (;;) {
                 int32_t got = unc_lzw_read(&z, obuf, (int32_t)ocap);

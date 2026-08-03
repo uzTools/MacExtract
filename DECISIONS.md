@@ -1080,3 +1080,63 @@ The general form is one this repository keeps meeting from new angles: **a
 number that comes from the data is not a number you have to budget for.** The
 same mistake in the other direction — treating the archive's size as a cost the
 engine must carry — was the RAM slurp removed the day before.
+
+## 2026-08-03 — the LZW table is sized from the input, once
+
+Same shape as the Arsenic block the entry above, found by looking for the same
+shape: `unc_lzw_init` allocated `(1 << maxbits) * 4`, the **declared** ceiling.
+`compress(1)` writes `maxbits=16` by default whatever it compressed, so `.Z`
+cost a flat **274,432 B** for every input — a 488-byte fixture allocated 256 KB
+for a table it filled a few hundred entries of. It was the second largest peak
+in the format matrix and the only one that did not vary with its input at all,
+which is what made it worth suspecting.
+
+**Growth on demand was tried first, and was the wrong answer.** Doubling as
+`ars_block_reserve` does measured:
+
+    synth-exo-Z.Z          274,432 -> 18,432 B
+    synth-exo-tar-Z.tar.Z  274,432 -> 61,440 B
+    a2ps.V4.3.tar.Z        274,432 -> 208,896 B
+    popper-1.7.tar.Z       274,432 -> 405,504 B      <- WORSE than doing nothing
+
+That last row is the transferable part. Copy-based growth has an unavoidable
+`old + new` transient, and **where the table IS the whole allocation, that
+transient becomes the peak**. Arsenic escaped it only because its transform
+vector is 4x the fill and dominates the later peak — the note above says as
+much ("1.5x capacity < 5x fill"), and the condition simply does not hold here.
+So the two cases look identical and are not: *growth pays off only when
+something larger than the grown buffer is allocated after it.*
+
+**What works is a bound from the input.** Every input code defines at most one
+new symbol and codes are at least 9 bits wide, so
+
+    symbols <= 256 + reserved + insize * 8 / 9
+
+however large `maxbits` claims. One allocation, no transient, strictly smaller
+than the ceiling in every case. `fmt_exo.c` passes the stream size less the
+3-byte header; StuffIt method 2 passes the entry's compressed length.
+
+The bound is **strict**, which is what lets the decode stay bit-identical:
+reaching entry `256 + reserved + k` takes `k + 1` codes, so the table cannot
+fill even when every code is the minimum width. That matters because
+`maxsymbols` is not just an allocation size — it is where the code width stops
+growing and where the table is declared full, both of which the encoder also
+decided. Lowering it would silently desync the decoder from the encoder rather
+than fail. So `maxsymbols` keeps its declared value and a new `capsymbols`
+carries what is allocated; only `capsymbols` was substituted into the
+allocation and the chain-buffer bound.
+
+`lzw_grow` widens to the declared ceiling if the bound is ever under-estimated,
+so a wrong estimate stays correct rather than overflowing. It is a safety net,
+not a strategy, and **it was verified to be both**: with growth hard-disabled
+the differential suite is still 769/769, so the bound never under-estimates
+anywhere in the corpus; and with `-D UNC_LZW_TINY_TABLE`, which forces the
+initial capacity to 258 so growth runs on every stream, it is *also* 769/769
+under ASan/UBSan/alignment. Neither number means anything without the third:
+starving the table without the safety net gives **675/769**, which is what
+establishes that these fixtures can fail on this code at all. 94 of them
+exercise it.
+
+Result: zero regressions across the corpus, 50 fixtures improved, `.Z` down
+from a flat 268 KB to 15–219 KB, and the 1 MB floor sweep unchanged at 41/44
+(this was never what limited it). Numbers in FORMATS.md, footnote §.

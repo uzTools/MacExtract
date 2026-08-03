@@ -38,12 +38,16 @@ Read them at the start of every session. Where these files disagree with each ot
 The repository is on GitHub as a **private** repo, `main`, tagged through
 `v0.4`. Working tree clean, `./ci.sh` green, nothing in flight.
 
-**Read OPEN_ITEMS.md first.** It is organised around what is actually open,
-and section 6 is a fully specified task with its measurements, its failed
-first attempt and the design that works — that is the best next piece of work.
-Everything else open is either impossible in this environment (real 68k or
-PowerPC silicon), the maintainer's to do (the Retro68 report), or deliberate
-scope.
+**Read OPEN_ITEMS.md first.** It is organised around what is actually open.
+Be aware that **nothing in it is currently a specified, ready-to-do task**:
+the LZW sizing task that used to be its section 6 was done on 2026-08-03, and
+what remains is either impossible in this environment (real 68k or PowerPC
+silicon), the maintainer's to do (the Retro68 report), or deliberate scope.
+Section 6 (loose ends) is the closest thing to actionable, and both its items
+are blocked on a fixture the oracle can read rather than on any work here.
+
+So the next session most likely has to **find** its work rather than pick it
+up, which is exactly what the habit below is for.
 
 **The one habit that produced everything valuable this week.** Nearly every
 real gain came from re-testing a claim the repository was already making,
@@ -57,11 +61,25 @@ rather than from new features:
 - The Arsenic block was allocated at its DECLARED 512 KB rather than what it
   holds (40/44 → 41/44, and `derived-RWAsm_Folder.sit` went 595.7 KB → 163.2 KB
   for the same output).
+- The LZW table was allocated at its DECLARED `maxbits` ceiling — found on
+  2026-08-03 purely by looking for the Arsenic mistake a second time, and the
+  matrix pointed straight at it: `.Z` was the one peak that did not vary with
+  its input at all. A flat 268 KB became 15–219 KB, 50 fixtures improved, none
+  regressed.
 
 So: **when something looks like a hard floor, check whether the number you are
 budgeting for is a number the data actually needs.** And when a claim has no
 reproduction, treat its neighbours as suspect too — that is literally how the
-last two were found.
+last two were found. A constant in the peak-RAM matrix is the tell: data-driven
+allocations vary with their input, so one that does not is usually a declared
+ceiling nobody questioned.
+
+**The same fix does not always work twice, though.** Growth-on-demand rescued
+the Arsenic block and made the LZW table *worse* than doing nothing, because
+copy-based growth has an `old + new` transient and there the table IS the whole
+allocation. Two problems with the same shape can want opposite fixes; measure
+the second one rather than porting the first one's answer. (DECISIONS.md,
+2026-08-03.)
 
 **Traps this environment sets, all of which cost real time here:**
 
