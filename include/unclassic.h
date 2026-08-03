@@ -23,7 +23,7 @@
 extern "C" {
 #endif
 
-#define UNC_VERSION "0.3.0"
+#define UNC_VERSION "0.4.0"
 
 /* ------------------------------------------------------------------ */
 /* Formats                                                            */
