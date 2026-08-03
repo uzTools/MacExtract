@@ -35,6 +35,7 @@ minutes per fixture. It is a deliberate, on-demand check.
 | `mountcheck.py` | boot a system image with disks attached and photograph the desktop — "does this mount?", and "does this system boot at all?" |
 | `mkapmdisk.py` | build an Apple-partitioned transfer disk that Mac OS on PowerPC will mount |
 | `checkdisk.py` | verify a run by READING its Out volume — both forks, and the names the on-screen grid cannot carry |
+| `mkcollide.py` | build an archive whose names collide on HFS, and verify what `BumpName` did with them — nothing in the corpus collides |
 
 `tools/quickdraw-repro/` is a sibling that reuses `mkboot.py` and this
 directory's `Display`/emulator plumbing to answer one narrow question about

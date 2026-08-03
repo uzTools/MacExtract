@@ -141,11 +141,46 @@ handling.
   was never a harness lesson either: it was filed as one, which is how a
   claim that would have meant the shipped interactive build was broken sat
   here unexamined.
-- **`HideCursor()` before drawing**, or the cursor's saved background
-  stamps the desktop pattern back over the grid; park the host pointer off
-  the grid before the app draws.
-- `pkill -9` never lets the emulator flush; use a fresh pristine boot image
-  per run (repeated boot+kill cycles corrupt System 6's writes to it).
+- **`HideCursor()` before drawing — CONFIRMED 2026-08-02, and it is
+  load-bearing.** The only claim in this list to survive its audit, and it now
+  has a reproduction. Built without it (`UNC_AT_NOHIDECURSOR`) and with the
+  host pointer dragged through the grid's cell CENTRES, the decoded result
+  comes back `ret = 0x04000000` — one flipped bit, i.e. exactly one cell
+  stamped over by the cursor's saved background. The stock build survives the
+  same drag untouched. Reproduced twice.
+
+  Two things had to be right before the test meant anything, and neither was
+  at first. The pointer must be inside the emulator window — it sits at
+  (144,129) on the 800x600 Xvfb, so the "inside the grid" coordinates tried
+  first were outside the window entirely — and the drag must cross cell
+  centres, because a path between rows disturbs nothing and decodes cleanly.
+  Both early attempts "passed" while testing nothing.
+
+  The harness's own pointer-parking is then belt and braces rather than
+  necessary: with `HideCursor()` in place the stock app survives the drag. It
+  costs one `xdotool` call, so it stays. `UNC_VMAC_PARK` overrides it, which is
+  how this was measured.
+- ~~`pkill -9` never lets the emulator flush; repeated boot+kill cycles
+  corrupt System 6's writes to it.~~ **WITHDRAWN 2026-08-02 — neither half
+  reproduces**, though the practice it recommends is kept for a better reason.
+
+  *Flushing:* writes reach the image. The whole 44-fixture sample was read
+  back off its Out volumes after exactly this kill (see the withdrawn
+  write-back claim above), and in the Finder configuration the boot image's
+  SHA-1 changes on every single cycle. Something is plainly being written.
+
+  *Corruption:* 6 boot+kill cycles re-using one boot image in the boot-shell
+  configuration — every run correct, and the image **byte-identical
+  throughout**, because that configuration never writes to its boot volume at
+  all, so there is nothing for a kill to damage. 5 more cycles in the
+  `--finder` configuration, which does write: the hash changes every time and
+  it still boots to a healthy Finder desktop on the fifth.
+
+  **A fresh pristine image per run is still right**, for the reason the Mac
+  OS 9 master-image incident taught rather than this one: the image DRIFTS, so
+  reusing it makes two runs months apart incomparable and hides what changed.
+  That is a reproducibility argument, not a corruption one, and it is the
+  argument the code should have carried.
 
 ### "QuickDraw bombs after File Manager activity" — WITHDRAWN 2026-08-01
 

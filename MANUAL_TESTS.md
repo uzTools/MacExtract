@@ -136,6 +136,58 @@ which is exactly where the withdrawn claim lived:
 **44/44 byte-exact at 4 MB**, output landing on the volume being read from,
 with the usual on-Mac read-back CRC of both forks.
 
+### Name collisions, 2026-08-02 — BumpName verified for the first time
+
+`BumpName()` appends `~1`..`~9` when a sanitized name already exists. It is
+live code — it is what produced `archive.sit~1` when the gzip/.Z fallback name
+collided with the archive itself — and nothing had ever checked it. Nothing in
+the corpus can: across all 769 manifests **no two entries collide** under the
+Mac's rules (case-insensitive HFS, 31-character components, `:` <-> `/`),
+which was measured, not assumed. So the archive has to be built for it.
+
+    tools/vmac/mkcollide.py /tmp/collide.tar
+    tools/vmac/run.py --keep-disks /tmp/collide.tar
+    tools/vmac/mkcollide.py --verify <that run's out.dsk>
+
+Five entries collide two different ways: `README` vs `readme` (case), and
+three names sharing their first 31 characters (truncation). Every payload is
+distinct and self-identifying, so the check is "the right bytes are in the
+file with the right name", not "five files exist".
+
+| archive entry | on the Mac | payload |
+|---|---|---|
+| `README` | `README` | upper case |
+| `readme` | `readme~1` | lower case |
+| `collide-me-when-truncated-to-31-alpha` | `collide-me-when-truncated-to-31` | alpha |
+| `collide-me-when-truncated-to-31-beta` | `collide-me-when-truncated-to-~1` | beta |
+| `collide-me-when-truncated-to-31-gamma` | `collide-me-when-truncated-to-~2` | gamma |
+
+All five arrive, none overwrites another, and each holds its own payload. The
+29-character clamp is visible in the result: `collide-me-when-truncated-to-` is
+29 characters, then `~1` makes 31. Archive order decides who keeps the plain
+name. **No silent data loss**, which is what a broken BumpName would cause.
+
+### The harness-lesson audit, 2026-08-02
+
+The remaining unreproduced claims in BLOCKERS.md's *test-harness lessons* list
+were tested. One survived, one did not; details there.
+
+    tools/vmac/run.py -D UNC_AT_NOHIDECURSOR fixtures/derived-DDT.sit
+    UNC_VMAC_PARK=344,279 tools/vmac/run.py ...      # park the pointer anywhere
+
+`HideCursor()` is **confirmed necessary**: without it, dragging the host
+pointer through the grid's cell centres flips a bit in the decoded result
+(`ret = 0x04000000`), while the stock build survives the same drag. Note the
+emulator window sits at (144,129) on the 800x600 Xvfb, so "grid coordinates"
+must have that added — two earlier attempts parked the pointer outside the
+window and proved nothing.
+
+The `pkill -9` claim is **withdrawn**: 6 boot+kill cycles re-using one
+boot-shell image leave it byte-identical (that configuration never writes to
+its boot volume), and 5 cycles of a `--finder` image change its hash every
+time and still boot to a healthy desktop. A fresh image per run is kept for
+reproducibility — the image drifts — not for corruption.
+
 ### Working directories, 2026-08-01 (System 6.0.8 AND System 7.0.1, 4 MB)
 
 `tools/vmac/run.py -D UNC_AT_WD` with `derived-EmpireBuilderDemo.sit`.

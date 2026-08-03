@@ -988,3 +988,43 @@ capability it displaced with it.** Nobody re-examined the screen channel for
 months because it worked. It was not wrong — it was unnecessarily blind, and
 nothing recorded that difference until TESTING.md was made to say what each
 layer cannot see.
+
+## 2026-08-02 — the claim audit, finished
+
+Every assertion this repository made about Mac or emulator behaviour without a
+reproduction has now been tested. The list was short by the end, because most
+had already been re-tested during the day:
+
+| claim | outcome |
+|---|---|
+| QuickDraw bombs after File Manager activity | withdrawn 2026-08-01 |
+| deep writes from the decode callback corrupt the volume | withdrawn earlier |
+| three non-relocatable staging blocks bomb the Memory Manager | withdrawn earlier |
+| interleaved reads/writes on one volume return zeros | withdrawn — `UNC_AT_INTERLEAVE` |
+| Mini vMac's write-back is lazy and partial | withdrawn — `checkdisk.py`, 44/44 |
+| `HideCursor()` before drawing the grid | **CONFIRMED**, with a reproduction |
+| `pkill -9` never flushes; boot+kill corrupts the image | withdrawn — 11 cycles |
+
+Two things are worth keeping out of it.
+
+**Not everything was wrong.** `HideCursor()` is load-bearing, and the audit
+gave it the reproduction it never had: built without it, with the pointer
+dragged through the grid's cell centres, one cell is stamped over and the
+decoded value comes back with a single flipped bit. That is a better outcome
+than another withdrawal — the list now separates what is true from what was
+merely inherited, which it could not do before.
+
+**The tests kept passing before they meant anything.** The cursor claim
+"passed" twice while testing nothing: first with the pointer parked at
+coordinates that were outside the emulator window altogether (it sits at
+(144,129) on the 800x600 Xvfb), then with the drag following a path *between*
+cell rows, which disturbs nothing. Only when the drag was aimed at cell
+centres did the bit flip. A green result from a test whose reach has not been
+established says nothing at all, and this is the third time today that has
+been the actual finding rather than the code under test.
+
+The general form, now evidenced five times over: **an unreproduced claim is a
+liability proportional to what it forces.** The write-back claim cost the most
+because it displaced a capability (reading names off the volume) rather than
+because it was wrong about anything. When one is found, the question worth
+asking first is not "is it true?" but "what does it stop us doing?".
