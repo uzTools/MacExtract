@@ -54,14 +54,20 @@ At the 1 MB floor the shell had 678 KB of budget left and `MaxBlock()` was
 468,126 B against a 498,564 B request — short by ~30 KB. **So the remaining
 work is on the Mac side, not in the inverse BWT.**
 
-But note what is already disproved, because it rules out the two obvious
-moves: `MaxMem()` before a retry does nothing, and neither does making the
-engine's blocks relocatable and stacking them high — `NewHandle` + `MoveHHi` +
-`HLock` was implemented, run on the Mac, and moved `MaxBlock` by 118 bytes in
-the wrong direction, so it was reverted. Both assumed the engine's own blocks
-strand the free space, and that assumption is now measured false. **Do not
-start there.** Establish what actually holds the middle of the heap first.
-`-D UNC_AT_BUDGET` is the probe; MANUAL_TESTS.md says how to read it.
+Measured at the refusal instant: `FreeMem()` 593,740 against `MaxBlock()`
+468,126, so **125,614 B is lost to fragmentation** and the request would fit
+an unfragmented heap with ~95 KB to spare. The engine held only 167,494 B, and
+that plus the free heap accounts for the whole 760,310 B — so the engine's own
+blocks are the only plausible thing splitting it.
+
+Which makes the one remedy already tried genuinely odd, and it is where to
+pick up: `NewHandle` + `MoveHHi` + `HLock` should have stacked those blocks
+clear and instead moved `MaxBlock` by 118 bytes. It was implemented, run on
+the Mac and reverted (30a8c10 — recoverable from git). **Do not re-attempt it
+blind; first check whether `MoveHHi` moves anything at all here**, with a
+`MaxBlock` either side of the call. `MaxMem()` before a retry is separately
+ruled out — compaction may not move a `NewPtr`. `-D UNC_AT_BUDGET` is the
+probe; MANUAL_TESTS.md says how to read it.
 
 The other lead worth having, not yet attempted: **the StuffIt method 13 LZSS
 window is a 64 KB format constant, but the reachable window is bounded by the

@@ -229,6 +229,10 @@ static long gBudget;        /* what the engine was actually given        */
 static long gRefusedSize;   /* size of the FIRST refused allocation      */
 static long gRefusedWhy;    /* 1 = over budget, 2 = NewPtr returned NULL */
 static long gRefusedMaxBlk; /* MaxBlock() at that moment: contiguity vs total */
+static long gRefusedFree;   /* FreeMem() at the SAME moment. FreeMem-MaxBlock
+                             * is the fragmentation; without both, the gap has
+                             * to be inferred from the start-of-run figure. */
+static long gRefusedHeld;   /* bytes the engine held when it was refused */
 #endif
 /* ------------------------------------------------------------------ */
 
@@ -252,7 +256,9 @@ static void *mal_alloc(void *ctx, uint32_t size)
     if (p == NULL) {
 #ifdef UNC_AT_BUDGET
         if (gRefusedWhy == 0) { gRefusedSize = (long)size; gRefusedWhy = 2;
-                                gRefusedMaxBlk = MaxBlock(); }
+                                gRefusedMaxBlk = MaxBlock();
+                                gRefusedFree = FreeMem();
+                                gRefusedHeld = a->initial - a->budget; }
 #endif
         return NULL;
     }
@@ -1732,11 +1738,13 @@ int main(void)
         /* Overwrite the two length slots — same trick UNC_AT_META uses.
          * vals[7] still carries peak, so the three numbers that decide a
          * refusal (free, allowed, used) are on screen together. */
+        vals[0] = (uint32_t)gRefusedFree;
         vals[3] = (uint32_t)gRefusedSize;
         vals[4] = (uint32_t)gFreeAtStart;
         vals[2] = (uint32_t)gRefusedMaxBlk;
         vals[5] = (uint32_t)gRefusedWhy;
         vals[6] = (uint32_t)gBudget;
+        vals[7] = (uint32_t)gRefusedHeld;
 #endif
 #ifdef UNC_AT_META
         /* E2E "launches by double-click" check: overwrite errors/CRC slots with

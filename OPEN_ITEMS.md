@@ -145,13 +145,31 @@ rather than repeated.
      moved by 118 bytes, in the wrong direction. Implemented, tested on the
      Mac, and reverted rather than kept as an unproven behaviour change.
 
-     So **the fragmentation is not caused by where the engine's own blocks
-     sit**, which is what both remedies assumed, and the next attempt should
-     establish what actually holds the middle of the heap before proposing a
-     fix. Whether the ~112 KB gap between free heap and `MaxBlock` is the
-     shell's own allocations, the System heap, or something else is
-     unmeasured — `-D UNC_AT_BUDGET` reports `MaxBlock` at one moment only,
-     and a heap walk would say more.
+     **The fragmentation is real, and now measured at the refusal instant
+     rather than inferred from the start-of-run figure:**
+
+     | at the moment `NewPtr` returned NULL | bytes |
+     |---|---|
+     | `FreeMem()` | 593,740 |
+     | `MaxBlock()` | 468,126 |
+     | **lost to fragmentation** | **125,614** |
+     | the request | 498,564 |
+     | held by the engine | 167,494 |
+
+     The request would fit the free heap with ~95 KB to spare; it does not fit
+     the largest run, by 30,438 B. The engine held only 167,494 B, and
+     167,494 + 593,740 accounts for essentially the whole 760,310 B heap — so
+     **the shell holds almost nothing besides the engine's own blocks**, and
+     those blocks are the only plausible thing splitting the free space.
+
+     That makes the relocatable-blocks result above *stranger*, not settled:
+     it should have worked and it moved `MaxBlock` by 118 bytes. A previous
+     write-up of this concluded "the fragmentation is not caused by where the
+     engine's own blocks sit" — that was inferred from the failed remedy, not
+     measured, and this table does not support it. **Corrected 2026-08-04.**
+     The open question is narrower than it was: whether `MoveHHi` actually
+     moved anything under System 6 here, which a before/after `MaxBlock`
+     around the `MoveHHi` call would settle in one run.
 
      Still untried, and now the only candidate that does not depend on the
      disproved assumption: trim the Arsenic capacity to the exact fill

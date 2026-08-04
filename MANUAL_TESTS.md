@@ -25,11 +25,18 @@ opposite fixes. `-D UNC_AT_BUDGET` overwrites four grid slots to show both:
 
 | grid slot | carries |
 |---|---|
+| `nfiles` | `FreeMem()` **at** the first refusal |
 | `errors` | `MaxBlock()` at the first refusal |
 | `sumDataCRC` | size of the first refused allocation |
-| `totalDataLen` | `FreeMem()` before the reserve |
+| `totalDataLen` | `FreeMem()` before the reserve, at start |
 | `sumRsrcCRC` | 1 = over budget, 2 = `NewPtr` returned NULL |
 | `totalRsrcLen` | the budget the engine was given |
+| `peak heap` | bytes the engine held at the refusal |
+
+`FreeMem()` minus `MaxBlock()`, both sampled at the refusal, is the
+fragmentation. Sampling free heap only at the START of the run does not give
+it — the gap then has to be inferred from an estimate of what the engine is
+holding, and one such inference has already had to be corrected.
 
 It reports FAIL by construction — the overwritten slots no longer match the
 oracle. Read the numbers, not the verdict. This is what showed the last three
