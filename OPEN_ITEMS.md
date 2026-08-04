@@ -130,15 +130,33 @@ rather than repeated.
      in the engine, and the thing to fix is on the Mac side rather than in the
      inverse BWT.
 
-     Ruled out already: retrying the allocation after `MaxMem()` does not
-     help — measured, still 12/13 — because the engine's blocks are `NewPtr`
-     and non-relocatable, so compaction has nothing it may move. **Untried
-     and the obvious next candidates** (all HYPOTHESIS): allocate the largest
-     block first so it is not stranded behind the 128 KB Arsenic block;
-     switch large engine allocations to `NewHandle` + `HLock` so the Memory
-     Manager can compact around them; or trim the Arsenic capacity to the
-     exact fill (item 2), which is 6,435 B here — a fifth of the shortfall,
-     so useful only in combination.
+     **Two remedies are ruled out by measurement, not by argument**, and the
+     second rules out a whole family:
+
+     | tried | result | `MaxBlock` at the refusal |
+     |---|---|---|
+     | baseline (`NewPtr`) | 12/13 | 468,126 |
+     | retry after `MaxMem()` | 12/13 | — |
+     | `NewHandle` + `MoveHHi` + `HLock` | 12/13 | **468,008** |
+
+     `MaxMem()` cannot help because compaction may not move a `NewPtr`. The
+     obvious answer to that — make the engine's blocks relocatable and stack
+     them against the top of the heap — **also changes nothing**: `MaxBlock`
+     moved by 118 bytes, in the wrong direction. Implemented, tested on the
+     Mac, and reverted rather than kept as an unproven behaviour change.
+
+     So **the fragmentation is not caused by where the engine's own blocks
+     sit**, which is what both remedies assumed, and the next attempt should
+     establish what actually holds the middle of the heap before proposing a
+     fix. Whether the ~112 KB gap between free heap and `MaxBlock` is the
+     shell's own allocations, the System heap, or something else is
+     unmeasured — `-D UNC_AT_BUDGET` reports `MaxBlock` at one moment only,
+     and a heap walk would say more.
+
+     Still untried, and now the only candidate that does not depend on the
+     disproved assumption: trim the Arsenic capacity to the exact fill
+     (item 2). That is 6,435 B here against a ~30 KB shortfall, so it cannot
+     close this alone.
 - **Timing: MEASURED 2026-08-02, and closed.** Eight
   fixtures across eight formats at authentic 1x, 8/8: boot ~10 s, every
   extraction under 5 s, plus the 278 KB StuffIt anchor at ~134 s (FORMATS.md,
