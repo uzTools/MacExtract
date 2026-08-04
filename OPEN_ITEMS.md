@@ -167,9 +167,23 @@ rather than repeated.
      write-up of this concluded "the fragmentation is not caused by where the
      engine's own blocks sit" — that was inferred from the failed remedy, not
      measured, and this table does not support it. **Corrected 2026-08-04.**
-     The open question is narrower than it was: whether `MoveHHi` actually
-     moved anything under System 6 here, which a before/after `MaxBlock`
-     around the `MoveHHi` call would settle in one run.
+
+     **What `-D UNC_AT_HANDLES` then showed, and what it cannot show.**
+     `MaxBlock` either side of the `MoveHHi` call, at the 128 KB Arsenic block
+     allocation: **598,114 before, 598,114 after.** But that comparison
+     **cannot fail** — moving a block from one end of a single free run to the
+     other leaves one run of the same size, so an unchanged `MaxBlock` is
+     equally consistent with `MoveHHi` working perfectly and with it doing
+     nothing. It does not settle the question it was built for. Treat the
+     "`MoveHHi` is a no-op" reading as UNTESTED, not as measured; distinguishing
+     them needs the block's ADDRESS, not the largest free run.
+
+     What the run does establish is where the damage happens. At the moment
+     the 128 KB block is taken, `MaxBlock` is **598,114** — comfortably more
+     than the 498,564 the transform will later ask for. By the time the
+     transform is requested it is 467,976. **The heap is fragmented between
+     those two allocations, not before the first one**, which is a much
+     smaller window to search than "somewhere in the run".
 
      Still untried, and now the only candidate that does not depend on the
      disproved assumption: trim the Arsenic capacity to the exact fill

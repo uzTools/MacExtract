@@ -233,6 +233,13 @@ static long gRefusedFree;   /* FreeMem() at the SAME moment. FreeMem-MaxBlock
                              * is the fragmentation; without both, the gap has
                              * to be inferred from the start-of-run figure. */
 static long gRefusedHeld;   /* bytes the engine held when it was refused */
+#ifdef UNC_AT_HANDLES
+/* Does MoveHHi move anything at all here? Measured around the call for the
+ * first allocation big enough to matter, in the real heap state rather than
+ * a synthetic one. Equal values mean MoveHHi is a no-op and the reverted
+ * relocatable-blocks remedy never had a chance. */
+static long gMoveBefore, gMoveAfter;
+#endif
 #endif
 /* ------------------------------------------------------------------ */
 
@@ -252,7 +259,22 @@ static void *mal_alloc(void *ctx, uint32_t size)
 #endif
         return NULL;
     }
+#ifdef UNC_AT_HANDLES
+    {
+        Handle h = NewHandle((long)size + 16);
+        p = NULL;
+        if (h != NULL) {
+            if (gMoveBefore == 0 && size >= 65536L) gMoveBefore = MaxBlock();
+            MoveHHi(h);
+            if (gMoveAfter == 0 && size >= 65536L) gMoveAfter = MaxBlock();
+            HLock(h);
+            p = *h;
+            *(Handle *)(p + 8) = h;
+        }
+    }
+#else
     p = NewPtr((long)size + 16);
+#endif
     if (p == NULL) {
 #ifdef UNC_AT_BUDGET
         if (gRefusedWhy == 0) { gRefusedSize = (long)size; gRefusedWhy = 2;
@@ -273,7 +295,11 @@ static void mal_free(void *ctx, void *ptr)
     MacAlloc *a = (MacAlloc *)ctx;
     Ptr p = (Ptr)ptr - 16;
     a->budget += *(long *)p + 16;
+#ifdef UNC_AT_HANDLES
+    { Handle h = *(Handle *)(p + 8); HUnlock(h); DisposeHandle(h); }
+#else
     DisposePtr(p);
+#endif
 }
 
 /* ------------------------------------------------------------------ */
@@ -1745,6 +1771,10 @@ int main(void)
         vals[5] = (uint32_t)gRefusedWhy;
         vals[6] = (uint32_t)gBudget;
         vals[7] = (uint32_t)gRefusedHeld;
+#ifdef UNC_AT_HANDLES
+        vals[4] = (uint32_t)gMoveBefore;   /* MaxBlock before MoveHHi */
+        vals[6] = (uint32_t)gMoveAfter;    /* MaxBlock after  MoveHHi */
+#endif
 #endif
 #ifdef UNC_AT_META
         /* E2E "launches by double-click" check: overwrite errors/CRC slots with

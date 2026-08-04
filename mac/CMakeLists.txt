@@ -77,6 +77,11 @@ target_compile_options(unclassic PRIVATE -mcpu=68000 -Os -Wno-multichar
                        # what it was ALLOWED, so a budget refusal and a real
                        # shortage are indistinguishable on screen.
                        $<$<BOOL:$ENV{UNC_AT_BUDGET}>:-DUNC_AT_BUDGET>
+                       # UNC_AT_HANDLES: allocate engine memory as relocatable
+                       # handles moved high and locked, instead of NewPtr, and
+                       # report MaxBlock either side of MoveHHi. Tests whether
+                       # MoveHHi does anything under System 6 at all.
+                       $<$<BOOL:$ENV{UNC_AT_HANDLES}>:-DUNC_AT_HANDLES>
                        # UNC_MAC_STAGE_WRITES: go back to accumulating each
                        # whole fork in RAM and writing it in sink_end. The
                        # default streams straight to the File Manager; this

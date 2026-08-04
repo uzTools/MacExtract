@@ -38,6 +38,18 @@ fragmentation. Sampling free heap only at the START of the run does not give
 it — the gap then has to be inferred from an estimate of what the engine is
 holding, and one such inference has already had to be corrected.
 
+`-D UNC_AT_HANDLES` additionally swaps the engine allocator to `NewHandle` +
+`MoveHHi` + `HLock` (the reverted remedy, kept buildable) and puts `MaxBlock`
+either side of the `MoveHHi` call into the two length slots.
+
+**What it CANNOT see, and this is the whole point of the probe:** `MaxBlock`
+is blind to where inside a single free run a block sits. Moving a block from
+the bottom of one run to the top leaves one run of the same size, so the
+before/after comparison **cannot fail** — it reads identically whether
+`MoveHHi` worked or did nothing at all. It was built to answer "does `MoveHHi`
+move anything" and does not. Answering that needs the block's ADDRESS
+(`*h` before and after), not the largest free run.
+
 It reports FAIL by construction — the overwritten slots no longer match the
 oracle. Read the numbers, not the verdict. This is what showed the last three
 1 MB refusals are a contiguity failure rather than a shortage (OPEN_ITEMS.md

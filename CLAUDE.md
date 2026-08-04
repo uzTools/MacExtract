@@ -60,14 +60,18 @@ an unfragmented heap with ~95 KB to spare. The engine held only 167,494 B, and
 that plus the free heap accounts for the whole 760,310 B — so the engine's own
 blocks are the only plausible thing splitting it.
 
-Which makes the one remedy already tried genuinely odd, and it is where to
-pick up: `NewHandle` + `MoveHHi` + `HLock` should have stacked those blocks
-clear and instead moved `MaxBlock` by 118 bytes. It was implemented, run on
-the Mac and reverted (30a8c10 — recoverable from git). **Do not re-attempt it
-blind; first check whether `MoveHHi` moves anything at all here**, with a
-`MaxBlock` either side of the call. `MaxMem()` before a retry is separately
-ruled out — compaction may not move a `NewPtr`. `-D UNC_AT_BUDGET` is the
-probe; MANUAL_TESTS.md says how to read it.
+The search window is now narrow. At the moment the 128 KB Arsenic block is
+taken, `MaxBlock` is 598,114 — more than the 498,564 the transform will later
+need. By the transform request it is 467,976. **The heap is fragmented between
+those two allocations**, so that is the only stretch worth instrumenting.
+
+Two probes exist (`-D UNC_AT_BUDGET`, `-D UNC_AT_HANDLES`; MANUAL_TESTS.md
+says how to read them, including what each cannot see). Note that the
+`MoveHHi` question is still OPEN: the before/after `MaxBlock` comparison built
+for it cannot fail, because `MaxBlock` is blind to where in a free run a block
+sits. Answering it needs the block's ADDRESS (`*h` either side of the call).
+`MaxMem()` before a retry is separately ruled out — compaction may not move a
+`NewPtr`.
 
 The other lead worth having, not yet attempted: **the StuffIt method 13 LZSS
 window is a 64 KB format constant, but the reachable window is bounded by the
