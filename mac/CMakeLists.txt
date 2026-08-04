@@ -71,6 +71,12 @@ target_compile_options(unclassic PRIVATE -mcpu=68000 -Os -Wno-multichar
                        # hiding the cursor first, to test the claim that the
                        # cursor's saved background stamps over the grid.
                        $<$<BOOL:$ENV{UNC_AT_NOHIDECURSOR}>:-DUNC_AT_NOHIDECURSOR>
+                       # UNC_AT_BUDGET: report FreeMem() and the engine's
+                       # allowed budget in the grid's two length slots. The
+                       # grid otherwise carries what the engine USED and never
+                       # what it was ALLOWED, so a budget refusal and a real
+                       # shortage are indistinguishable on screen.
+                       $<$<BOOL:$ENV{UNC_AT_BUDGET}>:-DUNC_AT_BUDGET>
                        # UNC_MAC_STAGE_WRITES: go back to accumulating each
                        # whole fork in RAM and writing it in sink_end. The
                        # default streams straight to the File Manager; this

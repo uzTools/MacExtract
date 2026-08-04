@@ -113,9 +113,32 @@ rather than repeated.
   2. **Capacity is never trimmed to the fill.** Doubling stops at the first
      power of two that fits, so `derived-Library_ISBN_Barcoder.sit` holds
      323 KB in a 512 KB block — 196 KB dead, for free, no algorithm change.
-  3. **Why `Troi-ClipSave` refuses at all** is unmeasured. 650 KB against a
-     documented ~700 KB free is marginal enough that the answer may be about
-     when the allocation happens rather than how big it is. One run.
+  3. **Why `Troi-ClipSave` refuses at all — MEASURED 2026-08-04, and it is
+     not a shortage.** `-D UNC_AT_BUDGET` reports what the shell allowed as
+     well as what the engine used:
+
+     | | bytes |
+     |---|---|
+     | free heap at start (`FreeMem`) | 760,312 |
+     | budget given to the engine (free − 80 KB reserve) | 678,392 |
+     | the refused request (transform vector, 4 × 124,637) | 498,548 |
+     | **`MaxBlock()` at that moment** | **468,126** |
+
+     The budget said yes with 678 KB to spare; **`NewPtr` itself returned
+     NULL**, short of a contiguous run by ~30 KB. So this is a
+     **fragmentation/contiguity failure in the shell**, not a memory shortage
+     in the engine, and the thing to fix is on the Mac side rather than in the
+     inverse BWT.
+
+     Ruled out already: retrying the allocation after `MaxMem()` does not
+     help — measured, still 12/13 — because the engine's blocks are `NewPtr`
+     and non-relocatable, so compaction has nothing it may move. **Untried
+     and the obvious next candidates** (all HYPOTHESIS): allocate the largest
+     block first so it is not stranded behind the 128 KB Arsenic block;
+     switch large engine allocations to `NewHandle` + `HLock` so the Memory
+     Manager can compact around them; or trim the Arsenic capacity to the
+     exact fill (item 2), which is 6,435 B here — a fifth of the shortfall,
+     so useful only in combination.
 - **Timing: MEASURED 2026-08-02, and closed.** Eight
   fixtures across eight formats at authentic 1x, 8/8: boot ~10 s, every
   extraction under 5 s, plus the 278 KB StuffIt anchor at ~134 s (FORMATS.md,

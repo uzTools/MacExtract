@@ -46,9 +46,15 @@ of them fills a 512 KB block, and `derived-Troi-ClipSave-Plug-in1.1.sit` holds
 124,637 B, so its refused entry needs about **650 KB against ~700 KB free**.
 Read the corrected section 5 for the ranked remainder, BLOCKERS.md
 *Withdrawn claims* for the measurements, and FORMATS.md for the per-fixture
-table. Start with item 3 there — why that entry refuses at all is one run, and
-it is the cheapest way to learn whether the remaining gap is about size or
-about timing.
+table.
+
+Item 3 there is now measured, and it moves the whole problem: the refusal is
+**`NewPtr` failing for want of a CONTIGUOUS run**, not the budget saying no.
+At the 1 MB floor the shell had 678 KB of budget left and `MaxBlock()` was
+468,126 B against a 498,564 B request — short by ~30 KB. **So the remaining
+work is on the Mac side (allocation order, or relocatable handles), not in the
+inverse BWT.** `MaxMem()` before a retry is already ruled out by measurement.
+`-D UNC_AT_BUDGET` is the probe; MANUAL_TESTS.md says how to read it.
 
 The other lead worth having, not yet attempted: **the StuffIt method 13 LZSS
 window is a 64 KB format constant, but the reachable window is bounded by the

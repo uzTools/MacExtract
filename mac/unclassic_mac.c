@@ -217,6 +217,20 @@ static uint32_t fio_size(void *ctx) { return ((FileIO *)ctx)->size; }
 /* ------------------------------------------------------------------ */
 /* UncAlloc over NewPtr with a budget                                 */
 /* ------------------------------------------------------------------ */
+#ifdef UNC_AT_BUDGET
+/* The result grid reports what the engine USED and never what it was
+ * ALLOWED, so a budget refusal and a genuine shortage look identical on
+ * screen. Worse, mal_alloc returns NULL for two unrelated reasons — the
+ * budget said no, or NewPtr itself failed — and those have opposite
+ * fixes ("the reserve is too big" vs "the heap is fragmented"). These
+ * make both visible. See MANUAL_TESTS.md. */
+static long gFreeAtStart;   /* FreeMem() before the reserve is taken off */
+static long gBudget;        /* what the engine was actually given        */
+static long gRefusedSize;   /* size of the FIRST refused allocation      */
+static long gRefusedWhy;    /* 1 = over budget, 2 = NewPtr returned NULL */
+static long gRefusedMaxBlk; /* MaxBlock() at that moment: contiguity vs total */
+#endif
+/* ------------------------------------------------------------------ */
 
 typedef struct {
     long budget;    /* remaining bytes the engine may hold */
@@ -228,9 +242,20 @@ static void *mal_alloc(void *ctx, uint32_t size)
 {
     MacAlloc *a = (MacAlloc *)ctx;
     Ptr p;
-    if ((long)size + 16 > a->budget) return NULL;
+    if ((long)size + 16 > a->budget) {
+#ifdef UNC_AT_BUDGET
+        if (gRefusedWhy == 0) { gRefusedSize = (long)size; gRefusedWhy = 1; }
+#endif
+        return NULL;
+    }
     p = NewPtr((long)size + 16);
-    if (p == NULL) return NULL;
+    if (p == NULL) {
+#ifdef UNC_AT_BUDGET
+        if (gRefusedWhy == 0) { gRefusedSize = (long)size; gRefusedWhy = 2;
+                                gRefusedMaxBlk = MaxBlock(); }
+#endif
+        return NULL;
+    }
     *(long *)p = (long)size;
     a->budget -= (long)size + 16;
     if (a->budget < a->lowmark) a->lowmark = a->budget;  /* track peak usage */
@@ -806,6 +831,11 @@ static int sink_end(void *ctx, int status)
 
 #ifndef UNC_SINK_TEST
 static long gPeakUsage;   /* engine heap high-water mark from the last RunExtract */
+#ifdef UNC_AT_BUDGET
+/* The result grid reports what the engine USED and never what it was
+ * ALLOWED, so a budget refusal and a genuine shortage look identical on
+ * screen. These two make the difference visible. See MANUAL_TESTS.md. */
+#endif
 
 /* Core extraction: open the archive at (inVol,inDir,name) and extract into
  * (outVol,outDir). The interactive app passes the same volume/folder for
@@ -886,9 +916,17 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
      * off disk there is no buffer to subtract first, so on the floor target
      * the engine now gets the archive's size back — which is what decided
      * which StuffIt 5 entries it could afford. */
+#ifdef UNC_AT_BUDGET
+    gFreeAtStart = FreeMem();
+    ma.budget = gFreeAtStart - kMemReserve;
+#else
     ma.budget = FreeMem() - kMemReserve;
+#endif
     if (ma.budget < 32L * 1024) ma.budget = 32L * 1024;
     ma.initial = ma.budget;      /* for peak-usage = initial - lowmark */
+#ifdef UNC_AT_BUDGET
+    gBudget = ma.initial;
+#endif
     ma.lowmark = ma.budget;
     al.ctx = &ma;
     al.alloc = mal_alloc;
@@ -1690,6 +1728,16 @@ int main(void)
         vals[5] = sumRsrcCRC;
         vals[6] = (uint32_t)totalRsrcLen;
         vals[7] = (uint32_t)gPeakUsage;
+#ifdef UNC_AT_BUDGET
+        /* Overwrite the two length slots — same trick UNC_AT_META uses.
+         * vals[7] still carries peak, so the three numbers that decide a
+         * refusal (free, allowed, used) are on screen together. */
+        vals[3] = (uint32_t)gRefusedSize;
+        vals[4] = (uint32_t)gFreeAtStart;
+        vals[2] = (uint32_t)gRefusedMaxBlk;
+        vals[5] = (uint32_t)gRefusedWhy;
+        vals[6] = (uint32_t)gBudget;
+#endif
 #ifdef UNC_AT_META
         /* E2E "launches by double-click" check: overwrite errors/CRC slots with
          * the first file's on-Mac Finder info — should be the archive's

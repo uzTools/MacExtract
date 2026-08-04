@@ -14,6 +14,34 @@ The earlier claim that this was caused by a **broken Retro68 `HOpen`
 glue** has been **withdrawn** — a standalone minimal reproduction
 (`tools/retro68-hopen-repro/`) disproved it. See BLOCKERS.md.
 
+### Why an entry is refused, 2026-08-04 — `-D UNC_AT_BUDGET`
+
+The result grid carries what the engine **used** and never what it was
+**allowed**, so a budget refusal and a genuine shortage are indistinguishable
+on screen — and `mal_alloc` returns NULL for two unrelated reasons with
+opposite fixes. `-D UNC_AT_BUDGET` overwrites four grid slots to show both:
+
+    tools/vmac/run.py --mem 1M -D UNC_AT_BUDGET fixtures/<fixture>
+
+| grid slot | carries |
+|---|---|
+| `errors` | `MaxBlock()` at the first refusal |
+| `sumDataCRC` | size of the first refused allocation |
+| `totalDataLen` | `FreeMem()` before the reserve |
+| `sumRsrcCRC` | 1 = over budget, 2 = `NewPtr` returned NULL |
+| `totalRsrcLen` | the budget the engine was given |
+
+It reports FAIL by construction — the overwritten slots no longer match the
+oracle. Read the numbers, not the verdict. This is what showed the last three
+1 MB refusals are a contiguity failure rather than a shortage (OPEN_ITEMS.md
+section 5).
+
+**A `-D` the CMakeLists does not know is silently ignored.** The first run of
+this probe "worked" and changed nothing, because a new switch must also be
+registered in `mac/CMakeLists.txt`; `run.py` passes it through the environment
+and CMake drops what it has no rule for. Check that a probe's numbers actually
+moved before believing what they say.
+
 ### The LZW table bound, 2026-08-03 — three builds, because one proves nothing
 
 `unc_lzw_init` sizes its table from the input rather than from `maxbits`
