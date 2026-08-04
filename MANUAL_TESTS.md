@@ -25,13 +25,17 @@ opposite fixes. `-D UNC_AT_BUDGET` overwrites four grid slots to show both:
 
 | grid slot | carries |
 |---|---|
-| `nfiles` | `FreeMem()` **at** the first refusal |
+| `nfiles`, `ret`, `sumDataCRC`, `peak heap` | addresses of the 4 largest live blocks, biggest first |
 | `errors` | `MaxBlock()` at the first refusal |
-| `sumDataCRC` | size of the first refused allocation |
-| `totalDataLen` | `FreeMem()` before the reserve, at start |
+| `totalDataLen` | application zone bottom (`ApplicationZone()`) |
 | `sumRsrcCRC` | 1 = over budget, 2 = `NewPtr` returned NULL |
-| `totalRsrcLen` | the budget the engine was given |
-| `peak heap` | bytes the engine held at the refusal |
+| `totalRsrcLen` | `ApplLimit` |
+
+Eight slots is not many. Earlier revisions of this probe put the refused
+size, free-at-refusal and held-at-refusal in four of them; those figures are
+recorded in OPEN_ITEMS.md section 5 and the slots were reused for addresses,
+which is the thing no aggregate could give. Swap them back by editing the
+`UNC_AT_BUDGET` block if a re-run needs the earlier set.
 
 `FreeMem()` minus `MaxBlock()`, both sampled at the refusal, is the
 fragmentation. Sampling free heap only at the START of the run does not give

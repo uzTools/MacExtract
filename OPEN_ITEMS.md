@@ -185,6 +185,31 @@ rather than repeated.
      those two allocations, not before the first one**, which is a much
      smaller window to search than "somewhere in the run".
 
+     **The layout itself, MEASURED 2026-08-04** — the probe now reports the
+     live blocks' ADDRESSES, which is what no `MaxBlock` figure could give:
+
+     | | address |
+     |---|---|
+     | application zone bottom | 147,404 |
+     | live blocks (3 of the 4 largest read back) | 222,740, 230,956, **363,682** |
+     | `ApplLimit` | 963,040 |
+     | `MaxBlock` at the refusal | 467,854 |
+
+     363,682 is the largest live block — the 128 KB Arsenic block. Above it
+     the heap runs to `ApplLimit`: `963,040 - (363,682 + 131,088) = 468,270`,
+     which is `MaxBlock` to within 416 B. **So the largest free run is the
+     region ABOVE the Arsenic block, and the ~126 KB that is stranded lies
+     BELOW it** — the block sits in the middle of the free space and splits
+     it. Merging the two would give ~594 KB contiguous, comfortably more than
+     the 498,564 requested.
+
+     Which says the relocatable-blocks idea was right in principle and
+     `MoveHHi` simply did not place the block high. That is consistent with
+     the untested reading above, and it is now the specific thing to fix:
+     **get the large block to the top of the heap.** If `MoveHHi` cannot be
+     made to do it, allocating the transform vector BEFORE the block (largest
+     first, within the entry) reaches the same layout from the other side.
+
      Still untried, and now the only candidate that does not depend on the
      disproved assumption: trim the Arsenic capacity to the exact fill
      (item 2). That is 6,435 B here against a ~30 KB shortfall, so it cannot

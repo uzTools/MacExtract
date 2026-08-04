@@ -60,18 +60,21 @@ an unfragmented heap with ~95 KB to spare. The engine held only 167,494 B, and
 that plus the free heap accounts for the whole 760,310 B — so the engine's own
 blocks are the only plausible thing splitting it.
 
-The search window is now narrow. At the moment the 128 KB Arsenic block is
-taken, `MaxBlock` is 598,114 — more than the 498,564 the transform will later
-need. By the transform request it is 467,976. **The heap is fragmented between
-those two allocations**, so that is the only stretch worth instrumenting.
+**The layout is now measured, and it names the fix.** The probe reports the
+live blocks' addresses: the 128 KB Arsenic block sits at 363,682 in a zone
+running 147,404 to 963,040, and the free run above it
+(`963,040 - (363,682 + 131,088) = 468,270`) is `MaxBlock` to within 416 B. So
+the block sits in the MIDDLE of the free space; the ~126 KB stranded below it
+plus the 468 KB above would be ~594 KB contiguous, against a 498,564 request.
 
-Two probes exist (`-D UNC_AT_BUDGET`, `-D UNC_AT_HANDLES`; MANUAL_TESTS.md
-says how to read them, including what each cannot see). Note that the
-`MoveHHi` question is still OPEN: the before/after `MaxBlock` comparison built
-for it cannot fail, because `MaxBlock` is blind to where in a free run a block
-sits. Answering it needs the block's ADDRESS (`*h` either side of the call).
+**Get the large block to the top of the heap.** `MoveHHi` did not — that is
+the open mechanism, and note the trap already hit here: `MaxBlock` either side
+of `MoveHHi` cannot fail (it is blind to where in a run a block sits), so use
+the ADDRESS. If `MoveHHi` cannot be made to work, allocating the transform
+vector BEFORE the block reaches the same layout from the other side.
 `MaxMem()` before a retry is separately ruled out — compaction may not move a
-`NewPtr`.
+`NewPtr`. Probes: `-D UNC_AT_BUDGET`, `-D UNC_AT_HANDLES`; MANUAL_TESTS.md
+says how to read them and what each cannot see.
 
 The other lead worth having, not yet attempted: **the StuffIt method 13 LZSS
 window is a 64 KB format constant, but the reachable window is bounded by the

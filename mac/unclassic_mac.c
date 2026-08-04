@@ -233,6 +233,55 @@ static long gRefusedFree;   /* FreeMem() at the SAME moment. FreeMem-MaxBlock
                              * is the fragmentation; without both, the gap has
                              * to be inferred from the start-of-run figure. */
 static long gRefusedHeld;   /* bytes the engine held when it was refused */
+/* Live-block table: the addresses are what a MaxBlock figure cannot give.
+ * The heap is fragmented somewhere between the Arsenic block and the
+ * transform request (OPEN_ITEMS.md section 5); knowing WHERE each live
+ * block sits, against the zone's own bounds, says which one splits it. */
+#define kLiveMax 8
+static Ptr  gLiveAddr[kLiveMax];
+static long gLiveSize[kLiveMax];
+static int  gLiveN;
+static Ptr  gSnapAddr[4];
+static long gZoneLo, gZoneHi;
+
+static void live_add(Ptr p, long n)
+{
+    if (gLiveN < kLiveMax) { gLiveAddr[gLiveN] = p; gLiveSize[gLiveN] = n;
+                             gLiveN++; }
+}
+
+static void live_del(Ptr p)
+{
+    int i;
+    for (i = 0; i < gLiveN; i++)
+        if (gLiveAddr[i] == p) {
+            gLiveN--;
+            gLiveAddr[i] = gLiveAddr[gLiveN];
+            gLiveSize[i] = gLiveSize[gLiveN];
+            return;
+        }
+}
+
+/* Snapshot the four LARGEST live blocks, biggest first — the small ones
+ * cannot account for a 125 KB split. */
+static void live_snapshot(void)
+{
+    int i, k;
+    long best;
+    int taken[kLiveMax], bi;
+    for (i = 0; i < gLiveN; i++) taken[i] = 0;
+    for (k = 0; k < 4; k++) {
+        best = -1; bi = -1;
+        for (i = 0; i < gLiveN; i++)
+            if (!taken[i] && gLiveSize[i] > best) { best = gLiveSize[i]; bi = i; }
+        if (bi < 0) break;
+        taken[bi] = 1;
+        gSnapAddr[k] = gLiveAddr[bi];
+    }
+    gZoneLo = (long)(Ptr)ApplicationZone();
+    gZoneHi = (long)LMGetApplLimit();
+}
+
 #ifdef UNC_AT_HANDLES
 /* Does MoveHHi move anything at all here? Measured around the call for the
  * first allocation big enough to matter, in the real heap state rather than
@@ -280,13 +329,17 @@ static void *mal_alloc(void *ctx, uint32_t size)
         if (gRefusedWhy == 0) { gRefusedSize = (long)size; gRefusedWhy = 2;
                                 gRefusedMaxBlk = MaxBlock();
                                 gRefusedFree = FreeMem();
-                                gRefusedHeld = a->initial - a->budget; }
+                                gRefusedHeld = a->initial - a->budget;
+                                live_snapshot(); }
 #endif
         return NULL;
     }
     *(long *)p = (long)size;
     a->budget -= (long)size + 16;
     if (a->budget < a->lowmark) a->lowmark = a->budget;  /* track peak usage */
+#ifdef UNC_AT_BUDGET
+    live_add(p, (long)size);
+#endif
     return p + 16;
 }
 
@@ -295,6 +348,9 @@ static void mal_free(void *ctx, void *ptr)
     MacAlloc *a = (MacAlloc *)ctx;
     Ptr p = (Ptr)ptr - 16;
     a->budget += *(long *)p + 16;
+#ifdef UNC_AT_BUDGET
+    live_del(p);
+#endif
 #ifdef UNC_AT_HANDLES
     { Handle h = *(Handle *)(p + 8); HUnlock(h); DisposeHandle(h); }
 #else
@@ -1764,13 +1820,16 @@ int main(void)
         /* Overwrite the two length slots — same trick UNC_AT_META uses.
          * vals[7] still carries peak, so the three numbers that decide a
          * refusal (free, allowed, used) are on screen together. */
-        vals[0] = (uint32_t)gRefusedFree;
-        vals[3] = (uint32_t)gRefusedSize;
+        vals[0] = (uint32_t)gSnapAddr[0];  /* largest live block, by address */
+        vals[1] = (uint32_t)gSnapAddr[1];
+        vals[3] = (uint32_t)gSnapAddr[2];
         vals[4] = (uint32_t)gFreeAtStart;
         vals[2] = (uint32_t)gRefusedMaxBlk;
         vals[5] = (uint32_t)gRefusedWhy;
         vals[6] = (uint32_t)gBudget;
-        vals[7] = (uint32_t)gRefusedHeld;
+        vals[4] = (uint32_t)gZoneLo;       /* application zone bottom */
+        vals[6] = (uint32_t)gZoneHi;       /* ApplLimit                */
+        vals[7] = (uint32_t)gSnapAddr[3];
 #ifdef UNC_AT_HANDLES
         vals[4] = (uint32_t)gMoveBefore;   /* MaxBlock before MoveHHi */
         vals[6] = (uint32_t)gMoveAfter;    /* MaxBlock after  MoveHHi */
