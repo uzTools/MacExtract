@@ -95,12 +95,27 @@ rather than repeated.
   allocated at its declared 512 KB. `derived-RWAsm_Folder.sit` went from
   595.7 KB to 163.2 KB for the same 38 byte-exact entries.
 
-  What is left is not a bug and not addressable by allocating better: those
-  three entries each really do fill a 512 KB block, and 512 KB + 2 MB of
-  transform vector does not fit in ~700 KB. Closing them would need a
-  fundamentally different inverse BWT — a sampled or blockwise one that trades
-  time for memory — which is a real design change, on a 7 MHz machine where the
-  time is already the scarce resource.
+  **Not closed, and the reason it was thought closed was wrong** (corrected
+  2026-08-03). This item used to say the three entries "each really do fill a
+  512 KB block", needing 512 KB + 2 MB against ~700 KB, and that closing them
+  would take a fundamentally different inverse BWT. Direct instrumentation says
+  none of the three fills a 512 KB block — the largest holds 323,384 B and
+  `derived-Troi-ClipSave-Plug-in1.1.sit` holds **124,637 B**, so its refused
+  entry needs about **650 KB, not 2.5 MB**. See *Withdrawn claims* in
+  BLOCKERS.md for the measurements and what the error cost.
+
+  What is actually left, ranked by what the peak model
+  (`~35 KB parser + capacity + 4 x fill`) says is dominant:
+
+  1. **The 4x transform vector** — 487 KB, 772 KB and 1,263 KB for the three.
+     The only remaining term big enough to matter, and the only one that needs
+     a different inverse BWT to shrink.
+  2. **Capacity is never trimmed to the fill.** Doubling stops at the first
+     power of two that fits, so `derived-Library_ISBN_Barcoder.sit` holds
+     323 KB in a 512 KB block — 196 KB dead, for free, no algorithm change.
+  3. **Why `Troi-ClipSave` refuses at all** is unmeasured. 650 KB against a
+     documented ~700 KB free is marginal enough that the answer may be about
+     when the allocation happens rather than how big it is. One run.
 - **Timing: MEASURED 2026-08-02, and closed.** Eight
   fixtures across eight formats at authentic 1x, 8/8: boot ~10 s, every
   extraction under 5 s, plus the 278 KB StuffIt anchor at ~134 s (FORMATS.md,

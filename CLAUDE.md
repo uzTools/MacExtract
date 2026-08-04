@@ -22,7 +22,7 @@ It runs on all three systems the project claims: **System 6.0.8 and System 7.0.1
 - `PROGRESS.md` — milestone table
 - `FORMATS.md` — format × status × peak RAM matrix, plus the per-fixture results for every tier: Mini vMac 4 MB and 1 MB, System 7, and Mac OS 9 (including HFS+)
 - `BLOCKERS.md` — status first (no open blockers), then what is true and
-  load-bearing, then **Withdrawn claims**: seven assertions this file used to
+  load-bearing, then **Withdrawn claims**: nine assertions this file used to
   make, each with what disproved it and what it cost. They are kept on
   purpose — twice a live claim has been re-tested because it sat beside an
   already-withdrawn one, and one of those was worth 39/44 → 40/44 at the
@@ -33,21 +33,36 @@ It runs on all three systems the project claims: **System 6.0.8 and System 7.0.1
 
 Read them at the start of every session. Where these files disagree with each other, treat it as a bug to fix, not a fact to choose from.
 
-## Where to start (handoff, 2026-08-03)
+## Where to start (handoff, 2026-08-04)
 
 The repository is on GitHub as a **private** repo, `main`, tagged through
 `v0.4`. Working tree clean, `./ci.sh` green, nothing in flight.
 
-**Read OPEN_ITEMS.md first.** It is organised around what is actually open.
-Be aware that **nothing in it is currently a specified, ready-to-do task**:
-the LZW sizing task that used to be its section 6 was done on 2026-08-03, and
-what remains is either impossible in this environment (real 68k or PowerPC
-silicon), the maintainer's to do (the Retro68 report), or deliberate scope.
-Section 6 (loose ends) is the closest thing to actionable, and both its items
-are blocked on a fixture the oracle can read rather than on any work here.
+**The next task is StuffIt 5 / Arsenic at the 1 MB floor, and it is open
+again because the reason it was closed turned out to be false.** OPEN_ITEMS.md
+section 5 said the three refused entries each fill a 512 KB block and so need
+~2.5 MB against ~700 KB — "a real design change". Measured on 2026-08-03: none
+of them fills a 512 KB block, and `derived-Troi-ClipSave-Plug-in1.1.sit` holds
+124,637 B, so its refused entry needs about **650 KB against ~700 KB free**.
+Read the corrected section 5 for the ranked remainder, BLOCKERS.md
+*Withdrawn claims* for the measurements, and FORMATS.md for the per-fixture
+table. Start with item 3 there — why that entry refuses at all is one run, and
+it is the cheapest way to learn whether the remaining gap is about size or
+about timing.
 
-So the next session most likely has to **find** its work rather than pick it
-up, which is exactly what the habit below is for.
+The other lead worth having, not yet attempted: **the StuffIt method 13 LZSS
+window is a 64 KB format constant, but the reachable window is bounded by the
+entry's uncompressed size**, which the header already passes in as `outlen`.
+175 of 225 StuffIt fixtures sit at exactly that window's peak (76,944 B —
+median and p90 both equal the max), and about two thirds of them have their
+largest fork under 64 KB. Note the trap: back-references past what has been
+produced currently read zero-filled window bytes, so shrinking the window
+changes behaviour on malformed streams. Establish that failure mode before
+believing a green suite.
+
+Everything else open is either impossible in this environment (real 68k or
+PowerPC silicon), the maintainer's to do (the Retro68 report), deliberate
+scope, or blocked on a fixture the oracle can read.
 
 **The one habit that produced everything valuable this week.** Nearly every
 real gain came from re-testing a claim the repository was already making,
@@ -66,6 +81,9 @@ rather than from new features:
   matrix pointed straight at it: `.Z` was the one peak that did not vary with
   its input at all. A flat 268 KB became 15–219 KB, 50 fixtures improved, none
   regressed.
+- "The three refused Arsenic entries each fill a 512 KB block" — the stated
+  reason the last capability gap was unclosable, and false. One of them holds
+  124,637 B. Found the same day, by the same reflex.
 
 So: **when something looks like a hard floor, check whether the number you are
 budgeting for is a number the data actually needs.** And when a claim has no
@@ -73,6 +91,20 @@ reproduction, treat its neighbours as suspect too — that is literally how the
 last two were found. A constant in the peak-RAM matrix is the tell: data-driven
 allocations vary with their input, so one that does not is usually a declared
 ceiling nobody questioned.
+
+**Read the status files against each other, not just in turn.** The 512 KB
+claim was disproved by a line already in this repository: DECISIONS.md said
+that fixture's blocks hold "~316 KB" while OPEN_ITEMS.md said they fill 512 KB,
+and the two sat a file apart for a day. The rule above — *where these files
+disagree, treat it as a bug* — is not housekeeping; a contradiction between
+two status files is a disproof nobody has collected yet, and it is the cheapest
+finding available. The same pass turned up README.md quoting a 1.8 MB corpus
+maximum where the measured figure is 2.53 MB.
+
+And note how the false claim was built: 512 KB was **true of the corpus** —
+two fixtures do reach 524,257 B — and got applied to three fixtures it did not
+describe. A true number about the worst case is not a number about the case in
+front of you.
 
 **The same fix does not always work twice, though.** Growth-on-demand rescued
 the Arsenic block and made the LZW table *worse* than doing nothing, because

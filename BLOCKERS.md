@@ -16,11 +16,17 @@ every system the project claims:
 Per-fixture tables are in FORMATS.md, re-run instructions in
 `tools/vmac/README.md`, and the on-demand experiments in MANUAL_TESTS.md.
 
-**Seven claims this file used to assert have been withdrawn, and one
-confirmed.** They are collected at the end, under *Withdrawn claims*, and kept
-on purpose: two of this project's most useful findings came from noticing that
-a live claim sat next to an already-withdrawn one. Nothing above this line
-depends on them.
+**Nine claims this file used to assert have been withdrawn, and one
+confirmed.** (This count read "seven" while the table held eight; corrected
+2026-08-03.) They are collected at the end, under *Withdrawn claims*, and kept
+on purpose, because two mechanisms keep finding the next one:
+
+- **A live claim sitting next to an already-withdrawn one.** Twice, worth
+  39/44 → 40/44 at the floor target once.
+- **Two files disagreeing.** Once, and it is how the 512 KB block claim below
+  fell — the disproof was already written down elsewhere in this repository.
+
+Nothing above this line depends on them.
 
 ---
 
@@ -198,6 +204,7 @@ Each entry is: what was claimed, what disproved it, and what it cost.
 | Interleaved reads and writes on one volume return zeros | `UNC_AT_INTERLEAVE`, 3 read shapes | 2026-08-02 |
 | Mini vMac's write-back is lazy and partial | `checkdisk.py`, 44/44 off the disk | 2026-08-02 |
 | `pkill -9` never flushes; boot+kill corrupts the image | 11 boot+kill cycles | 2026-08-02 |
+| The three 1 MB StuffIt 5 refusals each fill a 512 KB block | instrumenting `numbytes` where the transform vector is allocated | 2026-08-03 |
 
 **Retro68's `HOpen` glue.** Claimed to return `noErr` without writing back the
 refNum, and recorded as M10's root cause in commit `22e806b`. A standalone
@@ -290,6 +297,47 @@ change the hash every time and still boot to a healthy Finder desktop.
 the OS 9 master-image incident taught: the image DRIFTS, so reusing it makes
 two runs months apart incomparable. That is a reproducibility argument, not a
 corruption one.
+
+**The three 1 MB StuffIt 5 refusals each fill a 512 KB block.** OPEN_ITEMS.md
+gave this as the reason the last three sampled fixtures cannot pass at the
+floor target: "those three entries each really do fill a 512 KB block, and
+512 KB + 2 MB of transform vector does not fit in ~700 KB", closing the item as
+needing "a fundamentally different inverse BWT". Instrumenting `numbytes` at
+the point `sit_arsenic.c` sizes the transform vector says otherwise —
+**none of the three fills a 512 KB block, and one holds under a quarter of
+it**:
+
+| fixture | largest block fill | capacity by doubling | peak |
+|---|---|---|---|
+| `derived-Library_ISBN_Barcoder.sit` | 323,384 B | 512 KB | 1,854,208 B |
+| `derived-a2basic.dmg.sit` | 197,515 B | 256 KB | 1,088,588 B |
+| `derived-Troi-ClipSave-Plug-in1.1.sit` | **124,637 B** | 128 KB | 666,004 B |
+
+MEASURED 2026-08-03. The peak model `~35 KB parser + capacity + 4 x fill`
+reproduces all three measured peaks to within a rounding step, so the fills are
+confirmed by two independent routes.
+
+**Cost: the largest still outstanding.** The false figure made the remaining
+gap look like a 3x shortfall requiring a redesign, when `Troi-ClipSave`'s
+refused entry needs about **650 KB against the ~700 KB a 1 MB Mac Plus has
+free**. Nobody re-derived it for a day because the item read as closed. Two
+consequences follow directly and neither needs a new algorithm: the block
+capacity is left at the doubled size and never trimmed to the fill (Library_ISBN
+holds 323 KB in a 512 KB allocation, 196 KB of it dead), and the 4x transform
+vector — 487 KB, 772 KB and 1,263 KB respectively — is now visibly the only
+dominant term left.
+
+**Why it survived is the part worth keeping.** The disproof was already in this
+repository. DECISIONS.md, in the Arsenic entry, says that same fixture's blocks
+"really do hold ~316 KB" — correct, measured, and sitting one file away from
+the claim it contradicts. CLAUDE.md already says that where these files
+disagree it is a bug rather than a choice; what was missing was anyone reading
+them against each other. **A cross-file contradiction is a disproof nobody has
+collected yet.**
+
+Why `Troi-ClipSave` still refuses at 650 KB when ~700 KB is documented as free
+is NOT established — it is one run to find out, and it is a different and much
+smaller question than the one the withdrawn claim posed.
 
 ### Corrected figures and superseded write-ups
 

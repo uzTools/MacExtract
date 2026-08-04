@@ -53,12 +53,13 @@ itself; both are reproducible with `tools/vmac/run.py`. Per format:
 | Gzip | ✅ 3/3 | ✅ 3/3 | 51 KB |
 | Unix compress (.Z) | ✅ 4/4 | ✅ 4/4 | 15–219 KB |
 | DiskDoubler / Now Compress | ✅ detect-only | ✅ detect-only | none |
-| **StuffIt 5 / Arsenic** | ✅ 6/6 | ⚠️ **3/6** | 0.16–1.8 MB |
+| **StuffIt 5 / Arsenic** | ✅ 6/6 | ⚠️ **3/6** | 0.16–2.53 MB |
 
 **StuffIt 5 / Arsenic mostly wants a 4 MB machine.** Every real Arsenic
-block is 512 KB, and an entry needs that block plus four bytes of
-inverse-BWT transform vector for each byte the block actually holds — so
-an entry costs 0.6 MB and up, rising with how much data it carries. At
+block *declares* 512 KB, but the block is allocated to what it actually
+holds; what an entry costs is that fill plus four bytes of inverse-BWT
+transform vector for each byte of it — so an entry costs 0.16 MB and up,
+rising with how much data it carries. At
 1 MB the engine declines the entries it cannot afford — **per entry**,
 leaving the rest of the archive alone — which is why two sampled fixtures
 extract completely, three extract most of their entries, and only one

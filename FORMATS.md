@@ -327,13 +327,30 @@ what each block actually holds (40/44 → 41/44). The peaks in the table are the
 clearest measure: `derived-RWAsm_Folder.sit` went from 595.7 KB at the start of
 this to **163.2 KB**, for the same 38 byte-exact entries.
 
-**The three remaining refusals are the expected, accepted tier** (see †
-above): an Arsenic entry needs its block plus four bytes of transform vector
-per byte the block holds, and an entry whose block really does fill 512 KB
-needs about 2.5 MB, which a 1 MB Mac cannot give. The engine declines *that
-entry* and carries on, which is why two of the three still deliver 33 of 34
-and 12 of 13 files. `derived-a2basic.dmg.sit` refuses everything only because
-everything is one entry.
+**The three remaining refusals cost less than this file used to say.** An
+Arsenic entry needs its block plus four bytes of transform vector per byte the
+block holds. Until 2026-08-03 this section said the three refused entries each
+filled a 512 KB block and so needed ~2.5 MB against ~700 KB. Instrumenting
+`numbytes` where the transform vector is sized says none of them does:
+
+| fixture | largest block fill | capacity | 4x transform | peak |
+|---|---|---|---|---|
+| `derived-Library_ISBN_Barcoder.sit` | 323,384 B | 512 KB | 1,263 KB | 1,854,208 B |
+| `derived-a2basic.dmg.sit` | 197,515 B | 256 KB | 772 KB | 1,088,588 B |
+| `derived-Troi-ClipSave-Plug-in1.1.sit` | 124,637 B | 128 KB | 487 KB | 666,004 B |
+
+`~35 KB parser + capacity + 4 x fill` reproduces all three peaks, so
+`Troi-ClipSave`'s refused entry needs about **650 KB**, not 2.5 MB. The 512 KB
+figure was true of the CORPUS — `derived-EasyFind.dmg.sit` and
+`derived-Domino_v1.4.sit` both reach 524,257 B, 31 bytes short of a full block,
+and they are what sets the 2.53 MB maximum in † above — and was applied to
+three fixtures it does not describe. **A true number about the worst case is
+not a number about the case in front of you.** See *Withdrawn claims* in
+BLOCKERS.md, and OPEN_ITEMS.md for what is actually left.
+
+The engine declines *that entry* and carries on, which is why two of the three
+still deliver 33 of 34 and 12 of 13 files. `derived-a2basic.dmg.sit` refuses
+everything only because everything is one entry.
 
 
 **`popper-1.7.tar.Z` and `PCCTS.tar.gz` used to fail here and no longer do.**
