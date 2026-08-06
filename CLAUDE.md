@@ -33,7 +33,7 @@ It runs on all three systems the project claims: **System 6.0.8 and System 7.0.1
 
 Read them at the start of every session. Where these files disagree with each other, treat it as a bug to fix, not a fact to choose from.
 
-## Where to start (handoff, 2026-08-04)
+## Where to start (handoff, 2026-08-06)
 
 The repository is on GitHub as a **private** repo, `main`, tagged through
 `v0.4`. Working tree clean, `./ci.sh` green, nothing in flight.
@@ -57,23 +57,23 @@ work is on the Mac side, not in the inverse BWT.**
 Measured at the refusal instant: `FreeMem()` 593,740 against `MaxBlock()`
 468,126, so **125,614 B is lost to fragmentation** and the request would fit
 an unfragmented heap with ~95 KB to spare. The engine held only 167,494 B, and
-that plus the free heap accounts for the whole 760,310 B — so the engine's own
-blocks are the only plausible thing splitting it.
+that plus the free heap accounts for the whole 760,310 B.
 
-**The layout is now measured, and it names the fix.** The probe reports the
-live blocks' addresses: the 128 KB Arsenic block sits at 363,682 in a zone
-running 147,404 to 963,040, and the free run above it
-(`963,040 - (363,682 + 131,088) = 468,270`) is `MaxBlock` to within 416 B. So
-the block sits in the MIDDLE of the free space; the ~126 KB stranded below it
-plus the 468 KB above would be ~594 KB contiguous, against a 498,564 request.
+**The layout is measured, and moving the engine's blocks is NOT the fix.**
+The probe reports the live blocks' addresses: the 128 KB Arsenic block sits at
+363,682 in a zone running 147,404 to 963,040, and the free run above it
+(`963,040 - (363,682 + 131,088) = 468,270`) is `MaxBlock` to within 416 B. That
+arithmetic says the block splits the free space and hoisting it would merge
+~594 KB — and the direct test refutes it. `MoveHHi` does work, measured by
+address (205,828 → 803,634, just under `ApplLimit`), and the entry is refused
+anyway. Across four configurations, from low `NewPtr`s to handles stacked
+against the ceiling, `MaxBlock` at the refusal stays 467,672–468,008.
 
-**But moving the engine's blocks is now disproved as the fix.** `MoveHHi`
-does work — measured by address, 205,828 → 803,634, just under `ApplLimit` —
-and the entry is refused anyway. Across four configurations, from low
-`NewPtr`s to handles stacked against the ceiling, `MaxBlock` at the refusal
-stays 467,672–468,008. **~126 KB is stranded by something that is not the
-engine's blocks, and identifying it is the only live lead.** `MaxMem()` before
-a retry is separately ruled out — compaction may not move a `NewPtr`.
+**So ~126 KB is stranded by something that is not the engine's blocks, and
+identifying it is the only live lead.** `MaxMem()` before a retry is separately
+ruled out — compaction may not move a `NewPtr`. Twice now this heap has been
+described correctly by arithmetic and then contradicted by a direct
+measurement; prefer the measurement.
 
 Two traps this line of work has already sprung, both worth knowing before
 adding the next probe: `MaxBlock` either side of a move cannot fail, because
@@ -83,15 +83,12 @@ has to be sampled at the failure. Probes: `-D UNC_AT_BUDGET`,
 `-D UNC_AT_HANDLES`; MANUAL_TESTS.md says how to read them and what each
 cannot see.
 
-The other lead worth having, not yet attempted: **the StuffIt method 13 LZSS
-window is a 64 KB format constant, but the reachable window is bounded by the
-entry's uncompressed size**, which the header already passes in as `outlen`.
-175 of 225 StuffIt fixtures sit at exactly that window's peak (76,944 B —
-median and p90 both equal the max), and about two thirds of them have their
-largest fork under 64 KB. Note the trap: back-references past what has been
-produced currently read zero-filled window bytes, so shrinking the window
-changes behaviour on malformed streams. Establish that failure mode before
-believing a green suite.
+The method 13 LZSS window lead is DONE (2026-08-06): the window is now sized
+from the entry rather than from the format's 64 KB, 34 fixtures improved, none
+regressed. Note that the estimate which motivated it predicted ~115 and was
+wrong for a reason worth carrying — peak heap is a per-archive MAXIMUM, so one
+large fork pins an archive's peak however many small forks it has, and a
+per-fork distribution cannot predict it. DECISIONS.md, 2026-08-06.
 
 Everything else open is either impossible in this environment (real 68k or
 PowerPC silicon), the maintainer's to do (the Retro68 report), deliberate

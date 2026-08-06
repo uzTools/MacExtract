@@ -1140,3 +1140,47 @@ exercise it.
 Result: zero regressions across the corpus, 50 fixtures improved, `.Z` down
 from a flat 268 KB to 15–219 KB, and the 1 MB floor sweep unchanged at 41/44
 (this was never what limited it). Numbers in FORMATS.md, footnote §.
+
+## 2026-08-06 — method 13's LZSS window is sized from the entry
+
+Third instance of the same shape, and the first where the ceiling is a genuine
+format constant rather than a field read from the stream. `SIT13_WINDOW` is
+64 KB because StuffIt method 13 says so, and that is correct — but it is the
+size of the window the format PERMITS, not the size any given stream can
+REACH. An offset is `pos - moff`, and a well-formed encoder never emits
+`moff > pos`, because those bytes have not been produced yet. A fork whose
+entire output is 6 KB can address 6 KB of window; the other 58 KB was
+allocated, zeroed on every fork, and never read.
+
+So the window is rounded up to a power of two at or above the fork's
+uncompressed size, capped at 64 KB. The power of two is what keeps it exact:
+with `win >= outlen`, `pos < outlen <= win`, so `pos & (win-1) == pos` and
+`from & (win-1) == from` for every reachable offset — the same indices the
+64 KB window computes, not merely equivalent ones.
+
+**The assumption was measured, not argued.** `moff > pos` cannot happen in a
+valid archive, but "cannot happen" is exactly the kind of claim this
+repository has had to withdraw before, so an instrumented run counted them
+across the whole corpus: **0**. That is a different check from the
+differential suite passing — the suite would also pass if such references
+existed and happened to read zeros either way.
+
+Sensitivity was established the same way as the LZW bound: forcing the window
+to its 256-byte minimum takes the suite to **654/769**, so 115 fixtures reach
+this code and can fail on it. ASan stayed clean at that size too, which is
+worth noting — the masking keeps every access in bounds even when the window
+is wrong, so a bad bound here corrupts output rather than memory.
+
+Result: 34 fixtures improved, none regressed, `derived-MacGzip.sit`
+76,944 → 13,456 B. The corpus maximum is unchanged at 76,944 B because some
+forks genuinely exceed 64 KB — this is a gain at the small end only.
+
+**The estimate that motivated it was wrong, and the way it was wrong is the
+lesson.** 175 of 225 StuffIt fixtures sat at exactly the 64 KB-window peak and
+about two thirds had their largest fork under 64 KB, so ~115 fixtures looked
+like they would improve. 34 did. The flaw: peak heap is the MAXIMUM over an
+archive, so one fork over 64 KB anywhere pins the whole archive's peak at the
+old figure, however many small forks it also has. **A per-archive maximum
+cannot be predicted from a per-fork distribution** — the same class of error
+as inferring Arsenic block sizes from peak heap (see the † footnote in
+FORMATS.md), arrived at from the opposite direction.

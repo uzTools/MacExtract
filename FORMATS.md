@@ -14,7 +14,7 @@ whole corpus for that format (engine allocations only, via
 | BinHex 4 (.hqx) | extract | RLE90 | 179 fixtures | 8 KB | full |
 | PackIt (.pit) | extract | store, Huffman; encrypted detected | 4 fixtures (1 real + 3 synthetic PMa4) | 9 KB | full |
 | Compact Pro (.cpt) | extract | RLE, LZH+RLE | 106 fixtures | 19 KB | full |
-| StuffIt classic (.sit) | extract | 0 store, 1 RLE90*, 2 LZW, 3 Huffman, 5 LZAH, 8 MW, 13 LZSS+Huffman; 6 fixed-Huffman NOT implemented‡; encrypted detected | 211 fixtures | 76 KB | full |
+| StuffIt classic (.sit) | extract | 0 store, 1 RLE90*, 2 LZW, 3 Huffman, 5 LZAH, 8 MW, 13 LZSS+Huffman; 6 fixed-Huffman NOT implemented‡; encrypted detected | 211 fixtures | 8–76 KB‖ | full |
 | StuffIt 5 (.sit) | extract | 0, 13, 15 Arsenic; encrypted detected | 31 fixtures | 0.16–2.53 MB† | 11 of 31 fixtures extract FULLY; the rest refuse per entry |
 | Zip | extract | store, deflate; others & encrypted per-entry errors | 3 fixtures (+2 PKZIP-1.x corpus-only) | 66 KB | full |
 | Gzip | extract | deflate | 3 fixtures | 51 KB | full |
@@ -127,6 +127,22 @@ size; 50 fixtures improved corpus-wide, none regressed, and the sampled
 StuffIt classic peaks are unchanged because none of them is method-2 bound.
 On-Mac figures agree with Linux to a constant 32 B of shell overhead. See
 DECISIONS.md for why the table is sized once rather than grown.
+
+‖ **Method 13's LZSS window is sized from the entry, not from the format.**
+MEASURED 2026-08-06. The window is 64 KB by the format, but no stream can
+reach further back than it has produced — an offset is `pos - moff`, and a
+well-formed encoder never emits `moff > pos` because those bytes do not exist
+yet. So a fork whose whole output is 6 KB can only address 6 KB of window, and
+the rest was allocated, zeroed and never read. It is now rounded up to a power
+of two at or above the fork's uncompressed size, capped at 64 KB, which keeps
+the existing `& (win - 1)` masking computing exactly the same indices.
+
+The assumption was checked directly rather than inferred from output: an
+instrumented run over the whole corpus counted **0 back-references past
+produced output**. 34 fixtures improved, none regressed; the corpus maximum
+is unchanged at 76,944 B because some forks genuinely exceed 64 KB, so the
+gain is at the small end — `derived-MacGzip.sit` 76,944 → 13,456 B, and
+on-Mac `derived-Export.sit` 76,984 → 19,640 B.
 
 ## Envelope auto-unwrap
 
@@ -261,7 +277,7 @@ On-Mac engine peak heap (high-water mark) by format, matching the Linux
 | Compact Pro | 19 KB |
 | Zip | 12–65 KB |
 | Gzip | 51 KB |
-| StuffIt classic | 72–75 KB |
+| StuffIt classic | 19–72 KB‖ |
 | Unix compress (.Z) | 15–219 KB§ |
 | StuffIt 5 (Arsenic) | 0.63–2.53 MB (block *fill* dependent — see †) |
 | DiskDoubler / Now Compress | detect-only — no allocation, cleanly not extracted |

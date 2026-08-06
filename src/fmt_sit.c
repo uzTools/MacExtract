@@ -198,6 +198,26 @@ static int sit_huffman(SitFork *f, UncBufIn *in, uint32_t outlen,
 #include "sit13_tables.h"
 
 #define SIT13_WINDOW 65536u
+#define SIT13_WINMIN 256u
+
+/* The window is 64 KB by the format, but no stream can REACH further back
+ * than it has produced: an offset is `pos - moff` and a well-formed encoder
+ * never emits moff > pos, because those bytes do not exist yet. So a fork
+ * whose whole output is 6 KB can only ever address 6 KB of window, and the
+ * other 58 KB is allocated, zeroed and never read.
+ *
+ * Rounding up to a power of two keeps the existing `& (win - 1)` masking
+ * exact: with win >= outlen, pos < outlen <= win so `pos & (win-1) == pos`
+ * and `from & (win-1) == from` for every reachable offset — the same indices
+ * the 64 KB window computes. Streams that DO reference beyond what they have
+ * produced read a different zero-filled slot than before; that cannot happen
+ * in a valid archive, and stays in bounds either way. */
+static uint32_t sit13_winsize(uint32_t outlen)
+{
+    uint32_t w = SIT13_WINMIN;
+    while (w < outlen && w < SIT13_WINDOW) w <<= 1;
+    return w;
+}
 
 typedef struct Sit13 {
     UncCanon first, second, offset;
@@ -270,16 +290,17 @@ static int sit13_fork(SitFork *f, UncBufIn *in, uint32_t outlen,
     UncBitIn bi;
     UncCanon *curr, *second;
     uint32_t pos = 0;
+    uint32_t win = sit13_winsize(outlen);
     int err = UNC_OK;
     int val, sel;
 
     hz = (Sit13 *)unc_alloc(al, (uint32_t)sizeof *hz);
     if (!hz) return UNC_ERR_MEM;
-    window = (uint8_t *)unc_alloc(al, SIT13_WINDOW);
+    window = (uint8_t *)unc_alloc(al, win);
     if (!window) { unc_free(al, hz); return UNC_ERR_MEM; }
     {
         uint32_t i;
-        for (i = 0; i < SIT13_WINDOW; i++) window[i] = 0;
+        for (i = 0; i < win; i++) window[i] = 0;
     }
 
     val = unc_bufin_next(in);
@@ -324,7 +345,7 @@ static int sit13_fork(SitFork *f, UncBufIn *in, uint32_t outlen,
         }
         if (sym < 0x100) {
             curr = &hz->first;
-            window[pos++ & (SIT13_WINDOW - 1)] = (uint8_t)sym;
+            window[pos++ & (win - 1)] = (uint8_t)sym;
             if (sit_put(f, (uint8_t)sym) != UNC_OK) { err = UNC_ERR_SINK; goto out; }
         } else {
             int32_t mlen, moff, bl;
@@ -348,8 +369,8 @@ static int sit13_fork(SitFork *f, UncBufIn *in, uint32_t outlen,
             {
                 uint32_t from = pos - (uint32_t)moff;
                 while (mlen-- > 0 && pos < outlen) {
-                    uint8_t b = window[from++ & (SIT13_WINDOW - 1)];
-                    window[pos++ & (SIT13_WINDOW - 1)] = b;
+                    uint8_t b = window[from++ & (win - 1)];
+                    window[pos++ & (win - 1)] = b;
                     if (sit_put(f, b) != UNC_OK) { err = UNC_ERR_SINK; goto out; }
                 }
             }
