@@ -43,16 +43,20 @@ it — the gap then has to be inferred from an estimate of what the engine is
 holding, and one such inference has already had to be corrected.
 
 `-D UNC_AT_HANDLES` additionally swaps the engine allocator to `NewHandle` +
-`MoveHHi` + `HLock` (the reverted remedy, kept buildable) and puts `MaxBlock`
-either side of the `MoveHHi` call into the two length slots.
+`MoveHHi` + `HLock` (the reverted remedy, kept buildable) and puts the two
+figures either side of the `MoveHHi` call into the two length slots.
 
-**What it CANNOT see, and this is the whole point of the probe:** `MaxBlock`
-is blind to where inside a single free run a block sits. Moving a block from
-the bottom of one run to the top leaves one run of the same size, so the
-before/after comparison **cannot fail** — it reads identically whether
-`MoveHHi` worked or did nothing at all. It was built to answer "does `MoveHHi`
-move anything" and does not. Answering that needs the block's ADDRESS
-(`*h` before and after), not the largest free run.
+It reports the block's **address** either side of `MoveHHi`, which is what
+settled the question. The first revision reported `MaxBlock` there instead and
+**could not fail**: `MaxBlock` is blind to where inside a free run a block
+sits, so moving one from the bottom of a run to the top reads identically to
+not moving it. Fixed 2026-08-06; the address pair showed `MoveHHi` moving a
+block 205,828 → 803,634.
+
+**What it still cannot see:** it instruments the first allocation of 64 KB or
+more, which is not necessarily the Arsenic block — StuffIt's combined
+io/output buffer also qualifies. So it proves `MoveHHi` moves *an* engine
+block, not that specific one.
 
 It reports FAIL by construction — the overwritten slots no longer match the
 oracle. Read the numbers, not the verdict. This is what showed the last three

@@ -287,7 +287,10 @@ static void live_snapshot(void)
  * first allocation big enough to matter, in the real heap state rather than
  * a synthetic one. Equal values mean MoveHHi is a no-op and the reverted
  * relocatable-blocks remedy never had a chance. */
-static long gMoveBefore, gMoveAfter;
+static long gMoveBefore, gMoveAfter;   /* the block's ADDRESS, not MaxBlock:
+                                        * MaxBlock is blind to where in a
+                                        * free run a block sits, so it can
+                                        * never fail. See MANUAL_TESTS.md. */
 #endif
 #endif
 /* ------------------------------------------------------------------ */
@@ -313,9 +316,9 @@ static void *mal_alloc(void *ctx, uint32_t size)
         Handle h = NewHandle((long)size + 16);
         p = NULL;
         if (h != NULL) {
-            if (gMoveBefore == 0 && size >= 65536L) gMoveBefore = MaxBlock();
+            if (gMoveBefore == 0 && size >= 65536L) gMoveBefore = (long)*h;
             MoveHHi(h);
-            if (gMoveAfter == 0 && size >= 65536L) gMoveAfter = MaxBlock();
+            if (gMoveAfter == 0 && size >= 65536L) gMoveAfter = (long)*h;
             HLock(h);
             p = *h;
             *(Handle *)(p + 8) = h;

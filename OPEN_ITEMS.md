@@ -203,12 +203,37 @@ rather than repeated.
      it. Merging the two would give ~594 KB contiguous, comfortably more than
      the 498,564 requested.
 
-     Which says the relocatable-blocks idea was right in principle and
-     `MoveHHi` simply did not place the block high. That is consistent with
-     the untested reading above, and it is now the specific thing to fix:
-     **get the large block to the top of the heap.** If `MoveHHi` cannot be
-     made to do it, allocating the transform vector BEFORE the block (largest
-     first, within the entry) reaches the same layout from the other side.
+     **"Get the large block to the top of the heap" is now DISPROVED, and it
+     was this file's conclusion for one commit.** Measuring the block's
+     address either side of the call — the test the `MaxBlock` comparison
+     could not perform — says `MoveHHi` works:
+
+     | | address |
+     |---|---|
+     | before `MoveHHi` | 205,828 |
+     | after `MoveHHi` | **803,634** |
+
+     It moves the block to just under `ApplLimit` (963,040). And the entry is
+     refused anyway, with `MaxBlock` 467,672 — within 500 B of every other
+     configuration tried. **~126 KB stays stranded whether the engine's blocks
+     are low `NewPtr`s or handles stacked against the ceiling**, which is the
+     one number that has not moved across four attempts:
+
+     | configuration | `MaxBlock` at refusal |
+     |---|---|
+     | `NewPtr` (shipped) | 467,854 |
+     | retry after `MaxMem()` | — (12/13) |
+     | handles + `MoveHHi` + `HLock` | 468,008 |
+     | handles, block confirmed moved to 803,634 | 467,672 |
+
+     So the ~126 KB is not stranded by the engine's blocks at all — moving
+     them from the bottom of the heap to the top changes it by under 500 B.
+     Something else splits the free space, and it is roughly constant. **That
+     is the next thing to identify, and it is now the only live lead.** Note
+     one caveat in the probe: it instruments the first allocation of 64 KB or
+     more, which is not necessarily the Arsenic block (StuffIt's combined
+     io/output buffer also qualifies), so the address pair proves `MoveHHi`
+     moves *an* engine block, not specifically that one.
 
      Still untried, and now the only candidate that does not depend on the
      disproved assumption: trim the Arsenic capacity to the exact fill

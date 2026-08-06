@@ -67,14 +67,21 @@ running 147,404 to 963,040, and the free run above it
 the block sits in the MIDDLE of the free space; the ~126 KB stranded below it
 plus the 468 KB above would be ~594 KB contiguous, against a 498,564 request.
 
-**Get the large block to the top of the heap.** `MoveHHi` did not — that is
-the open mechanism, and note the trap already hit here: `MaxBlock` either side
-of `MoveHHi` cannot fail (it is blind to where in a run a block sits), so use
-the ADDRESS. If `MoveHHi` cannot be made to work, allocating the transform
-vector BEFORE the block reaches the same layout from the other side.
-`MaxMem()` before a retry is separately ruled out — compaction may not move a
-`NewPtr`. Probes: `-D UNC_AT_BUDGET`, `-D UNC_AT_HANDLES`; MANUAL_TESTS.md
-says how to read them and what each cannot see.
+**But moving the engine's blocks is now disproved as the fix.** `MoveHHi`
+does work — measured by address, 205,828 → 803,634, just under `ApplLimit` —
+and the entry is refused anyway. Across four configurations, from low
+`NewPtr`s to handles stacked against the ceiling, `MaxBlock` at the refusal
+stays 467,672–468,008. **~126 KB is stranded by something that is not the
+engine's blocks, and identifying it is the only live lead.** `MaxMem()` before
+a retry is separately ruled out — compaction may not move a `NewPtr`.
+
+Two traps this line of work has already sprung, both worth knowing before
+adding the next probe: `MaxBlock` either side of a move cannot fail, because
+it is blind to where in a free run a block sits — use the address; and
+sampling free heap at the START of a run cannot give the fragmentation, which
+has to be sampled at the failure. Probes: `-D UNC_AT_BUDGET`,
+`-D UNC_AT_HANDLES`; MANUAL_TESTS.md says how to read them and what each
+cannot see.
 
 The other lead worth having, not yet attempted: **the StuffIt method 13 LZSS
 window is a 64 KB format constant, but the reachable window is bounded by the
