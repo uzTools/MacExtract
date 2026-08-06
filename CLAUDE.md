@@ -11,7 +11,7 @@ The engine is the product. The Mac app is a thin shell.
 
 ## Current state — read before working
 
-M0–M10 are **DONE**. The engine passes a 769-fixture differential suite against `unar`, and the Mac shell extracts byte-exact on a real System 6.0.8 Mac Plus under Mini vMac (44/44 sampled fixtures at 4 MB, 41/44 at the 1 MB floor, the remainder being documented StuffIt 5 memory-budget refusals).
+M0–M10 are **DONE**. The engine passes a 769-fixture differential suite against `unar`, and the Mac shell extracts byte-exact on a real System 6.0.8 Mac Plus under Mini vMac (44/44 sampled fixtures at 4 MB, 42/44 at the 1 MB floor, the remainder being documented StuffIt 5 memory-budget refusals).
 
 It runs on all three systems the project claims: **System 6.0.8 and System 7.0.1** under Mini vMac (a true 68000), and **Mac OS 9.2** under QEMU PowerPC through the 68LC040 emulator, where 13/13 of a format sample is byte-exact, extraction onto **HFS+** is verified, and the `SIZE` partition is honoured by the Process Manager.
 
@@ -38,50 +38,29 @@ Read them at the start of every session. Where these files disagree with each ot
 The repository is on GitHub as a **private** repo, `main`, tagged through
 `v0.4`. Working tree clean, `./ci.sh` green, nothing in flight.
 
-**The next task is StuffIt 5 / Arsenic at the 1 MB floor, and it is open
-again because the reason it was closed turned out to be false.** OPEN_ITEMS.md
-section 5 said the three refused entries each fill a 512 KB block and so need
-~2.5 MB against ~700 KB — "a real design change". Measured on 2026-08-03: none
-of them fills a 512 KB block, and `derived-Troi-ClipSave-Plug-in1.1.sit` holds
-124,637 B, so its refused entry needs about **650 KB against ~700 KB free**.
-Read the corrected section 5 for the ranked remainder, BLOCKERS.md
-*Withdrawn claims* for the measurements, and FORMATS.md for the per-fixture
-table.
+**The 1 MB floor is 42/44 as of 2026-08-06**, and the two that remain need a
+different kind of work from everything that came before.
 
-Item 3 there is now measured, and it moves the whole problem: the refusal is
-**`NewPtr` failing for want of a CONTIGUOUS run**, not the budget saying no.
-At the 1 MB floor the shell had 678 KB of budget left and `MaxBlock()` was
-468,126 B against a 498,564 B request — short by ~30 KB. **So the remaining
-work is on the Mac side, not in the inverse BWT.**
+`derived-Troi-ClipSave-Plug-in1.1.sit` was closed by finding that the Arsenic
+block's doubling growth left a TRAIL — 8+16+32+64 KB of freed steps under the
+final 128 KB block, which a geometric sequence can never reuse for the step
+after it. That stranded 125,614 B and made a 498,548 B request fail against a
+468,126 B run while the budget still had 678 KB. The first allocation is now
+sized from the entry, `min(outlen, blocksize)`. Everything about this is in
+OPEN_ITEMS.md section 5 and DECISIONS.md 2026-08-06.
 
-Measured at the refusal instant: `FreeMem()` 593,740 against `MaxBlock()`
-468,126, so **125,614 B is lost to fragmentation** and the request would fit
-an unfragmented heap with ~95 KB to spare. The engine held only 167,494 B, and
-that plus the free heap accounts for the whole 760,310 B.
+**The remaining two are a genuine shortage, not a placement problem**, and the
+scope is fully worked out in OPEN_ITEMS.md section 5: `a2basic.dmg` needs
+1.06 MB and `Library_ISBN` 1.65 MB against a 678,392 B budget on a machine with
+760,312 B free. Only reducing the requirement reaches them, and the change that
+does is replacing the 4-bytes-per-byte inverse-BWT vector with a sampled-rank
+walk (`ars_inverse_bwt`, 17 lines). Estimated ~245 KB and ~379 KB, both inside
+budget; the unmeasured risk is time on a 7 MHz 68000, and `s` is the dial. The
+maintainer's instruction was to do this **after** other gains are exhausted.
 
-**The layout is measured, and moving the engine's blocks is NOT the fix.**
-The probe reports the live blocks' addresses: the 128 KB Arsenic block sits at
-363,682 in a zone running 147,404 to 963,040, and the free run above it
-(`963,040 - (363,682 + 131,088) = 468,270`) is `MaxBlock` to within 416 B. That
-arithmetic says the block splits the free space and hoisting it would merge
-~594 KB — and the direct test refutes it. `MoveHHi` does work, measured by
-address (205,828 → 803,634, just under `ApplLimit`), and the entry is refused
-anyway. Across four configurations, from low `NewPtr`s to handles stacked
-against the ceiling, `MaxBlock` at the refusal stays 467,672–468,008.
-
-**So ~126 KB is stranded by something that is not the engine's blocks, and
-identifying it is the only live lead.** `MaxMem()` before a retry is separately
-ruled out — compaction may not move a `NewPtr`. Twice now this heap has been
-described correctly by arithmetic and then contradicted by a direct
-measurement; prefer the measurement.
-
-Two traps this line of work has already sprung, both worth knowing before
-adding the next probe: `MaxBlock` either side of a move cannot fail, because
-it is blind to where in a free run a block sits — use the address; and
-sampling free heap at the START of a run cannot give the fragmentation, which
-has to be sampled at the failure. Probes: `-D UNC_AT_BUDGET`,
-`-D UNC_AT_HANDLES`; MANUAL_TESTS.md says how to read them and what each
-cannot see.
+Several remedies in this area are ruled out BY MEASUREMENT and listed in
+section 5 as do-not-retry: `MaxMem()` before a retry, and relocatable blocks
+moved high with `MoveHHi`.
 
 The method 13 LZSS window lead is DONE (2026-08-06): the window is now sized
 from the entry rather than from the format's 64 KB, 34 fixtures improved, none

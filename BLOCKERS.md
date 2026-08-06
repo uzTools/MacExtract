@@ -9,7 +9,7 @@ every system the project claims:
 | tier | result |
 |---|---|
 | System 6.0.8, 4 MB Mac Plus (Mini vMac, a true 68000) | 44/44 sampled fixtures |
-| System 6.0.8, **1 MB** — the floor target | 41/44; the three are StuffIt 5 budget refusals, each missing one entry |
+| System 6.0.8, **1 MB** — the floor target | 42/44; the two are StuffIt 5 budget refusals, each missing one entry |
 | System 7.0.1, 4 MB | 44/44 |
 | Mac OS 9.2 (QEMU PowerPC, 68LC040 emulation) | 13/13, plus HFS+ and the `SIZE` partition |
 
@@ -335,9 +335,11 @@ disagree it is a bug rather than a choice; what was missing was anyone reading
 them against each other. **A cross-file contradiction is a disproof nobody has
 collected yet.**
 
-Why `Troi-ClipSave` still refuses at 650 KB when ~700 KB is documented as free
-is NOT established — it is one run to find out, and it is a different and much
-smaller question than the one the withdrawn claim posed.
+Why `Troi-ClipSave` refused at 650 KB when ~700 KB was free is now
+**established, and it passes** (2026-08-06): the Arsenic block's doubling
+growth left a trail of freed steps that a geometric sequence can never reuse,
+stranding 125,614 B. Sizing the first allocation from the entry removes it.
+DECISIONS.md 2026-08-06, OPEN_ITEMS.md section 5. The floor target is 42/44.
 
 ### Corrected figures and superseded write-ups
 

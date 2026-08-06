@@ -214,6 +214,7 @@ typedef struct Arsenic {
     uint32_t  *transform;   /* [transform_cap] inverse-BWT vector */
     uint32_t   blocksize;   /* the DECLARED block size, 1 << blockbits */
     uint32_t   blockcap;    /* what is actually allocated right now */
+    uint32_t   outlen;      /* the entry's whole output — bounds the block */
     uint32_t   transform_cap;
     int32_t    blockbits;
 
@@ -278,7 +279,25 @@ static int ars_block_reserve(Arsenic *a, UncAlloc *al, uint32_t need)
     if (need <= a->blockcap) return UNC_OK;
     if (need > a->blocksize) return UNC_ERR_CORRUPT;   /* caller checks too */
 
-    cap = a->blockcap ? a->blockcap : ARS_BLOCK_INITIAL;
+    if (a->blockcap == 0) {
+        /* Size the FIRST allocation from the entry, so there is normally no
+         * second one. min(outlen, blocksize) is exact both ways: if the
+         * entry's whole output is smaller than a block there is exactly one
+         * block holding outlen, and otherwise at least one block fills.
+         *
+         * This is not just tidier than doubling from 8 KB — the doubling left
+         * a TRAIL. Each freed step is smaller than the next request, and a
+         * geometric trail can never satisfy the step that follows it, so
+         * 8+16+32+64 KB of holes sat under the final 128 KB block. Measured
+         * on the 1 MB floor target that trail was 125,614 B of stranded heap,
+         * and it is what made the transform vector's 498,548 B request fail
+         * against a 468,126 B largest run while the budget still had 678 KB.
+         * See OPEN_ITEMS.md section 5 and BLOCKERS.md. */
+        cap = a->outlen < a->blocksize ? a->outlen : a->blocksize;
+        if (cap < ARS_BLOCK_INITIAL) cap = ARS_BLOCK_INITIAL;
+    } else {
+        cap = a->blockcap;
+    }
     while (cap < need) {
         if (cap > a->blocksize / 2) { cap = a->blocksize; break; }
         cap *= 2;
@@ -432,6 +451,7 @@ int unc_arsenic_decode(UncBufIn *in, UncAlloc *al, uint32_t outlen,
      * to whatever the blocks actually hold. */
     a->block = NULL;
     a->blockcap = 0;
+    a->outlen = outlen;
     a->transform = NULL;
     a->transform_cap = 0;
 

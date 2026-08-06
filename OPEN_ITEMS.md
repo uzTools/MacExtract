@@ -82,163 +82,68 @@ rather than repeated.
 
 ## 5. Capability gaps that are deliberate, but still gaps
 
-- **StuffIt 5 / Arsenic on a 1 MB machine: 3 of 6 sampled fixtures fully, the
-  other 3 missing exactly one entry each.** An entry needs its block plus four
-  bytes of transform vector per byte the block holds, so an entry whose block
-  genuinely fills 512 KB needs ~2.5 MB and a 1 MB machine cannot give it. The
-  engine declines that entry and carries on, which is the designed behaviour.
+- **StuffIt 5 / Arsenic on a 1 MB machine: 4 of 6 sampled fixtures fully, the
+  other 2 missing exactly one entry each** (2026-08-06, 42/44 on the sweep).
+  The engine declines the entry it cannot afford and carries on, which is why
+  `Library_ISBN` still delivers 33 of 34 files.
 
-  **Closed as far as it can be** (2026-08-03). Two changes took the sample from
-  39/44 to 41/44, both about not paying for memory the data does not use: the
-  shell no longer reads the whole archive into RAM before the engine gets a
-  budget, and the Arsenic block is grown to what it actually holds rather than
-  allocated at its declared 512 KB. `derived-RWAsm_Folder.sit` went from
-  595.7 KB to 163.2 KB for the same 38 byte-exact entries.
+  **The contiguity half is CLOSED** (2026-08-06).
+  `derived-Troi-ClipSave-Plug-in1.1.sit` passes. Its refused entry was never
+  short of memory — it fit the budget with 12 KB to spare and failed on a
+  498,548 B request against a 468,126 B largest run. The stranded ~126 KB was
+  the Arsenic block's own doubling trail: growing 8K→16K→32K→64K→128K frees
+  each step, and a geometric trail can never satisfy the step after it, so
+  8+16+32+64 KB of holes sat under the final block (122,880 B, against 125,614 B
+  measured). Sizing the first allocation from the entry —
+  `min(outlen, blocksize)` — removes it. DECISIONS.md 2026-08-06.
 
-  **Not closed, and the reason it was thought closed was wrong** (corrected
-  2026-08-03). This item used to say the three entries "each really do fill a
-  512 KB block", needing 512 KB + 2 MB against ~700 KB, and that closing them
-  would take a fundamentally different inverse BWT. Direct instrumentation says
-  none of the three fills a 512 KB block — the largest holds 323,384 B and
-  `derived-Troi-ClipSave-Plug-in1.1.sit` holds **124,637 B**, so its refused
-  entry needs about **650 KB, not 2.5 MB**. See *Withdrawn claims* in
-  BLOCKERS.md for the measurements and what the error cost.
+  Ruled out along the way, by measurement, so **do not retry**: `MaxMem()`
+  before a retry (compaction may not move a `NewPtr`); and relocatable blocks
+  moved high — `MoveHHi` demonstrably works, 205,828 → 803,634, and changed
+  `MaxBlock` at the refusal by under 500 B, because the trail was never about
+  where the live blocks sat.
 
-  What is actually left, ranked by what the peak model
-  (`~35 KB parser + capacity + 4 x fill`) says is dominant:
+  **What remains is the genuine-shortage half, and only a cheaper inverse BWT
+  reaches it.** Against the 678,392 B budget a 1 MB machine gives the engine:
 
-  1. **The 4x transform vector** — 487 KB, 772 KB and 1,263 KB for the three.
-     The only remaining term big enough to matter, and the only one that needs
-     a different inverse BWT to shrink.
-  2. **Capacity is never trimmed to the fill.** Doubling stops at the first
-     power of two that fits, so `derived-Library_ISBN_Barcoder.sit` holds
-     323 KB in a 512 KB block — 196 KB dead, for free, no algorithm change.
-  3. **Why `Troi-ClipSave` refuses at all — MEASURED 2026-08-04, and it is
-     not a shortage.** `-D UNC_AT_BUDGET` reports what the shell allowed as
-     well as what the engine used:
+  | fixture | fill | 4x transform | needs | vs budget |
+  |---|---|---|---|---|
+  | `a2basic.dmg` | 197,515 | 790,060 | 1,088,588 | +410,196 |
+  | `Library_ISBN` | 323,384 | 1,293,536 | 1,854,208 | +1,175,816 |
 
-     | | bytes |
-     |---|---|
-     | free heap at start (`FreeMem`) | 760,312 |
-     | budget given to the engine (free − 80 KB reserve) | 678,392 |
-     | the refused request (transform vector, 4 × 124,637) | 498,548 |
-     | **`MaxBlock()` at that moment** | **468,126** |
+  `a2basic` needs 1.06 MB on a machine whose entire free heap is 760,312 B, so
+  no allocation placement, reserve tuning or defragmentation can reach it. Only
+  reducing the REQUIREMENT can.
 
-     The budget said yes with 678 KB to spare; **`NewPtr` itself returned
-     NULL**, short of a contiguous run by ~30 KB. So this is a
-     **fragmentation/contiguity failure in the shell**, not a memory shortage
-     in the engine, and the thing to fix is on the Mac side rather than in the
-     inverse BWT.
+  **The change that would: stop building the 4-bytes-per-byte inverse-BWT
+  vector.** It is the dominant term in both rows. `ars_inverse_bwt` is 17
+  self-contained lines building the standard T vector; a sampled-rank walk
+  keeping a checkpoint every `s` positions needs `fill/16` at `s`=64 instead of
+  `fill*4`:
 
-     **Two remedies are ruled out by measurement, not by argument**, and the
-     second rules out a whole family:
+  | fixture | needs now | with sampled ranks (estimate) |
+  |---|---|---|
+  | `a2basic.dmg` | 1,088,588 | ~245,699 |
+  | `Library_ISBN` | 1,854,208 | ~379,435 |
 
-     | tried | result | `MaxBlock` at the refusal |
-     |---|---|---|
-     | baseline (`NewPtr`) | 12/13 | 468,126 |
-     | retry after `MaxMem()` | 12/13 | — |
-     | `NewHandle` + `MoveHHi` + `HLock` | 12/13 | **468,008** |
+  Both land inside the budget, and both under 400 KB — which would also move
+  the "11 of 31 fixtures extract fully under a 400 KB budget" figure in the †
+  footnote of FORMATS.md.
 
-     `MaxMem()` cannot help because compaction may not move a `NewPtr`. The
-     obvious answer to that — make the engine's blocks relocatable and stack
-     them against the top of the heap — **also changes nothing**: `MaxBlock`
-     moved by 118 bytes, in the wrong direction. Implemented, tested on the
-     Mac, and reverted rather than kept as an unproven behaviour change.
+  Cost, and the main risk: **time, and it is unmeasured.** Each output byte
+  needs a rank query costing up to `s` steps — ~21M inner iterations for
+  `Library_ISBN` at `s`=64, against the repo's existing 134 s benchmark for a
+  278 KB StuffIt. `s` is the dial. It can also be made adaptive — today's fast
+  path when the budget affords `fill*4`, the sampled path when it does not — so
+  a 4 MB machine pays nothing. Correctness is unusually cheap to establish: it
+  is engine-side and portable, so the 769-fixture suite and the 31 StuffIt 5
+  fixtures adjudicate it entirely on Linux, with no emulator run needed until
+  the end.
 
-     **The fragmentation is real, and now measured at the refusal instant
-     rather than inferred from the start-of-run figure:**
+  Ruled out by the same arithmetic: trimming capacity to the exact fill leaves
+  `a2basic` 345,567 B over and `Library_ISBN` 974,912 B over; shrinking the
+  80 KB reserve reaches neither.
 
-     | at the moment `NewPtr` returned NULL | bytes |
-     |---|---|
-     | `FreeMem()` | 593,740 |
-     | `MaxBlock()` | 468,126 |
-     | **lost to fragmentation** | **125,614** |
-     | the request | 498,564 |
-     | held by the engine | 167,494 |
-
-     The request would fit the free heap with ~95 KB to spare; it does not fit
-     the largest run, by 30,438 B. The engine held only 167,494 B, and
-     167,494 + 593,740 accounts for essentially the whole 760,310 B heap — so
-     **the shell holds almost nothing besides the engine's own blocks**, and
-     those blocks are the only plausible thing splitting the free space.
-
-     That makes the relocatable-blocks result above *stranger*, not settled:
-     it should have worked and it moved `MaxBlock` by 118 bytes. A previous
-     write-up of this concluded "the fragmentation is not caused by where the
-     engine's own blocks sit" — that was inferred from the failed remedy, not
-     measured, and this table does not support it. **Corrected 2026-08-04.**
-
-     **What `-D UNC_AT_HANDLES` then showed, and what it cannot show.**
-     `MaxBlock` either side of the `MoveHHi` call, at the 128 KB Arsenic block
-     allocation: **598,114 before, 598,114 after.** But that comparison
-     **cannot fail** — moving a block from one end of a single free run to the
-     other leaves one run of the same size, so an unchanged `MaxBlock` is
-     equally consistent with `MoveHHi` working perfectly and with it doing
-     nothing. It does not settle the question it was built for. Treat the
-     "`MoveHHi` is a no-op" reading as UNTESTED, not as measured; distinguishing
-     them needs the block's ADDRESS, not the largest free run.
-
-     What the run does establish is where the damage happens. At the moment
-     the 128 KB block is taken, `MaxBlock` is **598,114** — comfortably more
-     than the 498,564 the transform will later ask for. By the time the
-     transform is requested it is 467,976. **The heap is fragmented between
-     those two allocations, not before the first one**, which is a much
-     smaller window to search than "somewhere in the run".
-
-     **The layout itself, MEASURED 2026-08-04** — the probe now reports the
-     live blocks' ADDRESSES, which is what no `MaxBlock` figure could give:
-
-     | | address |
-     |---|---|
-     | application zone bottom | 147,404 |
-     | live blocks (3 of the 4 largest read back) | 222,740, 230,956, **363,682** |
-     | `ApplLimit` | 963,040 |
-     | `MaxBlock` at the refusal | 467,854 |
-
-     363,682 is the largest live block — the 128 KB Arsenic block. Above it
-     the heap runs to `ApplLimit`: `963,040 - (363,682 + 131,088) = 468,270`,
-     which is `MaxBlock` to within 416 B. **So the largest free run is the
-     region ABOVE the Arsenic block, and the ~126 KB that is stranded lies
-     BELOW it** — the block sits in the middle of the free space and splits
-     it. Merging the two would give ~594 KB contiguous, comfortably more than
-     the 498,564 requested.
-
-     **"Get the large block to the top of the heap" is now DISPROVED, and it
-     was this file's conclusion for one commit.** Measuring the block's
-     address either side of the call — the test the `MaxBlock` comparison
-     could not perform — says `MoveHHi` works:
-
-     | | address |
-     |---|---|
-     | before `MoveHHi` | 205,828 |
-     | after `MoveHHi` | **803,634** |
-
-     It moves the block to just under `ApplLimit` (963,040). And the entry is
-     refused anyway, with `MaxBlock` 467,672 — within 500 B of every other
-     configuration tried. **~126 KB stays stranded whether the engine's blocks
-     are low `NewPtr`s or handles stacked against the ceiling**, which is the
-     one number that has not moved across four attempts:
-
-     | configuration | `MaxBlock` at refusal |
-     |---|---|
-     | `NewPtr` (shipped) | 467,854 |
-     | retry after `MaxMem()` | — (12/13) |
-     | handles + `MoveHHi` + `HLock` | 468,008 |
-     | handles, block confirmed moved to 803,634 | 467,672 |
-
-     So the ~126 KB is not stranded by the engine's blocks at all — moving
-     them from the bottom of the heap to the top changes it by under 500 B.
-     Something else splits the free space, and it is roughly constant. **That
-     is the next thing to identify, and it is now the only live lead.** Note
-     one caveat in the probe: it instruments the first allocation of 64 KB or
-     more, which is not necessarily the Arsenic block (StuffIt's combined
-     io/output buffer also qualifies), so the address pair proves `MoveHHi`
-     moves *an* engine block, not specifically that one.
-
-     Still untried, and now the only candidate that does not depend on the
-     disproved assumption: trim the Arsenic capacity to the exact fill
-     (item 2). That is 6,435 B here against a ~30 KB shortfall, so it cannot
-     close this alone.
 - **Timing: MEASURED 2026-08-02, and closed.** Eight
   fixtures across eight formats at authentic 1x, 8/8: boot ~10 s, every
   extraction under 5 s, plus the 278 KB StuffIt anchor at ~134 s (FORMATS.md,

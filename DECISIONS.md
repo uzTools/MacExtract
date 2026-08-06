@@ -1184,3 +1184,50 @@ old figure, however many small forks it also has. **A per-archive maximum
 cannot be predicted from a per-fork distribution** — the same class of error
 as inferring Arsenic block sizes from peak heap (see the † footnote in
 FORMATS.md), arrived at from the opposite direction.
+
+## 2026-08-06 — the Arsenic block's first allocation is sized from the entry
+
+Fourth in the "size it from the data" series, but the mechanism is different
+and worth separating: this one was not about how MUCH was allocated. It was
+about the shape left behind.
+
+`ars_block_reserve` grew from 8 KB by doubling. For an entry whose block ends
+at 128 KB that allocates 8, 16, 32, 64 and 128 KB, freeing each as it goes.
+**A geometric trail can never satisfy the step that follows it** — the sum of
+every earlier step is one step short — so the freed 8+16+32+64 KB sat under the
+final block as 122,880 B of unusable holes. Measured on the 1 MB floor target
+the stranded heap was 125,614 B, the rest being headers and small allocations.
+
+That is what refused an entry in `derived-Troi-ClipSave-Plug-in1.1.sit`: its
+transform vector asked for 498,548 B with 678 KB of budget still available and
+`MaxBlock` at 468,126 B. The entry needed 666,004 B against a 678,392 B budget
+— it was never short of memory, only of a contiguous run.
+
+The fix is one line of sizing: the first allocation is
+`min(outlen, blocksize)`. Both halves are bounds the data already gives —
+a block cannot hold more than the entry's whole output, nor more than a block —
+so there is normally no second allocation and no trail. Growth stays as a
+safety net.
+
+**It is a bound, not an exact size, and that cost 4 small regressions.** An
+encoder may split a fork into several blocks even when `outlen < blocksize`, in
+which case `outlen` over-allocates: `derived-Berkeley_Packet_Monitor.sit` went
+338,964 → 362,236 B, and three others by 2 KB or less. Against that, 24
+fixtures improved (`Library_ISBN` 1,854,208 → 1,682,080 B) and the floor target
+went 41/44 → 42/44. The regressions were taken deliberately: none crosses the
+400 KB budget threshold or the ~700 KB a 1 MB Mac has, so none costs a
+capability, and the alternative sizings that avoid them all reintroduce a
+trail. This is a weaker standard than the LZW change was held to, where any
+regression was disqualifying, and the difference is that this one buys a
+capability rather than an efficiency.
+
+**How it was found is the transferable part.** Four configurations had already
+been tried against this refusal and all four moved `MaxBlock` by under 500 B —
+`NewPtr`, `MaxMem()` retry, handles with `MoveHHi`, and handles with the move
+confirmed by address. Each assumed the LIVE blocks stranded the space. The
+trail is made of DEAD ones, which no amount of moving the live blocks can
+affect, and which nothing in the probe reported. The arithmetic that pointed at
+it was simply noticing that 8+16+32+64 = 120 KB sat suspiciously close to the
+125,614 B measured, and the confirming experiment was to set the initial
+capacity to 128 KB so no growth happens at all — one build, one run, and the
+fixture passed on the spot.
