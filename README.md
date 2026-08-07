@@ -29,6 +29,18 @@ Or let it finish:
 
 ![Alert reading Extraction complete.](docs/screens/4-complete.png)
 
+## Download
+
+| | |
+|---|---|
+| [`dist/unclassic.bin`](dist/unclassic.bin) | the application as uncompressed MacBinary — transfer it with anything MacBinary-aware |
+| [`dist/unclassic.dsk`](dist/unclassic.dsk) | an 800K HFS floppy image — write it to a real floppy, or mount it in Mini vMac, Basilisk II or SheepShaver |
+
+Both hold the same application and neither needs an unarchiver to open, which
+is the point: a bare Mac has no way to unpack a `.sit` until it already has
+something that can. [`dist/README.txt`](dist/README.txt) has the transfer
+notes.
+
 ## What it opens
 
 **Extracts:** StuffIt (`.sit`, classic and 5.x), Compact Pro (`.cpt`),
@@ -53,10 +65,8 @@ Encrypted and multi-part archives are out of scope.
 | Also runs on | System 7, Mac OS 8 and 9, PowerPC via the built-in 68k emulator |
 | Disk | one 800K floppy |
 
-The same binary adapts to whatever machine it finds itself on. To get it onto
-a bare Mac, `tools/make_dist.sh` builds a MacBinary file and an 800K disk
-image — useful when the machine has no unarchiver to unpack the unarchiver
-with.
+The same binary adapts to whatever machine it finds itself on, so the download
+above is the only one. (`tools/make_dist.sh` rebuilds it from source.)
 
 ## How long it takes
 
