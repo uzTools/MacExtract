@@ -48,6 +48,8 @@
 #define kErrorALRT      130
 #define kCancelItem     1
 #define kStatusItem     2
+#define kBarItem        3
+#define kDetailItem     4
 
 #define kStackBump      (24L * 1024)   /* extra stack over the 8 KB default */
 #define kMemReserve     (80L * 1024)   /* heap headroom kept from the engine */
@@ -368,10 +370,63 @@ static void mal_free(void *ctx, void *ptr)
 typedef struct {
     DialogPtr dlg;
     Boolean   cancelled;
-    long      lastTicks;
+    long      lastTicks;    /* TickCount of the last pump, for the 10 Hz gate */
+    long      startTicks;   /* TickCount when extraction began, for the ETA */
+    short     shownPct;     /* what the bar and the text currently say, so an */
+    long      shownRem;     /* unchanged reading costs no redraw and no flicker */
 } Progress;
 
 #ifndef UNC_SINK_TEST
+/* ---- progress bar -------------------------------------------------
+ * The bar is a DITL userItem. The Dialog Manager will not draw it, so
+ * BarUserItem is installed as its draw proc: that is what repaints it on
+ * an update event, and prog_tick calls BarDraw directly in between. The
+ * percentage lives in a file static because a userItem proc is handed
+ * nothing but the dialog and the item number. (The no-global-state rule
+ * is an ENGINE rule; the shell already keeps gHasWNE and friends.) */
+static short gBarPct = 0;
+
+static void BarDraw(const Rect *box)
+{
+    Rect r = *box, fill;
+    short w;
+
+    PenNormal();
+    FrameRect(&r);
+    r.left++; r.top++; r.right--; r.bottom--;   /* inside the frame */
+    w = (short)((long)(r.right - r.left) * gBarPct / 100);
+    fill = r;
+    fill.right = (short)(r.left + w);
+    if (fill.right > fill.left) PaintRect(&fill);
+    fill.left = fill.right;
+    fill.right = r.right;
+    if (fill.right > fill.left) EraseRect(&fill);
+}
+
+static pascal void BarUserItem(WindowPtr w, short item)
+{
+    short kind;
+    Handle h;
+    Rect box;
+    GetDialogItem((DialogPtr)w, item, &kind, &h, &box);
+    BarDraw(&box);
+}
+
+/* Pascal-string builders. NumToString is the only number formatter the
+ * Toolbox offers and it writes a whole Str255, so appending needs these. */
+static void PStrCat(Str255 d, const char *s)
+{
+    while (*s && d[0] < 255) d[++d[0]] = (unsigned char)*s++;
+}
+
+static void PStrCatNum(Str255 d, long n)
+{
+    Str255 t;
+    short i;
+    NumToString(n, t);
+    for (i = 1; i <= (short)t[0] && d[0] < 255; i++) d[++d[0]] = t[i];
+}
+
 static void ProgressPump(Progress *pr)
 {
     EventRecord ev;
@@ -403,22 +458,64 @@ static int prog_tick(void *ctx, uint32_t done, uint32_t total)
 {
     Progress *pr = (Progress *)ctx;
     long now = TickCount();
-    if (now - pr->lastTicks >= 6) {      /* ~10 Hz */
-        pr->lastTicks = now;
-        ProgressPump(pr);
-        if (total != UNC_SIZE_UNKNOWN && total != 0 && pr->dlg) {
-            Str255 s;
-            long pct = (long)((done / 128) * 100 / (total / 128 + 1));
-            Handle h;
-            short kind;
-            Rect box;
-            NumToString(pct, s);
-            s[++s[0]] = '%';
-            GetDialogItem(pr->dlg, kStatusItem, &kind, &h, &box);
-            if (h) SetDialogItemText(h, s);
+    short pct;
+    long elapsed, rem;
+    Handle h;
+    short kind;
+    Rect box;
+
+    if (now - pr->lastTicks < 6) return pr->cancelled ? 0 : 1;   /* ~10 Hz */
+    pr->lastTicks = now;
+    ProgressPump(pr);
+    if (pr->cancelled) return 0;
+    if (total == UNC_SIZE_UNKNOWN || total == 0 || !pr->dlg)
+        return 1;
+
+    /* /128 first: done*100 overflows a 32-bit long past 42 MB, and this
+     * runs on a 68000 where 64-bit division is a library call. */
+    pct = (short)((done / 128) * 100 / (total / 128 + 1));
+    if (pct > 100) pct = 100;
+    if (pct < 0) pct = 0;
+
+    /* Time left, in whole seconds, from the rate so far. Held back for the
+     * first two seconds and below 1%, where the estimate is meaningless and
+     * would show a wild number that then collapses. -1 means "no estimate".
+     * elapsed*(100-pct) is at most 216,000*100, which fits. */
+    elapsed = now - pr->startTicks;
+    rem = -1;
+    if (pct > 0 && elapsed > 120) rem = elapsed * (100 - pct) / pct / 60;
+
+    /* Redraw nothing if the reading has not changed: SetDialogItemText
+     * redraws the item, and at 10 Hz that flickers. */
+    if (pct == pr->shownPct && rem == pr->shownRem) return 1;
+    pr->shownPct = pct;
+    pr->shownRem = rem;
+
+    gBarPct = pct;
+    GetDialogItem(pr->dlg, kBarItem, &kind, &h, &box);
+    BarDraw(&box);
+
+    {
+        Str255 s;
+        s[0] = 0;
+        PStrCatNum(s, pct);
+        PStrCat(s, "%");
+        if (rem < 0) {
+            PStrCat(s, "   estimating time left");
+        } else if (rem < 60) {
+            PStrCat(s, "   about ");
+            PStrCatNum(s, rem < 5 ? 5 : rem);
+            PStrCat(s, " seconds left");
+        } else {
+            long mins = (rem + 30) / 60;
+            PStrCat(s, "   about ");
+            PStrCatNum(s, mins);
+            PStrCat(s, mins == 1 ? " minute left" : " minutes left");
         }
+        GetDialogItem(pr->dlg, kDetailItem, &kind, &h, &box);
+        if (h) SetDialogItemText(h, s);
     }
-    return pr->cancelled ? 0 : 1;
+    return 1;
 }
 #endif
 
@@ -1891,7 +1988,34 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name)
     pr.dlg = GetNewDialog(kProgressDLOG, NULL, (WindowPtr)-1);
     pr.cancelled = false;
     pr.lastTicks = 0;
-    if (pr.dlg) DrawDialog(pr.dlg);
+    pr.startTicks = TickCount();
+    pr.shownPct = -1;      /* forces the first tick to draw */
+    pr.shownRem = -2;
+    gBarPct = 0;
+    if (pr.dlg) {
+        Str255 s;
+        Handle h;
+        short kind;
+        Rect box;
+
+        /* The bar is a userItem, so nothing draws it until it has a proc. */
+        GetDialogItem(pr.dlg, kBarItem, &kind, &h, &box);
+        SetDialogItem(pr.dlg, kBarItem, kind,
+                      (Handle)NewUserItemUPP(BarUserItem), &box);
+
+        s[0] = 0;
+        PStrCat(s, "Extracting ");
+        { short i; for (i = 1; i <= (short)name[0] && s[0] < 255; i++)
+                       s[++s[0]] = name[i]; }
+        GetDialogItem(pr.dlg, kStatusItem, &kind, &h, &box);
+        if (h) SetDialogItemText(h, s);
+
+        GetDialogItem(pr.dlg, kDetailItem, &kind, &h, &box);
+        if (h) SetDialogItemText(h, "\p0%   estimating time left");
+
+        SetPort((GrafPtr)pr.dlg);
+        DrawDialog(pr.dlg);
+    }
     prog.ctx = &pr;
     prog.tick = prog_tick;
 

@@ -142,6 +142,7 @@ int unc_extract_as(UncFormat f, UncIO *io, UncSink *sink, UncAlloc *al,
     c.ps.total = io->size(io->ctx);
     c.ps.done = 0;
     c.ps.since_tick = 0;
+    c.ps.hold = 0;
     if (opt) c.opt = *opt;
     else { c.opt.list_only = 0; c.opt.test_only = 0; }
 

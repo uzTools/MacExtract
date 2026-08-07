@@ -90,7 +90,6 @@ distribution — `tools/make_dist.sh` builds an uncompressed MacBinary and an
 | System 6.0.8, 4 MB | 44-fixture corpus + the interactive UI end to end | ✅ 44/44; UI driven from the Finder, extracted `APPL` launches |
 | System 6.0.8, 1 MB | 44-fixture corpus | ✅ **44/44** (2026-08-07) — no memory-budget refusals remain |
 | System 7.0.1, 4 MB | 44-fixture corpus | ✅ 44/44, same peak heap as 6.0.8 |
-| System 7.0.1, 1 MB | boot probe | ⚠️ System 7 needs 2 MB and does not boot — not an application fault |
 | Interactive UI above System 6 | — | ⚪ **out of scope by choice** — System 6 is the UI's target and it is driven end to end there; the paths the higher tiers exist for are tested directly, below |
 | System 7.0.1 | the `SIZE` partition under the Process Manager | ✅ honoured — a 600 KB partition makes the engine decline an entry that needs 656 KB, cleanly; System 6 ignores `SIZE` and passes the same entry |
 | System 6.0.8 + 7.0.1 | working-directory extraction (`SFReply.vRefNum` + `dirID` 0) | ✅ output lands in the working directory, nothing in the volume root |

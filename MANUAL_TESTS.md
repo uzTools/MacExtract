@@ -111,8 +111,7 @@ boot volume, 4 MB Mac Plus, same on-Mac CRC-32 read-back of both forks.
     tools/vmac/run.py --system Sys7.img --list tools/vmac/sample.txt
 
 **Result: 44/44 byte-exact**, with engine peak heap identical to System 6.0.8
-on every fixture. **1 MB: the system does not boot** — a probe painted nothing
-in 180 s, which is System 7 needing 2 MB, not a fault in the application.
+on every fixture. This tier is 4 MB.
 
 7.0.1 rather than 7.1 because 7.1 survives on the mirrors only as floppy sets
 and a beta ISO. Both are System 7; what the tier is for is the two things
@@ -330,8 +329,19 @@ built for authentic 7 MHz timing and photographs every step. Confirmed from
 the screenshots:
 
 - **SFGetFile** comes up listing the archive on the boot volume.
-- **Progress dialog** repaints live — caught mid-run at 13% and 16%.
+- **Progress dialog** repaints live — caught mid-run at 13% and 16%. Since
+  2026-08-07 it shows the archive name, a graphical bar, the percentage and a
+  time estimate ("13%   about 1 minute left").
 - **The Cancel button** stops it: "Extraction cancelled." alert.
+
+  **Re-measure `PROGRESS_CANCEL` in `interactive.py` whenever the dialog
+  changes shape.** It is a hard-coded screen coordinate, so a moved button
+  does not make this step fail — the click lands on dialog background, the
+  extraction finishes normally, and `3-cancelled.png` is written anyway,
+  showing the progress dialog instead of the alert. That happened on
+  2026-08-07 when the DLOG grew 30 points taller. The constant's comment now
+  derives it from the DLOG origin plus the DITL rect; check the screenshot
+  actually shows the alert.
 - **Cmd-.** does the same, by the other route (the keyDown check in
   ProgressPump rather than Dialog Manager hit-testing).
 - **Partial output is removed, still.** After cancelling, SFGetFile lists

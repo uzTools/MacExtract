@@ -1317,3 +1317,53 @@ input-driven progress pump goes silent and a Mac user gets a frozen dialog and
 a dead Cancel. `unc_progress_poll` fires the tick without moving the byte
 count, called every `UNC_PROGRESS_STEP` output bytes and only on the sampled
 path — the fast path never runs long enough to need it.
+
+## 2026-08-07 — the progress dialog gets a bar, a percentage and a time left
+
+The dialog had a Cancel button and a percentage rendered as text. Two things
+made that inadequate once Arsenic became extractable on a 1 MB machine: a
+15-minute extraction wants a time estimate, and — worse — the number it showed
+was wrong for most of those fifteen minutes.
+
+**The percentage was measuring the wrong thing, and the fix is in the engine,
+not the UI.** Progress is counted in archive INPUT bytes consumed. Arsenic
+decodes an entire block from the input and only then walks it into output, so
+on a one-block fork the input position runs to the end while nothing has been
+written, and then does not move at all for the whole walk. Measured on
+`derived-a2basic.dmg.sit` under a 1 MB budget: 41 ticks, of which the last
+**23 reported the identical value**. The bar would have sat at 100% for the
+~42% of the run that the walk occupies — about seven minutes on a Mac Plus.
+
+So the decoder now reports its own position instead of letting the input pump
+do it. `UncProgressState.hold` suppresses the input-side tick for the duration
+of the fork, and Arsenic reports `pbase + span * produced / outlen`, where
+`span` is the fork's compressed length — already known, as `UncBufIn.limit`.
+The unit the UI sees is unchanged (bytes of archive consumed) and the sequence
+is monotonic; it is just interpolated across the fork by OUTPUT, which is what
+the time is actually proportional to. After: 801 ticks, monotonic, evenly
+spread.
+
+**The tick interval is 256 output bytes, not the engine's 8192.** Arsenic's
+bytes are expensive: at 8 KB the same run reports once every 37 seconds, which
+is a bar that jumps in 4% steps and a Cancel button that takes half a minute to
+answer. 256 gives ~1.2 s. The cost is a compare per output byte and a callback
+the Mac shell rate-limits to 10 Hz; the 769-fixture suite runs in the same time
+as before.
+
+**The bar is a DITL userItem with a real draw proc**, not something painted
+over the dialog, so it survives update events rather than relying on the next
+tick to repair it. The ETA is `elapsed * (100 - pct) / pct`, held back for the
+first two seconds and below 1% where it is meaningless, and both the bar and
+the text are redrawn only when the displayed reading changes — at 10 Hz,
+`SetDialogItemText` on every tick flickers.
+
+**Moving the button broke the harness silently, which is the part worth
+keeping.** The dialog grew from 80 to 110 points tall and Cancel moved down 30
+with it. `interactive.py` clicks a hard-coded coordinate measured off an old
+screenshot, so the click landed on inert dialog background: the extraction ran
+happily to completion and the run still produced a `3-cancelled.png` — of the
+progress dialog rather than the alert. Nothing failed. **A UI harness that
+drives by coordinate cannot fail on a moved control; it can only produce a
+screenshot of the wrong thing**, which is worthless unless somebody looks. The
+constant now carries the arithmetic that derives it from the DLOG and DITL
+rects, so the next person can recompute rather than re-measure.

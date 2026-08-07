@@ -9,12 +9,19 @@ every system the project claims:
 | tier | result |
 |---|---|
 | System 6.0.8, 4 MB Mac Plus (Mini vMac, a true 68000) | 44/44 sampled fixtures |
-| System 6.0.8, **1 MB** — the floor target | **44/44** (2026-08-07); no memory-budget refusals remain |
-| System 7.0.1, 4 MB | 44/44 |
-| Mac OS 9.2 (QEMU PowerPC, 68LC040 emulation) | 13/13, plus HFS+ and the `SIZE` partition |
+| System 6.0.8, **1 MB** — the floor target | **44/44**; no memory-budget refusals remain |
+| System 7.0.1, 4 MB | **44/44** |
+| Mac OS 9.2 (QEMU PowerPC, 68LC040 emulation) | **13/13**, plus HFS+ and the `SIZE` partition |
 
-Per-fixture tables are in FORMATS.md, re-run instructions in
-`tools/vmac/README.md`, and the on-demand experiments in MANUAL_TESTS.md.
+**All three were re-run end to end on 2026-08-07 against the final build**,
+after the sampled inverse BWT and the progress-dialog rewrite — not carried
+forward from earlier runs. The interactive UI was re-driven on System 6 in the
+same pass (`interactive.py`): bar, percentage, time estimate, Cancel, Cmd-.,
+partial-output cleanup, success alert.
+
+Per-fixture tables are in FORMATS.md, re-run instructions and what a full
+re-verification costs in `tools/vmac/README.md`, and the on-demand experiments
+in MANUAL_TESTS.md.
 
 **Nine claims this file used to assert have been withdrawn, and one
 confirmed.** (This count read "seven" while the table held eight; corrected

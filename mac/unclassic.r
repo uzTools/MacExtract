@@ -5,15 +5,27 @@
 #include "Dialogs.r"
 #include "Processes.r"
 
+/* Progress dialog. Four items, and the order is the item numbering the
+ * code uses (kCancelItem..kDetailItem in unclassic_mac.c):
+ *
+ *   1  Cancel button          also reachable as Cmd-.
+ *   2  status   "Extracting <name>"
+ *   3  userItem the progress bar; drawn by BarUserItem, not by the Dialog
+ *      Manager, so it repaints on update events as well as on every tick
+ *   4  detail   "45%   about 2 minutes left"
+ *
+ * 110 points tall rather than 80: the bar and the detail line are new. */
 resource 'DLOG' (128, purgeable) {
-    { 80, 80, 160, 400 },
+    { 80, 80, 190, 400 },
     dBoxProc, visible, noGoAway, 0, 128, "", noAutoCenter
 };
 
 resource 'DITL' (128, purgeable) {
     {
-        { 48, 220, 68, 300 }, Button { enabled, "Cancel" };
-        { 12, 16, 28, 300 }, StaticText { disabled, "Extracting" };
+        { 78, 220, 98, 300 }, Button     { enabled,  "Cancel" };
+        { 10,  16, 26, 300 }, StaticText { disabled, "Extracting" };
+        { 34,  16, 50, 300 }, UserItem   { enabled };
+        { 56,  16, 72, 300 }, StaticText { disabled, "" };
     }
 };
 

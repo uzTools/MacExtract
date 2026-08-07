@@ -14,12 +14,25 @@ against the same engine's Linux output.
 `--system` picks the boot system: `System6.hfv` (6.0.8, the floor target) or
 `Sys7.img` (7.0.1). System 7 is where `SFReply.vRefNum` becomes a working
 directory and the Process Manager starts honouring the `SIZE` partition, so it
-is a different set of code paths, not just a different splash screen. It also
-needs 2 MB: `--system Sys7.img --mem 1M` does not boot, and that is the
-system's floor, not the application's.
+is a different set of code paths, not just a different splash screen. Run the
+System 7 tier at 4 MB.
 
 Nothing here runs in `./ci.sh`: it needs ~80 MB of downloads, an X server and
 minutes per fixture. It is a deliberate, on-demand check.
+
+**What a full re-verification costs, as host wall clock** (measured
+2026-08-07, two cores, all-out emulators — this is how long YOU wait, and says
+nothing whatever about Mac Plus time; see the 1x note below):
+
+| tier | command | cost |
+|---|---|---|
+| System 6.0.8, 1 MB, 44 fixtures | `run.py --mem 1M --list sample.txt` | ~240 s |
+| System 7.0.1, 4 MB, 44 fixtures | `run.py --system Sys7.img --list sample.txt` | ~233 s |
+| Mac OS 9.2, 13 fixtures | `os9.py --list os9sample.txt --launch` | tens of minutes — one full PowerPC boot per fixture |
+
+Run the two Mini vMac tiers in parallel if you have the cores; do NOT run
+anything else alongside `os9.py`, which uses `build/rel/unclassic` as its
+oracle and will lose it to `./ci.sh`'s `make clean`.
 
 ## What the pieces do
 

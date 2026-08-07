@@ -211,7 +211,16 @@ SF_FIRST_ROW = (150, 137)
 # by button and Cancel by Cmd-. are separate checklist items reaching the same
 # code by different routes (Dialog Manager hit-testing vs. the keyDown check
 # in ProgressPump), so both are exercised.
-PROGRESS_CANCEL = (342, 138)
+#
+# THIS MOVES WHENEVER THE DIALOG DOES, and nothing here will say so: a click on
+# the wrong spot lands on inert dialog background, the extraction runs happily
+# to completion, and the run still produces a 3-cancelled.png — of the progress
+# dialog, not the alert. It was (342, 138) until 2026-08-07, when the DLOG grew
+# from 80 to 110 points tall to make room for the progress bar and the button
+# moved down with it. Derive it from the resources rather than guessing:
+# DLOG 128 is at (top 80, left 80) and the Cancel item's DITL rect is
+# {78, 220, 98, 300}, so the centre is (80+260, 80+88).
+PROGRESS_CANCEL = (340, 168)
 
 # Standard File's Drive button, one row above Open — the row that a mis-aimed
 # click once landed on by accident (see above). With two volumes mounted it

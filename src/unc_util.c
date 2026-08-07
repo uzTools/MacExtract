@@ -46,17 +46,17 @@ int unc_progress_add(UncProgressState *ps, uint32_t n)
     ps->since_tick += n;
     if (ps->since_tick >= UNC_PROGRESS_STEP) {
         ps->since_tick = 0;
-        if (ps->prog && ps->prog->tick &&
+        if (!ps->hold && ps->prog && ps->prog->tick &&
             !ps->prog->tick(ps->prog->ctx, ps->done, ps->total))
             return UNC_ERR_ABORTED;
     }
     return UNC_OK;
 }
 
-int unc_progress_poll(UncProgressState *ps)
+int unc_progress_at(UncProgressState *ps, uint32_t done)
 {
     if (ps && ps->prog && ps->prog->tick &&
-        !ps->prog->tick(ps->prog->ctx, ps->done, ps->total))
+        !ps->prog->tick(ps->prog->ctx, done, ps->total))
         return UNC_ERR_ABORTED;
     return UNC_OK;
 }

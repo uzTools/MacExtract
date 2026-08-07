@@ -355,18 +355,31 @@ CRC-32 read-back, the same twelve formats:
 
     tools/vmac/run.py --system Sys7.img --list tools/vmac/sample.txt
 
-Engine peak heap is **identical to System 6.0.8 on every fixture** (e.g.
-`derived-RWAsm_Folder.sit` 643.2 KB, `derived-Library_ISBN_Barcoder.sit`
-1810.8 KB, `derived-PuzzleGetter_0.8.sit` 710.6 KB), which is the expected
-result — the engine allocates through the same callback and never asks the
-system for anything — but it had never been shown.
+Engine peak heap is **identical to System 6.0.8 at the same memory size on
+every fixture**, which is the expected result — the engine allocates through
+the same callback and never asks the system for anything — but it had never
+been shown. Re-measured with the final build on 2026-08-07:
+`derived-RWAsm_Folder.sit` 160,766 B, `derived-KeyGraphics.sit` 181,774 B,
+`derived-Troi-ClipSave-Plug-in1.1.sit` 660,262 B. (The figures this paragraph
+carried before — 643.2 KB, 1810.8 KB, 710.6 KB — predate the 2026-08-03 block
+sizing and were never refreshed.)
 
-**System 7.0.1 does not run at 1 MB at all.** A 1 MB probe painted nothing in
-180 s: not a failed extraction, a system that cannot boot. System 7 wants 2 MB
-and the floor-target machine has half of it. This is not a defect in the
-application and there is no 1 MB row for this tier — **the 1 MB floor target
-is System 6, and only System 6.** The application's own memory floor is
-unchanged and is still demonstrated by the 44/44 System 6.0.8 run below.
+**Where this tier and the 1 MB tier disagree is the whole point of the
+adaptive inverse BWT, and it is visible in one number.** Same binary, same
+fixtures:
+
+| fixture | System 7, 4 MB | System 6, 1 MB |
+|---|---|---|
+| `derived-a2basic.dmg.sit` | 1,031,525 B (transform table) | 560,589 B (sampled index) |
+| `derived-Library_ISBN_Barcoder.sit` | 1,682,142 B (transform table) | 614,134 B (sampled index) |
+
+Given room, the decoder takes the fast table and spends 1.0 and 1.6 MB on it.
+Given a 1 MB machine, the table's allocation fails and it takes the sampled
+index instead. Nothing selects this but the allocator saying no, and both
+columns are byte-exact.
+
+**This tier is 4 MB.** **The 1 MB floor target is System 6, and only
+System 6**, and it is demonstrated by the 44/44 run below.
 
 ## Floor target verification (Mini vMac — System 6.0.8, **1 MB** Mac Plus, 68000)
 

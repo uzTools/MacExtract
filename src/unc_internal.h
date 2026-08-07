@@ -77,19 +77,26 @@ typedef struct UncProgressState {
     uint32_t     total;      /* archive size or UNC_SIZE_UNKNOWN */
     uint32_t     done;       /* bytes consumed so far */
     uint32_t     since_tick; /* bytes since last tick */
+    uint32_t     hold;       /* nonzero: accumulate, but do not tick */
 } UncProgressState;
 
 /* Account for n consumed input bytes; fires prog->tick at bounded
- * intervals. Returns UNC_OK or UNC_ERR_ABORTED. */
+ * intervals, unless ps->hold is set. Returns UNC_OK or UNC_ERR_ABORTED. */
 int unc_progress_add(UncProgressState *ps, uint32_t n);
 
-/* Fire prog->tick without moving the byte count, and without the
- * interval check — the caller decides when. For decoders that spend a
- * long time turning input they have ALREADY consumed into output, where
- * the input-driven pump goes quiet: the Arsenic walk under the sampled
- * index is minutes of work between two reads. Returns UNC_OK or
- * UNC_ERR_ABORTED. Tolerates a NULL ps. */
-int unc_progress_poll(UncProgressState *ps);
+/* Fire prog->tick at an explicit position, ignoring both the interval
+ * check and ps->hold. Returns UNC_OK or UNC_ERR_ABORTED; tolerates a
+ * NULL ps.
+ *
+ * This exists for decoders whose input position is a bad description of
+ * their progress. Arsenic decodes a whole block from the input and only
+ * then walks it into output, so the input pump runs to the end of the
+ * fork and then goes silent for as long as the walk takes — minutes,
+ * under the sampled index. Such a decoder sets ps->hold, keeps the
+ * input pump quiet, and reports its own position interpolated across
+ * the fork's input span instead. The number the UI sees stays in one
+ * unit (bytes of archive consumed) and stays monotonic. */
+int unc_progress_at(UncProgressState *ps, uint32_t done);
 
 /* ------------------------------------------------------------------ */
 /* Buffered byte-wise input reader                                    */

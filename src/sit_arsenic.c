@@ -297,6 +297,16 @@ static void ars_inverse_bwt(uint32_t *transform, const uint8_t *block,
 }
 #endif
 
+/* Output bytes between progress reports. Much finer than the engine's
+ * input-side UNC_PROGRESS_STEP (8192) because this decoder's bytes are
+ * expensive: under the sampled index a2basic emits 205,019 bytes in 927 s
+ * on a Mac Plus, so an 8 KB interval would tick once every 37 seconds —
+ * a bar that jumps in 4% steps and a Cancel button that takes half a
+ * minute to answer. At 256 the same run reports ~800 times, about 1.2 s
+ * apart. The cost is a compare per output byte and a callback that the
+ * Mac shell rate-limits to 10 Hz anyway. */
+#define ARS_PROGRESS_STEP 256u
+
 /* Samples per byte value at the first attempt. Halved until the index fits;
  * one sample per value (target 1) is the floor and costs at most 2 KB.
  * Overridable at compile time so a test build can force the deep end of
@@ -582,16 +592,40 @@ static int ars_read_block(Arsenic *a, UncAlloc *al)
     return ars_bwt_prepare(a, al);
 }
 
+/* span * num / den in 32-bit arithmetic (68000 discipline: no 64-bit in
+ * hot paths). Shifts num and den down together until the product cannot
+ * overflow, which costs at most one part in 2^16 of precision — far finer
+ * than a progress bar can show. */
+static uint32_t ars_scale(uint32_t span, uint32_t num, uint32_t den)
+{
+    if (den == 0 || span == 0) return 0;
+    if (num > den) num = den;
+    while (num != 0 && num > 0xFFFFFFFFu / span) { num >>= 1; den >>= 1; }
+    if (den == 0) return span;
+    return span * num / den;
+}
+
 int unc_arsenic_decode(UncBufIn *in, UncAlloc *al, uint32_t outlen,
                        int (*put)(void *ctx, uint8_t b), void *pctx)
 {
     Arsenic *a;
     uint32_t produced = 0;
+    uint32_t nexttick = 0;
     int err = UNC_OK;
     int32_t v;
+    /* This fork's input span, for reporting progress by OUTPUT. Arsenic
+     * decodes a whole block before emitting any of it, so the input
+     * position races to the end of the fork and then stops moving while
+     * the walk runs — which under the sampled index is most of the time.
+     * Hold the input pump and interpolate across the span instead. */
+    uint32_t pbase = in->ps ? in->ps->done : 0;
+    uint32_t pspan = in->limit;
+    uint32_t phold = in->ps ? in->ps->hold : 0;
+
+    if (in->ps) in->ps->hold = 1;
 
     a = (Arsenic *)unc_alloc(al, (uint32_t)sizeof *a);
-    if (!a) return UNC_ERR_MEM;
+    if (!a) { if (in->ps) in->ps->hold = phold; return UNC_ERR_MEM; }
     a->block = NULL;
     a->transform = NULL;
     a->index = NULL;
@@ -645,19 +679,26 @@ int unc_arsenic_decode(UncBufIn *in, UncAlloc *al, uint32_t outlen,
     while (produced < outlen) {
         uint8_t outbyte;
 
+        /* The only progress this decoder reports: the input pump is held
+         * for the whole fork (see pbase/pspan above), so this is what
+         * keeps the dialog alive, moves the bar and notices a Cancel.
+         * Driven by OUTPUT, on both paths — the walk is where the time
+         * goes under the sampled index, and it reads no input at all.
+         * Thresholded rather than tested with a mask because `retry`
+         * below re-enters the loop body without advancing `produced`. */
+        if (produced >= nexttick) {
+            nexttick = produced + ARS_PROGRESS_STEP;
+            err = unc_progress_at(in->ps,
+                                  pbase + ars_scale(pspan, produced, outlen));
+            if (err != UNC_OK) goto out;
+        }
+
         if (a->repeat) {
             a->repeat--;
             outbyte = a->last;
         } else {
             int32_t byte;
 retry:
-            /* Under the sampled index a block's walk is minutes of work
-             * with no input read in it, so the input-driven pump cannot
-             * keep the dialog alive or notice a Cancel. Poll it here. The
-             * fast path is left alone: it never runs long enough. */
-            if (a->index && (produced & (UNC_PROGRESS_STEP - 1u)) == 0 &&
-                (err = unc_progress_poll(in->ps)) != UNC_OK) goto out;
-
             if (a->bytecount >= a->numbytes) {
                 if (a->endofblocks) { err = UNC_ERR_TRUNCATED; goto out; }
                 if ((err = ars_read_block(a, al)) != UNC_OK) goto out;
@@ -705,5 +746,6 @@ out:
     unc_free(al, a->transform);
     unc_free(al, a->block);
     unc_free(al, a);
+    if (in->ps) in->ps->hold = phold;
     return err;
 }
