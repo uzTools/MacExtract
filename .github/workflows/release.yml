@@ -1,0 +1,50 @@
+name: release
+
+# Turns a pushed tag into a downloadable release.
+#
+# It does NOT build the application. Retro68 is a large cross-toolchain, and
+# dist/ is committed precisely so that somebody with an old Mac and no
+# compiler can download the thing — see the rule in CLAUDE.md that dist/ is
+# rebuilt and committed alongside any change to mac/ or src/. This workflow
+# publishes what is already in the tree, and fails loudly if it is missing.
+#
+# Authentication is the runner's own GITHUB_TOKEN. That is the whole point of
+# doing it this way: the repository is pushed to with a DEPLOY KEY, which
+# signs git over SSH and cannot talk to the Releases REST API at all, so the
+# alternative was issuing a personal access token to the machine that holds
+# the deploy key. This needs no new credential.
+#
+# `gh` is preinstalled on GitHub-hosted runners, so there is no third-party
+# action here either.
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write        # required to create a release
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # A release with a missing or empty asset is worse than no release: it
+      # looks finished. Check before publishing, not after.
+      - name: Check the artifacts are present
+        run: |
+          set -eu
+          for f in dist/unclassic.bin dist/unclassic.dsk dist/README.txt; do
+            test -s "$f" || { echo "release: $f missing or empty"; exit 1; }
+          done
+          ls -l dist/
+
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            dist/unclassic.bin dist/unclassic.dsk \
+            --title "$GITHUB_REF_NAME" \
+            --notes-file dist/README.txt
