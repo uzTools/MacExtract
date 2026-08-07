@@ -145,6 +145,15 @@ the second one rather than porting the first one's answer. (DECISIONS.md,
   matches that shell's own command line, so it kills itself before the
   work starts. It looks like the run crashed instantly. Match on the
   executable (`pkill -x minivmac`) or kill a captured pid.
+- **A sentinel echoed outside the redirect never reaches the log.**
+  `./ci.sh > ci.log 2>&1; echo "CI exit $?"` sends the sentinel to the
+  shell's stdout, not into `ci.log`, so a companion
+  `until grep -q "CI exit" ci.log; do sleep 30; done` waits for a string
+  that can never appear. The watched job finishes fine and the watcher
+  polls for ever; five of them accumulated in one session before anyone
+  noticed. Put the sentinel inside the redirect —
+  `{ ./ci.sh; echo "CI exit $?"; } > ci.log 2>&1` — or, better, do not
+  hand-roll a watcher: a backgrounded command notifies on exit by itself.
 - The Mac OS 9 pointer does not work at all; drive that guest from the
   keyboard. Mini vMac's mouse is fine.
 - An emulator run is minutes; do not poll it every few seconds, and do not
