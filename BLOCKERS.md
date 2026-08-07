@@ -9,7 +9,7 @@ every system the project claims:
 | tier | result |
 |---|---|
 | System 6.0.8, 4 MB Mac Plus (Mini vMac, a true 68000) | 44/44 sampled fixtures |
-| System 6.0.8, **1 MB** — the floor target | 42/44; the two are StuffIt 5 budget refusals, each missing one entry |
+| System 6.0.8, **1 MB** — the floor target | **44/44** (2026-08-07); no memory-budget refusals remain |
 | System 7.0.1, 4 MB | 44/44 |
 | Mac OS 9.2 (QEMU PowerPC, 68LC040 emulation) | 13/13, plus HFS+ and the `SIZE` partition |
 
@@ -339,7 +339,11 @@ Why `Troi-ClipSave` refused at 650 KB when ~700 KB was free is now
 **established, and it passes** (2026-08-06): the Arsenic block's doubling
 growth left a trail of freed steps that a geometric sequence can never reuse,
 stranding 125,614 B. Sizing the first allocation from the entry removes it.
-DECISIONS.md 2026-08-06, OPEN_ITEMS.md section 5. The floor target is 42/44.
+DECISIONS.md 2026-08-06, OPEN_ITEMS.md section 5. The floor target is **44/44**
+as of 2026-08-07, when the last two refusals went with it — those were a
+genuine shortage rather than a placement problem, and were closed by making the
+inverse BWT need less memory rather than by finding it more (DECISIONS.md
+2026-08-07).
 
 ### Corrected figures and superseded write-ups
 

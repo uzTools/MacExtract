@@ -13,11 +13,14 @@
 #     vMac.ROM          128 KB Macintosh Plus ROM (checksum 4D1F8172)
 #     System6.hfv       20 MB System 6.0.8 hard-disk image
 #     Sys7.img          10 MB System 7.0.1 hard-disk image (the System 7 tier)
-#     mv-4M/minivmac    emulator built for a 4 MB Mac Plus
-#     mv-1M/minivmac    emulator built for a 1 MB Mac Plus (the floor target)
+#     mv-4M/minivmac    4 MB Mac Plus, all out
+#     mv-1M/minivmac    1 MB Mac Plus, all out (the floor target)
+#     mv-4M-1x/minivmac 4 MB Mac Plus, authentic 7 MHz
+#     mv-1M-1x/minivmac 1 MB Mac Plus, authentic 7 MHz
 #
-# Two emulator builds exist because Mini vMac's RAM size is a COMPILE-time
-# option, and the 1 MB machine is the project's floor target.
+# Four emulator builds exist because BOTH RAM size and speed are COMPILE-time
+# options in Mini vMac, and this project makes claims along both axes: 1 MB is
+# the floor target, and only a 1x build may be quoted for timing.
 #
 # Usage:  tools/vmac/setup.sh        (idempotent; skips what is already there)
 set -e
@@ -84,7 +87,7 @@ PY
     rm -f macroms.zip
 fi
 
-# ---- build the two emulators ---------------------------------------------
+# ---- build the four emulators ---------------------------------------------
 # Mini vMac's setup tool emits a shell script that writes the config headers
 # and a Makefile; -speed a is "all out" (see run.py --speed for why the
 # default is NOT authentic 1x).
@@ -115,5 +118,12 @@ build_mv mv-1M 1M a
 # screenshot can be taken — and it is the only build any timing claim may be
 # drawn from.
 build_mv mv-4M-1x 4M z
+
+# 1 MB at 1x. Added 2026-08-07: the StuffIt 5 decoder only falls back to its
+# low-memory inverse BWT when memory is tight, so the cost of that fallback
+# cannot be timed on a 4 MB machine — it never takes that path there — and
+# cannot be timed on mv-1M either, which is all-out. Both existing 1x claims
+# and both existing 1 MB claims needed this fourth combination.
+build_mv mv-1M-1x 1M z
 
 echo "setup: ready in $VMAC_HOME"

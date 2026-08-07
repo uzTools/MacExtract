@@ -107,23 +107,38 @@ reads like a Mac-side bug and is wrong on the elapsed time as well; it is now
 its own verdict. **Re-run an `EMUDIED` fixture before drawing any conclusion
 from it.**
 
-**Timing has been attempted and is not settled.** `run.py --emu mv-4M-1x`
-runs the authentic build and splits boot from extraction (the app paints its
-"alive" grid before touching a disk, so the harness can see where work
-starts), and `timing.txt` is the set to measure. It has not produced a usable
-table: a 306 KB BinHex did not finish in fifteen minutes at 1x. Read the
-BLOCKERS.md section before trying again — in particular, **do not poll every
-few seconds**, because decoding a 512x342 grid in Python steals the CPU from
-the emulator you are timing.
+**Timing is settled.** `run.py --emu mv-4M-1x` runs an authentic build and
+splits boot from extraction (the app paints its "alive" grid before touching a
+disk, so the harness can see where work starts), and `timing.txt` is the set
+to measure. 8/8 since 2026-08-02, plus StuffIt 5 / Arsenic on 2026-08-07;
+FORMATS.md has the tables. This paragraph read "attempted and not settled"
+until 2026-08-07, long after the measurements existed — the 306 KB BinHex that
+"did not finish in fifteen minutes" simply takes 150 s, and every timeout
+chosen for it expired mid-run because its decode rate is very non-uniform.
+Still true and still the trap: **do not poll every few seconds**, because
+decoding a 512x342 grid in Python steals the CPU from the emulator you are
+timing.
 
-**Wall-clock time is not Mac Plus time — except in the 1x build.** `setup.sh`
-produces three emulators: `mv-4M` and `mv-1M` run *all out*, as fast as the
-host allows, which is what the fixture sweeps use because correctness does not
-depend on speed and 44 fixtures x 2 memory sizes at Mac Plus speed would take
-all day. `mv-4M-1x` runs at authentic 7 MHz timing and is the **only** build a
-timing claim may be drawn from. `interactive.py` defaults to it, because at
-all-out speed the extraction is over before the progress dialog can be
-photographed and Cmd-. has nothing left to cancel.
+**Wall-clock time is not Mac Plus time — except in a 1x build.** `setup.sh`
+produces four emulators, because RAM size and speed are both compile-time
+options. `mv-4M` and `mv-1M` run *all out*, as fast as the host allows, which
+is what the fixture sweeps use because correctness does not depend on speed
+and 44 fixtures x 2 memory sizes at Mac Plus speed would take all day.
+`mv-4M-1x` and `mv-1M-1x` run at authentic 7 MHz and are the **only** builds a
+timing claim may be drawn from. `interactive.py` defaults to `mv-4M-1x`,
+because at all-out speed the extraction is over before the progress dialog can
+be photographed and Cmd-. has nothing left to cancel.
+
+`mv-1M-1x` was added on 2026-08-07 for one reason worth remembering: the
+StuffIt 5 decoder only falls back to its low-memory inverse BWT when memory is
+tight, so **the cost of that fallback is not measurable on any of the other
+three** — a 4 MB machine never takes the path, and both all-out builds cannot
+be quoted for time. A claim that lives at the intersection of two axes needs a
+build at that intersection.
+
+**This box has one core.** At 1x the emulator paces itself against real time,
+so anything else CPU-heavy — `./ci.sh`, a corpus sweep — inflates the number
+you are measuring. Run timing alone.
 
 **`interactive.py` is not self-checking, by design.** It guarantees the same
 clicks in the same order and writes a numbered screenshot per step; judging

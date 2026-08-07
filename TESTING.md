@@ -82,13 +82,45 @@ can read it.
    `-nr` to disable unwrapping.
 5. **Budget sweep** (`tools/run_budget.py`): the whole corpus under
    `--budget 409600` (a small Mac). Everything verifies fully except
-   StuffIt 5/Arsenic (512 KB blocks → clean per-entry "out of
-   memory"); results in FORMATS.md.
+   part of StuffIt 5/Arsenic; since the sampled inverse BWT landed
+   (2026-08-07) that is **23 of 31** fixtures rather than 11, the rest
+   giving a clean per-entry "out of memory". Results in FORMATS.md.
 6. **Fuzzing** (`tools/fuzz.py`): seeded, reproducible
    mutation/splice/magic-garbage cases through `unclassic t` under the
    sanitizer build; nonzero exits are fine, signals/sanitizer
    aborts/hangs fail. 4,000 cases at M9; every CI run does a 150-case
    smoke.
+
+## The sampled inverse BWT (`ci.sh` variant 1b, added 2026-08-07)
+
+The Arsenic decoder picks between a 4-bytes-per-byte transform table and a
+sampled occurrence index **by trying to allocate the table and failing**
+(DECISIONS.md). Nothing an unconstrained run does reaches the fallback, so
+CI forces it three ways:
+
+- `-DUNC_ARS_FORCE_SAMPLED` compiles the fast path out. The whole
+  769-fixture diff suite and all 7,690 robustness variants run through the
+  fallback under ASan+UBSan, and must be byte-exact.
+- `--budget 678392` (what a 1 MB Mac Plus leaves the engine) on the 31
+  StuffIt 5 fixtures, with the normal adaptive build. This is the only step
+  that exercises *choosing*, and the halving of `target`.
+- `-DARS_INDEX_TARGET=1` forces the deep end of the dial, where a query's
+  scan spans most of the block. Byte-exactness there is checked on StuffIt 5
+  fixtures up to 100 KB (`--max-size`), without sanitizers, because at
+  `target=1` the walk is quadratic: 8.4 minutes for the full set against
+  ~25 s for the capped subset.
+
+**What these cannot see.** (a) *Time on a 68000.* Every figure above is x86;
+the emulator harness runs "all out" and the 1x timing list
+(`tools/vmac/timing.txt`) samples StuffIt 5 with a 4,611 B fixture, far too
+small to reach the fallback. One 1x measurement now exists —
+`derived-a2basic.dmg.sit`, 537 s fast vs 927 s sampled, FORMATS.md — but it is
+a single fixture and CI cannot produce it. (b) *The progress and Cancel path
+under the sampled walk.*
+`unc_progress_poll` exists because that walk produces output without reading
+input; it is Mac-side and no Linux harness observes it. (c) *The middle of
+the dial.* Only `target=1024` (forced) and `target=1` are pinned; the values
+in between are reached only incidentally by the budget run.
 
 ## On-Mac layers (not in `ci.sh` — they need an emulator)
 

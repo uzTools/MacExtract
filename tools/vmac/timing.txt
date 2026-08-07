@@ -33,3 +33,16 @@ derived-Expand_Now_1.0.1.sea               # Now Compress   61824 B
 
 # --- a small archive, for the other end of the range ----------------------
 derived-Export.sit                         # StuffIt         1615 B
+
+# --- StuffIt 5 / Arsenic, added 2026-08-07 --------------------------------
+# The list above samples StuffIt 5 with derived-KeyGraphics.sit (4,611 B),
+# which is far too small to make the decoder fall back to its low-memory
+# inverse BWT — so it measured the fast path and nothing else. This one does
+# reach the fallback at 1 MB, and is the only Arsenic 1x figure there is:
+#
+#     tools/vmac/run.py --emu mv-4M-1x --mem 4M ...   537 s  (fast table)
+#     tools/vmac/run.py --emu mv-1M-1x --mem 1M ...   927 s  (sampled index)
+#
+# derived-Library_ISBN_Barcoder.sit is the sample's worst case (641 KB out)
+# and has NOT been timed; allow --timeout 7200 if you try it.
+derived-a2basic.dmg.sit                    # StuffIt 5     152942 B (Arsenic)

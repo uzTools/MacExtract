@@ -23,6 +23,36 @@ UNCLASSIC=build/san/unclassic sh tests/run_robustness.sh || fail "robustness tes
 python3 tools/run_unwrap.py build/san/unclassic || fail "envelope unwrap tests"
 python3 tools/fuzz.py -n 150 --seed 7 --unclassic build/san/unclassic || fail "fuzz smoke"
 
+echo "=== variant 1b: sampled inverse BWT (forced, + budget) ==="
+# The Arsenic decoder falls back to a sampled occurrence index when the
+# 4-bytes-per-byte transform vector does not fit. It is chosen by an
+# allocation failing, so an unconstrained run never reaches it: force it,
+# and separately run StuffIt 5 under the budget a 1 MB Mac Plus leaves
+# the engine, which is what picks the fallback's sampling rate for real.
+make BUILD=build/ars CFLAGS="-O1 -g -fsanitize=address,undefined,alignment \
+     -fno-sanitize-recover=all -DUNC_ARS_FORCE_SAMPLED" all >/dev/null \
+     || fail "forced-sampled build"
+./build/ars/unit_tests || fail "unit tests (forced sampled)"
+UNCLASSIC=build/ars/unclassic sh tests/run_diff.sh || fail "diff tests (forced sampled)"
+UNCLASSIC=build/ars/unclassic sh tests/run_robustness.sh \
+    || fail "robustness tests (forced sampled)"
+python3 tools/run_diff.py --unclassic build/san/unclassic \
+    --format "StuffIt 5" --budget 678392 || fail "StuffIt 5 diff under 1 MB budget"
+
+# The deep end of the sampling dial, which neither run above reaches: a
+# budget big enough to hold the block at all is big enough to keep `target`
+# high, so no real run makes a query whose scan spans most of the block.
+# Force target=1 and check byte-exactness there. No sanitizers (variant 1b
+# already covers this code under ASan at the default target) and size-capped,
+# because at target=1 the walk is quadratic — the whole StuffIt 5 set costs
+# 8.4 min this way, the capped subset ~25 s.
+make BUILD=build/ars1 \
+     CFLAGS="-O2 -DUNC_ARS_FORCE_SAMPLED -DARS_INDEX_TARGET=1u" all >/dev/null \
+     || fail "target=1 build"
+./build/ars1/unit_tests || fail "unit tests (target=1)"
+python3 tools/run_diff.py --unclassic build/ars1/unclassic \
+    --format "StuffIt 5" --max-size 100000 || fail "StuffIt 5 diff at target=1"
+
 echo "=== variant 3b: Mac sink (native ASan + big-endian m68k) ==="
 sh tests/run_mac_sink.sh || fail "mac sink tests"
 

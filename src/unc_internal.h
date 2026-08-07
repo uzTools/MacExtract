@@ -83,6 +83,14 @@ typedef struct UncProgressState {
  * intervals. Returns UNC_OK or UNC_ERR_ABORTED. */
 int unc_progress_add(UncProgressState *ps, uint32_t n);
 
+/* Fire prog->tick without moving the byte count, and without the
+ * interval check — the caller decides when. For decoders that spend a
+ * long time turning input they have ALREADY consumed into output, where
+ * the input-driven pump goes quiet: the Arsenic walk under the sampled
+ * index is minutes of work between two reads. Returns UNC_OK or
+ * UNC_ERR_ABORTED. Tolerates a NULL ps. */
+int unc_progress_poll(UncProgressState *ps);
+
 /* ------------------------------------------------------------------ */
 /* Buffered byte-wise input reader                                    */
 /* Many decoders consume input a byte at a time; UncBufIn batches the */

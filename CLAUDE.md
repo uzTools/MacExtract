@@ -11,7 +11,7 @@ The engine is the product. The Mac app is a thin shell.
 
 ## Current state — read before working
 
-M0–M10 are **DONE**. The engine passes a 769-fixture differential suite against `unar`, and the Mac shell extracts byte-exact on a real System 6.0.8 Mac Plus under Mini vMac (44/44 sampled fixtures at 4 MB, 42/44 at the 1 MB floor, the remainder being documented StuffIt 5 memory-budget refusals).
+M0–M10 are **DONE**. The engine passes a 769-fixture differential suite against `unar`, and the Mac shell extracts byte-exact on a real System 6.0.8 Mac Plus under Mini vMac — **44/44 sampled fixtures at 4 MB and 44/44 at the 1 MB floor** (2026-08-07; there are no memory-budget refusals left).
 
 It runs on all three systems the project claims: **System 6.0.8 and System 7.0.1** under Mini vMac (a true 68000), and **Mac OS 9.2** under QEMU PowerPC through the 68LC040 emulator, where 13/13 of a format sample is byte-exact, extraction onto **HFS+** is verified, and the `SIZE` partition is honoured by the Process Manager.
 
@@ -33,34 +33,43 @@ It runs on all three systems the project claims: **System 6.0.8 and System 7.0.1
 
 Read them at the start of every session. Where these files disagree with each other, treat it as a bug to fix, not a fact to choose from.
 
-## Where to start (handoff, 2026-08-06)
+## Where to start (handoff, 2026-08-07)
 
 The repository is on GitHub as a **private** repo, `main`, tagged through
 `v0.4`. Working tree clean, `./ci.sh` green, nothing in flight.
 
-**The 1 MB floor is 42/44 as of 2026-08-06**, and the two that remain need a
-different kind of work from everything that came before.
+**The 1 MB floor is 44/44 as of 2026-08-07, and the StuffIt 5 / Arsenic
+capability gap is closed.** All six sampled StuffIt 5 fixtures extract every
+entry byte-exact on a 1 MB Mac Plus. There is no remaining "this format needs
+a bigger machine" caveat anywhere in the project.
 
-`derived-Troi-ClipSave-Plug-in1.1.sit` was closed by finding that the Arsenic
-block's doubling growth left a TRAIL — 8+16+32+64 KB of freed steps under the
-final 128 KB block, which a geometric sequence can never reuse for the step
-after it. That stranded 125,614 B and made a 498,548 B request fail against a
-468,126 B run while the budget still had 678 KB. The first allocation is now
-sized from the entry, `min(outlen, blocksize)`. Everything about this is in
-OPEN_ITEMS.md section 5 and DECISIONS.md 2026-08-06.
+The last two — `a2basic.dmg` and `Library_ISBN` — were a genuine shortage
+rather than a placement problem, so they were closed by making the decoder
+NEED less rather than by finding it more memory. `ars_inverse_bwt` builds a
+transform vector costing 4 bytes per block byte; when that allocation fails,
+`ars_index_build` substitutes a sampled occurrence index (one sample per
+`1 << shift[c]` occurrences of each byte value) and the walk scans forward
+from the nearest sample. Adaptive per block, fast path tried first, and it
+costs a machine that never needs it exactly 8 bytes. DECISIONS.md 2026-08-07,
+FORMATS.md "Floor target verification".
 
-**The remaining two are a genuine shortage, not a placement problem**, and the
-scope is fully worked out in OPEN_ITEMS.md section 5: `a2basic.dmg` needs
-1.06 MB and `Library_ISBN` 1.65 MB against a 678,392 B budget on a machine with
-760,312 B free. Only reducing the requirement reaches them, and the change that
-does is replacing the 4-bytes-per-byte inverse-BWT vector with a sampled-rank
-walk (`ars_inverse_bwt`, 17 lines). Estimated ~245 KB and ~379 KB, both inside
-budget; the unmeasured risk is time on a 7 MHz 68000, and `s` is the dial. The
-maintainer's instruction was to do this **after** other gains are exhausted.
+Two things about that change are worth carrying forward:
+
+- **A time-for-memory dial makes "peak heap" stop meaning "requirement".**
+  The decoder halves its sampling target only until the allocator says yes, so
+  under a cap it spends the cap. `Library_ISBN` peaks at 614,080 B under a
+  678,392 B budget and extracts fully from 393,028 B. If you compare a
+  peak-under-budget against a predicted requirement you will conclude the
+  prediction was 60% out when it was accurate. **Bisect the cap.**
+- **Estimate the thing you are changing.** This prediction was within 200 bytes
+  on one fixture and 3.6% on the other, because it estimated one allocation
+  inside one entry. The method 13 estimate a day earlier missed badly because
+  it estimated an aggregate over a distribution. Same author, same week, same
+  confidence — the difference was the shape of the quantity.
 
 Several remedies in this area are ruled out BY MEASUREMENT and listed in
-section 5 as do-not-retry: `MaxMem()` before a retry, and relocatable blocks
-moved high with `MoveHHi`.
+OPEN_ITEMS.md section 5 as do-not-retry: `MaxMem()` before a retry, and
+relocatable blocks moved high with `MoveHHi`.
 
 The method 13 LZSS window lead is DONE (2026-08-06): the window is now sized
 from the entry rather than from the format's 64 KB, 34 fixtures improved, none

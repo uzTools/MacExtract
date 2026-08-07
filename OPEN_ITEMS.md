@@ -1,4 +1,4 @@
-# OPEN_ITEMS.md — what is missing, as of 2026-08-03
+# OPEN_ITEMS.md — what is missing, as of 2026-08-07
 
 A standing audit of the gaps: things not done, things done but not verified,
 and things this repository asserts more confidently than the evidence supports.
@@ -77,72 +77,24 @@ rather than repeated.
 | "DECISIONS.md is truncated" | 2026-08-02 | it was not; the natural response — "restoring" the section — would have destroyed correct history. `git diff HEAD` answers it in seconds |
 | A hypothesis filed under *harness lessons* | 2026-08-01 | filing a hypothesis as a lesson hides it: this one implied the shipped UI was broken and nobody looked. **This file is the place to look for others of the same shape** |
 | The LZW table sized from `maxbits` rather than the input | 2026-08-03 | growth-on-demand and one-shot sizing look interchangeable and are not: copy-based growth has an `old + new` transient, so **where the buffer IS the allocation it can lose to doing nothing** (measured, 274,432 → 405,504 B). Bound it from the input instead. DECISIONS.md |
+| StuffIt 5 / Arsenic incomplete at the 1 MB floor (42/44) | 2026-08-07 | the last four gains were all "allocate less of what the data does not use"; this one had to **reduce the requirement** instead, and the tell was that no placement or reserve tuning could close a 410 KB shortfall on a 760 KB machine. Also: **estimate the thing you are changing.** The prediction here was within 200 B on one fixture and 3.6% on the other because it estimated a single allocation inside one entry; the method 13 estimate a day earlier missed badly because it estimated an aggregate over a distribution. DECISIONS.md |
+| "peak heap under a budget" read as a requirement | 2026-08-07 | a decoder with a time-for-memory dial spends whatever the cap allows, so its peak tracks the CAP, not its needs. Comparing such a peak against a predicted requirement compares two different quantities — **bisect the cap** for the requirement. This nearly made the sampled BWT look 2.3x worse than predicted when it was in fact accurate |
 
 ---
 
 ## 5. Capability gaps that are deliberate, but still gaps
 
-- **StuffIt 5 / Arsenic on a 1 MB machine: 4 of 6 sampled fixtures fully, the
-  other 2 missing exactly one entry each** (2026-08-06, 42/44 on the sweep).
-  The engine declines the entry it cannot afford and carries on, which is why
-  `Library_ISBN` still delivers 33 of 34 files.
+- **StuffIt 5 / Arsenic on a 1 MB machine: CLOSED 2026-08-07, 44/44.** Kept
+  here only as a pointer: all six sampled StuffIt 5 fixtures extract every
+  entry byte-exact on a 1 MB Mac Plus, so this section no longer has an
+  Arsenic capability gap. Results in FORMATS.md ("Floor target verification"),
+  reasoning in DECISIONS.md 2026-08-07, method in the section 4 table above.
 
-  **The contiguity half is CLOSED** (2026-08-06).
-  `derived-Troi-ClipSave-Plug-in1.1.sit` passes. Its refused entry was never
-  short of memory — it fit the budget with 12 KB to spare and failed on a
-  498,548 B request against a 468,126 B largest run. The stranded ~126 KB was
-  the Arsenic block's own doubling trail: growing 8K→16K→32K→64K→128K frees
-  each step, and a geometric trail can never satisfy the step after it, so
-  8+16+32+64 KB of holes sat under the final block (122,880 B, against 125,614 B
-  measured). Sizing the first allocation from the entry —
-  `min(outlen, blocksize)` — removes it. DECISIONS.md 2026-08-06.
-
-  Ruled out along the way, by measurement, so **do not retry**: `MaxMem()`
-  before a retry (compaction may not move a `NewPtr`); and relocatable blocks
-  moved high — `MoveHHi` demonstrably works, 205,828 → 803,634, and changed
-  `MaxBlock` at the refusal by under 500 B, because the trail was never about
-  where the live blocks sat.
-
-  **What remains is the genuine-shortage half, and only a cheaper inverse BWT
-  reaches it.** Against the 678,392 B budget a 1 MB machine gives the engine:
-
-  | fixture | fill | 4x transform | needs | vs budget |
-  |---|---|---|---|---|
-  | `a2basic.dmg` | 197,515 | 790,060 | 1,088,588 | +410,196 |
-  | `Library_ISBN` | 323,384 | 1,293,536 | 1,854,208 | +1,175,816 |
-
-  `a2basic` needs 1.06 MB on a machine whose entire free heap is 760,312 B, so
-  no allocation placement, reserve tuning or defragmentation can reach it. Only
-  reducing the REQUIREMENT can.
-
-  **The change that would: stop building the 4-bytes-per-byte inverse-BWT
-  vector.** It is the dominant term in both rows. `ars_inverse_bwt` is 17
-  self-contained lines building the standard T vector; a sampled-rank walk
-  keeping a checkpoint every `s` positions needs `fill/16` at `s`=64 instead of
-  `fill*4`:
-
-  | fixture | needs now | with sampled ranks (estimate) |
-  |---|---|---|
-  | `a2basic.dmg` | 1,088,588 | ~245,699 |
-  | `Library_ISBN` | 1,854,208 | ~379,435 |
-
-  Both land inside the budget, and both under 400 KB — which would also move
-  the "11 of 31 fixtures extract fully under a 400 KB budget" figure in the †
-  footnote of FORMATS.md.
-
-  Cost, and the main risk: **time, and it is unmeasured.** Each output byte
-  needs a rank query costing up to `s` steps — ~21M inner iterations for
-  `Library_ISBN` at `s`=64, against the repo's existing 134 s benchmark for a
-  278 KB StuffIt. `s` is the dial. It can also be made adaptive — today's fast
-  path when the budget affords `fill*4`, the sampled path when it does not — so
-  a 4 MB machine pays nothing. Correctness is unusually cheap to establish: it
-  is engine-side and portable, so the 769-fixture suite and the 31 StuffIt 5
-  fixtures adjudicate it entirely on Linux, with no emulator run needed until
-  the end.
-
-  Ruled out by the same arithmetic: trimming capacity to the exact fill leaves
-  `a2basic` 345,567 B over and `Library_ISBN` 974,912 B over; shrinking the
-  80 KB reserve reaches neither.
+  Still **do not retry**, ruled out by measurement while this was open:
+  `MaxMem()` before a retry (compaction may not move a `NewPtr`), and
+  relocatable blocks moved high with `MoveHHi` (it demonstrably works,
+  205,828 → 803,634, and changed `MaxBlock` at the refusal by under 500 B —
+  the stranded heap was never about where the live blocks sat).
 
 - **Timing: MEASURED 2026-08-02, and closed.** Eight
   fixtures across eight formats at authentic 1x, 8/8: boot ~10 s, every
@@ -153,6 +105,24 @@ rather than repeated.
   anomaly, simply takes 150 s, and instrumenting the engine's byte counter
   (`-D UNC_AT_PROGRESS`) showed the rate is very non-uniform so every timeout
   chosen for it expired mid-run. **Timing is closed for every format sampled.**
+
+  **Reopened for Arsenic on 2026-08-07, then measured the same day — but only
+  once.** The 1x list samples StuffIt 5 with `derived-KeyGraphics.sit`,
+  4,611 B, far too small to reach the sampled inverse BWT, so the fallback's
+  cost on a 7 MHz 68000 was unmeasured. It now is, for one fixture:
+  `derived-a2basic.dmg.sit` extracts in **537 s** on the fast path (4 MB) and
+  **927 s** on the sampled path (1 MB) — 1.73x, on a 1 MB 1x emulator that had
+  to be built for it (`build_mv mv-1M-1x 1M z`). FORMATS.md has the table.
+
+  What is still open: **`derived-Library_ISBN_Barcoder.sit` has not been timed
+  at 1x.** It is the sample's worst case at 641 KB of output and extrapolates
+  to roughly an hour, which is an estimate. A run was started and abandoned
+  rather than let it collide with a 3600 s timeout, because a timeout is a
+  bound and would have been quotable as if it were a measurement. What would
+  close it: `tools/vmac/run.py --emu mv-1M-1x --mem 1M --timeout 7200` on that
+  fixture, one boot, and add the row to FORMATS.md. Nothing depends on it —
+  correctness is already 44/44 — but the project's "do I wait one minute or
+  twenty" answer currently rests on a single Arsenic data point.
 - **Out of scope by the brief, and still out:** compression, StuffIt X
   (`.sitx`), encrypted archives, multi-segment archives, disk-image extraction,
   Now Compress, and LZH *extraction* — LZH was the optional half of M8 and is

@@ -15,7 +15,7 @@ whole corpus for that format (engine allocations only, via
 | PackIt (.pit) | extract | store, Huffman; encrypted detected | 4 fixtures (1 real + 3 synthetic PMa4) | 9 KB | full |
 | Compact Pro (.cpt) | extract | RLE, LZH+RLE | 106 fixtures | 19 KB | full |
 | StuffIt classic (.sit) | extract | 0 store, 1 RLE90*, 2 LZW, 3 Huffman, 5 LZAH, 8 MW, 13 LZSS+Huffman; 6 fixed-Huffman NOT implemented‡; encrypted detected | 211 fixtures | 8–76 KB‖ | full |
-| StuffIt 5 (.sit) | extract | 0, 13, 15 Arsenic; encrypted detected | 31 fixtures | 0.15–2.53 MB† | 11 of 31 fixtures extract FULLY; the rest refuse per entry |
+| StuffIt 5 (.sit) | extract | 0, 13, 15 Arsenic; encrypted detected | 31 fixtures | 0.15–2.53 MB† | 23 of 31 fixtures extract FULLY; the rest refuse per entry |
 | Zip | extract | store, deflate; others & encrypted per-entry errors | 3 fixtures (+2 PKZIP-1.x corpus-only) | 66 KB | full |
 | Gzip | extract | deflate | 3 fixtures | 51 KB | full |
 | Unix compress (.Z) | extract | LZW ≤16 bit | 4 fixtures | 219 KB§ | full |
@@ -60,7 +60,7 @@ allocated at its declared size —
     peak  =  ~35 KB parser state  +  512 KB block  +  4 × actual block fill
 
 — the inverse-BWT transform vector is sized to how much of the block the
-entry actually fills (`transform = numbytes * 4`, `sit_arsenic.c:327`),
+entry actually fills (`transform = numbytes * 4`, in `ars_bwt_prepare`),
 which is exactly what lets a small Arsenic entry fit a small budget. A
 fixture peaking at 0.64 MB is therefore a 512 KB block holding ~24 KB,
 not a 128 KB block; dividing by five turned every small payload into an
@@ -70,10 +70,30 @@ size, so the claim was not just false but unmeasurable that way.
 Measured peak heap over the corpus (`unclassic t --stats`): **min
 0.15 MB / median 0.59 MB / mean 0.92 MB / max 2.53 MB**, the maximum
 being the entries that genuinely fill a 512 KB block (35 KB + 512 KB +
-2048 KB). **11 of the 31 fixtures now extract completely under a 400 KB
-budget**, and 18 fit the ~700 KB a 1 MB Mac Plus has free.
+2048 KB). Those are the peaks with memory to spare, where the decoder takes
+the fast inverse BWT; under a cap it takes a cheaper one and the numbers
+below apply instead.
 
-Those figures improved on 2026-08-03, when the block stopped being allocated
+**Under a cap, since 2026-08-07: 23 of the 31 fixtures extract completely
+and byte-exact under a 400 KB budget (was 11), and all 31 fit the ~700 KB a
+1 MB Mac Plus has free (was 18).** The transform vector is no longer built
+at all when it does not fit; a sampled occurrence index answers the same
+query for a fraction of the memory and more time (DECISIONS.md 2026-08-07).
+**Peak heap under a budget is not the requirement** — the decoder spends
+whatever the cap allows, so the honest figure is the minimum at which a
+fixture still extracts fully, bisected:
+
+| fixture | needed before | minimum now |
+|---|---|---|
+| `derived-RWAsm_Folder.sit` | 160,704 | 71,996 |
+| `derived-Troi-ClipSave-Plug-in1.1.sit` | 660,200 | 167,455 |
+| `derived-a2basic.dmg.sit` | 1,031,463 | 245,897 |
+| `derived-Library_ISBN_Barcoder.sit` | 1,682,080 | 393,028 |
+| `derived-Domino_v1.4.sit` | 2,657,700 | 565,062 |
+| `derived-EasyFind.dmg.sit` | 2,657,700 | 565,062 |
+
+The unlimited-peak figures above improved on 2026-08-03, when the block
+stopped being allocated
 at its DECLARED size. `blockbits` says 512 KB on every real stream, but the
 fill varies enormously — the fixture that peaked at 643 KB was a 512 KB
 allocation holding 24 KB — so the block is now grown on demand
@@ -83,17 +103,24 @@ than `~35 KB + 512 KB + 4x fill`. The previous figures were min 0.63 / median
 the format or the decoder changed; only what is allocated to hold it. See
 DECISIONS.md.
 
-On a **1 MB Mac Plus** Arsenic is no longer mostly out of reach. It got there
-in two steps, both of which were about not paying for memory the data does not
-use rather than about the decoder:
+On a **1 MB Mac Plus** Arsenic is no longer out of reach at all. It got there
+in four steps. The first three were about not paying for memory the data does
+not use, rather than about the decoder; only the last changed what the decoder
+needs:
 
 - **2026-08-02** — the shell stopped reading the whole archive into RAM before
   the engine was given a budget, so each archive got its own size back.
 - **2026-08-03** — the Arsenic block stopped being allocated at its declared
   512 KB and is grown to what each block actually holds, which is often a
   small fraction of it.
+- **2026-08-06** — the block's first allocation is sized from the entry, so
+  doubling no longer leaves a trail of freed steps that nothing can reuse.
+- **2026-08-07** — the 4-bytes-per-byte inverse-BWT vector is no longer built
+  when it does not fit; a sampled occurrence index answers the same query for
+  a fraction of the memory, at the cost of time.
 
-All six extract byte-exact at 4 MB.
+All six extract byte-exact at 4 MB, and since the fourth step all six extract
+byte-exact at 1 MB as well.
 
 Until 2026-08-02 the boundary was **the size of the archive** rather
 than anything about the archive's contents, because the shell read the
@@ -187,6 +214,32 @@ resolution, not a stopwatch.
 | synth-exo-tar.tar | Tar | 20 KB | 10 s | 5 s |
 | synth-exo-gz.gz | Gzip | 0.1 KB | 10 s | <5 s |
 | macburger-helper.hqx | BinHex | 306 KB | 30 s | **150 s** |
+
+**StuffIt 5 / Arsenic at 1x, added 2026-08-07 — and it is in a class of its
+own.** The list above samples StuffIt 5 with a 4,611 B fixture, far too small
+to reach the sampled inverse BWT, so the fallback's cost on real hardware was
+unmeasured until now. Measured on `derived-a2basic.dmg.sit` (153 KB in,
+205 KB out), extract time only, on a purpose-built 1 MB 1x emulator
+(`build_mv mv-1M-1x 1M z`; `setup.sh` had no such build):
+
+| Machine | Inverse BWT | Peak heap | Extract |
+|---|---|---|---|
+| 4 MB Mac Plus | transform table (fast) | 1,031,525 B | **537 s** |
+| 1 MB Mac Plus | sampled index | 560,589 B | **927 s** |
+
+**The fallback costs 1.73x, and Arsenic was already the slow one.** Nine
+minutes for a 205 KB output is what the *fast* path costs a 7 MHz 68000; the
+sampled index makes it fifteen. Set against that, the 1 MB machine previously
+could not extract this entry at all. The x86 ratio for the same fixture is
+2.5x, so the fallback is relatively *cheaper* on the target than on the host —
+most likely because the arithmetic decoder dominates more on a 68000 and the
+BWT walk is a smaller share. **Do not quote the x86 ratio as a prediction of
+the Mac one.**
+
+`derived-Library_ISBN_Barcoder.sit` — the sample's worst case, 641 KB out —
+has **not** been timed at 1x; extrapolation puts it near an hour, which is an
+estimate and not a measurement. `a2basic` is the only Arsenic 1x figure this
+project has.
 
 **8/8, and the shape is the useful part: for small archives the BOOT dominates
 and extraction is seconds.** A stripped System 6.0.8 reaches the application in
@@ -313,7 +366,7 @@ system for anything — but it had never been shown.
 and the floor-target machine has half of it. This is not a defect in the
 application and there is no 1 MB row for this tier — **the 1 MB floor target
 is System 6, and only System 6.** The application's own memory floor is
-unchanged and is still demonstrated by the 42/44 System 6.0.8 run below.
+unchanged and is still demonstrated by the 44/44 System 6.0.8 run below.
 
 ## Floor target verification (Mini vMac — System 6.0.8, **1 MB** Mac Plus, 68000)
 
@@ -322,25 +375,37 @@ RAM** — the project's floor target — one boot per fixture, same on-Mac
 CRC-32 verification (`tools/vmac/run.py --mem 1M --list tools/vmac/sample.txt`).
 The engine budget is derived from `FreeMem` at startup.
 
-**42/44 byte-exact PASS.** Every fixture that does not pass is a StuffIt 5
-memory-budget refusal, and each of the two misses exactly **one** entry. Both
-pass at 4 MB:
+**44/44 byte-exact PASS** (2026-08-07). There are no memory-budget refusals
+left at the floor target: every fixture in the sample, in every format,
+extracts byte-exact on a 1 MB Mac Plus. The six StuffIt 5 rows, which were the
+last to arrive, with peak heap as the Mac itself reports it:
 
 | Fixture | Format | Outcome at 1 MB | Peak heap |
 |---|---|---|---|
-| derived-KeyGraphics.sit | StuffIt 5 | all 1 entry byte-exact | 176.8 KB |
-| derived-RWAsm_Folder.sit | StuffIt 5 | **all 38 entries byte-exact** | 163.2 KB |
-| derived-PuzzleGetter_0.8.sit | StuffIt 5 | **all 26 entries byte-exact** | 262.6 KB |
-| derived-Troi-ClipSave-Plug-in1.1.sit | StuffIt 5 | **all 13 entries byte-exact** | 644.8 KB |
-| derived-Library_ISBN_Barcoder.sit | StuffIt 5 | 33 of 34 entries, 1 refused | 379.5 KB |
-| derived-a2basic.dmg.sit | StuffIt 5 | clean per-entry refusal (1/1 entries) | 235.8 KB |
+| derived-RWAsm_Folder.sit | StuffIt 5 | **all 38 entries byte-exact** | 160,766 B |
+| derived-KeyGraphics.sit | StuffIt 5 | all 1 entry byte-exact | 181,774 B |
+| derived-PuzzleGetter_0.8.sit | StuffIt 5 | **all 26 entries byte-exact** | 269,084 B |
+| derived-a2basic.dmg.sit | StuffIt 5 | **all 1 entry byte-exact** | 560,589 B |
+| derived-Library_ISBN_Barcoder.sit | StuffIt 5 | **all 34 entries byte-exact** | 614,134 B |
+| derived-Troi-ClipSave-Plug-in1.1.sit | StuffIt 5 | **all 13 entries byte-exact** | 660,262 B |
 
-**This tier moved three times in five days.** The first two were about not
-paying for memory the data does not use: on 2026-08-02 the shell stopped
-reading the whole archive into RAM before the engine got a budget
+The last two rows are the ones that moved on 2026-08-07: `a2basic` was a clean
+per-entry refusal of its only entry, and `Library_ISBN` delivered 33 of 34.
+Both now need a *sampled* inverse BWT rather than the 4-bytes-per-byte table,
+chosen automatically because the table's allocation fails first.
+
+**The CLI's `--budget` simulation is now cross-validated against the real Mac
+allocator.** `unclassic --budget 678392` on Linux predicted 560,535 B and
+614,080 B for those two; the Mac measured 560,589 B and 614,134 B — 54 bytes
+apart in both cases. That is worth stating because every budget figure
+elsewhere in this file is a Linux number.
+
+**This tier moved four times in six days, 39/44 → 44/44.** The first two were
+about not paying for memory the data does not use: on 2026-08-02 the shell
+stopped reading the whole archive into RAM before the engine got a budget
 (39/44 → 40/44), and on 2026-08-03 the Arsenic block stopped being allocated at
 its declared 512 KB (40/44 → 41/44). `derived-RWAsm_Folder.sit` went from
-595.7 KB at the start of that to **163.2 KB** for the same 38 byte-exact
+595.7 KB at the start of that to **160,766 B** for the same 38 byte-exact
 entries.
 
 The third, on 2026-08-06, was not about how MUCH was allocated but about the
@@ -353,10 +418,17 @@ a 468,126 B contiguous run in front of it. Sizing the first allocation from the
 entry — `min(outlen, blocksize)`, since a block can hold neither more than the
 whole output nor more than a block — removes the trail, and the entry fits.
 
-**The two remaining refusals cost less than this file used to say.** An
-Arsenic entry needs its block plus four bytes of transform vector per byte the
-block holds. Until 2026-08-03 this section said the three refused entries each
-filled a 512 KB block and so needed ~2.5 MB against ~700 KB. Instrumenting
+The fourth, on 2026-08-07, was the only one that changed what the decoder
+NEEDS rather than what it asks for (42/44 → 44/44). The 4-bytes-per-byte
+transform vector is the dominant allocation, and it is no longer built when it
+does not fit: a sampled occurrence index answers the same query from roughly
+`4 * sum_c min(counts[c], target)` bytes, trading time for memory, chosen per
+block by the table's allocation failing. DECISIONS.md 2026-08-07.
+
+**How much the last two actually needed, and how that was mis-stated twice.**
+An Arsenic entry needs its block plus four bytes of transform vector per byte
+the block holds. Until 2026-08-03 this section said the three refused entries
+each filled a 512 KB block and so needed ~2.5 MB against ~700 KB. Instrumenting
 `numbytes` where the transform vector is sized says none of them does:
 
 | fixture | largest block fill | capacity | 4x transform | peak |
@@ -375,9 +447,12 @@ three fixtures it does not describe. **A true number about the worst case is
 not a number about the case in front of you.** See *Withdrawn claims* in
 BLOCKERS.md, and OPEN_ITEMS.md for what is actually left.
 
-The engine declines *that entry* and carries on, which is why two of the three
-still deliver 33 of 34 and 12 of 13 files. `derived-a2basic.dmg.sit` refuses
-everything only because everything is one entry.
+Those three peaks are what the fast path costs, and all three are now history:
+under the sampled index the same entries extract fully from **245,897 B**
+(`a2basic`), **393,028 B** (`Library_ISBN`) and **167,455 B**
+(`Troi-ClipSave`) — bisected minima, not peaks under a cap. The per-entry
+refusal machinery is unchanged and still correct; nothing in the sample
+reaches it any more.
 
 
 **`popper-1.7.tar.Z` and `PCCTS.tar.gz` used to fail here and no longer do.**

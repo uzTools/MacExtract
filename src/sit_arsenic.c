@@ -13,6 +13,9 @@
  * vector, block = 1 << (9..24) bits as encoded in the stream. Real
  * StuffIt 5 archives in the corpus use 16-bit blocks (64 KB -> ~320 KB
  * peak); the caller's allocator budget decides what is acceptable.
+ * When 4 bytes per block byte is not affordable the decoder falls back
+ * to a sampled occurrence index costing a fraction of that, trading
+ * time for memory — see "Inverse BWT" below.
  *
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
@@ -203,6 +206,15 @@ static const uint16_t ars_randtable[256] = {
 /* Decoder state                                                      */
 /* ------------------------------------------------------------------ */
 
+/* Sampled occurrence index — the low-memory inverse BWT (see below). */
+typedef struct ArsIndex {
+    uint32_t cum[256];     /* first sorted index of byte value c */
+    uint32_t base[256];    /* where c's samples start in pos[] */
+    uint32_t nsamples;
+    uint8_t  shift[256];   /* one sample per 1 << shift[c] occurrences */
+    uint32_t pos[1];       /* [nsamples]; over-allocated by the caller */
+} ArsIndex;
+
 typedef struct Arsenic {
     ArsDecoder dec;
     ArsModel   initialmodel, selectormodel;
@@ -211,7 +223,8 @@ typedef struct Arsenic {
     UncBitIn   bi;
 
     uint8_t   *block;       /* [blockcap], grown on demand up to blocksize */
-    uint32_t  *transform;   /* [transform_cap] inverse-BWT vector */
+    uint32_t  *transform;   /* [transform_cap] inverse-BWT vector, or NULL */
+    ArsIndex  *index;       /* set instead of transform when memory is tight */
     uint32_t   blocksize;   /* the DECLARED block size, 1 << blockbits */
     uint32_t   blockcap;    /* what is actually allocated right now */
     uint32_t   outlen;      /* the entry's whole output — bounds the block */
@@ -227,6 +240,41 @@ typedef struct Arsenic {
     int        has_compcrc;
 } Arsenic;
 
+/* ------------------------------------------------------------------ */
+/* Inverse BWT                                                        */
+/*                                                                    */
+/* Two implementations of one operation. The walk needs, for a sorted */
+/* index k, the block position transform[k] = the position of the     */
+/* (r+1)-th occurrence of the byte value c that owns k, where         */
+/* c is the value whose sorted range contains k and r = k - cum[c].   */
+/*                                                                    */
+/* ars_inverse_bwt() answers it in O(1) from a table costing 4 bytes  */
+/* per block byte. That table is the largest allocation the decoder   */
+/* makes and on a 1 MB Mac it is what puts large blocks out of reach: */
+/* a 323,384-byte block wants 1,293,536 bytes for it, against a       */
+/* ~678 KB heap budget.                                               */
+/*                                                                    */
+/* ars_index_build() answers the same question from SAMPLES: the      */
+/* position of every (1 << shift[c])-th occurrence of each value,     */
+/* shift[c] chosen so every value gets at most `target` samples.      */
+/* A query then scans the block forward from the nearest sample,      */
+/* counting occurrences of c. Cost:                                   */
+/*                                                                    */
+/*   memory  ~ 4 * sum over c of min(counts[c], target)               */
+/*   time    ~ blocklen/target positions scanned per output byte      */
+/*                                                                    */
+/* so `target` is a pure time-for-memory dial, and it is chosen by    */
+/* halving until the allocator accepts — nothing else knows what the  */
+/* caller's budget is. Samples are per VALUE rather than per sorted   */
+/* index on purpose: it makes the scan distance ~blocklen/target for  */
+/* every value, common or rare, instead of ~target occurrences of c,  */
+/* which for a rare c is most of the block.                           */
+/*                                                                    */
+/* The fast path is tried first at every block, so a machine that can */
+/* afford the table pays nothing for any of this.                     */
+/* ------------------------------------------------------------------ */
+
+#ifndef UNC_ARS_FORCE_SAMPLED
 /* CalculateInverseBWT (BWT.c): transform[] such that repeatedly
  * following transformindex=transform[transformindex] walks the
  * original byte order. Iterative, no recursion. */
@@ -246,6 +294,137 @@ static void ars_inverse_bwt(uint32_t *transform, const uint8_t *block,
         transform[cumulative[block[i]] + counts[block[i]]] = i;
         counts[block[i]]++;
     }
+}
+#endif
+
+/* Samples per byte value at the first attempt. Halved until the index fits;
+ * one sample per value (target 1) is the floor and costs at most 2 KB.
+ * Overridable at compile time so a test build can force the deep end of
+ * the dial: a budget large enough to hold the block is also large enough
+ * to keep `target` high, so nothing a real run does exercises a query
+ * whose scan spans most of the block. ci.sh builds with 1. */
+#ifndef ARS_INDEX_TARGET
+#define ARS_INDEX_TARGET 1024u
+#endif
+
+/* Pick shift[c] so no value has more than `target` samples, and return how
+ * many samples that is in total. Pure function of the histogram: cheap
+ * enough (256 values, <=24 shifts) to re-run for every candidate target. */
+static uint32_t ars_index_plan(const uint32_t *counts, uint32_t target,
+                               uint8_t *shift)
+{
+    uint32_t c, total = 0;
+    for (c = 0; c < 256; c++) {
+        uint32_t sh = 0;
+        while ((counts[c] >> sh) > target) sh++;
+        shift[c] = (uint8_t)sh;
+        if (counts[c]) total += ((counts[c] - 1) >> sh) + 1;
+    }
+    return total;
+}
+
+/* Build the sampled index for the block currently in a->block. */
+static int ars_index_build(Arsenic *a, UncAlloc *al)
+{
+    uint32_t counts[256], occ[256];
+    uint8_t  shift[256];
+    uint32_t i, c, total = 0, target, running, n = a->numbytes;
+    ArsIndex *ix = NULL;
+
+    for (i = 0; i < 256; i++) counts[i] = 0;
+    for (i = 0; i < n; i++) counts[a->block[i]]++;
+
+    for (target = ARS_INDEX_TARGET; ; target >>= 1) {
+        total = ars_index_plan(counts, target, shift);
+        /* Never ask for more than the table we already could not get. */
+        if (total <= n) {
+            ix = (ArsIndex *)unc_alloc(al, (uint32_t)sizeof *ix + total * 4u);
+            if (ix) break;
+        }
+        if (target == 1) return UNC_ERR_MEM;   /* per-entry, not fatal */
+    }
+
+    ix->nsamples = total;
+    running = 0;
+    for (c = 0; c < 256; c++) {
+        ix->cum[c] = running;
+        ix->shift[c] = shift[c];
+        running += counts[c];
+    }
+    running = 0;
+    for (c = 0; c < 256; c++) {
+        ix->base[c] = running;
+        if (counts[c]) running += ((counts[c] - 1) >> shift[c]) + 1;
+    }
+    for (i = 0; i < 256; i++) occ[i] = 0;
+    for (i = 0; i < n; i++) {
+        c = a->block[i];
+        if ((occ[c] & ((1u << shift[c]) - 1u)) == 0)
+            ix->pos[ix->base[c] + (occ[c] >> shift[c])] = i;
+        occ[c]++;
+    }
+
+    a->index = ix;
+    return UNC_OK;
+}
+
+/* One step of the walk, from the sampled index. Equivalent to
+ * transform[k], and provably in range: the binary search lands on the
+ * value c whose sorted range holds k, so r < counts[c] and the r-th
+ * occurrence of c exists at or after the sample it starts from. The
+ * i < n bound is belt-and-braces; it costs one compare per byte scanned
+ * and makes a corrupt block impossible to walk out of the buffer. */
+static uint32_t ars_index_next(const Arsenic *a, uint32_t k)
+{
+    const ArsIndex *ix = a->index;
+    const uint8_t *block = a->block;
+    uint32_t lo = 0, hi = 255, c, r, sh, i, rem, n = a->numbytes;
+
+    while (lo < hi) {
+        uint32_t mid = (lo + hi + 1u) >> 1;
+        if (ix->cum[mid] <= k) lo = mid; else hi = mid - 1;
+    }
+    c = lo;
+    sh = ix->shift[c];
+    r = k - ix->cum[c];
+    i = ix->pos[ix->base[c] + (r >> sh)];
+
+    for (rem = r & ((1u << sh) - 1u); rem; rem--) {
+        do { i++; } while (i < n && block[i] != (uint8_t)c);
+    }
+    return i < n ? i : 0;
+}
+
+/* Choose how this block's BWT will be inverted: the 4-bytes-per-byte table
+ * when the allocator affords it, the sampled index when it does not.
+ *
+ * The choice is made per block, and the table is kept across blocks while it
+ * is big enough, so a stream that starts affordable stays on the fast path
+ * without reallocating. UNC_ARS_FORCE_SAMPLED drops the fast path entirely;
+ * it exists so ci.sh can run the whole corpus through the fallback. */
+static int ars_bwt_prepare(Arsenic *a, UncAlloc *al)
+{
+#ifndef UNC_ARS_FORCE_SAMPLED
+    if (a->numbytes > a->transform_cap) {
+        uint32_t *nt;
+        unc_free(al, a->transform);
+        a->transform = NULL;
+        a->transform_cap = 0;
+        nt = (uint32_t *)unc_alloc(al, a->numbytes * 4u);
+        if (nt) { a->transform = nt; a->transform_cap = a->numbytes; }
+    }
+    if (a->transform) {
+        unc_free(al, a->index);
+        a->index = NULL;
+        ars_inverse_bwt(a->transform, a->block, a->numbytes);
+        return UNC_OK;
+    }
+#endif
+    /* Sized from this block's histogram, so it is rebuilt per block rather
+     * than grown; freeing first keeps the two from coexisting. */
+    unc_free(al, a->index);
+    a->index = NULL;
+    return ars_index_build(a, al);
 }
 
 /* Starting capacity for a block. Small enough that a tiny entry costs almost
@@ -395,20 +574,12 @@ static int ars_read_block(Arsenic *a, UncAlloc *al)
         }
     }
 
-    /* Size the transform vector to the actual block fill, not the
+    /* Size the inverse-BWT structure to the actual block fill, not the
      * declared block size: real archives use 512 KB blocks even for
-     * tiny files, and the 4x transform is the dominant allocation
+     * tiny files, and the transform is the dominant allocation
      * (XADStuffItArsenicHandle reallocs per block the same way).
      * This is what lets small Arsenic files fit a small budget. */
-    if (a->numbytes > a->transform_cap) {
-        unc_free(al, a->transform);
-        a->transform = (uint32_t *)unc_alloc(al, a->numbytes * 4);
-        if (!a->transform) { a->transform_cap = 0; return UNC_ERR_MEM; }
-        a->transform_cap = a->numbytes;
-    }
-
-    ars_inverse_bwt(a->transform, a->block, a->numbytes);
-    return UNC_OK;
+    return ars_bwt_prepare(a, al);
 }
 
 int unc_arsenic_decode(UncBufIn *in, UncAlloc *al, uint32_t outlen,
@@ -423,6 +594,7 @@ int unc_arsenic_decode(UncBufIn *in, UncAlloc *al, uint32_t outlen,
     if (!a) return UNC_ERR_MEM;
     a->block = NULL;
     a->transform = NULL;
+    a->index = NULL;
 
     unc_bitin_init(&a->bi, in);
     ars_dec_init(&a->dec, &a->bi);
@@ -454,6 +626,7 @@ int unc_arsenic_decode(UncBufIn *in, UncAlloc *al, uint32_t outlen,
     a->outlen = outlen;
     a->transform = NULL;
     a->transform_cap = 0;
+    a->index = NULL;
 
     a->numbytes = a->bytecount = 0;
     a->repeat = 0;
@@ -478,6 +651,13 @@ int unc_arsenic_decode(UncBufIn *in, UncAlloc *al, uint32_t outlen,
         } else {
             int32_t byte;
 retry:
+            /* Under the sampled index a block's walk is minutes of work
+             * with no input read in it, so the input-driven pump cannot
+             * keep the dialog alive or notice a Cancel. Poll it here. The
+             * fast path is left alone: it never runs long enough. */
+            if (a->index && (produced & (UNC_PROGRESS_STEP - 1u)) == 0 &&
+                (err = unc_progress_poll(in->ps)) != UNC_OK) goto out;
+
             if (a->bytecount >= a->numbytes) {
                 if (a->endofblocks) { err = UNC_ERR_TRUNCATED; goto out; }
                 if ((err = ars_read_block(a, al)) != UNC_OK) goto out;
@@ -488,7 +668,9 @@ retry:
                 a->randcount = (int32_t)ars_randtable[0];
             }
 
-            a->transformindex = a->transform[a->transformindex];
+            a->transformindex = a->index
+                ? ars_index_next(a, a->transformindex)
+                : a->transform[a->transformindex];
             byte = a->block[a->transformindex];
 
             if (a->randomized && (uint32_t)a->randcount == a->bytecount) {
@@ -519,6 +701,7 @@ retry:
     if (a->has_compcrc && a->compcrc != ~a->crc) err = UNC_ERR_CRC;
 
 out:
+    unc_free(al, a->index);
     unc_free(al, a->transform);
     unc_free(al, a->block);
     unc_free(al, a);

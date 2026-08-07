@@ -84,17 +84,19 @@ def parse_listing(out):
     return meta
 
 
-def check_fixture(unclassic, man, verbose):
+def check_fixture(unclassic, man, verbose, budget=0):
     fx = os.path.join(FIXDIR, man["fixture"])
+    cap = ["--budget", str(budget)] if budget else []
     problems = []
     with tempfile.TemporaryDirectory() as tmp:
-        r = subprocess.run([unclassic, "x", "-nr", "-o", tmp, fx],
+        r = subprocess.run([unclassic, "x", "-nr", "-o", tmp, fx] + cap,
                            capture_output=True, timeout=300)
         if r.returncode != 0:
             problems.append(f"exit {r.returncode}: {r.stderr.decode()[:300]}")
         files, dirs = collect_outputs(tmp)
 
-        lr = subprocess.run([unclassic, "l", fx], capture_output=True, timeout=60)
+        lr = subprocess.run([unclassic, "l", fx] + cap,
+                            capture_output=True, timeout=60)
         listing = parse_listing(lr.stdout.decode("utf-8", "replace"))
 
         for e in man["entries"]:
@@ -136,6 +138,14 @@ def main():
                     help="run even not-yet-implemented formats")
     ap.add_argument("-v", "--verbose", action="store_true")
     ap.add_argument("--format", help="only fixtures of this lsar format")
+    ap.add_argument("--budget", type=int, default=0,
+                    help="run under an allocation cap, in bytes: every "
+                         "fixture must still come out byte-exact. 678392 is "
+                         "what a 1 MB Mac Plus leaves the engine.")
+    ap.add_argument("--max-size", type=int, default=0,
+                    help="only fixtures at most this many bytes. For build "
+                         "variants that are correct but slow, where the point "
+                         "is to cover a code path rather than the corpus.")
     args = ap.parse_args()
 
     mandir = os.path.join(FIXDIR, "manifests")
@@ -147,17 +157,20 @@ def main():
     for mf in manifests:
         with open(os.path.join(mandir, mf)) as f:
             man = json.load(f)
-        if not os.path.exists(os.path.join(FIXDIR, man["fixture"])):
+        fxpath = os.path.join(FIXDIR, man["fixture"])
+        if not os.path.exists(fxpath):
             skipped_missing += 1
             continue
         fmt = man.get("format")
         if args.format and fmt != args.format:
             continue
+        if args.max_size and os.path.getsize(fxpath) > args.max_size:
+            continue
         if not args.all and fmt not in IMPLEMENTED:
             skipped_fmt += 1
             continue
         ran += 1
-        problems = check_fixture(args.unclassic, man, args.verbose)
+        problems = check_fixture(args.unclassic, man, args.verbose, args.budget)
         if problems:
             fails.append((man["fixture"], problems))
             print(f"DIFF FAIL {man['fixture']} ({fmt})")
@@ -170,7 +183,9 @@ def main():
             if args.verbose:
                 print(f"diff ok: {man['fixture']} ({fmt})")
 
-    print(f"diff: {passed}/{ran} fixtures ok "
+    cap = f" under a {args.budget} B budget" if args.budget else ""
+    cap += f" (fixtures <= {args.max_size} B)" if args.max_size else ""
+    print(f"diff{cap}: {passed}/{ran} fixtures ok "
           f"({skipped_fmt} formats pending, {skipped_missing} fixtures absent)")
     return 1 if fails else 0
 

@@ -1231,3 +1231,89 @@ it was simply noticing that 8+16+32+64 = 120 KB sat suspiciously close to the
 125,614 B measured, and the confirming experiment was to set the initial
 capacity to 128 KB so no growth happens at all — one build, one run, and the
 fixture passed on the spot.
+
+## 2026-08-07 — the inverse BWT falls back to a sampled occurrence index
+
+Fifth and last in the "size it from the data" series, and the first one that
+does not size anything: here the requirement itself is reduced.
+
+`ars_inverse_bwt` builds a transform vector costing **4 bytes per block byte**,
+and it is the dominant allocation in the decoder. OPEN_ITEMS.md had the
+arithmetic: `Library_ISBN` needed 1,854,208 B against the 678,392 B a 1 MB Mac
+Plus leaves the engine, of which 1,293,536 B was that one vector. No placement,
+reserve tuning or defragmentation can close a gap that size — only needing less
+can.
+
+`ars_index_build` answers the same query from **samples**: the position of
+every `1 << shift[c]`-th occurrence of each byte value, `shift[c]` chosen so no
+value gets more than `target` samples. A query binary-searches the value that
+owns the sorted index, jumps to the nearest sample and scans forward. Memory
+`~4 * sum_c min(counts[c], target)`, time `~blocklen/target` positions scanned
+per output byte — a pure time-for-memory dial.
+
+**Samples are per byte VALUE, not per sorted index.** Per index looks more
+natural and is worse: the scan then covers `target` occurrences of `c`, which
+for a rare `c` is most of the block. Per value makes the scan `blocklen/target`
+for every value, common or rare.
+
+**It is adaptive, and the fast path is tried first at every block.** The choice
+is made by an allocation failing, which is the only thing that knows the
+caller's budget. Measured cost of carrying it on a machine that never needs it:
+peak heap over all 31 StuffIt 5 fixtures is **HEAD + 8 bytes, exactly** — the
+one pointer added to `struct Arsenic` — and the corpus is byte-exact.
+
+**The dial is greedy, and that changes what "peak heap" means under a budget.**
+`target` halves only until the allocator accepts, so the decoder takes the
+largest index it can afford. Peak-under-budget is therefore roughly the budget,
+not the requirement: `Library_ISBN` peaks at 614,080 B under a 678,392 B cap
+but extracts fully down to **393,028 B** (bisected). Anyone comparing a
+peak-under-budget figure against a predicted requirement is comparing two
+different quantities — bisect for the requirement.
+
+| fixture | needed before | predicted | measured minimum |
+|---|---|---|---|
+| `derived-a2basic.dmg.sit` | 1,088,588 | ~245,699 | **245,897** |
+| `derived-Library_ISBN_Barcoder.sit` | 1,854,208 | ~379,435 | **393,028** |
+
+**The prediction was good, and the last one was not — the difference is worth
+keeping.** The method 13 LZSS estimate predicted ~115 improved fixtures and was
+wrong, because peak heap is a per-archive MAXIMUM and it was estimated from a
+per-fork distribution. This one was within 200 bytes on one fixture and 3.6% on
+the other, because it estimated the size of a SINGLE allocation inside one
+entry — exactly the quantity the change controls. **Estimate the thing you are
+changing, not an aggregate over things you are not.**
+
+**Time is the price, and it is uneven.** At the 1 MB budget the two floor
+targets cost 2x and 3x (`a2basic` 20→50 ms, `Library_ISBN` 36→124 ms, x86 -O2).
+The tail is worse: `derived-Domino_v1.4.sit` is 33x, because a tighter squeeze
+picks a smaller `target`. The floor targets are the cheap ones, which is luck,
+not design. At the extreme (`target=1`) the walk is quadratic: the whole
+StuffIt 5 set takes 8.4 minutes instead of one second.
+
+**On the target the price is 1.73x, and the x86 ratio does not predict it.**
+Measured at authentic 7 MHz on `derived-a2basic.dmg.sit`: 537 s with the fast
+table on a 4 MB machine, 927 s with the sampled index on a 1 MB one. The same
+fixture's x86 ratio is 2.5x, so the fallback is relatively *cheaper* on a
+68000 — most likely because the arithmetic decoder dominates more there and
+the BWT walk is a smaller share of the whole. The useful framing is not "the
+fallback costs 73%" but "Arsenic already costs nine minutes on a Plus, and
+this is what makes the entry extractable at all." Measuring it needed a 1 MB
+1x emulator that did not exist (`build_mv mv-1M-1x 1M z`); the three builds
+`setup.sh` makes are 4M/1M all-out and 4M-1x, and neither all-out build can
+answer a timing question.
+
+**Degradation is bounded by an accident worth knowing about.** Squeezing the
+budget below ~350 KB does not drive `target` to 1 and hang — it refuses the
+BLOCK BUFFER first, and the entry fails cleanly. The block must be allocated
+before the index is even planned, so the block is the binding constraint at
+exactly the point where the index would become pathological. Probed from
+678,392 B down to 200,000 B on `Library_ISBN`: clean `rc=0` to 450,000, 5 s at
+400,000, clean per-entry refusal at and below 350,000, no hang at any point.
+The robustness contract survives by construction rather than by a check.
+
+**One thing the sampled walk breaks that the table did not: progress.** It
+spends minutes turning input it has ALREADY consumed into output, so the
+input-driven progress pump goes silent and a Mac user gets a frozen dialog and
+a dead Cancel. `unc_progress_poll` fires the tick without moving the byte
+count, called every `UNC_PROGRESS_STEP` output bytes and only on the sampled
+path — the fast path never runs long enough to need it.

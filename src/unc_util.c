@@ -53,6 +53,14 @@ int unc_progress_add(UncProgressState *ps, uint32_t n)
     return UNC_OK;
 }
 
+int unc_progress_poll(UncProgressState *ps)
+{
+    if (ps && ps->prog && ps->prog->tick &&
+        !ps->prog->tick(ps->prog->ctx, ps->done, ps->total))
+        return UNC_ERR_ABORTED;
+    return UNC_OK;
+}
+
 /* ------------------------------------------------------------------ */
 /* Entry helpers                                                      */
 /* ------------------------------------------------------------------ */

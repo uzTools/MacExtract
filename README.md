@@ -29,7 +29,7 @@ detected by content (never by filename) and unwrapped automatically.
 
 | | Linux CLI | Mac app (System 6 → OS 9) |
 |---|---|---|
-| Extraction, all 12 formats | ✅ byte-exact vs `unar` (769 fixtures, both forks, in CI) | ✅ verified byte-exact on **System 6.0.8, System 7.0.1 and Mac OS 9.2**: 44/44 sampled fixtures at 4 MB on each of 6.0.8 and 7.0.1 (Mini vMac, a true 68000), 42/44 at 1 MB on 6.0.8, and 13/13 on OS 9.2 under the 68LC040 emulator — see the tier tables below |
+| Extraction, all 12 formats | ✅ byte-exact vs `unar` (769 fixtures, both forks, in CI) | ✅ verified byte-exact on **System 6.0.8, System 7.0.1 and Mac OS 9.2**: 44/44 sampled fixtures at 4 MB on each of 6.0.8 and 7.0.1 (Mini vMac, a true 68000), 44/44 at 1 MB on 6.0.8, and 13/13 on OS 9.2 under the 68LC040 emulator — see the tier tables below |
 | Both forks + type/creator/dates | ✅ | ✅ (resource fork exact bar the OS-stamped reserved header 16–127; extracted `APPL` launches by double-click) |
 | Robustness (truncated/bit-flipped) | ✅ clean per-entry errors, no crash/hang/sanitizer trip | shares the same engine |
 | Interactive UI | — | ✅ driven end to end on System 6: launched from the Finder → SFGetFile (Drive switches volumes) → progress dialog (Cancel / Cmd-.) → result alert; a cancel removes the partial output, and an extracted application launches by double-click |
@@ -53,21 +53,23 @@ itself; both are reproducible with `tools/vmac/run.py`. Per format:
 | Gzip | ✅ 3/3 | ✅ 3/3 | 51 KB |
 | Unix compress (.Z) | ✅ 4/4 | ✅ 4/4 | 15–219 KB |
 | DiskDoubler / Now Compress | ✅ detect-only | ✅ detect-only | none |
-| **StuffIt 5 / Arsenic** | ✅ 6/6 | ⚠️ **4/6** | 0.15–2.53 MB |
+| **StuffIt 5 / Arsenic** | ✅ 6/6 | ✅ **6/6** | 0.15–2.53 MB |
 
-**StuffIt 5 / Arsenic mostly wants a 4 MB machine.** Every real Arsenic
-block *declares* 512 KB, but the block is allocated to what it actually
-holds; what an entry costs is that fill plus four bytes of inverse-BWT
-transform vector for each byte of it — so an entry costs 0.16 MB and up,
-rising with how much data it carries. At
-1 MB the engine declines the entries it cannot afford — **per entry**,
-leaving the rest of the archive alone — which is why two sampled fixtures
-extract completely, three extract most of their entries, and only one
-refuses everything. Where the budget rejects the block at request time
-nothing is allocated at all (35.5 KB peak). This got better on 2026-08-02:
-the shell used to read the whole archive into RAM before the engine was
-given a budget, so a big archive starved it; now it reads from the file as
-it goes and each archive gets its own size back.
+**StuffIt 5 / Arsenic now fits a 1 MB machine too, since 2026-08-07.** Every
+real Arsenic block *declares* 512 KB, but the block is allocated to what it
+actually holds; on top of that the inverse BWT wants four bytes per block
+byte, and that vector — not the block — is what used to put large entries out
+of reach. It is no longer built when it does not fit: the decoder falls back,
+per block, to a sampled occurrence index that answers the same query from a
+fraction of the memory in exchange for more time. A machine with room to spare
+still takes the fast table and pays 8 bytes for the choice. The peak heap
+column above is the fast path; under a 1 MB budget the same six fixtures
+extract every entry from 160 KB to 660 KB.
+
+The per-entry refusal machinery is unchanged — the engine still declines an
+entry it cannot afford and leaves the rest of the archive alone — but no
+fixture in the sample reaches it any more. This tier improved four times in
+six days (39/44 → 44/44); FORMATS.md has the sequence.
 
 **Output size does not cost the shell any RAM.** Each chunk is written
 straight to the File Manager as the engine produces it, so a 1 MB machine
@@ -86,7 +88,7 @@ distribution — `tools/make_dist.sh` builds an uncompressed MacBinary and an
 | System | What was run | Result |
 |---|---|---|
 | System 6.0.8, 4 MB | 44-fixture corpus + the interactive UI end to end | ✅ 44/44; UI driven from the Finder, extracted `APPL` launches |
-| System 6.0.8, 1 MB | 44-fixture corpus | ✅ 42/44 — the 2 are StuffIt 5 budget refusals, each missing exactly one entry |
+| System 6.0.8, 1 MB | 44-fixture corpus | ✅ **44/44** (2026-08-07) — no memory-budget refusals remain |
 | System 7.0.1, 4 MB | 44-fixture corpus | ✅ 44/44, same peak heap as 6.0.8 |
 | System 7.0.1, 1 MB | boot probe | ⚠️ System 7 needs 2 MB and does not boot — not an application fault |
 | Interactive UI above System 6 | — | ⚪ **out of scope by choice** — System 6 is the UI's target and it is driven end to end there; the paths the higher tiers exist for are tested directly, below |
@@ -110,15 +112,22 @@ the full untested list.
 | a few KB (any format) | **under 5 s** |
 | 278 KB StuffIt → 417 KB out | **~134 s** |
 | 306 KB BinHex → 253 KB out | **~150 s** |
+| 153 KB StuffIt 5 → 205 KB out, 4 MB | **~537 s** |
+| 153 KB StuffIt 5 → 205 KB out, 1 MB | **~927 s** |
 
 The machine itself takes ~10 s to boot into the application, so for small
-archives the boot dominates and the extraction is barely noticeable. Per-format
-figures and the relative decode costs are in [FORMATS.md](FORMATS.md);
-Arsenic (StuffIt 5) is in a class of its own and mostly wants a 4 MB machine
-anyway.
+archives the boot dominates and the extraction is barely noticeable.
+
+**StuffIt 5 / Arsenic is in a class of its own — it is slow, not hungry.**
+Nine minutes for a 205 KB output is what a 7 MHz 68000 costs with the fast
+inverse BWT and memory to spare; on a 1 MB machine, where the decoder falls
+back to the sampled index, the same archive takes fifteen. That 1.73× is the
+price of extracting it on a Plus at all, which was impossible before
+2026-08-07. Per-format figures and the relative decode costs are in
+[FORMATS.md](FORMATS.md).
 
 So the rule of thumb is: a few kilobytes is instant, a few hundred kilobytes is
-two to three minutes. Nothing sampled behaves worse than that.
+two to three minutes, and StuffIt 5 is minutes to a quarter of an hour.
 
 **Detect-only** (v1 names but does not extract): StuffIt X, DiskDoubler,
 Now Compress, LZH, DiskCopy 4.2. **Out of scope (v1):** compression,
