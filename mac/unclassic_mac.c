@@ -1559,11 +1559,31 @@ static void at_count_dir(short vol, long dir, int *files, int *dirs)
  * read-back), so this measures instead of guessing: the callback already fires
  * every 8-16 KB of input, which is all the resolution needed to tell "slow"
  * from "stuck". */
+/* THE INSTRUMENT MUST NOT PERTURB THE MEASUREMENT. at_report erases the whole
+ * 21,888-byte framebuffer a byte at a time and repaints 272 cells, which costs
+ * about 57 ms on a 7 MHz 68000. That was invisible while the engine ticked
+ * every 8 KB of INPUT — `derived-a2basic.dmg.sit` reported 41 times in a whole
+ * run. On 2026-08-07 Arsenic started reporting every 256 bytes of OUTPUT so
+ * the Mac's progress bar and Cancel button would work, which took the same run
+ * to 801 reports and made this harness 8.6% slower: the 4 MB 1x figure went
+ * 537 s -> 583 s with no change to the decoder at all.
+ *
+ * So the autotest grid is rate-limited here rather than at the source. Five
+ * seconds is far finer than run.py's 5 s poll needs and keeps the overhead
+ * near 1%. The engine's own tick rate is left alone: it is what makes the
+ * shipped UI responsive, and the shipped UI redraws a small bar, not this. */
+#define kAtReportTicks 300      /* 60ths of a second */
+
+static long gATlastReport;      /* TickCount of the last progress grid */
+
 static int at_prog_tick(void *ctx, uint32_t done, uint32_t total)
 {
     uint32_t vals[8];
     int i;
+    long now = TickCount();
     (void)ctx;
+    if (gATlastReport != 0 && now - gATlastReport < kAtReportTicks) return 1;
+    gATlastReport = now;
     for (i = 0; i < 8; i++) vals[i] = 0;
     vals[0] = done;                      /* input bytes consumed so far   */
     vals[1] = (uint32_t)kAtRunning;      /* still working — not a result  */

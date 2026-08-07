@@ -111,22 +111,24 @@ the full untested list.
 | a few KB (any format) | **under 5 s** |
 | 278 KB StuffIt → 417 KB out | **~134 s** |
 | 306 KB BinHex → 253 KB out | **~150 s** |
-| 153 KB StuffIt 5 → 205 KB out, 4 MB | **~537 s** |
-| 153 KB StuffIt 5 → 205 KB out, 1 MB | **~927 s** |
+| 153 KB StuffIt 5 → 205 KB out, 4 MB | **~587 s** |
+| 153 KB StuffIt 5 → 205 KB out, 1 MB | **~966 s** |
+| 202 KB StuffIt 5 → 641 KB out, 4 MB | **~768 s** |
+| 202 KB StuffIt 5 → 641 KB out, 1 MB | **~1898 s** |
 
 The machine itself takes ~10 s to boot into the application, so for small
 archives the boot dominates and the extraction is barely noticeable.
 
 **StuffIt 5 / Arsenic is in a class of its own — it is slow, not hungry.**
-Nine minutes for a 205 KB output is what a 7 MHz 68000 costs with the fast
+Ten minutes for a 205 KB output is what a 7 MHz 68000 costs with the fast
 inverse BWT and memory to spare; on a 1 MB machine, where the decoder falls
-back to the sampled index, the same archive takes fifteen. That 1.73× is the
-price of extracting it on a Plus at all, which was impossible before
-2026-08-07. Per-format figures and the relative decode costs are in
-[FORMATS.md](FORMATS.md).
+back to the sampled index, the same archive takes sixteen. The sample's worst
+case is half an hour. That 1.65–2.47× is the price of extracting these on a
+Plus at all, which was impossible before 2026-08-07. Per-format figures and
+the relative decode costs are in [FORMATS.md](FORMATS.md).
 
 So the rule of thumb is: a few kilobytes is instant, a few hundred kilobytes is
-two to three minutes, and StuffIt 5 is minutes to a quarter of an hour.
+two to three minutes, and StuffIt 5 is ten minutes to half an hour.
 
 **Detect-only** (v1 names but does not extract): StuffIt X, DiskDoubler,
 Now Compress, LZH, DiskCopy 4.2. **Out of scope (v1):** compression,

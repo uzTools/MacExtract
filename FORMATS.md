@@ -215,31 +215,39 @@ resolution, not a stopwatch.
 | synth-exo-gz.gz | Gzip | 0.1 KB | 10 s | <5 s |
 | macburger-helper.hqx | BinHex | 306 KB | 30 s | **150 s** |
 
-**StuffIt 5 / Arsenic at 1x, added 2026-08-07 — and it is in a class of its
-own.** The list above samples StuffIt 5 with a 4,611 B fixture, far too small
-to reach the sampled inverse BWT, so the fallback's cost on real hardware was
-unmeasured until now. Measured on `derived-a2basic.dmg.sit` (153 KB in,
-205 KB out), extract time only, on a purpose-built 1 MB 1x emulator
-(`build_mv mv-1M-1x 1M z`; `setup.sh` had no such build):
+**StuffIt 5 / Arsenic at 1x — and it is in a class of its own.** The list
+above samples StuffIt 5 with a 4,611 B fixture, far too small to reach the
+sampled inverse BWT, so the fallback's cost on real hardware went unmeasured
+until 2026-08-07. Both Arsenic fixtures in the 1 MB sample, both paths,
+extract time only, on a purpose-built 1 MB 1x emulator (`build_mv mv-1M-1x
+1M z`; `setup.sh` had no such build until then):
 
-| Machine | Inverse BWT | Peak heap | Extract |
-|---|---|---|---|
-| 4 MB Mac Plus | transform table (fast) | 1,031,525 B | **537 s** |
-| 1 MB Mac Plus | sampled index | 560,589 B | **927 s** |
+| Fixture | Output | 4 MB — transform table | 1 MB — sampled index | ratio |
+|---|---|---|---|---|
+| `derived-a2basic.dmg.sit` | 205,019 B | **587 s** (peak 1,031,525 B) | **966 s** (peak 560,589 B) | 1.65x |
+| `derived-Library_ISBN_Barcoder.sit` | 641,115 B | **768 s** (peak 1,682,142 B) | **1,898 s** (peak 614,134 B) | 2.47x |
 
-**The fallback costs 1.73x, and Arsenic was already the slow one.** Nine
-minutes for a 205 KB output is what the *fast* path costs a 7 MHz 68000; the
-sampled index makes it fifteen. Set against that, the 1 MB machine previously
-could not extract this entry at all. The x86 ratio for the same fixture is
-2.5x, so the fallback is relatively *cheaper* on the target than on the host —
-most likely because the arithmetic decoder dominates more on a 68000 and the
-BWT walk is a smaller share. **Do not quote the x86 ratio as a prediction of
-the Mac one.**
+**The fallback costs 1.65x to 2.47x, and Arsenic was already the slow one.**
+Ten minutes for a 205 KB output is what the *fast* path costs a 7 MHz 68000.
+Set against that, a 1 MB machine could not extract either of these entries at
+all before 2026-08-07. The ratio widens with block fill, which is what the
+model predicts: the scan is `blocklen/target` per output byte, and
+`Library_ISBN`'s blocks hold 323,384 B against `a2basic`'s 197,515 B.
 
-`derived-Library_ISBN_Barcoder.sit` — the sample's worst case, 641 KB out —
-has **not** been timed at 1x; extrapolation puts it near an hour, which is an
-estimate and not a measurement. `a2basic` is the only Arsenic 1x figure this
-project has.
+Two warnings attached to these numbers:
+
+- **The x86 ratio does not predict the Mac one.** For `a2basic` it is 2.5x on
+  x86 against 1.65x here. The arithmetic decoder dominates more on a 68000, so
+  the BWT walk is a smaller share of the whole.
+- **Extrapolating from one fixture did not work either.** `Library_ISBN` was
+  predicted "near an hour" from `a2basic` scaled by output size; it is 31.6
+  minutes. Per-byte cost is not constant across fixtures, for the same reason
+  the ratio is not.
+
+All four figures were measured on one build, with one emulator running at a
+time. They supersede an earlier pair (537 s / 927 s) taken before the progress
+rewrite; see DECISIONS.md 2026-08-07 for the ~40 s that separates the two sets
+and for why it is recorded as unexplained.
 
 **8/8, and the shape is the useful part: for small archives the BOOT dominates
 and extraction is seconds.** A stripped System 6.0.8 reaches the application in

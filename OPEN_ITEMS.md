@@ -106,23 +106,14 @@ rather than repeated.
   (`-D UNC_AT_PROGRESS`) showed the rate is very non-uniform so every timeout
   chosen for it expired mid-run. **Timing is closed for every format sampled.**
 
-  **Reopened for Arsenic on 2026-08-07, then measured the same day — but only
-  once.** The 1x list samples StuffIt 5 with `derived-KeyGraphics.sit`,
-  4,611 B, far too small to reach the sampled inverse BWT, so the fallback's
-  cost on a 7 MHz 68000 was unmeasured. It now is, for one fixture:
-  `derived-a2basic.dmg.sit` extracts in **537 s** on the fast path (4 MB) and
-  **927 s** on the sampled path (1 MB) — 1.73x, on a 1 MB 1x emulator that had
-  to be built for it (`build_mv mv-1M-1x 1M z`). FORMATS.md has the table.
+  **Reopened for Arsenic on 2026-08-07, and CLOSED the same day.** The 1x list
+  sampled StuffIt 5 with `derived-KeyGraphics.sit`, 4,611 B, far too small to
+  reach the sampled inverse BWT, so the fallback's cost on a 7 MHz 68000 was
+  unmeasured. Both Arsenic fixtures have now been timed on both paths, on a
+  1 MB 1x emulator built for the purpose: `a2basic` 587 s fast / 966 s
+  sampled, `Library_ISBN` 768 s / 1,898 s. FORMATS.md has the table.
+  **Timing is closed for every format sampled, including Arsenic.**
 
-  What is still open: **`derived-Library_ISBN_Barcoder.sit` has not been timed
-  at 1x.** It is the sample's worst case at 641 KB of output and extrapolates
-  to roughly an hour, which is an estimate. A run was started and abandoned
-  rather than let it collide with a 3600 s timeout, because a timeout is a
-  bound and would have been quotable as if it were a measurement. What would
-  close it: `tools/vmac/run.py --emu mv-1M-1x --mem 1M --timeout 7200` on that
-  fixture, one boot, and add the row to FORMATS.md. Nothing depends on it —
-  correctness is already 44/44 — but the project's "do I wait one minute or
-  twenty" answer currently rests on a single Arsenic data point.
 - **Out of scope by the brief, and still out:** compression, StuffIt X
   (`.sitx`), encrypted archives, multi-segment archives, disk-image extraction,
   Now Compress, and LZH *extraction* — LZH was the optional half of M8 and is

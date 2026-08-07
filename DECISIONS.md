@@ -1290,17 +1290,18 @@ picks a smaller `target`. The floor targets are the cheap ones, which is luck,
 not design. At the extreme (`target=1`) the walk is quadratic: the whole
 StuffIt 5 set takes 8.4 minutes instead of one second.
 
-**On the target the price is 1.73x, and the x86 ratio does not predict it.**
-Measured at authentic 7 MHz on `derived-a2basic.dmg.sit`: 537 s with the fast
-table on a 4 MB machine, 927 s with the sampled index on a 1 MB one. The same
-fixture's x86 ratio is 2.5x, so the fallback is relatively *cheaper* on a
-68000 — most likely because the arithmetic decoder dominates more there and
-the BWT walk is a smaller share of the whole. The useful framing is not "the
-fallback costs 73%" but "Arsenic already costs nine minutes on a Plus, and
-this is what makes the entry extractable at all." Measuring it needed a 1 MB
-1x emulator that did not exist (`build_mv mv-1M-1x 1M z`); the three builds
-`setup.sh` makes are 4M/1M all-out and 4M-1x, and neither all-out build can
-answer a timing question.
+**On the target the price is 1.65x to 2.47x, and the x86 ratio does not
+predict it.** Measured at authentic 7 MHz, both Arsenic fixtures, both paths:
+`a2basic` 587 s fast / 966 s sampled (1.65x), `Library_ISBN` 768 s / 1,898 s
+(2.47x). The ratio widens with block fill, as the `blocklen/target` model
+says it should. The same `a2basic` ratio on x86 is 2.5x, so the fallback is
+relatively *cheaper* on a 68000 — most likely because the arithmetic decoder
+dominates more there and the BWT walk is a smaller share. The useful framing
+is not "the fallback costs 65%" but "Arsenic already costs ten minutes on a
+Plus, and this is what makes the entry extractable at all." Measuring it
+needed a 1 MB 1x emulator that did not exist (`build_mv mv-1M-1x 1M z`); the
+three builds `setup.sh` made were 4M/1M all-out and 4M-1x, and no all-out
+build can answer a timing question.
 
 **Degradation is bounded by an accident worth knowing about.** Squeezing the
 budget below ~350 KB does not drive `target` to 1 and hang — it refuses the
@@ -1367,3 +1368,71 @@ drives by coordinate cannot fail on a moved control; it can only produce a
 screenshot of the wrong thing**, which is worthless unless somebody looks. The
 constant now carries the arithmetic that derives it from the DLOG and DITL
 rects, so the next person can recompute rather than re-measure.
+
+## 2026-08-07 — the progress rewrite costs ~9% on a 68000, and why is UNKNOWN
+
+Recorded as an observation, not a finding: the mechanism has no reproduction
+and three plausible explanations have each been measured and killed.
+
+**Measured, and reproducible.** `derived-a2basic.dmg.sit`, 4 MB Mac Plus at
+authentic 7 MHz, extraction only, fast inverse BWT on both sides:
+
+| build | 4 MB (fast table) | 1 MB (sampled index) |
+|---|---|---|
+| b4b5429 (before the progress rewrite) | 536 s, 537 s | 927 s |
+| 8248ab8 (after) | 583 s, 587 s, 582 s | 966 s, 966 s |
+| delta | **+47 s** | **+39 s** |
+
+Host idle throughout (load 0.18, no stray emulators). Note the shape: the two
+deltas are close in ABSOLUTE terms on the same fixture, not in percentage —
++47 s and +39 s for the same 205,019 bytes of output — so "9%" is the wrong
+way to describe it. It is a cost of roughly 40 s attached to this fixture,
+which reads as 9% of the fast path and 4% of the slow one.
+
+**What it is NOT.** Each of these was a stated hypothesis, tested, and wrong:
+
+- *The autotest grid.* `at_report` erases the whole 21,888-byte framebuffer a
+  byte at a time and repaints 272 cells, and the rewrite took a2basic from 41
+  reports to 801. Rate-limiting the grid to one repaint per 5 s (from 801 to
+  ~117) changed the time by nothing: 587 s. The rate limit is kept anyway —
+  the instrument should not scale with the thing it measures — but it is not
+  the cause.
+- *The tick rate, and therefore anything charged per tick.* Setting
+  `ARS_PROGRESS_STEP` back to 8192, i.e. 26 progress calls instead of 801,
+  also changed nothing: 582 s. This is the strongest constraint available: a
+  30x reduction in callbacks bought zero, so whatever costs 40 s is not paid
+  per callback. It also rules out `ars_scale`'s 32-bit divisions.
+- *The engine change costing x86 time.* It does not. Ten runs of `unclassic t`
+  on the same fixture: 19 ms before, 19 ms after.
+
+**What it IS, as far as the evidence goes.** Copying only the four changed
+`src/` files into the b4b5429 worktree, keeping its Mac shell, reproduces the
+slowdown exactly: 582 s. So it is the engine diff, on a 68000, and not the Mac
+shell and not the reporting. The only per-output-byte addition in that diff is
+one `produced >= nexttick` compare over 205,019 iterations, which cannot
+account for 50 seconds at 7.83 MHz — that would be ~1,900 cycles a byte. The
+arithmetic is irreconcilable with the measurement, which is exactly why this
+is written down as unexplained rather than attributed.
+
+**It is being kept regardless, and that is a judgement, not an oversight.**
+What the 9% buys is a progress bar that moves and a Cancel button that answers
+in about a second instead of thirty-seven — on extractions that run for a
+quarter of an hour. A user who cannot tell a working machine from a hung one,
+and cannot stop it, is worse off than one who waits 9% longer.
+
+**Anyone picking this up, in order of cost.** Do not re-test the four killed
+hypotheses above.
+
+1. *Is the cost fixed, or proportional to output?* Two runs of
+   `derived-KeyGraphics.sit` (33 KB of output against a2basic's 205 KB), old
+   build and new, four minutes total. A fixed ~40 s would dominate that
+   fixture; a proportional cost would show ~7 s. This is the cheapest
+   discriminator there is and it splits the remaining space in half.
+2. *Is it the per-byte compare?* Keep `ps->hold` and `unc_progress_at`, delete
+   only the `produced >= nexttick` test from the output loop and tick from
+   `ars_read_block` instead. One 10-minute run.
+
+The arithmetic says it cannot be the compare — 40 s over 205,019 iterations is
+1,600 cycles a byte at 7.83 MHz — but the arithmetic also said it could not be
+the reporting, and the measurement disagreed with that too. Measure before
+believing either.

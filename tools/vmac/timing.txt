@@ -37,12 +37,18 @@ derived-Export.sit                         # StuffIt         1615 B
 # --- StuffIt 5 / Arsenic, added 2026-08-07 --------------------------------
 # The list above samples StuffIt 5 with derived-KeyGraphics.sit (4,611 B),
 # which is far too small to make the decoder fall back to its low-memory
-# inverse BWT — so it measured the fast path and nothing else. This one does
-# reach the fallback at 1 MB, and is the only Arsenic 1x figure there is:
+# inverse BWT — so it measured the fast path and nothing else. These two do
+# reach the fallback at 1 MB. Measured extract times, both paths:
 #
-#     tools/vmac/run.py --emu mv-4M-1x --mem 4M ...   537 s  (fast table)
-#     tools/vmac/run.py --emu mv-1M-1x --mem 1M ...   927 s  (sampled index)
+#                                    4 MB (table)   1 MB (sampled)
+#   derived-a2basic.dmg.sit               587 s          966 s
+#   derived-Library_ISBN_Barcoder.sit     768 s        1,898 s
 #
-# derived-Library_ISBN_Barcoder.sit is the sample's worst case (641 KB out)
-# and has NOT been timed; allow --timeout 7200 if you try it.
+#   run.py --emu mv-4M-1x --mem 4M ...   /   --emu mv-1M-1x --mem 1M ...
+#
+# ONE EMULATOR AT A TIME. Two 1x runs in parallel do not disturb each other's
+# pacing — the timings came out identical — but they do race the screenshot
+# against the framebuffer repaint, and a torn grid reads as a CRC MISMATCH
+# that looks like an extraction fault. Cost one wasted hour on 2026-08-07.
 derived-a2basic.dmg.sit                    # StuffIt 5     152942 B (Arsenic)
+derived-Library_ISBN_Barcoder.sit          # StuffIt 5     202454 B (Arsenic)

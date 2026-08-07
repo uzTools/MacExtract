@@ -139,6 +139,11 @@ the second one rather than porting the first one's answer. (DECISIONS.md,
   believing that it passed.
 - `pgrep -f "some command"` matches the watching shell itself, so an
   `until ! pgrep ...` loop never exits. Use `kill -0 <captured pid>`.
+  **`pkill -f` has the same flaw and it is worse**: put `pkill -f
+  "vmac/run.py"` and the run itself in one shell command and the pattern
+  matches that shell's own command line, so it kills itself before the
+  work starts. It looks like the run crashed instantly. Match on the
+  executable (`pkill -x minivmac`) or kill a captured pid.
 - The Mac OS 9 pointer does not work at all; drive that guest from the
   keyboard. Mini vMac's mouse is fine.
 - An emulator run is minutes; do not poll it every few seconds, and do not
