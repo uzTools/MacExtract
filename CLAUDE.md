@@ -36,7 +36,8 @@ Read them at the start of every session. Where these files disagree with each ot
 ## Where to start (handoff, 2026-08-07)
 
 The repository is on GitHub as a **private** repo, `main`, tagged through
-`v0.4`. Working tree clean, `./ci.sh` green, nothing in flight.
+`v0.5`, which is the first tag to publish a downloadable application (see
+*Cutting a release*). Working tree clean, `./ci.sh` green, nothing in flight.
 
 **The 1 MB floor is 44/44 as of 2026-08-07, and the StuffIt 5 / Arsenic
 capability gap is closed.** All six sampled StuffIt 5 fixtures extract every
@@ -161,6 +162,40 @@ the second one rather than porting the first one's answer. (DECISIONS.md,
 - **LGPL-2.1-or-later**, forced by transcribing XADMaster; keep `NOTICE` accurate.
 - Fixture archives are copyrighted and never committed — only `fixtures/SOURCES.md` and the manifests. Same rule for the Mac ROM and System image under `tools/vmac/`.
 - Work autonomously through a task list; log non-obvious decisions in `DECISIONS.md`; if something cannot be made to pass after genuine effort, write it up in `BLOCKERS.md` and move on rather than stalling.
+
+## Cutting a release
+
+Pushing a `v*` tag publishes a GitHub release with the application attached.
+`.github/workflows/release.yml` does it, using the runner's own
+`GITHUB_TOKEN`. **Verified end to end on v0.5, 2026-08-07.**
+
+```sh
+sh tools/make_dist.sh                    # rebuild dist/ from current source
+# commit dist/ + docs, ./ci.sh green, push main FIRST
+git tag -a v0.6 -m "..."                 # annotated; the message is the tag's
+git push origin v0.6
+```
+
+Four things will bite you, all of them cost a step on v0.5:
+
+- **Tag the commit that contains the workflow.** Actions reads the workflow
+  from the ref that was pushed, so a tag pointing at a commit predating
+  `release.yml` publishes nothing, silently. Push `main` before tagging.
+- **The release notes are `dist/README.txt`**, verbatim. It is a user-facing
+  download page, not a changelog — check it still describes the application
+  before tagging.
+- **`dist/` must be current.** The workflow publishes what is committed; it
+  does not build. It fails if an asset is missing or empty, but it cannot tell
+  that a present asset is three versions old.
+- **Confirming it worked is a human step.** The repo is private and this
+  machine authenticates with a DEPLOY KEY, which signs git over SSH and cannot
+  read the Releases or Actions API at all — every unauthenticated call returns
+  404. Ask, or look. Do not report a release as published on the strength of a
+  successful `git push`.
+
+A deploy-key push *is* allowed to add files under `.github/workflows/`, and a
+deploy-key tag push *does* trigger a workflow. Both were open questions before
+v0.5 and both are now settled; do not re-litigate them.
 
 ## Writing things down
 

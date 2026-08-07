@@ -31,6 +31,9 @@ Or let it finish:
 
 ## Download
 
+**[Latest release](https://github.com/jarreboum/unclassic/releases/latest)** —
+or straight from the tree:
+
 | | |
 |---|---|
 | [`dist/unclassic.bin`](dist/unclassic.bin) | the application as uncompressed MacBinary — transfer it with anything MacBinary-aware |

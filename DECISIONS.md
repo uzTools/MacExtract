@@ -1436,3 +1436,39 @@ The arithmetic says it cannot be the compare — 40 s over 205,019 iterations is
 1,600 cycles a byte at 7.83 MHz — but the arithmetic also said it could not be
 the reporting, and the measurement disagreed with that too. Measure before
 believing either.
+
+## 2026-08-07 — releases are published by Actions, not by a token here
+
+The machine that develops this repository authenticates with a **deploy key**.
+That signs git over SSH and cannot reach the Releases REST API at all, so v0.5
+first shipped as committed files with no release page behind it.
+
+Two ways out. Issue a personal access token to that machine, or let a workflow
+do it with the runner's own `GITHUB_TOKEN`. **The workflow wins, and the reason
+is not convenience:** a token stored here persists across sessions and grants
+its whole scope to anything that runs, including a confused or compromised
+agent session, whereas the workflow's credential exists for the length of one
+run and is scoped to one repository by construction. It also keeps working
+when nobody is at the keyboard, and leaves an audit trail in the Actions log.
+
+`.github/workflows/release.yml` publishes what is committed in `dist/` rather
+than building. Retro68 is a large cross-toolchain and `dist/` is committed
+precisely so a person with an old Mac and no compiler can download the thing;
+building it twice would only add a way for the two to disagree. The workflow
+refuses to publish a missing or empty asset — a release with a broken download
+is worse than no release, because it looks finished.
+
+`gh` is preinstalled on GitHub-hosted runners, so no third-party action is
+pinned here either.
+
+**What this costs: nobody on this machine can confirm a release exists.** The
+repo is private, the deploy key cannot read the Releases or Actions API, and
+every unauthenticated call returns 404. Verification is a human step, and the
+procedure in CLAUDE.md says so rather than letting a green `git push` be
+mistaken for a published release.
+
+Two assumptions were open when this was written and are now **confirmed by
+v0.5**: a deploy-key push may add files under `.github/workflows/` (the
+workflow-scope restriction applies to PATs over HTTPS, not SSH), and a
+deploy-key tag push does trigger a workflow (the no-recursion rule applies to
+`GITHUB_TOKEN`-driven events).
