@@ -177,6 +177,32 @@ there:
 - **No plans in status docs.** "The next attempt is one run, not three" is dead weight the moment it is done. Plans belong in the conversation or a commit message.
 - **Never cite `FILE.md:NN`.** Line numbers drift silently and are then wrong without anyone noticing. Cite the section or table row by name.
 
+### `README.md` is the exception, and has its own rules
+
+Every other document in this repository is written for whoever maintains it.
+`README.md` is written for **somebody who has a `.sit` file and an old
+Macintosh**, and it is the only one that is. Judge it by whether that person
+can tell in thirty seconds what this is, whether it runs on their machine, and
+how long they will be waiting.
+
+- **Concise, and human.** Aim for a screen or two. No memory budgets, no
+  allocation strategy, no per-fixture tables, no milestones, no methodology,
+  no history, no withdrawn claims. Those belong in the files above; link to
+  them at the end and let the reader choose to go deeper.
+- **Show the application.** Screenshots live in `docs/screens/` and come from
+  `tools/vmac/interactive.py`, so they are real frames from a real emulated
+  Mac rather than mockups. Re-take them whenever the UI changes, and **look at
+  each one before committing it** — that harness clicks fixed coordinates and
+  will happily photograph the wrong window (MANUAL_TESTS.md). One of the four
+  currently in the repo was wrong for exactly that reason on 2026-08-07.
+- **Every command in it must be run before it ships.** A README is the most
+  copy-pasted file in a project and the least tested.
+- **Round the numbers.** "16 minutes", not "966 s". Precision belongs in
+  FORMATS.md; the reader here wants to know whether to make coffee.
+- **Keep the honesty, drop the hedging.** "No physical Macintosh has ever run
+  it" stays — it is what a user needs to weigh. The four hypotheses behind an
+  unexplained 40 seconds do not.
+
 ## Out of scope (v1)
 
 Compression (extraction only), StuffIt X (`.sitx`), encrypted archives, multi-segment archives, disk images, DiskDoubler, Now Compress, LZH/LHA. These are **detect-only**: `unc_sniff` names them — including Disk Copy 4.2, whose probe is now real — so a UI can tell the user what the file is, and extraction returns cleanly unsupported.
