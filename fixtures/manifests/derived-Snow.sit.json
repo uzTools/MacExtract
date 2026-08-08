@@ -11,13 +11,13 @@
   },
   {
    "creator": "EDIT",
+   "data_oracle": "macunpack (macutils 2.0b3, -m32)",
+   "data_sha256": "62bce478f0e001c02ef58f5cb6a0c4b6b6618e021148b4069e202d4f6a4eceaa",
+   "data_size": 1400,
    "name": "Snow.info",
    "rsrc_sha256": "0b7a22e3f35179b8e4989b9fd849f01c05348e38ba06df17b8195daa01dfc697",
    "rsrc_size": 348,
-   "type": "TEXT",
-   "unadjudicated": {
-    "data": "Attempted to read more data than was available"
-   }
+   "type": "TEXT"
   },
   {
    "creator": "RICK",

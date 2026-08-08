@@ -14,7 +14,7 @@ whole corpus for that format (engine allocations only, via
 | BinHex 4 (.hqx) | extract | RLE90 | 179 fixtures | 8 KB | full |
 | PackIt (.pit) | extract | store, Huffman; encrypted detected | 4 fixtures (1 real + 3 synthetic PMa4) | 9 KB | full |
 | Compact Pro (.cpt) | extract | RLE, LZH+RLE | 108 fixtures | 19 KB | full |
-| StuffIt classic (.sit) | extract | 0 store, 1 RLE90*, 2 LZW, 3 Huffman, 5 LZAH, 8 MW, 13 LZSS+Huffman; 6 fixed-Huffman NOT implemented‡; encrypted detected | 225 fixtures | 8–76 KB‖ | full |
+| StuffIt classic (.sit) | extract | 0 store, 1 RLE90*, 2 LZW, 3 Huffman, 5 LZAH, 6 fixed Huffman‡, 8 MW, 13 LZSS+Huffman; encrypted detected | 227 fixtures | 8–76 KB‖ | full |
 | StuffIt 5 (.sit) | extract | 0, 13, 15 Arsenic; encrypted detected | 31 fixtures | 0.15–2.53 MB† | 23 of 31 fixtures extract FULLY; the rest refuse per entry |
 | Zip | extract | store, deflate; others & encrypted per-entry errors | 3 fixtures (+2 PKZIP-1.x corpus-only) | 66 KB | full |
 | Gzip | extract | deflate | 3 fixtures | 51 KB | full |
@@ -24,7 +24,7 @@ whole corpus for that format (engine allocations only, via
 | DiskDoubler (DD, DDAR, DDA2) | detect only | — | 4 sniffed | — | — |
 | Now Compress | detect only | — | 1 sniffed | — | — |
 | LZH/LHA (-lh?-, -lz?-) | detect only | — | — | — | — |
-| DiskCopy 4.2 (.image) | detect only | — | synthetic 800K GCR + real 800K image; 0 false positives in 803 fixtures | — | — |
+| DiskCopy 4.2 (.image) | detect only | — | synthetic 800K GCR + real 800K image; 0 false positives in 804 fixtures | — | — |
 
 \* **Method 1 occurs once and IS oracle-adjudicated** (since 2026-08-08).
 It is the 470-byte resource fork of `I Want To Buy Some Cheese` in
@@ -38,13 +38,28 @@ Edge cases the one real fork cannot reach — runs of `0x90`, the 255-byte
 maximum token, output ending inside a run — are covered by
 `synth-sit-rle90.sit` (`tools/synth_sit1.py`), also oracle-adjudicated.
 
-‡ **Method 6, "Fixed Huffman", is present in the corpus and NOT implemented.**
-`derived-INITLoader.sit` carries one 34,818-byte method-6 fork; the engine
-returns a clean per-entry "recognized but unsupported". The name comes from
-`reference/XADMaster/XADStuffItParser.m:284`; XADMaster does not implement it
-either (`//case 6: fixed huffman`, line 319), which is why that fixture has no
-manifest and why the gap went unnamed here until 2026-08-01. One fixture, one
-fork, in a corpus of 344 StuffIt archives.
+‡ **Method 6, "Fixed Huffman", is implemented and oracle-adjudicated**
+(since 2026-08-08). It occurs once in the corpus: the 34,818-byte resource
+fork of `INITLoader` in `derived-INITLoader.sit`, two Huffman-coded segments,
+which we decode byte-exact. Every segment is coded with a tree whose SHAPE is
+a constant of the format, so it is generated once from the reference by
+`tools/gen_sit6_tables.py` into `src/sit6_tables.h` rather than rebuilt per
+fork on a 68000; only the byte each leaf stands for is declared per segment.
+Peak heap 39,998 B on that fixture — the segment buffer is sized from the
+segment (31,806 B here), capped at 64 KB.
+
+The branches one real fork cannot reach — a *stored* segment, PackBits fillers,
+the longest and shortest runs, a one-byte alphabet, twelve segments in a fork —
+are covered by `synth-sit-fixhuf.sit` (`tools/synth_sit6.py`), also
+oracle-adjudicated, 10 forks over 5 entries.
+
+**The oracle for both is `macunpack`, not `unar`:** XADMaster recognizes the
+method and refuses it (`//case 6: fixed huffman`,
+`reference/XADMaster/XADStuffItParser.m`), which is where the name comes from
+and why this footnote said for a week that no oracle for the method existed
+(BLOCKERS.md, "Withdrawn claims"). macunpack has decoded it since 1991 and is
+the reference the decoder is transcribed from — see TESTING.md, "A second
+oracle", for what that does and does not prove.
 
 † **Every real Arsenic block is 512 KB.** The block size is `1 << (v+9)`
 with `v` read from the stream, so other sizes are legal, but across the
@@ -182,7 +197,7 @@ the intermediate deleted (`-nr` disables; depth ≤ 8). Verified chains:
 
 ## Hardening
 
-- Differential: 793 fixtures byte-exact against `unar` manifests
+- Differential: 795 fixtures byte-exact against `unar` manifests
   (both forks + type/creator), `./ci.sh`. `run_diff.py` prints the
   number it actually ran, plus two figures that must be read with it:
   **19 forks across 14 fixtures are oracle-unadjudicated** (the oracle
@@ -301,7 +316,7 @@ the others, cautiously and from a single anchor.
 
 ## Real-hardware verification (Mini vMac — System 6.0.8, 4 MB Mac Plus, 68000)
 
-The Retro68 Mac shell was replayed against a 53-fixture sample spanning all
+The Retro68 Mac shell was replayed against a 55-fixture sample spanning all
 twelve formats on a **real System 6.0.8 / 4 MB Mac Plus** under Mini vMac
 (a true 68000). Every extraction is verified ON THE MAC ITSELF: the app
 CRC-32s both forks after reading them back through the File Manager and the
@@ -309,12 +324,15 @@ result — painted to the framebuffer, read from a screenshot — is
 cross-checked against the same engine's Linux output (`tools/vmac_check.py`,
 `tools/decode_grid.py`).
 
-**53/53 byte-exact PASS** (2026-08-08) — data forks exact, resource forks exact
+**55/55 byte-exact PASS** (2026-08-08) — data forks exact, resource forks exact
 bar the OS-stamped reserved header (bytes 16–127).
 
 **The sample was 44 fixtures until 2026-08-08**, when nine that had never had
 an oracle manifest gained one and were added: seven THINK C projects holding
-both `X` and a real `X.rsrc`, and two with a leading-`~` name. Every `n/44`
+both `X` and a real `X.rsrc`, and two with a leading-`~` name. Two more joined
+the same day for the same reason once method 6 had an oracle —
+`derived-INITLoader.sit` and `synth-sit-fixhuf.sit`, measured on all three
+Mini vMac tiers that day and byte-exact on each. Every `n/44`
 figure elsewhere in this file refers to the smaller sample and is left as it
 was measured. The nine are the only fixtures here whose shape can distinguish
 a fork-naming mistake from a correct extraction, which is why the host-side
@@ -374,7 +392,7 @@ above System 6: Standard File returns a **working-directory** reference in
 is always running, so the `SIZE` partition governs the launch. Mini vMac's
 Mac Plus supports up to 7.5.5, so this is the same 68000 as every other row.
 
-**53/53 byte-exact PASS at 4 MB** (2026-08-08; 44/44 before the sample grew) —
+**55/55 byte-exact PASS at 4 MB** (2026-08-08; 44/44 before the sample grew) —
 the same committed sample, the same on-Mac CRC-32 read-back, the same twelve
 formats:
 
@@ -404,17 +422,17 @@ index instead. Nothing selects this but the allocator saying no, and both
 columns are byte-exact.
 
 **This tier is 4 MB.** **The 1 MB floor target is System 6, and only
-System 6**, and it is demonstrated by the 53/53 run below.
+System 6**, and it is demonstrated by the 55/55 run below.
 
 ## Floor target verification (Mini vMac — System 6.0.8, **1 MB** Mac Plus, 68000)
 
-The same 53-fixture sample was replayed on a Mini vMac built for **1 MB of
+The same 55-fixture sample was replayed on a Mini vMac built for **1 MB of
 RAM** — the project's floor target — one boot per fixture, same on-Mac
 CRC-32 verification (`tools/vmac/run.py --mem 1M --list tools/vmac/sample.txt`).
 The engine budget is derived from `FreeMem` at startup.
 
-**53/53 byte-exact PASS** (2026-08-08; 44/44 on 2026-08-07, before the nine
-recovered fixtures joined the sample). There are no memory-budget refusals
+**55/55 byte-exact PASS** (2026-08-08; 44/44 on 2026-08-07, before the nine
+recovered fixtures and the two method-6 fixtures joined the sample). There are no memory-budget refusals
 left at the floor target: every fixture in the sample, in every format,
 extracts byte-exact on a 1 MB Mac Plus. The six StuffIt 5 rows, which were the
 last to arrive, with peak heap as the Mac itself reports it:
@@ -560,8 +578,9 @@ rather than weaker:
   name that has to survive the round trip.
 
 **The sample is small on purpose.** Each fixture costs a whole boot (~110 s on
-an idle host, plus a 2 GB image copy), where Mini vMac replays the whole
-53-fixture set inside one boot. So this samples for breadth of format; the memory-budget
+an idle host, plus a 2 GB image copy), where Mini vMac boots per fixture too
+but at ~5 s a boot, so it replays all 55 in the time this tier spends on
+three. So this samples for breadth of format; the memory-budget
 spread that `sample.txt` exists to exercise is a 1 MB question, and this
 machine has 512 MB.
 

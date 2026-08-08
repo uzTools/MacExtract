@@ -8,14 +8,16 @@ every system the project claims:
 
 | tier | result |
 |---|---|
-| System 6.0.8, 4 MB Mac Plus (Mini vMac, a true 68000) | 53/53 sampled fixtures |
-| System 6.0.8, **1 MB** — the floor target | **53/53**; no memory-budget refusals remain |
-| System 7.0.1, 4 MB | **53/53** |
+| System 6.0.8, 4 MB Mac Plus (Mini vMac, a true 68000) | 55/55 sampled fixtures |
+| System 6.0.8, **1 MB** — the floor target | **55/55**; no memory-budget refusals remain |
+| System 7.0.1, 4 MB | **55/55** |
 | Mac OS 9.2 (QEMU PowerPC, 68LC040 emulation) | **13/13**, plus HFS+ and the `SIZE` partition |
 
 The sample was 44 fixtures until 2026-08-08, when nine that had never had an
 oracle manifest gained one and joined it (BLOCKERS.md *Withdrawn claims*,
-FORMATS.md); all three tiers were re-run against the enlarged sample that day.
+FORMATS.md), and then two more once method 6 had an oracle; all three tiers
+were re-run against the enlarged sample that day, and the two method-6
+fixtures measured on each of them.
 Figures written as `n/44` elsewhere in this file were measured on the smaller
 sample and are left as they were.
 
@@ -30,10 +32,10 @@ re-verification costs and every on-demand probe in `tools/vmac/README.md`.
 MANUAL_TESTS.md is not part of that: it lists what no emulator here can
 settle, and none of it has been done.
 
-**Ten claims this file used to assert have been withdrawn, and one
+**Eleven claims this file used to assert have been withdrawn, and one
 confirmed.** (This count read "seven" while the table held eight; corrected
 2026-08-03.) They are collected at the end, under *Withdrawn claims*, and kept
-on purpose, because three mechanisms keep finding the next one:
+on purpose, because four mechanisms keep finding the next one:
 
 - **A live claim sitting next to an already-withdrawn one.** Twice, worth
   39/44 → 40/44 at the floor target once.
@@ -43,6 +45,11 @@ on purpose, because three mechanisms keep finding the next one:
   2026-08-08: TESTING.md described the fork convention that made nine
   fixtures unusable while quoting the `unar --help` line that names the
   alternative.
+- **A limitation stated about the environment that is true only of one
+  tool.** Once, on 2026-08-08: "there is no oracle for StuffIt method 6" was
+  a fact about XADMaster, and the oracle that disproved it was already in
+  `reference/`. Read every "cannot be done here" for the name of the tool it
+  is really about.
 
 Nothing above this line depends on them.
 
@@ -224,6 +231,7 @@ Each entry is: what was claimed, what disproved it, and what it cost.
 | `pkill -9` never flushes; boot+kill corrupts the image | 11 boot+kill cycles | 2026-08-02 |
 | The three 1 MB StuffIt 5 refusals each fill a 512 KB block | instrumenting `numbytes` where the transform vector is allocated | 2026-08-03 |
 | Nine fixtures are ground truth the oracle cannot produce | `unar -k hidden`; all nine build, all 774 existing manifests unchanged | 2026-08-08 |
+| There is no oracle for StuffIt method 6, and no second fixture to test one on | `macunpack` from `reference/`, and `tools/synth_sit6.py` | 2026-08-08 |
 
 **Retro68's `HOpen` glue.** Claimed to return `noErr` without writing back the
 refNum, and recorded as M10's root cause in commit `22e806b`. A standalone
@@ -293,7 +301,7 @@ every entry to extracting most of them.
 **Mini vMac's write-back is lazy and partial** — "it can commit one fork of a
 file but not the other", so results could not be read off the Out volume. The
 whole sample was replayed with `--keep-disks` and every Out volume read back:
-**53/53 byte-exact, both forks, names and folder structure included.**
+**55/55 byte-exact, both forks, names and folder structure included.**
 `derived-RWAsm_Folder.sit` alone is 38 files and **73 forks**, i.e. dozens with
 both forks non-empty — exactly the case the claim named as impossible. An
 8-bit folder name, a MacRoman `Appé` and a `.DS_Store` survive too. **Cost:**
@@ -392,6 +400,22 @@ one was closeable in about an hour. The remedy was also quoted verbatim in
 TESTING.md, one paragraph above the sentence describing the limitation: the
 `unar --help` line documenting `-forks (-k) <visible|hidden|skip>`. **Check
 which of your limits are limits of a flag you chose.**
+
+**There is no oracle for StuffIt method 6.** The corpus's one fixed-Huffman
+fork was excluded from the suite for a week on this reasoning: XADMaster
+recognizes the method and refuses it, therefore nothing here can adjudicate an
+implementation, therefore implementing it is unverifiable and not obviously
+worth doing. Every step follows except the first-to-second: `macunpack`
+decodes method 6 and has since 1991, and it was already in `reference/`,
+fetched by this repository's own script and cited by other decoders in it.
+Built with `tools/build_macunpack.sh`, it adjudicates the real fork and all
+ten forks of the synthetic fixture the same item said could not exist —
+`tools/synth_sit6.py` writes one, since a fixture for a format you can decode
+is a generator rather than a search. **Cost:** one corpus fork unextractable
+and 22 forks of *other* methods left unadjudicated, all of which the same
+oracle settled within an hour of being built; and the claim was restated in
+four status files, which is how a fact about one tool became a fact about the
+environment.
 
 ### Corrected figures and superseded write-ups
 

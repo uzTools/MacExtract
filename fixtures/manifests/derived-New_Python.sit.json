@@ -11,13 +11,13 @@
   },
   {
    "creator": "SFX!",
+   "data_oracle": "macunpack (macutils 2.0b3, -m32)",
+   "data_sha256": "4c72a1154b02d0c8c2889fadf9c6de5d3dc3c9effd6923df322a6c4412619008",
+   "data_size": 23987,
    "name": "It's A Bit Runny Sir",
    "rsrc_sha256": "a813db7bb4b34ade621c30d8ccf920bef9e227c1eaca80df21bc45c50396d17c",
    "rsrc_size": 470,
-   "type": "FSSD",
-   "unadjudicated": {
-    "data": "Attempted to read more data than was available"
-   }
+   "type": "FSSD"
   },
   {
    "creator": "SFX!",

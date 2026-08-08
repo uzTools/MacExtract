@@ -11,7 +11,7 @@ The engine is the product. The Mac app is a thin shell.
 
 ## Current state — read before working
 
-M0–M10 are **DONE**. The engine passes a 793-fixture differential suite against `unar`, and the Mac shell extracts byte-exact on a real System 6.0.8 Mac Plus under Mini vMac — **53/53 sampled fixtures at 4 MB and 53/53 at the 1 MB floor** (2026-08-08, on a sample that grew from 44 to 53 that day; there are no memory-budget refusals left).
+M0–M10 are **DONE**. The engine passes a 795-fixture differential suite against `unar` and, where `unar` fails, `macunpack`; the Mac shell extracts byte-exact on a real System 6.0.8 Mac Plus under Mini vMac — **55/55 sampled fixtures at 4 MB and 55/55 at the 1 MB floor** (2026-08-08, on a sample that grew from 44 to 55 that day; there are no memory-budget refusals left).
 
 It runs on all three systems the project claims: **System 6.0.8 and System 7.0.1** under Mini vMac (a true 68000), and **Mac OS 9.2** under QEMU PowerPC through the 68LC040 emulator, where 13/13 of a format sample is byte-exact, extraction onto **HFS+** is verified, and the `SIZE` partition is honoured by the Process Manager.
 
@@ -41,8 +41,22 @@ The repository is on GitHub as a **private** repo, `main`, tagged through
 `v0.5`, which is the first tag to publish a downloadable application (see
 *Cutting a release*). Working tree clean, `./ci.sh` green, nothing in flight.
 
-**The differential suite is 793 fixtures, not 769** (2026-08-08), and both
-increases came from the measuring apparatus rather than from new archives.
+**The differential suite is 795 fixtures, not 769** (2026-08-08), and all
+three increases came from the measuring apparatus rather than from new archives.
+The third: **`unar` failing on a fork is a fact about `unar`.** Every fork it
+leaves unadjudicated is now offered to a SECOND oracle, macutils' `macunpack`,
+built out of `reference/` by `tools/build_macunpack.sh` and recorded per fork
+as `"data_oracle"` / `"rsrc_oracle"`. That settled 23 forks across 9 fixtures,
+of which only ONE is the method it was built for — so the value was in the
+other 22, on methods already implemented. It also closed StuffIt **method 6**
+("fixed Huffman"), which four status files had called unverifiable here
+because XADMaster refuses it: the oracle was in the repository the whole time
+(BLOCKERS.md *Withdrawn claims*). Note the two traps that cost time: macunpack
+must be built `-m32` or the STORED-segment branch is unreachable in it, and a
+PREDICTED output filename becomes ground truth — a missing `.data` is an empty
+fork only when the entry's `.info` proves the entry was written at all.
+DECISIONS.md and TESTING.md, 2026-08-08.
+
 The second: `make_manifests.py` discarded a whole manifest whenever `unar`
 failed on any single entry, so 19 fixtures contributed no oracle coverage at
 all — including the corpus's only StuffIt **method 1** fork, which `unar`
@@ -66,7 +80,7 @@ file** (per-entry error, `--overwrite` restores the old behaviour) — it used t
 destroy a 7 KB resource fork on a THINK C archive and exit 0.
 DECISIONS.md and BLOCKERS.md, 2026-08-08.
 
-**The 1 MB floor is 53/53 as of 2026-08-08 (44/44 on 2026-08-07, before the
+**The 1 MB floor is 55/55 as of 2026-08-08 (44/44 on 2026-08-07, before the
 sample grew), and the StuffIt 5 / Arsenic capability gap is closed.** All six
 sampled StuffIt 5 fixtures extract every
 entry byte-exact on a 1 MB Mac Plus. There is no remaining "this format needs
@@ -135,6 +149,12 @@ rather than from new features:
   in this environment*, and closeable in an hour. It was nine, and it was the
   fork-naming flag (769 → 778 fixtures). The remedy was quoted in TESTING.md
   one paragraph above the limitation it removes.
+- "There is no oracle to check a StuffIt method 6 implementation against" — a
+  fact about XADMaster, restated in four files as a fact about this
+  environment. `reference/macutils` has decoded the method since 1991. Building
+  it as a second oracle closed the method AND adjudicated 22 forks of other
+  methods (793 → 795). **A limitation that names one tool is a limitation of
+  that tool.**
 
 So: **when something looks like a hard floor, check whether the number you are
 budgeting for is a number the data actually needs.** And when a claim has no

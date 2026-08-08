@@ -10,9 +10,20 @@ This project's decoders are transcriptions/ports of algorithms from:
     Files that transcribe XADMaster code carry a
     "Source: reference/XADMaster/<file>" comment.
 
-  * macutils, by Dik T. Winter et al. (descended from Allan G. Weber's
-    unsit and D. J. Perry's unstuffit) — public-domain-ish late-80s C,
-    used as a secondary reference for the oldest formats.
+  * macutils 2.0b3, by Dik T. Winter et al. (descended from Allan G.
+    Weber's unsit and D. J. Perry's unstuffit) — late-80s C. Its README
+    states that every algorithm in it is implemented from publicly
+    available software, that use and redistribution are explicitly
+    allowed, and that "for some parts of it the GNU software license
+    does apply"; the files here that cite it say "LGPL, see NOTICE",
+    and this is what that points at.
+    Used as a secondary reference for the oldest formats, and as the
+    ONLY reference for StuffIt method 6, "fixed Huffman", which
+    XADMaster recognizes but does not implement: `src/fmt_sit.c` and
+    the generated `src/sit6_tables.h` transcribe `macunpack/sit.c`.
+    A build of `macunpack` is also the second oracle for the
+    differential test suite (TESTING.md) — test-time only, not linked
+    into anything shipped.
 
   * "Stuffit Method 15 compression format" by Matthew T. Russotto —
     the only public specification of the StuffIt 5 "Arsenic"

@@ -26,8 +26,8 @@
  * Method byte: 0x80 = encrypted flag; masked value 0x20 = folder
  * start, 0x21 = folder end (0x10 = "folder contains encrypted").
  * Plain methods: 0 store, 1 RLE90, 2 compress LZW (14-bit, block
- * mode), 3 Huffman (bit-serialized tree), 5 LZAH, 8 MW, 13
- * LZSS+Huffman, 14 installer, 15 Arsenic.
+ * mode), 3 Huffman (bit-serialized tree), 5 LZAH, 6 fixed Huffman,
+ * 8 MW, 13 LZSS+Huffman, 14 installer, 15 Arsenic.
  *
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
@@ -595,6 +595,207 @@ out:
 }
 
 /* ------------------------------------------------------------------ */
+/* Method 6: "fixed Huffman" — a fork is a sequence of independent    */
+/* segments, each of which decodes to a PackBits stream that is then  */
+/* expanded into the fork.                                            */
+/*                                                                    */
+/*   s32 size    counted from its own first byte.                     */
+/*   size < 0    the segment is stored: |size| - 4 PackBits bytes.    */
+/*   size > 0    u32 expanded length, u16 code count, then that many  */
+/*               bytes naming what leaf ordinals 1..count stand for,  */
+/*               then a bitstream ending at the terminator symbol.    */
+/*                                                                    */
+/* The Huffman tree's SHAPE is the same in every archive (sit6_tables */
+/* .h); only the leaf bytes change per segment, which is what "fixed" */
+/* means here.                                                        */
+/*                                                                    */
+/* Source: reference/macutils/macunpack/sit.c (sit_fixhuf, code6,     */
+/* sit_dosplit) — LGPL, see NOTICE. This is the ONLY reference        */
+/* implementation the project has for method 6: XADMaster recognizes  */
+/* the method and refuses it (XADStuffItParser.m).                    */
+/* ------------------------------------------------------------------ */
+
+#include "sit6_tables.h"
+
+/* Largest segment buffer we will allocate. macunpack decodes into a
+ * fixed char[32768], so the format does not exceed that; the cap is
+ * doubled to leave a real archive room to disagree. Nothing is
+ * allocated AT the cap — every buffer is the size the segment in hand
+ * declares, which for the corpus's only method-6 fork is 31,806 B. */
+#define SIT6_MAX_SEG 65536u
+
+/* Grow the segment buffer to n bytes. The old contents are dead at a
+ * segment boundary, so this frees and allocates rather than copying:
+ * a copy-based growth would need old + new bytes live at once, which
+ * is what made growth-on-demand lose to one-shot sizing for the LZW
+ * table (DECISIONS.md, 2026-08-03). */
+static int sit6_need(UncAlloc *al, uint8_t **seg, uint32_t *cap, uint32_t n)
+{
+    if (n <= *cap) return UNC_OK;
+    if (n > SIT6_MAX_SEG) return UNC_ERR_CORRUPT;
+    unc_free(al, *seg);
+    *seg = NULL;
+    *cap = 0;
+    *seg = (uint8_t *)unc_alloc(al, n);
+    if (!*seg) return UNC_ERR_MEM;
+    *cap = n;
+    return UNC_OK;
+}
+
+/* Big-endian scalars, byte-wise (no unaligned loads on a 68000). */
+static int sit6_u32(UncBufIn *in, uint32_t *out)
+{
+    uint32_t v = 0;
+    int i, b;
+    for (i = 0; i < 4; i++) {
+        if ((b = unc_bufin_next(in)) < 0) return in->err;
+        v = (v << 8) | (uint32_t)b;
+    }
+    *out = v;
+    return UNC_OK;
+}
+
+/* Expand one PackBits stream into the fork, stopping at *left bytes.
+ * Source: sit_fixhuf's tail loop. A control byte below 0x80 introduces
+ * n + 1 literals, 0x80 is a no-op, and above that it repeats the next
+ * byte 0x101 - n times. */
+static int sit6_packbits(SitFork *f, const uint8_t *seg, uint32_t seglen,
+                         uint32_t *left)
+{
+    uint32_t p = 0;
+    while (p < seglen && *left > 0) {
+        uint32_t n = seg[p++];
+        if (n < 0x80) {
+            n++;
+            if (seglen - p < n) return UNC_ERR_CORRUPT;
+            while (n-- > 0 && *left > 0) {
+                if (sit_put(f, seg[p++]) != UNC_OK) return UNC_ERR_SINK;
+                (*left)--;
+            }
+        } else if (n != 0x80) {
+            uint8_t v;
+            n = 0x101u - n;
+            if (p >= seglen) return UNC_ERR_CORRUPT;
+            v = seg[p++];
+            while (n-- > 0 && *left > 0) {
+                if (sit_put(f, v) != UNC_OK) return UNC_ERR_SINK;
+                (*left)--;
+            }
+        }
+    }
+    return UNC_OK;
+}
+
+/* Decode one Huffman-coded segment into seg[0..explen). */
+static int sit6_huffseg(UncBufIn *in, uint8_t *seg, uint32_t explen,
+                        const uint8_t *leaf, uint32_t codes,
+                        uint32_t segbytes, uint32_t *used)
+{
+    UncBitIn bi;
+    uint32_t start, got = 0;
+
+    unc_bitin_init(&bi, in);
+    start = unc_bitin_bytepos(&bi);
+    for (;;) {
+        uint16_t node = 0, child = 0;
+        int depth = 0;
+        do {
+            int bit = unc_bitin_bit(&bi);
+            if (bit < 0) return bi.err != UNC_OK ? bi.err : UNC_ERR_CORRUPT;
+            child = bit ? sit6_one[node] : sit6_zero[node];
+            if (child <= SIT6_LEAVES) break;             /* a leaf ordinal */
+            node = (uint16_t)(child - SIT6_LEAVES);
+        } while (++depth <= SIT6_DEPTH);
+        if (child > SIT6_LEAVES) return UNC_ERR_CORRUPT; /* not a tree */
+        if (child >= SIT6_LEAVES - 1) break;             /* terminator */
+        /* A code for a leaf the segment never named stands for nothing;
+         * macunpack hands back a byte left over from an earlier segment,
+         * which is a wrong fork rather than a refused one. */
+        if (child > codes) return UNC_ERR_CORRUPT;
+        if (got == explen) return UNC_ERR_CORRUPT;
+        seg[got++] = leaf[child - 1];
+        /* Bounded by the segment's own byte count, so a bitstream that
+         * never terminates cannot read on into the next fork. */
+        if (unc_bitin_bytepos(&bi) - start > segbytes) return UNC_ERR_CORRUPT;
+    }
+    if (got != explen) return UNC_ERR_CORRUPT;
+    *used = unc_bitin_bytepos(&bi) - start;
+    return *used <= segbytes ? UNC_OK : UNC_ERR_CORRUPT;
+}
+
+static int sit6_fork(SitFork *f, UncBufIn *in, uint32_t outlen, UncAlloc *al)
+{
+    uint8_t *seg = NULL;
+    uint32_t segcap = 0;
+    uint32_t left = outlen;
+    uint8_t leaf[256];
+    int err = UNC_OK;
+
+    /* Driven by the fork length rather than by the compressed length:
+     * every iteration consumes at least the 4-byte segment header, and
+     * the bufin is limited to this fork, so a stream that stops
+     * producing output still terminates on truncation. */
+    while (left > 0) {
+        uint32_t size = 0, seglen, i;
+        int stored;
+
+        if ((err = sit6_u32(in, &size)) != UNC_OK) goto out;
+        stored = (size & 0x80000000u) != 0;
+        if (stored) size = 0u - size;        /* negate without signed UB */
+        if (size < 4) { err = UNC_ERR_CORRUPT; goto out; }
+        size -= 4;
+
+        if (stored) {
+            seglen = size;
+            if ((err = sit6_need(al, &seg, &segcap, seglen)) != UNC_OK) goto out;
+            for (i = 0; i < seglen; i++) {
+                int b = unc_bufin_next(in);
+                if (b < 0) { err = in->err; goto out; }
+                seg[i] = (uint8_t)b;
+            }
+        } else {
+            uint32_t explen = 0, codes, used = 0;
+            int hi, lo;
+
+            if (size < 6) { err = UNC_ERR_CORRUPT; goto out; }
+            if ((err = sit6_u32(in, &explen)) != UNC_OK) goto out;
+            if ((hi = unc_bufin_next(in)) < 0 ||
+                (lo = unc_bufin_next(in)) < 0) {
+                err = in->err;
+                goto out;
+            }
+            codes = ((uint32_t)hi << 8) | (uint32_t)lo;
+            size -= 6;
+            /* Ordinals 257 and 258 are the terminator; a count that
+             * reached them would redefine it. */
+            if (codes > SIT6_LEAVES - 2 || codes > size || explen == 0) {
+                err = UNC_ERR_CORRUPT;
+                goto out;
+            }
+            for (i = 0; i < codes; i++) {
+                int b = unc_bufin_next(in);
+                if (b < 0) { err = in->err; goto out; }
+                leaf[i] = (uint8_t)b;
+            }
+            size -= codes;
+            if ((err = sit6_need(al, &seg, &segcap, explen)) != UNC_OK) goto out;
+            if ((err = sit6_huffseg(in, seg, explen, leaf, codes, size,
+                                    &used)) != UNC_OK) goto out;
+            /* The bitstream may end before the segment does. */
+            for (i = used; i < size; i++) {
+                if (unc_bufin_next(in) < 0) { err = in->err; goto out; }
+            }
+            seglen = explen;
+        }
+        if ((err = sit6_packbits(f, seg, seglen, &left)) != UNC_OK) goto out;
+    }
+
+out:
+    unc_free(al, seg);
+    return err;
+}
+
+/* ------------------------------------------------------------------ */
 /* Method 8: "MW" — an LZW variant with parent-only dictionary and    */
 /* explicit table restarts, LSB-first bits.                           */
 /* Source: reference/XADMaster/XADStuffItOldHandles.m (SIT_mw,        */
@@ -707,6 +908,7 @@ int unc_sit_decode_fork(UncCtx *c, UncFork fork, uint32_t at,
     case 2:  err = sit_lzw(&f, &in, outlen, complen, c->al); break;
     case 3:  err = sit_huffman(&f, &in, outlen, c->al); break;
     case 5:  err = sit_lzah_fork(&f, &in, outlen, c->al); break;
+    case 6:  err = sit6_fork(&f, &in, outlen, c->al); break;
     case 8:  err = sit_mw_fork(&f, &in, outlen, c->al); break;
     case 13: err = sit13_fork(&f, &in, outlen, c->al); break;
     case 15: err = unc_arsenic_decode(&in, c->al, outlen,

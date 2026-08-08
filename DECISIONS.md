@@ -1696,3 +1696,79 @@ every entry are method 1, since the real fixture only has it on the resource
 side. Worth the file: breaking only the `c == 255` case fails
 `synth-sit-rle90.sit` and **nothing else among the 225 StuffIt fixtures**,
 which is every fixture that reaches `sit_rle90` at all.
+
+## 2026-08-08 — a second oracle: `macunpack` adjudicates what `unar` cannot
+
+**Claim.** "There is no oracle to check a method-6 implementation against."
+**Evidence against.** `reference/macutils/macunpack/sit.c` has decoded StuffIt
+fixed Huffman since 1991, and it was already sitting in this repository —
+fetched by `tools/fetch_references.sh`, cited by other decoders here.
+**Consequence.** `tools/build_macunpack.sh` builds it out of a copy of the
+read-only reference tree, and `make_manifests.py` offers it every fork `unar`
+left unadjudicated. 23 forks across 9 fixtures gained ground truth, the
+differential suite went 793 → 795 fixtures, and the *only* forks now
+unadjudicated in the run are ones our engine also declines.
+
+Only 1 of those 23 forks is method 6. The other 22 are methods we already
+implemented, on archives where `unar` happens to fail — so the value of a
+second oracle had nothing to do with the feature that motivated it.
+
+Three things transfer:
+
+- **"No oracle exists" is a statement about one tool.** XADMaster refuses
+  method 6; that is a fact about XADMaster. The generalisation to "the format
+  cannot be adjudicated here" was never true, and it sat in three status files
+  for a week. When a limitation names an implementation, read it as naming
+  only that implementation.
+- **A build flag can silently delete the branch you are testing.** macunpack
+  must be built `-m32`: `util.c`'s `get4()` returns `unsigned long` and
+  `sit.c` assigns it to a `long`, so the sign test that selects a *stored*
+  method-6 segment is unreachable when `long` is 64 bits. Built LP64 it dies
+  with "Premature EOF" on exactly the branch the synthetic fixture exists to
+  adjudicate — an oracle that fails is at least loud, but one that fails
+  *only* on your new code path looks like your bug.
+- **A predicted output filename is a guess, and a guess becomes ground
+  truth.** macunpack names files through `transname.c` (many-to-one) and
+  writes nothing at all for an empty fork, so a mispredicted name is
+  indistinguishable from an entry with two empty forks — and would have been
+  recorded as a manifest saying so. The builder now refuses unless the
+  `.info` file macunpack writes for every entry it extracted is present, and
+  refuses any name two entries share. The rule is a condition, not a list of
+  fixtures.
+
+## 2026-08-08 — StuffIt method 6: the tree is generated, not built
+
+Method 6 codes each segment with a Huffman tree whose SHAPE is a constant of
+the format — macunpack derives it per fork from a fixed weight table
+(`code6[258]`) by recursively splitting the leaf range at half the remaining
+weight (`sit_dosplit`); only the byte each leaf stands for is declared per
+segment, which is what "fixed" means. So the shape depends on nothing but a
+constant, and `tools/gen_sit6_tables.py` computes it once into
+`src/sit6_tables.h`: 514 nodes, depth 13, two `uint16_t` tables with the leaf
+rows dropped. The engine walks it and never builds it.
+
+That buys three things a per-fork build would not: no recursion (a rule here),
+no 68000 cycles spent recomputing a constant for every fork of every archive,
+and a generator that can afford to check itself — it asserts the result is a
+tree, that all 258 leaves are reachable exactly once, and that no internal
+node dangles, because *a tree that agrees only with itself proves nothing*.
+
+The segment buffer is freed and reallocated when a segment needs it bigger,
+never grown by copying. At a segment boundary the old contents are dead, so
+copy-based growth would pay an `old + new` transient for bytes nobody reads —
+which is what made growth-on-demand lose to one-shot sizing for the LZW table
+(2026-08-03, above). Same shape, opposite answer, for the same reason: what
+matters is whether the old bytes are still needed.
+
+**And a fixture for what one real fork cannot reach.** The corpus's single
+method-6 fork (34,818 B, `derived-INITLoader.sit`) is two Huffman-coded
+segments, so it never takes the *stored* branch and never sees a `0x80`
+PackBits filler, the shortest run, or a fork of more than two segments.
+`tools/synth_sit6.py` generates `synth-sit-fixhuf.sit` — deterministic, five
+entries, both forks method 6, ten forks in all — covering the stored branch,
+both segment orders, every PackBits control-byte edge, a one-byte alphabet and
+a 254-byte one, and twelve segments in one fork. It reads the code tree out of
+the generated header rather than reimplementing it, and self-tests by decoding
+its own output the way `sit_fixhuf` does. The oracle for it is macunpack, and
+all ten forks are byte-exact against it — including the stored branch, which
+is the one an LP64 oracle cannot see.

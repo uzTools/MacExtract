@@ -753,6 +753,7 @@ Each line records how to re-fetch one. Use `tools/harvest.py --restore`.
 | synth-packit-1.pit | 97e30f742867f12346937fae54cb9b274328602a5a9ee6801810e5e004183879 | 3385 | synthetic:tools/synth_pit.py --seed 1 |
 | synth-packit-2.pit | 8c9fbb2e5a777c11937624ed5ed6885c59b730d27d8092a9dc7a9c0f6d877f7a | 3367 | synthetic:tools/synth_pit.py --seed 2 |
 | synth-packit-3.pit | 3102287e41ab3fa714b8a2a0a62e00319773b95f7333f169dbb7769c1e5c35f5 | 3381 | synthetic:tools/synth_pit.py --seed 3 |
+| synth-sit-fixhuf.sit | 230ccec1522c0ea3deb1140cacb76c2dae3716cf9d6e5b9e26219ad4000867e8 | 2601 | synthetic:tools/synth_sit6.py |
 | synth-sit-rle90.sit | cdd044dcabffafe20f7dc54c9b9b28b0890330c528543e09cfe37e4e0b9d1b47 | 1287 | synthetic:tools/synth_sit1.py |
 | syserrtable30.sit | d120343c034a72ab548824b63edef21572181505c8a6e3952a20397dfc4838fb | 24496 | http://www.nic.funet.fi/pub/mac/da/syserrtable30.sit |
 | systemidle.sit | 99dcc13a87539f6fb212d43221a1eca6a96ab89804706ddb8bee5bc7b6eddfca | 18923 | http://www.nic.funet.fi/pub/mac/da/systemidle.sit |

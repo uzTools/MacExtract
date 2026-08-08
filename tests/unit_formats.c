@@ -568,6 +568,45 @@ static void test_sit(void)
           == UNC_ERR_CORRUPT);
     arc[25] ^= 0xFF;
 
+    /* Method 6, "fixed Huffman": one STORED segment followed by one
+     * Huffman-coded segment, both expanding to the same PackBits stream
+     * (three literals then a five-byte run). The bytes come from
+     * tools/synth_sit6.py, whose code tree is generated from
+     * reference/macutils/macunpack/sit.c; the corpus has a single
+     * method-6 fork and it uses neither the stored branch nor a run this
+     * short, so without this the fixtureless build tests neither. */
+    {
+        static const uint8_t m6[] = {
+            /* stored: size -(6+4), then the PackBits bytes */
+            0xFF, 0xFF, 0xFF, 0xF6, 0x02, 'A', 'B', 'C', 0xFC, 0x2A,
+            /* Huffman: size 21, expanded 6, 6 codes, alphabet, bitstream */
+            0x00, 0x00, 0x00, 0x15, 0x00, 0x00, 0x00, 0x06, 0x00, 0x06,
+            0x02, 0x2A, 'A', 'B', 'C', 0xFC, 0x06, 0x3A, 0x12, 0x5F, 0xFE
+        };
+        static const uint8_t m6plain[] = {
+            'A','B','C',0x2A,0x2A,0x2A,0x2A,0x2A,
+            'A','B','C',0x2A,0x2A,0x2A,0x2A,0x2A
+        };
+        uint8_t six[256];
+        uint32_t slen = sit_synth(six, "fixhuf", 6, m6, sizeof m6,
+                                  m6plain, sizeof m6plain);
+        test_make_memio(&io, &m, six, slen);
+        cap_make(&sk, &cap);
+        CHECK(unc_extract_as(UNC_FORMAT_SIT, &io, &sk, &al, NULL, NULL) == UNC_OK);
+        CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+        CHECK(cap.info[0].method_data == 6);
+        CHECK(cap.dlen[0] == sizeof m6plain);
+        CHECK(memcmp(cap.data[0], m6plain, sizeof m6plain) == 0);
+
+        /* A segment claiming more expanded bytes than any segment can
+         * hold is a per-entry error, not a big allocation. */
+        six[22 + 112 + 10 + 4] = 0x7F;      /* explen high byte */
+        test_make_memio(&io, &m, six, slen);
+        cap_make(&sk, &cap);
+        CHECK(unc_extract_as(UNC_FORMAT_SIT, &io, &sk, &al, NULL, NULL) == UNC_OK);
+        CHECK(cap.count == 1 && cap.status[0] != UNC_OK);
+    }
+
     /* Encrypted method flag -> reported, not decoded. */
     {
         uint8_t enc[256];

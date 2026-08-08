@@ -2,12 +2,14 @@
  "entries": [
   {
    "creator": "ttxt",
+   "data_oracle": "macunpack (macutils 2.0b3, -m32)",
+   "data_sha256": "62923d82cb7ece0b691902ca5f6c2952050baeddf991f5ed5e5df88d2a0e899e",
+   "data_size": 1956,
    "name": "LaserChase! docs",
-   "type": "TEXT",
-   "unadjudicated": {
-    "data": "Attempted to read more data than was available",
-    "rsrc": "oracle wrote no output for this fork"
-   }
+   "rsrc_oracle": "macunpack (macutils 2.0b3, -m32)",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
   },
   {
    "creator": "KNLC",

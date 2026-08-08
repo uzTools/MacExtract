@@ -2,12 +2,14 @@
  "entries": [
   {
    "creator": "KAHL",
+   "data_oracle": "macunpack (macutils 2.0b3, -m32)",
+   "data_sha256": "0e9efe4b2bb685d382d439506920ffa4282c1188f2f01083d516d8f6c4e6e8cc",
+   "data_size": 1022,
    "name": "Future Enhancments",
-   "type": "TEXT",
-   "unadjudicated": {
-    "data": "Attempted to read more data than was available",
-    "rsrc": "oracle wrote no output for this fork"
-   }
+   "rsrc_oracle": "macunpack (macutils 2.0b3, -m32)",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
   },
   {
    "creator": "DMOV",

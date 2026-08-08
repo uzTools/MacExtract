@@ -18,7 +18,8 @@
 
 The oracle is The Unarchiver's CLI (`unar`/`lsar` 1.10.8, Debian
 package `unar`), whose XADMaster engine is also our primary reference.
-`macunpack` (macutils) is a secondary cross-check for old formats.
+`macunpack` (macutils 2.0b3) is a **second oracle** for the forks `unar`
+cannot read — see "A second oracle" below.
 
 ### Resource forks on Linux
 
@@ -109,25 +110,77 @@ manifest is refused, exactly as before.
 and prints the running total on every run. It also fails on a manifest
 where a hash and a reason sit beside each other, or where neither does.
 
+### A second oracle
+
+`unar` failing on a fork is a fact about `unar`. Since 2026-08-08 every fork
+it leaves unadjudicated is offered to **macutils' `macunpack`**, and the ones
+it decodes are recorded with per-fork provenance:
+
+```json
+"data_oracle": "macunpack (macutils 2.0b3, -m32)"
+```
+
+Build it with `sh tools/build_macunpack.sh`, which copies the read-only
+`reference/macutils` tree to `build/macunpack/` and patches the copy (two
+C99/makefile fixes, neither changing behaviour). `make_manifests.py` uses it
+if it is there and silently does without if it is not, so a machine with no
+32-bit toolchain still builds every manifest — those forks just stay
+unadjudicated. `./ci.sh` runs `make clean`, which takes `build/` and the
+oracle with it; re-running the script rebuilds it and is a no-op when the
+binary is already there.
+
+**`-m32` is load-bearing, not a preference.** `util.c`'s `get4()` returns
+`unsigned long` and `sit.c` assigns it to a `long`, so the sign test that
+selects a *stored* method-6 segment is only reachable while `long` is 32 bits.
+Built LP64, `macunpack` reads a stored segment as an enormous Huffman segment
+and dies with "Premature EOF" — the oracle silently loses the one branch
+`tools/synth_sit6.py` exists to adjudicate. Measured 2026-08-08.
+
+Matching an entry to the files `macunpack` wrote is a prediction, and the
+manifest builder refuses rather than guesses: names go through the
+`transname.c` table parsed out of the reference (plus the leading-dot rule,
+because the build passes `-DNODOT`), a name two entries share is refused
+because there is then no telling whose output a file is, and a missing
+`.data` counts as an empty fork **only** when the `.info` file `macunpack`
+writes for every entry is present. Without that witness a mispredicted name
+looks exactly like an entry with two empty forks, and would be written into
+the manifest as ground truth saying so.
+
+Result, 2026-08-08: 23 forks across 9 fixtures gained ground truth, the suite
+went 793 → 795 fixtures, the whole-archive skips went 3 → 2, and the
+unadjudicated tally went 19 forks/14 fixtures → 8/7.
+
+**What this cannot see:** `macunpack` is where our method-6 decoder was
+transcribed from (`src/fmt_sit.c`, `src/sit6_tables.h`), so on method 6 it
+adjudicates a transcription against its source rather than two independent
+implementations — a transcription error shows up, a misreading of the format
+shared with the reference does not. (The same caveat applies to `unar`, which
+is the primary reference for everything else.) It also reads none of Zip,
+Gzip, tar or DiskDoubler, and it fails whole-archive far more often than
+`unar` does, which is why it is the second oracle and not the first.
+
 **What this layer cannot see:**
 
 - **An unadjudicated fork is checked only by the archive's own CRC-16**,
   written by the same compressor that wrote the fork. That is a strong
-  check — the failing fork of `derived-New_Python.sit` decodes to
-  23,987 bytes whose CRC matches, which is why unar is the one that is
-  wrong there — but it is not byte-exactness against a second
-  implementation, and a decoder bug that reproduced the CRC would pass.
+  check but it is not byte-exactness against a second implementation, and
+  a decoder bug that reproduced the CRC would pass. The `derived-New_Python.sit`
+  fork unar failed on is what that argument was made about — it decodes to
+  23,987 bytes whose CRC matches — and the second oracle has since agreed on
+  all 23,987 of them, so on that one fork the argument no longer has to be
+  taken on trust.
 - **A fixture where every entry uses an out-of-scope method is skipped
-  whole** (3 of them: two PKZIP 1.x zips and the method-6 fixture).
-  A regression that made a *supported* method report "recognized but
-  unsupported" for entire archives would convert failures into skips.
-  The skip count is printed on every run for that reason; it is 3.
-- Do not read "unadjudicated: 19 forks" as 19 defects. It is 19 forks
-  across 14 fixtures where two implementations cannot be compared: on
-  **8** both sides decline (a genuinely damaged nested archive — the
-  engine says "file is truncated" where unar says "Error on
-  decrunching"), and **11** the engine extracts with the archive's own
-  CRC-16 verified while unar cannot read them at all.
+  whole** (2 of them, both PKZIP 1.x zips). A regression that made a
+  *supported* method report "recognized but unsupported" for entire
+  archives would convert failures into skips. The skip count is printed on
+  every run for that reason; it is 2.
+- Do not read "unadjudicated: 8 forks" as 8 defects. It is 8 forks across
+  7 fixtures where two implementations cannot be compared, and since the
+  second oracle landed **both sides decline on every one of them**: a
+  damaged nested archive where the engine says "file is truncated" and unar
+  says "Error on decrunching". Every fork the engine extracts is now
+  adjudicated by somebody. (Out of the diff run's scope, 15 more forks stay
+  unadjudicated in DiskDoubler and PKZIP 1.x fixtures.)
 
 ### Comparison normalization
 
@@ -178,7 +231,7 @@ sampled occurrence index **by trying to allocate the table and failing**
 CI forces it three ways:
 
 - `-DUNC_ARS_FORCE_SAMPLED` compiles the fast path out. The whole
-  793-fixture diff suite and all 7,960 robustness variants run through the
+  795-fixture diff suite and all 7,970 robustness variants run through the
   fallback under ASan+UBSan, and must be byte-exact.
 - `--budget 678392` (what a 1 MB Mac Plus leaves the engine) on the 31
   StuffIt 5 fixtures, with the normal adaptive build. This is the only step
@@ -211,13 +264,13 @@ exercised deliberately, by hand:
 
     # 1. the bound never under-estimates: hard-disable growth
     #    (make lzw_grow return UNC_ERR_MEM as its first statement)
-    UNCLASSIC=build/never/unclassic sh tests/run_diff.sh      # expect 793/793
+    UNCLASSIC=build/never/unclassic sh tests/run_diff.sh      # expect 795/795
 
     # 2. the safety net is correct: force it to run on every stream
     make BUILD=build/tiny CFLAGS="-O1 -g \
         -fsanitize=address,undefined,alignment -fno-sanitize-recover=all \
         -DUNC_LZW_TINY_TABLE" all
-    UNCLASSIC=build/tiny/unclassic sh tests/run_diff.sh       # expect 793/793
+    UNCLASSIC=build/tiny/unclassic sh tests/run_diff.sh       # expect 795/795
 
     # 3. these fixtures CAN fail on this code: starve the table AND
     #    skip the add instead of growing
@@ -233,7 +286,8 @@ would report — so without a demonstrated failure they distinguish nothing.
 method 2).
 
 Step 2 was re-measured at **778/778** on 2026-08-08, before per-entry
-oracle failures took the suite to 793 later the same day. Step 3's figure is from
+oracle failures and then the second oracle took the suite to 795 later the
+same day. Step 3's figure is from
 2026-08-03 and was **675/769** — 94 failures — against the 769-fixture suite of
 that date; re-running it needs the hand edit above, and what matters is that it
 fails at all, not the count. The LZW-path figure is from the same day.

@@ -29,14 +29,26 @@ at all, discarding every other fork it adjudicated perfectly well.
 Discovery is by condition, never by fixture name. DECISIONS.md,
 2026-08-08.
 
+Forks unar cannot adjudicate are offered to a SECOND oracle, macutils'
+macunpack, and the ones it decodes are recorded with per-fork provenance
+("data_oracle" / "rsrc_oracle"); the rest stay "unadjudicated". unar not
+implementing a method is a fact about unar, not about the format —
+StuffIt method 6 is one macunpack has decoded since 1991. Build the
+second oracle with tools/build_macunpack.sh. TESTING.md, "A second
+oracle"; DECISIONS.md, 2026-08-08.
+
 Oracle invocation (see TESTING.md for rationale):
     lsar -j -nr -e macintosh <fixture>          # format + metadata
     unar -nr -D -f -q -k hidden -e macintosh -o <tmp> <fixture>
+    macunpack -f <fixture>                      # second oracle, in <tmp>
 """
 import argparse, hashlib, json, os, plistlib, re, struct, subprocess, sys
 import tempfile, unicodedata
 
 FIXDIR = os.path.join(os.path.dirname(__file__), "..", "fixtures")
+ROOT = os.path.join(os.path.dirname(__file__), "..")
+MACUNPACK = os.path.join(ROOT, "build", "macunpack", "macunpack", "macunpack")
+MACUNPACK_ID = "macunpack (macutils 2.0b3, -m32)"
 
 
 def sha256_file(path):
@@ -147,6 +159,126 @@ def lsar_metadata(fixture):
         to4 = lambda v: struct.pack(">I", v).decode("mac_roman") if v else None
         meta[name] = (to4(t), to4(c))
     return fmt, meta
+
+
+# --- second oracle: macunpack ----------------------------------------
+# macunpack names its output files after a Mac name run through
+# util/transname.c: a 256-entry table that maps every unprintable byte,
+# every 8-bit byte without an unaccented Latin equivalent, space and '/'
+# to '_', plus a leading dot, because tools/build_macunpack.sh builds with
+# -DNODOT. The table is parsed out of the reference rather than retyped,
+# and the mapping is MANY-TO-ONE, so a name is only usable when no other
+# entry maps onto it.
+
+def _transname_table():
+    src = os.path.join(ROOT, "reference", "macutils", "util", "transname.c")
+    try:
+        text = open(src).read()
+    except OSError:
+        return None
+    m = re.search(r"static char char_mapping\[\] = \{(.*?)\};", text, re.S)
+    if not m:
+        return None
+    body = re.sub(r"#else /\* LATIN1 \*/.*?#endif /\* LATIN1 \*/", "",
+                  m.group(1), flags=re.S).replace("#ifndef LATIN1", "")
+    vals = []
+    for ch, octal in re.findall(r"'(\\.|[^'])'|(0[0-7]+)", body):
+        vals.append(int(octal, 8) if octal
+                    else ord({"\\\\": "\\", "\\'": "'"}.get(ch, ch)))
+    return bytes(vals) if len(vals) == 256 else None
+
+
+def transname(name, table):
+    """The path macunpack writes for one entry, or None if the name is not
+    MacRoman (in which case macunpack never saw these bytes either). Each
+    path component is mapped separately, and the leading-dot rule applied to
+    each: the separators in a manifest name are real directories, and
+    macunpack calls transname once per Mac name as it descends. Measured
+    against the built oracle, 2026-08-08: ".dotname" -> "_dotname"."""
+    try:
+        comps = [c.encode("mac_roman") for c in name.split("/")]
+    except UnicodeEncodeError:
+        return None
+    out = []
+    for c in comps:
+        t = "".join(chr(table[b]) for b in c)
+        out.append("_" + t[1:] if t.startswith(".") else t)   # -DNODOT
+    return "/".join(out)
+
+
+def macunpack_forks(fixture_path):
+    """Extract with the second oracle and return {output path: bytes} for the
+    files it wrote, or None if it failed. The ".info" files are kept as well
+    as the forks: macunpack writes one per entry it extracted, and it is the
+    only witness that a MISSING ".data" means an empty fork rather than a
+    name we failed to predict."""
+    if not os.path.exists(MACUNPACK):
+        return None
+    with tempfile.TemporaryDirectory() as tmp:
+        r = subprocess.run([os.path.abspath(MACUNPACK), "-f",
+                            os.path.abspath(fixture_path)],
+                           cwd=tmp, capture_output=True, timeout=300)
+        if r.returncode != 0:
+            return None
+        out = {}
+        for root, dirs, files in os.walk(tmp):
+            for f in files:
+                if not f.endswith((".data", ".rsrc", ".info")):
+                    continue
+                rel = os.path.relpath(os.path.join(root, f), tmp)
+                out[rel] = open(os.path.join(root, f), "rb").read()
+        return out
+
+
+def adjudicate_with_macunpack(fixture_path, entries):
+    """Fill in forks the primary oracle left unadjudicated. Returns the
+    number of forks adjudicated."""
+    if not any("unadjudicated" in e for e in entries):
+        return 0
+    table = _transname_table()
+    if table is None:
+        return 0
+    produced = macunpack_forks(fixture_path)
+    if not produced:
+        return 0
+
+    # transname is many-to-one: refuse any name two entries share, since
+    # there is then no telling whose output a file is.
+    mapped, clash = {}, set()
+    for e in entries:
+        if e.get("is_dir"):
+            continue
+        t = transname(e["name"], table)
+        if t is None:
+            continue
+        if t in mapped:
+            clash.add(t)
+        mapped[t] = e
+    filled = 0
+    for t, e in mapped.items():
+        un = e.get("unadjudicated")
+        if not un or t in clash:
+            continue
+        # Without the ".info" macunpack writes for every entry it extracted,
+        # a predicted name that is simply WRONG looks exactly like an entry
+        # with two empty forks, and would be recorded as ground truth saying
+        # so. Adjudicate only where the entry is known to have been written.
+        if t + ".info" not in produced:
+            continue
+        for fork in ("data", "rsrc"):
+            if fork not in un:
+                continue
+            # No file means macunpack decoded the fork as empty: it writes
+            # nothing for one — the same convention unar uses.
+            blob = produced.get(t + "." + fork, b"")
+            e[fork + "_size"] = len(blob)
+            e[fork + "_sha256"] = hashlib.sha256(blob).hexdigest()
+            e[fork + "_oracle"] = MACUNPACK_ID
+            del un[fork]
+            filled += 1
+        if not un:
+            del e["unadjudicated"]
+    return filled
 
 
 def build_manifest(fixture_path, verbose=False):
@@ -288,6 +420,10 @@ def build_manifest(fixture_path, verbose=False):
     if not entries:
         print(f"  oracle produced nothing for {name}", file=sys.stderr)
         return None
+    filled = adjudicate_with_macunpack(fixture_path, entries)
+    if filled:
+        print(f"  second oracle adjudicated {filled} fork(s) of {name}",
+              file=sys.stderr)
     # Canonical order, so a rebuild on another machine produces the same
     # file. Every consumer looks entries up by name; none depends on the
     # order they were walked in.
