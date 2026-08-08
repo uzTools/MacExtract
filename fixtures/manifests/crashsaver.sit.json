@@ -12,7 +12,7 @@
  ],
  "fixture": "crashsaver.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "53066db92ad692630e101c4ead466a7ef2487ce9bf3012a48e6a6ead4a0ac914",
  "size": 2530
 }

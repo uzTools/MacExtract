@@ -5,15 +5,6 @@
    "name": "AppDisk 1.6.1 ƒ"
   },
   {
-   "creator": "ttxt",
-   "data_sha256": "8bb7eb2f8af812af4966ff231df11b26a10ae929b33f0a27bd598f62bd8bc9cb",
-   "data_size": 13196,
-   "name": "AppDisk 1.6.1 ƒ/AppDisk 1.6.1 Read ME!",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0,
-   "type": "TEXT"
-  },
-  {
    "creator": "ApDs",
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
@@ -21,11 +12,20 @@
    "rsrc_sha256": "ba2f0ba85b3511891f135f57340a31c901e37173be42b5e516944573c12ae3a2",
    "rsrc_size": 39706,
    "type": "APPL"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "8bb7eb2f8af812af4966ff231df11b26a10ae929b33f0a27bd598f62bd8bc9cb",
+   "data_size": 13196,
+   "name": "AppDisk 1.6.1 ƒ/AppDisk 1.6.1 Read ME!",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
   }
  ],
  "fixture": "derived-AppDisk_1.6.1__.cpt",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "73e38eed53ae4b1b0d6155ac801f1334d7dccf1c34ed4962ed94a8c44305ab8f",
  "size": 24433
 }

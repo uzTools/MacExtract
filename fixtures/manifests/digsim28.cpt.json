@@ -12,7 +12,7 @@
  ],
  "fixture": "digsim28.cpt",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "0eb5a0c4dc05b1bde09a87de80c59022697356a274769763f13ec82c91b869ef",
  "size": 30848
 }

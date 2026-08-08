@@ -52,7 +52,7 @@
  ],
  "fixture": "derived-IbacomSecurity1.0.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "f34155277b93e822ed89821a5d01128aae7bca6c8753cbc7d44ab702accc81eb",
  "size": 63426
 }

@@ -12,7 +12,7 @@
  ],
  "fixture": "deluxeconv.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "86bd2b3595f8f9b6522aba2ca2257b30ded593b3b061a9c21d5e4d4297eb3dda",
  "size": 40214
 }

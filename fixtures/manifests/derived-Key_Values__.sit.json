@@ -25,7 +25,7 @@
  ],
  "fixture": "derived-Key_Values__.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "d36ea155b050d712a4a4cd7782d5c6b4618a0f8006d747ebf39de175c486e7ef",
  "size": 7585
 }

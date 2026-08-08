@@ -9,15 +9,6 @@
    "name": "Mac Storage FAQ/Storage Spreadsheets"
   },
   {
-   "creator": "MSWD",
-   "data_sha256": "26c7c31d7a8acae09c7496f24b70759af1050b11af08a9c2b0966e99947aa5e0",
-   "data_size": 78234,
-   "name": "Mac Storage FAQ/mac-storage-faq.txt",
-   "rsrc_sha256": "f86513000a059b32c9cb89c03685a703c97e06853db91b8c5f5dc4f3928bdc60",
-   "rsrc_size": 670,
-   "type": "TEXT"
-  },
-  {
    "creator": "BOBO",
    "data_sha256": "34a6465ec5eddf816eca402ff48f945ae3243fdb5fccf3e25a03f33105b0697d",
    "data_size": 25752,
@@ -43,11 +34,20 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
+  },
+  {
+   "creator": "MSWD",
+   "data_sha256": "26c7c31d7a8acae09c7496f24b70759af1050b11af08a9c2b0966e99947aa5e0",
+   "data_size": 78234,
+   "name": "Mac Storage FAQ/mac-storage-faq.txt",
+   "rsrc_sha256": "f86513000a059b32c9cb89c03685a703c97e06853db91b8c5f5dc4f3928bdc60",
+   "rsrc_size": 670,
+   "type": "TEXT"
   }
  ],
  "fixture": "derived-Mac_Storage_FAQ.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "42fee72fe50e6b7aa00807ff86a3fce15f3268adca01c2ed5d93ec1c29c32be0",
  "size": 43563
 }

@@ -12,7 +12,7 @@
  ],
  "fixture": "back-slide-12-jv.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "9d478b310d02871cf7271705f0cd8f3ba45e1de25c63dfde00afb78efc172a90",
  "size": 117679
 }

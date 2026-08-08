@@ -23,15 +23,19 @@ Per-fixture tables are in FORMATS.md, re-run instructions and what a full
 re-verification costs in `tools/vmac/README.md`, and the on-demand experiments
 in MANUAL_TESTS.md.
 
-**Nine claims this file used to assert have been withdrawn, and one
+**Ten claims this file used to assert have been withdrawn, and one
 confirmed.** (This count read "seven" while the table held eight; corrected
 2026-08-03.) They are collected at the end, under *Withdrawn claims*, and kept
-on purpose, because two mechanisms keep finding the next one:
+on purpose, because three mechanisms keep finding the next one:
 
 - **A live claim sitting next to an already-withdrawn one.** Twice, worth
   39/44 → 40/44 at the floor target once.
 - **Two files disagreeing.** Once, and it is how the 512 KB block claim below
   fell — the disproof was already written down elsewhere in this repository.
+- **A limitation written one paragraph from its own remedy.** Once, on
+  2026-08-08: TESTING.md described the fork convention that made nine
+  fixtures unusable while quoting the `unar --help` line that names the
+  alternative.
 
 Nothing above this line depends on them.
 
@@ -212,6 +216,7 @@ Each entry is: what was claimed, what disproved it, and what it cost.
 | Mini vMac's write-back is lazy and partial | `checkdisk.py`, 44/44 off the disk | 2026-08-02 |
 | `pkill -9` never flushes; boot+kill corrupts the image | 11 boot+kill cycles | 2026-08-02 |
 | The three 1 MB StuffIt 5 refusals each fill a 512 KB block | instrumenting `numbytes` where the transform vector is allocated | 2026-08-03 |
+| Nine fixtures are ground truth the oracle cannot produce | `unar -k hidden`; all nine build, all 774 existing manifests unchanged | 2026-08-08 |
 
 **Retro68's `HOpen` glue.** Claimed to return `noErr` without writing back the
 refNum, and recorded as M10's root cause in commit `22e806b`. A standalone
@@ -351,6 +356,35 @@ as of 2026-08-07, when the last two refusals went with it — those were a
 genuine shortage rather than a placement problem, and were closed by making the
 inverse BWT need less memory rather than by finding it more (DECISIONS.md
 2026-08-07).
+
+**Nine fixtures are ground truth the oracle cannot produce.** Seven were
+recorded as *structurally undecidable* (an archive holding both `X` and
+`X.rsrc`) and two as *oracle-buggy* (GNUstep writing the AppleDouble container
+into the data-fork filename for a leading-`~` name). Both are properties of
+`unar -k visible`, the flag this repository happened to pick: the suffix
+convention makes one entry's sidecar another entry's name, and it is the
+*appending* that GNUstep's path code refuses. Rebuilt with `-k hidden`
+(`._NAME`), all nine produce manifests, and all 774 pre-existing manifests come
+back entry-for-entry identical — so the convention was never distorting ground
+truth, only refusing to express some of it. Reasoning in DECISIONS.md
+2026-08-08.
+
+**Cost: nine fixtures sat outside the differential suite from M1 and M4
+(2026-07-23) until 2026-08-08**, including the only two Compact Pro archives with real
+`X`/`X.rsrc` pairs and the only MacBinary fixture with a `~`-prefixed
+resource-only entry — shapes nothing else in the corpus covers. The ongoing
+half is worse than the one-off: `harvest.py` accepts candidates by asking
+whether a manifest can be built, so every THINK C-shaped archive the corpus
+might have grown by was being dropped silently, and would have gone on being
+dropped.
+
+**Why it survived.** It was filed in OPEN_ITEMS.md section 1, *cannot be closed
+in this environment* — beside real hardware and a report only the maintainer
+can file. That section is where items go to stop being re-examined, and this
+one was closeable in about an hour. The remedy was also quoted verbatim in
+TESTING.md, one paragraph above the sentence describing the limitation: the
+`unar --help` line documenting `-forks (-k) <visible|hidden|skip>`. **Check
+which of your limits are limits of a flag you chose.**
 
 ### Corrected figures and superseded write-ups
 

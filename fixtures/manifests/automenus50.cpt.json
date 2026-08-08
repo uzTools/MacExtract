@@ -12,7 +12,7 @@
  ],
  "fixture": "automenus50.cpt",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "7e98613c3415639c85a20cdca9cc1b2e7e59891f565490f17262fa49c2780bde",
  "size": 16000
 }

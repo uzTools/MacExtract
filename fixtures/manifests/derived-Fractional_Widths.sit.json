@@ -21,7 +21,7 @@
  ],
  "fixture": "derived-Fractional_Widths.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "b5acdf7aa03ffbb8ec52cc80ec8a07a0496bbfb1245a4d8a84356947a2214e2b",
  "size": 1974
 }

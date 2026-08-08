@@ -12,7 +12,7 @@
  ],
  "fixture": "derived-ASCbeep.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "41d971d935998f2b8fa7a489bc4fc5df00a7992fba8377d8e49b49b4edc4b1a9",
  "size": 16843
 }

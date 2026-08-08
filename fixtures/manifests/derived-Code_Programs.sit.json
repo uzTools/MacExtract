@@ -34,7 +34,7 @@
  ],
  "fixture": "derived-Code_Programs.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "957cd26c22e61ef51426b6808eca9b0bc00e7ce07d942e4806b7068392e4b12b",
  "size": 60666
 }

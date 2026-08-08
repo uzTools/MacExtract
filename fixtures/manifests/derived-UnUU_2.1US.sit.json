@@ -34,7 +34,7 @@
  ],
  "fixture": "derived-UnUU_2.1US.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "782c1c4b3b5163cbc50f5485b5bf94bd326d696ead455d43b4e017b43e19faaf",
  "size": 30648
 }

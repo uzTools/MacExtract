@@ -34,7 +34,7 @@
  ],
  "fixture": "derived-3D_Terrain_Modeling_0.1.7.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "e5a1529de71e9f14e724ebd75136aec24276ac04b8e18194734c609c7bbb5d83",
  "size": 164711
 }

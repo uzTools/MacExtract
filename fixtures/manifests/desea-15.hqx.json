@@ -12,7 +12,7 @@
  ],
  "fixture": "desea-15.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "f6225fb0a7664d54aa43ef69ebbb2825e0f1aa508d46dd0c07587aa00b35c77e",
  "size": 31998
 }

@@ -12,7 +12,7 @@
  ],
  "fixture": "derived-SpaceSaver_5.0.1_Updater.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "c945c7c25c81f35e8b7b2d6ab9fa8b64772337bf9bc878d0d73ea16d93092d67",
  "size": 135412
 }

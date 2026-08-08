@@ -12,7 +12,7 @@
  ],
  "fixture": "domino-14.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "18b2aa3289829284f90c42dd0e37d6ef3e27358e02317b73b12d68c0adc75294",
  "size": 220280
 }

@@ -10,7 +10,7 @@
  ],
  "fixture": "synth-exo-gz.gz",
  "format": "Gzip",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "78773b077a911bfe6f73f2c83aab4062f9691d411f9b7a011a7be5bdab6d1498",
  "size": 81
 }

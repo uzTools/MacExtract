@@ -12,7 +12,7 @@
  ],
  "fixture": "basetobase10.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "1445f11419dde1a7ee51cad5bd6ebff6ba9008ad7139b2a1b58d05c0d8266fd4",
  "size": 15576
 }

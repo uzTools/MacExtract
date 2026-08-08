@@ -1,11 +1,11 @@
-# OPEN_ITEMS.md — what is missing, as of 2026-08-07
+# OPEN_ITEMS.md — what is missing, as of 2026-08-08
 
 A standing audit of the gaps: things not done, things done but not verified,
 and things this repository asserts more confidently than the evidence supports.
 
 **Not** BLOCKERS.md, which records investigations that went wrong and the
 claims withdrawn from them. Nothing here stops the engine or the CLI, which are
-byte-exact against the oracle across 769 fixtures in `./ci.sh`.
+byte-exact against the oracle across 778 fixtures in `./ci.sh`.
 
 Each item says what would close it. Detail lives in one place per finding —
 status in BLOCKERS.md, reasoning in DECISIONS.md, how to re-run in
@@ -31,9 +31,13 @@ rather than repeated.
   should submit it** — the maintainer will post it from his own account. (It is
   also not possible from here: an unauthenticated POST to the issues API
   returns 401.)
-- **Eight fixtures are excluded as oracle-undecidable or oracle-buggy**
-  (six StuffIt, two Compact Pro; see the M4 and M6 rows of PROGRESS.md). Not known
-  failures — the oracle cannot adjudicate them.
+
+This section held a fourth item — "eight fixtures are excluded as
+oracle-undecidable or oracle-buggy" — until 2026-08-08, when it turned out to be
+closeable here in about an hour, and to be nine fixtures rather than eight. It
+was the fork-naming flag, not the environment (section 4 below; BLOCKERS.md
+*Withdrawn claims*). **Filing something here is a decision to stop looking at
+it, so it had better be true.**
 
 ---
 
@@ -78,6 +82,7 @@ rather than repeated.
 | A hypothesis filed under *harness lessons* | 2026-08-01 | filing a hypothesis as a lesson hides it: this one implied the shipped UI was broken and nobody looked. **This file is the place to look for others of the same shape** |
 | The LZW table sized from `maxbits` rather than the input | 2026-08-03 | growth-on-demand and one-shot sizing look interchangeable and are not: copy-based growth has an `old + new` transient, so **where the buffer IS the allocation it can lose to doing nothing** (measured, 274,432 → 405,504 B). Bound it from the input instead. DECISIONS.md |
 | StuffIt 5 / Arsenic incomplete at the 1 MB floor (42/44) | 2026-08-07 | the last four gains were all "allocate less of what the data does not use"; this one had to **reduce the requirement** instead, and the tell was that no placement or reserve tuning could close a 410 KB shortfall on a 760 KB machine. Also: **estimate the thing you are changing.** The prediction here was within 200 B on one fixture and 3.6% on the other because it estimated a single allocation inside one entry; the method 13 estimate a day earlier missed badly because it estimated an aggregate over a distribution. DECISIONS.md |
+| Nine fixtures with no oracle manifest ("undecidable" or "oracle-buggy") | 2026-08-08 | both reasons were the fork-naming flag, not the archives: `unar -k visible` writes `NAME.rsrc`, which collides with a real entry called `X.rsrc` and which GNUstep refuses to build for a leading `~`. `-k hidden` (`._NAME`) decides all nine, and all 774 existing manifests rebuild identically. **A limitation and its remedy sat one paragraph apart in TESTING.md**; the remedy was a documented flag of a tool already in use. DECISIONS.md, BLOCKERS.md |
 | "peak heap under a budget" read as a requirement | 2026-08-07 | a decoder with a time-for-memory dial spends whatever the cap allows, so its peak tracks the CAP, not its needs. Comparing such a peak against a predicted requirement compares two different quantities — **bisect the cap** for the requirement. This nearly made the sampled BWT look 2.3x worse than predicted when it was in fact accurate |
 
 ---
@@ -122,6 +127,19 @@ rather than repeated.
 ---
 
 ## 6. Loose ends
+
+- **`unclassic x` still clobbers by default on a THINK C archive.** The CLI
+  writes resource forks as `NAME.rsrc` unless given `--forks hidden`, so an
+  archive holding both `X` and `X.rsrc` loses one of them — silently, since the
+  second write simply overwrites. The harnesses pass the flag and are unaffected
+  (2026-08-08). Closing it means either changing the default, which makes
+  resource forks invisible dotfiles for every other archive, or detecting the
+  collision and reporting it per entry. Nothing on the Mac side is affected:
+  the application writes real forks.
+- **The Mac-side checkers still read `<X>.rsrc` sidecars** (`vmac_check.py`,
+  `checkdisk.py`, `check_mac_sink.py`), so the nine recovered fixtures cannot
+  be added to the on-Mac 44-fixture sample until those readers learn the `._`
+  form. They are byte-exact on Linux; no on-Mac claim is made about them.
 
 - **StuffIt method 1 (RLE90): the claim that no corpus fixture uses it was
   WRONG.** Measured 2026-08-01 by instrumenting the method byte:

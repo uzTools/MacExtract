@@ -12,7 +12,7 @@
  ],
  "fixture": "xmasbeeps.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "e493eefce2a68f57ca196ee9279b95dce806501a1d0f5a0a3c2ae7eeb75c9dfb",
  "size": 286352
 }

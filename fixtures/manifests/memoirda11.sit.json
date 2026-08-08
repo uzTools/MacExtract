@@ -12,7 +12,7 @@
  ],
  "fixture": "memoirda11.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "e6e58ffeff90d1c624facb86c9d71b4bbd486b6fda479b08fdf2af1724d0eb55",
  "size": 5888
 }

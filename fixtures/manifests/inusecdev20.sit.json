@@ -12,7 +12,7 @@
  ],
  "fixture": "inusecdev20.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "0cee0da797e3bd7ec3e66160ef513fee6cd18957375fccc6e451259ceca574ca",
  "size": 9088
 }

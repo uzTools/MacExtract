@@ -21,7 +21,7 @@
  ],
  "fixture": "derived-AltCDEF_v1.3.sea",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "c5e9e24fb6886b3a757576767ef791e1cb1539b34cee867875dbbfa4e3279954",
  "size": 29752
 }

@@ -12,7 +12,7 @@
  ],
  "fixture": "ppc-mac-prices.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "37bf4bd6114fe1ab590b23c58c6e53c74f5c041919f05a895b146be81e7f0eb3",
  "size": 8304
 }

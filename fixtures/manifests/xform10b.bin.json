@@ -12,7 +12,7 @@
  ],
  "fixture": "xform10b.bin",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "cb635ae6ced3a4c423e2bb1ff934be351508a442d17e3b8cd5de0f4add728d3b",
  "size": 68227
 }

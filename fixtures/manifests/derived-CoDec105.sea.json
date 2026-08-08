@@ -25,7 +25,7 @@
  ],
  "fixture": "derived-CoDec105.sea",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "de5ea05507eb101bc6d654a4369500c00ae12703f51dfc4cfb34bce99f6f0efa",
  "size": 36477
 }

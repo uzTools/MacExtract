@@ -12,7 +12,7 @@
  ],
  "fixture": "macwoof12.cpt",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "0d18c27620680be6ce947b899f82c294da692a6b7a51d6c22f4fd7144c34cf34",
  "size": 175232
 }

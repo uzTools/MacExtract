@@ -12,7 +12,7 @@
  ],
  "fixture": "adobenumbers.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "23ab6b58f20071efda4d07cd33be20c513000610a056a0c1c9c6a22bf418dd2b",
  "size": 9062
 }

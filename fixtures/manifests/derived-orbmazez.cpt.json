@@ -25,7 +25,7 @@
  ],
  "fixture": "derived-orbmazez.cpt",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "9e394eac82f83e255098c37275a9e1cad443e7d6c12491104bf6f8dbac167030",
  "size": 202914
 }

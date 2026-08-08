@@ -25,7 +25,7 @@
  ],
  "fixture": "derived-Retrospect2iPatch.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "6a7925fc96289e1561c233c70849e6cab32de419e2cda70951590f0666d3aa89",
  "size": 28161
 }

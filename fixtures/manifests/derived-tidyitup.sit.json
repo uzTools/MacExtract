@@ -13,6 +13,15 @@
    "creator": "sysC",
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
+   "name": "Tidy It Up !",
+   "rsrc_sha256": "5adbad6bf7bece63741d41e85d5198e09a3c0cb97f7de1186973599ef3f7ce90",
+   "rsrc_size": 85740,
+   "type": "APPL"
+  },
+  {
+   "creator": "sysC",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
    "name": "Tidy It Up ! Defaults",
    "rsrc_sha256": "6008e3506e39e0fc4275608f008d964e1062b2f5b73b2c776698539dd8170ee0",
    "rsrc_size": 1872,
@@ -26,20 +35,11 @@
    "rsrc_sha256": "47cca55471b86056f7a8da06294cc868f5717aa115ad3c1e88fc3fbe19605185",
    "rsrc_size": 26459,
    "type": "sysH"
-  },
-  {
-   "creator": "sysC",
-   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "data_size": 0,
-   "name": "Tidy It Up !",
-   "rsrc_sha256": "5adbad6bf7bece63741d41e85d5198e09a3c0cb97f7de1186973599ef3f7ce90",
-   "rsrc_size": 85740,
-   "type": "APPL"
   }
  ],
  "fixture": "derived-tidyitup.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "5a0359c8f2543a842c6e130511eee32c44448c95984fde7cd8ed3d38107c76e8",
  "size": 77826
 }

@@ -12,7 +12,7 @@
  ],
  "fixture": "derived-Export.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "522af809d657160b4e190a17d1e47066004080e9bc6c8e3234e82ba82e55bd9d",
  "size": 1615
 }

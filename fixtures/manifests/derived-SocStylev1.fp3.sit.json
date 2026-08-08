@@ -43,7 +43,7 @@
  ],
  "fixture": "derived-SocStylev1.fp3.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "9414558705877ed0f145dc27f74386331e82d88b019a42b71061efbf5d941388",
  "size": 78792
 }

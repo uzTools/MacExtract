@@ -11,7 +11,7 @@ The engine is the product. The Mac app is a thin shell.
 
 ## Current state — read before working
 
-M0–M10 are **DONE**. The engine passes a 769-fixture differential suite against `unar`, and the Mac shell extracts byte-exact on a real System 6.0.8 Mac Plus under Mini vMac — **44/44 sampled fixtures at 4 MB and 44/44 at the 1 MB floor** (2026-08-07; there are no memory-budget refusals left).
+M0–M10 are **DONE**. The engine passes a 778-fixture differential suite against `unar`, and the Mac shell extracts byte-exact on a real System 6.0.8 Mac Plus under Mini vMac — **44/44 sampled fixtures at 4 MB and 44/44 at the 1 MB floor** (2026-08-07; there are no memory-budget refusals left).
 
 It runs on all three systems the project claims: **System 6.0.8 and System 7.0.1** under Mini vMac (a true 68000), and **Mac OS 9.2** under QEMU PowerPC through the 68LC040 emulator, where 13/13 of a format sample is byte-exact, extraction onto **HFS+** is verified, and the `SIZE` partition is honoured by the Process Manager.
 
@@ -22,7 +22,7 @@ It runs on all three systems the project claims: **System 6.0.8 and System 7.0.1
 - `PROGRESS.md` — milestone table
 - `FORMATS.md` — format × status × peak RAM matrix, plus the per-fixture results for every tier: Mini vMac 4 MB and 1 MB, System 7, and Mac OS 9 (including HFS+)
 - `BLOCKERS.md` — status first (no open blockers), then what is true and
-  load-bearing, then **Withdrawn claims**: nine assertions this file used to
+  load-bearing, then **Withdrawn claims**: ten assertions this file used to
   make, each with what disproved it and what it cost. They are kept on
   purpose — twice a live claim has been re-tested because it sat beside an
   already-withdrawn one, and one of those was worth 39/44 → 40/44 at the
@@ -33,11 +33,22 @@ It runs on all three systems the project claims: **System 6.0.8 and System 7.0.1
 
 Read them at the start of every session. Where these files disagree with each other, treat it as a bug to fix, not a fact to choose from.
 
-## Where to start (handoff, 2026-08-07)
+## Where to start (handoff, 2026-08-08)
 
 The repository is on GitHub as a **private** repo, `main`, tagged through
 `v0.5`, which is the first tag to publish a downloadable application (see
 *Cutting a release*). Working tree clean, `./ci.sh` green, nothing in flight.
+
+**The differential suite is 778 fixtures, not 769** (2026-08-08). Nine
+fixtures had been written off as ground truth the oracle could not produce —
+seven "structurally undecidable", two "oracle-buggy". Both reasons were
+properties of one flag: `unar -k visible` names resource forks `NAME.rsrc`,
+which collides with a real entry called `X.rsrc` and which GNUstep refuses to
+build for a leading `~`. Rebuilt with `-k hidden` (`._NAME`) all nine decide,
+and all 774 pre-existing manifests come back entry-for-entry identical, so the
+switch changed the measuring apparatus and not the ground truth. The CLI grew
+`--forks hidden` because it had the same collision on its own side; the
+default is unchanged. DECISIONS.md and BLOCKERS.md, 2026-08-08.
 
 **The 1 MB floor is 44/44 as of 2026-08-07, and the StuffIt 5 / Arsenic
 capability gap is closed.** All six sampled StuffIt 5 fixtures extract every
@@ -103,6 +114,10 @@ rather than from new features:
 - "The three refused Arsenic entries each fill a 512 KB block" — the stated
   reason the last capability gap was unclosable, and false. One of them holds
   124,637 B. Found the same day, by the same reflex.
+- "Eight fixtures the oracle cannot adjudicate" — filed under *cannot be closed
+  in this environment*, and closeable in an hour. It was nine, and it was the
+  fork-naming flag (769 → 778 fixtures). The remedy was quoted in TESTING.md
+  one paragraph above the limitation it removes.
 
 So: **when something looks like a hard floor, check whether the number you are
 budgeting for is a number the data actually needs.** And when a claim has no

@@ -12,7 +12,7 @@
  ],
  "fixture": "touchbase.cpt",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "dd3ea76220cebd8746d896ae34c88020e7047392bcc9ec40408faf640833679d",
  "size": 114560
 }

@@ -12,7 +12,7 @@
  ],
  "fixture": "derived-Manager10b1.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "48ec38accef3973f7818dd008b3c3f0e546836a120d32093c4bada744e24c780",
  "size": 71269
 }

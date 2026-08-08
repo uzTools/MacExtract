@@ -12,7 +12,7 @@
  ],
  "fixture": "teachtext-simpletext-20-xtnd.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "aa1abe82fb5002995c96a98ce635ac0bbd2d51006c21443e73722bd9586a51d2",
  "size": 17375
 }

@@ -19,6 +19,15 @@
    "type": "TEXT"
   },
   {
+   "creator": "TrAS",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "AutoSqueeze",
+   "rsrc_sha256": "596feea34068e978cfa738e2fec4d176b1b24cfaa9a09fef4b0cc9278c93bbc0",
+   "rsrc_size": 40178,
+   "type": "cdev"
+  },
+  {
    "creator": "MACA",
    "data_sha256": "37259b2d574f3ef90841b2d42beee9ebe0ea91f89601fcd55e84945ed24844ea",
    "data_size": 44878,
@@ -35,20 +44,11 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
-  },
-  {
-   "creator": "TrAS",
-   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "data_size": 0,
-   "name": "AutoSqueeze",
-   "rsrc_sha256": "596feea34068e978cfa738e2fec4d176b1b24cfaa9a09fef4b0cc9278c93bbc0",
-   "rsrc_size": 40178,
-   "type": "cdev"
   }
  ],
  "fixture": "derived-AutoSqueeze.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "1cf1247ed19063d84d213467524fbbf861dbd868482cc1a4ab5b8a8584436e6c",
  "size": 65601
 }

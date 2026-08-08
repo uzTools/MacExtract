@@ -12,7 +12,7 @@
  ],
  "fixture": "macpostclient10b6sw.cpt",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "959ef166d16dc01daf51bd2e53cba66adb46d7ad8e95366ff8250604f30674e3",
  "size": 150272
 }

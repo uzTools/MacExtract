@@ -30,7 +30,7 @@
  ],
  "fixture": "derived-Inside_Mac_DA_2.0_demo.sea",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "81b610816967b7144b5be100a369f6ae29b2a11cfbb9b857b8427e9d832d17ea",
  "size": 69156
 }

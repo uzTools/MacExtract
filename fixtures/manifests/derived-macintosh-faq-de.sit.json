@@ -12,7 +12,7 @@
  ],
  "fixture": "derived-macintosh-faq-de.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "b0d80c5f4ae22693dc3dcfceaaa3571acf76717c008b7c26667956bbddc6af6f",
  "size": 54015
 }

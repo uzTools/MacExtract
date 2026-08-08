@@ -12,7 +12,7 @@
  ],
  "fixture": "multistation320.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "3d1d302dd2b27151e7c03574890664ad406d9ca007be2df734f1b3f03386aacd",
  "size": 100899
 }

@@ -12,7 +12,7 @@
  ],
  "fixture": "kysw193.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "9ad5e0c3e937d76429e7c871fd46ea91dd870914b9f94a8cde467ef172b9eafb",
  "size": 41472
 }

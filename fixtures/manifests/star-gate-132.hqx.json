@@ -12,7 +12,7 @@
  ],
  "fixture": "star-gate-132.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "f2d5866cff05861f1bdc7ba24afd6b0eb7eec3fbc187d4024b0ed2207450bbf5",
  "size": 244944
 }

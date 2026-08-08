@@ -39,7 +39,7 @@
  ],
  "fixture": "derived-Diddle.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "01745d45bdb0858aa970946cf33cd0aa5dd4cad226faefbec5a5ce2d81f5599e",
  "size": 7274
 }

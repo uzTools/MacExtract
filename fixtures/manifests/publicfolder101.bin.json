@@ -12,7 +12,7 @@
  ],
  "fixture": "publicfolder101.bin",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "15a91dfda48e659a3c8ac7b65e707f0bc4ea01d8c457ca735dd295e33396fdb7",
  "size": 41984
 }

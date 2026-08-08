@@ -97,7 +97,7 @@
  ],
  "fixture": "derived-tads.cpt",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "ab616d48d594a08d252cd76567b0045e3d8179e992ec42dbcf08581b31de227a",
  "size": 177084
 }

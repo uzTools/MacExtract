@@ -12,7 +12,7 @@
  ],
  "fixture": "yp-magnetic-force-10.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "de044e621ddb43a5d33c3b2840eb56dbc8383a23fa9ed0aa9ba98ba6dc24ffaa",
  "size": 258869
 }

@@ -12,7 +12,7 @@
  ],
  "fixture": "gnuchess30.cpt",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "dbddc5465d8487f35ca971452fcd174323eafa7090a37e10f0739b4e865c6519",
  "size": 131072
 }

@@ -10,15 +10,6 @@
    "type": "INIT"
   },
   {
-   "creator": "MACA",
-   "data_sha256": "e692167b1bd93e240a9da4446340f28d3ebd946fff445ed40977599e14bcbf5b",
-   "data_size": 500,
-   "name": "P Key Info",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0,
-   "type": "TEXT"
-  },
-  {
    "creator": "ADBb",
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
@@ -26,11 +17,20 @@
    "rsrc_sha256": "81a568b488c9948847337e31ceebf32c83f0c187c9ec9e7303a3b927b30cc8e4",
    "rsrc_size": 1986,
    "type": "INIT"
+  },
+  {
+   "creator": "MACA",
+   "data_sha256": "e692167b1bd93e240a9da4446340f28d3ebd946fff445ed40977599e14bcbf5b",
+   "data_size": 500,
+   "name": "P Key Info",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
   }
  ],
  "fixture": "derived-es.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "c0e57316122448c128ab5dcc985ae95fb814c0ac328fea0724563a9cd3bece10",
  "size": 2402
 }

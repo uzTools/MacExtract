@@ -12,7 +12,7 @@
  ],
  "fixture": "mwrt17.sea",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "6f2708eadd610b97d63bb252ea9dbd986bc291d29c67825ac05eb26370653200",
  "size": 75904
 }

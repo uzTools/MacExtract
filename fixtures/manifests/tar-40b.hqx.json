@@ -12,7 +12,7 @@
  ],
  "fixture": "tar-40b.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "16a01e28e5d34e055f46f35f3cd60b789743fd981e874093ab40712e2c5014f6",
  "size": 41282
 }

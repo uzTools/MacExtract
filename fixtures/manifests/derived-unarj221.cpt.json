@@ -84,7 +84,7 @@
  ],
  "fixture": "derived-unarj221.cpt",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "e3dcfec2a68267bd965ff9a5073c656ed62708857aa99d3c98e4790e04444c13",
  "size": 46597
 }

@@ -25,7 +25,7 @@
  ],
  "fixture": "derived-DL111.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "da18648dc10756bbc4f1e66f524586c08cc9a24ead4faebdac1af5ea06b3ad4d",
  "size": 85144
 }

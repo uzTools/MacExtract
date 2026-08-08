@@ -12,7 +12,7 @@
  ],
  "fixture": "colorpix.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "52d67318a65b5ebf9722e8e851e508b5d7d8e0b36d705fa544099bd70f4720e5",
  "size": 7125
 }

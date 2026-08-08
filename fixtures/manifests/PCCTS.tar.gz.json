@@ -10,7 +10,7 @@
  ],
  "fixture": "PCCTS.tar.gz",
  "format": "Gzip",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "7174d13afe287ff7c6f28affa70b78c3679fa5171fe5a63b051b2cf91efb184a",
  "size": 63807
 }

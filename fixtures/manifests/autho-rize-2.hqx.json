@@ -12,7 +12,7 @@
  ],
  "fixture": "autho-rize-2.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "d165caa515f62b144311284d2a43d3eb11d7b02e805697084cd6e5ea66cdae8c",
  "size": 247051
 }

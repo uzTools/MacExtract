@@ -12,7 +12,7 @@
  ],
  "fixture": "derived-AT_View.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "5846254c591f2119655690591d881fd0ddd9d26d9979cdbe788c43082a1934f0",
  "size": 9784
 }

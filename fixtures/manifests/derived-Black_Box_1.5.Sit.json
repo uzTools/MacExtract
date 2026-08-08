@@ -21,7 +21,7 @@
  ],
  "fixture": "derived-Black_Box_1.5.Sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "18f2175de3845b71b0a1893ff0c188f02bbe4f42024d5d2bc3524a2f9dcb0d3a",
  "size": 55949
 }

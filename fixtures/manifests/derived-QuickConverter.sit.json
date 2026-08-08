@@ -52,7 +52,7 @@
  ],
  "fixture": "derived-QuickConverter.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "18b89e64e3699a2aa7d6ecbba72da73d82fc4556703bad1cfcd397ccc091ad98",
  "size": 32745
 }

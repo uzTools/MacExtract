@@ -21,7 +21,7 @@
  ],
  "fixture": "derived-Sound_Scrap_DA.sea",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "d9f8adb71b2243f1ace698bbfffb00811780a034d9fda086dd1fa5b886e05e6f",
  "size": 15198
 }

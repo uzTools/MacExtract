@@ -5,10 +5,6 @@
    "name": "SoundMover1.7 ƒ"
   },
   {
-   "is_dir": true,
-   "name": "SoundMover1.7 ƒ/SndControl"
-  },
-  {
    "creator": "ttxt",
    "data_sha256": "2b93510580693dfe5c077247b4b38a3e6970b5095286e5df57cf87107b6937d3",
    "data_size": 820,
@@ -31,6 +27,28 @@
    "data_sha256": "9c9ed6d03d31fe17dd562a6e8ca5c95fd5cd67ae0d5e9a9753b263fff3b825cc",
    "data_size": 26734,
    "name": "SoundMover1.7 ƒ/SMP Disk Manual",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "is_dir": true,
+   "name": "SoundMover1.7 ƒ/SndControl"
+  },
+  {
+   "creator": "ett3",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "SoundMover1.7 ƒ/SndControl/SndControl",
+   "rsrc_sha256": "fc0d81b0a0a0868966450b6104b854c76a51d3b856ccf97d54d6a204d10602b8",
+   "rsrc_size": 37618,
+   "type": "cdev"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "59f49650dddf0ff257bec39a267b1abd55ae8894815288476a6dae4ecc7499d9",
+   "data_size": 31962,
+   "name": "SoundMover1.7 ƒ/SndControl/SndControl Manual",
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -61,29 +79,11 @@
    "rsrc_sha256": "ed664ea108289847bde712d146394b7609032986ba0c9026a84625ff45875c8f",
    "rsrc_size": 286,
    "type": "TEXT"
-  },
-  {
-   "creator": "ttxt",
-   "data_sha256": "59f49650dddf0ff257bec39a267b1abd55ae8894815288476a6dae4ecc7499d9",
-   "data_size": 31962,
-   "name": "SoundMover1.7 ƒ/SndControl/SndControl Manual",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0,
-   "type": "TEXT"
-  },
-  {
-   "creator": "ett3",
-   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "data_size": 0,
-   "name": "SoundMover1.7 ƒ/SndControl/SndControl",
-   "rsrc_sha256": "fc0d81b0a0a0868966450b6104b854c76a51d3b856ccf97d54d6a204d10602b8",
-   "rsrc_size": 37618,
-   "type": "cdev"
   }
  ],
  "fixture": "derived-soundmover1.7.cpt",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "24b76d2df67a5295747f2c1c3c60a6020d7c3ff95887030df38a897e21ef69b5",
  "size": 89906
 }

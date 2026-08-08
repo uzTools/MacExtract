@@ -12,7 +12,7 @@
  ],
  "fixture": "noble-ape-0659-src.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "13add3c00d58ab903a15cb9be01355677a0ef626a855e06d4d46560a4c398611",
  "size": 260965
 }

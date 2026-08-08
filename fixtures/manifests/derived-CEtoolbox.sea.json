@@ -12,7 +12,7 @@
  ],
  "fixture": "derived-CEtoolbox.sea",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "1c964f9187c560defaefccdd0ec9cdf26d489ba20a6142d75b560be9b72e439e",
  "size": 31617
 }

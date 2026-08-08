@@ -34,7 +34,7 @@
  ],
  "fixture": "derived-MacZOO2.1.cpt",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "58856060a09124189900076f56978544504569001e60a69fbf1834847a4db7e9",
  "size": 61641
 }

@@ -12,7 +12,7 @@
  ],
  "fixture": "trans-data.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "0eccead1f168adfa7d515e9facb37d2a0cad7db0f5cd3ecbc88b09f67bcbc00e",
  "size": 145295
 }

@@ -12,7 +12,7 @@
  ],
  "fixture": "firefly.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "c6dce2dbe65bce3775d3f12f6174a62715e6fda69b73ccb13cfc799c1936d3bb",
  "size": 75174
 }

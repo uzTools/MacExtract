@@ -12,7 +12,7 @@
  ],
  "fixture": "mac-error-codes-de.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "36203e9742773b4eaea42735cfa65305bff3ddd23d6287ff5969303f6faccf8f",
  "size": 74942
 }

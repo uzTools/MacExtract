@@ -5,10 +5,6 @@
    "name": "spinning brain ƒ"
   },
   {
-   "is_dir": true,
-   "name": "spinning brain ƒ/Other Samples"
-  },
-  {
    "creator": "\u0000\u0000\u0000\u0000",
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
@@ -27,31 +23,8 @@
    "type": "nX^d"
   },
   {
-   "creator": "nX^n",
-   "data_sha256": "47f0c33dbf336b2b8b94edd920f1bf6872f7602d846c480b2d184f3a7f570890",
-   "data_size": 99131,
-   "name": "spinning brain ƒ/Spinning Brain. An inter…",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0,
-   "type": "nX^d"
-  },
-  {
-   "creator": "BråN",
-   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "data_size": 0,
-   "name": "spinning brain ƒ/spinning brain",
-   "rsrc_sha256": "0a9542d7ef5d479056f7d46b9dec7ae08a7a1bef8c688b6a39497d1549aa9256",
-   "rsrc_size": 53740,
-   "type": "APPL"
-  },
-  {
-   "creator": "EDIT",
-   "data_sha256": "68b8b8b1aeddb826f1da652f1f46e088b47e06738caac5fc4f1b83c8781de21d",
-   "data_size": 420,
-   "name": "spinning brain ƒ/spinning-brain-docs..doc",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0,
-   "type": "TEXT"
+   "is_dir": true,
+   "name": "spinning brain ƒ/Other Samples"
   },
   {
    "creator": "\u0000\u0000\u0000\u0000",
@@ -88,11 +61,38 @@
    "rsrc_sha256": "8eab0e7ad1898ee0448e6fd9a13353d29db5aaa6f75ad85433c1287b1dcdf7a3",
    "rsrc_size": 1323,
    "type": "Leov"
+  },
+  {
+   "creator": "nX^n",
+   "data_sha256": "47f0c33dbf336b2b8b94edd920f1bf6872f7602d846c480b2d184f3a7f570890",
+   "data_size": 99131,
+   "name": "spinning brain ƒ/Spinning Brain. An inter…",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "nX^d"
+  },
+  {
+   "creator": "BråN",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "spinning brain ƒ/spinning brain",
+   "rsrc_sha256": "0a9542d7ef5d479056f7d46b9dec7ae08a7a1bef8c688b6a39497d1549aa9256",
+   "rsrc_size": 53740,
+   "type": "APPL"
+  },
+  {
+   "creator": "EDIT",
+   "data_sha256": "68b8b8b1aeddb826f1da652f1f46e088b47e06738caac5fc4f1b83c8781de21d",
+   "data_size": 420,
+   "name": "spinning brain ƒ/spinning-brain-docs..doc",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
   }
  ],
  "fixture": "derived-Education7.1.cpt",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "2dc051415ab02da4a0075f749a78fa33ff8279295b3b872135c9935cbcde1ac2",
  "size": 85072
 }

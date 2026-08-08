@@ -21,7 +21,7 @@
  ],
  "fixture": "derived-Teac_Utility_1.1_.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "e95259a40fc0f9a008485be8aa7a1a62cbc56c023eb90a63b23c171862637bce",
  "size": 12633
 }

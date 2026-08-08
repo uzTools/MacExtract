@@ -12,7 +12,7 @@
  ],
  "fixture": "dropcheck.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "1cd3d7beca26504b929a91a49dd194e00686cc501e5e08f8df61533f5bbbefa1",
  "size": 124416
 }

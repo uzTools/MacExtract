@@ -12,7 +12,7 @@
  ],
  "fixture": "apollo06b1.sea",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "6ef8dcdd2f8d0663502eb6d7ee19e2f28fac42bc8320b71e9ca5c65d5e922e74",
  "size": 72192
 }

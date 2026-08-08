@@ -12,7 +12,7 @@
  ],
  "fixture": "maz143.sea",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "578265d5e965b48277f940cff989b88ac4a44047d486201519277d2104e03ed4",
  "size": 60800
 }

@@ -25,7 +25,7 @@
  ],
  "fixture": "derived-Drop_Text_1.5__.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "acd5f09abb1c0347747071740b985f1323877268d4e4588d32e6c39c99e5d923",
  "size": 23865
 }

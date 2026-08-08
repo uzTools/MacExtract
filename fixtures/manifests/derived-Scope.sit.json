@@ -12,7 +12,7 @@
  ],
  "fixture": "derived-Scope.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "f34c6c7fd23945a35824fd67ce742ab5c649d548c0fee1cd367e24cbdf7f546b",
  "size": 22907
 }

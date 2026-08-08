@@ -12,7 +12,7 @@
  ],
  "fixture": "maczoo-21.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "1777a4c9bbd8d4cddaf9294899fbfc7e8eb6fab7f1eb954f7bde6d9cb43c0079",
  "size": 85553
 }

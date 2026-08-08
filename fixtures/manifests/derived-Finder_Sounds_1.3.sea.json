@@ -4,19 +4,19 @@
    "creator": "ScFP",
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
-   "name": "Finder Sounds Config",
-   "rsrc_sha256": "5aad95ef0f10db39c1d3c25acff3b05c618f56c75ac54b3481700d056d44b00d",
-   "rsrc_size": 193994,
-   "type": "cdev"
+   "name": "Finder Sounds",
+   "rsrc_sha256": "42525405af13ffee148e3eebfde614ecc2eb3dda89d85683f21f6a6ef92b367f",
+   "rsrc_size": 9127,
+   "type": "INIT"
   },
   {
    "creator": "ScFP",
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
-   "name": "Finder Sounds",
-   "rsrc_sha256": "42525405af13ffee148e3eebfde614ecc2eb3dda89d85683f21f6a6ef92b367f",
-   "rsrc_size": 9127,
-   "type": "INIT"
+   "name": "Finder Sounds Config",
+   "rsrc_sha256": "5aad95ef0f10db39c1d3c25acff3b05c618f56c75ac54b3481700d056d44b00d",
+   "rsrc_size": 193994,
+   "type": "cdev"
   },
   {
    "creator": "ttxt",
@@ -30,7 +30,7 @@
  ],
  "fixture": "derived-Finder_Sounds_1.3.sea",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "6e95c66039a297994c32ced59fd94f74ba399a473051241d41264bbbe00a65ca",
  "size": 134551
 }

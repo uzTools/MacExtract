@@ -12,7 +12,7 @@
  ],
  "fixture": "derived-BinHex_5.0.sea",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "e7305afd1ad19d0261526ac6ddb6194927d34d6f2d534a6d59c2e143cfd4f2e1",
  "size": 5007
 }

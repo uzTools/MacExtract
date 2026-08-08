@@ -25,7 +25,7 @@
  ],
  "fixture": "derived-Apple_Jam.cpt",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "d5b20caebea1880d4157858e650d6006121e46486412365cf680d510e55c1400",
  "size": 43545
 }

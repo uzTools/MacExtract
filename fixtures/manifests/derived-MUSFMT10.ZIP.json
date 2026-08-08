@@ -206,7 +206,7 @@
  ],
  "fixture": "derived-MUSFMT10.ZIP",
  "format": "Zip",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "cac2ccf0d994b8d987dd2f020c6f06cda29810613a4bb32ceb60afdeac424352",
  "size": 171960
 }

@@ -12,7 +12,7 @@
  ],
  "fixture": "mews141.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "56f3bd92deb2b86284ffd206b824d9ee291616adf7f0a99f98de84f758a20eb5",
  "size": 270359
 }

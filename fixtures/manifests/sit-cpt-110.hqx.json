@@ -12,7 +12,7 @@
  ],
  "fixture": "sit-cpt-110.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "5eef9f2bdf2937b9fbbed1a325947e05255cca2306df557919762a6edfcd8bb1",
  "size": 25386
 }

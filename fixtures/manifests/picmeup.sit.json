@@ -12,7 +12,7 @@
  ],
  "fixture": "picmeup.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "e145a4d77af73ab7b257ec59a9045bf0baaa1a443884d147ac527161c98c51e6",
  "size": 44800
 }

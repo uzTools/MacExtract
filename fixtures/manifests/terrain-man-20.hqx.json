@@ -12,7 +12,7 @@
  ],
  "fixture": "terrain-man-20.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "1a1907d7a0afcab5727b104980aabe9e15c6a03afa41894b271ab6fb02a4d301",
  "size": 242463
 }

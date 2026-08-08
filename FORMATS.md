@@ -9,12 +9,12 @@ whole corpus for that format (engine allocations only, via
 
 | Format | Status | Methods | Oracle coverage | Peak RAM | 400 KB budget |
 |---|---|---|---|---|---|
-| MacBinary I/II/III | extract | — | 225 fixtures | 8 KB | full |
+| MacBinary I/II/III | extract | — | 226 fixtures | 8 KB | full |
 | AppleSingle/Double | extract | — | (unit tests + envelopes) | 8 KB | full |
 | BinHex 4 (.hqx) | extract | RLE90 | 179 fixtures | 8 KB | full |
 | PackIt (.pit) | extract | store, Huffman; encrypted detected | 4 fixtures (1 real + 3 synthetic PMa4) | 9 KB | full |
-| Compact Pro (.cpt) | extract | RLE, LZH+RLE | 106 fixtures | 19 KB | full |
-| StuffIt classic (.sit) | extract | 0 store, 1 RLE90*, 2 LZW, 3 Huffman, 5 LZAH, 8 MW, 13 LZSS+Huffman; 6 fixed-Huffman NOT implemented‡; encrypted detected | 211 fixtures | 8–76 KB‖ | full |
+| Compact Pro (.cpt) | extract | RLE, LZH+RLE | 108 fixtures | 19 KB | full |
+| StuffIt classic (.sit) | extract | 0 store, 1 RLE90*, 2 LZW, 3 Huffman, 5 LZAH, 8 MW, 13 LZSS+Huffman; 6 fixed-Huffman NOT implemented‡; encrypted detected | 217 fixtures | 8–76 KB‖ | full |
 | StuffIt 5 (.sit) | extract | 0, 13, 15 Arsenic; encrypted detected | 31 fixtures | 0.15–2.53 MB† | 23 of 31 fixtures extract FULLY; the rest refuse per entry |
 | Zip | extract | store, deflate; others & encrypted per-entry errors | 3 fixtures (+2 PKZIP-1.x corpus-only) | 66 KB | full |
 | Gzip | extract | deflate | 3 fixtures | 51 KB | full |
@@ -181,12 +181,14 @@ the intermediate deleted (`-nr` disables; depth ≤ 8). Verified chains:
 
 ## Hardening
 
-- Differential: 769 fixtures byte-exact against `unar` manifests
+- Differential: 778 fixtures byte-exact against `unar` manifests
   (both forks + type/creator), `./ci.sh`. That is every committed
-  manifest whose format the engine extracts: 774 manifests less the 5
+  manifest whose format the engine extracts: 783 manifests less the 5
   detect-only DiskDoubler/Now Compress ones the harness skips. (A
   headline figure of 771 stood here for a while; `run_diff.py` prints
-  the number it actually ran, and it is 769.)
+  the number it actually ran. It was 769 until 2026-08-08, when nine
+  fixtures previously written off as oracle-undecidable or oracle-buggy
+  turned out to be neither — see BLOCKERS.md.)
 - Robustness: 10 truncation/bit-flip variants per fixture — no
   crashes, hangs, or sanitizer trips under
   ASan+UBSan+`-fsanitize=alignment` (`-fno-sanitize-recover=all`).

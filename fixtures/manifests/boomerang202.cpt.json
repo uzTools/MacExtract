@@ -12,7 +12,7 @@
  ],
  "fixture": "boomerang202.cpt",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "2aa1895dc7687577f0c7bfe14b85e6668879b1acb87032c7d7c277c38eeefc80",
  "size": 48384
 }

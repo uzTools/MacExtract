@@ -25,7 +25,7 @@
  ],
  "fixture": "derived-Blue_Invasion_2001_Folder.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "22a5e0aab49f89657f895c96e1e1fd6e49ab030202809daf9f85b35e8e250b4c",
  "size": 14761
 }

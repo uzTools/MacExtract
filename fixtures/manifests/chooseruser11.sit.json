@@ -12,7 +12,7 @@
  ],
  "fixture": "chooseruser11.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "2c09e34a98e1a3038ee39ae7582ba0350a50110ad864dcd7f8e7e438936b0a47",
  "size": 21560
 }

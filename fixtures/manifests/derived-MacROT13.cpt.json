@@ -12,7 +12,7 @@
  ],
  "fixture": "derived-MacROT13.cpt",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "3fcfbdcafa0f5179b6f894953e25e68159175f8ebb3f76a799f7c6ad7b457166",
  "size": 3309
 }

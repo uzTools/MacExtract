@@ -12,7 +12,7 @@
  ],
  "fixture": "translator-package-152-docs.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "ca1f75597142cf9ed2401e25a6a404e1920f0f9c234ee70989baab3c0ec00595",
  "size": 97625
 }

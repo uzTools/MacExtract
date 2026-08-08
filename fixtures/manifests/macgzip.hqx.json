@@ -12,7 +12,7 @@
  ],
  "fixture": "macgzip.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "fdf2e87dd961fe972f3c788e9b1f29b566b8daaa7b1e5d91294b4797e9d6cd78",
  "size": 6509
 }

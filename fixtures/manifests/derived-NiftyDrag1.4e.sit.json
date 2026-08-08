@@ -43,7 +43,7 @@
  ],
  "fixture": "derived-NiftyDrag1.4e.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "3a5c4fa0776ca2d90c07a347420738d961e94a9723a799c3941e7be8348f0d46",
  "size": 63585
 }

@@ -12,7 +12,7 @@
  ],
  "fixture": "comit14.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "c969999debde048c127d5d21b7832e9cdddde160694b9d7acdedb687e4b42846",
  "size": 205056
 }

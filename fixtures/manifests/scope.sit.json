@@ -12,7 +12,7 @@
  ],
  "fixture": "scope.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "f1823c1372d5f7c38059236e026f54702ca4c6cd10e2a2af976662c70fe40832",
  "size": 23035
 }

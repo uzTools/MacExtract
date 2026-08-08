@@ -12,7 +12,7 @@
  ],
  "fixture": "soundscrapda.sea",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "906253d62c4282958cd5a9e0a1e33ca7367807e6aa535edd5ed819c6d7288c8f",
  "size": 28544
 }

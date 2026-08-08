@@ -12,7 +12,7 @@
  ],
  "fixture": "export-hc.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "cf7e308db72a9b578b83d8154a11c8d641c0534b5be077003c691c6fd9520fd6",
  "size": 3127
 }

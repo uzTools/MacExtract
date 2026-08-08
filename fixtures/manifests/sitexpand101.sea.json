@@ -12,7 +12,7 @@
  ],
  "fixture": "sitexpand101.sea",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "26ddd9a5390446bebcb2f11196a38e7a1ecd7222a7e6e0d19bbef960f263575c",
  "size": 23296
 }

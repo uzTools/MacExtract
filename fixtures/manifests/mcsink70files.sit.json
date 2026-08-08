@@ -12,7 +12,7 @@
  ],
  "fixture": "mcsink70files.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "d34d82babe93f33b08910640b46161d4100181f8ff818e90fb052cece832de97",
  "size": 45056
 }

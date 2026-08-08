@@ -8,6 +8,15 @@
    "creator": "bMRN",
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
+   "name": "Boomerang 2.0.2/Boomerang",
+   "rsrc_sha256": "c0b09bc155e675951a36a1937290489a04a600a4cc5fa30676afb13aed1141eb",
+   "rsrc_size": 57858,
+   "type": "cdev"
+  },
+  {
+   "creator": "bMRN",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
    "name": "Boomerang 2.0.2/Boomerang Help",
    "rsrc_sha256": "00a471865d79983e5746529b95b400f2b143d637cd14d9173173704a7e2e11d4",
    "rsrc_size": 27763,
@@ -21,15 +30,6 @@
    "rsrc_sha256": "bc7b222a0844809f8a68e3d036adfec549a223e4fa37a5cbbdea9f412a2d0efe",
    "rsrc_size": 7929,
    "type": "bMDT"
-  },
-  {
-   "creator": "bMRN",
-   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "data_size": 0,
-   "name": "Boomerang 2.0.2/Boomerang",
-   "rsrc_sha256": "c0b09bc155e675951a36a1937290489a04a600a4cc5fa30676afb13aed1141eb",
-   "rsrc_size": 57858,
-   "type": "cdev"
   },
   {
    "creator": "MACA",
@@ -52,7 +52,7 @@
  ],
  "fixture": "derived-boomerang202.sit",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "3ccc43c2115d807f4e724132b1ca7e10521210ac492f2ffce15cfd52632138b7",
  "size": 48219
 }

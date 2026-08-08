@@ -34,7 +34,7 @@
  ],
  "fixture": "derived-Stuff_and_Hex.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "b5d0e14bb5cabdc36397591fc51de4bf0eb4183ecaba947364a24e7965535227",
  "size": 16070
 }

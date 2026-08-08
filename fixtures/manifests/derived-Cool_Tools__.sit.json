@@ -5,10 +5,6 @@
    "name": "Cool Tools ∆í"
   },
   {
-   "is_dir": true,
-   "name": "Cool Tools ∆í/UltraClip Folder"
-  },
-  {
    "creator": "eSRD",
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
@@ -72,6 +68,10 @@
    "type": "APPL"
   },
   {
+   "is_dir": true,
+   "name": "Cool Tools ∆í/UltraClip Folder"
+  },
+  {
    "creator": "drag",
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
@@ -83,7 +83,7 @@
  ],
  "fixture": "derived-Cool_Tools__.sit",
  "format": "StuffIt 5",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "868faea3776b84abddc51660032f179238b673f8b6be4722d088543a5563f5fc",
  "size": 217507
 }

@@ -12,7 +12,7 @@
  ],
  "fixture": "gotofkey14.cpt",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "3bff0923dea9e99d926c94ac0ea68885d2d52b26c3986704e88e61882de2beb3",
  "size": 3584
 }

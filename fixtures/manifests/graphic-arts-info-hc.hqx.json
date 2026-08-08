@@ -12,7 +12,7 @@
  ],
  "fixture": "graphic-arts-info-hc.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "695101b7d6021e71b23853f13a11f0f8a05319d23b4adc7a012ae2235005fefc",
  "size": 91611
 }

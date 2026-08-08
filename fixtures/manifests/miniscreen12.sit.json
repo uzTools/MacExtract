@@ -12,7 +12,7 @@
  ],
  "fixture": "miniscreen12.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "9a64720529da2e759db8adbdfe95d56a220589918d2468e75544dcf51ac4dd85",
  "size": 5268
 }

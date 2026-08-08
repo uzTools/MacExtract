@@ -12,7 +12,7 @@
  ],
  "fixture": "diamond42demo.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "de334167fe87e39837cb20beb5fbd2b35f1c30c41d676b6023478828954a89f5",
  "size": 25484
 }

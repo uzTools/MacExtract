@@ -25,7 +25,7 @@
  ],
  "fixture": "derived-MacWEEK_Online__93_Index.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "4adc87a7d79ade25070ac1e3f75994ab6cfbe7f0c0aeb2107dc44f054340f169",
  "size": 77370
 }

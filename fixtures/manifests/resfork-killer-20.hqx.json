@@ -12,7 +12,7 @@
  ],
  "fixture": "resfork-killer-20.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "8748948c11d4e4a6a79ffd534e6821120edf0b5816d24fbc81bd93feb9567d7e",
  "size": 53736
 }

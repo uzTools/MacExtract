@@ -12,7 +12,7 @@
  ],
  "fixture": "macmeter.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "b6d793c7840b0842fc1980732737946311b64fa302b41c23eee0c32f28d88f4e",
  "size": 49285
 }

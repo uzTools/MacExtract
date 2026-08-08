@@ -5,10 +5,6 @@
    "name": "extractpc1.02 Folder"
   },
   {
-   "is_dir": true,
-   "name": "extractpc1.02 Folder/EXTRACT.EXE Folder"
-  },
-  {
    "creator": "ttxt",
    "data_sha256": "ee7cb960c8fbe8cc8cf03548d6a71e4c1fb228e395d563ece251b01fdc26852f",
    "data_size": 480,
@@ -34,11 +30,15 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "????"
+  },
+  {
+   "is_dir": true,
+   "name": "extractpc1.02 Folder/EXTRACT.EXE Folder"
   }
  ],
  "fixture": "derived-extractpc1.02_Folder.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "3d8f51319f0bb86c12cc73d2cfd845d99b5d26f594c233048aa6bab0af337127",
  "size": 33239
 }

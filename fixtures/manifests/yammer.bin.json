@@ -12,7 +12,7 @@
  ],
  "fixture": "yammer.bin",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "bfcdedd3d3be1dc95ebd498765e74b5f14c865a6d65e11c53a31b124da88ad8a",
  "size": 17792
 }

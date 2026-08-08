@@ -12,7 +12,7 @@
  ],
  "fixture": "mac-uucode-105.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "d1846267417975cd6ffefa45ac8f78f9a79c8fec88936c57616ac0aa614fc55b",
  "size": 28084
 }

@@ -21,7 +21,7 @@
  ],
  "fixture": "derived-Init_Escape.cpt",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "473c72c801f830c3125cda22afb0b781a3dc6f2714e8d43caf0c668178151bd3",
  "size": 13709
 }

@@ -12,7 +12,7 @@
  ],
  "fixture": "theldrowmap.bin",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "9b6f734435c10b003682933414c06e3a683feea4bd5f23058720c1add7fb82f2",
  "size": 38560
 }

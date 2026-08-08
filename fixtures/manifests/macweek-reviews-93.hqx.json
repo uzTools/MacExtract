@@ -12,7 +12,7 @@
  ],
  "fixture": "macweek-reviews-93.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "6cd9591e415e7ce2aaf6391da7828a32dc8bdbc4f46e486aa8f7c8fa0aed9be9",
  "size": 9037
 }

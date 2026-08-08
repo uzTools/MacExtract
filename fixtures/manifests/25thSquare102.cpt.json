@@ -12,7 +12,7 @@
  ],
  "fixture": "25thSquare102.cpt",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "270c9f7827ccf3fca3dddf5cd6b66e9118fe972196b104e7d9c8692b8d1d53b7",
  "size": 79232
 }

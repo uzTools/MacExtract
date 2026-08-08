@@ -12,7 +12,7 @@
  ],
  "fixture": "IIfxserialswitch.bin",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "6180632670c941bf1f5576c0d707b3998f0dd819f2fd2edd2c8210d7e5f98f6b",
  "size": 3180
 }

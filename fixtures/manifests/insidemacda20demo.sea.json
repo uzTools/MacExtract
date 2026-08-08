@@ -12,7 +12,7 @@
  ],
  "fixture": "insidemacda20demo.sea",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "970e9a4a500eef5d3e8eaf642b7f04ba880585cf7ff47f8da3d531b89ba82ecf",
  "size": 82560
 }

@@ -4,6 +4,15 @@
    "creator": "BigA",
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
+   "name": "Cubist",
+   "rsrc_sha256": "b11abaed42d36a22260038049600806fd3830011c1dfb80741e3616059c8c5fa",
+   "rsrc_size": 7096,
+   "type": "APPL"
+  },
+  {
+   "creator": "BigA",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
    "name": "Cubist FKEY",
    "rsrc_sha256": "262b55cfe20910271e5bae40a24e5e36b71a1ea6c6837ee25900dfe81d2176b1",
    "rsrc_size": 6390,
@@ -17,20 +26,11 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
-  },
-  {
-   "creator": "BigA",
-   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "data_size": 0,
-   "name": "Cubist",
-   "rsrc_sha256": "b11abaed42d36a22260038049600806fd3830011c1dfb80741e3616059c8c5fa",
-   "rsrc_size": 7096,
-   "type": "APPL"
   }
  ],
  "fixture": "derived-Cubist.cpt",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "660abc7784310dcf66045de429546954c5f563f0c04a4e92a58c1aec7d4723e8",
  "size": 9773
 }

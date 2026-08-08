@@ -12,7 +12,7 @@
  ],
  "fixture": "cubist11.cpt",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "f1e4ebec5902746d336f1d785cfac475c19f939d49dc4d357613148e24f5f1ab",
  "size": 9984
 }

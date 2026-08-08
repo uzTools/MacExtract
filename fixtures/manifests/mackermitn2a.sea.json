@@ -12,7 +12,7 @@
  ],
  "fixture": "mackermitn2a.sea",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "02746a01386d2dcd24580a89ea87cadc49aef2e6fc78e12e4ffb49880fa0fc56",
  "size": 232448
 }

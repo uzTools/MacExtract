@@ -1,15 +1,6 @@
 {
  "entries": [
   {
-   "creator": "ttxt",
-   "data_sha256": "4aa9e19b722c65069cb420019cd23483309edc15a75ec99164cb60f9b8e7bd1c",
-   "data_size": 4253,
-   "name": "Greg's Buttons 1.3 Docs",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0,
-   "type": "TEXT"
-  },
-  {
    "creator": "GrEG",
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
@@ -17,11 +8,20 @@
    "rsrc_sha256": "e6b2db42a0a057bd0daa27ae12a7916fc8940b90ce316dc894daaf2a1308b9ba",
    "rsrc_size": 16764,
    "type": "INIT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "4aa9e19b722c65069cb420019cd23483309edc15a75ec99164cb60f9b8e7bd1c",
+   "data_size": 4253,
+   "name": "Greg's Buttons 1.3 Docs",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
   }
  ],
  "fixture": "derived-Greg_s_Buttons.cpt",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "8aa463c887396a7997d8733b60604cc2fef6cebe8d027faaab03c3b71fb3854c",
  "size": 9923
 }

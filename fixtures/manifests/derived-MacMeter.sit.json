@@ -21,7 +21,7 @@
  ],
  "fixture": "derived-MacMeter.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "3b4af6c47e7d206d8fcfca91159a6e345d0824d5c66ffb231b1348cb90764b9e",
  "size": 49157
 }

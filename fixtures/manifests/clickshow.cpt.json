@@ -12,7 +12,7 @@
  ],
  "fixture": "clickshow.cpt",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "b4983847aa9a22c2be00a1a0d0b3a1e8187f76cebbecb4feb50f40b8b7df6ad6",
  "size": 8064
 }

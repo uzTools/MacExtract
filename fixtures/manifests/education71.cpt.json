@@ -12,7 +12,7 @@
  ],
  "fixture": "education71.cpt",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "6d228f0d86edcb1687909a96ae985feba78242ee3d829cecdf21c00962d06725",
  "size": 85248
 }

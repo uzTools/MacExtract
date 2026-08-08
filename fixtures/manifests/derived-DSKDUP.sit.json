@@ -21,7 +21,7 @@
  ],
  "fixture": "derived-DSKDUP.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "050206aca439e8909c8e06c562d6a36b9440bd7998c57b05292cfa0446853207",
  "size": 14049
 }

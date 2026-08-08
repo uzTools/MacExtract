@@ -12,7 +12,7 @@
  ],
  "fixture": "code-programs.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "5a5bd35c672498a9f7799a738f862b8a8de03dd1776f8f5c745ffd701595093b",
  "size": 82993
 }

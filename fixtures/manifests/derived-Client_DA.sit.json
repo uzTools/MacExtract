@@ -12,7 +12,7 @@
  ],
  "fixture": "derived-Client_DA.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "360d7848eec570f2777897bb1d9552b45f837aa1e9574833eef61771cd9e7041",
  "size": 18353
 }

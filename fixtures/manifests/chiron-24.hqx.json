@@ -12,7 +12,7 @@
  ],
  "fixture": "chiron-24.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "b16efe355022ee55639df11c41ef99ba8690a0bce506f87be760b79a540f74c6",
  "size": 179266
 }

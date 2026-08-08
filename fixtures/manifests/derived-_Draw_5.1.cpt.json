@@ -5,10 +5,6 @@
    "name": "•Draw 5.1"
   },
   {
-   "is_dir": true,
-   "name": "•Draw 5.1/•Draw Templates"
-  },
-  {
    "creator": "DMOV",
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
@@ -34,6 +30,10 @@
    "rsrc_sha256": "4805693eada596f4579922e60b2e76ebac70bea9dd2efe680aca947b585784b8",
    "rsrc_size": 870,
    "type": "WORD"
+  },
+  {
+   "is_dir": true,
+   "name": "•Draw 5.1/•Draw Templates"
   },
   {
    "creator": "•Drw",
@@ -173,7 +173,7 @@
  ],
  "fixture": "derived-_Draw_5.1.cpt",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "b593cc349f0bb4094369c577da2bf6f174e7ea6bdcfb45bed9be945737d99968",
  "size": 78123
 }

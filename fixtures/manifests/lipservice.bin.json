@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "LipS",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "~Lip Service",
+   "rsrc_sha256": "e4f264cefc59b408cea04dc94bd76b653062663d46d31a0c7eaff232baa30505",
+   "rsrc_size": 6869,
+   "type": "cdev"
+  }
+ ],
+ "fixture": "lipservice.bin",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "d7dc62df831ee68cbc0d3e5a628bc1fc500e8a802b1871800fd2a25ab4e4d843",
+ "size": 6997
+}

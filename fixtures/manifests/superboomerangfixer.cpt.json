@@ -12,7 +12,7 @@
  ],
  "fixture": "superboomerangfixer.cpt",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "a2cfb0018c8d9760d090ab00abc1aaec8aa671d3c702db26a0a83e179069807f",
  "size": 5248
 }

@@ -12,7 +12,7 @@
  ],
  "fixture": "unstuffit-307.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "3b4239294fb26c70f3f8ed5f1495d5e58f02650ba900d83ab464d38a74764022",
  "size": 120846
 }

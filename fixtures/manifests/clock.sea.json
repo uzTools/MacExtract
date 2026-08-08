@@ -12,7 +12,7 @@
  ],
  "fixture": "clock.sea",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "6a7d3d4009638597bbb48021f914cb7cafadda39a3f25e81f8bf02adc3222644",
  "size": 27264
 }

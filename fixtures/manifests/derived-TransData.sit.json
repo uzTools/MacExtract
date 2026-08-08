@@ -1,10 +1,6 @@
 {
  "entries": [
   {
-   "is_dir": true,
-   "name": "TransData™ 1.2 ƒ"
-  },
-  {
    "creator": "ttxt",
    "data_sha256": "9a652aaf3c86611dc676ec45dbad63086b14eae83d9587a716e3f2aed8f0974d",
    "data_size": 652,
@@ -33,29 +29,15 @@
   },
   {
    "is_dir": true,
-   "name": "TransData™ 1.2 ƒ/Examples"
+   "name": "TransData™ 1.2 ƒ"
   },
   {
-   "creator": "\u0000\u0000\u0000\u0000",
-   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "data_size": 0,
-   "name": "TransData™ 1.2 ƒ/Icon\r",
-   "rsrc_sha256": "0b454ebcbe1dbab4dc0d5ff6fe40a9e51e944253a0a2d78148b61e6c6279e36a",
-   "rsrc_size": 2704,
-   "type": "\u0000\u0000\u0000\u0000"
+   "is_dir": true,
+   "name": "TransData™ 1.2 ƒ/Examples"
   },
   {
    "is_dir": true,
    "name": "TransData™ 1.2 ƒ/Examples/Sample Data"
-  },
-  {
-   "creator": "Maui",
-   "data_sha256": "a0de08925cae308e1361a594b00a324a302497f621a83388090002e0743e6db8",
-   "data_size": 90,
-   "name": "TransData™ 1.2 ƒ/Examples/Sample Fixed-Length filer",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0,
-   "type": "HAWI"
   },
   {
    "creator": "ttxt",
@@ -83,11 +65,29 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
+  },
+  {
+   "creator": "Maui",
+   "data_sha256": "a0de08925cae308e1361a594b00a324a302497f621a83388090002e0743e6db8",
+   "data_size": 90,
+   "name": "TransData™ 1.2 ƒ/Examples/Sample Fixed-Length filer",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "HAWI"
+  },
+  {
+   "creator": "\u0000\u0000\u0000\u0000",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "TransData™ 1.2 ƒ/Icon\r",
+   "rsrc_sha256": "0b454ebcbe1dbab4dc0d5ff6fe40a9e51e944253a0a2d78148b61e6c6279e36a",
+   "rsrc_size": 2704,
+   "type": "\u0000\u0000\u0000\u0000"
   }
  ],
  "fixture": "derived-TransData.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "cb71017c794a30cd089d13e0029c579ee9b1e7ad4dd7d5e097df3fa9b8ba3ed4",
  "size": 105791
 }

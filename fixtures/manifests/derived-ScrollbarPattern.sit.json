@@ -21,7 +21,7 @@
  ],
  "fixture": "derived-ScrollbarPattern.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "a0596913f7a8f52983248c8417248314776f0c0a86bba219f235dc69bda39221",
  "size": 3701
 }

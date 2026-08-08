@@ -12,7 +12,7 @@
  ],
  "fixture": "Player-Pro410.sit.bin",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "27137daa4cb5984276961f3f636e7c6471945c9431b38a4d5ae41312e649a704",
  "size": 196608
 }

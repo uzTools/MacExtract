@@ -38,7 +38,7 @@
  ],
  "fixture": "derived-BCI_1.0.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "865190468893a31e03eb39c080197bee436beda8073e32c293f810cbde19d2a9",
  "size": 118143
 }

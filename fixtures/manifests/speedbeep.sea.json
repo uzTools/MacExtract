@@ -12,7 +12,7 @@
  ],
  "fixture": "speedbeep.sea",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "1acf2056d0977bad4b3f98e8b95fcb1eec05509c2cbc9e7f31d43bb153c78f28",
  "size": 52480
 }

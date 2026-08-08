@@ -12,7 +12,7 @@
  ],
  "fixture": "gregsbuttons.cpt",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "ac1e990b890784c2d7c6fb2f149ed44c3e667ef5df9330ad3ce6b15036dd6f7e",
  "size": 10112
 }

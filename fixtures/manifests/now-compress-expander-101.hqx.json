@@ -12,7 +12,7 @@
  ],
  "fixture": "now-compress-expander-101.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "be1596a1ff6d0ffc3b1074264223da4fc89b8397710e4113760eea4c9a8df206",
  "size": 120498
 }

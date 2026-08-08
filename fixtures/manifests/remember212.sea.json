@@ -12,7 +12,7 @@
  ],
  "fixture": "remember212.sea",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "5d3c83c5e4f271b5adf63e9c39285864874ce4d001d06ab10448c586089f4a38",
  "size": 164736
 }

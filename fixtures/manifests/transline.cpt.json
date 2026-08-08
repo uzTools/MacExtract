@@ -12,7 +12,7 @@
  ],
  "fixture": "transline.cpt",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "c59359a4d1af905790fc636e542b31e80aeb782d54dc3baf1c72bf59e6ea33b6",
  "size": 29948
 }

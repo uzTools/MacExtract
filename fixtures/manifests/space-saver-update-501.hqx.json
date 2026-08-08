@@ -12,7 +12,7 @@
  ],
  "fixture": "space-saver-update-501.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "0749e612336bda1591667bd27a8ca9c7f9c39b5bf105071a0b76fe8d13fa2532",
  "size": 184587
 }

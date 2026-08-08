@@ -42,7 +42,7 @@
  ],
  "fixture": "derived-Power_Macintosh_PRs.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "621749aae60b2865b5323b0df70a238d6de190f7c303d44ff302bc0134e0afc7",
  "size": 15787
 }

@@ -5,10 +5,6 @@
    "name": "YP Circuits CC ÔæÑ"
   },
   {
-   "is_dir": true,
-   "name": "YP Circuits CC ÔæÑ/Fichiers Exemples"
-  },
-  {
    "creator": "ttxt",
    "data_sha256": "64df42c19f67803bd4e15cfefa8e0eaf1bfae61953b5c56e754b24ba5df5b206",
    "data_size": 3358,
@@ -27,31 +23,8 @@
    "type": "TEXT"
   },
   {
-   "creator": "ttxt",
-   "data_sha256": "1250ba8588cecfdfb824b1ff41245734b10cec7fcb880e68d827c1aff45d46ec",
-   "data_size": 12669,
-   "name": "YP Circuits CC ÔæÑ/Guide d'Utilisation",
-   "rsrc_sha256": "af25a2972eff2d34abe428e5712b088af0f24a31a0b12e280614f3a39370ecd5",
-   "rsrc_size": 93706,
-   "type": "TEXT"
-  },
-  {
-   "creator": "Regi",
-   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "data_size": 0,
-   "name": "YP Circuits CC ÔæÑ/Register F",
-   "rsrc_sha256": "1df472f228cbfe6b1cf2eb9a0a7b90a566d65ea203023dd776fd56797bf8915e",
-   "rsrc_size": 96986,
-   "type": "APPL"
-  },
-  {
-   "creator": "yPdC",
-   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "data_size": 0,
-   "name": "YP Circuits CC ÔæÑ/YP Circuits CC 2.0",
-   "rsrc_sha256": "b65eaedf5897aa1c894abf42de870f77ecbec4a1827a198b0c214bf080169004",
-   "rsrc_size": 371916,
-   "type": "APPL"
+   "is_dir": true,
+   "name": "YP Circuits CC ÔæÑ/Fichiers Exemples"
   },
   {
    "creator": "yPdC",
@@ -88,11 +61,38 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "CirC"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "1250ba8588cecfdfb824b1ff41245734b10cec7fcb880e68d827c1aff45d46ec",
+   "data_size": 12669,
+   "name": "YP Circuits CC ÔæÑ/Guide d'Utilisation",
+   "rsrc_sha256": "af25a2972eff2d34abe428e5712b088af0f24a31a0b12e280614f3a39370ecd5",
+   "rsrc_size": 93706,
+   "type": "TEXT"
+  },
+  {
+   "creator": "Regi",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "YP Circuits CC ÔæÑ/Register F",
+   "rsrc_sha256": "1df472f228cbfe6b1cf2eb9a0a7b90a566d65ea203023dd776fd56797bf8915e",
+   "rsrc_size": 96986,
+   "type": "APPL"
+  },
+  {
+   "creator": "yPdC",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "YP Circuits CC ÔæÑ/YP Circuits CC 2.0",
+   "rsrc_sha256": "b65eaedf5897aa1c894abf42de870f77ecbec4a1827a198b0c214bf080169004",
+   "rsrc_size": 371916,
+   "type": "APPL"
   }
  ],
  "fixture": "derived-YP_Circuits_CC__.sit",
  "format": "StuffIt 5",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "91d5f35cbecb15b62f90a07239b256480b10e3b38140b950bc83af654d638f47",
  "size": 203171
 }

@@ -12,7 +12,7 @@
  ],
  "fixture": "continuum103.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "c4e555fe3f3ec5d0e1ee5c05fedbc093c2b38408ea696bb6916f13fdfefdcf02",
  "size": 137613
 }

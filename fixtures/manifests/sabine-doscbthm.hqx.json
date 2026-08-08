@@ -12,7 +12,7 @@
  ],
  "fixture": "sabine-doscbthm.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "5d5f39175e6dd3d80e654de3fb32c2c77324eff95254fd9f5363aaac12ef0fc1",
  "size": 20853
 }

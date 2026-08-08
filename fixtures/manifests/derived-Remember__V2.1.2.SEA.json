@@ -5,10 +5,6 @@
    "name": "Remember? V2.1.2"
   },
   {
-   "is_dir": true,
-   "name": "Remember? V2.1.2/Occasion Files"
-  },
-  {
    "creator": "ttxt",
    "data_sha256": "9bf83f9b5892e94aa00a242568bae1c2b7bf1a29b405c5435c308f2bfba9f74f",
    "data_size": 7224,
@@ -16,6 +12,28 @@
    "rsrc_sha256": "d231c923120b2cfb81f63a0c91626e7e4141d4ddff331032034558d77f26a08e",
    "rsrc_size": 998,
    "type": "ttro"
+  },
+  {
+   "is_dir": true,
+   "name": "Remember? V2.1.2/Occasion Files"
+  },
+  {
+   "creator": "Rem?",
+   "data_sha256": "4d9c9c138273108d6eb21f22e6534a6d02b12048a4c80ab1b8a2e5fe098e863e",
+   "data_size": 1325,
+   "name": "Remember? V2.1.2/Occasion Files/Holidays",
+   "rsrc_sha256": "03a978cb5562bd3cc4a78ef75baeebfe3c160171308ce53654161c43f2d62404",
+   "rsrc_size": 1292,
+   "type": "RmOc"
+  },
+  {
+   "creator": "Rem?",
+   "data_sha256": "0bf996eecd395cdc6cb18f8c71f5344162b3e4e10e65ae3d4c20593fa41eb1bc",
+   "data_size": 4124,
+   "name": "Remember? V2.1.2/Occasion Files/Notable BDays",
+   "rsrc_sha256": "abdca1b317736d9a4b65960b41d57ad62ca8ba1feb955bf5fe3016858043c8b2",
+   "rsrc_size": 3532,
+   "type": "RmOc"
   },
   {
    "creator": "ttxt",
@@ -61,29 +79,11 @@
    "rsrc_sha256": "30fef7850ec6642c6809d6fee4cc02d85001fff9d8498fed384efc97c7c531f7",
    "rsrc_size": 31062,
    "type": "INIT"
-  },
-  {
-   "creator": "Rem?",
-   "data_sha256": "4d9c9c138273108d6eb21f22e6534a6d02b12048a4c80ab1b8a2e5fe098e863e",
-   "data_size": 1325,
-   "name": "Remember? V2.1.2/Occasion Files/Holidays",
-   "rsrc_sha256": "03a978cb5562bd3cc4a78ef75baeebfe3c160171308ce53654161c43f2d62404",
-   "rsrc_size": 1292,
-   "type": "RmOc"
-  },
-  {
-   "creator": "Rem?",
-   "data_sha256": "0bf996eecd395cdc6cb18f8c71f5344162b3e4e10e65ae3d4c20593fa41eb1bc",
-   "data_size": 4124,
-   "name": "Remember? V2.1.2/Occasion Files/Notable BDays",
-   "rsrc_sha256": "abdca1b317736d9a4b65960b41d57ad62ca8ba1feb955bf5fe3016858043c8b2",
-   "rsrc_size": 3532,
-   "type": "RmOc"
   }
  ],
  "fixture": "derived-Remember__V2.1.2.SEA",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "19d5181959a206c41f94f210af895fd3dc8d6c7bcbcb8ecb5bd741178ba26fcf",
  "size": 151405
 }

@@ -12,7 +12,7 @@
  ],
  "fixture": "macpass390.sea",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "7538d57f9f674ce6eda6d7c251c04cea83de52bf9cb8ea3648eee856e616d84c",
  "size": 166400
 }

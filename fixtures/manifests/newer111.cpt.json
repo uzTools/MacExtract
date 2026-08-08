@@ -12,7 +12,7 @@
  ],
  "fixture": "newer111.cpt",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "9ca255dc5f109bb30d10052ca59eaa6c2a28a31ec5b7df33b395707c9b7b8f17",
  "size": 69632
 }

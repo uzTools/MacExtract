@@ -12,7 +12,7 @@
  ],
  "fixture": "redryder92.bin",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "faf770e41283c5c8dd5e68ef69424524e33585c460b467decc4ce45d05cacdd3",
  "size": 178320
 }

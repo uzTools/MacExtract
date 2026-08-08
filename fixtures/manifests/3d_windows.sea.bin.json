@@ -12,7 +12,7 @@
  ],
  "fixture": "3d_windows.sea.bin",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "20b67325eac7d8e3943af5c1c1034a86b513d1f717b1dbb348c7ad8f4111ddf5",
  "size": 21760
 }

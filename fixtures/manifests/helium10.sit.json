@@ -12,7 +12,7 @@
  ],
  "fixture": "helium10.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "aa5c2e4def8a8aeb5b63183ca37b117078f384c41debf01ec0db57751474e898",
  "size": 27136
 }

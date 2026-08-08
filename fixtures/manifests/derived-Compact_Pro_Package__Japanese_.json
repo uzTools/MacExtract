@@ -43,7 +43,7 @@
  ],
  "fixture": "derived-Compact_Pro_Package__Japanese_",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "02cabd108437a21c7838316033da5557e563db8cf31e8d3d8a14b58bedef9632",
  "size": 157368
 }

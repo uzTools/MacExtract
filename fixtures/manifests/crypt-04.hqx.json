@@ -12,7 +12,7 @@
  ],
  "fixture": "crypt-04.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "9e0885b5e6d4bd986647bd5d728d7a776060a6815dc675cb2c37cb35c1e14a99",
  "size": 38895
 }

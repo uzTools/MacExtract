@@ -21,7 +21,7 @@
  ],
  "fixture": "derived-All_JPEG1.0fat.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "3d6287d0d9f83914a9fe2eeb2c3407a643dc9241a9abf43503e3b10e7261233f",
  "size": 13302
 }

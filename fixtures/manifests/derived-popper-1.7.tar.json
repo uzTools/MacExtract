@@ -206,7 +206,7 @@
  ],
  "fixture": "derived-popper-1.7.tar",
  "format": "Tar",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "cc1e1a08902653bf2885af00e8090f55d977469be9adda4e6391eb667d79caae",
  "size": 174080
 }

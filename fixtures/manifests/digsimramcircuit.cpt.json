@@ -12,7 +12,7 @@
  ],
  "fixture": "digsimramcircuit.cpt",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "499174402a8c35433bf8247664257909a02c488a2b6284635868fa96156b96c4",
  "size": 4608
 }

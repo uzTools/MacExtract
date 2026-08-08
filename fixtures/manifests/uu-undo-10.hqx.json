@@ -12,7 +12,7 @@
  ],
  "fixture": "uu-undo-10.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "fbb3bdbd27380a9a8e4a45ce5b809a6915a31d8a5f549528fbef9095d7e884db",
  "size": 59617
 }

@@ -12,7 +12,7 @@
  ],
  "fixture": "text-converter-101.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "ad523a87e1b121ce94657e75caa34b47a67c5f71a3dfb2ba6b115fefd489be47",
  "size": 165546
 }

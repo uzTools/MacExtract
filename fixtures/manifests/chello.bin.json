@@ -12,7 +12,7 @@
  ],
  "fixture": "chello.bin",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "840bf87a8d27420d8f81ebbc096c35fc6142bda22302f2efc316821624be3d56",
  "size": 92032
 }

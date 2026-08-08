@@ -30,7 +30,7 @@
  ],
  "fixture": "derived-MacPass390.sea",
  "format": "DiskDoubler",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "d1a2b1d13ba72ba9fbc4b01b06c743cb8df94bda2b810b453678c52fed317bab",
  "size": 155792
 }

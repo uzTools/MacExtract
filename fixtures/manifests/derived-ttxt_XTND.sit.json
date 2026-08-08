@@ -1,15 +1,6 @@
 {
  "entries": [
   {
-   "creator": "ttxt",
-   "data_sha256": "be7f9a638e3216e2ee81682f13a87fc4123d4f65d175bd3d99239a5ffa8b8e29",
-   "data_size": 7974,
-   "name": "TeachText_SimpleText XTND Docs ",
-   "rsrc_sha256": "dcecf59af99a5856907062d52bec446035ef836edac227acfe8e623c91cf9f49",
-   "rsrc_size": 4381,
-   "type": "ttro"
-  },
-  {
    "creator": "Clrs",
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
@@ -17,11 +8,20 @@
    "rsrc_sha256": "a04678cd05936d431d6bdfde183364c7879d34b08c994b92815233ede6bfca87",
    "rsrc_size": 11121,
    "type": "Fltr"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "be7f9a638e3216e2ee81682f13a87fc4123d4f65d175bd3d99239a5ffa8b8e29",
+   "data_size": 7974,
+   "name": "TeachText_SimpleText XTND Docs ",
+   "rsrc_sha256": "dcecf59af99a5856907062d52bec446035ef836edac227acfe8e623c91cf9f49",
+   "rsrc_size": 4381,
+   "type": "ttro"
   }
  ],
  "fixture": "derived-ttxt_XTND.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "1fa51df300bb345b689ab5adc1037ece46130bc15c91504548628c2b09d527ed",
  "size": 11941
 }

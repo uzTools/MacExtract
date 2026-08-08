@@ -12,7 +12,7 @@
  ],
  "fixture": "derived-Mac_to_VGA_Adapters_1.0.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "d7a7c85c55d604d860501bc0acd3953a5706d34ab9982d354046f8565ab988ed",
  "size": 5259
 }

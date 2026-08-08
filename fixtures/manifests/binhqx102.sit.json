@@ -12,7 +12,7 @@
  ],
  "fixture": "binhqx102.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "10015a9fbcc3c0ef039316be5767b436c8a4379c512917c110d18df0c22820ed",
  "size": 32256
 }

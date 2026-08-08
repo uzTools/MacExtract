@@ -12,7 +12,7 @@
  ],
  "fixture": "derived-Guy_s_Mac_Consultants.cpt",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "54cb9f5735b3609d6f0f5da6eb8b0de2151031f7e24f48bb3a1e59f31ea94b85",
  "size": 94671
 }

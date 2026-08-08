@@ -43,7 +43,7 @@
  ],
  "fixture": "derived-ACInfo_Comm.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "e142c1131f3d5c0a63d58a3cf91be090e143cf4488d78d01a6461d8024ae0e08",
  "size": 158830
 }

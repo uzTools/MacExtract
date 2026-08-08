@@ -1,15 +1,6 @@
 {
  "entries": [
   {
-   "creator": "BOBO",
-   "data_sha256": "f2848ee03f35ecadb57be54f5c3dd898ea04ed15501ea8450480d57d5c161ed3",
-   "data_size": 15242,
-   "name": "TIFF (IBMpc to Mac).doc -cw",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0,
-   "type": "CWWP"
-  },
-  {
    "creator": "RMFT",
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
@@ -17,11 +8,20 @@
    "rsrc_sha256": "7db1db7185a2da7c742410c3183fa5b1d711959c85871bba8de2f1974ac9d33d",
    "rsrc_size": 59099,
    "type": "VISA"
+  },
+  {
+   "creator": "BOBO",
+   "data_sha256": "f2848ee03f35ecadb57be54f5c3dd898ea04ed15501ea8450480d57d5c161ed3",
+   "data_size": 15242,
+   "name": "TIFF (IBMpc to Mac).doc -cw",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "CWWP"
   }
  ],
  "fixture": "derived-TIFF_AFE.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "158bc5660b090129698dc29e61d2be33fcc90f2b3007bcd1075f0676fd37b687",
  "size": 23628
 }

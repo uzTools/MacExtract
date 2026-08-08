@@ -9,12 +9,35 @@
    "name": "The Lingo Library 1.5 Mac/Demo"
   },
   {
+   "creator": "MD00",
+   "data_sha256": "eb1e1790778f107490cc065a254f43da759ff8e6377178b200319681e4462f2d",
+   "data_size": 52889,
+   "name": "The Lingo Library 1.5 Mac/Demo/Demo.dir",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "MV07"
+  },
+  {
+   "creator": "MD00",
+   "data_sha256": "dec4cc691a125e9e23c25140d7793f41af812adc67841c3edab9ccb04fdeab86",
+   "data_size": 38222,
+   "name": "The Lingo Library 1.5 Mac/Demo/LingoLib.cst",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "MC07"
+  },
+  {
    "is_dir": true,
    "name": "The Lingo Library 1.5 Mac/Full"
   },
   {
-   "is_dir": true,
-   "name": "The Lingo Library 1.5 Mac/Manual"
+   "creator": "SIT!",
+   "data_sha256": "7c2b5eee3d38a4db54024c1d7b9c95a6a81d6dfab175fbe2d388acbb35b4f6d7",
+   "data_size": 49910,
+   "name": "The Lingo Library 1.5 Mac/Full/LingoLib.sit",
+   "rsrc_sha256": "9bd86b8f38925d8c61e5e4a23478d1cf3e8306e30ae2576e1e7654c1b4e8cec0",
+   "rsrc_size": 318,
+   "type": "SIT5"
   },
   {
    "creator": "R*ch",
@@ -26,6 +49,10 @@
    "type": "TEXT"
   },
   {
+   "is_dir": true,
+   "name": "The Lingo Library 1.5 Mac/Manual"
+  },
+  {
    "creator": "MSIE",
    "data_sha256": "c10ea8053c5015c5c3690ce4a85c4a341e54961faa380833d0df0bae69036fb1",
    "data_size": 119440,
@@ -35,45 +62,6 @@
    "type": "TEXT"
   },
   {
-   "creator": "R*ch",
-   "data_sha256": "0b23e44fffb6817451b46f06f8624d68d71f22b1392e0e1152717d359bec2066",
-   "data_size": 4353,
-   "name": "The Lingo Library 1.5 Mac/Read Me.txt",
-   "rsrc_sha256": "895719589b4c873ece0657bf912e85e134f70e71da302ffd74bfa23b7ce9a150",
-   "rsrc_size": 1454,
-   "type": "TEXT"
-  },
-  {
-   "creator": "MSIE",
-   "data_sha256": "d3693016d6babfdadf656e93f54727fa196b60cc589fe20a7629227241a5d2de",
-   "data_size": 613,
-   "name": "The Lingo Library 1.5 Mac/Secure Order Form.html",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0,
-   "type": "TEXT"
-  },
-  {
-   "creator": "MD00",
-   "data_sha256": "9ffcffb434aff7ad026493a5c40bce14807b36a774b7db13ab84a29f7c745112",
-   "data_size": 14858,
-   "name": "The Lingo Library 1.5 Mac/XML templates.cst",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0,
-   "type": "MC07"
-  },
-  {
-   "is_dir": true,
-   "name": "The Lingo Library 1.5 Mac/Manual/_notes"
-  },
-  {
-   "is_dir": true,
-   "name": "The Lingo Library 1.5 Mac/Manual/css"
-  },
-  {
-   "is_dir": true,
-   "name": "The Lingo Library 1.5 Mac/Manual/images"
-  },
-  {
    "creator": "MSIE",
    "data_sha256": "c10ea8053c5015c5c3690ce4a85c4a341e54961faa380833d0df0bae69036fb1",
    "data_size": 119440,
@@ -81,6 +69,36 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
+  },
+  {
+   "is_dir": true,
+   "name": "The Lingo Library 1.5 Mac/Manual/_notes"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "011e045b649ecc09aa7862893af14a936e8e22de7d078dcefc9afdedb1ea4812",
+   "data_size": 729,
+   "name": "The Lingo Library 1.5 Mac/Manual/_notes/dwSiteColumnsMe.xml",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "is_dir": true,
+   "name": "The Lingo Library 1.5 Mac/Manual/css"
+  },
+  {
+   "creator": "DmWr",
+   "data_sha256": "d099c2c4ffcb1dc4ed0a0e06149c114c0204f80c68132776280adcfe78d6d1e9",
+   "data_size": 1164,
+   "name": "The Lingo Library 1.5 Mac/Manual/css/whitemedia.css",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "is_dir": true,
+   "name": "The Lingo Library 1.5 Mac/Manual/images"
   },
   {
    "creator": "MSIE",
@@ -110,46 +128,28 @@
    "type": "GIFf"
   },
   {
-   "creator": "DmWr",
-   "data_sha256": "d099c2c4ffcb1dc4ed0a0e06149c114c0204f80c68132776280adcfe78d6d1e9",
-   "data_size": 1164,
-   "name": "The Lingo Library 1.5 Mac/Manual/css/whitemedia.css",
+   "creator": "R*ch",
+   "data_sha256": "0b23e44fffb6817451b46f06f8624d68d71f22b1392e0e1152717d359bec2066",
+   "data_size": 4353,
+   "name": "The Lingo Library 1.5 Mac/Read Me.txt",
+   "rsrc_sha256": "895719589b4c873ece0657bf912e85e134f70e71da302ffd74bfa23b7ce9a150",
+   "rsrc_size": 1454,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MSIE",
+   "data_sha256": "d3693016d6babfdadf656e93f54727fa196b60cc589fe20a7629227241a5d2de",
+   "data_size": 613,
+   "name": "The Lingo Library 1.5 Mac/Secure Order Form.html",
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
   },
   {
-   "creator": "ttxt",
-   "data_sha256": "011e045b649ecc09aa7862893af14a936e8e22de7d078dcefc9afdedb1ea4812",
-   "data_size": 729,
-   "name": "The Lingo Library 1.5 Mac/Manual/_notes/dwSiteColumnsMe.xml",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0,
-   "type": "TEXT"
-  },
-  {
-   "creator": "SIT!",
-   "data_sha256": "7c2b5eee3d38a4db54024c1d7b9c95a6a81d6dfab175fbe2d388acbb35b4f6d7",
-   "data_size": 49910,
-   "name": "The Lingo Library 1.5 Mac/Full/LingoLib.sit",
-   "rsrc_sha256": "9bd86b8f38925d8c61e5e4a23478d1cf3e8306e30ae2576e1e7654c1b4e8cec0",
-   "rsrc_size": 318,
-   "type": "SIT5"
-  },
-  {
    "creator": "MD00",
-   "data_sha256": "eb1e1790778f107490cc065a254f43da759ff8e6377178b200319681e4462f2d",
-   "data_size": 52889,
-   "name": "The Lingo Library 1.5 Mac/Demo/Demo.dir",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0,
-   "type": "MV07"
-  },
-  {
-   "creator": "MD00",
-   "data_sha256": "dec4cc691a125e9e23c25140d7793f41af812adc67841c3edab9ccb04fdeab86",
-   "data_size": 38222,
-   "name": "The Lingo Library 1.5 Mac/Demo/LingoLib.cst",
+   "data_sha256": "9ffcffb434aff7ad026493a5c40bce14807b36a774b7db13ab84a29f7c745112",
+   "data_size": 14858,
+   "name": "The Lingo Library 1.5 Mac/XML templates.cst",
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "MC07"
@@ -157,7 +157,7 @@
  ],
  "fixture": "derived-The_Lingo_Library_1.5_Mac.sit",
  "format": "StuffIt 5",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "7e3f04e8fcf9fff4c0353ef69167b77894e30449d69a4e21b7401a211d85c58e",
  "size": 152120
 }

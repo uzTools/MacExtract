@@ -12,7 +12,7 @@
  ],
  "fixture": "sierpinski-triangeln-1-swe.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "37d7e6398f4c842c366be18788c4a590672d94bd57781b6c383c53afaf449d58",
  "size": 10240
 }

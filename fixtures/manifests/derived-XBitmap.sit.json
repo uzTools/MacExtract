@@ -12,7 +12,7 @@
  ],
  "fixture": "derived-XBitmap.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "b440139b502e9156b25cb8cfb6bd8b93787cb0f6c5bc41a533d39d02a26c8e5e",
  "size": 11410
 }

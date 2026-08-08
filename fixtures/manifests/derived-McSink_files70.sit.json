@@ -129,7 +129,7 @@
  ],
  "fixture": "derived-McSink_files70.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "5a71e67a52ff16ef4ea6939a30532a2e6f9d00746646fe4449bc613281105327",
  "size": 44817
 }

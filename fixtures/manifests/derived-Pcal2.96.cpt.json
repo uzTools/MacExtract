@@ -30,7 +30,7 @@
  ],
  "fixture": "derived-Pcal2.96.cpt",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "20e08ee085f778607c689dd78a72e0769361cf7b3362baffa0f6148a1d615d0d",
  "size": 29506
 }

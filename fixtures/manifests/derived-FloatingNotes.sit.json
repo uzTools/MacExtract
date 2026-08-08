@@ -5,10 +5,6 @@
    "name": "FloatingNotes Carbon ∆í"
   },
   {
-   "is_dir": true,
-   "name": "FloatingNotes Carbon ∆í/Register FloatingNotes"
-  },
-  {
    "creator": "SPFL",
    "data_sha256": "8fc2027a0a37de3c999a0d81da138981ac4c41c8fb213c4eb039e30111c90c05",
    "data_size": 402495,
@@ -46,11 +42,7 @@
   },
   {
    "is_dir": true,
-   "name": "FloatingNotes Carbon ∆í/Register FloatingNotes/Mail or Fax"
-  },
-  {
-   "is_dir": true,
-   "name": "FloatingNotes Carbon ∆í/Register FloatingNotes/On the internet"
+   "name": "FloatingNotes Carbon ∆í/Register FloatingNotes"
   },
   {
    "creator": "ttxt",
@@ -62,13 +54,8 @@
    "type": "TEXT"
   },
   {
-   "creator": "????",
-   "data_sha256": "15090aa77b82e8ca22ce0f619028f8f4ec4655053c9f323a198fd604c985d14e",
-   "data_size": 14620,
-   "name": "FloatingNotes Carbon ∆í/Register FloatingNotes/On the internet/Open to Register FloatingNotes",
-   "rsrc_sha256": "ab989cc269930d0e03542d2ef9b97218eff5bcbe392c4bff6cb765ec4eba84bd",
-   "rsrc_size": 23573,
-   "type": "APPL"
+   "is_dir": true,
+   "name": "FloatingNotes Carbon ∆í/Register FloatingNotes/Mail or Fax"
   },
   {
    "creator": "Regi",
@@ -78,11 +65,24 @@
    "rsrc_sha256": "86f6c2a27e413ab376b41f5d36dd8f57e5444541262c02f3308b6c2a6d565206",
    "rsrc_size": 103542,
    "type": "APPL"
+  },
+  {
+   "is_dir": true,
+   "name": "FloatingNotes Carbon ∆í/Register FloatingNotes/On the internet"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "15090aa77b82e8ca22ce0f619028f8f4ec4655053c9f323a198fd604c985d14e",
+   "data_size": 14620,
+   "name": "FloatingNotes Carbon ∆í/Register FloatingNotes/On the internet/Open to Register FloatingNotes",
+   "rsrc_sha256": "ab989cc269930d0e03542d2ef9b97218eff5bcbe392c4bff6cb765ec4eba84bd",
+   "rsrc_size": 23573,
+   "type": "APPL"
   }
  ],
  "fixture": "derived-FloatingNotes.sit",
  "format": "StuffIt 5",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "2ee48248b5e16ee6706bb9847ab7c6ce23aca5160802ee868138304cbf122a1d",
  "size": 205334
 }

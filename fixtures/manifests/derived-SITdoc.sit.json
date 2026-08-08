@@ -21,7 +21,7 @@
  ],
  "fixture": "derived-SITdoc.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "3e797f5f6f04f1b951d29cfb0bc77a96d81516aa2448859a04bce293caefd504",
  "size": 33612
 }

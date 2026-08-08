@@ -12,7 +12,7 @@
  ],
  "fixture": "berkeley-packet-monitor-10.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "5bbe9787c1eab5fccb5562bec4ec795018acab5d2597d799860900ca7c8451d9",
  "size": 178537
 }

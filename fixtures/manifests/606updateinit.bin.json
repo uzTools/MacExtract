@@ -12,7 +12,7 @@
  ],
  "fixture": "606updateinit.bin",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "0f3c22b8216966afc30b17659b923b19076e37251371e402aba259864af2cd5d",
  "size": 887
 }

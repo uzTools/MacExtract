@@ -12,7 +12,7 @@
  ],
  "fixture": "alpha401.cpt",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "ede0a233e15a98c79971f96243d326d45d999cbe8aaf0280e499456f50b8e141",
  "size": 198912
 }

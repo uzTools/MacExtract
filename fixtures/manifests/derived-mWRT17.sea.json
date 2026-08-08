@@ -5,16 +5,34 @@
    "name": "miniWRITER 1.7 ƒ"
   },
   {
-   "is_dir": true,
-   "name": "miniWRITER 1.7 ƒ/docs.mw"
-  },
-  {
    "creator": "MACA",
    "data_sha256": "a361c1f27e9dc2df0c5e9920a8dd993645aa6b03d1ee387f01228f53ea95a426",
    "data_size": 1584,
    "name": "miniWRITER 1.7 ƒ/Read Me First (mWRT 1.7)",
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
+   "type": "WORD"
+  },
+  {
+   "is_dir": true,
+   "name": "miniWRITER 1.7 ƒ/docs.mw"
+  },
+  {
+   "creator": "MACA",
+   "data_sha256": "e56690875bb083872ec13bbfc36416133bfc62e08b5be40729e8d212056c24cf",
+   "data_size": 20442,
+   "name": "miniWRITER 1.7 ƒ/docs.mw/miniWRITER.appendix",
+   "rsrc_sha256": "4bbd3d0d9b29e0b98faf71f98728a3ce27672fc2093239bf50de1e6dd7f5e66c",
+   "rsrc_size": 690,
+   "type": "WORD"
+  },
+  {
+   "creator": "MACA",
+   "data_sha256": "de09a203d25011a0b0124e7ae57b8f0cef16b31cfc65764449dba1e8a585eaa6",
+   "data_size": 57524,
+   "name": "miniWRITER 1.7 ƒ/docs.mw/miniWRITER.doc",
+   "rsrc_sha256": "3930c6d0b2959fdf3e16410e49613ad8663a9cca620a91ee45f375b361ee26d6",
+   "rsrc_size": 730,
    "type": "WORD"
   },
   {
@@ -52,29 +70,11 @@
    "rsrc_sha256": "3b6bb35e94de2c91caaaffc195315314d9055e4d5c419b3352791ff3a7b38368",
    "rsrc_size": 38237,
    "type": "dfil"
-  },
-  {
-   "creator": "MACA",
-   "data_sha256": "e56690875bb083872ec13bbfc36416133bfc62e08b5be40729e8d212056c24cf",
-   "data_size": 20442,
-   "name": "miniWRITER 1.7 ƒ/docs.mw/miniWRITER.appendix",
-   "rsrc_sha256": "4bbd3d0d9b29e0b98faf71f98728a3ce27672fc2093239bf50de1e6dd7f5e66c",
-   "rsrc_size": 690,
-   "type": "WORD"
-  },
-  {
-   "creator": "MACA",
-   "data_sha256": "de09a203d25011a0b0124e7ae57b8f0cef16b31cfc65764449dba1e8a585eaa6",
-   "data_size": 57524,
-   "name": "miniWRITER 1.7 ƒ/docs.mw/miniWRITER.doc",
-   "rsrc_sha256": "3930c6d0b2959fdf3e16410e49613ad8663a9cca620a91ee45f375b361ee26d6",
-   "rsrc_size": 730,
-   "type": "WORD"
   }
  ],
  "fixture": "derived-mWRT17.sea",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "8405eca950400a6e127c2d7f827b9f4ff9a656c2050fd18aee8994c5edbe3e73",
  "size": 62571
 }

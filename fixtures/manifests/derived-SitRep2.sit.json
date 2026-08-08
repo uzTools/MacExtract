@@ -30,7 +30,7 @@
  ],
  "fixture": "derived-SitRep2.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "0269f36ec028e622927599c43a2f2a99e7de38bea540fb4dc5c9b065e0df87c4",
  "size": 48069
 }

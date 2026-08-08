@@ -12,7 +12,7 @@
  ],
  "fixture": "derived-BiPlane__2_Share.cpt",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "057f6ff55e5e0acfd1a131540ec4bdcfc4d87c036a7f6f25a76eb81e638c0d1a",
  "size": 106873
 }

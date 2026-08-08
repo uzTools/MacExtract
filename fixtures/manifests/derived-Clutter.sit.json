@@ -1,15 +1,6 @@
 {
  "entries": [
   {
-   "creator": "ttxt",
-   "data_sha256": "6e5b00a6f762b0ec2a31475765924201c5f7c884f26605185492b0da4e92ab77",
-   "data_size": 3339,
-   "name": "Clutter Manual",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0,
-   "type": "ttro"
-  },
-  {
    "creator": "DMOV",
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
@@ -17,11 +8,20 @@
    "rsrc_sha256": "c63776fbb0ef0ce9ec2cbabb85fcb71764360e5d8c37cd45e951f74205245db7",
    "rsrc_size": 5083,
    "type": "DFIL"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "6e5b00a6f762b0ec2a31475765924201c5f7c884f26605185492b0da4e92ab77",
+   "data_size": 3339,
+   "name": "Clutter Manual",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "ttro"
   }
  ],
  "fixture": "derived-Clutter.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "1c21fff97e82a6563c0b5da0ed6358d34b9c3935b862418c020731a22dcaf1b6",
  "size": 6079
 }

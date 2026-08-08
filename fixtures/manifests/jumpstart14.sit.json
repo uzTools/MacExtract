@@ -12,7 +12,7 @@
  ],
  "fixture": "jumpstart14.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "fa9c6321478cf74db54ea88f258ef4d4bc34a330289bddf75fd475967c54a738",
  "size": 34176
 }

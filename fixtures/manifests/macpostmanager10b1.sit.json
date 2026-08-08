@@ -12,7 +12,7 @@
  ],
  "fixture": "macpostmanager10b1.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "2354011d3cb0896469015a30876f67949feb5f48ea69f491dd75e60f110907d5",
  "size": 71424
 }

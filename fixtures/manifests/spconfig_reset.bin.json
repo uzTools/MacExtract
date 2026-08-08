@@ -12,7 +12,7 @@
  ],
  "fixture": "spconfig_reset.bin",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "9069491795ee6412ac3a4e323595afb2ef9c4599935c3856e5128abd1d4e80c8",
  "size": 2061
 }

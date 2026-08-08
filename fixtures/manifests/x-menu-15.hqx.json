@@ -12,7 +12,7 @@
  ],
  "fixture": "x-menu-15.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "4930affcfb4991eb7ac23f6ea1b1ad475d37db02442a682fd8da97e1d799865f",
  "size": 152369
 }

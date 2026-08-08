@@ -12,7 +12,7 @@
  ],
  "fixture": "lha-expander-103.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "12dcf9e5cc5a830e24dc5339dd33a483d63322149ef44754652796219193cff0",
  "size": 121325
 }

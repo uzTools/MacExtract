@@ -12,7 +12,7 @@
  ],
  "fixture": "derived-UUTool-FAT.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "e41e1f5e0d2703f14676daa6fdd9f6a0da01cc600df4855599738836fa7aae10",
  "size": 64480
 }

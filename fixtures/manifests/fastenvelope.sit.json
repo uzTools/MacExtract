@@ -12,7 +12,7 @@
  ],
  "fixture": "fastenvelope.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "de1a1b4e67d4f24e1aa964f0bcbdcb0bfb9097beb87ddd75c4d34bab31fa57c1",
  "size": 213248
 }

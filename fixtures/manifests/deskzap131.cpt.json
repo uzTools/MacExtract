@@ -12,7 +12,7 @@
  ],
  "fixture": "deskzap131.cpt",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "4a1322e073d110ece70903b67c569ca74e7c2f5d40a17f104683161beb14453e",
  "size": 24704
 }

@@ -61,7 +61,7 @@
  ],
  "fixture": "derived-Decode_da_Code_1.5.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "58a2aac7af4c3aaa85a9f17513b418d044b55731cf59141e017d813654842c4a",
  "size": 111565
 }

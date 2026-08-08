@@ -25,7 +25,7 @@
  ],
  "fixture": "derived-Memory_Manager_INIT.cpt",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "a5bc08e8f01a295e2235e796a943cfa61acae321e2bbfcf75823a56d045047d6",
  "size": 14013
 }

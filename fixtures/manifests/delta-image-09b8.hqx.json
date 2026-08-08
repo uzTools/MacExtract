@@ -12,7 +12,7 @@
  ],
  "fixture": "delta-image-09b8.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "070b5a463da56417df91f5f3ff4f27838b350a5342eb0310ec39382946f78f30",
  "size": 34222
 }

@@ -12,7 +12,7 @@
  ],
  "fixture": "tidyitup.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "b09bed60afcb8098ef5e9b97e7849b3a1724b003c3c7c10837864ca23fcf1b9c",
  "size": 77954
 }

@@ -21,7 +21,7 @@
  ],
  "fixture": "derived-UUCat1.1.cpt",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "f6e19336d00cae6abd239cdef9693c9285dc2ac8bfffd3717ebdfc5ee2a2a51f",
  "size": 33703
 }

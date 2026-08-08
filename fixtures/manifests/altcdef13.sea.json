@@ -12,7 +12,7 @@
  ],
  "fixture": "altcdef13.sea",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "9bec1cb8570a039191d5f8106ff005fffbcc2863f216ba3004c3340d3dc3b02e",
  "size": 43136
 }

@@ -12,7 +12,7 @@
  ],
  "fixture": "appdisk161.cpt",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "d6f2493fbcdc7b6c6fd53fe4ec8f5e6aef40efc8d35d078470a86f344f9f4c36",
  "size": 24576
 }

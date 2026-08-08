@@ -12,7 +12,7 @@
  ],
  "fixture": "aliasassassin106.sea",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "7f11326b908314d5112c6ffdb1d60ef035ec2937915bdfc3bee4b2c2052ab882",
  "size": 46592
 }

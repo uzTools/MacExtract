@@ -11,7 +11,7 @@ import json, os, subprocess, sys, tempfile
 ROOT = os.path.join(os.path.dirname(__file__), "..")
 FIXDIR = os.path.join(ROOT, "fixtures")
 sys.path.insert(0, os.path.dirname(__file__))
-from run_diff import normpath, sha256_file, collect_outputs  # noqa: E402
+from run_diff import normpath, sha256_file, collect_outputs, sidecar  # noqa: E402
 
 # (outer fixture, manifest describing the fully-unwrapped contents)
 CHAINS = [
@@ -29,7 +29,7 @@ def check(unclassic, outer, manifest):
         man = json.load(f)
     problems = []
     with tempfile.TemporaryDirectory() as tmp:
-        r = subprocess.run([unclassic, "x", "-o", tmp, fx],
+        r = subprocess.run([unclassic, "x", "--forks", "hidden", "-o", tmp, fx],
                            capture_output=True, timeout=300)
         if r.returncode != 0:
             problems.append(f"exit {r.returncode}: {r.stderr.decode()[:200]}")
@@ -46,7 +46,7 @@ def check(unclassic, outer, manifest):
                 continue
             if sha256_file(p) != e["data_sha256"]:
                 problems.append(f"{name!r}: data mismatch")
-            rp = files.pop(name + ".rsrc", None)
+            rp = files.pop(sidecar(name), None)
             rsz = os.path.getsize(rp) if rp else 0
             if rsz != e["rsrc_size"]:
                 problems.append(f"{name!r}: rsrc size {rsz} != {e['rsrc_size']}")

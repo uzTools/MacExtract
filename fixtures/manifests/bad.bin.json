@@ -12,7 +12,7 @@
  ],
  "fixture": "bad.bin",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "f6c481b57d69fc112f0596dc686a62b2d9601d3224c6b0ea8ff38e1ba41d31ea",
  "size": 11136
 }

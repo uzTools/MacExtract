@@ -5,14 +5,6 @@
    "name": "The Recipe Box"
   },
   {
-   "is_dir": true,
-   "name": "The Recipe Box/Recipes"
-  },
-  {
-   "is_dir": true,
-   "name": "The Recipe Box/Reference Texts"
-  },
-  {
    "creator": "ttxt",
    "data_sha256": "10c3c1dcf23ddd2eeff54a0a449d376f9b5bc50fc7d5f79a2669438356c10d13",
    "data_size": 27774,
@@ -22,49 +14,8 @@
    "type": "TEXT"
   },
   {
-   "creator": "????",
-   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "data_size": 0,
-   "name": "The Recipe Box/The Recipe Box",
-   "rsrc_sha256": "c59106b0b3fd2e13d388461b4338d2124bba46e536678680e44cac2e857d3841",
-   "rsrc_size": 185403,
-   "type": "APPL"
-  },
-  {
-   "creator": "dosa",
-   "data_sha256": "e021c3ad5256f2f56225845189e50b97f267af3911adc80a146f26b7a78ca472",
-   "data_size": 3535,
-   "name": "The Recipe Box/Reference Texts/BAC.TXT",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0,
-   "type": "TEXT"
-  },
-  {
-   "creator": "dosa",
-   "data_sha256": "bb44e950b52e28853092114140cdce89dde853b5ee8298fd361a578c3b0a46a6",
-   "data_size": 1353,
-   "name": "The Recipe Box/Reference Texts/EQUALS.TXT",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0,
-   "type": "TEXT"
-  },
-  {
-   "creator": "dosa",
-   "data_sha256": "2abcdfa62cdc6f7cd11fcfc04e68e829e2992c3d13344c1725d3f75a4d49a189",
-   "data_size": 1415,
-   "name": "The Recipe Box/Reference Texts/FATS.TXT",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0,
-   "type": "TEXT"
-  },
-  {
-   "creator": "dosa",
-   "data_sha256": "7463921cf557aa96bcc99edb6f3e40b4064765f134cdd2c3a5c24eb0986ce5b1",
-   "data_size": 1400,
-   "name": "The Recipe Box/Reference Texts/PYRAMID.TXT",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0,
-   "type": "TEXT"
+   "is_dir": true,
+   "name": "The Recipe Box/Recipes"
   },
   {
    "creator": "ˇˇˇØ",
@@ -128,11 +79,60 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "\u0000U¶®"
+  },
+  {
+   "is_dir": true,
+   "name": "The Recipe Box/Reference Texts"
+  },
+  {
+   "creator": "dosa",
+   "data_sha256": "e021c3ad5256f2f56225845189e50b97f267af3911adc80a146f26b7a78ca472",
+   "data_size": 3535,
+   "name": "The Recipe Box/Reference Texts/BAC.TXT",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "dosa",
+   "data_sha256": "bb44e950b52e28853092114140cdce89dde853b5ee8298fd361a578c3b0a46a6",
+   "data_size": 1353,
+   "name": "The Recipe Box/Reference Texts/EQUALS.TXT",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "dosa",
+   "data_sha256": "2abcdfa62cdc6f7cd11fcfc04e68e829e2992c3d13344c1725d3f75a4d49a189",
+   "data_size": 1415,
+   "name": "The Recipe Box/Reference Texts/FATS.TXT",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "dosa",
+   "data_sha256": "7463921cf557aa96bcc99edb6f3e40b4064765f134cdd2c3a5c24eb0986ce5b1",
+   "data_size": 1400,
+   "name": "The Recipe Box/Reference Texts/PYRAMID.TXT",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "The Recipe Box/The Recipe Box",
+   "rsrc_sha256": "c59106b0b3fd2e13d388461b4338d2124bba46e536678680e44cac2e857d3841",
+   "rsrc_size": 185403,
+   "type": "APPL"
   }
  ],
  "fixture": "derived-RECIPE10.CPT",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "4190bae2df03e3cf59542be8dace95d5a81091ba53c9b1fd03a08db1481a7535",
  "size": 104643
 }

@@ -12,7 +12,7 @@
  ],
  "fixture": "jobs-quote.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "2939274269b3b849694883dba4ceb97f9fb1dfdae611a79b20ee7f309abb529d",
  "size": 33129
 }

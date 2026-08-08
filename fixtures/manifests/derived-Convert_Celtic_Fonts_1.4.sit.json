@@ -97,7 +97,7 @@
  ],
  "fixture": "derived-Convert_Celtic_Fonts_1.4.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "d61458acc026aa9f1460d34b7847a0d8373733a89b426c2cbfab72fbccce5138",
  "size": 12406
 }

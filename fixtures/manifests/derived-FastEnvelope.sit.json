@@ -57,7 +57,7 @@
  ],
  "fixture": "derived-FastEnvelope.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "40416c0ee97f8c6cc1576066f32db68e12c65dc35ff09fb0ff95287d67bf302c",
  "size": 212997
 }

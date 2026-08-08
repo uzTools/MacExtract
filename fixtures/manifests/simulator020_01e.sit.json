@@ -12,7 +12,7 @@
  ],
  "fixture": "simulator020_01e.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "deb6bfd64c5d30c89a907be9b6266f425b1ff84fba1ab7d9da05d99f6792dff5",
  "size": 13568
 }

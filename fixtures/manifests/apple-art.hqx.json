@@ -12,7 +12,7 @@
  ],
  "fixture": "apple-art.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "b997468857402a74ef6aaef508bbd1db67ffc4b02e0f48b96722815ff46e8bd6",
  "size": 198339
 }

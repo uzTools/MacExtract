@@ -21,7 +21,7 @@
  ],
  "fixture": "derived-PKG_Translator.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "56c5e58f0471fee6da7901323d50cdce3ac871dcc5cb394f33d6045926a1727b",
  "size": 39820
 }

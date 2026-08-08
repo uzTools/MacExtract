@@ -12,7 +12,7 @@
  ],
  "fixture": "script-palette.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "d33ecb505186de18a3789cd55626f9e9ccd1a32262b4292177cc178c7cbd153d",
  "size": 92955
 }

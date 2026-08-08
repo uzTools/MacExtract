@@ -9,6 +9,141 @@
    "name": "800-SAY-WHAT 3.0.1J/800-Say-What 3.0.1.app"
   },
   {
+   "is_dir": true,
+   "name": "800-SAY-WHAT 3.0.1J/800-Say-What 3.0.1.app/Contents"
+  },
+  {
+   "data_sha256": "f3a8e3c24b6bda68f66c9e845694f810c65af01471d0df04beb39859c43fd92d",
+   "data_size": 798,
+   "name": "800-SAY-WHAT 3.0.1J/800-Say-What 3.0.1.app/Contents/Info.plist",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "is_dir": true,
+   "name": "800-SAY-WHAT 3.0.1J/800-Say-What 3.0.1.app/Contents/MacOS"
+  },
+  {
+   "data_sha256": "a424f180f8aecccf3bd314382713e8763e84552ed7fe25bd8651ffc3cdeb87db",
+   "data_size": 51116,
+   "name": "800-SAY-WHAT 3.0.1J/800-Say-What 3.0.1.app/Contents/MacOS/SayWhat",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "906f3014da628fd0642d6d2a879688da02595441ea3e4c083009bef1037bd9ef",
+   "data_size": 8,
+   "name": "800-SAY-WHAT 3.0.1J/800-Say-What 3.0.1.app/Contents/PkgInfo",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "is_dir": true,
+   "name": "800-SAY-WHAT 3.0.1J/800-Say-What 3.0.1.app/Contents/Resources"
+  },
+  {
+   "data_sha256": "1a4102bf32855ddea9f3fc075b7de3e2743cb641d398e57b1214478c7b8e37eb",
+   "data_size": 813,
+   "name": "800-SAY-WHAT 3.0.1J/800-Say-What 3.0.1.app/Contents/Resources/Controller.h",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "1bae1a956c31a21a5b300633893749241aa110c27e8fce72dbc74018cd283098",
+   "data_size": 198,
+   "name": "800-SAY-WHAT 3.0.1J/800-Say-What 3.0.1.app/Contents/Resources/Converter.h",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "is_dir": true,
+   "name": "800-SAY-WHAT 3.0.1J/800-Say-What 3.0.1.app/Contents/Resources/English.lproj"
+  },
+  {
+   "data_sha256": "dfef12d1049d711b52f3cb3dc41edff718e3faa99109a970ee22f00cb22b0b0e",
+   "data_size": 316,
+   "name": "800-SAY-WHAT 3.0.1J/800-Say-What 3.0.1.app/Contents/Resources/English.lproj/InfoPlist.strings",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "is_dir": true,
+   "name": "800-SAY-WHAT 3.0.1J/800-Say-What 3.0.1.app/Contents/Resources/English.lproj/MainMenu.nib"
+  },
+  {
+   "data_sha256": "6b9fa531d3701ddd6ac4740cdc88b9dde533b63e10998c1c2591763694817252",
+   "data_size": 877,
+   "name": "800-SAY-WHAT 3.0.1J/800-Say-What 3.0.1.app/Contents/Resources/English.lproj/MainMenu.nib/classes.nib",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "7c770649a6f49e32f0c016a0ff77e050d2408488807e05900fd5b16b8cf1084e",
+   "data_size": 586,
+   "name": "800-SAY-WHAT 3.0.1J/800-Say-What 3.0.1.app/Contents/Resources/English.lproj/MainMenu.nib/info.nib",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "7b9836faa18307134c875640a78876db33550f0bca3ec24eede97d3a23fb5a4c",
+   "data_size": 8004,
+   "name": "800-SAY-WHAT 3.0.1J/800-Say-What 3.0.1.app/Contents/Resources/English.lproj/MainMenu.nib/objects.nib",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "is_dir": true,
+   "name": "800-SAY-WHAT 3.0.1J/800-Say-What 3.0.1.app/Contents/Resources/Japanese.lproj"
+  },
+  {
+   "creator": "\u0000\u0000\u0000\u0000",
+   "data_sha256": "5f6581b6668d4842e7813e154d9703dd672469ef74f7383dc4edc9a49aac6d41",
+   "data_size": 330,
+   "name": "800-SAY-WHAT 3.0.1J/800-Say-What 3.0.1.app/Contents/Resources/Japanese.lproj/InfoPlist.strings",
+   "rsrc_sha256": "10ef7120bec7677b530b64bf699fad4127df1802ef264f7de99e8020988aa15f",
+   "rsrc_size": 1710,
+   "type": "utxt"
+  },
+  {
+   "is_dir": true,
+   "name": "800-SAY-WHAT 3.0.1J/800-Say-What 3.0.1.app/Contents/Resources/Japanese.lproj/MainMenu.nib"
+  },
+  {
+   "data_sha256": "6b9fa531d3701ddd6ac4740cdc88b9dde533b63e10998c1c2591763694817252",
+   "data_size": 877,
+   "name": "800-SAY-WHAT 3.0.1J/800-Say-What 3.0.1.app/Contents/Resources/Japanese.lproj/MainMenu.nib/classes.nib",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "2598be4b2ee62c1f03a39bd94386c1a2230e2f2361f1ef292126b78e49883db9",
+   "data_size": 563,
+   "name": "800-SAY-WHAT 3.0.1J/800-Say-What 3.0.1.app/Contents/Resources/Japanese.lproj/MainMenu.nib/info.nib",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "6fc93f7a388319f7be98935e79f7742547ab3f4551b24c1b24737aeb75e078db",
+   "data_size": 15908,
+   "name": "800-SAY-WHAT 3.0.1J/800-Say-What 3.0.1.app/Contents/Resources/Japanese.lproj/MainMenu.nib/keyedobjects.nib",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "38770e0d89d29621d9453ed97d8943375e6307f88b6933e463112b9dd523ab96",
+   "data_size": 40992,
+   "name": "800-SAY-WHAT 3.0.1J/800-Say-What 3.0.1.app/Contents/Resources/SayWhatIcon.icns",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "79f5920c1a5f3ab2d33de269a964df0dea61a9322df8a8092fe1680e4dfee59e",
+   "data_size": 184,
+   "name": "800-SAY-WHAT 3.0.1J/800-Say-What 3.0.1.app/Contents/Resources/phoneList.txt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
    "creator": "MACS",
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
@@ -41,146 +176,11 @@
    "rsrc_sha256": "8dac8e37b8a4bd0eeb2e9ba79b387805cc18482b91440d463b516ac1cc5dc643",
    "rsrc_size": 49376,
    "type": "\u0000\u0000\u0000\u0000"
-  },
-  {
-   "is_dir": true,
-   "name": "800-SAY-WHAT 3.0.1J/800-Say-What 3.0.1.app/Contents"
-  },
-  {
-   "is_dir": true,
-   "name": "800-SAY-WHAT 3.0.1J/800-Say-What 3.0.1.app/Contents/MacOS"
-  },
-  {
-   "is_dir": true,
-   "name": "800-SAY-WHAT 3.0.1J/800-Say-What 3.0.1.app/Contents/Resources"
-  },
-  {
-   "data_sha256": "f3a8e3c24b6bda68f66c9e845694f810c65af01471d0df04beb39859c43fd92d",
-   "data_size": 798,
-   "name": "800-SAY-WHAT 3.0.1J/800-Say-What 3.0.1.app/Contents/Info.plist",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
-  },
-  {
-   "data_sha256": "906f3014da628fd0642d6d2a879688da02595441ea3e4c083009bef1037bd9ef",
-   "data_size": 8,
-   "name": "800-SAY-WHAT 3.0.1J/800-Say-What 3.0.1.app/Contents/PkgInfo",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
-  },
-  {
-   "is_dir": true,
-   "name": "800-SAY-WHAT 3.0.1J/800-Say-What 3.0.1.app/Contents/Resources/English.lproj"
-  },
-  {
-   "is_dir": true,
-   "name": "800-SAY-WHAT 3.0.1J/800-Say-What 3.0.1.app/Contents/Resources/Japanese.lproj"
-  },
-  {
-   "data_sha256": "1a4102bf32855ddea9f3fc075b7de3e2743cb641d398e57b1214478c7b8e37eb",
-   "data_size": 813,
-   "name": "800-SAY-WHAT 3.0.1J/800-Say-What 3.0.1.app/Contents/Resources/Controller.h",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
-  },
-  {
-   "data_sha256": "1bae1a956c31a21a5b300633893749241aa110c27e8fce72dbc74018cd283098",
-   "data_size": 198,
-   "name": "800-SAY-WHAT 3.0.1J/800-Say-What 3.0.1.app/Contents/Resources/Converter.h",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
-  },
-  {
-   "data_sha256": "38770e0d89d29621d9453ed97d8943375e6307f88b6933e463112b9dd523ab96",
-   "data_size": 40992,
-   "name": "800-SAY-WHAT 3.0.1J/800-Say-What 3.0.1.app/Contents/Resources/SayWhatIcon.icns",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
-  },
-  {
-   "data_sha256": "79f5920c1a5f3ab2d33de269a964df0dea61a9322df8a8092fe1680e4dfee59e",
-   "data_size": 184,
-   "name": "800-SAY-WHAT 3.0.1J/800-Say-What 3.0.1.app/Contents/Resources/phoneList.txt",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
-  },
-  {
-   "is_dir": true,
-   "name": "800-SAY-WHAT 3.0.1J/800-Say-What 3.0.1.app/Contents/Resources/Japanese.lproj/MainMenu.nib"
-  },
-  {
-   "creator": "\u0000\u0000\u0000\u0000",
-   "data_sha256": "5f6581b6668d4842e7813e154d9703dd672469ef74f7383dc4edc9a49aac6d41",
-   "data_size": 330,
-   "name": "800-SAY-WHAT 3.0.1J/800-Say-What 3.0.1.app/Contents/Resources/Japanese.lproj/InfoPlist.strings",
-   "rsrc_sha256": "10ef7120bec7677b530b64bf699fad4127df1802ef264f7de99e8020988aa15f",
-   "rsrc_size": 1710,
-   "type": "utxt"
-  },
-  {
-   "data_sha256": "6b9fa531d3701ddd6ac4740cdc88b9dde533b63e10998c1c2591763694817252",
-   "data_size": 877,
-   "name": "800-SAY-WHAT 3.0.1J/800-Say-What 3.0.1.app/Contents/Resources/Japanese.lproj/MainMenu.nib/classes.nib",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
-  },
-  {
-   "data_sha256": "2598be4b2ee62c1f03a39bd94386c1a2230e2f2361f1ef292126b78e49883db9",
-   "data_size": 563,
-   "name": "800-SAY-WHAT 3.0.1J/800-Say-What 3.0.1.app/Contents/Resources/Japanese.lproj/MainMenu.nib/info.nib",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
-  },
-  {
-   "data_sha256": "6fc93f7a388319f7be98935e79f7742547ab3f4551b24c1b24737aeb75e078db",
-   "data_size": 15908,
-   "name": "800-SAY-WHAT 3.0.1J/800-Say-What 3.0.1.app/Contents/Resources/Japanese.lproj/MainMenu.nib/keyedobjects.nib",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
-  },
-  {
-   "is_dir": true,
-   "name": "800-SAY-WHAT 3.0.1J/800-Say-What 3.0.1.app/Contents/Resources/English.lproj/MainMenu.nib"
-  },
-  {
-   "data_sha256": "dfef12d1049d711b52f3cb3dc41edff718e3faa99109a970ee22f00cb22b0b0e",
-   "data_size": 316,
-   "name": "800-SAY-WHAT 3.0.1J/800-Say-What 3.0.1.app/Contents/Resources/English.lproj/InfoPlist.strings",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
-  },
-  {
-   "data_sha256": "6b9fa531d3701ddd6ac4740cdc88b9dde533b63e10998c1c2591763694817252",
-   "data_size": 877,
-   "name": "800-SAY-WHAT 3.0.1J/800-Say-What 3.0.1.app/Contents/Resources/English.lproj/MainMenu.nib/classes.nib",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
-  },
-  {
-   "data_sha256": "7c770649a6f49e32f0c016a0ff77e050d2408488807e05900fd5b16b8cf1084e",
-   "data_size": 586,
-   "name": "800-SAY-WHAT 3.0.1J/800-Say-What 3.0.1.app/Contents/Resources/English.lproj/MainMenu.nib/info.nib",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
-  },
-  {
-   "data_sha256": "7b9836faa18307134c875640a78876db33550f0bca3ec24eede97d3a23fb5a4c",
-   "data_size": 8004,
-   "name": "800-SAY-WHAT 3.0.1J/800-Say-What 3.0.1.app/Contents/Resources/English.lproj/MainMenu.nib/objects.nib",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
-  },
-  {
-   "data_sha256": "a424f180f8aecccf3bd314382713e8763e84552ed7fe25bd8651ffc3cdeb87db",
-   "data_size": 51116,
-   "name": "800-SAY-WHAT 3.0.1J/800-Say-What 3.0.1.app/Contents/MacOS/SayWhat",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
   }
  ],
  "fixture": "derived-800saywhat301j.sit",
  "format": "StuffIt 5",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "d3788d31eb57ea17cc0a218fbc2167f50be59f536bd899d97334363a9fcf8f7f",
  "size": 91648
 }

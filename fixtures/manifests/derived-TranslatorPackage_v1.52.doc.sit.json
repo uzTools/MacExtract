@@ -12,7 +12,7 @@
  ],
  "fixture": "derived-TranslatorPackage_v1.52.doc.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "844593e3803297d7b8c96038b9fc804623b230e37f3122ae4f8ddec0cddb68bc",
  "size": 69635
 }

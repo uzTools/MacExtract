@@ -12,7 +12,7 @@
  ],
  "fixture": "derived-Mombasa.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "f2b46c42588a4d76034f745d49deb2dc72d2f8ed5e670b52d41398c887967212",
  "size": 93966
 }

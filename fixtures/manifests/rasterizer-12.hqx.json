@@ -12,7 +12,7 @@
  ],
  "fixture": "rasterizer-12.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "9c91cd0d77b34057989752cf586f79f616e0bf5e45b0d8bd8f6fff05b642904c",
  "size": 42901
 }

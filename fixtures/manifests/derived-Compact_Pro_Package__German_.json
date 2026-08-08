@@ -34,7 +34,7 @@
  ],
  "fixture": "derived-Compact_Pro_Package__German_",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "7adf78991a97f5e8ffbbb42934c3fab243f73261fcc53937e01cff3fbda681da",
  "size": 156901
 }

@@ -12,7 +12,7 @@
  ],
  "fixture": "beaver085.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "8161a159f13eab378413496d306011f48384afc060991517bf69a6a9a2b3c455",
  "size": 186658
 }

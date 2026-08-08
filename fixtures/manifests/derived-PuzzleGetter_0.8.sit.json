@@ -9,6 +9,27 @@
    "name": "PuzzleGetter 0.8/PuzzleGetter ReadMe.rtfd"
   },
   {
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "PuzzleGetter 0.8/PuzzleGetter ReadMe.rtfd/.typeAttributes.dict",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "f9bd74d361ea54a6639f4377fa575377fe62edfa1d4834239ba0eac97f1f8aaa",
+   "data_size": 8569,
+   "name": "PuzzleGetter 0.8/PuzzleGetter ReadMe.rtfd/TXT.rtf",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "7e7d73aa153653d6d7335738a9e75dd5bff7d109d642bcf5110a32896985194e",
+   "data_size": 65730,
+   "name": "PuzzleGetter 0.8/PuzzleGetter ReadMe.rtfd/puzzleGetter_icon.tiff",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
    "is_dir": true,
    "name": "PuzzleGetter 0.8/PuzzleGetter.app"
   },
@@ -17,17 +38,20 @@
    "name": "PuzzleGetter 0.8/PuzzleGetter.app/Contents"
   },
   {
+   "data_sha256": "463826ade5d7f0b3c7e24b72ff06fcd49ca2a613f5d77bad988cb4fac672fae4",
+   "data_size": 962,
+   "name": "PuzzleGetter 0.8/PuzzleGetter.app/Contents/Info.plist",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
    "is_dir": true,
    "name": "PuzzleGetter 0.8/PuzzleGetter.app/Contents/MacOS"
   },
   {
-   "is_dir": true,
-   "name": "PuzzleGetter 0.8/PuzzleGetter.app/Contents/Resources"
-  },
-  {
-   "data_sha256": "463826ade5d7f0b3c7e24b72ff06fcd49ca2a613f5d77bad988cb4fac672fae4",
-   "data_size": 962,
-   "name": "PuzzleGetter 0.8/PuzzleGetter.app/Contents/Info.plist",
+   "data_sha256": "1dc1881f1e772b38e4bb6220aa711c03b2f02c6482c01dc42c9c342d8f7b4331",
+   "data_size": 21512,
+   "name": "PuzzleGetter 0.8/PuzzleGetter.app/Contents/MacOS/PuzzleGetter",
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -39,19 +63,51 @@
    "rsrc_size": 0
   },
   {
-   "data_sha256": "3ffbbea0e7157611151e447e005ec4f3841e0258ea5ecdca9cbfdaa268dc8037",
-   "data_size": 311,
-   "name": "PuzzleGetter 0.8/PuzzleGetter.app/Contents/pbdevelopment.plist",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
+   "is_dir": true,
+   "name": "PuzzleGetter 0.8/PuzzleGetter.app/Contents/Resources"
   },
   {
    "is_dir": true,
    "name": "PuzzleGetter 0.8/PuzzleGetter.app/Contents/Resources/English.lproj"
   },
   {
+   "data_sha256": "16036915bc2e990f1d4eb4d7bcfa95b204641b8d3fc8f6a3f72288ffdb4a6976",
+   "data_size": 532,
+   "name": "PuzzleGetter 0.8/PuzzleGetter.app/Contents/Resources/English.lproj/InfoPlist.strings",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
    "is_dir": true,
-   "name": "PuzzleGetter 0.8/PuzzleGetter.app/Contents/Resources/Scripts"
+   "name": "PuzzleGetter 0.8/PuzzleGetter.app/Contents/Resources/English.lproj/MainMenu.nib"
+  },
+  {
+   "data_sha256": "e9c13890d0b8166ac446f6e0199331c0b27d0e866254c17cc05ee7b2421a8e64",
+   "data_size": 110,
+   "name": "PuzzleGetter 0.8/PuzzleGetter.app/Contents/Resources/English.lproj/MainMenu.nib/classes.nib",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "f96f916b3aff84e4c8a0561d2d6b22f4f90545d06dc058bb13cdd705b1a1829b",
+   "data_size": 278,
+   "name": "PuzzleGetter 0.8/PuzzleGetter.app/Contents/Resources/English.lproj/MainMenu.nib/data.dependency",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "67ae6946a6d486708ef44b1e4d87975edbee5a536b0ed77683ca5141068fcb4f",
+   "data_size": 509,
+   "name": "PuzzleGetter 0.8/PuzzleGetter.app/Contents/Resources/English.lproj/MainMenu.nib/info.nib",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "0b23f0324ced3cc37d881bcdf6843deabdccc38be4bde09d46f2c5056cca11dc",
+   "data_size": 10299,
+   "name": "PuzzleGetter 0.8/PuzzleGetter.app/Contents/Resources/English.lproj/MainMenu.nib/objects.nib",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
   },
   {
    "data_sha256": "8d501c43fd8f417683339b8c4300438c15f08420190f1502aaff6cd14af76699",
@@ -59,6 +115,10 @@
    "name": "PuzzleGetter 0.8/PuzzleGetter.app/Contents/Resources/PuzzleGetter.icns",
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
+  },
+  {
+   "is_dir": true,
+   "name": "PuzzleGetter 0.8/PuzzleGetter.app/Contents/Resources/Scripts"
   },
   {
    "creator": "ToyS",
@@ -178,76 +238,16 @@
    "type": "osas"
   },
   {
-   "is_dir": true,
-   "name": "PuzzleGetter 0.8/PuzzleGetter.app/Contents/Resources/English.lproj/MainMenu.nib"
-  },
-  {
-   "data_sha256": "16036915bc2e990f1d4eb4d7bcfa95b204641b8d3fc8f6a3f72288ffdb4a6976",
-   "data_size": 532,
-   "name": "PuzzleGetter 0.8/PuzzleGetter.app/Contents/Resources/English.lproj/InfoPlist.strings",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
-  },
-  {
-   "data_sha256": "e9c13890d0b8166ac446f6e0199331c0b27d0e866254c17cc05ee7b2421a8e64",
-   "data_size": 110,
-   "name": "PuzzleGetter 0.8/PuzzleGetter.app/Contents/Resources/English.lproj/MainMenu.nib/classes.nib",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
-  },
-  {
-   "data_sha256": "f96f916b3aff84e4c8a0561d2d6b22f4f90545d06dc058bb13cdd705b1a1829b",
-   "data_size": 278,
-   "name": "PuzzleGetter 0.8/PuzzleGetter.app/Contents/Resources/English.lproj/MainMenu.nib/data.dependency",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
-  },
-  {
-   "data_sha256": "67ae6946a6d486708ef44b1e4d87975edbee5a536b0ed77683ca5141068fcb4f",
-   "data_size": 509,
-   "name": "PuzzleGetter 0.8/PuzzleGetter.app/Contents/Resources/English.lproj/MainMenu.nib/info.nib",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
-  },
-  {
-   "data_sha256": "0b23f0324ced3cc37d881bcdf6843deabdccc38be4bde09d46f2c5056cca11dc",
-   "data_size": 10299,
-   "name": "PuzzleGetter 0.8/PuzzleGetter.app/Contents/Resources/English.lproj/MainMenu.nib/objects.nib",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
-  },
-  {
-   "data_sha256": "1dc1881f1e772b38e4bb6220aa711c03b2f02c6482c01dc42c9c342d8f7b4331",
-   "data_size": 21512,
-   "name": "PuzzleGetter 0.8/PuzzleGetter.app/Contents/MacOS/PuzzleGetter",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
-  },
-  {
-   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "data_size": 0,
-   "name": "PuzzleGetter 0.8/PuzzleGetter ReadMe.rtfd/.typeAttributes.dict",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
-  },
-  {
-   "data_sha256": "f9bd74d361ea54a6639f4377fa575377fe62edfa1d4834239ba0eac97f1f8aaa",
-   "data_size": 8569,
-   "name": "PuzzleGetter 0.8/PuzzleGetter ReadMe.rtfd/TXT.rtf",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
-  },
-  {
-   "data_sha256": "7e7d73aa153653d6d7335738a9e75dd5bff7d109d642bcf5110a32896985194e",
-   "data_size": 65730,
-   "name": "PuzzleGetter 0.8/PuzzleGetter ReadMe.rtfd/puzzleGetter_icon.tiff",
+   "data_sha256": "3ffbbea0e7157611151e447e005ec4f3841e0258ea5ecdca9cbfdaa268dc8037",
+   "data_size": 311,
+   "name": "PuzzleGetter 0.8/PuzzleGetter.app/Contents/pbdevelopment.plist",
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   }
  ],
  "fixture": "derived-PuzzleGetter_0.8.sit",
  "format": "StuffIt 5",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "2d39e630fed1bc3152c47f92a334025db20aa2c2dea226d8c16848e3adb9bca1",
  "size": 92510
 }

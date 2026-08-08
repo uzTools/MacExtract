@@ -12,7 +12,7 @@
  ],
  "fixture": "easy15c.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "18341832d6c7d0610ebd2871fdd46729f47f2a3ded332899697e98ac602d6283",
  "size": 64947
 }

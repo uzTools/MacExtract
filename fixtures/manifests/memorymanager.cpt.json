@@ -12,7 +12,7 @@
  ],
  "fixture": "memorymanager.cpt",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "088d8bce4df2cb3dfa60fe9bd0c3311bf3fa127bd077fcd0b26dc1fce48c056a",
  "size": 14208
 }

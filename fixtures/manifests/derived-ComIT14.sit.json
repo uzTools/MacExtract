@@ -21,7 +21,7 @@
  ],
  "fixture": "derived-ComIT14.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "f6e6e67251c9f0ef9a7af89af0a4a9117c9a64c32193be3a0a1d5b661f5112b6",
  "size": 204926
 }

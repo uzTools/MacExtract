@@ -12,7 +12,7 @@
  ],
  "fixture": "works200bupd.bin",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "8de5ae9057c2d3b41f8c093b7ab964281a8824352bc1b73d13965428672071ee",
  "size": 8693
 }

@@ -12,7 +12,7 @@
  ],
  "fixture": "tads.cpt",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "2f9241c98bbc293bee3f6a3950972648645ffac6a30500cca9c5f4d5ecab5672",
  "size": 177280
 }

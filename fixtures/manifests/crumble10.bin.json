@@ -12,7 +12,7 @@
  ],
  "fixture": "crumble10.bin",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "bb0b9440356dfaee3714c381a49b283a80e12e61d43ccc8b36eaef065c76c283",
  "size": 3240
 }

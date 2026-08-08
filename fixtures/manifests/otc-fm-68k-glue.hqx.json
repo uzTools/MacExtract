@@ -12,7 +12,7 @@
  ],
  "fixture": "otc-fm-68k-glue.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "e22609669b5cc331f70e88bad4f367d3a55575f5715fae542f84115f6cf75b79",
  "size": 287052
 }

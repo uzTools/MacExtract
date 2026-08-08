@@ -12,7 +12,7 @@
  ],
  "fixture": "applejam.cpt",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "c595f6c984c6e92de0c7678011602e3683fadc4f3b7872dec197f7c5ab459982",
  "size": 43776
 }

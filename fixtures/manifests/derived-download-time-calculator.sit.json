@@ -9,33 +9,6 @@
    "name": "Download Time Calculator 1.2/Cenic's Software Products"
   },
   {
-   "creator": "pG3!",
-   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "data_size": 0,
-   "name": "Download Time Calculator 1.2/Download Time Calculator 1.2",
-   "rsrc_sha256": "21595a9c7ec5706bf49de3c5290b859a5ecbc40d3c1a00838d5109a881e36304",
-   "rsrc_size": 158586,
-   "type": "APPL"
-  },
-  {
-   "creator": "ttxt",
-   "data_sha256": "e8d4f83fd7ba951f329855879bcbe831b8c7ac5cac4228e132266f60cd038b49",
-   "data_size": 3225,
-   "name": "Download Time Calculator 1.2/Read Me!",
-   "rsrc_sha256": "ecc2223d605b2e60f9a3b7d212c8c4c7cb06ccd5f7b639366f3789a16bd921d6",
-   "rsrc_size": 932,
-   "type": "TEXT"
-  },
-  {
-   "creator": "ttxt",
-   "data_sha256": "982892da7fb4046e9a7f9f47fdcbda3372184e93903f03a44459bcb355c363c6",
-   "data_size": 1148,
-   "name": "Download Time Calculator 1.2/Registration Form",
-   "rsrc_sha256": "d35cc8218a3fb2bc6b8de2b390262ad9659b8149353e94e9ec56bcc1beb91703",
-   "rsrc_size": 352,
-   "type": "TEXT"
-  },
-  {
    "creator": "ttxt",
    "data_sha256": "07291393cf13a42e5d84cdd14e4cd39d5439386f447e0183ce65476f73a5ee77",
    "data_size": 1878,
@@ -97,11 +70,38 @@
    "rsrc_sha256": "484811285186151a4e61932f9c2709b1c0b6c431990c01ec36683fa7be556718",
    "rsrc_size": 572,
    "type": "TEXT"
+  },
+  {
+   "creator": "pG3!",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Download Time Calculator 1.2/Download Time Calculator 1.2",
+   "rsrc_sha256": "21595a9c7ec5706bf49de3c5290b859a5ecbc40d3c1a00838d5109a881e36304",
+   "rsrc_size": 158586,
+   "type": "APPL"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "e8d4f83fd7ba951f329855879bcbe831b8c7ac5cac4228e132266f60cd038b49",
+   "data_size": 3225,
+   "name": "Download Time Calculator 1.2/Read Me!",
+   "rsrc_sha256": "ecc2223d605b2e60f9a3b7d212c8c4c7cb06ccd5f7b639366f3789a16bd921d6",
+   "rsrc_size": 932,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "982892da7fb4046e9a7f9f47fdcbda3372184e93903f03a44459bcb355c363c6",
+   "data_size": 1148,
+   "name": "Download Time Calculator 1.2/Registration Form",
+   "rsrc_sha256": "d35cc8218a3fb2bc6b8de2b390262ad9659b8149353e94e9ec56bcc1beb91703",
+   "rsrc_size": 352,
+   "type": "TEXT"
   }
  ],
  "fixture": "derived-download-time-calculator.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "4d7b9ff7751bf2fc832d965e7cf1a6db247b84d088e7dc8c341b52a02583e4d8",
  "size": 79817
 }

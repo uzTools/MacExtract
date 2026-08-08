@@ -5,14 +5,6 @@
    "name": "TypoTapps_PlusTapps 2.0 Ordner"
   },
   {
-   "is_dir": true,
-   "name": "TypoTapps_PlusTapps 2.0 Ordner/Sherlock-PlugIns"
-  },
-  {
-   "is_dir": true,
-   "name": "TypoTapps_PlusTapps 2.0 Ordner/Tastaturabbildungen"
-  },
-  {
    "creator": "Dk@P",
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
@@ -29,6 +21,77 @@
    "rsrc_sha256": "d3697edec0c7a14b8319e52693cf9f1bf2844d3fb4df1b4f890b72218405c8f2",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
+  },
+  {
+   "is_dir": true,
+   "name": "TypoTapps_PlusTapps 2.0 Ordner/Sherlock-PlugIns"
+  },
+  {
+   "creator": "fndf",
+   "data_sha256": "c7c1df7a3bb84274bcd23fee4f76bee354b314fc79638d9e426decb39196e622",
+   "data_size": 842,
+   "name": "TypoTapps_PlusTapps 2.0 Ordner/Sherlock-PlugIns/CYBERCENTER.DE.src",
+   "rsrc_sha256": "33c265909acb6361094c1e4c512d5c40d3fbebc715271e77d08cb7c8f40073de",
+   "rsrc_size": 2842,
+   "type": "issp"
+  },
+  {
+   "creator": "fndf",
+   "data_sha256": "e7a12614b005d51766a24456e842bb30af9aa04a7c34629fbccdc3878e955bd8",
+   "data_size": 709,
+   "name": "TypoTapps_PlusTapps 2.0 Ordner/Sherlock-PlugIns/DAS AUGE.src",
+   "rsrc_sha256": "e35d7a76f708a4cbd748141f2d5d880be507c93d7881ff30b77db0b62e9e1160",
+   "rsrc_size": 458,
+   "type": "issp"
+  },
+  {
+   "creator": "MACS",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "TypoTapps_PlusTapps 2.0 Ordner/Sherlock-PlugIns/Icon\r",
+   "rsrc_sha256": "0c5cc17abdd56673afee52ca11b77b83a708ea1979e64ba3ada0786fa50d1ed6",
+   "rsrc_size": 6306,
+   "type": "icon"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "3dfd6f4069c519778c5e8589172fb6014c94f7a321a07b4ea05b1966e472b17c",
+   "data_size": 3112,
+   "name": "TypoTapps_PlusTapps 2.0 Ordner/Sherlock-PlugIns/Über die Sherlock-PlugIns",
+   "rsrc_sha256": "4d8a38744521e8abbd4ed06da9e5564de183bd673942e4a42e239901e6af420e",
+   "rsrc_size": 632,
+   "type": "ttro"
+  },
+  {
+   "is_dir": true,
+   "name": "TypoTapps_PlusTapps 2.0 Ordner/Tastaturabbildungen"
+  },
+  {
+   "creator": "MACS",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "TypoTapps_PlusTapps 2.0 Ordner/Tastaturabbildungen/Icon\r",
+   "rsrc_sha256": "3fb11acf1b22c17b610770dc246c38cc1cf0b2e51bb04f0fcced7986fdc69caa",
+   "rsrc_size": 2606,
+   "type": "icon"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "0cd4b312e8f40950d176a263d71d4d0d0688873ca7570179dcf90cac5671f414",
+   "data_size": 54224,
+   "name": "TypoTapps_PlusTapps 2.0 Ordner/Tastaturabbildungen/PlusTapps™ Tastaturabbildung",
+   "rsrc_sha256": "cd53c9bb27351995019aa8e53710122b61313fc3a0092575d05a590daa53d4e7",
+   "rsrc_size": 862,
+   "type": "PICT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "f155cc0d8839d5034d7995bb7c874a4f6ff7e94874328756c9f06ffa2c5fd78b",
+   "data_size": 54158,
+   "name": "TypoTapps_PlusTapps 2.0 Ordner/Tastaturabbildungen/TypoTapps™ Tastaturabbildung",
+   "rsrc_sha256": "3a722f5dcce034118b1b40ce176dabecd6f3b74392cb22c53273eff40d4b10da",
+   "rsrc_size": 862,
+   "type": "PICT"
   },
   {
    "creator": "MOSS",
@@ -74,74 +137,11 @@
    "rsrc_sha256": "9f155a0ca0a8e0c851ec6bf0d6743e8b7274f7df7eb3dba39fbf8989c60fa961",
    "rsrc_size": 5674,
    "type": "kfil"
-  },
-  {
-   "creator": "MACS",
-   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "data_size": 0,
-   "name": "TypoTapps_PlusTapps 2.0 Ordner/Tastaturabbildungen/Icon\r",
-   "rsrc_sha256": "3fb11acf1b22c17b610770dc246c38cc1cf0b2e51bb04f0fcced7986fdc69caa",
-   "rsrc_size": 2606,
-   "type": "icon"
-  },
-  {
-   "creator": "ttxt",
-   "data_sha256": "0cd4b312e8f40950d176a263d71d4d0d0688873ca7570179dcf90cac5671f414",
-   "data_size": 54224,
-   "name": "TypoTapps_PlusTapps 2.0 Ordner/Tastaturabbildungen/PlusTapps™ Tastaturabbildung",
-   "rsrc_sha256": "cd53c9bb27351995019aa8e53710122b61313fc3a0092575d05a590daa53d4e7",
-   "rsrc_size": 862,
-   "type": "PICT"
-  },
-  {
-   "creator": "ttxt",
-   "data_sha256": "f155cc0d8839d5034d7995bb7c874a4f6ff7e94874328756c9f06ffa2c5fd78b",
-   "data_size": 54158,
-   "name": "TypoTapps_PlusTapps 2.0 Ordner/Tastaturabbildungen/TypoTapps™ Tastaturabbildung",
-   "rsrc_sha256": "3a722f5dcce034118b1b40ce176dabecd6f3b74392cb22c53273eff40d4b10da",
-   "rsrc_size": 862,
-   "type": "PICT"
-  },
-  {
-   "creator": "fndf",
-   "data_sha256": "c7c1df7a3bb84274bcd23fee4f76bee354b314fc79638d9e426decb39196e622",
-   "data_size": 842,
-   "name": "TypoTapps_PlusTapps 2.0 Ordner/Sherlock-PlugIns/CYBERCENTER.DE.src",
-   "rsrc_sha256": "33c265909acb6361094c1e4c512d5c40d3fbebc715271e77d08cb7c8f40073de",
-   "rsrc_size": 2842,
-   "type": "issp"
-  },
-  {
-   "creator": "fndf",
-   "data_sha256": "e7a12614b005d51766a24456e842bb30af9aa04a7c34629fbccdc3878e955bd8",
-   "data_size": 709,
-   "name": "TypoTapps_PlusTapps 2.0 Ordner/Sherlock-PlugIns/DAS AUGE.src",
-   "rsrc_sha256": "e35d7a76f708a4cbd748141f2d5d880be507c93d7881ff30b77db0b62e9e1160",
-   "rsrc_size": 458,
-   "type": "issp"
-  },
-  {
-   "creator": "MACS",
-   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "data_size": 0,
-   "name": "TypoTapps_PlusTapps 2.0 Ordner/Sherlock-PlugIns/Icon\r",
-   "rsrc_sha256": "0c5cc17abdd56673afee52ca11b77b83a708ea1979e64ba3ada0786fa50d1ed6",
-   "rsrc_size": 6306,
-   "type": "icon"
-  },
-  {
-   "creator": "ttxt",
-   "data_sha256": "3dfd6f4069c519778c5e8589172fb6014c94f7a321a07b4ea05b1966e472b17c",
-   "data_size": 3112,
-   "name": "TypoTapps_PlusTapps 2.0 Ordner/Sherlock-PlugIns/Über die Sherlock-PlugIns",
-   "rsrc_sha256": "4d8a38744521e8abbd4ed06da9e5564de183bd673942e4a42e239901e6af420e",
-   "rsrc_size": 632,
-   "type": "ttro"
   }
  ],
  "fixture": "derived-TypoTapps_PlusTapps_2.0.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "88c393afc5c54fe3a93d76ffee1982cbe63ad40162a5b51b89534766847c4dcf",
  "size": 208872
 }

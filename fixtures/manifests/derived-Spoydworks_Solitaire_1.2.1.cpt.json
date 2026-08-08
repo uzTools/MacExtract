@@ -25,7 +25,7 @@
  ],
  "fixture": "derived-Spoydworks_Solitaire_1.2.1.cpt",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "982776f0b8b7981e5695526517d4d5a3903bb4111067f2323af6c819eb334c07",
  "size": 56194
 }

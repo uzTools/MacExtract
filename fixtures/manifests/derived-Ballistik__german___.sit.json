@@ -5,21 +5,21 @@
    "name": "Ballistik (german) ƒ"
   },
   {
-   "creator": "Dk@P",
-   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "data_size": 0,
-   "name": "Ballistik (german) ƒ/Ballistik.doc",
-   "rsrc_sha256": "08c21e18f03853258b5f17da307791d80cef580d2b6c4956d3140134bed5d1f3",
-   "rsrc_size": 107703,
-   "type": "APPL"
-  },
-  {
    "creator": "BLLS",
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Ballistik (german) ƒ/Ballistik",
    "rsrc_sha256": "f11069a532be55d158161619147317981303b80f711c3e64c7fbf4cce136afbe",
    "rsrc_size": 338904,
+   "type": "APPL"
+  },
+  {
+   "creator": "Dk@P",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Ballistik (german) ƒ/Ballistik.doc",
+   "rsrc_sha256": "08c21e18f03853258b5f17da307791d80cef580d2b6c4956d3140134bed5d1f3",
+   "rsrc_size": 107703,
    "type": "APPL"
   },
   {
@@ -34,7 +34,7 @@
  ],
  "fixture": "derived-Ballistik__german___.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "878f33a375cee4ec8dc212b0f3b377ff1bb0a1777afd7cc8827d238edfea7c0d",
  "size": 169093
 }

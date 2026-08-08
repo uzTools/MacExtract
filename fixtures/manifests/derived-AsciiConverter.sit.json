@@ -5,10 +5,6 @@
    "name": "Ascii Converter 1.0"
   },
   {
-   "is_dir": true,
-   "name": "Ascii Converter 1.0/Examples"
-  },
-  {
    "creator": "ASci",
    "data_sha256": "40a3a93d71906fdfcd9cdaadc08829444c4e28e74b8d86077157f43332f417f1",
    "data_size": 12764,
@@ -18,31 +14,8 @@
    "type": "APPL"
   },
   {
-   "creator": "ISHT",
-   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "data_size": 0,
-   "name": "Ascii Converter 1.0/Home Page",
-   "rsrc_sha256": "1db2324d3b3c32af2a45b0a2c3a046a7ae1fbfaf25954b31c540b98bf5287cbb",
-   "rsrc_size": 16239,
-   "type": "APPL"
-  },
-  {
-   "creator": "ttxt",
-   "data_sha256": "db1519bcac21707866f24f23cb7c6a7707c885a0389ea7ad443b749da77fee3b",
-   "data_size": 1374,
-   "name": "Ascii Converter 1.0/ReadMe",
-   "rsrc_sha256": "ef50e982cb21ebb7daa9086922a753ab1c55173bbe7aa9354b03844c4960ed10",
-   "rsrc_size": 33385,
-   "type": "ttro"
-  },
-  {
-   "creator": "ISHT",
-   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "data_size": 0,
-   "name": "Ascii Converter 1.0/Register",
-   "rsrc_sha256": "593014873376373ba2d388f65ced505ed00ec3d4a0afb59581648a51d971801f",
-   "rsrc_size": 16212,
-   "type": "APPL"
+   "is_dir": true,
+   "name": "Ascii Converter 1.0/Examples"
   },
   {
    "creator": "ttxt",
@@ -70,11 +43,38 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
+  },
+  {
+   "creator": "ISHT",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Ascii Converter 1.0/Home Page",
+   "rsrc_sha256": "1db2324d3b3c32af2a45b0a2c3a046a7ae1fbfaf25954b31c540b98bf5287cbb",
+   "rsrc_size": 16239,
+   "type": "APPL"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "db1519bcac21707866f24f23cb7c6a7707c885a0389ea7ad443b749da77fee3b",
+   "data_size": 1374,
+   "name": "Ascii Converter 1.0/ReadMe",
+   "rsrc_sha256": "ef50e982cb21ebb7daa9086922a753ab1c55173bbe7aa9354b03844c4960ed10",
+   "rsrc_size": 33385,
+   "type": "ttro"
+  },
+  {
+   "creator": "ISHT",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Ascii Converter 1.0/Register",
+   "rsrc_sha256": "593014873376373ba2d388f65ced505ed00ec3d4a0afb59581648a51d971801f",
+   "rsrc_size": 16212,
+   "type": "APPL"
   }
  ],
  "fixture": "derived-AsciiConverter.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "5312a7b1729d5ac3a5eda821782281608da0bb1111818e588fd244e0f4f5eb21",
  "size": 115051
 }

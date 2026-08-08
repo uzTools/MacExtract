@@ -12,7 +12,7 @@
  ],
  "fixture": "seasons-greetings.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "1ec6b2cf4b081f46ef81905ac21ecdba71c062a9e2845a767eae8b69f3edcbf3",
  "size": 106441
 }

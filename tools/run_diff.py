@@ -55,6 +55,18 @@ def normpath(path):
     return "/".join(norm(c) for c in path.split("/"))
 
 
+def sidecar(path):
+    """Resource-fork sidecar path for an entry: "dir/file" -> "dir/._file".
+
+    Both sides of the diff use the "._" prefix (`unclassic --forks
+    hidden`, `unar -k hidden`) rather than a ".rsrc" suffix, because
+    the suffix collides with real entries in archives that hold both
+    "X" and "X.rsrc". DECISIONS.md, 2026-08-08.
+    """
+    head, _, tail = path.rpartition("/")
+    return f"{head}/._{tail}" if head else f"._{tail}"
+
+
 def collect_outputs(tmp):
     """Map normalized relative path -> full path for files and dirs."""
     files, dirs = {}, set()
@@ -89,7 +101,8 @@ def check_fixture(unclassic, man, verbose, budget=0):
     cap = ["--budget", str(budget)] if budget else []
     problems = []
     with tempfile.TemporaryDirectory() as tmp:
-        r = subprocess.run([unclassic, "x", "-nr", "-o", tmp, fx] + cap,
+        r = subprocess.run([unclassic, "x", "-nr", "--forks", "hidden",
+                            "-o", tmp, fx] + cap,
                            capture_output=True, timeout=300)
         if r.returncode != 0:
             problems.append(f"exit {r.returncode}: {r.stderr.decode()[:300]}")
@@ -114,7 +127,7 @@ def check_fixture(unclassic, man, verbose, budget=0):
                 problems.append(f"{name!r}: data size {sz} != {e['data_size']}")
             elif sha256_file(path) != e["data_sha256"]:
                 problems.append(f"{name!r}: data sha mismatch")
-            rp = files.pop(name + ".rsrc", None)
+            rp = files.pop(sidecar(name), None)
             rsz = os.path.getsize(rp) if rp else 0
             if rsz != e["rsrc_size"]:
                 problems.append(f"{name!r}: rsrc size {rsz} != {e['rsrc_size']}")

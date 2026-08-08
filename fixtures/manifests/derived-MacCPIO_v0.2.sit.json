@@ -34,7 +34,7 @@
  ],
  "fixture": "derived-MacCPIO_v0.2.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "d6c77680a0d0d2739e34cc69ab86d434b9069b155b968f423c31affeff3e552c",
  "size": 17769
 }

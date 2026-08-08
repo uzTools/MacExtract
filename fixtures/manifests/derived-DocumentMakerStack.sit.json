@@ -25,7 +25,7 @@
  ],
  "fixture": "derived-DocumentMakerStack.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "8bb5cf7e9b216ae7e956e35da23221fe8a9c9409bdc19d07fffe23ca8f672ec1",
  "size": 51534
 }

@@ -12,7 +12,7 @@
  ],
  "fixture": "letter-gothic-egg-0.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "2df19003fcd61691e35a179edfdc7a1d43ecefb0e3ba4f8cdaeb3a03edb84865",
  "size": 109974
 }

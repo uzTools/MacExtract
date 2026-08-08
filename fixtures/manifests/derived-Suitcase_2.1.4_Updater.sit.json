@@ -25,7 +25,7 @@
  ],
  "fixture": "derived-Suitcase_2.1.4_Updater.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "55264b52590b0e06091af5b65229451446994c697ea6afa154eff9b30ada2103",
  "size": 49740
 }

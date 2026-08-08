@@ -12,7 +12,7 @@
  ],
  "fixture": "autosqueeze.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "d04a9b711b3bdbd0e18fde0d1373898fa3c07de8561e9ae195f12165ae9a7da6",
  "size": 65792
 }

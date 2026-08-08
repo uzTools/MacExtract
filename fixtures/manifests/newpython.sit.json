@@ -12,7 +12,7 @@
  ],
  "fixture": "newpython.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "2e53e6372ed599090c5ffcd6dcbfa0507c5a1dfb68cb100053f4ac73b8e652b6",
  "size": 80256
 }

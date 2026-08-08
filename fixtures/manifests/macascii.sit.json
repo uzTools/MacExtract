@@ -12,7 +12,7 @@
  ],
  "fixture": "macascii.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "c0916f46a63d95d71dabbf3a782d989ef9f7ed56e89ba7c07ce52712a6292aa8",
  "size": 35159
 }

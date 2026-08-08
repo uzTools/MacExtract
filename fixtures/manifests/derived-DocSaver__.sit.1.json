@@ -25,7 +25,7 @@
  ],
  "fixture": "derived-DocSaver__.sit.1",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "a65b64534194cb9a49e4c81c4203b8c2ed5337d8e172198732ebb754a2724ce4",
  "size": 8645
 }

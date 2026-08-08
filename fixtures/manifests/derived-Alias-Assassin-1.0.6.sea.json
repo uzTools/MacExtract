@@ -12,7 +12,7 @@
  ],
  "fixture": "derived-Alias-Assassin-1.0.6.sea",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "bb4a1ce83a5f5d91ffd9c177a8a5475dafb382e62e19cf350290716deacc10a5",
  "size": 33204
 }

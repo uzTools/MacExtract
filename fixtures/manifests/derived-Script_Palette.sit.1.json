@@ -5,10 +5,6 @@
    "name": "Script Palette"
   },
   {
-   "is_dir": true,
-   "name": "Script Palette/Plug-ins"
-  },
-  {
    "creator": "MACS",
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
@@ -18,13 +14,8 @@
    "type": "icon"
   },
   {
-   "creator": "&SP1",
-   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "data_size": 0,
-   "name": "Script Palette/Script Palette 1.0",
-   "rsrc_sha256": "95a0f35065146fa4d210555c7bb3d2841c33c9afcd30949c3f4d5dbcace124aa",
-   "rsrc_size": 80659,
-   "type": "APPL"
+   "is_dir": true,
+   "name": "Script Palette/Plug-ins"
   },
   {
    "creator": "ToyS",
@@ -133,11 +124,20 @@
    "rsrc_sha256": "500ec590cbe90942c8ff02f5027ab5ab451657d38bd9aae3ec27dd66bc731e75",
    "rsrc_size": 1850,
    "type": "osas"
+  },
+  {
+   "creator": "&SP1",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Script Palette/Script Palette 1.0",
+   "rsrc_sha256": "95a0f35065146fa4d210555c7bb3d2841c33c9afcd30949c3f4d5dbcace124aa",
+   "rsrc_size": 80659,
+   "type": "APPL"
   }
  ],
  "fixture": "derived-Script_Palette.sit.1",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "a6bdf42307fc398bb54f6de8b7aef0704988ab04f6e9f67a875824d05f93d158",
  "size": 67928
 }

@@ -5,44 +5,8 @@
    "name": "Playground - pl10"
   },
   {
-   "creator": "MWII",
-   "data_sha256": "f0ae0bb8c5c4d816e5843298d70d808f459a18a522fe0312319ac26f25286237",
-   "data_size": 1392,
-   "name": "READ ME FIRST!",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0,
-   "type": "TEXT"
-  },
-  {
    "is_dir": true,
    "name": "Playground - pl10/Dungeon"
-  },
-  {
-   "creator": "MWII",
-   "data_sha256": "d5232dd2ed1fd6b46f83571cb7193db86da503ce3e716a485ccbd9f2964e845f",
-   "data_size": 50689,
-   "name": "Playground - pl10/Guidebook",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0,
-   "type": "TEXT"
-  },
-  {
-   "creator": "nh30",
-   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "data_size": 0,
-   "name": "Playground - pl10/Open NetHack",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0,
-   "type": "TEXT"
-  },
-  {
-   "creator": "MWII",
-   "data_sha256": "a329d08a8b34d11c989afaa8e0da7d7671288167a48b330944169ca179e56edf",
-   "data_size": 6519,
-   "name": "Playground - pl10/nh30-10.doc [Manual]",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0,
-   "type": "TEXT"
   },
   {
    "creator": "nh30",
@@ -205,11 +169,47 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "AUXL"
+  },
+  {
+   "creator": "MWII",
+   "data_sha256": "d5232dd2ed1fd6b46f83571cb7193db86da503ce3e716a485ccbd9f2964e845f",
+   "data_size": 50689,
+   "name": "Playground - pl10/Guidebook",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "nh30",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Playground - pl10/Open NetHack",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MWII",
+   "data_sha256": "a329d08a8b34d11c989afaa8e0da7d7671288167a48b330944169ca179e56edf",
+   "data_size": 6519,
+   "name": "Playground - pl10/nh30-10.doc [Manual]",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MWII",
+   "data_sha256": "f0ae0bb8c5c4d816e5843298d70d808f459a18a522fe0312319ac26f25286237",
+   "data_size": 1392,
+   "name": "READ ME FIRST!",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
   }
  ],
  "fixture": "derived-playground.sea",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "2ec928457440e5983742bd93b2c64cc5201010275b5b039020a8d9a4e9c38637",
  "size": 72366
 }

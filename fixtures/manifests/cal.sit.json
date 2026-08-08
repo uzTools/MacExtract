@@ -12,7 +12,7 @@
  ],
  "fixture": "cal.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "0f7688111c132f9864d4a6fedd62d33977752b71adbe3b9e232ddb3513d91c05",
  "size": 50333
 }

@@ -12,7 +12,7 @@
  ],
  "fixture": "derived-Super_Boomerang_Fixer.cpt",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "18e3574e86236d3896caa120b6ca32593915bc0dfe011617856c43dea2308a28",
  "size": 5082
 }

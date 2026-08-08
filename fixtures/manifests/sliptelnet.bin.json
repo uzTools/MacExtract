@@ -12,7 +12,7 @@
  ],
  "fixture": "sliptelnet.bin",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "cc616579c55a39b39ea379a3fcb064e47f64de737f69d42c0f87ef2104c3ce8b",
  "size": 284638
 }

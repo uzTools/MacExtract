@@ -1,0 +1,103 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "unshar 1.11 folder"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "986c67358f941abf2f42d9a1c15111bbcbde497e831205b0be40ec02f8d07951",
+   "data_size": 234,
+   "name": "unshar 1.11 folder/GenericCFRG.r",
+   "rsrc_sha256": "2871297f9ef1a0d524dcc3e7c04be13177344d4e5bb47020277568767d4558d7",
+   "rsrc_size": 686,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "025079557d315bcc66eeceb47ce1ffe1c002e5241082fb746ac34c3e13970138",
+   "data_size": 2843,
+   "name": "unshar 1.11 folder/Read me!",
+   "rsrc_sha256": "f4f97a6c6fe25b1681c68983d26898b9eee908c0ba564e5ab56792c33aca1f99",
+   "rsrc_size": 574,
+   "type": "TEXT"
+  },
+  {
+   "creator": "CWIE",
+   "data_sha256": "5c910257394c08c9a64348b7dea0a921bc726ed57a2690cfd8d780e4d9d34f32",
+   "data_size": 2006,
+   "name": "unshar 1.11 folder/mw_68k•unshar π",
+   "rsrc_sha256": "4f159a4e5f5917de9dfcea33d7896464fed1f33697babfa4428535eb1454636f",
+   "rsrc_size": 10136,
+   "type": "MMPR"
+  },
+  {
+   "creator": "CWIE",
+   "data_sha256": "14e7297caa065a60af7cdd76b592e1e9778b546a534d1003dbe66f6a0f326fff",
+   "data_size": 2220,
+   "name": "unshar 1.11 folder/mw_ppc•unshar π",
+   "rsrc_sha256": "b6028f5363d8bdac45e54d23c2465548fd9441d2c8a1814520b5a57a764b056e",
+   "rsrc_size": 10136,
+   "type": "MMPR"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "73c5284286b9acfb81f2791bf1157ced73f26fd44ffd89efdbb587a66b8eb481",
+   "data_size": 6351,
+   "name": "unshar 1.11 folder/unshar",
+   "rsrc_sha256": "341f2008b0ab5380d9014477b885f106821914654de8fb38c8c764bd03f6268a",
+   "rsrc_size": 22525,
+   "type": "MPST"
+  },
+  {
+   "creator": "KAHL",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "unshar 1.11 folder/unshar π",
+   "rsrc_sha256": "972906fe1b75112225c3736002c8e60bce69fe71c24e66176c46de8053ceb13d",
+   "rsrc_size": 7852,
+   "type": "PROJ"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "unshar 1.11 folder/unshar π.rsrc",
+   "rsrc_sha256": "3be06ad4a558fd56d9fe1bffcc5d1b02252a59acd722d87bed7e2a1d203d0df8",
+   "rsrc_size": 14574,
+   "type": "rsrc"
+  },
+  {
+   "creator": "UnSh",
+   "data_sha256": "fa8972a08144db54bd8390ff0d5f9b8c8ad17f47025f003b3e906a4099150449",
+   "data_size": 39713,
+   "name": "unshar 1.11 folder/unshar.FAT",
+   "rsrc_sha256": "1773e0f0360a72c83382ca235ebfc851739beebff7fa2cd98b9d93bbddf38492",
+   "rsrc_size": 38724,
+   "type": "APPL"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "31189b9fb34286210dd219de7c23dcc8937e4c2ad84b59d5a487dc7e5cb40cf7",
+   "data_size": 21883,
+   "name": "unshar 1.11 folder/unshar.c",
+   "rsrc_sha256": "ee6ec3ba7f34b33a286441ee2a5a00ee5cbb27212b26fd87a3707e56f93a23f7",
+   "rsrc_size": 625,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MPS ",
+   "data_sha256": "91bc058785db281ac97e1c8e57e90c4c529cd3ba5fe7c60ddd5100da3a1ee88e",
+   "data_size": 2961,
+   "name": "unshar 1.11 folder/unshar.make",
+   "rsrc_sha256": "69823e4cddda397a7793bc8e560195ee47d4499a8068ffa16220c4c4c3e21699",
+   "rsrc_size": 581,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-unshar_1.11_folder.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "3a8aa1c616c6df481c1dd82f33ce6ffdc020e714e4f2f89719e377cb1943ad46",
+ "size": 84532
+}

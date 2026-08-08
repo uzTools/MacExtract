@@ -79,7 +79,7 @@
  ],
  "fixture": "derived-People_Lister_1.1-Sv.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "04c03d4ae92cab7f2a5d379f530ed049f35d176ee4dc5dc8794b2e9bf52933ec",
  "size": 162393
 }

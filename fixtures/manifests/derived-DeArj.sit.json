@@ -25,7 +25,7 @@
  ],
  "fixture": "derived-DeArj.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "d72dc35f24f467312ab8085032d50df78190a66cc063f9860768aad6b04a79de",
  "size": 14776
 }

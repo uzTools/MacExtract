@@ -2,21 +2,21 @@
  "entries": [
   {
    "creator": "GWLL",
-   "data_sha256": "49ee2c6ccf42b673b72f4285eb2e86387f6cdf2449fa655b50ca963bc43ae24e",
-   "data_size": 92560,
-   "name": "Continuum Galaxy",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0,
-   "type": "PLNT"
-  },
-  {
-   "creator": "GWLL",
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Continuum",
    "rsrc_sha256": "fc9e44268e8bb29fe0281ed2d2eb357e5119bb9d400990fe30796e216acc3664",
    "rsrc_size": 109087,
    "type": "APPL"
+  },
+  {
+   "creator": "GWLL",
+   "data_sha256": "49ee2c6ccf42b673b72f4285eb2e86387f6cdf2449fa655b50ca963bc43ae24e",
+   "data_size": 92560,
+   "name": "Continuum Galaxy",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "PLNT"
   },
   {
    "creator": "MACA",
@@ -30,7 +30,7 @@
  ],
  "fixture": "derived-Continuum1.03.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "dcee1caed9261f4ce1b79d93b6507f6dffd077e3e8df824b196bda1ad8263bb4",
  "size": 137485
 }

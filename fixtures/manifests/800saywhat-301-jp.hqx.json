@@ -12,7 +12,7 @@
  ],
  "fixture": "800saywhat-301-jp.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "00dfbc3f9405caa2fc46e4a515568c5ec5c5adc9ea0cbecb42f33ffa7bcde9b9",
  "size": 123700
 }

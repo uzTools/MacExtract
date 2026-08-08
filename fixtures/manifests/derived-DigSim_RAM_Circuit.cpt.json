@@ -93,7 +93,7 @@
  ],
  "fixture": "derived-DigSim_RAM_Circuit.cpt",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "61f3fbe26433a570cc0f96b93770900105ca05dae77b73e8f0fba300648acf95",
  "size": 4397
 }

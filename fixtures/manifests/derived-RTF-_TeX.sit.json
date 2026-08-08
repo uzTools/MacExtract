@@ -52,7 +52,7 @@
  ],
  "fixture": "derived-RTF-_TeX.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "7b071cb4f9a32ada5204862511976c7788affccdb4df1bb8709d2b6c4cbbf5f6",
  "size": 99217
 }

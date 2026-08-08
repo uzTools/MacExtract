@@ -1,15 +1,6 @@
 {
  "entries": [
   {
-   "creator": "MSWD",
-   "data_sha256": "0364c20ef3975ce4cbab3b92661d38c684beb91ef05d0f34152766f8d4ac78ad",
-   "data_size": 18944,
-   "name": "LeeMail 1.1 Docs",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0,
-   "type": "WDBN"
-  },
-  {
    "creator": "Ther",
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
@@ -17,11 +8,20 @@
    "rsrc_sha256": "38bcd230de84e997118a240af7409ba6f3a6acf2d54db05e27f17ce82ae78040",
    "rsrc_size": 128329,
    "type": "APPL"
+  },
+  {
+   "creator": "MSWD",
+   "data_sha256": "0364c20ef3975ce4cbab3b92661d38c684beb91ef05d0f34152766f8d4ac78ad",
+   "data_size": 18944,
+   "name": "LeeMail 1.1 Docs",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "WDBN"
   }
  ],
  "fixture": "derived-LeeMail1.1.sea",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "7d84a612b7835affdf5f82dca1db1ba17009c81a3220100825b5b9b202a0e47a",
  "size": 69744
 }

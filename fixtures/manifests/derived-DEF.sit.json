@@ -12,7 +12,7 @@
  ],
  "fixture": "derived-DEF.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "0e69441f46a94986766bcddf3be5b93a23e038020f2d2dad9dc7b426b954bba8",
  "size": 12573
 }

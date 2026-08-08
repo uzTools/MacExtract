@@ -12,7 +12,7 @@
  ],
  "fixture": "ds-to-qif-converter.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "d40ff4c81bc07fb6d4d911c9d64ee77aefa4394417cbae254ffcd511aeba9a5d",
  "size": 53304
 }

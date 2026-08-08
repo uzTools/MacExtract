@@ -2,21 +2,21 @@
  "entries": [
   {
    "creator": "????",
-   "data_sha256": "c7b6ed7e22e3667e521804c42c120722f62f11af07fc2e6a9790b1968f309ca6",
-   "data_size": 12197,
-   "name": "DandStoQIF2.c",
-   "rsrc_sha256": "a15ffeae8975f9c9212a4c8d97f85e3b103cedc9cccffc4dc4e30197daf9cb6a",
-   "rsrc_size": 430,
-   "type": "TEXT"
-  },
-  {
-   "creator": "????",
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "DandStoQIF2",
    "rsrc_sha256": "62c3afcd4def1598a1878a3d15dbcf08d4356f2d9b18e1c7cfb106458d52eac6",
    "rsrc_size": 23846,
    "type": "APPL"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "c7b6ed7e22e3667e521804c42c120722f62f11af07fc2e6a9790b1968f309ca6",
+   "data_size": 12197,
+   "name": "DandStoQIF2.c",
+   "rsrc_sha256": "a15ffeae8975f9c9212a4c8d97f85e3b103cedc9cccffc4dc4e30197daf9cb6a",
+   "rsrc_size": 430,
+   "type": "TEXT"
   },
   {
    "creator": "MACA",
@@ -30,7 +30,7 @@
  ],
  "fixture": "derived-DandStoQIF2.sea",
  "format": "DiskDoubler",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "936e6d8715776addb0870bedf3b35e811cf2b94f8e31f3feb6c41cb69b4d58a1",
  "size": 30562
 }

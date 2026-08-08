@@ -32,15 +32,6 @@
    "type": "TEXT"
   },
   {
-   "creator": "REGO",
-   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "data_size": 0,
-   "name": "Look Mom, No Hands! 1.5.1/Register Online",
-   "rsrc_sha256": "0aa98df21b0c4b0fc7645b4073a8cfe18ba0817fc05e8a7136314220c543c22b",
-   "rsrc_size": 13639,
-   "type": "APPL"
-  },
-  {
    "creator": "Regi",
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
@@ -48,11 +39,20 @@
    "rsrc_sha256": "2e81634d76c782caeeb3c85a3da281766fe05362b634a9416082b87f40a142a8",
    "rsrc_size": 95353,
    "type": "APPL"
+  },
+  {
+   "creator": "REGO",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Look Mom, No Hands! 1.5.1/Register Online",
+   "rsrc_sha256": "0aa98df21b0c4b0fc7645b4073a8cfe18ba0817fc05e8a7136314220c543c22b",
+   "rsrc_size": 13639,
+   "type": "APPL"
   }
  ],
  "fixture": "derived-Look_Mom__No_Hands__1.5.1.s.1",
  "format": "StuffIt 5",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "916e118cda3ec16a0eef3ffdc55ab6b92b7077c6dbd13f757395e6de32b99b26",
  "size": 66579
 }

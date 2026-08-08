@@ -12,7 +12,7 @@
  ],
  "fixture": "pc-errors-and-help-11-hc.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "abf5e77a7aa148269db620412eaa5af5d966538812884f504620ceb85667780b",
  "size": 82841
 }

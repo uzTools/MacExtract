@@ -12,7 +12,7 @@
  ],
  "fixture": "mac-to-vax-hc.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "e48aee5958d394457a7c1206dc76536809addd38be0cf5df8cb7853377fa3086",
  "size": 73136
 }

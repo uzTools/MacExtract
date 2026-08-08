@@ -25,7 +25,7 @@
  ],
  "fixture": "derived-Delta_Image_0.9b8.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "9421259a55ceaf24a0c7026aca25684297ffae3b91bb55a9b25afd51235b7185",
  "size": 24993
 }

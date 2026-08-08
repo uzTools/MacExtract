@@ -12,7 +12,7 @@
  ],
  "fixture": "cool-tools-101.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "c9e41245a15cf196f8b03ff287c752e0eab7b99df8b2e48dc566ff31cc90bbda",
  "size": 297154
 }

@@ -25,7 +25,7 @@
  ],
  "fixture": "derived-Clock.sea",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "1e5e5261c359b8c07d30070b9d9b7442cfc57ab42774fdfb2e7ab0cd66c1a770",
  "size": 13699
 }

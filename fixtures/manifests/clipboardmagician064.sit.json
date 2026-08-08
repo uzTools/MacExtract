@@ -12,7 +12,7 @@
  ],
  "fixture": "clipboardmagician064.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "5d616d957b1478cf36ea8dcfe70bea17d4b5cac84b79dd96243ec6fbebc7cccd",
  "size": 134272
 }

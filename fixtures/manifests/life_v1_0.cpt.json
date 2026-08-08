@@ -25,7 +25,7 @@
  ],
  "fixture": "life_v1_0.cpt",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "a142d55e1153054d207a7dc6792c01ebf1d287cd0c125a2169af8cb45f6c4574",
  "size": 45394
 }

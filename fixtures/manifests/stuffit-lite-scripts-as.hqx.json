@@ -12,7 +12,7 @@
  ],
  "fixture": "stuffit-lite-scripts-as.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "3e74b175519f261463f0fe691d24adebd5253c88442ccc9474e25bed4bd5fc2a",
  "size": 28836
 }

@@ -12,7 +12,7 @@
  ],
  "fixture": "pkgtranslator.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "db42f459776c3bc5de3f9228da482cf7c9377788705fcbcc75a9cc17cc29348a",
  "size": 40064
 }

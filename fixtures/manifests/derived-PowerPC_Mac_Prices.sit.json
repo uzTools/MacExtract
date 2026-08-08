@@ -21,7 +21,7 @@
  ],
  "fixture": "derived-PowerPC_Mac_Prices.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "bd3f511032cada7e24fc8fcf540daa1a1f703aa46a7703370f816a1c41e47eda",
  "size": 4669
 }

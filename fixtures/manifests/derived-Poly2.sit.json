@@ -12,7 +12,7 @@
  ],
  "fixture": "derived-Poly2.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "784f28bf62c229a2681c1722a4b32ee46395257d9b25956fc3bfcd39cbbef224",
  "size": 143253
 }

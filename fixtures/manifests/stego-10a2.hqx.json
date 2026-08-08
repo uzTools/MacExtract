@@ -12,7 +12,7 @@
  ],
  "fixture": "stego-10a2.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "48148ad84064299a79915b94b0a48cfd74228a1b6a742a760cd793abbb55af6c",
  "size": 267178
 }

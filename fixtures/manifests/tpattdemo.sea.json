@@ -12,7 +12,7 @@
  ],
  "fixture": "tpattdemo.sea",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "b81ce9de4aed9a53ea5510dba0bd076af3be75a53adb641aa9c614b338c8d688",
  "size": 209536
 }

@@ -21,7 +21,7 @@
  ],
  "fixture": "derived-naffs7.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "1ffabbaaf3526907456d933f48b391b0c85399513c21b274afa44e3d4f51bfb8",
  "size": 8439
 }

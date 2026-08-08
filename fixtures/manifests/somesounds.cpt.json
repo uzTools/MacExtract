@@ -12,7 +12,7 @@
  ],
  "fixture": "somesounds.cpt",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "01f9ec8eec59bea94aaaab7a83862922e4675ea3dc6d6f8d02b33708c85aa2ba",
  "size": 109440
 }

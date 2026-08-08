@@ -12,7 +12,7 @@
  ],
  "fixture": "sndpatch2.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "cc8c3b7ea94c658a0f23727d68f79df44222c6850f450e4805acef8a0f9890e9",
  "size": 64511
 }

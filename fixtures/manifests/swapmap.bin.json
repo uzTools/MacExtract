@@ -12,7 +12,7 @@
  ],
  "fixture": "swapmap.bin",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "8961fd04be131f99e0483596613df4582d7c388d7139b6917a2fbb8a732c1966",
  "size": 1148
 }

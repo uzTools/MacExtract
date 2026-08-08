@@ -12,7 +12,7 @@
  ],
  "fixture": "diskfit20df.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "552687f3d00eed5e8c46c1c1978bb0d1dc2090c3563aa710215f6fc0fea5c46e",
  "size": 208896
 }

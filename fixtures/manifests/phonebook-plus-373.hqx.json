@@ -12,7 +12,7 @@
  ],
  "fixture": "phonebook-plus-373.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "ac1ebe1abd6d11302a3e7b52faeac233cb3fbf8051813806e3dead220090920a",
  "size": 301334
 }

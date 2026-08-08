@@ -43,7 +43,7 @@
  ],
  "fixture": "derived-CRLF-120-sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "29861b601255b60dccebfdbb1fd71a3160fa5659341aa64beb3f688fd2b7b28a",
  "size": 20935
 }

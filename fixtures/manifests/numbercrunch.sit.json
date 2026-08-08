@@ -12,7 +12,7 @@
  ],
  "fixture": "numbercrunch.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "272a823d3156a70bed11719f0bb40c6324c5fcf1c63f955d8f92b662b4fb63c4",
  "size": 65915
 }

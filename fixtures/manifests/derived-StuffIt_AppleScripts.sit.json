@@ -39,7 +39,7 @@
  ],
  "fixture": "derived-StuffIt_AppleScripts.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "865d574e7b1ff723f47daa8ea96dfb2ee236767612436443db22e969a335f354",
  "size": 20075
 }

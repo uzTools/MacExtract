@@ -21,7 +21,7 @@
  ],
  "fixture": "derived-tar.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "ce8b0d8d34b1b1756fee648ddf4aa012009527d835b8752d40243ffeae574e3a",
  "size": 29780
 }

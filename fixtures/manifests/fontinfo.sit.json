@@ -12,7 +12,7 @@
  ],
  "fixture": "fontinfo.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "5d8b0e139406ae8bb0d24d419eb149c07645c122e55535a64f1e0cc0076573df",
  "size": 17891
 }

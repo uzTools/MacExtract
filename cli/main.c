@@ -9,6 +9,7 @@
  *   -o <dir>       output directory (default .)
  *   --budget <N>   allocation cap in bytes (simulate a small Mac)
  *   --raw-names    emit raw MacRoman bytes instead of UTF-8 names
+ *   --forks <visible|hidden>  resource-fork sidecar naming
  *   -f <format>    force format (name from `unclassic formats`)
  *
  * The CLI is the only place libc I/O and malloc are used; the engine
@@ -180,6 +181,7 @@ typedef struct {
     int         list_only;
     int         test_only;
     int         raw_names;
+    int         hidden_forks;   /* "._NAME" sidecars, not "NAME.rsrc" */
     int         mac_encoding;   /* names are MacRoman */
     int         verbose;
     FILE       *data_f, *rsrc_f;
@@ -263,13 +265,35 @@ static int sink_begin(void *ctx, const UncEntryInfo *info)
     return 0;
 }
 
+/* Resource-fork sidecar path for a data path, under the convention the
+ * caller chose: "NAME.rsrc" (default, and what unar -k visible writes)
+ * or "._NAME" (unar -k hidden). The suffix form is ambiguous whenever
+ * an archive holds both "X" and "X.rsrc" — a THINK C project is that
+ * shape — so the differential harness uses the prefix form, whose
+ * namespace is disjoint from real archive names.
+ * DECISIONS.md, 2026-08-08. */
+static void rsrc_path(const char *path, int hidden, char *out, size_t outsz)
+{
+    const char *slash;
+    if (!hidden) {
+        snprintf(out, outsz, "%s.rsrc", path);
+        return;
+    }
+    slash = strrchr(path, '/');
+    if (slash)
+        snprintf(out, outsz, "%.*s._%s", (int)(slash - path + 1), path,
+                 slash + 1);
+    else
+        snprintf(out, outsz, "._%s", path);
+}
+
 static FILE *sink_open_fork(DiskSink *s, UncFork fork)
 {
     char path[1100];
     if (fork == UNC_FORK_DATA)
         snprintf(path, sizeof path, "%s", s->cur_path);
     else
-        snprintf(path, sizeof path, "%s.rsrc", s->cur_path);
+        rsrc_path(s->cur_path, s->hidden_forks, path, sizeof path);
     return fopen(path, "wb");
 }
 
@@ -366,6 +390,8 @@ static void usage(void)
         "  -o <dir>       output directory (default .)\n"
         "  --budget <N>   allocation cap in bytes\n"
         "  --raw-names    keep raw MacRoman bytes in filenames\n"
+        "  --forks <visible|hidden>  resource forks as NAME.rsrc "
+        "(default) or ._NAME\n"
         "  -nr            do not auto-unwrap envelope layers (.sit.hqx, ...)\n"
         "  --stats        print allocator statistics\n"
         "  -f <format>    force format\n"
@@ -375,7 +401,7 @@ static void usage(void)
 int main(int argc, char **argv)
 {
     const char *cmd, *file = NULL, *outdir = ".", *force = NULL;
-    int raw_names = 0, verbose = 0, stats = 0;
+    int raw_names = 0, verbose = 0, stats = 0, hidden_forks = 0;
     uint32_t budget = 0;
     int i;
 
@@ -401,6 +427,12 @@ int main(int argc, char **argv)
         else if (strcmp(argv[i], "--budget") == 0 && i + 1 < argc)
             budget = (uint32_t)strtoul(argv[++i], NULL, 0);
         else if (strcmp(argv[i], "--raw-names") == 0) raw_names = 1;
+        else if (strcmp(argv[i], "--forks") == 0 && i + 1 < argc) {
+            const char *k = argv[++i];
+            if (strcmp(k, "hidden") == 0) hidden_forks = 1;
+            else if (strcmp(k, "visible") == 0) hidden_forks = 0;
+            else { usage(); return 2; }
+        }
         else if (strcmp(argv[i], "-nr") == 0) no_recurse = 1;
         else if (strcmp(argv[i], "--stats") == 0) stats = 1;
         else if (strcmp(argv[i], "-f") == 0 && i + 1 < argc) force = argv[++i];
@@ -438,6 +470,7 @@ nextlayer:
     memset(&sink, 0, sizeof sink);
     sink.outdir = outdir;
     sink.raw_names = raw_names;
+    sink.hidden_forks = hidden_forks;
     sink.verbose = verbose;
 
     sk.ctx = &sink;
@@ -538,7 +571,7 @@ nextlayer:
     if (delfile[0]) {
         char rp[1100];
         remove(delfile);
-        snprintf(rp, sizeof rp, "%s.rsrc", delfile);
+        rsrc_path(delfile, hidden_forks, rp, sizeof rp);
         remove(rp);
         delfile[0] = 0;
     }

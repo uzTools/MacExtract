@@ -12,7 +12,7 @@
  ],
  "fixture": "playground.sea",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "ae9fef554876285d951ca19f358eb23580af74b64ae074572dbb34abf1574969",
  "size": 85760
 }

@@ -48,7 +48,7 @@
  ],
  "fixture": "synth-packit-3.pit",
  "format": "PackIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "3102287e41ab3fa714b8a2a0a62e00319773b95f7333f169dbb7769c1e5c35f5",
  "size": 3381
 }

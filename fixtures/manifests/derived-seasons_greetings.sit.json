@@ -79,7 +79,7 @@
  ],
  "fixture": "derived-seasons_greetings.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "8cc2e3f647d6f2c69ef2e655562f98981525994a975af928dbce23551500d6a1",
  "size": 77966
 }

@@ -30,7 +30,7 @@
  ],
  "fixture": "derived-Easy_Envelopes_Plus_1.5c.Sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "d803711e44f9965a18730c40134821137fd89ac9d891292db75535a772e5a3e0",
  "size": 64819
 }

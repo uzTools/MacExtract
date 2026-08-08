@@ -12,7 +12,7 @@
  ],
  "fixture": "ssavefkey.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "f3332b1395d6a97591456dcf4607ded8e07722049e5dbaa8f9a0a6cdcb5ed433",
  "size": 3712
 }

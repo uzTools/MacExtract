@@ -12,7 +12,7 @@
  ],
  "fixture": "networktime101.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "4251506da6f525145e9e1640c39dca9809e0509604cbcd9d400677fdc2c6b42a",
  "size": 88320
 }

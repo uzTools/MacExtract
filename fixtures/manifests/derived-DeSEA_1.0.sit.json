@@ -1,15 +1,6 @@
 {
  "entries": [
   {
-   "creator": "ttxt",
-   "data_sha256": "9e24136b8068b96c7f0131465cbc243fa4eaf781190933b670858c0194293aa8",
-   "data_size": 3334,
-   "name": "DeSEA 1.0 Release Notes",
-   "rsrc_sha256": "352ee79947eafdf018202521c3104691e818615f62395171a153acdc9da72546",
-   "rsrc_size": 574,
-   "type": "TEXT"
-  },
-  {
    "creator": "dSEA",
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
@@ -17,11 +8,20 @@
    "rsrc_sha256": "c09b47a1d07bd8849a8d7e9562194feee4a09d6f7079159adc53f7fc00744a1d",
    "rsrc_size": 19436,
    "type": "APPL"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "9e24136b8068b96c7f0131465cbc243fa4eaf781190933b670858c0194293aa8",
+   "data_size": 3334,
+   "name": "DeSEA 1.0 Release Notes",
+   "rsrc_sha256": "352ee79947eafdf018202521c3104691e818615f62395171a153acdc9da72546",
+   "rsrc_size": 574,
+   "type": "TEXT"
   }
  ],
  "fixture": "derived-DeSEA_1.0.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "3ec517accb7a8552ba62c9a8ba5743e18c8532a519918d27d46868a074dccf49",
  "size": 16401
 }

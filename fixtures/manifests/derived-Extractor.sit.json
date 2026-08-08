@@ -12,7 +12,7 @@
  ],
  "fixture": "derived-Extractor.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "8cef3e7ce79a43b67f547c3fc3514ac3f5ae6ca186d7e01a1f1d1dc5dce16c58",
  "size": 19223
 }

@@ -21,7 +21,7 @@
  ],
  "fixture": "derived-Tron2.1.cpt",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "90e72e8d90650d8339f05299781f155bbc66293a9ae1fe76f42633f34d59ce31",
  "size": 100349
 }

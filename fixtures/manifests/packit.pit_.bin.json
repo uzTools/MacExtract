@@ -12,7 +12,7 @@
  ],
  "fixture": "packit.pit_.bin",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "34ca0afcc6feae8e7aae7df4a948e6544d1f0958c2b930bd3edcb1cd0187fbe4",
  "size": 62080
 }

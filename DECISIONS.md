@@ -51,9 +51,13 @@ Non-obvious decisions, most recent last.
 - **Oracle output is not blindly trusted:** `unar` (GNUstep build)
   mishandles resource forks when it cannot append `.rsrc` to a name
   (leading `~`, seen with `lipservice.bin` — our extraction was correct,
-  the oracle's was not). `make_manifests.py` now refuses to build a
-  manifest when unar prints `cannot append extension`; such fixtures
-  stay in the corpus for robustness testing only.
+  the oracle's was not). `make_manifests.py` refuses to build a
+  manifest when unar prints `cannot append extension`.
+  **Narrowed 2026-08-08:** this is a `-k visible` bug — it is the
+  *appending* that GNUstep refuses — and manifests are now built with
+  `-k hidden`, under which `lipservice.bin` is ground truth like any
+  other fixture. The refusal stays as a guard for a mode that should no
+  longer be reachable.
 - **MacBinary II/III CRC fallback:** XADMaster also accepts a
   CRC-16/USB-style checksum (reflected poly 0xA001, init/xor 0xFFFF)
   from buggy encoders; transcribed as a bitwise loop rather than a
@@ -104,9 +108,10 @@ Non-obvious decisions, most recent last.
 - **lsar JSON is parsed with `strict=False`:** its output can embed
   raw control bytes (binary `XADNextSolidEntry` values in PackIt
   archives), which the default Python JSON parser rejects.
-- **Manifest builder synthesizes entries for orphan `.rsrc` sidecars**
+- **Manifest builder synthesizes entries for orphan sidecars**
   (resource-only entries: unar writes nothing for a 0-byte data fork,
-  so the data file is absent and only `<name>.rsrc` exists).
+  so the data file is absent and only the sidecar — `._<name>` since
+  2026-08-08, `<name>.rsrc` before it — exists).
 
 ## M4
 
@@ -134,12 +139,15 @@ Non-obvious decisions, most recent last.
   0x81 that would be the final output byte is a literal; 0x81 0x81
   emits a literal 0x81 while staying escaped; 0x81 0x82 0x00 is a
   literal "0x81 0x82". The 106-fixture corpus exercises all of them.
-- **Oracle output can be structurally undecidable:** archives holding
-  both "X" and "X.rsrc" as real entries (THINK C projects) cannot be
-  represented with the ".rsrc"-sidecar convention — one clobbers the
-  other, for unar and for us. make_manifests.py detects the collision
-  in lsar metadata and refuses (derived-BootTime.cpt,
-  derived-GNU_Chess_3.0.cpt stay corpus-only).
+- **~~Oracle output can be structurally undecidable~~ — WITHDRAWN
+  2026-08-08.** Claimed: archives holding both "X" and "X.rsrc" as real
+  entries (THINK C projects) cannot be represented at all, so
+  `derived-BootTime.cpt` and `derived-GNU_Chess_3.0.cpt` stay
+  corpus-only. True of the `.rsrc`-suffix convention, and it was the
+  convention that was chosen, not a property of the archives:
+  `unar -k hidden` and `unclassic --forks hidden` name the sidecar
+  `._X`, which collides with nothing. Both fixtures now have manifests.
+  BLOCKERS.md *Withdrawn claims*; DECISIONS.md 2026-08-08.
 - **`UncBufIn.limit`** bounds every compressed fork substream so
   corrupt streams cannot read into unrelated bytes — mirrors
   XADMaster's bounded sub-handles.
@@ -187,11 +195,13 @@ Non-obvious decisions, most recent last.
   raises a checksum exception at the same point).
 - **`~`-name oracle bug generalized:** GNUstep unar can silently write
   the AppleDouble container INTO the data-fork filename (no warning
-  printed). make_manifests.py now rejects any data fork that begins
-  with the AppleDouble magic and has no sidecar (caught
-  derived-020_Simulator.sit). Five more fixtures dropped as
-  .rsrc-collision undecidable (BitMap11, The_Journal, TogSndVol,
-  Unzip101, unshar_1.11).
+  printed), caught on derived-020_Simulator.sit; five more fixtures
+  were dropped as .rsrc-collision undecidable (BitMap11, The_Journal,
+  TogSndVol, Unzip101, unshar_1.11). **All six recovered 2026-08-08**
+  when manifests moved to `-k hidden`: both defects belonged to the
+  suffix convention. The AppleDouble-as-data-fork guard is replaced by
+  its stronger form — every `._` sidecar must parse as an AppleDouble
+  container, or the fixture is refused.
 
 ## M7
 
@@ -1472,3 +1482,54 @@ v0.5**: a deploy-key push may add files under `.github/workflows/` (the
 workflow-scope restriction applies to PATs over HTTPS, not SSH), and a
 deploy-key tag push does trigger a workflow (the no-recursion rule applies to
 `GITHUB_TOKEN`-driven events).
+
+## 2026-08-08 — the undecidability was the oracle's fork convention, not the archives
+
+Nine fixtures had no manifest and were recorded as ground truth the oracle
+could not produce. Both reasons were properties of one flag, `unar -k visible`:
+
+- Seven held an entry `X` and an entry `X.rsrc` (a THINK C project is exactly
+  that shape). Under the `.rsrc` suffix convention one entry's sidecar is
+  another entry's name, so the extraction tree cannot say which is which.
+- Two had a leading `~` in a name. GNUstep's `stringByAppendingPathExtension:`
+  refuses that, and unar then writes the AppleDouble container into the
+  *data*-fork filename — sometimes without printing the warning the manifest
+  builder guarded on.
+
+`unar -k hidden` names the container `._NAME`. Prefixing never calls the path
+code that fails, and the `._` namespace is disjoint from real archive names.
+All nine build cleanly, and the differential suite goes 769 → 778.
+
+**The manifest never encoded the convention** — it stores entry names and
+per-fork hashes — so this changes the measuring apparatus, not the ground
+truth. Rebuilding all 774 pre-existing manifests confirmed it: entry for
+entry identical, only the recorded `oracle` string differs. The two
+conventions agreed everywhere both could speak, and differed only where one
+of them could not speak at all.
+
+The CLI needed `--forks hidden` for the same reason: `unclassic` wrote
+`NAME.rsrc` too, so the harness had been comparing two trees written in the
+same ambiguous encoding — a mistake inside that encoding could cancel out
+between them. The default stays `visible`, matching unar; the harnesses pass
+the flag.
+
+**Transferable: "structurally undecidable" was a claim about the tool's output
+format, and it was applied to the data.** The archives always contained the
+answer. `unar --help` documents the alternative, and TESTING.md quoted the
+line that names it — the sentence describing the limitation sat one paragraph
+from its own remedy, from M1 on 2026-07-23 until now. Before recording
+something as impossible, check whether it is impossible *under a flag you
+chose*.
+
+Two things this does not reach. The Mac tiers still read `<X>.rsrc` sidecars
+(`vmac_check.py`, `checkdisk.py`), so the nine cannot simply be added to the
+on-Mac sample without teaching those readers the same lesson; nothing does
+that today. And a CLI user who does not pass `--forks hidden` still gets the
+silent clobber on a THINK C archive (OPEN_ITEMS.md).
+
+**The trap on the way in.** Under `-k hidden` a resource-only entry produces
+only `._X` and no data file, which reads exactly like a dropped data fork —
+and one of the two `~` fixtures is that shape, so a careless reading would
+have "confirmed" the very bug being escaped. It is an empty data fork:
+`lsar` reports the single entry with `XADIsResourceFork: 1`, and the container
+holds ids 9 and 2 only. Checked before believing, on all nine.

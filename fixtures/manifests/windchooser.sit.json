@@ -12,7 +12,7 @@
  ],
  "fixture": "windchooser.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "d7c06c519403a7741c21830116888e76717f240a8128541f95ca15e5e64ece41",
  "size": 23769
 }

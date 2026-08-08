@@ -1,0 +1,76 @@
+{
+ "entries": [
+  {
+   "creator": "MACA",
+   "data_sha256": "c38de78d8d95fd7f06d46399c4e77b50a75b31a0a2fec82ad2daebee6c7d5f85",
+   "data_size": 4951,
+   "name": "About UnZip 1.01",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "is_dir": true,
+   "name": "Source"
+  },
+  {
+   "creator": "KAHL",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Source/UnZip.π",
+   "rsrc_sha256": "4dae6250922e088c4fdb047c8f242b50b489470ec27eb5f647fa5c8e3ba5c67a",
+   "rsrc_size": 7048,
+   "type": "PROJ"
+  },
+  {
+   "creator": "desp",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Source/UnZip.π.rsrc",
+   "rsrc_sha256": "4bde04f7d07ac8f572466670677ac1785a9413cad6b5f3de6a16b582a71fb94f",
+   "rsrc_size": 5656,
+   "type": "rsrc"
+  },
+  {
+   "creator": "KAHL",
+   "data_sha256": "c41e9fcd55f57d01d20a5b70c3965d4cccded4f766b83878b9d9f88aa144fdbd",
+   "data_size": 9541,
+   "name": "Source/crc32.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "KAHL",
+   "data_sha256": "54f620ff17b6fb86acf3df6a6e7297c964b45fd67ee342d65d632d903f1c2e25",
+   "data_size": 132,
+   "name": "Source/crc32.h",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "KAHL",
+   "data_sha256": "aaa270b1642364ada4e9c221c90c994f1d6577a1c68c829560f20087cad79c67",
+   "data_size": 42142,
+   "name": "Source/unzip.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "pZIP",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "UnZip 1.01",
+   "rsrc_sha256": "b610397f992121071e85e3c9f5f025efbb715cf0c63db903147151858df1978d",
+   "rsrc_size": 47390,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "derived-Unzip101.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "b6c169b039b875459864c3490ca9fa188808a0e27b8bfffb01f4163ac23e00d5",
+ "size": 72818
+}

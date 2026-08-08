@@ -12,7 +12,7 @@
  ],
  "fixture": "derived-Mystic_8-Ball.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "e8e80cb6fd3a491072028c5af9d8021590d9d9be6b9cd6b9b05b8df4f190c130",
  "size": 219363
 }

@@ -12,7 +12,7 @@
  ],
  "fixture": "initshare.bin",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "7f724cbc42e896010135830050f64f4703880a7d5aeefde70222815283ec2229",
  "size": 2700
 }

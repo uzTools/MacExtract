@@ -1,8 +1,13 @@
 {
  "entries": [
   {
-   "is_dir": true,
-   "name": "GREPFileRename 1.0ƒ"
+   "creator": "dplt",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "GREPFileRename 1.01",
+   "rsrc_sha256": "a64476348969c87963b5c5ca721415a8dfd0f207e7d4da48715305ceaf97cbba",
+   "rsrc_size": 18663,
+   "type": "APPL"
   },
   {
    "creator": "cArD",
@@ -14,18 +19,13 @@
    "type": "APPL"
   },
   {
-   "creator": "dplt",
-   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "data_size": 0,
-   "name": "GREPFileRename 1.01",
-   "rsrc_sha256": "a64476348969c87963b5c5ca721415a8dfd0f207e7d4da48715305ceaf97cbba",
-   "rsrc_size": 18663,
-   "type": "APPL"
+   "is_dir": true,
+   "name": "GREPFileRename 1.0ƒ"
   }
  ],
  "fixture": "derived-GREPFileRename_1.01_.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "5e22dc9b1c1f307f4cefabe68a527bbadf331321c3c71cdbac0d09745c8785c1",
  "size": 22924
 }

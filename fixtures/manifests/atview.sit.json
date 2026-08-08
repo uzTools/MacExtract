@@ -12,7 +12,7 @@
  ],
  "fixture": "atview.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "7ef01e43ef6588ec31b8bf369b6695e90bc6acf41905262cad1cd9d8bf33e978",
  "size": 9912
 }

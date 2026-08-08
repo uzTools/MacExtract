@@ -12,7 +12,7 @@
  ],
  "fixture": "key-graphics.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "7249bd0e80eddbfadbec0b9ee60dfe7d05e364158e20b9dfca9f854c02cc7905",
  "size": 6969
 }

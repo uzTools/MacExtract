@@ -12,7 +12,7 @@
  ],
  "fixture": "derived-Mac_ASCII.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "7205d9ef742a800830d103faf6e667ff54295e3b316e5246587a4763a78236bf",
  "size": 35031
 }

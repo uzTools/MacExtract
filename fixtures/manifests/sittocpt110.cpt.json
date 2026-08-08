@@ -12,7 +12,7 @@
  ],
  "fixture": "sittocpt110.cpt",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "acc8214b4bcdf5b21818e300b4a15f1ec3978267d016d586ef0d153f2c3d19bc",
  "size": 18560
 }

@@ -21,7 +21,7 @@
  ],
  "fixture": "derived-FI22.CPT",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "95105dfa32dece351b2c4514a1871c0d72593e92d4ee65ffb011a6e679100daf",
  "size": 48172
 }

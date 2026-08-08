@@ -25,7 +25,7 @@
  ],
  "fixture": "derived-MacErrors2.0_folder.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "e5f0e5822b9cca7b96a458546710ac37e5f5177e87b65f418598c1f9108249be",
  "size": 44098
 }

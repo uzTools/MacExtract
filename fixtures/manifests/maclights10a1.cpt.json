@@ -12,7 +12,7 @@
  ],
  "fixture": "maclights10a1.cpt",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "2d2eadff27ed8e8d7c8818c4bb1e68cbb923a77df9331ecb59ad6914bd41bcdf",
  "size": 12928
 }

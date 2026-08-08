@@ -5,10 +5,6 @@
    "name": "Timbuktu IAD Actions"
   },
   {
-   "is_dir": true,
-   "name": "Timbuktu IAD Actions/images"
-  },
-  {
    "creator": "std6",
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
@@ -81,6 +77,10 @@
    "type": "TEXT"
   },
   {
+   "is_dir": true,
+   "name": "Timbuktu IAD Actions/images"
+  },
+  {
    "creator": "GKON",
    "data_sha256": "a8a9d882ccf397750243bdc832e47dd59f8dda67562207a827a789e9debe8eb7",
    "data_size": 6301,
@@ -128,7 +128,7 @@
  ],
  "fixture": "derived-TimbuktuIADActions1.0b1.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "16095e53c45a2a1315b700b26750050cdc4d45c788cb618e5e729e0b36dd5851",
  "size": 74189
 }

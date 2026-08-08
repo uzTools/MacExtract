@@ -20,6 +20,15 @@
   },
   {
    "creator": "mcPT",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "MacPost",
+   "rsrc_sha256": "fb258a2cc5d2301b4aec3d6c5c97c23064b58c055f55602de500903d2e6d9bd0",
+   "rsrc_size": 149880,
+   "type": "APPL"
+  },
+  {
+   "creator": "mcPT",
    "data_sha256": "53a56bf48194f98eb7a2e4f1956c022117f5c0b986248b1428698019ee7b5441",
    "data_size": 6143,
    "name": "MacPost Release Notes",
@@ -37,15 +46,6 @@
    "type": "WORD"
   },
   {
-   "creator": "mcPT",
-   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "data_size": 0,
-   "name": "MacPost",
-   "rsrc_sha256": "fb258a2cc5d2301b4aec3d6c5c97c23064b58c055f55602de500903d2e6d9bd0",
-   "rsrc_size": 149880,
-   "type": "APPL"
-  },
-  {
    "creator": "MWII",
    "data_sha256": "cb3ca54775b17c8112dbb3aaf3ae523127a9416b37da28f73adff6cda7e0bc14",
    "data_size": 4999,
@@ -57,7 +57,7 @@
  ],
  "fixture": "derived-MacPost-Client-SW-1.0b6.cpt",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "f3bc7a1a2e9a269b695d126e57ab6dd7adfda2c81918d805063b746ba24727e9",
  "size": 150033
 }

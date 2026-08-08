@@ -12,7 +12,7 @@
  ],
  "fixture": "afe-appleworks-msworks.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "85e18bb2ed1774b399244bc8cca6227a005b77f46ccce2ced65f5ed2f27dd558",
  "size": 11004
 }

@@ -12,7 +12,7 @@
  ],
  "fixture": "psiwp16.bin",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "3d6153193f52a70b6754a96c5e46f8ac28144c1cf2faa85072d248e0fb7dbfdd",
  "size": 72064
 }

@@ -12,7 +12,7 @@
  ],
  "fixture": "botdocs.cpt",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "5bce782fc78252424442b632775fbc48418006e50ff63ccf525b9405dfcb5ecf",
  "size": 99584
 }

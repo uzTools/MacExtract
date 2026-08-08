@@ -1,15 +1,6 @@
 {
  "entries": [
   {
-   "creator": "MSWD",
-   "data_sha256": "1e401c5948b0649cd94ba2ec4bb3c5eefe7f8a3278eeb09d79084e0dd0d11c2f",
-   "data_size": 581,
-   "name": "Auditor ReadME!",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0,
-   "type": "TEXT"
-  },
-  {
    "creator": "CHKR",
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
@@ -17,11 +8,20 @@
    "rsrc_sha256": "e6794faa7dc85cab07eea8c8622eea8b19ddcdf80cd3ba76f994ff2791fcabf2",
    "rsrc_size": 27745,
    "type": "APPL"
+  },
+  {
+   "creator": "MSWD",
+   "data_sha256": "1e401c5948b0649cd94ba2ec4bb3c5eefe7f8a3278eeb09d79084e0dd0d11c2f",
+   "data_size": 581,
+   "name": "Auditor ReadME!",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
   }
  ],
  "fixture": "derived-Auditor.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "9f81b711ea950fe0295cac39877fd735e68f437f899bf3f5235838683a1f07a8",
  "size": 20876
 }

@@ -12,7 +12,7 @@
  ],
  "fixture": "macvoglalpha1.cpt",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "f6fa4d8e535b50dd4e132c7c8b670e98a741741a808834cdd1bd39a22e3d418d",
  "size": 184448
 }

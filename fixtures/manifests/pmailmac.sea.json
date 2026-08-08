@@ -44,7 +44,7 @@
  ],
  "fixture": "pmailmac.sea",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "2698c114dc096fa90e80f831f9a48154fc2aeff789044adefd4d537eb45f35c0",
  "size": 138135
 }

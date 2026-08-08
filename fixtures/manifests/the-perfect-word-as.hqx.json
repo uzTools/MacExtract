@@ -12,7 +12,7 @@
  ],
  "fixture": "the-perfect-word-as.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "33d83ca74507f0eec1cf087d48062bd5af6b1c9d623c15340ea28e4f708ba0f4",
  "size": 23687
 }

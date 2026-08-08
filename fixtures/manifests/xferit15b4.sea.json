@@ -12,7 +12,7 @@
  ],
  "fixture": "xferit15b4.sea",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "566e46f98f8aa479697b533e78707ff39dc9bb377deb69cb437f016e52562e3f",
  "size": 298880
 }

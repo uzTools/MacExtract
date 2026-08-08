@@ -12,7 +12,7 @@
  ],
  "fixture": "dd-expand-40.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "5485390004eff5861ca665de401f12dd8dfa3e9b8ff591a983c8a108be761f7c",
  "size": 181395
 }

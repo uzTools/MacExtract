@@ -12,7 +12,7 @@
  ],
  "fixture": "flashit22b1.cpt",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "aa2378c5134f8cd849778058f252e15a0c131ec8ecdad035cff7187aa131c51f",
  "size": 49056
 }

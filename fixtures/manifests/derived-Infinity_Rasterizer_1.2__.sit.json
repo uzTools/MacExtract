@@ -70,7 +70,7 @@
  ],
  "fixture": "derived-Infinity_Rasterizer_1.2__.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "efde7c642d3ce82c41b4ff3cf7330975d986ee1b54cb400d7a8fa9c9f30fbfce",
  "size": 31248
 }

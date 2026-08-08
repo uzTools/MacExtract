@@ -12,7 +12,7 @@
  ],
  "fixture": "recipe10.cpt",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "423f4e0ec1931f96c7feb990c2c1564cbd0496d54e6a1a3fd08fdb93a4d87365",
  "size": 104832
 }

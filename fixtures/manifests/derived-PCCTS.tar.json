@@ -1,30 +1,6 @@
 {
  "entries": [
   {
-   "is_dir": true,
-   "name": "antlr"
-  },
-  {
-   "is_dir": true,
-   "name": "dlg"
-  },
-  {
-   "is_dir": true,
-   "name": "h"
-  },
-  {
-   "is_dir": true,
-   "name": "pascal"
-  },
-  {
-   "is_dir": true,
-   "name": "smallC"
-  },
-  {
-   "is_dir": true,
-   "name": "sym"
-  },
-  {
    "data_sha256": "e3aa8aa9855884f5b80874a93b5dc51f23323f0bac9e44e90bb8d09d5ac8157f",
    "data_size": 2487,
    "name": "READ_ME",
@@ -32,235 +8,8 @@
    "rsrc_size": 0
   },
   {
-   "data_sha256": "19da20b9353bb5f76ce527b70ac2e91fcbbb701385249876cfeffab72b3407c5",
-   "data_size": 7834,
-   "name": "sym/sym.c",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
-  },
-  {
-   "data_sha256": "dc11bb90b78e0d2f62512235ad891eaebf37d08ce9d17bc6ab7618d546b4da03",
-   "data_size": 241,
-   "name": "sym/sym.h",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
-  },
-  {
-   "data_sha256": "c66f330ad891a11cdffb65405eb41a7524227f125c51931f6a3b4e5e0b618514",
-   "data_size": 108,
-   "name": "smallC/fact.c",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
-  },
-  {
-   "data_sha256": "08ba24cf17f1f0e234cf982e373b2f2a0d1b3b22698b9b69eeec742f68695cea",
-   "data_size": 1474,
-   "name": "smallC/gen.c",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
-  },
-  {
-   "data_sha256": "625f28b12400ad6bde2e7894d1eb056f38315c2c1ba6a50b7efdcad1de34d156",
-   "data_size": 543,
-   "name": "smallC/gen.h",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
-  },
-  {
-   "data_sha256": "4ad39d20e7eade8ee25822276965a05e2389afb95c48fe28266e43958d615268",
-   "data_size": 296,
-   "name": "smallC/makefile",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
-  },
-  {
-   "data_sha256": "15b66e68de3efb1894c6aaeb6120fc561e3f4d498c5bcb3c3d60c7c508ae57b3",
-   "data_size": 3280,
-   "name": "smallC/small.g",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
-  },
-  {
-   "data_sha256": "19da20b9353bb5f76ce527b70ac2e91fcbbb701385249876cfeffab72b3407c5",
-   "data_size": 7834,
-   "name": "smallC/sym.c",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
-  },
-  {
-   "data_sha256": "adc7de962bf0e33fe825bfc4a1c330b96f891cf501d057deaf32837e68fc3fd0",
-   "data_size": 393,
-   "name": "smallC/sym.h",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
-  },
-  {
-   "data_sha256": "d46e4436afa5a4f6ecdfd34831e3133c3168e978e77386798f0c085d0dc5977a",
-   "data_size": 18385,
-   "name": "smallC/tsam.c",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
-  },
-  {
-   "data_sha256": "c8ce1aeb10ed6ab17fea34bee56d6e130cc2257c4d1bc3db6ca7a13d81b8183c",
-   "data_size": 1289,
-   "name": "smallC/tsam.doc",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
-  },
-  {
-   "data_sha256": "12389ffaca986135eecc3082424d4238b55bb46c1e0771dac1c34e562b33f16f",
-   "data_size": 284,
-   "name": "pascal/gen.c",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
-  },
-  {
-   "data_sha256": "914885c4196c3386459d507a47cbd21102fb10603cad8d08cd49d163eafcf4b1",
-   "data_size": 377,
-   "name": "pascal/makefile",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
-  },
-  {
-   "data_sha256": "40f5d7358f6483d9009efb8f001ee3f2de941b8c25b0021ff835d6e5df97dfb7",
-   "data_size": 5483,
-   "name": "pascal/pascal.g",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
-  },
-  {
-   "data_sha256": "f425cc7d1ee19dcd136593661e4326c9b494c0fb8dc4f59892a5d6ea7bd1153c",
-   "data_size": 1948,
-   "name": "pascal/pmain.c",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
-  },
-  {
-   "data_sha256": "19da20b9353bb5f76ce527b70ac2e91fcbbb701385249876cfeffab72b3407c5",
-   "data_size": 7834,
-   "name": "pascal/sym.c",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
-  },
-  {
-   "data_sha256": "28d083da57436a1c8b7ba537165d5765e7b65402276311b238b3ccc4587dceba",
-   "data_size": 228,
-   "name": "pascal/sym.h",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
-  },
-  {
-   "data_sha256": "537c1dc09897a5dd6db3cf3ce823ed80bac3428d5e7cc8a4d1253fe0a94107fd",
-   "data_size": 4602,
-   "name": "h/attrib.h",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
-  },
-  {
-   "data_sha256": "6d5027e0c0cf95e1a5ed772d187dc61d29957e5aad6e86960b895a6123ec8abe",
-   "data_size": 1517,
-   "name": "h/dlgauto.h",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
-  },
-  {
-   "data_sha256": "73d8616ef255d4942ecd36952402555ede86302f525c163804ccec6feb927730",
-   "data_size": 113,
-   "name": "h/dlgdef.h",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
-  },
-  {
-   "data_sha256": "84a81e974ce6be4e6c5cc323b0e63f5dbdb852d73d60eb34dfe5946ef6be5a17",
-   "data_size": 1189,
-   "name": "h/trax.h",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
-  },
-  {
-   "data_sha256": "bbe166e2f69a26d70fc025c4a367c5228f0ed7900877a6d2d818a426d8b5d4a1",
-   "data_size": 5668,
-   "name": "dlg/automata.c",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
-  },
-  {
-   "data_sha256": "5967fbeaf042d9ecd0e213175cf3168509eeba738c6ef3410c647f3f07217ef8",
-   "data_size": 1051,
-   "name": "dlg/dlg.g",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
-  },
-  {
-   "data_sha256": "05b1a1787f6f0534cefc901a7cb808b7dd279c7ef3db98b31fe1bfe6cc57a9d4",
-   "data_size": 3832,
-   "name": "dlg/dlg.h",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
-  },
-  {
-   "data_sha256": "27daf993c9aa5ca5a1f11696e89d3538336fcea1a6482fa8ecabbf3a62fbae1d",
-   "data_size": 3470,
-   "name": "dlg/dlg_a.c",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
-  },
-  {
-   "data_sha256": "12c0054610e8a509166ebbbf5e4e2f00b9ab35f1b310c88f9402b8a78ea39b29",
-   "data_size": 7577,
-   "name": "dlg/dlg_p.c",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
-  },
-  {
-   "data_sha256": "55732751596cb9f69f1c6152e003a1d826d303f9fa6c6c9bbc7964e77b316a9d",
-   "data_size": 596,
-   "name": "dlg/makefile",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
-  },
-  {
-   "data_sha256": "369b673982a6de1a80b19f5c09559ef5afaf8083d51efa5cf51616200f096e83",
-   "data_size": 5690,
-   "name": "dlg/output.c",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
-  },
-  {
-   "data_sha256": "fe35492bee148bb7bd3e6a56244642333477207a2da9cf138caa593dfaeb1ff6",
-   "data_size": 2202,
-   "name": "dlg/relabel.c",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
-  },
-  {
-   "data_sha256": "656746151c95374cceb0bff7426669add73fe016e43e827bbf1b1e0250561012",
-   "data_size": 6560,
-   "name": "dlg/sets.c",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
-  },
-  {
-   "data_sha256": "9f2b2dfe2a4542385da2fba456ae6d033f2b614ea439d5e4fdac0685cfb1c9d8",
-   "data_size": 1163,
-   "name": "dlg/sets.h",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
-  },
-  {
-   "data_sha256": "342a225ae52c9a168d87cc1d6a1732e73802769cd952c4618b259410279c6d9e",
-   "data_size": 3039,
-   "name": "dlg/support.c",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
-  },
-  {
-   "data_sha256": "c9fec4c550032c83c7c51416d85a8a4000808d88fafa423fe02bff73cf0bba28",
-   "data_size": 644,
-   "name": "dlg/tokens.h",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
+   "is_dir": true,
+   "name": "antlr"
   },
   {
    "data_sha256": "194ddafaa5b307f3cc7bd8722c29f57d4c9bf3533fc85ff69e017510feb2f93f",
@@ -366,11 +115,262 @@
    "name": "antlr/trax.c",
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
+  },
+  {
+   "is_dir": true,
+   "name": "dlg"
+  },
+  {
+   "data_sha256": "bbe166e2f69a26d70fc025c4a367c5228f0ed7900877a6d2d818a426d8b5d4a1",
+   "data_size": 5668,
+   "name": "dlg/automata.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "5967fbeaf042d9ecd0e213175cf3168509eeba738c6ef3410c647f3f07217ef8",
+   "data_size": 1051,
+   "name": "dlg/dlg.g",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "05b1a1787f6f0534cefc901a7cb808b7dd279c7ef3db98b31fe1bfe6cc57a9d4",
+   "data_size": 3832,
+   "name": "dlg/dlg.h",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "27daf993c9aa5ca5a1f11696e89d3538336fcea1a6482fa8ecabbf3a62fbae1d",
+   "data_size": 3470,
+   "name": "dlg/dlg_a.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "12c0054610e8a509166ebbbf5e4e2f00b9ab35f1b310c88f9402b8a78ea39b29",
+   "data_size": 7577,
+   "name": "dlg/dlg_p.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "55732751596cb9f69f1c6152e003a1d826d303f9fa6c6c9bbc7964e77b316a9d",
+   "data_size": 596,
+   "name": "dlg/makefile",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "369b673982a6de1a80b19f5c09559ef5afaf8083d51efa5cf51616200f096e83",
+   "data_size": 5690,
+   "name": "dlg/output.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "fe35492bee148bb7bd3e6a56244642333477207a2da9cf138caa593dfaeb1ff6",
+   "data_size": 2202,
+   "name": "dlg/relabel.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "656746151c95374cceb0bff7426669add73fe016e43e827bbf1b1e0250561012",
+   "data_size": 6560,
+   "name": "dlg/sets.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "9f2b2dfe2a4542385da2fba456ae6d033f2b614ea439d5e4fdac0685cfb1c9d8",
+   "data_size": 1163,
+   "name": "dlg/sets.h",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "342a225ae52c9a168d87cc1d6a1732e73802769cd952c4618b259410279c6d9e",
+   "data_size": 3039,
+   "name": "dlg/support.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "c9fec4c550032c83c7c51416d85a8a4000808d88fafa423fe02bff73cf0bba28",
+   "data_size": 644,
+   "name": "dlg/tokens.h",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "is_dir": true,
+   "name": "h"
+  },
+  {
+   "data_sha256": "537c1dc09897a5dd6db3cf3ce823ed80bac3428d5e7cc8a4d1253fe0a94107fd",
+   "data_size": 4602,
+   "name": "h/attrib.h",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "6d5027e0c0cf95e1a5ed772d187dc61d29957e5aad6e86960b895a6123ec8abe",
+   "data_size": 1517,
+   "name": "h/dlgauto.h",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "73d8616ef255d4942ecd36952402555ede86302f525c163804ccec6feb927730",
+   "data_size": 113,
+   "name": "h/dlgdef.h",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "84a81e974ce6be4e6c5cc323b0e63f5dbdb852d73d60eb34dfe5946ef6be5a17",
+   "data_size": 1189,
+   "name": "h/trax.h",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "is_dir": true,
+   "name": "pascal"
+  },
+  {
+   "data_sha256": "12389ffaca986135eecc3082424d4238b55bb46c1e0771dac1c34e562b33f16f",
+   "data_size": 284,
+   "name": "pascal/gen.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "914885c4196c3386459d507a47cbd21102fb10603cad8d08cd49d163eafcf4b1",
+   "data_size": 377,
+   "name": "pascal/makefile",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "40f5d7358f6483d9009efb8f001ee3f2de941b8c25b0021ff835d6e5df97dfb7",
+   "data_size": 5483,
+   "name": "pascal/pascal.g",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "f425cc7d1ee19dcd136593661e4326c9b494c0fb8dc4f59892a5d6ea7bd1153c",
+   "data_size": 1948,
+   "name": "pascal/pmain.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "19da20b9353bb5f76ce527b70ac2e91fcbbb701385249876cfeffab72b3407c5",
+   "data_size": 7834,
+   "name": "pascal/sym.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "28d083da57436a1c8b7ba537165d5765e7b65402276311b238b3ccc4587dceba",
+   "data_size": 228,
+   "name": "pascal/sym.h",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "is_dir": true,
+   "name": "smallC"
+  },
+  {
+   "data_sha256": "c66f330ad891a11cdffb65405eb41a7524227f125c51931f6a3b4e5e0b618514",
+   "data_size": 108,
+   "name": "smallC/fact.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "08ba24cf17f1f0e234cf982e373b2f2a0d1b3b22698b9b69eeec742f68695cea",
+   "data_size": 1474,
+   "name": "smallC/gen.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "625f28b12400ad6bde2e7894d1eb056f38315c2c1ba6a50b7efdcad1de34d156",
+   "data_size": 543,
+   "name": "smallC/gen.h",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "4ad39d20e7eade8ee25822276965a05e2389afb95c48fe28266e43958d615268",
+   "data_size": 296,
+   "name": "smallC/makefile",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "15b66e68de3efb1894c6aaeb6120fc561e3f4d498c5bcb3c3d60c7c508ae57b3",
+   "data_size": 3280,
+   "name": "smallC/small.g",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "19da20b9353bb5f76ce527b70ac2e91fcbbb701385249876cfeffab72b3407c5",
+   "data_size": 7834,
+   "name": "smallC/sym.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "adc7de962bf0e33fe825bfc4a1c330b96f891cf501d057deaf32837e68fc3fd0",
+   "data_size": 393,
+   "name": "smallC/sym.h",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "d46e4436afa5a4f6ecdfd34831e3133c3168e978e77386798f0c085d0dc5977a",
+   "data_size": 18385,
+   "name": "smallC/tsam.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "c8ce1aeb10ed6ab17fea34bee56d6e130cc2257c4d1bc3db6ca7a13d81b8183c",
+   "data_size": 1289,
+   "name": "smallC/tsam.doc",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "is_dir": true,
+   "name": "sym"
+  },
+  {
+   "data_sha256": "19da20b9353bb5f76ce527b70ac2e91fcbbb701385249876cfeffab72b3407c5",
+   "data_size": 7834,
+   "name": "sym/sym.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "dc11bb90b78e0d2f62512235ad891eaebf37d08ce9d17bc6ab7618d546b4da03",
+   "data_size": 241,
+   "name": "sym/sym.h",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
   }
  ],
  "fixture": "derived-PCCTS.tar",
  "format": "Tar",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "d1457236fa0361b88edeec1be61e598b0144a6db9053f7166efce29df19ae075",
  "size": 286720
 }

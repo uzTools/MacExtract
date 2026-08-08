@@ -5,14 +5,6 @@
    "name": "Mankato Halfwit"
   },
   {
-   "is_dir": true,
-   "name": "Mankato Halfwit/Postscript Type1"
-  },
-  {
-   "is_dir": true,
-   "name": "Mankato Halfwit/TrueType"
-  },
-  {
    "creator": "ttxt",
    "data_sha256": "c91e7c4a53ca40630de2003082c3ba54988d28d82291c9a5356300ef12d81004",
    "data_size": 1508,
@@ -40,22 +32,8 @@
    "type": "icon"
   },
   {
-   "creator": "drag",
-   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "data_size": 0,
-   "name": "Mankato Halfwit/www.fontosaurus.com",
-   "rsrc_sha256": "9bce052b9a1d6c827ed0956c219c0ac088384eecc5e58792914d10c89516e5c5",
-   "rsrc_size": 520,
-   "type": "ilht"
-  },
-  {
-   "creator": "DMOV",
-   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "data_size": 0,
-   "name": "Mankato Halfwit/TrueType/Mankato Halfwit.suit",
-   "rsrc_sha256": "e776ace08061f672cf0d396a26a51981577eefff7240862a1c08ff1f74eddc52",
-   "rsrc_size": 47876,
-   "type": "FFIL"
+   "is_dir": true,
+   "name": "Mankato Halfwit/Postscript Type1"
   },
   {
    "creator": "ACp1",
@@ -74,11 +52,33 @@
    "rsrc_sha256": "95e6a11568aec9211ae83eb268ea453b214015c06bc4281424123deefbd69bff",
    "rsrc_size": 49388,
    "type": "FFIL"
+  },
+  {
+   "is_dir": true,
+   "name": "Mankato Halfwit/TrueType"
+  },
+  {
+   "creator": "DMOV",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Mankato Halfwit/TrueType/Mankato Halfwit.suit",
+   "rsrc_sha256": "e776ace08061f672cf0d396a26a51981577eefff7240862a1c08ff1f74eddc52",
+   "rsrc_size": 47876,
+   "type": "FFIL"
+  },
+  {
+   "creator": "drag",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Mankato Halfwit/www.fontosaurus.com",
+   "rsrc_sha256": "9bce052b9a1d6c827ed0956c219c0ac088384eecc5e58792914d10c89516e5c5",
+   "rsrc_size": 520,
+   "type": "ilht"
   }
  ],
  "fixture": "derived-Mankato_Halfwit.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "6d4f40a05a09a96669a5c80757520c7717e1c36d0e0633d54a12112b4046079e",
  "size": 76402
 }

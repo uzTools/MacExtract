@@ -12,7 +12,7 @@
  ],
  "fixture": "mac-cpio-02.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "14523a7483cab0652fdb512f93a146b3756ebb8b8903ee1b8ff1fea8a5ad500d",
  "size": 25154
 }

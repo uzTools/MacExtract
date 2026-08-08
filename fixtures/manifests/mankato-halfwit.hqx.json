@@ -12,7 +12,7 @@
  ],
  "fixture": "mankato-halfwit.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "884ef2677be0c7eb4feab70777536b7022bc9084ddf46cb0580ad586e45bea96",
  "size": 104063
 }

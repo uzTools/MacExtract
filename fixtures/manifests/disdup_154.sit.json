@@ -12,7 +12,7 @@
  ],
  "fixture": "disdup_154.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "c9af2382b01b48c104c50c9f063ffd1d0305a6560a283611f6bc6fb8834443f2",
  "size": 14592
 }

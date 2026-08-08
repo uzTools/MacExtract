@@ -12,7 +12,7 @@
  ],
  "fixture": "nuntius11a2.sea",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "cf477703cf19d96297dabe9db1c1edb1a6a55d614a5db21c606b64ce3ee0bdf7",
  "size": 270720
 }

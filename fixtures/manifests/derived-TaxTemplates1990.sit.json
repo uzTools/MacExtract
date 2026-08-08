@@ -39,7 +39,7 @@
  ],
  "fixture": "derived-TaxTemplates1990.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "938badfcf34ae99021babe0efc7b1d79ef808922f3896b2d50fb049e70c29bbd",
  "size": 30312
 }

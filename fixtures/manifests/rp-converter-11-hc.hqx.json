@@ -12,7 +12,7 @@
  ],
  "fixture": "rp-converter-11-hc.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "7e31e419eb54d90a0437734b81a9a65a406857ea8d19d3893cd5cf05c9df34c1",
  "size": 10834
 }

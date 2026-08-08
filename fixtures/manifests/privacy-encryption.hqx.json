@@ -12,7 +12,7 @@
  ],
  "fixture": "privacy-encryption.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "05c7056cdabcb617b5f6f7a6d378391ac047e3813abb03108fad2ea207a5f2dd",
  "size": 65791
 }

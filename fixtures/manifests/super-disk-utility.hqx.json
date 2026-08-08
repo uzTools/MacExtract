@@ -12,7 +12,7 @@
  ],
  "fixture": "super-disk-utility.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "ee2806e14cd7faab4a82c01db40b4d2a46ea75b176e3acc48bb58ba0e3c321f3",
  "size": 27199
 }

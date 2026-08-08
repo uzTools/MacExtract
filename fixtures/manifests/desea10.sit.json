@@ -12,7 +12,7 @@
  ],
  "fixture": "desea10.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "8b3b355277dc6ff4dd3d3e29257a5e8e393c79c2590933a7d018d543e4bb443f",
  "size": 16529
 }

@@ -12,7 +12,7 @@
  ],
  "fixture": "derived-MacWeek_Index.txt.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "b2290cfd24ea13ae9159b36b0669a1629c4d2854da6ad87339ee7f6672f10dae",
  "size": 5967
 }

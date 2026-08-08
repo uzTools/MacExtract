@@ -21,7 +21,7 @@
  ],
  "fixture": "derived-_bot_docs.MacWrite.cpt",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "44387619a865b638f59ad86b118443db22a0587229125d184dbb6c87ddd3637d",
  "size": 99385
 }

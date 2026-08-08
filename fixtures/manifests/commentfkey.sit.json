@@ -12,7 +12,7 @@
  ],
  "fixture": "commentfkey.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "ed03f183d3e234674805472a1afc64e2d9de002f2a040d615090d5ed590ee36f",
  "size": 14397
 }

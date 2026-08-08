@@ -21,7 +21,7 @@
  ],
  "fixture": "derived-gotofkey14.cpt",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "123a6f97f08d1b6fb3f0630b8deca6918afa19e61accd3a7c45c2945c76181b6",
  "size": 3340
 }

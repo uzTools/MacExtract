@@ -12,7 +12,7 @@
  ],
  "fixture": "initescape.cpt",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "62938966b7bf4b4900422ee70314fbc6f40aeaffdaf685488c5a584b3421a930",
  "size": 13952
 }

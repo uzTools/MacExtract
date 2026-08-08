@@ -21,7 +21,7 @@
  ],
  "fixture": "derived-MAZv143.sea",
  "format": "DiskDoubler",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "fd4d2b1035dd46b2a2001b07a2d51429c71c2bd42c6a1245b43ad98440cc4cf0",
  "size": 50277
 }

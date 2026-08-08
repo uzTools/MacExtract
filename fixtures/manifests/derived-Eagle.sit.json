@@ -12,7 +12,7 @@
  ],
  "fixture": "derived-Eagle.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "93437fa7539bd958f9bb3f79aba4ef86ccdcc559aee5e847e5c8625cfc53fe8d",
  "size": 27933
 }

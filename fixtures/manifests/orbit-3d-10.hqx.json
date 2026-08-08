@@ -12,7 +12,7 @@
  ],
  "fixture": "orbit-3d-10.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "79b2752d548915017bbd3267e3ad170699e1e49bfcabf9fff9b27d077e80eaee",
  "size": 238681
 }

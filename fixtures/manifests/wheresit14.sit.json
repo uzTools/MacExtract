@@ -12,7 +12,7 @@
  ],
  "fixture": "wheresit14.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "eae10e91450de017c85fefa97172d1d832a28eb795d197d06dbd6904b8b094dc",
  "size": 66907
 }

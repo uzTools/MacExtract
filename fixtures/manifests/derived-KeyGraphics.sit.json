@@ -12,7 +12,7 @@
  ],
  "fixture": "derived-KeyGraphics.sit",
  "format": "StuffIt 5",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "c19da9a16a6741d0fedf2ea666c949476c1acfe3a39ba6c67e7d82b8fbc444f5",
  "size": 4611
 }

@@ -12,7 +12,7 @@
  ],
  "fixture": "smartkeys2.sea",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "b0173040cb29c5a823672a4ec47b324dec08ece7f96b4fd6c4b38899a962e3cd",
  "size": 40064
 }

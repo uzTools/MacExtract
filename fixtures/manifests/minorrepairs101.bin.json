@@ -12,7 +12,7 @@
  ],
  "fixture": "minorrepairs101.bin",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "a9364be4eed36a2058693572afc21488c839d064596d4c9fe4536d71f41a3e0b",
  "size": 6400
 }

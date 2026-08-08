@@ -12,7 +12,7 @@
  ],
  "fixture": "3d-terrain-modeling-017.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "0cbcf4293e5ae055fb8ddc0cf14e7316cd1de25010679aaba6763556b099fb21",
  "size": 224099
 }

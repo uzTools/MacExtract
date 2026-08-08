@@ -25,7 +25,7 @@
  ],
  "fixture": "derived-Easy_Errors_1.11.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "ff877dd5e3fda1d53240b424bee663cdaa58fa5833ce7427c6ed62ecadc40536",
  "size": 45954
 }

@@ -12,7 +12,7 @@
  ],
  "fixture": "initloader.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "202a9f8f3c94c986fc24bfc324496b80f9421abadf3cdfe4cf51fc09e48b1008",
  "size": 28928
 }

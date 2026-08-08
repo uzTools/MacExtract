@@ -71,24 +71,24 @@
    "creator": "RSED",
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
-   "name": "Ultimate Copland 1.1/Ultimate System 7.5 Update",
-   "rsrc_sha256": "c33d26254a6b4b0f7c0fce059d91e720f7c14aaa7b84dfef9f7f1ecfaaf8aa73",
-   "rsrc_size": 240910,
+   "name": "Ultimate Copland 1.1/Ultimate System",
+   "rsrc_sha256": "1e0c48c0ae4d3615f9b4637ecf815cdfa9b0f534b01e034ea6a0421b6d394709",
+   "rsrc_size": 101260,
    "type": "rsrc"
   },
   {
    "creator": "RSED",
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
-   "name": "Ultimate Copland 1.1/Ultimate System",
-   "rsrc_sha256": "1e0c48c0ae4d3615f9b4637ecf815cdfa9b0f534b01e034ea6a0421b6d394709",
-   "rsrc_size": 101260,
+   "name": "Ultimate Copland 1.1/Ultimate System 7.5 Update",
+   "rsrc_sha256": "c33d26254a6b4b0f7c0fce059d91e720f7c14aaa7b84dfef9f7f1ecfaaf8aa73",
+   "rsrc_size": 240910,
    "type": "rsrc"
   }
  ],
  "fixture": "derived-Ultimate_Copland_1.1.sit.1",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "d68f7bc1d369fff7d1361b9e50c54347fb51188b02ea5fced5ad3c7e52a55d6e",
  "size": 154432
 }

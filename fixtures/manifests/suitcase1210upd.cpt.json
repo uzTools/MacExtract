@@ -12,7 +12,7 @@
  ],
  "fixture": "suitcase1210upd.cpt",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "9d898a39239689c7e9ef768ca8b3cfb1db228fedd4a6d32e8dd4f20e60bb87ea",
  "size": 33792
 }

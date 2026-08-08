@@ -12,7 +12,7 @@
  ],
  "fixture": "realdrag.bin",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "eea72f7b0fe7e5bddc78531b9fe15ee837ee59ae574b6e6c746b4370f4ee139e",
  "size": 6656
 }

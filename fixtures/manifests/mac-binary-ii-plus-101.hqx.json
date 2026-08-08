@@ -12,7 +12,7 @@
  ],
  "fixture": "mac-binary-ii-plus-101.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "0d7fa139de008535f2ec106ea1a5db0c1beb33da551b1f300e01915a7e8a9d9e",
  "size": 25683
 }

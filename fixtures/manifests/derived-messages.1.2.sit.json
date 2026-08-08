@@ -10,15 +10,6 @@
    "type": "TEXT"
   },
   {
-   "creator": "DMOV",
-   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "data_size": 0,
-   "name": "Messages DA",
-   "rsrc_sha256": "de8da030970f21f321af6d11d07dc5041efbfe4c21d340b293d2759807a29639",
-   "rsrc_size": 15194,
-   "type": "DFIL"
-  },
-  {
    "creator": "mail",
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
@@ -26,6 +17,15 @@
    "rsrc_sha256": "183f6d8cc9a905e5e8ac3ad4917902b52244bbf6eb330fb2658bf4453a895d33",
    "rsrc_size": 17886,
    "type": "cdev"
+  },
+  {
+   "creator": "DMOV",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Messages DA",
+   "rsrc_sha256": "de8da030970f21f321af6d11d07dc5041efbfe4c21d340b293d2759807a29639",
+   "rsrc_size": 15194,
+   "type": "DFIL"
   },
   {
    "creator": "????",
@@ -39,7 +39,7 @@
  ],
  "fixture": "derived-messages.1.2.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "6ca7017ee1166756387e202ac0dda13e03b7320ae147991cf1f962f3ac21a448",
  "size": 25935
 }

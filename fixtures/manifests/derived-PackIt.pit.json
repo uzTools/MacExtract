@@ -1,15 +1,6 @@
 {
  "entries": [
   {
-   "creator": "MACA",
-   "data_sha256": "4a5f2031b415e015bddaa641083286012c3542d6b1593bc3c0ab1668ecd8e72f",
-   "data_size": 5370,
-   "name": "PackIt.doc",
-   "rsrc_sha256": "8e470f3f0f0f64f729e0e0f0f247474efb7a519468e15597bb436e1de196a988",
-   "rsrc_size": 784,
-   "type": "WORD"
-  },
-  {
    "creator": "PIT ",
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
@@ -17,6 +8,15 @@
    "rsrc_sha256": "a94effaa251e750635be330b47ebc22ebfd3886de22e9615ec194b17691b3d27",
    "rsrc_size": 8999,
    "type": "APPL"
+  },
+  {
+   "creator": "MACA",
+   "data_sha256": "4a5f2031b415e015bddaa641083286012c3542d6b1593bc3c0ab1668ecd8e72f",
+   "data_size": 5370,
+   "name": "PackIt.doc",
+   "rsrc_sha256": "8e470f3f0f0f64f729e0e0f0f247474efb7a519468e15597bb436e1de196a988",
+   "rsrc_size": 784,
+   "type": "WORD"
   },
   {
    "creator": "PIT ",
@@ -39,7 +39,7 @@
  ],
  "fixture": "derived-PackIt.pit",
  "format": "PackIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "fe0b4cc3785cd5fb23172d4c8a221cbf88278dc4e1cfd1de954b1a0d5e4958ac",
  "size": 61843
 }

@@ -12,7 +12,7 @@
  ],
  "fixture": "pointingdevice.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "f14ebedf90b40b3a0154393cacc9835bf778307225fde12c6cb5377459115a87",
  "size": 7680
 }

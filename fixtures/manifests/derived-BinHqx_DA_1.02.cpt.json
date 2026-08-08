@@ -21,7 +21,7 @@
  ],
  "fixture": "derived-BinHqx_DA_1.02.cpt",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "92cf45aaece130741ae84da5a9fe367643ae699415560b4cd9c874b37a833ad5",
  "size": 23924
 }

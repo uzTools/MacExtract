@@ -12,7 +12,7 @@
  ],
  "fixture": "derived-Helium_1.0.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "1c78a081482189ab50c25ba813ef552942e98fa2190ebe94fb0556e661351239",
  "size": 26951
 }

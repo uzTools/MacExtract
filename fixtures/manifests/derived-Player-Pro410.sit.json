@@ -5,14 +5,6 @@
    "name": "Player PRO 4.10"
   },
   {
-   "is_dir": true,
-   "name": "Player PRO 4.10/Instruments"
-  },
-  {
-   "is_dir": true,
-   "name": "Player PRO 4.10/Plugs"
-  },
-  {
    "creator": "\u0000\u0000\u0000\u0000",
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
@@ -20,6 +12,28 @@
    "rsrc_sha256": "d4c4baca59e48bcc41451b7f57f5c80e278a9980840d2e09e936564a9b61c315",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
+  },
+  {
+   "is_dir": true,
+   "name": "Player PRO 4.10/Instruments"
+  },
+  {
+   "creator": "movr",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Player PRO 4.10/Instruments/funkylang",
+   "rsrc_sha256": "f48d8c82fc4208bc2e7abe4eaa4dc976b06c02951e5b08e5eea4dbc9d21b1bb0",
+   "rsrc_size": 7842,
+   "type": "sfil"
+  },
+  {
+   "creator": "movr",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Player PRO 4.10/Instruments/ha",
+   "rsrc_sha256": "3732b211cc9dbc6e5c3fad2ce0de9bb23f3b160c89051eb3042fc8eb245a65fd",
+   "rsrc_size": 20155,
+   "type": "sfil"
   },
   {
    "creator": "SNPL",
@@ -31,13 +45,8 @@
    "type": "APPL"
   },
   {
-   "creator": "SNPL",
-   "data_sha256": "10bc471c6686dacd2106f501a52f5a126a13735835f96c83146a5d2a25d39c64",
-   "data_size": 68224,
-   "name": "Player PRO 4.10/mod.unknown1",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0,
-   "type": "STrk"
+   "is_dir": true,
+   "name": "Player PRO 4.10/Plugs"
   },
   {
    "creator": "SNPL",
@@ -58,27 +67,18 @@
    "type": "PLug"
   },
   {
-   "creator": "movr",
-   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "data_size": 0,
-   "name": "Player PRO 4.10/Instruments/funkylang",
-   "rsrc_sha256": "f48d8c82fc4208bc2e7abe4eaa4dc976b06c02951e5b08e5eea4dbc9d21b1bb0",
-   "rsrc_size": 7842,
-   "type": "sfil"
-  },
-  {
-   "creator": "movr",
-   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "data_size": 0,
-   "name": "Player PRO 4.10/Instruments/ha",
-   "rsrc_sha256": "3732b211cc9dbc6e5c3fad2ce0de9bb23f3b160c89051eb3042fc8eb245a65fd",
-   "rsrc_size": 20155,
-   "type": "sfil"
+   "creator": "SNPL",
+   "data_sha256": "10bc471c6686dacd2106f501a52f5a126a13735835f96c83146a5d2a25d39c64",
+   "data_size": 68224,
+   "name": "Player PRO 4.10/mod.unknown1",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "STrk"
   }
  ],
  "fixture": "derived-Player-Pro410.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "997916ccd32aa43ffb04f61354651f20f4b7cfa75c1476db63171c497f8bfd75",
  "size": 196401
 }

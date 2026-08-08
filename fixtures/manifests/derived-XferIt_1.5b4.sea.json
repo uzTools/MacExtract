@@ -5,10 +5,6 @@
    "name": "XferIt 1.5b4"
   },
   {
-   "is_dir": true,
-   "name": "XferIt 1.5b4/documentation"
-  },
-  {
    "creator": "XFex",
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
@@ -27,26 +23,8 @@
    "type": "APPL"
   },
   {
-   "creator": "XFUR",
-   "data_sha256": "e3392903893e4c9c676be0df63058103b919dc9e7f2ca87bf06e60d2aaadaa7f",
-   "data_size": 1542,
-   "name": "XferIt 1.5b4/ftp.apple.com",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0,
-   "type": "XFal"
-  },
-  {
-   "creator": "XFUR",
-   "data_sha256": "447677d19ac8f6a7901a11407e6677e212b4256d50ac36ace2ba7bda82a8061b",
-   "data_size": 120,
-   "name": "XferIt 1.5b4/test script",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0,
-   "type": "TEXT"
-  },
-  {
    "is_dir": true,
-   "name": "XferIt 1.5b4/documentation/manual for binding"
+   "name": "XferIt 1.5b4/documentation"
   },
   {
    "creator": "MWII",
@@ -85,6 +63,10 @@
    "type": "WDBN"
   },
   {
+   "is_dir": true,
+   "name": "XferIt 1.5b4/documentation/manual for binding"
+  },
+  {
    "creator": "MWII",
    "data_sha256": "395ee641b8254904c6dc655807b9250d5dae21e8115eb6b8dc71655974bcda72",
    "data_size": 122624,
@@ -101,11 +83,29 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "MW2D"
+  },
+  {
+   "creator": "XFUR",
+   "data_sha256": "e3392903893e4c9c676be0df63058103b919dc9e7f2ca87bf06e60d2aaadaa7f",
+   "data_size": 1542,
+   "name": "XferIt 1.5b4/ftp.apple.com",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "XFal"
+  },
+  {
+   "creator": "XFUR",
+   "data_sha256": "447677d19ac8f6a7901a11407e6677e212b4256d50ac36ace2ba7bda82a8061b",
+   "data_size": 120,
+   "name": "XferIt 1.5b4/test script",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
   }
  ],
  "fixture": "derived-XferIt_1.5b4.sea",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "f568dd1fb26a604c7ef4a46c9529ddaf906aab9b42985a3a30b5f2dc916a7e5a",
  "size": 285495
 }

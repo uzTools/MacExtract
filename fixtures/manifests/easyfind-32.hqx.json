@@ -12,7 +12,7 @@
  ],
  "fixture": "easyfind-32.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "f52cf46ee6ee55084b41ed52fa149c5d4dee1c79e0b7a95d8627d483649f23aa",
  "size": 287703
 }

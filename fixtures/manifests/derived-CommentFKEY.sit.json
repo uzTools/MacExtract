@@ -39,7 +39,7 @@
  ],
  "fixture": "derived-CommentFKEY.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "929837294b8f30978dbcc8315cd7ef67f192647c07e85008f97fe44149b205b0",
  "size": 14269
 }

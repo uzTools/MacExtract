@@ -25,7 +25,7 @@
  ],
  "fixture": "derived-ZkandiSys_7.0.sea",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "958c906c49effe44ed1f2a439356795704c9199aac1b3e867e495931f1301b7b",
  "size": 7719
 }

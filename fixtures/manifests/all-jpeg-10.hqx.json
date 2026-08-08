@@ -12,7 +12,7 @@
  ],
  "fixture": "all-jpeg-10.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "f25e564b820b1d0ae62ca4996f218dca3fae7691347a8498f398af6461106487",
  "size": 19394
 }

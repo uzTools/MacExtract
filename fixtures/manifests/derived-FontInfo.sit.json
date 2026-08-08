@@ -1,6 +1,15 @@
 {
  "entries": [
   {
+   "creator": "DMOV",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "FontInfo",
+   "rsrc_sha256": "882363dbdca253ab252ea4c96cc68f9351394385657416570662886bb6f33655",
+   "rsrc_size": 7057,
+   "type": "DFIL"
+  },
+  {
    "creator": "MACA",
    "data_sha256": "936e78e856c0bb113091259e4f5d486df906bcf5952550726833888f96b43fa8",
    "data_size": 11938,
@@ -17,20 +26,11 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "WDBN"
-  },
-  {
-   "creator": "DMOV",
-   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "data_size": 0,
-   "name": "FontInfo",
-   "rsrc_sha256": "882363dbdca253ab252ea4c96cc68f9351394385657416570662886bb6f33655",
-   "rsrc_size": 7057,
-   "type": "DFIL"
   }
  ],
  "fixture": "derived-FontInfo.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "be38f05c784ebfdcfd98e8ba43e81290acb4b0a4f12d4e96e0f7934d610fc165",
  "size": 17763
 }

@@ -12,7 +12,7 @@
  ],
  "fixture": "nekoda.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "3261b87f478ee0a3a0155a961b94c839d349bdde1e3ad706b838a32e1f202787",
  "size": 12916
 }

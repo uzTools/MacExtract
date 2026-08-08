@@ -12,7 +12,7 @@
  ],
  "fixture": "messages12.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "8cc74d59b38a0d122f7a2dd66661374f691efeb70a815fd75423e55ce8506669",
  "size": 26063
 }

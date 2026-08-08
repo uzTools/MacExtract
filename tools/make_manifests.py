@@ -5,17 +5,24 @@ For each file in fixtures/ (non-recursive, excluding manifests/ etc.),
 run the oracle (unar, The Unarchiver's CLI) and record per entry:
 
   - data-fork SHA-256 + size
-  - resource-fork SHA-256 + size (parsed out of the AppleDouble ".rsrc"
-    files that `unar -k visible` produces)
+  - resource-fork SHA-256 + size (parsed out of the AppleDouble "._"
+    files that `unar -k hidden` produces)
   - Mac type/creator codes when the oracle exposes them (from the
     AppleDouble Finder-info entry, falling back to `lsar -j`)
 
 Manifests land in fixtures/manifests/<fixture>.json and are committed;
 the fixtures themselves are not. See TESTING.md for the exact procedure.
 
+Forks are taken from `-k hidden` ("._NAME") rather than `-k visible`
+("NAME.rsrc") because the suffix convention is ambiguous whenever an
+archive holds both "X" and "X.rsrc" — a THINK C project is exactly that
+shape — while the prefix namespace is disjoint from real archive names.
+The manifest itself records neither convention: entry name plus per-fork
+hashes. DECISIONS.md, 2026-08-08.
+
 Oracle invocation (see TESTING.md for rationale):
     lsar -j -nr -e macintosh <fixture>          # format + metadata
-    unar -nr -D -f -q -k visible -e macintosh -o <tmp> <fixture>
+    unar -nr -D -f -q -k hidden -e macintosh -o <tmp> <fixture>
 """
 import argparse, hashlib, json, os, plistlib, struct, subprocess, sys, tempfile
 import unicodedata
@@ -88,118 +95,97 @@ def lsar_metadata(fixture):
 def build_manifest(fixture_path, verbose=False):
     name = os.path.basename(fixture_path)
     fmt, meta = lsar_metadata(fixture_path)
-    # Undecidable ground truth: if the archive contains both an entry
-    # "X" and an entry "X.rsrc" (THINK C project resources are named
-    # like that), the ".rsrc" AppleDouble sidecar convention — used by
-    # unar and unclassic alike — cannot represent both on disk: one
-    # clobbers the other. Refuse to build a manifest; the fixture
-    # stays in the corpus for robustness testing.
+    # The "._" sidecar namespace is disjoint from real archive names in
+    # every fixture harvested so far, which is why forks are taken from
+    # `-k hidden` — but an entry literally named "._X" would collide
+    # with the sidecar of "X", the one shape this convention cannot
+    # represent. Refuse rather than guess; the fixture stays in the
+    # corpus for robustness testing.
     for n in meta:
-        if n + ".rsrc" in meta:
+        if os.path.basename(n).startswith("._"):
             print(f"  oracle UNDECIDABLE on {name} "
-                  f"(.rsrc sidecar collision: {n!r}), skipping",
+                  f"(AppleDouble prefix collision: {n!r}), skipping",
                   file=sys.stderr)
             return None
     with tempfile.TemporaryDirectory() as tmp:
         r = subprocess.run(
-            ["unar", "-nr", "-D", "-f", "-q", "-k", "visible",
+            ["unar", "-nr", "-D", "-f", "-q", "-k", "hidden",
              "-e", "macintosh", "-o", tmp, fixture_path],
             capture_output=True, timeout=300)
         if r.returncode != 0:
             print(f"  oracle FAILED on {name}: {r.stderr.decode()[:200]}",
                   file=sys.stderr)
             return None
-        # GNUstep can silently mishandle resource forks for names it
-        # cannot append ".rsrc" to (e.g. leading '~'); such output is
-        # not trustworthy ground truth (observed: lipservice.bin).
+        # GNUstep's fork-path bug is a `-k visible` bug: it comes from
+        # appending ".rsrc" to a name its path code rejects (leading
+        # '~'), and it can write the AppleDouble container into the
+        # data-fork filename. Prefixing never calls that code, so this
+        # warning should not appear here at all — if it does, something
+        # is unmodelled and the output is not ground truth.
         if b"cannot append extension" in r.stderr:
             print(f"  oracle UNRELIABLE on {name} (fork path bug), skipping",
                   file=sys.stderr)
             return None
         entries = []
         for root, dirs, files in os.walk(tmp):
-            rel = os.path.relpath(root, tmp)
+            dirs.sort()          # os.walk order is otherwise the
+            rel = os.path.relpath(root, tmp)   # filesystem's, not ours
+            fs = set(files)
             for d in sorted(dirs):
                 p = norm(os.path.normpath(os.path.join(rel, d)))
                 entries.append({"name": p, "is_dir": True})
-            for f in sorted(files):
-                if f.endswith(".rsrc"):
-                    # A ".rsrc" sidecar with no data-fork file beside it
-                    # is a real entry whose data fork is empty (unar
-                    # writes nothing for a 0-byte data fork, e.g.
-                    # PackIt resource-only entries) — synthesize the
-                    # empty data fork below via the orphan branch.
-                    if f[:-len(".rsrc")] in files:
-                        continue
-                    base = f[:-len(".rsrc")]
-                    p = norm(os.path.normpath(os.path.join(rel, base)))
-                    ent = {
-                        "name": p,
-                        "data_size": 0,
-                        "data_sha256": hashlib.sha256(b"").hexdigest(),
-                        "rsrc_size": 0,
-                        "rsrc_sha256": hashlib.sha256(b"").hexdigest(),
-                    }
-                    rsrc, typ, creator = parse_appledouble(
-                        os.path.join(root, f))
-                    if rsrc is not None:
-                        ent["rsrc_size"] = len(rsrc)
-                        ent["rsrc_sha256"] = hashlib.sha256(rsrc).hexdigest()
-                        if typ:
-                            ent["type"] = typ
-                        if creator:
-                            ent["creator"] = creator
-                    if "type" not in ent and p in meta and meta[p][0]:
-                        ent["type"], ent["creator"] = meta[p][0], meta[p][1]
-                    entries.append(ent)
-                    continue
-                full = os.path.join(root, f)
-                p = norm(os.path.normpath(os.path.join(rel, f)))
-                # GNUstep unar can silently write the AppleDouble
-                # container INTO the data-fork filename when it cannot
-                # form the ".rsrc" sidecar name (seen with leading-'~'
-                # names, not always accompanied by a "cannot append
-                # extension" warning). A data fork that begins with the
-                # AppleDouble magic and has no sidecar next to it is
-                # that bug, not ground truth.
-                if not os.path.exists(full + ".rsrc"):
-                    with open(full, "rb") as fh:
-                        if fh.read(4) == b"\x00\x05\x16\x07":
-                            print(f"  oracle UNRELIABLE on {name} "
-                                  f"(AppleDouble written as data fork: {p!r})",
-                                  file=sys.stderr)
-                            return None
+            # One entry per name, whether it arrived as a data-fork
+            # file, a "._" sidecar, or both. A sidecar with no data
+            # file beside it is a real entry whose data fork is empty:
+            # unar writes nothing for a 0-byte data fork (resource-only
+            # entries, e.g. PackIt members and FKEY/cdev files).
+            for base in sorted({f[2:] if f.startswith("._") else f
+                                for f in fs}):
+                p = norm(os.path.normpath(os.path.join(rel, base)))
                 ent = {
                     "name": p,
-                    "data_size": os.path.getsize(full),
-                    "data_sha256": sha256_file(full),
+                    "data_size": 0,
+                    "data_sha256": hashlib.sha256(b"").hexdigest(),
                     "rsrc_size": 0,
                     "rsrc_sha256": hashlib.sha256(b"").hexdigest(),
                 }
-                ad = full + ".rsrc"
+                if base in fs:
+                    full = os.path.join(root, base)
+                    ent["data_size"] = os.path.getsize(full)
+                    ent["data_sha256"] = sha256_file(full)
+                ad = os.path.join(root, "._" + base)
                 if os.path.exists(ad):
                     rsrc, typ, creator = parse_appledouble(ad)
-                    if rsrc is not None:
-                        ent["rsrc_size"] = len(rsrc)
-                        ent["rsrc_sha256"] = hashlib.sha256(rsrc).hexdigest()
-                        if typ:
-                            ent["type"] = typ
-                        if creator:
-                            ent["creator"] = creator
+                    # Every "._" file unar writes is an AppleDouble
+                    # container; one that is not means the oracle put
+                    # something else there, which is not ground truth.
+                    if rsrc is None:
+                        print(f"  oracle UNRELIABLE on {name} "
+                              f"(sidecar is not AppleDouble: {p!r})",
+                              file=sys.stderr)
+                        return None
+                    ent["rsrc_size"] = len(rsrc)
+                    ent["rsrc_sha256"] = hashlib.sha256(rsrc).hexdigest()
+                    if typ:
+                        ent["type"] = typ
+                    if creator:
+                        ent["creator"] = creator
                 if "type" not in ent and p in meta and meta[p][0]:
                     ent["type"], ent["creator"] = meta[p][0], meta[p][1]
                 entries.append(ent)
-        # Orphan .rsrc (resource fork with no data fork file): unar still
-        # creates the data file, so this should not happen; guard anyway.
     if not entries:
         print(f"  oracle produced nothing for {name}", file=sys.stderr)
         return None
+    # Canonical order, so a rebuild on another machine produces the same
+    # file. Every consumer looks entries up by name; none depends on the
+    # order they were walked in.
+    entries.sort(key=lambda e: e["name"])
     return {
         "fixture": name,
         "sha256": sha256_file(fixture_path),
         "size": os.path.getsize(fixture_path),
         "format": fmt,
-        "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+        "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
         "entries": entries,
     }
 

@@ -12,7 +12,7 @@
  ],
  "fixture": "privacy-for-pals-15.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "77dcbd764c53b862860f0ffbc6c4e173395d8f1dc06673d2c4c909a834596319",
  "size": 89557
 }

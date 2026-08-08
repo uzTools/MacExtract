@@ -5,15 +5,6 @@
    "name": "SitExpand ƒ"
   },
   {
-   "creator": "ttxt",
-   "data_sha256": "e929aaa2a77dbc9fc85c43e79ba6b724dfdd824fe434f63258103f79733e30a2",
-   "data_size": 3896,
-   "name": "SitExpand ƒ/SitExpand Doc",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0,
-   "type": "TEXT"
-  },
-  {
    "creator": "SIT!",
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
@@ -21,11 +12,20 @@
    "rsrc_sha256": "ef3e24e7b176e31a176be26a924ea2055583504d036471c211f5ba0a6dee9028",
    "rsrc_size": 13407,
    "type": "APPL"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "e929aaa2a77dbc9fc85c43e79ba6b724dfdd824fe434f63258103f79733e30a2",
+   "data_size": 3896,
+   "name": "SitExpand ƒ/SitExpand Doc",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
   }
  ],
  "fixture": "derived-SitExpand_1.01.sea",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "ae883b5d4cabd1d414d656d49f7ec7b37fe6df52671d467e8a7b1fc7d88604d7",
  "size": 9891
 }

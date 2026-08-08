@@ -5,6 +5,15 @@
    "name": "MacEncrypt ƒ"
   },
   {
+   "creator": "DESx",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "MacEncrypt ƒ/MacEncrypt",
+   "rsrc_sha256": "c0b5af6d7886ae574a1c096ded5ae372b8d3278b09309c11dd0525b71f74aa9a",
+   "rsrc_size": 29796,
+   "type": "APPL"
+  },
+  {
    "creator": "MSWD",
    "data_sha256": "372385fe9cb65c260fd55faaa02fd66788cc04c67dbe50056c2b5d55bf6add75",
    "data_size": 23552,
@@ -23,15 +32,6 @@
    "type": "TEXT"
   },
   {
-   "creator": "DESx",
-   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "data_size": 0,
-   "name": "MacEncrypt ƒ/MacEncrypt",
-   "rsrc_sha256": "c0b5af6d7886ae574a1c096ded5ae372b8d3278b09309c11dd0525b71f74aa9a",
-   "rsrc_size": 29796,
-   "type": "APPL"
-  },
-  {
    "creator": "ttxt",
    "data_sha256": "66b5188a68485c4d72676e93559b0c296cd4928279a6801d832a85bf4296e451",
    "data_size": 1847,
@@ -43,7 +43,7 @@
  ],
  "fixture": "derived-MacEncrypt.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "4eb00267b5a1b4f7741b9605278c61c0bc363a80f6ce48bcd0b62b167eb26db9",
  "size": 31359
 }

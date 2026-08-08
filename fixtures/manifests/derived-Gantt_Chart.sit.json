@@ -34,7 +34,7 @@
  ],
  "fixture": "derived-Gantt_Chart.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "7d8de1ea93529f665f6b75cd79d08c00734a7958a6e6b486752de44587f6bf02",
  "size": 112862
 }

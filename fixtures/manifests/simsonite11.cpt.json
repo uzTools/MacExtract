@@ -12,7 +12,7 @@
  ],
  "fixture": "simsonite11.cpt",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "f7c70caacb2f25969a258196be384ca86abebd18e50a8df48639ce308430c6d7",
  "size": 4608
 }

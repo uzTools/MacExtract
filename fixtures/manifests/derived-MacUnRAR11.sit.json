@@ -39,7 +39,7 @@
  ],
  "fixture": "derived-MacUnRAR11.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "67ee6d7b86933295162106cd76785b2df76537f2b0042875df31da6551e467fe",
  "size": 79374
 }

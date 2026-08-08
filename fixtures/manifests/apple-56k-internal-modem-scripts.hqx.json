@@ -12,7 +12,7 @@
  ],
  "fixture": "apple-56k-internal-modem-scripts.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "fba674e9c50ba78556e53569184911b3d3ff2f034f4b53c8d0fad3225daf62dc",
  "size": 21544
 }

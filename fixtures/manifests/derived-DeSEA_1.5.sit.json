@@ -5,15 +5,6 @@
    "name": "DeSEA 1.5"
   },
   {
-   "creator": "R*ch",
-   "data_sha256": "39b3fd22d5797ea62f4b5d68a48d24aefeefb0e12c10ff069278a66661e77f5d",
-   "data_size": 6644,
-   "name": "DeSEA 1.5/DeSEA 1.5 Release Notes",
-   "rsrc_sha256": "95363298dc6fc21077ca1facecb106bb97d7e9f1424dbfec533d167fde1aa405",
-   "rsrc_size": 915,
-   "type": "TEXT"
-  },
-  {
    "creator": "dSEA",
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
@@ -21,11 +12,20 @@
    "rsrc_sha256": "c9a8d40ab93fbc9ee654e613ac9915e5d1f208ce1fc832945de0624414560c19",
    "rsrc_size": 34555,
    "type": "APPL"
+  },
+  {
+   "creator": "R*ch",
+   "data_sha256": "39b3fd22d5797ea62f4b5d68a48d24aefeefb0e12c10ff069278a66661e77f5d",
+   "data_size": 6644,
+   "name": "DeSEA 1.5/DeSEA 1.5 Release Notes",
+   "rsrc_sha256": "95363298dc6fc21077ca1facecb106bb97d7e9f1424dbfec533d167fde1aa405",
+   "rsrc_size": 915,
+   "type": "TEXT"
   }
  ],
  "fixture": "derived-DeSEA_1.5.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "22a3131841c0f00658fc1352a05d2bac65e31464a05f812f1f156712941f31a1",
  "size": 22969
 }

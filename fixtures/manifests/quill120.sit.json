@@ -12,7 +12,7 @@
  ],
  "fixture": "quill120.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "3262dcd768adce76c38e4b2ecaed9a56427d50eee19e5f83aaa7c910f76da6b9",
  "size": 16384
 }

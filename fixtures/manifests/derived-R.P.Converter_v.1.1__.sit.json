@@ -25,7 +25,7 @@
  ],
  "fixture": "derived-R.P.Converter_v.1.1__.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "48ac06cb11145f1d612b5422d500cad8d664a56c83431195c2afa88459b94823",
  "size": 7890
 }

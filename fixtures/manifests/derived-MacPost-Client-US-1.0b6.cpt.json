@@ -2,6 +2,15 @@
  "entries": [
   {
    "creator": "mcPT",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Listener",
+   "rsrc_sha256": "a493a236863e70b86a5d3df7903222058541d6abfdb8fdcc4a2fe211e68a9497",
+   "rsrc_size": 28288,
+   "type": "INIT"
+  },
+  {
+   "creator": "mcPT",
    "data_sha256": "4d917203b473c36200b44979755e371dfa6c01caaf6fad9b99cadfeda204befb",
    "data_size": 632,
    "name": "Listener Release Notes",
@@ -13,10 +22,10 @@
    "creator": "mcPT",
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
-   "name": "Listener",
-   "rsrc_sha256": "a493a236863e70b86a5d3df7903222058541d6abfdb8fdcc4a2fe211e68a9497",
-   "rsrc_size": 28288,
-   "type": "INIT"
+   "name": "MacPost",
+   "rsrc_sha256": "236a139d8de5c7ca9b8e46fc08f1d80fe118b4d27b8200004e6f8f196b83bdff",
+   "rsrc_size": 149554,
+   "type": "APPL"
   },
   {
    "creator": "mcPT",
@@ -37,15 +46,6 @@
    "type": "WORD"
   },
   {
-   "creator": "mcPT",
-   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "data_size": 0,
-   "name": "MacPost",
-   "rsrc_sha256": "236a139d8de5c7ca9b8e46fc08f1d80fe118b4d27b8200004e6f8f196b83bdff",
-   "rsrc_size": 149554,
-   "type": "APPL"
-  },
-  {
    "creator": "MWII",
    "data_sha256": "cb3ca54775b17c8112dbb3aaf3ae523127a9416b37da28f73adff6cda7e0bc14",
    "data_size": 4999,
@@ -57,7 +57,7 @@
  ],
  "fixture": "derived-MacPost-Client-US-1.0b6.cpt",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "27fd94e030b3dde1cf49da489ad8abd133dad2fc9996025acff109fafb8c390c",
  "size": 171258
 }

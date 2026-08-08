@@ -12,7 +12,7 @@
  ],
  "fixture": "polyglot.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "ad37186562a2bec7ac502603ea5c4c4e1154513a31c3670d6e4883310c2e4a3c",
  "size": 110400
 }

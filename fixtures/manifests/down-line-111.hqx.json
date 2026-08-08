@@ -12,7 +12,7 @@
  ],
  "fixture": "down-line-111.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "04fa063aec0af3558434cc0556244da92f79e5decbe01d4e0e85515c0979da12",
  "size": 116518
 }

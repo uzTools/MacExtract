@@ -1,10 +1,6 @@
 {
  "entries": [
   {
-   "is_dir": true,
-   "name": "Original Distribution files"
-  },
-  {
    "creator": "????",
    "data_sha256": "5b9394ad5bfda7edbd7f6f84c06a827a065f1d0c86bd192792d88a6e4b42e343",
    "data_size": 467,
@@ -39,6 +35,28 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "WDBN"
+  },
+  {
+   "is_dir": true,
+   "name": "Original Distribution files"
+  },
+  {
+   "creator": "MSWD",
+   "data_sha256": "176526713fc7a5767126a35d21fcbed1fbdbc2190db9b524b01092e052b9216a",
+   "data_size": 59392,
+   "name": "Original Distribution files/ckmker.doc",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "WDBN"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "17432d68ead81054e293bfeadc98f8fa63ff212f0415f635c48c6aaaead8435c",
+   "data_size": 92609,
+   "name": "Original Distribution files/ckmker.ps",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
   },
   {
    "creator": "KR09",
@@ -111,29 +129,11 @@
    "rsrc_sha256": "0c5ad35f2834a350356420263983364db4d0f9f8e4d3e71bbff05a07b78ad317",
    "rsrc_size": 1318,
    "type": "KERS"
-  },
-  {
-   "creator": "MSWD",
-   "data_sha256": "176526713fc7a5767126a35d21fcbed1fbdbc2190db9b524b01092e052b9216a",
-   "data_size": 59392,
-   "name": "Original Distribution files/ckmker.doc",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0,
-   "type": "WDBN"
-  },
-  {
-   "creator": "????",
-   "data_sha256": "17432d68ead81054e293bfeadc98f8fa63ff212f0415f635c48c6aaaead8435c",
-   "data_size": 92609,
-   "name": "Original Distribution files/ckmker.ps",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0,
-   "type": "TEXT"
   }
  ],
  "fixture": "derived-Kermit_0.98_63_.cpt",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "8b31986324ecf1a13a9d660edd4ab8c20005e04c9f7ff006272a56c326c702c0",
  "size": 145343
 }

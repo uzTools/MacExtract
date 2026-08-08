@@ -12,7 +12,7 @@
  ],
  "fixture": "x-bitmap.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "0660dba7422c8e6bba5fd9ecd6e37bd8230cb82ea0fc90737e72d74c53c5915b",
  "size": 15884
 }

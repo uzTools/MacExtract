@@ -21,7 +21,7 @@
  ],
  "fixture": "derived-BinHqx102.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "636b0d1bb537b9a6c0195e1ed420cb6fe89a9b8c2cb26b878e6baac257a048ab",
  "size": 32055
 }

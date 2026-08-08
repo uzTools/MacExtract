@@ -12,7 +12,7 @@
  ],
  "fixture": "nettron21.cpt",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "b4ce5d0e4fb9fd7bfc80a0e555bcee81401538b3830a4103dd1a9d5e65bd96cb",
  "size": 100480
 }

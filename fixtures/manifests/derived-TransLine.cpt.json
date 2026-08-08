@@ -21,7 +21,7 @@
  ],
  "fixture": "derived-TransLine.cpt",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "db7b2fd7689f0b8ec8a7c5aff962f7c4de16f72afc1c0af6b4d011a786ee9d35",
  "size": 29820
 }

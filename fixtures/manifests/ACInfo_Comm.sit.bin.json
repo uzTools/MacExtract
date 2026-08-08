@@ -12,7 +12,7 @@
  ],
  "fixture": "ACInfo_Comm.sit.bin",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "e6b0745c08f0a10c07634f70533ea6829b32fe61e694dd6eade2ea5e8e75ef8d",
  "size": 159360
 }

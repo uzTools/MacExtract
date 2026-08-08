@@ -12,7 +12,7 @@
  ],
  "fixture": "ripem-mac-08b2.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "993fb34741a166ac9bfb14d8bbf4af98f28c80c44c86d862128772768111cb36",
  "size": 186185
 }

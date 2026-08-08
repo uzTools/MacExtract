@@ -12,7 +12,7 @@
  ],
  "fixture": "altwdef.bin",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "9e605686b934dbd98f63ba216aeefe7dc0da91e06d067b2ba8dad6c3c70273fc",
  "size": 31842
 }

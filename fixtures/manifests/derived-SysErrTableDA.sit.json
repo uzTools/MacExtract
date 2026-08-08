@@ -12,7 +12,7 @@
  ],
  "fixture": "derived-SysErrTableDA.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "ec3dbf0ccfbd6564eb3ede04e71194b51dab9852f28d7a1c9585031b0242ba6c",
  "size": 24368
 }

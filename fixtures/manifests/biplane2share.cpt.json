@@ -12,7 +12,7 @@
  ],
  "fixture": "biplane2share.cpt",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "af236af8a8822d48d1895b93acd262ad0912ab378c56471dc6383298bb457634",
  "size": 107008
 }

@@ -12,7 +12,7 @@
  ],
  "fixture": "stopwatch11.cpt",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "f9640d22eae055508aef447d49a80da3bebdef490b72114b7d9405fa14842b26",
  "size": 12416
 }

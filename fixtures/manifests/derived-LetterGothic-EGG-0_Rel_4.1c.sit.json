@@ -5,14 +5,6 @@
    "name": "LetterGothic-EGG-0_Rel_4.1c"
   },
   {
-   "is_dir": true,
-   "name": "LetterGothic-EGG-0_Rel_4.1c/LetterGothic-EGG-0 - TTF"
-  },
-  {
-   "is_dir": true,
-   "name": "LetterGothic-EGG-0_Rel_4.1c/LetterGothic-EGG-0 - Type 1"
-  },
-  {
    "creator": "ttxt",
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
@@ -29,6 +21,41 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
+  },
+  {
+   "is_dir": true,
+   "name": "LetterGothic-EGG-0_Rel_4.1c/LetterGothic-EGG-0 - TTF"
+  },
+  {
+   "creator": "DMOV",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "LetterGothic-EGG-0_Rel_4.1c/LetterGothic-EGG-0 - TTF/LetterGothic-EGG-0.suit",
+   "rsrc_sha256": "e566b7843b323050ad72fd53efe115dcd66f3b9d226044bcfde7cf80175d7fd1",
+   "rsrc_size": 55763,
+   "type": "FFIL"
+  },
+  {
+   "is_dir": true,
+   "name": "LetterGothic-EGG-0_Rel_4.1c/LetterGothic-EGG-0 - Type 1"
+  },
+  {
+   "creator": "ACp1",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "LetterGothic-EGG-0_Rel_4.1c/LetterGothic-EGG-0 - Type 1/LetteGotEGG0",
+   "rsrc_sha256": "c0db0a43e544ca0963b96c72ad382c05099c2f41a71be2c74e9d831dc5a0036c",
+   "rsrc_size": 27424,
+   "type": "LWFN"
+  },
+  {
+   "creator": "DMOV",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "LetterGothic-EGG-0_Rel_4.1c/LetterGothic-EGG-0 - Type 1/LetterGothic-EGG-0.bmap",
+   "rsrc_sha256": "60811071faba33de85462dc7bae7bd3070a0eb8163a9ab13771f764c65d24b0b",
+   "rsrc_size": 15144,
+   "type": "FFIL"
   },
   {
    "creator": "MSWD",
@@ -56,38 +83,11 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
-  },
-  {
-   "creator": "ACp1",
-   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "data_size": 0,
-   "name": "LetterGothic-EGG-0_Rel_4.1c/LetterGothic-EGG-0 - Type 1/LetteGotEGG0",
-   "rsrc_sha256": "c0db0a43e544ca0963b96c72ad382c05099c2f41a71be2c74e9d831dc5a0036c",
-   "rsrc_size": 27424,
-   "type": "LWFN"
-  },
-  {
-   "creator": "DMOV",
-   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "data_size": 0,
-   "name": "LetterGothic-EGG-0_Rel_4.1c/LetterGothic-EGG-0 - Type 1/LetterGothic-EGG-0.bmap",
-   "rsrc_sha256": "60811071faba33de85462dc7bae7bd3070a0eb8163a9ab13771f764c65d24b0b",
-   "rsrc_size": 15144,
-   "type": "FFIL"
-  },
-  {
-   "creator": "DMOV",
-   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "data_size": 0,
-   "name": "LetterGothic-EGG-0_Rel_4.1c/LetterGothic-EGG-0 - TTF/LetterGothic-EGG-0.suit",
-   "rsrc_sha256": "e566b7843b323050ad72fd53efe115dcd66f3b9d226044bcfde7cf80175d7fd1",
-   "rsrc_size": 55763,
-   "type": "FFIL"
   }
  ],
  "fixture": "derived-LetterGothic-EGG-0_Rel_4.1c.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "8ca15c0847496ac0bb84fc294579f021bc0837b2e872d66d7e3274873e0640fb",
  "size": 79662
 }

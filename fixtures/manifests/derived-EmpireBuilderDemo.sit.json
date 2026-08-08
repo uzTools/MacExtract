@@ -30,7 +30,7 @@
  ],
  "fixture": "derived-EmpireBuilderDemo.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "2683df40fc33603e60a0017eae5a1e981ec44db5d7c5970f335d2c9ed9add2f9",
  "size": 278294
 }

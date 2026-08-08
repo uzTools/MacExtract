@@ -34,7 +34,7 @@
  ],
  "fixture": "derived-UUParser1.72.sea",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "486c22b090e5029f5cd66133375168b35dd8c8ff174d4c73f598a5ab6a603e11",
  "size": 66272
 }

@@ -12,7 +12,7 @@
  ],
  "fixture": "extract-pc-102.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "1e3a840f22805c1f1204841e258e99598107f653963a2ccb457258429f3a511f",
  "size": 45203
 }

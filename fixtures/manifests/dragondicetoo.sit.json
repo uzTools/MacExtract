@@ -12,7 +12,7 @@
  ],
  "fixture": "dragondicetoo.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "9b25f7cc03e8f8396ad3b9bcfcc8d6eb2d6641b9e9ec1aab949b46c79b802172",
  "size": 3840
 }

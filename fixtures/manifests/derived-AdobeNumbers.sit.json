@@ -21,7 +21,7 @@
  ],
  "fixture": "derived-AdobeNumbers.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "213630e36fd8373f00de3027d102ee3b02e1d7f92de466ccb08b3c4a46931ea3",
  "size": 8934
 }

@@ -34,7 +34,7 @@
  ],
  "fixture": "derived-Bootblocker.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "c4b7542c736d1c2ae22d445d41f188900a11db73e45041d169d550457498a710",
  "size": 27577
 }

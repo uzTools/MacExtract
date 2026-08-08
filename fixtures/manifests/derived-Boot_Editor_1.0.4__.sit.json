@@ -25,7 +25,7 @@
  ],
  "fixture": "derived-Boot_Editor_1.0.4__.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "399cc671fdc180a794c7a41e437c23c298a9af92f0daf9a1d2a6816a2d9e03f3",
  "size": 47669
 }

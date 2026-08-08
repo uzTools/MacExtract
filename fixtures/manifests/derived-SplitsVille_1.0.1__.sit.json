@@ -70,7 +70,7 @@
  ],
  "fixture": "derived-SplitsVille_1.0.1__.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "4ad27fccf5aaf9ea45da009f415c691f6576715b5b6f2acb71e5e738072466e4",
  "size": 163672
 }

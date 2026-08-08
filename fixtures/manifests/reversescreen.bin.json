@@ -12,7 +12,7 @@
  ],
  "fixture": "reversescreen.bin",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "3ff8c666221f707d4262a4542f9082a535ba693ae28bfdc30c6c5fbc0a495f44",
  "size": 1944
 }

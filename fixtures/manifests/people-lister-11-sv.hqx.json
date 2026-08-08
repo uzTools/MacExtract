@@ -12,7 +12,7 @@
  ],
  "fixture": "people-lister-11-sv.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "b401ed3f9a6fe51b22a9f5f3f2a56f45051cb13876c5fa81d1f685a6f7a3dbe8",
  "size": 221688
 }

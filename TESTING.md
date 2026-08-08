@@ -22,19 +22,43 @@ package `unar`), whose XADMaster engine is also our primary reference.
 
 ### Resource forks on Linux
 
-`unar --help` documents `-forks (-k) <visible|hidden|skip>`; with
-`-k visible` (the default) each resource fork is written as an
-**AppleDouble container** named `<file>.rsrc` beside the data fork.
-Manifest building therefore parses the AppleDouble (magic
-`0x00051607`; entry id 2 = raw resource fork, id 9 = Finder info with
-type/creator) to recover raw fork bytes and metadata — see
-`tools/make_manifests.py::parse_appledouble`.
+`unar --help` documents `-forks (-k) <visible|hidden|skip>`. Both
+non-skip modes write an **AppleDouble container** beside the data
+fork; they differ in how it is named, and manifests are built from
+`-k hidden` (`._<file>`) rather than the default `-k visible`
+(`<file>.rsrc`):
+
+- The suffix form is **ambiguous**: an archive holding both `X` and
+  `X.rsrc` — every THINK C project — cannot be represented, because
+  one entry's sidecar is another entry's name. The prefix namespace is
+  disjoint from real archive names.
+- The suffix form also triggers a GNUstep bug: `-k visible` builds the
+  name by appending an extension, which its path code refuses for a
+  leading `~`, and unar then writes the container into the *data*-fork
+  filename. Prefixing never calls that code.
+
+Manifest building parses the AppleDouble (magic `0x00051607`; entry
+id 2 = raw resource fork, id 9 = Finder info with type/creator) to
+recover raw fork bytes and metadata — see
+`tools/make_manifests.py::parse_appledouble`. The manifest records
+neither convention, only entry names and per-fork hashes; switching
+conventions left all 774 pre-existing manifests byte-identical
+(DECISIONS.md, 2026-08-08).
+
+**A resource-only entry produces only a `._X` file**, because unar
+writes nothing for a 0-byte data fork. That is an empty data fork, not
+a lost one — confirmed against `lsar`'s `XADIsResourceFork` and the
+container's entry ids, not assumed.
+
+`unclassic` writes `<file>.rsrc` by default like unar, and `._<file>`
+under `--forks hidden`; the differential harnesses pass that flag so
+both sides of the comparison use the unambiguous form.
 
 ### Exact oracle invocation
 
 ```
 lsar -j -nr -e macintosh <fixture>     # format name + metadata (JSON)
-unar -nr -D -f -q -k visible -e macintosh -o <tmpdir> <fixture>
+unar -nr -D -f -q -k hidden -e macintosh -o <tmpdir> <fixture>
 ```
 
 - `-nr`: no recursion — each manifest describes exactly one container
@@ -99,7 +123,7 @@ sampled occurrence index **by trying to allocate the table and failing**
 CI forces it three ways:
 
 - `-DUNC_ARS_FORCE_SAMPLED` compiles the fast path out. The whole
-  769-fixture diff suite and all 7,690 robustness variants run through the
+  778-fixture diff suite and all 7,780 robustness variants run through the
   fallback under ASan+UBSan, and must be byte-exact.
 - `--budget 678392` (what a 1 MB Mac Plus leaves the engine) on the 31
   StuffIt 5 fixtures, with the normal adaptive build. This is the only step

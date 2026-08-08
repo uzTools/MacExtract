@@ -12,7 +12,7 @@
  ],
  "fixture": "derived-Chooser_2.0.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "ad3ac2fa144c55c87f2cf047f86b4bae0c3ba9b80a6bf70d95dc0c7bbee6e69d",
  "size": 47212
 }

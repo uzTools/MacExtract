@@ -12,7 +12,7 @@
  ],
  "fixture": "teacutil11.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "80d334ead63db303403af85a642efd7b5c5d02ad357e69f472fefed3f6e8afa5",
  "size": 12761
 }

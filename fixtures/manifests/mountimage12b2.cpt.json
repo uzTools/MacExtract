@@ -12,7 +12,7 @@
  ],
  "fixture": "mountimage12b2.cpt",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "0d17315471922400555ae29d203854ea74c0b87fcd97a9daa9d5d0d83b15f545",
  "size": 6912
 }

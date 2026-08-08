@@ -12,7 +12,7 @@
  ],
  "fixture": "alysis-disk-expander-12.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "0556786ab17a4d18aed6cb268455281f05ff965d6186bf4e7038395e0cef6dd8",
  "size": 62549
 }

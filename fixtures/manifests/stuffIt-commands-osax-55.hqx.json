@@ -12,7 +12,7 @@
  ],
  "fixture": "stuffIt-commands-osax-55.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "c43ca3a3087fcd17e7df4b888c343c8875527c9f8c575e22170d03d929030d92",
  "size": 91923
 }

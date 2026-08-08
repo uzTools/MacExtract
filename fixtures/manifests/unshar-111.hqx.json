@@ -12,7 +12,7 @@
  ],
  "fixture": "unshar-111.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "e5a06a9a11bcdb6d8c9389340265f3e32a7405d3d59d4c2413bff4c8a98ecceb",
  "size": 115223
 }

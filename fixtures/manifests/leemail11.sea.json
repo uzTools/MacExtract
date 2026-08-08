@@ -12,7 +12,7 @@
  ],
  "fixture": "leemail11.sea",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "e49f6dd548f5108bbaf61fcd510053364ac53069a40c0cbc6983a2a6e367aef1",
  "size": 83072
 }

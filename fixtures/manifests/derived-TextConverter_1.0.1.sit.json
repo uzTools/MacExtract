@@ -61,7 +61,7 @@
  ],
  "fixture": "derived-TextConverter_1.0.1.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "6995841ec93105d8cd171122c0172849f4083ed92b277a713f268905918fd7c4",
  "size": 121602
 }

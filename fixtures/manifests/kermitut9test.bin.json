@@ -12,7 +12,7 @@
  ],
  "fixture": "kermitut9test.bin",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "cdb283305a8dafb563f948ab0387954d4d5488735ca88ab355c96c02781cb08b",
  "size": 303744
 }

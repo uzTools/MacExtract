@@ -12,7 +12,7 @@
  ],
  "fixture": "bitmap11.sit.bin",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "cf9947aec10a6def1563a3e5d0eb14b331335d9eece1a9fc11033407a584989c",
  "size": 125696
 }

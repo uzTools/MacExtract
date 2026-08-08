@@ -6,6 +6,15 @@
   },
   {
    "creator": "QEdt",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "QuoEdit mini 1.1/QuoEdit mini",
+   "rsrc_sha256": "a476d02b849d83c8806ffffde877c8f1e373f600b4b39a2a677d1c63e5810a05",
+   "rsrc_size": 61089,
+   "type": "APPL"
+  },
+  {
+   "creator": "QEdt",
    "data_sha256": "31364f949b70a22e255b0954e572e8e93facd1ff1248272a4c0d22d37e492ee9",
    "data_size": 4050,
    "name": "QuoEdit mini 1.1/QuoEdit mini History",
@@ -30,20 +39,11 @@
    "rsrc_sha256": "90825ad97e048c096b89b8462f13b98c559d1f6aad71d5016c73d2f90329302d",
    "rsrc_size": 516,
    "type": "TEXT"
-  },
-  {
-   "creator": "QEdt",
-   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "data_size": 0,
-   "name": "QuoEdit mini 1.1/QuoEdit mini",
-   "rsrc_sha256": "a476d02b849d83c8806ffffde877c8f1e373f600b4b39a2a677d1c63e5810a05",
-   "rsrc_size": 61089,
-   "type": "APPL"
   }
  ],
  "fixture": "derived-QuoEdit_mini_1.1.sit",
  "format": "StuffIt 5",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "4b9cdd81c88b5361f473a31b23a86063da29faaeb98f93f3bd34cbcded9e1b33",
  "size": 40558
 }

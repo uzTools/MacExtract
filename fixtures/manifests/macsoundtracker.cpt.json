@@ -12,7 +12,7 @@
  ],
  "fixture": "macsoundtracker.cpt",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "dab608c08f5da1ea8876b6a3524fa19567f5fc1e5544fed0decce330314e2644",
  "size": 97408
 }

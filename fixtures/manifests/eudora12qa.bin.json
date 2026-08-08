@@ -12,7 +12,7 @@
  ],
  "fixture": "eudora12qa.bin",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "46a3853abe8cf0b4b815c9c319645f8adf2bc3839f5c9dd35db0bf168099fb00",
  "size": 41088
 }

@@ -5,50 +5,6 @@
    "name": "ACMDS"
   },
   {
-   "is_dir": true,
-   "name": "LaTeX"
-  },
-  {
-   "creator": "ALFA",
-   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "data_size": 0,
-   "name": "Alpha.4.01",
-   "rsrc_sha256": "d330f51cf1ae309317c7081ca3c23235443c5070167f20884e1346ea34c3ece6",
-   "rsrc_size": 283927,
-   "type": "APPL"
-  },
-  {
-   "creator": "ALFA",
-   "data_sha256": "f6902f3e94becc74645f294c4931e8e2a2b2aa313b72f572b6550e19bcb62382",
-   "data_size": 18224,
-   "name": "AlphaBits",
-   "rsrc_sha256": "152a5bcb795c832a7b98e3a65f93ba1838b2e21d0fa8e0dffbb8cde95b9af9d6",
-   "rsrc_size": 540,
-   "type": "TEXT"
-  },
-  {
-   "creator": "ALFA",
-   "data_sha256": "e455e154c2b966e228dd968e702f007c292cfa9084a9e9b3f926fb26f908792b",
-   "data_size": 29006,
-   "name": "Changes",
-   "rsrc_sha256": "6f58d52342979279d75dd812fbfff51a32406a7e6e3d93fefa29f435145d6cfd",
-   "rsrc_size": 560,
-   "type": "TEXT"
-  },
-  {
-   "creator": "ALFA",
-   "data_sha256": "5ccb0d0bd4da62a7dd0fc01a643ce08fdb7691ddb0711ef5ee2823805360638d",
-   "data_size": 527,
-   "name": "README",
-   "rsrc_sha256": "8361a23512918aec083a477307204e7615f01434ec2b03b268e9778afa0655fd",
-   "rsrc_size": 360,
-   "type": "TEXT"
-  },
-  {
-   "is_dir": true,
-   "name": "ACMDS/acmds.new"
-  },
-  {
    "creator": "ALFA",
    "data_sha256": "d3efd0d8276966d56b9210f740549ac515370082fca50dd13b27e6e0839cb759",
    "data_size": 968,
@@ -155,40 +111,8 @@
    "type": "TEXT"
   },
   {
-   "creator": "ALFA",
-   "data_sha256": "ba7115224ba5523abde0c84148f1928a6539e1c5a2c331aee4127a27797075a8",
-   "data_size": 2541,
-   "name": "ACMDS/dir.c",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0,
-   "type": "TEXT"
-  },
-  {
-   "creator": "ALFA",
-   "data_sha256": "85711c752b202d61a5298c55effb1243f2c7b33599e8e89b93c58d17215c68c3",
-   "data_size": 540,
-   "name": "ACMDS/loopMacro",
-   "rsrc_sha256": "e1dd813f81701f70193ce9451336baf7005ec11bf1f851615a5a1f4f1a122bfd",
-   "rsrc_size": 357,
-   "type": "TEXT"
-  },
-  {
-   "creator": "ALFA",
-   "data_sha256": "802dbc96c2062da9ef4e17eec8c6162c7f88562c730d04175385b816c847f58e",
-   "data_size": 2231,
-   "name": "ACMDS/wc ACMD.c",
-   "rsrc_sha256": "c90210c7261d803298a4e947574463475e5230500c34ac6400f33417787223a1",
-   "rsrc_size": 357,
-   "type": "TEXT"
-  },
-  {
-   "creator": "ALFA",
-   "data_sha256": "f730350f5d113473b44c3c42040b3bda07fe9fda64609fecd8e4417112da1dd3",
-   "data_size": 339,
-   "name": "ACMDS/acmds.new/define.c",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0,
-   "type": "TEXT"
+   "is_dir": true,
+   "name": "ACMDS/acmds.new"
   },
   {
    "creator": "KAHL",
@@ -198,6 +122,15 @@
    "rsrc_sha256": "f37533378dda95a840113ba14e33846888ca71c5077bc1f69d1c6f0ba04061d6",
    "rsrc_size": 5294,
    "type": "PROJ"
+  },
+  {
+   "creator": "ALFA",
+   "data_sha256": "f730350f5d113473b44c3c42040b3bda07fe9fda64609fecd8e4417112da1dd3",
+   "data_size": 339,
+   "name": "ACMDS/acmds.new/define.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
   },
   {
    "creator": "KAHL",
@@ -236,12 +169,75 @@
    "type": "TEXT"
   },
   {
+   "creator": "ALFA",
+   "data_sha256": "ba7115224ba5523abde0c84148f1928a6539e1c5a2c331aee4127a27797075a8",
+   "data_size": 2541,
+   "name": "ACMDS/dir.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ALFA",
+   "data_sha256": "85711c752b202d61a5298c55effb1243f2c7b33599e8e89b93c58d17215c68c3",
+   "data_size": 540,
+   "name": "ACMDS/loopMacro",
+   "rsrc_sha256": "e1dd813f81701f70193ce9451336baf7005ec11bf1f851615a5a1f4f1a122bfd",
+   "rsrc_size": 357,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ALFA",
+   "data_sha256": "802dbc96c2062da9ef4e17eec8c6162c7f88562c730d04175385b816c847f58e",
+   "data_size": 2231,
+   "name": "ACMDS/wc ACMD.c",
+   "rsrc_sha256": "c90210c7261d803298a4e947574463475e5230500c34ac6400f33417787223a1",
+   "rsrc_size": 357,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ALFA",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Alpha.4.01",
+   "rsrc_sha256": "d330f51cf1ae309317c7081ca3c23235443c5070167f20884e1346ea34c3ece6",
+   "rsrc_size": 283927,
+   "type": "APPL"
+  },
+  {
+   "creator": "ALFA",
+   "data_sha256": "f6902f3e94becc74645f294c4931e8e2a2b2aa313b72f572b6550e19bcb62382",
+   "data_size": 18224,
+   "name": "AlphaBits",
+   "rsrc_sha256": "152a5bcb795c832a7b98e3a65f93ba1838b2e21d0fa8e0dffbb8cde95b9af9d6",
+   "rsrc_size": 540,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ALFA",
+   "data_sha256": "e455e154c2b966e228dd968e702f007c292cfa9084a9e9b3f926fb26f908792b",
+   "data_size": 29006,
+   "name": "Changes",
+   "rsrc_sha256": "6f58d52342979279d75dd812fbfff51a32406a7e6e3d93fefa29f435145d6cfd",
+   "rsrc_size": 560,
+   "type": "TEXT"
+  },
+  {
+   "is_dir": true,
+   "name": "LaTeX"
+  },
+  {
    "is_dir": true,
    "name": "LaTeX/Dewar Macros"
   },
   {
-   "is_dir": true,
-   "name": "LaTeX/Wright Macros"
+   "creator": "ALFA",
+   "data_sha256": "87207ba9932a35f24474c19ff5b9747284590f3af5e29ba7d573189c17b341e3",
+   "data_size": 8141,
+   "name": "LaTeX/Dewar Macros/dewarLatex",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
   },
   {
    "creator": "ALFA",
@@ -260,6 +256,10 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
+  },
+  {
+   "is_dir": true,
+   "name": "LaTeX/Wright Macros"
   },
   {
    "creator": "ALFA",
@@ -290,17 +290,17 @@
   },
   {
    "creator": "ALFA",
-   "data_sha256": "87207ba9932a35f24474c19ff5b9747284590f3af5e29ba7d573189c17b341e3",
-   "data_size": 8141,
-   "name": "LaTeX/Dewar Macros/dewarLatex",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0,
+   "data_sha256": "5ccb0d0bd4da62a7dd0fc01a643ce08fdb7691ddb0711ef5ee2823805360638d",
+   "data_size": 527,
+   "name": "README",
+   "rsrc_sha256": "8361a23512918aec083a477307204e7615f01434ec2b03b268e9778afa0655fd",
+   "rsrc_size": 360,
    "type": "TEXT"
   }
  ],
  "fixture": "derived-alpha4.01.cpt",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "dfcc1d76e69ef118a7cb4339602b60c46f9d8eea347a3ab89501d4396b4531ec",
  "size": 198749
 }

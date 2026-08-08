@@ -12,7 +12,7 @@
  ],
  "fixture": "timbuktu-iad-actions-10b1.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "c923e10718bda091d20171be700e82cb61a819aab023d3ee3c0be86c9dc90ad0",
  "size": 101436
 }

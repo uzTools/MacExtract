@@ -5,18 +5,6 @@
    "name": "Troi-ClipSave-Plug-in1.1"
   },
   {
-   "is_dir": true,
-   "name": "Troi-ClipSave-Plug-in1.1/For Solution developers"
-  },
-  {
-   "is_dir": true,
-   "name": "Troi-ClipSave-Plug-in1.1/Mac OS Plug-in"
-  },
-  {
-   "is_dir": true,
-   "name": "Troi-ClipSave-Plug-in1.1/Windows Plug-in"
-  },
-  {
    "creator": "ttxt",
    "data_sha256": "f3a006fac8b10a3f63b4e7b89cedd4b489073bc7c99c32529c4330a653c56301",
    "data_size": 7165,
@@ -40,6 +28,50 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "FMP5"
+  },
+  {
+   "is_dir": true,
+   "name": "Troi-ClipSave-Plug-in1.1/For Solution developers"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "2b4e2da0f63c4f626a3324dde40883539e896acf601dc091af41148622a7cf9c",
+   "data_size": 5871,
+   "name": "Troi-ClipSave-Plug-in1.1/For Solution developers/Developer SW License Agreement",
+   "rsrc_sha256": "8863ad5bc7bb179d9069c409bbc15727d078f183057348c2981bf70dddd49d89",
+   "rsrc_size": 392,
+   "type": "TEXT"
+  },
+  {
+   "creator": "FMP5",
+   "data_sha256": "bf9b5554b7e7d8a00e0ce0ffb4add9515815c95de0e0e9d7e3e86022cfced2ba",
+   "data_size": 126976,
+   "name": "Troi-ClipSave-Plug-in1.1/For Solution developers/RegiFunc.fp5",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "FMP5"
+  },
+  {
+   "creator": "MSIE",
+   "data_sha256": "7b70b6b0a126901f39d6e01cdca7dbf1c6249940b4a2d7a2c8c39b12de76e28b",
+   "data_size": 4444,
+   "name": "Troi-ClipSave-Plug-in1.1/For Solution developers/developer license info.html",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "is_dir": true,
+   "name": "Troi-ClipSave-Plug-in1.1/Mac OS Plug-in"
+  },
+  {
+   "creator": "Clib",
+   "data_sha256": "396109fc1c18f7fdf8393a6367c9bf7bd3af400e792f6198c2d6c229767eed70",
+   "data_size": 70454,
+   "name": "Troi-ClipSave-Plug-in1.1/Mac OS Plug-in/ClipSave Plug-In",
+   "rsrc_sha256": "55294dfd151fb93e9fcca26f8a214202aa8c0a0b1e7744756fc8ec875a987ec7",
+   "rsrc_size": 62814,
+   "type": "FMXT"
   },
   {
    "creator": "FMP5",
@@ -87,6 +119,10 @@
    "type": "FMP5"
   },
   {
+   "is_dir": true,
+   "name": "Troi-ClipSave-Plug-in1.1/Windows Plug-in"
+  },
+  {
    "creator": "CWIE",
    "data_sha256": "ef4076524937c8f1e84ea060bd9a7ac9ac59b9e9f34283652946f1c889eb8310",
    "data_size": 104960,
@@ -94,47 +130,11 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "iDLL"
-  },
-  {
-   "creator": "Clib",
-   "data_sha256": "396109fc1c18f7fdf8393a6367c9bf7bd3af400e792f6198c2d6c229767eed70",
-   "data_size": 70454,
-   "name": "Troi-ClipSave-Plug-in1.1/Mac OS Plug-in/ClipSave Plug-In",
-   "rsrc_sha256": "55294dfd151fb93e9fcca26f8a214202aa8c0a0b1e7744756fc8ec875a987ec7",
-   "rsrc_size": 62814,
-   "type": "FMXT"
-  },
-  {
-   "creator": "ttxt",
-   "data_sha256": "2b4e2da0f63c4f626a3324dde40883539e896acf601dc091af41148622a7cf9c",
-   "data_size": 5871,
-   "name": "Troi-ClipSave-Plug-in1.1/For Solution developers/Developer SW License Agreement",
-   "rsrc_sha256": "8863ad5bc7bb179d9069c409bbc15727d078f183057348c2981bf70dddd49d89",
-   "rsrc_size": 392,
-   "type": "TEXT"
-  },
-  {
-   "creator": "FMP5",
-   "data_sha256": "bf9b5554b7e7d8a00e0ce0ffb4add9515815c95de0e0e9d7e3e86022cfced2ba",
-   "data_size": 126976,
-   "name": "Troi-ClipSave-Plug-in1.1/For Solution developers/RegiFunc.fp5",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0,
-   "type": "FMP5"
-  },
-  {
-   "creator": "MSIE",
-   "data_sha256": "7b70b6b0a126901f39d6e01cdca7dbf1c6249940b4a2d7a2c8c39b12de76e28b",
-   "data_size": 4444,
-   "name": "Troi-ClipSave-Plug-in1.1/For Solution developers/developer license info.html",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0,
-   "type": "TEXT"
   }
  ],
  "fixture": "derived-Troi-ClipSave-Plug-in1.1.sit",
  "format": "StuffIt 5",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "0e5568730e7136996d5bf77acbe5f3247db00ad53d294a5c3bc342173a6df138",
  "size": 221991
 }

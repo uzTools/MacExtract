@@ -12,7 +12,7 @@
  ],
  "fixture": "derived-extension-to-type-3.txt.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "a38aee8fbff1c35745aa013da28d901cde04291a18e709921fdc5f1ce252b521",
  "size": 8040
 }

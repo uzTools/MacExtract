@@ -12,7 +12,7 @@
  ],
  "fixture": "soundmover17.cpt",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "bc257adf48cf7c98cd4485dd74c3efd81b316ac53a9debda6e2c3f612ad40887",
  "size": 90112
 }

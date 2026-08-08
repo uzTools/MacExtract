@@ -12,7 +12,7 @@
  ],
  "fixture": "lingo-library-15.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "f87c994cb8b922d9e5db71a5e81ededfe9e9eef51cb98d43ca012b39de7243b5",
  "size": 205025
 }

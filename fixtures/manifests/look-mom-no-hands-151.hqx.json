@@ -12,7 +12,7 @@
  ],
  "fixture": "look-mom-no-hands-151.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "e2c3f93fd25b06fbfc6772d6dbd70f3a0df31cced8991518921200f5f085c9ea",
  "size": 97619
 }

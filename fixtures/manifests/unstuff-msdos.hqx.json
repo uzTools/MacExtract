@@ -12,7 +12,7 @@
  ],
  "fixture": "unstuff-msdos.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "0b1b2193684ee5c797a33eaaa4feb173bd9613a22c5c9ca3cbff95863496ecff",
  "size": 132737
 }

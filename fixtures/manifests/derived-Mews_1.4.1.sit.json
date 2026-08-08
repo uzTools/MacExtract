@@ -39,7 +39,7 @@
  ],
  "fixture": "derived-Mews_1.4.1.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "3b134349f68755f76922eef521b09c1b3da4719bf99c9008945c6c1c2b88411f",
  "size": 270231
 }

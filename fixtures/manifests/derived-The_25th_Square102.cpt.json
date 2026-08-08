@@ -25,7 +25,7 @@
  ],
  "fixture": "derived-The_25th_Square102.cpt",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "d856b056040310f1a88527aec2b99ca3af747adeca13b42d48df9430a4e0746f",
  "size": 79040
 }

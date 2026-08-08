@@ -12,7 +12,7 @@
  ],
  "fixture": "afe-tiff-translator.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "69245deba30ef403190db7c91ee2ca32775aeacd23369b49473345468191c1a3",
  "size": 33372
 }

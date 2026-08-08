@@ -12,7 +12,7 @@
  ],
  "fixture": "macburger-helper.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "88c352166ca730b5c3aaa763b0a4ef0a5323150d40db34bcb980f0f84c1a5a47",
  "size": 306651
 }

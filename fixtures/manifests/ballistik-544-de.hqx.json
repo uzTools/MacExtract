@@ -12,7 +12,7 @@
  ],
  "fixture": "ballistik-544-de.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "83c76b0a15a3e626ab6652e19cf264c765308893b3c7d15192316b35d3707f8c",
  "size": 230896
 }

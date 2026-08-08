@@ -10,7 +10,7 @@
  ],
  "fixture": "typotapps-plustapps-20.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "a0fa91c585c9dfa1545c081a44b717bb314f109ae69f9400019e711fce401e6d",
  "size": 283987
 }

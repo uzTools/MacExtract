@@ -12,7 +12,7 @@
  ],
  "fixture": "retrospect-2i-patch.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "821fb33a816f112765f44a5924c760831ed0facd457a8d8ed41589102dd6a445",
  "size": 39354
 }

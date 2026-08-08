@@ -1,10 +1,6 @@
 {
  "entries": [
   {
-   "is_dir": true,
-   "name": "Source Code"
-  },
-  {
    "creator": "ddTf",
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
@@ -21,6 +17,10 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
+  },
+  {
+   "is_dir": true,
+   "name": "Source Code"
   },
   {
    "creator": "MPS ",
@@ -52,7 +52,7 @@
  ],
  "fixture": "derived-DeleteDesktop.cpt",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "a7fe929bb42faf105c41804a1f3763512621da1f4e2a45ca140299a1b69520e7",
  "size": 4366
 }

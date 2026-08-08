@@ -12,7 +12,7 @@
  ],
  "fixture": "syserrtable30.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "d120343c034a72ab548824b63edef21572181505c8a6e3952a20397dfc4838fb",
  "size": 24496
 }

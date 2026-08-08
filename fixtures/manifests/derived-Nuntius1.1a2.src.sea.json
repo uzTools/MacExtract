@@ -1146,7 +1146,7 @@
  ],
  "fixture": "derived-Nuntius1.1a2.src.sea",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "85ddeff5bf66f3e25344c073f62385efcdd8288a5d3f30677d7296abc448b010",
  "size": 254268
 }

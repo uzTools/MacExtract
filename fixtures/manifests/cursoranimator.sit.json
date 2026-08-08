@@ -12,7 +12,7 @@
  ],
  "fixture": "cursoranimator.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "3d3e916208c8a4266bc74ec3cf5e695250cce23c1492b739fa443ae2af7eabc7",
  "size": 112512
 }

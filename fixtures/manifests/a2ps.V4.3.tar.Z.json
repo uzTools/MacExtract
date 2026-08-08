@@ -10,7 +10,7 @@
  ],
  "fixture": "a2ps.V4.3.tar.Z",
  "format": "Compress",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "2a5121c2fc9329533b7ba08bb56d1ec18a0e44a3a110932ba8f57c3a159c9147",
  "size": 30255
 }

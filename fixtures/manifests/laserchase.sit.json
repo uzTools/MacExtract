@@ -12,7 +12,7 @@
  ],
  "fixture": "laserchase.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "3a25c6f02d82d22007c89d27625e354460c255748337b054911840de0c561301",
  "size": 25344
 }

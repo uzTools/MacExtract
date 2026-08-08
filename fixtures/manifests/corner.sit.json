@@ -12,7 +12,7 @@
  ],
  "fixture": "corner.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "0d21c9672df474defc7ff903fb1f57465a2f0a33b6600411fbcf3dcfd73efaf4",
  "size": 5888
 }

@@ -12,7 +12,7 @@
  ],
  "fixture": "blackbox15.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "2653a93eeb575c316263596df6922182c9aeca36fa56652abc038e83f4eb9081",
  "size": 56077
 }

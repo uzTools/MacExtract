@@ -12,7 +12,7 @@
  ],
  "fixture": "indexer-script-10-as.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "ffd96e62ff6b3ebc5ad6a498ac5425e9321aa4ea8b89016ef24bb8e8a451caa3",
  "size": 19867
 }

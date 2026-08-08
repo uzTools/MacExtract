@@ -12,7 +12,7 @@
  ],
  "fixture": "taxtemplates1990.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "8883da64cea6e12ef5b97237b2e11cf5513b2a07e5fa260d2cbfd15cd1809c87",
  "size": 30464
 }

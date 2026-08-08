@@ -12,7 +12,7 @@
  ],
  "fixture": "derived-DD_Expand.sea",
  "format": "DiskDoubler",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "400153442550e009da1033e0c6f69142a7936a769fd912066c9621fa068f771a",
  "size": 123399
 }

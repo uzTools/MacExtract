@@ -12,7 +12,7 @@
  ],
  "fixture": "pup-decryptor-20.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "221de4fd12bdca2010566278fde6853f83c70eb5d6d370a5ef8e703afcc8fbb7",
  "size": 16132
 }

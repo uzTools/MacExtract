@@ -12,7 +12,7 @@
  ],
  "fixture": "thejournal091.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "c33317af4cf5d2d39098195f9c368d14f5cb13e6b8ecd64a4a80df61c99bb749",
  "size": 82560
 }

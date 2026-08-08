@@ -12,7 +12,7 @@
  ],
  "fixture": "rwasm-202.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "7550c2a0d9c0e592d8c9eb012bf6b1e6af1a82a8cd1bc2ddde6985ab40d71572",
  "size": 89399
 }

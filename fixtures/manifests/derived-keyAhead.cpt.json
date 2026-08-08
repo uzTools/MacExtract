@@ -12,7 +12,7 @@
  ],
  "fixture": "derived-keyAhead.cpt",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "d5200b3c88ef6467bb9d3f80871b8af2b113e1ff36ca1ed56765d411c92f2545",
  "size": 863
 }

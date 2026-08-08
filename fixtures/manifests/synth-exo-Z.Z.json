@@ -10,7 +10,7 @@
  ],
  "fixture": "synth-exo-Z.Z",
  "format": "Compress",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "f11f802daae22d9df385686b78cbd06026e1ff6ae0467ff7b6c803ee29204df5",
  "size": 488
 }

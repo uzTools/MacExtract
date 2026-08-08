@@ -12,7 +12,7 @@
  ],
  "fixture": "business-card-importer.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "1d5fb366cc2e19c6abbcb77955e60078c8d126155292286fa2112cb2afb67d58",
  "size": 161461
 }

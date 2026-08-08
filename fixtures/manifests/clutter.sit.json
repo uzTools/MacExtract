@@ -12,7 +12,7 @@
  ],
  "fixture": "clutter.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "121fbf065c74698b473bf5e6002b9f98dddced34e36cca8d5f0c5e2ee56a8e0d",
  "size": 6207
 }

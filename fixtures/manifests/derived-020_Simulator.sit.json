@@ -1,0 +1,27 @@
+{
+ "entries": [
+  {
+   "creator": "McSk",
+   "data_sha256": "fcc5bca55b8dc845fc0615088a8c42105e2c24bfeea701fc9b8374319b338c4c",
+   "data_size": 1242,
+   "name": "Sim020 Readme",
+   "rsrc_sha256": "28ee5056c2d3e8315a127dca882987b4528e536099fd6c9fdaba6cc4cd22f345",
+   "rsrc_size": 574,
+   "type": "TEXT"
+  },
+  {
+   "creator": "BK?!",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "~Sim020",
+   "rsrc_sha256": "7895c58468e1918b8320318a9fd265d0f142037f27dd3858a1f562eba140a1b5",
+   "rsrc_size": 15332,
+   "type": "cdev"
+  }
+ ],
+ "fixture": "derived-020_Simulator.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "c191286d63f2b7a672e4bbc3bcdf1ba92b1d581b72823588fc8a62046f0c2080",
+ "size": 13415
+}

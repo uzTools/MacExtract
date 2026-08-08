@@ -79,25 +79,32 @@ two mean anything:
 
     # 1. the bound never under-estimates: hard-disable growth
     #    (make lzw_grow return UNC_ERR_MEM as its first statement)
-    UNCLASSIC=build/never/unclassic sh tests/run_diff.sh      # expect 769/769
+    UNCLASSIC=build/never/unclassic sh tests/run_diff.sh      # expect 778/778
 
     # 2. the safety net is correct: force it to run on every stream
     make BUILD=build/tiny CFLAGS="-O1 -g \
         -fsanitize=address,undefined,alignment -fno-sanitize-recover=all \
         -DUNC_LZW_TINY_TABLE" all
-    UNCLASSIC=build/tiny/unclassic sh tests/run_diff.sh       # expect 769/769
+    UNCLASSIC=build/tiny/unclassic sh tests/run_diff.sh       # expect 778/778
 
     # 3. these fixtures CAN fail on this code: starve the table AND
     #    skip the add instead of growing
-    UNCLASSIC=build/probe/unclassic sh tests/run_diff.sh      # expect 675/769
+    UNCLASSIC=build/probe/unclassic sh tests/run_diff.sh      # expect ~90 FAILURES
 
 `UNC_LZW_TINY_TABLE` is committed and forces the initial capacity to 258.
 Steps 1 and 3 are one-line local edits and are deliberately NOT build flags:
 each makes the engine wrong on purpose, and a flag that ships wrong behaviour
 is a flag somebody eventually sets. **Step 3 is the point.** Steps 1 and 2 both
-report 769/769 — the same number a build that ignored the input entirely would
-report — so without a demonstrated failure they distinguish nothing. 94 of the
-769 fixtures reach the LZW path (4 `.Z`, the rest StuffIt classic method 2).
+report a full pass — the same number a build that ignored the input entirely
+would report — so without a demonstrated failure they distinguish nothing.
+94 of the fixtures reach the LZW path (4 `.Z`, the rest StuffIt classic
+method 2).
+
+Numbers: step 2 re-measured **778/778** on 2026-08-08, on the corpus that
+gained nine fixtures that day. Step 3's exact figure is from 2026-08-03 and was
+**675/769** — 94 failures — measured against the 769-fixture suite of that
+date; re-running it needs the hand edit above, and what matters is that it
+fails at all, not the precise count. The LZW-path figure is from the same day.
 
 ### System 7.0.1, 2026-08-01 — a second system tier, corpus only
 
@@ -225,9 +232,11 @@ with the usual on-Mac read-back CRC of both forks.
 `BumpName()` appends `~1`..`~9` when a sanitized name already exists. It is
 live code — it is what produced `archive.sit~1` when the gzip/.Z fallback name
 collided with the archive itself — and nothing had ever checked it. Nothing in
-the corpus can: across all 769 manifests **no two entries collide** under the
+the corpus can: across all manifests **no two entries collide** under the
 Mac's rules (case-insensitive HFS, 31-character components, `:` <-> `/`),
-which was measured, not assumed. So the archive has to be built for it.
+which was measured, not assumed — over 769 manifests then, re-measured over
+all 783 on 2026-08-08 when the nine recovered fixtures were added. So the
+archive has to be built for it.
 
     tools/vmac/mkcollide.py /tmp/collide.tar
     tools/vmac/run.py --keep-disks /tmp/collide.tar

@@ -12,7 +12,7 @@
  ],
  "fixture": "crlf-120.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "b73c2797e675f8ada198d2ea5c2406267f760d8273d06aa377a5a2a5b36bb344",
  "size": 30212
 }

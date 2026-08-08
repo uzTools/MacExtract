@@ -12,7 +12,7 @@
  ],
  "fixture": "compact-pro-151-jp.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "1894fe138c7beb577114e46bb815fec65833ca26e8675cb876030f0a8faa1941",
  "size": 232392
 }

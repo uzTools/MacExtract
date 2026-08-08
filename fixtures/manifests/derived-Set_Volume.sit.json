@@ -12,7 +12,7 @@
  ],
  "fixture": "derived-Set_Volume.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "d0a38859be3c83fa9b58ead9947b2b6ff1ead0f701b9eee6ecc6fac4ec554663",
  "size": 3541
 }

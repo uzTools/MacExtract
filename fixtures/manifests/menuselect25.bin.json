@@ -12,7 +12,7 @@
  ],
  "fixture": "menuselect25.bin",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "2cf99b870a1e3f2ebabec23969db3dafc82818022dac8cd8b084f47f9a5c76da",
  "size": 1847
 }

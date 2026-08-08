@@ -34,7 +34,7 @@
  ],
  "fixture": "derived-Cico_1.0__.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "a93607989c322ae4a4d5ecf1e24211a8821d91a0442afb5da41d5bb664680c54",
  "size": 7702
 }

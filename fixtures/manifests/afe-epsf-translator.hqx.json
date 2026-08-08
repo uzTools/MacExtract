@@ -12,7 +12,7 @@
  ],
  "fixture": "afe-epsf-translator.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "2f141192c3915771b1b57bf757532d46105f05368e24dd5c76113e973eaa6e45",
  "size": 33547
 }

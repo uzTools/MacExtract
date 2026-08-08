@@ -10,6 +10,15 @@
    "type": "ttro"
   },
   {
+   "creator": "NTim",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Network Time",
+   "rsrc_sha256": "6f8de0ec50b307beb073c7eed088eff5e661d9539241a1d9ca66015f0f508b74",
+   "rsrc_size": 45001,
+   "type": "cdev"
+  },
+  {
    "creator": "ttxt",
    "data_sha256": "4cdf07270ae4da6a47d6142096186f6e0a5a8a0900901f876036ae1857a787e8",
    "data_size": 1456,
@@ -26,20 +35,11 @@
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "WDBN"
-  },
-  {
-   "creator": "NTim",
-   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "data_size": 0,
-   "name": "Network Time",
-   "rsrc_sha256": "6f8de0ec50b307beb073c7eed088eff5e661d9539241a1d9ca66015f0f508b74",
-   "rsrc_size": 45001,
-   "type": "cdev"
   }
  ],
  "fixture": "derived-Network_Time_1.0.1.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "8b47010cbcb677eeec983d2a66efb0826d9b3bbf1e4ba26d839ab0199025600c",
  "size": 88126
 }

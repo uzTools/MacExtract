@@ -25,7 +25,7 @@
  ],
  "fixture": "derived-SoundExtractor.cpt",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "a0fc88e78f091cea6f5b0c5623e6b27efdedc7ee18d1c98878c0785166f0ebd8",
  "size": 13799
 }

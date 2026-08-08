@@ -12,7 +12,7 @@
  ],
  "fixture": "smart-saver-34.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "51cdd0bf7b361a1a2ad518c314641ca72e4cd4a04b2898f45207595b4e7321ed",
  "size": 139762
 }

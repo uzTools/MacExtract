@@ -30,7 +30,7 @@
  ],
  "fixture": "derived-MiniScreen_INIT_1.2.SIT",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "3abaa1ad0b82132e521c08cc8e275febdcda1dd60ffed5841af1851db028cab1",
  "size": 5140
 }

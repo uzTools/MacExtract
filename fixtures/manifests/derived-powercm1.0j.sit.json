@@ -34,7 +34,7 @@
  ],
  "fixture": "derived-powercm1.0j.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "b3c5f02930f70f09e45ead9d6c74d680f3d986a98e5a1cd98f7a1dda4cb03c99",
  "size": 11367
 }

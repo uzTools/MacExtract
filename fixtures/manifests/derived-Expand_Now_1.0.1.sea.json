@@ -12,7 +12,7 @@
  ],
  "fixture": "derived-Expand_Now_1.0.1.sea",
  "format": "Now Compress",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "8e8993b925a9d3270cba7d58d769562fc85158a1db72cd9b1d8244905cbba8f9",
  "size": 61824
 }

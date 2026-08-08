@@ -12,7 +12,7 @@
  ],
  "fixture": "derived-apple.art.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "e8af509a77c3256d986c3a46bf44e83c3ebd75d0b59d8a45a6609268e7861188",
  "size": 145596
 }

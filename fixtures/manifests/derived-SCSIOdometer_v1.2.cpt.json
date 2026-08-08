@@ -21,7 +21,7 @@
  ],
  "fixture": "derived-SCSIOdometer_v1.2.cpt",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "beb97bfef28c0bb9dc6863e98d48aa2528360e0b4951cd93f21de283259df4be",
  "size": 10263
 }

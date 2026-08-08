@@ -21,7 +21,7 @@
  ],
  "fixture": "derived-Data_Parser_4.1.sea",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "802707468917e501c6eb92aff6c29d709721db3ebc9fc8e3b34365f57f19fb05",
  "size": 21191
 }

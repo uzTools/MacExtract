@@ -1,14 +1,6 @@
 {
  "entries": [
   {
-   "is_dir": true,
-   "name": "bin"
-  },
-  {
-   "is_dir": true,
-   "name": "docs"
-  },
-  {
    "data_sha256": "944d759a8ff1c6367f61721f455db242cfa5de7c0873ee4c6f927e50fcf65d1b",
    "data_size": 540,
    "name": "README.txt",
@@ -16,11 +8,8 @@
    "rsrc_size": 0
   },
   {
-   "data_sha256": "debe473cfdd9d005111e7bda9630ff4d760f7aff4423ebf63f3448504fccbfac",
-   "data_size": 2200,
-   "name": "docs/manual.txt",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
+   "is_dir": true,
+   "name": "bin"
   },
   {
    "data_sha256": "8d24cb8b59fe12609a5eee44df66a017a500449e2c5610998c11ea6a0082eae3",
@@ -35,11 +24,22 @@
    "name": "bin/zeros.dat",
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
+  },
+  {
+   "is_dir": true,
+   "name": "docs"
+  },
+  {
+   "data_sha256": "debe473cfdd9d005111e7bda9630ff4d760f7aff4423ebf63f3448504fccbfac",
+   "data_size": 2200,
+   "name": "docs/manual.txt",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
   }
  ],
  "fixture": "synth-exo-zip-deflate.zip",
  "format": "Zip",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "7b6dcc8cd9d64e25b771d13049c12b8f04a24f4464d9578b178006d89918f179",
  "size": 3709
 }

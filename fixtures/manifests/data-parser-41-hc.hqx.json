@@ -12,7 +12,7 @@
  ],
  "fixture": "data-parser-41-hc.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "c1dd2a17794ebaf62d5a4fbd0798589351c2b92b2b1efa3bfcd341f6502f5649",
  "size": 47918
 }

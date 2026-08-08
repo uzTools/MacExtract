@@ -12,7 +12,7 @@
  ],
  "fixture": "firstclassdemo.cpt",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "0cfd5001062f36b0295ecf68f741803c3c9716a2c2f8db1753fcd9085b7deedc",
  "size": 249088
 }

@@ -21,7 +21,7 @@
  ],
  "fixture": "derived-DDArchive.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "fa729630c531798ce278849ea72aefb7a3d2ad57e4602e221a489103721e8ade",
  "size": 35408
 }

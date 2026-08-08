@@ -12,7 +12,7 @@
  ],
  "fixture": "derived-Computer_Terms.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "2be9f92b83b1a2e5ae64416c1a0fbfc16f6e7394a4044f6fda7973c157f8d919",
  "size": 22503
 }

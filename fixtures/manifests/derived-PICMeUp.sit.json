@@ -1,6 +1,15 @@
 {
  "entries": [
   {
+   "creator": "Pme^",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "PICMeUp",
+   "rsrc_sha256": "c276b6af102872b75c340d4180bfa02fe13dafd8b145c960255b28d84bf21752",
+   "rsrc_size": 9381,
+   "type": "APPL"
+  },
+  {
    "creator": "MACA",
    "data_sha256": "4eeb785a542aa3c4fdbcabfc3d66a7b91f110caa35de04bc834061db7f82082a",
    "data_size": 13364,
@@ -22,15 +31,6 @@
    "creator": "Pme^",
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
-   "name": "PICMeUp",
-   "rsrc_sha256": "c276b6af102872b75c340d4180bfa02fe13dafd8b145c960255b28d84bf21752",
-   "rsrc_size": 9381,
-   "type": "APPL"
-  },
-  {
-   "creator": "Pme^",
-   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "data_size": 0,
    "name": "StartupMessage",
    "rsrc_sha256": "25cb364cf5e98a5bac2b8b60d4fe2d10db84bcd18415b29c9aa74dfd989ced9c",
    "rsrc_size": 16175,
@@ -39,7 +39,7 @@
  ],
  "fixture": "derived-PICMeUp.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "130c4c624e4ef940a3f25ba2b57897b6e830fc443c64aee3003d456f93acb761",
  "size": 44571
 }

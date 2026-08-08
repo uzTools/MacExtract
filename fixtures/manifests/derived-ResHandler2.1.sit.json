@@ -12,7 +12,7 @@
  ],
  "fixture": "derived-ResHandler2.1.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "a7baef01895430b28498b5da61ecac6bdc938f9c96ccec05690eddc4e8b44ec2",
  "size": 7739
 }

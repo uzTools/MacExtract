@@ -12,7 +12,7 @@
  ],
  "fixture": "bpanel.bin",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "7f3548d6eb0ba865204047b062c4d69561cad1e3ac92eb4b9ffac0798218e543",
  "size": 11904
 }

@@ -12,7 +12,7 @@
  ],
  "fixture": "easy-errors-111.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "6740ec06af102c0df877bb381175315bda17f26929b8e4619777993568d4c823",
  "size": 62742
 }

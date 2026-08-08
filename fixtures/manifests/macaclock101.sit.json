@@ -12,7 +12,7 @@
  ],
  "fixture": "macaclock101.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "088546f3dbb374f264daf8e3184561101ea9b9fdb9c0c3950a466030081ffb51",
  "size": 22656
 }

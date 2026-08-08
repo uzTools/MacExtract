@@ -12,7 +12,7 @@
  ],
  "fixture": "mombasa.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "18f162982795d99db703a3461d2d8819b1fcadeaa1bd787b38e850d3aef7a549",
  "size": 94094
 }

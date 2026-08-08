@@ -12,7 +12,7 @@
  ],
  "fixture": "power-cm-10-jp.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "0c8caae3af78cf3b24d9ec6acd2c679b1b67310998659d17cf25bbc32fdf9ac6",
  "size": 15764
 }

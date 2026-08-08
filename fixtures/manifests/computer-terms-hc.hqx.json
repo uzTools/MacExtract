@@ -12,7 +12,7 @@
  ],
  "fixture": "computer-terms-hc.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "bd323a0ffdf2fd3ad675b4cf3cbdb24bdb102f41221bdae2c75570fbb0595c71",
  "size": 31284
 }

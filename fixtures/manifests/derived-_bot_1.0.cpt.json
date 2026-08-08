@@ -9,160 +9,48 @@
    "name": "’bot 1.0 Folder/\".bot\" Files"
   },
   {
-   "is_dir": true,
-   "name": "’bot 1.0 Folder/Tutorial"
-  },
-  {
    "creator": "’bAr",
-   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "data_size": 0,
-   "name": "’bot 1.0 Folder/’bot Arena 1.0",
-   "rsrc_sha256": "b75865675e852804a68dcd50e71790befdffecab108860604901f3ace5c0f7df",
-   "rsrc_size": 124147,
-   "type": "APPL"
-  },
-  {
-   "creator": "’bDv",
-   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "data_size": 0,
-   "name": "’bot 1.0 Folder/’bot Developer 1.0",
-   "rsrc_sha256": "6c715470cde8f479d8071b074875ba74fb7a789aa30ef3b131736818b86ffe5c",
-   "rsrc_size": 121147,
-   "type": "APPL"
-  },
-  {
-   "creator": "MSWD",
-   "data_sha256": "fba4bce33f4f16c75e7c3322209a9833091323366e4d1815138375c7deecb93a",
-   "data_size": 130560,
-   "name": "’bot 1.0 Folder/’bot Documentation • READ",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0,
-   "type": "WDBN"
-  },
-  {
-   "is_dir": true,
-   "name": "’bot 1.0 Folder/Tutorial/ASM"
-  },
-  {
-   "is_dir": true,
-   "name": "’bot 1.0 Folder/Tutorial/BASIC"
-  },
-  {
-   "creator": "MSWD",
-   "data_sha256": "fa443401110fd2384c33ed6f9fe58ae3049bcb1f2e37676cb056addcc60c6a47",
-   "data_size": 70656,
-   "name": "’bot 1.0 Folder/Tutorial/Basic Tutorial",
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0,
-   "type": "WDBN"
-  },
-  {
-   "creator": "’bDv",
-   "data_sha256": "e6e54b0a59cc9d45142c1cef42f006ff30a9a2ed7f952ab3c15f3ef9d72b2a80",
-   "data_size": 1848,
-   "name": "’bot 1.0 Folder/Tutorial/BASIC/Bomber",
-   "rsrc_sha256": "259bf0904572613939730e40642b09ba7fd08c3bdf93b6b59b7120c95596d31c",
-   "rsrc_size": 372,
-   "type": "TEXT"
-  },
-  {
-   "creator": "’bAr",
-   "data_sha256": "55eadb57b98c383eb72e98ecb473edbbb8188ad06a531d9522a80f8d38b9fb31",
-   "data_size": 643,
-   "name": "’bot 1.0 Folder/Tutorial/BASIC/Bomber.bot",
-   "rsrc_sha256": "5700ca723a71ca0556397bc809adc9dc061878d31c18b1da8ee889e22d00cd06",
-   "rsrc_size": 392,
-   "type": "’b.O"
-  },
-  {
-   "creator": "’bDv",
-   "data_sha256": "d40642c1fb484ac30fb958e4e1f500480f7fdae971c22112cdcaff2022a6f482",
-   "data_size": 1305,
-   "name": "’bot 1.0 Folder/Tutorial/BASIC/Corner",
-   "rsrc_sha256": "34a01cc0cb1454f040180162fc78533a374ad099eff9624843df6c594c034957",
-   "rsrc_size": 372,
-   "type": "TEXT"
-  },
-  {
-   "creator": "’bAr",
-   "data_sha256": "a8f043cc9e07b8ccc2695ffa79f13cf9a7689d22daa786c357220fc7803d5d71",
-   "data_size": 493,
-   "name": "’bot 1.0 Folder/Tutorial/BASIC/Corner.bot",
-   "rsrc_sha256": "05f5016521d632638a424060c35f75f28629cd6455c0243728df8748c0d58862",
-   "rsrc_size": 384,
-   "type": "’b.O"
-  },
-  {
-   "creator": "’bDv",
-   "data_sha256": "e94ee8be7b5de7edc38c40ff3fdaf0605cd17d4024b1ae69f62d3bdc21a0ac07",
-   "data_size": 6061,
-   "name": "’bot 1.0 Folder/Tutorial/BASIC/Middle",
-   "rsrc_sha256": "78c0faa03aee392d0448d99893de4416313cf1a45482bb30c466a9384d12745d",
-   "rsrc_size": 373,
-   "type": "TEXT"
-  },
-  {
-   "creator": "’bAr",
-   "data_sha256": "a7791ec371eaf52e6b4ac0f8d52b9ced9d14324c2754caee74f39cb6bec3f2bb",
-   "data_size": 2023,
-   "name": "’bot 1.0 Folder/Tutorial/BASIC/Middle.bot",
-   "rsrc_sha256": "cc5e33ab889ab46e079a1e182f1390a24372652fa998a0779c391984fdf058ec",
-   "rsrc_size": 392,
-   "type": "’b.O"
-  },
-  {
-   "creator": "’bDv",
-   "data_sha256": "3d48321eb19e09593ab56a98b305ff2f84ac530912a5688a5d69f6883183d118",
-   "data_size": 1055,
-   "name": "’bot 1.0 Folder/Tutorial/BASIC/Seeker",
-   "rsrc_sha256": "7dd81a237b6d009689deb6e7b9b7d7128a3b48f92d63b195dd959165c15aecf3",
-   "rsrc_size": 372,
-   "type": "TEXT"
-  },
-  {
-   "creator": "’bAr",
-   "data_sha256": "650f4ef71b08aa51436265dec4f2df1d6d67a323d31541ca876805e80a4ece5d",
-   "data_size": 233,
-   "name": "’bot 1.0 Folder/Tutorial/BASIC/Seeker.bot",
-   "rsrc_sha256": "56cfa23a18ce3ac58720c318884333381d68806d2a5837201c0946e52696137b",
-   "rsrc_size": 382,
-   "type": "’b.O"
-  },
-  {
-   "creator": "’bDv",
-   "data_sha256": "29ad939cee03ae630420458d5621d316e008e3433b5de0e0985038e6d5354688",
-   "data_size": 1731,
-   "name": "’bot 1.0 Folder/Tutorial/BASIC/Suicide",
-   "rsrc_sha256": "61f0ae6b91ac88fe4c7cc59da62a6faa6c70df506aceef3e0a4a37e57abe7a75",
-   "rsrc_size": 373,
-   "type": "TEXT"
-  },
-  {
-   "creator": "’bAr",
-   "data_sha256": "01569c23b4fb334d54280c391b5b23962670a594da503d1beb4c660c43982213",
-   "data_size": 733,
-   "name": "’bot 1.0 Folder/Tutorial/BASIC/Suicide.bot",
-   "rsrc_sha256": "4256f2509ad15f47271a4fba13d2e615cc99e3ad259f17d40b06cfe283154b22",
+   "data_sha256": "ff2d5987eb81cf89c04defdd7bcd73c20c16cf686c154376d99456e1e82930c7",
+   "data_size": 2143,
+   "name": "’bot 1.0 Folder/\".bot\" Files/BF Zap.bot",
+   "rsrc_sha256": "7d3f65fb75013a43c8b3394a2d5273e238b4bb3d7e9725bf3bc38bbf2c312bd1",
    "rsrc_size": 390,
    "type": "’b.O"
   },
   {
-   "creator": "’bDv",
-   "data_sha256": "60a1565056f5ff798e839eb61abb4dea30272d398ea4b73e0199efde54e74f4a",
-   "data_size": 2143,
-   "name": "’bot 1.0 Folder/Tutorial/BASIC/Zapper",
-   "rsrc_sha256": "091049626e95fb1ae2ad4177f626691e562ebfc654d4c7f0349303e85f3a11ff",
-   "rsrc_size": 372,
-   "type": "TEXT"
+   "creator": "’bAr",
+   "data_sha256": "54ca48529b6b3d2da305a5161575a64cc9af2ac15aeb85f84bcca389032e10a2",
+   "data_size": 853,
+   "name": "’bot 1.0 Folder/\".bot\" Files/Kamakazi.bot",
+   "rsrc_sha256": "de1db4f1e3b37f6b1a6d1fbed01b41e0ca84ce82d1d4fa398a2c0bb92b297225",
+   "rsrc_size": 396,
+   "type": "’b.O"
   },
   {
    "creator": "’bAr",
-   "data_sha256": "48ed5d8ce00df1864d9314c2e711bb14a1851cbf15bcc6d9c3cc656495255954",
-   "data_size": 993,
-   "name": "’bot 1.0 Folder/Tutorial/BASIC/Zapper.bot",
-   "rsrc_sha256": "b0e6e24398e059c1682107cf61a4d2c1f9a0aaa1aeac356ba0e653d93a1fde8e",
+   "data_sha256": "b66a580bff96397f5cb0d5879eddcd4615741e3a57e6ab741c6ba7d6f65e545a",
+   "data_size": 603,
+   "name": "’bot 1.0 Folder/\".bot\" Files/SnowStorm.bot",
+   "rsrc_sha256": "c78f1e7a59795303c9bc46365fb8431962b2ade04e64129bd8817a38a726bb9a",
+   "rsrc_size": 392,
+   "type": "’b.O"
+  },
+  {
+   "creator": "’bAr",
+   "data_sha256": "82f2bd24dbf269f3c6a95f78803cb6402c078c024e172c6cd5f4b8baf629a94d",
+   "data_size": 573,
+   "name": "’bot 1.0 Folder/\".bot\" Files/Thrash.bot",
+   "rsrc_sha256": "d0bd952068ee7457c8f0a82becef69b011e052a95e32618cd05f4d76f2fc5254",
    "rsrc_size": 394,
    "type": "’b.O"
+  },
+  {
+   "is_dir": true,
+   "name": "’bot 1.0 Folder/Tutorial"
+  },
+  {
+   "is_dir": true,
+   "name": "’bot 1.0 Folder/Tutorial/ASM"
   },
   {
    "creator": "’bDv",
@@ -273,45 +161,157 @@
    "type": "’b.O"
   },
   {
-   "creator": "’bAr",
-   "data_sha256": "ff2d5987eb81cf89c04defdd7bcd73c20c16cf686c154376d99456e1e82930c7",
-   "data_size": 2143,
-   "name": "’bot 1.0 Folder/\".bot\" Files/BF Zap.bot",
-   "rsrc_sha256": "7d3f65fb75013a43c8b3394a2d5273e238b4bb3d7e9725bf3bc38bbf2c312bd1",
-   "rsrc_size": 390,
-   "type": "’b.O"
+   "is_dir": true,
+   "name": "’bot 1.0 Folder/Tutorial/BASIC"
+  },
+  {
+   "creator": "’bDv",
+   "data_sha256": "e6e54b0a59cc9d45142c1cef42f006ff30a9a2ed7f952ab3c15f3ef9d72b2a80",
+   "data_size": 1848,
+   "name": "’bot 1.0 Folder/Tutorial/BASIC/Bomber",
+   "rsrc_sha256": "259bf0904572613939730e40642b09ba7fd08c3bdf93b6b59b7120c95596d31c",
+   "rsrc_size": 372,
+   "type": "TEXT"
   },
   {
    "creator": "’bAr",
-   "data_sha256": "54ca48529b6b3d2da305a5161575a64cc9af2ac15aeb85f84bcca389032e10a2",
-   "data_size": 853,
-   "name": "’bot 1.0 Folder/\".bot\" Files/Kamakazi.bot",
-   "rsrc_sha256": "de1db4f1e3b37f6b1a6d1fbed01b41e0ca84ce82d1d4fa398a2c0bb92b297225",
-   "rsrc_size": 396,
-   "type": "’b.O"
-  },
-  {
-   "creator": "’bAr",
-   "data_sha256": "b66a580bff96397f5cb0d5879eddcd4615741e3a57e6ab741c6ba7d6f65e545a",
-   "data_size": 603,
-   "name": "’bot 1.0 Folder/\".bot\" Files/SnowStorm.bot",
-   "rsrc_sha256": "c78f1e7a59795303c9bc46365fb8431962b2ade04e64129bd8817a38a726bb9a",
+   "data_sha256": "55eadb57b98c383eb72e98ecb473edbbb8188ad06a531d9522a80f8d38b9fb31",
+   "data_size": 643,
+   "name": "’bot 1.0 Folder/Tutorial/BASIC/Bomber.bot",
+   "rsrc_sha256": "5700ca723a71ca0556397bc809adc9dc061878d31c18b1da8ee889e22d00cd06",
    "rsrc_size": 392,
    "type": "’b.O"
   },
   {
+   "creator": "’bDv",
+   "data_sha256": "d40642c1fb484ac30fb958e4e1f500480f7fdae971c22112cdcaff2022a6f482",
+   "data_size": 1305,
+   "name": "’bot 1.0 Folder/Tutorial/BASIC/Corner",
+   "rsrc_sha256": "34a01cc0cb1454f040180162fc78533a374ad099eff9624843df6c594c034957",
+   "rsrc_size": 372,
+   "type": "TEXT"
+  },
+  {
    "creator": "’bAr",
-   "data_sha256": "82f2bd24dbf269f3c6a95f78803cb6402c078c024e172c6cd5f4b8baf629a94d",
-   "data_size": 573,
-   "name": "’bot 1.0 Folder/\".bot\" Files/Thrash.bot",
-   "rsrc_sha256": "d0bd952068ee7457c8f0a82becef69b011e052a95e32618cd05f4d76f2fc5254",
+   "data_sha256": "a8f043cc9e07b8ccc2695ffa79f13cf9a7689d22daa786c357220fc7803d5d71",
+   "data_size": 493,
+   "name": "’bot 1.0 Folder/Tutorial/BASIC/Corner.bot",
+   "rsrc_sha256": "05f5016521d632638a424060c35f75f28629cd6455c0243728df8748c0d58862",
+   "rsrc_size": 384,
+   "type": "’b.O"
+  },
+  {
+   "creator": "’bDv",
+   "data_sha256": "e94ee8be7b5de7edc38c40ff3fdaf0605cd17d4024b1ae69f62d3bdc21a0ac07",
+   "data_size": 6061,
+   "name": "’bot 1.0 Folder/Tutorial/BASIC/Middle",
+   "rsrc_sha256": "78c0faa03aee392d0448d99893de4416313cf1a45482bb30c466a9384d12745d",
+   "rsrc_size": 373,
+   "type": "TEXT"
+  },
+  {
+   "creator": "’bAr",
+   "data_sha256": "a7791ec371eaf52e6b4ac0f8d52b9ced9d14324c2754caee74f39cb6bec3f2bb",
+   "data_size": 2023,
+   "name": "’bot 1.0 Folder/Tutorial/BASIC/Middle.bot",
+   "rsrc_sha256": "cc5e33ab889ab46e079a1e182f1390a24372652fa998a0779c391984fdf058ec",
+   "rsrc_size": 392,
+   "type": "’b.O"
+  },
+  {
+   "creator": "’bDv",
+   "data_sha256": "3d48321eb19e09593ab56a98b305ff2f84ac530912a5688a5d69f6883183d118",
+   "data_size": 1055,
+   "name": "’bot 1.0 Folder/Tutorial/BASIC/Seeker",
+   "rsrc_sha256": "7dd81a237b6d009689deb6e7b9b7d7128a3b48f92d63b195dd959165c15aecf3",
+   "rsrc_size": 372,
+   "type": "TEXT"
+  },
+  {
+   "creator": "’bAr",
+   "data_sha256": "650f4ef71b08aa51436265dec4f2df1d6d67a323d31541ca876805e80a4ece5d",
+   "data_size": 233,
+   "name": "’bot 1.0 Folder/Tutorial/BASIC/Seeker.bot",
+   "rsrc_sha256": "56cfa23a18ce3ac58720c318884333381d68806d2a5837201c0946e52696137b",
+   "rsrc_size": 382,
+   "type": "’b.O"
+  },
+  {
+   "creator": "’bDv",
+   "data_sha256": "29ad939cee03ae630420458d5621d316e008e3433b5de0e0985038e6d5354688",
+   "data_size": 1731,
+   "name": "’bot 1.0 Folder/Tutorial/BASIC/Suicide",
+   "rsrc_sha256": "61f0ae6b91ac88fe4c7cc59da62a6faa6c70df506aceef3e0a4a37e57abe7a75",
+   "rsrc_size": 373,
+   "type": "TEXT"
+  },
+  {
+   "creator": "’bAr",
+   "data_sha256": "01569c23b4fb334d54280c391b5b23962670a594da503d1beb4c660c43982213",
+   "data_size": 733,
+   "name": "’bot 1.0 Folder/Tutorial/BASIC/Suicide.bot",
+   "rsrc_sha256": "4256f2509ad15f47271a4fba13d2e615cc99e3ad259f17d40b06cfe283154b22",
+   "rsrc_size": 390,
+   "type": "’b.O"
+  },
+  {
+   "creator": "’bDv",
+   "data_sha256": "60a1565056f5ff798e839eb61abb4dea30272d398ea4b73e0199efde54e74f4a",
+   "data_size": 2143,
+   "name": "’bot 1.0 Folder/Tutorial/BASIC/Zapper",
+   "rsrc_sha256": "091049626e95fb1ae2ad4177f626691e562ebfc654d4c7f0349303e85f3a11ff",
+   "rsrc_size": 372,
+   "type": "TEXT"
+  },
+  {
+   "creator": "’bAr",
+   "data_sha256": "48ed5d8ce00df1864d9314c2e711bb14a1851cbf15bcc6d9c3cc656495255954",
+   "data_size": 993,
+   "name": "’bot 1.0 Folder/Tutorial/BASIC/Zapper.bot",
+   "rsrc_sha256": "b0e6e24398e059c1682107cf61a4d2c1f9a0aaa1aeac356ba0e653d93a1fde8e",
    "rsrc_size": 394,
    "type": "’b.O"
+  },
+  {
+   "creator": "MSWD",
+   "data_sha256": "fa443401110fd2384c33ed6f9fe58ae3049bcb1f2e37676cb056addcc60c6a47",
+   "data_size": 70656,
+   "name": "’bot 1.0 Folder/Tutorial/Basic Tutorial",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "WDBN"
+  },
+  {
+   "creator": "’bAr",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "’bot 1.0 Folder/’bot Arena 1.0",
+   "rsrc_sha256": "b75865675e852804a68dcd50e71790befdffecab108860604901f3ace5c0f7df",
+   "rsrc_size": 124147,
+   "type": "APPL"
+  },
+  {
+   "creator": "’bDv",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "’bot 1.0 Folder/’bot Developer 1.0",
+   "rsrc_sha256": "6c715470cde8f479d8071b074875ba74fb7a789aa30ef3b131736818b86ffe5c",
+   "rsrc_size": 121147,
+   "type": "APPL"
+  },
+  {
+   "creator": "MSWD",
+   "data_sha256": "fba4bce33f4f16c75e7c3322209a9833091323366e4d1815138375c7deecb93a",
+   "data_size": 130560,
+   "name": "’bot 1.0 Folder/’bot Documentation • READ",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "WDBN"
   }
  ],
  "fixture": "derived-_bot_1.0.cpt",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "ade505dd91daf464cb7a79ec20aef7516c6cc87bb1beaf2c537bf614d3069ece",
  "size": 241494
 }

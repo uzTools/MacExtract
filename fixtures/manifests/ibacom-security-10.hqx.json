@@ -12,7 +12,7 @@
  ],
  "fixture": "ibacom-security-10.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "a9b7bb3a6af0d2428b8124e10e2540b094ff786f9b96ccad3579b1ccf3ee5c3b",
  "size": 88263
 }

@@ -25,7 +25,7 @@
  ],
  "fixture": "derived-boogers152.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "fafe54ae39d9c83a73055d711dffb8589b27577a840dbf806a2ca99a22427180",
  "size": 141169
 }

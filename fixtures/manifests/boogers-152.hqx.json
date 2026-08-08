@@ -12,7 +12,7 @@
  ],
  "fixture": "boogers-152.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "31c80d93767575924aee33dc826cba957c9aee15f4e5bd47b1bc6f77c099ebf9",
  "size": 192847
 }

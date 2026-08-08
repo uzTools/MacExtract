@@ -12,7 +12,7 @@
  ],
  "fixture": "suitcase-214-update.bin",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "c3d75d345aa9b3ff0065dd025d72842b0312a83befef865745131f9fc53f77d9",
  "size": 49920
 }

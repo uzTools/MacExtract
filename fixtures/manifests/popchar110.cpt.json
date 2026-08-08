@@ -12,7 +12,7 @@
  ],
  "fixture": "popchar110.cpt",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "d880df7c2617b181005a7bbdfd44a7305c44def6edfbf3b2de875da86ac83252",
  "size": 26880
 }

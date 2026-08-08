@@ -12,7 +12,7 @@
  ],
  "fixture": "mac-storage-faq.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "9ff5c7b42f6876c8b7d6cbc632b2f4f3380d9cf27d912e02c37a11a1cb60bf0a",
  "size": 59837
 }

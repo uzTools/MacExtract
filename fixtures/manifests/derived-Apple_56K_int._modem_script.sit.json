@@ -43,7 +43,7 @@
  ],
  "fixture": "derived-Apple_56K_int._modem_script.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "5b2c71996613fdce516216242748ccdadf7b0ecd26799be94d1f2ec0541dce75",
  "size": 15254
 }

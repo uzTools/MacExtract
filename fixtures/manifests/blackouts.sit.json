@@ -12,7 +12,7 @@
  ],
  "fixture": "blackouts.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "18e48fd61dbe6a0e44b652ccc0f1f97871706a51bc0193c0fb7eb1ff11b025f8",
  "size": 47102
 }

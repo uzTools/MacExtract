@@ -25,7 +25,7 @@
  ],
  "fixture": "derived-InfoStack_folder.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "5f71a7a9b0db0faadf3d292e21e962b4b6edd1a1f024432c400902656e48af27",
  "size": 66513
 }

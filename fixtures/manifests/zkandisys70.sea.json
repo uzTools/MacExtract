@@ -12,7 +12,7 @@
  ],
  "fixture": "zkandisys70.sea",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "a5d67bece18fa302a651a2968e87219755f756f490f49dfc1445f290ba8774dd",
  "size": 21120
 }

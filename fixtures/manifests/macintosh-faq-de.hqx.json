@@ -12,7 +12,7 @@
  ],
  "fixture": "macintosh-faq-de.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "500cb8b6dd78e85e212ac214e2b55e6e9dc4c59dac90883056a308fe12185f81",
  "size": 73944
 }

@@ -12,7 +12,7 @@
  ],
  "fixture": "alwaysfract.bin",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "a37c8ddad42c8e76e44ecb265875fafb64a06c72aeffde76ca9086cfc125f887",
  "size": 1423
 }

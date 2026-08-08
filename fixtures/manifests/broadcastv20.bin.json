@@ -12,7 +12,7 @@
  ],
  "fixture": "broadcastv20.bin",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "f54611b7685cc121f443783b9de40c0184fac14c2bc62c9118f29229a86fb37c",
  "size": 36352
 }

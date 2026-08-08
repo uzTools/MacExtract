@@ -1,0 +1,192 @@
+{
+ "entries": [
+  {
+   "creator": "KAHL",
+   "data_sha256": "74c481a582ee5fd777f642aa3f7ffd75eb70e2f704d6130e5081826fbe19e3cf",
+   "data_size": 2177,
+   "name": "README",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "KAHL",
+   "data_sha256": "24217256e2d08073b14d85d31b42df830409569394b498c758c61b0bbd4e0a89",
+   "data_size": 7880,
+   "name": "README FIRST",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "is_dir": true,
+   "name": "cdev"
+  },
+  {
+   "creator": "JrNl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "cdev/ The Journal",
+   "rsrc_sha256": "08d7cb005dc48554b16c9baf0e32ee1c7cf16e9b9e2d6ccf176c2e2cbc8af5a4",
+   "rsrc_size": 23933,
+   "type": "cdev"
+  },
+  {
+   "creator": "KAHL",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "cdev/Journal cdev π",
+   "rsrc_sha256": "c0f1bd60c1e4de5b54521b6ebba4d2aaeea7c1b2360cd5dca77b6de5af36f04f",
+   "rsrc_size": 5238,
+   "type": "PROJ"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "cdev/Journal cdev π.rsrc",
+   "rsrc_sha256": "ec37b529c2708bc2c8e2e24061519f6ea41160528994ab875909ec5d5faa86f0",
+   "rsrc_size": 23899,
+   "type": "rsrc"
+  },
+  {
+   "creator": "KAHL",
+   "data_sha256": "33c37703fe8ea3ba7116a214ee06eb47d14dabf45f84891c26d117c458e33b4d",
+   "data_size": 11818,
+   "name": "cdev/Journal cdev.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "KAHL",
+   "data_sha256": "afeb2f43b3c8f1e3759eb972a64f8f58641165bb86d84e66dd6f5d3be7ee80ae",
+   "data_size": 1997,
+   "name": "cdev/Journal cdev.h",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "is_dir": true,
+   "name": "install DRVR INIT"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "install DRVR INIT/Journal INIT",
+   "rsrc_sha256": "2eb1df477b8122f5beb2f8c3d8d3f805a1d8b7bc2fd2f4568e546b3b611ce2cc",
+   "rsrc_size": 5375,
+   "type": "rsrc"
+  },
+  {
+   "creator": "KAHL",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "install DRVR INIT/Journal INIT.π",
+   "rsrc_sha256": "124d7011859cad1a64d692e87fce89ef10b195ef89018e88ba7199939bda431a",
+   "rsrc_size": 4872,
+   "type": "PROJ"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "install DRVR INIT/Journal INIT.π.rsrc",
+   "rsrc_sha256": "20f3d3644fbc421d13705aa431453404f3ba91bd2984e6e99a325a0653de2759",
+   "rsrc_size": 1454,
+   "type": "rsrc"
+  },
+  {
+   "creator": "KAHL",
+   "data_sha256": "b99da9e7d6ab8503a2cad2ae2f8f2c317fc6f5aba4da13a4aedb593a0f897d71",
+   "data_size": 15114,
+   "name": "install DRVR INIT/driver.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "KAHL",
+   "data_sha256": "00acf7354a240d96a9a040c0139fd76c995b236a2af85f26577acd5bc8e6067d",
+   "data_size": 1167,
+   "name": "install DRVR INIT/driver.h",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "KAHL",
+   "data_sha256": "92a7e82b9f2c46e663e13269aa198058db8c99f2c6f789c109fad393a1a6b213",
+   "data_size": 1166,
+   "name": "install DRVR INIT/installJournalDriver.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "KAHL",
+   "data_sha256": "d2bad33d355654ed41439d11363fee02e61e8b00ba31f8922645e1ce7541864d",
+   "data_size": 80,
+   "name": "install DRVR INIT/installJournalDriver.h",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "is_dir": true,
+   "name": "journal Driver"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "journal Driver/Journal Driver",
+   "rsrc_sha256": "3a646caec59c882c7076b439bd5e76d6c60d1709a07d390854abbb2586bea021",
+   "rsrc_size": 6807,
+   "type": "rsrc"
+  },
+  {
+   "creator": "KAHL",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "journal Driver/Journal Driver.π",
+   "rsrc_sha256": "7a113159f79213c9888abad05d7740bec82d09f99855cb3307447bf23e13f797",
+   "rsrc_size": 5134,
+   "type": "PROJ"
+  },
+  {
+   "creator": "KAHL",
+   "data_sha256": "5487acd2fda8cb947bb019f8c3d23002f95f837e5b49c0c8db0eab29de1dee2b",
+   "data_size": 17437,
+   "name": "journal Driver/journalDriver.c",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "KAHL",
+   "data_sha256": "244d21ea080a4625bf295666936be170df4b4f511ab74b8925c1cc7571f1bb68",
+   "data_size": 6423,
+   "name": "journal Driver/journalDriver.h",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "KAHL",
+   "data_sha256": "b710e155cdb9b8cd32b97cf8a46710a552ad904969ac291b4d990b0358ff398b",
+   "data_size": 1012,
+   "name": "journal Driver/journalDriverInclude.h",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-The_Journal_0.9.1.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "13ac9ece7ed0e65447bed9f320f3d799bf63844e811d676e8598a0550c51e224",
+ "size": 82408
+}

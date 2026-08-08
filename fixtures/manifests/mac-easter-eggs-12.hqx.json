@@ -12,7 +12,7 @@
  ],
  "fixture": "mac-easter-eggs-12.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "30c5a7de798163b64acab0fce83dd9f3c269bbd92504771408d4c5d92464ac3a",
  "size": 154303
 }

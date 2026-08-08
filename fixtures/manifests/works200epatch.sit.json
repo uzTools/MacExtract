@@ -12,7 +12,7 @@
  ],
  "fixture": "works200epatch.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "4efa0a7921663dd91893e474b4c1286938cb93f047faa8a3af6532ff49a5041a",
  "size": 7936
 }

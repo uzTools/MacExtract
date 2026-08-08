@@ -21,7 +21,7 @@
  ],
  "fixture": "derived-UnStuff_PC__Install",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "44ee43f380dd62f27499aa728de41094bae0112d7a83ce353c4f73ef4290c8a3",
  "size": 80789
 }

@@ -12,7 +12,7 @@
  ],
  "fixture": "orbmazez.cpt",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "2c32237f255f408cb91201aafccb1a4e8ae65322def14f6d02f64b583df5d231",
  "size": 203136
 }

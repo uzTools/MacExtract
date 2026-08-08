@@ -12,7 +12,7 @@
  ],
  "fixture": "termulator203.sea",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "64a48d65501208cf51b54f293b86b503987dc9f74d889ca159a6eaa0a9f525d0",
  "size": 85632
 }

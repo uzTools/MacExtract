@@ -12,7 +12,7 @@
  ],
  "fixture": "derived-Suitcase_II_Updater_1.2.10.cpt",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "c2f105d8cb5b8fe712f04db8bdc96d1584699949c1b6f4c39d180613a0c3db64",
  "size": 33583
 }

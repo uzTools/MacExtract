@@ -12,7 +12,7 @@
  ],
  "fixture": "12x24fkey.bin",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "c90c11f10b1724b679b4db0495f2a8740f7f57c6d7abae3e8dd87dcb1c25c836",
  "size": 562
 }

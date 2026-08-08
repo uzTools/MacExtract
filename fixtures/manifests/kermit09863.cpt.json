@@ -12,7 +12,7 @@
  ],
  "fixture": "kermit09863.cpt",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "cd4b04c4cecb0a33425e229cafa7429295e57bfe800512430c0efcebf042f745",
  "size": 145536
 }

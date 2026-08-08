@@ -5,8 +5,13 @@
    "name": "Newer1.1.1"
   },
   {
-   "is_dir": true,
-   "name": "Newer1.1.1/Sample Command Files"
+   "creator": "GTNW",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Newer1.1.1/Newer",
+   "rsrc_sha256": "d4c6ee131423674e441966f16afe5df6230c267cdb48873098367abd6dc1fb86",
+   "rsrc_size": 59212,
+   "type": "APPL"
   },
   {
    "creator": "MSWD",
@@ -27,15 +32,6 @@
    "type": "WDBN"
   },
   {
-   "creator": "GTNW",
-   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "data_size": 0,
-   "name": "Newer1.1.1/Newer",
-   "rsrc_sha256": "d4c6ee131423674e441966f16afe5df6230c267cdb48873098367abd6dc1fb86",
-   "rsrc_size": 59212,
-   "type": "APPL"
-  },
-  {
    "creator": "ttxt",
    "data_sha256": "71eb18295813d75de2d79802352459160c339deacb2d9aec8ac58dfcbff00da2",
    "data_size": 4364,
@@ -45,13 +41,8 @@
    "type": "TEXT"
   },
   {
-   "creator": "GTNW",
-   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "data_size": 0,
-   "name": "Newer1.1.1/Sample Command Files/Backup Changes",
-   "rsrc_sha256": "2243e6e7b4ab632449990c26445de4bbab885bff843ddb6c4a315d7354c3593e",
-   "rsrc_size": 641,
-   "type": "TEXT"
+   "is_dir": true,
+   "name": "Newer1.1.1/Sample Command Files"
   },
   {
    "creator": "GTNW",
@@ -60,6 +51,15 @@
    "name": "Newer1.1.1/Sample Command Files/Backup",
    "rsrc_sha256": "f0feb7b28807b164a57b8e45c803f3b38b201f4a2b5da48fbaf8e1b2f97849c0",
    "rsrc_size": 564,
+   "type": "TEXT"
+  },
+  {
+   "creator": "GTNW",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Newer1.1.1/Sample Command Files/Backup Changes",
+   "rsrc_sha256": "2243e6e7b4ab632449990c26445de4bbab885bff843ddb6c4a315d7354c3593e",
+   "rsrc_size": 641,
    "type": "TEXT"
   },
   {
@@ -101,7 +101,7 @@
  ],
  "fixture": "derived-Newer1.1.1.cpt",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "31841008cfed967ddf929422a2b67fccb814b6798bacbf5d84db44820eedd479",
  "size": 69414
 }

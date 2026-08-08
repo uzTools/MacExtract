@@ -12,7 +12,7 @@
  ],
  "fixture": "lzwres.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "9f44e4f121aa03ef14d287235474c8f85c05f051dd15a05124856da59d0256ac",
  "size": 16555
 }

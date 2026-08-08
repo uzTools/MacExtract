@@ -5,6 +5,15 @@
    "name": "ZkandiTerm 3.0 ƒ"
   },
   {
+   "creator": "zTRM",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "ZkandiTerm 3.0 ƒ/ZkandiTerm 3.0",
+   "rsrc_sha256": "f8324deef45e30ba343f4e09db31cd215df239e7ceb10bf79b5ff4ab80112709",
+   "rsrc_size": 216775,
+   "type": "zPHO"
+  },
+  {
    "creator": "movr",
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
@@ -21,20 +30,11 @@
    "rsrc_sha256": "e55ee83745cc0394de9e8d7958636e186c16a6be225f853231dc7f1d8d7282fd",
    "rsrc_size": 853,
    "type": "WORD"
-  },
-  {
-   "creator": "zTRM",
-   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "data_size": 0,
-   "name": "ZkandiTerm 3.0 ƒ/ZkandiTerm 3.0",
-   "rsrc_sha256": "f8324deef45e30ba343f4e09db31cd215df239e7ceb10bf79b5ff4ab80112709",
-   "rsrc_size": 216775,
-   "type": "zPHO"
   }
  ],
  "fixture": "derived-zkanditerm-30.sea",
  "format": "Compact Pro",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "b7968b78fb60b633f08cc51b338a4f417d2b7edc1fb9032a19498c8fc0d4f555",
  "size": 110913
 }

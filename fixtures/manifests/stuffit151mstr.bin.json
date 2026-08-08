@@ -12,7 +12,7 @@
  ],
  "fixture": "stuffit151mstr.bin",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "2a79f66987528aece87ba95f6b81e45b64c0e15b1f7694db164aa23252be4a3d",
  "size": 493
 }

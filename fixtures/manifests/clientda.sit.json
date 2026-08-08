@@ -12,7 +12,7 @@
  ],
  "fixture": "clientda.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "ee5fd6ac5e3783f2a2fee8e6ee216116d34ded7f68a2d356c06e0c9841d39f9b",
  "size": 18481
 }

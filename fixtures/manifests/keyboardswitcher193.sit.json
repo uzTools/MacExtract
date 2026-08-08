@@ -12,7 +12,7 @@
  ],
  "fixture": "keyboardswitcher193.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "4b2b135db689abfc3d96f6eeabc6f917e29a2f9a4877b5cbe9261c787cdfd6c3",
  "size": 41472
 }

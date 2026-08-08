@@ -12,7 +12,7 @@
  ],
  "fixture": "desktopexpressfix.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "f638e886ef52f478908b45cf5d20e5099cf0b96bbddb65767597969f8daceaed",
  "size": 13184
 }

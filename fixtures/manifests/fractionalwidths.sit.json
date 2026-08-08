@@ -12,7 +12,7 @@
  ],
  "fixture": "fractionalwidths.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "5de5761a43db7cdb763a0028bdab32635cc1d06969a7f6d18803dec7893a1dea",
  "size": 2102
 }

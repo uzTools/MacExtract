@@ -12,7 +12,7 @@
  ],
  "fixture": "derived-SNDPatchV2.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "1102b6b5a6c158ef123e40758d8b5929691512de3c408642e65e279f00764317",
  "size": 64383
 }

@@ -12,7 +12,7 @@
  ],
  "fixture": "scsiodometer12.cpt",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "edc3cad7ee4ffda8a57d37d785b1a8a5fc044a2558644bfba7409ca7b90cb90c",
  "size": 10496
 }

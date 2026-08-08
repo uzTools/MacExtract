@@ -23,15 +23,6 @@
    "type": "TEXT"
   },
   {
-   "creator": "MATL",
-   "data_sha256": "6e72f6b650e318d1727f57e65e73503bef39812aec346f6651410659171eba08",
-   "data_size": 1084,
-   "name": "MacGzip/gzip.m",
-   "rsrc_sha256": "d1e50e7105db373728a99d8b95c67d6477aaf238da7e72ae4e5e149cd016fdc5",
-   "rsrc_size": 457,
-   "type": "TEXT"
-  },
-  {
    "creator": "ToyS",
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
@@ -39,6 +30,15 @@
    "rsrc_sha256": "28cae4e2fd35999a792e58930dc099728458eafd3f8754b6f21ee9583c845357",
    "rsrc_size": 1538,
    "type": "osas"
+  },
+  {
+   "creator": "MATL",
+   "data_sha256": "6e72f6b650e318d1727f57e65e73503bef39812aec346f6651410659171eba08",
+   "data_size": 1084,
+   "name": "MacGzip/gzip.m",
+   "rsrc_sha256": "d1e50e7105db373728a99d8b95c67d6477aaf238da7e72ae4e5e149cd016fdc5",
+   "rsrc_size": 457,
+   "type": "TEXT"
   },
   {
    "creator": "ToyS",
@@ -52,7 +52,7 @@
  ],
  "fixture": "derived-MacGzip.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "b8caca9f8c99bc7668750e2af096b54fdd91ecd3e73278e81ef2de2a2a699e37",
  "size": 4618
 }

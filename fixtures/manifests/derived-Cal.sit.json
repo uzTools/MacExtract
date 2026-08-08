@@ -30,7 +30,7 @@
  ],
  "fixture": "derived-Cal.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "dc36fb48cd392d63c0311f0015e08d910368da5fab62cc94cf1cdc54f08cd628",
  "size": 50205
 }

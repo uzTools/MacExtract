@@ -39,7 +39,7 @@
  ],
  "fixture": "derived-PFPv1.5.sea",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "6eb8ab2ff4a9e432210ad2b329faf759e51b0c39dab32d0e0676a32c7e7ea1f8",
  "size": 49495
 }

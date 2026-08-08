@@ -12,7 +12,7 @@
  ],
  "fixture": "derived-PUP__Decryptor_v2.0.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "bb8b5992c2d68f7e456acc3b80a63a528e6ec9c99b7de5cb62ff694436f48e09",
  "size": 11475
 }

@@ -21,7 +21,7 @@
  ],
  "fixture": "derived-Diamond_4.2.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "274f09393bbbbfcf2507378dd6e95250dc652f25a8e448ff15180cf550923feb",
  "size": 25356
 }

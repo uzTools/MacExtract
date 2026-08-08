@@ -12,7 +12,7 @@
  ],
  "fixture": "telnet24tcp.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "c1301cda665821583d59f4952840a9a89e619f57aed9ddfacac69402fe1efa8d",
  "size": 172800
 }

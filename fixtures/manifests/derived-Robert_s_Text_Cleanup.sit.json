@@ -421,7 +421,7 @@
  ],
  "fixture": "derived-Robert_s_Text_Cleanup.sit",
  "format": "StuffIt",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "4df95148cda6aa7b1ffcef7b4a4c5ccb0553be60a25a41397bbe40a45650db90",
  "size": 55457
 }

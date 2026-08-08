@@ -12,7 +12,7 @@
  ],
  "fixture": "unzip101.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "ceba1c3f655af025169a7dec22043ab9e7a0b64bf75d54ab0e60faa0c923e150",
  "size": 72946
 }

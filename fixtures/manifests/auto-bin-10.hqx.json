@@ -12,7 +12,7 @@
  ],
  "fixture": "auto-bin-10.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "72c35a9e55bf3ae876baf606faa3e315f7fd578b1b6eda0b2a46a75b2d5ebdfe",
  "size": 24539
 }

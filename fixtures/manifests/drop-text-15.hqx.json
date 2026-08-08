@@ -12,7 +12,7 @@
  ],
  "fixture": "drop-text-15.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "4f3e69a593fa19c31a7dbf7b4aa6154c300797267b500400fed495c0318ed381",
  "size": 34763
 }

@@ -12,7 +12,7 @@
  ],
  "fixture": "macs-in-mixed-network.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "69b42734f83546dab2e76a9f733207c814013a048bf4f12b9ffc7bffff019df1",
  "size": 16140
 }

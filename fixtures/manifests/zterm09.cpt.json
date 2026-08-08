@@ -12,7 +12,7 @@
  ],
  "fixture": "zterm09.cpt",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "92a3c7cd2dc665787d23029cc57bc18b9ee0c098da05cedf0212c63cdeacd3f3",
  "size": 189824
 }

@@ -12,7 +12,7 @@
  ],
  "fixture": "signaleditor121.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "b039ddd55577c453a02d5b2b34d43cb2fffd41690b92255d73758f3d7d5fe397",
  "size": 113652
 }

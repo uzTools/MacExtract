@@ -12,7 +12,7 @@
  ],
  "fixture": "auditor.sit",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "6460940b507768302cdf039a2c5ca5c7600c4944750f46c223bcbd3216bae48c",
  "size": 21004
 }

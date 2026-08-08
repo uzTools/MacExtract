@@ -12,7 +12,7 @@
  ],
  "fixture": "soundextractor10.cpt",
  "format": "MacBinary",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "07f4b4b87302654f9ac425ff80c1bc7dfc057f85b0e5b589f16c935e77aadcaf",
  "size": 13952
 }

@@ -12,7 +12,7 @@
  ],
  "fixture": "sniffles-20.hqx",
  "format": "BinHex",
- "oracle": "unar -nr -D -f -q -k visible -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
  "sha256": "2291f52199aa9c888a5c5934dd709cbb4243ae5bfec43605e74c452b3aeefcab",
  "size": 113572
 }
