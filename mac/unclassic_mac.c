@@ -1018,6 +1018,205 @@ static int sink_end(void *ctx, int status)
 /* ------------------------------------------------------------------ */
 
 #ifndef UNC_SINK_TEST
+/* ------------------------------------------------------------------ */
+/* Segmented archives: finding the parts                              */
+/*                                                                    */
+/* A part is recognized by its header, never by its name, so the       */
+/* search is the same wherever the file came from: read the first 100  */
+/* bytes and ask the engine whether they belong to this set.           */
+/*                                                                    */
+/* Order of attack, cheapest first:                                    */
+/*   1. the folder the opened part is in — the usual case, silent;     */
+/*   2. the "locate part N" alert, which offers Standard File. Its     */
+/*      Drive/Eject buttons reach any mounted volume, so a part on     */
+/*      another disk is found the same way as one in another folder.   */
+/*                                                                    */
+/* One part is open at a time (seg_release before the next seg_need),  */
+/* because a Mac Plus with one floppy drive cannot mount two and       */
+/* System 6 counts its FCBs.                                           */
+/* ------------------------------------------------------------------ */
+
+#define kSegMaxKnown 64      /* parts we can remember where to find */
+
+static void ShowNote(short alrtID, const unsigned char *msg);
+
+typedef struct {
+    short vRefNum;
+    long  dirID;
+    Str63 name;
+} SegLoc;
+
+typedef struct {
+    UncSegmentDesc desc;
+    SegLoc  loc[kSegMaxKnown + 1];   /* loc[p].name[0] == 0 => unknown */
+    FileIO  fio;                     /* the one open part */
+    short   refNum;                  /* 0 = nothing open */
+    DialogPtr hide;                  /* progress dialog to hide while asking */
+    int     asked;                   /* nonzero once the user was involved */
+    int     cancelled;               /* user chose Cancel in the alert */
+} SegHost;
+
+/* Read a candidate file's header and return its part number, or 0. */
+static int SegPartOf(SegHost *h, short vol, long dir, ConstStr255Param name)
+{
+    short ref;
+    long count;
+    uint8_t head[UNC_SEG_HEAD];
+    OSErr err;
+    int part;
+
+    if (MyOpenFork(vol, dir, name, fsRdPerm, 0, &ref) != noErr) return 0;
+    count = (long)sizeof head;
+    err = FSRead(ref, &count, head);
+    FSClose(ref);
+    if (err != noErr && err != eofErr) return 0;
+    if (count < (long)sizeof head) return 0;
+    part = unc_segment_match(&h->desc, head, (int32_t)count);
+    return part;
+}
+
+static void SegRemember(SegHost *h, int part, short vol, long dir,
+                        ConstStr255Param name)
+{
+    short i;
+    if (part < 1 || part > kSegMaxKnown) return;
+    if (h->loc[part].name[0]) return;         /* first match wins */
+    h->loc[part].vRefNum = vol;
+    h->loc[part].dirID = dir;
+    for (i = 0; i <= (short)name[0]; i++) h->loc[part].name[i] = name[i];
+}
+
+/* Walk one folder, recording every part of this set that it holds. */
+static void SegScanDir(SegHost *h, short vol, long dir)
+{
+    CInfoPBRec pb;
+    Str63 nm;
+    short idx;
+    long z;
+
+    for (idx = 1; idx < 512; idx++) {
+        for (z = 0; z < (long)sizeof pb; z++) ((char *)&pb)[z] = 0;
+        pb.hFileInfo.ioNamePtr = nm;
+        pb.hFileInfo.ioVRefNum = vol;
+        pb.hFileInfo.ioDirID = dir;
+        pb.hFileInfo.ioFDirIndex = idx;
+        if (PBGetCatInfoSync(&pb) != noErr) return;    /* past the last item */
+        if (pb.hFileInfo.ioFlAttrib & ioDirMask) continue;
+        {
+            int part = SegPartOf(h, vol, dir, nm);
+            if (part) SegRemember(h, part, vol, dir, nm);
+        }
+    }
+}
+
+#ifndef UNC_MAC_AUTOTEST
+#define kSegALRT        131
+#define kSegFindItem    1
+#define kSegSkipItem    2
+#define kSegCancelItem  3
+
+/* Ask the user to point at part `part`. Returns nonzero once it has been
+ * located. The autotest build has no user, so this is not compiled there
+ * and a part that was not found beside the archive is simply missing. */
+static int SegAskUser(SegHost *h, int part)
+{
+    Str255 msg;
+    SFReply reply;
+    Point where;
+    short hit;
+
+    for (;;) {
+        msg[0] = 0;
+        PStrCat(msg, "Part ");
+        PStrCatNum(msg, (long)part);
+        PStrCat(msg, " of \"");
+        { short i; for (i = 0; i < (short)h->desc.name_len && msg[0] < 200; i++)
+                       msg[++msg[0]] = h->desc.name[i]; }
+        PStrCat(msg, "\" has not been found. Locate it, "
+                     "skip it, or cancel.");
+        ParamText(msg, "\p", "\p", "\p");
+
+        if (h->hide) HideWindow((WindowPtr)h->hide);
+        hit = CautionAlert(kSegALRT, NULL);
+        h->asked = 1;
+
+        if (hit == kSegFindItem) {
+            SetPt(&where, 90, 90);
+            reply.good = false;
+            SFGetFile(where, "\p", NULL, -1, NULL, NULL, &reply);
+            if (reply.good) {
+                int got = SegPartOf(h, reply.vRefNum, 0, reply.fName);
+                if (got == part) {
+                    SegRemember(h, part, reply.vRefNum, 0, reply.fName);
+                    /* The rest of the set is often beside it. */
+                    SegScanDir(h, reply.vRefNum, 0);
+                    if (h->hide) ShowWindow((WindowPtr)h->hide);
+                    return 1;
+                }
+                if (got) {
+                    Str255 s;
+                    s[0] = 0;
+                    PStrCat(s, "That is part ");
+                    PStrCatNum(s, (long)got);
+                    PStrCat(s, " of the same archive. Part ");
+                    PStrCatNum(s, (long)part);
+                    PStrCat(s, " is the one needed.");
+                    ShowNote(kErrorALRT, s);
+                    /* Keep it: a later part will want it. */
+                    SegRemember(h, got, reply.vRefNum, 0, reply.fName);
+                } else {
+                    ShowNote(kErrorALRT,
+                             "\pThat file is not part of this archive.");
+                }
+            }
+            continue;             /* ask again */
+        }
+
+        if (hit == kSegCancelItem) h->cancelled = 1;
+        if (h->hide) ShowWindow((WindowPtr)h->hide);
+        return 0;                 /* Skip or Cancel */
+    }
+}
+#endif  /* !UNC_MAC_AUTOTEST */
+
+static int seg_need(void *ctx, const UncSegmentDesc *desc, int part, UncIO *io)
+{
+    SegHost *h = (SegHost *)ctx;
+    long eof;
+
+    (void)desc;
+    if (part < 1 || part > kSegMaxKnown) return UNC_ERR_SEGMENTED;
+#ifndef UNC_MAC_AUTOTEST
+    if (!h->loc[part].name[0] && !h->cancelled) SegAskUser(h, part);
+    if (h->cancelled) return UNC_ERR_ABORTED;
+#endif
+    if (!h->loc[part].name[0]) return UNC_ERR_SEGMENTED;
+
+    if (MyOpenFork(h->loc[part].vRefNum, h->loc[part].dirID,
+                   h->loc[part].name, fsRdPerm, 0, &h->refNum) != noErr)
+        return UNC_ERR_SEGMENTED;
+    eof = 0;
+    GetEOF(h->refNum, &eof);
+    if (eof <= 0) { FSClose(h->refNum); h->refNum = 0; return UNC_ERR_SEGMENTED; }
+
+    h->fio.refNum = h->refNum;
+    h->fio.size = (uint32_t)eof;
+    h->fio.pos = 0;
+    io->ctx = &h->fio;
+    io->read = fio_read;
+    io->seek = fio_seek;
+    io->tell = fio_tell;
+    io->size = fio_size;
+    return UNC_OK;
+}
+
+static void seg_release(void *ctx, UncIO *io)
+{
+    SegHost *h = (SegHost *)ctx;
+    (void)io;
+    if (h->refNum) { FSClose(h->refNum); h->refNum = 0; }
+}
+
 static long gPeakUsage;   /* engine heap high-water mark from the last RunExtract */
 #ifdef UNC_AT_BUDGET
 /* The result grid reports what the engine USED and never what it was
@@ -1048,6 +1247,8 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
     Ptr archiveBuf;
     OSErr err;
     int ret;
+    SegHost *sh = NULL;         /* non-NULL: this file is one part of a set */
+    Ptr segScratch = NULL;
 
     *entries = *errors = 0;
 
@@ -1060,6 +1261,45 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
     fileSize = 0;
     GetEOF(refNum, &fileSize);
     if (fileSize <= 0) { FSClose(refNum); return UNC_ERR_FORMAT; }
+
+    /* --- Is this one part of a segmented set? Decided from the header,
+     *     before any of the whole-archive machinery below, because a
+     *     segmented archive is not read through `io` at all: the parts
+     *     are opened one at a time by the volume source. --- */
+    {
+        FileIO probe;
+        UncIO pio;
+        UncSegmentDesc desc;
+        probe.refNum = refNum;
+        probe.size = (uint32_t)fileSize;
+        probe.pos = 0;
+        pio.ctx = &probe;
+        pio.read = fio_read;
+        pio.seek = fio_seek;
+        pio.tell = fio_tell;
+        pio.size = fio_size;
+        /* unc_segment_describe, not unc_sniff: this runs on EVERY archive
+         * the app opens, and a full sniff would re-walk a Compact Pro
+         * index CRC that unc_extract is about to walk again — twice the
+         * work on a 7 MHz machine, for a question one header answers. */
+        if (unc_segment_describe(&pio, &desc) == UNC_OK) {
+            sh = (SegHost *)NewPtr((Size)sizeof(SegHost));
+            segScratch = NewPtr((Size)unc_segment_scratch_size());
+            if (sh == NULL || segScratch == NULL) {
+                if (sh) DisposePtr((Ptr)sh);
+                if (segScratch) DisposePtr(segScratch);
+                FSClose(refNum);
+                return UNC_ERR_MEM;
+            }
+            { long z; for (z = 0; z < (long)sizeof(SegHost); z++)
+                          ((char *)sh)[z] = 0; }
+            sh->desc = desc;
+            /* The file we were opened on is a part, at the number its
+             * own header states — so opening part 3 of a set works. */
+            SegRemember(sh, (int)sh->desc.part, inVol, inDir, name);
+            SegScanDir(sh, inVol, inDir);
+        }
+    }
 
 #ifdef UNC_MAC_SLURP_ARCHIVE
     archiveBuf = NewPtr(fileSize);
@@ -1151,13 +1391,39 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
         }
     }
 
-    ret = unc_extract(&io, &sk, &al, prog, &opt);
+    if (sh) {
+        UncVolumeSource vs;
+        /* Nothing else may hold the archive open: the parts are opened
+         * one at a time, and this file is one of them. */
+#ifdef UNC_MAC_SLURP_ARCHIVE
+        DisposePtr(archiveBuf);
+        archiveBuf = NULL;
+#else
+        FSClose(refNum);
+#endif
+        refNum = 0;
+#ifndef UNC_MAC_AUTOTEST
+        /* Only the interactive app puts a Progress behind prog->ctx; the
+         * autotest's tick carries something else entirely. */
+        sh->hide = prog ? ((Progress *)prog->ctx)->dlg : NULL;
+#endif
+        vs.ctx = sh;
+        vs.need = seg_need;
+        vs.release = seg_release;
+        ret = unc_extract_segments(&sh->desc, &vs, segScratch, &sk, &al,
+                                   prog, &opt);
+        seg_release(sh, NULL);
+        DisposePtr((Ptr)sh);
+        DisposePtr(segScratch);
+    } else {
+        ret = unc_extract(&io, &sk, &al, prog, &opt);
+    }
     gPeakUsage = ma.initial - ma.lowmark;   /* engine heap high-water mark */
 
 #ifdef UNC_MAC_SLURP_ARCHIVE
-    DisposePtr(archiveBuf);
+    if (archiveBuf) DisposePtr(archiveBuf);
 #else
-    FSClose(refNum);           /* held open for the whole extraction */
+    if (refNum) FSClose(refNum);   /* held open for the whole extraction */
 #endif
     FlushVol(NULL, outVol);    /* persist all output before returning */
     FlushVol(NULL, outVol);
@@ -2045,8 +2311,13 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name)
 
     if (pr.dlg) DisposeDialog(pr.dlg);
 
-    if (pr.cancelled)
+    if (pr.cancelled || ret == UNC_ERR_ABORTED)
         ShowNote(kDoneALRT, "\pExtraction cancelled.");
+    else if (ret == UNC_ERR_SEGMENTED)
+        /* A part of a segmented set was never located. Whatever the parts
+         * on hand did decode has been written and is worth saying so. */
+        ShowNote(kErrorALRT, "\pSome parts of this archive were not found. "
+                             "Only what they contained was extracted.");
     else if (ret == UNC_ERR_IO && entries == 0)
         ShowNote(kErrorALRT, "\pCould not open the archive.");
     else if (ret != UNC_OK)

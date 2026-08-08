@@ -58,7 +58,14 @@ creator codes and dates all survive, so an extracted application simply runs.
 LZH, Disk Copy 4.2. It tells you what the file is rather than failing
 obscurely.
 
-Encrypted and multi-part archives are out of scope.
+**Archives split across floppies:** a StuffIt segmented set is joined back
+together for you. Open the first part and the rest are found beside it; if a
+part is somewhere else — another folder, another disk — you are asked to
+point at it. Parts are recognised by what is inside them, so it does not
+matter what they are called or whether they are all in one place.
+
+Encrypted archives are out of scope, as are sets split by Compact Pro or
+by PKZIP.
 
 ## What you need
 

@@ -77,20 +77,29 @@ def sh(*argv, **kw):
                           errors="surrogateescape", **kw)
 
 
-def make_floppy(path, volname, payload=None, size_kb=FLOPPY_KB):
-    """Create a fresh HFS floppy image, optionally with one data-fork file."""
+def make_floppy(path, volname, payload=None, extras=(), size_kb=FLOPPY_KB):
+    """Create a fresh HFS floppy image, optionally with data-fork files.
+
+    `payload` lands as ARCHIVE_NAME, which is the file the autotest app
+    opens. `extras` are (host path, Mac name) pairs put beside it — the
+    other parts of a segmented set, whose names are deliberately NOT
+    required to resemble each other, since the app finds them by
+    reading their headers.
+    """
     with open(path, "wb") as f:
         f.truncate(size_kb * 1024)
     env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
     try:
         subprocess.run(["hformat", "-l", volname, path],
                        check=True, capture_output=True, env=env)
-        if payload:
+        files = ([(payload, ARCHIVE_NAME)] if payload else []) + list(extras)
+        if files:
             subprocess.run(["hmount", path], check=True, capture_output=True, env=env)
             # -r: raw copy, data fork only. The archive is a plain byte stream;
             # its type/creator are irrelevant because the app opens it by name.
-            subprocess.run(["hcopy", "-r", payload, f"{volname}:{ARCHIVE_NAME}"],
-                           check=True, capture_output=True, env=env)
+            for src, macname in files:
+                subprocess.run(["hcopy", "-r", src, f"{volname}:{macname}"],
+                               check=True, capture_output=True, env=env)
             subprocess.run(["humount", path], check=True, capture_output=True, env=env)
     finally:
         shutil.rmtree(env["HOME"], ignore_errors=True)
@@ -194,7 +203,7 @@ class Display:
 
 
 def run_one(fixture, mem, timeout, poll, workdir, bootimg, keep_png=None,
-            emu_dir=None):
+            emu_dir=None, extras=()):
     """Boot the Mac on one fixture.
 
     Returns (values or None, seconds, png, emulator-exited). The last one
@@ -212,7 +221,7 @@ def run_one(fixture, mem, timeout, poll, workdir, bootimg, keep_png=None,
     outdsk = os.path.join(workdir, "out.dsk")
     png = os.path.join(workdir, "screen.png")
     shutil.copyfile(bootimg, boot)          # every run starts from a pristine
-    make_floppy(indsk, "In", payload=fixture)   # image: System 6 writes to the
+    make_floppy(indsk, "In", payload=fixture, extras=extras)  # image: System 6
     make_floppy(outdsk, "Out")                  # boot volume as it goes
 
     dpy = Display()
@@ -416,11 +425,26 @@ def main():
     ap.add_argument("--pngdir", help="keep each run's final screenshot here")
     ap.add_argument("--keep-disks", action="store_true",
                     help="do not delete the run's In/Out disk images, so\n                         the host can look at what the Mac actually\n                         wrote instead of only at the on-screen grid")
+    ap.add_argument("--extra-file", action="append", default=[],
+                    metavar="HOSTPATH:MACNAME",
+                    help="put another file on the In floppy beside the "
+                         "fixture. Used for the other parts of a segmented "
+                         "set, whose names are deliberately unlike the "
+                         "fixture's: the app matches them by header, not name")
     ap.add_argument("-D", dest="defines", action="append", default=[],
                     metavar="UNC_...",
                     help="extra build switch for the application, e.g. "
                          "-D UNC_MAC_STAGE_WRITES (repeatable)")
     args = ap.parse_args()
+
+    extras = []
+    for spec in args.extra_file:
+        host, _, macname = spec.rpartition(":")
+        if not host or not macname:
+            ap.error(f"--extra-file wants HOSTPATH:MACNAME, got {spec!r}")
+        if not os.path.exists(host):
+            raise SystemExit(f"run: no such file: {host}")
+        extras.append((host, macname))
 
     fixtures = list(args.fixtures)
     if args.listfile:
@@ -454,7 +478,7 @@ def main():
         try:
             vals, secs, png, died, boot, extract = run_one(
                 fixture, args.mem, args.timeout, args.poll, workdir, bootimg,
-                keep, args.emu)
+                keep, args.emu, extras=extras)
             status = AT_STATUS.get(signed32(vals[1])) if vals else None
             if vals is None and died:
                 verdict, detail = "EMUDIED", (

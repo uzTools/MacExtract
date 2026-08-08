@@ -20,6 +20,7 @@ whole corpus for that format (engine allocations only, via
 | Gzip | extract | deflate | 3 fixtures | 51 KB | full |
 | Unix compress (.Z) | extract | LZW ≤16 bit | 4 fixtures | 219 KB§ | full |
 | Tar (ustar/v7) | extract | — (links reported unsupported) | 3 fixtures (2 real 1990 v7 tars) + unit tests | 8 KB | full |
+| StuffIt segment (multi-part) | extract | — (join only; the joined file is the next layer) | 7 synthetic sets, oracle-adjudicated | 8 KB | full |
 | StuffIt X (.sitx) | detect only | — | — | — | — |
 | DiskDoubler (DD, DDAR, DDA2) | detect only | — | 4 sniffed | — | — |
 | Now Compress | detect only | — | 1 sniffed | — | — |
@@ -194,6 +195,67 @@ on-Mac `derived-Export.sit` 76,984 → 19,640 B.
 .Z layers that yield exactly one file are recursively extracted and
 the intermediate deleted (`-nr` disables; depth ≤ 8). Verified chains:
 `.sit.bin`, `.sit.hqx`, `.tar.Z` (tools/run_unwrap.py, in CI).
+
+A **StuffIt segment** is an envelope too, and joins that list: the
+parts are joined, the file inside comes out, and if that file is an
+archive the same recursion continues into it.
+
+## Segmented archives (multi-part sets)
+
+One logical file cut across several, one per floppy. The scheme
+implemented is **StuffIt segments** (XADMaster's "StuffIt split file"),
+a 100-byte header on each part: `B0 56 00`, part number, the original
+file's name, and 26 fingerprint bytes at offset 68 (type, creator,
+Finder flags, both dates, both fork lengths). Concatenating the parts'
+payloads in order gives the original file — resource fork, then data
+fork. `src/fmt_sitseg.c` has the layout and its source.
+
+Two properties of that header decide the design:
+
+- **Identity is content, not name.** A part belongs to a set if its
+  name bytes and those 26 bytes agree; the filename is a hint for
+  finding candidates and nothing more. Sets whose parts are named
+  unlike each other, or spread across folders and volumes, join
+  correctly — the `misnamed` case in the test suite is exactly that,
+  and `unar` cannot read it (TESTING.md).
+- **The set is self-terminating.** `rsrclen + datalen` is the exact
+  payload total, so from part 1 alone the joiner knows how much is
+  missing and when the set is complete. No part count is stored
+  anywhere, and none is needed.
+
+**The join is read strictly forward: 0 backward crossings**, measured
+over the 3-part and 12-part cases (`unclassic x --stats` reports part
+opens and how many were backward). That is what decides the cost on
+removable media — a backward crossing is a disk the user has to put
+back — so it is measured rather than assumed.
+
+Peak heap for the join is 8 KB: one buffer, no part table beyond the
+caller's ~1.1 KB scratch struct, one part open at a time.
+
+### On a real emulated Mac Plus (System 6.0.8, 2026-08-08)
+
+`derived-Cal.sit` (50,205 B) cut into three parts and put on one
+floppy, the parts named `archive.sit`, `part-two` and `zzz` — names
+that resemble neither each other nor the file inside:
+
+| tier | result |
+|---|---|
+| Mini vMac, 4 MB | joined and written as `Cal.sit`, **byte-identical** to the original, type/creator `SIT!/SIT!` off the header |
+| Mini vMac, **1 MB** (floor target) | same, byte-identical |
+| 4 MB, part 2 removed | `ret = -11` (`UNC_ERR_SEGMENTED`), 1 entry error, the 20,000 B that part 1 held left on the volume; peak heap **8,208 B** |
+
+Read back off the Out volume with hfsutils and compared to the source
+file on the host, which is layer 9 of TESTING.md — not the on-screen
+grid, which cannot see a filename. Re-run with:
+
+```
+python3 tools/vmac/run.py PART1 --extra-file HOST:MACNAME ... --keep-disks
+```
+
+The parts being found at all is the point of the middle column: the app
+reads every file in the folder and asks the engine, so the names are
+free. What is NOT covered here is a part arriving on a disk inserted
+mid-run — see OPEN_ITEMS.md section 6.
 
 ## Hardening
 

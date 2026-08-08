@@ -95,9 +95,54 @@ environment (section 4).
 ## 5. Deliberate gaps, and remedies ruled out by measurement
 
 - **Out of scope by the brief, and still out:** compression, StuffIt X
-  (`.sitx`), encrypted archives, multi-segment archives, disk-image extraction,
-  Now Compress, and LZH *extraction* — LZH was the optional half of M8 and is
-  detect-only (the LZH/LHA row of FORMATS.md).
+  (`.sitx`), encrypted archives, disk-image extraction, Now Compress, and
+  LZH *extraction* — LZH was the optional half of M8 and is detect-only
+  (the LZH/LHA row of FORMATS.md). **Multi-segment archives are IN scope
+  since 2026-08-08** and one scheme is implemented; the rest are the
+  section below.
+
+---
+
+## 6. Multi-segment: what the proof of concept deliberately left
+
+StuffIt segments extract end to end (M11). These are the parts that were
+scoped out on purpose, ranked by what they would cost.
+
+- **Other segment schemes.** Spanned Zip (`.z01…/.zip`, oracle: `unar`)
+  and plain `.NNN` splits are next and cheap; note a `.NNN` split can
+  only ever be identified by NAME, so it cannot meet the "parts may be
+  named anything" bar the StuffIt scheme meets. **Compact Pro segmented
+  archives are the interesting one and the expensive one**: the format
+  documents a volume byte per archive and per entry, no reference
+  implementation extracts them (`unar` and `macunpack` both read the
+  byte and ignore it), and there is no sample in the corpus — so it
+  needs a genuine segmented `.cpt` before a line of parser is written.
+  Compact Pro itself is in the corpus and splits archives across
+  floppies, so generating one under Mini vMac is a route; the oracle
+  would then be differential (same files, segmented vs not).
+- **Reacting to a disk being inserted.** The Mac shell finds parts by
+  scanning a folder and by asking the user, and does nothing when a new
+  volume appears — so after a disk swap the user must point at the part
+  even though it is now sitting on the desktop. `diskEvt` already
+  arrives in `ProgressPump` and is dropped; the rescan it would trigger
+  is the same routine the folder scan uses. **Held until the UI is
+  reworked, deliberately**, so that the shipped code has no path that
+  nothing exercises. It is **testable under emulation** — Mini vMac
+  mounts an image mid-run — and does not belong in MANUAL_TESTS.md.
+- **A destination other than the archive's folder.** Output goes beside
+  the archive, which is fine for a set on a hard disk and wrong for one
+  on floppies: the volume holding the output is the volume that has to
+  be ejected. Needs a destination picker, which is a UI change beyond
+  the "locate part N" alert; until then the workable floppy procedure
+  is the one people actually used — copy the parts to a hard disk
+  first.
+- **Parts that are individually wrapped.** A real download is
+  `Archive.sit.1.hqx`: each part BinHex- or MacBinary-encoded on its
+  own, so the envelope has to come off before the join. Today the
+  envelope recursion runs *after* the join, which is the other order.
+- **A part count in the alert.** The format stores none, so "part 2 of
+  3" cannot be stated. The remaining byte count can be (`total` minus
+  what has been read), and is not shown yet.
 
 - **Do not retry, on Mac heap pressure.** Both were measured while StuffIt 5 /
   Arsenic was still short of the 1 MB floor, and both are dead ends:

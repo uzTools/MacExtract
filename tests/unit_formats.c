@@ -860,6 +860,166 @@ static void test_diskcopy(void)
     }
 }
 
+/* ------------------------------------------------------------------ */
+/* StuffIt segments (multi-part sets)                                 */
+/* ------------------------------------------------------------------ */
+
+/* One part: 100-byte header + payload slice. See src/fmt_sitseg.c for
+ * the layout and its source. */
+static void seg_head(uint8_t *h, int part, const char *name,
+                     uint32_t rsrclen, uint32_t datalen, uint32_t mtime)
+{
+    size_t nl = strlen(name);
+    memset(h, 0, UNC_SEG_HEAD);
+    h[0] = 0xB0; h[1] = 0x56; h[2] = 0x00; h[3] = (uint8_t)part;
+    h[4] = (uint8_t)nl;
+    memcpy(h + 5, name, nl);
+    memcpy(h + 68, "SIT!SIT!", 8);                 /* type + creator */
+    h[82] = (uint8_t)(mtime >> 24); h[83] = (uint8_t)(mtime >> 16);
+    h[84] = (uint8_t)(mtime >> 8);  h[85] = (uint8_t)mtime;
+    h[86] = (uint8_t)(rsrclen >> 24); h[87] = (uint8_t)(rsrclen >> 16);
+    h[88] = (uint8_t)(rsrclen >> 8);  h[89] = (uint8_t)rsrclen;
+    h[90] = (uint8_t)(datalen >> 24); h[91] = (uint8_t)(datalen >> 16);
+    h[92] = (uint8_t)(datalen >> 8);  h[93] = (uint8_t)datalen;
+}
+
+/* A volume source over in-memory parts, with a hole the test can open
+ * and close to check the missing-part path. */
+typedef struct {
+    const uint8_t *part[5];
+    uint32_t       len[5];
+    int            nparts;
+    int            missing;      /* part number to refuse, 0 = none */
+    MemIO          m;
+    int            opens;
+} SegParts;
+
+static int segsrc_need(void *ctx, const UncSegmentDesc *desc, int part,
+                       UncIO *io)
+{
+    SegParts *p = (SegParts *)ctx;
+    (void)desc;
+    if (part < 1 || part > p->nparts || part == p->missing)
+        return UNC_ERR_SEGMENTED;
+    p->opens++;
+    test_make_memio(io, &p->m, p->part[part - 1], p->len[part - 1]);
+    return UNC_OK;
+}
+
+static void test_sitseg(void)
+{
+    uint8_t whole[UNC_SEG_HEAD + 300];
+    uint8_t p1[UNC_SEG_HEAD + 120], p2[UNC_SEG_HEAD + 100],
+            p3[UNC_SEG_HEAD + 80];
+    uint8_t payload[300];
+    UncSegmentDesc desc;
+    UncIO io;
+    MemIO m;
+    UncAlloc al;
+    UncSink sk;
+    CapSink cap;
+    int i;
+
+    for (i = 0; i < 300; i++) payload[i] = (uint8_t)(i * 7 + 1);
+
+    /* --- describe ------------------------------------------------- */
+    seg_head(whole, 1, "Thing.sit", 100, 200, 0x11223344u);
+    memcpy(whole + UNC_SEG_HEAD, payload, 300);
+    test_make_memio(&io, &m, whole, sizeof whole);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_SITSEG);
+    CHECK(unc_segment_describe(&io, &desc) == UNC_OK);
+    CHECK(desc.part == 1);
+    CHECK(desc.name_len == 9 && memcmp(desc.name, "Thing.sit", 9) == 0);
+    CHECK(desc.rsrc_size == 100 && desc.data_size == 200);
+    CHECK(desc.total == 300);
+    CHECK(desc.type == 0x53495421u);      /* 'SIT!' */
+    CHECK(desc.mod_date == 0x11223344u);
+
+    /* --- match: content decides, never the name of the file ------- */
+    {
+        uint8_t other[UNC_SEG_HEAD];
+        seg_head(other, 3, "Thing.sit", 100, 200, 0x11223344u);
+        CHECK(unc_segment_match(&desc, other, UNC_SEG_HEAD) == 3);
+        /* Same name, one different fingerprint byte: another set. */
+        seg_head(other, 3, "Thing.sit", 100, 200, 0x11223345u);
+        CHECK(unc_segment_match(&desc, other, UNC_SEG_HEAD) == 0);
+        /* Same fingerprint, different name: another set. */
+        seg_head(other, 3, "Other.sit", 100, 200, 0x11223344u);
+        CHECK(unc_segment_match(&desc, other, UNC_SEG_HEAD) == 0);
+        /* Too short to prove itself. */
+        seg_head(other, 2, "Thing.sit", 100, 200, 0x11223344u);
+        CHECK(unc_segment_match(&desc, other, UNC_SEG_HEAD - 1) == 0);
+        /* Part 0 is not a part. */
+        seg_head(other, 0, "Thing.sit", 100, 200, 0x11223344u);
+        CHECK(unc_sitseg_probe(other, UNC_SEG_HEAD) == 0);
+    }
+
+    /* --- a set of one part needs no volume source ----------------- */
+    test_make_memio(&io, &m, whole, sizeof whole);
+    test_make_alloc(&al);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_SITSEG, &io, &sk, &al, NULL, NULL) == UNC_OK);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+    CHECK(cap.rlen[0] == 100 && memcmp(cap.rsrc[0], payload, 100) == 0);
+    CHECK(cap.dlen[0] == 200 && memcmp(cap.data[0], payload + 100, 200) == 0);
+
+    /* --- three parts, joined through a volume source -------------- */
+    seg_head(p1, 1, "Thing.sit", 100, 200, 0x11223344u);
+    seg_head(p2, 2, "Thing.sit", 100, 200, 0x11223344u);
+    seg_head(p3, 3, "Thing.sit", 100, 200, 0x11223344u);
+    memcpy(p1 + UNC_SEG_HEAD, payload, 120);
+    memcpy(p2 + UNC_SEG_HEAD, payload + 120, 100);
+    memcpy(p3 + UNC_SEG_HEAD, payload + 220, 80);
+    {
+        SegParts sp;
+        UncVolumeSource vs;
+        void *scratch;
+        uint32_t opens = 0, back = 0;
+
+        memset(&sp, 0, sizeof sp);
+        sp.part[0] = p1; sp.len[0] = sizeof p1;
+        sp.part[1] = p2; sp.len[1] = sizeof p2;
+        sp.part[2] = p3; sp.len[2] = sizeof p3;
+        sp.nparts = 3;
+        vs.ctx = &sp; vs.need = segsrc_need; vs.release = NULL;
+
+        scratch = malloc(unc_segment_scratch_size());
+        CHECK(scratch != NULL);
+
+        /* The fork boundary is inside part 1 and the parts are uneven,
+         * so this fails on any off-by-one at a part edge. */
+        cap_make(&sk, &cap);
+        CHECK(unc_extract_segments(&desc, &vs, scratch, &sk, &al, NULL, NULL)
+              == UNC_OK);
+        CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+        CHECK(cap.rlen[0] == 100 && memcmp(cap.rsrc[0], payload, 100) == 0);
+        CHECK(cap.dlen[0] == 200 && memcmp(cap.data[0], payload + 100, 200) == 0);
+        CHECK(sp.opens == 3);
+        unc_segment_stats(scratch, &opens, &back);
+        CHECK(opens == 3);
+        CHECK(back == 0);      /* the join is read strictly forward */
+
+        /* A part the host cannot produce: the archive says so, and the
+         * entry is reported truncated rather than silently short. */
+        sp.missing = 2;
+        sp.opens = 0;
+        cap_make(&sk, &cap);
+        CHECK(unc_extract_segments(&desc, &vs, scratch, &sk, &al, NULL, NULL)
+              == UNC_ERR_SEGMENTED);
+        CHECK(cap.count == 1 && cap.status[0] == UNC_ERR_TRUNCATED);
+        CHECK(cap.rlen[0] == 100);          /* what part 1 held is kept */
+        CHECK(cap.dlen[0] == 20);
+        free(scratch);
+    }
+
+    /* --- a middle part on its own cannot be extracted alone ------- */
+    test_make_memio(&io, &m, p2, sizeof p2);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_SITSEG, &io, &sk, &al, NULL, NULL)
+          == UNC_ERR_SEGMENTED);
+    CHECK(cap.count == 0);
+}
+
 void run_format_tests(void)
 {
     test_macbinary();
@@ -874,4 +1034,5 @@ void run_format_tests(void)
     test_tar();
     test_zip();
     test_diskcopy();
+    test_sitseg();
 }

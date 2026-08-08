@@ -33,6 +33,7 @@ static const UncFormatDesc unc_formats[] = {
     { UNC_FORMAT_DISKCOPY,    "DiskCopy image",  0 },
     { UNC_FORMAT_NOWCOMPRESS, "Now Compress",    0 },
     { UNC_FORMAT_LZH,         "LZH",             0 },
+    { UNC_FORMAT_SITSEG,      "StuffIt segment", 1 },
 };
 
 const char *unc_format_name(UncFormat f)
@@ -98,6 +99,7 @@ UncFormat unc_sniff(UncIO *io)
     /* Strong magic numbers first. */
     if (unc_sit5_probe(head, len))      return UNC_FORMAT_SIT5;
     if (unc_sit_probe(head, len))       return UNC_FORMAT_SIT;
+    if (unc_sitseg_probe(head, len))    return UNC_FORMAT_SITSEG;
     if (unc_sitx_probe(head, len))      return UNC_FORMAT_SITX;
     if (unc_packit_probe(head, len))    return UNC_FORMAT_PACKIT;
     if (unc_gzip_probe(head, len))      return UNC_FORMAT_GZIP;
@@ -161,6 +163,7 @@ int unc_extract_as(UncFormat f, UncIO *io, UncSink *sink, UncAlloc *al,
     case UNC_FORMAT_GZIP:        return unc_gzip_extract(&c);
     case UNC_FORMAT_COMPRESS_Z:  return unc_compressz_extract(&c);
     case UNC_FORMAT_TAR:         return unc_tar_extract(&c);
+    case UNC_FORMAT_SITSEG:      return unc_sitseg_extract(&c);
     case UNC_FORMAT_UNKNOWN:     return UNC_ERR_FORMAT;
     default:                     return UNC_ERR_UNSUPPORTED;
     }

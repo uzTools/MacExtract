@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <dirent.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 
@@ -406,6 +407,155 @@ static int prog_tick(void *ctx, uint32_t done, uint32_t total)
 }
 
 /* ------------------------------------------------------------------ */
+/* Volume source: where the parts of a segmented archive come from     */
+/*                                                                    */
+/* Three ways in, all ending at the same fingerprint check, because a  */
+/* filename is never evidence that a file belongs to a set:            */
+/*   1. --part FILE, stated by the user (checked all the same);        */
+/*   2. a scan of the directory the opened part came from;             */
+/*   3. --ask, which reads a path from stdin — the CLI's stand-in for  */
+/*      the Mac's "locate part N" dialog, so both hosts exercise the   */
+/*      same engine callback.                                          */
+/* Default is non-interactive: a missing part is an error, never a     */
+/* prompt, so no test run can block.                                   */
+/* ------------------------------------------------------------------ */
+
+typedef struct {
+    UncSegmentDesc desc;
+    char    *path[UNC_SEG_MAX_PARTS + 1];  /* NULL = not located yet */
+    FileIO   open_io;                      /* one part open at a time */
+    int      ask;
+    int      verbose;
+} SegHost;
+
+/* Read a candidate's first bytes and return its part number in the
+ * set, or 0. Never opens directories or unreadable files. */
+static int seg_part_of(const SegHost *h, const char *path)
+{
+    uint8_t head[UNC_SEG_HEAD];
+    size_t got;
+    FILE *f;
+    struct stat st;
+
+    if (stat(path, &st) != 0 || !S_ISREG(st.st_mode)) return 0;
+    f = fopen(path, "rb");
+    if (!f) return 0;
+    got = fread(head, 1, sizeof head, f);
+    fclose(f);
+    return unc_segment_match(&h->desc, head, (int32_t)got);
+}
+
+/* strdup is POSIX, and this file builds -std=c99 -pedantic. */
+static char *seg_dup(const char *s)
+{
+    size_t n = strlen(s) + 1;
+    char *p = (char *)malloc(n);
+    if (p) memcpy(p, s, n);
+    return p;
+}
+
+static void seg_record(SegHost *h, int part, const char *path)
+{
+    if (part < 1 || part > UNC_SEG_MAX_PARTS) return;
+    if (h->path[part]) return;              /* first match wins */
+    h->path[part] = seg_dup(path);
+    if (h->verbose)
+        fprintf(stderr, "part %d: %s\n", part, path);
+}
+
+/* Scan the directory holding `anchor` for parts of the set. */
+static void seg_scan_dir(SegHost *h, const char *anchor)
+{
+    char dir[1024], cand[1200];
+    const char *slash = strrchr(anchor, '/');
+    DIR *d;
+    struct dirent *de;
+
+    if (slash) {
+        size_t n = (size_t)(slash - anchor);
+        if (n >= sizeof dir) return;
+        memcpy(dir, anchor, n);
+        dir[n] = 0;
+        if (n == 0) { dir[0] = '/'; dir[1] = 0; }
+    } else {
+        dir[0] = '.'; dir[1] = 0;
+    }
+
+    d = opendir(dir);
+    if (!d) return;
+    while ((de = readdir(d)) != NULL) {
+        int part;
+        if (strcmp(de->d_name, ".") == 0 || strcmp(de->d_name, "..") == 0)
+            continue;
+        if ((size_t)snprintf(cand, sizeof cand, "%s/%s", dir, de->d_name)
+            >= sizeof cand)
+            continue;
+        part = seg_part_of(h, cand);
+        if (part) seg_record(h, part, cand);
+    }
+    closedir(d);
+}
+
+/* Ask stdin for a path to part `part`, until one matches or the user
+ * gives up (empty line or EOF). */
+static int seg_ask(SegHost *h, int part)
+{
+    char line[1200];
+
+    for (;;) {
+        size_t n;
+        int got;
+        fprintf(stderr, "unclassic: locate part %d of \"%s\" "
+                        "(path, or empty to give up): ", part, h->desc.name);
+        fflush(stderr);
+        if (!fgets(line, sizeof line, stdin)) return 0;
+        n = strlen(line);
+        while (n && (line[n - 1] == '\n' || line[n - 1] == '\r')) line[--n] = 0;
+        if (n == 0) return 0;
+
+        got = seg_part_of(h, line);
+        if (got == part) { seg_record(h, part, line); return 1; }
+        if (got)
+            fprintf(stderr, "unclassic: that is part %d of the same set; "
+                            "part %d is what is needed\n", got, part);
+        else
+            fprintf(stderr, "unclassic: that file is not part of \"%s\"\n",
+                    h->desc.name);
+    }
+}
+
+static int seg_need(void *ctx, const UncSegmentDesc *desc, int part, UncIO *io)
+{
+    SegHost *h = (SegHost *)ctx;
+    struct stat st;
+    FILE *f;
+
+    (void)desc;
+    if (part < 1 || part > UNC_SEG_MAX_PARTS) return UNC_ERR_SEGMENTED;
+    if (!h->path[part] && h->ask && !seg_ask(h, part)) return UNC_ERR_SEGMENTED;
+    if (!h->path[part]) return UNC_ERR_SEGMENTED;
+
+    f = fopen(h->path[part], "rb");
+    if (!f) return UNC_ERR_SEGMENTED;
+    h->open_io.f = f;
+    h->open_io.size = stat(h->path[part], &st) == 0 ? (uint32_t)st.st_size
+                                                    : UNC_SIZE_UNKNOWN;
+    io->ctx = &h->open_io;
+    io->read = fio_read;
+    io->seek = fio_seek;
+    io->tell = fio_tell;
+    io->size = fio_size;
+    return UNC_OK;
+}
+
+static void seg_release(void *ctx, UncIO *io)
+{
+    SegHost *h = (SegHost *)ctx;
+    (void)io;
+    if (h->open_io.f) { fclose(h->open_io.f); h->open_io.f = NULL; }
+}
+
+/* ------------------------------------------------------------------ */
 /* main                                                               */
 /* ------------------------------------------------------------------ */
 
@@ -434,6 +584,10 @@ static void usage(void)
         "  --overwrite    write over existing output files "
         "(default: per-entry error)\n"
         "  -nr            do not auto-unwrap envelope layers (.sit.hqx, ...)\n"
+        "  --part <file>  another part of a segmented archive (repeatable);\n"
+        "                 parts are also looked for beside the one given\n"
+        "  --no-parts     do not look for other parts\n"
+        "  --ask          prompt on stdin for parts that were not found\n"
         "  --stats        print allocator statistics\n"
         "  -f <format>    force format\n"
         "  -v             verbose\n");
@@ -459,6 +613,9 @@ int main(int argc, char **argv)
     int no_recurse = 0, depth = 0;
     char curfile[1024], delfile[1024];
     struct stat st;
+    SegHost seg;
+    const char *partargs[UNC_SEG_MAX_PARTS];
+    int nparts = 0, no_parts = 0, ask = 0;
 
     if (argc < 3) { usage(); return 2; }
     cmd = argv[1];
@@ -476,6 +633,12 @@ int main(int argc, char **argv)
         }
         else if (strcmp(argv[i], "--overwrite") == 0) overwrite = 1;
         else if (strcmp(argv[i], "-nr") == 0) no_recurse = 1;
+        else if (strcmp(argv[i], "--part") == 0 && i + 1 < argc) {
+            if (nparts < UNC_SEG_MAX_PARTS) partargs[nparts++] = argv[++i];
+            else { fprintf(stderr, "unclassic: too many --part\n"); return 2; }
+        }
+        else if (strcmp(argv[i], "--no-parts") == 0) no_parts = 1;
+        else if (strcmp(argv[i], "--ask") == 0) ask = 1;
         else if (strcmp(argv[i], "--stats") == 0) stats = 1;
         else if (strcmp(argv[i], "-f") == 0 && i + 1 < argc) force = argv[++i];
         else if (strcmp(argv[i], "-v") == 0) verbose = 1;
@@ -593,7 +756,54 @@ nextlayer:
     if (verbose || strcmp(cmd, "l") == 0)
         fprintf(stderr, "%s: %s\n", file, unc_format_name(fmt));
 
-    ret = unc_extract_as(fmt, &io, &sk, &al, &prog, &opt);
+    if (fmt == UNC_FORMAT_SITSEG && !no_parts) {
+        UncVolumeSource vs;
+        void *scratch;
+
+        memset(&seg, 0, sizeof seg);
+        seg.ask = ask;
+        seg.verbose = verbose;
+        if (unc_segment_describe(&io, &seg.desc) != UNC_OK) {
+            fprintf(stderr, "unclassic: %s: not a readable segment header\n",
+                    file);
+            fclose(fio.f);
+            return 1;
+        }
+
+        /* The file we were handed is a part, and its own part number
+         * comes from its header — so opening part 3 of a set works. */
+        seg_record(&seg, (int)seg.desc.part, file);
+        for (i = 0; i < nparts; i++) {
+            int p = seg_part_of(&seg, partargs[i]);
+            if (p) seg_record(&seg, p, partargs[i]);
+            else fprintf(stderr, "unclassic: %s: not part of \"%s\", ignored\n",
+                         partargs[i], seg.desc.name);
+        }
+        seg_scan_dir(&seg, file);
+
+        vs.ctx = &seg;
+        vs.need = seg_need;
+        vs.release = seg_release;
+
+        scratch = malloc(unc_segment_scratch_size());
+        if (!scratch) {
+            fprintf(stderr, "unclassic: out of memory\n");
+            fclose(fio.f);
+            return 1;
+        }
+        ret = unc_extract_segments(&seg.desc, &vs, scratch, &sk, &al,
+                                   &prog, &opt);
+        if (stats) {
+            uint32_t sw = 0, back = 0;
+            unc_segment_stats(scratch, &sw, &back);
+            fprintf(stderr, "segments: %u part opens, %u of them backward\n",
+                    sw, back);
+        }
+        free(scratch);
+        for (i = 1; i <= UNC_SEG_MAX_PARTS; i++) free(seg.path[i]);
+    } else {
+        ret = unc_extract_as(fmt, &io, &sk, &al, &prog, &opt);
+    }
     fclose(fio.f);
 
     if (stats)
@@ -626,7 +836,8 @@ nextlayer:
     if (strcmp(cmd, "x") == 0 && !no_recurse && depth < 8 &&
         (fmt == UNC_FORMAT_MACBINARY || fmt == UNC_FORMAT_BINHEX ||
          fmt == UNC_FORMAT_APPLESINGLE || fmt == UNC_FORMAT_APPLEDOUBLE ||
-         fmt == UNC_FORMAT_GZIP || fmt == UNC_FORMAT_COMPRESS_Z) &&
+         fmt == UNC_FORMAT_GZIP || fmt == UNC_FORMAT_COMPRESS_Z ||
+         fmt == UNC_FORMAT_SITSEG) &&
         sink.file_count == 1 && sink.dir_count == 0 &&
         sink.last_ok_path[0]) {
         FILE *pf = fopen(sink.last_ok_path, "rb");

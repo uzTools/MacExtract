@@ -57,6 +57,34 @@ resource 'DITL' (130, purgeable) {
     }
 };
 
+/* "Locate part N" alert, for a segmented archive whose next part was not
+ * found beside the one that was opened. Three buttons, in the order the
+ * code tests them (kSegFindItem..kSegCancelItem in unclassic_mac.c):
+ *
+ *   1  Find...   opens Standard File so the user can point at it, on any
+ *                mounted volume — including a disk inserted just now
+ *   2  Skip      give up on this part; what was decoded so far is kept
+ *   3  Cancel    stop the extraction
+ *
+ * The wording deliberately says "locate", not "insert the next disk": the
+ * parts of a set are not assumed to be on separate floppies, or to be
+ * named alike, or to be anywhere in particular. */
+resource 'ALRT' (131, purgeable) {
+    { 90, 80, 214, 452 }, 131, {
+        OK, visible, sound1, OK, visible, sound1,
+        OK, visible, sound1, OK, visible, sound1
+    }, noAutoCenter
+};
+
+resource 'DITL' (131, purgeable) {
+    {
+        { 92, 282, 112, 352 }, Button { enabled, "Find..." };
+        { 92, 196, 112, 266 }, Button { enabled, "Skip" };
+        { 92, 110, 112, 180 }, Button { enabled, "Cancel" };
+        { 10, 16, 84, 356 }, StaticText { disabled, "^0" };
+    }
+};
+
 /* MultiFinder/System 7 friendliness; System 6 Finder ignores it (there the
  * app just gets all free RAM). Preferred 4 MB lets the engine use a large
  * runtime budget on a roomy machine (Arsenic/SIT5 needs ~2.6 MB); minimum

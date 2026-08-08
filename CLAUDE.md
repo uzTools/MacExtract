@@ -11,7 +11,16 @@ The engine is the product. The Mac app is a thin shell.
 
 ## Current state — read before working
 
-M0–M10 are **DONE**. The engine passes a 797-fixture differential suite against `unar` and, where `unar` fails, `macunpack`; the Mac shell extracts byte-exact on a real System 6.0.8 Mac Plus under Mini vMac — **55/55 sampled fixtures at 4 MB and 55/55 at the 1 MB floor** (2026-08-08, on a sample that grew from 44 to 55 that day; there are no memory-budget refusals left).
+M0–M11 are **DONE**. M11 is multi-segment archives, in scope since
+2026-08-08: StuffIt segments join end to end, on Linux and byte-exact on a
+real emulated Mac Plus at 4 MB and at the 1 MB floor. **A part is identified
+by its header, never by its filename** — that is the whole point, and it is
+why a set whose parts are scattered or named unlike each other works here and
+does not work in `unar`. Other schemes are ranked in OPEN_ITEMS.md section 6;
+Compact Pro's needs a genuine sample before any parser is written, because no
+reference implementation extracts one.
+
+The engine passes a 797-fixture differential suite against `unar` and, where `unar` fails, `macunpack`; the Mac shell extracts byte-exact on a real System 6.0.8 Mac Plus under Mini vMac — **55/55 sampled fixtures at 4 MB and 55/55 at the 1 MB floor** (2026-08-08, on a sample that grew from 44 to 55 that day; there are no memory-budget refusals left).
 
 It runs on all three systems the project claims: **System 6.0.8 and System 7.0.1** under Mini vMac (a true 68000), and **Mac OS 9.2** under QEMU PowerPC through the 68LC040 emulator, where 13/13 of a format sample is byte-exact, extraction onto **HFS+** is verified, and the `SIZE` partition is honoured by the Process Manager.
 
@@ -325,4 +334,11 @@ how long they will be waiting.
 
 ## Out of scope (v1)
 
-Compression (extraction only), StuffIt X (`.sitx`), encrypted archives, multi-segment archives, disk images, DiskDoubler, Now Compress, LZH/LHA. These are **detect-only**: `unc_sniff` names them — including Disk Copy 4.2, whose probe is now real — so a UI can tell the user what the file is, and extraction returns cleanly unsupported.
+Compression (extraction only), StuffIt X (`.sitx`), encrypted archives, disk images, DiskDoubler, Now Compress, LZH/LHA. These are **detect-only**: `unc_sniff` names them — including Disk Copy 4.2, whose probe is now real — so a UI can tell the user what the file is, and extraction returns cleanly unsupported.
+
+**Multi-segment archives are IN scope since 2026-08-08** (M11), where this
+file used to list them as out. One scheme is implemented — StuffIt segments —
+and the others, including Compact Pro's, are ranked in OPEN_ITEMS.md section
+6 with what each would cost. The rule that decided the order: **a part must
+be identifiable from its own bytes.** A `.001` split cannot be, whatever it
+is named, so it buys less than it looks like it does.

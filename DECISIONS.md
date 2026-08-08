@@ -1837,3 +1837,82 @@ garbage. No fixture in the corpus collides; the builder now refuses one that
 does, the way the macunpack matcher already refused its own collisions. **Two
 matchers in one file disagreeing about the same hazard is a bug even when
 neither has fired.**
+
+---
+
+## 2026-08-08 — Multi-segment archives: one scheme, chosen for its header
+
+Multi-segment moved from "out of scope (v1)" to in scope. One scheme is
+implemented as a proof of concept and the rest are filed in OPEN_ITEMS.md.
+
+**Which scheme, and why it was not a toss-up.** The candidates were
+StuffIt segments, Compact Pro segmented archives, spanned Zip
+(`.z01`/`.zip`), and a plain `.001` split. The requirement — parts that
+may be anywhere and named anything — is decidable only where a part
+says what it is:
+
+| scheme | what identifies a part | oracle here |
+|---|---|---|
+| StuffIt segments | 100-byte header: part number, original name, 26 fingerprint bytes | `unar` |
+| Compact Pro segmented | a volume byte per archive and per entry; segment 2+ layout undocumented | **none** — neither `unar` nor `macunpack` extracts them |
+| spanned Zip | the filename extension | `unar` |
+| `.001` split | the filename, and nothing else | `unar`, only when part 1 is not itself a recognizable archive |
+
+A `.001` split would have been the least code and cannot meet the
+brief at all: with no header, the name is the only evidence there is.
+Compact Pro is the one classic-Mac scheme with no reference
+implementation to transcribe or check against, so it needs a genuine
+sample before a line is written. StuffIt segments is both the cheapest
+and the strongest, and its join touches no decoder: the payload is a
+byte concatenation, so this is an envelope in the shape of MacBinary.
+
+**The engine sequences, the host opens.** Parts arrive through an
+`UncVolumeSource` callback, so no file is touched from the engine, the
+joiner is a caller-provided struct (no allocation), and the "where is
+part 2?" question lands where it belongs — a directory scan in the CLI,
+an alert in the Mac shell. The joiner keeps **one part open at a time**:
+a Mac Plus with one floppy drive cannot mount two, and System 6 counts
+its FCBs.
+
+**Two things the header gives away, both load-bearing.** `rsrclen +
+datalen` is the exact payload total, so a set is known to be complete
+without a part count — and none is stored in the format, which is also
+why XADMaster stops at the first gap rather than knowing when to stop.
+And a set of one part is an ordinary file with a 100-byte hat, so it
+extracts with no volume source at all.
+
+**A missing part is the archive's verdict, not the entry's.** The
+joiner reports an unavailable part as EOF, so the entry ends as a
+per-entry `UNC_ERR_TRUNCATED` with its partial output kept and the sink
+told, while the call returns `UNC_ERR_SEGMENTED` — the first code path
+in the project that ever produces that error, which had been declared
+in `unclassic.h` since M0 and returned by nothing.
+
+**Backward crossings are measured, not assumed.** A backward seek
+across a part boundary re-opens a part, which on removable media is a
+disk the user has to put back. `unc_segment_stats()` counts them and
+`--stats` prints them: **0 on both the 3-part and 12-part cases.** The
+StuffIt join is read strictly forward, so the swap-thrash problem this
+design was braced for does not exist for this scheme. It is reported
+per run rather than concluded once, because it is a property of the
+container inside the join, not of the joiner.
+
+### The oracle's discovery is name-gated; ours is not
+
+`unar` matches parts by content — but only among files whose name
+starts with the opened part's basename. Renaming the parts of a valid
+set makes it disappear from the oracle entirely. That is not a bug we
+inherit: our discovery reads every file in the folder and asks the
+engine. It does mean the `misnamed` case cannot be adjudicated in
+place, so it is adjudicated on a renamed copy of the same bytes — the
+payload stays oracle-checked, and what the case tests is discovery.
+
+**And the trap that would have poisoned the ground truth:** `unar
+Part.1` joins nothing and extracts part 1 alone, looking entirely
+successful, while `unar ./Part.1` works. `[name
+stringByDeletingLastPathComponent]` returns `@""` for a bare relative
+name, and the `if(!dirname) dirname=@"."` guard tests for nil, not
+emptiness. A manifest built that way would have been truncated, and our
+correct output would have "failed" against it. Reproduced, cause read
+in the reference source, and written down where the next harness author
+will look (TESTING.md).

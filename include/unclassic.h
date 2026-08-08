@@ -53,6 +53,11 @@ typedef enum UncFormat {
     UNC_FORMAT_NOWCOMPRESS,   /* Now Compress archive                 */
     UNC_FORMAT_LZH,           /* .lzh/.lha                            */
 
+    /* Extractable, but assembled from several files. Appended here
+     * rather than beside the other extractable formats so that no
+     * existing enumerator changes value. */
+    UNC_FORMAT_SITSEG,        /* one part of a StuffIt segmented set   */
+
     UNC_FORMAT__COUNT
 } UncFormat;
 
@@ -215,6 +220,93 @@ int unc_extract(UncIO *io, UncSink *sink, UncAlloc *al,
 /* Same, but skip sniffing and force a specific format. */
 int unc_extract_as(UncFormat f, UncIO *io, UncSink *sink, UncAlloc *al,
                    UncProgress *prog, const UncOptions *opt);
+
+/* ------------------------------------------------------------------ */
+/* Multi-segment archives                                             */
+/*                                                                    */
+/* A segmented archive is one logical stream cut across several        */
+/* files, one per floppy. Each part carries a header that names the    */
+/* set, numbers the part within it, and fingerprints the original      */
+/* file, so a part is identified BY CONTENT: filenames are a hint for  */
+/* finding candidates and never evidence that one belongs.             */
+/*                                                                    */
+/* The engine sequences the parts; the host opens them. That keeps     */
+/* every file operation on the caller's side (engine discipline) and   */
+/* puts the "where is part 2?" question — a directory scan, a dialog,  */
+/* a disk swap — where it belongs.                                     */
+/* ------------------------------------------------------------------ */
+
+#define UNC_SEG_HEAD      100  /* bytes of a part the engine inspects   */
+#define UNC_SEG_FP_LEN     26  /* fingerprint length, in those bytes    */
+#define UNC_SEG_MAX_PARTS 256  /* part numbers are one byte             */
+
+/* Identity of a SET, plus which part of it we happened to look at. */
+typedef struct UncSegmentDesc {
+    UncFormat scheme;        /* UNC_FORMAT_SITSEG                       */
+    uint16_t  part;          /* part number of the inspected file, >= 1 */
+    uint32_t  head_len;      /* header bytes to drop from each part      */
+
+    /* Name of the ORIGINAL file (not of any part), raw MacRoman. */
+    uint8_t   name[UNC_NAME_MAX + 1];
+    uint16_t  name_len;
+
+    /* Opaque bytes that must agree across every part of the set. */
+    uint8_t   fp[UNC_SEG_FP_LEN];
+
+    /* Decoded from the fingerprint: what the joined stream contains. */
+    uint32_t  total;         /* payload bytes across all parts          */
+    uint32_t  data_size, rsrc_size;
+    uint32_t  type, creator;
+    uint16_t  finder_flags;
+    uint32_t  create_date, mod_date;
+} UncSegmentDesc;
+
+/* Describe the set that the file at `io` is a part of.
+ * Returns UNC_OK, or UNC_ERR_FORMAT if this is not a segment. */
+int unc_segment_describe(UncIO *io, UncSegmentDesc *desc);
+
+/* Test a candidate file's first bytes against a known set. Returns its
+ * part number (>= 1) if it belongs, or 0. `len` under UNC_SEG_HEAD
+ * always answers 0: a candidate too short to prove itself is not one. */
+int unc_segment_match(const UncSegmentDesc *desc,
+                      const uint8_t *head, int32_t len);
+
+/* Supplies parts on demand. */
+typedef struct UncVolumeSource {
+    void *ctx;
+    /* Open part `part` (1-based) of `desc` and fill *io. Return UNC_OK,
+     * UNC_ERR_SEGMENTED if it cannot be produced (missing, or the user
+     * declined), or another negative error. The engine may ask for a
+     * part it has already read: hosts that can should remember where
+     * each part was found rather than asking the user twice. */
+    int  (*need)(void *ctx, const UncSegmentDesc *desc, int part, UncIO *io);
+    /* Release a stream previously handed over by need(). May be NULL.
+     * The engine releases the current part before asking for another,
+     * so a host is never required to hold two open at once. */
+    void (*release)(void *ctx, UncIO *io);
+} UncVolumeSource;
+
+/* Joins the parts of `desc` and extracts the result: one entry, with
+ * the original file's name, type/creator, dates and both forks.
+ * Whatever that file turns out to be (usually a .sit) is the caller's
+ * next layer, exactly as for MacBinary or BinHex.
+ *
+ * `scratch` is caller-owned working storage for the joiner, of at
+ * least unc_segment_scratch_size() bytes, aligned for uint32_t. It is
+ * a caller allocation because on a 1 MB Mac it belongs in the heap
+ * rather than on an 8 KB stack. */
+uint32_t unc_segment_scratch_size(void);
+int unc_extract_segments(const UncSegmentDesc *desc, UncVolumeSource *vs,
+                         void *scratch, UncSink *sink, UncAlloc *al,
+                         UncProgress *prog, const UncOptions *opt);
+
+/* How the last unc_extract_segments() call on `scratch` moved between
+ * parts: how many opens it asked for, and how many of those were a
+ * backward seek re-opening a part already read. On removable media the
+ * second number is what a disk swap costs, so it is measured rather
+ * than assumed. Either pointer may be NULL. */
+void unc_segment_stats(const void *scratch, uint32_t *part_switches,
+                       uint32_t *backward_crossings);
 
 #ifdef __cplusplus
 }

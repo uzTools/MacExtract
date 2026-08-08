@@ -25,8 +25,15 @@ Unix compress (.Z). Nested files like .sit.hqx or .tar.Z are unwrapped
 automatically, by looking inside them rather than trusting the name. Resource
 forks, type and creator codes and dates all survive, so an extracted
 application simply runs. StuffIt X, DiskDoubler, Now Compress, LZH and Disk
-Copy 4.2 are recognised and named, not extracted; encrypted and multi-part
-archives are out of scope.
+Copy 4.2 are recognised and named, not extracted; encrypted archives are out
+of scope.
+
+Archives split across floppies: a StuffIt segmented set is joined back
+together. Open the first part; the rest are found beside it, and if one is
+somewhere else you are asked to point at it. The parts are recognised by
+what is inside them, so it does not matter what they are called or whether
+they are all in one folder. Sets split by Compact Pro or PKZIP are not
+handled yet.
 
 Every archive in the test sample extracts byte-exact on a 1 MB Mac Plus,
 StuffIt 5 (Arsenic) included. Arsenic is slow on a 68000 — 16 minutes for a

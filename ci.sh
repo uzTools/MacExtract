@@ -23,6 +23,8 @@ UNCLASSIC=build/san/unclassic sh tests/run_robustness.sh || fail "robustness tes
 python3 tools/run_unwrap.py build/san/unclassic || fail "envelope unwrap tests"
 UNCLASSIC=build/san/unclassic sh tests/run_collide.sh || fail "collision tests"
 python3 tools/fuzz.py -n 150 --seed 7 --unclassic build/san/unclassic || fail "fuzz smoke"
+python3 tools/run_segments.py --unclassic build/san/unclassic \
+    || fail "segmented-archive tests"
 
 echo "=== variant 1b: sampled inverse BWT (forced, + budget) ==="
 # The Arsenic decoder falls back to a sampled occurrence index when the

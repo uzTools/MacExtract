@@ -321,6 +321,13 @@ int unc_cpt_extract(UncCtx *c);
 int unc_sit_probe(const uint8_t *head, int32_t len);       /* classic */
 int unc_sit_extract(UncCtx *c);
 
+/* One part of a StuffIt segmented set (fmt_sitseg.c). unc_sitseg_emit
+ * writes the single joined entry, reading its forks from `base`:
+ * UNC_SEG_HEAD for a lone part, 0 for the stream unc_segment.c joins. */
+int unc_sitseg_probe(const uint8_t *head, int32_t len);
+int unc_sitseg_extract(UncCtx *c);
+int unc_sitseg_emit(UncCtx *c, const UncSegmentDesc *desc, uint32_t base);
+
 /* One StuffIt fork: seek to `at`, decode `complen` -> `outlen` bytes
  * with the given method, verify the CRC-16/ARC (`wantcrc`; method 15
  * verifies its own internal CRC-32 instead). Shared by the classic
