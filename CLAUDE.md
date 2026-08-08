@@ -38,8 +38,13 @@ Read them at the start of every session. Where these files disagree with each ot
 ## Where to start (handoff, 2026-08-08)
 
 The repository is on GitHub as a **private** repo, `main`, tagged through
-`v0.5`, which is the first tag to publish a downloadable application (see
-*Cutting a release*). Working tree clean, `./ci.sh` green, nothing in flight.
+`v0.6`, the release that adds StuffIt method 6 (`v0.5` was the first tag to
+publish a downloadable application at all — see *Cutting a release*). Working
+tree clean, `./ci.sh` green, nothing in flight. **Whether v0.6's release page
+actually appeared has not been checked from here and cannot be**: this machine
+has no `gh`, no token, and the Releases API answers 404 for a private repo —
+re-tested 2026-08-08. `git ls-remote --tags origin` does work over SSH, so the
+TAG is confirmed pushed; the release page it triggers is not.
 
 **The differential suite is 797 fixtures, not 769** (2026-08-08), and all
 three increases came from the measuring apparatus rather than from new archives.
@@ -261,11 +266,16 @@ Four things will bite you, all of them cost a step on v0.5:
 - **`dist/` must be current.** The workflow publishes what is committed; it
   does not build. It fails if an asset is missing or empty, but it cannot tell
   that a present asset is three versions old.
-- **Confirming it worked is a human step.** The repo is private and this
-  machine authenticates with a DEPLOY KEY, which signs git over SSH and cannot
-  read the Releases or Actions API at all — every unauthenticated call returns
-  404. Ask, or look. Do not report a release as published on the strength of a
-  successful `git push`.
+- **Confirming it worked is a human step — but confirm what you CAN.** The repo
+  is private and this machine authenticates with a DEPLOY KEY, which signs git
+  over SSH and cannot read the Releases or Actions API at all: re-tested
+  2026-08-08 on v0.6, `gh` is not installed, no token is in the environment,
+  and both `/repos/...` and `/repos/.../releases` answer 404. What *does* work
+  over SSH is `git ls-remote --tags origin`, which settles that the tag reached
+  GitHub — the half that used to be assumed from a `git push` exit status.
+  Publishing itself is NOT a human step: the workflow does it, unattended, and
+  a deploy-key tag push triggers it (v0.5, v0.6). So report the tag as pushed
+  and the release page as unverified, and never collapse the two.
 
 A deploy-key push *is* allowed to add files under `.github/workflows/`, and a
 deploy-key tag push *does* trigger a workflow. Both were open questions before
