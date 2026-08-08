@@ -10,6 +10,7 @@
  *   --budget <N>   allocation cap in bytes (simulate a small Mac)
  *   --raw-names    emit raw MacRoman bytes instead of UTF-8 names
  *   --forks <visible|hidden>  resource-fork sidecar naming
+ *   --overwrite    write over existing output files (default: refuse)
  *   -f <format>    force format (name from `unclassic formats`)
  *
  * The CLI is the only place libc I/O and malloc are used; the engine
@@ -182,6 +183,9 @@ typedef struct {
     int         test_only;
     int         raw_names;
     int         hidden_forks;   /* "._NAME" sidecars, not "NAME.rsrc" */
+    int         overwrite;      /* write over existing output files    */
+    int         clobber;        /* last open refused: path existed     */
+    const char *unwrap_src;     /* envelope being unwrapped, or NULL   */
     int         mac_encoding;   /* names are MacRoman */
     int         verbose;
     FILE       *data_f, *rsrc_f;
@@ -287,13 +291,42 @@ static void rsrc_path(const char *path, int hidden, char *out, size_t outsz)
         snprintf(out, outsz, "._%s", path);
 }
 
+/* The envelope currently being unwrapped is exempt from the clobber
+ * check: it is deleted moments after the inner layer succeeds, and an
+ * inner entry may legitimately carry its name. */
+static int sink_unwrap_exempt(DiskSink *s, const char *path)
+{
+    char rp[1100];
+    if (!s->unwrap_src || !s->unwrap_src[0]) return 0;
+    if (strcmp(path, s->unwrap_src) == 0) return 1;
+    rsrc_path(s->unwrap_src, s->hidden_forks, rp, sizeof rp);
+    return strcmp(path, rp) == 0;
+}
+
+/* Never write over a file that is already there. Two entries can want
+ * the same path — an archive holding both "X" and "X.rsrc" puts the
+ * second one on the first one's sidecar — and letting the last writer
+ * win destroys a fork that was extracted correctly, without saying so.
+ * Refusing makes it a per-entry error like a CRC failure, and names the
+ * two ways out. --overwrite restores the old behaviour, which is what
+ * re-extracting into a used directory wants. */
 static FILE *sink_open_fork(DiskSink *s, UncFork fork)
 {
     char path[1100];
+    struct stat st;
     if (fork == UNC_FORK_DATA)
         snprintf(path, sizeof path, "%s", s->cur_path);
     else
         rsrc_path(s->cur_path, s->hidden_forks, path, sizeof path);
+    s->clobber = 0;
+    if (!s->overwrite && stat(path, &st) == 0 &&
+        !sink_unwrap_exempt(s, path)) {
+        s->clobber = 1;
+        fprintf(stderr, "unclassic: %s: output path already exists; re-run "
+                "with --forks hidden to keep both forks, or --overwrite\n",
+                path);
+        return NULL;
+    }
     return fopen(path, "wb");
 }
 
@@ -310,8 +343,9 @@ static int sink_write(void *ctx, UncFork fork, const void *buf, int32_t len)
     if (!*fp) {
         *fp = sink_open_fork(s, fork);
         if (!*fp) {
-            fprintf(stderr, "unclassic: cannot create output for %s: %s\n",
-                    s->cur_path, strerror(errno));
+            if (!s->clobber)   /* sink_open_fork already explained that one */
+                fprintf(stderr, "unclassic: cannot create output for %s: %s\n",
+                        s->cur_path, strerror(errno));
             return -1;
         }
     }
@@ -327,10 +361,15 @@ static int sink_end(void *ctx, int status)
     char name[512];
 
     if (!s->test_only && !s->list_only) {
-        /* An entry with a data fork of size 0 still gets an empty file. */
+        /* An entry with a data fork of size 0 still gets an empty file.
+         * That open can hit the clobber check too — a resource-only
+         * entry named "X" collides with the sidecar of an earlier "X"
+         * under the hidden convention — so it becomes a per-entry
+         * error the same way a write would have. */
         if (!s->cur.is_dir && !s->data_f && s->cur_path[0] && status == UNC_OK) {
             FILE *f = sink_open_fork(s, UNC_FORK_DATA);
             if (f) s->data_f = f;
+            else if (s->clobber) status = UNC_ERR_SINK;
         }
         if (s->data_f) { fclose(s->data_f); s->data_f = NULL; }
         if (s->rsrc_f) { fclose(s->rsrc_f); s->rsrc_f = NULL; }
@@ -392,6 +431,8 @@ static void usage(void)
         "  --raw-names    keep raw MacRoman bytes in filenames\n"
         "  --forks <visible|hidden>  resource forks as NAME.rsrc "
         "(default) or ._NAME\n"
+        "  --overwrite    write over existing output files "
+        "(default: per-entry error)\n"
         "  -nr            do not auto-unwrap envelope layers (.sit.hqx, ...)\n"
         "  --stats        print allocator statistics\n"
         "  -f <format>    force format\n"
@@ -401,7 +442,7 @@ static void usage(void)
 int main(int argc, char **argv)
 {
     const char *cmd, *file = NULL, *outdir = ".", *force = NULL;
-    int raw_names = 0, verbose = 0, stats = 0, hidden_forks = 0;
+    int raw_names = 0, verbose = 0, stats = 0, hidden_forks = 0, overwrite = 0;
     uint32_t budget = 0;
     int i;
 
@@ -433,6 +474,7 @@ int main(int argc, char **argv)
             else if (strcmp(k, "visible") == 0) hidden_forks = 0;
             else { usage(); return 2; }
         }
+        else if (strcmp(argv[i], "--overwrite") == 0) overwrite = 1;
         else if (strcmp(argv[i], "-nr") == 0) no_recurse = 1;
         else if (strcmp(argv[i], "--stats") == 0) stats = 1;
         else if (strcmp(argv[i], "-f") == 0 && i + 1 < argc) force = argv[++i];
@@ -471,6 +513,8 @@ nextlayer:
     sink.outdir = outdir;
     sink.raw_names = raw_names;
     sink.hidden_forks = hidden_forks;
+    sink.overwrite = overwrite;
+    sink.unwrap_src = delfile;   /* "" until a layer is being unwrapped */
     sink.verbose = verbose;
 
     sk.ctx = &sink;

@@ -21,6 +21,7 @@ make BUILD=build/san \
 UNCLASSIC=build/san/unclassic sh tests/run_diff.sh || fail "diff tests (sanitizers)"
 UNCLASSIC=build/san/unclassic sh tests/run_robustness.sh || fail "robustness tests (sanitizers)"
 python3 tools/run_unwrap.py build/san/unclassic || fail "envelope unwrap tests"
+UNCLASSIC=build/san/unclassic sh tests/run_collide.sh || fail "collision tests"
 python3 tools/fuzz.py -n 150 --seed 7 --unclassic build/san/unclassic || fail "fuzz smoke"
 
 echo "=== variant 1b: sampled inverse BWT (forced, + budget) ==="

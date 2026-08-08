@@ -82,6 +82,7 @@ environment (section 4).
 | The LZW table sized from `maxbits` rather than the input | 2026-08-03 | growth-on-demand and one-shot sizing look interchangeable and are not: copy-based growth has an `old + new` transient, so **where the buffer IS the allocation it can lose to doing nothing** (measured, 274,432 → 405,504 B). Bound it from the input instead. DECISIONS.md |
 | StuffIt 5 / Arsenic incomplete at the 1 MB floor (42/44) | 2026-08-07 | the last four gains were all "allocate less of what the data does not use"; this one had to **reduce the requirement** instead, and the tell was that no placement or reserve tuning could close a 410 KB shortfall on a 760 KB machine. Also: **estimate the thing you are changing.** The prediction here was within 200 B on one fixture and 3.6% on the other because it estimated a single allocation inside one entry; the method 13 estimate a day earlier missed badly because it estimated an aggregate over a distribution. DECISIONS.md |
 | "peak heap under a budget" read as a requirement | 2026-08-07 | a decoder with a time-for-memory dial spends whatever the cap allows, so its peak tracks the CAP, not its needs. Comparing such a peak against a predicted requirement compares two different quantities — **bisect the cap** for the requirement. This nearly made the sampled BWT look 2.3x worse than predicted when it was in fact accurate |
+| `unclassic x` clobbered its own output on a THINK C archive | 2026-08-08 | entry `X`'s sidecar and entry `X.rsrc`'s data fork are one path, and the sink opened it `"wb"`: a 7,048 B resource fork became a 0-byte file with a zero exit status. Every open now refuses an existing path as a per-entry error naming both ways out. **Fixing a harness can hide the defect it was hiding** — `run_diff.py` had just been moved to `--forks hidden`, so nothing exercised the shipped default any more; `tests/run_collide.sh` extracts with the default on purpose. DECISIONS.md |
 | Nine fixtures with no oracle manifest ("undecidable" or "oracle-buggy") | 2026-08-08 | both reasons were the fork-naming flag, not the archives: `unar -k visible` writes `NAME.rsrc`, which collides with a real entry called `X.rsrc` and which GNUstep refuses to build for a leading `~`. `-k hidden` (`._NAME`) decides all nine, and all 774 existing manifests rebuild identically. **A limitation and its remedy sat one paragraph apart in TESTING.md**; the remedy was a documented flag of a tool already in use. DECISIONS.md, BLOCKERS.md |
 
 ---
@@ -105,14 +106,6 @@ environment (section 4).
 
 ## 6. Loose ends
 
-- **`unclassic x` still clobbers by default on a THINK C archive.** The CLI
-  writes resource forks as `NAME.rsrc` unless given `--forks hidden`, so an
-  archive holding both `X` and `X.rsrc` loses one of them — silently, since the
-  second write simply overwrites. The harnesses pass the flag and are unaffected
-  (2026-08-08). Closing it means either changing the default, which makes
-  resource forks invisible dotfiles for every other archive, or detecting the
-  collision and reporting it per entry. The Mac application is unaffected: it
-  writes real forks.
 - **The Mac-side checkers still read `<X>.rsrc` sidecars** (`vmac_check.py`,
   `checkdisk.py`, `check_mac_sink.py`), so the nine fixtures recovered on
   2026-08-08 cannot join the on-Mac 44-fixture sample until those readers learn

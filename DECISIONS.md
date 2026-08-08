@@ -1533,3 +1533,47 @@ and one of the two `~` fixtures is that shape, so a careless reading would
 have "confirmed" the very bug being escaped. It is an empty data fork:
 `lsar` reports the single entry with `XADIsResourceFork: 1`, and the container
 holds ids 9 and 2 only. Checked before believing, on all nine.
+
+## 2026-08-08 — the CLI refuses to write over its own output
+
+The `.rsrc` suffix convention could destroy a fork in silence. Entry `X`'s
+sidecar and entry `X.rsrc`'s data fork are the same path, and `sink_open_fork`
+just opened it `"wb"`, so the second entry truncated the first one's resource
+fork. Measured on `derived-Unzip101.sit`: `Source/UnZip.π`'s 7,048 B resource
+fork becomes a 0-byte file, exit status 0, nothing on stderr. That is what the
+CLI did unconditionally until now, and what `--overwrite` still does.
+
+Every output open now `stat()`s first and fails the entry when the path is
+already there, with a message naming both ways out (`--forks hidden` to keep
+both forks, `--overwrite` for the old behaviour). It is a per-entry error like
+a CRC mismatch, so extraction continues and the exit status is nonzero.
+
+**Refusing beats switching the default to `._NAME`.** The suffix form is what
+unar writes and what every example in these docs shows; making resource forks
+invisible dotfiles for every archive is a bigger change than an error on the
+rare one. More to the point, an error can carry its own remedy and a changed
+default cannot. It also covers more than the sidecar case: two entries with
+identical names, and re-extracting into a directory that already holds output,
+had the same shape and the same silence.
+
+One exemption: the envelope being unwrapped. `unclassic x` writes an
+intermediate file, recurses into it, and deletes it when the inner layer
+succeeds — so that file exists while the inner layer is writing, and an inner
+entry may legitimately carry its name. The sink holds a pointer to that path
+and allows it (and its sidecar) through. The five unwrap chains in `ci.sh` are
+what would catch this being wrong.
+
+**Transferable: fixing the harness can hide the defect it was hiding.** The
+day's earlier change made `run_diff.py` extract with `--forks hidden`, which is
+correct and which also means the corpus no longer exercises the shipped default
+at all. The OPEN_ITEMS entry recording that said "the harnesses pass the flag
+and are unaffected" — true, and not a reason to leave it. `tests/run_collide.sh`
+therefore extracts with the DEFAULT convention and asserts the refusal; it was
+run against the pre-fix binary first and fails there, which is the only reason
+to believe it passes now.
+
+**What that test cannot see:** it pins one archive's shape (`X` plus a real
+`X.rsrc`). No corpus fixture holds two entries with byte-identical names, so
+that branch of the same check is exercised only by re-extraction, and a
+collision against a pre-existing unrelated file is not distinguished from one
+of our own — both refuse, which is the safe direction but not a diagnosis.

@@ -54,6 +54,14 @@ container's entry ids, not assumed.
 under `--forks hidden`; the differential harnesses pass that flag so
 both sides of the comparison use the unambiguous form.
 
+Which means the harnesses no longer exercise the default convention.
+`tests/run_collide.sh` (in `ci.sh`) covers it directly: with default
+forks `derived-Unzip101.sit` must fail the one entry whose data fork
+lands on another entry's sidecar and keep the fork already written,
+with `--forks hidden` it must extract whole, and `--overwrite` must
+restore the old write-over-anything behaviour. It was run against the
+pre-fix binary and fails there. DECISIONS.md, 2026-08-08.
+
 ### Exact oracle invocation
 
 ```

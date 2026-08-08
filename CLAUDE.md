@@ -47,8 +47,11 @@ which collides with a real entry called `X.rsrc` and which GNUstep refuses to
 build for a leading `~`. Rebuilt with `-k hidden` (`._NAME`) all nine decide,
 and all 774 pre-existing manifests come back entry-for-entry identical, so the
 switch changed the measuring apparatus and not the ground truth. The CLI grew
-`--forks hidden` because it had the same collision on its own side; the
-default is unchanged. DECISIONS.md and BLOCKERS.md, 2026-08-08.
+`--forks hidden` because it had the same collision on its own side; the default
+naming is unchanged, but the CLI now **refuses to write over an existing output
+file** (per-entry error, `--overwrite` restores the old behaviour) — it used to
+destroy a 7 KB resource fork on a THINK C archive and exit 0.
+DECISIONS.md and BLOCKERS.md, 2026-08-08.
 
 **The 1 MB floor is 44/44 as of 2026-08-07, and the StuffIt 5 / Arsenic
 capability gap is closed.** All six sampled StuffIt 5 fixtures extract every
