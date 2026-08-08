@@ -64,6 +64,19 @@ environment (section 4).
   engine and sink semantics of a cancel are covered separately: unit tests,
   both write paths through the qemu-m68k mock in `ci.sh`, and `UNC_AT_CANCEL`
   on-Mac at 4 MB and 1 MB.
+- **The Mac "locate part N" alert has never been on screen.** The
+  segmented join is verified on the emulator at 4 MB and at the 1 MB
+  floor (FORMATS.md), but only through the autotest build, which has no
+  user and therefore does not compile `SegAskUser` at all: every part in
+  those runs was found by the folder scan. So what is proven is the
+  join, the discovery and the missing-part verdict — not the alert, the
+  Standard File call inside it, the wrong-part message, or hiding and
+  restoring the progress dialog around a nested modal. The engine
+  callback underneath it is exercised, from the CLI, by `--ask`.
+  Closing this needs `tools/vmac/interactive.py` driving the buttons,
+  the way the cancel paths were done. **Nothing here is hardware-only**:
+  Mini vMac can mount an image mid-run, so even the disk-swap case is
+  emulator-testable and does not belong in MANUAL_TESTS.md.
 - **Files larger than the HFS 2 GB cap**, and the engine's 32-bit-only
   arithmetic against them.
 - **MacRoman filename display and 8-bit characters above System 6.** The bytes
