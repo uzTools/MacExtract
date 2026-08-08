@@ -9,6 +9,9 @@
    "data_sha256": "9eb03b570805f5cda04c163bc3234b89cd5abb8274ce828d494a4e41da42aeab",
    "data_size": 7916,
    "name": "Look Mom, No Hands! 1.5.1/Lies Mich- Look Mom, No Hands!",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "c9cba5ee1b0e5f4622f2751ff0898483bdf2a3a925099e1ee6f34e20fe44c895",
    "rsrc_size": 4714,
    "type": "TEXT"
@@ -18,6 +21,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Look Mom, No Hands! 1.5.1/Look Mom, No Hands!",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "44cc6d26def61ff47cbbce75dcc2325b12a26d47d5b0ebe8533fce826f3b4a28",
    "rsrc_size": 11494,
    "type": "INIT"
@@ -27,6 +33,9 @@
    "data_sha256": "c872e76c544382b21aa5369c548ccb5f4e1995c2988772067ce0abd0621efee6",
    "data_size": 7211,
    "name": "Look Mom, No Hands! 1.5.1/ReadMe - Look Mom, No Hands!",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "08faf8e47c912ee9c41bbf896647ef2700f9f711d29ca79ff97768e8afa97b11",
    "rsrc_size": 4794,
    "type": "TEXT"
@@ -36,6 +45,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Look Mom, No Hands! 1.5.1/Register",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "2e81634d76c782caeeb3c85a3da281766fe05362b634a9416082b87f40a142a8",
    "rsrc_size": 95353,
    "type": "APPL"
@@ -45,6 +57,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Look Mom, No Hands! 1.5.1/Register Online",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "0aa98df21b0c4b0fc7645b4073a8cfe18ba0817fc05e8a7136314220c543c22b",
    "rsrc_size": 13639,
    "type": "APPL"

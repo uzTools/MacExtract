@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Set Volume",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "3425301ab506fbd89a8bf7462587637a6a22c61256ac4904a837df386991e1e2",
    "rsrc_size": 4411,
    "type": "DFIL"

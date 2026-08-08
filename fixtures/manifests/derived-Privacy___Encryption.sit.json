@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Privacy & Encryption",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "859833266e067e0276becb156fada656fc4a9796e4a827a886337fbf28b7960d",
    "rsrc_size": 80862,
    "type": "APPL"

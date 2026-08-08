@@ -5,6 +5,9 @@
    "data_sha256": "35c12878c0f4656e016c3f8421cf366cd6e64d36ad1dcec6e3c87b63bf696a00",
    "data_size": 1053,
    "name": "About Apollo converter…",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "518db8ac136aef0846b04caa7a81bd87f6388d80c11c5cb803217f39eb360aa8",
    "rsrc_size": 2586,
    "type": "TEXT"
@@ -14,6 +17,9 @@
    "data_sha256": "30866543cfd7b3bf9da47c21577d84a1fafac446e759aaa31c605e1e112cca3f",
    "data_size": 12133,
    "name": "About Apollo…",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "8f64509c9418bc12fc2e8f0badf1debf206cd341b9e18b4e096b7aea52857545",
    "rsrc_size": 39014,
    "type": "TEXT"
@@ -23,6 +29,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Apollo 0.6b1",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "777a83e9935400da651eba703f15097c8d40f1e5b1f9d75befbd015f5351adf2",
    "rsrc_size": 55741,
    "type": "INIT"
@@ -32,6 +41,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Apollo converter",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "215f58655af1ef96f7617e4001713fd5eb83681017a61cc166fe8d2f49362333",
    "rsrc_size": 8513,
    "type": "APPL"
@@ -41,6 +53,9 @@
    "data_sha256": "1d378ec3f59ffd5a89ae4c016251b4d13031c7fe8aedf0d9e999bc9df3642ee8",
    "data_size": 1274,
    "name": "Version history",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"

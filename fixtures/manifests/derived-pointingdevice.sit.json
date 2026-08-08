@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Pointing Device",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "4e4f837a623dee783164238a4c40a0922b74b31fe6fe6ce511be53749b8784d1",
    "rsrc_size": 12133,
    "type": "cdev"

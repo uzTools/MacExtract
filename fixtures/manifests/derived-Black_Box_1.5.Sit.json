@@ -5,6 +5,10 @@
    "data_sha256": "7670d3e3fae70231f57334a27b152e6babc291834630e5475cbe59669ed607db",
    "data_size": 26,
    "name": "Black Box",
+   "oracle_methods": [
+    "Compress",
+    "Huffman"
+   ],
    "rsrc_sha256": "7596df96ae8fcc89c6f7e129fb745880cd9db48879adac1ce9e1d4cc5a49ddec",
    "rsrc_size": 33698,
    "type": "INIT"
@@ -14,6 +18,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Black Box 1.5 Docs",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "ac2ed8073f253098735483f9d0125f47a5961c3db5758a410f1ddb2c7d8ae995",
    "rsrc_size": 47561,
    "type": "APPL"

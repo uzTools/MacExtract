@@ -9,6 +9,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Jobs Quote/Homepage",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "8562d925430754a20fbde9ec1d9f511653b49440299d9560d1e5cf0017c9bb23",
    "rsrc_size": 530,
    "type": "ilht"
@@ -18,6 +21,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Jobs Quote/Jobs Quote",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "a3b743074578e30471dc09d8ddccc8258f5a9fc559dc469ebd8766dc0198e89d",
    "rsrc_size": 40127,
    "type": "INIT"
@@ -27,6 +33,9 @@
    "data_sha256": "63eb0fd489b962c39cf8d9970bee8ea90408df220546669664333d7ebb481dd1",
    "data_size": 954,
    "name": "Jobs Quote/Read Me",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "b0828b367c320d93add2f052db9ed9c4a9725cf6835a1476e7676e33ff60d6be",
    "rsrc_size": 3796,
    "type": "ttro"
@@ -36,6 +45,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Jobs Quote/europe@ehug.info",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "c8d5c5b63cdac857000f75851124f5ac3fd7a761ddb220a256986e0254f32f37",
    "rsrc_size": 543,
    "type": "ilma"

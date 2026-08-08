@@ -9,6 +9,9 @@
    "data_sha256": "af88b87631602f9f0c1724fdb40c051a19a5436c538c878507a84c8ba2c7e64a",
    "data_size": 39232,
    "name": "DocumentMaker Stack/DocumentMaker",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "9994a4c875c126d2ed8896d29a6789fd5b27be706bfac7051b5cd26356b3a962",
    "rsrc_size": 96280,
    "type": "STAK"
@@ -18,6 +21,9 @@
    "data_sha256": "7faaa1cfba055872e3915f2e2b106064a8f5814b4e97d81638403d662709c447",
    "data_size": 2639,
    "name": "DocumentMaker Stack/Read Me",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "ceb347b47f06d55f5094b56e771bf76011a779ab4906449a36bdb4d06e4ab08b",
    "rsrc_size": 832,
    "type": "TEXT"

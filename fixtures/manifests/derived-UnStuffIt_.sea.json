@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "UnStuffIt™",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "6a9351f340ca265ecc54b38eb5ce0b6d0a724274abc5f7c5006789967b6f7829",
    "rsrc_size": 101061,
    "type": "APPL"

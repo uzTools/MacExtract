@@ -5,6 +5,9 @@
    "data_sha256": "c6bca402d6452453baece35d432d3809241d6db20690123f8672d9b12d403ad1",
    "data_size": 98961,
    "name": "XShelf_1.0.dmg",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "devi"

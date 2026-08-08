@@ -9,6 +9,9 @@
    "data_sha256": "ff171ad9604ce93b3b7c8bad9c53189cc97c12e21a310499d5af494916294e3b",
    "data_size": 1040,
    "name": "TextConverter 1.0.1/How to Register",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "ddc4b9fdb518c72e690178c8b83c8e6c471fb5fd22ae39d920370b8bef2389e5",
    "rsrc_size": 887,
    "type": "TEXT"
@@ -18,6 +21,9 @@
    "data_sha256": "d5897ac6b85d65a4612e5f741c7d5dbea76c03b9492264ec59113dd941b15766",
    "data_size": 92673,
    "name": "TextConverter 1.0.1/Quadra 800.logo",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -27,6 +33,9 @@
    "data_sha256": "2cc688da284fffe3e20c1d4896f847b984b23fba548e457240402636d9db36e8",
    "data_size": 9949,
    "name": "TextConverter 1.0.1/ReadMe",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "302c639edf01ac48c02792fa8084f9704225e55da7b7e51940703203f8b1b71c",
    "rsrc_size": 3338,
    "type": "TEXT"
@@ -36,6 +45,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "TextConverter 1.0.1/Register",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "497927781fee0e7fa73eb2eb20e7eee60728115b7bc87939826383e57d95869e",
    "rsrc_size": 94321,
    "type": "APPL"
@@ -45,6 +57,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "TextConverter 1.0.1/Text Converter 1.0.1",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "662703ccb8eb4e750ac3a76d508edcc454d4bf0437cf16e9200ced324d138d15",
    "rsrc_size": 37697,
    "type": "APPL"
@@ -54,6 +69,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "TextConverter 1.0.1/TextConverter user guide",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "4c55339e2705f960ca09da8def5acdc48971fb3f6b11c812300b56cdd4c6aa75",
    "rsrc_size": 99393,
    "type": "APPL"

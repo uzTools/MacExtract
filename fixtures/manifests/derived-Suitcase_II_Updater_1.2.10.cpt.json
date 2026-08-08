@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Suitcase II Updater 1.2.10",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "70a417b14247d07c02b9b7a45e18b11a38fbce17b332665686a117744d6ffbb9",
    "rsrc_size": 54650,
    "type": "APPL"

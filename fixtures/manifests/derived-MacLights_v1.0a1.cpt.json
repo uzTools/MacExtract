@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacLights",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "5ccbfbf1247c6627ac070a1cb4eff969e583c2581dbc9d49c426f1b123422b33",
    "rsrc_size": 30295,
    "type": "cdev"
@@ -14,6 +17,9 @@
    "data_sha256": "26245d25a4322f35b7a4eab287a78a5df22dbce629357d380ffb213162986d39",
    "data_size": 950,
    "name": "MacLights v1.0a1 doc",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"

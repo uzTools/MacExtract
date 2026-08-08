@@ -8,6 +8,9 @@
    "data_sha256": "bb0234ceb5bb72f6f3cb5b7891e1592566a964f0ac3efc8a9357e46cbed74b84",
    "data_size": 6148,
    "name": "ResFork Killer/.DS_Store",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -15,6 +18,9 @@
    "data_sha256": "072ce792bbcfd4b0c56e6a88e42540d26d27bd7d91f5e1d5f27e569b19ebaeeb",
    "data_size": 2460,
    "name": "ResFork Killer/ResFork Killer Read Me.rtf",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -26,6 +32,9 @@
    "data_sha256": "e4450cbce83039f40db3708449302251e678996675a2e6cecc6ef5e11b4f42ab",
    "data_size": 6148,
    "name": "ResFork Killer/ResFork Killer.app/.DS_Store",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -37,6 +46,9 @@
    "data_sha256": "23173a6d9c42d04fc42189796c85c513a7ad255b995ea2b8e1a229a61062c3dd",
    "data_size": 6148,
    "name": "ResFork Killer/ResFork Killer.app/Contents/.DS_Store",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -45,6 +57,9 @@
    "data_sha256": "7307b162965e027174666ef36fc4048e89d4e699d7eb281d7f41e64b2354abae",
    "data_size": 1282,
    "name": "ResFork Killer/ResFork Killer.app/Contents/Info.plist",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "9d7e0aaa49797cf742e870b517096ed146e7071e15c26af4b94f4d7bd5bd8836",
    "rsrc_size": 410,
    "type": "TEXT"
@@ -57,6 +72,9 @@
    "data_sha256": "fe24e7ae91634797fe823f65996bf8d27c790154429e4eccb6943798eb3bed8e",
    "data_size": 6148,
    "name": "ResFork Killer/ResFork Killer.app/Contents/MacOSClassic/.DS_Store",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -65,6 +83,9 @@
    "data_sha256": "30d41512c963febaaa24843ffa192cf42704fdbb34066f84a2cf558a379678db",
    "data_size": 18670,
    "name": "ResFork Killer/ResFork Killer.app/Contents/MacOSClassic/ResFork Killer",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e10e40680a67c1864a8ed1da4f3b864ecc4f98edc4af5ea4afbf5bdf0a16f6e1",
    "rsrc_size": 1629,
    "type": "APPL"
@@ -74,6 +95,10 @@
    "data_sha256": "fd5628419097931a6f3b52193ba51db53fb34cbd465d079a94d81b5741ab8d49",
    "data_size": 8,
    "name": "ResFork Killer/ResFork Killer.app/Contents/PkgInfo",
+   "oracle_methods": [
+    "Arsenic",
+    "None"
+   ],
    "rsrc_sha256": "75d056289ee680a8cec9be190670fd4fff9c3bafe418a2645db1d5c9b34a2f47",
    "rsrc_size": 410,
    "type": "TEXT"
@@ -86,6 +111,9 @@
    "data_sha256": "8fc4522db1437a0274c01e4b4794517c95d0deda2b4a15260ccb70bf5d70ebe7",
    "data_size": 6148,
    "name": "ResFork Killer/ResFork Killer.app/Contents/Resources/.DS_Store",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -97,6 +125,9 @@
    "data_sha256": "bcb8cbd723f4490584dff725e5bee3ddcb725e779fd1fff7601428764aff3097",
    "data_size": 6148,
    "name": "ResFork Killer/ResFork Killer.app/Contents/Resources/English.lproj/.DS_Store",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -105,6 +136,9 @@
    "data_sha256": "e1a45ac74c5df6d70a2e0d9f974d37b76e6cc3ce31f7e06754d92bf52fe10c0f",
    "data_size": 230,
    "name": "ResFork Killer/ResFork Killer.app/Contents/Resources/English.lproj/InfoPlist.strings",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "d81260a8300b1b9b485e972f6ea40ffca7ef9f26255e64754a73944172cda02d",
    "rsrc_size": 410,
    "type": "TEXT"
@@ -113,6 +147,9 @@
    "data_sha256": "dcd5ed25c88c77c6677b48e89919aab937a02350020012f5246749f3e239d7b5",
    "data_size": 63026,
    "name": "ResFork Killer/ResFork Killer.app/Contents/Resources/rfk.icns",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -121,6 +158,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "ResFork Killer/ResFork Killer.app/Icon\r",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "f137342b00d1a19e4b589358b2bf4f1ceda0382acc1e439aedf0d0dbb209bb49",
    "rsrc_size": 286,
    "type": "icon"
@@ -129,6 +169,9 @@
    "data_sha256": "0d001d64d44c00e1c7ba70cffc873b1ae195012b9142e2cf16ff42989a72f64f",
    "data_size": 468,
    "name": "ResFork Killer/Version History.rtf",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -137,6 +180,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "ResFork Killer/www.darkeagle.com.webloc",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "0dd3b8e2f9e0306a0db03004728f9ba15dffadff191d446ab8a15f8ca6cffcd4",
    "rsrc_size": 456,
    "type": "ilht"

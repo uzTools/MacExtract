@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "FCB Inspector",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "730ca813b257ab91262c8833dee9b4a43e96140e9362270fe8aa17417f3c2374",
    "rsrc_size": 18061,
    "type": "cdev"
@@ -14,6 +17,9 @@
    "data_sha256": "4249e1f18f2db14ea8162030faf71a4e0d3abac480dd73e991432009024ae22e",
    "data_size": 9472,
    "name": "FCB Inspector 1.1 Docs",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "WORD"

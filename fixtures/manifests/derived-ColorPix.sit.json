@@ -5,6 +5,9 @@
    "data_sha256": "26f570bf0f6ea1e3461a6babf759e680b4bdc9f3b9e44cbf375328af36a6c152",
    "data_size": 3683,
    "name": "ColorPix Main.pas",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -14,6 +17,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "ColorPix.FKEY",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "e10fb65e14d3d35cf74ae8e2ae7e50460e5a013aa3a823ed44fb0013acdface4",
    "rsrc_size": 3061,
    "type": "rsrc"
@@ -23,6 +29,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "ColorPix.resources",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "ec9064bb05733732e52e7cc72641b412fb3fcd0f47598414ef1030242a133e8a",
    "rsrc_size": 854,
    "type": "rsrc"
@@ -32,6 +41,9 @@
    "data_sha256": "40c880e946ff6a95c98fa2d48d90a41d86470c37707a3233997fa7f3ed6abfcb",
    "data_size": 54,
    "name": "FKey Tester",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -41,6 +53,9 @@
    "data_sha256": "f99cd7ea046bbeea6abf3ca4e3a5db5345d76036b5e50b8f613bf262ab9c3dca",
    "data_size": 1873,
    "name": "IntToStr.pas",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"

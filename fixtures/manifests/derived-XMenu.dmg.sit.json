@@ -4,6 +4,9 @@
    "data_sha256": "27077fd25d2844dbe48a8a6aa7b1bac7fc570d8130c2fb746c32bbe032b27a52",
    "data_size": 1122819,
    "name": "XMenu.dmg",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   }

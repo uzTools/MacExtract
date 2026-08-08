@@ -9,6 +9,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Player PRO 4.10/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "d4c4baca59e48bcc41451b7f57f5c80e278a9980840d2e09e936564a9b61c315",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -22,6 +25,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Player PRO 4.10/Instruments/funkylang",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "f48d8c82fc4208bc2e7abe4eaa4dc976b06c02951e5b08e5eea4dbc9d21b1bb0",
    "rsrc_size": 7842,
    "type": "sfil"
@@ -31,6 +37,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Player PRO 4.10/Instruments/ha",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "3732b211cc9dbc6e5c3fad2ce0de9bb23f3b160c89051eb3042fc8eb245a65fd",
    "rsrc_size": 20155,
    "type": "sfil"
@@ -40,6 +49,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Player PRO 4.10/Player PRO 4.10",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "4ce9e920d357837ba6eaa2ca2454db360e04fcb0086f0ac417939b150beab687",
    "rsrc_size": 255164,
    "type": "APPL"
@@ -53,6 +65,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Player PRO 4.10/Plugs/Maximize",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "d0f682984f42cb997b36cd4fb1d08581dc817d1f294cc39e9972387b2762ca07",
    "rsrc_size": 484,
    "type": "PLug"
@@ -62,6 +77,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Player PRO 4.10/Plugs/Silence",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "a64a36bde198928e4b1f3db238f6666549137bbba58d73ff0ab73118a81abb63",
    "rsrc_size": 441,
    "type": "PLug"
@@ -71,6 +89,9 @@
    "data_sha256": "10bc471c6686dacd2106f501a52f5a126a13735835f96c83146a5d2a25d39c64",
    "data_size": 68224,
    "name": "Player PRO 4.10/mod.unknown1",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "STrk"

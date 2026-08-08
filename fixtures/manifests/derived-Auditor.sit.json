@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Auditor",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "e6794faa7dc85cab07eea8c8622eea8b19ddcdf80cd3ba76f994ff2791fcabf2",
    "rsrc_size": 27745,
    "type": "APPL"
@@ -14,6 +17,9 @@
    "data_sha256": "1e401c5948b0649cd94ba2ec4bb3c5eefe7f8a3278eeb09d79084e0dd0d11c2f",
    "data_size": 581,
    "name": "Auditor ReadME!",
+   "oracle_methods": [
+    "Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"

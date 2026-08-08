@@ -5,6 +5,9 @@
    "data_sha256": "87cd5895ba11314ea96404854fbcd457377c49bbbf0cae5f1d49fbdd6961cd62",
    "data_size": 61935,
    "name": "UUTool-FAT",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "716bef66c23726962c7c3986dcbf3feed66693b092ca55315ce01a407ec327c4",
    "rsrc_size": 73956,
    "type": "APPL"

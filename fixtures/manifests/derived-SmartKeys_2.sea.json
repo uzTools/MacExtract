@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "SmartKeys 2",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "453eeebd8d3eb36c8870c1cfe01e95df75720af7d592c6ac40b178c99a769eef",
    "rsrc_size": 42888,
    "type": "cdev"
@@ -14,6 +17,9 @@
    "data_sha256": "dc246be169487c6fbeb5de7fd064c7fa29dfe4c62e9bd5b8ff85ac8506febdec",
    "data_size": 22476,
    "name": "SmartKeys 2 Docs",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "WORD"

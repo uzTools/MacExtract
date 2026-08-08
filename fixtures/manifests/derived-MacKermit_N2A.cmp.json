@@ -5,6 +5,9 @@
    "data_sha256": "360c82f1c86496dd878270c6fd3f349169ec2d1ed8c7ab4dde491e37fbf6de13",
    "data_size": 82944,
    "name": "BUS med Mac allmänt",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "WDBN"
@@ -14,6 +17,9 @@
    "data_sha256": "80cf79149922df2b2744c13a459d7035e361a5c674f0001b1f2c289ad9020618",
    "data_size": 82944,
    "name": "BUS med Mac på KTH",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "WDBN"
@@ -27,6 +33,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "BUS-dokument/BUS tbord 512 (N2A)",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "8103790eea4e284689726c23c930682c56de3b0a56aa6786d317d78b82c15fb8",
    "rsrc_size": 1686,
    "type": "KERS"
@@ -36,6 +45,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "BUS-dokument/BUS tbord Plus (N2A)",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "f812d87f61b8d4b193e2b067374f34178d8f9532896d8187a44d30a67bc46c00",
    "rsrc_size": 1653,
    "type": "KERS"
@@ -45,6 +57,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "BUS-dokument/BUS tbord datakomm (N2A)",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "205e492fce8d43bf516e696efee8261cfa7dc1128d9c1ee1cdfba16a79fb5fea",
    "rsrc_size": 1641,
    "type": "KERS"
@@ -54,6 +69,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "BUS-dokument/BUS tbord gammalt (N2A)",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "2f136335ae669d377c216c5b7d901ba19ea68d14af3dc3228dc51e94d0a6a8ce",
    "rsrc_size": 1641,
    "type": "KERS"
@@ -63,6 +81,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "BUS-dokument/BUS tbord standard (N2A)",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "2c9072f904614f297c1b7fb6d6e802866fc5b53bcd835fb32aac86aaf807c069",
    "rsrc_size": 1641,
    "type": "KERS"
@@ -72,6 +93,9 @@
    "data_sha256": "0e974da5c0602fc52aabdb5c9b44ef4be2d8d7a9841e83858f1fee493dc18aee",
    "data_size": 21177,
    "name": "Engelsk handbok 1",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -81,6 +105,9 @@
    "data_sha256": "f054b511e3776a6cd2f2f06de5ac84b9cbc05007693cfe7b82db6ebe094f8e7e",
    "data_size": 28631,
    "name": "Engelsk handbok 2",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -90,6 +117,9 @@
    "data_sha256": "f4f45c1ea20ec0024ff3970a9bab9fd3f8fa4b337c5d71ac118d212556fe515a",
    "data_size": 51200,
    "name": "Kort MacKermit-handledning",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "WDBN"
@@ -99,6 +129,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacKermit N2A",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "7e8d1bb2b33c755dbf5308949b4e9c2d131e6cc88bfcbb036b30cc25014f178a",
    "rsrc_size": 142929,
    "type": "APPL"
@@ -108,6 +141,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Svensk, MacKermit",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "28c2c91148be96fbdf1cfa08c1ebcb7ba37a309b506c4b708a104c08e7c53f99",
    "rsrc_size": 2260,
    "type": "kfil"
@@ -117,6 +153,9 @@
    "data_sha256": "b8798515215b77ead28136f7c416c508ba592da8d3b83c9f711252db831f5111",
    "data_size": 27648,
    "name": "Teknisk information (N2A)",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "WDBN"
@@ -126,6 +165,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Texthanteraren",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "9284388fcbb86501f681c3bfcfdfb2292771070c2267206a35084d9caef56ae4",
    "rsrc_size": 19015,
    "type": "APPL"

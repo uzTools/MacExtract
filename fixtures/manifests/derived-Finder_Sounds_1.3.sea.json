@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Finder Sounds",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "42525405af13ffee148e3eebfde614ecc2eb3dda89d85683f21f6a6ef92b367f",
    "rsrc_size": 9127,
    "type": "INIT"
@@ -14,6 +17,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Finder Sounds Config",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "5aad95ef0f10db39c1d3c25acff3b05c618f56c75ac54b3481700d056d44b00d",
    "rsrc_size": 193994,
    "type": "cdev"
@@ -23,6 +29,9 @@
    "data_sha256": "0c2652ce65d13aa16b5ff943f8c5b5bdb3ab2a3952f9e21e057f301f74a46002",
    "data_size": 14508,
    "name": "Finder Sounds.teach",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"

@@ -13,6 +13,9 @@
    "data_sha256": "97def3c53133c384c726abbdae788a166a9035cc065958b8d1996b65edd0f42c",
    "data_size": 3384,
    "name": "Møire 3.22 ƒ/After Dark Module/Møire (After Dark) docs",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "WORD"
@@ -22,6 +25,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Møire 3.22 ƒ/After Dark Module/Møire 3.10.1 (After Dark)",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "1cecf2a0838df27d0f1b89fb66f367809fc79ae94b880a75c3f3bdf64f4865de",
    "rsrc_size": 8669,
    "type": "ADgm"
@@ -31,6 +37,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Møire 3.22 ƒ/Møire 3.22",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "4a82bfb8a080469edbe005260187ef12d9eaddc6e37f13208d98b0417467ccc2",
    "rsrc_size": 31972,
    "type": "cdev"
@@ -40,6 +49,9 @@
    "data_sha256": "b255cab51b464ce75470e845fd9ffd7cb353cf5e4ee369944310e99d0d7411ac",
    "data_size": 61948,
    "name": "Møire 3.22 ƒ/Møire Docs (MacWrite)",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "a67bfe6d4337e095921841c2edf6daf60c057d7b7e3d79c0cdcb6ffba85a1521",
    "rsrc_size": 730,
    "type": "WORD"
@@ -49,6 +61,9 @@
    "data_sha256": "4234be39868b05ed7d954412e3b9ea952a0f3f44f5a6c665062e476f0df49e61",
    "data_size": 3778,
    "name": "Møire 3.22 ƒ/Møire Update (MacWrite)",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "8f6bdef2cc8e2e158eb1501b885198b475f623e04370974e78b957452a02405f",
    "rsrc_size": 730,
    "type": "WORD"
@@ -58,6 +73,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Møire 3.22 ƒ/Møire cdev => INIT",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3bed6da9ad2ca0ee2b52b36cc5b39c85b860d538cc6ba397e6c3dbcf8cec169",
    "rsrc_size": 6086,
    "type": "APPL"

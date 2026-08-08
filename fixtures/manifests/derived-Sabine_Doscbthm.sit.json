@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Sabine Doscbthm",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "991b1ef1754efa82136fa018a8cd3d7a06d72d6188ec6c8766b0b53559ac5832",
    "rsrc_size": 29688,
    "type": "FFIL"

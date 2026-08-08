@@ -9,6 +9,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "spinning brain ƒ/*Car-Pictures",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "1b0eb40d9f28bc36240e69cb5b25a5ec4fc88e4eb0cf3393d27faa85269142e5",
    "rsrc_size": 1323,
    "type": "Leov"
@@ -18,6 +21,9 @@
    "data_sha256": "afc88bd16b9f701b25d78f3a714ce786a977303beaf37c325144bfd66c429ede",
    "data_size": 36473,
    "name": "spinning brain ƒ/How to use…",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "nX^d"
@@ -31,6 +37,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "spinning brain ƒ/Other Samples/Face-Pictures",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "7b1ca11284aa47fc01e12e12f8e745a282fb032c4d6d2bc8d6899bef74f63d6a",
    "rsrc_size": 1323,
    "type": "Leov"
@@ -40,6 +49,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "spinning brain ƒ/Other Samples/House-Pictures",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "577659af43f10e402efff7f59bf49ff929016c97c01a99e51b6554c9dfc9611b",
    "rsrc_size": 1323,
    "type": "Leov"
@@ -49,6 +61,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "spinning brain ƒ/Other Samples/Tree-Pictures",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "dbc6d8211b402a30ea0188a3075d5ff16a5d6c951fdf3e6f6a114afc84b8f2fc",
    "rsrc_size": 1323,
    "type": "Leov"
@@ -58,6 +73,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "spinning brain ƒ/Other Samples/Tree-Pictures2",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "8eab0e7ad1898ee0448e6fd9a13353d29db5aaa6f75ad85433c1287b1dcdf7a3",
    "rsrc_size": 1323,
    "type": "Leov"
@@ -67,6 +85,9 @@
    "data_sha256": "47f0c33dbf336b2b8b94edd920f1bf6872f7602d846c480b2d184f3a7f570890",
    "data_size": 99131,
    "name": "spinning brain ƒ/Spinning Brain. An inter…",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "nX^d"
@@ -76,6 +97,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "spinning brain ƒ/spinning brain",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "0a9542d7ef5d479056f7d46b9dec7ae08a7a1bef8c688b6a39497d1549aa9256",
    "rsrc_size": 53740,
    "type": "APPL"
@@ -85,6 +109,9 @@
    "data_sha256": "68b8b8b1aeddb826f1da652f1f46e088b47e06738caac5fc4f1b83c8781de21d",
    "data_size": 420,
    "name": "spinning brain ƒ/spinning-brain-docs..doc",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"

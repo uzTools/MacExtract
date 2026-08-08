@@ -82,7 +82,13 @@ def collect_outputs(tmp):
 
 
 def parse_listing(out):
-    """Parse `unclassic l` output -> {name: (type, creator)}."""
+    """Parse `unclassic l` output -> {name: (type, creator) or (None, None)}.
+
+    Every listed entry is recorded, not only those with type/creator: the
+    listing is how an entry the engine cannot extract is checked to be
+    SEEN at all, and a zip entry has no type/creator to print (the field
+    is a bare "/").
+    """
     meta = {}
     for line in out.splitlines():
         if not line.startswith("f "):
@@ -92,8 +98,9 @@ def parse_listing(out):
         if len(parts) < 5:
             continue
         tc = parts[3]
-        if len(tc) == 9 and tc[4] == "/":
-            meta[normpath(parts[4])] = (tc[:4], tc[5:])
+        meta[normpath(parts[4])] = ((tc[:4], tc[5:])
+                                    if len(tc) == 9 and tc[4] == "/"
+                                    else (None, None))
     return meta
 
 
@@ -102,26 +109,45 @@ TALLY = re.compile(r"^unclassic: (\d+) of (\d+) entries failed$")
 
 
 def parse_entry_errors(stderr):
-    """Return ({normalized entry name: reason}, all_entries_unsupported).
+    """Return {normalized entry name: reason}.
 
-    `unclassic` reports a failed entry as "unclassic: NAME: reason" and
-    finishes with "unclassic: N of M entries failed"; the whole-archive
-    errors it prints instead name the FIXTURE path, and are left in the
-    dict deliberately — they must never be excused as per-entry.
+    `unclassic` reports a failed entry as "unclassic: NAME: reason"; the
+    whole-archive errors it prints instead name the FIXTURE path, and are
+    left in the dict deliberately — they must never be excused as
+    per-entry.
     """
-    errs, tally = {}, None
+    errs = {}
     for line in stderr.splitlines():
-        t = TALLY.match(line)
-        if t:
-            tally = (int(t.group(1)), int(t.group(2)))
+        if TALLY.match(line):
             continue
         m = ENTRY_ERR.match(line)
         if m:
             errs[normpath(m.group(1))] = m.group(2)
-    whole = (tally is not None and tally[0] == tally[1]
-             and bool(errs)
-             and all(r == "recognized but unsupported" for r in errs.values()))
-    return errs, whole
+    return errs
+
+
+UNSUPPORTED = "recognized but unsupported"
+
+# Compression methods v1 does not implement, NAMED AS THE ORACLE NAMES
+# THEM (`XADCompressionName`, recorded per entry in the manifest). An
+# entry our engine declines with "recognized but unsupported" is excused
+# only if the oracle says its method is one of these — so the excuse is
+# anchored to lsar, and a regression that made a SUPPORTED method report
+# "unsupported" cannot buy itself an excuse. FORMATS.md is the scope.
+#
+# Deliberately only the methods the corpus actually contains: a method
+# named here that lsar spells differently would excuse nothing, silently,
+# whereas an unlisted one fails the suite loudly and gets added. Zip
+# reduce/shrink and tar links belong here the day a fixture has one.
+ORACLE_OUT_OF_SCOPE = {"Implode"}
+
+
+def out_of_scope(entry):
+    """True when the ORACLE says every method of this entry is outside v1
+    scope. An entry with no recorded method is never out of scope: an
+    absent field must not become an excuse."""
+    m = entry.get("oracle_methods")
+    return bool(m) and all(x in ORACLE_OUT_OF_SCOPE for x in m)
 
 
 def check_fixture(unclassic, man, verbose, budget=0):
@@ -134,21 +160,18 @@ def check_fixture(unclassic, man, verbose, budget=0):
         r = subprocess.run([unclassic, "x", "-nr", "--forks", "hidden",
                             "-o", tmp, fx] + cap,
                            capture_output=True, timeout=300)
-        un_errs, all_unsupported = parse_entry_errors(
-            r.stderr.decode("utf-8", "replace"))
-        if all_unsupported:
-            # Every entry uses a method outside v1 scope, so there is
-            # nothing here a diff could compare — the same situation as
-            # a format we do not implement, arrived at per entry instead
-            # of per archive. Reported separately, never silently.
-            return [], 0, True
+        un_errs = parse_entry_errors(r.stderr.decode("utf-8", "replace"))
+        # An entry may produce nothing for exactly two reasons, both of
+        # them the ORACLE's word rather than ours: it failed that entry
+        # too, or it names the entry's compression method as one v1 does
+        # not implement. Never because our binary said "unsupported" —
+        # that would let a regression in the method dispatch grade itself.
+        outofscope = {normpath(e["name"]) for e in man["entries"]
+                      if out_of_scope(e)}
         if r.returncode != 0:
-            # A per-entry error is excused only where the ORACLE also
-            # failed that entry: both sides agree there is nothing to
-            # get, and the excuse is anchored to unar's behaviour rather
-            # than to ours, so it cannot grow to cover a regression.
-            unexplained = {n: e for n, e in un_errs.items()
-                           if n not in excused}
+            unexplained = {n: er for n, er in un_errs.items()
+                           if n not in excused
+                           and not (er == UNSUPPORTED and n in outofscope)}
             if unexplained or not un_errs:
                 problems.append(
                     f"exit {r.returncode}: {r.stderr.decode()[:300]}")
@@ -187,29 +210,36 @@ def check_fixture(unclassic, man, verbose, budget=0):
                 if path is None and rp is None and name not in listing:
                     problems.append(f"missing entry: {name!r}")
                 continue
-            # Where BOTH sides failed this entry, our engine may have
-            # written nothing at all — but only its absence is excused.
-            # Whatever it did write is still compared, so an entry that
-            # fails on one fork keeps its other fork under the oracle.
-            partial = name in un_errs and name in excused
-            if path is None and not partial:
+            # A fork WITH ground truth is compared, or it is missing.
+            # Absence is excused only for an entry whose method the oracle
+            # puts outside v1 scope — not merely because the oracle failed
+            # the entry's OTHER fork, which used to excuse the whole entry
+            # and made 6 fixtures' adjudicated forks unfailable.
+            absent_ok = name in un_errs and name in outofscope
+            if path is None and not absent_ok:
                 problems.append(f"missing file: {name!r}")
                 continue
-            if "data" not in un and not (partial and path is None):
-                sz = os.path.getsize(path)
+            if absent_ok and path is None and rp is None:
+                # Out of scope and nothing written: the name is still
+                # ground truth and is the only thing left to check.
+                if name not in listing:
+                    problems.append(f"missing entry: {name!r}")
+                continue
+            if "data" not in un:
+                sz = os.path.getsize(path) if path else 0
                 if sz != e["data_size"]:
                     problems.append(
                         f"{name!r}: data size {sz} != {e['data_size']}")
-                elif sha256_file(path) != e["data_sha256"]:
+                elif path and sha256_file(path) != e["data_sha256"]:
                     problems.append(f"{name!r}: data sha mismatch")
-            if "rsrc" not in un and not (partial and rp is None):
+            if "rsrc" not in un:
                 rsz = os.path.getsize(rp) if rp else 0
                 if rsz != e["rsrc_size"]:
                     problems.append(
                         f"{name!r}: rsrc size {rsz} != {e['rsrc_size']}")
                 elif rp and sha256_file(rp) != e["rsrc_sha256"]:
                     problems.append(f"{name!r}: rsrc sha mismatch")
-            if "type" in e and name in listing:
+            if "type" in e and listing.get(name, (None, None))[0]:
                 t, c = listing[name]
                 if t != e["type"] or (e.get("creator") and c != e["creator"]):
                     problems.append(
@@ -217,7 +247,7 @@ def check_fixture(unclassic, man, verbose, budget=0):
                         f"{e['type']}/{e.get('creator')}")
         for leftover in files:
             problems.append(f"unexpected output: {leftover!r}")
-    return problems, unadjudicated, False
+    return problems, unadjudicated
 
 
 def main():
@@ -242,7 +272,7 @@ def main():
                        if f.endswith(".json")) if os.path.isdir(mandir) else []
 
     ran = passed = skipped_fmt = skipped_missing = 0
-    unadj_forks = unadj_fixtures = skipped_unsupported = 0
+    unadj_forks = unadj_fixtures = oos_entries = 0
     fails = []
     for mf in manifests:
         with open(os.path.join(mandir, mf)) as f:
@@ -260,12 +290,9 @@ def main():
             skipped_fmt += 1
             continue
         ran += 1
-        problems, unadj, unsupported = check_fixture(
+        problems, unadj = check_fixture(
             args.unclassic, man, args.verbose, args.budget)
-        if unsupported:
-            ran -= 1
-            skipped_unsupported += 1
-            continue
+        oos_entries += sum(1 for e in man["entries"] if out_of_scope(e))
         if unadj:
             unadj_forks += unadj
             unadj_fixtures += 1
@@ -285,11 +312,12 @@ def main():
     cap += f" (fixtures <= {args.max_size} B)" if args.max_size else ""
     print(f"diff{cap}: {passed}/{ran} fixtures ok "
           f"({skipped_fmt} formats pending, {skipped_missing} fixtures absent)")
-    # Printed even when zero: this number is the only place a fork that
-    # nothing compares shows up, and it must be cheap to notice growing.
-    if skipped_unsupported:
-        print(f"  {skipped_unsupported} fixture(s) skipped: every entry uses "
-              f"a compression method outside v1 scope")
+    # No fixture is ever skipped for what OUR engine says about it; an
+    # entry the oracle names as out of v1 scope is graded on its name and
+    # on anything the engine did produce, and counted here.
+    if oos_entries:
+        print(f"  {oos_entries} entr(y/ies) the oracle names as compressed "
+              f"with a method outside v1 scope: graded on name only")
     print(f"  oracle-unadjudicated: {unadj_forks} fork(s) across "
           f"{unadj_fixtures} fixture(s) — the oracle failed on these, so "
           f"no second implementation adjudicates them (TESTING.md)")

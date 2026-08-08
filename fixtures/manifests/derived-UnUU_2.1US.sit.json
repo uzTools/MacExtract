@@ -9,6 +9,9 @@
    "data_sha256": "2a649c25b1ac4039901bc0cfd2e9f1d1a4a2aadcb055941fbf85634a4579e8d4",
    "data_size": 24537,
    "name": "UnUU 2.1US/UnUU",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "07ddb8092252d3074926634b50a930d4a428ca2b027822969bb9c2f15df93f41",
    "rsrc_size": 20588,
    "type": "APPL"
@@ -18,6 +21,9 @@
    "data_sha256": "b85637e50751d8a8282cae0da062ce4942ed582cc4f5b6e59193306681238a4b",
    "data_size": 3566,
    "name": "UnUU 2.1US/UnUU v2.1 History",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e088924012913f5949c1fbcfa30807b76645606cf0088e2151e695800f2eaee8",
    "rsrc_size": 752,
    "type": "ttro"
@@ -27,6 +33,9 @@
    "data_sha256": "dce2c165b5b9a4fb71c0e5fc6a59830c2dcef82407160f40248c0626fa474fbb",
    "data_size": 11795,
    "name": "UnUU 2.1US/UnUU v2.1 Notice",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "f8a283d2c0795bd05f6e288ef2f6ddd1ba0e92f068b66d2212b9b3b35a5a87e5",
    "rsrc_size": 1232,
    "type": "ttro"

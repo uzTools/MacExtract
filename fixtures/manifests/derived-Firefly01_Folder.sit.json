@@ -12,6 +12,9 @@
    "data_sha256": "3da07c9ef90c57bd9891b16d0cd25b5fd2f75822e99dd19dc50af6a6af3d4529",
    "data_size": 6148,
    "name": "Firefly01 Folder/Firefly.app/.DS_Store",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -23,6 +26,9 @@
    "data_sha256": "72cce13e8db56941a566df99f6e1838e476ddc3365fa01793d74694aa0576e26",
    "data_size": 622,
    "name": "Firefly01 Folder/Firefly.app/Contents/Info.plist",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -34,6 +40,9 @@
    "data_sha256": "58b63ceccade8382674dafdc2857bba4f3511d98fd244f6533df575514c91cb2",
    "data_size": 133156,
    "name": "Firefly01 Folder/Firefly.app/Contents/MacOS/Firefly",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -41,6 +50,9 @@
    "data_sha256": "82502191c9484b04d685374f9879a0066069c49b8acae7a04b01d38d07e8eca0",
    "data_size": 8,
    "name": "Firefly01 Folder/Firefly.app/Contents/PkgInfo",
+   "oracle_methods": [
+    "None"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -56,6 +68,9 @@
    "data_sha256": "55e90aadfe2fcbac0b4a43fabbf292bea5af2c3ede3693514d4092a3141bc2f4",
    "data_size": 520,
    "name": "Firefly01 Folder/Firefly.app/Contents/Resources/English.lproj/InfoPlist.strings",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -67,6 +82,9 @@
    "data_sha256": "c63516f5c3371b9185ef61e9ccfc187086e47b5216679fb1c9adeaf73674086f",
    "data_size": 794,
    "name": "Firefly01 Folder/Firefly.app/Contents/Resources/English.lproj/MainMenu.nib/classes.nib",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -74,6 +92,9 @@
    "data_sha256": "0362ae9a09a542a19e088ea58d3e6d7a665256a855dd79d5a59b28003ad91ae4",
    "data_size": 531,
    "name": "Firefly01 Folder/Firefly.app/Contents/Resources/English.lproj/MainMenu.nib/info.nib",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -81,6 +102,9 @@
    "data_sha256": "085755190602d531bef2817022ae86aa200325c8676d654f05579d990fdeb106",
    "data_size": 10710,
    "name": "Firefly01 Folder/Firefly.app/Contents/Resources/English.lproj/MainMenu.nib/objects.nib",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -88,6 +112,9 @@
    "data_sha256": "25462bc3bea6a6f6dbc1b135027b74ddf6187af8861089835ef582c793fcc836",
    "data_size": 273,
    "name": "Firefly01 Folder/Firefly.app/Contents/pbdevelopment.plist",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -99,6 +126,9 @@
    "data_sha256": "11d3c3688cae6688e08d0c9dd10fb269d35c01b3b013ff59c500f5a0d7705f7d",
    "data_size": 6148,
    "name": "Firefly01 Folder/Firefly.app/Source/.DS_Store",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -110,6 +140,9 @@
    "data_sha256": "3546581bedb671103a4a1f382996a594fc1415dd26a94e3acf954b5f79c1c641",
    "data_size": 6148,
    "name": "Firefly01 Folder/Firefly.app/Source/English.lproj/.DS_Store",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -117,6 +150,9 @@
    "data_sha256": "55e90aadfe2fcbac0b4a43fabbf292bea5af2c3ede3693514d4092a3141bc2f4",
    "data_size": 520,
    "name": "Firefly01 Folder/Firefly.app/Source/English.lproj/InfoPlist.strings",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -128,6 +164,9 @@
    "data_sha256": "c63516f5c3371b9185ef61e9ccfc187086e47b5216679fb1c9adeaf73674086f",
    "data_size": 794,
    "name": "Firefly01 Folder/Firefly.app/Source/English.lproj/MainMenu.nib/classes.nib",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -135,6 +174,9 @@
    "data_sha256": "0362ae9a09a542a19e088ea58d3e6d7a665256a855dd79d5a59b28003ad91ae4",
    "data_size": 531,
    "name": "Firefly01 Folder/Firefly.app/Source/English.lproj/MainMenu.nib/info.nib",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -142,6 +184,9 @@
    "data_sha256": "085755190602d531bef2817022ae86aa200325c8676d654f05579d990fdeb106",
    "data_size": 10710,
    "name": "Firefly01 Folder/Firefly.app/Source/English.lproj/MainMenu.nib/objects.nib",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -153,6 +198,9 @@
    "data_sha256": "c63516f5c3371b9185ef61e9ccfc187086e47b5216679fb1c9adeaf73674086f",
    "data_size": 794,
    "name": "Firefly01 Folder/Firefly.app/Source/English.lproj/MainMenu~.nib/classes.nib",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -160,6 +208,9 @@
    "data_sha256": "0362ae9a09a542a19e088ea58d3e6d7a665256a855dd79d5a59b28003ad91ae4",
    "data_size": 531,
    "name": "Firefly01 Folder/Firefly.app/Source/English.lproj/MainMenu~.nib/info.nib",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -167,6 +218,9 @@
    "data_sha256": "7303ede17ab1ff5adf3c18d9f275392110a63d950b0bbd8dd7f4eab91e1dcd76",
    "data_size": 10677,
    "name": "Firefly01 Folder/Firefly.app/Source/English.lproj/MainMenu~.nib/objects.nib",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -178,6 +232,9 @@
    "data_sha256": "8e780272655167b65ae8524cebd92a061ea1430eea90c3b58ac019983bcdc8ef",
    "data_size": 2771,
    "name": "Firefly01 Folder/Firefly.app/Source/Firefly.pbproj/aaron.pbxuser",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -185,6 +242,9 @@
    "data_sha256": "fd46fab685a556c9d60ffc3d64c49d9a7f30c3ca05d685b650d6a0a3f993fa30",
    "data_size": 7568,
    "name": "Firefly01 Folder/Firefly.app/Source/Firefly.pbproj/project.pbxproj",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -192,6 +252,9 @@
    "data_sha256": "ce308b242a54cf38838879a3dd433daf83fc0b0e8efd137ad998ea7b99443b0e",
    "data_size": 1722,
    "name": "Firefly01 Folder/Firefly.app/Source/FireflyView.h",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -199,6 +262,9 @@
    "data_sha256": "8e00f0a4edbfb7fac3cd83f12258e7352fabbd3ef6c62876bea07d531a292ac7",
    "data_size": 9833,
    "name": "Firefly01 Folder/Firefly.app/Source/FireflyView.m",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -206,6 +272,9 @@
    "data_sha256": "46b02933cbb1297a23ebf36baa92dd3c75ea2abd88e4ea5df6824cd0e08c89cc",
    "data_size": 254,
    "name": "Firefly01 Folder/Firefly.app/Source/main.m",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -213,6 +282,9 @@
    "data_sha256": "4d3a9ac7c9d3dc3a2e90f13ec85a98c68450e610b2aa22bac247ecf9e61ae150",
    "data_size": 953,
    "name": "Firefly01 Folder/Read Me.rtf",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   }

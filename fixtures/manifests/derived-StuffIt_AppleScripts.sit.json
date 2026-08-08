@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Add to sit Archive",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "23d4838c0b5af7a60429ca862f80116e21421d10d8b39fe2786fded80ed112e2",
    "rsrc_size": 13416,
    "type": "APPL"
@@ -14,6 +17,9 @@
    "data_sha256": "7905821098d2765db030cffa6928f63849f0f778c60b6b1f75acc4af3bd6e4ea",
    "data_size": 824,
    "name": "StuffIt AppleScripts About",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "ac480d3ae031d79c3944a84a5afe178ff4cf7e7083a5ea9876e1c302e7b052e2",
    "rsrc_size": 648,
    "type": "ttro"
@@ -23,6 +29,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "StuffIt archive",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "69e04afe6f9c3c3aa75eace72a3be1d819b01441b80150ad21e5527076650fa0",
    "rsrc_size": 13361,
    "type": "APPL"
@@ -32,6 +41,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "StuffIt compress",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "0c386c51b6b10f4dbed89c03ba4381739170f77e6d4165347505a3fd5e07589d",
    "rsrc_size": 7093,
    "type": "APPL"

@@ -9,6 +9,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "The Perfect Word!/The Perfect Word",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "90ecc6f81d549d16dab26e4bd0209efcd427c522149e84fc84f8663bc6d6c040",
    "rsrc_size": 4054,
    "type": "APPL"
@@ -18,6 +21,9 @@
    "data_sha256": "442512f336a7a6c2f6d2737196ca10c91ac2af1c35c82cfd26c7fdb710735938",
    "data_size": 2503,
    "name": "The Perfect Word!/The Perfect Word--Read me!",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "cda3f0e59e7f9ab135e7c89742bb83d63f1cc53c82861c7e1942b9c913ff8bc0",
    "rsrc_size": 332,
    "type": "TEXT"

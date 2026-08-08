@@ -5,6 +5,9 @@
    "data_sha256": "09ea056eb42c0b377b1c69adf0fe8e60c7a4d6124ce928e57e326c2c546ed470",
    "data_size": 26728,
    "name": "Mac to VGA Adapters 1.0",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"

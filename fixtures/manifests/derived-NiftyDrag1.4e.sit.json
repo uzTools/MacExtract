@@ -9,6 +9,9 @@
    "data_sha256": "0757a562f69c37880811e02c11bad35ec0da95d3b05b75fc6ed5cf03d0416213",
    "data_size": 944,
    "name": "NiftyDrag1.4e/Go to URL.html",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "4b37c06ae3a3690d1bdc0d3bd78024220f5b8d377cfbf16563d3c65e83b8ca73",
    "rsrc_size": 318,
    "type": "TEXT"
@@ -18,6 +21,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "NiftyDrag1.4e/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "61b90cbc366b73ed18d7abac48d8adfbf5433ca245016ab0c102974f2c76829f",
    "rsrc_size": 286,
    "type": "icon"
@@ -27,6 +33,9 @@
    "data_sha256": "cf624581408b6eeed4f8dd555268181980b3dd71cf622e3a6b71a6c3c005fc05",
    "data_size": 3071,
    "name": "NiftyDrag1.4e/Installer",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "64af867c59e4f5145c34b305d120ea3a9c09fe7df846b0a9c085e3cdcdb9aa33",
    "rsrc_size": 111056,
    "type": "APPL"
@@ -36,6 +45,9 @@
    "data_sha256": "2e03180ce9124d1baa9d8bcc0c5f367be88b9ce90f5b63b102867f8d5ad36ba4",
    "data_size": 2598,
    "name": "NiftyDrag1.4e/User'sGuide",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "ed2d6dc10bf862fc7b90948ef93f6d57f68e92acf1c9fd27597b0c38094d5c51",
    "rsrc_size": 830,
    "type": "ttro"

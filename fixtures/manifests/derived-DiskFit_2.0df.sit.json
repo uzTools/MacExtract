@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "DiskFit 2.0-df",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "fcb7229b72e9c08258176d600062a500234be7ff5d81b327bcff54d96325db84",
    "rsrc_size": 247120,
    "type": "APPL"
@@ -14,6 +17,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "DiskFit.df.Help",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "65ad331152aebc5518510cacd32675993443b5d5472e38f3fd8c080ff99e3d86",
    "rsrc_size": 90723,
    "type": "HEL4"

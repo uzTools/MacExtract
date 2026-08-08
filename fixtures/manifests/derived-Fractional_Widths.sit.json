@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Fractional Width Key 1.0",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "2e2978a8d600e0070b3ab6b17182762eb237c340e819fc97bb1ff5793d527b84",
    "rsrc_size": 490,
    "type": "FKEY"
@@ -14,6 +17,9 @@
    "data_sha256": "067f7c5373715a0e0f5e1f82fe98d6a6b555d367f4282ee6f0bc49cca40416d1",
    "data_size": 2130,
    "name": "Fractional Width Key Docs",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"

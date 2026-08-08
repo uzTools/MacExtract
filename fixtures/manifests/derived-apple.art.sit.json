@@ -5,6 +5,9 @@
    "data_sha256": "88e4791f2ea907096368e1f06d97919e85566aabe65197115fc3567e4493fef6",
    "data_size": 393130,
    "name": "apple.art",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "afa2cd86ef91c1296d22884360fbfcc7a4db90beb9cd46d358bebdec6ecf468a",
    "rsrc_size": 10053,
    "type": "EPSF"

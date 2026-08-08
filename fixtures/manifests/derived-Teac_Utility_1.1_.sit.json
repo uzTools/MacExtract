@@ -5,6 +5,9 @@
    "data_sha256": "984e631bb827691eb7cbfd6203c377b0e33154cb92f3c67c40b2b2bb9ba5fa55",
    "data_size": 2932,
    "name": "About Teac Utility 1.1",
+   "oracle_methods": [
+    "Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -14,6 +17,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "TEAC Utility 1.1",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "3e81a5b0fba6fb9bca8775c76985d9b8db974276e1adacb2ebe9d7676fc01c39",
    "rsrc_size": 17551,
    "type": "DFIL"

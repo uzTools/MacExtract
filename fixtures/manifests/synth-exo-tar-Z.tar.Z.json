@@ -4,6 +4,9 @@
    "data_sha256": "964880c4f1f66495fad65f67d8e948a86dd55c64854d94b6a287754e4b7e865d",
    "data_size": 20480,
    "name": "synth-exo-tar-Z.tar",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   }

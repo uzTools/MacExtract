@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Diamond 4.2",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "341423f459164f13e724abae9b4e9b47e3571ea8967e192ae06876beae56c8ce",
    "rsrc_size": 33166,
    "type": "APPL"
@@ -14,6 +17,9 @@
    "data_sha256": "6d22a9631e436f225d1af2e8949df1d7ad5d7673dffb5876233d11c2489cdde0",
    "data_size": 1293,
    "name": "Read Me First - Diamond v4.2",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"

@@ -9,6 +9,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "DocSaver ƒ/DocSaver",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e2c2445efb5bc8fdcebb47fab7a5a7b4651f1e1d0985b11fc9abf70b26853885",
    "rsrc_size": 7666,
    "type": "APPL"
@@ -18,6 +21,9 @@
    "data_sha256": "9c14da8de4ba66773fbc8c591130102265309a3eadd3c5450e1ee7feb35d0ee1",
    "data_size": 4054,
    "name": "DocSaver ƒ/Read Me",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "733734984a3c967f7ee58f8d8d9f45f12fdc17a49fe19dec0e2450e29bee4c6e",
    "rsrc_size": 7722,
    "type": "TEXT"

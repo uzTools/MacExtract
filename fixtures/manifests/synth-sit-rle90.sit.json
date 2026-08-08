@@ -5,6 +5,9 @@
    "data_sha256": "40aff2e9d2d8922e47afd4648e6967497158785fbd1da870e7110266bf944880",
    "data_size": 256,
    "name": "All literals",
+   "oracle_methods": [
+    "RLE"
+   ],
    "rsrc_sha256": "cd6816b77f68d70001fc3eaa4d42bdd67cb5973b3151cc5292ecc02a3daac6ab",
    "rsrc_size": 256,
    "type": "TEXT"
@@ -14,6 +17,9 @@
    "data_sha256": "d5f80759e380279391b9f8746debfb05ac8b61ed2862ae9d15fbffb49d0ec445",
    "data_size": 12,
    "name": "Escape runs",
+   "oracle_methods": [
+    "RLE"
+   ],
    "rsrc_sha256": "363b62fc75301d68e3c60ec2fd39f0fb7db96338fde3b287e5c6fb5395f50985",
    "rsrc_size": 8,
    "type": "TEXT"
@@ -23,6 +29,9 @@
    "data_sha256": "1b0b2bcd866e2b8b1d0fc9812a50b9c63ea05c13e8c619bd230880adfef602e3",
    "data_size": 304,
    "name": "Long run",
+   "oracle_methods": [
+    "RLE"
+   ],
    "rsrc_sha256": "4391da166394eb9d592a66cdb937c0aa011b9fd54cb2fa0e7f5c7a6648c6625a",
    "rsrc_size": 512,
    "type": "TEXT"
@@ -32,6 +41,9 @@
    "data_sha256": "3752885c1d62099901b0d593561162a66d4a810ddc2b976359a30a259e877ed3",
    "data_size": 510,
    "name": "Max run",
+   "oracle_methods": [
+    "RLE"
+   ],
    "rsrc_sha256": "0d9ca5e38ff595a8ece44cac4fb5914d05dc6138809d8fc3f36274e040f3a46b",
    "rsrc_size": 510,
    "type": "TEXT"
@@ -41,6 +53,9 @@
    "data_sha256": "2c5bca2c7e6e42730134edb68fa01461d95216f7742799daa1f1314c8d7e207e",
    "data_size": 8,
    "name": "Short run",
+   "oracle_methods": [
+    "RLE"
+   ],
    "rsrc_sha256": "8e35c2cd3bf6641bdb0e2050b76932cbb2e6034a0ddacc1d9bea82a6ba57f7cf",
    "rsrc_size": 1,
    "type": "TEXT"
@@ -50,6 +65,9 @@
    "data_sha256": "aa7d1737e192fb71d52d19260a111a669f005175c873d98a65ae901485161914",
    "data_size": 71,
    "name": "Trailing run",
+   "oracle_methods": [
+    "RLE"
+   ],
    "rsrc_sha256": "eec2e7703b7ff3ca60b810115a76a777a4e532d537fc0f6aa3aa29c7be9a06d8",
    "rsrc_size": 40,
    "type": "TEXT"

@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Scope",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "7b49f544e80d40efadf042a8f0e948a5d390a76d1e0e12757f4b3d06c0764dcf",
    "rsrc_size": 35719,
    "type": "DFIL"

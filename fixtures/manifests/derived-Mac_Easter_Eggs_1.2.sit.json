@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Mac Easter Eggs 1.2",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "6caf00fc409e0de3b055eb1fd5e0d9ca64a1c6d406f3ba54fc9433e98c2f9c41",
    "rsrc_size": 393899,
    "type": "APPL"

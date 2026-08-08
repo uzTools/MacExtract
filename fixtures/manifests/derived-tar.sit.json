@@ -5,6 +5,9 @@
    "data_sha256": "e46f485674103592c72ae2bb6c51752f66928a2e4b60c1c1bd08e3d2c9b2ed9b",
    "data_size": 9532,
    "name": "Tar Manual",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "ttro"
@@ -14,6 +17,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "tar",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "2eaf3fd9c03f887167ac42cff3e0fd30b2259777a4b7b429d504825312999b2e",
    "rsrc_size": 46073,
    "type": "APPL"

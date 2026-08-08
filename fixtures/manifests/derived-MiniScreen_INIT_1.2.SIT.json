@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": " MiniScreen",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "8b78fafdf3cf2933ee18ba372efe3f8266cdf414211f504568c53b778527d171",
    "rsrc_size": 2871,
    "type": "INIT"
@@ -14,6 +17,9 @@
    "data_sha256": "26c8c4a86191917a5f32033b16a01fc9530c61aec57870198e51846aa4afaa6a",
    "data_size": 998,
    "name": "About MiniScreen 1.2",
+   "oracle_methods": [
+    "Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -23,6 +29,9 @@
    "data_sha256": "d327f56a9c0f3e002502206e82b368c040e226b107ae3b249bac5c7ab475e544",
    "data_size": 2874,
    "name": "Hey!  Read Me!",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "WORD"

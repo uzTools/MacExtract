@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "WindChooser",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "1ba0e417268db08dd6fea7de030a7985d9aaf58999c18ec5179f466503b3a79b",
    "rsrc_size": 28312,
    "type": "cdev"
@@ -14,6 +17,9 @@
    "data_sha256": "1c787cf3edf09702c352947fe4ce21ce25f6d4acfa63ccf387590d7cd7bf7753",
    "data_size": 6148,
    "name": "WindChooser docs (write)",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "WORD"

@@ -4,6 +4,9 @@
    "data_sha256": "d88314bb62d3c68bcdefc46c9480e4cc1d4db0f3253954ff0100b9be763af23d",
    "data_size": 13085,
    "name": "4ALAUNCH.EXE",
+   "oracle_methods": [
+    "Implode"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -11,11 +14,17 @@
    "data_sha256": "94289b357386f0076116ffa03c65bee71179441bab03c24772465085a89e11f6",
    "data_size": 19769,
    "name": "4ALAUNCH.HLP",
+   "oracle_methods": [
+    "Implode"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
   {
    "name": "LAUNCH.TXT",
+   "oracle_methods": [
+    "Implode"
+   ],
    "unadjudicated": {
     "data": "Attempted to read more data than was available",
     "rsrc": "oracle wrote no output for this fork"
@@ -25,6 +34,9 @@
    "data_sha256": "dca653cc793c8581504b2b614e275da9782573882da6ede2d8a64c9840671e09",
    "data_size": 64544,
    "name": "THREED.VBX",
+   "oracle_methods": [
+    "Implode"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   }

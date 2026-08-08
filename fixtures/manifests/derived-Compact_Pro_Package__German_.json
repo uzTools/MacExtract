@@ -9,6 +9,9 @@
    "data_sha256": "ca8946a0373142067e3922cafcda5a370655dd0f90f2207236f2b1d77ad83eb2",
    "data_size": 104599,
    "name": "Compact Pro D-1.51/Compact Pro",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "ea3f39af9c92faa53b2b1025e731fc788a740df53e76d98bc3b2224143bb7105",
    "rsrc_size": 99837,
    "type": "APPL"
@@ -18,6 +21,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Compact Pro D-1.51/Compact Pro User's Guide",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "025923ec62a1ab399f8e4eb8a8f4f1c6f59beb39c02ba7cf2b7a7d8670838b59",
    "rsrc_size": 109817,
    "type": "APPL"
@@ -27,6 +33,9 @@
    "data_sha256": "2e9be2d5d63f1eb8dda158dcd1fe3109736d549557aadbb74329d70275117b6d",
    "data_size": 2803,
    "name": "Compact Pro D-1.51/What's New?",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "1e164e48fddf01df266164ba62f21319c9e86237d86d6f65c63955b8437e0984",
    "rsrc_size": 286,
    "type": "ttro"

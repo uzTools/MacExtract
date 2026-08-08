@@ -9,6 +9,9 @@
    "data_sha256": "e7eeaf25b1472fec189fe1ba628733a2bb91dd5eec9e4bd7c4215e5f4f434968",
    "data_size": 189,
    "name": "ZTerm ƒ/GEnie.zts",
+   "oracle_methods": [
+    "RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -22,6 +25,9 @@
    "data_sha256": "9af4bed8fb569ca29a9b08a7e65d96f78e4fbd477cd57d5c9abe36e59060c271",
    "data_size": 1451,
    "name": "ZTerm ƒ/Sounds/ZTerm Sound Info",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -31,6 +37,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "ZTerm ƒ/Sounds/connect",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "d72c5670483a75ab0195bde1a930fb2d9e38b3d62458177b34adb6dd40b9bfeb",
    "rsrc_size": 12702,
    "type": "sfil"
@@ -40,6 +49,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "ZTerm ƒ/Sounds/filedone",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "04b4a033a0e81bac2f637aeb7d0bfa04da6a1b7f22de260cd7795ec379a97410",
    "rsrc_size": 14555,
    "type": "sfil"
@@ -49,6 +61,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "ZTerm ƒ/Sounds/termbell",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "0b1891edd4ce878702ae5f735a808b5fcaafe32e41910ff12d3ac6c074480bb8",
    "rsrc_size": 965,
    "type": "sfil"
@@ -62,6 +77,9 @@
    "data_sha256": "dff41cc34b231f0ff5640bcbec2244c59ffc91724a9e5f5ac8cfeec39b169de6",
    "data_size": 495,
    "name": "ZTerm ƒ/System 7 & MacPlus/MacPlus users - Read Me",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -71,6 +89,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "ZTerm ƒ/System 7 & MacPlus/ZTerm Keyboard",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "a63c101d1b949d7a12da068f00df2aa10068eca578c71899fce7c6b4a743e657",
    "rsrc_size": 1987,
    "type": "kfil"
@@ -80,6 +101,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "ZTerm ƒ/ZPhoneList",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "aadbe7e883f685e604776722a478ce0f31f3d161e5c4adf9f58775a07ed029be",
    "rsrc_size": 2387,
    "type": "zPHO"
@@ -89,6 +113,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "ZTerm ƒ/ZTerm 0.9",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "ac4e19e2b8b0b99de1e78a7175ccda7981a5c47947364d524024419026c03d73",
    "rsrc_size": 201586,
    "type": "APPL"
@@ -98,6 +125,9 @@
    "data_sha256": "43b22f212917f9d7bd3f0e495eb8311af1d29f7c5138ca7f1e8bedab7d61d0e9",
    "data_size": 1641,
    "name": "ZTerm ƒ/ZTerm 0.9 Command Keys",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -107,6 +137,9 @@
    "data_sha256": "f61fcb3008dc8bbc9c1a96b29dad6188d10d6204d42668a08c8f539f4df7b8a4",
    "data_size": 3484,
    "name": "ZTerm ƒ/ZTerm 0.9 Release Notes",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -116,6 +149,9 @@
    "data_sha256": "70b25d7f12525086f4e8f56920e7cf369094d59637d4002c9067b20f0153f2c4",
    "data_size": 1735,
    "name": "ZTerm ƒ/ZTerm 0.9 Scripting",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -125,6 +161,9 @@
    "data_sha256": "4411bb5387a804c1f16c8b681343f4575816ae0d14e773f6e441e016b63db30a",
    "data_size": 94920,
    "name": "ZTerm ƒ/ZTerm Doc 0.9 (MW)",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "4928024d42d9743a19f6e04980ed72773871d89fa9786e9b1da79abeb7c7c6e3",
    "rsrc_size": 763,
    "type": "WORD"
@@ -134,6 +173,9 @@
    "data_sha256": "3825346fa16c29f3f68e62b8670cdecc1f741a5fc91d52296f95b230a65743c8",
    "data_size": 1039,
    "name": "ZTerm ƒ/ZTerm Registration",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"

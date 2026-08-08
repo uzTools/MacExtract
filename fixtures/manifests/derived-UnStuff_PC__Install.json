@@ -5,6 +5,9 @@
    "data_sha256": "64c3ea1f4e1148db07f0938ca0d7566d09372e9fa6237d5fd4e1166072520e35",
    "data_size": 347,
    "name": "Read Me On Macintosh",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "5b6a46d0e4a5d2981a11d7fe339f07b5a6bca2e752eb4638a81f33712f85ce6c",
    "rsrc_size": 648,
    "type": "TEXT"
@@ -14,6 +17,9 @@
    "data_sha256": "599cf9d851a9725468850eb5ff39b343eec486120f7a6568a872b59d7c25ec1b",
    "data_size": 100035,
    "name": "UNSITINS.EXE",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"

@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Cubist",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "b11abaed42d36a22260038049600806fd3830011c1dfb80741e3616059c8c5fa",
    "rsrc_size": 7096,
    "type": "APPL"
@@ -14,6 +17,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Cubist FKEY",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "262b55cfe20910271e5bae40a24e5e36b71a1ea6c6837ee25900dfe81d2176b1",
    "rsrc_size": 6390,
    "type": "FKEY"
@@ -23,6 +29,9 @@
    "data_sha256": "10e953f9e410df27f49b7b600a4dc3550de53298814f0f4df595d9dbc476e97f",
    "data_size": 2561,
    "name": "Cubist ReadMe",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"

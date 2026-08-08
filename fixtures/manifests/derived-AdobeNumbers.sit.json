@@ -5,6 +5,9 @@
    "data_sha256": "eb290200ec6083f87e7128299c297653b658991df929f3d55c8af01350ef7cbf",
    "data_size": 2060,
    "name": "About AdobeNumbers 1.0",
+   "oracle_methods": [
+    "Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -14,6 +17,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Adobe Vols by Number",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "7822e2a7ebe75dfd12179436116b698705bb5f26ad9255d6e0be0513d7e7bc60",
    "rsrc_size": 13240,
    "type": "DFIL"

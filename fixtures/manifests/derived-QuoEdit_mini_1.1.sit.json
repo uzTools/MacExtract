@@ -9,6 +9,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "QuoEdit mini 1.1/QuoEdit mini",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "a476d02b849d83c8806ffffde877c8f1e373f600b4b39a2a677d1c63e5810a05",
    "rsrc_size": 61089,
    "type": "APPL"
@@ -18,6 +21,9 @@
    "data_sha256": "31364f949b70a22e255b0954e572e8e93facd1ff1248272a4c0d22d37e492ee9",
    "data_size": 4050,
    "name": "QuoEdit mini 1.1/QuoEdit mini History",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "507a02a8e67f499a6ed13384de6a5f93dfc7f690431258f07dc7912e47c5f6fd",
    "rsrc_size": 516,
    "type": "TEXT"
@@ -27,6 +33,9 @@
    "data_sha256": "661f3b19c525fcb14d18dd38411cee05ed4e9eb815bae6e97efa62f0b7a3a258",
    "data_size": 3760,
    "name": "QuoEdit mini 1.1/QuoEdit mini ReadMe",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "c8d45785493943943ed50db18994bcf797418181ca401880449be1689a36c1ee",
    "rsrc_size": 516,
    "type": "TEXT"
@@ -36,6 +45,9 @@
    "data_sha256": "e6d24eb18b7101da2033e8d01c0f41a809acaf06c6bf475aed05762cc24cab38",
    "data_size": 7977,
    "name": "QuoEdit mini 1.1/QuoEdit mini Reference",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "90825ad97e048c096b89b8462f13b98c559d1f6aad71d5016c73d2f90329302d",
    "rsrc_size": 516,
    "type": "TEXT"

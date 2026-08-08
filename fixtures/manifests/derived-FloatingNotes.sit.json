@@ -9,6 +9,9 @@
    "data_sha256": "8fc2027a0a37de3c999a0d81da138981ac4c41c8fb213c4eb039e30111c90c05",
    "data_size": 402495,
    "name": "FloatingNotes Carbon ∆í/FloatingNotes Carbon 1.1",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "2fa57f04567f95b5ae7af8110d02e2d84c75d4fc9c07924d0a2cc0d5b9d9a3bc",
    "rsrc_size": 21826,
    "type": "APPL"
@@ -18,6 +21,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "FloatingNotes Carbon ∆í/Icon\r",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "caff25732b6964703e600a21e8b2911d48b95bede26243a1d124ffaaa4e8af7e",
    "rsrc_size": 2640,
    "type": "\u0000\u0000\u0000\u0000"
@@ -27,6 +33,9 @@
    "data_sha256": "5a1297549ba5b5dfe44086d75a4b96031c7893d557b886da2d42df028ad15c72",
    "data_size": 286,
    "name": "FloatingNotes Carbon ∆í/New for v1.1",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "ae567134989d6014313c2fd7a0867ccf3bd5639f0999967988fa2b641c8b8215",
    "rsrc_size": 352,
    "type": "TEXT"
@@ -36,6 +45,9 @@
    "data_sha256": "074f5f82512544d9646ad3ee4279fc7f773c153beefff220763f2fe827f15882",
    "data_size": 953,
    "name": "FloatingNotes Carbon ∆í/Read Me First",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "a880189d672061d4b4f307854d31a6db084379727cfd875ed0650e137ceb8797",
    "rsrc_size": 552,
    "type": "TEXT"
@@ -49,6 +61,9 @@
    "data_sha256": "21a168a97c94e77c2ef2dfffb7ca81e11666b82bb966959197a287b9fa8d40a5",
    "data_size": 215,
    "name": "FloatingNotes Carbon ∆í/Register FloatingNotes/How to register",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "923b265cd2e92b9737e5916607918a0bac28af518d91fefdd1f96073490843dd",
    "rsrc_size": 432,
    "type": "TEXT"
@@ -62,6 +77,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "FloatingNotes Carbon ∆í/Register FloatingNotes/Mail or Fax/Register",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "86f6c2a27e413ab376b41f5d36dd8f57e5444541262c02f3308b6c2a6d565206",
    "rsrc_size": 103542,
    "type": "APPL"
@@ -75,6 +93,9 @@
    "data_sha256": "15090aa77b82e8ca22ce0f619028f8f4ec4655053c9f323a198fd604c985d14e",
    "data_size": 14620,
    "name": "FloatingNotes Carbon ∆í/Register FloatingNotes/On the internet/Open to Register FloatingNotes",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "ab989cc269930d0e03542d2ef9b97218eff5bcbe392c4bff6cb765ec4eba84bd",
    "rsrc_size": 23573,
    "type": "APPL"

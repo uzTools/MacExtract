@@ -4,6 +4,9 @@
    "data_sha256": "a030d2ef98a6eee1c325c7b24f7c5651a5e8d8e6ba5c421d43e21c6f75817cde",
    "data_size": 1851907,
    "name": "EasyFind.dmg",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   }

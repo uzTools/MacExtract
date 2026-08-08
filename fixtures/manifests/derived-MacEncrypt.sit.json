@@ -9,6 +9,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacEncrypt ƒ/MacEncrypt",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "c0b5af6d7886ae574a1c096ded5ae372b8d3278b09309c11dd0525b71f74aa9a",
    "rsrc_size": 29796,
    "type": "APPL"
@@ -18,6 +21,9 @@
    "data_sha256": "372385fe9cb65c260fd55faaa02fd66788cc04c67dbe50056c2b5d55bf6add75",
    "data_size": 23552,
    "name": "MacEncrypt ƒ/MacEncrypt Doc",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "WDBN"
@@ -27,6 +33,9 @@
    "data_sha256": "dc35836e9cb9ef306e0dff753e42d8462070aa7d5d62ca1dec7cd2e248891f02",
    "data_size": 17791,
    "name": "MacEncrypt ƒ/MacEncrypt Doc (Text)",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -36,6 +45,9 @@
    "data_sha256": "66b5188a68485c4d72676e93559b0c296cd4928279a6801d832a85bf4296e451",
    "data_size": 1847,
    "name": "MacEncrypt ƒ/Read Me",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "26b339fa89ec38f96d638c8d1e194b89a80e7a6080c1e18e2e3a40c64603238e",
    "rsrc_size": 336,
    "type": "TEXT"

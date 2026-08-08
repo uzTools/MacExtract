@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Alias Assassin 1.0.6",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "a1e564481c928481316c2080d2e5931dd07ef0934d1ad3deabf061b64ebf5c24",
    "rsrc_size": 74412,
    "type": "APPL"

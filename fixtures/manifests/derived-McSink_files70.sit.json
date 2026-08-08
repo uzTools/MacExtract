@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "ASCII Codes VCMD",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "faece3f71127d8bacb5ca91e29db7dc8971f0bf4232435b7aa8b270b645fc999",
    "rsrc_size": 3334,
    "type": "VEXT"
@@ -14,6 +17,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Catalog VCMD",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "00d342ee60e1f5fc20fe601cbec7dd957e31821ac798d9e39368c8b94b9910ea",
    "rsrc_size": 2926,
    "type": "VEXT"
@@ -23,6 +29,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Compare Files VCMD",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "d6ba28e398613ffcc0003d7e4779dff739e7906d42f0672f9c223635a50d9ab7",
    "rsrc_size": 7462,
    "type": "VEXT"
@@ -32,6 +41,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Copy Icon Grabber VCMD",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "229edb143c00bb6904b1eef7d9774ab52f75aa9da82b5229c97d790a2713d558",
    "rsrc_size": 1062,
    "type": "VEXT"
@@ -41,6 +53,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Curly Quotes VCMD",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "4d5bc460dcd4447c1485bec74f8d20bbb803934d293ad7bbb810f4b86adf38f3",
    "rsrc_size": 696,
    "type": "VEXT"
@@ -50,6 +65,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Delete Files VCMD",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "2ecfc0c641134cc483009ed02a92789e717651b727434be4397d413bc6d9f9f5",
    "rsrc_size": 5636,
    "type": "VEXT"
@@ -59,6 +77,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "File Munger VCMD",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "5147902428c19f58401c3ca84bd1de938643ad7943390ab6b0d5527d37b5feee",
    "rsrc_size": 7988,
    "type": "VEXT"
@@ -68,6 +89,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Hex Icon Grabber VCMD",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "edb8c48c8f365f892107407008049db732b581db7b37cf3dc4ee99a5e887ec9a",
    "rsrc_size": 1122,
    "type": "VEXT"
@@ -77,6 +101,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Join Files VCMD",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "2771eff845b4a9c4d0102b120a9f40622cf5bdbeaf8cfb1e64831bdb5fb3affc",
    "rsrc_size": 4244,
    "type": "VEXT"
@@ -86,6 +113,9 @@
    "data_sha256": "505f35d73b27172292024436e1ce420286f3d04c7a731263cd820328bf1f1f6c",
    "data_size": 20935,
    "name": "McSink V7.0 Changes",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "9a299a4d27d0d26e6323205bbaa0b1c1d4e8c5b5e7ab580127b64f3c9ef9adca",
    "rsrc_size": 574,
    "type": "TEXT"
@@ -95,6 +125,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Open Files VCMD",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "0d77846cd90d93ea2d27dcaa8e30ffb5fad838a23a04a615b8c754e7a0019689",
    "rsrc_size": 4926,
    "type": "VEXT"
@@ -104,6 +137,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Sloppy Compare VCMD",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "39b2b7a769d8610eefbdb536382f757960b7021a109977cd51246df50745a8d6",
    "rsrc_size": 2060,
    "type": "VEXT"
@@ -113,6 +149,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Sloppy Search VCMD",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "0019b12007dc5d44a7aa25f4ebc5a468887f90e42ec29f95d1670e347cdcf689",
    "rsrc_size": 7246,
    "type": "VEXT"
@@ -122,6 +161,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Straight Quotes VCMD",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "45d66009b407edaf00a82c947716256acbc5222e3ef650013fa59decf8384681",
    "rsrc_size": 596,
    "type": "VEXT"

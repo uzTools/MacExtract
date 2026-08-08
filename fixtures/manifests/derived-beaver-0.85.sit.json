@@ -9,6 +9,9 @@
    "data_sha256": "f220e6e302c2448adaa4910d152ab5c052aa1edb8c58a0bd8d20c4d7a708527e",
    "data_size": 46592,
    "name": "BeaverGate 0.85/BeaverGate 0.85 docs MS Word",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "WDBN"
@@ -22,6 +25,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "BeaverGate 0.85/Contents go with QM Administor/smtp_config",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "a7d96fe81e560bcee6ef866a0a9772438c30d299e359793a3eab3228dbb6ed01",
    "rsrc_size": 39140,
    "type": "APPL"
@@ -31,6 +37,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "BeaverGate 0.85/Contents go with QM Administor/smtp_recv",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "54ca846d2fd2fa762d1828a49aad8958491ef5ad4fabce3064c7f6aed870dae2",
    "rsrc_size": 66825,
    "type": "APPL"
@@ -40,6 +49,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "BeaverGate 0.85/Contents go with QM Administor/smtp_send",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "404bc301cac29e2d9402cef204d7ba2802c4e02863ef1e27a6e28229761fdfd0",
    "rsrc_size": 76449,
    "type": "APPL"
@@ -53,6 +65,9 @@
    "data_sha256": "19da032c58f1a4d6bed7d7963fc06571c4b914bc716b0ec80f9a92f1a054623b",
    "data_size": 1144,
    "name": "BeaverGate 0.85/Install with QM Forms/BeaverGate 0.85 QM form",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "MLTP"
@@ -66,6 +81,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "BeaverGate 0.85/Put contents in QA folder/QMBeaverGateBridge-0.85",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "36b9bd3821866ea4f910a1c2bb016bfb4b0c3ed4628aaa722e3f427aa7a1ea11",
    "rsrc_size": 29960,
    "type": "CEbr"

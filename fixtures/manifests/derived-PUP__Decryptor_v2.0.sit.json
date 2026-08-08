@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "PUP™ Decryptor v2.0",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "fa77492a133247e9ea435286eae39004430cbc2d612c2a5e02a9dddbb27894d7",
    "rsrc_size": 21592,
    "type": "APPL"

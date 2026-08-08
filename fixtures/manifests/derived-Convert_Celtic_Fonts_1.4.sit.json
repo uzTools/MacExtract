@@ -9,6 +9,9 @@
    "data_sha256": "997e0b5178cc58f51e5647965408ad128d1906b22888ea7cafe93c23501542ff",
    "data_size": 2134,
    "name": "Convert Celtic Fonts 1.4/Arial Black Celtic cmap",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -18,6 +21,9 @@
    "data_sha256": "8f43c063b0907ad96cbc2120233a049388316f7f85cfafd58b1660c5e2898f94",
    "data_size": 2130,
    "name": "Convert Celtic Fonts 1.4/Arial Celtic cmap",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -27,6 +33,9 @@
    "data_sha256": "8d2373e61b61513b440a527b51f905eeaee47e1f260239a8867cc6d286ff7278",
    "data_size": 999,
    "name": "Convert Celtic Fonts 1.4/Check your Celtic fonts here",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "94bff0cb8a0107439ef04068205548cd59d0692ea5cd39e481bdcc6d9e1165a2",
    "rsrc_size": 712,
    "type": "TEXT"
@@ -36,6 +45,9 @@
    "data_sha256": "eab06b92a073ed1e8e50da744707775136f5b9bcff06b42a61eaa32642048e04",
    "data_size": 2132,
    "name": "Convert Celtic Fonts 1.4/Comic Sans MS Celtic cmap",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -45,6 +57,9 @@
    "data_sha256": "8f43c063b0907ad96cbc2120233a049388316f7f85cfafd58b1660c5e2898f94",
    "data_size": 2130,
    "name": "Convert Celtic Fonts 1.4/Courier New Celtic cmap",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -54,6 +69,9 @@
    "data_sha256": "85b0d741e32d3d41bf315fe1df35b4295197e025390a25b43b302f7f3ff55517",
    "data_size": 2134,
    "name": "Convert Celtic Fonts 1.4/Impact Celtic cmap",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -63,6 +81,9 @@
    "data_sha256": "b864012244fa549fe8f5900d8f48ea5a270e934e9b52e3f798b31e64e4931cc3",
    "data_size": 2132,
    "name": "Convert Celtic Fonts 1.4/Monotype.com Celtic cmap",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -72,6 +93,9 @@
    "data_sha256": "9e16a7eca2d3ed515653709aecf3caaeed2f73117bd98f5230cdcffa9088f648",
    "data_size": 3891,
    "name": "Convert Celtic Fonts 1.4/Read me first",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "35e61d917d1fd3c114494556a283af5976f9d105d3bb712d9ad826dbfb65907b",
    "rsrc_size": 2592,
    "type": "TEXT"
@@ -81,6 +105,9 @@
    "data_sha256": "8f43c063b0907ad96cbc2120233a049388316f7f85cfafd58b1660c5e2898f94",
    "data_size": 2130,
    "name": "Convert Celtic Fonts 1.4/Times New Roman Celtic cmap",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -90,6 +117,9 @@
    "data_sha256": "d1b0f6dc972b27dac59e7e8ee21e2369895b72de075b73b6d89272aff7082098",
    "data_size": 2130,
    "name": "Convert Celtic Fonts 1.4/Verdana Celtic cmap",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"

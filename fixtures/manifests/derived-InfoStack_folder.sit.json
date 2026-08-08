@@ -9,6 +9,9 @@
    "data_sha256": "b8138d57514e4a6ecf6442ccc9e59c03775f856cabe51fcec281dc485a88e952",
    "data_size": 498,
    "name": "InfoStack folder/Comments about InfoStack.sit",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "ttro"
@@ -18,6 +21,9 @@
    "data_sha256": "56c09dfaf427dd4feccc1dedb9e69c646e18f9ac7a6c163ef383448850b08861",
    "data_size": 180224,
    "name": "InfoStack folder/InfoStack",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "776d38f1c5966a41c672b233f76c60cf3bab3cc8554a4041761b2c79b76b03e1",
    "rsrc_size": 616,
    "type": "STAK"

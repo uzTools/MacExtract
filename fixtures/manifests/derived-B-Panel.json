@@ -9,6 +9,9 @@
    "data_sha256": "13f81c9e900950c907292ff495337964882a3d6a88d6df83bef95631968f8cd7",
    "data_size": 1150,
    "name": "B–Panel 1.0 Folder/B–Panel docs",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "ttro"
@@ -18,6 +21,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "B–Panel 1.0 Folder/◊B–Panel",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "20fbd08b12f6e42259cbc38b57df7b57764565f04d00aa5a6f297284a0a98561",
    "rsrc_size": 18884,
    "type": "cdev"

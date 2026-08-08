@@ -9,6 +9,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Domino v1.4/Domino",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "05d1b1c0b4c61ff18d6b16e3c0d48a8824e9e63c93cdcdf5f65803e674a44e04",
    "rsrc_size": 630868,
    "type": "APPL"

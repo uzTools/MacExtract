@@ -5,6 +5,9 @@
    "data_sha256": "c164c3c2e689fda95afc1472696d6a66e81761b5b6780d15cab176009ce38822",
    "data_size": 5047,
    "name": "ClassList",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "59e96decf1f3ff2d3b07d9844914a3cabb4829003d37c5bc132e41bfe691359a",
    "rsrc_size": 428,
    "type": "TEXT"
@@ -14,6 +17,9 @@
    "data_sha256": "3919ee38d28ea8e9c4b24c71916cb27343a95a9be8e7bdddfe25c5c8e5005623",
    "data_size": 5167,
    "name": "ErrorGlobals.h",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "d60a3a14763aad9c40aebe29d3de1817dda8daba556315633fcb3c26b6ca59bd",
    "rsrc_size": 428,
    "type": "TEXT"
@@ -23,6 +29,9 @@
    "data_sha256": "e655ece4d2cb10410a5c627e3165886814a960ee4807961753156cbb869adf51",
    "data_size": 8830,
    "name": "Errors.r",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -32,6 +41,9 @@
    "data_sha256": "608a4331e6b2ad9ed497a65f8d0deb864634db1df315c842b1efc51030af0412",
    "data_size": 1254,
    "name": "FastBits.cp",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -41,6 +53,9 @@
    "data_sha256": "56007cf560da8640959c3efdd54a781cc4b8b120bb3aa1ca483c86ffead0494f",
    "data_size": 436,
    "name": "FastBits.h",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -50,6 +65,9 @@
    "data_sha256": "b509bea8a80aeda8951f84e5420d24f489a27e50f5d26165082dc07fe1cec9eb",
    "data_size": 481,
    "name": "FontTools.cp",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -59,6 +77,9 @@
    "data_sha256": "94d4089c4e397d42b865c19c2bc239638597b6361c614cf6df41746bd7f35a7a",
    "data_size": 309,
    "name": "FontTools.h",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -68,6 +89,9 @@
    "data_sha256": "a7a87d491c185aef2b72f3d81c2272e5318e1a6c29892332d917b127c94f666e",
    "data_size": 3526,
    "name": "MNuntius.cp",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -77,6 +101,9 @@
    "data_sha256": "b8f850cfcb48c3f6e787c8f5a402b1f8269fdfdf991c54fd7eed43984c41bd9d",
    "data_size": 6447,
    "name": "Menus.r",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -86,6 +113,9 @@
    "data_sha256": "9690bd6d5fe6ace4733571d898c4c27ba1218fac736f255969ff4966aa2f6c1c",
    "data_size": 2922,
    "name": "Misc.r",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -95,6 +125,9 @@
    "data_sha256": "0aad5bda931144b2fe02a2a01d6df30a57334e39fa642576f964da6bccaf4306",
    "data_size": 1332,
    "name": "MyDontDeadStrip.cp",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -104,6 +137,9 @@
    "data_sha256": "05d6f2bdc97bb665e91bd2a6bfb0c68e1f66bb0c11af8e63c4ac315f4d4a3a77",
    "data_size": 147,
    "name": "MyDontDeadStrip.h",
+   "oracle_methods": [
+    "RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -113,6 +149,9 @@
    "data_sha256": "958d6dcdfb4e65f0dd5fdd41a23205d441859d32bb1c6f01e4bb5e5cf37b49e5",
    "data_size": 858,
    "name": "MyViewTypes.r",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -122,6 +161,9 @@
    "data_sha256": "991d95fcf229dc941478932b711fbca017d9af3dc8f05dc5decde66de07ea915",
    "data_size": 5356,
    "name": "NetAsciiTools.cp",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -131,6 +173,9 @@
    "data_sha256": "09e53abc6255acf61f9999cb7f56c90a0e4036e50ce7837b5f9fa344eed8f6d1",
    "data_size": 733,
    "name": "NetAsciiTools.h",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -140,6 +185,9 @@
    "data_sha256": "ee9b1898b5352c873fed828d39f024127f2f9acaf723769ceed6972c3c8f76b0",
    "data_size": 17636,
    "name": "Nuntius.MAMake",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "d645566af927f82b221891edda2cb299cbd88e87be1b79989540eedcd8948127",
    "rsrc_size": 428,
    "type": "TEXT"
@@ -149,6 +197,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Nuntius.ResEdit",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "fbdf41725611d7ee20c189f5d06505922975e101d481de588752a788852eaa1c",
    "rsrc_size": 17787,
    "type": "rsrc"
@@ -158,6 +209,9 @@
    "data_sha256": "eecae5c48706d9f7dfc9affb4e51d142086bd6d03654fea7a7f86dc9f2f108bf",
    "data_size": 1754,
    "name": "Nuntius.r",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -167,6 +221,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Old Nuntius icons",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "312e41a33bd964b7dbae83c66eb063fa96fd87f5f1818796c6bacc83f44b7f2a",
    "rsrc_size": 5198,
    "type": "rsrc"
@@ -176,6 +233,9 @@
    "data_sha256": "1d6ea4d5bc0abca1aa7af8532482638d9a6aba121ea7bdae8c202514f6009718",
    "data_size": 14614,
    "name": "PostingViews.r",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -185,6 +245,9 @@
    "data_sha256": "2d9d4158848c390849d15edda9255baacbade8dd5d1169eddb892cee44058037",
    "data_size": 1972,
    "name": "Preferences",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "a9e894da0a3ce3d7bb3afdee702128966b784ff7a593ccc8ed5310f8cbb0b328",
    "rsrc_size": 428,
    "type": "TEXT"
@@ -194,6 +257,9 @@
    "data_sha256": "0b3c501c75676890d06fbf51e7616c50e4fd80c5108d963dc653cef6aae427d6",
    "data_size": 41736,
    "name": "PreferencesViews.r",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -203,6 +269,9 @@
    "data_sha256": "888440f8964216b88c89e29c52dbf108cd0a2dfb5e02b5e77622982dd2fceb51",
    "data_size": 1495,
    "name": "ProgressGlobals.h",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -212,6 +281,9 @@
    "data_sha256": "dd54eddcceef69a0bbd3c1298f60c112c1e1a96841510097ab4d01019e9b4882",
    "data_size": 14273,
    "name": "ProgressViews.r",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -221,6 +293,9 @@
    "data_sha256": "24d938b1bbd61b860a50aff524cd0da1574fa62e466b7d1934a6b2feb316fc82",
    "data_size": 11793,
    "name": "Test.r",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -230,6 +305,9 @@
    "data_sha256": "0efde4325435779bbefed85c603d59ae14b02039fb94522b6a63ce0581b160b6",
    "data_size": 203,
    "name": "TestCode.cp",
+   "oracle_methods": [
+    "RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -239,6 +317,9 @@
    "data_sha256": "4fc316eb819bf14584b1d4b079e82a01bb6e7ab0386de91a8d486c3ffe0dc8e3",
    "data_size": 217,
    "name": "TestCode.h",
+   "oracle_methods": [
+    "RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -248,6 +329,9 @@
    "data_sha256": "87dd44e01ef4e9c592cae096c3dedb88ba32d0209f48cfb2c9e4a585b64c983d",
    "data_size": 60166,
    "name": "TheGroupList",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "219614d2a31f1d0feadb1dae4fcc84c332dcd438c144e0ab35f18856f0e0f686",
    "rsrc_size": 428,
    "type": "TEXT"
@@ -257,6 +341,9 @@
    "data_sha256": "195f06dc5a4027ade4ccb61d966dbe43c4eba6c3e7149fc799119a6cacfad2e5",
    "data_size": 5460,
    "name": "ThreadLib.o",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "OBJ "
@@ -266,6 +353,9 @@
    "data_sha256": "45f4f52cd68a5868ca65d7c8f78a61934e5fea62fba282a78ddfd92d8e5b927f",
    "data_size": 5764,
    "name": "Threads.h",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "34486852d12ba9bddee291900fd36578b9713752319973c5185d2135df8197fc",
    "rsrc_size": 428,
    "type": "TEXT"
@@ -275,6 +365,9 @@
    "data_sha256": "d0fc330c2803a76714d267f0b0871e59255fca8331a7da0f0358c5451c875f17",
    "data_size": 3953,
    "name": "Tools.cp",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -284,6 +377,9 @@
    "data_sha256": "ac624ca497e00d0dc21040eff8b629b921e13c5adf9637071b35d91a096ca602",
    "data_size": 1086,
    "name": "Tools.h",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -293,6 +389,9 @@
    "data_sha256": "a52e714aeb46440c8ce8d12e2873cf2e5ba63570c1ba09faec9b3fb1560bdc26",
    "data_size": 5384,
    "name": "UArticleCache.cp",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -302,6 +401,9 @@
    "data_sha256": "8c58091a0610bec4b0bb4f07ec5d7edaf0cebb9895bf9294c9d83250522c8ed4",
    "data_size": 1191,
    "name": "UArticleCache.h",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -311,6 +413,9 @@
    "data_sha256": "6ec0b8165412e53949b10eac5f9bdc7111f510ddb997cfd204f602085f60102b",
    "data_size": 3983,
    "name": "UArticleCmds.cp",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -320,6 +425,9 @@
    "data_sha256": "381f5a8b7b92266ac2621d09d92db17009059205170f69572e07168a9aeb9e12",
    "data_size": 1664,
    "name": "UArticleCmds.h",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -329,6 +437,9 @@
    "data_sha256": "46c0047beb57e3f05fbbd7ec17309459c9b6059867acf0f827193d6b2a550ed0",
    "data_size": 9547,
    "name": "UArticleStatus.cp",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -338,6 +449,9 @@
    "data_sha256": "20acc917c946476358f9c123d7691ec2a1db2548670dd32f69df25e5a1f6ed84",
    "data_size": 1290,
    "name": "UArticleStatus.h",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -347,6 +461,9 @@
    "data_sha256": "23a2e6dcec14c16734a3bf4eb7d5ee55f091480621a56f6c9f4f8fc04c7648b6",
    "data_size": 26326,
    "name": "UArticleView.cp",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -356,6 +473,9 @@
    "data_sha256": "c9e7c4d9d5aab1589b20994eaa87e18a29ac4f3bb22830e868049ce1f7b8c9cb",
    "data_size": 3359,
    "name": "UArticleView.h",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -365,6 +485,9 @@
    "data_sha256": "b8b95a0bcbc36e87b0db437d6ace33c0f9b07033b9446a3f8b17ab3040e60a1f",
    "data_size": 23455,
    "name": "UBinariesCmds.cp",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -374,6 +497,9 @@
    "data_sha256": "d332d7b9f1b7e1db281714a736de03a9c2e8969206349e004e34ab7b47e01b10",
    "data_size": 2427,
    "name": "UBinariesCmds.h",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -383,6 +509,9 @@
    "data_sha256": "61aaf6f7c3648941734eb9294ebfab9c4678601a227ae6f0f5cc1fb1d5403c41",
    "data_size": 16740,
    "name": "UDiscList.cp",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -392,6 +521,9 @@
    "data_sha256": "363b870eb85766c37c2c6d3df526cd1a6bd54d5bbafdba3497f80f4e422fd94b",
    "data_size": 2106,
    "name": "UDiscList.h",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -401,6 +533,9 @@
    "data_sha256": "8bcc9c9de0569bb4c39acce041ee5e333f8464354dedceb3e1f1ef24d350b00e",
    "data_size": 1516,
    "name": "UDiscListCmds.cp",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -410,6 +545,9 @@
    "data_sha256": "3227b91239260426e69347b07c924abb7919fe06ca6213fc801d7acd89cb619d",
    "data_size": 451,
    "name": "UDiscListCmds.h",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -419,6 +557,9 @@
    "data_sha256": "2ea5d7102e1330cbc8491996d67c4951288bb18f3e2eaac0f8428536930672e7",
    "data_size": 18349,
    "name": "UDiscListView.cp",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -428,6 +569,9 @@
    "data_sha256": "4ca8179a80d0876f738814bb646b42e92f68d3b6de16c94ddb3bf0eb24f6d4d9",
    "data_size": 1741,
    "name": "UDiscListView.h",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -437,6 +581,9 @@
    "data_sha256": "37120ee7d3fda21a0f7f9f17b56062bbc112b7330c61399cdfce925575e81ba4",
    "data_size": 11090,
    "name": "UDiscussion.cp",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -446,6 +593,9 @@
    "data_sha256": "e80d042d8f2a861bdf9dfa73a4606f017ef6943e3c2b972383326f3de087241f",
    "data_size": 2605,
    "name": "UDiscussion.h",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -455,6 +605,9 @@
    "data_sha256": "60dcc3a3bdf6487c64c45b74453398effec25326545c681789726f0001b42c5d",
    "data_size": 14345,
    "name": "UDynDynList.cp",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -464,6 +617,9 @@
    "data_sha256": "3cac52b2c0dffeaee5fa4b462036bb826c724062b83610e07c0f5c22443cef94",
    "data_size": 1384,
    "name": "UDynDynList.h",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -473,6 +629,9 @@
    "data_sha256": "c4e89f86f096f607fb981ee1641ea91dd7e7b22a40f5ef7126e9b68ef45a009c",
    "data_size": 8286,
    "name": "UFakeNntp.cp",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -482,6 +641,9 @@
    "data_sha256": "4be85e30fafd0408dac7ecaf86708166d1fbcb73d8d58c82e675f75d0ae6f620",
    "data_size": 825,
    "name": "UFakeNntp.h",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -491,6 +653,9 @@
    "data_sha256": "86eccfd15fc29c2dbf569f635012f9fddb7b1c359c4b2113824cb2cdd0a95576",
    "data_size": 10760,
    "name": "UFolderSelectView.cp",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -500,6 +665,9 @@
    "data_sha256": "3507416f2f2521f707562eb8978836093df2e65a7ccd9dce29c092b462f2e8da",
    "data_size": 2040,
    "name": "UFolderSelectView.h",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -509,6 +677,9 @@
    "data_sha256": "f36b13df97bade95caee0d5dfebace72253526aca0a53ced9c19bd34efceb5c6",
    "data_size": 18413,
    "name": "UGroupCmds.cp",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -518,6 +689,9 @@
    "data_sha256": "058016dac0659171039d3d389980e3a4f71902899a887494659a9845de071992",
    "data_size": 3603,
    "name": "UGroupCmds.h",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -527,6 +701,9 @@
    "data_sha256": "98504d6ed6997a63b3c6a1df4748d61195b6aa2c0dba9fb2da6baf75781142af",
    "data_size": 10713,
    "name": "UGroupDoc.cp",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -536,6 +713,9 @@
    "data_sha256": "de8c46a7a4c8a7c8a5117f91fd471aa9cfdd38878dc953e815d2de927ad04129",
    "data_size": 1920,
    "name": "UGroupDoc.h",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -545,6 +725,9 @@
    "data_sha256": "add8288cf613010d3e2071ea7d4e82fb3e61d622378c5e74464dc6138aebf3f6",
    "data_size": 15061,
    "name": "UGroupDocCmds.cp",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -554,6 +737,9 @@
    "data_sha256": "a81e7312ff54656814234c00f85cfc3e75e5b8870567e66c017790e8edaeb0fa",
    "data_size": 784,
    "name": "UGroupDocCmds.h",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -563,6 +749,9 @@
    "data_sha256": "4f84f19a7fd43632096eb121a2917bb40bfe1a8a18d553e531709fbcc415ba11",
    "data_size": 3287,
    "name": "UGroupList.cp",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -572,6 +761,9 @@
    "data_sha256": "68e1c65600bf795e06900d7fde66212322b399deed7b2dba8e306b00ebae8a6d",
    "data_size": 1167,
    "name": "UGroupList.h",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -581,6 +773,9 @@
    "data_sha256": "9fb01b4d8a3c1e4d5b52fcfe34f6c2a88c1f2f67bfaffe160b05579451abb629",
    "data_size": 5070,
    "name": "UGroupListDoc.cp",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -590,6 +785,9 @@
    "data_sha256": "9399cc2a6911c7f721a9a6a1acf97bc4a005e34829a65621864485c4e6165fba",
    "data_size": 1039,
    "name": "UGroupListDoc.h",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -599,6 +797,9 @@
    "data_sha256": "bcd0af505fb30038f1381ec9b0ab5919647d321524778780c9c967cba8cc7bc6",
    "data_size": 8706,
    "name": "UGroupListView.cp",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -608,6 +809,9 @@
    "data_sha256": "c95b11e549cf345a8d1330c25c25b6fc460acec5566f996c0b5bfcd2242a5f65",
    "data_size": 1631,
    "name": "UGroupListView.h",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -617,6 +821,9 @@
    "data_sha256": "29922dd73d55f94e25567703f5ac756bc53423b89e15536e245041f853b77450",
    "data_size": 23285,
    "name": "UGroupTree.cp",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -626,6 +833,9 @@
    "data_sha256": "65ebd28ab64e692d779331cda5bcbd3f1dcee18c89ab0e4e4d329130e31b897d",
    "data_size": 2845,
    "name": "UGroupTree.h",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -635,6 +845,9 @@
    "data_sha256": "f3cff006c6f7b1b995cfd61ec69425e7e3df3b33204591cd374d996aa95823f1",
    "data_size": 8312,
    "name": "UGroupTreeCmds.cp",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -644,6 +857,9 @@
    "data_sha256": "7b735368071b81513a4a0e90006aea7285bf96f8392fc64ee5dbc2a3c8674be6",
    "data_size": 2811,
    "name": "UGroupTreeCmds.h",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -653,6 +869,9 @@
    "data_sha256": "763c7763672408c61a2d21ef6aef63913e655f98bf0d63fe33bb4563772906e8",
    "data_size": 9183,
    "name": "UGroupTreeDoc.cp",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -662,6 +881,9 @@
    "data_sha256": "05d80bfff541a5fcf8b4352108e231ae28d7c80a570bb234ea04be8a6e3f4991",
    "data_size": 1540,
    "name": "UGroupTreeDoc.h",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -671,6 +893,9 @@
    "data_sha256": "5d81a3eae5d87c42d4e26ab8853477373dae00a275b04fa5aa2884724d4dfb5e",
    "data_size": 17617,
    "name": "UGroupTreeView.cp",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -680,6 +905,9 @@
    "data_sha256": "6cab169b304451fb2fba4cd9eef4d590178d8b794e0df77a07c70f0810d5e0e0",
    "data_size": 2676,
    "name": "UGroupTreeView.h",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -689,6 +917,9 @@
    "data_sha256": "e978115867aae0355beb7075ef03177ebc129c7e9e4cbe744168abe6cdfd172d",
    "data_size": 2527,
    "name": "UHashTable.cp",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -698,6 +929,9 @@
    "data_sha256": "f75146103b633345920f895a66d633265fa5ffeb40dcd1bed69553bea809213c",
    "data_size": 1064,
    "name": "UHashTable.h",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -707,6 +941,9 @@
    "data_sha256": "65a89e3d4fe957dbd57769d0a01478efc4adb698b04b1913ef917430c86f3c22",
    "data_size": 9226,
    "name": "UHeaderList.cp",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -716,6 +953,9 @@
    "data_sha256": "762065d31c0850f18e7b92c449e3e2537b02255d99b3fdcf079faac5c81362a4",
    "data_size": 756,
    "name": "UHeaderList.h",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -725,6 +965,9 @@
    "data_sha256": "47fabca6d9098fb3438f07595a47f4a229212a803b3614419d05b325ff5f818d",
    "data_size": 11637,
    "name": "UMacTcp.cp",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -734,6 +977,9 @@
    "data_sha256": "d108f6c897022d786a1b2949032300e2229d00814ca33ab3f1e0e180f9b5e35a",
    "data_size": 1799,
    "name": "UMacTcp.h",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -743,6 +989,9 @@
    "data_sha256": "28e8280b478952ec0fe56085d14b8b3154f1628731a857280074c5eb234da5bc",
    "data_size": 3001,
    "name": "UNavigatorView.cp",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -752,6 +1001,9 @@
    "data_sha256": "2c78978272f0c8194c32c14912b1c0e1b3dfd49c2f03add26b5a2b1dc3189902",
    "data_size": 1154,
    "name": "UNavigatorView.h",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -761,6 +1013,9 @@
    "data_sha256": "56383eea9424f9ca7748c99efbfd1074aa0e8a748cacfcd101e75af544690d14",
    "data_size": 10059,
    "name": "UNetAsciiProtocol.cp",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -770,6 +1025,9 @@
    "data_sha256": "e1dbe6e820219abfc3e5fa01f76cfdca1c7a9b3228132ae1795a28fe34da1a2f",
    "data_size": 1250,
    "name": "UNetAsciiProtocol.h",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -779,6 +1037,9 @@
    "data_sha256": "ccc03893cdac450ad16fe7116d9bd723ba9c007e1fff99d96f63bd514704570f",
    "data_size": 14086,
    "name": "UNewsAppl.cp",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -788,6 +1049,9 @@
    "data_sha256": "41696a7dbba594121ce42592ceb5004339bb8197e5622ad7082d5c58d6012af9",
    "data_size": 1731,
    "name": "UNewsAppl.h",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -797,6 +1061,9 @@
    "data_sha256": "858705b2c8006ad3c4cc74511914e23030c5ffbb3ac706a377fd916b8304e3bc",
    "data_size": 8286,
    "name": "UNewsApplCmds.cp",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -806,6 +1073,9 @@
    "data_sha256": "4bee4d37b52393340b145140e7b5f56cbd7538ccdcddcc9ff945f4fc67742cd3",
    "data_size": 704,
    "name": "UNewsApplCmds.h",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -815,6 +1085,9 @@
    "data_sha256": "3e7106ad2bf0815d698421872fa17906254c2a010f3e863785acc49d12667212",
    "data_size": 3489,
    "name": "UNntp.cp",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -824,6 +1097,9 @@
    "data_sha256": "64aa2cb5448a6d4f1edf54d0c03ef36fcb2e4582f2b57581935be53c6eec6848",
    "data_size": 1774,
    "name": "UNntp.h",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -833,6 +1109,9 @@
    "data_sha256": "0e8fbbe1a19405a78af6a3bf88715c69bf5381c0ace5185cf636c3224271ce9a",
    "data_size": 6845,
    "name": "UObjectCache.cp",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -842,6 +1121,9 @@
    "data_sha256": "eb3e0d7a521231600828831f965942b85d9783d372ec07f2777423d464539f27",
    "data_size": 1057,
    "name": "UObjectCache.h",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -851,6 +1133,9 @@
    "data_sha256": "d44989f2575957b6555b77399d794b1a6a43ddfbe2103900d97ad26561b259f4",
    "data_size": 2504,
    "name": "UOffsetLengthList.cp",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -860,6 +1145,9 @@
    "data_sha256": "3e90281e5fa417b8ae1fb371dbf2af7cb10bbcae1300c96d718a8adfb47a32f9",
    "data_size": 658,
    "name": "UOffsetLengthList.h",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -869,6 +1157,9 @@
    "data_sha256": "233c6fb7adc773ffb44776c6aef962bf3177e3b6dde68fe7ba260de219d17797",
    "data_size": 16742,
    "name": "UPostArticleCmds.cp",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -878,6 +1169,9 @@
    "data_sha256": "a408c761e3f8b7cd74e1aa5b5145c13763e948413cee3e713506081819e84500",
    "data_size": 1851,
    "name": "UPostArticleCmds.h",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -887,6 +1181,9 @@
    "data_sha256": "bf05ca1adc96c10185087f2d66339e9bea68cdf954d8ff32925824332e151d90",
    "data_size": 6547,
    "name": "UPostArticleView.cp",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -896,6 +1193,9 @@
    "data_sha256": "5231c1ec6ea8093f4918b281af9cf9ae465682c705a08d0a9fab6c31d43ea774",
    "data_size": 1761,
    "name": "UPostArticleView.h",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -905,6 +1205,9 @@
    "data_sha256": "8351904ec585f517fa6d07518f044f4a2be5f9b00aa2b694f69376762df27dae",
    "data_size": 13643,
    "name": "UPreferencesView.cp",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -914,6 +1217,9 @@
    "data_sha256": "e710b923366e6180629b5ec8b3eec92107e409124d3ab8e0a10380acc301a934",
    "data_size": 1556,
    "name": "UPreferencesView.h",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -923,6 +1229,9 @@
    "data_sha256": "46d8b063eae7b614a6e8abf5bc9503c7d40cf787cd8acefb8857ec135f3b953f",
    "data_size": 18158,
    "name": "UPrefsDoc.cp",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -932,6 +1241,9 @@
    "data_sha256": "a21ea0e5e823384f85d2c40c36bfe1c0df2343d9df9eb40e9890bad0e7c38bc0",
    "data_size": 3819,
    "name": "UPrefsDoc.h",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -941,6 +1253,9 @@
    "data_sha256": "d9565da3e8c879a8fd98a2c69eecbff87722da09c16d5bde96ba19604eb89bb2",
    "data_size": 12842,
    "name": "UProgress.cp",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -950,6 +1265,9 @@
    "data_sha256": "98131dbc9b2beafb07ff9509b3c0d05ab54668d9a6cfa0972a7ca6cef1ee7f51",
    "data_size": 1925,
    "name": "UProgress.h",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -959,6 +1277,9 @@
    "data_sha256": "2fecde29b83f5749a1f968be5dc215d470a7a051640179f01a70e7e276a78e4d",
    "data_size": 8893,
    "name": "URealNntp.cp",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -968,6 +1289,9 @@
    "data_sha256": "fd5c33b0b64de940de685c2f5a0098dda6f7ffaccf9db9c43d8b6ccadb4fe1a5",
    "data_size": 1257,
    "name": "URealNntp.h",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -977,6 +1301,9 @@
    "data_sha256": "1c20e0da8911c099aa6ffa4d10eb22643f77397139905092e5ec3937e3063ee5",
    "data_size": 6772,
    "name": "UResFile.cp",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -986,6 +1313,9 @@
    "data_sha256": "0cf3727c4cd1e4f7fdab8cc7726d3f0cb2474d84bad75243e74bfc69c1938873",
    "data_size": 1727,
    "name": "UResFile.h",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -995,6 +1325,9 @@
    "data_sha256": "bf87c8ec114044a671738c59ee2facaaebc3281355104bbd9ae0aa441e15f7a4",
    "data_size": 2638,
    "name": "URowSelection.cp",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -1004,6 +1337,9 @@
    "data_sha256": "04fe4d6d555c9274874dfba3bb5157619a18a9d7eb5e5ec8d954ac3655aa4af4",
    "data_size": 783,
    "name": "URowSelection.h",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -1013,6 +1349,9 @@
    "data_sha256": "42adedb6b93b88e05fd15dcdc59db5d91a387d6dff99731318ecd6b6e6aa72b7",
    "data_size": 5544,
    "name": "UStatDynList.cp",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -1022,6 +1361,9 @@
    "data_sha256": "9efff63375bb04896012c165c38a22e83290614c4b48de083b59af79c1a1817d",
    "data_size": 833,
    "name": "UStatDynList.h",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -1031,6 +1373,9 @@
    "data_sha256": "ae179b1dabe5c705debcbf465482245feb8c60e8e241c96470eb32072fe9fd5d",
    "data_size": 10805,
    "name": "UStructureInspectors.cp",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "a11a82a01dfab4e5e9ea368680f8e2339231984d6047796506ecc6a7e6299eae",
    "rsrc_size": 478,
    "type": "TEXT"
@@ -1040,6 +1385,9 @@
    "data_sha256": "bb83caf7a2ea63d8623622000592732451305b172007873530dcf418009c7c7d",
    "data_size": 1854,
    "name": "UStructureInspectors.h",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "6e1a9d54907985eabfbcf8b4b841661fc5962833b8abaae0d04354de1168e328",
    "rsrc_size": 478,
    "type": "TEXT"
@@ -1049,6 +1397,9 @@
    "data_sha256": "03ce17df039195dbace1cf58f75445303ca47345b0b4b092ec6395e226a021d5",
    "data_size": 5664,
    "name": "UTextScroller.cp",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -1058,6 +1409,9 @@
    "data_sha256": "4091da7b6471aa9b0b7c448c371d38f01cc13d22495bca4a35a6517c9053e797",
    "data_size": 841,
    "name": "UTextScroller.h",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -1067,6 +1421,9 @@
    "data_sha256": "38d2fa7643bb34e20cc6ac8fc89b4c30aca1752f49079e18f8cfaffb3e7d6901",
    "data_size": 6253,
    "name": "UThread.cp",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -1076,6 +1433,9 @@
    "data_sha256": "a4f09d7f54c8b2c9b5a5f1967656604fc36df149251b25868002f4b86c295532",
    "data_size": 647,
    "name": "UThread.h",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -1085,6 +1445,9 @@
    "data_sha256": "4de31fedf07fb3571cff596bd4600f41b1b96334ad3e67348a36ff98adef3afb",
    "data_size": 323,
    "name": "UpdateMake",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "34702256e521a5709157d5ea25c32fc9670b91cfbeb4edc0ce83d398be887fb4",
    "rsrc_size": 428,
    "type": "TEXT"
@@ -1094,6 +1457,9 @@
    "data_sha256": "19f3ab72020c913832bbafe56e67100d2e6b789fa64ce524e5b366e1c9d2609f",
    "data_size": 4607,
    "name": "ViewTools.cp",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -1103,6 +1469,9 @@
    "data_sha256": "1a963c822483264f2530fa169f05adda0f3ff5398a517fd1b0291b5ccf407253",
    "data_size": 255,
    "name": "ViewTools.h",
+   "oracle_methods": [
+    "RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -1112,6 +1481,9 @@
    "data_sha256": "642d3ba9deaca9032c4c55e8556b792347c4a019c658817c93d2dec52039bb0a",
    "data_size": 17954,
    "name": "Views.r",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -1121,6 +1493,9 @@
    "data_sha256": "0c39bfbbc5f5576117a84b3bcc2b7c7f6173f829f8a98558019fe8b0efb4acd5",
    "data_size": 371,
    "name": "XTypes.h",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -1130,6 +1505,9 @@
    "data_sha256": "d0647f7eb3d879596bd6bc8279c00868475624ca153173636be9b0aac16f7f08",
    "data_size": 844,
    "name": "bup",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "97adf743cc3f1abec594efb2988bc436e7322438fffb758c876cddf37159d385",
    "rsrc_size": 428,
    "type": "TEXT"
@@ -1139,6 +1517,9 @@
    "data_sha256": "5409c3fe809caaeb3a8c8b386de4085906ed51d393d799ea777b9b51380718d5",
    "data_size": 60950,
    "name": "grouplist",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "b9cfe6f83bf0aa81e82da69717b815d6434d8be842c3e794c037f7ab16a08524",
    "rsrc_size": 428,
    "type": "TEXT"

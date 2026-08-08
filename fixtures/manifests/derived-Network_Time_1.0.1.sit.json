@@ -5,6 +5,9 @@
    "data_sha256": "1b45f33b9ee46218d6c4d38b2b974a0ef7857f58f728d314341b2cfcb3be0404",
    "data_size": 220,
    "name": "Bug Fix in 1.0.1",
+   "oracle_methods": [
+    "Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "ttro"
@@ -14,6 +17,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Network Time",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "6f8de0ec50b307beb073c7eed088eff5e661d9539241a1d9ca66015f0f508b74",
    "rsrc_size": 45001,
    "type": "cdev"
@@ -23,6 +29,10 @@
    "data_sha256": "4cdf07270ae4da6a47d6142096186f6e0a5a8a0900901f876036ae1857a787e8",
    "data_size": 1456,
    "name": "Network Time - Read Me",
+   "oracle_methods": [
+    "Compress",
+    "Huffman"
+   ],
    "rsrc_sha256": "cdc922e116fa6d0c71c5b93c1cc72643e9d4d8eae4268a40f8ad9a4887794553",
    "rsrc_size": 363,
    "type": "ttro"
@@ -32,6 +42,9 @@
    "data_sha256": "57098c0c4571889b9cccd3c7998802b67e3cf5bede44b2f776f93aa8dff2665b",
    "data_size": 103936,
    "name": "Network Time Documentation",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "WDBN"

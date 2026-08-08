@@ -9,6 +9,9 @@
    "data_sha256": "2b93510580693dfe5c077247b4b38a3e6970b5095286e5df57cf87107b6937d3",
    "data_size": 820,
    "name": "SoundMover1.7 ƒ/Format 1 vs Format 2 snds…",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "c670e16c5b1547c56888fca3a11f6cfe07fe7a84af132f0143ed678a7b3b6fc5",
    "rsrc_size": 286,
    "type": "TEXT"
@@ -18,6 +21,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "SoundMover1.7 ƒ/IBeep2",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "70a005d42658b2620bb2122c77159c335701a66cb16e1787ad7f404d4596485c",
    "rsrc_size": 10523,
    "type": "cdev"
@@ -27,6 +33,9 @@
    "data_sha256": "9c9ed6d03d31fe17dd562a6e8ca5c95fd5cd67ae0d5e9a9753b263fff3b825cc",
    "data_size": 26734,
    "name": "SoundMover1.7 ƒ/SMP Disk Manual",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -40,6 +49,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "SoundMover1.7 ƒ/SndControl/SndControl",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "fc0d81b0a0a0868966450b6104b854c76a51d3b856ccf97d54d6a204d10602b8",
    "rsrc_size": 37618,
    "type": "cdev"
@@ -49,6 +61,9 @@
    "data_sha256": "59f49650dddf0ff257bec39a267b1abd55ae8894815288476a6dae4ecc7499d9",
    "data_size": 31962,
    "name": "SoundMover1.7 ƒ/SndControl/SndControl Manual",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -58,6 +73,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "SoundMover1.7 ƒ/Sound Mover",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "04c61f8a154abb0fceb5cf1dc2da18f3ba77e639cde66d04b9ae7bec7d3bce02",
    "rsrc_size": 59615,
    "type": "APPL"
@@ -67,6 +85,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "SoundMover1.7 ƒ/StartupSndInit",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "dc212edbf71c65614727d925d6cf21f4b662df156fe113b5a368ba21ab4529c9",
    "rsrc_size": 1932,
    "type": "INIT"
@@ -76,6 +97,10 @@
    "data_sha256": "80afd4ddfd711765e7a8d9794c9cab8ca288d3dbfe77b3db8b5c04c1795481e0",
    "data_size": 15404,
    "name": "SoundMover1.7 ƒ/What's new in Sound Mover",
+   "oracle_methods": [
+    "LZH+RLE",
+    "RLE"
+   ],
    "rsrc_sha256": "ed664ea108289847bde712d146394b7609032986ba0c9026a84625ff45875c8f",
    "rsrc_size": 286,
    "type": "TEXT"

@@ -5,6 +5,9 @@
    "data_sha256": "300375ba91eaabfb8575015de278c1b7d0fdc6055840507790a7083c60ba8099",
    "data_size": 4557,
    "name": "All JPEG 1.0 README",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "6a1117d0ef977830c06ca2ec98faf7f980f61d00a47787ac0c532ab68b415d8a",
    "rsrc_size": 5272,
    "type": "TEXT"
@@ -14,6 +17,9 @@
    "data_sha256": "8b0dc4664296eaea0bedfe082e04dec4ead059a0648abf8b3de6f056c6a64344",
    "data_size": 9664,
    "name": "All JPEG Fat 1.0",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "81e6f6bdbde42f1cee66cde88ca6b888991f96d4de1a5bc1b0ed00e48f717bef",
    "rsrc_size": 12281,
    "type": "APPL"

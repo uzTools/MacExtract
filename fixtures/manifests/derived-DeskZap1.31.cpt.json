@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "DeskZap 1.31",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "d71919cff297e283c2a476460e86434f13a6779ef78f9c36074cf3beb18bd7be",
    "rsrc_size": 16398,
    "type": "DFIL"
@@ -14,6 +17,9 @@
    "data_sha256": "0eb6d15220d30c41ee18d17f41b3015b48ef3b90a0caffd00dbf3785bf567d1c",
    "data_size": 30252,
    "name": "DeskZap 1.31 Doc",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "f5050726a3dfa1804ee0e07752c08b1aaa90f75a07706cdeca218d6287e7bd12",
    "rsrc_size": 760,
    "type": "WORD"

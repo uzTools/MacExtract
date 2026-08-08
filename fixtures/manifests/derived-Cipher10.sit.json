@@ -5,6 +5,9 @@
    "data_sha256": "a00767eb44fb617b392a8bff6bb506cc8eb8593092b93f294db56724d3bb512c",
    "data_size": 65536,
    "name": "Cipher",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "a2c9dec25a72813cd2e0074a51da2df8252f32d3d595cfeeebf4ec63e5c4dd47",
    "rsrc_size": 1214,
    "type": "STAK"

@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "TIFF (IBMpc to Mac)",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "7db1db7185a2da7c742410c3183fa5b1d711959c85871bba8de2f1974ac9d33d",
    "rsrc_size": 59099,
    "type": "VISA"
@@ -14,6 +17,9 @@
    "data_sha256": "f2848ee03f35ecadb57be54f5c3dd898ea04ed15501ea8450480d57d5c161ed3",
    "data_size": 15242,
    "name": "TIFF (IBMpc to Mac).doc -cw",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "CWWP"

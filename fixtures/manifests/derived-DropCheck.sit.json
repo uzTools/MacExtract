@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "DropCheck",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "44959a1fa3e3a1524300ded7c0916856279c18763cf0461329b1f2936b167722",
    "rsrc_size": 154160,
    "type": "cdev"

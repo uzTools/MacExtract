@@ -9,6 +9,9 @@
    "data_sha256": "3003bfa54647a4ee455a41a9ea0a84bdb2c330dbe60865150f074e4a85051efb",
    "data_size": 434,
    "name": "MacGzip/Readme.txt",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "59d28b5e269683c2ec88ef6927601f75853f079420bf31a6b85a0285cbc7a085",
    "rsrc_size": 457,
    "type": "TEXT"
@@ -18,6 +21,9 @@
    "data_sha256": "36785a759838ef026f346bcc67506f36510cf298c7b24a60f82442d3daed6356",
    "data_size": 1331,
    "name": "MacGzip/gunzip.m",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "a12edd60a7ceda58918213698cb1be8c35b04d8bb5def771c8812b68531c4184",
    "rsrc_size": 457,
    "type": "TEXT"
@@ -27,6 +33,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacGzip/gzip",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "28cae4e2fd35999a792e58930dc099728458eafd3f8754b6f21ee9583c845357",
    "rsrc_size": 1538,
    "type": "osas"
@@ -36,6 +45,9 @@
    "data_sha256": "6e72f6b650e318d1727f57e65e73503bef39812aec346f6651410659171eba08",
    "data_size": 1084,
    "name": "MacGzip/gzip.m",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "d1e50e7105db373728a99d8b95c67d6477aaf238da7e72ae4e5e149cd016fdc5",
    "rsrc_size": 457,
    "type": "TEXT"
@@ -45,6 +57,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacGzip/mat2front",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "b6e56de7008f78132ce066cc2989a670b9159e6ba481345ba97ee0524e5925af",
    "rsrc_size": 1371,
    "type": "osas"

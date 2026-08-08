@@ -4,6 +4,9 @@
    "data_sha256": "dc35be75706ec843257ce68c6089dee2b4a50f2adeac5fcc0be12dc85f8593ab",
    "data_size": 107686,
    "name": "Polyglot.dmg",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   }

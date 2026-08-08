@@ -5,6 +5,9 @@
    "data_sha256": "17e020a0409642b6822529bc098602037e170b546443b8c833b1f790978b73a5",
    "data_size": 25462,
    "name": "macs_in_mixed_network.txt",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"

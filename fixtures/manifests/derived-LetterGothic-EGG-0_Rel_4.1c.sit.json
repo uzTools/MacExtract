@@ -9,6 +9,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "LetterGothic-EGG-0_Rel_4.1c/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "6a6dfbd793699f24edea28a723d5327bfdf9b843e9c96b511aad3408a3c00992",
    "rsrc_size": 2670,
    "type": "TEXT"
@@ -18,6 +21,9 @@
    "data_sha256": "9b55332fc53dc9b17b0148abab31d1a95e1a18c2b774678e9320491358c8d038",
    "data_size": 2266,
    "name": "LetterGothic-EGG-0_Rel_4.1c/LetterGothic-0_Cover.txt",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -31,6 +37,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "LetterGothic-EGG-0_Rel_4.1c/LetterGothic-EGG-0 - TTF/LetterGothic-EGG-0.suit",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e566b7843b323050ad72fd53efe115dcd66f3b9d226044bcfde7cf80175d7fd1",
    "rsrc_size": 55763,
    "type": "FFIL"
@@ -44,6 +53,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "LetterGothic-EGG-0_Rel_4.1c/LetterGothic-EGG-0 - Type 1/LetteGotEGG0",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "c0db0a43e544ca0963b96c72ad382c05099c2f41a71be2c74e9d831dc5a0036c",
    "rsrc_size": 27424,
    "type": "LWFN"
@@ -53,6 +65,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "LetterGothic-EGG-0_Rel_4.1c/LetterGothic-EGG-0 - Type 1/LetterGothic-EGG-0.bmap",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "60811071faba33de85462dc7bae7bd3070a0eb8163a9ab13771f764c65d24b0b",
    "rsrc_size": 15144,
    "type": "FFIL"
@@ -62,6 +77,9 @@
    "data_sha256": "3e60a45666db9bc53364f1d1e0b8d239819492ef789b86fb9e902346ea52f35d",
    "data_size": 11021,
    "name": "LetterGothic-EGG-0_Rel_4.1c/LetterGothic-EGG-0_Rel_Note.txt",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -71,6 +89,9 @@
    "data_sha256": "d343f55b5468e488fa69efb0777afbfbc18adbb73c926a73c4bf563e55fd7876",
    "data_size": 14336,
    "name": "LetterGothic-EGG-0_Rel_4.1c/LetterGothic-EGG-0_Rel_Note.wrd",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "WDBN"
@@ -80,6 +101,9 @@
    "data_sha256": "90294c1901c84b7832ac69d39aad26195cd6867251bdaca844088cef8366edfe",
    "data_size": 7729,
    "name": "LetterGothic-EGG-0_Rel_4.1c/LetterGothic-EGG-0_Summary.txt",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"

@@ -13,6 +13,9 @@
    "data_sha256": "eb1e1790778f107490cc065a254f43da759ff8e6377178b200319681e4462f2d",
    "data_size": 52889,
    "name": "The Lingo Library 1.5 Mac/Demo/Demo.dir",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "MV07"
@@ -22,6 +25,9 @@
    "data_sha256": "dec4cc691a125e9e23c25140d7793f41af812adc67841c3edab9ccb04fdeab86",
    "data_size": 38222,
    "name": "The Lingo Library 1.5 Mac/Demo/LingoLib.cst",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "MC07"
@@ -35,6 +41,10 @@
    "data_sha256": "7c2b5eee3d38a4db54024c1d7b9c95a6a81d6dfab175fbe2d388acbb35b4f6d7",
    "data_size": 49910,
    "name": "The Lingo Library 1.5 Mac/Full/LingoLib.sit",
+   "oracle_methods": [
+    "Arsenic",
+    "None"
+   ],
    "rsrc_sha256": "9bd86b8f38925d8c61e5e4a23478d1cf3e8306e30ae2576e1e7654c1b4e8cec0",
    "rsrc_size": 318,
    "type": "SIT5"
@@ -44,6 +54,9 @@
    "data_sha256": "ff619a7f3f5e22781e4ed9c6465c6c64b703c9fcdebf3c9890d61e651d606d37",
    "data_size": 1979,
    "name": "The Lingo Library 1.5 Mac/How to Register.txt",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -57,6 +70,9 @@
    "data_sha256": "c10ea8053c5015c5c3690ce4a85c4a341e54961faa380833d0df0bae69036fb1",
    "data_size": 119440,
    "name": "The Lingo Library 1.5 Mac/Manual.html",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -66,6 +82,9 @@
    "data_sha256": "c10ea8053c5015c5c3690ce4a85c4a341e54961faa380833d0df0bae69036fb1",
    "data_size": 119440,
    "name": "The Lingo Library 1.5 Mac/Manual/Manual.html",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -79,6 +98,9 @@
    "data_sha256": "011e045b649ecc09aa7862893af14a936e8e22de7d078dcefc9afdedb1ea4812",
    "data_size": 729,
    "name": "The Lingo Library 1.5 Mac/Manual/_notes/dwSiteColumnsMe.xml",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -92,6 +114,9 @@
    "data_sha256": "d099c2c4ffcb1dc4ed0a0e06149c114c0204f80c68132776280adcfe78d6d1e9",
    "data_size": 1164,
    "name": "The Lingo Library 1.5 Mac/Manual/css/whitemedia.css",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -105,6 +130,9 @@
    "data_sha256": "31f2ee2adc6fe8bb18d2547b9eac412e785d27e447dcf6d804d422b80cbcb45c",
    "data_size": 5008,
    "name": "The Lingo Library 1.5 Mac/Manual/images/Image1.gif",
+   "oracle_methods": [
+    "None"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "GIFf"
@@ -114,6 +142,9 @@
    "data_sha256": "f66ded0842bacd8e02599a3f19787ce214a9b82473f95f346157dd879cf2e734",
    "data_size": 5837,
    "name": "The Lingo Library 1.5 Mac/Manual/images/Image2.gif",
+   "oracle_methods": [
+    "None"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "GIFf"
@@ -123,6 +154,9 @@
    "data_sha256": "b54f3eb510b77efdd4bd7861a38c1c2a26569b510d47249181b86b52a520abd2",
    "data_size": 7369,
    "name": "The Lingo Library 1.5 Mac/Manual/images/Image3.gif",
+   "oracle_methods": [
+    "None"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "GIFf"
@@ -132,6 +166,9 @@
    "data_sha256": "0b23e44fffb6817451b46f06f8624d68d71f22b1392e0e1152717d359bec2066",
    "data_size": 4353,
    "name": "The Lingo Library 1.5 Mac/Read Me.txt",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "895719589b4c873ece0657bf912e85e134f70e71da302ffd74bfa23b7ce9a150",
    "rsrc_size": 1454,
    "type": "TEXT"
@@ -141,6 +178,9 @@
    "data_sha256": "d3693016d6babfdadf656e93f54727fa196b60cc589fe20a7629227241a5d2de",
    "data_size": 613,
    "name": "The Lingo Library 1.5 Mac/Secure Order Form.html",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -150,6 +190,9 @@
    "data_sha256": "9ffcffb434aff7ad026493a5c40bce14807b36a774b7db13ab84a29f7c745112",
    "data_size": 14858,
    "name": "The Lingo Library 1.5 Mac/XML templates.cst",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "MC07"

@@ -13,6 +13,9 @@
    "data_sha256": "513d8507195c1b5d4502baa8c867d2e0e4331337e4ee91b2c7c8c2a01c8f927c",
    "data_size": 3856,
    "name": "Playground - pl10/Dungeon/MacHelp",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -22,6 +25,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Playground - pl10/Dungeon/NetHack goes here.  Delete me!",
+   "oracle_methods": [
+    "RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -31,6 +37,9 @@
    "data_sha256": "26e55070cd6872142c1736733c8e9f82260c46c9dc040e085c6e34678d59d8c7",
    "data_size": 1964,
    "name": "Playground - pl10/Dungeon/castle",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "AUXL"
@@ -40,6 +49,9 @@
    "data_sha256": "0dce8c1cac14bc7bdc36c891ab778d8c47db41e05d80a5fa3a73b6f6d0730d05",
    "data_size": 3908,
    "name": "Playground - pl10/Dungeon/cmdhelp",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -49,6 +61,9 @@
    "data_sha256": "39f15d6a952811c780f26f2997ac1ddf04b324a650d4fcf3c1b12df0737b17f4",
    "data_size": 22782,
    "name": "Playground - pl10/Dungeon/data",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -58,6 +73,9 @@
    "data_sha256": "f9b9dd50a2c95f3531e5df17fa2567a23e89db2f4922125e71e08d9f2ee06a28",
    "data_size": 1061,
    "name": "Playground - pl10/Dungeon/endgame",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "AUXL"
@@ -67,6 +85,9 @@
    "data_sha256": "53686692b25028b1aa83c94ed24b7144a917756322fb127134a9440139fc3a30",
    "data_size": 6648,
    "name": "Playground - pl10/Dungeon/help",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -76,6 +97,9 @@
    "data_sha256": "49dbf580c5d39b861ed8581202700799981da6b91b5b1fd985e19e9cb671c58c",
    "data_size": 3565,
    "name": "Playground - pl10/Dungeon/hh",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -85,6 +109,9 @@
    "data_sha256": "874741fce41f2817e843c30115c5a4760199a743c49eaacf18e031cf5792c2b4",
    "data_size": 3174,
    "name": "Playground - pl10/Dungeon/history",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -94,6 +121,9 @@
    "data_sha256": "e711317fe85bd1fe1d85978400f19026e99c6f3617b8846c4e9d48d09957d6ad",
    "data_size": 4910,
    "name": "Playground - pl10/Dungeon/license",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -103,6 +133,9 @@
    "data_sha256": "7d506269e300afccd2fa75fd22ccd6fdb494c1cd2b031a667c5c8309572dc347",
    "data_size": 929,
    "name": "Playground - pl10/Dungeon/news",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -112,6 +145,9 @@
    "data_sha256": "89416d6ab1bad702529ccc00e493d195375a6ad9fd433dc8fc7863f5cdd05bfb",
    "data_size": 4025,
    "name": "Playground - pl10/Dungeon/opthelp",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -121,6 +157,9 @@
    "data_sha256": "6f040543609f994bba42375b6b966668277660f350d5a625eff8713c843d01af",
    "data_size": 4396,
    "name": "Playground - pl10/Dungeon/oracles",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -130,6 +169,9 @@
    "data_sha256": "f86848370281f2565e2ccbfc99adb0cdba1c82d4d1786242ffd16dcf87721839",
    "data_size": 77,
    "name": "Playground - pl10/Dungeon/record",
+   "oracle_methods": [
+    "RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -139,6 +181,9 @@
    "data_sha256": "15c120ddddd5afe328123354cdc7821dd025a5d82f727f7528266520f4269275",
    "data_size": 40193,
    "name": "Playground - pl10/Dungeon/rumors",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -148,6 +193,9 @@
    "data_sha256": "64e06a4c5fde2a433c484a1e0331af5b19164f9d31a0612620db9b2de56ca074",
    "data_size": 404,
    "name": "Playground - pl10/Dungeon/tower1",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "AUXL"
@@ -157,6 +205,9 @@
    "data_sha256": "62fe7bcd3acb7188c29e43a967e3ebab3581610f9ae3b4321a8a2c7408329187",
    "data_size": 348,
    "name": "Playground - pl10/Dungeon/tower2",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "AUXL"
@@ -166,6 +217,9 @@
    "data_sha256": "5239c2d717a0efd4171debf4391292daeba03ae3f46c88f7bc48779136ec1498",
    "data_size": 376,
    "name": "Playground - pl10/Dungeon/tower3",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "AUXL"
@@ -175,6 +229,9 @@
    "data_sha256": "d5232dd2ed1fd6b46f83571cb7193db86da503ce3e716a485ccbd9f2964e845f",
    "data_size": 50689,
    "name": "Playground - pl10/Guidebook",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -184,6 +241,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Playground - pl10/Open NetHack",
+   "oracle_methods": [
+    "RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -193,6 +253,9 @@
    "data_sha256": "a329d08a8b34d11c989afaa8e0da7d7671288167a48b330944169ca179e56edf",
    "data_size": 6519,
    "name": "Playground - pl10/nh30-10.doc [Manual]",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -202,6 +265,9 @@
    "data_sha256": "f0ae0bb8c5c4d816e5843298d70d808f459a18a522fe0312319ac26f25286237",
    "data_size": 1392,
    "name": "READ ME FIRST!",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"

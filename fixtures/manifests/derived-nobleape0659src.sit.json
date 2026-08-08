@@ -13,6 +13,9 @@
    "data_sha256": "1b29a3688bb6e778d388a1172b37366e4992da4aaa507ddcc346b8c8bf94835c",
    "data_size": 5486,
    "name": "nobleape0659src/manual/engine.html",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e737820117e73200d3442122c6ef9f8e6cbd7c8e87d84d3a692e015a23cd46e1",
    "rsrc_size": 314,
    "type": "TEXT"
@@ -22,6 +25,9 @@
    "data_sha256": "153fed91763683077ea157d8db8cc3a5ba92055d3a6657c1d760bea4d44e0572",
    "data_size": 5515,
    "name": "nobleape0659src/manual/faq.html",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "5a0b5f3799d066a5eae9d8082979b1ae88feb099bacf1e83217f815c35d32dbd",
    "rsrc_size": 314,
    "type": "TEXT"
@@ -31,6 +37,9 @@
    "data_sha256": "6ad5fffb0a5cbe95e1b7b76f5b30d9397a5d557ceaac617586ec2ff6d0f83eb1",
    "data_size": 5300,
    "name": "nobleape0659src/manual/file.html",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "f582b3c02c0d28a411a50b7d0b0eda8f5b93e4b41d29682e572b772a616ab980",
    "rsrc_size": 314,
    "type": "TEXT"
@@ -44,6 +53,9 @@
    "data_sha256": "af7bec8ac3dad1a33dc1f1d0b63f2239d42861b262f2956f162ec942c5c916b9",
    "data_size": 6936,
    "name": "nobleape0659src/manual/img/brain.gif",
+   "oracle_methods": [
+    "None"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "GIFf"
@@ -53,6 +65,9 @@
    "data_sha256": "325cbe4d9eecaf0d504cbd8a9216590635a32556ee20053a5c022b1edb736e27",
    "data_size": 3208,
    "name": "nobleape0659src/manual/img/cle.gif",
+   "oracle_methods": [
+    "None"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "GIFf"
@@ -62,6 +77,9 @@
    "data_sha256": "e18f6d76aaf46b510385847161b3e70d08a0299f5cfabdde3a22788d8a98f5e1",
    "data_size": 9926,
    "name": "nobleape0659src/manual/img/fullplat.gif",
+   "oracle_methods": [
+    "None"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "GIFf"
@@ -71,6 +89,9 @@
    "data_sha256": "36e794b4a173ab9a205525ac5d5c21817c0f102f4cfa492bc67ef2ad0397aba3",
    "data_size": 2642,
    "name": "nobleape0659src/manual/img/index20.gif",
+   "oracle_methods": [
+    "None"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "GIFf"
@@ -80,6 +101,9 @@
    "data_sha256": "5683cf09f3c70bc758833486105f9ca452f2b84635b82a36634e6869c5dec223",
    "data_size": 2642,
    "name": "nobleape0659src/manual/img/index21.gif",
+   "oracle_methods": [
+    "None"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "GIFf"
@@ -89,6 +113,9 @@
    "data_sha256": "2578f7026bbf7b2bb461c92c987d337d41b30e27aeb7be9291ec44ce14b35fbe",
    "data_size": 3473,
    "name": "nobleape0659src/manual/img/index22.gif",
+   "oracle_methods": [
+    "None"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "GIFf"
@@ -98,6 +125,9 @@
    "data_sha256": "cc479ddfd6b903165f68c579cdb7ba0fe925c32898df9abaaf511fe5d74f4e2d",
    "data_size": 3473,
    "name": "nobleape0659src/manual/img/index23.gif",
+   "oracle_methods": [
+    "None"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "GIFf"
@@ -107,6 +137,9 @@
    "data_sha256": "fdcd3f9f1b08ec78347b309217aa3c836f8680eba5b3773bb781eedd85708f97",
    "data_size": 3297,
    "name": "nobleape0659src/manual/img/index24.gif",
+   "oracle_methods": [
+    "None"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "GIFf"
@@ -116,6 +149,9 @@
    "data_sha256": "0644c413fbb4d8f40b78cc0ec581c4d52d4809792a133e986a0e56c4986221f4",
    "data_size": 7400,
    "name": "nobleape0659src/manual/img/index25.gif",
+   "oracle_methods": [
+    "None"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "GIFf"
@@ -125,6 +161,10 @@
    "data_sha256": "2a53385dbc8f87b8d0fb7119db1eb92f7b681d5aab9a60c0ce4d263c7cf55237",
    "data_size": 11725,
    "name": "nobleape0659src/manual/img/map.jpg",
+   "oracle_methods": [
+    "Arsenic",
+    "None"
+   ],
    "rsrc_sha256": "5cf42579ffe982b1bd3fee5b14879cfcca3b70286329c997236133cae4ba4b77",
    "rsrc_size": 8689,
    "type": "JPEG"
@@ -134,6 +174,9 @@
    "data_sha256": "d9e951bffde56c59a0016f1bb05483d50342727761df2313d495dfc2867e2fa3",
    "data_size": 2671,
    "name": "nobleape0659src/manual/img/meters.gif",
+   "oracle_methods": [
+    "None"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "GIFf"
@@ -143,6 +186,9 @@
    "data_sha256": "73a0d54570efd28a88b745ef4599a5103a0c7dde4800df19f51290c6e018945e",
    "data_size": 8609,
    "name": "nobleape0659src/manual/img/pocplat.gif",
+   "oracle_methods": [
+    "None"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "GIFf"
@@ -152,6 +198,10 @@
    "data_sha256": "17efef2a58fcf4fd95f8906f4281e895cf032b120f963b44001af68f0f573ecf",
    "data_size": 10453,
    "name": "nobleape0659src/manual/img/terrain.jpg",
+   "oracle_methods": [
+    "Arsenic",
+    "None"
+   ],
    "rsrc_sha256": "6b40a76986dd12795db8f2b7565abf0d661031a0ad876f5f4c3120614aae9b26",
    "rsrc_size": 7909,
    "type": "JPEG"
@@ -161,6 +211,9 @@
    "data_sha256": "5679d356e837e1172cf4f4f34cd07f72ea6ab58cca8984bedb0120eacafeb754",
    "data_size": 1620,
    "name": "nobleape0659src/manual/index.html",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "3ade9c0c83ef84d9ff28c4478989a2a73c2d3e41f1c6d1c5d8c9dbe980c0ccfb",
    "rsrc_size": 314,
    "type": "TEXT"
@@ -170,6 +223,9 @@
    "data_sha256": "eaddc15742ea25fe4494dae07412dbce4cab268075975dedca84f3144baca3db",
    "data_size": 4782,
    "name": "nobleape0659src/manual/interfaces.html",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "36f4d5f4c814aa10ed52f719cbd8740d56ac99e5d2937995322e66f9677390d5",
    "rsrc_size": 314,
    "type": "TEXT"
@@ -179,6 +235,9 @@
    "data_sha256": "243f8873c8e92082e4fa13e584b557830afcdb434071f28ac4fd76f8c3b2b70e",
    "data_size": 2419,
    "name": "nobleape0659src/manual/legal.html",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -188,6 +247,9 @@
    "data_sha256": "a71b5bab641b43c5ccc34ba34b343938177b25d8d764e9b5d597bebe9f56d1ff",
    "data_size": 10642,
    "name": "nobleape0659src/manual/sim_graph.html",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -197,6 +259,9 @@
    "data_sha256": "6286be581d35431e607ab5b024203f46eae9b2ec2c07e6833d5938d30521b58e",
    "data_size": 21896,
    "name": "nobleape0659src/manual/sim_intro.html",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "070603b31b9a47eedf98ccf13d4ac0d726b1bfc173ad13f00e73df2dfba00a8e",
    "rsrc_size": 332,
    "type": "TEXT"
@@ -206,6 +271,9 @@
    "data_sha256": "26435f95aa983565c130567ebe854629d8cbf3d501c6c2e75cd3320647e5f684",
    "data_size": 4361,
    "name": "nobleape0659src/manual/start.html",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "8faf395a80b0a43ce13ed68d08a2af67fdc4e18f76906e6be4fb5300cec4948e",
    "rsrc_size": 314,
    "type": "TEXT"
@@ -223,6 +291,9 @@
    "data_sha256": "982227eb5f8193233cbd648c2567078b21e804142f35830dbb6ea65ac1aa24b9",
    "data_size": 4661,
    "name": "nobleape0659src/src/cle/cle.c",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "681875ec0fa9edb00e9ae591b15eb068cdb84d81d65996d2d9ac42b4aa435b69",
    "rsrc_size": 314,
    "type": "TEXT"
@@ -232,6 +303,9 @@
    "data_sha256": "ecbd3bdf3b90a15753e851a85531a98bc8d07fce036b1de440ac3ccd6fe1f57c",
    "data_size": 4149,
    "name": "nobleape0659src/src/cle/coretest.c",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "783463a1b72e0020f28c60d70d57a584ebc005fdcfd179bd9570f654a6db3fcd",
    "rsrc_size": 396,
    "type": "TEXT"
@@ -241,6 +315,9 @@
    "data_sha256": "895b1b7d43499379aef47ff6a49460c7a4ec590ef7b0af8b9d2b7b9b099eb918",
    "data_size": 9680,
    "name": "nobleape0659src/src/cle/cth.c",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "bf0a3681de9f6cca13384017a15fd269b9b13e505700254e4bf84daefb110cc9",
    "rsrc_size": 419,
    "type": "TEXT"
@@ -250,6 +327,9 @@
    "data_sha256": "65c7e59ba12f4b0f1afa4b513470a42c3842e99c523c46632436b94560719e3e",
    "data_size": 5391,
    "name": "nobleape0659src/src/cle/logtrack.c",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "071f32523a1ecc786b710979e972e05c0e7afe27233a428b0954a9c55725d1ca",
    "rsrc_size": 396,
    "type": "TEXT"
@@ -259,6 +339,9 @@
    "data_sha256": "d0950eeae1cb09e16b568205c4276ca3459795df0829efd32b3935d1ac36236f",
    "data_size": 9147,
    "name": "nobleape0659src/src/cle/nervmake.c",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "fdfbbe43b7544ea097a7807cc4c30d31dcfa8fa90b11c29b640d9b3ac769e3c5",
    "rsrc_size": 396,
    "type": "TEXT"
@@ -268,6 +351,9 @@
    "data_sha256": "5c767f2bc0cf6164b57d887cd4b5123872193aa29ccebf7ad7e9415dcba35735",
    "data_size": 4138,
    "name": "nobleape0659src/src/cle/nervmake.txt",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "a786cc2ada40cb6b0b535c8343e12e267e00acae009859e65a723b51dfb47aa2",
    "rsrc_size": 426,
    "type": "TEXT"
@@ -281,6 +367,9 @@
    "data_sha256": "8754b85e9ba6d806d7bc80cff3fb926824e9882b150c1f41e4cc2c05bec88536",
    "data_size": 9237,
    "name": "nobleape0659src/src/core/ape.c",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "29b5dc0306d41f3d27af70d9a656feb18c8f0b9329db1e21a63056ffd4f44cc1",
    "rsrc_size": 419,
    "type": "TEXT"
@@ -290,6 +379,9 @@
    "data_sha256": "7aab5cab85580d10dd27d3b52e6f9f02a55bc3942ec3395987d92c121beb9693",
    "data_size": 7541,
    "name": "nobleape0659src/src/core/biology.c",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "743b68cd93b0687bc5ed496078744e149a774abe8496a9958ae6dcc5f8daf716",
    "rsrc_size": 519,
    "type": "TEXT"
@@ -299,6 +391,9 @@
    "data_sha256": "31df2cd840c2b2f5050c7d3501a963b06836357dbba745cccb72c5d405fb1571",
    "data_size": 5598,
    "name": "nobleape0659src/src/core/core.h",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "eb55fe86bdb72d95682bd8056a31e1e19d0f05ea6926f09e873a13c9aadc1ac5",
    "rsrc_size": 420,
    "type": "TEXT"
@@ -308,6 +403,9 @@
    "data_sha256": "01fa8920a5cba91b2f178ec8891a8fdee5ad8c407c79821083e4145926fe464e",
    "data_size": 12402,
    "name": "nobleape0659src/src/core/island.c",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "d564dc5dd083027db073d9bfc68fb6eeae026ab5474314f03f20c1b38c3f0874",
    "rsrc_size": 422,
    "type": "TEXT"
@@ -317,6 +415,9 @@
    "data_sha256": "6f310da9178cad66b8b09dadc0d7e47b88bf54f1f9b9f5a9bd72c3c5e8e14de7",
    "data_size": 14474,
    "name": "nobleape0659src/src/core/nervio.c",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "eab9761696a0bcd15627ad078621b7a16f20672423dce660959794d7dca6d2c4",
    "rsrc_size": 314,
    "type": "TEXT"
@@ -326,6 +427,9 @@
    "data_sha256": "50b66aacb10a91e979c11f529b986b9d13df9d59b261ab734da68a71e15f97a4",
    "data_size": 2693,
    "name": "nobleape0659src/src/core/version.h",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "23b68fccdd719464f579112ad6223cef507b00e6f3a9ebfc45d2ece750304920",
    "rsrc_size": 519,
    "type": "TEXT"
@@ -339,6 +443,9 @@
    "data_sha256": "b98c90da87f75260c2589a62a7a76a24bc9cc354ba234bfbd6b63a8d8136f92a",
    "data_size": 2556,
    "name": "nobleape0659src/src/glut/display.c",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "f3ed1125d672c353fc287293104cc36e06de2a1f8ac0c491b2779e5c96d97570",
    "rsrc_size": 395,
    "type": "TEXT"
@@ -348,6 +455,9 @@
    "data_sha256": "113cdf4a1ed6879d1389f9123f7537d18591c47fd75fe629c2c168e008045783",
    "data_size": 23638,
    "name": "nobleape0659src/src/glut/glutform.c",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "64c581b01197fee68d87b99ae262da44afe0af64b9be4d958b5e0e8b3a65659a",
    "rsrc_size": 396,
    "type": "TEXT"
@@ -357,6 +467,9 @@
    "data_sha256": "2512605577ae5fd87d136f608f982b80c0b946166014a4c1372ef3339c6a92e0",
    "data_size": 2507,
    "name": "nobleape0659src/src/glut/glutform.h",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "1a36a4d0853a23e7f0a6735b3eb6025dcbc2576b7f6059cb1a31ae3acf4416bd",
    "rsrc_size": 396,
    "type": "TEXT"
@@ -366,6 +479,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "nobleape0659src/src/glut/glutform.rsrc",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "330a03ef8927f154d2b241e80f0bf9138d341a343bb7d7211fde8d191ebf6ac1",
    "rsrc_size": 7654,
    "type": "rsrc"
@@ -379,6 +495,9 @@
    "data_sha256": "5aad369c68c71b55a12792fab0849924785493cb09c7404118777e76e4b8f1e2",
    "data_size": 11789,
    "name": "nobleape0659src/src/gui/control.c",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "08ec53baf40e77b56ddb2f2717abce71f5df46e6c76161536546e1fb7af841b9",
    "rsrc_size": 314,
    "type": "TEXT"
@@ -388,6 +507,9 @@
    "data_sha256": "86204b84591e0e4aa603de328f6f03c69bb6f36d7cf745b51aa0e8306465e700",
    "data_size": 14356,
    "name": "nobleape0659src/src/gui/display.c",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "7ad69a4beefef0643328304abed70fcea1811a68be72dce42ce49c1c7c336160",
    "rsrc_size": 423,
    "type": "TEXT"
@@ -397,6 +519,9 @@
    "data_sha256": "9c8f9233ce97c7b5343479780cce2b3f094c0175de548fb54c7552c11f87d7eb",
    "data_size": 28306,
    "name": "nobleape0659src/src/gui/draw.c",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "da8dda1cdfc3ef62f8a8fcc44496c7e1f77c7a93390f355bd072f57525d637f6",
    "rsrc_size": 516,
    "type": "TEXT"
@@ -406,6 +531,9 @@
    "data_sha256": "16e9db26e00c0c5b4e4949f30c6d912d357079dd7560eecc69ac1973104fe868",
    "data_size": 5383,
    "name": "nobleape0659src/src/gui/gui.h",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "27381d5b3c457db7a0e179ab272eee613394db3f3931f25df5a79d5bd4c772b3",
    "rsrc_size": 314,
    "type": "TEXT"
@@ -419,6 +547,9 @@
    "data_sha256": "02185f35f4859f25ebe212e414d93ce165c6221fb7061b64cd4d2792725732a4",
    "data_size": 26518,
    "name": "nobleape0659src/src/mac/platform.c",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "153aacc10de16c6eac2d5d4e7a21c890c45acf34cfb5df33f85ac44b8db6c65f",
    "rsrc_size": 410,
    "type": "TEXT"
@@ -428,6 +559,9 @@
    "data_sha256": "4ef83c3428aab550dcd30e0d081f36996f496bbd7a9f1369140d8b04e90b718a",
    "data_size": 3515,
    "name": "nobleape0659src/src/mac/platform.h",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "2079d0c776b2613fe993f822a7e91e12c5e12ab2ff571bd73c7073f4a1e335d4",
    "rsrc_size": 520,
    "type": "TEXT"
@@ -437,6 +571,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "nobleape0659src/src/mac/platform.rsrc",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "5a89523caffc4735fa4cd1b095683ac3f0090a888628f13361402b600aa4c06f",
    "rsrc_size": 7684,
    "type": "rsrc"

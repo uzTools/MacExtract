@@ -9,6 +9,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "ApplWindows/ApplWindows",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "b48ebd72fd35ac8d95d679f25cd349aac42fb82ca440eeb4664b1e42743458b9",
    "rsrc_size": 40367,
    "type": "cdev"
@@ -18,6 +21,9 @@
    "data_sha256": "eafc111cee0cf205e3b249bfe0b961d915f45a33977574005db3ef0ce32d2b2a",
    "data_size": 42496,
    "name": "ApplWindows/ApplWindows 2.0.2 (MS Word)",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "WDBN"

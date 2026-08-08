@@ -5,6 +5,9 @@
    "data_sha256": "8731c3fd9ef3e8cbc520553b9035057574113199faa4425d4b3d785e48ceb31c",
    "data_size": 8192,
    "name": "Getting Started...",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "WDBN"
@@ -18,6 +21,9 @@
    "data_sha256": "6af9877d877f9000c2d1922fe52a64adbd7d370ed27f91807e4d3eaa9b44138a",
    "data_size": 22572,
    "name": "Samples/Personals",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "IDEA"
@@ -31,6 +37,9 @@
    "data_sha256": "82f627ef8226757d744d95e821eb4522dc0b10564606dd06d7dd9321a2c39714",
    "data_size": 5532,
    "name": "Samples/Sample Import from another DB/Formatted TEXT File (Tabs, CRs)",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -40,6 +49,9 @@
    "data_sha256": "14f8da364e561af799f626233c5200614e938d8e24d8cf29eb045313000dc90b",
    "data_size": 40083,
    "name": "Samples/Travel",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "IDEA"
@@ -49,6 +61,9 @@
    "data_sha256": "f558d20ec14ebe644e5551609a5ab56ba04a1ab5e3b1b147f72864aadd1ac991",
    "data_size": 47107,
    "name": "ThoughtPattern Help",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "2ab61f0462af827fd029f33d952af9d676c598872d35294265b0a7f89b36a26d",
    "rsrc_size": 286,
    "type": "BFHF"
@@ -58,6 +73,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "ThoughtPattern™ DEMO",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e328dadac38861e25f35f8b36b6aa582c3bd5c8d5e6a8db9b1e58b7eba29ac32",
    "rsrc_size": 375560,
    "type": "APPL"

@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Memoir DA 1.1",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "82c5ea0b022e8bdde77f383cebc7bcbe6c6932ed74b5769b7622425589691448",
    "rsrc_size": 4641,
    "type": "DFIL"
@@ -14,6 +17,9 @@
    "data_sha256": "e96608efb35bea120e95c4e97def2033c2e2191bbc50adccce0b24d5a154dde5",
    "data_size": 2653,
    "name": "Memoir Docs",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "16248b3d523bf85c19e084fa3785c08e037fb87af9a7a99b5a957e6dc9c4d8cb",
    "rsrc_size": 351,
    "type": "TEXT"

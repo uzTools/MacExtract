@@ -9,6 +9,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Boot Editor 1.0.4 ƒ/Boot Editor 1.0.4",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "aad1c4b2c5b33bb06b54ce3719a925dd63e66b66772aff5fc627c7ca63d8e055",
    "rsrc_size": 93174,
    "type": "APPL"
@@ -18,6 +21,9 @@
    "data_sha256": "b758aca47e2506c2fdd5ffdadd384e324aef935e574ab1139b123c48ecb999bb",
    "data_size": 806,
    "name": "Boot Editor 1.0.4 ƒ/Boot Editor Doc",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "791e19338ca9fc2c47aadd378b2aa1bb82173b1c77c10e1dd11ee1385411310f",
    "rsrc_size": 632,
    "type": "ttro"

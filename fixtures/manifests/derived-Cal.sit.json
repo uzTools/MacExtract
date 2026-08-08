@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Cal 3.02",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "3622754e90520b84332fd5230e450429fe3b04ab919483eac0b08ddd0f58f565",
    "rsrc_size": 27545,
    "type": "DFIL"
@@ -14,6 +17,9 @@
    "data_sha256": "0fbf358292978ce0512b704747ac2e800d9fb71d140bdbd439a5eec600859fce",
    "data_size": 2739,
    "name": "Cal.Intro",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -23,6 +29,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Calendar Tools",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "0ee6bc5a4ab5d0d9263e87d1d80ad507b128394ec8a3d8635fe4b4e0c924d6ff",
    "rsrc_size": 39884,
    "type": "APPL"

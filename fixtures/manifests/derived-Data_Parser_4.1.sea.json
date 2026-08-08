@@ -5,6 +5,9 @@
    "data_sha256": "8b0a7407c0a603e07e0fa7a73f4f613eb147c96c92b9d41cc155d2d0650ad946",
    "data_size": 37824,
    "name": "Data Parser 4.1",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "3ba61b6ff5418a8289251f020739ea851797aeb3a5f37f660ea73940cbddae7a",
    "rsrc_size": 13169,
    "type": "STAK"
@@ -14,6 +17,9 @@
    "data_sha256": "5090926eeebe9d3af26b7c5ea460a95d735727e303538c785f12e130a60a99d1",
    "data_size": 1219,
    "name": "READ ME",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"

@@ -8,6 +8,9 @@
    "data_sha256": "aab41f67c30b79f970a2857d79e9803f7558dd01569d50205450f982d093d825",
    "data_size": 6148,
    "name": "Sniffles 2.0/.DS_Store",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -16,6 +19,9 @@
    "data_sha256": "b512512172b54aa20ae688f43574fbcacf68bdfbfeed68e27589df7690081ff7",
    "data_size": 602,
    "name": "Sniffles 2.0/ReadMe.txt",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "effccccf0310d9accbf8641e70d9cff940cfb3679b2693140a8b885e29649aab",
    "rsrc_size": 382,
    "type": "TEXT"
@@ -32,6 +38,9 @@
    "data_sha256": "7f2548d58fa86fc4bd4f5e8b0a390372231ab61ffe65790b26de72162e8f0459",
    "data_size": 1043,
    "name": "Sniffles 2.0/Sniffles.app/Contents/Info.plist",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -43,6 +52,9 @@
    "data_sha256": "60b613cbe86d19194d465a0c9b9d3136b43247a8a67a342974c169e36fff066a",
    "data_size": 62816,
    "name": "Sniffles 2.0/Sniffles.app/Contents/MacOS/Sniffles",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -50,6 +62,9 @@
    "data_sha256": "7f08dc0757f1df6eee82145cb128b462b272dee93df5f710836e015a236e70f5",
    "data_size": 8,
    "name": "Sniffles 2.0/Sniffles.app/Contents/PkgInfo",
+   "oracle_methods": [
+    "None"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -69,6 +84,9 @@
    "data_sha256": "93e05bfd42071326f5b1dd88bcc1656e74ca2058fdd5b230ef68c4ec2ed4bd8f",
    "data_size": 479,
    "name": "Sniffles 2.0/Sniffles.app/Contents/Resources/English.lproj/GraphWindow.nib/classes.nib",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -76,6 +94,9 @@
    "data_sha256": "1056edbcf08e1f32c48153281d466288760eeb4b1070ae5a9631556e0e60110c",
    "data_size": 350,
    "name": "Sniffles 2.0/Sniffles.app/Contents/Resources/English.lproj/GraphWindow.nib/info.nib",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -83,6 +104,9 @@
    "data_sha256": "6e42bde3524029e99bc0aea3bb5c8b53769bbaa739c6b5c1e09a156a7263995d",
    "data_size": 3024,
    "name": "Sniffles 2.0/Sniffles.app/Contents/Resources/English.lproj/GraphWindow.nib/objects.nib",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -90,6 +114,9 @@
    "data_sha256": "a8ebbbd4af83418b32eb242a7b66dc2d7c33a731e1d61bb77a69660b369c5a8b",
    "data_size": 454,
    "name": "Sniffles 2.0/Sniffles.app/Contents/Resources/English.lproj/InfoPlist.strings",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -101,6 +128,9 @@
    "data_sha256": "2415c7b10529694baab80c3bd8bcc70f2c83c41f09c8555255ed017976a11b9e",
    "data_size": 265,
    "name": "Sniffles 2.0/Sniffles.app/Contents/Resources/HelpWindow.nib/classes.nib",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -108,6 +138,9 @@
    "data_sha256": "602a9daf3185590e8ebdd2a2e29a9401449a906b017ab5649dace7a25bf334bf",
    "data_size": 273,
    "name": "Sniffles 2.0/Sniffles.app/Contents/Resources/HelpWindow.nib/info.nib",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -115,6 +148,9 @@
    "data_sha256": "94fa9dbe5d7b47bc56288190f78f985f73544075872f62e8ba91987f412e22fe",
    "data_size": 14991,
    "name": "Sniffles 2.0/Sniffles.app/Contents/Resources/HelpWindow.nib/objects.nib",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -126,6 +162,9 @@
    "data_sha256": "ab7a326f63358e0ea13a6c1ffcb798bf04d081e376a2316bc21d2aa4c82c2cf9",
    "data_size": 1945,
    "name": "Sniffles 2.0/Sniffles.app/Contents/Resources/MainMenu.nib/classes.nib",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -133,6 +172,9 @@
    "data_sha256": "32f1311c3118cac7300ca5b07ac7dd356da9e2abe09c9a6fd46b7cc92d9d106d",
    "data_size": 600,
    "name": "Sniffles 2.0/Sniffles.app/Contents/Resources/MainMenu.nib/info.nib",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -140,6 +182,9 @@
    "data_sha256": "7756576879200c53ad084034a6fe572604030fb5894c86d280f5a64a1c737bb5",
    "data_size": 14538,
    "name": "Sniffles 2.0/Sniffles.app/Contents/Resources/MainMenu.nib/objects.nib",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -151,6 +196,9 @@
    "data_sha256": "1a9253838abd05e684b9a2ba83627f0dc4d395e3379eb58faedb5490563b3f01",
    "data_size": 449,
    "name": "Sniffles 2.0/Sniffles.app/Contents/Resources/Preferences.nib/classes.nib",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -158,6 +206,9 @@
    "data_sha256": "dc36a5edaec3fab222dcc0fbdcdeadb896fc2ccfba52d152e985ecf8fa0b7e27",
    "data_size": 348,
    "name": "Sniffles 2.0/Sniffles.app/Contents/Resources/Preferences.nib/info.nib",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -165,6 +216,9 @@
    "data_sha256": "92587d200cbc78fcc61a1c93255701e9099d8ea6f7452d2b0b0443fe6250dc8e",
    "data_size": 2802,
    "name": "Sniffles 2.0/Sniffles.app/Contents/Resources/Preferences.nib/objects.nib",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -172,6 +226,9 @@
    "data_sha256": "764ab48d7fd3486ee8307bbd6d16bd19a6c45e74d6801ba6e50cabfa707fe2d7",
    "data_size": 64682,
    "name": "Sniffles 2.0/Sniffles.app/Contents/Resources/app_icon.icns",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -179,6 +236,9 @@
    "data_sha256": "0dd95a34bdf0d345f2195a2e9ae381f079eb90338f371e3d9af73b4e5accae8e",
    "data_size": 288,
    "name": "Sniffles 2.0/Sniffles.app/Contents/pbdevelopment.plist",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -190,6 +250,9 @@
    "data_sha256": "9cb846f283fe5a176a4614a97fb6655e98154e1075655f6b509e7808c4728b6c",
    "data_size": 57503,
    "name": "Sniffles 2.0/man/tcpdump.1",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   }

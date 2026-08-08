@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Mombasa 1.1",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "c48c95ec5fad06ddaaf70ba93b1a762019f9208ee75ba1b444c9a10218f6d5a9",
    "rsrc_size": 129267,
    "type": "APPL"

@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Eagle",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "a5989ca2e875f576e42ba745ae115618ed2d8b1b74872997f80b50193cb8b8be",
    "rsrc_size": 46588,
    "type": "sfil"

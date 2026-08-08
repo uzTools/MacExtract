@@ -11,7 +11,7 @@ The engine is the product. The Mac app is a thin shell.
 
 ## Current state — read before working
 
-M0–M10 are **DONE**. The engine passes a 795-fixture differential suite against `unar` and, where `unar` fails, `macunpack`; the Mac shell extracts byte-exact on a real System 6.0.8 Mac Plus under Mini vMac — **55/55 sampled fixtures at 4 MB and 55/55 at the 1 MB floor** (2026-08-08, on a sample that grew from 44 to 55 that day; there are no memory-budget refusals left).
+M0–M10 are **DONE**. The engine passes a 797-fixture differential suite against `unar` and, where `unar` fails, `macunpack`; the Mac shell extracts byte-exact on a real System 6.0.8 Mac Plus under Mini vMac — **55/55 sampled fixtures at 4 MB and 55/55 at the 1 MB floor** (2026-08-08, on a sample that grew from 44 to 55 that day; there are no memory-budget refusals left).
 
 It runs on all three systems the project claims: **System 6.0.8 and System 7.0.1** under Mini vMac (a true 68000), and **Mac OS 9.2** under QEMU PowerPC through the 68LC040 emulator, where 13/13 of a format sample is byte-exact, extraction onto **HFS+** is verified, and the `SIZE` partition is honoured by the Process Manager.
 
@@ -41,7 +41,7 @@ The repository is on GitHub as a **private** repo, `main`, tagged through
 `v0.5`, which is the first tag to publish a downloadable application (see
 *Cutting a release*). Working tree clean, `./ci.sh` green, nothing in flight.
 
-**The differential suite is 795 fixtures, not 769** (2026-08-08), and all
+**The differential suite is 797 fixtures, not 769** (2026-08-08), and all
 three increases came from the measuring apparatus rather than from new archives.
 The third: **`unar` failing on a fork is a fact about `unar`.** Every fork it
 leaves unadjudicated is now offered to a SECOND oracle, macutils' `macunpack`,
@@ -55,6 +55,19 @@ because XADMaster refuses it: the oracle was in the repository the whole time
 must be built `-m32` or the STORED-segment branch is unreachable in it, and a
 PREDICTED output filename becomes ground truth — a missing `.data` is an empty
 fork only when the entry's `.info` proves the entry was written at all.
+DECISIONS.md and TESTING.md, 2026-08-08.
+
+And the reason the suite is 797 rather than 795: reviewing that day's harness
+work for hardcoded fixture names found none, but found **two excuses that
+could not fail.** One rested on our OWN error message — a fixture was skipped
+whole when every entry the binary called "recognized but unsupported", so the
+thing being graded decided whether it was graded, and it was quietly
+discarding 10 adjudicated forks of the two PKZIP 1.x zips. The other excused a
+whole ENTRY where the oracle had failed one of its forks, so an adjudicated
+fork beside an unadjudicated one was never required to exist. Both now anchor
+on the oracle: manifests record `oracle_methods` from `lsar`, and only a
+method the ORACLE puts outside v1 scope excuses anything. **Ask what evidence
+a tolerance rests on; if the answer is "our own output", it cannot fail.**
 DECISIONS.md and TESTING.md, 2026-08-08.
 
 The second: `make_manifests.py` discarded a whole manifest whenever `unar`

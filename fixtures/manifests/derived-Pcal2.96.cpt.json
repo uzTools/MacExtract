@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "PCal 2.96",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e5ed8238a99dceb1fa84d3bbd08db2f196fda220814bfd60f3043e70201cc2e6",
    "rsrc_size": 48146,
    "type": "APPL"
@@ -14,6 +17,9 @@
    "data_sha256": "b67029fa12593a0b7eba64477cfef239ad7b6fb3020051b1edea46dc38963423",
    "data_size": 7712,
    "name": "PCal docs (text-only)",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -23,6 +29,9 @@
    "data_sha256": "6cfc3996261567dc5d84c0f70efb95a887408e4d60f4ff6a4444ab637d1d0faa",
    "data_size": 392,
    "name": "Sample Events",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"

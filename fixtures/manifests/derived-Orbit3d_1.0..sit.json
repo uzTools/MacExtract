@@ -8,6 +8,9 @@
    "data_sha256": "2231f1b14f9c097ac8faf05b41d34253b051073bd2f42662e02a62f1241ea575",
    "data_size": 6148,
    "name": "Orbit3d 1.0/.DS_Store",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -19,6 +22,9 @@
    "data_sha256": "e278ff55a026ea8efcb46c4b319ea5d0d633daa4e8a17029f8c25f174ac59e1e",
    "data_size": 6148,
    "name": "Orbit3d 1.0/Documentation/.DS_Store",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -26,6 +32,9 @@
    "data_sha256": "31ee4babc31b215e74f89eda95b188067a83681b97d10dcefdd8621eab8a5e4e",
    "data_size": 2183,
    "name": "Orbit3d 1.0/Documentation/FAQ.html",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -33,6 +42,9 @@
    "data_sha256": "d41c3efc031dcb15df5c0e1317100baf99b866a4f20e89414fccb32cf603e128",
    "data_size": 657,
    "name": "Orbit3d 1.0/Documentation/Quick Reference.html",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -40,6 +52,9 @@
    "data_sha256": "f6db9b88693169cf53fdddd86e14ab037dcf68fc4d662c9dcdf2da7ba68d6b2e",
    "data_size": 5797,
    "name": "Orbit3d 1.0/Documentation/Tutorial.html",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -51,6 +66,9 @@
    "data_sha256": "4d432b2ef370ad50b5b77795ccf1c6e9842bc60e9bf8f1d06fc125a54843ab93",
    "data_size": 6148,
    "name": "Orbit3d 1.0/Documentation/images/.DS_Store",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -59,6 +77,9 @@
    "data_sha256": "0dd0ead991a436cf8e6e8f6cd48936d752ba5e8604b778e82e3dcc40404eddbd",
    "data_size": 22037,
    "name": "Orbit3d 1.0/Documentation/images/body_editor.jpg",
+   "oracle_methods": [
+    "None"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "JPEG"
@@ -68,6 +89,9 @@
    "data_sha256": "a010214d628b8cf17a56d838a49290e7b4f6a95ea14b76aabe59787f0c7a8a19",
    "data_size": 13407,
    "name": "Orbit3d 1.0/Documentation/images/main_screen.jpg",
+   "oracle_methods": [
+    "None"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "JPEG"
@@ -77,6 +101,9 @@
    "data_sha256": "123c01fb90d0e8dccf57929b826edc8fdc5b7624e17a5f127889c7cfb923e586",
    "data_size": 10882,
    "name": "Orbit3d 1.0/Documentation/images/system_variable_editor.jpg",
+   "oracle_methods": [
+    "None"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "JPEG"
@@ -89,6 +116,9 @@
    "data_sha256": "375cea6cb495743975815c71f297d322e83a46519a2a016ba11fa275361fc606",
    "data_size": 6148,
    "name": "Orbit3d 1.0/Example Systems/.DS_Store",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -96,6 +126,9 @@
    "data_sha256": "52907e318df470a7eb8a6e214ca8a49ad68a5c8a8d41ad93b3ad492f4aa30f14",
    "data_size": 1517,
    "name": "Orbit3d 1.0/Example Systems/12 Bodies",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -103,6 +136,9 @@
    "data_sha256": "da2d4fdd2f9e5ee7afd730fbd7f0a24b2f195d9bcbc0bccea3987b7d44de81c0",
    "data_size": 642,
    "name": "Orbit3d 1.0/Example Systems/4 Bodies",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -110,6 +146,9 @@
    "data_sha256": "4f104afcbbfc7179a8e7091f4d6674d095915c8c5eabe5e8a8734d7cebdf5f39",
    "data_size": 752,
    "name": "Orbit3d 1.0/Example Systems/4 Bodies + Center",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -117,6 +156,9 @@
    "data_sha256": "bb55643dd53f96f463256d605b5f5823f903614b38c605c5b6a5a801a9dc8c47",
    "data_size": 383,
    "name": "Orbit3d 1.0/Example Systems/Acceleramitron",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -124,6 +166,9 @@
    "data_sha256": "e691066dca737f52afa19587c3795a63fd2672ba5951dffd063259b2f2c9e8fe",
    "data_size": 613,
    "name": "Orbit3d 1.0/Example Systems/Antigravity",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -131,6 +176,9 @@
    "data_sha256": "846eea5532ee8511b9e44448feddf165bd5e33ba67eee89767f65b750cc25c56",
    "data_size": 391,
    "name": "Orbit3d 1.0/Example Systems/Basic Collision",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -138,6 +186,9 @@
    "data_sha256": "c256299c8fd8f844a9f6ef78006ef081c1b01f40804c8ec21131668a26c67cbf",
    "data_size": 523,
    "name": "Orbit3d 1.0/Example Systems/Big Blue",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -145,6 +196,9 @@
    "data_sha256": "5ab079aa6136353681a726039f28ca2474be854dc887e926c8d444db579051e3",
    "data_size": 399,
    "name": "Orbit3d 1.0/Example Systems/Binary",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -152,6 +206,9 @@
    "data_sha256": "5d7ddc6efe5cf950e7e51788308cd4babadc12c9aed43976d30a6dfc91333ba7",
    "data_size": 627,
    "name": "Orbit3d 1.0/Example Systems/Binary with Moons",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -159,6 +216,9 @@
    "data_sha256": "bba1df81633a591aece3eb11860bb9968db2cd5ad0f9a48870509e0fcbfc768b",
    "data_size": 405,
    "name": "Orbit3d 1.0/Example Systems/Circular Orbit",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -166,6 +226,9 @@
    "data_sha256": "1e213961f6d7e15e845bc54ffc420a6154286a4d448da3ee8844bca6d273e3e3",
    "data_size": 400,
    "name": "Orbit3d 1.0/Example Systems/Elliptical",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -173,6 +236,9 @@
    "data_sha256": "eda8300fb15766af025e11c70957d81a997668a77e3cf3baa02df136d9616591",
    "data_size": 1420,
    "name": "Orbit3d 1.0/Example Systems/Escape Velocity",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -180,6 +246,9 @@
    "data_sha256": "635384830c9b558746dbeca3f5340b87c3fbe87b672b766a8f7a0bd7ab1f84fe",
    "data_size": 7401,
    "name": "Orbit3d 1.0/Example Systems/Executive Toy",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -187,6 +256,9 @@
    "data_sha256": "f23a48284544e521f330517d415879ed35b2ec74b4dd97a743f6e0d10cf89e88",
    "data_size": 506,
    "name": "Orbit3d 1.0/Example Systems/Figure 8",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -194,6 +266,9 @@
    "data_sha256": "ef48e6aa3003fbb9b199004861d07d7cbd4a24e12309fa6400ac2ee5bb4f6626",
    "data_size": 511,
    "name": "Orbit3d 1.0/Example Systems/Moon on Moon",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -201,6 +276,9 @@
    "data_sha256": "7931b5e064f8c95f1d600b1c1852a6dd0665b7965ed1b01fe194c04a3d182fe8",
    "data_size": 401,
    "name": "Orbit3d 1.0/Example Systems/Radial Symetry",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -208,6 +286,9 @@
    "data_sha256": "392cc848fe09c5478125f6a6e362ec9366f77a060604b21e7a41f8d70fa348b0",
    "data_size": 629,
    "name": "Orbit3d 1.0/Example Systems/Right Angle Collisions",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -215,6 +296,9 @@
    "data_sha256": "93a31b78d8f3e28c84f130b58ecf668a136d07b49a32afe0cde7283d32e5971a",
    "data_size": 11857,
    "name": "Orbit3d 1.0/Example Systems/Star Fish",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -222,6 +306,9 @@
    "data_sha256": "4c45f533632dafd4ab94eeee1f83f365f3aa5ff30cca669e581b27e3308efb98",
    "data_size": 623,
    "name": "Orbit3d 1.0/Example Systems/Three Levels",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -229,6 +316,9 @@
    "data_sha256": "126f40b762694c64114eadec9030d06bd0a385e029934dd176495aa25c608cf7",
    "data_size": 509,
    "name": "Orbit3d 1.0/Example Systems/Yo-Yo",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -240,6 +330,9 @@
    "data_sha256": "77430c95f5f9cdfddd428dfe7c9fc4d28465af4ae19cfd3ab00e1d23ae3dc377",
    "data_size": 6148,
    "name": "Orbit3d 1.0/Orbit3d.app/.DS_Store",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -251,6 +344,9 @@
    "data_sha256": "55761d08641cba3457449ad3a96ae18c6ed1d42c299cc076fb7e437cb55ad5bd",
    "data_size": 6148,
    "name": "Orbit3d 1.0/Orbit3d.app/Contents/.DS_Store",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -258,6 +354,9 @@
    "data_sha256": "e7b2745d9f6c355d4b8b5067760f8321e1c8b34fe9d880a20c142459214e8147",
    "data_size": 927,
    "name": "Orbit3d 1.0/Orbit3d.app/Contents/Info.plist",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -269,6 +368,9 @@
    "data_sha256": "4bd86f5457e694106a33a41735c87e9197447153cadbfb862be0971f8a89d595",
    "data_size": 377768,
    "name": "Orbit3d 1.0/Orbit3d.app/Contents/MacOS/Orbit3d",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -276,6 +378,9 @@
    "data_sha256": "aec088c57c47792ec372b4baed37cb45a672ad9a8a4e0b61fc0ad0a9a0d4b1ad",
    "data_size": 8,
    "name": "Orbit3d 1.0/Orbit3d.app/Contents/PkgInfo",
+   "oracle_methods": [
+    "None"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -291,6 +396,9 @@
    "data_sha256": "0b7549faf5dd8889284be9902abbf25cec528c5b3ba02ac457abecfa959c70a3",
    "data_size": 520,
    "name": "Orbit3d 1.0/Orbit3d.app/Contents/Resources/English.lproj/InfoPlist.strings",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -302,6 +410,9 @@
    "data_sha256": "349717bab35a4cb262cae0c64aae936d9c799fa49c4a71ea3a62edff23581261",
    "data_size": 2048,
    "name": "Orbit3d 1.0/Orbit3d.app/Contents/Resources/English.lproj/MainMenu.nib/classes.nib",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -309,6 +420,9 @@
    "data_sha256": "9f582e43ec37a852099b357be31bf3b96289e02acf67835c1fd65d93fdcff609",
    "data_size": 461,
    "name": "Orbit3d 1.0/Orbit3d.app/Contents/Resources/English.lproj/MainMenu.nib/info.nib",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -316,6 +430,9 @@
    "data_sha256": "1cab6712c4e01926245925116311e96dfbbb155353949f91c0cd7c9d49b0eb95",
    "data_size": 9575,
    "name": "Orbit3d 1.0/Orbit3d.app/Contents/Resources/English.lproj/MainMenu.nib/objects.nib",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -327,6 +444,9 @@
    "data_sha256": "af689e459d9b705c80166bed0122ec7942e89401ca8d860a096495089dd1f2b8",
    "data_size": 1066,
    "name": "Orbit3d 1.0/Orbit3d.app/Contents/Resources/English.lproj/OrbitSystem.nib/classes.nib",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -334,6 +454,9 @@
    "data_sha256": "8146d3befaa2d5b5cf46ab0da2fcb66268fa96224ec52def365b68ae0f9f588a",
    "data_size": 427,
    "name": "Orbit3d 1.0/Orbit3d.app/Contents/Resources/English.lproj/OrbitSystem.nib/info.nib",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -341,6 +464,9 @@
    "data_sha256": "d263a1bcb839265e2749d87f538275631b356d31aa2296b132b6718d56228909",
    "data_size": 1897,
    "name": "Orbit3d 1.0/Orbit3d.app/Contents/Resources/English.lproj/OrbitSystem.nib/objects.nib",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -348,6 +474,9 @@
    "data_sha256": "415ddc5c247027075082770d0173e5f08c07bdbbc4f53e713e5b3ebbc00aee4a",
    "data_size": 62555,
    "name": "Orbit3d 1.0/Orbit3d.app/Contents/Resources/Icon.icns",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -355,6 +484,9 @@
    "data_sha256": "18d3c3e8fd8f9e949f6930e14a4e1868945fa9bbb7a228720028e4f280d0e76b",
    "data_size": 273,
    "name": "Orbit3d 1.0/Orbit3d.app/Contents/pbdevelopment.plist",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -366,6 +498,9 @@
    "data_sha256": "1d1ae0448031bd431056e6b34ab5ae013ae49ff9fb5c0cdadc02ddaa8ab1d0b1",
    "data_size": 6148,
    "name": "Orbit3d 1.0/Orbit3d.app/Source Code/.DS_Store",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -374,6 +509,9 @@
    "data_sha256": "5461f462fbc3885997b440fb786625807161f4ea54fe76107098f6f6c177d0cf",
    "data_size": 2187,
    "name": "Orbit3d 1.0/Orbit3d.app/Source Code/AppController.h",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "????"
@@ -383,6 +521,9 @@
    "data_sha256": "ba79448a2794cd4a49e5ba159b534bcf2a1b8e8bfa4abcc8ef3368e36eefe22c",
    "data_size": 9102,
    "name": "Orbit3d 1.0/Orbit3d.app/Source Code/AppController.m",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "????"
@@ -392,6 +533,9 @@
    "data_sha256": "9c9fc450ef4c8b2235a5fc3598b92f953aaf53f40fc05296e85cfc2826433355",
    "data_size": 316,
    "name": "Orbit3d 1.0/Orbit3d.app/Source Code/OrbitView.h",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "????"
@@ -401,6 +545,9 @@
    "data_sha256": "041fb7d044c24c45ec705444908a9cd920c1fc63c5eeb66e778c46c410f71973",
    "data_size": 761,
    "name": "Orbit3d 1.0/Orbit3d.app/Source Code/OrbitView.m",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "????"
@@ -410,6 +557,9 @@
    "data_sha256": "51d37d0b3b3a7a09e12aa8f7f3fa5faf4d81b248d20054e9e35911acb0392c78",
    "data_size": 182,
    "name": "Orbit3d 1.0/Orbit3d.app/Source Code/OrbitWindow.h",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "????"
@@ -419,6 +569,9 @@
    "data_sha256": "16ef44e513bf0d175f74ddd99be0078d3f4443d2d7dd4e93438559fc8ee4d6c9",
    "data_size": 1617,
    "name": "Orbit3d 1.0/Orbit3d.app/Source Code/OrbitWindow.m",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "????"
@@ -428,6 +581,9 @@
    "data_sha256": "287f724860549847a590854d9cc1d86780ea7817a281e799acb456ff2dd5037b",
    "data_size": 3231,
    "name": "Orbit3d 1.0/Orbit3d.app/Source Code/SystemController.h",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "????"
@@ -437,6 +593,9 @@
    "data_sha256": "f1da51fcaa85584d67ba60b12ce1818f3bb5a0eb78a6a347cd7ea6647ee33c22",
    "data_size": 23908,
    "name": "Orbit3d 1.0/Orbit3d.app/Source Code/SystemController.m",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "????"
@@ -446,6 +605,9 @@
    "data_sha256": "3d28ec0c631df5ac70998ca59325b6915c6ffebec6d8a3483b8194bac34b9ade",
    "data_size": 110,
    "name": "Orbit3d 1.0/Orbit3d.app/Source Code/main.m",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "????"
@@ -454,6 +616,9 @@
    "data_sha256": "77eb7977809c3a51d1b97e2887e3f054bd0e33c01bae4c7dd8ed3be5fb7f97c2",
    "data_size": 694,
    "name": "Orbit3d 1.0/Read Me.rtf",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   }

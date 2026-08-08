@@ -9,6 +9,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Key Values ƒ/Key Values",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "ed7749f286ace2b3bcf557d9649c637dc8c0d6356529491f2dd566696057e603",
    "rsrc_size": 5525,
    "type": "APPL"
@@ -18,6 +21,9 @@
    "data_sha256": "2e2e363e9958152df6270c818299ba281052a1702c9532996556e01f4c0e7a15",
    "data_size": 3319,
    "name": "Key Values ƒ/Read Me",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "7b0fa92520929423afd4c6d1d080faf0a892a7ccbeebe27451221c79fc646976",
    "rsrc_size": 7602,
    "type": "TEXT"

@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Simsonite",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "2a953dce563494aace16b3be3b000f355a5f5095cb0320e47331a30f214b7a47",
    "rsrc_size": 4866,
    "type": "APPL"
@@ -14,6 +17,9 @@
    "data_sha256": "d9773c8bdd97858b65b61c8c01854302e0d566014e5cef4b14aefdea57d82e07",
    "data_size": 1879,
    "name": "Simsonite 1.1 Read Me",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"

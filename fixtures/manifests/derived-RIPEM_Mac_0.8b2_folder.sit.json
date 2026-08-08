@@ -13,6 +13,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "RIPEM Mac 0.8b2 folder/BBEdit folder/RIPEM Mac Decrypt",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "0817b31a0b3d63c1a8b03140d5def8b0fac3b6234178106adb2d56a5b0ea6a60",
    "rsrc_size": 2005,
    "type": "BBXT"
@@ -22,6 +25,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "RIPEM Mac 0.8b2 folder/BBEdit folder/RIPEM Mac Encrypt",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "153187b53b62e35d7695d5c5cd42855dbf3829743b964bc617ff546fac3e4e99",
    "rsrc_size": 2039,
    "type": "BBXT"
@@ -31,6 +37,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "RIPEM Mac 0.8b2 folder/BBEdit folder/RIPEM Mac Sign (Plain)",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "a230b55ab8f8a3519582c420b1d66c39223c38ba710c40b6889efa9c079ad278",
    "rsrc_size": 2044,
    "type": "BBXT"
@@ -40,6 +49,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "RIPEM Mac 0.8b2 folder/BBEdit folder/RIPEM Mac Sign (Recode)",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "b7376fe5b5630abc23cef3f0fcfffb80ff545108f378fdcaa3c4d29ac5702675",
    "rsrc_size": 2045,
    "type": "BBXT"
@@ -49,6 +61,9 @@
    "data_sha256": "9dedb1c4e0d1496ff209f124319a89b1f27202240b5e3ae9aefe5fca68cac6ea",
    "data_size": 7098,
    "name": "RIPEM Mac 0.8b2 folder/Bootstrap",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "65e7155b64b72d5c3f780cceb3ea426fead8a693de672c5d9c850e60c6238eb8",
    "rsrc_size": 670,
    "type": "TEXT"
@@ -58,6 +73,9 @@
    "data_sha256": "63f33856b3c527fe8c153f47dd9b8451430567dce90f42ce9c5a9e8114531bc5",
    "data_size": 1907,
    "name": "RIPEM Mac 0.8b2 folder/Change History",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "fde112cd606915c6982bf8096a9472ce5a87c91cfa62afa25b56b8a539cdcf1c",
    "rsrc_size": 670,
    "type": "TEXT"
@@ -67,6 +85,9 @@
    "data_sha256": "66ef272c06e0e741cd7c2f457a20a5a8e798cb9c7c1eb35580057a13a99738a1",
    "data_size": 3402,
    "name": "RIPEM Mac 0.8b2 folder/For users of previous versions",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "d99b5a0aec146e0155f0894b5c587ffb699e80f3f02ed0da2bbae657ca5d3bb1",
    "rsrc_size": 664,
    "type": "TEXT"
@@ -84,6 +105,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "RIPEM Mac 0.8b2 folder/QuicKeys folder/QuicKeys Extension/RIPEM Mac Launch QK",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "00051a54afba502abb130ae4f702a4385995514ea79c11cebf69c887557065d2",
    "rsrc_size": 2915,
    "type": "QKex"
@@ -97,6 +121,9 @@
    "data_sha256": "4f69a8fe0025bd645540f2c34819c866ae3bb4af57a89c1fb99ff17475000633",
    "data_size": 5370,
    "name": "RIPEM Mac 0.8b2 folder/QuicKeys folder/QuicKeys Sequences/RIPEM Mac QuicKeys",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "KEYS"
@@ -106,6 +133,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "RIPEM Mac 0.8b2 folder/RIPEM Mac",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "164ae0b1af9e138061630941669b3427e88647e64fe349d73b45d2e7fff23bdc",
    "rsrc_size": 133560,
    "type": "APPL"
@@ -115,6 +145,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "RIPEM Mac 0.8b2 folder/RIPEM Mac User's Guide",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "0e9db1246bcd49637fb7b0437ac1739acdf1b1790255831a7c2d4b284a7d65c4",
    "rsrc_size": 125944,
    "type": "APPL"
@@ -124,6 +157,9 @@
    "data_sha256": "0c60a2cc41cf6b1b5e22820e18213eaafe8c0ff8f7ef1a3ae288c7369e509fb5",
    "data_size": 3083,
    "name": "RIPEM Mac 0.8b2 folder/Readme",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"

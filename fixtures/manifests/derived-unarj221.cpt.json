@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "UnArjMac",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "6063e6f0e310c944dc37af793744bdbf624de93432d2e6d5c6cf4bfe03d6b5a0",
    "rsrc_size": 34628,
    "type": "APPL"
@@ -14,6 +17,9 @@
    "data_sha256": "dde75e4f61de29057bbcb4135c86fef3b2149023f06495f356d061d95ccc2faf",
    "data_size": 11344,
    "name": "decode.c",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -23,6 +29,9 @@
    "data_sha256": "ca65850a9463819e36c4254791770d7a0ce20ba909b26654149d9e917e91658e",
    "data_size": 12878,
    "name": "environ.c",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -32,6 +41,9 @@
    "data_sha256": "c9e2ed5debf3f965008fae30f0d19ebac32d83ae555c88c1942f38870682322f",
    "data_size": 1371,
    "name": "readme.doc",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -41,6 +53,9 @@
    "data_sha256": "a7bd72e4db836ed14b5b367484e306b12e968d52846fdc61cd047043c956eb6b",
    "data_size": 3893,
    "name": "technote.doc",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -50,6 +65,9 @@
    "data_sha256": "adbaf6086cb571d5921297d6266734fe09727a943805be19d08e7de30fea52e2",
    "data_size": 22286,
    "name": "unarj.c",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -59,6 +77,9 @@
    "data_sha256": "16bb8936509115191a1234136194f9cfe8e8a4818c2fc6e7f9c6f55d862782e8",
    "data_size": 10305,
    "name": "unarj.doc",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "????"
@@ -68,6 +89,9 @@
    "data_sha256": "241557696505c5393772f5b722d1bd0f4d8391742cd56090260170d5aac5f157",
    "data_size": 11545,
    "name": "unarj.h",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -77,6 +101,9 @@
    "data_sha256": "28a0781bf617c6633a8b909dd44462a5b5d34b4d43e61f8ce36a154b266a38af",
    "data_size": 1852,
    "name": "unarjmac.doc",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "db8ae6a8a6f92fb5fde7b92ef2e8d6795f700393ad59308e89d98db18744e35f",
    "rsrc_size": 574,
    "type": "TEXT"

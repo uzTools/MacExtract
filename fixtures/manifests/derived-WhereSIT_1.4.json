@@ -5,6 +5,9 @@
    "data_sha256": "d2033454ff6ed9c58616028aca187f9bec5e9b13a5826ca5de87b174cdb194ca",
    "data_size": 5632,
    "name": "WSitAdd1.4.wd4",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "WDBN"
@@ -14,6 +17,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "WhereSIT 1.4",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "ff79c7f1d3d1e80602bb61a12e5134de0480407679592d976dd3d3801075d727",
    "rsrc_size": 65982,
    "type": "APPL"
@@ -23,6 +29,9 @@
    "data_sha256": "28815bcbf43b61876a9b4759022b919986d24eafa07875e0bbc58b58c8605162",
    "data_size": 35840,
    "name": "WhereSIT docs.wd4",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "WDBN"

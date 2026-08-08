@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "BiPlane™ 2.0 Shareware",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "00e944819c82536fd866949b565be361b94d58d8524078fbfecd9c5e3c179a67",
    "rsrc_size": 224293,
    "type": "APPL"

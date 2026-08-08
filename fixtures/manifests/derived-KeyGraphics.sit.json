@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "KeyGraphics",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "04050faf59022b0f4e800e529b6c30f862af91fe7371acd96173096a7c04eaea",
    "rsrc_size": 33484,
    "type": "FFIL"

@@ -5,6 +5,9 @@
    "data_sha256": "f4083beb0cba96d52ac285a84d57acaeecb25ec62bcba4d1e55f588412c0b9ad",
    "data_size": 4890,
    "name": "About these Blackouts",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "d61df02930a689da9fd1c39777ae59b6126aa2378d244f726c740593a156eca3",
    "rsrc_size": 814,
    "type": "WORD"
@@ -14,6 +17,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "BounceBox",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "814712dda3e6510cc8eeb96924dbc96e36f09550a98852d45c4b6bfd4a5b3710",
    "rsrc_size": 3954,
    "type": "Dark"
@@ -23,6 +29,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Clock",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "8913b18b4c1af870b470f0c35d176f3917aef2e18111f6894fd52fda18dfbb76",
    "rsrc_size": 5633,
    "type": "Dark"
@@ -32,6 +41,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Fireworks",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "3abf2ceb9ef2174f84258c7f8bfb106fe3ac5c63e8a2e8cc79ceb0209116ce08",
    "rsrc_size": 4964,
    "type": "Dark"
@@ -41,6 +53,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Galaxy",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "09ef195cd57d05a96ddfaa3c89a99b58d3ff322e19e4301ae60ae8bbc297e5e5",
    "rsrc_size": 4997,
    "type": "Dark"
@@ -50,6 +65,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "LEDs",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "73307c38e9623e2673ded9c59c6a19a61f5526fccdf8c1063d82c49b845a9ef5",
    "rsrc_size": 4158,
    "type": "Dark"
@@ -59,6 +77,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Moire",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "959b6edb71572c358f002984fbc4319dc7766c61f3ad81cc28ba9333031684b8",
    "rsrc_size": 4776,
    "type": "Dark"
@@ -68,6 +89,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Rain",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "9d043c085f5403c7b132887543a75de9826c3ebc6c15cc936daa4506b6c18107",
    "rsrc_size": 4336,
    "type": "Dark"
@@ -77,6 +101,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Stars",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "6dca1b611aed5170550a678778b4c0557b3b0e34ab1cfb4c4d9f191d462b06a3",
    "rsrc_size": 5336,
    "type": "Dark"
@@ -86,6 +113,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "String",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "9e097e760ea25c7dcecaddd472a7ebcdb6f8320c45f831635b4c407f600b3a15",
    "rsrc_size": 5601,
    "type": "Dark"
@@ -95,6 +125,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "ZoomRect",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "d005a2bd40f857b96a45f82e38dda2597fa474eb39202c745c282e782271bb50",
    "rsrc_size": 4670,
    "type": "Dark"

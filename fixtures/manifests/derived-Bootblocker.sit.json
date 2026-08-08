@@ -9,6 +9,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "BootBlocker/\u0001\u0001\u0001BootBlocker",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "94a4182cdbf2c656b89f46bd8ae1ca53e16d6411854291796de1d0252e1fee4c",
    "rsrc_size": 41600,
    "type": "cdev"
@@ -18,6 +21,9 @@
    "data_sha256": "cbfd53b2277945f6636d401d41cfdc9e91344af5ae54fef40264de368f62e287",
    "data_size": 5120,
    "name": "BootBlocker/BootBlocker Docs",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "WDBN"
@@ -27,6 +33,9 @@
    "data_sha256": "011e96dd0896a9994635b497d4d75d720603459a4e5f27d9e4121b8a4820f998",
    "data_size": 3219,
    "name": "BootBlocker/BootBlocker Docs.TXT",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"

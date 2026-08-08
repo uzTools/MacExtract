@@ -9,6 +9,9 @@
    "data_sha256": "876aaa1aa5e72f20aa7b9f007bccd8b2914b7d3d00c8c228764ba90f3e791faf",
    "data_size": 39618,
    "name": "uuUndo 1.0 ƒ/uuUndo",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "4921a63e218e803fa3d3c765681bac39b0b2f493a2de678bf0e4fb302fc57ee7",
    "rsrc_size": 35956,
    "type": "APPL"
@@ -18,6 +21,9 @@
    "data_sha256": "2b8b91fac5c02e54aec3b8ac222175587c775ad1ec27d8068c63eb87cc37ddde",
    "data_size": 11362,
    "name": "uuUndo 1.0 ƒ/uuUndo notes",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "abfc466e2055c7a62563c19fef97eb4ccf46cd8059581049f35cc62bf652bafc",
    "rsrc_size": 1468,
    "type": "ttro"

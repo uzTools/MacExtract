@@ -17,6 +17,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1601/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "06fdb6c86946b1717e1f2656bd98757fd35d5536849f55758b56c62a79008552",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -30,6 +33,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1602/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "b7fef5f21a045a48d370d83563fd6f78926d60b44a1f8105ec1c534b34e068f5",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -43,6 +49,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1603/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "54c63d1aa326f5bc82bdaca0b7266453734e2a574cc17c2d6a5f0cb6df942e22",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -56,6 +65,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1604/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "839b364f3b2ebabd2888eccf027799a02d66635fe90344460a8dfc23d7073f06",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -69,6 +81,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1605/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "1eb822ee21a5c830085e40e7743ed42e115eb226e4624a27f3f162d7383b54f7",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -82,6 +97,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1606/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "9ef93bad29296d541b8b5da0134665bf20af89daf11ba0c077954d10b78b420d",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -95,6 +113,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1607/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "f61636b400210cdb0a9232ec0fe226c1a68ab97054c948c4d8c5e6af26765019",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -108,6 +129,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1608/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "a43838a5f4ce53b7f564b90da900a0137c4bc3edfd41abfede59dbb1b218fb59",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -121,6 +145,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1609/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "5ac38ea79ff78bf7ba1c0b80706590eec411e3c554166af879d3a250d012c41f",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -134,6 +161,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1610/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "da9f4bd6c17e3dcba45a5fabbf4502376f45d285f0fd9172979a508bddddab85",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -147,6 +177,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1611/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "1964b997ad21d5f8f69f3d68a3782a1ed14d3e98971806d66756b94e7fc205fd",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -160,6 +193,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1612/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "263d8aa029f6d9794e060e89eb8eae218446764426fa5bf4669ff4a6fb38ba21",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -173,6 +209,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1613/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "74e058d6f418a810e3b2a497cba8b295eee495874787ce71b90bafc6958b560d",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -186,6 +225,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1614/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "fcf4262535a1a9627eecceffe9bd37598040cee0be04851297fed8ae7e3ac53d",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -199,6 +241,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1615/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "ac8fded64a7272a5bef373c56272f15253dbb607a115fe86bbdcc17344616f4a",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -212,6 +257,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1616/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "802d6063507c0dc4ac12b1f726a4995c59bfa149ecccdadb99e069487750e596",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -225,6 +273,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1617/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "66c1c70dbf9124ffa7be437bb0284eb1e6140e880d06fbc1b55b1afed7075b3f",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -238,6 +289,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1618/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "91f64d942d153818595fc4a5c5c0a34189a250a67077bd56285f96932bc5c486",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -251,6 +305,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1619/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "2da63ae337c154f66f55ef21cad901af8a0c088a3280d2eac0d91beac48741a2",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -264,6 +321,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1620/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "06b989ebc14ff1d237cb10dccb5ec3e4295be220798ec312c648fd9b14534c7c",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -277,6 +337,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1621/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "c817fdc92bc0a48ba0146202bb4a546be8122b995eb8db17b29f15416e1b7aa1",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -290,6 +353,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1622/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "4c8c1ec4f0db37fe0b2cdc390c6c3bc14b5aa55f7969d4f85a16526a6ebb4baf",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -303,6 +369,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1623/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "67db40953772dc0c7c5c3d53fe66dc68ddbc8a3628c380bdca882fa2ed5adf4f",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -316,6 +385,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1624/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "90dbb57409f9d9d195fbc95a712b344e1d31bf3961218f3878950509942e41d0",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -329,6 +401,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1625/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "57a55d4e23f2663a743a05c294fc287d7170c90f38529f10e120a2a85f54e53a",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -342,6 +417,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1626/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "1a876efe9aa4ddeeef1fef85e63bee6112163af5c8bb0485f6c7a2715d1c4db2",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -355,6 +433,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1627/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "3edad46e3340daba7e36597699e8c26279ebcdba11adac17985d57f663e62419",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -368,6 +449,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1628/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "8e6db744dbd7a930561670ac32bba0a4a1fa22f60af0a17d4e6167dd7e4f56a2",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -381,6 +465,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1629/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "d6e9b4367a032e8f70e0b4da08e6c5b78575b091550db114d9e6cf89fb1812c1",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -394,6 +481,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1630/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "fd2b6b530ff10b4d3d36e55097d90dd547a4bd2200d8b495b48f3c0be32f2804",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -407,6 +497,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1631/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "ad2a41293dbe17e737b3ff81731222a8fefde2728071705df750609700ba9119",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -420,6 +513,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1632/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "cdb84a148302373a9cb6dae8e4776f1804bdcfdd43410702f7618950f51d5ca3",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -433,6 +529,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1633/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "f9cf1b38365b848901614a9d4c571fb1bb8f02a6e0436a29238ba8d12a7ecae4",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -446,6 +545,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1634/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "89d279160c9acad7635d1f071df391c261d0710c32debe67c6cd8e8710d1f9d7",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -459,6 +561,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1635/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "c957acdfe003810c8d9d3423007090e85ae45a52463163cb790565f1736db9fb",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -472,6 +577,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1636/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "14fa83b4b036297baa40c026dd5cce50e98e7c7f5a07c3cd07ba9a4407763290",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -485,6 +593,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1637/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "538efcfd5c0407a591799ddd5d6ff666e7f8976920eda0660451ce822b03fad7",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -498,6 +609,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1638/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "6a05ff0ab511667961a73d84aedd16cb0e76502efd4ba2f218cc0ba824356c48",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -511,6 +625,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1639/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "3d9a34c481217832007a6c516677a5148fdaf939bedc49d8a030e31f0b3b03a0",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -524,6 +641,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1640/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "98ca82be3d94e28a7eaaf2fa0cdbba2be44240a16133ba9e2edab9d936536d64",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -537,6 +657,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1641/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "07f44b7ad716dc4a1e99bb8af8d26289ddf7334cea4813ffe6d89c3df523fdc5",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -550,6 +673,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1642/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "6e68059c9e5556904ff265f7d158209bd74583a0fdde6ad9f9ab2fd5e7b1b626",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -563,6 +689,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1643/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "c6f5f8ae15be1a376e33170d9fd9a7c5c7b6970b8e05add00569422cec965c7a",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -576,6 +705,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1644/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "101da7e33088cde22ff7fa760960249fb133cf9148e6449dc59436b0297f7ea1",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -589,6 +721,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1645/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "ffca6090a6f5eb79c8f7f4e5cae4e4926b2d17bbe2a69717d520d27498e1081a",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -602,6 +737,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1646/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "c867e68fdf6021132a4bc91eedb4708e05fa00758080baa8ca2e4c892a08c8b6",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -615,6 +753,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1647/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "5c3f432c412ea781d59f7879ef05663a2a3cf23093ea50d3612410d62f0627a5",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -628,6 +769,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1648/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "7f9faacc90a93b21be9efe229a02e356fbcd49f418f98f8aecb1996a0285d2fb",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -641,6 +785,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1649/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "5442713178a385b9589fb0432ef3656d4cc0b1cd213cfc27869543c528cfcbca",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -654,6 +801,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1650/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "5965981ef94870b47925ce03ba4fb09e71e18183164349bf917aab964a950b5b",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -667,6 +817,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1651/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "5967891a525b5e9a1562745b71ea6f81292bd0a545a6c1a80a699b3605d32e73",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -680,6 +833,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1652/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "ac064d9be5ba6ec0e3d1dcf61e6a01ae411fdecba980477e8895649444cccc65",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -693,6 +849,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1653/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e8eb267055af1a0e1681c5f099dddf0a6d3d7671093b97875a50cff13e8cc434",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -706,6 +865,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1654/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "73091a8e18aff7a1268a20a52b43ae46fefc1ef29a5c7965ca3ea2c430876869",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -719,6 +881,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1655/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "59986378db4d7f05dce6841c3aa2cd8b386a7aec71a69167f9e54d5efa897b37",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -732,6 +897,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1656/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "f5d91b3370f30a649de3078080461723758a03383892046566afd8e3d8d97956",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -745,6 +913,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1657/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "03e7c499cc863558a8a439027ef8c8e56dbe5082de4c921ff72e5944aa35d215",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -758,6 +929,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1658/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "9a7b7883978ac0c14e80f442a4a604cec93d4cd54396fe94eeb40da1e3c2c9d1",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -771,6 +945,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1659/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "85896b6e7fcc5268595e96c68ebb7f3a01cd847700124eb637d0e25a49837a4d",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -784,6 +961,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1660/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "c1be7f19294990b2c88c9c93847fe0d668dc0f57de58162e070c677b447e2d59",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -797,6 +977,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1661/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "2dd0d01aed695cbe7b097f7bd2a7620419e47a7f1028b37da29ea58006ec000f",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -810,6 +993,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1662/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "b29d478a50327a865a905306548156161e3182ea64a581bf35260632b924852f",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -823,6 +1009,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1663/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e3371848d085bf8084551f678268584e40e539669ed5ade61a9a5a0c46385bd2",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -836,6 +1025,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1664/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "355971184d2f75ed717fb0149e72d49a96f239cca987dc748ed878d5767084ab",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -849,6 +1041,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1665/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "8a8f330ba677945e39b78ffbcd35b0c8eec520db37fa2a1596ad08a81d11a477",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -862,6 +1057,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1666/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "288924062d8fe77e9b018a03db0bd218a0a0f53a0b9f9b2c6b8574c7e66de720",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -875,6 +1073,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1667/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "613cc33ec51f19acd702ba4b300bdaa35e3fe749570d8187e2391ce034e1bc50",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -888,6 +1089,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1668/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "46fceaf99dd219d37d8e874b11943b01834282a109ba1ce94b3e89c444f399b6",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -901,6 +1105,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1669/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "cc87156707f42dcc00193bde6369c671b985c72941d908a6900fd110d1b97e93",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -914,6 +1121,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1670/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "f6e4d8891173fe7ad6d6f39fac74f16918e3ae7a9e447671b0c8731adbebd350",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -927,6 +1137,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1671/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "b46c9ff15c3fde44f65ec86d453f39b6c9effb694d375ffd0dc5f3a4fb017800",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -940,6 +1153,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1672/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "effdc95ae3005251c5f491bb5c20266e6bab5dbb93749bd4c0366cb0bfaf9ddf",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -953,6 +1169,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1673/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "adec94e19b41da632601e73d92356211ec0be155957bc9e71bfaa6a2526ab8d9",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -966,6 +1185,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1674/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "579e3756159c0bc206a2bf04cfe2fbbef9e32d78d4aa95df659102ddf24552d6",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -979,6 +1201,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1675/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "59bf1d1fa9407fa2238611def183860af5946e6c2ea365b234c8499433680397",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -992,6 +1217,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1676/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "635ad9b43e1c5b0874d0ae0267c660ac9a8256526049545dc837056b96838e05",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1005,6 +1233,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1677/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "9ef7e684c55e4a946362753a7ed01cef2f1fe6bd1d643783d07d0caf66e2d674",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1018,6 +1249,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1678/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "a1f2d011da667c8eb2b9b0e04af6b85a9915e46ab589df853636fd32fa31587c",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1031,6 +1265,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1679/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "1e744f5aea501d0e9d1f29986ee8da0a334c4e4d207cec0128f829a7899134b5",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1044,6 +1281,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1680/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e0bbc0c8635eea2dcba16a2862caf5fbec0e1743f7c9f7eaa6faa354893df9be",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1057,6 +1297,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1681/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "ffa019c8abf1c95679826bf1c315cb7606a594a69d75044039422611184559f5",
    "rsrc_size": 2670,
    "type": "icon"
@@ -1070,6 +1313,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1682/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "7544a5a1c7d97556df53865785b17b9116efb5212dd6d9e65e8643395ee6281e",
    "rsrc_size": 2670,
    "type": "icon"
@@ -1083,6 +1329,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1683/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "fdb78458e0a8e00c91304cb34cdf6e71792a243f59ebf82ccb6fef64d9c24231",
    "rsrc_size": 2670,
    "type": "icon"
@@ -1096,6 +1345,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1684/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "cc718355d977d0012d0a800e7f22d2475ce7f5b19137af5d061cdb5e6925f0fb",
    "rsrc_size": 2670,
    "type": "icon"
@@ -1109,6 +1361,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1685/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "d0954d94eeec9e98f0477d82fd099a6e89b8def5ef52020b1a2265e4eadb4091",
    "rsrc_size": 2670,
    "type": "icon"
@@ -1122,6 +1377,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1686/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "8d3504a492f78c327efb98a50fb7a34b7f911d09f61019a7a95a1326131354ad",
    "rsrc_size": 2670,
    "type": "icon"
@@ -1135,6 +1393,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1687/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "6fc3184e966a32bb227e6c2e351950545bc4668dc5bb9c4390fce160c0e55363",
    "rsrc_size": 2670,
    "type": "icon"
@@ -1148,6 +1409,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1688/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "f2247dc1227b92f1b6274ed0b382adcc925108c712a0e5343f70e340e2089cbd",
    "rsrc_size": 2670,
    "type": "icon"
@@ -1161,6 +1425,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1689/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "fa75c70b46070f53ff7af46c4af15d160181834f61a6f52e4cca62cfb891eb69",
    "rsrc_size": 2670,
    "type": "icon"
@@ -1174,6 +1441,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1690/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "14d7d0e2b2ccb2e876bdfbe00cba5ce9b09df68457f01b3c7ca2223a884e25bf",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1187,6 +1457,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1691/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "6795ff151c08ffd4e9087ac4395d2e04a23968f060f1a44d9a64a05d7f98ceee",
    "rsrc_size": 2670,
    "type": "icon"
@@ -1200,6 +1473,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1692/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "1efd49d1c43a28c26c81474a85d22f1e11abf1adaa8ec6b531d9effb2f27a6e0",
    "rsrc_size": 2670,
    "type": "icon"
@@ -1213,6 +1489,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1693/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "ec400cf859ec41379da452ea8c9a3fe0f8e92078e6025df7ba894b72d5f07a62",
    "rsrc_size": 2670,
    "type": "icon"
@@ -1226,6 +1505,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1694/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "84738f155cbada9768369542118636d3400f584f48c3d9e80a0bad4eab11d6e5",
    "rsrc_size": 2670,
    "type": "icon"
@@ -1239,6 +1521,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/1695/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "9a647260ccb8f1f394bbe068ca0c1737e59ca799dda6f12221a15b46e0d21178",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1248,6 +1533,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/16x16/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "bd316d794a8cd552b15472fc9b5e84787e2f6c52ca31dfb9547060c4cbca803c",
    "rsrc_size": 2670,
    "type": "icon"
@@ -1265,6 +1553,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3201/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "d784eb312a010a45e6ba0cd8c3d215c9dd300314468766141772a9b107614af0",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1278,6 +1569,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3202/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "7d78ba417f4a09a58de9cdebfdcff2c13805b212277df5f786e3e05b567b941e",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1291,6 +1585,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3203/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "165365cec03c18b49db04e6980a34ca8c7ae94a18674a2540297693e4971db36",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1304,6 +1601,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3204/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "a07236ea0a8da3d16d7bc53e5cb15b9e005cf49408910c066e1b0c608ab1274a",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1317,6 +1617,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3205/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "03d7aec77f651a8a317d9706d371a671ea337e5bdeb33c49a18d0a81c3f1d665",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1330,6 +1633,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3206/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "473c13aa419a933838bfc01ec1a9ae915296072d700e044afb847141767f2b55",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1343,6 +1649,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3207/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "62c6cded82d73ef8eab6df6b0e9661b9b525393fe1adf1484b2c8a89ca01c8e9",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1356,6 +1665,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3208/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "9140d55e1db84958603619087462b4e6250394cd562963d4014938d742f86acf",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1369,6 +1681,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3209/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "158f85813e29c967325f3ca83b166b0962360d5ea66410f2bbdbf6f2246bde95",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1382,6 +1697,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3210/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "d3abda66875bde10174c37718a03c2ad4b078dd230064191c543eebaf305bb56",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1395,6 +1713,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3211/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "058b27f56c8a2dcc1edb08346a49c586527696b182f3bbaa19232e0f268433e6",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1408,6 +1729,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3212/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "9fc924f39db3b73cf16a01eb46cd6369f026331c15133ace9b3868d08618c01c",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1421,6 +1745,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3213/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "54e9f610e15b001d491adf5eb2b71cc6ce5d11d30a27f39bc00e3e1bc8f00e92",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1434,6 +1761,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3214/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "448448222af127bad4088743e01e3c6edb436261f6b4515bfd571623aeda8318",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1447,6 +1777,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3215/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "a3d76942af7455dcfda0ab24040a977f3ca2f31f78cbeb09eae284a30b8223cb",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1460,6 +1793,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3216/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "3d0a7590b21f78ad510be3ffeba16746e0c2d0833e6a88691e99281fcd2252d8",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1473,6 +1809,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3217/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "fe13e67637c032a0493940a081a7fc688d8298a58173a4fb74cb3fbf95b5f756",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1486,6 +1825,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3218/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "570a50949aa598b3e79500a6f79c58d9156abd2c4e1f3362a3c0d01c7b0fe535",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1499,6 +1841,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3219/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "5f9dee6405cccd6235679544a7ef27c31ac259726518c2ae5ecc2066f8490739",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1512,6 +1857,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3220/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "d8c72f4c8df5aed72909ecc73ae1df2bbefe9829fff30f0c06b6da2ccf01862a",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1525,6 +1873,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3221/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "5c9e60068cae817d04db3c37336b993774bc2e0c458f60388bc8fbb5bed4c6a7",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1538,6 +1889,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3222/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e886eb5b80ad9bef35cfb3faffa77588c6e74dd259123a8d6915419b5bfd95e1",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1551,6 +1905,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3223/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "092d4e76d241cccd3d953015d967437b854aae058fc9778625d3dbe47048bba0",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1564,6 +1921,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3224/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "f25b5380d8d7aeec7f41201ff6f38b16212b640b90d333796e4829e331c8f6dd",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1577,6 +1937,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3225/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "f3387fe3815ac0969398cbc417ed6725ef4b6780d0324607bae3a2ab670c5c89",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1590,6 +1953,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3226/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "6125bb038c624f136362cd74563a1b218efd88aad1970e1b76a0516e6010be12",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1603,6 +1969,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3227/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "b02a51b2b98b32f642987b582bc3782c5fc3816d17c662a15fdb5e7b14932901",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1616,6 +1985,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3228/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "b4bd55f8f37de21dca9e74444c3fe5d80848577081f0faf62af2e6b7cadaefaa",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1629,6 +2001,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3229/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "bc36f9771de795d7b76f096441441fcadb6a67674322c2c4aa0e9883fbf53620",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1642,6 +2017,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3230/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e83652e4568b2a6881ee74ea50ac8729f1535d0a061d2ecc8c9dcc5f733c2b43",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1655,6 +2033,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3231/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "3c7bc40daaee72ca90abe0502892bdec81124f94e1d00ad9019e61e018b8ae60",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1668,6 +2049,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3232/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "2458a585049874b7d18a404a4facd9805e613519cb36426d8a98ce1f9c8c6699",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1681,6 +2065,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3233/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "46aa45222f58773c22aa8c5b135f9005b864e9e1106875969a0a727ab86b2f51",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1694,6 +2081,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3234/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "634ebeb5a2a0666a7e2f5becf8586786eb65f40382fd93aacd45108d88d678d5",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1707,6 +2097,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3235/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "5bea021510872e9a7f54107dffbc18164a99ff8bf2a36fff280d4b718106c925",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1720,6 +2113,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3236/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "5eca3b9ec755fcd4528cd520337a8d456921ce6e76721d097c229e58b8d51d6b",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1733,6 +2129,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3237/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "d345f3d8877e7cfa14019026082aaf06b071b0f387ca0dd11d59e8c03c1996f3",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1746,6 +2145,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3238/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "fc4e03e8526d1b22aa2b2c6ebd32c941705bb03d47016249f73b459353c4090f",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1759,6 +2161,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3239/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "0a4cfab06d1ac5fb7762c72bd9fb00ea72e3d29121583d7f833bda20776c75ee",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1772,6 +2177,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3240/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "bb89b9b5b85387d043c8956e65ae5cfe8ebc6bb2e2caf294df9e9e7d912979d3",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1785,6 +2193,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3241/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "453b1ad6ba8d4324ecd003682c665751ff2b237a851f1533f9672ffc0b88eb33",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1798,6 +2209,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3242/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "7a12c8be72411c2aff62ebf950d89fad5e2bf1c8c8d36a162b9badfa1ad3e654",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1811,6 +2225,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3243/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "6b359a7f41b1df4aaf77fb71ba853232ffb94812e324dc960fe2125cfaa15449",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1824,6 +2241,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3244/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "37bd69b13bd8dd33b3272738eeb0fb6b6526fd11508a718d940aeeba2de84de2",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1837,6 +2257,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3245/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "ca8c4338d86b1d1e582f70be5bd50406aa94c1fda548df6cc23f906039fe8013",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1850,6 +2273,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3246/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "9e5a6d533fa3a985b465f0b1b915c00cefe7e7b05e1bbcccc88fb2fcbd17ef77",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1863,6 +2289,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3247/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "88d55298cdd3d241268f1d46428454205fe7add11d21946fe2ba8783c2e5426d",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1876,6 +2305,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3248/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "40f2d3fbf9eb35c0e93c102cc5868bf7e63ae979da79d9d5fe207cce62a69e68",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1889,6 +2321,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3249/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "3f48cceb412de9d2bf1e02ce0aeca09bcc7a4c0ef4a160c780dab0b9c4cd2041",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1902,6 +2337,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3250/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "2a3deca5ee1c926edb7650d005584efebf40e21d237d7bf3e57cec7ab48069f7",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1915,6 +2353,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3251/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "cb07188693797065c9e0f27d3b810f9162ea73163c415fc144d26485cca9fb96",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1928,6 +2369,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3252/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "9f2b0fdf580e3c96447367d9d6380af2787e90448f1879cd49284a960317067f",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1941,6 +2385,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3253/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "9de4cba8cd0cd9914e24cbd48b74c069d9348cdb612118558121ad784955bfb0",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1954,6 +2401,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3254/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "55123bd28d42079d08ad50fbf3462dc366d3e723641ff7da0a32631c1767f6cf",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1967,6 +2417,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3255/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "d7e03003c5edb313be2c0b2c6e8e98d239ffbf5de6b991b7ab6d8d3154ac4089",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1980,6 +2433,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3256/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "7c16d6d590da8205c06e996618368144f1265d420e0368b8920e5b3e1880ed0d",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -1993,6 +2449,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3257/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "0e8a560e5473420ffc22d5a17f382563440a8e40a90099c075d54f669945b16c",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2006,6 +2465,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3258/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "b4b5af3d539647b34141ea44dc1939b07d50b32b1181a9e56d7c3206099fb883",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2019,6 +2481,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3259/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "4b5a7ba92b475194e1982d51552d9f24e1de27fdc62a60af653f69d828089579",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2032,6 +2497,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3260/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "1948c2271cd65432cf3a5f9c174e6eba4ebe5758b7e2c761ca54d11f87d846e9",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2045,6 +2513,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3261/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "f442ea0785e573bfd329088a6daba7d46de1fadb4e363afe0de310be2621f8a4",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2058,6 +2529,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3262/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "4698a4f5bad9e79557df4a4af1502e6d5731821e19e8e2b13288fd583e980c6f",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2071,6 +2545,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3263/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "8dfb993a4d586f1859b437df51f9fcfcc9f629a9b59ea8c7d6e2547d4ae23af8",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2084,6 +2561,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3264/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "77b8c3a669dbf2e0b3d6beecb3139345b1bf7726e401ae3f60948fa9cb10253e",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2097,6 +2577,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3265/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "2f5f5403f0e912b432c1be3b26ae848ed97a182f253ba80a9cc639d55655f4ab",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2110,6 +2593,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3266/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "5efd65e089165577b023b925ce3742529902bed4f419618cb34d536079b0c3e9",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2123,6 +2609,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3267/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "f46779d6a5183857161e525e55c41918b423cdc78eb7f716a76809536fcdcb46",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2136,6 +2625,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3268/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "013077d0044d3e803a66ae63a19783c781d2f4d51abf655f9c2f75ddfbe60ce9",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2149,6 +2641,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3269/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "23304bef699a7c038ede0f441e87bdba250ef7aeb154bcee0fd8bbec5919e68d",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2162,6 +2657,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3270/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "9dda39aad142cebe0d7fa53a281b0338a7cd98b8b064ebc53313ca838fdc1b69",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2175,6 +2673,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3271/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "98c6eee0635ed5aa61dc15d4d1521a0c8fe7672c5468de220bc725d5de7b05da",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2188,6 +2689,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3272/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "a1b554d7f74ebfb874f060bc8bf8e1772cb94d86a920b595a12f38f75f1544f7",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2201,6 +2705,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3273/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "55bb68d83e961cd1984534a15a02ffde7df8941ec54b19c3800afb94659160f4",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2214,6 +2721,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3274/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e1d1cdb9ec38c3aba3ab157a4a5957c8b45265eaa4030742183c95d5bd76cc14",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2227,6 +2737,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3275/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e1937269496bc6ac7bc7fbc38ac13a1a31be1f00fc2817b1f8f9951e31e150c5",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2240,6 +2753,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3276/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "a4c37a10f8f86a8f6cc367c6cddf00ee9be79e4439ec0eceb1dbb40b78e6ee12",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2253,6 +2769,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3277/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "112bdebb8bdb4262d9eba9245bc65d729bcd7f3a21fc97aabf00056676cd6779",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2266,6 +2785,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/3278/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "59888f83caaa7c755d37316bc2b60b49b96a7a6dc34f863afc3e7f82cdef5962",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2275,6 +2797,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/32x32/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "1bd4c29629f8f1bd57657d877977151cb802d25a2b917f99edf08050b5ae096d",
    "rsrc_size": 2670,
    "type": "icon"
@@ -2284,6 +2809,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "c6f8a623328dfe0e01bf234340843930c8d6545378a578edfeb554a0fd7b47a1",
    "rsrc_size": 2670,
    "type": "icon"
@@ -2293,6 +2821,9 @@
    "data_sha256": "5dbbf6ca182eff5f7a1a82e227558d712717c62f400e822e858c079d9ae6c0b8",
    "data_size": 2349,
    "name": "MacburgerHelper/READ ME",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "ce4490ab6ef20a8bd0212a0f1a99044aaddbb874287329021d1e058b03fc8142",
    "rsrc_size": 2916,
    "type": "TEXT"
@@ -2306,6 +2837,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/extras/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "80f331203ca3f2b3712d20c8581cf91857da26affa9b8466f07697ef0aabccdf",
    "rsrc_size": 2670,
    "type": "icon"
@@ -2319,6 +2853,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/extras/ex01/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "962957726817591ee89e2dc2f3552fe2cf3088846262e24828a1cee54c20ba4e",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2332,6 +2869,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/extras/ex02/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "7b043c8d6da91b355549ebc0a488dc3833addbff5c9dcf6b006c6698c6359cbc",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2345,6 +2885,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/extras/ex03/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "07238ba6c5936844a256dcd21a3ab0b263dd2539bea063ff71e499ed63c12ec6",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2358,6 +2901,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/extras/ex04/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "070bcea382c3034b78ea52397a4c7d8d5932c3cdd0e16661617f99380a246623",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2371,6 +2917,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/extras/ex05/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "2b8cfc4b6b383830b19dfdec01b6da5047d94b5d01558dae28521deb3f389db3",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2384,6 +2933,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/extras/ex06/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "7e778d93fd81069aad0293d0f0bb2059b3d453d15a97400c45f9c9ffb9732baa",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2397,6 +2949,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/extras/ex07/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "380a37078c0a100247b097a3657f22f302be2e0679e5181c7d6f91124257b378",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2410,6 +2965,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/extras/ex08/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "28f0113aadf2209b30ca13f98c06382b55d0c8cd8ba74f67273c2349431543b7",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2423,6 +2981,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/extras/ex09/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "8c741c0caf88f6f63b7ad57b99834d5478bbd556b653a84295b434a5c8e94260",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2436,6 +2997,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/extras/ex10/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "0c1bbe0ae9321797a5bafb9ce1a9ddacdde2891329d521b351fd00787638ec2c",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2449,6 +3013,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/extras/ex11/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "1dc588f7f4b6bde7160ca1d1ae3cb53fae4920f581796afce2f95162f9089817",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2462,6 +3029,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/extras/ex12/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "1a14bbaac2b3fbc39d97b0c0eff0707283bd7b29d63b1380e4cbca99828e3a5c",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2475,6 +3045,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/extras/ex13/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "11eebf3a2d01bb969d0fef57925bb85e76d2944bc0e012909a63858b111481bf",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2488,6 +3061,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/extras/ex14/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "f3c2c37bd8e4fcec20f4e058201f75142a47b89e7f184827cad76bef3e92087d",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2501,6 +3077,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/extras/ex15/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "8a0e3a3c34f2006e7df738c2e0a017a7f28e166b7bf9169f54117d257f79545a",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2514,6 +3093,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/extras/ex16/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e3499da9002ed86eec10c6f78c44679f9c598e7c921be3e06687fc008a6a2cca",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2527,6 +3109,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/extras/ex17/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "20ae915155287a0240e1eba6754d26ce7625f6fa4a96fd334acebf7a6324adce",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2540,6 +3125,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/ikthusian@aol.com/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "bf8c2676f10fdfac8a0e8dd1afe613774fb6f9f2f2ef20eb928b6b30bc7a16ee",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2566,6 +3154,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "76e8cd1053864e567c4445c2f163aa2c6d164a2d8b5d61f4ed3aad2f194c81e8",
    "rsrc_size": 2670,
    "type": "icon"
@@ -2579,6 +3170,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p001/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "c8ed92df9953abb5bb9d13e9d85b636047fd0dd5b7eba3955ee9ef90f33298bf",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2592,6 +3186,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p002/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "c17642034a921cc0d9fe1b1a22adf4048b36015be1c05feeed6bf1b90c181767",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2605,6 +3202,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p003/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "a37538297f5fea7a7491a1664f94daced93d374dadc38bdaacd9873f837c6555",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2618,6 +3218,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p004/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "70ee04b72005a48b173172e2b83397873d0b6b4e8c46c2e8a2a5cdb2c55b59f9",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2631,6 +3234,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p005/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "f135a9818b0a92da158ac841cb167954af27b701777d4d03bf22e1b5c1d34d22",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2644,6 +3250,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p006/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "5e25ca80c14688d855595a7cc7c05868004db7e0775ca84c2b55208bf386c8f8",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2657,6 +3266,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p007/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "9a7da3127d75a86aae34bae483e90d9ef36e35d03af12b229f66d87d8b29406a",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2670,6 +3282,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p008/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "59b5c675052ebf90eb9774aee9405834d3eb0d4f888ef83297bb9d193509da77",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2683,6 +3298,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p009/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "4fcfb92c9e77864b382918976c1dbe7f18af572986b55dae3b689e5a8c4d20a0",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2696,6 +3314,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p010/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "f0a304891971ef204b3f6d73784ca6e32757c45afe17622b050d94ef53009d22",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2709,6 +3330,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p011/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "06ccff5ea157346705fb5430ccae554819b09a2bd950e1cfea72c219d8b81296",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2722,6 +3346,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p012/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e4f4651556c36aa645aad77f89806eda5cd4e3e473f72217c65cbc4d4f861dbe",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2735,6 +3362,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p013/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "dfd24c90985c16f60e4f227b72202f06cfa3c25a5a95fc957edfa32799889d51",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2748,6 +3378,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p014/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "00db4c78ccaadc2c6043edbf5ff7bd5d1f0bdeff9a087cab6c735249c0cf04fc",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2761,6 +3394,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p015/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "084906f385dad3831455e9899229015c56e1052c550430bd0455dfee375a3b24",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2774,6 +3410,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p016/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "32eeba49cbccadf0138eba708e979f90e798f7edc8616a5322580109e7518bfe",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2787,6 +3426,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p017/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "55d9e77aebc2c01f517bec016bb23bc4aa52ec03319b0690d19f1c288cbd9f14",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2800,6 +3442,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p018/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "616a82637a7317faf4cf6b7d7a090b82d9676fd549a54e60237bb770e5cc61ad",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2813,6 +3458,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p019/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "170e2435a15ef48973695ece07dc4d58607618c3d3a820c7dbfd13fd02d3e546",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2826,6 +3474,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p020/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "594f41c0645122b1eecea265889bdc801392186794f98f5891fd28a26d9c8c68",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2839,6 +3490,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p021/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "5d3c927e375acb59ca68ef6dcae19c1ce5d1b0a43eea35a60d2c632a4d1d3bf5",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2852,6 +3506,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p022/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "05c5db5613c1479355cc0781eb4072cea07b7b7f2b8658d7e1576bba311030d8",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2865,6 +3522,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p023/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "9ff2a39480975c092f8fcf410b754576a005d2a68f5b4e192c13b80612e0dcd0",
    "rsrc_size": 2670,
    "type": "icon"
@@ -2878,6 +3538,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p024/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "2c4b6b627c2ea02eddf7dace35db90749176883f72aa0f7d075501913e380c75",
    "rsrc_size": 2670,
    "type": "icon"
@@ -2891,6 +3554,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p025/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e0f11da3a9809dc8eb941c0816ef21575744fc9671f84af0849a1f4f7f64578a",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2904,6 +3570,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p026/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "0d20f010af0fae684ca55f7a313cdabd49233d2a9397cb12dd4ea8428a0efbed",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2917,6 +3586,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p027/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "806775b58c1431c2d1c8f9baa630db43b86f31a1d29452c6914822edfc6a7f64",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2930,6 +3602,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p028/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "70a488a0dd51890283bf5d0a7834b106e93c3109b867729c3ff55ffc3778203e",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2943,6 +3618,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p029/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "a181c2145625c47f7256930a7baca576f3c1c13a3d8a9780791a938221da9a68",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2956,6 +3634,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p030/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "eb7ebe4575124133f58891643f27a7e87af8b4466ef755b9833e274275cd801c",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2969,6 +3650,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p031/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "df5974e2bbe73fc7fce55e2c51d690da10f45e0465e827f07cf97973de117b50",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -2982,6 +3666,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p032/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "7b26e22f58a092b9acf823d5df1962b3b5d1302e967d4aa269541fc44653e398",
    "rsrc_size": 2670,
    "type": "icon"
@@ -2995,6 +3682,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p033/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "790e03645aa07b9055ec25d56c711b41034f7da06998dda84a00f4ff51dd19f6",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3008,6 +3698,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p034/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "b7c790357d6b3f46ef6b3780104d315c4da2710795b07b25002aee0322eb488c",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3021,6 +3714,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p035/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "f1120e8cb8a91ca91c1eb572581bf7566e0eea3f1c3f7184938164640fe3f108",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3034,6 +3730,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p036/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "c9e04f2d607af7ed56cac88bb2f5896683393bd98dfa7d31905971e39bee964c",
    "rsrc_size": 2670,
    "type": "icon"
@@ -3047,6 +3746,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p037/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "03db6023fae8817d46983d2fe11debd2cf2cea08e74ba7148be0fd44f1ae2ff3",
    "rsrc_size": 2670,
    "type": "icon"
@@ -3060,6 +3762,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p038/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "8e23d44c8a6046c42b55cccd09563801c65879c02808f2c68cb9f801eac4fb81",
    "rsrc_size": 2670,
    "type": "icon"
@@ -3073,6 +3778,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p039/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "be10ac9a04ff997dc572f17fa3bbf831575b9573822fc792f5d71eb8fc8ec355",
    "rsrc_size": 2670,
    "type": "icon"
@@ -3086,6 +3794,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p040/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "f34fee825b7c29c85c08f040d54e8e56827a84fc314eb63068e1c465c4bf2667",
    "rsrc_size": 2670,
    "type": "icon"
@@ -3099,6 +3810,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p041/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "4540fdeed0e885ce556ec17c703aa60c040f223236fe49dcc75e0a3fe96eb843",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3112,6 +3826,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p042/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "084069b89c19da6de55ceebe1479800a5de0c5e8438c95f274d4d1070122b31d",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3125,6 +3842,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p043/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "dc925e10a50abcda8d73a0a8f228fe48ec22954311c3d75b2398f8121027dcd3",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3138,6 +3858,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p044/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "3c1d2ed997ef80d12ecafddeb63ff375a9301022e6bc6cbf51015920f046ed77",
    "rsrc_size": 2670,
    "type": "icon"
@@ -3151,6 +3874,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p045/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "0f44dbb495035246f1ec223011e541165a5fa734056f9cdda7d2d4a0eb193f79",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3164,6 +3890,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p046/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "4af0a3c805cd70cc9e0f635678a344b0fd771834840b3571b62feb5b621f208d",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3177,6 +3906,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p047/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e5f7c74428c67f2bc1a70201875060e4a5a33667e54af31de4db749dac55ebde",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3190,6 +3922,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p048/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "1a9ab2871bb1a7c991980e369360ee6d2aacea312c126dbfe4c8b65e207da1f6",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3203,6 +3938,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p049/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "23e3118d37a90ca921c344f52231d361e602a1c2708797c03920e8a1a76ce8a0",
    "rsrc_size": 2670,
    "type": "icon"
@@ -3216,6 +3954,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p050/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "5568a57199adec4a2ee6e1e212725c42de0708e04e91f9d03cd554fbfa36083e",
    "rsrc_size": 2670,
    "type": "icon"
@@ -3229,6 +3970,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p051/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e82f4113795c4e2e31f4a034c14de30960927d3adfc43db77b7fc6d356a96eca",
    "rsrc_size": 2670,
    "type": "icon"
@@ -3242,6 +3986,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p052/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "7c95dd02506561d4da9d02683f1cfd2b16a1b56c56879986bdd08de709c9ddc9",
    "rsrc_size": 2670,
    "type": "icon"
@@ -3255,6 +4002,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p053/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "b3e94afb83fbb669158366a8b507845ab07d4f247e34824c642e52bcfa145d93",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3268,6 +4018,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p054/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "54b11bf9f6a7a45cf89e7256ec6491e6f4df908869cf126a9ba7a4173c65d123",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3281,6 +4034,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p055/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "6081b08b15f4979458ce78a8044583d652c3666e653c534d6f52f656bf798e60",
    "rsrc_size": 2670,
    "type": "icon"
@@ -3294,6 +4050,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p056/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e5636d03722b1be473350493b5c8bcaec4db2711461e9e315ea8c39adfb39ba4",
    "rsrc_size": 2670,
    "type": "icon"
@@ -3307,6 +4066,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p057/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "c30d7a9fd4ce83a096e64f367218df36fae838c7faeb1ba7475ab1487b4c982c",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3320,6 +4082,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p058/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "d1027fa01156cf42d8d920ddeaf0596b72466d393fc1e2c954addec780f90390",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3333,6 +4098,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p059/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "f3c9b555bb9a77f4e3fdcff51c9a21ca25b50304b81904d929657b3cbecd29d9",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3346,6 +4114,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p060/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "de0aaa30c035c8cf3a77092da19fb0a2a023819fc3c3f8fa443a7a5b53000ab3",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3359,6 +4130,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p061/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "84fe0be1c7cc2abaa16ef16e14f262eebd0d437b34ebbbbd9020df18f157fe2d",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3372,6 +4146,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p062/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "2661b37fc945beadbcb0574aae74fda8e6427ac45dd5ed2b093f0a842ee353b3",
    "rsrc_size": 2670,
    "type": "icon"
@@ -3385,6 +4162,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p063/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "344885343e6fec821f3d384ad9dd873651b2feee70ce880b54556b913751a45c",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3398,6 +4178,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p064/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "1770dbf1bdb22fb382847088e0dfb1e9a21d7fde68708f9a6849aeae97e3789c",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3411,6 +4194,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p065/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "fce2fb50f1393861acb24a6caebdc80b30195189d95137c13c498a25817c9e97",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3424,6 +4210,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p066/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "a6892517bfd623ca5684e72c9d39381282d393793f18a088ef3901a7f3559abb",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3437,6 +4226,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p067/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "a9d37d33388bc81819432ea305b5f07a219242898450dbd92abf3cfaac469d57",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3450,6 +4242,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p068/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "802f70d99893b0c1a0f71ce803f85f68ea64d144c6ad66d0aa63594788919118",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3463,6 +4258,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p069/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "94420ad41c930eb66e1260bb9f49108b5e25243931cb58f7287182def33f4e29",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3476,6 +4274,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p070/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "484e72d8ee9f37c76512ddcade291a144edf7a52aecd743bed58aaa49c46b34b",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3489,6 +4290,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p071/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "d47a4ef8afb1da5aac0b6de717d64284c4d2ef2208c1c45e2bf057876ac00e3c",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3502,6 +4306,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p072/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "688ba228a8eae5297542135670737052e33be00cc78cc63691f6690e30b876c4",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3515,6 +4322,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p073/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "10192627864c7d5c84861f59b41d9370646463dd5e28f9ab2e4942b59964eaf9",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3528,6 +4338,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p074/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "3f5a4de1ce96c3321e249defe3dbac5b17a50482c9c551ba735335389022e5e1",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3541,6 +4354,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p075/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "313b7adeaec30d59a7ce3fda054a0ebad3cacbfb8e117b0b0a464d285b9bbcfe",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3554,6 +4370,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p076/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e4e1f0f4380bb266f76cd537f53a66f95833702ce900961156aa6644ff01cad6",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3567,6 +4386,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p077/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "58851bcf487dfe00a4cddc746ace22932669337b19ead714b3aabdeeb1f839bc",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3580,6 +4402,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p078/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "dd2137c1ef83c7724c64dd6a4c818d310fbe1fca9a5b365813f19312707032d7",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3593,6 +4418,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p079/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "09ba529cfc91d3df5a27882b278622dd9366d2998d798d4e5fd692e8901af715",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3606,6 +4434,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p080/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "7f9e61871e8fe72d47b1a71727598c23f5d04ef25adcf285e0c1733efe0f2656",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3619,6 +4450,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p081/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "6b495f0330172185425e535720224e1ef2d686466355069eacf31c01785c5614",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3632,6 +4466,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p082/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "3fc6e69856621898ef773c542b83eaa2c26dd10aee59cec3625a2672c88876f3",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3645,6 +4482,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p083/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "f9d8abc332f69baa8be1dd3136a0d5f5d98b425e106f5df8435982bff6793f58",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3658,6 +4498,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p084/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "d8571485c0e43f2b237546ba34c814861387ab19737c8003d96c0e0b5426b280",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3671,6 +4514,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p085/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "aa707af0165b589fe60ccad819e987a240a63a4a90335e153640fbba722bb219",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3684,6 +4530,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p086/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "d233a7047b27638ddc82bab89fdd81b3c8497f8f3e783923788f40884da8a15b",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3697,6 +4546,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p087/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "15a086aa3a8b866231681f5d08e22d9b86eb49e300f2c723db331504a179d4f5",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3710,6 +4562,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p088/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "54d8efbdbb33bc49454e933f670a545f7bac869adf7b8c08511b489112486294",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3723,6 +4578,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p089/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "ceea277e5d1f64a9825a4570449ee7de644ac8b6607f951830a2b8e85c4c0790",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3736,6 +4594,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p090/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "92dcf8173642a2cbdb0efacb2f9038d4b72620871b2c894e1a01b4028a797042",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3749,6 +4610,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p091/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "32491ae09a6dcc0f37a5a8323dfec39b32f21fe98d7a2158bc119a51cb1bdca0",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3762,6 +4626,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p092/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "3bf83e91cb399a9866f6acea1c63ab52340960db9bb480d0c4cc9a65f8642460",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3775,6 +4642,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p093/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "842b5390c06ce3b4bfa7b77a4b86de16768c3f406ffa5c8df94b3363b2de399e",
    "rsrc_size": 2670,
    "type": "icon"
@@ -3788,6 +4658,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p094/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "a0b40550a24f6156f70b469043600a2bae531b1ef20822083ba53bd69cfc5312",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3801,6 +4674,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p095/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "ccda4e56cd9405ea18a1bcecc9e5420c20186bf4712472e49bbb40d801042a96",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3814,6 +4690,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p096/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "1d3cdbb9ec7137bf02fb4e5ad8aaab7c14d368e13cbf53aede1ae2f3fc9b4e93",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3827,6 +4706,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p097/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "d77c34687835c4cbf016d23bd4691e03b18c6751c544e55ed82ea678f20c9880",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3840,6 +4722,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p098/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "9e54c7968ee0245f2967a510daca27ca1290c889bbe62890974db16583d0fbc0",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3853,6 +4738,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p099/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "706f52029fbb9b842e7f518e588178f42e7e9994db8a1d0fdc75f7753eec7efc",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3866,6 +4754,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p100/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "8a64e0ae925d39a8a619bd4d7651fd01dee24c66a3fad906685220a1b1c6b9b2",
    "rsrc_size": 2670,
    "type": "icon"
@@ -3879,6 +4770,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p101/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "d91d797cb18ef8775937d91d69908b4bb83f77381c51952222bbc76232bd3336",
    "rsrc_size": 2670,
    "type": "icon"
@@ -3892,6 +4786,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p102/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "c8452003add4bbbfe7597ba0ff4f051b18ea7e50e3670401667954fa21057aef",
    "rsrc_size": 2670,
    "type": "icon"
@@ -3905,6 +4802,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p103/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "60f0a0a2d27c0a3accbdfee7b87c0144f826eecc109d4be85789abcf4795d42c",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3918,6 +4818,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p104/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "69ce8aabe7e77c5ca5a91820b5dbbad4f357a81e62ac1e9202f0eab2999152b6",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3931,6 +4834,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p105/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "f26fbb78a4ce6797156528fee85caf171c3a2d3be919e77bfff017771149aa75",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3944,6 +4850,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p106/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "129bc1ed98555cf3aba3d206b0c700b613476d87c9729ed9c75d0e4e3b2c0714",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3957,6 +4866,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p107/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "3d237cfedc26f37e3678e3b467cb5e58983888c5dd609626b853fcf3ef71d86f",
    "rsrc_size": 2670,
    "type": "icon"
@@ -3970,6 +4882,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p108/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "b2f8e69b24fbcc9b8712a5bfcef8b1d9b7057fd361ef20f910215e8672451ec1",
    "rsrc_size": 2670,
    "type": "icon"
@@ -3983,6 +4898,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p109/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "7015a6414e1602a7bbd646c57f220008a561773940ad911cbf3de64c6ac9e976",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -3996,6 +4914,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p110/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "1ff63da81aeba4bd949163ae664e55f3ba26424733270e5800c93d8a97f1629b",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -4009,6 +4930,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p111/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "ed7fe78242e38de2f9ef37faac9f28839dc66b471058733b273fc4a5195be52b",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -4022,6 +4946,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p112/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "5c96908c95a3b2ee32eeca1d28149990cc68807b52d2a3a2522b81284cd4bcdb",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -4035,6 +4962,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p113/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "8f46a45963e062f4942dbee78a20dd55605e9be30b3a6c2755e24deb26a0e3cf",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"
@@ -4048,6 +4978,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacburgerHelper/patterns/p114/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "c40a9497245c6661ff9b971749854b6b56f55b22e9ecf23b2fa05b573adefbbc",
    "rsrc_size": 2670,
    "type": "\u0000\u0000\u0000\u0000"

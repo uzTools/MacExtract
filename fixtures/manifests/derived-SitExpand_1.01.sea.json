@@ -9,6 +9,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "SitExpand ƒ/SitExpand",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "ef3e24e7b176e31a176be26a924ea2055583504d036471c211f5ba0a6dee9028",
    "rsrc_size": 13407,
    "type": "APPL"
@@ -18,6 +21,9 @@
    "data_sha256": "e929aaa2a77dbc9fc85c43e79ba6b724dfdd824fe434f63258103f79733e30a2",
    "data_size": 3896,
    "name": "SitExpand ƒ/SitExpand Doc",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"

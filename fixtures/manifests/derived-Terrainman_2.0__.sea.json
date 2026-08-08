@@ -5,6 +5,9 @@
    "data_sha256": "03b84d367fb78add0ecd56c1002e62acd61688710dd79c380d782e8ca534041f",
    "data_size": 446,
    "name": "StudioPro users - read me!",
+   "oracle_methods": [
+    "DDn"
+   ],
    "type": "TEXT",
    "unadjudicated": {
     "rsrc": "Attempted to read more data than was available"
@@ -15,6 +18,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Terrainman 2.0",
+   "oracle_methods": [
+    "DDn"
+   ],
    "rsrc_sha256": "bd2ccc4cbfb55f555980fdd342da6aad171b8e932f8033b036ddc444e4d1a764",
    "rsrc_size": 236758,
    "type": "APPL"
@@ -28,6 +34,9 @@
    "data_sha256": "78cd490f44475ab9d3d5449a36f7ab3773d011365d47007c1e63a54ec9fc7595",
    "data_size": 5806,
    "name": "Terrainman 2.0 ƒ/Comprehend me",
+   "oracle_methods": [
+    "DDn"
+   ],
    "type": "TEXT",
    "unadjudicated": {
     "rsrc": "Attempted to read more data than was available"
@@ -42,6 +51,9 @@
    "data_sha256": "2cf901bc53778b904e1c42b668fb4c1209a2373ff0650d2271af6a367e9391e5",
    "data_size": 842,
    "name": "Terrainman 2.0 ƒ/Is your terrain backwards?/How to adjust orientation",
+   "oracle_methods": [
+    "DDn"
+   ],
    "rsrc_sha256": "8b0267cf435e1016468652ec803b5f2779e8d08a14a66cd97cc47e1d97a75c59",
    "rsrc_size": 332,
    "type": "TEXT"
@@ -51,6 +63,9 @@
    "data_sha256": "6871290c1d73d9bc0bb36bbc154ae9e8aa0965146fa78067617f0d5ec4ab96c7",
    "data_size": 1210,
    "name": "Terrainman 2.0 ƒ/Is your terrain backwards?/R",
+   "oracle_methods": [
+    "DDn"
+   ],
    "rsrc_sha256": "3d6bf5e2f8970a003c72638be81ba84656cb471e64b927aed25a49da2a97a3cb",
    "rsrc_size": 701,
    "type": "PICT"
@@ -64,6 +79,9 @@
    "data_sha256": "ca6f48564bf62a3279adea827c61ed1a2878b618f91079f46628a7a0c89d0a1c",
    "data_size": 12888,
    "name": "Terrainman 2.0 ƒ/Pictures to try/Bacteria (use low height)",
+   "oracle_methods": [
+    "DDn"
+   ],
    "type": "PICT",
    "unadjudicated": {
     "rsrc": "Attempted to read more data than was available"
@@ -74,6 +92,9 @@
    "data_sha256": "34b5c8d0dbeeb1549f20c13fe01c523da5d44e086c3726a934865784a9eda282",
    "data_size": 19240,
    "name": "Terrainman 2.0 ƒ/Pictures to try/Bloop!",
+   "oracle_methods": [
+    "DDn"
+   ],
    "rsrc_sha256": "9e33525a8a5dacf63a74da371a235438fb61fb2fa740c07e31c7bcb339d6413e",
    "rsrc_size": 563,
    "type": "PICT"
@@ -83,6 +104,9 @@
    "data_sha256": "d121b8514bd6a796dba525f1cb56eb57a1c2918cd9c6f92f9a2661c5b2c361db",
    "data_size": 15728,
    "name": "Terrainman 2.0 ƒ/Pictures to try/Downtown",
+   "oracle_methods": [
+    "DDn"
+   ],
    "rsrc_sha256": "f8411ecc6982390db9739f89488a495501e03227c8c7a738ec648e5fcd033879",
    "rsrc_size": 563,
    "type": "PICT"
@@ -90,6 +114,9 @@
   {
    "creator": "8BIM",
    "name": "Terrainman 2.0 ƒ/Pictures to try/Gnarly cove",
+   "oracle_methods": [
+    "DDn"
+   ],
    "rsrc_sha256": "1b7e2cb4ef0a13cdea23ebb82f981340f37940dc6914eea0063440d5cf5153ec",
    "rsrc_size": 563,
    "type": "PICT",
@@ -102,6 +129,9 @@
    "data_sha256": "b79e1daebcfd05a3231fcce64e979b7eb1bb12bba1061e74ad51fef03cf440ce",
    "data_size": 7650,
    "name": "Terrainman 2.0 ƒ/Pictures to try/Rocky Countryside",
+   "oracle_methods": [
+    "DDn"
+   ],
    "type": "PICT",
    "unadjudicated": {
     "rsrc": "Attempted to read more data than was available"
@@ -112,6 +142,9 @@
    "data_sha256": "d66f07422e8168b42527d2fa8c6b7428f488192b6d998034d4e66b80ed5f2f98",
    "data_size": 10150,
    "name": "Terrainman 2.0 ƒ/Pictures to try/Swirly",
+   "oracle_methods": [
+    "DDn"
+   ],
    "rsrc_sha256": "5f19a4ab4276064566de25afc8f6b6420efc287f17191e72c44115b419b11bbc",
    "rsrc_size": 563,
    "type": "PICT"
@@ -121,6 +154,9 @@
    "data_sha256": "5b853d5012c4ed2d863e4d69c0758a648281e82cd960c5a9965478dc9d160fc4",
    "data_size": 5376,
    "name": "Terrainman 2.0 ƒ/Pictures to try/They call me Spike",
+   "oracle_methods": [
+    "DDn"
+   ],
    "type": "PICT",
    "unadjudicated": {
     "rsrc": "Attempted to read more data than was available"

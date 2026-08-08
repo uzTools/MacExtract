@@ -9,6 +9,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Robert's Text Cleanup/\t\t\t\t\t\t\t\t\t ",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "d8d0039d1d44ddc9631c8e3fa3c3ba58287eff5b3dbaf310f957af78b80f0d7d",
    "rsrc_size": 3038,
    "type": "TEXT"
@@ -18,6 +21,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Robert's Text Cleanup/\t\t\t\t\t\t\t\t \t",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "2ffaae53658fabd9da11b2babbc185d7039371352bed9c7ab8ce3797fa83a72a",
    "rsrc_size": 3038,
    "type": "TEXT"
@@ -27,6 +33,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Robert's Text Cleanup/\t\t\t\t\t\t\t\t  ",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "f4e9343c11e676dd9e015850030b49f02788861ac61e0c0bd22e63cbecad064b",
    "rsrc_size": 3038,
    "type": "TEXT"
@@ -36,6 +45,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Robert's Text Cleanup/\t\t\t\t\t\t\t \t\t",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "592f336243cd608177b86de2a2c727b381cf9bf998f1f67e0dbfb237c6b80d1a",
    "rsrc_size": 3038,
    "type": "TEXT"
@@ -45,6 +57,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Robert's Text Cleanup/\t\t\t\t\t\t\t \t ",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "3d3acaf233d7b1a6a744074632cd7bb98f086cf314b7d887a61d9442a3a0b45a",
    "rsrc_size": 3038,
    "type": "TEXT"
@@ -54,6 +69,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Robert's Text Cleanup/\t\t\t\t\t\t\t  \t",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "73a803d83e0d1ed80d391de15d8ae0efe4abf071d954ac95d1dd4de831081db7",
    "rsrc_size": 3038,
    "type": "TEXT"
@@ -63,6 +81,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Robert's Text Cleanup/\t\t\t\t\t\t\t   ",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "48ddfb6dd89ce33508f1b23a3007aa5836820c6827f8a4b55e564b2379c8bd44",
    "rsrc_size": 3038,
    "type": "TEXT"
@@ -72,6 +93,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Robert's Text Cleanup/\t\t\t\t\t\t \t\t\t",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "0792660d4f8008f6b735f2fe25ec3691f24be89ab6fd1969a128861ac8cdb218",
    "rsrc_size": 3038,
    "type": "TEXT"
@@ -81,6 +105,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Robert's Text Cleanup/\t\t\t\t\t\t \t\t ",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "0e59045a2eb17d5841ee110d1ec1a24abb96feaa710e5ade9eb27ce22dbca14f",
    "rsrc_size": 3038,
    "type": "TEXT"
@@ -90,6 +117,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Robert's Text Cleanup/\t\t\t\t\t\t \t \t",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "837efc27d364e5ecc1c06b8e94b44d5a586b773ef3f38a2e4403e4a43b939faa",
    "rsrc_size": 3038,
    "type": "TEXT"
@@ -99,6 +129,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Robert's Text Cleanup/\t\t\t\t\t\t \t  ",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "b6083ad64cb81acbef539c2d2079000c71aab61a29dbbd233420e546dc8de211",
    "rsrc_size": 3038,
    "type": "TEXT"
@@ -108,6 +141,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Robert's Text Cleanup/\t\t\t\t\t\t  \t\t",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "bc27e064a5bd5c7843bdb7771a82e7e442dd8169bccfc6ad9ad2b1c2bedc83fb",
    "rsrc_size": 3038,
    "type": "TEXT"
@@ -117,6 +153,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Robert's Text Cleanup/\t\t\t\t\t\t  \t ",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "d38dbcb21d2ff010a4c2b37c66fee9064ed7017ee9c43e228e4478e3e6a8afe6",
    "rsrc_size": 3038,
    "type": "TEXT"
@@ -126,6 +165,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Robert's Text Cleanup/\t\t\t\t\t\t   \t",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "535525d0e20ccc7f462bdd8d15af125b254e94aba62572f870192135afe7f4c0",
    "rsrc_size": 3038,
    "type": "TEXT"
@@ -135,6 +177,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Robert's Text Cleanup/\t\t\t\t\t\t    ",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e3c1b28f5783bdd2eeca49af6276c3c6d319240484001ad59652b7f4f92ded4a",
    "rsrc_size": 3038,
    "type": "TEXT"
@@ -144,6 +189,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Robert's Text Cleanup/\t\t\t\t\t \t\t\t\t",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "5f5e93e9f7fb86194d3c76b28a3ec46da0f27b822632fdfed23a2c8bf3721f23",
    "rsrc_size": 3038,
    "type": "TEXT"
@@ -153,6 +201,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Robert's Text Cleanup/\t\t\t\t\t \t\t\t ",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "624a7d3575cf5b08f1edd7c91351c9fac4e06db5699b6575b1c5b3cd4bafb489",
    "rsrc_size": 3038,
    "type": "TEXT"
@@ -162,6 +213,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Robert's Text Cleanup/\t\t\t\t\t \t\t \t",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "51239470e4111c52baf811091dfe79a4652ce5a216bc80ee68e524da4e5b4ecb",
    "rsrc_size": 3038,
    "type": "TEXT"
@@ -171,6 +225,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Robert's Text Cleanup/\t\t\t\t\t \t\t  ",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "031436a71b15bd556d89df880e8d9af9aae5fb728fe0ca90aa72dd83c576c0c3",
    "rsrc_size": 3038,
    "type": "TEXT"
@@ -180,6 +237,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Robert's Text Cleanup/\t\t\t\t\t \t \t\t",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "7acdbe7dc2df9b6c237220bbaad114f5e523d100ceefc90459f656368513f9f4",
    "rsrc_size": 3038,
    "type": "TEXT"
@@ -189,6 +249,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Robert's Text Cleanup/\t\t\t\t\t \t \t ",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "9b729d733eb57a3886a14c144eaf5a55fd96dceb0ceebdc158266f999caa6aab",
    "rsrc_size": 3038,
    "type": "TEXT"
@@ -198,6 +261,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Robert's Text Cleanup/\t\t\t\t\t \t  \t",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "521693b0ff909030b8763aae7623e159a0068e65bb7b3dbfa62599a7d5a9ef03",
    "rsrc_size": 3038,
    "type": "TEXT"
@@ -207,6 +273,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Robert's Text Cleanup/\t\t\t\t\t \t   ",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "652ce5a9a736c095ab745c606ce66fec7dd9a5d7e75747e7b036b02dbddd60e8",
    "rsrc_size": 3038,
    "type": "TEXT"
@@ -216,6 +285,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Robert's Text Cleanup/\t\t\t\t\t  \t\t\t",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "f8a61ce31dd8a4affc693668f5c7b1fc2216a3c2cf741c439231ef33dcfa6449",
    "rsrc_size": 3038,
    "type": "TEXT"
@@ -225,6 +297,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Robert's Text Cleanup/\t\t\t\t\t  \t\t ",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "f6db73561bd294529d9da2da1c9bc78e74705a918fee85c76311b6bcad5d519c",
    "rsrc_size": 3038,
    "type": "TEXT"
@@ -234,6 +309,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Robert's Text Cleanup/\t\t\t\t\t  \t \t",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "427ece82a40d9fddd871e79e8d1c6a798bc407abeff07e7c8d996e2ef1366c55",
    "rsrc_size": 3038,
    "type": "TEXT"
@@ -243,6 +321,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Robert's Text Cleanup/\t\t\t\t\t  \t  ",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "1f4412b2d401407af08e1ba4e22033105cef4ace31ae759093ae0bf47ff7d8ee",
    "rsrc_size": 3038,
    "type": "TEXT"
@@ -252,6 +333,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Robert's Text Cleanup/\t\t\t\t\t   \t\t",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e8882695017dc3134c6293738a09a0ae10c628cd9a5c57592e9a6705d7cf4f3b",
    "rsrc_size": 3038,
    "type": "TEXT"
@@ -261,6 +345,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Robert's Text Cleanup/\t\t\t\t\t   \t ",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "066ecac18ad66b552ca0c3418d169a2b604d04e2d2d0fc1178476aa269c8ada4",
    "rsrc_size": 3038,
    "type": "TEXT"
@@ -270,6 +357,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Robert's Text Cleanup/\t\t\t\t\t    \t",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "a9cec223f7e01052fb04d3419bf417adbf69e8369db08c287de12a2e226d651f",
    "rsrc_size": 3038,
    "type": "TEXT"
@@ -279,6 +369,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Robert's Text Cleanup/\t\t\t\t\t     ",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "ae5c1c99a1dc99ac9fae347d9c2dcb9aedad571a35fd761ee3025026fdd3cb5b",
    "rsrc_size": 3038,
    "type": "TEXT"
@@ -288,6 +381,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Robert's Text Cleanup/\t\t\t\t \t\t\t\t\t",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "190232b34f5b660e5a70d8ee94bbd30ce7c9dbb96e20a49fe2606c1fa4da771b",
    "rsrc_size": 3038,
    "type": "TEXT"
@@ -297,6 +393,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Robert's Text Cleanup/\t\t\t\t \t\t\t\t ",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e4f9d1d0e922b853d2b55c850cd272ed5ff25555d322bb2e428911994d36272c",
    "rsrc_size": 3038,
    "type": "TEXT"
@@ -306,6 +405,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Robert's Text Cleanup/\t\t\t\t \t\t\t \t",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "1e5ecf260a3475c92161dab19603d6cebaac601ea9f89a48a18ab734fa4ccf16",
    "rsrc_size": 3038,
    "type": "TEXT"
@@ -315,6 +417,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Robert's Text Cleanup/\t\t\t\t \t\t\t  ",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "81694ccb711b07aeb825f406e7c072a560ce4c8c18a9cf59a12469861c3a0a6a",
    "rsrc_size": 3038,
    "type": "TEXT"
@@ -324,6 +429,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Robert's Text Cleanup/\t\t\t\t \t\t \t\t",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "2d6f132d67057e8398218d2c9512f9aa89be0342b45d1adcec55c9d63f9e0741",
    "rsrc_size": 3038,
    "type": "TEXT"
@@ -333,6 +441,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Robert's Text Cleanup/\t\t\t\t \t\t \t ",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "8870e7655cb581c235cf215437517f1c368cc19dafeee7084161af934ae20e07",
    "rsrc_size": 3038,
    "type": "TEXT"
@@ -342,6 +453,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Robert's Text Cleanup/\t\t\t\t \t\t  \t",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "6c5bc867f1cf8f9cbc99ce2874206211a64e9c0a1028f0ba104a1dae92911222",
    "rsrc_size": 3038,
    "type": "TEXT"
@@ -351,6 +465,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Robert's Text Cleanup/\t\t\t\t \t\t   ",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "724dfa667e3db0e71daae4d20822d08f2ede4c1d2d863d6ef238747726eca8bf",
    "rsrc_size": 3038,
    "type": "TEXT"
@@ -360,6 +477,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Robert's Text Cleanup/\t\t\t\t \t \t\t\t",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "6fa025c7304790d04273d7680e0a99c271484bae7ea7fd1cf9a1889b45a43591",
    "rsrc_size": 3038,
    "type": "TEXT"
@@ -369,6 +489,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Robert's Text Cleanup/\t\t\t\t \t \t\t ",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "ceb059cf094103fa284b37101c1f693ac1f26b8c765823bdfcf0279a972d2c15",
    "rsrc_size": 3038,
    "type": "TEXT"
@@ -378,6 +501,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Robert's Text Cleanup/\t\t\t\t \t \t \t",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "bfb65a785722c5876b6c3bd148259a33e4fe3678db8dc23880cbffabe95cc806",
    "rsrc_size": 3038,
    "type": "TEXT"
@@ -387,6 +513,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Robert's Text Cleanup/Cleanup Script (QXP3.32) 1.0",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "feefcc9dcacf4dfb0fdc8c6c4c12c834143af3ca5eb11636f56d6674fc898b05",
    "rsrc_size": 5962,
    "type": "APPL"
@@ -396,6 +525,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Robert's Text Cleanup/Cleanup Script (QXP4.04) 1.0",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "dc8a78418a36f96acbeeb9119a7fd079949f5202d57ff2d868fdc3110d24cbc0",
    "rsrc_size": 5992,
    "type": "APPL"
@@ -405,6 +537,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Robert's Text Cleanup/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "8b621bdaab1483e344ec9cc879536d22ae9df428c122777fde03bd957f7b7599",
    "rsrc_size": 286,
    "type": "icon"
@@ -414,6 +549,9 @@
    "data_sha256": "77f2d070a2edaf4d2959fba3209a5ba1959d7888209e71a967c6e785e7a3911e",
    "data_size": 3298,
    "name": "Robert's Text Cleanup/Read Me",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "b2554f25eda58ff406b6ab3e758b4d5bc5a588730551dca12b9116515d464573",
    "rsrc_size": 1332,
    "type": "ttro"

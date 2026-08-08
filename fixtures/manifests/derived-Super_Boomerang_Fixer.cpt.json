@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Super Boomerang Fixer",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "c5d54a95a0e0256f9829bb657aaa29ab4635f9cea460aee7f992400fd5eb30c5",
    "rsrc_size": 8448,
    "type": "cdev"

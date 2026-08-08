@@ -9,6 +9,9 @@
    "data_sha256": "c91e7c4a53ca40630de2003082c3ba54988d28d82291c9a5356300ef12d81004",
    "data_size": 1508,
    "name": "Mankato Halfwit/ Read Me, Please!",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "f47a7c82aea4407f8d1a4452b4ce14aec3df7da39e50442449860a9d33137200",
    "rsrc_size": 2652,
    "type": "TEXT"
@@ -18,6 +21,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Mankato Halfwit/Donate Two Bucks",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "99a5deb9ff1063b5d98035346ae61645d5ce35d3afa75ea1e05da7dd8411054c",
    "rsrc_size": 826,
    "type": "ilht"
@@ -27,6 +33,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Mankato Halfwit/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "40dc81615e0c31b2e4fe653a3c1a41e50530dcf64a4b2428ff8ae6b5770863b6",
    "rsrc_size": 286,
    "type": "icon"
@@ -40,6 +49,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Mankato Halfwit/Postscript Type1/MankaHal",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "00ff8c416470e9a315486e85e87138a4b043daa55a7c1dada3b11b5f95504912",
    "rsrc_size": 23760,
    "type": "LWFN"
@@ -49,6 +61,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Mankato Halfwit/Postscript Type1/Mankato Halfwit.bmap",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "95e6a11568aec9211ae83eb268ea453b214015c06bc4281424123deefbd69bff",
    "rsrc_size": 49388,
    "type": "FFIL"
@@ -62,6 +77,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Mankato Halfwit/TrueType/Mankato Halfwit.suit",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e776ace08061f672cf0d396a26a51981577eefff7240862a1c08ff1f74eddc52",
    "rsrc_size": 47876,
    "type": "FFIL"
@@ -71,6 +89,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Mankato Halfwit/www.fontosaurus.com",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "9bce052b9a1d6c827ed0956c219c0ac088384eecc5e58792914d10c89516e5c5",
    "rsrc_size": 520,
    "type": "ilht"

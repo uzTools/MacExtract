@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "StuffIt Commands",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "7e5a46e06876573031dfc2446d146dacd1b15da2fd4e4c1d7ec7fa80d8e6a5b3",
    "rsrc_size": 191745,
    "type": "osax"
@@ -14,6 +17,9 @@
    "data_sha256": "7c657559dbdafbbc10155ec826a83d49cba55fa488bce4582f360837bcfd2596",
    "data_size": 4742,
    "name": "StuffIt Commands Dictionary",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "c89fe63071100661cc3862ea9b80a3ca7c6298b7ed48fa2ea0fa63c66dc19f2c",
    "rsrc_size": 6352,
    "type": "TEXT"
@@ -23,6 +29,9 @@
    "data_sha256": "74ef5b8044acff5f617fb1161fd4096d08d2ac5e0c4093950d75f1de45b834e4",
    "data_size": 11138,
    "name": "StuffIt Commands Read Me",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "b420f8b3dc2939ff3a91125e7dbb222da74860d1946b37f0ac3927d44e9983e2",
    "rsrc_size": 932,
    "type": "TEXT"

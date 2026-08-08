@@ -9,6 +9,9 @@
    "data_sha256": "5221c3c8b5951bd20d5f690a906cfc59b562b4202aad1e740c4d1dde9f2e1c57",
    "data_size": 10727,
    "name": "Easy Errors 1.11/Easy Errors 1.11",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "c302140e2b2c7ec9f25668980a85d24c3e2a7104d99cc9e18201da1fc39a76c6",
    "rsrc_size": 87929,
    "type": "APPL"
@@ -18,6 +21,9 @@
    "data_sha256": "b1f36818cda9dc169d0ccbcb630079d34339cbf8c72dd24cdea09f1688ed52c4",
    "data_size": 5235,
    "name": "Easy Errors 1.11/Errors Info",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "99d8172b864a4ddc7a904fd779dd2e20250089bbaa715fe270e3ff04952ebcd9",
    "rsrc_size": 332,
    "type": "TEXT"

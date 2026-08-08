@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "PICMeUp",
+   "oracle_methods": [
+    "Huffman"
+   ],
    "rsrc_sha256": "c276b6af102872b75c340d4180bfa02fe13dafd8b145c960255b28d84bf21752",
    "rsrc_size": 9381,
    "type": "APPL"
@@ -14,6 +17,9 @@
    "data_sha256": "4eeb785a542aa3c4fdbcabfc3d66a7b91f110caa35de04bc834061db7f82082a",
    "data_size": 13364,
    "name": "PICMeUp Docs MacWrite",
+   "oracle_methods": [
+    "Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "WORD"
@@ -23,6 +29,9 @@
    "data_sha256": "d678202de3f4b1c2c26b703dcd360957e778431bef2a901dceb7656ae00c448d",
    "data_size": 17408,
    "name": "PICMeUp Docs Word",
+   "oracle_methods": [
+    "Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "WDBN"
@@ -32,6 +41,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "StartupMessage",
+   "oracle_methods": [
+    "Huffman"
+   ],
    "rsrc_sha256": "25cb364cf5e98a5bac2b8b60d4fe2d10db84bcd18415b29c9aa74dfd989ced9c",
    "rsrc_size": 16175,
    "type": "rsrc"

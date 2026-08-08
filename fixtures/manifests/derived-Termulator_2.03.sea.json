@@ -9,6 +9,9 @@
    "data_sha256": "d766749b06ec309f706fe2eda03c3f098569f3023c4d94cb48c2b21718bfb74b",
    "data_size": 12034,
    "name": "Termulator/File Transfer",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TUST"
@@ -18,6 +21,9 @@
    "data_sha256": "a1a2c13a861bcb614474ea9ada17cb24da36ea853fd7cd185d2ebba9f50f0c75",
    "data_size": 6467,
    "name": "Termulator/Sample GEnie Setup",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TUST"
@@ -27,6 +33,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Termulator/Termulator 2.03",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "d9434e6e74f69a05a9f288e4fadfbb81327faba49d3575584a27ec03a88dc800",
    "rsrc_size": 103429,
    "type": "APPL"
@@ -36,6 +45,9 @@
    "data_sha256": "e647ca3ac6c11839b3e7029e238f07c4fc4abfd5b2ad6a258d75871895280fae",
    "data_size": 25332,
    "name": "Termulator/Termulator Docs (MacWrite)",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "2e9c4d2642af8f29d53cf8564d0c01f8c1dfdaad38b463296d65d52f63a0d969",
    "rsrc_size": 772,
    "type": "WORD"

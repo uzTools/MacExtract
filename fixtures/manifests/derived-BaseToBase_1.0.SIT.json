@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "BaseToBase 1.0",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "c0f60a93a94efd4b684536f0fa4a8b0f8cd7e96b846b7ccc4489d392c845c8d5",
    "rsrc_size": 10230,
    "type": "DFIL"
@@ -14,6 +17,9 @@
    "data_sha256": "f945ff1704bbfeb3cb52cc1cbb0a904894239740a9645af0f27624541ea2c945",
    "data_size": 11124,
    "name": "BaseToBase ∂",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "e1b8fda149d186728500dcf656a6393215c94fa8c9f26179d07320a70c2aae95",
    "rsrc_size": 772,
    "type": "WORD"

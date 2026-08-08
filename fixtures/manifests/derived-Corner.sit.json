@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Corner",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "2dc6dbf45b59f55a4ec7e300ed7865ec04a6df5d7135ad82e8f9766f0b1f3e0c",
    "rsrc_size": 2474,
    "type": "INIT"
@@ -14,6 +17,9 @@
    "data_sha256": "96d1614955640720be1015151f5e1a1a8d03643a3ebd5c7f8d81fa25b212a3c0",
    "data_size": 3938,
    "name": "Corner.doc",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "40c4419f4380a999d50d031a60542325c2b0fb621b5981105a6336c73c70cbf0",
    "rsrc_size": 814,
    "type": "WORD"

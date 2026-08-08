@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Quick View",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "c8c624dbc58cd9a2ae45a7238c2a7f3cc64fb5a3141d281bd090320e1bdec26e",
    "rsrc_size": 17329,
    "type": "DFIL"
@@ -14,6 +17,9 @@
    "data_sha256": "c0c672e24321aeeaeefd8f95cded701d9dfaf147d07600dc143cf4daa7cf7ce3",
    "data_size": 1478,
    "name": "QuickView.readme",
+   "oracle_methods": [
+    "Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"

@@ -16,7 +16,7 @@ whole corpus for that format (engine allocations only, via
 | Compact Pro (.cpt) | extract | RLE, LZH+RLE | 108 fixtures | 19 KB | full |
 | StuffIt classic (.sit) | extract | 0 store, 1 RLE90*, 2 LZW, 3 Huffman, 5 LZAH, 6 fixed Huffman‡, 8 MW, 13 LZSS+Huffman; encrypted detected | 227 fixtures | 8–76 KB‖ | full |
 | StuffIt 5 (.sit) | extract | 0, 13, 15 Arsenic; encrypted detected | 31 fixtures | 0.15–2.53 MB† | 23 of 31 fixtures extract FULLY; the rest refuse per entry |
-| Zip | extract | store, deflate; others & encrypted per-entry errors | 3 fixtures (+2 PKZIP-1.x corpus-only) | 66 KB | full |
+| Zip | extract | store, deflate; others & encrypted per-entry errors | 5 fixtures (2 of them PKZIP 1.x, graded on names and entry counts only — Implode is out of v1 scope, and `unar` adjudicates 5 of their 7 entries) | 66 KB | full |
 | Gzip | extract | deflate | 3 fixtures | 51 KB | full |
 | Unix compress (.Z) | extract | LZW ≤16 bit | 4 fixtures | 219 KB§ | full |
 | Tar (ustar/v7) | extract | — (links reported unsupported) | 3 fixtures (2 real 1990 v7 tars) + unit tests | 8 KB | full |
@@ -197,16 +197,21 @@ the intermediate deleted (`-nr` disables; depth ≤ 8). Verified chains:
 
 ## Hardening
 
-- Differential: 795 fixtures byte-exact against `unar` manifests
+- Differential: 797 fixtures byte-exact against `unar` manifests
   (both forks + type/creator), `./ci.sh`. `run_diff.py` prints the
   number it actually ran, plus two figures that must be read with it:
-  **19 forks across 14 fixtures are oracle-unadjudicated** (the oracle
-  failed on them, so the engine's own CRC-16 is the only check), and 3
-  fixtures are skipped whole because every entry uses a method outside
-  v1 scope. It was 769 until 2026-08-08 (nine fixtures written off as
-  oracle-undecidable, and neither — BLOCKERS.md), then 778 until
-  per-entry oracle failures stopped discarding whole manifests the same
-  day.
+  **12 forks across 9 fixtures are oracle-unadjudicated** (both
+  implementations decline every one of them, so the engine's own CRC-16
+  is the only check), and **7 entries are compressed with a method the
+  ORACLE names as outside v1 scope** and are graded on their names and
+  entry counts alone. No fixture is skipped for anything our own engine
+  says about it (TESTING.md, "When our engine declines an entry"). It was
+  769 until 2026-08-08 — nine fixtures written off as oracle-undecidable
+  and neither (BLOCKERS.md), then 778 until per-entry oracle failures
+  stopped discarding whole manifests, 793 with them, 795 once a second
+  oracle read what `unar` could not, and 797 once two fixtures stopped
+  being skipped on our own say-so. Every increase that day was the
+  measuring apparatus, not new archives.
 - Robustness: 10 truncation/bit-flip variants per fixture — no
   crashes, hangs, or sanitizer trips under
   ASan+UBSan+`-fsanitize=alignment` (`-fno-sanitize-recover=all`).

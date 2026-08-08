@@ -13,6 +13,9 @@
    "data_sha256": "34a6465ec5eddf816eca402ff48f945ae3243fdb5fccf3e25a03f33105b0697d",
    "data_size": 25752,
    "name": "Mac Storage FAQ/Storage Spreadsheets/Storage (ClarisWrks2)",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "CWSS"
@@ -22,6 +25,9 @@
    "data_sha256": "9b0481c8fa4f0405b31683543e947f0c1e75d56fdfdb23102ac7e78b76caf2b0",
    "data_size": 8346,
    "name": "Mac Storage FAQ/Storage Spreadsheets/Storage (Excel 3)",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "XLS3"
@@ -31,6 +37,9 @@
    "data_sha256": "4ea4d4da56687a64888cdb7613b5d88c4ca2b9ce8e8f333fe586531adf778feb",
    "data_size": 9649,
    "name": "Mac Storage FAQ/Storage Spreadsheets/Storage (SYLK)",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -40,6 +49,9 @@
    "data_sha256": "26c7c31d7a8acae09c7496f24b70759af1050b11af08a9c2b0966e99947aa5e0",
    "data_size": 78234,
    "name": "Mac Storage FAQ/mac-storage-faq.txt",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "f86513000a059b32c9cb89c03685a703c97e06853db91b8c5f5dc4f3928bdc60",
    "rsrc_size": 670,
    "type": "TEXT"

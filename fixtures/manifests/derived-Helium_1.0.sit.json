@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Helium 1.0",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "ec2445f2307dea3d9dbc0ffe9e2f88d11f078e6a7b175036d3ca797267cde8f5",
    "rsrc_size": 36897,
    "type": "cdev"

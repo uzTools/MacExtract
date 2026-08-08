@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "CEToolbox",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "f82e5d2af301f6a6a0ad6ae16525df3398e230f42ca67fec82345d9fce99badf",
    "rsrc_size": 63500,
    "type": "INIT"

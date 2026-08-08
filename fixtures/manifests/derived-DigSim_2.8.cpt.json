@@ -5,6 +5,9 @@
    "data_sha256": "94b5858f8f9014d9bfe6700ee72070eed60365eacd09fb046e1452d098fe9e14",
    "data_size": 450,
    "name": "2 Bit Arithmetic Logic Unit",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "CIRC"
@@ -14,6 +17,9 @@
    "data_sha256": "ad9bd34ec2a3a83f5ee02739bc837a7f1c0209bebdcafc188ec99d92608852d9",
    "data_size": 525,
    "name": "2 bit ALU doc",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -23,6 +29,9 @@
    "data_sha256": "ea811a06def5ef889fba02f70d53308820922d3054b6261eabaf97f221a43a63",
    "data_size": 96,
    "name": "4 Input AND Gate",
+   "oracle_methods": [
+    "RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "CIRC"
@@ -32,6 +41,9 @@
    "data_sha256": "8aa9553d75b06a2d86fedc151c551ec7cc86f9f4d2fa8ed33b17d874cf4a2c3f",
    "data_size": 96,
    "name": "4 Input NAND Gate",
+   "oracle_methods": [
+    "RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "CIRC"
@@ -41,6 +53,9 @@
    "data_sha256": "4b653c9b318afccbd77a854d1bd07e7c68ccbd5b7d763068886d2030f47315a2",
    "data_size": 234,
    "name": "4-Bit Comparator",
+   "oracle_methods": [
+    "RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "CIRC"
@@ -50,6 +65,9 @@
    "data_sha256": "711a2709835ef56181efe17cc2a6f9ebd04df67f2fd2fed366932f5ee90f4197",
    "data_size": 162,
    "name": "Binary Full Adder",
+   "oracle_methods": [
+    "RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "CIRC"
@@ -59,6 +77,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "DigSim 2.8",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "8f3f893435fa63ead36e5462eb752c671ba82009d14380feb5dbc48a2142f228",
    "rsrc_size": 44202,
    "type": "APPL"
@@ -68,6 +89,9 @@
    "data_sha256": "1deab62285142b6b021cf13840a9cb56b295ffdcc8b091d8cc7d75828d3a187d",
    "data_size": 12956,
    "name": "DigSim 2.8 Doc",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "322e6e8fd57c947237b1dea53fe64c7bc165976087307de852ce79211ba6def2",
    "rsrc_size": 784,
    "type": "WORD"

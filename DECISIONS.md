@@ -255,10 +255,13 @@ Non-obvious decisions, most recent last.
   gzip -n, tar --sort/--owner/--group/--mtime, zip -X). Plus
   real-world era files: PCCTS.tar.gz, popper-1.7.tar.Z,
   a2ps.V4.3.tar.Z from funet.
-- **4acalc.zip / 4alnch11.zip (PKZIP 1.x, method Implode) stay
-  corpus-only:** even unar fails on them, so there is no oracle
-  manifest; they exercise our clean per-entry
-  "unsupported method" path and the robustness harness.
+- **4acalc.zip / 4alnch11.zip (PKZIP 1.x, method Implode) exercise our
+  clean per-entry "unsupported method" path and the robustness
+  harness.** This said they stay corpus-only because "even unar fails on
+  them"; unar fails on ONE entry of each, and since per-entry manifests
+  landed (2026-08-08) both carry ground truth for the rest — 5 of 7
+  entries. Corrected 2026-08-08, along with the harness that was
+  skipping them whole (TESTING.md, "When our engine declines an entry").
 - **gzip/.Z carry no entry name; unar derives it from the archive
   filename (minus extension), ignoring even an embedded FNAME.** The
   engine gained UncOptions.name_hint so frontends can supply the same
@@ -1772,3 +1775,65 @@ the generated header rather than reimplementing it, and self-tests by decoding
 its own output the way `sit_fixhuf` does. The oracle for it is macunpack, and
 all ten forks are byte-exact against it — including the stored branch, which
 is the one an LP64 oracle cannot see.
+
+## 2026-08-08 — an excuse must be anchored outside our own output
+
+Reviewing the per-entry oracle work of earlier the same day turned up no
+hardcoded fixture names — discovery really is by condition throughout — but
+two excuses that could not fail, and both were found by asking the same
+question: *what evidence does this tolerance rest on?*
+
+**The first rested on our own error message.** `run_diff.py` skipped a whole
+fixture when every entry our binary reported failed with "recognized but
+unsupported". So the thing being graded decided whether it was graded. Two
+costs, both measured:
+
+- `4acalc.zip` and `4alnch11.zip` carry adjudicated hashes for 5 of their 7
+  entries, because `unar` implements Implode and we do not. Ten forks, plus
+  their names and entry counts, were never compared. The reason on record —
+  "even unar fails on them" (DECISIONS.md, M8) — had been false since
+  per-entry manifests landed that morning, and the disproof was in the
+  manifests themselves. **Two files disagreeing, again**: the third time that
+  mechanism has produced a finding here.
+- a regression that made a SUPPORTED method report "recognized but
+  unsupported" for a whole archive turned a failure into a skip. The
+  mitigation on record was a printed count for a human to compare against a
+  number in TESTING.md — and that number silently went 3 → 2 earlier the same
+  day when method 6 landed, which is exactly the change it was supposed to
+  make visible.
+
+The fix is to anchor the excuse in the ORACLE: `lsar` already names every
+entry's compression method, so manifests now record `oracle_methods` and the
+harness excuses "recognized but unsupported" only where the oracle says the
+method is outside v1 scope (`ORACLE_OUT_OF_SCOPE`, today just `Implode`). No
+fixture is skipped for anything our binary says any more; an out-of-scope
+entry is still graded on its name, on its entry count, and on anything the
+engine did write, so implementing Implode starts ten comparisons with no
+change to the harness. The set deliberately lists only methods the corpus
+contains: an unlisted one fails the suite loudly, where a misspelled guess
+would excuse nothing silently.
+
+**The second rested on the oracle, but too coarsely.** Where the oracle had
+failed ONE fork of an entry, our engine's absence was excused for the whole
+entry — so a fork with ground truth sitting beside an unadjudicated one was
+never required to exist. Six fixtures are shaped like that. Absence is now
+excused only for out-of-scope entries; an adjudicated fork is compared or
+reported missing.
+
+**Both were demonstrated failing before they were called fixed**, with stub
+binaries rather than a sabotaged engine: one that writes nothing for
+`•Draw 5.1.cpt` (78,123 B of adjudicated data fork) and one that calls every
+entry of the fully-adjudicated `derived-Export.sit` unsupported. Both passed
+before, both fail now, and the real engine's results did not move — 795 → 797
+fixtures graded, because the two zips stopped being skipped.
+
+**Also guarded: a many-to-one match key that trusted uniqueness.**
+`matchkey()` flattens `:` and `/` to `_` so unar's progress report can be
+matched against paths on disk. Two different entry names can therefore share a
+key, and the failure would be attributed to whichever the walk reached first —
+leaving the entry that really failed holding hashes of whatever unar dropped
+on disk, which the same day's notes record can be a sidecar padded with
+garbage. No fixture in the corpus collides; the builder now refuses one that
+does, the way the macunpack matcher already refused its own collisions. **Two
+matchers in one file disagreeing about the same hazard is a bug even when
+neither has fired.**

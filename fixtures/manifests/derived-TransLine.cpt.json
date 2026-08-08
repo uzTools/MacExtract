@@ -5,6 +5,9 @@
    "data_sha256": "b254ddb2fc49a128158a6740cbd83f51e7de3d42ee36cee6b92460feefc9d5c4",
    "data_size": 1806,
    "name": "Summary",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "4fc1efbd72a259db78e92378d9181a8698c079852df6717dae623d362ada77bb",
    "rsrc_size": 1356,
    "type": "TEXT"
@@ -14,6 +17,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "TransLine",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "96c766ddb654537cb4bd27ea6482e23451cb9ad5967360ddd3488950f39b537b",
    "rsrc_size": 58668,
    "type": "INIT"

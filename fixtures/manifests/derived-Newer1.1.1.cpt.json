@@ -9,6 +9,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Newer1.1.1/Newer",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "d4c6ee131423674e441966f16afe5df6230c267cdb48873098367abd6dc1fb86",
    "rsrc_size": 59212,
    "type": "APPL"
@@ -18,6 +21,9 @@
    "data_sha256": "7fac6a1c7cd17ccb82a6ea33469ad9e92ed8bf8915edf562f5fc1a825746a0ef",
    "data_size": 5632,
    "name": "Newer1.1.1/Newer 1.1.1 Release Notes",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "WDBN"
@@ -27,6 +33,9 @@
    "data_sha256": "3da2d86cba6153d9057d6ca41ee8975e0204add39465779ea335b60f2256812f",
    "data_size": 75264,
    "name": "Newer1.1.1/Newer Doc",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "WDBN"
@@ -36,6 +45,9 @@
    "data_sha256": "71eb18295813d75de2d79802352459160c339deacb2d9aec8ac58dfcbff00da2",
    "data_size": 4364,
    "name": "Newer1.1.1/Read me too",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -49,6 +61,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Newer1.1.1/Sample Command Files/Backup",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "f0feb7b28807b164a57b8e45c803f3b38b201f4a2b5da48fbaf8e1b2f97849c0",
    "rsrc_size": 564,
    "type": "TEXT"
@@ -58,6 +73,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Newer1.1.1/Sample Command Files/Backup Changes",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "2243e6e7b4ab632449990c26445de4bbab885bff843ddb6c4a315d7354c3593e",
    "rsrc_size": 641,
    "type": "TEXT"
@@ -67,6 +85,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Newer1.1.1/Sample Command Files/Bkup4Merge",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "63758a0a6cd9751cdccf8b8cb1f29b4f2e14da31f037dee5ad552374360e5c5c",
    "rsrc_size": 574,
    "type": "TEXT"
@@ -76,6 +97,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Newer1.1.1/Sample Command Files/Merge",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "a1422fd98998bd7e402902ff66230e261b4181cb19e263fdaabd498af820bfbc",
    "rsrc_size": 630,
    "type": "TEXT"
@@ -85,6 +109,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Newer1.1.1/Sample Command Files/Restore",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "f9a0b7020b9aa9cf17ebc78d713efdd938cb59f5f8dbf1fc3da3af1b8ea86ea2",
    "rsrc_size": 568,
    "type": "TEXT"
@@ -94,6 +121,10 @@
    "data_sha256": "9c10964d68eccaa6eb3e69a29aaca6c84035848c173623e3a182d4adf257715e",
    "data_size": 27,
    "name": "Newer1.1.1/Sample Command Files/See Get Info on these files",
+   "oracle_methods": [
+    "LZH+RLE",
+    "RLE"
+   ],
    "rsrc_sha256": "87e612b6e611e7ca7f8791158bfb7ca6217f2f427d0c18a4a0f49e1172ba44af",
    "rsrc_size": 438,
    "type": "TEXT"

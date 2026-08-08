@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Timelord",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "b1ce777c35c289fad5e1e439aa6bba25ed31cee280d26306fd933e6560b94451",
    "rsrc_size": 11705,
    "type": "cdev"
@@ -14,6 +17,9 @@
    "data_sha256": "3d89129d61d78cdf3a08c366b2d949e6745927b369504bb11c1c64fbde083888",
    "data_size": 53,
    "name": "TimelordLog",
+   "oracle_methods": [
+    "RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -23,6 +29,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "tardis",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "40c54fc69bf71c7d890e8855a74b063df1a3564d7e74cd9a6bafb45e5a193b93",
    "rsrc_size": 5730,
    "type": "RDEV"
@@ -32,6 +41,9 @@
    "data_sha256": "e0b0cf2a68322abc8b318fb8f65479922fc0bdc9a7cc0ba28e306e33531a7115",
    "data_size": 1081,
    "name": "tardis.doc",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"

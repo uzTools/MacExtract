@@ -5,6 +5,10 @@
    "data_sha256": "f915b0eae516ee7d561a71dc8530d35e87bf8a467fb2dda1a37ce43186548af3",
    "data_size": 61,
    "name": "MessageLog",
+   "oracle_methods": [
+    "Compress",
+    "Huffman"
+   ],
    "rsrc_sha256": "b7a2f63e49e35f0ff1e24461eb43132a70b804c356194eecefda55439582ceb7",
    "rsrc_size": 414,
    "type": "TEXT"
@@ -14,6 +18,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Messages",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "183f6d8cc9a905e5e8ac3ad4917902b52244bbf6eb330fb2658bf4453a895d33",
    "rsrc_size": 17886,
    "type": "cdev"
@@ -23,6 +30,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Messages DA",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "de8da030970f21f321af6d11d07dc5041efbfe4c21d340b293d2759807a29639",
    "rsrc_size": 15194,
    "type": "DFIL"
@@ -32,6 +42,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "myICON",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "1b52ddccd88d8436e47ae22ddcf3013cc2710388db9a27744d4b42f93876a8b5",
    "rsrc_size": 438,
    "type": "????"

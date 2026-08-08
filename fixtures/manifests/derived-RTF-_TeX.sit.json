@@ -9,6 +9,9 @@
    "data_sha256": "bc286d0e444b6349df144d7b434d3309f901aa73bd460dd2a37a05c7330085d0",
    "data_size": 9044,
    "name": "RTF->TeX ƒ/RTF",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "74a292769239f665077f4283a339fd06d5034d9901fe9668ae3827462328dbb8",
    "rsrc_size": 444,
    "type": "TEXT"
@@ -18,6 +21,9 @@
    "data_sha256": "4a4a05171f17ff43467ff92845038e9a126ce0d7207abdb063dbdb20296114b4",
    "data_size": 29696,
    "name": "RTF->TeX ƒ/RTF->TEX Document",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "WDBN"
@@ -27,6 +33,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "RTF->TeX ƒ/RTF->TeX",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "9a773eaafdd5e249e402c8c8598259f815efd2a234af902fe70a00bc1ac01195",
    "rsrc_size": 109157,
    "type": "APPL"
@@ -36,6 +45,9 @@
    "data_sha256": "600332a7630fa84de7552e1afc630dc7bf79695967419438827b5b7630296908",
    "data_size": 6958,
    "name": "RTF->TeX ƒ/RTF.tex",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "dfe748a588182ebbf301ceea297fa6902ae32c653d43b4ec39a794e86bf16354",
    "rsrc_size": 8426,
    "type": "TEXT"
@@ -45,6 +57,9 @@
    "data_sha256": "2487d4109f61f333172af9639b30ad2e0fb23cb60a6f2bfced95ea9eea9df939",
    "data_size": 7765,
    "name": "RTF->TeX ƒ/RTF.tex1",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"

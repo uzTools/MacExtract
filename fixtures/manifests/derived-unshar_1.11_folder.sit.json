@@ -9,6 +9,9 @@
    "data_sha256": "986c67358f941abf2f42d9a1c15111bbcbde497e831205b0be40ec02f8d07951",
    "data_size": 234,
    "name": "unshar 1.11 folder/GenericCFRG.r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "2871297f9ef1a0d524dcc3e7c04be13177344d4e5bb47020277568767d4558d7",
    "rsrc_size": 686,
    "type": "TEXT"
@@ -18,6 +21,9 @@
    "data_sha256": "025079557d315bcc66eeceb47ce1ffe1c002e5241082fb746ac34c3e13970138",
    "data_size": 2843,
    "name": "unshar 1.11 folder/Read me!",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "f4f97a6c6fe25b1681c68983d26898b9eee908c0ba564e5ab56792c33aca1f99",
    "rsrc_size": 574,
    "type": "TEXT"
@@ -45,6 +51,9 @@
    "data_sha256": "73c5284286b9acfb81f2791bf1157ced73f26fd44ffd89efdbb587a66b8eb481",
    "data_size": 6351,
    "name": "unshar 1.11 folder/unshar",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "341f2008b0ab5380d9014477b885f106821914654de8fb38c8c764bd03f6268a",
    "rsrc_size": 22525,
    "type": "MPST"
@@ -54,6 +63,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "unshar 1.11 folder/unshar π",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "972906fe1b75112225c3736002c8e60bce69fe71c24e66176c46de8053ceb13d",
    "rsrc_size": 7852,
    "type": "PROJ"
@@ -63,6 +75,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "unshar 1.11 folder/unshar π.rsrc",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "3be06ad4a558fd56d9fe1bffcc5d1b02252a59acd722d87bed7e2a1d203d0df8",
    "rsrc_size": 14574,
    "type": "rsrc"
@@ -72,6 +87,9 @@
    "data_sha256": "fa8972a08144db54bd8390ff0d5f9b8c8ad17f47025f003b3e906a4099150449",
    "data_size": 39713,
    "name": "unshar 1.11 folder/unshar.FAT",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "1773e0f0360a72c83382ca235ebfc851739beebff7fa2cd98b9d93bbddf38492",
    "rsrc_size": 38724,
    "type": "APPL"
@@ -81,6 +99,9 @@
    "data_sha256": "31189b9fb34286210dd219de7c23dcc8937e4c2ad84b59d5a487dc7e5cb40cf7",
    "data_size": 21883,
    "name": "unshar 1.11 folder/unshar.c",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "ee6ec3ba7f34b33a286441ee2a5a00ee5cbb27212b26fd87a3707e56f93a23f7",
    "rsrc_size": 625,
    "type": "TEXT"
@@ -90,6 +111,9 @@
    "data_sha256": "91bc058785db281ac97e1c8e57e90c4c529cd3ba5fe7c60ddd5100da3a1ee88e",
    "data_size": 2961,
    "name": "unshar 1.11 folder/unshar.make",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "69823e4cddda397a7793bc8e560195ee47d4499a8068ffa16220c4c4c3e21699",
    "rsrc_size": 581,
    "type": "TEXT"

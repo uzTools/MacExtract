@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "AT Server",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "a369d7ccfa0b7af87dcc3199d1fb64a73a09edb5a470f7c454b8ef27131c37e7",
    "rsrc_size": 96016,
    "type": "APPL"
@@ -14,6 +17,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "AT Server.log",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "f26123d5c097a68d225b26f7b5360188d418d45f7e9a9a01917dcdeda7e1ac9d",
    "rsrc_size": 348,
    "type": "TEXT"
@@ -23,6 +29,10 @@
    "data_sha256": "74187a74ef65494e83555ca4c4966ed991f7e8d0d4fffc7385c342f39abedb70",
    "data_size": 106,
    "name": "Alias",
+   "oracle_methods": [
+    "LZH+RLE",
+    "RLE"
+   ],
    "rsrc_sha256": "330670e49b1e4839fdf779e7a015c662bc25635d2d07124b8bde12183b90bd97",
    "rsrc_size": 348,
    "type": "TEXT"
@@ -36,6 +46,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Database/Mail Index",
+   "oracle_methods": [
+    "RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "????"
@@ -45,6 +58,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Database/Sequence Number",
+   "oracle_methods": [
+    "RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "????"
@@ -54,6 +70,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Database/Users",
+   "oracle_methods": [
+    "RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "????"
@@ -67,6 +86,10 @@
    "data_sha256": "5cf2330df6108487a2d27d4c865bd75717751f1f2455ee857151ab604ee5a70d",
    "data_size": 82,
    "name": "Mailboxes/Broadcast",
+   "oracle_methods": [
+    "LZH+RLE",
+    "RLE"
+   ],
    "rsrc_sha256": "9950f1ed6b06226893d39b04b6016010b3651bcb0a87be373376f431b58875eb",
    "rsrc_size": 444,
    "type": "TEXT"
@@ -76,6 +99,10 @@
    "data_sha256": "9db9121cb8b67c115186350c5bfcbdd2e013887dc50b3ae020a100247cd957ff",
    "data_size": 43,
    "name": "Mailboxes/Delete User",
+   "oracle_methods": [
+    "LZH+RLE",
+    "RLE"
+   ],
    "rsrc_sha256": "686d1d52800df388fb166104bd8daa8a9f44f343e65bda2ed0ae09407050a1c3",
    "rsrc_size": 348,
    "type": "TEXT"
@@ -85,6 +112,9 @@
    "data_sha256": "70560ccbee92dd5b8837650c70e494d98a1362306f108eae519f8ea329a54260",
    "data_size": 35,
    "name": "Mailboxes/Get Statistics",
+   "oracle_methods": [
+    "RLE"
+   ],
    "rsrc_sha256": "9060199548d915e0696ce75072a121346ce2b627b5f4310212bc9c77f2e389c8",
    "rsrc_size": 348,
    "type": "TEXT"
@@ -94,6 +124,10 @@
    "data_sha256": "07a9e1a090a293bf591827d4c19fcb58b13de96288ab298a6ee7089b83151937",
    "data_size": 85,
    "name": "Mailboxes/New Realuser",
+   "oracle_methods": [
+    "LZH+RLE",
+    "RLE"
+   ],
    "rsrc_sha256": "306e5c8ba0a033b552c9c392b983a184f6d724b5e0ae84111365ed95aa0b6ba2",
    "rsrc_size": 348,
    "type": "TEXT"
@@ -103,6 +137,10 @@
    "data_sha256": "bcf6e6622983de9f10fba3b3bfde39fe489457fe949cea73c0ddbaef37cc08a8",
    "data_size": 50,
    "name": "Mailboxes/New User",
+   "oracle_methods": [
+    "LZH+RLE",
+    "RLE"
+   ],
    "rsrc_sha256": "98c11e7f706c71323766a403993bd47b5f4f160f9342c9d03cbefe6f000d5482",
    "rsrc_size": 348,
    "type": "TEXT"
@@ -112,6 +150,9 @@
    "data_sha256": "055a1954ee430b67e9ef96e041ce6e299c491b5d139e91e646b9b0174a587c60",
    "data_size": 26,
    "name": "Mailboxes/Purge",
+   "oracle_methods": [
+    "RLE"
+   ],
    "rsrc_sha256": "03ef9169223cb0d4fb85c15019c02d80215cbb57892d639c0eed1f2ec0fd7a46",
    "rsrc_size": 348,
    "type": "TEXT"
@@ -121,6 +162,9 @@
    "data_sha256": "80b0fd1d17fdbee7c3d2f81d28d84d87d51af4ddb960b09ad1fc5b59210ed080",
    "data_size": 37,
    "name": "Mailboxes/Reset Statistics",
+   "oracle_methods": [
+    "RLE"
+   ],
    "rsrc_sha256": "861f8618eb699513ff370ffe8976302fcb1f8a8466c4d0a840cdd396c115277e",
    "rsrc_size": 348,
    "type": "TEXT"
@@ -130,6 +174,10 @@
    "data_sha256": "ff6136da319cac74a6066b2f8465a2f879cb59d4dbea65007dd89069fb87117d",
    "data_size": 61,
    "name": "Mailboxes/Set Password",
+   "oracle_methods": [
+    "LZH+RLE",
+    "RLE"
+   ],
    "rsrc_sha256": "ccf25e67f8bc400fbc24741eb546fc897ba9f0e808930e69321bd6d716a54477",
    "rsrc_size": 444,
    "type": "TEXT"
@@ -139,6 +187,10 @@
    "data_sha256": "6c493c55b293de7ad194421d6b6f69ae763a91256793eb09aa2144bf83b40765",
    "data_size": 57,
    "name": "Mailboxes/Set Realname",
+   "oracle_methods": [
+    "LZH+RLE",
+    "RLE"
+   ],
    "rsrc_sha256": "3aa73d2b7ff0025320841b9e29a4b324f7f167b3e70caa817b60f4edbffd551c",
    "rsrc_size": 348,
    "type": "TEXT"
@@ -152,6 +204,9 @@
    "data_sha256": "c37f830ecfbb5c3a554be438186e1bf49c7c922a9159f73b08de2ce9166e7e92",
    "data_size": 36,
    "name": "Mailboxes/To AT Server/MBX_8cbaa7",
+   "oracle_methods": [
+    "RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -161,6 +216,10 @@
    "data_sha256": "7c82749ce59e0e5f6b67e71ccc377cea39e51dda44a7363255e9595cc8a132ad",
    "data_size": 32,
    "name": "Mailboxes/User Backup",
+   "oracle_methods": [
+    "LZH+RLE",
+    "RLE"
+   ],
    "rsrc_sha256": "6025ff81567220fa347fcfa945a79dfc877e3359a6bdd8c3f65e33e40a2f38fe",
    "rsrc_size": 348,
    "type": "TEXT"
@@ -170,6 +229,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Manager",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "76cee96351e098b267d8ee856b9350e7168c2ffeb56b39d5c5bbc5ab62562c69",
    "rsrc_size": 110877,
    "type": "APPL"
@@ -179,6 +241,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Preferences",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "600f4ac51aa3b13f67461b877c199440f38e953332abd967877e8d4f07b0160f",
    "rsrc_size": 451,
    "type": "rsrc"
@@ -188,6 +253,9 @@
    "data_sha256": "cb3ca54775b17c8112dbb3aaf3ae523127a9416b37da28f73adff6cda7e0bc14",
    "data_size": 4999,
    "name": "README.txt",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -197,6 +265,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "SMTP Client",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "2705e99cfc3d357273a458ebbf9db34223a4ab2760c2ccb3cfc9ee70b46bba75",
    "rsrc_size": 55603,
    "type": "APPL"
@@ -206,6 +277,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "SMTP Client.log",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "3411bf3c9cf0e35a9fea1bf58c4cb4db03f637e4db4563621dc8d3fb06c7a01f",
    "rsrc_size": 348,
    "type": "TEXT"
@@ -215,6 +289,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "SMTP Server",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e1c8ba6b228478077f5ba0feaf563196eeff859f008a79c8a0f80708666c5349",
    "rsrc_size": 55987,
    "type": "APPL"
@@ -224,6 +301,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "SMTP Server.log",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "88a60b132ad83faadf12fdb8c740f12fa19f1c0809ee5978f21584ff2ab827af",
    "rsrc_size": 348,
    "type": "TEXT"
@@ -233,6 +313,9 @@
    "data_sha256": "7ec3d18e177c1bd9d696e4e40e40db13e060cf6964fd7aa5bcb7a72499e3a850",
    "data_size": 69130,
    "name": "Server Install.mw5",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "d4de7c2f0f7bf1c51e577d5a34fd4b88335c5a28653a1131ea3288a5f406911a",
    "rsrc_size": 808,
    "type": "WORD"
@@ -242,6 +325,10 @@
    "data_sha256": "e3316a7572296f0f7c24e651727e61f9052a842d9dce20ad8ffa0c8110dd6027",
    "data_size": 5266,
    "name": "Server Release Notes",
+   "oracle_methods": [
+    "LZH+RLE",
+    "RLE"
+   ],
    "rsrc_sha256": "38466e718478f2bde63adaba3b1af20860b140507228cf760d2be8c474849deb",
    "rsrc_size": 313,
    "type": "TEXT"
@@ -255,6 +342,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Update Users/Update Users",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "c2098aab0e2eac5d4663ba8ad3a7412d11e14cfb0726c47a16905bdd472ec5dc",
    "rsrc_size": 22188,
    "type": "APPL"
@@ -264,6 +354,9 @@
    "data_sha256": "17c1aa285347dec3e778c27fd6ab76cca2d60d8ad7b41561dc95ab44b8de8ae6",
    "data_size": 554,
    "name": "Update Users/Update Users README",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "472dc80b543b3ce8394b2260c1b62b9c4cb89d34fbd87c4f8189b9677f311a3c",
    "rsrc_size": 375,
    "type": "TEXT"

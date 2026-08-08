@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Nuntius1.1a2",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "55dee032327a32d48fdfa5722bd5b5857e29c14e1ff6f3551637bdaab74d1b94",
    "rsrc_size": 589469,
    "type": "APPL"

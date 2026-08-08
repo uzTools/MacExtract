@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Diddle FKEY",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "41b70a343785c91428161b2561e04aa39b73c9101cdb8004b8c4b8f91428633f",
    "rsrc_size": 729,
    "type": "FKEY"
@@ -14,6 +17,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Diddle.fkey.proj",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "a9a55d7783d6e82cbdbe4f2405bd2b0304988abd1acdfcfb69dd4a7e0e6caefb",
    "rsrc_size": 6129,
    "type": "QPRJ"
@@ -23,6 +29,9 @@
    "data_sha256": "25c54e950836c05038c9c6b9893033cb1f8abb77edb97246677d4863aefb9208",
    "data_size": 5754,
    "name": "Diddle.p",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -32,6 +41,9 @@
    "data_sha256": "eddf314d6c873e8ac5d1e21a02b7f1fc69ef0cdbc833d377fe2569a091ca49c4",
    "data_size": 352,
    "name": "fkeydebug.p",
+   "oracle_methods": [
+    "Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"

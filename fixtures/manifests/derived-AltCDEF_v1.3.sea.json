@@ -5,6 +5,9 @@
    "data_sha256": "9080c36ed864e50b4b3208af4c075fb1f8430075509e54dfba78014858402f2b",
    "data_size": 10480,
    "name": "AAAReadMe.AltCDEF",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "9cd98a54c9f7b0a730b158f3245d085314cef62b59320b46ce1261d8811bcc38",
    "rsrc_size": 820,
    "type": "WORD"
@@ -14,6 +17,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "AltCDEF v1.3",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "44d7529bbaba61f30a64ef990a4c4a2b2c7c9471f91a743b4eb0769454e22229",
    "rsrc_size": 41978,
    "type": "cdev"

@@ -5,6 +5,9 @@
    "data_sha256": "0b230018f5cd1c3bcd2e0502dc57ad3a6878cdd2cc354327876d65476ba3902b",
    "data_size": 7033,
    "name": "SpaceSaver 5.0.1 Updater",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "f814646391e673b5f2ea71bf74bb1ac1583a6d464a02c8df795e06f02c13d583",
    "rsrc_size": 145141,
    "type": "APPL"

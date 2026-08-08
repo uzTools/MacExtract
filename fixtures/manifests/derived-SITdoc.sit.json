@@ -5,6 +5,9 @@
    "data_sha256": "fa10185c18d6e621715437e627cf3aec3c100c725ac7b46d9f0912f79d4d3d7a",
    "data_size": 26586,
    "name": "StuffIt.doc",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "84f4c87d72b2a67795572128f764faae31326bb3c86de4b0fb82a62a0cee7475",
    "rsrc_size": 811,
    "type": "WORD"
@@ -14,6 +17,9 @@
    "data_sha256": "7842cf187779c673d8a6d48b3120408a46c4176238c2f6a52af28b76cbc48441",
    "data_size": 26624,
    "name": "StuffItdoc.msword",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "WDBN"

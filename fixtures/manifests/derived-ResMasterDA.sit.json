@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "ResMaster",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "2bcbbc9f7877ce705ee6a8772154b0449e70ea32857cf1b2273a401a26a37b1b",
    "rsrc_size": 32444,
    "type": "DFIL"
@@ -14,6 +17,9 @@
    "data_sha256": "e0183fecf42fb228573729c2794e323fa8c98494bd2d540d4ca111085498e2ae",
    "data_size": 2307,
    "name": "ResMaster.doc",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"

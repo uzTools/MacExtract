@@ -5,6 +5,9 @@
    "data_sha256": "c5d147915ac2497fd17bbcf2c336ab6637962f10867eef165812b1d6294b5268",
    "data_size": 510,
    "name": "About Scroll Bar Pattern Editor",
+   "oracle_methods": [
+    "Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -14,6 +17,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Scrollbar Pattern Editor",
+   "oracle_methods": [
+    "Huffman"
+   ],
    "rsrc_sha256": "4912f9c37dc09c932486f47ca9c278a119337fd1c77bc728bb6d32aa1644f8d8",
    "rsrc_size": 3469,
    "type": "APPL"

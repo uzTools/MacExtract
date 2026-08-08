@@ -9,6 +9,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MACUUCODE1.0.5 Folder/MACUUCODE1.05",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "1bdbff24f21ee230361858002fc04dd4593489a2ea5f0b0694d244d1cec1adab",
    "rsrc_size": 35191,
    "type": "APPL"
@@ -18,6 +21,9 @@
    "data_sha256": "4ca6a8e9b6851b6b618a62038df2a513a2c0dbfad744a187552d3794cab9b1de",
    "data_size": 955,
    "name": "MACUUCODE1.0.5 Folder/README-UUENCODE1.0.5",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "414b71282a762294425e3e8955ef46a40f0838ad4cf0e8f9134f5a89e161ae8e",
    "rsrc_size": 286,
    "type": "TEXT"

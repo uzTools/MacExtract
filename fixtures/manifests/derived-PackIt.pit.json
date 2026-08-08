@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "PackIt",
+   "oracle_methods": [
+    "None"
+   ],
    "rsrc_sha256": "a94effaa251e750635be330b47ebc22ebfd3886de22e9615ec194b17691b3d27",
    "rsrc_size": 8999,
    "type": "APPL"
@@ -14,6 +17,9 @@
    "data_sha256": "4a5f2031b415e015bddaa641083286012c3542d6b1593bc3c0ab1668ecd8e72f",
    "data_size": 5370,
    "name": "PackIt.doc",
+   "oracle_methods": [
+    "None"
+   ],
    "rsrc_sha256": "8e470f3f0f0f64f729e0e0f0f247474efb7a519468e15597bb436e1de196a988",
    "rsrc_size": 784,
    "type": "WORD"
@@ -23,6 +29,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Packit III 1.3",
+   "oracle_methods": [
+    "None"
+   ],
    "rsrc_sha256": "e59e836da2a9a995e100d703cd43115d787f71fc67a9ac36dda94ef153800b48",
    "rsrc_size": 29772,
    "type": "APPL"
@@ -32,6 +41,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Unpit",
+   "oracle_methods": [
+    "None"
+   ],
    "rsrc_sha256": "3e904841510bed20ed20b2637e717e630d3d6e3420ad2fd29549d6ca9fa40d79",
    "rsrc_size": 16514,
    "type": "APPL"

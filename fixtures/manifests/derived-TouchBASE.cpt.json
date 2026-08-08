@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "TouchBASE Demo",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "871db1a4e4c71530b31f52140234b8afaccbf5d2f3da87f778eeb6318d62a5a7",
    "rsrc_size": 204966,
    "type": "DFIL"
@@ -14,6 +17,9 @@
    "data_sha256": "4ee8995c82e43ade8a5cd29b7f02b23358e69196622e7e8cd78403b0df0dcef8",
    "data_size": 2142,
    "name": "TouchBASE Demo.ReadMe",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -23,6 +29,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "TouchBASE Prefs",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "6575a02f34c85225079a7decae5435f42ac915571c127b338db5ad5ab1b61b1a",
    "rsrc_size": 5248,
    "type": "\u0000\u0000\u0000\u0000"

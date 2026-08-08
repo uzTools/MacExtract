@@ -5,6 +5,9 @@
    "data_sha256": "a9405f06e6f8cc07eeff5e0e5a5f20164ba4c4c2c1c7cdf3076a99c7ad204511",
    "data_size": 38784,
    "name": "ASC init beep",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "36c80f30cb2c0b74edcf492c4de8e6d45a7c9bb1d5479913caf45341ca1bdb37",
    "rsrc_size": 470,
    "type": "FSSD"

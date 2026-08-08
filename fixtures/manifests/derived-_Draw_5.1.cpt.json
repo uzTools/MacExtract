@@ -9,6 +9,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "•Draw 5.1/\u0014Draw",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "8d52aaed7d551878f2c50e33d02231cd65313da28fdfb82da9efcd3f25217889",
    "rsrc_size": 52931,
    "type": "DFIL"
@@ -18,6 +21,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "•Draw 5.1/\u0014Drawer",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "01ffa91756ca51f388f5f9d44f031004e4bdfeda137366999c8abff401ca6d95",
    "rsrc_size": 10478,
    "type": "APPL"
@@ -27,6 +33,9 @@
    "data_sha256": "330a181727b58a870a8bea3dc82c676e6dcdfe987ac66620132fc163c2d737b3",
    "data_size": 53858,
    "name": "•Draw 5.1/MW•V5.1 Documentation",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "4805693eada596f4579922e60b2e76ebac70bea9dd2efe680aca947b585784b8",
    "rsrc_size": 870,
    "type": "WORD"
@@ -40,6 +49,9 @@
    "data_sha256": "247d4229711f73d6d37391d736173de58197b6b31466d7b6a2f6506a340aa6e2",
    "data_size": 913,
    "name": "•Draw 5.1/•Draw Templates/•Bomb",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "•DPi"
@@ -49,6 +61,9 @@
    "data_sha256": "4eeb87d81f75b60470c738dccb1a94fdec1af5dd80cac70b6fbf46cc72b6bf4c",
    "data_size": 3827,
    "name": "•Draw 5.1/•Draw Templates/•Collection",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "•DPi"
@@ -58,6 +73,9 @@
    "data_sha256": "a22b8fe5f765760402914364a0a042403e1c162bba80dbaadacbd5fda72972d4",
    "data_size": 433,
    "name": "•Draw 5.1/•Draw Templates/•Cube",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "•DPi"
@@ -67,6 +85,9 @@
    "data_sha256": "26145d1bc23f9f2fef97bfe0cc6f2472864c24192146a9e65c29ee098e0726ad",
    "data_size": 418,
    "name": "•Draw 5.1/•Draw Templates/•Cylinder",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "•DPi"
@@ -76,6 +97,9 @@
    "data_sha256": "501e81f11dbc78b7f8ab38b20a557bae57244277a76fa7d0e49f37e1204c371c",
    "data_size": 668,
    "name": "•Draw 5.1/•Draw Templates/•Diskette",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "•DPi"
@@ -85,6 +109,9 @@
    "data_sha256": "953305d0170c491dacf6788f337189459d5088ec1f7fa990b067508a877a787f",
    "data_size": 357,
    "name": "•Draw 5.1/•Draw Templates/•Document",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "•DPi"
@@ -94,6 +121,9 @@
    "data_sha256": "3a88d664b93450427d87862324df27b1fd50fb90cd5a23c44c734528f8b405aa",
    "data_size": 671,
    "name": "•Draw 5.1/•Draw Templates/•Mac",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "•DPi"
@@ -103,6 +133,9 @@
    "data_sha256": "1fab741b6df991cc389e15c993957af3ae52bb412b6eb55e7782fbf6840eeeea",
    "data_size": 684,
    "name": "•Draw 5.1/•Draw Templates/•Man",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "•DPi"
@@ -112,6 +145,9 @@
    "data_sha256": "95e1a10d3e138e42a9c989f322f2f3ab8caf8cfcfdfa1be7c0bbc89d9e38c773",
    "data_size": 2974,
    "name": "•Draw 5.1/•Draw Templates/•Memo",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "•DPi"
@@ -121,6 +157,9 @@
    "data_sha256": "b71a627d43f290d1fc182f7c48bb3d75a46fc027e118b927047f147c78b0454d",
    "data_size": 2271,
    "name": "•Draw 5.1/•Draw Templates/•Mouse",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "•DPi"
@@ -130,6 +169,9 @@
    "data_sha256": "6d2cd877435e3fdb0689d58f0939074f16a4c5f32fba00e985f6406b5cc1901d",
    "data_size": 1475,
    "name": "•Draw 5.1/•Draw Templates/•Partial Pictures",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "•DPi"
@@ -139,6 +181,9 @@
    "data_sha256": "97a835999786c2529c1a1ebdd1cb10357cbcdba3e3743ac503f11b23874fcb4c",
    "data_size": 577,
    "name": "•Draw 5.1/•Draw Templates/•Pen",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "•DPi"
@@ -148,6 +193,9 @@
    "data_sha256": "91381be79346ee4d613b0ed483b498721c142e6ec3645f8c9a4212ff4244f1df",
    "data_size": 5526,
    "name": "•Draw 5.1/•Draw Templates/•Shortcuts",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "•DPi"
@@ -157,6 +205,9 @@
    "data_sha256": "da5ef797893b3eee309f23752d5091f9e5a51cca7c2ec78939618521dd0662ad",
    "data_size": 2284,
    "name": "•Draw 5.1/•Draw Templates/•Timetable",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "•DPi"
@@ -166,6 +217,9 @@
    "data_sha256": "5d464cb5efa013aef9cdd573376c785d2f8611181b11b9884e27c5bd03c821e4",
    "data_size": 5834,
    "name": "•Draw 5.1/•Draw Templates/•USA Map",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "•DPi"

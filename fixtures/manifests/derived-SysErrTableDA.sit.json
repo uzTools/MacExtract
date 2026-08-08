@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "SysErrTableDA",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "a5ffd956fdf2351a1028dbbcd726e8cf7db2b0bc420edc24d49dbb1de7d70db2",
    "rsrc_size": 46300,
    "type": "DFIL"

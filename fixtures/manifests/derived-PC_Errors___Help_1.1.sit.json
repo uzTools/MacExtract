@@ -5,6 +5,9 @@
    "data_sha256": "968b7f77122cace27b3dc992a0a9ce7b56e366b711ecfa15fb56b2bce8b9c2a3",
    "data_size": 40960,
    "name": "PC Errors & Help 1.1",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "2898fb75ccc3fb41555684923e846606f8913189e67db1fd328e7a2c3511a9ef",
    "rsrc_size": 99324,
    "type": "STAK"

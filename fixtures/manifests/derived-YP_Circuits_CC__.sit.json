@@ -9,6 +9,9 @@
    "data_sha256": "64df42c19f67803bd4e15cfefa8e0eaf1bfae61953b5c56e754b24ba5df5b206",
    "data_size": 3358,
    "name": "YP Circuits CC ÔæÑ/Autres Produits",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e44c154e87624f8a4e957c8a1648a041f03aa964c9f58b60f099df5aea1d56dd",
    "rsrc_size": 113288,
    "type": "TEXT"
@@ -18,6 +21,9 @@
    "data_sha256": "7e2175f700d7dcf8f2040abb11d2c396640a01fdf1cfdec1d0829a8e24bd6192",
    "data_size": 3263,
    "name": "YP Circuits CC ÔæÑ/Comment Commander",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "baad4fcff13e3da40e818b20010205d9418d79ce4f4aba9d86ad3217c39ca871",
    "rsrc_size": 1172,
    "type": "TEXT"
@@ -31,6 +37,9 @@
    "data_sha256": "01b7971a71d868d9bf764a0b9bf47dc4fcf960d419ab74a314dee34e5aa64317",
    "data_size": 1388,
    "name": "YP Circuits CC ÔæÑ/Fichiers Exemples/3 RÂ∏Çistances en parallÁ≤õe",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "CirC"
@@ -40,6 +49,9 @@
    "data_sha256": "b554de8746de5ede6d75a815e6fc1c15198531e4dcfedd2f1ff521367044c6ac",
    "data_size": 1388,
    "name": "YP Circuits CC ÔæÑ/Fichiers Exemples/3 RÂ∏Çistances en sÂ±çie",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "CirC"
@@ -49,6 +61,9 @@
    "data_sha256": "9faad390f9929ad1ef65a9e5a5d853833d5af2e520e2feb214c57c6580ad44cd",
    "data_size": 1388,
    "name": "YP Circuits CC ÔæÑ/Fichiers Exemples/Kirchoff, 2 mailles",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "CirC"
@@ -58,6 +73,9 @@
    "data_sha256": "608c870b0c91a28a72ff34587a8c7a8d32e731823119f4a77fb800a7fd476d91",
    "data_size": 1388,
    "name": "YP Circuits CC ÔæÑ/Fichiers Exemples/Kirchoff, 3 mailles",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "CirC"
@@ -67,6 +85,9 @@
    "data_sha256": "1250ba8588cecfdfb824b1ff41245734b10cec7fcb880e68d827c1aff45d46ec",
    "data_size": 12669,
    "name": "YP Circuits CC ÔæÑ/Guide d'Utilisation",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "af25a2972eff2d34abe428e5712b088af0f24a31a0b12e280614f3a39370ecd5",
    "rsrc_size": 93706,
    "type": "TEXT"
@@ -76,6 +97,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "YP Circuits CC ÔæÑ/Register F",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "1df472f228cbfe6b1cf2eb9a0a7b90a566d65ea203023dd776fd56797bf8915e",
    "rsrc_size": 96986,
    "type": "APPL"
@@ -85,6 +109,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "YP Circuits CC ÔæÑ/YP Circuits CC 2.0",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "b65eaedf5897aa1c894abf42de870f77ecbec4a1827a198b0c214bf080169004",
    "rsrc_size": 371916,
    "type": "APPL"

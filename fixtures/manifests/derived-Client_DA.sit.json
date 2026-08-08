@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Client DA 1.3.0",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "b61da7b301c00c27e6a43ea5daad7c84112b1e4d62a310266c49dea090ddcfeb",
    "rsrc_size": 25068,
    "type": "DFIL"

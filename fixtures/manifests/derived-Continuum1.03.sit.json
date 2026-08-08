@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Continuum",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "fc9e44268e8bb29fe0281ed2d2eb357e5119bb9d400990fe30796e216acc3664",
    "rsrc_size": 109087,
    "type": "APPL"
@@ -14,6 +17,9 @@
    "data_sha256": "49ee2c6ccf42b673b72f4285eb2e86387f6cdf2449fa655b50ca963bc43ae24e",
    "data_size": 92560,
    "name": "Continuum Galaxy",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "PLNT"
@@ -23,6 +29,9 @@
    "data_sha256": "3f8775b03f3eb10952ea68a9b1b5eb72a3641dfe9d71122345f17d70dac43945",
    "data_size": 14954,
    "name": "Planet Editor Docs",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "fbfafdadf769fc9f4e9b514ceee90a450d0fc5c8773f741c4f798e9c8b016d78",
    "rsrc_size": 823,
    "type": "WORD"

@@ -5,6 +5,9 @@
    "data_sha256": "ee7df0d8ce3c11bc1333f11b21a58371762415f26fade7c70b88adcbdda3e32b",
    "data_size": 57728,
    "name": "Computer Terms",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "STAK"

@@ -14,6 +14,9 @@
    "data_sha256": "e4c2aff8a80453d5a7009c358ccc723781fa84a439224bc1c0a2b1f062d0fdad",
    "data_size": 2000,
    "name": "Compressed Doc",
+   "oracle_methods": [
+    "Huffman"
+   ],
    "rsrc_sha256": "b745ddb6985a3d01389dc4bbbef9764a8bfa9ed87a7255065fcce4aa21d4ef5e",
    "rsrc_size": 400,
    "type": "TEXT"
@@ -23,6 +26,9 @@
    "data_sha256": "bc00453f7622091291839cead6e519db621e1bf5c7b6ebcb53a2b67807b4f464",
    "data_size": 300,
    "name": "Read Me",
+   "oracle_methods": [
+    "None"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -32,6 +38,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "empty.rsrc only",
+   "oracle_methods": [
+    "None"
+   ],
    "rsrc_sha256": "20e466efe657e9aa81a580287615b56f11d8f5609edad828ea73ec10b56a0a86",
    "rsrc_size": 120,
    "type": "TEXT"
@@ -41,6 +50,9 @@
    "data_sha256": "7fb638fe6a8de3603d5fe85dcec0f41371f4bb55a21964244cd96e1b7466fce3",
    "data_size": 700,
    "name": "one-symbol",
+   "oracle_methods": [
+    "Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"

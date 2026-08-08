@@ -9,6 +9,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "CoDec ƒ/CoDec 1.0.5",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "a71bd0cf224210d34094ae1f59d9c3e73421d2d4afa6294754e4db8335b04b34",
    "rsrc_size": 70564,
    "type": "APPL"
@@ -18,6 +21,9 @@
    "data_sha256": "cd9dbb7d8f4e3c88973a21c6487f9ae06c60fd77d2fe06008446a34e2ad6a441",
    "data_size": 7135,
    "name": "CoDec ƒ/Read Me",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "8ff9d7fdb798c16cad21028e581efdf7b1b1c4db9299b99ae0dcc5bc27da22ed",
    "rsrc_size": 24786,
    "type": "ttro"

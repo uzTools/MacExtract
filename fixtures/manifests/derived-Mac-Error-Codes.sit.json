@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Mac-Error-Codes",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "1c5c2f47c5621bb7756520b700264e8d184cfe3f722a5edbe0935aa51aff3ee1",
    "rsrc_size": 136750,
    "type": "APPL"

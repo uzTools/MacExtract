@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Snow",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "6a63aa0c14dd67898f76a7a82c26bde8e66fa88f77c7031845ffb4a3b4fd9574",
    "rsrc_size": 7144,
    "type": "DFIL"
@@ -15,6 +18,10 @@
    "data_sha256": "62bce478f0e001c02ef58f5cb6a0c4b6b6618e021148b4069e202d4f6a4eceaa",
    "data_size": 1400,
    "name": "Snow.info",
+   "oracle_methods": [
+    "Compress",
+    "Huffman"
+   ],
    "rsrc_sha256": "0b7a22e3f35179b8e4989b9fd849f01c05348e38ba06df17b8195daa01dfc697",
    "rsrc_size": 348,
    "type": "TEXT"
@@ -24,6 +31,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "SnowOpen",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "a9cb84a086324642cd0c81f76f71377e29f9ef2f65b703ff4c67d2af70532d0a",
    "rsrc_size": 610,
    "type": "APPL"

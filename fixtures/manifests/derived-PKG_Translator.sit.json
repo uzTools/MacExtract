@@ -5,6 +5,9 @@
    "data_sha256": "bb2930ed0bbcd08fc1bbbebf69fb523cce2b605312f0ec561a39e3b88cd89b50",
    "data_size": 12288,
    "name": "About AppleLink Translator",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "d6b8574484c5295b20a2d2098e4c64f90f39493ec11fa53686a8961fbf87db06",
    "rsrc_size": 478,
    "type": "TEXT"
@@ -14,6 +17,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "AppleLink Package Translator",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "2a0830a57384b7d168784ee7d7698af37b95689b0b453f87172cc6a843a0f93d",
    "rsrc_size": 43985,
    "type": "SITo"

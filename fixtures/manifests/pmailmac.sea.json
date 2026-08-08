@@ -5,6 +5,9 @@
    "data_sha256": "3043216b6c54a95f57e7170b6834daf0d122a4e926a0c84a514bb0ebd9aa9be1",
    "data_size": 1243,
    "name": "Important release note",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -21,6 +24,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Pegasus Mail",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "f0c92a5113bbd303ce920660f4752c1ab5c53b4b67e9b479405d198478ff5db3",
    "rsrc_size": 221644,
    "type": "APPL"
@@ -30,6 +36,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Pmail Config",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "0f01521ef01bf007898022ef4545758fff4eb68672e6ea2afedd192aca0d76fe",
    "rsrc_size": 20192,
    "type": "APPL"

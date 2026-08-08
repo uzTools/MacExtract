@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacBinary",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "038e8968020a6a0b433f46d7da1266999648b594fa37bc73b080da93b014d931",
    "rsrc_size": 16745,
    "type": "APPL"
@@ -14,6 +17,9 @@
    "data_sha256": "63ede29f2ac7172f157536b63a3a85074704dbebe0c520cd93c8caf7255d5830",
    "data_size": 3820,
    "name": "MacBinary.doc",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "635dff1d765545f598488431e15273c84092635006ffaa2d9ff1bfe96a0ff04e",
    "rsrc_size": 769,
    "type": "WORD"

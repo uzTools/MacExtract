@@ -9,6 +9,9 @@
    "data_sha256": "b36b4276da566ac0bfea33d764ca4e81b9ca4139f9dcb56eca1a8d8a26945994",
    "data_size": 17231,
    "name": "Apple 56K int. modem scripts/Apple 56k int(V.34)",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "f1abb170d64a4cf23a459793c6f8031a4f943f3db975ca035306bd06d46cc8be",
    "rsrc_size": 713,
    "type": "mlts"
@@ -18,6 +21,9 @@
    "data_sha256": "97ef92e1478d62bf25583b7af0a03a5e9cc33b1e65ffa01524a9565e33ecbffb",
    "data_size": 17231,
    "name": "Apple 56K int. modem scripts/Apple 56k int(V.90)",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "f1abb170d64a4cf23a459793c6f8031a4f943f3db975ca035306bd06d46cc8be",
    "rsrc_size": 713,
    "type": "mlts"
@@ -27,6 +33,9 @@
    "data_sha256": "32d2935c901ce093e7ee4b9534b43679df85ed5407b6517afcdcc7c07936f30b",
    "data_size": 3258,
    "name": "Apple 56K int. modem scripts/Quick Start readme",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "157c86ce2923109074c1b9064c6d957ebfdaeb6491f2183df7d6b6f45f763a77",
    "rsrc_size": 332,
    "type": "TEXT"
@@ -36,6 +45,9 @@
    "data_sha256": "02e8694b883eaf90f2257d0a2289287fabdce630146c74e04117d2ffe740b05e",
    "data_size": 446,
    "name": "Apple 56K int. modem scripts/cover letter",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "c1661f81088baef970e54a06c39e0acc41195821f09dd9cf6db94c605de698b9",
    "rsrc_size": 332,
    "type": "TEXT"

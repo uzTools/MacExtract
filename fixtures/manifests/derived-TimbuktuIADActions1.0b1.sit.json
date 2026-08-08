@@ -9,6 +9,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Timbuktu IAD Actions/Chat with Timbuktu",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "ef5df35d847992d5fc236136a45965378402c3717772d4e762dd7defb3280dbc",
    "rsrc_size": 4187,
    "type": "osas"
@@ -18,6 +21,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Timbuktu IAD Actions/Control with Timbuktu",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "ebac9615cca0f65264f06128b744e9c17a6755309eee3788a7055ef341ff3e3a",
    "rsrc_size": 4163,
    "type": "osas"
@@ -27,6 +33,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Timbuktu IAD Actions/Exchange with Timbuktu",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "9a0f280abb21873cb13c6a08ea100153cf9d949669b9972ca8a2757dd0c8f764",
    "rsrc_size": 4166,
    "type": "osas"
@@ -36,6 +45,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Timbuktu IAD Actions/Flashnote with Timbuktu",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "7ea21144d362d1b4ca934b9f05ca2b0a8d95515063b6962133b4e5e0a85712d1",
    "rsrc_size": 4161,
    "type": "osas"
@@ -45,6 +57,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Timbuktu IAD Actions/Intercom with Timbuktu",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "89c45f6d592b1a126bc3ca831790b476a52b87cd3c9aa7fc13b19544375fc9fb",
    "rsrc_size": 4160,
    "type": "osas"
@@ -54,6 +69,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Timbuktu IAD Actions/Notify with Timbuktu",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "963ca81e3b4b6324adc90a1abc22169efce5f3846bb630ca57dfee625c010c19",
    "rsrc_size": 4203,
    "type": "osas"
@@ -63,6 +81,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Timbuktu IAD Actions/Observe with Timbuktu",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "6720580aa60f408b7e8e131c8c1bba78509335513d5a5763d553fa56e7be429c",
    "rsrc_size": 4163,
    "type": "osas"
@@ -72,6 +93,9 @@
    "data_sha256": "335d27c0545edff48080a2047438f3834ca6a1376ce1cfa34a8ca158dd872a8d",
    "data_size": 2444,
    "name": "Timbuktu IAD Actions/ReadMe.shtml",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "b7e5e5a1c5059f8d583e8d358274be83dfa262bef6602b5d0e66bd3128d522c4",
    "rsrc_size": 1454,
    "type": "TEXT"
@@ -85,6 +109,9 @@
    "data_sha256": "a8a9d882ccf397750243bdc832e47dd59f8dda67562207a827a789e9debe8eb7",
    "data_size": 6301,
    "name": "Timbuktu IAD Actions/images/dialog1.gif",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "c92009280c3b78c98602264e9a3ef1d7575ebb87c7b7f5f941ef7fd5a59eba53",
    "rsrc_size": 19446,
    "type": "GIFf"
@@ -94,6 +121,9 @@
    "data_sha256": "d3e65c3ff6cb27e2cf738bd13f9d81da5ff1702f9e01ebfa12340fe0f937de9d",
    "data_size": 10756,
    "name": "Timbuktu IAD Actions/images/dialog2.gif",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "fb15dc5f632fd8104d7aca06b097bfcda9b9ff90a536ba79a0c3e0e931991c92",
    "rsrc_size": 38304,
    "type": "GIFf"
@@ -103,6 +133,9 @@
    "data_sha256": "bc3ec759e333154d4512443e724c3d2a1c63269d3f87cd0e6bfd9e1b2324a135",
    "data_size": 3090,
    "name": "Timbuktu IAD Actions/images/menu.gif",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "2107f0b2dccfe1a3b69f051c3de065923580b42cae39a4d056cdebe98fe415a9",
    "rsrc_size": 16114,
    "type": "GIFf"
@@ -112,6 +145,9 @@
    "data_sha256": "fea1a8e0099f4490fb23f99c82ff013d4d799cbdc9dffb4789c312675d8e02d6",
    "data_size": 3251,
    "name": "Timbuktu IAD Actions/images/menu2.gif",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "06b38ef7ed43103ad21f83d283122f4f4428ca4878bd26188b381812abaa56dc",
    "rsrc_size": 17632,
    "type": "GIFf"
@@ -121,6 +157,9 @@
    "data_sha256": "cab2b62729951e772d71b25b3b0d186c62f83ad637db990d67f0a325b1ef90a2",
    "data_size": 2053,
    "name": "Timbuktu IAD Actions/images/menu3.gif",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "5bf2d0809f44dfcff3c0e630b97420538100f06adad09d7dfa9395f5383dbe93",
    "rsrc_size": 22258,
    "type": "GIFf"

@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "DeSEA 1.0",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "c09b47a1d07bd8849a8d7e9562194feee4a09d6f7079159adc53f7fc00744a1d",
    "rsrc_size": 19436,
    "type": "APPL"
@@ -14,6 +17,10 @@
    "data_sha256": "9e24136b8068b96c7f0131465cbc243fa4eaf781190933b670858c0194293aa8",
    "data_size": 3334,
    "name": "DeSEA 1.0 Release Notes",
+   "oracle_methods": [
+    "Compress",
+    "Huffman"
+   ],
    "rsrc_sha256": "352ee79947eafdf018202521c3104691e818615f62395171a153acdc9da72546",
    "rsrc_size": 574,
    "type": "TEXT"

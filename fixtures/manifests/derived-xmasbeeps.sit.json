@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Christmas beeps",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "c2d26e8f53548ef19df09ce11859f5063ee2188ba5715989c93083f960e543f5",
    "rsrc_size": 351756,
    "type": "\u0000\u0000\u0000\u0000"
@@ -15,6 +18,9 @@
    "data_sha256": "944695bc27f79ce0d2835f1119e0e3d5c9e5316a35ed2cea182b1700b0b8802d",
    "data_size": 1288,
    "name": "Don't read me!!",
+   "oracle_methods": [
+    "Huffman"
+   ],
    "rsrc_oracle": "macunpack (macutils 2.0b3, -m32)",
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,

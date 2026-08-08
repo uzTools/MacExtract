@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "LZWRes",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "7415aa2541d14728ffa1b05b91b47427b3ca04d5306e5eeae1d2e1e5790a26d4",
    "rsrc_size": 22986,
    "type": "APPL"
@@ -14,6 +17,9 @@
    "data_sha256": "3ecce4010ef5a600a0ac5b299808dbed268d2e0fe31040591b833776a1706f84",
    "data_size": 2473,
    "name": "LZWRes Docs",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"

@@ -5,6 +5,9 @@
    "data_sha256": "ae5bb8957de3261e9ebe3b359181a2bf3c74ad25c3f47d21703978895aca5c7b",
    "data_size": 1045,
    "name": "ssave.c",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "7b54e2f5bdfc680e295bfcf1b21b7d087d19e8ecdd8e1545254883b46ee68bbf",
    "rsrc_size": 534,
    "type": "TEXT"
@@ -14,6 +17,9 @@
    "data_sha256": "b1750a0c50095de4be41ad150174a607a0a3f50e302a27a23f9f526ca82bae4d",
    "data_size": 412,
    "name": "ssave.c.o",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "OBJ "
@@ -23,6 +29,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "ssaveFKEY",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "1278b4a3a267d08013450dc777cdea94f5c59dc9898c27e10a4ef1ef2c7c55ed",
    "rsrc_size": 756,
    "type": "FKEY"
@@ -32,6 +41,9 @@
    "data_sha256": "ffbf82144588077e6f99a2537a612b9870c769a19b5054213b3ac587a107322b",
    "data_size": 523,
    "name": "ssaveFKEY.make",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"

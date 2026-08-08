@@ -9,6 +9,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "set-aux-binary 1.0/set-aux-binary",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "fb318558bb0e9a01fb950af5dc9057ea40933f1b84d81402f9d91356ed457b7f",
    "rsrc_size": 5448,
    "type": "APPL"
@@ -18,6 +21,9 @@
    "data_sha256": "f084185e26a0d9595dc9576c47b8b9605fb6c40c6f01c15c94e2b13b066d7728",
    "data_size": 958,
    "name": "set-aux-binary 1.0/set-aux-binary-README.txt",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"

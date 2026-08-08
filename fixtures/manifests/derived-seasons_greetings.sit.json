@@ -9,6 +9,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "seasons_greetings/SeasoGre",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "3438c4faf091eef4ecb7ee63af0e067f1d7d5bcc41287531db11045b3d17d6f5",
    "rsrc_size": 43643,
    "type": "LWFN"
@@ -18,6 +21,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "seasons_greetings/SeasonsGreetings.bmap",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "d1e7ce8514e98a2509275f65285506de0d39d00084014276ed0ebe8a74c7bbf5",
    "rsrc_size": 3020,
    "type": "FFIL"
@@ -27,6 +33,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "seasons_greetings/SeasonsGreetings.suit",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "aae32f3a8e32953ed42b49906194229d69b55233d6e4c3e83594f3b420014b2f",
    "rsrc_size": 49531,
    "type": "FFIL"
@@ -36,6 +45,9 @@
    "data_sha256": "937f58e451750124b69daa0022ddaf4e42d2fa4071796c196ce8a1b761a39a41",
    "data_size": 3410,
    "name": "seasons_greetings/merryXmas.gif",
+   "oracle_methods": [
+    "None"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "GIFf"
@@ -45,6 +57,9 @@
    "data_sha256": "29b8852e5dcf54e22116e667da249e1d9502c99ca07320f2a0552f9c35356ae3",
    "data_size": 853,
    "name": "seasons_greetings/read me",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "2a179b4a1afdd434db8f173699c741c3a57dfcbb1a83139644f9531fb3df9861",
    "rsrc_size": 352,
    "type": "TEXT"
@@ -54,6 +69,9 @@
    "data_sha256": "11c7b7d91f5051a745940b0e017d593336ddb285c5b6b28bbc507f89c2316158",
    "data_size": 49920,
    "name": "seasons_greetings/seasg___.ttf",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -63,6 +81,9 @@
    "data_sha256": "5e027ffe9c177e6c7e0a7531eb7f5beebed5d8f9241320414771dc22880cf14f",
    "data_size": 1716,
    "name": "seasons_greetings/visit_me.htm",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -72,6 +93,9 @@
    "data_sha256": "2872360c331cb984bcbfa63f8b2864c3e6980fe53f3a55c0e59008655efc0be9",
    "data_size": 3827,
    "name": "seasons_greetings/xmas.gif",
+   "oracle_methods": [
+    "None"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "GIFf"

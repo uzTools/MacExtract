@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacLHa 2.00",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "2de3f8f15fa4340d02005e915b5df46058a17b6f0cfbc010d600dea2e9322c9d",
    "rsrc_size": 64331,
    "type": "APPL"
@@ -14,6 +17,9 @@
    "data_sha256": "b6281622e979dca5cc801d068a13d86237cf77ac07e65ed420be982ed44706f2",
    "data_size": 10975,
    "name": "MacLHa.doc",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "d2d1900e740881171b343d0a935a5a5ba5ea1b0d3b6f60616fbd83b8a6a46bb5",
    "rsrc_size": 350,
    "type": "TEXT"

@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacROT13",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "99d6b89733a5a12bc2cd85128b46880fc4e20b00269266abd581c81bd278e08e",
    "rsrc_size": 5594,
    "type": "APPL"

@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Mac ASCII",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "fb4e622b2aba8e60083526d896d317f655fb4b0d226d59570d136cf65f515f81",
    "rsrc_size": 56520,
    "type": "DFIL"

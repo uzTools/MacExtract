@@ -5,6 +5,9 @@
    "data_sha256": "3fd7788d127e09954cc81a3b1c7e164506b4ca7760d0d070b11ccc1c7801493f",
    "data_size": 10969,
    "name": "1990 TAX (TEMPLATE)",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "XLBN"
@@ -14,6 +17,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Macros",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "9a6a1dcb78f471665984c82a88c9402f603f0a9b5ccc7d59e9f75148d40449b4",
    "rsrc_size": 2392,
    "type": "mcod"
@@ -23,6 +29,9 @@
    "data_sha256": "20785b570b3befcd570d00ba63f5416112b4dd254cecab320c48d401c04cf762",
    "data_size": 4096,
    "name": "README",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "WDBN"
@@ -32,6 +41,9 @@
    "data_sha256": "6ba98769c4b4306affab4bc3285b40e367ad3510535cd4d049f258258444954d",
    "data_size": 40960,
    "name": "Tax 1990(word)",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "WDBN"

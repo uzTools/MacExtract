@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Crypt 0.4.1",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "a68ac382c81c07bbcf9d473b942a880a1dbdf003e22847fc01a88d40ce3860d5",
    "rsrc_size": 22302,
    "type": "APPL"
@@ -14,6 +17,9 @@
    "data_sha256": "ee375159eb82b71308e2b8f822550e6ba34d981d10f6cff7dfd87ae465520794",
    "data_size": 2422,
    "name": "Crypt README",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "d1311ddaa8227d719668ae858ab4f3b57d5754c2acda07862018c1dad8679fb2",
    "rsrc_size": 1252,
    "type": "TEXT"
@@ -23,6 +29,9 @@
    "data_sha256": "d9579bdc2b3f889399f999d69c321f127fe174fbf9a3f1afac911100f8a4e767",
    "data_size": 2583,
    "name": "sCrypt README",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "291cdaa452fe914e20185d1384f53784a612126540179d8dc711aaa81cde06d3",
    "rsrc_size": 1052,
    "type": "TEXT"
@@ -32,6 +41,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "sCrypt™ 0.4",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "386437104c21f81d6f7f911c8c1bbc3c51dc01cc4c34e649d27e066b642ced6f",
    "rsrc_size": 31523,
    "type": "APPL"

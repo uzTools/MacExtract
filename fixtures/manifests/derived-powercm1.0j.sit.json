@@ -9,6 +9,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "PowerCM 1.0J/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "f6a1a7980c9360ecb9e27b1d19eb0b82b02ba0f36a4e6ee990a63d0ae87fea2d",
    "rsrc_size": 2670,
    "type": "rsrc"
@@ -18,6 +21,9 @@
    "data_sha256": "391d8e83e904629a40a657bd40fd111b3a74dd27aa5f3722e51a55f03e946062",
    "data_size": 12310,
    "name": "PowerCM 1.0J/PowerCM 1.0J",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "7e9a434b7468ac71fbeb4b3ece29e320f8c68d3157f115f53ac8e4431e7a0d5f",
    "rsrc_size": 3125,
    "type": "cmpi"
@@ -27,6 +33,9 @@
    "data_sha256": "a283d2f5753cdc06f3620beb3eb80d36ae2a72dace0d9270bdc832f40075ed34",
    "data_size": 3031,
    "name": "PowerCM 1.0J/ì«ÇÒÇ≈â∫Ç≥Ç¢",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "380780941456a2621942b85c968739d26eac3519067284c0d38be20c2b304846",
    "rsrc_size": 3692,
    "type": "TEXT"

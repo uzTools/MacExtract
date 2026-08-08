@@ -9,6 +9,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "CRLF v1.2/CRLF 1.2",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "7a2910c2ebaffe8dbae5d059b069c4c64f4df975e36fda01c3d6130779cbe559",
    "rsrc_size": 34418,
    "type": "APPL"
@@ -18,6 +21,9 @@
    "data_sha256": "9bc9dac9f08677d2ea4d7bc004064454cf15fb6e283341971af36029f1fd4e85",
    "data_size": 603,
    "name": "CRLF v1.2/List-Canada",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -27,6 +33,9 @@
    "data_sha256": "2bac637f0bdd966d1efcbabbf9f6421c37dda075c41a240fb874cff7dbb32d6f",
    "data_size": 586,
    "name": "CRLF v1.2/List-Japan",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -36,6 +45,9 @@
    "data_sha256": "31c85a03425af243b14ac7c0bdbe4ddb09ad96a15d3330353135d6ecdef43c1b",
    "data_size": 5986,
    "name": "CRLF v1.2/ReadMe - CRLF",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "f5815efd3304dc0289a7a556f92b47486e4659672b2aeb875effc02123dddacf",
    "rsrc_size": 350,
    "type": "TEXT"

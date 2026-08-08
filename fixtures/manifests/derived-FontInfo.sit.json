@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "FontInfo",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "882363dbdca253ab252ea4c96cc68f9351394385657416570662886bb6f33655",
    "rsrc_size": 7057,
    "type": "DFIL"
@@ -14,6 +17,9 @@
    "data_sha256": "936e78e856c0bb113091259e4f5d486df906bcf5952550726833888f96b43fa8",
    "data_size": 11938,
    "name": "FontInfo Manual (McW)",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "WORD"
@@ -23,6 +29,9 @@
    "data_sha256": "0f5bd1e6f5876af283f1252eb5de988f113d8b2e04532de49abed77e3a687f8d",
    "data_size": 11264,
    "name": "FontInfo Manual (MsWd)",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "WDBN"

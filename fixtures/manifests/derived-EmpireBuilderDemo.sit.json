@@ -5,6 +5,9 @@
    "data_sha256": "e78ddd1702d3db6b26077cde1131087626c55d8ce620057938c979095842c4c3",
    "data_size": 54816,
    "name": "Demo Manual V1.6",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "FWRT"
@@ -14,6 +17,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "EB Sounds",
+   "oracle_methods": [
+    "Huffman"
+   ],
    "rsrc_sha256": "76d6c1ccb25a7ccf2a1bbb8b47d37ca62b09501251a7dc18e316617c659978de",
    "rsrc_size": 138462,
    "type": "rsrc"
@@ -23,6 +29,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Empire Builder V1.6.1 Demo",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "a873755fb6768b0a53ba455d8d53e265f0e71bcb3d09571d80ed5de2786fad5e",
    "rsrc_size": 223362,
    "type": "APPL"

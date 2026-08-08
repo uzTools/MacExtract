@@ -9,6 +9,9 @@
    "data_sha256": "ca8946a0373142067e3922cafcda5a370655dd0f90f2207236f2b1d77ad83eb2",
    "data_size": 104599,
    "name": "Compact Pro 1.51/Compact Pro",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "7965e3b99ff95feabf429ba22c2ff4ad3fcd19d59449a2e74dee571147e92d56",
    "rsrc_size": 98000,
    "type": "APPL"
@@ -18,6 +21,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Compact Pro 1.51/Compact Pro User's Guide",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "b1329cfc73e981903055aba4ffdd2ab35396bfe610d03138903b4c4ddf76b3b5",
    "rsrc_size": 109809,
    "type": "APPL"
@@ -27,6 +33,9 @@
    "data_sha256": "2e9be2d5d63f1eb8dda158dcd1fe3109736d549557aadbb74329d70275117b6d",
    "data_size": 2803,
    "name": "Compact Pro 1.51/What's New?",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "81d4f395221e96a920a508d21621017071c81aefdcaf102206a634072fde5999",
    "rsrc_size": 286,
    "type": "ttro"

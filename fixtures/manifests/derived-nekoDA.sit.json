@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "nekoDA",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "80ad1aef7d170f8a3560923c90eb7b3926ddcdc5b4f912126e4c5c2526ea7055",
    "rsrc_size": 16979,
    "type": "DFIL"

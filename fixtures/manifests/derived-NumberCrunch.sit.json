@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "NumberCrunch",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "91f2bb3e49fd369b5596d1a37e8cf54cc5972c941d2acb070c745d2b0f644958",
    "rsrc_size": 89890,
    "type": "DFIL"
@@ -14,6 +17,9 @@
    "data_sha256": "0c7eeeabd274bbd134ce5a055ebc4ffe91ae549c9ef841bba844ab8a2f173d52",
    "data_size": 12626,
    "name": "NumberCrunch ∂",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"

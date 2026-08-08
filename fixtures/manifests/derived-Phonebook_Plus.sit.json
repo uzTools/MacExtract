@@ -5,6 +5,9 @@
    "data_sha256": "e2fc5921eaeadf8e00768051784fc3ef8cc832eb47af07e9a9b3cb19c1f32f15",
    "data_size": 468084,
    "name": "Phonebook Plus",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "2e3bab04869d3e7db2e4602359bed7094eb683696dcb1243f566c6fd192c5bf9",
    "rsrc_size": 174192,
    "type": "APPL"

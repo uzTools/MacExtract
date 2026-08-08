@@ -7,6 +7,9 @@
   {
    "creator": "ttxt",
    "name": "LHA Expander 1.0.3/1.0.3 Release Notes (E)",
+   "oracle_methods": [
+    "DDn"
+   ],
    "type": "TEXT",
    "unadjudicated": {
     "data": "Attempted to read more data than was available",
@@ -18,6 +21,9 @@
    "data_sha256": "b8ae6ef33538c73631bd2f66650a9e9bf240fc90dcc8cbbe7c3c5548f2898d47",
    "data_size": 1233,
    "name": "LHA Expander 1.0.3/1.0.3 Release Notes (J)",
+   "oracle_methods": [
+    "DDn"
+   ],
    "type": "TEXT",
    "unadjudicated": {
     "rsrc": "Attempted to read more data than was available"
@@ -28,6 +34,9 @@
    "data_sha256": "e6dc54f19c918a631672bb3f4a30c632668e66d3b5eb88f29a3238110e815133",
    "data_size": 55542,
    "name": "LHA Expander 1.0.3/LHA Expander",
+   "oracle_methods": [
+    "DDn"
+   ],
    "rsrc_sha256": "31e87d460e812945ae2b3dfe0f44da93eab43ddd470f9be880fc7973d71a4004",
    "rsrc_size": 78231,
    "type": "APPL"
@@ -35,6 +44,9 @@
   {
    "creator": "ttxt",
    "name": "LHA Expander 1.0.3/LHA Expander Read Me (E)",
+   "oracle_methods": [
+    "DDn"
+   ],
    "type": "TEXT",
    "unadjudicated": {
     "data": "Attempted to read more data than was available",
@@ -46,6 +58,9 @@
    "data_sha256": "528cf12504c408d03e7436834e901f128237b6473099112ccd1473040ac54e6f",
    "data_size": 5689,
    "name": "LHA Expander 1.0.3/LHA Expander Read Me (J)",
+   "oracle_methods": [
+    "DDn"
+   ],
    "rsrc_sha256": "8de7f2d6a312bb8d6d031f83706812b0bc04fde5f1b5c4a2fd8ab2f037cbe0dc",
    "rsrc_size": 1671,
    "type": "TEXT"

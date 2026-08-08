@@ -5,6 +5,9 @@
    "data_sha256": "944a3a57f921d787a79208fadbcaf6689c48d98c72dc60b0916f4734967f907e",
    "data_size": 19440,
    "name": "About Clipboard Magician",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "71d5be00e20f6daa4f468e5ddfc48a7b56f720f9ae4532d9801552b8d24beee1",
    "rsrc_size": 382,
    "type": "TEXT"
@@ -14,6 +17,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Clipboard magician DA",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "897258b8ca0dcc5bc22682eef34ce6d51fcbf01b16944ba2683a1a5fe3c96848",
    "rsrc_size": 17228,
    "type": "DFIL"
@@ -23,6 +29,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Magic Wand",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "1917f067f2b3e601d965339d3797c5b12e8112f069b6416fec9fa336e90d487c",
    "rsrc_size": 134925,
    "type": "CNVM"
@@ -32,6 +41,9 @@
    "data_sha256": "c1d4777fe47f72fa5670aaa6aeafa4806b99f7e4eb934f78b721db3a5e10aed6",
    "data_size": 1715,
    "name": "iconpict.p",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -41,6 +53,9 @@
    "data_sha256": "917ef66394cf2fe3572a76a45841e9b2df578e7b14fd122fecdbbc4171be95a2",
    "data_size": 10586,
    "name": "programming information",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "fd97775e1eaa40bc1a6f4e73081692e24a5e7dfdb88ae8b2556fad7219ed71d0",
    "rsrc_size": 428,
    "type": "TEXT"
@@ -50,6 +65,9 @@
    "data_sha256": "d28398f0a53f592eaf6743c95e41a6ea2edef6671af1071c643926a4ae831f80",
    "data_size": 10232,
    "name": "testmagic.p",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "QPED"

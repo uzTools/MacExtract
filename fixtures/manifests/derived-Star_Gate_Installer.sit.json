@@ -5,6 +5,9 @@
    "data_sha256": "02c4a392088b348ef160494a40b77409173eaaa303151b1666be1143cc27c717",
    "data_size": 122294,
    "name": "Star Gate Installer",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "cf313bc3a5a605a947b35ef4c4196d40c3ea2f622de7579af8982a1d0fe80838",
    "rsrc_size": 111246,
    "type": "APPL"

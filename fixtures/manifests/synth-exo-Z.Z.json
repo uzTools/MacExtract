@@ -4,6 +4,9 @@
    "data_sha256": "debe473cfdd9d005111e7bda9630ff4d760f7aff4423ebf63f3448504fccbfac",
    "data_size": 2200,
    "name": "synth-exo-Z",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   }

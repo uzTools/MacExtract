@@ -5,6 +5,9 @@
    "data_sha256": "b98a2cc4d1583c6933828425c1277a45fd0ec5fb423cfae5cc2d559c1fbfb287",
    "data_size": 78762,
    "name": "FYC",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "????"
@@ -14,6 +17,9 @@
    "data_sha256": "631f5821e17c117bf8b3931f60c87f2ddd913c302ecf9c48bd37a3a55bef9457",
    "data_size": 1735,
    "name": "SoundTracker Documentation",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "ff2e933056d15fbff554953463c6a4ae08804aac46d7e688bd5d0774f544deec",
    "rsrc_size": 4530,
    "type": "ttro"
@@ -23,6 +29,9 @@
    "data_sha256": "365721b6a779048b657a2618f14aa1cb941cd8ecbc17bb66329f2f06906d84c8",
    "data_size": 3865,
    "name": "SoundTracker Translations",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -32,6 +41,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "The SoundTracker 0.9",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "4a02a095fa7ecde87491891dab2dad7a62a64d7c4294e861d9545017a868287a",
    "rsrc_size": 67341,
    "type": "APPL"

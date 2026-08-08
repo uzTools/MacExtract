@@ -32,7 +32,7 @@ re-verification costs and every on-demand probe in `tools/vmac/README.md`.
 MANUAL_TESTS.md is not part of that: it lists what no emulator here can
 settle, and none of it has been done.
 
-**Eleven claims this file used to assert have been withdrawn, and one
+**Twelve claims this file used to assert have been withdrawn, and one
 confirmed.** (This count read "seven" while the table held eight; corrected
 2026-08-03.) They are collected at the end, under *Withdrawn claims*, and kept
 on purpose, because four mechanisms keep finding the next one:
@@ -232,6 +232,7 @@ Each entry is: what was claimed, what disproved it, and what it cost.
 | The three 1 MB StuffIt 5 refusals each fill a 512 KB block | instrumenting `numbytes` where the transform vector is allocated | 2026-08-03 |
 | Nine fixtures are ground truth the oracle cannot produce | `unar -k hidden`; all nine build, all 774 existing manifests unchanged | 2026-08-08 |
 | There is no oracle for StuffIt method 6, and no second fixture to test one on | `macunpack` from `reference/`, and `tools/synth_sit6.py` | 2026-08-08 |
+| Even `unar` fails on the two PKZIP 1.x zips, so they stay corpus-only | their own manifests: `unar` adjudicates 5 of the 7 entries | 2026-08-08 |
 
 **Retro68's `HOpen` glue.** Claimed to return `noErr` without writing back the
 refNum, and recorded as M10's root cause in commit `22e806b`. A standalone
@@ -416,6 +417,19 @@ and 22 forks of *other* methods left unadjudicated, all of which the same
 oracle settled within an hour of being built; and the claim was restated in
 four status files, which is how a fact about one tool became a fact about the
 environment.
+
+**Even `unar` fails on the two PKZIP 1.x zips.** True at M8, when a manifest
+was all-or-nothing: `unar` fails one entry of each, which then cost the
+archive its whole manifest. Per-entry manifests (2026-08-08) gave both
+ground truth for the remaining 5 of 7 entries — and the claim survived the
+morning that disproved it, because a second mechanism was hiding the
+evidence: `run_diff.py` skipped these two fixtures whole on the strength of
+our own "recognized but unsupported" output, so nothing ever looked at their
+manifests. **Cost:** 10 adjudicated forks, plus their names and entry counts,
+ungraded for a day; and the skip that hid them could not fail, so a
+regression turning a supported method into "unsupported" would have been
+recorded as a skip. Both are fixed (TESTING.md, "When our engine declines an
+entry"); the suite went 795 → 797 with no engine change.
 
 ### Corrected figures and superseded write-ups
 

@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Init Escape",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "fefd655eab1c9e4587f110cd615fb31855b1db4ce2adf642507e57f75e48cf79",
    "rsrc_size": 18639,
    "type": "INIT"
@@ -14,6 +17,9 @@
    "data_sha256": "ad541db3d7ee0306a211f3c797d1a718df496d6e73ea35270df305a742eab2a7",
    "data_size": 3911,
    "name": "Read me",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "678f832760c96df2e054850fbfd2bb8a36479e071851350b926ee3e6254677c3",
    "rsrc_size": 1306,
    "type": "TEXT"

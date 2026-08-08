@@ -6,6 +6,9 @@
    "data_sha256": "344b2ff96a9b6913fc6d68907c56924f2578e6ad6ce8611ae6584282954bb1e0",
    "data_size": 1017,
    "name": "Works 2.00e Patch README",
+   "oracle_methods": [
+    "Huffman"
+   ],
    "rsrc_oracle": "macunpack (macutils 2.0b3, -m32)",
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
@@ -16,6 +19,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Works 2.00e Patcher",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "c7eb4a6a7c9af19af39eb1246e0d79b486c97d0a313d838bc515010f6a22f063",
    "rsrc_size": 8174,
    "type": "APPL"

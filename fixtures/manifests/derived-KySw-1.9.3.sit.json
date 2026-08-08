@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "ANSI Dvorak",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "a5fcc1471e90ba52aec29925627479915545b7d229ec1d67652abb1989f7ea57",
    "rsrc_size": 2053,
    "type": "kfil"
@@ -14,6 +17,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Keyboard Menu",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "d8ec8fa7c1be7f837322f28bc4468fb07608794cef6e5d0cf877f6b64f299907",
    "rsrc_size": 2680,
    "type": "INIT"
@@ -23,6 +29,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Keyboard Switcher",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "f09172f9f372a7fbfde5f36d1f42cf95f9e60c3f2d7c92bf0987f00d77523a8e",
    "rsrc_size": 43992,
    "type": "cdev"
@@ -33,6 +42,10 @@
    "data_sha256": "bee66b70e4505aeb3be13a8c2870d96f40233aa96e5ae61525d86dddc413cb09",
    "data_size": 1091,
    "name": "Keyboard Switcher read-me",
+   "oracle_methods": [
+    "Compress",
+    "Huffman"
+   ],
    "rsrc_sha256": "10f2fd15ea0fcbfa0b88e9bd749f14dfb003be4ba89c16890b718e68e5f03676",
    "rsrc_size": 438,
    "type": "TEXT"
@@ -42,6 +55,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "No CapsLock",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "194c035e7a2ade84358af0f2929d743502f476efa759668c9ed69142078a22a0",
    "rsrc_size": 1728,
    "type": "kfil"
@@ -51,6 +67,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Shift Cancels CapsLock",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "664ad73c7d7da84fb5ff9479adfd2bb9311b8a099af3f4f765dd58c660a2d0fb",
    "rsrc_size": 1995,
    "type": "kfil"
@@ -60,6 +79,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Shift comma",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "0b4068e24e35bfe135b53a8a8747e689d8a3b935ae7094d4feaff970a2908e10",
    "rsrc_size": 1992,
    "type": "kfil"
@@ -69,6 +91,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "U.S. Undead",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "31e5c5d7af34c0d8c921968e60197b1b8ecce043924b42d4ef21d9ebeb8b3511",
    "rsrc_size": 1718,
    "type": "kfil"

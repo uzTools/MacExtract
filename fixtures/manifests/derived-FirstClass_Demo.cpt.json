@@ -5,6 +5,9 @@
    "data_sha256": "c63c4e66d56bacbc4b64380a541a7543e551aaef64f8bd50e492a6228b3bb1a6",
    "data_size": 5166,
    "name": "A Tour of FirstClass",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "a7c29f057f940bc29e9b9520c63853f7b1758d30fc5e5c5fbc97f5c0f326a1f2",
    "rsrc_size": 38834,
    "type": "TEXT"
@@ -14,6 +17,9 @@
    "data_sha256": "20ca3800094acdeaa6ca83417ca81b72ce21f470a7088d0af9bf5979d9a68bd3",
    "data_size": 216298,
    "name": "FirstClass Data",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "FCbu"
@@ -23,6 +29,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "FirstClass Demo",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "a9c4aef7fb6e367e64ef7e1801678806403a1a57f497ee92d8d9c4e0d6300ba4",
    "rsrc_size": 329569,
    "type": "APPL"
@@ -32,6 +41,9 @@
    "data_sha256": "da17ad250d277928a7799f2f87919abe4f8218b70d1803ce2f8dd857085e1c02",
    "data_size": 10305,
    "name": "FirstClass Features",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -41,6 +53,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Install FirstClass Demo",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "4878b4649c40e98ac1ac86bd2c13432c0aba681cbce47458f6175aae3bedf414",
    "rsrc_size": 21626,
    "type": "APPL"
@@ -50,6 +65,9 @@
    "data_sha256": "3980bc8cc9cf3b70613fc60d776fa8d10605de46b846945b9f61bf96a5282816",
    "data_size": 2467,
    "name": "Read Me First",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "f6d4f0134cdd5c2ae97c27418a894df117c1c93ede6dcfb52730e2a782c94362",
    "rsrc_size": 822,
    "type": "TEXT"
@@ -59,6 +77,9 @@
    "data_sha256": "2b2ef020685d78a49ddd2cfb7af7149864d241d83c3a93bc14e47f57299c99b1",
    "data_size": 2261,
    "name": "SoftArc Online",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"

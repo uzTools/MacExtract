@@ -9,6 +9,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Orb Mazez 1.0b2/Orb Mazez 1.0b2",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "c4421c7f29d3c7ed26e6b8d35f1045c5e7aea09ac7980b3b280e4d070ace38c3",
    "rsrc_size": 338634,
    "type": "APPL"
@@ -18,6 +21,9 @@
    "data_sha256": "26c8fe228e7591c5f84b10ea3d007d80dc94bb53840e5351f64708ed6558f63a",
    "data_size": 1837,
    "name": "Orb Mazez 1.0b2/orb-mazez-10b2..doc",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"

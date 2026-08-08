@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Mystic 8-Ball",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "3edf56ab695b982682171b8a437db9a471064da33687aba62f0ceb291e21e588",
    "rsrc_size": 268592,
    "type": "APPL"

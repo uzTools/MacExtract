@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "NAFF",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "b5abba071695f8622574047db17246b614ee721e5ec23b9accd5527a5a8f37f2",
    "rsrc_size": 9363,
    "type": "APPL"
@@ -14,6 +17,10 @@
    "data_sha256": "bb01033d82d2920b38641915b3e72caeaaa11926785e760eb2d997007102a0f8",
    "data_size": 1540,
    "name": "naff.readme",
+   "oracle_methods": [
+    "Compress",
+    "Huffman"
+   ],
    "rsrc_sha256": "e28e8f25e2a3abf1ac4dcd3fb9e308388adb47010d9901ed43da7b94a7cff239",
    "rsrc_size": 574,
    "type": "TEXT"

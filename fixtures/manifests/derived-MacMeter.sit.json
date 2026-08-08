@@ -5,6 +5,9 @@
    "data_sha256": "6d57ce4e6abd9d74245eec9490da83568b9f868c134e70ca36d0b638c3c546b2",
    "data_size": 39356,
    "name": "About MacMeter 1.0",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "5cd36ac34fcea7a5441379c85280b1a5f24ec6ffb675c500b09a999386857377",
    "rsrc_size": 730,
    "type": "WORD"
@@ -14,6 +17,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "MacMeter",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "0a44eb04432a4760f91f66b81b5ce5785631115f09cd401274c54329c7035233",
    "rsrc_size": 32591,
    "type": "DFIL"

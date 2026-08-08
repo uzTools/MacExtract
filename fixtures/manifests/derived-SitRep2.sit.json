@@ -5,6 +5,9 @@
    "data_sha256": "82fc0a2a503b70e5407440da9b5cd6b6e187e0ee1a17b6f1300bf8f76c3d7a09",
    "data_size": 10752,
    "name": "SitRep doc.",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "WDBN"
@@ -14,6 +17,9 @@
    "data_sha256": "33b9a36e5e53f2db1209f25f891e8d40dcf178e072e4996d119eb5016bd570bc",
    "data_size": 5917,
    "name": "SitRep doc. (TEXT)",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -23,6 +29,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "SitReport",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "1ee3c1b4b0ba96a9dbf39caa687b4b9ab59f179441c405013eaa9b9d016ba377",
    "rsrc_size": 55896,
    "type": "APPL"

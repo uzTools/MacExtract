@@ -9,6 +9,9 @@
    "data_sha256": "f3a006fac8b10a3f63b4e7b89cedd4b489073bc7c99c32529c4330a653c56301",
    "data_size": 7165,
    "name": "Troi-ClipSave-Plug-in1.1/ Read Me -Troi ClipSave Plug-in",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "2315b3de8703b8065335766d7c81034c80b9bb2595540571339ec36103c1c729",
    "rsrc_size": 15596,
    "type": "TEXT"
@@ -17,6 +20,9 @@
    "data_sha256": "f15f4b6a2b3a1764d9fc4f9f3fe605d10ede5c9677fe20737b288bc6d806de63",
    "data_size": 6148,
    "name": "Troi-ClipSave-Plug-in1.1/.DS_Store",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -25,6 +31,9 @@
    "data_sha256": "0bf2ee689c5c8a047c9deae3ce1b6a271944aba0e6a4ed0312bf1df52c65c64f",
    "data_size": 94208,
    "name": "Troi-ClipSave-Plug-in1.1/All ClipSave Examples.fp5",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "FMP5"
@@ -38,6 +47,9 @@
    "data_sha256": "2b4e2da0f63c4f626a3324dde40883539e896acf601dc091af41148622a7cf9c",
    "data_size": 5871,
    "name": "Troi-ClipSave-Plug-in1.1/For Solution developers/Developer SW License Agreement",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "8863ad5bc7bb179d9069c409bbc15727d078f183057348c2981bf70dddd49d89",
    "rsrc_size": 392,
    "type": "TEXT"
@@ -47,6 +59,9 @@
    "data_sha256": "bf9b5554b7e7d8a00e0ce0ffb4add9515815c95de0e0e9d7e3e86022cfced2ba",
    "data_size": 126976,
    "name": "Troi-ClipSave-Plug-in1.1/For Solution developers/RegiFunc.fp5",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "FMP5"
@@ -56,6 +71,9 @@
    "data_sha256": "7b70b6b0a126901f39d6e01cdca7dbf1c6249940b4a2d7a2c8c39b12de76e28b",
    "data_size": 4444,
    "name": "Troi-ClipSave-Plug-in1.1/For Solution developers/developer license info.html",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -69,6 +87,9 @@
    "data_sha256": "396109fc1c18f7fdf8393a6367c9bf7bd3af400e792f6198c2d6c229767eed70",
    "data_size": 70454,
    "name": "Troi-ClipSave-Plug-in1.1/Mac OS Plug-in/ClipSave Plug-In",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "55294dfd151fb93e9fcca26f8a214202aa8c0a0b1e7744756fc8ec875a987ec7",
    "rsrc_size": 62814,
    "type": "FMXT"
@@ -78,6 +99,9 @@
    "data_sha256": "6951c44d59a443cfd6b5a23fea43de39d05d3d9e71ffc03fbe0e7bd6a29436a8",
    "data_size": 112640,
    "name": "Troi-ClipSave-Plug-in1.1/Overview.fp5",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "FMP5"
@@ -87,6 +111,9 @@
    "data_sha256": "bc0d56feffe3aafcef39166cc69238f564663a59f8c5836c65b31fd862f06435",
    "data_size": 3277,
    "name": "Troi-ClipSave-Plug-in1.1/Software License Agreement",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "1288e62a901d2dc61b28b9a92312e4df662ad5f9f67e9e6e86ee6f0249134244",
    "rsrc_size": 352,
    "type": "TEXT"
@@ -96,6 +123,9 @@
    "data_sha256": "b3ab31e2d2f96b73bbf6bc05da37e394fbf12786ea063742f80731ff8cf27775",
    "data_size": 2725,
    "name": "Troi-ClipSave-Plug-in1.1/Troi Software Overview",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "f5c2237b488513824c2d8ce1dcaf1419e7e00bfdde3c895d9cc5faf50490ba72",
    "rsrc_size": 972,
    "type": "TEXT"
@@ -105,6 +135,9 @@
    "data_sha256": "24a1c92e25a0f1a547dcc0652851ff27635aec016accf286ae3ce7fa259ddd51",
    "data_size": 125268,
    "name": "Troi-ClipSave-Plug-in1.1/User Guide ClipSave 1.1.pdf",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "PDF "
@@ -114,6 +147,9 @@
    "data_sha256": "57ede674ec634c94c26a017962578f661876c9821a4b00d7a499024389cdd2f8",
    "data_size": 52224,
    "name": "Troi-ClipSave-Plug-in1.1/Version.fp5",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "FMP5"
@@ -127,6 +163,9 @@
    "data_sha256": "ef4076524937c8f1e84ea060bd9a7ac9ac59b9e9f34283652946f1c889eb8310",
    "data_size": 104960,
    "name": "Troi-ClipSave-Plug-in1.1/Windows Plug-in/clipsave.fmx",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "iDLL"

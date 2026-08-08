@@ -9,6 +9,9 @@
    "data_sha256": "869d6a734a8f05f0fcd86278a7e31b986eff3a674b548171bb84ed30d9325d1b",
    "data_size": 5691,
    "name": "Drop Text 1.5 ƒ/Drop Text - Read Me",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "76510b31e83b547f8bd2f3d703fe836d0b682b9858abcd6033682586bfed7fc9",
    "rsrc_size": 332,
    "type": "TEXT"
@@ -18,6 +21,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Drop Text 1.5 ƒ/Drop Text 1.5",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "3ead6b2983257b24abc7ebf92b936c5a783ccf9dc069353115af7efc742626c2",
    "rsrc_size": 40164,
    "type": "APPL"

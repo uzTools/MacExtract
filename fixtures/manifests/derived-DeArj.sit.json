@@ -9,6 +9,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "DeArjƒ/DeArj",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "db40712d6320c543a0016e2eb991e7f968ee6d109c5d7748f6797f6b923fcf2d",
    "rsrc_size": 25682,
    "type": "APPL"
@@ -18,6 +21,9 @@
    "data_sha256": "9d7875d6ffa2f521b62af2c90699c44946fd3868ce07947c04430f5857fa82b5",
    "data_size": 944,
    "name": "DeArjƒ/ReadMe",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"

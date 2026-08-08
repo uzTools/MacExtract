@@ -5,6 +5,9 @@
    "data_sha256": "3f1e052da9b2fa79d0bf28d7da85cd24d0c91ef2893d322d1dc499d38cbe5cbc",
    "data_size": 57344,
    "name": "macToVax",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "2fad43f85ed884f860619e218bca4f194ab2b9051ec81d4f1df208d2d670ae36",
    "rsrc_size": 39703,
    "type": "STAK"

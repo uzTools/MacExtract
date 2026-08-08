@@ -9,6 +9,9 @@
    "data_sha256": "e8c0d3aff7749a1dbe2dc1cd79fa69be47e5f23b98dbefc241d34227646dbd6a",
    "data_size": 245138,
    "name": "ACInfo Comm/ACInfo Comm",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "b2ff701a06d5ce9ee20c3fb63d112d09f866ac1e0be6075673185d4c1068b2c1",
    "rsrc_size": 162660,
    "type": "APPL"
@@ -18,6 +21,9 @@
    "data_sha256": "691ee33f7d727575424e0e563b10e84501e76d075a728b904f4ad6cd16c05e50",
    "data_size": 6056,
    "name": "ACInfo Comm/Documentation",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "23c4acb0774e2a07fc7b969510aa1ef08fa427585c30c0fc8f7b787fedf34ac1",
    "rsrc_size": 1552,
    "type": "TEXT"
@@ -27,6 +33,9 @@
    "data_sha256": "c839ad3c8f154b98cb8b820cf9fcaddaa1a267de1127b0d5df3f42cd53bdef6d",
    "data_size": 988,
    "name": "ACInfo Comm/Registration",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "44d4047e47ca2492ff4372278f81ef1d2ff95b2fb95b53157624e114c81a3cbe",
    "rsrc_size": 1032,
    "type": "TEXT"
@@ -36,6 +45,9 @@
    "data_sha256": "83ab58e3695d1beb907ce8e98121ffd01c1089f0768d622eeecca2d710d68d89",
    "data_size": 1598,
    "name": "ACInfo Comm/Software Agreement",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "7b5ef66d76bb9b566147935a9f813fba9cd432d3ff95f438fdc19145360ff88d",
    "rsrc_size": 452,
    "type": "TEXT"

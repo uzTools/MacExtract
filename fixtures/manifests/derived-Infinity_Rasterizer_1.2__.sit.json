@@ -9,6 +9,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Infinity Rasterizer 1.2 ƒ/French Touch Tech Support",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "85e883eb30eb56f63af8ac8fa38bf884da2ba78a9ccca648bc8dbfa044447557",
    "rsrc_size": 699,
    "type": "ilma"
@@ -18,6 +21,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Infinity Rasterizer 1.2 ƒ/French Touch Web Site",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e337296d17de7e7ead6fb8290abe856019429cf86279fe30442da49cca95af45",
    "rsrc_size": 462,
    "type": "ilht"
@@ -27,6 +33,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Infinity Rasterizer 1.2 ƒ/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "426aba141bbcdfa5aecbb376dc9d67a6843609446b89b9321df63ed7195c907f",
    "rsrc_size": 1894,
    "type": "TEXT"
@@ -36,6 +45,9 @@
    "data_sha256": "8664f694652df859931786a575bd6c9aa5720b33c19907c56e33d06953e2da70",
    "data_size": 63383,
    "name": "Infinity Rasterizer 1.2 ƒ/Rasterizer 1.2",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "137ade3ba941fa6d3e14ad11e253fffc9053235e277dd94ddfd5fa9a207c5986",
    "rsrc_size": 9436,
    "type": "APPL"
@@ -45,6 +57,9 @@
    "data_sha256": "8a0f2d46d289138ab4c0715da768fae1cdc5a9e9cddc430ccc339d2296ead23b",
    "data_size": 2710,
    "name": "Infinity Rasterizer 1.2 ƒ/Rasterizer Read-me",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "41698ab34a47379a8077ada12e427117008335e0ab24ce788ad394847dbfe9eb",
    "rsrc_size": 992,
    "type": "ttro"
@@ -54,6 +69,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Infinity Rasterizer 1.2 ƒ/Rasterizer web page",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "8ff94e35117aecca8ac9a3479b918801ba632d0fb2e685424fba3bfbce71d42c",
    "rsrc_size": 510,
    "type": "ilht"
@@ -63,6 +81,9 @@
    "data_sha256": "b2269ab8f75df55c47e4d47b13370ace44f251bdda14b02901a3f3afa6b77ea6",
    "data_size": 322,
    "name": "Infinity Rasterizer 1.2 ƒ/Version History",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "2bd369236611e7a9281e16da8929238ac085787d4ecff41c779d124c647d5498",
    "rsrc_size": 552,
    "type": "ttro"

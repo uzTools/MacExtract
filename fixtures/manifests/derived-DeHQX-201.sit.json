@@ -9,6 +9,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "DeHQX-201/DeHQX",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "8083e0ee3582b48129e2d3ea18337681a43d94a143f77b4a0108c2cb0799fc3e",
    "rsrc_size": 36416,
    "type": "APPL"
@@ -18,6 +21,9 @@
    "data_sha256": "730da26a75fc72bf196cb75637d238eb39465d91c0958eaa7a984e8711c0347c",
    "data_size": 15753,
    "name": "DeHQX-201/DeHQX Documentation",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"

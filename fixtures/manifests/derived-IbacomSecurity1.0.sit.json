@@ -9,6 +9,9 @@
    "data_sha256": "d6dbc495e8dded6ddc739a7d66c0c0eae225835f457cabfbf8bdb2c5720f70fe",
    "data_size": 12848,
    "name": "IbacomSecurity1.0/IbacomSecurity",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e31a341ec3aaa6bd2472e7133a924f62417bc2464ccace0539f622fa93e124f8",
    "rsrc_size": 919,
    "type": "W*pi"
@@ -18,6 +21,10 @@
    "data_sha256": "6a4eda5de77bd5e4e048f83fa3884eb1ae903f7ccb90ef76aa0ecb3a23a2dc9c",
    "data_size": 13,
    "name": "IbacomSecurity1.0/IbacomSecurity.cfg",
+   "oracle_methods": [
+    "LZ+Huffman",
+    "None"
+   ],
    "rsrc_sha256": "67c7589fc67c7244ca81304e18456921485df1c198ea5191a62253e10aaf403d",
    "rsrc_size": 1454,
    "type": "TEXT"
@@ -27,6 +34,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "IbacomSecurity1.0/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "35e778ef97b1eca6f2a9643184ff43dded1bd70ef2da714fd1c7b577b4aa5be7",
    "rsrc_size": 486,
    "type": "icon"
@@ -36,6 +46,9 @@
    "data_sha256": "c106060a00f8a4820be5ae8facff9482dba0dfdf54f878a232f904217b5b42c7",
    "data_size": 8813,
    "name": "IbacomSecurity1.0/ReadMe.html",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "91117010ac042919e7020b21cd9063554f30672af3975c94c225d1b23ddd83cf",
    "rsrc_size": 286,
    "type": "TEXT"
@@ -45,6 +58,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "IbacomSecurity1.0/Register IbacomSecurity",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "bb0de178115d4b5efc9ff06df944b9982d7f3bfd29827a30a63bdf4aaddcc5c2",
    "rsrc_size": 103710,
    "type": "APPL"

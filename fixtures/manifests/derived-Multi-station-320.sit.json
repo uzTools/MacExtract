@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Multi-Station",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "28d93fa24d1dca20fb8d53d6b8f7590d386afbdc673b7b9cdbd031b59fc8747e",
    "rsrc_size": 155583,
    "type": "APPL"
@@ -14,6 +17,9 @@
    "data_sha256": "44bf55f0140980504e0864a50224154b418bf8df070920fb3f5edb6286e0ef34",
    "data_size": 6255,
    "name": "docs.text",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
@@ -23,6 +29,9 @@
    "data_sha256": "b1caed95a0aeb004084d0fb78fda0ebf6b0bb1c535b5c93704ded5e235dcfa6b",
    "data_size": 4479,
    "name": "kb template",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "a2328b01d368ed204cb64a010d85c68398ad0feade9b824f9d801861fb667fd0",
    "rsrc_size": 3584,
    "type": "PICT"

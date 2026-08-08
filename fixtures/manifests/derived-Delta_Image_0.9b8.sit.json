@@ -9,6 +9,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Delta Image 0.9b8/∆î 0.9ß8",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "a55f8bdf79151f430292516197d4996ea9a0a47ee3aa112b09314a5bebc4297a",
    "rsrc_size": 63531,
    "type": "APPL"
@@ -18,6 +21,9 @@
    "data_sha256": "74f14e351178c3ebd01fb528d9788838b89c4ffa9779d19edd2f0624b9082cb7",
    "data_size": 10654,
    "name": "Delta Image 0.9b8/∆î Documentation",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "2a3efbe947778f3a21ad44fc0e9f604ebd3c8336806c034559c2a7851b0a4143",
    "rsrc_size": 932,
    "type": "TEXT"

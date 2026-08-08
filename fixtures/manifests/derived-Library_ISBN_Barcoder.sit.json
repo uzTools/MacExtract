@@ -16,6 +16,9 @@
    "data_sha256": "67802afa4a82c9a7b82db1ece2713860e65be2c1ecc2cee1c6e796bb24ae9aec",
    "data_size": 1381,
    "name": "Library ISBN Barcoder/Library Barcoder.app/Contents/Info.plist",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -27,6 +30,9 @@
    "data_sha256": "57c05f3cbd100b9c430aefa365bfac059e36f02ae593d8ffcda9f947f2153721",
    "data_size": 352160,
    "name": "Library ISBN Barcoder/Library Barcoder.app/Contents/MacOS/Library Barcoder",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -34,6 +40,9 @@
    "data_sha256": "b9af12968a84e44e59059a4dfed3390dfc12a1455b43cfca7c17b9130480f451",
    "data_size": 8,
    "name": "Library ISBN Barcoder/Library Barcoder.app/Contents/PkgInfo",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -49,6 +58,9 @@
    "data_sha256": "871a7724a23f14b408d4ce7b5491c78f20be53ff8a059e28b8add07a5b017b4c",
    "data_size": 1144,
    "name": "Library ISBN Barcoder/Library Barcoder.app/Contents/Resources/English.lproj/AboutTheBookScript",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -56,6 +68,9 @@
    "data_sha256": "860bf1ef3eab808b2dd58d0046d799140fa0e20bb77910107f12048d7ec79ed7",
    "data_size": 532,
    "name": "Library ISBN Barcoder/Library Barcoder.app/Contents/Resources/English.lproj/Credits.rtf",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -63,6 +78,9 @@
    "data_sha256": "556bce0b584e958ef4e97a23775afb41bcb4ab29ee98a4f2c9c3d3c89a728284",
    "data_size": 588,
    "name": "Library ISBN Barcoder/Library Barcoder.app/Contents/Resources/English.lproj/InfoPlist.strings",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -70,6 +88,9 @@
    "data_sha256": "d98acc13bd2c0ac1ea9e3e51cba770984dd24984862cc972f93384fdb3f8743b",
    "data_size": 21856,
    "name": "Library ISBN Barcoder/Library Barcoder.app/Contents/Resources/English.lproj/LeftButton.tiff",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -77,6 +98,9 @@
    "data_sha256": "3bc8ee602abb25da0ef9520bec6db9c1ebf6d8f579046fda7e9b4ebdc8d514f0",
    "data_size": 45364,
    "name": "Library ISBN Barcoder/Library Barcoder.app/Contents/Resources/English.lproj/Library Barcoder Document.icns",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -84,6 +108,9 @@
    "data_sha256": "fdde5c4d4440f99d17c42b700d8fd3de0b4b3b261502c0d0649cfebb5b5ab2a8",
    "data_size": 64154,
    "name": "Library ISBN Barcoder/Library Barcoder.app/Contents/Resources/English.lproj/Library Barcoder.icns",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -95,6 +122,9 @@
    "data_sha256": "e40d32b12e174b6987275202cd0538df7e621f5a52eca1eb61492a369a5f2e7f",
    "data_size": 3663,
    "name": "Library ISBN Barcoder/Library Barcoder.app/Contents/Resources/English.lproj/LibraryBarcoderDocument.nib/classes.nib",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -102,6 +132,9 @@
    "data_sha256": "9958529a49f64c59d79372202dc60651e38c35b8ea2585ddb00f643cd6cb8aa2",
    "data_size": 451,
    "name": "Library ISBN Barcoder/Library Barcoder.app/Contents/Resources/English.lproj/LibraryBarcoderDocument.nib/info.nib",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -109,6 +142,9 @@
    "data_sha256": "570b0a480f377675d3cc17756b833754db7be94df92abb7d503ccc6f743f93df",
    "data_size": 19348,
    "name": "Library ISBN Barcoder/Library Barcoder.app/Contents/Resources/English.lproj/LibraryBarcoderDocument.nib/keyedobjects.nib",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -116,6 +152,9 @@
    "data_sha256": "2cf84fab89eb6aab0472ba11cc38169999649593c90e638ea20e5461aaa5227d",
    "data_size": 840,
    "name": "Library ISBN Barcoder/Library Barcoder.app/Contents/Resources/English.lproj/LibraryBarcoderScript",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -127,6 +166,9 @@
    "data_sha256": "77988f9d80566cb5f7b9d0db70a95a0175c51945b79c911d3cd0adc1983088e6",
    "data_size": 2386,
    "name": "Library ISBN Barcoder/Library Barcoder.app/Contents/Resources/English.lproj/MainMenu.nib/classes.nib",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -134,6 +176,9 @@
    "data_sha256": "1671bb215a55a728e419be3e1dd8fb4cef495d832f3154fb810fe1261ad3f474",
    "data_size": 624,
    "name": "Library ISBN Barcoder/Library Barcoder.app/Contents/Resources/English.lproj/MainMenu.nib/info.nib",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -141,6 +186,9 @@
    "data_sha256": "dc42c91210abb7af129fb3fe3fe46d451121f35041a53a186932c25dce5544d7",
    "data_size": 6090,
    "name": "Library ISBN Barcoder/Library Barcoder.app/Contents/Resources/English.lproj/MainMenu.nib/objects.nib",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -152,6 +200,9 @@
    "data_sha256": "027e0a09887c11c803aa88f4cf91435096a994d7c5dc49def7029c26818043a2",
    "data_size": 1204,
    "name": "Library ISBN Barcoder/Library Barcoder.app/Contents/Resources/English.lproj/Printing.nib/classes.nib",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -159,6 +210,9 @@
    "data_sha256": "1f6df54eab2594d0dd7be56d63fe92d334b1c9c5e60b2a46d58a27941610aab7",
    "data_size": 564,
    "name": "Library ISBN Barcoder/Library Barcoder.app/Contents/Resources/English.lproj/Printing.nib/info.nib",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -166,6 +220,9 @@
    "data_sha256": "130f4fe5262c27914535adc115cf7fdc08c784922e1d6fc99de610ad3bed166a",
    "data_size": 6491,
    "name": "Library ISBN Barcoder/Library Barcoder.app/Contents/Resources/English.lproj/Printing.nib/keyedobjects.nib",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -177,6 +234,9 @@
    "data_sha256": "a091b85538acb5fa07d3e6109e51e01ed0bfa1840e28525629e2bbe5bd54cdc2",
    "data_size": 641,
    "name": "Library ISBN Barcoder/Library Barcoder.app/Contents/Resources/English.lproj/RegistrationWindow.nib/classes.nib",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -184,6 +244,9 @@
    "data_sha256": "24c6a9fb9129d254424da0396ecb1dbca37bbf65cde531aec1349005d9d0a3c4",
    "data_size": 452,
    "name": "Library ISBN Barcoder/Library Barcoder.app/Contents/Resources/English.lproj/RegistrationWindow.nib/info.nib",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -191,6 +254,9 @@
    "data_sha256": "6b57e1ffaae35c1c79bc196c65ac87de8447a2f3dbf588eb64b889e0725354ce",
    "data_size": 3202,
    "name": "Library ISBN Barcoder/Library Barcoder.app/Contents/Resources/English.lproj/RegistrationWindow.nib/objects.nib",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -198,6 +264,9 @@
    "data_sha256": "591a5f268043631a187b57dcad319003e9a6f86262d0492770bcd9806872a585",
    "data_size": 21856,
    "name": "Library ISBN Barcoder/Library Barcoder.app/Contents/Resources/English.lproj/RightButton.tiff",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -205,6 +274,9 @@
    "data_sha256": "55eae1d57b475517700ef5418489f180ce9d051917ec54c2a3e95eb11e4249e2",
    "data_size": 22152,
    "name": "Library ISBN Barcoder/Library Barcoder.app/Contents/Resources/English.lproj/SaveButton.tiff",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -216,6 +288,9 @@
    "data_sha256": "ae3b8b2a128b269635a0d54b27ab3a6924d801f3cfd601db3c9c78c214b869bc",
    "data_size": 2649,
    "name": "Library ISBN Barcoder/Library Barcoder.app/Contents/Resources/English.lproj/Saving.nib/classes.nib",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -223,6 +298,9 @@
    "data_sha256": "d45b6bc415a55468e33ad5eb3322675ca0ea98c2799582016aab0fb655d3248e",
    "data_size": 494,
    "name": "Library ISBN Barcoder/Library Barcoder.app/Contents/Resources/English.lproj/Saving.nib/info.nib",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -230,6 +308,9 @@
    "data_sha256": "d44c3616005b88d6349e892baff97df683a60b0b8280f2619873b9edce7d8c46",
    "data_size": 6418,
    "name": "Library ISBN Barcoder/Library Barcoder.app/Contents/Resources/English.lproj/Saving.nib/keyedobjects.nib",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -237,6 +318,9 @@
    "data_sha256": "01c35bb8124bfaf05ffed69b0d346cfc233e574a2c54302c503eed4fb303ee51",
    "data_size": 17172,
    "name": "Library ISBN Barcoder/Library Barcoder.app/Contents/Resources/English.lproj/TVAll.tiff",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -244,6 +328,9 @@
    "data_sha256": "4a868dcbda987c2a19da0fddb2741096339523dcb362ecad158415581139168e",
    "data_size": 17040,
    "name": "Library ISBN Barcoder/Library Barcoder.app/Contents/Resources/English.lproj/TVGroups.tiff",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -251,6 +338,9 @@
    "data_sha256": "bcfb076e0790191b65d9a452ff801a1ae9bf84c37fbaa325a5b878131c539748",
    "data_size": 16992,
    "name": "Library ISBN Barcoder/Library Barcoder.app/Contents/Resources/English.lproj/TVRecord.tiff",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -258,6 +348,9 @@
    "data_sha256": "d1362d952c1b725e1fa041cfce4844c34652e1c66ed245128801fe0b4e7916ed",
    "data_size": 463,
    "name": "Library ISBN Barcoder/Library Barcoder.app/Contents/Resources/English.lproj/version.plist",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -265,6 +358,9 @@
    "data_sha256": "67802afa4a82c9a7b82db1ece2713860e65be2c1ecc2cee1c6e796bb24ae9aec",
    "data_size": 1381,
    "name": "Library ISBN Barcoder/Library Barcoder.app/Contents/Resources/Info.plist",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -272,6 +368,9 @@
    "data_sha256": "a50252cd138a930775e251e699cefe968162810c6c623efde45e35bb5813f166",
    "data_size": 182,
    "name": "Library ISBN Barcoder/Library Barcoder.app/Contents/Resources/Library Barcoder_Prefix.pch",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   },
@@ -279,6 +378,9 @@
    "data_sha256": "2ddb83465e13597614dc3199130cbef02ea217d28efd4c57decd839153a8048f",
    "data_size": 1173,
    "name": "Library ISBN Barcoder/ReadMe!.rtf",
+   "oracle_methods": [
+    "Arsenic"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   }

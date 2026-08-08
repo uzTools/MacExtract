@@ -49,6 +49,9 @@ FIXDIR = os.path.join(os.path.dirname(__file__), "..", "fixtures")
 ROOT = os.path.join(os.path.dirname(__file__), "..")
 MACUNPACK = os.path.join(ROOT, "build", "macunpack", "macunpack", "macunpack")
 MACUNPACK_ID = "macunpack (macutils 2.0b3, -m32)"
+# Fixtures whose unadjudicated forks were never offered to the second
+# oracle because it was not built. Reported at the end, loudly.
+MISSING_ORACLE = set()
 
 
 def sha256_file(path):
@@ -141,7 +144,15 @@ def parse_oracle_failures(text):
 
 
 def lsar_metadata(fixture):
-    """Return (formatname, {normalized name: (type, creator)}) via lsar -j."""
+    """Return (formatname, {name: (type, creator)}, {name: [method, ...]}).
+
+    The method names are the ORACLE's own (`XADCompressionName`), one set
+    per entry name because a two-fork entry is two lsar records and the
+    forks may use different methods. They are recorded so that a harness
+    can ask what an entry is compressed with WITHOUT asking our engine —
+    see run_diff.py, which excuses "recognized but unsupported" only for
+    methods named here (TESTING.md, "When our engine declines an entry").
+    """
     try:
         out = subprocess.run(
             ["lsar", "-j", "-nr", "-e", "macintosh", fixture],
@@ -150,15 +161,18 @@ def lsar_metadata(fixture):
         # (e.g. binary XADNextSolidEntry keys in PackIt archives).
         data = json.loads(out.stdout.decode("utf-8", "replace"), strict=False)
     except Exception:
-        return None, {}
+        return None, {}, {}
     fmt = data.get("lsarFormatName")
-    meta = {}
+    meta, methods = {}, {}
     for e in data.get("lsarContents", []):
         name = norm(e.get("XADFileName", ""))
         t, c = e.get("XADFileType"), e.get("XADFileCreator")
         to4 = lambda v: struct.pack(">I", v).decode("mac_roman") if v else None
         meta[name] = (to4(t), to4(c))
-    return fmt, meta
+        m = e.get("XADCompressionName")
+        if m:
+            methods.setdefault(name, set()).add(m)
+    return fmt, meta, {k: sorted(v) for k, v in methods.items()}
 
 
 # --- second oracle: macunpack ----------------------------------------
@@ -235,6 +249,16 @@ def adjudicate_with_macunpack(fixture_path, entries):
     number of forks adjudicated."""
     if not any("unadjudicated" in e for e in entries):
         return 0
+    # Doing without the second oracle is deliberate (a machine with no
+    # 32-bit toolchain must still build every manifest) but it must never
+    # be SILENT: a rebuild with it missing writes weaker manifests than
+    # the committed ones and looks like success. `./ci.sh` runs
+    # `make clean`, which deletes it — measured the hard way, 2026-08-08,
+    # by rebuilding the corpus straight after a CI run and reverting 23
+    # adjudicated forks to "unadjudicated".
+    if not os.path.exists(MACUNPACK):
+        MISSING_ORACLE.add(os.path.basename(fixture_path))
+        return 0
     table = _transname_table()
     if table is None:
         return 0
@@ -283,7 +307,7 @@ def adjudicate_with_macunpack(fixture_path, entries):
 
 def build_manifest(fixture_path, verbose=False):
     name = os.path.basename(fixture_path)
-    fmt, meta = lsar_metadata(fixture_path)
+    fmt, meta, methods = lsar_metadata(fixture_path)
     # The "._" sidecar namespace is disjoint from real archive names in
     # every fixture harvested so far, which is why forks are taken from
     # `-k hidden` — but an entry literally named "._X" would collide
@@ -315,7 +339,22 @@ def build_manifest(fixture_path, verbose=False):
                 print(f"  oracle FAILED on {name}: {r.stderr.decode()[:200]}",
                       file=sys.stderr)
                 return None
-            known = {matchkey(n) for n in meta}
+            # matchkey is many-to-one (':' and '/' both flatten to '_'),
+            # so two DIFFERENT entry names can share a key — and then a
+            # failure would be attributed to whichever of them the walk
+            # reached, leaving the entry that really failed holding
+            # hashes of whatever unar dropped on disk. Refuse instead.
+            # No fixture harvested so far collides; this is a condition,
+            # not a case.
+            bykey = {}
+            for n in meta:
+                bykey.setdefault(matchkey(n), []).append(n)
+            clashing = [v for v in bykey.values() if len(v) > 1]
+            if clashing:
+                print(f"  oracle UNRELIABLE on {name} (entries {clashing[0]!r} "
+                      f"share a failure-report key), skipping", file=sys.stderr)
+                return None
+            known = set(bykey)
             for ename, fork, err in parsed:
                 if matchkey(ename) not in known:
                     print(f"  oracle UNRELIABLE on {name} (reports a failure "
@@ -382,6 +421,8 @@ def build_manifest(fixture_path, verbose=False):
                         ent["creator"] = creator
                 if "type" not in ent and p in meta and meta[p][0]:
                     ent["type"], ent["creator"] = meta[p][0], meta[p][1]
+                if p in methods:
+                    ent["oracle_methods"] = methods[p]
                 # A fork the oracle failed on is not ground truth,
                 # whatever it left on disk — and what it leaves varies:
                 # a 0-byte file, a partial one (114,644 B of a failed
@@ -416,7 +457,10 @@ def build_manifest(fixture_path, verbose=False):
             full = dict(un)
             for fork in ("data", "rsrc"):
                 full.setdefault(fork, "oracle wrote no output for this entry")
-            entries.append({"name": failed_names[key], "unadjudicated": full})
+            ent = {"name": failed_names[key], "unadjudicated": full}
+            if failed_names[key] in methods:
+                ent["oracle_methods"] = methods[failed_names[key]]
+            entries.append(ent)
     if not entries:
         print(f"  oracle produced nothing for {name}", file=sys.stderr)
         return None
@@ -477,6 +521,12 @@ def main():
         print(f"  manifest: {os.path.basename(fx)} "
               f"({m['format']}, {len(m['entries'])} entries)")
     print(f"manifests: {made} built, {skipped} kept, {failed} failed")
+    if MISSING_ORACLE:
+        print(f"WARNING: the second oracle is not built, so {len(MISSING_ORACLE)}"
+              f" fixture(s) kept forks it may be able to adjudicate — the "
+              f"manifests just written are WEAKER than committed ones built "
+              f"with it. Run `sh tools/build_macunpack.sh` and rebuild them: "
+              f"{' '.join(sorted(MISSING_ORACLE))}", file=sys.stderr)
     return 0 if failed == 0 else 1
 
 

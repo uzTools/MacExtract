@@ -9,6 +9,9 @@
    "data_sha256": "d578b23e11c5859d8ed974a11b723f3476fee8e535f9439556f54132b7fa3148",
    "data_size": 19456,
    "name": "Memory Mgr Init Folder/MM Bug - Technical Stuff",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "WDBN"
@@ -18,6 +21,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Memory Mgr Init Folder/MMInit",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "526e8f007d8283a08853fef190dd5458f9ddf3aeac71d95210d21cfcc853ba6a",
    "rsrc_size": 12258,
    "type": "INIT"

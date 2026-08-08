@@ -5,6 +5,9 @@
    "data_sha256": "7e9a91996172bf43714b38c4cde224c705c24d2690048c76d7781ca7c0235b4f",
    "data_size": 801,
    "name": "--INFO--",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "ttro"
@@ -14,6 +17,9 @@
    "data_sha256": "d938ce02db8e35d4cc78c04161a5d24be360dba6aa4e78a3a9ea37c69dbd3e38",
    "data_size": 1168,
    "name": "--READ ME--",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "ttro"
@@ -23,6 +29,9 @@
    "data_sha256": "e6169ad4e305c427509f8a12216a063d78950e358402ca5cb1da415f72faf4f2",
    "data_size": 12966,
    "name": "Privacy for Pals v1.5",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "ec60401be68449b14ec300586d75bc0622d9751f46cb460f5676f8f989464045",
    "rsrc_size": 69909,
    "type": "APPL"
@@ -32,6 +41,9 @@
    "data_sha256": "117162653e6f4821d9a66d0001792dcdc30ef548fc4262e9cf1bb37a2451f99e",
    "data_size": 60,
    "name": "REGISTER.TXT",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"

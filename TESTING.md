@@ -80,8 +80,11 @@ unar -nr -D -f -q -k hidden -e macintosh -o <tmpdir> <fixture>
 
 `fixtures/manifests/<fixture>.json`: fixture sha256/size, lsar format
 name, and per entry: name (UTF-8, NFC-normalized), data fork
-sha256+size, resource fork sha256+size, and type/creator when the
-oracle exposes them.
+sha256+size, resource fork sha256+size, type/creator when the oracle
+exposes them, and `oracle_methods` — the compression method(s) `lsar`
+names for that entry (`XADCompressionName`; two forks can differ, so it
+is a list). Nothing in the engine reads it; it exists so a harness can
+ask what an entry is compressed with without asking the engine.
 
 ### When the oracle fails on an entry
 
@@ -147,8 +150,11 @@ looks exactly like an entry with two empty forks, and would be written into
 the manifest as ground truth saying so.
 
 Result, 2026-08-08: 23 forks across 9 fixtures gained ground truth, the suite
-went 793 → 795 fixtures, the whole-archive skips went 3 → 2, and the
-unadjudicated tally went 19 forks/14 fixtures → 8/7.
+went 793 → 795 fixtures, and the unadjudicated tally went 19 forks/14 fixtures
+→ 8/7. Later the same day the suite reached 797 and the tally 12/9, for a
+different reason — the two fixtures that were being skipped whole started
+being graded, and a skipped fixture's unadjudicated forks had been counted
+nowhere. See "When our engine declines an entry", below.
 
 **What this cannot see:** `macunpack` is where our method-6 decoder was
 transcribed from (`src/fmt_sit.c`, `src/sit6_tables.h`), so on method 6 it
@@ -169,18 +175,63 @@ Gzip, tar or DiskDoubler, and it fails whole-archive far more often than
   23,987 bytes whose CRC matches — and the second oracle has since agreed on
   all 23,987 of them, so on that one fork the argument no longer has to be
   taken on trust.
-- **A fixture where every entry uses an out-of-scope method is skipped
-  whole** (2 of them, both PKZIP 1.x zips). A regression that made a
-  *supported* method report "recognized but unsupported" for entire
-  archives would convert failures into skips. The skip count is printed on
-  every run for that reason; it is 2.
-- Do not read "unadjudicated: 8 forks" as 8 defects. It is 8 forks across
-  7 fixtures where two implementations cannot be compared, and since the
-  second oracle landed **both sides decline on every one of them**: a
-  damaged nested archive where the engine says "file is truncated" and unar
-  says "Error on decrunching". Every fork the engine extracts is now
-  adjudicated by somebody. (Out of the diff run's scope, 15 more forks stay
-  unadjudicated in DiskDoubler and PKZIP 1.x fixtures.)
+- **An entry the oracle names as out of v1 scope is graded on its name and
+  on anything the engine did write — not on its forks**, because the engine
+  produces none (7 entries, all Implode, in the two PKZIP 1.x zips). The
+  day Implode is implemented those 10 forks start being compared with no
+  change to the harness. Until 2026-08-08 the whole FIXTURE was skipped
+  instead, on the strength of our own error message; see "When our engine
+  declines an entry".
+- Do not read "unadjudicated: 12 forks" as 12 defects. It is 12 forks
+  across 9 fixtures where two implementations cannot be compared, and
+  **both sides decline on every one of them**: 8 in damaged nested archives
+  where the engine says "file is truncated" and unar says "Error on
+  decrunching", and 4 in the two PKZIP 1.x zips, where unar failed the entry
+  and Implode is outside v1 scope for us. Every fork the engine extracts is
+  adjudicated by somebody. (The count was 8 across 7 until those two zips
+  stopped being skipped whole, which is the point: a skipped fixture's
+  unadjudicated forks were not counted anywhere.) Out of the diff run's
+  scope, 11 more forks stay unadjudicated in DiskDoubler fixtures.
+
+### When our engine declines an entry
+
+A per-entry error from `unclassic` is tolerated in exactly two cases, and
+**both are the oracle's word, never ours**:
+
+- the oracle failed that same entry (it is `unadjudicated`), or
+- the oracle names the entry's compression method as one v1 does not
+  implement — `oracle_methods` against `run_diff.py`'s
+  `ORACLE_OUT_OF_SCOPE`, which today holds `Implode` and nothing else.
+
+Anything else fails the fixture, including a non-zero exit with no
+per-entry report at all, and including every whole-archive error (those
+name the FIXTURE path, which can never match an entry name).
+
+**Why it is anchored outside our own output.** Until 2026-08-08 a fixture
+was skipped whole when every entry our binary reported failed with
+"recognized but unsupported". Two consequences, both measured on
+2026-08-08:
+
+- it discarded ground truth. `4acalc.zip` and `4alnch11.zip` carry
+  adjudicated hashes for 5 of their 7 entries — `unar` implements Implode
+  and we do not — and none of the 10 forks, nor the names, nor the entry
+  counts were compared. **"even unar fails on them" was true at M8 and
+  false since per-entry manifests landed**, and the disproof was sitting
+  in the manifests themselves.
+- it could not fail. A regression that made a *supported* method report
+  "recognized but unsupported" for a whole archive converted a failure
+  into a skip, and the mitigation on record was a printed count for a
+  human to notice. Demonstrated with a stub binary: `derived-Export.sit`,
+  fully adjudicated, passed as a skip. It fails now.
+
+The same pass tightened a second excuse. An entry the oracle partly
+failed used to have its whole absence excused, so a fork WITH ground
+truth beside an unadjudicated one was never required to exist: a stub
+that wrote nothing for `•Draw 5.1.cpt` passed while the manifest held a
+78,123-byte adjudicated data fork. Absence is now excused only for
+out-of-scope entries; an adjudicated fork is compared or missing. Six
+fixtures sit on that path and all six were byte-exact already, so the
+tightening changed no result — it changed what a result means.
 
 ### Comparison normalization
 
@@ -231,7 +282,7 @@ sampled occurrence index **by trying to allocate the table and failing**
 CI forces it three ways:
 
 - `-DUNC_ARS_FORCE_SAMPLED` compiles the fast path out. The whole
-  795-fixture diff suite and all 7,970 robustness variants run through the
+  797-fixture diff suite and all 7,970 robustness variants run through the
   fallback under ASan+UBSan, and must be byte-exact.
 - `--budget 678392` (what a 1 MB Mac Plus leaves the engine) on the 31
   StuffIt 5 fixtures, with the normal adaptive build. This is the only step
@@ -264,13 +315,13 @@ exercised deliberately, by hand:
 
     # 1. the bound never under-estimates: hard-disable growth
     #    (make lzw_grow return UNC_ERR_MEM as its first statement)
-    UNCLASSIC=build/never/unclassic sh tests/run_diff.sh      # expect 795/795
+    UNCLASSIC=build/never/unclassic sh tests/run_diff.sh      # expect 797/797
 
     # 2. the safety net is correct: force it to run on every stream
     make BUILD=build/tiny CFLAGS="-O1 -g \
         -fsanitize=address,undefined,alignment -fno-sanitize-recover=all \
         -DUNC_LZW_TINY_TABLE" all
-    UNCLASSIC=build/tiny/unclassic sh tests/run_diff.sh       # expect 795/795
+    UNCLASSIC=build/tiny/unclassic sh tests/run_diff.sh       # expect 797/797
 
     # 3. these fixtures CAN fail on this code: starve the table AND
     #    skip the add instead of growing
@@ -286,7 +337,8 @@ would report — so without a demonstrated failure they distinguish nothing.
 method 2).
 
 Step 2 was re-measured at **778/778** on 2026-08-08, before per-entry
-oracle failures and then the second oracle took the suite to 795 later the
+oracle failures, the second oracle and the end of whole-fixture skips took
+the suite to 797 later the
 same day. Step 3's figure is from
 2026-08-03 and was **675/769** — 94 failures — against the 769-fixture suite of
 that date; re-running it needs the hand edit above, and what matters is that it

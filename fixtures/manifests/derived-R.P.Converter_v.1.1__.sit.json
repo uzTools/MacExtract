@@ -9,6 +9,9 @@
    "data_sha256": "4b8bbce50f133e3c91ff05388e9865fc4068e2fe89400ccdd492a48ecc33a53e",
    "data_size": 1625,
    "name": "R.P.Converter v.1.1 ƒ/R.P Converter v.1.1 docs",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e0a8ebda55c3e32ea2a015b53cd03304b9e16faf8432f544e17f676695ceaca6",
    "rsrc_size": 670,
    "type": "TEXT"
@@ -18,6 +21,9 @@
    "data_sha256": "5b79dfee16b27eb5d0946b2178ab431551306e51ad686f017c3ccf075cf27ca8",
    "data_size": 15392,
    "name": "R.P.Converter v.1.1 ƒ/R.P.Converter v.1.1",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e504cbf7a17997cca2989c0d0241e88039aa36e7f873fc8c008f9a77c5606900",
    "rsrc_size": 3248,
    "type": "STAK"

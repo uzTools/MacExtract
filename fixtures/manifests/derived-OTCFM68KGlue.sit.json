@@ -17,6 +17,9 @@
    "data_sha256": "4493cf3e312723a42afdbbb050fb5498efd0331c01777582a089a143a60e30c9",
    "data_size": 308400,
    "name": "OTCFM68KGlue/(Private)/Headers/OTCFM68KGluePrv.h",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "38233d6ba4fca5ace132f3b2fb95fd7a6696313e800dad4fd36c1cc0b38d719d",
    "rsrc_size": 684,
    "type": "TEXT"
@@ -30,6 +33,9 @@
    "data_sha256": "4b0df5171ad1deef1d1ed9c956862cb997dbf636382ea95d57537943e96fbfc1",
    "data_size": 134,
    "name": "OTCFM68KGlue/(Private)/No Source/ApplParamsHack.c.o",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "c35501c1aa5363cc01f58de011e0486b5e952635cb696fd3f448978db710de0e",
    "rsrc_size": 578,
    "type": "OBJ "
@@ -39,6 +45,9 @@
    "data_sha256": "a70e662d978432ae778d72abb52a5a382092e27bd2b7dea530b56bb7c4746601",
    "data_size": 4263,
    "name": "OTCFM68KGlue/(Private)/OTCFM68KGlue.make",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "0a53d9e32dbdacdb12542bc3a042bfd60bc7740f6958839c9c04e639104ea5a2",
    "rsrc_size": 605,
    "type": "TEXT"
@@ -48,6 +57,9 @@
    "data_sha256": "3cd2b5129d853fa37a51d7fbb89695a3a1cc286c562d6bab7d41348c54532881",
    "data_size": 242106,
    "name": "OTCFM68KGlue/(Private)/OTCFM68KGlue.mcp",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "3ce50fd6365ecf52d63d9e18da124ba15d335ee9f764de482394b4800bc3326b",
    "rsrc_size": 442,
    "type": "MMPr"
@@ -61,6 +73,9 @@
    "data_sha256": "03eecb11162a9516f30e0b3f9656cd1f536c5058dd3d08fc615be36d337446d5",
    "data_size": 111487,
    "name": "OTCFM68KGlue/(Private)/Sources/OTCFM68KGlue.cp",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "3b920dfa74714c54b0b259d9c39b18d621b74d9ddfd4f5c41f16c9b3ed4cc6c8",
    "rsrc_size": 689,
    "type": "TEXT"
@@ -70,6 +85,9 @@
    "data_sha256": "8daaa5ac12d22898f4f17a890ed948a9819f3c099acf28ab7e95ac8ef78e4d35",
    "data_size": 96688,
    "name": "OTCFM68KGlue/(Private)/Sources/OTCFM68KGlueRsrc.cp",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "d6281183807c97620c5f9bc51fec2a55363e13481fbf410e1fbfc7b54b1364c3",
    "rsrc_size": 721,
    "type": "TEXT"
@@ -83,6 +101,9 @@
    "data_sha256": "a413f4e68ca53573e0081efb5675cf24b32db51dd9e18e067abaebfe427c8a79",
    "data_size": 8855,
    "name": "OTCFM68KGlue/(Private)/Test/testbed.cp",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "57fdf489c3dcf35360e4c3a599d7995cffeb58c9c4b494c6255816b5c7f9aec6",
    "rsrc_size": 661,
    "type": "TEXT"
@@ -92,6 +113,9 @@
    "data_sha256": "09a17d87d9ad5ba4fa238f94eb2fab5e3529c014ff5de277eb21ef73f891903a",
    "data_size": 1767,
    "name": "OTCFM68KGlue/(Private)/Test/testbed.r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "c6200fd7469aa4632268155a9545458387877fb334b3f213c8f0a135f4af2c51",
    "rsrc_size": 602,
    "type": "TEXT"
@@ -105,6 +129,9 @@
    "data_sha256": "5fa1610991cac169a5ecf913560c38b64467f6a264b3690aa0ef7bfbf9f7d51c",
    "data_size": 26052,
    "name": "OTCFM68KGlue/Docs/OTCFM68KGlue.html",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "81899146fc0636ec1d8342b9a732fea310f6b59d8e1810b864e4bffffe2f7573",
    "rsrc_size": 752,
    "type": "TEXT"
@@ -114,6 +141,10 @@
    "data_sha256": "15cafc252b8fcfd690f82a304fee289dfac240482383f70c6d1c9b1f5693614e",
    "data_size": 14048,
    "name": "OTCFM68KGlue/Docs/cfm68kprefs.gif",
+   "oracle_methods": [
+    "LZ+Huffman",
+    "None"
+   ],
    "rsrc_sha256": "526037460a4f846780eb630a3319428a764328a5ed76e5f8b5f5c7f64272d3d9",
    "rsrc_size": 449,
    "type": "GIFf"
@@ -127,6 +158,9 @@
    "data_sha256": "93a71ca4747a043f81c43a8388f0a8dd23505fbeccc59e87384d153014d88417",
    "data_size": 14870,
    "name": "OTCFM68KGlue/Headers/OTCFM68KGlue.h",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "9253bb83e0e867025af29c47058b6bc11570c0cfdcc221487c160a8ae562d437",
    "rsrc_size": 646,
    "type": "TEXT"
@@ -140,6 +174,9 @@
    "data_sha256": "907142b0956ad881c6b016139ded265e1692807ba1b1174d65629bc832246d3a",
    "data_size": 55024,
    "name": "OTCFM68KGlue/Libraries/OTCFM68KGlue.cfm.dbg.lib",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "fcce3027b425fba5962356e64576147dbcd7ccb20e4e39f72f437fb146bdd61a",
    "rsrc_size": 286,
    "type": "MPLF"
@@ -149,6 +186,9 @@
    "data_sha256": "bb07bac14294ad402cabf3e0c86d05b2eb71b3162d87eeda574469225115190e",
    "data_size": 75504,
    "name": "OTCFM68KGlue/Libraries/OTCFM68KGlue.cfm.dbg.o",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "OBJ "
@@ -158,6 +198,9 @@
    "data_sha256": "ae6243c2bca4f270a9f4c7fae408317f7f6042ec1c2eec9a379e00ae7bd7bdec",
    "data_size": 30196,
    "name": "OTCFM68KGlue/Libraries/OTCFM68KGlue.cfm.rls.lib",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "c8bc13a863d2200f1dcd9b3185890d0edc4f8220ce0c1609391abbccd6770f43",
    "rsrc_size": 286,
    "type": "MPLF"
@@ -167,6 +210,9 @@
    "data_sha256": "233bdb4ce86cde636ad855181ee9ff079850319c9feed5e8e2c1afa62d08b65c",
    "data_size": 31638,
    "name": "OTCFM68KGlue/Libraries/OTCFM68KGlue.cfm.rls.o",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "OBJ "
@@ -176,6 +222,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "OTCFM68KGlue/Libraries/OTCFM68KGlue.dbg.rsrc",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "6f0072d07c54341ee84a96d410eb9d0a28ad2ef671c1b4aedb0480f1f410145c",
    "rsrc_size": 29947,
    "type": "RSRC"
@@ -185,6 +234,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "OTCFM68KGlue/Libraries/OTCFM68KGlue.rls.rsrc",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "f4d0b1487f817966c63fa3d7b17438ab481db186bd04185349743074ee5c74df",
    "rsrc_size": 22432,
    "type": "RSRC"

@@ -9,6 +9,9 @@
    "data_sha256": "39cb5e55037809783b23f0ccf70beb9234877ab982ff78d0e03cc17e87a2ba70",
    "data_size": 2181,
    "name": "YP Magnetic Force 1.0 ƒ/How to Order",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "abe37922ed68399993a382ad6e73f4db7eb2582fb4d7083bb0d8db9761b87f00",
    "rsrc_size": 1192,
    "type": "TEXT"
@@ -18,6 +21,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "YP Magnetic Force 1.0 ƒ/Icon\r",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "40dc81615e0c31b2e4fe653a3c1a41e50530dcf64a4b2428ff8ae6b5770863b6",
    "rsrc_size": 286,
    "type": "icon"
@@ -27,6 +33,9 @@
    "data_sha256": "a305bea5af429563f3bdf1df474d53ee6bf9c003a42994769ee3b612444917af",
    "data_size": 2351,
    "name": "YP Magnetic Force 1.0 ƒ/Other Products",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "45cd8315fba555eb37a9b34a2ec589be1d9625c4579f623577f7a9bc477fe9f0",
    "rsrc_size": 82929,
    "type": "TEXT"
@@ -36,6 +45,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "YP Magnetic Force 1.0 ƒ/Register",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "60f89e655ad052b414ae1acef45c12ba83264d8831bdeeadcdc33968e52fb1c5",
    "rsrc_size": 94920,
    "type": "APPL"
@@ -45,6 +57,9 @@
    "data_sha256": "663b31fd0128205414b6a18ec454f09ff362a984cfb1af17313a7d89f066214c",
    "data_size": 8687,
    "name": "YP Magnetic Force 1.0 ƒ/User's Guide",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e79fd268d9911f5931c05ce99869db245566df76375b4cff191470862ce784ca",
    "rsrc_size": 111435,
    "type": "TEXT"
@@ -54,6 +69,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "YP Magnetic Force 1.0 ƒ/YP Magnetic Force 1.0",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "6ab296f3dcf9d7111e7b9e6bd3b8f53ed16b0bbd262a6852a9fbfc0bca6c4602",
    "rsrc_size": 194054,
    "type": "APPL"

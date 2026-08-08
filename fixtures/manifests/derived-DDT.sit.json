@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "DDT.da",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "a276ca0b68f4f5b8222c211691e78960c942884a6751d9763553f9d9c6934209",
    "rsrc_size": 3504,
    "type": "DFIL"
@@ -14,6 +17,9 @@
    "data_sha256": "e365cb9fdb3de87ecbb962d29e0b2caa2924b6ca003658aedd267279cff2c606",
    "data_size": 1473,
    "name": "README",
+   "oracle_methods": [
+    "Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"

@@ -5,6 +5,10 @@
    "data_sha256": "491cff5890443279c8db1b0c5d66d5f2d467f6365a2565d523fdde6a2701a9dc",
    "data_size": 19776,
    "name": "I Want To Buy Some Cheese",
+   "oracle_methods": [
+    "Huffman",
+    "RLE"
+   ],
    "rsrc_sha256": "75bc48f16447c05275f85780e6d63d9188abc8352895e52858b2cc9c7172661d",
    "rsrc_size": 470,
    "type": "FSSD"
@@ -15,6 +19,9 @@
    "data_sha256": "4c72a1154b02d0c8c2889fadf9c6de5d3dc3c9effd6923df322a6c4412619008",
    "data_size": 23987,
    "name": "It's A Bit Runny Sir",
+   "oracle_methods": [
+    "Huffman"
+   ],
    "rsrc_sha256": "a813db7bb4b34ade621c30d8ccf920bef9e227c1eaca80df21bc45c50396d17c",
    "rsrc_size": 470,
    "type": "FSSD"
@@ -24,6 +31,9 @@
    "data_sha256": "936a34d5a2f79a0169b909f69615bd6cbec545b2d667216653a2773ffe90e695",
    "data_size": 11264,
    "name": "Lemon Curry 2",
+   "oracle_methods": [
+    "Huffman"
+   ],
    "rsrc_sha256": "c71f492910fa21347e850818cf3acb55708ef4b52fd32dba24a9247c8454a01f",
    "rsrc_size": 470,
    "type": "FSSD"
@@ -33,6 +43,9 @@
    "data_sha256": "01cfbae382d417252fc0d32fed6410b365c96859eadcb42545278e3302a3a7a4",
    "data_size": 5248,
    "name": "Stop It",
+   "oracle_methods": [
+    "Huffman"
+   ],
    "rsrc_sha256": "32536ea1c45d4de501b2d72f61aebed53dd2f4203a5240d4697c4a959ba6bf1a",
    "rsrc_size": 470,
    "type": "FSSD"
@@ -42,6 +55,9 @@
    "data_sha256": "9462a2f887733b8f43e75322fffb75cc792c4bfbf95a29e021c5e574154c2232",
    "data_size": 33152,
    "name": "Your Nicked...",
+   "oracle_methods": [
+    "Huffman"
+   ],
    "rsrc_sha256": "bcc0ec026f1309a46540f4fae351a1189ae5c63c24fe9ee3b14e201865f976d7",
    "rsrc_size": 470,
    "type": "FSSD"

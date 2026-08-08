@@ -6,6 +6,9 @@
    "data_sha256": "62923d82cb7ece0b691902ca5f6c2952050baeddf991f5ed5e5df88d2a0e899e",
    "data_size": 1956,
    "name": "LaserChase! docs",
+   "oracle_methods": [
+    "Huffman"
+   ],
    "rsrc_oracle": "macunpack (macutils 2.0b3, -m32)",
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
@@ -16,6 +19,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "LaserChase! v1.2",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "4c89170bedeb67d78ca0af9490eff4febf0c589ef85827561f57e741bc595467",
    "rsrc_size": 28599,
    "type": "APPL"

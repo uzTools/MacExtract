@@ -5,6 +5,9 @@
    "data_sha256": "0d881160af5bed0d9d5936838fea7db609add2d2f0bf281105e8895a76dadbfe",
    "data_size": 6944,
    "name": "Export",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "STAK"

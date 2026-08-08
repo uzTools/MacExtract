@@ -9,6 +9,9 @@
    "data_sha256": "f76fd1a747da2181b67ad1e349be4feb6edbc9d99426dc78d6af1df6a44859b9",
    "data_size": 8330,
    "name": "DL111/DL 1.1.1 Rel Notes",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "d50b9f43ca03013be896cb421e4ed2d4343b2df093143dcdc2a7b77e20544e40",
    "rsrc_size": 2075,
    "type": "TEXT"
@@ -18,6 +21,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "DL111/DownLine",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "6d2f6f8453b4a0ef175a26d6ae051a70d28a5215838d21de9995a292af54d1fb",
    "rsrc_size": 102264,
    "type": "APPL"

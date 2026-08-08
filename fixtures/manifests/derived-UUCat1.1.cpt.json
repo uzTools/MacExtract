@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "UUCat 1.1",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "080e43785ab83ea0ffa95c1afcf87d2c7314fa48dfa7ed56fb84afe22b68f5bf",
    "rsrc_size": 77150,
    "type": "APPL"
@@ -14,6 +17,9 @@
    "data_sha256": "dc23f217ffbe2df1f02a7c430036ab016a38759f4f7dd6a06d27ba89bc2e9bc0",
    "data_size": 3744,
    "name": "uucat.dox",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "ttro"

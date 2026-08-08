@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "EPSF (IBMpc to Mac)",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "eac95233cc0efa206cd757a0f5913cee8d736d1e3ab7b33597ee902b8cb68f92",
    "rsrc_size": 60862,
    "type": "VISA"
@@ -14,6 +17,9 @@
    "data_sha256": "69acade3023e697585d2e4bd6ccc7c369f7ca24247ae1e66c09719342611f60f",
    "data_size": 14753,
    "name": "EPSF (IBMpc to Mac).doc -cw",
+   "oracle_methods": [
+    "LZ+Huffman"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "CWWP"

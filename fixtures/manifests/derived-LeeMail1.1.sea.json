@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "LeeMail 1.1",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "38bcd230de84e997118a240af7409ba6f3a6acf2d54db05e27f17ce82ae78040",
    "rsrc_size": 128329,
    "type": "APPL"
@@ -14,6 +17,9 @@
    "data_sha256": "0364c20ef3975ce4cbab3b92661d38c684beb91ef05d0f34152766f8d4ac78ad",
    "data_size": 18944,
    "name": "LeeMail 1.1 Docs",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "WDBN"

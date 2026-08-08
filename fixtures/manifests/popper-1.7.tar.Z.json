@@ -4,6 +4,9 @@
    "data_sha256": "cc1e1a08902653bf2885af00e8090f55d977469be9adda4e6391eb667d79caae",
    "data_size": 174080,
    "name": "popper-1.7.tar",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
   }

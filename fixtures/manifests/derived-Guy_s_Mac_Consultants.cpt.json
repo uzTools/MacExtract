@@ -5,6 +5,9 @@
    "data_sha256": "2fdbc855b0dd054519df2b5f25e05b003e808c2bb69a9ca50abaf338a80b2d09",
    "data_size": 550408,
    "name": "Consultants DB",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "GDEX"

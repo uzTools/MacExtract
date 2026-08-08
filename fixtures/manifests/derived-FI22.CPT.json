@@ -5,6 +5,9 @@
    "data_sha256": "942503fba6516514fea2ecda1aa57f835fad8ade22b12740ac23d9fa2a904ed2",
    "data_size": 63562,
    "name": "FI22.DOC (MW)",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "WORD"
@@ -14,6 +17,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Flash-It 2.2",
+   "oracle_methods": [
+    "LZH+RLE"
+   ],
    "rsrc_sha256": "e42ceab3216a248021706a98bd2d60d6ebd54634efe67906689dc630de12445a",
    "rsrc_size": 43088,
    "type": "cdev"

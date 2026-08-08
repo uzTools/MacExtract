@@ -5,6 +5,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "SignalEditor 1.21",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "f521c390536a9b382c700e2301c1d17f454e65a1ccbfd998aecb6817ff8d50fa",
    "rsrc_size": 81254,
    "type": "APPL"
@@ -14,6 +17,9 @@
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "SignalEditor II 1.21",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "6dd3ed5606fec340aff6c5b4c414c522dbe9669c5f251b74b78a6f7fa4aea9f3",
    "rsrc_size": 75324,
    "type": "APPL"
@@ -23,6 +29,9 @@
    "data_sha256": "4faba2714eb85d3fc1ae695b0675e02010630e8979c4ecb542ca7e3459bea2a7",
    "data_size": 6903,
    "name": "SignalEditor doc 1.21",
+   "oracle_methods": [
+    "Compress"
+   ],
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "TEXT"
