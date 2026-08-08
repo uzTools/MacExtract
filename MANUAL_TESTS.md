@@ -33,8 +33,9 @@ opposite fixes. `-D UNC_AT_BUDGET` overwrites four grid slots to show both:
 
 Eight slots is not many. Earlier revisions of this probe put the refused
 size, free-at-refusal and held-at-refusal in four of them; those figures are
-recorded in OPEN_ITEMS.md section 5 and the slots were reused for addresses,
-which is the thing no aggregate could give. Swap them back by editing the
+recorded in DECISIONS.md ("the Arsenic block's first allocation is sized from
+the entry", 2026-08-06) and the slots were reused for addresses, which is the
+thing no aggregate could give. Swap them back by editing the
 `UNC_AT_BUDGET` block if a re-run needs the earlier set.
 
 `FreeMem()` minus `MaxBlock()`, both sampled at the refusal, is the

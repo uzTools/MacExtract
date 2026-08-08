@@ -12,6 +12,12 @@ status in BLOCKERS.md, reasoning in DECISIONS.md, how to re-run in
 MANUAL_TESTS.md, results in FORMATS.md — and is cross-referenced from here
 rather than repeated.
 
+**Filing something here is a decision to stop looking at it, so it had better
+be true.** Section 1 in particular: it held "eight fixtures are excluded as
+oracle-undecidable or oracle-buggy" until 2026-08-08, when the item turned out
+to be nine fixtures, closeable in an hour, and nothing to do with this
+environment (section 4).
+
 ---
 
 ## 1. Cannot be closed in this environment
@@ -31,13 +37,6 @@ rather than repeated.
   should submit it** — the maintainer will post it from his own account. (It is
   also not possible from here: an unauthenticated POST to the issues API
   returns 401.)
-
-This section held a fourth item — "eight fixtures are excluded as
-oracle-undecidable or oracle-buggy" — until 2026-08-08, when it turned out to be
-closeable here in about an hour, and to be nine fixtures rather than eight. It
-was the fork-naming flag, not the environment (section 4 below; BLOCKERS.md
-*Withdrawn claims*). **Filing something here is a decision to stop looking at
-it, so it had better be true.**
 
 ---
 
@@ -82,47 +81,31 @@ it, so it had better be true.**
 | A hypothesis filed under *harness lessons* | 2026-08-01 | filing a hypothesis as a lesson hides it: this one implied the shipped UI was broken and nobody looked. **This file is the place to look for others of the same shape** |
 | The LZW table sized from `maxbits` rather than the input | 2026-08-03 | growth-on-demand and one-shot sizing look interchangeable and are not: copy-based growth has an `old + new` transient, so **where the buffer IS the allocation it can lose to doing nothing** (measured, 274,432 → 405,504 B). Bound it from the input instead. DECISIONS.md |
 | StuffIt 5 / Arsenic incomplete at the 1 MB floor (42/44) | 2026-08-07 | the last four gains were all "allocate less of what the data does not use"; this one had to **reduce the requirement** instead, and the tell was that no placement or reserve tuning could close a 410 KB shortfall on a 760 KB machine. Also: **estimate the thing you are changing.** The prediction here was within 200 B on one fixture and 3.6% on the other because it estimated a single allocation inside one entry; the method 13 estimate a day earlier missed badly because it estimated an aggregate over a distribution. DECISIONS.md |
-| Nine fixtures with no oracle manifest ("undecidable" or "oracle-buggy") | 2026-08-08 | both reasons were the fork-naming flag, not the archives: `unar -k visible` writes `NAME.rsrc`, which collides with a real entry called `X.rsrc` and which GNUstep refuses to build for a leading `~`. `-k hidden` (`._NAME`) decides all nine, and all 774 existing manifests rebuild identically. **A limitation and its remedy sat one paragraph apart in TESTING.md**; the remedy was a documented flag of a tool already in use. DECISIONS.md, BLOCKERS.md |
 | "peak heap under a budget" read as a requirement | 2026-08-07 | a decoder with a time-for-memory dial spends whatever the cap allows, so its peak tracks the CAP, not its needs. Comparing such a peak against a predicted requirement compares two different quantities — **bisect the cap** for the requirement. This nearly made the sampled BWT look 2.3x worse than predicted when it was in fact accurate |
+| Nine fixtures with no oracle manifest ("undecidable" or "oracle-buggy") | 2026-08-08 | both reasons were the fork-naming flag, not the archives: `unar -k visible` writes `NAME.rsrc`, which collides with a real entry called `X.rsrc` and which GNUstep refuses to build for a leading `~`. `-k hidden` (`._NAME`) decides all nine, and all 774 existing manifests rebuild identically. **A limitation and its remedy sat one paragraph apart in TESTING.md**; the remedy was a documented flag of a tool already in use. DECISIONS.md, BLOCKERS.md |
 
 ---
 
-## 5. Capability gaps that are deliberate, but still gaps
-
-- **StuffIt 5 / Arsenic on a 1 MB machine: CLOSED 2026-08-07, 44/44.** Kept
-  here only as a pointer: all six sampled StuffIt 5 fixtures extract every
-  entry byte-exact on a 1 MB Mac Plus, so this section no longer has an
-  Arsenic capability gap. Results in FORMATS.md ("Floor target verification"),
-  reasoning in DECISIONS.md 2026-08-07, method in the section 4 table above.
-
-  Still **do not retry**, ruled out by measurement while this was open:
-  `MaxMem()` before a retry (compaction may not move a `NewPtr`), and
-  relocatable blocks moved high with `MoveHHi` (it demonstrably works,
-  205,828 → 803,634, and changed `MaxBlock` at the refusal by under 500 B —
-  the stranded heap was never about where the live blocks sat).
-
-- **Timing: MEASURED 2026-08-02, and closed.** Eight
-  fixtures across eight formats at authentic 1x, 8/8: boot ~10 s, every
-  extraction under 5 s, plus the 278 KB StuffIt anchor at ~134 s (FORMATS.md,
-  README). The earlier diagnosis that this host "cannot be trusted to run 1x"
-  was wrong and is corrected — an idle machine measures fine. What remains is
-  nothing outstanding: `macburger-helper.hqx`, written up three times as an
-  anomaly, simply takes 150 s, and instrumenting the engine's byte counter
-  (`-D UNC_AT_PROGRESS`) showed the rate is very non-uniform so every timeout
-  chosen for it expired mid-run. **Timing is closed for every format sampled.**
-
-  **Reopened for Arsenic on 2026-08-07, and CLOSED the same day.** The 1x list
-  sampled StuffIt 5 with `derived-KeyGraphics.sit`, 4,611 B, far too small to
-  reach the sampled inverse BWT, so the fallback's cost on a 7 MHz 68000 was
-  unmeasured. Both Arsenic fixtures have now been timed on both paths, on a
-  1 MB 1x emulator built for the purpose: `a2basic` 587 s fast / 966 s
-  sampled, `Library_ISBN` 768 s / 1,898 s. FORMATS.md has the table.
-  **Timing is closed for every format sampled, including Arsenic.**
+## 5. Deliberate gaps, and remedies ruled out by measurement
 
 - **Out of scope by the brief, and still out:** compression, StuffIt X
   (`.sitx`), encrypted archives, multi-segment archives, disk-image extraction,
   Now Compress, and LZH *extraction* — LZH was the optional half of M8 and is
   detect-only (the LZH/LHA row of FORMATS.md).
+
+- **Do not retry, on Mac heap pressure.** Both were measured while StuffIt 5 /
+  Arsenic was still short of the 1 MB floor, and both are dead ends:
+  `MaxMem()` before a retry (compaction may not move a `NewPtr`), and
+  relocatable blocks moved high with `MoveHHi` (it demonstrably works,
+  205,828 → 803,634, and changed `MaxBlock` at the refusal by under 500 B —
+  the stranded heap was never about where the live blocks sat). Cited from
+  `src/sit_arsenic.c` and `mac/unclassic_mac.c`.
+
+Two items that lived here are closed and are not repeated: **StuffIt 5 /
+Arsenic at the 1 MB floor** (2026-08-07, 44/44 — FORMATS.md "Floor target
+verification", method in the section 4 table) and **1x timing on a 7 MHz Mac
+Plus** (BLOCKERS.md "Timing on a 7 MHz Mac Plus", per-fixture table in
+FORMATS.md).
 
 ---
 
@@ -134,13 +117,12 @@ it, so it had better be true.**
   second write simply overwrites. The harnesses pass the flag and are unaffected
   (2026-08-08). Closing it means either changing the default, which makes
   resource forks invisible dotfiles for every other archive, or detecting the
-  collision and reporting it per entry. Nothing on the Mac side is affected:
-  the application writes real forks.
+  collision and reporting it per entry. The Mac application is unaffected: it
+  writes real forks.
 - **The Mac-side checkers still read `<X>.rsrc` sidecars** (`vmac_check.py`,
-  `checkdisk.py`, `check_mac_sink.py`), so the nine recovered fixtures cannot
-  be added to the on-Mac 44-fixture sample until those readers learn the `._`
-  form. They are byte-exact on Linux; no on-Mac claim is made about them.
-
+  `checkdisk.py`, `check_mac_sink.py`), so the nine fixtures recovered on
+  2026-08-08 cannot join the on-Mac 44-fixture sample until those readers learn
+  the `._` form. They are byte-exact on Linux; no on-Mac claim is made for them.
 - **StuffIt method 1 (RLE90): the claim that no corpus fixture uses it was
   WRONG.** Measured 2026-08-01 by instrumenting the method byte:
   `derived-New_Python.sit` has one 470-byte method-1 resource fork, and the

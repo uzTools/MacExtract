@@ -137,9 +137,10 @@ CI forces it three ways:
 **What these cannot see.** (a) *Time on a 68000.* Every figure above is x86;
 the emulator harness runs "all out" and the 1x timing list
 (`tools/vmac/timing.txt`) samples StuffIt 5 with a 4,611 B fixture, far too
-small to reach the fallback. One 1x measurement now exists —
-`derived-a2basic.dmg.sit`, 537 s fast vs 927 s sampled, FORMATS.md — but it is
-a single fixture and CI cannot produce it. (b) *The progress and Cancel path
+small to reach the fallback. Both Arsenic fixtures have since been timed at 1x
+on both paths (`a2basic` 587 s fast / 966 s sampled, `Library_ISBN` 768 s /
+1,898 s — FORMATS.md), but CI cannot produce those figures. (b) *The progress
+and Cancel path
 under the sampled walk.*
 `unc_progress_poll` exists because that walk produces output without reading
 input; it is Mac-side and no Linux harness observes it. (c) *The middle of
