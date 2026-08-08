@@ -101,12 +101,6 @@ environment (section 4).
   the stranded heap was never about where the live blocks sat). Cited from
   `src/sit_arsenic.c` and `mac/unclassic_mac.c`.
 
-Two items that lived here are closed and are not repeated: **StuffIt 5 /
-Arsenic at the 1 MB floor** (2026-08-07, 44/44 — FORMATS.md "Floor target
-verification", method in the section 4 table) and **1x timing on a 7 MHz Mac
-Plus** (BLOCKERS.md "Timing on a 7 MHz Mac Plus", per-fixture table in
-FORMATS.md).
-
 ---
 
 ## 6. Loose ends
