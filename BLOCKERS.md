@@ -25,9 +25,10 @@ forward from earlier runs. The interactive UI was re-driven on System 6 in the
 same pass (`interactive.py`): bar, percentage, time estimate, Cancel, Cmd-.,
 partial-output cleanup, success alert.
 
-Per-fixture tables are in FORMATS.md, re-run instructions and what a full
-re-verification costs in `tools/vmac/README.md`, and the on-demand experiments
-in MANUAL_TESTS.md.
+Per-fixture tables are in FORMATS.md; re-run instructions, what a full
+re-verification costs and every on-demand probe in `tools/vmac/README.md`.
+MANUAL_TESTS.md is not part of that: it lists what no emulator here can
+settle, and none of it has been done.
 
 **Ten claims this file used to assert have been withdrawn, and one
 confirmed.** (This count read "seven" while the table held eight; corrected

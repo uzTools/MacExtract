@@ -76,7 +76,7 @@ int unc_lzw_init(UncLzw *z, UncAlloc *al, UncBufIn *in,
 #ifdef UNC_LZW_TINY_TABLE
     /* Deliberately under-estimate so lzw_grow runs on every stream that
      * defines a symbol. The output must stay byte-exact; that is the
-     * only way the safety net is ever exercised. See MANUAL_TESTS.md. */
+     * only way the safety net is ever exercised. See TESTING.md. */
     cap = 258;
 #endif
 

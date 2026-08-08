@@ -113,7 +113,7 @@ No physical Macintosh has ever run it. Emulation is evidence, not proof.
 | [DECISIONS.md](DECISIONS.md) | why it is built the way it is |
 | [OPEN_ITEMS.md](OPEN_ITEMS.md) | what is missing |
 | [BLOCKERS.md](BLOCKERS.md) | current status, and claims since disproved |
-| [MANUAL_TESTS.md](MANUAL_TESTS.md) | the on-Mac checklist |
+| [MANUAL_TESTS.md](MANUAL_TESTS.md) | what still needs a real Macintosh |
 
 ## License
 

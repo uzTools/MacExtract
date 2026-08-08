@@ -29,7 +29,9 @@ It runs on all three systems the project claims: **System 6.0.8 and System 7.0.1
   floor target. Do not delete them.
 - `DECISIONS.md` — every non-obvious engineering decision, oldest first
 - `OPEN_ITEMS.md` — what is still missing, ranked, with what would close each
-- `TESTING.md`, `MANUAL_TESTS.md`, `tools/vmac/README.md` — how to re-run the harnesses
+- `TESTING.md` — how the automated suites work and what each layer cannot see
+- `tools/vmac/README.md` — how to re-run an emulator harness or a `-D` probe
+- `MANUAL_TESTS.md` — **the to-do list for whoever has real hardware**: only what no emulator here can settle. Nothing else belongs in it
 
 Read them at the start of every session. Where these files disagree with each other, treat it as a bug to fix, not a fact to choose from.
 
@@ -232,7 +234,7 @@ most findings written up three or four times. Keep them from getting back
 there:
 
 - **Status first.** Every status file opens with the current state — tallies, what works, what is open — readable in a minute. History goes below that line, never above it.
-- **One home per finding.** Status → `BLOCKERS.md`. Reasoning and transferable lessons → `DECISIONS.md`. How to re-run → `MANUAL_TESTS.md`. Numbers and per-fixture tables → `FORMATS.md`. Gaps → `OPEN_ITEMS.md`. Cross-reference; do not repeat. A finding written in two files disagrees with itself within a week — which this repository treats as a bug, so do not create the opportunity.
+- **One home per finding.** Status → `BLOCKERS.md`. Reasoning and transferable lessons → `DECISIONS.md`. How to re-run an automated suite → `TESTING.md`; an emulator harness or probe → `tools/vmac/README.md`. What only real hardware can answer → `MANUAL_TESTS.md`. Numbers and per-fixture tables → `FORMATS.md`. Gaps → `OPEN_ITEMS.md`. Cross-reference; do not repeat. A finding written in two files disagrees with itself within a week — which this repository treats as a bug, so do not create the opportunity.
 - **A finding is claim, evidence, consequence.** Three lines. Expand only where the *reasoning* is the part worth transferring.
 - **Correct figures in place.** Change the number where it lives and note the correction once. Never add a section that supersedes an earlier section: that is how one file came to state three different boot times, all of them presented as fact.
 - **Withdrawn claims are collected, not interleaved**, and each records what it COST. That is what separates a claim that was merely wrong from one that displaced a capability — and the cost line is what makes the next one worth re-testing.
@@ -257,7 +259,7 @@ how long they will be waiting.
   `tools/vmac/interactive.py`, so they are real frames from a real emulated
   Mac rather than mockups. Re-take them whenever the UI changes, and **look at
   each one before committing it** — that harness clicks fixed coordinates and
-  will happily photograph the wrong window (MANUAL_TESTS.md). One of the four
+  will happily photograph the wrong window (`tools/vmac/README.md`). One of the four
   currently in the repo was wrong for exactly that reason on 2026-08-07.
 - **Every command in it must be run before it ships.** A README is the most
   copy-pasted file in a project and the least tested.

@@ -155,6 +155,41 @@ input; it is Mac-side and no Linux harness observes it. (c) *The middle of
 the dial.* Only `target=1024` (forced) and `target=1` are pinned; the values
 in between are reached only incidentally by the budget run.
 
+## The LZW table bound — three builds, because one proves nothing
+
+`unc_lzw_init` sizes its table from the input rather than from `maxbits`
+(DECISIONS.md, FORMATS.md footnote §). The safety net that catches an
+under-estimated bound never runs in normal operation, so it is only ever
+exercised deliberately, by hand:
+
+    # 1. the bound never under-estimates: hard-disable growth
+    #    (make lzw_grow return UNC_ERR_MEM as its first statement)
+    UNCLASSIC=build/never/unclassic sh tests/run_diff.sh      # expect 778/778
+
+    # 2. the safety net is correct: force it to run on every stream
+    make BUILD=build/tiny CFLAGS="-O1 -g \
+        -fsanitize=address,undefined,alignment -fno-sanitize-recover=all \
+        -DUNC_LZW_TINY_TABLE" all
+    UNCLASSIC=build/tiny/unclassic sh tests/run_diff.sh       # expect 778/778
+
+    # 3. these fixtures CAN fail on this code: starve the table AND
+    #    skip the add instead of growing
+    UNCLASSIC=build/probe/unclassic sh tests/run_diff.sh      # expect ~90 FAILURES
+
+`UNC_LZW_TINY_TABLE` is committed and forces the initial capacity to 258.
+Steps 1 and 3 are one-line local edits and are deliberately NOT build flags:
+each makes the engine wrong on purpose, and a flag that ships wrong behaviour
+is a flag somebody eventually sets. **Step 3 is the point.** Steps 1 and 2 both
+report a full pass — the same number a build that ignored the input entirely
+would report — so without a demonstrated failure they distinguish nothing.
+94 of the fixtures reach the LZW path (4 `.Z`, the rest StuffIt classic
+method 2).
+
+Step 2 was re-measured at **778/778** on 2026-08-08. Step 3's figure is from
+2026-08-03 and was **675/769** — 94 failures — against the 769-fixture suite of
+that date; re-running it needs the hand edit above, and what matters is that it
+fails at all, not the count. The LZW-path figure is from the same day.
+
 ## On-Mac layers (not in `ci.sh` — they need an emulator)
 
 7. **Mini vMac replay** (`tools/vmac/run.py`, System 6.0.8 and 7.0.1 on a

@@ -225,7 +225,7 @@ static uint32_t fio_size(void *ctx) { return ((FileIO *)ctx)->size; }
  * screen. Worse, mal_alloc returns NULL for two unrelated reasons — the
  * budget said no, or NewPtr itself failed — and those have opposite
  * fixes ("the reserve is too big" vs "the heap is fragmented"). These
- * make both visible. See MANUAL_TESTS.md. */
+ * make both visible. See tools/vmac/README.md. */
 static long gFreeAtStart;   /* FreeMem() before the reserve is taken off */
 static long gBudget;        /* what the engine was actually given        */
 static long gRefusedSize;   /* size of the FIRST refused allocation      */
@@ -292,7 +292,7 @@ static void live_snapshot(void)
 static long gMoveBefore, gMoveAfter;   /* the block's ADDRESS, not MaxBlock:
                                         * MaxBlock is blind to where in a
                                         * free run a block sits, so it can
-                                        * never fail. See MANUAL_TESTS.md. */
+                                        * never fail. See tools/vmac/README.md. */
 #endif
 #endif
 /* ------------------------------------------------------------------ */
@@ -1022,7 +1022,7 @@ static long gPeakUsage;   /* engine heap high-water mark from the last RunExtrac
 #ifdef UNC_AT_BUDGET
 /* The result grid reports what the engine USED and never what it was
  * ALLOWED, so a budget refusal and a genuine shortage look identical on
- * screen. These two make the difference visible. See MANUAL_TESTS.md. */
+ * screen. These two make the difference visible. See tools/vmac/README.md. */
 #endif
 
 /* Core extraction: open the archive at (inVol,inDir,name) and extract into

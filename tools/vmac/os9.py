@@ -1209,7 +1209,7 @@ def main():
                          "archive and writes nothing, provided the Linux "
                          "engine extracts it. For the SIZE-partition test, "
                          "where a clean per-entry refusal is the correct "
-                         "outcome — see MANUAL_TESTS.md")
+                         "outcome — see tools/vmac/README.md")
     ap.add_argument("--keep-boot", action="store_true",
                     help="keep each run's 2 GB boot copy instead of deleting "
                          "it (a sweep would otherwise need 2 GB per fixture)")

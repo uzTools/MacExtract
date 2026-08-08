@@ -69,7 +69,8 @@ resource 'DITL' (130, purgeable) {
  * preferred partition, System 7.0.1's Process Manager honoured it and the
  * engine declined a 656 KB entry cleanly (peak 35.5 KB — the block refused at
  * request time), while System 6.0.8 ignored the partition and extracted the
- * same entry with 656.8 KB. See MANUAL_TESTS.md. */
+ * same entry with 656.8 KB. FORMATS.md has the three-system table,
+ * tools/vmac/README.md the method. */
 resource 'SIZE' (-1) {
     reserved, acceptSuspendResumeEvents, reserved,
     canBackground, doesActivateOnFGSwitch, backgroundAndForeground,

@@ -8,9 +8,10 @@ claims withdrawn from them. Nothing here stops the engine or the CLI, which are
 byte-exact against the oracle across 778 fixtures in `./ci.sh`.
 
 Each item says what would close it. Detail lives in one place per finding —
-status in BLOCKERS.md, reasoning in DECISIONS.md, how to re-run in
-MANUAL_TESTS.md, results in FORMATS.md — and is cross-referenced from here
-rather than repeated.
+status in BLOCKERS.md, reasoning in DECISIONS.md, how to re-run in TESTING.md
+or `tools/vmac/README.md`, what needs real hardware in MANUAL_TESTS.md,
+results in FORMATS.md — and is cross-referenced from here rather than
+repeated.
 
 **Filing something here is a decision to stop looking at it, so it had better
 be true.** Section 1 in particular: it held "eight fixtures are excluded as

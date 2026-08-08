@@ -619,8 +619,21 @@ Built with a 600 KB preferred partition and run against
 `ret == UNC_OK`, peak heap 35.5 KB** — the same figure System 7.0.1 gives, on
 a machine with 512 MB of RAM. The partition governs, not the hardware, and
 35.5 KB is parser state alone: the 512 KB Arsenic block was declined at
-request time, never allocated. Method and the three-system table in
-MANUAL_TESTS.md.
+request time, never allocated.
+
+Same binary, same fixture, three systems — the partition governs and System 6
+without MultiFinder ignores `SIZE` outright, exactly as the resource's comment
+always claimed and nothing had ever shown:
+
+| System | Outcome | Engine peak heap |
+|---|---|---|
+| System 7.0.1 (4 MB) | **1 entry refused, 0 files** | 35.5 KB |
+| Mac OS 9.2 (512 MB) | **1 entry refused, 0 files** | 35.5 KB |
+| System 6.0.8 (4 MB) | 1 file, byte-exact | 656.8 KB |
+
+The 656.8 KB row is the control — the same figure the 4 MB sweep records for
+that fixture, with nothing changed but the partition. Method and commands in
+`tools/vmac/README.md` ("The `SIZE` partition").
 
 **Still not covered here:** names HFS+ permits that HFS does not — probably
 unreachable through the classic File Manager at all, since it caps at 31

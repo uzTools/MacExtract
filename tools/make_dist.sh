@@ -12,7 +12,8 @@
 #                    SheepShaver, then drag the app onto your startup disk.
 #   README.txt     — the two paragraphs above, for the download.
 #
-# Builds the application first (needs a Retro68 toolchain). See MANUAL_TESTS.md.
+# Builds the application first (needs a Retro68 toolchain). Getting the result
+# onto a real machine: MANUAL_TESTS.md, "Before you start".
 #
 # NOT REPRODUCIBLE, and that is not a bug: MacBinary carries the file's
 # creation and modification dates, so two runs over identical code differ at

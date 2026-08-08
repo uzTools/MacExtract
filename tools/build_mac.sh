@@ -31,4 +31,4 @@ cmake -B build/mac -S mac \
 cmake --build build/mac -- -j"$(nproc)"
 ls -la build/mac/unclassic.APPL build/mac/unclassic.bin build/mac/unclassic.dsk
 echo "mac: OK — this only proves it compiles. tools/vmac/run.py replays fixtures"
-echo "mac: on a real emulated Mac Plus; MANUAL_TESTS.md is the runtime checklist."
+echo "mac: on a real emulated Mac Plus; tools/vmac/README.md is how to run it."

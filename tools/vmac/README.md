@@ -1,7 +1,8 @@
 # tools/vmac — running the Mac shell on an emulated Mac Plus
 
-Everything in FORMATS.md and MANUAL_TESTS.md that claims the Macintosh shell
-"runs on real System 6" was produced by this harness. It boots the Retro68
+Everything in FORMATS.md and BLOCKERS.md that claims the Macintosh shell
+"runs on real System 6" was produced by this harness — on an emulator.
+MANUAL_TESTS.md is the complement: what only silicon can answer. It boots the Retro68
 application on Mini vMac emulating a **68000 Mac Plus under System 6.0.8 or
 System 7.0.1**, extracts one fixture per boot, and cross-checks the result
 against the same engine's Linux output.
@@ -269,3 +270,157 @@ Two hfsutils traps it hit, both worth knowing before writing anything similar:
 `hls` **hides names beginning with a dot** unless given `-a`, and every path
 argument must be encoded as **MacRoman**, not UTF-8, or any 8-bit name is a
 file that does not exist.
+
+## On-demand probes — the `-D` switches and the one-off harnesses
+
+Every switch below rebuilds the autotest application with an extra define and
+answers one question the normal replay cannot. None is part of any suite; each
+is run by hand when the question comes up again. **A `-D` the CMakeLists does
+not know is silently ignored** — `run.py` passes it through the environment and
+CMake drops what it has no rule for, so a probe can "work" and change nothing.
+Check that its numbers actually moved before believing them.
+
+Results are not repeated here; each line says where they live.
+
+| switch | answers | where the result is |
+|---|---|---|
+| `UNC_AT_BUDGET` | why an entry was refused: over budget, or `NewPtr` failed | DECISIONS.md 2026-08-06, OPEN_ITEMS.md section 5 |
+| `UNC_AT_HANDLES` | does `MoveHHi` move an engine block, and does it help | OPEN_ITEMS.md section 5 (do-not-retry) |
+| `UNC_AT_INTERLEAVE` | do reads return zeros while output is written to the same volume | BLOCKERS.md *Withdrawn claims* |
+| `UNC_AT_SAMEVOL` | does extraction onto the archive's own volume work | DECISIONS.md 2026-08-02 |
+| `UNC_AT_WD` | is `SFReply.vRefNum` handled as a System 7 working directory | DECISIONS.md 2026-08-01 |
+| `UNC_AT_CANCEL` | does an aborted entry leave anything behind | BLOCKERS.md, MANUAL_TESTS.md checklist |
+| `UNC_AT_NOHIDECURSOR` | is `HideCursor()` before painting the grid necessary | BLOCKERS.md (confirmed, with a reproduction) |
+| `UNC_AT_PROGRESS` | how fast is the engine actually going, mid-run | BLOCKERS.md "Timing on a 7 MHz Mac Plus" |
+| `UNC_MAC_SLURP_ARCHIVE` | rebuilds the old read-whole-archive-into-RAM path | DECISIONS.md 2026-08-02 |
+| `UNC_MAC_STAGE_WRITES` | the older whole-fork staging write path (also in `ci.sh`) | TESTING.md |
+
+### Why an entry is refused — `UNC_AT_BUDGET`
+
+    run.py --mem 1M -D UNC_AT_BUDGET fixtures/<fixture>
+
+The grid carries what the engine **used** and never what it was **allowed**, so
+a budget refusal and a genuine shortage look identical on screen — and
+`mal_alloc` returns NULL for two unrelated reasons with opposite fixes. The
+probe overwrites four slots:
+
+| grid slot | carries |
+|---|---|
+| `nfiles`, `ret`, `sumDataCRC`, `peak heap` | addresses of the 4 largest live blocks, biggest first |
+| `errors` | `MaxBlock()` at the first refusal |
+| `totalDataLen` | application zone bottom (`ApplicationZone()`) |
+| `sumRsrcCRC` | 1 = over budget, 2 = `NewPtr` returned NULL |
+| `totalRsrcLen` | `ApplLimit` |
+
+`FreeMem()` minus `MaxBlock()`, both sampled **at the refusal**, is the
+fragmentation; sampling free heap at the start of the run does not give it, and
+one such inference has already had to be corrected. Earlier revisions carried
+the refused size, free-at-refusal and held-at-refusal instead — those figures
+are in DECISIONS.md 2026-08-06; swap them back by editing the `UNC_AT_BUDGET`
+block if a re-run needs them.
+
+It reports FAIL by construction, because the overwritten slots no longer match
+the oracle. **Read the numbers, not the verdict.**
+
+`UNC_AT_HANDLES` additionally swaps the engine allocator to `NewHandle` +
+`MoveHHi` + `HLock` (the reverted remedy, kept buildable) and reports the
+block's **address** either side of `MoveHHi`. Its first revision reported
+`MaxBlock` there and **could not fail**: `MaxBlock` is blind to where inside a
+free run a block sits, so moving one from the bottom to the top reads exactly
+like not moving it. It instruments the first allocation of 64 KB or more, which
+is not necessarily the Arsenic block — StuffIt's combined io/output buffer also
+qualifies — so it proves `MoveHHi` moves *an* engine block, not that one.
+
+### The same-volume and interleaved-read questions
+
+    run.py -D UNC_AT_INTERLEAVE fixtures/derived-EmpireBuilderDemo.sit
+    run.py -D UNC_AT_INTERLEAVE --mem 1M fixtures/derived-EmpireBuilderDemo.sit
+    run.py -D UNC_AT_INTERLEAVE fixtures/derived-PCCTS.tar
+    run.py -D UNC_AT_SAMEVOL --list sample.txt
+
+The first reads one file three ways on one volume — undisturbed, in 4 KB chunks
+with a file created and written between every chunk, and again seeking with
+`SetFPos` before each read — and compares CRC-32s. The second points the output
+at the volume the archive is being read from, which is what the interactive
+application does and what no other run here does.
+
+### Working directories, without a Finder
+
+    run.py -D UNC_AT_WD fixtures/derived-EmpireBuilderDemo.sit
+
+Makes a real working directory over a real subfolder with `PBOpenWD` and
+extracts through it exactly as `ExtractOne()` does, counting what landed in the
+folder and what leaked to the root. Every other harness here extracts into a
+volume root, where a working directory and the root are the same directory —
+which is why this code was untested until 2026-08-01.
+
+### Name collisions — `mkcollide.py`
+
+    mkcollide.py /tmp/collide.tar
+    run.py --keep-disks /tmp/collide.tar
+    mkcollide.py --verify <that run's out.dsk>
+
+`BumpName()` appends `~1`..`~9` when a sanitized name already exists, and
+**nothing in the corpus can exercise it**: across all 783 manifests no two
+entries collide under the Mac's rules (case-insensitive HFS, 31-character
+components, `:` <-> `/`) — measured, not assumed, and re-measured on
+2026-08-08. So the archive has to be built for it. Five entries collide two
+ways, and each payload is distinct and self-identifying, so the check is "the
+right bytes are in the file with the right name", not "five files exist":
+
+| archive entry | on the Mac | payload |
+|---|---|---|
+| `README` | `README` | upper case |
+| `readme` | `readme~1` | lower case |
+| `collide-me-when-truncated-to-31-alpha` | `collide-me-when-truncated-to-31` | alpha |
+| `collide-me-when-truncated-to-31-beta` | `collide-me-when-truncated-to-~1` | beta |
+| `collide-me-when-truncated-to-31-gamma` | `collide-me-when-truncated-to-~2` | gamma |
+
+All five arrive, none overwrites another, each holds its own payload, and the
+29-character clamp is visible: `collide-me-when-truncated-to-` is 29
+characters, then `~1` makes 31. Archive order decides who keeps the plain name.
+
+### The `SIZE` partition
+
+    sed -i 's/4096 \* 1024, 400 \* 1024/600 * 1024, 400 * 1024/' mac/unclassic.r
+    run.py --system Sys7.img fixtures/derived-KeyGraphics.sit
+    run.py                   fixtures/derived-KeyGraphics.sit
+    os9.py fixtures/derived-KeyGraphics.sit -o <dir> --hfsplus --expect-refusal
+    git checkout mac/unclassic.r        # the edit is temporary, on purpose
+
+A partition big enough to launch and too small for a 512 KB Arsenic block,
+against a fixture that needs ~656 KB and passes at 4 MB. `--expect-refusal`
+makes the run self-checking: it passes only when the Linux engine DOES extract
+the fixture, the Mac writes nothing, the archive returns `UNC_OK`, and an entry
+is counted as refused — without that first condition a negative test would pass
+just as happily on an empty archive. Three-system table in FORMATS.md.
+
+### Driving the real UI
+
+    interactive.py                  # progress dialog, Cancel, Cmd-., at 1x
+    interactive.py --e2e            # Finder desktop: double-click launch, SFGetFile,
+                                    # volume navigation, an extracted APPL launching
+
+`--e2e` leaves the **Finder** in place instead of installing the application as
+the boot shell, which is the only way to launch the application the way a
+person does and the only way to launch what it extracted. Both runs photograph
+every step, and `docs/screens/` comes from here.
+
+What a pass looks like, and the fixtures that make it checkable: `--e2e` uses
+`derived-ScrollbarPattern.sit`, whose entry is an application — so the last
+step is double-clicking `Scrollbar Pattern Editor` in the Finder and seeing it
+draw its own splash screen, which exercises type/creator, the Finder inited
+flag and resource-fork integrity together (the application *is* its resource
+fork). The cancel run uses `derived-EmpireBuilderDemo.sit`, three entries: after
+a cancel, SFGetFile must list exactly `Demo Manual V1.6` — the one entry that
+finished — with no trace of `EB Sounds`, the entry that was being written.
+Partial-output cleanup seen in the file list rather than inferred. Status for
+both is in BLOCKERS.md.
+
+**Re-measure `PROGRESS_CANCEL` in `interactive.py` whenever the dialog changes
+shape.** It is a hard-coded screen coordinate, so a moved button does not make
+the step fail — the click lands on dialog background, the extraction finishes
+normally, and `3-cancelled.png` is written anyway, showing the progress dialog
+instead of the alert. That happened on 2026-08-07 when the DLOG grew 30 points
+taller. The constant's comment derives it from the DLOG origin plus the DITL
+rect; **check the screenshot actually shows the alert.**

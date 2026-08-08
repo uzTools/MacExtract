@@ -5,7 +5,7 @@
 #   cmake --build build-mac
 #
 # Produces unclassic.APPL/.bin/.dsk (mountable in Mini vMac; copy the
-# application onto a System 6..9 boot disk to run). See MANUAL_TESTS.md.
+# application onto a System 6..9 boot disk to run). See tools/vmac/README.md.
 cmake_minimum_required(VERSION 3.10)
 project(unclassic_mac C)
 
@@ -31,7 +31,7 @@ target_compile_options(unclassic PRIVATE -mcpu=68000 -Os -Wno-multichar
                        -ffunction-sections
                        # UNC_MAC_AUTOTEST builds a headless self-driving variant
                        # (no SFGetFile/alerts) used by the Mini vMac harness in
-                       # tools/; see MANUAL_TESTS.md. Normal builds omit it.
+                       # tools/; see tools/vmac/README.md. Normal builds omit it.
                        $<$<BOOL:$ENV{UNC_MAC_AUTOTEST}>:-DUNC_MAC_AUTOTEST>
                        # UNC_AT_META: autotest reports the first file's on-Mac
                        # type/creator/Finder-flags instead of the CRC aggregate

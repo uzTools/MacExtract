@@ -11,9 +11,9 @@ This drives the real application the way a person would — clicking Open in
 SFGetFile, watching the progress dialog, pressing Cmd-. — and captures a
 screenshot at each step. **The screenshots are the result.** There is no bit
 grid to decode here and no oracle to compare against; a human (or a model that
-can see) looks at them and decides. That is exactly the manual checklist in
-MANUAL_TESTS.md, with the tedious, error-prone driving automated so it can be
-repeated identically.
+can see) looks at them and decides. It automates the UI walkthrough a person
+would otherwise do by hand, so it can be repeated identically; the checks that
+still need a real machine are in MANUAL_TESTS.md.
 
     tools/vmac/interactive.py fixtures/derived-EmpireBuilderDemo.sit -o /tmp/shots
 
