@@ -11,7 +11,7 @@ The engine is the product. The Mac app is a thin shell.
 
 ## Current state — read before working
 
-M0–M10 are **DONE**. The engine passes a 778-fixture differential suite against `unar`, and the Mac shell extracts byte-exact on a real System 6.0.8 Mac Plus under Mini vMac — **44/44 sampled fixtures at 4 MB and 44/44 at the 1 MB floor** (2026-08-07; there are no memory-budget refusals left).
+M0–M10 are **DONE**. The engine passes a 778-fixture differential suite against `unar`, and the Mac shell extracts byte-exact on a real System 6.0.8 Mac Plus under Mini vMac — **53/53 sampled fixtures at 4 MB and 53/53 at the 1 MB floor** (2026-08-08, on a sample that grew from 44 to 53 that day; there are no memory-budget refusals left).
 
 It runs on all three systems the project claims: **System 6.0.8 and System 7.0.1** under Mini vMac (a true 68000), and **Mac OS 9.2** under QEMU PowerPC through the 68LC040 emulator, where 13/13 of a format sample is byte-exact, extraction onto **HFS+** is verified, and the `SIZE` partition is honoured by the Process Manager.
 
@@ -53,8 +53,9 @@ file** (per-entry error, `--overwrite` restores the old behaviour) — it used t
 destroy a 7 KB resource fork on a THINK C archive and exit 0.
 DECISIONS.md and BLOCKERS.md, 2026-08-08.
 
-**The 1 MB floor is 44/44 as of 2026-08-07, and the StuffIt 5 / Arsenic
-capability gap is closed.** All six sampled StuffIt 5 fixtures extract every
+**The 1 MB floor is 53/53 as of 2026-08-08 (44/44 on 2026-08-07, before the
+sample grew), and the StuffIt 5 / Arsenic capability gap is closed.** All six
+sampled StuffIt 5 fixtures extract every
 entry byte-exact on a 1 MB Mac Plus. There is no remaining "this format needs
 a bigger machine" caveat anywhere in the project.
 

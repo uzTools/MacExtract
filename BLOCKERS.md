@@ -8,10 +8,16 @@ every system the project claims:
 
 | tier | result |
 |---|---|
-| System 6.0.8, 4 MB Mac Plus (Mini vMac, a true 68000) | 44/44 sampled fixtures |
-| System 6.0.8, **1 MB** — the floor target | **44/44**; no memory-budget refusals remain |
-| System 7.0.1, 4 MB | **44/44** |
+| System 6.0.8, 4 MB Mac Plus (Mini vMac, a true 68000) | 53/53 sampled fixtures |
+| System 6.0.8, **1 MB** — the floor target | **53/53**; no memory-budget refusals remain |
+| System 7.0.1, 4 MB | **53/53** |
 | Mac OS 9.2 (QEMU PowerPC, 68LC040 emulation) | **13/13**, plus HFS+ and the `SIZE` partition |
+
+The sample was 44 fixtures until 2026-08-08, when nine that had never had an
+oracle manifest gained one and joined it (BLOCKERS.md *Withdrawn claims*,
+FORMATS.md); all three tiers were re-run against the enlarged sample that day.
+Figures written as `n/44` elsewhere in this file were measured on the smaller
+sample and are left as they were.
 
 **All three were re-run end to end on 2026-08-07 against the final build**,
 after the sampled inverse BWT and the progress-dialog rewrite — not carried
@@ -53,7 +59,7 @@ cleared) is confirmed on-Mac, so an extracted `APPL` launches by double-click.
 
 Since 2026-08-02 the Out volume can also be read directly
 (`run.py --keep-disks` + `tools/vmac/checkdisk.py`), which adds the one thing
-the grid cannot carry: **names**. 44/44 with names and folder structure
+the grid cannot carry: **names**. 53/53 with names and folder structure
 included. The grid is kept — it needs nothing of the volume and reports
 liveness and setup failures a disk cannot.
 
@@ -286,7 +292,7 @@ every entry to extracting most of them.
 **Mini vMac's write-back is lazy and partial** — "it can commit one fork of a
 file but not the other", so results could not be read off the Out volume. The
 whole sample was replayed with `--keep-disks` and every Out volume read back:
-**44/44 byte-exact, both forks, names and folder structure included.**
+**53/53 byte-exact, both forks, names and folder structure included.**
 `derived-RWAsm_Folder.sit` alone is 38 files and **73 forks**, i.e. dozens with
 both forks non-empty — exactly the case the claim named as impossible. An
 8-bit folder name, a MacRoman `Appé` and a `.DS_Store` survive too. **Cost:**

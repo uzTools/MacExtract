@@ -41,8 +41,15 @@ def hfs(env, *argv):
     return subprocess.run(argv, capture_output=True, env=env)
 
 
-def walk(env, mac_dir="", depth=0):
-    """Every file on the mounted volume, as '/'-joined MacRoman paths."""
+def walk(env, mac_dir=(), depth=0):
+    """Every file on the mounted volume, as tuples of MacRoman components.
+
+    Components, not a joined string: '/' is a legal character in an HFS
+    filename (`mw/68k•unshar π` in derived-unshar_1.11_folder.sit) and ':'
+    is the separator, so joining on either loses the difference between a
+    name and a path. Found on 2026-08-08, when that fixture joined the
+    sample and two of its entries could not be copied off the volume.
+    """
     if depth > 8:
         return []
     out = []
@@ -51,7 +58,8 @@ def walk(env, mac_dir="", depth=0):
     # that is what the names on the volume are — passing a Python str makes
     # subprocess encode UTF-8 and any 8-bit name (`spinning brain ƒ`) becomes
     # a directory that does not exist.
-    arg = [mac_dir.encode("mac_roman", "replace")] if mac_dir else []
+    arg = [mac_path(mac_dir, True).encode("mac_roman", "replace")] \
+        if mac_dir else []
     listing = hfs(env, "hls", "-a", "-F", "-1", *arg)
     for raw in listing.stdout.split(b"\n"):
         entry = raw.rstrip().decode("mac_roman")
@@ -59,12 +67,17 @@ def walk(env, mac_dir="", depth=0):
             continue
         isdir = entry.endswith(":")
         name = entry[:-1] if isdir or entry.endswith("*") else entry
-        rel = f"{mac_dir.strip(':').replace(':', '/')}/{name}" if mac_dir else name
+        rel = mac_dir + (unicodedata.normalize("NFC", name),)
         if isdir:
-            out += walk(env, ":" + rel.replace("/", ":") + ":", depth + 1)
+            out += walk(env, rel, depth + 1)
         else:
-            out.append(unicodedata.normalize("NFC", rel))
+            out.append(rel)
     return out
+
+
+def mac_path(comps, folder=False):
+    """A tuple of components as an absolute Mac path, ':'-separated."""
+    return ":" + ":".join(comps) + (":" if folder else "")
 
 
 def fixture_of(indsk, env):
@@ -113,53 +126,60 @@ def check(rundir):
     asmac = os.path.join(rundir, "as-the-mac-saw-it", "archive.sit")
     os.makedirs(os.path.dirname(asmac), exist_ok=True)
     subprocess.run(["cp", fixture, asmac], check=False)
-    subprocess.run([CLI, "x", "-nr", asmac, "-o", ref], capture_output=True)
+    subprocess.run([CLI, "x", "-nr", "--forks", "hidden", asmac, "-o", ref],
+                   capture_output=True)
     want_names = []
     enf, _sdc, _sdl, _src, _srl = aggregate_dir(ref, want_names)
 
-    expected = set()
+    # Mac path tuple -> the components the CLI actually wrote on Linux. Two
+    # differences make that mapping necessary: the CLI writes a Mac name's
+    # '/' as ':', and the Mac shell caps each component at 31 characters
+    # (ComponentToStr63).
+    expected = {}
     for root, _d, files in os.walk(ref):
-        # A "<X>.rsrc" is the CLI's resource sidecar for <X> ONLY if <X> is
-        # also here; otherwise it is an archive entry whose own name ends in
-        # .rsrc — a real data file, e.g. RWasm.rsrc. vmac_check.py makes the
-        # same distinction for the same reason.
-        fileset = set(files)
+        # The reference is extracted with `--forks hidden`, so a sidecar is
+        # exactly a "._" file and an archive entry never is. The Mac has no
+        # sidecars at all — a resource fork is part of the file there — so
+        # only the data-fork names are expected on the volume.
         for f in files:
-            if f.endswith(".rsrc") and f[:-5] in fileset:
+            if f.startswith("._"):
                 continue
             rel = os.path.relpath(os.path.join(root, f), ref)
-            expected.add(unicodedata.normalize("NFC", rel))
-    # The Mac shell caps each path component at 31 characters (see
-    # ComponentToStr63); apply the same rule to the reference before comparing.
-    expected = {"/".join(c.replace(":", "/")[:31] for c in e.split("/"))
-                for e in expected}
+            comps = [unicodedata.normalize("NFC", c) for c in rel.split(os.sep)]
+            expected[tuple(c.replace(":", "/")[:31] for c in comps)] = comps
 
     problems = []
-    missing, extra = expected - set(names), set(names) - expected
+    names = set(names)
+    missing, extra = set(expected) - names, names - set(expected)
     if missing:
-        problems.append("MISSING on the Mac: " + ", ".join(sorted(missing)))
+        problems.append("MISSING on the Mac: "
+                        + ", ".join(sorted(mac_path(m) for m in missing)))
     if extra:
-        problems.append("UNEXPECTED on the Mac: " + ", ".join(sorted(extra)))
+        problems.append("UNEXPECTED on the Mac: "
+                        + ", ".join(sorted(mac_path(e) for e in extra)))
 
     nforks = 0
-    for n in sorted(set(names) & expected):
-        mb = os.path.join(rundir, "f-" + n.replace("/", "_") + ".macbin")
+    for n in sorted(names & set(expected)):
+        flat = "_".join(n).replace("/", "_")
+        mb = os.path.join(rundir, "f-" + flat + ".macbin")
         c = subprocess.run(["hcopy", "-m",
-                            (":" + n.replace("/", ":")).encode("mac_roman",
-                                                               "replace"),
+                            mac_path(n).encode("mac_roman", "replace"),
                             mb.encode()],
                            capture_output=True, env=env)
         if c.returncode != 0:
-            problems.append(f"{n}: cannot copy off the volume")
+            problems.append(f"{mac_path(n)}: cannot copy off the volume")
             continue
         _t, _c2, data, rsrc = os9.macbinary_forks(mb)
-        for label, got, path, mask in (("data", data, os.path.join(ref, n), False),
-                                       ("rsrc", rsrc, os.path.join(ref, n) + ".rsrc", True)):
+        comps = expected[n]
+        data_ref = os.path.join(ref, *comps)
+        rsrc_ref = os.path.join(ref, *comps[:-1], "._" + comps[-1])
+        for label, got, path, mask in (("data", data, data_ref, False),
+                                       ("rsrc", rsrc, rsrc_ref, True)):
             want = open(path, "rb").read() if os.path.exists(path) else b""
             a, b = (mask_reserved(got), mask_reserved(want)) if mask else (got, want)
             if a != b:
-                problems.append(f"{n} {label}: Mac {len(got)} B vs Linux "
-                                f"{len(want)} B MISMATCH")
+                problems.append(f"{mac_path(n)} {label}: Mac {len(got)} B vs "
+                                f"Linux {len(want)} B MISMATCH")
             elif got or want:
                 nforks += 1
     hfs(env, "humount")

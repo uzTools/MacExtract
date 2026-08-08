@@ -172,7 +172,7 @@ in between are reached only incidentally by the budget run.
    then `tools/vmac/checkdisk.py /tmp/vmacrun-*/`): the same comparison
    layer 8 does, on the System 6/7 tier — both forks byte for byte,
    plus names and folder structure, read off the floppy image after the
-   run. **44/44 on the committed sample.**
+   run. **53/53 on the committed sample.**
 
 **What each layer can see is not the same, and that matters.** Layer 7
 compares a count, two summed CRC-32s and two summed lengths. A summed

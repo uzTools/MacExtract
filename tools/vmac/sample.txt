@@ -10,6 +10,13 @@
 # BLOCKERS.md.
 #
 # Run:  tools/vmac/run.py --list tools/vmac/sample.txt [--mem 1M]
+#
+# Nine fixtures were added on 2026-08-08, marked "see below". They had no
+# oracle manifest until that day and so could never be replayed here; seven
+# are THINK C projects holding both "X" and a real "X.rsrc", two carry a
+# leading-'~' name. They qualify under the rule above by being named
+# individually in BLOCKERS.md, and they are the only fixtures in this list
+# whose shape can tell a fork-naming mistake from a correct extraction.
 
 # BinHex
 export-hc.hqx                              # 3127 B
@@ -19,8 +26,10 @@ macburger-helper.hqx                       # 306651 B
 
 # Compact Pro
 derived-keyAhead.cpt                       # 863 B
+derived-BootTime.cpt                       # 6457 B   THINK C, see below
 derived-BinHqx_DA_1.02.cpt                 # 23924 B
 derived-Education7.1.cpt                   # 85072 B
+derived-GNU_Chess_3.0.cpt                  # 130880 B THINK C, see below
 derived-XferIt_1.5b4.sea                   # 285495 B
 
 # Compress
@@ -42,6 +51,7 @@ PCCTS.tar.gz                               # 63807 B
 
 # MacBinary
 stuffit151mstr.bin                         # 493 B
+lipservice.bin                             # 6997 B   '~' name, see below
 nilminder.bin                              # 19829 B
 macpostmanager10b1.sit                     # 71424 B
 kermitut9test.bin                          # 303744 B
@@ -57,8 +67,14 @@ derived-PackIt.pit                         # 61843 B
 
 # StuffIt
 derived-Export.sit                         # 1615 B
+derived-020_Simulator.sit                  # 13415 B  '~' name, see below
 derived-Auditor.sit                        # 20876 B
+derived-TogSndVol.sit                      # 31362 B  THINK C, see below
 derived-SNDPatchV2.sit                     # 64383 B
+derived-Unzip101.sit                       # 72818 B  THINK C, see below
+derived-The_Journal_0.9.1.sit              # 82408 B  THINK C, see below
+derived-unshar_1.11_folder.sit             # 84532 B  THINK C, see below
+derived-BitMap11.sit                       # 125096 B THINK C, see below
 derived-EmpireBuilderDemo.sit              # 278294 B
 
 # StuffIt 5

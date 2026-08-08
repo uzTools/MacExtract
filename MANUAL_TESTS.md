@@ -3,8 +3,9 @@
 NOTE (2026-07-25): the shell runs under Mini vMac (System 6.0.8, Mac
 Plus, a true 68000) and **extracts correctly — single-fork, two-fork,
 and multi-file — with both forks verified byte-exact ON THE MAC ITSELF**
-(44/44 sampled fixtures at 4 MB across all twelve formats, and **44/44 at
-1 MB** since 2026-08-07). Data forks match exactly;
+(53/53 sampled fixtures at 4 MB across all twelve formats, and **53/53 at
+1 MB**, 2026-08-08; 44/44 at both tiers on 2026-08-07, before nine fixtures
+joined the sample). Data forks match exactly;
 resource forks match except the 112-byte "reserved for system use" area
 of the resource file header (offsets 16–127), which is masked identically
 on both sides — see DECISIONS.md. For the 1 MB Mac Plus results, see the
@@ -113,12 +114,14 @@ Every on-Mac result before this one came from System 6.0.8. This is the first
 time the binary has been run anywhere else in the System 6 → Mac OS 9 range
 the project claims.
 
-**What was run:** the committed 44-fixture sample, on a stripped System 7.0.1
+**What was run:** the committed sample (44 fixtures then, 53 since
+2026-08-08), on a stripped System 7.0.1
 boot volume, 4 MB Mac Plus, same on-Mac CRC-32 read-back of both forks.
 
     tools/vmac/run.py --system Sys7.img --list tools/vmac/sample.txt
 
-**Result: 44/44 byte-exact**, with engine peak heap identical to System 6.0.8
+**Result: 44/44 byte-exact** — 53/53 when re-run on the enlarged sample on
+2026-08-08 — with engine peak heap identical to System 6.0.8
 on every fixture. This tier is 4 MB.
 
 7.0.1 rather than 7.1 because 7.1 survives on the mirrors only as floppy sets
@@ -225,7 +228,8 @@ which is exactly where the withdrawn claim lived:
 
     tools/vmac/run.py -D UNC_AT_SAMEVOL --list tools/vmac/sample.txt
 
-**44/44 byte-exact at 4 MB**, output landing on the volume being read from,
+**44/44 byte-exact at 4 MB** (the sample was 44 fixtures then), output
+landing on the volume being read from,
 with the usual on-Mac read-back CRC of both forks.
 
 ### Name collisions, 2026-08-02 — BumpName verified for the first time

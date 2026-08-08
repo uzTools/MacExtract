@@ -22,12 +22,15 @@ minutes per fixture. It is a deliberate, on-demand check.
 
 **What a full re-verification costs, as host wall clock** (measured
 2026-08-07, two cores, all-out emulators — this is how long YOU wait, and says
-nothing whatever about Mac Plus time; see the 1x note below):
+nothing whatever about Mac Plus time; see the 1x note below). The totals were
+~240 s and ~233 s when the sample held 44 fixtures; the per-fixture figure is
+what every run since has reported, so scale it rather than trusting a total
+measured on a different list:
 
 | tier | command | cost |
 |---|---|---|
-| System 6.0.8, 1 MB, 44 fixtures | `run.py --mem 1M --list sample.txt` | ~240 s |
-| System 7.0.1, 4 MB, 44 fixtures | `run.py --system Sys7.img --list sample.txt` | ~233 s |
+| System 6.0.8, 1 MB, 53 fixtures | `run.py --mem 1M --list sample.txt` | ~5.1 s per fixture, one boot each |
+| System 7.0.1, 4 MB, 53 fixtures | `run.py --system Sys7.img --list sample.txt` | ~5.1 s per fixture, one boot each |
 | Mac OS 9.2, 13 fixtures | `os9.py --list os9sample.txt --launch` | tens of minutes — one full PowerPC boot per fixture |
 
 Run the two Mini vMac tiers in parallel if you have the cores; do NOT run
@@ -70,7 +73,7 @@ write-back is "lazy and partial — it will commit one fork of a file and not th
 other", so extracted files could not be read back on the host. **That does not
 reproduce and is withdrawn** (BLOCKERS.md): the whole sample was replayed with
 `--keep-disks` and every Out volume read back byte-exact, both forks, names
-included — 44/44. See "Checking a run off the disk" at the end of this file.
+included — 53/53. See "Checking a run off the disk" at the end of this file.
 
 The grid stays: it is proven, it needs nothing of the volume, and it reports
 liveness and setup failures that a disk cannot. What it cannot do is carry a
@@ -136,7 +139,7 @@ timing.
 produces four emulators, because RAM size and speed are both compile-time
 options. `mv-4M` and `mv-1M` run *all out*, as fast as the host allows, which
 is what the fixture sweeps use because correctness does not depend on speed
-and 44 fixtures x 2 memory sizes at Mac Plus speed would take all day.
+and 53 fixtures x 2 memory sizes at Mac Plus speed would take all day.
 `mv-4M-1x` and `mv-1M-1x` run at authentic 7 MHz and are the **only** builds a
 timing claim may be drawn from. `interactive.py` defaults to `mv-4M-1x`,
 because at all-out speed the extraction is over before the progress dialog can
@@ -252,7 +255,7 @@ reproduce:
     run.py --keep-disks --list sample.txt      # keep each run's disk images
     checkdisk.py /tmp/vmacrun-*/               # read them back
 
-**44/44 byte-exact**, both forks, names and folder structure included, over
+**53/53 byte-exact**, both forks, names and folder structure included, over
 the committed sample — including `derived-RWAsm_Folder.sit` at 38 files and 73
 forks, an 8-bit `spinning brain ƒ` folder, a MacRoman `Appé`, and a
 `.DS_Store`.

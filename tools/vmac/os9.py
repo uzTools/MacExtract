@@ -634,15 +634,20 @@ def verify_output(xfer, fixture, workdir):
     asmac = os.path.join(workdir, "as-the-mac-saw-it", "archive.sit")
     os.makedirs(os.path.dirname(asmac), exist_ok=True)
     shutil.copyfile(fixture, asmac)
-    subprocess.run([cli, "x", "-nr", asmac, "-o", ref], capture_output=True)
+    subprocess.run([cli, "x", "-nr", "--forks", "hidden", asmac, "-o", ref],
+                   capture_output=True)
 
-    # Everything the reference wrote, as relative paths, resource forks folded
-    # back onto the file they belong to.
+    # Everything the reference wrote, as relative paths. The reference is
+    # extracted with `--forks hidden`, so a "._" file is a resource fork and
+    # an archive entry never is — the Mac has no sidecars at all, its forks
+    # live inside the file. DECISIONS.md, 2026-08-08.
     expected = set()
     for root, _, files in os.walk(ref):
         for f in files:
+            if f.startswith("._"):
+                continue
             rel = os.path.relpath(os.path.join(root, f), ref)
-            expected.add(rel[:-5] if rel.endswith(".rsrc") else rel)
+            expected.add(rel)
     expected = {unicodedata.normalize("NFC", e) for e in expected}
 
     if not expected and not names:
@@ -706,7 +711,9 @@ def verify_output(xfer, fixture, workdir):
             continue
         typ, crt, data, rsrc = macbinary_forks(mb)
         want_d = os.path.join(ref, name)
-        want_r = want_d + ".rsrc"
+        head, _, tail = name.rpartition("/")
+        want_r = os.path.join(ref, head, "._" + tail) if head \
+            else os.path.join(ref, "._" + tail)
         for label, got, path, mask in (("data", data, want_d, False),
                                        ("rsrc", rsrc, want_r, True)):
             if not os.path.exists(path):
@@ -961,7 +968,8 @@ def verify_hfsplus(xfer, fixture, workdir, wrapper=None, expect_refusal=False):
     shutil.rmtree(ref, ignore_errors=True)
     os.makedirs(ref)
     cli = os.path.join(R.REPO, "build", "rel", "unclassic")
-    subprocess.run([cli, "x", "-nr", fixture, "-o", ref], capture_output=True)
+    subprocess.run([cli, "x", "-nr", "--forks", "hidden", fixture, "-o", ref],
+                   capture_output=True)
 
     sys.path.insert(0, os.path.join(R.REPO, "tools"))
     from vmac_check import aggregate_dir                      # noqa: E402

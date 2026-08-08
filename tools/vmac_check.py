@@ -86,23 +86,28 @@ def mask_reserved(rsrc):
 
 def aggregate_dir(root_dir, names=None):
     """(nfiles, sumDataCRC, totalDataLen, sumRsrcCRC, totalRsrcLen) for a tree
-    of CLI output.
+    of CLI output, extracted with `--forks hidden`.
 
     Split out of expected_aggregate() so the Mac OS 9 harness can use the same
     arithmetic on its own reference directory — the two tiers must agree on
     what "the expected aggregate" means, and having it in one place is the only
     way that stays true. `names`, if given, is a list the leaf filenames are
-    appended to, for harnesses that also compare names."""
+    appended to, for harnesses that also compare names.
+
+    The "._<X>" sidecar namespace is disjoint from archive names, so a file
+    either IS a sidecar or is not, with nothing to infer. This used to read
+    "<X>.rsrc" sidecars and guess: a "<X>.rsrc" was a sidecar only when <X>
+    existed beside it, otherwise a real entry of that name. That guess is
+    wrong for the archives where BOTH are real — the THINK C projects
+    recovered on 2026-08-08 — which is why every caller now passes
+    `--forks hidden`. On a Mac there is no ambiguity to begin with: HFS
+    forks are part of the file, so this only ever described how the HOST
+    stages a comparison. DECISIONS.md, 2026-08-08."""
     nfiles = sdc = sdl = src = srl = 0
     for root, _d, files in os.walk(root_dir):
-        fileset = set(files)
         for f in files:
-            # A "<X>.rsrc" is the CLI's resource sidecar for data file <X>
-            # ONLY if <X> also exists here; otherwise it's an archive entry
-            # whose own name ends in ".rsrc" (a real data file — e.g.
-            # RWasm.rsrc). Getting this wrong miscounts and mis-CRCs.
-            if f.endswith(".rsrc") and f[:-5] in fileset:
-                continue
+            if f.startswith("._"):
+                continue                 # sidecar; counted with its data file
             p = os.path.join(root, f)
             data = open(p, "rb").read()
             nfiles += 1
@@ -110,7 +115,7 @@ def aggregate_dir(root_dir, names=None):
                 names.append(f)
             sdc = (sdc + crc(data)) & 0xFFFFFFFF
             sdl += len(data)
-            rp = p + ".rsrc"
+            rp = os.path.join(root, "._" + f)
             rsrc = open(rp, "rb").read() if os.path.exists(rp) else b""
             src = (src + crc(mask_reserved(rsrc))) & 0xFFFFFFFF
             srl += len(rsrc)
@@ -122,7 +127,8 @@ def expected_aggregate(manifest_path):
     fixture = os.path.join(os.path.dirname(manifest_path), "..", man["fixture"])
     tmp = tempfile.mkdtemp()
     try:
-        subprocess.run([CLI, "x", "-nr", fixture, "-o", tmp],
+        subprocess.run([CLI, "x", "-nr", "--forks", "hidden", fixture,
+                        "-o", tmp],
                        capture_output=True, timeout=180)
         return aggregate_dir(tmp)
     finally:

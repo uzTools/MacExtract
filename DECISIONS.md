@@ -1577,3 +1577,60 @@ to believe it passes now.
 that branch of the same check is exercised only by re-extraction, and a
 collision against a pre-existing unrelated file is not distinguished from one
 of our own — both refuse, which is the safe direction but not a diagnosis.
+
+## 2026-08-08 — the Mac-side checkers stopped guessing at sidecars
+
+The three host-side readers decided what was a resource fork by a heuristic on
+`<X>.rsrc`: it was a sidecar for `<X>` when `<X>` existed beside it, and a real
+entry otherwise. That cannot be right for an archive where both are real, which
+is precisely the nine fixtures recovered earlier the same day, so they could
+not be replayed on the Mac at all. All reference extractions now use
+`--forks hidden` and pair `._X`; `aggregate_dir`, `checkdisk.py` and
+`check_mac_sink.py` no longer infer anything.
+
+**On a Mac there was never an ambiguity to resolve.** HFS keeps the resource
+fork inside the file, so `X` and `X.rsrc` are two unrelated files there and
+always were. Every version of this problem has been about how the HOST stages
+its copy of the comparison — which is why the mock File Manager in
+`tests/mac_sink_test.c` now writes `._X` too: a `.rsrc` suffix invented a
+collision the real File Manager does not have, making the mock *less* faithful
+to the thing it stands in for.
+
+Measured after the change, on the enlarged 53-fixture sample: **53/53 at 4 MB
+on System 6.0.8, 53/53 at the 1 MB floor, 53/53 on System 7.0.1**, and **53/53
+read back off the Out volumes with names and folder structure included**
+(`--keep-disks` + `checkdisk.py`). Two of the nine also run through the
+qemu-m68k mock in `ci.sh`, so the Mac sink's own code meets a THINK C archive
+on the target's endianness.
+
+**Adding one fixture of a new SHAPE found three harness defects that no amount
+of re-running the old list could.** All three had been unfailable rather than
+passing:
+
+- `check_mac_sink.py` compared UTF-8 manifest names against the raw MacRoman
+  bytes on disk. Every fixture in that harness's list was ASCII, so nothing
+  had ever differed. `UnZip.π` differed.
+- The same checker gated each comparison on a fork's size, so an entry with an
+  empty data fork was never looked for at all. It now asserts presence
+  whatever the size — a missing empty file is a real defect.
+- `checkdisk.py` joined Mac path components with `/`, and `/` is a legal
+  character in an HFS filename: `derived-unshar_1.11_folder.sit` holds
+  `mw/68k•unshar π`. Two of its entries could not even be copied off the
+  volume. Paths are tuples of components now, joined with `:` only when a
+  Mac path is actually needed.
+
+That last one is the same mistake as the `.rsrc` sidecar, one layer down: a
+separator that is also legal inside a name. **The list a harness runs on is
+part of the harness**, and a corpus that never contains the awkward shape
+cannot report that the harness would mishandle it.
+
+**The heuristic itself was in four readers.** `vmac_check.py`,
+`checkdisk.py`, `os9.py` and `check_mac_sink.py` each had their own copy of
+"a `<X>.rsrc` is a sidecar only when `<X>` is beside it", and one of the
+comments said so out loud — *"vmac_check.py makes the same distinction for the
+same reason"*. Fixing three of them left the fourth silently comparing against
+a tree that no longer used that convention; the Mac OS 9 pair was found by
+grepping for `.rsrc`, not by anything failing, because no CI job reaches that
+tier. **One home per finding applies to code, not just to documents** — a
+duplicated rule has to be re-found once per copy, and the copy nobody has a
+test for is the one that survives.

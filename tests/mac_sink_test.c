@@ -64,30 +64,35 @@ void NumToString(long v, StringPtr s)
     s[0] = (unsigned char)n; memcpy(s + 1, b, (size_t)n);
 }
 
-static void full_path(long dir, ConstStr255Param name, char *out, size_t cap)
+/* The mock stands in for HFS, where a resource fork is part of the file and
+ * two entries named "X" and "X.rsrc" have nothing to do with each other. A
+ * ".rsrc" SUFFIX encoding invents a collision the File Manager does not have,
+ * so the sidecar is written as a "._" PREFIX — the same convention the host
+ * comparison uses. DECISIONS.md, 2026-08-08. */
+static void full_path(long dir, ConstStr255Param name, int rsrc,
+                      char *out, size_t cap)
 {
     char leaf[64];
     const char *base = (dir >= 0 && dir < gNumDirs) ? gDirs[dir] : gOutDir;
     pstr(name, leaf, sizeof leaf);
-    snprintf(out, cap, "%s/%s", base, leaf);
+    snprintf(out, cap, "%s/%s%s", base, rsrc ? "._" : "", leaf);
 }
 
 OSErr HCreate(short vref, long dir, ConstStr255Param name, OSType cr, OSType ty)
 {
     char path[800]; int fd;
     (void)vref; (void)cr; (void)ty;
-    full_path(dir, name, path, sizeof path);
+    full_path(dir, name, 0, path, sizeof path);
     fd = open(path, O_CREAT | O_EXCL | O_WRONLY, 0644);
     if (fd < 0) return dupFNErr;
     close(fd);
     return noErr;
 }
 
-static OSErr do_open(long dir, ConstStr255Param name, const char *suffix, short *ref)
+static OSErr do_open(long dir, ConstStr255Param name, int rsrc, short *ref)
 {
     char path[800]; int fd, slot;
-    full_path(dir, name, path, sizeof path);
-    if (suffix) strncat(path, suffix, sizeof path - strlen(path) - 1);
+    full_path(dir, name, rsrc, path, sizeof path);
     fd = open(path, O_CREAT | O_RDWR, 0644);
     if (fd < 0) return fnfErr;
     slot = alloc_slot(fd);
@@ -96,30 +101,31 @@ static OSErr do_open(long dir, ConstStr255Param name, const char *suffix, short 
     return noErr;
 }
 OSErr HOpen(short v, long d, ConstStr255Param n, SignedByte p, short *ref)
-{ (void)v; (void)p; return do_open(d, n, NULL, ref); }
+{ (void)v; (void)p; return do_open(d, n, 0, ref); }
 OSErr HOpenRF(short v, long d, ConstStr255Param n, SignedByte p, short *ref)
-{ (void)v; (void)p; return do_open(d, n, ".rsrc", ref); }
+{ (void)v; (void)p; return do_open(d, n, 1, ref); }
 
 /* Param-block File Manager calls — the real Mac shell uses these (the H-glue
  * is broken on System 6); the mock exercises the same code path. */
 OSErr PBHOpenSync(HParamBlockRec *pb)
 {
     short ref = 0;
-    OSErr e = do_open(pb->fileParam.ioDirID, pb->ioParam.ioNamePtr, NULL, &ref);
+    OSErr e = do_open(pb->fileParam.ioDirID, pb->ioParam.ioNamePtr, 0, &ref);
     pb->ioParam.ioRefNum = ref;
     return e;
 }
 OSErr PBHOpenRFSync(HParamBlockRec *pb)
 {
     short ref = 0;
-    OSErr e = do_open(pb->fileParam.ioDirID, pb->ioParam.ioNamePtr, ".rsrc", &ref);
+    OSErr e = do_open(pb->fileParam.ioDirID, pb->ioParam.ioNamePtr, 1, &ref);
     pb->ioParam.ioRefNum = ref;
     return e;
 }
 OSErr PBHCreateSync(HParamBlockRec *pb)
 {
     char path[800]; int fd;
-    full_path(pb->fileParam.ioDirID, pb->ioParam.ioNamePtr, path, sizeof path);
+    full_path(pb->fileParam.ioDirID, pb->ioParam.ioNamePtr, 0, path,
+              sizeof path);
     fd = open(path, O_CREAT | O_EXCL | O_WRONLY, 0644);
     if (fd < 0) return dupFNErr;
     close(fd);
@@ -128,8 +134,10 @@ OSErr PBHCreateSync(HParamBlockRec *pb)
 OSErr PBHDeleteSync(HParamBlockRec *pb)
 {
     char path[800], rpath[820];
-    full_path(pb->fileParam.ioDirID, pb->ioParam.ioNamePtr, path, sizeof path);
-    snprintf(rpath, sizeof rpath, "%s.rsrc", path);
+    full_path(pb->fileParam.ioDirID, pb->ioParam.ioNamePtr, 0, path,
+              sizeof path);
+    full_path(pb->fileParam.ioDirID, pb->ioParam.ioNamePtr, 1, rpath,
+              sizeof rpath);
     unlink(rpath);                     /* resource-fork sidecar, if any */
     return unlink(path) == 0 ? noErr : fnfErr;
 }
@@ -199,7 +207,8 @@ OSErr PBSetCatInfoSync(CInfoPBRec *pb) { (void)pb; return noErr; }
 OSErr PBDirCreateSync(HParamBlockRec *pb)
 {
     char path[800];
-    full_path(pb->fileParam.ioDirID, pb->fileParam.ioNamePtr, path, sizeof path);
+    full_path(pb->fileParam.ioDirID, pb->fileParam.ioNamePtr, 0, path,
+              sizeof path);
     mkdir(path, 0755);                 /* tolerate EEXIST */
     if (gNumDirs >= MAX_DIRS) return noErr;
     snprintf(gDirs[gNumDirs], sizeof gDirs[0], "%s", path);

@@ -15,10 +15,13 @@ set -e
 cd "$(dirname "$0")/.."
 
 # A spread of fixtures: different StuffIt methods, a CPT with nested
-# folders, an Arsenic SIT5 (big block), a resource-only entry.
+# folders, an Arsenic SIT5 (big block), a resource-only entry, and a THINK C
+# project holding both "X" and a real "X.rsrc" — two files that only collide
+# if the sidecar convention makes them (2026-08-08).
 FIXTURES="derived-ASCbeep.sit derived-apple.art.sit alpha401.cpt \
           derived-Compact_Pro_Package derived-resforkkiller.sit \
-          derived-PackIt.pit synth-exo-tar.tar"
+          derived-PackIt.pit synth-exo-tar.tar derived-Unzip101.sit \
+          derived-BootTime.cpt"
 
 # Two-fork files (non-empty data AND resource fork) — the case where the
 # data and resource paths can disagree, so every write variant is proven

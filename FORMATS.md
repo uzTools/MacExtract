@@ -298,7 +298,7 @@ the others, cautiously and from a single anchor.
 
 ## Real-hardware verification (Mini vMac — System 6.0.8, 4 MB Mac Plus, 68000)
 
-The Retro68 Mac shell was replayed against a 44-fixture sample spanning all
+The Retro68 Mac shell was replayed against a 53-fixture sample spanning all
 twelve formats on a **real System 6.0.8 / 4 MB Mac Plus** under Mini vMac
 (a true 68000). Every extraction is verified ON THE MAC ITSELF: the app
 CRC-32s both forks after reading them back through the File Manager and the
@@ -306,8 +306,19 @@ result — painted to the framebuffer, read from a screenshot — is
 cross-checked against the same engine's Linux output (`tools/vmac_check.py`,
 `tools/decode_grid.py`).
 
-**44/44 byte-exact PASS** — data forks exact, resource forks exact bar the
-OS-stamped reserved header (bytes 16–127). Re-run 2026-08-01 and reproduced,
+**53/53 byte-exact PASS** (2026-08-08) — data forks exact, resource forks exact
+bar the OS-stamped reserved header (bytes 16–127).
+
+**The sample was 44 fixtures until 2026-08-08**, when nine that had never had
+an oracle manifest gained one and were added: seven THINK C projects holding
+both `X` and a real `X.rsrc`, and two with a leading-`~` name. Every `n/44`
+figure elsewhere in this file refers to the smaller sample and is left as it
+was measured. The nine are the only fixtures here whose shape can distinguish
+a fork-naming mistake from a correct extraction, which is why the host-side
+readers had to stop guessing at `<X>.rsrc` sidecars first (DECISIONS.md,
+2026-08-08).
+
+Re-run 2026-08-01 and reproduced,
 with a caveat about the harness rather than the Mac: two fixtures came back
 `EMUDIED` on the first pass — the emulator PROCESS exited within five seconds,
 before the application could paint anything — and both passed on an immediate
@@ -360,8 +371,9 @@ above System 6: Standard File returns a **working-directory** reference in
 is always running, so the `SIZE` partition governs the launch. Mini vMac's
 Mac Plus supports up to 7.5.5, so this is the same 68000 as every other row.
 
-**44/44 byte-exact PASS at 4 MB** — the same committed sample, the same on-Mac
-CRC-32 read-back, the same twelve formats:
+**53/53 byte-exact PASS at 4 MB** (2026-08-08; 44/44 before the sample grew) —
+the same committed sample, the same on-Mac CRC-32 read-back, the same twelve
+formats:
 
     tools/vmac/run.py --system Sys7.img --list tools/vmac/sample.txt
 
@@ -389,16 +401,17 @@ index instead. Nothing selects this but the allocator saying no, and both
 columns are byte-exact.
 
 **This tier is 4 MB.** **The 1 MB floor target is System 6, and only
-System 6**, and it is demonstrated by the 44/44 run below.
+System 6**, and it is demonstrated by the 53/53 run below.
 
 ## Floor target verification (Mini vMac — System 6.0.8, **1 MB** Mac Plus, 68000)
 
-The same 44-fixture sample was replayed on a Mini vMac built for **1 MB of
+The same 53-fixture sample was replayed on a Mini vMac built for **1 MB of
 RAM** — the project's floor target — one boot per fixture, same on-Mac
 CRC-32 verification (`tools/vmac/run.py --mem 1M --list tools/vmac/sample.txt`).
 The engine budget is derived from `FreeMem` at startup.
 
-**44/44 byte-exact PASS** (2026-08-07). There are no memory-budget refusals
+**53/53 byte-exact PASS** (2026-08-08; 44/44 on 2026-08-07, before the nine
+recovered fixtures joined the sample). There are no memory-budget refusals
 left at the floor target: every fixture in the sample, in every format,
 extracts byte-exact on a 1 MB Mac Plus. The six StuffIt 5 rows, which were the
 last to arrive, with peak heap as the Mac itself reports it:
@@ -544,8 +557,8 @@ rather than weaker:
   name that has to survive the round trip.
 
 **The sample is small on purpose.** Each fixture costs a whole boot (~110 s on
-an idle host, plus a 2 GB image copy), where Mini vMac replays a 44-fixture set
-inside one boot. So this samples for breadth of format; the memory-budget
+an idle host, plus a 2 GB image copy), where Mini vMac replays the whole
+53-fixture set inside one boot. So this samples for breadth of format; the memory-budget
 spread that `sample.txt` exists to exercise is a 1 MB question, and this
 machine has 512 MB.
 
