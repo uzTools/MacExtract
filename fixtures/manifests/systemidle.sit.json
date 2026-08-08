@@ -1,0 +1,19 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "8fd96d72fad3f599710b187834dd57fcd24fcc103491a47119d07556198603f2",
+   "data_size": 18509,
+   "name": "SystemIdle.Sit",
+   "type": "SIT!",
+   "unadjudicated": {
+    "rsrc": "Error on decrunching"
+   }
+  }
+ ],
+ "fixture": "systemidle.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "99dcc13a87539f6fb212d43221a1eca6a96ab89804706ddb8bee5bc7b6eddfca",
+ "size": 18923
+}

@@ -466,8 +466,11 @@ static void test_cpt(void)
 }
 
 /* ------------------------------------------------------------------ */
-/* M5: StuffIt classic container + RLE90 (method 1 is absent from the */
-/* harvested corpus, so it is pinned here).                           */
+/* M5: StuffIt classic container + RLE90. Method 1 is NOT absent from  */
+/* the corpus, as this comment claimed until 2026-08-08: one resource  */
+/* fork in derived-New_Python.sit, oracle-adjudicated since the        */
+/* manifest builder learned to record per-entry oracle failures, plus  */
+/* the edge cases in synth-sit-rle90.sit. These stay as the fast check.*/
 /* ------------------------------------------------------------------ */
 
 static uint16_t crc16arc_ref(const uint8_t *p, uint32_t n)

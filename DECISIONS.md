@@ -1634,3 +1634,65 @@ grepping for `.rsrc`, not by anything failing, because no CI job reaches that
 tier. **One home per finding applies to code, not just to documents** — a
 duplicated rule has to be re-found once per copy, and the copy nobody has a
 test for is the one that survives.
+
+## 2026-08-08 — "the oracle cannot read it" was the harness throwing evidence away
+
+**Claim.** StuffIt method 1 (RLE90) had no oracle coverage because `unar`
+fails on `derived-New_Python.sit`, the corpus's only method-1 fixture, so
+`make_manifests.py` refused a manifest. Filed under *Loose ends* in
+OPEN_ITEMS.md as needing "a method-1 archive `unar` can read".
+
+**Evidence that it was wrong.** `unar` reads the method-1 fork perfectly. It
+is the 470-byte resource fork of `I Want To Buy Some Cheese` (`rmeth=1`,
+470 → 389), and it comes out byte-identical to ours. What `unar` fails on is
+the *data* fork of a different entry, `It's A Bit Runny Sir`, compressed with
+method **3**. Nine of that archive's ten forks were adjudicated ground truth
+and all nine were being discarded to avoid recording the tenth.
+
+**Consequence.** Manifests are now built per entry rather than per archive.
+A fork the oracle failed on is recorded as `"unadjudicated": {fork: reason}`
+with its hash omitted; everything else in the archive is ground truth as
+usual. 19 fixtures that contributed nothing now contribute: the suite goes
+778 → 793, and method 1 is oracle-adjudicated. Sabotaging `sit_rle90`'s run
+length fails exactly one fixture, `derived-New_Python.sit` — the coverage is
+real, and it was demonstrated failing before it was believed passing.
+
+Four things here transfer:
+
+- **The all-or-nothing rule was invisible because it never failed.**
+  `oracle FAILED on X` scrolled past on every rebuild and read as a property
+  of the fixture. It was a property of the *builder*: one bad fork vetoed
+  nine good ones. A harness that discards evidence looks identical to a
+  harness that never had it.
+- **A true statement about the failure was applied to the wrong entry.**
+  "unar fails on derived-New_Python.sit" is true, and the inference "so it
+  cannot adjudicate method 1" does not follow — different entry, different
+  method. The same shape as the 512 KB Arsenic claim: a fact about the
+  archive used as a fact about the fork in front of you.
+- **What a failed extraction leaves on disk is not one thing.** Three
+  behaviours in 19 fixtures: a 0-byte file (most), 114,644 bytes of partial
+  output (`guysmaccontacts.sea`), and a sidecar padded to the DECLARED length
+  with garbage (`appledraw51.cpt`, whose 13,121 B disagrees with our 13,036).
+  A first draft of this change cross-checked the parse by requiring failed
+  forks to be empty on disk; two of the three shapes would have sailed
+  through, and the padded sidecar would have become "ground truth". The parse
+  is instead checked against unar's own failure count and against `lsar`'s
+  independent entry list.
+- **An excuse must be anchored to the other implementation, not to ours.**
+  A per-entry error from `unclassic` is tolerated only where the oracle
+  failed that same entry — a condition our code cannot influence. Tolerating
+  "recognized but unsupported" in general would have been far easier and
+  would have silently excused every StuffIt fixture the day someone broke the
+  method dispatch table.
+
+**And a fixture for what one real fork cannot reach.** `tools/synth_sit1.py`
+generates `synth-sit-rle90.sit` (deterministic; container layout from the
+same XADStuffItParser.m offsets the parser cites, RLE90 as the inverse of
+XADRLE90Handle.m, with a self-test asserting the encoder really is that
+inverse). The real fork exercises 25 run escapes and one literal `0x90`; the
+synthetic one adds runs *of* `0x90`, the maximum 255-byte token, multi-token
+runs, output ending inside a run, and the shortest legal token. Both forks of
+every entry are method 1, since the real fixture only has it on the resource
+side. Worth the file: breaking only the `c == 255` case fails
+`synth-sit-rle90.sit` and **nothing else among the 225 StuffIt fixtures**,
+which is every fixture that reaches `sit_rle90` at all.

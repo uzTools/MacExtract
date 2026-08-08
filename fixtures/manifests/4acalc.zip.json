@@ -1,0 +1,30 @@
+{
+ "entries": [
+  {
+   "data_sha256": "f6ea009c20ce189ffeed52dc9e171c61a6bba85546cb6a86cc112e2031581bdc",
+   "data_size": 17950,
+   "name": "4ACALC.EXE",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "name": "CALC.TXT",
+   "unadjudicated": {
+    "data": "Attempted to read more data than was available",
+    "rsrc": "oracle wrote no output for this fork"
+   }
+  },
+  {
+   "data_sha256": "0d9c3b72debfdedbe729bbbcc97d4e031cac6b5a7c4ee0a6279b59aab283b285",
+   "data_size": 7804,
+   "name": "REGCALC.TXT",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  }
+ ],
+ "fixture": "4acalc.zip",
+ "format": "Zip",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "af4577079f8c07cd50ad4f97ab5553db01cda2b7e490c1411f855d82f993fd73",
+ "size": 10422
+}

@@ -1,0 +1,27 @@
+{
+ "entries": [
+  {
+   "creator": "ttxt",
+   "name": "Works 2.00e Patch README",
+   "type": "ttro",
+   "unadjudicated": {
+    "data": "Attempted to read more data than was available",
+    "rsrc": "oracle wrote no output for this fork"
+   }
+  },
+  {
+   "creator": "????",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Works 2.00e Patcher",
+   "rsrc_sha256": "c7eb4a6a7c9af19af39eb1246e0d79b486c97d0a313d838bc515010f6a22f063",
+   "rsrc_size": 8174,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "derived-Works_2.00e_Patch.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "2e8c7292c1272592ec60f637c415fd41ce990a0ae48d66682250be3a4717cfe0",
+ "size": 7713
+}

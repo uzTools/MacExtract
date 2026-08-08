@@ -20,12 +20,21 @@ shape — while the prefix namespace is disjoint from real archive names.
 The manifest itself records neither convention: entry name plus per-fork
 hashes. DECISIONS.md, 2026-08-08.
 
+When the oracle fails on individual ENTRIES but still walks the
+container, the manifest is built from what it did produce and the forks
+it failed on are recorded per entry as "unadjudicated" (fork -> the
+oracle's own error text) with their hashes omitted. Nothing else is
+lost: an archive where unar dies on one fork used to yield no manifest
+at all, discarding every other fork it adjudicated perfectly well.
+Discovery is by condition, never by fixture name. DECISIONS.md,
+2026-08-08.
+
 Oracle invocation (see TESTING.md for rationale):
     lsar -j -nr -e macintosh <fixture>          # format + metadata
     unar -nr -D -f -q -k hidden -e macintosh -o <tmp> <fixture>
 """
-import argparse, hashlib, json, os, plistlib, struct, subprocess, sys, tempfile
-import unicodedata
+import argparse, hashlib, json, os, plistlib, re, struct, subprocess, sys
+import tempfile, unicodedata
 
 FIXDIR = os.path.join(os.path.dirname(__file__), "..", "fixtures")
 
@@ -71,6 +80,54 @@ def norm(name):
     return unicodedata.normalize("NFC", name)
 
 
+def matchkey(name):
+    """Key for matching the oracle's own report against extracted paths.
+
+    A classic Mac name may contain '/', which unar writes as '_' on
+    disk while its progress report still prints it — so "F/G" on disk
+    is ambiguous between a folder and a name. Flattening both
+    separators to '_' removes the ambiguity for MATCHING only; manifest
+    entry names are recorded exactly as walked.
+    """
+    return norm(name).replace(":", "_").replace("/", "_")
+
+
+# `unar` has no machine-readable extraction report, so per-entry
+# failures are read off its progress output. Both templates are literal
+# strings in the reference tree: unar.m builds "  " + info line +
+# "... Failed! (" + reason + ")" and the trailer at unar.m:307, and
+# CommandLineCommon.m::MediumInfoLineForEntryWithDictionary joins the
+# tags as "  (" + ", " + ")".
+#
+# The tag list can also carry "dir", "link" and "corrupted", which this
+# pattern deliberately does NOT match: an unmatched failure line makes
+# the parsed count disagree with the trailer, which refuses the whole
+# manifest. Failing safe beats guessing at a shape never seen here.
+# /* Source: reference/XADMaster/unar.m, CommandLineCommon.m */
+FAIL_RE = re.compile(r"^  (.*)  \((\d+) B(, rsrc)?\)\.\.\. Failed! \((.*)\)$")
+TRAILER_RE = re.compile(
+    r"^Extraction to directory .* failed \((\d+) files? failed\.\)$")
+
+
+def parse_oracle_failures(text):
+    """Return (failures, trailer_count) from unar's output.
+
+    failures: [(name, "data"|"rsrc", error text)]; trailer_count is the
+    total unar itself reports, or None if it never said.
+    """
+    failures, trailer = [], None
+    for line in text.splitlines():
+        m = FAIL_RE.match(line)
+        if m:
+            failures.append((m.group(1), "rsrc" if m.group(3) else "data",
+                             m.group(4)))
+            continue
+        t = TRAILER_RE.match(line)
+        if t:
+            trailer = int(t.group(1))
+    return failures, trailer
+
+
 def lsar_metadata(fixture):
     """Return (formatname, {normalized name: (type, creator)}) via lsar -j."""
     try:
@@ -112,10 +169,31 @@ def build_manifest(fixture_path, verbose=False):
             ["unar", "-nr", "-D", "-f", "-q", "-k", "hidden",
              "-e", "macintosh", "-o", tmp, fixture_path],
             capture_output=True, timeout=300)
+        # A non-zero exit is per-ENTRY failure or container failure, and
+        # the difference is worth the whole manifest. Accept it as
+        # per-entry only when unar's own report accounts for it exactly:
+        # the parsed failures must match the total it prints, and every
+        # name it names must be an entry lsar also lists. Otherwise the
+        # output is not modelled and is not ground truth.
+        failures, failed_names = {}, {}
         if r.returncode != 0:
-            print(f"  oracle FAILED on {name}: {r.stderr.decode()[:200]}",
-                  file=sys.stderr)
-            return None
+            parsed, trailer = parse_oracle_failures(
+                (r.stdout + r.stderr).decode("utf-8", "replace"))
+            if not parsed or trailer is None or len(parsed) != trailer:
+                print(f"  oracle FAILED on {name}: {r.stderr.decode()[:200]}",
+                      file=sys.stderr)
+                return None
+            known = {matchkey(n) for n in meta}
+            for ename, fork, err in parsed:
+                if matchkey(ename) not in known:
+                    print(f"  oracle UNRELIABLE on {name} (reports a failure "
+                          f"for {ename!r}, which it does not list)",
+                          file=sys.stderr)
+                    return None
+                failures.setdefault(matchkey(ename), {})[fork] = err
+                failed_names[matchkey(ename)] = norm(ename)
+            print(f"  oracle PARTIAL on {name}: "
+                  f"{len(parsed)} fork(s) unadjudicated", file=sys.stderr)
         # GNUstep's fork-path bug is a `-k visible` bug: it comes from
         # appending ".rsrc" to a name its path code rejects (leading
         # '~'), and it can write the AppleDouble container into the
@@ -172,7 +250,41 @@ def build_manifest(fixture_path, verbose=False):
                         ent["creator"] = creator
                 if "type" not in ent and p in meta and meta[p][0]:
                     ent["type"], ent["creator"] = meta[p][0], meta[p][1]
+                # A fork the oracle failed on is not ground truth,
+                # whatever it left on disk — and what it leaves varies:
+                # a 0-byte file, a partial one (114,644 B of a failed
+                # data fork in guysmaccontacts.sea), or a sidecar padded
+                # to the DECLARED length (appledraw51.cpt). Record the
+                # oracle's reason and drop the hashes.
+                un = failures.pop(matchkey(p), None)
+                if un:
+                    # "no data-fork file means a 0-byte data fork" holds
+                    # only for entries the oracle COMPLETED. On one it
+                    # failed, absent output means it never got there, so
+                    # the other fork is unadjudicated too rather than
+                    # empty (derived-INITLoader.sit: sidecar written,
+                    # data fork never attempted).
+                    if base not in fs:
+                        un.setdefault("data", "oracle wrote no output for "
+                                              "this fork")
+                    if not os.path.exists(ad):
+                        un.setdefault("rsrc", "oracle wrote no output for "
+                                              "this fork")
+                    ent["unadjudicated"] = un
+                    for fork in un:
+                        ent.pop(fork + "_size", None)
+                        ent.pop(fork + "_sha256", None)
                 entries.append(ent)
+        # An entry the oracle failed on before writing anything at all
+        # is still an entry, and its NAME is still ground truth: record
+        # it with both forks unadjudicated so the runner keeps checking
+        # that we produce it, rather than silently tolerating one more
+        # output file.
+        for key, un in failures.items():
+            full = dict(un)
+            for fork in ("data", "rsrc"):
+                full.setdefault(fork, "oracle wrote no output for this entry")
+            entries.append({"name": failed_names[key], "unadjudicated": full})
     if not entries:
         print(f"  oracle produced nothing for {name}", file=sys.stderr)
         return None

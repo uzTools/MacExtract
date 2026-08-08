@@ -97,7 +97,7 @@ build/unclassic sniff mystery.bin       # what is this?
 
 ## Is it any good?
 
-It is checked against [The Unarchiver](https://theunarchiver.com/) on 778 real
+It is checked against [The Unarchiver](https://theunarchiver.com/) on 793 real
 archives, byte for byte, both forks. The Macintosh application is checked the
 same way *while running on* an emulated Mac Plus, a System 7 machine and a
 Mac OS 9 PowerPC — not only on Linux.

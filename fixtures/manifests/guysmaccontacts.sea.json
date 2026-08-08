@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "EXTR",
+   "name": "Guy's Mac Contacts.cpt",
+   "type": "APPL",
+   "unadjudicated": {
+    "data": "Error on decrunching",
+    "rsrc": "Error on decrunching"
+   }
+  }
+ ],
+ "fixture": "guysmaccontacts.sea",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "cd9c56d6bba082c446fac737f0e644664657f5b158f94f910fda7c1a2b91dbab",
+ "size": 114772
+}

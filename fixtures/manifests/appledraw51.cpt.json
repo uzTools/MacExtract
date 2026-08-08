@@ -1,0 +1,19 @@
+{
+ "entries": [
+  {
+   "creator": "EXTR",
+   "data_sha256": "b593cc349f0bb4094369c577da2bf6f174e7ea6bdcfb45bed9be945737d99968",
+   "data_size": 78123,
+   "name": "•Draw 5.1.cpt",
+   "type": "APPL",
+   "unadjudicated": {
+    "rsrc": "Error on decrunching"
+   }
+  }
+ ],
+ "fixture": "appledraw51.cpt",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "70ae6b677233144d2cef680f5b6d4540407ef81c13b204c52e9a3f4c7ab68501",
+ "size": 91372
+}

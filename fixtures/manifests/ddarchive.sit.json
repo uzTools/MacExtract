@@ -1,0 +1,19 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "fa729630c531798ce278849ea72aefb7a3d2ad57e4602e221a489103721e8ade",
+   "data_size": 35408,
+   "name": "DDArchive.sit",
+   "type": "SIT!",
+   "unadjudicated": {
+    "rsrc": "Error on decrunching"
+   }
+  }
+ ],
+ "fixture": "ddarchive.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "bf34e9cdeca5162d07eaa937ea22a6e7f61e612e5d1058f87c107d657fef2087",
+ "size": 35822
+}

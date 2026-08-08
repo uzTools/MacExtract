@@ -9,12 +9,12 @@ whole corpus for that format (engine allocations only, via
 
 | Format | Status | Methods | Oracle coverage | Peak RAM | 400 KB budget |
 |---|---|---|---|---|---|
-| MacBinary I/II/III | extract | — | 226 fixtures | 8 KB | full |
+| MacBinary I/II/III | extract | — | 233 fixtures | 8 KB | full |
 | AppleSingle/Double | extract | — | (unit tests + envelopes) | 8 KB | full |
 | BinHex 4 (.hqx) | extract | RLE90 | 179 fixtures | 8 KB | full |
 | PackIt (.pit) | extract | store, Huffman; encrypted detected | 4 fixtures (1 real + 3 synthetic PMa4) | 9 KB | full |
 | Compact Pro (.cpt) | extract | RLE, LZH+RLE | 108 fixtures | 19 KB | full |
-| StuffIt classic (.sit) | extract | 0 store, 1 RLE90*, 2 LZW, 3 Huffman, 5 LZAH, 8 MW, 13 LZSS+Huffman; 6 fixed-Huffman NOT implemented‡; encrypted detected | 217 fixtures | 8–76 KB‖ | full |
+| StuffIt classic (.sit) | extract | 0 store, 1 RLE90*, 2 LZW, 3 Huffman, 5 LZAH, 8 MW, 13 LZSS+Huffman; 6 fixed-Huffman NOT implemented‡; encrypted detected | 225 fixtures | 8–76 KB‖ | full |
 | StuffIt 5 (.sit) | extract | 0, 13, 15 Arsenic; encrypted detected | 31 fixtures | 0.15–2.53 MB† | 23 of 31 fixtures extract FULLY; the rest refuse per entry |
 | Zip | extract | store, deflate; others & encrypted per-entry errors | 3 fixtures (+2 PKZIP-1.x corpus-only) | 66 KB | full |
 | Gzip | extract | deflate | 3 fixtures | 51 KB | full |
@@ -26,16 +26,17 @@ whole corpus for that format (engine allocations only, via
 | LZH/LHA (-lh?-, -lz?-) | detect only | — | — | — | — |
 | DiskCopy 4.2 (.image) | detect only | — | synthetic 800K GCR + real 800K image; 0 false positives in 803 fixtures | — | — |
 
-\* **Method 1 does occur** — once, a 470-byte resource fork in
-`derived-New_Python.sit` — contrary to what this footnote said until
-2026-08-01. The engine extracts that whole archive cleanly, every CRC-16
-verified, so method 1 *is* exercised against a real file. What it has no
-ORACLE coverage for is the same fixture: `unar` fails on it ("Attempted to
-read more data than was available" on `It's A Bit Runny Sir`), so
-`make_manifests.py` refuses a manifest and the differential suite never sees
-it. Method 1 is therefore pinned by unit tests transcribed from
-XADRLE90Handle *plus* one real archive checked against its own checksums —
-not by the oracle.
+\* **Method 1 occurs once and IS oracle-adjudicated** (since 2026-08-08).
+It is the 470-byte resource fork of `I Want To Buy Some Cheese` in
+`derived-New_Python.sit` (470 → 389), and `unar` decodes it byte-identically
+to us. This footnote previously said the oracle could not adjudicate it,
+because `unar` fails on that archive — but it fails on the *data* fork of a
+different entry, `It's A Bit Runny Sir`, compressed with method *3*, and the
+manifest builder was discarding the whole archive over it. Per-entry
+manifests fixed that (TESTING.md, "When the oracle fails on an entry").
+Edge cases the one real fork cannot reach — runs of `0x90`, the 255-byte
+maximum token, output ending inside a run — are covered by
+`synth-sit-rle90.sit` (`tools/synth_sit1.py`), also oracle-adjudicated.
 
 ‡ **Method 6, "Fixed Huffman", is present in the corpus and NOT implemented.**
 `derived-INITLoader.sit` carries one 34,818-byte method-6 fork; the engine
@@ -181,14 +182,16 @@ the intermediate deleted (`-nr` disables; depth ≤ 8). Verified chains:
 
 ## Hardening
 
-- Differential: 778 fixtures byte-exact against `unar` manifests
-  (both forks + type/creator), `./ci.sh`. That is every committed
-  manifest whose format the engine extracts: 783 manifests less the 5
-  detect-only DiskDoubler/Now Compress ones the harness skips. (A
-  headline figure of 771 stood here for a while; `run_diff.py` prints
-  the number it actually ran. It was 769 until 2026-08-08, when nine
-  fixtures previously written off as oracle-undecidable or oracle-buggy
-  turned out to be neither — see BLOCKERS.md.)
+- Differential: 793 fixtures byte-exact against `unar` manifests
+  (both forks + type/creator), `./ci.sh`. `run_diff.py` prints the
+  number it actually ran, plus two figures that must be read with it:
+  **19 forks across 14 fixtures are oracle-unadjudicated** (the oracle
+  failed on them, so the engine's own CRC-16 is the only check), and 3
+  fixtures are skipped whole because every entry uses a method outside
+  v1 scope. It was 769 until 2026-08-08 (nine fixtures written off as
+  oracle-undecidable, and neither — BLOCKERS.md), then 778 until
+  per-entry oracle failures stopped discarding whole manifests the same
+  day.
 - Robustness: 10 truncation/bit-flip variants per fixture — no
   crashes, hangs, or sanitizer trips under
   ASan+UBSan+`-fsanitize=alignment` (`-fno-sanitize-recover=all`).

@@ -1,0 +1,37 @@
+{
+ "entries": [
+  {
+   "creator": "DMOV",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Snow",
+   "rsrc_sha256": "6a63aa0c14dd67898f76a7a82c26bde8e66fa88f77c7031845ffb4a3b4fd9574",
+   "rsrc_size": 7144,
+   "type": "DFIL"
+  },
+  {
+   "creator": "EDIT",
+   "name": "Snow.info",
+   "rsrc_sha256": "0b7a22e3f35179b8e4989b9fd849f01c05348e38ba06df17b8195daa01dfc697",
+   "rsrc_size": 348,
+   "type": "TEXT",
+   "unadjudicated": {
+    "data": "Attempted to read more data than was available"
+   }
+  },
+  {
+   "creator": "RICK",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "SnowOpen",
+   "rsrc_sha256": "a9cb84a086324642cd0c81f76f71377e29f9ef2f65b703ff4c67d2af70532d0a",
+   "rsrc_size": 610,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "derived-Snow.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "90d1b6a5a27144a3f0271c5ae8f1d6444392193b70d3272a6fd30a7d9a765a90",
+ "size": 7087
+}

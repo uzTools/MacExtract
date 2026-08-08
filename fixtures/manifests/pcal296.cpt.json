@@ -1,0 +1,19 @@
+{
+ "entries": [
+  {
+   "creator": "EXTR",
+   "data_sha256": "20e08ee085f778607c689dd78a72e0769361cf7b3362baffa0f6148a1d615d0d",
+   "data_size": 29506,
+   "name": "Pcal2.96.cpt",
+   "type": "APPL",
+   "unadjudicated": {
+    "rsrc": "Error on decrunching"
+   }
+  }
+ ],
+ "fixture": "pcal296.cpt",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "9f86562400850599ed15f26b43689f57db24abafba644b1526db03c4df3c03a5",
+ "size": 42595
+}

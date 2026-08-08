@@ -1,0 +1,19 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "3e797f5f6f04f1b951d29cfb0bc77a96d81516aa2448859a04bce293caefd504",
+   "data_size": 33612,
+   "name": "SITdoc.sit",
+   "type": "SIT!",
+   "unadjudicated": {
+    "rsrc": "Error on decrunching"
+   }
+  }
+ ],
+ "fixture": "sitdoc.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "14e15401c17957f1eac742134cf9c794e6a3d4a73daded2c9311e2ce62dc37ee",
+ "size": 34026
+}

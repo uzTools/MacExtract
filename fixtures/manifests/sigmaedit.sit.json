@@ -1,0 +1,19 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "5671df6f7bcb47c522678811bf2e0ff5f4b842ce5290b3e4aa549be68c67f709",
+   "data_size": 50187,
+   "name": "SigmaEdit.sit",
+   "type": "SIT!",
+   "unadjudicated": {
+    "rsrc": "Error on decrunching"
+   }
+  }
+ ],
+ "fixture": "sigmaedit.sit",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "dca7b8eef3b3a3f30109c964517dc86d89d8776b5f3fe86260fce9dad2b5b745",
+ "size": 50780
+}

@@ -1,0 +1,45 @@
+{
+ "entries": [
+  {
+   "creator": "KAHL",
+   "name": "Future Enhancments",
+   "type": "TEXT",
+   "unadjudicated": {
+    "data": "Attempted to read more data than was available",
+    "rsrc": "oracle wrote no output for this fork"
+   }
+  },
+  {
+   "creator": "DMOV",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "∑Edit 1.12",
+   "rsrc_sha256": "c2eb402a690c8778c0322ea84f4177fe8fdc5a3a8693963c2b81d4f8d395c4c3",
+   "rsrc_size": 52802,
+   "type": "DFIL"
+  },
+  {
+   "creator": "KAHL",
+   "data_sha256": "b8140c2b0aaf3a37a200478e7b1acfd878fd7ae2257ddced5494e51564a33453",
+   "data_size": 5703,
+   "name": "∑Edit 1.12 Docs",
+   "rsrc_sha256": "b6a6e449643320c38235444058e590301f923966899898b30cd8fa3070a6024f",
+   "rsrc_size": 348,
+   "type": "TEXT"
+  },
+  {
+   "creator": "KAHL",
+   "data_sha256": "3c733ebc29b6755684de783bc54ca872519ecde79e4079af3334b44da8246806",
+   "data_size": 11295,
+   "name": "∑Edit Docs",
+   "rsrc_sha256": "f1f89d9a75838fd7b9c0eb2cb5b8cb0f33e9b6d10a3096dbcfe6cd54a290e9d9",
+   "rsrc_size": 348,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-SigmaEdit.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "5671df6f7bcb47c522678811bf2e0ff5f4b842ce5290b3e4aa549be68c67f709",
+ "size": 50187
+}

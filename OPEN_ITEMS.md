@@ -5,7 +5,7 @@ and things this repository asserts more confidently than the evidence supports.
 
 **Not** BLOCKERS.md, which records investigations that went wrong and the
 claims withdrawn from them. Nothing here stops the engine or the CLI, which are
-byte-exact against the oracle across 778 fixtures in `./ci.sh`.
+byte-exact against the oracle across 793 fixtures in `./ci.sh`.
 
 Each item says what would close it. Detail lives in one place per finding —
 status in BLOCKERS.md, reasoning in DECISIONS.md, how to re-run in TESTING.md
@@ -85,6 +85,7 @@ environment (section 4).
 | "peak heap under a budget" read as a requirement | 2026-08-07 | a decoder with a time-for-memory dial spends whatever the cap allows, so its peak tracks the CAP, not its needs. Comparing such a peak against a predicted requirement compares two different quantities — **bisect the cap** for the requirement. This nearly made the sampled BWT look 2.3x worse than predicted when it was in fact accurate |
 | The Mac-side checkers read `<X>.rsrc` sidecars, so nine fixtures could not be replayed on the Mac | 2026-08-08 | the sidecar heuristic ("`X.rsrc` is a sidecar only when `X` exists beside it") cannot describe an archive where both are real. All host-side readers now extract with `--forks hidden` and pair `._X`, including the mock File Manager — on HFS the fork is inside the file, so the suffix made the mock *less* faithful than the prefix. Sample 44 → 53 fixtures, **53/53 at 4 MB, at the 1 MB floor, on System 7, and read back off the volumes with names**. Adding one fixture of a new SHAPE exposed three harness defects that were unfailable rather than passing, including `/` inside an HFS filename. DECISIONS.md |
 | `unclassic x` clobbered its own output on a THINK C archive | 2026-08-08 | entry `X`'s sidecar and entry `X.rsrc`'s data fork are one path, and the sink opened it `"wb"`: a 7,048 B resource fork became a 0-byte file with a zero exit status. Every open now refuses an existing path as a per-entry error naming both ways out. **Fixing a harness can hide the defect it was hiding** — `run_diff.py` had just been moved to `--forks hidden`, so nothing exercised the shipped default any more; `tests/run_collide.sh` extracts with the default on purpose. DECISIONS.md |
+| StuffIt method 1 (RLE90) had no oracle coverage | 2026-08-08 | the premise was false in the same way twice over. `unar` decodes the method-1 fork perfectly — it fails on a *different entry's* fork compressed with method *3* — and `make_manifests.py` was discarding nine adjudicated forks to avoid recording the one bad one. **A harness that throws evidence away is indistinguishable from one that never had it**, because `oracle FAILED on X` scrolls past on every rebuild and reads as a fact about the fixture. Per-entry manifests took the suite 778 → 793 across 19 fixtures that had contributed nothing. Also: what a failed extraction leaves behind is not one thing (0-byte, 114 KB partial, or a sidecar padded to the declared length with garbage), so "the failed fork will be empty" is not a usable cross-check. DECISIONS.md |
 | Nine fixtures with no oracle manifest ("undecidable" or "oracle-buggy") | 2026-08-08 | both reasons were the fork-naming flag, not the archives: `unar -k visible` writes `NAME.rsrc`, which collides with a real entry called `X.rsrc` and which GNUstep refuses to build for a leading `~`. `-k hidden` (`._NAME`) decides all nine, and all 774 existing manifests rebuild identically. **A limitation and its remedy sat one paragraph apart in TESTING.md**; the remedy was a documented flag of a tool already in use. DECISIONS.md, BLOCKERS.md |
 
 ---
@@ -108,12 +109,6 @@ environment (section 4).
 
 ## 6. Loose ends
 
-- **StuffIt method 1 (RLE90): the claim that no corpus fixture uses it was
-  WRONG.** Measured 2026-08-01 by instrumenting the method byte:
-  `derived-New_Python.sit` has one 470-byte method-1 resource fork, and the
-  engine extracts that archive cleanly with every CRC-16 verified. It has no
-  ORACLE coverage because `unar` fails on that same archive, so no manifest
-  exists. Closing it properly still needs a method-1 archive `unar` can read.
 - **StuffIt method 6, "fixed Huffman", is not implemented — and was never
   named.** `derived-INITLoader.sit` carries one 34,818-byte method-6 fork;
   the engine returns a clean per-entry "recognized but unsupported", which is

@@ -82,6 +82,53 @@ name, and per entry: name (UTF-8, NFC-normalized), data fork
 sha256+size, resource fork sha256+size, and type/creator when the
 oracle exposes them.
 
+### When the oracle fails on an entry
+
+`unar` sometimes fails on individual entries while walking the rest of
+the container fine. Until 2026-08-08 that discarded the whole manifest,
+which cost oracle coverage of every *other* entry in those archives —
+including the corpus's only StuffIt method 1 fork, which unar decodes
+correctly (DECISIONS.md).
+
+`make_manifests.py` now records what the oracle produced and marks the
+forks it failed on, per entry:
+
+```json
+"unadjudicated": { "data": "Attempted to read more data than was available" }
+```
+
+with that fork's size and hash **omitted**. The classification is by
+condition, never by fixture name: exit non-zero, plus a per-entry
+failure report that accounts for itself. Two cross-checks must pass
+before the output is treated as ground truth at all — the parsed
+failure count must equal the total unar prints, and every name it
+reports must be an entry `lsar` independently lists. Otherwise the
+manifest is refused, exactly as before.
+
+`run_diff.py` skips those forks, requires the entry to exist anyway,
+and prints the running total on every run. It also fails on a manifest
+where a hash and a reason sit beside each other, or where neither does.
+
+**What this layer cannot see:**
+
+- **An unadjudicated fork is checked only by the archive's own CRC-16**,
+  written by the same compressor that wrote the fork. That is a strong
+  check — the failing fork of `derived-New_Python.sit` decodes to
+  23,987 bytes whose CRC matches, which is why unar is the one that is
+  wrong there — but it is not byte-exactness against a second
+  implementation, and a decoder bug that reproduced the CRC would pass.
+- **A fixture where every entry uses an out-of-scope method is skipped
+  whole** (3 of them: two PKZIP 1.x zips and the method-6 fixture).
+  A regression that made a *supported* method report "recognized but
+  unsupported" for entire archives would convert failures into skips.
+  The skip count is printed on every run for that reason; it is 3.
+- Do not read "unadjudicated: 19 forks" as 19 defects. It is 19 forks
+  across 14 fixtures where two implementations cannot be compared: on
+  **8** both sides decline (a genuinely damaged nested archive — the
+  engine says "file is truncated" where unar says "Error on
+  decrunching"), and **11** the engine extracts with the archive's own
+  CRC-16 verified while unar cannot read them at all.
+
 ### Comparison normalization
 
 The engine emits raw MacRoman filename bytes; the CLI converts to
@@ -131,7 +178,7 @@ sampled occurrence index **by trying to allocate the table and failing**
 CI forces it three ways:
 
 - `-DUNC_ARS_FORCE_SAMPLED` compiles the fast path out. The whole
-  778-fixture diff suite and all 7,780 robustness variants run through the
+  793-fixture diff suite and all 7,960 robustness variants run through the
   fallback under ASan+UBSan, and must be byte-exact.
 - `--budget 678392` (what a 1 MB Mac Plus leaves the engine) on the 31
   StuffIt 5 fixtures, with the normal adaptive build. This is the only step
@@ -164,13 +211,13 @@ exercised deliberately, by hand:
 
     # 1. the bound never under-estimates: hard-disable growth
     #    (make lzw_grow return UNC_ERR_MEM as its first statement)
-    UNCLASSIC=build/never/unclassic sh tests/run_diff.sh      # expect 778/778
+    UNCLASSIC=build/never/unclassic sh tests/run_diff.sh      # expect 793/793
 
     # 2. the safety net is correct: force it to run on every stream
     make BUILD=build/tiny CFLAGS="-O1 -g \
         -fsanitize=address,undefined,alignment -fno-sanitize-recover=all \
         -DUNC_LZW_TINY_TABLE" all
-    UNCLASSIC=build/tiny/unclassic sh tests/run_diff.sh       # expect 778/778
+    UNCLASSIC=build/tiny/unclassic sh tests/run_diff.sh       # expect 793/793
 
     # 3. these fixtures CAN fail on this code: starve the table AND
     #    skip the add instead of growing
@@ -185,7 +232,8 @@ would report — so without a demonstrated failure they distinguish nothing.
 94 of the fixtures reach the LZW path (4 `.Z`, the rest StuffIt classic
 method 2).
 
-Step 2 was re-measured at **778/778** on 2026-08-08. Step 3's figure is from
+Step 2 was re-measured at **778/778** on 2026-08-08, before per-entry
+oracle failures took the suite to 793 later the same day. Step 3's figure is from
 2026-08-03 and was **675/769** — 94 failures — against the 769-fixture suite of
 that date; re-running it needs the hand edit above, and what matters is that it
 fails at all, not the count. The LZW-path figure is from the same day.

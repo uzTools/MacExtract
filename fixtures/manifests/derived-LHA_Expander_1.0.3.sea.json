@@ -1,0 +1,59 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "LHA Expander 1.0.3"
+  },
+  {
+   "creator": "ttxt",
+   "name": "LHA Expander 1.0.3/1.0.3 Release Notes (E)",
+   "type": "TEXT",
+   "unadjudicated": {
+    "data": "Attempted to read more data than was available",
+    "rsrc": "Attempted to read more data than was available"
+   }
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "b8ae6ef33538c73631bd2f66650a9e9bf240fc90dcc8cbbe7c3c5548f2898d47",
+   "data_size": 1233,
+   "name": "LHA Expander 1.0.3/1.0.3 Release Notes (J)",
+   "type": "TEXT",
+   "unadjudicated": {
+    "rsrc": "Attempted to read more data than was available"
+   }
+  },
+  {
+   "creator": "LHAx",
+   "data_sha256": "e6dc54f19c918a631672bb3f4a30c632668e66d3b5eb88f29a3238110e815133",
+   "data_size": 55542,
+   "name": "LHA Expander 1.0.3/LHA Expander",
+   "rsrc_sha256": "31e87d460e812945ae2b3dfe0f44da93eab43ddd470f9be880fc7973d71a4004",
+   "rsrc_size": 78231,
+   "type": "APPL"
+  },
+  {
+   "creator": "ttxt",
+   "name": "LHA Expander 1.0.3/LHA Expander Read Me (E)",
+   "type": "TEXT",
+   "unadjudicated": {
+    "data": "Attempted to read more data than was available",
+    "rsrc": "Attempted to read more data than was available"
+   }
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "528cf12504c408d03e7436834e901f128237b6473099112ccd1473040ac54e6f",
+   "data_size": 5689,
+   "name": "LHA Expander 1.0.3/LHA Expander Read Me (J)",
+   "rsrc_sha256": "8de7f2d6a312bb8d6d031f83706812b0bc04fde5f1b5c4a2fd8ab2f037cbe0dc",
+   "rsrc_size": 1671,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-LHA_Expander_1.0.3.sea",
+ "format": "DiskDoubler",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "474367151a5428a628f34c3a12c1094237e16b822a921ad1a0a1b9b0c3ad5516",
+ "size": 79182
+}

@@ -1,0 +1,27 @@
+{
+ "entries": [
+  {
+   "creator": "ttxt",
+   "name": "LaserChase! docs",
+   "type": "TEXT",
+   "unadjudicated": {
+    "data": "Attempted to read more data than was available",
+    "rsrc": "oracle wrote no output for this fork"
+   }
+  },
+  {
+   "creator": "KNLC",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "LaserChase! v1.2",
+   "rsrc_sha256": "4c89170bedeb67d78ca0af9490eff4febf0c589ef85827561f57e741bc595467",
+   "rsrc_size": 28599,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "derived-LaserChase_.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "cea227e285989f86fc77027f21d7ad48355815c4073d71abc6e64022d4b1a21e",
+ "size": 25197
+}

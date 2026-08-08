@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "Load",
+   "name": "INITLoader",
+   "type": "cdev",
+   "unadjudicated": {
+    "data": "oracle wrote no output for this fork",
+    "rsrc": "File is not fully supported"
+   }
+  }
+ ],
+ "fixture": "derived-INITLoader.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "ef0888464861888ff4c25d6841d9952a17951bf01b621ac66375462383c3c8bd",
+ "size": 28680
+}

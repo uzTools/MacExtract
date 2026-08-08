@@ -1,0 +1,27 @@
+{
+ "entries": [
+  {
+   "creator": "\u0000\u0000\u0000\u0000",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "Christmas beeps",
+   "rsrc_sha256": "c2d26e8f53548ef19df09ce11859f5063ee2188ba5715989c93083f960e543f5",
+   "rsrc_size": 351756,
+   "type": "\u0000\u0000\u0000\u0000"
+  },
+  {
+   "creator": "ttxt",
+   "name": "Don't read me!!",
+   "type": "TEXT",
+   "unadjudicated": {
+    "data": "Attempted to read more data than was available",
+    "rsrc": "oracle wrote no output for this fork"
+   }
+  }
+ ],
+ "fixture": "derived-xmasbeeps.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "b31e9828b2cc11219d63175ad261ce735a1d9cbbe5ae091b190d213963945ed3",
+ "size": 286224
+}

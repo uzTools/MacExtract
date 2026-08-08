@@ -11,7 +11,7 @@ The engine is the product. The Mac app is a thin shell.
 
 ## Current state — read before working
 
-M0–M10 are **DONE**. The engine passes a 778-fixture differential suite against `unar`, and the Mac shell extracts byte-exact on a real System 6.0.8 Mac Plus under Mini vMac — **53/53 sampled fixtures at 4 MB and 53/53 at the 1 MB floor** (2026-08-08, on a sample that grew from 44 to 53 that day; there are no memory-budget refusals left).
+M0–M10 are **DONE**. The engine passes a 793-fixture differential suite against `unar`, and the Mac shell extracts byte-exact on a real System 6.0.8 Mac Plus under Mini vMac — **53/53 sampled fixtures at 4 MB and 53/53 at the 1 MB floor** (2026-08-08, on a sample that grew from 44 to 53 that day; there are no memory-budget refusals left).
 
 It runs on all three systems the project claims: **System 6.0.8 and System 7.0.1** under Mini vMac (a true 68000), and **Mac OS 9.2** under QEMU PowerPC through the 68LC040 emulator, where 13/13 of a format sample is byte-exact, extraction onto **HFS+** is verified, and the `SIZE` partition is honoured by the Process Manager.
 
@@ -41,7 +41,18 @@ The repository is on GitHub as a **private** repo, `main`, tagged through
 `v0.5`, which is the first tag to publish a downloadable application (see
 *Cutting a release*). Working tree clean, `./ci.sh` green, nothing in flight.
 
-**The differential suite is 778 fixtures, not 769** (2026-08-08). Nine
+**The differential suite is 793 fixtures, not 769** (2026-08-08), and both
+increases came from the measuring apparatus rather than from new archives.
+The second: `make_manifests.py` discarded a whole manifest whenever `unar`
+failed on any single entry, so 19 fixtures contributed no oracle coverage at
+all — including the corpus's only StuffIt **method 1** fork, which `unar`
+decodes perfectly (it fails on a different entry of that archive, using a
+different method). Manifests now record per-fork `"unadjudicated"` where the
+oracle failed and keep everything else. **`oracle FAILED on X` scrolling past
+on every rebuild read as a fact about the fixture; it was a fact about the
+builder.** DECISIONS.md and TESTING.md, 2026-08-08.
+
+The first: nine
 fixtures had been written off as ground truth the oracle could not produce —
 seven "structurally undecidable", two "oracle-buggy". Both reasons were
 properties of one flag: `unar -k visible` names resource forks `NAME.rsrc`,
