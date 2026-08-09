@@ -308,7 +308,13 @@ int unc_segment_describe(UncIO *io, UncSegmentDesc *desc);
 int unc_segment_match(const UncSegmentDesc *desc,
                       const uint8_t *head, int32_t len);
 
-/* Supplies parts on demand. */
+/* Supplies parts on demand.
+ *
+ * ZERO THIS STRUCT BEFORE FILLING IT IN. Optional members are marked by
+ * being NULL, so a caller that leaves one holding whatever was on the
+ * stack is telling the engine to call it. `size` was added on
+ * 2026-08-09 and every existing caller — including two unit tests that
+ * went on passing — was doing exactly that. */
 typedef struct UncVolumeSource {
     void *ctx;
     /* Open part `part` (1-based) of `desc` and fill *io. Return UNC_OK,
@@ -321,6 +327,17 @@ typedef struct UncVolumeSource {
      * The engine releases the current part before asking for another,
      * so a host is never required to hold two open at once. */
     void (*release)(void *ctx, UncIO *io);
+    /* Length of part `part`, IF that can be answered for nothing — a
+     * directory lookup, not a disk swap. May be NULL, and returning
+     * UNC_SIZE_UNKNOWN for any part is a normal answer.
+     *
+     * It is only ever used to give the progress callback a denominator.
+     * A host with one drive genuinely cannot know the total until every
+     * disk has been seen, and going to look would cost the user the
+     * swaps this design exists to avoid, so a NULL here means the
+     * progress callback is told UNC_SIZE_UNKNOWN and nothing else
+     * changes. Never answer by opening the part. */
+    uint32_t (*size)(void *ctx, const UncSegmentDesc *desc, int part);
 } UncVolumeSource;
 
 /* Joins the parts of `desc` and extracts the result.

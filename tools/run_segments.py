@@ -37,7 +37,7 @@ Every oracle call here therefore passes an ABSOLUTE path.
 
 Usage: run_segments.py [--unclassic build/dev/unclassic] [--case NAME]
 """
-import argparse, os, shutil, struct, subprocess, sys, tempfile
+import argparse, os, re, shutil, struct, subprocess, sys, tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
@@ -207,20 +207,79 @@ def case_run(unclassic, case, workroot, fails):
 
 
 def zip_stats(unclassic, part_path, dest):
-    """Extract with --stats and return (output tree, the segments line).
-
-    The crossing counts are REPORTED, not required to be zero. A StuffIt
-    join is strictly forward because its payload is a plain stream; a
-    zip's directory lives at the end and its entry data at the start, so
-    going backwards is what the format asks for. Printing it is what
-    makes the cost of the scheme visible instead of assumed.
-    """
+    """Extract with --stats and return (rc, output, the segments line)."""
     os.makedirs(dest, exist_ok=True)
     r = run([unclassic, "x", "-nr", "--stats", "-o", dest,
              os.path.abspath(part_path)])
     out = r.stdout.decode("utf-8", "replace")
     line = "".join(l for l in out.splitlines() if l.startswith("segments:"))
     return r.returncode, out, line
+
+
+def zip_floor(parts):
+    """Fewest part opens (and backward crossings) the set can be read in,
+    derived from the archive's OWN central directory.
+
+    Computed here in Python rather than taken from the engine, for the
+    same reason py_parts() re-implements the StuffIt match rule: a floor
+    the engine calculates is a floor the engine cannot fail to meet.
+
+    The model is what the format allows: open the last part for the
+    end-of-central-directory record, read the directory from wherever
+    that record says it starts, then visit each entry in the order the
+    directory lists them, opening the part it starts on and rolling
+    forward while its data spills into the next.
+
+    The directory's own placement is part of the model and was left out
+    of the first version of it, which then accused the engine of two
+    extra opens on `zmany` — where the directory genuinely begins on
+    part 11 and crosses into part 12. A floor that is too low is not a
+    safe error: it reads as a defect in the thing being measured.
+    """
+    sizes = [os.path.getsize(p) for p in parts]
+    data = b"".join(open(p, "rb").read() for p in parts)
+    e = data.rfind(b"PK\x05\x06")
+    if e < 0:
+        return None
+    cddisk, _nd, nent, cdsize, cdoff = struct.unpack_from("<HHHII", data, e + 6)
+    base = lambda k: sum(sizes[:k])
+
+    def part_of(logical):
+        k = 0
+        while k + 1 < len(sizes) and base(k + 1) <= logical:
+            k += 1
+        return k
+
+    state = {"cur": len(parts) - 1, "opens": 1, "back": 0}
+
+    def visit(first, last):
+        for k in range(first, last + 1):
+            if k != state["cur"]:
+                if k < state["cur"]:
+                    state["back"] += 1
+                state["cur"] = k
+                state["opens"] += 1
+
+    # the directory, which need not start on the last part
+    cdstart = base(cddisk) + cdoff
+    visit(cddisk, part_of(cdstart + cdsize - 1))
+
+    p = cdstart
+    ents = []
+    for _ in range(nent):
+        if data[p:p + 4] != b"PK\x01\x02":
+            return None
+        csize = struct.unpack_from("<I", data, p + 20)[0]
+        nl, el, cl, sd = struct.unpack_from("<HHHH", data, p + 28)
+        lho = struct.unpack_from("<I", data, p + 42)[0]
+        ents.append((sd, lho, csize))
+        p += 46 + nl + el + cl
+
+    for sd, lho, csize in ents:
+        # 30 = the local header, whose name and extra add more; using the
+        # minimum keeps the floor a floor.
+        visit(sd, part_of(base(sd) + lho + 30 + csize))
+    return state["opens"], state["back"]
 
 
 def zip_case_run(unclassic, case, workroot, fails):
@@ -281,11 +340,22 @@ def zip_behaviours(unclassic, case, d, parts, whole, want, workroot, fails):
     last, first = parts[-1], parts[0]
     multi = len(parts) > 1
 
-    # How much the join costs in part opens, which on removable media is
-    # what a disk swap costs. Reported for every case.
-    rc, out, line = zip_stats(unclassic, last, os.path.join(d, "_stats"))
-    if line:
-        print("  %s: %s" % (case, line))
+    # What the join costs in part opens, which on removable media is what
+    # a disk swap costs. Required to MATCH the floor the archive's own
+    # directory allows, not merely to be reported: this number was 3-4x
+    # the floor for a day, written up as the format's doing, because
+    # nothing compared it against anything (DECISIONS.md 2026-08-09).
+    if multi:
+        rc, out, line = zip_stats(unclassic, last, os.path.join(d, "_stats"))
+        floor = zip_floor(parts)
+        if fails.check(bool(line) and floor is not None,
+                       "%s: no segment line or no floor" % case):
+            got = tuple(int(x) for x in re.findall(r"\d+", line))
+            print("  %-9s %s  (floor: %d part opens, %d backward)"
+                  % (case + ":", line, floor[0], floor[1]))
+            fails.check(got == floor,
+                        "%s: %d opens / %d backward, floor is %d / %d"
+                        % ((case,) + got + floor))
 
     if not multi:
         # `zip -s` that did not split: an ordinary archive with a marker
@@ -302,6 +372,43 @@ def zip_behaviours(unclassic, case, d, parts, whole, want, workroot, fails):
                     "%s: a set of one sniffed as %r"
                     % (case, r.stdout.decode().strip()))
         return
+
+    # The directory is buffered when it fits and read a record at a time
+    # when it does not, and the second path is reachable only under a
+    # budget too small to hold it. Squeeze it there and require the SAME
+    # BYTES out, at a visibly worse cost in part opens — which is what
+    # the buffering buys and the only place the difference shows.
+    #
+    # Only on the cases that STORE. The budget is aimed one byte under
+    # the run's own high-water mark, which lands on the directory buffer
+    # exactly when nothing else is competing for the heap; a deflated
+    # entry allocates a window on top and the same budget would starve
+    # the decoder instead, testing something else entirely.
+    if case in zsynth.STORED:
+        peak = re.search(r"high-water (\d+)", out)
+        if fails.check(peak is not None, "%s: --stats printed no peak" % case):
+            lean = os.path.join(d, "_lean")
+            os.makedirs(lean, exist_ok=True)
+            r = run([unclassic, "x", "-nr", "--budget",
+                     str(int(peak.group(1)) - 1), "--stats", "--forks",
+                     "hidden", "-o", lean, os.path.abspath(last)])
+            lout = r.stdout.decode("utf-8", "replace")
+            fails.check(r.returncode == 0,
+                        "%s: refused to extract without room for the "
+                        "directory: %s" % (case, lout.strip()))
+            fails.check(read_tree(lean) == want,
+                        "%s: the un-buffered directory walk gave different "
+                        "bytes" % case)
+            fails.check("1 refused" in lout,
+                        "%s: nothing was refused, so the fallback was never "
+                        "taken and this case proved nothing" % case)
+            lean_line = "".join(l for l in lout.splitlines()
+                                if l.startswith("segments:"))
+            lean_opens = tuple(int(x) for x in re.findall(r"\d+", lean_line))
+            fails.check(lean_opens > floor,
+                        "%s: the un-buffered walk cost %s, no more than the "
+                        "buffered one — buffering the directory is doing "
+                        "nothing" % (case, lean_opens))
 
     # A middle part identifies itself as nothing, and the oracle refuses
     # one too (MEASURED). Ours must refuse rather than guess.

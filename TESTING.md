@@ -401,15 +401,32 @@ on it too: the justification for refusing is that such a part identifies
 itself as nothing, and that is a claim about the format which the suite
 re-checks rather than quotes.
 
-`--stats` output is printed per case rather than asserted. A zip join
-cannot hold at zero the way the StuffIt one does — the directory is at
-the end — but the printed numbers are about **four times** the floor
-those archives allow, and that is this implementation's doing rather
-than the format's (FORMATS.md, "Spanned zip"). Printing them is what
-made the gap findable at all: the figures were written up as inherent
-until somebody asked why Windows never behaved that way. If these
-numbers move, check them against the floor rather than against the last
-run.
+**`--stats` is asserted against a floor, not merely printed.**
+`zip_floor()` derives, from each archive's OWN central directory, the
+fewest part opens the format permits — read the last part for the
+end-of-central-directory record, read the directory from wherever that
+record says it starts, then visit each entry in the order listed,
+rolling forward while its data spills into the next part — and the
+measured count must equal it exactly.
+
+Computed in Python rather than asked of the engine, for the same reason
+`py_parts()` re-implements the StuffIt match rule: a floor the engine
+calculates is a floor the engine cannot fail to meet. Both directions
+have been demonstrated. Falling back to the record-at-a-time directory
+walk gives 16/6 against a floor of 6/1 and fails; adding back a pass
+that measures every part first gives 10/1 and fails. And the model
+itself was wrong first — it ignored where the directory sits, so it
+accused `zmany` of two opens the format requires. **A floor that is too
+low reads as a defect in the thing being measured**, so treat a
+mismatch as a question about both sides.
+
+The last case also runs under a budget one byte below the run's own
+high-water mark, which lands on the directory buffer exactly when
+nothing else is competing for the heap — so it is applied only to the
+cases the generator recorded as all-STORED. That forces the fallback
+walk and requires identical bytes out of it, at a cost in opens that
+must be strictly worse; otherwise buffering the directory is doing
+nothing and the case would pass while proving that.
 
 **Two ways the oracle can be wrong here, both measured on 2026-08-08:**
 

@@ -1576,6 +1576,14 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
          * autotest's tick carries something else entirely. */
         sh->hide = prog ? ((Progress *)prog->ctx)->dlg : NULL;
 #endif
+        /* Optional members are the NULL ones, so this must start
+         * zeroed (unclassic.h). `size` stays NULL deliberately: this
+         * host reads floppies, and answering it would mean sending the
+         * user after disks to put a denominator on a progress bar. */
+        {
+            long z;
+            for (z = 0; z < (long)sizeof vs; z++) ((char *)&vs)[z] = 0;
+        }
         vs.ctx = sh;
         vs.need = seg_need;
         vs.release = seg_release;

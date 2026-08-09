@@ -79,8 +79,21 @@ def _parts_of(d, name):
     return out
 
 
-def _finish(d, name, method_args, srcrel):
+"""Cases whose entries are all STORED, recorded where the method is
+chosen rather than guessed from a case name later.
+
+It matters to run_segments.py: an archive that only stores decodes with
+one fixed buffer, so its peak heap is that buffer plus the central
+directory and nothing else — which is what lets a budget be aimed at
+the directory alone. Anything deflated allocates a window on top and a
+budget aimed that way starves the decoder instead."""
+STORED = set()
+
+
+def _finish(d, name, method_args, srcrel, case=None):
     _zip(d, name, method_args, srcrel)
+    if case and "-0" in method_args:
+        STORED.add(case)
     return (os.path.join(d, srcrel), _parts_of(d, name),
             os.path.join(d, name + "-whole.zip"))
 
@@ -93,7 +106,7 @@ def case_stored(d):
     for i in range(5):
         _write(os.path.join(src, "f%d.bin" % i), _rand(100 + i, 60000))
     _write(os.path.join(src, "small.txt"), b"a small one\n")
-    return _finish(d, "Stored", ["-0"], "src")
+    return _finish(d, "Stored", ["-0"], "src", "zstored")
 
 
 def case_deflate(d):
@@ -102,7 +115,7 @@ def case_deflate(d):
     for i in range(4):
         _write(os.path.join(src, "t%d.txt" % i), _text(200 + i, 400000))
     _write(os.path.join(src, "raw.bin"), _rand(9, 90000))
-    return _finish(d, "Deflate", ["-9"], "src")
+    return _finish(d, "Deflate", ["-9"], "src", "zdeflate")
 
 
 def case_nested(d):
@@ -112,7 +125,7 @@ def case_nested(d):
     _write(os.path.join(src, "one", "beside.bin"), _rand(12, 70000))
     _write(os.path.join(src, "Appé", "inside.bin"), _rand(13, 30000))
     _write(os.path.join(src, "empty.bin"), b"")
-    return _finish(d, "Nested", ["-0"], "src")
+    return _finish(d, "Nested", ["-0"], "src", "znested")
 
 
 def case_many(d):
@@ -120,7 +133,7 @@ def case_many(d):
     src = os.path.join(d, "src")
     for i in range(12):
         _write(os.path.join(src, "p%02d.bin" % i), _rand(300 + i, 60000))
-    return _finish(d, "Many", ["-0"], "src")
+    return _finish(d, "Many", ["-0"], "src", "zmany")
 
 
 def case_solo(d):
@@ -132,7 +145,7 @@ def case_solo(d):
     """
     src = os.path.join(d, "src")
     _write(os.path.join(src, "only.txt"), b"fits in one part\n")
-    return _finish(d, "Solo", ["-0"], "src")
+    return _finish(d, "Solo", ["-0"], "src", "zsolo")
 
 
 CASES = {

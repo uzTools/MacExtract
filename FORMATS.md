@@ -16,12 +16,12 @@ whole corpus for that format (engine allocations only, via
 | Compact Pro (.cpt) | extract | RLE, LZH+RLE | 108 fixtures | 19 KB | full |
 | StuffIt classic (.sit) | extract | 0 store, 1 RLE90*, 2 LZW, 3 Huffman, 5 LZAH, 6 fixed Huffman‡, 8 MW, 13 LZSS+Huffman; encrypted detected | 227 fixtures | 8–76 KB‖ | full |
 | StuffIt 5 (.sit) | extract | 0, 13, 15 Arsenic; encrypted detected | 31 fixtures | 0.15–2.53 MB† | 23 of 31 fixtures extract FULLY; the rest refuse per entry |
-| Zip | extract | store, deflate; others & encrypted per-entry errors | 5 fixtures (2 of them PKZIP 1.x, graded on names and entry counts only — Implode is out of v1 scope, and `unar` adjudicates 5 of their 7 entries) | 66 KB | full |
+| Zip | extract | store, deflate; others & encrypted per-entry errors | 5 fixtures (2 of them PKZIP 1.x, graded on names and entry counts only — Implode is out of v1 scope, and `unar` adjudicates 5 of their 7 entries) | 12–54 KB¶ | full |
 | Gzip | extract | deflate | 3 fixtures | 51 KB | full |
 | Unix compress (.Z) | extract | LZW ≤16 bit | 4 fixtures | 219 KB§ | full |
 | Tar (ustar/v7) | extract | — (links reported unsupported) | 3 fixtures (2 real 1990 v7 tars) + unit tests | 8 KB | full |
 | StuffIt segment (multi-part) | extract | — (join only; the joined file is the next layer) | 7 synthetic sets, oracle-adjudicated | 8 KB | full |
-| Zip segment (spanned, .z01…/.zip) | extract | store, deflate — the zip reader, over the joined parts | 5 generated sets, adjudicated 4 ways (source tree, `unar`, us split, us unsplit) | 66 KB | full |
+| Zip segment (spanned, .z01…/.zip) | extract | store, deflate — the zip reader, over the joined parts | 5 generated sets, adjudicated 4 ways (source tree, `unar`, us split, us unsplit) | 12–13 KB¶ | full |
 | StuffIt X (.sitx) | detect only | — | — | — | — |
 | DiskDoubler (DD, DDAR, DDA2) | detect only | — | 4 sniffed | — | — |
 | Now Compress | detect only | — | 1 sniffed | — | — |
@@ -130,6 +130,33 @@ StuffIt classic peaks are unchanged because none of them is method-2 bound.
 On-Mac figures agree with Linux to a constant 32 B of shell overhead. See
 DECISIONS.md for why the table is sized once rather than grown.
 
+¶ **The zip peak lost its 66,000 B floor on 2026-08-09.** Every zip used
+to allocate the whole span an end-of-central-directory record could
+occupy and scan it in memory; it is now scanned backwards through a
+515-byte window on the stack, which is what a segmented set needed
+anyway — a 66,000-byte read from the end of one spans two parts and
+costs a disk swap to satisfy. The peak is now the 12,288 B decode
+buffer, plus a deflate window where there is one, plus the central
+directory, which is read once so that walking it does not interleave
+with reading entry data:
+
+| fixture | was | now |
+|---|---|---|
+| `4acalc.zip` | 12,288 | 12,493 |
+| `4alnch11.zip` | 41,702 | 12,554 |
+| `derived-MUSFMT10.ZIP` | 53,892 | 53,892 |
+| `synth-exo-zip-deflate.zip` | 52,216 | 52,551 |
+| `synth-exo-zip-store.zip` | 12,288 | 12,623 |
+
+A large directory can therefore cost more than it used to on a small
+archive — a few hundred bytes here, and unbounded in principle at 46
+bytes plus a name per entry. That is why the directory buffer is
+optional: when the allocation fails, the reader goes back to fetching
+one record at a time and produces the same bytes more slowly, which
+`ci.sh` checks by aiming a budget one byte under the run's own peak
+(TESTING.md). The bound is the caller's budget, never a constant chosen
+in the decoder.
+
 ‖ **Method 13's LZSS window is sized from the entry, not from the format's
 64 KB.** MEASURED 2026-08-06; an instrumented run over the whole corpus counted
 **0 back-references past produced output**, which is what licenses it
@@ -203,25 +230,29 @@ signature checks removed) fails exactly the suite's *wrong order* and
 need splitting. Such a file says "disk 0", needs no joining, and reads
 as an ordinary zip — it sniffed as *unknown* before 2026-08-09.
 
-The join is **not** read forward, and one crossing of that is the
-format's doing (the directory is at the end) while the rest is this
-implementation's — a prepass that measures every part, and a directory
-walk interleaved with the data reads. Part opens (backward), measured,
-beside the floor computed from each archive's own directory
+The join is **not** read forward — the directory is at the end — but it
+costs exactly one backward crossing, which is the floor the format
+allows. Part opens (backward), measured, beside the floor each
+archive's own directory permits; `run_segments.py` computes that floor
+independently and requires the two to be equal, so this cannot drift
 (DECISIONS.md 2026-08-09):
 
-| case | parts | as built | floor |
-|---|---|---|---|
-| `zstored` | 5 | 22 (7 back) | 6 (1 back) |
-| `zdeflate` | 4 | 18 (6) | 5 (1) |
-| `znested` | 3 | 14 (5) | 4 (1) |
-| `zmany` | 12 | 49 (14) | 12 (1) |
+| case | parts | measured = floor |
+|---|---|---|
+| `zstored` | 5 | 6 opens, 1 backward |
+| `zdeflate` | 4 | 5, 1 |
+| `znested` | 3 | 4, 1 |
+| `zmany` | 12 | 14, 2 |
 
-Peak heap 66,000 B, unchanged from a single-file zip: the EOCD tail
-buffer dominates and the joiner adds only the caller's ~1.1 KB scratch.
-Bisected, so the figure is a requirement rather than an observation —
-`--budget 66000` extracts fully and `65999` refuses cleanly with
-`UNC_ERR_MEM`, having opened the parts to measure them first.
+`zmany` needs two because its central directory begins on part 11 and
+crosses into part 12; where the directory sits is part of the floor.
+
+Peak heap **12.4–13.0 KB** across those cases: the 12,288 B decode
+buffer plus the central directory, which is read once into memory.
+When that allocation does not fit the budget the reader falls back to
+fetching one directory record at a time — same bytes out, at 16 opens
+instead of 6 — so the bound is the allocator's rather than a constant
+chosen here. Both paths are exercised in `ci.sh`.
 
 ### StuffIt segments on a real emulated Mac Plus (System 6.0.8, 2026-08-08)
 
@@ -433,7 +464,7 @@ On-Mac engine peak heap (high-water mark) by format, matching the Linux
 | MacBinary / BinHex / Tar | 8 KB |
 | PackIt | 9 KB |
 | Compact Pro | 19 KB |
-| Zip | 12–65 KB |
+| Zip | 12–53 KB (re-measured 2026-08-09, was 12–65: see ¶) |
 | Gzip | 51 KB |
 | StuffIt classic | 19–72 KB‖ |
 | Unix compress (.Z) | 15–219 KB§ |

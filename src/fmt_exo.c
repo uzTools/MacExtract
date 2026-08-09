@@ -444,28 +444,43 @@ int unc_zip_probe(const uint8_t *head, int32_t len)
            head[6] == 3 && head[7] == 4;
 }
 
-/* Resolve a (part, offset within that part) pair — how a spanned zip
- * addresses everything — to an offset in the stream being read.
+/* A zip stores every address as (part, offset within that part). For an
+ * archive in one file the part is always 0 and the offset is absolute,
+ * so these two make the whole reader indifferent to which it has: it
+ * positions, then reads forward, and a segmented set rolls into its
+ * next part on its own.
  *
- * Without a map there is only one part, so the offset already is the
- * answer; a non-zero part number then means the caller was handed one
- * member of a set and nothing else, which is not a corrupt archive but
- * an incomplete one. */
-static int zip_at(UncCtx *c, uint32_t part0, uint32_t off, uint32_t *out)
+ * Which is why nothing here ever needs a part's SIZE, or a table of
+ * them. That was not true of the first version, and the table cost a
+ * pass over the whole set to build (DECISIONS.md 2026-08-09). */
+static int zip_seek(UncCtx *c, uint32_t part0, uint32_t off)
 {
-    uint32_t base;
-
     if (!c->segmap) {
+        /* A part number with no set behind it: the caller was handed
+         * one member and nothing else. Not corrupt — incomplete. */
         if (part0 != 0) return UNC_ERR_SEGMENTED;
-        *out = off;
-        return UNC_OK;
+        return c->io->seek(c->io->ctx, off) < 0 ? UNC_ERR_IO : UNC_OK;
     }
     if (part0 >= 0xFFFFu) return UNC_ERR_UNSUPPORTED;   /* zip64 */
-    base = c->segmap->base(c->segmap->ctx, (int)part0 + 1);
-    if (base == UNC_SIZE_UNKNOWN) return UNC_ERR_CORRUPT;
-    if (base + off < base) return UNC_ERR_CORRUPT;
-    *out = base + off;
-    return UNC_OK;
+    return c->segmap->seek_part(c->segmap->ctx, (int)part0 + 1, off);
+}
+
+static int zip_skip(UncCtx *c, uint32_t n)
+{
+    if (!c->segmap) return unc_skip(c->io, n);
+    return c->segmap->skip(c->segmap->ctx, n);
+}
+
+/* The EOCD scanner's reader. For a segmented set the record is in the
+ * LAST part, so offsets here are within that part. */
+typedef struct { UncCtx *c; uint32_t part0; } ZipScan;
+
+static int zip_scan_read(void *ctx, uint32_t off, void *buf, int32_t len)
+{
+    ZipScan *s = (ZipScan *)ctx;
+    int err = zip_seek(s->c, s->part0, off);
+    if (err != UNC_OK) return err;
+    return unc_read_full(s->c->io, buf, len);
 }
 
 static int zip_emit(void *ctx, const uint8_t *p, int32_t n)
@@ -475,103 +490,137 @@ static int zip_emit(void *ctx, const uint8_t *p, int32_t n)
 
 int unc_zip_extract(UncCtx *c)
 {
-    uint32_t fsize, scan, eocd = 0;
-    uint8_t *tail = NULL, *iobuf = NULL, *obuf;
+    uint32_t eocd = 0, scanend;
+    uint8_t *iobuf = NULL, *obuf, *cdbuf = NULL;
     uint32_t iocap = 4096, ocap = 8192;
-    uint32_t nentries, cdoffs, cpos, disknum, cddisk;
+    uint32_t nentries, cdoffs, cdsize, cdrel, disknum, cddisk;
+    uint32_t lastpart0 = 0;
+    uint8_t eo[22];
     uint8_t ce[46];
-    int found = 0;
+    ZipScan scan;
     uint32_t i;
     int err = UNC_OK;
 
-    fsize = c->io->size(c->io->ctx);
-    if (fsize == UNC_SIZE_UNKNOWN || fsize < 22) return UNC_ERR_FORMAT;
+    /* Where the end-of-central-directory record may be. A whole archive
+     * ends where the file does; a segmented one ends where its LAST
+     * part does, which is where a zip writes the record. Neither needs
+     * to know how big the set is altogether. */
+    if (c->segmap) {
+        lastpart0 = (uint32_t)c->segmap->nparts - 1u;
+        scanend = c->segmap->part_size(c->segmap->ctx, c->segmap->nparts);
+    } else {
+        scanend = c->io->size(c->io->ctx);
+    }
+    if (scanend == UNC_SIZE_UNKNOWN || scanend < 22) return UNC_ERR_FORMAT;
 
-    /* Find the end-of-central-directory record in the last 66,000
-     * bytes (EOCD is 22 bytes + up to 65,535 of comment). */
-    scan = fsize < 66000 ? fsize : 66000;
-    tail = (uint8_t *)unc_alloc(c->al, scan);
-    if (!tail) return UNC_ERR_MEM;
-    if (unc_read_at(c->io, fsize - scan, tail, (int32_t)scan) != UNC_OK) {
-        unc_free(c->al, tail);
+    scan.c = c;
+    scan.part0 = lastpart0;
+    if (unc_zip_scan_eocd(&scan, zip_scan_read, scanend, &eocd) != UNC_OK)
         return UNC_ERR_FORMAT;
-    }
-    for (i = scan - 22; ; i--) {
-        if (tail[i] == 'P' && tail[i + 1] == 'K' &&
-            tail[i + 2] == 5 && tail[i + 3] == 6) {
-            eocd = i;
-            found = 1;
-            break;
-        }
-        if (i == 0) break;
-    }
-    if (!found) { unc_free(c->al, tail); return UNC_ERR_FORMAT; }
+    err = zip_seek(c, lastpart0, eocd);
+    if (err != UNC_OK) return err;
+    if (unc_read_full(c->io, eo, 22) != UNC_OK) return UNC_ERR_FORMAT;
 
     /* "number of this disk" and "disk where the central directory
      * starts": 0 and 0 for an archive in one file. */
-    disknum  = unc_get_u16le(tail + eocd + 4);
-    cddisk   = unc_get_u16le(tail + eocd + 6);
-    nentries = unc_get_u16le(tail + eocd + 10);
-    cdoffs   = unc_get_u32le(tail + eocd + 16);
-    unc_free(c->al, tail);
+    disknum  = unc_get_u16le(eo + 4);
+    cddisk   = unc_get_u16le(eo + 6);
+    nentries = unc_get_u16le(eo + 10);
+    cdsize   = unc_get_u32le(eo + 12);
+    cdoffs   = unc_get_u32le(eo + 16);
 
-    /* The set the archive says it is must be the set that was joined.
-     * This is the check that catches parts assembled in the wrong order
-     * or from the wrong archive, because filenames put them there and a
-     * filename is evidence of nothing (see unclassic.h). */
+    /* The set the archive says it is must be the set that was assembled.
+     * This is the check that catches parts put in the wrong order or
+     * taken from the wrong archive, because filenames put them there and
+     * a filename is evidence of nothing (see unclassic.h). */
     if (!c->segmap) {
         if (disknum != 0) return UNC_ERR_SEGMENTED;
     } else if ((uint32_t)c->segmap->nparts != disknum + 1) {
         return UNC_ERR_CORRUPT;
     }
 
-    err = zip_at(c, cddisk, cdoffs, &cpos);
-    if (err != UNC_OK) return err;
-
     iobuf = (uint8_t *)unc_alloc(c->al, iocap + ocap);
     if (!iobuf) return UNC_ERR_MEM;
     obuf = iobuf + iocap;
 
+    /* Read the whole central directory once, so that walking it does not
+     * interleave with reading entry data. On one file that saves seeks;
+     * across a set it saves going back to the last part between every
+     * entry, which is a disk swap each (DECISIONS.md 2026-08-09).
+     *
+     * The bound is the allocator's, not a number invented here: if the
+     * directory does not fit in the budget, the reader falls back to
+     * fetching one record at a time, exactly as it used to. */
+    if (cdsize && cdsize <= 0x7FFFFFFFu) {
+        cdbuf = (uint8_t *)unc_alloc(c->al, cdsize);
+        if (cdbuf) {
+            if (zip_seek(c, cddisk, cdoffs) != UNC_OK ||
+                unc_read_full(c->io, cdbuf, (int32_t)cdsize) != UNC_OK) {
+                unc_free(c->al, cdbuf);
+                unc_free(c->al, iobuf);
+                return UNC_ERR_TRUNCATED;
+            }
+        }
+    }
+
+    cdrel = 0;                    /* bytes into the directory, either way */
     for (i = 0; i < nentries; i++) {
         uint32_t method, flags, wantcrc, csize, usize;
         uint32_t namelen, extralen, commentlen, lhoffs, startdisk;
-        uint8_t name[256];
+        const uint8_t *cd, *namep;
+        uint8_t namebuf[256];
         uint32_t nread;
         UncEntryInfo e;
         int sret, est;
 
-        if (unc_read_at(c->io, cpos, ce, 46) != UNC_OK) {
-            err = UNC_ERR_TRUNCATED;
-            break;
+        if (cdbuf) {
+            if (cdrel + 46 > cdsize) { err = UNC_ERR_TRUNCATED; break; }
+            cd = cdbuf + cdrel;
+        } else {
+            if (zip_seek(c, cddisk, cdoffs + cdrel) != UNC_OK ||
+                unc_read_full(c->io, ce, 46) != UNC_OK) {
+                err = UNC_ERR_TRUNCATED;
+                break;
+            }
+            cd = ce;
         }
-        if (!(ce[0] == 'P' && ce[1] == 'K' && ce[2] == 1 && ce[3] == 2)) {
+        if (!(cd[0] == 'P' && cd[1] == 'K' && cd[2] == 1 && cd[3] == 2)) {
             err = UNC_ERR_CORRUPT;
             break;
         }
-        flags      = unc_get_u16le(ce + 8);
-        method     = unc_get_u16le(ce + 10);
-        wantcrc    = unc_get_u32le(ce + 16);
-        csize      = unc_get_u32le(ce + 20);
-        usize      = unc_get_u32le(ce + 24);
-        namelen    = unc_get_u16le(ce + 28);
-        extralen   = unc_get_u16le(ce + 30);
-        commentlen = unc_get_u16le(ce + 32);
-        startdisk  = unc_get_u16le(ce + 34);   /* "disk number start" */
-        lhoffs     = unc_get_u32le(ce + 42);   /* relative to that disk */
+        flags      = unc_get_u16le(cd + 8);
+        method     = unc_get_u16le(cd + 10);
+        wantcrc    = unc_get_u32le(cd + 16);
+        csize      = unc_get_u32le(cd + 20);
+        usize      = unc_get_u32le(cd + 24);
+        namelen    = unc_get_u16le(cd + 28);
+        extralen   = unc_get_u16le(cd + 30);
+        commentlen = unc_get_u16le(cd + 32);
+        startdisk  = unc_get_u16le(cd + 34);   /* "disk number start" */
+        lhoffs     = unc_get_u32le(cd + 42);   /* relative to that disk */
 
-        nread = namelen < sizeof name ? namelen : (uint32_t)sizeof name;
-        if (nread &&
-            unc_read_at(c->io, cpos + 46, name, (int32_t)nread) != UNC_OK) {
-            err = UNC_ERR_TRUNCATED;
-            break;
+        /* The name is read into `namebuf` when the record came off the
+         * stream, and pointed at in place when the directory is in
+         * memory — no copy, and no libc in the engine either way. */
+        nread = namelen < sizeof namebuf ? namelen : (uint32_t)sizeof namebuf;
+        if (cdbuf) {
+            if (cdrel + 46 + nread > cdsize) { err = UNC_ERR_TRUNCATED; break; }
+            namep = cdbuf + cdrel + 46;
+        } else {
+            namep = namebuf;
+            if (nread && unc_read_full(c->io, namebuf, (int32_t)nread)
+                != UNC_OK) {
+                err = UNC_ERR_TRUNCATED;
+                break;
+            }
         }
 
         unc_entry_clear(&e);
         {
             uint32_t plen = nread;
-            int isdir = plen > 0 && name[plen - 1] == '/';
-            while (plen > 0 && name[plen - 1] == '/') plen--;
-            unc_entry_set_path(&e, name, plen);   /* '/' native, raw bytes */
+            int isdir = plen > 0 && namep[plen - 1] == '/';
+            while (plen > 0 && namep[plen - 1] == '/') plen--;
+            unc_entry_set_path(&e, namep, plen);  /* '/' native, raw bytes */
             e.is_dir = (uint8_t)isdir;
         }
         e.data_size = e.is_dir ? 0 : usize;
@@ -598,23 +647,26 @@ int unc_zip_extract(UncCtx *c)
                     /* Local header gives the true data offset (its
                      * name/extra lengths may differ from the CD's). */
                     uint8_t lh[30];
-                    uint32_t lhat;
-                    est = zip_at(c, startdisk, lhoffs, &lhat);
+                    est = zip_seek(c, startdisk, lhoffs);
                     if (est != UNC_OK) {
                         /* fall through to end_entry with this status */
-                    } else if (unc_read_at(c->io, lhat, lh, 30) != UNC_OK ||
+                    } else if (unc_read_full(c->io, lh, 30) != UNC_OK ||
                         !(lh[0] == 'P' && lh[1] == 'K' && lh[2] == 3 &&
                           lh[3] == 4)) {
                         est = UNC_ERR_CORRUPT;
                     } else {
-                        uint32_t dataat = lhat + 30 +
-                            unc_get_u16le(lh + 26) + unc_get_u16le(lh + 28);
                         UncBufIn in;
                         uint32_t crc = 0xFFFFFFFFu, produced = 0;
                         ExoSink es;
                         es.c = c;
-                        if (c->io->seek(c->io->ctx, dataat) < 0) {
-                            est = UNC_ERR_IO;
+                        /* The data follows the header's own name and
+                         * extra fields; skipping forward rather than
+                         * seeking is what lets an entry begin in one
+                         * part and continue in the next. */
+                        est = zip_skip(c, (uint32_t)unc_get_u16le(lh + 26) +
+                                          unc_get_u16le(lh + 28));
+                        if (est != UNC_OK) {
+                            /* fall through */
                         } else if (method == 0) {
                             uint32_t left = usize;
                             est = UNC_OK;
@@ -662,9 +714,10 @@ int unc_zip_extract(UncCtx *c)
             }
         }
 
-        cpos += 46 + namelen + extralen + commentlen;
+        cdrel += 46 + namelen + extralen + commentlen;
     }
 
+    unc_free(c->al, cdbuf);
     unc_free(c->al, iobuf);
     return err;
 }

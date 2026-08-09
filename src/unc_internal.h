@@ -300,19 +300,34 @@ void unc_entry_path_append(UncEntryInfo *e, const uint8_t *comp, uint32_t len);
 /* offset 0) and an extractor.                                        */
 /* ------------------------------------------------------------------ */
 
-/* Where the parts of a segmented archive sit in the joined stream.
+/* Reading a segmented archive by the addresses it actually stores.
  *
  * Only formats that address themselves as (part, offset within that
  * part) need this — in practice zip, whose central directory stores
  * both numbers per entry. NULL for an archive read out of one file,
  * which is every other case; a decoder that finds a non-zero part
  * number with no map in hand is looking at a set it was handed one
- * member of, and should say UNC_ERR_SEGMENTED rather than guess. */
+ * member of, and should say UNC_ERR_SEGMENTED rather than guess.
+ *
+ * The pairs are kept as pairs. An earlier version flattened the set
+ * into one address space and translated, which is the obvious thing to
+ * do and costs a pass over every part to learn the sizes that make the
+ * translation possible — on a one-drive Mac, a disk swap each, before
+ * a byte is extracted. Keeping the pairs needs no sizes at all:
+ * position, read, and roll into the next part at EOF (DECISIONS.md
+ * 2026-08-09). */
 typedef struct UncSegMap {
     void     *ctx;
-    /* Logical offset where part `part` (1-based) begins, or
-     * UNC_SIZE_UNKNOWN if that part is not in the set. */
-    uint32_t (*base)(void *ctx, int part);
+    /* Position the stream at `off` within part `part` (1-based). An
+     * `off` past that part's end rolls into the following ones, so a
+     * caller may skip forward without knowing where the cuts fell.
+     * Reads afterwards cross part boundaries invisibly. */
+    int      (*seek_part)(void *ctx, int part, uint32_t off);
+    /* Skip `n` bytes forward from wherever the stream is now. */
+    int      (*skip)(void *ctx, uint32_t n);
+    /* Length of part `part`, opening it if that is the only way to
+     * tell. UNC_SIZE_UNKNOWN if it cannot be had. */
+    uint32_t (*part_size)(void *ctx, int part);
     uint16_t  nparts;
 } UncSegMap;
 
@@ -352,6 +367,14 @@ int unc_sitseg_describe(UncIO *io, UncSegmentDesc *desc);
 int unc_zipseg_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_zipseg_extract(UncCtx *c);
 int unc_zipseg_describe(UncIO *io, UncSegmentDesc *desc);
+
+/* The one backwards scan for a zip's end-of-central-directory record,
+ * shared by the describe path and both extraction paths. Reads through
+ * `rd` so the caller decides what "offset" means — a position in a file
+ * for a whole archive, a position in the LAST PART for a segmented one.
+ * `end` is one past the last byte that may be scanned. */
+typedef int (*UncZipReadAt)(void *ctx, uint32_t off, void *buf, int32_t len);
+int unc_zip_scan_eocd(void *ctx, UncZipReadAt rd, uint32_t end, uint32_t *at);
 
 /* One StuffIt fork: seek to `at`, decode `complen` -> `outlen` bytes
  * with the given method, verify the CRC-16/ARC (`wantcrc`; method 15

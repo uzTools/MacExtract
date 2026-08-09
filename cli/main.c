@@ -690,6 +690,22 @@ static void seg_release(void *ctx, UncIO *io)
     if (h->open_io.f) { fclose(h->open_io.f); h->open_io.f = NULL; }
 }
 
+/* A part's length without opening it. On a filesystem that is a stat,
+ * so the engine can put a denominator on the progress callback for
+ * free; a host reading floppies would leave this NULL rather than send
+ * the user hunting for disks to answer a cosmetic question. */
+static uint32_t seg_size_of(void *ctx, const UncSegmentDesc *desc, int part)
+{
+    SegHost *h = (SegHost *)ctx;
+    struct stat st;
+
+    (void)desc;
+    if (part < 1 || part > UNC_SEG_MAX_PARTS || !h->path[part])
+        return UNC_SIZE_UNKNOWN;
+    if (stat(h->path[part], &st) != 0) return UNC_SIZE_UNKNOWN;
+    return (uint32_t)st.st_size;
+}
+
 /* ------------------------------------------------------------------ */
 /* main                                                               */
 /* ------------------------------------------------------------------ */
@@ -986,9 +1002,11 @@ nextlayer:
             seg_scan_dir(&seg, file);
         }
 
+        memset(&vs, 0, sizeof vs);   /* optional members are NULL ones */
         vs.ctx = &seg;
         vs.need = seg_need;
         vs.release = seg_release;
+        vs.size = seg_size_of;
 
         scratch = malloc(unc_segment_scratch_size());
         if (!scratch) {

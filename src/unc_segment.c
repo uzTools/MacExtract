@@ -14,14 +14,26 @@
  * a backward seek can cost a re-open, and why the joiner counts those
  * crossings — see unc_segment_stats() and DECISIONS.md.
  *
- * The two schemes end the walk differently, and that is the only place
- * they differ here. A StuffIt set declares its payload TOTAL in part 1,
- * so the walk stops when that many bytes have been seen and the parts
- * are opened lazily, strictly forward. A spanned zip declares a part
- * COUNT instead, and its reader wants the end of the stream first, so
- * every part is opened once up front purely to be measured. Which is
- * not an inefficiency to remove: the sizes ARE the address map, and
- * without them a (part, offset) pair cannot be resolved at all.
+ * There are two modes, and which one a scheme wants follows from how
+ * it addresses itself.
+ *
+ *   FLAT (StuffIt). The payload is one byte stream that happens to be
+ *   cut up, and nothing inside it refers to a part. So the parts are
+ *   presented as one address space, `start[]` maps an offset to a part,
+ *   and it is discovered by opening parts in order — start[i] is known
+ *   only once 1..i-1 have been seen. The set declares its payload TOTAL
+ *   in part 1, so the walk knows when to stop.
+ *
+ *   ADDRESSED (spanned zip). The archive already stores (part, offset)
+ *   pairs, so they are kept as pairs: position at one, read, and roll
+ *   into the next part at EOF. No `start[]`, no sizes, no pass over the
+ *   set to learn them. The set declares a part COUNT instead of a size,
+ *   which is all this mode needs.
+ *
+ * Flattening the addressed case was the first implementation and it
+ * cost a pass over every part before extraction began, to build a table
+ * that only existed to undo the pairs the format had already given us
+ * — on a one-drive Mac, a disk swap each (DECISIONS.md 2026-08-09).
  *
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
@@ -34,20 +46,24 @@ typedef struct SegJoin {
 
     UncIO    cur;                  /* stream of the open part, if any */
     int      curpart;              /* 0 = none open */
+    uint32_t cursize;              /* length of that part */
 
-    /* start[i] = logical offset of part i's payload, 1-based.
-     * Valid for i <= known; start[known] is the total payload seen so
-     * far, i.e. where the next unopened part would begin. */
+    int      addressed;            /* mode: see the header comment */
+
+    /* FLAT mode only. start[i] = logical offset of part i's payload,
+     * 1-based. Valid for i <= known; start[known] is the total payload
+     * seen so far, i.e. where the next unopened part would begin. */
     uint32_t start[UNC_SEG_MAX_PARTS + 2];
     int      known;
 
-    /* Where the walk stops. Exactly one of these is authoritative:
-     * `total` for a scheme that declares its payload size, `last` for
-     * one that declares a part count (and then `total` is measured). */
+    /* Where the walk stops: `total` in flat mode, `last` in addressed
+     * mode (where the total is nobody's business and often unknowable
+     * — it would take seeing every part). */
     uint32_t total;
     int      last;                 /* highest part that may exist */
 
-    uint32_t pos;                  /* logical read cursor */
+    uint32_t off;                  /* ADDRESSED: cursor within curpart */
+    uint32_t pos;                  /* FLAT: logical read cursor */
     uint32_t switches;             /* parts opened */
     uint32_t backward;             /* opens forced by a backward seek */
     int      err;                  /* sticky: UNC_ERR_SEGMENTED etc. */
@@ -94,13 +110,25 @@ static int seg_open(SegJoin *j, int part)
 
     if (j->curpart == part) return UNC_OK;
     if (part < 1 || part > j->last) return UNC_ERR_SEGMENTED;
-    if (part > j->known) return UNC_ERR_CORRUPT;   /* start[] not derived yet */
+    /* Flat mode can only reach a part whose predecessors have been
+     * measured; addressed mode may open any part in the set, which is
+     * the whole reason it exists. */
+    if (!j->addressed && part > j->known) return UNC_ERR_CORRUPT;
 
     if (j->curpart && part < j->curpart) j->backward++;
     seg_release(j);
 
     err = j->vs->need(j->vs->ctx, j->desc, part, &j->cur);
-    if (err != UNC_OK) return err;
+    if (err != UNC_OK) {
+        /* A part the host could not produce is the ARCHIVE's verdict,
+         * not the entry's, however the caller happened to ask for it.
+         * Recorded here rather than at each call site: addressed mode
+         * reaches this through three of them, and the flat reader's
+         * conversion to EOF would otherwise be the only path that
+         * remembered. */
+        if (err == UNC_ERR_SEGMENTED) j->err = err;
+        return err;
+    }
     j->curpart = part;
     j->switches++;
 
@@ -111,6 +139,8 @@ static int seg_open(SegJoin *j, int part)
         seg_release(j);
         return UNC_ERR_CORRUPT;
     }
+    j->cursize = size;
+    if (j->addressed) return UNC_OK;
     if (part == j->known) {
         uint32_t end = j->start[part] + (size - j->desc->head_len);
         if (end < j->start[part]) { seg_release(j); return UNC_ERR_CORRUPT; }
@@ -144,30 +174,72 @@ static int seg_locate(SegJoin *j, uint32_t at)
     return UNC_ERR_SEGMENTED;
 }
 
-/* Open every part once, in order, so that start[] spans the whole set
- * and the total is known. Only for a scheme that declares a part count
- * instead of a payload size; a declared total needs no such pass and
- * must not pay for one. */
-static int seg_measure(SegJoin *j)
+/* ------------------------------------------------------------------ */
+/* ADDRESSED mode: the (part, offset) pairs the archive itself stores  */
+/* ------------------------------------------------------------------ */
+
+/* Position at `off` within `part`, rolling into later parts when `off`
+ * runs past the end of one. Rolling is what lets a caller skip a
+ * variable-length field — a local header's name and extra — without
+ * knowing whether the skip crosses a cut. */
+static int seg_seek_part(void *ctx, int part, uint32_t off)
 {
-    while (j->known <= j->last) {
-        int err = seg_open(j, j->known);
+    SegJoin *j = (SegJoin *)ctx;
+    int err;
+
+    for (;;) {
+        err = seg_open(j, part);
         if (err != UNC_OK) return err;
+        if (off < j->cursize) break;
+        if (part >= j->last) { j->off = j->cursize; return UNC_OK; }  /* EOF */
+        off -= j->cursize;
+        part++;
     }
-    j->total = j->start[j->last + 1];
+    j->off = off;
     return UNC_OK;
 }
 
-/* Logical offset where part `part` begins, for a reader that addresses
- * the stream as (part, offset within it). UNC_SIZE_UNKNOWN if the part
- * is not in the set — which for a set assembled by filename is a real
- * possibility and must not read as offset 0. */
-static uint32_t seg_base(void *ctx, int part)
+static int seg_skip_fwd(void *ctx, uint32_t n)
 {
-    const SegJoin *j = (const SegJoin *)ctx;
-    if (part < 1 || part > j->last || part >= j->known)
-        return UNC_SIZE_UNKNOWN;
-    return j->start[part];
+    SegJoin *j = (SegJoin *)ctx;
+    if (!j->curpart) return UNC_ERR_IO;
+    if (j->off + n < j->off) return UNC_ERR_CORRUPT;   /* 32-bit wrap */
+    return seg_seek_part(j, j->curpart, j->off + n);
+}
+
+static uint32_t seg_part_size(void *ctx, int part)
+{
+    SegJoin *j = (SegJoin *)ctx;
+    if (seg_open(j, part) != UNC_OK) return UNC_SIZE_UNKNOWN;
+    return j->cursize;
+}
+
+static int32_t seg_read_addressed(SegJoin *j, void *buf, int32_t len)
+{
+    uint32_t avail;
+    int32_t r;
+
+    if (!j->curpart) { j->err = UNC_ERR_IO; return -1; }
+
+    /* At the end of this part: step into the next one. A short read is
+     * allowed by the UncIO contract, so this never has to stitch two
+     * parts together within one call. */
+    while (j->off >= j->cursize) {
+        int err;
+        if (j->curpart >= j->last) return 0;           /* end of the set */
+        err = seg_open(j, j->curpart + 1);
+        if (err == UNC_ERR_SEGMENTED) { j->err = err; return 0; }
+        if (err != UNC_OK) { j->err = err; return -1; }
+        j->off = 0;
+    }
+
+    avail = j->cursize - j->off;
+    if ((uint32_t)len > avail) len = (int32_t)avail;
+    if (j->cur.seek(j->cur.ctx, j->off) < 0) { j->err = UNC_ERR_IO; return -1; }
+    r = j->cur.read(j->cur.ctx, buf, len);
+    if (r < 0) { j->err = UNC_ERR_IO; return -1; }
+    j->off += (uint32_t)r;
+    return r;
 }
 
 static int32_t seg_read(void *ctx, void *buf, int32_t len)
@@ -178,6 +250,7 @@ static int32_t seg_read(void *ctx, void *buf, int32_t len)
     int err;
 
     if (len <= 0) return 0;
+    if (j->addressed) return seg_read_addressed(j, buf, len);
     if (j->pos >= j->total) return 0;                /* logical EOF */
 
     err = seg_locate(j, j->pos);
@@ -211,12 +284,42 @@ static int32_t seg_read(void *ctx, void *buf, int32_t len)
 static int seg_seek(void *ctx, uint32_t pos)
 {
     SegJoin *j = (SegJoin *)ctx;
+    /* Addressed mode has no flat address space to seek within, and a
+     * caller that thinks it does would read the wrong bytes silently.
+     * Refuse instead: the reader for this mode positions itself through
+     * UncSegMap and never comes here. */
+    if (j->addressed) return -1;
     j->pos = pos;               /* lazy: the next read locates the part */
     return 0;
 }
 
-static uint32_t seg_tell(void *ctx)  { return ((SegJoin *)ctx)->pos; }
+static uint32_t seg_tell(void *ctx)
+{
+    const SegJoin *j = (const SegJoin *)ctx;
+    return j->addressed ? j->off : j->pos;
+}
+
 static uint32_t seg_size(void *ctx)  { return ((SegJoin *)ctx)->total; }
+
+/* Total bytes across the set, if the host can say so for nothing.
+ * Used only to give the progress callback a denominator: on a machine
+ * with one drive the answer is genuinely unknowable until every disk
+ * has been seen, and finding out is exactly the pass this mode exists
+ * to avoid. UNC_SIZE_UNKNOWN is therefore a normal answer, not a
+ * failure. */
+static uint32_t seg_total_if_free(SegJoin *j)
+{
+    uint32_t sum = 0;
+    int p;
+
+    if (!j->vs->size) return UNC_SIZE_UNKNOWN;
+    for (p = 1; p <= j->last; p++) {
+        uint32_t s = j->vs->size(j->vs->ctx, j->desc, p);
+        if (s == UNC_SIZE_UNKNOWN || sum + s < sum) return UNC_SIZE_UNKNOWN;
+        sum += s;
+    }
+    return sum;
+}
 
 int unc_extract_segments(const UncSegmentDesc *desc, UncVolumeSource *vs,
                          void *scratch, UncSink *sink, UncAlloc *al,
@@ -239,10 +342,13 @@ int unc_extract_segments(const UncSegmentDesc *desc, UncVolumeSource *vs,
     j->desc = desc;
     j->vs = vs;
     j->curpart = 0;
+    j->cursize = 0;
+    j->addressed = (desc->scheme == UNC_FORMAT_ZIPSEG);
     j->start[1] = 0;
     j->known = 1;
     j->total = desc->total;
     j->last = desc->nparts ? (int)desc->nparts : UNC_SEG_MAX_PARTS;
+    j->off = 0;
     j->pos = 0;
     j->switches = 0;
     j->backward = 0;
@@ -253,23 +359,23 @@ int unc_extract_segments(const UncSegmentDesc *desc, UncVolumeSource *vs,
     j->io.tell = seg_tell;
     j->io.size = seg_size;
 
-    if (j->total == UNC_SIZE_UNKNOWN) {
-        ret = seg_measure(j);
-        if (ret != UNC_OK) { seg_release(j); return ret; }
-    }
+    if (j->addressed && j->total == UNC_SIZE_UNKNOWN)
+        j->total = seg_total_if_free(j);
 
     map.ctx = j;
-    map.base = seg_base;
+    map.seek_part = seg_seek_part;
+    map.skip = seg_skip_fwd;
+    map.part_size = seg_part_size;
     map.nparts = (uint16_t)j->last;
 
     c.io = &j->io;
     c.sink = sink;
     c.al = al;
-    /* Only for a scheme that declares a part count, because only then
-     * is `nparts` a fact rather than the ceiling the walk happens to
-     * have been given. A StuffIt payload is a plain byte stream and
-     * nothing reading it asks which part a byte came from. */
-    c.segmap = desc->nparts ? &map : NULL;
+    /* Only in addressed mode, because only there is `nparts` a fact
+     * rather than the ceiling the walk happens to have been given. A
+     * StuffIt payload is a plain byte stream and nothing reading it
+     * asks which part a byte came from. */
+    c.segmap = j->addressed ? &map : NULL;
     c.ps.prog = prog;
     c.ps.total = j->total;
     c.ps.done = 0;

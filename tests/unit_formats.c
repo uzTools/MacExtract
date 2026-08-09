@@ -981,6 +981,7 @@ static void test_sitseg(void)
         sp.part[1] = p2; sp.len[1] = sizeof p2;
         sp.part[2] = p3; sp.len[2] = sizeof p3;
         sp.nparts = 3;
+        memset(&vs, 0, sizeof vs);   /* optional members are NULL ones */
         vs.ctx = &sp; vs.need = segsrc_need; vs.release = NULL;
 
         scratch = malloc(unc_segment_scratch_size());
@@ -1142,6 +1143,7 @@ static void test_zipseg(void)
         sp.part[0] = p1; sp.len[0] = p1len;
         sp.part[1] = p2; sp.len[1] = p2len;
         sp.nparts = 2;
+        memset(&vs, 0, sizeof vs);   /* optional members are NULL ones */
         vs.ctx = &sp; vs.need = segsrc_need; vs.release = NULL;
 
         scratch = malloc(unc_segment_scratch_size());
@@ -1152,14 +1154,18 @@ static void test_zipseg(void)
               == UNC_OK);
         CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
         CHECK(cap.dlen[0] == n && memcmp(cap.data[0], payload, n) == 0);
-        /* Every part is opened once to be measured before anything is
-         * read, so unlike a StuffIt join this one does cross backwards.
-         * Recorded rather than required to be zero: that property is a
-         * fact about the StuffIt layout, not about segmentation. */
+        /* The floor, and it is exact rather than a bound: part 2 for the
+         * directory, part 1 for the entry's data, then part 2 again
+         * because this entry deliberately spans the cut. One backward
+         * crossing is what the layout costs and all it costs — a reader
+         * that opened every part to measure it first reports 5 here
+         * (DECISIONS.md 2026-08-09). */
         unc_segment_stats(scratch, &opens, &back);
-        CHECK(opens >= 2 && back >= 1);
+        CHECK(opens == 3);
+        CHECK(back == 1);
 
-        /* A part the host cannot produce. */
+        /* A part the host cannot produce. The entry fails, and the
+         * archive's verdict outranks it. */
         sp.missing = 1;
         cap_make(&sk, &cap);
         CHECK(unc_extract_segments(&desc, &vs, scratch, &sk, &al, NULL, NULL)
@@ -1168,13 +1174,25 @@ static void test_zipseg(void)
 
         /* The set assembled must be the set the archive describes. The
          * host ordered these by filename, so this is the only thing
-         * standing between a wrong guess and a wrong extraction. */
+         * standing between a wrong guess and a wrong extraction. Two
+         * shapes of wrong, and they fail differently:
+         *
+         * a count that disagrees with the record — the real last part
+         * is where it should be, but the set claims one more... */
         desc.nparts = 3;
-        cap_make(&sk, &cap);
         sp.nparts = 3;
-        sp.part[2] = p1; sp.len[2] = p1len;
+        sp.part[2] = p2; sp.len[2] = p2len;
+        cap_make(&sk, &cap);
         CHECK(unc_extract_segments(&desc, &vs, scratch, &sk, &al, NULL, NULL)
               == UNC_ERR_CORRUPT);
+        CHECK(cap.count == 0);
+
+        /* ...and a last part that is not one, which is caught earlier
+         * still, when no directory is found where the format puts it. */
+        sp.part[2] = p1; sp.len[2] = p1len;
+        cap_make(&sk, &cap);
+        CHECK(unc_extract_segments(&desc, &vs, scratch, &sk, &al, NULL, NULL)
+              == UNC_ERR_FORMAT);
         CHECK(cap.count == 0);
         desc.nparts = 2;
         sp.nparts = 2;

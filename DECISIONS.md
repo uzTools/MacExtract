@@ -2354,13 +2354,22 @@ is this implementation's. Part opens (backward), measured on the
 suite's cases beside the floor computed from each archive's own
 directory:
 
-| case | parts | as built | floor |
+| case | parts | first version | now = floor |
 |---|---|---|---|
 | `zstored` | 5 | 22 (7 back) | **6 (1 back)** |
 | `zdeflate` | 4 | 18 (6) | **5 (1)** |
 | `znested` | 3 | 14 (5) | **4 (1)** |
-| `zmany` | 12 | 49 (14) | **12 (1)** |
+| `zmany` | 12 | 49 (14) | **14 (2)** |
 | StuffIt `many12`, for contrast | 12 | 12 (0) | 12 (0) |
+
+`zmany`'s floor is 2 backward crossings, not 1, because its central
+directory begins on part 11 and crosses into part 12: where the
+directory *sits* is part of the floor, and the first version of the
+model left that out and accused the reader of two opens it had no way
+to avoid. **A floor that is too low is not a safe error** — it reads as
+a defect in the thing being measured. `run_segments.py` now computes
+the floor from each archive's own directory and requires equality, so
+neither the reader nor the model can drift alone.
 
 **What is the format's:** exactly one backward crossing. The
 end-of-central-directory record is at the end, so any directory-driven
@@ -2371,27 +2380,62 @@ forward from part 1 instead would cross zero times and is not worth it:
 with flag bit 3 the sizes live in a data descriptor AFTER the data, so
 the reader would be scanning for signatures rather than being told.
 
-**What is ours:** everything else — one open per part before anything is
-read, plus about two per ENTRY, which is why the overshoot tracks entry
-count rather than part count. Two decisions cause it.
-The prepass opens every part before anything is read, because the parts
-are presented as one concatenated stream so `unc_zip_extract` could be
-reused verbatim — and a concatenated stream has to know its own length
-before the EOCD can be found from the end. Then the directory walk is
-interleaved with the data reads, one entry at a time, which costs about
-two opens per entry.
+**What was ours** — everything else, and it came from two decisions,
+both since reversed:
+
+*A prepass over every part.* The parts were presented as one
+concatenated stream so that `unc_zip_extract` could be reused verbatim,
+and a concatenated stream has to know its own length before the record
+at the end can be found. Learning that length means opening every part.
+
+*A directory walk interleaved with the data reads.* One record, then
+its entry's data, then back for the next record — about two opens per
+ENTRY, which is why the overshoot tracked entry count rather than part
+count.
 
 **The correction worth carrying: a joined stream is not the only way to
 read a format that addresses itself by part.** A spanned zip stores
 (part, offset) pairs, so a reader that keeps them as pairs needs no size
-table at all — open that part, seek, read, and on EOF mid-entry continue
-at offset 0 of the next. The sizes are an artifact of flattening the
-set into one address space, and this entry originally called them "the
-address map... not an inefficiency to remove", which was wrong: they are
-the address map only of the representation we chose. Corrected
-2026-08-09 after the claim was questioned and the floor measured.
-Neither cost is visible on Linux; both are the reason the Mac shell
-waits (OPEN_ITEMS.md section 4).
+table at all — position, read, and roll into the next part at EOF. The
+sizes were an artifact of flattening the set into one address space, and
+this entry originally called them "the address map... not an
+inefficiency to remove", which was exactly backwards: they are the
+address map only of the representation we chose. Both are gone
+(`UncSegMap` is now `seek_part` / `skip` / `part_size`, and the joiner
+has an ADDRESSED mode beside the flat one StuffIt still uses), and the
+reader hits the floor on all four cases.
+
+Three things fell out of it that were not the point but are worth
+having. The 66,000-byte tail buffer every zip used to allocate to find
+its directory record is gone, replaced by the 515-byte windowed scan
+`fmt_zipseg.c` already had for the describe path — one scanner now,
+where there were two doing the same job, and zip's peak heap dropped
+accordingly (FORMATS.md ¶). The directory is read once into memory,
+which helps a single-file zip too. And because that allocation can fail,
+the old record-at-a-time walk is kept as the fallback: the bound on it
+is the caller's budget rather than a constant chosen in the decoder,
+which is the same rule the Arsenic block and the LZW table settled on.
+
+**The one cost that had to be checked on the Mac rather than reasoned
+about.** Recognizing the last part of a set means scanning backwards for
+a record that can be 65,557 bytes from the end, and that probe sits
+before most of the others — so on a Mac every archive the first seven
+probes do not claim now pays a backwards scan off a floppy before its
+format is even known. The argument that it is harmless is that the scan
+is bounded by `min(size, 65 KB)` while extraction scales with the whole
+file, so the ratio can only shrink as files grow; the worst shape is
+therefore a LARGE file of the format probed last, which is BinHex.
+Measured at authentic 1x on `macburger-helper.hqx` (306 KB): **132 s**,
+against the 150 s recorded for it before this work (FORMATS.md, "7 MHz
+Mac Plus"). Not visible, and the argument survives its own worst case.
+
+**A caller-allocated struct that grows is a trap.** `UncVolumeSource`
+gained an optional `size` callback here, and every existing caller —
+the CLI, the Mac shell, and two unit tests — was filling the struct
+field by field without zeroing it first, so the new member held whatever
+was on the stack and the engine called it. The CLI segfaulted; **the
+unit tests passed**, which is the part to remember. Callers now zero it
+and the header says to.
 
 **The generator being somebody else's code buys a fourth opinion.**
 `tools/synth_sitsplit.py` writes StuffIt parts by hand because nothing

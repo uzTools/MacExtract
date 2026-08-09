@@ -53,50 +53,67 @@
 
 /* Scan backwards for the end-of-central-directory signature.
  *
- * Deliberately allocation-free: unc_segment_describe() is handed an
- * UncIO and nothing else, and on a 1 MB Mac the alternative — the
- * 66,000-byte tail buffer unc_zip_extract uses — is a large fraction of
- * the heap to spend on a question asked before extraction even starts.
- * A window on the stack keeps this within the 68000 discipline (call
- * depth <= 4 KB), at the cost of re-reading 3 bytes per step.
+ * Deliberately allocation-free. It used to be a 66,000-byte buffer in
+ * unc_zip_extract holding the whole possible tail, which on a 1 MB Mac
+ * is a large fraction of the heap and, for a segmented set, spans two
+ * parts and so costs a disk swap to read. A window on the stack keeps
+ * this within the 68000 discipline (call depth <= 4 KB) at the cost of
+ * re-reading 3 bytes per step, and is now the only such scan in the
+ * engine — the describe path, whole-file extraction and segmented
+ * extraction all come here.
+ *
+ * `end` is one past the last byte that may be scanned: the file size
+ * for a whole archive, the LAST PART's size for a segmented one, since
+ * that is where a zip writes the record.
  *
  * Returns UNC_OK with *at set, or UNC_ERR_FORMAT if there is none. */
-static int zs_find_eocd(UncIO *io, uint32_t fsize, uint32_t *at)
+int unc_zip_scan_eocd(void *ctx, UncZipReadAt rd, uint32_t end, uint32_t *at)
 {
     uint8_t win[512 + 3];
-    uint32_t back = fsize < ZS_EOCD_MAXBACK ? fsize : ZS_EOCD_MAXBACK;
-    uint32_t floor_ = fsize - back;   /* earliest offset worth reading */
-    uint32_t end = fsize;             /* exclusive end of this window */
+    uint32_t back = end < ZS_EOCD_MAXBACK ? end : ZS_EOCD_MAXBACK;
+    uint32_t floor_ = end - back;     /* earliest offset worth reading */
+    uint32_t hiend = end;             /* exclusive end of this window */
 
-    if (fsize < ZS_EOCD_FIXED) return UNC_ERR_FORMAT;
+    if (end < ZS_EOCD_FIXED) return UNC_ERR_FORMAT;
 
-    while (end > floor_) {
-        uint32_t span = end - floor_ < 512u ? end - floor_ : 512u;
-        uint32_t start = end - span;
+    while (hiend > floor_) {
+        uint32_t span = hiend - floor_ < 512u ? hiend - floor_ : 512u;
+        uint32_t start = hiend - span;
         /* Carry 3 bytes of the NEXT window down so a signature
          * straddling the boundary is still seen whole. */
-        uint32_t take = span + (fsize - end < 3u ? fsize - end : 3u);
+        uint32_t take = span + (end - hiend < 3u ? end - hiend : 3u);
         /* Highest start position whose four signature bytes were read.
-         * In the topmost window there is nothing past `end`, so the
+         * In the topmost window there is nothing past `hiend`, so the
          * last three positions cannot hold a signature at all. */
         uint32_t hi = take >= 3u ? take - 3u : 0u;
         uint32_t i;
 
         if (hi > span) hi = span;
-        if (unc_read_at(io, start, win, (int32_t)take) != UNC_OK)
+        if (rd(ctx, start, win, (int32_t)take) != UNC_OK)
             return UNC_ERR_FORMAT;
         for (i = hi; i-- > 0; ) {
             if (win[i] == 'P' && win[i + 1] == 'K' &&
                 win[i + 2] == 5 && win[i + 3] == 6) {
-                /* The record must fit in the file. */
-                if (start + i + ZS_EOCD_FIXED > fsize) continue;
+                /* The record must fit in what is being scanned. */
+                if (start + i + ZS_EOCD_FIXED > end) continue;
                 *at = start + i;
                 return UNC_OK;
             }
         }
-        end = start;
+        hiend = start;
     }
     return UNC_ERR_FORMAT;
+}
+
+/* The scanner's reader, for a caller that has a plain stream. */
+static int zs_io_read_at(void *ctx, uint32_t off, void *buf, int32_t len)
+{
+    return unc_read_at((UncIO *)ctx, off, buf, len);
+}
+
+static int zs_find_eocd(UncIO *io, uint32_t fsize, uint32_t *at)
+{
+    return unc_zip_scan_eocd(io, zs_io_read_at, fsize, at);
 }
 
 /* Read the two disk numbers out of the EOCD at `at`. */
