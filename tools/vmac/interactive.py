@@ -9,20 +9,31 @@ rewritten to stream its writes.
 
 This drives the real application the way a person would — clicking Open in
 SFGetFile, watching the progress dialog, pressing Cmd-. — and captures a
-screenshot at each step. **The screenshots are the result.** There is no bit
-grid to decode here and no oracle to compare against; a human (or a model that
-can see) looks at them and decides. It automates the UI walkthrough a person
-would otherwise do by hand, so it can be repeated identically; the checks that
-still need a real machine are in MANUAL_TESTS.md.
+screenshot at each step. **The screenshots are most of the result**: there is
+no bit grid to decode here, so a human (or a model that can see) looks at them
+and decides. Every phase but `--e2e` does end on ONE thing that can fail by
+itself, read off the volume the Mac wrote to, because a screenshot of the wrong
+dialog looks exactly like a screenshot of the right one — this phase once
+reported an extraction "settled after ~134s" having spent all of it in a
+"Replace existing" alert. (`--e2e` has no such line: what it is for is a
+photograph, an extracted application drawing its own splash screen.) The checks
+that still need a real machine are in MANUAL_TESTS.md.
 
     tools/vmac/interactive.py fixtures/derived-EmpireBuilderDemo.sit -o /tmp/shots
 
-Two phases, because they need different machines.
+**Run one phase at a time.** The waits between clicks are seconds, and a Mac
+sharing its core with a second emulator drops below 1x and desynchronises the
+whole choreography without anything failing.
+
+Five phases, because they need different machines: the default, `--e2e`,
+`--wd`, `--dest` and `--segments`. `--help` describes the last three.
 
 The default one installs the application as the boot shell (as every other
 harness here does) and concentrates on cancelling:
 
     1-launched.png    application is up, SFGetFile listing the archive
+    1b-destination.png where should the files go? (SFPutFile, opened in the
+                      archive's own folder, so Return means "beside it")
     2-extracting.png  progress dialog, part way through
     3-cancelled.png   the alert after the Cancel button
     4-back.png        back at SFGetFile, ready for another file
@@ -38,6 +49,7 @@ the application extracted:
     e2e-3-sfgetfile.png             launched by double-click
     e2e-4-other-volume.png          Drive switched to the second volume
     e2e-5-back-to-boot.png          Drive switched back
+    e2e-5b-destination.png          the destination dialog
     e2e-6-complete.png              "Extraction complete."
     e2e-7-back-in-finder.png        quit; the extracted files are in the window
     e2e-8-extracted-app-running.png the extracted APPL, double-clicked
@@ -46,10 +58,12 @@ Mini vMac maps the host Alt key to the Mac Command key; see command_key() for
 why the chord is sent as an explicit hold rather than an xdotool chord.
 """
 import argparse, os, shutil, signal, subprocess, sys, tempfile, time
+import unicodedata
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import run as R                                              # noqa: E402
+import checkdisk as CD                                       # noqa: E402
 
 
 def build_interactive_app():
@@ -172,7 +186,7 @@ class Mac:
             pass
         self.dpy.close()
 
-    def settle(self, path, interval=10.0, timeout=900.0, stable=2):
+    def settle(self, path, interval=10.0, timeout=900.0, stable=2, quiet=None):
         """Screenshot until the screen stops changing; return seconds waited.
 
         Used instead of a fixed sleep both for "has it finished booting" and
@@ -180,7 +194,23 @@ class Mac:
         varies with the archive, so a fixed wait is either wrong or wasteful.
         While work is in progress the progress dialog repaints its percentage,
         so consecutive shots differ; when the alert goes up the screen is
-        static. Returns the elapsed time, which is a real Mac Plus figure."""
+        static. Returns the elapsed time, which is a real Mac Plus figure.
+
+        **"Static" is only ever "unchanged since the last poll", and that is
+        not the same question.** The progress dialog repaints when the engine
+        calls back, which is every 8–16 KB of INPUT — so on a slow decode the
+        gap between repaints is tens of seconds, two polls land inside one
+        gap, and a running extraction reads as a finished one. Pass `quiet`
+        (SECONDS the screen must be unchanged) for any settle that means "has
+        the extraction finished": it must exceed the worst repaint gap, not
+        the poll interval. `stable` alone is fine for "has it booted", where
+        what precedes the static screen is continuous repainting.
+
+        Found on 2026-08-09: --dest reported the output on the wrong volume
+        because this returned at 33%, and the phase then read a half-written
+        disk. Nothing about that failure named the harness.
+        """
+        need = stable - 1 if quiet is None else max(1, round(quiet / interval))
         started = time.time()
         prev, same = None, 0
         while time.time() - started < timeout:
@@ -189,7 +219,7 @@ class Mac:
             cur = open(path, "rb").read()
             same = same + 1 if cur == prev else 0
             prev = cur
-            if same >= stable - 1:
+            if same >= need:
                 return time.time() - started
         return None
 
@@ -206,6 +236,33 @@ class Mac:
 # is clicked. Standard File pre-selects the first item and mkboot strips the
 # volume to one archive, so the first row IS the archive.
 SF_FIRST_ROW = (150, 137)
+
+# How long the screen must hold still before an extraction is called
+# finished, in seconds. Not a poll interval: see Mac.settle, where the
+# reason it has to be this long is that the progress dialog repaints once
+# per engine callback and those are 8–16 KB of input apart. Every settle
+# that waits for an extraction passes this; the ones that wait for a boot
+# do not need it.
+EXTRACT_QUIET = 120.0
+
+# The same question after a Cancel, where the wait is shorter because
+# something is expected to happen rather than to stop happening.
+CANCEL_QUIET = 15.0
+
+
+def wait_for_alert(mac, scratch, timeout=240.0):
+    """Wait for the screen to stop moving after a Cancel or a Cmd-period.
+
+    Not a fixed sleep. The cancel is noticed in the engine's progress
+    callback, which fires every 8–16 KB of INPUT, so how long the alert
+    takes to come up is a property of the archive and the machine. Three
+    seconds was enough until 2026-08-09 and then was not — and nothing
+    failed when it stopped being enough: the phase photographed the
+    progress dialog as "3-cancelled", the alert as "4-back", and every
+    frame after that was one step behind the name it was saved under.
+    """
+    return mac.settle(scratch, interval=2.0, quiet=CANCEL_QUIET,
+                      timeout=timeout)
 
 # The progress dialog's Cancel button, measured off 2-extracting.png. Cancel
 # by button and Cancel by Cmd-. are separate checklist items reaching the same
@@ -256,10 +313,184 @@ SF_SUBFOLDER_ROW = (150, 137)
 # wd-2-volume.png for each. They are a table rather than constants because
 # this is a look-and-adjust loop by nature — the first System 7 attempt
 # clicked bare desktop with System 6 coordinates and launched nothing.
+#
+# `folder` was 66 until 2026-08-09 and opened the SYSTEM FOLDER: four icons at
+# the Finder's default spacing overlap their neighbours' labels on a 512-point
+# screen, so being one icon out looks like a normal window. wd-7 is only
+# illustration now — the phase decides on the volume's own directory — but
+# re-measure it off wd-2-volume.png whenever the volume's contents change.
 WD_ICONS = {
-    "System6.hfv": {"app": (240, 110), "folder": (66, 106)},
+    "System6.hfv": {"app": (240, 110), "folder": (106, 106)},
     "Sys7.img":    {"app": (222, 313), "folder": (157, 313)},
 }
+
+# The folder --wd puts the archive in, so that the archive's folder and the
+# volume root are different directories. Named once: the harness builds the
+# volume with it and then looks for the output inside it.
+ARCHIVE_FOLDER = "Archives"
+
+
+def accept_destination(mac, pause=3.0):
+    """Press Return on the destination dialog.
+
+    Since 2026-08-09 the application asks where the files should go, with
+    SFPutFile. Standard File keeps ONE current folder across SFGetFile and
+    SFPutFile, so the dialog opens in the folder the archive was chosen
+    from and Return means "beside the archive" — the behaviour every phase
+    here was written against. A phase that needs output SOMEWHERE ELSE
+    navigates before calling this.
+    """
+    time.sleep(pause)
+    mac.key("Return")
+    time.sleep(1.5)
+
+
+# SFPutFile's buttons. Its layout is NOT SFGetFile's — there is a name
+# field along the bottom and the buttons sit lower — so SF_DRIVE would
+# miss. Measured off 1b-destination.png at the same `where` (82, 90).
+SFPUT_DRIVE = (337, 181)
+
+
+def volume_names(img):
+    """Every file on an HFS image, as checkdisk.py's component tuples.
+
+    Not `hls -1` split on whitespace: a Mac filename contains spaces
+    ("Demo Manual V1.6" is three fields, one name), may begin with a dot,
+    and may sit in a folder. checkdisk.walk already handles all three,
+    including the '/'-in-a-name case, so it is used rather than restated.
+    """
+    home = tempfile.mkdtemp(prefix="hfs-")
+    env = dict(os.environ, HOME=home)
+    try:
+        if CD.hfs(env, "hmount", img).returncode != 0:
+            raise SystemExit(f"interactive: {img} will not mount")
+        names = set(CD.walk(env))
+        CD.hfs(env, "humount")
+        return names
+    finally:
+        shutil.rmtree(home, ignore_errors=True)
+
+
+def expected_names(fixture, workdir):
+    """The names the Mac should have written, as component tuples.
+
+    The same mapping checkdisk.py makes: extract with the CLI, drop the
+    "._" sidecars (a resource fork is part of the file on a Mac), undo the
+    engine's reversible '/'->':' swap and cap each component at 31
+    characters as ComponentToStr63 does. The fixture is copied to
+    `archive.sit` first because that is the name the Mac saw, and gzip/.Z
+    derive an output name from the archive's.
+
+    What this CANNOT see: it compares NAMES only. A file of the right name
+    and the wrong bytes passes here — run.py and checkdisk.py are what
+    compare forks. This phase asks one question, "which volume did the
+    output land on", and a name is enough to answer it.
+    """
+    if not os.path.exists(CD.CLI):
+        print(f"interactive: no CLI at {CD.CLI} — run `make BUILD=build/rel`")
+        return set()
+    asmac = os.path.join(workdir, "as-the-mac-saw-it", "archive.sit")
+    os.makedirs(os.path.dirname(asmac), exist_ok=True)
+    shutil.copyfile(fixture, asmac)
+    ref = os.path.join(workdir, "linux-out")
+    subprocess.run([CD.CLI, "x", "-nr", "--forks", "hidden", asmac, "-o", ref],
+                   capture_output=True)
+    want = set()
+    for root, _dirs, files in os.walk(ref):
+        for f in files:
+            if f.startswith("._"):
+                continue
+            rel = os.path.relpath(os.path.join(root, f), ref)
+            comps = [unicodedata.normalize("NFC", c) for c in rel.split(os.sep)]
+            want.add(tuple(c.replace(":", "/")[:31] for c in comps))
+    if not want:
+        print(f"interactive: the CLI extracted nothing from {fixture} — "
+              f"there is no output to look for")
+    return want
+
+
+def phase_dest(args, appbin, workdir, shot):
+    """Does choosing a different folder actually send the files there?
+
+    The destination dialog defaulting to the archive's folder is what
+    --wd checks. This checks the other half, which is the whole reason
+    the dialog exists: a set of floppies cannot write its output onto
+    the disk it is about to ask you to eject.
+
+    The archive is on the boot volume and an empty floppy is mounted
+    beside it. The walk switches the DESTINATION dialog to that floppy
+    and extracts. Afterwards the host reads both volumes: the files must
+    be on the floppy and must NOT be on the boot volume. That is an
+    assertion, not a screenshot — "Extraction complete." looks the same
+    wherever the bytes went.
+
+    Give it a SMALL fixture with a folder in it — `derived-Downer.sit` is
+    what this was written against. Small because the phase waits out
+    EXTRACT_QUIET after the last repaint and nothing here is measuring
+    speed; with a folder because "which volume" and "did the folder come
+    with it" are the same read of the same volume.
+    """
+    stock = os.path.join(R.VMAC_HOME, args.system)
+    bootimg = os.path.join(workdir, "boot-dest.hfv")
+    R.sh(sys.executable, os.path.join(HERE, "mkboot.py"), stock, appbin, bootimg,
+         "--data", f"{args.fixture}:archive.sit")
+    destdsk = os.path.join(workdir, "dest.dsk")
+    R.make_floppy(destdsk, "Dest")
+
+    scratch = os.path.join(args.outdir, ".settle.png")
+    elapsed = None
+    mac = Mac(bootimg, args.emu, workdir, extra=(destdsk,))
+    try:
+        if mac.settle(scratch, interval=5.0, timeout=args.boot_timeout) is None:
+            raise SystemExit("interactive: the machine never settled")
+        # Standard File opens on the last-inserted volume, which is the
+        # empty floppy. Drive over to the boot volume to find the archive.
+        mac.click(*SF_DRIVE)
+        time.sleep(2.0)
+        shot(mac, "dest-1-sfgetfile.png")
+
+        mac.click(*SF_FIRST_ROW)
+        mac.key("Return")                    # Open -> destination dialog
+        time.sleep(3.0)
+        shot(mac, "dest-2-destination.png")  # opens on the archive's volume
+
+        mac.click(*SFPUT_DRIVE)              # ...and away to the floppy
+        time.sleep(2.0)
+        shot(mac, "dest-3-other-volume.png")
+
+        mac.key("Return")                    # Save -> extraction
+        elapsed = mac.settle(scratch, interval=5.0, quiet=EXTRACT_QUIET,
+                             timeout=args.complete_timeout)
+        shot(mac, "dest-4-complete.png")
+    finally:
+        mac.close()
+        if os.path.exists(scratch):
+            os.remove(scratch)
+
+    written = os.path.join(workdir, "boot.hfv")     # Mac()'s private copy
+    want = expected_names(args.fixture, workdir)
+    if not want:
+        return False
+    on_dest = volume_names(destdsk)
+    on_boot = volume_names(written)
+
+    missing = sorted(n for n in want if n not in on_dest)
+    leaked = sorted(n for n in want if n in on_boot)
+    print(f"interactive: chosen volume holds "
+          f"{sorted(CD.mac_path(n) for n in on_dest)}")
+    print(f"interactive: archive's volume holds "
+          f"{sorted(CD.mac_path(n) for n in on_boot)}")
+    if missing:
+        print("interactive: NOT on the chosen volume: "
+              + ", ".join(CD.mac_path(n) for n in missing))
+    if leaked:
+        print("interactive: leaked onto the archive's volume: "
+              + ", ".join(CD.mac_path(n) for n in leaked))
+    if elapsed is None:
+        print("interactive: the extraction never settled")
+    ok = not missing and not leaked
+    print("interactive: destination " + ("HONOURED" if ok else "WRONG"))
+    return ok
 
 
 def phase_wd(args, appbin, workdir, shot):
@@ -279,7 +510,8 @@ def phase_wd(args, appbin, workdir, shot):
     stock = os.path.join(R.VMAC_HOME, args.system)
     bootimg = os.path.join(workdir, "boot-wd.hfv")
     R.sh(sys.executable, os.path.join(HERE, "mkboot.py"), stock, appbin, bootimg,
-         "--finder", "--data", f"{args.fixture}:Archives:archive.sit")
+         "--finder", "--data",
+         f"{args.fixture}:{ARCHIVE_FOLDER}:archive.sit")
 
     icons = WD_ICONS.get(args.system)
     if icons is None:
@@ -307,8 +539,11 @@ def phase_wd(args, appbin, workdir, shot):
 
         mac.click(*SF_FIRST_ROW)                          # the archive
         mac.key("Return")
+        shot(mac, "wd-4b-destination.png")   # opens INSIDE Archives, not at /
+        accept_destination(mac)
         mac.settle(os.path.join(args.outdir, ".settle.png"),
-                   interval=5.0, timeout=args.complete_timeout)
+                   interval=5.0, quiet=EXTRACT_QUIET,
+                   timeout=args.complete_timeout)
         shot(mac, "wd-5-complete.png")
         mac.key("Return")                                 # dismiss the alert
         time.sleep(2.0)
@@ -321,9 +556,29 @@ def phase_wd(args, appbin, workdir, shot):
         shot(mac, "wd-7-folder-after.png") # the FOLDER: must hold the output
     finally:
         mac.close()
-    print("interactive: wd-6 is the volume root, wd-7 is the folder the archive")
-    print("interactive: was in. The extracted files belong in wd-7 and must be")
-    print("interactive: absent from wd-6.")
+
+    # The verdict comes off the volume, not off wd-6 and wd-7. Those two
+    # frames are aimed at Finder icons by coordinate, and on 2026-08-09
+    # wd-7 photographed the System Folder — the volume's icons overlap at
+    # the Finder's default spacing, so "the output is not in this window"
+    # was true of a window nobody meant to open.
+    want = expected_names(args.fixture, workdir)
+    got = volume_names(os.path.join(workdir, "boot.hfv"))
+    missing = sorted(n for n in want if (ARCHIVE_FOLDER,) + n not in got)
+    at_root = sorted(n for n in want if n in got)
+    print("interactive: the volume holds "
+          + ", ".join(sorted(CD.mac_path(n) for n in got)))
+    if missing:
+        print(f"interactive: NOT inside {ARCHIVE_FOLDER}: "
+              + ", ".join(CD.mac_path(n) for n in missing))
+    if at_root:
+        print("interactive: at the volume ROOT, where a working-directory "
+              "mistake puts it: " + ", ".join(CD.mac_path(n) for n in at_root))
+    ok = bool(want) and not missing and not at_root
+    print("interactive: working directory " + ("HONOURED" if ok else "WRONG"))
+    print("interactive: wd-6 is the volume root and wd-7 the archive's folder; "
+          "the print above is what decides.")
+    return ok
 
 
 def phase_e2e(args, appbin, workdir, shot):
@@ -372,9 +627,12 @@ def phase_e2e(args, appbin, workdir, shot):
         shot(mac, "e2e-5-back-to-boot.png")
 
         mac.click(*SF_FIRST_ROW)
-        mac.key("Return")                                # Open -> extraction
+        mac.key("Return")                                # Open
+        shot(mac, "e2e-5b-destination.png")              # where do they go?
+        accept_destination(mac)                          # beside the archive
         elapsed = mac.settle(os.path.join(args.outdir, ".settle.png"),
-                             interval=5.0, timeout=args.complete_timeout)
+                             interval=5.0, quiet=EXTRACT_QUIET,
+                             timeout=args.complete_timeout)
         shot(mac, "e2e-6-complete.png")
         mac.key("Return")                                # dismiss the alert
         time.sleep(2.0)
@@ -474,6 +732,7 @@ def phase_segments(args, appbin, workdir, shot):
 
         mac.click(*SF_FIRST_ROW)             # archive.sit = part 1
         mac.key("Return")
+        accept_destination(mac)              # onto the boot volume
         time.sleep(10.0)
         shot(mac, "seg-3-locate.png")        # part 2 is not beside part 1
 
@@ -498,7 +757,7 @@ def phase_segments(args, appbin, workdir, shot):
         # second Drive click here; seg-6 is what says whether that held.
         mac.click(*SF_FIRST_ROW)             # "part-two" — the right one
         mac.key("Return")
-        elapsed = mac.settle(scratch, interval=5.0,
+        elapsed = mac.settle(scratch, interval=5.0, quiet=EXTRACT_QUIET,
                              timeout=args.complete_timeout)
         shot(mac, "seg-7-complete.png")
     finally:
@@ -522,9 +781,13 @@ def phase_segments(args, appbin, workdir, shot):
                              capture_output=True, env=env)
         if got.returncode != 0:
             # Say what IS on the volume: "not found" on its own cannot
-            # distinguish a wrong name from a failed extraction.
+            # distinguish a wrong name from a failed extraction. Decoded
+            # as MacRoman, not as text=True: the volume holds `StuffIt
+            # Expander™ 4.0.1 Folder`, so a UTF-8 decode raises — and it
+            # raises only on the path that runs when the run has ALREADY
+            # failed, taking the diagnostic down with it.
             listing = subprocess.run(["hls", "-l"], capture_output=True,
-                                     text=True, env=env).stdout.strip()
+                                     env=env).stdout.decode("mac_roman").strip()
         subprocess.run(["humount", written], capture_output=True, env=env)
         if got.returncode == 0 and os.path.exists(out):
             verdict = ("BYTE-EXACT" if open(out, "rb").read() == original
@@ -575,6 +838,11 @@ def main():
                          "and this is the only arrangement that can tell a "
                          "mishandled one from a correct one — at the volume "
                          "root the two are the same directory.")
+    ap.add_argument("--dest", action="store_true",
+                    help="the destination phase: switch the destination "
+                         "dialog to a second volume and check on the HOST "
+                         "that the files landed there and not beside the "
+                         "archive. Asserts; does not just photograph.")
     ap.add_argument("--segments", action="store_true",
                     help="the segmented-archive phase: cut the fixture into "
                          "three parts, leave part 1 alone on the boot volume "
@@ -605,6 +873,14 @@ def main():
         # at native size.
         mac.shot(os.path.join(args.outdir, name), scale="200%" if args.e2e else None)
 
+    if args.dest:
+        try:
+            ok = phase_dest(args, appbin, workdir, shot)
+        finally:
+            shutil.rmtree(workdir, ignore_errors=True)
+        print(f"interactive: screenshots in {args.outdir} — LOOK AT THEM.")
+        return 0 if ok else 1
+
     if args.segments:
         try:
             ok = phase_segments(args, appbin, workdir, shot)
@@ -615,11 +891,11 @@ def main():
 
     if args.wd:
         try:
-            phase_wd(args, appbin, workdir, shot)
+            ok = phase_wd(args, appbin, workdir, shot)
         finally:
             shutil.rmtree(workdir, ignore_errors=True)
         print(f"interactive: screenshots in {args.outdir} — LOOK AT THEM.")
-        return 0
+        return 0 if ok else 1
 
     if args.e2e:
         try:
@@ -646,12 +922,14 @@ def main():
         shot(mac, "1-launched.png")
 
         mac.click(*SF_FIRST_ROW)            # select the archive
-        mac.key("Return")                   # Open -> extraction starts
+        mac.key("Return")                   # Open
+        shot(mac, "1b-destination.png")     # "Extract the files into..."
+        accept_destination(mac)             # Return: beside the archive
         time.sleep(args.extract_wait)
         shot(mac, "2-extracting.png")
 
         mac.click(*PROGRESS_CANCEL)         # Cancel button
-        time.sleep(3.0)
+        wait_for_alert(mac, scratch)
         shot(mac, "3-cancelled.png")
 
         mac.key("Return")                   # dismiss the alert
@@ -662,9 +940,10 @@ def main():
         # in ProgressPump rather than by the Dialog Manager.
         mac.click(*SF_FIRST_ROW)
         mac.key("Return")
+        accept_destination(mac)
         time.sleep(args.extract_wait)
         mac.command_key("period")
-        time.sleep(3.0)
+        wait_for_alert(mac, scratch)
         shot(mac, "6-cmd-period.png")
     finally:
         mac.close()
@@ -679,23 +958,41 @@ def main():
             raise SystemExit("interactive: second boot never settled")
         mac.click(*SF_FIRST_ROW)
         mac.key("Return")
-        elapsed = mac.settle(scratch, interval=10.0, timeout=args.complete_timeout)
+        accept_destination(mac)
+        elapsed = mac.settle(scratch, interval=10.0, quiet=EXTRACT_QUIET,
+                             timeout=args.complete_timeout)
         shot(mac, "5-complete.png")
     finally:
         mac.close()
-        shutil.rmtree(workdir, ignore_errors=True)
         if os.path.exists(scratch):
             os.remove(scratch)
+
+    # One assertion, on the volume phase 2 wrote to. The rest of this phase
+    # is photographs, and a photograph of the wrong dialog is indistinguishable
+    # from a photograph of the right one unless somebody looks: on 2026-08-09
+    # this run reported "settled after ~134s" having spent every second of it
+    # in a "Replace existing" alert, with nothing extracted at all. The names
+    # cannot be argued with.
+    try:
+        want = expected_names(args.fixture, workdir)
+        got = volume_names(os.path.join(workdir, "boot.hfv"))
+        absent = sorted(n for n in want if n not in got)
+    finally:
+        shutil.rmtree(workdir, ignore_errors=True)
 
     if elapsed is None:
         print(f"interactive: still working after {args.complete_timeout:.0f}s")
     else:
         print(f"interactive: extraction settled after ~{elapsed:.0f}s "
               f"of emulated Mac Plus time (boot took ~{boot:.0f}s)")
+    if absent:
+        print("interactive: NOT on the boot volume after phase 2: "
+              + ", ".join(CD.mac_path(n) for n in absent))
+    print("interactive: phase 2 output " + ("INCOMPLETE" if absent else "COMPLETE"))
     print(f"interactive: screenshots in {args.outdir} — LOOK AT THEM.")
-    print("Nothing here is self-checking: this driver only guarantees the same")
-    print("clicks happen in the same order. Judging is the reader's job.")
-    return 0
+    print("Everything else here is judged by eye: this driver guarantees the")
+    print("same clicks in the same order, and asserts only on those names.")
+    return 1 if absent or not want else 0
 
 
 if __name__ == "__main__":

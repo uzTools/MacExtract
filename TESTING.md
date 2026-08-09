@@ -432,6 +432,17 @@ part boundary (27 failures). Both were reverted.
     wrong — which is exactly what happened twice while writing this one
     (DECISIONS.md, 2026-08-09).
 
+    Its `--dest` phase covers the destination dialog the same way. The
+    archive is on the boot volume, an empty floppy is mounted beside it,
+    the DESTINATION dialog is switched to the floppy, and afterwards the
+    host reads **both** volumes: every output name must be on the chosen
+    one and none may be on the archive's. That is the assertion, because
+    "Extraction complete." looks identical wherever the bytes went.
+    `--wd` covers the other half and asserts the same way: the archive
+    goes inside a folder, Return accepts the default destination, and
+    every output name must be under that folder and none at the volume
+    root — which is where a working-directory mistake would put them.
+
 **What each layer can see is not the same, and that matters.** Layer 7
 compares a count, two summed CRC-32s and two summed lengths. A summed
 CRC cannot carry a filename, so layer 7 has never checked an output

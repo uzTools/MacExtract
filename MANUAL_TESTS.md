@@ -120,7 +120,8 @@ Verified under QEMU only, through the 68LC040 emulator.
 ## 4. The interactive application, on any real machine
 
 Emulation has driven all of this on System 6.0.8 end to end — launch by
-double-click, SFGetFile with volume navigation, the progress dialog, Cancel,
+double-click, SFGetFile with volume navigation, the destination dialog (both
+"beside the archive" and "another volume"), the progress dialog, Cancel,
 Cmd-., partial-output cleanup, the result alert, and an extracted `APPL`
 launching (`tools/vmac/interactive.py --e2e`). Re-doing it by hand is worth one
 pass per machine, because a person notices what a screenshot comparison does
@@ -130,6 +131,12 @@ Launch and UI
 - [ ] Application launches; SFGetFile appears immediately.
 - [ ] Cancel in SFGetFile quits cleanly to the Finder.
 - [ ] Standard File's Drive button switches volumes and back.
+- [ ] The destination dialog opens in the archive's own folder, and Return
+      puts the files there. Cancelling it returns to SFGetFile, not to the
+      Finder.
+- [ ] The destination dialog's prompt is not clipped by the machine's font.
+      It is one fixed-width static text item and it does not wrap; the
+      wording was shortened once already for exactly this (DECISIONS.md).
 - [ ] The progress dialog repaints when covered and uncovered — on System 6,
       by opening a desk accessory over it.
 - [ ] The Cancel button stops extraction in under a second: completed entries

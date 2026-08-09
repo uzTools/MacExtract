@@ -154,13 +154,30 @@ be quoted for time. A claim that lives at the intersection of two axes needs a
 build at that intersection.
 
 **This box has one core.** At 1x the emulator paces itself against real time,
-so anything else CPU-heavy — `./ci.sh`, a corpus sweep — inflates the number
-you are measuring. Run timing alone.
+so anything else CPU-heavy — `./ci.sh`, a corpus sweep, a second
+`interactive.py` — inflates the number you are measuring. Run timing alone.
 
-**`interactive.py` is not self-checking, by design.** It guarantees the same
-clicks in the same order and writes a numbered screenshot per step; judging
-them is the reader's job. Two lessons are baked into it, both of which
-produced confident-looking nonsense first:
+**And it is not only the number.** `interactive.py` waits fixed seconds
+between clicks, so a Mac running below 1x desynchronises the whole
+choreography: two phases run side by side on 2026-08-09 and every frame of one
+came out a step early — `3-cancelled.png` showing the progress dialog,
+`4-back.png` showing the alert that belonged in it, the Cmd-. round never
+happening at all. Nothing failed; the screenshots were simply of the wrong
+moments. **Run the interactive phases one at a time.**
+
+**`interactive.py` is mostly not self-checking.** It guarantees the same clicks
+in the same order and writes a numbered screenshot per step; judging them is
+the reader's job. Every phase but `--e2e` does end on ONE thing that can fail
+on its own — `--segments` on the joined bytes, `--dest` on which volume holds
+the output, `--wd` on which folder does, the default phase on the names its
+second boot wrote — and those exist because a screenshot of the wrong dialog
+looks exactly like a screenshot of the right one. The default phase once
+reported "settled after ~134s" for a run that spent all 134 in a "Replace
+existing" alert and extracted nothing (2026-08-09). `--e2e` has no such line
+on purpose: what it is for *is* a photograph, an extracted application drawing
+its own splash screen.
+Three lessons are baked into it, all of which produced confident-looking
+nonsense first:
 
 - *Press buttons with Return, not coordinates.* Clicking SFGetFile's Open at a
   measured point hit **Drive** one row up, switched to an empty volume, and
@@ -169,6 +186,10 @@ produced confident-looking nonsense first:
   so key events go to the root window. Mouse clicks are delivered by position
   and work anyway — which makes it look like the Mac ignores one particular
   key rather than receiving none.
+- *A phase written for a new path can leave the old one less covered.*
+  `--dest` passed twice while the DEFAULT destination was broken, because it
+  sends the output to an empty floppy and the bug needed the archive's own
+  folder. Ask which case the new phase stopped exercising.
 
 ## The downloads, and why none of them are committed
 
@@ -401,6 +422,10 @@ just as happily on an empty archive. Three-system table in FORMATS.md.
     interactive.py --e2e            # Finder desktop: double-click launch, SFGetFile,
                                     # volume navigation, an extracted APPL launching
     interactive.py --segments       # the "locate part N" alert for a split archive
+    interactive.py --wd             # output lands in the archive's folder, not at /
+    interactive.py --dest           # output lands on the volume the user CHOSE
+
+Run them one at a time (see "This box has one core", above).
 
 `--e2e` leaves the **Finder** in place instead of installing the application as
 the boot shell, which is the only way to launch the application the way a
@@ -436,6 +461,23 @@ Two things it will get wrong if you copy it:
 - **`Mac()` boots from a private copy of the boot image.** Read results back
   from `<workdir>/boot.hfv`, not from the image you handed it, or a run that
   worked reports "not found".
+
+`--dest` is the same shape for the destination dialog: the archive on the boot
+volume, an empty floppy beside it, the DESTINATION dialog switched to the
+floppy with its own Drive button (`SFPUT_DRIVE` — SFPutFile's buttons sit lower
+than SFGetFile's, so `SF_DRIVE` misses), and then a read of **both** volumes.
+Every output name must be on the chosen volume and none on the archive's. Give
+it a small fixture with a folder in it, `derived-Downer.sit`; nothing here is
+measuring speed and the phase waits out `EXTRACT_QUIET` at the end.
+
+**`Mac.settle` answers "the screen stopped changing", which is not "the
+extraction finished".** The progress dialog repaints once per engine callback
+— every 8–16 KB of *input* — so on a slow decode two polls land inside one gap
+and a running extraction reads as a finished one. Every settle that waits for
+an extraction therefore passes `quiet=EXTRACT_QUIET`, a number of SECONDS the
+screen must hold still, and it has to exceed the worst repaint gap rather than
+the poll interval. Without it `--dest` returned at 33%, read a half-written
+floppy, and reported the application had sent the output to the wrong volume.
 
 **Re-measure `PROGRESS_CANCEL` in `interactive.py` whenever the dialog changes
 shape.** It is a hard-coded screen coordinate, so a moved button does not make

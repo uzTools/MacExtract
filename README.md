@@ -15,6 +15,11 @@ Pick an archive:
 
 ![Standard File dialog listing archive.sit](docs/screens/1-open.png)
 
+Say where the files should go — it opens in the archive's own folder, so
+Return means "next to it", and any other disk is a Drive click away:
+
+![Standard File save dialog headed Extract into this folder:](docs/screens/1b-destination.png)
+
 Watch it work — with a real estimate, because on a Mac Plus some archives take
 half an hour:
 
@@ -68,7 +73,9 @@ obscurely.
 together for you. Open the first part and the rest are found beside it; if a
 part is somewhere else — another folder, another disk — you are asked to
 point at it. Parts are recognised by what is inside them, so it does not
-matter what they are called or whether they are all in one place.
+matter what they are called or whether they are all in one place. Send the
+output to a different disk from the parts, which is the only thing that works
+when the parts are on floppies you have to keep swapping.
 
 Encrypted archives are out of scope, as are sets split by Compact Pro or
 by PKZIP.

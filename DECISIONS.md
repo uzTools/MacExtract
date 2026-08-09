@@ -1954,3 +1954,90 @@ found" alone cannot distinguish a wrong name from a failed extraction.
 supplying part 2 also picked up part 3 sitting beside it and the second
 prompt never appeared. That is one line in `SegAskUser` and it is the
 difference between one interruption and one per disk.
+
+---
+
+## 2026-08-09 — Asking where the output goes, on a system with no folder picker
+
+Output went beside the archive, which is right on a hard disk and wrong
+on floppies: the volume holding the output is the volume that has to be
+ejected to insert the next part. OPEN_ITEMS.md had it filed as "needs a
+destination picker, which is a UI change beyond the alert".
+
+**There is no folder picker to call.** `CustomGetFile` and its hooks
+arrive with System 7 and the floor target is System 6.0.x, so the
+classic idiom is `SFPutFile`: take the *location* out of the reply and
+ignore the name. That is what the application now does between
+`SFGetFile` and the extraction.
+
+**Why it does not change what anyone had.** Standard File keeps ONE
+current folder across `SFGetFile` and `SFPutFile`, so the destination
+dialog opens in the folder the archive was just chosen from and Return
+means "beside the archive" — the previous behaviour, reachable without
+reading anything. Navigating is the addition, not the default.
+
+**Two traps, both photographed rather than reasoned about.**
+
+Standard File's prompt is one static text item about 200 points wide
+and it does not wrap. "Extract the files into this folder:" rendered on
+System 6 as "Extract the files into this" — the word carrying the
+meaning was the word that fell off. It is now "Extract into this
+folder:". A prompt is a fixed-width resource, not a sentence.
+
+And the name in the box was seeded with `reply.fName`, which is the
+archive's own name in the archive's own folder, so pressing Save raised
+**"Replace existing "archive.sit"?"** — on the DEFAULT path, the one
+that means "beside the archive". Nothing is written under that name
+whichever button is pressed, because the name is ignored; the alert
+simply asks the user to overwrite the file they just opened, and its
+default button is No, which returns to the dialog. The default name is
+a constant now.
+
+**The bug was reachable only where nothing was looking.** The phase
+written to test the feature switches the destination to an EMPTY floppy,
+where the archive's name collides with nothing — so `--dest` passed,
+twice, while the case every other phase exercises was broken. A test
+aimed at the new path can leave the default path less covered than it
+was before the change.
+
+**And the phases that did hit it reported success.** The default
+interactive phase spent its entire run in that alert and printed
+"extraction settled after ~134s"; `settle` cannot tell a static alert
+from a static result, and that phase is photograph-only by design
+(tools/vmac/README.md). It was found by looking at the frames, which is
+the one step that is written down as mandatory and is the easiest to
+skip.
+
+### A "the screen stopped changing" oracle is a "the screen is changing slowly" oracle
+
+`interactive.py --dest` asserts on the volumes rather than on a
+screenshot, because "Extraction complete." looks identical wherever the
+bytes went. Its first run reported the output on the WRONG volume, and
+the application was right: `Mac.settle` had returned while the progress
+dialog read 33%, and the phase then read a half-written floppy.
+
+`settle` polls for two consecutive identical frames. The progress
+dialog repaints once per engine callback — every 8–16 KB of *input* —
+so on a slow decode consecutive polls land inside one gap and a running
+extraction is indistinguishable from a finished one. The fix is not a
+bigger poll interval but a different question: `quiet=EXTRACT_QUIET`
+asks for a number of SECONDS the screen must hold still, and that
+number has to exceed the worst repaint gap. Every settle waiting on an
+extraction now passes it; the ones waiting on a boot do not need it,
+because what precedes a booted screen is continuous repainting.
+
+Two things worth carrying:
+
+- **The unsound wait had been in every interactive phase since M10 and
+  had never failed**, because those phases extract to a hard disk and
+  judge the result by eye. It took an assertion — one that can fail —
+  to expose it, and it failed in the direction that accuses the
+  application. That is the third time in two days that a UI harness's
+  own defect arrived dressed as an application bug (the other two are
+  in the entry above).
+- **The readback was a second copy of a solved problem.** It listed the
+  volume with `hls -1` split on whitespace, so "Demo Manual V1.6" was
+  three names and no fixture with a space in an entry name could ever
+  pass; `checkdisk.walk` had handled that, plus dot-files, folders and
+  `/` inside an HFS name, since 2026-08-08. It is imported now. A
+  harness that re-derives a name rule gets the old version of it.

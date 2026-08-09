@@ -5,8 +5,9 @@
  * runs unchanged through Mac OS 9.
  *
  * Design (see CLAUDE.md M10):
- *   - SFGetFile to pick an archive; extraction lands in the archive's
- *     folder; loop back to SFGetFile until Cancel.
+ *   - SFGetFile to pick an archive, then SFPutFile to pick where the
+ *     output goes — opening in the archive's own folder, so Return
+ *     means "beside it"; loop back to SFGetFile until Cancel.
  *   - Event loop on GetNextEvent + SystemTask; WaitNextEvent is used
  *     only after a runtime trap check.
  *   - Modal progress dialog with a Cancel button (and Cmd-.).
@@ -2265,7 +2266,8 @@ static void ShowNote(short alrtID, const unsigned char *msg)
     NoteAlert(alrtID, NULL);
 }
 
-static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name)
+static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
+                       short outVol, long outDir)
 {
     Progress pr;
     UncProgress prog;
@@ -2305,8 +2307,9 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name)
     prog.ctx = &pr;
     prog.tick = prog_tick;
 
-    /* Interactive: extract next to the archive (same volume/folder). */
-    ret = RunExtract(vRefNum, dirID, name, vRefNum, dirID,
+    /* The archive is read from where it was opened; output goes wherever
+     * the destination dialog left us, which defaults to that same folder. */
+    ret = RunExtract(vRefNum, dirID, name, outVol, outDir,
                      &prog, &entries, &errors);
 
     if (pr.dlg) DisposeDialog(pr.dlg);
@@ -2361,13 +2364,46 @@ int main(void)
     where.h = 82;
     where.v = 90;
     for (;;) {
-        SFReply reply;
+        SFReply reply, dest;
         SFGetFile(where, "\p", NULL, -1, NULL, NULL, &reply);
         if (!reply.good) break;
-        {
-            /* SFReply.vRefNum is a working directory; extract there. */
-            ExtractOne(reply.vRefNum, 0, reply.fName);
-        }
+
+        /* Where should the files go? Standard File keeps ONE current
+         * folder across SFGetFile and SFPutFile, so this opens in the
+         * folder the archive was just chosen from: pressing Return
+         * extracts beside the archive, which is what this application
+         * did before it asked at all. Navigating elsewhere is the
+         * point — a set of floppies cannot write its output to the
+         * disk it is about to ask you to eject.
+         *
+         * SFPutFile is the classic way to pick a FOLDER (there is no
+         * folder picker before System 7's CustomGetFile hooks, and
+         * this binary must run on System 6). Only the location of the
+         * reply is used; the name in the box is inert.
+         *
+         * THE DEFAULT NAME MUST NOT NAME A FILE THAT IS THERE. It was
+         * `reply.fName` for a day, which is the archive's own name in
+         * the archive's own folder, so Save always hit Standard File's
+         * "Replace existing "archive.sit"?" — on the DEFAULT path, the
+         * one that means "beside the archive". Nothing is written under
+         * this name whichever button is pressed, but the alert asks the
+         * user to overwrite the file they just opened. A constant is
+         * used instead: the box is inert, so it may as well say what
+         * the button does.
+         *
+         * KEEP THE PROMPT SHORT. Standard File's prompt is a single
+         * static text item about 200 points wide and it does not wrap:
+         * "Extract the files into this folder:" was photographed on
+         * System 6 rendering as "Extract the files into this", with
+         * the word that carried the meaning cut off. */
+        SFPutFile(where, "\pExtract into this folder:",
+                  "\pExtract here", NULL, &dest);
+        if (!dest.good) continue;      /* changed their mind: pick again */
+
+        /* Both refNums are working directories on System 7 and later
+         * and plain volume refNums on System 6; dirID 0 is correct for
+         * either (FORMATS.md, the working-directory row). */
+        ExtractOne(reply.vRefNum, 0, reply.fName, dest.vRefNum, 0);
     }
     return 0;
 }

@@ -24,7 +24,7 @@ The engine passes a 797-fixture differential suite against `unar` and, where `un
 
 It runs on all three systems the project claims: **System 6.0.8 and System 7.0.1** under Mini vMac (a true 68000), and **Mac OS 9.2** under QEMU PowerPC through the 68LC040 emulator, where 13/13 of a format sample is byte-exact, extraction onto **HFS+** is verified, and the `SIZE` partition is honoured by the Process Manager.
 
-**System 6 is the target for the interactive UI.** It is driven end to end there — SFGetFile, progress dialog, Cancel, Cmd-., partial-output cleanup, result alert, launch by double-click. Above System 6 the UI is deliberate scope, not an open item: do not spend runs on how it looks or behaves on 7 or 9. The paths those tiers exist for are tested directly instead, without a Finder.
+**System 6 is the target for the interactive UI.** It is driven end to end there — SFGetFile, the destination dialog, progress dialog, Cancel, Cmd-., partial-output cleanup, result alert, launch by double-click. Above System 6 the UI is deliberate scope, not an open item: do not spend runs on how it looks or behaves on 7 or 9. The paths those tiers exist for are tested directly instead, without a Finder.
 
 **Do not re-plan or re-run completed milestones.** The authoritative status lives in:
 

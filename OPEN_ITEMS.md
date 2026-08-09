@@ -1,4 +1,4 @@
-# OPEN_ITEMS.md — what is missing, as of 2026-08-08
+# OPEN_ITEMS.md — what is missing, as of 2026-08-09
 
 A standing audit of the gaps: things not done, things done but not verified,
 and things this repository asserts more confidently than the evidence supports.
@@ -89,6 +89,8 @@ environment (section 4).
 | Nine fixtures with no oracle manifest ("undecidable" or "oracle-buggy") | 2026-08-08 | both reasons were the fork-naming flag, not the archives: `unar -k visible` writes `NAME.rsrc`, which collides with a real entry called `X.rsrc` and which GNUstep refuses to build for a leading `~`. `-k hidden` (`._NAME`) decides all nine, and all 774 existing manifests rebuild identically. **A limitation and its remedy sat one paragraph apart in TESTING.md**; the remedy was a documented flag of a tool already in use. DECISIONS.md, BLOCKERS.md |
 | StuffIt method 6 unimplemented, "no oracle to check it against" | 2026-08-08 | the oracle existed and was already in `reference/`: macunpack has decoded fixed Huffman since 1991, and only XADMaster — the implementation we happened to be reading — refuses it. **"No oracle exists" was a statement about one tool.** The second fixture the item also said was missing was a generator, not a search: `tools/synth_sit6.py` covers the branches the one real fork cannot reach. Building that oracle also adjudicated 22 forks of OTHER methods that unar fails on, taking the suite 793 → 795. DECISIONS.md, TESTING.md |
 | The Mac "locate part N" alert had never been on screen | 2026-08-09 | the emulator runs that proved the join used the autotest build, which does not compile `SegAskUser` at all — so "verified on a Mac" covered the join and covered none of the dialog. Closed by `tools/vmac/interactive.py --segments`, which forces the alert by leaving part 1 alone on the boot volume. **Both bugs it found were in the harness, and both looked like application bugs**: Standard File opens on the LAST-INSERTED volume, so the first walk opened part 2 and the app's perfectly correct "part 1 has not been found" read as a defect; and the read-back opened the pristine boot image rather than `Mac()`'s private copy, reporting "not found" for a run that had worked. **A UI harness asserts on a screenshot, so its own mistakes are indistinguishable from the failures it is looking for** — which is why this phase ends on a byte comparison instead. DECISIONS.md |
+| Output could only go beside the archive | 2026-08-09 | wrong for the case the segment work exists for: the volume holding the output is the volume that has to be ejected. There is no folder picker before System 7, so the System 6 idiom is `SFPutFile` with the name ignored — and because Standard File keeps ONE current folder across it and `SFGetFile`, the dialog opens beside the archive and Return is the old behaviour. Closed by `interactive.py --dest`, which asserts on BOTH volumes because "Extraction complete." looks the same wherever the bytes went. **The prompt is a fixed-width resource, not a sentence**: "Extract the files into this folder:" rendered as "Extract the files into this". DECISIONS.md |
+| `Mac.settle` could not tell "finished" from "slow" | 2026-08-09 | it waited for two consecutive identical frames, and the progress dialog repaints once per engine callback (8–16 KB of input), so on a slow decode both polls land in one gap. It returned at 33% and `--dest` reported the application had written to the wrong volume. Now every settle that waits on an extraction asks for SECONDS of stillness (`quiet=EXTRACT_QUIET`) rather than two polls. **The unsound wait had been in every interactive phase since M10 and never failed, because none of them could**: they extract to a hard disk and are judged by eye. It took an assertion to expose it. DECISIONS.md |
 | Two harness excuses that could not fail | 2026-08-08 | found by asking what EVIDENCE each tolerance rested on. One rested on our own error message — a fixture was skipped whole when every entry our binary called "recognized but unsupported", so the thing being graded decided whether it was graded; it was discarding 10 adjudicated forks of the two PKZIP 1.x zips, and a regression on a supported method would have become a skip. The other excused a whole ENTRY where the oracle had failed one of its forks, so an adjudicated fork beside an unadjudicated one was never required to exist. Both now anchor on the oracle (`oracle_methods` from lsar), both were demonstrated failing with stub binaries first, and no engine result moved: 795 → 797 graded. **An excuse must be anchored outside the thing it excuses.** DECISIONS.md, TESTING.md |
 
 ---
@@ -130,13 +132,6 @@ scoped out on purpose, ranked by what they would cost.
   reworked, deliberately**, so that the shipped code has no path that
   nothing exercises. It is **testable under emulation** — Mini vMac
   mounts an image mid-run — and does not belong in MANUAL_TESTS.md.
-- **A destination other than the archive's folder.** Output goes beside
-  the archive, which is fine for a set on a hard disk and wrong for one
-  on floppies: the volume holding the output is the volume that has to
-  be ejected. Needs a destination picker, which is a UI change beyond
-  the "locate part N" alert; until then the workable floppy procedure
-  is the one people actually used — copy the parts to a hard disk
-  first.
 - **Parts that are individually wrapped.** A real download is
   `Archive.sit.1.hqx`: each part BinHex- or MacBinary-encoded on its
   own, so the envelope has to come off before the join. Today the
