@@ -300,10 +300,27 @@ void unc_entry_path_append(UncEntryInfo *e, const uint8_t *comp, uint32_t len);
 /* offset 0) and an extractor.                                        */
 /* ------------------------------------------------------------------ */
 
+/* Where the parts of a segmented archive sit in the joined stream.
+ *
+ * Only formats that address themselves as (part, offset within that
+ * part) need this — in practice zip, whose central directory stores
+ * both numbers per entry. NULL for an archive read out of one file,
+ * which is every other case; a decoder that finds a non-zero part
+ * number with no map in hand is looking at a set it was handed one
+ * member of, and should say UNC_ERR_SEGMENTED rather than guess. */
+typedef struct UncSegMap {
+    void     *ctx;
+    /* Logical offset where part `part` (1-based) begins, or
+     * UNC_SIZE_UNKNOWN if that part is not in the set. */
+    uint32_t (*base)(void *ctx, int part);
+    uint16_t  nparts;
+} UncSegMap;
+
 typedef struct UncCtx {
     UncIO            *io;
     UncSink          *sink;
     UncAlloc         *al;
+    const UncSegMap  *segmap;   /* NULL unless the archive is joined */
     UncProgressState  ps;
     UncOptions        opt;
 } UncCtx;
@@ -327,6 +344,14 @@ int unc_sit_extract(UncCtx *c);
 int unc_sitseg_probe(const uint8_t *head, int32_t len);
 int unc_sitseg_extract(UncCtx *c);
 int unc_sitseg_emit(UncCtx *c, const UncSegmentDesc *desc, uint32_t base);
+int unc_sitseg_describe(UncIO *io, UncSegmentDesc *desc);
+
+/* One part of a spanned ("split") zip set (fmt_zipseg.c). The probe
+ * needs the io handle because the only part that identifies itself
+ * unambiguously does so at the END of the file. */
+int unc_zipseg_probe(const uint8_t *head, int32_t len, UncIO *io);
+int unc_zipseg_extract(UncCtx *c);
+int unc_zipseg_describe(UncIO *io, UncSegmentDesc *desc);
 
 /* One StuffIt fork: seek to `at`, decode `complen` -> `outlen` bytes
  * with the given method, verify the CRC-16/ARC (`wantcrc`; method 15

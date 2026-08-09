@@ -496,6 +496,126 @@ static void seg_scan_dir(SegHost *h, const char *anchor)
     closedir(d);
 }
 
+/* ------------------------------------------------------------------ */
+/* Spanned zip: the same three ways in, decided by NAME                 */
+/*                                                                    */
+/* A spanned zip fingerprints nothing, so unc_segment_match cannot be  */
+/* asked and the parts are ordered the only way the format allows —    */
+/* by the extension Info-ZIP gives them, NAME.z01 ... NAME.z99 with    */
+/* the last part called NAME.zip. (Source: the volume regex in         */
+/* reference/XADMaster/XADZipParser.m +volumesForHandle:,              */
+/* `^NAME\.(zip|z[0-9]{2})$`, matched case-insensitively against the   */
+/* directory the opened part came from.) What keeps a wrong file out   */
+/* is not this scan but the structural check the engine makes on the   */
+/* assembled set; see unc_extract_segments in unclassic.h.             */
+/* ------------------------------------------------------------------ */
+
+static int ascii_lower(int ch)
+{
+    return (ch >= 'A' && ch <= 'Z') ? ch - 'A' + 'a' : ch;
+}
+
+/* Which part of the family `name` is, given the stem the family shares:
+ * NN for a ".zNN" extension, ZIPFAM_LAST for ".zip", 0 for no match. */
+#define ZIPFAM_LAST (-1)
+
+static int zipfam_part_of(const char *stem, size_t stemlen, const char *name)
+{
+    size_t i;
+    const char *ext;
+
+    for (i = 0; i < stemlen; i++)
+        if (ascii_lower((unsigned char)name[i]) !=
+            ascii_lower((unsigned char)stem[i]) || name[i] == 0)
+            return 0;
+    if (name[stemlen] != '.') return 0;
+    ext = name + stemlen + 1;
+
+    if (ascii_lower((unsigned char)ext[0]) == 'z' &&
+        ascii_lower((unsigned char)ext[1]) == 'i' &&
+        ascii_lower((unsigned char)ext[2]) == 'p' && ext[3] == 0)
+        return ZIPFAM_LAST;
+    if (ascii_lower((unsigned char)ext[0]) == 'z' &&
+        ext[1] >= '0' && ext[1] <= '9' &&
+        ext[2] >= '0' && ext[2] <= '9' && ext[3] == 0) {
+        int n = (ext[1] - '0') * 10 + (ext[2] - '0');
+        return n >= 1 ? n : 0;      /* there is no part zero */
+    }
+    return 0;
+}
+
+/* Which part a path's own extension names, independent of any family:
+ * what --part has to go on when the file was given from elsewhere. */
+static int zip_ext_part(const char *path)
+{
+    const char *slash = strrchr(path, '/');
+    const char *base = slash ? slash + 1 : path;
+    const char *dot = strrchr(base, '.');
+    if (!dot || dot == base) return 0;
+    return zipfam_part_of(base, (size_t)(dot - base), base);
+}
+
+/* Split a path into the directory to scan and the stem its family
+ * shares. Returns the part the given file itself is, or 0 if its name
+ * is not of the family shape at all. */
+static int zipfam_split(const char *path, char *dir, size_t dirsz,
+                        const char **stem, size_t *stemlen)
+{
+    const char *slash = strrchr(path, '/');
+    const char *base = slash ? slash + 1 : path;
+    const char *dot = strrchr(base, '.');
+    size_t n;
+
+    if (!dot || dot == base) return 0;
+    *stem = base;
+    *stemlen = (size_t)(dot - base);
+
+    n = slash ? (size_t)(slash - path) : 0;
+    if (n + 2 >= dirsz) return 0;
+    if (!slash) { dir[0] = '.'; dir[1] = 0; }
+    else if (n == 0) { dir[0] = '/'; dir[1] = 0; }
+    else { memcpy(dir, path, n); dir[n] = 0; }
+
+    return zipfam_part_of(*stem, *stemlen, base);
+}
+
+/* Walk the family's directory and record every member. `nparts` says
+ * which slot the ".zip" member belongs in; pass 0 while that is still
+ * unknown, which records every other member and leaves that one out.
+ * `lastbuf` receives the ".zip" member's path either way, since it has
+ * to be described before the count can be known at all. */
+static void seg_scan_zip_family(SegHost *h, const char *anchor, int nparts,
+                                char *lastbuf, size_t lastsz)
+{
+    char dir[1024], cand[1200];
+    const char *stem;
+    size_t stemlen;
+    DIR *d;
+    struct dirent *de;
+
+    if (lastbuf && lastsz) lastbuf[0] = 0;
+    if (!zipfam_split(anchor, dir, sizeof dir, &stem, &stemlen)) return;
+
+    d = opendir(dir);
+    if (!d) return;
+    while ((de = readdir(d)) != NULL) {
+        struct stat st;
+        int part = zipfam_part_of(stem, stemlen, de->d_name);
+        if (!part) continue;
+        if ((size_t)snprintf(cand, sizeof cand, "%s/%s", dir, de->d_name)
+            >= sizeof cand)
+            continue;
+        if (stat(cand, &st) != 0 || !S_ISREG(st.st_mode)) continue;
+        if (part == ZIPFAM_LAST) {
+            if (lastbuf && lastsz) snprintf(lastbuf, lastsz, "%s", cand);
+            part = nparts;
+            if (part < 1) continue;      /* count not established yet */
+        }
+        seg_record(h, part, cand);
+    }
+    closedir(d);
+}
+
 /* Ask stdin for a path to part `part`, until one matches or the user
  * gives up (empty line or EOF). */
 static int seg_ask(SegHost *h, int part)
@@ -512,6 +632,21 @@ static int seg_ask(SegHost *h, int part)
         n = strlen(line);
         while (n && (line[n - 1] == '\n' || line[n - 1] == '\r')) line[--n] = 0;
         if (n == 0) return 0;
+
+        /* A spanned zip part cannot prove which part it is, so the
+         * offer is taken at face value and the engine's structural
+         * check on the assembled set is what catches a wrong one. Said
+         * out loud, because everywhere else in this program a part is
+         * verified before it is used. */
+        if (h->desc.scheme == UNC_FORMAT_ZIPSEG) {
+            struct stat st;
+            if (stat(line, &st) == 0 && S_ISREG(st.st_mode)) {
+                seg_record(h, part, line);
+                return 1;
+            }
+            fprintf(stderr, "unclassic: %s: cannot read that file\n", line);
+            continue;
+        }
 
         got = seg_part_of(h, line);
         if (got == part) { seg_record(h, part, line); return 1; }
@@ -585,7 +720,9 @@ static void usage(void)
         "(default: per-entry error)\n"
         "  -nr            do not auto-unwrap envelope layers (.sit.hqx, ...)\n"
         "  --part <file>  another part of a segmented archive (repeatable);\n"
-        "                 parts are also looked for beside the one given\n"
+        "                 parts are also looked for beside the one given.\n"
+        "                 A StuffIt part is placed by its header, a spanned\n"
+        "                 zip part by its .zNN / .zip extension\n"
         "  --no-parts     do not look for other parts\n"
         "  --ask          prompt on stdin for parts that were not found\n"
         "  --stats        print allocator statistics\n"
@@ -702,7 +839,7 @@ nextlayer:
 
     /* Mac formats carry MacRoman names; zip/tar/gzip do not. */
     switch (fmt) {
-    case UNC_FORMAT_ZIP: case UNC_FORMAT_TAR:
+    case UNC_FORMAT_ZIP: case UNC_FORMAT_ZIPSEG: case UNC_FORMAT_TAR:
     case UNC_FORMAT_GZIP: case UNC_FORMAT_COMPRESS_Z:
         sink.mac_encoding = 0; break;
     default:
@@ -756,30 +893,98 @@ nextlayer:
     if (verbose || strcmp(cmd, "l") == 0)
         fprintf(stderr, "%s: %s\n", file, unc_format_name(fmt));
 
-    if (fmt == UNC_FORMAT_SITSEG && !no_parts) {
+    if ((fmt == UNC_FORMAT_SITSEG || fmt == UNC_FORMAT_ZIPSEG) && !no_parts) {
         UncVolumeSource vs;
         void *scratch;
 
         memset(&seg, 0, sizeof seg);
         seg.ask = ask;
         seg.verbose = verbose;
-        if (unc_segment_describe(&io, &seg.desc) != UNC_OK) {
-            fprintf(stderr, "unclassic: %s: not a readable segment header\n",
-                    file);
-            fclose(fio.f);
-            return 1;
-        }
 
-        /* The file we were handed is a part, and its own part number
-         * comes from its header — so opening part 3 of a set works. */
-        seg_record(&seg, (int)seg.desc.part, file);
-        for (i = 0; i < nparts; i++) {
-            int p = seg_part_of(&seg, partargs[i]);
-            if (p) seg_record(&seg, p, partargs[i]);
-            else fprintf(stderr, "unclassic: %s: not part of \"%s\", ignored\n",
-                         partargs[i], seg.desc.name);
+        if (fmt == UNC_FORMAT_ZIPSEG) {
+            /* Only the LAST part carries the part count, so it has to be
+             * found before anything else can be — and for this scheme
+             * "found" means "named .zip in the same folder". */
+            char lastpath[1200];
+            const char *stem;
+            size_t stemlen;
+            char dirbuf[1024];
+            FILE *lf;
+            FileIO lio_f;
+            UncIO lio;
+            struct stat lst;
+            int derr;
+
+            seg_scan_zip_family(&seg, file, 0, lastpath, sizeof lastpath);
+            if (!lastpath[0]) {
+                fprintf(stderr, "unclassic: %s: this is one part of a spanned "
+                        "zip; the last part (named .zip) is not beside it\n",
+                        file);
+                fclose(fio.f);
+                return 1;
+            }
+            lf = fopen(lastpath, "rb");
+            if (!lf) {
+                fprintf(stderr, "unclassic: %s: %s\n", lastpath,
+                        strerror(errno));
+                fclose(fio.f);
+                return 1;
+            }
+            memset(&lio_f, 0, sizeof lio_f);
+            lio_f.f = lf;
+            lio_f.size = stat(lastpath, &lst) == 0 ? (uint32_t)lst.st_size
+                                                   : UNC_SIZE_UNKNOWN;
+            lio.ctx = &lio_f;
+            lio.read = fio_read;
+            lio.seek = fio_seek;
+            lio.tell = fio_tell;
+            lio.size = fio_size;
+            derr = unc_segment_describe(&lio, &seg.desc);
+            fclose(lf);
+            if (derr != UNC_OK) {
+                fprintf(stderr, "unclassic: %s: %s\n", lastpath,
+                        unc_strerror(derr));
+                fclose(fio.f);
+                return 1;
+            }
+            seg_record(&seg, (int)seg.desc.nparts, lastpath);
+
+            /* The engine has no filename to put in a prompt, because the
+             * format stores none. Borrow the family's stem for display. */
+            if (zipfam_split(file, dirbuf, sizeof dirbuf, &stem, &stemlen)) {
+                if (stemlen > UNC_NAME_MAX) stemlen = UNC_NAME_MAX;
+                memcpy(seg.desc.name, stem, stemlen);
+                seg.desc.name[stemlen] = 0;
+                seg.desc.name_len = (uint16_t)stemlen;
+            }
+
+            for (i = 0; i < nparts; i++) {
+                int p = zip_ext_part(partargs[i]);
+                if (p == ZIPFAM_LAST) p = (int)seg.desc.nparts;
+                if (p) seg_record(&seg, p, partargs[i]);
+                else fprintf(stderr, "unclassic: %s: no .zNN or .zip "
+                             "extension to place it by, ignored\n",
+                             partargs[i]);
+            }
+        } else {
+            if (unc_segment_describe(&io, &seg.desc) != UNC_OK) {
+                fprintf(stderr, "unclassic: %s: not a readable segment header\n",
+                        file);
+                fclose(fio.f);
+                return 1;
+            }
+
+            /* The file we were handed is a part, and its own part number
+             * comes from its header — so opening part 3 of a set works. */
+            seg_record(&seg, (int)seg.desc.part, file);
+            for (i = 0; i < nparts; i++) {
+                int p = seg_part_of(&seg, partargs[i]);
+                if (p) seg_record(&seg, p, partargs[i]);
+                else fprintf(stderr, "unclassic: %s: not part of \"%s\", "
+                             "ignored\n", partargs[i], seg.desc.name);
+            }
+            seg_scan_dir(&seg, file);
         }
-        seg_scan_dir(&seg, file);
 
         vs.ctx = &seg;
         vs.need = seg_need;

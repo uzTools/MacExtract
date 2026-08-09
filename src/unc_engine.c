@@ -34,6 +34,7 @@ static const UncFormatDesc unc_formats[] = {
     { UNC_FORMAT_NOWCOMPRESS, "Now Compress",    0 },
     { UNC_FORMAT_LZH,         "LZH",             0 },
     { UNC_FORMAT_SITSEG,      "StuffIt segment", 1 },
+    { UNC_FORMAT_ZIPSEG,      "Zip segment",     1 },
 };
 
 const char *unc_format_name(UncFormat f)
@@ -104,6 +105,14 @@ UncFormat unc_sniff(UncIO *io)
     if (unc_packit_probe(head, len))    return UNC_FORMAT_PACKIT;
     if (unc_gzip_probe(head, len))      return UNC_FORMAT_GZIP;
     if (unc_compressz_probe(head, len)) return UNC_FORMAT_COMPRESS_Z;
+    /* Before the plain zip probe, and not after: the two parts of a
+     * spanned set that are recognizable at all both look enough like a
+     * zip for that probe to claim them, and it would then be reported
+     * as an archive that happens to be broken rather than as a piece of
+     * one. This costs every file that reaches here a bounded backwards
+     * scan for an end-of-central-directory record; a whole zip has one
+     * in its last 512 bytes, so it pays a single read. */
+    if (unc_zipseg_probe(head, len, io)) return UNC_FORMAT_ZIPSEG;
     if (unc_zip_probe(head, len))       return UNC_FORMAT_ZIP;
     if (unc_lzh_probe(head, len))       return UNC_FORMAT_LZH;
     if (unc_nowcompress_probe(head, len)) return UNC_FORMAT_NOWCOMPRESS;
@@ -140,13 +149,15 @@ int unc_extract_as(UncFormat f, UncIO *io, UncSink *sink, UncAlloc *al,
     c.io = io;
     c.sink = sink;
     c.al = al;
+    c.segmap = NULL;              /* one file: offsets are already absolute */
     c.ps.prog = prog;
     c.ps.total = io->size(io->ctx);
     c.ps.done = 0;
     c.ps.since_tick = 0;
     c.ps.hold = 0;
     if (opt) c.opt = *opt;
-    else { c.opt.list_only = 0; c.opt.test_only = 0; }
+    else { c.opt.list_only = 0; c.opt.test_only = 0;
+           c.opt.name_hint = 0; c.opt.name_hint_len = 0; }
 
     if (io->seek(io->ctx, 0) < 0) return UNC_ERR_IO;
 
@@ -164,6 +175,7 @@ int unc_extract_as(UncFormat f, UncIO *io, UncSink *sink, UncAlloc *al,
     case UNC_FORMAT_COMPRESS_Z:  return unc_compressz_extract(&c);
     case UNC_FORMAT_TAR:         return unc_tar_extract(&c);
     case UNC_FORMAT_SITSEG:      return unc_sitseg_extract(&c);
+    case UNC_FORMAT_ZIPSEG:      return unc_zipseg_extract(&c);
     case UNC_FORMAT_UNKNOWN:     return UNC_ERR_FORMAT;
     default:                     return UNC_ERR_UNSUPPORTED;
     }

@@ -75,23 +75,46 @@ DECISIONS.md, the withdrawn claim to BLOCKERS.md, the numbers to FORMATS.md.
 
 ---
 
-## 4. Multi-segment: what the proof of concept deliberately left
+## 4. Multi-segment: what the two implemented schemes leave
 
-StuffIt segments extract end to end (M11). These are the parts that were
-scoped out on purpose, ranked by what they would cost.
+StuffIt segments and spanned zip extract end to end (M11). These are the
+parts scoped out on purpose, ranked by what they would cost.
 
-- **Other segment schemes.** Spanned Zip (`.z01…/.zip`, oracle: `unar`)
-  and plain `.NNN` splits are next and cheap; note a `.NNN` split can
-  only ever be identified by NAME, so it cannot meet the "parts may be
-  named anything" bar the StuffIt scheme meets. **Compact Pro segmented
-  archives are the interesting one and the expensive one**: the format
-  documents a volume byte per archive and per entry, no reference
-  implementation extracts them (`unar` and `macunpack` both read the
-  byte and ignore it), and there is no sample in the corpus — so it
-  needs a genuine segmented `.cpt` before a line of parser is written.
-  Compact Pro itself is in the corpus and splits archives across
-  floppies, so generating one under Mini vMac is a route; the oracle
-  would then be differential (same files, segmented vs not).
+- **Spanned zip is not wired into the Mac shell.** Engine and Linux CLI
+  only, by decision on 2026-08-09. Two things stand in the way, and
+  neither is hard: the shell's part discovery matches a StuffIt header,
+  where this scheme needs a filename match, and the descriptor would
+  have to carry a base filename the engine deliberately has no concept
+  of (a zip stores none). The real question is whether it is *usable*
+  there rather than whether it compiles — a one-drive Mac Plus would be
+  asked for 22 disk swaps on a 5-part set and 49 on a 12-part one
+  (FORMATS.md, "Spanned zip"), because a zip's directory is at the end
+  and its entry data at the beginning. Buffering the central directory
+  once, before extracting, is what would fix that; it costs the
+  directory's size in heap and would change zip's recorded peak-RAM
+  figures, so it is a measurement job, not a patch. The Mac application
+  carries the code regardless — its payload went 76,800 → 78,208 B on
+  2026-08-09, +1.4 KB it cannot yet reach — which is noise against the
+  floor target's ~700 KB of free heap but is the honest price of the
+  engine being shared.
+- **Other segment schemes.** Plain `.NNN` splits are cheap and weak: a
+  part can only ever be identified by NAME, so the scheme cannot meet
+  the "parts may be named anything" bar StuffIt meets, and unlike
+  spanned zip it has no structure to adjudicate the result against
+  afterwards either. **Compact Pro segmented archives are the
+  interesting one and the expensive one**: the format documents a volume
+  byte per archive and per entry, no reference implementation extracts
+  them (`unar` and `macunpack` both read the byte and ignore it), and
+  there is no sample in the corpus — so it needs a genuine segmented
+  `.cpt` before a line of parser is written. Compact Pro itself is in
+  the corpus and splits archives across floppies, so generating one
+  under Mini vMac is a route; the oracle would then be differential
+  (same files, segmented vs not).
+- **Zip64 spanned sets are refused, not read.** An end-of-central-directory
+  record whose disk number is `0xFFFF` defers to the zip64 locator,
+  which nothing here parses; `unc_zipseg_describe` answers
+  `UNC_ERR_UNSUPPORTED`. Out of reach of the floor target anyway (a
+  2 GB+ archive), and no fixture exists.
 - **Parts that are individually wrapped.** A real download is
   `Archive.sit.1.hqx`: each part BinHex- or MacBinary-encoded on its
   own, so the envelope has to come off before the join. Today the
@@ -105,8 +128,8 @@ scoped out on purpose, ranked by what they would cost.
   (`.sitx`), encrypted archives, disk-image extraction, Now Compress, and
   LZH *extraction* — LZH was the optional half of M8 and is detect-only
   (the LZH/LHA row of FORMATS.md). **Multi-segment archives are IN scope
-  since 2026-08-08** and one scheme is implemented; the rest are the
-  section above.
+  since 2026-08-08** and two schemes are implemented (StuffIt segments,
+  spanned zip); the rest are the section above.
 - **Do not retry, on Mac heap pressure.** Both were measured while StuffIt 5 /
   Arsenic was still short of the 1 MB floor, and both are dead ends:
   `MaxMem()` before a retry (compaction may not move a `NewPtr`), and

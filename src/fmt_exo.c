@@ -427,11 +427,45 @@ int unc_tar_extract(UncCtx *c)
 
 int unc_zip_probe(const uint8_t *head, int32_t len)
 {
-    /* Local file header or (rarely first) central dir / EOCD magic. */
     if (len < 4) return 0;
-    if (head[0] != 'P' || head[1] != 'K') return 0;
-    return (head[2] == 3 && head[3] == 4) ||
-           (head[2] == 5 && head[3] == 6);   /* empty archive */
+    /* Local file header or (rarely first) central dir / EOCD magic. */
+    if (head[0] == 'P' && head[1] == 'K' &&
+        ((head[2] == 3 && head[3] == 4) ||
+         (head[2] == 5 && head[3] == 6)))    /* empty archive */
+        return 1;
+    /* A local header displaced to offset 4: what a splitting zip writes
+     * when it puts a marker in front. That archive may be a set of one,
+     * in which case it is an ordinary zip and reads as one — the four
+     * bytes are simply part of every offset it records.
+     * Source: reference/XADMaster/XADZipParser.m
+     * +recognizeFileWithHandle:, `bytes[4..7] == PK\3\4`. Segmented
+     * sets are caught before this by unc_zipseg_probe. */
+    return len >= 8 && head[4] == 'P' && head[5] == 'K' &&
+           head[6] == 3 && head[7] == 4;
+}
+
+/* Resolve a (part, offset within that part) pair — how a spanned zip
+ * addresses everything — to an offset in the stream being read.
+ *
+ * Without a map there is only one part, so the offset already is the
+ * answer; a non-zero part number then means the caller was handed one
+ * member of a set and nothing else, which is not a corrupt archive but
+ * an incomplete one. */
+static int zip_at(UncCtx *c, uint32_t part0, uint32_t off, uint32_t *out)
+{
+    uint32_t base;
+
+    if (!c->segmap) {
+        if (part0 != 0) return UNC_ERR_SEGMENTED;
+        *out = off;
+        return UNC_OK;
+    }
+    if (part0 >= 0xFFFFu) return UNC_ERR_UNSUPPORTED;   /* zip64 */
+    base = c->segmap->base(c->segmap->ctx, (int)part0 + 1);
+    if (base == UNC_SIZE_UNKNOWN) return UNC_ERR_CORRUPT;
+    if (base + off < base) return UNC_ERR_CORRUPT;
+    *out = base + off;
+    return UNC_OK;
 }
 
 static int zip_emit(void *ctx, const uint8_t *p, int32_t n)
@@ -444,7 +478,7 @@ int unc_zip_extract(UncCtx *c)
     uint32_t fsize, scan, eocd = 0;
     uint8_t *tail = NULL, *iobuf = NULL, *obuf;
     uint32_t iocap = 4096, ocap = 8192;
-    uint32_t nentries, cdoffs, cpos;
+    uint32_t nentries, cdoffs, cpos, disknum, cddisk;
     uint8_t ce[46];
     int found = 0;
     uint32_t i;
@@ -473,18 +507,34 @@ int unc_zip_extract(UncCtx *c)
     }
     if (!found) { unc_free(c->al, tail); return UNC_ERR_FORMAT; }
 
+    /* "number of this disk" and "disk where the central directory
+     * starts": 0 and 0 for an archive in one file. */
+    disknum  = unc_get_u16le(tail + eocd + 4);
+    cddisk   = unc_get_u16le(tail + eocd + 6);
     nentries = unc_get_u16le(tail + eocd + 10);
     cdoffs   = unc_get_u32le(tail + eocd + 16);
     unc_free(c->al, tail);
+
+    /* The set the archive says it is must be the set that was joined.
+     * This is the check that catches parts assembled in the wrong order
+     * or from the wrong archive, because filenames put them there and a
+     * filename is evidence of nothing (see unclassic.h). */
+    if (!c->segmap) {
+        if (disknum != 0) return UNC_ERR_SEGMENTED;
+    } else if ((uint32_t)c->segmap->nparts != disknum + 1) {
+        return UNC_ERR_CORRUPT;
+    }
+
+    err = zip_at(c, cddisk, cdoffs, &cpos);
+    if (err != UNC_OK) return err;
 
     iobuf = (uint8_t *)unc_alloc(c->al, iocap + ocap);
     if (!iobuf) return UNC_ERR_MEM;
     obuf = iobuf + iocap;
 
-    cpos = cdoffs;
     for (i = 0; i < nentries; i++) {
         uint32_t method, flags, wantcrc, csize, usize;
-        uint32_t namelen, extralen, commentlen, lhoffs;
+        uint32_t namelen, extralen, commentlen, lhoffs, startdisk;
         uint8_t name[256];
         uint32_t nread;
         UncEntryInfo e;
@@ -506,7 +556,8 @@ int unc_zip_extract(UncCtx *c)
         namelen    = unc_get_u16le(ce + 28);
         extralen   = unc_get_u16le(ce + 30);
         commentlen = unc_get_u16le(ce + 32);
-        lhoffs     = unc_get_u32le(ce + 42);
+        startdisk  = unc_get_u16le(ce + 34);   /* "disk number start" */
+        lhoffs     = unc_get_u32le(ce + 42);   /* relative to that disk */
 
         nread = namelen < sizeof name ? namelen : (uint32_t)sizeof name;
         if (nread &&
@@ -547,12 +598,16 @@ int unc_zip_extract(UncCtx *c)
                     /* Local header gives the true data offset (its
                      * name/extra lengths may differ from the CD's). */
                     uint8_t lh[30];
-                    if (unc_read_at(c->io, lhoffs, lh, 30) != UNC_OK ||
+                    uint32_t lhat;
+                    est = zip_at(c, startdisk, lhoffs, &lhat);
+                    if (est != UNC_OK) {
+                        /* fall through to end_entry with this status */
+                    } else if (unc_read_at(c->io, lhat, lh, 30) != UNC_OK ||
                         !(lh[0] == 'P' && lh[1] == 'K' && lh[2] == 3 &&
                           lh[3] == 4)) {
                         est = UNC_ERR_CORRUPT;
                     } else {
-                        uint32_t dataat = lhoffs + 30 +
+                        uint32_t dataat = lhat + 30 +
                             unc_get_u16le(lh + 26) + unc_get_u16le(lh + 28);
                         UncBufIn in;
                         uint32_t crc = 0xFFFFFFFFu, produced = 0;

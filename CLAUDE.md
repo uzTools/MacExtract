@@ -12,13 +12,25 @@ The engine is the product. The Mac app is a thin shell.
 ## Current state — read before working
 
 M0–M11 are **DONE**. M11 is multi-segment archives, in scope since
-2026-08-08: StuffIt segments join end to end, on Linux and byte-exact on a
-real emulated Mac Plus at 4 MB and at the 1 MB floor. **A part is identified
-by its header, never by its filename** — that is the whole point, and it is
-why a set whose parts are scattered or named unlike each other works here and
-does not work in `unar`. Other schemes are ranked in OPEN_ITEMS.md section 4;
-Compact Pro's needs a genuine sample before any parser is written, because no
-reference implementation extracts one.
+2026-08-08, and **two schemes are implemented**.
+
+**StuffIt segments** join end to end, on Linux and byte-exact on a real
+emulated Mac Plus at 4 MB and at the 1 MB floor. **A part is identified by
+its header, never by its filename** — that is the whole point, and it is why
+a set whose parts are scattered or named unlike each other works here and does
+not work in `unar`.
+
+**Spanned ("split") zip** joins `NAME.z01` … `NAME.zip` (2026-08-09), engine
+and Linux CLI only. It cannot meet that bar and is worth understanding as the
+counter-example: the format identifies only its FIRST and LAST parts, and the
+last is the only place the part count is written, so the host orders parts by
+NAME and the engine adjudicates the assembled set afterwards — part count,
+central-directory position, every local header, every CRC. **Names propose,
+content disposes.** The promise is not "a wrong part is refused" but "a wrong
+part cannot pass silently", and a lax reader was built to prove the difference
+is load-bearing. Compact Pro's scheme needs a genuine sample before any parser
+is written, because no reference implementation extracts one; the rest is
+ranked in OPEN_ITEMS.md section 4.
 
 The engine passes a 797-fixture differential suite against `unar` and, where `unar` fails, `macunpack`; the Mac shell extracts byte-exact on a real System 6.0.8 Mac Plus under Mini vMac — **55/55 sampled fixtures at 4 MB and 55/55 at the 1 MB floor** (2026-08-08, on a sample that grew from 44 to 55 that day; there are no memory-budget refusals left).
 
@@ -354,8 +366,12 @@ how long they will be waiting.
 Compression (extraction only), StuffIt X (`.sitx`), encrypted archives, disk images, DiskDoubler, Now Compress, LZH/LHA. These are **detect-only**: `unc_sniff` names them — including Disk Copy 4.2, whose probe is now real — so a UI can tell the user what the file is, and extraction returns cleanly unsupported.
 
 **Multi-segment archives are IN scope since 2026-08-08** (M11), where this
-file used to list them as out. One scheme is implemented — StuffIt segments —
-and the others, including Compact Pro's, are ranked in OPEN_ITEMS.md section
-4 with what each would cost. The rule that decided the order: **a part must
-be identifiable from its own bytes.** A `.001` split cannot be, whatever it
-is named, so it buys less than it looks like it does.
+file used to list them as out. Two schemes are implemented — StuffIt segments
+and spanned zip — and the others, including Compact Pro's, are ranked in
+OPEN_ITEMS.md section 4 with what each would cost. The rule that decided the
+ORDER was: **a part must be identifiable from its own bytes.** It is still
+the right first question, but it turned out to be a ranking rule rather than
+a gate — spanned zip fails it in the middle of a set and was built anyway,
+because the archive can be made to prove itself once assembled. What a
+`.NNN` split lacks is not the header but that second chance: nothing about
+the joined result would contradict a wrong order.

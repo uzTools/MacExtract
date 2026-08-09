@@ -21,6 +21,7 @@ whole corpus for that format (engine allocations only, via
 | Unix compress (.Z) | extract | LZW ≤16 bit | 4 fixtures | 219 KB§ | full |
 | Tar (ustar/v7) | extract | — (links reported unsupported) | 3 fixtures (2 real 1990 v7 tars) + unit tests | 8 KB | full |
 | StuffIt segment (multi-part) | extract | — (join only; the joined file is the next layer) | 7 synthetic sets, oracle-adjudicated | 8 KB | full |
+| Zip segment (spanned, .z01…/.zip) | extract | store, deflate — the zip reader, over the joined parts | 5 generated sets, adjudicated 4 ways (source tree, `unar`, us split, us unsplit) | 66 KB | full |
 | StuffIt X (.sitx) | detect only | — | — | — | — |
 | DiskDoubler (DD, DDAR, DDA2) | detect only | — | 4 sniffed | — | — |
 | Now Compress | detect only | — | 1 sniffed | — | — |
@@ -151,8 +152,14 @@ archive the same recursion continues into it.
 
 ## Segmented archives (multi-part sets)
 
-One logical file cut across several, one per floppy. The scheme
-implemented is **StuffIt segments** (XADMaster's "StuffIt split file"),
+One logical file cut across several, one per floppy. **Two schemes are
+implemented**: StuffIt segments and spanned ("split") zip. They differ
+in whether a part can be recognized from its own bytes, and everything
+else follows from that (DECISIONS.md 2026-08-08 and 2026-08-09).
+
+### StuffIt segments
+
+XADMaster's "StuffIt split file":
 a 100-byte header on each part: `B0 56 00`, part number, the original
 file's name, and 26 fingerprint bytes at offset 68 (type, creator,
 Finder flags, both dates, both fork lengths). Concatenating the parts'
@@ -175,7 +182,47 @@ back — so it is measured rather than assumed.
 Peak heap for the join is 8 KB: one buffer, no part table beyond the
 caller's ~1.1 KB scratch struct, one part open at a time.
 
-### On a real emulated Mac Plus (System 6.0.8, 2026-08-08)
+### Spanned ("split") zip — `NAME.z01` … `NAME.zip`
+
+The parts concatenate with nothing to strip, and the archive addresses
+itself as (part, offset within that part): "disk number start" at
+offset 34 of each central-directory entry, and the two disk numbers in
+the end-of-central-directory record. `src/fmt_zipseg.c` has the layout
+and its sources.
+
+Only the FIRST part (a local file header at offset 4) and the LAST (the
+EOCD, the only place the part COUNT appears) identify themselves; the
+parts between are undistinguished data, and `unar` refuses one too. So
+the host orders parts by filename and the engine adjudicates the result
+structurally — part count, central-directory position, every entry's
+local header, every CRC-32. A deliberately lax reader (CRC and
+signature checks removed) fails exactly the suite's *wrong order* and
+*foreign part* cases, so those checks are load-bearing.
+
+`zip -s` writes its `50 4B 07 08` marker even when the archive did not
+need splitting. Such a file says "disk 0", needs no joining, and reads
+as an ordinary zip — it sniffed as *unknown* before 2026-08-09.
+
+The join is **not** read forward: a zip's directory is at the end and
+its entry data at the beginning. Part opens (backward), measured:
+
+| case | parts | opens | backward |
+|---|---|---|---|
+| `zstored` | 5 | 22 | 7 |
+| `zdeflate` | 4 | 18 | 6 |
+| `znested` | 3 | 14 | 5 |
+| `zmany` | 12 | 49 | 14 |
+
+Peak heap 66,000 B, unchanged from a single-file zip: the EOCD tail
+buffer dominates and the joiner adds only the caller's ~1.1 KB scratch.
+Bisected, so the figure is a requirement rather than an observation —
+`--budget 66000` extracts fully and `65999` refuses cleanly with
+`UNC_ERR_MEM`, having opened the parts to measure them first.
+
+### StuffIt segments on a real emulated Mac Plus (System 6.0.8, 2026-08-08)
+
+Spanned zip is not wired into the Mac shell (OPEN_ITEMS.md section 4);
+everything below is the StuffIt scheme.
 
 `derived-Cal.sit` (50,205 B) cut into three parts and put on one
 floppy, the parts named `archive.sit`, `part-two` and `zzz` — names

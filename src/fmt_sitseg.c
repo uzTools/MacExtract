@@ -99,7 +99,7 @@ int unc_sitseg_probe(const uint8_t *head, int32_t len)
     return sitseg_parse(head, len, NULL) == UNC_OK;
 }
 
-int unc_segment_describe(UncIO *io, UncSegmentDesc *desc)
+int unc_sitseg_describe(UncIO *io, UncSegmentDesc *desc)
 {
     uint8_t head[UNC_SEG_HEAD];
     int err;
@@ -107,7 +107,10 @@ int unc_segment_describe(UncIO *io, UncSegmentDesc *desc)
     if (!io || !desc) return UNC_ERR_FORMAT;
     err = unc_read_at(io, 0, head, UNC_SEG_HEAD);
     if (err != UNC_OK) return UNC_ERR_FORMAT;   /* too short to be one */
-    return sitseg_parse(head, UNC_SEG_HEAD, desc);
+    err = sitseg_parse(head, UNC_SEG_HEAD, desc);
+    /* The payload total ends the walk; there is no part count stored. */
+    if (err == UNC_OK) desc->nparts = 0;
+    return err;
 }
 
 int unc_segment_match(const UncSegmentDesc *desc,
@@ -117,6 +120,10 @@ int unc_segment_match(const UncSegmentDesc *desc,
     int32_t i;
 
     if (!desc || !head) return 0;
+    /* A scheme whose parts carry no identity cannot answer this. Said
+     * explicitly rather than left to fall out of a failed header parse,
+     * because the two outcomes mean opposite things (see unclassic.h). */
+    if (desc->scheme != UNC_FORMAT_SITSEG) return 0;
     if (sitseg_parse(head, len, &cand) != UNC_OK) return 0;
     if (cand.name_len != desc->name_len) return 0;
     for (i = 0; i < (int32_t)desc->name_len; i++)

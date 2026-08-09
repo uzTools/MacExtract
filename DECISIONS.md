@@ -54,6 +54,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-09 — Reacting to the disk going in, and three wrong diagnoses
 - 2026-08-09 — how much of a segmented set is left, without a part count
 - 2026-08-09 — what the docs cost to read, and the rule that hid it
+- 2026-08-09 — Spanned zip: the second scheme, and what it cannot promise
 
 ---
 
@@ -1948,8 +1949,12 @@ says what it is:
 |---|---|---|
 | StuffIt segments | 100-byte header: part number, original name, 26 fingerprint bytes | `unar` |
 | Compact Pro segmented | a volume byte per archive and per entry; segment 2+ layout undocumented | **none** — neither `unar` nor `macunpack` extracts them |
-| spanned Zip | the filename extension | `unar` |
+| spanned Zip | the filename extension* | `unar` |
 | `.001` split | the filename, and nothing else | `unar`, only when part 1 is not itself a recognizable archive |
+
+\* Too coarse, corrected 2026-08-09 when the scheme was implemented:
+its first and last parts DO identify themselves, and the last is the
+only place the part count is written. See the entry of that date.
 
 A `.001` split would have been the least code and cannot meet the
 brief at all: with no header, the name is the only evidence there is.
@@ -2283,3 +2288,92 @@ that said "closed items get a table row, not an essay", which told a session to
 shorten a closed item rather than to move it. Fifteen of the nineteen were
 already written up elsewhere; the four that were not are now entries above. The
 rule now names the destination instead of the format.
+
+---
+
+## 2026-08-09 — Spanned zip: the second scheme, and what it cannot promise
+
+M11 shipped with one segmentation scheme and a table ranking the rest by
+"what identifies a part". Spanned Zip was second, its answer recorded as
+"the filename extension". That answer was too coarse, and getting it
+right is most of this entry.
+
+**A spanned zip identifies two of its parts and no others.** The first
+carries a local file header displaced to offset 4 (XADZipParser.m
+`+recognizeFileWithHandle:`). The last carries the end-of-central-directory
+record, which is the ONE place the part count is written. Everything
+between them is undistinguished archive data — no marker, no index, no
+number. `unar` refuses such a part too, and the suite asserts that it
+does, so the premise is re-checked on every run rather than quoted from
+this entry.
+
+That asymmetry decides the whole design. Discovery cannot start from the
+part the user opened, the way the StuffIt scheme does: it has to reach
+the LAST part first, because nothing else knows how many there are. So
+the CLI resolves any member of a `NAME.zNN` / `NAME.zip` family to the
+`.zip` (the volume regex in XADZipParser.m `+volumesForHandle:`, matched
+case-insensitively), describes that, and only then knows what to ask for.
+
+**Names propose; content disposes.** Ordering parts by filename is
+evidence of nothing, and this project's stated bar is that a part be
+identifiable from its own bytes. A spanned zip cannot meet it — but it
+can be made to prove itself *afterwards*, which is nearly as good and is
+the honest version of the claim. The assembled stream is required to
+agree with itself in three places: the part count must match the one the
+EOCD states, the central directory must begin where that record says it
+does, and every entry's local header must be found at the offset the
+directory gives for it, with its CRC-32 checked as always. So the API
+promise is not "a wrong part is refused" but "a wrong part cannot pass
+silently", and the two are different sentences.
+
+Which is worth nothing unless the checks are load-bearing, so that was
+measured rather than asserted. Building a deliberately lax reader — CRC
+comparison removed, local-header signature check removed — and running
+the suite makes exactly two cases fail: *parts in the wrong order
+extracted cleanly* and *a foreign part extracted cleanly*. Those two
+assertions are the ones holding the scheme up, and they are not vacuous.
+
+**A producer's marker records how a file was made, not what it is.**
+`zip -s` writes `50 4B 07 08` in front of the first part. It also writes
+it when the archive did not need splitting at all: the result is one
+file, its EOCD says "disk 0", and nothing is missing. Reading that marker
+as "this is a segment" would refuse a file that extracts perfectly.
+Deciding it the other way round — the EOCD is the authority, the marker
+is only a shape — turned up a gap that predates this work: such an
+archive sniffed as *unknown* and could not be extracted at all, because
+`unc_zip_probe` looked for a local header only at offset 0. Accepting one
+at offset 4 (the reference's own rule) fixes it, and cost nothing: across
+1,609 corpus files, zero have those bytes there and no fixture changes
+what it sniffs as.
+
+**"0 backward crossings" is a fact about StuffIt's layout, not about
+joining.** The M11 entry above reports it as a measured property and
+braced for swap-thrash that did not materialise. It does materialise
+here, and it is the format asking for it: a zip's directory is at the end
+and its entry data at the beginning, so the reader crosses back the
+moment it starts extracting. Measured on the suite's cases, part opens
+(backward):
+
+| case | parts | opens | backward |
+|---|---|---|---|
+| `zstored` | 5 | 22 | 7 |
+| `zdeflate` | 4 | 18 | 6 |
+| `znested` | 3 | 14 | 5 |
+| `zmany` | 12 | 49 | 14 |
+| StuffIt `many12`, for contrast | 12 | 12 | **0** |
+
+The joiner also has to open every part once before reading anything,
+because a spanned zip declares a part COUNT where StuffIt declares a
+payload SIZE, and the sizes of the parts ARE its address map — a
+(part, offset) pair cannot be resolved without them. That is not an
+inefficiency to remove. What it means for a one-drive Mac is in
+OPEN_ITEMS.md; the engine and CLI do not care.
+
+**The generator being somebody else's code buys a fourth opinion.**
+`tools/synth_sitsplit.py` writes StuffIt parts by hand because nothing
+here produces them, which leaves that scheme adjudicated by `unar` and by
+the generator's own intent. Info-ZIP is in this environment, so every
+spanned case is built twice from the same input — split and unsplit — and
+the unsplit archive is read by our own engine down a path that touches no
+joiner and no address translation. A subtly wrong join now disagrees with
+*us*, not only with the oracle.

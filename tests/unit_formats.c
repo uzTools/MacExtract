@@ -1020,6 +1020,215 @@ static void test_sitseg(void)
     CHECK(cap.count == 0);
 }
 
+/* ------------------------------------------------------------------ */
+/* M11: spanned ("split") zip                                         */
+/*                                                                    */
+/* Everything here is hand-built, because the properties that matter   */
+/* are ones no generated fixture reaches: an end-of-central-directory  */
+/* record pushed away from the end of the file by a comment (and, at   */
+/* one specific length, straddling the backwards scanner's window      */
+/* boundary), and a set whose declared part count disagrees with what  */
+/* the host assembled. tools/run_segments.py covers real `zip -s`      */
+/* output against the oracle.                                         */
+/* ------------------------------------------------------------------ */
+
+static void put16le(uint8_t *p, uint32_t v)
+{
+    p[0] = (uint8_t)(v & 0xFF);
+    p[1] = (uint8_t)((v >> 8) & 0xFF);
+}
+
+/* One stored entry called "f", its data at `dataoff` within part
+ * `startdisk`, plus a central directory and an EOCD claiming `ndisks`
+ * disks and a comment of `commentlen` bytes. Returns the total length.
+ * `cdat` receives where the central directory was put. */
+static uint32_t zs_build_tail(uint8_t *buf, uint32_t crc, uint32_t n,
+                              uint32_t startdisk, uint32_t dataoff,
+                              uint32_t ndisks, uint32_t cddisk,
+                              uint32_t cdrel, uint32_t commentlen)
+{
+    uint32_t cd = 0, eocd;
+
+    memcpy(buf + cd, "PK\x01\x02", 4);
+    put32le(buf + cd + 16, crc);
+    put32le(buf + cd + 20, n);
+    put32le(buf + cd + 24, n);
+    buf[cd + 28] = 1;                            /* name length */
+    put16le(buf + cd + 34, startdisk);           /* "disk number start" */
+    put32le(buf + cd + 42, dataoff);             /* relative to that disk */
+    buf[cd + 46] = 'f';
+    eocd = cd + 47;
+
+    memcpy(buf + eocd, "PK\x05\x06", 4);
+    put16le(buf + eocd + 4, ndisks - 1);         /* "number of this disk" */
+    put16le(buf + eocd + 6, cddisk);
+    buf[eocd + 8] = 1; buf[eocd + 10] = 1;       /* entry counts */
+    put32le(buf + eocd + 12, eocd - cd);         /* cd size */
+    put32le(buf + eocd + 16, cdrel);             /* cd offset in cddisk */
+    put16le(buf + eocd + 20, commentlen);
+    return eocd + 22 + commentlen;
+}
+
+static void test_zipseg(void)
+{
+    static const char *payload = "spanned zip payload, split across parts";
+    uint8_t p1[64], p2[1600], solo[1700];
+    uint32_t n = (uint32_t)strlen(payload);
+    uint32_t crc, p1len, p2len;
+    UncSegmentDesc desc;
+    UncIO io;
+    MemIO m;
+    UncAlloc al;
+    UncSink sk;
+    CapSink cap;
+    uint32_t comment;
+
+    crc = unc_crc32(0xFFFFFFFFu, (const uint8_t *)payload, (int32_t)n)
+          ^ 0xFFFFFFFFu;
+    test_make_alloc(&al);
+
+    /* --- part 1: marker, local header, and the first 10 payload bytes.
+     * The entry's data deliberately runs off the end of the part. --- */
+    memset(p1, 0, sizeof p1);
+    memcpy(p1, "PK\x07\x08", 4);                 /* what `zip -s` writes */
+    memcpy(p1 + 4, "PK\x03\x04", 4);
+    put32le(p1 + 4 + 14, crc);
+    put32le(p1 + 4 + 18, n);
+    put32le(p1 + 4 + 22, n);
+    p1[4 + 26] = 1;                              /* name length */
+    p1[4 + 30] = 'f';
+    memcpy(p1 + 4 + 31, payload, 10);
+    p1len = 4 + 31 + 10;
+
+    /* --- part 2: the rest of the payload, then the directory ------- */
+    memset(p2, 0, sizeof p2);
+    memcpy(p2, payload + 10, n - 10);
+    p2len = (n - 10) +
+            zs_build_tail(p2 + (n - 10), crc, n, 0, 4, 2, 1, n - 10, 0);
+
+    /* --- what each part says about itself -------------------------- */
+    test_make_memio(&io, &m, p1, p1len);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_ZIPSEG);   /* local header at 4 */
+    CHECK(unc_segment_describe(&io, &desc) == UNC_ERR_FORMAT);  /* no EOCD */
+
+    test_make_memio(&io, &m, p2, p2len);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_ZIPSEG);
+    CHECK(unc_segment_describe(&io, &desc) == UNC_OK);
+    CHECK(desc.scheme == UNC_FORMAT_ZIPSEG);
+    CHECK(desc.nparts == 2 && desc.part == 2);
+    CHECK(desc.head_len == 0);                    /* the parts concatenate */
+    CHECK(desc.total == UNC_SIZE_UNKNOWN);        /* measured, not declared */
+    CHECK(desc.name_len == 0);                    /* the format stores none */
+
+    /* A scheme that fingerprints nothing cannot answer this, and 0 here
+     * means "cannot be asked" rather than "does not belong". */
+    CHECK(unc_segment_match(&desc, p1, (int32_t)p1len) == 0);
+
+    /* --- the last part alone is not the archive -------------------- */
+    cap_make(&sk, &cap);
+    test_make_memio(&io, &m, p2, p2len);
+    CHECK(unc_extract_as(UNC_FORMAT_ZIPSEG, &io, &sk, &al, NULL, NULL)
+          == UNC_ERR_SEGMENTED);
+    CHECK(cap.count == 0);
+
+    /* --- joined ---------------------------------------------------- */
+    {
+        SegParts sp;
+        UncVolumeSource vs;
+        void *scratch;
+        uint32_t opens = 0, back = 0;
+
+        memset(&sp, 0, sizeof sp);
+        sp.part[0] = p1; sp.len[0] = p1len;
+        sp.part[1] = p2; sp.len[1] = p2len;
+        sp.nparts = 2;
+        vs.ctx = &sp; vs.need = segsrc_need; vs.release = NULL;
+
+        scratch = malloc(unc_segment_scratch_size());
+        CHECK(scratch != NULL);
+
+        cap_make(&sk, &cap);
+        CHECK(unc_extract_segments(&desc, &vs, scratch, &sk, &al, NULL, NULL)
+              == UNC_OK);
+        CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+        CHECK(cap.dlen[0] == n && memcmp(cap.data[0], payload, n) == 0);
+        /* Every part is opened once to be measured before anything is
+         * read, so unlike a StuffIt join this one does cross backwards.
+         * Recorded rather than required to be zero: that property is a
+         * fact about the StuffIt layout, not about segmentation. */
+        unc_segment_stats(scratch, &opens, &back);
+        CHECK(opens >= 2 && back >= 1);
+
+        /* A part the host cannot produce. */
+        sp.missing = 1;
+        cap_make(&sk, &cap);
+        CHECK(unc_extract_segments(&desc, &vs, scratch, &sk, &al, NULL, NULL)
+              == UNC_ERR_SEGMENTED);
+        sp.missing = 0;
+
+        /* The set assembled must be the set the archive describes. The
+         * host ordered these by filename, so this is the only thing
+         * standing between a wrong guess and a wrong extraction. */
+        desc.nparts = 3;
+        cap_make(&sk, &cap);
+        sp.nparts = 3;
+        sp.part[2] = p1; sp.len[2] = p1len;
+        CHECK(unc_extract_segments(&desc, &vs, scratch, &sk, &al, NULL, NULL)
+              == UNC_ERR_CORRUPT);
+        CHECK(cap.count == 0);
+        desc.nparts = 2;
+        sp.nparts = 2;
+        free(scratch);
+    }
+
+    /* --- a whole archive that merely LOOKS split ------------------- *
+     * `zip -s` writes its marker even when the result fits in one file
+     * (MEASURED). Such a file says "disk 0", needs no joining, and must
+     * read as an ordinary zip rather than be refused as a fragment. */
+    memset(solo, 0, sizeof solo);
+    memcpy(solo, "PK\x07\x08", 4);
+    memcpy(solo + 4, "PK\x03\x04", 4);
+    put32le(solo + 4 + 14, crc);
+    put32le(solo + 4 + 18, n);
+    put32le(solo + 4 + 22, n);
+    solo[4 + 26] = 1;
+    solo[4 + 30] = 'f';
+    memcpy(solo + 4 + 31, payload, n);
+    {
+        uint32_t cdat = 4 + 31 + n;
+        uint32_t len = cdat + zs_build_tail(solo + cdat, crc, n, 0, 4,
+                                            1, 0, cdat, 0);
+        test_make_memio(&io, &m, solo, len);
+        CHECK(unc_sniff(&io) == UNC_FORMAT_ZIP);
+        cap_make(&sk, &cap);
+        CHECK(unc_extract_as(UNC_FORMAT_ZIP, &io, &sk, &al, NULL, NULL)
+              == UNC_OK);
+        CHECK(cap.count == 1 && cap.dlen[0] == n);
+        CHECK(memcmp(cap.data[0], payload, n) == 0);
+    }
+
+    /* --- the EOCD pushed away from the end by a comment ------------ *
+     * The scanner walks backwards in 512-byte windows, so the lengths
+     * that matter are the ones putting the signature 513, 514 and 515
+     * bytes from the end: its four bytes then straddle a window edge
+     * and a scanner that forgot to carry them would miss it entirely.
+     * A whole spanned set would be needed to notice this any other way. */
+    for (comment = 0; comment <= 1000; comment++) {
+        uint32_t cdat = 0;
+        uint32_t len;
+        int interesting = (comment + 22 >= 511 && comment + 22 <= 517) ||
+                          comment == 0 || comment == 1000;
+        if (!interesting) continue;
+        memset(p2, 0xAA, sizeof p2);   /* noise, not zeros, in the comment */
+        len = cdat + zs_build_tail(p2 + cdat, crc, n, 0, 4, 4, 3, 0, comment);
+        CHECK(len <= sizeof p2);
+        test_make_memio(&io, &m, p2, len);
+        CHECK(unc_sniff(&io) == UNC_FORMAT_ZIPSEG);
+        CHECK(unc_segment_describe(&io, &desc) == UNC_OK);
+        CHECK(desc.nparts == 4);
+    }
+}
+
 void run_format_tests(void)
 {
     test_macbinary();
@@ -1035,4 +1244,5 @@ void run_format_tests(void)
     test_zip();
     test_diskcopy();
     test_sitseg();
+    test_zipseg();
 }

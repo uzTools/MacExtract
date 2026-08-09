@@ -79,8 +79,10 @@ all in one place. Send the
 output to a different disk from the parts, which is the only thing that works
 when the parts are on floppies you have to keep swapping.
 
-Encrypted archives are out of scope, as are sets split by Compact Pro or
-by PKZIP.
+Zip archives split into `.z01`, `.z02` … `.zip` are joined too, by the
+Linux command-line version — not yet by the Macintosh application.
+
+Encrypted archives are out of scope, as are sets split by Compact Pro.
 
 ## What you need
 

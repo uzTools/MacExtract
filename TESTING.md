@@ -371,6 +371,41 @@ the part order with a name-alike intruder beside it. Plus behaviours:
 opening a part other than the first, a missing part, `--ask` accepting
 and refusing files, `--no-parts`, and the part-open counters.
 
+### Spanned zip (`tools/synth_zipsplit.py`, same runner)
+
+Five more cases, and here the generator is **Info-ZIP** rather than us:
+`zip -s 64k` builds each case split, and the same input again unsplit.
+That second archive is the reason this scheme is adjudicated four ways
+rather than three — the source tree, `unar`, our CLI on the set, and our
+CLI on the unsplit archive, which reaches the same bytes down a path
+with no joiner and no address translation in it. Skipped with a notice
+if `zip` is absent, the way the whole file is if `unar` is.
+
+The cases: stored entries straddling part boundaries; a deflated stream
+straddling one; nested folders with an 8-bit name and an empty file;
+twelve parts, so the extension rolls over `.z09` → `.z10`; and a
+`zip -s` archive that did not need splitting (one file, the marker
+present, "disk 0" — which must extract even under `--no-parts`).
+
+**The two cases that hold the scheme up** are the mutations, because
+parts are placed by FILENAME here and a filename proves nothing: two
+parts swapped, and one part replaced by random bytes of the same
+length. Both must fail. That they are not vacuous was established by
+building a lax reader — CRC comparison and local-header signature check
+removed — and confirming that those two cases, and only those two, then
+fail. Re-do that before trusting a change to `zip_at` or to the part-count
+check in `unc_zip_extract`.
+
+Opening a MIDDLE part must fail, and the case asserts that `unar` fails
+on it too: the justification for refusing is that such a part identifies
+itself as nothing, and that is a claim about the format which the suite
+re-checks rather than quotes.
+
+`--stats` output is printed per case rather than asserted. Unlike the
+StuffIt join, a zip join crosses backwards by design (FORMATS.md,
+"Spanned zip"), so there is no number here to hold at zero — printing it
+is what keeps the cost visible.
+
 **Two ways the oracle can be wrong here, both measured on 2026-08-08:**
 
 - `unar Part.1` joins **nothing** and extracts part 1 alone, while
