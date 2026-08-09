@@ -2078,3 +2078,59 @@ Two things worth carrying:
   pass; `checkdisk.walk` had handled that, plus dot-files, folders and
   `/` inside an HFS name, since 2026-08-08. It is imported now. A
   harness that re-derives a name rule gets the old version of it.
+
+---
+
+## 2026-08-09 — Reacting to the disk going in, and three wrong diagnoses
+
+OPEN_ITEMS.md held this back deliberately: "so that the shipped code has
+no path that nothing exercises". The gate was testability, and the
+escape clause was a claim — "Mini vMac mounts an image mid-run" — so the
+claim was tested first. It is true, and it needed a tool: Mini vMac's
+X11 build takes a runtime disk through **XDND only** (control mode
+offers magnify, reset, interrupt, quit and speed, no open-disk; the
+build sets `NeedRequestInsertDisk 0`), and `ParseOneUri` turns a `file:`
+URI into `Sony_Insert1a`. With no window manager or file manager on the
+harness display there was nothing to drag from, so
+`tools/vmac/xdnd_insert.c` is the missing drag source. Proven before any
+application code was written: one volume and a dimmed Drive button
+before the drop, `LateDisk` in Standard File after it.
+
+The feature itself is an alert filter that scans the newly mounted
+volume and takes the alert down when the wanted part is on it. What it
+cost was three diagnoses, each wrong, each a run:
+
+- **A modal filter never sees a disk-inserted event.** `ModalDialog`
+  "calls the Event Manager function GetNextEvent with a mask that
+  excludes disk-inserted events" (Inside Macintosh: Toolbox Essentials).
+  Found by building a version that dismissed the alert on ANY `diskEvt`
+  reaching the filter; it sat through two insertions unmoved. The queue
+  has to be read directly.
+- **Fetching the event is also what mounts the disk.** After the fetch
+  broke something else, it was replaced by a polite version that touched
+  no events and polled the volume list twice a second — which never saw
+  a volume appear at all. The mount result is what the event's high word
+  carries; until somebody fetches it, nothing has mounted.
+- **Supplying a filter replaces the standard one, and with it the
+  default button.** This is what actually broke `--segments`, three runs
+  running, while the blame went to volume selection and then to event
+  consumption. An alert with no filter gets a standard filter that maps
+  Return and Enter to item 1; ours took that away, so the alert ignored
+  its own default button and every later step of the phase clicked into
+  a dialog that should have closed. The filter now handles Return itself.
+
+Also true, and nearly missed: the filter is **throttled to twice a
+second**, because calling `GetNextEvent` on every pass takes events out
+from under the loop that owns them.
+
+**The lesson is about method, not about dialogs.** Three explanations
+were produced and two were confidently wrong, each costing an emulator
+run, because each was reasoned from a failing tally. What ended it was
+one screenshot taken at the moment in question — the alert still on
+screen three seconds after Return — which named the cause immediately.
+When a symptom is "the sequence went wrong somewhere", photograph the
+step rather than theorise about the outcome.
+
+`PostEvent` is declared by this toolchain and not implemented; a design
+that leaned on putting an event back died at the linker, which was the
+cheapest of the four failures.

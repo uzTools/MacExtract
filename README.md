@@ -72,8 +72,10 @@ obscurely.
 **Archives split across floppies:** a StuffIt segmented set is joined back
 together for you. Open the first part and the rest are found beside it; if a
 part is somewhere else — another folder, another disk — you are asked to
-point at it. Parts are recognised by what is inside them, so it does not
-matter what they are called or whether they are all in one place. Send the
+point at it, and putting the disk in is enough: the part is picked up as soon
+as the disk appears, with nothing to click. Parts are recognised by what is
+inside them, so it does not matter what they are called or whether they are
+all in one place. Send the
 output to a different disk from the parts, which is the only thing that works
 when the parts are on floppies you have to keep swapping.
 

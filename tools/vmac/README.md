@@ -424,6 +424,7 @@ just as happily on an empty archive. Three-system table in FORMATS.md.
     interactive.py --segments       # the "locate part N" alert for a split archive
     interactive.py --wd             # output lands in the archive's folder, not at /
     interactive.py --dest           # output lands on the volume the user CHOSE
+    interactive.py --diskswap       # insert the missing part's disk mid-run
 
 Run them one at a time (see "This box has one core", above).
 
@@ -469,6 +470,28 @@ than SFGetFile's, so `SF_DRIVE` misses), and then a read of **both** volumes.
 Every output name must be on the chosen volume and none on the archive's. Give
 it a small fixture with a folder in it, `derived-Downer.sit`; nothing here is
 measuring speed and the phase waits out `EXTRACT_QUIET` at the end.
+
+### Putting a disk in while the Mac is running
+
+`xdnd_insert.c` is a minimal XDND drag SOURCE, built on demand into
+`$UNC_VMAC_HOME`. Mini vMac's X11 build accepts a disk at runtime through
+exactly one door: its control mode (hold Control) offers magnify, full screen,
+reset, interrupt, quit and speed and no open-disk, it is built here with
+`NeedRequestInsertDisk 0`, and `ParseOneUri` in `src/OSGLUXWN.c` turns a
+dropped `file:` URI into `Sony_Insert1a`. This display has no window manager
+and no file manager, so there was nothing to drag from until this.
+
+    cc -o xdnd_insert tools/vmac/xdnd_insert.c -lX11
+    DISPLAY=:<n> ./xdnd_insert /path/to/disk.dsk
+
+It finds the emulator window by its `XdndAware` property and exits nonzero if
+there is none or the target never asks for the file list — a silent success
+would be indistinguishable from a Mac that ignored the disk.
+
+**Fetching the disk-inserted event is what MOUNTS the disk.** A version of the
+application that left the queue alone and polled the volume list instead never
+saw a volume appear at all. So "did the disk mount" is not a question the
+harness can answer by waiting; something has to read the event.
 
 **`Mac.settle` answers "the screen stopped changing", which is not "the
 extraction finished".** The progress dialog repaints once per engine callback

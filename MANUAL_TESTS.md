@@ -134,6 +134,14 @@ Launch and UI
 - [ ] The destination dialog opens in the archive's own folder, and Return
       puts the files there. Cancelling it returns to SFGetFile, not to the
       Finder.
+- [ ] **A disk swap in ONE drive.** Inserting the disk holding the missing
+      part answers the "part N has not been found" alert by itself, and that
+      is driven under emulation (`interactive.py --diskswap`) — but Mini vMac
+      inserts each image into a NEW drive, so every insertion there has a
+      different drive number. A Mac Plus has one floppy drive: the user
+      ejects and re-inserts, and the second disk arrives on the drive the
+      first one used. The shell keys off the drive number in the event, so
+      this should work; nothing here can show that it does.
 - [ ] The destination dialog's prompt is not clipped by the machine's font.
       It is one fixed-width static text item and it does not wrap; the
       wording was shortened once already for exactly this (DECISIONS.md).

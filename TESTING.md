@@ -438,6 +438,15 @@ part boundary (27 failures). Both were reverted.
     host reads **both** volumes: every output name must be on the chosen
     one and none may be on the archive's. That is the assertion, because
     "Extraction complete." looks identical wherever the bytes went.
+    Its `--diskswap` phase goes one further and changes the machine
+    mid-run: the parts are on a floppy that is NOT in the drive, the
+    application asks for one, and the harness **inserts the disk while
+    the alert is up** (`tools/vmac/xdnd_insert.c` drops it onto the
+    running emulator). A decoy disk holding no part of the set goes in
+    first and must not dismiss anything — without that control the
+    phase could not tell "reacted to the right disk" from "the alert
+    went away". It ends on the joined bytes.
+
     `--wd` covers the other half and asserts the same way: the archive
     goes inside a folder, Return accepts the default destination, and
     every output name must be under that folder and none at the volume

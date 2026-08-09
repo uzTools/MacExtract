@@ -669,6 +669,142 @@ SEG_CANCEL = (225, 192)
 SF_SECOND_ROW = (SF_FIRST_ROW[0], SF_FIRST_ROW[1] + 16)
 
 
+def cut_into_parts(fixture, workdir, n=3):
+    """Cut an archive into `n` StuffIt segment parts. Returns (bytes, name,
+    [paths]) — the same split --segments uses, so both phases agree on what
+    a part is."""
+    sys.path.insert(0, os.path.join(R.REPO, "tools"))
+    from synth_sitsplit import header                            # noqa: E402
+
+    original = open(fixture, "rb").read()
+    name = os.path.basename(fixture).encode("mac_roman")[:31] or b"Joined"
+    cuts = [len(original) * i // n for i in range(n)] + [len(original)]
+    parts = []
+    for i in range(n):
+        p = os.path.join(workdir, "part%d" % (i + 1))
+        with open(p, "wb") as f:
+            f.write(header(i + 1, name, 0, len(original)))
+            f.write(original[cuts[i]:cuts[i + 1]])
+        parts.append(p)
+    return original, name, parts
+
+
+def drop_disk(mac, image):
+    """Insert a disk image into the RUNNING emulator.
+
+    Mini vMac's X11 build takes a disk at runtime through exactly one
+    door — XDND — and there is no window manager or file manager on this
+    display to drag from, so tools/vmac/xdnd_insert.c is the missing drag
+    source. Built on demand into the emulator's own directory.
+    """
+    exe = os.path.join(R.VMAC_HOME, "xdnd_insert")
+    src = os.path.join(HERE, "xdnd_insert.c")
+    if not os.path.exists(exe) or os.path.getmtime(src) > os.path.getmtime(exe):
+        subprocess.run(["cc", "-O2", "-o", exe, src, "-lX11"], check=True)
+    r = subprocess.run([exe, image], env=dict(os.environ, DISPLAY=mac.dpy.name),
+                       capture_output=True, text=True)
+    if r.returncode != 0:
+        raise SystemExit(f"interactive: the drop failed: {r.stderr.strip()}")
+
+
+def phase_diskswap(args, appbin, workdir, shot):
+    """Does putting the disk in answer the question, without a click?
+
+    The application asks for part 2. The part is on a floppy that is not
+    in the machine. A person's answer is to put the disk in — and until
+    now that did nothing: they still had to work through an alert about a
+    disk already sitting in the drive.
+
+    The walk inserts TWO disks. The first is a decoy holding no part of
+    this set, and the alert must still be there afterwards; that is the
+    negative control, and without it the phase could not tell "the
+    application reacted to the right disk" from "the alert went away".
+    The second holds parts 2 and 3, and nothing is clicked after it goes
+    in. The phase ends on the joined file read back off the boot volume,
+    byte for byte against the fixture, because "Extraction complete." is
+    not evidence about bytes.
+    """
+    original, name, parts = cut_into_parts(args.fixture, workdir)
+
+    bootimg = os.path.join(workdir, "boot-swap.hfv")
+    R.sh(sys.executable, os.path.join(HERE, "mkboot.py"),
+         os.path.join(R.VMAC_HOME, args.system), appbin, bootimg,
+         "--data", f"{parts[0]}:archive.sit")
+    decoy = os.path.join(workdir, "decoy.dsk")
+    R.make_floppy(decoy, "Decoy", extras=[(parts[0], "not-the-one")])
+    later = os.path.join(workdir, "later.dsk")
+    R.make_floppy(later, "Later",
+                  extras=[(parts[1], "part-two"), (parts[2], "zzz")])
+
+    scratch = os.path.join(args.outdir, ".settle.png")
+    elapsed, still_asking = None, None
+    mac = Mac(bootimg, args.emu, workdir)      # neither floppy at boot
+    try:
+        if mac.settle(scratch, interval=5.0, timeout=args.boot_timeout) is None:
+            raise SystemExit("interactive: the machine never settled")
+        shot(mac, "swap-1-launched.png")
+
+        mac.click(*SF_FIRST_ROW)               # archive.sit = part 1
+        mac.key("Return")
+        accept_destination(mac)                # onto the boot volume
+        wait_for_alert(mac, scratch)
+        shot(mac, "swap-2-locate.png")         # "Part 2 has not been found"
+        asking = open(scratch, "rb").read()
+
+        # The decoy: a disk of this set's part 1, which is not what was
+        # asked for. The alert must survive it.
+        drop_disk(mac, decoy)
+        time.sleep(8.0)
+        mac.shot(scratch)
+        still_asking = open(scratch, "rb").read() == asking
+        shot(mac, "swap-3-after-decoy.png")
+
+        # The real one. Nothing is clicked from here on.
+        drop_disk(mac, later)
+        elapsed = mac.settle(scratch, interval=5.0, quiet=EXTRACT_QUIET,
+                             timeout=args.complete_timeout)
+        shot(mac, "swap-4-complete.png")
+    finally:
+        mac.close()
+        if os.path.exists(scratch):
+            os.remove(scratch)
+
+    got = read_joined(os.path.join(workdir, "boot.hfv"), name, workdir)
+    ok = got == original
+    print(f"interactive: the decoy disk "
+          + ("left the alert up" if still_asking else "DISMISSED THE ALERT"))
+    print(f"interactive: joined file off the boot volume: "
+          + ("BYTE-EXACT" if ok else
+             f"WRONG ({len(got) if got is not None else 'not found'} B, "
+             f"{len(original)} B expected)"))
+    if elapsed is not None:
+        print(f"interactive: settled ~{elapsed:.0f}s after the disk went in")
+    ok = ok and bool(still_asking)
+    print("interactive: disk insertion " + ("HANDLED" if ok else "NOT HANDLED"))
+    return ok
+
+
+def read_joined(image, name, workdir):
+    """The joined archive off an HFS image, or None. MacRoman throughout:
+    the volume holds names like `StuffIt Expander™`, and a `text=True`
+    decode of a listing raises on those — on the path that only runs when
+    the run has already failed."""
+    out = os.path.join(workdir, "joined-read.bin")
+    home = tempfile.mkdtemp(prefix="hfs-")
+    env = dict(os.environ, HOME=home)
+    try:
+        if CD.hfs(env, "hmount", image).returncode != 0:
+            return None
+        got = CD.hfs(env, "hcopy", "-r", b":" + name, out.encode())
+        if got.returncode != 0:
+            listing = CD.hfs(env, "hls", "-l").stdout.decode("mac_roman")
+            print("interactive: not on the volume, which holds:\n" + listing)
+        CD.hfs(env, "humount")
+        return open(out, "rb").read() if got.returncode == 0 else None
+    finally:
+        shutil.rmtree(home, ignore_errors=True)
+
+
 def phase_segments(args, appbin, workdir, shot):
     """The segmented-archive dialog: can a person actually find part 2?
 
@@ -742,6 +878,12 @@ def phase_segments(args, appbin, workdir, shot):
 
         mac.key("Return")                    # default button: Find...
         time.sleep(3.0)
+        # Which volume Standard File lands on here is NOT ours to assume:
+        # it depends on what has consumed the disk-inserted event for the
+        # parts floppy, which changes with what the alert is doing. So it
+        # is photographed before anything is clicked, and the Drive click
+        # below is aimed using that frame.
+        shot(mac, "seg-3b-find-opens-on.png")
         mac.click(*SF_DRIVE)                 # over to the Parts floppy
         time.sleep(2.0)
         shot(mac, "seg-4-parts-volume.png")
@@ -847,6 +989,12 @@ def main():
                          "dialog to a second volume and check on the HOST "
                          "that the files landed there and not beside the "
                          "archive. Asserts; does not just photograph.")
+    ap.add_argument("--diskswap", action="store_true",
+                    help="the disk-swap phase: hold the fixture's parts on "
+                         "a floppy that is NOT in the machine, let the "
+                         "application ask for one, and INSERT IT while the "
+                         "alert is up. A decoy disk goes in first and must "
+                         "not dismiss anything. Ends on the joined bytes.")
     ap.add_argument("--segments", action="store_true",
                     help="the segmented-archive phase: cut the fixture into "
                          "three parts, leave part 1 alone on the boot volume "
@@ -876,6 +1024,14 @@ def main():
         # for dialog text, not decoded, and a 512x342 1bpp screen is hard work
         # at native size.
         mac.shot(os.path.join(args.outdir, name), scale="200%" if args.e2e else None)
+
+    if args.diskswap:
+        try:
+            ok = phase_diskswap(args, appbin, workdir, shot)
+        finally:
+            shutil.rmtree(workdir, ignore_errors=True)
+        print(f"interactive: screenshots in {args.outdir} — LOOK AT THEM.")
+        return 0 if ok else 1
 
     if args.dest:
         try:

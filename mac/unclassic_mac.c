@@ -1115,6 +1115,111 @@ static void SegScanDir(SegHost *h, short vol, long dir)
 #define kSegFindItem    1
 #define kSegSkipItem    2
 #define kSegCancelItem  3
+#define kSegDiskItem    4    /* NOT in the DITL — see SegDiskFilter */
+
+#define kSegRootDirID   2L   /* fsRtDirID; the headers here do not define it */
+
+/* An alert filter takes no context, so these say which part the alert
+ * currently on screen is waiting for. The shell already keeps state this
+ * way (gHasWNE); the no-global rule is the engine's. */
+static SegHost *gSegAsking = NULL;
+static int gSegWantPart = 0;
+static long gSegNextPoll = 0;    /* TickCount: throttles SegDiskFilter */
+
+/* Record every part of this set that is on the volume in `drive`.
+ * PBHGetVInfo reports a volume's drive in ioVDrvInfo, so the disk just
+ * put in is found by number rather than by walking every volume
+ * mounted — a hard disk's root is not worth scanning again. */
+static void SegScanDrive(SegHost *h, short drive)
+{
+    HParamBlockRec pb;
+    Str63 nm;
+    short idx;
+    long z;
+
+    for (idx = 1; idx < 64; idx++) {
+        for (z = 0; z < (long)sizeof pb; z++) ((char *)&pb)[z] = 0;
+        pb.volumeParam.ioNamePtr = nm;
+        pb.volumeParam.ioVolIndex = idx;
+        if (PBHGetVInfoSync(&pb) != noErr) return;   /* past the last volume */
+        if (pb.volumeParam.ioVDrvInfo != drive) continue;
+        SegScanDir(h, pb.volumeParam.ioVRefNum, kSegRootDirID);
+        return;
+    }
+}
+
+/* Notice a disk going in while the alert is asking for a part.
+ *
+ * This is the whole feature: the user is told "part 2 has not been
+ * found", puts the disk in, and the extraction carries on rather than
+ * making them answer an alert about a disk already in the machine.
+ *
+ * Two things about it are not obvious, and both cost a run to find.
+ *
+ * The event handed to a filter is never the one wanted. `ModalDialog`
+ * "calls the Event Manager function GetNextEvent with a mask that
+ * excludes disk-inserted events" (Inside Macintosh: Toolbox Essentials,
+ * ModalDialog), so a diskEvt is never delivered — a build that dismissed
+ * the alert on ANY diskEvt reaching this filter sat through two
+ * insertions unmoved. The queue has to be asked directly, which is done
+ * here on every event including the null ones, and that is what makes it
+ * work with nobody touching the mouse.
+ *
+ * And fetching the event is not merely how we hear about the disk, it is
+ * what gets the disk MOUNTED: a version that left the queue alone and
+ * instead polled the volume list twice a second never saw a new volume
+ * at all. The mount result is what the event's high word carries, so
+ * nothing has mounted until somebody fetches it. */
+static pascal Boolean SegDiskFilter(DialogPtr dlg, EventRecord *evt,
+                                    INTEGER *itemHit)
+{
+    EventRecord de;
+
+    (void)dlg;
+    if (gSegAsking == NULL) return false;
+
+    /* Return and Enter press the default button — and doing that here is
+     * not a courtesy, it is replacing what was lost. An alert with no
+     * filter gets a standard one that maps them to item 1; supplying our
+     * own takes that away, and the symptom is not subtle in hindsight:
+     * the alert simply ignored its own default button, and every later
+     * step of --segments clicked into a dialog that should have closed.
+     * Handled on every pass, unthrottled, because a keystroke is not
+     * something to poll for. */
+    if (evt->what == keyDown || evt->what == autoKey) {
+        char c = (char)(evt->message & charCodeMask);
+        if (c == '\r' || c == 0x03) {
+            *itemHit = kSegFindItem;
+            return true;
+        }
+    }
+
+    /* THROTTLED, and that is not an optimisation. Calling GetNextEvent
+     * on every pass takes events out from under the modal loop that
+     * owns them: with it unthrottled the alert stopped acting on its
+     * own buttons — Return was still sitting on an undismissed alert
+     * three seconds later, and every later step of --segments then
+     * clicked into a dialog that should have been gone. Twice a second
+     * is far quicker than anyone swaps a floppy. */
+    if (TickCount() < gSegNextPoll) return false;
+    gSegNextPoll = TickCount() + 30;
+
+    if (!GetNextEvent(diskMask, &de)) return false;
+
+    /* Nonzero result: no HFS volume mounted. This shell has nothing to
+     * offer for that — it is not the Finder, and formatting somebody's
+     * disk is not its business — so the alert simply stays up. */
+    if ((short)((de.message >> 16) & 0xFFFFL) != noErr) return false;
+
+    SegScanDrive(gSegAsking, (short)(de.message & 0xFFFFL));
+
+    if (gSegWantPart >= 1 && gSegWantPart <= kSegMaxKnown
+        && gSegAsking->loc[gSegWantPart].name[0]) {
+        *itemHit = kSegDiskItem;
+        return true;               /* the disk had it: take the alert down */
+    }
+    return false;                  /* some other disk: keep asking */
+}
 
 /* Ask the user to point at part `part`. Returns nonzero once it has been
  * located. The autotest build has no user, so this is not compiled there
@@ -1125,6 +1230,7 @@ static int SegAskUser(SegHost *h, int part)
     SFReply reply;
     Point where;
     short hit;
+    short savedMask;
 
     for (;;) {
         msg[0] = 0;
@@ -1138,8 +1244,25 @@ static int SegAskUser(SegHost *h, int part)
         ParamText(msg, "\p", "\p", "\p");
 
         if (h->hide) HideWindow((WindowPtr)h->hide);
-        hit = CautionAlert(kSegALRT, NULL);
+        gSegAsking = h;
+        gSegWantPart = part;
+        /* Disk-inserted events reach the queue only if the system event
+         * mask lets them; saved and put back rather than restored to an
+         * assumed default, because the default is not ours to know. */
+        savedMask = LMGetSysEvtMask();
+        LMSetSysEvtMask(savedMask | diskMask);
+        gSegNextPoll = 0;
+        hit = CautionAlert(kSegALRT, NewModalFilterUPP(SegDiskFilter));
+        LMSetSysEvtMask(savedMask);
+        gSegAsking = NULL;
         h->asked = 1;
+
+        /* The filter found it on a disk that was put in while the alert
+         * was up; nothing was clicked. */
+        if (hit == kSegDiskItem) {
+            if (h->hide) ShowWindow((WindowPtr)h->hide);
+            return 1;
+        }
 
         if (hit == kSegFindItem) {
             SetPt(&where, 90, 90);
