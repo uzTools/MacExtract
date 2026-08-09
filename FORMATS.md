@@ -30,12 +30,9 @@ whole corpus for that format (engine allocations only, via
 \* **Method 1 occurs once and IS oracle-adjudicated** (since 2026-08-08).
 It is the 470-byte resource fork of `I Want To Buy Some Cheese` in
 `derived-New_Python.sit` (470 → 389), and `unar` decodes it byte-identically
-to us. This footnote previously said the oracle could not adjudicate it,
-because `unar` fails on that archive — but it fails on the *data* fork of a
-different entry, `It's A Bit Runny Sir`, compressed with method *3*, and the
-manifest builder was discarding the whole archive over it. Per-entry
-manifests fixed that (TESTING.md, "When the oracle fails on an entry").
-Edge cases the one real fork cannot reach — runs of `0x90`, the 255-byte
+to us — `unar` fails elsewhere in that archive, on a method-3 fork, which is
+why per-entry manifests were needed to see this one at all (TESTING.md, "When
+the oracle fails on an entry"). Edge cases the one real fork cannot reach — runs of `0x90`, the 255-byte
 maximum token, output ending inside a run — are covered by
 `synth-sit-rle90.sit` (`tools/synth_sit1.py`), also oracle-adjudicated.
 
@@ -56,11 +53,10 @@ oracle-adjudicated, 10 forks over 5 entries.
 
 **The oracle for both is `macunpack`, not `unar`:** XADMaster recognizes the
 method and refuses it (`//case 6: fixed huffman`,
-`reference/XADMaster/XADStuffItParser.m`), which is where the name comes from
-and why this footnote said for a week that no oracle for the method existed
-(BLOCKERS.md, "Withdrawn claims"). macunpack has decoded it since 1991 and is
-the reference the decoder is transcribed from — see TESTING.md, "A second
-oracle", for what that does and does not prove.
+`reference/XADMaster/XADStuffItParser.m`), which is where the name comes from;
+macunpack has decoded it since 1991 and is the reference the decoder is
+transcribed from. TESTING.md, "A second oracle", for what that does and does
+not prove; BLOCKERS.md for the claim that no oracle existed.
 
 † **Every real Arsenic block is 512 KB.** The block size is `1 << (v+9)`
 with `v` read from the stream, so other sizes are legal, but across the
@@ -68,21 +64,16 @@ with `v` read from the stream, so other sizes are legal, but across the
 fork — declare 512 KB** (`v` = 10, blockbits 19). Measured directly by
 instrumenting the point where `sit_arsenic.c` reads `v`, not inferred.
 
-A note here previously claimed the blocks were "128 KB (14 fixtures,
-dominant), 256 KB (9), 512 KB (8)". That was **wrong**, and the way it
-went wrong is worth keeping: it was inferred from peak heap via
-"peak ≈ 5× block", which does not hold, because only the *block* is
-allocated at its declared size —
+Peak heap is modelled by
 
-    peak  =  ~35 KB parser state  +  512 KB block  +  4 × actual block fill
+    peak  =  ~35 KB parser state  +  block capacity  +  4 × actual block fill
 
-— the inverse-BWT transform vector is sized to how much of the block the
-entry actually fills (`transform = numbytes * 4`, in `ars_bwt_prepare`),
-which is exactly what lets a small Arsenic entry fit a small budget. A
-fixture peaking at 0.64 MB is therefore a 512 KB block holding ~24 KB,
-not a 128 KB block; dividing by five turned every small payload into an
-imaginary small block. Peak heap can never recover the declared block
-size, so the claim was not just false but unmeasurable that way.
+because only the *block* is allocated at its declared size; the inverse-BWT
+transform vector is sized to how much of the block the entry actually fills
+(`transform = numbytes * 4`, in `ars_bwt_prepare`). Peak heap therefore cannot
+recover the declared block size — the earlier "128 KB (14 fixtures) / 256 KB
+(9) / 512 KB (8)" figures were inferred by dividing peak by five and are
+withdrawn (BLOCKERS.md, *Withdrawn claims*).
 
 Measured peak heap over the corpus (`unclassic t --stats`): **min
 0.15 MB / median 0.59 MB / mean 0.92 MB / max 2.53 MB**, the maximum
@@ -109,55 +100,21 @@ fixture still extracts fully, bisected:
 | `derived-Domino_v1.4.sit` | 2,657,700 | 565,062 |
 | `derived-EasyFind.dmg.sit` | 2,657,700 | 565,062 |
 
-The unlimited-peak figures above improved on 2026-08-03, when the block
-stopped being allocated
-at its DECLARED size. `blockbits` says 512 KB on every real stream, but the
-fill varies enormously — the fixture that peaked at 643 KB was a 512 KB
-allocation holding 24 KB — so the block is now grown on demand
-(`ars_block_reserve`) and peak is `~35 KB parser + capacity + 4x fill` rather
-than `~35 KB + 512 KB + 4x fill`. The previous figures were min 0.63 / median
-0.97 / mean 1.23 MB with **every** entry over a 400 KB budget. Nothing about
-the format or the decoder changed; only what is allocated to hold it. See
-DECISIONS.md.
-
-On a **1 MB Mac Plus** Arsenic is no longer out of reach at all. It got there
-in four steps. The first three were about not paying for memory the data does
-not use, rather than about the decoder; only the last changed what the decoder
-needs:
-
-- **2026-08-02** — the shell stopped reading the whole archive into RAM before
-  the engine was given a budget, so each archive got its own size back.
-- **2026-08-03** — the Arsenic block stopped being allocated at its declared
-  512 KB and is grown to what each block actually holds, which is often a
-  small fraction of it.
-- **2026-08-06** — the block's first allocation is sized from the entry, so
-  doubling no longer leaves a trail of freed steps that nothing can reuse.
-- **2026-08-07** — the 4-bytes-per-byte inverse-BWT vector is no longer built
-  when it does not fit; a sampled occurrence index answers the same query for
-  a fraction of the memory, at the cost of time.
-
-All six extract byte-exact at 4 MB, and since the fourth step all six extract
-byte-exact at 1 MB as well.
-
-Until 2026-08-02 the boundary was **the size of the archive** rather
-than anything about the archive's contents, because the shell read the
-whole thing into RAM before the engine got a budget — so a 202 KB
-archive had 202 KB less to work with. That is gone: the archive is read
-from the file as the engine asks for it, and every fixture got its own
-size back in budget. The effect was large. `derived-Library_ISBN_Barcoder.sit`
-went from refusing all 34 entries to extracting 31 of them, and
-`derived-RWAsm_Folder.sit` from 36 of 38 to all 38. See the two Mini vMac
-sections below for the per-fixture outcomes, and DECISIONS.md for why the
-slurp existed and why it does not any more.
+Those figures are what the corpus costs today. **Arsenic reached the 1 MB floor
+in four steps, and the per-fixture outcomes are the two Mini vMac sections
+below:** 2026-08-02 the shell stopped slurping the archive, 2026-08-03 the
+block stopped being allocated at its declared 512 KB, 2026-08-06 its first
+allocation was sized from the entry, 2026-08-07 the transform vector became
+optional. Before the first, peak was min 0.63 / median 0.97 / mean 1.23 MB with
+**every** entry over a 400 KB budget; nothing about the format or the decoder
+changed, only what is allocated to hold it. One DECISIONS.md entry per step,
+same dates.
 
 § **The `.Z` peak used to be a flat 274,432 B for every input, and is now
-sized from the input.** MEASURED 2026-08-03. `compress(1)` writes
-`maxbits=16` by default whatever it compressed, so a 488-byte `.Z` declared a
-65,536-entry table it filled a few hundred entries of, and `unc_lzw_init`
-allocated the DECLARED ceiling — the same mistake the Arsenic block had. Every
-input code defines at most one new symbol and codes are at least 9 bits wide,
-so `symbols <= 256 + reserved + insize * 8 / 9` bounds the table however large
-`maxbits` claims:
+sized from the input.** MEASURED 2026-08-03. `compress(1)` writes `maxbits=16`
+whatever it compressed, so a 488-byte `.Z` declared a 65,536-entry table it
+filled a few hundred entries of; the table is now bounded from the input by
+`symbols <= 256 + reserved + insize * 8 / 9` (DECISIONS.md 2026-08-03):
 
 | fixture | in | was | now |
 |---|---|---|---|
@@ -172,20 +129,12 @@ StuffIt classic peaks are unchanged because none of them is method-2 bound.
 On-Mac figures agree with Linux to a constant 32 B of shell overhead. See
 DECISIONS.md for why the table is sized once rather than grown.
 
-‖ **Method 13's LZSS window is sized from the entry, not from the format.**
-MEASURED 2026-08-06. The window is 64 KB by the format, but no stream can
-reach further back than it has produced — an offset is `pos - moff`, and a
-well-formed encoder never emits `moff > pos` because those bytes do not exist
-yet. So a fork whose whole output is 6 KB can only address 6 KB of window, and
-the rest was allocated, zeroed and never read. It is now rounded up to a power
-of two at or above the fork's uncompressed size, capped at 64 KB, which keeps
-the existing `& (win - 1)` masking computing exactly the same indices.
-
-The assumption was checked directly rather than inferred from output: an
-instrumented run over the whole corpus counted **0 back-references past
-produced output**. 34 fixtures improved, none regressed; the corpus maximum
-is unchanged at 76,944 B because some forks genuinely exceed 64 KB, so the
-gain is at the small end — `derived-MacGzip.sit` 76,944 → 13,456 B, and
+‖ **Method 13's LZSS window is sized from the entry, not from the format's
+64 KB.** MEASURED 2026-08-06; an instrumented run over the whole corpus counted
+**0 back-references past produced output**, which is what licenses it
+(DECISIONS.md 2026-08-06). 34 fixtures improved, none regressed; the corpus
+maximum is unchanged at 76,944 B because some forks genuinely exceed 64 KB, so
+the gain is at the small end — `derived-MacGzip.sit` 76,944 → 13,456 B, and
 on-Mac `derived-Export.sit` 76,984 → 19,640 B.
 
 ## Envelope auto-unwrap
@@ -210,18 +159,12 @@ Finder flags, both dates, both fork lengths). Concatenating the parts'
 payloads in order gives the original file — resource fork, then data
 fork. `src/fmt_sitseg.c` has the layout and its source.
 
-Two properties of that header decide the design:
-
-- **Identity is content, not name.** A part belongs to a set if its
-  name bytes and those 26 bytes agree; the filename is a hint for
-  finding candidates and nothing more. Sets whose parts are named
-  unlike each other, or spread across folders and volumes, join
-  correctly — the `misnamed` case in the test suite is exactly that,
-  and `unar` cannot read it (TESTING.md).
-- **The set is self-terminating.** `rsrclen + datalen` is the exact
-  payload total, so from part 1 alone the joiner knows how much is
-  missing and when the set is complete. No part count is stored
-  anywhere, and none is needed.
+Two properties of that header decide the design, and DECISIONS.md 2026-08-08
+has why they decided it: **identity is content, not name** (a part belongs to a
+set if its name bytes and those 26 bytes agree — the `misnamed` case in the
+suite joins correctly and `unar` cannot read it), and **the set is
+self-terminating** (`rsrclen + datalen` is the exact payload total, so no part
+count is stored anywhere and none is needed).
 
 **The join is read strictly forward: 0 backward crossings**, measured
 over the 3-part and 12-part cases (`unclassic x --stats` reports part
@@ -282,7 +225,7 @@ harness bugs that each produced a plausible-looking wrong screenshot
 (DECISIONS.md).
 
 What is still NOT covered is a part arriving on a disk inserted
-mid-run — see OPEN_ITEMS.md section 6.
+mid-run — see OPEN_ITEMS.md section 4.
 
 ## Hardening
 
@@ -295,12 +238,9 @@ mid-run — see OPEN_ITEMS.md section 6.
   ORACLE names as outside v1 scope** and are graded on their names and
   entry counts alone. No fixture is skipped for anything our own engine
   says about it (TESTING.md, "When our engine declines an entry"). It was
-  769 until 2026-08-08 — nine fixtures written off as oracle-undecidable
-  and neither (BLOCKERS.md), then 778 until per-entry oracle failures
-  stopped discarding whole manifests, 793 with them, 795 once a second
-  oracle read what `unar` could not, and 797 once two fixtures stopped
-  being skipped on our own say-so. Every increase that day was the
-  measuring apparatus, not new archives.
+  769 until 2026-08-08 and reached 797 that day in four steps, every one of
+  them the measuring apparatus rather than new archives (BLOCKERS.md,
+  DECISIONS.md).
 - Robustness: 10 truncation/bit-flip variants per fixture — no
   crashes, hangs, or sanitizer trips under
   ASan+UBSan+`-fsanitize=alignment` (`-fno-sanitize-recover=all`).
@@ -342,26 +282,15 @@ extract time only, on a purpose-built 1 MB 1x emulator (`build_mv mv-1M-1x
 | `derived-Library_ISBN_Barcoder.sit` | 641,115 B | **768 s** (peak 1,682,142 B) | **1,898 s** (peak 614,134 B) | 2.47x |
 
 **The fallback costs 1.65x to 2.47x, and Arsenic was already the slow one.**
-Ten minutes for a 205 KB output is what the *fast* path costs a 7 MHz 68000.
-Set against that, a 1 MB machine could not extract either of these entries at
-all before 2026-08-07. The ratio widens with block fill, which is what the
-model predicts: the scan is `blocklen/target` per output byte, and
-`Library_ISBN`'s blocks hold 323,384 B against `a2basic`'s 197,515 B.
-
-Two warnings attached to these numbers:
-
-- **The x86 ratio does not predict the Mac one.** For `a2basic` it is 2.5x on
-  x86 against 1.65x here. The arithmetic decoder dominates more on a 68000, so
-  the BWT walk is a smaller share of the whole.
-- **Extrapolating from one fixture did not work either.** `Library_ISBN` was
-  predicted "near an hour" from `a2basic` scaled by output size; it is 31.6
-  minutes. Per-byte cost is not constant across fixtures, for the same reason
-  the ratio is not.
+Ten minutes for a 205 KB output is what the *fast* path costs a 7 MHz 68000;
+before 2026-08-07 a 1 MB machine could not extract either entry at all. The
+ratio widens with block fill, and neither the x86 ratio nor one fixture scaled
+by output size predicts these — DECISIONS.md 2026-08-07 for both.
 
 All four figures were measured on one build, with one emulator running at a
 time. They supersede an earlier pair (537 s / 927 s) taken before the progress
-rewrite; see DECISIONS.md 2026-08-07 for the ~40 s that separates the two sets
-and for why it is recorded as unexplained.
+rewrite; DECISIONS.md 2026-08-07 records the ~40 s between the two sets as
+unexplained.
 
 **8/8, and the shape is the useful part: for small archives the BOOT dominates
 and extraction is seconds.** A stripped System 6.0.8 reaches the application in
@@ -370,12 +299,10 @@ larger 1x measurement that exists — `derived-EmpireBuilderDemo.sit`, 278 KB in
 and 417 KB out — took **~134 s**. So a few kilobytes is instant, a quarter of a
 megabyte is a couple of minutes.
 
-**The large BinHex is not an anomaly.** `macburger-helper.hqx` was written up
-three times as one — it never finished inside the timeouts chosen for it — and
-it simply takes 150 s. Instrumenting the engine's byte counter
-(`-D UNC_AT_PROGRESS`) showed why the timeouts misled: the rate is very
-non-uniform, 16% of the input in the first seven minutes and the last 205 KB
-in a hundred seconds. See BLOCKERS.md.
+**The large BinHex is not an anomaly.** `macburger-helper.hqx` simply takes
+150 s; the rate is very non-uniform (16% of the input in the first seven
+minutes, the last 205 KB in a hundred seconds), which is what made the
+timeouts chosen for it mislead three times. BLOCKERS.md.
 
 ## Relative decode cost per format (Linux, same engine)
 
@@ -433,24 +360,15 @@ a fork-naming mistake from a correct extraction, which is why the host-side
 readers had to stop guessing at `<X>.rsrc` sidecars first (DECISIONS.md,
 2026-08-08).
 
-Re-run 2026-08-01 and reproduced,
-with a caveat about the harness rather than the Mac: two fixtures came back
-`EMUDIED` on the first pass — the emulator PROCESS exited within five seconds,
-before the application could paint anything — and both passed on an immediate
-re-run. That verdict now exists precisely so this is not mistaken for a
-Mac-side failure again (`tools/vmac/README.md`). The sample is
-`tools/vmac/sample.txt`; reproduce with
+The sample is `tools/vmac/sample.txt`; reproduce with
 
     tools/vmac/setup.sh                              # once
     tools/vmac/run.py --list tools/vmac/sample.txt   # 4 MB
 
-An earlier record of this run reported 39/44 — four timeouts and one
-unexplained failure (`derived-RWAsm_Folder.sit`, errors on all 38 entries).
-Neither survives on the rebuilt harness: all four "timeouts" complete, and
-RWAsm_Folder extracts its 38 entries byte-exact at the same 643.2 KB peak
-the failing run reported. The old harness was not committed and no longer
-exists, so what differed cannot be established; the numbers here are the
-ones that reproduce.
+An `EMUDIED` verdict (the emulator process exits before the application paints)
+is a harness event, not a Mac-side failure — `tools/vmac/README.md`. An earlier
+39/44 record of this run does not survive the rebuilt harness (BLOCKERS.md,
+*Withdrawn claims*).
 
 Note that the emulator now runs **all out** rather than at Mac Plus speed,
 so this harness measures correctness only — **no timing claim about a 7 MHz
@@ -551,77 +469,36 @@ allocator.** `unclassic --budget 678392` on Linux predicted 560,535 B and
 apart in both cases. That is worth stating because every budget figure
 elsewhere in this file is a Linux number.
 
-**This tier moved four times in six days, 39/44 → 44/44.** The first two were
-about not paying for memory the data does not use: on 2026-08-02 the shell
-stopped reading the whole archive into RAM before the engine got a budget
-(39/44 → 40/44), and on 2026-08-03 the Arsenic block stopped being allocated at
-its declared 512 KB (40/44 → 41/44). `derived-RWAsm_Folder.sit` went from
-595.7 KB at the start of that to **160,766 B** for the same 38 byte-exact
-entries.
+**This tier moved four times in six days, 39/44 → 44/44**, one DECISIONS.md
+entry per step and none of them a decoder change until the last:
 
-The third, on 2026-08-06, was not about how MUCH was allocated but about the
-SHAPE it left behind (41/44 → 42/44). Growing the block by doubling from 8 KB
-left a trail of freed steps — 8+16+32+64 KB under a final 128 KB block — and a
-geometric trail can never satisfy the step that follows it, so it stranded
-125,614 B of heap. That is what made `derived-Troi-ClipSave-Plug-in1.1.sit`
-refuse an entry whose 498,548 B request had 678 KB of budget behind it but only
-a 468,126 B contiguous run in front of it. Sizing the first allocation from the
-entry — `min(outlen, blocksize)`, since a block can hold neither more than the
-whole output nor more than a block — removes the trail, and the entry fits.
+| date | what changed | tier |
+|---|---|---|
+| 2026-08-02 | the shell stopped reading the whole archive into RAM | 39/44 → 40/44 |
+| 2026-08-03 | the Arsenic block stopped being allocated at its declared 512 KB | 40/44 → 41/44 |
+| 2026-08-06 | the block's first allocation sized from the entry, so growth strands no heap | 41/44 → 42/44 |
+| 2026-08-07 | the transform vector is not built when it does not fit | 42/44 → 44/44 |
 
-The fourth, on 2026-08-07, was the only one that changed what the decoder
-NEEDS rather than what it asks for (42/44 → 44/44). The 4-bytes-per-byte
-transform vector is the dominant allocation, and it is no longer built when it
-does not fit: a sampled occurrence index answers the same query from roughly
-`4 * sum_c min(counts[c], target)` bytes, trading time for memory, chosen per
-block by the table's allocation failing. DECISIONS.md 2026-08-07.
+`derived-RWAsm_Folder.sit` went 595.7 KB → **160,766 B** across the first two,
+for the same 38 byte-exact entries.
 
-**How much the last two actually needed, and how that was mis-stated twice.**
-An Arsenic entry needs its block plus four bytes of transform vector per byte
-the block holds. Until 2026-08-03 this section said the three refused entries
-each filled a 512 KB block and so needed ~2.5 MB against ~700 KB. Instrumenting
-`numbytes` where the transform vector is sized says none of them does:
+The three entries that were refused before the last step peaked at 1,854,208 B
+(`Library_ISBN`), 1,088,588 B (`a2basic`) and 666,004 B (`Troi-ClipSave`) on the
+fast path — `~35 KB parser + capacity + 4 × fill` reproduces all three. Under
+the sampled index the same entries extract fully from **245,897 B**, **393,028 B**
+and **167,455 B**, bisected minima rather than peaks under a cap. (This is where
+the withdrawn "each fills a 512 KB block" claim lived; BLOCKERS.md has it and
+what it cost.) The per-entry refusal machinery is unchanged and still correct;
+nothing in the sample reaches it any more.
 
-| fixture | largest block fill | capacity | 4x transform | peak |
-|---|---|---|---|---|
-| `derived-Library_ISBN_Barcoder.sit` | 323,384 B | 512 KB | 1,263 KB | 1,854,208 B |
-| `derived-a2basic.dmg.sit` | 197,515 B | 256 KB | 772 KB | 1,088,588 B |
-| `derived-Troi-ClipSave-Plug-in1.1.sit` | 124,637 B | 128 KB | 487 KB | 666,004 B |
-
-`~35 KB parser + capacity + 4 x fill` reproduces all three peaks, so
-`Troi-ClipSave`'s refused entry needed about **650 KB**, not 2.5 MB — which is
-inside the 678,392 B budget, and is why it now passes. The 512 KB
-figure was true of the CORPUS — `derived-EasyFind.dmg.sit` and
-`derived-Domino_v1.4.sit` both reach 524,257 B, 31 bytes short of a full block,
-and they are what sets the 2.53 MB maximum in † above — and was applied to
-three fixtures it does not describe. **A true number about the worst case is
-not a number about the case in front of you.** See *Withdrawn claims* in
-BLOCKERS.md, and OPEN_ITEMS.md for what is actually left.
-
-Those three peaks are what the fast path costs, and all three are now history:
-under the sampled index the same entries extract fully from **245,897 B**
-(`a2basic`), **393,028 B** (`Library_ISBN`) and **167,455 B**
-(`Troi-ClipSave`) — bisected minima, not peaks under a cap. The per-entry
-refusal machinery is unchanged and still correct; nothing in the sample
-reaches it any more.
-
-
-**`popper-1.7.tar.Z` and `PCCTS.tar.gz` used to fail here and no longer do.**
-The Mac sink previously accumulated each whole output fork in a `NewPtr`
-block and wrote it in `sink_end`, so the shell needed `archive + engine peak
-+ largest output fork` — and those two fixtures have the sample's largest
-output forks (174 KB and 287 KB), which a 1 MB machine could not spare. The
-sink now writes each chunk straight to the File Manager as the engine
-produces it, so **the shell's own RAM use no longer depends on output size
-at all**. Both fixtures are byte-exact at 1 MB, with the engine's peak heap
-unchanged. The old path is still buildable (`UNC_MAC_STAGE_WRITES`) and both
-are byte-exact through the qemu-m68k mock in CI.
-
-What unblocked all of this was rewriting the File Manager calls to use
-explicit, fully-zeroed HFS param blocks. This was originally attributed to a
-broken Retro68 `HOpen` glue; **that attribution has been withdrawn** — a
-standalone minimal reproduction (`tools/retro68-hopen-repro/`) disproved it.
-See DECISIONS.md and BLOCKERS.md.
+**`popper-1.7.tar.Z` and `PCCTS.tar.gz` used to fail here and no longer do** —
+the Mac sink stopped accumulating whole output forks, so the shell's RAM use no
+longer depends on output size at all, and these two have the sample's largest
+output forks (174 KB and 287 KB). Both byte-exact at 1 MB, engine peak heap
+unchanged; the old path stays buildable as `UNC_MAC_STAGE_WRITES` and both are
+byte-exact through the qemu-m68k mock in CI. BLOCKERS.md, *Corrected figures*,
+and DECISIONS.md for the HFS param-block rewrite that unblocked it — and for the
+`HOpen` attribution that was withdrawn.
 
 ## Mac OS 9 tier (QEMU PowerPC — Mac OS 9.2, `mac99`, 512 MB, 68LC040 emulation)
 
@@ -654,29 +531,18 @@ each in its own boot from a pristine copy of the master image:
 
 **13/13**, 32 files, 712,481 data bytes and 309,358 resource-fork bytes compared.
 
-Two things differ from the Mini vMac tiers, and both make this check stronger
-rather than weaker:
+This tier reads its result **off the disk rather than the screen** — both forks
+of every extracted file lifted out with hfsutils and compared byte for byte
+against `unclassic x -nr` — so unlike the Mini vMac tiers it compares **names,
+folder structure and 8-bit characters** too, which is how it caught the gzip/.Z
+fallback-name defect on its first sweep (TESTING.md for what each layer can and
+cannot see). `derived-XferIt_1.5b4.sea` alone lands 10 files three folders deep,
+and PackIt's `Appé` is a MacRoman name that has to survive the round trip.
 
-- **The result is read off the disk, not the screen.** The transfer volume is
-  a file on the host, so after the emulator exits both forks of every
-  extracted file are lifted out with hfsutils and compared **byte for byte**
-  against `unclassic x -nr`. The Mini vMac tiers compare an on-screen CRC-32
-  aggregate because getting a floppy back out mid-run is awkward; nothing here
-  needs that.
-- **Output names, folder structure and 8-bit characters are compared.** A
-  summed CRC cannot carry a name, so the System 6 and 7 tiers have never
-  checked one and cannot be made to fail on one. This tier does, and its first
-  sweep immediately caught a real Mac-shell defect in the gzip/.Z fallback
-  name — now fixed (BLOCKERS.md, DECISIONS.md). `derived-XferIt_1.5b4.sea`
-  alone lands 10 files three folders deep, and PackIt's `Appé` is a MacRoman
-  name that has to survive the round trip.
-
-**The sample is small on purpose.** Each fixture costs a whole boot (~110 s on
-an idle host, plus a 2 GB image copy), where Mini vMac boots per fixture too
-but at ~5 s a boot, so it replays all 55 in the time this tier spends on
-three. So this samples for breadth of format; the memory-budget
-spread that `sample.txt` exists to exercise is a 1 MB question, and this
-machine has 512 MB.
+**The sample is small on purpose:** each fixture costs a whole boot (~110 s plus
+a 2 GB image copy) against Mini vMac's ~5 s, so this tier samples for breadth of
+format, and the memory-budget spread `sample.txt` exercises is a 1 MB question
+on a 512 MB machine.
 
 **The Finder is driven from the keyboard.** The pointer does not work in this
 guest at all — five mouse primitives measured at exactly zero effect, cursor
@@ -708,20 +574,14 @@ result, and it was worth measuring rather than assuming.
 
 Two things make this tier trustworthy:
 
-- **The answer comes back as a file, not off the screen.** `at_report()` pokes
-  1bpp pixels straight at the framebuffer — the right channel on a Mac Plus,
-  and invisible on OS 9's 32-bit screen (confirmed by screenshot: the desktop
-  is untouched after the run finishes). `at_report_file()` writes the same
-  values, plus every output name, to the plain-HFS input volume. That is what
-  made HFS+ reachable at all: the output volume was never the obstacle, the
-  reporting channel was.
-- **That the output really landed on HFS+ is measured.** The boot volume is
-  HFS+ inside an HFS wrapper, and hfsutils can see only the wrapper. After the
-  run the wrapper still contains exactly one file,
-  `Where_have_all_my_files_gone?` — so none of those 41 files went to plain
-  HFS. A signature word was considered and rejected: the classic File Manager
-  reports `'BD'` for an HFS+ volume for compatibility, so a negative would
-  prove nothing.
+- **The answer comes back as a file, not off the screen** — `at_report_file()`
+  on the plain-HFS input volume, because the framebuffer channel that works on
+  a Mac Plus is invisible on OS 9's 32-bit screen. The output volume was never
+  the obstacle; the reporting channel was (DECISIONS.md 2026-08-02).
+- **That the output really landed on HFS+ is measured.** hfsutils sees only the
+  HFS wrapper, and after the run it still contains exactly one file,
+  `Where_have_all_my_files_gone?` — so none of those 41 files went to plain HFS.
+  A signature word proves nothing here (BLOCKERS.md).
 
 One corroboration falls out of it: the Mac's **unmasked** resource-fork CRC
 equals Linux's **masked** one, so Mac OS 9 leaves the 112-byte reserved header

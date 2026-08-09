@@ -1,6 +1,7 @@
 #!/bin/sh
 # ci.sh — full build + test matrix. Must be green before every commit.
 #
+#   0. documentation invariants (tools/check_docs.py) — cheap, so it runs first
 #   1. gcc, ASan + UBSan + alignment sanitizer, unit tests + diff tests
 #   2. gcc -m32 (32-bit), unit tests + diff tests (skipped gracefully
 #      if multilib is unavailable)
@@ -11,6 +12,9 @@ set -e
 cd "$(dirname "$0")"
 
 fail() { echo "CI: FAILED: $*" >&2; exit 1; }
+
+echo "=== documentation invariants ==="
+python3 tools/check_docs.py || fail "documentation checks"
 
 echo "=== variant 1: sanitizers (ASan+UBSan+alignment) ==="
 make clean >/dev/null

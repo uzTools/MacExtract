@@ -13,6 +13,14 @@
    never a crash, hang, or sanitizer trip. Run under
    ASan+UBSan+`-fsanitize=alignment` with `-fno-sanitize-recover=all`,
    so any violation is fatal and caught.
+0. **Documentation invariants** (`tools/check_docs.py`): DECISIONS.md's
+   Contents index must list every `## ` entry in file order, and no
+   document may cite another by line number. Needs no build, so `ci.sh`
+   runs it first; `--fix` regenerates the index. **What it cannot see:**
+   whether an entry is in the right file, whether a citation points at a
+   section that still exists, or whether a paragraph re-narrates one that
+   lives elsewhere — that last one is the failure mode these documents
+   actually have (CLAUDE.md, *Writing things down*).
 
 ## The oracle
 

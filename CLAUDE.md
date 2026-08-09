@@ -16,7 +16,7 @@ M0–M11 are **DONE**. M11 is multi-segment archives, in scope since
 real emulated Mac Plus at 4 MB and at the 1 MB floor. **A part is identified
 by its header, never by its filename** — that is the whole point, and it is
 why a set whose parts are scattered or named unlike each other works here and
-does not work in `unar`. Other schemes are ranked in OPEN_ITEMS.md section 6;
+does not work in `unar`. Other schemes are ranked in OPEN_ITEMS.md section 4;
 Compact Pro's needs a genuine sample before any parser is written, because no
 reference implementation extracts one.
 
@@ -36,13 +36,29 @@ It runs on all three systems the project claims: **System 6.0.8 and System 7.0.1
   purpose — twice a live claim has been re-tested because it sat beside an
   already-withdrawn one, and one of those was worth 39/44 → 40/44 at the
   floor target. Do not delete them.
-- `DECISIONS.md` — every non-obvious engineering decision, oldest first
-- `OPEN_ITEMS.md` — what is still missing, ranked, with what would close each
+- `DECISIONS.md` — every non-obvious engineering decision, oldest first, with a
+  **Contents** index at the top; find the entry there rather than reading the
+  whole log. `tools/check_docs.py` (first step of `ci.sh`) fails if the index drifts
+  from the headings, and `--fix` regenerates it
+- `OPEN_ITEMS.md` — what is still missing, ranked, with what would close each.
+  **Only OPEN items belong in it**, the same way MANUAL_TESTS.md holds only
+  what needs hardware: when one closes, it leaves the file
 - `TESTING.md` — how the automated suites work and what each layer cannot see
 - `tools/vmac/README.md` — how to re-run an emulator harness or a `-D` probe
 - `MANUAL_TESTS.md` — **the to-do list for whoever has real hardware**: only what no emulator here can settle. Nothing else belongs in it
 
-Read them at the start of every session. Where these files disagree with each other, treat it as a bug to fix, not a fact to choose from.
+**Read at the start of every session: this file, `PROGRESS.md`, `OPEN_ITEMS.md`
+and `BLOCKERS.md`.** That is the current state, and it is about 17k tokens.
+The other five are reference, not briefing — all nine together are ~305 KB, and
+reading them whole every time costs more than it returns. Open the ones the
+task touches: `FORMATS.md` for a number or a per-fixture result, `DECISIONS.md`
+via its Contents index for why something is the way it is, `TESTING.md` before
+changing a suite, `tools/vmac/README.md` before running an emulator,
+`MANUAL_TESTS.md` when something needs real hardware. **A claim you are about
+to rely on, contradict or re-test is always worth opening the source for** —
+that reflex is what found nearly everything valuable in this repository.
+
+Where these files disagree with each other, treat it as a bug to fix, not a fact to choose from.
 
 ## Where to start (handoff, 2026-08-08)
 
@@ -302,7 +318,8 @@ there:
 - **Correct figures in place.** Change the number where it lives and note the correction once. Never add a section that supersedes an earlier section: that is how one file came to state three different boot times, all of them presented as fact.
 - **Withdrawn claims are collected, not interleaved**, and each records what it COST. That is what separates a claim that was merely wrong from one that displaced a capability — and the cost line is what makes the next one worth re-testing.
 - **Label every claim: measured, hypothesis, or withdrawn.** An unlabelled claim is read as measured. This is the documentation half of the reproduction rule above.
-- **Closed items get a table row, not an essay.** Keep the method if it transfers to the next problem; drop the narrative.
+- **Closing an item means moving it, not annotating it.** Keep the method if it transfers to the next problem and drop the narrative — but keep it where that KIND of thing lives: the lesson in `DECISIONS.md`, a disproved assertion under *Withdrawn claims* in `BLOCKERS.md`, a milestone in `PROGRESS.md`, a figure in `FORMATS.md`. Delete the item from the file that was tracking it as open. A "closed, kept for the method" list inside a gaps file is the failure mode: OPEN_ITEMS.md grew nineteen such rows, fifteen of them already written up in full elsewhere, and the file stopped being readable as a list of what is left (2026-08-09).
+- **Re-narration is the way these docs actually grow, and the duplication rule does not catch it.** A verbatim-sentence scan across all nine documents on 2026-08-09 found exactly ONE repeated sentence — and FORMATS.md was still telling the streaming-sink story, the four-step Arsenic story and the LZW-bound derivation in full, each of which is a DECISIONS.md entry, one of them a BLOCKERS.md bullet as well. Paraphrase evades the rule. So: **if you are writing a paragraph that explains WHY in any file other than DECISIONS.md, stop** — state the claim, give the number, cite the entry. That pass took FORMATS.md from 757 lines to 617 without losing a table or a measured figure.
 - **No plans in status docs.** "The next attempt is one run, not three" is dead weight the moment it is done. Plans belong in the conversation or a commit message.
 - **Never cite `FILE.md:NN`.** Line numbers drift silently and are then wrong without anyone noticing. Cite the section or table row by name.
 
@@ -339,6 +356,6 @@ Compression (extraction only), StuffIt X (`.sitx`), encrypted archives, disk ima
 **Multi-segment archives are IN scope since 2026-08-08** (M11), where this
 file used to list them as out. One scheme is implemented — StuffIt segments —
 and the others, including Compact Pro's, are ranked in OPEN_ITEMS.md section
-6 with what each would cost. The rule that decided the order: **a part must
+4 with what each would cost. The rule that decided the order: **a part must
 be identifiable from its own bytes.** A `.001` split cannot be, whatever it
 is named, so it buys less than it looks like it does.
