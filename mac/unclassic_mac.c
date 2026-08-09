@@ -1050,6 +1050,10 @@ typedef struct {
 typedef struct {
     UncSegmentDesc desc;
     SegLoc  loc[kSegMaxKnown + 1];   /* loc[p].name[0] == 0 => unknown */
+    /* Payload bytes of each part actually opened, so that "how much is
+     * left" is a sum over what has been SEEN rather than a running
+     * total. Indexed by part, so a part opened twice counts once. */
+    uint32_t psize[kSegMaxKnown + 1];
     FileIO  fio;                     /* the one open part */
     short   refNum;                  /* 0 = nothing open */
     DialogPtr hide;                  /* progress dialog to hide while asking */
@@ -1221,6 +1225,39 @@ static pascal Boolean SegDiskFilter(DialogPtr dlg, EventRecord *evt,
     return false;                  /* some other disk: keep asking */
 }
 
+/* Payload bytes of this set not yet read, or 0 if that cannot be said.
+ *
+ * "Part 2 of 3" is what a person wants and the format does not store a
+ * part count, so it cannot be said at all — but how much is left CAN
+ * be: the header carries the total payload of the whole set, and the
+ * parts already opened account for the rest. It answers roughly the
+ * same question, "how many more floppies is this", without inventing a
+ * number the file does not contain. */
+static uint32_t SegRemaining(SegHost *h)
+{
+    uint32_t seen = 0;
+    short p;
+
+    if (h->desc.total == 0) return 0;
+    for (p = 1; p <= kSegMaxKnown; p++) seen += h->psize[p];
+    return seen < h->desc.total ? h->desc.total - seen : 0;
+}
+
+/* Append "About 33K still to read." for a size worth mentioning. */
+static void SegCatRemaining(Str255 msg, uint32_t left)
+{
+    if (left == 0) return;
+    PStrCat(msg, " About ");
+    if (left >= 1024) {
+        PStrCatNum(msg, (long)((left + 512) / 1024));
+        PStrCat(msg, "K");
+    } else {
+        PStrCatNum(msg, (long)left);
+        PStrCat(msg, " bytes");
+    }
+    PStrCat(msg, " still to read.");
+}
+
 /* Ask the user to point at part `part`. Returns nonzero once it has been
  * located. The autotest build has no user, so this is not compiled there
  * and a part that was not found beside the archive is simply missing. */
@@ -1239,8 +1276,9 @@ static int SegAskUser(SegHost *h, int part)
         PStrCat(msg, " of \"");
         { short i; for (i = 0; i < (short)h->desc.name_len && msg[0] < 200; i++)
                        msg[++msg[0]] = h->desc.name[i]; }
-        PStrCat(msg, "\" has not been found. Locate it, "
-                     "skip it, or cancel.");
+        PStrCat(msg, "\" has not been found.");
+        SegCatRemaining(msg, SegRemaining(h));
+        PStrCat(msg, " Locate it, skip it, or cancel.");
         ParamText(msg, "\p", "\p", "\p");
 
         if (h->hide) HideWindow((WindowPtr)h->hide);
@@ -1322,6 +1360,13 @@ static int seg_need(void *ctx, const UncSegmentDesc *desc, int part, UncIO *io)
     eof = 0;
     GetEOF(h->refNum, &eof);
     if (eof <= 0) { FSClose(h->refNum); h->refNum = 0; return UNC_ERR_SEGMENTED; }
+
+    /* What this part contributes to the whole, for the "still to read"
+     * line in the alert. Every part carries the same header, which is
+     * not payload. */
+    if (part <= kSegMaxKnown)
+        h->psize[part] = (uint32_t)eof > h->desc.head_len
+                       ? (uint32_t)eof - h->desc.head_len : 0;
 
     h->fio.refNum = h->refNum;
     h->fio.size = (uint32_t)eof;

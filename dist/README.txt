@@ -34,13 +34,14 @@ puts them next to it; click Drive to send them to another disk instead.
 
 Archives split across floppies: a StuffIt segmented set is joined back
 together. Open the first part; the rest are found beside it, and if one is
-somewhere else you are asked to point at it — and just putting the disk in
-answers that: the part is picked up as soon as the disk appears, with nothing
-to click. The parts are recognised by
-what is inside them, so it does not matter what they are called or whether
-they are all in one folder. Send the output to a different disk from the
-parts — the disk holding the output is otherwise the disk you have to eject.
-Sets split by Compact Pro or PKZIP are not handled yet.
+somewhere else you are asked for it. Putting the disk in is the whole answer
+— the part is picked up as soon as the disk appears, with nothing to click —
+and the question tells you how much of the archive is still to read. The
+parts are recognised by what is inside them, so it does not matter what they
+are called or whether they are all in one folder. Send the output to a
+different disk from the parts; the disk holding the output is otherwise the
+disk you have to eject. Sets split by Compact Pro or PKZIP are not handled
+yet.
 
 Every archive in the test sample extracts byte-exact on a 1 MB Mac Plus,
 StuffIt 5 (Arsenic) included. Arsenic is slow on a 68000 — 16 minutes for a
