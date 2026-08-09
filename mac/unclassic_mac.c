@@ -2333,7 +2333,7 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
 
 int main(void)
 {
-    Point where;
+    Point where, dwhere;
 
     /* LMGetApplLimit: the GetApplLimit glue is absent from the
      * Multiversal import libraries; the low-memory accessor is the
@@ -2363,8 +2363,30 @@ int main(void)
 
     where.h = 82;
     where.v = 90;
+
+    /* The destination dialog is placed 30 points down and right of the
+     * file-open one, so that it visibly MOVES when it replaces it. The
+     * two are otherwise near-identical Standard File boxes at the same
+     * spot — same list, same Eject and Drive, differing in a prompt
+     * line, a name box, and Save where Open was — and a reader who is
+     * not looking for those reads the second as the first redrawn.
+     * Both dialogs are Apple's; their size and internal layout are not
+     * ours to change (that would need SFPPutFile and our own DLOG), so
+     * position is the cue available. Measured: the open dialog is
+     * 366x216 and the destination one 322x200, so at +30 both still sit
+     * whole on a 512x342 Mac Plus screen. */
+    dwhere.h = where.h + 30;
+    dwhere.v = where.v + 30;
+
     for (;;) {
         SFReply reply, dest;
+        /* The prompt stays empty because SFGetFile's standard dialog
+         * has no item to draw one in. That is measured, not assumed:
+         * "Open an archive:" was passed here and photographed on System
+         * 6.0.8, and the frame came back pixel-for-pixel identical to
+         * the empty-prompt one (0 differing pixels of 512x342). Only
+         * SFPutFile's dialog has a prompt item, which is why the two
+         * are told apart by POSITION below. */
         SFGetFile(where, "\p", NULL, -1, NULL, NULL, &reply);
         if (!reply.good) break;
 
@@ -2396,7 +2418,7 @@ int main(void)
          * "Extract the files into this folder:" was photographed on
          * System 6 rendering as "Extract the files into this", with
          * the word that carried the meaning cut off. */
-        SFPutFile(where, "\pExtract into this folder:",
+        SFPutFile(dwhere, "\pExtract into this folder:",
                   "\pExtract here", NULL, &dest);
         if (!dest.good) continue;      /* changed their mind: pick again */
 

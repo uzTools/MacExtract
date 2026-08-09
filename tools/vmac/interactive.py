@@ -345,10 +345,14 @@ def accept_destination(mac, pause=3.0):
     time.sleep(1.5)
 
 
-# SFPutFile's buttons. Its layout is NOT SFGetFile's — there is a name
-# field along the bottom and the buttons sit lower — so SF_DRIVE would
-# miss. Measured off 1b-destination.png at the same `where` (82, 90).
-SFPUT_DRIVE = (337, 181)
+# SFPutFile's Drive button. Two things move it away from SF_DRIVE: its
+# layout is NOT SFGetFile's (there is a name field along the bottom and
+# the buttons sit lower), and since 2026-08-09 the application opens it 30
+# points down and right of the open dialog, ON PURPOSE, so that the second
+# dialog visibly moves rather than looking like the first one redrawn.
+# Measured off 1b-destination.png; if that offset changes in
+# `mac/unclassic_mac.c`, this moves with it.
+SFPUT_DRIVE = (337 + 30, 181 + 30)
 
 
 def volume_names(img):

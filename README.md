@@ -15,7 +15,7 @@ Pick an archive:
 
 ![Standard File dialog listing archive.sit](docs/screens/1-open.png)
 
-Say where the files should go — it opens in the archive's own folder, so
+Say where the files should go. This one opens in the archive's own folder, so
 Return means "next to it", and any other disk is a Drive click away:
 
 ![Standard File save dialog headed Extract into this folder:](docs/screens/1b-destination.png)

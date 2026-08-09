@@ -1993,6 +1993,21 @@ simply asks the user to overwrite the file they just opened, and its
 default button is No, which returns to the dialog. The default name is
 a constant now.
 
+**And they look far too alike.** Two Standard File boxes at the same
+spot, same list, same Eject and Drive; the second differs by a prompt
+line, a name box and Save where Open was. A reader not looking for
+those reads it as the first dialog redrawn — which is how it was
+reported here. The open dialog cannot be labelled: `SFGetFile` takes a
+prompt argument and the standard dialog has **no item to draw it in**,
+measured by passing "Open an archive:" and photographing the result on
+System 6.0.8 — pixel-for-pixel identical to the empty-prompt frame, 0
+of 175,104 differing. Titling it would mean our own `DLOG` driven
+through `SFPPutFile`, i.e. shipping a copy of a system dialog that has
+to render from System 6 to Mac OS 9. So the cue is POSITION: the
+destination dialog opens 30 points down and right, and visibly moves.
+Sizes measured for the offset — open 366x216, destination 322x200 —
+so both still sit whole on a 512x342 screen.
+
 **The bug was reachable only where nothing was looking.** The phase
 written to test the feature switches the destination to an EMPTY floppy,
 where the archive's name collides with nothing — so `--dest` passed,
