@@ -1997,16 +1997,38 @@ a constant now.
 spot, same list, same Eject and Drive; the second differs by a prompt
 line, a name box and Save where Open was. A reader not looking for
 those reads it as the first dialog redrawn — which is how it was
-reported here. The open dialog cannot be labelled: `SFGetFile` takes a
-prompt argument and the standard dialog has **no item to draw it in**,
-measured by passing "Open an archive:" and photographing the result on
-System 6.0.8 — pixel-for-pixel identical to the empty-prompt frame, 0
-of 175,104 differing. Titling it would mean our own `DLOG` driven
-through `SFPPutFile`, i.e. shipping a copy of a system dialog that has
-to render from System 6 to Mac OS 9. So the cue is POSITION: the
-destination dialog opens 30 points down and right, and visibly moves.
-Sizes measured for the offset — open 366x216, destination 322x200 —
-so both still sit whole on a 512x342 screen.
+reported here.
+
+**The open dialog cannot be labelled through `SFGetFile`.** Its `prompt`
+argument is documented "Ignored", for `SFGetFile` and `SFPGetFile`
+alike (Inside Macintosh: Files, Standard File Package). That was
+confirmed here before the documentation was found: "Open an archive:"
+was passed and photographed on System 6.0.8, and the frame came back
+pixel-for-pixel identical to the empty-prompt one — 0 of 175,104
+differing.
+
+**There IS a placeholder in the item list, and it is parked.** `DITL`
+-4000 was read out of the System file's own resource fork (`hcopy -m`
+the System off the image, walk the resource map; the parser was
+cross-checked by reproducing our `DITL` 128 item for item against
+`mac/unclassic.r`). Ten items, of which item 10 is an *enabled*
+`statText` with empty text at rect t=1044 l=20 b=1145 r=116 — a
+thousand points below a dialog that is 348x200. Item 2, a button, is
+parked the same way at t=1152. So the empty text item exists; nothing
+draws it, and it is nowhere near the white band at the top. Apple
+documents the customization route as `SFPGetFile` with "the resource ID
+of a **customized** dialog template", so dragging that item into view
+under the STANDARD template is undocumented behaviour and not something
+to build on.
+
+**The white band is layout, not a placeholder**, which the same dump
+settles: the open dialog's first visible item starts at t=39 and the
+save dialog's at t=29. Ten points — exactly the 21-against-11 measured
+on screen between each frame's border and its volume box.
+
+So the cue is POSITION: the destination dialog opens 30 points down and
+right, and visibly moves. Sizes measured for the offset — open 366x216,
+destination 322x200 — so both still sit whole on a 512x342 screen.
 
 **The bug was reachable only where nothing was looking.** The phase
 written to test the feature switches the destination to an EMPTY floppy,

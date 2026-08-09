@@ -2380,13 +2380,17 @@ int main(void)
 
     for (;;) {
         SFReply reply, dest;
-        /* The prompt stays empty because SFGetFile's standard dialog
-         * has no item to draw one in. That is measured, not assumed:
-         * "Open an archive:" was passed here and photographed on System
-         * 6.0.8, and the frame came back pixel-for-pixel identical to
-         * the empty-prompt one (0 differing pixels of 512x342). Only
-         * SFPutFile's dialog has a prompt item, which is why the two
-         * are told apart by POSITION below. */
+        /* The prompt stays empty because SFGetFile ignores it.
+         * Source: Inside Macintosh: Files, Standard File Package —
+         * the `prompt` parameter of SFGetFile and SFPGetFile is
+         * documented "Ignored". Confirmed on System 6.0.8 before that
+         * was found: passing "Open an archive:" produced a frame
+         * pixel-for-pixel identical to this one. DITL -4000 does carry
+         * an empty statText (item 10), but parked at t=1044, a
+         * thousand points below a 348x200 dialog, and reaching it needs
+         * a customized dialog template. Only SFPutFile's dialog has a
+         * usable prompt item, which is why the two are told apart by
+         * POSITION below. DECISIONS.md, 2026-08-09. */
         SFGetFile(where, "\p", NULL, -1, NULL, NULL, &reply);
         if (!reply.good) break;
 
