@@ -400,6 +400,7 @@ just as happily on an empty archive. Three-system table in FORMATS.md.
     interactive.py                  # progress dialog, Cancel, Cmd-., at 1x
     interactive.py --e2e            # Finder desktop: double-click launch, SFGetFile,
                                     # volume navigation, an extracted APPL launching
+    interactive.py --segments       # the "locate part N" alert for a split archive
 
 `--e2e` leaves the **Finder** in place instead of installing the application as
 the boot shell, which is the only way to launch the application the way a
@@ -416,6 +417,25 @@ a cancel, SFGetFile must list exactly `Demo Manual V1.6` — the one entry that
 finished — with no trace of `EB Sounds`, the entry that was being written.
 Partial-output cleanup seen in the file list rather than inferred. Status for
 both is in BLOCKERS.md.
+
+`--segments` cuts the fixture into three parts, leaves part 1 alone on the
+boot volume and puts the other two on a second floppy, so the folder scan
+must fail and the alert must appear. It then offers the WRONG part on
+purpose, to see it refused by fingerprint and named for what it is. Unlike
+the other two phases **it ends on a byte comparison** — the joined file read
+back off the volume the Mac wrote to, against the fixture — and exits
+nonzero if they differ, so it is not purely a look-at-it harness.
+
+Two things it will get wrong if you copy it:
+
+- **Standard File opens on the last-inserted volume**, which is the parts
+  floppy, not the boot disk. Click Drive and photograph the result before
+  clicking a row. The first version did not, opened part 2, and produced a
+  screenshot of the app asking for part 1 — correct behaviour that read
+  exactly like a bug.
+- **`Mac()` boots from a private copy of the boot image.** Read results back
+  from `<workdir>/boot.hfv`, not from the image you handed it, or a run that
+  worked reports "not found".
 
 **Re-measure `PROGRESS_CANCEL` in `interactive.py` whenever the dialog changes
 shape.** It is a hard-coded screen coordinate, so a moved button does not make

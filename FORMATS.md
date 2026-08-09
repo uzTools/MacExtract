@@ -254,7 +254,34 @@ python3 tools/vmac/run.py PART1 --extra-file HOST:MACNAME ... --keep-disks
 
 The parts being found at all is the point of the middle column: the app
 reads every file in the folder and asks the engine, so the names are
-free. What is NOT covered here is a part arriving on a disk inserted
+free.
+
+### The "locate part N" dialog, driven on the same machine (2026-08-09)
+
+Those runs use the autotest build, which has no user and does not
+compile the dialog at all. The interactive application was driven
+separately, with part 1 alone on the boot volume and parts 2 and 3 on a
+second floppy so the folder scan has to fail:
+
+```
+python3 tools/vmac/interactive.py fixtures/derived-Cal.sit --segments -o DIR
+```
+
+| step | what the Mac showed |
+|---|---|
+| open part 1 | *Part 2 of "derived-Cal.sit" has not been found. Locate it, skip it, or cancel.* — Cancel / Skip / **Find...** |
+| Find..., switch to the other floppy, offer part **3** | *That is part 3 of the same archive. Part 2 is the one needed.* |
+| Find... again, offer part 2 | extraction resumes with no further prompt: locating one part rescans its folder, which picks up part 3 beside it |
+| finish | *Extraction complete.* |
+
+**It ends on a byte comparison, not on the screenshot**: the joined file
+is read back off the volume the Mac wrote to and compared to the
+fixture — 50,205 B, byte-exact. A screenshot of "Extraction complete."
+is not evidence that the bytes are right, and this phase found two
+harness bugs that each produced a plausible-looking wrong screenshot
+(DECISIONS.md).
+
+What is still NOT covered is a part arriving on a disk inserted
 mid-run — see OPEN_ITEMS.md section 6.
 
 ## Hardening

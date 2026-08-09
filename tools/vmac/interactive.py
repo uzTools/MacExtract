@@ -395,6 +395,152 @@ def phase_e2e(args, appbin, workdir, shot):
           f"Mac Plus time")
 
 
+# The "locate part N" alert (ALRT 131). Its default button is item 1,
+# Find..., so that one is reached with Return and never needs a coordinate.
+# Skip and Cancel do: DLOG-style arithmetic off mac/unclassic.r, where the
+# ALRT is at (top 90, left 80) and the DITL rects are {92,196,112,266} and
+# {92,110,112,180}, giving the centres below. THEY MOVE IF THE ALERT DOES.
+SEG_SKIP = (311, 192)
+SEG_CANCEL = (225, 192)
+
+# Rows in Standard File's list are 16 points apart; the first is SF_FIRST_ROW.
+SF_SECOND_ROW = (SF_FIRST_ROW[0], SF_FIRST_ROW[1] + 16)
+
+
+def phase_segments(args, appbin, workdir, shot):
+    """The segmented-archive dialog: can a person actually find part 2?
+
+    run.py proves the JOIN, but only through the autotest build, which has
+    no user and does not compile SegAskUser at all — every part in those
+    runs was found by the folder scan. This is the other half: part 1 sits
+    alone on the boot volume and the rest are on a second floppy, so the
+    scan must fail and the alert must come up.
+
+    The walk is deliberately the awkward one. The wrong part is offered
+    first, to see whether it is refused BY FINGERPRINT and named for what
+    it actually is, and only then the right one — which should also drag
+    in the part beside it, because locating one part rescans its folder.
+
+    Unlike the other phases this one does not end at a screenshot: the
+    boot volume is read back afterwards and the joined file compared,
+    byte for byte, against the archive the parts were cut from. A
+    screenshot of "Extraction complete." is not evidence that the bytes
+    are right.
+    """
+    import struct
+    sys.path.insert(0, os.path.join(R.REPO, "tools"))
+    from synth_sitsplit import header, HEAD                  # noqa: E402
+
+    original = open(args.fixture, "rb").read()
+    name = os.path.basename(args.fixture).encode("mac_roman")[:31] or b"Joined"
+    cuts = [0, len(original) // 3, 2 * len(original) // 3, len(original)]
+    parts = []
+    for i in range(3):
+        p = os.path.join(workdir, "part%d" % (i + 1))
+        with open(p, "wb") as f:
+            f.write(header(i + 1, name, 0, len(original)))
+            f.write(original[cuts[i]:cuts[i + 1]])
+        parts.append(p)
+
+    # Part 1 alone on the boot volume; parts 2 and 3 on a floppy, under
+    # names that resemble neither the archive nor each other. Sorted by
+    # the Finder they read "part-two", then "zzz", so the WRONG one (part
+    # 3) is the second row and the right one is the first.
+    R.sh(sys.executable, os.path.join(HERE, "mkboot.py"),
+         os.path.join(R.VMAC_HOME, args.system), appbin,
+         os.path.join(workdir, "boot-interactive.hfv"),
+         "--data", f"{parts[0]}:archive.sit")
+    bootimg = os.path.join(workdir, "boot-interactive.hfv")
+    partsdsk = os.path.join(workdir, "parts.dsk")
+    R.make_floppy(partsdsk, "Parts",
+                  extras=[(parts[1], "part-two"), (parts[2], "zzz")])
+
+    scratch = os.path.join(args.outdir, ".settle.png")
+    mac = Mac(bootimg, args.emu, workdir, extra=(partsdsk,))
+    try:
+        if mac.settle(scratch, interval=5.0, timeout=args.boot_timeout) is None:
+            raise SystemExit("interactive: the machine never settled")
+        shot(mac, "seg-1-launched.png")
+
+        # Standard File opens on the LAST-INSERTED volume, which is the
+        # Parts floppy, not the boot disk. The first version of this phase
+        # assumed otherwise and opened "part-two" — so the app asked for
+        # part 1, entirely correctly, and the screenshot looked like a bug
+        # in the application. Drive first, and photograph the result before
+        # clicking a row.
+        mac.click(*SF_DRIVE)                 # -> the boot volume
+        time.sleep(2.0)
+        shot(mac, "seg-2-boot-volume.png")
+
+        mac.click(*SF_FIRST_ROW)             # archive.sit = part 1
+        mac.key("Return")
+        time.sleep(10.0)
+        shot(mac, "seg-3-locate.png")        # part 2 is not beside part 1
+
+        mac.key("Return")                    # default button: Find...
+        time.sleep(3.0)
+        mac.click(*SF_DRIVE)                 # over to the Parts floppy
+        time.sleep(2.0)
+        shot(mac, "seg-4-parts-volume.png")
+
+        mac.click(*SF_SECOND_ROW)            # "zzz" — part THREE, on purpose
+        mac.key("Return")
+        time.sleep(4.0)
+        shot(mac, "seg-5-wrong-part.png")    # refused, and named as part 3
+
+        mac.key("Return")                    # dismiss; back to the alert
+        time.sleep(2.0)
+        mac.key("Return")                    # Find... again
+        time.sleep(3.0)
+        shot(mac, "seg-6-sfgetfile-again.png")
+
+        # Standard File reopens on the volume it was last left on, so no
+        # second Drive click here; seg-6 is what says whether that held.
+        mac.click(*SF_FIRST_ROW)             # "part-two" — the right one
+        mac.key("Return")
+        elapsed = mac.settle(scratch, interval=5.0,
+                             timeout=args.complete_timeout)
+        shot(mac, "seg-7-complete.png")
+    finally:
+        mac.close()
+        if os.path.exists(scratch):
+            os.remove(scratch)
+
+    # The bytes, not the screenshot. Read the joined file back off the
+    # volume the Mac actually wrote to — which is Mac()'s private COPY of
+    # the boot image, not the image handed to it. Reading the template
+    # instead reports "not found" for a run that worked perfectly, which
+    # is how this was first written.
+    written = os.path.join(workdir, "boot.hfv")
+    out = os.path.join(workdir, "joined.bin")
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+    verdict, listing = "NOT FOUND", ""
+    try:
+        subprocess.run(["hmount", written], check=True, capture_output=True,
+                       env=env)
+        got = subprocess.run(["hcopy", "-r", ":" + name.decode("mac_roman"), out],
+                             capture_output=True, env=env)
+        if got.returncode != 0:
+            # Say what IS on the volume: "not found" on its own cannot
+            # distinguish a wrong name from a failed extraction.
+            listing = subprocess.run(["hls", "-l"], capture_output=True,
+                                     text=True, env=env).stdout.strip()
+        subprocess.run(["humount", written], capture_output=True, env=env)
+        if got.returncode == 0 and os.path.exists(out):
+            verdict = ("BYTE-EXACT" if open(out, "rb").read() == original
+                       else "DIFFERS")
+    finally:
+        shutil.rmtree(env["HOME"], ignore_errors=True)
+
+    print(f"interactive: joined file read back off the boot volume: {verdict} "
+          f"({len(original)} B expected)")
+    if listing:
+        print("interactive: the volume holds:\n" + listing)
+    if elapsed is not None:
+        print(f"interactive: settled ~{elapsed:.0f}s after the part was given")
+    return verdict == "BYTE-EXACT"
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -429,6 +575,14 @@ def main():
                          "and this is the only arrangement that can tell a "
                          "mishandled one from a correct one — at the volume "
                          "root the two are the same directory.")
+    ap.add_argument("--segments", action="store_true",
+                    help="the segmented-archive phase: cut the fixture into "
+                         "three parts, leave part 1 alone on the boot volume "
+                         "and put the others on a second floppy, so the "
+                         "'locate part N' alert has to come up. Offers the "
+                         "WRONG part first. Ends by reading the joined file "
+                         "back off the boot volume and comparing it to the "
+                         "fixture, so this phase can fail on its own.")
     ap.add_argument("--e2e", action="store_true",
                     help="run the Finder end-to-end phase INSTEAD of the "
                          "cancel phases: launch by double-click, navigate "
@@ -450,6 +604,14 @@ def main():
         # for dialog text, not decoded, and a 512x342 1bpp screen is hard work
         # at native size.
         mac.shot(os.path.join(args.outdir, name), scale="200%" if args.e2e else None)
+
+    if args.segments:
+        try:
+            ok = phase_segments(args, appbin, workdir, shot)
+        finally:
+            shutil.rmtree(workdir, ignore_errors=True)
+        print(f"interactive: screenshots in {args.outdir} — LOOK AT THEM.")
+        return 0 if ok else 1
 
     if args.wd:
         try:

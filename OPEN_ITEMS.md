@@ -64,19 +64,6 @@ environment (section 4).
   engine and sink semantics of a cancel are covered separately: unit tests,
   both write paths through the qemu-m68k mock in `ci.sh`, and `UNC_AT_CANCEL`
   on-Mac at 4 MB and 1 MB.
-- **The Mac "locate part N" alert has never been on screen.** The
-  segmented join is verified on the emulator at 4 MB and at the 1 MB
-  floor (FORMATS.md), but only through the autotest build, which has no
-  user and therefore does not compile `SegAskUser` at all: every part in
-  those runs was found by the folder scan. So what is proven is the
-  join, the discovery and the missing-part verdict — not the alert, the
-  Standard File call inside it, the wrong-part message, or hiding and
-  restoring the progress dialog around a nested modal. The engine
-  callback underneath it is exercised, from the CLI, by `--ask`.
-  Closing this needs `tools/vmac/interactive.py` driving the buttons,
-  the way the cancel paths were done. **Nothing here is hardware-only**:
-  Mini vMac can mount an image mid-run, so even the disk-swap case is
-  emulator-testable and does not belong in MANUAL_TESTS.md.
 - **Files larger than the HFS 2 GB cap**, and the engine's 32-bit-only
   arithmetic against them.
 - **MacRoman filename display and 8-bit characters above System 6.** The bytes
@@ -101,6 +88,7 @@ environment (section 4).
 | StuffIt method 1 (RLE90) had no oracle coverage | 2026-08-08 | the premise was false in the same way twice over. `unar` decodes the method-1 fork perfectly — it fails on a *different entry's* fork compressed with method *3* — and `make_manifests.py` was discarding nine adjudicated forks to avoid recording the one bad one. **A harness that throws evidence away is indistinguishable from one that never had it**, because `oracle FAILED on X` scrolls past on every rebuild and reads as a fact about the fixture. Per-entry manifests took the suite 778 → 793 across 19 fixtures that had contributed nothing. Also: what a failed extraction leaves behind is not one thing (0-byte, 114 KB partial, or a sidecar padded to the declared length with garbage), so "the failed fork will be empty" is not a usable cross-check. DECISIONS.md |
 | Nine fixtures with no oracle manifest ("undecidable" or "oracle-buggy") | 2026-08-08 | both reasons were the fork-naming flag, not the archives: `unar -k visible` writes `NAME.rsrc`, which collides with a real entry called `X.rsrc` and which GNUstep refuses to build for a leading `~`. `-k hidden` (`._NAME`) decides all nine, and all 774 existing manifests rebuild identically. **A limitation and its remedy sat one paragraph apart in TESTING.md**; the remedy was a documented flag of a tool already in use. DECISIONS.md, BLOCKERS.md |
 | StuffIt method 6 unimplemented, "no oracle to check it against" | 2026-08-08 | the oracle existed and was already in `reference/`: macunpack has decoded fixed Huffman since 1991, and only XADMaster — the implementation we happened to be reading — refuses it. **"No oracle exists" was a statement about one tool.** The second fixture the item also said was missing was a generator, not a search: `tools/synth_sit6.py` covers the branches the one real fork cannot reach. Building that oracle also adjudicated 22 forks of OTHER methods that unar fails on, taking the suite 793 → 795. DECISIONS.md, TESTING.md |
+| The Mac "locate part N" alert had never been on screen | 2026-08-09 | the emulator runs that proved the join used the autotest build, which does not compile `SegAskUser` at all — so "verified on a Mac" covered the join and covered none of the dialog. Closed by `tools/vmac/interactive.py --segments`, which forces the alert by leaving part 1 alone on the boot volume. **Both bugs it found were in the harness, and both looked like application bugs**: Standard File opens on the LAST-INSERTED volume, so the first walk opened part 2 and the app's perfectly correct "part 1 has not been found" read as a defect; and the read-back opened the pristine boot image rather than `Mac()`'s private copy, reporting "not found" for a run that had worked. **A UI harness asserts on a screenshot, so its own mistakes are indistinguishable from the failures it is looking for** — which is why this phase ends on a byte comparison instead. DECISIONS.md |
 | Two harness excuses that could not fail | 2026-08-08 | found by asking what EVIDENCE each tolerance rested on. One rested on our own error message — a fixture was skipped whole when every entry our binary called "recognized but unsupported", so the thing being graded decided whether it was graded; it was discarding 10 adjudicated forks of the two PKZIP 1.x zips, and a regression on a supported method would have become a skip. The other excused a whole ENTRY where the oracle had failed one of its forks, so an adjudicated fork beside an unadjudicated one was never required to exist. Both now anchor on the oracle (`oracle_methods` from lsar), both were demonstrated failing with stub binaries first, and no engine result moved: 795 → 797 graded. **An excuse must be anchored outside the thing it excuses.** DECISIONS.md, TESTING.md |
 
 ---

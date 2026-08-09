@@ -1916,3 +1916,41 @@ emptiness. A manifest built that way would have been truncated, and our
 correct output would have "failed" against it. Reproduced, cause read
 in the reference source, and written down where the next harness author
 will look (TESTING.md).
+
+---
+
+## 2026-08-09 — Driving the segment dialog: a UI harness cannot tell its own bugs from the application's
+
+The join was verified on an emulated Mac Plus the day before, and that
+verification covered none of the dialog: those runs use the autotest
+build, which has no user and does not compile `SegAskUser` at all. Every
+part in them was found by the folder scan. So `tools/vmac/interactive.py`
+grew a `--segments` phase that leaves part 1 alone on the boot volume and
+puts the others on a second floppy, forcing the alert.
+
+It works, and both bugs it turned up were in the harness — **and both
+produced a screenshot that looked like an application bug**:
+
+- The first walk photographed *"Part 1 of derived-Cal.sit has not been
+  found"* while part 1 was the file the user had just opened. The
+  application was right: Standard File opens on the LAST-INSERTED
+  volume, so the click landed on the parts floppy and opened part **2**,
+  and asking for part 1 was correct behaviour. The phase now clicks
+  Drive first and photographs the volume before touching a row.
+- The byte check then reported NOT FOUND for a run that had worked
+  perfectly. `Mac()` boots from a private *copy* of the boot image, so
+  the read-back was opening the pristine template.
+
+The lesson is the one this repository keeps relearning in new clothes:
+an assertion made on a screenshot fails identically whether the
+application is wrong or the harness is aimed wrong. Hence the phase ends
+on a **byte comparison** — the joined file read back off the volume the
+Mac actually wrote to, against the fixture it was cut from — so the run
+can fail on its own rather than only in a reader's judgement. And when
+the file is missing it now prints the volume's listing, because "not
+found" alone cannot distinguish a wrong name from a failed extraction.
+
+**Also worth keeping:** locating one part rescans its folder, so
+supplying part 2 also picked up part 3 sitting beside it and the second
+prompt never appeared. That is one line in `SegAskUser` and it is the
+difference between one interruption and one per disk.

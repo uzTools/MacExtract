@@ -29,6 +29,12 @@ Or let it finish:
 
 ![Alert reading Extraction complete.](docs/screens/4-complete.png)
 
+If an archive was split across floppies and a part is not where the first one
+was, you are asked for it — and told straight away if you point at the wrong
+one, because parts are recognised by what is inside them:
+
+![Alert reading: Part 2 of "derived-Cal.sit" has not been found. Locate it, skip it, or cancel. Buttons: Cancel, Skip, Find...](docs/screens/5-locate-part.png)
+
 ## Download
 
 **[Latest release](https://github.com/jarreboum/unclassic/releases/latest)** —

@@ -390,7 +390,10 @@ and `unar` writes nothing at all — a file-creation policy, not bytes.
 A disagreement of that shape is invisible to the oracle comparison and
 is covered only by the generator comparison, which encodes our policy.
 It also says nothing about the Mac: `tools/vmac/run.py --extra-file`
-puts the other parts on the In floppy for that.
+puts the other parts on the In floppy for the join, and
+`tools/vmac/interactive.py --segments` drives the dialog (layer 10
+below). And it cannot see the *dialog* at all — the CLI's `--ask` uses
+the same engine callback, which is the most it can claim.
 
 **It was demonstrated failing before it was called passing**, by
 mutation: a matcher that ignores the fingerprint (4 failures — the
@@ -415,6 +418,19 @@ part boundary (27 failures). Both were reverted.
    layer 8 does, on the System 6/7 tier — both forks byte for byte,
    plus names and folder structure, read off the floppy image after the
    run. **53/53 on the committed sample.**
+
+10. **Driving the real UI** (`tools/vmac/interactive.py`): the
+    interactive application, clicked the way a person clicks it. Its
+    `--segments` phase covers the "locate part N" alert, which nothing
+    else can — the autotest build has no user and does not compile
+    `SegAskUser` at all. Part 1 is left alone on the boot volume and the
+    others put on a second floppy, the WRONG part is offered first, and
+    the phase **ends on a byte comparison** of the joined file read back
+    off the volume the Mac wrote to. That last part matters: the other
+    interactive phases assert on a screenshot, and a screenshot fails
+    identically whether the application is wrong or the harness is aimed
+    wrong — which is exactly what happened twice while writing this one
+    (DECISIONS.md, 2026-08-09).
 
 **What each layer can see is not the same, and that matters.** Layer 7
 compares a count, two summed CRC-32s and two summed lengths. A summed

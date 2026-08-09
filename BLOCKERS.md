@@ -27,6 +27,13 @@ forward from earlier runs. The interactive UI was re-driven on System 6 in the
 same pass (`interactive.py`): bar, percentage, time estimate, Cancel, Cmd-.,
 partial-output cleanup, success alert.
 
+**The segmented-archive dialog was driven on System 6 on 2026-08-09**
+(`interactive.py --segments`): the "locate part N" alert, Find... into
+Standard File, switching volumes, the wrong part refused and named as part 3,
+the right one accepted, and the joined file read back off the volume
+**byte-exact**. Locating one part rescans its folder, so part 3 was picked up
+beside part 2 and only one prompt ever appeared.
+
 Per-fixture tables are in FORMATS.md; re-run instructions, what a full
 re-verification costs and every on-demand probe in `tools/vmac/README.md`.
 MANUAL_TESTS.md is not part of that: it lists what no emulator here can
