@@ -87,12 +87,21 @@ parts scoped out on purpose, ranked by what they would cost.
   have to carry a base filename the engine deliberately has no concept
   of (a zip stores none). The real question is whether it is *usable*
   there rather than whether it compiles — a one-drive Mac Plus would be
-  asked for 22 disk swaps on a 5-part set and 49 on a 12-part one
-  (FORMATS.md, "Spanned zip"), because a zip's directory is at the end
-  and its entry data at the beginning. Buffering the central directory
-  once, before extracting, is what would fix that; it costs the
-  directory's size in heap and would change zip's recorded peak-RAM
-  figures, so it is a measurement job, not a patch. The Mac application
+  asked for 22 disk swaps on a 5-part set and 49 on a 12-part one, where
+  those archives allow **6 and 12**, with one backward crossing rather
+  than 7 and 14 (FORMATS.md, "Spanned zip"). The gap is ours, not the
+  format's, and closing it is the prerequisite for the Mac pass — it is
+  the difference between "insert the last disk, then disks 1 to N in
+  order", which is what a PC did with these in the 1990s, and thrashing.
+  **Two changes, in the order they pay:** buffer the central directory
+  once before extracting (removes ~2 opens per entry; costs the
+  directory's size in heap, so it needs a bound and a fallback to the
+  streaming walk), and address the set as (part, offset) pairs instead
+  of flattening it into one concatenated stream (removes the prepass,
+  and with it the need for any part-size table at all — DECISIONS.md
+  2026-08-09). The second is the bigger edit and the simpler result;
+  both change zip's recorded peak-RAM figures, so both are measurement
+  jobs rather than patches. The Mac application
   carries the code regardless — its payload went 76,800 → 78,208 B on
   2026-08-09, +1.4 KB it cannot yet reach — which is noise against the
   floor target's ~700 KB of free heap but is the honest price of the

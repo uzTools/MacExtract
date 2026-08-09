@@ -203,15 +203,19 @@ signature checks removed) fails exactly the suite's *wrong order* and
 need splitting. Such a file says "disk 0", needs no joining, and reads
 as an ordinary zip — it sniffed as *unknown* before 2026-08-09.
 
-The join is **not** read forward: a zip's directory is at the end and
-its entry data at the beginning. Part opens (backward), measured:
+The join is **not** read forward, and one crossing of that is the
+format's doing (the directory is at the end) while the rest is this
+implementation's — a prepass that measures every part, and a directory
+walk interleaved with the data reads. Part opens (backward), measured,
+beside the floor computed from each archive's own directory
+(DECISIONS.md 2026-08-09):
 
-| case | parts | opens | backward |
+| case | parts | as built | floor |
 |---|---|---|---|
-| `zstored` | 5 | 22 | 7 |
-| `zdeflate` | 4 | 18 | 6 |
-| `znested` | 3 | 14 | 5 |
-| `zmany` | 12 | 49 | 14 |
+| `zstored` | 5 | 22 (7 back) | 6 (1 back) |
+| `zdeflate` | 4 | 18 (6) | 5 (1) |
+| `znested` | 3 | 14 (5) | 4 (1) |
+| `zmany` | 12 | 49 (14) | 12 (1) |
 
 Peak heap 66,000 B, unchanged from a single-file zip: the EOCD tail
 buffer dominates and the joiner adds only the caller's ~1.1 KB scratch.

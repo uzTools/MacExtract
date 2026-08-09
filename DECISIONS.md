@@ -2349,25 +2349,49 @@ what it sniffs as.
 **"0 backward crossings" is a fact about StuffIt's layout, not about
 joining.** The M11 entry above reports it as a measured property and
 braced for swap-thrash that did not materialise. It does materialise
-here, and it is the format asking for it: a zip's directory is at the end
-and its entry data at the beginning, so the reader crosses back the
-moment it starts extracting. Measured on the suite's cases, part opens
-(backward):
+here — but only ONE crossing of it is the format's doing, and the rest
+is this implementation's. Part opens (backward), measured on the
+suite's cases beside the floor computed from each archive's own
+directory:
 
-| case | parts | opens | backward |
+| case | parts | as built | floor |
 |---|---|---|---|
-| `zstored` | 5 | 22 | 7 |
-| `zdeflate` | 4 | 18 | 6 |
-| `znested` | 3 | 14 | 5 |
-| `zmany` | 12 | 49 | 14 |
-| StuffIt `many12`, for contrast | 12 | 12 | **0** |
+| `zstored` | 5 | 22 (7 back) | **6 (1 back)** |
+| `zdeflate` | 4 | 18 (6) | **5 (1)** |
+| `znested` | 3 | 14 (5) | **4 (1)** |
+| `zmany` | 12 | 49 (14) | **12 (1)** |
+| StuffIt `many12`, for contrast | 12 | 12 (0) | 12 (0) |
 
-The joiner also has to open every part once before reading anything,
-because a spanned zip declares a part COUNT where StuffIt declares a
-payload SIZE, and the sizes of the parts ARE its address map — a
-(part, offset) pair cannot be resolved without them. That is not an
-inefficiency to remove. What it means for a one-drive Mac is in
-OPEN_ITEMS.md; the engine and CLI do not care.
+**What is the format's:** exactly one backward crossing. The
+end-of-central-directory record is at the end, so any directory-driven
+reader must touch the last part first and can then go forward — and it
+can, because the directory lists entries in increasing (part, offset)
+order in all four cases (checked, not assumed). Reading local headers
+forward from part 1 instead would cross zero times and is not worth it:
+with flag bit 3 the sizes live in a data descriptor AFTER the data, so
+the reader would be scanning for signatures rather than being told.
+
+**What is ours:** everything else — one open per part before anything is
+read, plus about two per ENTRY, which is why the overshoot tracks entry
+count rather than part count. Two decisions cause it.
+The prepass opens every part before anything is read, because the parts
+are presented as one concatenated stream so `unc_zip_extract` could be
+reused verbatim — and a concatenated stream has to know its own length
+before the EOCD can be found from the end. Then the directory walk is
+interleaved with the data reads, one entry at a time, which costs about
+two opens per entry.
+
+**The correction worth carrying: a joined stream is not the only way to
+read a format that addresses itself by part.** A spanned zip stores
+(part, offset) pairs, so a reader that keeps them as pairs needs no size
+table at all — open that part, seek, read, and on EOF mid-entry continue
+at offset 0 of the next. The sizes are an artifact of flattening the
+set into one address space, and this entry originally called them "the
+address map... not an inefficiency to remove", which was wrong: they are
+the address map only of the representation we chose. Corrected
+2026-08-09 after the claim was questioned and the floor measured.
+Neither cost is visible on Linux; both are the reason the Mac shell
+waits (OPEN_ITEMS.md section 4).
 
 **The generator being somebody else's code buys a fourth opinion.**
 `tools/synth_sitsplit.py` writes StuffIt parts by hand because nothing

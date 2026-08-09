@@ -401,10 +401,15 @@ on it too: the justification for refusing is that such a part identifies
 itself as nothing, and that is a claim about the format which the suite
 re-checks rather than quotes.
 
-`--stats` output is printed per case rather than asserted. Unlike the
-StuffIt join, a zip join crosses backwards by design (FORMATS.md,
-"Spanned zip"), so there is no number here to hold at zero — printing it
-is what keeps the cost visible.
+`--stats` output is printed per case rather than asserted. A zip join
+cannot hold at zero the way the StuffIt one does — the directory is at
+the end — but the printed numbers are about **four times** the floor
+those archives allow, and that is this implementation's doing rather
+than the format's (FORMATS.md, "Spanned zip"). Printing them is what
+made the gap findable at all: the figures were written up as inherent
+until somebody asked why Windows never behaved that way. If these
+numbers move, check them against the floor rather than against the last
+run.
 
 **Two ways the oracle can be wrong here, both measured on 2026-08-08:**
 
