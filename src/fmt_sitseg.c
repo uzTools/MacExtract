@@ -163,7 +163,11 @@ static int sitseg_stream_fork(UncCtx *c, UncFork fork, uint32_t size,
 
 /* Emit the single entry described by `desc`, reading its forks from
  * `base` onwards. `base` is UNC_SEG_HEAD for a lone part read
- * directly, and 0 for the joined stream the joiner presents. */
+ * directly, and 0 for the joined stream the joiner presents.
+ *
+ * Shared with UNC_FORMAT_SPLIT, which is this same shape with nothing
+ * in front of it: one entry, one fork, sizes and name supplied rather
+ * than parsed (unc_segment.c). */
 int unc_sitseg_emit(UncCtx *c, const UncSegmentDesc *desc, uint32_t base)
 {
     UncEntryInfo e;

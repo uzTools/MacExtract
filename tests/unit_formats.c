@@ -1247,6 +1247,130 @@ static void test_zipseg(void)
     }
 }
 
+/* ------------------------------------------------------------------ */
+/* M11: a plain NAME.001 split                                        */
+/*                                                                    */
+/* Nothing to parse — the parts are anonymous slices and the whole     */
+/* descriptor is the host's word. What is worth pinning is therefore   */
+/* the contract, not a layout: where the joined LENGTH may come from,  */
+/* and what happens when it can come from nowhere.                    */
+/* ------------------------------------------------------------------ */
+
+static uint32_t segsrc_size(void *ctx, const UncSegmentDesc *desc, int part)
+{
+    SegParts *p = (SegParts *)ctx;
+    (void)desc;
+    if (part < 1 || part > p->nparts) return UNC_SIZE_UNKNOWN;
+    return p->len[part - 1];
+}
+
+static void split_desc(UncSegmentDesc *d, int nparts, uint32_t total)
+{
+    memset(d, 0, sizeof *d);
+    d->scheme = UNC_FORMAT_SPLIT;
+    d->part = 1;
+    d->head_len = 0;
+    d->nparts = (uint16_t)nparts;
+    d->total = total;
+    memcpy(d->name, "Thing.sit", 9);
+    d->name_len = 9;
+}
+
+static void test_split(void)
+{
+    uint8_t p1[120], p2[100], p3[80];
+    uint8_t payload[300];
+    UncSegmentDesc desc;
+    UncAlloc al;
+    UncSink sk;
+    CapSink cap;
+    SegParts sp;
+    UncVolumeSource vs;
+    void *scratch;
+    uint32_t opens = 0, back = 0;
+    int i;
+
+    for (i = 0; i < 300; i++) payload[i] = (uint8_t)(i * 11 + 3);
+    memcpy(p1, payload, 120);
+    memcpy(p2, payload + 120, 100);
+    memcpy(p3, payload + 220, 80);
+
+    test_make_alloc(&al);
+    memset(&sp, 0, sizeof sp);
+    sp.part[0] = p1; sp.len[0] = sizeof p1;
+    sp.part[1] = p2; sp.len[1] = sizeof p2;
+    sp.part[2] = p3; sp.len[2] = sizeof p3;
+    sp.nparts = 3;
+    memset(&vs, 0, sizeof vs);
+    vs.ctx = &sp; vs.need = segsrc_need; vs.release = NULL;
+
+    scratch = malloc(unc_segment_scratch_size());
+    CHECK(scratch != NULL);
+
+    /* --- the host counted the parts; the engine sums their lengths -- */
+    split_desc(&desc, 3, UNC_SIZE_UNKNOWN);
+    vs.size = segsrc_size;
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_segments(&desc, &vs, scratch, &sk, &al, NULL, NULL)
+          == UNC_OK);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+    CHECK(cap.info[0].name_len == 9 &&
+          memcmp(cap.info[0].name, "Thing.sit", 9) == 0);
+    CHECK(cap.rlen[0] == 0);                 /* a split file has one fork */
+    CHECK(cap.dlen[0] == 300 && memcmp(cap.data[0], payload, 300) == 0);
+    CHECK(sp.opens == 3);
+    unc_segment_stats(scratch, &opens, &back);
+    CHECK(opens == 3 && back == 0);          /* read strictly forward */
+
+    /* --- no length, from anywhere: refused rather than guessed ------ */
+    split_desc(&desc, 3, UNC_SIZE_UNKNOWN);
+    vs.size = NULL;
+    sp.opens = 0;
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_segments(&desc, &vs, scratch, &sk, &al, NULL, NULL)
+          == UNC_ERR_CORRUPT);
+    CHECK(cap.count == 0);
+    CHECK(sp.opens == 0);                    /* nothing was even opened */
+
+    /* --- a host that knows the total needs no size callback -------- */
+    split_desc(&desc, 3, 300);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_segments(&desc, &vs, scratch, &sk, &al, NULL, NULL)
+          == UNC_OK);
+    CHECK(cap.count == 1 && cap.dlen[0] == 300);
+
+    /* --- a part the host cannot produce, with the total already
+     * known: the same verdict the other schemes give, and the only
+     * shape in which this one can give it at all. */
+    split_desc(&desc, 3, 300);
+    sp.missing = 2;
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_segments(&desc, &vs, scratch, &sk, &al, NULL, NULL)
+          == UNC_ERR_SEGMENTED);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_ERR_TRUNCATED);
+    CHECK(cap.dlen[0] == 120);               /* what part 1 held is kept */
+    sp.missing = 0;
+
+    /* --- no count either: nobody could tell where the set ends ----- */
+    split_desc(&desc, 0, UNC_SIZE_UNKNOWN);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_segments(&desc, &vs, scratch, &sk, &al, NULL, NULL)
+          == UNC_ERR_CORRUPT);
+    CHECK(cap.count == 0);
+
+    /* --- one part is a whole set, and a legitimate one -------------- */
+    split_desc(&desc, 1, UNC_SIZE_UNKNOWN);
+    vs.size = segsrc_size;
+    sp.nparts = 1;
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_segments(&desc, &vs, scratch, &sk, &al, NULL, NULL)
+          == UNC_OK);
+    CHECK(cap.count == 1 && cap.dlen[0] == 120);
+    CHECK(memcmp(cap.data[0], payload, 120) == 0);
+
+    free(scratch);
+}
+
 void run_format_tests(void)
 {
     test_macbinary();
@@ -1263,4 +1387,5 @@ void run_format_tests(void)
     test_diskcopy();
     test_sitseg();
     test_zipseg();
+    test_split();
 }

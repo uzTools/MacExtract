@@ -22,6 +22,7 @@ whole corpus for that format (engine allocations only, via
 | Tar (ustar/v7) | extract | — (links reported unsupported) | 3 fixtures (2 real 1990 v7 tars) + unit tests | 8 KB | full |
 | StuffIt segment (multi-part) | extract | — (join only; the joined file is the next layer) | 7 synthetic sets, oracle-adjudicated | 8 KB | full |
 | Zip segment (spanned, .z01…/.zip) | extract | store, deflate — the zip reader, over the joined parts | 5 generated sets, adjudicated 4 ways (source tree, `unar`, us split, us unsplit) | 12–13 KB¶ | full |
+| Split file (plain .001/.002) | extract | — (join only; the joined file is the next layer) | 3 generated sets, adjudicated against the bytes that were cut, `unar` where it can join, and our unsplit read | 8 KB | full |
 | StuffIt X (.sitx) | detect only | — | — | — | — |
 | DiskDoubler (DD, DDAR, DDA2) | detect only | — | 4 sniffed | — | — |
 | Now Compress | detect only | — | 1 sniffed | — | — |
@@ -179,10 +180,11 @@ archive the same recursion continues into it.
 
 ## Segmented archives (multi-part sets)
 
-One logical file cut across several, one per floppy. **Two schemes are
-implemented**: StuffIt segments and spanned ("split") zip. They differ
-in whether a part can be recognized from its own bytes, and everything
-else follows from that (DECISIONS.md 2026-08-08 and 2026-08-09).
+One logical file cut across several, one per floppy. **Three schemes
+are implemented**: StuffIt segments, spanned ("split") zip and plain
+`.NNN` splits. They differ in how much a part can prove about itself,
+and everything else follows from that (DECISIONS.md 2026-08-08,
+2026-08-09 and 2026-08-10).
 
 ### StuffIt segments
 
@@ -308,6 +310,28 @@ harness bugs that each produced a plausible-looking wrong screenshot
 
 What is still NOT covered is a part arriving on a disk inserted
 mid-run — see OPEN_ITEMS.md section 4.
+
+
+### Plain `.NNN` splits
+
+No header, no marker, no part count: the scheme is the naming
+convention (`reference/XADMaster/XADSplitFileParser.m`). The host
+builds the descriptor, the engine joins the consecutive run `.001` …
+`.NNN` flat, and one entry comes out — the joined file, named without
+the extension — for the caller's next layer, as for a StuffIt segment.
+The joined LENGTH is the sum of the parts', which is the only place it
+exists, so every part is located before extraction starts.
+
+Part opens are one per part, 0 backward, on every case (`--stats`,
+required to equal that floor in `ci.sh`). Peak heap is the 8 KB
+streaming buffer; nothing else is allocated.
+
+**What adjudicates such a set is the file it joins into**, and only
+that. Measured, both directions: a swap of two parts of a split zip is
+refused by the payload's own offsets and CRCs, unless the swap involves
+part 1 — after which the join no longer sniffs as an archive and
+nothing objects. A set missing its tail is undetectable in every case.
+DECISIONS.md 2026-08-10.
 
 ## Hardening
 

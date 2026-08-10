@@ -58,6 +58,7 @@ typedef enum UncFormat {
      * existing enumerator changes value. */
     UNC_FORMAT_SITSEG,        /* one part of a StuffIt segmented set   */
     UNC_FORMAT_ZIPSEG,        /* one part of a spanned (split) zip set */
+    UNC_FORMAT_SPLIT,         /* one part of a plain NAME.001 split    */
 
     UNC_FORMAT__COUNT
 } UncFormat;
@@ -226,9 +227,8 @@ int unc_extract_as(UncFormat f, UncIO *io, UncSink *sink, UncAlloc *al,
 /* Multi-segment archives                                             */
 /*                                                                    */
 /* A segmented archive is one logical stream cut across several        */
-/* files, one per floppy. Two schemes are supported, and they differ   */
-/* in exactly one respect — whether a part can be recognized from its  */
-/* own bytes:                                                          */
+/* files, one per floppy. Three schemes are supported, and they differ */
+/* in one respect — how much a part can prove about itself:            */
 /*                                                                    */
 /*  UNC_FORMAT_SITSEG  Every part carries a header that names the set, */
 /*      numbers the part within it, and fingerprints the original      */
@@ -244,6 +244,23 @@ int unc_extract_as(UncFormat f, UncIO *io, UncSink *sink, UncAlloc *al,
 /*      the result structurally — see unc_extract_segments. Names      */
 /*      propose; content disposes.                                     */
 /*                                                                    */
+/*  UNC_FORMAT_SPLIT   A plain NAME.001 / NAME.002 split proves        */
+/*      nothing at all: no header, no marker, no part count anywhere,  */
+/*      and the payload is a byte concatenation. The whole scheme is   */
+/*      the naming convention, so the DESCRIPTOR IS BUILT BY THE HOST  */
+/*      — unc_segment_describe never returns this scheme, because      */
+/*      there is nothing in a part to read it out of. The host fills   */
+/*      in scheme, nparts, part and name; the engine joins.            */
+/*                                                                    */
+/*      What adjudicates such a set is the file it joins back into: a  */
+/*      .sit or .cpt or .zip states its own lengths and checksums, and */
+/*      one entry is emitted for the caller to hand to that reader     */
+/*      (the CLI does it automatically, as for any envelope). Where    */
+/*      that file is not an archive, NOTHING checks the join — and a   */
+/*      set missing its TAIL is invisible even when it is, because no  */
+/*      part count exists to miss. This scheme is the weak one on      */
+/*      purpose; see DECISIONS.md 2026-08-09.                          */
+/*                                                                    */
 /* The engine sequences the parts; the host opens them. That keeps     */
 /* every file operation on the caller's side (engine discipline) and   */
 /* puts the "where is part 2?" question — a directory scan, a dialog,  */
@@ -256,24 +273,29 @@ int unc_extract_as(UncFormat f, UncIO *io, UncSink *sink, UncAlloc *al,
 
 /* Identity of a SET, plus which part of it we happened to look at. */
 typedef struct UncSegmentDesc {
-    UncFormat scheme;        /* UNC_FORMAT_SITSEG or UNC_FORMAT_ZIPSEG  */
+    UncFormat scheme;        /* SITSEG, ZIPSEG or SPLIT                 */
     uint16_t  part;          /* part number of the inspected file, >= 1 */
     uint32_t  head_len;      /* header bytes to drop from each part      */
 
     /* Name of the ORIGINAL file (not of any part), raw MacRoman.
      * Empty when the scheme does not store one (ZIPSEG). A host may
-     * fill it in for display; nothing in the engine reads it. */
+     * fill it in for display; nothing in the engine reads it — except
+     * under SPLIT, where it is the only name there is and becomes the
+     * emitted entry's, so it is host-supplied bytes in the host's own
+     * encoding rather than MacRoman. */
     uint8_t   name[UNC_NAME_MAX + 1];
     uint16_t  name_len;
 
     /* Opaque bytes that must agree across every part of the set.
-     * All zero for a scheme that fingerprints nothing (ZIPSEG). */
+     * All zero for a scheme that fingerprints nothing (ZIPSEG, SPLIT). */
     uint8_t   fp[UNC_SEG_FP_LEN];
 
     /* How many parts the set has, or 0 when the scheme does not say
      * and `total` is what ends the walk (SITSEG). Exactly one of the
      * two is always known: a joiner that had neither could not tell a
-     * complete set from a truncated one. */
+     * complete set from a truncated one. SPLIT stores neither in the
+     * files, so the count is the host's — how many consecutively
+     * numbered parts it found — and it is required. */
     uint16_t  nparts;
 
     /* Decoded from the fingerprint: what the joined stream contains.
@@ -289,6 +311,9 @@ typedef struct UncSegmentDesc {
 /* Describe the set that the file at `io` is a part of.
  * Returns UNC_OK, or UNC_ERR_FORMAT if this is not a segment.
  *
+ * SPLIT is never the answer: a part of one carries nothing to read.
+ * A host that has decided by name builds the descriptor itself.
+ *
  * For ZIPSEG this only ever succeeds on the LAST part, because the
  * end-of-central-directory record is the one place a spanned zip
  * writes its part count. Hand it any other part and it answers
@@ -301,10 +326,10 @@ int unc_segment_describe(UncIO *io, UncSegmentDesc *desc);
  * always answers 0: a candidate too short to prove itself is not one.
  *
  * Answers 0 for every candidate of a scheme whose parts carry no
- * identity (ZIPSEG). That is not "this file does not belong" — it is
- * "this scheme cannot be asked", and a host that orders parts by name
- * must not read a 0 here as a refusal. Use unc_sniff to check the two
- * parts of a spanned zip that ARE recognizable. */
+ * identity (ZIPSEG, SPLIT). That is not "this file does not belong" —
+ * it is "this scheme cannot be asked", and a host that orders parts by
+ * name must not read a 0 here as a refusal. Use unc_sniff to check the
+ * two parts of a spanned zip that ARE recognizable. */
 int unc_segment_match(const UncSegmentDesc *desc,
                       const uint8_t *head, int32_t len);
 
@@ -347,6 +372,12 @@ typedef struct UncVolumeSource {
  * .sit) is the caller's next layer, exactly as for MacBinary or BinHex.
  * ZIPSEG runs the ordinary zip reader over the joined stream and yields
  * the archive's entries directly — there is no envelope to unwrap.
+ * SPLIT yields one entry too — the joined file, under `desc->name`,
+ * data fork only — and needs its total length before it can say how
+ * big that entry is: either `desc->total`, or the sum of what the
+ * volume source's `size` callback answers for every part. With
+ * neither it returns UNC_ERR_CORRUPT rather than guess, because the
+ * scheme has nothing else that could end the walk.
  *
  * For ZIPSEG this is also where a wrongly assembled set is caught. The
  * host ordered the parts by name, which is evidence of nothing, so the

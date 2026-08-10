@@ -35,6 +35,11 @@ static const UncFormatDesc unc_formats[] = {
     { UNC_FORMAT_LZH,         "LZH",             0 },
     { UNC_FORMAT_SITSEG,      "StuffIt segment", 1 },
     { UNC_FORMAT_ZIPSEG,      "Zip segment",     1 },
+    /* Extractable, but only as a SET: unc_extract_as has no case for it,
+     * because one part of a plain split is an anonymous slice of bytes
+     * and there is no header to read it as. The host decides by name
+     * and calls unc_extract_segments. */
+    { UNC_FORMAT_SPLIT,       "Split file",      1 },
 };
 
 const char *unc_format_name(UncFormat f)

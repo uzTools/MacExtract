@@ -17,12 +17,14 @@
  * There are two modes, and which one a scheme wants follows from how
  * it addresses itself.
  *
- *   FLAT (StuffIt). The payload is one byte stream that happens to be
- *   cut up, and nothing inside it refers to a part. So the parts are
- *   presented as one address space, `start[]` maps an offset to a part,
- *   and it is discovered by opening parts in order — start[i] is known
- *   only once 1..i-1 have been seen. The set declares its payload TOTAL
- *   in part 1, so the walk knows when to stop.
+ *   FLAT (StuffIt, and a plain NAME.001 split). The payload is one byte
+ *   stream that happens to be cut up, and nothing inside it refers to a
+ *   part. So the parts are presented as one address space, `start[]`
+ *   maps an offset to a part, and it is discovered by opening parts in
+ *   order — start[i] is known only once 1..i-1 have been seen. StuffIt
+ *   declares its payload TOTAL in part 1, so the walk knows when to
+ *   stop; a split declares nothing anywhere, and the host's part sizes
+ *   are what end it.
  *
  *   ADDRESSED (spanned zip). The archive already stores (part, offset)
  *   pairs, so they are kept as pairs: position at one, read, and roll
@@ -43,6 +45,12 @@ typedef struct SegJoin {
     UncIO                 io;      /* what the engine reads through */
     const UncSegmentDesc *desc;
     UncVolumeSource      *vs;
+
+    /* SPLIT only: the caller's descriptor with the sizes filled in.
+     * The joined length is learned here — from the volume source —
+     * rather than by the host, and the emitter needs it in a desc.
+     * In the scratch block because a 1 MB Mac has 8 KB of stack. */
+    UncSegmentDesc        split;
 
     UncIO    cur;                  /* stream of the open part, if any */
     int      curpart;              /* 0 = none open */
@@ -332,7 +340,8 @@ int unc_extract_segments(const UncSegmentDesc *desc, UncVolumeSource *vs,
 
     if (!desc || !vs || !vs->need || !scratch || !sink || !al)
         return UNC_ERR_IO;
-    if (desc->scheme != UNC_FORMAT_SITSEG && desc->scheme != UNC_FORMAT_ZIPSEG)
+    if (desc->scheme != UNC_FORMAT_SITSEG && desc->scheme != UNC_FORMAT_ZIPSEG
+        && desc->scheme != UNC_FORMAT_SPLIT)
         return UNC_ERR_UNSUPPORTED;
     if (desc->nparts > UNC_SEG_MAX_PARTS) return UNC_ERR_UNSUPPORTED;
     /* Neither a size nor a count is a set nobody can tell the end of. */
@@ -362,6 +371,24 @@ int unc_extract_segments(const UncSegmentDesc *desc, UncVolumeSource *vs,
     if (j->addressed && j->total == UNC_SIZE_UNKNOWN)
         j->total = seg_total_if_free(j);
 
+    /* A split declares no length anywhere, so the flat walk has nothing
+     * to stop at and the emitted entry has no size to announce. The
+     * host's part sizes are the only source, and they are free to ask
+     * for (a directory lookup). Measuring instead — opening every part
+     * before extracting — is the prepass the addressed mode exists to
+     * avoid, and on removable media it is a disk swap each. */
+    if (desc->scheme == UNC_FORMAT_SPLIT) {
+        if (desc->nparts == 0) return UNC_ERR_CORRUPT;
+        if (j->total == UNC_SIZE_UNKNOWN) j->total = seg_total_if_free(j);
+        if (j->total == UNC_SIZE_UNKNOWN) return UNC_ERR_CORRUPT;
+        j->split = *desc;
+        j->split.head_len  = 0;      /* a part is payload, all of it */
+        j->split.total     = j->total;
+        j->split.data_size = j->total;
+        j->split.rsrc_size = 0;      /* a split file has one fork */
+        j->desc = &j->split;
+    }
+
     map.ctx = j;
     map.seek_part = seg_seek_part;
     map.skip = seg_skip_fwd;
@@ -388,7 +415,7 @@ int unc_extract_segments(const UncSegmentDesc *desc, UncVolumeSource *vs,
     if (desc->scheme == UNC_FORMAT_ZIPSEG)
         ret = unc_zip_extract(&c);
     else
-        ret = unc_sitseg_emit(&c, desc, 0);
+        ret = unc_sitseg_emit(&c, j->desc, 0);   /* SPLIT: the copy above */
     seg_release(j);
 
     /* A missing part is the archive's verdict, not the entry's: the

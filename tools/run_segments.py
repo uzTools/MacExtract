@@ -15,6 +15,20 @@ what our own code should produce — so the oracle is what makes a case
 adjudicated. The generator is kept as a third opinion because it can
 catch the case where we and unar are wrong in the same way.
 
+Plain NAME.001 splits (tools/synth_split.py) are adjudicated by what
+they were cut from, since nothing in the parts says anything:
+
+  * the original file, byte for byte  (we did the cutting, so this is
+    exact ground truth rather than an opinion)
+  * `unar`, on the payloads it can join at all — a plain data file, but
+    not an archive, whose first part its content parsers claim first.
+    That asymmetry is the reason our discovery decides by NAME, so it
+    is re-measured here on every run instead of quoted from a document
+  * our own extraction of the unsplit archive, for the archive payload
+
+and by what they CANNOT catch, which is asserted just as hard: see
+split_behaviours().
+
 Spanned zip (tools/synth_zipsplit.py), four ways, because the generator
 is Info-ZIP rather than us and that buys an extra one:
 
@@ -43,6 +57,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import synth_sitsplit as synth
 import synth_zipsplit as zsynth
+import synth_split as ssynth
 from make_manifests import parse_appledouble
 
 
@@ -344,7 +359,7 @@ def zip_behaviours(unclassic, case, d, parts, whole, want, workroot, fails):
     # a disk swap costs. Required to MATCH the floor the archive's own
     # directory allows, not merely to be reported: this number was 3-4x
     # the floor for a day, written up as the format's doing, because
-    # nothing compared it against anything (DECISIONS.md 2026-08-09).
+    # nothing compared it against anything (DECISIONS.md 2026-08-10).
     if multi:
         rc, out, line = zip_stats(unclassic, last, os.path.join(d, "_stats"))
         floor = zip_floor(parts)
@@ -483,6 +498,241 @@ def zip_behaviours(unclassic, case, d, parts, whole, want, workroot, fails):
                 "%s: the set did not survive the mutation tests" % case)
 
 
+# --- plain NAME.001 splits -----------------------------------------------
+
+
+def joined_file(dest, whole):
+    """The one entry a split yields: the parts' name minus ".NNN"."""
+    p = os.path.join(dest, os.path.basename(whole))
+    return open(p, "rb").read() if os.path.exists(p) else None
+
+
+def ours_join(unclassic, part_path, dest, extra=()):
+    """Extract with -nr, which stops at the joined file itself."""
+    return ours_extract(unclassic, os.path.abspath(part_path), dest, extra)
+
+
+def run_full(unclassic, path, dest):
+    """Extract WITHOUT -nr: a joined archive is unwrapped in place, the
+    way a user gets it."""
+    os.makedirs(dest, exist_ok=True)
+    r = run([unclassic, "x", "--forks", "hidden", "-o", dest,
+             os.path.abspath(path)])
+    return r.returncode, r.stdout.decode("utf-8", "replace")
+
+
+def split_case_run(unclassic, case, workroot, fails):
+    d = os.path.join(workroot, case)
+    os.makedirs(d)
+    kind, whole, parts, src = ssynth.CASES[case](d)
+    original = open(whole, "rb").read()
+    if not fails.check(len(parts) > 1, "%s: no parts were generated" % case):
+        return
+
+    # Ours, from part 1. The comparison is against the bytes that were
+    # cut up, so this case needs no oracle to be adjudicated at all.
+    rc, out = ours_join(unclassic, parts[0], os.path.join(d, "_ours"))
+    fails.check(rc == 0, "%s: unclassic failed: %s" % (case, out.strip()))
+    fails.check(joined_file(os.path.join(d, "_ours"), whole) == original,
+                "%s: the join is not the file that was cut up" % case)
+
+    # The oracle, and which half of it applies is the whole point.
+    rc, out = oracle_extract(parts[0], os.path.join(d, "_oracle"))
+    got = joined_file(os.path.join(d, "_oracle"), whole)
+    if kind == "blob":
+        fails.check(rc == 0, "%s: oracle failed: %s" % (case, out.strip()))
+        fails.check(got == original,
+                    "%s: the oracle's join disagrees with the original"
+                    % case)
+    else:
+        # MEASURED, not assumed: XADSplitFileParser is tried after the
+        # content parsers, so part 1 of a split archive is read as the
+        # truncated archive it is a slice of. If this ever starts
+        # passing, deciding by name before the sniff is no longer a
+        # capability the reference lacks and the CLI's rule wants
+        # revisiting (cli/main.c, UNC_FORMAT_SPLIT).
+        fails.check(got != original,
+                    "%s: the oracle joined an archive-payload split after "
+                    "all; the premise for deciding by name is wrong" % case)
+
+    # An archive payload can be checked all the way through, against an
+    # opinion that owes nothing to the joiner: our own unsplit read.
+    if src is not None:
+        rc, out = run_full(unclassic, parts[0], os.path.join(d, "_full"))
+        fails.check(rc == 0, "%s: joined archive did not extract: %s"
+                    % (case, out.strip()))
+        rc, out = run_full(unclassic, whole, os.path.join(d, "_unsplit"))
+        fails.check(rc == 0, "%s: unsplit archive did not extract: %s"
+                    % (case, out.strip()))
+        stem = os.path.basename(src)
+        want = dict(("%s/%s" % (stem, k), v) for k, v in read_tree(src).items())
+        got_full = read_tree(os.path.join(d, "_full"))
+        # The joined archive is left behind by the unwrap only if it
+        # failed; where it succeeded the layer is removed, so the trees
+        # compare directly.
+        fails.check(got_full == want,
+                    "%s: the joined archive extracted to something else: "
+                    "%s vs %s" % (case, sorted(got_full), sorted(want)))
+        fails.check(got_full == read_tree(os.path.join(d, "_unsplit")),
+                    "%s: joined and unsplit reads disagree" % case)
+    return d, kind, whole, parts, original
+
+
+def split_behaviours(unclassic, case, d, kind, whole, parts, original,
+                     workroot, fails):
+    """What byte-exactness cannot see — including, deliberately, the two
+    things this scheme cannot promise."""
+    n = len(parts)
+
+    # Any part reaches the same set: the numbering is a total order and
+    # the run is walked from .001 whichever member was opened.
+    for i in (1, n - 1):
+        dest = os.path.join(d, "_from%d" % (i + 1))
+        rc, out = ours_join(unclassic, parts[i], dest)
+        fails.check(rc == 0 and joined_file(dest, whole) == original,
+                    "%s: opening part %d gave a different join" % (case, i + 1))
+
+    # A flat join is read strictly forward, so the floor is one open per
+    # part and no backward crossing. Unlike a spanned zip there is no
+    # directory at the end to reach first.
+    r = run([unclassic, "x", "-nr", "--stats", "-o", os.path.join(d, "_stats"),
+             os.path.abspath(parts[0])])
+    out = r.stdout.decode("utf-8", "replace")
+    line = "".join(l for l in out.splitlines() if l.startswith("segments:"))
+    if fails.check(bool(line), "%s: --stats printed no segment line" % case):
+        got = tuple(int(x) for x in re.findall(r"\d+", line))
+        print("  %-7s %s  (floor: %d part opens, 0 backward)"
+              % (case + ":", line, n))
+        fails.check(got == (n, 0), "%s: %d opens / %d backward, floor is "
+                    "%d / 0" % ((case,) + got + (n,)))
+
+    # --no-parts hands the file back to the sniff, which sees one slice.
+    rc, out = ours_join(unclassic, parts[0], os.path.join(d, "_np"),
+                        extra=["--no-parts"])
+    fails.check(joined_file(os.path.join(d, "_np"), whole) is None,
+                "%s: --no-parts produced the joined file" % case)
+
+    # A member numbered past the end of the run says a part is missing.
+    # The reference appends it instead (MEASURED here, both halves).
+    #
+    # Numbered n+2, deliberately inside the 256-part ceiling: at .900
+    # this "passed" against the ceiling check instead, which is a
+    # different branch and would have gone on passing with the run
+    # rule removed entirely.
+    stray = "%s.%03d" % (whole, n + 2)
+    open(stray, "wb").write(b"JUNKJUNK")
+    rc, out = ours_join(unclassic, parts[0], os.path.join(d, "_stray"))
+    fails.check(rc != 0, "%s: a stray numbered member was joined" % case)
+    fails.check("part %d" % (n + 1) in out,
+                "%s: stray member reported as %r" % (case, out.strip()))
+    if kind == "blob":
+        rc, oout = oracle_extract(parts[0], os.path.join(d, "_ostray"))
+        fails.check(joined_file(os.path.join(d, "_ostray"), whole)
+                    == original + b"JUNKJUNK",
+                    "%s: the oracle did not append the stray member; the "
+                    "departure this rule exists for is gone" % case)
+    os.remove(stray)
+
+    # ...and one past the ceiling, which is its own branch and its own
+    # message: three digits reach 999 and the joiner stops at 256.
+    stray = "%s.900" % whole
+    open(stray, "wb").write(b"JUNKJUNK")
+    rc, out = ours_join(unclassic, parts[0], os.path.join(d, "_over"))
+    fails.check(rc != 0 and "256" in out,
+                "%s: a member numbered 900 reported as %r" % (case, out.strip()))
+    os.remove(stray)
+
+    # A gap with something beyond it: refused, and named.
+    hidden = os.path.join(workroot, "hidden-%s" % case)
+    shutil.move(parts[1], hidden)
+    rc, out = ours_join(unclassic, parts[0], os.path.join(d, "_gap"))
+    fails.check(rc != 0, "%s: a missing middle part must fail" % case)
+    fails.check("part 2" in out, "%s: missing part reported as %r"
+                % (case, out.strip()))
+
+    # --ask puts it back, over the engine callback the Mac dialog uses.
+    dest = os.path.join(d, "_ask")
+    os.makedirs(dest, exist_ok=True)
+    r = subprocess.run([unclassic, "x", "-nr", "--ask", "-o", dest,
+                        os.path.abspath(parts[0])],
+                       input=(hidden + "\n").encode(),
+                       stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    fails.check(r.returncode == 0, "%s: --ask failed: %s"
+                % (case, r.stdout.decode("utf-8", "replace").strip()))
+    fails.check(joined_file(dest, whole) == original,
+                "%s: --ask produced a different join" % case)
+    shutil.move(hidden, parts[1])
+
+    # --- the two things this scheme cannot promise --------------------
+    # Both are asserted rather than written down, so that "a wrong part
+    # cannot pass silently" is never quietly assumed of this scheme the
+    # way it is true of a spanned zip.
+
+    # 1. A missing TAIL. No part count exists anywhere, so a set that
+    #    stops early looks exactly like a complete one — unless what it
+    #    joins into notices, which only an archive does.
+    tail = os.path.join(workroot, "tail-%s" % case)
+    shutil.move(parts[-1], tail)
+    dest = os.path.join(d, "_tail")
+    rc, out = ours_join(unclassic, parts[0], dest)
+    if kind == "blob":
+        got = joined_file(dest, whole)
+        fails.check(rc == 0 and got is not None and len(got) < len(original)
+                    and got == original[:len(got)],
+                    "%s: a set missing its tail did not join into a short "
+                    "prefix — nothing in this scheme can detect that, so "
+                    "find out what did before believing it" % case)
+    else:
+        rc2, out2 = run_full(unclassic, parts[0], os.path.join(d, "_tailfull"))
+        fails.check(rc2 != 0,
+                    "%s: an archive missing its tail extracted cleanly" % case)
+    shutil.move(tail, parts[-1])
+
+    # 2. Parts in the wrong ORDER — a user's floppies labelled wrongly,
+    #    which here means two parts' CONTENTS swapped. What catches it
+    #    is entirely the payload's doing, and the two swaps below are
+    #    the two halves of that:
+    def swap(i, j):
+        pi, pj = parts[i], parts[j]
+        bi, bj = open(pi, "rb").read(), open(pj, "rb").read()
+        open(pi, "wb").write(bj)
+        open(pj, "wb").write(bi)
+        return lambda: (open(pi, "wb").write(bi), open(pj, "wb").write(bj))
+
+    #    (a) a swap that leaves part 1 alone. The joined file still
+    #        LOOKS like its format, so the reader runs and its own
+    #        offsets and checksums throw it out.
+    if kind != "blob" and n > 3:
+        undo = swap(1, 2)
+        rc2, out2 = run_full(unclassic, parts[0], os.path.join(d, "_swapmid"))
+        fails.check(rc2 != 0, "%s: parts 2 and 3 swapped extracted cleanly; "
+                    "the payload is what adjudicates a split and it did not"
+                    % case)
+        undo()
+
+    #    (b) a swap involving part 1, which is where the payload's own
+    #        header lived. The join no longer sniffs as anything, so it
+    #        is emitted as the plain file this scheme is entitled to
+    #        produce and NOTHING objects. Asserted so that the limit is
+    #        re-measured rather than remembered: a wrong part cannot
+    #        pass silently only while what it joins into can still be
+    #        recognized (DECISIONS.md 2026-08-10).
+    undo = swap(0, 1)
+    dest = os.path.join(d, "_swapped")
+    rc, out = ours_join(unclassic, parts[0], dest)
+    fails.check(rc == 0 and joined_file(dest, whole) != original,
+                "%s: a swap across part 1 was caught; nothing in this "
+                "scheme can do that, so find out what did before "
+                "believing it" % case)
+    undo()
+
+    # Back to health, so a mutation that leaked would be caught here.
+    dest = os.path.join(d, "_again")
+    rc, out = ours_join(unclassic, parts[0], dest)
+    fails.check(rc == 0 and joined_file(dest, whole) == original,
+                "%s: the set did not survive the mutation tests" % case)
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--unclassic", default="build/dev/unclassic")
@@ -505,6 +755,11 @@ def main():
     if zipcases and not zsynth.available():
         print("run_segments: `zip` not found; skipping the spanned-zip cases")
         zipcases = []
+    splitcases = [c for c in (selected or sorted(ssynth.CASES))
+                  if c in ssynth.CASES]
+    if splitcases and not ssynth.available():
+        print("run_segments: `zip` not found; skipping the zip5 split case")
+        splitcases = [c for c in splitcases if c != "zip5"]
 
     fails = Failures()
     workroot = tempfile.mkdtemp(prefix="unc-seg-")
@@ -621,6 +876,14 @@ def main():
                 d, _src, parts, whole, want = r
                 zip_behaviours(unclassic, c, d, parts, whole, want,
                                workroot, fails)
+
+        # --- plain NAME.001 splits --------------------------------------
+        for c in splitcases:
+            r = split_case_run(unclassic, c, workroot, fails)
+            if r:
+                d, kind, whole, parts, original = r
+                split_behaviours(unclassic, c, d, kind, whole, parts,
+                                 original, workroot, fails)
     finally:
         if a.keep:
             print("kept: %s" % workroot)
@@ -629,8 +892,9 @@ def main():
 
     for f in fails:
         print("FAIL " + f)
-    print("segments: %d StuffIt + %d spanned-zip cases, %d failures"
-          % (len(cases), len(zipcases), len(fails)))
+    print("segments: %d StuffIt + %d spanned-zip + %d split cases, "
+          "%d failures" % (len(cases), len(zipcases), len(splitcases),
+                           len(fails)))
     return 1 if fails else 0
 
 

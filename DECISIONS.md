@@ -55,6 +55,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-09 — how much of a segmented set is left, without a part count
 - 2026-08-09 — what the docs cost to read, and the rule that hid it
 - 2026-08-09 — Spanned zip: the second scheme, and what it cannot promise
+- 2026-08-10 — `.NNN` splits: the payload is the adjudicator
 
 ---
 
@@ -2445,3 +2446,81 @@ spanned case is built twice from the same input — split and unsplit — and
 the unsplit archive is read by our own engine down a path that touches no
 joiner and no address translation. A subtly wrong join now disagrees with
 *us*, not only with the oracle.
+
+---
+
+## 2026-08-10 — `.NNN` splits: the payload is the adjudicator
+
+The third segmentation scheme, and the one this repository had ranked
+last and written off. `NAME.001` / `NAME.002` (source:
+`reference/XADMaster/XADSplitFileParser.m`) carries no header, no
+marker and no part count: the scheme *is* the naming convention. So
+the descriptor is built by the HOST — `unc_segment_describe` never
+returns `UNC_FORMAT_SPLIT`, because there is nothing in a part to read
+it out of — and the engine joins a flat set whose length is the sum of
+its parts.
+
+**The claim that was wrong.** OPEN_ITEMS.md said a `.NNN` split "has no
+structure to adjudicate the result against afterwards". True of the
+scheme, false of the result: the joined stream is normally a `.sit`,
+`.cpt` or `.zip` that states its own lengths and checksums, and the CLI
+already hands a joined file to that reader through the envelope unwrap
+chain. **A scheme that proves nothing can still inherit a proof from
+what it joins into.** What it genuinely lacks, and spanned zip has, is
+a declared part COUNT — so a set missing its TAIL is invisible to
+everything except the payload.
+
+**How far that inheritance goes was measured, not assumed**, because it
+degrades in a specific place: swap two parts of a split zip and the
+reader throws the set out on its own offsets and CRCs — *unless the
+swap involves part 1*, after which the join no longer looks like an
+archive at all, is emitted as the plain file this scheme is entitled to
+produce, and nothing objects. Both halves are asserted in
+`tools/run_segments.py` (`split_behaviours`), so the limit is
+re-measured on every run instead of remembered. The API promise is
+therefore weaker than spanned zip's by one step: *a wrong part cannot
+pass silently while what it joins into can still be recognized.*
+
+**Name beats content, deliberately.** XADSplitFileParser sits under
+"over-eager detectors", second from last in `XADArchiveParser.m`, so
+every content parser is tried first — and part 1 of a split `.sit`
+begins with `SIT!`. Measured: `unar derived-Fractional_Widths.sit.001`
+exits 1 having written one truncated fork, and `lsar` calls it StuffIt.
+That is the shape these sets actually have in the wild, so the CLI
+decides by name BEFORE the sniff (`--no-parts` puts the sniff back in
+charge). **A limitation of a parser's priority order is not a
+limitation of the scheme.**
+
+**Two departures from the reference, both because it joins whatever the
+directory scan returns:** the run must be consecutive from `.001`, and
+a member numbered past the end of the run is treated as evidence that
+the gap is a missing part rather than as another part. A stray
+`NAME.900` beside a valid 3-part set is appended by the reference
+silently — 10,200 → 10,208 bytes, measured, and re-measured by the
+suite so the departure cannot quietly stop being one. Recognition is
+widened the same way: the reference requires one SPECIFIC sibling, so a
+set whose `.002` is the missing one is reported as an unknown format
+with its `.003` sitting beside it; any member will do here, and the
+missing part is then named.
+
+**The gap is resolved before extraction, not disk by disk.** For the
+other two schemes the volume source is asked lazily. Here the joined
+LENGTH is the sum of the parts' lengths — nothing states it anywhere —
+and it is the size the one emitted entry announces, so every part has
+to be located up front. `--ask` therefore prompts before the first byte
+is written. A host that cannot answer `size` for nothing gets
+`UNC_ERR_CORRUPT` rather than a guess.
+
+**What it cost to build: 25 lines of engine.** The flat mode already
+was this join with `head_len = 0`, and `unc_sitseg_emit` already was
+"one entry, name and sizes from a descriptor, forks streamed from the
+joined stream". The rest is host-side name discovery in `cli/main.c`.
+The ranking rule from 2026-08-08 — *a part must be identifiable from
+its own bytes* — put this scheme last and that was right about the
+strength; it was not a reason not to build it.
+
+**A test that passed for the wrong reason, caught by mutating the
+code it was supposed to test.** The stray-member case used `NAME.900`,
+which trips the 256-part ceiling check — a different branch — so
+removing the consecutive-run rule entirely left it passing. It is
+numbered `n+2` now, and the ceiling has its own case beside it.

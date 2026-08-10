@@ -409,6 +409,40 @@ record says it starts, then visit each entry in the order listed,
 rolling forward while its data spills into the next part — and the
 measured count must equal it exactly.
 
+### Plain `.NNN` splits (`tools/synth_split.py`, same runner)
+
+Three cases, and the ground truth is exact rather than an opinion: the
+generator CUTS a file up, so the join is required to equal the bytes
+that were cut, byte for byte. Two payloads, because they answer
+different questions. A plain data file is one `unar` can also join, so
+the join itself is adjudicated against the oracle. A zip archive is one
+it CANNOT — its content parsers claim part 1 as the truncated archive
+it is a slice of — and that asymmetry is the whole reason our discovery
+decides by name, so the suite re-measures it every run rather than
+quoting it. The archive payload is then adjudicated twice more: the
+joined archive must extract to the source tree, and to exactly what our
+own engine gets from the same archive unsplit.
+
+**The two cases that state the scheme's limit are as load-bearing as
+the ones that state its strength**, because a split proves nothing about
+itself and inherits whatever proof its payload has. A set missing its
+TAIL joins cleanly into a short file and NOTHING notices — asserted. A
+swap of two parts is thrown out by the payload... unless the swap
+involves part 1, after which the join no longer sniffs as an archive,
+is emitted as the plain file this scheme may legitimately produce, and
+nothing objects — also asserted, with a message telling the next reader
+to find out what caught it before believing a pass. Beside them: the
+consecutive-run rule (a member numbered past the end of the run is a
+missing part, where the reference appends it silently — both halves
+measured), the 256-part ceiling as its own case, `--ask` across a gap,
+`--no-parts`, opening any part, and part opens against a floor of one
+per part with no backward crossing.
+
+The stray-member case was numbered `NAME.900` at first and **passed for
+the wrong reason**: 900 trips the part-count ceiling, a different
+branch, so deleting the consecutive-run rule left it green. Mutating
+the code a test guards is the only way that shows up.
+
 Computed in Python rather than asked of the engine, for the same reason
 `py_parts()` re-implements the StuffIt match rule: a floor the engine
 calculates is a floor the engine cannot fail to meet. Both directions

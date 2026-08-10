@@ -616,6 +616,181 @@ static void seg_scan_zip_family(SegHost *h, const char *anchor, int nparts,
     closedir(d);
 }
 
+/* ------------------------------------------------------------------ */
+/* Plain NAME.001 splits: the scheme IS the filename                    */
+/*                                                                    */
+/* (Source: reference/XADMaster/XADSplitFileParser.m. Its              */
+/* +recognizeFileWithHandle: matches ^(.*)\.([0-9]{3})$ case-          */
+/* insensitively and requires the sibling to exist — .001 looks for    */
+/* .002, any other part looks for .001 — and its +volumesForHandle:    */
+/* scans the directory for ^STEM\.[0-9]{3}$.)                          */
+/*                                                                    */
+/* Two departures, both because the reference concatenates whatever    */
+/* the scan returns, sorted by name:                                   */
+/*   - the run must be CONSECUTIVE from .001. A stray NAME.900 beside  */
+/*     a valid 3-part set is appended by the reference silently        */
+/*     (measured 2026-08-09: 10,200 -> 10,208 bytes).                  */
+/*   - a numbered member sitting BEYOND the run means the gap is a     */
+/*     missing part, and that is refused rather than joined. It is the */
+/*     only shape in which such a set can report a missing part at     */
+/*     all: nothing counts the parts, so a set missing its TAIL looks  */
+/*     exactly like a complete one.                                    */
+/* ------------------------------------------------------------------ */
+
+/* The part number a NAME.NNN filename ends in, or 0 (which is also
+ * what ".000" gives, and there is no part zero). */
+static int split_ext_part(const char *name)
+{
+    size_t n = strlen(name);
+    const char *e;
+
+    if (n < 5) return 0;                       /* "x.001" is the shortest */
+    e = name + n - 4;
+    if (e[0] != '.') return 0;
+    if (e[1] < '0' || e[1] > '9' || e[2] < '0' || e[2] > '9' ||
+        e[3] < '0' || e[3] > '9') return 0;
+    return (e[1] - '0') * 100 + (e[2] - '0') * 10 + (e[3] - '0');
+}
+
+/* Does `name` belong to the family sharing `stem`? Part number, or 0. */
+static int splitfam_part_of(const char *stem, size_t stemlen, const char *name)
+{
+    size_t i;
+
+    if (strlen(name) != stemlen + 4) return 0;
+    for (i = 0; i < stemlen; i++)
+        if (ascii_lower((unsigned char)name[i]) !=
+            ascii_lower((unsigned char)stem[i]))
+            return 0;
+    return split_ext_part(name);
+}
+
+/* Split a path into the directory to scan and the stem its family
+ * shares (its name without ".NNN"). Returns the part the given file
+ * itself is, or 0 when the name is not of the family shape. */
+static int splitfam_split(const char *path, char *dir, size_t dirsz,
+                          const char **stem, size_t *stemlen)
+{
+    const char *slash = strrchr(path, '/');
+    const char *base = slash ? slash + 1 : path;
+    size_t n;
+    int part = split_ext_part(base);
+
+    if (part < 1) return 0;
+    *stem = base;
+    *stemlen = strlen(base) - 4;
+    if (*stemlen == 0) return 0;               /* ".001" is all extension */
+
+    n = slash ? (size_t)(slash - path) : 0;
+    if (n + 2 >= dirsz) return 0;
+    if (!slash) { dir[0] = '.'; dir[1] = 0; }
+    else if (n == 0) { dir[0] = '/'; dir[1] = 0; }
+    else { memcpy(dir, path, n); dir[n] = 0; }
+
+    return part;
+}
+
+/* What makes this file a segment rather than a file whose name happens
+ * to end in three digits: another member of its family is there.
+ *
+ * The reference asks for one SPECIFIC sibling (.001 looks for .002, and
+ * everything else for .001), which means a set whose .002 is the
+ * missing one is not recognized as a set at all and the user is told
+ * the format is unknown — with the .003 sitting right beside it. Any
+ * other member will do here, so that case reaches the part-numbering
+ * checks below and is reported as the missing part it is. */
+static int split_family_present(const char *path)
+{
+    char dir[1024];
+    const char *stem;
+    size_t stemlen;
+    DIR *d;
+    struct dirent *de;
+    int self = splitfam_split(path, dir, sizeof dir, &stem, &stemlen);
+    int found = 0;
+
+    if (self < 1) return 0;
+    d = opendir(dir);
+    if (!d) return 0;
+    while (!found && (de = readdir(d)) != NULL) {
+        char cand[1200];
+        struct stat st;
+        int p = splitfam_part_of(stem, stemlen, de->d_name);
+        if (p < 1 || p == self) continue;
+        if ((size_t)snprintf(cand, sizeof cand, "%s/%s", dir, de->d_name)
+            >= sizeof cand)
+            continue;
+        if (stat(cand, &st) == 0 && S_ISREG(st.st_mode)) found = 1;
+    }
+    closedir(d);
+    return found;
+}
+
+/* Was another member of this family handed over with --part? That is
+ * the second way a set proves it is one, and the only way when the
+ * parts were collected from different directories. */
+static int split_part_offered(const char *path, const char **args, int n)
+{
+    char dir[1024];
+    const char *stem;
+    size_t stemlen;
+    int self = splitfam_split(path, dir, sizeof dir, &stem, &stemlen), i;
+
+    if (self < 1) return 0;
+    for (i = 0; i < n; i++) {
+        const char *slash = strrchr(args[i], '/');
+        int p = splitfam_part_of(stem, stemlen, slash ? slash + 1 : args[i]);
+        if (p >= 1 && p != self) return 1;
+    }
+    return 0;
+}
+
+/* Record every member of the family in the anchor's directory.
+ * Returns the highest part number SEEN, including numbers too large to
+ * record, so the caller can tell a 300-part set from a 256-part one. */
+static int seg_scan_split_family(SegHost *h, const char *anchor)
+{
+    char dir[1024], cand[1200];
+    const char *stem;
+    size_t stemlen;
+    DIR *d;
+    struct dirent *de;
+    int highest = 0;
+
+    if (splitfam_split(anchor, dir, sizeof dir, &stem, &stemlen) < 1)
+        return 0;
+
+    d = opendir(dir);
+    if (!d) return 0;
+    while ((de = readdir(d)) != NULL) {
+        struct stat st;
+        int part = splitfam_part_of(stem, stemlen, de->d_name);
+        if (part < 1) continue;
+        if ((size_t)snprintf(cand, sizeof cand, "%s/%s", dir, de->d_name)
+            >= sizeof cand)
+            continue;
+        if (stat(cand, &st) != 0 || !S_ISREG(st.st_mode)) continue;
+        if (part > highest) highest = part;
+        seg_record(h, part, cand);
+    }
+    closedir(d);
+    return highest;
+}
+
+/* Length of the consecutive run .001 .. .N that was found. *beyond is
+ * set when a member sits past the end of it, which says the gap is a
+ * missing part and not the end of the set. */
+static int split_run_length(const SegHost *h, int *beyond)
+{
+    int run = 0, p;
+
+    while (run < UNC_SEG_MAX_PARTS && h->path[run + 1]) run++;
+    *beyond = 0;
+    for (p = run + 2; p <= UNC_SEG_MAX_PARTS; p++)
+        if (h->path[p]) { *beyond = 1; break; }
+    return run;
+}
+
 /* Ask stdin for a path to part `part`, until one matches or the user
  * gives up (empty line or EOF). */
 static int seg_ask(SegHost *h, int part)
@@ -637,8 +812,11 @@ static int seg_ask(SegHost *h, int part)
          * offer is taken at face value and the engine's structural
          * check on the assembled set is what catches a wrong one. Said
          * out loud, because everywhere else in this program a part is
-         * verified before it is used. */
-        if (h->desc.scheme == UNC_FORMAT_ZIPSEG) {
+         * verified before it is used. A plain split is the same, minus
+         * even that check: there, only the file it joins back into can
+         * object. */
+        if (h->desc.scheme == UNC_FORMAT_ZIPSEG ||
+            h->desc.scheme == UNC_FORMAT_SPLIT) {
             struct stat st;
             if (stat(line, &st) == 0 && S_ISREG(st.st_mode)) {
                 seg_record(h, part, line);
@@ -738,7 +916,8 @@ static void usage(void)
         "  --part <file>  another part of a segmented archive (repeatable);\n"
         "                 parts are also looked for beside the one given.\n"
         "                 A StuffIt part is placed by its header, a spanned\n"
-        "                 zip part by its .zNN / .zip extension\n"
+        "                 zip part by its .zNN / .zip extension, a plain\n"
+        "                 split by its .NNN one\n"
         "  --no-parts     do not look for other parts\n"
         "  --ask          prompt on stdin for parts that were not found\n"
         "  --stats        print allocator statistics\n"
@@ -851,12 +1030,24 @@ nextlayer:
         }
     } else {
         fmt = unc_sniff(&io);
+
+        /* A plain split is decided by NAME, and deliberately BEFORE the
+         * sniff has a say: part 1 of a split .sit begins with "SIT!" and
+         * sniffs as the archive it is a slice of. The reference tries
+         * its content parsers first and so cannot read that shape at all
+         * — measured 2026-08-09, `unar derived-Fractional_Widths.sit.001`
+         * exits 1 having written one truncated fork. --no-parts puts the
+         * sniff back in charge. */
+        if (!no_parts && (split_family_present(file) ||
+                          split_part_offered(file, partargs, nparts)))
+            fmt = UNC_FORMAT_SPLIT;
     }
 
-    /* Mac formats carry MacRoman names; zip/tar/gzip do not. */
+    /* Mac formats carry MacRoman names; zip/tar/gzip do not — nor does
+     * a split, whose entry is named after the host's own file. */
     switch (fmt) {
     case UNC_FORMAT_ZIP: case UNC_FORMAT_ZIPSEG: case UNC_FORMAT_TAR:
-    case UNC_FORMAT_GZIP: case UNC_FORMAT_COMPRESS_Z:
+    case UNC_FORMAT_GZIP: case UNC_FORMAT_COMPRESS_Z: case UNC_FORMAT_SPLIT:
         sink.mac_encoding = 0; break;
     default:
         sink.mac_encoding = 1; break;
@@ -909,7 +1100,8 @@ nextlayer:
     if (verbose || strcmp(cmd, "l") == 0)
         fprintf(stderr, "%s: %s\n", file, unc_format_name(fmt));
 
-    if ((fmt == UNC_FORMAT_SITSEG || fmt == UNC_FORMAT_ZIPSEG) && !no_parts) {
+    if ((fmt == UNC_FORMAT_SITSEG || fmt == UNC_FORMAT_ZIPSEG ||
+         fmt == UNC_FORMAT_SPLIT) && !no_parts) {
         UncVolumeSource vs;
         void *scratch;
 
@@ -917,7 +1109,91 @@ nextlayer:
         seg.ask = ask;
         seg.verbose = verbose;
 
-        if (fmt == UNC_FORMAT_ZIPSEG) {
+        if (fmt == UNC_FORMAT_SPLIT) {
+            /* Nothing in these files says anything, so the descriptor is
+             * built here: the set is the consecutive run of NAME.NNN in
+             * one directory, and the joined file is called NAME. */
+            const char *stem;
+            size_t stemlen;
+            char dirbuf[1024];
+            int self, highest, beyond = 0, run;
+
+            self = splitfam_split(file, dirbuf, sizeof dirbuf, &stem, &stemlen);
+            if (self < 1) {
+                fprintf(stderr, "unclassic: %s: not a NAME.NNN part\n", file);
+                fclose(fio.f);
+                return 1;
+            }
+            seg.desc.scheme   = UNC_FORMAT_SPLIT;
+            seg.desc.part     = (uint16_t)self;
+            seg.desc.head_len = 0;
+            seg.desc.total    = UNC_SIZE_UNKNOWN;   /* the engine sums it */
+            if (stemlen > UNC_NAME_MAX) stemlen = UNC_NAME_MAX;
+            memcpy(seg.desc.name, stem, stemlen);
+            seg.desc.name[stemlen] = 0;
+            seg.desc.name_len = (uint16_t)stemlen;
+
+            highest = seg_scan_split_family(&seg, file);
+            for (i = 0; i < nparts; i++) {
+                const char *slash = strrchr(partargs[i], '/');
+                int p = split_ext_part(slash ? slash + 1 : partargs[i]);
+                if (p >= 1) {
+                    if (p > highest) highest = p;
+                    seg_record(&seg, p, partargs[i]);
+                } else {
+                    fprintf(stderr, "unclassic: %s: no .NNN extension to "
+                            "place it by, ignored\n", partargs[i]);
+                }
+            }
+
+            run = split_run_length(&seg, &beyond);
+            if (highest > UNC_SEG_MAX_PARTS) {
+                /* Says what was SEEN, not what it means: three digits
+                 * reach 999 and a member numbered past our ceiling is
+                 * either a set too big to read or a stray file, and
+                 * nothing here can tell which. */
+                fprintf(stderr, "unclassic: \"%s\": a part numbered %d is "
+                        "beside it, and this reads at most %d parts\n",
+                        seg.desc.name, highest, UNC_SEG_MAX_PARTS);
+                fclose(fio.f);
+                return 1;
+            }
+            if (run < 1) {
+                fprintf(stderr, "unclassic: %s: part 1 of \"%s\" is not "
+                        "beside it\n", file, seg.desc.name);
+                fclose(fio.f);
+                return 1;
+            }
+            /* Something numbered past the end of the run says a part in
+             * between is missing. Refused, unless --ask means the user
+             * is standing by to produce it. */
+            if (beyond && !ask) {
+                fprintf(stderr, "unclassic: part %d of \"%s\" is missing "
+                        "(a later part is there)\n", run + 1, seg.desc.name);
+                fclose(fio.f);
+                return 1;
+            }
+            if (beyond) run = highest;
+
+            /* Gaps are resolved HERE rather than one disk at a time,
+             * which is what the volume source does for the other two
+             * schemes. A split states its length nowhere, so the joined
+             * size is the sum of the parts' — and that has to be known
+             * before the first byte is written, since it is the size
+             * the one emitted entry announces. */
+            for (i = 1; i <= run; i++) {
+                if (seg.path[i]) continue;
+                if (!ask || !seg_ask(&seg, i)) {
+                    fprintf(stderr, "unclassic: part %d of \"%s\" is "
+                            "missing\n", i, seg.desc.name);
+                    fclose(fio.f);
+                    return 1;
+                }
+            }
+            seg.desc.nparts = (uint16_t)run;
+            if (verbose)
+                fprintf(stderr, "%s: %d parts\n", seg.desc.name, run);
+        } else if (fmt == UNC_FORMAT_ZIPSEG) {
             /* Only the LAST part carries the part count, so it has to be
              * found before anything else can be — and for this scheme
              * "found" means "named .zip in the same folder". */
@@ -1060,7 +1336,7 @@ nextlayer:
         (fmt == UNC_FORMAT_MACBINARY || fmt == UNC_FORMAT_BINHEX ||
          fmt == UNC_FORMAT_APPLESINGLE || fmt == UNC_FORMAT_APPLEDOUBLE ||
          fmt == UNC_FORMAT_GZIP || fmt == UNC_FORMAT_COMPRESS_Z ||
-         fmt == UNC_FORMAT_SITSEG) &&
+         fmt == UNC_FORMAT_SITSEG || fmt == UNC_FORMAT_SPLIT) &&
         sink.file_count == 1 && sink.dir_count == 0 &&
         sink.last_ok_path[0]) {
         FILE *pf = fopen(sink.last_ok_path, "rb");

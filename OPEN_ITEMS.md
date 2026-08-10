@@ -1,4 +1,4 @@
-# OPEN_ITEMS.md — what is missing, as of 2026-08-09
+# OPEN_ITEMS.md — what is missing, as of 2026-08-10
 
 A standing audit of the gaps: things not done, things done but not verified,
 and things this repository asserts more confidently than the evidence supports.
@@ -75,17 +75,23 @@ DECISIONS.md, the withdrawn claim to BLOCKERS.md, the numbers to FORMATS.md.
 
 ---
 
-## 4. Multi-segment: what the two implemented schemes leave
+## 4. Multi-segment: what the three implemented schemes leave
 
-StuffIt segments and spanned zip extract end to end (M11). These are the
-parts scoped out on purpose, ranked by what they would cost.
+StuffIt segments, spanned zip and plain `.NNN` splits extract end to end
+(M11). These are the parts scoped out on purpose, ranked by what they
+would cost.
 
-- **Spanned zip is not wired into the Mac shell.** Engine and Linux CLI
-  only, by decision on 2026-08-09. Two things stand in the way, and
-  neither is hard: the shell's part discovery matches a StuffIt header,
-  where this scheme needs a filename match, and the descriptor would
-  have to carry a base filename the engine deliberately has no concept
-  of (a zip stores none). **The disk-swap cost that used to be the
+- **Spanned zip and `.NNN` splits are not wired into the Mac shell.**
+  Engine and Linux CLI only, by decision on 2026-08-09 and 2026-08-10.
+  One piece is missing and it serves both: the shell's part discovery
+  matches a StuffIt header, where these two schemes need a filename
+  match, and the descriptor would have to carry a base filename the
+  engine deliberately has no concept of (neither scheme stores one).
+  A split needs one thing more — every part's LENGTH before extraction
+  starts, since that is the only place the joined size comes from
+  (DECISIONS.md 2026-08-10), which on a one-drive Mac is either a
+  `PBHGetFInfo` per part on a hard disk or a decision to ask the user
+  for all the disks up front. **The disk-swap cost that used to be the
   reason to wait is gone** (2026-08-09): the reader hits the floor its
   archives allow — 6 opens with 1 backward crossing on a 5-part set,
   14/2 on a 12-part one — so the shape a user would see is "insert the
@@ -94,14 +100,10 @@ parts scoped out on purpose, ranked by what they would cost.
   what the "locate part N" alert should say for a scheme where a part
   cannot be checked before it is used. The Mac application
   carries the code regardless — its payload went 76,800 → 78,208 B on
-  2026-08-09, +1.4 KB it cannot yet reach — which is noise against the
-  floor target's ~700 KB of free heap but is the honest price of the
-  engine being shared.
-- **Other segment schemes.** Plain `.NNN` splits are cheap and weak: a
-  part can only ever be identified by NAME, so the scheme cannot meet
-  the "parts may be named anything" bar StuffIt meets, and unlike
-  spanned zip it has no structure to adjudicate the result against
-  afterwards either. **Compact Pro segmented archives are the
+  2026-08-09 and 79,360 B on 2026-08-10, +2.5 KB it cannot yet reach —
+  which is noise against the floor target's ~700 KB of free heap but is
+  the honest price of the engine being shared.
+- **Other segment schemes. Compact Pro segmented archives are the
   interesting one and the expensive one**: the format documents a volume
   byte per archive and per entry, no reference implementation extracts
   them (`unar` and `macunpack` both read the byte and ignore it), and
@@ -128,8 +130,8 @@ parts scoped out on purpose, ranked by what they would cost.
   (`.sitx`), encrypted archives, disk-image extraction, Now Compress, and
   LZH *extraction* — LZH was the optional half of M8 and is detect-only
   (the LZH/LHA row of FORMATS.md). **Multi-segment archives are IN scope
-  since 2026-08-08** and two schemes are implemented (StuffIt segments,
-  spanned zip); the rest are the section above.
+  since 2026-08-08** and three schemes are implemented (StuffIt segments,
+  spanned zip, plain `.NNN` splits); the rest are the section above.
 - **Do not retry, on Mac heap pressure.** Both were measured while StuffIt 5 /
   Arsenic was still short of the 1 MB floor, and both are dead ends:
   `MaxMem()` before a retry (compaction may not move a `NewPtr`), and

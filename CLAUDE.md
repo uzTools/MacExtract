@@ -12,7 +12,7 @@ The engine is the product. The Mac app is a thin shell.
 ## Current state — read before working
 
 M0–M11 are **DONE**. M11 is multi-segment archives, in scope since
-2026-08-08, and **two schemes are implemented**.
+2026-08-08, and **three schemes are implemented**.
 
 **StuffIt segments** join end to end, on Linux and byte-exact on a real
 emulated Mac Plus at 4 MB and at the 1 MB floor. **A part is identified by
@@ -366,12 +366,13 @@ how long they will be waiting.
 Compression (extraction only), StuffIt X (`.sitx`), encrypted archives, disk images, DiskDoubler, Now Compress, LZH/LHA. These are **detect-only**: `unc_sniff` names them — including Disk Copy 4.2, whose probe is now real — so a UI can tell the user what the file is, and extraction returns cleanly unsupported.
 
 **Multi-segment archives are IN scope since 2026-08-08** (M11), where this
-file used to list them as out. Two schemes are implemented — StuffIt segments
-and spanned zip — and the others, including Compact Pro's, are ranked in
-OPEN_ITEMS.md section 4 with what each would cost. The rule that decided the
-ORDER was: **a part must be identifiable from its own bytes.** It is still
-the right first question, but it turned out to be a ranking rule rather than
-a gate — spanned zip fails it in the middle of a set and was built anyway,
-because the archive can be made to prove itself once assembled. What a
-`.NNN` split lacks is not the header but that second chance: nothing about
-the joined result would contradict a wrong order.
+file used to list them as out. Three schemes are implemented — StuffIt segments,
+spanned zip and plain `.NNN` splits — and the others, including Compact
+Pro's, are ranked in OPEN_ITEMS.md section 4 with what each would cost. The
+rule that decided the ORDER was: **a part must be identifiable from its own
+bytes.** It is still the right first question, but it turned out to be a
+ranking rule rather than a gate — spanned zip fails it in the middle of a
+set, a `.NNN` split fails it everywhere, and both were built anyway,
+because what cannot prove itself can still be made to prove itself once
+assembled: a spanned zip structurally, and a split by whatever archive it
+joins back into (DECISIONS.md 2026-08-10).
