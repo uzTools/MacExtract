@@ -110,14 +110,38 @@ would cost.
   which is noise against the floor target's ~700 KB of free heap but is
   the honest price of the engine being shared.
 - **Other segment schemes. Compact Pro segmented archives are the
-  interesting one and the expensive one**: the format documents a volume
-  byte per archive and per entry, no reference implementation extracts
-  them (`unar` and `macunpack` both read the byte and ignore it), and
-  there is no sample in the corpus — so it needs a genuine segmented
-  `.cpt` before a line of parser is written. Compact Pro itself is in
-  the corpus and splits archives across floppies, so generating one
-  under Mini vMac is a route; the oracle would then be differential
-  (same files, segmented vs not).
+  interesting one and the expensive one**, and what is missing is a
+  SPECIMEN, not documentation. No reference implementation extracts one:
+  XADMaster reads the archive volume byte and discards it
+  (`/*int volume=*/`), records the per-entry one as metadata it never
+  acts on, and its own format wiki marks all three of the fields
+  involved — volume, cross-volume magic, per-entry volume — "meaning not
+  entirely clear". `macunpack` stores its copy unused. Both sources are
+  now fetched by `tools/fetch_references.sh` as
+  `reference/notes/cpt_specs_theunarchiver.md` and
+  `cpt_users_guide.txt`, the second being the author's own manual, which
+  documents what the scheme PROMISES even though no one documents its
+  bytes: at most 255 segments, each an ordinary Macintosh file; names
+  and locations chosen freely, "since Compact Pro saves information
+  inside the files to determine their proper ordering"; and the FINAL
+  segment is the one you open. Measured here, 2026-08-13: the
+  cross-volume magic is **distinct in all 68 corpus archives**, so it is
+  a per-archive identifier rather than a constant — which is what a set
+  identity looks like and matches what the manual says the files carry.
+  On the project's own ranking rule that makes this scheme StuffIt-like
+  (identity is content, not name) rather than zip-like, and it is
+  therefore worth more than its position in this list suggests.
+  No sample exists here — all 805 fixtures scanned for a Compact Pro
+  signature with a volume byte other than 1, including files not named
+  `.cpt`, since a middle segment has no index and would not sniff as one:
+  zero hits — and nothing in the funet whole-index is named like a
+  segment set. Generating one under Mini vMac with the copy of Compact
+  Pro already in the corpus is the route, and it would answer what the
+  documentation does not: whether every segment carries the 8-byte
+  header, and whether an entry's offset is relative to its own segment
+  or to the joined stream. The oracle would then be differential (same
+  files, segmented vs not) with Compact Pro itself as a second opinion
+  on the Mac.
 - **Zip64 spanned sets are refused, not read.** An end-of-central-directory
   record whose disk number is `0xFFFF` defers to the zip64 locator,
   which nothing here parses; `unc_zipseg_describe` answers
