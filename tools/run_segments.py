@@ -29,6 +29,12 @@ they were cut from, since nothing in the parts says anything:
 and by what they CANNOT catch, which is asserted just as hard: see
 split_behaviours().
 
+Parts inside envelopes (tools/synth_wrapped.py) are the shape a real
+download has — Archive.sit.1.hqx, Archive.sit.2.hqx — and are the same
+StuffIt sets with a BinHex or MacBinary layer around each part. The
+oracle contributes what it DOES rather than ground truth: it unwraps
+the one part it was given and exits 0. See wrapped_case_run().
+
 Spanned zip (tools/synth_zipsplit.py), four ways, because the generator
 is Info-ZIP rather than us and that buys an extra one:
 
@@ -58,6 +64,7 @@ sys.path.insert(0, HERE)
 import synth_sitsplit as synth
 import synth_zipsplit as zsynth
 import synth_split as ssynth
+import synth_wrapped as wsynth
 from make_manifests import parse_appledouble
 
 
@@ -733,6 +740,188 @@ def split_behaviours(unclassic, case, d, kind, whole, parts, original,
                 "%s: the set did not survive the mutation tests" % case)
 
 
+# --- parts that arrived inside an envelope --------------------------------
+
+
+WRAPPED_CASES = {
+    # case: {part basename: (envelope, name the wrapper is given)}
+    "wrapped-hqx": {},
+    "wrapped-bin": {},
+    "wrapped-mixed": {
+        "Test.sit.2": ("bin", "zzz-download"),
+        "Test.sit.3": ("hqx", "Other.sit.9"),
+    },
+}
+
+
+def wrapped_layout(case):
+    """(default envelope, per-part overrides, per-part renames)."""
+    over = WRAPPED_CASES[case]
+    default = "bin" if case == "wrapped-bin" else "hqx"
+    return (default,
+            dict((k, v[0]) for k, v in over.items()),
+            dict((k, v[1]) for k, v in over.items()))
+
+
+def wrapper_name(case, part):
+    """What the wrapper around `part` is called on disk. The reader is
+    not allowed to care; the harness has to, since it puts the files
+    there and takes them away again."""
+    default, per_part, rename = wrapped_layout(case)
+    env = per_part.get(part, default)
+    return rename.get(part, part) + wsynth.ENVELOPES[env][1]
+
+
+def wrapped_case_run(unclassic, case, workroot, fails):
+    """A set whose parts are each in their own envelope — what a real
+    download of one looks like: Archive.sit.1.hqx, Archive.sit.2.hqx.
+
+    Adjudicated three ways, none of which is the peel path being tested:
+
+      * the generator, which knows the joined bytes exactly;
+      * our own read of the SAME set unwrapped, which reaches the joiner
+        by a route that never opens an envelope;
+      * `unar`, for what it does rather than for ground truth. MEASURED
+        2026-08-13: handed part 1 of a wrapped set it unwraps that one
+        part, writes it out and exits 0 — success, with a fragment. If
+        that ever changes, the reference has gained a capability this
+        program was built because it lacks, and the note in
+        OPEN_ITEMS.md wants revisiting.
+    """
+    d = os.path.join(workroot, case)
+    plain = os.path.join(d, "plain")
+    os.makedirs(plain)
+    rawname, payload, rsrclen, datalen = synth.CASES["basic3"](plain)
+    name = rawname.decode("ascii")
+    want = expected_tree(name, payload, rsrclen)
+
+    default, per_part, rename = wrapped_layout(case)
+    wrapped = os.path.join(d, "wrapped")
+    wsynth.wrap_dir(plain, wrapped, default, per_part, rename)
+    first = os.path.join(wrapped, wrapper_name(case, "Test.sit.1"))
+    if not fails.check(os.path.exists(first),
+                       "%s: part 1 was not wrapped" % case):
+        return
+
+    # Ours, the way a user gets it: no -nr, because taking the envelope
+    # off is the layer under test.
+    rc, out = run_full(unclassic, first, os.path.join(d, "_ours"))
+    fails.check(rc == 0, "%s: unclassic failed: %s" % (case, out.strip()))
+    got = read_tree(os.path.join(d, "_ours"))
+    fails.check(got == want,
+                "%s: ours disagrees with the generator: %s vs %s"
+                % (case, sorted(got), sorted(want)))
+
+    # The same set, unwrapped: an opinion that owes nothing to the peel.
+    rc, out = run_full(unclassic, os.path.join(plain, "Test.sit.1"),
+                       os.path.join(d, "_plain"))
+    fails.check(rc == 0, "%s: the unwrapped set failed: %s" % (case, out.strip()))
+    fails.check(got == read_tree(os.path.join(d, "_plain")),
+                "%s: wrapped and unwrapped reads disagree" % case)
+
+    # Nothing of ours is left in the output directory.
+    fails.check(not os.path.exists(os.path.join(d, "_ours",
+                                                ".unclassic-parts")),
+                "%s: the decoded parts were left behind" % case)
+
+    rc, out = oracle_extract(first, os.path.join(d, "_oracle"))
+    got_oracle = read_tree(os.path.join(d, "_oracle"), appledouble=True)
+    fails.check(got_oracle != want,
+                "%s: the oracle joined a wrapped set after all" % case)
+    return d, plain, wrapped, first, want
+
+
+def wrapped_behaviours(unclassic, case, d, plain, wrapped, first, want, fails):
+    """What byte-exactness cannot see: what gets in, and what does not."""
+    # A wrapped part of a DIFFERENT set, named exactly like the one that
+    # is missing. The envelope comes off and the fingerprint decides, so
+    # the name buys it nothing.
+    other = os.path.join(d, "_other")
+    os.makedirs(other)
+    synth.CASES["many12"](other)
+    decoy = os.path.join(d, "decoy")
+    shutil.copytree(wrapped, decoy)
+    default, per_part, _r = wrapped_layout(case)
+    gone = wrapper_name(case, "Test.sit.2")
+    os.remove(os.path.join(decoy, gone))
+    wsynth.wrap_file(os.path.join(other, sorted(os.listdir(other))[1]),
+                     decoy, per_part.get("Test.sit.2", default),
+                     dest_name=gone.rsplit(".", 1)[0])
+    rc, out = run_full(unclassic,
+                       os.path.join(decoy, wrapper_name(case, "Test.sit.1")),
+                       os.path.join(d, "_decoy"))
+    fails.check(rc != 0, "%s: a foreign wrapped part was accepted" % case)
+    fails.check("segment" in out.lower(),
+                "%s: foreign wrapped part reported as %r" % (case, out.strip()))
+    fails.check(not os.path.exists(os.path.join(d, "_decoy",
+                                                ".unclassic-parts")),
+                "%s: a failed join left its decoded parts behind" % case)
+
+    # Parts collected from three directories, under three names, in two
+    # envelopes: the set is what the headers say it is.
+    scat = os.path.join(d, "_scattered")
+    for i, sub in ((1, "a"), (2, "b"), (3, "c")):
+        os.makedirs(os.path.join(scat, sub))
+        wsynth.wrap_file(os.path.join(plain, "Test.sit.%d" % i),
+                         os.path.join(scat, sub),
+                         "hqx" if i != 2 else "bin",
+                         dest_name="disk%d" % i)
+    rc, out = run_full_with(unclassic,
+                            os.path.join(scat, "a", "disk1.hqx"),
+                            os.path.join(d, "_scat"),
+                            ["--part", os.path.join(scat, "b", "disk2.bin"),
+                             "--part", os.path.join(scat, "c", "disk3.hqx")])
+    fails.check(rc == 0, "%s: --part with wrapped parts failed: %s"
+                % (case, out.strip()))
+    fails.check(read_tree(os.path.join(d, "_scat")) == want,
+                "%s: scattered wrapped parts gave different bytes" % case)
+
+    # What the search is rationed by: a set that is COMPLETE opens
+    # nothing beside it, however many envelopes are lying there. The
+    # "looked inside" line is the decode itself reporting, so this
+    # measures the cost and not a consequence of it.
+    beside = os.path.join(d, "_beside")
+    shutil.copytree(plain, beside)
+    wsynth.wrap_file(os.path.join(plain, "Test.sit.2"), beside, "hqx",
+                     dest_name="spare")
+    r = run([unclassic, "x", "-v", "--forks", "hidden", "-o",
+             os.path.join(d, "_beside_out"), os.path.join(beside, "Test.sit.1")])
+    out = r.stdout.decode("utf-8", "replace")
+    fails.check(r.returncode == 0,
+                "%s: the unwrapped set failed beside an envelope: %s"
+                % (case, out.strip()))
+    fails.check("looked inside" not in out,
+                "%s: a complete set opened the envelopes beside it" % case)
+    fails.check(read_tree(os.path.join(d, "_beside_out")) == want,
+                "%s: the unwrapped set gave different bytes" % case)
+
+    # ...and a set that is SHORT does pay, which is how a half-unstuffed
+    # download joins: two parts unwrapped on disk, the third still in
+    # its envelope.
+    half = os.path.join(d, "_half")
+    shutil.copytree(plain, half)
+    os.remove(os.path.join(half, "Test.sit.2"))
+    wsynth.wrap_file(os.path.join(plain, "Test.sit.2"), half, "hqx",
+                     dest_name="whatever-it-was-called")
+    r = run([unclassic, "x", "-v", "--forks", "hidden", "-o",
+             os.path.join(d, "_half_out"), os.path.join(half, "Test.sit.1")])
+    out = r.stdout.decode("utf-8", "replace")
+    fails.check(r.returncode == 0, "%s: a half-unstuffed set failed: %s"
+                % (case, out.strip()))
+    fails.check("looked inside" in out,
+                "%s: a set short of a part did not look inside anything"
+                % case)
+    fails.check(read_tree(os.path.join(d, "_half_out")) == want,
+                "%s: the half-unstuffed set gave different bytes" % case)
+
+
+def run_full_with(unclassic, path, dest, extra):
+    os.makedirs(dest, exist_ok=True)
+    r = run([unclassic, "x", "--forks", "hidden", "-o", dest]
+            + list(extra) + [os.path.abspath(path)])
+    return r.returncode, r.stdout.decode("utf-8", "replace")
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--unclassic", default="build/dev/unclassic")
@@ -755,6 +944,8 @@ def main():
     if zipcases and not zsynth.available():
         print("run_segments: `zip` not found; skipping the spanned-zip cases")
         zipcases = []
+    wrapcases = [c for c in (selected or sorted(WRAPPED_CASES))
+                 if c in WRAPPED_CASES]
     splitcases = [c for c in (selected or sorted(ssynth.CASES))
                   if c in ssynth.CASES]
     if splitcases and not ssynth.available():
@@ -877,6 +1068,14 @@ def main():
                 zip_behaviours(unclassic, c, d, parts, whole, want,
                                workroot, fails)
 
+        # --- parts inside envelopes -------------------------------------
+        for c in wrapcases:
+            r = wrapped_case_run(unclassic, c, workroot, fails)
+            if r:
+                d, plain, wrapped, first, want = r
+                wrapped_behaviours(unclassic, c, d, plain, wrapped, first,
+                                   want, fails)
+
         # --- plain NAME.001 splits --------------------------------------
         for c in splitcases:
             r = split_case_run(unclassic, c, workroot, fails)
@@ -892,9 +1091,9 @@ def main():
 
     for f in fails:
         print("FAIL " + f)
-    print("segments: %d StuffIt + %d spanned-zip + %d split cases, "
-          "%d failures" % (len(cases), len(zipcases), len(splitcases),
-                           len(fails)))
+    print("segments: %d StuffIt + %d spanned-zip + %d split + %d wrapped "
+          "cases, %d failures" % (len(cases), len(zipcases), len(splitcases),
+                                  len(wrapcases), len(fails)))
     return 1 if fails else 0
 
 

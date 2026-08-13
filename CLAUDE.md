@@ -32,6 +32,16 @@ is load-bearing. Compact Pro's scheme needs a genuine sample before any parser
 is written, because no reference implementation extracts one; the rest is
 ranked in OPEN_ITEMS.md section 4.
 
+**Parts inside envelopes** — `Archive.sit.1.hqx`, which is how a set was
+actually distributed — join on the Linux CLI since 2026-08-13, for the StuffIt
+scheme only, because that is the one whose identity is in the payload and so
+survives a wrapper. The envelope comes off each part BEFORE the join instead
+of after it, and the search is rationed by NEED: envelopes beside the archive
+are opened only while the set is short of a part. **The first ration was
+gated on the shape of part 1, and the assertion defending it could not fail** —
+it observed whether a wrapped part was used, which is a consequence of the
+search rather than the search (DECISIONS.md 2026-08-13).
+
 The engine passes a 797-fixture differential suite against `unar` and, where `unar` fails, `macunpack`; the Mac shell extracts byte-exact on a real System 6.0.8 Mac Plus under Mini vMac — **55/55 sampled fixtures at 4 MB and 55/55 at the 1 MB floor** (2026-08-08, on a sample that grew from 44 to 55 that day; there are no memory-budget refusals left).
 
 It runs on all three systems the project claims: **System 6.0.8 and System 7.0.1** under Mini vMac (a true 68000), and **Mac OS 9.2** under QEMU PowerPC through the 68LC040 emulator, where 13/13 of a format sample is byte-exact, extraction onto **HFS+** is verified, and the `SIZE` partition is honoured by the Process Manager.
@@ -72,16 +82,18 @@ that reflex is what found nearly everything valuable in this repository.
 
 Where these files disagree with each other, treat it as a bug to fix, not a fact to choose from.
 
-## Where to start (handoff, 2026-08-08)
+## Where to start (handoff, 2026-08-13)
 
 The repository is on GitHub as a **private** repo, `main`, tagged through
-`v0.6`, the release that adds StuffIt method 6 (`v0.5` was the first tag to
-publish a downloadable application at all — see *Cutting a release*). Working
-tree clean, `./ci.sh` green, nothing in flight. **Whether v0.6's release page
-actually appeared has not been checked from here and cannot be**: this machine
+`v0.7`, the release that gives the Macintosh application a destination dialog
+and answers a missing part by having the disk put in (`v0.5` was the first tag
+to publish a downloadable application at all — see *Cutting a release*).
+Working tree clean, `./ci.sh` green, nothing in flight. **Whether a release
+PAGE appeared has never been checked from here and cannot be**: this machine
 has no `gh`, no token, and the Releases API answers 404 for a private repo —
-re-tested 2026-08-08. `git ls-remote --tags origin` does work over SSH, so the
-TAG is confirmed pushed; the release page it triggers is not.
+re-tested on v0.6, 2026-08-08. `git ls-remote --tags origin` does work over
+SSH, and confirms `main` and every tag through v0.7 are pushed; the release
+page a tag triggers is not confirmed and never has been.
 
 **The differential suite is 797 fixtures, not 769** (2026-08-08), and all
 three increases came from the measuring apparatus rather than from new archives.
@@ -288,8 +300,8 @@ Pushing a `v*` tag publishes a GitHub release with the application attached.
 ```sh
 sh tools/make_dist.sh                    # rebuild dist/ from current source
 # commit dist/ + docs, ./ci.sh green, push main FIRST
-git tag -a v0.6 -m "..."                 # annotated; the message is the tag's
-git push origin v0.6
+git tag -a v0.8 -m "..."                 # annotated; the message is the tag's
+git push origin v0.8
 ```
 
 Four things will bite you, all of them cost a step on v0.5:
@@ -311,7 +323,7 @@ Four things will bite you, all of them cost a step on v0.5:
   over SSH is `git ls-remote --tags origin`, which settles that the tag reached
   GitHub — the half that used to be assumed from a `git push` exit status.
   Publishing itself is NOT a human step: the workflow does it, unattended, and
-  a deploy-key tag push triggers it (v0.5, v0.6). So report the tag as pushed
+  a deploy-key tag push triggers it (v0.5, v0.6, v0.7). So report the tag as pushed
   and the release page as unverified, and never collapse the two.
 
 A deploy-key push *is* allowed to add files under `.github/workflows/`, and a
@@ -375,4 +387,6 @@ ranking rule rather than a gate — spanned zip fails it in the middle of a
 set, a `.NNN` split fails it everywhere, and both were built anyway,
 because what cannot prove itself can still be made to prove itself once
 assembled: a spanned zip structurally, and a split by whatever archive it
-joins back into (DECISIONS.md 2026-08-10).
+joins back into (DECISIONS.md 2026-08-10). The same rule then decided which
+scheme could have its parts read out of per-part envelopes, and there it WAS
+a gate: only StuffIt (DECISIONS.md 2026-08-13).

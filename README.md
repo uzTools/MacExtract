@@ -80,7 +80,11 @@ output to a different disk from the parts, which is the only thing that works
 when the parts are on floppies you have to keep swapping.
 
 Zip archives split into `.z01`, `.z02` … `.zip` are joined too, by the
-Linux command-line version — not yet by the Macintosh application.
+Linux command-line version — not yet by the Macintosh application. The
+same version also joins a set whose parts are each still in their own
+BinHex or MacBinary wrapper (`Archive.sit.1.hqx`, `Archive.sit.2.hqx`),
+which is how these were usually downloaded; it does not mind if only
+some of them still are.
 
 Encrypted archives are out of scope, as are sets split by Compact Pro.
 

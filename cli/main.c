@@ -407,6 +407,155 @@ static int prog_tick(void *ctx, uint32_t done, uint32_t total)
 }
 
 /* ------------------------------------------------------------------ */
+/* Envelopes                                                          */
+/*                                                                    */
+/* One file in, one file out: the layers a real download is chained    */
+/* from (.sit.hqx, .cpt.bin, .tar.Z). ONE list, read both by the       */
+/* auto-unwrap at the end of main and by wrapped-part discovery below; */
+/* two lists would drift apart.                                       */
+/* ------------------------------------------------------------------ */
+
+static int env_is_envelope(UncFormat f)
+{
+    return f == UNC_FORMAT_MACBINARY || f == UNC_FORMAT_BINHEX ||
+           f == UNC_FORMAT_APPLESINGLE || f == UNC_FORMAT_APPLEDOUBLE ||
+           f == UNC_FORMAT_GZIP || f == UNC_FORMAT_COMPRESS_Z;
+}
+
+/* Sink for taking one envelope off a file, in either of two modes.
+ *
+ * PEEK (head != NULL) collects the first `cap` bytes of the data fork
+ * and then asks to stop, which is what makes it affordable to look
+ * inside every envelope in a directory. PEEL (out != NULL) streams the
+ * whole data fork to a file.
+ *
+ * The resource fork is ignored in both: a part of a segmented set is a
+ * run of bytes that happens to have travelled inside a Macintosh file,
+ * and all three schemes concatenate data forks (unc_extract_segments).
+ * An envelope holding a part with a resource fork would be a file this
+ * program has never seen, and inventing a meaning for it here is the
+ * one thing rule #1 forbids. */
+typedef struct {
+    FILE    *out;           /* PEEL: where the data fork goes          */
+    uint8_t *head;          /* PEEK: where the first bytes go          */
+    int32_t  cap, len;
+    int      entries;       /* how many entries the envelope yielded   */
+    int      err;
+} EnvSink;
+
+static int env_begin(void *ctx, const UncEntryInfo *info)
+{
+    EnvSink *e = (EnvSink *)ctx;
+    if (info->is_dir) { e->entries++; return 1; }
+    return e->entries++ ? 1 : 0;      /* the first file is the payload */
+}
+
+static int env_write(void *ctx, UncFork fork, const void *buf, int32_t len)
+{
+    EnvSink *e = (EnvSink *)ctx;
+
+    if (fork != UNC_FORK_DATA || len <= 0) return 0;
+    if (e->out) {
+        if (fwrite(buf, 1, (size_t)len, e->out) != (size_t)len) {
+            e->err = 1;
+            return -1;
+        }
+        return 0;
+    }
+    if (e->len < e->cap) {
+        int32_t n = e->cap - e->len;
+        if (n > len) n = len;
+        memcpy(e->head + e->len, buf, (size_t)n);
+        e->len += n;
+    }
+    /* Enough to decide on. Stopping here is the difference between
+     * reading a hundred bytes of every envelope in a directory and
+     * decoding all of them; it is reported as a per-entry failure,
+     * which is why a peek is judged by what it collected and never by
+     * the status it returns. */
+    return e->len >= e->cap ? -1 : 0;
+}
+
+static int env_end(void *ctx, int status)
+{
+    EnvSink *e = (EnvSink *)ctx;
+    if (e->out && status != UNC_OK) e->err = 1;
+    return 0;
+}
+
+/* Run one envelope layer of `path` into `es`. Returns 0 if the file is
+ * not an envelope at all. */
+static int env_run(const char *path, EnvSink *es)
+{
+    FileIO f;
+    UncIO eio;
+    UncSink sk;
+    UncAlloc al;
+    BudgetAlloc ba;
+    UncProgress prog;
+    UncFormat fmt;
+    struct stat st;
+    int rc;
+
+    memset(&f, 0, sizeof f);
+    f.f = fopen(path, "rb");
+    if (!f.f) return 0;
+    f.size = stat(path, &st) == 0 ? (uint32_t)st.st_size : UNC_SIZE_UNKNOWN;
+    eio.ctx = &f;
+    eio.read = fio_read;
+    eio.seek = fio_seek;
+    eio.tell = fio_tell;
+    eio.size = fio_size;
+
+    fmt = unc_sniff(&eio);
+    if (!env_is_envelope(fmt)) { fclose(f.f); return 0; }
+
+    memset(&ba, 0, sizeof ba);          /* budget 0: no cap */
+    al.ctx = &ba;
+    al.alloc = ba_alloc;
+    al.free = ba_free;
+    sk.ctx = es;
+    sk.begin_entry = env_begin;
+    sk.write = env_write;
+    sk.end_entry = env_end;
+    prog.ctx = NULL;
+    prog.tick = prog_tick;
+
+    rc = unc_extract_as(fmt, &eio, &sk, &al, &prog, NULL);
+    fclose(f.f);
+    if (es->out && rc != UNC_OK) es->err = 1;
+    return 1;
+}
+
+/* First `cap` bytes of what one envelope layer of `path` holds.
+ * Returns how many were collected; 0 for a file that is not an
+ * envelope, or whose payload is shorter than a decision needs. */
+static int32_t env_peek(const char *path, uint8_t *head, int32_t cap)
+{
+    EnvSink es;
+    memset(&es, 0, sizeof es);
+    es.head = head;
+    es.cap = cap;
+    if (!env_run(path, &es)) return 0;
+    return es.len;
+}
+
+/* Take one envelope off `path`, writing the payload to `dest`.
+ * Returns 1 on success. */
+static int env_peel(const char *path, const char *dest)
+{
+    EnvSink es;
+    int ok;
+
+    memset(&es, 0, sizeof es);
+    es.out = fopen(dest, "wb");
+    if (!es.out) return 0;
+    ok = env_run(path, &es);
+    if (fclose(es.out) != 0) es.err = 1;
+    return ok && !es.err;
+}
+
+/* ------------------------------------------------------------------ */
 /* Volume source: where the parts of a segmented archive come from     */
 /*                                                                    */
 /* Three ways in, all ending at the same fingerprint check, because a  */
@@ -426,6 +575,10 @@ typedef struct {
     FileIO   open_io;                      /* one part open at a time */
     int      ask;
     int      verbose;
+    /* Parts that arrived inside an envelope are decoded to here before
+     * the join; see seg_wrapped_part_of. Empty until one has been. */
+    const char *outdir;
+    char     peeldir[1024];
 } SegHost;
 
 /* Read a candidate's first bytes and return its part number in the
@@ -463,8 +616,140 @@ static void seg_record(SegHost *h, int part, const char *path)
         fprintf(stderr, "part %d: %s\n", part, path);
 }
 
-/* Scan the directory holding `anchor` for parts of the set. */
-static void seg_scan_dir(SegHost *h, const char *anchor)
+/* ------------------------------------------------------------------ */
+/* Parts that arrived inside an envelope                               */
+/*                                                                    */
+/* A real download is per-part wrapped — Archive.sit.1.hqx,            */
+/* Archive.sit.2.hqx — so the envelope has to come off BEFORE the      */
+/* join, where this program's ordinary auto-unwrap runs after it. The  */
+/* part is decoded to a file beside the output and the joiner is given */
+/* that; the decoded parts are deleted as soon as the join is over.    */
+/*                                                                    */
+/* Only the StuffIt scheme is looked for this way, because it is the   */
+/* only one of the three that can prove a wrapped part belongs: its    */
+/* header is in the payload, so unwrapping is all that stands between  */
+/* the file and the same fingerprint check every other part gets. A    */
+/* spanned zip or a .NNN split is placed by its FILENAME, and the name */
+/* of a wrapped part is the wrapper's — no reference implementation    */
+/* says what that name should look like, and guessing one is exactly   */
+/* what rule #1 forbids.                                              */
+/* ------------------------------------------------------------------ */
+
+#define SEG_PEELDIR ".unclassic-parts"
+
+/* Make the directory decoded parts go in. It is inside the output
+ * directory, which the caller has already created and is the one place
+ * this program knows it may write. */
+static int seg_peel_dir(SegHost *h)
+{
+    if (h->peeldir[0]) return 1;
+    if (!h->outdir) return 0;
+    if ((size_t)snprintf(h->peeldir, sizeof h->peeldir, "%s/%s",
+                         h->outdir, SEG_PEELDIR) >= sizeof h->peeldir) {
+        h->peeldir[0] = 0;
+        return 0;
+    }
+    if (mkdir(h->peeldir, 0700) != 0 && errno != EEXIST) {
+        h->peeldir[0] = 0;
+        return 0;
+    }
+    return 1;
+}
+
+/* Remove the decoded parts and the directory holding them. Called
+ * whatever the join did: they are this program's own litter, and an
+ * archive that failed to join is exactly when a user is least helped
+ * by finding pieces of it lying around. */
+static void seg_peel_clean(SegHost *h)
+{
+    DIR *d;
+    struct dirent *de;
+
+    if (!h->peeldir[0]) return;
+    d = opendir(h->peeldir);
+    if (d) {
+        while ((de = readdir(d)) != NULL) {
+            char p[1200];
+            if (strcmp(de->d_name, ".") == 0 || strcmp(de->d_name, "..") == 0)
+                continue;
+            if ((size_t)snprintf(p, sizeof p, "%s/%s", h->peeldir, de->d_name)
+                < sizeof p)
+                remove(p);
+        }
+        closedir(d);
+    }
+    remove(h->peeldir);
+    h->peeldir[0] = 0;
+}
+
+/* Do the parts found so far account for the whole set?
+ *
+ * A StuffIt part states the original file's two fork lengths, so their
+ * sum is the payload the set holds and summing to it is what ends the
+ * joiner's walk (fmt_sitseg.c). The same sum answers the only question
+ * a host needs here: is there anything still to look for. Parts are
+ * read in order, so a gap ends the count whatever sits past it. */
+static int seg_have_all(const SegHost *h)
+{
+    uint32_t sum = 0;
+    int p;
+
+    if (h->desc.total == UNC_SIZE_UNKNOWN) return 0;
+    for (p = 1; p <= UNC_SEG_MAX_PARTS && h->path[p]; p++) {
+        struct stat st;
+        if (stat(h->path[p], &st) != 0) return 0;
+        if ((uint32_t)st.st_size <= h->desc.head_len) return 0;
+        sum += (uint32_t)st.st_size - h->desc.head_len;
+        if (sum >= h->desc.total) return 1;
+    }
+    return 0;
+}
+
+/* Is `path` an envelope holding a part of this set? If so the part is
+ * decoded whole and recorded, and its number returned.
+ *
+ * The first UNC_SEG_HEAD bytes are what decides, so an envelope that
+ * has nothing to do with this set costs a hundred decoded bytes rather
+ * than a whole decode. One layer only: Archive.sit.1.hqx is the shape
+ * that exists, and a second would be a guess. */
+static int seg_wrapped_part_of(SegHost *h, const char *path)
+{
+    uint8_t head[UNC_SEG_HEAD];
+    char dest[1200];
+    struct stat st;
+    int32_t got;
+    int part;
+
+    /* Same gate seg_part_of applies: directories and unreadable things
+     * are not candidates, and fopen() on a directory succeeds here. */
+    if (stat(path, &st) != 0 || !S_ISREG(st.st_mode)) return 0;
+
+    got = env_peek(path, head, (int32_t)sizeof head);
+    /* Said out loud because it is the cost this search is rationed by:
+     * every envelope beside the archive is decoded this far, and only
+     * a set that is missing a part pays for it at all. */
+    if (h->verbose && got > 0)
+        fprintf(stderr, "looked inside %s\n", path);
+    part = got > 0 ? unc_segment_match(&h->desc, head, got) : 0;
+    if (part < 1) return 0;                    /* not one of ours */
+    if (h->path[part]) return part;            /* already have that one */
+
+    if (!seg_peel_dir(h)) return 0;
+    if ((size_t)snprintf(dest, sizeof dest, "%s/part-%03d", h->peeldir, part)
+        >= sizeof dest)
+        return 0;
+    if (!env_peel(path, dest)) { remove(dest); return 0; }
+
+    if (h->verbose)
+        fprintf(stderr, "unwrapping part %d: %s\n", part, path);
+    seg_record(h, part, dest);
+    return part;
+}
+
+/* Scan the directory holding `anchor` for parts of the set. With
+ * `wrapped`, a candidate that is not a part in its own right is also
+ * tried as an envelope holding one. */
+static void seg_scan_dir(SegHost *h, const char *anchor, int wrapped)
 {
     char dir[1024], cand[1200];
     const char *slash = strrchr(anchor, '/');
@@ -491,7 +776,8 @@ static void seg_scan_dir(SegHost *h, const char *anchor)
             >= sizeof cand)
             continue;
         part = seg_part_of(h, cand);
-        if (part) seg_record(h, part, cand);
+        if (part) { seg_record(h, part, cand); continue; }
+        if (wrapped) (void)seg_wrapped_part_of(h, cand);
     }
     closedir(d);
 }
@@ -827,6 +1113,9 @@ static int seg_ask(SegHost *h, int part)
         }
 
         got = seg_part_of(h, line);
+        /* The user has named one file, so looking inside an envelope
+         * costs a hundred decoded bytes and asks nobody anything. */
+        if (!got) got = seg_wrapped_part_of(h, line);
         if (got == part) { seg_record(h, part, line); return 1; }
         if (got)
             fprintf(stderr, "unclassic: that is part %d of the same set; "
@@ -917,7 +1206,8 @@ static void usage(void)
         "                 parts are also looked for beside the one given.\n"
         "                 A StuffIt part is placed by its header, a spanned\n"
         "                 zip part by its .zNN / .zip extension, a plain\n"
-        "                 split by its .NNN one\n"
+        "                 split by its .NNN one. A StuffIt part still inside\n"
+        "                 an envelope (Archive.sit.1.hqx) is unwrapped first\n"
         "  --no-parts     do not look for other parts\n"
         "  --ask          prompt on stdin for parts that were not found\n"
         "  --stats        print allocator statistics\n"
@@ -943,6 +1233,7 @@ int main(int argc, char **argv)
     UncFormat fmt;
     int ret;
     int no_recurse = 0, depth = 0;
+    const char *origfile;       /* the file named on the command line */
     char curfile[1024], delfile[1024];
     struct stat st;
     SegHost seg;
@@ -978,6 +1269,7 @@ int main(int argc, char **argv)
         else file = argv[i];
     }
     if (!file) { usage(); return 2; }
+    origfile = file;
     snprintf(curfile, sizeof curfile, "%s", file);
     delfile[0] = 0;
 
@@ -1108,6 +1400,7 @@ nextlayer:
         memset(&seg, 0, sizeof seg);
         seg.ask = ask;
         seg.verbose = verbose;
+        seg.outdir = outdir;
 
         if (fmt == UNC_FORMAT_SPLIT) {
             /* Nothing in these files says anything, so the descriptor is
@@ -1270,12 +1563,34 @@ nextlayer:
              * comes from its header — so opening part 3 of a set works. */
             seg_record(&seg, (int)seg.desc.part, file);
             for (i = 0; i < nparts; i++) {
+                /* A part named by the user is worth unwrapping whether
+                 * or not anything else here is wrapped: it is one file,
+                 * and the user has said what it is. */
                 int p = seg_part_of(&seg, partargs[i]);
                 if (p) seg_record(&seg, p, partargs[i]);
-                else fprintf(stderr, "unclassic: %s: not part of \"%s\", "
-                             "ignored\n", partargs[i], seg.desc.name);
+                else if (!seg_wrapped_part_of(&seg, partargs[i]))
+                    fprintf(stderr, "unclassic: %s: not part of \"%s\", "
+                            "ignored\n", partargs[i], seg.desc.name);
             }
-            seg_scan_dir(&seg, file);
+            seg_scan_dir(&seg, file, 0);
+            /* A part that arrived wrapped was unwrapped into the OUTPUT
+             * directory, so the rest of the set is not there: it is
+             * still where the user left it. */
+            if (depth > 0)
+                seg_scan_dir(&seg, origfile, 0);
+
+            /* Only now, and only if something is still missing, is it
+             * worth taking envelopes off to look — which is how a real
+             * download arrives (Archive.sit.1.hqx) and also how a
+             * half-unstuffed one does. Rationing it this way means a
+             * set that is complete never opens a single file beside it,
+             * and one that is short pays a hundred decoded bytes per
+             * envelope rather than failing. */
+            if (!seg_have_all(&seg)) {
+                if (depth > 0)
+                    seg_scan_dir(&seg, origfile, 1);
+                seg_scan_dir(&seg, file, 1);
+            }
         }
 
         memset(&vs, 0, sizeof vs);   /* optional members are NULL ones */
@@ -1299,6 +1614,7 @@ nextlayer:
                     sw, back);
         }
         free(scratch);
+        seg_peel_clean(&seg);
         for (i = 1; i <= UNC_SEG_MAX_PARTS; i++) free(seg.path[i]);
     } else {
         ret = unc_extract_as(fmt, &io, &sk, &al, &prog, &opt);
@@ -1333,9 +1649,7 @@ nextlayer:
      * .cpt.bin, .tar.Z ...): when an envelope format yielded exactly
      * one file, sniff it and extract in place. -nr disables. */
     if (strcmp(cmd, "x") == 0 && !no_recurse && depth < 8 &&
-        (fmt == UNC_FORMAT_MACBINARY || fmt == UNC_FORMAT_BINHEX ||
-         fmt == UNC_FORMAT_APPLESINGLE || fmt == UNC_FORMAT_APPLEDOUBLE ||
-         fmt == UNC_FORMAT_GZIP || fmt == UNC_FORMAT_COMPRESS_Z ||
+        (env_is_envelope(fmt) ||
          fmt == UNC_FORMAT_SITSEG || fmt == UNC_FORMAT_SPLIT) &&
         sink.file_count == 1 && sink.dir_count == 0 &&
         sink.last_ok_path[0]) {

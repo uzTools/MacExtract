@@ -1,4 +1,4 @@
-# OPEN_ITEMS.md — what is missing, as of 2026-08-10
+# OPEN_ITEMS.md — what is missing, as of 2026-08-13
 
 A standing audit of the gaps: things not done, things done but not verified,
 and things this repository asserts more confidently than the evidence supports.
@@ -84,9 +84,15 @@ would cost.
 - **Spanned zip and `.NNN` splits are not wired into the Mac shell.**
   Engine and Linux CLI only, by decision on 2026-08-09 and 2026-08-10.
   One piece is missing and it serves both: the shell's part discovery
-  matches a StuffIt header, where these two schemes need a filename
-  match, and the descriptor would have to carry a base filename the
-  engine deliberately has no concept of (neither scheme stores one).
+  (`SegPartOf`) matches a StuffIt header through `unc_segment_match`,
+  where these two schemes can only be matched by filename. This item
+  used to add that the descriptor would have to carry a base filename
+  "the engine deliberately has no concept of"; that was wrong, and it
+  made the job look bigger than it is. The name is the HOST's already —
+  `ExtractOne` is handed the name Standard File returned and passes it
+  to `SegRemember` two lines after building the descriptor, which is
+  the same place the Linux CLI gets its stem from (`zipfam_split`).
+  What is actually missing is a name-matching branch beside `SegPartOf`.
   A split needs one thing more — every part's LENGTH before extraction
   starts, since that is the only place the joined size comes from
   (DECISIONS.md 2026-08-10), which on a one-drive Mac is either a
@@ -117,10 +123,19 @@ would cost.
   which nothing here parses; `unc_zipseg_describe` answers
   `UNC_ERR_UNSUPPORTED`. Out of reach of the floor target anyway (a
   2 GB+ archive), and no fixture exists.
-- **Parts that are individually wrapped.** A real download is
-  `Archive.sit.1.hqx`: each part BinHex- or MacBinary-encoded on its
-  own, so the envelope has to come off before the join. Today the
-  envelope recursion runs *after* the join, which is the other order.
+- **Parts inside envelopes: done for StuffIt, and only there**
+  (2026-08-13). `Archive.sit.1.hqx` joins — the Linux CLI takes the
+  envelope off each part before the join, and only when the set is
+  short of one (DECISIONS.md). Two pieces of that are open. The Mac
+  shell does not do it: like the two schemes above it needs the step
+  added to `SegPartOf`, and unlike them it also needs somewhere to put
+  a decoded part, which on the floor target is a temporary file on the
+  output volume rather than the CLI's ~100 bytes of peek plus a whole
+  decode. And a wrapped part of a spanned zip or a `.NNN` split is not
+  looked for at all: those are placed by FILENAME, the filename of a
+  wrapped part is the wrapper's, and no reference implementation says
+  what that should look like — so it stays unbuilt until a real
+  example says what the convention is, rather than being guessed.
 
 ---
 

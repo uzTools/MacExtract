@@ -409,6 +409,48 @@ record says it starts, then visit each entry in the order listed,
 rolling forward while its data spills into the next part — and the
 measured count must equal it exactly.
 
+### Parts inside envelopes (`tools/synth_wrapped.py`, same runner)
+
+Three cases, and they are the same StuffIt sets with a BinHex or
+MacBinary layer around each part — `Archive.sit.1.hqx`, which is the
+shape a download of one actually has. One case per envelope, plus a
+mixed one whose wrappers are named `zzz-download.bin` and
+`Other.sit.9.hqx`, so a pass says identity survived the envelope rather
+than that the names lined up.
+
+Adjudicated three ways, none of them the code under test: the
+generator, which knows the joined bytes exactly; our own read of the
+same set UNWRAPPED, which reaches the joiner without opening an
+envelope; and `unar` for what it DOES — handed part 1 of a wrapped set
+it unwraps that one part and exits 0, success with a fragment, which
+the suite asserts rather than remembers.
+
+**What this layer cannot see:** the Mac shell. This is `cli/main.c`
+only, and the shell's discovery matches headers with no envelope step
+in it (OPEN_ITEMS.md section 4). Nor can it see the other two schemes,
+which are placed by filename and are deliberately not looked for inside
+envelopes at all (DECISIONS.md, 2026-08-13).
+
+The behaviours are where the design is: a wrapped part of a DIFFERENT
+set, wrapped and named exactly like the missing one, must be refused —
+the envelope comes off and the fingerprint decides; parts scattered
+across three directories in two envelopes under three names must join;
+and nothing of ours may be left in the output directory, on a failed
+join as much as a successful one.
+
+**The ration has a case in each direction, and the first version of it
+could not fail.** Envelopes are opened only when the set is still short
+of a part, so a COMPLETE set must open nothing beside it however many
+envelopes are lying there, and a set missing one must open them and
+join. What is asserted is the decode itself — `looked inside X` under
+`-v` — because the first attempt asserted a consequence of the search
+(whether a wrapped part was USED) and stayed green with the ration
+removed: a part already located is skipped before anything is printed.
+All four assertions were shown to fail before being believed, by
+mutating the code they guard — search disabled, ration removed, cleanup
+removed — and the foreign-decoy one by replacing the decoy with the
+genuine part.
+
 ### Plain `.NNN` splits (`tools/synth_split.py`, same runner)
 
 Three cases, and the ground truth is exact rather than an opinion: the

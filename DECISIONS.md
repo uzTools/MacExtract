@@ -56,6 +56,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-09 — what the docs cost to read, and the rule that hid it
 - 2026-08-09 — Spanned zip: the second scheme, and what it cannot promise
 - 2026-08-10 — `.NNN` splits: the payload is the adjudicator
+- 2026-08-13 — parts inside envelopes, and rationing the search
 
 ---
 
@@ -2524,3 +2525,70 @@ code it was supposed to test.** The stray-member case used `NAME.900`,
 which trips the 256-part ceiling check — a different branch — so
 removing the consecutive-run rule entirely left it passing. It is
 numbered `n+2` now, and the ceiling has its own case beside it.
+
+## 2026-08-13 — parts inside envelopes, and rationing the search
+
+A real download of a segmented set is not a set of parts. It is
+`Archive.sit.1.hqx`, `Archive.sit.2.hqx`, …: every part BinHex- or
+MacBinary-encoded on its own, because that is what carried a Macintosh
+file over a 7-bit network. Until now this program took the envelope off
+*after* the join — the wrong order — and the shape failed: measured
+2026-08-13, part 1 unwrapped into the output directory, discovery found
+no siblings there, and the run ended in `UNC_ERR_SEGMENTED` having
+written a truncated `Test.sit` and left the intermediate behind.
+
+**The join is the layer that has to move, not the envelope.** So
+discovery gained one thing: a candidate that is not a part in its own
+right is tried as an envelope holding one. It is entirely host-side —
+`cli/main.c`, no engine change — because opening files is the host's
+job and the engine already accepts parts through a callback.
+
+**Only the StuffIt scheme is looked for this way**, and the reason is
+the one that ranked the three schemes in the first place: a StuffIt
+part carries its header IN the payload, so unwrapping is all that
+stands between the file and the same fingerprint check every other part
+gets. A spanned zip part or a `.NNN` split part is placed by its
+FILENAME, and the filename of a wrapped part is the wrapper's — no
+reference implementation says what that should look like, and inventing
+a convention is what rule #1 forbids.
+
+**What the search is rationed by, and the first answer was wrong.**
+The first version looked inside envelopes when the part it was handed
+had itself come out of one — the shape of part 1 as evidence about the
+set. It works, and the assertion written to defend it could not fail:
+with the ration removed, a complete set beside a spare envelope still
+passed, because a part already located is skipped *before* anything is
+printed. The observable was a consequence of the search, not the search.
+
+Two things came out of fixing that, and the second is the better
+design. The cost is now reported by the decode itself (`looked inside
+X` under `-v`), so what is asserted is the work rather than its effect.
+And the ration became **need, not shape**: the raw scans run first, and
+envelopes are opened only if the set is still short of a part —
+`seg_have_all` sums the located parts' payloads against the fork
+lengths the StuffIt header states, which is the same sum that ends the
+joiner's walk. A complete set opens nothing beside it however many
+envelopes are lying there; a short one pays a hundred decoded bytes per
+envelope rather than failing. The peek stops at `UNC_SEG_HEAD` bytes
+and a part is decoded whole only once it has proved it belongs.
+
+This is strictly more capable than the rule it replaced, and by
+accident rather than design: a **half-unstuffed** download — some parts
+already unwrapped on disk, one still in its envelope — now joins, and
+it was never a shape anyone set out to support. **A ration tied to what
+is missing subsumes one tied to what the first part looked like.**
+
+**What it buys, measured against the reference.** `unar` handed part 1
+of a wrapped set unwraps that one part, writes it out and **exits 0** —
+success, with a fragment, which is the same silent-truncation class as
+the bare-relative-path trap already documented in `run_segments.py`. It
+is asserted rather than remembered: if the oracle ever joins one, the
+suite says so. Parts wrapped in different envelopes, under names that
+say nothing (`zzz-download.bin`) or actively lie (`Other.sit.9.hqx`),
+scattered across three directories, join byte-exact — because after the
+envelope comes off, identity is where it always was.
+
+The suite's four new assertions were each shown to fail before being
+believed (`tools/run_segments.py`, `wrapped-*`): with the search
+disabled, with the ration removed, with the cleanup removed, and with
+the foreign decoy replaced by the genuine part.

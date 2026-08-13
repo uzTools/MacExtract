@@ -20,7 +20,7 @@ whole corpus for that format (engine allocations only, via
 | Gzip | extract | deflate | 3 fixtures | 51 KB | full |
 | Unix compress (.Z) | extract | LZW ≤16 bit | 4 fixtures | 219 KB§ | full |
 | Tar (ustar/v7) | extract | — (links reported unsupported) | 3 fixtures (2 real 1990 v7 tars) + unit tests | 8 KB | full |
-| StuffIt segment (multi-part) | extract | — (join only; the joined file is the next layer) | 7 synthetic sets, oracle-adjudicated | 8 KB | full |
+| StuffIt segment (multi-part) | extract | — (join only; the joined file is the next layer) | 7 synthetic sets, oracle-adjudicated, + 3 with each part in its own envelope (CLI only) | 8 KB | full |
 | Zip segment (spanned, .z01…/.zip) | extract | store, deflate — the zip reader, over the joined parts | 5 generated sets, adjudicated 4 ways (source tree, `unar`, us split, us unsplit) | 12–13 KB¶ | full |
 | Split file (plain .001/.002) | extract | — (join only; the joined file is the next layer) | 3 generated sets, adjudicated against the bytes that were cut, `unar` where it can join, and our unsplit read | 8 KB | full |
 | StuffIt X (.sitx) | detect only | — | — | — | — |
@@ -210,6 +210,18 @@ back — so it is measured rather than assumed.
 
 Peak heap for the join is 8 KB: one buffer, no part table beyond the
 caller's ~1.1 KB scratch struct, one part open at a time.
+
+**Parts inside envelopes** — `Archive.sit.1.hqx`, which is how a set
+was actually distributed — join on the Linux CLI since 2026-08-13. The
+envelope comes off each part before the join rather than after it, and
+the search is rationed: envelopes beside the archive are opened only
+while the set is short of a part, at `UNC_SEG_HEAD` decoded bytes each,
+and a part is decoded whole only once its fingerprint places it. Mixed
+envelopes, wrapper names that say nothing, and parts in three
+directories all join byte-exact; `unar` handed part 1 of such a set
+unwraps that part alone and exits 0. Not in the Mac shell, and not for
+the two name-placed schemes (DECISIONS.md 2026-08-13, OPEN_ITEMS.md
+section 4).
 
 ### Spanned ("split") zip — `NAME.z01` … `NAME.zip`
 
