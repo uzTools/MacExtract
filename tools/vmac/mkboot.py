@@ -16,7 +16,7 @@ Takes the stock image fetched by setup.sh and produces a boot volume that
 
 Usage:
     mkboot.py <stock.hfv> <app.bin> <out.hfv> [--data FILE:MACNAME]...
-              [--app-name NAME] [--finder]
+              [--macbin FILE:MACNAME]... [--app-name NAME] [--finder]
 
 <app.bin> is the MacBinary produced by a Retro68 build (tools/vmac/run.py
 builds unclassic's); its resource fork is what makes it an application, so it
@@ -27,6 +27,12 @@ name subfolders ("Archives:archive.sit"), which are created as needed. The
 interactive driver uses it to put an archive where SFGetFile will list it: the
 interactive application extracts next to the archive, so that volume has to be
 writable, and the boot volume is the one SFGetFile opens on by default.
+
+--macbin is the same, for a host file in MacBinary form: both forks and the
+type/creator survive. A data-fork copy is enough for anything this project's
+own application opens, because it opens what it is given by name — but another
+application's Standard File filters on TYPE, so an archive copied with --data
+is invisible to it. That is what this is for (tools/vmac/cptsegment.py).
 
 --app-name sets the application's name on the volume (default "unclassic"),
 which is also the boot-block shell name.
@@ -181,14 +187,16 @@ def main():
     extras = []
     app_name = DEFAULT_APP
     finder = False
-    while "--data" in argv:
-        i = argv.index("--data")
-        spec = argv[i + 1]
-        host, _, macname = spec.partition(":")
-        if not macname:
-            raise SystemExit(f"mkboot: --data wants FILE:MACNAME, got {spec!r}")
-        extras.append((host, macname))
-        del argv[i:i + 2]
+    for flag, mode in (("--data", "-r"), ("--macbin", "-m")):
+        while flag in argv:
+            i = argv.index(flag)
+            spec = argv[i + 1]
+            host, _, macname = spec.partition(":")
+            if not macname:
+                raise SystemExit(
+                    f"mkboot: {flag} wants FILE:MACNAME, got {spec!r}")
+            extras.append((host, macname, mode))
+            del argv[i:i + 2]
     if "--app-name" in argv:
         i = argv.index("--app-name")
         app_name = argv[i + 1]
@@ -211,7 +219,7 @@ def main():
             # The shell application is looked up in the blessed (System) folder.
             hfs.run("hcopy", "-m", appbin, hfs.path(SYS_FOLDER, app_name))
             verify_stripped(hfs, KEEP | {app_name})
-        for host, macname in extras:
+        for host, macname, mode in extras:
             # MACNAME may name subfolders, "Archives:archive.sit". Create them:
             # putting the archive somewhere OTHER than the volume root is the
             # only arrangement in which a mishandled working-directory refNum
@@ -220,7 +228,7 @@ def main():
             parts = macname.split(":")
             for i in range(1, len(parts)):
                 hfs.run("hmkdir", hfs.path(*parts[:i]), check=False)
-            hfs.run("hcopy", "-r", host, hfs.path(*parts))
+            hfs.run("hcopy", mode, host, hfs.path(*parts))
     finally:
         hfs.close()
     if finder:

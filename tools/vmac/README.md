@@ -471,6 +471,48 @@ Every output name must be on the chosen volume and none on the archive's. Give
 it a small fixture with a folder in it, `derived-Downer.sit`; nothing here is
 measuring speed and the phase waits out `EXTRACT_QUIET` at the end.
 
+### Making a segmented Compact Pro archive — `cptsegment.py`
+
+    cptsegment.py --list
+    cptsegment.py --map              photograph the application's menus
+    cptsegment.py --case edu3        cut a specimen, and read it back
+    cptsegment.py --verify           does tools/synth_cptsplit.py still
+                                     reproduce the specimens byte for byte?
+
+The only harness here that drives **somebody else's application**. Compact
+Pro 1.51 comes out of the corpus through our own CLI, goes onto the boot
+volume as MacBinary beside the archive to be cut, and the driver works
+`Misc > Segment` with a chosen size. The set lands in
+`$UNC_VMAC_HOME/specimens/<case>/` with a `case.json`; it is not committed,
+for the reason no fixture is — and it is kept beside the emulator rather
+than under `build/`, because the first two specimens were written there and
+the next `./ci.sh` ran `make clean` and deleted both.
+
+Why this exists at all is in DECISIONS.md 2026-08-14: nothing documents the
+segmented layout, so the specimen IS the documentation, and the application
+is the only thing that writes one. `--verify` is what keeps the description
+honest: `tools/synth_cptsplit.py` writes sets from that derivation, and it
+has to reproduce these ones exactly — a generator validated against nothing
+is just a second copy of the reader's assumptions.
+
+Four things it will teach you if you drive another application here:
+
+- **A `--data` copy is invisible to it.** Our own application opens what it
+  is handed by name; another one filters Standard File on TYPE, so the
+  archive has to arrive as MacBinary with `PACT`/`CPCT` on it. That is what
+  `mkboot.py --macbin` is for.
+- **Its Standard File is not ours.** The dialog is the application's own
+  resource: this one's first row is at y=88 where `interactive.py`'s is at
+  137. Clicking ours selected nothing, and the shot showed a dialog with
+  Open dimmed — a photograph of a working machine doing nothing.
+- **Menu titles have to be measured, not counted.** The first map was one
+  menu to the left the whole way along, so every shot was mislabelled and
+  the "Misc" photograph was of the View menu.
+- **The number of Save boxes is not known in advance** — it is what the
+  segment size and the archive decide. The driver stops when the screen
+  stops changing rather than counting, because a fixed count either leaves
+  a dialog up or types Return into the catalog window afterwards.
+
 ### Putting a disk in while the Mac is running
 
 `xdnd_insert.c` is a minimal XDND drag SOURCE, built on demand into

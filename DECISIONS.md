@@ -57,6 +57,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-09 — Spanned zip: the second scheme, and what it cannot promise
 - 2026-08-10 — `.NNN` splits: the payload is the adjudicator
 - 2026-08-13 — parts inside envelopes, and rationing the search
+- 2026-08-14 — Compact Pro segments: the layout, derived from specimens
 
 ---
 
@@ -2592,3 +2593,80 @@ The suite's four new assertions were each shown to fail before being
 believed (`tools/run_segments.py`, `wrapped-*`): with the search
 disabled, with the ration removed, with the cleanup removed, and with
 the foreign decoy replaced by the genuine part.
+
+## 2026-08-14 — Compact Pro segments: the layout, derived from specimens
+
+Every other format in this engine was transcribed from a reference
+implementation. This one could not be: `unar` reads the archive volume
+byte and discards it, `macunpack` stores its copy unused, and The
+Unarchiver's own format wiki marks all three of the fields involved —
+volume, cross-volume magic, per-entry volume — "meaning not entirely
+clear" (`reference/notes/cpt_specs_theunarchiver.md`). There is no
+sample in the corpus and none in the public archives: segmentation moved
+archives between people on floppies, it did not distribute them.
+
+**So the specimen was made by the only implementation that writes the
+format.** `tools/vmac/cptsegment.py` runs Compact Pro 1.51 — unpacked
+out of the corpus by our own CLI — on System 6.0.8 under Mini vMac,
+opens an archive the differential suite already adjudicates, and drives
+`Misc > Segment` with a chosen segment size. What comes back off the
+volume is a real segmented set, written by the application, and the
+archive it was cut from is ground truth that owes nothing to any of
+this.
+
+**Two specimens, chosen for different shapes**, because one set cannot
+tell "always" from "coincidence": `edu3` is 4 segments of a 9-file
+archive with folders, `biplane5` is 5 segments of an archive holding ONE
+entry, whose data therefore straddles all four boundaries.
+
+What both say, measured rather than read:
+
+- Each segment begins with the SAME 8-byte header as an ordinary
+  archive: `01`, a volume number, a 16-bit set identity, and an index
+  offset.
+- Volume numbers are 1-based and consecutive: 1..N.
+- **The identity is one value shared by every segment of a set**, freshly
+  generated and not the source archive's (0xD2CF and 0xDE46 here, from
+  sources 0x9438 and 0x81DF). That is the "information inside the files
+  to determine their proper ordering" the author's manual describes, and
+  it is why the manual can promise that names and locations do not
+  matter. It matches the corpus: the same field is distinct in all 68
+  single-volume archives.
+- **The index offset is 0 in every segment but the LAST**, which carries
+  it relative to its own start. That is the byte-level form of the
+  manual's "you must open the FINAL segment".
+- **The payload — each segment minus its 8 header bytes, concatenated —
+  is byte-identical to the source archive's data region**: 84,467 bytes
+  and 106,790 bytes, exactly. Segmenting re-chunks the archive and
+  rewrites the directory; it does not recompress anything.
+- An entry is addressed as **(volume, offset within that volume's
+  file)**, offset counted from the segment's own start, header included.
+  Every entry's pair maps to precisely the flat offset the unsegmented
+  archive used — checked for all 9 entries of one and the 1 of the other.
+- Entry data crosses segment boundaries freely, skipping the 8-byte
+  header of each segment it continues into.
+
+So the scheme is **zip-like in its addressing and StuffIt-like in its
+identity**: parts are located by content, and the reader must translate
+(volume, offset) rather than flatten. The ranking rule from 2026-08-08 —
+*a part must be identifiable from its own bytes* — puts it at the top of
+the unbuilt schemes rather than the bottom, which is the opposite of
+where OPEN_ITEMS.md had it.
+
+**What a derived layout has to carry that a transcribed one does not.**
+Every field above is a statement about two specimens, so the parser
+records what would falsify it rather than citing a source that says it
+is so: a set whose identity differs between segments, a non-final
+segment with a non-zero index offset, or an entry whose (volume, offset)
+does not land in the volume it names. The suite asserts all three
+(TESTING.md), and the real specimens are what the Python generator is
+validated against.
+
+**And one thing not to repeat.** The second case was first pointed at
+`alpha401.cpt`, which is a MacBinary file holding a `.cpt` — that is how
+it was uploaded — so the Mac got a PACT-typed file whose data fork is an
+envelope and Compact Pro said it was "damaged or has a format which this
+version does not recognize". Six minutes of emulator to learn what the
+first two bytes say. The harness now refuses a source that does not
+begin `01 01`, and the corpus's `derived-*.cpt` copies are the unwrapped
+ones. **A fixture's extension is a claim about it, not a fact.**

@@ -131,17 +131,17 @@ would cost.
   On the project's own ranking rule that makes this scheme StuffIt-like
   (identity is content, not name) rather than zip-like, and it is
   therefore worth more than its position in this list suggests.
-  No sample exists here — all 805 fixtures scanned for a Compact Pro
-  signature with a volume byte other than 1, including files not named
-  `.cpt`, since a middle segment has no index and would not sniff as one:
-  zero hits — and nothing in the funet whole-index is named like a
-  segment set. Generating one under Mini vMac with the copy of Compact
-  Pro already in the corpus is the route, and it would answer what the
-  documentation does not: whether every segment carries the 8-byte
-  header, and whether an entry's offset is relative to its own segment
-  or to the joined stream. The oracle would then be differential (same
-  files, segmented vs not) with Compact Pro itself as a second opinion
-  on the Mac.
+  **Specimens now exist** (2026-08-14): `tools/vmac/cptsegment.py` drives
+  Compact Pro 1.51 itself on System 6.0.8 under Mini vMac and cuts an
+  archive the suite already adjudicates into a real segmented set. Two
+  shapes, and both answer what the documentation does not — every
+  segment carries the 8-byte header, an entry is addressed as (volume,
+  offset within that volume's file), and the concatenated payloads are
+  byte-identical to the source archive's data region (DECISIONS.md
+  2026-08-14). **What is left is the parser and the CLI**, plus a Python
+  generator for the suite validated against those specimens. The
+  specimens themselves are not committed, for the reason no fixture is:
+  they are cut from copyrighted archives, and the script remakes them.
 - **Zip64 spanned sets are refused, not read.** An end-of-central-directory
   record whose disk number is `0xFFFF` defers to the zip64 locator,
   which nothing here parses; `unc_zipseg_describe` answers
