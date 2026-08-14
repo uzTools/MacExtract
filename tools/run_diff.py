@@ -34,6 +34,43 @@ IMPLEMENTED = {
     "Compress": "Unix compress",
 }
 
+# Formats v1 names but does not extract. Until 2026-08-14 a fixture of one
+# of these was simply skipped — counted as "formats pending" and asserted
+# on in no way at all — which left the whole detect-only claim untested:
+# `unc_sniff` names them "so a UI can tell the user what the file is"
+# (CLAUDE.md) and nothing checked that it does. They are now graded on
+# the two things the claim actually promises: the NAME agrees with the
+# oracle's, and extraction refuses without writing anything.
+DETECT_ONLY = {
+    "DiskDoubler": "DiskDoubler",
+    "Now Compress": "Now Compress",
+    "LZH": "LZH",
+    "StuffIt X": "StuffIt X",
+    "DiskCopy": "Disk Copy 4.2",
+}
+
+
+def check_detect_only(unclassic, fx, ourname):
+    """A format v1 names but does not extract. Two promises, both checked:
+    `sniff` agrees with the oracle about WHAT it is, and `x` refuses
+    without writing anything. Returns a list of problems."""
+    bad = []
+    r = subprocess.run([unclassic, "sniff", fx], capture_output=True,
+                       timeout=120)
+    got = r.stdout.decode("utf-8", "replace").strip()
+    if got != ourname:
+        bad.append(f"sniff says {got!r}, the oracle says {ourname!r}")
+    with tempfile.TemporaryDirectory() as tmp:
+        r = subprocess.run([unclassic, "x", "-o", tmp, fx],
+                           capture_output=True, timeout=300)
+        files, dirs = collect_outputs(tmp)
+        if r.returncode == 0:
+            bad.append("extraction exited 0 for a format v1 cannot extract")
+        if files or dirs:
+            bad.append(f"extraction wrote {len(files)} file(s) and "
+                       f"{len(dirs)} folder(s); it must write nothing")
+    return bad
+
 
 def norm(name):
     # NFC-normalize, and neutralize path-separator sanitization
@@ -272,6 +309,7 @@ def main():
                        if f.endswith(".json")) if os.path.isdir(mandir) else []
 
     ran = passed = skipped_fmt = skipped_missing = 0
+    detect_ran = detect_bad = 0
     unadj_forks = unadj_fixtures = oos_entries = 0
     fails = []
     for mf in manifests:
@@ -287,6 +325,18 @@ def main():
         if args.max_size and os.path.getsize(fxpath) > args.max_size:
             continue
         if not args.all and fmt not in IMPLEMENTED:
+            if fmt in DETECT_ONLY:
+                detect_ran += 1
+                bad = check_detect_only(args.unclassic, fxpath,
+                                        DETECT_ONLY[fmt])
+                if bad:
+                    detect_bad += 1
+                    print(f"DETECT FAIL {man['fixture']}")
+                    for b in bad:
+                        print(f"    {b}")
+                elif args.verbose:
+                    print(f"detect ok: {man['fixture']} ({fmt})")
+                continue
             skipped_fmt += 1
             continue
         ran += 1
@@ -312,6 +362,9 @@ def main():
     cap += f" (fixtures <= {args.max_size} B)" if args.max_size else ""
     print(f"diff{cap}: {passed}/{ran} fixtures ok "
           f"({skipped_fmt} formats pending, {skipped_missing} fixtures absent)")
+    if detect_ran:
+        print(f"  detect-only: {detect_ran - detect_bad}/{detect_ran} named as "
+              f"the oracle names them, and refused cleanly")
     # No fixture is ever skipped for what OUR engine says about it; an
     # entry the oracle names as out of v1 scope is graded on its name and
     # on anything the engine did produce, and counted here.
@@ -321,7 +374,7 @@ def main():
     print(f"  oracle-unadjudicated: {unadj_forks} fork(s) across "
           f"{unadj_fixtures} fixture(s) — the oracle failed on these, so "
           f"no second implementation adjudicates them (TESTING.md)")
-    return 1 if fails else 0
+    return 1 if (fails or detect_bad) else 0
 
 
 if __name__ == "__main__":

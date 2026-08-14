@@ -91,8 +91,12 @@ that empties is the point of the file.
   missing feature.
 - **Out of scope by the brief, and still out:** compression, StuffIt X
   (`.sitx`), encrypted archives, disk-image extraction, Now Compress, and
-  LZH *extraction* — LZH was the optional half of M8 and is detect-only
-  (the LZH/LHA row of FORMATS.md). **Multi-segment archives are IN scope
+  LZH *extraction* — the optional half of M8, and the evidence for
+  leaving it there is that **the corpus contains no `.lzh` at all**:
+  Macintosh software was not distributed that way. It would be ~550 new
+  lines, since Compact Pro's LZH is a different algorithm from LHA's.
+  The detect-only claim itself is now tested rather than asserted
+  (DECISIONS.md 2026-08-14). **Multi-segment archives are IN scope
   since 2026-08-08** and three schemes are implemented (StuffIt segments,
   spanned zip, plain `.NNN` splits); the rest are the section above.
 - **Do not retry, on Mac heap pressure.** Both were measured while StuffIt 5 /

@@ -61,6 +61,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-14 — reading a Compact Pro set: addressed mode, and the index
 - 2026-08-14 — the Macintosh shell learns the other three schemes
 - 2026-08-14 — the Macintosh application takes ALL the envelopes off
+- 2026-08-14 — the detect-only claim had no test, and LZH stays out of scope
 
 ---
 
@@ -2829,3 +2830,40 @@ Verified through the real UI at 4 MB and at the 1 MB floor target: part
 envelope, a name that says nothing), part 3 as `Other.9.hqx` — joined,
 extracted, and nothing of ours left on the volume, against the Linux
 CLI on the same three files.
+
+## 2026-08-14 — the detect-only claim had no test, and LZH stays out of scope
+
+Asked why LZH is out of scope, and the answer in the documents was thin —
+"the optional half of M8" — while the evidence for it is strong and was
+never written down: **the corpus contains no `.lzh` at all**, measured
+over every fixture. Macintosh software was essentially not distributed
+that way; LHA belonged to the Japanese PC world and the Amiga. Compact
+Pro's LZH is a different algorithm from LHA's, so nothing here is a head
+start either: macutils keeps them in separate files (`cpt.c` +
+`huffman.h` against `de_lzh.c`), and so does XADMaster. Extraction would
+be ~550 new lines for a format the target platform did not use.
+
+**What the question did turn up is that the detect-only claim was
+untested.** Five formats are named but not extracted, and the promise —
+`unc_sniff` names them so a UI can say what the file is — had nothing
+behind it for LZH or StuffIt X. Worse, `run_diff.py` SKIPPED any fixture
+whose format it does not extract, counting it as a "format pending", so
+the 6 DiskDoubler and 1 Now Compress fixtures in the corpus were
+asserted on in no way at all.
+
+They are graded now, on exactly what the claim promises: the name agrees
+with the oracle's, and extraction refuses without writing anything.
+8 fixtures, and "formats pending" is 0.
+
+**One real LZH file was added to the corpus on purpose**, and it is the
+only fixture here that is not Macintosh software: an Amiga `-lh5-`
+archive from Aminet. That is the point — the corpus has none because the
+platform had none, so testing the probe needs one from outside, and
+`fixtures/SOURCES.md` says so where somebody will find it.
+
+**And a limit worth stating rather than discovering later.** The refusal
+is guarded twice — `unc_format_extractable` in the CLI and the `default:`
+arm of the engine's dispatch — so mutating either alone changes nothing
+the test can see. It catches "this format silently became extractable and
+succeeded", not "one of the two gates broke". Both mutations together do
+fail it, which is how that was established rather than assumed.

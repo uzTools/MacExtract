@@ -24,10 +24,10 @@ whole corpus for that format (engine allocations only, via
 | Zip segment (spanned, .z01…/.zip) | extract | store, deflate — the zip reader, over the joined parts | 5 generated sets, adjudicated 4 ways (source tree, `unar`, us split, us unsplit) | 12–13 KB¶ | full |
 | Compact Pro segment (multi-part) | extract | RLE / LZH+RLE — the Compact Pro reader, over the segments | 2 generated sets + 2 cut by Compact Pro 1.51 itself | 20 KB | full |
 | Split file (plain .001/.002) | extract | — (join only; the joined file is the next layer) | 3 generated sets, adjudicated against the bytes that were cut, `unar` where it can join, and our unsplit read | 8 KB | full |
-| StuffIt X (.sitx) | detect only | — | — | — | — |
-| DiskDoubler (DD, DDAR, DDA2) | detect only | — | 4 sniffed | — | — |
-| Now Compress | detect only | — | 1 sniffed | — | — |
-| LZH/LHA (-lh?-, -lz?-) | detect only | — | — | — | — |
+| StuffIt X (.sitx) | detect only | — | — (no fixture) | — | — |
+| DiskDoubler (DD, DDAR, DDA2) | detect only | — | 6 fixtures, named + refused | — | — |
+| Now Compress | detect only | — | 1 fixture, named + refused | — | — |
+| LZH/LHA (-lh?-, -lz?-) | detect only | — | 1 real `-lh5-` archive, named + refused; unit test over every method byte | — | — |
 | DiskCopy 4.2 (.image) | detect only | — | synthetic 800K GCR + real 800K image; 0 false positives in 804 fixtures | — | — |
 
 \* **Method 1 occurs once and IS oracle-adjudicated** (since 2026-08-08).

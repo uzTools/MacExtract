@@ -786,6 +786,87 @@ static void test_zip(void)
     arc[cd + 10] = 0;
 }
 
+/* LZH/LHA is DETECT-ONLY: unc_sniff must name it so a UI can say what the
+ * file is, and extraction must refuse cleanly. The corpus holds one real
+ * LZH archive (aminet-lha_68k.lha, an Amiga -lh5- set — Macintosh software
+ * was essentially never distributed this way, which is why the format is
+ * detect-only at all), and run_diff.py grades that one on its NAME. This
+ * covers what one file cannot: every method byte the reference accepts,
+ * and every guard that must reject.
+ *
+ * Source: reference/XADMaster/XADLZHParser.m +recognizeFileWithHandle:,
+ * which matches bytes[2..6] as "-lh?-" with ? in 0-7 or 'd', and "-lz?-"
+ * with ? in 0, 4 or 5. Bytes 0 and 1 are the header size and its checksum
+ * and are not part of the recognition. */
+static void test_lzh(void)
+{
+    uint8_t h[32];
+    UncIO io;
+    MemIO m;
+    int i;
+    static const char *ok_lh = "01234567d";
+    static const char *ok_lz = "045";
+    static const char *no_lh = "89abcex-";
+    static const char *no_lz = "1236789";
+
+    for (i = 0; i < (int)sizeof h; i++) h[i] = 0;
+    h[0] = 0x20;                       /* header size, not checked */
+    h[1] = 0x00;                       /* header checksum, not checked */
+    h[2] = '-'; h[6] = '-';
+
+    h[3] = 'l'; h[4] = 'h';
+    for (i = 0; ok_lh[i]; i++) {
+        h[5] = (uint8_t)ok_lh[i];
+        test_make_memio(&io, &m, h, sizeof h);
+        CHECK(unc_sniff(&io) == UNC_FORMAT_LZH);
+    }
+    for (i = 0; no_lh[i]; i++) {
+        h[5] = (uint8_t)no_lh[i];
+        test_make_memio(&io, &m, h, sizeof h);
+        CHECK(unc_sniff(&io) != UNC_FORMAT_LZH);
+    }
+
+    h[4] = 'z';                        /* LArc */
+    for (i = 0; ok_lz[i]; i++) {
+        h[5] = (uint8_t)ok_lz[i];
+        test_make_memio(&io, &m, h, sizeof h);
+        CHECK(unc_sniff(&io) == UNC_FORMAT_LZH);
+    }
+    for (i = 0; no_lz[i]; i++) {
+        h[5] = (uint8_t)no_lz[i];
+        test_make_memio(&io, &m, h, sizeof h);
+        CHECK(unc_sniff(&io) != UNC_FORMAT_LZH);
+    }
+
+    /* Both dashes are required, and so is the length. */
+    h[4] = 'h'; h[5] = '5';
+    test_make_memio(&io, &m, h, sizeof h);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_LZH);
+    h[2] = '+';
+    test_make_memio(&io, &m, h, sizeof h);
+    CHECK(unc_sniff(&io) != UNC_FORMAT_LZH);
+    h[2] = '-';
+    h[6] = '+';
+    test_make_memio(&io, &m, h, sizeof h);
+    CHECK(unc_sniff(&io) != UNC_FORMAT_LZH);
+    h[6] = '-';
+    test_make_memio(&io, &m, h, 6);            /* one byte short of a decision */
+    CHECK(unc_sniff(&io) != UNC_FORMAT_LZH);
+
+    /* Detect-only: named, and refused without pretending. */
+    {
+        UncAlloc al;
+        UncSink sk;
+        CapSink cap;
+        test_make_memio(&io, &m, h, sizeof h);
+        test_make_alloc(&al);
+        cap_make(&sk, &cap);
+        CHECK(unc_extract_as(UNC_FORMAT_LZH, &io, &sk, &al, NULL, NULL)
+              == UNC_ERR_UNSUPPORTED);
+        CHECK(cap.count == 0);
+    }
+}
+
 /* DiskCopy 4.2 is DETECT-ONLY: unc_sniff must name it, and extraction must
  * refuse cleanly rather than pretend. The probe is deliberately strict (the
  * magic word is only 16 bits), so also check that each guard rejects. */
@@ -1385,6 +1466,7 @@ void run_format_tests(void)
     test_tar();
     test_zip();
     test_diskcopy();
+    test_lzh();
     test_sitseg();
     test_zipseg();
     test_split();

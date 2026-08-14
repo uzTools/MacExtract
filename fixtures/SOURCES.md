@@ -3,6 +3,13 @@
 Fixtures are not committed (copyrighted historical software).
 Each line records how to re-fetch one. Use `tools/harvest.py --restore`.
 
+One fixture is deliberately NOT Macintosh software: `aminet-lha_68k.lha`
+is an Amiga LHA archive. The corpus has no `.lzh` at all — measured over
+all of it, which is the evidence behind LZH being detect-only rather than
+extracted — so this exists to test that the probe NAMES one correctly on
+a real file instead of only on a synthetic header (TESTING.md,
+"Detect-only formats").
+
 | name | sha256 | size | url |
 |---|---|---|---|
 | 12x24fkey.bin | c90c11f10b1724b679b4db0495f2a8740f7f57c6d7abae3e8dd87dcb1c25c836 | 562 | http://www.nic.funet.fi/pub/mac/fkey/12x24fkey.bin |
@@ -32,6 +39,7 @@ Each line records how to re-fetch one. Use `tools/harvest.py --restore`.
 | altwdef.bin | 9e605686b934dbd98f63ba216aeefe7dc0da91e06d067b2ba8dad6c3c70273fc | 31842 | http://www.nic.funet.fi/pub/mac/cdev/altwdef.bin |
 | alwaysfract.bin | a37c8ddad42c8e76e44ecb265875fafb64a06c72aeffde76ca9086cfc125f887 | 1423 | http://www.nic.funet.fi/pub/mac/init/alwaysfract.bin |
 | alysis-disk-expander-12.hqx | 0556786ab17a4d18aed6cb268455281f05ff965d6186bf4e7038395e0cef6dd8 | 62549 | http://www.nic.funet.fi/index/info-mac/cmp/alysis-disk-expander-12.hqx |
+| aminet-lha_68k.lha | b1e9ce416a84c4e2b53c70fd51d434df09eb11fe110014d86c0bea76147d1899 | 167691 | https://aminet.net/util/arc/lha_68k.lha |
 | anim8.bin | af7b060e31c327fce0a0e4de6535a3c178d88be563352027ebb62f2105aa3786 | 29698 | http://www.nic.funet.fi/pub/mac/appl/anim8.bin |
 | apollo06b1.sea | 6ef8dcdd2f8d0663502eb6d7ee19e2f28fac42bc8320b71e9ca5c65d5e922e74 | 72192 | http://www.nic.funet.fi/pub/mac/extension/apollo06b1.sea |
 | appdisk161.cpt | d6f2493fbcdc7b6c6fd53fe4ec8f5e6aef40efc8d35d078470a86f344f9f4c36 | 24576 | http://www.nic.funet.fi/pub/mac/diskutil/appdisk161.cpt |

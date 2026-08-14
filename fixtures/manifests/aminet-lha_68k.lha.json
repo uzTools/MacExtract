@@ -1,0 +1,59 @@
+{
+ "entries": [
+  {
+   "data_sha256": "24ba9434c5988461cc18d9710e865c634955655bb786a8043094eebbabe63687",
+   "data_size": 108948,
+   "name": "LhA.guide",
+   "oracle_methods": [
+    "-lh5-"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "07574c833cebbb6cd639f460671f2b75eb06be71cd4192d846fc710d39595a16",
+   "data_size": 72216,
+   "name": "lha_68020",
+   "oracle_methods": [
+    "-lh5-"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "3415b51fbbc031cb14618377453f798194adff12d8fff72314f93f5e3d6b6900",
+   "data_size": 72608,
+   "name": "lha_68040",
+   "oracle_methods": [
+    "-lh5-"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "24e90ed19a80b68027088ad0544beabd15b5fc9a833fc4aece3542455e66e142",
+   "data_size": 75332,
+   "name": "lha_68k",
+   "oracle_methods": [
+    "-lh5-"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "89100e5e8699e13025b208e7738c4d7ac6fdd6e792e1d993c855067f0b9a9adc",
+   "data_size": 2130,
+   "name": "lha_68k.readme",
+   "oracle_methods": [
+    "-lh5-"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  }
+ ],
+ "fixture": "aminet-lha_68k.lha",
+ "format": "LZH",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "b1e9ce416a84c4e2b53c70fd51d434df09eb11fe110014d86c0bea76147d1899",
+ "size": 167691
+}
