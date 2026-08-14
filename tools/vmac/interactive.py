@@ -63,6 +63,7 @@ import unicodedata
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import run as R                                              # noqa: E402
+from mkboot import LISTING_DATE                              # noqa: E402
 import checkdisk as CD                                       # noqa: E402
 
 
@@ -837,6 +838,170 @@ def build_named_set(kind, workdir, fixture):
     return parts, b"Ablob", blob
 
 
+def phase_wrapped(args, appbin, workdir, shot):
+    """A set whose parts are each in their own envelope — Archive.sit.1.hqx,
+    which is how one was actually downloaded.
+
+    Every part is BinHex- or MacBinary-wrapped, under names that say
+    nothing, and the one the user opens is part 1. The application has to
+    take the envelope off THAT, notice the result is a segment, go back to
+    the folder the user's file came from, look inside the other envelopes
+    for the missing parts, decode them next to the output, join, and tidy
+    up after itself. The check is the archive's own contents, against the
+    Linux CLI on the same set.
+    """
+    sys.path.insert(0, os.path.join(R.REPO, "tools"))
+    import synth_wrapped as W                                # noqa: E402
+    from synth_sitsplit import header                        # noqa: E402
+
+    original = open(args.fixture, "rb").read()
+    inner = os.path.basename(args.fixture).encode("mac_roman")[:31]
+    d = os.path.join(workdir, "wrapped")
+    os.makedirs(d, exist_ok=True)
+    cuts = [0, len(original) // 3, 2 * len(original) // 3, len(original)]
+    raw = []
+    for i in range(3):
+        p = os.path.join(d, "raw%d" % (i + 1))
+        with open(p, "wb") as f:
+            f.write(header(i + 1, inner, 0, len(original)))
+            f.write(original[cuts[i]:cuts[i + 1]])
+        raw.append(p)
+    # Part 1 in BinHex and named to sort first; the others in different
+    # envelopes under names that resemble nothing.
+    W.wrap_file(raw[0], d, "hqx", dest_name="Apart.sit.1")
+    W.wrap_file(raw[1], d, "bin", dest_name="zzz-download")
+    W.wrap_file(raw[2], d, "hqx", dest_name="Other.9")
+    onvol = ["Apart.sit.1.hqx", "zzz-download.bin", "Other.9.hqx"]
+
+    data = []
+    for n in onvol:
+        data += ["--data", f"{os.path.join(d, n)}:{n}"]
+    R.sh(sys.executable, os.path.join(HERE, "mkboot.py"),
+         os.path.join(R.VMAC_HOME, args.system), appbin,
+         os.path.join(workdir, "boot-wrapped.hfv"), *data)
+
+    scratch = os.path.join(args.outdir, ".settle.png")
+    mac = Mac(os.path.join(workdir, "boot-wrapped.hfv"), args.emu, workdir)
+    try:
+        if mac.settle(scratch, interval=5.0, timeout=args.boot_timeout) is None:
+            raise SystemExit("interactive: the machine never settled")
+        shot(mac, "wrapped-1-sfgetfile.png")
+        mac.click(*SF_FIRST_ROW)                 # Apart.sit.1.hqx
+        mac.key("Return")
+        accept_destination(mac)
+        mac.settle(scratch, interval=5.0, quiet=EXTRACT_QUIET,
+                   timeout=args.complete_timeout)
+        shot(mac, "wrapped-2-complete.png")
+    finally:
+        mac.close()
+        if os.path.exists(scratch):
+            os.remove(scratch)
+
+    home = tempfile.mkdtemp(prefix="hfs-")
+    env = dict(os.environ, HOME=home)
+    try:
+        CD.hfs(env, "hmount", os.path.join(workdir, "boot.hfv"))
+        listing = CD.hfs(env, "hdir", ":").stdout.decode("mac_roman")
+        CD.hfs(env, "humount")
+    finally:
+        shutil.rmtree(home, ignore_errors=True)
+    got = set()
+    for line in listing.splitlines():
+        m = LISTING_DATE.search(line)
+        if not m:
+            continue
+        nm = m.group(1)
+        if nm in ("System Folder", "Desktop", "unclassic") or \
+                nm.startswith("StuffIt Expander") or nm in onvol:
+            continue
+        got.add(nm)
+
+    ref = os.path.join(workdir, "_cli")
+    os.makedirs(ref, exist_ok=True)
+    R.sh(os.path.join(R.REPO, "build", "dev", "unclassic"), "x", "-o", ref,
+         os.path.join(d, "Apart.sit.1.hqx"))
+    want = set(os.listdir(ref))
+    left = [g for g in got if g.startswith("unclassic part")]
+    ok = got == want and not left
+    print(f"interactive: the volume holds {sorted(got)}")
+    print(f"interactive: the Linux CLI gives {sorted(want)}")
+    print("interactive: " + ("MATCH" if got == want else "MISMATCH")
+          + ("; decoded parts left behind: %s" % left if left
+             else "; nothing of ours left behind"))
+    return ok
+
+
+def phase_chain(args, appbin, workdir, shot):
+    """Does the application take ALL the envelope layers off?
+
+    A real download is chained — Archive.sit.hqx — and until 2026-08-14
+    this application took one layer off and stopped, leaving the user to
+    open the result again. README.md promised otherwise the whole time.
+    So this drives the chain through the real UI and compares the NAMES
+    on the volume against what the Linux CLI produces from the same file,
+    which has always recursed. The intermediate must be gone too: a
+    passing name set with `boogers152.sit` still sitting there would mean
+    the layers came off and the litter did not.
+    """
+    onmac = "Achain" + os.path.splitext(args.fixture)[1]
+    R.sh(sys.executable, os.path.join(HERE, "mkboot.py"),
+         os.path.join(R.VMAC_HOME, args.system), appbin,
+         os.path.join(workdir, "boot-chain.hfv"),
+         "--data", f"{args.fixture}:{onmac}")
+    bootimg = os.path.join(workdir, "boot-chain.hfv")
+
+    scratch = os.path.join(args.outdir, ".settle.png")
+    mac = Mac(bootimg, args.emu, workdir)
+    try:
+        if mac.settle(scratch, interval=5.0, timeout=args.boot_timeout) is None:
+            raise SystemExit("interactive: the machine never settled")
+        shot(mac, "chain-1-sfgetfile.png")
+        mac.click(*SF_FIRST_ROW)
+        mac.key("Return")
+        accept_destination(mac)
+        mac.settle(scratch, interval=5.0, quiet=EXTRACT_QUIET,
+                   timeout=args.complete_timeout)
+        shot(mac, "chain-2-complete.png")
+    finally:
+        mac.close()
+        if os.path.exists(scratch):
+            os.remove(scratch)
+
+    # What the Mac ended up with, at the root of the volume it wrote to.
+    home = tempfile.mkdtemp(prefix="hfs-")
+    env = dict(os.environ, HOME=home)
+    try:
+        CD.hfs(env, "hmount", os.path.join(workdir, "boot.hfv"))
+        listing = CD.hfs(env, "hdir", ":").stdout.decode("mac_roman")
+        CD.hfs(env, "humount")
+    finally:
+        shutil.rmtree(home, ignore_errors=True)
+    ignore = {"System Folder", "StuffIt Expander\u2122 4.0.1 Folder", "Desktop",
+              "unclassic", onmac}
+    got = set()
+    for line in listing.splitlines():
+        m = LISTING_DATE.search(line)
+        if m and m.group(1) not in ignore and \
+                not m.group(1).startswith("StuffIt Expander"):
+            got.add(m.group(1))
+
+    # What the Linux CLI makes of the same file, recursion and all.
+    ref = os.path.join(workdir, "_cli")
+    os.makedirs(ref, exist_ok=True)
+    R.sh(os.path.join(R.REPO, "build", "dev", "unclassic"), "x", "-o", ref,
+         args.fixture)
+    want = set(os.listdir(ref))
+
+    ok = got == want
+    print(f"interactive: after the chain, the volume holds {sorted(got)}")
+    print(f"interactive: the Linux CLI produces           {sorted(want)}")
+    print("interactive: " + ("MATCH" if ok else "MISMATCH")
+          + " — and the intermediate is "
+          + ("gone" if not any(g.endswith(".sit") and g != onmac for g in got)
+             else "STILL THERE"))
+    return ok
+
+
 def phase_named(args, appbin, workdir, shot):
     """The two schemes that are placed by FILENAME, on the Mac.
 
@@ -1082,6 +1247,12 @@ def main():
                          "application ask for one, and INSERT IT while the "
                          "alert is up. A decoy disk goes in first and must "
                          "not dismiss anything. Ends on the joined bytes.")
+    ap.add_argument("--wrapped", action="store_true",
+                    help="drive a set whose parts are each inside an "
+                         "envelope (Archive.sit.1.hqx)")
+    ap.add_argument("--chain", action="store_true",
+                    help="drive a chained file (.sit.hqx) and check that "
+                         "every envelope layer comes off")
     ap.add_argument("--named", choices=("zip", "split"),
                     help="drive a set placed by FILENAME: a spanned zip "
                          "or a plain .NNN split, through Standard File")
@@ -1126,6 +1297,22 @@ def main():
     if args.dest:
         try:
             ok = phase_dest(args, appbin, workdir, shot)
+        finally:
+            shutil.rmtree(workdir, ignore_errors=True)
+        print(f"interactive: screenshots in {args.outdir} — LOOK AT THEM.")
+        return 0 if ok else 1
+
+    if args.wrapped:
+        try:
+            ok = phase_wrapped(args, appbin, workdir, shot)
+        finally:
+            shutil.rmtree(workdir, ignore_errors=True)
+        print(f"interactive: screenshots in {args.outdir} — LOOK AT THEM.")
+        return 0 if ok else 1
+
+    if args.chain:
+        try:
+            ok = phase_chain(args, appbin, workdir, shot)
         finally:
             shutil.rmtree(workdir, ignore_errors=True)
         print(f"interactive: screenshots in {args.outdir} — LOOK AT THEM.")

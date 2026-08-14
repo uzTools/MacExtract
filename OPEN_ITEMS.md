@@ -22,6 +22,10 @@ BLOCKERS.md, 2026-08-08).
 
 **Only open items live here.** A closed one moves out: the lesson to
 DECISIONS.md, the withdrawn claim to BLOCKERS.md, the numbers to FORMATS.md.
+Section 4 used to be *Multi-segment*, and on 2026-08-14 it emptied: all
+four schemes join on Linux and on the Macintosh, and the last thing in it
+— taking an envelope off each part — was built the same day. A section
+that empties is the point of the file.
 
 ---
 
@@ -75,34 +79,7 @@ DECISIONS.md, the withdrawn claim to BLOCKERS.md, the numbers to FORMATS.md.
 
 ---
 
-## 4. Multi-segment: what the four implemented schemes leave
-
-StuffIt segments, Compact Pro segments, spanned zip and plain `.NNN`
-splits extract end to end (M11), **all four on the Macintosh as well as
-on Linux** since 2026-08-14. These are the parts scoped out on purpose.
-
-- **Parts inside envelopes: Linux only, and only for StuffIt**
-  (2026-08-13). `Archive.sit.1.hqx` joins on the CLI — the envelope
-  comes off each part before the join, and only when the set is short of
-  one (DECISIONS.md). Two pieces are open. **The Mac shell does not do
-  it**, and unlike the joining it needs a decision rather than code: a
-  decoded part has to go somewhere, which on the floor target means a
-  temporary file on the output volume, where the CLI spends ~100 bytes
-  of peek plus a whole decode. And a wrapped part of a spanned zip or a
-  `.NNN` split is not looked for at all: those are placed by FILENAME,
-  the filename of a wrapped part is the wrapper's, and no reference
-  implementation says what that should look like — so it stays unbuilt
-  until a real example says what the convention is, rather than being
-  guessed.
-
-  This is now the ONLY thing in the multi-segment area that the Macintosh
-  application cannot do that the CLI can. All four joining schemes run
-  there, at 4 MB and at the 1 MB floor target (FORMATS.md, "Segmented
-  sets on a real emulated Mac Plus").
-
----
-
-## 5. Deliberate gaps, and remedies ruled out by measurement
+## 4. Deliberate gaps, and remedies ruled out by measurement
 
 - **Zip64 spanned sets, out of scope as of 2026-08-14.** An
   end-of-central-directory record whose disk number is `0xFFFF` defers to

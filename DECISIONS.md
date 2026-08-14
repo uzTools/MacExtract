@@ -60,6 +60,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-14 — Compact Pro segments: the layout, derived from specimens
 - 2026-08-14 — reading a Compact Pro set: addressed mode, and the index
 - 2026-08-14 — the Macintosh shell learns the other three schemes
+- 2026-08-14 — the Macintosh application takes ALL the envelopes off
 
 ---
 
@@ -2782,3 +2783,49 @@ deterministic rather than lucky. **What made this cheap to find was
 putting the engine's return code in the alert**: `ret=-1 fam=0` said
 in one frame that the application had never seen a family at all, where
 the screenshot alone had already sent me to re-read the matcher twice.
+
+## 2026-08-14 — the Macintosh application takes ALL the envelopes off
+
+Asked for `Archive.sit.1.hqx` on the Mac, and found something else
+first: the application had no envelope unwrap at all. Opened on
+`boogers-152.hqx` it wrote `boogers152.sit` and stopped — measured, not
+inferred — where the Linux CLI has always gone on to the contents.
+README.md has promised the second behaviour since it was written, which
+makes it the first user-facing claim in this repository that the
+software did not honour (BLOCKERS.md, *Withdrawn claims*).
+
+It also blocked what was asked for. A wrapped set is
+`Archive.sit.1.hqx`: the envelope has to come off part 1 before anything
+can notice that what is inside is a segment. No unwrap, no wrapped
+parts.
+
+**The loop is in the interactive path only.** The autotest keeps
+single-layer semantics because every manifest it is graded against
+describes one layer (`tools/vmac_check.py`), and 55/55 depends on that.
+So `RunExtract` reports the SHAPE of what it wrote — one file and no
+folders is what an envelope yields — and `ExtractOne` sniffs that file
+rather than trusting its name, goes round, and deletes the layer it came
+from once the next one has succeeded.
+
+**And the bug that cost a run: a delete after the last flush is not a
+delete.** `RunExtract` calls `FlushVol` before returning, so removing
+the intermediate afterwards left the change in the volume's cache — the
+harness kills the emulator where a person would quit, and the file was
+still there on the image. The extraction was right and the tidying up
+was invisible. Anything this application does to a volume AFTER an
+extraction has to flush for itself.
+
+**Wrapped parts then followed the CLI's shape**, with one difference
+that is the whole reason it was ranked last: a decoded part needs
+somewhere to live. On Linux that is a temp file beside the output; here
+it is `unclassic part N` on the OUTPUT volume, deleted when the join is
+over — the one place this application knows it may write. The search is
+rationed the same way, by `SegHaveAll`: envelopes are opened only while
+the set is short of a part, so a complete set opens nothing. StuffIt
+only, for the reason the CLI gives.
+
+Verified through the real UI at 4 MB and at the 1 MB floor target: part
+1 as `Apart.sit.1.hqx`, part 2 as `zzz-download.bin` (a different
+envelope, a name that says nothing), part 3 as `Other.9.hqx` — joined,
+extracted, and nothing of ours left on the volume, against the Linux
+CLI on the same three files.

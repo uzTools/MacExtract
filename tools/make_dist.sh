@@ -82,8 +82,20 @@ and the question tells you how much of the archive is still to read. The
 parts are recognised by what is inside them, so it does not matter what they
 are called or whether they are all in one folder. Send the output to a
 different disk from the parts; the disk holding the output is otherwise the
-disk you have to eject. Sets split by Compact Pro or PKZIP are not handled
-yet.
+disk you have to eject.
+
+If the parts are still in their BinHex or MacBinary wrappers
+(Archive.sit.1.hqx and friends), open the first one — the wrappers come off
+and the pieces are found inside the others.
+
+Sets made by Compact Pro are joined the same way, and you can open any
+segment of one. Archives split into NAME.z01/.z02/.zip, or into plain
+NAME.001/.002 pieces, are joined by name instead — those two schemes put
+nothing inside the files that says which set they belong to, so keep the
+names they came with.
+
+Nested files unpack in one go: a .sit.hqx gives you what is inside the
+.sit, not the .sit.
 
 Every archive in the test sample extracts byte-exact on a 1 MB Mac Plus,
 StuffIt 5 (Arsenic) included. Arsenic is slow on a 68000 — 16 minutes for a

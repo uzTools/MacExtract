@@ -41,14 +41,20 @@ part cannot pass silently", and a lax reader was built to prove the
 difference is load-bearing.
 
 **Parts inside envelopes** — `Archive.sit.1.hqx`, which is how a set was
-actually distributed — join on the Linux CLI since 2026-08-13, for the StuffIt
-scheme only, because that is the one whose identity is in the payload and so
+actually distributed — join on Linux since 2026-08-13 and on the Macintosh
+since 2026-08-14, for the StuffIt scheme only, because that is the one whose identity is in the payload and so
 survives a wrapper. The envelope comes off each part BEFORE the join instead
 of after it, and the search is rationed by NEED: envelopes beside the archive
 are opened only while the set is short of a part. **The first ration was
 gated on the shape of part 1, and the assertion defending it could not fail** —
 it observed whether a wrapped part was used, which is a consequence of the
-search rather than the search (DECISIONS.md 2026-08-13).
+search rather than the search (DECISIONS.md 2026-08-13). Building the Mac
+half turned up the first user-facing claim this repository ever got wrong:
+the application had **no envelope unwrap at all** — `.sit.hqx` gave you the
+`.sit` and stopped — while README.md promised otherwise. It has the loop
+now (BLOCKERS.md *Withdrawn claims*). **A claim with no test behind it is
+the one that will be false**, and the README was the only document here
+that nothing checked.
 
 The engine passes a 797-fixture differential suite against `unar` and, where `unar` fails, `macunpack`; the Mac shell extracts byte-exact on a real System 6.0.8 Mac Plus under Mini vMac — **55/55 sampled fixtures at 4 MB and 55/55 at the 1 MB floor** (2026-08-08, on a sample that grew from 44 to 55 that day; there are no memory-budget refusals left).
 

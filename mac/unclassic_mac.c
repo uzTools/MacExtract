@@ -549,6 +549,12 @@ typedef struct {
     Str63        curName;      /* sanitized current file name */
     UncEntryInfo cur;
     int          entries, errors;
+    /* The shape of what was written, for the envelope unwrap in
+     * ExtractOne: one file and no folders is what an envelope layer
+     * looks like, and lastName/lastDir say where it landed. */
+    int          fileCount, dirCount;
+    Str63        lastName;
+    long         lastDir;
     Progress    *pr;
 #ifndef UNC_MAC_STAGE_WRITES
     /* Streaming write path: each chunk goes straight to disk as the engine
@@ -1005,12 +1011,18 @@ static int sink_end(void *ctx, int status)
 #ifdef UNC_MAC_AUTOTEST
         unc_at_record(s->vRefNum, s->curDirID, s->curName);   /* success only */
 #endif
+        if (!s->cur.is_dir) {
+            BlockMoveData(s->curName, s->lastName, s->curName[0] + 1);
+            s->lastDir = s->curDirID;
+        }
     } else if (!s->cur.is_dir) {
         /* Cancelled or failed: remove the empty/partial file this entry
          * created in sink_begin, so no incomplete output is left behind. */
         MyHDelete(s->vRefNum, s->curDirID, s->curName);
     }
     if (status != UNC_OK) s->errors++;
+    if (s->cur.is_dir) s->dirCount++;
+    else s->fileCount++;
     return 0;
 }
 
@@ -1065,6 +1077,11 @@ typedef struct {
     unsigned char stem[64];
     short   stemlen;
     int     highest;
+    /* Where a part that arrived inside an envelope is decoded to, and
+     * whether any was. */
+    short   tmpVol;
+    long    tmpDir;
+    int     peeled;
 } SegHost;
 
 /* Read a candidate file's header and return its part number, or 0. */
@@ -1272,6 +1289,216 @@ static int SegDescribeLast(SegHost *h, short vol, long dir,
     SegRemember(h, (int)cand.nparts, vol, dir, nm);
     if ((int)cand.nparts > h->highest) h->highest = (int)cand.nparts;
     return 1;
+}
+
+/* ------------------------------------------------------------------ */
+/* Parts that arrived inside an envelope                               */
+/*                                                                    */
+/* A real download is per-part wrapped — Archive.sit.1.hqx — so the    */
+/* envelope has to come off each part BEFORE the join. On this side    */
+/* that means writing the decoded part somewhere, which is the whole   */
+/* difference from the Linux CLI: it peeks ~100 bytes and decodes to a */
+/* file, and so does this, but here the file lands on the output       */
+/* volume and is deleted when the join is over.                        */
+/*                                                                    */
+/* StuffIt only, for the reason the CLI gives: its header is IN the    */
+/* payload, so unwrapping is all that stands between a wrapped part    */
+/* and the fingerprint check every other part gets. A spanned zip or a */
+/* .NNN part is placed by FILENAME, and the filename of a wrapped part */
+/* is the wrapper's.                                                   */
+/* ------------------------------------------------------------------ */
+
+typedef struct {
+    short    outRef;         /* PEEL: fork being written, 0 in peek mode */
+    uint8_t *head;           /* PEEK: where the first bytes go           */
+    int32_t  cap, len;
+    int      entries;
+    int      err;
+} EnvSink;
+
+static int env_begin(void *ctx, const UncEntryInfo *info)
+{
+    EnvSink *e = (EnvSink *)ctx;
+    if (info->is_dir) { e->entries++; return 1; }
+    return e->entries++ ? 1 : 0;         /* the first file is the payload */
+}
+
+static int env_write(void *ctx, UncFork fork, const void *buf, int32_t len)
+{
+    EnvSink *e = (EnvSink *)ctx;
+
+    if (fork != UNC_FORK_DATA || len <= 0) return 0;
+    if (e->outRef) {
+        long count = (long)len;
+        if (FSWrite(e->outRef, &count, (const void *)buf) != noErr ||
+            count != (long)len) { e->err = 1; return -1; }
+        return 0;
+    }
+    if (e->len < e->cap) {
+        int32_t n = e->cap - e->len, i;
+        const uint8_t *sp = (const uint8_t *)buf;
+        if (n > len) n = len;
+        for (i = 0; i < n; i++) e->head[e->len + i] = sp[i];
+        e->len += n;
+    }
+    /* Enough to decide on; the abort is reported as a per-entry failure,
+     * which is why a peek is judged by what it collected. */
+    return e->len >= e->cap ? -1 : 0;
+}
+
+static int env_end(void *ctx, int status)
+{
+    EnvSink *e = (EnvSink *)ctx;
+    if (e->outRef && status != UNC_OK) e->err = 1;
+    return 0;
+}
+
+/* Run one envelope layer of a file into `es`. 0 if it is not one. */
+static int EnvRun(short vol, long dir, ConstStr255Param nm, EnvSink *es,
+                  UncAlloc *al)
+{
+    FileIO fio;
+    UncIO eio;
+    UncSink sk;
+    UncProgress prog;
+    UncFormat fmt;
+    short ref;
+    long eof = 0;
+    int rc;
+
+    if (MyOpenFork(vol, dir, nm, fsRdPerm, 0, &ref) != noErr) return 0;
+    GetEOF(ref, &eof);
+    fio.refNum = ref;
+    fio.size = (uint32_t)eof;
+    fio.pos = 0;
+    eio.ctx = &fio;
+    eio.read = fio_read;
+    eio.seek = fio_seek;
+    eio.tell = fio_tell;
+    eio.size = fio_size;
+
+    fmt = unc_sniff(&eio);
+    if (fmt != UNC_FORMAT_MACBINARY && fmt != UNC_FORMAT_BINHEX &&
+        fmt != UNC_FORMAT_APPLESINGLE && fmt != UNC_FORMAT_APPLEDOUBLE &&
+        fmt != UNC_FORMAT_GZIP && fmt != UNC_FORMAT_COMPRESS_Z) {
+        FSClose(ref);
+        return 0;
+    }
+    sk.ctx = es;
+    sk.begin_entry = env_begin;
+    sk.write = env_write;
+    sk.end_entry = env_end;
+    prog.ctx = NULL;
+    prog.tick = NULL;
+    rc = unc_extract_as(fmt, &eio, &sk, al, NULL, NULL);
+    FSClose(ref);
+    if (es->outRef && rc != UNC_OK) es->err = 1;
+    return 1;
+}
+
+/* Do the parts found so far account for the whole set? StuffIt states
+ * the payload total in every part, so this is the same sum that ends the
+ * joiner's walk — and it is the only question that decides whether
+ * opening envelopes is worth anything. */
+static int SegHaveAll(SegHost *h)
+{
+    uint32_t sum = 0;
+    int p;
+
+    if (h->desc.total == UNC_SIZE_UNKNOWN) return 0;
+    for (p = 1; p <= kSegMaxKnown && h->loc[p].name[0]; p++) {
+        uint32_t len = SegPartLength(h, p);
+        if (len == UNC_SIZE_UNKNOWN || len <= h->desc.head_len) return 0;
+        sum += len - h->desc.head_len;
+        if (sum >= h->desc.total) return 1;
+    }
+    return 0;
+}
+
+/* Is this file an envelope holding a part of the set? If so it is
+ * decoded whole, next to the output, and recorded. */
+static int SegWrappedPartOf(SegHost *h, short vol, long dir,
+                            ConstStr255Param nm, UncAlloc *al)
+{
+    uint8_t head[UNC_SEG_HEAD];
+    EnvSink es;
+    Str255 tmp;              /* PStrCat's contract is Str255, not Str63 */
+    int part;
+    short ref;
+    long z;
+
+    for (z = 0; z < (long)sizeof es; z++) ((char *)&es)[z] = 0;
+    es.head = head;
+    es.cap = (int32_t)sizeof head;
+    if (!EnvRun(vol, dir, nm, &es, al)) return 0;
+    part = es.len > 0 ? unc_segment_match(&h->desc, head, es.len) : 0;
+    if (part < 1) return 0;
+    if (h->loc[part].name[0]) return part;      /* already have that one */
+
+    /* "unclassic part N" — on the output volume, which is the one place
+     * this application knows it may write. */
+    tmp[0] = 0;
+    PStrCat(tmp, "unclassic part ");
+    PStrCatNum(tmp, (long)part);
+    MyHDelete(h->tmpVol, h->tmpDir, tmp);        /* a stale one, if any */
+    if (MyHCreate(h->tmpVol, h->tmpDir, tmp) != noErr) return 0;
+    if (MyOpenFork(h->tmpVol, h->tmpDir, tmp, fsWrPerm, 0, &ref) != noErr) {
+        MyHDelete(h->tmpVol, h->tmpDir, tmp);
+        return 0;
+    }
+    for (z = 0; z < (long)sizeof es; z++) ((char *)&es)[z] = 0;
+    es.outRef = ref;
+    if (!EnvRun(vol, dir, nm, &es, al) || es.err) {
+        FSClose(ref);
+        MyHDelete(h->tmpVol, h->tmpDir, tmp);
+        return 0;
+    }
+    FSClose(ref);
+    FlushVol(NULL, h->tmpVol);
+    SegRemember(h, part, h->tmpVol, h->tmpDir, tmp);
+    h->peeled = 1;
+    return part;
+}
+
+/* Walk a folder looking INSIDE envelopes. Only ever called when the set
+ * is short of a part: a complete one opens nothing. */
+static void SegScanWrapped(SegHost *h, short vol, long dir, UncAlloc *al)
+{
+    CInfoPBRec pb;
+    Str63 nm;
+    short idx;
+    long z;
+
+    for (idx = 1; idx < 32767; idx++) {
+        for (z = 0; z < (long)sizeof pb; z++) ((char *)&pb)[z] = 0;
+        nm[0] = 0;
+        pb.hFileInfo.ioNamePtr = nm;
+        pb.hFileInfo.ioVRefNum = vol;
+        pb.hFileInfo.ioDirID = dir;
+        pb.hFileInfo.ioFDirIndex = idx;
+        if (PBGetCatInfoSync(&pb) != noErr) break;
+        if (pb.hFileInfo.ioFlAttrib & 0x10) continue;          /* a folder */
+        if (SegPartOf(h, vol, dir, nm)) continue;      /* a part in its own right */
+        SegWrappedPartOf(h, vol, dir, nm, al);
+        if (SegHaveAll(h)) break;
+    }
+}
+
+/* Remove the decoded parts: this application's own litter, and a join
+ * that failed is when a user is least helped by finding pieces of one. */
+static void SegPeelClean(SegHost *h)
+{
+    int p;
+    if (!h->peeled) return;
+    for (p = 1; p <= kSegMaxKnown; p++) {
+        Str255 tmp;
+        tmp[0] = 0;
+        PStrCat(tmp, "unclassic part ");
+        PStrCatNum(tmp, (long)p);
+        MyHDelete(h->tmpVol, h->tmpDir, tmp);
+    }
+    FlushVol(NULL, h->tmpVol);
+    h->peeled = 0;
 }
 
 /* Compact Pro: which of these is the LAST segment?
@@ -1648,9 +1875,23 @@ static long gPeakUsage;   /* engine heap high-water mark from the last RunExtrac
  * volume. Returns the unc_extract status; fills *entries and *errors from the
  * sink, and gPeakUsage with the engine's peak heap use. prog may be NULL.
  * Shared by the interactive app and the on-Mac autotest. */
+/* `out` is filled with where a single-file extraction landed, so the
+ * caller can take the next envelope off it; pass NULL not to care. */
+typedef struct {
+    int   fileCount, dirCount;
+    Str63 name;
+    long  dirID;
+} ExtractShape;
+
+/* `origVol`/`origDir` is the folder the USER's file came from, which is
+ * not where this layer's file is once an envelope has been taken off —
+ * and it is where the other parts of a wrapped set are still sitting.
+ * Pass the same as inVol/inDir when there is no chain. */
 static int RunExtract(short inVol, long inDir, ConstStr255Param name,
                       short outVol, long outDir,
-                      UncProgress *prog, int *entries, int *errors)
+                      short origVol, long origDir,
+                      UncProgress *prog, int *entries, int *errors,
+                      ExtractShape *shape)
 {
     UncIO io;
     MemIO mem;
@@ -1794,10 +2035,26 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
                 }
             } else {
             sh->desc = desc;
+            sh->tmpVol = outVol;
+            sh->tmpDir = outDir;
             /* The file we were opened on is a part, at the number its
              * own header states — so opening part 3 of a set works. */
             SegRemember(sh, (int)sh->desc.part, inVol, inDir, name);
             SegScanDir(sh, inVol, inDir);
+            /* A part that arrived wrapped was unwrapped into the OUTPUT
+             * folder, so the rest of the set is not there: it is still
+             * where the user left it. */
+            if (origVol != inVol || origDir != inDir)
+                SegScanDir(sh, origVol, origDir);
+            /* Only now, and only if something is still missing, is it
+             * worth taking envelopes off to look — which is how a real
+             * download arrives, and also how a half-unstuffed one does.
+             * A complete set opens nothing beside it. */
+            if (sh->desc.scheme == UNC_FORMAT_SITSEG && !SegHaveAll(sh)) {
+                if (origVol != inVol || origDir != inDir)
+                    SegScanWrapped(sh, origVol, origDir, &al);
+                SegScanWrapped(sh, inVol, inDir, &al);
+            }
             /* A Compact Pro set opened anywhere but its last segment
              * does not yet know how many segments it has. */
             if (sh->desc.nparts == 0 &&
@@ -1881,6 +2138,9 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
     sink.vRefNum = outVol;
     sink.rootDirID = outDir;
     sink.entries = sink.errors = 0;
+    sink.fileCount = sink.dirCount = 0;
+    sink.lastName[0] = 0;
+    sink.lastDir = 0;
     sink.pr = NULL;
     sk.ctx = &sink;
     sk.begin_entry = sink_begin;
@@ -1939,6 +2199,7 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
         ret = unc_extract_segments(&sh->desc, &vs, segScratch, &sk, &al,
                                    prog, &opt);
         seg_release(sh, NULL);
+        SegPeelClean(sh);
         DisposePtr((Ptr)sh);
         DisposePtr(segScratch);
     } else {
@@ -1955,6 +2216,12 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
     FlushVol(NULL, outVol);
     *entries = sink.entries;
     *errors = sink.errors;
+    if (shape) {
+        shape->fileCount = sink.fileCount;
+        shape->dirCount = sink.dirCount;
+        shape->dirID = sink.lastDir;
+        BlockMoveData(sink.lastName, shape->name, sink.lastName[0] + 1);
+    }
     return ret;
 }
 #endif
@@ -2462,7 +2729,8 @@ int main(void)
         prog.ctx = NULL;
         prog.tick = at_cancel_tick;
         ret = RunExtract(inVol, fsRtDirID, "\parchive.sit",
-                         outVol, fsRtDirID, &prog, &entries, &errors);
+                         outVol, fsRtDirID, inVol, fsRtDirID,
+                         &prog, &entries, &errors, NULL);
         at_count_dir(outVol, fsRtDirID, &files, &dirs);
         for (i = 0; i < 8; i++) vals[i] = 0;
         vals[0] = (uint32_t)gATnrec;   /* entries that completed successfully */
@@ -2667,7 +2935,8 @@ int main(void)
 
         /* dirID 0 with a working-directory refNum: exactly ExtractOne(). */
         ret = RunExtract(inVol, fsRtDirID, "\parchive.sit",
-                         wdRef, 0, NULL, &entries, &errors);
+                         wdRef, 0, inVol, fsRtDirID,
+                         NULL, &entries, &errors, NULL);
 
         at_count_dir(outVol, fsRtDirID, &rootFiles, &rootDirs);
         at_count_dir(outVol, dirID, &subFiles, &subDirs);
@@ -2692,11 +2961,13 @@ int main(void)
         prog.ctx = NULL;
         prog.tick = at_prog_tick;
         ret = RunExtract(inVol, fsRtDirID, "\parchive.sit",
-                         outVol, fsRtDirID, &prog, &entries, &errors);
+                         outVol, fsRtDirID, inVol, fsRtDirID,
+                         &prog, &entries, &errors, NULL);
     }
 #else
     ret = RunExtract(inVol, fsRtDirID, "\parchive.sit",
-                     outVol, fsRtDirID, NULL, &entries, &errors);
+                     outVol, fsRtDirID, inVol, fsRtDirID,
+                     NULL, &entries, &errors, NULL);
 #endif
 
     /* Read every extracted file's forks back through the real File Manager,
@@ -2833,9 +3104,86 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
     prog.tick = prog_tick;
 
     /* The archive is read from where it was opened; output goes wherever
-     * the destination dialog left us, which defaults to that same folder. */
-    ret = RunExtract(vRefNum, dirID, name, outVol, outDir,
-                     &prog, &entries, &errors);
+     * the destination dialog left us, which defaults to that same folder.
+     *
+     * Then the envelope layers come off, one at a time. A real download
+     * is chained — Archive.sit.hqx, Archive.cpt.bin, Archive.tar.Z —
+     * and until 2026-08-14 this application took exactly ONE layer off
+     * and stopped, leaving the user to open the result again by hand.
+     * README.md has promised the other behaviour since it was written;
+     * the Linux CLI has always done it. The autotest keeps the
+     * single-layer semantics, because every manifest it is graded
+     * against describes one layer (tools/vmac_check.py).
+     *
+     * The test is the same one the CLI uses: exactly one file and no
+     * folders is what an envelope yields, and the file is then sniffed
+     * rather than trusted by name. */
+    {
+        ExtractShape shape;
+        short curVol = vRefNum;
+        long curDir = dirID;
+        Str63 curName;
+        short delVol = 0;
+        long delDir = 0;
+        Str63 delName;
+        int depth;
+
+        BlockMoveData(name, curName, name[0] + 1);
+        delName[0] = 0;
+
+        for (depth = 0; depth < 8; depth++) {
+            ret = RunExtract(curVol, curDir, curName, outVol, outDir,
+                             vRefNum, dirID,
+                             &prog, &entries, &errors, &shape);
+            /* This layer worked, so the envelope it came out of is
+             * litter now. Removed before the next layer runs, so a
+             * chain does not leave a trail of intermediates. */
+            if (ret == UNC_OK && !errors && delName[0]) {
+                MyHDelete(delVol, delDir, delName);
+                delName[0] = 0;
+                /* RunExtract flushed the volume before it returned, so
+                 * this delete is on the far side of the last flush and
+                 * would sit in the cache until something else forced
+                 * it. The harness kills the emulator where a user would
+                 * quit, and the intermediate survived on the volume for
+                 * exactly that reason. */
+                FlushVol(NULL, delVol);
+            }
+            if (ret != UNC_OK || errors || pr.cancelled) break;
+            if (shape.fileCount != 1 || shape.dirCount != 0 ||
+                !shape.name[0]) break;
+            {
+                short ref;
+                FileIO fio2;
+                UncIO io2;
+                long eof = 0;
+                UncFormat inner;
+
+                if (MyOpenFork(outVol, shape.dirID, shape.name, fsRdPerm,
+                               0, &ref) != noErr) break;
+                GetEOF(ref, &eof);
+                fio2.refNum = ref;
+                fio2.size = (uint32_t)eof;
+                fio2.pos = 0;
+                io2.ctx = &fio2;
+                io2.read = fio_read;
+                io2.seek = fio_seek;
+                io2.tell = fio_tell;
+                io2.size = fio_size;
+                inner = unc_sniff(&io2);
+                FSClose(ref);
+                if (!unc_format_extractable(inner)) break;
+            }
+            /* Go round on what was just written, and remember it as the
+             * layer to delete once the next one succeeds. */
+            delVol = outVol;
+            delDir = shape.dirID;
+            BlockMoveData(shape.name, delName, shape.name[0] + 1);
+            curVol = outVol;
+            curDir = shape.dirID;
+            BlockMoveData(shape.name, curName, shape.name[0] + 1);
+        }
+    }
 
     if (pr.dlg) DisposeDialog(pr.dlg);
 

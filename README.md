@@ -86,11 +86,11 @@ into `.z01`, `.z02` … `.zip`, and plain `.001`/`.002` splits. For those
 last two the names are the only thing that says which parts belong
 together, so keep them.
 
-The Linux version does one thing more: it joins a set whose parts are
-each still in their own BinHex or MacBinary wrapper
-(`Archive.sit.1.hqx`, `Archive.sit.2.hqx`), which is how these were
-usually downloaded, and it does not mind if only some of them still
-are.
+Sets whose parts are each still in their own BinHex or MacBinary wrapper
+(`Archive.sit.1.hqx`, `Archive.sit.2.hqx`) — which is how these were
+usually downloaded — are joined as well: open the first part and the
+rest are found inside their wrappers. It does not mind if only some of
+them still are.
 
 Encrypted archives are out of scope.
 

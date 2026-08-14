@@ -424,6 +424,8 @@ just as happily on an empty archive. Three-system table in FORMATS.md.
     interactive.py --segments       # the "locate part N" alert for a split archive
     interactive.py --named zip      # a spanned zip set, opened through Standard File
     interactive.py --named split    # a plain .NNN split, likewise
+    interactive.py --chain          # .sit.hqx: do ALL the envelope layers come off?
+    interactive.py --wrapped        # a set whose parts are each in an envelope
     interactive.py --wd             # output lands in the archive's folder, not at /
     interactive.py --dest           # output lands on the volume the user CHOSE
     interactive.py --diskswap       # insert the missing part's disk mid-run
@@ -533,6 +535,14 @@ application correctly said so. **The fourth harness bug in this
 directory to photograph as an application bug.** What settled it in one
 frame was putting the engine's return code into the alert: `ret=-1
 fam=0` said the application had never seen a family at all.
+
+`--chain` and `--wrapped` both compare NAMES on the volume against what
+the Linux CLI produces from the same file, and both require the
+application to have tidied up after itself — the intermediate layer for
+`--chain`, the decoded parts for `--wrapped`. `--chain` is the phase that
+found the application had no envelope unwrap at all (BLOCKERS.md), so it
+is worth keeping even though it now passes: it is the only thing that
+tests the claim README.md makes to users.
 
 ### Putting a disk in while the Mac is running
 

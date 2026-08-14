@@ -247,6 +247,7 @@ Each entry is: what was claimed, what disproved it, and what it cost.
 | Nine fixtures are ground truth the oracle cannot produce | `unar -k hidden`; all nine build, all 774 existing manifests unchanged | 2026-08-08 |
 | There is no oracle for StuffIt method 6, and no second fixture to test one on | `macunpack` from `reference/`, and `tools/synth_sit6.py` | 2026-08-08 |
 | Even `unar` fails on the two PKZIP 1.x zips, so they stay corpus-only | their own manifests: `unar` adjudicates 5 of the 7 entries | 2026-08-08 |
+| The Macintosh application unwraps nested files (`.sit.hqx`) automatically | running it: one layer came off and it stopped | 2026-08-14 |
 
 **Retro68's `HOpen` glue.** Claimed to return `noErr` without writing back the
 refNum, and recorded as M10's root cause in commit `22e806b`. A standalone
@@ -444,6 +445,31 @@ ungraded for a day; and the skip that hid them could not fail, so a
 regression turning a supported method into "unsupported" would have been
 recorded as a skip. Both are fixed (TESTING.md, "When our engine declines an
 entry"); the suite went 795 → 797 with no engine change.
+
+**The Macintosh application unwraps nested files automatically.** Claimed
+by README.md — "Nested files like `.sit.hqx` or `.tar.Z` are unwrapped
+automatically, by looking inside them rather than trusting the name" — in
+the section describing the APPLICATION. It was true of the Linux CLI and
+false of the application, which took exactly one layer off and stopped.
+Measured on 2026-08-14 by running it: `boogers-152.hqx` produced
+`boogers152.sit` and nothing more, and the manifest it is graded against
+in the 55-fixture sample describes precisely that one entry — so every
+tier agreed with the application and none of them was asking the question
+the README answers.
+
+**Cost:** a user with a `.sit.hqx` — which is most of what was
+distributed — had to open the result a second time by hand, for as long
+as the application has existed. It also blocked the feature that found
+it: a wrapped segmented set is `Archive.sit.1.hqx`, and the envelope has
+to come off part 1 before anything can see that a segment is inside.
+Fixed the same day (DECISIONS.md); the application now matches what the
+README always said.
+
+**Why it survived:** the autotest is graded per layer on purpose, so the
+one harness that replays 55 fixtures through this application could
+never have caught it, and nothing else read the README as a
+specification. **A claim in the user-facing document had no test at
+all** — every other claim in this repository is checked by something.
 
 ### Corrected figures and superseded write-ups
 

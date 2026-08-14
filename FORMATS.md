@@ -220,10 +220,12 @@ while the set is short of a part, at `UNC_SEG_HEAD` decoded bytes each,
 and a part is decoded whole only once its fingerprint places it. Mixed
 envelopes, wrapper names that say nothing, and parts in three
 directories all join byte-exact; `unar` handed part 1 of such a set
-unwraps that part alone and exits 0. Not in the Mac shell, and not for
-the two name-placed schemes (DECISIONS.md 2026-08-13, OPEN_ITEMS.md
-section 4) — the joining of those two IS in the Mac shell since
-2026-08-14; it is only the envelope step that is not.
+unwraps that part alone and exits 0. **In the Mac shell too since
+2026-08-14**, where a decoded part lands on the output volume as
+`unclassic part N` and is deleted when the join is over. Not for the two
+name-placed schemes, on Linux or Mac: a wrapped part's filename is the
+wrapper's, and no reference says what that should look like
+(DECISIONS.md 2026-08-13).
 
 ### Compact Pro segments
 
@@ -315,6 +317,8 @@ StuffIt table below is from 2026-08-08; the other three are:
 | Compact Pro, last segment withheld | same | 0 files, refused — the negative control |
 | Spanned zip, 4 MB and **1 MB** | `interactive.py --named zip`, opened at part 1 of 5 through Standard File | joined file **byte-exact**, 278,294 B |
 | `.NNN` split, 4 MB and **1 MB** | `interactive.py --named split`, opened at part 1 of 3 | joined file **byte-exact** |
+| Parts inside envelopes, 4 MB and **1 MB** | `interactive.py --wrapped`: part 1 as `Apart.sit.1.hqx`, part 2 as `zzz-download.bin`, part 3 as `Other.9.hqx` | same contents as the Linux CLI on the same three files, and no decoded parts left on the volume |
+| A chained file (`.sit.hqx`), 4 MB and **1 MB** | `interactive.py --chain` | every layer comes off and the intermediate is removed — which this application did NOT do before 2026-08-14 (BLOCKERS.md) |
 
 The two name-placed schemes go through the real UI rather than the
 autotest, because the autotest opens a file called `archive.sit` and a
