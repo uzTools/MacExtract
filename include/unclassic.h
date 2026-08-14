@@ -59,6 +59,7 @@ typedef enum UncFormat {
     UNC_FORMAT_SITSEG,        /* one part of a StuffIt segmented set   */
     UNC_FORMAT_ZIPSEG,        /* one part of a spanned (split) zip set */
     UNC_FORMAT_SPLIT,         /* one part of a plain NAME.001 split    */
+    UNC_FORMAT_CPTSEG,        /* one segment of a Compact Pro set      */
 
     UNC_FORMAT__COUNT
 } UncFormat;
@@ -227,13 +228,26 @@ int unc_extract_as(UncFormat f, UncIO *io, UncSink *sink, UncAlloc *al,
 /* Multi-segment archives                                             */
 /*                                                                    */
 /* A segmented archive is one logical stream cut across several        */
-/* files, one per floppy. Three schemes are supported, and they differ */
+/* files, one per floppy. Four schemes are supported, and they differ  */
 /* in one respect — how much a part can prove about itself:            */
 /*                                                                    */
 /*  UNC_FORMAT_SITSEG  Every part carries a header that names the set, */
 /*      numbers the part within it, and fingerprints the original      */
 /*      file, so a part is identified BY CONTENT: filenames are a hint */
 /*      for finding candidates and never evidence that one belongs.    */
+/*                                                                    */
+/*  UNC_FORMAT_CPTSEG  A Compact Pro segment carries the same 8-byte   */
+/*      header an ordinary archive has, holding a 16-bit identity that  */
+/*      every segment of the set shares and an index offset that is 0   */
+/*      in all but the LAST. So identity is content, as for SITSEG —    */
+/*      unc_segment_match answers for it — but the part COUNT lives     */
+/*      only in the final segment, and unc_segment_describe answers     */
+/*      with nparts == 0 from any other. A host given a middle segment  */
+/*      is expected to find the final one (it can: every part           */
+/*      identifies itself) and describe that. Entries are addressed as  */
+/*      (volume, offset within that volume), so the reader translates   */
+/*      rather than flattens. DERIVED from specimens, not transcribed:  */
+/*      see src/fmt_cptseg.c.                                           */
 /*                                                                    */
 /*  UNC_FORMAT_ZIPSEG  A spanned ("split") zip stores nothing of the   */
 /*      kind. Only the FIRST part (a local file header at offset 4)    */
@@ -273,7 +287,7 @@ int unc_extract_as(UncFormat f, UncIO *io, UncSink *sink, UncAlloc *al,
 
 /* Identity of a SET, plus which part of it we happened to look at. */
 typedef struct UncSegmentDesc {
-    UncFormat scheme;        /* SITSEG, ZIPSEG or SPLIT                 */
+    UncFormat scheme;        /* SITSEG, CPTSEG, ZIPSEG or SPLIT         */
     uint16_t  part;          /* part number of the inspected file, >= 1 */
     uint32_t  head_len;      /* header bytes to drop from each part      */
 
@@ -287,7 +301,8 @@ typedef struct UncSegmentDesc {
     uint16_t  name_len;
 
     /* Opaque bytes that must agree across every part of the set.
-     * All zero for a scheme that fingerprints nothing (ZIPSEG, SPLIT). */
+     * All zero for a scheme that fingerprints nothing (ZIPSEG, SPLIT).
+     * CPTSEG spends two bytes on it, in fp[0..1]. */
     uint8_t   fp[UNC_SEG_FP_LEN];
 
     /* How many parts the set has, or 0 when the scheme does not say

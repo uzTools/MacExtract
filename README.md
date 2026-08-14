@@ -86,7 +86,10 @@ BinHex or MacBinary wrapper (`Archive.sit.1.hqx`, `Archive.sit.2.hqx`),
 which is how these were usually downloaded; it does not mind if only
 some of them still are.
 
-Encrypted archives are out of scope, as are sets split by Compact Pro.
+Archives split by **Compact Pro** are joined too, by the Linux
+command-line version. Open any segment — the parts recognise each other
+by what is inside them, so it does not matter what they are called or
+which one you point at. Encrypted archives are out of scope.
 
 ## What you need
 

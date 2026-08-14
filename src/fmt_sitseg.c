@@ -120,6 +120,11 @@ int unc_segment_match(const UncSegmentDesc *desc,
     int32_t i;
 
     if (!desc || !head) return 0;
+    /* Compact Pro fingerprints a set too — two bytes of identity in
+     * every segment — so it answers this as well; its rule lives with
+     * its own header, in fmt_cptseg.c. */
+    if (desc->scheme == UNC_FORMAT_CPTSEG)
+        return unc_cptseg_match(desc, head, len);
     /* A scheme whose parts carry no identity cannot answer this. Said
      * explicitly rather than left to fall out of a failed header parse,
      * because the two outcomes mean opposite things (see unclassic.h). */

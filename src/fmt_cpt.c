@@ -37,6 +37,9 @@
 #include "unc_internal.h"
 
 #define CPT_WINDOW   8192u      /* macutils CIRCSIZE */
+/* An index bigger than this is not worth an allocation attempt;
+ * the record-at-a-time walk reads it either way. */
+#define CPT_INDEX_MAX 262144u
 #define CPT_BLOCK    0x1fff0u   /* cost units per Huffman-tree block */
 #define CPT_ESC1     0x81
 #define CPT_ESC2     0x82
@@ -325,7 +328,71 @@ static int cpt_rle_fork(CptRle *rle, UncBufIn *in, uint32_t complen)
 /* Returns UNC_OK and the updated running CRC via *crc.               */
 /* ------------------------------------------------------------------ */
 
-static int cpt_fork(UncCtx *c, UncFork fork, uint32_t at, uint32_t complen,
+/* Compact Pro writes every address as (volume, offset within that
+ * volume's file) — the volume byte sits in front of the offset in each
+ * file entry, and in an unsegmented archive it is 1 and the offset is
+ * absolute. So these two make the reader indifferent to which it has,
+ * exactly as zip_seek/zip_skip do in fmt_exo.c: position, then read
+ * forward, and a segmented set rolls into its next segment on its own.
+ *
+ * DERIVED, not transcribed — the mapping was measured on sets cut by
+ * Compact Pro itself; see fmt_cptseg.c and DECISIONS.md 2026-08-14. */
+static int cpt_seek(UncCtx *c, uint32_t vol, uint32_t off)
+{
+    if (!c->segmap) {
+        /* One file, and an entry that says it lives in another volume:
+         * the caller was handed one segment of a set and nothing else.
+         * Not corrupt — incomplete. */
+        if (vol > 1) return UNC_ERR_SEGMENTED;
+        return c->io->seek(c->io->ctx, off) < 0 ? UNC_ERR_IO : UNC_OK;
+    }
+    if (vol < 1 || vol > c->segmap->nparts) return UNC_ERR_SEGMENTED;
+    return c->segmap->seek_part(c->segmap->ctx, (int)vol, off);
+}
+
+static int cpt_read_at(UncCtx *c, uint32_t vol, uint32_t off,
+                       void *buf, int32_t len)
+{
+    int err = cpt_seek(c, vol, off);
+    if (err != UNC_OK) return err;
+    return unc_read_full(c->io, buf, len);
+}
+
+/* The index, held in memory while the entries are walked.
+ *
+ * Every entry's record has to be read from the index and its forks from
+ * wherever the entry lives, and in a segmented set those are different
+ * SEGMENTS — so alternating between them costs a part open each way. On
+ * a floppy that is a disk swap each way. Measured before this existed:
+ * 19 opens and 8 backward crossings on a 4-segment set whose floor is 5
+ * and 1. The zip reader met the same problem and answered it the same
+ * way (DECISIONS.md 2026-08-09).
+ *
+ * It is an allocation that may be refused, so the record-at-a-time walk
+ * stays as the fallback: same bytes out, more crossings. */
+typedef struct {
+    uint8_t *buf;        /* NULL: read records through cpt_read_at    */
+    uint32_t base;       /* offset the buffer starts at, within `vol` */
+    uint32_t len;
+    uint32_t vol;
+} CptIndex;
+
+static int cpt_index_read(UncCtx *c, const CptIndex *ix, uint32_t off,
+                          void *buf, int32_t len)
+{
+    if (ix->buf && off >= ix->base && len >= 0 &&
+        (uint32_t)len <= ix->len - (off - ix->base)) {
+        uint8_t *d = (uint8_t *)buf;
+        const uint8_t *sp = ix->buf + (off - ix->base);
+        int32_t i;
+        for (i = 0; i < len; i++) d[i] = sp[i];
+        return UNC_OK;
+    }
+    return cpt_read_at(c, ix->vol, off, buf, len);
+}
+
+static int cpt_fork(UncCtx *c, UncFork fork, uint32_t vol, uint32_t at,
+                    uint32_t complen,
                     uint32_t outlen, int lzh, uint32_t *crc,
                     uint8_t *iobuf, uint32_t iocap,
                     uint8_t *obuf, uint32_t ocap,
@@ -340,7 +407,10 @@ static int cpt_fork(UncCtx *c, UncFork fork, uint32_t at, uint32_t complen,
          * compressed fork is empty, whatever the claimed output size. */
         return UNC_OK;
     }
-    if (c->io->seek(c->io->ctx, at) < 0) return UNC_ERR_IO;
+    {
+        int serr = cpt_seek(c, vol, at);
+        if (serr != UNC_OK) return serr;
+    }
     unc_bufin_init(&in, c->io, &c->ps, iobuf, iocap);
     in.limit = complen;   /* corrupt streams must not read past the fork */
 
@@ -374,15 +444,24 @@ int unc_cpt_extract(UncCtx *c)
     uint32_t iocap = 4096, ocap = 4096;
     uint8_t path[UNC_NAME_MAX + 1];
     uint16_t plen = 0;
+    uint32_t idxvol;
+    CptIndex ix;
     int err = UNC_OK;
 
     fsize = c->io->size(c->io->ctx);
 
-    if (unc_read_at(c->io, 0, head, 8) != UNC_OK) return UNC_ERR_FORMAT;
+    /* The index is in the LAST segment of a set — "you must open the
+     * FINAL segment", the manual, and the byte that says so is the only
+     * non-zero index offset in the set. For one file that is volume 1
+     * and this is all a no-op. */
+    idxvol = c->segmap ? (uint32_t)c->segmap->nparts : 1u;
+
+    if (cpt_read_at(c, idxvol, 0, head, 8) != UNC_OK) return UNC_ERR_FORMAT;
     if (head[0] != 1) return UNC_ERR_FORMAT;
     offset = unc_get_u32be(head + 4);
+    if (c->segmap && offset == 0) return UNC_ERR_SEGMENTED;  /* not the last */
 
-    if (unc_read_at(c->io, offset, meta, 7) != UNC_OK) return UNC_ERR_FORMAT;
+    if (cpt_read_at(c, idxvol, offset, meta, 7) != UNC_OK) return UNC_ERR_FORMAT;
     /* Index CRC was verified by the probe; re-deriving it here would
      * mean a second full pass, so trust the per-file CRCs instead. */
     nentries = unc_get_u16be(meta + 4);
@@ -395,6 +474,37 @@ int unc_cpt_extract(UncCtx *c)
     window = obuf + ocap;
     hz = (CptLzh *)unc_alloc(c->al, (uint32_t)sizeof *hz);
     if (!hz) { unc_free(c->al, iobuf); return UNC_ERR_MEM; }
+
+    /* LAST, and deliberately: this one is an optimisation and the two
+     * above are not, so it gets what is left rather than competing for
+     * what they need. Refused, the walk simply reads each record where
+     * it lies — which for a segmented set is more part opens (and on a
+     * floppy, more disk swaps) for exactly the same bytes. */
+    ix.buf = NULL;
+    ix.base = offset;
+    ix.len = 0;
+    ix.vol = idxvol;
+    {
+        /* Everything from the index CRC to the end of the file — or of
+         * the final segment — is the index. */
+        uint32_t end = c->segmap
+            ? c->segmap->part_size(c->segmap->ctx, (int)idxvol) : fsize;
+        if (end != UNC_SIZE_UNKNOWN && end > offset &&
+            end - offset <= CPT_INDEX_MAX) {
+            uint32_t want = end - offset;
+            uint8_t *b = (uint8_t *)unc_alloc(c->al, want);
+            if (b) {
+                if (cpt_read_at(c, idxvol, offset, b, (int32_t)want) == UNC_OK) {
+                    ix.buf = b;
+                    ix.len = want;
+                } else {
+                    unc_free(c->al, b);
+                }
+            }
+        }
+    }
+
+
 
     remaining[0] = nentries;
     pathlen[0] = 0;
@@ -409,7 +519,7 @@ int unc_cpt_extract(UncCtx *c)
         }
         if (remaining[depth] == 0) break;   /* top level exhausted */
 
-        if (unc_read_at(c->io, ipos, name, 1) != UNC_OK) {
+        if (cpt_index_read(c, &ix, ipos, name, 1) != UNC_OK) {
             err = UNC_ERR_TRUNCATED;
             goto out;
         }
@@ -417,7 +527,7 @@ int unc_cpt_extract(UncCtx *c)
         namelen = name[0] & 0x7f;
         isdir = name[0] & 0x80;
         if (namelen &&
-            unc_read_at(c->io, ipos, name, (int32_t)namelen) != UNC_OK) {
+            cpt_index_read(c, &ix, ipos, name, (int32_t)namelen) != UNC_OK) {
             err = UNC_ERR_TRUNCATED;
             goto out;
         }
@@ -434,7 +544,7 @@ int unc_cpt_extract(UncCtx *c)
 
         if (isdir) {
             uint32_t count;
-            if (unc_read_at(c->io, ipos, meta, 2) != UNC_OK) {
+            if (cpt_index_read(c, &ix, ipos, meta, 2) != UNC_OK) {
                 err = UNC_ERR_TRUNCATED;
                 goto out;
             }
@@ -463,17 +573,18 @@ int unc_cpt_extract(UncCtx *c)
                 for (i = 0; i < e.name_len; i++) path[i] = e.name[i];
             }
         } else {
-            uint32_t fileoffs, filecrc, flags;
+            uint32_t fileoffs, filecrc, flags, filevol;
             uint32_t rsrclen, datalen, rcomp, dcomp;
             uint32_t crc;
             int est;
 
-            if (unc_read_at(c->io, ipos, meta, 45) != UNC_OK) {
+            if (cpt_index_read(c, &ix, ipos, meta, 45) != UNC_OK) {
                 err = UNC_ERR_TRUNCATED;
                 goto out;
             }
             ipos += 45;
 
+            filevol       = meta[0];
             fileoffs      = unc_get_u32be(meta + 1);
             e.type        = unc_get_u32be(meta + 5);
             e.creator     = unc_get_u32be(meta + 9);
@@ -505,16 +616,23 @@ int unc_cpt_extract(UncCtx *c)
                 est = UNC_OK;                     /* metadata only */
             } else if (fileoffs + rcomp < fileoffs ||
                        fileoffs + rcomp + dcomp < fileoffs ||
-                       (fsize != UNC_SIZE_UNKNOWN &&
+                       (!c->segmap && fsize != UNC_SIZE_UNKNOWN &&
                         fileoffs + rcomp + dcomp > fsize)) {
+                /* Only within one file does "past the end" mean
+                 * anything: across a set the forks legitimately run off
+                 * the end of the segment they start in, and the reader
+                 * rolls into the next one. A short set is caught by the
+                 * read, which cannot roll past the last part. */
                 est = UNC_ERR_CORRUPT;            /* forks outside file */
             } else {
                 crc = 0xFFFFFFFFu;
-                est = cpt_fork(c, UNC_FORK_RSRC, fileoffs, rcomp, rsrclen,
+                est = cpt_fork(c, UNC_FORK_RSRC, filevol, fileoffs,
+                               rcomp, rsrclen,
                                flags & 2, &crc, iobuf, iocap, obuf, ocap,
                                hz, window);
                 if (est == UNC_OK)
-                    est = cpt_fork(c, UNC_FORK_DATA, fileoffs + rcomp,
+                    est = cpt_fork(c, UNC_FORK_DATA, filevol,
+                                   fileoffs + rcomp,
                                    dcomp, datalen, flags & 4, &crc,
                                    iobuf, iocap, obuf, ocap, hz, window);
                 if (est == UNC_OK && crc != filecrc) est = UNC_ERR_CRC;
@@ -532,6 +650,7 @@ int unc_cpt_extract(UncCtx *c)
     }
 
 out:
+    if (ix.buf) unc_free(c->al, ix.buf);
     unc_free(c->al, hz);
     unc_free(c->al, iobuf);
     return err;

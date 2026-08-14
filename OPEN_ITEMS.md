@@ -1,4 +1,4 @@
-# OPEN_ITEMS.md — what is missing, as of 2026-08-13
+# OPEN_ITEMS.md — what is missing, as of 2026-08-14
 
 A standing audit of the gaps: things not done, things done but not verified,
 and things this repository asserts more confidently than the evidence supports.
@@ -75,78 +75,50 @@ DECISIONS.md, the withdrawn claim to BLOCKERS.md, the numbers to FORMATS.md.
 
 ---
 
-## 4. Multi-segment: what the three implemented schemes leave
+## 4. Multi-segment: what the four implemented schemes leave
 
-StuffIt segments, spanned zip and plain `.NNN` splits extract end to end
-(M11). These are the parts scoped out on purpose, ranked by what they
+StuffIt segments, spanned zip, plain `.NNN` splits and Compact Pro
+segments extract end to end (M11), the last of them on the Linux CLI
+only. These are the parts scoped out on purpose, ranked by what they
 would cost.
 
-- **Spanned zip and `.NNN` splits are not wired into the Mac shell.**
-  Engine and Linux CLI only, by decision on 2026-08-09 and 2026-08-10.
-  One piece is missing and it serves both: the shell's part discovery
-  (`SegPartOf`) matches a StuffIt header through `unc_segment_match`,
-  where these two schemes can only be matched by filename. This item
-  used to add that the descriptor would have to carry a base filename
-  "the engine deliberately has no concept of"; that was wrong, and it
-  made the job look bigger than it is. The name is the HOST's already —
+- **Three of the four schemes are not wired into the Mac shell.**
+  Engine and Linux CLI only, by decision on 2026-08-09, 2026-08-10 and
+  2026-08-14. What each still needs:
+
+  *Compact Pro* is the closest. Its parts are matched by header through
+  `unc_segment_match`, which is what `SegPartOf` already calls, so a set
+  opened at its FINAL segment would join today. What is missing is the
+  other case: the count lives only in the last segment, so the shell
+  needs the search the CLI does — describe each part found until one
+  answers with a count. Untested on a Mac, and therefore claimed nowhere.
+
+  *Spanned zip and `.NNN` splits* need a name-matching branch beside
+  `SegPartOf`, since neither can be matched by content. This item used
+  to add that the descriptor would have to carry a base filename "the
+  engine deliberately has no concept of"; that was wrong, and it made
+  the job look bigger than it is. The name is the HOST's already —
   `ExtractOne` is handed the name Standard File returned and passes it
   to `SegRemember` two lines after building the descriptor, which is
   the same place the Linux CLI gets its stem from (`zipfam_split`).
-  What is actually missing is a name-matching branch beside `SegPartOf`.
-  A split needs one thing more — every part's LENGTH before extraction
+
+  *A split* needs one thing more — every part's LENGTH before extraction
   starts, since that is the only place the joined size comes from
   (DECISIONS.md 2026-08-10), which on a one-drive Mac is either a
   `PBHGetFInfo` per part on a hard disk or a decision to ask the user
   for all the disks up front. **The disk-swap cost that used to be the
-  reason to wait is gone** (2026-08-09): the reader hits the floor its
-  archives allow — 6 opens with 1 backward crossing on a 5-part set,
-  14/2 on a 12-part one — so the shape a user would see is "insert the
-  last disk, then disks 1 to N in order", which is what a PC did with
-  these in the 1990s. What is left is the wiring above, plus deciding
-  what the "locate part N" alert should say for a scheme where a part
-  cannot be checked before it is used. The Mac application
-  carries the code regardless — its payload went 76,800 → 78,208 B on
-  2026-08-09 and 79,360 B on 2026-08-10, +2.5 KB it cannot yet reach —
-  which is noise against the floor target's ~700 KB of free heap but is
-  the honest price of the engine being shared.
-- **Other segment schemes. Compact Pro segmented archives are the
-  interesting one and the expensive one**, and what is missing is a
-  SPECIMEN, not documentation. No reference implementation extracts one:
-  XADMaster reads the archive volume byte and discards it
-  (`/*int volume=*/`), records the per-entry one as metadata it never
-  acts on, and its own format wiki marks all three of the fields
-  involved — volume, cross-volume magic, per-entry volume — "meaning not
-  entirely clear". `macunpack` stores its copy unused. Both sources are
-  now fetched by `tools/fetch_references.sh` as
-  `reference/notes/cpt_specs_theunarchiver.md` and
-  `cpt_users_guide.txt`, the second being the author's own manual, which
-  documents what the scheme PROMISES even though no one documents its
-  bytes: at most 255 segments, each an ordinary Macintosh file; names
-  and locations chosen freely, "since Compact Pro saves information
-  inside the files to determine their proper ordering"; and the FINAL
-  segment is the one you open. Measured here, 2026-08-13: the
-  cross-volume magic is **distinct in all 68 corpus archives**, so it is
-  a per-archive identifier rather than a constant — which is what a set
-  identity looks like and matches what the manual says the files carry.
-  On the project's own ranking rule that makes this scheme StuffIt-like
-  (identity is content, not name) rather than zip-like, and it is
-  therefore worth more than its position in this list suggests.
-  **Specimens now exist** (2026-08-14): `tools/vmac/cptsegment.py` drives
-  Compact Pro 1.51 itself on System 6.0.8 under Mini vMac and cuts an
-  archive the suite already adjudicates into a real segmented set. Two
-  shapes, and both answer what the documentation does not — every
-  segment carries the 8-byte header, an entry is addressed as (volume,
-  offset within that volume's file), and the concatenated payloads are
-  byte-identical to the source archive's data region (DECISIONS.md
-  2026-08-14). **What is left is the parser and the CLI**, plus a Python
-  generator for the suite validated against those specimens. The
-  specimens themselves are not committed, for the reason no fixture is:
-  they are cut from copyrighted archives, and the script remakes them.
-- **Zip64 spanned sets are refused, not read.** An end-of-central-directory
-  record whose disk number is `0xFFFF` defers to the zip64 locator,
-  which nothing here parses; `unc_zipseg_describe` answers
-  `UNC_ERR_UNSUPPORTED`. Out of reach of the floor target anyway (a
-  2 GB+ archive), and no fixture exists.
+  reason to wait is gone** (2026-08-09): every reader here hits the
+  floor its archives allow — 6 opens with 1 backward crossing on a
+  5-part zip set, 5/1 on a 4-segment Compact Pro one — so the shape a
+  user would see is "insert the last disk, then disks 1 to N in order",
+  which is what a PC did with these in the 1990s.
+
+  Left over for all three: what the "locate part N" alert should say for
+  a scheme where a part cannot be checked before it is used. The
+  application carries the code regardless — its payload went 76,800 →
+  78,208 B on 2026-08-09, 79,360 B on 2026-08-10 and 80,640 B on
+  2026-08-14, which is noise against the floor target's ~700 KB of free
+  heap but is the honest price of the engine being shared.
 - **Parts inside envelopes: done for StuffIt, and only there**
   (2026-08-13). `Archive.sit.1.hqx` joins — the Linux CLI takes the
   envelope off each part before the join, and only when the set is
@@ -165,6 +137,14 @@ would cost.
 
 ## 5. Deliberate gaps, and remedies ruled out by measurement
 
+- **Zip64 spanned sets, out of scope as of 2026-08-14.** An
+  end-of-central-directory record whose disk number is `0xFFFF` defers to
+  the zip64 locator, which nothing here parses; `unc_zipseg_describe`
+  answers `UNC_ERR_UNSUPPORTED`. It was ranked as a gap until somebody
+  asked the obvious question: zip64 postdates every machine this project
+  targets by a decade, a set that needs it is 2 GB+, and no archive of
+  the era could be one. Refusing it cleanly is the right answer, not a
+  missing feature.
 - **Out of scope by the brief, and still out:** compression, StuffIt X
   (`.sitx`), encrypted archives, disk-image extraction, Now Compress, and
   LZH *extraction* — LZH was the optional half of M8 and is detect-only

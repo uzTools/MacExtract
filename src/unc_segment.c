@@ -91,6 +91,13 @@ int unc_segment_describe(UncIO *io, UncSegmentDesc *desc)
      * scheme has to hunt backwards from the end of the file. */
     err = unc_sitseg_describe(io, desc);
     if (err == UNC_OK) return UNC_OK;
+    /* Compact Pro next: like StuffIt it decides on a header at offset 0,
+     * where the zip scheme has to hunt backwards from the end. Unlike
+     * StuffIt, a part that is not the LAST one answers with nparts == 0
+     * — it knows the set it belongs to but not how big the set is, and
+     * the host is expected to go and find the final segment. */
+    err = unc_cptseg_describe(io, desc);
+    if (err == UNC_OK) return UNC_OK;
     return unc_zipseg_describe(io, desc);
 }
 
@@ -189,7 +196,15 @@ static int seg_locate(SegJoin *j, uint32_t at)
 /* Position at `off` within `part`, rolling into later parts when `off`
  * runs past the end of one. Rolling is what lets a caller skip a
  * variable-length field — a local header's name and extra — without
- * knowing whether the skip crosses a cut. */
+ * knowing whether the skip crosses a cut.
+ *
+ * `head_len` is what a part costs before its payload starts: 0 for a
+ * spanned zip, whose parts simply concatenate, and 8 for Compact Pro,
+ * where every segment repeats the archive header. Rolling into a part
+ * therefore lands on head_len, not on 0 — and getting that wrong is
+ * invisible until an entry happens to straddle a cut, which is why the
+ * first version passed 9 of 11 entries and failed exactly the two that
+ * do (2026-08-14). */
 static int seg_seek_part(void *ctx, int part, uint32_t off)
 {
     SegJoin *j = (SegJoin *)ctx;
@@ -201,6 +216,7 @@ static int seg_seek_part(void *ctx, int part, uint32_t off)
         if (off < j->cursize) break;
         if (part >= j->last) { j->off = j->cursize; return UNC_OK; }  /* EOF */
         off -= j->cursize;
+        off += j->desc->head_len;
         part++;
     }
     j->off = off;
@@ -238,7 +254,7 @@ static int32_t seg_read_addressed(SegJoin *j, void *buf, int32_t len)
         err = seg_open(j, j->curpart + 1);
         if (err == UNC_ERR_SEGMENTED) { j->err = err; return 0; }
         if (err != UNC_OK) { j->err = err; return -1; }
-        j->off = 0;
+        j->off = j->desc->head_len;      /* past that part's own header */
     }
 
     avail = j->cursize - j->off;
@@ -341,7 +357,8 @@ int unc_extract_segments(const UncSegmentDesc *desc, UncVolumeSource *vs,
     if (!desc || !vs || !vs->need || !scratch || !sink || !al)
         return UNC_ERR_IO;
     if (desc->scheme != UNC_FORMAT_SITSEG && desc->scheme != UNC_FORMAT_ZIPSEG
-        && desc->scheme != UNC_FORMAT_SPLIT)
+        && desc->scheme != UNC_FORMAT_SPLIT
+        && desc->scheme != UNC_FORMAT_CPTSEG)
         return UNC_ERR_UNSUPPORTED;
     if (desc->nparts > UNC_SEG_MAX_PARTS) return UNC_ERR_UNSUPPORTED;
     /* Neither a size nor a count is a set nobody can tell the end of. */
@@ -352,7 +369,8 @@ int unc_extract_segments(const UncSegmentDesc *desc, UncVolumeSource *vs,
     j->vs = vs;
     j->curpart = 0;
     j->cursize = 0;
-    j->addressed = (desc->scheme == UNC_FORMAT_ZIPSEG);
+    j->addressed = (desc->scheme == UNC_FORMAT_ZIPSEG ||
+                    desc->scheme == UNC_FORMAT_CPTSEG);
     j->start[1] = 0;
     j->known = 1;
     j->total = desc->total;
@@ -414,6 +432,8 @@ int unc_extract_segments(const UncSegmentDesc *desc, UncVolumeSource *vs,
 
     if (desc->scheme == UNC_FORMAT_ZIPSEG)
         ret = unc_zip_extract(&c);
+    else if (desc->scheme == UNC_FORMAT_CPTSEG)
+        ret = unc_cpt_extract(&c);
     else
         ret = unc_sitseg_emit(&c, j->desc, 0);   /* SPLIT: the copy above */
     seg_release(j);

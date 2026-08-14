@@ -1393,7 +1393,7 @@ nextlayer:
         fprintf(stderr, "%s: %s\n", file, unc_format_name(fmt));
 
     if ((fmt == UNC_FORMAT_SITSEG || fmt == UNC_FORMAT_ZIPSEG ||
-         fmt == UNC_FORMAT_SPLIT) && !no_parts) {
+         fmt == UNC_FORMAT_SPLIT || fmt == UNC_FORMAT_CPTSEG) && !no_parts) {
         UncVolumeSource vs;
         void *scratch;
 
@@ -1486,6 +1486,97 @@ nextlayer:
             seg.desc.nparts = (uint16_t)run;
             if (verbose)
                 fprintf(stderr, "%s: %d parts\n", seg.desc.name, run);
+        } else if (fmt == UNC_FORMAT_CPTSEG) {
+            /* Every segment carries the set's identity, so discovery is
+             * by CONTENT exactly as it is for StuffIt — a set whose
+             * parts are scattered and named unlike each other works, and
+             * the author's manual says as much ("the names of the files
+             * are not important"). What is special is that only the
+             * FINAL segment says how many there are, by being the one
+             * that carries the index. So: identify the set from whatever
+             * part we were given, collect the rest, then take the count
+             * from the final one. */
+            int i2, fin = 0;
+            char dirbuf[1024];
+            const char *base;
+
+            if (unc_segment_describe(&io, &seg.desc) != UNC_OK) {
+                fprintf(stderr, "unclassic: %s: not a readable segment "
+                        "header\n", file);
+                fclose(fio.f);
+                return 1;
+            }
+            seg_record(&seg, (int)seg.desc.part, file);
+            for (i = 0; i < nparts; i++) {
+                int p = seg_part_of(&seg, partargs[i]);
+                if (p) seg_record(&seg, p, partargs[i]);
+                else fprintf(stderr, "unclassic: %s: not a segment of this "
+                             "set, ignored\n", partargs[i]);
+            }
+            seg_scan_dir(&seg, file, 0);
+
+            /* Which of them is the last? The one whose header names an
+             * index. Asking each is an 8-byte read, and it is the only
+             * way round: nothing else in the set states the count. */
+            if (seg.desc.nparts == 0) {
+                for (i2 = 1; i2 <= UNC_SEG_MAX_PARTS && !fin; i2++) {
+                    UncSegmentDesc cand;
+                    FILE *cf;
+                    FileIO cio_f;
+                    UncIO cio;
+                    struct stat cst;
+                    if (!seg.path[i2]) continue;
+                    cf = fopen(seg.path[i2], "rb");
+                    if (!cf) continue;
+                    memset(&cio_f, 0, sizeof cio_f);
+                    cio_f.f = cf;
+                    cio_f.size = stat(seg.path[i2], &cst) == 0
+                                 ? (uint32_t)cst.st_size : UNC_SIZE_UNKNOWN;
+                    cio.ctx = &cio_f;
+                    cio.read = fio_read;
+                    cio.seek = fio_seek;
+                    cio.tell = fio_tell;
+                    cio.size = fio_size;
+                    if (unc_segment_describe(&cio, &cand) == UNC_OK &&
+                        cand.nparts)
+                        { seg.desc = cand; fin = i2; }
+                    fclose(cf);
+                }
+                if (!fin) {
+                    fprintf(stderr, "unclassic: %s: this is one segment of a "
+                            "Compact Pro set; the last segment, the one "
+                            "holding the index, is not beside it\n", file);
+                    fclose(fio.f);
+                    return 1;
+                }
+            }
+
+            /* Now that the count is known, every part is re-checked
+             * against the full rule: a middle segment must not carry an
+             * index and the last one must, which is more than the
+             * identity alone could ask (fmt_cptseg.c). */
+            for (i2 = 1; i2 <= UNC_SEG_MAX_PARTS; i2++) {
+                if (!seg.path[i2]) continue;
+                if (seg_part_of(&seg, seg.path[i2]) == i2) continue;
+                if (verbose)
+                    fprintf(stderr, "part %d: %s no longer matches the set, "
+                            "dropped\n", i2, seg.path[i2]);
+                free(seg.path[i2]);
+                seg.path[i2] = NULL;
+            }
+
+            /* The format stores no name for the original archive, so
+             * the prompt borrows the opened file's, for display only. */
+            base = strrchr(file, '/');
+            base = base ? base + 1 : file;
+            snprintf(dirbuf, sizeof dirbuf, "%s", base);
+            {
+                size_t n = strlen(dirbuf);
+                if (n > UNC_NAME_MAX) n = UNC_NAME_MAX;
+                memcpy(seg.desc.name, dirbuf, n);
+                seg.desc.name[n] = 0;
+                seg.desc.name_len = (uint16_t)n;
+            }
         } else if (fmt == UNC_FORMAT_ZIPSEG) {
             /* Only the LAST part carries the part count, so it has to be
              * found before anything else can be — and for this scheme

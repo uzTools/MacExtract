@@ -409,6 +409,47 @@ record says it starts, then visit each entry in the order listed,
 rolling forward while its data spills into the next part — and the
 measured count must equal it exactly.
 
+### Compact Pro segments (`tools/synth_cptsplit.py`, same runner)
+
+Two cases, and the adjudication chain is what makes them worth
+anything: a set is cut from an archive the differential suite ALREADY
+grades against `unar` and `macunpack`, so "the set holds what the
+archive held" rests on nothing this scheme wrote. `cpt4` has folders
+and entries either side of a cut; `cpt5` holds one entry whose data
+crosses every boundary.
+
+**The oracle appears for what it cannot do**, which is why this scheme
+needed a specimen at all. Given the final segment `unar` calls the file
+a whole Compact Pro archive — `lsar` agrees — reads every entry at an
+offset belonging to another volume, fails most of them, writes the rest
+as garbage and exits 0. Given the first segment it says "Couldn't
+recognize the archive format" and also exits 0. Both are asserted, so
+if the reference ever learns the scheme this repository finds out.
+
+Beyond byte-exactness: **any** segment opens the set (the application
+itself requires the final one); a segment of ANOTHER set, put in place
+of the missing one, is refused by its identity; a missing segment fails;
+`--no-parts` refuses.
+
+**Part opens are asserted against a floor**, derived in Python from the
+archive's own directory the way `zip_floor()` is — the index is in the
+last segment, then entries are visited in directory order, rolling
+forward while their data spills. 5 opens with 1 backward crossing on
+`cpt4`, 6/1 on `cpt5`.
+
+**And the same case runs one byte under its own high-water mark**, which
+lands on the index buffer because that is allocated last. Refused, the
+walk reads each record where it lies: `cpt4` goes 5/1 → **19/8** with a
+byte-identical tree. Both halves are asserted, so neither the
+optimisation nor its fallback can quietly stop working.
+
+**What this layer cannot see:** the Mac shell, and anything about how
+Compact Pro actually writes a set. The second is covered by
+`tools/vmac/cptsegment.py --verify`, which requires the generator above
+to reproduce two real sets — cut by Compact Pro 1.51 under Mini vMac —
+byte for byte, and by the suite extracting those real sets when they
+are present on the machine.
+
 ### Parts inside envelopes (`tools/synth_wrapped.py`, same runner)
 
 Three cases, and they are the same StuffIt sets with a BinHex or

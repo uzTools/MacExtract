@@ -58,6 +58,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-10 — `.NNN` splits: the payload is the adjudicator
 - 2026-08-13 — parts inside envelopes, and rationing the search
 - 2026-08-14 — Compact Pro segments: the layout, derived from specimens
+- 2026-08-14 — reading a Compact Pro set: addressed mode, and the index
 
 ---
 
@@ -2670,3 +2671,58 @@ version does not recognize". Six minutes of emulator to learn what the
 first two bytes say. The harness now refuses a source that does not
 begin `01 01`, and the corpus's `derived-*.cpt` copies are the unwrapped
 ones. **A fixture's extension is a claim about it, not a fact.**
+
+## 2026-08-14 — reading a Compact Pro set: addressed mode, and the index
+
+The layout was derived the day before; this is what reading it took.
+
+**It is the ADDRESSED mode, not the flat one.** A Compact Pro entry
+carries the volume its data lives in and the offset within that
+volume's file, so the pairs are already there and flattening them would
+mean measuring every segment before extraction began — the prepass that
+mode exists to avoid (DECISIONS.md 2026-08-09). The reader positions at
+(volume, offset) and rolls forward, exactly as the zip reader does, and
+`unc_cpt_extract` gained the same two helpers `zip_seek`/`zip_skip` are.
+
+**Rolling into the next part starts at `head_len`, not at 0.** A spanned
+zip's parts concatenate with nothing to strip; every Compact Pro segment
+repeats the 8-byte archive header. The first version rolled to 0 and
+**9 of 11 entries came out byte-exact** — the two that failed were
+exactly the two whose data crosses a cut. A bug that only shows on
+straddling entries is invisible in any archive small enough to fit in
+one segment, which is most of them.
+
+**The index is read once, and that is worth an allocation.** Every
+entry's record lives in the final segment and its forks live wherever
+the entry is, so walking record-by-record alternates between two
+segments — 19 part opens with 8 backward crossings on a 4-segment set
+whose floor is 5 and 1. On a floppy each of those is a disk swap. The
+index is now buffered for the walk, and the suite requires the measured
+opens to equal a floor derived in Python from the archive's own
+directory.
+
+**It is allocated LAST, after the working buffers, and that is not an
+implementation detail.** Allocated first it would compete for memory the
+decode genuinely needs, and on a small machine a large index would
+starve a small archive. Last, it takes what is left: refused, the walk
+reads each record where it lies and produces the same bytes for more
+crossings. Measured at one byte under the run's own high-water mark:
+5/1 becomes 19/8, tree identical, and `ci.sh` asserts both halves.
+**An optimisation that can starve the thing it optimises is not one.**
+
+**What `unar` does with a set, measured 2026-08-14.** Given the final
+segment it calls the file a whole Compact Pro archive — `lsar` agrees —
+reads every entry at an offset belonging to another volume, fails most
+of them with "Attempted to read more data than was available", writes
+the rest as garbage, and **exits 0**. Given the first segment it says
+"Couldn't recognize the archive format" and also exits 0. That is why
+the segment probe runs before the plain one in `unc_sniff`: the final
+segment of a set is exactly the file a user opens, and it is the one
+that most looks like an ordinary archive. Asserted in the suite, so if
+the reference ever learns the scheme this repository finds out.
+
+**Any segment opens the set, which the application itself cannot do.**
+The manual is explicit that "you must open the FINAL segment"; every
+segment carries the set identity, so a reader that discovers by content
+has no reason to require one in particular. Opening parts 1, 2 and 3 of
+a 4-segment set gives the same tree as opening part 4.

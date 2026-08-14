@@ -22,6 +22,7 @@ whole corpus for that format (engine allocations only, via
 | Tar (ustar/v7) | extract | — (links reported unsupported) | 3 fixtures (2 real 1990 v7 tars) + unit tests | 8 KB | full |
 | StuffIt segment (multi-part) | extract | — (join only; the joined file is the next layer) | 7 synthetic sets, oracle-adjudicated, + 3 with each part in its own envelope (CLI only) | 8 KB | full |
 | Zip segment (spanned, .z01…/.zip) | extract | store, deflate — the zip reader, over the joined parts | 5 generated sets, adjudicated 4 ways (source tree, `unar`, us split, us unsplit) | 12–13 KB¶ | full |
+| Compact Pro segment (multi-part) | extract | RLE / LZH+RLE — the Compact Pro reader, over the segments | 2 generated sets + 2 cut by Compact Pro 1.51 itself | 20 KB | full |
 | Split file (plain .001/.002) | extract | — (join only; the joined file is the next layer) | 3 generated sets, adjudicated against the bytes that were cut, `unar` where it can join, and our unsplit read | 8 KB | full |
 | StuffIt X (.sitx) | detect only | — | — | — | — |
 | DiskDoubler (DD, DDAR, DDA2) | detect only | — | 4 sniffed | — | — |
@@ -222,6 +223,39 @@ directories all join byte-exact; `unar` handed part 1 of such a set
 unwraps that part alone and exits 0. Not in the Mac shell, and not for
 the two name-placed schemes (DECISIONS.md 2026-08-13, OPEN_ITEMS.md
 section 4).
+
+### Compact Pro segments
+
+The one scheme whose layout is derived rather than transcribed: nothing
+documents it, so it was measured on sets cut by Compact Pro 1.51 itself
+(`tools/vmac/cptsegment.py`, DECISIONS.md 2026-08-14). Every segment
+carries the same 8-byte header an ordinary archive has — signature,
+volume, a 16-bit set identity shared by the whole set, and an index
+offset that is 0 in all but the LAST segment. `src/fmt_cptseg.c` has the
+layout and what would falsify it.
+
+**Identity is content, not name** (the author's manual: "the names of the
+files are not important"), so discovery matches headers exactly as it
+does for StuffIt, and **any** segment opens the set — the application
+itself requires the final one. An entry is addressed as (volume, offset
+within that volume's file), so this reads in the same addressed mode as
+a spanned zip.
+
+Part opens (backward), measured, beside the floor each archive's own
+directory permits — `run_segments.py` derives that floor independently:
+
+| case | segments | measured = floor | without the index buffer |
+|---|---|---|---|
+| `cpt4` (9 files, folders) | 4 | 5 opens, 1 backward | 19 opens, 8 backward |
+| `cpt5` (one entry) | 5 | 6, 1 | 6, 1 |
+
+The last column is the fallback when the index allocation is refused:
+same bytes, more crossings (DECISIONS.md 2026-08-14). Peak heap ~20 KB,
+the ordinary Compact Pro reader's 16 KB of buffers plus the index.
+
+`unar` cannot read one: given the final segment it calls it a whole
+archive and writes garbage with exit 0 (MEASURED, and asserted by the
+suite).
 
 ### Spanned ("split") zip — `NAME.z01` … `NAME.zip`
 

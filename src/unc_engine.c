@@ -40,6 +40,7 @@ static const UncFormatDesc unc_formats[] = {
      * and there is no header to read it as. The host decides by name
      * and calls unc_extract_segments. */
     { UNC_FORMAT_SPLIT,       "Split file",      1 },
+    { UNC_FORMAT_CPTSEG,      "Compact Pro segment", 1 },
 };
 
 const char *unc_format_name(UncFormat f)
@@ -129,6 +130,13 @@ UncFormat unc_sniff(UncIO *io)
     }
 
     /* Weaker/structural probes. */
+    /* Before the plain Compact Pro probe, and for the same reason the
+     * spanned-zip probe precedes the zip one: the FINAL segment of a set
+     * carries a valid index and would be claimed as a whole archive,
+     * which would then read every entry at an offset belonging to some
+     * other volume. What separates them is the volume byte and the index
+     * offset, and only this probe looks at those. */
+    if (unc_cptseg_probe(head, len, io)) return UNC_FORMAT_CPTSEG;
     if (unc_cpt_probe(head, len, io))   return UNC_FORMAT_COMPACTPRO;
     if (unc_tar_probe(head, len))       return UNC_FORMAT_TAR;
     if (unc_diskcopy_probe(head, len, io)) return UNC_FORMAT_DISKCOPY;

@@ -57,14 +57,16 @@ Every oracle call here therefore passes an ABSOLUTE path.
 
 Usage: run_segments.py [--unclassic build/dev/unclassic] [--case NAME]
 """
-import argparse, os, re, shutil, struct, subprocess, sys, tempfile
+import argparse, glob, json, os, re, shutil, struct, subprocess, sys, tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+FIXDIR = os.path.join(os.path.dirname(HERE), "fixtures")
 sys.path.insert(0, HERE)
 import synth_sitsplit as synth
 import synth_zipsplit as zsynth
 import synth_split as ssynth
 import synth_wrapped as wsynth
+import synth_cptsplit as csynth
 from make_manifests import parse_appledouble
 
 
@@ -740,6 +742,238 @@ def split_behaviours(unclassic, case, d, kind, whole, parts, original,
                 "%s: the set did not survive the mutation tests" % case)
 
 
+# --- Compact Pro segments -------------------------------------------------
+
+
+CPT_CASES = {
+    "cpt4": ("derived-Education7.1.cpt", 24576,
+             "folders, and entries either side of a cut"),
+    "cpt5": ("derived-BiPlane__2_Share.cpt", 24576,
+             "ONE entry, whose data crosses every boundary"),
+}
+
+SPECIMENS = os.path.join(
+    os.environ.get("UNC_VMAC_HOME",
+                   os.path.expanduser("~/.cache/unclassic/vmac")), "specimens")
+
+
+def cpt_parts(d):
+    return sorted(glob.glob(os.path.join(d, "*.cpt.#*")),
+                  key=lambda p: int(p.rsplit("#", 1)[1]))
+
+
+def cpt_floor(fixture_path, seg_size):
+    """The fewest segment opens the format allows, derived in Python from
+    the archive's OWN directory rather than asked of the engine.
+
+    The index is in the last segment, so that one is opened first; then
+    the entries are visited in directory order, each starting in the
+    segment its (volume, offset) names and rolling forward while its
+    data spills into the next. Same reasoning as zip_floor(), and for
+    the same reason: a floor the engine calculates is a floor the engine
+    cannot fail to meet.
+    """
+    src = open(fixture_path, "rb").read()
+    idx, ents, _end = csynth.parse_index(src)
+    body = seg_size - csynth.HDR
+    payload = len(src) - csynth.HDR
+    nseg = max(1, (payload + body - 1) // body)
+    def vol_of(flat):
+        return min(nseg, flat // body + 1)
+    seq = [nseg]
+    for kind, _name, _vol, off, at in ents:
+        if kind != "f":
+            continue
+        # rsrc+data run consecutively from the entry's offset
+        j = ents.index((kind, _name, _vol, off, at))
+        start = off - csynth.HDR
+        span = 0
+        # lengths live in the 45-byte record; re-read them here
+        nl = src[at]
+        q = at + 1 + (nl & 0x7f) + 1
+        rcl, dcl = struct.unpack(">II", src[q + 36:q + 44])
+        span = rcl + dcl
+        if span == 0:
+            continue
+        first, last = vol_of(start), vol_of(start + span - 1)
+        seq.extend(range(first, last + 1))
+    opens = 1
+    back = 0
+    for a, b in zip(seq, seq[1:]):
+        if b != a:
+            opens += 1
+            if b < a:
+                back += 1
+    return opens, back
+
+
+def cpt_case_run(unclassic, case, workroot, fails):
+    """A segmented Compact Pro set, cut in Python the way the application
+    cuts one.
+
+    Adjudicated against the archive it was cut FROM — which the
+    differential suite already grades against `unar` and `macunpack` —
+    so nothing here rests on the segment code being right. The oracle
+    appears for what it CANNOT do, which is the reason this scheme
+    needed generating in the first place: handed the final segment,
+    `unar` calls it a whole Compact Pro archive, reads every entry at an
+    offset belonging to another volume, and exits 0 having written
+    garbage (MEASURED 2026-08-14).
+    """
+    fixture, seg_size, _why = CPT_CASES[case]
+    src = os.path.join(FIXDIR, fixture)
+    if not os.path.exists(src):
+        print(f"run_segments: SKIP {case} ({fixture} absent)")
+        return None
+    d = os.path.join(workroot, case)
+    os.makedirs(d)
+    setdir = os.path.join(d, "set")
+    csynth.write_set(src, setdir, seg_size, base="Source.cpt")
+    parts = cpt_parts(setdir)
+    if not fails.check(len(parts) > 1, "%s: nothing was segmented" % case):
+        return None
+
+    # What the archive holds, by a path with no joiner in it.
+    rc, out = run_full(unclassic, src, os.path.join(d, "_whole"))
+    fails.check(rc == 0, "%s: the unsegmented archive failed: %s"
+                % (case, out.strip()))
+    want = read_tree(os.path.join(d, "_whole"))
+
+    rc, out = run_full(unclassic, parts[-1], os.path.join(d, "_ours"))
+    fails.check(rc == 0, "%s: the segmented set failed: %s" % (case, out.strip()))
+    got = read_tree(os.path.join(d, "_ours"))
+    fails.check(got == want,
+                "%s: the set does not hold what the archive did: %s vs %s"
+                % (case, sorted(got), sorted(want)))
+
+    # The oracle, for what it does. If this ever starts agreeing, unar
+    # has learned the scheme and OPEN_ITEMS.md wants revisiting.
+    rc, out = oracle_extract(parts[-1], os.path.join(d, "_oracle"))
+    got_oracle = read_tree(os.path.join(d, "_oracle"), appledouble=True)
+    fails.check(got_oracle != want,
+                "%s: the oracle read a segmented set correctly after all"
+                % case)
+    return d, setdir, parts, want
+
+
+def cpt_behaviours(unclassic, case, d, setdir, parts, want, workroot, fails):
+    fixture, seg_size, _why = CPT_CASES[case]
+
+    # ANY segment reaches the set. The application itself requires the
+    # final one ("you must open the FINAL segment"); every part carries
+    # the set's identity, so there is no reason a reader should.
+    for i in (0, len(parts) // 2):
+        dest = os.path.join(d, "_from%d" % (i + 1))
+        rc, out = run_full(unclassic, parts[i], dest)
+        fails.check(rc == 0 and read_tree(dest) == want,
+                    "%s: opening segment %d gave a different result: %s"
+                    % (case, i + 1, out.strip()))
+
+    # A segment of ANOTHER set, named exactly like the missing one. The
+    # identity is two bytes, so this is the check that has to hold.
+    other = os.path.join(d, "_other")
+    os.makedirs(other, exist_ok=True)
+    alt = os.path.join(FIXDIR, CPT_CASES["cpt5" if case == "cpt4" else "cpt4"][0])
+    if os.path.exists(alt):
+        csynth.write_set(alt, other, seg_size, base="Other.cpt")
+        decoy = os.path.join(d, "_decoy")
+        shutil.copytree(setdir, decoy)
+        victim = os.path.basename(parts[1])
+        os.remove(os.path.join(decoy, victim))
+        shutil.copyfile(cpt_parts(other)[1], os.path.join(decoy, victim))
+        rc, out = run_full(unclassic, os.path.join(decoy, os.path.basename(parts[-1])),
+                           os.path.join(d, "_decoyout"))
+        fails.check(rc != 0, "%s: a segment of another set was accepted" % case)
+        fails.check("segment" in out.lower(),
+                    "%s: foreign segment reported as %r" % (case, out.strip()))
+
+    # A missing middle segment, and --no-parts.
+    gap = os.path.join(d, "_gap")
+    shutil.copytree(setdir, gap)
+    os.remove(os.path.join(gap, os.path.basename(parts[1])))
+    rc, out = run_full(unclassic, os.path.join(gap, os.path.basename(parts[-1])),
+                       os.path.join(d, "_gapout"))
+    fails.check(rc != 0, "%s: a missing segment must fail" % case)
+    rc, out = run_full_with(unclassic, parts[-1], os.path.join(d, "_np"),
+                            ["--no-parts"])
+    fails.check(rc != 0, "%s: --no-parts must not extract a set" % case)
+
+    # The index buffer is an allocation, so it can be refused — and then
+    # the walk reads each record where it lies, which costs part opens
+    # and changes nothing else. Run one byte under the run's own
+    # high-water mark, which lands on exactly that block because it is
+    # allocated last (src/fmt_cpt.c).
+    r = run([unclassic, "x", "--forks", "hidden", "--stats", "-o",
+             os.path.join(d, "_hw"), os.path.abspath(parts[-1])])
+    hw = re.search(r"high-water (\d+)", r.stdout.decode("utf-8", "replace"))
+    if fails.check(bool(hw), "%s: --stats printed no high-water" % case):
+        dest = os.path.join(d, "_tight")
+        rc, out = run_full_with(unclassic, parts[-1], dest,
+                                ["--stats", "--budget",
+                                 str(int(hw.group(1)) - 1)])
+        fails.check(rc == 0, "%s: refusing the index buffer broke the read: %s"
+                    % (case, out.strip()))
+        fails.check(read_tree(dest) == want,
+                    "%s: the record-at-a-time walk gave different bytes" % case)
+        tight = re.search(r"segments: (\d+) part opens, (\d+)", out)
+        if fails.check(bool(tight),
+                       "%s: no segment stats under the tight budget" % case):
+            print("  %-7s without the index buffer: %s part opens, %s backward"
+                  % (case + ":", tight.group(1), tight.group(2)))
+            fails.check("1 refused" in out,
+                        "%s: the tight budget refused nothing, so the "
+                        "fallback was never taken" % case)
+
+    # Part opens against a floor derived from the archive's own directory.
+    r = run([unclassic, "x", "--forks", "hidden", "--stats", "-o",
+             os.path.join(d, "_stats"), os.path.abspath(parts[-1])])
+    out = r.stdout.decode("utf-8", "replace")
+    line = [l for l in out.splitlines() if l.startswith("segments:")]
+    floor = cpt_floor(os.path.join(FIXDIR, fixture), seg_size)
+    if fails.check(bool(line), "%s: --stats printed no segment line" % case):
+        got = tuple(int(w) for w in re.findall(r"(\d+) part opens, (\d+)",
+                                               line[0])[0])
+        print("  %-7s %s  (floor: %d part opens, %d backward)"
+              % (case + ":", line[0], floor[0], floor[1]))
+        fails.check(got == floor,
+                    "%s: %d/%d opens against a floor of %d/%d"
+                    % (case, got[0], got[1], floor[0], floor[1]))
+
+
+def cpt_specimens(unclassic, workroot, fails):
+    """The real thing, when it is here: sets cut by Compact Pro 1.51
+    itself (tools/vmac/cptsegment.py). The generator above is checked
+    against these byte for byte by `cptsegment.py --verify`; this checks
+    the READER against them, which is a different question."""
+    if not os.path.isdir(SPECIMENS):
+        print("run_segments: no Compact Pro specimens (tools/vmac/cptsegment.py)")
+        return 0
+    ran = 0
+    for case in sorted(os.listdir(SPECIMENS)):
+        meta_path = os.path.join(SPECIMENS, case, "case.json")
+        if not os.path.exists(meta_path):
+            continue
+        meta = json.load(open(meta_path))
+        src = os.path.join(FIXDIR, meta["source_fixture"])
+        if not os.path.exists(src):
+            continue
+        parts = cpt_parts(os.path.join(SPECIMENS, case))
+        d = os.path.join(workroot, "specimen-" + case)
+        os.makedirs(d)
+        rc, out = run_full(unclassic, src, os.path.join(d, "_whole"))
+        fails.check(rc == 0, "specimen %s: the archive failed" % case)
+        rc, out = run_full(unclassic, parts[-1], os.path.join(d, "_ours"))
+        fails.check(rc == 0, "specimen %s: the real set failed: %s"
+                    % (case, out.strip()))
+        fails.check(read_tree(os.path.join(d, "_ours"))
+                    == read_tree(os.path.join(d, "_whole")),
+                    "specimen %s: the real set gave something else" % case)
+        ran += 1
+        print("  specimen %s: %d segments cut by Compact Pro 1.51 — same bytes"
+              % (case, len(parts)))
+    return ran
+
+
 # --- parts that arrived inside an envelope --------------------------------
 
 
@@ -946,12 +1180,14 @@ def main():
         zipcases = []
     wrapcases = [c for c in (selected or sorted(WRAPPED_CASES))
                  if c in WRAPPED_CASES]
+    cptcases = [c for c in (selected or sorted(CPT_CASES)) if c in CPT_CASES]
     splitcases = [c for c in (selected or sorted(ssynth.CASES))
                   if c in ssynth.CASES]
     if splitcases and not ssynth.available():
         print("run_segments: `zip` not found; skipping the zip5 split case")
         splitcases = [c for c in splitcases if c != "zip5"]
 
+    nspec = 0
     fails = Failures()
     workroot = tempfile.mkdtemp(prefix="unc-seg-")
     try:
@@ -1068,6 +1304,15 @@ def main():
                 zip_behaviours(unclassic, c, d, parts, whole, want,
                                workroot, fails)
 
+        # --- Compact Pro segments ---------------------------------------
+        for c in cptcases:
+            r = cpt_case_run(unclassic, c, workroot, fails)
+            if r:
+                d, setdir, parts, want = r
+                cpt_behaviours(unclassic, c, d, setdir, parts, want,
+                               workroot, fails)
+        nspec = cpt_specimens(unclassic, workroot, fails)
+
         # --- parts inside envelopes -------------------------------------
         for c in wrapcases:
             r = wrapped_case_run(unclassic, c, workroot, fails)
@@ -1091,9 +1336,10 @@ def main():
 
     for f in fails:
         print("FAIL " + f)
-    print("segments: %d StuffIt + %d spanned-zip + %d split + %d wrapped "
-          "cases, %d failures" % (len(cases), len(zipcases), len(splitcases),
-                                  len(wrapcases), len(fails)))
+    print("segments: %d StuffIt + %d spanned-zip + %d split + %d wrapped + "
+          "%d Compact Pro cases, %d failures"
+          % (len(cases), len(zipcases), len(splitcases), len(wrapcases),
+             len(cptcases), len(fails)))
     return 1 if fails else 0
 
 

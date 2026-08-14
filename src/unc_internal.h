@@ -350,6 +350,10 @@ int unc_packit_probe(const uint8_t *head, int32_t len);
 int unc_packit_extract(UncCtx *c);
 int unc_cpt_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_cpt_extract(UncCtx *c);
+int unc_cptseg_probe(const uint8_t *head, int32_t len, UncIO *io);
+int unc_cptseg_describe(UncIO *io, UncSegmentDesc *desc);
+int unc_cptseg_match(const UncSegmentDesc *desc, const uint8_t *head,
+                     int32_t len);
 int unc_sit_probe(const uint8_t *head, int32_t len);       /* classic */
 int unc_sit_extract(UncCtx *c);
 
