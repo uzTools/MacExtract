@@ -1059,6 +1059,12 @@ typedef struct {
     DialogPtr hide;                  /* progress dialog to hide while asking */
     int     asked;                   /* nonzero once the user was involved */
     int     cancelled;               /* user chose Cancel in the alert */
+    /* Name-placed schemes only: the stem the family shares, and the
+     * highest member number seen — which is how a set missing a part in
+     * the middle is told from one that simply ends there. */
+    unsigned char stem[64];
+    short   stemlen;
+    int     highest;
 } SegHost;
 
 /* Read a candidate file's header and return its part number, or 0. */
@@ -1078,6 +1084,238 @@ static int SegPartOf(SegHost *h, short vol, long dir, ConstStr255Param name)
     if (count < (long)sizeof head) return 0;
     part = unc_segment_match(&h->desc, head, (int32_t)count);
     return part;
+}
+
+/* ------------------------------------------------------------------ */
+/* The schemes that are placed by NAME                                 */
+/*                                                                    */
+/* A spanned zip part and a plain .NNN split part carry nothing that   */
+/* says which set they belong to — only the FIRST and LAST parts of a  */
+/* spanned zip are recognizable at all, and a split part is not even   */
+/* that. So the family is decided by filename, exactly as the Linux    */
+/* CLI decides it, and what keeps a wrong file out is not this scan    */
+/* but the check the engine makes on the ASSEMBLED set (unclassic.h,   */
+/* unc_extract_segments). Names propose; content disposes.            */
+/*                                                                    */
+/* Filenames here are Str63 — a length byte and MacRoman bytes — so    */
+/* the comparisons are written out rather than borrowed from a libc    */
+/* this application does not link.                                     */
+/* ------------------------------------------------------------------ */
+
+#define kZipFamLast (-1)          /* the ".zip" member, whose number is N */
+
+static void SegRemember(SegHost *h, int part, short vol, long dir,
+                        ConstStr255Param name);
+
+static short PLowerByte(short c)
+{
+    return (c >= 'A' && c <= 'Z') ? (short)(c - 'A' + 'a') : c;
+}
+
+/* Length of `nm` up to its LAST '.', or 0 if it has none. That is the
+ * stem a family shares: "Archive.zip" and "Archive.z01" share
+ * "Archive", and "Set.001" and "Set.002" share "Set". */
+static short PStemLen(ConstStr255Param nm)
+{
+    short i, dot = 0;
+    for (i = 1; i <= (short)nm[0]; i++)
+        if (nm[i] == '.') dot = i;
+    return dot ? (short)(dot - 1) : 0;
+}
+
+static int PStemMatches(const unsigned char *stem, short stemlen,
+                        ConstStr255Param nm)
+{
+    short i;
+    if ((short)nm[0] < stemlen + 2) return 0;      /* stem + '.' + one */
+    if (nm[stemlen + 1] != '.') return 0;
+    for (i = 0; i < stemlen; i++)
+        if (PLowerByte(stem[i]) != PLowerByte(nm[i + 1])) return 0;
+    return 1;
+}
+
+/* Which member of the zip family `nm` is: NN for ".zNN", kZipFamLast
+ * for ".zip", 0 for anything else. Source for the naming: the volume
+ * regex in reference/XADMaster/XADZipParser.m, ^NAME\.(zip|z[0-9]{2})$,
+ * matched case-insensitively. */
+static int ZipFamPartOf(const unsigned char *stem, short stemlen,
+                        ConstStr255Param nm)
+{
+    short ext = stemlen + 2;                       /* first byte after '.' */
+    if (!PStemMatches(stem, stemlen, nm)) return 0;
+    if ((short)nm[0] == ext + 2 &&
+        PLowerByte(nm[ext]) == 'z' && PLowerByte(nm[ext + 1]) == 'i' &&
+        PLowerByte(nm[ext + 2]) == 'p')
+        return kZipFamLast;
+    /* ext is the INDEX of the first extension byte, so a three-byte
+     * extension ends at ext+2 and the name is ext+2 long — the same
+     * arithmetic the ".zip" test above uses. Written ext+1 here at
+     * first, which matched nothing: the .zip member was found, the
+     * numbered parts were not, and the set failed as damaged rather
+     * than as incomplete. The .NNN scheme was right, so a passing
+     * split case said nothing about this one. */
+    if ((short)nm[0] == ext + 2 && PLowerByte(nm[ext]) == 'z' &&
+        nm[ext + 1] >= '0' && nm[ext + 1] <= '9' &&
+        nm[ext + 2] >= '0' && nm[ext + 2] <= '9') {
+        int n = (nm[ext + 1] - '0') * 10 + (nm[ext + 2] - '0');
+        return n >= 1 ? n : 0;                     /* there is no part zero */
+    }
+    return 0;
+}
+
+/* Which member of a .NNN split `nm` is, or 0. Three digits exactly, and
+ * ".000" is not one: reference/XADMaster/XADSplitFileParser.m. */
+static int SplitPartOf(const unsigned char *stem, short stemlen,
+                       ConstStr255Param nm)
+{
+    short ext = stemlen + 2;
+    short i;
+    int n = 0;
+    if (!PStemMatches(stem, stemlen, nm)) return 0;
+    if ((short)nm[0] != ext + 2) return 0;
+    for (i = 0; i < 3; i++) {
+        if (nm[ext + i] < '0' || nm[ext + i] > '9') return 0;
+        n = n * 10 + (nm[ext + i] - '0');
+    }
+    return n >= 1 ? n : 0;
+}
+
+/* Walk one folder and record every member of the family, by name. The
+ * zip family's ".zip" member is the LAST part, and its number is only
+ * known once that part has been read, so it is reported separately. */
+static void SegScanFamily(SegHost *h, short vol, long dir, int split,
+                          Str63 lastName)
+{
+    CInfoPBRec pb;
+    Str63 nm;
+    short idx;
+    long z;
+
+    lastName[0] = 0;
+    for (idx = 1; idx < 32767; idx++) {
+        for (z = 0; z < (long)sizeof pb; z++) ((char *)&pb)[z] = 0;
+        nm[0] = 0;
+        pb.hFileInfo.ioNamePtr = nm;
+        pb.hFileInfo.ioVRefNum = vol;
+        pb.hFileInfo.ioDirID = dir;
+        pb.hFileInfo.ioFDirIndex = idx;
+        if (PBGetCatInfoSync(&pb) != noErr) break;
+        if (pb.hFileInfo.ioFlAttrib & 0x10) continue;         /* a folder */
+        {
+            int part = split ? SplitPartOf(h->stem, h->stemlen, nm)
+                             : ZipFamPartOf(h->stem, h->stemlen, nm);
+            if (part == kZipFamLast) {
+                for (z = 0; z <= (long)nm[0]; z++) lastName[z] = nm[z];
+                continue;
+            }
+            if (part >= 1) {
+                SegRemember(h, part, vol, dir, nm);
+                if (part > h->highest) h->highest = part;
+                h->psize[part <= kSegMaxKnown ? part : 0] = 0;
+            }
+        }
+    }
+}
+
+/* The length of a part, without opening it: a directory lookup, which
+ * on a hard disk is free and on a floppy costs nothing the user can
+ * see. A plain split needs every one of them before extraction starts,
+ * because the sum IS the joined length and nothing else states it
+ * (DECISIONS.md 2026-08-10). */
+static uint32_t SegPartLength(SegHost *h, int part)
+{
+    CInfoPBRec pb;
+    Str63 nm;
+    long z;
+    short i;
+
+    if (part < 1 || part > kSegMaxKnown || !h->loc[part].name[0])
+        return UNC_SIZE_UNKNOWN;
+    for (z = 0; z < (long)sizeof pb; z++) ((char *)&pb)[z] = 0;
+    for (i = 0; i <= (short)h->loc[part].name[0]; i++)
+        nm[i] = h->loc[part].name[i];
+    pb.hFileInfo.ioNamePtr = nm;
+    pb.hFileInfo.ioVRefNum = h->loc[part].vRefNum;
+    pb.hFileInfo.ioDirID = h->loc[part].dirID;
+    pb.hFileInfo.ioFDirIndex = 0;
+    if (PBGetCatInfoSync(&pb) != noErr) return UNC_SIZE_UNKNOWN;
+    return (uint32_t)pb.hFileInfo.ioFlLgLen;
+}
+
+/* Read the part count out of the one file that has it — the ".zip"
+ * member of a spanned set. Returns nonzero on success, having filled in
+ * the descriptor and recorded that file as the last part. */
+static int SegDescribeLast(SegHost *h, short vol, long dir,
+                           ConstStr255Param nm)
+{
+    UncSegmentDesc cand;
+    FileIO probe;
+    UncIO pio;
+    short ref;
+    long eof = 0;
+    int ok;
+
+    if (MyOpenFork(vol, dir, nm, fsRdPerm, 0, &ref) != noErr) return 0;
+    GetEOF(ref, &eof);
+    probe.refNum = ref;
+    probe.size = (uint32_t)eof;
+    probe.pos = 0;
+    pio.ctx = &probe;
+    pio.read = fio_read;
+    pio.seek = fio_seek;
+    pio.tell = fio_tell;
+    pio.size = fio_size;
+    ok = unc_segment_describe(&pio, &cand) == UNC_OK && cand.nparts;
+    FSClose(ref);
+    if (!ok) return 0;
+    h->desc = cand;
+    SegRemember(h, (int)cand.nparts, vol, dir, nm);
+    if ((int)cand.nparts > h->highest) h->highest = (int)cand.nparts;
+    return 1;
+}
+
+/* Compact Pro: which of these is the LAST segment?
+ *
+ * Only the last one carries the index, and only the index says how many
+ * segments there are — so a set opened at any other segment has no
+ * count, and neither the joiner nor the "part N of M" arithmetic can
+ * start. Every segment identifies itself (a 16-bit set identity in its
+ * header), so the answer is here on the disk; it just has to be asked
+ * for, one 8-byte header at a time. The CLI does exactly this.
+ *
+ * Leaves h->desc alone if no part answers, and the caller then reports
+ * the set as incomplete, which it is: without the final segment there
+ * is no directory anywhere. */
+static void SegFindLast(SegHost *h)
+{
+    int p;
+
+    for (p = 1; p <= kSegMaxKnown; p++) {
+        UncSegmentDesc cand;
+        FileIO probe;
+        UncIO pio;
+        short ref;
+        long eof = 0;
+
+        if (!h->loc[p].name[0]) continue;
+        if (MyOpenFork(h->loc[p].vRefNum, h->loc[p].dirID, h->loc[p].name,
+                       fsRdPerm, 0, &ref) != noErr) continue;
+        GetEOF(ref, &eof);
+        probe.refNum = ref;
+        probe.size = (uint32_t)eof;
+        probe.pos = 0;
+        pio.ctx = &probe;
+        pio.read = fio_read;
+        pio.seek = fio_seek;
+        pio.tell = fio_tell;
+        pio.size = fio_size;
+        if (unc_segment_describe(&pio, &cand) == UNC_OK && cand.nparts) {
+            h->desc = cand;
+            FSClose(ref);
+            return;
+        }
+        FSClose(ref);
+    }
 }
 
 static void SegRemember(SegHost *h, int part, short vol, long dir,
@@ -1307,7 +1545,18 @@ static int SegAskUser(SegHost *h, int part)
             reply.good = false;
             SFGetFile(where, "\p", NULL, -1, NULL, NULL, &reply);
             if (reply.good) {
-                int got = SegPartOf(h, reply.vRefNum, 0, reply.fName);
+                int got;
+                /* A spanned zip part and a split part cannot prove
+                 * which part they are, so an offer of one is taken at
+                 * face value and the engine's check on the assembled
+                 * set is what catches a wrong file. Said out loud,
+                 * because everywhere else here a part is verified
+                 * before it is used. */
+                if (h->desc.scheme == UNC_FORMAT_ZIPSEG ||
+                    h->desc.scheme == UNC_FORMAT_SPLIT)
+                    got = part;
+                else
+                    got = SegPartOf(h, reply.vRefNum, 0, reply.fName);
                 if (got == part) {
                     SegRemember(h, part, reply.vRefNum, 0, reply.fName);
                     /* The rest of the set is often beside it. */
@@ -1418,6 +1667,9 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
     int ret;
     SegHost *sh = NULL;         /* non-NULL: this file is one part of a set */
     Ptr segScratch = NULL;
+    unsigned char famStem[64];
+    short famStemLen = 0;
+    int famSplit = 0, famZip = 0;
 
     *entries = *errors = 0;
 
@@ -1451,7 +1703,25 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
          * the app opens, and a full sniff would re-walk a Compact Pro
          * index CRC that unc_extract is about to walk again — twice the
          * work on a 7 MHz machine, for a question one header answers. */
-        if (unc_segment_describe(&pio, &desc) == UNC_OK) {
+        {
+            /* Decided by NAME first, and deliberately before the header
+             * has a say: part 1 of a split .sit begins with "SIT!" and
+             * would be read as the truncated archive it is a slice of.
+             * The Linux CLI makes the same choice for the same reason
+             * (DECISIONS.md 2026-08-10). A family of one is not a set,
+             * so a lone Archive.001 falls through to the ordinary
+             * reader. */
+            short stemlen = PStemLen(name);
+            if (stemlen > 0 && stemlen <= 63) {
+                short i;
+                for (i = 0; i < stemlen; i++) famStem[i] = name[i + 1];
+                famStemLen = stemlen;
+                famSplit = SplitPartOf(famStem, stemlen, name) >= 1;
+                famZip = !famSplit &&
+                         ZipFamPartOf(famStem, stemlen, name) != 0;
+            }
+        }
+        if (famSplit || famZip || unc_segment_describe(&pio, &desc) == UNC_OK) {
             sh = (SegHost *)NewPtr((Size)sizeof(SegHost));
             segScratch = NewPtr((Size)unc_segment_scratch_size());
             if (sh == NULL || segScratch == NULL) {
@@ -1462,11 +1732,90 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
             }
             { long z; for (z = 0; z < (long)sizeof(SegHost); z++)
                           ((char *)sh)[z] = 0; }
+            if (famSplit || famZip) {
+                short i;
+                Str63 lastName;
+                for (i = 0; i < famStemLen; i++) sh->stem[i] = famStem[i];
+                sh->stemlen = famStemLen;
+                SegScanFamily(sh, inVol, inDir, famSplit, lastName);
+                if (famZip) {
+                    /* Only the ".zip" member carries the part count, so
+                     * it has to be read before anything else can be. */
+                    if (!lastName[0] ||
+                        !SegDescribeLast(sh, inVol, inDir, lastName)) {
+                        DisposePtr((Ptr)sh);
+                        DisposePtr(segScratch);
+                        FSClose(refNum);
+                        return UNC_ERR_SEGMENTED;
+                    }
+                } else {
+                    /* Nothing in a split says anything, so the whole
+                     * descriptor is built here: the set is the
+                     * consecutive run of NAME.NNN, the joined file is
+                     * called NAME, and its length is the sum of the
+                     * parts' — which is why every one is measured now
+                     * rather than disk by disk. */
+                    int p, run = 0;
+                    uint32_t total = 0;
+                    long z;
+                    for (z = 0; z < (long)sizeof sh->desc; z++)
+                        ((char *)&sh->desc)[z] = 0;
+                    sh->desc.scheme = UNC_FORMAT_SPLIT;
+                    sh->desc.part = 1;
+                    sh->desc.head_len = 0;
+                    for (i = 0; i < famStemLen && i < UNC_NAME_MAX; i++)
+                        sh->desc.name[i] = famStem[i];
+                    sh->desc.name[i] = 0;
+                    sh->desc.name_len = (uint16_t)i;
+                    while (run < kSegMaxKnown && sh->loc[run + 1].name[0])
+                        run++;
+                    if (run < 1 || run < sh->highest) {
+                        /* A member numbered past the end of the run says
+                         * the gap is a missing part, not the end. */
+                        DisposePtr((Ptr)sh);
+                        DisposePtr(segScratch);
+                        FSClose(refNum);
+                        return UNC_ERR_SEGMENTED;
+                    }
+                    for (p = 1; p <= run; p++) {
+                        uint32_t len = SegPartLength(sh, p);
+                        if (len == UNC_SIZE_UNKNOWN) { total = UNC_SIZE_UNKNOWN; break; }
+                        total += len;
+                    }
+                    if (total == UNC_SIZE_UNKNOWN) {
+                        DisposePtr((Ptr)sh);
+                        DisposePtr(segScratch);
+                        FSClose(refNum);
+                        return UNC_ERR_SEGMENTED;
+                    }
+                    sh->desc.nparts = (uint16_t)run;
+                    sh->desc.total = total;
+                    sh->desc.data_size = total;
+                }
+            } else {
             sh->desc = desc;
             /* The file we were opened on is a part, at the number its
              * own header states — so opening part 3 of a set works. */
             SegRemember(sh, (int)sh->desc.part, inVol, inDir, name);
             SegScanDir(sh, inVol, inDir);
+            /* A Compact Pro set opened anywhere but its last segment
+             * does not yet know how many segments it has. */
+            if (sh->desc.nparts == 0 &&
+                sh->desc.scheme == UNC_FORMAT_CPTSEG) {
+                SegFindLast(sh);
+                if (sh->desc.nparts) {
+                    /* With a count in hand the match rule is stricter —
+                     * a middle segment must not carry an index and the
+                     * last one must — so everything found under the
+                     * looser one is looked at again. Two bytes of
+                     * identity is not much to let a file in on. */
+                    long z;
+                    for (z = 0; z < (long)sizeof sh->loc; z++)
+                        ((char *)sh->loc)[z] = 0;
+                    SegScanDir(sh, inVol, inDir);
+                }
+            }
+            }
         }
     }
 

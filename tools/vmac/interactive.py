@@ -57,7 +57,7 @@ the application extracted:
 Mini vMac maps the host Alt key to the Mac Command key; see command_key() for
 why the chord is sent as an explicit hold rather than an xdotool chord.
 """
-import argparse, os, shutil, signal, subprocess, sys, tempfile, time
+import argparse, glob, os, shutil, signal, subprocess, sys, tempfile, time
 import unicodedata
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -805,6 +805,93 @@ def read_joined(image, name, workdir):
         shutil.rmtree(home, ignore_errors=True)
 
 
+def build_named_set(kind, workdir, fixture):
+    """A set whose parts are placed by NAME, and the one file it must
+    produce. Both schemes are given ONE payload on purpose: the check at
+    the end is a byte comparison, and one file can be compared without
+    walking a tree off an HFS volume."""
+    d = os.path.join(workdir, "namedset")
+    os.makedirs(d, exist_ok=True)
+    blob = open(fixture, "rb").read()
+    # The stem begins with "A" so that the first part is the FIRST ROW of
+    # Standard File whatever else is on the volume. The boot volume's root
+    # holds an invisible `Desktop` file, and a set called Set.z01 sorts
+    # AFTER it: the first version of this clicked row one, opened Desktop,
+    # and the application said the file could not be extracted — which it
+    # cannot, entirely correctly. A harness bug that photographs as an
+    # application bug, which is the shape this directory keeps meeting.
+    if kind == "zip":
+        shutil.copyfile(fixture, os.path.join(d, "payload.bin"))
+        R.sh("zip", "-q", "-0", "-s", "64k", os.path.join(d, "Aset.zip"),
+             "payload.bin", cwd=d)
+        os.remove(os.path.join(d, "payload.bin"))
+        parts = sorted(glob.glob(os.path.join(d, "Aset.z*")))
+        return parts, b"payload.bin", blob
+    cut = (len(blob) + 2) // 3
+    parts = []
+    for i in range(3):
+        p = os.path.join(d, "Ablob.%03d" % (i + 1))
+        with open(p, "wb") as f:
+            f.write(blob[i * cut:(i + 1) * cut])
+        parts.append(p)
+    return parts, b"Ablob", blob
+
+
+def phase_named(args, appbin, workdir, shot):
+    """The two schemes that are placed by FILENAME, on the Mac.
+
+    Compact Pro and StuffIt sets are found by header, so run.py can drive
+    them under any names at all. These two cannot be: a spanned zip part
+    proves nothing about itself unless it is the first or last, and a
+    .NNN split part proves nothing anywhere. The names ARE the scheme, so
+    the parts have to reach the Mac under their real ones — which the
+    autotest cannot do, since it opens a file called `archive.sit`. Hence
+    Standard File, where the name comes from the user.
+
+    Ends on a byte comparison, not a screenshot: the one file the set
+    must produce is read back off the volume the Mac wrote to.
+    """
+    parts, outname, expect = build_named_set(args.named, workdir, args.fixture)
+    for_each = []
+    for p in parts:
+        for_each += ["--data", f"{p}:{os.path.basename(p)}"]
+    bootimg = os.path.join(workdir, "boot-named.hfv")
+    R.sh(sys.executable, os.path.join(HERE, "mkboot.py"),
+         os.path.join(R.VMAC_HOME, args.system), appbin, bootimg, *for_each)
+
+    scratch = os.path.join(args.outdir, ".settle.png")
+    mac = Mac(bootimg, args.emu, workdir)
+    elapsed = None
+    try:
+        if mac.settle(scratch, interval=5.0, timeout=args.boot_timeout) is None:
+            raise SystemExit("interactive: the machine never settled")
+        shot(mac, f"named-{args.named}-1-sfgetfile.png")
+        # Sorted case-insensitively, the first row is the FIRST part —
+        # Set.z01 or Blob.001 — which is deliberately not the one that
+        # carries the count in either scheme.
+        mac.click(*SF_FIRST_ROW)
+        mac.key("Return")
+        shot(mac, f"named-{args.named}-2-destination.png")
+        accept_destination(mac)
+        elapsed = mac.settle(scratch, interval=5.0, quiet=EXTRACT_QUIET,
+                             timeout=args.complete_timeout)
+        shot(mac, f"named-{args.named}-3-complete.png")
+    finally:
+        mac.close()
+        if os.path.exists(scratch):
+            os.remove(scratch)
+
+    got = read_joined(os.path.join(workdir, "boot.hfv"), outname, workdir)
+    verdict = ("BYTE-EXACT" if got == expect
+               else "DIFFERS" if got is not None else "NOT FOUND")
+    print(f"interactive: {args.named} set -> {outname.decode()}: {verdict} "
+          f"({len(expect)} B expected"
+          + (f", {len(got)} B read" if got is not None else "") + ")")
+    if elapsed is not None:
+        print(f"interactive: settled ~{elapsed:.0f}s after opening part 1")
+    return verdict == "BYTE-EXACT"
+
+
 def phase_segments(args, appbin, workdir, shot):
     """The segmented-archive dialog: can a person actually find part 2?
 
@@ -995,6 +1082,9 @@ def main():
                          "application ask for one, and INSERT IT while the "
                          "alert is up. A decoy disk goes in first and must "
                          "not dismiss anything. Ends on the joined bytes.")
+    ap.add_argument("--named", choices=("zip", "split"),
+                    help="drive a set placed by FILENAME: a spanned zip "
+                         "or a plain .NNN split, through Standard File")
     ap.add_argument("--segments", action="store_true",
                     help="the segmented-archive phase: cut the fixture into "
                          "three parts, leave part 1 alone on the boot volume "
@@ -1036,6 +1126,14 @@ def main():
     if args.dest:
         try:
             ok = phase_dest(args, appbin, workdir, shot)
+        finally:
+            shutil.rmtree(workdir, ignore_errors=True)
+        print(f"interactive: screenshots in {args.outdir} — LOOK AT THEM.")
+        return 0 if ok else 1
+
+    if args.named:
+        try:
+            ok = phase_named(args, appbin, workdir, shot)
         finally:
             shutil.rmtree(workdir, ignore_errors=True)
         print(f"interactive: screenshots in {args.outdir} — LOOK AT THEM.")

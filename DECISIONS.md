@@ -59,6 +59,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-13 — parts inside envelopes, and rationing the search
 - 2026-08-14 — Compact Pro segments: the layout, derived from specimens
 - 2026-08-14 — reading a Compact Pro set: addressed mode, and the index
+- 2026-08-14 — the Macintosh shell learns the other three schemes
 
 ---
 
@@ -2726,3 +2727,58 @@ The manual is explicit that "you must open the FINAL segment"; every
 segment carries the set identity, so a reader that discovers by content
 has no reason to require one in particular. Opening parts 1, 2 and 3 of
 a 4-segment set gives the same tree as opening part 4.
+
+## 2026-08-14 — the Macintosh shell learns the other three schemes
+
+The engine had four segmentation schemes and the application had one.
+Closing that took two pieces, and the second is the interesting one.
+
+**Compact Pro needed a search, not a matcher.** Its parts are matched by
+header, which `SegPartOf` already did through `unc_segment_match` — so a
+set opened at its FINAL segment would have joined without any change at
+all. What was missing is every other case: the part count lives only in
+the last segment, so a set opened anywhere else has no count and the
+joiner cannot start. `SegFindLast` asks each part found so far, 8 bytes
+at a time, until one answers with one. Then the whole scan is thrown
+away and redone, because with a count in hand the match rule is
+stricter — a middle segment must not carry an index and the last one
+must — and two bytes of identity is not much to let a file in on.
+
+**Spanned zip and `.NNN` splits needed a name matcher**, which this
+application had deliberately never had: "a part is identified by its
+header, never by its filename" is the property that makes a StuffIt set
+work when its parts are scattered and named unlike each other. Neither
+of these schemes can be matched that way — only the first and last part
+of a spanned zip identify themselves at all, and a split part never
+does — so the shell now decides by NAME first, exactly as the Linux CLI
+does and for the same reason: part 1 of a split `.sit` begins with
+`SIT!` and would otherwise be read as the truncated archive it is a
+slice of. What keeps a wrong file out is not the scan but the check the
+engine makes on the ASSEMBLED set.
+
+The names arrive as Str63 — a length byte and MacRoman bytes — so the
+comparisons are written out rather than borrowed from a libc this
+application does not link. That is where the one real bug was: the
+`.zNN` test measured the extension one byte short, so the `.zip` member
+was found and the numbered parts were not, and the set failed as damaged
+rather than as incomplete. **The `.NNN` scheme's arithmetic was right,
+so a passing split case said nothing about the zip one** — two schemes
+sharing a function do not share its bugs.
+
+**A split needs every part's LENGTH before extraction starts**, since
+the sum is the joined size and nothing states it anywhere. On a Mac that
+is `PBGetCatInfoSync` per part — a directory lookup, not a disk swap —
+and it is what OPEN_ITEMS.md said would have to be decided. It costs
+nothing the user can see, so it is simply done up front.
+
+**And the harness bug, which is the fourth of its kind in this
+directory.** The new phase opens the first row of Standard File. The
+boot volume's root holds an invisible `Desktop` file, and `Set.z01`
+sorts after it while `Blob.001` sorts before — so the split case passed
+and the zip case opened `Desktop`, which is not an archive, and the
+application said so. A photograph of correct behaviour that reads
+exactly like a defect. The sets are now named to sort first, which is
+deterministic rather than lucky. **What made this cheap to find was
+putting the engine's return code in the alert**: `ret=-1 fam=0` said
+in one frame that the application had never seen a family at all, where
+the screenshot alone had already sent me to re-read the matcher twice.

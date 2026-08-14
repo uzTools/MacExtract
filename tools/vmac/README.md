@@ -422,6 +422,8 @@ just as happily on an empty archive. Three-system table in FORMATS.md.
     interactive.py --e2e            # Finder desktop: double-click launch, SFGetFile,
                                     # volume navigation, an extracted APPL launching
     interactive.py --segments       # the "locate part N" alert for a split archive
+    interactive.py --named zip      # a spanned zip set, opened through Standard File
+    interactive.py --named split    # a plain .NNN split, likewise
     interactive.py --wd             # output lands in the archive's folder, not at /
     interactive.py --dest           # output lands on the volume the user CHOSE
     interactive.py --diskswap       # insert the missing part's disk mid-run
@@ -512,6 +514,25 @@ Four things it will teach you if you drive another application here:
   segment size and the archive decide. The driver stops when the screen
   stops changing rather than counting, because a fixed count either leaves
   a dialog up or types Return into the catalog window afterwards.
+
+### The two schemes that are placed by FILENAME — `--named`
+
+`run.py` can drive a StuffIt or Compact Pro set under any names at all,
+because those are found by header. It cannot drive a spanned zip or a
+`.NNN` split: the names ARE the scheme, and the autotest opens a file
+called `archive.sit`. So those two go through Standard File, where the
+name comes from the user, and the phase ends on a byte comparison — the
+one file the set must produce, read back off the volume the Mac wrote to.
+
+Both sets are built with a stem beginning `A`, and that is not
+cosmetic. The phase opens the FIRST ROW of Standard File, the boot
+volume's root holds an invisible `Desktop` file, and `Set.z01` sorts
+after it while `Blob.001` sorts before — so the split case passed while
+the zip case opened `Desktop`, which is not an archive, and the
+application correctly said so. **The fourth harness bug in this
+directory to photograph as an application bug.** What settled it in one
+frame was putting the engine's return code into the alert: `ret=-1
+fam=0` said the application had never seen a family at all.
 
 ### Putting a disk in while the Mac is running
 

@@ -77,61 +77,28 @@ DECISIONS.md, the withdrawn claim to BLOCKERS.md, the numbers to FORMATS.md.
 
 ## 4. Multi-segment: what the four implemented schemes leave
 
-StuffIt segments, spanned zip, plain `.NNN` splits and Compact Pro
-segments extract end to end (M11), the last of them on the Linux CLI
-only. These are the parts scoped out on purpose, ranked by what they
-would cost.
+StuffIt segments, Compact Pro segments, spanned zip and plain `.NNN`
+splits extract end to end (M11), **all four on the Macintosh as well as
+on Linux** since 2026-08-14. These are the parts scoped out on purpose.
 
-- **Three of the four schemes are not wired into the Mac shell.**
-  Engine and Linux CLI only, by decision on 2026-08-09, 2026-08-10 and
-  2026-08-14. What each still needs:
+- **Parts inside envelopes: Linux only, and only for StuffIt**
+  (2026-08-13). `Archive.sit.1.hqx` joins on the CLI — the envelope
+  comes off each part before the join, and only when the set is short of
+  one (DECISIONS.md). Two pieces are open. **The Mac shell does not do
+  it**, and unlike the joining it needs a decision rather than code: a
+  decoded part has to go somewhere, which on the floor target means a
+  temporary file on the output volume, where the CLI spends ~100 bytes
+  of peek plus a whole decode. And a wrapped part of a spanned zip or a
+  `.NNN` split is not looked for at all: those are placed by FILENAME,
+  the filename of a wrapped part is the wrapper's, and no reference
+  implementation says what that should look like — so it stays unbuilt
+  until a real example says what the convention is, rather than being
+  guessed.
 
-  *Compact Pro* is the closest. Its parts are matched by header through
-  `unc_segment_match`, which is what `SegPartOf` already calls, so a set
-  opened at its FINAL segment would join today. What is missing is the
-  other case: the count lives only in the last segment, so the shell
-  needs the search the CLI does — describe each part found until one
-  answers with a count. Untested on a Mac, and therefore claimed nowhere.
-
-  *Spanned zip and `.NNN` splits* need a name-matching branch beside
-  `SegPartOf`, since neither can be matched by content. This item used
-  to add that the descriptor would have to carry a base filename "the
-  engine deliberately has no concept of"; that was wrong, and it made
-  the job look bigger than it is. The name is the HOST's already —
-  `ExtractOne` is handed the name Standard File returned and passes it
-  to `SegRemember` two lines after building the descriptor, which is
-  the same place the Linux CLI gets its stem from (`zipfam_split`).
-
-  *A split* needs one thing more — every part's LENGTH before extraction
-  starts, since that is the only place the joined size comes from
-  (DECISIONS.md 2026-08-10), which on a one-drive Mac is either a
-  `PBHGetFInfo` per part on a hard disk or a decision to ask the user
-  for all the disks up front. **The disk-swap cost that used to be the
-  reason to wait is gone** (2026-08-09): every reader here hits the
-  floor its archives allow — 6 opens with 1 backward crossing on a
-  5-part zip set, 5/1 on a 4-segment Compact Pro one — so the shape a
-  user would see is "insert the last disk, then disks 1 to N in order",
-  which is what a PC did with these in the 1990s.
-
-  Left over for all three: what the "locate part N" alert should say for
-  a scheme where a part cannot be checked before it is used. The
-  application carries the code regardless — its payload went 76,800 →
-  78,208 B on 2026-08-09, 79,360 B on 2026-08-10 and 80,640 B on
-  2026-08-14, which is noise against the floor target's ~700 KB of free
-  heap but is the honest price of the engine being shared.
-- **Parts inside envelopes: done for StuffIt, and only there**
-  (2026-08-13). `Archive.sit.1.hqx` joins — the Linux CLI takes the
-  envelope off each part before the join, and only when the set is
-  short of one (DECISIONS.md). Two pieces of that are open. The Mac
-  shell does not do it: like the two schemes above it needs the step
-  added to `SegPartOf`, and unlike them it also needs somewhere to put
-  a decoded part, which on the floor target is a temporary file on the
-  output volume rather than the CLI's ~100 bytes of peek plus a whole
-  decode. And a wrapped part of a spanned zip or a `.NNN` split is not
-  looked for at all: those are placed by FILENAME, the filename of a
-  wrapped part is the wrapper's, and no reference implementation says
-  what that should look like — so it stays unbuilt until a real
-  example says what the convention is, rather than being guessed.
+  This is now the ONLY thing in the multi-segment area that the Macintosh
+  application cannot do that the CLI can. All four joining schemes run
+  there, at 4 MB and at the 1 MB floor target (FORMATS.md, "Segmented
+  sets on a real emulated Mac Plus").
 
 ---
 

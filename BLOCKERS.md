@@ -27,6 +27,13 @@ forward from earlier runs. The interactive UI was re-driven on System 6 in the
 same pass (`interactive.py`): bar, percentage, time estimate, Cancel, Cmd-.,
 partial-output cleanup, success alert.
 
+**All four segmentation schemes join on System 6, 2026-08-14**: StuffIt
+and Compact Pro found by header (Compact Pro opened at a MIDDLE segment,
+the other parts named nothing like it), spanned zip and `.NNN` splits
+found by name through Standard File. Byte-exact at 4 MB and at the 1 MB
+floor target; withholding the segment that carries the count refuses the
+set rather than extracting part of it. FORMATS.md has the table.
+
 **The segmented-archive dialog was driven on System 6 on 2026-08-09**
 (`interactive.py --segments`): the "locate part N" alert, Find... into
 Standard File, switching volumes, the wrong part refused and named as part 3,

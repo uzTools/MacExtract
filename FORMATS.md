@@ -222,7 +222,8 @@ envelopes, wrapper names that say nothing, and parts in three
 directories all join byte-exact; `unar` handed part 1 of such a set
 unwraps that part alone and exits 0. Not in the Mac shell, and not for
 the two name-placed schemes (DECISIONS.md 2026-08-13, OPEN_ITEMS.md
-section 4).
+section 4) — the joining of those two IS in the Mac shell since
+2026-08-14; it is only the envelope step that is not.
 
 ### Compact Pro segments
 
@@ -302,10 +303,23 @@ fetching one directory record at a time — same bytes out, at 16 opens
 instead of 6 — so the bound is the allocator's rather than a constant
 chosen here. Both paths are exercised in `ci.sh`.
 
-### StuffIt segments on a real emulated Mac Plus (System 6.0.8, 2026-08-08)
+### Segmented sets on a real emulated Mac Plus (System 6.0.8)
 
-Spanned zip is not wired into the Mac shell (OPEN_ITEMS.md section 4);
-everything below is the StuffIt scheme.
+**All four schemes join on the Mac** as of 2026-08-14; what none of them
+does there is take an envelope off a part (OPEN_ITEMS.md section 4). The
+StuffIt table below is from 2026-08-08; the other three are:
+
+| scheme | how it was driven | result |
+|---|---|---|
+| Compact Pro, 4 MB and **1 MB** | `run.py`, opened at a MIDDLE segment, the others named `One`, `Three`, `Last` | 9 files byte-exact against the Linux oracle, peak heap 19,915 B |
+| Compact Pro, last segment withheld | same | 0 files, refused — the negative control |
+| Spanned zip, 4 MB and **1 MB** | `interactive.py --named zip`, opened at part 1 of 5 through Standard File | joined file **byte-exact**, 278,294 B |
+| `.NNN` split, 4 MB and **1 MB** | `interactive.py --named split`, opened at part 1 of 3 | joined file **byte-exact** |
+
+The two name-placed schemes go through the real UI rather than the
+autotest, because the autotest opens a file called `archive.sit` and a
+scheme decided by filename cannot be driven that way (DECISIONS.md
+2026-08-14).
 
 `derived-Cal.sit` (50,205 B) cut into three parts and put on one
 floppy, the parts named `archive.sit`, `part-two` and `zzz` — names

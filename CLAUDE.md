@@ -12,25 +12,33 @@ The engine is the product. The Mac app is a thin shell.
 ## Current state — read before working
 
 M0–M11 are **DONE**. M11 is multi-segment archives, in scope since
-2026-08-08, and **three schemes are implemented**.
+2026-08-08, and **four schemes are implemented — all of them on Linux AND
+in the Macintosh application**, byte-exact at 4 MB and at the 1 MB floor
+target (FORMATS.md, "Segmented sets on a real emulated Mac Plus").
 
-**StuffIt segments** join end to end, on Linux and byte-exact on a real
-emulated Mac Plus at 4 MB and at the 1 MB floor. **A part is identified by
-its header, never by its filename** — that is the whole point, and it is why
-a set whose parts are scattered or named unlike each other works here and does
-not work in `unar`.
+They divide on one question, and everything follows from it: **can a part
+prove what it is?**
 
-**Spanned ("split") zip** joins `NAME.z01` … `NAME.zip` (2026-08-09), engine
-and Linux CLI only. It cannot meet that bar and is worth understanding as the
-counter-example: the format identifies only its FIRST and LAST parts, and the
-last is the only place the part count is written, so the host orders parts by
-NAME and the engine adjudicates the assembled set afterwards — part count,
-central-directory position, every local header, every CRC. **Names propose,
-content disposes.** The promise is not "a wrong part is refused" but "a wrong
-part cannot pass silently", and a lax reader was built to prove the difference
-is load-bearing. Compact Pro's scheme needs a genuine sample before any parser
-is written, because no reference implementation extracts one; the rest is
-ranked in OPEN_ITEMS.md section 4.
+**StuffIt segments** and **Compact Pro segments** can. A part is
+identified by its header — never by its filename — which is why a set
+whose parts are scattered or named unlike each other works here and does
+not work in `unar`. Compact Pro's layout is DERIVED rather than
+transcribed (2026-08-14): no reference implementation reads it, so it was
+measured on sets cut by Compact Pro 1.51 itself under Mini vMac, and
+`tools/synth_cptsplit.py` has to reproduce those specimens byte for byte
+or the description is wrong. Its one asymmetry: only the LAST segment
+carries the index, so a set opened anywhere else must go and find it.
+
+**Spanned ("split") zip** and **plain `.NNN` splits** cannot, and are the
+counter-examples worth understanding. A spanned zip identifies only its
+FIRST and LAST parts and writes the count in the last one alone; a split
+proves nothing anywhere. So the host orders parts by NAME and the engine
+adjudicates the assembled set afterwards — for zip, structurally (part
+count, central-directory position, every local header, every CRC); for a
+split, by whatever archive it joins back into. **Names propose, content
+disposes.** The promise is not "a wrong part is refused" but "a wrong
+part cannot pass silently", and a lax reader was built to prove the
+difference is load-bearing.
 
 **Parts inside envelopes** — `Archive.sit.1.hqx`, which is how a set was
 actually distributed — join on the Linux CLI since 2026-08-13, for the StuffIt
