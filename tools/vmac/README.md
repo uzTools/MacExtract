@@ -42,6 +42,7 @@ oracle and will lose it to `./ci.sh`'s `make clean`.
 
 | file | role |
 |---|---|
+| `segcheck.py` | **replay every segmented-archive scenario in one command** — the four joining schemes, parts inside envelopes, and a chained file, across both harnesses |
 | `setup.sh` | fetch + build the emulator, the ROM and a System 6.0.8 image into `$UNC_VMAC_HOME` (default `~/.cache/unclassic/vmac/`) |
 | `mkboot.py` | strip that image to System + Finder and make it boot straight into the application |
 | `run.py` | build the disks, boot, screenshot, decode, check |
@@ -516,6 +517,26 @@ Four things it will teach you if you drive another application here:
   segment size and the archive decide. The driver stops when the screen
   stops changing rather than counting, because a fixed count either leaves
   a dialog up or types Return into the catalog window afterwards.
+
+### Replaying the segment work — `segcheck.py`
+
+    tools/vmac/segcheck.py --list
+    tools/vmac/segcheck.py                 # all seven, 4 MB
+    tools/vmac/segcheck.py --mem 1M        # the floor target
+    tools/vmac/segcheck.py --case cpt-middle
+
+Everything about segmented archives on the Mac was verified once, by
+hand, on 2026-08-14. This is those commands written down, which is the
+difference between evidence and history: it caught two stale
+expectations and one real defect on its first full run (DECISIONS.md).
+
+Two scenarios are worth knowing about because they are easy to get
+backwards. **A StuffIt set is checked off the DISK**, not against the
+grid: it yields the joined archive, where the fixture's manifest
+describes what is inside that archive. **A Compact Pro set is checked
+against the grid**, because its reader emits the archive's entries
+directly — which is what the manifest lists. Same shape from outside,
+opposite oracles.
 
 ### The two schemes that are placed by FILENAME — `--named`
 

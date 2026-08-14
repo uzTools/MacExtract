@@ -43,7 +43,9 @@ one, because parts are recognised by what is inside them:
 ## Download
 
 **[Latest release](https://github.com/jarreboum/unclassic/releases/latest)** —
-or straight from the tree:
+currently **v0.8.0**. If the release page shows anything older, the
+publish step did not run and what is below is newer than what is there.
+Or take it straight from the tree:
 
 | | |
 |---|---|

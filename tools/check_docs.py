@@ -9,6 +9,14 @@ Two of them, both cheap enough to run first in ci.sh:
 2. No document cites another document by line number. Line numbers drift
    without anyone noticing; CLAUDE.md requires citing the section by name.
    Source files (`foo.c:41`) are fine - only `*.md:NN` is checked.
+3. The version agrees in all three places it is written: UNC_VERSION in
+   include/unclassic.h (the source of truth, which `unclassic --version`
+   prints), the download section of README.md, and the first line of
+   dist/README.txt, which make_dist.sh generates from the header. That
+   constant sat at "0.4.0" through four releases because nothing read it
+   and nothing checked it; a reader who sees a stale version on the
+   release page now knows the publish step did not run, which is the one
+   thing about a release this environment cannot check for itself.
 """
 
 import re
@@ -56,6 +64,32 @@ def check_index(fix):
     return out
 
 
+VERSION_RE = re.compile(r'#define UNC_VERSION "([0-9][^"]*)"')
+
+
+def check_version():
+    """UNC_VERSION, README.md's download section and dist/README.txt's
+    first line must agree."""
+    bad = []
+    header = (ROOT / "include" / "unclassic.h").read_text()
+    m = VERSION_RE.search(header)
+    if not m:
+        return ["include/unclassic.h: no UNC_VERSION"]
+    ver = m.group(1)
+
+    readme = (ROOT / "README.md").read_text()
+    if f"**v{ver}**" not in readme:
+        bad.append(f"README.md does not state the current version (**v{ver}**)")
+
+    dist = ROOT / "dist" / "README.txt"
+    if dist.exists():
+        first = dist.read_text().splitlines()[0]
+        if f"v{ver}" not in first:
+            bad.append(f"dist/README.txt says {first!r}, not v{ver} — "
+                       f"run tools/make_dist.sh")
+    return bad
+
+
 def check_citations():
     out = []
     for path in sorted(ROOT.glob("*.md")) + sorted(ROOT.glob("tools/**/*.md")):
@@ -68,7 +102,7 @@ def check_citations():
 
 def main():
     fix = "--fix" in sys.argv[1:]
-    problems = check_index(fix) + check_citations()
+    problems = check_index(fix) + check_citations() + check_version()
     for p in problems:
         print(p, file=sys.stderr)
     if problems:

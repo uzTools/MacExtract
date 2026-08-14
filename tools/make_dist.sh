@@ -39,9 +39,12 @@ fi
 mkdir -p dist
 cp "$SRC/unclassic.bin" dist/unclassic.bin
 cp "$SRC/unclassic.dsk" dist/unclassic.dsk
-cat > dist/README.txt <<'TXT'
-unclassic — bootstrap distribution
-==================================
+VERSION=$(sed -n 's/^#define UNC_VERSION "\(.*\)"/\1/p' include/unclassic.h)
+[ -n "$VERSION" ] || { echo "make_dist: no UNC_VERSION in include/unclassic.h" >&2; exit 1; }
+
+cat > dist/README.txt <<TXT
+unclassic v$VERSION — bootstrap distribution
+=========================================
 
 A bare Classic Mac has no way to open a .sit/.cpt/.hqx until it HAS an
 unarchiver, so unclassic ships in two forms that need no unarchiver:

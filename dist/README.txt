@@ -1,5 +1,5 @@
-unclassic — bootstrap distribution
-==================================
+unclassic v0.8.0 — bootstrap distribution
+=========================================
 
 A bare Classic Mac has no way to open a .sit/.cpt/.hqx until it HAS an
 unarchiver, so unclassic ships in two forms that need no unarchiver:

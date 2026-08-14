@@ -23,7 +23,12 @@
 extern "C" {
 #endif
 
-#define UNC_VERSION "0.4.0"
+/* The version, and the ONE place it is written. It sat at "0.4.0" through
+ * four releases because nothing read it — `unclassic --version` and
+ * tools/make_dist.sh do now, and tools/check_docs.py fails the build if
+ * this, README.md and dist/README.txt disagree. A constant nobody reads
+ * is a constant that is wrong. */
+#define UNC_VERSION "0.8.0"
 
 /* ------------------------------------------------------------------ */
 /* Formats                                                            */

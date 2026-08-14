@@ -62,6 +62,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-14 — the Macintosh shell learns the other three schemes
 - 2026-08-14 — the Macintosh application takes ALL the envelopes off
 - 2026-08-14 — the detect-only claim had no test, and LZH stays out of scope
+- 2026-08-14 — one command to replay the segment work, and what it caught
 
 ---
 
@@ -2867,3 +2868,53 @@ arm of the engine's dispatch — so mutating either alone changes nothing
 the test can see. It catches "this format silently became extractable and
 succeeded", not "one of the two gates broke". Both mutations together do
 fail it, which is how that was established rather than assumed.
+
+## 2026-08-14 — one command to replay the segment work, and what it caught
+
+Every segmented-archive scenario had been verified on the Mac by a
+command typed once. `tools/vmac/segcheck.py` is those commands in one
+place — seven scenarios across both harnesses, each saying what it would
+mean if it failed. `sample.txt` cannot carry them: it is a flat list of
+fixture names and the autotest opens a file called `archive.sit`, while
+a set needs extra files beside it or its own real filenames.
+
+**It failed on its first full run, twice, and both were right to fail.**
+
+*The StuffIt case was checking the wrong thing.* That scheme yields the
+JOINED ARCHIVE — one file — where the fixture's manifest describes what
+is inside that archive, so the on-screen grid can never match it. The
+disk is the only honest check there, and the scenario now reads the
+joined file back off the Out volume and compares it to the archive it
+was cut from. Compact Pro is the opposite: its reader emits the
+archive's entries directly, which is exactly what the manifest lists, so
+the grid is right for it. **Two schemes that look alike from the outside
+want opposite oracles.**
+
+*The zip and split cases had been overtaken by that morning's own work.*
+Their payloads are archives, and the envelope unwrap added hours earlier
+now extracts what the join produces and deletes it — so a phase looking
+for the joined file found nothing. The application was right and the
+expectation was a day old.
+
+**And fixing that turned up a genuine defect: the two hosts disagreed.**
+The Linux CLI unwraps only ENVELOPE formats — MacBinary, BinHex,
+AppleSingle/Double, gzip, `.Z` — plus the segment schemes that yield the
+file they were cut from. My Mac loop unwrapped anything that produced
+exactly one file and no folders, whatever produced it. So a zip holding
+a single `.sit` was extracted twice on the Mac and once on Linux:
+
+    volume:  Demo Manual V1.6, EB Sounds, Empire Builder V1.6.1 Demo
+    CLI:     payload.bin
+
+The CLI's rule is the considered one — an archive that happens to hold
+one archive is still an archive, and its contents are the answer. The
+shell applies the same predicate now, and learns the format for free:
+`unc_extract` sniffs internally, so sniffing explicitly and dispatching
+with `unc_extract_as` costs nothing and tells the caller what the layer
+was.
+
+**Nothing would have found this except running both hosts against each
+other.** The Mac phases compared against the Linux CLI, which is why a
+divergence introduced on one side showed up at all — and it showed up
+the same day rather than in a user's hands, because the scenarios were
+written down as a script instead of left in a terminal.

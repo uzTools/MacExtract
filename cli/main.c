@@ -1212,7 +1212,8 @@ static void usage(void)
         "  --ask          prompt on stdin for parts that were not found\n"
         "  --stats        print allocator statistics\n"
         "  -f <format>    force format\n"
-        "  -v             verbose\n");
+        "  -v             verbose\n"
+        "  --version      print the version and exit\n");
 }
 
 int main(int argc, char **argv)
@@ -1240,6 +1241,11 @@ int main(int argc, char **argv)
     const char *partargs[UNC_SEG_MAX_PARTS];
     int nparts = 0, no_parts = 0, ask = 0;
 
+    if (argc >= 2 && (strcmp(argv[1], "--version") == 0 ||
+                      strcmp(argv[1], "-V") == 0)) {
+        printf("unclassic %s\n", UNC_VERSION);
+        return 0;
+    }
     if (argc < 3) { usage(); return 2; }
     cmd = argv[1];
 

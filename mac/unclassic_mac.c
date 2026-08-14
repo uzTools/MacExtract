@@ -1353,6 +1353,19 @@ static int env_end(void *ctx, int status)
     return 0;
 }
 
+/* The formats that hold exactly one file and are worth looking inside:
+ * the same set cli/main.c unwraps, and deliberately NOT every format that
+ * happens to yield one file. A zip or a StuffIt archive containing a
+ * single archive is an ARCHIVE — its contents are the answer, and going
+ * round again would extract something the user did not ask for. The two
+ * hosts disagreed about this for exactly one day (DECISIONS.md). */
+static int IsEnvelopeFormat(UncFormat f)
+{
+    return f == UNC_FORMAT_MACBINARY || f == UNC_FORMAT_BINHEX ||
+           f == UNC_FORMAT_APPLESINGLE || f == UNC_FORMAT_APPLEDOUBLE ||
+           f == UNC_FORMAT_GZIP || f == UNC_FORMAT_COMPRESS_Z;
+}
+
 /* Run one envelope layer of a file into `es`. 0 if it is not one. */
 static int EnvRun(short vol, long dir, ConstStr255Param nm, EnvSink *es,
                   UncAlloc *al)
@@ -1378,9 +1391,7 @@ static int EnvRun(short vol, long dir, ConstStr255Param nm, EnvSink *es,
     eio.size = fio_size;
 
     fmt = unc_sniff(&eio);
-    if (fmt != UNC_FORMAT_MACBINARY && fmt != UNC_FORMAT_BINHEX &&
-        fmt != UNC_FORMAT_APPLESINGLE && fmt != UNC_FORMAT_APPLEDOUBLE &&
-        fmt != UNC_FORMAT_GZIP && fmt != UNC_FORMAT_COMPRESS_Z) {
+    if (!IsEnvelopeFormat(fmt)) {
         FSClose(ref);
         return 0;
     }
@@ -1878,9 +1889,10 @@ static long gPeakUsage;   /* engine heap high-water mark from the last RunExtrac
 /* `out` is filled with where a single-file extraction landed, so the
  * caller can take the next envelope off it; pass NULL not to care. */
 typedef struct {
-    int   fileCount, dirCount;
-    Str63 name;
-    long  dirID;
+    int       fileCount, dirCount;
+    Str63     name;
+    long      dirID;
+    UncFormat fmt;        /* what this layer turned out to be */
 } ExtractShape;
 
 /* `origVol`/`origDir` is the folder the USER's file came from, which is
@@ -1911,6 +1923,7 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
     unsigned char famStem[64];
     short famStemLen = 0;
     int famSplit = 0, famZip = 0;
+    UncFormat extractedAs = UNC_FORMAT_UNKNOWN;
 
     *entries = *errors = 0;
 
@@ -2203,7 +2216,12 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
         DisposePtr((Ptr)sh);
         DisposePtr(segScratch);
     } else {
-        ret = unc_extract(&io, &sk, &al, prog, &opt);
+        /* Sniff and dispatch rather than calling unc_extract, which does
+         * exactly this internally: same work, and the caller learns what
+         * the layer was — which is what decides whether there is another
+         * one under it. */
+        extractedAs = unc_sniff(&io);
+        ret = unc_extract_as(extractedAs, &io, &sk, &al, prog, &opt);
     }
     gPeakUsage = ma.initial - ma.lowmark;   /* engine heap high-water mark */
 
@@ -2220,6 +2238,7 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
         shape->fileCount = sink.fileCount;
         shape->dirCount = sink.dirCount;
         shape->dirID = sink.lastDir;
+        shape->fmt = sh ? sh->desc.scheme : extractedAs;
         BlockMoveData(sink.lastName, shape->name, sink.lastName[0] + 1);
     }
     return ret;
@@ -3152,6 +3171,11 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
             if (ret != UNC_OK || errors || pr.cancelled) break;
             if (shape.fileCount != 1 || shape.dirCount != 0 ||
                 !shape.name[0]) break;
+            /* Only an envelope — or a segmented set, which yields the
+             * file it was cut from — has another layer under it. */
+            if (!IsEnvelopeFormat(shape.fmt) &&
+                shape.fmt != UNC_FORMAT_SITSEG &&
+                shape.fmt != UNC_FORMAT_SPLIT) break;
             {
                 short ref;
                 FileIO fio2;

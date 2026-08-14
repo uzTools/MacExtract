@@ -96,18 +96,27 @@ that reflex is what found nearly everything valuable in this repository.
 
 Where these files disagree with each other, treat it as a bug to fix, not a fact to choose from.
 
-## Where to start (handoff, 2026-08-13)
+## Where to start (handoff, 2026-08-14)
 
 The repository is on GitHub as a **private** repo, `main`, tagged through
-`v0.7`, the release that gives the Macintosh application a destination dialog
-and answers a missing part by having the disk put in (`v0.5` was the first tag
-to publish a downloadable application at all — see *Cutting a release*).
-Working tree clean, `./ci.sh` green, nothing in flight. **Whether a release
-PAGE appeared has never been checked from here and cannot be**: this machine
-has no `gh`, no token, and the Releases API answers 404 for a private repo —
-re-tested on v0.6, 2026-08-08. `git ls-remote --tags origin` does work over
-SSH, and confirms `main` and every tag through v0.7 are pushed; the release
-page a tag triggers is not confirmed and never has been.
+`v0.8`, the release in which the Macintosh application learned every way an
+archive was ever split — Compact Pro sets, spanned zip, `.NNN` splits, parts
+inside envelopes — and learned to take all the envelope layers off a chained
+file (`v0.5` was the first tag to publish a downloadable application at all —
+see *Cutting a release*). Working tree clean, `./ci.sh` green, nothing in
+flight.
+
+**Releases publish.** The maintainer confirms every tag so far produced its
+release page (2026-08-14); this used to be written up as permanently
+unverifiable and is not an open question. What is still true is that THIS
+machine cannot see it: no `gh`, no token, and the Releases API answers 404 for
+a private repo. So a session tags, pushes, confirms the tag with
+`git ls-remote --tags origin`, and says so — it does not claim to have seen
+the page. **The version is the cheap check**: `README.md` names the current
+one, `unclassic --version` prints it, `dist/README.txt` carries it, and
+`tools/check_docs.py` fails the build if the three disagree — so a release
+page showing an older version is immediately visible as a publish that did
+not run.
 
 **The differential suite is 797 fixtures, not 769** (2026-08-08), and all
 three increases came from the measuring apparatus rather than from new archives.
@@ -329,16 +338,17 @@ Four things will bite you, all of them cost a step on v0.5:
 - **`dist/` must be current.** The workflow publishes what is committed; it
   does not build. It fails if an asset is missing or empty, but it cannot tell
   that a present asset is three versions old.
-- **Confirming it worked is a human step — but confirm what you CAN.** The repo
-  is private and this machine authenticates with a DEPLOY KEY, which signs git
-  over SSH and cannot read the Releases or Actions API at all: re-tested
-  2026-08-08 on v0.6, `gh` is not installed, no token is in the environment,
-  and both `/repos/...` and `/repos/.../releases` answer 404. What *does* work
-  over SSH is `git ls-remote --tags origin`, which settles that the tag reached
-  GitHub — the half that used to be assumed from a `git push` exit status.
-  Publishing itself is NOT a human step: the workflow does it, unattended, and
-  a deploy-key tag push triggers it (v0.5, v0.6, v0.7). So report the tag as pushed
-  and the release page as unverified, and never collapse the two.
+- **Bump `UNC_VERSION` in `include/unclassic.h` first.** It is the source of
+  truth: `make_dist.sh` writes it into `dist/README.txt`, `unclassic --version`
+  prints it, README.md names it, and `check_docs.py` (first step of `ci.sh`)
+  fails if any of them disagree. It sat at "0.4.0" through four releases
+  because nothing read it.
+- **Confirming the page is the maintainer's, and it has always worked.** Every
+  tag so far published (maintainer, 2026-08-14). This machine still cannot
+  see it — deploy key, no `gh`, no token, 404 from the Releases API — so
+  confirm the TAG with `git ls-remote --tags origin`, report that, and leave
+  the page to somebody who can load it. The version on the page is what makes
+  a failed publish obvious without any API at all.
 
 A deploy-key push *is* allowed to add files under `.github/workflows/`, and a
 deploy-key tag push *does* trigger a workflow. Both were open questions before
@@ -392,10 +402,11 @@ how long they will be waiting.
 Compression (extraction only), StuffIt X (`.sitx`), encrypted archives, disk images, DiskDoubler, Now Compress, LZH/LHA. These are **detect-only**: `unc_sniff` names them — including Disk Copy 4.2, whose probe is now real — so a UI can tell the user what the file is, and extraction returns cleanly unsupported.
 
 **Multi-segment archives are IN scope since 2026-08-08** (M11), where this
-file used to list them as out. Three schemes are implemented — StuffIt segments,
-spanned zip and plain `.NNN` splits — and the others, including Compact
-Pro's, are ranked in OPEN_ITEMS.md section 4 with what each would cost. The
-rule that decided the ORDER was: **a part must be identifiable from its own
+file used to list them as out. Four schemes are implemented — StuffIt segments,
+Compact Pro segments, spanned zip and plain `.NNN` splits — plus parts inside
+envelopes, all of them on Linux and in the Macintosh application. Nothing in
+that area is open any more: OPEN_ITEMS.md's multi-segment section emptied on
+2026-08-14 and was removed. The rule that decided the ORDER was: **a part must be identifiable from its own
 bytes.** It is still the right first question, but it turned out to be a
 ranking rule rather than a gate — spanned zip fails it in the middle of a
 set, a `.NNN` split fails it everywhere, and both were built anyway,

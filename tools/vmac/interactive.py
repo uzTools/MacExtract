@@ -1046,15 +1046,46 @@ def phase_named(args, appbin, workdir, shot):
         if os.path.exists(scratch):
             os.remove(scratch)
 
-    got = read_joined(os.path.join(workdir, "boot.hfv"), outname, workdir)
-    verdict = ("BYTE-EXACT" if got == expect
-               else "DIFFERS" if got is not None else "NOT FOUND")
-    print(f"interactive: {args.named} set -> {outname.decode()}: {verdict} "
-          f"({len(expect)} B expected"
-          + (f", {len(got)} B read" if got is not None else "") + ")")
+    # What the joined set produced, compared against the Linux CLI on the
+    # same parts. NOT "is the joined file on the volume": since 2026-08-14
+    # the application unwraps what it joins, so a set whose payload is an
+    # archive — which both of these are — leaves that archive's CONTENTS
+    # behind and deletes the archive. This phase checked for the file and
+    # failed the day the loop landed; the application was right and the
+    # expectation was a day old.
+    home = tempfile.mkdtemp(prefix="hfs-")
+    env = dict(os.environ, HOME=home)
+    try:
+        CD.hfs(env, "hmount", os.path.join(workdir, "boot.hfv"))
+        listing = CD.hfs(env, "hdir", ":").stdout.decode("mac_roman")
+        CD.hfs(env, "humount")
+    finally:
+        shutil.rmtree(home, ignore_errors=True)
+    onvol = {os.path.basename(p) for p in parts}
+    got = set()
+    for line in listing.splitlines():
+        m = LISTING_DATE.search(line)
+        if not m:
+            continue
+        nm = m.group(1)
+        if nm in ("System Folder", "Desktop", "unclassic") or \
+                nm.startswith("StuffIt Expander") or nm in onvol:
+            continue
+        got.add(nm)
+
+    ref = os.path.join(workdir, "_cli")
+    os.makedirs(ref, exist_ok=True)
+    R.sh(os.path.join(R.REPO, "build", "dev", "unclassic"), "x", "-o", ref,
+         parts[0])
+    want = set(os.listdir(ref))
+    ok = got == want
+    print(f"interactive: the volume holds {sorted(got)}")
+    print(f"interactive: the Linux CLI gives {sorted(want)}")
+    print("interactive: " + ("MATCH" if ok else "MISMATCH")
+          + f" for the {args.named} set")
     if elapsed is not None:
         print(f"interactive: settled ~{elapsed:.0f}s after opening part 1")
-    return verdict == "BYTE-EXACT"
+    return ok
 
 
 def phase_segments(args, appbin, workdir, shot):

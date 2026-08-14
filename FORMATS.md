@@ -323,7 +323,9 @@ StuffIt table below is from 2026-08-08; the other three are:
 The two name-placed schemes go through the real UI rather than the
 autotest, because the autotest opens a file called `archive.sit` and a
 scheme decided by filename cannot be driven that way (DECISIONS.md
-2026-08-14).
+2026-08-14). All of it replays with `tools/vmac/segcheck.py`, one
+command, which is what keeps this table re-runnable rather than
+historical.
 
 `derived-Cal.sit` (50,205 B) cut into three parts and put on one
 floppy, the parts named `archive.sit`, `part-two` and `zzz` — names
