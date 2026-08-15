@@ -96,6 +96,30 @@ them still are.
 
 Encrypted archives are out of scope.
 
+## Compared with StuffIt Expander 4.0.2
+
+Expander is what you would otherwise reach for on the machine itself. It is
+free, it was the standard, and on System 7 it is nicer to use. Here is what
+each one opens:
+
+| | StuffIt Expander 4.0.2 | unclassic |
+|---|---|---|
+| StuffIt, Compact Pro, BinHex, MacBinary | yes | yes |
+| StuffIt 5 archives | no — needs Expander 5 or later | yes |
+| zip, gzip, tar, `.Z` | only with a paid add-on, System 7 only | yes |
+| PackIt (`.pit`) | not listed | yes |
+| Sets split across floppies | StuffIt sets, with the same add-on | StuffIt, Compact Pro, zip and `.001` sets |
+| Split zip or Compact Pro sets | "cannot expand" — its own Read Me | yes |
+| Encrypted archives | yes, if you know the password | no |
+| BinHex postings split across several messages | yes | only where the parts are named `.001`, `.002` … |
+| `.arc`, `.uu`, AppleLink `.pkg`, SpaceSaver | with the add-on | no |
+| What you install | the application, a StuffIt Engine extension, and the add-on for anything above | one application |
+| Source | free, closed | free, open (LGPL) |
+
+Under System 7 Expander also has drag-and-drop, watch folders and background
+expansion; under System 6 both are menu-driven. The full table, with sources,
+is in [FORMATS.md](FORMATS.md) under "Compared with StuffIt Expander 4.0.2".
+
 ## What you need
 
 | | |

@@ -787,3 +787,79 @@ that fixture, with nothing changed but the partition. Method and commands in
 unreachable through the classic File Manager at all, since it caps at 31
 characters on either filesystem, but that is unproven either way. Real PowerPC
 silicon, like real 68k silicon, remains untouched.
+
+## Compared with StuffIt Expander 4.0.2 (Aladdin, April 1996)
+
+The free tool a user would otherwise run on the machine itself, and the only
+external yardstick this project has (why it was worth applying: DECISIONS.md
+2026-08-15). **This is its documentation against our measurements: Expander
+has never been RUN here**, and no row below is a head-to-head observation of
+its behaviour.
+
+**Where the Expander column comes from.** Its own distribution,
+`stuffit_expander_4.0.2.sea_.bin` from Macintosh Garden: MacBinary around a
+StuffIt self-extracting archive around a 400K HFS image. `unclassic x` walked
+the chain and produced an image byte-identical to `unar`'s (410,624 B, md5
+`888c0ca0b93f6ee0ff67e89926e20f83`), and every quotation below is a string
+read out of that image — the shipped Read Me, the "What's new" file and the
+application's own alert strings. Web sources are used for dates and for what
+later versions did, never for what 4.0.2 does.
+
+### Coverage over this corpus
+
+807 files in `fixtures/`, classified by INNERMOST format — envelopes unwrapped
+with `x -nr` first, then `unclassic sniff` — because both tools decode BinHex
+and MacBinary and then continue into what was inside (measured 2026-08-15):
+
+| Innermost format | files | Expander 4.0.2 | unclassic 0.8 |
+|---|---|---|---|
+| StuffIt classic, incl. `.sea` | 454 | ✅ | ✅ |
+| Compact Pro, incl. `.sea` | 216 | ✅ | ✅ |
+| envelope over a non-archive | 38 | ✅ | ✅ |
+| StuffIt 5 / Arsenic | 62 | ❌ postdates it | ✅ |
+| zip, gzip, `.Z`, tar | 16 | ⚠️ paid add-on, System 7 only | ✅ |
+| PackIt | 5 | ❌ not in its list | ✅ |
+| DiskDoubler, Now Compress, LZH, StuffIt X | 16 | ❌ | detect-only, named |
+| **total** | **807** | **708 alone, 724 with the add-on** | **791 extract, 16 named** |
+
+The 62 StuffIt 5 fixtures are the largest single difference, and it is a date
+rather than a capability: 4.0.2 shipped two years before the format. Handed
+one it answers *"You may need a newer version of the StuffIt Engine to work
+with this archive."*
+
+### Capability by capability
+
+| | StuffIt Expander 4.0.2 | unclassic 0.8 |
+|---|---|---|
+| Floor system | System 6.0.5 (its Read Me) | System 6.0.8, measured on a 1 MB Mac Plus |
+| Everything beyond `.sit`/`.cpt`/`.hqx`/`.bin` | needs DropStuff with Expander Enhancer, *"a **System 7-only** shareware product"* | in the same free application, on System 6 |
+| Installed pieces | application + StuffIt Engine extension + the add-on | one 85 KB application, no extension, no installer |
+| StuffIt segmented sets | with the add-on, so System 7 only | yes, System 6 and up |
+| Compact Pro segmented sets | *"StuffIt Expander cannot expand encrypted or segmented Zip or Compact Pro files"* | yes |
+| Spanned zip sets | same sentence — no | yes |
+| Plain `.001`/`.002` splits | not claimed | yes |
+| Parts still inside per-part envelopes | not claimed | yes, StuffIt sets |
+| How a part is identified | not stated | by its header, never by its filename (zip and `.NNN` sets excepted — see "Segmented archives") |
+| Segment joining, known defect | *"if the `Delete segments after joining` preference is selected, and you run out of disk space during a join operation, the first segment will be deleted even though the joining is not complete"* | parts are never deleted; the Mac shell removes only what it wrote |
+| Encrypted archives | yes — it prompts, and knows *"You have entered an incorrect password"* | detected and refused, out of scope |
+| Multipart BinHex | *"Multipart BinHex files, such as those appearing in Internet newsgroup postings (e.g. comp.binaries.mac), are fully supported"* — multiple documents in one text file, and one file broken into several pieces | one document per file; split parts join only when named `.001`, `.002` … (OPEN_ITEMS.md) |
+| Compact Pro comments | written out beside the extracted items | read and CRC'd, never surfaced |
+| `.arc`, `.uu`, AppleLink `.pkg`, SpaceSaver | with the add-on | no, and not sniffed either (out of scope, CLAUDE.md) |
+| Chained expansion (`.sit.hqx`) | yes, and can be turned off | yes, `-nr` turns it off |
+| System 7 conveniences | drag-and-drop of files, folders and whole disks; watch folders; background expansion; Apple events | none; Standard File, one archive at a time |
+| Verification | none published | 797 fixtures byte-exact against `unar`/`macunpack` |
+| Licence | free, closed | free, LGPL-2.1-or-later |
+| Memory partition | **not measured** — reading the app's `SIZE` resource needs an HFS reader this machine does not have | engine peak heap per format in the matrix above |
+
+### Sources
+
+- The application itself, extracted as described above: `Read Me`, `What's new
+  in Expander`, and the alert strings in `StuffIt Expander 4.0.2`.
+- [Gryphel Project — Stuffit Expander](https://www.gryphel.com/c/sw/archive/stuffexp/),
+  for which versions run under Mini vMac and on which systems.
+- [Macintosh Garden — StuffIt Expander 4.0.2](https://macintoshgarden.org/apps/stuffit-expander-402),
+  the distribution used here.
+- [ATPM 5.05 — review of StuffIt Deluxe 5.1.2](https://atpm.com/5.05/stuffit.shtml),
+  for StuffIt 5 archives being unreadable by 4.x.
+- [Wikipedia — StuffIt Expander](https://en.wikipedia.org/wiki/StuffIt_Expander),
+  for freeware status and version history.

@@ -97,8 +97,19 @@ that empties is the point of the file.
   lines, since Compact Pro's LZH is a different algorithm from LHA's.
   The detect-only claim itself is now tested rather than asserted
   (DECISIONS.md 2026-08-14). **Multi-segment archives are IN scope
-  since 2026-08-08** and three schemes are implemented (StuffIt segments,
-  spanned zip, plain `.NNN` splits); the rest are the section above.
+  since 2026-08-08** and four schemes are implemented (StuffIt segments,
+  Compact Pro segments, spanned zip, plain `.NNN` splits); the rest are
+  the section above.
+- **Out of scope, and added to the brief on 2026-08-15 rather than found
+  in it:** `.arc`, uuencode (`.uu`), AppleLink packages (`.pkg`) and
+  StuffIt SpaceSaver. They are here because the comparison with StuffIt
+  Expander 4.0.2 (FORMATS.md) is what named them: each is a format its
+  paid add-on expanded and we do not, and unlike the detect-only list
+  above we do not sniff them either. None appears in this corpus.
+- **Compact Pro archive comments are read, CRC'd and discarded.**
+  Expander 4.0.2 writes them out beside the extracted items. Deliberate:
+  a comment is not a file, and the sink writes files. Noted so that the
+  difference is a decision rather than an oversight.
 - **Do not retry, on Mac heap pressure.** Both were measured while StuffIt 5 /
   Arsenic was still short of the 1 MB floor, and both are dead ends:
   `MaxMem()` before a retry (compaction may not move a `NewPtr`), and
@@ -106,3 +117,30 @@ that empties is the point of the file.
   205,828 → 803,634, and changed `MaxBlock` at the refusal by under 500 B —
   the stranded heap was never about where the live blocks sat). Cited from
   `src/sit_arsenic.c` and `mac/unclassic_mac.c`.
+
+---
+
+## 5. Missing capability, with a reproduction
+
+- **Multipart BinHex: several documents in one text file.** MEASURED
+  2026-08-15. `cat a.hqx b.hqx > two.hqx`, and we list and extract the
+  FIRST document only, exit 0 — no error, no hint that anything was left.
+  `unar` does the same, so the oracle cannot see this and the differential
+  suite never could have caught it (DECISIONS.md 2026-08-15). Expander
+  4.0.2 claims the case outright and names comp.binaries.mac while doing
+  it — FORMATS.md, "Compared with StuffIt Expander 4.0.2" — which is where
+  most of this corpus came from.
+  **What would close it:** on reaching a stream's end, resume scanning for
+  another BinHex header and continue as further entries. Both references
+  scan for that header line — `XADBinHexParser.m` and macutils
+  `hexbin/hqx.c` — so the layout is transcribable rather than guessable,
+  and `hexbin` is the oracle for grading it. It needs a fixture the corpus
+  does not have; a synthesised one is only ground truth once `hexbin`
+  adjudicates it.
+- **What is NOT missing here, also measured the same day:** a single
+  BinHex document CUT across files joins and extracts through to the
+  archive inside, as long as the parts are named `NAME.hqx.001` /
+  `.002` — the plain-split scheme takes it. A half named `NAME.hqx.1`
+  reads as a whole document, lists an entry from the header's declared
+  length, and then fails at extraction (`file is truncated`, exit 1)
+  rather than writing a short file quietly.

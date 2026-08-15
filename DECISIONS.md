@@ -63,6 +63,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-14 — the Macintosh application takes ALL the envelopes off
 - 2026-08-14 — the detect-only claim had no test, and LZH stays out of scope
 - 2026-08-14 — one command to replay the segment work, and what it caught
+- 2026-08-15 — measuring this project against StuffIt Expander 4.0.2
 
 ---
 
@@ -2918,3 +2919,52 @@ other.** The Mac phases compared against the Linux CLI, which is why a
 divergence introduced on one side showed up at all — and it showed up
 the same day rather than in a user's hands, because the scenarios were
 written down as a script instead of left in a terminal.
+
+## 2026-08-15 — measuring this project against StuffIt Expander 4.0.2
+
+Everything this repository knows about "enough" has been self-referential:
+the corpus, the oracle and the milestones are all ours. The one external
+yardstick available is what a user of a real Mac Plus would otherwise
+have run, and it had never been applied.
+
+**A competitor's documentation is a primary source, and it ships inside a
+file we can already read.** Expander 4.0.2's distribution is MacBinary
+around a StuffIt self-extracting archive around a 400K HFS image; our own
+CLI walked the chain and produced an image byte-identical to `unar`'s, and
+its Read Me, its "What's new" file and its alert strings answered every
+question the comparison needed. No web page was needed for a single claim
+about 4.0.2's behaviour — the web was used only for dates. The tables and
+their sourcing are in FORMATS.md, "Compared with StuffIt Expander 4.0.2".
+
+Three things came out of it that were not visible from inside:
+
+- **A rival's stated limitation is a claim about the problem, not only
+  about the rival.** *"StuffIt Expander cannot expand encrypted or
+  segmented Zip or Compact Pro files"* is its Read Me admitting the two
+  hardest segment schemes — and those are exactly the two M11 built after
+  ranking them as the ones a part cannot prove itself in. The ranking rule
+  and the era's own tooling agree about which end of the problem is hard,
+  which is the first outside confirmation the M11 ordering ever had.
+- **The free tool's floor is a system version, ours is a machine.** Expander
+  runs from System 6.0.5, but everything beyond `.sit`/`.cpt`/`.hqx`/`.bin`
+  lives in an add-on its Read Me calls *"a System 7-only shareware
+  product"*. So on the exact machine this project floors at, the standard
+  tool is four formats and one segment scheme, permanently. That is the
+  gap this project actually fills, and nothing in the repository had said
+  so.
+- **An oracle you share a blind spot with cannot show you the blind
+  spot.** Expander claims multipart BinHex — several documents in one text
+  file, the shape comp.binaries.mac produced. We take the first document
+  and exit 0; `unar` does the same, so 179 BinHex fixtures and a
+  differential suite could never have caught it. It is filed in
+  OPEN_ITEMS.md section 5 with the reproduction. The lesson generalises
+  past BinHex: **the differential suite can only find defects the oracle
+  does not share**, and the cheapest way to find the shared ones is to ask
+  what some THIRD implementation claims. That is the same move that closed
+  StuffIt method 6 with macunpack, arrived at from the other direction.
+
+What this comparison is not: Expander was never RUN here. Every row in its
+column is documentation, labelled as such in FORMATS.md, and the one number
+it would have been nice to have — the memory partition the application asks
+for — is unmeasured, because reading a `SIZE` resource off that HFS image
+needs a reader this machine does not have.

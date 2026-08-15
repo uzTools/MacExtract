@@ -401,6 +401,16 @@ how long they will be waiting.
 
 Compression (extraction only), StuffIt X (`.sitx`), encrypted archives, disk images, DiskDoubler, Now Compress, LZH/LHA. These are **detect-only**: `unc_sniff` names them — including Disk Copy 4.2, whose probe is now real — so a UI can tell the user what the file is, and extraction returns cleanly unsupported.
 
+**Also out of scope, and NOT detect-only: `.arc`, uuencode (`.uu`), AppleLink
+packages (`.pkg`), StuffIt SpaceSaver.** Added 2026-08-15, and the distinction
+matters: nothing names these, so a user gets *unknown* rather than a refusal.
+Each is a format StuffIt Expander 4.0.2's paid add-on expanded and we do not;
+none occurs in the corpus. That comparison — the first external yardstick this
+project has applied — is FORMATS.md, "Compared with StuffIt Expander 4.0.2",
+and what it is worth is DECISIONS.md 2026-08-15. It found exactly ONE gap that
+is **not** out of scope: **multipart BinHex**, invisible to the differential
+suite because `unar` shares it (OPEN_ITEMS.md section 5).
+
 **Multi-segment archives are IN scope since 2026-08-08** (M11), where this
 file used to list them as out. Four schemes are implemented — StuffIt segments,
 Compact Pro segments, spanned zip and plain `.NNN` splits — plus parts inside
