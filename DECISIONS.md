@@ -67,6 +67,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-15 — several BinHex documents in one file, and the oracle's blind spot
 - 2026-08-15 — DiskDoubler in scope: three containers, four methods, and two traps
 - 2026-08-15 — Now Compress without the solid stream
+- 2026-08-15 — the emulator harness graded fixtures against other fixtures
 
 ---
 
@@ -3098,3 +3099,36 @@ forks in the wrong order and the unit test fails while the fixture still
 passes 1/1**, because the fixture has no data fork to get wrong. What neither
 reaches is written down in OPEN_ITEMS.md, including a checksum-driven search
 for a wrong offset delta that has never once fired here.
+
+## 2026-08-15 — the emulator harness graded fixtures against other fixtures
+
+**Claim:** two Mini vMac tiers run in parallel, as this repository's own
+harness README recommends, can grade a fixture against another fixture's
+screen. **Evidence:** the 4 MB and 1 MB tiers started together; three fixtures
+failed at 4 MB and two at 1 MB, and the failing rows reported file counts,
+peak heaps and fork lengths that belonged to archives from the OTHER run —
+`derived-MacPass390.sea` "failing" with `derived-DD_Expand.sea`'s 102,432 B
+peak and 270,362 B resource fork. Re-run serially, all of them pass.
+**Consequence:** every parallel run this project has ever done was liable to
+it, and the same five fixtures pass 61/61 on both tiers once the cause is
+fixed.
+
+The cause is check-then-act. `Display.__init__` scanned for an `n` whose
+`/tmp/.X<n>-lock` did not exist and then started Xvfb on `:n`. Two processes
+both saw `:90` free; the second Xvfb exited immediately because the lock was
+taken, and nothing checked that it had — the readiness probe,
+`xdotool getdisplaygeometry`, succeeded against the FIRST run's server. From
+there both runs pointed the emulator and `import` at one display.
+
+Two things worth carrying:
+
+- **A readiness probe that does not identify what it is talking to will
+  happily confirm somebody else's server.** The probe was doing its job; it
+  was asked the wrong question. Xvfb now picks the display itself with
+  `-displayfd` and tells us which, so the answer cannot be another process's.
+- **The failure mode was a wrong verdict, not an error.** Nothing crashed,
+  nothing warned; a format that works perfectly was reported as broken, and
+  the numbers in the failure message were the tell. Had two fixtures happened
+  to share an aggregate, it would have been a false PASS instead. A harness
+  whose two instances can silently share a channel does not have a flakiness
+  problem, it has a correctness one.

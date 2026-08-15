@@ -145,24 +145,46 @@ class Display:
 
     def __init__(self):
         self._win = None
-        for n in range(90, 200):
-            if os.path.exists(f"/tmp/.X{n}-lock"):
-                continue
-            self.num = n
-            # Depth 24: Mini vMac's X11 glue picks a visual it can XPutImage
-            # into, and on an 8-bit Xvfb the very first PutImage dies with
-            # BadMatch, taking the emulator with it a few seconds after boot.
-            self.proc = subprocess.Popen(
-                ["Xvfb", f":{n}", "-screen", "0", "800x600x24", "-nolisten", "tcp"],
-                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            for _ in range(200):                    # wait for it to accept clients
+        # Xvfb picks the display and tells us which one, over a pipe. This
+        # used to look for a free number by testing /tmp/.X<n>-lock and then
+        # starting Xvfb on it, which is check-then-act: two runs started
+        # together both saw :90 free, the second Xvfb died of the taken
+        # lock, and its `xdotool getdisplaygeometry` probe succeeded anyway
+        # — against the FIRST run's server. The two then shared a display
+        # and photographed each other's emulator, so a fixture was graded
+        # against another fixture's screen. Measured 2026-08-15, running
+        # the 4 MB and 1 MB tiers in parallel as this directory's README
+        # suggests; three fixtures "failed" with another run's numbers.
+        #
+        # Depth 24: Mini vMac's X11 glue picks a visual it can XPutImage
+        # into, and on an 8-bit Xvfb the very first PutImage dies with
+        # BadMatch, taking the emulator with it a few seconds after boot.
+        r, w = os.pipe()
+        self.proc = subprocess.Popen(
+            ["Xvfb", "-displayfd", str(w), "-screen", "0", "800x600x24",
+             "-nolisten", "tcp"],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, pass_fds=(w,))
+        os.close(w)
+        got = b""
+        with os.fdopen(r, "rb") as pipe:
+            for _ in range(200):
+                chunk = pipe.read()
+                if chunk:
+                    got += chunk
+                    break
                 time.sleep(0.05)
-                if subprocess.run(["xdotool", "getdisplaygeometry"],
-                                  env=dict(os.environ, DISPLAY=f":{n}"),
-                                  capture_output=True).returncode == 0:
-                    return
+        if not got.strip().isdigit():
             self.close()
-        raise SystemExit("run: no free X display")
+            raise SystemExit("run: Xvfb did not report a display number")
+        self.num = int(got.strip())
+        for _ in range(200):                    # wait for it to accept clients
+            if subprocess.run(["xdotool", "getdisplaygeometry"],
+                              env=dict(os.environ, DISPLAY=self.name),
+                              capture_output=True).returncode == 0:
+                return
+            time.sleep(0.05)
+        self.close()
+        raise SystemExit("run: Xvfb never accepted clients")
 
     @property
     def name(self):

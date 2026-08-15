@@ -65,13 +65,14 @@ unchanged through Mac OS 9 and adapts its memory use to the machine at runtime,
 so there is one download for every Mac.
 
 What it opens: StuffIt (.sit, classic and 5.x), Compact Pro (.cpt), BinHex
-(.hqx), MacBinary, PackIt (.pit), AppleSingle/AppleDouble, zip, gzip, tar and
-Unix compress (.Z). Nested files like .sit.hqx or .tar.Z are unwrapped
-automatically, by looking inside them rather than trusting the name. Resource
+(.hqx), MacBinary, PackIt (.pit), DiskDoubler (.dd, DDAR, DDA2), Now Compress,
+AppleSingle/AppleDouble, zip, gzip, tar and Unix compress (.Z). Nested files
+like .sit.hqx or .tar.Z are unwrapped automatically, by looking inside them
+rather than trusting the name, and a .hqx holding several files -- one
+newsgroup posting, several attachments -- gives you all of them. Resource
 forks, type and creator codes and dates all survive, so an extracted
-application simply runs. StuffIt X, DiskDoubler, Now Compress, LZH and Disk
-Copy 4.2 are recognised and named, not extracted; encrypted archives are out
-of scope.
+application simply runs. StuffIt X, LZH and Disk Copy 4.2 are recognised and
+named, not extracted; encrypted archives are out of scope.
 
 Using it: open an archive, then say which folder the files should go into.
 That second dialog opens in the archive's own folder, so pressing Return

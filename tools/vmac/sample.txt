@@ -44,7 +44,17 @@ a2ps.V4.3.tar.Z                            # 30255 B
 popper-1.7.tar.Z                           # 59323 B
 
 # DiskDoubler
-derived-DandStoQIF2.sea                    # 30562 B
+derived-DandStoQIF2.sea                    # 30562 B, DiskDoubler AD1
+# M12, 2026-08-15: DiskDoubler and Now Compress became extractable, so the
+# six DiskDoubler fixtures and the one Now Compress fixture join the sample.
+# derived-DandStoQIF2.sea was already here as a REFUSAL case and is now an
+# extraction; the other five DiskDoubler fixtures cover the other methods.
+derived-MAZv143.sea                        # 50277 B, DiskDoubler method 8 (Compact Pro)
+derived-MacPass390.sea                     # 155792 B, DiskDoubler method 8, largest
+derived-DD_Expand.sea                      # 123399 B, DiskDoubler method 10 (DDn)
+derived-LHA_Expander_1.0.3.sea             # 79182 B, DDn with folders
+derived-Terrainman_2.0__.sea               # 167771 B, DDn + delta-1, deepest tree
+derived-Expand_Now_1.0.1.sea               # 61824 B, Now Compress
 derived-MAZv143.sea                        # 50277 B
 derived-DD_Expand.sea                      # 123399 B
 derived-MacPass390.sea                     # 155792 B

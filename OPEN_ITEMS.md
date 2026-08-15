@@ -68,11 +68,11 @@ A section that empties is the point of the file.
   archive. The path is covered by a unit test, including the name
   coming from the host rather than the archive, which is what the
   reference does with a `.dd` suffix.
-- **Not re-run on a Mac since.** The Mini vMac and Mac OS 9 tiers
-  measured DiskDoubler as a clean refusal, because that is what it was
-  when they last ran. The engine is shared and its peak heap here is
-  small, but no on-Mac run has extracted a DiskDoubler archive
-  (FORMATS.md marks those rows pre-M12).
+- **The Mac OS 9 tier has not re-run since M12.** Both Mini vMac tiers
+  have (61/61 at 4 MB and at 1 MB, 2026-08-15), but the OS 9 sample
+  costs a full PowerPC boot per fixture and still records DiskDoubler as
+  a refusal, which is what it was when that tier last ran. FORMATS.md
+  marks those rows pre-M12.
 
 ---
 

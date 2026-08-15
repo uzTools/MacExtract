@@ -34,7 +34,15 @@ measured on a different list:
 | System 7.0.1, 4 MB, 55 fixtures | `run.py --system Sys7.img --list sample.txt` | ~5.1 s per fixture, one boot each |
 | Mac OS 9.2, 13 fixtures | `os9.py --list os9sample.txt --launch` | tens of minutes — one full PowerPC boot per fixture |
 
-Run the two Mini vMac tiers in parallel if you have the cores; do NOT run
+Run the two Mini vMac tiers in parallel if you have the cores — **safe since
+2026-08-15**, and it was not before: `Display` looked for a free X display by
+testing `/tmp/.X<n>-lock` and then starting Xvfb on it, which is check-then-act.
+Two runs started together both chose `:90`, the loser's Xvfb died of the taken
+lock, and its readiness probe then succeeded against the WINNER's server — so
+both runs drew on one display and screenshotted each other's emulator. Three
+fixtures "failed" with another run's numbers before anyone noticed the numbers
+belonged to a different archive. Xvfb now picks the display itself
+(`-displayfd`) and reports it back. Do NOT run
 anything else alongside `os9.py`, which uses `build/rel/unclassic` as its
 oracle and will lose it to `./ci.sh`'s `make clean`.
 

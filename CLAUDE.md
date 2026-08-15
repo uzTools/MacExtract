@@ -56,7 +56,7 @@ now (BLOCKERS.md *Withdrawn claims*). **A claim with no test behind it is
 the one that will be false**, and the README was the only document here
 that nothing checked.
 
-The engine passes an 804-fixture differential suite against `unar` and, where `unar` fails, `macunpack`; the Mac shell extracts byte-exact on a real System 6.0.8 Mac Plus under Mini vMac — **55/55 sampled fixtures at 4 MB and 55/55 at the 1 MB floor** (2026-08-08, on a sample that grew from 44 to 55 that day; there are no memory-budget refusals left).
+The engine passes an 804-fixture differential suite against `unar` and, where `unar` fails, `macunpack`; the Mac shell extracts byte-exact on a real System 6.0.8 Mac Plus under Mini vMac — **61/61 sampled fixtures at 4 MB and 61/61 at the 1 MB floor** (2026-08-15, on a sample that grew from 55 when M12 added DiskDoubler and Now Compress; there are no memory-budget refusals left).
 
 It runs on all three systems the project claims: **System 6.0.8 and System 7.0.1** under Mini vMac (a true 68000), and **Mac OS 9.2** under QEMU PowerPC through the 68LC040 emulator, where 13/13 of a format sample is byte-exact, extraction onto **HFS+** is verified, and the `SIZE` partition is honoured by the Process Manager.
 

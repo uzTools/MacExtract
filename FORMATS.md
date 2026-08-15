@@ -40,7 +40,7 @@ and lengths are three separately Huffman-coded streams laid out back to back).
 Delta-1 preprocessing is applied where the header asks for it, outside the
 checksum, which is where the reference puts it.
 
-Peak heap 16–108 KB, measured (`unclassic t --stats`): the 100 KB end is DDn,
+Peak heap 16–108 KB on Linux and the same on a Mac Plus at 4 MB and 1 MB (`unclassic t --stats`; FORMATS.md, "DiskDoubler and Now Compress on the Mac"): the 100 KB end is DDn,
 whose window is sized from the entry up to the format's 64 KB, plus a
 literal/offset buffer sized from each block's own header. All six extract
 fully under a 400 KB budget and under the 678,392 B a 1 MB Mac Plus leaves the
@@ -59,7 +59,8 @@ per file; each stream is a table of blocks, each up to 32 KB of output against
 a 32 KB sliding history, in one of five shapes (stored, LZSS, Huffman,
 Huffman then LZSS, and a second "new" LZSS with its own length/offset tables).
 Peak heap is a flat **128 KB** — history, block and staging buffers, all fixed
-by the format — and it extracts fully under a 400 KB budget.
+by the format — and it extracts fully under a 400 KB budget. Byte-exact on a
+real emulated Mac Plus at 4 MB and at the 1 MB floor (2026-08-15).
 
 The reference treats the whole archive as ONE solid stream and cuts entries
 out of it by offset; this reader does not, because each file's stream holds
@@ -562,16 +563,18 @@ the others, cautiously and from a single anchor.
 
 ## Real-hardware verification (Mini vMac — System 6.0.8, 4 MB Mac Plus, 68000)
 
-The Retro68 Mac shell was replayed against a 55-fixture sample spanning all
-twelve formats on a **real System 6.0.8 / 4 MB Mac Plus** under Mini vMac
+The Retro68 Mac shell was replayed against a 61-fixture sample spanning all
+fourteen formats on a **real System 6.0.8 / 4 MB Mac Plus** under Mini vMac
 (a true 68000). Every extraction is verified ON THE MAC ITSELF: the app
 CRC-32s both forks after reading them back through the File Manager and the
 result — painted to the framebuffer, read from a screenshot — is
 cross-checked against the same engine's Linux output (`tools/vmac_check.py`,
 `tools/decode_grid.py`).
 
-**55/55 byte-exact PASS** (2026-08-08) — data forks exact, resource forks exact
-bar the OS-stamped reserved header (bytes 16–127).
+**61/61 byte-exact PASS** (2026-08-15; 55/55 on 2026-08-08, before M12 added
+six DiskDoubler fixtures and one Now Compress fixture to the sample) — data
+forks exact, resource forks exact bar the OS-stamped reserved header
+(bytes 16–127).
 
 **The sample was 44 fixtures until 2026-08-08**, when nine that had never had
 an oracle manifest gained one and were added: seven THINK C projects holding
@@ -612,7 +615,7 @@ On-Mac engine peak heap (high-water mark) by format, matching the Linux
 | StuffIt classic | 19–72 KB‖ |
 | Unix compress (.Z) | 15–219 KB§ |
 | StuffIt 5 (Arsenic) | 0.63–2.53 MB (block *fill* dependent — see †) |
-| DiskDoubler / Now Compress | measured while both were detect-only; both have been extractable since M12 and this row has not been re-measured |
+| DiskDoubler / Now Compress | extracted and byte-exact on both Mini vMac tiers since 2026-08-15 (see above); the Mac OS 9 rows below still predate M12 |
 
 ## System 7 tier (Mini vMac — System 7.0.1, 4 MB Mac Plus, 68000)
 
@@ -661,15 +664,43 @@ columns are byte-exact.
 **This tier is 4 MB.** **The 1 MB floor target is System 6, and only
 System 6**, and it is demonstrated by the 55/55 run below.
 
+### DiskDoubler and Now Compress on the Mac (2026-08-15)
+
+The seven fixtures M12 added, replayed on both tiers the day the formats
+landed. **Identical numbers at 4 MB and at 1 MB** — nothing in either decoder
+varies with the machine, and the on-Mac peak agrees with the Linux figure to
+the shell's constant 16 B:
+
+| Fixture | Format / method | Files | Peak heap on the Mac | Data | Rsrc |
+|---|---|---|---|---|---|
+| `derived-DandStoQIF2.sea` | DiskDoubler AD1 (9) | 3 | 16,400 B | 20,918 B | 24,562 B |
+| `derived-MAZv143.sea` | DiskDoubler Compact Pro (8) | 2 | 19,318 B | 57,078 B | 40,079 B |
+| `derived-MacPass390.sea` | DiskDoubler Compact Pro (8) | 3 | 19,318 B | 0 B | 351,825 B |
+| `derived-DD_Expand.sea` | DiskDoubler DDn (10) | 1 | 102,432 B | 0 B | 270,362 B |
+| `derived-LHA_Expander_1.0.3.sea` | DiskDoubler DDn, folders | 5 | 110,624 B | 69,776 B | 82,778 B |
+| `derived-Terrainman_2.0__.sea` | DiskDoubler DDn + delta-1 | 12 | 106,528 B | 95,860 B | 245,265 B |
+| `derived-Expand_Now_1.0.1.sea` | Now Compress | 1 | 131,088 B | 0 B | 88,942 B |
+
+`derived-DandStoQIF2.sea` was in the sample before M12 as a REFUSAL case —
+the only one there has ever been — and is now an extraction.
+
+**Multi-document BinHex was checked here too**, on a file the corpus does not
+contain: `export-hc.hqx`, a mail separator, and `mac-rot13.hqx` concatenated.
+2 files byte-exact at 4 MB and at 1 MB, 8,208 B peak. It is not in
+`sample.txt` because it is not a corpus fixture; regenerate it by
+concatenating those two with any text between them, which is what
+`tools/run_multihqx.py` does on Linux.
+
 ## Floor target verification (Mini vMac — System 6.0.8, **1 MB** Mac Plus, 68000)
 
-The same 55-fixture sample was replayed on a Mini vMac built for **1 MB of
+The same 61-fixture sample was replayed on a Mini vMac built for **1 MB of
 RAM** — the project's floor target — one boot per fixture, same on-Mac
 CRC-32 verification (`tools/vmac/run.py --mem 1M --list tools/vmac/sample.txt`).
 The engine budget is derived from `FreeMem` at startup.
 
-**55/55 byte-exact PASS** (2026-08-08; 44/44 on 2026-08-07, before the nine
-recovered fixtures and the two method-6 fixtures joined the sample). There are no memory-budget refusals
+**61/61 byte-exact PASS** (2026-08-15; 55/55 on 2026-08-08 and 44/44 on
+2026-08-07, before the recovered fixtures, the method-6 pair and M12's seven
+joined the sample). There are no memory-budget refusals
 left at the floor target: every fixture in the sample, in every format,
 extracts byte-exact on a 1 MB Mac Plus. The six StuffIt 5 rows, which were the
 last to arrive, with peak heap as the Mac itself reports it:
