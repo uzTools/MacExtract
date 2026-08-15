@@ -29,7 +29,7 @@ static const UncFormatDesc unc_formats[] = {
     { UNC_FORMAT_COMPRESS_Z,  "Unix compress",   1 },
     { UNC_FORMAT_TAR,         "Tar",             1 },
     { UNC_FORMAT_SITX,        "StuffIt X",       0 },
-    { UNC_FORMAT_DISKDOUBLER, "DiskDoubler",     0 },
+    { UNC_FORMAT_DISKDOUBLER, "DiskDoubler",     1 },
     { UNC_FORMAT_DISKCOPY,    "DiskCopy image",  0 },
     { UNC_FORMAT_NOWCOMPRESS, "Now Compress",    0 },
     { UNC_FORMAT_LZH,         "LZH",             0 },
@@ -187,6 +187,7 @@ int unc_extract_as(UncFormat f, UncIO *io, UncSink *sink, UncAlloc *al,
     case UNC_FORMAT_GZIP:        return unc_gzip_extract(&c);
     case UNC_FORMAT_COMPRESS_Z:  return unc_compressz_extract(&c);
     case UNC_FORMAT_TAR:         return unc_tar_extract(&c);
+    case UNC_FORMAT_DISKDOUBLER: return unc_dd_extract(&c);
     case UNC_FORMAT_SITSEG:      return unc_sitseg_extract(&c);
     case UNC_FORMAT_ZIPSEG:      return unc_zipseg_extract(&c);
     case UNC_FORMAT_UNKNOWN:     return UNC_ERR_FORMAT;

@@ -65,6 +65,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-14 — one command to replay the segment work, and what it caught
 - 2026-08-15 — measuring this project against StuffIt Expander 4.0.2
 - 2026-08-15 — several BinHex documents in one file, and the oracle's blind spot
+- 2026-08-15 — DiskDoubler in scope: three containers, four methods, and two traps
 
 ---
 
@@ -3013,3 +3014,55 @@ The other half of what StuffIt Expander 4.0.2 calls multipart BinHex — one
 document broken across several postings — is NOT this. What this engine joins
 is a document cut across files named `.001`, `.002`, which the plain-split
 scheme already did (FORMATS.md, comparison table).
+
+## 2026-08-15 — DiskDoubler in scope: three containers, four methods, and two traps
+
+DiskDoubler and Now Compress were both out of scope by the brief and named
+detect-only in five status files. The maintainer put them in scope; this is
+what DiskDoubler took, and why Now Compress did not land with it.
+
+**What is implemented is what the corpus can grade.** Three containers (a
+single compressed file, `DDAR`, `DDA2`) and methods 0, 6/9, 8 and 10 — every
+method the six fixtures use. Methods 1, 2, 3, 4, 5 and 7 are declined per
+entry, because the reference marks two of them unimplemented and one untested,
+and none appears in any fixture: code no oracle can grade is not a feature,
+it is a liability with a version number. Same rule that keeps LZH extraction
+out.
+
+**Method 8 is Compact Pro compression in a DiskDoubler container**, so it is
+`fmt_cpt.c`'s two stages with one parameter changed: the Huffman block is
+0xfff0 here against 0x1fff0 there. That made three functions and two structs
+move into `unc_internal.h` rather than be copied — the alternative was a
+second copy of an LZH decoder that 108 fixtures already exercise.
+
+Two traps, both worth carrying:
+
+- **`unc_bufin_tell()` counts from the last `unc_bufin_init()`, not from the
+  start of the file.** DDn addresses three sub-streams by absolute offset and
+  seeks between them, and every seek re-bases the buffer — so the first
+  version computed `literalstart`, `lengthstart` and `nextblock` against a
+  moving zero and produced offsets like 42. The decoder now carries an
+  `origin` and adds it. **A position helper is only absolute if nothing
+  re-bases the thing it measures.**
+- **A short read is invisible until the optimiser exposes it.** The `DDAR`
+  entry header is 124 bytes and the walk read 120 of them, so `rsrccrc` came
+  from uninitialized stack. At `-O0` that stack held zeros and the check was
+  skipped; at `-O2` it held `"ttxt"` and the entry failed its checksum. The
+  fixtures could not see it either, because every DiskDoubler file in the
+  corpus takes the other branch — **the unit test written for coverage found
+  it within a minute of existing**, which is the argument for fixture-free
+  tests in one line.
+
+**Now Compress is not the same job.** Its archive is SOLID — every fork of
+every file in one compressed stream, entries addressed as (offset, length) —
+which is a container model this engine has never had, and the codec is a
+517-line handle against a single fixture. It stays detect-only, and the
+detect-only claim stays tested (`run_diff.py` keeps it in DETECT_ONLY).
+OPEN_ITEMS.md has what would close it.
+
+**Neither format has multi-segment anything.** The request was conditional on
+that, so it was checked rather than assumed: `XADDiskDoublerParser.m`,
+`XADNowCompressParser.m` and macutils' `dd.c` contain no concept of a part, a
+volume or a continuation, and no header field in either format numbers one.
+DiskDoubler split *disks*, not archives — the multi-segment work of M11 has no
+counterpart here.

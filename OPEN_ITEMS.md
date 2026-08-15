@@ -5,7 +5,7 @@ and things this repository asserts more confidently than the evidence supports.
 
 **Not** BLOCKERS.md, which records investigations that went wrong and the
 claims withdrawn from them. Nothing here stops the engine or the CLI, which are
-byte-exact against the oracle across 797 fixtures in `./ci.sh`.
+byte-exact against the oracle across 803 fixtures in `./ci.sh`.
 
 Each item says what would close it. Detail lives in one place per finding —
 status in BLOCKERS.md, reasoning in DECISIONS.md, how to re-run in TESTING.md
@@ -14,7 +14,7 @@ results in FORMATS.md — and is cross-referenced from here rather than
 repeated.
 
 **Filing something here is a decision to stop looking at it, so it had better
-be true.** Section 1 in particular: it held "eight fixtures are excluded as
+be true.** Section 3 in particular: it held "eight fixtures are excluded as
 oracle-undecidable or oracle-buggy" until 2026-08-08, when the item turned out
 to be nine fixtures, closeable in an hour, and nothing to do with this
 environment — it was a fork-naming flag of the oracle (DECISIONS.md,
@@ -22,7 +22,7 @@ BLOCKERS.md, 2026-08-08).
 
 **Only open items live here.** A closed one moves out: the lesson to
 DECISIONS.md, the withdrawn claim to BLOCKERS.md, the numbers to FORMATS.md.
-Section 4 used to be *Multi-segment*, and on 2026-08-14 it emptied: all
+The old section 4 used to be *Multi-segment*, and on 2026-08-14 it emptied: all
 four schemes join on Linux and on the Macintosh, and the last thing in it
 — taking an envelope off each part — was built the same day. A section 5
 held multi-document BinHex for one day and emptied on 2026-08-15 (M2
@@ -31,7 +31,52 @@ A section that empties is the point of the file.
 
 ---
 
-## 1. Cannot be closed in this environment
+## 1. Asked for and not built: Now Compress
+
+- **Now Compress extraction.** Requested with DiskDoubler on 2026-08-15;
+  DiskDoubler landed the same day (M12) and this did not. It is a
+  different shape of problem, not more of the same: a Now Compress
+  archive is **solid** — every fork of every file concatenated into one
+  compressed stream, addressed as (offset, length) pairs — which is a
+  container model this engine has never had, and its codec is a
+  517-line handle in the reference against our 1 fixture.
+  **What would close it:** transcribe `XADNowCompressParser.m` (entry
+  table, nested by a per-directory entry count) and
+  `XADNowCompressHandle.m`, then decode the stream once and cut the
+  forks out of it as they pass, since the entry table is in stream
+  order. `derived-Expand_Now_1.0.1.sea` is the only fixture and `unar`
+  adjudicates it, so it is gradeable the moment it exists. Until then
+  it stays detect-only, and `run_diff.py` keeps it in DETECT_ONLY so
+  the claim is tested rather than assumed.
+
+---
+
+## 2. DiskDoubler: what M12 left
+
+- **Methods 1, 2, 3, 4, 5 and 7 are declined per entry.** No corpus
+  fixture uses any of them; the reference marks 3 and 4 unimplemented
+  and 5 untested. Writing them would produce code no oracle here could
+  grade — the same reason LZH extraction stays out of scope. Method 1
+  is the cheapest if a fixture ever turns up: it is Unix compress, and
+  `unc_lzw` already exists.
+- **11 forks across 2 fixtures are adjudicated by neither oracle**
+  (`derived-Terrainman_2.0__.sea`, `derived-LHA_Expander_1.0.3.sea`).
+  `unar` fails on them and `macunpack` — built with its own DiskDoubler
+  support — fails too. We extract them; nobody grades them.
+- **The single-file container (`0xABCD0054` at offset 0) has no
+  fixture.** Every DiskDoubler file in the corpus is a `DDAR` or `DDA2`
+  archive. The path is covered by a unit test, including the name
+  coming from the host rather than the archive, which is what the
+  reference does with a `.dd` suffix.
+- **Not re-run on a Mac since.** The Mini vMac and Mac OS 9 tiers
+  measured DiskDoubler as a clean refusal, because that is what it was
+  when they last ran. The engine is shared and its peak heap here is
+  small, but no on-Mac run has extracted a DiskDoubler archive
+  (FORMATS.md marks those rows pre-M12).
+
+---
+
+## 3. Cannot be closed in this environment
 
 - **Real 68k hardware: never run.** No genuine floppy I/O, no real media errors
   mid-write, no real 8 KB stack underneath a real ROM's own usage. The
@@ -51,7 +96,7 @@ A section that empties is the point of the file.
 
 ---
 
-## 2. Known unknowns, not being chased
+## 4. Known unknowns, not being chased
 
 - **Why the pointer does not work under QEMU on Mac OS 9.** Measured to
   0.0000 effect across five mouse primitives; the mechanism behind that has no
@@ -63,7 +108,7 @@ A section that empties is the point of the file.
 
 ---
 
-## 3. Untested code, named so it is not mistaken for tested
+## 5. Untested code, named so it is not mistaken for tested
 
 - **The interactive UI above System 6 is deliberate scope**, not a gap
   (2026-08-02). System 6 is the UI's target and it is driven end to end there.
@@ -81,7 +126,7 @@ A section that empties is the point of the file.
 
 ---
 
-## 4. Deliberate gaps, and remedies ruled out by measurement
+## 6. Deliberate gaps, and remedies ruled out by measurement
 
 - **Zip64 spanned sets, out of scope as of 2026-08-14.** An
   end-of-central-directory record whose disk number is `0xFFFF` defers to

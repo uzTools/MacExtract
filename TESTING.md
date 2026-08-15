@@ -282,6 +282,24 @@ can read it.
    aborts/hangs fail. 4,000 cases at M9; every CI run does a 150-case
    smoke.
 
+## DiskDoubler joined the graded set (2026-08-15)
+
+M12 moved DiskDoubler out of `run_diff.py`'s `DETECT_ONLY` and into
+`IMPLEMENTED`, which is the whole change on the harness side: 6 fixtures
+that used to be graded on "named, and wrote nothing" are now graded
+entry-for-entry against `unar`, and the suite went 797 → 803. Now Compress
+stays in `DETECT_ONLY` until it is built, so the claim it makes is still
+the tested one.
+
+**What this cannot see:** 11 forks across 2 of those fixtures that neither
+oracle can decode — `unar` fails and `macunpack` fails, with its own
+DiskDoubler support compiled in. We extract them and nothing checks the
+result; the count prints on every run. Nor does anything here exercise the
+single-file `.dd` container, which no fixture uses — `test_diskdoubler` in
+the unit tests covers the containers and the inline-stored path instead,
+and found a short header read that the fixtures structurally could not
+(DECISIONS.md 2026-08-15).
+
 ## Several BinHex documents in one file (`tools/run_multihqx.py`, in `ci.sh`)
 
 Added 2026-08-15, with the capability it grades. Real corpus `.hqx`
@@ -319,7 +337,7 @@ sampled occurrence index **by trying to allocate the table and failing**
 CI forces it three ways:
 
 - `-DUNC_ARS_FORCE_SAMPLED` compiles the fast path out. The whole
-  797-fixture diff suite and all 7,970 robustness variants run through the
+  803-fixture diff suite and all 8,030 robustness variants run through the
   fallback under ASan+UBSan, and must be byte-exact.
 - `--budget 678392` (what a 1 MB Mac Plus leaves the engine) on the 31
   StuffIt 5 fixtures, with the normal adaptive build. This is the only step
@@ -352,13 +370,13 @@ exercised deliberately, by hand:
 
     # 1. the bound never under-estimates: hard-disable growth
     #    (make lzw_grow return UNC_ERR_MEM as its first statement)
-    UNCLASSIC=build/never/unclassic sh tests/run_diff.sh      # expect 797/797
+    UNCLASSIC=build/never/unclassic sh tests/run_diff.sh      # expect 803/803
 
     # 2. the safety net is correct: force it to run on every stream
     make BUILD=build/tiny CFLAGS="-O1 -g \
         -fsanitize=address,undefined,alignment -fno-sanitize-recover=all \
         -DUNC_LZW_TINY_TABLE" all
-    UNCLASSIC=build/tiny/unclassic sh tests/run_diff.sh       # expect 797/797
+    UNCLASSIC=build/tiny/unclassic sh tests/run_diff.sh       # expect 803/803
 
     # 3. these fixtures CAN fail on this code: starve the table AND
     #    skip the add instead of growing

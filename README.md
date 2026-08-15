@@ -60,8 +60,8 @@ notes.
 ## What it opens
 
 **Extracts:** StuffIt (`.sit`, classic and 5.x), Compact Pro (`.cpt`),
-BinHex (`.hqx`), MacBinary, PackIt (`.pit`), AppleSingle/AppleDouble,
-zip, gzip, tar, Unix compress (`.Z`).
+BinHex (`.hqx`), MacBinary, PackIt (`.pit`), DiskDoubler (`.dd`, `DDAR`,
+`DDA2`), AppleSingle/AppleDouble, zip, gzip, tar, Unix compress (`.Z`).
 
 Nested files like `.sit.hqx` or `.tar.Z` are unwrapped automatically, by
 looking inside them rather than trusting the name. A `.hqx` that holds
@@ -69,8 +69,8 @@ several files — one newsgroup posting, several attachments — gives you
 all of them, not just the first. Resource forks, type and
 creator codes and dates all survive, so an extracted application simply runs.
 
-**Recognises but does not extract:** StuffIt X, DiskDoubler, Now Compress,
-LZH, Disk Copy 4.2. It tells you what the file is rather than failing
+**Recognises but does not extract:** StuffIt X, Now Compress, LZH,
+Disk Copy 4.2. It tells you what the file is rather than failing
 obscurely.
 
 **Archives split across floppies:** a StuffIt segmented set is joined back
@@ -115,6 +115,7 @@ each one opens:
 | Encrypted archives | yes, if you know the password | no |
 | Several files posted in one BinHex message | yes | yes |
 | `.arc`, `.uu`, AppleLink `.pkg`, SpaceSaver | with the add-on | no |
+| DiskDoubler archives | no | yes |
 | What you install | the application, a StuffIt Engine extension, and the add-on for anything above | one application |
 | Source | free, closed | free, open (LGPL) |
 
@@ -159,7 +160,7 @@ build/unclassic sniff mystery.bin       # what is this?
 
 ## Is it any good?
 
-It is checked against [The Unarchiver](https://theunarchiver.com/) on 797 real
+It is checked against [The Unarchiver](https://theunarchiver.com/) on 803 real
 archives, byte for byte, both forks. The Macintosh application is checked the
 same way *while running on* an emulated Mac Plus, a System 7 machine and a
 Mac OS 9 PowerPC — not only on Linux.

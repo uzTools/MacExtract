@@ -25,10 +25,33 @@ whole corpus for that format (engine allocations only, via
 | Compact Pro segment (multi-part) | extract | RLE / LZH+RLE — the Compact Pro reader, over the segments | 2 generated sets + 2 cut by Compact Pro 1.51 itself | 20 KB | full |
 | Split file (plain .001/.002) | extract | — (join only; the joined file is the next layer) | 3 generated sets, adjudicated against the bytes that were cut, `unar` where it can join, and our unsplit read | 8 KB | full |
 | StuffIt X (.sitx) | detect only | — | — (no fixture) | — | — |
-| DiskDoubler (DD, DDAR, DDA2) | detect only | — | 6 fixtures, named + refused | — | — |
+| DiskDoubler (DD, DDAR, DDA2) | extract | 0 store, 6/9 AD LZSS, 8 Compact Pro, 10 DDn; 1/2/3/4/5/7 declined per entry✦ | 6 fixtures | 16–108 KB✦ | full |
 | Now Compress | detect only | — | 1 fixture, named + refused | — | — |
 | LZH/LHA (-lh?-, -lz?-) | detect only | — | 1 real `-lh5-` archive, named + refused; unit test over every method byte | — | — |
 | DiskCopy 4.2 (.image) | detect only | — | synthetic 800K GCR + real 800K image; 0 false positives in 804 fixtures | — | — |
+
+✦ **DiskDoubler, in scope since 2026-08-15** (M12), where every status file
+here used to call it detect-only. Three containers — a single compressed file
+(`0xABCD0054`), `DDAR`, `DDA2` — and four methods, which is every method the
+corpus uses: 0 stored, 6/9 (an 8 KB-block LZSS), 8 (Compact Pro compression in
+a DiskDoubler container: the same two stages as `.cpt`, at a 0xfff0 Huffman
+block instead of 0x1fff0), 10 (DDn: a 64 KB-window LZSS whose literals, offsets
+and lengths are three separately Huffman-coded streams laid out back to back).
+Delta-1 preprocessing is applied where the header asks for it, outside the
+checksum, which is where the reference puts it.
+
+Peak heap 16–108 KB, measured (`unclassic t --stats`): the 100 KB end is DDn,
+whose window is sized from the entry up to the format's 64 KB, plus a
+literal/offset buffer sized from each block's own header. All six extract
+fully under a 400 KB budget and under the 678,392 B a 1 MB Mac Plus leaves the
+engine — measured on Linux; no on-Mac run has extracted one (OPEN_ITEMS.md).
+
+Methods 1, 2, 3, 4, 5 and 7 are **declined per entry**: no corpus fixture uses
+one, and the reference marks 3 and 4 unimplemented and 5 untested, so anything
+written for them could not be graded. **11 forks across 2 fixtures are
+adjudicated by neither oracle** — `unar` fails on them and `macunpack` (built
+with its DiskDoubler support on) fails too; our output for those is ungraded,
+and `run_diff.py` prints the count on every run. DECISIONS.md 2026-08-15.
 
 †† **A `.hqx` file may hold more than one document, and since 2026-08-15 all
 of them are extracted** — the shape comp.binaries.mac produced, several files
@@ -412,7 +435,7 @@ DECISIONS.md 2026-08-10.
 
 ## Hardening
 
-- Differential: 797 fixtures byte-exact against `unar` manifests
+- Differential: 803 fixtures byte-exact against `unar` manifests
   (both forks + type/creator), `./ci.sh`. `run_diff.py` prints the
   number it actually ran, plus two figures that must be read with it:
   **12 forks across 9 fixtures are oracle-unadjudicated** (both
@@ -570,7 +593,7 @@ On-Mac engine peak heap (high-water mark) by format, matching the Linux
 | StuffIt classic | 19–72 KB‖ |
 | Unix compress (.Z) | 15–219 KB§ |
 | StuffIt 5 (Arsenic) | 0.63–2.53 MB (block *fill* dependent — see †) |
-| DiskDoubler / Now Compress | detect-only — no allocation, cleanly not extracted |
+| DiskDoubler / Now Compress | measured while both were detect-only; DiskDoubler has been extractable since M12 and this row has not been re-measured |
 
 ## System 7 tier (Mini vMac — System 7.0.1, 4 MB Mac Plus, 68000)
 
@@ -708,7 +731,7 @@ each in its own boot from a pristine copy of the master image:
 | `derived-DDT.sit` | StuffIt with a resource fork | 2 | 1,473 | 3,504 | ✅ byte-exact |
 | `derived-KeyGraphics.sit` | StuffIt 5 / Arsenic | 1 | 0 | 33,484 | ✅ byte-exact |
 | `derived-XferIt_1.5b4.sea` | Compact Pro self-extracting | 10 | 679,423 | 268,752 | ✅ byte-exact |
-| `derived-DandStoQIF2.sea` | DiskDoubler: must REFUSE | 0 | — | — | ✅ declined, as Linux does |
+| `derived-DandStoQIF2.sea` | DiskDoubler: must REFUSE | 0 | — | — | ✅ declined, as Linux did **then** — pre-M12, not re-run |
 | `synth-exo-tar.tar` | tar | 4 | 7,788 | 0 | ✅ byte-exact |
 | `synth-exo-zip-deflate.zip` | zip | 4 | 7,788 | 0 | ✅ byte-exact |
 
@@ -830,8 +853,9 @@ and MacBinary and then continue into what was inside (measured 2026-08-15):
 | StuffIt 5 / Arsenic | 62 | ❌ postdates it | ✅ |
 | zip, gzip, `.Z`, tar | 16 | ⚠️ paid add-on, System 7 only | ✅ |
 | PackIt | 5 | ❌ not in its list | ✅ |
-| DiskDoubler, Now Compress, LZH, StuffIt X | 16 | ❌ | detect-only, named |
-| **total** | **807** | **708 alone, 724 with the add-on** | **791 extract, 16 named** |
+| DiskDoubler | 12 | ❌ | ✅ since 2026-08-15 |
+| Now Compress, LZH, StuffIt X | 4 | ❌ | detect-only, named |
+| **total** | **807** | **708 alone, 724 with the add-on** | **803 extract, 4 named** |
 
 The 62 StuffIt 5 fixtures are the largest single difference, and it is a date
 rather than a capability: 4.0.2 shipped two years before the format. Handed
@@ -858,7 +882,7 @@ with this archive."*
 | `.arc`, `.uu`, AppleLink `.pkg`, SpaceSaver | with the add-on | no, and not sniffed either (out of scope, CLAUDE.md) |
 | Chained expansion (`.sit.hqx`) | yes, and can be turned off | yes, `-nr` turns it off |
 | System 7 conveniences | drag-and-drop of files, folders and whole disks; watch folders; background expansion; Apple events | none; Standard File, one archive at a time |
-| Verification | none published | 797 fixtures byte-exact against `unar`/`macunpack` |
+| Verification | none published | 803 fixtures byte-exact against `unar`/`macunpack` |
 | Licence | free, closed | free, LGPL-2.1-or-later |
 | Memory partition | **not measured** — reading the app's `SIZE` resource needs an HFS reader this machine does not have | engine peak heap per format in the matrix above |
 

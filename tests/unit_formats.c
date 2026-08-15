@@ -1586,6 +1586,118 @@ static void test_binhex_multi(void)
     CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
 }
 
+
+/* ------------------------------------------------------------------ */
+/* M12: DiskDoubler containers                                        */
+/* ------------------------------------------------------------------ */
+
+/* One 'DDAR' entry header, 124 bytes; the payload follows it.
+ * Source: reference/XADMaster/XADDiskDoublerParser.m parseArchive. */
+static uint32_t ddar_entry(uint8_t *p, const char *name, int isdir, int enddir,
+                           uint32_t dlen, uint32_t rlen, int inlineflag)
+{
+    uint32_t nl = (uint32_t)strlen(name), i;
+    for (i = 0; i < 124; i++) p[i] = 0;
+    memcpy(p, "DDAR", 4);
+    p[8] = (uint8_t)nl;
+    memcpy(p + 9, name, nl);
+    p[72] = (uint8_t)isdir;
+    p[73] = (uint8_t)enddir;
+    put32(p + 74, dlen);
+    put32(p + 78, rlen);
+    memcpy(p + 90, "TEXT", 4);
+    memcpy(p + 94, "ttxt", 4);
+    p[99] = (uint8_t)(inlineflag ? 0x20 : 0x00);   /* finder flags */
+    return 124;
+}
+
+static void test_diskdoubler(void)
+{
+    uint8_t arc[1024];
+    uint32_t len = 0, i;
+    uint16_t crc;
+    MemIO m;
+    UncIO io;
+    UncAlloc al;
+    UncSink sk;
+    CapSink cap;
+
+    /* Archive header: 'DDAR' + 74 bytes, CRC-16/XMODEM over the first 76. */
+    for (i = 0; i < 78; i++) arc[i] = 0;
+    memcpy(arc, "DDAR", 4);
+    crc = unc_crc16_xmodem(0, arc, 76);
+    arc[76] = (uint8_t)(crc >> 8); arc[77] = (uint8_t)crc;
+    len = 78;
+
+    /* A folder, a file stored inline inside it, then the folder's end. */
+    len += ddar_entry(arc + len, "folder", 1, 0, 0, 0, 0);
+    len += ddar_entry(arc + len, "hello.txt", 0, 0, 11, 4, 1);
+    memcpy(arc + len, "hello, fork", 11); len += 11;
+    memcpy(arc + len, "RSRC", 4); len += 4;
+    len += ddar_entry(arc + len, "", 0, 1, 0, 0, 0);
+
+    test_make_memio(&io, &m, arc, len);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_DISKDOUBLER);
+
+    test_make_alloc(&al);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_DISKDOUBLER, &io, &sk, &al, NULL, NULL) == UNC_OK);
+    CHECK(cap.count == 2);
+    CHECK(cap.info[0].is_dir == 1);
+    CHECK(cap.info[0].name_len == 6 && memcmp(cap.info[0].name, "folder", 6) == 0);
+    /* The path is the folder's, joined — the walk tracks depth by the
+     * end-of-directory marker, not by re-reading names. */
+    CHECK(cap.info[1].name_len == 16 &&
+          memcmp(cap.info[1].name, "folder/hello.txt", 16) == 0);
+    CHECK(cap.status[1] == UNC_OK);
+    CHECK(cap.dlen[1] == 11 && memcmp(cap.data[1], "hello, fork", 11) == 0);
+    CHECK(cap.rlen[1] == 4 && memcmp(cap.rsrc[1], "RSRC", 4) == 0);
+    CHECK(cap.info[1].type == 0x54455854u);   /* 'TEXT' */
+
+    /* A single compressed file: magic, an 80-byte header, then the forks.
+     * It carries no name of its own, so the host's supplies one and the
+     * ".dd" suffix comes off. Source: XADDiskDoublerParser.m parse. */
+    {
+        UncOptions opt;
+        static const uint8_t hint[] = "Report.txt.dd";
+        uint8_t one[512];
+        uint32_t n;
+        for (n = 0; n < 84; n++) one[n] = 0;
+        one[0] = 0xAB; one[1] = 0xCD; one[2] = 0x00; one[3] = 0x54;
+        put32(one + 4, 5);           /* datasize   */
+        put32(one + 8, 5);           /* datacomp   */
+        put32(one + 12, 3);          /* rsrcsize   */
+        put32(one + 16, 3);          /* rsrccomp   */
+        one[20] = 0; one[21] = 0;    /* both methods: stored */
+        memcpy(one + 32, "TEXT", 4);
+        memcpy(one + 36, "ttxt", 4);
+        n = 84;
+        memcpy(one + n, "plain", 5); n += 5;
+        memcpy(one + n, "RSC", 3);   n += 3;
+        /* The probe accepts a zero CRC ("really old files"), which keeps
+         * this synthetic file honest rather than needing one computed. */
+        opt.list_only = 0; opt.test_only = 0;
+        opt.name_hint = hint;
+        opt.name_hint_len = (uint16_t)(sizeof hint - 1);
+        test_make_memio(&io, &m, one, n);
+        CHECK(unc_sniff(&io) == UNC_FORMAT_DISKDOUBLER);
+        cap_make(&sk, &cap);
+        CHECK(unc_extract_as(UNC_FORMAT_DISKDOUBLER, &io, &sk, &al, NULL,
+                             &opt) == UNC_OK);
+        CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+        CHECK(cap.info[0].name_len == 10 &&
+              memcmp(cap.info[0].name, "Report.txt", 10) == 0);
+        CHECK(cap.dlen[0] == 5 && memcmp(cap.data[0], "plain", 5) == 0);
+        CHECK(cap.rlen[0] == 3 && memcmp(cap.rsrc[0], "RSC", 3) == 0);
+    }
+
+    /* A corrupt header CRC is not a DiskDoubler archive at all. */
+    arc[76] ^= 0xFF;
+    test_make_memio(&io, &m, arc, len);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_UNKNOWN);
+    arc[76] ^= 0xFF;
+}
+
 void run_format_tests(void)
 {
     test_macbinary();
@@ -1605,4 +1717,5 @@ void run_format_tests(void)
     test_zipseg();
     test_split();
     test_binhex_multi();
+    test_diskdoubler();
 }

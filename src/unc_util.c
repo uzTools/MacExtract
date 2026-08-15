@@ -288,6 +288,34 @@ void unc_bufin_init(UncBufIn *b, UncIO *io, UncProgressState *ps,
     b->err = UNC_OK;
 }
 
+/* Absolute stream position: what has been pulled from io, less what is
+ * still sitting unread in the buffer. */
+uint32_t unc_bufin_tell(const UncBufIn *b)
+{
+    return b->lenfed - (b->len - b->pos);
+}
+
+/* Consume forward to an absolute position. Going backwards is a caller
+ * bug (a decoder that needs it must seek the io and re-init instead). */
+int unc_bufin_skip_to(UncBufIn *b, uint32_t abs)
+{
+    uint32_t at = unc_bufin_tell(b);
+    if (abs < at) return UNC_ERR_CORRUPT;
+    while (at < abs) {
+        uint32_t chunk = abs - at;
+        if (b->pos < b->len) {
+            uint32_t have = b->len - b->pos;
+            if (chunk > have) chunk = have;
+            b->pos += chunk;
+        } else {
+            if (unc_bufin_next(b) < 0) return b->err;
+            chunk = 1;
+        }
+        at += chunk;
+    }
+    return UNC_OK;
+}
+
 int unc_bufin_next_slow(UncBufIn *b)
 {
     int32_t r;

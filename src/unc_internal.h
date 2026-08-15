@@ -126,6 +126,10 @@ void unc_bufin_init(UncBufIn *b, UncIO *io, UncProgressState *ps,
  * UNC_ERR_TRUNCATED (EOF), UNC_ERR_IO, or UNC_ERR_ABORTED. */
 int unc_bufin_next_slow(UncBufIn *b);
 
+/* Absolute position in the stream, and forward-only seeking to one. */
+uint32_t unc_bufin_tell(const UncBufIn *b);
+int unc_bufin_skip_to(UncBufIn *b, uint32_t abs);
+
 static inline int unc_bufin_next(UncBufIn *b)
 {
     if (b->pos < b->len) return b->buf[b->pos++];
@@ -340,6 +344,42 @@ typedef struct UncCtx {
     UncOptions        opt;
 } UncCtx;
 
+/* ------------------------------------------------------------------ */
+/* Compact Pro's two decode stages, shared with DiskDoubler method 8,   */
+/* which is Compact Pro compression inside a DiskDoubler container      */
+/* (Source: XADDiskDoublerParser.m case 8). The only difference is the  */
+/* Huffman block size: 0x1fff0 there, 0xfff0 here.                      */
+/* ------------------------------------------------------------------ */
+
+typedef struct CptRle {
+    /* DiskDoubler method 8 reuses this stage and needs the archive's own
+     * CRC-16/ARC over the decompressed bytes; Compact Pro itself does not
+     * ask for it. See fmt_dd.c. */
+    uint16_t crc16;
+    int      want_crc16;
+    UncCtx  *c;
+    UncFork  fork;
+    uint32_t remaining;   /* output bytes still owed */
+    uint32_t crc;         /* running fork CRC (shared across forks) */
+    int      state;
+    uint8_t  saved;       /* last emitted byte (repeat source) */
+    uint8_t *obuf;        /* staging buffer */
+    uint32_t ocap, olen;
+    int      err;         /* sticky */
+} CptRle;
+
+typedef struct CptLzh {
+    UncCanon lit, len, off;
+} CptLzh;
+
+void unc_cpt_rle_start(CptRle *r, UncCtx *c, UncFork fork, uint32_t outlen,
+                       uint32_t crc, uint8_t *obuf, uint32_t ocap);
+int unc_cpt_lzh_fork(CptRle *rle, UncBufIn *in, CptLzh *hz,
+                     uint8_t *window, uint32_t blocksize);
+int unc_cpt_rle_fork(CptRle *rle, UncBufIn *in, uint32_t complen);
+int unc_cpt_rle_flush(CptRle *r);
+
+
 int unc_macbinary_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_macbinary_extract(UncCtx *c);
 int unc_applesingle_probe(const uint8_t *head, int32_t len, UncFormat *out);
@@ -413,6 +453,7 @@ int unc_compressz_probe(const uint8_t *head, int32_t len);
 int unc_compressz_extract(UncCtx *c);
 int unc_tar_probe(const uint8_t *head, int32_t len);
 int unc_tar_extract(UncCtx *c);
+int unc_dd_extract(UncCtx *c);
 
 /* Detect-only probes */
 int unc_sitx_probe(const uint8_t *head, int32_t len);

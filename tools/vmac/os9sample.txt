@@ -16,11 +16,15 @@
 #                            never touches;
 #   derived-XferIt_1.5b4.sea a self-extracting archive, and at 285 KB by far
 #                            the largest thing here;
-#   derived-DandStoQIF2.sea  DiskDoubler, which is DETECT-ONLY by the brief.
-#                            The correct outcome is a clean refusal with
-#                            nothing written, and that is checked: the harness
-#                            passes it only when the Mac and the Linux engine
-#                            BOTH produce nothing. Most `.sea` fixtures in the
+#   derived-DandStoQIF2.sea  DiskDoubler. It was DETECT-ONLY when this list
+#                            was written and the expected outcome was a clean
+#                            refusal; since M12 (2026-08-15) the engine
+#                            extracts it. Nothing here needs changing for
+#                            that: the harness compares the Mac against the
+#                            Linux engine, so it follows the engine rather
+#                            than a hardcoded verdict — but the row in
+#                            FORMATS.md recording a refusal is a result from
+#                            before M12, not a current one. Most `.sea` fixtures in the
 #                            corpus turn out to be DiskDoubler or Now Compress
 #                            rather than StuffIt, which the extension hides.
 #
@@ -39,6 +43,6 @@ derived-Export.sit                         # StuffIt, 1615 B
 derived-DDT.sit                            # StuffIt with a resource fork, 3642 B
 derived-KeyGraphics.sit                    # StuffIt 5 / Arsenic, 4611 B
 derived-XferIt_1.5b4.sea                   # Compact Pro self-extracting, 285495 B
-derived-DandStoQIF2.sea                    # DiskDoubler: must REFUSE, 30562 B
+derived-DandStoQIF2.sea                    # DiskDoubler, extracted since M12, 30562 B
 synth-exo-tar.tar                          # tar, 20480 B
 synth-exo-zip-deflate.zip                  # zip, 3709 B

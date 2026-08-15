@@ -101,19 +101,8 @@ int unc_cpt_probe(const uint8_t *head, int32_t len, UncIO *io)
 
 enum { CPT_RLE_NONE, CPT_RLE_ESC1, CPT_RLE_ESC2 };
 
-typedef struct CptRle {
-    UncCtx  *c;
-    UncFork  fork;
-    uint32_t remaining;   /* output bytes still owed */
-    uint32_t crc;         /* running fork CRC (shared across forks) */
-    int      state;
-    uint8_t  saved;       /* last emitted byte (repeat source) */
-    uint8_t *obuf;        /* staging buffer */
-    uint32_t ocap, olen;
-    int      err;         /* sticky */
-} CptRle;
 
-static void cpt_rle_start(CptRle *r, UncCtx *c, UncFork fork,
+void unc_cpt_rle_start(CptRle *r, UncCtx *c, UncFork fork,
                           uint32_t outlen, uint32_t crc,
                           uint8_t *obuf, uint32_t ocap)
 {
@@ -127,12 +116,16 @@ static void cpt_rle_start(CptRle *r, UncCtx *c, UncFork fork,
     r->ocap = ocap;
     r->olen = 0;
     r->err = UNC_OK;
+    r->crc16 = 0;
+    r->want_crc16 = 0;
 }
 
-static int cpt_rle_flush(CptRle *r)
+int unc_cpt_rle_flush(CptRle *r)
 {
     if (r->olen == 0) return UNC_OK;
     r->crc = unc_crc32(r->crc, r->obuf, (int32_t)r->olen);
+    if (r->want_crc16)
+        r->crc16 = unc_crc16_arc(r->crc16, r->obuf, (int32_t)r->olen);
     if (!r->c->opt.test_only &&
         r->c->sink->write(r->c->sink->ctx, r->fork, r->obuf,
                           (int32_t)r->olen) < 0) {
@@ -147,7 +140,7 @@ static int cpt_rle_emit(CptRle *r, uint8_t b)
 {
     r->obuf[r->olen++] = b;
     r->remaining--;
-    if (r->olen == r->ocap) return cpt_rle_flush(r);
+    if (r->olen == r->ocap) return unc_cpt_rle_flush(r);
     return UNC_OK;
 }
 
@@ -204,9 +197,6 @@ static int cpt_rle_push(CptRle *r, uint8_t ch)
 /* cpt_rle_lzh.                                                       */
 /* ------------------------------------------------------------------ */
 
-typedef struct CptLzh {
-    UncCanon lit, len, off;
-} CptLzh;
 
 /* One code: u8 n, then n bytes of two 4-bit code lengths each
  * (high nibble first). n*2 must not exceed nsyms; missing trailing
@@ -230,12 +220,12 @@ static int cpt_read_code(UncCanon *c, UncBufIn *in, int32_t nsyms)
 }
 
 /* Decode one LZH-compressed fork, feeding bytes through `rle`. */
-static int cpt_lzh_fork(CptRle *rle, UncBufIn *in, CptLzh *hz,
-                        uint8_t *window)
+int unc_cpt_lzh_fork(CptRle *rle, UncBufIn *in, CptLzh *hz,
+                     uint8_t *window, uint32_t blocksize)
 {
     UncBitIn bi;
     uint32_t wpos = 0;
-    uint32_t blockcost = CPT_BLOCK;   /* force tree read on first pass */
+    uint32_t blockcost = blocksize;   /* force tree read on first pass */
     uint32_t blockstart = 0;
     int first = 1, err;
     uint32_t i;
@@ -244,7 +234,7 @@ static int cpt_lzh_fork(CptRle *rle, UncBufIn *in, CptLzh *hz,
     unc_bitin_init(&bi, in);
 
     while (rle->remaining > 0) {
-        if (blockcost >= CPT_BLOCK) {
+        if (blockcost >= blocksize) {
             /* New block: re-read the three codes, byte-aligned.
              * After the first block, the encoder pads to a 16-bit unit
              * boundary relative to the previous trees' end; XADMaster
@@ -311,7 +301,7 @@ static int cpt_lzh_fork(CptRle *rle, UncBufIn *in, CptLzh *hz,
 }
 
 /* Plain-RLE fork: complen input bytes through the RLE stage. */
-static int cpt_rle_fork(CptRle *rle, UncBufIn *in, uint32_t complen)
+int unc_cpt_rle_fork(CptRle *rle, UncBufIn *in, uint32_t complen)
 {
     uint32_t i;
     int err;
@@ -414,12 +404,12 @@ static int cpt_fork(UncCtx *c, UncFork fork, uint32_t vol, uint32_t at,
     unc_bufin_init(&in, c->io, &c->ps, iobuf, iocap);
     in.limit = complen;   /* corrupt streams must not read past the fork */
 
-    cpt_rle_start(&rle, c, fork, outlen, *crc, obuf, ocap);
-    if (lzh) err = cpt_lzh_fork(&rle, &in, hz, window);
-    else     err = cpt_rle_fork(&rle, &in, complen);
+    unc_cpt_rle_start(&rle, c, fork, outlen, *crc, obuf, ocap);
+    if (lzh) err = unc_cpt_lzh_fork(&rle, &in, hz, window, CPT_BLOCK);
+    else     err = unc_cpt_rle_fork(&rle, &in, complen);
     if (err == UNC_OK && rle.remaining > 0) err = UNC_ERR_TRUNCATED;
     if (err == UNC_OK || err == UNC_ERR_TRUNCATED || err == UNC_ERR_CORRUPT)
-        if (cpt_rle_flush(&rle) != UNC_OK) err = rle.err;
+        if (unc_cpt_rle_flush(&rle) != UNC_OK) err = rle.err;
     *crc = rle.crc;
     return err;
 }
