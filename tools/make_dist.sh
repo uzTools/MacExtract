@@ -118,12 +118,19 @@ echo "make_dist:       dist/unclassic.dsk ($(wc -c < dist/unclassic.dsk) B), dis
 # Cheap proof that the two artifacts carry the same application: the .dsk's
 # copy round-trips back to a MacBinary whose resource fork — which is the
 # whole of an APPL — matches the one in dist/unclassic.bin byte for byte.
-HOME_SAVE=$HOME
-HOME=$(mktemp -d); export HOME
-hmount dist/unclassic.dsk >/dev/null
-hcopy -m "unclassic:unclassic" "$HOME/roundtrip.bin"
-humount >/dev/null
-python3 - "$HOME/roundtrip.bin" <<'PY'
+#
+# hfsutils does that properly, through the catalog. Without it the check
+# still runs, weaker: the fork must appear verbatim in the image. A machine
+# with no hfsutils used to reach this line and die with `hmount: not found`
+# AFTER writing dist/, which read as "the build failed" when the artifacts
+# were in fact sitting there unverified (2026-08-15).
+if command -v hmount >/dev/null 2>&1; then
+    HOME_SAVE=$HOME
+    HOME=$(mktemp -d); export HOME
+    hmount dist/unclassic.dsk >/dev/null
+    hcopy -m "unclassic:unclassic" "$HOME/roundtrip.bin"
+    humount >/dev/null
+    python3 - "$HOME/roundtrip.bin" <<'PY'
 import sys
 a = open(sys.argv[1], 'rb').read()
 b = open('dist/unclassic.bin', 'rb').read()
@@ -133,5 +140,19 @@ print(f"make_dist: .dsk round-trip: {rl} B resource fork, "
       f"{'identical' if same else 'DIFFERENT'} to the MacBinary")
 sys.exit(0 if same else 1)
 PY
-rm -rf "$HOME"
-HOME=$HOME_SAVE; export HOME
+    rm -rf "$HOME"
+    HOME=$HOME_SAVE; export HOME
+else
+    python3 - <<'PY'
+import sys
+b = open('dist/unclassic.bin', 'rb').read()
+img = open('dist/unclassic.dsk', 'rb').read()
+rl = int.from_bytes(b[87:91], 'big')
+fork = b[128:128 + rl]
+found = fork in img
+print(f"make_dist: no hfsutils, weaker check: {rl} B resource fork "
+      f"{'found verbatim in' if found else 'NOT FOUND in'} the .dsk "
+      f"(the catalog itself is unchecked)")
+sys.exit(0 if found else 1)
+PY
+fi

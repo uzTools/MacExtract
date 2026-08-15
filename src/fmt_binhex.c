@@ -185,8 +185,19 @@ static int bh_next(BhDec *d)
 /* ------------------------------------------------------------------ */
 
 /* Scan the raw input for the banner; position after end of that line.
+ *
+ * `limited` bounds the scan, which is right for the FIRST document — a
+ * mail preamble is short, and a file that is not BinHex at all should be
+ * given up on rather than read whole. It is wrong for every document
+ * after it: the text between two postings is a whole posting, and in
+ * list mode the previous document's own encoded stream has not been
+ * consumed, so the distance to the next banner is the size of the file.
+ * Source: reference/macutils/hexbin/hexbin.c, which decodes a document
+ * and then does `again = 1; goto nexttry` to look for the next header in
+ * the same input, its find_header() scanning to EOF.
+ *
  * Returns UNC_OK or UNC_ERR_FORMAT. */
-static int bh_find_banner(UncBufIn *in)
+static int bh_find_banner(UncBufIn *in, int limited)
 {
     uint8_t window[40];
     uint32_t have = 0, w = 0, scanned = 0;
@@ -206,7 +217,7 @@ static int bh_find_banner(UncBufIn *in)
                 if (window[(w + i) % 40] != (uint8_t)bh_banner[i]) break;
             if (i == 40) break;
         }
-        if (++scanned > 4 * BH_SNIFF_LIMIT) return UNC_ERR_FORMAT;
+        if (limited && ++scanned > 4 * BH_SNIFF_LIMIT) return UNC_ERR_FORMAT;
     }
     do {
         ch = unc_bufin_next(in);
@@ -259,48 +270,47 @@ static int bh_fork(UncCtx *c, BhDec *d, UncFork fork, uint32_t size,
     return UNC_OK;
 }
 
-int unc_binhex_extract(UncCtx *c)
+/* Decoder state for the next document. The input cursor and its buffer
+ * carry on; everything the 6-bit and RLE layers hold does not, including
+ * the sticky error the terminating ':' of the previous document set. */
+static void bh_reset(BhDec *d)
 {
-    BhDec d;
+    d->phase = 0;
+    d->prev_bits = 0;
+    d->eof = 0;
+    d->rle_byte = 0;
+    d->rle_num = 0;
+    d->err = UNC_OK;
+}
+
+/* One BinHex document, from just after its ':' to the end of its forks. */
+static int bh_document(UncCtx *c, BhDec *d, uint8_t *obuf, uint32_t ocap)
+{
     UncEntryInfo e;
     uint8_t hdr[64 + 20];
-    uint8_t *iobuf, *obuf;
-    uint32_t iocap = 4096, ocap = 4096;
     uint32_t namelen, datalen, rsrclen, i;
     uint16_t hcrc;
     int err, sret, b;
 
-    iobuf = (uint8_t *)unc_alloc(c->al, iocap + ocap);
-    if (!iobuf) return UNC_ERR_MEM;
-    obuf = iobuf + iocap;
-
-    bh_init(&d, c, iobuf, iocap);
-
-    err = bh_find_banner(&d.in);
-    if (err == UNC_OK) err = bh_find_colon(&d.in);
-    if (err != UNC_OK) goto out;
-
     /* Header: namelen, name, version, type, creator, flags, lens, CRC. */
-    b = bh_next(&d);
-    if (b < 0) { err = UNC_ERR_FORMAT; goto out; }
+    b = bh_next(d);
+    if (b < 0) return UNC_ERR_FORMAT;
     namelen = (uint32_t)b;
-    if (namelen < 1 || namelen > 63) { err = UNC_ERR_FORMAT; goto out; }
+    if (namelen < 1 || namelen > 63) return UNC_ERR_FORMAT;
     hdr[0] = (uint8_t)namelen;
     for (i = 0; i < namelen + 19; i++) {
-        b = bh_next(&d);
-        if (b < 0) { err = UNC_ERR_TRUNCATED; goto out; }
+        b = bh_next(d);
+        if (b < 0) return UNC_ERR_TRUNCATED;
         hdr[1 + i] = (uint8_t)b;
     }
-    b = bh_next(&d);
-    if (b < 0) { err = UNC_ERR_TRUNCATED; goto out; }
+    b = bh_next(d);
+    if (b < 0) return UNC_ERR_TRUNCATED;
     hcrc = (uint16_t)(b << 8);
-    b = bh_next(&d);
-    if (b < 0) { err = UNC_ERR_TRUNCATED; goto out; }
+    b = bh_next(d);
+    if (b < 0) return UNC_ERR_TRUNCATED;
     hcrc |= (uint16_t)b;
-    if (unc_crc16_xmodem(0, hdr, (int32_t)(namelen + 20)) != hcrc) {
-        err = UNC_ERR_CRC;
-        goto out;
-    }
+    if (unc_crc16_xmodem(0, hdr, (int32_t)(namelen + 20)) != hcrc)
+        return UNC_ERR_CRC;
 
     unc_entry_clear(&e);
     unc_entry_set_name(&e, hdr + 1, namelen);
@@ -319,28 +329,67 @@ int unc_binhex_extract(UncCtx *c)
     if (c->ps.total != UNC_SIZE_UNKNOWN) {
         uint32_t cap255 = c->ps.total > 0x00FFFFFFu ? 0xFFFFFFFEu
                                                     : c->ps.total * 255u;
-        if (datalen > cap255 || rsrclen > cap255) {
-            err = UNC_ERR_CORRUPT;
-            goto out;
-        }
+        if (datalen > cap255 || rsrclen > cap255) return UNC_ERR_CORRUPT;
     }
 
     sret = c->sink->begin_entry(c->sink->ctx, &e);
-    if (sret < 0) { err = UNC_ERR_SINK; goto out; }
-    if (sret > 0) { err = UNC_OK; goto out; }
+    if (sret < 0) return UNC_ERR_SINK;
+    if (sret > 0) return UNC_OK;
 
     err = UNC_OK;
     if (!c->opt.list_only) {
-        err = bh_fork(c, &d, UNC_FORK_DATA, datalen, obuf, ocap);
+        err = bh_fork(c, d, UNC_FORK_DATA, datalen, obuf, ocap);
         if (err == UNC_OK)
-            err = bh_fork(c, &d, UNC_FORK_RSRC, rsrclen, obuf, ocap);
+            err = bh_fork(c, d, UNC_FORK_RSRC, rsrclen, obuf, ocap);
     }
 
-    if (c->sink->end_entry(c->sink->ctx, err) < 0) { err = UNC_ERR_SINK; goto out; }
+    if (c->sink->end_entry(c->sink->ctx, err) < 0) return UNC_ERR_SINK;
     if (err != UNC_ERR_SINK && err != UNC_ERR_ABORTED && err != UNC_ERR_IO)
         err = UNC_OK;
+    return err;
+}
 
-out:
+/* A .hqx file can hold MORE THAN ONE document — several files posted in
+ * one message, which is what comp.binaries.mac produced and what this
+ * decoder took the first of, exit 0, until 2026-08-15. Each document is
+ * banner, ':', stream, ':'; after one ends we look for the next banner,
+ * exactly as the reference does (see bh_find_banner).
+ *
+ * A banner with no usable document after it is an ERROR, not a quiet
+ * stop: swallowing it is how the single-document version hid the rest of
+ * a posting for as long as it did. */
+int unc_binhex_extract(UncCtx *c)
+{
+    BhDec d;
+    uint8_t *iobuf, *obuf;
+    uint32_t iocap = 4096, ocap = 4096;
+    uint32_t docs;
+    int err;
+
+    iobuf = (uint8_t *)unc_alloc(c->al, iocap + ocap);
+    if (!iobuf) return UNC_ERR_MEM;
+    obuf = iobuf + iocap;
+
+    bh_init(&d, c, iobuf, iocap);
+
+    for (docs = 0; ; docs++) {
+        err = bh_find_banner(&d.in, docs == 0);
+        if (err != UNC_OK) {
+            /* No further banner. For the first document that means the
+             * file is not BinHex; after one, it means the file is over —
+             * unless the reader itself failed, which is not an end. */
+            if (docs > 0)
+                err = (d.in.err == UNC_ERR_IO || d.in.err == UNC_ERR_ABORTED)
+                      ? d.in.err : UNC_OK;
+            break;
+        }
+        err = bh_find_colon(&d.in);
+        if (err != UNC_OK) break;
+        bh_reset(&d);
+        err = bh_document(c, &d, obuf, ocap);
+        if (err != UNC_OK) break;
+    }
+
     unc_free(c->al, iobuf);
     return err;
 }

@@ -64,6 +64,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-14 — the detect-only claim had no test, and LZH stays out of scope
 - 2026-08-14 — one command to replay the segment work, and what it caught
 - 2026-08-15 — measuring this project against StuffIt Expander 4.0.2
+- 2026-08-15 — several BinHex documents in one file, and the oracle's blind spot
 
 ---
 
@@ -2968,3 +2969,47 @@ column is documentation, labelled as such in FORMATS.md, and the one number
 it would have been nice to have — the memory partition the application asks
 for — is unmeasured, because reading a `SIZE` resource off that HFS image
 needs a reader this machine does not have.
+
+## 2026-08-15 — several BinHex documents in one file, and the oracle's blind spot
+
+**Claim:** a `.hqx` can hold more than one document; this decoder read the
+first and returned success. **Evidence:** `cat a.hqx b.hqx` listed and
+extracted one file, exit 0. **Consequence:** every posting that carried two
+attachments silently lost all but the first.
+
+The fix is small — after a document's terminating ':' , look for the next
+banner and decode again — and it is transcribed rather than invented:
+`reference/macutils/hexbin/hexbin.c` decodes a document and then does
+`again = 1; goto nexttry`, its `find_header()` scanning on to EOF. Three
+things about it are worth keeping:
+
+- **The banner scan had a limit that was right once and wrong afterwards.**
+  32 KB is a sane bound for finding the FIRST banner, since a file that is
+  not BinHex should be given up on rather than read whole. Applied to the
+  second document it would have made the fix work in extract mode and fail
+  in list mode, where the previous document's stream is never consumed and
+  the distance to the next banner is the size of the file. A bound derived
+  from one caller's situation does not survive a second caller.
+- **A banner with nothing usable after it is an error, not a quiet stop.**
+  The tempting alternative — treat any failure after the first document as
+  "end of file" — reintroduces exactly the defect being fixed, in a place
+  nobody would look for it again.
+- **`unar` shares the limitation, so the differential suite was blind by
+  construction.** 179 BinHex fixtures and 3,740 corrupt variants could not
+  have caught this at any point, and the size of that suite is precisely
+  what made the gap feel impossible. The way out was a THIRD oracle:
+  macutils' `hexbin` has handled the case since 1991, and it now grades the
+  concatenated fixtures in `ci.sh` (TESTING.md). This is the macunpack
+  lesson from the other direction — that one was *a limitation that names
+  one tool is a limitation of that tool*; this one is **a limitation you
+  share with your oracle is invisible until a different implementation is
+  asked.**
+
+Both new suites were shown to fail before being believed: a one-line mutation
+(decode one document and stop) fails 6 unit checks and all four assertions of
+`tools/run_multihqx.py`, including the `hexbin` one.
+
+The other half of what StuffIt Expander 4.0.2 calls multipart BinHex — one
+document broken across several postings — is NOT this. What this engine joins
+is a document cut across files named `.001`, `.002`, which the plain-split
+scheme already did (FORMATS.md, comparison table).

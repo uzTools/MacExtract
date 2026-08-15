@@ -1452,6 +1452,140 @@ static void test_split(void)
     free(scratch);
 }
 
+/* ------------------------------------------------------------------ */
+/* M2 follow-up: several BinHex documents in one file                 */
+/* ------------------------------------------------------------------ */
+
+/* Source: reference/XADMaster/XADBinHexParser.m (alphabet, header
+ * layout, CRC-16/XMODEM per fork, 0x90 escape where count 0 means a
+ * literal 0x90). This is the encoder side of fmt_binhex.c, so that the
+ * multi-document loop is covered on a machine with no fixtures. */
+static const char bh_alpha[65] =
+    "!\"#$%&'()*+,-012345689@ABCDEFGHIJKLMNPQRSTUVXYZ[`abcdefhijklmpqr";
+
+static const char bh_line[] = "(This file must be converted with BinHex 4.0)\n\n:";
+
+/* Append one complete BinHex document; returns bytes written. */
+static uint32_t bh_synth(uint8_t *out, const char *name,
+                         const uint8_t *data, uint32_t dlen,
+                         const uint8_t *rsrc, uint32_t rlen)
+{
+    uint8_t raw[1024], esc[1200];
+    uint32_t n = 0, e = 0, i, off, bitbuf = 0, nbits = 0, col = 0;
+    uint32_t nl = (uint32_t)strlen(name);
+    uint16_t crc;
+
+    raw[n++] = (uint8_t)nl;
+    memcpy(raw + n, name, nl); n += nl;
+    raw[n++] = 0;                                  /* version */
+    memcpy(raw + n, "TEXT", 4); n += 4;
+    memcpy(raw + n, "ttxt", 4); n += 4;
+    raw[n++] = 0; raw[n++] = 0;                    /* finder flags */
+    put32(raw + n, dlen); n += 4;
+    put32(raw + n, rlen); n += 4;
+    crc = unc_crc16_xmodem(0, raw, (int32_t)n);    /* header CRC */
+    raw[n++] = (uint8_t)(crc >> 8); raw[n++] = (uint8_t)crc;
+    memcpy(raw + n, data, dlen); n += dlen;
+    crc = unc_crc16_xmodem(0, data, (int32_t)dlen);
+    raw[n++] = (uint8_t)(crc >> 8); raw[n++] = (uint8_t)crc;
+    memcpy(raw + n, rsrc, rlen); n += rlen;
+    crc = unc_crc16_xmodem(0, rsrc, (int32_t)rlen);
+    raw[n++] = (uint8_t)(crc >> 8); raw[n++] = (uint8_t)crc;
+
+    /* RLE layer: escape 0x90, emit no runs. */
+    for (i = 0; i < n; i++) {
+        esc[e++] = raw[i];
+        if (raw[i] == 0x90) esc[e++] = 0;
+    }
+
+    off = (uint32_t)strlen(bh_line);
+    memcpy(out, bh_line, off);
+    for (i = 0; i < e; i++) {
+        bitbuf = (bitbuf << 8) | esc[i];
+        nbits += 8;
+        while (nbits >= 6) {
+            nbits -= 6;
+            out[off++] = (uint8_t)bh_alpha[(bitbuf >> nbits) & 0x3F];
+            if (++col == 64) { out[off++] = '\n'; col = 0; }
+        }
+    }
+    if (nbits) out[off++] = (uint8_t)bh_alpha[(bitbuf << (6 - nbits)) & 0x3F];
+    out[off++] = ':';
+    out[off++] = '\n';
+    return off;
+}
+
+static uint32_t bh_text(uint8_t *out, const char *s)
+{
+    uint32_t n = (uint32_t)strlen(s);
+    memcpy(out, s, n);
+    return n;
+}
+
+static void test_binhex_multi(void)
+{
+    /* 0x90 in both payloads: the escape has to survive the round trip,
+     * and it is the one byte that can desynchronise a document. */
+    static const uint8_t d1[] = { 'h','i',0x90,0x90,'!' };
+    static const uint8_t r1[] = { 'R','S','R','C' };
+    static const uint8_t d2[] = { 's','e','c','o','n','d' };
+    uint8_t arc[8192];
+    uint32_t len, one;
+    MemIO m;
+    UncIO io;
+    UncAlloc al;
+    UncSink sk;
+    CapSink cap;
+
+    test_make_alloc(&al);
+
+    /* --- one document: unchanged behaviour ------------------------- */
+    one = bh_synth(arc, "first.txt", d1, sizeof d1, r1, sizeof r1);
+    test_make_memio(&io, &m, arc, one);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_BINHEX);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_BINHEX, &io, &sk, &al, NULL, NULL) == UNC_OK);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+    CHECK(cap.dlen[0] == sizeof d1 && memcmp(cap.data[0], d1, sizeof d1) == 0);
+    CHECK(cap.rlen[0] == sizeof r1 && memcmp(cap.rsrc[0], r1, sizeof r1) == 0);
+
+    /* --- two documents, with a posting's worth of text between ----- */
+    len = one;
+    len += bh_text(arc + len, "\n--- next part of the digest ---\n"
+                              "Content-Type: application/mac-binhex40\n\n");
+    len += bh_synth(arc + len, "second.txt", d2, sizeof d2, r1, 0);
+    test_make_memio(&io, &m, arc, len);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_BINHEX, &io, &sk, &al, NULL, NULL) == UNC_OK);
+    CHECK(cap.count == 2);
+    CHECK(cap.status[0] == UNC_OK && cap.status[1] == UNC_OK);
+    CHECK(cap.info[0].name_len == 9 && memcmp(cap.info[0].name, "first.txt", 9) == 0);
+    CHECK(cap.info[1].name_len == 10 && memcmp(cap.info[1].name, "second.txt", 10) == 0);
+    CHECK(cap.dlen[0] == sizeof d1 && memcmp(cap.data[0], d1, sizeof d1) == 0);
+    CHECK(cap.dlen[1] == sizeof d2 && memcmp(cap.data[1], d2, sizeof d2) == 0);
+    CHECK(cap.rlen[1] == 0);
+
+    /* --- the second document is truncated: per-entry error, and the
+     *     first one still arrives ---------------------------------- */
+    test_make_memio(&io, &m, arc, len - 12);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_BINHEX, &io, &sk, &al, NULL, NULL) == UNC_OK);
+    CHECK(cap.count == 2);
+    CHECK(cap.status[0] == UNC_OK && cap.status[1] == UNC_ERR_TRUNCATED);
+
+    /* --- a banner with no document after it is reported, not
+     *     swallowed: taking the first document and exiting 0 is the
+     *     defect this loop exists to fix -------------------------- */
+    len = one;
+    len += bh_text(arc + len, "\n(This file must be converted with BinHex 4.0)\n"
+                              "and then the posting was cut off\n");
+    test_make_memio(&io, &m, arc, len);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_BINHEX, &io, &sk, &al, NULL, NULL)
+          == UNC_ERR_FORMAT);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+}
+
 void run_format_tests(void)
 {
     test_macbinary();
@@ -1470,4 +1604,5 @@ void run_format_tests(void)
     test_sitseg();
     test_zipseg();
     test_split();
+    test_binhex_multi();
 }

@@ -408,8 +408,13 @@ Each is a format StuffIt Expander 4.0.2's paid add-on expanded and we do not;
 none occurs in the corpus. That comparison — the first external yardstick this
 project has applied — is FORMATS.md, "Compared with StuffIt Expander 4.0.2",
 and what it is worth is DECISIONS.md 2026-08-15. It found exactly ONE gap that
-is **not** out of scope: **multipart BinHex**, invisible to the differential
-suite because `unar` shares it (OPEN_ITEMS.md section 5).
+was **not** out of scope — **several BinHex documents in one file**, which the
+differential suite could never see because `unar` takes the first document
+too — and that was built the same day, graded by a THIRD oracle, macutils'
+`hexbin` (FORMATS.md ††, TESTING.md). **Where a limitation is shared with the
+oracle, the suite is blind by construction; the way out is to ask what some
+other implementation claims.** That is the macunpack lesson arriving from the
+opposite direction, and it is now twice-proven.
 
 **Multi-segment archives are IN scope since 2026-08-08** (M11), where this
 file used to list them as out. Four schemes are implemented — StuffIt segments,

@@ -11,7 +11,7 @@ whole corpus for that format (engine allocations only, via
 |---|---|---|---|---|---|
 | MacBinary I/II/III | extract | — | 233 fixtures | 8 KB | full |
 | AppleSingle/Double | extract | — | (unit tests + envelopes) | 8 KB | full |
-| BinHex 4 (.hqx) | extract | RLE90 | 179 fixtures | 8 KB | full |
+| BinHex 4 (.hqx) | extract | RLE90; several documents in one file†† | 179 fixtures | 8 KB | full |
 | PackIt (.pit) | extract | store, Huffman; encrypted detected | 4 fixtures (1 real + 3 synthetic PMa4) | 9 KB | full |
 | Compact Pro (.cpt) | extract | RLE, LZH+RLE | 108 fixtures | 19 KB | full |
 | StuffIt classic (.sit) | extract | 0 store, 1 RLE90*, 2 LZW, 3 Huffman, 5 LZAH, 6 fixed Huffman‡, 8 MW, 13 LZSS+Huffman; encrypted detected | 227 fixtures | 8–76 KB‖ | full |
@@ -29,6 +29,17 @@ whole corpus for that format (engine allocations only, via
 | Now Compress | detect only | — | 1 fixture, named + refused | — | — |
 | LZH/LHA (-lh?-, -lz?-) | detect only | — | 1 real `-lh5-` archive, named + refused; unit test over every method byte | — | — |
 | DiskCopy 4.2 (.image) | detect only | — | synthetic 800K GCR + real 800K image; 0 false positives in 804 fixtures | — | — |
+
+†† **A `.hqx` file may hold more than one document, and since 2026-08-15 all
+of them are extracted** — the shape comp.binaries.mac produced, several files
+posted in one message. Each document is banner, ':', stream, ':'; the decoder
+looks for the next banner after each one, as
+`reference/macutils/hexbin/hexbin.c` does. A banner with nothing usable after
+it is an error rather than a quiet stop. Graded by `hexbin` and by the same
+fixtures decoded one at a time (TESTING.md, "Several BinHex documents in one
+file"); the differential suite cannot see this case, because `unar` takes the
+first document too. The 179 fixtures are single-document files and are
+unaffected — all still byte-exact.
 
 \* **Method 1 occurs once and IS oracle-adjudicated** (since 2026-08-08).
 It is the 470-byte resource fork of `I Want To Buy Some Cheese` in
@@ -842,7 +853,7 @@ with this archive."*
 | How a part is identified | not stated | by its header, never by its filename (zip and `.NNN` sets excepted — see "Segmented archives") |
 | Segment joining, known defect | *"if the `Delete segments after joining` preference is selected, and you run out of disk space during a join operation, the first segment will be deleted even though the joining is not complete"* | parts are never deleted; the Mac shell removes only what it wrote |
 | Encrypted archives | yes — it prompts, and knows *"You have entered an incorrect password"* | detected and refused, out of scope |
-| Multipart BinHex | *"Multipart BinHex files, such as those appearing in Internet newsgroup postings (e.g. comp.binaries.mac), are fully supported"* — multiple documents in one text file, and one file broken into several pieces | one document per file; split parts join only when named `.001`, `.002` … (OPEN_ITEMS.md) |
+| Multipart BinHex | *"Multipart BinHex files, such as those appearing in Internet newsgroup postings (e.g. comp.binaries.mac), are fully supported"* — multiple documents in one text file, and one file broken into several pieces | several documents in one file since 2026-08-15 (††, above); a document broken across FILES joins where the parts are named `.001`, `.002` … |
 | Compact Pro comments | written out beside the extracted items | read and CRC'd, never surfaced |
 | `.arc`, `.uu`, AppleLink `.pkg`, SpaceSaver | with the add-on | no, and not sniffed either (out of scope, CLAUDE.md) |
 | Chained expansion (`.sit.hqx`) | yes, and can be turned off | yes, `-nr` turns it off |

@@ -282,6 +282,35 @@ can read it.
    aborts/hangs fail. 4,000 cases at M9; every CI run does a 150-case
    smoke.
 
+## Several BinHex documents in one file (`tools/run_multihqx.py`, in `ci.sh`)
+
+Added 2026-08-15, with the capability it grades. Real corpus `.hqx`
+fixtures are concatenated with a posting's worth of text between them —
+2 documents and 3 — and each set is graded three ways: against the same
+fixtures extracted ONE AT A TIME with `-nr`, against `hexbin`, and on the
+two ways it must fail (a truncated last document is a per-entry error
+with the earlier documents intact; a banner with nothing usable after it
+is reported, not swallowed). Every one of those four assertions was shown
+to fail against a single-document build before being believed.
+
+`hexbin` is the third oracle in this project, for the same reason
+`macunpack` is the second: **the tool the differential suite uses cannot
+do the thing being tested.** `unar` decodes the first document and stops,
+exactly as we did, so 179 BinHex fixtures and 3,740 corrupt variants
+could never have caught this. macutils has decoded multi-document files
+since 1991 (`reference/macutils/hexbin/hexbin.c`, the `again = 1; goto
+nexttry` loop).
+
+**What this cannot see:** entry NAMES — it compares the set of fork
+hashes, because `hexbin` mangles names on the way out (spaces become
+underscores) and pairing on a mangled name would grade our naming against
+its transliteration. Names are covered by `test_binhex_multi` in the unit
+tests instead, which also carries the whole case on a machine with no
+fixtures. It also cannot see the *era's* other multipart shape — one
+document cut across several postings, each with its own headers; what
+this engine joins is a document cut across files named `.001`, `.002`,
+which is the plain-split scheme rather than anything BinHex-specific.
+
 ## The sampled inverse BWT (`ci.sh` variant 1b, added 2026-08-07)
 
 The Arsenic decoder picks between a 4-bytes-per-byte transform table and a

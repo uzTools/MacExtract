@@ -1,4 +1,4 @@
-# OPEN_ITEMS.md — what is missing, as of 2026-08-14
+# OPEN_ITEMS.md — what is missing, as of 2026-08-15
 
 A standing audit of the gaps: things not done, things done but not verified,
 and things this repository asserts more confidently than the evidence supports.
@@ -24,8 +24,10 @@ BLOCKERS.md, 2026-08-08).
 DECISIONS.md, the withdrawn claim to BLOCKERS.md, the numbers to FORMATS.md.
 Section 4 used to be *Multi-segment*, and on 2026-08-14 it emptied: all
 four schemes join on Linux and on the Macintosh, and the last thing in it
-— taking an envelope off each part — was built the same day. A section
-that empties is the point of the file.
+— taking an envelope off each part — was built the same day. A section 5
+held multi-document BinHex for one day and emptied on 2026-08-15 (M2
+follow-up in PROGRESS.md; DECISIONS.md for what it taught about oracles).
+A section that empties is the point of the file.
 
 ---
 
@@ -117,30 +119,3 @@ that empties is the point of the file.
   205,828 → 803,634, and changed `MaxBlock` at the refusal by under 500 B —
   the stranded heap was never about where the live blocks sat). Cited from
   `src/sit_arsenic.c` and `mac/unclassic_mac.c`.
-
----
-
-## 5. Missing capability, with a reproduction
-
-- **Multipart BinHex: several documents in one text file.** MEASURED
-  2026-08-15. `cat a.hqx b.hqx > two.hqx`, and we list and extract the
-  FIRST document only, exit 0 — no error, no hint that anything was left.
-  `unar` does the same, so the oracle cannot see this and the differential
-  suite never could have caught it (DECISIONS.md 2026-08-15). Expander
-  4.0.2 claims the case outright and names comp.binaries.mac while doing
-  it — FORMATS.md, "Compared with StuffIt Expander 4.0.2" — which is where
-  most of this corpus came from.
-  **What would close it:** on reaching a stream's end, resume scanning for
-  another BinHex header and continue as further entries. Both references
-  scan for that header line — `XADBinHexParser.m` and macutils
-  `hexbin/hqx.c` — so the layout is transcribable rather than guessable,
-  and `hexbin` is the oracle for grading it. It needs a fixture the corpus
-  does not have; a synthesised one is only ground truth once `hexbin`
-  adjudicates it.
-- **What is NOT missing here, also measured the same day:** a single
-  BinHex document CUT across files joins and extracts through to the
-  archive inside, as long as the parts are named `NAME.hqx.001` /
-  `.002` — the plain-split scheme takes it. A half named `NAME.hqx.1`
-  reads as a whole document, lists an entry from the header's declared
-  length, and then fails at extraction (`file is truncated`, exit 1)
-  rather than writing a short file quietly.
