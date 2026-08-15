@@ -41,6 +41,8 @@ static const UncFormatDesc unc_formats[] = {
      * and calls unc_extract_segments. */
     { UNC_FORMAT_SPLIT,       "Split file",      1 },
     { UNC_FORMAT_CPTSEG,      "Compact Pro segment", 1 },
+    { UNC_FORMAT_UU,          "uuencode",        1 },
+    { UNC_FORMAT_ARC,         "ARC",             1 },
 };
 
 const char *unc_format_name(UncFormat f)
@@ -139,10 +141,18 @@ UncFormat unc_sniff(UncIO *io)
     if (unc_cptseg_probe(head, len, io)) return UNC_FORMAT_CPTSEG;
     if (unc_cpt_probe(head, len, io))   return UNC_FORMAT_COMPACTPRO;
     if (unc_tar_probe(head, len))       return UNC_FORMAT_TAR;
+    /* ARC's magic is one byte (0x1a), so the probe leans on the whole
+     * header: a printable 13-byte name, a known method, and sizes that
+     * land on the next header or the end marker. */
+    if (unc_arc_probe(head, len, io))   return UNC_FORMAT_ARC;
     if (unc_diskcopy_probe(head, len, io)) return UNC_FORMAT_DISKCOPY;
     if (unc_macbinary_probe(head, len, io)) return UNC_FORMAT_MACBINARY;
 
-    /* BinHex last: it scans for a banner amid mail garbage. */
+    /* BinHex last: it scans for a banner amid mail garbage. uuencode
+     * sits beside it — same habitat, same kind of scan — and before it,
+     * because BinHex's probe reads on past its own banner and a uu file
+     * has none to find. */
+    if (unc_uu_probe(head, len))        return UNC_FORMAT_UU;
     if (unc_binhex_probe(head, len, io)) return UNC_FORMAT_BINHEX;
 
     return UNC_FORMAT_UNKNOWN;
@@ -189,6 +199,8 @@ int unc_extract_as(UncFormat f, UncIO *io, UncSink *sink, UncAlloc *al,
     case UNC_FORMAT_TAR:         return unc_tar_extract(&c);
     case UNC_FORMAT_DISKDOUBLER: return unc_dd_extract(&c);
     case UNC_FORMAT_NOWCOMPRESS: return unc_now_extract(&c);
+    case UNC_FORMAT_UU:          return unc_uu_extract(&c);
+    case UNC_FORMAT_ARC:         return unc_arc_extract(&c);
     case UNC_FORMAT_SITSEG:      return unc_sitseg_extract(&c);
     case UNC_FORMAT_ZIPSEG:      return unc_zipseg_extract(&c);
     case UNC_FORMAT_UNKNOWN:     return UNC_ERR_FORMAT;

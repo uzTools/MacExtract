@@ -34,6 +34,13 @@ IMPLEMENTED = {
     "Compress": "Unix compress",
     "DiskDoubler": "DiskDoubler",          # M12
     "Now Compress": "Now Compress",        # M12
+    "ARC": "ARC",                          # M13
+    # `unar` cannot read uuencode at all, so a manifest for one is not
+    # built from the oracle: its ground truth is the bytes
+    # tools/synth_uu.py encoded, with macutils' hexbin agreeing on the
+    # same content in tools/run_uu.py. The manifest says so in its
+    # "oracle" field (TESTING.md, "ARC and uuencode").
+    "uuencode": "uuencode",                # M13
 }
 
 # Formats v1 names but does not extract. Until 2026-08-14 a fixture of one

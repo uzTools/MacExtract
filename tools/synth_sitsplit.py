@@ -2,10 +2,10 @@
 """synth_sitsplit.py — synthetic StuffIt segmented ("split") sets.
 
 No segmented archive exists in the harvested corpus: measured on
-2026-08-08 over all 806 fixtures — no file carries the `B0 56 00`
-header, every Compact Pro archive is volume 1 and all 273 of their file
-entries point at volume 1, and no manifest holds a part-like entry
-name. So the fixtures for this format are generated, and adjudicated by
+2026-08-08 and re-measured 2026-08-15 over all 805 fixtures — no file
+carries the `B0 56 00` header, all 108 Compact Pro archives are volume 1
+and every file entry in them points at volume 1, and no manifest holds a
+part-like entry name. So the fixtures for this format are generated, and adjudicated by
 `unar`, which implements it (reference/XADMaster/XADStuffItSplitParser.m).
 
 Header layout comes from that parser and nowhere else:

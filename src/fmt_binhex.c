@@ -84,8 +84,19 @@ int unc_binhex_probe(const uint8_t *head, int32_t len, UncIO *io)
 /* Decoder state                                                      */
 /* ------------------------------------------------------------------ */
 
+/* A BinHex line is 64 characters; the buffer is larger so that a file
+ * written with longer lines still reads. A line that overflows it is
+ * handed over in pieces, which is harmless: every piece is judged by
+ * the same rule and the character order is unchanged. */
+#define BH_LINE_MAX 256
+
 typedef struct BhDec {
     UncBufIn in;
+    /* One line at a time, because a document can have MAIL between its
+     * lines — the shape a file posted in several parts arrives in. See
+     * bh_refill_line. */
+    uint8_t  line[BH_LINE_MAX];
+    int32_t  llen, lpos;
     uint8_t  lut[256];    /* char -> 6-bit value, 0xFF = invalid, 0xFE = ':' */
     uint32_t phase;       /* decoded-byte counter mod 3 */
     uint8_t  prev_bits;
@@ -108,19 +119,70 @@ static void bh_init(BhDec *d, UncCtx *c, uint8_t *storage, uint32_t cap)
     d->eof = 0;
     d->rle_byte = 0;
     d->rle_num = 0;
+    d->llen = d->lpos = 0;
     d->err = UNC_OK;
 }
 
-/* Next 6-bit group; invalid characters (line breaks etc.) are skipped,
- * ':' ends the stream. Returns -1 on end/error with d->err set. */
+/* Read the next line and decide whether it belongs to the document.
+ *
+ * Source: reference/macutils/hexbin/hqx.c, which checks each line "for
+ * intermediate garbage" and skips the whole line when it finds any —
+ * that is what lets it read a file posted in several parts, each part
+ * carrying its own mail header, and it is why the BinHex alphabet
+ * omitting n, o, s, t, u and the space is load-bearing: ordinary prose
+ * fails within a few characters.
+ *
+ * ONE HALF of hexbin's rule is deliberately not transcribed: it also
+ * skips any line whose length differs from the first line's, with a
+ * look-ahead exception for the last one. That test can discard a
+ * legitimate short final line (hexbin ships `-c` to turn it off), and
+ * the alphabet half already rejects every header shape measured here.
+ * What it would have caught — a junk line built only of alphabet
+ * characters — is caught by BinHex's own per-fork CRC instead, as a
+ * per-entry error rather than as silence. */
+static int bh_refill_line(BhDec *d)
+{
+    for (;;) {
+        int ch;
+        int32_t i;
+        int ok = 1;
+
+        d->llen = d->lpos = 0;
+        for (;;) {
+            ch = unc_bufin_next(&d->in);
+            if (ch < 0) {
+                if (d->llen == 0) { d->err = d->in.err; return -1; }
+                break;
+            }
+            if (ch == '\n' || ch == '\r') break;
+            if (d->llen >= BH_LINE_MAX) break;      /* hand over in pieces */
+            d->line[d->llen++] = (uint8_t)ch;
+        }
+        /* Mailers eat trailing whitespace; hexbin trims it before
+         * judging the line, so a trimmed line is not "garbage". */
+        while (d->llen > 0 && (d->line[d->llen - 1] == ' ' ||
+                               d->line[d->llen - 1] == '\t'))
+            d->llen--;
+        if (d->llen == 0) continue;                 /* blank line */
+
+        for (i = 0; i < d->llen; i++)
+            if (d->lut[d->line[i]] == 0xFF) { ok = 0; break; }
+        if (ok) return UNC_OK;
+    }
+}
+
+/* Next 6-bit group, from a line that belongs to the document; ':' ends
+ * the stream. Returns -1 on end/error with d->err set. */
 static int bh_get_bits(BhDec *d)
 {
     for (;;) {
-        int ch = unc_bufin_next(&d->in);
         uint8_t v;
-        if (ch < 0) { d->err = d->in.err; return -1; }
-        v = d->lut[ch];
-        if (v == 0xFF) continue;
+        if (d->lpos >= d->llen) {
+            if (bh_refill_line(d) != UNC_OK) return -1;
+            continue;
+        }
+        v = d->lut[d->line[d->lpos++]];
+        if (v == 0xFF) continue;                    /* cannot happen */
         if (v == 0xFE) { d->eof = 1; d->err = UNC_ERR_TRUNCATED; return -1; }
         return v;
     }
@@ -275,6 +337,7 @@ static int bh_fork(UncCtx *c, BhDec *d, UncFork fork, uint32_t size,
  * the sticky error the terminating ':' of the previous document set. */
 static void bh_reset(BhDec *d)
 {
+    d->llen = d->lpos = 0;
     d->phase = 0;
     d->prev_bits = 0;
     d->eof = 0;

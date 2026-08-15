@@ -11,7 +11,7 @@ The engine is the product. The Mac app is a thin shell.
 
 ## Current state — read before working
 
-M0–M11 are **DONE**. M11 is multi-segment archives, in scope since
+M0–M13 are **DONE**. M11 is multi-segment archives, in scope since
 2026-08-08, and **four schemes are implemented — all of them on Linux AND
 in the Macintosh application**, byte-exact at 4 MB and at the 1 MB floor
 target (FORMATS.md, "Segmented sets on a real emulated Mac Plus").
@@ -56,7 +56,7 @@ now (BLOCKERS.md *Withdrawn claims*). **A claim with no test behind it is
 the one that will be false**, and the README was the only document here
 that nothing checked.
 
-The engine passes an 804-fixture differential suite against `unar` and, where `unar` fails, `macunpack`; the Mac shell extracts byte-exact on a real System 6.0.8 Mac Plus under Mini vMac — **61/61 sampled fixtures at 4 MB and 61/61 at the 1 MB floor** (2026-08-15, on a sample that grew from 55 when M12 added DiskDoubler and Now Compress; there are no memory-budget refusals left).
+The engine passes an 806-fixture differential suite against `unar` and, where `unar` fails, `macunpack`; the Mac shell extracts byte-exact on a real System 6.0.8 Mac Plus under Mini vMac — **63/63 sampled fixtures at 4 MB and 63/63 at the 1 MB floor** (2026-08-15, on a sample that grew from 55 when M12 added DiskDoubler and Now Compress and again when M13 added ARC and uuencode; there are no memory-budget refusals left).
 
 It runs on all three systems the project claims: **System 6.0.8 and System 7.0.1** under Mini vMac (a true 68000), and **Mac OS 9.2** under QEMU PowerPC through the 68LC040 emulator, where 13/13 of a format sample is byte-exact, extraction onto **HFS+** is verified, and the `SIZE` partition is honoured by the Process Manager.
 
@@ -96,11 +96,13 @@ that reflex is what found nearly everything valuable in this repository.
 
 Where these files disagree with each other, treat it as a bug to fix, not a fact to choose from.
 
-## Where to start (handoff, 2026-08-14)
+## Where to start (handoff, 2026-08-15)
 
 The repository is on GitHub as a **private** repo, `main`, tagged through
-`v0.8`, the release in which the Macintosh application learned every way an
-archive was ever split — Compact Pro sets, spanned zip, `.NNN` splits, parts
+`v0.9` — DiskDoubler, Now Compress and multi-document BinHex, all three
+replayed on a real emulated Mac Plus at 4 MB and at the 1 MB floor. `v0.8`
+before it was the release in which the Macintosh application learned every way
+an archive was ever split — Compact Pro sets, spanned zip, `.NNN` splits, parts
 inside envelopes — and learned to take all the envelope layers off a chained
 file (`v0.5` was the first tag to publish a downloadable application at all —
 see *Cutting a release*). Working tree clean, `./ci.sh` green, nothing in
@@ -413,11 +415,27 @@ so what it cannot reach is named in OPEN_ITEMS.md rather than assumed.
 Neither format has any multi-segment scheme: two independent reference implementations know nothing
 of parts or volumes for either (DECISIONS.md 2026-08-15).
 
-**Also out of scope, and NOT detect-only: `.arc`, uuencode (`.uu`), AppleLink
-packages (`.pkg`), StuffIt SpaceSaver.** Added 2026-08-15, and the distinction
-matters: nothing names these, so a user gets *unknown* rather than a refusal.
-Each is a format StuffIt Expander 4.0.2's paid add-on expanded and we do not;
-none occurs in the corpus. That comparison — the first external yardstick this
+**`.arc` and uuencode (`.uu`) are IN scope since 2026-08-15** (M13), when the
+brief became "everything StuffIt Expander 4.0.2 expands" — this file listed
+both as out of scope and unsniffed a few hours earlier. ARC methods 1-9 and
+both uu shapes (plain, and UUTool's, which carries the resource fork and the
+Finder info) extract. Neither format occurs in the corpus, so both suites
+GENERATE their archives and hand them to a second implementation to grade:
+`unar` for ARC, macutils' `hexbin` for the UUTool shape. **That is not
+ceremony — twice the decoder and the generator shared a misreading, round-
+tripped perfectly, satisfied the CRC, and were caught only by the oracle**
+(DECISIONS.md 2026-08-15). A generator written from the same reading as the
+decoder tests the reading, not the format.
+
+**AppleLink packages (`.pkg`) and StuffIt SpaceSaver are the other two the
+add-on expanded, and they are NOT delivered** — not by choice of scope but by
+rule #1: no reference implementation and no published layout exists for
+either, so nothing here can even name them without inventing a magic number.
+What was searched, and what would close it, is OPEN_ITEMS.md §6. **ArcMac's
+payload is declined for a sharper version of the same reason**: macutils
+documents its header and the file that read its payload, `arc.c`, is missing
+from macutils upstream, so the fork order inside the stream is written down
+nowhere — and Now Compress proves the order is not guessable by analogy. That comparison — the first external yardstick this
 project has applied — is FORMATS.md, "Compared with StuffIt Expander 4.0.2",
 and what it is worth is DECISIONS.md 2026-08-15. It found exactly ONE gap that
 was **not** out of scope — **several BinHex documents in one file**, which the

@@ -457,6 +457,16 @@ int unc_tar_extract(UncCtx *c);
 int unc_dd_extract(UncCtx *c);
 int unc_now_extract(UncCtx *c);
 
+/* uuencode, including UUTool's two-fork shape (fmt_uu.c). The probe
+ * needs no io: a uu file identifies itself in its first lines. */
+int unc_uu_probe(const uint8_t *head, int32_t len);
+int unc_uu_extract(UncCtx *c);
+
+/* ARC / ArcMac (fmt_arc.c). The probe reads the next header to place
+ * this one, so it takes io. */
+int unc_arc_probe(const uint8_t *head, int32_t len, UncIO *io);
+int unc_arc_extract(UncCtx *c);
+
 /* Detect-only probes */
 int unc_sitx_probe(const uint8_t *head, int32_t len);
 int unc_diskcopy_probe(const uint8_t *head, int32_t len, UncIO *io);

@@ -156,6 +156,55 @@ def check(unclassic, parts, tmpdir):
     return problems
 
 
+def check_posted(unclassic, tmp):
+    """ONE document cut across several postings, each part carrying its
+    own mail header — the other half of "multipart", and the half that
+    puts junk INSIDE the stream rather than between documents.
+
+    hexbin reads these (hqx.c skips a line that holds "intermediate
+    garbage"), and until 2026-08-15 we did not: the ':' in "From:" ended
+    the document and the entry came back truncated. Also pinned here is
+    the edge of the rule — a junk line built ONLY of alphabet characters
+    is indistinguishable from data and is still consumed, which BinHex's
+    per-fork CRC then catches as a per-entry error rather than silence.
+    """
+    os.makedirs(tmp, exist_ok=True)
+    problems = []
+    src = os.path.join(FIXDIR, PARTS[0])
+    lines = open(src, "rb").read().split(b"\n")
+    half = len(lines) // 2
+
+    rc, want = extract(unclassic, src)
+    if rc != 0:
+        problems.append(f"posted: the fixture alone exits {rc}")
+
+    posted = os.path.join(tmp, "posted.hqx")
+    with open(posted, "wb") as f:
+        f.write(b"From: someone\nSubject: " + PARTS[0].encode() + b" (1/2)\n\n")
+        f.write(b"\n".join(lines[:half]) + b"\n")
+        f.write(b"\nFrom: someone\nSubject: " + PARTS[0].encode() + b" (2/2)\n\n")
+        f.write(b"[ part 2 of 2 -- append to part 1 ]\n\n")
+        f.write(b"\n".join(lines[half:]))
+
+    rc, got = extract(unclassic, posted)
+    if rc != 0:
+        problems.append(f"posted: exit {rc}")
+    if got != want:
+        problems.append(f"posted: {len(got)} document(s) with different forks, "
+                        f"expected the {len(want)} the single file gives")
+
+    # The edge: alphabet-only junk cannot be told from data, so it is
+    # taken as data and the CRC objects. Silence would be the bug.
+    edged = os.path.join(tmp, "edged.hqx")
+    with open(edged, "wb") as f:
+        f.write(b"\n".join(lines[:half]) + b"\nAB:CD\n" + b"\n".join(lines[half:]))
+    rc, _ = extract(unclassic, edged)
+    if rc == 0:
+        problems.append("edged: alphabet-only junk mid-stream was accepted "
+                        "silently; the CRC should have objected")
+    return problems
+
+
 def main():
     unclassic = os.path.join(ROOT, "build/san/unclassic")
     argv = sys.argv[1:]
@@ -184,6 +233,15 @@ def main():
                 print(f"MULTIHQX FAIL: {n} documents in one file")
             else:
                 print(f"multihqx ok: {n} documents in one file")
+
+        problems = check_posted(unclassic, os.path.join(tmp, "posted"))
+        for p in problems:
+            print(f"    {p}")
+        if problems:
+            fails += 1
+            print("MULTIHQX FAIL: one document posted in several parts")
+        else:
+            print("multihqx ok: one document posted in several parts")
     return 1 if fails else 0
 
 

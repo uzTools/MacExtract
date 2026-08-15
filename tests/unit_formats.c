@@ -1584,6 +1584,37 @@ static void test_binhex_multi(void)
     CHECK(unc_extract_as(UNC_FORMAT_BINHEX, &io, &sk, &al, NULL, NULL)
           == UNC_ERR_FORMAT);
     CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+
+    /* --- ONE document posted in several parts: the mail header of the
+     *     second posting lands in the middle of the stream, and the
+     *     line has to be stepped over. Source for the rule:
+     *     reference/macutils/hexbin/hqx.c. Note "From:" — its colon is
+     *     the terminator, which is exactly how this used to end the
+     *     document early and report it truncated ------------------- */
+    {
+        uint32_t cut = one / 2, tail;
+        uint8_t split[8192];
+        uint32_t sl = 0;
+        /* Cut the document at a line boundary. */
+        while (cut < one && arc[cut] != '\n') cut++;
+        cut++;
+        memcpy(split, arc, cut);
+        sl = cut;
+        sl += bh_text(split + sl, "\nFrom: someone\n"
+                                  "Subject: first.txt (2/2)\n\n"
+                                  "[ append this to part 1 ]\n\n");
+        tail = one - cut;
+        memcpy(split + sl, arc + cut, tail);
+        sl += tail;
+
+        test_make_memio(&io, &m, split, sl);
+        cap_make(&sk, &cap);
+        CHECK(unc_extract_as(UNC_FORMAT_BINHEX, &io, &sk, &al, NULL, NULL)
+              == UNC_OK);
+        CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+        CHECK(cap.dlen[0] == sizeof d1 && memcmp(cap.data[0], d1, sizeof d1) == 0);
+        CHECK(cap.rlen[0] == sizeof r1 && memcmp(cap.rsrc[0], r1, sizeof r1) == 0);
+    }
 }
 
 
@@ -1816,6 +1847,268 @@ static void test_nowcompress(void)
     CHECK(cap.dlen[2] == 4 && memcmp(cap.data[2], "tail", 4) == 0);
 }
 
+/* ------------------------------------------------------------------ */
+/* M13: uuencode                                                      */
+/* ------------------------------------------------------------------ */
+
+/* Encode len bytes as one uu line, into buf. Mirror of mu_convert. */
+static uint32_t uu_line(uint8_t *buf, const uint8_t *p, uint32_t len)
+{
+    uint32_t o = 0, i;
+    buf[o++] = (uint8_t)(0x20 + len);
+    for (i = 0; i < len; i += 3) {
+        uint8_t a = p[i];
+        uint8_t b = i + 1 < len ? p[i + 1] : 0;
+        uint8_t c = i + 2 < len ? p[i + 2] : 0;
+        buf[o++] = (uint8_t)(0x20 + ((a >> 2) & 0x3f));
+        buf[o++] = (uint8_t)(0x20 + (((a << 4) | (b >> 4)) & 0x3f));
+        buf[o++] = (uint8_t)(0x20 + (((b << 2) | (c >> 6)) & 0x3f));
+        buf[o++] = (uint8_t)(0x20 + (c & 0x3f));
+    }
+    buf[o++] = '\n';
+    return o;
+}
+
+static uint32_t uu_section_bytes(uint8_t *buf, const char *hdr,
+                                 const uint8_t *p, uint32_t len)
+{
+    uint32_t o = 0, i;
+    uint32_t hl = (uint32_t)strlen(hdr);
+    memcpy(buf, hdr, hl); o += hl;
+    buf[o++] = '\n';
+    for (i = 0; i < len; i += 45) {
+        uint32_t n = len - i > 45 ? 45 : len - i;
+        o += uu_line(buf + o, p + i, n);
+    }
+    buf[o++] = '`'; buf[o++] = '\n';
+    memcpy(buf + o, "end\n", 4); o += 4;
+    return o;
+}
+
+static void test_uu(void)
+{
+    uint8_t buf[4096];
+    uint8_t payload[300], rsrc[64], info[16];
+    uint32_t i, o = 0;
+    MemIO m;
+    UncIO io;
+    UncAlloc al;
+    UncSink sk;
+    CapSink cap;
+
+    for (i = 0; i < sizeof payload; i++) payload[i] = (uint8_t)(i * 7 + 1);
+    for (i = 0; i < sizeof rsrc; i++) rsrc[i] = (uint8_t)(0xF0 - i);
+    memset(info, 0, sizeof info);
+    memcpy(info, "APPLxxxx", 8);
+    info[3] = 'L'; memcpy(info + 4, "MACS", 4);
+
+    /* A mail banner first: the reason the scan exists at all. */
+    memcpy(buf, "From: nobody\nSubject: a file\n\n", 29); o = 29;
+    o += uu_section_bytes(buf + o, "begin 644 \"Mac File\"", payload,
+                          sizeof payload);
+    o += uu_section_bytes(buf + o, "begin 644  .rsrc", rsrc, sizeof rsrc);
+    o += uu_section_bytes(buf + o, "begin 644  .finfo", info, sizeof info);
+
+    test_make_memio(&io, &m, buf, o);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_UU);
+
+    test_make_alloc(&al);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_UU, &io, &sk, &al, NULL, NULL) == UNC_OK);
+    CHECK(cap.count == 1);
+    CHECK(cap.info[0].name_len == 8 &&
+          memcmp(cap.info[0].name, "Mac File", 8) == 0);
+    CHECK(cap.dlen[0] == sizeof payload &&
+          memcmp(cap.data[0], payload, sizeof payload) == 0);
+    CHECK(cap.rlen[0] == sizeof rsrc &&
+          memcmp(cap.rsrc[0], rsrc, sizeof rsrc) == 0);
+    /* The Finder info is the whole reason a document is read twice. */
+    CHECK(cap.info[0].type == 0x4150504Cu);      /* 'APPL' */
+    CHECK(cap.info[0].creator == 0x4D414353u);   /* 'MACS' */
+
+    /* Two plain documents in one file, the newsgroup shape. Nothing
+     * but the second document's offsets proves the base fix: with
+     * relative offsets it decoded as corrupt. */
+    o = 0;
+    o += uu_section_bytes(buf + o, "begin 644 one.bin", payload, 60);
+    memcpy(buf + o, "\n-- next --\n\n", 13); o += 13;
+    o += uu_section_bytes(buf + o, "begin 600 two.bin", payload + 60, 120);
+
+    test_make_memio(&io, &m, buf, o);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_UU);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_UU, &io, &sk, &al, NULL, NULL) == UNC_OK);
+    CHECK(cap.count == 2);
+    CHECK(cap.info[0].name_len == 7 &&
+          memcmp(cap.info[0].name, "one.bin", 7) == 0);
+    CHECK(cap.dlen[0] == 60 && memcmp(cap.data[0], payload, 60) == 0);
+    CHECK(cap.dlen[1] == 120 && memcmp(cap.data[1], payload + 60, 120) == 0);
+    CHECK(cap.rlen[1] == 0);
+
+    /* CR line endings: these files came off Macs. */
+    for (i = 0; i < o; i++) if (buf[i] == '\n') buf[i] = '\r';
+    test_make_memio(&io, &m, buf, o);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_UU);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_UU, &io, &sk, &al, NULL, NULL) == UNC_OK);
+    CHECK(cap.count == 2 && cap.dlen[1] == 120);
+
+    /* One document posted in two parts: the second posting's header sits
+     * between two data lines. A uu line's first character declares how
+     * many bytes it encodes, so a line whose length disagrees cannot be
+     * data — that is the test, and it is stronger than an alphabet. */
+    {
+        uint8_t split[4096];
+        uint32_t o2 = 0, i2, cut;
+        const char *hdr = "\nFrom: someone\nSubject: one.bin (2/2)\n\n"
+                          "[ append this to part 1 ]\n\n";
+        o2 += uu_section_bytes(split, "begin 644 one.bin", payload, 200);
+        /* Re-cut it: header inserted after the third line. */
+        cut = 0;
+        for (i2 = 0, cut = 0; cut < 3 && i2 < o2; i2++)
+            if (split[i2] == '\n') cut++;
+        memmove(split + i2 + strlen(hdr), split + i2, o2 - i2);
+        memcpy(split + i2, hdr, strlen(hdr));
+        o2 += (uint32_t)strlen(hdr);
+
+        test_make_memio(&io, &m, split, o2);
+        CHECK(unc_sniff(&io) == UNC_FORMAT_UU);
+        cap_make(&sk, &cap);
+        CHECK(unc_extract_as(UNC_FORMAT_UU, &io, &sk, &al, NULL, NULL) == UNC_OK);
+        CHECK(cap.count == 1);
+        CHECK(cap.dlen[0] == 200 && memcmp(cap.data[0], payload, 200) == 0);
+    }
+
+    /* Prose that happens to contain "begin " is not a uu file. */
+    {
+        const char *prose = "To begin with, we should note\nthat nothing"
+                            " here is encoded at all.\n";
+        memcpy(buf, prose, strlen(prose));
+        test_make_memio(&io, &m, buf, (uint32_t)strlen(prose));
+        CHECK(unc_sniff(&io) != UNC_FORMAT_UU);
+    }
+}
+
+/* ------------------------------------------------------------------ */
+/* M13: ARC                                                           */
+/* ------------------------------------------------------------------ */
+
+static uint32_t arc_hdr(uint8_t *b, int method, const char *name,
+                        uint32_t comp, uint32_t uncomp, uint16_t crc)
+{
+    uint32_t o = 0, i;
+    b[o++] = 0x1A;
+    b[o++] = (uint8_t)method;
+    for (i = 0; i < 13; i++) b[o + i] = 0;
+    memcpy(b + o, name, strlen(name) > 12 ? 12 : strlen(name));
+    o += 13;
+    b[o++] = (uint8_t)comp; b[o++] = (uint8_t)(comp >> 8);
+    b[o++] = (uint8_t)(comp >> 16); b[o++] = (uint8_t)(comp >> 24);
+    b[o++] = 0x21; b[o++] = 0x5B;            /* date */
+    b[o++] = 0x00; b[o++] = 0x70;            /* time */
+    b[o++] = (uint8_t)crc; b[o++] = (uint8_t)(crc >> 8);
+    if (method != 1) {
+        b[o++] = (uint8_t)uncomp; b[o++] = (uint8_t)(uncomp >> 8);
+        b[o++] = (uint8_t)(uncomp >> 16); b[o++] = (uint8_t)(uncomp >> 24);
+    }
+    return o;
+}
+
+static void test_arc(void)
+{
+    uint8_t buf[2048];
+    const uint8_t body[] = "ARCHIVE CONTENT, stored verbatim.";
+    uint32_t blen = (uint32_t)sizeof body - 1;
+    uint32_t o = 0;
+    uint16_t crc;
+    MemIO m;
+    UncIO io;
+    UncAlloc al;
+    UncSink sk;
+    CapSink cap;
+
+    memset(buf, 0, sizeof buf);
+    crc = unc_crc16_arc(0, body, (int32_t)blen);
+
+    /* A directory, a stored file inside it, the directory end, then a
+     * method-1 file (the older header, with no second size field) at
+     * the top level. No fixture in the corpus has any of this. */
+    o += arc_hdr(buf + o, 0x1e, "folder", 0, 0, 0);
+    o += arc_hdr(buf + o, 0x02, "inside.txt", blen, blen, crc);
+    memcpy(buf + o, body, blen); o += blen;
+    buf[o++] = 0x1A; buf[o++] = 0x1f;              /* leave the folder */
+    o += arc_hdr(buf + o, 0x01, "old.txt", blen, blen, crc);
+    memcpy(buf + o, body, blen); o += blen;
+    buf[o++] = 0x1A; buf[o++] = 0x00;              /* end of archive */
+
+    test_make_memio(&io, &m, buf, o);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_ARC);
+
+    test_make_alloc(&al);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_ARC, &io, &sk, &al, NULL, NULL) == UNC_OK);
+    CHECK(cap.count == 2);
+    CHECK(cap.info[0].name_len == 17 &&
+          memcmp(cap.info[0].name, "folder/inside.txt", 17) == 0);
+    CHECK(cap.status[0] == UNC_OK && cap.dlen[0] == blen);
+    CHECK(memcmp(cap.data[0], body, blen) == 0);
+    /* Out of the folder again: a sibling, not a child. */
+    CHECK(cap.info[1].name_len == 7 &&
+          memcmp(cap.info[1].name, "old.txt", 7) == 0);
+    CHECK(cap.status[1] == UNC_OK && cap.dlen[1] == blen);
+
+    /* A wrong CRC is a per-entry error, and the entry after it still
+     * extracts. */
+    {
+        uint32_t at = 0;
+        at += arc_hdr(buf, 0x02, "bad.txt", blen, blen, (uint16_t)(crc ^ 1));
+        memcpy(buf + at, body, blen); at += blen;
+        at += arc_hdr(buf + at, 0x02, "good.txt", blen, blen, crc);
+        memcpy(buf + at, body, blen); at += blen;
+        buf[at++] = 0x1A; buf[at++] = 0x00;
+        test_make_memio(&io, &m, buf, at);
+        cap_make(&sk, &cap);
+        CHECK(unc_extract_as(UNC_FORMAT_ARC, &io, &sk, &al, NULL, NULL)
+              == UNC_OK);
+        CHECK(cap.count == 2);
+        CHECK(cap.status[0] == UNC_ERR_CRC);
+        CHECK(cap.status[1] == UNC_OK && cap.dlen[1] == blen);
+    }
+
+    /* ArcMac: named, walked, and DECLINED per entry — the payload's
+     * fork order is documented nowhere (fmt_arc.c). */
+    {
+        uint8_t mac[256];
+        uint32_t at;
+        memset(mac, 0, sizeof mac);
+        mac[0] = 0x1B;                 /* Mac magic          */
+        mac[1] = 0x02;                 /* kind = stored      */
+        memcpy(mac + 2, "Mac Entry", 9);
+        memcpy(mac + 34, "TEXT", 4);
+        memcpy(mac + 38, "ttxt", 4);
+        mac[53] = (uint8_t)blen;       /* data fork length   */
+        mac[57] = 0;                   /* no resource fork   */
+        mac[59] = 0x1A;                /* the PC header      */
+        mac[60] = 0x02;
+        memcpy(mac + 61, "MACENTRY.TXT", 12);
+        mac[74] = (uint8_t)blen;
+        at = 88;
+        memcpy(mac + at, body, blen); at += blen;
+        mac[at++] = 0x1B; mac[at++] = 0x00;
+
+        test_make_memio(&io, &m, mac, at);
+        CHECK(unc_sniff(&io) == UNC_FORMAT_ARC);
+        cap_make(&sk, &cap);
+        CHECK(unc_extract_as(UNC_FORMAT_ARC, &io, &sk, &al, NULL, NULL)
+              == UNC_OK);
+        CHECK(cap.count == 1);
+        CHECK(cap.info[0].name_len == 9 &&
+              memcmp(cap.info[0].name, "Mac Entry", 9) == 0);
+        CHECK(cap.info[0].type == 0x54455854u);      /* 'TEXT' */
+        CHECK(cap.status[0] == UNC_ERR_UNSUPPORTED);
+    }
+}
+
 void run_format_tests(void)
 {
     test_macbinary();
@@ -1837,4 +2130,6 @@ void run_format_tests(void)
     test_binhex_multi();
     test_diskdoubler();
     test_nowcompress();
+    test_uu();
+    test_arc();
 }

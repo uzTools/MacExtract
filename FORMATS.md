@@ -11,7 +11,7 @@ whole corpus for that format (engine allocations only, via
 |---|---|---|---|---|---|
 | MacBinary I/II/III | extract | — | 233 fixtures | 8 KB | full |
 | AppleSingle/Double | extract | — | (unit tests + envelopes) | 8 KB | full |
-| BinHex 4 (.hqx) | extract | RLE90; several documents in one file†† | 179 fixtures | 8 KB | full |
+| BinHex 4 (.hqx) | extract | RLE90; several documents in one file, and one document posted in several parts†† | 179 fixtures | 8 KB | full |
 | PackIt (.pit) | extract | store, Huffman; encrypted detected | 4 fixtures (1 real + 3 synthetic PMa4) | 9 KB | full |
 | Compact Pro (.cpt) | extract | RLE, LZH+RLE | 108 fixtures | 19 KB | full |
 | StuffIt classic (.sit) | extract | 0 store, 1 RLE90*, 2 LZW, 3 Huffman, 5 LZAH, 6 fixed Huffman‡, 8 MW, 13 LZSS+Huffman; encrypted detected | 227 fixtures | 8–76 KB‖ | full |
@@ -27,8 +27,10 @@ whole corpus for that format (engine allocations only, via
 | StuffIt X (.sitx) | detect only | — | — (no fixture) | — | — |
 | DiskDoubler (DD, DDAR, DDA2) | extract | 0 store, 6/9 AD LZSS, 8 Compact Pro, 10 DDn; 1/2/3/4/5/7 declined per entry✦ | 6 fixtures | 16–108 KB✦ | full |
 | Now Compress | extract | stored, LZSS, Huffman, Huffman+LZSS, "new" LZSS✧ | 1 fixture | 128 KB✧ | full |
+| ARC / ArcMac (.arc) | extract | 1/2 store, 3 RLE90, 4 squeeze+RLE90, 5/6/7 crunch, 8 12-bit LZW+RLE90, 9 13-bit LZW, 0x7f compress; 0x0a/0x0b (PKARC) and every ArcMac payload declined per entry★ | 10 generated archives (methods 1-9, adjudicated by `unar`) + 3 written by Debian's `arc` 5.21q; `synth-arc-mixed.arc` also has an `unar` manifest and is in the differential suite | 4–32 KB★ | full |
+| uuencode (.uu, incl. UUTool) | extract | — (plain uu, UUTool's two-fork "MU" shape, and documents posted in several parts★★) | 7 generated cases, the two-fork ones adjudicated by macutils' `hexbin`; `synth-uu-mac.uu` is in the differential suite | 4 KB | full |
 | LZH/LHA (-lh?-, -lz?-) | detect only | — | 1 real `-lh5-` archive, named + refused; unit test over every method byte | — | — |
-| DiskCopy 4.2 (.image) | detect only | — | synthetic 800K GCR + real 800K image; 0 false positives in 804 fixtures | — | — |
+| DiskCopy 4.2 (.image) | detect only | — | synthetic 800K GCR + real 800K image; 0 false positives in 807 fixtures (re-measured 2026-08-15) | — | — |
 
 ✦ **DiskDoubler, in scope since 2026-08-15** (M12), where every status file
 here used to call it detect-only. Three containers — a single compressed file
@@ -73,7 +75,23 @@ than one stream and the cross-stream dictionary are NOT exercised by it;
 `test_nowcompress` covers the container half of that list on synthetic bytes.
 The rest is named in OPEN_ITEMS.md rather than implied to be tested.
 
-†† **A `.hqx` file may hold more than one document, and since 2026-08-15 all
+†† **Multipart, in both directions, since 2026-08-15.** A `.hqx` file may hold
+more than one document, and a single document may have been posted in several
+parts — each part carrying its own mail header, so that joining them puts that
+header in the MIDDLE of the stream. The second case was added later the same
+day, after the first was: `unclassic x posted.hqx.001` used to report the entry
+truncated, because the `:` in `From:` is BinHex's terminator. The rule that
+fixes it is `reference/macutils/hexbin/hqx.c`'s — judge each LINE and skip one
+holding "intermediate garbage" — and it works because the BinHex alphabet omits
+`n`, `o`, `s`, `t`, `u` and the space, so ordinary prose disqualifies itself
+within a few characters. Half of hexbin's rule is deliberately left out (the
+equal-length test, which can discard a legitimate short final line — hexbin
+ships `-c` to disable it); what that half would have caught, a junk line built
+only of alphabet characters, the per-fork CRC catches instead, as a per-entry
+error rather than as silence. Both halves are asserted in
+`tools/run_multihqx.py`, and both fail against a build with the rule removed.
+
+**A `.hqx` file may hold more than one document, and since 2026-08-15 all
 of them are extracted** — the shape comp.binaries.mac produced, several files
 posted in one message. Each document is banner, ':', stream, ':'; the decoder
 looks for the next banner after each one, as
@@ -220,6 +238,44 @@ in the decoder.
 maximum is unchanged at 76,944 B because some forks genuinely exceed 64 KB, so
 the gain is at the small end — `derived-MacGzip.sit` 76,944 → 13,456 B, and
 on-Mac `derived-Export.sit` 76,984 → 19,640 B.
+
+
+★★ **A uu document posted in several parts** joins the same way, and the test
+is stronger than BinHex's: a uu line's first character DECLARES how many bytes
+it encodes, so a line whose length disagrees cannot be data and is stepped
+over. What uuencode cannot do is notice a part that never arrived — it carries
+no length and no checksum anywhere, so a set missing its MIDDLE part decodes to
+a short file with nothing to object to (a missing LAST part is still caught:
+the terminator and `end` live there). That limitation is asserted rather than
+described, in `tools/run_uu.py`; OPEN_ITEMS.md.
+
+★ **ARC and uuencode, in scope since 2026-08-15** (M13), when the brief
+became "everything StuffIt Expander 4.0.2 expands". Neither occurs in this
+corpus, so every archive under test is generated and handed to a second
+implementation to grade — `unar` for ARC, `hexbin` for the UUTool shape
+(TESTING.md). Peak heap, measured per method: stored and RLE90 4,096 B,
+squeeze 5,124 B, the compress methods 6,660–6,664 B, and crunch **32,768 B**,
+which is the whole spread — a 4096-entry table at 6 B an entry plus a 4 KB
+stack. uuencode is a flat 4,096 B, whatever the file holds, because it
+decodes a line at a time.
+
+**Byte-exact on a real emulated Mac Plus at 4 MB and at the 1 MB floor**
+(2026-08-15): `synth-arc-mixed.arc`, all nine methods in one archive, 9 files
+at 32,800 B peak; `synth-uu-mac.uu`, both forks and its type, 1 file at
+4,112 B — the same numbers at both memory sizes, and the same as Linux plus
+the shell's constant 32 B. Both are in `tools/vmac/sample.txt`, which is 63
+fixtures since M13.
+
+**What is declined, and why it is declined rather than written:** ARC's
+methods 0x0a (Crushed) and 0x0b (Distilled) are PKARC's, and nothing
+reachable from here writes them, so an implementation could not be graded.
+**ArcMac** — the Macintosh container, `0x1b` then the ordinary ARC header 59
+bytes in — is walked, named, and its entries are reported with their real
+names, type and creator, but the payload is refused: its single stream holds
+both forks and NOTHING documents which comes first. macutils describes the
+header (`arc.h`) and the only implementation that ever read the payload,
+`arc.c`, is absent from the macutils distribution — upstream included, checked
+2026-08-15. No oracle here reads ArcMac either. OPEN_ITEMS.md.
 
 ## Envelope auto-unwrap
 
@@ -455,10 +511,10 @@ DECISIONS.md 2026-08-10.
 
 ## Hardening
 
-- Differential: 804 fixtures byte-exact against `unar` manifests
+- Differential: 806 fixtures byte-exact against `unar` manifests
   (both forks + type/creator), `./ci.sh`. `run_diff.py` prints the
   number it actually ran, plus two figures that must be read with it:
-  **12 forks across 9 fixtures are oracle-unadjudicated** (both
+  **23 forks across 11 fixtures are oracle-unadjudicated** (both
   implementations decline every one of them, so the engine's own CRC-16
   is the only check), and **7 entries are compressed with a method the
   ORACLE names as outside v1 scope** and are graded on their names and
@@ -563,15 +619,15 @@ the others, cautiously and from a single anchor.
 
 ## Real-hardware verification (Mini vMac — System 6.0.8, 4 MB Mac Plus, 68000)
 
-The Retro68 Mac shell was replayed against a 61-fixture sample spanning all
-fourteen formats on a **real System 6.0.8 / 4 MB Mac Plus** under Mini vMac
+The Retro68 Mac shell was replayed against a 63-fixture sample spanning all
+sixteen formats on a **real System 6.0.8 / 4 MB Mac Plus** under Mini vMac
 (a true 68000). Every extraction is verified ON THE MAC ITSELF: the app
 CRC-32s both forks after reading them back through the File Manager and the
 result — painted to the framebuffer, read from a screenshot — is
 cross-checked against the same engine's Linux output (`tools/vmac_check.py`,
 `tools/decode_grid.py`).
 
-**61/61 byte-exact PASS** (2026-08-15; 55/55 on 2026-08-08, before M12 added
+**63/63 byte-exact PASS** (2026-08-15, re-run after the BinHex line rule changed — every `.hqx` in the sample goes through it; 61/61 earlier the same day, before M13 added ARC and uuencode; 55/55 on 2026-08-08, before M12 added
 six DiskDoubler fixtures and one Now Compress fixture to the sample) — data
 forks exact, resource forks exact bar the OS-stamped reserved header
 (bytes 16–127).
@@ -693,12 +749,12 @@ concatenating those two with any text between them, which is what
 
 ## Floor target verification (Mini vMac — System 6.0.8, **1 MB** Mac Plus, 68000)
 
-The same 61-fixture sample was replayed on a Mini vMac built for **1 MB of
+The same 63-fixture sample was replayed on a Mini vMac built for **1 MB of
 RAM** — the project's floor target — one boot per fixture, same on-Mac
 CRC-32 verification (`tools/vmac/run.py --mem 1M --list tools/vmac/sample.txt`).
 The engine budget is derived from `FreeMem` at startup.
 
-**61/61 byte-exact PASS** (2026-08-15; 55/55 on 2026-08-08 and 44/44 on
+**63/63 byte-exact PASS** (2026-08-15, with M13's two; 61/61 before them; 55/55 on 2026-08-08 and 44/44 on
 2026-08-07, before the recovered fixtures, the method-6 pair and M12's seven
 joined the sample). There are no memory-budget refusals
 left at the floor target: every fixture in the sample, in every format,
@@ -891,21 +947,33 @@ later versions did, never for what 4.0.2 does.
 
 ### Coverage over this corpus
 
-807 files in `fixtures/`, classified by INNERMOST format — envelopes unwrapped
+805 files in `fixtures/` — the corpus as it stood before M13 added two
+generated ones — classified by INNERMOST format — envelopes unwrapped
 with `x -nr` first, then `unclassic sniff` — because both tools decode BinHex
-and MacBinary and then continue into what was inside (measured 2026-08-15):
+and MacBinary and then continue into what was inside (measured 2026-08-15,
+re-measured the same day after M12: the total read 807 and the corpus is 805,
+which moved the non-archive row and nothing else):
 
-| Innermost format | files | Expander 4.0.2 | unclassic 0.8 |
+| Innermost format | files | Expander 4.0.2 | unclassic 0.10 |
 |---|---|---|---|
 | StuffIt classic, incl. `.sea` | 454 | ✅ | ✅ |
 | Compact Pro, incl. `.sea` | 216 | ✅ | ✅ |
-| envelope over a non-archive | 38 | ✅ | ✅ |
+| envelope over a non-archive | 36 | ✅ | ✅ ✧✧ |
 | StuffIt 5 / Arsenic | 62 | ❌ postdates it | ✅ |
 | zip, gzip, `.Z`, tar | 16 | ⚠️ paid add-on, System 7 only | ✅ |
 | PackIt | 5 | ❌ not in its list | ✅ |
 | DiskDoubler, Now Compress | 14 | ❌ | ✅ since 2026-08-15 |
 | LZH, StuffIt X | 2 | ❌ | detect-only, named |
-| **total** | **807** | **708 alone, 724 with the add-on** | **805 extract, 2 named** |
+| **total** | **805** | **708 alone, 724 with the add-on** | **803 extract, 2 named** |
+
+✧✧ The 36 break down as 31 envelopes whose payload is a resource-only file,
+and 5 whose payload is a document: two HyperCard `STAK`s, one damaged Compact
+Pro archive whose index offset points past its own end (`unar` declines it
+too), and **two Alysis SuperDisk! files** (`Disk Expander .X`,
+`SD! Utilities.x` — the header carries the string `SuperDisk! Add-In Module`).
+SuperDisk! is the one format the corpus actually holds that nothing here
+names: a user gets *unknown*, and `unar` reads no further than the envelope
+either. OPEN_ITEMS.md §6.
 
 The 62 StuffIt 5 fixtures are the largest single difference, and it is a date
 rather than a capability: 4.0.2 shipped two years before the format. Handed
@@ -914,7 +982,7 @@ with this archive."*
 
 ### Capability by capability
 
-| | StuffIt Expander 4.0.2 | unclassic 0.8 |
+| | StuffIt Expander 4.0.2 | unclassic 0.10 |
 |---|---|---|
 | Floor system | System 6.0.5 (its Read Me) | System 6.0.8, measured on a 1 MB Mac Plus |
 | Everything beyond `.sit`/`.cpt`/`.hqx`/`.bin` | needs DropStuff with Expander Enhancer, *"a **System 7-only** shareware product"* | in the same free application, on System 6 |
@@ -929,10 +997,12 @@ with this archive."*
 | Encrypted archives | yes — it prompts, and knows *"You have entered an incorrect password"* | detected and refused, out of scope |
 | Multipart BinHex | *"Multipart BinHex files, such as those appearing in Internet newsgroup postings (e.g. comp.binaries.mac), are fully supported"* — multiple documents in one text file, and one file broken into several pieces | several documents in one file since 2026-08-15 (††, above); a document broken across FILES joins where the parts are named `.001`, `.002` … |
 | Compact Pro comments | written out beside the extracted items | read and CRC'd, never surfaced |
-| `.arc`, `.uu`, AppleLink `.pkg`, SpaceSaver | with the add-on | no, and not sniffed either (out of scope, CLAUDE.md) |
+| `.arc` (ARC / ArcMac) | with the add-on | **yes since 2026-08-15**, methods 1-9; an ArcMac payload is named and declined (★ above) |
+| uuencode (`.uu`) | with the add-on | **yes since 2026-08-15**, plain and UUTool's two-fork shape |
+| AppleLink `.pkg`, StuffIt SpaceSaver | with the add-on | no, and not sniffed either. Not a decision about scope any more — a decision about evidence: neither has a reference implementation or a published layout anywhere reachable, so rule #1 forbids writing one. OPEN_ITEMS.md §6 records what was searched |
 | Chained expansion (`.sit.hqx`) | yes, and can be turned off | yes, `-nr` turns it off |
 | System 7 conveniences | drag-and-drop of files, folders and whole disks; watch folders; background expansion; Apple events | none; Standard File, one archive at a time |
-| Verification | none published | 804 fixtures byte-exact against `unar`/`macunpack` |
+| Verification | none published | 806 fixtures byte-exact against `unar`/`macunpack` — bar the one uuencode fixture, which `unar` cannot read at all and whose ground truth is its generator's input, with `hexbin` agreeing |
 | Licence | free, closed | free, LGPL-2.1-or-later |
 | Memory partition | **not measured** — reading the app's `SIZE` resource needs an HFS reader this machine does not have | engine peak heap per format in the matrix above |
 

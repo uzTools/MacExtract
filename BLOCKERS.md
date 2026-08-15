@@ -8,16 +8,19 @@ every system the project claims:
 
 | tier | result |
 |---|---|
-| System 6.0.8, 4 MB Mac Plus (Mini vMac, a true 68000) | 55/55 sampled fixtures |
-| System 6.0.8, **1 MB** — the floor target | **55/55**; no memory-budget refusals remain |
-| System 7.0.1, 4 MB | **55/55** |
-| Mac OS 9.2 (QEMU PowerPC, 68LC040 emulation) | **13/13**, plus HFS+ and the `SIZE` partition |
+| System 6.0.8, 4 MB Mac Plus (Mini vMac, a true 68000) | 63/63 sampled fixtures |
+| System 6.0.8, **1 MB** — the floor target | **63/63**; no memory-budget refusals remain |
+| System 7.0.1, 4 MB | **55/55** on the pre-M12 sample; not re-run since (OPEN_ITEMS.md) |
+| Mac OS 9.2 (QEMU PowerPC, 68LC040 emulation) | **13/13**, plus HFS+ and the `SIZE` partition; DiskDoubler still recorded there as the refusal it was pre-M12 |
 
 The sample was 44 fixtures until 2026-08-08, when nine that had never had an
 oracle manifest gained one and joined it (BLOCKERS.md *Withdrawn claims*,
 FORMATS.md), and then two more once method 6 had an oracle; all three tiers
 were re-run against the enlarged sample that day, and the two method-6
-fixtures measured on each of them.
+fixtures measured on each of them. It reached **61 on 2026-08-15**, when M12
+added six DiskDoubler fixtures and one Now Compress fixture, and **63 the same
+day**, when M13 added a generated ARC archive holding all nine methods and a
+UUTool `.uu`; only the two System 6 tiers have run against that sample.
 Figures written as `n/44` elsewhere in this file were measured on the smaller
 sample and are left as they were.
 
@@ -219,7 +222,7 @@ DiskCopy 4.2 was named in `unc_sniff` but never detected, because no reference
 was available offline and rule #3 forbids inventing a format from memory. A
 reference was obtained (`reference/notes/DiskCopy42.md`, DiscFerret wiki) and
 the probe is real: it matches a synthetic 800K GCR image and a real one, 0
-false positives across 803 fixtures. Still detect-only — disk images are out of
+false positives across 807 fixtures. Still detect-only — disk images are out of
 scope for v1.
 
 ---

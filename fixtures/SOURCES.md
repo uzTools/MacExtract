@@ -751,6 +751,7 @@ a real file instead of only on a synthetic header (TESTING.md,
 | super-disk-utility.hqx | ee2806e14cd7faab4a82c01db40b4d2a46ea75b176e3acc48bb58ba0e3c321f3 | 27199 | http://www.nic.funet.fi/index/info-mac/cmp/super-disk-utility.hqx |
 | superboomerangfixer.cpt | a2cfb0018c8d9760d090ab00abc1aaec8aa671d3c702db26a0a83e179069807f | 5248 | http://www.nic.funet.fi/pub/mac/appl/superboomerangfixer.cpt |
 | swapmap.bin | 8961fd04be131f99e0483596613df4582d7c388d7139b6917a2fbb8a732c1966 | 1148 | http://www.nic.funet.fi/pub/mac/fkey/swapmap.bin |
+| synth-arc-mixed.arc | db36b85b5f3a923adf2e6788414752d9112a9fa34ce2c4a03c7496ac6ff6ae78 | 9312 | synthetic:tools/synth_arc.py |
 | synth-exo-Z.Z | f11f802daae22d9df385686b78cbd06026e1ff6ae0467ff7b6c803ee29204df5 | 488 | synthetic:tools/synth_exo.py --kind Z |
 | synth-exo-gz-named.gz | 06cf163df204ed7bb5a8d70af55316def25bd4b171cacf268125cea36ab266ea | 99 | synthetic:tools/synth_exo.py --kind gz-named |
 | synth-exo-gz.gz | 78773b077a911bfe6f73f2c83aab4062f9691d411f9b7a011a7be5bdab6d1498 | 81 | synthetic:tools/synth_exo.py --kind gz |
@@ -763,6 +764,7 @@ a real file instead of only on a synthetic header (TESTING.md,
 | synth-packit-3.pit | 3102287e41ab3fa714b8a2a0a62e00319773b95f7333f169dbb7769c1e5c35f5 | 3381 | synthetic:tools/synth_pit.py --seed 3 |
 | synth-sit-fixhuf.sit | 230ccec1522c0ea3deb1140cacb76c2dae3716cf9d6e5b9e26219ad4000867e8 | 2601 | synthetic:tools/synth_sit6.py |
 | synth-sit-rle90.sit | cdd044dcabffafe20f7dc54c9b9b28b0890330c528543e09cfe37e4e0b9d1b47 | 1287 | synthetic:tools/synth_sit1.py |
+| synth-uu-mac.uu | e2ac98889d442f3a3053a8c4d7be695c11f3b55accf79659f0c97d1172d9d705 | 3020 | synthetic:tools/synth_uu.py |
 | syserrtable30.sit | d120343c034a72ab548824b63edef21572181505c8a6e3952a20397dfc4838fb | 24496 | http://www.nic.funet.fi/pub/mac/da/syserrtable30.sit |
 | systemidle.sit | 99dcc13a87539f6fb212d43221a1eca6a96ab89804706ddb8bee5bc7b6eddfca | 18923 | http://www.nic.funet.fi/pub/mac/da/systemidle.sit |
 | tads.cpt | 2f9241c98bbc293bee3f6a3950972648645ffac6a30500cca9c5f4d5ecab5672 | 177280 | http://www.nic.funet.fi/pub/mac/games/tads.cpt |

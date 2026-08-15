@@ -1,0 +1,99 @@
+{
+ "entries": [
+  {
+   "data_sha256": "ebc3efb5cd2c2947bba4250ec833580c7b0360b102d3b7c92d425947f4e98c47",
+   "data_size": 1800,
+   "name": "m1.bin",
+   "oracle_methods": [
+    "None (old)"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "ebc3efb5cd2c2947bba4250ec833580c7b0360b102d3b7c92d425947f4e98c47",
+   "data_size": 1800,
+   "name": "m2.bin",
+   "oracle_methods": [
+    "None"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "ebc3efb5cd2c2947bba4250ec833580c7b0360b102d3b7c92d425947f4e98c47",
+   "data_size": 1800,
+   "name": "m3.bin",
+   "oracle_methods": [
+    "Packed"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "ebc3efb5cd2c2947bba4250ec833580c7b0360b102d3b7c92d425947f4e98c47",
+   "data_size": 1800,
+   "name": "m4.bin",
+   "oracle_methods": [
+    "Squeezed"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "ebc3efb5cd2c2947bba4250ec833580c7b0360b102d3b7c92d425947f4e98c47",
+   "data_size": 1800,
+   "name": "m5.bin",
+   "oracle_methods": [
+    "Crunched (no packing)"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "ebc3efb5cd2c2947bba4250ec833580c7b0360b102d3b7c92d425947f4e98c47",
+   "data_size": 1800,
+   "name": "m6.bin",
+   "oracle_methods": [
+    "Crunched"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "ebc3efb5cd2c2947bba4250ec833580c7b0360b102d3b7c92d425947f4e98c47",
+   "data_size": 1800,
+   "name": "m7.bin",
+   "oracle_methods": [
+    "Crunched (fast)"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "ebc3efb5cd2c2947bba4250ec833580c7b0360b102d3b7c92d425947f4e98c47",
+   "data_size": 1800,
+   "name": "m8.bin",
+   "oracle_methods": [
+    "Crunched (LZW)"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "ebc3efb5cd2c2947bba4250ec833580c7b0360b102d3b7c92d425947f4e98c47",
+   "data_size": 1800,
+   "name": "m9.bin",
+   "oracle_methods": [
+    "Squashed"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  }
+ ],
+ "fixture": "synth-arc-mixed.arc",
+ "format": "ARC",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "db36b85b5f3a923adf2e6788414752d9112a9fa34ce2c4a03c7496ac6ff6ae78",
+ "size": 9312
+}

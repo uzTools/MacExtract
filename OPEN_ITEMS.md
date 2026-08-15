@@ -5,7 +5,7 @@ and things this repository asserts more confidently than the evidence supports.
 
 **Not** BLOCKERS.md, which records investigations that went wrong and the
 claims withdrawn from them. Nothing here stops the engine or the CLI, which are
-byte-exact against the oracle across 803 fixtures in `./ci.sh`.
+byte-exact against the oracle across 806 fixtures in `./ci.sh`.
 
 Each item says what would close it. Detail lives in one place per finding —
 status in BLOCKERS.md, reasoning in DECISIONS.md, how to re-run in TESTING.md
@@ -68,11 +68,16 @@ A section that empties is the point of the file.
   archive. The path is covered by a unit test, including the name
   coming from the host rather than the archive, which is what the
   reference does with a `.dd` suffix.
-- **The Mac OS 9 tier has not re-run since M12.** Both Mini vMac tiers
-  have (61/61 at 4 MB and at 1 MB, 2026-08-15), but the OS 9 sample
-  costs a full PowerPC boot per fixture and still records DiskDoubler as
-  a refusal, which is what it was when that tier last ran. FORMATS.md
-  marks those rows pre-M12.
+- **Two of the four Mac tiers have not re-run since M12 or M13.** The
+  System 6 tiers have (63/63 at 4 MB and at 1 MB, 2026-08-15). **System 7.0.1 and
+  Mac OS 9.2 have not**: System 7 stands at 55/55 on the pre-M12 sample
+  (2026-08-08), so the seven fixtures M12 added and the two M13 added have
+  never run there, and
+  the OS 9 sample still records DiskDoubler as a refusal, which is what
+  it was when that tier last ran. FORMATS.md marks those rows pre-M12.
+  **What would close it:** `run.py --system Sys7.img --list
+  tools/vmac/sample.txt` (Mini vMac, cheap) and an OS 9 sweep, which
+  costs a full PowerPC boot per fixture.
 
 ---
 
@@ -137,7 +142,7 @@ A section that empties is the point of the file.
   the era could be one. Refusing it cleanly is the right answer, not a
   missing feature.
 - **Out of scope by the brief, and still out:** compression, StuffIt X
-  (`.sitx`), encrypted archives, disk-image extraction, Now Compress, and
+  (`.sitx`), encrypted archives, disk-image extraction, and
   LZH *extraction* — the optional half of M8, and the evidence for
   leaving it there is that **the corpus contains no `.lzh` at all**:
   Macintosh software was not distributed that way. It would be ~550 new
@@ -147,12 +152,58 @@ A section that empties is the point of the file.
   since 2026-08-08** and four schemes are implemented (StuffIt segments,
   Compact Pro segments, spanned zip, plain `.NNN` splits); the rest are
   the section above.
-- **Out of scope, and added to the brief on 2026-08-15 rather than found
-  in it:** `.arc`, uuencode (`.uu`), AppleLink packages (`.pkg`) and
-  StuffIt SpaceSaver. They are here because the comparison with StuffIt
-  Expander 4.0.2 (FORMATS.md) is what named them: each is a format its
-  paid add-on expanded and we do not, and unlike the detect-only list
-  above we do not sniff them either. None appears in this corpus.
+- **The four formats StuffIt Expander 4.0.2's add-on expanded were brought
+  IN scope on 2026-08-15, and two of them are done.** `.arc` (ARC and
+  ArcMac) and uuencode (`.uu`, including UUTool's two-fork shape) extract —
+  M13, FORMATS.md ★. The other two are open, and not for want of effort:
+
+  - **AppleLink `.pkg` and StuffIt SpaceSaver cannot be written under
+    rule #1.** Neither has a reference implementation or a published layout
+    anywhere reachable. Searched 2026-08-15: the only AppleLink format with
+    documented internals is the Apple II `.acu` (CiderPress2's format notes,
+    magic `fZink`), which that page explicitly distinguishes from the
+    Macintosh Package format; SpaceSaver has no specification, no open
+    implementation, and Aladdin's own later Expanders dropped it. Neither
+    can even be **sniffed** without inventing a magic number, so a user still
+    gets *unknown* rather than a name. **What would close it:** a specimen
+    plus the original application, derived under Mini vMac the way Compact
+    Pro's segment layout was (DECISIONS.md 2026-08-14) — or one published
+    description of either format.
+  - **An ArcMac entry's payload is declined.** The container is walked and
+    the entry reported with its real Mac name, type, creator and fork
+    lengths (all documented in `reference/macutils/macunpack/arc.h`), but
+    the single compressed stream holds both forks and nothing says which
+    comes first. macutils' `arc.c` — the only implementation that ever read
+    it — is missing from the distribution, upstream tarball included. Now
+    Compress puts the resource fork first and lists it second, so the order
+    is not guessable by analogy either. **What would close it:** one real
+    ArcMac archive with both forks non-empty; a resource fork identifies
+    itself from its own first 16 bytes, so a single specimen decides it.
+  - **A uuencoded set missing a MIDDLE part decodes short, and silent.**
+    Since 2026-08-15 a document posted in several parts joins and
+    decodes — the mail headers between the parts are stepped over — but
+    uuencode carries no length and no checksum anywhere, so nothing can
+    notice that a part never arrived. A missing LAST part IS caught (the
+    terminator and `end` live there). Asserted rather than described:
+    `tools/run_uu.py` builds a gapped set and requires exactly this
+    result, so the day the format turns out to have a check, the suite
+    says so. **What would close it:** nothing in the format. A host that
+    knows the parts were numbered `1/5` could check the count, which is
+    a naming question and not a decoding one.
+  - **ARC methods 0x0a (Crushed) and 0x0b (Distilled) are declined per
+    entry.** PKARC's, and nothing reachable from here writes one, so an
+    implementation could not be graded — the DiskDoubler rule.
+
+- **Alysis SuperDisk! is the one format this corpus holds that nothing
+  here names.** Two files, both inside envelopes, so a user gets the
+  payload and then *unknown*: `Disk Expander .X` and `SD! Utilities.x`,
+  out of `alysis-disk-expander-12.hqx` and `super-disk-utility.hqx`
+  (FORMATS.md ✧✧). `unar` reads no further than the envelope either, so
+  it is not on the Expander comparison's list and nothing had looked for
+  it — it fell out of the innermost-format pass. **What would close the
+  sniff:** a reference. There is none in `reference/` and XADMaster does
+  not implement the format, so this is blocked exactly the way
+  AppleLink `.pkg` and SpaceSaver are, by evidence rather than effort.
 - **Compact Pro archive comments are read, CRC'd and discarded.**
   Expander 4.0.2 writes them out beside the extracted items. Deliberate:
   a comment is not a file, and the sink writes files. Noted so that the

@@ -43,7 +43,7 @@ one, because parts are recognised by what is inside them:
 ## Download
 
 **[Latest release](https://github.com/jarreboum/unclassic/releases/latest)** —
-currently **v0.9.0**. If the release page shows anything older, the
+currently **v0.10.0**. If the release page shows anything older, the
 publish step did not run and what is below is newer than what is there.
 Or take it straight from the tree:
 
@@ -61,14 +61,18 @@ notes.
 
 **Extracts:** StuffIt (`.sit`, classic and 5.x), Compact Pro (`.cpt`),
 BinHex (`.hqx`), MacBinary, PackIt (`.pit`), DiskDoubler (`.dd`, `DDAR`,
-`DDA2`), Now Compress, AppleSingle/AppleDouble, zip, gzip, tar,
-Unix compress (`.Z`).
+`DDA2`), Now Compress, ARC (`.arc`), uuencoded files (`.uu`),
+AppleSingle/AppleDouble, zip, gzip, tar, Unix compress (`.Z`).
 
 Nested files like `.sit.hqx` or `.tar.Z` are unwrapped automatically, by
 looking inside them rather than trusting the name. A `.hqx` that holds
 several files — one newsgroup posting, several attachments — gives you
-all of them, not just the first. Resource forks, type and
-creator codes and dates all survive, so an extracted application simply runs.
+all of them, not just the first — and so does a `.uu` file, which on top of
+that carries the resource fork and the type when UUTool made it. A file that
+was posted in several parts also works: join the parts and the mail headers
+between them are stepped over. Resource
+forks, type and creator codes and dates all survive, so an extracted
+application simply runs.
 
 **Recognises but does not extract:** StuffIt X, LZH, Disk Copy 4.2. It tells you what the file is rather than failing
 obscurely.
@@ -114,7 +118,8 @@ each one opens:
 | Split zip or Compact Pro sets | "cannot expand" — its own Read Me | yes |
 | Encrypted archives | yes, if you know the password | no |
 | Several files posted in one BinHex message | yes | yes |
-| `.arc`, `.uu`, AppleLink `.pkg`, SpaceSaver | with the add-on | no |
+| `.arc` and uuencoded (`.uu`) files | with the add-on | yes |
+| AppleLink `.pkg`, StuffIt SpaceSaver | with the add-on | no — nobody has published how either one is laid out, and this project does not guess |
 | DiskDoubler and Now Compress archives | no | yes |
 | What you install | the application, a StuffIt Engine extension, and the add-on for anything above | one application |
 | Source | free, closed | free, open (LGPL) |

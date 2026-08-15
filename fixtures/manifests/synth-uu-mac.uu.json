@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "ttxt",
+   "data_sha256": "d42f12abd4034c3792c1859fd25738a58f20aa853575d3a05a0fc961758cf37f",
+   "data_size": 1350,
+   "name": "Mac File",
+   "rsrc_sha256": "f3a25aa93aa2fbba28d79260535bbd6a5eb0fc1c24a8b0f04e12b484c1dfe363",
+   "rsrc_size": 768,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "synth-uu-mac.uu",
+ "format": "uuencode",
+ "oracle": "tools/synth_uu.py (input bytes) + hexbin agreement on Linux",
+ "sha256": "e2ac98889d442f3a3053a8c4d7be695c11f3b55accf79659f0c97d1172d9d705",
+ "size": 3020
+}

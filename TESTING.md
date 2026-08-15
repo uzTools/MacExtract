@@ -190,16 +190,17 @@ Gzip, tar or DiskDoubler, and it fails whole-archive far more often than
   change to the harness. Until 2026-08-08 the whole FIXTURE was skipped
   instead, on the strength of our own error message; see "When our engine
   declines an entry".
-- Do not read "unadjudicated: 12 forks" as 12 defects. It is 12 forks
-  across 9 fixtures where two implementations cannot be compared, and
-  **both sides decline on every one of them**: 8 in damaged nested archives
-  where the engine says "file is truncated" and unar says "Error on
-  decrunching", and 4 in the two PKZIP 1.x zips, where unar failed the entry
-  and Implode is outside v1 scope for us. Every fork the engine extracts is
-  adjudicated by somebody. (The count was 8 across 7 until those two zips
+- Do not read "unadjudicated: 23 forks" as 23 defects. It is 23 forks
+  across 11 fixtures where two implementations cannot be compared: 8 in
+  damaged nested archives where the engine says "file is truncated" and
+  unar says "Error on decrunching", 4 in the two PKZIP 1.x zips, where
+  unar failed the entry and Implode is outside v1 scope for us — **both
+  sides decline on every one of those 12** — and 11 in two DiskDoubler
+  fixtures, which are the exception worth knowing about: **we extract
+  those and nobody grades them** (both oracles fail; see the DiskDoubler
+  section below). (The count was 8 across 7 until those two zips
   stopped being skipped whole, which is the point: a skipped fixture's
-  unadjudicated forks were not counted anywhere.) Out of the diff run's
-  scope, 11 more forks stay unadjudicated in DiskDoubler fixtures.
+  unadjudicated forks were not counted anywhere.)
 
 ### When our engine declines an entry
 
@@ -343,7 +344,7 @@ sampled occurrence index **by trying to allocate the table and failing**
 CI forces it three ways:
 
 - `-DUNC_ARS_FORCE_SAMPLED` compiles the fast path out. The whole
-  803-fixture diff suite and all 8,030 robustness variants run through the
+  806-fixture diff suite and all 8,060 robustness variants run through the
   fallback under ASan+UBSan, and must be byte-exact.
 - `--budget 678392` (what a 1 MB Mac Plus leaves the engine) on the 31
   StuffIt 5 fixtures, with the normal adaptive build. This is the only step
@@ -405,13 +406,58 @@ same day. Step 3's figure is from
 that date; re-running it needs the hand edit above, and what matters is that it
 fails at all, not the count. The LZW-path figure is from the same day.
 
+
+## ARC and uuencode (`tools/run_arc.py`, `tools/run_uu.py`, in `ci.sh`)
+
+Neither format occurs in the corpus — measured 2026-08-15 by innermost
+format over all 805 fixtures — so both suites write their own archives
+and then get out of the way, because a generator this repository wrote
+cannot grade a decoder this repository wrote.
+
+**ARC.** `tools/synth_arc.py` builds one archive per compression method
+(1-9) plus one holding all nine, and every one is required to agree three
+ways: the bytes that went in, what `unar` extracts, and what our CLI
+extracts. `unar` is the load-bearing one. Two encoder/decoder pairs here
+shared a misreading and round-tripped perfectly — the crunch codes' bit
+order, and the compress table's growth point — and in both cases the
+CRC-16 agreed as well, because ARC's checksum covers the DECODED bytes
+(DECISIONS.md 2026-08-15). When `tools/get_arc.sh` has fetched Debian's
+`arc` 5.21q, three archives written by a real encoder are checked too;
+its absence is printed, never silent. Also asserted: a flipped payload
+byte is a per-entry CRC error and the entry after it still extracts.
+
+**uuencode.** `tools/synth_uu.py` writes the plain shape (encoded by
+CPython's `binascii`, so the encoding side is not ours either) and
+UUTool's two-fork shape, which macutils' **`hexbin`** then decodes — the
+same arrangement that grades multi-document BinHex, and for the same
+reason: it is the implementation `fmt_uu.c` was transcribed from. Also
+covered: a mail banner in front, several documents in one file, CR line
+endings, and the two ways it must fail (prose containing the word
+"begin" is not an archive; a truncated document is an error).
+
+**Multipart postings** are covered in both suites since 2026-08-15:
+`run_uu.py` joins two postings (headers and all), runs the same set
+through the `.001`/`.002` split scheme so the whole chain is exercised
+rather than the decoder alone, and asserts the one thing uuencode cannot
+detect — a missing MIDDLE part decodes short and silent.
+`run_multihqx.py` does the BinHex half, plus the edge of the rule: a
+junk line built only of alphabet characters is indistinguishable from
+data, is taken as data, and must come back as a CRC error rather than as
+silence. **Both were run against a build with the line rules removed and
+both fail there** (DECISIONS.md, "Multipart postings").
+
+**What these cannot see.** No fixture in the wild has ever been run
+through either decoder — every input is synthetic or from a
+reconstructed encoder. ArcMac's payload is declined rather than decoded,
+so nothing exercises a two-fork ARC entry at all (OPEN_ITEMS.md).
+
 ## Segmented archives (`tools/run_segments.py`, in `ci.sh`)
 
-No segmented archive exists in the corpus — measured over all 806
-fixtures: no `B0 56 00` header anywhere, every Compact Pro archive is
-volume 1 with all 273 of its file entries pointing at volume 1, no
-disk-spanning zip marker, no part-like filename, and no part-like entry
-name in the 804 manifests. So these fixtures are generated by
+No segmented archive exists in the corpus — first measured 2026-08-08 and
+**re-measured 2026-08-15 over all 805 fixtures**, after M12 grew it: no
+`B0 56 00` header anywhere, all 108 Compact Pro archives are volume 1 with
+every file entry in them pointing at volume 1, no disk-spanning zip marker,
+no part-like filename, and no part-like entry name in the 805 manifests. So these fixtures are generated by
 `tools/synth_sitsplit.py` into a temp directory per run, and each case
 is required to agree three ways: what the generator wrote, what `unar`
 extracts, and what our CLI extracts. The generator alone would be our

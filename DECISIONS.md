@@ -68,6 +68,8 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-15 — DiskDoubler in scope: three containers, four methods, and two traps
 - 2026-08-15 — Now Compress without the solid stream
 - 2026-08-15 — the emulator harness graded fixtures against other fixtures
+- M13 — ARC and uuencode: a generator that agrees with you proves nothing
+- Multipart postings: the other half of "split", and what each format can prove
 
 ---
 
@@ -363,7 +365,7 @@ which fails CI if it drifts from the headings below it.
   was later obtained (`reference/notes/DiskCopy42.md`, from the
   DiscFerret wiki) and the probe is now real: `unc_diskcopy_probe`
   (`src/fmt_stubs.c:76`) matches a synthetic 800K GCR image and a real
-  one, with 0 false positives across 803 fixtures. Still detect-only —
+  one, with 0 false positives across the corpus (FORMATS.md). Still detect-only —
   disk images remain out of scope for v1. The rest of this entry stands.
 - **The fuzzer treats exit codes 0 and 1 as success** — the contract
   under fuzz is "clean error, no crash/hang/sanitizer trip", which is
@@ -3132,3 +3134,139 @@ Two things worth carrying:
   to share an aggregate, it would have been a false PASS instead. A harness
   whose two instances can silently share a channel does not have a flakiness
   problem, it has a correctness one.
+
+## M13 — ARC and uuencode: a generator that agrees with you proves nothing
+
+**2026-08-15.** The brief became "everything StuffIt Expander 4.0.2 expands",
+which named four formats. Two are delivered (`.arc`, `.uu`); two are not
+(AppleLink `.pkg`, StuffIt SpaceSaver), and the reason is worth separating
+from the work.
+
+**Neither delivered format occurs in the corpus.** Both are therefore graded
+the way M11's segmented sets were: generate the archives, then hand them to an
+implementation that is not ours. For ARC that is `unar`; for the UUTool shape
+of `.uu` it is macutils' `hexbin`, the implementation the decoder was
+transcribed from. Debian's `arc` 5.21q, fetched by `tools/get_arc.sh`, adds
+archives whose bytes owe nothing to this repository at all — but it only emits
+methods 2, 4, 8 and 9, and macutils says ArcMac used 1 to 7, so the generator
+is not optional.
+
+**Twice, our decoder and our generator agreed with each other and were both
+wrong.** The crunch decoder (methods 5/6/7) read its 12-bit codes LSB-first;
+`tools/synth_arc.py` mirrored the same reading, so every generated archive
+round-tripped perfectly — and the CRC-16 agreed too, because ARC's checksum
+covers the DECODED bytes, which were correct. `unar` refused all three
+methods. The fix is one call: XADARCCrunchHandle reads `CSInputNextBitString`,
+and in XADMaster it is the **LE-suffixed** variant that means LSB-first
+(`reference/XADMaster/CSInputBuffer.h`), so these codes are MSB-first. The
+second was the same shape: the compress encoder for methods 8/9 added a table
+entry on every code, where the decoder adds one on every code *except the
+first*, so it widened its codes one step early — again invisible in a round
+trip, again caught by `unar` and by our own decoder agreeing with each other
+against the generator.
+
+**The lesson is the one this repository keeps relearning from the other
+direction.** "Ask what evidence a tolerance rests on; if the answer is our own
+output, it cannot fail" (2026-08-08) was about a skip. This is the same
+sentence about a fixture: **a generator written from the same reading as the
+decoder tests the reading, not the format.** A round trip is a self-portrait.
+The oracle is the only part of the arrangement that can disagree, which is why
+neither format was allowed into the suite without one.
+
+**What is declined, and the difference between the two reasons.**
+
+- ARC methods 0x0a (Crushed) and 0x0b (Distilled) are PKARC's. Nothing
+  reachable writes them, so an implementation could not be graded — the
+  DiskDoubler rule (2026-08-15), unchanged.
+- **ArcMac** is different and worth recording. Its entries ARE walked: the
+  Mac header is documented in `reference/macutils/macunpack/arc.h`, offset by
+  offset, so name, type, creator and both fork lengths come out and the entry
+  is reported. What is refused is the payload, because the entry's single
+  stream holds both forks and no source anywhere says which comes first.
+  macutils would have said — `macbinary.c` calls `arc()` — but **`arc.c` is
+  absent from the macutils distribution, upstream tarball included** (checked
+  2026-08-15). Now Compress is the reason this is not guessable by analogy:
+  its streams hold the resource fork BEFORE the data fork, the opposite of
+  the order the header lists them in (2026-08-15). A coin flip with a 50%
+  chance of silently producing swapped forks is exactly what rule #1 exists
+  to prevent.
+- **AppleLink `.pkg` and StuffIt SpaceSaver are not delivered at all**, and
+  the searching is recorded so nobody repeats it: the only AppleLink format
+  with a published layout is the Apple II `.acu` ("fZink", CiderPress2's
+  format notes), which that documentation explicitly distinguishes from the
+  Macintosh Package format; SpaceSaver has no specification and no open
+  implementation, and Aladdin's own later Expanders dropped it. Neither can
+  even be SNIFFED without inventing a magic number. The route that would work
+  is the one Compact Pro segments took (2026-08-14): drive the original
+  application under Mini vMac and derive the layout from specimens it
+  produces. That needs a specimen and a copy of the tool, and this environment
+  has neither.
+
+**One implementation detail worth carrying.** `unc_bufin_tell()` counts from
+wherever the buffer was initialised, not from the start of the file. fmt_uu.c
+re-initialises a buffer per document (it reads each document twice — the
+Finder info that gives a Mac file its type sits at the END of the document,
+and the sink needs it before the first byte), so every offset it keeps has to
+be made absolute. Getting that wrong looked exactly like a corrupt second
+document in a multi-document file, and only in the second one.
+
+## Multipart postings: the other half of "split", and what each format can prove
+
+**2026-08-15.** "Every type that does split files should be decoded" turned
+out to name two different things, and only one of them was already built.
+
+**What is a split archive, per the references.** XADMaster ships exactly two
+split parsers — `XADSplitFileParser` (plain `.NNN`) and
+`XADStuffItSplitParser` — plus spanning inside the zip parser; Compact Pro's
+scheme has no reference at all and was derived here (2026-08-14). Everything
+else was checked and has nothing: **ARC has no volume, part or segment concept
+anywhere** — not in `XADARCParser.m`, not in macutils' `arc.h` or its ArcMac
+notes, not in the `arc` 5.21q man page — which is the same answer DiskDoubler
+and Now Compress gave. So M11's four schemes are the whole of it, and no new
+joiner was needed.
+
+**What was missing is the TEXT formats' version of splitting**, which is not
+an archive scheme at all: one file posted as several mail messages. Joining
+the parts — by hand, or by the `.NNN` scheme this engine already has — leaves
+each posting's header sitting in the middle of the encoded stream.
+
+- A **clean** cut joined and decoded already: `hello.uu.001` / `.002` works,
+  because a split's ground truth is whatever archive it joins back into.
+- A **realistic** one did not, for BinHex *and* uuencode: `From:` ends a
+  BinHex document, since `:` is its terminator, and a mail header is not a
+  uu line. Both came back as errors.
+
+**hexbin was doing it all along**, which is the recurring shape: a limitation
+that names one tool. `hqx.c` checks each LINE for "intermediate garbage" and
+skips the whole line when it finds any — measured here, it decodes a
+posting-shaped file byte-for-byte identically to the unsplit one. The rule
+works because the BinHex alphabet omits `n`, `o`, `s`, `t`, `u` and the space:
+ordinary prose disqualifies itself within a few characters. Our reader
+filtered invalid CHARACTERS instead, which keeps the valid ones out of a junk
+line and then stops at its colon.
+
+**Only half of hexbin's rule is transcribed, and the half left out is the
+interesting one.** It also skips any line whose length differs from the first
+line's, with a look-ahead exception for the last. That test can discard a
+legitimate short final line — hexbin ships `-c` to turn it off, which is the
+reference admitting the same thing — and what it would have caught here is a
+junk line built only of alphabet characters. **BinHex can afford to drop that
+half because it carries per-fork CRCs**: a wrongly-accepted line becomes a
+per-entry checksum error, not silence. That is asserted, not assumed
+(`tools/run_multihqx.py` feeds it `AB:CD` mid-stream and requires a non-zero
+exit).
+
+**uuencode cannot afford the same reasoning, and the difference is the point.**
+It has no length and no checksum anywhere, so the line test has to come from
+the format itself — and it does: a uu line's first character declares how many
+bytes it encodes, so a line whose length disagrees cannot be data. That
+disqualifies every header shape measured. What no test can recover is a part
+that never arrived: a set missing its MIDDLE part decodes to a short file and
+nothing objects. A missing LAST part is still caught, because the terminator
+and `end` live there. **The limitation is asserted rather than described** —
+`tools/run_uu.py` builds a gapped set and requires the short, silent result —
+so the day uuencode grows a check nobody knew about, the suite says so.
+
+**Both new assertions were run against a mutant** with the line rules removed,
+and both fail there. A test for a tolerance is worth nothing until the
+intolerant build has failed it.

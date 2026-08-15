@@ -111,3 +111,10 @@ derived-PCCTS.tar                          # 286720 B
 synth-exo-zip-deflate.zip                  # 3709 B
 synth-exo-zip-store.zip                    # 8384 B
 derived-MUSFMT10.ZIP                       # 171960 B
+
+# ARC and uuencode (M13, 2026-08-15). Neither format occurs in the
+# corpus, so both are generated: tools/synth_arc.py and tools/synth_uu.py.
+# The ARC one holds all nine implemented methods in one archive; the uu
+# one is UUTool's shape, so it carries a resource fork and a type.
+synth-arc-mixed.arc                        # 9312 B
+synth-uu-mac.uu                            # 3020 B

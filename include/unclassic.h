@@ -28,7 +28,7 @@ extern "C" {
  * tools/make_dist.sh do now, and tools/check_docs.py fails the build if
  * this, README.md and dist/README.txt disagree. A constant nobody reads
  * is a constant that is wrong. */
-#define UNC_VERSION "0.9.0"
+#define UNC_VERSION "0.10.0"
 
 /* ------------------------------------------------------------------ */
 /* Formats                                                            */
@@ -65,6 +65,11 @@ typedef enum UncFormat {
     UNC_FORMAT_ZIPSEG,        /* one part of a spanned (split) zip set */
     UNC_FORMAT_SPLIT,         /* one part of a plain NAME.001 split    */
     UNC_FORMAT_CPTSEG,        /* one segment of a Compact Pro set      */
+
+    /* Brought in scope 2026-08-15 with the rest of what StuffIt
+     * Expander 4.0.2 expands; appended for the same ABI reason. */
+    UNC_FORMAT_UU,            /* uuencoded file, incl. UUTool's shape  */
+    UNC_FORMAT_ARC,           /* .arc — ARC / ArcMac                   */
 
     UNC_FORMAT__COUNT
 } UncFormat;
