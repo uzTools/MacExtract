@@ -316,6 +316,24 @@ int unc_bufin_skip_to(UncBufIn *b, uint32_t abs)
     return UNC_OK;
 }
 
+/* A UncBufIn over bytes already in memory: the same reader, with the
+ * buffer pre-filled and its limit set so a read past the end reports
+ * truncation instead of reaching for an io that is not there. Now
+ * Compress needs it — it decompresses block-to-block inside RAM and
+ * still wants the shared bit reader and canonical-Huffman decoder. */
+void unc_bufin_init_mem(UncBufIn *b, const uint8_t *mem, uint32_t len)
+{
+    b->io = NULL;
+    b->ps = NULL;
+    b->buf = (uint8_t *)mem;
+    b->cap = len;
+    b->len = len;
+    b->pos = 0;
+    b->lenfed = len;
+    b->limit = len;
+    b->err = UNC_OK;
+}
+
 int unc_bufin_next_slow(UncBufIn *b)
 {
     int32_t r;

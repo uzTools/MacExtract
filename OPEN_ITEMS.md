@@ -31,23 +31,23 @@ A section that empties is the point of the file.
 
 ---
 
-## 1. Asked for and not built: Now Compress
+## 1. Now Compress: what one fixture cannot reach
 
-- **Now Compress extraction.** Requested with DiskDoubler on 2026-08-15;
-  DiskDoubler landed the same day (M12) and this did not. It is a
-  different shape of problem, not more of the same: a Now Compress
-  archive is **solid** — every fork of every file concatenated into one
-  compressed stream, addressed as (offset, length) pairs — which is a
-  container model this engine has never had, and its codec is a
-  517-line handle in the reference against our 1 fixture.
-  **What would close it:** transcribe `XADNowCompressParser.m` (entry
-  table, nested by a per-directory entry count) and
-  `XADNowCompressHandle.m`, then decode the stream once and cut the
-  forks out of it as they pass, since the entry table is in stream
-  order. `derived-Expand_Now_1.0.1.sea` is the only fixture and `unar`
-  adjudicates it, so it is gradeable the moment it exists. Until then
-  it stays detect-only, and `run_diff.py` keeps it in DETECT_ONLY so
-  the claim is tested rather than assumed.
+- **Three of the five block shapes are unexercised by any fixture.**
+  MEASURED 2026-08-15 by instrumenting the block loop: the corpus's one
+  Now Compress archive uses "new" LZSS and Huffman-only blocks. Stored,
+  LZSS-only and Huffman-then-LZSS blocks are transcribed and never run.
+  `test_nowcompress` builds stored blocks synthetically, so that one is
+  covered; the other two are not. **What would close it:** another Now
+  Compress archive. They are rare — the corpus has one in 807.
+- **The offset-delta search has never fired.** The fixture's block
+  tables are correct, so `now_find_delta` — the checksum walk that
+  recovers a table whose offsets are wrong by a constant — is dead code
+  here. It is transcribed from the reference, which needed it.
+- **Directories, data forks and multi-stream archives** come from the
+  unit test only: the fixture is one file with one fork. The test earns
+  it — swapping the fork order fails `test_nowcompress` and still
+  passes the fixture 1/1 (DECISIONS.md 2026-08-15).
 
 ---
 

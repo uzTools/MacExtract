@@ -56,7 +56,7 @@ now (BLOCKERS.md *Withdrawn claims*). **A claim with no test behind it is
 the one that will be false**, and the README was the only document here
 that nothing checked.
 
-The engine passes an 803-fixture differential suite against `unar` and, where `unar` fails, `macunpack`; the Mac shell extracts byte-exact on a real System 6.0.8 Mac Plus under Mini vMac — **55/55 sampled fixtures at 4 MB and 55/55 at the 1 MB floor** (2026-08-08, on a sample that grew from 44 to 55 that day; there are no memory-budget refusals left).
+The engine passes an 804-fixture differential suite against `unar` and, where `unar` fails, `macunpack`; the Mac shell extracts byte-exact on a real System 6.0.8 Mac Plus under Mini vMac — **55/55 sampled fixtures at 4 MB and 55/55 at the 1 MB floor** (2026-08-08, on a sample that grew from 44 to 55 that day; there are no memory-budget refusals left).
 
 It runs on all three systems the project claims: **System 6.0.8 and System 7.0.1** under Mini vMac (a true 68000), and **Mac OS 9.2** under QEMU PowerPC through the 68LC040 emulator, where 13/13 of a format sample is byte-exact, extraction onto **HFS+** is verified, and the `SIZE` partition is honoured by the Process Manager.
 
@@ -399,16 +399,18 @@ how long they will be waiting.
 
 ## Out of scope (v1)
 
-Compression (extraction only), StuffIt X (`.sitx`), encrypted archives, disk images, Now Compress, LZH/LHA. These are **detect-only**: `unc_sniff` names them — including Disk Copy 4.2, whose probe is now real — so a UI can tell the user what the file is, and extraction returns cleanly unsupported.
+Compression (extraction only), StuffIt X (`.sitx`), encrypted archives, disk images, LZH/LHA. These are **detect-only**: `unc_sniff` names them — including Disk Copy 4.2, whose probe is now real — so a UI can tell the user what the file is, and extraction returns cleanly unsupported.
 
 **DiskDoubler is IN scope since 2026-08-15** (M12), at the maintainer's
 request, where this file listed it as detect-only. Three containers and the
 four methods the corpus uses; 6/6 fixtures byte-exact, and the suite is 803
-(FORMATS.md ✦). **Now Compress was asked for in the same breath and is not
-done** — it is a SOLID archive, every fork of every file in one stream, which
-is a shape this engine has never had, and its codec is a 517-line handle in
-the reference. It is the top item in OPEN_ITEMS.md. Neither format has any
-multi-segment scheme: two independent reference implementations know nothing
+(FORMATS.md ✦). **Now Compress landed the same day.** The reference reads it as a SOLID
+archive — every fork of every file in one stream — and it does not have to:
+each file's stream holds exactly that file's resource fork then its data
+fork, so this reader is per file and runs in fixed memory (128 KB). 1/1
+fixture byte-exact, and that fixture reaches two of the five block shapes,
+so what it cannot reach is named in OPEN_ITEMS.md rather than assumed.
+Neither format has any multi-segment scheme: two independent reference implementations know nothing
 of parts or volumes for either (DECISIONS.md 2026-08-15).
 
 **Also out of scope, and NOT detect-only: `.arc`, uuencode (`.uu`), AppleLink

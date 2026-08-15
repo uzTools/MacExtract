@@ -127,6 +127,7 @@ void unc_bufin_init(UncBufIn *b, UncIO *io, UncProgressState *ps,
 int unc_bufin_next_slow(UncBufIn *b);
 
 /* Absolute position in the stream, and forward-only seeking to one. */
+void unc_bufin_init_mem(UncBufIn *b, const uint8_t *mem, uint32_t len);
 uint32_t unc_bufin_tell(const UncBufIn *b);
 int unc_bufin_skip_to(UncBufIn *b, uint32_t abs);
 
@@ -454,6 +455,7 @@ int unc_compressz_extract(UncCtx *c);
 int unc_tar_probe(const uint8_t *head, int32_t len);
 int unc_tar_extract(UncCtx *c);
 int unc_dd_extract(UncCtx *c);
+int unc_now_extract(UncCtx *c);
 
 /* Detect-only probes */
 int unc_sitx_probe(const uint8_t *head, int32_t len);

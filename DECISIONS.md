@@ -66,6 +66,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-15 — measuring this project against StuffIt Expander 4.0.2
 - 2026-08-15 — several BinHex documents in one file, and the oracle's blind spot
 - 2026-08-15 — DiskDoubler in scope: three containers, four methods, and two traps
+- 2026-08-15 — Now Compress without the solid stream
 
 ---
 
@@ -3066,3 +3067,34 @@ that, so it was checked rather than assumed: `XADDiskDoublerParser.m`,
 volume or a continuation, and no header field in either format numbers one.
 DiskDoubler split *disks*, not archives — the multi-segment work of M11 has no
 counterpart here.
+
+## 2026-08-15 — Now Compress without the solid stream
+
+The reference reads a Now Compress archive as one SOLID stream: every fork of
+every file concatenated, entries cut out of it by (offset, length). That is
+why this was written up as a container model the engine had never had, and
+why it was ranked as a second job rather than more of the first.
+
+**It does not have to be read that way.** The parser hands the decompressor a
+list of per-file start offsets, and each file's stream holds exactly that
+file's resource fork followed by its data fork — the solid offsets are just
+the running sum of those. So this reader opens one stream per file and serves
+two forks out of it, which is the shape the engine already has, and which is
+what keeps the whole format to a **flat 128 KB**: history, block, staging, all
+fixed by the format rather than by the archive. A solid reader would have had
+to hold or re-decode the stream to reach a late entry.
+
+**A rediscovered structure beats an inherited abstraction.** The reference's
+solid-stream machinery exists because XADMaster has it and it is free there;
+transcribing it here would have imported an architecture to solve a problem
+this format does not actually have.
+
+**One fixture is not coverage, and the mutation says so.** The corpus has a
+single Now Compress archive; instrumenting the block loop shows it reaches two
+of the five block shapes, with one file, one fork and no folders. The unit
+test `test_nowcompress` builds the container synthetically — a folder, a file
+with both forks, stored blocks — and its worth is measurable: **serve the two
+forks in the wrong order and the unit test fails while the fixture still
+passes 1/1**, because the fixture has no data fork to get wrong. What neither
+reaches is written down in OPEN_ITEMS.md, including a checksum-driven search
+for a wrong offset delta that has never once fired here.

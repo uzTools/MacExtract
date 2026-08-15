@@ -1698,6 +1698,124 @@ static void test_diskdoubler(void)
     arc[76] ^= 0xFF;
 }
 
+
+/* ------------------------------------------------------------------ */
+/* M12: Now Compress — the container, which the one fixture cannot     */
+/* reach (it holds a single file, one fork, no folders)                */
+/* ------------------------------------------------------------------ */
+
+/* One 110-byte entry. Its last 4 bytes are a sum of the first 106,
+ * which is what unc_sniff checks on the first entry.
+ * Source: reference/XADMaster/XADNowCompressParser.m. */
+static void now_entry(uint8_t *p, const char *name, int isdir,
+                      uint32_t numdir, uint32_t dlen, uint32_t rlen,
+                      uint32_t datastart)
+{
+    uint32_t nl = (uint32_t)strlen(name), i, sum = 0;
+    for (i = 0; i < 110; i++) p[i] = 0;
+    p[0] = (uint8_t)nl;
+    memcpy(p + 1, name, nl);
+    p[37] = (uint8_t)(isdir ? 0x10 : 0x00);
+    memcpy(p + 38, "TEXT", 4);
+    memcpy(p + 42, "ttxt", 4);
+    p[82] = (uint8_t)(numdir >> 8); p[83] = (uint8_t)numdir;
+    put32(p + 86, dlen);
+    put32(p + 90, rlen);
+    put32(p + 98, datastart);
+    for (i = 0; i < 106; i++) sum += p[i];
+    put32(p + 106, sum);
+}
+
+/* A block table for one file: `n` stored blocks of the given lengths,
+ * laid out immediately after it. The table is `firstoffset`, then one
+ * 8-byte record per block, then four bytes and a 32-bit sum of
+ * everything before them.
+ * Source: parseAndCheckFileHeaderWithHeaderOffset. */
+static uint32_t now_sum32_t(uint32_t v)
+{
+    return (v >> 24) + ((v >> 16) & 0xff) + ((v >> 8) & 0xff) + (v & 0xff);
+}
+
+static void now_table(uint8_t *arc, uint32_t at, const uint32_t *lens, int n)
+{
+    uint32_t first = at + 4 + 8 * (uint32_t)n + 8;
+    uint32_t last = first, sum;
+    int k;
+
+    put32(arc + at, first);
+    sum = now_sum32_t(first);
+    for (k = 0; k < n; k++) {
+        uint8_t *rec = arc + at + 4 + 8 * (uint32_t)k;
+        uint32_t next = last + lens[k] + 4;      /* padding 0 */
+        rec[0] = rec[1] = rec[2] = rec[3] = 0;   /* flags 0 = stored */
+        put32(rec + 4, next);
+        sum += now_sum32_t(next);
+        last = next;
+    }
+    for (k = 0; k < 4; k++) arc[at + 4 + 8 * (uint32_t)n + (uint32_t)k] = 0;
+    put32(arc + at + 4 + 8 * (uint32_t)n + 4, sum);
+}
+
+static void test_nowcompress(void)
+{
+    uint8_t arc[2048];
+    uint32_t i, at, f1, f2;
+    MemIO m;
+    UncIO io;
+    UncAlloc al;
+    UncSink sk;
+    CapSink cap;
+
+    for (i = 0; i < sizeof arc; i++) arc[i] = 0;
+    arc[0] = 0x00; arc[1] = 0x02;
+    put32(arc + 8, 3);                    /* three entries */
+
+    /* The two streams live after the three entry records. */
+    f1 = 24 + 3 * 110;
+    f2 = f1 + 200;
+
+    now_entry(arc + 24,       "folder", 1, 1, 0, 0, 0);
+    now_entry(arc + 24 + 110, "inside", 0, 0, 6, 5, f1);
+    now_entry(arc + 24 + 220, "beside", 0, 0, 4, 0, f2);
+
+    /* Stream 1: one stored block holding rsrc then data. */
+    {
+        uint32_t lens[1];
+        lens[0] = 11;
+        now_table(arc, f1, lens, 1);
+        at = f1 + 4 + 8 + 8;
+        memcpy(arc + at, "RSRCXdatadd", 11);   /* 5 rsrc + 6 data */
+    }
+    /* Stream 2: one stored block, data fork only. */
+    {
+        uint32_t lens[1];
+        lens[0] = 4;
+        now_table(arc, f2, lens, 1);
+        at = f2 + 4 + 8 + 8;
+        memcpy(arc + at, "tail", 4);
+    }
+
+    test_make_memio(&io, &m, arc, sizeof arc);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_NOWCOMPRESS);
+
+    test_make_alloc(&al);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_NOWCOMPRESS, &io, &sk, &al, NULL, NULL)
+          == UNC_OK);
+    CHECK(cap.count == 3);
+    CHECK(cap.info[0].is_dir == 1);
+    CHECK(cap.info[1].name_len == 13 &&
+          memcmp(cap.info[1].name, "folder/inside", 13) == 0);
+    /* The folder held one entry, so the next one is a sibling again. */
+    CHECK(cap.info[2].name_len == 6 &&
+          memcmp(cap.info[2].name, "beside", 6) == 0);
+    CHECK(cap.status[1] == UNC_OK);
+    CHECK(cap.rlen[1] == 5 && memcmp(cap.rsrc[1], "RSRCX", 5) == 0);
+    CHECK(cap.dlen[1] == 6 && memcmp(cap.data[1], "datadd", 6) == 0);
+    CHECK(cap.status[2] == UNC_OK);
+    CHECK(cap.dlen[2] == 4 && memcmp(cap.data[2], "tail", 4) == 0);
+}
+
 void run_format_tests(void)
 {
     test_macbinary();
@@ -1718,4 +1836,5 @@ void run_format_tests(void)
     test_split();
     test_binhex_multi();
     test_diskdoubler();
+    test_nowcompress();
 }

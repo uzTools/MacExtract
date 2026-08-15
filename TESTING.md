@@ -282,14 +282,20 @@ can read it.
    aborts/hangs fail. 4,000 cases at M9; every CI run does a 150-case
    smoke.
 
-## DiskDoubler joined the graded set (2026-08-15)
+## DiskDoubler and Now Compress joined the graded set (2026-08-15)
 
-M12 moved DiskDoubler out of `run_diff.py`'s `DETECT_ONLY` and into
-`IMPLEMENTED`, which is the whole change on the harness side: 6 fixtures
-that used to be graded on "named, and wrote nothing" are now graded
-entry-for-entry against `unar`, and the suite went 797 → 803. Now Compress
-stays in `DETECT_ONLY` until it is built, so the claim it makes is still
-the tested one.
+M12 moved both out of `run_diff.py`'s `DETECT_ONLY` and into `IMPLEMENTED`,
+which is the whole change on the harness side: 7 fixtures that used to be
+graded on "named, and wrote nothing" are now graded entry-for-entry against
+`unar`, and the suite went 797 → 804.
+
+**Now Compress is one fixture, and it does not reach most of the code.**
+Measured: it uses two of the five block shapes, has one file, one fork and
+no folders. `test_nowcompress` covers the container on synthetic bytes, and
+the proof that it is worth having is a mutation: serve the two forks in the
+wrong order and the unit test fails while the fixture still passes 1/1,
+because the fixture has no data fork. What remains unexercised is listed in
+OPEN_ITEMS.md rather than left to look tested.
 
 **What this cannot see:** 11 forks across 2 of those fixtures that neither
 oracle can decode — `unar` fails and `macunpack` fails, with its own

@@ -33,6 +33,7 @@ IMPLEMENTED = {
     "Tar": "Tar",
     "Compress": "Unix compress",
     "DiskDoubler": "DiskDoubler",          # M12
+    "Now Compress": "Now Compress",        # M12
 }
 
 # Formats v1 names but does not extract. Until 2026-08-14 a fixture of one
@@ -43,7 +44,6 @@ IMPLEMENTED = {
 # the two things the claim actually promises: the NAME agrees with the
 # oracle's, and extraction refuses without writing anything.
 DETECT_ONLY = {
-    "Now Compress": "Now Compress",   # M12 second half, not yet extracted
     "LZH": "LZH",
     "StuffIt X": "StuffIt X",
     "DiskCopy": "Disk Copy 4.2",

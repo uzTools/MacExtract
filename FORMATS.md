@@ -26,7 +26,7 @@ whole corpus for that format (engine allocations only, via
 | Split file (plain .001/.002) | extract | — (join only; the joined file is the next layer) | 3 generated sets, adjudicated against the bytes that were cut, `unar` where it can join, and our unsplit read | 8 KB | full |
 | StuffIt X (.sitx) | detect only | — | — (no fixture) | — | — |
 | DiskDoubler (DD, DDAR, DDA2) | extract | 0 store, 6/9 AD LZSS, 8 Compact Pro, 10 DDn; 1/2/3/4/5/7 declined per entry✦ | 6 fixtures | 16–108 KB✦ | full |
-| Now Compress | detect only | — | 1 fixture, named + refused | — | — |
+| Now Compress | extract | stored, LZSS, Huffman, Huffman+LZSS, "new" LZSS✧ | 1 fixture | 128 KB✧ | full |
 | LZH/LHA (-lh?-, -lz?-) | detect only | — | 1 real `-lh5-` archive, named + refused; unit test over every method byte | — | — |
 | DiskCopy 4.2 (.image) | detect only | — | synthetic 800K GCR + real 800K image; 0 false positives in 804 fixtures | — | — |
 
@@ -52,6 +52,25 @@ written for them could not be graded. **11 forks across 2 fixtures are
 adjudicated by neither oracle** — `unar` fails on them and `macunpack` (built
 with its DiskDoubler support on) fails too; our output for those is ungraded,
 and `run_diff.py` prints the count on every run. DECISIONS.md 2026-08-15.
+
+✧ **Now Compress, in scope since 2026-08-15** (M12). The archive is a flat
+entry table nested by a per-directory entry count, then one compressed stream
+per file; each stream is a table of blocks, each up to 32 KB of output against
+a 32 KB sliding history, in one of five shapes (stored, LZSS, Huffman,
+Huffman then LZSS, and a second "new" LZSS with its own length/offset tables).
+Peak heap is a flat **128 KB** — history, block and staging buffers, all fixed
+by the format — and it extracts fully under a 400 KB budget.
+
+The reference treats the whole archive as ONE solid stream and cuts entries
+out of it by offset; this reader does not, because each file's stream holds
+exactly that file's resource fork followed by its data fork. That is what
+keeps it to fixed memory (DECISIONS.md 2026-08-15).
+
+**What the single fixture reaches, measured:** "new" LZSS and Huffman-only
+blocks. Stored blocks, LZSS-only, Huffman+LZSS, directories, data forks, more
+than one stream and the cross-stream dictionary are NOT exercised by it;
+`test_nowcompress` covers the container half of that list on synthetic bytes.
+The rest is named in OPEN_ITEMS.md rather than implied to be tested.
 
 †† **A `.hqx` file may hold more than one document, and since 2026-08-15 all
 of them are extracted** — the shape comp.binaries.mac produced, several files
@@ -435,7 +454,7 @@ DECISIONS.md 2026-08-10.
 
 ## Hardening
 
-- Differential: 803 fixtures byte-exact against `unar` manifests
+- Differential: 804 fixtures byte-exact against `unar` manifests
   (both forks + type/creator), `./ci.sh`. `run_diff.py` prints the
   number it actually ran, plus two figures that must be read with it:
   **12 forks across 9 fixtures are oracle-unadjudicated** (both
@@ -593,7 +612,7 @@ On-Mac engine peak heap (high-water mark) by format, matching the Linux
 | StuffIt classic | 19–72 KB‖ |
 | Unix compress (.Z) | 15–219 KB§ |
 | StuffIt 5 (Arsenic) | 0.63–2.53 MB (block *fill* dependent — see †) |
-| DiskDoubler / Now Compress | measured while both were detect-only; DiskDoubler has been extractable since M12 and this row has not been re-measured |
+| DiskDoubler / Now Compress | measured while both were detect-only; both have been extractable since M12 and this row has not been re-measured |
 
 ## System 7 tier (Mini vMac — System 7.0.1, 4 MB Mac Plus, 68000)
 
@@ -853,9 +872,9 @@ and MacBinary and then continue into what was inside (measured 2026-08-15):
 | StuffIt 5 / Arsenic | 62 | ❌ postdates it | ✅ |
 | zip, gzip, `.Z`, tar | 16 | ⚠️ paid add-on, System 7 only | ✅ |
 | PackIt | 5 | ❌ not in its list | ✅ |
-| DiskDoubler | 12 | ❌ | ✅ since 2026-08-15 |
-| Now Compress, LZH, StuffIt X | 4 | ❌ | detect-only, named |
-| **total** | **807** | **708 alone, 724 with the add-on** | **803 extract, 4 named** |
+| DiskDoubler, Now Compress | 14 | ❌ | ✅ since 2026-08-15 |
+| LZH, StuffIt X | 2 | ❌ | detect-only, named |
+| **total** | **807** | **708 alone, 724 with the add-on** | **805 extract, 2 named** |
 
 The 62 StuffIt 5 fixtures are the largest single difference, and it is a date
 rather than a capability: 4.0.2 shipped two years before the format. Handed
@@ -882,7 +901,7 @@ with this archive."*
 | `.arc`, `.uu`, AppleLink `.pkg`, SpaceSaver | with the add-on | no, and not sniffed either (out of scope, CLAUDE.md) |
 | Chained expansion (`.sit.hqx`) | yes, and can be turned off | yes, `-nr` turns it off |
 | System 7 conveniences | drag-and-drop of files, folders and whole disks; watch folders; background expansion; Apple events | none; Standard File, one archive at a time |
-| Verification | none published | 803 fixtures byte-exact against `unar`/`macunpack` |
+| Verification | none published | 804 fixtures byte-exact against `unar`/`macunpack` |
 | Licence | free, closed | free, LGPL-2.1-or-later |
 | Memory partition | **not measured** — reading the app's `SIZE` resource needs an HFS reader this machine does not have | engine peak heap per format in the matrix above |
 
