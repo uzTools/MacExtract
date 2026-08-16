@@ -759,6 +759,7 @@ a real file instead of only on a synthetic header (TESTING.md,
 | synth-exo-tar.tar | 964880c4f1f66495fad65f67d8e948a86dd55c64854d94b6a287754e4b7e865d | 20480 | synthetic:tools/synth_exo.py --kind tar |
 | synth-exo-zip-deflate.zip | 7b6dcc8cd9d64e25b771d13049c12b8f04a24f4464d9578b178006d89918f179 | 3709 | synthetic:tools/synth_exo.py --kind zip-deflate |
 | synth-exo-zip-store.zip | 2902496bae5852f8be45dcdc4c7f191166327a87f584deba6193f0d027834c43 | 8384 | synthetic:tools/synth_exo.py --kind zip-store |
+| synth-now-mixed.now | e87810e9df1e0a663436531cc7ab2f34153b81fffcefd10b467ccbd7dc6f89ae | 7803 | synthetic:tools/synth_now.py |
 | synth-packit-1.pit | 97e30f742867f12346937fae54cb9b274328602a5a9ee6801810e5e004183879 | 3385 | synthetic:tools/synth_pit.py --seed 1 |
 | synth-packit-2.pit | 8c9fbb2e5a777c11937624ed5ed6885c59b730d27d8092a9dc7a9c0f6d877f7a | 3367 | synthetic:tools/synth_pit.py --seed 2 |
 | synth-packit-3.pit | 3102287e41ab3fa714b8a2a0a62e00319773b95f7333f169dbb7769c1e5c35f5 | 3381 | synthetic:tools/synth_pit.py --seed 3 |

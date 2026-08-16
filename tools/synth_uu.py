@@ -66,13 +66,22 @@ def uutool(macname, datafork, rsrcfork, ftype, creator, flags=0):
 
 
 def main():
+    data = b"the quick brown fox jumps over the lazy dog.\n" * 30
+    rsrc = bytes(range(256)) * 3
+
+    # `-o <file>` writes the one document committed as a fixture, which
+    # is the form fixtures/SOURCES.md restores with (harvest.py: "the
+    # script must accept -o <path> and be deterministic"). Without it
+    # that line could not be restored at all.
+    if len(sys.argv) == 3 and sys.argv[1] == "-o":
+        open(sys.argv[2], "w").write(
+            uutool("Mac File", data, rsrc, b"TEXT", b"ttxt"))
+        return
     if len(sys.argv) != 2:
-        raise SystemExit("usage: synth_uu.py <outdir>")
+        raise SystemExit("usage: synth_uu.py <outdir> | synth_uu.py -o <file>")
     out = sys.argv[1]
     os.makedirs(out, exist_ok=True)
 
-    data = b"the quick brown fox jumps over the lazy dog.\n" * 30
-    rsrc = bytes(range(256)) * 3
     made = []
 
     p = os.path.join(out, "synth-uu-plain.uu")

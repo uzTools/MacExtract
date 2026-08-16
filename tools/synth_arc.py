@@ -365,11 +365,21 @@ def sample_data():
 
 
 def main():
+    data = sample_data()
+
+    # `-o <file>` writes the one archive committed as a fixture, which is
+    # the form fixtures/SOURCES.md restores with (harvest.py: "the script
+    # must accept -o <path> and be deterministic"). Without it that line
+    # could not be restored at all.
+    if len(sys.argv) == 3 and sys.argv[1] == "-o":
+        build(sys.argv[2], [(m, "m%d.bin" % m, data["text.txt"])
+                            for m in (1, 2, 3, 4, 5, 6, 7, 8, 9)])
+        return
     if len(sys.argv) != 2:
-        raise SystemExit("usage: synth_arc.py <outdir>")
+        raise SystemExit("usage: synth_arc.py <outdir> | "
+                         "synth_arc.py -o <file>")
     out = sys.argv[1]
     os.makedirs(out, exist_ok=True)
-    data = sample_data()
 
     made = []
     for method in (1, 2, 3, 4, 5, 6, 7, 8, 9):

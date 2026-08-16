@@ -36,6 +36,14 @@ python3 tools/run_segments.py --unclassic build/san/unclassic \
 # implementation to grade: `unar` for ARC, `hexbin` for the UUTool shape.
 python3 tools/run_arc.py --unclassic build/san/unclassic || fail "ARC tests"
 python3 tools/run_uu.py --unclassic build/san/unclassic || fail "uuencode tests"
+# Now Compress has exactly one REAL fixture, and it reaches two of the
+# five shapes a block can have. The rest — and the offset-delta search,
+# and folders, and several files in one archive — are generated the same
+# way and handed to `unar`, which is the implementation fmt_now.c was
+# transcribed from. One of the generated archives is committed as a
+# fixture too, so the diff suite grades those paths without `unar`.
+python3 tools/run_now.py --unclassic build/san/unclassic \
+    || fail "Now Compress tests"
 
 echo "=== variant 1b: sampled inverse BWT (forced, + budget) ==="
 # The Arsenic decoder falls back to a sampled occurrence index when the

@@ -56,7 +56,7 @@ now (BLOCKERS.md *Withdrawn claims*). **A claim with no test behind it is
 the one that will be false**, and the README was the only document here
 that nothing checked.
 
-The engine passes an 806-fixture differential suite against `unar` and, where `unar` fails, `macunpack`; the Mac shell extracts byte-exact on a real System 6.0.8 Mac Plus under Mini vMac — **63/63 sampled fixtures at 4 MB and 63/63 at the 1 MB floor** (2026-08-15, on a sample that grew from 55 when M12 added DiskDoubler and Now Compress and again when M13 added ARC and uuencode; there are no memory-budget refusals left).
+The engine passes an 807-fixture differential suite against `unar` and, where `unar` fails, `macunpack`; the Mac shell extracts byte-exact on a real System 6.0.8 Mac Plus under Mini vMac — **63/63 sampled fixtures at 4 MB and 63/63 at the 1 MB floor** (2026-08-15, on a sample that grew from 55 when M12 added DiskDoubler and Now Compress and again when M13 added ARC and uuencode; there are no memory-budget refusals left).
 
 It runs on all three systems the project claims: **System 6.0.8 and System 7.0.1** under Mini vMac (a true 68000), and **Mac OS 9.2** under QEMU PowerPC through the 68LC040 emulator, where 13/13 of a format sample is byte-exact, extraction onto **HFS+** is verified, and the `SIZE` partition is honoured by the Process Manager.
 
@@ -410,8 +410,21 @@ four methods the corpus uses; 6/6 fixtures byte-exact, and the suite is 803
 archive — every fork of every file in one stream — and it does not have to:
 each file's stream holds exactly that file's resource fork then its data
 fork, so this reader is per file and runs in fixed memory (128 KB). 1/1
-fixture byte-exact, and that fixture reaches two of the five block shapes,
-so what it cannot reach is named in OPEN_ITEMS.md rather than assumed.
+fixture byte-exact — and that fixture reaches two of the five block shapes,
+which is why **the other three are now generated**: `tools/synth_now.py`
+writes 13 archives and `unar` grades them, closing every path one fixture
+could not reach (2026-08-15). Three things that came out of building it are
+worth carrying: the assertion for the stream-restart marker **could not
+fail** where it was first placed, because the state it restores had not yet
+diverged from the state already there; `unar` REFUSES a bit stream that ends
+within 7 bits of its buffer, which this decoder reads perfectly well — a
+limit of the oracle, so the generator works around it rather than the
+engine; and **an empty file anywhere but last is decoded WRONG by the
+reference and right by us**, silently for the entry after next, because
+reading per file makes that bug unrepresentable rather than fixed. Both
+oracle limits are asserted, not described. What is left is OPEN_ITEMS.md §1
+and cannot be generated away: the only implementation of this format is the
+one this decoder was transcribed from.
 Neither format has any multi-segment scheme: two independent reference implementations know nothing
 of parts or volumes for either (DECISIONS.md 2026-08-15).
 

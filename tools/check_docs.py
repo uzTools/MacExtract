@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Documentation invariants that would otherwise go stale silently.
 
-Two of them, both cheap enough to run first in ci.sh:
+Four of them, all cheap enough to run first in ci.sh:
 
 1. DECISIONS.md's Contents index lists every `## ` entry, in order. An index
    nobody regenerates is worse than no index, because it reads as complete.
@@ -17,10 +17,20 @@ Two of them, both cheap enough to run first in ci.sh:
    and nothing checked it; a reader who sees a stale version on the
    release page now knows the publish step did not run, which is the one
    thing about a release this environment cannot check for itself.
+4. Every `synthetic:` fixture in fixtures/SOURCES.md regenerates the exact
+   bytes recorded there. `harvest.py --restore` rebuilds those by running
+   the script with `-o <path>`, and that path needs a network for every
+   other fixture, so it never runs in ci.sh: two of the lines had been
+   unrestorable since they were written, because their generators took an
+   output DIRECTORY and no `-o` at all (2026-08-15).
 """
 
+import hashlib
+import os
 import re
+import subprocess
 import sys
+import tempfile
 import pathlib
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
@@ -100,9 +110,48 @@ def check_citations():
     return out
 
 
+SYNTH_RE = re.compile(r"^\|\s*(\S+)\s*\|\s*([0-9a-f]{64})\s*\|\s*(\d+)\s*\|"
+                      r"\s*synthetic:(.+?)\s*\|")
+
+
+def check_synthetic():
+    """Every `synthetic:` line in fixtures/SOURCES.md must regenerate the
+    bytes it records. harvest.py restores those fixtures by running the
+    script with `-o <path>`, so a script that does not accept `-o`, or
+    one that has since changed what it writes, leaves a corpus entry that
+    cannot be rebuilt — and nothing else would say so, because the
+    restore path needs a network and never runs in ci.sh."""
+    src = ROOT / "fixtures" / "SOURCES.md"
+    if not src.exists():
+        return []
+    bad = []
+    with tempfile.TemporaryDirectory() as tmp:
+        for line in src.read_text().split("\n"):
+            m = SYNTH_RE.match(line)
+            if not m:
+                continue
+            name, want, size, cmd = m.groups()
+            out = os.path.join(tmp, name)
+            argv = [sys.executable, str(ROOT / cmd.split()[0])] + \
+                cmd.split()[1:] + ["-o", out]
+            r = subprocess.run(argv, capture_output=True)
+            if r.returncode != 0 or not os.path.exists(out):
+                bad.append(f"fixtures/SOURCES.md: {name} cannot be restored "
+                           f"({cmd} -o ... exited {r.returncode})")
+                continue
+            blob = open(out, "rb").read()
+            got = hashlib.sha256(blob).hexdigest()
+            if got != want or len(blob) != int(size):
+                bad.append(f"fixtures/SOURCES.md: {name} regenerates as "
+                           f"{len(blob)} B / {got[:12]}…, recorded as "
+                           f"{size} B / {want[:12]}…")
+    return bad
+
+
 def main():
     fix = "--fix" in sys.argv[1:]
-    problems = check_index(fix) + check_citations() + check_version()
+    problems = (check_index(fix) + check_citations() + check_version() +
+                check_synthetic())
     for p in problems:
         print(p, file=sys.stderr)
     if problems:

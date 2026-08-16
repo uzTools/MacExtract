@@ -5,7 +5,7 @@ and things this repository asserts more confidently than the evidence supports.
 
 **Not** BLOCKERS.md, which records investigations that went wrong and the
 claims withdrawn from them. Nothing here stops the engine or the CLI, which are
-byte-exact against the oracle across 806 fixtures in `./ci.sh`.
+byte-exact against the oracle across 807 fixtures in `./ci.sh`.
 
 Each item says what would close it. Detail lives in one place per finding —
 status in BLOCKERS.md, reasoning in DECISIONS.md, how to re-run in TESTING.md
@@ -31,23 +31,26 @@ A section that empties is the point of the file.
 
 ---
 
-## 1. Now Compress: what one fixture cannot reach
+## 1. Now Compress: one implementation, and it is the one we copied
 
-- **Three of the five block shapes are unexercised by any fixture.**
-  MEASURED 2026-08-15 by instrumenting the block loop: the corpus's one
-  Now Compress archive uses "new" LZSS and Huffman-only blocks. Stored,
-  LZSS-only and Huffman-then-LZSS blocks are transcribed and never run.
-  `test_nowcompress` builds stored blocks synthetically, so that one is
-  covered; the other two are not. **What would close it:** another Now
-  Compress archive. They are rare — the corpus has one in 807.
-- **The offset-delta search has never fired.** The fixture's block
-  tables are correct, so `now_find_delta` — the checksum walk that
-  recovers a table whose offsets are wrong by a constant — is dead code
-  here. It is transcribed from the reference, which needed it.
-- **Directories, data forks and multi-stream archives** come from the
-  unit test only: the fixture is one file with one fork. The test earns
-  it — swapping the fork order fails `test_nowcompress` and still
-  passes the fixture 1/1 (DECISIONS.md 2026-08-15).
+Everything the single fixture could not reach — three of the five block
+shapes, the offset-delta search, folders, data forks, several files in
+one archive, a Huffman code too deep for a nibble, a stream that reads
+back into the previous stream's dictionary cache — is exercised since
+2026-08-15 by generated archives graded by `unar` (TESTING.md, "Now
+Compress: the archives the corpus does not have"). What remains is one
+thing, and no amount of generating closes it:
+
+- **The oracle is the source of the transcription.** XADMaster is the
+  only implementation of Now Compress in existence, so on those three
+  shapes "we agree with `unar`" means the transcription is faithful,
+  not that the format is understood. A misreading shared with the
+  reference would survive every test here. Only the two shapes the
+  corpus fixture uses have been checked against bytes Now Software
+  wrote. **What would close it:** a second Now Compress archive from
+  the wild — one whose blocks are stored, LZSS-only or
+  Huffman-then-LZSS. They are rare: the corpus holds exactly one real
+  one, and `synth-now-mixed.now` beside it is ours.
 
 ---
 

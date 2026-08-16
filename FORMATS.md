@@ -26,7 +26,7 @@ whole corpus for that format (engine allocations only, via
 | Split file (plain .001/.002) | extract | — (join only; the joined file is the next layer) | 3 generated sets, adjudicated against the bytes that were cut, `unar` where it can join, and our unsplit read | 8 KB | full |
 | StuffIt X (.sitx) | detect only | — | — (no fixture) | — | — |
 | DiskDoubler (DD, DDAR, DDA2) | extract | 0 store, 6/9 AD LZSS, 8 Compact Pro, 10 DDn; 1/2/3/4/5/7 declined per entry✦ | 6 fixtures | 16–108 KB✦ | full |
-| Now Compress | extract | stored, LZSS, Huffman, Huffman+LZSS, "new" LZSS✧ | 1 fixture | 128 KB✧ | full |
+| Now Compress | extract | stored, LZSS, Huffman, Huffman+LZSS, "new" LZSS✧ | 1 real fixture + 13 generated archives (all five shapes, adjudicated by `unar`); `synth-now-mixed.now` also has an `unar` manifest and is in the differential suite | 128 KB✧ | full |
 | ARC / ArcMac (.arc) | extract | 1/2 store, 3 RLE90, 4 squeeze+RLE90, 5/6/7 crunch, 8 12-bit LZW+RLE90, 9 13-bit LZW, 0x7f compress; 0x0a/0x0b (PKARC) and every ArcMac payload declined per entry★ | 10 generated archives (methods 1-9, adjudicated by `unar`) + 3 written by Debian's `arc` 5.21q; `synth-arc-mixed.arc` also has an `unar` manifest and is in the differential suite | 4–32 KB★ | full |
 | uuencode (.uu, incl. UUTool) | extract | — (plain uu, UUTool's two-fork "MU" shape, and documents posted in several parts★★) | 7 generated cases, the two-fork ones adjudicated by macutils' `hexbin`; `synth-uu-mac.uu` is in the differential suite | 4 KB | full |
 | LZH/LHA (-lh?-, -lz?-) | detect only | — | 1 real `-lh5-` archive, named + refused; unit test over every method byte | — | — |
@@ -69,11 +69,15 @@ out of it by offset; this reader does not, because each file's stream holds
 exactly that file's resource fork followed by its data fork. That is what
 keeps it to fixed memory (DECISIONS.md 2026-08-15).
 
-**What the single fixture reaches, measured:** "new" LZSS and Huffman-only
-blocks. Stored blocks, LZSS-only, Huffman+LZSS, directories, data forks, more
-than one stream and the cross-stream dictionary are NOT exercised by it;
-`test_nowcompress` covers the container half of that list on synthetic bytes.
-The rest is named in OPEN_ITEMS.md rather than implied to be tested.
+**What the single fixture reaches, measured** by instrumenting the block
+loop: three blocks, "new" LZSS twice and Huffman-only once, zero padding, no
+offset delta, no stream restart, no length past a nibble, deepest code 12.
+Everything else — the other three shapes, folders, data forks, several
+streams, the cross-stream dictionary, a 17-bit code and both routes into the
+offset-delta search — is covered since 2026-08-15 by 13 generated archives
+adjudicated by `unar` (TESTING.md), byte-exact there and under qemu-m68k. The
+one thing that leaves open is in OPEN_ITEMS.md: the oracle is the
+implementation this decoder was transcribed from.
 
 †† **Multipart, in both directions, since 2026-08-15.** A `.hqx` file may hold
 more than one document, and a single document may have been posted in several
@@ -511,7 +515,7 @@ DECISIONS.md 2026-08-10.
 
 ## Hardening
 
-- Differential: 806 fixtures byte-exact against `unar` manifests
+- Differential: 807 fixtures byte-exact against `unar` manifests
   (both forks + type/creator), `./ci.sh`. `run_diff.py` prints the
   number it actually ran, plus two figures that must be read with it:
   **23 forks across 11 fixtures are oracle-unadjudicated** (both
@@ -1002,7 +1006,7 @@ with this archive."*
 | AppleLink `.pkg`, StuffIt SpaceSaver | with the add-on | no, and not sniffed either. Not a decision about scope any more — a decision about evidence: neither has a reference implementation or a published layout anywhere reachable, so rule #1 forbids writing one. OPEN_ITEMS.md §6 records what was searched |
 | Chained expansion (`.sit.hqx`) | yes, and can be turned off | yes, `-nr` turns it off |
 | System 7 conveniences | drag-and-drop of files, folders and whole disks; watch folders; background expansion; Apple events | none; Standard File, one archive at a time |
-| Verification | none published | 806 fixtures byte-exact against `unar`/`macunpack` — bar the one uuencode fixture, which `unar` cannot read at all and whose ground truth is its generator's input, with `hexbin` agreeing |
+| Verification | none published | 807 fixtures byte-exact against `unar`/`macunpack` — bar the one uuencode fixture, which `unar` cannot read at all and whose ground truth is its generator's input, with `hexbin` agreeing |
 | Licence | free, closed | free, LGPL-2.1-or-later |
 | Memory partition | **not measured** — reading the app's `SIZE` resource needs an HFS reader this machine does not have | engine peak heap per format in the matrix above |
 

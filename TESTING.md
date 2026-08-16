@@ -14,9 +14,12 @@
    ASan+UBSan+`-fsanitize=alignment` with `-fno-sanitize-recover=all`,
    so any violation is fatal and caught.
 0. **Documentation invariants** (`tools/check_docs.py`): DECISIONS.md's
-   Contents index must list every `## ` entry in file order, and no
-   document may cite another by line number. Needs no build, so `ci.sh`
-   runs it first; `--fix` regenerates the index. **What it cannot see:**
+   Contents index must list every `## ` entry in file order, no
+   document may cite another by line number, the version agrees in the
+   three places it is written, and every `synthetic:` fixture in
+   SOURCES.md regenerates the bytes recorded there. Needs no build, so
+   `ci.sh` runs it first; `--fix` regenerates the index. **What it cannot
+   see:**
    whether an entry is in the right file, whether a citation points at a
    section that still exists, or whether a paragraph re-narrates one that
    lives elsewhere — that last one is the failure mode these documents
@@ -259,6 +262,15 @@ and `fixtures/manifests/`. `tools/harvest.py --restore` re-downloads
 the corpus; `--probe URL` adds a candidate, accepting it only if lsar
 can read it.
 
+**Synthetic fixtures are restored by running their generator**, not
+downloaded: `synthetic:<script>` in SOURCES.md, which harvest.py calls
+with `-o <path>`. Two of those lines could not be restored at all until
+2026-08-15 — their generators took an output DIRECTORY and had no `-o`
+— which nothing noticed because `--restore` needs a network for every
+other fixture and so never runs in `ci.sh`. `check_docs.py` now
+regenerates every synthetic line and compares the sha256, which is the
+only part of the restore path that can be checked offline.
+
 ## Running everything
 
 ```
@@ -291,12 +303,15 @@ graded on "named, and wrote nothing" are now graded entry-for-entry against
 `unar`, and the suite went 797 → 804.
 
 **Now Compress is one fixture, and it does not reach most of the code.**
-Measured: it uses two of the five block shapes, has one file, one fork and
-no folders. `test_nowcompress` covers the container on synthetic bytes, and
-the proof that it is worth having is a mutation: serve the two forks in the
-wrong order and the unit test fails while the fixture still passes 1/1,
-because the fixture has no data fork. What remains unexercised is listed in
-OPEN_ITEMS.md rather than left to look tested.
+Measured by instrumenting the block loop: three blocks, two of the five
+shapes (`0x40` twice, `0x20` once), one file, one fork, no folders, no
+padding, no stream restart, no offset delta, no length past a nibble, and a
+deepest Huffman code of 12. `test_nowcompress` covers the container on
+synthetic bytes, and the proof that it is worth having is a mutation: serve
+the two forks in the wrong order and the unit test fails while the fixture
+still passes 1/1, because the fixture has no data fork. Everything in that
+list of nevers is covered since 2026-08-15 by generated archives — see
+"Now Compress: the archives the corpus does not have" below.
 
 **What this cannot see:** 11 forks across 2 of those fixtures that neither
 oracle can decode — `unar` fails and `macunpack` fails, with its own
@@ -344,7 +359,7 @@ sampled occurrence index **by trying to allocate the table and failing**
 CI forces it three ways:
 
 - `-DUNC_ARS_FORCE_SAMPLED` compiles the fast path out. The whole
-  806-fixture diff suite and all 8,060 robustness variants run through the
+  807-fixture diff suite and all 8,070 robustness variants run through the
   fallback under ASan+UBSan, and must be byte-exact.
 - `--budget 678392` (what a 1 MB Mac Plus leaves the engine) on the 31
   StuffIt 5 fixtures, with the normal adaptive build. This is the only step
@@ -450,6 +465,69 @@ both fail there** (DECISIONS.md, "Multipart postings").
 through either decoder — every input is synthetic or from a
 reconstructed encoder. ArcMac's payload is declined rather than decoded,
 so nothing exercises a two-fork ARC entry at all (OPEN_ITEMS.md).
+
+## Now Compress: the archives the corpus does not have (`tools/run_now.py`, in `ci.sh`)
+
+Added 2026-08-15. The corpus's one real fixture reaches two block shapes; the other
+three, the offset-delta search, folders, data forks, several files in one
+archive and a Huffman code deeper than a nibble had no archive at all. So
+`tools/synth_now.py` writes them and `unar` grades them, three ways — the
+bytes that went in, what the oracle extracts, what our CLI extracts —
+exactly as the ARC and uuencode suites do, and for the same reason.
+
+Thirteen archives: one per block shape (each holding prose, run-length
+content and incompressible noise), one stream cycling all five shapes with a
+non-zero `padding` between two blocks, a folder tree with a nested folder, an
+empty folder, a two-fork file, a resource-only file, a code 17 bits deep, two
+whose table offsets are wrong by a constant — one obviously (the reference
+does not even try zero), one plausibly (its checksum has to fail first) — and
+one where a stream's first block reaches back into the dictionary cache the
+previous stream left behind. Type and creator are checked separately, since
+comparing forks cannot see them: ours from `l -v`, the oracle's from the
+Finder info in its AppleDouble sidecar.
+
+**One of the thirteen is also committed as a fixture.**
+`synth-now-mixed.now` — the stream cycling all five shapes — has an `unar`
+manifest in `fixtures/manifests/`, so the differential suite grades those
+paths byte-for-byte on every run, including on a machine with no `unar` at
+all, and any future Mac replay can pick it up. It is restored from
+`tools/synth_now.py -o`, like every other synthetic fixture (see *Corpus*).
+
+**A fourteenth archive is graded ONE way**, because the two implementations
+genuinely disagree on it and the reference is wrong: a zero-length file
+anywhere but last leaves `unar` decoding the files after it from a stale
+block, so it fails one entry and writes the NEXT one at the right length
+with the wrong bytes. Both halves are asserted — our extraction must be
+byte-exact and the oracle must still fail — so a later `unar` that fixes it
+reports itself rather than quietly agreeing (DECISIONS.md, "Now Compress: an
+empty file in the middle").
+
+**Two mutations are built in**, because a comparison nothing has been shown
+to fail is not evidence: a flipped byte inside a stored block must change the
+output (nothing in this format checksums a block, so it must come out as
+wrong bytes rather than as an error), and a flipped byte inside a block table
+must be refused by both implementations, since the table is checksummed.
+Twelve mutations of `fmt_now.c` were also run against the whole suite and all
+twelve fail it (DECISIONS.md, "Now Compress: writing the archives the corpus
+never had") — including one that did NOT fail until the archive that tests it
+was rebuilt, which is written up there.
+
+**What this cannot see.** XADMaster is the only implementation of Now
+Compress there is, and `fmt_now.c` was transcribed from it, so for the three
+shapes no real archive reaches, agreement proves the transcription and not
+the format. Only the two shapes the corpus fixture uses have ever been
+checked against bytes Now Software wrote. The generator also has to stay
+inside what the oracle can read: its bit reader refuses a stream that ends
+within 7 bits of its buffer, which ours reads perfectly well, so every
+generated stream leaves a whole spare byte.
+
+And these archives have run on Linux and under qemu-m68k (big-endian,
+32-bit) — not on a Mac. The Mac tiers replay `tools/vmac/sample.txt`, whose
+Now Compress entry is the real fixture, so the four shapes only these
+archives reach have never been decoded on a 68000 with a real File Manager
+under it. `synth-now-mixed.now` is a fixture with a manifest, so adding the
+line is all it would take; the sample's counts in FORMATS.md would then need
+re-measuring, which is why it is not there already.
 
 ## Segmented archives (`tools/run_segments.py`, in `ci.sh`)
 

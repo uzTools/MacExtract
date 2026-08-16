@@ -70,6 +70,9 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-15 — the emulator harness graded fixtures against other fixtures
 - M13 — ARC and uuencode: a generator that agrees with you proves nothing
 - Multipart postings: the other half of "split", and what each format can prove
+- Now Compress: writing the archives the corpus never had
+- Now Compress: an empty file in the middle, and which reader is right
+- Two corpus lines that could not be restored, found by adding a third
 
 ---
 
@@ -3270,3 +3273,123 @@ so the day uuencode grows a check nobody knew about, the suite says so.
 **Both new assertions were run against a mutant** with the line rules removed,
 and both fail there. A test for a tolerance is worth nothing until the
 intolerant build has failed it.
+
+## Now Compress: writing the archives the corpus never had
+
+**2026-08-15.** The format shipped with one real fixture, and the entry above
+says what that cost: three of the five block shapes, the offset-delta search,
+folders, data forks and multi-file archives were transcribed and never run.
+The remedy is the M13 one — `tools/synth_now.py` writes the archives and
+`unar` grades them, three ways: the bytes that went in, what the oracle
+extracts, what we extract (`tools/run_now.py`, in `ci.sh`). Fourteen
+archives, byte-exact on Linux and under qemu-m68k; thirteen are graded three
+ways and the fourteenth one way, because on that one the reference is wrong
+(the entry below). One of them, `synth-now-mixed.now`, is committed as a
+fixture, so the differential suite grades these paths even where `unar` is
+not installed.
+
+**What the fixture actually reaches, measured rather than assumed.**
+Instrumenting the block loop: three blocks, flags `0x40` twice and `0x20`
+once, `padding` 0 everywhere, `delta` 0, no stream-restart record, no
+"extra length" list, and the deepest Huffman code 12 of a possible 31. Every
+one of those is now a generated archive, including a code 17 deep, which is
+the only way the length-over-a-nibble list is reached at all.
+
+**The oracle constrains what can be generated, and the constraint is a fact
+about the oracle.** The first generated Huffman blocks failed in `unar` while
+decoding perfectly here. XADMaster tracks its bit position as
+`currbyte*8 - (numbits & 7)` and raises end-of-buffer the moment `currbyte`
+passes the end, so it needs the stream's padding to cover whatever its
+register is still holding — up to 7 bits. Bisecting confirmed it: 3 spare bits
+or fewer and a block it otherwise reads is refused. Our reader is bit-serial
+and never looks past the bit it needs, so it is strictly more tolerant, and
+there is nothing to fix — but a generated archive the oracle cannot read
+grades nothing, so the generator leaves a whole spare byte. `endbits` can
+express at most 15 bits of padding, which is what bounds the workaround.
+
+**An assertion that could not fail, again, and the same tell.** A zero-length
+table record means "the next block starts a stream", which makes the decoder
+reload the dictionary cache. Put that marker on the SECOND block and deleting
+the code that reads it changes nothing — the cache was written after the first
+block and still holds exactly what the running window holds. The suite stayed
+green against a build with the marker ignored. On the THIRD block the two
+differ and the mutant fails. **When a flag's effect is "restore state X", the
+test only bites where X has since diverged** — which is the 2026-08-13 ration
+assertion in different clothing: both observed a consequence that was true
+anyway.
+
+Twelve mutations of `fmt_now.c` were run against the suite and all twelve
+fail it: fork order swapped, the delta search disabled, the dictionary restore
+and the dictionary save each removed, the restart marker ignored, LZSS-only
+folded into stored, Huffman-then-LZSS folded into Huffman-only, the new-LZSS
+window based at the block start instead of the history, `padding` dropped from
+the block length, directory nesting flattened, the extra-length list ignored,
+and the word alignment after the code table.
+
+**What none of it proves.** XADMaster is the only implementation of this
+format in existence, so for the three shapes no real archive reaches,
+agreement means the transcription matches its source — not that its source
+matches Now Software. The two shapes the fixture does reach are graded against
+a real archive by the differential suite, and that is the whole of the
+external evidence. Written down in TESTING.md rather than left implied.
+
+## Now Compress: an empty file in the middle, and which reader is right
+
+**2026-08-15.** Generating archives turned up a shape the two
+implementations decode differently, and it is the reference that is wrong.
+
+**Claim:** a zero-length file anywhere but last makes `unar` mis-decode the
+files after it. **Evidence:** an archive holding `two forks`, `empty`,
+`after` and `beside` — `unar` reports `Folder/after` as failed and writes
+`beside` at the right length with the wrong bytes; we extract all four
+byte-exact. Moving `empty` to the end makes `unar` agree, which is how the
+boundary was located. **Consequence:** asserted both ways in `run_now.py` —
+our extraction must be exact and the oracle must still fail — so a later
+`unar` that fixes this reports itself instead of quietly agreeing.
+
+**The mechanism.** An empty file's stream has no blocks at all.
+`produceBlockAtOffset` asks "have I run out of blocks?" with an `if` and not
+a `while`, so after loading a header that declares zero it indexes
+`blocks[0]` regardless — and the array is only reallocated when a file needs
+MORE entries than the last one did, so `blocks[0]` still holds the previous
+file's first block. The next file is then decoded from a stale offset.
+
+Two things worth carrying:
+
+- **Reading per file made this unreachable rather than fixed.** Nothing in
+  `fmt_now.c` handles it; the stream is opened per file, from that file's own
+  table, so a file with no blocks is simply a file whose table is never read.
+  The solid abstraction the entry above declined to inherit is exactly where
+  the bug lives. **An architecture that cannot represent a bug beats a check
+  for it.**
+- **The oracle failed loudly on one entry and SILENTLY on the next.**
+  `beside` came back the right length with the wrong bytes — no error, no
+  warning. A differential suite that only compared exit statuses would have
+  called that a pass, which is the same lesson the emulator harness taught on
+  a different day: the dangerous failure is a wrong verdict, not an error.
+
+## Two corpus lines that could not be restored, found by adding a third
+
+**2026-08-15.** Committing a generated Now Compress archive as a fixture meant
+writing a `synthetic:tools/synth_now.py` line in `fixtures/SOURCES.md`, and
+the contract for those lines is in `harvest.py`: "the script must accept
+`-o <path>` and be deterministic". Checking that the two existing lines of the
+same shape worked found that **neither did** — `synth_arc.py` and
+`synth_uu.py` take an output DIRECTORY and reject `-o`, so
+`synth-arc-mixed.arc` and `synth-uu-mac.uu` could not be rebuilt at all. A
+fresh clone would have restored 805 of 807 fixtures and reported the other two
+as absent, which the diff suite counts and prints, but nobody had ever cloned
+fresh.
+
+**Why it survived:** `--restore` needs a network for every other fixture, so
+it never runs in `ci.sh` — the one part of the corpus pipeline with no test
+under it. Both scripts now take `-o` and reproduce their recorded sha256
+exactly, and `check_docs.py` regenerates every `synthetic:` line and compares,
+which is the half of the restore path that works offline. Shown to fail first:
+with `synth_arc.py` reverted, the check names it.
+
+**The generalisation is the useful part.** This repository's habit is to ask
+what evidence a claim rests on; the sharper question here was *when does the
+code that makes this claim true ever run?* A provenance line, a `--fix` flag,
+a restore path, a migration — anything only exercised by a human doing an
+unusual thing — is where a claim rots without contradicting anything.

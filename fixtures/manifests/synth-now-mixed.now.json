@@ -1,0 +1,21 @@
+{
+ "entries": [
+  {
+   "creator": "UNCL",
+   "data_sha256": "e8d4be591c31069ee437680c2f0ce00eb7391229bb1e197e387a5fe24dfb220b",
+   "data_size": 15096,
+   "name": "mixed",
+   "oracle_methods": [
+    "Now Compress"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "synth-now-mixed.now",
+ "format": "Now Compress",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "e87810e9df1e0a663436531cc7ab2f34153b81fffcefd10b467ccbd7dc6f89ae",
+ "size": 7803
+}
