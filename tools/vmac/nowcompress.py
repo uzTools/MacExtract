@@ -442,6 +442,110 @@ def verify():
                 shutil.rmtree(out, ignore_errors=True)
 
 
+def adjudicate(macbinary, archive):
+    """Let a self-extracting archive's OWN extractor grade our output.
+
+    `unar` fails on every fork of the corpus's 1995 archive and macunpack
+    never knew the format, so what this decoder produces for it had no
+    oracle at all. It has one: the decoder that shipped inside it. Put
+    the `.sea` on a volume with room for what comes out, run it, and
+    compare fork by fork.
+
+    Resource forks are compared with bytes 16..127 masked, the convention
+    `tools/vmac_check.py` already uses: that region is reserved for system
+    use and the Resource Manager stamps it with session scratch when it
+    touches a file, so a Mac's copy and an archive's copy differ there for
+    reasons that have nothing to do with decoding.
+    """
+    sys.path.insert(0, os.path.join(REPO, "tools"))
+    from vmac_check import mask_reserved            # noqa: E402
+    work = tempfile.mkdtemp(prefix="nowadj-")
+    img = os.path.join(work, "adj.img")
+    open(img, "wb").truncate(25 * 1024 * 1024)
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+    subprocess.run(["hformat", "-l", "Adj", img], check=True, capture_output=True,
+                   env=env)
+    subprocess.run(["hmount", img], check=True, capture_output=True, env=env)
+    subprocess.run(["hcopy", "-m", os.path.abspath(macbinary), "Adj:"], check=True,
+                   capture_output=True, env=env)
+    subprocess.run(["humount"], check=True, capture_output=True, env=env)
+
+    s = Session(os.path.join(HOME, "Sys7.img"), [img], os.path.join(work, "shots"))
+    try:
+        s.boot()
+        s.mac.click(470, 110, double=True)          # open the volume
+        time.sleep(10)
+        s.mac.click(30, 105, double=True)           # run the archive
+        s.shot("launched", wait=45.0)
+        s.mac.key("Return")                          # Extract, into this folder
+        s.shot("extracting", wait=60.0)
+        s.mac.key("Return")
+        s.shot("done", wait=120.0)
+        s.mac.click(470, 110)
+        s.mac.command_key("y")                       # Put Away: flush
+        s.shot("ejected", wait=20.0)
+    finally:
+        time.sleep(5)
+        s.close()
+
+    theirs = read_forks(img)
+    out = tempfile.mkdtemp()
+    subprocess.run([cli(), "x", "--forks", "hidden", "-o", out, archive],
+                   check=True, capture_output=True)
+    bad = 0
+    for path, (data, rsrc) in sorted(theirs.items()):
+        mine = os.path.join(out, path)
+        head, tail = os.path.split(mine)
+        ours_data = open(mine, "rb").read() if os.path.isfile(mine) else b""
+        side = os.path.join(head, "._" + tail)
+        ours_rsrc = open(side, "rb").read() if os.path.isfile(side) else b""
+        for fork, a, b in (("data", data, ours_data),
+                           ("rsrc", mask_reserved(rsrc), mask_reserved(ours_rsrc))):
+            same = a == b
+            bad += not same
+            print("  %-34s %-4s %9d B  %s" % (path[-34:], fork, len(a),
+                                              "IDENTICAL" if same else "DIFFERS"))
+    shutil.rmtree(out, ignore_errors=True)
+    print("adjudication: %s" % ("the original extractor agrees with us on every "
+                                "fork" if not bad else "%d fork(s) DIFFER" % bad))
+    return bad
+
+
+def read_forks(img):
+    """path -> (data, rsrc) for every file on a volume, folders included."""
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+    out = {}
+
+    def walk(prefix):
+        listing = subprocess.run(["hls", "-1"], capture_output=True,
+                                 env=env).stdout.decode("mac-roman", "replace")
+        for name in [n for n in listing.split("\n") if n.strip()]:
+            if subprocess.run(["hcd", name], capture_output=True,
+                              env=env).returncode == 0:
+                walk(prefix + name + "/")
+                subprocess.run(["hcd", "::"], capture_output=True, env=env)
+                continue
+            tmp = tempfile.mktemp(suffix=".bin")
+            if subprocess.run(["hcopy", "-m", name, tmp], capture_output=True,
+                              env=env).returncode != 0:
+                continue
+            blob = open(tmp, "rb").read()
+            os.unlink(tmp)
+            dlen = struct.unpack(">I", blob[0x53:0x57])[0]
+            rlen = struct.unpack(">I", blob[0x57:0x5B])[0]
+            roff = 128 + ((dlen + 127) & ~127)
+            if blob[65:69] == b"APPL":
+                continue                    # the self-extracting archive itself
+            out[prefix + name] = (blob[128:128 + dlen], blob[roff:roff + rlen])
+    try:
+        subprocess.run(["hmount", img], check=True, capture_output=True, env=env)
+        walk("")
+        subprocess.run(["humount"], capture_output=True, env=env)
+    finally:
+        shutil.rmtree(env["HOME"], ignore_errors=True)
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -452,6 +556,9 @@ def main():
     ap.add_argument("--case", help="one of %s, or 'all'" % ", ".join(sorted(CASES)))
     ap.add_argument("--verify", action="store_true",
                     help="decode the specimens and check them against the input")
+    ap.add_argument("--adjudicate", nargs=2, metavar=("SEA.bin", "ARCHIVE"),
+                    help="run a self-extracting archive under the emulator and "
+                         "compare its output with ours")
     args = ap.parse_args()
     if args.setup:
         fetch_installer()
@@ -464,7 +571,10 @@ def main():
             run_case(c)
     if args.verify:
         verify()
-    if not any((args.setup, args.install, args.case, args.verify)):
+    if args.adjudicate:
+        return 1 if adjudicate(*args.adjudicate) else 0
+    if not any((args.setup, args.install, args.case, args.verify,
+                args.adjudicate)):
         ap.print_help()
     return 0
 

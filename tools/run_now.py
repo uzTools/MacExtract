@@ -230,14 +230,16 @@ def check_empty_stream(tmp, unclassic, problems):
 
 
 # The second real Now Compress archive, found on 2026-08-16 (DECISIONS.md).
-# `unar` cannot decode ANY of its forks — the format's bit streams end
-# wherever they end, and 129 of its 306 blocks leave fewer than 7 spare
-# bits, which is the overrun measured the day before — so its manifest
-# carries names, type and creator and marks every fork unadjudicated.
-# These hashes are therefore NOT ground truth. They are a regression
-# anchor for output no oracle in existence can grade, and they sit beside
-# a check that CAN fail on its own terms: the resource fork has to be a
-# resource fork.
+# `unar` cannot decode ANY of its forks — 129 of its 306 blocks leave
+# fewer than 7 spare bits, which is the overrun measured the day before —
+# so its manifest carries names, type and creator and marks every fork
+# unadjudicated. The hashes below are not ground truth from THIS suite's
+# point of view, but they are not unchecked either: the archive is
+# self-extracting, and `tools/vmac/nowcompress.py --adjudicate` ran the
+# 1995 extractor inside it under the emulator, which agrees with us on
+# every fork (resource forks compared with bytes 16..127 masked, the
+# vmac_check.py convention). They sit beside a check that can fail on its
+# own terms: the resource fork has to be a resource fork.
 REAL_FIXTURE = "derived-SyntheticReferences2.0.sea"
 REAL_FORKS = {
     "Synthetic References v2.0/SynRef2.0 INFO": (

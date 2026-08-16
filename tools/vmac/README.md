@@ -211,6 +211,7 @@ Pro: by running the original application.
     tools/vmac/nowcompress.py --install   # install Now QuickFiler on System 7
     tools/vmac/nowcompress.py --case all  # write the specimens
     tools/vmac/nowcompress.py --verify    # decode them, check against the input
+    tools/vmac/nowcompress.py --adjudicate SEA.bin ARCHIVE   # see below
 
 The compressor is **Now QuickFiler**, whose menu has Compress ▸ Faster/Smaller
 and Archive ▸ Faster/Smaller. Specimens land in
@@ -233,6 +234,21 @@ Three things to know before re-running it:
 
 What the encoder writes per mode is FORMATS.md ✧; why any of it matters is
 DECISIONS.md, "Now Compress, written by Now Compress".
+
+**`--adjudicate` grades us with the archive's own decoder.** A self-extracting
+archive contains the extractor that shipped with it, so it is both a specimen
+and an implementation:
+
+    tools/vmac/nowcompress.py --adjudicate \
+        fixtures/SyntheticReferences2.0.sea.bin \
+        fixtures/derived-SyntheticReferences2.0.sea
+
+puts the `.sea` on a 25 MB volume, runs it under System 7, reads the volume
+back and compares every fork against our own extraction — resource forks with
+bytes 16..127 masked, the `vmac_check.py` convention, because the Resource
+Manager stamps that region whenever it touches a file. That is what settled
+the corpus's 1995 archive, which `unar` cannot decode at all. It works for any
+`.sea` in the corpus, not just this one.
 
 ## The downloads, and why none of them are committed
 

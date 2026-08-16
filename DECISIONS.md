@@ -75,6 +75,7 @@ which fails CI if it drifts from the headings below it.
 - Two corpus lines that could not be restored, found by adding a third
 - The second Now Compress archive, found by creator code
 - Now Compress, written by Now Compress
+- The archive that carries its own oracle
 
 ---
 
@@ -2968,7 +2969,7 @@ Three things came out of it that were not visible from inside:
   file, the shape comp.binaries.mac produced. We take the first document
   and exit 0; `unar` does the same, so 179 BinHex fixtures and a
   differential suite could never have caught it. It is filed in
-  OPEN_ITEMS.md section 5 with the reproduction. The lesson generalises
+  OPEN_ITEMS.md, *Deliberate gaps*, with the reproduction. The lesson generalises
   past BinHex: **the differential suite can only find defects the oracle
   does not share**, and the cheapest way to find the shared ones is to ask
   what some THIRD implementation claims. That is the same move that closed
@@ -3543,3 +3544,43 @@ offers a one-week demo instead; the demo is what this uses. Nothing from the
 product is redistributed: `nowcompress.py` fetches the Garden image by URL and
 checks its MD5, exactly as `setup.sh` does for the ROM, and the specimens live
 beside the emulator rather than in `fixtures/`.
+
+## The archive that carries its own oracle
+
+**2026-08-16.** OPEN_ITEMS.md had one Now Compress item left: four forks of
+`derived-SyntheticReferences2.0.sea` that nothing could grade. `unar` fails on
+every one of them, `macunpack` never knew the format, and the entry above
+records what defended our output instead — coherent prose, a self-consistent
+resource fork, a structural check in the suite. All true, and all weaker than
+an independent decoder.
+
+**There was one all along, inside the file.** The archive is
+SELF-EXTRACTING: the decoder Now Software shipped in 1995 is sitting in its
+resource fork. `nowcompress.py --adjudicate` puts the `.sea` on a 25 MB volume
+with room for what comes out, runs it under System 7 on the emulated Mac Plus,
+and compares fork by fork.
+
+**It agrees on every fork**, including the 9,949,696-byte FileMaker database
+byte for byte. The one apparent difference — 11 bytes of the 332-byte resource
+fork, at offsets 63..121 — is inside the region reserved for system use, which
+the Resource Manager stamps with session scratch whenever it touches a file.
+`tools/vmac_check.py::mask_reserved` has masked bytes 16..127 since M10 for
+exactly this reason, and under that convention the forks are identical. The
+suspicious part would have been the opposite result: bytes 16..127 matching
+after a round trip through a real Mac.
+
+**So the adjudication is not "nobody can check this".** It is: no decoder on
+Linux can, and the decoder that came with the archive can, and it does.
+
+Two things worth carrying:
+
+- **A self-extracting archive is a format specimen and an implementation of
+  the format, in one file.** Every `.sea` in this corpus is a decoder that has
+  never been asked anything. That generalises past Now Compress — StuffIt,
+  Compact Pro and DiskDoubler SEAs are all in `fixtures/`.
+- **The oracle was not missing, it was unexamined.** The item said "a second
+  implementation of Now Compress. None exists" — written while a copy of one
+  sat in the corpus under a `.sea` extension. That is the same shape as
+  "there is no oracle for StuffIt method 6", which was a fact about XADMaster
+  with `macunpack` already in `reference/` (BLOCKERS.md). **Twice now the
+  answer to "nothing can grade this" has been sitting in the repository.**

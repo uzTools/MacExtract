@@ -203,8 +203,8 @@ Two things about that change are worth carrying forward:
   confidence — the difference was the shape of the quantity.
 
 Several remedies in this area are ruled out BY MEASUREMENT and listed in
-OPEN_ITEMS.md section 5 as do-not-retry: `MaxMem()` before a retry, and
-relocatable blocks moved high with `MoveHHi`.
+OPEN_ITEMS.md, *Deliberate gaps*, as do-not-retry: `MaxMem()` before a retry,
+and relocatable blocks moved high with `MoveHHi`.
 
 The method 13 LZSS window lead is DONE (2026-08-06): the window is now sized
 from the entry rather than from the format's 64 KB, 34 fixtures improved, none
@@ -443,8 +443,16 @@ byte-exact here and in `unar`. Two things only the encoder could say: it
 REFUSES a wholly incompressible file rather than storing it, and a stored
 block can carry flag bit 0x100 that nothing examines. The application is
 commercial, so nothing from it is committed — it is fetched by URL and run in
-its own demo mode, like the ROM. What is left is OPEN_ITEMS.md §1, and it is
-one fork nobody can grade.
+its own demo mode, like the ROM.
+
+**Nothing about Now Compress is open any more.** The last item — four forks of
+the 1995 archive that no decoder on Linux can grade — closed the same day,
+because **the archive is self-extracting and carries its own decoder**:
+`nowcompress.py --adjudicate` runs it under the emulator and compares fork by
+fork, and the 1995 extractor agrees with us on all four, including 9.9 MB byte
+for byte (resource forks compared with bytes 16..127 masked, the convention
+`vmac_check.py` has used since M10). Twice now the answer to "nothing can
+grade this" has been sitting in the repository.
 Neither format has any multi-segment scheme: two independent reference implementations know nothing
 of parts or volumes for either (DECISIONS.md 2026-08-15).
 
@@ -464,7 +472,7 @@ decoder tests the reading, not the format.
 add-on expanded, and they are NOT delivered** — not by choice of scope but by
 rule #1: no reference implementation and no published layout exists for
 either, so nothing here can even name them without inventing a magic number.
-What was searched, and what would close it, is OPEN_ITEMS.md §6. **ArcMac's
+What was searched, and what would close it, is OPEN_ITEMS.md, *Deliberate gaps*. **ArcMac's
 payload is declined for a sharper version of the same reason**: macutils
 documents its header and the file that read its payload, `arc.c`, is missing
 from macutils upstream, so the fork order inside the stream is written down

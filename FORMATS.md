@@ -87,7 +87,10 @@ adjudicated by `unar` (TESTING.md), byte-exact there and under qemu-m68k.
 adjudicated by nobody: 129 of its 306 blocks end within 7 bits of their
 buffer, and XADMaster's bit reader raises end-of-buffer there (DECISIONS.md
 2026-08-16). The spare-bit count is spread almost uniformly over 0..15, which
-is what a real encoder writes. What that leaves open is OPEN_ITEMS.md §1.
+is what a real encoder writes. Those four forks were adjudicated on
+2026-08-16 by the decoder inside the archive — it is self-extracting —
+which agrees with us on every one (DECISIONS.md, "The archive that carries its
+own oracle").
 
 **The block shapes come from the encoder itself since 2026-08-16.**
 `tools/vmac/nowcompress.py` installs Now QuickFiler 5.0.1 under System 7 on an
@@ -452,9 +455,10 @@ chosen here. Both paths are exercised in `ci.sh`.
 
 ### Segmented sets on a real emulated Mac Plus (System 6.0.8)
 
-**All four schemes join on the Mac** as of 2026-08-14; what none of them
-does there is take an envelope off a part (OPEN_ITEMS.md section 4). The
-StuffIt table below is from 2026-08-08; the other three are:
+**All four schemes join on the Mac** as of 2026-08-14, and so does a set
+whose parts are still inside envelopes — the StuffIt scheme only, which is the
+one whose identity survives a wrapper. The StuffIt table below is from
+2026-08-08; the other three are:
 
 | scheme | how it was driven | result |
 |---|---|---|
@@ -519,8 +523,10 @@ is not evidence that the bytes are right, and this phase found two
 harness bugs that each produced a plausible-looking wrong screenshot
 (DECISIONS.md).
 
-What is still NOT covered is a part arriving on a disk inserted
-mid-run — see OPEN_ITEMS.md section 4.
+A part arriving on a disk inserted mid-run is driven by
+`interactive.py --diskswap`; what no emulator here can settle about it — Mini
+vMac gives every insertion a NEW drive — is MANUAL_TESTS.md, "A disk swap in
+ONE drive".
 
 
 ### Plain `.NNN` splits
@@ -1008,7 +1014,7 @@ too), and **two Alysis SuperDisk! files** (`Disk Expander .X`,
 `SD! Utilities.x` — the header carries the string `SuperDisk! Add-In Module`).
 SuperDisk! is the one format the corpus actually holds that nothing here
 names: a user gets *unknown*, and `unar` reads no further than the envelope
-either. OPEN_ITEMS.md §6.
+either. OPEN_ITEMS.md, *Deliberate gaps*.
 
 The 62 StuffIt 5 fixtures are the largest single difference, and it is a date
 rather than a capability: 4.0.2 shipped two years before the format. Handed
@@ -1034,7 +1040,7 @@ with this archive."*
 | Compact Pro comments | written out beside the extracted items | read and CRC'd, never surfaced |
 | `.arc` (ARC / ArcMac) | with the add-on | **yes since 2026-08-15**, methods 1-9; an ArcMac payload is named and declined (★ above) |
 | uuencode (`.uu`) | with the add-on | **yes since 2026-08-15**, plain and UUTool's two-fork shape |
-| AppleLink `.pkg`, StuffIt SpaceSaver | with the add-on | no, and not sniffed either. Not a decision about scope any more — a decision about evidence: neither has a reference implementation or a published layout anywhere reachable, so rule #1 forbids writing one. OPEN_ITEMS.md §6 records what was searched |
+| AppleLink `.pkg`, StuffIt SpaceSaver | with the add-on | no, and not sniffed either. Not a decision about scope any more — a decision about evidence: neither has a reference implementation or a published layout anywhere reachable, so rule #1 forbids writing one. OPEN_ITEMS.md, *Deliberate gaps*, records what was searched |
 | Chained expansion (`.sit.hqx`) | yes, and can be turned off | yes, `-nr` turns it off |
 | System 7 conveniences | drag-and-drop of files, folders and whole disks; watch folders; background expansion; Apple events | none; Standard File, one archive at a time |
 | Verification | none published | 809 fixtures byte-exact against `unar`/`macunpack` — bar the one uuencode fixture, which `unar` cannot read at all and whose ground truth is its generator's input, with `hexbin` agreeing |

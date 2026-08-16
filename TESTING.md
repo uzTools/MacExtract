@@ -521,10 +521,17 @@ differential suite cannot: `derived-SyntheticReferences2.0.sea` (1995) defeats
 marks the forks unadjudicated. `run_now.py` extracts it and asserts one thing
 that can fail on its own terms — **the resource fork we produce must be a
 resource fork**, its own first 16 bytes accounting for exactly its length —
-plus per-fork hashes labelled for what they are: a regression anchor for
-output no oracle can grade, not ground truth. Mutating the decoder's fork
-order fails both. The fixture is skipped with a message when it has not been
-fetched.
+plus per-fork hashes. Mutating the decoder's fork order fails both. The
+fixture is skipped with a message when it has not been fetched.
+
+**Those hashes are not merely our own output any more.** The archive is
+self-extracting, so the decoder Now Software shipped with it is in its
+resource fork: `tools/vmac/nowcompress.py --adjudicate` runs it under the
+emulator and compares fork by fork, and it agrees with us on all four —
+9,949,696 bytes byte for byte, and the resource fork identical once bytes
+16..127 are masked, which is the convention `vmac_check.py` has used since
+M10 because the Resource Manager stamps that region (DECISIONS.md, "The
+archive that carries its own oracle").
 
 **Archives from the ENCODER are checked too, when they exist.**
 `tools/vmac/nowcompress.py` drives Now QuickFiler 5.0.1 under Mini vMac and
@@ -667,10 +674,11 @@ it unwraps that one part and exits 0, success with a fragment, which
 the suite asserts rather than remembers.
 
 **What this layer cannot see:** the Mac shell. This is `cli/main.c`
-only, and the shell's discovery matches headers with no envelope step
-in it (OPEN_ITEMS.md section 4). Nor can it see the other two schemes,
-which are placed by filename and are deliberately not looked for inside
-envelopes at all (DECISIONS.md, 2026-08-13).
+only. The shell has its own envelope step in the interactive path since
+2026-08-14 (PROGRESS.md, M11) and it is driven by `interactive.py`, not
+here. Nor does this layer see the other two schemes, which are placed by
+filename and are deliberately not looked for inside envelopes at all
+(DECISIONS.md, 2026-08-13).
 
 The behaviours are where the design is: a wrapped part of a DIFFERENT
 set, wrapped and named exactly like the missing one, must be refused —

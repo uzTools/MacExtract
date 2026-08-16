@@ -385,7 +385,7 @@ Why `Troi-ClipSave` refused at 650 KB when ~700 KB was free is now
 **established, and it passes** (2026-08-06): the Arsenic block's doubling
 growth left a trail of freed steps that a geometric sequence can never reuse,
 stranding 125,614 B. Sizing the first allocation from the entry removes it.
-DECISIONS.md 2026-08-06, OPEN_ITEMS.md section 5. The floor target is **44/44**
+DECISIONS.md 2026-08-06, OPEN_ITEMS.md, *Deliberate gaps*. The floor target is **44/44**
 as of 2026-08-07, when the last two refusals went with it — those were a
 genuine shortage rather than a placement problem, and were closed by making the
 inverse BWT need less memory rather than by finding it more (DECISIONS.md
@@ -412,7 +412,7 @@ whether a manifest can be built, so every THINK C-shaped archive the corpus
 might have grown by was being dropped silently, and would have gone on being
 dropped.
 
-**Why it survived.** It was filed in OPEN_ITEMS.md section 1, *cannot be closed
+**Why it survived.** It was filed in OPEN_ITEMS.md under *cannot be closed
 in this environment* — beside real hardware and a report only the maintainer
 can file. That section is where items go to stop being re-examined, and this
 one was closeable in about an hour. The remedy was also quoted verbatim in

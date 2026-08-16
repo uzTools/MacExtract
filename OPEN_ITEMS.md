@@ -1,4 +1,4 @@
-# OPEN_ITEMS.md — what is missing, as of 2026-08-15
+# OPEN_ITEMS.md — what is missing, as of 2026-08-16
 
 A standing audit of the gaps: things not done, things done but not verified,
 and things this repository asserts more confidently than the evidence supports.
@@ -27,39 +27,16 @@ four schemes join on Linux and on the Macintosh, and the last thing in it
 — taking an envelope off each part — was built the same day. A section 5
 held multi-document BinHex for one day and emptied on 2026-08-15 (M2
 follow-up in PROGRESS.md; DECISIONS.md for what it taught about oracles).
-A section that empties is the point of the file.
+Section 1 was **Now Compress** and emptied on 2026-08-16: the block shapes
+stopped being a transcription checked against its own source once the
+original encoder wrote them (`tools/vmac/nowcompress.py`), and the four
+forks no Linux decoder could grade were graded by the decoder inside the
+archive itself, which is self-extracting. A section that empties is the
+point of the file.
 
 ---
 
-## 1. Now Compress: one fork nobody can grade
-
-Everything the first fixture could not reach is exercised since
-2026-08-15 by generated archives graded by `unar` (TESTING.md, "Now
-Compress: the archives the corpus does not have"). A **second real
-archive** joined the corpus on 2026-08-16, found by creator code rather
-than by name: folders, both forks, two streams and two stream-restart
-records on 1995 bytes, 9.9 MB out of 2.9 MB at the same flat 128 KB.
-And on the same day the **block shapes stopped being a transcription
-checked against its own source**: `tools/vmac/nowcompress.py` drives Now
-QuickFiler 5.0.1 under Mini vMac, so stored, LZSS-only and
-Huffman-then-LZSS now exist as bytes the ORIGINAL encoder wrote, decoded
-byte-exact here and by `unar` (DECISIONS.md, FORMATS.md ✧). What is left
-is one thing:
-
-- **Four forks of the 1995 fixture are adjudicated by nobody.** `unar`
-  fails every one of them — 129 of the archive's 306 blocks end within
-  7 bits of their buffer, which its bit reader cannot survive
-  (DECISIONS.md) — and `macunpack` has never known the format. `lsar`
-  still walks it, so names, type and creator are ground truth and the
-  forks are marked unadjudicated, like DiskDoubler's 11 in section 2.
-  Our output is defended structurally instead: `tools/run_now.py`
-  requires the resource fork we produce to be a resource fork, and
-  that check fails when the decoder is mutated. **What would close it:**
-  a second implementation of Now Compress. None exists.
-
----
-
-## 2. DiskDoubler: what M12 left
+## 1. DiskDoubler: what M12 left
 
 - **Methods 1, 2, 3, 4, 5 and 7 are declined per entry.** No corpus
   fixture uses any of them; the reference marks 3 and 4 unimplemented
@@ -89,7 +66,7 @@ is one thing:
 
 ---
 
-## 3. Cannot be closed in this environment
+## 2. Cannot be closed in this environment
 
 - **Real 68k hardware: never run.** No genuine floppy I/O, no real media errors
   mid-write, no real 8 KB stack underneath a real ROM's own usage. The
@@ -109,7 +86,7 @@ is one thing:
 
 ---
 
-## 4. Known unknowns, not being chased
+## 3. Known unknowns, not being chased
 
 - **Why the pointer does not work under QEMU on Mac OS 9.** Measured to
   0.0000 effect across five mouse primitives; the mechanism behind that has no
@@ -121,7 +98,7 @@ is one thing:
 
 ---
 
-## 5. Untested code, named so it is not mistaken for tested
+## 4. Untested code, named so it is not mistaken for tested
 
 - **The interactive UI above System 6 is deliberate scope**, not a gap
   (2026-08-02). System 6 is the UI's target and it is driven end to end there.
@@ -139,7 +116,7 @@ is one thing:
 
 ---
 
-## 6. Deliberate gaps, and remedies ruled out by measurement
+## 5. Deliberate gaps, and remedies ruled out by measurement
 
 - **Zip64 spanned sets, out of scope as of 2026-08-14.** An
   end-of-central-directory record whose disk number is `0xFFFF` defers to
