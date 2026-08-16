@@ -25,7 +25,7 @@ scope, not an open item.
 | file | holds | read it |
 |---|---|---|
 | `PROGRESS.md` | what each milestone delivered, one line each | at session start |
-| `OPEN_ITEMS.md` | what is still missing, and what would close each | at session start |
+| `OPEN_ITEMS.md` | **what is out of scope** (part 1), then what is still missing and what would close each (part 2) | at session start |
 | `BLOCKERS.md` | the tier results, and **every claim this project has withdrawn**, with what it cost | at session start |
 | `FORMATS.md` | format × status × peak RAM, and every per-fixture table | for a number |
 | `DECISIONS.md` | why anything is the way it is, oldest first, with a Contents index | via the index, for one entry |
@@ -36,6 +36,12 @@ scope, not an open item.
 Those first three are ~8k tokens together. The rest is reference — opening the
 one the task touches beats reading them all. **A claim you are about to rely
 on, contradict or re-test is always worth opening the source for.**
+
+**Scope is not stated in this file.** What is in, what is detect-only, what
+cannot be written under rule #1 and what the formats themselves make
+impossible is OPEN_ITEMS.md, **Part 1 — Out of scope for v1**. Read it before
+starting work on a format: the brief has grown three times, and each time the
+answer was in that list rather than here.
 
 Where these files disagree with each other, treat it as a bug to fix, not a
 fact to choose from.
@@ -189,30 +195,3 @@ how long they will be waiting.
 - **Keep the honesty, drop the hedging.** "No physical Macintosh has ever run
   it" stays — it is what a user needs to weigh. The four hypotheses behind an
   unexplained 40 seconds do not.
-
-## Out of scope (v1)
-
-Compression (this is an extractor), StuffIt X (`.sitx`), encrypted archives,
-disk-image extraction, and LZH/LHA. All are **detect-only**: `unc_sniff` names
-them — including Disk Copy 4.2, whose probe is real — so a UI can say what the
-file is and extraction returns cleanly unsupported. The corpus contains no
-`.lzh` at all, which is the evidence for leaving LHA there.
-
-**The brief has grown three times, and each time this file said the opposite
-first.** Multi-segment archives (M11, 2026-08-08), DiskDoubler and Now Compress
-(M12, 2026-08-15) and `.arc` + uuencode (M13, 2026-08-15) were all listed as
-out of scope until the maintainer asked for them. PROGRESS.md has what each
-delivered; FORMATS.md has the matrix.
-
-**Two formats cannot be written under rule #1**, which is a decision about
-evidence rather than scope: **AppleLink `.pkg`** and **StuffIt SpaceSaver**
-have no reference implementation and no published layout anywhere reachable,
-so neither can even be sniffed without inventing a magic number. **ArcMac's
-payload** is declined for a sharper version of the same reason: its single
-stream holds both forks and the only implementation that ever read it is
-missing from macutils upstream. What was searched and what would close each is
-OPEN_ITEMS.md, *Deliberate gaps*.
-
-**Alysis SuperDisk!** is the one format this corpus holds that nothing here
-names — two files, both inside envelopes. `unar` reads no further either.
-Blocked by evidence, not effort.

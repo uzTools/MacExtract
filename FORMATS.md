@@ -1043,7 +1043,7 @@ too), and **two Alysis SuperDisk! files** (`Disk Expander .X`,
 `SD! Utilities.x` — the header carries the string `SuperDisk! Add-In Module`).
 SuperDisk! is the one format the corpus actually holds that nothing here
 names: a user gets *unknown*, and `unar` reads no further than the envelope
-either. OPEN_ITEMS.md, *Deliberate gaps*.
+either. OPEN_ITEMS.md, *Out of scope for v1*.
 
 The 62 StuffIt 5 fixtures are the largest single difference, and it is a date
 rather than a capability: 4.0.2 shipped two years before the format. Handed
@@ -1069,7 +1069,7 @@ with this archive."*
 | Compact Pro comments | written out beside the extracted items | read and CRC'd, never surfaced |
 | `.arc` (ARC / ArcMac) | with the add-on | **yes since 2026-08-15**, methods 1-9; an ArcMac payload is named and declined (★ above) |
 | uuencode (`.uu`) | with the add-on | **yes since 2026-08-15**, plain and UUTool's two-fork shape |
-| AppleLink `.pkg`, StuffIt SpaceSaver | with the add-on | no, and not sniffed either. Not a decision about scope any more — a decision about evidence: neither has a reference implementation or a published layout anywhere reachable, so rule #1 forbids writing one. OPEN_ITEMS.md, *Deliberate gaps*, records what was searched |
+| AppleLink `.pkg`, StuffIt SpaceSaver | with the add-on | no, and not sniffed either. Not a decision about scope any more — a decision about evidence: neither has a reference implementation or a published layout anywhere reachable, so rule #1 forbids writing one. OPEN_ITEMS.md, *Out of scope for v1*, records what was searched |
 | Chained expansion (`.sit.hqx`) | yes, and can be turned off | yes, `-nr` turns it off |
 | System 7 conveniences | drag-and-drop of files, folders and whole disks; watch folders; background expansion; Apple events | none; Standard File, one archive at a time |
 | Verification | none published | 809 fixtures byte-exact against `unar`/`macunpack` — bar the one uuencode fixture, which `unar` cannot read at all and whose ground truth is its generator's input, with `hexbin` agreeing |

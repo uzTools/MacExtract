@@ -1,17 +1,22 @@
-# OPEN_ITEMS.md — what is missing, as of 2026-08-16
+# OPEN_ITEMS.md — what is missing, and what is deliberately not
 
-A standing audit of the gaps: things not done, things done but not verified,
-and things this repository asserts more confidently than the evidence supports.
+Two kinds of thing live here, and they are kept apart on purpose:
+
+1. **Out of scope** — decided, recorded so nobody re-litigates it, and the
+   first section below because it is the thing a session most needs to know
+   before starting work on a format.
+2. **Open items** — a standing audit of the gaps: things not done, things done
+   but not verified, and things this repository asserts more confidently than
+   the evidence supports. Each says what would close it.
 
 **Not** BLOCKERS.md, which records investigations that went wrong and the
 claims withdrawn from them. Nothing here stops the engine or the CLI, which are
 byte-exact against the oracle across 809 fixtures in `./ci.sh`.
 
-Each item says what would close it. Detail lives in one place per finding —
-status in BLOCKERS.md, reasoning in DECISIONS.md, how to re-run in TESTING.md
-or `tools/vmac/README.md`, what needs real hardware in MANUAL_TESTS.md,
-results in FORMATS.md — and is cross-referenced from here rather than
-repeated.
+Detail lives in one place per finding — status in BLOCKERS.md, reasoning in
+DECISIONS.md, how to re-run in TESTING.md or `tools/vmac/README.md`, what needs
+real hardware in MANUAL_TESTS.md, results in FORMATS.md — and is
+cross-referenced from here rather than repeated.
 
 **Filing something here is a decision to stop looking at it, so it had
 better be true.** The section that held "eight fixtures are excluded as
@@ -19,23 +24,102 @@ oracle-undecidable" was wrong about the count, the cause and the difficulty —
 it was closeable in an hour and had nothing to do with this environment
 (BLOCKERS.md, *Withdrawn claims*).
 
-**Only open items live here.** A closed one moves out: the lesson to
+**Only OPEN items live in part 2.** A closed one moves out: the lesson to
 DECISIONS.md, the withdrawn claim to BLOCKERS.md, the numbers to FORMATS.md.
-Four sections have emptied and been removed that way — multi-segment
-(2026-08-14), multi-document BinHex (2026-08-15), and Now Compress
+Three sections have emptied and been removed that way — multi-segment
+(2026-08-14), multi-document BinHex (2026-08-15) and Now Compress
 (2026-08-16), whose last item was closed by the decoder inside the archive
 itself. A section that empties is the point of the file.
 
 ---
 
+# Part 1 — Out of scope for v1
+
+**Decided, not open.** Everything here is a deliberate boundary or a limit of
+the evidence; none of it is work waiting to be done. The brief HAS grown three
+times — multi-segment archives (M11), DiskDoubler and Now Compress (M12), and
+`.arc` + uuencode (M13) were all listed as out of scope until the maintainer
+asked for them — so "out of scope" means *today's* answer, not a refusal.
+
+## Out by the brief
+
+| what | status | why it stays out |
+|---|---|---|
+| Compression | not implemented | this is an extractor |
+| StuffIt X (`.sitx`) | **detect-only** | out by the brief |
+| Encrypted archives | **detected and reported** | out by the brief; PackIt PMa5/6 resync rather than fail |
+| Disk images (Disk Copy 4.2) | **detect-only**, with a real probe | out by the brief — the probe matches a synthetic 800K GCR image and a real one, 0 false positives |
+| LZH / LHA extraction | **detect-only**, tested rather than asserted (DECISIONS.md 2026-08-14) | the corpus contains **no `.lzh` at all** — Macintosh software was not distributed that way — and Compact Pro's LZH is a different algorithm from LHA's, so it is ~550 new lines for nothing the corpus can grade |
+| Zip64 spanned sets | `unc_zipseg_describe` answers `UNC_ERR_UNSUPPORTED`, cleanly | an EOCD with disk number `0xFFFF` defers to a locator nothing here parses. Zip64 postdates every machine this project targets by a decade and a set that needs it is 2 GB+; refusing it cleanly is the right answer, not a missing feature (2026-08-14) |
+| Compact Pro archive comments | read, CRC'd, discarded | Expander 4.0.2 writes them out beside the extracted items; a comment is not a file and the sink writes files. Recorded so the difference is a decision rather than an oversight |
+
+Everything detect-only is **named** by `unc_sniff`, so a UI can tell the user
+what the file is and extraction returns cleanly unsupported.
+
+## Out because rule #1 forbids inventing a format
+
+These are limits of the evidence, not of effort. Rule #1: magic numbers and
+layouts come from a reference implementation or a spec, never from memory.
+
+- **AppleLink `.pkg` and StuffIt SpaceSaver.** Neither has a reference
+  implementation or a published layout anywhere reachable. Searched
+  2026-08-15: the only AppleLink format with documented internals is the
+  Apple II `.acu` (CiderPress2's format notes, magic `fZink`), which that page
+  explicitly distinguishes from the Macintosh Package format; SpaceSaver has
+  no specification, no open implementation, and Aladdin's own later Expanders
+  dropped it. Neither can even be **sniffed** without inventing a magic
+  number, so a user gets *unknown* rather than a name. **What would change
+  it:** a specimen plus the original application, derived under Mini vMac the
+  way Compact Pro's segment layout and Now Compress's block shapes were — or
+  one published description.
+- **An ArcMac entry's payload.** The container is walked and the entry
+  reported with its real Mac name, type, creator and fork lengths (all in
+  `reference/macutils/macunpack/arc.h`), but its single compressed stream
+  holds both forks and nothing says which comes first. macutils' `arc.c` — the
+  only implementation that ever read it — is missing from the distribution,
+  upstream tarball included, and Now Compress puts the resource fork first
+  while listing it second, so the order is not guessable by analogy.
+  **What would change it:** one real ArcMac archive with both forks
+  non-empty; a resource fork identifies itself from its own first 16 bytes,
+  so a single specimen decides it.
+- **Alysis SuperDisk!** — the one format this corpus holds that nothing here
+  names. Two files, both inside envelopes, so a user gets the payload and then
+  *unknown*: `Disk Expander .X` and `SD! Utilities.x`, out of
+  `alysis-disk-expander-12.hqx` and `super-disk-utility.hqx` (FORMATS.md ✧✧). `unar`
+  reads no further than the envelope either, which is why it never appeared on
+  the Expander comparison's list. **What would change it:** a reference. There
+  is none in `reference/` and XADMaster does not implement the format.
+- **DiskDoubler methods 1–5 and 7, and ARC 0x0a/0x0b.** No corpus fixture uses
+  any of them and nothing reachable writes the ARC pair (they are PKARC's), so
+  an implementation could not be graded — code no oracle can check is the same
+  bargain LZH refuses. Method 1 is the cheapest if a fixture ever turns up: it
+  is Unix compress and `unc_lzw` already exists.
+
+## Limits of the formats themselves
+
+- **A uuencoded set missing a MIDDLE part decodes short, and silently.** A
+  document posted in several parts joins and decodes — the mail headers
+  between parts are stepped over — but uuencode carries no length and no
+  checksum anywhere, so nothing can notice that a part never arrived. A
+  missing LAST part IS caught: the terminator and `end` live there. Asserted
+  rather than described — `tools/run_uu.py` builds a gapped set and requires
+  exactly this result, so the day the format turns out to have a check, the
+  suite says so. **What would change it:** nothing in the format. A host that
+  knows the parts were numbered `1/5` could check the count, which is a naming
+  question and not a decoding one.
+
+---
+
+# Part 2 — Open items
+
+---
+
 ## 1. DiskDoubler: what M12 left
 
-- **Methods 1, 2, 3, 4, 5 and 7 are declined per entry.** No corpus
-  fixture uses any of them; the reference marks 3 and 4 unimplemented
-  and 5 untested. Writing them would produce code no oracle here could
-  grade — the same reason LZH extraction stays out of scope. Method 1
-  is the cheapest if a fixture ever turns up: it is Unix compress, and
-  `unc_lzw` already exists.
+- **Methods 1, 2, 3, 4, 5 and 7 are declined per entry** — a scope
+  decision, Part 1. The reference itself marks 3 and 4 unimplemented and
+  5 untested, so there would be nothing to grade an implementation
+  against.
 - **11 forks across 2 fixtures are adjudicated by neither oracle**
   (`derived-Terrainman_2.0__.sea`, `derived-LHA_Expander_1.0.3.sea`).
   `unar` fails on them and `macunpack` — built with its own DiskDoubler
@@ -108,87 +192,15 @@ itself. A section that empties is the point of the file.
 
 ---
 
-## 5. Deliberate gaps, and remedies ruled out by measurement
+## 5. Remedies ruled out by measurement
 
-- **Zip64 spanned sets, out of scope as of 2026-08-14.** An
-  end-of-central-directory record whose disk number is `0xFFFF` defers to
-  the zip64 locator, which nothing here parses; `unc_zipseg_describe`
-  answers `UNC_ERR_UNSUPPORTED`. It was ranked as a gap until somebody
-  asked the obvious question: zip64 postdates every machine this project
-  targets by a decade, a set that needs it is 2 GB+, and no archive of
-  the era could be one. Refusing it cleanly is the right answer, not a
-  missing feature.
-- **Out of scope by the brief, and still out:** compression, StuffIt X
-  (`.sitx`), encrypted archives, disk-image extraction, and
-  LZH *extraction* — the optional half of M8, and the evidence for
-  leaving it there is that **the corpus contains no `.lzh` at all**:
-  Macintosh software was not distributed that way. It would be ~550 new
-  lines, since Compact Pro's LZH is a different algorithm from LHA's.
-  The detect-only claim itself is now tested rather than asserted
-  (DECISIONS.md 2026-08-14). **Multi-segment archives are IN scope
-  since 2026-08-08** and four schemes are implemented (StuffIt segments,
-  Compact Pro segments, spanned zip, plain `.NNN` splits); the rest are
-  the section above.
-- **The four formats StuffIt Expander 4.0.2's add-on expanded were brought
-  IN scope on 2026-08-15, and two of them are done.** `.arc` (ARC and
-  ArcMac) and uuencode (`.uu`, including UUTool's two-fork shape) extract —
-  M13, FORMATS.md ★. The other two are open, and not for want of effort:
+- **Do not retry, on Mac heap pressure.** Both were measured while
+  StuffIt 5 / Arsenic was still short of the 1 MB floor, and both are dead
+  ends: `MaxMem()` before a retry (compaction may not move a `NewPtr`), and
+  relocatable blocks moved high with `MoveHHi` — it demonstrably works,
+  205,828 → 803,634, and changed `MaxBlock` at the refusal by under 500 B,
+  because the stranded heap was never about where the live blocks sat. Cited
+  from `src/sit_arsenic.c` and `mac/unclassic_mac.c`.
 
-  - **AppleLink `.pkg` and StuffIt SpaceSaver cannot be written under
-    rule #1.** Neither has a reference implementation or a published layout
-    anywhere reachable. Searched 2026-08-15: the only AppleLink format with
-    documented internals is the Apple II `.acu` (CiderPress2's format notes,
-    magic `fZink`), which that page explicitly distinguishes from the
-    Macintosh Package format; SpaceSaver has no specification, no open
-    implementation, and Aladdin's own later Expanders dropped it. Neither
-    can even be **sniffed** without inventing a magic number, so a user still
-    gets *unknown* rather than a name. **What would close it:** a specimen
-    plus the original application, derived under Mini vMac the way Compact
-    Pro's segment layout was (DECISIONS.md 2026-08-14) — or one published
-    description of either format.
-  - **An ArcMac entry's payload is declined.** The container is walked and
-    the entry reported with its real Mac name, type, creator and fork
-    lengths (all documented in `reference/macutils/macunpack/arc.h`), but
-    the single compressed stream holds both forks and nothing says which
-    comes first. macutils' `arc.c` — the only implementation that ever read
-    it — is missing from the distribution, upstream tarball included. Now
-    Compress puts the resource fork first and lists it second, so the order
-    is not guessable by analogy either. **What would close it:** one real
-    ArcMac archive with both forks non-empty; a resource fork identifies
-    itself from its own first 16 bytes, so a single specimen decides it.
-  - **A uuencoded set missing a MIDDLE part decodes short, and silent.**
-    Since 2026-08-15 a document posted in several parts joins and
-    decodes — the mail headers between the parts are stepped over — but
-    uuencode carries no length and no checksum anywhere, so nothing can
-    notice that a part never arrived. A missing LAST part IS caught (the
-    terminator and `end` live there). Asserted rather than described:
-    `tools/run_uu.py` builds a gapped set and requires exactly this
-    result, so the day the format turns out to have a check, the suite
-    says so. **What would close it:** nothing in the format. A host that
-    knows the parts were numbered `1/5` could check the count, which is
-    a naming question and not a decoding one.
-  - **ARC methods 0x0a (Crushed) and 0x0b (Distilled) are declined per
-    entry.** PKARC's, and nothing reachable from here writes one, so an
-    implementation could not be graded — the DiskDoubler rule.
-
-- **Alysis SuperDisk! is the one format this corpus holds that nothing
-  here names.** Two files, both inside envelopes, so a user gets the
-  payload and then *unknown*: `Disk Expander .X` and `SD! Utilities.x`,
-  out of `alysis-disk-expander-12.hqx` and `super-disk-utility.hqx`
-  (FORMATS.md ✧✧). `unar` reads no further than the envelope either, so
-  it is not on the Expander comparison's list and nothing had looked for
-  it — it fell out of the innermost-format pass. **What would close the
-  sniff:** a reference. There is none in `reference/` and XADMaster does
-  not implement the format, so this is blocked exactly the way
-  AppleLink `.pkg` and SpaceSaver are, by evidence rather than effort.
-- **Compact Pro archive comments are read, CRC'd and discarded.**
-  Expander 4.0.2 writes them out beside the extracted items. Deliberate:
-  a comment is not a file, and the sink writes files. Noted so that the
-  difference is a decision rather than an oversight.
-- **Do not retry, on Mac heap pressure.** Both were measured while StuffIt 5 /
-  Arsenic was still short of the 1 MB floor, and both are dead ends:
-  `MaxMem()` before a retry (compaction may not move a `NewPtr`), and
-  relocatable blocks moved high with `MoveHHi` (it demonstrably works,
-  205,828 → 803,634, and changed `MaxBlock` at the refusal by under 500 B —
-  the stranded heap was never about where the live blocks sat). Cited from
-  `src/sit_arsenic.c` and `mac/unclassic_mac.c`.
+Everything else that used to sit in this section is a scope decision and is
+now Part 1.

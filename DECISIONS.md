@@ -2969,7 +2969,7 @@ Three things came out of it that were not visible from inside:
   file, the shape comp.binaries.mac produced. We take the first document
   and exit 0; `unar` does the same, so 179 BinHex fixtures and a
   differential suite could never have caught it. It is filed in
-  OPEN_ITEMS.md, *Deliberate gaps*, with the reproduction. The lesson generalises
+  OPEN_ITEMS.md, *Remedies ruled out by measurement*, with the reproduction. The lesson generalises
   past BinHex: **the differential suite can only find defects the oracle
   does not share**, and the cheapest way to find the shared ones is to ask
   what some THIRD implementation claims. That is the same move that closed
