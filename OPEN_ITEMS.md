@@ -72,16 +72,6 @@ layouts come from a reference implementation or a spec, never from memory.
   it:** a specimen plus the original application, derived under Mini vMac the
   way Compact Pro's segment layout and Now Compress's block shapes were — or
   one published description.
-- **An ArcMac entry's payload.** The container is walked and the entry
-  reported with its real Mac name, type, creator and fork lengths (all in
-  `reference/macutils/macunpack/arc.h`), but its single compressed stream
-  holds both forks and nothing says which comes first. macutils' `arc.c` — the
-  only implementation that ever read it — is missing from the distribution,
-  upstream tarball included, and Now Compress puts the resource fork first
-  while listing it second, so the order is not guessable by analogy.
-  **What would change it:** one real ArcMac archive with both forks
-  non-empty; a resource fork identifies itself from its own first 16 bytes,
-  so a single specimen decides it.
 - **Alysis SuperDisk!** — the one format this corpus holds that nothing here
   names. Two files, both inside envelopes, so a user gets the payload and then
   *unknown*: `Disk Expander .X` and `SD! Utilities.x`, out of

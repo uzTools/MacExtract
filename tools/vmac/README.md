@@ -265,6 +265,57 @@ Manager stamps that region whenever it touches a file. That is what settled
 the corpus's 1995 archive, which `unar` cannot decode at all. It works for any
 `.sea` in the corpus, not just this one.
 
+## Making ArcMac archives with ArcMac — `arcmac.py`
+
+An ArcMac entry's payload is one compressed stream holding both forks, and no
+document anywhere states which fork comes first. `arcmac.py` measured it the
+way `nowcompress.py` measured the Now Compress block shapes: by running the
+original application.
+
+    tools/vmac/arcmac.py --wild     # the two archives in the wild, fork by fork
+    tools/vmac/arcmac.py --setup    # fetch ArcMac 1.2a, rebuild the application
+    tools/vmac/arcmac.py --make     # boot, archive a two-fork file, read it back
+    tools/vmac/arcmac.py --decide   # report which fork the payload starts with
+
+The answer is **data fork first** (FORMATS.md ★★★; why it had to be measured
+is DECISIONS.md, "ArcMac's fork order"). Specimens land in
+`$UNC_VMAC_HOME/specimens/arcmac/` as plain `.arc` files, with the input forks
+beside them and a screenshot per step. Nothing here runs in `ci.sh`.
+
+The specimens are `run.py` inputs like any other archive — there is no oracle
+manifest for them, since `unar` cannot recognise ArcMac at all, so read the
+grid directly:
+
+    tools/vmac/run.py --pngdir /tmp/p $UNC_VMAC_HOME/specimens/arcmac/Packed.ARC
+    tools/decode_grid.py /tmp/p/Packed.ARC.png
+
+Both fork CRC-32s must equal those of `specimens/arcmac/in-data` and
+`in-rsrc` — the bytes that went INTO ArcMac on the emulated Mac in the first
+place. That closes the loop without an oracle: encoded on a Mac, decoded on a
+Mac, checked against the input.
+
+Four things to know before re-running it:
+
+- **The encoder comes out of the archive it is needed for.** `--setup`
+  fetches `ARCMACRC.BIN` — shareware, by URL, checked by SHA-256, not
+  committed — whose first entry IS the ArcMac application: an APPL with an
+  empty data fork. That entry is decoded with our own CLI and re-wrapped as
+  MacBinary, so no self-extractor has to run inside the guest.
+- **Do not copy a Mac header's Finder info into MacBinary unexamined.** The
+  ArcMac header's has bit 0x40 of the high byte set — `invisible` — so the
+  first attempt put the application on the volume where the Finder would not
+  show it. The disk read "112K in disk, 1 item", which looks like a failed
+  copy and is not.
+- **ArcMac 1.3c is a command shell, not a dialog.** It opens "Martian
+  Operating System"; the verb is `arc a<modifiers> archive files`, documented
+  under *ArcMac Command Summary* in the `ARCMAC.DOC` that ships with it. Pass
+  `--cmd` (repeatable) to run anything else at that prompt.
+- **The run ends with Special ▸ Shut Down, and must.** Mini vMac buffers the
+  guest's sector writes and only flushes when the volume is ejected, so
+  killing the emulator with it still mounted loses the archive: the Finder
+  showed `Test.ARC` on screen while the host's copy of the image did not have
+  it.
+
 ## The downloads, and why none of them are committed
 
 `setup.sh` fetches by URL and verifies by SHA-256, exactly as `fixtures/` does,

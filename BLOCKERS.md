@@ -95,6 +95,7 @@ line is what makes the next one worth re-testing.
 | Even `unar` fails on the two PKZIP 1.x zips, so they stay corpus-only | their own manifests: `unar` adjudicates 5 of the 7 entries | 2026-08-08 |
 | The Macintosh application unwraps nested files (`.sit.hqx`) automatically | running it: one layer came off and it stopped | 2026-08-14 |
 | No second implementation of Now Compress exists, so four forks cannot be graded | the archive is self-extracting: its own 1995 extractor agrees on every fork | 2026-08-16 |
+| Nothing documents which fork an ArcMac payload starts with, and no oracle reads ArcMac | ArcMac 1.3c archiving a two-fork file under Mini vMac: data fork first | 2026-08-16 |
 
 **Retro68's `HOpen` glue.** Claimed to return `noErr` without writing back the
 refNum, and recorded as M10's root cause. Ten cases — real vRefNum, non-zero
@@ -226,6 +227,23 @@ the `vmac_check.py` convention). **Cost:** one day of those forks being
 defended structurally instead of adjudicated — and the same shape as the
 method-6 entry above, which is why this one was worth re-reading.
 **Twice now the answer to "nothing can grade this" has been in the repository.**
+
+**Nothing documents ArcMac's fork order, and no oracle reads ArcMac.** Both
+halves wrong, and both fell to one wiki page (justsolve.archiveteam.org/wiki/
+ArcMac, read 2026-08-16). The format HAS a published specification — *ArcMac
+File Structure* in the `ARCMAC.DOC` that ships with every distribution — which
+states the fork lengths are stored "using Intel 80xxx byte sex"; the decoder
+had been reading them big-endian. It does not give the order, so that was
+measured instead: `tools/vmac/arcmac.py` has ArcMac 1.3c archive a two-fork
+file under Mini vMac, and the payload is **data fork then resource fork**,
+byte-exact both ways, confirmed a second time with the `s` (stored) modifier
+where the two forks are legible raw. The page also named two real archives —
+neither had ever been searched for. **Cost:** every ArcMac entry's payload,
+declined for a day; every ArcMac entry's fork SIZES, reported as garbage for
+the same day, by a decoder and a unit test that were wrong the same way, so
+the suite could not see it. **Three times now the answer to "nothing can grade
+this" was one search away**, and this time the withdrawn claim above is what
+made the third worth attempting.
 
 ### Corrected figures and superseded write-ups
 

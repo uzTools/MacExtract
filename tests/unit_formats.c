@@ -2075,25 +2075,42 @@ static void test_arc(void)
         CHECK(cap.status[1] == UNC_OK && cap.dlen[1] == blen);
     }
 
-    /* ArcMac: named, walked, and DECLINED per entry — the payload's
-     * fork order is documented nowhere (fmt_arc.c). */
+    /* ArcMac: one stream holds both forks, DATA FORK FIRST, and the fork
+     * lengths are little-endian.
+     *
+     * The order is not asserted here — it is MEASURED, by having ArcMac
+     * itself archive a two-fork file under the emulator
+     * (tools/vmac/arcmac.py). This builds an entry the measured way and
+     * guards the split, which is a different job: a generator that agrees
+     * with the decoder is not evidence about the format (DECISIONS.md,
+     * M13). Before 2026-08-16 both this test and the decoder read the
+     * lengths big-endian, so the test could not see the bug. */
     {
+        const uint8_t rsrc[] = "RESOURCE FORK BYTES";
+        uint32_t rlen = (uint32_t)sizeof rsrc - 1;
         uint8_t mac[256];
-        uint32_t at;
+        uint32_t at, total = blen + rlen;
+        uint16_t mcrc;
+
         memset(mac, 0, sizeof mac);
         mac[0] = 0x1B;                 /* Mac magic          */
         mac[1] = 0x02;                 /* kind = stored      */
         memcpy(mac + 2, "Mac Entry", 9);
         memcpy(mac + 34, "TEXT", 4);
         memcpy(mac + 38, "ttxt", 4);
-        mac[53] = (uint8_t)blen;       /* data fork length   */
-        mac[57] = 0;                   /* no resource fork   */
+        mac[50] = (uint8_t)blen;       /* data fork length, little-endian */
+        mac[54] = (uint8_t)rlen;       /* rsrc fork length, little-endian */
         mac[59] = 0x1A;                /* the PC header      */
         mac[60] = 0x02;
         memcpy(mac + 61, "MACENTRY.TXT", 12);
-        mac[74] = (uint8_t)blen;
+        mac[74] = (uint8_t)total;      /* compressed size    */
+        mac[84] = (uint8_t)total;      /* uncompressed size  */
         at = 88;
         memcpy(mac + at, body, blen); at += blen;
+        memcpy(mac + at, rsrc, rlen);  at += rlen;
+        mcrc = unc_crc16_arc(0, mac + 88, (int32_t)total);
+        mac[82] = (uint8_t)(mcrc & 0xFF);
+        mac[83] = (uint8_t)(mcrc >> 8);
         mac[at++] = 0x1B; mac[at++] = 0x00;
 
         test_make_memio(&io, &m, mac, at);
@@ -2105,7 +2122,9 @@ static void test_arc(void)
         CHECK(cap.info[0].name_len == 9 &&
               memcmp(cap.info[0].name, "Mac Entry", 9) == 0);
         CHECK(cap.info[0].type == 0x54455854u);      /* 'TEXT' */
-        CHECK(cap.status[0] == UNC_ERR_UNSUPPORTED);
+        CHECK(cap.status[0] == UNC_OK);
+        CHECK(cap.dlen[0] == blen && memcmp(cap.data[0], body, blen) == 0);
+        CHECK(cap.rlen[0] == rlen && memcmp(cap.rsrc[0], rsrc, rlen) == 0);
     }
 }
 

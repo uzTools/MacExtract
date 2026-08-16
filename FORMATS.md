@@ -27,7 +27,7 @@ whole corpus for that format (engine allocations only, via
 | StuffIt X (.sitx) | detect only | — | — (no fixture) | — | — |
 | DiskDoubler (DD, DDAR, DDA2) | extract | 0 store, 6/9 AD LZSS, 8 Compact Pro, 10 DDn; 1/2/3/4/5/7 declined per entry✦ | 6 fixtures | 16–108 KB✦ | full |
 | Now Compress | extract | stored, LZSS, Huffman, Huffman+LZSS, "new" LZSS✧ | 2 real fixtures + 13 generated archives (all five shapes, adjudicated by `unar`); `synth-now-mixed.now` also has an `unar` manifest and is in the differential suite | 128 KB✧ | full |
-| ARC / ArcMac (.arc) | extract | 1/2 store, 3 RLE90, 4 squeeze+RLE90, 5/6/7 crunch, 8 12-bit LZW+RLE90, 9 13-bit LZW, 0x7f compress; 0x0a/0x0b (PKARC) and every ArcMac payload declined per entry★ | 10 generated archives (methods 1-9, adjudicated by `unar`) + 3 written by Debian's `arc` 5.21q; `synth-arc-mixed.arc` also has an `unar` manifest and is in the differential suite | 4–32 KB★ | full |
+| ARC / ArcMac (.arc) | extract | 1/2 store, 3 RLE90, 4 squeeze+RLE90, 5/6/7 crunch, 8 12-bit LZW+RLE90, 9 13-bit LZW, 0x7f compress; ArcMac's two-fork payload since 2026-08-16★★★; 0x0a/0x0b (PKARC) declined per entry★ | 10 generated archives (methods 1-9, adjudicated by `unar`) + 3 written by Debian's `arc` 5.21q; `synth-arc-mixed.arc` also has an `unar` manifest and is in the differential suite | 4–32 KB★ | full |
 | uuencode (.uu, incl. UUTool) | extract | — (plain uu, UUTool's two-fork "MU" shape, and documents posted in several parts★★) | 7 generated cases, the two-fork ones adjudicated by macutils' `hexbin`; `synth-uu-mac.uu` is in the differential suite | 4 KB | full |
 | LZH/LHA (-lh?-, -lz?-) | detect only | — | 1 real `-lh5-` archive, named + refused; unit test over every method byte | — | — |
 | DiskCopy 4.2 (.image) | detect only | — | synthetic 800K GCR + real 800K image; 0 false positives in 807 fixtures (re-measured 2026-08-15) | — | — |
@@ -320,13 +320,23 @@ fixtures since M13.
 **What is declined, and why it is declined rather than written:** ARC's
 methods 0x0a (Crushed) and 0x0b (Distilled) are PKARC's, and nothing
 reachable from here writes them, so an implementation could not be graded.
-**ArcMac** — the Macintosh container, `0x1b` then the ordinary ARC header 59
-bytes in — is walked, named, and its entries are reported with their real
-names, type and creator, but the payload is refused: its single stream holds
-both forks and NOTHING documents which comes first. macutils describes the
-header (`arc.h`) and the only implementation that ever read the payload,
-`arc.c`, is absent from the macutils distribution — upstream included, checked
-2026-08-15. No oracle here reads ArcMac either. OPEN_ITEMS.md.
+
+★★★ **ArcMac** — the Macintosh container, `0x1b` then the ordinary ARC header
+59 bytes in — **extracts both forks since 2026-08-16**. One compressed stream
+holds them, **data fork first**, with the CRC over the concatenation; the
+header's two fork lengths are **little-endian**, as ARCMAC.DOC's *ArcMac File
+Structure* states and both real archives confirm. Neither fact is in `arc.h`,
+which is what this decoder was transcribed from, and the order is in no
+document at all — it was measured by having ArcMac 1.3c archive a two-fork
+file under Mini vMac (`tools/vmac/arcmac.py`; DECISIONS.md). Two archives in
+the wild now read end to end: `ARCMACRC.BIN` (6 entries, methods 8 and 9, 1988)
+and `ArcPop.Arc`. Splitting the stream across two forks allocates nothing, so
+peak heap stays the underlying method's: `Packed.ARC` (method 8, 4,230 + 333)
+extracts **byte-exact on a real emulated Mac Plus at 4 MB**, 1 file, 0 errors,
+**8,000 B peak**, both fork CRCs equal to the bytes that went into ArcMac —
+encoded on an emulated Mac, decoded on one. `unar` reads none of these: it
+cannot recognise the format at all, which is why the encoder had to be the
+oracle.
 
 ## Envelope auto-unwrap
 
@@ -1067,7 +1077,7 @@ with this archive."*
 | Encrypted archives | yes — it prompts, and knows *"You have entered an incorrect password"* | detected and refused, out of scope |
 | Multipart BinHex | *"Multipart BinHex files, such as those appearing in Internet newsgroup postings (e.g. comp.binaries.mac), are fully supported"* — multiple documents in one text file, and one file broken into several pieces | several documents in one file since 2026-08-15 (††, above); a document broken across FILES joins where the parts are named `.001`, `.002` … |
 | Compact Pro comments | written out beside the extracted items | read and CRC'd, never surfaced |
-| `.arc` (ARC / ArcMac) | with the add-on | **yes since 2026-08-15**, methods 1-9; an ArcMac payload is named and declined (★ above) |
+| `.arc` (ARC / ArcMac) | with the add-on | **yes since 2026-08-15**, methods 1-9; ArcMac's two-fork payload since 2026-08-16 (★★★ above) |
 | uuencode (`.uu`) | with the add-on | **yes since 2026-08-15**, plain and UUTool's two-fork shape |
 | AppleLink `.pkg`, StuffIt SpaceSaver | with the add-on | no, and not sniffed either. Not a decision about scope any more — a decision about evidence: neither has a reference implementation or a published layout anywhere reachable, so rule #1 forbids writing one. OPEN_ITEMS.md, *Out of scope for v1*, records what was searched |
 | Chained expansion (`.sit.hqx`) | yes, and can be turned off | yes, `-nr` turns it off |

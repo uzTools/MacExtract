@@ -76,6 +76,7 @@ which fails CI if it drifts from the headings below it.
 - The second Now Compress archive, found by creator code
 - Now Compress, written by Now Compress
 - The archive that carries its own oracle
+- ArcMac's fork order, measured rather than guessed
 
 ---
 
@@ -3584,3 +3585,78 @@ Two things worth carrying:
   "there is no oracle for StuffIt method 6", which was a fact about XADMaster
   with `macunpack` already in `reference/` (BLOCKERS.md). **Twice now the
   answer to "nothing can grade this" has been sitting in the repository.**
+
+## ArcMac's fork order, measured rather than guessed
+
+**Claim:** an ArcMac entry's single compressed stream holds the data fork
+first and the resource fork second, and the header's two fork lengths are
+little-endian. **Evidence:** ArcMac 1.3c, run under Mini vMac, archiving a
+file with both forks non-empty (`tools/vmac/arcmac.py`); and `ARCMAC.DOC`,
+*ArcMac File Structure*, for the byte order. **Consequence:** ArcMac payloads
+extract, both forks byte-exact, instead of being declined per entry.
+
+The route there is the transferable part, because the item had been closed as
+evidence-limited and was reopened by a single wiki page.
+
+**A format wiki is worth reading for what it CITES, not for what it says.**
+justsolve.archiveteam.org/wiki/ArcMac carries no header layout at all — it
+would have looked like a dead end. What it carries is two pointers: that the
+specification is a section of the `ARCMAC.DOC` shipped inside every ArcMac
+distribution, and direct links to those distributions. Both were decisive and
+neither is a fact about the format.
+
+**The specification answered the question nobody had asked.** `ARCMAC.DOC`
+gives the Pascal record and marks seven fields with `{!` — "these values are
+all stored in archive using Intel 80xxx byte sex". `arc.h`, which this
+decoder was transcribed from, gives the offsets and says nothing about order,
+so the fork lengths had been read big-endian since M13. Both real archives
+disprove it instantly: little-endian, the two fork lengths sum to the header's
+own uncompressed size on every entry; big-endian they sum to ~4 billion. **A
+field whose byte order the reference does not state is an untested
+assumption, not a transcription.**
+
+**The archives in the wild decided a different question than expected.** Two
+were found — `ARCMACRC.BIN` on cd.textfiles.com and, inside Macintosh
+Garden's `ArcMac.hqx`, a self-extracting `ArcPop.Arc` — and neither settles
+fork order, because *every entry in both has one empty fork*. That is not
+chance: an ArcMac distribution is documents (data fork only) and applications
+(resource fork only). A specimen search can be a complete success and still
+not answer the question, and it is worth predicting which entries would
+actually discriminate before going looking.
+
+**So the encoder was asked instead**, as `nowcompress.py` asks Now Compress.
+ArcMac 1.3c is not a dialog application at all — it opens a command shell,
+"Martian Operating System", whose verb is `arc a<modifiers> archive files`.
+Two archives of the same two-fork subject were made in one boot: `a` (which
+chose crunching) and `as` (stored). Both decode to data fork then resource
+fork, byte-exact both ways. **The stored one is the better evidence**: its
+payload is the two forks laid down raw, so the order is legible without
+invoking our decoder or any other, and the resource fork's own 16-byte header
+appears exactly at the data fork's length.
+
+Three smaller things this cost, all worth keeping:
+
+- **The encoder came out of the archive it was needed for.** `ARCMACRC.BIN`'s
+  first entry IS the ArcMac application — an APPL with an empty data fork —
+  so decoding that one entry with our own CLI and re-wrapping it as MacBinary
+  produced a runnable copy, and no self-extractor had to run inside the guest.
+  The same shape as the `.sea` adjudication above: **the specimen and the
+  implementation are one file.**
+- **The Finder flags in a Mac header are not a blob to copy across.** Passing
+  the ArcMac header's Finder info straight into MacBinary put the application
+  on the volume with bit 0x40 of the high byte set — `invisible`. The disk
+  showed 112K used and one item, which reads as "the copy failed" and is not.
+- **Mini vMac only flushes a volume when the guest ejects it.** The Finder
+  displayed the freshly written `Test.ARC` while the host's copy of the image
+  did not have it, because the emulator buffers sector writes and the harness
+  kills it. Special ▸ Shut Down ejects everything; `--make` ends that way.
+  This is narrower than, and does not contradict, the withdrawn "write-back is
+  lazy and partial" claim in BLOCKERS.md: writes DO land, on eject.
+
+**An ArcMac header contains a whole PC ARC header at offset 59**, which is why
+the wiki can say non-ArcMac-aware extractors sometimes cope. That makes a
+one-entry `.arc` carvable out of any ArcMac entry, which is how the payloads
+were first read — through the shipped decoder and its CRC, before any of this
+was implemented. It is also a free cross-check: `XARCMAC.EXE` decoded out of
+the 1988 archive is byte-identical to the copy in `macarc.zip` from a
+different site, so method 8 has a real external oracle now.

@@ -17,9 +17,20 @@ if [ ! -d reference/macutils ]; then
 fi
 
 cd reference/notes
-for p in StuffIt Compact_Pro PackIt BinHex MacBinary; do
+for p in StuffIt Compact_Pro PackIt BinHex MacBinary ArcMac; do
     [ -f "$p.md" ] || curl -sL "http://fileformats.archiveteam.org/wiki/$p?action=raw" -o "$p.md"
 done
+# ArcMac's own specification: the "ArcMac File Structure" section of the
+# ARCMAC.DOC that ships with every ArcMac distribution. It is the only place
+# that states the byte order of the two fork lengths ("Intel 80xxx byte sex");
+# macutils' arc.h gives the offsets and not the order. Text, CR line endings.
+if [ ! -f ArcMac.DOC ]; then
+    curl -sL "https://www.sac.sk/download/pack/macarc.zip" -o /tmp/macarc.zip
+    # 1988 zip, PKWARE-imploded: python3's zipfile cannot read it, unzip can.
+    unzip -p /tmp/macarc.zip ARCMAC.DOC | tr '\r' '\n' > ArcMac.DOC
+    rm -f /tmp/macarc.zip
+fi
+
 # Matthew Russotto's Arsenic (StuffIt method 15) spec; russotto.net may be
 # unreachable — fall back to the Wayback Machine and strip the HTML.
 if [ ! -f arsenic_russotto.md ]; then

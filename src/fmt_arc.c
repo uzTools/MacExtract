@@ -16,6 +16,14 @@
  *       length of an ArcMac entry comes from the fork lengths.
  *   reference/macutils/README                — "ArcMac: nearly PC-Arc
  *       compatible", and the method list this file implements.
+ *   reference/notes/ArcMac.DOC               — ArcMac's own specification,
+ *       section "ArcMac File Structure": the header as a Pascal record,
+ *       and the only statement anywhere of the fork lengths' byte order
+ *       ("stored in archive using Intel 80xxx byte sex").
+ *
+ * What no document states is which fork an ArcMac payload starts with.
+ * That was MEASURED — ArcMac 1.3c archiving a two-fork file under an
+ * emulated Mac Plus, tools/vmac/arcmac.py — and it is the data fork.
  *
  * Methods 8, 9 and 0x7f are Unix compress with the parameters the
  * method fixes, so they run through unc_lzw.c unchanged.
@@ -465,10 +473,33 @@ int unc_arc_probe(const uint8_t *head, int32_t len, UncIO *io)
     return nb[0] == 0x1a;
 }
 
+/* Write one run of decoded bytes, splitting it across the two forks.
+ *
+ * `at` is the offset of buf[0] within the entry's single stream and
+ * `dsplit` how much of that stream is the data fork — the whole of it for
+ * plain ARC, the header's data-fork length for ArcMac. A run can straddle
+ * the boundary, so it is written in at most two pieces.
+ * Source: the fork order is measured, tools/vmac/arcmac.py. */
+static int arc_emit(UncCtx *c, uint32_t at, const uint8_t *buf, int32_t n,
+                    uint32_t dsplit)
+{
+    if (at < dsplit) {
+        int32_t k = (int32_t)(dsplit - at);
+        if (k > n) k = n;
+        if (c->sink->write(c->sink->ctx, UNC_FORK_DATA, buf, k) != 0)
+            return UNC_ERR_SINK;
+        buf += k;
+        n -= k;
+    }
+    if (n > 0 && c->sink->write(c->sink->ctx, UNC_FORK_RSRC, buf, n) != 0)
+        return UNC_ERR_SINK;
+    return UNC_OK;
+}
+
 /* Decode one entry's stream into the sink, checking the CRC.         */
 static int arc_entry_data(UncCtx *c, UncBufIn *in, int method,
                           uint32_t compsize, uint32_t outsize, uint16_t crc16,
-                          int write)
+                          int write, uint32_t dsplit)
 {
     ArcDec d;
     uint8_t out[512];
@@ -490,17 +521,17 @@ static int arc_entry_data(UncCtx *c, UncBufIn *in, int method,
         produced++;
         if (n == (int32_t)sizeof out) {
             crc = unc_crc16_arc(crc, out, n);
-            if (write && c->sink->write(c->sink->ctx, UNC_FORK_DATA, out, n) != 0) {
-                err = UNC_ERR_SINK;
-                break;
+            if (write) {
+                err = arc_emit(c, produced - (uint32_t)n, out, n, dsplit);
+                if (err != UNC_OK) break;
             }
             n = 0;
         }
     }
     if (err == UNC_OK && n > 0) {
         crc = unc_crc16_arc(crc, out, n);
-        if (write && c->sink->write(c->sink->ctx, UNC_FORK_DATA, out, n) != 0)
-            err = UNC_ERR_SINK;
+        if (write)
+            err = arc_emit(c, produced - (uint32_t)n, out, n, dsplit);
     }
     arc_dec_free(&d);
 
@@ -552,8 +583,16 @@ int unc_arc_extract(UncCtx *c)
             macname[i] = 0;
             mactype    = unc_get_u32be(mh + AM_FTYPE);
             maccreator = unc_get_u32be(mh + AM_FAUTH);
-            dlen = unc_get_u32be(mh + AM_FDATA);
-            rlen = unc_get_u32be(mh + AM_FRSRC);
+            /* Little-endian, like every other sized field in an ARC
+             * header. ARCMAC.DOC marks the fork lengths, with size, date,
+             * time and crc, as "stored in archive using Intel 80xxx byte
+             * sex"; arc.h gives the offsets but not the order, and this
+             * read was big-endian until 2026-08-16. Both archives in the
+             * wild confirm it: little-endian, the pair sums to the
+             * header's own uncompressed size on every entry.
+             * Source: reference/notes/ArcMac.DOC, "ArcMac File Structure". */
+            dlen = unc_get_u32le(mh + AM_FDATA);
+            rlen = unc_get_u32le(mh + AM_FRSRC);
             compsize = unc_get_u32le(mh + AM_MAGIC2 + 0x0f);
             crc16 = unc_get_u16le(mh + AM_MAGIC2 + 0x17);
             uncompsize = dlen + rlen;
@@ -571,15 +610,26 @@ int unc_arc_extract(UncCtx *c)
             sret = c->sink->begin_entry(c->sink->ctx, &e);
             if (sret < 0) { err = UNC_ERR_SINK; break; }
             if (sret == 0) {
-                /* DECLINED, and this is the reason: the entry's single
-                 * stream holds both forks, but which one comes first is
-                 * written down nowhere. macutils documents the header
-                 * (arc.h) and its arc.c — the only implementation that
-                 * ever read the payload — is absent from the macutils
-                 * distribution, upstream included. No oracle here reads
-                 * ArcMac either, so a guess could not even be graded.
-                 * OPEN_ITEMS.md. */
-                est = UNC_ERR_UNSUPPORTED;
+                /* One compressed stream holds both forks, data fork
+                 * first. Nothing states the order — macunpack's arc.c,
+                 * the only implementation that ever read the payload, is
+                 * absent from the distribution — so it was MEASURED, by
+                 * having ArcMac 1.3c itself archive a two-fork file under
+                 * the emulator: tools/vmac/arcmac.py, and DECISIONS.md.
+                 * The CRC covers the concatenation, so it grades the
+                 * split as well as the decode. */
+                est = UNC_OK;
+                if (!c->opt.list_only) {
+                    if (c->io->seek(c->io->ctx, pos) < 0) {
+                        est = UNC_ERR_IO;
+                    } else {
+                        unc_bufin_init(&in, c->io, &c->ps, iobuf, iocap);
+                        in.limit = compsize;
+                        est = arc_entry_data(c, &in, method & 0x7f, compsize,
+                                             uncompsize, crc16,
+                                             !c->opt.test_only, dlen);
+                    }
+                }
                 if (c->sink->end_entry(c->sink->ctx, est) < 0) {
                     err = UNC_ERR_SINK;
                     break;
@@ -587,7 +637,6 @@ int unc_arc_extract(UncCtx *c)
             }
             any = 1;
             pos += compsize;
-            (void)uncompsize;
             continue;
         }
 
@@ -650,7 +699,7 @@ int unc_arc_extract(UncCtx *c)
                     unc_bufin_init(&in, c->io, &c->ps, iobuf, iocap);
                     in.limit = compsize;
                     est = arc_entry_data(c, &in, method, compsize, uncompsize,
-                                         crc16, !c->opt.test_only);
+                                         crc16, !c->opt.test_only, uncompsize);
                 }
             }
             if (c->sink->end_entry(c->sink->ctx, est) < 0) {

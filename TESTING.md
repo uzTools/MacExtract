@@ -464,10 +464,16 @@ data, is taken as data, and must come back as a CRC error rather than as
 silence. **Both were run against a build with the line rules removed and
 both fail there** (DECISIONS.md, "Multipart postings").
 
-**What these cannot see.** No fixture in the wild has ever been run
-through either decoder — every input is synthetic or from a
-reconstructed encoder. ArcMac's payload is declined rather than decoded,
-so nothing exercises a two-fork ARC entry at all (OPEN_ITEMS.md).
+**What these cannot see.** Neither suite reads a real ArcMac archive:
+`ci.sh` covers the two-fork split with one synthetic stored entry in
+`tests/unit_formats.c`, which is a regression guard and no more — the
+generator encodes the order the decoder expects, so it cannot be evidence
+about the format. The order itself is measured elsewhere, by
+`tools/vmac/arcmac.py`, and the archives in the wild are read there too;
+neither runs in `ci.sh`. Until 2026-08-16 that unit test also encoded the
+fork lengths big-endian, exactly as the decoder read them, so **the suite
+agreed with the bug** — the fix was to make the test build the entry the
+measured way and check both forks come back.
 
 ## Now Compress: the archives the corpus does not have (`tools/run_now.py`, in `ci.sh`)
 
