@@ -3,13 +3,6 @@
 Fixtures are not committed (copyrighted historical software).
 Each line records how to re-fetch one. Use `tools/harvest.py --restore`.
 
-One fixture is deliberately NOT Macintosh software: `aminet-lha_68k.lha`
-is an Amiga LHA archive. The corpus has no `.lzh` at all — measured over
-all of it, which is the evidence behind LZH being detect-only rather than
-extracted — so this exists to test that the probe NAMES one correctly on
-a real file instead of only on a synthetic header (TESTING.md,
-"Detect-only formats").
-
 | name | sha256 | size | url |
 |---|---|---|---|
 | 12x24fkey.bin | c90c11f10b1724b679b4db0495f2a8740f7f57c6d7abae3e8dd87dcb1c25c836 | 562 | http://www.nic.funet.fi/pub/mac/fkey/12x24fkey.bin |
@@ -24,6 +17,7 @@ a real file instead of only on a synthetic header (TESTING.md,
 | IIfxserialswitch.bin | 6180632670c941bf1f5576c0d707b3998f0dd819f2fd2edd2c8210d7e5f98f6b | 3180 | http://www.nic.funet.fi/pub/mac/cdev/IIfxserialswitch.bin |
 | PCCTS.tar.gz | 7174d13afe287ff7c6f28affa70b78c3679fa5171fe5a63b051b2cf91efb184a | 63807 | http://www.nic.funet.fi/pub/unix/tools/PCCTS.tar.gz |
 | Player-Pro410.sit.bin | 27137daa4cb5984276961f3f636e7c6471945c9431b38a4d5ae41312e649a704 | 196608 | http://www.nic.funet.fi/pub/mac/sound/Player-Pro410.sit.bin |
+| SyntheticReferences2.0.sea.bin | 7f93b5f8eb2d7fd84bdd70bc9e677914be07e5ad73b423f5e0a92bada1e4ecb1 | 2960000 | http://www.nic.funet.fi/pub/mac/science/SyntheticReferences2.0.sea.bin |
 | Ultimate_Copland_1.1.sit.bin | a9f92aa7f9c761144b70e3744593c9c8c628dcdc4e5aec40f103597ea1f36681 | 154624 | http://www.nic.funet.fi/pub/mac/extension/Ultimate_Copland_1.1.sit.bin |
 | a2basic-09.hqx | d816141f402065424ee8564a963163abaeea9ae13b5b7ca71d54825b5729bf46 | 209212 | http://www.nic.funet.fi/index/info-mac/cmp/a2basic-09.hqx |
 | a2ps.V4.3.tar.Z | 2a5121c2fc9329533b7ba08bb56d1ec18a0e44a3a110932ba8f57c3a159c9147 | 30255 | http://www.nic.funet.fi/pub/unix/tools/a2ps.V4.3.tar.Z |
@@ -406,6 +400,7 @@ a real file instead of only on a synthetic header (TESTING.md,
 | derived-Suitcase_2.1.4_Updater.sit | 55264b52590b0e06091af5b65229451446994c697ea6afa154eff9b30ada2103 | 49740 | derived:unar-nr:suitcase-214-update.bin |
 | derived-Suitcase_II_Updater_1.2.10.cpt | c2f105d8cb5b8fe712f04db8bdc96d1584699949c1b6f4c39d180613a0c3db64 | 33583 | derived:unar-nr:suitcase1210upd.cpt |
 | derived-Super_Boomerang_Fixer.cpt | 18e3574e86236d3896caa120b6ca32593915bc0dfe011617856c43dea2308a28 | 5082 | derived:unar-nr:superboomerangfixer.cpt |
+| derived-SyntheticReferences2.0.sea | 0d9b85b861f1557b772165b4203990165fae7bbe7e0bec3dfd2936bcd5fd67de | 2932448 | derived:unar-nr:SyntheticReferences2.0.sea.bin |
 | derived-SysErrTableDA.sit | ec3dbf0ccfbd6564eb3ede04e71194b51dab9852f28d7a1c9585031b0242ba6c | 24368 | derived:unar-nr:syserrtable30.sit |
 | derived-SystemIdle.Sit | 8fd96d72fad3f599710b187834dd57fcd24fcc103491a47119d07556198603f2 | 18509 | derived:unar-nr:systemidle.sit |
 | derived-TAXES99_Folder.sit | d30750c6e10ff94975521c548d886c783b957fefeb562965119867d1f03414a7 | 31450 | derived:unar-nr:taxes-99.hqx |

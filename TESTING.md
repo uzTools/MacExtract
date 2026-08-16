@@ -311,7 +311,10 @@ synthetic bytes, and the proof that it is worth having is a mutation: serve
 the two forks in the wrong order and the unit test fails while the fixture
 still passes 1/1, because the fixture has no data fork. Everything in that
 list of nevers is covered since 2026-08-15 by generated archives — see
-"Now Compress: the archives the corpus does not have" below.
+"Now Compress: the archives the corpus does not have" below — and a **second
+real archive** joined the corpus on 2026-08-16: folders, both forks, two
+streams, two stream-restart records, 9.9 MB out of 2.9 MB, and `unar` cannot
+decode a byte of it (DECISIONS.md).
 
 **What this cannot see:** 11 forks across 2 of those fixtures that neither
 oracle can decode — `unar` fails and `macunpack` fails, with its own
@@ -359,7 +362,7 @@ sampled occurrence index **by trying to allocate the table and failing**
 CI forces it three ways:
 
 - `-DUNC_ARS_FORCE_SAMPLED` compiles the fast path out. The whole
-  807-fixture diff suite and all 8,070 robustness variants run through the
+  809-fixture diff suite and all 8,090 robustness variants run through the
   fallback under ASan+UBSan, and must be byte-exact.
 - `--budget 678392` (what a 1 MB Mac Plus leaves the engine) on the 31
   StuffIt 5 fixtures, with the normal adaptive build. This is the only step
@@ -511,6 +514,17 @@ Twelve mutations of `fmt_now.c` were also run against the whole suite and all
 twelve fail it (DECISIONS.md, "Now Compress: writing the archives the corpus
 never had") — including one that did NOT fail until the archive that tests it
 was rebuilt, which is written up there.
+
+**The corpus's second real archive is checked here too**, because the
+differential suite cannot: `derived-SyntheticReferences2.0.sea` (1995) defeats
+`unar` on every fork, so its manifest carries names, type and creator and
+marks the forks unadjudicated. `run_now.py` extracts it and asserts one thing
+that can fail on its own terms — **the resource fork we produce must be a
+resource fork**, its own first 16 bytes accounting for exactly its length —
+plus per-fork hashes labelled for what they are: a regression anchor for
+output no oracle can grade, not ground truth. Mutating the decoder's fork
+order fails both. The fixture is skipped with a message when it has not been
+fetched.
 
 **What this cannot see.** XADMaster is the only implementation of Now
 Compress there is, and `fmt_now.c` was transcribed from it, so for the three

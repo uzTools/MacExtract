@@ -73,6 +73,7 @@ which fails CI if it drifts from the headings below it.
 - Now Compress: writing the archives the corpus never had
 - Now Compress: an empty file in the middle, and which reader is right
 - Two corpus lines that could not be restored, found by adding a third
+- The second Now Compress archive, found by creator code
 
 ---
 
@@ -3393,3 +3394,80 @@ what evidence a claim rests on; the sharper question here was *when does the
 code that makes this claim true ever run?* A provenance line, a `--fix` flag,
 a restore path, a migration — anything only exercised by a human doing an
 unusual thing — is where a claim rots without contradicting anything.
+
+## The second Now Compress archive, found by creator code
+
+**2026-08-16.** OPEN_ITEMS.md asked for one thing: another real Now Compress
+archive. It exists, it was on a public mirror the corpus already draws from,
+and **no filename search would ever have found it**.
+
+**What the name search says.** `.now` is the extension (the format's users say
+so; there is no other public description). Crawled and searched by name:
+funet's whole `/pub/mac` tree — 45,891 files, 30,596 of them `.hqx` — has no
+`.now` anywhere; umich's 3,678 do not either; the Wayback Machine has never
+archived a `.now` URL on any of six Mac hosts (`hyperarchive.lcs.mit.edu`,
+`sumex-aim.stanford.edu`, `mac.archive.umich.edu`, `ftp.amug.org`,
+`www.macgurus.com`, `ftp.apple.com`), and the same query for `.hqx` on the
+first of them returns results, so the filter works. Now Software's own site is
+in the Wayback Machine with no binaries. Their updaters are `TEXT/NwUD` and
+`APPL/RMSP`, not Now Compress. Now Utilities 6.5's CD ships a 531-file HFS
+listing with type and creator for every file and not one `NC` creator among
+them, because Now Compress was 5.x-era and did not survive into 6.
+
+**What found it is 4 bytes of metadata.** A Now Compress self-extracting
+archive is an application with creator **`NCse`**, and BinHex and MacBinary
+both carry type and creator in a header near the front of the file — so a
+2 KB range request per file, decoded, gives the creator of every archive on a
+mirror for a few megabytes of traffic. 241 `.sea`/`.bin` files into that
+sweep: `science/SyntheticReferences2.0.sea.bin`, 1995, 2,960,000 bytes,
+`APPL/NCse`. **The format is invisible in filenames and obvious in four bytes
+of Finder metadata; search the metadata.**
+
+**The specimen.** A folder, a `TEXT/ttxt` file with both forks (574 B data,
+332 B resource) and a 9,949,696-byte FileMaker Pro database, in 2.9 MB. Two
+streams, 306 blocks, all of them "new" LZSS with flag bit `0x100` also set
+(which this decoder ignores and the reference ignores too), no padding, no
+offset delta, and **two stream-restart records** — the zero-length table entry
+that reloads the dictionary cache, which the corpus's first fixture never
+uses and which had only ever been exercised by generated archives. Peak heap
+on the 9.9 MB extraction is 131,072 B: the flat 128 KB holds.
+
+**`unar` cannot read it.** Every fork fails with "Attempted to read more data
+than was available", on the raw `.sea` and through the MacBinary envelope
+alike. The cause is the overrun derived the day before from generated
+archives: XADMaster tracks its bit position as `currbyte*8 - (numbits & 7)`
+and raises end-of-buffer as soon as `currbyte` passes the end, so it needs the
+padding to cover its register — up to 7 bits. **129 of this archive's 306
+blocks end with fewer than 7 spare bits**, and the spare count is spread
+almost uniformly over 0..15, i.e. the real encoder pads to the word and no
+further. So the workaround in `tools/synth_now.py` — always leave a spare byte
+— is a departure from what real archives look like, and the reason it exists
+is now measured on a real one rather than inferred. What was written up as "a
+property of the oracle rather than of the format" is stronger than that: it
+makes the only implementation of this format unable to read the format.
+
+**Why we believe our output, given nothing can grade it.** Three
+independent things, none of which is our own say-so: the 574-byte `TEXT` fork
+is coherent English prose describing the product it ships with; the 332-byte
+resource fork's own first 16 bytes — data offset 0x100, map offset 0x11A, data
+length 0x1A, map length 0x32 — account for exactly 332 bytes, and a resource
+fork identifies itself that way; and the entry table's declared sizes are met
+exactly. `tools/run_now.py` asserts the structural one, which can fail on its
+own terms: swap the fork order and it reports a resource fork that is not one.
+The hashes beside it are labelled for what they are — a regression anchor, not
+ground truth.
+
+**Consequences for the corpus.** Two fixtures joined it (the envelope and the
+derived archive), the suite is 809, and **four forks are adjudicated by
+nobody** — the manifest carries names, type and creator from `lsar`, which
+walks the archive fine, and marks every fork unadjudicated with the oracle's
+own error. That is the same shape as DiskDoubler's 11 (OPEN_ITEMS.md), and it
+is why the differential suite alone cannot protect this decoder.
+
+**The transferable part.** A format whose files are rare is not necessarily a
+format whose files are gone: this one had been sitting on the mirror this
+project has harvested since M0, three directories away from fixtures already
+in the corpus. What hid it was that every search anyone would run — the
+extension, the product name, the vendor — is a search over names, and the
+thing that identifies it is metadata. **When a format is defined by its
+header, look for it with its header.**

@@ -26,7 +26,7 @@ whole corpus for that format (engine allocations only, via
 | Split file (plain .001/.002) | extract | — (join only; the joined file is the next layer) | 3 generated sets, adjudicated against the bytes that were cut, `unar` where it can join, and our unsplit read | 8 KB | full |
 | StuffIt X (.sitx) | detect only | — | — (no fixture) | — | — |
 | DiskDoubler (DD, DDAR, DDA2) | extract | 0 store, 6/9 AD LZSS, 8 Compact Pro, 10 DDn; 1/2/3/4/5/7 declined per entry✦ | 6 fixtures | 16–108 KB✦ | full |
-| Now Compress | extract | stored, LZSS, Huffman, Huffman+LZSS, "new" LZSS✧ | 1 real fixture + 13 generated archives (all five shapes, adjudicated by `unar`); `synth-now-mixed.now` also has an `unar` manifest and is in the differential suite | 128 KB✧ | full |
+| Now Compress | extract | stored, LZSS, Huffman, Huffman+LZSS, "new" LZSS✧ | 2 real fixtures + 13 generated archives (all five shapes, adjudicated by `unar`); `synth-now-mixed.now` also has an `unar` manifest and is in the differential suite | 128 KB✧ | full |
 | ARC / ArcMac (.arc) | extract | 1/2 store, 3 RLE90, 4 squeeze+RLE90, 5/6/7 crunch, 8 12-bit LZW+RLE90, 9 13-bit LZW, 0x7f compress; 0x0a/0x0b (PKARC) and every ArcMac payload declined per entry★ | 10 generated archives (methods 1-9, adjudicated by `unar`) + 3 written by Debian's `arc` 5.21q; `synth-arc-mixed.arc` also has an `unar` manifest and is in the differential suite | 4–32 KB★ | full |
 | uuencode (.uu, incl. UUTool) | extract | — (plain uu, UUTool's two-fork "MU" shape, and documents posted in several parts★★) | 7 generated cases, the two-fork ones adjudicated by macutils' `hexbin`; `synth-uu-mac.uu` is in the differential suite | 4 KB | full |
 | LZH/LHA (-lh?-, -lz?-) | detect only | — | 1 real `-lh5-` archive, named + refused; unit test over every method byte | — | — |
@@ -69,15 +69,25 @@ out of it by offset; this reader does not, because each file's stream holds
 exactly that file's resource fork followed by its data fork. That is what
 keeps it to fixed memory (DECISIONS.md 2026-08-15).
 
-**What the single fixture reaches, measured** by instrumenting the block
-loop: three blocks, "new" LZSS twice and Huffman-only once, zero padding, no
-offset delta, no stream restart, no length past a nibble, deepest code 12.
-Everything else — the other three shapes, folders, data forks, several
-streams, the cross-stream dictionary, a 17-bit code and both routes into the
-offset-delta search — is covered since 2026-08-15 by 13 generated archives
-adjudicated by `unar` (TESTING.md), byte-exact there and under qemu-m68k. The
-one thing that leaves open is in OPEN_ITEMS.md: the oracle is the
-implementation this decoder was transcribed from.
+**What the two real fixtures reach, measured** by instrumenting the block
+loop. `derived-Expand_Now_1.0.1.sea`: three blocks, "new" LZSS twice and
+Huffman-only once, zero padding, no offset delta, no stream restart, no length
+past a nibble, deepest code 12. `derived-SyntheticReferences2.0.sea`
+(1995, found 2026-08-16): a folder, a two-fork file and a 9,949,696-byte
+FileMaker database out of 2.9 MB, in two streams of 306 blocks — all "new"
+LZSS, and **two stream-restart records**, the dictionary-cache reload no other
+real archive here uses. Peak heap on that extraction is 131,072 B, so the flat
+128 KB is measured on a 9.9 MB output.
+
+Everything else — the other three shapes, a 17-bit code and both routes into
+the offset-delta search — is covered since 2026-08-15 by 13 generated archives
+adjudicated by `unar` (TESTING.md), byte-exact there and under qemu-m68k.
+
+**`unar` cannot read the 1995 archive at all**, so four of its forks are
+adjudicated by nobody: 129 of its 306 blocks end within 7 bits of their
+buffer, and XADMaster's bit reader raises end-of-buffer there (DECISIONS.md
+2026-08-16). The spare-bit count is spread almost uniformly over 0..15, which
+is what a real encoder writes. What that leaves open is OPEN_ITEMS.md §1.
 
 †† **Multipart, in both directions, since 2026-08-15.** A `.hqx` file may hold
 more than one document, and a single document may have been posted in several
@@ -515,7 +525,7 @@ DECISIONS.md 2026-08-10.
 
 ## Hardening
 
-- Differential: 807 fixtures byte-exact against `unar` manifests
+- Differential: 809 fixtures byte-exact against `unar` manifests
   (both forks + type/creator), `./ci.sh`. `run_diff.py` prints the
   number it actually ran, plus two figures that must be read with it:
   **23 forks across 11 fixtures are oracle-unadjudicated** (both
@@ -1006,7 +1016,7 @@ with this archive."*
 | AppleLink `.pkg`, StuffIt SpaceSaver | with the add-on | no, and not sniffed either. Not a decision about scope any more — a decision about evidence: neither has a reference implementation or a published layout anywhere reachable, so rule #1 forbids writing one. OPEN_ITEMS.md §6 records what was searched |
 | Chained expansion (`.sit.hqx`) | yes, and can be turned off | yes, `-nr` turns it off |
 | System 7 conveniences | drag-and-drop of files, folders and whole disks; watch folders; background expansion; Apple events | none; Standard File, one archive at a time |
-| Verification | none published | 807 fixtures byte-exact against `unar`/`macunpack` — bar the one uuencode fixture, which `unar` cannot read at all and whose ground truth is its generator's input, with `hexbin` agreeing |
+| Verification | none published | 809 fixtures byte-exact against `unar`/`macunpack` — bar the one uuencode fixture, which `unar` cannot read at all and whose ground truth is its generator's input, with `hexbin` agreeing |
 | Licence | free, closed | free, LGPL-2.1-or-later |
 | Memory partition | **not measured** — reading the app's `SIZE` resource needs an HFS reader this machine does not have | engine peak heap per format in the matrix above |
 

@@ -5,7 +5,7 @@ and things this repository asserts more confidently than the evidence supports.
 
 **Not** BLOCKERS.md, which records investigations that went wrong and the
 claims withdrawn from them. Nothing here stops the engine or the CLI, which are
-byte-exact against the oracle across 807 fixtures in `./ci.sh`.
+byte-exact against the oracle across 809 fixtures in `./ci.sh`.
 
 Each item says what would close it. Detail lives in one place per finding —
 status in BLOCKERS.md, reasoning in DECISIONS.md, how to re-run in TESTING.md
@@ -31,26 +31,38 @@ A section that empties is the point of the file.
 
 ---
 
-## 1. Now Compress: one implementation, and it is the one we copied
+## 1. Now Compress: what two real archives still do not reach
 
-Everything the single fixture could not reach — three of the five block
+Everything the first fixture could not reach — three of the five block
 shapes, the offset-delta search, folders, data forks, several files in
 one archive, a Huffman code too deep for a nibble, a stream that reads
 back into the previous stream's dictionary cache — is exercised since
 2026-08-15 by generated archives graded by `unar` (TESTING.md, "Now
-Compress: the archives the corpus does not have"). What remains is one
-thing, and no amount of generating closes it:
+Compress: the archives the corpus does not have"). A **second real
+archive** joined the corpus on 2026-08-16, found by creator code rather
+than by name (DECISIONS.md): folders, both forks, two streams and two
+stream-restart records on 1995 bytes, 9.9 MB out of 2.9 MB at the same
+flat 128 KB. Two things are still open, and neither is closed by
+generating anything:
 
-- **The oracle is the source of the transcription.** XADMaster is the
-  only implementation of Now Compress in existence, so on those three
-  shapes "we agree with `unar`" means the transcription is faithful,
-  not that the format is understood. A misreading shared with the
-  reference would survive every test here. Only the two shapes the
-  corpus fixture uses have been checked against bytes Now Software
-  wrote. **What would close it:** a second Now Compress archive from
-  the wild — one whose blocks are stored, LZSS-only or
-  Huffman-then-LZSS. They are rare: the corpus holds exactly one real
-  one, and `synth-now-mixed.now` beside it is ours.
+- **No real archive reaches stored, LZSS-only or Huffman-then-LZSS
+  blocks.** Both corpus specimens are "new" LZSS (plus one Huffman-only
+  block in the first). On those three shapes, agreeing with `unar`
+  means the transcription is faithful to XADMaster — the only other
+  implementation there is — not that the format is understood.
+  **What would close it:** a third archive whose blocks are one of the
+  three. They are rare; finding the second took a metadata sweep of two
+  mirrors, and a name search over 49,000 files found nothing.
+- **Four forks of the new fixture are adjudicated by nobody.** `unar`
+  fails every one of them — 129 of the archive's 306 blocks end within
+  7 bits of their buffer, which its bit reader cannot survive
+  (DECISIONS.md) — and `macunpack` has never known the format. `lsar`
+  still walks it, so names, type and creator are ground truth and the
+  forks are marked unadjudicated, like DiskDoubler's 11 in section 2.
+  Our output is defended structurally instead: `tools/run_now.py`
+  requires the resource fork we produce to be a resource fork, and
+  that check fails when the decoder is mutated. **What would close it:**
+  a second implementation of Now Compress. None exists.
 
 ---
 

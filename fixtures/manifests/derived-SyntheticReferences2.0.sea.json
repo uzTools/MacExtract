@@ -1,0 +1,37 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "Synthetic References v2.0"
+  },
+  {
+   "creator": "ttxt",
+   "name": "Synthetic References v2.0/SynRef2.0 INFO",
+   "oracle_methods": [
+    "Now Compress"
+   ],
+   "type": "TEXT",
+   "unadjudicated": {
+    "data": "Attempted to read more data than was available",
+    "rsrc": "Attempted to read more data than was available"
+   }
+  },
+  {
+   "creator": "FMPR",
+   "name": "Synthetic References v2.0/Synthetic References v.2.0",
+   "oracle_methods": [
+    "Now Compress"
+   ],
+   "type": "FMPR",
+   "unadjudicated": {
+    "data": "Attempted to read more data than was available",
+    "rsrc": "oracle wrote no output for this fork"
+   }
+  }
+ ],
+ "fixture": "derived-SyntheticReferences2.0.sea",
+ "format": "Now Compress",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "0d9b85b861f1557b772165b4203990165fae7bbe7e0bec3dfd2936bcd5fd67de",
+ "size": 2932448
+}

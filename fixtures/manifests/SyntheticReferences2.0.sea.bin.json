@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "NCse",
+   "data_sha256": "0d9b85b861f1557b772165b4203990165fae7bbe7e0bec3dfd2936bcd5fd67de",
+   "data_size": 2932448,
+   "name": "SyntheticReferences2.0.sea",
+   "rsrc_sha256": "a74cdafad3730d411071e7a3ec0791d1777ef64ee43a5747e724269cf26fd371",
+   "rsrc_size": 27389,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "SyntheticReferences2.0.sea.bin",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "7f93b5f8eb2d7fd84bdd70bc9e677914be07e5ad73b423f5e0a92bada1e4ecb1",
+ "size": 2960000
+}

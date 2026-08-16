@@ -229,6 +229,76 @@ def check_empty_stream(tmp, unclassic, problems):
                         "synth_now.py and TESTING.md is out of date")
 
 
+# The second real Now Compress archive, found on 2026-08-16 (DECISIONS.md).
+# `unar` cannot decode ANY of its forks — the format's bit streams end
+# wherever they end, and 129 of its 306 blocks leave fewer than 7 spare
+# bits, which is the overrun measured the day before — so its manifest
+# carries names, type and creator and marks every fork unadjudicated.
+# These hashes are therefore NOT ground truth. They are a regression
+# anchor for output no oracle in existence can grade, and they sit beside
+# a check that CAN fail on its own terms: the resource fork has to be a
+# resource fork.
+REAL_FIXTURE = "derived-SyntheticReferences2.0.sea"
+REAL_FORKS = {
+    "Synthetic References v2.0/SynRef2.0 INFO": (
+        "7044bbb8fde9e5f52b1b61a5184d2cc29e4b46b8c8a1d55b8c8eae525bfc7472",
+        "473a97ba6d88b40e02b2f40b63591562a138f9ff8836fd7bd7b56158a5342428"),
+    "Synthetic References v2.0/Synthetic References v.2.0": (
+        "f680a0e92759a05cae094a0de2a75e7023c0e7296e02552779be462042542dc0",
+        None),
+}
+
+
+def check_real_fixture(unclassic, problems):
+    """The corpus's second real archive, if it has been fetched."""
+    import hashlib
+    import struct
+    archive = os.path.join(ROOT, "fixtures", REAL_FIXTURE)
+    if not os.path.exists(archive):
+        print("run_now: %s absent, skipping the real-archive checks"
+              % REAL_FIXTURE)
+        return 0
+    out = tempfile.mkdtemp()
+    try:
+        r = run([unclassic, "x", "--forks", "hidden", "-o", out, archive])
+        if r.returncode != 0:
+            problems.append("%s: we exited %d" % (REAL_FIXTURE, r.returncode))
+        for path, (dhash, rhash) in REAL_FORKS.items():
+            full = os.path.join(out, path)
+            head, tail = os.path.split(full)
+            got = {"data": full, "rsrc": os.path.join(head, "._" + tail)}
+            for fork, want in (("data", dhash), ("rsrc", rhash)):
+                if want is None:
+                    continue
+                if not os.path.isfile(got[fork]):
+                    problems.append("%s: no %s fork for %r"
+                                    % (REAL_FIXTURE, fork, path))
+                    continue
+                blob = open(got[fork], "rb").read()
+                if hashlib.sha256(blob).hexdigest() != want:
+                    problems.append("%s: the %s fork of %r changed"
+                                    % (REAL_FIXTURE, fork, path))
+
+        # The one check here that owes nothing to a previous run of ours:
+        # a resource fork describes itself in its first 16 bytes — data
+        # offset, map offset, data length, map length — and those four
+        # numbers have to account for exactly the bytes we produced. A
+        # wrong decode does not survive this.
+        rsrc = os.path.join(out, "Synthetic References v2.0",
+                            "._SynRef2.0 INFO")
+        if os.path.isfile(rsrc):
+            blob = open(rsrc, "rb").read()
+            doff, moff, dlen, mlen = struct.unpack(">IIII", blob[:16])
+            if doff + dlen != moff or moff + mlen != len(blob):
+                problems.append("%s: the resource fork we produced is not a "
+                                "resource fork (%d+%d != %d, or %d+%d != %d)"
+                                % (REAL_FIXTURE, doff, dlen, moff, moff, mlen,
+                                   len(blob)))
+    finally:
+        shutil.rmtree(out, ignore_errors=True)
+    return 1
+
+
 def main():
     unclassic = os.path.join(ROOT, "build", "unclassic")
     args = sys.argv[1:]
@@ -254,6 +324,7 @@ def main():
         check_refusals(tmp, unclassic, problems)
         check_empty_stream(tmp, unclassic, problems)
         ran += 3
+        ran += check_real_fixture(unclassic, problems)
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 
