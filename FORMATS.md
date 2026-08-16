@@ -89,6 +89,27 @@ buffer, and XADMaster's bit reader raises end-of-buffer there (DECISIONS.md
 2026-08-16). The spare-bit count is spread almost uniformly over 0..15, which
 is what a real encoder writes. What that leaves open is OPEN_ITEMS.md §1.
 
+**The block shapes come from the encoder itself since 2026-08-16.**
+`tools/vmac/nowcompress.py` installs Now QuickFiler 5.0.1 under System 7 on an
+emulated Mac Plus and drives its Compress and Archive commands, the way
+`cptsegment.py` derives a segmented Compact Pro set. What it writes:
+
+| what | block flags | shape |
+|---|---|---|
+| Compress ▸ Faster | 0x10 | LZSS only |
+| Compress ▸ Smaller, text | 0x1f | LZSS only |
+| Compress ▸ Smaller, mixed content | 0x3f | Huffman then LZSS |
+| Compress ▸ Smaller, incompressible | 0x00 | stored |
+| Archive ▸ Smaller (a `.sea`) | 0x100 / 0x140 | stored / new LZSS |
+
+Seven specimens, every one byte-exact through this decoder and through `unar`.
+With the 1993 fixture's Huffman-only block that is all five shapes on real
+bytes. Two things only the encoder could say: it REFUSES a wholly
+incompressible file rather than storing it, so a stored block appears only
+inside a file that compresses somewhere else; and a stored block may carry
+flag bit 0x100, which no decoder here or in XADMaster examines
+(DECISIONS.md 2026-08-16).
+
 †† **Multipart, in both directions, since 2026-08-15.** A `.hqx` file may hold
 more than one document, and a single document may have been posted in several
 parts — each part carrying its own mail header, so that joining them puts that

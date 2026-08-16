@@ -526,11 +526,20 @@ output no oracle can grade, not ground truth. Mutating the decoder's fork
 order fails both. The fixture is skipped with a message when it has not been
 fetched.
 
+**Archives from the ENCODER are checked too, when they exist.**
+`tools/vmac/nowcompress.py` drives Now QuickFiler 5.0.1 under Mini vMac and
+leaves its specimens beside the emulator; `run_now.py` decodes each one and
+requires the bytes that went in to come back. They are not fixtures — the
+application is commercial and is not redistributed — so the check reports
+itself as skipped when the specimens are absent, which is what CI sees.
+Seven specimens cover stored, LZSS-only, Huffman-then-LZSS and new LZSS
+(FORMATS.md ✧).
+
 **What this cannot see.** XADMaster is the only implementation of Now
-Compress there is, and `fmt_now.c` was transcribed from it, so for the three
-shapes no real archive reaches, agreement proves the transcription and not
-the format. Only the two shapes the corpus fixture uses have ever been
-checked against bytes Now Software wrote. The generator also has to stay
+Compress there is, and `fmt_now.c` was transcribed from it — so where a shape
+has no specimen from the encoder, agreement proves the transcription and not
+the format. Since 2026-08-16 that is no shape at all, but it becomes true
+again for anything the four cases do not reach. The generator also has to stay
 inside what the oracle can read: its bit reader refuses a stream that ends
 within 7 bits of its buffer, which ours reads perfectly well, so every
 generated stream leaves a whole spare byte.

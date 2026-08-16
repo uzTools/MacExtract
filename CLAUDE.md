@@ -432,9 +432,19 @@ search over 49,000 mirror files found nothing — the format is invisible in
 filenames. It brings folders, both forks, two streams and the stream-restart
 record on 1995 bytes, and 9.9 MB of output at the same flat 128 KB. Its four
 forks are graded by nobody, so they are defended structurally instead
-(DECISIONS.md 2026-08-16). What is left is OPEN_ITEMS.md §1: no REAL archive
-reaches three of the five block shapes, and there is no second implementation
-to ask.
+(DECISIONS.md 2026-08-16).
+
+**And the block shapes now come from the encoder.** `tools/vmac/nowcompress.py`
+installs **Now QuickFiler 5.0.1** under System 7 on an emulated Mac Plus and
+drives Compress ▸ Faster/Smaller and Archive, which is the Compact Pro
+precedent applied again: stored, LZSS-only and Huffman-then-LZSS are no longer
+a transcription checked against its own source. Seven specimens, all
+byte-exact here and in `unar`. Two things only the encoder could say: it
+REFUSES a wholly incompressible file rather than storing it, and a stored
+block can carry flag bit 0x100 that nothing examines. The application is
+commercial, so nothing from it is committed — it is fetched by URL and run in
+its own demo mode, like the ROM. What is left is OPEN_ITEMS.md §1, and it is
+one fork nobody can grade.
 Neither format has any multi-segment scheme: two independent reference implementations know nothing
 of parts or volumes for either (DECISIONS.md 2026-08-15).
 

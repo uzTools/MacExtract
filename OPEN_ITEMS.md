@@ -31,29 +31,22 @@ A section that empties is the point of the file.
 
 ---
 
-## 1. Now Compress: what two real archives still do not reach
+## 1. Now Compress: one fork nobody can grade
 
-Everything the first fixture could not reach — three of the five block
-shapes, the offset-delta search, folders, data forks, several files in
-one archive, a Huffman code too deep for a nibble, a stream that reads
-back into the previous stream's dictionary cache — is exercised since
+Everything the first fixture could not reach is exercised since
 2026-08-15 by generated archives graded by `unar` (TESTING.md, "Now
 Compress: the archives the corpus does not have"). A **second real
 archive** joined the corpus on 2026-08-16, found by creator code rather
-than by name (DECISIONS.md): folders, both forks, two streams and two
-stream-restart records on 1995 bytes, 9.9 MB out of 2.9 MB at the same
-flat 128 KB. Two things are still open, and neither is closed by
-generating anything:
+than by name: folders, both forks, two streams and two stream-restart
+records on 1995 bytes, 9.9 MB out of 2.9 MB at the same flat 128 KB.
+And on the same day the **block shapes stopped being a transcription
+checked against its own source**: `tools/vmac/nowcompress.py` drives Now
+QuickFiler 5.0.1 under Mini vMac, so stored, LZSS-only and
+Huffman-then-LZSS now exist as bytes the ORIGINAL encoder wrote, decoded
+byte-exact here and by `unar` (DECISIONS.md, FORMATS.md ✧). What is left
+is one thing:
 
-- **No real archive reaches stored, LZSS-only or Huffman-then-LZSS
-  blocks.** Both corpus specimens are "new" LZSS (plus one Huffman-only
-  block in the first). On those three shapes, agreeing with `unar`
-  means the transcription is faithful to XADMaster — the only other
-  implementation there is — not that the format is understood.
-  **What would close it:** a third archive whose blocks are one of the
-  three. They are rare; finding the second took a metadata sweep of two
-  mirrors, and a name search over 49,000 files found nothing.
-- **Four forks of the new fixture are adjudicated by nobody.** `unar`
+- **Four forks of the 1995 fixture are adjudicated by nobody.** `unar`
   fails every one of them — 129 of the archive's 306 blocks end within
   7 bits of their buffer, which its bit reader cannot survive
   (DECISIONS.md) — and `macunpack` has never known the format. `lsar`

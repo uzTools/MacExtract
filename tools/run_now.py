@@ -299,6 +299,58 @@ def check_real_fixture(unclassic, problems):
     return 1
 
 
+def check_encoder_specimens(unclassic, problems):
+    """Archives written by Now Compress itself, if they have been made.
+
+    `tools/vmac/nowcompress.py` drives Now QuickFiler 5.0.1 under Mini
+    vMac and leaves its specimens beside the emulator. They are not
+    fixtures — the application is commercial and is not redistributed —
+    so this checks them when they are there and says so when they are
+    not. What they cover that nothing else can: the block shapes as the
+    ORIGINAL encoder writes them, against the bytes that went in.
+    """
+    home = os.environ.get("UNC_VMAC_HOME") or os.path.join(
+        os.environ.get("XDG_CACHE_HOME", os.path.expanduser("~/.cache")),
+        "unclassic", "vmac")
+    root = os.path.join(home, "specimens", "now")
+    if not os.path.isdir(root):
+        print("run_now: no encoder specimens (tools/vmac/nowcompress.py) — "
+              "skipping the from-the-encoder checks")
+        return 0
+    ran = 0
+    for case in sorted(os.listdir(root)):
+        d = os.path.join(root, case)
+        if not os.path.isdir(d):
+            continue
+        for f in sorted(os.listdir(d)):
+            if not f.endswith(".dat"):
+                continue
+            archive = os.path.join(d, f)
+            r = run([unclassic, "l", archive])
+            if b"Now Compress" not in r.stdout + r.stderr:
+                continue          # an uncompressed file the encoder declined
+            out = tempfile.mkdtemp()
+            try:
+                x = run([unclassic, "x", "-o", out, archive])
+                if x.returncode != 0:
+                    problems.append("%s/%s: we exited %d" % (case, f,
+                                                             x.returncode))
+                for root_, _, names in os.walk(out):
+                    for name in names:
+                        want = os.path.join(d, "in-" + name)
+                        if not os.path.exists(want):
+                            continue
+                        got = open(os.path.join(root_, name), "rb").read()
+                        if got != open(want, "rb").read():
+                            problems.append("%s/%s: %r is not what was "
+                                            "compressed" % (case, f, name))
+                ran += 1
+            finally:
+                shutil.rmtree(out, ignore_errors=True)
+    print("run_now: %d specimen(s) from the encoder checked" % ran)
+    return ran
+
+
 def main():
     unclassic = os.path.join(ROOT, "build", "unclassic")
     args = sys.argv[1:]
@@ -325,6 +377,7 @@ def main():
         check_empty_stream(tmp, unclassic, problems)
         ran += 3
         ran += check_real_fixture(unclassic, problems)
+        ran += check_encoder_specimens(unclassic, problems)
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 

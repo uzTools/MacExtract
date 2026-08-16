@@ -74,6 +74,7 @@ which fails CI if it drifts from the headings below it.
 - Now Compress: an empty file in the middle, and which reader is right
 - Two corpus lines that could not be restored, found by adding a third
 - The second Now Compress archive, found by creator code
+- Now Compress, written by Now Compress
 
 ---
 
@@ -3471,3 +3472,74 @@ in the corpus. What hid it was that every search anyone would run — the
 extension, the product name, the vendor — is a search over names, and the
 thing that identifies it is metadata. **When a format is defined by its
 header, look for it with its header.**
+
+## Now Compress, written by Now Compress
+
+**2026-08-16.** Three of the five block shapes had never existed as real bytes
+anywhere this project could reach, so they were graded against XADMaster — the
+implementation `fmt_now.c` was transcribed from — and OPEN_ITEMS.md said so.
+They exist now, made by the encoder that defined the format:
+`tools/vmac/nowcompress.py` installs **Now QuickFiler 5.0.1** under System 7
+on an emulated Mac Plus and drives its Compress and Archive commands. Same
+method as the Compact Pro segments (2026-08-14), same reason: the application
+is the only authority left.
+
+**What the encoder writes, measured** by patching `now_next_block` in a
+throwaway build to print `flags`:
+
+| what                        | flags       | shape             |
+|-----------------------------|-------------|-------------------|
+| Compress ▸ Faster           | 0x10        | LZSS only         |
+| Compress ▸ Smaller, text    | 0x1f        | LZSS only         |
+| Compress ▸ Smaller, mixed   | 0x3f        | Huffman then LZSS |
+| Compress ▸ Smaller, random  | 0x00        | stored            |
+| Archive ▸ Smaller (a `.sea`)| 0x100/0x140 | stored / new LZSS |
+
+Every one of the seven specimens comes back **byte-for-byte identical to what
+went in**, and `unar` decodes all of them too — so the three shapes are no
+longer a transcription checked against its own source: they are the encoder's
+own output, agreed on by two independent decoders.
+
+**Four things the reference could not have told anyone.**
+
+- **The encoder REFUSES incompressible files.** A 30 KB random file comes back
+  untouched with "N file(s) are special uncompressible files". A stored block
+  therefore only appears INSIDE a file that is compressible somewhere else —
+  which is how the `stored` case is built: 33 KB of keystream followed by
+  16 KB of prose gives a stored first block and a Huffman-then-LZSS second.
+- **A stored block can carry flag bit 0x100**, which neither this decoder nor
+  XADMaster looks at. Both are right by accident: the shape is chosen by
+  0x20/0x40/0x1f, and 0x100 falls outside all three tests.
+- **"Faster" and "Smaller" are the format's two compressors**, not two effort
+  levels of one: Faster is always plain LZSS, Smaller picks per block.
+- **The archive header's third and fourth bytes track the mode** — `00 10`
+  for Faster, `00 3f` for Smaller, `01 60` for a self-extracting archive —
+  a field this reader ignores and now has three known values for.
+
+**Getting the application at all was the hard part**, and it is worth writing
+down because it is a general shape. Now Compress was commercial, so unlike
+Compact Pro (shareware, a corpus fixture from funet) it is on no public
+mirror: what the mirrors carry is its free EXPANDER, which cannot create an
+archive. It survives inside **Now Utilities 5.0.1**, whose Macintosh Garden
+download is an **NDIF** disk image — Apple's undocumented compressed format.
+Its `bcem` resource was derived from the one specimen, checked three ways
+against what the file states about itself (chunk starts summing to the 2880
+sectors its `vers` resource names, compressed offsets and lengths chaining
+onto the data fork's exact length, each chunk decompressing to exactly the
+sector count the next chunk's start implies), and confirmed by the only test
+that matters: the result mounts as HFS. That decoder is in `nowcompress.py`,
+not in the engine — disk images are out of scope, and this is tooling.
+
+**The installer is driven by reading the screen, not by clicking coordinates.**
+Its component list is eleven checkboxes; the first attempt clicked eight of
+them blind and turned QuickFiler OFF while leaving three others on, which the
+screenshots showed afterwards. The script now samples each row's checkmark
+column out of a screenshot after every click, so it knows what it did. **A GUI
+harness that cannot read the state it is changing is writing coordinates into
+a file and hoping.**
+
+**On the licence.** Now Utilities asks for a serial number on first launch and
+offers a one-week demo instead; the demo is what this uses. Nothing from the
+product is redistributed: `nowcompress.py` fetches the Garden image by URL and
+checks its MD5, exactly as `setup.sh` does for the ROM, and the specimens live
+beside the emulator rather than in `fixtures/`.

@@ -200,6 +200,40 @@ nonsense first:
   sends the output to an empty floppy and the bug needed the archive's own
   folder. Ask which case the new phase stopped exercising.
 
+## Making Now Compress archives with Now Compress — `nowcompress.py`
+
+Three of the five Now Compress block shapes had no real archive anywhere, so
+they were graded against the implementation `fmt_now.c` was transcribed from.
+`nowcompress.py` fixes that the way `cptsegment.py` fixed segmented Compact
+Pro: by running the original application.
+
+    tools/vmac/nowcompress.py --setup     # fetch Now Utilities 5.0.1, convert
+    tools/vmac/nowcompress.py --install   # install Now QuickFiler on System 7
+    tools/vmac/nowcompress.py --case all  # write the specimens
+    tools/vmac/nowcompress.py --verify    # decode them, check against the input
+
+The compressor is **Now QuickFiler**, whose menu has Compress ▸ Faster/Smaller
+and Archive ▸ Faster/Smaller. Specimens land in
+`$UNC_VMAC_HOME/specimens/now/<case>/` with the inputs beside them and a
+screenshot per step; `tools/run_now.py` picks them up if they are there and
+skips them with a message if they are not.
+
+Three things to know before re-running it:
+
+- **The application is commercial and is not committed**, exactly like the
+  ROM: `--setup` fetches Macintosh Garden's installer image by URL and checks
+  its MD5. Now Utilities asks for a serial number at first launch and offers a
+  one-week demo; the demo is what the script uses.
+- **The installer image is NDIF**, Apple's undocumented compressed format.
+  `--setup` converts it to a raw HFS volume with an ADC decoder and a block
+  map derived from the image itself; if the conversion is ever wrong the
+  result will not mount, which is the check.
+- **The installer's checkbox list is read back off the screen** after every
+  click. Clicking it blind is how the first attempt turned QuickFiler off.
+
+What the encoder writes per mode is FORMATS.md ✧; why any of it matters is
+DECISIONS.md, "Now Compress, written by Now Compress".
+
 ## The downloads, and why none of them are committed
 
 `setup.sh` fetches by URL and verifies by SHA-256, exactly as `fixtures/` does,
