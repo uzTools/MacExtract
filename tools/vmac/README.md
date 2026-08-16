@@ -94,8 +94,15 @@ rewritten from `Finder` to `unclassic`, so the ROM hands control straight to
 the application. No Finder, no synthetic double-click, no mouse automation —
 the machine boots into the test and nothing else runs.
 
-That is a materially different environment, and it is worth naming: nothing
-mounts disks (see BLOCKERS.md), and no other process competes for the heap.
+That is a materially different environment, and it is worth naming: **nothing
+mounts disks**, and no other process competes for the heap. A disk inserted
+after startup never appears — the disk-inserted event is posted, but volumes
+are mounted when somebody asks and normally that somebody is the Finder
+(measured: the volume walk saw exactly one volume after 30 s, with both images
+present and both mounting fine when the Finder was left as shell). The
+autotest build calls `PBMountVol` on each drive number first
+(`MountAllDrives`); the interactive application uses Standard File, which does
+its own disk handling.
 `mkboot.py --finder` is the other arrangement — Finder left as the shell, the
 application at the volume root, launched by double-clicking it — for questions
 that only make sense outside the boot-shell setup. `tools/quickdraw-repro/`
@@ -141,6 +148,14 @@ FORMATS.md has the tables. This paragraph read "attempted and not settled"
 until 2026-08-07, long after the measurements existed — the 306 KB BinHex that
 "did not finish in fifteen minutes" simply takes 150 s, and every timeout
 chosen for it expired mid-run because its decode rate is very non-uniform.
+The instrument that settled it was `UNC_AT_PROGRESS`, which paints the
+engine's byte counter into the grid as it runs, so a run that has NOT finished
+can still be interrogated:
+
+    t+~7 min     49,152 / 306,651   (16%)
+    t+~9 min     98,304 / 306,651   (32%)
+    t+11 min    303,104 / 306,651   (99%)   <- 205 KB in the last 100 s
+
 Still true and still the trap: **do not poll every few seconds**, because
 decoding a 512x342 grid in Python steals the CPU from the emulator you are
 timing.
@@ -285,7 +300,11 @@ the application and checks what it wrote:
 
 An idle host reaches the Finder desktop in ~110 s. Every fixture boots its own
 pristine copy of the master image — Mac OS 9 writes to its boot volume as it
-goes — and `--keep-boot` is off by default because each copy is 2 GB.
+goes — and `--keep-boot` is off by default because each copy is 2 GB. The
+master's published SHA-1 is verified before every run, and `--setup --force`
+re-fetches: the harness once booted the master in place and never hashed it,
+so the drift was invisible until the local copy stopped matching archive.org
+and the volume read back hardware-locked (BLOCKERS.md, *Corrected figures*).
 
 **The Finder is driven from the keyboard.** The pointer does not work in this
 guest: `os9probe.py` measured five mouse primitives at exactly 0.0000 effect
@@ -296,6 +315,16 @@ run it if clicking or typing ever appears to stop working, because it answers
 "which link broke?" in one boot instead of inferring it from a non-event.
 
 **`--hfsplus` writes to a volume the host cannot read.** The boot volume is
+HFS+ inside an HFS wrapper — wrapper MDB signature `0x4244 'BD'`,
+`drEmbedSigWord` `0x482B 'H+'`, embedded volume header at byte 966656 of the
+partition — and hfsutils mounts the WRAPPER, whose root holds exactly one
+file, Apple's `Where_have_all_my_files_gone?` placeholder. Nothing here can
+write HFS+ (no hfsprogs, no kernel module), which is why the application
+cannot be dropped into `Startup Items` offline and the Finder has to be
+automated. It also gives a free, unambiguous test: output written to that
+volume is NOT visible in the wrapper, which is how the HFS+ runs prove where
+their output landed rather than trusting a signature word the classic File
+Manager reports as `'BD'` for compatibility anyway. The boot volume is
 HFS+; renaming it to `Out` in the Finder is enough to point the *autotest*
 build at it, since that build finds its volumes by name. The result comes back
 through `at_report_file()` — a small file on the plain-HFS input volume
@@ -370,7 +399,7 @@ Results are not repeated here; each line says where they live.
 | `UNC_AT_SAMEVOL` | does extraction onto the archive's own volume work | DECISIONS.md 2026-08-02 |
 | `UNC_AT_WD` | is `SFReply.vRefNum` handled as a System 7 working directory | DECISIONS.md 2026-08-01 |
 | `UNC_AT_CANCEL` | does an aborted entry leave anything behind | BLOCKERS.md, MANUAL_TESTS.md checklist |
-| `UNC_AT_NOHIDECURSOR` | is `HideCursor()` before painting the grid necessary | BLOCKERS.md (confirmed, with a reproduction) |
+| `UNC_AT_NOHIDECURSOR` | is `HideCursor()` before painting the grid necessary | yes — BLOCKERS.md; two things must be right before the test means anything: the pointer must be INSIDE the emulator window (at (144,129) on the 800x600 Xvfb) and the drag must cross cell CENTRES, since a path between rows disturbs nothing. `UNC_VMAC_PARK` overrides the parking position |
 | `UNC_AT_PROGRESS` | how fast is the engine actually going, mid-run | BLOCKERS.md "Timing on a 7 MHz Mac Plus" |
 | `UNC_MAC_SLURP_ARCHIVE` | rebuilds the old read-whole-archive-into-RAM path | DECISIONS.md 2026-08-02 |
 | `UNC_MAC_STAGE_WRITES` | the older whole-fork staging write path (also in `ci.sh`) | TESTING.md |

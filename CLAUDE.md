@@ -9,299 +9,90 @@
 
 The engine is the product. The Mac app is a thin shell.
 
-## Current state — read before working
+## Where things stand
 
-M0–M13 are **DONE**. M11 is multi-segment archives, in scope since
-2026-08-08, and **four schemes are implemented — all of them on Linux AND
-in the Macintosh application**, byte-exact at 4 MB and at the 1 MB floor
-target (FORMATS.md, "Segmented sets on a real emulated Mac Plus").
+**M0–M13 are DONE and nothing is in flight.** Fourteen format families
+extract; the engine passes an **809-fixture** differential suite against
+`unar` and, where `unar` fails, `macunpack`, plus 8,090 robustness variants.
+The Macintosh application extracts byte-exact on **System 6.0.8 at 4 MB and at
+the 1 MB floor target** (63/63 sampled fixtures each), on System 7.0.1, and on
+Mac OS 9.2 under QEMU including HFS+. System 6 is the target for the
+interactive UI and is driven there end to end; above it the UI is deliberate
+scope, not an open item.
 
-They divide on one question, and everything follows from it: **can a part
-prove what it is?**
+**Do not re-plan or re-run completed milestones.** The authoritative status is:
 
-**StuffIt segments** and **Compact Pro segments** can. A part is
-identified by its header — never by its filename — which is why a set
-whose parts are scattered or named unlike each other works here and does
-not work in `unar`. Compact Pro's layout is DERIVED rather than
-transcribed (2026-08-14): no reference implementation reads it, so it was
-measured on sets cut by Compact Pro 1.51 itself under Mini vMac, and
-`tools/synth_cptsplit.py` has to reproduce those specimens byte for byte
-or the description is wrong. Its one asymmetry: only the LAST segment
-carries the index, so a set opened anywhere else must go and find it.
+| file | holds | read it |
+|---|---|---|
+| `PROGRESS.md` | what each milestone delivered, one line each | at session start |
+| `OPEN_ITEMS.md` | what is still missing, and what would close each | at session start |
+| `BLOCKERS.md` | the tier results, and **every claim this project has withdrawn**, with what it cost | at session start |
+| `FORMATS.md` | format × status × peak RAM, and every per-fixture table | for a number |
+| `DECISIONS.md` | why anything is the way it is, oldest first, with a Contents index | via the index, for one entry |
+| `TESTING.md` | how each suite works and what it cannot see | before changing a suite |
+| `tools/vmac/README.md` | how to run the emulator harnesses and probes | before booting anything |
+| `MANUAL_TESTS.md` | only what no emulator here can settle | when something needs hardware |
 
-**Spanned ("split") zip** and **plain `.NNN` splits** cannot, and are the
-counter-examples worth understanding. A spanned zip identifies only its
-FIRST and LAST parts and writes the count in the last one alone; a split
-proves nothing anywhere. So the host orders parts by NAME and the engine
-adjudicates the assembled set afterwards — for zip, structurally (part
-count, central-directory position, every local header, every CRC); for a
-split, by whatever archive it joins back into. **Names propose, content
-disposes.** The promise is not "a wrong part is refused" but "a wrong
-part cannot pass silently", and a lax reader was built to prove the
-difference is load-bearing.
+Those first three are ~8k tokens together. The rest is reference — opening the
+one the task touches beats reading them all. **A claim you are about to rely
+on, contradict or re-test is always worth opening the source for.**
 
-**Parts inside envelopes** — `Archive.sit.1.hqx`, which is how a set was
-actually distributed — join on Linux since 2026-08-13 and on the Macintosh
-since 2026-08-14, for the StuffIt scheme only, because that is the one whose identity is in the payload and so
-survives a wrapper. The envelope comes off each part BEFORE the join instead
-of after it, and the search is rationed by NEED: envelopes beside the archive
-are opened only while the set is short of a part. **The first ration was
-gated on the shape of part 1, and the assertion defending it could not fail** —
-it observed whether a wrapped part was used, which is a consequence of the
-search rather than the search (DECISIONS.md 2026-08-13). Building the Mac
-half turned up the first user-facing claim this repository ever got wrong:
-the application had **no envelope unwrap at all** — `.sit.hqx` gave you the
-`.sit` and stopped — while README.md promised otherwise. It has the loop
-now (BLOCKERS.md *Withdrawn claims*). **A claim with no test behind it is
-the one that will be false**, and the README was the only document here
-that nothing checked.
+Where these files disagree with each other, treat it as a bug to fix, not a
+fact to choose from.
 
-The engine passes an 809-fixture differential suite against `unar` and, where `unar` fails, `macunpack`; the Mac shell extracts byte-exact on a real System 6.0.8 Mac Plus under Mini vMac — **63/63 sampled fixtures at 4 MB and 63/63 at the 1 MB floor** (2026-08-15, on a sample that grew from 55 when M12 added DiskDoubler and Now Compress and again when M13 added ARC and uuencode; there are no memory-budget refusals left).
+## The habit that produced everything valuable here
 
-It runs on all three systems the project claims: **System 6.0.8 and System 7.0.1** under Mini vMac (a true 68000), and **Mac OS 9.2** under QEMU PowerPC through the 68LC040 emulator, where 13/13 of a format sample is byte-exact, extraction onto **HFS+** is verified, and the `SIZE` partition is honoured by the Process Manager.
+**Re-test the claims this repository already makes.** Nearly every real gain
+came from that rather than from new features: two false claims from the M10
+period were each costing a capability; an allocation sized from a DECLARED
+ceiling rather than from the data cost 50 fixtures their real peak; "there is
+no oracle for this method" was a fact about one tool with the second oracle
+already sitting in `reference/`; and "no second implementation exists" was
+written while a self-extracting fixture carried one in its resource fork.
 
-**System 6 is the target for the interactive UI.** It is driven end to end there — SFGetFile, the destination dialog, progress dialog, Cancel, Cmd-., partial-output cleanup, result alert, launch by double-click. Above System 6 the UI is deliberate scope, not an open item: do not spend runs on how it looks or behaves on 7 or 9. The paths those tiers exist for are tested directly instead, without a Finder.
+`BLOCKERS.md` keeps all fourteen withdrawn claims with **what each one cost**,
+and names the four smells that keep finding the next one. The cheapest is a
+**cross-file contradiction**: two status files disagreeing is a disproof
+nobody has collected yet. A constant in the peak-RAM matrix is another —
+data-driven allocations vary with their input, so one that does not is usually
+a declared ceiling nobody questioned.
 
-**Do not re-plan or re-run completed milestones.** The authoritative status lives in:
+Two corollaries worth keeping in mind while working:
 
-- `PROGRESS.md` — milestone table
-- `FORMATS.md` — format × status × peak RAM matrix, plus the per-fixture results for every tier: Mini vMac 4 MB and 1 MB, System 7, and Mac OS 9 (including HFS+)
-- `BLOCKERS.md` — status first (no open blockers), then what is true and
-  load-bearing, then **Withdrawn claims**: ten assertions this file used to
-  make, each with what disproved it and what it cost. They are kept on
-  purpose — twice a live claim has been re-tested because it sat beside an
-  already-withdrawn one, and one of those was worth 39/44 → 40/44 at the
-  floor target. Do not delete them.
-- `DECISIONS.md` — every non-obvious engineering decision, oldest first, with a
-  **Contents** index at the top; find the entry there rather than reading the
-  whole log. `tools/check_docs.py` (first step of `ci.sh`) fails if the index drifts
-  from the headings, and `--fix` regenerates it
-- `OPEN_ITEMS.md` — what is still missing, ranked, with what would close each.
-  **Only OPEN items belong in it**, the same way MANUAL_TESTS.md holds only
-  what needs hardware: when one closes, it leaves the file
-- `TESTING.md` — how the automated suites work and what each layer cannot see
-- `tools/vmac/README.md` — how to re-run an emulator harness or a `-D` probe
-- `MANUAL_TESTS.md` — **the to-do list for whoever has real hardware**: only what no emulator here can settle. Nothing else belongs in it
+- **Ask what evidence a tolerance rests on. If the answer is "our own output",
+  it cannot fail.** Two skips that could never fire were hiding 10 adjudicated
+  forks; an assertion about a rationed search observed a consequence of the
+  search rather than the search.
+- **The same fix does not always work twice.** Growth-on-demand rescued the
+  Arsenic block and made the LZW table worse, because there the table IS the
+  whole allocation. Measure the second problem rather than porting the first
+  one's answer.
 
-**Read at the start of every session: this file, `PROGRESS.md`, `OPEN_ITEMS.md`
-and `BLOCKERS.md`.** That is the current state, and it is about 17k tokens.
-The other five are reference, not briefing — all nine together are ~305 KB, and
-reading them whole every time costs more than it returns. Open the ones the
-task touches: `FORMATS.md` for a number or a per-fixture result, `DECISIONS.md`
-via its Contents index for why something is the way it is, `TESTING.md` before
-changing a suite, `tools/vmac/README.md` before running an emulator,
-`MANUAL_TESTS.md` when something needs real hardware. **A claim you are about
-to rely on, contradict or re-test is always worth opening the source for** —
-that reflex is what found nearly everything valuable in this repository.
+## Traps this environment sets
 
-Where these files disagree with each other, treat it as a bug to fix, not a fact to choose from.
+All of these cost real time here:
 
-## Where to start (handoff, 2026-08-15)
-
-The repository is on GitHub as a **private** repo, `main`, tagged through
-`v0.9` — DiskDoubler, Now Compress and multi-document BinHex, all three
-replayed on a real emulated Mac Plus at 4 MB and at the 1 MB floor. `v0.8`
-before it was the release in which the Macintosh application learned every way
-an archive was ever split — Compact Pro sets, spanned zip, `.NNN` splits, parts
-inside envelopes — and learned to take all the envelope layers off a chained
-file (`v0.5` was the first tag to publish a downloadable application at all —
-see *Cutting a release*). Working tree clean, `./ci.sh` green, nothing in
-flight.
-
-**Releases publish.** The maintainer confirms every tag so far produced its
-release page (2026-08-14); this used to be written up as permanently
-unverifiable and is not an open question. What is still true is that THIS
-machine cannot see it: no `gh`, no token, and the Releases API answers 404 for
-a private repo. So a session tags, pushes, confirms the tag with
-`git ls-remote --tags origin`, and says so — it does not claim to have seen
-the page. **The version is the cheap check**: `README.md` names the current
-one, `unclassic --version` prints it, `dist/README.txt` carries it, and
-`tools/check_docs.py` fails the build if the three disagree — so a release
-page showing an older version is immediately visible as a publish that did
-not run.
-
-**The differential suite is 797 fixtures, not 769** (2026-08-08), and all
-three increases came from the measuring apparatus rather than from new archives.
-The third: **`unar` failing on a fork is a fact about `unar`.** Every fork it
-leaves unadjudicated is now offered to a SECOND oracle, macutils' `macunpack`,
-built out of `reference/` by `tools/build_macunpack.sh` and recorded per fork
-as `"data_oracle"` / `"rsrc_oracle"`. That settled 23 forks across 9 fixtures,
-of which only ONE is the method it was built for — so the value was in the
-other 22, on methods already implemented. It also closed StuffIt **method 6**
-("fixed Huffman"), which four status files had called unverifiable here
-because XADMaster refuses it: the oracle was in the repository the whole time
-(BLOCKERS.md *Withdrawn claims*). Note the two traps that cost time: macunpack
-must be built `-m32` or the STORED-segment branch is unreachable in it, and a
-PREDICTED output filename becomes ground truth — a missing `.data` is an empty
-fork only when the entry's `.info` proves the entry was written at all.
-DECISIONS.md and TESTING.md, 2026-08-08.
-
-And the reason the suite is 797 rather than 795: reviewing that day's harness
-work for hardcoded fixture names found none, but found **two excuses that
-could not fail.** One rested on our OWN error message — a fixture was skipped
-whole when every entry the binary called "recognized but unsupported", so the
-thing being graded decided whether it was graded, and it was quietly
-discarding 10 adjudicated forks of the two PKZIP 1.x zips. The other excused a
-whole ENTRY where the oracle had failed one of its forks, so an adjudicated
-fork beside an unadjudicated one was never required to exist. Both now anchor
-on the oracle: manifests record `oracle_methods` from `lsar`, and only a
-method the ORACLE puts outside v1 scope excuses anything. **Ask what evidence
-a tolerance rests on; if the answer is "our own output", it cannot fail.**
-DECISIONS.md and TESTING.md, 2026-08-08.
-
-The second: `make_manifests.py` discarded a whole manifest whenever `unar`
-failed on any single entry, so 19 fixtures contributed no oracle coverage at
-all — including the corpus's only StuffIt **method 1** fork, which `unar`
-decodes perfectly (it fails on a different entry of that archive, using a
-different method). Manifests now record per-fork `"unadjudicated"` where the
-oracle failed and keep everything else. **`oracle FAILED on X` scrolling past
-on every rebuild read as a fact about the fixture; it was a fact about the
-builder.** DECISIONS.md and TESTING.md, 2026-08-08.
-
-The first: nine
-fixtures had been written off as ground truth the oracle could not produce —
-seven "structurally undecidable", two "oracle-buggy". Both reasons were
-properties of one flag: `unar -k visible` names resource forks `NAME.rsrc`,
-which collides with a real entry called `X.rsrc` and which GNUstep refuses to
-build for a leading `~`. Rebuilt with `-k hidden` (`._NAME`) all nine decide,
-and all 774 pre-existing manifests come back entry-for-entry identical, so the
-switch changed the measuring apparatus and not the ground truth. The CLI grew
-`--forks hidden` because it had the same collision on its own side; the default
-naming is unchanged, but the CLI now **refuses to write over an existing output
-file** (per-entry error, `--overwrite` restores the old behaviour) — it used to
-destroy a 7 KB resource fork on a THINK C archive and exit 0.
-DECISIONS.md and BLOCKERS.md, 2026-08-08.
-
-**The 1 MB floor is 55/55 as of 2026-08-08 (44/44 on 2026-08-07, before the
-sample grew), and the StuffIt 5 / Arsenic capability gap is closed.** All six
-sampled StuffIt 5 fixtures extract every
-entry byte-exact on a 1 MB Mac Plus. There is no remaining "this format needs
-a bigger machine" caveat anywhere in the project.
-
-The last two — `a2basic.dmg` and `Library_ISBN` — were a genuine shortage
-rather than a placement problem, so they were closed by making the decoder
-NEED less rather than by finding it more memory. `ars_inverse_bwt` builds a
-transform vector costing 4 bytes per block byte; when that allocation fails,
-`ars_index_build` substitutes a sampled occurrence index (one sample per
-`1 << shift[c]` occurrences of each byte value) and the walk scans forward
-from the nearest sample. Adaptive per block, fast path tried first, and it
-costs a machine that never needs it exactly 8 bytes. DECISIONS.md 2026-08-07,
-FORMATS.md "Floor target verification".
-
-Two things about that change are worth carrying forward:
-
-- **A time-for-memory dial makes "peak heap" stop meaning "requirement".**
-  The decoder halves its sampling target only until the allocator says yes, so
-  under a cap it spends the cap. `Library_ISBN` peaks at 614,080 B under a
-  678,392 B budget and extracts fully from 393,028 B. If you compare a
-  peak-under-budget against a predicted requirement you will conclude the
-  prediction was 60% out when it was accurate. **Bisect the cap.**
-- **Estimate the thing you are changing.** This prediction was within 200 bytes
-  on one fixture and 3.6% on the other, because it estimated one allocation
-  inside one entry. The method 13 estimate a day earlier missed badly because
-  it estimated an aggregate over a distribution. Same author, same week, same
-  confidence — the difference was the shape of the quantity.
-
-Several remedies in this area are ruled out BY MEASUREMENT and listed in
-OPEN_ITEMS.md, *Deliberate gaps*, as do-not-retry: `MaxMem()` before a retry,
-and relocatable blocks moved high with `MoveHHi`.
-
-The method 13 LZSS window lead is DONE (2026-08-06): the window is now sized
-from the entry rather than from the format's 64 KB, 34 fixtures improved, none
-regressed. Note that the estimate which motivated it predicted ~115 and was
-wrong for a reason worth carrying — peak heap is a per-archive MAXIMUM, so one
-large fork pins an archive's peak however many small forks it has, and a
-per-fork distribution cannot predict it. DECISIONS.md, 2026-08-06.
-
-Everything else open is either impossible in this environment (real 68k or
-PowerPC silicon), the maintainer's to do (the Retro68 report), deliberate
-scope, or blocked on a fixture the oracle can read.
-
-**The one habit that produced everything valuable this week.** Nearly every
-real gain came from re-testing a claim the repository was already making,
-rather than from new features:
-
-- Two claims from the M10 "confounded period" turned out to be false and were
-  each costing something concrete — one forced the whole archive into RAM
-  (39/44 → 40/44 at the floor target when removed), the other forced
-  verification through a channel that cannot see filenames (which is how a
-  real gzip/.Z naming bug survived for weeks).
-- The Arsenic block was allocated at its DECLARED 512 KB rather than what it
-  holds (40/44 → 41/44, and `derived-RWAsm_Folder.sit` went 595.7 KB → 163.2 KB
-  for the same output).
-- The LZW table was allocated at its DECLARED `maxbits` ceiling — found on
-  2026-08-03 purely by looking for the Arsenic mistake a second time, and the
-  matrix pointed straight at it: `.Z` was the one peak that did not vary with
-  its input at all. A flat 268 KB became 15–219 KB, 50 fixtures improved, none
-  regressed.
-- "The three refused Arsenic entries each fill a 512 KB block" — the stated
-  reason the last capability gap was unclosable, and false. One of them holds
-  124,637 B. Found the same day, by the same reflex.
-- "Eight fixtures the oracle cannot adjudicate" — filed under *cannot be closed
-  in this environment*, and closeable in an hour. It was nine, and it was the
-  fork-naming flag (769 → 778 fixtures). The remedy was quoted in TESTING.md
-  one paragraph above the limitation it removes.
-- "There is no oracle to check a StuffIt method 6 implementation against" — a
-  fact about XADMaster, restated in four files as a fact about this
-  environment. `reference/macutils` has decoded the method since 1991. Building
-  it as a second oracle closed the method AND adjudicated 22 forks of other
-  methods (793 → 795). **A limitation that names one tool is a limitation of
-  that tool.**
-
-So: **when something looks like a hard floor, check whether the number you are
-budgeting for is a number the data actually needs.** And when a claim has no
-reproduction, treat its neighbours as suspect too — that is literally how the
-last two were found. A constant in the peak-RAM matrix is the tell: data-driven
-allocations vary with their input, so one that does not is usually a declared
-ceiling nobody questioned.
-
-**Read the status files against each other, not just in turn.** The 512 KB
-claim was disproved by a line already in this repository: DECISIONS.md said
-that fixture's blocks hold "~316 KB" while OPEN_ITEMS.md said they fill 512 KB,
-and the two sat a file apart for a day. The rule above — *where these files
-disagree, treat it as a bug* — is not housekeeping; a contradiction between
-two status files is a disproof nobody has collected yet, and it is the cheapest
-finding available. The same pass turned up README.md quoting a 1.8 MB corpus
-maximum where the measured figure is 2.53 MB.
-
-And note how the false claim was built: 512 KB was **true of the corpus** —
-two fixtures do reach 524,257 B — and got applied to three fixtures it did not
-describe. A true number about the worst case is not a number about the case in
-front of you.
-
-**The same fix does not always work twice, though.** Growth-on-demand rescued
-the Arsenic block and made the LZW table *worse* than doing nothing, because
-copy-based growth has an `old + new` transient and there the table IS the whole
-allocation. Two problems with the same shape can want opposite fixes; measure
-the second one rather than porting the first one's answer. (DECISIONS.md,
-2026-08-03.)
-
-**Traps this environment sets, all of which cost real time here:**
-
-- A test that passes may not be testing anything. The cursor experiment
-  "passed" twice while the pointer was outside the emulator window, and again
-  while the drag ran between grid rows. Establish that a test can fail before
-  believing that it passed.
-- `pgrep -f "some command"` matches the watching shell itself, so an
-  `until ! pgrep ...` loop never exits. Use `kill -0 <captured pid>`.
-  **`pkill -f` has the same flaw and it is worse**: put `pkill -f
-  "vmac/run.py"` and the run itself in one shell command and the pattern
-  matches that shell's own command line, so it kills itself before the
-  work starts. It looks like the run crashed instantly. Match on the
-  executable (`pkill -x minivmac`) or kill a captured pid.
+- **A test that passes may not be testing anything.** Establish that a test can
+  fail before believing that it passed.
+- `pgrep -f "some command"` matches the watching shell itself, so
+  `until ! pgrep ...` never exits. Use `kill -0 <captured pid>`. **`pkill -f`
+  is worse**: `pkill -f "vmac/run.py"` in the same shell command as the run
+  matches that shell's own command line and kills the run before it starts.
+  Match the executable (`pkill -x minivmac`) or a captured pid.
 - **A sentinel echoed outside the redirect never reaches the log.**
-  `./ci.sh > ci.log 2>&1; echo "CI exit $?"` sends the sentinel to the
-  shell's stdout, not into `ci.log`, so a companion
-  `until grep -q "CI exit" ci.log; do sleep 30; done` waits for a string
-  that can never appear. The watched job finishes fine and the watcher
-  polls for ever; five of them accumulated in one session before anyone
-  noticed. Put the sentinel inside the redirect —
-  `{ ./ci.sh; echo "CI exit $?"; } > ci.log 2>&1` — or, better, do not
-  hand-roll a watcher: a backgrounded command notifies on exit by itself.
+  `./ci.sh > ci.log 2>&1; echo "CI exit $?"` puts the sentinel on the shell's
+  stdout, so a companion `until grep -q "CI exit" ci.log` waits forever. Put it
+  inside — `{ ./ci.sh; echo "CI exit $?"; } > ci.log 2>&1` — or let a
+  backgrounded command notify on exit by itself.
+- **Backgrounded processes lose network access here.** A detached download or
+  probe stalls in `poll()` with no error; run anything that talks to the
+  network in the foreground, in chunks that fit the timeout.
+- **Do not edit a shell script while it is running.** `sh` reads the file by
+  offset, so an edit shifts what it executes next.
 - The Mac OS 9 pointer does not work at all; drive that guest from the
   keyboard. Mini vMac's mouse is fine.
-- An emulator run is minutes; do not poll it every few seconds, and do not
-  read a timeout as a measurement of anything.
+- An emulator run is minutes; do not poll it every few seconds, and **do not
+  read a timeout as a measurement of anything**.
 
 ## Rules
 
@@ -401,103 +192,27 @@ how long they will be waiting.
 
 ## Out of scope (v1)
 
-Compression (extraction only), StuffIt X (`.sitx`), encrypted archives, disk images, LZH/LHA. These are **detect-only**: `unc_sniff` names them — including Disk Copy 4.2, whose probe is now real — so a UI can tell the user what the file is, and extraction returns cleanly unsupported.
+Compression (this is an extractor), StuffIt X (`.sitx`), encrypted archives,
+disk-image extraction, and LZH/LHA. All are **detect-only**: `unc_sniff` names
+them — including Disk Copy 4.2, whose probe is real — so a UI can say what the
+file is and extraction returns cleanly unsupported. The corpus contains no
+`.lzh` at all, which is the evidence for leaving LHA there.
 
-**DiskDoubler is IN scope since 2026-08-15** (M12), at the maintainer's
-request, where this file listed it as detect-only. Three containers and the
-four methods the corpus uses; 6/6 fixtures byte-exact, and the suite is 803
-(FORMATS.md ✦). **Now Compress landed the same day.** The reference reads it as a SOLID
-archive — every fork of every file in one stream — and it does not have to:
-each file's stream holds exactly that file's resource fork then its data
-fork, so this reader is per file and runs in fixed memory (128 KB). 1/1
-fixture byte-exact — and that fixture reaches two of the five block shapes,
-which is why **the other three are now generated**: `tools/synth_now.py`
-writes 13 archives and `unar` grades them, closing every path one fixture
-could not reach (2026-08-15). Three things that came out of building it are
-worth carrying: the assertion for the stream-restart marker **could not
-fail** where it was first placed, because the state it restores had not yet
-diverged from the state already there; `unar` REFUSES a bit stream that ends
-within 7 bits of its buffer, which this decoder reads perfectly well — a
-limit of the oracle, so the generator works around it rather than the
-engine; and **an empty file anywhere but last is decoded WRONG by the
-reference and right by us**, silently for the entry after next, because
-reading per file makes that bug unrepresentable rather than fixed. Both
-oracle limits are asserted, not described.
+**The brief has grown three times, and each time this file said the opposite
+first.** Multi-segment archives (M11, 2026-08-08), DiskDoubler and Now Compress
+(M12, 2026-08-15) and `.arc` + uuencode (M13, 2026-08-15) were all listed as
+out of scope until the maintainer asked for them. PROGRESS.md has what each
+delivered; FORMATS.md has the matrix.
 
-**A second real archive joined the corpus on 2026-08-16** and settles what the
-first oracle limit is worth: `unar` cannot decode a byte of it, because 129 of
-its 306 blocks end within 7 bits of their buffer. It was found by **creator
-code** (`APPL/NCse`, read out of a 2 KB range request per file) after a name
-search over 49,000 mirror files found nothing — the format is invisible in
-filenames. It brings folders, both forks, two streams and the stream-restart
-record on 1995 bytes, and 9.9 MB of output at the same flat 128 KB. Its four
-forks are graded by nobody, so they are defended structurally instead
-(DECISIONS.md 2026-08-16).
+**Two formats cannot be written under rule #1**, which is a decision about
+evidence rather than scope: **AppleLink `.pkg`** and **StuffIt SpaceSaver**
+have no reference implementation and no published layout anywhere reachable,
+so neither can even be sniffed without inventing a magic number. **ArcMac's
+payload** is declined for a sharper version of the same reason: its single
+stream holds both forks and the only implementation that ever read it is
+missing from macutils upstream. What was searched and what would close each is
+OPEN_ITEMS.md, *Deliberate gaps*.
 
-**And the block shapes now come from the encoder.** `tools/vmac/nowcompress.py`
-installs **Now QuickFiler 5.0.1** under System 7 on an emulated Mac Plus and
-drives Compress ▸ Faster/Smaller and Archive, which is the Compact Pro
-precedent applied again: stored, LZSS-only and Huffman-then-LZSS are no longer
-a transcription checked against its own source. Seven specimens, all
-byte-exact here and in `unar`. Two things only the encoder could say: it
-REFUSES a wholly incompressible file rather than storing it, and a stored
-block can carry flag bit 0x100 that nothing examines. The application is
-commercial, so nothing from it is committed — it is fetched by URL and run in
-its own demo mode, like the ROM.
-
-**Nothing about Now Compress is open any more.** The last item — four forks of
-the 1995 archive that no decoder on Linux can grade — closed the same day,
-because **the archive is self-extracting and carries its own decoder**:
-`nowcompress.py --adjudicate` runs it under the emulator and compares fork by
-fork, and the 1995 extractor agrees with us on all four, including 9.9 MB byte
-for byte (resource forks compared with bytes 16..127 masked, the convention
-`vmac_check.py` has used since M10). Twice now the answer to "nothing can
-grade this" has been sitting in the repository.
-Neither format has any multi-segment scheme: two independent reference implementations know nothing
-of parts or volumes for either (DECISIONS.md 2026-08-15).
-
-**`.arc` and uuencode (`.uu`) are IN scope since 2026-08-15** (M13), when the
-brief became "everything StuffIt Expander 4.0.2 expands" — this file listed
-both as out of scope and unsniffed a few hours earlier. ARC methods 1-9 and
-both uu shapes (plain, and UUTool's, which carries the resource fork and the
-Finder info) extract. Neither format occurs in the corpus, so both suites
-GENERATE their archives and hand them to a second implementation to grade:
-`unar` for ARC, macutils' `hexbin` for the UUTool shape. **That is not
-ceremony — twice the decoder and the generator shared a misreading, round-
-tripped perfectly, satisfied the CRC, and were caught only by the oracle**
-(DECISIONS.md 2026-08-15). A generator written from the same reading as the
-decoder tests the reading, not the format.
-
-**AppleLink packages (`.pkg`) and StuffIt SpaceSaver are the other two the
-add-on expanded, and they are NOT delivered** — not by choice of scope but by
-rule #1: no reference implementation and no published layout exists for
-either, so nothing here can even name them without inventing a magic number.
-What was searched, and what would close it, is OPEN_ITEMS.md, *Deliberate gaps*. **ArcMac's
-payload is declined for a sharper version of the same reason**: macutils
-documents its header and the file that read its payload, `arc.c`, is missing
-from macutils upstream, so the fork order inside the stream is written down
-nowhere — and Now Compress proves the order is not guessable by analogy. That comparison — the first external yardstick this
-project has applied — is FORMATS.md, "Compared with StuffIt Expander 4.0.2",
-and what it is worth is DECISIONS.md 2026-08-15. It found exactly ONE gap that
-was **not** out of scope — **several BinHex documents in one file**, which the
-differential suite could never see because `unar` takes the first document
-too — and that was built the same day, graded by a THIRD oracle, macutils'
-`hexbin` (FORMATS.md ††, TESTING.md). **Where a limitation is shared with the
-oracle, the suite is blind by construction; the way out is to ask what some
-other implementation claims.** That is the macunpack lesson arriving from the
-opposite direction, and it is now twice-proven.
-
-**Multi-segment archives are IN scope since 2026-08-08** (M11), where this
-file used to list them as out. Four schemes are implemented — StuffIt segments,
-Compact Pro segments, spanned zip and plain `.NNN` splits — plus parts inside
-envelopes, all of them on Linux and in the Macintosh application. Nothing in
-that area is open any more: OPEN_ITEMS.md's multi-segment section emptied on
-2026-08-14 and was removed. The rule that decided the ORDER was: **a part must be identifiable from its own
-bytes.** It is still the right first question, but it turned out to be a
-ranking rule rather than a gate — spanned zip fails it in the middle of a
-set, a `.NNN` split fails it everywhere, and both were built anyway,
-because what cannot prove itself can still be made to prove itself once
-assembled: a spanned zip structurally, and a split by whatever archive it
-joins back into (DECISIONS.md 2026-08-10). The same rule then decided which
-scheme could have its parts read out of per-part envelopes, and there it WAS
-a gate: only StuffIt (DECISIONS.md 2026-08-13).
+**Alysis SuperDisk!** is the one format this corpus holds that nothing here
+names — two files, both inside envelopes. `unar` reads no further either.
+Blocked by evidence, not effort.

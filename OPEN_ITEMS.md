@@ -13,26 +13,18 @@ or `tools/vmac/README.md`, what needs real hardware in MANUAL_TESTS.md,
 results in FORMATS.md — and is cross-referenced from here rather than
 repeated.
 
-**Filing something here is a decision to stop looking at it, so it had better
-be true.** Section 3 in particular: it held "eight fixtures are excluded as
-oracle-undecidable or oracle-buggy" until 2026-08-08, when the item turned out
-to be nine fixtures, closeable in an hour, and nothing to do with this
-environment — it was a fork-naming flag of the oracle (DECISIONS.md,
-BLOCKERS.md, 2026-08-08).
+**Filing something here is a decision to stop looking at it, so it had
+better be true.** The section that held "eight fixtures are excluded as
+oracle-undecidable" was wrong about the count, the cause and the difficulty —
+it was closeable in an hour and had nothing to do with this environment
+(BLOCKERS.md, *Withdrawn claims*).
 
 **Only open items live here.** A closed one moves out: the lesson to
 DECISIONS.md, the withdrawn claim to BLOCKERS.md, the numbers to FORMATS.md.
-The old section 4 used to be *Multi-segment*, and on 2026-08-14 it emptied: all
-four schemes join on Linux and on the Macintosh, and the last thing in it
-— taking an envelope off each part — was built the same day. A section 5
-held multi-document BinHex for one day and emptied on 2026-08-15 (M2
-follow-up in PROGRESS.md; DECISIONS.md for what it taught about oracles).
-Section 1 was **Now Compress** and emptied on 2026-08-16: the block shapes
-stopped being a transcription checked against its own source once the
-original encoder wrote them (`tools/vmac/nowcompress.py`), and the four
-forks no Linux decoder could grade were graded by the decoder inside the
-archive itself, which is self-extracting. A section that empties is the
-point of the file.
+Four sections have emptied and been removed that way — multi-segment
+(2026-08-14), multi-document BinHex (2026-08-15), and Now Compress
+(2026-08-16), whose last item was closed by the decoder inside the archive
+itself. A section that empties is the point of the file.
 
 ---
 

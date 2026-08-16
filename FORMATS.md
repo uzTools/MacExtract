@@ -14,7 +14,7 @@ whole corpus for that format (engine allocations only, via
 | BinHex 4 (.hqx) | extract | RLE90; several documents in one file, and one document posted in several parts†† | 179 fixtures | 8 KB | full |
 | PackIt (.pit) | extract | store, Huffman; encrypted detected | 4 fixtures (1 real + 3 synthetic PMa4) | 9 KB | full |
 | Compact Pro (.cpt) | extract | RLE, LZH+RLE | 108 fixtures | 19 KB | full |
-| StuffIt classic (.sit) | extract | 0 store, 1 RLE90*, 2 LZW, 3 Huffman, 5 LZAH, 6 fixed Huffman‡, 8 MW, 13 LZSS+Huffman; encrypted detected | 227 fixtures | 8–76 KB‖ | full |
+| StuffIt classic (.sit) | extract | 0 store, 1 RLE90*, 2 LZW, 3 Huffman, 5 LZAH, 6 fixed Huffman‡, 8 MW, 13 LZSS+Huffman; encrypted detected | 227 fixtures‡‡ | 8–76 KB‖ | full |
 | StuffIt 5 (.sit) | extract | 0, 13, 15 Arsenic; encrypted detected | 31 fixtures | 0.15–2.53 MB† | 23 of 31 fixtures extract FULLY; the rest refuse per entry |
 | Zip | extract | store, deflate; others & encrypted per-entry errors | 5 fixtures (2 of them PKZIP 1.x, graded on names and entry counts only — Implode is out of v1 scope, and `unar` adjudicates 5 of their 7 entries) | 12–54 KB¶ | full |
 | Gzip | extract | deflate | 3 fixtures | 51 KB | full |
@@ -171,6 +171,12 @@ macunpack has decoded it since 1991 and is the reference the decoder is
 transcribed from. TESTING.md, "A second oracle", for what that does and does
 not prove; BLOCKERS.md for the claim that no oracle existed.
 
+‡‡ **Per-entry method coverage across the 227 StuffIt-classic fixtures**,
+counted from the manifests: LZ+Huffman (13) 970 entries in 115 fixtures,
+Compress (2) 330/90, Huffman (3) 38/24, None (0) 13/7, Fixed Huffman (6) 6/2,
+LZAH (5) 1/1, MW (8) 3/1. Method 1 (RLE90) has no oracle coverage but does
+occur — `synth-sit-rle90.sit` and one real fork carry it.
+
 † **Every real Arsenic block is 512 KB.** The block size is `1 << (v+9)`
 with `v` read from the stream, so other sizes are legal, but across the
 31-fixture StuffIt 5 corpus **all 484 Arsenic streams — one per compressed
@@ -191,7 +197,10 @@ withdrawn (BLOCKERS.md, *Withdrawn claims*).
 Measured peak heap over the corpus (`unclassic t --stats`): **min
 0.15 MB / median 0.59 MB / mean 0.92 MB / max 2.53 MB**, the maximum
 being the entries that genuinely fill a 512 KB block (35 KB + 512 KB +
-2048 KB). Those are the peaks with memory to spare, where the decoder takes
+2048 KB) — **exactly two fixtures reach 524,257 B of fill**, which is the
+number that got applied to three fixtures it did not describe (BLOCKERS.md,
+*Withdrawn claims*). A true figure about the worst case is not a figure about
+the case in front of you. Those are the peaks with memory to spare, where the decoder takes
 the fast inverse BWT; under a cap it takes a cheaper one and the numbers
 below apply instead.
 
@@ -291,7 +300,11 @@ described, in `tools/run_uu.py`; OPEN_ITEMS.md.
 became "everything StuffIt Expander 4.0.2 expands". Neither occurs in this
 corpus, so every archive under test is generated and handed to a second
 implementation to grade — `unar` for ARC, `hexbin` for the UUTool shape
-(TESTING.md). Peak heap, measured per method: stored and RLE90 4,096 B,
+(TESTING.md). The methods: 1/2 stored, 3 RLE90, 4 squeeze (a Huffman tree of
+int16LE node pairs, then RLE90), 5/6/7 crunch (12-bit LZW whose table is
+addressed **by hash rather than by sequence**), 8 (12-bit compress LZW +
+RLE90) and 9 (13-bit compress LZW), the last two over the shared `unc_lzw.c`;
+CRC-16 per entry. 0x0a/0x0b are PKARC's and nothing reachable writes them. Peak heap, measured per method: stored and RLE90 4,096 B,
 squeeze 5,124 B, the compress methods 6,660–6,664 B, and crunch **32,768 B**,
 which is the whole spread — a 4096-entry table at 6 B an entry plus a 4 KB
 stack. uuencode is a flat 4,096 B, whatever the file holds, because it
@@ -815,6 +828,22 @@ The last two rows are the ones that moved on 2026-08-07: `a2basic` was a clean
 per-entry refusal of its only entry, and `Library_ISBN` delivered 33 of 34.
 Both now need a *sampled* inverse BWT rather than the 4-bytes-per-byte table,
 chosen automatically because the table's allocation fails first.
+
+**What those three entries actually hold**, measured 2026-08-03 by
+instrumenting `numbytes` where `sit_arsenic.c` sizes the transform vector.
+The figures matter because a false one — "each fills a 512 KB block" — closed
+this tier as needing a redesign for a day (BLOCKERS.md, *Withdrawn claims*):
+
+| fixture | largest block fill | capacity by doubling | peak |
+|---|---|---|---|
+| `derived-Library_ISBN_Barcoder.sit` | 323,384 B | 512 KB | 1,854,208 B |
+| `derived-a2basic.dmg.sit` | 197,515 B | 256 KB | 1,088,588 B |
+| `derived-Troi-ClipSave-Plug-in1.1.sit` | **124,637 B** | 128 KB | 666,004 B |
+
+The peak model `~35 KB parser + capacity + 4 × fill` reproduces all three to
+within a rounding step, so the fills are confirmed by two independent routes —
+and the 4× transform vector (487 KB, 772 KB and 1,263 KB respectively) is
+visibly the dominant term, which is what the sampled inverse BWT went after.
 
 **The CLI's `--budget` simulation is now cross-validated against the real Mac
 allocator.** `unclassic --budget 678392` on Linux predicted 560,535 B and
