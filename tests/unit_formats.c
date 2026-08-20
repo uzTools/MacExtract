@@ -1848,6 +1848,125 @@ static void test_nowcompress(void)
 }
 
 /* ------------------------------------------------------------------ */
+/* Alysis SuperDisk! — the container, and the fork order no fixture    */
+/* in the corpus can show (both of them have one fork per file)        */
+/* ------------------------------------------------------------------ */
+
+/* An 8-byte record prefix and a Pascal name padded to even.
+ * Source: CODE 2 of super-disk-utility.hqx @0x2f6 and @0x336. */
+static uint32_t sd_rec(uint8_t *p, uint32_t at, unsigned tag, const char *name)
+{
+    uint32_t nl = (uint32_t)strlen(name), i;
+    for (i = 0; i < 8; i++) p[at + i] = 0;
+    p[at] = (uint8_t)tag;
+    at += 8;
+    p[at++] = (uint8_t)nl;
+    memcpy(p + at, name, nl);
+    at += nl;
+    if (at & 1u) p[at++] = 0;
+    return at;
+}
+
+/* A stored block: the length word with bit 15 set counts itself and
+ * the two bytes of the next block's length. Source: @0x614. */
+static uint32_t sd_stored(uint8_t *p, uint32_t at, const char *bytes,
+                          uint32_t n)
+{
+    p[at] = (uint8_t)(0x80 | ((n + 2) >> 8));
+    p[at + 1] = (uint8_t)(n + 2);
+    memcpy(p + at + 2, bytes, n);
+    return at + 2 + n;
+}
+
+static void test_superdisk(void)
+{
+    uint8_t arc[1024];
+    uint32_t i, at, len;
+    MemIO m;
+    UncIO io;
+    UncAlloc al;
+    UncSink sk;
+    CapSink cap;
+
+    for (i = 0; i < sizeof arc; i++) arc[i] = 0;
+    /* The first eight bytes are read and thrown away (@0x110), so what
+     * is in them is deliberately not zero here. */
+    memcpy(arc, "\xe5\x80\xd0\xad\xf6\x7c\x42\x67", 8);
+    at = 8;
+
+    at = sd_rec(arc, at, 0x29, "folder");            /* open a folder */
+    at += 20;                                        /* DInfo + scroll */
+
+    at = sd_rec(arc, at, 0x28, "both");              /* a two-fork file */
+    put32(arc + at, 6);                              /* data fork  */
+    put32(arc + at + 4, 5);                          /* rsrc fork  */
+    memcpy(arc + at + 8, "TEXT", 4);
+    memcpy(arc + at + 12, "ttxt", 4);
+    at += 30;
+    at = sd_stored(arc, at, "DATAdd", 6);            /* data comes first */
+    at = sd_stored(arc, at, "RSRCX", 5);
+
+    at = sd_rec(arc, at, 0x28, "cannot");            /* an unknown method */
+    put32(arc + at, 4);
+    put32(arc + at + 4, 0);
+    memcpy(arc + at + 8, "TEXT", 4);
+    memcpy(arc + at + 12, "ttxt", 4);
+    at += 30;
+    arc[at] = 0; arc[at + 1] = 12;                   /* clen: 6 + 6 bytes */
+    arc[at + 2] = 0; arc[at + 3] = 4;                /* ulen                */
+    arc[at + 4] = 0; arc[at + 5] = 10;               /* method 10, SlowFastA */
+    at += 12;
+
+    at = sd_rec(arc, at, 0x2a, "");                  /* close the folder */
+    at -= 2;                                         /* 0x2a carries no name */
+
+    at = sd_rec(arc, at, 0x28, "after");             /* a sibling again */
+    put32(arc + at, 4);
+    put32(arc + at + 4, 0);
+    memcpy(arc + at + 8, "TEXT", 4);
+    memcpy(arc + at + 12, "ttxt", 4);
+    at += 30;
+    at = sd_stored(arc, at, "tail", 4);
+
+    for (i = 0; i < 8; i++) arc[at + i] = 0;
+    arc[at] = 0x27;                                  /* end of archive */
+    len = at + 8;
+
+    test_make_memio(&io, &m, arc, len);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_SUPERDISK);
+
+    test_make_alloc(&al);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_SUPERDISK, &io, &sk, &al, NULL, NULL)
+          == UNC_OK);
+    CHECK(cap.count == 4);
+    CHECK(cap.info[0].is_dir == 1);
+    CHECK(cap.info[1].name_len == 11 &&
+          memcmp(cap.info[1].name, "folder/both", 11) == 0);
+    CHECK(cap.status[1] == UNC_OK);
+    CHECK(cap.dlen[1] == 6 && memcmp(cap.data[1], "DATAdd", 6) == 0);
+    CHECK(cap.rlen[1] == 5 && memcmp(cap.rsrc[1], "RSRCX", 5) == 0);
+    /* A method no reference here could be read from is a per-entry
+     * error, and the entry after it still arrives: the block chain is
+     * walked past it by length. */
+    CHECK(cap.status[2] == UNC_ERR_UNSUPPORTED);
+    CHECK(cap.info[3].name_len == 5 &&
+          memcmp(cap.info[3].name, "after", 5) == 0);
+    CHECK(cap.status[3] == UNC_OK);
+    CHECK(cap.dlen[3] == 4 && memcmp(cap.data[3], "tail", 4) == 0);
+
+    /* Without the 0x27 record the file is not claimed at all: byte 8
+     * looking like a tag is far too weak on its own. */
+    arc[len - 8] = 0x28;
+    test_make_memio(&io, &m, arc, len);
+    CHECK(unc_sniff(&io) != UNC_FORMAT_SUPERDISK);
+    arc[len - 8] = 0x27;
+    arc[8] = 0x11;
+    test_make_memio(&io, &m, arc, len);
+    CHECK(unc_sniff(&io) != UNC_FORMAT_SUPERDISK);
+}
+
+/* ------------------------------------------------------------------ */
 /* M13: uuencode                                                      */
 /* ------------------------------------------------------------------ */
 
@@ -2149,6 +2268,7 @@ void run_format_tests(void)
     test_binhex_multi();
     test_diskdoubler();
     test_nowcompress();
+    test_superdisk();
     test_uu();
     test_arc();
 }

@@ -77,6 +77,7 @@ which fails CI if it drifts from the headings below it.
 - Now Compress, written by Now Compress
 - The archive that carries its own oracle
 - ArcMac's fork order, measured rather than guessed
+- SuperDisk!, read out of SuperDisk!
 
 ---
 
@@ -3660,3 +3661,101 @@ were first read — through the shipped decoder and its CRC, before any of this
 was implemented. It is also a free cross-check: `XARCMAC.EXE` decoded out of
 the 1988 archive is byte-identical to the copy in `macarc.zip` from a
 different site, so method 8 has a real external oracle now.
+
+## SuperDisk!, read out of SuperDisk!
+
+**2026-08-20.** Alysis SuperDisk! was the one format the corpus held that
+nothing here could name: two files, `Disk Expander .X` and `SD! Utilities.x`,
+that came out of their BinHex envelopes and then sniffed as *unknown*. It was
+filed as out of scope under rule #1 — magic numbers and layouts come from a
+reference implementation or a spec, never from memory — because there is no
+published layout, XADMaster does not implement it and `unar` and `macunpack`
+both stop at the envelope. **The premise was wrong, and it was wrong in the
+way this repository's smells predict**: both files are APPLs, both are
+self-extracting, and a self-extracting archive contains an implementation.
+The rule was never the obstacle. Finding the reference was.
+
+There turned out to be three of them, each better than the last:
+
+- **The self-extractor's `CODE 2`.** `SD! Utilities.x` carries 2,694 bytes of
+  68k that walk the records, chain the blocks and decode methods 1..9. Every
+  routine cited in `fmt_superdisk.c` — 0x2e4, 0x5f4, 0x6b4, 0x72e, 0x884 — is
+  an address in that resource.
+- **An Add-In Module in the data fork.** `Disk Expander .X` begins with 982
+  bytes headed `SuperDisk! Add-In Module`, named `SlowFastB`, which is
+  method 11's decoder: a self-contained LZSS with a parameter block at A0 and
+  a selector at A0+36. The archive ships the codec its own payload needs.
+- **The extension the second archive extracts.** Decoding method 11 yields a
+  66,953-byte resource fork which is Disk Expander 1.2 itself, and its `Cmpr`
+  resources are the whole codec set, one module per method, each with its
+  method number at offset 0x1c and its name at 0x3c: 1 " Faster", 2
+  " Tighter", 9 "30% Solution", 10 "SlowFastA", 11 "SlowFastB" (twice, a
+  small implementation and a fast one), 13 "SlowFastC", 20 "Tennessee".
+  **Implementing one method printed the method table for all of them.**
+
+### What only running it could settle
+
+The disassembly gives the layout; it does not give the fork order, because
+both archives happen to hold one fork per file — the same gap ArcMac had.
+Here the answer was in the code rather than on the emulator: `CODE 2` @0x3d0
+opens the data fork with `_HOpen` and writes it, then @0x3f0 opens the
+resource fork with `_HOpenRF` and writes that. **Data fork first.** The unit
+test builds a two-fork entry precisely because no fixture can.
+
+What the emulator settled is the whole of it at once. `tools/vmac/superdisk.py
+--adjudicate` puts each self-extracting archive on a System 7 volume, runs it,
+and reads back every fork: **5 forks across 2 archives, all identical to what
+this decoder produces**. That is the only oracle the format has, and it is the
+format's own.
+
+### Three things the bytes say that no reading would have
+
+- **The predictor's context is a lossy hash, not the last two bytes.** The
+  reference shifts the 16-bit context left by 6 and then ORs the new byte into
+  the low EIGHT bits, so bits 6 and 7 of each byte collide with bits 0 and 1
+  of the one before it. Transcribing it as a clean concatenation compiles,
+  runs, and decodes garbage.
+- **The decoder over-produces by two bytes and the caller drops them.** A
+  block's `ulen` counts only the bytes after the two raw ones that seed the
+  output, so the loop yields `ulen + 2`; the writer (@0x65e) writes `ulen`.
+  The two discarded bytes consume two literals that are not there — the
+  reference reads off the end of its own literal buffer, every block, on
+  purpose or by luck. Stopping at `ulen` gives identical output and no
+  over-read. This was found by arithmetic, not by inspection: the literal
+  count matched the flag bitmap exactly, and only one reading of the loop
+  made both true.
+- **A stored block is a length with bit 15 set — except 0x8002.** Bit 15
+  marks "stored", so the length can say at most 32,767; a full 32 KB stored
+  block cannot be expressed. @0x614 special-cases the one value that collides
+  and reads it as 32,768. An implementation that masks bit 15 unconditionally
+  is wrong for exactly one block size.
+
+### Two things the SUITE got wrong, caught before it shipped
+
+- **`--budget 4M` is four bytes.** The CLI parses the value with
+  `strtoul(..., 0)`, which stops at the `M`, so all 24 corrupted variants ran
+  with a four-byte allocation budget: every one of them was refused its first
+  buffer and none of them ever reached the parser. They passed. Every other
+  suite in the tree passes an integer (`fuzz.py` writes `str(4 << 20)`), which
+  is what made the odd one out findable. The variants now run for real, and
+  there are 116 of them.
+- **An allocation failure was ending the archive.** The record loop treated
+  `UNC_ERR_MEM` like a sink or I/O error and broke out, which contradicts the
+  engine's own rule — allocation failure is per-entry, never per-archive — and
+  `fmt_now.c`, which has always continued. The symptom is invisible unless you
+  look for it: the entries after the oversized one are simply never mentioned.
+  `run_superdisk.py` now runs each archive under a budget too small for any of
+  its forks and requires every entry to still be NAMED; that check fails
+  against the binary built before the fix.
+
+### What is NOT implemented, and why that is the same bargain as LZH
+
+Methods 10, 13 and 20 have modules sitting in `reference`-quality form inside
+the corpus — they could be transcribed. **They are declined per entry
+anyway**, because no fixture anywhere uses them and no encoder is reachable:
+SuperDisk! itself compressed files, and only its expander survives here. Code
+no oracle can grade is what OPEN_ITEMS.md already refuses for LZH and for
+DiskDoubler's methods 1-5 and 7. `unc_sniff` still names the file and the
+entry fails cleanly, and the block chain is walked past by length so the rest
+of the archive still extracts — which is why the unit test puts an
+undecodable entry BETWEEN two decodable ones.

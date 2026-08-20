@@ -29,6 +29,7 @@ whole corpus for that format (engine allocations only, via
 | Now Compress | extract | stored, LZSS, Huffman, Huffman+LZSS, "new" LZSS✧ | 2 real fixtures + 13 generated archives (all five shapes, adjudicated by `unar`); `synth-now-mixed.now` also has an `unar` manifest and is in the differential suite | 128 KB✧ | full |
 | ARC / ArcMac (.arc) | extract | 1/2 store, 3 RLE90, 4 squeeze+RLE90, 5/6/7 crunch, 8 12-bit LZW+RLE90, 9 13-bit LZW, 0x7f compress; ArcMac's two-fork payload since 2026-08-16★★★; 0x0a/0x0b (PKARC) declined per entry★ | 10 generated archives (methods 1-9, adjudicated by `unar`) + 3 written by Debian's `arc` 5.21q; `synth-arc-mixed.arc` also has an `unar` manifest and is in the differential suite | 4–32 KB★ | full |
 | uuencode (.uu, incl. UUTool) | extract | — (plain uu, UUTool's two-fork "MU" shape, and documents posted in several parts★★) | 7 generated cases, the two-fork ones adjudicated by macutils' `hexbin`; `synth-uu-mac.uu` is in the differential suite | 4 KB | full |
+| Alysis SuperDisk! (.X, .x) | extract | 1-4 and 5-8 (a finite-context predictor over a 13- or 16-bit context, with the flag bitmap and/or the literals Huffman-coded), 9 Huffman, 11 SlowFastB (LZSS); 10, 13 and 20 declined per entry✧✧ | 2 fixtures, 5 forks, adjudicated by the archives' OWN self-extractors on an emulated Mac | 72–115 KB✧✧ | full |
 | LZH/LHA (-lh?-, -lz?-) | detect only | — | 1 real `-lh5-` archive, named + refused; unit test over every method byte | — | — |
 | DiskCopy 4.2 (.image) | detect only | — | synthetic 800K GCR + real 800K image; 0 false positives in 807 fixtures (re-measured 2026-08-15) | — | — |
 
@@ -112,6 +113,52 @@ incompressible file rather than storing it, so a stored block appears only
 inside a file that compresses somewhere else; and a stored block may carry
 flag bit 0x100, which no decoder here or in XADMaster examines
 (DECISIONS.md 2026-08-16).
+
+✧✧ **Alysis SuperDisk!, in scope since 2026-08-20**, where every status file
+here used to call it the one format the corpus holds that nothing can name.
+An archive is eight bytes nobody reads, an optional chain of 68k decompressor
+modules, then a record stream: `0x29` opens a folder, `0x2a` closes one,
+`0x28` is a file and `0x27` ends the archive. A file's forks follow its own
+record inline — **data fork first**, then resource — each a chain of blocks of
+at most 32 KB of output, each block's length counting itself, with bit 15
+marking a stored block.
+
+| method | name | shape |
+|---|---|---|
+| 1 | " Faster" | context predictor, bitmap and literals stored |
+| 2 | " Tighter" | bitmap Huffman-coded, literals stored |
+| 3 | — | bitmap stored, literals Huffman-coded |
+| 4 | — | both Huffman-coded |
+| 5-8 | — | 1-4 again, over a 16-bit context instead of a 13-bit one |
+| 9 | "30% Solution" | Huffman alone |
+| 11 | "SlowFastB" | LZSS, lengths 2-282, offsets 1-49120 |
+| 10, 13, 20 | "SlowFastA", "SlowFastC", "Tennessee" | **declined per entry** |
+
+The corpus's two archives use 7 and 11. The method table is not guesswork:
+decoding method 11 yields Disk Expander 1.2's own resource fork, whose `Cmpr`
+resources are one module per method, each stating its number and its name
+(DECISIONS.md, "SuperDisk!, read out of SuperDisk!"). 10, 13 and 20 are
+declined because no fixture uses them and no encoder is reachable, so an
+implementation could not be graded — the bargain LZH and DiskDoubler's
+methods 1-5 and 7 already make.
+
+**There is no oracle but the archives themselves.** `unar` and `macunpack`
+both stop at the BinHex envelope, so `fixtures/manifests/` describes the
+payload and says nothing about its contents. Both archives are
+self-extracting applications, so `tools/vmac/superdisk.py --adjudicate` runs
+each one under System 7 on an emulated Mac Plus and reads back what it wrote:
+**5 forks across the 2 archives, every one identical** (2026-08-20; resource
+forks with bytes 16..127 masked, the `vmac_check.py` convention).
+`tools/run_superdisk.py` replays that verdict offline by content and adds 116
+corrupted variants, which nothing else covers — `t` does not unwrap envelopes,
+so the corpus-driven robustness and fuzz suites only ever reach the BinHex
+layer.
+
+Peak heap **74,220 B** for `SD! Utilities.x` and **117,294 B** for
+`Disk Expander .X` (`unclassic t --stats`); both extract fully under a 400 KB
+budget. Neither peak is a ceiling anybody declared: the 64 KB step is the wide
+context table, allocated only for methods 5-8, and the 96 KB one is
+SlowFastB's window, allocated only when a method-11 block turns up.
 
 †† **Multipart, in both directions, since 2026-08-15.** A `.hqx` file may hold
 more than one document, and a single document may have been posted in several
@@ -811,6 +858,27 @@ contain: `export-hc.hqx`, a mail separator, and `mac-rot13.hqx` concatenated.
 concatenating those two with any text between them, which is what
 `tools/run_multihqx.py` does on Linux.
 
+### SuperDisk! on the Mac (2026-08-20)
+
+Not in `sample.txt`, because neither archive is a fixture: both are PAYLOADS
+inside envelopes, and `run.py` grades against an oracle manifest, which for
+this format describes the envelope. So they are read off the grid the way the
+ArcMac specimens are (`tools/vmac/README.md`, "Grading SuperDisk! with
+SuperDisk!"). **Identical numbers at 4 MB and at 1 MB**, and identical to the
+Linux aggregate for the same payload, `ret` 0 with 0 entry errors on all four
+runs:
+
+| Payload | Files | Peak heap on the Mac | Data | Rsrc |
+|---|---|---|---|---|
+| `SD! Utilities.x` (method 7) | 3 | 74,252 B | 9,916 B | 14,389 B |
+| `Disk Expander .X` (method 11) | 2 | 117,326 B | 1,748 B | 66,953 B |
+
+The 117,326 B is the 96 KB SlowFastB window plus one block, and the Mac
+granted it at the floor target without a refusal. Both exceed the Linux figures by exactly 32 B, which is
+the shell's 16 B allocation header on each of the TWO blocks live at the peak
+— the block buffer and either the window or the context table. The
+DiskDoubler rows above differ by 16 B for the same reason: one block.
+
 ## Floor target verification (Mini vMac — System 6.0.8, **1 MB** Mac Plus, 68000)
 
 The same 63-fixture sample was replayed on a Mini vMac built for **1 MB of
@@ -1038,22 +1106,23 @@ which moved the non-archive row and nothing else):
 |---|---|---|---|
 | StuffIt classic, incl. `.sea` | 454 | ✅ | ✅ |
 | Compact Pro, incl. `.sea` | 216 | ✅ | ✅ |
-| envelope over a non-archive | 36 | ✅ | ✅ ✧✧ |
+| envelope over a non-archive | 34 | ✅ | ✅ ✧✧✧ |
 | StuffIt 5 / Arsenic | 62 | ❌ postdates it | ✅ |
 | zip, gzip, `.Z`, tar | 16 | ⚠️ paid add-on, System 7 only | ✅ |
 | PackIt | 5 | ❌ not in its list | ✅ |
 | DiskDoubler, Now Compress | 14 | ❌ | ✅ since 2026-08-15 |
+| Alysis SuperDisk! | 2 | ❌ not in its list | ✅ since 2026-08-20 |
 | LZH, StuffIt X | 2 | ❌ | detect-only, named |
-| **total** | **805** | **708 alone, 724 with the add-on** | **803 extract, 2 named** |
+| **total** | **805** | **704 alone, 720 with the add-on** | **803 extract, 2 named** |
 
-✧✧ The 36 break down as 31 envelopes whose payload is a resource-only file,
-and 5 whose payload is a document: two HyperCard `STAK`s, one damaged Compact
-Pro archive whose index offset points past its own end (`unar` declines it
-too), and **two Alysis SuperDisk! files** (`Disk Expander .X`,
-`SD! Utilities.x` — the header carries the string `SuperDisk! Add-In Module`).
-SuperDisk! is the one format the corpus actually holds that nothing here
-names: a user gets *unknown*, and `unar` reads no further than the envelope
-either. OPEN_ITEMS.md, *Out of scope for v1*.
+✧✧✧ The 34 break down as 31 envelopes whose payload is a resource-only file,
+and 3 whose payload is a document: two HyperCard `STAK`s and one damaged
+Compact Pro archive whose index offset points past its own end (`unar`
+declines it too). The row held 36 until 2026-08-20, when the two Alysis
+SuperDisk! payloads stopped being payloads and became the archives they always
+were, and moved to their own row above. The Expander column's total was
+corrected at the same time: it had read 708 since the row went from 38 to 36
+and nobody re-added the column.
 
 The 62 StuffIt 5 fixtures are the largest single difference, and it is a date
 rather than a capability: 4.0.2 shipped two years before the format. Handed

@@ -96,6 +96,27 @@ line is what makes the next one worth re-testing.
 | The Macintosh application unwraps nested files (`.sit.hqx`) automatically | running it: one layer came off and it stopped | 2026-08-14 |
 | No second implementation of Now Compress exists, so four forks cannot be graded | the archive is self-extracting: its own 1995 extractor agrees on every fork | 2026-08-16 |
 | Nothing documents which fork an ArcMac payload starts with, and no oracle reads ArcMac | ArcMac 1.3c archiving a two-fork file under Mini vMac: data fork first | 2026-08-16 |
+| Alysis SuperDisk! has no reference anywhere, so rule #1 forbids reading it | both corpus archives are self-extracting: the layout, the method table and every codec are inside them | 2026-08-20 |
+
+**Alysis SuperDisk! "has no reference".** Filed under OPEN_ITEMS.md's
+*"rule #1 forbids inventing a format"* for as long as that section has
+existed, on the grounds that XADMaster does not implement it, `unar` and
+`macunpack` stop at the envelope, and no layout is published. Every one of
+those statements is true and the conclusion did not follow: both corpus
+archives are self-extracting APPLs, so each ships an implementation — a 2,694
+byte `CODE 2` that walks the container, a 982-byte `SuperDisk! Add-In Module`
+in the data fork that decodes method 11, and, once that method decodes, the
+Disk Expander extension whose `Cmpr` resources are the entire codec set with
+their method numbers and names.
+
+**Cost: the only format in the corpus that a user got *unknown* for, for the
+whole life of the project** — two archives, five forks, four documents and an
+application nobody could get at. It is the fourth withdrawal of this exact
+shape, after StuffIt method 6 ("there is no oracle" — the second oracle was in
+`reference/`), Now Compress's 1995 archive and ArcMac's fork order. The smell
+is the same every time: **a claim that no implementation exists, made without
+opening the file that needs one.** A self-extracting archive is never missing
+its decoder.
 
 **Retro68's `HOpen` glue.** Claimed to return `noErr` without writing back the
 refNum, and recorded as M10's root cause. Ten cases — real vRefNum, non-zero

@@ -61,8 +61,9 @@ notes.
 
 **Extracts:** StuffIt (`.sit`, classic and 5.x), Compact Pro (`.cpt`),
 BinHex (`.hqx`), MacBinary, PackIt (`.pit`), DiskDoubler (`.dd`, `DDAR`,
-`DDA2`), Now Compress, ARC (`.arc`), uuencoded files (`.uu`),
-AppleSingle/AppleDouble, zip, gzip, tar, Unix compress (`.Z`).
+`DDA2`), Now Compress, Alysis SuperDisk! (`.X`), ARC (`.arc`), uuencoded
+files (`.uu`), AppleSingle/AppleDouble, zip, gzip, tar, Unix compress
+(`.Z`).
 
 Nested files like `.sit.hqx` or `.tar.Z` are unwrapped automatically, by
 looking inside them rather than trusting the name. A `.hqx` that holds
@@ -120,7 +121,7 @@ each one opens:
 | Several files posted in one BinHex message | yes | yes |
 | `.arc` and uuencoded (`.uu`) files | with the add-on | yes |
 | AppleLink `.pkg`, StuffIt SpaceSaver | with the add-on | no — nobody has published how either one is laid out, and this project does not guess |
-| DiskDoubler and Now Compress archives | no | yes |
+| DiskDoubler, Now Compress and SuperDisk! archives | no | yes |
 | What you install | the application, a StuffIt Engine extension, and the add-on for anything above | one application |
 | Source | free, closed | free, open (LGPL) |
 

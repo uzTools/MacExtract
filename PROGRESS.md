@@ -21,6 +21,8 @@ missing in OPEN_ITEMS.md.
 | M12 DiskDoubler + Now Compress | DiskDoubler: three containers, methods 0/6/8/9/10, 6 fixtures. Now Compress: 2 real fixtures, 13 generated archives, and **specimens from the original encoder** under emulation (2026-08-16) | FORMATS.md ✦ ✧, DECISIONS.md, `tools/vmac/nowcompress.py` |
 | M13 ARC + uuencode | ARC methods 1–9 and ArcMac, both forks — the payload's fork order measured by running ArcMac itself under emulation (2026-08-16); uuencode plain and UUTool's two-fork shape, multipart included. Neither format occurs in the corpus, so both suites generate and hand off to a second implementation | FORMATS.md ★ ★★★, DECISIONS.md, `tools/vmac/arcmac.py` |
 
+| M14 Alysis SuperDisk! | The format nothing here could name, read out of the corpus itself: both archives are self-extracting, so each ships the decoder it should be graded by. Container, block chain and methods 1-9 from the self-extractor's `CODE 2`; method 11 from the Add-In Module in the second archive's own data fork; the method table from the Disk Expander extension that method 11 unpacks. 5 forks across 2 archives adjudicated by running those self-extractors under emulation (2026-08-20); methods 10, 13 and 20 declined per entry | FORMATS.md ✧✧, DECISIONS.md, BLOCKERS.md, `tools/vmac/superdisk.py` |
+
 **The suite is 809 fixtures**, byte-exact against `unar` and, where `unar`
 fails, `macunpack`; 8,090 robustness variants clean. The Mac shell replays a
 63-fixture sample byte-exact at 4 MB and at the 1 MB floor. Current figures

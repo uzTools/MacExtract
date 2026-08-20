@@ -71,6 +71,9 @@ typedef enum UncFormat {
     UNC_FORMAT_UU,            /* uuencoded file, incl. UUTool's shape  */
     UNC_FORMAT_ARC,           /* .arc — ARC / ArcMac                   */
 
+    /* Brought in scope 2026-08-20; appended for the same ABI reason. */
+    UNC_FORMAT_SUPERDISK,     /* Alysis SuperDisk! auto-expanding file  */
+
     UNC_FORMAT__COUNT
 } UncFormat;
 

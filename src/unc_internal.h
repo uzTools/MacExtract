@@ -456,6 +456,7 @@ int unc_tar_probe(const uint8_t *head, int32_t len);
 int unc_tar_extract(UncCtx *c);
 int unc_dd_extract(UncCtx *c);
 int unc_now_extract(UncCtx *c);
+int unc_superdisk_extract(UncCtx *c);
 
 /* uuencode, including UUTool's two-fork shape (fmt_uu.c). The probe
  * needs no io: a uu file identifies itself in its first lines. */
@@ -471,6 +472,7 @@ int unc_arc_extract(UncCtx *c);
 int unc_sitx_probe(const uint8_t *head, int32_t len);
 int unc_diskcopy_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_nowcompress_probe(const uint8_t *head, int32_t len);
+int unc_superdisk_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_diskdoubler_probe(const uint8_t *head, int32_t len);
 int unc_lzh_probe(const uint8_t *head, int32_t len);
 

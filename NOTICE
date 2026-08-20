@@ -25,6 +25,19 @@ This project's decoders are transcriptions/ports of algorithms from:
     differential test suite (TESTING.md) — test-time only, not linked
     into anything shipped.
 
+  * Alysis SuperDisk! / Disk Expander (Alysis Software Corporation,
+    1991-1992). No public specification of this format exists and no
+    other implementation of it does either, so `src/fmt_superdisk.c`
+    was written from the format's own 68k decoders, read out of the two
+    self-extracting archives in the test corpus: the container walk and
+    methods 1-9 from the self-extractor's `CODE 2`, method 11 from the
+    "SuperDisk! Add-In Module" one of them carries, and the method
+    table from the `Cmpr` resources of the Disk Expander extension that
+    method 11 unpacks. No code was copied; every routine cited in that
+    file is an address in a binary this project does not redistribute.
+    The archives themselves are fetched by URL, never committed
+    (fixtures/SOURCES.md).
+
   * "Stuffit Method 15 compression format" by Matthew T. Russotto —
     the only public specification of the StuffIt 5 "Arsenic"
     (BWT + MTF + arithmetic coding) method.

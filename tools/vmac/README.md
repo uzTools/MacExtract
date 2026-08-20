@@ -316,6 +316,59 @@ Four things to know before re-running it:
   showed `Test.ARC` on screen while the host's copy of the image did not have
   it.
 
+## Grading SuperDisk! with SuperDisk! — `superdisk.py`
+
+Nothing outside the two corpus archives reads the format, so the only oracle
+it has is the archives themselves: both are self-extracting applications.
+`superdisk.py` is the same bargain `nowcompress.py --adjudicate` makes.
+
+    tools/vmac/superdisk.py --list                    what the corpus holds
+    tools/vmac/superdisk.py --adjudicate FIXTURE.hqx  run it, compare forks
+
+The archive is unwrapped from its envelope with our own CLI, rebuilt as
+MacBinary, put alone on a 25 MB volume and launched under System 7; its "Save
+the expanded file as:" box is accepted with Return, and every fork it wrote is
+read back off the image with `hfsutils` and compared with `unclassic x`.
+Resource forks are compared with bytes 16..127 masked, the `vmac_check.py`
+convention. The verdict is 5 forks across the 2 archives, all identical
+(2026-08-20; FORMATS.md ✧✧). Screenshots land in
+`$UNC_VMAC_HOME/specimens/superdisk/`. Nothing here runs in `ci.sh` —
+`tools/run_superdisk.py` replays the verdict offline.
+
+Two things to know before re-running it:
+
+- **The application is opened with Select All, not with a coordinate.** The
+  volume holds exactly one item, so ⌘A then ⌘O needs no measurement — and a
+  measurement is what broke here: a double-click on a point measured from the
+  first archive's window merely SELECTED the second one, whose icon the Finder
+  had drawn a few pixels higher. The run then "succeeded" having launched
+  nothing, which is what a screenshot of the right window at the wrong moment
+  always looks like.
+- **The run ends with Put Away, and must**, for the reason `arcmac.py`
+  documents above: Mini vMac flushes the guest's writes when the volume is
+  ejected, so a run killed with it still mounted reads back an empty disk.
+
+### Replaying a SuperDisk! archive through OUR Mac application
+
+`run.py` grades against an oracle manifest and this format has none, so the
+two archives are read off the grid directly, exactly as the ArcMac specimens
+are. They are payloads rather than fixtures, so unwrap them first:
+
+    unclassic x -nr -o /tmp/sd fixtures/alysis-disk-expander-12.hqx
+    tools/vmac/run.py --pngdir /tmp/p "/tmp/sd/Disk Expander .X"
+    tools/decode_grid.py "/tmp/p/Disk Expander .X.png"
+
+`run.py` will report FAIL — "no oracle manifest" — and that is the harness
+saying it cannot grade, not a result. The grid is the result; compare it with
+the same engine's Linux aggregate:
+
+    python3 -c "import sys; sys.path.insert(0,'tools'); \
+      from vmac_check import aggregate_dir; print(aggregate_dir('DIR'))"
+
+over a `unclassic x -nr --forks hidden` of the same payload. Both archives
+matched at 4 MB and at 1 MB on 2026-08-20; the numbers are in FORMATS.md,
+"SuperDisk! on the Mac".
+
 ## The downloads, and why none of them are committed
 
 `setup.sh` fetches by URL and verifies by SHA-256, exactly as `fixtures/` does,

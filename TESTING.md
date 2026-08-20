@@ -565,6 +565,44 @@ under it. `synth-now-mixed.now` is a fixture with a manifest, so adding the
 line is all it would take; the sample's counts in FORMATS.md would then need
 re-measuring, which is why it is not there already.
 
+## Alysis SuperDisk! (`tools/run_superdisk.py`, in `ci.sh`)
+
+Added 2026-08-20. The corpus holds two SuperDisk! archives and no oracle
+outside them: `unar` and `macunpack` both stop at the BinHex envelope, so
+their manifests in `fixtures/manifests/` describe the payload file and say
+nothing about its contents. Both archives are self-extracting, so the grading
+was done by the archives themselves — `tools/vmac/superdisk.py --adjudicate`,
+under System 7 on an emulated Mac Plus, 5 forks, all identical. This suite
+replays that verdict offline: per-fork size and SHA-256, the sniff, and the
+file count from `l`.
+
+**It runs on the PAYLOAD, not on the fixture.** `l` never recurses through an
+envelope — only `x` does — so the suite unwraps with `x -nr` first. That is
+also why the corpus-driven suites never reach this parser at all: to
+`run_robustness.sh` and `fuzz.py` these two fixtures are BinHex files, and all
+8,090 of their variants exercise the BinHex layer.
+
+**116 corrupted variants** — ten truncations and forty-eight bit-flips per
+archive — therefore live here. They are FORCED with `-f "SuperDisk!"`: a
+truncated archive loses the trailing `0x27` record the probe insists on, so it
+sniffs as *unknown* and a run that trusted the sniff would exit clean having
+parsed nothing.
+
+**A budget run per archive checks the per-entry contract.** Every fork in
+`alysis-disk-expander-12` is method 11, whose 96 KB window is the whole
+allocation, so `--budget 50000` refuses all of them — and what is asserted is
+that the run still NAMES every entry. Allocation failure is per-entry, never
+per-archive (CLAUDE.md, 68000 discipline), and the only symptom of getting
+that wrong is entries that are silently never reached.
+
+**What this cannot see.** The hashes were produced by this reader before they
+were confirmed on the emulator, so they are a regression fence and not an
+oracle; re-confirming them means re-running `--adjudicate`. It also grades
+two methods, 7 and 11, because that is what the two archives use — everything
+else is compiled and never run (OPEN_ITEMS.md, *Untested code*). The unit
+test carries what no fixture can: a two-fork file, so that fork order is asserted, and an
+undecodable method BETWEEN two decodable entries.
+
 ## Segmented archives (`tools/run_segments.py`, in `ci.sh`)
 
 No segmented archive exists in the corpus — first measured 2026-08-08 and

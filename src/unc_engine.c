@@ -43,6 +43,7 @@ static const UncFormatDesc unc_formats[] = {
     { UNC_FORMAT_CPTSEG,      "Compact Pro segment", 1 },
     { UNC_FORMAT_UU,          "uuencode",        1 },
     { UNC_FORMAT_ARC,         "ARC",             1 },
+    { UNC_FORMAT_SUPERDISK,   "SuperDisk!",      1 },
 };
 
 const char *unc_format_name(UncFormat f)
@@ -125,6 +126,10 @@ UncFormat unc_sniff(UncIO *io)
     if (unc_lzh_probe(head, len))       return UNC_FORMAT_LZH;
     if (unc_nowcompress_probe(head, len)) return UNC_FORMAT_NOWCOMPRESS;
     if (unc_diskdoubler_probe(head, len)) return UNC_FORMAT_DISKDOUBLER;
+    /* SuperDisk!'s own mark is a module signature or a record tag at
+     * byte 8, either way confirmed by the 0x27 record that must end
+     * the file — weak on its own, so it sits after the magics. */
+    if (unc_superdisk_probe(head, len, io)) return UNC_FORMAT_SUPERDISK;
 
     {
         UncFormat asd = UNC_FORMAT_UNKNOWN;
@@ -201,6 +206,7 @@ int unc_extract_as(UncFormat f, UncIO *io, UncSink *sink, UncAlloc *al,
     case UNC_FORMAT_NOWCOMPRESS: return unc_now_extract(&c);
     case UNC_FORMAT_UU:          return unc_uu_extract(&c);
     case UNC_FORMAT_ARC:         return unc_arc_extract(&c);
+    case UNC_FORMAT_SUPERDISK:   return unc_superdisk_extract(&c);
     case UNC_FORMAT_SITSEG:      return unc_sitseg_extract(&c);
     case UNC_FORMAT_ZIPSEG:      return unc_zipseg_extract(&c);
     case UNC_FORMAT_UNKNOWN:     return UNC_ERR_FORMAT;

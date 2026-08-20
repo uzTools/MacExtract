@@ -44,6 +44,13 @@ python3 tools/run_uu.py --unclassic build/san/unclassic || fail "uuencode tests"
 # fixture too, so the diff suite grades those paths without `unar`.
 python3 tools/run_now.py --unclassic build/san/unclassic \
     || fail "Now Compress tests"
+# SuperDisk! is the one format in the corpus that neither `unar` nor
+# `macunpack` can read at all, so the oracle manifests describe only the
+# envelope. Its two archives were graded fork by fork by their OWN
+# self-extractors on an emulated Mac (tools/vmac/superdisk.py
+# --adjudicate); this replays that verdict by content.
+python3 tools/run_superdisk.py --unclassic build/san/unclassic \
+    || fail "SuperDisk! tests"
 
 echo "=== variant 1b: sampled inverse BWT (forced, + budget) ==="
 # The Arsenic decoder falls back to a sampled occurrence index when the

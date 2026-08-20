@@ -29,7 +29,11 @@ DECISIONS.md, the withdrawn claim to BLOCKERS.md, the numbers to FORMATS.md.
 Three sections have emptied and been removed that way — multi-segment
 (2026-08-14), multi-document BinHex (2026-08-15) and Now Compress
 (2026-08-16), whose last item was closed by the decoder inside the archive
-itself. A section that empties is the point of the file.
+itself. A section that empties is the point of the file. So is a Part 1 entry
+that turns out to be a research failure rather than a boundary: Alysis
+SuperDisk! sat under *"rule #1 forbids inventing a format"* until 2026-08-20,
+when the reference turned up inside the corpus's own fixtures (BLOCKERS.md,
+*Withdrawn claims*).
 
 ---
 
@@ -71,19 +75,20 @@ layouts come from a reference implementation or a spec, never from memory.
   number, so a user gets *unknown* rather than a name. **What would change
   it:** a specimen plus the original application, derived under Mini vMac the
   way Compact Pro's segment layout and Now Compress's block shapes were — or
-  one published description.
-- **Alysis SuperDisk!** — the one format this corpus holds that nothing here
-  names. Two files, both inside envelopes, so a user gets the payload and then
-  *unknown*: `Disk Expander .X` and `SD! Utilities.x`, out of
-  `alysis-disk-expander-12.hqx` and `super-disk-utility.hqx` (FORMATS.md ✧✧). `unar`
-  reads no further than the envelope either, which is why it never appeared on
-  the Expander comparison's list. **What would change it:** a reference. There
-  is none in `reference/` and XADMaster does not implement the format.
-- **DiskDoubler methods 1–5 and 7, and ARC 0x0a/0x0b.** No corpus fixture uses
-  any of them and nothing reachable writes the ARC pair (they are PKARC's), so
-  an implementation could not be graded — code no oracle can check is the same
-  bargain LZH refuses. Method 1 is the cheapest if a fixture ever turns up: it
-  is Unix compress and `unc_lzw` already exists.
+  one published description. **A SELF-EXTRACTING specimen would settle it on
+  its own**, which is what the SuperDisk! withdrawal cost this project four
+  documents to learn (BLOCKERS.md); neither has one here, or a specimen of
+  any kind.
+- **DiskDoubler methods 1–5 and 7, ARC 0x0a/0x0b, and SuperDisk! methods 10,
+  13 and 20.** No corpus fixture uses any of them and nothing reachable writes
+  them, so an implementation could not be graded — code no oracle can check is
+  the same bargain LZH refuses. DiskDoubler method 1 is the cheapest if a
+  fixture ever turns up: it is Unix compress and `unc_lzw` already exists. The
+  three SuperDisk! methods are cheaper still in one sense and no cheaper in
+  the other: their 68k modules sit inside the corpus, named and complete
+  (FORMATS.md ✧✧), so transcribing them needs no research at all — and there
+  would still be nothing to check the result against, because SuperDisk!'s
+  compressor does not survive here, only its expander.
 
 ## Limits of the formats themselves
 
@@ -104,7 +109,7 @@ layouts come from a reference implementation or a spec, never from memory.
 
 ---
 
-## 1. DiskDoubler: what M12 left
+## 1. DiskDoubler and SuperDisk!: what M12 and M14 left
 
 - **Methods 1, 2, 3, 4, 5 and 7 are declined per entry** — a scope
   decision, Part 1. The reference itself marks 3 and 4 unimplemented and
@@ -119,8 +124,9 @@ layouts come from a reference implementation or a spec, never from memory.
   archive. The path is covered by a unit test, including the name
   coming from the host rather than the archive, which is what the
   reference does with a `.dd` suffix.
-- **Two of the four Mac tiers have not re-run since M12 or M13.** The
-  System 6 tiers have (63/63 at 4 MB and at 1 MB, 2026-08-15). **System 7.0.1 and
+- **Two of the four Mac tiers have not re-run since M12, M13 or M14.** The
+  System 6 tiers have (63/63 at 4 MB and at 1 MB, 2026-08-15; plus both
+  SuperDisk! payloads on both, 2026-08-20). **System 7.0.1 and
   Mac OS 9.2 have not**: System 7 stands at 55/55 on the pre-M12 sample
   (2026-08-08), so the seven fixtures M12 added and the two M13 added have
   never run there, and
@@ -129,6 +135,13 @@ layouts come from a reference implementation or a spec, never from memory.
   **What would close it:** `run.py --system Sys7.img --list
   tools/vmac/sample.txt` (Mini vMac, cheap) and an OS 9 sweep, which
   costs a full PowerPC boot per fixture.
+- **The SuperDisk! archives are in no `--list` file, on any tier**, because
+  they are payloads inside envelopes and `run.py` grades against a manifest
+  the format has none of. They were replayed by hand on both System 6 tiers
+  (FORMATS.md, "SuperDisk! on the Mac"), and a future sweep will silently
+  leave them out. **What would close it:** an oracle-free grading mode in
+  `run.py` — a `--expect` taking the Linux aggregate — which is also what the
+  ArcMac specimens have wanted since M13.
 
 ---
 
@@ -175,6 +188,16 @@ layouts come from a reference implementation or a spec, never from memory.
   engine and sink semantics of a cancel are covered separately: unit tests,
   both write paths through the qemu-m68k mock in `ci.sh`, and `UNC_AT_CANCEL`
   on-Mac at 4 MB and 1 MB.
+- **SuperDisk! methods 1-6, 8 and 9 have never decoded anything.** Both corpus
+  archives use one method each — 7 and 11, counted block by block — so the
+  13-bit context (1-4), two of the four wide variants and Huffman-alone (9)
+  are transcribed and compiled and nothing more. The Huffman decoder itself
+  and the wide context ARE exercised, since method 7 is both. The unit test
+  cannot help: it builds stored blocks, because writing coded ones would mean
+  writing an encoder and grading this decoder against it. **What would change
+  it:** an archive that uses one of them, or the `Cmpr` modules run under
+  emulation as a second implementation — the same route the adjudication
+  already takes, applied per method instead of per archive.
 - **Files larger than the HFS 2 GB cap**, and the engine's 32-bit-only
   arithmetic against them.
 - **MacRoman filename display and 8-bit characters above System 6.** The bytes
