@@ -78,6 +78,7 @@ which fails CI if it drifts from the headings below it.
 - The archive that carries its own oracle
 - ArcMac's fork order, measured rather than guessed
 - SuperDisk!, read out of SuperDisk!
+- 2026-08-20 — DiskDoubler methods 1 and 7, and what the application itself could write
 
 ---
 
@@ -3759,3 +3760,72 @@ DiskDoubler's methods 1-5 and 7. `unc_sniff` still names the file and the
 entry fails cleanly, and the block chain is walked past by length so the rest
 of the archive still extracts — which is why the unit test puts an
 undecodable entry BETWEEN two decodable ones.
+
+## 2026-08-20 — DiskDoubler methods 1 and 7, and what the application itself could write
+
+The engine declined six of DiskDoubler's eleven methods because "no corpus
+fixture uses one and nothing reachable writes one". Only the first half had
+ever been checked. **The way to find out what an application can write is to
+run it**, which is what `nowcompress.py` and `arcmac.py` already do for two
+other formats; `tools/vmac/diskdoubler.py` does it here.
+
+**DiskDoubler 3.7's Settings dialog offers exactly two software methods**, and
+they are method 1 and method 8:
+
+| menu item | writes | note |
+|---|---|---|
+| Method A (fastest) | **1**, Unix compress | not implemented until now |
+| Method B (usually smaller) | 8, Compact Pro | implemented since M12 |
+| Smallest Guess (let DD choose) | 8 | on the subject used here |
+| Smallest (try both) | 8 | "both" is A and B: there is no third |
+| Sigma Hardware | **7**, Stac LZS | the item only appears with the card fitted |
+
+All four were run. That accounts for every method a DiskDoubler writes that
+this project can reach: 3.7 writes 1, 7 and 8, and 4.x writes 6, 9 and 10 —
+which the corpus has had since M12, written by the application of the day.
+Methods 2, 3, 4 and 5 belong to 1.x and 2.x, and no copy of either survives
+anywhere this machine can reach (OPEN_ITEMS.md).
+
+The Sigma line is the interesting one: method 7 is a *hardware* method, so no
+emulator here can produce one — and it did not have to, because Salient built
+the 3.7 distribution disk on a machine that had the card. Two THINK C
+libraries on it are method 7, and each carries the checksum that grades it.
+**A distribution disk is a corpus.**
+
+Three things about method 1 that a plain `.Z` reader gets wrong, all from
+`XADDiskDoublerParser.m` case 1:
+
+- the three-byte compress header is stored XORed with 0x5a, and **so are the
+  decoded bytes — but not the code stream between them**;
+- the fork's stored sum has those three header bytes added into it, so the
+  value to compare against is `crc - m1 - m2 - flags`;
+- **the fork's LENGTH ends the stream, nothing in the stream does.** Asking
+  the LZW decoder for a full buffer when the fork owes fewer bytes makes it
+  read the NEXT fork's first code and reject it as out of range. That failure
+  reads as "archive structure is corrupt" on a file that is perfectly well
+  formed, and it is a general shape: **a codec that stops on its own input
+  cannot be handed a shared stream without a limit.**
+
+Method 7 is a 2 KB-window LZSS with two twists worth carrying: the bit stream
+is stored complemented **and so is the output** (macutils complements only the
+input, which is one of the reasons its copy has never run), and a match length
+is not bounded by the window — 2100 bytes at distance 9 is legal and repeats.
+Copying byte by byte through the ring buffer reproduces that for free; the
+reference splits it into window-sized emissions because its LZSS emitter
+cannot express it.
+
+**What graded what.** Method 1 is graded by the bytes that went INTO
+DiskDoubler on the emulated Mac — compressed on a Mac, decoded here, compared
+with the input, the loop `arcmac.py` closes the same way — and `unar` agrees.
+Method 7 has no such loop, and does not need one: the fork's own XOR checksum
+is computed by the compressor over the original bytes, and both specimens
+match it, with `unar` agreeing byte for byte. `macunpack` cannot be the second
+implementation for either: its method 7 segfaults (BLOCKERS.md).
+
+**What the fixtures cannot see is in the unit test, and it is written by
+hand.** Both method 7 specimens are 2,226 bytes — even, and far inside the
+window — so neither reaches the odd-length checksum branch (the stored value
+is complemented only when the fork's length is even) nor a match longer than
+2048. `test_dd_stac` writes a stream that does both. Its encoder is ours, so
+it grades the transcription against the reference and not against the format;
+the specimens are what grade it against the format.

@@ -79,13 +79,22 @@ layouts come from a reference implementation or a spec, never from memory.
   its own**, which is what the SuperDisk! withdrawal cost this project four
   documents to learn (BLOCKERS.md); neither has one here, or a specimen of
   any kind.
-- **DiskDoubler methods 1–5 and 7, ARC 0x0a/0x0b, and SuperDisk! methods 10,
-  13 and 20.** No corpus fixture uses any of them and nothing reachable writes
-  them, so an implementation could not be graded — code no oracle can check is
-  the same bargain LZH refuses. DiskDoubler method 1 is the cheapest if a
-  fixture ever turns up: it is Unix compress and `unc_lzw` already exists. The
-  three SuperDisk! methods are cheaper still in one sense and no cheaper in
-  the other: their 68k modules sit inside the corpus, named and complete
+- **DiskDoubler methods 2, 3, 4 and 5, ARC 0x0a/0x0b, and SuperDisk! methods
+  10, 13 and 20.** No corpus fixture uses any of them and nothing reachable
+  writes them, so an implementation could not be graded — code no oracle can
+  check is the same bargain LZH refuses. **Methods 1 and 7 were in this list
+  until 2026-08-20 and are now implemented**: DiskDoubler 3.7 writes method 1
+  from its own menu, and its distribution disk ships two method 7 files
+  (BLOCKERS.md, *Withdrawn claims*). What is left of the list is earlier
+  DiskDoubler work: 3.7's menu offers two software methods and neither is one
+  of them, and no copy of 1.x or 2.x is reachable from here — Macintosh Garden
+  has 3.7 and 4.x only, and the 1990 shareware "DiskDoubler .05" on funet
+  writes MacCompress files (its INIT carries `ZIVM`/`LZIV` and none of the
+  three DiskDoubler magics), so it predates the container entirely.
+  **What would close it:** a copy of DiskDoubler 1.x or 2.x, or one file
+  written by one. The three
+  SuperDisk! methods are cheaper still in one sense and no cheaper in the
+  other: their 68k modules sit inside the corpus, named and complete
   (FORMATS.md ✧✧), so transcribing them needs no research at all — and there
   would still be nothing to check the result against, because SuperDisk!'s
   compressor does not survive here, only its expander.
@@ -111,19 +120,30 @@ layouts come from a reference implementation or a spec, never from memory.
 
 ## 1. DiskDoubler and SuperDisk!: what M12 and M14 left
 
-- **Methods 1, 2, 3, 4, 5 and 7 are declined per entry** — a scope
-  decision, Part 1. The reference itself marks 3 and 4 unimplemented and
-  5 untested, so there would be nothing to grade an implementation
-  against.
+- **Methods 2, 3, 4 and 5 are declined per entry** — a scope decision,
+  Part 1: nothing reachable writes one, so an implementation could not
+  be graded. Between them the two references cover three of the four
+  (macutils implements 3, XADMaster implements 4 and 5, both untested),
+  which is not the obstacle; a specimen is.
+- **A method 7 fork longer than one chunk has never been decoded.** The
+  fork header counts its compressed chunks and gives each a 16-bit
+  length; both specimens hold exactly one, and the codec reads the
+  chunks as one continuous bit stream because that is what the
+  reference does. A fork over ~64 KB would settle whether that is
+  right. **What would close it:** a bigger method 7 file, which needs
+  the Sigma Designs card DiskDoubler 3.x wrote them with — no emulator
+  here has one.
 - **11 forks across 2 fixtures are adjudicated by neither oracle**
   (`derived-Terrainman_2.0__.sea`, `derived-LHA_Expander_1.0.3.sea`).
   `unar` fails on them and `macunpack` — built with its own DiskDoubler
   support — fails too. We extract them; nobody grades them.
-- **The single-file container (`0xABCD0054` at offset 0) has no
+- **The single-file container (`0xABCD0054` at offset 0) has no corpus
   fixture.** Every DiskDoubler file in the corpus is a `DDAR` or `DDA2`
-  archive. The path is covered by a unit test, including the name
-  coming from the host rather than the archive, which is what the
-  reference does with a `.dd` suffix.
+  archive. It is no longer untested — every specimen `tools/vmac/
+  diskdoubler.py` produces is one, and so are the two method 7 files off
+  the 3.7 disk — but none of those is in `fixtures/`, so `ci.sh` still
+  reaches the path only through the unit test, which also covers the
+  name coming from the host rather than the archive.
 - **Two of the four Mac tiers have not re-run since M12, M13 or M14.** The
   System 6 tiers have (63/63 at 4 MB and at 1 MB, 2026-08-15; plus both
   SuperDisk! payloads on both, 2026-08-20). **System 7.0.1 and

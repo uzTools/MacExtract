@@ -1,0 +1,690 @@
+#!/usr/bin/env python3
+"""diskdoubler.py — find out what DiskDoubler itself can WRITE, by running it.
+
+DiskDoubler defines eleven compression methods and this engine implements
+the ones the corpus could grade. The rest were declined on the grounds
+that no specimen exists — a claim about this machine's reach, not about
+the format, and the way to test it is the one `nowcompress.py` and
+`arcmac.py` already use: run the original application under Mini vMac and
+look at what it produces.
+
+    diskdoubler.py --setup           fetch DiskDoubler 3.7, unpack its disk
+    diskdoubler.py --wild --extract  every DD container ON that disk, by method
+    diskdoubler.py --install         a System 7 image with the DD INIT loaded
+    diskdoubler.py --probe           photograph the menus and dialogs
+    diskdoubler.py --make A          compress the subject with one method
+    diskdoubler.py --verify          decode every specimen and grade it
+
+**The answer, measured 2026-08-20.** The Settings dialog's "How To
+Compress" popup has four items, and between them they write two methods:
+
+    Method A (fastest)               -> method 1, Unix compress
+    Method B (usually smaller)       -> method 8, Compact Pro
+    Smallest Guess (let DD choose)   -> method 8 on the subject here
+    Smallest (try both)              -> method 8 on the subject here
+
+With a Sigma Designs compression card fitted the popup grows a "Sigma
+Hardware" item, which is **method 7 (Stac LZS)** — and nothing here
+emulates that card, so no keyboard on this machine can produce one. It
+did not have to: Salient built the 3.7 distribution disk on a machine
+that had the card, and two THINK C libraries on it are method 7
+(`--wild`). The menu strings are MENU 5019 (no card) and 5021 (card) in
+the application's resource fork.
+
+Methods 2, 3, 4 and 5 are NOT reachable from this application at all;
+they belong to DiskDoubler 1.x and 2.x, and no copy of either is
+reachable from here (OPEN_ITEMS.md).
+
+Specimens land in `$UNC_VMAC_HOME/specimens/diskdoubler/`, beside the
+emulator rather than under `build/`, which `make clean` removes. Nothing
+here runs in `ci.sh`.
+"""
+import argparse
+import hashlib
+import os
+import shutil
+import struct
+import subprocess
+import sys
+import tempfile
+import time
+import zipfile
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+REPO = os.path.dirname(os.path.dirname(HERE))
+sys.path.insert(0, HERE)
+sys.path.insert(0, os.path.join(REPO, "tools"))
+import run as R                                      # noqa: E402
+from interactive import Mac                          # noqa: E402
+from arcmac import macbinary                         # noqa: E402
+
+# DiskDoubler 3.7, commercial, fetched by URL and checked by hash exactly
+# like the ROM and the System images; nothing from it is committed. The
+# 3.7 disk is the last one whose compressor predates the AD/DDn methods
+# of 4.0, which is why it is the one worth running.
+DD37_URL = "https://old.mac.gdn/apps/diskdoublertm_3-7_disk-i.zip"
+DD37_PAGE = "https://macintoshgarden.org/apps/diskdoubler-37"
+DD37_SHA = "8cccf39aad06bbe60b92ac85ba2978f43ae3851d97e14cb7bb98ebac649ff811"
+
+HOME = R.VMAC_HOME
+WORK = os.path.join(HOME, "diskdoubler")
+SPECIMENS = os.path.join(HOME, "specimens", "diskdoubler")
+ZIP = os.path.join(WORK, "dd37.zip")
+RAW = os.path.join(WORK, "dd37.hfv")
+BOOT = os.path.join(WORK, "ddboot.hfv")           # System 7 + the DD INIT
+
+DD_MAGIC = 0xABCD0054
+
+# The subject: a data fork that compresses well and a resource fork that
+# identifies itself from its own first bytes, so whatever comes back out
+# says what it is without being trusted.
+SUBJECT_NAME = "Subject"
+SUBJECT_DATA = (b"DiskDoubler method probe. " * 400 +
+                bytes(range(256)) * 4 +
+                b"tail" )
+
+
+def cli():
+    for build in ("rel", "san", ""):
+        p = os.path.join(REPO, "build", build, "unclassic")
+        if os.path.exists(p):
+            return p
+    raise SystemExit("diskdoubler: build the CLI first (make)")
+
+
+# ------------------------------------------------------------------
+# Reading DiskDoubler containers without decoding them
+# ------------------------------------------------------------------
+
+def header(blob, off=0):
+    """The single-file container's 84-byte header, or None."""
+    if len(blob) - off < 84:
+        return None
+    if struct.unpack_from(">I", blob, off)[0] != DD_MAGIC:
+        return None
+    dl, dcl, rl, rcl = struct.unpack_from(">IIII", blob, off + 4)
+    return {
+        "datamethod": blob[off + 20] & 0x7F,
+        "rsrcmethod": blob[off + 21] & 0x7F,
+        "data": dl, "datacomp": dcl, "rsrc": rl, "rsrccomp": rcl,
+        "info1": blob[off + 22], "info2": blob[off + 52],
+        "datacrc": struct.unpack_from(">H", blob, off + 48)[0],
+        "rsrccrc": struct.unpack_from(">H", blob, off + 50)[0],
+    }
+
+
+METHOD_NAMES = {
+    0: "stored", 1: "Compress", 2: "method 2", 3: "RLE", 4: "Huffman",
+    5: "method 5", 6: "AD2", 7: "Stac LZS", 8: "Compact Pro", 9: "AD1",
+    10: "DDn",
+}
+
+
+def describe(h):
+    return ("data %d (%s) %d->%d, rsrc %d (%s) %d->%d"
+            % (h["datamethod"], METHOD_NAMES.get(h["datamethod"], "?"),
+               h["data"], h["datacomp"],
+               h["rsrcmethod"], METHOD_NAMES.get(h["rsrcmethod"], "?"),
+               h["rsrc"], h["rsrccomp"]))
+
+
+# ------------------------------------------------------------------
+# Fetching and unpacking the distribution disk
+# ------------------------------------------------------------------
+
+def fetch():
+    os.makedirs(WORK, exist_ok=True)
+    if not os.path.exists(ZIP):
+        subprocess.run(["curl", "-sS", "-L", "-A", "Mozilla/5.0",
+                        "-e", DD37_PAGE, "-o", ZIP, DD37_URL], check=True)
+    got = hashlib.sha256(open(ZIP, "rb").read()).hexdigest()
+    print("diskdoubler: %s sha256 %s" % (os.path.basename(ZIP), got))
+    with zipfile.ZipFile(ZIP) as z:
+        names = [i.filename for i in z.infolist() if "XtraStuf" not in i.filename]
+        blob = z.read(names[0])
+    # DiskCopy 4.2: an 84-byte header, then the sectors. The header names
+    # the data length, which is what says the image is whole.
+    dlen = struct.unpack_from(">I", blob, 64)[0]
+    if len(blob) < 84 + dlen:
+        raise SystemExit("diskdoubler: DiskCopy image is short")
+    open(RAW, "wb").write(blob[84:84 + dlen])
+    print("diskdoubler: %s — %d bytes of HFS" % (RAW, dlen))
+    return RAW
+
+
+def volume_files(img):
+    """path tuple -> (type, creator, data, rsrc) for a whole volume.
+
+    Names are carried as BYTES all the way to `hcopy`. An HFS name is
+    Mac Roman and hfsutils takes it verbatim, so decoding it and handing
+    back a str makes Python re-encode it as UTF-8 — and every name with a
+    ™ or an ƒ in it then fails to open. On this disk that is most of the
+    interesting files, and the failure is silent: the walk simply returns
+    fewer of them.
+    """
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+    out = {}
+
+    def walk(prefix):
+        listing = subprocess.run([b"hls", b"-1F"], capture_output=True,
+                                 env=env).stdout
+        for name in [n for n in listing.split(b"\n") if n.strip()]:
+            if name.endswith(b":"):
+                name = name[:-1]
+                subprocess.run([b"hcd", name], capture_output=True, env=env)
+                walk(prefix + (name,))
+                subprocess.run([b"hcd", b"::"], capture_output=True, env=env)
+                continue
+            if name.endswith(b"*") or name.endswith(b"/"):
+                name = name[:-1]
+            tmp = tempfile.mktemp(suffix=".bin").encode()
+            if subprocess.run([b"hcopy", b"-m", name, tmp], capture_output=True,
+                              env=env).returncode != 0:
+                continue
+            blob = open(tmp, "rb").read()
+            os.unlink(tmp)
+            dlen, rlen = struct.unpack(">II", blob[83:91])
+            roff = 128 + ((dlen + 127) & ~127)
+            out[prefix + (name,)] = (blob[65:69].decode("mac-roman"),
+                                     blob[69:73].decode("mac-roman"),
+                                     blob[128:128 + dlen], blob[roff:roff + rlen])
+    try:
+        subprocess.run(["hmount", img], check=True, capture_output=True, env=env)
+        walk(())
+        subprocess.run(["humount"], capture_output=True, env=env)
+    finally:
+        shutil.rmtree(env["HOME"], ignore_errors=True)
+    return out
+
+
+def show(path):
+    return "/".join(p.decode("mac-roman") for p in path)
+
+
+def wild(extract=False):
+    """Every DiskDoubler container on the distribution disk, by method.
+
+    The disk ships its own files compressed, which is why it is a corpus
+    as well as an application: the two THINK C libraries on it are the
+    only method 7 specimens this project has, and no keyboard here can
+    make another — method 7 is what the Sigma Designs card wrote.
+    """
+    if not os.path.exists(RAW):
+        fetch()
+    dest = os.path.join(SPECIMENS, "wild")
+    if extract:
+        os.makedirs(dest, exist_ok=True)
+    found = 0
+    for path, (ftype, creator, data, rsrc) in sorted(volume_files(RAW).items()):
+        h = header(data) or header(rsrc)
+        if not h:
+            continue
+        found += 1
+        print("  %-40s %s/%s  %s" % (show(path)[-40:], ftype, creator,
+                                     describe(h)))
+        if extract:
+            name = path[-1].decode("mac-roman").replace("/", "_")
+            p = os.path.join(dest, name + ".dd")
+            open(p, "wb").write(data if header(data) else rsrc)
+    print("diskdoubler: %d compressed file(s) on the 3.7 disk%s"
+          % (found, (" -> %s" % dest) if extract else ""))
+    return found
+
+
+def extract_app(dest):
+    """The DiskDoubler application, its data file and its help file, as
+    MacBinary. The application launches on its own; the other two are
+    what it looks for beside itself."""
+    if not os.path.exists(RAW):
+        fetch()
+    files = volume_files(RAW)
+    want = ("DiskDoubler\u2122 App", "DiskDoublerData(3.7)",
+            "DiskDoubler\u2122 Help")
+    out = []
+    for path, (ftype, creator, data, rsrc) in files.items():
+        name = path[-1].decode("mac-roman")
+        if name in want:
+            p = os.path.join(dest, name.replace("/", "_") + ".bin")
+            open(p, "wb").write(macbinary(name, ftype, creator, data, rsrc))
+            out.append(p)
+    if not out:
+        raise SystemExit("diskdoubler: no application on the 3.7 disk")
+    return out
+
+
+# ------------------------------------------------------------------
+# Volumes
+# ------------------------------------------------------------------
+
+def make_rsrc(text=b"\x1eDiskDoubler method probe fork"):
+    """A real resource fork: a STR resource, so what comes back can be
+    read as a resource fork rather than compared as a blob."""
+    data = struct.pack(">I", len(text)) + text
+    doff, dlen = 256, len(data)
+    moff = doff + dlen
+    types = struct.pack(">H", 0) + b"STR " + struct.pack(">HH", 0, 10)
+    refs = struct.pack(">hHII", 128, 0xFFFF, 0, 0)
+    tloff, nloff = 28, 28 + len(types) + len(refs)
+    hdr = struct.pack(">IIII", doff, moff, dlen, nloff)
+    mp = hdr + b"\0" * 4 + struct.pack(">HHHH", 0, 0, tloff, nloff) + types + refs
+    return hdr + b"\0" * (doff - 16) + data + mp
+
+
+def make_volume(path, volname, macbins, size_kb=4096):
+    open(path, "wb").truncate(size_kb * 1024)
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+    try:
+        subprocess.run(["hformat", "-l", volname, path], check=True,
+                       capture_output=True, env=env)
+        subprocess.run(["hmount", path], check=True, capture_output=True, env=env)
+        for mb in macbins:
+            subprocess.run(["hcopy", "-m", os.path.abspath(mb), volname + ":"],
+                           check=True, capture_output=True, env=env)
+        subprocess.run(["humount"], check=True, capture_output=True, env=env)
+    finally:
+        shutil.rmtree(env["HOME"], ignore_errors=True)
+
+
+def install():
+    """A System 7 boot image with the DiskDoubler INIT in Extensions.
+
+    The application does NOT run on its own: launched with no INIT loaded
+    it takes the personalization, writes it back into its own resource
+    fork and quits without ever showing a window — which looks exactly
+    like a crash on a screenshot. DiskDoubler is an extension with an
+    application beside it, and the extension is the half that compresses.
+    """
+    if not os.path.exists(RAW):
+        fetch()
+    work = tempfile.mkdtemp(prefix="ddinst-")
+    try:
+        files = volume_files(RAW)
+        init = None
+        for path, (ftype, creator, data, rsrc) in files.items():
+            if path[-1].decode("mac-roman") == "DiskDoubler\u2122 INIT":
+                init = os.path.join(work, "ddinit.bin")
+                open(init, "wb").write(macbinary("DiskDoubler\u2122 INIT",
+                                                 ftype, creator, data, rsrc))
+        if not init:
+            raise SystemExit("diskdoubler: no INIT on the 3.7 disk")
+        shutil.copyfile(os.path.join(HOME, "Sys7.img"), BOOT)
+        env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+        try:
+            subprocess.run(["hmount", BOOT], check=True, capture_output=True,
+                           env=env)
+            subprocess.run(["hcopy", "-m", init,
+                            ":System Folder:Extensions:"], check=True,
+                           capture_output=True, env=env)
+            subprocess.run(["humount"], check=True, capture_output=True, env=env)
+        finally:
+            shutil.rmtree(env["HOME"], ignore_errors=True)
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+    print("diskdoubler: boot image with the DiskDoubler INIT at %s" % BOOT)
+    return BOOT
+
+
+# ------------------------------------------------------------------
+# Driving DiskDoubler
+# ------------------------------------------------------------------
+
+class Session:
+    """A booted Mac with screenshots kept per step."""
+
+    def __init__(self, boot, extra, shots, mem="mv-4M"):
+        self.work = tempfile.mkdtemp(prefix="dd-")
+        self.shots = shots
+        os.makedirs(shots, exist_ok=True)
+        self.n = 0
+        self.mac = Mac(boot, mem, self.work, extra=tuple(extra))
+
+    def shot(self, tag, wait=2.0):
+        """Screenshot WITHOUT parking the pointer: parking closes a menu
+        being held open."""
+        time.sleep(wait)
+        self.n += 1
+        p = os.path.join(self.shots, "%02d-%s.png" % (self.n, tag))
+        for _ in range(30):
+            if self.mac.dpy.screenshot(p):
+                return p
+            time.sleep(0.4)
+        raise SystemExit("diskdoubler: no screenshot")
+
+    def boot(self):
+        self.mac.settle(os.path.join(self.work, "s.png"), interval=8.0,
+                        timeout=420.0, stable=3)
+
+    def menu(self, title_x, item_y, tag):
+        ox, oy = self.mac.origin()
+        x = self.mac._xdo
+        x("mousemove", str(ox + title_x), str(oy + 8))
+        time.sleep(0.4)
+        x("mousedown", "1")
+        time.sleep(1.2)
+        x("mousemove", str(ox + title_x + 25), str(oy + item_y))
+        time.sleep(1.0)
+        self.shot(tag)
+        x("mouseup", "1")
+        time.sleep(2.0)
+
+    def peek(self, title_x, tag):
+        """Pull a menu down, photograph it, and cancel — the step that
+        measures an item's y before anything clicks one."""
+        ox, oy = self.mac.origin()
+        x = self.mac._xdo
+        x("mousemove", str(ox + title_x), str(oy + 8))
+        time.sleep(0.4)
+        x("mousedown", "1")
+        time.sleep(1.5)
+        self.shot(tag)
+        x("mousemove", str(ox + 5), str(oy + 8))
+        time.sleep(0.5)
+        x("mouseup", "1")
+        time.sleep(1.0)
+
+    def close(self):
+        self.mac.close()
+
+
+# The Settings dialog, measured from `--probe` screenshots (System 7,
+# 512x342): the "How To Compress" popup and its four items, and OK.
+POPUP = (270, 46)
+POPUP_ITEMS = {"A": 46, "B": 60, "guess": 74, "both": 88}
+POPUP_X = 300
+SETTINGS_OK = (388, 267)
+DD_MENU_X = 281
+DD_COMPRESS_Y = 29
+DD_SETTINGS_Y = 138
+VOLUME_ICON = (470, 110)
+
+
+def personalize(s):
+    """The INIT personalizes itself the first time a DD command is used
+    and writes the answer into its own copy in the System Folder. Mini
+    vMac boots from a COPY of the image, so this happens on every run
+    rather than once."""
+    s.shot("personalize", wait=15.0)
+    s.mac.click(300, 95)
+    s.mac._xdo("type", "--delay", "120", "unclassic")
+    s.mac.key("Tab")
+    s.mac._xdo("type", "--delay", "120", "test")
+    s.mac.click(415, 214)                               # OK, no default button
+    s.shot("postage", wait=10.0)
+    s.mac.key("Return")                                 # "Don't Waste The Postage!"
+
+
+def pick_method(s, which):
+    """Hold the "How To Compress" popup open and release on an item."""
+    ox, oy = s.mac.origin()
+    x = s.mac._xdo
+    x("mousemove", str(ox + POPUP[0]), str(oy + POPUP[1]))
+    time.sleep(0.4)
+    x("mousedown", "1")
+    time.sleep(1.2)
+    x("mousemove", str(ox + POPUP_X), str(oy + POPUP_ITEMS[which]))
+    time.sleep(1.0)
+    s.shot("pick-%s" % which)
+    x("mouseup", "1")
+    time.sleep(1.5)
+    s.shot("chosen-%s" % which, wait=1.0)
+    s.mac.click(*SETTINGS_OK)
+    time.sleep(2.0)
+
+
+def session_with_subject(tag):
+    """A booted Mac with the DiskDoubler INIT loaded and a work volume
+    holding the subject file."""
+    work = tempfile.mkdtemp(prefix="ddwork-")
+    apps = extract_app(work)
+    subj = os.path.join(work, "subject.bin")
+    open(subj, "wb").write(macbinary(SUBJECT_NAME, "TEXT", "ttxt",
+                                     SUBJECT_DATA, make_rsrc()))
+    img = os.path.join(work, "ddwork.img")
+    make_volume(img, "DDwork", apps + [subj])
+    if not os.path.exists(BOOT):
+        install()
+    s = Session(BOOT, [img], os.path.join(SPECIMENS, tag))
+    return s, work, img
+
+
+def probe(keep=False):
+    """Boot with the INIT loaded and photograph the menus and dialogs.
+    This is the step that measured every coordinate above."""
+    s, work, img = session_with_subject("probe")
+    try:
+        s.boot()
+        s.shot("desktop", wait=5.0)
+        s.mac.click(*VOLUME_ICON, double=True)
+        s.shot("volume", wait=10.0)
+        s.peek(DD_MENU_X, "dd-menu")
+        s.menu(DD_MENU_X, DD_SETTINGS_Y, "pick-settings")
+        personalize(s)
+        s.shot("settings", wait=15.0)
+        ox, oy = s.mac.origin()
+        s.mac._xdo("mousemove", str(ox + POPUP[0]), str(oy + POPUP[1]))
+        time.sleep(0.4)
+        s.mac._xdo("mousedown", "1")
+        s.shot("how-to-compress", wait=1.5)
+        s.mac._xdo("mouseup", "1")
+        time.sleep(1.0)
+    finally:
+        time.sleep(3)
+        s.close()
+    print("diskdoubler: screenshots in %s" % s.shots)
+    if not keep:
+        shutil.rmtree(work, ignore_errors=True)
+
+
+def make(which="A", keep=False):
+    """Compress the subject with one of the methods the menu offers, and
+    report what DiskDoubler wrote."""
+    if which not in POPUP_ITEMS:
+        raise SystemExit("diskdoubler: --method is one of %s"
+                         % ", ".join(sorted(POPUP_ITEMS)))
+    s, work, img = session_with_subject(which)
+    try:
+        s.boot()
+        s.shot("desktop", wait=5.0)
+        s.mac.click(*VOLUME_ICON, double=True)
+        s.shot("volume", wait=10.0)
+        s.menu(DD_MENU_X, DD_SETTINGS_Y, "pick-settings")
+        personalize(s)
+        s.shot("settings", wait=15.0)
+        pick_method(s, which)
+        s.mac.key("s")                                  # select "Subject"
+        s.shot("selected", wait=3.0)
+        s.menu(DD_MENU_X, DD_COMPRESS_Y, "pick-compress")
+        s.shot("compressing", wait=45.0)
+        s.mac.key("Return")                             # any report
+        s.shot("done", wait=20.0)
+        # Mini vMac flushes a guest's sector writes when the volume is
+        # ejected, so a run killed with it mounted reads back unchanged.
+        s.mac.click(*VOLUME_ICON)
+        s.mac.command_key("y")                          # Put Away
+        s.shot("ejected", wait=15.0)
+    finally:
+        time.sleep(5)
+        s.close()
+
+    os.makedirs(SPECIMENS, exist_ok=True)
+    got = volume_files(img)
+    kept = 0
+    for path, (ftype, creator, data, rsrc) in sorted(got.items()):
+        name = path[-1].decode("mac-roman")
+        if name != SUBJECT_NAME:
+            continue
+        h = header(data) or header(rsrc)
+        print("  %-10s %s/%s  %s" % (which, ftype, creator,
+                                     describe(h) if h else "NOT compressed"))
+        if h:
+            p = os.path.join(SPECIMENS, "subject-%s.dd" % which)
+            open(p, "wb").write(data if header(data) else rsrc)
+            open(os.path.join(SPECIMENS, "in-data"), "wb").write(SUBJECT_DATA)
+            open(os.path.join(SPECIMENS, "in-rsrc"), "wb").write(make_rsrc())
+            print("  wrote %s" % p)
+            kept += 1
+    if not kept:
+        print("diskdoubler: nothing came back compressed — see %s" % s.shots)
+    if not keep:
+        shutil.rmtree(work, ignore_errors=True)
+    return 0 if kept else 1
+
+
+def forks_of(d, appledouble):
+    """{name: (data, rsrc)} for a directory of extracted forks, dropping
+    empty forks so the two conventions can be compared at all."""
+    sys.path.insert(0, os.path.join(REPO, "tools"))
+    from make_manifests import parse_appledouble          # noqa: E402
+    out = {}
+    if not os.path.isdir(d):
+        return out
+    for n in os.listdir(d):
+        p = os.path.join(d, n)
+        if not os.path.isfile(p):
+            continue
+        if n.startswith("._"):
+            name, fork = n[2:], "rsrc"
+            blob = (parse_appledouble(p)[0] if appledouble
+                    else open(p, "rb").read())
+        else:
+            name, fork = n, "data"
+            blob = open(p, "rb").read()
+        if not blob:
+            continue
+        out.setdefault(name, {})[fork] = blob
+    return {k: sorted(v.items()) for k, v in out.items()}
+
+
+def verify_wild():
+    """Grade the specimens off the distribution disk against `unar`.
+
+    There is no input to compare these with — nobody here compressed
+    them — so the two things that grade them are the fork checksum the
+    compressor wrote (which the engine enforces, so a decode that
+    reaches the end is already checked) and a second implementation.
+    `unar` is that; `macunpack` is not, since its method 7 has never run
+    (BLOCKERS.md).
+    """
+    d = os.path.join(SPECIMENS, "wild")
+    if not os.path.isdir(d):
+        print("diskdoubler: no --wild --extract specimens, skipped")
+        return 0
+    if not shutil.which("unar"):
+        print("diskdoubler: unar is not installed, wild specimens ungraded")
+        return 0
+    bad = 0
+    for f in sorted(os.listdir(d)):
+        if not f.endswith(".dd"):
+            continue
+        p = os.path.join(d, f)
+        h = header(open(p, "rb").read())
+        work = tempfile.mkdtemp(prefix="ddwild-")
+        try:
+            ours, theirs = os.path.join(work, "a"), os.path.join(work, "b")
+            r = subprocess.run([cli(), "x", "--forks", "hidden", "-o", ours, p],
+                               capture_output=True, text=True)
+            subprocess.run(["unar", "-q", "-k", "hidden", "-o", theirs, p],
+                           capture_output=True)
+            # `unar -k hidden` writes the resource fork as an APPLEDOUBLE
+            # file, our "._" sidecar is the fork itself, and unar omits an
+            # empty data fork altogether. Compare the forks, not the files.
+            # FORKS ONLY, not names: the single-file container carries
+            # no name, so both tools take it from the host file — and
+            # they read those bytes differently (we say Mac Roman, unar
+            # says UTF-8), which makes "IACUtilities.π" disagree for a
+            # reason that has nothing to do with decoding. What the name
+            # rule does is checked by `test_diskdoubler` instead.
+            mine = forks_of(ours, appledouble=False)
+            oracle = forks_of(theirs, appledouble=True)
+            same = sorted(mine.values()) == sorted(oracle.values()) and bool(mine)
+            bad += not same or r.returncode != 0
+            note = "unar agrees" if same else "DIFFERS from unar"
+            if r.returncode != 0:
+                note = "rc=%d %s" % (r.returncode, r.stderr.strip()[:60])
+            print("  %-30s %-52s %s"
+                  % (f[:30], describe(h) if h else "no header", note))
+        finally:
+            shutil.rmtree(work, ignore_errors=True)
+    return bad
+
+
+def verify():
+    """Decode every specimen with our own CLI and check it against the
+    bytes that went in — the loop closed without an oracle: compressed on
+    an emulated Mac, decoded here, compared with the input."""
+    if not os.path.isdir(SPECIMENS):
+        print("diskdoubler: no specimens yet — run --make")
+        return 1
+    want = {"": SUBJECT_DATA, ".rsrc": make_rsrc()}
+    bad = seen = 0
+    bad += verify_wild()
+    for f in sorted(os.listdir(SPECIMENS)):
+        if not f.endswith(".dd"):
+            continue
+        p = os.path.join(SPECIMENS, f)
+        h = header(open(p, "rb").read())
+        out = tempfile.mkdtemp(prefix="ddver-")
+        try:
+            r = subprocess.run([cli(), "x", "-o", out, p], capture_output=True,
+                               text=True)
+            names = sorted(os.listdir(out))
+            for n in names:
+                blob = open(os.path.join(out, n), "rb").read()
+                ext = ".rsrc" if n.endswith(".rsrc") else ""
+                if not blob and not want[ext]:
+                    continue
+                seen += 1
+                same = blob == want[ext]
+                bad += not same
+                print("  %-20s %-8s %7d B  %s"
+                      % (f, ext or "data", len(blob),
+                         "EXACT" if same else "DIFFERS"))
+            if r.returncode != 0:
+                print("  %-20s rc=%d %s" % (f, r.returncode, r.stderr.strip()))
+                bad += 1
+        finally:
+            shutil.rmtree(out, ignore_errors=True)
+        print("  %-20s %s" % (f, describe(h) if h else "no header"))
+    print("diskdoubler: %d fork(s) checked, %s"
+          % (seen, "all exact" if not bad and seen else "%d wrong" % bad))
+    return 1 if bad or not seen else 0
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__,
+                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--setup", action="store_true", help="fetch the 3.7 disk")
+    ap.add_argument("--wild", action="store_true",
+                    help="report every compressed file on that disk")
+    ap.add_argument("--extract", action="store_true",
+                    help="with --wild, keep those files as specimens")
+    ap.add_argument("--install", action="store_true",
+                    help="build a System 7 image with the DiskDoubler INIT")
+    ap.add_argument("--probe", action="store_true",
+                    help="boot the application and photograph each step")
+    ap.add_argument("--make", metavar="METHOD", nargs="?", const="A",
+                    help="compress the subject with A, B, guess or both")
+    ap.add_argument("--verify", action="store_true",
+                    help="decode the specimens and check them against the input")
+    ap.add_argument("--keep", action="store_true", help="keep the work dir")
+    args = ap.parse_args()
+    if args.setup:
+        fetch()
+    if args.install:
+        install()
+    if args.wild:
+        wild(args.extract)
+    if args.probe:
+        probe(args.keep)
+    if args.make:
+        make(args.make, args.keep)
+    if args.verify:
+        return verify()
+    if not (args.setup or args.install or args.wild or args.probe
+            or args.make or args.verify):
+        ap.print_help()
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

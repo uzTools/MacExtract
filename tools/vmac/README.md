@@ -61,6 +61,7 @@ oracle and will lose it to `./ci.sh`'s `make clean`.
 | `mountcheck.py` | boot a system image with disks attached and photograph the desktop — "does this mount?", and "does this system boot at all?" |
 | `mkapmdisk.py` | build an Apple-partitioned transfer disk that Mac OS on PowerPC will mount |
 | `checkdisk.py` | verify a run by READING its Out volume — both forks, and the names the on-screen grid cannot carry |
+| `diskdoubler.py` | **ask DiskDoubler itself what it can write** — run the 3.7 application, compress a subject with each method its menu offers, read the method byte back |
 | `mkcollide.py` | build an archive whose names collide on HFS, and verify what `BumpName` did with them — nothing in the corpus collides |
 
 `tools/quickdraw-repro/` is a sibling that reuses `mkboot.py` and this
@@ -315,6 +316,47 @@ Four things to know before re-running it:
   killing the emulator with it still mounted loses the archive: the Finder
   showed `Test.ARC` on screen while the host's copy of the image did not have
   it.
+
+## Asking DiskDoubler what it can write — `diskdoubler.py`
+
+Six of DiskDoubler's eleven methods were declined because "nothing reachable
+writes one". Running the application settled that: two of the six were
+reachable, and are now implemented (BLOCKERS.md).
+
+    tools/vmac/diskdoubler.py --setup      # fetch DiskDoubler 3.7, unpack its disk
+    tools/vmac/diskdoubler.py --wild       # every DD container ON that disk, by method
+    tools/vmac/diskdoubler.py --install    # System 7 + the DiskDoubler INIT
+    tools/vmac/diskdoubler.py --probe      # photograph the menus and dialogs
+    tools/vmac/diskdoubler.py --make A     # compress the subject with Method A
+    tools/vmac/diskdoubler.py --verify     # decode the specimens, check against the input
+
+`--make` takes `A`, `B`, `guess` or `both` — the four items of the "How To
+Compress" popup. What each one writes is FORMATS.md ✦; why it matters is
+DECISIONS.md, "DiskDoubler methods 1 and 7". Specimens land in
+`$UNC_VMAC_HOME/specimens/diskdoubler/` with the input forks beside them
+(`in-data`, `in-rsrc`) and a screenshot per step. Nothing here runs in
+`ci.sh`.
+
+Four things to know before re-running it:
+
+- **The application does not run on its own.** DiskDoubler is an extension
+  with an application beside it; launched with no INIT loaded, the
+  application takes the personalization, writes it into its own resource fork
+  and quits without ever showing a window — which on a screenshot looks
+  exactly like a crash. `--install` puts the INIT in Extensions, and the work
+  is then done from the Finder's own **DD** menu.
+- **Both halves personalize themselves on first use**, into their own file.
+  Mini vMac boots from a COPY of the boot image, so the INIT does it on every
+  run; the dialog has no default button, so Return leaves it exactly where it
+  was.
+- **Method 7 is not reachable from this keyboard.** The popup only offers
+  "Sigma Hardware" when a Sigma Designs compression card is fitted, and
+  nothing here emulates one. The specimens for it come from `--wild`: the 3.7
+  distribution disk was built on a machine that had the card, and two THINK C
+  libraries on it are method 7.
+- **The run ends with Put Away, and must**, for the reason `arcmac.py`
+  documents below: Mini vMac flushes the guest's writes when the volume is
+  ejected, so a run killed with it still mounted reads back an unchanged disk.
 
 ## Grading SuperDisk! with SuperDisk! — `superdisk.py`
 

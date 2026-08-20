@@ -325,6 +325,23 @@ the unit tests covers the containers and the inline-stored path instead,
 and found a short header read that the fixtures structurally could not
 (DECISIONS.md 2026-08-15).
 
+### Methods 1 and 7 are graded outside `ci.sh` (2026-08-20)
+
+Neither has a corpus fixture, because neither can be fetched by a URL: the
+method 1 specimens are written by DiskDoubler 3.7 running under Mini vMac,
+and the method 7 ones live two containers deep inside its distribution disk
+(a Macintosh Garden zip holding a DiskCopy 4.2 image holding an HFS volume).
+`tools/vmac/diskdoubler.py --wild | --make | --verify` produces and grades
+both, and `tools/vmac/README.md` says how.
+
+**So `ci.sh` sees these two methods only through `test_dd_stac` and the
+method 1 half of `test_diskdoubler`** — unit tests whose streams this project
+wrote. They grade the transcription against the reference; they cannot grade
+it against the format, and a regression that agreed with our own encoder
+would survive them. The specimens are what grade it against the format, and
+re-running them is a deliberate, on-demand check like every other emulator
+harness here.
+
 ## Several BinHex documents in one file (`tools/run_multihqx.py`, in `ci.sh`)
 
 Added 2026-08-15, with the capability it grades. Real corpus `.hqx`

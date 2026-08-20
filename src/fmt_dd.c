@@ -6,16 +6,16 @@
  *   Source: reference/XADMaster/XADDiskDoublerParser.m       (containers)
  *   Source: reference/XADMaster/XADDiskDoublerADnHandle.m    (methods 6, 9)
  *   Source: reference/XADMaster/XADDiskDoublerDDnHandle.m    (method 10)
+ *   Source: reference/XADMaster/XADStacLZSHandle.m           (method 7)
  * — LGPL, see NOTICE.
  *
  * A file header describes BOTH forks, each with its own method, so one
  * DiskDoubler entry is one entry here (XADMaster splits the forks into
  * two entries; ours is the engine's usual shape).
  *
- * Methods 2, 3, 4, 5 and 7 are recognized and declined per entry. Three
- * of them the reference itself marks untested or unimplemented, and the
- * corpus has no fixture for any of the five, so implementing them would
- * be ungradeable — the same reason LZH extraction stays out of scope.
+ * Methods 2, 3, 4 and 5 are recognized and declined per entry: no
+ * specimen of any of them has been found, so an implementation could not
+ * be graded — the same reason LZH extraction stays out of scope.
  *
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
@@ -48,13 +48,16 @@ typedef struct DdFork {
     uint32_t dist;
     uint32_t dpos;
     uint8_t  dbuf[256];
+    uint8_t  xsum;        /* running XOR of the same bytes; method 7 */
+    uint16_t sumadj;      /* subtracted from the stored sum; method 1 */
 } DdFork;
 
 static void dd_out_start(DdFork *o, UncCtx *c, UncFork fork, uint32_t len,
                          uint8_t *obuf, uint32_t ocap, uint32_t dist)
 {
     uint32_t i;
-    o->c = c; o->fork = fork; o->left = len; o->sum = 0;
+    o->c = c; o->fork = fork; o->left = len; o->sum = 0; o->xsum = 0;
+    o->sumadj = 0;
     o->obuf = obuf; o->ocap = ocap; o->olen = 0;
     o->dist = dist; o->dpos = 0;
     for (i = 0; i < sizeof o->dbuf; i++) o->dbuf[i] = 0;
@@ -75,6 +78,7 @@ static int dd_out_byte(DdFork *o, uint8_t b)
 {
     if (o->left == 0) return UNC_OK;      /* trailing filler is dropped */
     o->sum = (o->sum + b) & 0xFFFFu;
+    o->xsum ^= b;
     if (o->dist) {
         b = (uint8_t)(b + o->dbuf[(o->dpos - o->dist) & 0xFFu]);
         o->dbuf[o->dpos & 0xFFu] = b;
@@ -199,6 +203,155 @@ static int dd_adn(DdFork *o, UncBufIn *in, uint8_t *win)
          * stop short of it. */
         if ((err = unc_bufin_skip_to(in, blockstart + 12 + compsize)) != UNC_OK)
             return err;
+    }
+    return UNC_OK;
+}
+
+/* ---- method 1: Unix compress -------------------------------------- */
+/*
+ * compress(1)'s LZW, behind three bytes of its own: the two magic bytes
+ * and the flags byte that names the code width and block mode. Three
+ * things about it are DiskDoubler's rather than compress's, and all
+ * three are what a plain .Z reader would get wrong:
+ *
+ *  - those three bytes are stored XORed with 0x5a whenever the header
+ *    asks for it (`info1 >= 0x2a` and info2's high bit clear), and so
+ *    are the DECOMPRESSED bytes — but NOT the code stream between them;
+ *  - the fork's stored sum has the three header bytes added into it, so
+ *    the sum to compare against is `crc - m1 - m2 - flags`;
+ *  - the fork's length is what ends the stream, not the stream itself.
+ *
+ * Source: XADDiskDoublerParser.m handleForEntryWithDictionary, case 1.
+ */
+static int dd_lzc(DdFork *o, UncCtx *c, UncBufIn *in, uint32_t complen,
+                  int xorval, uint8_t *obuf, uint32_t ocap)
+{
+    UncLzw z;
+    int m1, m2, flags, err;
+
+    if (complen < 3) return UNC_ERR_TRUNCATED;
+    if ((m1 = unc_bufin_next(in)) < 0) return in->err;
+    if ((m2 = unc_bufin_next(in)) < 0) return in->err;
+    if ((flags = unc_bufin_next(in)) < 0) return in->err;
+    m1 ^= xorval; m2 ^= xorval; flags ^= xorval;
+    o->sumadj = (uint16_t)(m1 + m2 + flags);
+
+    err = unc_lzw_init(&z, c->al, in, flags & 0x1F, (flags & 0x80) != 0,
+                       complen - 3u);
+    if (err != UNC_OK) return err;
+    while (o->left > 0) {
+        /* Ask for exactly what the fork still owes. The forks are laid
+         * out back to back and nothing marks the end of this one's code
+         * stream, so a decoder asked for more than it owes reads the
+         * NEXT fork's first code and rejects it as out of range — which
+         * is what "corrupt" meant here for one build. */
+        int32_t want = (int32_t)(o->left < ocap ? o->left : ocap);
+        int32_t got = unc_lzw_read(&z, obuf, want), i;
+        if (got < 0) { err = (int)got; break; }
+        if (got == 0) break;                     /* end of stream */
+        for (i = 0; i < got && o->left > 0; i++)
+            if ((err = dd_out_byte(o, (uint8_t)(obuf[i] ^ xorval))) != UNC_OK)
+                break;
+        if (err != UNC_OK) break;
+    }
+    unc_lzw_free(&z, c->al);
+    return err;
+}
+
+/* ---- method 7: Stac LZS -------------------------------------------- */
+/*
+ * Stac's LZS, which DiskDoubler 3.x wrote when a Sigma Designs
+ * compression card was fitted. A 2 KB-window LZSS, with two twists: the
+ * bit stream is stored COMPLEMENTED, and so are the bytes it produces;
+ * and a match length is not bounded by the window, so it may exceed 2048
+ * and repeat.
+ *
+ * Source: reference/XADMaster/XADStacLZSHandle.m (the codec) and
+ * XADDiskDoublerParser.m, case 7 (the chunk table, the two complements
+ * and the checksum's parity rule). Cross-checked against
+ * reference/macutils/macunpack/dd.c, dd_lzss, which agrees on the codec
+ * and on complementing the input, and omits the output's complement.
+ */
+#define DD_STAC_WINDOW 2048u
+
+/* n bits of a complemented stream. Bits are read MSB-first and each
+ * field is contiguous, so complementing the field is complementing the
+ * bytes it came from. */
+static int32_t dd_stac_bits(UncBitIn *bi, int n)
+{
+    int32_t v = unc_bitin_bits(bi, n);
+    if (v < 0) return v;
+    return v ^ (int32_t)((1u << n) - 1u);
+}
+
+static int dd_stac(DdFork *o, UncBufIn *in, uint8_t *win, uint32_t complen)
+{
+    UncBitIn bi;
+    uint32_t ne = 0, pos = 0, i;
+    int32_t v;
+    int err, b;
+
+    /* Six bytes, a 32-bit count of compressed chunks, eight more, then
+     * one 16-bit length per chunk. The codec reads none of it: the
+     * chunks are one continuous bit stream. */
+    if (complen < 18) return UNC_ERR_TRUNCATED;
+    for (i = 0; i < 6; i++)
+        if (unc_bufin_next(in) < 0) return in->err;
+    for (i = 0; i < 4; i++) {
+        b = unc_bufin_next(in);
+        if (b < 0) return in->err;
+        ne = (ne << 8) | (uint32_t)b;
+    }
+    if (ne > (complen - 18u) / 2u) return UNC_ERR_CORRUPT;
+    if ((err = unc_bufin_skip_to(in, 18u + 2u * ne)) != UNC_OK) return err;
+
+    unc_bitin_init(&bi, in);
+    while (o->left > 0) {
+        if ((v = dd_stac_bits(&bi, 1)) < 0) return bi.err;
+        if (v == 0) {
+            if ((v = dd_stac_bits(&bi, 8)) < 0) return bi.err;
+            win[pos & (DD_STAC_WINDOW - 1u)] = (uint8_t)v;
+            pos++;
+            if ((err = dd_out_byte(o, (uint8_t)(v ^ 0xFF))) != UNC_OK)
+                return err;
+        } else {
+            uint32_t offset, length;
+            if ((v = dd_stac_bits(&bi, 1)) < 0) return bi.err;
+            if (v == 1) {
+                if ((v = dd_stac_bits(&bi, 7)) < 0) return bi.err;
+                offset = (uint32_t)v;
+            } else {
+                if ((v = dd_stac_bits(&bi, 7)) < 0) return bi.err;
+                if (v == 0) break;                  /* end of stream */
+                offset = (uint32_t)v << 4;
+                if ((v = dd_stac_bits(&bi, 4)) < 0) return bi.err;
+                offset |= (uint32_t)v;
+            }
+            if ((v = dd_stac_bits(&bi, 2)) < 0) return bi.err;
+            length = (uint32_t)v;
+            if (length == 3) {
+                if ((v = dd_stac_bits(&bi, 2)) < 0) return bi.err;
+                length += (uint32_t)v;
+                if (length == 6) {
+                    do {
+                        if ((v = dd_stac_bits(&bi, 4)) < 0) return bi.err;
+                        length += (uint32_t)v;
+                    } while (v == 15);
+                }
+            }
+            length += 2;
+            /* A zero distance names no byte. XADStacLZSHandle rejects it
+             * only through `offset>pos`, macunpack ends the stream on it;
+             * no specimen reaches either. */
+            if (offset == 0 || offset > pos) return UNC_ERR_CORRUPT;
+            for (i = 0; i < length && o->left > 0; i++) {
+                uint8_t m = win[(pos - offset) & (DD_STAC_WINDOW - 1u)];
+                win[pos & (DD_STAC_WINDOW - 1u)] = m;
+                pos++;
+                if ((err = dd_out_byte(o, (uint8_t)(m ^ 0xFF))) != UNC_OK)
+                    return err;
+            }
+        }
     }
     return UNC_OK;
 }
@@ -477,7 +630,8 @@ static uint32_t dd_window_for(uint32_t size)
 }
 
 static int dd_fork(UncCtx *c, UncFork fork, uint32_t at, uint32_t complen,
-                   uint32_t uncomplen, int method, int delta, uint16_t crc)
+                   uint32_t uncomplen, int method, int delta, uint16_t crc,
+                   int xorval)
 {
     uint8_t *mem = NULL;
     UncBufIn in;
@@ -489,7 +643,7 @@ static int dd_fork(UncCtx *c, UncFork fork, uint32_t at, uint32_t complen,
     if (delta != 0 && delta != 1) return UNC_ERR_UNSUPPORTED;
 
     switch (m) {
-    case 0: case 6: case 8: case 9: case 10: break;
+    case 0: case 1: case 6: case 7: case 8: case 9: case 10: break;
     default: return UNC_ERR_UNSUPPORTED;
     }
     /* Method 8's RLE stage writes to the sink itself, so the delta
@@ -556,6 +710,24 @@ static int dd_fork(UncCtx *c, UncFork fork, uint32_t at, uint32_t complen,
         if (err == UNC_OK && crc != 0 && rle.crc16 != crc) err = UNC_ERR_CRC;
         unc_free(c->al, mem);
         return err;
+    } else if (m == 1) {
+        /* A staging buffer for the LZW output, which arrives in runs
+         * rather than a byte at a time; the codec's own table is its
+         * own allocation. */
+        uint32_t stage = 2048;
+        mem = (uint8_t *)unc_alloc(c->al, iocap + ocap + stage);
+        if (!mem) return UNC_ERR_MEM;
+        unc_bufin_init(&in, c->io, &c->ps, mem, iocap);
+        dd_out_start(&o, c, fork, uncomplen, mem + iocap, ocap,
+                     delta == 1 ? 1u : 0u);
+        err = dd_lzc(&o, c, &in, complen, xorval, mem + iocap + ocap, stage);
+    } else if (m == 7) {
+        mem = (uint8_t *)unc_alloc(c->al, iocap + ocap + DD_STAC_WINDOW);
+        if (!mem) return UNC_ERR_MEM;
+        unc_bufin_init(&in, c->io, &c->ps, mem, iocap);
+        dd_out_start(&o, c, fork, uncomplen, mem + iocap, ocap,
+                     delta == 1 ? 1u : 0u);
+        err = dd_stac(&o, &in, mem + iocap + ocap, complen);
     } else if (m == 6 || m == 9) {
         mem = (uint8_t *)unc_alloc(c->al, iocap + ocap + DD_AD_BLOCK);
         if (!mem) return UNC_ERR_MEM;
@@ -577,8 +749,17 @@ static int dd_fork(UncCtx *c, UncFork fork, uint32_t at, uint32_t complen,
     /* Methods 0..5 carry a 16-bit sum of the decompressed bytes; the
      * AD and DD methods carry per-block XORs instead and store 0 here.
      * Source: XADDiskDoublerParser.m handleForEntryWithDictionary. */
-    if (err == UNC_OK && m <= 5 && crc != 0 && o.sum != crc)
+    if (err == UNC_OK && m <= 5 && crc != 0 &&
+        o.sum != (uint16_t)(crc - o.sumadj))
         err = UNC_ERR_CRC;
+    /* Method 7 carries a one-byte XOR of the fork instead, complemented
+     * when the fork's length is even.
+     * Source: XADDiskDoublerParser.m handleForEntryWithDictionary, case 7. */
+    if (err == UNC_OK && m == 7 && crc != 0) {
+        uint8_t want = (uint8_t)crc;
+        if ((uncomplen & 1u) == 0) want ^= 0xFF;
+        if (o.xsum != want) err = UNC_ERR_CRC;
+    }
     unc_free(c->al, mem);
     return err;
 }
@@ -593,6 +774,7 @@ typedef struct DdFile {
     uint32_t modification, creation, type, creator;
     int      finderflags, datadelta, rsrcdelta;
     uint16_t datacrc, rsrccrc;
+    int      info1, info2;   /* method 1's obfuscation, below */
 } DdFile;
 
 /* The 80 bytes after 0xABCD0054.
@@ -605,6 +787,8 @@ static void dd_parse_filehdr(const uint8_t *h, DdFile *f)
     f->rsrccomp     = unc_get_u32be(h + 12);
     f->datamethod   = h[16];
     f->rsrcmethod   = h[17];
+    f->info1        = h[18];
+    f->info2        = h[48];
     f->modification = unc_get_u32be(h + 20);
     f->creation     = unc_get_u32be(h + 24);
     f->type         = unc_get_u32be(h + 28);
@@ -631,6 +815,15 @@ static void dd_entry_from(UncEntryInfo *e, const DdFile *f)
     e->method_rsrc  = (uint8_t)(f->rsrcmethod & 0x7F);
 }
 
+/* The obfuscation methods 1..5 apply to their three header bytes and to
+ * the bytes they decode. It is on when info1 has reached 0x2a and info2's
+ * high bit is clear; every specimen seen has info1 == 0x2a exactly.
+ * Source: XADDiskDoublerParser.m handleForEntryWithDictionary. */
+static int dd_xorval(const DdFile *f)
+{
+    return (f->info1 >= 0x2a && (f->info2 & 0x80) == 0) ? 0x5a : 0;
+}
+
 /* Emit one file: begin, both forks, end. `at` is where the data fork's
  * compressed bytes start. */
 static int dd_emit(UncCtx *c, UncEntryInfo *e, const DdFile *f, uint32_t at)
@@ -643,9 +836,10 @@ static int dd_emit(UncCtx *c, UncEntryInfo *e, const DdFile *f, uint32_t at)
 
     if (!c->opt.list_only) {
         err = dd_fork(c, UNC_FORK_DATA, at, f->datacomp, f->datasize,
-                      f->datamethod, f->datadelta, f->datacrc);
+                      f->datamethod, f->datadelta, f->datacrc, dd_xorval(f));
         ferr = dd_fork(c, UNC_FORK_RSRC, at + f->datacomp, f->rsrccomp,
-                       f->rsrcsize, f->rsrcmethod, f->rsrcdelta, f->rsrccrc);
+                       f->rsrcsize, f->rsrcmethod, f->rsrcdelta, f->rsrccrc,
+                       dd_xorval(f));
         if (err == UNC_OK) err = ferr;
     }
 

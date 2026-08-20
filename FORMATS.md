@@ -25,7 +25,7 @@ whole corpus for that format (engine allocations only, via
 | Compact Pro segment (multi-part) | extract | RLE / LZH+RLE — the Compact Pro reader, over the segments | 2 generated sets + 2 cut by Compact Pro 1.51 itself | 20 KB | full |
 | Split file (plain .001/.002) | extract | — (join only; the joined file is the next layer) | 3 generated sets, adjudicated against the bytes that were cut, `unar` where it can join, and our unsplit read | 8 KB | full |
 | StuffIt X (.sitx) | detect only | — | — (no fixture) | — | — |
-| DiskDoubler (DD, DDAR, DDA2) | extract | 0 store, 6/9 AD LZSS, 8 Compact Pro, 10 DDn; 1/2/3/4/5/7 declined per entry✦ | 6 fixtures | 16–108 KB✦ | full |
+| DiskDoubler (DD, DDAR, DDA2) | extract | 0 store, 1 Unix compress, 6/9 AD LZSS, 7 Stac LZS, 8 Compact Pro, 10 DDn; 2/3/4/5 declined per entry✦ | 6 fixtures + 4 specimens (2 written by DiskDoubler 3.7 under Mini vMac, 2 off its distribution disk) | 10–108 KB✦ | full |
 | Now Compress | extract | stored, LZSS, Huffman, Huffman+LZSS, "new" LZSS✧ | 2 real fixtures + 13 generated archives (all five shapes, adjudicated by `unar`); `synth-now-mixed.now` also has an `unar` manifest and is in the differential suite | 128 KB✧ | full |
 | ARC / ArcMac (.arc) | extract | 1/2 store, 3 RLE90, 4 squeeze+RLE90, 5/6/7 crunch, 8 12-bit LZW+RLE90, 9 13-bit LZW, 0x7f compress; ArcMac's two-fork payload since 2026-08-16★★★; 0x0a/0x0b (PKARC) declined per entry★ | 10 generated archives (methods 1-9, adjudicated by `unar`) + 3 written by Debian's `arc` 5.21q; `synth-arc-mixed.arc` also has an `unar` manifest and is in the differential suite | 4–32 KB★ | full |
 | uuencode (.uu, incl. UUTool) | extract | — (plain uu, UUTool's two-fork "MU" shape, and documents posted in several parts★★) | 7 generated cases, the two-fork ones adjudicated by macutils' `hexbin`; `synth-uu-mac.uu` is in the differential suite | 4 KB | full |
@@ -43,18 +43,34 @@ and lengths are three separately Huffman-coded streams laid out back to back).
 Delta-1 preprocessing is applied where the header asks for it, outside the
 checksum, which is where the reference puts it.
 
-Peak heap 16–108 KB on Linux and the same on a Mac Plus at 4 MB and 1 MB (`unclassic t --stats`; FORMATS.md, "DiskDoubler and Now Compress on the Mac"): the 100 KB end is DDn,
+Peak heap 10–108 KB on Linux and the same on a Mac Plus at 4 MB and 1 MB (`unclassic t --stats`; FORMATS.md, "DiskDoubler and Now Compress on the Mac"): the 10 KB end is method 7, whose whole state is a 2 KB window; method 1 is 17 KB on an 11 KB fork, sized from the input like every other `unc_lzw` caller; the 100 KB end is DDn,
 whose window is sized from the entry up to the format's 64 KB, plus a
 literal/offset buffer sized from each block's own header. All six extract
 fully under a 400 KB budget and under the 678,392 B a 1 MB Mac Plus leaves the
 engine — measured on Linux; no on-Mac run has extracted one (OPEN_ITEMS.md).
 
-Methods 1, 2, 3, 4, 5 and 7 are **declined per entry**: no corpus fixture uses
-one, and the reference marks 3 and 4 unimplemented and 5 untested, so anything
-written for them could not be graded. **11 forks across 2 fixtures are
-adjudicated by neither oracle** — `unar` fails on them and `macunpack` (built
-with its DiskDoubler support on) fails too; our output for those is ungraded,
-and `run_diff.py` prints the count on every run. DECISIONS.md 2026-08-15.
+**Methods 1 and 7 joined them on 2026-08-20**, when running DiskDoubler
+itself showed that both are reachable after all (BLOCKERS.md, *Withdrawn
+claims*):
+
+| method | what writes it | specimens | how graded |
+|---|---|---|---|
+| 1, Unix compress | DiskDoubler 3.7, "Method A (fastest)" | `subject-A.dd`, both forks | the bytes that went IN, on the emulated Mac; `unar` agrees |
+| 7, Stac LZS | the Sigma Designs card DiskDoubler 3.x drove | the two THINK C libraries on the 3.7 disk, 2,226 B each | the fork's own XOR checksum; `unar` agrees byte for byte |
+
+Method 1 is `unc_lzw` behind three bytes of its own, with an 0x5a XOR over the
+DECODED bytes and the header bytes — not over the code stream — and a sum
+adjusted by those three bytes. Method 7 is a 2 KB-window LZSS whose bit stream
+AND output are stored complemented, with match lengths unbounded by the
+window. Both: DECISIONS.md 2026-08-20.
+
+Methods 2, 3, 4 and 5 stay **declined per entry**: nothing reachable writes
+one — DiskDoubler 3.7's menu offers method 1 and method 8 and nothing else —
+so anything written for them could not be graded. **11 forks across 2 fixtures
+are adjudicated by neither oracle** — `unar` fails on them and `macunpack`
+(built with its DiskDoubler support on) fails too; our output for those is
+ungraded, and `run_diff.py` prints the count on every run. DECISIONS.md
+2026-08-15.
 
 ✧ **Now Compress, in scope since 2026-08-15** (M12). The archive is a flat
 entry table nested by a per-directory entry count, then one compressed stream

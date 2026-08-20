@@ -97,6 +97,42 @@ line is what makes the next one worth re-testing.
 | No second implementation of Now Compress exists, so four forks cannot be graded | the archive is self-extracting: its own 1995 extractor agrees on every fork | 2026-08-16 |
 | Nothing documents which fork an ArcMac payload starts with, and no oracle reads ArcMac | ArcMac 1.3c archiving a two-fork file under Mini vMac: data fork first | 2026-08-16 |
 | Alysis SuperDisk! has no reference anywhere, so rule #1 forbids reading it | both corpus archives are self-extracting: the layout, the method table and every codec are inside them | 2026-08-20 |
+| Nothing reachable writes DiskDoubler methods 1–5 or 7, so none can be graded | DiskDoubler 3.7 under Mini vMac writes method 1 from its own menu; its distribution disk ships two method 7 files | 2026-08-20 |
+
+**DiskDoubler methods 1–5 and 7 "cannot be graded".** Declined per entry
+since M12 on the grounds that no corpus fixture uses one and nothing reachable
+writes one. The first half was true and the second was never tested. Running
+the application says otherwise, twice over:
+
+- **DiskDoubler 3.7's own Settings dialog offers exactly two software
+  methods**, "Method A (fastest)" and "Method B (usually smaller)", and A
+  writes **method 1** — Unix compress, which OPEN_ITEMS.md had already named
+  as the cheapest one to add "if a fixture ever turns up". A fixture turns up
+  in four minutes: `tools/vmac/diskdoubler.py --make A`.
+- **Method 7 needed no emulator at all.** The 3.7 distribution disk ships two
+  THINK C libraries compressed with it, because Salient built the disk on a
+  machine with the Sigma Designs card fitted. They were sitting in a zip on
+  Macintosh Garden the whole time, and each carries the checksum that grades
+  it.
+
+**Cost: two methods, and with method 1 the default output of DiskDoubler's own
+era** — 3.7's fast setting, on a product that shipped from 1990. The smell is
+the one this file already names: *a limitation stated about the environment
+that is true only of one tool*. "No fixture in the corpus" was read as "no
+specimen exists", and the corpus is 812 files that a URL harvester could
+reach, not the set of DiskDoubler files in the world. The other half of the
+same claim — that "the reference marks 3 and 4 unimplemented and 5 untested" —
+was also wrong in the direction that mattered less: XADMaster implements 4 and
+5 (untested) and macutils implements 3 (untested), so the references cover
+three of the four methods still declined. What is missing for those is a
+specimen, not code.
+
+**macunpack is not a second implementation of method 7.** Built with
+`-DUNTESTED` its `dd_lzss` segfaults on the first specimen: it takes the
+32-bit value at offset 6 as a byte count to skip, where the field is a chunk
+COUNT, and never initialises the bit pointer it then reads through. The
+grading uses `unar` and the fork's own checksum instead. An `#ifdef UNTESTED`
+is a claim about the code, and this one is accurate.
 
 **Alysis SuperDisk! "has no reference".** Filed under OPEN_ITEMS.md's
 *"rule #1 forbids inventing a format"* for as long as that section has

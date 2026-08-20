@@ -1642,6 +1642,137 @@ static uint32_t ddar_entry(uint8_t *p, const char *name, int isdir, int enddir,
     return 124;
 }
 
+/* ------------------------------------------------------------------ */
+/* Method 7 (Stac LZS): a written stream, because the two specimens in  */
+/* the wild reach neither of the two things worth checking — a match    */
+/* longer than the 2048-byte window, and a fork of ODD length, whose    */
+/* checksum is NOT complemented.                                        */
+/* ------------------------------------------------------------------ */
+
+typedef struct StacBits {
+    uint8_t *p;
+    uint32_t len;
+    int      nbits;
+    uint32_t acc;
+} StacBits;
+
+/* The stream is stored complemented, so each finished byte is inverted
+ * on the way out. Source: XADDiskDoublerParser.m, case 7. */
+static void stac_put(StacBits *b, uint32_t v, int n)
+{
+    int i;
+    for (i = n - 1; i >= 0; i--) {
+        b->acc = (b->acc << 1) | ((v >> i) & 1u);
+        if (++b->nbits == 8) {
+            b->p[b->len++] = (uint8_t)(~b->acc & 0xFFu);
+            b->nbits = 0;
+            b->acc = 0;
+        }
+    }
+}
+
+static void stac_flush(StacBits *b)
+{
+    while (b->nbits) stac_put(b, 0, 1);
+}
+
+/* A match of `length` at `dist`, with the 7-bit distance form and the
+ * 4-bit length extension the codec uses past 8. */
+static void stac_match(StacBits *b, uint32_t dist, uint32_t length)
+{
+    uint32_t extra;
+    stac_put(b, 1, 1);
+    stac_put(b, 1, 1);
+    stac_put(b, dist, 7);
+    if (length <= 4) {
+        stac_put(b, length - 2u, 2);
+        return;
+    }
+    stac_put(b, 3, 2);
+    if (length <= 7) {
+        stac_put(b, length - 5u, 2);
+        return;
+    }
+    stac_put(b, 3, 2);
+    extra = length - 8u;
+    while (extra >= 15u) { stac_put(b, 15, 4); extra -= 15u; }
+    stac_put(b, extra, 4);
+}
+
+static void test_dd_stac(void)
+{
+    static const char lit[] = "unclassic";
+    static const uint32_t NLIT = 9, MATCH = 2100;   /* 2109: odd, > window */
+    uint8_t one[4096], want[2109];
+    uint8_t sum = 0;
+    uint32_t n, i;
+    StacBits b;
+    MemIO m;
+    UncIO io;
+    UncAlloc al;
+    UncSink sk;
+    CapSink cap;
+    UncOptions opt;
+    static const uint8_t hint[] = "Stac";
+
+    for (i = 0; i < NLIT; i++) want[i] = (uint8_t)(~(uint8_t)lit[i]);
+    for (i = NLIT; i < NLIT + MATCH; i++) want[i] = want[i - NLIT];
+    for (i = 0; i < NLIT + MATCH; i++) sum ^= want[i];
+
+    for (n = 0; n < 84; n++) one[n] = 0;
+    one[0] = 0xAB; one[1] = 0xCD; one[2] = 0x00; one[3] = 0x54;
+    put32(one + 4, NLIT + MATCH);              /* datasize  */
+    one[20] = 7; one[21] = 0;                  /* data method 7, no rsrc */
+    memcpy(one + 32, "TEXT", 4);
+    memcpy(one + 36, "ttxt", 4);
+    /* The fork is 2109 bytes — odd, so the stored checksum is the plain
+     * XOR rather than its complement. */
+    one[48] = 0; one[49] = sum;
+
+    /* Six bytes, a chunk count of TWO, eight bytes, then one 16-bit
+     * length per chunk: eighteen plus four bytes the codec steps over.
+     * No specimen has more than one chunk. */
+    n = 84;
+    for (i = 0; i < 6; i++) one[n++] = 0x11;
+    put32(one + n, 2); n += 4;
+    for (i = 0; i < 8; i++) one[n++] = 0x22;
+    for (i = 0; i < 4; i++) one[n++] = 0x33;
+
+    b.p = one + n; b.len = 0; b.nbits = 0; b.acc = 0;
+    for (i = 0; i < NLIT; i++) {
+        stac_put(&b, 0, 1);
+        stac_put(&b, (uint8_t)lit[i], 8);
+    }
+    stac_match(&b, NLIT, MATCH);
+    stac_put(&b, 1, 1); stac_put(&b, 0, 1); stac_put(&b, 0, 7);  /* end */
+    stac_flush(&b);
+    n += b.len;
+    put32(one + 8, n - 84u);                   /* datacomp */
+
+    opt.list_only = 0; opt.test_only = 0;
+    opt.name_hint = hint;
+    opt.name_hint_len = (uint16_t)(sizeof hint - 1);
+    test_make_alloc(&al);
+    test_make_memio(&io, &m, one, n);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_DISKDOUBLER);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_DISKDOUBLER, &io, &sk, &al, NULL,
+                         &opt) == UNC_OK);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+    CHECK(cap.dlen[0] == NLIT + MATCH);
+    CHECK(memcmp(cap.data[0], want, NLIT + MATCH) == 0);
+
+    /* The checksum is checked, and this is what proves it: one bit of it
+     * changed must fail the fork rather than pass it. */
+    one[49] ^= 0x01;
+    test_make_memio(&io, &m, one, n);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_DISKDOUBLER, &io, &sk, &al, NULL,
+                         &opt) == UNC_OK);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_ERR_CRC);
+    one[49] ^= 0x01;
+}
+
 static void test_diskdoubler(void)
 {
     uint8_t arc[1024];
@@ -1727,6 +1858,8 @@ static void test_diskdoubler(void)
     test_make_memio(&io, &m, arc, len);
     CHECK(unc_sniff(&io) == UNC_FORMAT_UNKNOWN);
     arc[76] ^= 0xFF;
+
+    test_dd_stac();
 }
 
 
