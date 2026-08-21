@@ -316,10 +316,18 @@ real archive** joined the corpus on 2026-08-16: folders, both forks, two
 streams, two stream-restart records, 9.9 MB out of 2.9 MB, and `unar` cannot
 decode a byte of it (DECISIONS.md).
 
-**What this cannot see:** 11 forks across 2 of those fixtures that neither
-oracle can decode — `unar` fails and `macunpack` fails, with its own
-DiskDoubler support compiled in. We extract them and nothing checks the
-result; the count prints on every run. Nor does anything here exercise the
+**What this could not see until 2026-08-21:** 11 forks across 2 of those
+fixtures that neither oracle can decode — `unar` fails and `macunpack` fails,
+with its own DiskDoubler support compiled in. Both fixtures are
+SELF-EXTRACTING, so each carries a third implementation in its resource fork;
+`tools/vmac/diskdoubler.py --adjudicate --write-manifest` runs it under
+System 7 and writes the verdict into the fixture's manifest, where `ci.sh`
+re-checks it on every run like any other entry. Only DATA forks can be
+recorded that way: the Resource Manager stamps bytes 16..127 of a resource
+fork's header whenever it touches the file, so a resource fork the Mac wrote
+is never byte-identical and stays `unadjudicated` with its reason saying the
+Mac agreed with those bytes masked. `run_diff.py` counts the two kinds
+separately. Nor does anything here exercise the
 single-file `.dd` container, which no fixture uses — `test_diskdoubler` in
 the unit tests covers the containers and the inline-stored path instead,
 and found a short header read that the fixtures structurally could not
@@ -833,7 +841,11 @@ derived, never that what was derived matches DiskDoubler.
 
 **What says that is in the same runner since 2026-08-21**: the three
 sets DiskDoubler itself cut, registered as fixtures (`run_ddtf.py
---register`) and joined here from the first part and from the last. Each
+--register`) and joined here from the first part and from the last. A
+fourth kind of evidence is outside `ci.sh` and worth knowing about:
+`tools/vmac/ddpro.py --experiments` has DiskDoubler Pro 4.1 split a file
+of known content under emulation, and the parts join back to the bytes
+that went in — cut on a Mac, joined here, compared with the input. Each
 is compared with the file the corpus publishes beside it — both forks,
 the resource fork coming from the AppleDouble sidecar that is a fixture
 too — and then the joined archive is extracted and required to give what

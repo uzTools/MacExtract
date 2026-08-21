@@ -81,6 +81,8 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-20 — DiskDoubler methods 1 and 7, and what the application itself could write
 - 2026-08-21 — DiskDoubler Pro's stored entries, and a corpus that carries its own oracle
 - 2026-08-21 (later) — the DiskDoubler corpus becomes fixtures, and three claims it brought with it
+- 2026-08-21 (later still) — the forks nobody could grade, graded by the archive itself
+- 2026-08-21 (later still) — running DiskDoubler Pro, and what its own Split will not say yet
 
 ---
 
@@ -4009,3 +4011,89 @@ them. The sidecars themselves stay manifest-less: our hint rule drops the last
 extension and `unar` keeps it, so a manifest for one would assert a naming
 convention rather than a decode, and DECISIONS.md already records why the hint
 is the way it is.
+\n
+## 2026-08-21 (later still) — the forks nobody could grade, graded by the archive itself
+
+`derived-LHA_Expander_1.0.3.sea` and `derived-Terrainman_2.0__.sea` held 11
+forks that `unar` fails on and `macunpack` fails on too. Both archives are
+**self-extracting**, which is the fourth time in this project that the answer
+to "no implementation exists" was inside the file that needed one
+(BLOCKERS.md). Running them under System 7 compares all 33 forks of the two
+archives: **all 33 identical.**
+
+Three things this cost, all of them in the HARNESS rather than the format,
+and all three the same shape — a path is not a path until something says
+which tree it is in:
+
+- **The Mac's copy of a resource fork is not ground truth and never can be.**
+  Every resource fork the two extractors wrote differs from ours in bytes
+  16..127 — the resource header's "reserved for system use" area, which the
+  Resource Manager stamps whenever it touches a file. So `--write-manifest`
+  records DATA forks as adjudicated and leaves resource forks
+  `unadjudicated`, with the reason extended to say the Mac agreed with those
+  bytes masked. `run_diff.py` counts the two kinds separately, because
+  collapsing them would either overstate the gap or hide it.
+- **A self-extractor expands INTO a folder it asks you to name**, so an entry
+  at the top level of the archive is one level down on the volume. A global
+  "strip the first component" rule looked right on the specimen that needed it
+  and broke the other one completely — Terrainman's own folder happens to
+  share the destination's name and merged with it, so its nested paths need no
+  adjustment and only its two top-level entries do. The rule that works is per
+  path: try it as it stands, then with the first component dropped, and take
+  whichever exists.
+- **`hls` prints Mac Roman bytes and Python hands the shell UTF-8.** A folder
+  called `Terrainman 2.0 ƒ` was neither descended into nor copied, so the walk
+  returned nothing and the run reported "0 forks compared" — which reads as
+  *the application wrote nothing* rather than *this could not read it*, on a
+  run whose own screenshot showed the folder sitting on the volume. `hcd` and
+  `hcopy` now take the raw bytes.
+\n
+## 2026-08-21 (later still) — running DiskDoubler Pro, and what its own Split will not say yet
+
+`ddpro.py` is `diskdoubler.py` for the other half of the format: DiskDoubler
+Pro 4.1, which writes `DDA2` and whose Split command is where `SPLT` comes
+from. Two open items need it. One is narrowed and one is not, and both are
+worth writing down because the next attempt starts from here.
+
+**The 4 bytes at `+4` of a `SPLT` header are the Mac's `TickCount`.** Three
+files split 72 seconds apart wrote 7,581, 11,905 and 16,235 — differences of
+4,324 and 4,330, or 60.06 and 60.14 per second against a 60.15 Hz tick, and
+the first at 7,581 ticks is 126 s after the machine booted, which is when the
+run reached the menu. Two of the three files were **byte-identical** with
+different names, so it is neither a checksum of the content nor a hash of the
+name; every checksum tried over every fork and the whole file had already
+failed on the published sets, and this is why. It is written once per SET,
+which is exactly the property the joiner relies on: equal across a set's
+parts, different between sets. Nothing changes in the reader — the identity
+was already matched as 26 opaque bytes, and the other 22 are the fork
+lengths, type, creator, flags and dates — but a field that is understood is
+one nobody has to re-derive, and the three published sets' values now read as
+11 minutes, 45 minutes and 42.6 minutes into somebody's afternoon.
+
+**A `DDA2` stored entry with a resource fork is still unseen, and it is not
+for want of an incompressible file.** "Create Archive…" on a 20,000-byte
+pseudorandom file with a 344-byte resource fork produced an ordinary
+`0xABCD0054` header — data fork **method 0, stored, 20,000 → 20,000**;
+resource fork **method 9 (AD1), 344 → 148** — and not the headerless
+`0x1000` record the corpus's nine archives use for their JPEG and PNG. So
+whatever selects that form is not "the data does not compress": it is 4.1.1
+rather than 4.1, or an archive built from seven files rather than one. The
+specimen is a real addition either way — the first archive here with a stored
+data fork beside a compressed resource fork, and this engine reads it.
+
+**Three things the Finder does that a driver has to know**, all of them
+costing a run before they were understood:
+
+- **Return opens the selected icon's NAME for editing.** A `key("Return")`
+  meant for a report the archive step does not print renamed the subject to
+  "a" — the next keystroke went into the name box — and the three splits then
+  had nothing selected. `select()` presses Escape first and the driver never
+  presses Return at the desktop.
+- **The Finder menu is a front end; the application has to be on a mounted
+  volume.** Without it, "Create Archive…" answers *The DiskDoubler
+  application cannot be found. Please locate it.* and greys out the entire
+  menu behind the dialog — which photographs exactly like a menu whose
+  coordinates are wrong.
+- **A split leaves the original in place**, so the volume needs room for the
+  parts as well, and the menu item is "Split File (760K)": a subject smaller
+  than that comes out in one piece and answers nothing.

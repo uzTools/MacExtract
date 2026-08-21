@@ -202,22 +202,41 @@ def run_ddseg_real(case, mem, workdir):
             for l in out.splitlines() if "disks kept in" in l]
     if not kept:
         return False, "run.py kept no disks to read"
-    # The app opens ARCHIVE_NAME and the joined file takes its name
-    # minus the extension: there is no name inside a `SPLT` part.
-    got, gotr = read_out_volume_forks(kept[0], R.ARCHIVE_NAME.rsplit(".", 1)[0])
+    # The joined file takes the OPENED PART's name minus a trailing
+    # ".N", and nothing else — a `SPLT` part carries no name, and the
+    # ".N" rule is the only thing the host strips. run.py puts the
+    # anchor on the floppy as ARCHIVE_NAME, which has no numeric suffix,
+    # so the joined file is called exactly that. (Measured 2026-08-21;
+    # the first version of this case looked for the name with the
+    # extension removed, which is the rule for gzip and not for this.)
+    got, gotr = read_out_volume_forks(kept[0], R.ARCHIVE_NAME)
     shutil.rmtree(kept[0], ignore_errors=True)
     want = open(whole, "rb").read()
     wantr = parse_appledouble(side)[0]
     if got is None:
-        return False, "the joined file is not on the Out volume"
-    if got != want or gotr != wantr:
-        return False, ("joined data %d B (want %d), rsrc %d B (want %d) — "
-                       "%s" % (len(got), len(want), len(gotr), len(wantr),
-                               "contents differ"))
+        return False, ("the joined file is not on the Out volume as %r; "
+                       "run.py said: %s"
+                       % (R.ARCHIVE_NAME, out.strip().splitlines()[-1]
+                          if out.strip() else "nothing"))
+    # The resource fork is compared with bytes 16..127 masked, the
+    # convention every other on-Mac check here uses: the Resource
+    # Manager stamps that region of the header whenever it touches a
+    # file, so a fork written on a Mac is never byte-identical to the
+    # same fork on Linux, and a raw comparison fails on 112 bytes that
+    # nothing points at (tools/vmac_check.py says why that is safe).
+    from vmac_check import mask_reserved                  # noqa: E402
+    bad = []
+    if got != want:
+        bad.append("data %d B (want %d)" % (len(got), len(want)))
+    if mask_reserved(gotr) != mask_reserved(wantr):
+        bad.append("rsrc %d B (want %d)" % (len(gotr), len(wantr)))
+    if bad:
+        return False, "the joined file differs: " + ", ".join(bad)
     grid = r.returncode == 0
-    return grid, ("joined byte-exact on the Mac, %d B data + %d B rsrc, "
-                  "and the grid agrees" % (len(want), len(wantr)) if grid else
-                  "the file is byte-exact but the grid did not: " +
+    return grid, ("joined on the Mac byte for byte, %d B data + %d B rsrc "
+                  "(the resource header's OS-stamped bytes masked), and the "
+                  "grid agrees" % (len(want), len(wantr)) if grid else
+                  "the file is right but the grid did not agree: " +
                   out.strip()[-200:])
 
 

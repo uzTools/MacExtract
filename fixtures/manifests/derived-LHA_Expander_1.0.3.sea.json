@@ -6,14 +6,16 @@
   },
   {
    "creator": "ttxt",
+   "data_oracle": "DiskDoubler's own self-extractor under System 7 (tools/vmac/diskdoubler.py --adjudicate)",
+   "data_sha256": "0cc8693f40cfc150ff020a683b135db0ca4cdb1178a4f515b8cb8edc5e11974a",
+   "data_size": 1335,
    "name": "LHA Expander 1.0.3/1.0.3 Release Notes (E)",
    "oracle_methods": [
     "DDn"
    ],
    "type": "TEXT",
    "unadjudicated": {
-    "data": "Attempted to read more data than was available",
-    "rsrc": "Attempted to read more data than was available"
+    "rsrc": "Attempted to read more data than was available — but DiskDoubler's own self-extractor agrees on this fork with the resource header's OS-stamped bytes 16..127 masked (tools/vmac/diskdoubler.py --adjudicate, 2026-08-21)"
    }
   },
   {
@@ -26,7 +28,7 @@
    ],
    "type": "TEXT",
    "unadjudicated": {
-    "rsrc": "Attempted to read more data than was available"
+    "rsrc": "Attempted to read more data than was available — but DiskDoubler's own self-extractor agrees on this fork with the resource header's OS-stamped bytes 16..127 masked (tools/vmac/diskdoubler.py --adjudicate, 2026-08-21)"
    }
   },
   {
@@ -43,14 +45,16 @@
   },
   {
    "creator": "ttxt",
+   "data_oracle": "DiskDoubler's own self-extractor under System 7 (tools/vmac/diskdoubler.py --adjudicate)",
+   "data_sha256": "63f26bf65f06c83d03271d53ba17e13fc34d9adcd6b3aaf62d6b7d0c7bcb421f",
+   "data_size": 5977,
    "name": "LHA Expander 1.0.3/LHA Expander Read Me (E)",
    "oracle_methods": [
     "DDn"
    ],
    "type": "TEXT",
    "unadjudicated": {
-    "data": "Attempted to read more data than was available",
-    "rsrc": "Attempted to read more data than was available"
+    "rsrc": "Attempted to read more data than was available — but DiskDoubler's own self-extractor agrees on this fork with the resource header's OS-stamped bytes 16..127 masked (tools/vmac/diskdoubler.py --adjudicate, 2026-08-21)"
    }
   },
   {

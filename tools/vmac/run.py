@@ -494,6 +494,20 @@ def main():
             name = line.split("#")[0].strip()
             if name:
                 fixtures.append(os.path.join(REPO, "fixtures", name))
+    # A list of names is not a set of names. sample.txt carried four
+    # duplicates from M12 to 2026-08-21, so every sweep of every tier ran
+    # them twice and every tier result counted them twice (BLOCKERS.md).
+    # Deduplicated here rather than in the file alone, because the file is
+    # edited by hand and this is not.
+    seen, unique = set(), []
+    for f in fixtures:
+        if f in seen:
+            print(f"run: {os.path.basename(f)} is listed more than once; "
+                  f"running it once", flush=True)
+            continue
+        seen.add(f)
+        unique.append(f)
+    fixtures = unique
     if not fixtures:
         ap.error("no fixtures given (pass paths, or --list)")
     missing = [f for f in fixtures if not os.path.exists(f)]

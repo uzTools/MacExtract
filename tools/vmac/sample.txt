@@ -55,9 +55,11 @@ derived-DD_Expand.sea                      # 123399 B, DiskDoubler method 10 (DD
 derived-LHA_Expander_1.0.3.sea             # 79182 B, DDn with folders
 derived-Terrainman_2.0__.sea               # 167771 B, DDn + delta-1, deepest tree
 derived-Expand_Now_1.0.1.sea               # 61824 B, Now Compress
-derived-MAZv143.sea                        # 50277 B
-derived-DD_Expand.sea                      # 123399 B
-derived-MacPass390.sea                     # 155792 B
+# Four of those lines used to appear twice: MAZv143, DD_Expand, MacPass390
+# and Expand_Now were already in this list as REFUSAL cases when M12 added
+# them again as extractions, so every sweep since ran them twice and every
+# tier result counted 63 where 59 files exist. Removed 2026-08-21; the
+# claim it inflated is in BLOCKERS.md.
 
 # Gzip
 synth-exo-gz.gz                            # 81 B
@@ -71,8 +73,7 @@ nilminder.bin                              # 19829 B
 macpostmanager10b1.sit                     # 71424 B
 kermitut9test.bin                          # 303744 B
 
-# Now Compress
-derived-Expand_Now_1.0.1.sea               # 61824 B
+# Now Compress: listed with the DiskDoubler block above, where M12 put it.
 
 # PackIt
 synth-packit-2.pit                         # 3367 B

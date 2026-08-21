@@ -41,6 +41,7 @@ here runs in `ci.sh`.
 """
 import argparse
 import hashlib
+import json
 import os
 import shutil
 import struct
@@ -631,7 +632,32 @@ ADJUDICATE = {
 }
 
 
-def adjudicate(fixture, keep=False):
+def ours_path(root, path):
+    """Where OUR extraction put the file the Mac has at `path`.
+
+    A DiskDoubler self-extractor asks "Expand To:" and creates a folder;
+    everything it writes lands inside it, including entries that sit at
+    the TOP LEVEL of the archive, which our side writes at the root. So
+    a path is tried as it stands and then with its first component
+    dropped, and whichever one exists is the answer — rather than a rule
+    about the folder, because the two specimens disagree about it: the
+    Terrainman archive's own folder shares the destination's name and
+    merged with it, so its nested paths need no adjustment and its two
+    top-level entries do (measured 2026-08-21, when a global rule made
+    3 of 23 forks "differ" in one specimen and all 10 in the other).
+    """
+    def at(parts):
+        p = os.path.join(root, *[c.replace("/", ":") for c in parts])
+        h, t = os.path.split(p)
+        return p, (os.path.exists(p) or os.path.exists(os.path.join(h, "._" + t)))
+    p, ok = at(path)
+    if ok or len(path) < 2:
+        return p
+    alt, ok2 = at(path[1:])
+    return alt if ok2 else p
+
+
+def adjudicate(fixture, keep=False, write=False):
     """Run a DiskDoubler self-extractor under System 7 and compare every
     fork it writes with what our engine makes of the same archive."""
     sys.path.insert(0, os.path.join(REPO, "tools"))
@@ -701,35 +727,121 @@ def adjudicate(fixture, keep=False):
     ours = tempfile.mkdtemp(prefix="ddadj-ours-")
     subprocess.run([cli(), "x", "--forks", "hidden", "-o", ours, inner],
                    capture_output=True)
-    bad = seen = 0
+    bad = seen = raw_bad = 0
+    verdict = {}                      # entry path -> {fork: bytes the Mac wrote}
     for path, (ftype2, creator2, tdata, trsrc) in sorted(theirs.items()):
         if path[-1] == name:
             continue                                   # the extractor itself
-        mine = os.path.join(ours, *[p.replace("/", ":") for p in path])
+        mine = ours_path(ours, path)
         head, tail = os.path.split(mine)
         odata = open(mine, "rb").read() if os.path.isfile(mine) else b""
         side = os.path.join(head, "._" + tail)
         orsrc = open(side, "rb").read() if os.path.isfile(side) else b""
-        for fork, a, b in (("data", tdata, odata),
-                           ("rsrc", mask_reserved(trsrc),
-                            mask_reserved(orsrc))):
+        for fork, a, b, ra, rb in (("data", tdata, odata, tdata, odata),
+                                   ("rsrc", mask_reserved(trsrc),
+                                    mask_reserved(orsrc), trsrc, orsrc)):
             if not a and not b:
                 continue
             seen += 1
             same = a == b
             bad += not same
+            # RAW as well as masked. The mask exists because the Resource
+            # Manager stamps bytes 16..127 of a resource fork when it
+            # touches the file — but if it did not touch these, the Mac's
+            # bytes are exact ground truth and can go in a manifest, which
+            # a masked comparison could never justify.
+            rawsame = ra == rb
+            raw_bad += not rawsame
+            verdict.setdefault("/".join(path), {})[fork] = (ra, rawsame)
             shown = "/".join(path)
-            print("  %-40s %s/%s %-4s %8d B  %s"
+            print("  %-40s %s/%s %-4s %8d B  %s%s"
                   % (shown[-40:], ftype2, creator2, fork, len(a),
-                     "IDENTICAL" if same else "DIFFERS"))
+                     "IDENTICAL" if same else "DIFFERS",
+                     " (with the reserved header masked)"
+                     if same and not rawsame else ""))
     shutil.rmtree(ours, ignore_errors=True)
     if not keep:
         shutil.rmtree(work, ignore_errors=True)
     print("diskdoubler: %d fork(s) compared with DiskDoubler's own "
           "extractor, %s" % (seen, "all identical" if not bad and seen
                              else "%d DIFFER" % bad))
+    if raw_bad:
+        print("diskdoubler: %d of them agree only with the resource-fork "
+              "reserved header masked" % raw_bad)
     print("diskdoubler: screenshots in %s" % os.path.join(SPECIMENS, tag))
+    if write and not bad and seen:
+        n, notes = write_verdict(inner, verdict)
+        print("diskdoubler: %d fork(s) written into the manifest as "
+              "adjudicated, %d more noted as agreeing with the resource "
+              "header masked" % (n, notes))
     return 1 if (bad or not seen) else 0
+
+
+ADJ_ID = ("DiskDoubler's own self-extractor under System 7 "
+          "(tools/vmac/diskdoubler.py --adjudicate)")
+
+MASKED_NOTE = (" — but DiskDoubler's own self-extractor agrees on this fork "
+               "with the resource header's OS-stamped bytes 16..127 masked "
+               "(tools/vmac/diskdoubler.py --adjudicate, 2026-08-21)")
+
+
+def write_verdict(fixture, verdict):
+    """Record the Mac's bytes for forks no oracle could adjudicate.
+
+    Only forks currently marked `unadjudicated` are touched, only where
+    the Mac's RAW bytes are what we produced — a fork that agrees only
+    with the reserved header masked is not exact ground truth and stays
+    unadjudicated, with the reason left as it was. This is the same
+    per-fork provenance `make_manifests.py` writes when the second
+    oracle rescues a fork.
+    """
+    man_path = os.path.join(REPO, "fixtures", "manifests",
+                            os.path.basename(fixture) + ".json")
+    man = json.load(open(man_path))
+    n = notes = 0
+    for e in man["entries"]:
+        un = e.get("unadjudicated")
+        if not un:
+            continue
+        # The Mac's key is its own path, which carries the folder the
+        # extractor expanded INTO; an entry at the top level of the
+        # archive is at the top level of our output and one level down
+        # on the volume. Same fallback as ours_path, from the other end.
+        got = verdict.get(e["name"])
+        if not got:
+            for k, v in verdict.items():
+                if k.split("/", 1)[-1] == e["name"]:
+                    got = v
+                    break
+        if not got:
+            continue
+        for fork in ("data", "rsrc"):
+            if fork not in un or fork not in got:
+                continue
+            blob, rawsame = got[fork]
+            if not rawsame:
+                # Agreed with the reserved header masked, and that is
+                # worth recording where the fork's reason lives: the
+                # Resource Manager stamps bytes 16..127 whenever it
+                # touches a file, so the Mac can never be a byte-exact
+                # oracle for a resource fork — it can for a data fork.
+                if MASKED_NOTE not in un[fork]:
+                    un[fork] = un[fork] + MASKED_NOTE
+                    notes += 1
+                continue
+            e[fork + "_size"] = len(blob)
+            e[fork + "_sha256"] = hashlib.sha256(blob).hexdigest()
+            e[fork + "_oracle"] = ADJ_ID
+            del un[fork]
+            n += 1
+        if not un:
+            del e["unadjudicated"]
+    if n or notes:
+        man["entries"].sort(key=lambda x: x["name"])
+        with open(man_path, "w") as fh:
+            json.dump(man, fh, indent=1, ensure_ascii=False, sort_keys=True)
+            fh.write("\n")
+    return n, notes
 
 
 def forks_of(d, appledouble):
@@ -874,6 +986,9 @@ def main():
                     help="run a self-extracting fixture under System 7 and "
                          "compare every fork it writes with ours (%s)"
                          % ", ".join(sorted(ADJUDICATE)))
+    ap.add_argument("--write-manifest", action="store_true",
+                    help="with --adjudicate, record the Mac's bytes for the "
+                         "forks no oracle could grade")
     ap.add_argument("--keep", action="store_true", help="keep the work dir")
     args = ap.parse_args()
     if args.setup:
@@ -889,7 +1004,8 @@ def main():
     if args.make:
         make(args.make, args.keep)
     if args.adjudicate:
-        return adjudicate(args.adjudicate, args.keep)
+        return adjudicate(args.adjudicate, args.keep,
+                          args.write_manifest)
     if args.verify:
         return verify()
     if not (args.setup or args.install or args.wild or args.probe

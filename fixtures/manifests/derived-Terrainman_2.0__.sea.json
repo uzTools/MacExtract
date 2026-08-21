@@ -10,7 +10,7 @@
    ],
    "type": "TEXT",
    "unadjudicated": {
-    "rsrc": "Attempted to read more data than was available"
+    "rsrc": "Attempted to read more data than was available — but DiskDoubler's own self-extractor agrees on this fork with the resource header's OS-stamped bytes 16..127 masked (tools/vmac/diskdoubler.py --adjudicate, 2026-08-21)"
    }
   },
   {
@@ -39,7 +39,7 @@
    ],
    "type": "TEXT",
    "unadjudicated": {
-    "rsrc": "Attempted to read more data than was available"
+    "rsrc": "Attempted to read more data than was available — but DiskDoubler's own self-extractor agrees on this fork with the resource header's OS-stamped bytes 16..127 masked (tools/vmac/diskdoubler.py --adjudicate, 2026-08-21)"
    }
   },
   {
@@ -84,7 +84,7 @@
    ],
    "type": "PICT",
    "unadjudicated": {
-    "rsrc": "Attempted to read more data than was available"
+    "rsrc": "Attempted to read more data than was available — but DiskDoubler's own self-extractor agrees on this fork with the resource header's OS-stamped bytes 16..127 masked (tools/vmac/diskdoubler.py --adjudicate, 2026-08-21)"
    }
   },
   {
@@ -113,16 +113,16 @@
   },
   {
    "creator": "8BIM",
+   "data_oracle": "DiskDoubler's own self-extractor under System 7 (tools/vmac/diskdoubler.py --adjudicate)",
+   "data_sha256": "5c93c09640e00d354892322e76e8b4d99c2c7191047d4b48f2333f656b474a5f",
+   "data_size": 16524,
    "name": "Terrainman 2.0 ƒ/Pictures to try/Gnarly cove",
    "oracle_methods": [
     "DDn"
    ],
    "rsrc_sha256": "1b7e2cb4ef0a13cdea23ebb82f981340f37940dc6914eea0063440d5cf5153ec",
    "rsrc_size": 563,
-   "type": "PICT",
-   "unadjudicated": {
-    "data": "Attempted to read more data than was available"
-   }
+   "type": "PICT"
   },
   {
    "creator": "8BIM",
@@ -134,7 +134,7 @@
    ],
    "type": "PICT",
    "unadjudicated": {
-    "rsrc": "Attempted to read more data than was available"
+    "rsrc": "Attempted to read more data than was available — but DiskDoubler's own self-extractor agrees on this fork with the resource header's OS-stamped bytes 16..127 masked (tools/vmac/diskdoubler.py --adjudicate, 2026-08-21)"
    }
   },
   {
@@ -159,7 +159,7 @@
    ],
    "type": "PICT",
    "unadjudicated": {
-    "rsrc": "Attempted to read more data than was available"
+    "rsrc": "Attempted to read more data than was available — but DiskDoubler's own self-extractor agrees on this fork with the resource header's OS-stamped bytes 16..127 masked (tools/vmac/diskdoubler.py --adjudicate, 2026-08-21)"
    }
   }
  ],

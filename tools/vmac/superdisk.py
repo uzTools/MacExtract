@@ -9,6 +9,8 @@ this there is no oracle for the format at all.
 
     tools/vmac/superdisk.py --list                    what the corpus holds
     tools/vmac/superdisk.py --adjudicate FIXTURE.hqx  run it, compare forks
+    tools/vmac/superdisk.py --on-mac                  replay both payloads
+                                                      through OUR application
 
 The archive is unwrapped from its envelope with our own CLI, rebuilt as
 MacBinary and put on a 25 MB volume; System 7 boots, the application is
@@ -77,17 +79,29 @@ def read_forks(img):
 
     def walk(prefix):
         """`prefix` is a TUPLE of components: an HFS name may contain a
-        slash, so a joined path cannot be split back apart."""
+        slash, so a joined path cannot be split back apart.
+
+        Names go to `hcd` and `hcopy` as the RAW BYTES `hls` printed, not
+        as text. HFS names are Mac Roman and Python would hand a str to
+        the shell as UTF-8, so a folder called "Terrainman 2.0 ƒ" was
+        neither descended into nor copied — and a walk that silently
+        skips a folder reports zero forks, which reads as "the
+        application wrote nothing" rather than "this could not read it"
+        (measured 2026-08-21, on a run whose screenshot showed the
+        folder sitting on the volume).
+        """
         listing = subprocess.run(["hls", "-1"], capture_output=True,
-                                 env=env).stdout.decode("mac-roman", "replace")
-        for name in [n for n in listing.split("\n") if n.strip()]:
-            if subprocess.run(["hcd", name], capture_output=True,
+                                 env=env).stdout
+        for raw in [n for n in listing.split(b"\n") if n.strip()]:
+            name = raw.decode("mac-roman", "replace")
+            if subprocess.run([b"hcd", raw], capture_output=True,
                               env=env).returncode == 0:
                 walk(prefix + (name,))
                 subprocess.run(["hcd", "::"], capture_output=True, env=env)
                 continue
             tmp = tempfile.mktemp(suffix=".bin")
-            if subprocess.run(["hcopy", "-m", name, tmp], capture_output=True,
+            if subprocess.run([b"hcopy", b"-m", raw, tmp.encode()],
+                              capture_output=True,
                               env=env).returncode != 0:
                 continue
             blob = open(tmp, "rb").read()
@@ -201,6 +215,47 @@ def listing():
         sys.stdout.write(r.stdout or r.stderr)
 
 
+def on_mac(mem="4M", system="System6.hfv"):
+    """Replay both payloads through OUR Mac application.
+
+    The archives are payloads INSIDE envelopes, so they are in no
+    `--list` file and a sweep of the corpus leaves them out silently —
+    which is what OPEN_ITEMS.md recorded until this existed. They also
+    have no oracle manifest, since `unar` stops at the envelope, so the
+    run is graded with `run.py --expect`: the aggregate on screen
+    against this engine's own Linux output, whose SuperDisk! side is
+    adjudicated fork by fork by the archives' own self-extractors
+    (`--adjudicate`, replayed offline by `tools/run_superdisk.py`).
+    """
+    work = tempfile.mkdtemp(prefix="sdmac-")
+    bad = ran = 0
+    try:
+        for f in FIXTURES:
+            p = os.path.join(REPO, "fixtures", f)
+            if not os.path.exists(p):
+                print("superdisk: %s is not in the corpus, skipped" % f)
+                continue
+            out = os.path.join(work, f)
+            os.makedirs(out)
+            subprocess.run([cli(), "x", "-nr", "-o", out, p], check=True,
+                           capture_output=True)
+            for name in sorted(os.listdir(out)):
+                if name.endswith(".rsrc"):
+                    continue
+                ran += 1
+                r = subprocess.run(
+                    [sys.executable, os.path.join(HERE, "run.py"),
+                     os.path.join(out, name), "--expect", "--mem", mem,
+                     "--system", system], capture_output=True, text=True)
+                bad += r.returncode != 0
+                sys.stdout.write(r.stdout + r.stderr)
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+    print("superdisk: %d payload(s) replayed on the Mac at %s, %s"
+          % (ran, mem, "all PASS" if not bad and ran else "%d FAILED" % bad))
+    return 1 if (bad or not ran) else 0
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -208,6 +263,11 @@ def main():
                     help="list what the corpus's SuperDisk! archives hold")
     ap.add_argument("--adjudicate", metavar="FIXTURE",
                     help="run the self-extractor under System 7 and compare")
+    ap.add_argument("--on-mac", action="store_true",
+                    help="replay both payloads through our own Mac "
+                         "application, graded with run.py --expect")
+    ap.add_argument("--mem", default="4M", choices=("4M", "1M"))
+    ap.add_argument("--system", default="System6.hfv")
     ap.add_argument("--keep", action="store_true", help="keep the work volume")
     a = ap.parse_args()
     if a.list:
@@ -215,6 +275,8 @@ def main():
         return 0
     if a.adjudicate:
         return adjudicate(a.adjudicate, a.keep)
+    if a.on_mac:
+        return on_mac(a.mem, a.system)
     ap.print_help()
     return 0
 

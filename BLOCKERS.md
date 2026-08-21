@@ -8,9 +8,9 @@ system the project claims:
 
 | tier | result |
 |---|---|
-| System 6.0.8, 4 MB Mac Plus (Mini vMac, a true 68000) | 63/63 sampled fixtures |
-| System 6.0.8, **1 MB** — the floor target | **63/63**; no memory-budget refusals remain |
-| System 7.0.1, 4 MB | 55/55 on the pre-M12 sample; not re-run since (OPEN_ITEMS.md) |
+| System 6.0.8, 4 MB Mac Plus (Mini vMac, a true 68000) | 59/59 sampled fixtures |
+| System 6.0.8, **1 MB** — the floor target | **59/59**; no memory-budget refusals remain |
+| System 7.0.1, 4 MB | **59/59**, re-run 2026-08-21 with everything M12–M14 added |
 | Mac OS 9.2 (QEMU PowerPC, 68LC040 emulation) | 13/13, plus HFS+ and the `SIZE` partition; DiskDoubler still recorded there as the refusal it was pre-M12 |
 
 Per-fixture tables and how the sample grew: FORMATS.md. How to re-run any of
@@ -110,6 +110,8 @@ line is what makes the next one worth re-testing.
 | Nothing reachable writes DiskDoubler methods 1–5 or 7, so none can be graded | DiskDoubler 3.7 under Mini vMac writes method 1 from its own menu; its distribution disk ships two method 7 files | 2026-08-20 |
 | The three DiskDoubler containers are read; the corpus exercises every one | nine archives from `ssokolow/diskdoubler-test-files`: five fail at their third entry, on a `DDA2` entry type neither we nor XADMaster implement | 2026-08-21 |
 | The `SPLT` specimens are four parts across two sets | the same clone: six parts across three, the third with a 14 KB resource fork | 2026-08-21 |
+| The Mac sample is 63 fixtures, and every tier result is 63/63 | counting the file: 63 lines, 59 distinct — four listed twice | 2026-08-21 |
+| Macintosh Garden has DiskDoubler 3.7 and 4.x only | it also has 3.2 and DDExpand 2.03; 3.2's menu offers the same two software methods, and 2.03 is an expander | 2026-08-21 |
 
 **DiskDoubler methods 1–5 and 7 "cannot be graded".** Declined per entry
 since M12 on the grounds that no corpus fixture uses one and nothing reachable
@@ -160,6 +162,30 @@ than 12. All three now join byte-exact, forks included, and the CRC at `+48`
 is exact on all six rather than on four. The smell is the oldest one here: a
 number copied forward instead of re-counted. Nothing re-derived it because
 the harness that reads the corpus grades files, and these are sets.
+
+**"Macintosh Garden has 3.7 and 4.x only."** Written as the reason methods
+2-5 cannot be graded, and false: the same site carries `DiskDoubler_App_3.2`
+and `DiskDoubler2.03.sit`. Neither closes the gap — 3.2's `MENU 5019` offers
+"Method A (fastest)" and "Method B", the same two 3.7 has, and the 2.03
+download is DDExpand, the free EXPANDER, which compresses nothing — but the
+CONCLUSION was being carried by a fact nobody had checked, and the check is
+one page load. **Cost: none yet**, and that is the point of collecting it: the
+next reader would have stopped at the sentence instead of at the search. The
+smell is the one this file names first — a limitation stated about the
+environment. OPEN_ITEMS.md now says what is on that page.
+
+**63 sampled fixtures.** `tools/vmac/sample.txt` held 63 lines and 59 names:
+`derived-MAZv143.sea`, `derived-DD_Expand.sea`, `derived-MacPass390.sea` and
+`derived-Expand_Now_1.0.1.sea` were already in the list as REFUSAL cases when
+M12 added them again as extractions, and nothing deduplicates a list of file
+names. **Cost: four emulator runs on every sweep of every tier since
+2026-08-15 — minutes each, at 1x tens of minutes — and a coverage number 7%
+higher than the coverage.** It also inflated a gap: OPEN_ITEMS.md read "the
+seven fixtures M12 added" have never run on System 7, and M12 added TWO new
+names to this list. The smell is a cross-file contradiction that no file
+carried, because both numbers were computed from the same list by hand and
+neither by counting. A list of names is not a set of names until something
+makes it one.
 
 **macunpack is not a second implementation of method 7.** Built with
 `-DUNTESTED` its `dd_lzss` segfaults on the first specimen: it takes the

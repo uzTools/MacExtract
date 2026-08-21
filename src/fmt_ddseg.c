@@ -18,8 +18,11 @@
  *
  *   Every part begins with a 94-byte header:
  *      0  'SPLT'
- *      4  set identity, 4 bytes — equal across the parts of a set and
- *         different between sets; what it MEANS is unidentified
+ *      4  the Mac's TickCount when the file was split (1/60 s since
+ *         the machine booted) — written once per SET, which is why it
+ *         is equal across the parts and different between sets.
+ *         MEASURED 2026-08-21: three splits 72 s apart under emulation
+ *         differ by 4,324 and 4,330, i.e. 60.06 and 60.14 per second
  *      8  data fork length of the original file (4)
  *     12  resource fork length (4)
  *     16  type (4)      20  creator (4)      24  Finder flags (2)
@@ -58,7 +61,9 @@
  */
 #include "unc_internal.h"
 
-#define DS_ID        4          /* start of the 26 fingerprint bytes */
+#define DS_ID        4          /* start of the 26 fingerprint bytes:
+                                 * split time, both fork lengths, type,
+                                 * creator, flags and the two dates */
 #define DS_DATALEN   8
 #define DS_RSRCLEN  12
 #define DS_TYPE     16

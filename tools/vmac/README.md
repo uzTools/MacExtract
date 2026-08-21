@@ -61,7 +61,9 @@ oracle and will lose it to `./ci.sh`'s `make clean`.
 | `mountcheck.py` | boot a system image with disks attached and photograph the desktop — "does this mount?", and "does this system boot at all?" |
 | `mkapmdisk.py` | build an Apple-partitioned transfer disk that Mac OS on PowerPC will mount |
 | `checkdisk.py` | verify a run by READING its Out volume — both forks, and the names the on-screen grid cannot carry |
-| `diskdoubler.py` | **ask DiskDoubler itself what it can write** — run the 3.7 application, compress a subject with each method its menu offers, read the method byte back |
+| `diskdoubler.py` | **ask DiskDoubler itself what it can write** — run the 3.7 application, compress a subject with each method its menu offers, read the method byte back; and `--adjudicate`, which runs a self-extracting fixture and grades the forks no oracle can decode |
+| `ddpro.py` | the other half of the format: DiskDoubler **Pro** 4.1, which writes `DDA2` and whose Split command is the source of the `SPLT` questions still open |
+| `superdisk.py` | grade SuperDisk! with its own self-extractors, and `--on-mac`, which replays both payloads through our application |
 | `mkcollide.py` | build an archive whose names collide on HFS, and verify what `BumpName` did with them — nothing in the corpus collides |
 
 `tools/quickdraw-repro/` is a sibling that reuses `mkboot.py` and this
@@ -283,17 +285,24 @@ is DECISIONS.md, "ArcMac's fork order"). Specimens land in
 `$UNC_VMAC_HOME/specimens/arcmac/` as plain `.arc` files, with the input forks
 beside them and a screenshot per step. Nothing here runs in `ci.sh`.
 
-The specimens are `run.py` inputs like any other archive — there is no oracle
-manifest for them, since `unar` cannot recognise ArcMac at all, so read the
-grid directly:
+The specimens are `run.py` inputs like any other archive, and since 2026-08-21
+they are graded like any other archive too — `--expect` grades a file that has
+no oracle manifest against this engine's own Linux output, which is what the
+manifest was only ever used to locate:
+
+    tools/vmac/run.py --expect $UNC_VMAC_HOME/specimens/arcmac/Packed.ARC
+
+Before that it had to be done by hand, reading the grid:
 
     tools/vmac/run.py --pngdir /tmp/p $UNC_VMAC_HOME/specimens/arcmac/Packed.ARC
     tools/decode_grid.py /tmp/p/Packed.ARC.png
 
-Both fork CRC-32s must equal those of `specimens/arcmac/in-data` and
-`in-rsrc` — the bytes that went INTO ArcMac on the emulated Mac in the first
-place. That closes the loop without an oracle: encoded on a Mac, decoded on a
-Mac, checked against the input.
+Either way both fork CRC-32s must equal those of `specimens/arcmac/in-data`
+and `in-rsrc` — the bytes that went INTO ArcMac on the emulated Mac in the
+first place. That closes the loop without an oracle: encoded on a Mac,
+decoded on a Mac, checked against the input. What `--expect` does NOT do is
+adjudicate the Linux side; the suite for that format does (TESTING.md), and
+the run says so on every line it prints.
 
 Four things to know before re-running it:
 
@@ -357,6 +366,77 @@ Four things to know before re-running it:
 - **The run ends with Put Away, and must**, for the reason `arcmac.py`
   documents below: Mini vMac flushes the guest's writes when the volume is
   ejected, so a run killed with it still mounted reads back an unchanged disk.
+
+### The forks neither oracle can decode — `--adjudicate`
+
+    tools/vmac/diskdoubler.py --adjudicate lha-expander-103.hqx --write-manifest
+    tools/vmac/diskdoubler.py --adjudicate terrain-man-20.hqx  --write-manifest
+
+Two corpus fixtures hold forks that `unar` fails on and `macunpack` — built
+with its own DiskDoubler support — fails on too. Both are SELF-EXTRACTING, so
+each carries a third implementation in its resource fork, the bargain
+`superdisk.py` and `nowcompress.py` already make. The fixture named on the
+command line is the ENVELOPE, because the derived `.sea` in `fixtures/` is its
+data fork alone and a self-extractor without its code is just an archive.
+
+`--write-manifest` records the verdict where `ci.sh` will keep checking it,
+which is the point: a fork the Mac wrote goes into the fixture's manifest with
+`data_oracle` naming this harness, exactly as `make_manifests.py` records a
+fork the second oracle rescued.
+
+**Only DATA forks can go in.** Measured 2026-08-21: every resource fork the
+Mac wrote agrees with ours only once bytes 16..127 — the resource header's
+"reserved for system use" area — are masked, because the Resource Manager
+stamps them whenever it touches a file. That is not byte-exact ground truth,
+so those forks stay `unadjudicated` and their reason says the Mac agreed
+modulo the mask; `run_diff.py` counts them separately. It is the same mask
+`vmac_check.py` applies for the same reason, and it is why this harness cannot
+turn a resource fork into a manifest entry however many times it is run.
+
+## The other half of DiskDoubler — `ddpro.py`
+
+`diskdoubler.py` runs DiskDoubler 3.7, whose two software methods are 1 and
+8. DiskDoubler **Pro** 4.1 writes the other container: `DDA2` archives, and
+methods 9, 6 and 10 behind the AD1/AD2/DD1/DD2/DD3 items of its Settings
+dialog. Two open questions need it, and neither can be answered by reading a
+file (OPEN_ITEMS.md):
+
+    tools/vmac/ddpro.py --setup     # fetch 4.1, unpack it
+    tools/vmac/ddpro.py --install   # System 7 + its Finder-menu extension
+    tools/vmac/ddpro.py --probe     # photograph the menus and dialogs
+
+- **A `DDA2` stored entry with a resource fork.** Every stored entry anyone
+  here has seen is a JPEG or a PNG with no resource fork, so `+87` — read as
+  that fork's XOR checksum, by position beside the data fork's at `+86` — has
+  only ever been 0, and the record's two dates have only ever been equal.
+  Still open, and narrowed: 4.1's "Create Archive…" on one incompressible
+  file writes an ordinary header with the data fork STORED, not the
+  headerless `0x1000` record (OPEN_ITEMS.md).
+- **What the 4 bytes at `+4` of a `SPLT` header mean. ANSWERED 2026-08-21:
+  the Mac's `TickCount` when the file was split.** Three files split 72 s
+  apart differ by 4,324 and 4,330 ticks, and two of the three were
+  byte-identical with different names (FORMATS.md, DECISIONS.md).
+
+    tools/vmac/ddpro.py --experiments   # one session, both questions
+
+Like `diskdoubler.py` this is an extension with an application beside it, so
+the work is done from the Finder's own menu; unlike it, the download is a
+StuffIt archive rather than a disk image, and our own CLI unpacks it.
+
+Three things the first two runs cost, all worth knowing before the third:
+
+- **The application has to be on a mounted volume.** The Finder menu is the
+  front end only: "Create Archive…" answers *The DiskDoubler application
+  cannot be found. Please locate it.* and every menu item greys out behind
+  the dialog. `session()` puts it on the work volume.
+- **The name has to be the Mac's.** The application is called
+  `DiskDoubler™`, and what a Mac Roman `™` becomes in a Linux directory
+  depends on the transcoding, so the name given to MacBinary is spelled out
+  in the source rather than taken from the host file.
+- **The volume needs room for what DiskDoubler writes**, not just for the
+  subjects: a split leaves the original in place, so a 1 MB file needs 1 MB
+  more, and the menu item is "Split File (760K)" — a subject smaller than
+  that comes out in one piece and answers nothing.
 
 ## Grading SuperDisk! with SuperDisk! — `superdisk.py`
 
@@ -770,6 +850,17 @@ describes what is inside that archive. **A Compact Pro set is checked
 against the grid**, because its reader emits the archive's entries
 directly — which is what the manifest lists. Same shape from outside,
 opposite oracles.
+
+**`ddseg-real` is the only case whose parts were cut by the application
+that defines the format** (added 2026-08-21). DiskDoubler Pro 4.1.1 cut
+`ddtf-ddpro411ad1.dd` into two, both are fixtures, and so is the
+AppleDouble sidecar holding the original's resource fork — so this case
+checks the joined FILE off the Out volume, both forks, against what the
+corpus publishes, as well as the grid via `--expect` (a `SPLT` part has
+no manifest; nothing but DiskDoubler writes the container). Part 2 goes
+on the volume under a name that resembles nothing, because a `SPLT` part
+is matched by the 26 identity bytes in its header and never by its
+filename.
 
 ### The two schemes that are placed by FILENAME — `--named`
 

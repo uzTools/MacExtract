@@ -68,10 +68,15 @@ window. Both: DECISIONS.md 2026-08-20.
 Methods 2, 3, 4 and 5 stay **declined per entry**: nothing reachable writes
 one — DiskDoubler 3.7's menu offers method 1 and method 8 and nothing else —
 so anything written for them could not be graded. **11 forks across 2 fixtures
-are adjudicated by neither oracle** — `unar` fails on them and `macunpack`
-(built with its DiskDoubler support on) fails too; our output for those is
-ungraded, and `run_diff.py` prints the count on every run. DECISIONS.md
-2026-08-15.
+were adjudicated by neither oracle** — `unar` fails on them and `macunpack`
+(built with its DiskDoubler support on) fails too. Both fixtures are
+self-extracting, so each carries DiskDoubler's own expander: running them
+under System 7 on 2026-08-21 compared **all 33 forks of the two archives and
+found all 33 identical** (`tools/vmac/diskdoubler.py --adjudicate`). Three
+data forks are recorded in the manifests with that provenance and are checked
+by `ci.sh` on every run; the 8 resource forks agree only with the OS-stamped
+header bytes 16..127 masked, so they stay unadjudicated and `run_diff.py`
+prints the two counts separately. DECISIONS.md 2026-08-15, 2026-08-21.
 
 **A `DDA2` entry of type `0x1000` carries no `0xABCD0054` header of its own**
 — DiskDoubler Pro's form for a file it could not shrink. Read since
@@ -569,9 +574,9 @@ chosen here. Both paths are exercised in `ci.sh`.
 
 **M11's four schemes join on the Mac** as of 2026-08-14, and so does a set
 whose parts are still inside envelopes — the StuffIt scheme only, which is the
-one whose identity survives a wrapper. The fifth, DiskDoubler `SPLT`, has
-never been joined there (OPEN_ITEMS.md). The StuffIt table below is from
-2026-08-08; the other three are:
+one whose identity survives a wrapper. **The fifth, DiskDoubler `SPLT`, joined
+there on 2026-08-21** and is in the table. The StuffIt table below is from
+2026-08-08; the others are:
 
 | scheme | how it was driven | result |
 |---|---|---|
@@ -581,6 +586,7 @@ never been joined there (OPEN_ITEMS.md). The StuffIt table below is from
 | `.NNN` split, 4 MB and **1 MB** | `interactive.py --named split`, opened at part 1 of 3 | joined file **byte-exact** |
 | Parts inside envelopes, 4 MB and **1 MB** | `interactive.py --wrapped`: part 1 as `Apart.sit.1.hqx`, part 2 as `zzz-download.bin`, part 3 as `Other.9.hqx` | same contents as the Linux CLI on the same three files, and no decoded parts left on the volume |
 | A chained file (`.sit.hqx`), 4 MB and **1 MB** | `interactive.py --chain` | every layer comes off and the intermediate is removed — which this application did NOT do before 2026-08-14 (BLOCKERS.md) |
+| DiskDoubler `SPLT`, 4 MB | `segcheck.py --case ddseg-real`: two parts **cut by DiskDoubler Pro 4.1.1 itself**, part 2 on the volume as `zzz-piece2` | the joined file off the Out volume equals the file the corpus publishes — 15,918 B data + 342 B resource fork, the latter with the OS-stamped header bytes masked — and the grid agrees, peak heap 8,208 B |
 
 The two name-placed schemes go through the real UI rather than the
 autotest, because the autotest opens a file called `archive.sit` and a
@@ -666,8 +672,8 @@ DECISIONS.md 2026-08-10.
 ### DiskDoubler `SPLT`
 
 DiskDoubler's own Split command, in scope since 2026-08-21.
-`src/fmt_ddseg.c` has the layout, derived from the four specimens in
-`ssokolow/diskdoubler-test-files`; why each field is read the way it is,
+`src/fmt_ddseg.c` has the layout, derived from the six specimens in
+`ssokolow/diskdoubler-test-files` (four when it was derived — BLOCKERS.md); why each field is read the way it is,
 and the rule that a `SPLT` header beats a `.NNN` filename, are
 DECISIONS.md 2026-08-21.
 
@@ -687,11 +693,27 @@ sets reassemble byte-exact, forks included, against the files they were
 cut from — including the 14,128-byte resource fork of the
 self-extractor, the largest fork any of them carries.
 
+**And the loop closes without an oracle at all**: DiskDoubler Pro 4.1
+splitting a 1,024,000-byte file under Mini vMac
+(`tools/vmac/ddpro.py --experiments`) produced a two-part set that this
+engine joins back to the bytes that went in, byte for byte — cut on a
+Mac, joined here, compared with the input, which is the same bargain the
+method 1 specimens make.
+
 Part opens are one per part, 0 backward. Peak heap is the 8 KB streaming
 buffer. The CRC-16/XMODEM at offset 48 is exact on all six specimen
 parts and is **checked while a part is read straight through**, which is
-what joining a set does (DECISIONS.md 2026-08-21). The 4 bytes at offset
-4 are parsed and unidentified (OPEN_ITEMS.md).
+what joining a set does (DECISIONS.md 2026-08-21).
+
+**The 4 bytes at offset 4 are the Mac's `TickCount` when the file was
+split** (MEASURED 2026-08-21, `tools/vmac/ddpro.py --experiments`):
+DiskDoubler Pro splitting three files 72 s apart wrote 7,581, 11,905 and
+16,235 — differences of 4,324 and 4,330, which is 60.06 and 60.14 per
+second against the Mac's 60.15 Hz tick. Two of the three files were
+byte-identical with different names, so it is neither a checksum nor a
+hash of the name. It is written once per SET, which is exactly why it is
+equal across a set's parts and different between sets; the joiner needs
+no more than that, and matches on all 26 identity bytes anyway.
 
 ## Hardening
 
@@ -700,9 +722,12 @@ what joining a set does (DECISIONS.md 2026-08-21). The 4 bytes at offset
   the DiskDoubler corpus, whose manifests are built from the files it was
   made from rather than from a decoder (TESTING.md). `run_diff.py` prints
   the number it actually ran, plus two figures that must be read with it:
-  **27 forks across 12 fixtures are oracle-unadjudicated** (both
+  **24 forks across 12 fixtures are oracle-unadjudicated** — both
   implementations decline every one of them, so the engine's own CRC-16
-  is the only check), and **7 entries are compressed with a method the
+  is the only byte-exact check; 8 of the 24 have since been compared
+  with DiskDoubler's own expander on an emulated Mac and agree with the
+  resource header's OS-stamped bytes masked, which `run_diff.py` reports
+  as its own line — and **7 entries are compressed with a method the
   ORACLE names as outside v1 scope** and are graded on their names and
   entry counts alone. No fixture is skipped for anything our own engine
   says about it (TESTING.md, "When our engine declines an entry"). It was
@@ -813,10 +838,14 @@ result — painted to the framebuffer, read from a screenshot — is
 cross-checked against the same engine's Linux output (`tools/vmac_check.py`,
 `tools/decode_grid.py`).
 
-**63/63 byte-exact PASS** (2026-08-15, re-run after the BinHex line rule changed — every `.hqx` in the sample goes through it; 61/61 earlier the same day, before M13 added ARC and uuencode; 55/55 on 2026-08-08, before M12 added
-six DiskDoubler fixtures and one Now Compress fixture to the sample) — data
-forks exact, resource forks exact bar the OS-stamped reserved header
-(bytes 16–127).
+**59/59 byte-exact PASS** (2026-08-15, re-run after the BinHex line rule
+changed — every `.hqx` in the sample goes through it; 57/57 earlier the same
+day, before M13 added ARC and uuencode; 55/55 on 2026-08-08, before M12 added
+two names to the sample) — data forks exact, resource forks exact bar the
+OS-stamped reserved header (bytes 16–127). Those runs were 63, 61 and 55
+files long: four names were listed twice until 2026-08-21 and every sweep ran
+them twice (BLOCKERS.md). The verdicts are unchanged — a duplicate that
+passes twice passes — and the COUNT is what was wrong.
 
 **The sample was 44 fixtures until 2026-08-08**, when nine that had never had
 an oracle manifest gained one and were added: seven THINK C projects holding
@@ -874,9 +903,11 @@ above System 6: Standard File returns a **working-directory** reference in
 is always running, so the `SIZE` partition governs the launch. Mini vMac's
 Mac Plus supports up to 7.5.5, so this is the same 68000 as every other row.
 
-**55/55 byte-exact PASS at 4 MB** (2026-08-08; 44/44 before the sample grew) —
-the same committed sample, the same on-Mac CRC-32 read-back, the same twelve
-formats:
+**59/59 byte-exact PASS at 4 MB** (2026-08-21; 55/55 on 2026-08-08 and 44/44
+before the sample grew) — the same committed sample, the same on-Mac CRC-32
+read-back. The 2026-08-21 run is the first on this tier since M12, M13 and M14,
+so it is the first that includes DiskDoubler, Now Compress, ARC and uuencode
+here; every one passed, 5.1 s a fixture, one boot each:
 
     tools/vmac/run.py --system Sys7.img --list tools/vmac/sample.txt
 
@@ -936,12 +967,13 @@ concatenating those two with any text between them, which is what
 ### SuperDisk! on the Mac (2026-08-20)
 
 Not in `sample.txt`, because neither archive is a fixture: both are PAYLOADS
-inside envelopes, and `run.py` grades against an oracle manifest, which for
-this format describes the envelope. So they are read off the grid the way the
-ArcMac specimens are (`tools/vmac/README.md`, "Grading SuperDisk! with
-SuperDisk!"). **Identical numbers at 4 MB and at 1 MB**, and identical to the
-Linux aggregate for the same payload, `ret` 0 with 0 entry errors on all four
-runs:
+inside envelopes, and `run.py` graded only against an oracle manifest, which
+for this format describes the envelope. Since 2026-08-21 one command replays
+both — `tools/vmac/superdisk.py --on-mac`, which unwraps each payload and
+grades it with `run.py --expect` against this engine's own Linux output
+(both PASS at 4 MB, re-run 2026-08-21). **Identical numbers at 4 MB and at
+1 MB**, and identical to the Linux aggregate for the same payload, `ret` 0
+with 0 entry errors on every run:
 
 | Payload | Files | Peak heap on the Mac | Data | Rsrc |
 |---|---|---|---|---|
@@ -961,9 +993,11 @@ RAM** — the project's floor target — one boot per fixture, same on-Mac
 CRC-32 verification (`tools/vmac/run.py --mem 1M --list tools/vmac/sample.txt`).
 The engine budget is derived from `FreeMem` at startup.
 
-**63/63 byte-exact PASS** (2026-08-15, with M13's two; 61/61 before them; 55/55 on 2026-08-08 and 44/44 on
-2026-08-07, before the recovered fixtures, the method-6 pair and M12's seven
-joined the sample). There are no memory-budget refusals
+**59/59 byte-exact PASS** (2026-08-15, with M13's two; 57/57 before them;
+55/55 on 2026-08-08 and 44/44 on 2026-08-07, before the recovered fixtures,
+the method-6 pair and M12's two joined the sample; the sample carried four
+duplicate lines until 2026-08-21, so those runs were 63, 61 and 55 files
+long — BLOCKERS.md). There are no memory-budget refusals
 left at the floor target: every fixture in the sample, in every format,
 extracts byte-exact on a 1 MB Mac Plus. The six StuffIt 5 rows, which were the
 last to arrive, with peak heap as the Mac itself reports it:

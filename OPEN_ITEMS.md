@@ -87,12 +87,17 @@ layouts come from a reference implementation or a spec, never from memory.
   from its own menu, and its distribution disk ships two method 7 files
   (BLOCKERS.md, *Withdrawn claims*). What is left of the list is earlier
   DiskDoubler work: 3.7's menu offers two software methods and neither is one
-  of them, and no copy of 1.x or 2.x is reachable from here — Macintosh Garden
-  has 3.7 and 4.x only, and the 1990 shareware "DiskDoubler .05" on funet
+  of them, and no COMPRESSOR older than 3.2 is reachable. What Macintosh
+  Garden has, checked 2026-08-21 rather than assumed: **DiskDoubler 3.2**,
+  whose `MENU 5019` offers the same two software methods as 3.7 ("Method A
+  (fastest)", "Method B") and so writes the same two; **DDExpand 2.03**,
+  which is the free EXPANDER of the 2.x era and compresses nothing —
+  the file is called `DiskDoubler2.03.sit`, which is what makes it worth
+  writing down; 3.7.x, and 4.x. The 1990 shareware "DiskDoubler .05" on funet
   writes MacCompress files (its INIT carries `ZIVM`/`LZIV` and none of the
   three DiskDoubler magics), so it predates the container entirely.
-  **What would close it:** a copy of DiskDoubler 1.x or 2.x, or one file
-  written by one. DiskDoubler Pro 4.1.1 does not help: its five menu
+  **What would close it:** a copy of the DiskDoubler 1.x or 2.x
+  COMPRESSOR, or one file written by one. DiskDoubler Pro 4.1.1 does not help: its five menu
   entries are AD1, AD2, DD1, DD2 and DD3, which write methods 9, 6, and
   10 three ways — nine archives' worth of them in
   `ssokolow/diskdoubler-test-files`, and not one method between 2 and 5. The three
@@ -131,60 +136,44 @@ layouts come from a reference implementation or a spec, never from memory.
   right. **What would close it:** a bigger method 7 file, which needs
   the Sigma Designs card DiskDoubler 3.x wrote them with — no emulator
   here has one.
-- **11 forks across 2 fixtures are adjudicated by neither oracle**
-  (`derived-Terrainman_2.0__.sea`, `derived-LHA_Expander_1.0.3.sea`).
-  `unar` fails on them and `macunpack` — built with its own DiskDoubler
-  support — fails too. We extract them; nobody grades them.
-- **No `SPLT` set has ever been joined on a Mac.** The application
-  compiles with the scheme (`ci.sh` variant 4) and shares the joiner,
-  the volume source and the "locate part N" dialog with the four
-  schemes that HAVE run there; two pieces are its own, the filename
-  rule and the joined file's name. **What would close it:**
-  `tools/vmac/run.py` on a set cut from a fixture — the same shape as
-  the segmented-set runs of 2026-08-09 (FORMATS.md, "Segmented sets on
-  a real emulated Mac Plus").
-- **The 4 bytes at `+4` of a `SPLT` header are unidentified.** Equal
-  across the parts of a set, different between sets, so they serve as
-  the identity and the joiner needs nothing more. Three sets are known
-  and no checksum accounts for them: not of the payload, of either
-  fork, or of the file (sum, rotating sum, CRC-16/ARC, CCITT and XMODEM,
-  over data, resource and both, all tested 2026-08-21). Two of the three
-  sets have IDENTICAL data forks and different values, so whatever it
-  is, it is not a function of the data fork alone. **What would close
-  it:** DiskDoubler splitting files of known size and known time under
-  emulation — the same file twice would separate a content hash from a
-  clock, and `tools/vmac/diskdoubler.py --probe-split` is where that
-  starts.
+- **8 resource forks across 2 fixtures are not ground truth**, though
+  a third implementation agrees with every one of them. Both fixtures
+  are self-extracting, so each carries DiskDoubler's own expander;
+  running them under System 7 on 2026-08-21 compared all 33 forks and
+  found all 33 identical (`tools/vmac/diskdoubler.py --adjudicate`).
+  The three DATA forks are now in the manifests with that provenance,
+  where `ci.sh` re-checks them. The resource forks cannot be: the
+  Resource Manager stamps bytes 16..127 of a fork's header whenever it
+  touches the file, so the Mac's copy agrees only with those masked and
+  is not byte-exact ground truth. **What would close it:** an
+  implementation that runs off a Mac, which for these methods means
+  transcribing one — or a specimen of the same archive from a machine
+  that never opened it.
 - **A `DDA2` stored entry with a resource fork has never been seen.**
   `+87` is read as that fork's XOR checksum by position, next to the
   data fork's at `+86`, which is measured on ten forks. Both stored
   files in every set are fork-less (a JPEG and a PNG), so `+87` has only
   ever been 0 — and the record's two dates have only ever been equal, so
   which of `+54` and `+58` is the creation is assigned rather than
-  measured (DECISIONS.md 2026-08-21). **What would close both:** one
-  incompressible file with a resource fork, compressed by DiskDoubler
-  Pro.
-- **Two of the four Mac tiers have not re-run since M12, M13 or M14.** The
-  System 6 tiers have (63/63 at 4 MB and at 1 MB, 2026-08-15; plus both
-  SuperDisk! payloads on both, 2026-08-20). **System 7.0.1 and
-  Mac OS 9.2 have not**: System 7 stands at 55/55 on the pre-M12 sample
-  (2026-08-08), so the seven fixtures M12 added and the two M13 added have
-  never run there, and
-  the OS 9 sample still records DiskDoubler as a refusal, which is what
-  it was when that tier last ran. FORMATS.md marks those rows pre-M12.
-  **What would close it:** `run.py --system Sys7.img --list
-  tools/vmac/sample.txt` (Mini vMac, cheap) and an OS 9 sweep, which
-  costs a full PowerPC boot per fixture.
-- **The SuperDisk! archives are in no `--list` file, on any tier**, because
-  they are payloads inside envelopes and `run.py` graded only against a
-  manifest, which the format has none of. They were replayed by hand on both
-  System 6 tiers (FORMATS.md, "SuperDisk! on the Mac"), and a sweep would
-  silently leave them out. The grading mode they wanted exists since
-  2026-08-21 — `run.py --expect`, which takes the Linux aggregate for a file
-  with no manifest, as the ArcMac specimens have also wanted since M13.
-  **What would close it:** a sweep that includes them, and a `--list` file
-  that names the payloads.
-
+  measured (DECISIONS.md 2026-08-21). **What would close both:** a
+  `0x1000` record whose file has a resource fork. Narrowed 2026-08-21:
+  DiskDoubler Pro **4.1**'s "Create Archive…" on a single incompressible
+  file with a resource fork does NOT write one — it writes an ordinary
+  `0xABCD0054` header with the data fork stored (method 0) and the
+  resource fork AD1-compressed, which this engine reads
+  (`tools/vmac/ddpro.py --experiments`, then `--check-stored`). So the
+  `0x1000` form comes from something else about the nine published
+  archives: 4.1.1 rather than 4.1, or seven files at once rather than
+  one. Trying those two is what is left.
+- **The Mac OS 9.2 tier has not re-run since M12, M13 or M14.** The other
+  three have: System 6 at 4 MB and at 1 MB (59/59 each, 2026-08-15, plus
+  both SuperDisk! payloads on both, 2026-08-20) and System 7.0.1
+  (**59/59, 2026-08-21**, the first run there with DiskDoubler, Now
+  Compress, ARC and uuencode in the sample). The OS 9 sample still
+  records DiskDoubler as a refusal, which is what it was when that tier
+  last ran, and FORMATS.md marks those rows pre-M12. **What would close
+  it:** an OS 9 sweep, which costs a full PowerPC boot per fixture —
+  tens of minutes, against five for the whole System 7 tier.
 ---
 
 ## 2. Cannot be closed in this environment

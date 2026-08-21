@@ -124,6 +124,15 @@ def aggregate_dir(root_dir, names=None):
 
 
 def expected_from_fixture(fixture):
+    # The reference build is what `./ci.sh` deletes first (`make clean`),
+    # and losing it here used to surface as sixty lines of traceback from
+    # subprocess. Say it in one line instead — the answer is always the
+    # same, and `tools/vmac/README.md` already warns not to run these
+    # alongside CI.
+    if not os.path.exists(CLI):
+        sys.exit("vmac_check: no reference build at %s — `make` it (and do "
+                 "not run this while ./ci.sh is running: its `make clean` "
+                 "takes that binary away)" % os.path.normpath(CLI))
     tmp = tempfile.mkdtemp()
     try:
         subprocess.run([CLI, "x", "-nr", "--forks", "hidden", fixture,

@@ -197,7 +197,7 @@ def out_of_scope(entry):
 def check_fixture(unclassic, man, verbose, budget=0):
     fx = os.path.join(FIXDIR, man["fixture"])
     cap = ["--budget", str(budget)] if budget else []
-    problems, unadjudicated = [], 0
+    problems, unadjudicated, masked = [], 0, 0
     excused = {normpath(e["name"]) for e in man["entries"]
                if e.get("unadjudicated")}
     with tempfile.TemporaryDirectory() as tmp:
@@ -245,6 +245,14 @@ def check_fixture(unclassic, man, verbose, budget=0):
                         f"{'both' if fork in un else 'neither'} adjudicated "
                         f"and unadjudicated")
             unadjudicated += len(un)
+            # A fork can be unadjudicated in two different senses, and
+            # collapsing them overstates the gap: some have been compared
+            # on a Mac with the resource header's OS-stamped bytes masked
+            # (tools/vmac/diskdoubler.py --adjudicate), which is not
+            # byte-exact ground truth but is not "nobody has looked"
+            # either. The reason string says which, and it is the
+            # manifest's own words rather than a flag we set.
+            masked += sum(1 for r in un.values() if "masked" in r)
             path = files.pop(name, None)
             rp = files.pop(sidecar(name), None)
             if len(un) == 2:
@@ -291,7 +299,7 @@ def check_fixture(unclassic, man, verbose, budget=0):
                         f"{e['type']}/{e.get('creator')}")
         for leftover in files:
             problems.append(f"unexpected output: {leftover!r}")
-    return problems, unadjudicated
+    return problems, unadjudicated, masked
 
 
 def main():
@@ -317,7 +325,7 @@ def main():
 
     ran = passed = skipped_fmt = skipped_missing = 0
     detect_ran = detect_bad = 0
-    unadj_forks = unadj_fixtures = oos_entries = 0
+    unadj_forks = unadj_fixtures = oos_entries = unadj_masked = 0
     fails = []
     for mf in manifests:
         with open(os.path.join(mandir, mf)) as f:
@@ -347,8 +355,9 @@ def main():
             skipped_fmt += 1
             continue
         ran += 1
-        problems, unadj = check_fixture(
+        problems, unadj, masked = check_fixture(
             args.unclassic, man, args.verbose, args.budget)
+        unadj_masked += masked
         oos_entries += sum(1 for e in man["entries"] if out_of_scope(e))
         if unadj:
             unadj_forks += unadj
@@ -380,7 +389,12 @@ def main():
               f"with a method outside v1 scope: graded on name only")
     print(f"  oracle-unadjudicated: {unadj_forks} fork(s) across "
           f"{unadj_fixtures} fixture(s) — the oracle failed on these, so "
-          f"no second implementation adjudicates them (TESTING.md)")
+          f"no second implementation adjudicates them byte for byte "
+          f"(TESTING.md)")
+    if unadj_masked:
+        print(f"    of those, {unadj_masked} fork(s) DO agree with a third "
+              f"implementation on an emulated Mac, with the resource "
+              f"header's OS-stamped bytes 16..127 masked")
     return 1 if (fails or detect_bad) else 0
 
 
