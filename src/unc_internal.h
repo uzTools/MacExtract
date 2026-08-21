@@ -400,11 +400,27 @@ int unc_sit_extract(UncCtx *c);
 
 /* One part of a StuffIt segmented set (fmt_sitseg.c). unc_sitseg_emit
  * writes the single joined entry, reading its forks from `base`:
- * UNC_SEG_HEAD for a lone part, 0 for the stream unc_segment.c joins. */
+ * UNC_SEG_HEAD for a lone part, 0 for the stream unc_segment.c joins.
+ * `data_first` says which fork the stream begins with — StuffIt puts
+ * the resource fork first, DiskDoubler's `SPLT` the data fork. */
 int unc_sitseg_probe(const uint8_t *head, int32_t len);
 int unc_sitseg_extract(UncCtx *c);
-int unc_sitseg_emit(UncCtx *c, const UncSegmentDesc *desc, uint32_t base);
+int unc_sitseg_emit(UncCtx *c, const UncSegmentDesc *desc, uint32_t base,
+                    int data_first);
 int unc_sitseg_describe(UncIO *io, UncSegmentDesc *desc);
+
+/* One part of a DiskDoubler `SPLT` set (fmt_ddseg.c). unc_ddseg_payload
+ * is what the joiner asks a freshly opened part: how many of its bytes
+ * are payload, given that the part declares it and also re-proves that
+ * it belongs to this set and is this part. */
+int unc_ddseg_probe(const uint8_t *head, int32_t len);
+int unc_ddseg_extract(UncCtx *c);
+int unc_ddseg_describe(UncIO *io, UncSegmentDesc *desc);
+int unc_ddseg_match(const UncSegmentDesc *desc, const uint8_t *head,
+                    int32_t len);
+int unc_ddseg_payload(const UncSegmentDesc *desc, const uint8_t *head,
+                      int32_t len, int part, uint32_t size,
+                      uint32_t *payload);
 
 /* One part of a spanned ("split") zip set (fmt_zipseg.c). The probe
  * needs the io handle because the only part that identifies itself

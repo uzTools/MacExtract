@@ -89,11 +89,11 @@ output to a different disk from the parts, which is the only thing that works
 when the parts are on floppies you have to keep swapping.
 
 The other ways an archive gets split are joined too, on the Macintosh
-as well as on Linux: sets made by **Compact Pro** (open any segment —
-they recognise each other by what is inside them), zip archives split
-into `.z01`, `.z02` … `.zip`, and plain `.001`/`.002` splits. For those
-last two the names are the only thing that says which parts belong
-together, so keep them.
+as well as on Linux: sets made by **Compact Pro** or by **DiskDoubler's
+Split command** (open any part — they recognise each other by what is
+inside them), zip archives split into `.z01`, `.z02` … `.zip`, and plain
+`.001`/`.002` splits. For those last two the names are the only thing
+that says which parts belong together, so keep them.
 
 Sets whose parts are each still in their own BinHex or MacBinary wrapper
 (`Archive.sit.1.hqx`, `Archive.sit.2.hqx`) — which is how these were
@@ -115,7 +115,7 @@ each one opens:
 | StuffIt 5 archives | no — needs Expander 5 or later | yes |
 | zip, gzip, tar, `.Z` | only with a paid add-on, System 7 only | yes |
 | PackIt (`.pit`) | not listed | yes |
-| Sets split across floppies | StuffIt sets, with the same add-on | StuffIt, Compact Pro, zip and `.001` sets |
+| Sets split across floppies | StuffIt sets, with the same add-on | StuffIt, Compact Pro, DiskDoubler, zip and `.001` sets |
 | Split zip or Compact Pro sets | "cannot expand" — its own Read Me | yes |
 | Encrypted archives | yes, if you know the password | no |
 | Several files posted in one BinHex message | yes | yes |

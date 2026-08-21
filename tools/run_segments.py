@@ -67,6 +67,7 @@ import synth_zipsplit as zsynth
 import synth_split as ssynth
 import synth_wrapped as wsynth
 import synth_cptsplit as csynth
+import synth_ddsplit as dsynth
 from make_manifests import parse_appledouble
 
 
@@ -1156,6 +1157,153 @@ def run_full_with(unclassic, path, dest, extra):
     return r.returncode, r.stdout.decode("utf-8", "replace")
 
 
+
+# --------------------------------------------------------------------
+# DiskDoubler `SPLT` sets (tools/synth_ddsplit.py)
+#
+# The one scheme here with NO oracle at all: `unar` 1.10.8 does not
+# recognize a part, and does not recognize the parts concatenated
+# either — asserted below rather than quoted, because it is a claim
+# about the reference and those go stale. So a case is adjudicated
+# against the bytes that were cut up, and, where the payload is an
+# archive, against our own read of the unsplit one.
+#
+# What grades the FORMAT is elsewhere: tools/run_ddtf.py replays the
+# four real specimens against the original files they were made from.
+# This file grades the READER against the layout in src/fmt_ddseg.c.
+# --------------------------------------------------------------------
+
+def ddseg_joined(dest, part_path):
+    """The one entry a `SPLT` set yields. The format stores no name, so
+    it is the OPENED part's, minus a trailing ".N"."""
+    base = os.path.basename(part_path)
+    stem, _, ext = base.rpartition(".")
+    if stem and ext.isdigit():
+        base = stem
+    data = os.path.join(dest, base)
+    rsrc = os.path.join(dest, "._" + base)
+    return (open(data, "rb").read() if os.path.exists(data) else None,
+            open(rsrc, "rb").read() if os.path.exists(rsrc) else b"")
+
+
+def ddseg_case_run(unclassic, case, workroot, fails):
+    d = os.path.join(workroot, "ddseg-" + case)
+    os.makedirs(d)
+    whole, rsrc, parts, src = dsynth.CASES[case](d)
+    original = open(whole, "rb").read()
+
+    # From the first part and from the last: the part's own index is in
+    # its header, so the set is reachable from any member.
+    for which in sorted({0, len(parts) - 1}):
+        dest = os.path.join(d, "_ours%d" % which)
+        rc, out = ours_join(unclassic, parts[which], dest)
+        fails.check(rc == 0, "ddseg/%s: unclassic failed from part %d: %s"
+                    % (case, which + 1, out.strip()))
+        gotd, gotr = ddseg_joined(dest, parts[which])
+        fails.check(gotd == original,
+                    "ddseg/%s: the join is not the file that was cut up "
+                    "(from part %d)" % (case, which + 1))
+        fails.check(gotr == rsrc,
+                    "ddseg/%s: the joined resource fork is wrong (from part "
+                    "%d): %d bytes vs %d, %s"
+                    % (case, which + 1, len(gotr), len(rsrc),
+                       "same length, different bytes" if len(gotr) == len(rsrc)
+                       else "wrong length"))
+
+    # The oracle cannot join this scheme, and the case says so rather
+    # than assuming it: if this ever starts passing, `SPLT` has a second
+    # implementation and everything here can be graded against it.
+    rc, out = oracle_extract(parts[0], os.path.join(d, "_oracle"))
+    fails.check(rc != 0 or not out.strip().startswith("Test.dd"),
+                "ddseg/%s: the oracle read a SPLT part after all" % case)
+
+    if src is not None:
+        rc, out = run_full(unclassic, parts[0], os.path.join(d, "_full"))
+        fails.check(rc == 0, "ddseg/%s: joined archive did not extract: %s"
+                    % (case, out.strip()))
+        rc, out = run_full(unclassic, whole, os.path.join(d, "_unsplit"))
+        fails.check(rc == 0, "ddseg/%s: unsplit archive did not extract: %s"
+                    % (case, out.strip()))
+        fails.check(read_tree(os.path.join(d, "_full")) ==
+                    read_tree(os.path.join(d, "_unsplit")),
+                    "ddseg/%s: joined and unsplit reads disagree" % case)
+    return d, whole, rsrc, parts, original
+
+
+def ddseg_behaviours(unclassic, case, d, whole, rsrc, parts, original,
+                     workroot, fails):
+    """What byte-exactness cannot see: the four ways a set can be wrong,
+    and the two properties no other scheme here has."""
+    n = len(parts)
+
+    # --no-parts on a set of more than one must FAIL. A `SPLT` part
+    # declares the part count, so a reader that quietly emitted the one
+    # part it was handed would be discarding a fact it had.
+    dest = os.path.join(d, "_alone")
+    rc, out = ours_join(unclassic, parts[0], dest, extra=("--no-parts",))
+    if n > 1:
+        fails.check(rc != 0, "ddseg/%s: --no-parts must fail on a %d-part set"
+                    % (case, n))
+    else:
+        # A set of ONE is a whole file with a 94-byte hat: it extracts
+        # with no volume source at all, which is a different code path
+        # (unc_ddseg_extract, not the joiner).
+        fails.check(rc == 0, "ddseg/%s: --no-parts on a set of one failed: %s"
+                    % (case, out.strip()))
+        gotd, gotr = ddseg_joined(dest, parts[0])
+        fails.check(gotd == original and gotr == rsrc,
+                    "ddseg/%s: the lone-part path gave different bytes" % case)
+
+    if n < 2:
+        return
+
+    # A part of a DIFFERENT set, sitting in the same directory, must be
+    # ignored: parts are matched by the 26 identity bytes, never by name.
+    other = os.path.join(d, os.path.basename(parts[1]) + ".other")
+    pay = b"\xEE" * 200
+    with open(other, "wb") as f:
+        f.write(dsynth.part_header(0x1234567, 200, 0, 1, n, pay) + pay)
+    dest = os.path.join(d, "_intruder")
+    rc, out = ours_join(unclassic, parts[0], dest)
+    fails.check(rc == 0, "ddseg/%s: an intruder broke the set: %s"
+                % (case, out.strip()))
+    fails.check(ddseg_joined(dest, parts[0])[0] == original,
+                "ddseg/%s: an intruder changed the join" % case)
+    os.remove(other)
+
+    # A missing part must fail, and say what is wrong with it.
+    hidden = os.path.join(workroot, "ddseg-hidden-" + case)
+    shutil.move(parts[1], hidden)
+    rc, out = ours_join(unclassic, parts[0], os.path.join(d, "_gap"))
+    fails.check(rc != 0, "ddseg/%s: a missing part must fail" % case)
+    fails.check("segment" in out.lower(),
+                "ddseg/%s: missing part reported as %r" % (case, out.strip()))
+    shutil.move(hidden, parts[1])
+
+    # A part that declares more payload than it holds is truncated, and
+    # must be refused rather than read to the end of the file.
+    body = open(parts[1], "rb").read()
+    pay = body[dsynth.HEAD:]
+    lie = dsynth.part_header(0x0009BE6, len(original), len(rsrc), 1, n, pay,
+                             paylen=len(pay) + 4096)
+    with open(parts[1], "wb") as f:
+        f.write(lie + pay)
+    rc, out = ours_join(unclassic, parts[0], os.path.join(d, "_short"))
+    fails.check(rc != 0,
+                "ddseg/%s: a part declaring more payload than it holds must "
+                "fail" % case)
+    with open(parts[1], "wb") as f:
+        f.write(body)
+
+    # And the join still works afterwards, so the two mutations above
+    # are testing the mutation rather than the directory.
+    rc, out = ours_join(unclassic, parts[0], os.path.join(d, "_again"))
+    fails.check(rc == 0 and
+                ddseg_joined(os.path.join(d, "_again"), parts[0])[0] == original,
+                "ddseg/%s: the set stopped joining after it was restored"
+                % case)
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--unclassic", default="build/dev/unclassic")
@@ -1183,6 +1331,11 @@ def main():
     cptcases = [c for c in (selected or sorted(CPT_CASES)) if c in CPT_CASES]
     splitcases = [c for c in (selected or sorted(ssynth.CASES))
                   if c in ssynth.CASES]
+    ddsegcases = [c for c in (selected or sorted(dsynth.CASES))
+                  if c in dsynth.CASES]
+    if ddsegcases and not dsynth.available():
+        print("run_segments: `zip` not found; skipping the zip4 SPLT case")
+        ddsegcases = [c for c in ddsegcases if c != "zip4"]
     if splitcases and not ssynth.available():
         print("run_segments: `zip` not found; skipping the zip5 split case")
         splitcases = [c for c in splitcases if c != "zip5"]
@@ -1328,6 +1481,14 @@ def main():
                 d, kind, whole, parts, original = r
                 split_behaviours(unclassic, c, d, kind, whole, parts,
                                  original, workroot, fails)
+
+        # --- DiskDoubler `SPLT` sets ------------------------------------
+        for c in ddsegcases:
+            r = ddseg_case_run(unclassic, c, workroot, fails)
+            if r:
+                d, whole, rsrc, parts, original = r
+                ddseg_behaviours(unclassic, c, d, whole, rsrc, parts,
+                                 original, workroot, fails)
     finally:
         if a.keep:
             print("kept: %s" % workroot)
@@ -1337,9 +1498,9 @@ def main():
     for f in fails:
         print("FAIL " + f)
     print("segments: %d StuffIt + %d spanned-zip + %d split + %d wrapped + "
-          "%d Compact Pro cases, %d failures"
+          "%d Compact Pro + %d DiskDoubler SPLT cases, %d failures"
           % (len(cases), len(zipcases), len(splitcases), len(wrapcases),
-             len(cptcases), len(fails)))
+             len(cptcases), len(ddsegcases), len(fails)))
     return 1 if fails else 0
 
 

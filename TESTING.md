@@ -342,6 +342,31 @@ would survive them. The specimens are what grade it against the format, and
 re-running them is a deliberate, on-demand check like every other emulator
 harness here.
 
+### The CC0 corpus, graded against its own originals (`tools/run_ddtf.py`, 2026-08-21)
+
+`ssokolow/diskdoubler-test-files` publishes nine sets of the same seven files
+— DiskDoubler 3.7.7 and DiskDoubler Pro 4.1.1, every method their menus offer
+— **beside the source files they were made from**. So the grading is against
+the bytes that went in, not against another decoder, and there is nothing to
+adjudicate:
+
+    tools/run_ddtf.py --fetch          # 456 forks, 0 mismatched (2026-08-21)
+
+63 single-file containers, 9 archives, 10 self-extractors and their 10
+BinHexed copies. It is **not in `ci.sh`**: the corpus is a `git clone`, not a
+fixture (OPEN_ITEMS.md says what putting it in `fixtures/` would take).
+
+**What it cannot see**, beyond the docstring's list: it compares forks, so a
+regression in dates, type/creator or Finder flags passes it — the corpus's
+AppleDouble sidecars carry a Finder info block the Mac rewrote when the files
+were copied, so those fields are not oracle-grade here even though the forks
+are. It also says nothing about `SPLT`: the four `.dd.1` / `.dd.2` specimens
+are skipped, because nothing here reads them yet.
+
+**It can fail.** Against the build immediately before the `DDA2` `0x1000`
+fix it reports 25 mismatches — five archives, ten self-extractors and the
+forks under them — which is how that defect was found.
+
 ## Several BinHex documents in one file (`tools/run_multihqx.py`, in `ci.sh`)
 
 Added 2026-08-15, with the capability it grades. Real corpus `.hqx`
@@ -760,6 +785,42 @@ All four assertions were shown to fail before being believed, by
 mutating the code they guard — search disabled, ration removed, cleanup
 removed — and the foreign-decoy one by replacing the decoy with the
 genuine part.
+
+### DiskDoubler `SPLT` (`tools/synth_ddsplit.py`, same runner)
+
+**No oracle at all**, and the suite says so rather than assuming it:
+`unar` 1.10.8 recognizes neither a part nor the parts `cat`ed together,
+and a case asserts that — if it ever starts passing, `SPLT` has a second
+implementation and everything here can be graded against it. So a case
+is adjudicated against the bytes that were cut up, and, where the
+payload is a zip, against our own read of the unsplit archive.
+
+Eight cases: two parts cut inside the data fork (the specimens' shape),
+three with a cut inside the RESOURCE fork (which neither specimen
+reaches), a set of ONE, twelve parts, parts with 64 bytes appended after
+each payload, parts named nothing like each other, parts named `.001`
+… `.003`, and a zip payload. Each is joined from the first part and
+from the last.
+
+Behaviours: `--no-parts` must fail on a set of more than one and must
+SUCCEED on a set of one (a different code path — `unc_ddseg_extract`,
+with no volume source); a part of a foreign set in the same directory
+is ignored; a missing part fails and says so; a part that declares more
+payload than it holds is refused; and the set still joins afterwards, so
+the two mutations are testing the mutation and not the directory.
+
+**Three of the cases are load-bearing and were confirmed to fail.**
+Removing the header-declared payload length breaks `tail`; emitting the
+forks in StuffIt's order breaks every case with a resource fork; and
+removing the rule that a `SPLT` header beats a `.NNN` filename breaks
+`numbered` — which is the collision that would otherwise fold a 94-byte
+header into a joined file, quietly.
+
+**What it cannot see:** the layout. These parts are written from
+`src/fmt_ddseg.c`, so a case passing says the reader matches what was
+derived, never that what was derived matches DiskDoubler. The four real
+specimens are what say that, in `tools/run_ddtf.py`, and they are not in
+`ci.sh` (OPEN_ITEMS.md).
 
 ### Plain `.NNN` splits (`tools/synth_split.py`, same runner)
 

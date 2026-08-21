@@ -56,8 +56,8 @@ no oracle for this method" was a fact about one tool with the second oracle
 already sitting in `reference/`; and "no second implementation exists" was
 written while a self-extracting fixture carried one in its resource fork.
 
-`BLOCKERS.md` keeps all sixteen withdrawn claims with **what each one cost**,
-and names the four smells that keep finding the next one. The cheapest is a
+`BLOCKERS.md` keeps all eighteen withdrawn claims with **what each one cost**,
+and names the five smells that keep finding the next one. The cheapest is a
 **cross-file contradiction**: two status files disagreeing is a disproof
 nobody has collected yet. A constant in the peak-RAM matrix is another —
 data-driven allocations vary with their input, so one that does not is usually

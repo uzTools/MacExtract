@@ -431,7 +431,7 @@ static int env_is_envelope(UncFormat f)
  *
  * The resource fork is ignored in both: a part of a segmented set is a
  * run of bytes that happens to have travelled inside a Macintosh file,
- * and all three schemes concatenate data forks (unc_extract_segments).
+ * and every scheme here concatenates data forks (unc_extract_segments).
  * An envelope holding a part with a resource fork would be a file this
  * program has never seen, and inventing a meaning for it here is the
  * one thing rule #1 forbids. */
@@ -626,9 +626,11 @@ static void seg_record(SegHost *h, int part, const char *path)
 /* that; the decoded parts are deleted as soon as the join is over.    */
 /*                                                                    */
 /* Only the StuffIt scheme is looked for this way, because it is the   */
-/* only one of the three that can prove a wrapped part belongs: its    */
-/* header is in the payload, so unwrapping is all that stands between  */
-/* the file and the same fingerprint check every other part gets. A    */
+/* only one whose parts arrive wrapped in the wild: its header is in   */
+/* the payload, so unwrapping is all that stands between the file and  */
+/* the same fingerprint check every other part gets. A DiskDoubler     */
+/* `SPLT` part could prove itself the same way and nothing looks for   */
+/* one, because no wrapped specimen of that shape has been seen. A     */
 /* spanned zip or a .NNN split is placed by its FILENAME, and the name */
 /* of a wrapped part is the wrapper's — no reference implementation    */
 /* says what that name should look like, and guessing one is exactly   */
@@ -1336,8 +1338,14 @@ nextlayer:
          * — measured 2026-08-09, `unar derived-Fractional_Widths.sit.001`
          * exits 1 having written one truncated fork. --no-parts puts the
          * sniff back in charge. */
-        if (!no_parts && (split_family_present(file) ||
-                          split_part_offered(file, partargs, nparts)))
+        /* Unless the file proves otherwise. A DiskDoubler `SPLT` part
+         * carries its own index, count and identity, so a set named
+         * Archive.dd.001 is joined as the scheme it declares — the name
+         * rule above exists for parts that declare nothing, and folding
+         * 94-byte headers into a file would be silent and wrong. */
+        if (!no_parts && fmt != UNC_FORMAT_DDSEG &&
+            (split_family_present(file) ||
+             split_part_offered(file, partargs, nparts)))
             fmt = UNC_FORMAT_SPLIT;
     }
 
@@ -1399,7 +1407,8 @@ nextlayer:
         fprintf(stderr, "%s: %s\n", file, unc_format_name(fmt));
 
     if ((fmt == UNC_FORMAT_SITSEG || fmt == UNC_FORMAT_ZIPSEG ||
-         fmt == UNC_FORMAT_SPLIT || fmt == UNC_FORMAT_CPTSEG) && !no_parts) {
+         fmt == UNC_FORMAT_SPLIT || fmt == UNC_FORMAT_CPTSEG ||
+         fmt == UNC_FORMAT_DDSEG) && !no_parts) {
         UncVolumeSource vs;
         void *scratch;
 
@@ -1656,6 +1665,31 @@ nextlayer:
                 return 1;
             }
 
+            /* A `SPLT` part carries everything about the set except a
+             * name for the file it joins into: DiskDoubler's Split does
+             * not store one. The part's own filename is all there is,
+             * minus the ".N" that numbers it — and because the parts
+             * are matched by CONTENT, that name is for display and for
+             * the output file, never evidence. */
+            if (fmt == UNC_FORMAT_DDSEG) {
+                const char *base = strrchr(file, '/');
+                const char *dot;
+                size_t n;
+                base = base ? base + 1 : file;
+                n = strlen(base);
+                dot = strrchr(base, '.');
+                if (dot && dot != base) {
+                    const char *d;
+                    for (d = dot + 1; *d; d++)
+                        if (*d < '0' || *d > '9') break;
+                    if (*d == 0 && d != dot + 1) n = (size_t)(dot - base);
+                }
+                if (n > UNC_NAME_MAX) n = UNC_NAME_MAX;
+                memcpy(seg.desc.name, base, n);
+                seg.desc.name[n] = 0;
+                seg.desc.name_len = (uint16_t)n;
+            }
+
             /* The file we were handed is a part, and its own part number
              * comes from its header — so opening part 3 of a set works. */
             seg_record(&seg, (int)seg.desc.part, file);
@@ -1747,7 +1781,8 @@ nextlayer:
      * one file, sniff it and extract in place. -nr disables. */
     if (strcmp(cmd, "x") == 0 && !no_recurse && depth < 8 &&
         (env_is_envelope(fmt) ||
-         fmt == UNC_FORMAT_SITSEG || fmt == UNC_FORMAT_SPLIT) &&
+         fmt == UNC_FORMAT_SITSEG || fmt == UNC_FORMAT_SPLIT ||
+         fmt == UNC_FORMAT_DDSEG) &&
         sink.file_count == 1 && sink.dir_count == 0 &&
         sink.last_ok_path[0]) {
         FILE *pf = fopen(sink.last_ok_path, "rb");

@@ -23,9 +23,10 @@ whole corpus for that format (engine allocations only, via
 | StuffIt segment (multi-part) | extract | — (join only; the joined file is the next layer) | 7 synthetic sets, oracle-adjudicated, + 3 with each part in its own envelope (CLI only) | 8 KB | full |
 | Zip segment (spanned, .z01…/.zip) | extract | store, deflate — the zip reader, over the joined parts | 5 generated sets, adjudicated 4 ways (source tree, `unar`, us split, us unsplit) | 12–13 KB¶ | full |
 | Compact Pro segment (multi-part) | extract | RLE / LZH+RLE — the Compact Pro reader, over the segments | 2 generated sets + 2 cut by Compact Pro 1.51 itself | 20 KB | full |
+| DiskDoubler split (`SPLT`) | extract | — (join only; the joined file is the next layer) | 4 real parts (2 sets, cut by DiskDoubler itself) + 8 generated sets, adjudicated against the bytes that were cut — no oracle exists | 8 KB | full |
 | Split file (plain .001/.002) | extract | — (join only; the joined file is the next layer) | 3 generated sets, adjudicated against the bytes that were cut, `unar` where it can join, and our unsplit read | 8 KB | full |
 | StuffIt X (.sitx) | detect only | — | — (no fixture) | — | — |
-| DiskDoubler (DD, DDAR, DDA2) | extract | 0 store, 1 Unix compress, 6/9 AD LZSS, 7 Stac LZS, 8 Compact Pro, 10 DDn; 2/3/4/5 declined per entry✦ | 6 fixtures + 4 specimens (2 written by DiskDoubler 3.7 under Mini vMac, 2 off its distribution disk) | 10–108 KB✦ | full |
+| DiskDoubler (DD, DDAR, DDA2) | extract | 0 store, 1 Unix compress, 6/9 AD LZSS, 7 Stac LZS, 8 Compact Pro, 10 DDn; 2/3/4/5 declined per entry✦ | 6 fixtures + 4 specimens (2 written by DiskDoubler 3.7 under Mini vMac, 2 off its distribution disk) + 92 CC0 files graded against their own originals✦ | 10–108 KB✦ | full |
 | Now Compress | extract | stored, LZSS, Huffman, Huffman+LZSS, "new" LZSS✧ | 2 real fixtures + 13 generated archives (all five shapes, adjudicated by `unar`); `synth-now-mixed.now` also has an `unar` manifest and is in the differential suite | 128 KB✧ | full |
 | ARC / ArcMac (.arc) | extract | 1/2 store, 3 RLE90, 4 squeeze+RLE90, 5/6/7 crunch, 8 12-bit LZW+RLE90, 9 13-bit LZW, 0x7f compress; ArcMac's two-fork payload since 2026-08-16★★★; 0x0a/0x0b (PKARC) declined per entry★ | 10 generated archives (methods 1-9, adjudicated by `unar`) + 3 written by Debian's `arc` 5.21q; `synth-arc-mixed.arc` also has an `unar` manifest and is in the differential suite | 4–32 KB★ | full |
 | uuencode (.uu, incl. UUTool) | extract | — (plain uu, UUTool's two-fork "MU" shape, and documents posted in several parts★★) | 7 generated cases, the two-fork ones adjudicated by macutils' `hexbin`; `synth-uu-mac.uu` is in the differential suite | 4 KB | full |
@@ -71,6 +72,33 @@ are adjudicated by neither oracle** — `unar` fails on them and `macunpack`
 (built with its DiskDoubler support on) fails too; our output for those is
 ungraded, and `run_diff.py` prints the count on every run. DECISIONS.md
 2026-08-15.
+
+**A `DDA2` entry of type `0x1000` is stored in the archive with no
+`0xABCD0054` header of its own** — DiskDoubler Pro writes it for a file it
+could not shrink — and the walk did not know it, so five of the nine
+DiskDoubler Pro 4.1.1 archives in `ssokolow/diskdoubler-test-files` failed at
+their third entry. `unar` fails on them for the same reason and still does —
+measured here, not inferred from the source: `lsar` stops at the same entry on
+all five with *Archive parsing failed! (Data is corrupted.)*, and reads all
+four 3.7.7 archives fine. Fixed 2026-08-21, layout and
+checksum derived from the specimens; DECISIONS.md.
+
+That corpus is CC0 and publishes the **originals** beside the archives, so it
+grades against source bytes rather than against another decoder. Extracted
+here and compared:
+
+| what | count | result |
+|---|---|---|
+| single-file `0xABCD0054` containers (7 files × 9 methods) | 63 | byte-exact |
+| `DDAR` / `DDA2` archives (methods 1, 6, 8, 9, 10 and stored) | 9 | byte-exact |
+| self-extractors, plain and prompt-for-folder | 10 | byte-exact |
+| the same, BinHexed | 10 | byte-exact |
+| data forks / resource forks compared against the published originals | 54 / 36 | exact |
+
+The TIFF in each set has no published original — it was made on the Mac — and
+comes out identical from all nine independent compressions, forks included.
+None of these is in `fixtures/`, so `ci.sh` does not see them (OPEN_ITEMS.md);
+the `DDA2` stored entry is pinned by `test_dd_archive2` instead.
 
 ✧ **Now Compress, in scope since 2026-08-15** (M12). The archive is a flat
 entry table nested by a per-directory entry count, then one compressed stream
@@ -415,11 +443,12 @@ archive the same recursion continues into it.
 
 ## Segmented archives (multi-part sets)
 
-One logical file cut across several, one per floppy. **Three schemes
-are implemented**: StuffIt segments, spanned ("split") zip and plain
-`.NNN` splits. They differ in how much a part can prove about itself,
-and everything else follows from that (DECISIONS.md 2026-08-08,
-2026-08-09 and 2026-08-10).
+One logical file cut across several, one per floppy. **Five schemes
+are implemented**: StuffIt segments, Compact Pro segments, spanned
+("split") zip, plain `.NNN` splits and DiskDoubler's `SPLT`. They differ
+in how much a part can prove about itself, and everything else follows
+from that (DECISIONS.md 2026-08-08, 2026-08-09, 2026-08-10, 2026-08-14
+and 2026-08-21).
 
 ### StuffIt segments
 
@@ -541,9 +570,10 @@ chosen here. Both paths are exercised in `ci.sh`.
 
 ### Segmented sets on a real emulated Mac Plus (System 6.0.8)
 
-**All four schemes join on the Mac** as of 2026-08-14, and so does a set
+**M11's four schemes join on the Mac** as of 2026-08-14, and so does a set
 whose parts are still inside envelopes — the StuffIt scheme only, which is the
-one whose identity survives a wrapper. The StuffIt table below is from
+one whose identity survives a wrapper. The fifth, DiskDoubler `SPLT`, has
+never been joined there (OPEN_ITEMS.md). The StuffIt table below is from
 2026-08-08; the other three are:
 
 | scheme | how it was driven | result |
@@ -635,6 +665,40 @@ refused by the payload's own offsets and CRCs, unless the swap involves
 part 1 — after which the join no longer sniffs as an archive and
 nothing objects. A set missing its tail is undetectable in every case.
 DECISIONS.md 2026-08-10.
+
+### DiskDoubler `SPLT`
+
+DiskDoubler's own Split command, and the only scheme here no reference
+reads: `unar` 1.10.8 recognizes neither a part nor the parts
+concatenated (MEASURED, and asserted by the suite). `src/fmt_ddseg.c`
+has the layout, derived from the four specimens in
+`ssokolow/diskdoubler-test-files` and confirmed by reassembling both
+sets byte for byte, forks included.
+
+A 94-byte header per part carries more than any other scheme's: the
+set's 26-byte identity, the part INDEX, the part COUNT, both fork
+lengths of the original file, and **that part's own payload length**.
+So it is the only one where
+
+- a part is matched by content AND the set's size is known, so a
+  missing tail is detectable — the plain `.NNN` split can do neither;
+- the payload is bounded by the header rather than by the file, so
+  bytes appended to a part never reach the join;
+- **the header beats the filename.** A set named `Archive.dd.001` is
+  joined as `SPLT`, not as a plain split, in the CLI and in the
+  application both. Joining it the other way would fold a 94-byte
+  header into the file, silently. The suite's `numbered` case is that
+  collision, and it fails without the rule.
+
+It stores no NAME: the joined file is named after the part that was
+opened, minus the `.N`. The payload is the DATA fork then the resource
+fork — the opposite order to StuffIt's split. Part opens are one per
+part, 0 backward. Peak heap is the 8 KB streaming buffer.
+
+Two header fields are parsed and unidentified: 4 bytes at offset 4
+(equal across a set, different between sets — it is the identity, and
+what it MEANS is unknown) and, at offset 48, a CRC-16/XMODEM of the
+part's payload that nothing checks (OPEN_ITEMS.md).
 
 ## Hardening
 

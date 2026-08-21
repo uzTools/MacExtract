@@ -125,6 +125,10 @@ int unc_segment_match(const UncSegmentDesc *desc,
      * its own header, in fmt_cptseg.c. */
     if (desc->scheme == UNC_FORMAT_CPTSEG)
         return unc_cptseg_match(desc, head, len);
+    /* So does a DiskDoubler `SPLT` part, and with more of it: index,
+     * count and both fork lengths. Its rule lives in fmt_ddseg.c. */
+    if (desc->scheme == UNC_FORMAT_DDSEG)
+        return unc_ddseg_match(desc, head, len);
     /* A scheme whose parts carry no identity cannot answer this. Said
      * explicitly rather than left to fall out of a failed header parse,
      * because the two outcomes mean opposite things (see unclassic.h). */
@@ -173,7 +177,8 @@ static int sitseg_stream_fork(UncCtx *c, UncFork fork, uint32_t size,
  * Shared with UNC_FORMAT_SPLIT, which is this same shape with nothing
  * in front of it: one entry, one fork, sizes and name supplied rather
  * than parsed (unc_segment.c). */
-int unc_sitseg_emit(UncCtx *c, const UncSegmentDesc *desc, uint32_t base)
+int unc_sitseg_emit(UncCtx *c, const UncSegmentDesc *desc, uint32_t base,
+                    int data_first)
 {
     UncEntryInfo e;
     int err, sret;
@@ -200,14 +205,17 @@ int unc_sitseg_emit(UncCtx *c, const UncSegmentDesc *desc, uint32_t base)
         uint8_t *buf = (uint8_t *)unc_alloc(c->al, bufsz);
         if (!buf) err = UNC_ERR_MEM;
         if (err == UNC_OK) {
+            UncFork f1 = data_first ? UNC_FORK_DATA : UNC_FORK_RSRC;
+            UncFork f2 = data_first ? UNC_FORK_RSRC : UNC_FORK_DATA;
+            uint32_t n1 = data_first ? desc->data_size : desc->rsrc_size;
+            uint32_t n2 = data_first ? desc->rsrc_size : desc->data_size;
             if (c->io->seek(c->io->ctx, base) < 0) err = UNC_ERR_IO;
-            /* Resource fork first: that is the order in the stream. */
+            /* Whichever fork the stream begins with: StuffIt's split
+             * puts the resource fork first, DiskDoubler's the data. */
             if (err == UNC_OK)
-                err = sitseg_stream_fork(c, UNC_FORK_RSRC, desc->rsrc_size,
-                                         buf, bufsz);
+                err = sitseg_stream_fork(c, f1, n1, buf, bufsz);
             if (err == UNC_OK)
-                err = sitseg_stream_fork(c, UNC_FORK_DATA, desc->data_size,
-                                         buf, bufsz);
+                err = sitseg_stream_fork(c, f2, n2, buf, bufsz);
             unc_free(c->al, buf);
         }
     }
@@ -236,5 +244,5 @@ int unc_sitseg_extract(UncCtx *c)
     if (desc.part != 1) return UNC_ERR_SEGMENTED;
     if (size - UNC_SEG_HEAD < desc.total) return UNC_ERR_SEGMENTED;
 
-    return unc_sitseg_emit(c, &desc, UNC_SEG_HEAD);
+    return unc_sitseg_emit(c, &desc, UNC_SEG_HEAD, 0);
 }

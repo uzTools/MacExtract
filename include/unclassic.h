@@ -74,6 +74,9 @@ typedef enum UncFormat {
     /* Brought in scope 2026-08-20; appended for the same ABI reason. */
     UNC_FORMAT_SUPERDISK,     /* Alysis SuperDisk! auto-expanding file  */
 
+    /* Brought in scope 2026-08-21; appended for the same ABI reason. */
+    UNC_FORMAT_DDSEG,         /* one part of a DiskDoubler `SPLT` set   */
+
     UNC_FORMAT__COUNT
 } UncFormat;
 
@@ -241,7 +244,7 @@ int unc_extract_as(UncFormat f, UncIO *io, UncSink *sink, UncAlloc *al,
 /* Multi-segment archives                                             */
 /*                                                                    */
 /* A segmented archive is one logical stream cut across several        */
-/* files, one per floppy. Four schemes are supported, and they differ  */
+/* files, one per floppy. Five schemes are supported, and they differ  */
 /* in one respect — how much a part can prove about itself:            */
 /*                                                                    */
 /*  UNC_FORMAT_SITSEG  Every part carries a header that names the set, */
@@ -288,6 +291,19 @@ int unc_extract_as(UncFormat f, UncIO *io, UncSink *sink, UncAlloc *al,
 /*      part count exists to miss. This scheme is the weak one on      */
 /*      purpose; see DECISIONS.md 2026-08-09.                          */
 /*                                                                    */
+/*  UNC_FORMAT_DDSEG   DiskDoubler's own Split command, `SPLT`. The    */
+/*      strongest of the five and the only one no reference reads: a   */
+/*      94-byte header per part carries the set's identity, the part's */
+/*      INDEX, the part COUNT, both fork lengths of the original and   */
+/*      this part's own payload length. So a part is identified by     */
+/*      content like a StuffIt one, a missing tail is detectable       */
+/*      unlike a .NNN split, and the payload is bounded by the header  */
+/*      rather than by the file's size. It carries no NAME — that is   */
+/*      the host's, as for a plain split — and the joined payload is   */
+/*      the DATA fork first, then the resource fork, which is the      */
+/*      opposite of StuffIt's. DERIVED from specimens, not             */
+/*      transcribed: src/fmt_ddseg.c.                                  */
+/*                                                                    */
 /* The engine sequences the parts; the host opens them. That keeps     */
 /* every file operation on the caller's side (engine discipline) and   */
 /* puts the "where is part 2?" question — a directory scan, a dialog,  */
@@ -297,6 +313,7 @@ int unc_extract_as(UncFormat f, UncIO *io, UncSink *sink, UncAlloc *al,
 #define UNC_SEG_HEAD      100  /* bytes of a part the engine inspects   */
 #define UNC_SEG_FP_LEN     26  /* fingerprint length, in those bytes    */
 #define UNC_SEG_MAX_PARTS 256  /* part numbers are one byte             */
+#define UNC_DDSEG_HEAD     94  /* a DiskDoubler `SPLT` part's header    */
 
 /* Identity of a SET, plus which part of it we happened to look at. */
 typedef struct UncSegmentDesc {

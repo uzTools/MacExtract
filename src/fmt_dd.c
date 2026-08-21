@@ -631,7 +631,7 @@ static uint32_t dd_window_for(uint32_t size)
 
 static int dd_fork(UncCtx *c, UncFork fork, uint32_t at, uint32_t complen,
                    uint32_t uncomplen, int method, int delta, uint16_t crc,
-                   int xorval)
+                   int xorval, int xorsum)
 {
     uint8_t *mem = NULL;
     UncBufIn in;
@@ -749,8 +749,15 @@ static int dd_fork(UncCtx *c, UncFork fork, uint32_t at, uint32_t complen,
     /* Methods 0..5 carry a 16-bit sum of the decompressed bytes; the
      * AD and DD methods carry per-block XORs instead and store 0 here.
      * Source: XADDiskDoublerParser.m handleForEntryWithDictionary. */
-    if (err == UNC_OK && m <= 5 && crc != 0 &&
+    if (err == UNC_OK && !xorsum && m <= 5 && crc != 0 &&
         o.sum != (uint16_t)(crc - o.sumadj))
+        err = UNC_ERR_CRC;
+    /* A DDA2 entry stored in the archive with no file header of its own
+     * carries a one-byte XOR of each fork where the header would carry
+     * that sum, and carries it whatever its value: 0 means an empty
+     * fork, which never reaches here. Measured on both stored forks of
+     * all five DiskDoubler Pro 4.1.1 archives (DECISIONS.md 2026-08-21). */
+    if (err == UNC_OK && xorsum && o.xsum != (uint8_t)crc)
         err = UNC_ERR_CRC;
     /* Method 7 carries a one-byte XOR of the fork instead, complemented
      * when the fork's length is even.
@@ -775,6 +782,7 @@ typedef struct DdFile {
     int      finderflags, datadelta, rsrcdelta;
     uint16_t datacrc, rsrccrc;
     int      info1, info2;   /* method 1's obfuscation, below */
+    int      xorsum;         /* datacrc/rsrccrc are one-byte XORs */
 } DdFile;
 
 /* The 80 bytes after 0xABCD0054.
@@ -798,6 +806,7 @@ static void dd_parse_filehdr(const uint8_t *h, DdFile *f)
     f->rsrccrc      = unc_get_u16be(h + 46);
     f->datadelta    = (int)unc_get_u16be(h + 50);
     f->rsrcdelta    = (int)unc_get_u16be(h + 52);
+    f->xorsum       = 0;
 }
 
 static void dd_entry_from(UncEntryInfo *e, const DdFile *f)
@@ -836,10 +845,11 @@ static int dd_emit(UncCtx *c, UncEntryInfo *e, const DdFile *f, uint32_t at)
 
     if (!c->opt.list_only) {
         err = dd_fork(c, UNC_FORK_DATA, at, f->datacomp, f->datasize,
-                      f->datamethod, f->datadelta, f->datacrc, dd_xorval(f));
+                      f->datamethod, f->datadelta, f->datacrc, dd_xorval(f),
+                      f->xorsum);
         ferr = dd_fork(c, UNC_FORK_RSRC, at + f->datacomp, f->rsrccomp,
                        f->rsrcsize, f->rsrcmethod, f->rsrcdelta, f->rsrccrc,
-                       dd_xorval(f));
+                       dd_xorval(f), f->xorsum);
         if (err == UNC_OK) err = ferr;
     }
 
@@ -1029,6 +1039,7 @@ static int dd_archive2(UncCtx *c)
              * level counter, which is what the level arithmetic above
              * is written against. Source: XADDiskDoublerParser.m
              * parseArchive2 (currdir=name, lastdirlevel untouched). */
+            if (unc_read_full(c->io, hdr + 46, 16) != UNC_OK) break;
             if ((err = dd_path_push(&path, hdr + 7, nlen)) != UNC_OK) return err;
             unc_entry_set_path(&e, path.buf, path.len);
             e.is_dir = 1;
@@ -1041,6 +1052,37 @@ static int dd_archive2(UncCtx *c)
         }
 
         dd_path_leaf(&path, &e, hdr + 7, nlen);
+
+        if ((entrytype & 0xF000) == 0x1000) {
+            /* Stored in the archive with no file header of its own —
+             * DiskDoubler Pro writes it for a file it could not shrink.
+             * The record carries the file's own metadata instead, and
+             * the 90-byte header is followed by the two raw forks.
+             * The reference has no branch for this and raises on the
+             * missing 0xABCD0054, which is why `unar` calls every
+             * DiskDoubler Pro archive holding an incompressible file
+             * corrupt. Derived from the nine archives of
+             * ssokolow/diskdoubler-test-files (DECISIONS.md 2026-08-21). */
+            DdFile f;
+            uint8_t *fp = (uint8_t *)&f;
+            uint32_t fi;
+            if (unc_read_full(c->io, hdr + 46, 44) != UNC_OK) break;
+            for (fi = 0; fi < sizeof f; fi++) fp[fi] = 0;
+            f.creation     = unc_get_u32be(hdr + 54);
+            f.modification = unc_get_u32be(hdr + 58);
+            f.type         = unc_get_u32be(hdr + 62);
+            f.creator      = unc_get_u32be(hdr + 66);
+            f.finderflags  = (int)unc_get_u16be(hdr + 70);
+            f.datasize = f.datacomp = unc_get_u32be(hdr + 78);
+            f.rsrcsize = f.rsrccomp = unc_get_u32be(hdr + 82);
+            f.datacrc  = hdr[86];
+            f.rsrccrc  = hdr[87];
+            f.xorsum   = 1;
+            dd_entry_from(&e, &f);
+            if ((err = dd_emit(c, &e, &f, start + 90)) != UNC_OK) return err;
+            at = start + totalsize;
+            continue;
+        }
 
         if (c->io->seek(c->io->ctx, start + 56) < 0) return UNC_ERR_IO;
         if (unc_read_full(c->io, hdr, 4) != UNC_OK) break;

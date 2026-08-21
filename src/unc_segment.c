@@ -98,6 +98,11 @@ int unc_segment_describe(UncIO *io, UncSegmentDesc *desc)
      * the host is expected to go and find the final segment. */
     err = unc_cptseg_describe(io, desc);
     if (err == UNC_OK) return UNC_OK;
+    /* DiskDoubler's `SPLT`, also decided on a header at offset 0 — and
+     * on a second copy of its magic at offset 90, so it is the cheapest
+     * of the four to refuse. */
+    err = unc_ddseg_describe(io, desc);
+    if (err == UNC_OK) return UNC_OK;
     return unc_zipseg_describe(io, desc);
 }
 
@@ -157,7 +162,22 @@ static int seg_open(SegJoin *j, int part)
     j->cursize = size;
     if (j->addressed) return UNC_OK;
     if (part == j->known) {
-        uint32_t end = j->start[part] + (size - j->desc->head_len);
+        uint32_t payload = size - j->desc->head_len;
+        uint32_t end;
+        /* A `SPLT` part declares its own payload length, so the file's
+         * size is a bound on it and not a measurement of it — and the
+         * same header re-proves that this file belongs to this set and
+         * is this part. Every other scheme here has to take what the
+         * host handed it. */
+        if (j->desc->scheme == UNC_FORMAT_DDSEG) {
+            uint8_t h[UNC_DDSEG_HEAD];
+            int e = unc_read_at(&j->cur, 0, h, UNC_DDSEG_HEAD);
+            if (e == UNC_OK)
+                e = unc_ddseg_payload(j->desc, h, UNC_DDSEG_HEAD, part,
+                                      size, &payload);
+            if (e != UNC_OK) { seg_release(j); return e; }
+        }
+        end = j->start[part] + payload;
         if (end < j->start[part]) { seg_release(j); return UNC_ERR_CORRUPT; }
         j->start[part + 1] = end;
         j->known = part + 1;
@@ -358,7 +378,8 @@ int unc_extract_segments(const UncSegmentDesc *desc, UncVolumeSource *vs,
         return UNC_ERR_IO;
     if (desc->scheme != UNC_FORMAT_SITSEG && desc->scheme != UNC_FORMAT_ZIPSEG
         && desc->scheme != UNC_FORMAT_SPLIT
-        && desc->scheme != UNC_FORMAT_CPTSEG)
+        && desc->scheme != UNC_FORMAT_CPTSEG
+        && desc->scheme != UNC_FORMAT_DDSEG)
         return UNC_ERR_UNSUPPORTED;
     if (desc->nparts > UNC_SEG_MAX_PARTS) return UNC_ERR_UNSUPPORTED;
     /* Neither a size nor a count is a set nobody can tell the end of. */
@@ -435,7 +456,10 @@ int unc_extract_segments(const UncSegmentDesc *desc, UncVolumeSource *vs,
     else if (desc->scheme == UNC_FORMAT_CPTSEG)
         ret = unc_cpt_extract(&c);
     else
-        ret = unc_sitseg_emit(&c, j->desc, 0);   /* SPLIT: the copy above */
+        /* SITSEG, SPLIT (the copy above) and DDSEG all join into one
+         * file; only the fork order differs. */
+        ret = unc_sitseg_emit(&c, j->desc, 0,
+                              desc->scheme == UNC_FORMAT_DDSEG);
     seg_release(j);
 
     /* A missing part is the archive's verdict, not the entry's: the

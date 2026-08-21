@@ -44,6 +44,7 @@ static const UncFormatDesc unc_formats[] = {
     { UNC_FORMAT_UU,          "uuencode",        1 },
     { UNC_FORMAT_ARC,         "ARC",             1 },
     { UNC_FORMAT_SUPERDISK,   "SuperDisk!",      1 },
+    { UNC_FORMAT_DDSEG,       "DiskDoubler split", 1 },
 };
 
 const char *unc_format_name(UncFormat f)
@@ -110,6 +111,8 @@ UncFormat unc_sniff(UncIO *io)
     if (unc_sit5_probe(head, len))      return UNC_FORMAT_SIT5;
     if (unc_sit_probe(head, len))       return UNC_FORMAT_SIT;
     if (unc_sitseg_probe(head, len))    return UNC_FORMAT_SITSEG;
+    /* DiskDoubler's `SPLT`: two copies of its magic, 90 bytes apart. */
+    if (unc_ddseg_probe(head, len))     return UNC_FORMAT_DDSEG;
     if (unc_sitx_probe(head, len))      return UNC_FORMAT_SITX;
     if (unc_packit_probe(head, len))    return UNC_FORMAT_PACKIT;
     if (unc_gzip_probe(head, len))      return UNC_FORMAT_GZIP;
@@ -208,6 +211,7 @@ int unc_extract_as(UncFormat f, UncIO *io, UncSink *sink, UncAlloc *al,
     case UNC_FORMAT_ARC:         return unc_arc_extract(&c);
     case UNC_FORMAT_SUPERDISK:   return unc_superdisk_extract(&c);
     case UNC_FORMAT_SITSEG:      return unc_sitseg_extract(&c);
+    case UNC_FORMAT_DDSEG:       return unc_ddseg_extract(&c);
     case UNC_FORMAT_ZIPSEG:      return unc_zipseg_extract(&c);
     case UNC_FORMAT_UNKNOWN:     return UNC_ERR_FORMAT;
     default:                     return UNC_ERR_UNSUPPORTED;

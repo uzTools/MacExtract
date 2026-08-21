@@ -79,6 +79,7 @@ which fails CI if it drifts from the headings below it.
 - ArcMac's fork order, measured rather than guessed
 - SuperDisk!, read out of SuperDisk!
 - 2026-08-20 — DiskDoubler methods 1 and 7, and what the application itself could write
+- 2026-08-21 — DiskDoubler Pro's stored entries, and a corpus that carries its own oracle
 
 ---
 
@@ -3231,8 +3232,11 @@ scheme has no reference at all and was derived here (2026-08-14). Everything
 else was checked and has nothing: **ARC has no volume, part or segment concept
 anywhere** — not in `XADARCParser.m`, not in macutils' `arc.h` or its ArcMac
 notes, not in the `arc` 5.21q man page — which is the same answer DiskDoubler
-and Now Compress gave. So M11's four schemes are the whole of it, and no new
-joiner was needed.
+and Now Compress gave. So M11's four schemes are the whole of what the
+REFERENCES describe, and no new joiner was needed. **A fifth turned up on
+2026-08-21 and needed no new joiner either**: DiskDoubler's `SPLT`, which no
+reference implements — the search above was of the references, and this file
+should have said so at the time.
 
 **What was missing is the TEXT formats' version of splitting**, which is not
 an archive scheme at all: one file posted as several mail messages. Joining
@@ -3829,3 +3833,103 @@ is complemented only when the fork's length is even) nor a match longer than
 2048. `test_dd_stac` writes a stream that does both. Its encoder is ours, so
 it grades the transcription against the reference and not against the format;
 the specimens are what grade it against the format.
+
+## 2026-08-21 — DiskDoubler Pro's stored entries, and a corpus that carries its own oracle
+
+`ssokolow/diskdoubler-test-files` (CC0) is nine sets of the same seven small
+files, compressed on a real Power Mac G4 by DiskDoubler 3.7.7 and DiskDoubler
+Pro 4.1.1 in every method their menus offer, published **beside the originals**.
+That last part is what makes it worth more than its size: the oracle is the
+bytes that went in, the same loop `arcmac.py` and the method 1 work closed,
+except that here somebody else's hardware ran the compressor.
+
+**Five of the nine archives did not extract.** `DDA2` entry type `0x1000` is a
+file DiskDoubler Pro could not shrink: it is stored in the archive with no
+`0xABCD0054` header of its own, and its 90-byte record header carries the
+metadata instead. Every set has two — the JPEG and the PNG, which is exactly
+the pair nothing can compress. The reference has no branch for it and raises
+on the missing magic (`XADDiskDoublerParser.m`, `parseArchive2`), which is why
+`unar` calls every DiskDoubler Pro archive holding an incompressible file
+corrupt, and why the repository's own README reports 4.1.1 as "hit-or-miss" —
+the author had already localised it to the tools rather than the files by
+unpacking them on the Mac. **This is the first place this project knowingly
+extracts something XADMaster cannot.** `DDAR` has the same idea under a
+different flag (finder flags `0x20`), which the reference DOES handle and we
+already followed; the two containers were simply never read as one design.
+
+The layout was derived from the ten specimens, not guessed: `+54` creation,
+`+58` modification, `+62` type, `+66` creator, `+70` finder flags, `+78` data
+length, `+82` resource length, and the two forks raw at `+90`. Each field is
+where the record's own `totalsize` and the file's known content put it —
+`totalsize - 90` equals the original's length in all ten, and the payload
+begins `FFD8` and `89504E47`.
+
+**`+86` is a one-byte XOR of the fork, not the 16-bit sum a file header
+carries there.** Measured: it equals the XOR of all 220 bytes of the JPEG and
+all 87 of the PNG, in all five archives, and matches none of the additive,
+rotating, CRC-16/ARC or CCITT candidates. So the checksum is asserted rather
+than skipped, unconditionally — a stored fork whose XOR is 0 is an empty fork,
+and an empty fork never reaches the check. `+87` is read as the resource
+fork's; no specimen has a stored file with one, and OPEN_ITEMS.md says so.
+
+**The folder branch was reading uninitialised bytes.** `parseArchive2`'s walk
+fills 46 bytes of its header buffer and the folder dates live at `+54` and
+`+58`, so every `DDA2` folder took its dates from whatever the previous
+entry's 80-byte file header had left there — and the first folder from an
+unset stack buffer. Nothing could see it: no fixture is a `DDA2` with folders,
+the differential suite does not compare dates, and ASan does not read
+uninitialised memory. It is one `unc_read_full` and the unit test now pins
+both dates, which is a smaller lesson than it looks: **a fixed-size read
+followed by field offsets past its end is a class, not an incident** — the
+compressed branch re-seeks and re-reads, which is why it was never wrong.
+
+**What it graded.** 63 single-file `0xABCD0054` containers, 9 archives, 10
+self-extractors and their 10 BinHexed copies, all extracted here and compared
+byte for byte with the published originals: 54 data forks and 36 resource
+forks exact, plus a TIFF that has no published original and comes out
+identical from all nine independent compressions. That is the container the
+corpus had no fixture for, tested 63 ways, and the first grading of methods 6,
+9 and 10 against source bytes rather than against `unar`.
+
+**DiskDoubler's `SPLT`, derived from the same four files, is the fifth
+segmented scheme.** A 94-byte header per part — `+8` data length, `+12`
+resource length, `+16` type, `+20` creator, `+24` Finder flags, `+32`
+modification and `+36` creation, `+40` part count, `+42` index, `+44` this
+part's payload length, `+48` a CRC-16/XMODEM of that payload, and `SPLT`
+again at `+90` — whose payloads concatenated in index order give the data
+fork followed by the resource fork. Verified byte-exact on both pairs,
+including the 342-byte resource fork of the Pro archive. `unar` reads neither
+a part nor the parts `cat`ed together (measured, 1.10.8), so there is no
+oracle and the grading is against the bytes that were cut up.
+
+Four things the specimens settled that a guess would have got wrong:
+
+- **The fork order is the opposite of StuffIt's split** — data fork first,
+  resource fork second. `unc_sitseg_emit` now takes the order as an argument
+  rather than two near-identical emitters existing.
+- **The dates are modification-then-creation.** No oracle for this: the
+  AppleDouble sidecars beside the specimens carry Finder info and no dates.
+  What decides it is that one specimen's pair DIFFERS, and only this
+  assignment reads as a file modified after it was created — and it is the
+  order DiskDoubler's own file header uses (`dd_parse_filehdr`). The `DDA2`
+  folder record uses the other one, so the format is not self-consistent and
+  the convention alone would not have been enough.
+- **A part declares its own payload length, so the file's size is a bound
+  and not a measurement.** Every other scheme here takes what the host hands
+  it; this one can ignore bytes appended to a part, and re-proves at every
+  open that the file belongs to this set and is this part. That is 20 lines
+  in `seg_open` and it is the only scheme-specific branch in the joiner.
+- **The header has to beat the filename.** Both hosts decide a plain
+  `.NNN` split by NAME before the sniff has a say — deliberately, because
+  part 1 of a split `.sit` sniffs as the truncated `.sit` it is a slice of
+  (2026-08-10). A `SPLT` set named `Archive.dd.001` would therefore have
+  been joined as a plain split, folding every 94-byte header into the file,
+  quietly and byte-wrong. The rule that fixes it is the one this file
+  already keeps for parts: **content disposes.** The suite's `numbered`
+  case is exactly that collision and fails without it.
+
+The identity at `+4` and the payload CRC at `+48` are parsed and unused:
+what the first MEANS is unknown (it is equal across a set and different
+between sets, which is all the joiner needs), and checking the second would
+mean reading every part a second time — on a one-drive Mac, a disk swap each,
+which is the cost the whole scheme is arranged to avoid. OPEN_ITEMS.md.

@@ -1773,6 +1773,248 @@ static void test_dd_stac(void)
     one[49] ^= 0x01;
 }
 
+
+/* ------------------------------------------------------------------ */
+/* The 'DDA2' archive walk: a folder, a file with its own 0xABCD0054   */
+/* header, and one stored in the archive with none — which is what     */
+/* DiskDoubler Pro writes for a file it could not shrink, and what the */
+/* reference raises on. Derived from ssokolow/diskdoubler-test-files   */
+/* (DECISIONS.md 2026-08-21).                                          */
+/* ------------------------------------------------------------------ */
+
+/* The first 46 bytes of a record, common to all three kinds. */
+static void dda2_rec(uint8_t *p, uint32_t reclen, uint16_t type,
+                     const char *name, uint32_t dirlevel, uint32_t totalsize)
+{
+    uint32_t nl = (uint32_t)strlen(name), i;
+    for (i = 0; i < reclen; i++) p[i] = 0;
+    memcpy(p, "DDA2", 4);
+    p[4] = (uint8_t)(type >> 8); p[5] = (uint8_t)type;
+    p[6] = (uint8_t)nl;
+    memcpy(p + 7, name, nl);
+    put32(p + 38, dirlevel + 2u);
+    put32(p + 42, totalsize);
+}
+
+static void test_dd_archive2(void)
+{
+    uint8_t arc[1024];
+    uint32_t len, i, folder, stored;
+    uint16_t crc;
+    uint8_t dx = 0, rx = 0;
+    MemIO m;
+    UncIO io;
+    UncAlloc al;
+    UncSink sk;
+    CapSink cap;
+    static const char dat[] = "plain";
+    static const char rsc[] = "RSC";
+
+    for (i = 0; i < 5; i++) dx ^= (uint8_t)dat[i];
+    for (i = 0; i < 3; i++) rx ^= (uint8_t)rsc[i];
+
+    /* Archive header: 'DDA2' + 58 bytes, CRC-16/XMODEM over the first 60. */
+    for (i = 0; i < 62; i++) arc[i] = 0;
+    memcpy(arc, "DDA2", 4);
+    crc = unc_crc16_xmodem(0, arc, 60);
+    arc[60] = (uint8_t)(crc >> 8); arc[61] = (uint8_t)crc;
+    len = 62;
+
+    /* A folder at level 0, whose dates live at +54 and +58 — past the 46
+     * bytes the walk reads first, so a walk that does not read them again
+     * reports whatever was in its buffer. */
+    folder = len;
+    dda2_rec(arc + len, 88, 0x9000, "folder", 0, 88);
+    put32(arc + len + 54, 0xE01AF53Eu);   /* creation     */
+    put32(arc + len + 58, 0xE01AF54Eu);   /* modification */
+    len += 88;
+
+    /* A file at level 1 stored in the archive: 90-byte record header,
+     * then the two raw forks. */
+    stored = len;
+    dda2_rec(arc + len, 90, 0x1000, "raw.bin", 1, 90 + 5 + 3);
+    put32(arc + len + 62, 0x4A504547u);   /* 'JPEG' */
+    put32(arc + len + 66, 0x474B4F4Eu);   /* 'GKON' */
+    arc[len + 70] = 0x01;                 /* finder flags 0x0100 */
+    put32(arc + len + 78, 5);             /* datasize */
+    put32(arc + len + 82, 3);             /* rsrcsize */
+    arc[len + 86] = dx;
+    arc[len + 87] = rx;
+    len += 90;
+    memcpy(arc + len, dat, 5); len += 5;
+    memcpy(arc + len, rsc, 3); len += 3;
+
+    /* A file at level 1 with a header of its own at +56. */
+    dda2_rec(arc + len, 56, 0x5000, "own.txt", 1, 56 + 84 + 5 + 3);
+    len += 56;
+    for (i = 0; i < 84; i++) arc[len + i] = 0;
+    arc[len] = 0xAB; arc[len + 1] = 0xCD; arc[len + 2] = 0x00; arc[len + 3] = 0x54;
+    put32(arc + len + 4, 5);              /* datasize */
+    put32(arc + len + 8, 5);              /* datacomp */
+    put32(arc + len + 12, 3);             /* rsrcsize */
+    put32(arc + len + 16, 3);             /* rsrccomp */
+    memcpy(arc + len + 32, "TEXT", 4);
+    memcpy(arc + len + 36, "ttxt", 4);
+    len += 84;
+    memcpy(arc + len, dat, 5); len += 5;
+    memcpy(arc + len, rsc, 3); len += 3;
+
+    /* End of archive. */
+    dda2_rec(arc + len, 46, 0xBBBB, "", 1, 46);
+    len += 46;
+
+    test_make_memio(&io, &m, arc, len);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_DISKDOUBLER);
+
+    test_make_alloc(&al);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_DISKDOUBLER, &io, &sk, &al, NULL, NULL)
+          == UNC_OK);
+    CHECK(cap.count == 3);
+    CHECK(cap.info[0].is_dir == 1);
+    CHECK(cap.info[0].name_len == 6 && memcmp(cap.info[0].name, "folder", 6) == 0);
+    CHECK(cap.info[0].create_date == 0xE01AF53Eu);
+    CHECK(cap.info[0].mod_date == 0xE01AF54Eu);
+
+    CHECK(cap.info[1].name_len == 14 &&
+          memcmp(cap.info[1].name, "folder/raw.bin", 14) == 0);
+    CHECK(cap.status[1] == UNC_OK);
+    CHECK(cap.info[1].type == 0x4A504547u);
+    CHECK(cap.info[1].creator == 0x474B4F4Eu);
+    CHECK(cap.info[1].finder_flags == 0x0100);
+    CHECK(cap.dlen[1] == 5 && memcmp(cap.data[1], dat, 5) == 0);
+    CHECK(cap.rlen[1] == 3 && memcmp(cap.rsrc[1], rsc, 3) == 0);
+
+    CHECK(cap.info[2].name_len == 14 &&
+          memcmp(cap.info[2].name, "folder/own.txt", 14) == 0);
+    CHECK(cap.status[2] == UNC_OK);
+    CHECK(cap.info[2].type == 0x54455854u);   /* 'TEXT' */
+    CHECK(cap.dlen[2] == 5 && memcmp(cap.data[2], dat, 5) == 0);
+
+    /* The stored record's XOR of each fork is checked, and can fail:
+     * one wrong bit in the data fork's is a per-entry CRC error, and the
+     * entries around it still come out. */
+    arc[stored + 86] ^= 0x01;
+    test_make_memio(&io, &m, arc, len);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_DISKDOUBLER, &io, &sk, &al, NULL, NULL)
+          == UNC_OK);
+    CHECK(cap.count == 3);
+    CHECK(cap.status[1] == UNC_ERR_CRC);
+    CHECK(cap.status[2] == UNC_OK);
+    arc[stored + 86] ^= 0x01;
+    (void)folder;
+}
+
+
+/* ------------------------------------------------------------------ */
+/* DiskDoubler `SPLT`: the part header, and the set of one            */
+/*                                                                    */
+/* The joined sets live in tools/run_segments.py and the real          */
+/* specimens in tools/run_ddtf.py. What is here is what neither can    */
+/* reach cheaply: the four ways a header is refused, and the lone-part */
+/* path, which is the only one that runs without a volume source.      */
+/* ------------------------------------------------------------------ */
+
+static uint32_t ddseg_head(uint8_t *p, uint32_t datalen, uint32_t rsrclen,
+                           int index, int nparts, uint32_t paylen)
+{
+    uint32_t i;
+    for (i = 0; i < UNC_DDSEG_HEAD; i++) p[i] = 0;
+    memcpy(p, "SPLT", 4);
+    put32(p + 4, 0x0009BE6u);              /* set identity */
+    put32(p + 8, datalen);
+    put32(p + 12, rsrclen);
+    memcpy(p + 16, "DDA2", 4);
+    memcpy(p + 20, "DDAP", 4);
+    p[24] = 0x01;                          /* finder flags 0x0100 */
+    put32(p + 32, 0xE0364FA6u);            /* modification */
+    put32(p + 36, 0xE0364F79u);            /* creation     */
+    p[41] = (uint8_t)nparts;
+    p[43] = (uint8_t)index;
+    put32(p + 44, paylen);
+    memcpy(p + 90, "SPLT", 4);
+    return UNC_DDSEG_HEAD;
+}
+
+static void test_ddseg(void)
+{
+    uint8_t part[512];
+    uint32_t len;
+    MemIO m;
+    UncIO io;
+    UncAlloc al;
+    UncSink sk;
+    CapSink cap;
+    static const char dat[] = "the data fork";
+    static const char rsc[] = "RSRC!";
+
+    len = ddseg_head(part, 13, 5, 0, 1, 18);
+    memcpy(part + len, dat, 13); len += 13;
+    memcpy(part + len, rsc, 5);  len += 5;
+
+    test_make_memio(&io, &m, part, len);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_DDSEG);
+
+    test_make_alloc(&al);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_DDSEG, &io, &sk, &al, NULL, NULL) == UNC_OK);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+    /* The data fork comes FIRST in the stream, which is the opposite of
+     * a StuffIt split and the one thing a set of one still proves. */
+    CHECK(cap.dlen[0] == 13 && memcmp(cap.data[0], dat, 13) == 0);
+    CHECK(cap.rlen[0] == 5 && memcmp(cap.rsrc[0], rsc, 5) == 0);
+    CHECK(cap.info[0].type == 0x44444132u);      /* 'DDA2' */
+    CHECK(cap.info[0].creator == 0x44444150u);   /* 'DDAP' */
+    CHECK(cap.info[0].finder_flags == 0x0100);
+    CHECK(cap.info[0].mod_date == 0xE0364FA6u);
+    CHECK(cap.info[0].create_date == 0xE0364F79u);
+    /* No name is stored anywhere in the format; with no hint from the
+     * host there is nothing to call it but something. */
+    CHECK(cap.info[0].name_len == 5 &&
+          memcmp(cap.info[0].name, "split", 5) == 0);
+
+    /* Part 1 of TWO is not a file: the count is in the header, so this
+     * is the one case in the engine that answers UNC_ERR_SEGMENTED. */
+    ddseg_head(part, 13, 5, 0, 2, 18);
+    test_make_memio(&io, &m, part, len);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_DDSEG, &io, &sk, &al, NULL, NULL)
+          == UNC_ERR_SEGMENTED);
+    CHECK(cap.count == 0);
+
+    /* Four refusals. 'SPLT' at offset 0 is four bytes any file could
+     * open with; what makes the header a shape is the second copy at
+     * 90 and the three fields that have to agree with each other. */
+    ddseg_head(part, 13, 5, 0, 1, 18);
+    part[92] ^= 0xFF;                      /* the second mark */
+    test_make_memio(&io, &m, part, len);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_UNKNOWN);
+
+    ddseg_head(part, 13, 5, 0, 0, 18);     /* a set of no parts */
+    test_make_memio(&io, &m, part, len);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_UNKNOWN);
+
+    ddseg_head(part, 13, 5, 2, 2, 18);     /* part 3 of 2 */
+    test_make_memio(&io, &m, part, len);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_UNKNOWN);
+
+    ddseg_head(part, 13, 5, 0, 1, 99);     /* one part, holding more than
+                                            * the whole file has forks */
+    test_make_memio(&io, &m, part, len);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_UNKNOWN);
+
+    /* A header that is legal and a FILE that is short: the refusal has
+     * to come from the size, which is the only one of the five that
+     * cannot be seen in the header alone. */
+    ddseg_head(part, 13, 5, 0, 1, 18);
+    test_make_memio(&io, &m, part, UNC_DDSEG_HEAD + 10);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_DDSEG);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_DDSEG, &io, &sk, &al, NULL, NULL)
+          == UNC_ERR_SEGMENTED);
+}
+
 static void test_diskdoubler(void)
 {
     uint8_t arc[1024];
@@ -1860,6 +2102,8 @@ static void test_diskdoubler(void)
     arc[76] ^= 0xFF;
 
     test_dd_stac();
+    test_dd_archive2();
+    test_ddseg();
 }
 
 

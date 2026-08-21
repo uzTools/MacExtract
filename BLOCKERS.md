@@ -66,7 +66,7 @@ detect-only — disk images are out of scope for v1.
 
 **Kept deliberately, and this is the part of the file to read first.** Twice a
 live claim has been re-tested *because* it sat beside an already-withdrawn one,
-and one of those was worth 39/44 → 40/44 at the floor target. Four mechanisms
+and one of those was worth 39/44 → 40/44 at the floor target. Five mechanisms
 keep finding the next one:
 
 - a live claim sitting next to an already-withdrawn one;
@@ -74,7 +74,12 @@ keep finding the next one:
   has collected yet;
 - a limitation written one paragraph from its own remedy;
 - **a limitation stated about the environment that is true only of one tool.**
-  Read every "cannot be done here" for the name of the tool it is really about.
+  Read every "cannot be done here" for the name of the tool it is really about;
+- **somebody else complaining about the tool you grade yourself by.** The
+  fifth, added 2026-08-21: a test corpus's README said `unar` was
+  "hit-or-miss" on DiskDoubler Pro and that the same files unpacked fine on
+  the Mac. That is a bug report against the oracle, written by someone who
+  had already ruled out the files.
 
 Each entry is what was claimed, what disproved it, and what it COST. The cost
 line is what makes the next one worth re-testing.
@@ -98,6 +103,7 @@ line is what makes the next one worth re-testing.
 | Nothing documents which fork an ArcMac payload starts with, and no oracle reads ArcMac | ArcMac 1.3c archiving a two-fork file under Mini vMac: data fork first | 2026-08-16 |
 | Alysis SuperDisk! has no reference anywhere, so rule #1 forbids reading it | both corpus archives are self-extracting: the layout, the method table and every codec are inside them | 2026-08-20 |
 | Nothing reachable writes DiskDoubler methods 1–5 or 7, so none can be graded | DiskDoubler 3.7 under Mini vMac writes method 1 from its own menu; its distribution disk ships two method 7 files | 2026-08-20 |
+| The three DiskDoubler containers are read; the corpus exercises every one | nine archives from `ssokolow/diskdoubler-test-files`: five fail at their third entry, on a `DDA2` entry type neither we nor XADMaster implement | 2026-08-21 |
 
 **DiskDoubler methods 1–5 and 7 "cannot be graded".** Declined per entry
 since M12 on the grounds that no corpus fixture uses one and nothing reachable
@@ -126,6 +132,19 @@ was also wrong in the direction that mattered less: XADMaster implements 4 and
 5 (untested) and macutils implements 3 (untested), so the references cover
 three of the four methods still declined. What is missing for those is a
 specimen, not code.
+
+**`DDA2` was read as far as the corpus went, and the corpus stopped early.**
+Entry type `0x1000` is a file DiskDoubler Pro stored because it could not
+shrink it: no `0xABCD0054` header of its own, metadata in the record instead.
+Not one of the six DiskDoubler fixtures is a `DDA2` with such a file in it, so
+809 green fixtures said nothing about it, and neither did the reference —
+XADMaster raises on the missing magic, which is `unar`'s side of the same bug
+and is still there. **Cost: every DiskDoubler Pro archive containing a file
+that would not compress, which is most archives that contain an image or a
+sound.** Five of the nine real ones tried here. Fixed and graded the same day
+against the originals the corpus publishes (DECISIONS.md 2026-08-21); the
+walk's folder branch turned out to be reading uninitialised bytes for its
+dates at the same time, which no fixture could see either.
 
 **macunpack is not a second implementation of method 7.** Built with
 `-DUNTESTED` its `dd_lzss` segfaults on the first specimen: it takes the

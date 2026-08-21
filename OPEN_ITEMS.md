@@ -92,7 +92,10 @@ layouts come from a reference implementation or a spec, never from memory.
   writes MacCompress files (its INIT carries `ZIVM`/`LZIV` and none of the
   three DiskDoubler magics), so it predates the container entirely.
   **What would close it:** a copy of DiskDoubler 1.x or 2.x, or one file
-  written by one. The three
+  written by one. DiskDoubler Pro 4.1.1 does not help: its five menu
+  entries are AD1, AD2, DD1, DD2 and DD3, which write methods 9, 6, and
+  10 three ways — nine archives' worth of them in
+  `ssokolow/diskdoubler-test-files`, and not one method between 2 and 5. The three
   SuperDisk! methods are cheaper still in one sense and no cheaper in the
   other: their 68k modules sit inside the corpus, named and complete
   (FORMATS.md ✧✧), so transcribing them needs no research at all — and there
@@ -139,11 +142,58 @@ layouts come from a reference implementation or a spec, never from memory.
   support — fails too. We extract them; nobody grades them.
 - **The single-file container (`0xABCD0054` at offset 0) has no corpus
   fixture.** Every DiskDoubler file in the corpus is a `DDAR` or `DDA2`
-  archive. It is no longer untested — every specimen `tools/vmac/
-  diskdoubler.py` produces is one, and so are the two method 7 files off
-  the 3.7 disk — but none of those is in `fixtures/`, so `ci.sh` still
-  reaches the path only through the unit test, which also covers the
-  name coming from the host rather than the archive.
+  archive. It is not untested — it is now the best-tested thing here, 63
+  of them extracted byte-exact against their own originals (FORMATS.md)
+  — but none of those is in `fixtures/`, so `ci.sh` still reaches the
+  path only through the unit test, which also covers the name coming
+  from the host rather than the archive.
+- **`ssokolow/diskdoubler-test-files` is not in `fixtures/`.** 92 CC0
+  files, published beside the originals that made them, which is the
+  only DiskDoubler grading here that does not go through another
+  decoder — and `ci.sh` has never seen one. **What would close it:**
+  rows in `fixtures/SOURCES.md` and manifests, with one wrinkle worth
+  planning for: `unar` FAILS on the five DiskDoubler Pro archives (it
+  has the `0x1000` bug we just fixed) and on all four `SPLT` parts, so
+  the oracle for those has to be the published originals, which is not
+  a mode `run_diff.py` has. The same `--expect` the ArcMac and
+  SuperDisk! specimens have wanted since M13 would cover it. Until then
+  the only `SPLT` sets `ci.sh` sees are generated ones
+  (`tools/synth_ddsplit.py`), which grade the reader against the layout
+  and cannot grade the layout against DiskDoubler.
+- **No `SPLT` set has ever been joined on a Mac.** The application
+  compiles with the scheme (`ci.sh` variant 4) and shares the joiner,
+  the volume source and the "locate part N" dialog with the four
+  schemes that HAVE run there, but the two pieces written for this one
+  are its own: the rule that a `SPLT` header beats a `.NNN` filename,
+  and the joined file's name being taken from the opened part.
+  **What would close it:** `tools/vmac/run.py` on a set cut from a
+  fixture — the same shape as the segmented-set runs of 2026-08-09
+  (FORMATS.md, "Segmented sets on a real emulated Mac Plus").
+- **A `SPLT` part's payload CRC is parsed and never checked.** The
+  header carries a CRC-16/XMODEM of that part's payload at `+48`
+  (identified 2026-08-21, exact on all four specimens), and the joiner
+  ignores it: it streams a part at most once and may seek backwards
+  through it, so checking would mean a second full read of every part —
+  on a one-drive Mac, a disk swap each, which is the cost this scheme
+  is arranged around. **What would close it:** a per-part running check
+  in the flat reader that fires only when a part happens to be read
+  straight through, which is the common case and not a guarantee. Until
+  then the joined FILE is what adjudicates the set, as for every other
+  scheme here.
+- **The 4 bytes at `+4` of a `SPLT` header are unidentified.** Equal
+  across the parts of a set, different between sets, so they serve as
+  the identity and the joiner needs nothing more. They are not a
+  checksum of the payload (sum, rotating sum, CRC-16/ARC, CCITT and
+  XMODEM all tested), not either fork's length and not the file's.
+  **What would close it:** more sets, or DiskDoubler splitting a file
+  of known size under emulation — `tools/vmac/diskdoubler.py` already
+  drives the application.
+- **A `DDA2` stored entry with a resource fork has never been seen.**
+  `+87` is read as that fork's XOR checksum by position, next to the
+  data fork's at `+86`, which is measured on ten forks. Both stored
+  files in every set are fork-less (a JPEG and a PNG), so `+87` has only
+  ever been 0. **What would close it:** one incompressible file with a
+  resource fork, compressed by DiskDoubler Pro.
 - **Two of the four Mac tiers have not re-run since M12, M13 or M14.** The
   System 6 tiers have (63/63 at 4 MB and at 1 MB, 2026-08-15; plus both
   SuperDisk! payloads on both, 2026-08-20). **System 7.0.1 and

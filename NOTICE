@@ -43,6 +43,17 @@ This project's decoders are transcriptions/ports of algorithms from:
     (BWT + MTF + arithmetic coding) method.
     http://www.russotto.net/arseniccomp.html
 
+The `DDA2` entry that carries no file header of its own — DiskDoubler
+Pro's form for a file it could not compress — and the whole of the
+`SPLT` split container (src/fmt_ddseg.c), neither of which any other
+reader implements, were derived from the specimens in Stephan Sokolow's
+`ssokolow/diskdoubler-test-files`, released under CC0 and published
+beside the original files they were made from. No code was involved:
+the layout is read off the records, and the originals are what grade
+the result (tools/run_ddtf.py). Like every other archive here, those
+files are fetched, never committed.
+
 Thanks to the maintainers of fileformats.archiveteam.org for format
-documentation, and to the Info-Mac and Macintosh Garden archives for
-the historical software that forms the test corpus.
+documentation, to the Info-Mac and Macintosh Garden archives for
+the historical software that forms the test corpus, and to Stephan
+Sokolow for buying DiskDoubler on eBay and publishing what it wrote.

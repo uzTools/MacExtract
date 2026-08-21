@@ -1945,6 +1945,7 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
         FileIO probe;
         UncIO pio;
         UncSegmentDesc desc;
+        int segOK;
         probe.refNum = refNum;
         probe.size = (uint32_t)fileSize;
         probe.pos = 0;
@@ -1975,7 +1976,18 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
                          ZipFamPartOf(famStem, stemlen, name) != 0;
             }
         }
-        if (famSplit || famZip || unc_segment_describe(&pio, &desc) == UNC_OK) {
+        segOK = unc_segment_describe(&pio, &desc) == UNC_OK;
+        /* ...unless the file proves otherwise. A DiskDoubler `SPLT`
+         * part carries its own index, count and identity, so a set
+         * named Archive.dd.001 is joined as the scheme it declares:
+         * the name rule above is for parts that declare nothing, and
+         * folding 94-byte headers into a file would be silent and
+         * wrong. The Linux CLI makes the same choice. */
+        if (segOK && desc.scheme == UNC_FORMAT_DDSEG) {
+            famSplit = 0;
+            famZip = 0;
+        }
+        if (famSplit || famZip || segOK) {
             sh = (SegHost *)NewPtr((Size)sizeof(SegHost));
             segScratch = NewPtr((Size)unc_segment_scratch_size());
             if (sh == NULL || segScratch == NULL) {
@@ -2048,6 +2060,20 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
                 }
             } else {
             sh->desc = desc;
+            /* A `SPLT` set stores no name for the file it joins into.
+             * The opened part's is all there is, minus the ".N" that
+             * numbers it — for the output file, never for matching:
+             * the parts are found by content like a StuffIt set's. */
+            if (desc.scheme == UNC_FORMAT_DDSEG) {
+                short n = name[0], d, i;
+                if (n > UNC_NAME_MAX) n = UNC_NAME_MAX;
+                d = n;
+                while (d >= 1 && name[d] >= '0' && name[d] <= '9') d--;
+                if (d < n && d >= 2 && name[d] == '.') n = (short)(d - 1);
+                for (i = 0; i < n; i++) sh->desc.name[i] = name[i + 1];
+                sh->desc.name[n] = 0;
+                sh->desc.name_len = (uint16_t)n;
+            }
             sh->tmpVol = outVol;
             sh->tmpDir = outDir;
             /* The file we were opened on is a part, at the number its
@@ -3175,6 +3201,7 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
              * file it was cut from — has another layer under it. */
             if (!IsEnvelopeFormat(shape.fmt) &&
                 shape.fmt != UNC_FORMAT_SITSEG &&
+                shape.fmt != UNC_FORMAT_DDSEG &&
                 shape.fmt != UNC_FORMAT_SPLIT) break;
             {
                 short ref;
