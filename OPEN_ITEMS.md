@@ -114,55 +114,34 @@ Unlike section 3, none of this is impossible here: a download would do it.
   writes them, so an implementation could not be graded — code no oracle can
   check is the same bargain LZH refuses.
 
-  **What is missing is a SPECIMEN, not a reference: all three DiskDoubler
-  methods have one, and the two references are complementary.** Checked in
-  the source rather than carried forward, 2026-08-21:
+  **What is missing is a SPECIMEN, not a reference**, and for the three
+  DiskDoubler methods it is not effort either (read out of the source
+  2026-08-21; the two references are complementary):
 
-  | method | XADMaster | macutils `dd.c` | what it would cost here |
-  |---|---|---|---|
-  | 3, RLE | none — `nameForMethod` only, no `case 3:` in the decode switch | **`dd_rle`**, behind `#ifdef UNTESTED`: an ESC byte, then a repeat count | ~20 lines; nothing in the engine to reuse |
-  | 4, Huffman | **`XADStuffItHuffmanHandle`** (untested), plus the 0x5a XOR and the 16-bit sum | declared but inside `#ifdef NOTIMPLEMENTED` | ~15 lines: that handle IS StuffIt method 3, which this engine already has as `sit_huffman` over `unc_huff_*`. The same shape as method 8 being Compact Pro in a DiskDoubler container |
-  | 5 | **shares method 2's branch** (untested), reading the tree count from a leading byte, 0 meaning 256 | `"???"`, name only | ~10 lines on top of `dd_m2` |
+  | method | reference | cost here |
+  |---|---|---|
+  | 3, RLE | macutils `dd_rle`, behind `#ifdef UNTESTED`; XADMaster has no `case 3:` in its decode switch at all | ~20 lines, nothing in the engine to reuse |
+  | 4, Huffman | XADMaster `XADStuffItHuffmanHandle`, untested; macutils' is inside `#ifdef NOTIMPLEMENTED` | ~15 lines — that handle IS StuffIt method 3, already here as `sit_huffman` over `unc_huff_*` |
+  | 5 | XADMaster, sharing method 2's branch, untested: a leading tree-count byte, 0 meaning 256 | ~10 lines on top of `dd_m2` |
 
-  So none of the three is blocked on research or on effort, and two are
-  nearly free now that method 2 is in. Each is blocked on one file.
+  **What would close it:** one file written by any of them; the candidate
+  left is a DiskDoubler 1.x or 2.x COMPRESSOR. Searched and empty, so
+  nobody repeats it: **seven releases** — 3.1.2, 3.2 and 3.7, whose menus
+  offer two software methods, and 4.0, 4.1 and 4.1.1, whose `MENU
+  195/196/197` and *Compress Using* submenu offer AD 1, AD 2, DD 1, DD 2,
+  DD 3, with `STR# 403` carrying no label for 3-5 at all; **Macintosh
+  Garden**, which has 3.2, 3.7.x, 4.x and DDExpand 2.03, an expander;
+  **funet**'s 1990 shareware "DiskDoubler .05", whose INIT carries
+  `ZIVM`/`LZIV` and none of the three DiskDoubler magics, so it writes
+  MacCompress files and predates the container; **Salient's own 3.1.2
+  disk** (methods 1, 2 and 7); and the **dexvert samples**
+  (`tools/vmac/ndd.py --dexvert` — methods 0, 1, 6, 8 and 9).
 
-  **Method 2 left this list on 2026-08-21**: Salient's 3.1.2 distribution floppy on WinWorld carries one
-  fork of it, which is all a codec needs (DECISIONS.md, the Salient disk).
-  That is also the shape of what would close the rest — a disk, not a
-  reasoning step. What has been checked for the others, so nobody repeats
-  it: **seven DiskDoubler releases now, and none offers a method between 3
-  and 5** — 3.1.2 and 3.2 and 3.7, whose menus offer two software methods,
-  and 4.0, 4.1 and 4.1.1, whose `MENU 195/196/197` and photographed
-  *Compress Using* submenu carry AD 1, AD 2, DD 1, DD 2, DD 3 and nothing
-  else. The vendor's own display vocabulary agrees: `STR# 403` is twelve
-  labels — `AD 1 | AD 2 | DD 1 | DD 2 | DD 3 | AIC | other | A | B | Sigma
-  | S | none` — with a word for stored, for methods 1, 7 and 8 and for
-  AutoDoubler's internal compressor, and none for 3-5, which fall through
-  to `other`. Method 5 is method 2's codec with a leading tree-count byte,
-  so it is ~10 lines the day a fork of it appears. What Macintosh
-  Garden has, checked 2026-08-21 rather than assumed: **DiskDoubler 3.2**,
-  whose `MENU 5019` offers the same two software methods as 3.7 ("Method A
-  (fastest)", "Method B") and so writes the same two; **DDExpand 2.03**,
-  which is the free EXPANDER of the 2.x era and compresses nothing —
-  the file is called `DiskDoubler2.03.sit`, which is what makes it worth
-  writing down; 3.7.x, and 4.x. The 1990 shareware "DiskDoubler .05" on funet
-  writes MacCompress files (its INIT carries `ZIVM`/`LZIV` and none of the
-  three DiskDoubler magics), so it predates the container entirely.
-  **What would close it:** a copy of the DiskDoubler 1.x or 2.x
-  COMPRESSOR, or one file written by one — and the place to look is
-  whichever archive nobody has tried, which is how method 2 arrived. Two
-  collections checked on 2026-08-21 and found not to have one, so nobody
-  re-checks them: Salient's own 3.1.2 disk (methods 1, 2 and 7 only) and
-  the dexvert samples linked from the Just Solve the File Format Problem
-  wiki (`tools/vmac/ndd.py --dexvert` — 15 real files, methods 0, 1, 6, 8
-  and 9 and both containers). The
-  three
-  SuperDisk! methods are cheaper still in one sense and no cheaper in the
-  other: their 68k modules sit inside the corpus, named and complete
-  (FORMATS.md ✧✧), so transcribing them needs no research at all — and there
-  would still be nothing to check the result against, because SuperDisk!'s
-  compressor does not survive here, only its expander.
+  SuperDisk! 10, 13 and 20 need no research at all — their 68k modules sit
+  in the corpus, named and complete (FORMATS.md ✧✧) — and still have
+  nothing to grade against, because only SuperDisk!'s expander survives
+  here and not its compressor.
+
 - **AppleLink `.pkg` and StuffIt SpaceSaver.** Neither has a reference
   implementation or a published layout anywhere reachable. Searched
   2026-08-15: the only AppleLink format with documented internals is the
