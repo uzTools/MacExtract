@@ -86,6 +86,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-21 (last) — "out of scope" and "we have not found one yet" are different files
 - 2026-08-21 (the Symantec release) — DiskDoubler's four publishers, and what the headerless record selects on
 - 2026-08-21 (the Salient disk) — method 2, and the archive nobody here searched
+- 2026-08-21 (methods 3, 4 and 5) — writing DiskDoubler files so DiskDoubler can grade them
 
 ---
 
@@ -4359,3 +4360,91 @@ about DiskDoubler's *history* — publishers, versions, bundles — and the
 history is what dated methods 2-5 to the Salient era. It could not have found
 a download, because nobody asks a search engine "who owned this company" and
 gets a floppy image.
+
+## 2026-08-21 (methods 3, 4 and 5) — writing DiskDoubler files so DiskDoubler can grade them
+
+The last three DiskDoubler methods were declined on the grounds that
+"code no oracle can check is the same bargain LZH refuses". Every word of
+that was true except the premise: **an oracle had been sitting on the
+1991 disk since the morning.** Salient's own `DiskDoubler™ App` and its
+INIT come off that floppy uncompressed, run under Mini vMac, and expand
+whatever they are given.
+
+So the loop runs backwards from the usual one. Instead of decoding a
+specimen nobody has, `tools/vmac/ddencode.py` **encodes** a fork, builds
+a `0xABCD0054` container round it with a correct header CRC, and lets the
+1991 application expand it. All three come back byte-exact. Method 5 is
+confirmed twice, because DiskDoubler 4.1.1 expands it too.
+
+This is the move `arcmac.py`, `nowcompress.py` and `diskdoubler.py
+--make` already make — the difference is that those had a real file at
+one end and this has none at either, so what it grades has to be stated
+carefully:
+
+- **It grades our reading of the FORMAT.** A wrong escape byte, a wrong
+  tree serialization, a wrong bit order, a wrong checksum base or a wrong
+  XOR gate all make the expander refuse or hand back different bytes.
+  Those are the errors that are systematic, and they are the ones this
+  catches.
+- **It does not grade our decoder against encodings our encoder never
+  emits.** A real fork may hold run lengths, tree shapes or contexts ours
+  never produces. That is why these stay listed as having no specimen.
+
+### Three things it measured that neither reference states
+
+**The 0x5a XOR applies to methods 1, 2 and 5, and not to 3 and 4.** The
+first run XORed all four; the expander handed back exactly
+`SUBJECT ^ 0x5a` for methods 3 and 4 and the subject itself for 5. Since
+a constant XOR of the whole output cannot come from a wrong codec, that
+one run confirmed both codecs and located the difference at the same
+time. The headers carried `info1 = 0x2a`, which is what **every** real
+file on the 1991 disk carries — 24 of 24 — so this is not an
+anachronistic test value. macutils agrees by construction: it computes
+`dd_xor` from the same `info1`/`info2` rule and then only `dd_lzc` ever
+applies it. **XADMaster's case 4 disagrees**, and is marked untested by
+its own author. This project follows the implementation that shipped.
+
+**DiskDoubler 4.1.1 has dropped methods 3 and 4.** Handed the same
+files it answers *Unknown compression method. The file was probably
+created by a more recent version of DiskDoubler* — about a 1990 format.
+So the 1991 expander is not merely the most convenient oracle for those
+two, it is the only one, and a session that reached for the newest
+version would have concluded the files were malformed.
+
+**Only a method 5 tree count of 0 is confirmed.** 0 means 256 and
+expands byte-exact under both expanders; a count of 16 is rejected by
+both with *Checksum failed*. Since encoder and decoder here share one
+reading, the shared reading of the non-zero case is what is wrong — or
+non-zero counts are not a thing. The branch stays, because it is
+XADMaster's reading and its failure is a loud per-entry checksum error,
+and it is named in OPEN_ITEMS.md as untested rather than left to look
+tested.
+
+### What the escape byte cost, and the shape of that mistake
+
+macutils declares method 3's escape as `#define ESC 0x144`. That is 324;
+`ch` is a byte; the comparison can never be true, so its own escape
+branch is unreachable and its method 3 copies input to output. Read as
+decimal **144** the algorithm is RLE90 exactly — escape 0x90, `ESC 0` a
+literal escape, `ESC n` a run of n — which is the filter this engine
+already runs for ARC. The derivation was labelled a hypothesis in the
+source until the expander agreed; it did.
+
+The transferable part is not the typo. It is that **a reference marked
+untested can be untested in a way that makes it a no-op rather than
+wrong**, which reads as "implemented" to anyone counting references.
+BLOCKERS.md already had one instance — macutils' method 7 segfaults —
+and this is the second in the same file.
+
+### Why the first --expand run proved less than it looked
+
+It reported one file expanded and three untouched, and the three were a
+harness fault, not a format one: expanding a `TEXT` file launched
+TeachText, and the next `Cmd-O` went to **TeachText's** Open dialog. The
+fix is two lines — click the Finder window first, and give the subjects
+a type nothing owns so the Finder puts up *the necessary application
+could not be found* instead of launching anything. It is the shape
+`superdisk.py` and `ddpro.py` both record: **the frame that shows the
+damage is never the frame of the click that caused it**, and here three
+"the expander did not take it" lines were really one stale front
+application.

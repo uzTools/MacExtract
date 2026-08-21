@@ -109,38 +109,18 @@ Each says which of the two is missing, because the searches are different:
 
 Unlike section 3, none of this is impossible here: a download would do it.
 
-- **DiskDoubler methods 3, 4 and 5, ARC 0x0a/0x0b, and SuperDisk! methods
-  10, 13 and 20.** No corpus fixture uses any of them and nothing reachable
-  writes them, so an implementation could not be graded — code no oracle can
-  check is the same bargain LZH refuses.
-
-  **What is missing is a SPECIMEN, not a reference**, and for the three
-  DiskDoubler methods it is not effort either (read out of the source
-  2026-08-21; the two references are complementary):
-
-  | method | reference | cost here |
-  |---|---|---|
-  | 3, RLE | macutils `dd_rle`, behind `#ifdef UNTESTED`; XADMaster has no `case 3:` in its decode switch at all | ~20 lines, nothing in the engine to reuse |
-  | 4, Huffman | XADMaster `XADStuffItHuffmanHandle`, untested; macutils' is inside `#ifdef NOTIMPLEMENTED` | ~15 lines — that handle IS StuffIt method 3, already here as `sit_huffman` over `unc_huff_*` |
-  | 5 | XADMaster, sharing method 2's branch, untested: a leading tree-count byte, 0 meaning 256 | ~10 lines on top of `dd_m2` |
-
-  **What would close it:** one file written by any of them; the candidate
-  left is a DiskDoubler 1.x or 2.x COMPRESSOR. Searched and empty, so
-  nobody repeats it: **seven releases** — 3.1.2, 3.2 and 3.7, whose menus
-  offer two software methods, and 4.0, 4.1 and 4.1.1, whose `MENU
-  195/196/197` and *Compress Using* submenu offer AD 1, AD 2, DD 1, DD 2,
-  DD 3, with `STR# 403` carrying no label for 3-5 at all; **Macintosh
-  Garden**, which has 3.2, 3.7.x, 4.x and DDExpand 2.03, an expander;
-  **funet**'s 1990 shareware "DiskDoubler .05", whose INIT carries
-  `ZIVM`/`LZIV` and none of the three DiskDoubler magics, so it writes
-  MacCompress files and predates the container; **Salient's own 3.1.2
-  disk** (methods 1, 2 and 7); and the **dexvert samples**
-  (`tools/vmac/ndd.py --dexvert` — methods 0, 1, 6, 8 and 9).
-
+- **ARC 0x0a/0x0b, and SuperDisk! methods 10, 13 and 20.** No corpus
+  fixture uses any of them and nothing reachable writes them, so an
+  implementation could not be graded — code no oracle can check is the same
+  bargain LZH refuses. **What is missing is a gradeable SPECIMEN.**
   SuperDisk! 10, 13 and 20 need no research at all — their 68k modules sit
   in the corpus, named and complete (FORMATS.md ✧✧) — and still have
   nothing to grade against, because only SuperDisk!'s expander survives
-  here and not its compressor.
+  here and not its compressor. Before filing anything else here, ask the
+  question that emptied the DiskDoubler half of this entry on 2026-08-21:
+  **is there an implementation that could be FED?** An expander that
+  cannot be read from can still be handed a file somebody encoded
+  (DECISIONS.md, methods 3, 4 and 5).
 
 - **AppleLink `.pkg` and StuffIt SpaceSaver.** Neither has a reference
   implementation or a published layout anywhere reachable. Searched
@@ -212,13 +192,25 @@ Unlike section 3, none of this is impossible here: a download would do it.
   it:** an archive that uses one of them, or the `Cmpr` modules run under
   emulation as a second implementation — the same route the adjudication
   already takes, applied per method instead of per archive.
-- **DiskDoubler method 2 with more than a few dozen contexts.** A tree is
-  1,536 B and is built on first use, so the peak tracks the number of
-  distinct context bytes: the one specimen touches 60 and measures
-  101,888 B (FORMATS.md). A fork touching all 256 would want ~392 KB and
-  fail per entry on a 1 MB machine. Neither the many-context path nor that
-  failure has run on anything, because the one specimen is 564 bytes.
-  **What would change it:** a bigger method 2 fork.
+- **Methods 3, 4 and 5 have never decoded a fork this project did not
+  write.** All three are byte-exact through Salient's own 1991 expander,
+  which grades the reading of the format rather than the decoder
+  (DECISIONS.md, methods 3, 4 and 5) — so what is untested is every
+  encoding our own encoder does not emit: run lengths it never chooses,
+  Huffman tree shapes it never builds, contexts it never reaches.
+  **What would change it:** one real fork of any of the three.
+- **Method 5's tree-count byte is only confirmed at 0.** 0 means 256 and
+  expands byte-exact under both the 1991 and the 4.1.1 expander; a count of
+  16 is rejected by both with *Checksum failed*, and encoder and decoder
+  here share one reading, so the shared reading of the non-zero case is
+  what is wrong — or non-zero counts do not occur. The branch is kept
+  because it is XADMaster's reading and it fails as a per-entry checksum
+  error rather than silently. **What would change it:** a method 5 fork
+  with a non-zero count.
+- **The 392 KB path.** Methods 2 and 5 pay 1,536 B per distinct context
+  byte; a fork touching all 256 measures 401,408 B, which fits a 1 MB Mac
+  Plus on paper (FORMATS.md) and has never been run on one, nor under the
+  400 KB budget the rest of the corpus holds to.
 - **Files larger than the HFS 2 GB cap**, and the engine's 32-bit-only
   arithmetic against them.
 - **MacRoman filename display and 8-bit characters above System 6.** The bytes

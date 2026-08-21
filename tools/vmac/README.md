@@ -63,6 +63,7 @@ oracle and will lose it to `./ci.sh`'s `make clean`.
 | `checkdisk.py` | verify a run by READING its Out volume — both forks, and the names the on-screen grid cannot carry |
 | `diskdoubler.py` | **ask DiskDoubler itself what it can write** — run the 3.7 application, compress a subject with each method its menu offers, read the method byte back; and `--adjudicate`, which runs a self-extracting fixture and grades the forks no oracle can decode |
 | `ddpro.py` | the other half of the format: DiskDoubler **Pro** 4.1, which writes `DDA2` and whose Split command is the source of the `SPLT` questions still open |
+| `ddencode.py` | **grade a method by WRITING it**: encode a fork, hand it to Salient's own 1991 DiskDoubler, and see whether it comes back. How methods 3, 4 and 5 were graded with no specimen |
 | `ndd.py` | the releases nothing here had run: Salient's **3.1.2** (1991, the oldest reachable — it has the only method 2 fork), **DiskDoubler 4.0** and **Norton DiskDoubler Pro 1.1** (Symantec — whose application is 4.1.1). `--specimens`, `--harvest` and `--grade` need no emulator |
 | `superdisk.py` | grade SuperDisk! with its own self-extractors, and `--on-mac`, which replays both payloads through our application |
 | `mkcollide.py` | build an archive whose names collide on HFS, and verify what `BumpName` did with them — nothing in the corpus collides |
@@ -496,6 +497,44 @@ Four things here that the other two harnesses do not have:
 `--stored` grades itself: it reads the archive back with our own CLI and
 compares every fork with the bytes that went in, resource forks with 16..127
 masked, and returns non-zero on any mismatch.
+
+## Grading a method by writing it — `ddencode.py`
+
+Every other harness here decodes something somebody else made. This one
+does the opposite, because DiskDoubler methods 3, 4 and 5 have no specimen
+and never will unless a 1990 file turns up: it **encodes** a fork, wraps it
+in a `0xABCD0054` container with a correct header CRC, and hands it to
+Salient's own 1991 application, which comes off the 3.1.2 disk uncompressed
+and runs.
+
+    tools/vmac/ddencode.py --build            write them; round-trip here
+    tools/vmac/ddencode.py --probe            the 1991 INIT, in the Finder
+    tools/vmac/ddencode.py --probe-app        the application's own menus
+    tools/vmac/ddencode.py --expand           let 1991 read them
+    tools/vmac/ddencode.py --expand --era 411 let 4.1.1 read them
+
+`--build` needs no emulator and must pass before a boot is worth it: it is
+only encoder-vs-decoder, both ours, so it catches transcription slips and
+proves nothing about the format. `--expand` is the part that grades.
+
+Four things this one has that the others do not:
+
+- **The 1991 INIT adds no menu to the Finder's menu bar.** That arrived with
+  the separate "Finder Menu" extension of 3.7 and 4.x. It does register the
+  `DDF2`/`DDAP` icons, which is how a `--probe` frame shows it loaded at
+  all, and expanding is a double-click.
+- **The application personalizes on first launch**, like 3.7's. `--expand`
+  answers it once and quits before touching any file, so the dialog does not
+  interrupt the run.
+- **Give the subjects a type nothing owns.** Expanding a `TEXT` file
+  launches TeachText, and the next `Cmd-O` then opens **TeachText's** Open
+  dialog — which is how the first run of `--expand` expanded one file and
+  typed the other three names into a standard file dialog, reporting three
+  false "the expander did not take it". Click the Finder window before each
+  file, too.
+- **Use 1991, not 4.1.1, for methods 3 and 4.** 4.1.1 has dropped them and
+  answers *Unknown compression method*. `--era 411` is worth running anyway:
+  it is a second opinion on method 5.
 
 ## Grading SuperDisk! with SuperDisk! — `superdisk.py`
 

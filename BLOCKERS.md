@@ -119,6 +119,7 @@ line is what makes the next one worth re-testing.
 | The `0x1000` `DDA2` record is what DiskDoubler Pro writes for a file it could not shrink | the same fifteen archives hold 45 ordinary headers whose data fork is stored; all 30 `0x1000` records are the files with NO resource fork | 2026-08-21 |
 | A `0x1000` record with a resource fork is waiting to be found | DiskDoubler 4.1.1 writes the form only for a fork-less file — all four cells of compressible x forked measured in one archive | 2026-08-21 |
 | No DiskDoubler COMPRESSOR older than 3.2 is reachable, so methods 2-5 cannot be graded | WinWorld carries Salient's **3.1.2** distribution floppy (1991), which holds a method 2 fork | 2026-08-21 |
+| DiskDoubler methods 3, 4 and 5 cannot be graded, because no specimen of them exists | the 1991 disk carries Salient's own expander: it reads forks THIS project encoded, and all three come back byte-exact | 2026-08-21 |
 
 **DiskDoubler methods 1–5 and 7 "cannot be graded".** Declined per entry
 since M12 on the grounds that no corpus fixture uses one and nothing reachable
@@ -160,6 +161,30 @@ the nine real ones tried here. **No smell above found this one** — inputs
 from outside the corpus did, which is a sixth mechanism and the only one that
 needs no cleverness. What named the cause in minutes was the fifth.
 DECISIONS.md 2026-08-21.
+
+**"Methods 3, 4 and 5 cannot be graded."** True of decoding, and the whole
+question was pointed the wrong way. Grading a decoder needs a specimen;
+grading a READING of the format needs an implementation, and Salient's own
+`DiskDoubler™ App` comes off the 1991 disk uncompressed and runs. Encode a
+fork, hand it to 1991, and it either expands to the bytes that went in or it
+does not: all three do (`tools/vmac/ddencode.py --expand`), and 4.1.1
+confirms method 5 a second time. **Cost: the last three methods of the
+format, held behind a rule about oracles while the oracle was on the disk
+that had just been downloaded for something else.**
+
+The smell is the third in the list — *a limitation written one paragraph from
+its own remedy*. OPEN_ITEMS.md said what was missing was "a file to grade a
+decoder against" in the same entry that named two reference implementations;
+what nobody asked was whether the grading had to run in that direction. The
+sharper form: **an oracle you can only feed is still an oracle.**
+
+It also found a second `#ifdef UNTESTED` that is untested in the worst way.
+macutils declares method 3's escape byte as `#define ESC 0x144` — 324, which
+no byte can equal — so its escape branch is unreachable and its method 3
+copies input to output. Read as decimal 144 the algorithm is RLE90 exactly.
+That is twice now in one file: **a reference marked untested can be untested
+into a no-op, which counts as "implemented" to anyone counting references and
+decodes nothing.**
 
 **"No compressor older than 3.2 is reachable."** The reason methods 2-5 were
 declined, and false. Salient's own **3.1.2** distribution floppy is on

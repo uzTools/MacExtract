@@ -342,11 +342,17 @@ static void dd_m2_splay(DdM2Tree *t, int byte)
     }
 }
 
-static int dd_m2(DdFork *o, UncCtx *c, UncBufIn *in, int xorval)
+static int dd_m2(DdFork *o, UncCtx *c, UncBufIn *in, int xorval, int ntrees)
 {
     UncBitIn bi;
     DdM2 m;
     int err = UNC_OK, i, ctx = 0;
+
+    /* Method 2 fixes this at 256; method 5 reads it from the stream, and
+     * 0 there means 256. Guarded because it divides below: a zero that
+     * reached the modulo would be a crash on a malformed file, which is
+     * the one failure the fork's checksum cannot turn into an error. */
+    if (ntrees <= 0 || ntrees > 256) ntrees = 256;
 
     for (i = 0; i < 256; i++) m.tree[i] = NULL;
     unc_bitin_init(&bi, in);
@@ -365,11 +371,114 @@ static int dd_m2(DdFork *o, UncCtx *c, UncBufIn *in, int xorval)
         if (err != UNC_OK) break;
         byte = node - 0x100;
         dd_m2_splay(t, byte);
-        ctx = byte;
+        ctx = ntrees == 256 ? byte : byte % ntrees;
         if ((err = dd_out_byte(o, (uint8_t)(byte ^ xorval))) != UNC_OK) break;
     }
 
     for (i = 0; i < 256; i++) unc_free(c->al, m.tree[i]);
+    return err;
+}
+
+/* ---- method 3: RLE90 ----------------------------------------------- */
+/*
+ * A run filter on an escape byte: ESC 0 is a literal ESC, and ESC n is
+ * a run of n copies of the byte before it. Identical in shape to the
+ * RLE90 this engine already runs for ARC (`arc_byte`), whose reference
+ * is XADRLE90Handle.m, and to macutils' `dd_rle`.
+ *
+ * **The escape byte is derived, not transcribed, and it is the one
+ * thing here a specimen has never confirmed.** macutils declares it
+ * `#define ESC 0x144` — 324, which no byte can equal, so its own escape
+ * branch is unreachable and its method 3 copies input to output. Read as
+ * decimal 144 the algorithm becomes RLE90 exactly, escape byte 0x90,
+ * which is what the surrounding code computes (`n = *data++ - 1`, then
+ * n copies; a count of 0 emits the escape itself). Labelled a
+ * HYPOTHESIS until an expander that was there agrees — DECISIONS.md
+ * 2026-08-21 (methods 3, 4 and 5).
+ *
+ * **No 0x5a XOR**, unlike methods 1, 2 and 5, and this is measured
+ * rather than transcribed: Salient's own 1991 expander turned a
+ * synthetic method 3 fork into exactly the codec's output with no XOR
+ * applied, on a header carrying info1 = 0x2a — the value every real
+ * file of that era carries. macutils agrees by construction, since
+ * `dd_rle` never touches its `dd_xor`. DECISIONS.md 2026-08-21
+ * (methods 3, 4 and 5).
+ *
+ * Source: reference/macutils/macunpack/dd.c dd_rle (the algorithm),
+ * reference/XADMaster/XADRLE90Handle.m (the same filter, and the
+ * escape byte).
+ */
+#define DD_RLE_ESC 0x90u
+
+static int dd_rle(DdFork *o, UncBufIn *in, uint32_t complen, int xorval)
+{
+    uint32_t i = 0;
+    int last = 0, err;
+
+    while (i < complen && o->left > 0) {
+        int b = unc_bufin_next(in);
+        if (b < 0) return in->err;
+        i++;
+        if ((uint32_t)b != DD_RLE_ESC) {
+            last = b;
+            if ((err = dd_out_byte(o, (uint8_t)(b ^ xorval))) != UNC_OK)
+                return err;
+            continue;
+        }
+        if (i >= complen) return UNC_ERR_TRUNCATED;
+        b = unc_bufin_next(in);
+        if (b < 0) return in->err;
+        i++;
+        if (b == 0) {                          /* a literal escape byte */
+            last = (int)DD_RLE_ESC;
+            if ((err = dd_out_byte(o, (uint8_t)(DD_RLE_ESC ^ (uint32_t)xorval))) != UNC_OK)
+                return err;
+            continue;
+        }
+        /* n copies in total, one of which is already out. The count is a
+         * single byte, so a run is bounded by 255 whatever the file
+         * says, and `o->left` bounds it again. */
+        while (--b > 0 && o->left > 0)
+            if ((err = dd_out_byte(o, (uint8_t)(last ^ xorval))) != UNC_OK)
+                return err;
+    }
+    return UNC_OK;
+}
+
+/* ---- method 4: StuffIt's Huffman ----------------------------------- */
+/*
+ * The bit-serialized Huffman tree this engine already reads for StuffIt
+ * method 3 and for PackIt, in a DiskDoubler container — the same
+ * borrowing method 8 makes of Compact Pro. The 0x5a XOR over decoded
+ * bytes and the 16-bit sum are DiskDoubler's.
+ *
+ * **No 0x5a XOR**, and here this project DISAGREES with its reference:
+ * XADMaster's case 4 applies one, and its own author marks the branch
+ * untested. Salient's 1991 expander does not — it turned a synthetic
+ * method 4 fork into exactly the Huffman output, on a header carrying
+ * info1 = 0x2a. A real implementation of the era beats an untested
+ * transcription; no specimen exists to break the tie outright.
+ * DECISIONS.md 2026-08-21 (methods 3, 4 and 5).
+ *
+ * Source: XADDiskDoublerParser.m case 4, which builds exactly an
+ * XADStuffItHuffmanHandle over the fork.
+ */
+static int dd_huffman(DdFork *o, UncCtx *c, UncBufIn *in, int xorval)
+{
+    UncBitIn bi;
+    UncHuff *h;
+    int err;
+
+    h = (UncHuff *)unc_alloc(c->al, (uint32_t)sizeof *h);
+    if (!h) return UNC_ERR_MEM;
+    unc_bitin_init(&bi, in);
+    err = unc_huff_read_tree(h, &bi);
+    while (err == UNC_OK && o->left > 0) {
+        int sym = unc_huff_decode(h, &bi);
+        if (sym < 0) { err = bi.err != UNC_OK ? bi.err : UNC_ERR_CORRUPT; break; }
+        err = dd_out_byte(o, (uint8_t)(sym ^ xorval));
+    }
+    unc_free(c->al, h);
     return err;
 }
 
@@ -758,7 +867,8 @@ static int dd_fork(UncCtx *c, UncFork fork, uint32_t at, uint32_t complen,
     if (delta != 0 && delta != 1) return UNC_ERR_UNSUPPORTED;
 
     switch (m) {
-    case 0: case 1: case 2: case 6: case 7: case 8: case 9: case 10: break;
+    case 0: case 1: case 2: case 3: case 4: case 5:
+    case 6: case 7: case 8: case 9: case 10: break;
     default: return UNC_ERR_UNSUPPORTED;
     }
     /* Method 8's RLE stage writes to the sink itself, so the delta
@@ -836,13 +946,37 @@ static int dd_fork(UncCtx *c, UncFork fork, uint32_t at, uint32_t complen,
         dd_out_start(&o, c, fork, uncomplen, mem + iocap, ocap,
                      delta == 1 ? 1u : 0u);
         err = dd_lzc(&o, c, &in, complen, xorval, mem + iocap + ocap, stage);
-    } else if (m == 2) {
+    } else if (m == 2 || m == 5) {
+        int ntrees = 256;
         mem = (uint8_t *)unc_alloc(c->al, iocap + ocap);
         if (!mem) return UNC_ERR_MEM;
         unc_bufin_init(&in, c->io, &c->ps, mem, iocap);
         dd_out_start(&o, c, fork, uncomplen, mem + iocap, ocap,
                      delta == 1 ? 1u : 0u);
-        err = dd_m2(&o, c, &in, xorval);
+        if (m == 5) {
+            /* Method 5 is method 2 with the tree count in front of the
+             * bit stream, 0 meaning 256.
+             * Source: XADDiskDoublerParser.m case 5. */
+            int nb = unc_bufin_next(&in);
+            if (nb < 0) { err = in.err; goto m2done; }
+            ntrees = nb == 0 ? 256 : nb;
+        }
+        err = dd_m2(&o, c, &in, xorval, ntrees);
+m2done: ;
+    } else if (m == 3) {
+        mem = (uint8_t *)unc_alloc(c->al, iocap + ocap);
+        if (!mem) return UNC_ERR_MEM;
+        unc_bufin_init(&in, c->io, &c->ps, mem, iocap);
+        dd_out_start(&o, c, fork, uncomplen, mem + iocap, ocap,
+                     delta == 1 ? 1u : 0u);
+        err = dd_rle(&o, &in, complen, 0);
+    } else if (m == 4) {
+        mem = (uint8_t *)unc_alloc(c->al, iocap + ocap);
+        if (!mem) return UNC_ERR_MEM;
+        unc_bufin_init(&in, c->io, &c->ps, mem, iocap);
+        dd_out_start(&o, c, fork, uncomplen, mem + iocap, ocap,
+                     delta == 1 ? 1u : 0u);
+        err = dd_huffman(&o, c, &in, 0);
     } else if (m == 7) {
         mem = (uint8_t *)unc_alloc(c->al, iocap + ocap + DD_STAC_WINDOW);
         if (!mem) return UNC_ERR_MEM;

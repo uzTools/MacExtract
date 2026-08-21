@@ -11,7 +11,7 @@ The engine is the product. The Mac app is a thin shell.
 
 ## Where things stand
 
-**M0–M19 are DONE and nothing is in flight.** Every family in FORMATS.md's
+**M0–M20 are DONE and nothing is in flight.** Every family in FORMATS.md's
 table extracts — that table is the count, and this file does not keep a copy
 of it — and the engine passes a **916-fixture** differential suite against
 `unar` and, where `unar` fails, `macunpack`, plus 9,160 robustness variants.
@@ -58,7 +58,7 @@ no oracle for this method" was a fact about one tool with the second oracle
 already sitting in `reference/`; and "no second implementation exists" was
 written while a self-extracting fixture carried one in its resource fork.
 
-`BLOCKERS.md` keeps all twenty-four withdrawn claims with **what each one cost**,
+`BLOCKERS.md` keeps all twenty-five withdrawn claims with **what each one cost**,
 and names the seven smells that keep finding the next one. The cheapest is a
 **cross-file contradiction**: two status files disagreeing is a disproof
 nobody has collected yet. A constant in the peak-RAM matrix is another —

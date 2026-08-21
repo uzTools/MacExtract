@@ -1985,6 +1985,106 @@ static void test_dd_method2(void)
 
 
 /* ------------------------------------------------------------------ */
+/* Methods 3, 4 and 5. No specimen of any of them exists; what grades  */
+/* them against the FORMAT is Salient's own 1991 expander, which turned */
+/* streams from these same encoders back into the bytes that went in    */
+/* (tools/vmac/ddencode.py --expand; DECISIONS.md, methods 3, 4 and 5). */
+/* These vectors are that encoder's output, frozen, so the C decoder    */
+/* has a regression test the emulator does not have to be booted for.   */
+/* ------------------------------------------------------------------ */
+
+static const uint8_t m345_subject[] = {
+    0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, 0x90, 0x90,
+    0x62, 0x63, 0x64, 0x62, 0x63, 0x64, 0x62, 0x63, 0x64, 0x7A, 0x7A, 0x7A,
+    0x7A, 0x7A, 0x7A, 0x7A, 0x7A, 0x7A, 0x7A, 0x7A, 0x7A, 0x7A, 0x7A, 0x7A,
+    0x7A, 0x7A, 0x7A, 0x7A, 0x7A, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
+    0x07, 0x65, 0x6E, 0x64, 0x2E
+};
+
+/* RLE90 on 0x90: a run of ten, an escaped literal 0x90 twice, a run of
+ * twenty, and bytes that must pass through untouched. No 0x5a XOR. */
+static const uint8_t m3_stream[] = {
+    0x61, 0x90, 0x0A, 0x90, 0x00, 0x90, 0x00, 0x62, 0x63, 0x64, 0x62, 0x63,
+    0x64, 0x62, 0x63, 0x64, 0x7A, 0x90, 0x14, 0x00, 0x01, 0x02, 0x03, 0x04,
+    0x05, 0x06, 0x07, 0x65, 0x6E, 0x64, 0x2E
+};
+
+/* StuffIt's bit-serialized Huffman tree, then the codes. No 0x5a XOR. */
+static const uint8_t m4_stream[] = {
+    0x5E, 0x85, 0x8A, 0xC6, 0x20, 0x50, 0x34, 0x12, 0x0A, 0x41, 0xA0, 0xE9,
+    0x75, 0x94, 0xB2, 0x32, 0x0B, 0x72, 0x01, 0x01, 0xB0, 0xFF, 0xFF, 0xFF,
+    0xFF, 0xAD, 0x44, 0xE4, 0x4E, 0x44, 0xE0, 0x00, 0x00, 0x6E, 0xDF, 0x45,
+    0x35, 0x57, 0x65, 0xB7, 0xED, 0x97, 0x00
+};
+
+/* A leading tree count of 0, meaning 256 — the only value either
+ * expander accepted — then method 2's splay stream. The 0x5a XOR DOES
+ * apply here, which is the difference from 3 and 4 that cost a run to
+ * find. */
+static const uint8_t m5_stream[] = {
+    0x00, 0x3B, 0x3B, 0x87, 0xF4, 0x95, 0x95, 0xB8, 0x39, 0x3E, 0x38, 0x98,
+    0x95, 0xC0, 0x41, 0x67, 0xFF, 0xF8, 0xB4, 0xB6, 0xB0, 0xB2, 0xBC, 0xBE,
+    0xB8, 0xBA, 0x7E, 0x68, 0x7D, 0xBA, 0x00
+};
+
+static void dd_one_method(int method, const uint8_t *stream, uint32_t slen)
+{
+    uint8_t one[256];
+    uint32_t n, i, sum = 0;
+    MemIO m;
+    UncIO io;
+    UncAlloc al;
+    UncSink sk;
+    CapSink cap;
+    UncOptions opt;
+    static const uint8_t hint[] = "M345";
+
+    for (i = 0; i < sizeof m345_subject; i++)
+        sum = (sum + m345_subject[i]) & 0xFFFFu;
+
+    for (n = 0; n < 84; n++) one[n] = 0;
+    one[0] = 0xAB; one[1] = 0xCD; one[2] = 0x00; one[3] = 0x54;
+    put32(one + 4, (uint32_t)sizeof m345_subject);
+    put32(one + 8, slen);
+    one[20] = (uint8_t)method; one[21] = 0;
+    one[22] = 0x2A;                            /* info1: the XOR rule fires */
+    memcpy(one + 32, "TEXT", 4);
+    memcpy(one + 36, "ttxt", 4);
+    one[48] = (uint8_t)(sum >> 8); one[49] = (uint8_t)sum;
+    memcpy(one + 84, stream, slen);
+    n = 84 + slen;
+
+    opt.list_only = 0; opt.test_only = 0;
+    opt.name_hint = hint;
+    opt.name_hint_len = (uint16_t)(sizeof hint - 1);
+    test_make_alloc(&al);
+    test_make_memio(&io, &m, one, n);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_DISKDOUBLER);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_DISKDOUBLER, &io, &sk, &al, NULL,
+                         &opt) == UNC_OK);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+    CHECK(cap.dlen[0] == sizeof m345_subject);
+    CHECK(memcmp(cap.data[0], m345_subject, sizeof m345_subject) == 0);
+
+    /* It can fail: one bit of the stored sum must reject the fork. */
+    one[49] ^= 0x01;
+    test_make_memio(&io, &m, one, n);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_DISKDOUBLER, &io, &sk, &al, NULL,
+                         &opt) == UNC_OK);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_ERR_CRC);
+}
+
+static void test_dd_methods345(void)
+{
+    dd_one_method(3, m3_stream, (uint32_t)sizeof m3_stream);
+    dd_one_method(4, m4_stream, (uint32_t)sizeof m4_stream);
+    dd_one_method(5, m5_stream, (uint32_t)sizeof m5_stream);
+}
+
+
+/* ------------------------------------------------------------------ */
 /* The 'DDA2' archive walk: a folder, a file with its own 0xABCD0054   */
 /* header, and one stored in the archive with none — which is what     */
 /* DiskDoubler Pro writes for a file it could not shrink, and what the */
@@ -2313,6 +2413,7 @@ static void test_diskdoubler(void)
 
     test_dd_stac();
     test_dd_method2();
+    test_dd_methods345();
     test_dd_archive2();
     test_ddseg();
 }
