@@ -1257,7 +1257,7 @@ with this archive."*
 | Compact Pro comments | written out beside the extracted items | read and CRC'd, never surfaced |
 | `.arc` (ARC / ArcMac) | with the add-on | **yes since 2026-08-15**, methods 1-9; ArcMac's two-fork payload since 2026-08-16 (★★★ above) |
 | uuencode (`.uu`) | with the add-on | **yes since 2026-08-15**, plain and UUTool's two-fork shape |
-| AppleLink `.pkg`, StuffIt SpaceSaver | with the add-on | no, and not sniffed either. Not a decision about scope any more — a decision about evidence: neither has a reference implementation or a published layout anywhere reachable, so rule #1 forbids writing one. OPEN_ITEMS.md, *Out of scope for v1*, records what was searched |
+| AppleLink `.pkg`, StuffIt SpaceSaver | with the add-on | no, and not sniffed either. Not a decision about scope any more — a decision about evidence: neither has a reference implementation or a published layout anywhere reachable, so rule #1 forbids writing one. OPEN_ITEMS.md, *Waiting on a file this machine does not have*, records what was searched |
 | Chained expansion (`.sit.hqx`) | yes, and can be turned off | yes, `-nr` turns it off |
 | System 7 conveniences | drag-and-drop of files, folders and whole disks; watch folders; background expansion; Apple events | none; Standard File, one archive at a time |
 | Verification | none published | 916 fixtures byte-exact against `unar`/`macunpack` — bar the one uuencode fixture, which `unar` cannot read at all and whose ground truth is its generator's input, with `hexbin` agreeing |

@@ -38,9 +38,10 @@ Those first three are ~8k tokens together. The rest is reference — opening the
 one the task touches beats reading them all. **A claim you are about to rely
 on, contradict or re-test is always worth opening the source for.**
 
-**Scope is not stated in this file.** What is in, what is detect-only, what
-cannot be written under rule #1 and what the formats themselves make
-impossible is OPEN_ITEMS.md, **Part 1 — Out of scope for v1**. Read it before
+**Scope is not stated in this file.** What is in, what is detect-only and what
+the formats themselves make impossible is OPEN_ITEMS.md, **Part 1 — Out of
+scope for v1**; what is missing only for want of a specimen or a reference is
+Part 2's *"Waiting on a file this machine does not have"*. Read them before
 starting work on a format: the brief has grown three times, and each time the
 answer was in that list rather than here.
 

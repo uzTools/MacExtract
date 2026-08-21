@@ -83,6 +83,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-21 (later) — the DiskDoubler corpus becomes fixtures, and three claims it brought with it
 - 2026-08-21 (later still) — the forks nobody could grade, graded by the archive itself
 - 2026-08-21 (later still) — running DiskDoubler Pro, and what its own Split will not say yet
+- 2026-08-21 (last) — "out of scope" and "we have not found one yet" are different files
 
 ---
 
@@ -4094,3 +4095,37 @@ matters**, since the frame that shows the damage is never the frame of the
 click that caused it. Here the volume listing did: `Rough` had become `a`.
 The checklist that follows is in `tools/vmac/README.md`, where re-running
 lives.
+
+## 2026-08-21 (last) — "out of scope" and "we have not found one yet" are different files
+
+OPEN_ITEMS.md split its Part 1 into two kinds of thing and called both
+*decided*: boundaries somebody chose (compression, encrypted archives, Zip64)
+and formats nobody here has a specimen or a reference for (AppleLink `.pkg`,
+StuffIt SpaceSaver, DiskDoubler methods 2-5, ARC 0x0a/0x0b, SuperDisk!
+methods 10, 13 and 20). The second kind is not decided. It is exactly the
+first kind's opposite: work this project WANTS, blocked on a file.
+
+The evidence that this matters is in BLOCKERS.md and it cost a format.
+**Alysis SuperDisk! sat in that section for the life of the project** on the
+grounds that no reference existed — and the reference was inside the corpus's
+own fixtures the whole time. A gap filed as a boundary stops being re-tested,
+which is the one thing that would have found it. Two of the entries beside it
+had already been disproved the same way (DiskDoubler methods 1 and 7).
+
+So Part 1 now holds only what no evidence could change — the brief, and
+properties of the formats themselves, like a uuencoded set that cannot detect
+its own missing middle part — and Part 2 gains **"Waiting on a file this
+machine does not have"**, which collects every such item across formats and
+says for each whether what is missing is a REFERENCE (a spec, an
+implementation, or a self-extracting specimen, which is one) or a GRADEABLE
+SPECIMEN (a file something else wrote). Collecting them across formats is the
+point: they are closed by one person noticing one file, and that person is
+reading a list, not a format section. Both times it has happened here — the
+SuperDisk! fixtures, the DiskDoubler distribution disk — the finding arrived
+from outside the format it settled.
+
+Two DiskDoubler items moved the other way at the same time, out of the
+verification section and into this one, because they are the same kind of
+thing: a method 7 fork longer than one chunk, and a `DDA2` stored entry with
+a resource fork. Both are "nobody here has the file", filed next to "no
+corpus fixture uses methods 2-5" instead of a page apart from it.

@@ -29,19 +29,25 @@ DECISIONS.md, the withdrawn claim to BLOCKERS.md, the numbers to FORMATS.md.
 Three sections have emptied and been removed that way — multi-segment
 (2026-08-14), multi-document BinHex (2026-08-15) and Now Compress
 (2026-08-16), whose last item was closed by the decoder inside the archive
-itself. A section that empties is the point of the file. So is a Part 1 entry
-that turns out to be a research failure rather than a boundary: Alysis
-SuperDisk! sat under *"rule #1 forbids inventing a format"* until 2026-08-20,
-when the reference turned up inside the corpus's own fixtures (BLOCKERS.md,
-*Withdrawn claims*).
+itself. A section that empties is the point of the file. So is a
+Part 1 entry that turns out to be a research failure rather than a boundary:
+Alysis SuperDisk! sat under *"rule #1 forbids inventing a format"* until
+2026-08-20, when the reference turned up inside the corpus's own fixtures
+(BLOCKERS.md, *Withdrawn claims*). That section is now Part 2's, for the
+reason that withdrawal demonstrated.
 
 ---
 
 # Part 1 — Out of scope for v1
 
-**Decided, not open.** Everything here is a deliberate boundary or a limit of
-the evidence; none of it is work waiting to be done. The brief HAS grown three
-times — multi-segment archives (M11), DiskDoubler and Now Compress (M12), and
+**Decided, or impossible. Not open.** Everything here is either a boundary
+somebody chose or a property of a format that no evidence can change; none of
+it is work waiting to be done, and nothing here is closed by finding a file.
+Things that ARE waiting for a file are section 2 of Part 2 — including
+everything that used to sit here under *"rule #1 forbids inventing a format"*,
+which moved on 2026-08-21 because "we have not found a reference yet" is a
+gap, not a decision (DECISIONS.md). The brief HAS grown three times —
+multi-segment archives (M11), DiskDoubler and Now Compress (M12), and
 `.arc` + uuencode (M13) were all listed as out of scope until the maintainer
 asked for them — so "out of scope" means *today's* answer, not a refusal.
 
@@ -60,25 +66,93 @@ asked for them — so "out of scope" means *today's* answer, not a refusal.
 Everything detect-only is **named** by `unc_sniff`, so a UI can tell the user
 what the file is and extraction returns cleanly unsupported.
 
-## Out because rule #1 forbids inventing a format
+## Limits of the formats themselves
 
-These are limits of the evidence, not of effort. Rule #1: magic numbers and
-layouts come from a reference implementation or a spec, never from memory.
+- **A uuencoded set missing a MIDDLE part decodes short, and silently.** A
+  document posted in several parts joins and decodes — the mail headers
+  between parts are stepped over — but uuencode carries no length and no
+  checksum anywhere, so nothing can notice that a part never arrived. A
+  missing LAST part IS caught: the terminator and `end` live there. Asserted
+  rather than described — `tools/run_uu.py` builds a gapped set and requires
+  exactly this result, so the day the format turns out to have a check, the
+  suite says so. **What would change it:** nothing in the format. A host that
+  knows the parts were numbered `1/5` could check the count, which is a naming
+  question and not a decoding one.
 
-- **AppleLink `.pkg` and StuffIt SpaceSaver.** Neither has a reference
-  implementation or a published layout anywhere reachable. Searched
-  2026-08-15: the only AppleLink format with documented internals is the
-  Apple II `.acu` (CiderPress2's format notes, magic `fZink`), which that page
-  explicitly distinguishes from the Macintosh Package format; SpaceSaver has
-  no specification, no open implementation, and Aladdin's own later Expanders
-  dropped it. Neither can even be **sniffed** without inventing a magic
-  number, so a user gets *unknown* rather than a name. **What would change
-  it:** a specimen plus the original application, derived under Mini vMac the
-  way Compact Pro's segment layout and Now Compress's block shapes were — or
-  one published description. **A SELF-EXTRACTING specimen would settle it on
-  its own**, which is what the SuperDisk! withdrawal cost this project four
-  documents to learn (BLOCKERS.md); neither has one here, or a specimen of
-  any kind.
+---
+
+# Part 2 — Open items
+
+---
+
+## 1. DiskDoubler and SuperDisk!: what M12 and M14 left
+
+Verification gaps — things this project has and has not checked.
+What it does not HAVE is section 2.
+
+- **8 resource forks across 2 fixtures are not ground truth**, though
+  DiskDoubler's own expander agrees with every one of them: 33 forks
+  compared under System 7 on 2026-08-21, all 33 identical, and the 3
+  data forks are in the manifests (DECISIONS.md, FORMATS.md). A
+  resource fork the Mac wrote is never byte-exact, so these 8 stay
+  unadjudicated. **What would close it:** an implementation that runs
+  off a Mac — for these methods, transcribing one — or a copy of the
+  same archive from a machine that never opened it.
+- **The Mac OS 9.2 tier has not re-run since M12, M13 or M14.** The other
+  three have: System 6 at 4 MB and at 1 MB (59/59 each, 2026-08-15, plus
+  both SuperDisk! payloads on both, 2026-08-20) and System 7.0.1
+  (**59/59, 2026-08-21**, the first run there with DiskDoubler, Now
+  Compress, ARC and uuencode in the sample). The OS 9 sample still
+  records DiskDoubler as a refusal, which is what it was when that tier
+  last ran, and FORMATS.md marks those rows pre-M12. **What would close
+  it:** an OS 9 sweep, which costs a full PowerPC boot per fixture —
+  tens of minutes, against five for the whole System 7 tier.
+
+---
+
+## 2. Waiting on a file this machine does not have
+
+**Not scope decisions, and not effort.** Every entry here is a format or a
+method whose decoder is written or writeable; what is missing is something to
+grade it against. They sit together because that is how they get closed — by
+somebody finding a file, not by somebody deciding. SuperDisk! left this list
+when a fixture turned out to contain its own decoder, and DiskDoubler methods
+1 and 7 when the application was run (BLOCKERS.md). The question to bring
+here is *what did I just find?*
+
+Each says which of the two is missing, because the searches are different:
+
+- a **reference** — a spec, an implementation, or a self-extracting specimen,
+  which is one; rule #1 forbids writing a format without it;
+- a **gradeable specimen** — a file written by something else, so our output
+  has something to be wrong against.
+
+Unlike section 3, none of this is impossible here: a download would do it.
+
+- **A method 7 fork longer than one chunk has never been decoded.** The
+  fork header counts its compressed chunks and gives each a 16-bit
+  length; both specimens hold exactly one, and the codec reads the
+  chunks as one continuous bit stream because that is what the
+  reference does. A fork over ~64 KB would settle whether that is
+  right. **What would close it:** a bigger method 7 file, which needs
+  the Sigma Designs card DiskDoubler 3.x wrote them with — no emulator
+  here has one.
+- **A `DDA2` stored entry with a resource fork has never been seen.**
+  `+87` is read as that fork's XOR checksum by position, next to the
+  data fork's at `+86`, which is measured on ten forks. Both stored
+  files in every set are fork-less (a JPEG and a PNG), so `+87` has only
+  ever been 0 — and the record's two dates have only ever been equal, so
+  which of `+54` and `+58` is the creation is assigned rather than
+  measured (DECISIONS.md 2026-08-21). **What would close both:** a
+  `0x1000` record whose file has a resource fork. Narrowed 2026-08-21:
+  DiskDoubler Pro **4.1**'s "Create Archive…" on a single incompressible
+  file with a resource fork does NOT write one — it writes an ordinary
+  `0xABCD0054` header with the data fork stored (method 0) and the
+  resource fork AD1-compressed, which this engine reads
+  (`tools/vmac/ddpro.py --experiments`, then `--check-stored`). So the
+  `0x1000` form comes from something else about the nine published
+  archives: 4.1.1 rather than 4.1, or seven files at once rather than
+  one. Trying those two is what is left.
 - **DiskDoubler methods 2, 3, 4 and 5, ARC 0x0a/0x0b, and SuperDisk! methods
   10, 13 and 20.** No corpus fixture uses any of them and nothing reachable
   writes them, so an implementation could not be graded — code no oracle can
@@ -106,72 +180,24 @@ layouts come from a reference implementation or a spec, never from memory.
   (FORMATS.md ✧✧), so transcribing them needs no research at all — and there
   would still be nothing to check the result against, because SuperDisk!'s
   compressor does not survive here, only its expander.
-
-## Limits of the formats themselves
-
-- **A uuencoded set missing a MIDDLE part decodes short, and silently.** A
-  document posted in several parts joins and decodes — the mail headers
-  between parts are stepped over — but uuencode carries no length and no
-  checksum anywhere, so nothing can notice that a part never arrived. A
-  missing LAST part IS caught: the terminator and `end` live there. Asserted
-  rather than described — `tools/run_uu.py` builds a gapped set and requires
-  exactly this result, so the day the format turns out to have a check, the
-  suite says so. **What would change it:** nothing in the format. A host that
-  knows the parts were numbered `1/5` could check the count, which is a naming
-  question and not a decoding one.
-
----
-
-# Part 2 — Open items
+- **AppleLink `.pkg` and StuffIt SpaceSaver.** Neither has a reference
+  implementation or a published layout anywhere reachable. Searched
+  2026-08-15: the only AppleLink format with documented internals is the
+  Apple II `.acu` (CiderPress2's format notes, magic `fZink`), which that page
+  explicitly distinguishes from the Macintosh Package format; SpaceSaver has
+  no specification, no open implementation, and Aladdin's own later Expanders
+  dropped it. Neither can even be **sniffed** without inventing a magic
+  number, so a user gets *unknown* rather than a name. **What would change
+  it:** a specimen plus the original application, derived under Mini vMac the
+  way Compact Pro's segment layout and Now Compress's block shapes were — or
+  one published description. **A SELF-EXTRACTING specimen would settle it on
+  its own**, which is what the SuperDisk! withdrawal cost this project four
+  documents to learn (BLOCKERS.md); neither has one here, or a specimen of
+  any kind.
 
 ---
 
-## 1. DiskDoubler and SuperDisk!: what M12 and M14 left
-
-- **A method 7 fork longer than one chunk has never been decoded.** The
-  fork header counts its compressed chunks and gives each a 16-bit
-  length; both specimens hold exactly one, and the codec reads the
-  chunks as one continuous bit stream because that is what the
-  reference does. A fork over ~64 KB would settle whether that is
-  right. **What would close it:** a bigger method 7 file, which needs
-  the Sigma Designs card DiskDoubler 3.x wrote them with — no emulator
-  here has one.
-- **8 resource forks across 2 fixtures are not ground truth**, though
-  DiskDoubler's own expander agrees with every one of them: 33 forks
-  compared under System 7 on 2026-08-21, all 33 identical, and the 3
-  data forks are in the manifests (DECISIONS.md, FORMATS.md). A
-  resource fork the Mac wrote is never byte-exact, so these 8 stay
-  unadjudicated. **What would close it:** an implementation that runs
-  off a Mac — for these methods, transcribing one — or a copy of the
-  same archive from a machine that never opened it.
-- **A `DDA2` stored entry with a resource fork has never been seen.**
-  `+87` is read as that fork's XOR checksum by position, next to the
-  data fork's at `+86`, which is measured on ten forks. Both stored
-  files in every set are fork-less (a JPEG and a PNG), so `+87` has only
-  ever been 0 — and the record's two dates have only ever been equal, so
-  which of `+54` and `+58` is the creation is assigned rather than
-  measured (DECISIONS.md 2026-08-21). **What would close both:** a
-  `0x1000` record whose file has a resource fork. Narrowed 2026-08-21:
-  DiskDoubler Pro **4.1**'s "Create Archive…" on a single incompressible
-  file with a resource fork does NOT write one — it writes an ordinary
-  `0xABCD0054` header with the data fork stored (method 0) and the
-  resource fork AD1-compressed, which this engine reads
-  (`tools/vmac/ddpro.py --experiments`, then `--check-stored`). So the
-  `0x1000` form comes from something else about the nine published
-  archives: 4.1.1 rather than 4.1, or seven files at once rather than
-  one. Trying those two is what is left.
-- **The Mac OS 9.2 tier has not re-run since M12, M13 or M14.** The other
-  three have: System 6 at 4 MB and at 1 MB (59/59 each, 2026-08-15, plus
-  both SuperDisk! payloads on both, 2026-08-20) and System 7.0.1
-  (**59/59, 2026-08-21**, the first run there with DiskDoubler, Now
-  Compress, ARC and uuencode in the sample). The OS 9 sample still
-  records DiskDoubler as a refusal, which is what it was when that tier
-  last ran, and FORMATS.md marks those rows pre-M12. **What would close
-  it:** an OS 9 sweep, which costs a full PowerPC boot per fixture —
-  tens of minutes, against five for the whole System 7 tier.
----
-
-## 2. Cannot be closed in this environment
+## 3. Cannot be closed in this environment
 
 - **Real 68k hardware: never run.** No genuine floppy I/O, no real media errors
   mid-write, no real 8 KB stack underneath a real ROM's own usage. The
@@ -191,7 +217,7 @@ layouts come from a reference implementation or a spec, never from memory.
 
 ---
 
-## 3. Known unknowns, not being chased
+## 4. Known unknowns, not being chased
 
 - **Why the pointer does not work under QEMU on Mac OS 9.** Measured to
   0.0000 effect across five mouse primitives; the mechanism behind that has no
@@ -203,7 +229,7 @@ layouts come from a reference implementation or a spec, never from memory.
 
 ---
 
-## 4. Untested code, named so it is not mistaken for tested
+## 5. Untested code, named so it is not mistaken for tested
 
 - **The interactive UI above System 6 is deliberate scope**, not a gap
   (2026-08-02). System 6 is the UI's target and it is driven end to end there.
@@ -231,7 +257,7 @@ layouts come from a reference implementation or a spec, never from memory.
 
 ---
 
-## 5. Remedies ruled out by measurement
+## 6. Remedies ruled out by measurement
 
 - **Do not retry, on Mac heap pressure.** Both were measured while
   StuffIt 5 / Arsenic was still short of the 1 MB floor, and both are dead
