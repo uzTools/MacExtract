@@ -66,9 +66,8 @@ detect-only — disk images are out of scope for v1.
 
 **Kept deliberately, and this is the part of the file to read first.** Twice a
 live claim has been re-tested *because* it sat beside an already-withdrawn one,
-and one of those was worth 39/44 → 40/44 at the floor target. Six mechanisms
-keep finding the next one, and the last is the only one that needs nothing but
-patience:
+and one of those was worth 39/44 → 40/44 at the floor target. Seven mechanisms
+keep finding the next one, and the last two need no insight at all:
 
 - a live claim sitting next to an already-withdrawn one;
 - **two files disagreeing** — a cross-file contradiction is a disproof nobody
@@ -85,6 +84,11 @@ patience:
   here had seen, and five of them failed in the first minute (below). A suite
   that is green on the files it has says nothing about the files it has not,
   and this is the only mechanism here that needs no insight — just files.
+- **what the corpus never does that the claim would allow.** Added
+  2026-08-21: a rule inferred from the records it was drawn from fits every
+  one of them, so counting those proves nothing. Count the records it does
+  NOT cover instead — 30 `0x1000` entries fitted the claim and 45 in the same
+  fifteen files contradicted it (below).
 
 Each entry is what was claimed, what disproved it, and what it COST. The cost
 line is what makes the next one worth re-testing.
@@ -112,6 +116,8 @@ line is what makes the next one worth re-testing.
 | The `SPLT` specimens are four parts across two sets | the same clone: six parts across three, the third with a 14 KB resource fork | 2026-08-21 |
 | The Mac sample is 63 fixtures, and every tier result is 63/63 | counting the file: 63 lines, 59 distinct — four listed twice | 2026-08-21 |
 | Macintosh Garden has DiskDoubler 3.7 and 4.x only | it also has 3.2 and DDExpand 2.03; 3.2's menu offers the same two software methods, and 2.03 is an expander | 2026-08-21 |
+| The `0x1000` `DDA2` record is what DiskDoubler Pro writes for a file it could not shrink | the same fifteen archives hold 45 ordinary headers whose data fork is stored; all 30 `0x1000` records are the files with NO resource fork | 2026-08-21 |
+| A `0x1000` record with a resource fork is waiting to be found | DiskDoubler 4.1.1 writes the form only for a fork-less file — all four cells of compressible x forked measured in one archive | 2026-08-21 |
 
 **DiskDoubler methods 1–5 and 7 "cannot be graded".** Declined per entry
 since M12 on the grounds that no corpus fixture uses one and nothing reachable
@@ -151,6 +157,26 @@ the nine real ones tried here. **No smell above found this one** — inputs
 from outside the corpus did, which is a sixth mechanism and the only one that
 needs no cleverness. What named the cause in minutes was the fifth.
 DECISIONS.md 2026-08-21.
+
+**The headerless `DDA2` record "is for a file DiskDoubler Pro could not
+shrink".** True, and half a condition. The other half is that the file must
+have **no resource fork**: `Test Text` is eleven bytes, stored, and gets a
+full `0xABCD0054` header because it has a 332-byte one. Measured on the Mac
+across all four cells of compressible x forked, and visible in the corpus the
+claim was derived from all along — 30 `0x1000` records, every one fork-less,
+beside 45 stored-data-fork headers that are not. **Cost: two emulator
+sessions spent looking for a file that cannot exist**, and a byte at `+87`
+documented as a resource fork's checksum when no `0x1000` record can carry a
+resource fork at all. It also kept an entry in OPEN_ITEMS.md's *waiting on a
+file* list, which is the section whose whole point is that somebody might
+turn up with the file.
+
+**No smell here found this one either, and none would have.** The claim was
+inferred from real records and was merely incomplete, so it had no tell. What
+found it was looking in the corpus for what the claim would ALLOW and the
+corpus never does. That is the seventh mechanism, and DECISIONS.md
+2026-08-21 (the Symantec release) states it as a habit: a rule inferred from
+the cases it was drawn from always fits them.
 
 **Four `SPLT` parts, two sets.** Written into FORMATS.md and OPEN_ITEMS.md
 the day the scheme was derived, and the corpus it was derived from holds six

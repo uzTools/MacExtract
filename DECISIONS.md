@@ -84,6 +84,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-21 (later still) — the forks nobody could grade, graded by the archive itself
 - 2026-08-21 (later still) — running DiskDoubler Pro, and what its own Split will not say yet
 - 2026-08-21 (last) — "out of scope" and "we have not found one yet" are different files
+- 2026-08-21 (the Symantec release) — DiskDoubler's four publishers, and what the headerless record selects on
 
 ---
 
@@ -3853,7 +3854,9 @@ except that here somebody else's hardware ran the compressor.
 file DiskDoubler Pro could not shrink: it is stored in the archive with no
 `0xABCD0054` header of its own, and its 90-byte record header carries the
 metadata instead. Every set has two — the JPEG and the PNG, which is exactly
-the pair nothing can compress. The reference has no branch for it and raises
+the pair nothing can compress. (**Half a condition**, corrected 2026-08-21 in
+"the Symantec release" below: the file must also have no resource fork, and
+these two are the only fork-less files in the set.) The reference has no branch for it and raises
 on the missing magic (`XADDiskDoublerParser.m`, `parseArchive2`), which is why
 `unar` calls every DiskDoubler Pro archive holding an incompressible file
 corrupt, and why the repository's own README reports 4.1.1 as "hit-or-miss" —
@@ -4131,3 +4134,140 @@ verification section and into this one, because they are the same kind of
 thing: a method 7 fork longer than one chunk, and a `DDA2` stored entry with
 a resource fork. Both are "nobody here has the file", filed next to "no
 corpus fixture uses methods 2-5" instead of a page apart from it.
+
+## 2026-08-21 (the Symantec release) — DiskDoubler's four publishers, and what the headerless record selects on
+
+DiskDoubler had four owners, and the order matters because it dates the
+methods. Checked online rather than remembered: Terry Morse and Lloyd
+Chambers wrote it and formed **Salient Software** around it in 1990, which
+sold it **standalone** through 3.7.x; Salient went to **Fifth Generation
+Systems in 1992**, which is when it was FIRST bundled — as *SuperDoubler
+4.0*, with AutoDoubler and CopyDoubler; Fifth Generation went to
+**Symantec**, which shipped the same bundle as **Norton DiskDoubler Pro
+1.1**, a fat binary, and then let it die. It was never part of Norton
+Utilities. So the sequence is standalone first and bundled from 4.0 on,
+and version 4 is where the bundling STARTS.
+
+**The "1.1" is the disk, not the program.** `vers 2` on that floppy reads
+*Norton DiskDoubler Pro™ Disk 1.1* and `vers 1` reads **4.1.1** — the exact
+version OPEN_ITEMS.md had named as one of the two things left to try for the
+`0x1000` record. A suite version and an application version were being read
+as the same number.
+
+`tools/vmac/ndd.py` runs both ends: 4.0 from Macintosh Garden and 4.1.1 from
+the Symantec floppy.
+
+### The floppy is a corpus, and the boot image is our own output
+
+Every file on the Norton disk ships DiskDoubler-compressed — types `DDF0`
+through `DDF3`, creator `DDAP` — so ten more real specimens arrived with the
+application, exactly as 3.7's distribution disk carried the only two method 7
+forks anybody here will ever see (2026-08-20). All ten are methods 0 and 10.
+
+Two of them are worth more than a count:
+
+- **`DiskTester™` 3.7.7 ships compressed on the Symantec floppy and
+  UNCOMPRESSED inside the Fifth Generation 4.0 StuffIt archive.** Same build,
+  two publishers, two distributions. Our decode of the compressed copy equals
+  the uncompressed one to the byte outside the resource header's 112-byte
+  system-reserved window, where 46 bytes differ because one copy carries
+  DiskDoubler's `DDAppExpandTempFile` bookkeeping and the other the
+  Installer's. That is a method 10 resource fork graded against a copy no
+  DiskDoubler ever touched — and it is independent evidence for the masking
+  convention FORMATS.md already uses on the 8 unadjudicated forks, which
+  until now rested on the assertion that the Mac rewrites those bytes.
+- **The System 7 boot image is built out of forks this engine decoded.** The
+  Finder-menu extension is `INIT/DDI4` inside a method 10 container; nothing
+  on that disk can be installed without decompressing it first. So a Mac that
+  boots the extension and drives the application is a Mac executing our own
+  output, and a wrong byte does not produce a warning — it produces a machine
+  that will not start.
+
+### The `0x1000` record: the claim was half a condition
+
+M16 read the headerless `DDA2` record as *what DiskDoubler Pro writes for a
+file it could not shrink*, and OPEN_ITEMS.md then spent two sessions looking
+for one that had a resource fork — first 4.1 on a single incompressible
+forked file, then 4.1.1 on seven at once. Both produced an ordinary
+`0xABCD0054` header with the data fork stored. The reason is that the claim
+was missing its other half, and **the corpus it was derived from says so**:
+`ddtf-*.dd` and `ddtf-*.sea` hold **30** `0x1000` records, every one of them
+a file with no resource fork, beside **45** ordinary headers whose data fork
+is stored and which have one. `Test Text` is eleven bytes, stored, and gets a
+full header, because it has a 332-byte resource fork.
+
+Measured on the Mac rather than inferred, all four cells in one archive
+(`ndd.py --stored`):
+
+| data fork | resource fork | record |
+|---|---|---|
+| incompressible (40 B, 300 B, 20,000 B) | none | **`0x1000`** |
+| incompressible (300 B, 20,000 B) | 335-338 B | `0xABCD0054`, data stored, fork AD1 |
+| compressible | none | `0xABCD0054`, AD1 |
+| compressible | 336 B | `0xABCD0054`, both AD1 |
+
+**DiskDoubler Pro writes the headerless record exactly when the data fork is
+stored AND the file has no resource fork.** Size has nothing to do with it —
+40 bytes and 20,000 bytes both take the form.
+
+Three consequences, and the first is the one that was costing something:
+
+- **A `0x1000` record with a resource fork cannot be written.** It was filed
+  under *waiting on a file this machine does not have*; there is no such file
+  to wait for. The byte at `+87`, read as that fork's XOR checksum by
+  position, has no fork to describe in any archive DiskDoubler Pro can
+  produce. `+86` IS the data fork's checksum, and that is now measured rather
+  than positional too: flipping one payload byte makes the CLI report
+  *checksum mismatch* on that entry alone.
+- **`+54` is the creation date and `+58` the modification.** Every specimen
+  had carried the same value twice, so `dd_archive2()` assigned them by the
+  order the reference reads them in a different branch — a guess with a
+  citation. Giving two subjects a 1990 creation and a 1995 modification
+  through the MacBinary header separates them: `+54` came back 1990 on both.
+  The guess was right, which is worth exactly as much as knowing it.
+- **`unar` is still wrong about all of it**, unchanged: XADMaster has no
+  branch for the record and raises on the missing magic.
+
+### Methods 2-5 are Salient-era, and that is now dated rather than guessed
+
+The reason to run the LAST version was that it is the cheapest remaining
+route to a method between 2 and 5. It is not there, and three independent
+readings say so:
+
+- 4.1.1's **Compress Using** submenu, photographed under Mini vMac: AD 1,
+  AD 2, DD 1, DD 2, DD 3, and nothing else;
+- `MENU 195`, `196` and `197` in both **4.0** and **4.1.1** carry that same
+  list, read on the host — the trick BLOCKERS.md used on 3.2's `MENU 5019`,
+  which costs no boot at all;
+- **`STR# 403`**, the vocabulary the "Compressed Using" column draws on:
+  `AD 1 | AD 2 | DD 1 | DD 2 | DD 3 | AIC | other | A | B | Sigma | S |
+  none`. Twelve labels covering stored (`none`), method 1 (`A`), method 8
+  (`B`), method 7 (`Sigma`), 6/9/10 and AutoDoubler's internal compressor —
+  and **no name at all** for a method between 2 and 5, which fall through to
+  `other`.
+
+So no DiskDoubler from 3.2 to 4.1.1 writes one, and the last one has no word
+for one either. With the ownership history above, that is a date rather than
+a shrug: methods 2-5 belong to Salient's 1.x and 2.x, before the 1992 sale.
+The gap stays exactly where it was — a specimen — but it is now bounded by
+five releases checked instead of two.
+
+One route it also closes: **DiskDoubler's own expander cannot read method 7
+without the hardware.** `STR# 1` string 19 is *the file cannot be expanded
+because it was compressed with Sigma hardware and no hardware is installed in
+this Macintosh*. Running DD Expand under emulation was the obvious way to get
+a second opinion on the two method 7 forks; it is not available, and this
+engine decodes something the original application on that disk cannot.
+
+### The lesson
+
+The claim that cost two sessions was not unsupported — it was derived from
+the corpus, from real records, and it was *half a condition*. Nothing about
+it looked like a guess, and no smell in BLOCKERS.md points at one, because
+the evidence was genuine and merely incomplete. What found it was reading the
+corpus for the counter-example instead of for the example: **30 records that
+fit the claim were beside 45 that contradict it, in the same fifteen files.**
+So, next to "ask what evidence a tolerance rests on": **ask what a corpus
+does NOT do that the claim would allow.** A rule inferred from the cases it
+was drawn from will always fit them; the disproof is in the cases nobody
+counted.

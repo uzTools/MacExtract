@@ -1054,24 +1054,30 @@ static int dd_archive2(UncCtx *c)
         dd_path_leaf(&path, &e, hdr + 7, nlen);
 
         if ((entrytype & 0xF000) == 0x1000) {
-            /* Stored in the archive with no file header of its own —
-             * DiskDoubler Pro writes it for a file it could not shrink.
-             * The record carries the file's own metadata instead, and
-             * the 90-byte header is followed by the two raw forks.
-             * The reference has no branch for this and raises on the
+            /* Stored in the archive with no file header of its own.
+             * DiskDoubler Pro writes it when the data fork is stored
+             * AND the file has no resource fork — both halves measured
+             * on the application, 2026-08-21 (DECISIONS.md, the
+             * Symantec release); a file with a resource fork gets a
+             * full header even when its data fork is stored. The
+             * record carries the file's own metadata instead, and the
+             * 90-byte header is followed by the two raw forks. The
+             * reference has no branch for this and raises on the
              * missing 0xABCD0054, which is why `unar` calls every
-             * DiskDoubler Pro archive holding an incompressible file
-             * corrupt. Derived from the nine archives of
+             * DiskDoubler Pro archive holding an incompressible
+             * fork-less file corrupt. Derived from the nine archives of
              * ssokolow/diskdoubler-test-files (DECISIONS.md 2026-08-21). */
             DdFile f;
             uint8_t *fp = (uint8_t *)&f;
             uint32_t fi;
             if (unc_read_full(c->io, hdr + 46, 44) != UNC_OK) break;
             for (fi = 0; fi < sizeof f; fi++) fp[fi] = 0;
-            /* Assigned, not measured: every stored specimen carries
-             * the same value twice, so nothing distinguishes the two.
-             * This is the order the reference reads them in the folder
-             * branch of this same walk (OPEN_ITEMS.md). */
+            /* MEASURED 2026-08-21: two subjects stamped with a 1990
+             * creation and a 1995 modification came back with 1990 at
+             * +54 in both records (`tools/vmac/ndd.py --dates`). Until
+             * then every specimen carried the same value twice and this
+             * was the reference's order in the folder branch of the
+             * same walk, taken on faith. */
             f.creation     = unc_get_u32be(hdr + 54);
             f.modification = unc_get_u32be(hdr + 58);
             f.type         = unc_get_u32be(hdr + 62);
@@ -1080,6 +1086,11 @@ static int dd_archive2(UncCtx *c)
             f.datasize = f.datacomp = unc_get_u32be(hdr + 78);
             f.rsrcsize = f.rsrccomp = unc_get_u32be(hdr + 82);
             f.datacrc  = hdr[86];
+            /* +87 sits where the resource fork's checksum would go and
+             * is 0 in all 33 records seen. It has never described
+             * anything: this record type is only written for a file
+             * with no resource fork, so rsrcsize above is always 0 and
+             * this value is never compared. */
             f.rsrccrc  = hdr[87];
             f.xorsum   = 1;
             dd_entry_from(&e, &f);

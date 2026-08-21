@@ -7,24 +7,30 @@ Settings dialog offers AD1, AD2, DD1, DD2 and DD3, which write methods 9,
 6 and 10, and its archives are `DDA2` rather than `DDAR`. Two things in
 OPEN_ITEMS.md need it, and neither can be answered by reading a file:
 
-  * a `DDA2` **stored** entry with a RESOURCE fork. Every stored entry
-    seen so far is a JPEG or a PNG with no resource fork, so the byte at
-    `+87` — read as that fork's XOR checksum, by position beside the data
-    fork's at `+86` — has only ever been 0, and the record's two dates
-    have only ever been equal, so which of `+54` and `+58` is the
-    creation is assigned rather than measured (DECISIONS.md 2026-08-21).
-  * what the 4 bytes at `+4` of a `SPLT` header MEAN. They are equal
-    across the parts of a set and different between sets; no checksum of
-    any fork or of the file accounts for them, and two published sets
-    with IDENTICAL data forks have different values. Splitting the same
-    file twice, minutes apart, separates a content hash from a clock.
+  * a `DDA2` **stored** entry with a RESOURCE fork. **ANSWERED
+    2026-08-21: there is none, and there cannot be.** The `0x1000` form
+    is written only when the data fork is stored AND the file has no
+    resource fork, so `+87` never describes one; `+54` and `+58` are the
+    creation and modification dates, also measured. Both by
+    `tools/vmac/ndd.py --stored` and `--dates` (DECISIONS.md, the
+    Symantec release). What `--experiments` here produced —
+    an ordinary header with a stored data fork beside an AD1 resource
+    fork — is half of that answer.
+  * what the 4 bytes at `+4` of a `SPLT` header MEAN. **ANSWERED
+    2026-08-21: the Mac's `TickCount` when the file was split.** They are
+    equal across the parts of a set and different between sets, and no
+    checksum of any fork or of the file accounts for them; splitting the
+    same file twice, minutes apart, separated a content hash from a clock
+    — three files split 72 s apart differ by 4,324 and 4,330 ticks
+    (DECISIONS.md 2026-08-21, later still; FORMATS.md).
 
     tools/vmac/ddpro.py --setup        fetch 4.1 and unpack it
     tools/vmac/ddpro.py --install      a System 7 image with its Finder menu
     tools/vmac/ddpro.py --probe        photograph the menus and dialogs
-    tools/vmac/ddpro.py --stored       compress an incompressible file
-                                       that HAS a resource fork
-    tools/vmac/ddpro.py --split        split three files in one session
+    tools/vmac/ddpro.py --experiments  one session: archive an incompressible
+                                       file that HAS a resource fork, then
+                                       split three files
+    tools/vmac/ddpro.py --check-stored describe the archive that came back
 
 Nothing here runs in `ci.sh`, and nothing it fetches is committed — the
 archive is commercial software, fetched by URL and checked by hash

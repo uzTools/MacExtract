@@ -63,6 +63,7 @@ oracle and will lose it to `./ci.sh`'s `make clean`.
 | `checkdisk.py` | verify a run by READING its Out volume — both forks, and the names the on-screen grid cannot carry |
 | `diskdoubler.py` | **ask DiskDoubler itself what it can write** — run the 3.7 application, compress a subject with each method its menu offers, read the method byte back; and `--adjudicate`, which runs a self-extracting fixture and grades the forks no oracle can decode |
 | `ddpro.py` | the other half of the format: DiskDoubler **Pro** 4.1, which writes `DDA2` and whose Split command is the source of the `SPLT` questions still open |
+| `ndd.py` | the two releases nothing here had run: **DiskDoubler 4.0** (Fifth Generation, the first bundle) and **Norton DiskDoubler Pro 1.1** (Symantec — whose application is 4.1.1). Also `--harvest`/`--grade`, which need no emulator: that floppy ships every file DiskDoubler-compressed |
 | `superdisk.py` | grade SuperDisk! with its own self-extractors, and `--on-mac`, which replays both payloads through our application |
 | `mkcollide.py` | build an archive whose names collide on HFS, and verify what `BumpName` did with them — nothing in the corpus collides |
 
@@ -401,13 +402,13 @@ file (OPEN_ITEMS.md):
     tools/vmac/ddpro.py --install   # System 7 + its Finder-menu extension
     tools/vmac/ddpro.py --probe     # photograph the menus and dialogs
 
-- **A `DDA2` stored entry with a resource fork.** Every stored entry anyone
-  here has seen is a JPEG or a PNG with no resource fork, so `+87` — read as
-  that fork's XOR checksum, by position beside the data fork's at `+86` — has
-  only ever been 0, and the record's two dates have only ever been equal.
-  Still open, and narrowed: 4.1's "Create Archive…" on one incompressible
-  file writes an ordinary header with the data fork STORED, not the
-  headerless `0x1000` record (OPEN_ITEMS.md).
+- **A `DDA2` stored entry with a resource fork. ANSWERED 2026-08-21: there
+  is no such thing.** DiskDoubler Pro writes the headerless `0x1000` record
+  only for a file whose data fork is stored AND which has no resource fork —
+  4.1's "Create Archive…" on one incompressible forked file writes an
+  ordinary header with the data fork STORED, and so does 4.1.1 on seven at
+  once. `ndd.py --stored` measures all four cells; `--dates` settles which of
+  `+54` and `+58` is the creation (FORMATS.md, DECISIONS.md).
 - **What the 4 bytes at `+4` of a `SPLT` header mean. ANSWERED 2026-08-21:
   the Mac's `TickCount` when the file was split.** Three files split 72 s
   apart differ by 4,324 and 4,330 ticks, and two of the three were
@@ -434,6 +435,58 @@ to misread is DECISIONS.md 2026-08-21; what to do about them is:
 - **Leave room for what DiskDoubler writes.** A split leaves the original in
   place, and the menu says "Split File (760K)" — a subject smaller than that
   comes out in one piece and answers nothing.
+
+## The last two DiskDoublers — `ndd.py`
+
+`diskdoubler.py` runs Salient's 3.7 and `ddpro.py` runs Fifth Generation's
+DiskDoubler Pro 4.1. This one covers the other two ends of the product's
+history: **DiskDoubler 4.0**, the release that first bundled AutoDoubler and
+CopyDoubler as *SuperDoubler*, and **Norton DiskDoubler Pro 1.1**, Symantec's
+last one — whose application is DiskDoubler **4.1.1**, not 1.1. Why that
+matters and what it settled is DECISIONS.md 2026-08-21 (the Symantec
+release).
+
+    tools/vmac/ndd.py --setup      fetch both
+    tools/vmac/ndd.py --harvest    decode the floppy here; report methods
+    tools/vmac/ndd.py --grade      DiskTester: ours vs the uncompressed 4.0 copy
+    tools/vmac/ndd.py --install    System 7 + 4.1.1's Finder menu
+    tools/vmac/ndd.py --probe      photograph the menu titles
+    tools/vmac/ndd.py --submenu    Compress Using, About, Settings
+    tools/vmac/ndd.py --stored     what selects the headerless 0x1000 record
+    tools/vmac/ndd.py --dates      which of +54 and +58 is the creation
+    tools/vmac/ndd.py --archive    seven files, one incompressible with a fork
+
+`--harvest` and `--grade` need no emulator and no X server. The rest are one
+boot each, about ten minutes of host wall clock.
+
+Four things here that the other two harnesses do not have:
+
+- **The download is behind a one-shot token.** Macintosh Repository answers a
+  plain `GET download.php?id=` with an interstitial that says the link has
+  expired, which reads as "the file is gone" and is not: the token is minted
+  by a 302 that only appears with the software page's own session cookie
+  behind it, and the file is a POST of the hidden field on the page past that
+  redirect. `fetch_norton()` does the three steps. The failure mode is a
+  168-byte HTML body saved as `.img` that `file(1)` cheerfully calls a floppy,
+  so the SHA-1 is checked against the published one.
+- **Everything on that floppy is DiskDoubler-compressed** — types `DDF0`
+  through `DDF3`, creator `DDAP`. `--harvest` decodes all of it with our own
+  CLI and prints each container's methods, so the installer disk is ten more
+  graded specimens, the same way 3.7's distribution disk turned out to carry
+  the only two method 7 forks reachable here.
+- **The boot image is built out of forks this engine decoded**, because
+  nothing on the disk can be installed without decompressing it first. That
+  is the point rather than a shortcut: a wrong byte does not produce a
+  warning, it produces a System 7 that will not start.
+- **Put the subjects in a folder.** `session(..., folder="Subjects")` leaves
+  the application at the volume root, because Select All in the root window
+  selects the application DiskDoubler is about to launch. The Return trap
+  `ddpro.py` documents applies here too — `select()` sends Escape first, and
+  the folder is opened with Cmd-O.
+
+`--stored` grades itself: it reads the archive back with our own CLI and
+compares every fork with the bytes that went in, resource forks with 16..127
+masked, and returns non-zero on any mismatch.
 
 ## Grading SuperDisk! with SuperDisk! — `superdisk.py`
 

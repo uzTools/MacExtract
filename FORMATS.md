@@ -78,9 +78,29 @@ by `ci.sh` on every run; the 8 resource forks agree only with the OS-stamped
 header bytes 16..127 masked, so they stay unadjudicated and `run_diff.py`
 prints the two counts separately. DECISIONS.md 2026-08-15, 2026-08-21.
 
-**A `DDA2` entry of type `0x1000` carries no `0xABCD0054` header of its own**
-— DiskDoubler Pro's form for a file it could not shrink. Read since
-2026-08-21 (DECISIONS.md); before that, five of the nine DiskDoubler Pro
+**That masking window has independent evidence since 2026-08-21.**
+`DiskTester™` 3.7.7 ships DiskDoubler-compressed on the Norton DiskDoubler
+Pro 1.1 floppy and UNCOMPRESSED in the Fifth Generation 4.0 StuffIt archive —
+same build, two publishers. Our decode of the compressed copy equals the
+other over all 36,104 bytes except 46, every one of them inside 16..127
+(`tools/vmac/ndd.py --grade`). Until then the window was masked on the
+argument that the Mac rewrites it; this is a fork graded against a copy no
+DiskDoubler ever touched.
+
+**A `DDA2` entry of type `0x1000` carries no `0xABCD0054` header of its own.**
+DiskDoubler Pro writes it **exactly when the data fork is stored AND the file
+has no resource fork** — measured across all four cells of compressible x
+forked in one archive on 2026-08-21 (`tools/vmac/ndd.py --stored`;
+DECISIONS.md, the Symantec release). Size is not a factor: 40 B and 20,000 B
+both take the form. A file with a resource fork gets a full header even when
+its data fork is stored, which is 45 of the records in the CC0 corpus against
+30 of the headerless kind. Consequences: **no `0x1000` record can carry a
+resource fork**, so `+87` never describes one; `+86` is the data fork's
+checksum (corrupting one payload byte trips it); and `+54` and `+58` are the
+creation and modification dates, measured 2026-08-21 by archiving subjects
+stamped 1990 and 1995, not assigned.
+
+Read since 2026-08-21; before that, five of the nine DiskDoubler Pro
 4.1.1 archives in `ssokolow/diskdoubler-test-files` stopped at their third
 entry, and **`unar` 1.10.8 still stops there** (MEASURED): `lsar` fails on
 all five with *Archive parsing failed! (Data is corrupted.)*, and reads all
