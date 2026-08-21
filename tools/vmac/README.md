@@ -63,7 +63,7 @@ oracle and will lose it to `./ci.sh`'s `make clean`.
 | `checkdisk.py` | verify a run by READING its Out volume — both forks, and the names the on-screen grid cannot carry |
 | `diskdoubler.py` | **ask DiskDoubler itself what it can write** — run the 3.7 application, compress a subject with each method its menu offers, read the method byte back; and `--adjudicate`, which runs a self-extracting fixture and grades the forks no oracle can decode |
 | `ddpro.py` | the other half of the format: DiskDoubler **Pro** 4.1, which writes `DDA2` and whose Split command is the source of the `SPLT` questions still open |
-| `ndd.py` | the two releases nothing here had run: **DiskDoubler 4.0** (Fifth Generation, the first bundle) and **Norton DiskDoubler Pro 1.1** (Symantec — whose application is 4.1.1). Also `--harvest`/`--grade`, which need no emulator: that floppy ships every file DiskDoubler-compressed |
+| `ndd.py` | the releases nothing here had run: Salient's **3.1.2** (1991, the oldest reachable — it has the only method 2 fork), **DiskDoubler 4.0** and **Norton DiskDoubler Pro 1.1** (Symantec — whose application is 4.1.1). `--specimens`, `--harvest` and `--grade` need no emulator |
 | `superdisk.py` | grade SuperDisk! with its own self-extractors, and `--on-mac`, which replays both payloads through our application |
 | `mkcollide.py` | build an archive whose names collide on HFS, and verify what `BumpName` did with them — nothing in the corpus collides |
 
@@ -446,8 +446,9 @@ last one — whose application is DiskDoubler **4.1.1**, not 1.1. Why that
 matters and what it settled is DECISIONS.md 2026-08-21 (the Symantec
 release).
 
-    tools/vmac/ndd.py --setup      fetch both
-    tools/vmac/ndd.py --harvest    decode the floppy here; report methods
+    tools/vmac/ndd.py --setup      fetch all three
+    tools/vmac/ndd.py --specimens  decode Salient's 1991 disk; report methods
+    tools/vmac/ndd.py --harvest    decode the Norton floppy; report methods
     tools/vmac/ndd.py --grade      DiskTester: ours vs the uncompressed 4.0 copy
     tools/vmac/ndd.py --install    System 7 + 4.1.1's Finder menu
     tools/vmac/ndd.py --probe      photograph the menu titles
@@ -455,9 +456,17 @@ release).
     tools/vmac/ndd.py --stored     what selects the headerless 0x1000 record
     tools/vmac/ndd.py --dates      which of +54 and +58 is the creation
     tools/vmac/ndd.py --archive    seven files, one incompressible with a fork
+    tools/vmac/ndd.py --dexvert    a third collector's samples, over the network
 
-`--harvest` and `--grade` need no emulator and no X server. The rest are one
-boot each, about ten minutes of host wall clock.
+`--specimens`, `--harvest` and `--grade` need no emulator and no X server.
+The rest are one boot each, about ten minutes of host wall clock.
+
+**`--specimens` is the one that pays.** Salient's 3.1.2 floppy (WinWorld, a
+PC abandonware library nobody here had searched — BLOCKERS.md) holds 24
+DiskDoubler containers written in 1991: one method 2 fork, which is the only
+one this project has ever found and what method 2 is graded on, and 22 method
+7 forks of up to eight chunks. Each carries its own checksum, so the disk
+grades itself and the mode returns non-zero on any mismatch.
 
 Four things here that the other two harnesses do not have:
 

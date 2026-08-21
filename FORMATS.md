@@ -26,7 +26,7 @@ whole corpus for that format (engine allocations only, via
 | DiskDoubler split (`SPLT`) | extract | — (join only; the joined file is the next layer) | 6 real parts (3 sets, cut by DiskDoubler itself, in `fixtures/`) + 8 generated sets, adjudicated against the published files they were cut from — no oracle exists | 8 KB | full |
 | Split file (plain .001/.002) | extract | — (join only; the joined file is the next layer) | 3 generated sets, adjudicated against the bytes that were cut, `unar` where it can join, and our unsplit read | 8 KB | full |
 | StuffIt X (.sitx) | detect only | — | — (no fixture) | — | — |
-| DiskDoubler (DD, DDAR, DDA2) | extract | 0 store, 1 Unix compress, 6/9 AD LZSS, 7 Stac LZS, 8 Compact Pro, 10 DDn; 2/3/4/5 declined per entry✦ | 88 fixtures (6 harvested + 82 CC0 files graded against their own originals, in `ci.sh` since 2026-08-21) + 19 BinHexed copies of those + 4 specimens (2 written by DiskDoubler 3.7 under Mini vMac, 2 off its distribution disk)✦ | 10–108 KB✦ | full |
+| DiskDoubler (DD, DDAR, DDA2) | extract | 0 store, 1 Unix compress, 2 splay Huffman, 6/9 AD LZSS, 7 Stac LZS, 8 Compact Pro, 10 DDn; 3/4/5 declined per entry✦ | 88 fixtures (6 harvested + 82 CC0 files graded against their own originals, in `ci.sh` since 2026-08-21) + 19 BinHexed copies of those + 28 specimens (2 written by DiskDoubler 3.7 under Mini vMac, 2 off its distribution disk, 24 off Salient's 3.1.2 disk)✦ | 10–108 KB✦ | full |
 | Now Compress | extract | stored, LZSS, Huffman, Huffman+LZSS, "new" LZSS✧ | 2 real fixtures + 13 generated archives (all five shapes, adjudicated by `unar`); `synth-now-mixed.now` also has an `unar` manifest and is in the differential suite | 128 KB✧ | full |
 | ARC / ArcMac (.arc) | extract | 1/2 store, 3 RLE90, 4 squeeze+RLE90, 5/6/7 crunch, 8 12-bit LZW+RLE90, 9 13-bit LZW, 0x7f compress; ArcMac's two-fork payload since 2026-08-16★★★; 0x0a/0x0b (PKARC) declined per entry★ | 10 generated archives (methods 1-9, adjudicated by `unar`) + 3 written by Debian's `arc` 5.21q; `synth-arc-mixed.arc` also has an `unar` manifest and is in the differential suite | 4–32 KB★ | full |
 | uuencode (.uu, incl. UUTool) | extract | — (plain uu, UUTool's two-fork "MU" shape, and documents posted in several parts★★) | 7 generated cases, the two-fork ones adjudicated by macutils' `hexbin`; `synth-uu-mac.uu` is in the differential suite | 4 KB | full |
@@ -56,8 +56,26 @@ claims*):
 
 | method | what writes it | specimens | how graded |
 |---|---|---|---|
-| 1, Unix compress | DiskDoubler 3.7, "Method A (fastest)" | `subject-A.dd`, both forks | the bytes that went IN, on the emulated Mac; `unar` agrees |
-| 7, Stac LZS | the Sigma Designs card DiskDoubler 3.x drove | the two THINK C libraries on the 3.7 disk, 2,226 B each | the fork's own XOR checksum; `unar` agrees byte for byte |
+| 1, Unix compress | DiskDoubler 3.7, "Method A (fastest)" | `subject-A.dd`, both forks; one more on the 3.1.2 disk | the bytes that went IN, on the emulated Mac; `unar` agrees |
+| 7, Stac LZS | the Sigma Designs card DiskDoubler 3.x drove | the two THINK C libraries on the 3.7 disk, 2,226 B each, **and 22 forks on the 3.1.2 disk, up to 97,906 B in 8 chunks** | the fork's own XOR checksum; `unar` agrees byte for byte |
+| 2, splay Huffman | DiskDoubler 1.x-3.1.x | **one**: `XCMD.h` on the 3.1.2 disk, 564 → 386 B (2026-08-21) | the fork's own 16-bit sum, and the output is legible 1990 Salient C |
+
+**Method 2 joined on 2026-08-21**, when Salient's own 3.1.2 distribution
+floppy turned up on WinWorld — older than any DiskDoubler this project had
+(BLOCKERS.md). It is an order-1 adaptive code: 256 splay trees, the one in
+use chosen by the byte just produced, each starting as the complete binary
+tree over 256 leaves and rotating the leaf it just emitted toward the root.
+The 0x5a XOR over decoded bytes is method 1's, under the same `info1`/`info2`
+condition; the checksum needs no adjustment because the stream carries no
+header of its own. DECISIONS.md 2026-08-21 (the Salient disk).
+
+**Its peak is the number of distinct context bytes, not a constant.** A tree
+is 1,536 B and is built only when its context first occurs, so the single
+specimen — 60 distinct contexts in 564 bytes — measures **101,888 B**
+(`unclassic t --stats`), inside the range above. A fork that used every
+context would want 256 trees, ~392 KB, and would be a per-entry allocation
+failure on a 1 MB machine like any other data-driven allocation here; no
+specimen exists to try it on (OPEN_ITEMS.md).
 
 Method 1 is `unc_lzw` behind three bytes of its own, with an 0x5a XOR over the
 DECODED bytes and the header bytes — not over the code stream — and a sum
@@ -65,9 +83,8 @@ adjusted by those three bytes. Method 7 is a 2 KB-window LZSS whose bit stream
 AND output are stored complemented, with match lengths unbounded by the
 window. Both: DECISIONS.md 2026-08-20.
 
-Methods 2, 3, 4 and 5 stay **declined per entry**: nothing reachable writes
-one — DiskDoubler 3.7's menu offers method 1 and method 8 and nothing else —
-so anything written for them could not be graded. **11 forks across 2 fixtures
+Methods 3, 4 and 5 stay **declined per entry**: no specimen of any of them
+has ever been found, so anything written for them could not be graded. **11 forks across 2 fixtures
 were adjudicated by neither oracle** — `unar` fails on them and `macunpack`
 (built with its DiskDoubler support on) fails too. Both fixtures are
 self-extracting, so each carries DiskDoubler's own expander: running them

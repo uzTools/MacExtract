@@ -258,6 +258,121 @@ static int dd_lzc(DdFork *o, UncCtx *c, UncBufIn *in, uint32_t complen,
     return err;
 }
 
+/* ---- method 2: splay-tree Huffman, one tree per preceding byte ----- */
+/*
+ * An order-1 adaptive code: 256 splay trees, the one in use chosen by
+ * the byte just produced. Each tree starts as the complete binary tree
+ * over 256 leaves — internal node j has children 2j and 2j+1, the root
+ * is node 1 and node 256+b is the leaf for byte b — so the first byte
+ * of a fork costs eight bits and the tree self-adjusts from there:
+ * after each byte its leaf is rotated toward the root, which is what
+ * makes the code adaptive without transmitting any table.
+ *
+ * The decompressed bytes are XORed with 0x5a under the same condition
+ * as method 1 (`info1 >= 0x2a` and info2's high bit clear); the fork's
+ * 16-bit sum is taken over the result, and unlike method 1 there is no
+ * header adjustment because the stream carries no header.
+ *
+ * Method 5 is this codec with a leading byte giving the tree count
+ * (0 meaning 256); it stays declined for want of a specimen.
+ *
+ * Source: reference/XADMaster/XADDiskDoublerMethod2Handle.m (the tree
+ * and the splay step) and XADDiskDoublerParser.m, case 2 (the tree
+ * count, the XOR condition and the checksum).
+ */
+typedef struct DdM2Tree {
+    uint16_t left[256];      /* by internal node; a value >= 256 is a leaf */
+    uint16_t right[256];
+    uint8_t  parent[512];    /* by node, internal and leaf alike */
+} DdM2Tree;
+
+typedef struct DdM2 {
+    DdM2Tree *tree[256];     /* NULL until a context is first used */
+} DdM2;
+
+/* The trees are identical until used, so one is built only when its
+ * context byte actually occurs. A fork that never mentions a byte never
+ * pays its 1,536 bytes — which is what keeps a small fork small; a fork
+ * that uses every context costs 384 KB and is a per-entry allocation
+ * failure on a small machine, like any other data-driven allocation
+ * here. */
+static DdM2Tree *dd_m2_tree(DdM2 *m, UncCtx *c, int i)
+{
+    DdM2Tree *t = m->tree[i];
+    int j;
+
+    if (t) return t;
+    t = (DdM2Tree *)unc_alloc(c->al, (uint32_t)sizeof *t);
+    if (!t) return NULL;
+    for (j = 0; j < 256; j++) {
+        t->left[j]  = (uint16_t)(j * 2);
+        t->right[j] = (uint16_t)(j * 2 + 1);
+        t->parent[j * 2]     = (uint8_t)j;
+        t->parent[j * 2 + 1] = (uint8_t)j;
+    }
+    m->tree[i] = t;
+    return t;
+}
+
+/* Rotate the leaf just decoded one level toward the root, repeatedly:
+ * the node changes places with its uncle, which halves its depth. */
+static void dd_m2_splay(DdM2Tree *t, int byte)
+{
+    int node = byte + 0x100;
+
+    for (;;) {
+        int parent = t->parent[node], grand, uncle;
+
+        if (parent == 1) break;
+        grand = t->parent[parent];
+        uncle = t->left[grand];
+        if (uncle == parent) {
+            uncle = t->right[grand];
+            t->right[grand] = (uint16_t)node;
+        } else {
+            t->left[grand] = (uint16_t)node;
+        }
+        if (t->left[parent] != node) t->right[parent] = (uint16_t)uncle;
+        else                         t->left[parent]  = (uint16_t)uncle;
+        t->parent[node]  = (uint8_t)grand;
+        t->parent[uncle] = (uint8_t)parent;
+
+        node = grand;
+        if (node == 1) break;
+    }
+}
+
+static int dd_m2(DdFork *o, UncCtx *c, UncBufIn *in, int xorval)
+{
+    UncBitIn bi;
+    DdM2 m;
+    int err = UNC_OK, i, ctx = 0;
+
+    for (i = 0; i < 256; i++) m.tree[i] = NULL;
+    unc_bitin_init(&bi, in);
+
+    while (o->left > 0) {
+        DdM2Tree *t = dd_m2_tree(&m, c, ctx);
+        int node = 1, byte;
+
+        if (!t) { err = UNC_ERR_MEM; break; }
+        for (;;) {
+            int bit = unc_bitin_bit(&bi);
+            if (bit < 0) { err = bi.err; break; }
+            node = bit ? t->right[node] : t->left[node];
+            if (node >= 0x100) break;
+        }
+        if (err != UNC_OK) break;
+        byte = node - 0x100;
+        dd_m2_splay(t, byte);
+        ctx = byte;
+        if ((err = dd_out_byte(o, (uint8_t)(byte ^ xorval))) != UNC_OK) break;
+    }
+
+    for (i = 0; i < 256; i++) unc_free(c->al, m.tree[i]);
+    return err;
+}
+
 /* ---- method 7: Stac LZS -------------------------------------------- */
 /*
  * Stac's LZS, which DiskDoubler 3.x wrote when a Sigma Designs
@@ -643,7 +758,7 @@ static int dd_fork(UncCtx *c, UncFork fork, uint32_t at, uint32_t complen,
     if (delta != 0 && delta != 1) return UNC_ERR_UNSUPPORTED;
 
     switch (m) {
-    case 0: case 1: case 6: case 7: case 8: case 9: case 10: break;
+    case 0: case 1: case 2: case 6: case 7: case 8: case 9: case 10: break;
     default: return UNC_ERR_UNSUPPORTED;
     }
     /* Method 8's RLE stage writes to the sink itself, so the delta
@@ -721,6 +836,13 @@ static int dd_fork(UncCtx *c, UncFork fork, uint32_t at, uint32_t complen,
         dd_out_start(&o, c, fork, uncomplen, mem + iocap, ocap,
                      delta == 1 ? 1u : 0u);
         err = dd_lzc(&o, c, &in, complen, xorval, mem + iocap + ocap, stage);
+    } else if (m == 2) {
+        mem = (uint8_t *)unc_alloc(c->al, iocap + ocap);
+        if (!mem) return UNC_ERR_MEM;
+        unc_bufin_init(&in, c->io, &c->ps, mem, iocap);
+        dd_out_start(&o, c, fork, uncomplen, mem + iocap, ocap,
+                     delta == 1 ? 1u : 0u);
+        err = dd_m2(&o, c, &in, xorval);
     } else if (m == 7) {
         mem = (uint8_t *)unc_alloc(c->al, iocap + ocap + DD_STAC_WINDOW);
         if (!mem) return UNC_ERR_MEM;

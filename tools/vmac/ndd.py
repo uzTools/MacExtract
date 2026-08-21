@@ -77,13 +77,31 @@ DD40_URL = "https://old.mac.gdn/apps/diskdoublertm-4-sit.bin"
 DD40_PAGE = "https://macintoshgarden.org/apps/diskdoubler-40"
 DD40_MD5 = "ddfad526576f0ac03cd5d181e3fdd944"           # MD5, as published
 
+# Salient's own 3.1.2 distribution floppy, 1991 — the OLDEST DiskDoubler
+# reachable, and the only place a method 2 fork has ever been found.
+# WinWorld hands the download out from a mirror link on the download
+# page; the SHA-1 below is the one it publishes beside the file.
+DD312_PAGE = "https://winworldpc.com/download/a8d3a7f3-377c-11e9-8581-fa163e9022f0"
+DD312_URL = DD312_PAGE + "/from/c39ac2af-c381-c2bf-1b25-11c3a4e284a2"
+DD312_SHA = "73beb38b09f0cdad8764f3ec3bd9d8c43734f7b3"
+
+# A third collector's DiskDoubler samples, linked from the Just Solve the
+# File Format Problem wiki: real files from real disks, independent of
+# both Salient's own and the CC0 corpus. A live directory listing rather
+# than a pinned archive, so nothing here is hashed — it is a check, not a
+# fixture source.
+DEXVERT = "http://sembiance.com/fileFormatSamples/archive/diskDoubler/"
+
 HOME = R.VMAC_HOME
 WORK = os.path.join(HOME, "ndd")
 SPECIMENS = os.path.join(HOME, "specimens", "ndd")
 IMG = os.path.join(WORK, "Norton-DiskDoubler-Pro.img")
 SIT = os.path.join(WORK, "dd40.sit.bin")
+SEVENZ = os.path.join(WORK, "dd312.7z")
+TREE312 = os.path.join(WORK, "dd312")
 TREE40 = os.path.join(WORK, "dd40")
 DECODED = os.path.join(WORK, "decoded")
+DEXTREE = os.path.join(WORK, "dexvert")
 BOOT = os.path.join(WORK, "nddboot.hfv")
 
 # The extension is the half that compresses, exactly as in 3.7 and 4.1.
@@ -174,6 +192,136 @@ def fetch_dd40():
     return TREE40
 
 
+def fetch_dd312():
+    """Salient's 3.1.2 distribution floppy: a 7-zip holding an 800K HFS
+    image. WinWorld's product page for DiskDoubler lists 3.x only, and
+    the file behind it is older than anything else reachable."""
+    os.makedirs(WORK, exist_ok=True)
+    if not os.path.exists(SEVENZ) or _sha1(SEVENZ) != DD312_SHA:
+        subprocess.run(["curl", "-sS", "-L", "-A", "Mozilla/5.0",
+                        "-e", DD312_PAGE, "-o", SEVENZ, DD312_URL], check=True)
+    got = _sha1(SEVENZ)
+    print("ndd: %s sha1 %s%s" % (os.path.basename(SEVENZ), got,
+                                 "" if got == DD312_SHA else "  MISMATCH"))
+    if got != DD312_SHA:
+        raise SystemExit("ndd: the 3.1.2 download is not the file this was "
+                         "written against")
+    shutil.rmtree(TREE312, ignore_errors=True)
+    os.makedirs(TREE312)
+    subprocess.run(["7z", "x", "-y", "-o" + TREE312, SEVENZ],
+                   check=True, capture_output=True)
+    for root, _d, files in os.walk(TREE312):
+        for f in files:
+            if f.endswith(".img"):
+                print("ndd: 3.1.2 disk image at %s" % os.path.join(root, f))
+                return os.path.join(root, f)
+    raise SystemExit("ndd: no disk image inside the 3.1.2 download")
+
+
+def dd312_image():
+    for root, _d, files in os.walk(TREE312):
+        for f in files:
+            if f.endswith(".img"):
+                return os.path.join(root, f)
+    return fetch_dd312()
+
+
+def specimens():
+    """Every DiskDoubler-compressed file on the 1991 Salient disk, with
+    the method that wrote it, decoded and checked by our own CLI.
+
+    This disk is why methods 2 and 7 are not guesses. It carries the
+    only method 2 fork anybody here has found, and method 7 forks of up
+    to EIGHT chunks — where the two off the 3.7 disk have one each, and
+    "a fork longer than one chunk has never been decoded" was an open
+    item until this ran. Each fork carries its own checksum, so the disk
+    grades itself: `t` returns non-zero on any mismatch.
+    """
+    img = dd312_image()
+    forks = read_forks(img)
+    hist, bad, n = {}, 0, 0
+    tmp = tempfile.mkdtemp(prefix="ndd-s-")
+    try:
+        for path, (ftype, creator, data, _rsrc) in sorted(forks.items()):
+            h = header(data)
+            if h is None:
+                continue
+            n += 1
+            for meth, size in ((h["datamethod"], h["data"]),
+                               (h["rsrcmethod"], h["rsrc"])):
+                if size:
+                    hist[meth] = hist.get(meth, 0) + 1
+            src = os.path.join(tmp, "in.dd")
+            open(src, "wb").write(data)
+            r = subprocess.run([cli(), "t", src], capture_output=True, text=True)
+            chunks = _stac_chunks(data, h)
+            print("ndd: %-44s %s/%s  %s%s  %s"
+                  % ("/".join(path)[-44:], ftype, creator, describe(h),
+                     "" if chunks is None else "  chunks=%d" % chunks,
+                     "ok" if r.returncode == 0
+                     else (r.stderr or r.stdout).strip().splitlines()[-1]))
+            bad += 1 if r.returncode else 0
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    print("ndd: %d containers, %d failed; forks by method: %s"
+          % (n, bad, ", ".join("%d x%d" % (m, c) for m, c in sorted(hist.items()))))
+    return 1 if bad else 0
+
+
+def _stac_chunks(data, h):
+    """Method 7's compressed-chunk count, at +6 of the fork."""
+    if h["datamethod"] != 7 and h["rsrcmethod"] != 7:
+        return None
+    off, ln = (84, h["datacomp"]) if h["data"] else (84 + h["datacomp"],
+                                                    h["rsrccomp"])
+    if ln < 18:
+        return None
+    return struct.unpack_from(">I", data, off + 6)[0]
+
+
+def dexvert():
+    """Run the engine over a third collector's DiskDoubler samples.
+
+    Fifteen files from real disks, none of them from Salient's own media
+    or from the CC0 corpus. What it is worth: an independent check that
+    is not this project's own choice of specimen. What it found on
+    2026-08-21: methods 0, 1, 6, 8 and 9 and both containers, **no
+    method 3, 4 or 5**, and one file whose method 1 fork fails its
+    checksum — `readme`, which `unar` also rejects as *Wrong checksum*
+    and whose text reads "shaneware" and "ane morally obl". Single-bit
+    rot in the sample; both decoders agree on the bytes and disagree
+    with the stored sum, which is what a per-entry CRC error is for.
+    """
+    os.makedirs(DEXTREE, exist_ok=True)
+    listing = subprocess.run(["curl", "-sSL", "-m", "90", "-A", "Mozilla/5.0",
+                              DEXVERT], capture_output=True).stdout
+    hrefs = [h.decode("latin1") for h in
+             re.findall(rb'href="([^"?][^"]*)"', listing)]
+    ok = bad = 0
+    for h in hrefs:
+        if h.startswith(".."):
+            continue
+        import urllib.parse
+        out = os.path.join(DEXTREE, urllib.parse.unquote(h).replace("/", "_"))
+        if not os.path.exists(out):
+            subprocess.run(["curl", "-sSL", "-m", "180", "-A", "Mozilla/5.0",
+                            "-o", out, DEXVERT + h], check=True)
+        blob = open(out, "rb").read()
+        h2 = header(blob)
+        what = describe(h2) if h2 else (
+            "%s container" % blob[:4].decode("latin1")
+            if blob[:4] in (b"DDAR", b"DDA2") else "wrapped")
+        r = subprocess.run([cli(), "t", out], capture_output=True, text=True)
+        ok, bad = (ok + 1, bad) if r.returncode == 0 else (ok, bad + 1)
+        print("ndd: %-40s %-52s %s"
+              % (os.path.basename(out)[:40], what,
+                 "ok" if r.returncode == 0
+                 else (r.stderr or r.stdout).strip().splitlines()[0]))
+    print("ndd: %d ok, %d failed — `readme` is a damaged sample `unar` "
+          "rejects too, not a defect" % (ok, bad))
+    return 0
+
+
 def _sha1(path):
     return hashlib.sha1(open(path, "rb").read()).hexdigest()
 
@@ -181,6 +329,7 @@ def _sha1(path):
 def setup():
     fetch_norton()
     fetch_dd40()
+    fetch_dd312()
 
 
 # ------------------------------------------------------------------
@@ -883,6 +1032,10 @@ def main():
     ap.add_argument("--setup", action="store_true", help="fetch both releases")
     ap.add_argument("--harvest", action="store_true",
                     help="decode the Norton floppy here and report methods")
+    ap.add_argument("--dexvert", action="store_true",
+                    help="run the engine over a third collector's samples")
+    ap.add_argument("--specimens", action="store_true",
+                    help="decode Salient's 1991 3.1.2 disk and report methods")
     ap.add_argument("--grade", action="store_true",
                     help="DiskTester: our decode vs the uncompressed 4.0 copy")
     ap.add_argument("--install", action="store_true",
@@ -905,6 +1058,10 @@ def main():
         setup()
     elif a.harvest:
         harvest()
+    elif a.dexvert:
+        return dexvert()
+    elif a.specimens:
+        return specimens()
     elif a.grade:
         return grade()
     elif a.install:

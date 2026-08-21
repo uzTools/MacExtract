@@ -118,6 +118,7 @@ line is what makes the next one worth re-testing.
 | Macintosh Garden has DiskDoubler 3.7 and 4.x only | it also has 3.2 and DDExpand 2.03; 3.2's menu offers the same two software methods, and 2.03 is an expander | 2026-08-21 |
 | The `0x1000` `DDA2` record is what DiskDoubler Pro writes for a file it could not shrink | the same fifteen archives hold 45 ordinary headers whose data fork is stored; all 30 `0x1000` records are the files with NO resource fork | 2026-08-21 |
 | A `0x1000` record with a resource fork is waiting to be found | DiskDoubler 4.1.1 writes the form only for a fork-less file — all four cells of compressible x forked measured in one archive | 2026-08-21 |
+| No DiskDoubler COMPRESSOR older than 3.2 is reachable, so methods 2-5 cannot be graded | WinWorld carries Salient's **3.1.2** distribution floppy (1991), which holds a method 2 fork | 2026-08-21 |
 
 **DiskDoubler methods 1–5 and 7 "cannot be graded".** Declined per entry
 since M12 on the grounds that no corpus fixture uses one and nothing reachable
@@ -157,6 +158,25 @@ the nine real ones tried here. **No smell above found this one** — inputs
 from outside the corpus did, which is a sixth mechanism and the only one that
 needs no cleverness. What named the cause in minutes was the fifth.
 DECISIONS.md 2026-08-21.
+
+**"No compressor older than 3.2 is reachable."** The reason methods 2-5 were
+declined, and false. Salient's own **3.1.2** distribution floppy is on
+WinWorld — 1991, 800K, SHA-1 published — and it carries **a method 2 fork**
+(`XCMD.h`, 564 → 386 B), the only one anybody here has seen, plus 22 method 7
+forks of up to eight chunks where the 3.7 disk's two hold one each. Method 2
+is implemented and graded from it; the multi-chunk question closed with it.
+
+**Cost: one of the eleven methods, for the life of the project**, and an open
+item that read as "wait for somebody to find a file" when the file was one
+page load away. The smell is the fourth in the list — *a limitation stated
+about the environment that is true only of one tool* — where the tool was the
+three sites somebody thought to search. All three are Macintosh archives;
+WinWorld is a PC abandonware library that also carries Mac software, and
+nothing had ever looked there. The sharper form, for next time: **when an
+open item says what is missing is a FILE, search for the file and not for the
+story.** Every search this project ran about DiskDoubler was about its
+history, which is genuinely what dated methods 2-5 to the Salient era — and
+which could never have returned a floppy image.
 
 **The headerless `DDA2` record "is for a file DiskDoubler Pro could not
 shrink".** True, and half a condition. The other half is that the file must

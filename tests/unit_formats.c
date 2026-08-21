@@ -1782,7 +1782,9 @@ static void test_dd_stac(void)
 
     /* Six bytes, a chunk count of TWO, eight bytes, then one 16-bit
      * length per chunk: eighteen plus four bytes the codec steps over.
-     * No specimen has more than one chunk. */
+     * Multi-chunk forks are real — the 3.1.2 distribution disk has forks
+     * of up to EIGHT chunks and 97,906 bytes, and they decode as one
+     * continuous bit stream (DECISIONS.md 2026-08-21, the Salient disk). */
     n = 84;
     for (i = 0; i < 6; i++) one[n++] = 0x11;
     put32(one + n, 2); n += 4;
@@ -1815,6 +1817,163 @@ static void test_dd_stac(void)
 
     /* The checksum is checked, and this is what proves it: one bit of it
      * changed must fail the fork rather than pass it. */
+    one[49] ^= 0x01;
+    test_make_memio(&io, &m, one, n);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_DISKDOUBLER, &io, &sk, &al, NULL,
+                         &opt) == UNC_OK);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_ERR_CRC);
+    one[49] ^= 0x01;
+}
+
+
+/* ------------------------------------------------------------------ */
+/* Method 2: splay-tree Huffman with one tree per preceding byte.      */
+/* The only specimen reachable is 564 bytes on Salient's 3.1.2 disk    */
+/* (tools/vmac/ndd.py --specimens), so what the fixtures cannot see is */
+/* written by hand here: several contexts, and enough repetition that  */
+/* the splay step actually shortens a code. The encoder below is OURS, */
+/* so this grades the transcription against the reference rather than  */
+/* against the format; the specimen is what grades it against the      */
+/* format.                                                             */
+/* ------------------------------------------------------------------ */
+
+typedef struct M2Tree {
+    uint16_t left[256], right[256];
+    uint8_t  parent[512];
+} M2Tree;
+
+static void m2_init(M2Tree *t)
+{
+    int j;
+    for (j = 0; j < 256; j++) {
+        t->left[j]  = (uint16_t)(j * 2);
+        t->right[j] = (uint16_t)(j * 2 + 1);
+        t->parent[j * 2] = (uint8_t)j;
+        t->parent[j * 2 + 1] = (uint8_t)j;
+    }
+}
+
+/* The same rotation the decoder performs, so encoder and decoder stay
+ * in step; if they did not, nothing would come back. */
+static void m2_splay(M2Tree *t, int byte)
+{
+    int node = byte + 0x100;
+    for (;;) {
+        int parent = t->parent[node], grand, uncle;
+        if (parent == 1) break;
+        grand = t->parent[parent];
+        uncle = t->left[grand];
+        if (uncle == parent) { uncle = t->right[grand]; t->right[grand] = (uint16_t)node; }
+        else                 { t->left[grand] = (uint16_t)node; }
+        if (t->left[parent] != node) t->right[parent] = (uint16_t)uncle;
+        else                         t->left[parent]  = (uint16_t)uncle;
+        t->parent[node] = (uint8_t)grand;
+        t->parent[uncle] = (uint8_t)parent;
+        node = grand;
+        if (node == 1) break;
+    }
+}
+
+typedef struct M2Bits { uint8_t *p; uint32_t len; int nbits; uint32_t acc; } M2Bits;
+
+static void m2_put(M2Bits *b, uint32_t v, int n)
+{
+    b->acc = (b->acc << n) | (v & ((1u << n) - 1u));
+    b->nbits += n;
+    while (b->nbits >= 8) {
+        b->nbits -= 8;
+        b->p[b->len++] = (uint8_t)(b->acc >> b->nbits);
+    }
+}
+
+static void m2_flush(M2Bits *b)
+{
+    if (b->nbits) m2_put(b, 0, 8 - b->nbits);
+}
+
+/* Walk leaf -> root recording each step, then emit root -> leaf. */
+static void m2_emit(M2Bits *b, M2Tree *t, int byte)
+{
+    uint8_t dir[32];
+    int node = byte + 0x100, n = 0, i;
+    while (node != 1) {
+        int parent = t->parent[node];
+        dir[n++] = (uint8_t)(t->right[parent] == node ? 1 : 0);
+        node = parent;
+    }
+    for (i = n - 1; i >= 0; i--) m2_put(b, dir[i], 1);
+}
+
+static void test_dd_method2(void)
+{
+    /* Repeats so that a context is revisited after its tree has moved,
+     * and distinct enough that several trees exist at once. */
+    static const char text[] =
+        "abracadabra abracadabra abracadabra banana bandana bandanna "
+        "abracadabra abracadabra banana banana banana";
+    const uint32_t NTEXT = (uint32_t)(sizeof text - 1);
+    uint8_t one[4096], want[256];
+    M2Tree *trees;
+    M2Bits b;
+    MemIO m;
+    UncIO io;
+    UncAlloc al;
+    UncSink sk;
+    CapSink cap;
+    UncOptions opt;
+    uint32_t n, i, sum = 0;
+    int ctx = 0;
+    static const uint8_t hint[] = "M2";
+
+    CHECK(NTEXT <= sizeof want);
+    /* info1 >= 0x2a with info2's high bit clear, so the DECODED bytes
+     * are XORed with 0x5a — the same condition method 1 uses. */
+    for (i = 0; i < NTEXT; i++) {
+        want[i] = (uint8_t)(text[i] ^ 0x5A);
+        sum = (sum + want[i]) & 0xFFFFu;
+    }
+
+    trees = (M2Tree *)malloc(256 * sizeof *trees);
+    CHECK(trees != NULL);
+    for (i = 0; i < 256; i++) m2_init(&trees[i]);
+
+    for (n = 0; n < 84; n++) one[n] = 0;
+    one[0] = 0xAB; one[1] = 0xCD; one[2] = 0x00; one[3] = 0x54;
+    put32(one + 4, NTEXT);                     /* datasize */
+    one[20] = 2; one[21] = 0;                  /* data method 2, no rsrc */
+    one[22] = 0x2A;                            /* info1: the XOR applies */
+    memcpy(one + 32, "TEXT", 4);
+    memcpy(one + 36, "ttxt", 4);
+    one[48] = (uint8_t)(sum >> 8); one[49] = (uint8_t)sum;
+    one[52] = 0;                               /* info2 */
+
+    b.p = one + 84; b.len = 0; b.nbits = 0; b.acc = 0;
+    for (i = 0; i < NTEXT; i++) {
+        int byte = (int)(uint8_t)text[i];      /* pre-XOR: what is coded */
+        m2_emit(&b, &trees[ctx], byte);
+        m2_splay(&trees[ctx], byte);
+        ctx = byte;
+    }
+    m2_flush(&b);
+    n = 84 + b.len;
+    put32(one + 8, b.len);                     /* datacomp */
+    free(trees);
+
+    opt.list_only = 0; opt.test_only = 0;
+    opt.name_hint = hint;
+    opt.name_hint_len = (uint16_t)(sizeof hint - 1);
+    test_make_alloc(&al);
+    test_make_memio(&io, &m, one, n);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_DISKDOUBLER);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_DISKDOUBLER, &io, &sk, &al, NULL,
+                         &opt) == UNC_OK);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+    CHECK(cap.dlen[0] == NTEXT);
+    CHECK(memcmp(cap.data[0], want, NTEXT) == 0);
+
+    /* It can fail: one bit of the stored sum must reject the fork. */
     one[49] ^= 0x01;
     test_make_memio(&io, &m, one, n);
     cap_make(&sk, &cap);
@@ -2153,6 +2312,7 @@ static void test_diskdoubler(void)
     arc[76] ^= 0xFF;
 
     test_dd_stac();
+    test_dd_method2();
     test_dd_archive2();
     test_ddseg();
 }

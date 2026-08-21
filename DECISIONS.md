@@ -85,6 +85,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-21 (later still) — running DiskDoubler Pro, and what its own Split will not say yet
 - 2026-08-21 (last) — "out of scope" and "we have not found one yet" are different files
 - 2026-08-21 (the Symantec release) — DiskDoubler's four publishers, and what the headerless record selects on
+- 2026-08-21 (the Salient disk) — method 2, and the archive nobody here searched
 
 ---
 
@@ -3795,7 +3796,10 @@ All four were run. That accounts for every method a DiskDoubler writes that
 this project can reach: 3.7 writes 1, 7 and 8, and 4.x writes 6, 9 and 10 —
 which the corpus has had since M12, written by the application of the day.
 Methods 2, 3, 4 and 5 belong to 1.x and 2.x, and no copy of either survives
-anywhere this machine can reach (OPEN_ITEMS.md).
+anywhere this machine can reach (OPEN_ITEMS.md). (**Wrong on the second
+half**, corrected 2026-08-21 in "the Salient disk" below: WinWorld carries
+3.1.2, whose own distribution floppy holds a method 2 fork. Method 2 is
+implemented and graded from it; 3, 4 and 5 are still specimen-less.)
 
 The Sigma line is the interesting one: method 7 is a *hardware* method, so no
 emulator here can produce one — and it did not have to, because Salient built
@@ -4271,3 +4275,87 @@ So, next to "ask what evidence a tolerance rests on": **ask what a corpus
 does NOT do that the claim would allow.** A rule inferred from the cases it
 was drawn from will always fit them; the disproof is in the cases nobody
 counted.
+
+## 2026-08-21 (the Salient disk) — method 2, and the archive nobody here searched
+
+Two links, handed over rather than found: `justsolve.archiveteam.org`'s
+DiskDoubler page and **`winworldpc.com/product/diskdoubler/3x`**. The first
+was serving a database error all afternoon and has still not been read. The
+second is why methods 2-5 stopped being one item.
+
+WinWorld's DiskDoubler page lists one release — **3.1.2, 1991, Salient**, an
+800K floppy in a 7-zip, SHA-1 published beside it. That is **older than
+anything this project had**, and OPEN_ITEMS.md had said in as many words that
+"no COMPRESSOR older than 3.2 is reachable" (BLOCKERS.md).
+
+### What was on it
+
+The disk is the pattern this project already has a name for — a distribution
+disk is a corpus — and it is the third time it has paid:
+
+    tools/vmac/ndd.py --specimens      24 containers, 0 failed
+    forks by method: 1 x1, 2 x1, 7 x22
+
+- **A method 2 fork.** One, `Goodies/Programmers Only/XCMD ƒ/XCMD.h`, 564
+  bytes into 386. The only one anybody here has seen.
+- **Method 7 forks of up to EIGHT chunks**, 97,906 bytes. The two off the 3.7
+  disk hold one chunk each, which is what made "a fork longer than one chunk
+  has never been decoded" an open item: the fork header counts its chunks and
+  gives each a 16-bit length, and this codec reads them as one continuous bit
+  stream because that is what the reference does. Eight chunks decode, the
+  fork's own XOR checksum agrees, and flipping any of three widely spaced
+  bytes fails it. **The reading was right and is now measured**; the item is
+  closed rather than narrowed.
+
+### Method 2
+
+An order-1 adaptive code, and small: 256 splay trees, the one in use chosen
+by the byte just produced. Each starts as the complete binary tree over 256
+leaves — internal node j has children 2j and 2j+1, node 256+b is the leaf for
+byte b — so the first byte in a fresh context costs eight bits, and after
+each byte its leaf is rotated toward the root. No table is transmitted.
+Method 5 is the same codec with a leading tree-count byte; it stays declined,
+because there is still no specimen and code no oracle can check is the
+bargain LZH refuses.
+
+Source: `XADDiskDoublerMethod2Handle.m` for the tree and the splay step,
+`XADDiskDoublerParser.m` case 2 for the tree count, the XOR condition and the
+checksum. The 0x5a XOR over DECODED bytes is method 1's, under the same
+`info1 >= 0x2a`/`info2 & 0x80` condition — the specimen has `info1` exactly
+0x2a — and unlike method 1 the sum needs no adjustment, because the stream
+carries no header of its own to have been added into it.
+
+**Graded three ways, which is what one specimen requires.** The fork's stored
+16-bit sum matches (0xab41); a Python transcription written before any C
+produces the identical 564 bytes; and the output is a legible 1990 Salient
+copyright header for HyperCard XCMDs, so a decoder that were subtly wrong
+would have to be wrong into valid C. Corrupting the stored sum — and
+re-stamping the header's own XMODEM CRC, or the file stops being recognised
+at all — turns it into a checksum mismatch, so the check is live.
+
+**The memory is the number of distinct context bytes.** A tree is 1,536 bytes
+and every tree is identical until used, so one is built only when its context
+first occurs: the specimen touches 60 and measures 101,888 B. A fork using
+all 256 would want ~392 KB and fail per entry on a 1 MB machine. This is
+deliberately NOT the growth-on-demand shape that rescued Arsenic and hurt the
+LZW table — nothing is copied and nothing is resized; a slot is either the
+initial tree, which needs no storage, or an allocation. The trap that rule
+warns about is porting a strategy; the property that made lazy allocation
+right here is that the untouched state is *known*, which was true of neither.
+
+### The lesson, and it is about searching
+
+The project had searched Macintosh Garden, funet and Macintosh Repository —
+Macintosh archives — and concluded that no DiskDoubler older than 3.2
+survives anywhere reachable. WinWorld is a PC-centric abandonware library
+that also carries Mac software, and it had the 1991 disk the whole time.
+
+That is BLOCKERS.md's fourth smell again, worn differently: **a limitation
+stated about the environment that is true only of one tool** — here, of the
+three sites somebody happened to think of. The sharper version for next time:
+when an open item says what is missing is A FILE, search for the file, not
+for the story. Every search run this session before the links arrived was
+about DiskDoubler's *history* — publishers, versions, bundles — and the
+history is what dated methods 2-5 to the Salient era. It could not have found
+a download, because nobody asks a search engine "who owned this company" and
+gets a floppy image.

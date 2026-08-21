@@ -109,35 +109,24 @@ Each says which of the two is missing, because the searches are different:
 
 Unlike section 3, none of this is impossible here: a download would do it.
 
-- **A method 7 fork longer than one chunk has never been decoded.** The
-  fork header counts its compressed chunks and gives each a 16-bit
-  length; both specimens hold exactly one, and the codec reads the
-  chunks as one continuous bit stream because that is what the
-  reference does. A fork over ~64 KB would settle whether that is
-  right. **What would close it:** a bigger method 7 file, which needs
-  the Sigma Designs card DiskDoubler 3.x wrote them with — no emulator
-  here has one. Running DiskDoubler's own expander on the two we have is
-  not a way round it: `STR# 1` in DiskDoubler 4.1.1 answers *the file
-  cannot be expanded because it was compressed with Sigma hardware and
-  no hardware is installed in this Macintosh*, so this engine reads
-  something the original application cannot (DECISIONS.md 2026-08-21,
-  the Symantec release).
-- **DiskDoubler methods 2, 3, 4 and 5, ARC 0x0a/0x0b, and SuperDisk! methods
+- **DiskDoubler methods 3, 4 and 5, ARC 0x0a/0x0b, and SuperDisk! methods
   10, 13 and 20.** No corpus fixture uses any of them and nothing reachable
   writes them, so an implementation could not be graded — code no oracle can
-  check is the same bargain LZH refuses. What is left is earlier DiskDoubler
-  work, and it is now bounded rather than guessed: **five releases have been
-  read or run and not one offers a method between 2 and 5** — 3.2 and 3.7,
-  whose menus offer two software methods and neither is one of them, and
-  4.0, 4.1 and **4.1.1**, whose `MENU 195/196/197` and photographed
+  check is the same bargain LZH refuses. **Method 2 left this list on
+  2026-08-21**: Salient's 3.1.2 distribution floppy on WinWorld carries one
+  fork of it, which is all a codec needs (DECISIONS.md, the Salient disk).
+  That is also the shape of what would close the rest — a disk, not a
+  reasoning step. What has been checked for the others, so nobody repeats
+  it: **seven DiskDoubler releases now, and none offers a method between 3
+  and 5** — 3.1.2 and 3.2 and 3.7, whose menus offer two software methods,
+  and 4.0, 4.1 and 4.1.1, whose `MENU 195/196/197` and photographed
   *Compress Using* submenu carry AD 1, AD 2, DD 1, DD 2, DD 3 and nothing
   else. The vendor's own display vocabulary agrees: `STR# 403` is twelve
   labels — `AD 1 | AD 2 | DD 1 | DD 2 | DD 3 | AIC | other | A | B | Sigma
   | S | none` — with a word for stored, for methods 1, 7 and 8 and for
-  AutoDoubler's internal compressor, and none for 2-5, which fall through
-  to `other`. They are Salient's 1.x and 2.x, before the 1992 sale
-  (DECISIONS.md 2026-08-21, the Symantec release), and no COMPRESSOR older
-  than 3.2 is reachable. What Macintosh
+  AutoDoubler's internal compressor, and none for 3-5, which fall through
+  to `other`. Method 5 is method 2's codec with a leading tree-count byte,
+  so it is ~10 lines the day a fork of it appears. What Macintosh
   Garden has, checked 2026-08-21 rather than assumed: **DiskDoubler 3.2**,
   whose `MENU 5019` offers the same two software methods as 3.7 ("Method A
   (fastest)", "Method B") and so writes the same two; **DDExpand 2.03**,
@@ -147,11 +136,14 @@ Unlike section 3, none of this is impossible here: a download would do it.
   writes MacCompress files (its INIT carries `ZIVM`/`LZIV` and none of the
   three DiskDoubler magics), so it predates the container entirely.
   **What would close it:** a copy of the DiskDoubler 1.x or 2.x
-  COMPRESSOR, or one file written by one. 4.1.1 does not help, and that is
-  measured here now rather than read off somebody else's corpus: it is the
-  application on the **Norton DiskDoubler Pro 1.1** floppy, it has been run
-  under Mini vMac (`tools/vmac/ndd.py`), and its five menu entries write
-  methods 9, 6 and 10 three ways. The three
+  COMPRESSOR, or one file written by one — and the place to look is
+  whichever archive nobody has tried, which is how method 2 arrived. Two
+  collections checked on 2026-08-21 and found not to have one, so nobody
+  re-checks them: Salient's own 3.1.2 disk (methods 1, 2 and 7 only) and
+  the dexvert samples linked from the Just Solve the File Format Problem
+  wiki (`tools/vmac/ndd.py --dexvert` — 15 real files, methods 0, 1, 6, 8
+  and 9 and both containers). The
+  three
   SuperDisk! methods are cheaper still in one sense and no cheaper in the
   other: their 68k modules sit inside the corpus, named and complete
   (FORMATS.md ✧✧), so transcribing them needs no research at all — and there
@@ -227,6 +219,13 @@ Unlike section 3, none of this is impossible here: a download would do it.
   it:** an archive that uses one of them, or the `Cmpr` modules run under
   emulation as a second implementation — the same route the adjudication
   already takes, applied per method instead of per archive.
+- **DiskDoubler method 2 with more than a few dozen contexts.** A tree is
+  1,536 B and is built on first use, so the peak tracks the number of
+  distinct context bytes: the one specimen touches 60 and measures
+  101,888 B (FORMATS.md). A fork touching all 256 would want ~392 KB and
+  fail per entry on a 1 MB machine. Neither the many-context path nor that
+  failure has run on anything, because the one specimen is 564 bytes.
+  **What would change it:** a bigger method 2 fork.
 - **Files larger than the HFS 2 GB cap**, and the engine's 32-bit-only
   arithmetic against them.
 - **MacRoman filename display and 8-bit characters above System 6.** The bytes
