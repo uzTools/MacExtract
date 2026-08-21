@@ -319,15 +319,13 @@ decode a byte of it (DECISIONS.md).
 **What this could not see until 2026-08-21:** 11 forks across 2 of those
 fixtures that neither oracle can decode — `unar` fails and `macunpack` fails,
 with its own DiskDoubler support compiled in. Both fixtures are
-SELF-EXTRACTING, so each carries a third implementation in its resource fork;
-`tools/vmac/diskdoubler.py --adjudicate --write-manifest` runs it under
-System 7 and writes the verdict into the fixture's manifest, where `ci.sh`
-re-checks it on every run like any other entry. Only DATA forks can be
-recorded that way: the Resource Manager stamps bytes 16..127 of a resource
-fork's header whenever it touches the file, so a resource fork the Mac wrote
-is never byte-identical and stays `unadjudicated` with its reason saying the
-Mac agreed with those bytes masked. `run_diff.py` counts the two kinds
-separately. Nor does anything here exercise the
+SELF-EXTRACTING, so `tools/vmac/diskdoubler.py --adjudicate --write-manifest`
+runs the archive's own expander under System 7 and writes the verdict into
+the manifest: 33 forks compared, all identical, 3 data forks now graded by
+`ci.sh` on every run and 8 resource forks still `unadjudicated` because the
+Mac's copy of one is never byte-exact (DECISIONS.md 2026-08-21).
+`run_diff.py` counts the two kinds separately. Nor does anything here
+exercise the
 single-file `.dd` container, which no fixture uses — `test_diskdoubler` in
 the unit tests covers the containers and the inline-stored path instead,
 and found a short header read that the fixtures structurally could not

@@ -384,14 +384,10 @@ which is the point: a fork the Mac wrote goes into the fixture's manifest with
 `data_oracle` naming this harness, exactly as `make_manifests.py` records a
 fork the second oracle rescued.
 
-**Only DATA forks can go in.** Measured 2026-08-21: every resource fork the
-Mac wrote agrees with ours only once bytes 16..127 — the resource header's
-"reserved for system use" area — are masked, because the Resource Manager
-stamps them whenever it touches a file. That is not byte-exact ground truth,
-so those forks stay `unadjudicated` and their reason says the Mac agreed
-modulo the mask; `run_diff.py` counts them separately. It is the same mask
-`vmac_check.py` applies for the same reason, and it is why this harness cannot
-turn a resource fork into a manifest entry however many times it is run.
+**Only DATA forks can go in**, and re-running this will not change that:
+every resource fork the Mac wrote agrees with ours only under the
+`vmac_check.py` mask (measured 2026-08-21; DECISIONS.md for why). Those forks
+stay `unadjudicated` with the mask noted in their reason.
 
 ## The other half of DiskDoubler — `ddpro.py`
 
@@ -423,20 +419,21 @@ Like `diskdoubler.py` this is an extension with an application beside it, so
 the work is done from the Finder's own menu; unlike it, the download is a
 StuffIt archive rather than a disk image, and our own CLI unpacks it.
 
-Three things the first two runs cost, all worth knowing before the third:
+Four things each cost a run before the fourth one worked. Why they are easy
+to misread is DECISIONS.md 2026-08-21; what to do about them is:
 
-- **The application has to be on a mounted volume.** The Finder menu is the
-  front end only: "Create Archive…" answers *The DiskDoubler application
-  cannot be found. Please locate it.* and every menu item greys out behind
-  the dialog. `session()` puts it on the work volume.
-- **The name has to be the Mac's.** The application is called
-  `DiskDoubler™`, and what a Mac Roman `™` becomes in a Linux directory
-  depends on the transcoding, so the name given to MacBinary is spelled out
-  in the source rather than taken from the host file.
-- **The volume needs room for what DiskDoubler writes**, not just for the
-  subjects: a split leaves the original in place, so a 1 MB file needs 1 MB
-  more, and the menu item is "Split File (760K)" — a subject smaller than
-  that comes out in one piece and answers nothing.
+- **Never press Return at the desktop** — it opens the selected icon's name
+  for editing, and the next keystroke types into it. `select()` sends Escape
+  first.
+- **Put the application on the work volume.** The Finder menu is a front end;
+  without it, "Create Archive…" answers *The DiskDoubler application cannot
+  be found.* and greys the whole menu out behind the dialog.
+- **Spell the Mac name in the source.** The application is `DiskDoubler™`,
+  and what a Mac Roman `™` becomes in a Linux directory depends on the
+  transcoding.
+- **Leave room for what DiskDoubler writes.** A split leaves the original in
+  place, and the menu says "Split File (760K)" — a subject smaller than that
+  comes out in one piece and answers nothing.
 
 ## Grading SuperDisk! with SuperDisk! — `superdisk.py`
 

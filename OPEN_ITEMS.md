@@ -137,18 +137,13 @@ layouts come from a reference implementation or a spec, never from memory.
   the Sigma Designs card DiskDoubler 3.x wrote them with — no emulator
   here has one.
 - **8 resource forks across 2 fixtures are not ground truth**, though
-  a third implementation agrees with every one of them. Both fixtures
-  are self-extracting, so each carries DiskDoubler's own expander;
-  running them under System 7 on 2026-08-21 compared all 33 forks and
-  found all 33 identical (`tools/vmac/diskdoubler.py --adjudicate`).
-  The three DATA forks are now in the manifests with that provenance,
-  where `ci.sh` re-checks them. The resource forks cannot be: the
-  Resource Manager stamps bytes 16..127 of a fork's header whenever it
-  touches the file, so the Mac's copy agrees only with those masked and
-  is not byte-exact ground truth. **What would close it:** an
-  implementation that runs off a Mac, which for these methods means
-  transcribing one — or a specimen of the same archive from a machine
-  that never opened it.
+  DiskDoubler's own expander agrees with every one of them: 33 forks
+  compared under System 7 on 2026-08-21, all 33 identical, and the 3
+  data forks are in the manifests (DECISIONS.md, FORMATS.md). A
+  resource fork the Mac wrote is never byte-exact, so these 8 stay
+  unadjudicated. **What would close it:** an implementation that runs
+  off a Mac — for these methods, transcribing one — or a copy of the
+  same archive from a machine that never opened it.
 - **A `DDA2` stored entry with a resource fork has never been seen.**
   `+87` is read as that fork's XOR checksum by position, next to the
   data fork's at `+86`, which is measured on ten forks. Both stored

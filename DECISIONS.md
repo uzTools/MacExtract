@@ -4081,19 +4081,16 @@ rather than 4.1, or an archive built from seven files rather than one. The
 specimen is a real addition either way — the first archive here with a stored
 data fork beside a compressed resource fork, and this engine reads it.
 
-**Three things the Finder does that a driver has to know**, all of them
-costing a run before they were understood:
-
-- **Return opens the selected icon's NAME for editing.** A `key("Return")`
-  meant for a report the archive step does not print renamed the subject to
-  "a" — the next keystroke went into the name box — and the three splits then
-  had nothing selected. `select()` presses Escape first and the driver never
-  presses Return at the desktop.
-- **The Finder menu is a front end; the application has to be on a mounted
-  volume.** Without it, "Create Archive…" answers *The DiskDoubler
-  application cannot be found. Please locate it.* and greys out the entire
-  menu behind the dialog — which photographs exactly like a menu whose
-  coordinates are wrong.
-- **A split leaves the original in place**, so the volume needs room for the
-  parts as well, and the menu item is "Split File (760K)": a subject smaller
-  than that comes out in one piece and answers nothing.
+**Every way this failed photographed like a coordinate error.** A missing
+application greys the whole menu out behind a dialog; a `key("Return")` at the
+desktop opens the selected icon's NAME for editing, so the next keystroke goes
+into the name box and the run renames its own subject to "a"; a subject
+smaller than the split size comes out in one piece. Three different causes,
+one screenshot each that says "the menu did not respond". It is the same
+shape `superdisk.py` already records in its own source — *a screenshot of the
+right window at the wrong moment looks exactly like success* — and the
+practical answer is the same too: **photograph the step after the one that
+matters**, since the frame that shows the damage is never the frame of the
+click that caused it. Here the volume listing did: `Rough` had become `a`.
+The checklist that follows is in `tools/vmac/README.md`, where re-running
+lives.
