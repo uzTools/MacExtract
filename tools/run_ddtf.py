@@ -25,9 +25,9 @@ instead, forks included.
 What it CANNOT see: dates, type/creator and Finder flags (the corpus
 publishes the forks, and its AppleDouble sidecars carry a Finder info
 block the Mac rewrote on copy); the five methods no shipping
-DiskDoubler menu offers; and anything about `SPLT`, whose four
-specimens this script skips because nothing here reads them yet
-(OPEN_ITEMS.md).
+DiskDoubler menu offers; and the four `SPLT` parts, which the engine
+does read — they are two SETS rather than two files, and this script
+grades file by file (tools/run_segments.py has the sets).
 """
 import argparse
 import hashlib

@@ -66,8 +66,9 @@ detect-only — disk images are out of scope for v1.
 
 **Kept deliberately, and this is the part of the file to read first.** Twice a
 live claim has been re-tested *because* it sat beside an already-withdrawn one,
-and one of those was worth 39/44 → 40/44 at the floor target. Five mechanisms
-keep finding the next one:
+and one of those was worth 39/44 → 40/44 at the floor target. Six mechanisms
+keep finding the next one, and the last is the only one that needs nothing but
+patience:
 
 - a live claim sitting next to an already-withdrawn one;
 - **two files disagreeing** — a cross-file contradiction is a disproof nobody
@@ -75,11 +76,15 @@ keep finding the next one:
 - a limitation written one paragraph from its own remedy;
 - **a limitation stated about the environment that is true only of one tool.**
   Read every "cannot be done here" for the name of the tool it is really about;
-- **somebody else complaining about the tool you grade yourself by.** The
-  fifth, added 2026-08-21: a test corpus's README said `unar` was
-  "hit-or-miss" on DiskDoubler Pro and that the same files unpacked fine on
-  the Mac. That is a bug report against the oracle, written by someone who
-  had already ruled out the files.
+- **somebody else complaining about the tool you grade yourself by.** Added
+  2026-08-21: a test corpus's README said `unar` was "hit-or-miss" on
+  DiskDoubler Pro and that the same files unpacked fine on the Mac. That is a
+  bug report against the oracle, written by someone who had already ruled out
+  the files;
+- **inputs from outside the corpus.** Added 2026-08-21: nine archives nobody
+  here had seen, and five of them failed in the first minute (below). A suite
+  that is green on the files it has says nothing about the files it has not,
+  and this is the only mechanism here that needs no insight — just files.
 
 Each entry is what was claimed, what disproved it, and what it COST. The cost
 line is what makes the next one worth re-testing.
@@ -134,17 +139,15 @@ three of the four methods still declined. What is missing for those is a
 specimen, not code.
 
 **`DDA2` was read as far as the corpus went, and the corpus stopped early.**
-Entry type `0x1000` is a file DiskDoubler Pro stored because it could not
-shrink it: no `0xABCD0054` header of its own, metadata in the record instead.
-Not one of the six DiskDoubler fixtures is a `DDA2` with such a file in it, so
-809 green fixtures said nothing about it, and neither did the reference —
-XADMaster raises on the missing magic, which is `unar`'s side of the same bug
-and is still there. **Cost: every DiskDoubler Pro archive containing a file
-that would not compress, which is most archives that contain an image or a
-sound.** Five of the nine real ones tried here. Fixed and graded the same day
-against the originals the corpus publishes (DECISIONS.md 2026-08-21); the
-walk's folder branch turned out to be reading uninitialised bytes for its
-dates at the same time, which no fixture could see either.
+Not one of the six DiskDoubler fixtures is a `DDA2` holding a file DiskDoubler
+Pro could not compress, so 809 green fixtures said nothing about the entry
+type that describes one — and neither did the reference, which raises on it
+too. **Cost: every DiskDoubler Pro archive containing a file that would not
+compress, which is most archives that contain an image or a sound.** Five of
+the nine real ones tried here. **No smell above found this one** — inputs
+from outside the corpus did, which is a sixth mechanism and the only one that
+needs no cleverness. What named the cause in minutes was the fifth.
+DECISIONS.md 2026-08-21.
 
 **macunpack is not a second implementation of method 7.** Built with
 `-DUNTESTED` its `dd_lzss` segfaults on the first specimen: it takes the

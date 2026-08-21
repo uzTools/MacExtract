@@ -73,32 +73,29 @@ are adjudicated by neither oracle** — `unar` fails on them and `macunpack`
 ungraded, and `run_diff.py` prints the count on every run. DECISIONS.md
 2026-08-15.
 
-**A `DDA2` entry of type `0x1000` is stored in the archive with no
-`0xABCD0054` header of its own** — DiskDoubler Pro writes it for a file it
-could not shrink — and the walk did not know it, so five of the nine
-DiskDoubler Pro 4.1.1 archives in `ssokolow/diskdoubler-test-files` failed at
-their third entry. `unar` fails on them for the same reason and still does —
-measured here, not inferred from the source: `lsar` stops at the same entry on
+**A `DDA2` entry of type `0x1000` carries no `0xABCD0054` header of its own**
+— DiskDoubler Pro's form for a file it could not shrink. Read since
+2026-08-21 (DECISIONS.md); before that, five of the nine DiskDoubler Pro
+4.1.1 archives in `ssokolow/diskdoubler-test-files` stopped at their third
+entry, and **`unar` 1.10.8 still stops there** (MEASURED): `lsar` fails on
 all five with *Archive parsing failed! (Data is corrupted.)*, and reads all
-four 3.7.7 archives fine. Fixed 2026-08-21, layout and
-checksum derived from the specimens; DECISIONS.md.
+four DiskDoubler 3.7.7 archives fine.
 
 That corpus is CC0 and publishes the **originals** beside the archives, so it
 grades against source bytes rather than against another decoder. Extracted
-here and compared:
+here and compared (`tools/run_ddtf.py`):
 
 | what | count | result |
 |---|---|---|
 | single-file `0xABCD0054` containers (7 files × 9 methods) | 63 | byte-exact |
 | `DDAR` / `DDA2` archives (methods 1, 6, 8, 9, 10 and stored) | 9 | byte-exact |
-| self-extractors, plain and prompt-for-folder | 10 | byte-exact |
-| the same, BinHexed | 10 | byte-exact |
-| data forks / resource forks compared against the published originals | 54 / 36 | exact |
+| self-extractors, plain and prompt-for-folder, and the same BinHexed | 20 | byte-exact |
+| **forks compared against the published originals, in all** | **456** | **exact** |
 
 The TIFF in each set has no published original — it was made on the Mac — and
 comes out identical from all nine independent compressions, forks included.
-None of these is in `fixtures/`, so `ci.sh` does not see them (OPEN_ITEMS.md);
-the `DDA2` stored entry is pinned by `test_dd_archive2` instead.
+None of these is in `fixtures/` (OPEN_ITEMS.md); what `ci.sh` covers instead
+is in TESTING.md.
 
 ✧ **Now Compress, in scope since 2026-08-15** (M12). The archive is a flat
 entry table nested by a per-directory entry count, then one compressed stream
@@ -668,37 +665,31 @@ DECISIONS.md 2026-08-10.
 
 ### DiskDoubler `SPLT`
 
-DiskDoubler's own Split command, and the only scheme here no reference
-reads: `unar` 1.10.8 recognizes neither a part nor the parts
-concatenated (MEASURED, and asserted by the suite). `src/fmt_ddseg.c`
-has the layout, derived from the four specimens in
-`ssokolow/diskdoubler-test-files` and confirmed by reassembling both
-sets byte for byte, forks included.
+DiskDoubler's own Split command, in scope since 2026-08-21.
+`src/fmt_ddseg.c` has the layout, derived from the four specimens in
+`ssokolow/diskdoubler-test-files`; why each field is read the way it is,
+and the rule that a `SPLT` header beats a `.NNN` filename, are
+DECISIONS.md 2026-08-21.
 
-A 94-byte header per part carries more than any other scheme's: the
+A 94-byte header per part, carrying more than any other scheme's: the
 set's 26-byte identity, the part INDEX, the part COUNT, both fork
-lengths of the original file, and **that part's own payload length**.
-So it is the only one where
+lengths of the original file, and that part's own payload length. So it
+is the only scheme here where a part is matched by content AND the set's
+size is known — a missing tail is detectable, which the plain `.NNN`
+split cannot manage either way — and the only one where bytes appended
+to a part never reach the join. It stores no NAME; the joined file takes
+the opened part's, minus the `.N`. The payload is the DATA fork then the
+resource fork, the opposite of StuffIt's split.
 
-- a part is matched by content AND the set's size is known, so a
-  missing tail is detectable — the plain `.NNN` split can do neither;
-- the payload is bounded by the header rather than by the file, so
-  bytes appended to a part never reach the join;
-- **the header beats the filename.** A set named `Archive.dd.001` is
-  joined as `SPLT`, not as a plain split, in the CLI and in the
-  application both. Joining it the other way would fold a 94-byte
-  header into the file, silently. The suite's `numbered` case is that
-  collision, and it fails without the rule.
+**No reference reads it** (MEASURED, 2026-08-21): `unar` 1.10.8
+recognizes neither a part nor the parts concatenated. Both specimen sets
+reassemble byte-exact, forks included, against the files they were cut
+from.
 
-It stores no NAME: the joined file is named after the part that was
-opened, minus the `.N`. The payload is the DATA fork then the resource
-fork — the opposite order to StuffIt's split. Part opens are one per
-part, 0 backward. Peak heap is the 8 KB streaming buffer.
-
-Two header fields are parsed and unidentified: 4 bytes at offset 4
-(equal across a set, different between sets — it is the identity, and
-what it MEANS is unknown) and, at offset 48, a CRC-16/XMODEM of the
-part's payload that nothing checks (OPEN_ITEMS.md).
+Part opens are one per part, 0 backward. Peak heap is the 8 KB streaming
+buffer. Two header fields are parsed and unidentified — 4 bytes at
+offset 4, and a CRC-16/XMODEM of the payload at offset 48 that nothing
+checks (OPEN_ITEMS.md).
 
 ## Hardening
 

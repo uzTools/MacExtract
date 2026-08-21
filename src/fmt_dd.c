@@ -1068,6 +1068,10 @@ static int dd_archive2(UncCtx *c)
             uint32_t fi;
             if (unc_read_full(c->io, hdr + 46, 44) != UNC_OK) break;
             for (fi = 0; fi < sizeof f; fi++) fp[fi] = 0;
+            /* Assigned, not measured: every stored specimen carries
+             * the same value twice, so nothing distinguishes the two.
+             * This is the order the reference reads them in the folder
+             * branch of this same walk (OPEN_ITEMS.md). */
             f.creation     = unc_get_u32be(hdr + 54);
             f.modification = unc_get_u32be(hdr + 58);
             f.type         = unc_get_u32be(hdr + 62);

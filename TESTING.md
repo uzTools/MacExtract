@@ -360,12 +360,11 @@ fixture (OPEN_ITEMS.md says what putting it in `fixtures/` would take).
 regression in dates, type/creator or Finder flags passes it — the corpus's
 AppleDouble sidecars carry a Finder info block the Mac rewrote when the files
 were copied, so those fields are not oracle-grade here even though the forks
-are. It also says nothing about `SPLT`: the four `.dd.1` / `.dd.2` specimens
-are skipped, because nothing here reads them yet.
+are. It also skips the four `SPLT` parts, which the engine does read: they
+are two sets rather than two files, and this harness grades file by file.
 
-**It can fail.** Against the build immediately before the `DDA2` `0x1000`
-fix it reports 25 mismatches — five archives, ten self-extractors and the
-forks under them — which is how that defect was found.
+**It can fail**: 25 mismatches against the build before the `DDA2` `0x1000`
+fix — five archives, ten self-extractors, and the forks under them.
 
 ## Several BinHex documents in one file (`tools/run_multihqx.py`, in `ci.sh`)
 
@@ -788,12 +787,11 @@ genuine part.
 
 ### DiskDoubler `SPLT` (`tools/synth_ddsplit.py`, same runner)
 
-**No oracle at all**, and the suite says so rather than assuming it:
-`unar` 1.10.8 recognizes neither a part nor the parts `cat`ed together,
-and a case asserts that — if it ever starts passing, `SPLT` has a second
-implementation and everything here can be graded against it. So a case
-is adjudicated against the bytes that were cut up, and, where the
-payload is a zip, against our own read of the unsplit archive.
+**No oracle at all**, and the suite asserts that rather than assuming
+it: a case requires `unar` to fail on a part, so the day it has a second
+implementation, this says so. Adjudication is therefore against the
+bytes that were cut up, and, where the payload is a zip, against our own
+read of the unsplit archive.
 
 Eight cases: two parts cut inside the data fork (the specimens' shape),
 three with a cut inside the RESOURCE fork (which neither specimen
@@ -809,12 +807,12 @@ is ignored; a missing part fails and says so; a part that declares more
 payload than it holds is refused; and the set still joins afterwards, so
 the two mutations are testing the mutation and not the directory.
 
-**Three of the cases are load-bearing and were confirmed to fail.**
-Removing the header-declared payload length breaks `tail`; emitting the
-forks in StuffIt's order breaks every case with a resource fork; and
-removing the rule that a `SPLT` header beats a `.NNN` filename breaks
-`numbered` — which is the collision that would otherwise fold a 94-byte
-header into a joined file, quietly.
+**Three of the cases are load-bearing, and that was confirmed by
+mutating the code they guard.** Removing the header-declared payload
+length breaks `tail`; emitting the forks in StuffIt's order breaks every
+case with a resource fork; removing the rule that a `SPLT` header beats
+a `.NNN` filename breaks `numbered` (DECISIONS.md 2026-08-21 for what
+that rule is protecting).
 
 **What it cannot see:** the layout. These parts are written from
 `src/fmt_ddseg.c`, so a case passing says the reader matches what was

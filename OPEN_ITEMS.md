@@ -142,44 +142,39 @@ layouts come from a reference implementation or a spec, never from memory.
   support — fails too. We extract them; nobody grades them.
 - **The single-file container (`0xABCD0054` at offset 0) has no corpus
   fixture.** Every DiskDoubler file in the corpus is a `DDAR` or `DDA2`
-  archive. It is not untested — it is now the best-tested thing here, 63
-  of them extracted byte-exact against their own originals (FORMATS.md)
-  — but none of those is in `fixtures/`, so `ci.sh` still reaches the
-  path only through the unit test, which also covers the name coming
-  from the host rather than the archive.
+  archive. It is not untested: 63 of them extract byte-exact against
+  their own originals (FORMATS.md). But none is in `fixtures/`, so
+  `ci.sh` still reaches the path only through the unit test, which also
+  covers the name coming from the host rather than the archive.
 - **`ssokolow/diskdoubler-test-files` is not in `fixtures/`.** 92 CC0
   files, published beside the originals that made them, which is the
   only DiskDoubler grading here that does not go through another
   decoder — and `ci.sh` has never seen one. **What would close it:**
-  rows in `fixtures/SOURCES.md` and manifests, with one wrinkle worth
-  planning for: `unar` FAILS on the five DiskDoubler Pro archives (it
-  has the `0x1000` bug we just fixed) and on all four `SPLT` parts, so
-  the oracle for those has to be the published originals, which is not
-  a mode `run_diff.py` has. The same `--expect` the ArcMac and
+  rows in `fixtures/SOURCES.md` and manifests, with one wrinkle: `unar`
+  fails on the five DiskDoubler Pro archives and on all four `SPLT`
+  parts, so their oracle has to be the published originals, which is
+  not a mode `run_diff.py` has. The same `--expect` the ArcMac and
   SuperDisk! specimens have wanted since M13 would cover it. Until then
-  the only `SPLT` sets `ci.sh` sees are generated ones
-  (`tools/synth_ddsplit.py`), which grade the reader against the layout
-  and cannot grade the layout against DiskDoubler.
+  `ci.sh` grades both formats against generated files only (TESTING.md),
+  which grades the reader against the layout and never the layout
+  against DiskDoubler.
 - **No `SPLT` set has ever been joined on a Mac.** The application
   compiles with the scheme (`ci.sh` variant 4) and shares the joiner,
   the volume source and the "locate part N" dialog with the four
-  schemes that HAVE run there, but the two pieces written for this one
-  are its own: the rule that a `SPLT` header beats a `.NNN` filename,
-  and the joined file's name being taken from the opened part.
-  **What would close it:** `tools/vmac/run.py` on a set cut from a
-  fixture — the same shape as the segmented-set runs of 2026-08-09
-  (FORMATS.md, "Segmented sets on a real emulated Mac Plus").
+  schemes that HAVE run there; two pieces are its own, the filename
+  rule and the joined file's name. **What would close it:**
+  `tools/vmac/run.py` on a set cut from a fixture — the same shape as
+  the segmented-set runs of 2026-08-09 (FORMATS.md, "Segmented sets on
+  a real emulated Mac Plus").
 - **A `SPLT` part's payload CRC is parsed and never checked.** The
   header carries a CRC-16/XMODEM of that part's payload at `+48`
-  (identified 2026-08-21, exact on all four specimens), and the joiner
-  ignores it: it streams a part at most once and may seek backwards
-  through it, so checking would mean a second full read of every part —
-  on a one-drive Mac, a disk swap each, which is the cost this scheme
-  is arranged around. **What would close it:** a per-part running check
-  in the flat reader that fires only when a part happens to be read
-  straight through, which is the common case and not a guarantee. Until
-  then the joined FILE is what adjudicates the set, as for every other
-  scheme here.
+  (identified 2026-08-21, exact on all four specimens); checking it
+  would cost a second full read of every part, which is a disk swap
+  each on a one-drive Mac (DECISIONS.md). **What would close it:** a
+  running check in the flat reader that fires when a part happens to be
+  read straight through — the common case, and not a guarantee. Until
+  then the joined FILE adjudicates the set, as for every other scheme
+  here.
 - **The 4 bytes at `+4` of a `SPLT` header are unidentified.** Equal
   across the parts of a set, different between sets, so they serve as
   the identity and the joiner needs nothing more. They are not a
@@ -192,8 +187,11 @@ layouts come from a reference implementation or a spec, never from memory.
   `+87` is read as that fork's XOR checksum by position, next to the
   data fork's at `+86`, which is measured on ten forks. Both stored
   files in every set are fork-less (a JPEG and a PNG), so `+87` has only
-  ever been 0. **What would close it:** one incompressible file with a
-  resource fork, compressed by DiskDoubler Pro.
+  ever been 0 — and the record's two dates have only ever been equal, so
+  which of `+54` and `+58` is the creation is assigned rather than
+  measured (DECISIONS.md 2026-08-21). **What would close both:** one
+  incompressible file with a resource fork, compressed by DiskDoubler
+  Pro.
 - **Two of the four Mac tiers have not re-run since M12, M13 or M14.** The
   System 6 tiers have (63/63 at 4 MB and at 1 MB, 2026-08-15; plus both
   SuperDisk! payloads on both, 2026-08-20). **System 7.0.1 and

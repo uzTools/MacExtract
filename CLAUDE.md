@@ -11,8 +11,9 @@ The engine is the product. The Mac app is a thin shell.
 
 ## Where things stand
 
-**M0–M14 are DONE and nothing is in flight.** Fifteen format families
-extract; the engine passes an **809-fixture** differential suite against
+**M0–M16 are DONE and nothing is in flight.** Every family in FORMATS.md's
+table extracts — that table is the count, and this file does not keep a copy
+of it — and the engine passes an **809-fixture** differential suite against
 `unar` and, where `unar` fails, `macunpack`, plus 8,090 robustness variants.
 The Macintosh application extracts byte-exact on **System 6.0.8 at 4 MB and at
 the 1 MB floor target** (63/63 sampled fixtures each), on System 7.0.1, and on
@@ -57,7 +58,7 @@ already sitting in `reference/`; and "no second implementation exists" was
 written while a self-extracting fixture carried one in its resource fork.
 
 `BLOCKERS.md` keeps all eighteen withdrawn claims with **what each one cost**,
-and names the five smells that keep finding the next one. The cheapest is a
+and names the six smells that keep finding the next one. The cheapest is a
 **cross-file contradiction**: two status files disagreeing is a disproof
 nobody has collected yet. A constant in the peak-RAM matrix is another —
 data-driven allocations vary with their input, so one that does not is usually

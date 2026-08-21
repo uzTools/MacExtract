@@ -3857,12 +3857,15 @@ extracts something XADMaster cannot.** `DDAR` has the same idea under a
 different flag (finder flags `0x20`), which the reference DOES handle and we
 already followed; the two containers were simply never read as one design.
 
-The layout was derived from the ten specimens, not guessed: `+54` creation,
-`+58` modification, `+62` type, `+66` creator, `+70` finder flags, `+78` data
-length, `+82` resource length, and the two forks raw at `+90`. Each field is
-where the record's own `totalsize` and the file's known content put it —
-`totalsize - 90` equals the original's length in all ten, and the payload
-begins `FFD8` and `89504E47`.
+The layout was derived from the ten specimens, not guessed: `+62` type, `+66`
+creator, `+70` finder flags, `+78` data length, `+82` resource length, and the
+two forks raw at `+90`. Each field is where the record's own `totalsize` and
+the file's known content put it — `totalsize - 90` equals the original's
+length in all ten, and the payload begins `FFD8` and `89504E47`. The two dates
+at `+54` and `+58` are the exception and are labelled as such: every stored
+specimen has them EQUAL, so nothing here distinguishes creation from
+modification, and they are assigned in the order the reference reads them in
+the folder branch of the same walk.
 
 **`+86` is a one-byte XOR of the fork, not the 16-bit sum a file header
 carries there.** Measured: it equals the XOR of all 220 bytes of the JPEG and
@@ -3877,8 +3880,8 @@ fills 46 bytes of its header buffer and the folder dates live at `+54` and
 `+58`, so every `DDA2` folder took its dates from whatever the previous
 entry's 80-byte file header had left there — and the first folder from an
 unset stack buffer. Nothing could see it: no fixture is a `DDA2` with folders,
-the differential suite does not compare dates, and ASan does not read
-uninitialised memory. It is one `unc_read_full` and the unit test now pins
+the differential suite does not compare dates, and ASan does not detect reads
+of uninitialised memory (that is MSan, which nothing here runs). It is one `unc_read_full` and the unit test now pins
 both dates, which is a smaller lesson than it looks: **a fixed-size read
 followed by field offsets past its end is a class, not an incident** — the
 compressed branch re-seeks and re-reads, which is why it was never wrong.
