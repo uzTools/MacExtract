@@ -1355,7 +1355,9 @@ capability rather than an efficiency.
 **How it was found is the transferable part.** Four configurations had already
 been tried against this refusal and all four moved `MaxBlock` by under 500 B —
 `NewPtr`, `MaxMem()` retry, handles with `MoveHHi`, and handles with the move
-confirmed by address. Each assumed the LIVE blocks stranded the space. The
+confirmed by address. `MoveHHi` demonstrably did what it says (205,828 →
+803,634 B of free space below the moved blocks) and still changed nothing at
+the refusal, which is the cleanest statement of the point. Each assumed the LIVE blocks stranded the space. The
 trail is made of DEAD ones, which no amount of moving the live blocks can
 affect, and which nothing in the probe reported. The arithmetic that pointed at
 it was simply noticing that 8+16+32+64 = 120 KB sat suspiciously close to the

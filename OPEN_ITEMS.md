@@ -19,37 +19,21 @@ real hardware in MANUAL_TESTS.md, results in FORMATS.md — and is
 cross-referenced from here rather than repeated.
 
 **Filing something here is a decision to stop looking at it, so it had
-better be true.** The section that held "eight fixtures are excluded as
-oracle-undecidable" was wrong about the count, the cause and the difficulty —
-it was closeable in an hour and had nothing to do with this environment
-(BLOCKERS.md, *Withdrawn claims*).
+better be true.**
 
-**Only OPEN items live in part 2.** A closed one moves out: the lesson to
-DECISIONS.md, the withdrawn claim to BLOCKERS.md, the numbers to FORMATS.md.
-Three sections have emptied and been removed that way — multi-segment
-(2026-08-14), multi-document BinHex (2026-08-15) and Now Compress
-(2026-08-16), whose last item was closed by the decoder inside the archive
-itself. A section that empties is the point of the file. So is a
-Part 1 entry that turns out to be a research failure rather than a boundary:
-Alysis SuperDisk! sat under *"rule #1 forbids inventing a format"* until
-2026-08-20, when the reference turned up inside the corpus's own fixtures
-(BLOCKERS.md, *Withdrawn claims*). That section is now Part 2's, for the
-reason that withdrawal demonstrated.
+**Only OPEN items live in part 2.** A closed one moves out rather than being
+annotated: the lesson to DECISIONS.md, the withdrawn claim to BLOCKERS.md,
+the numbers to FORMATS.md. A section that empties is the point of the file.
 
 ---
 
 # Part 1 — Out of scope for v1
 
 **Decided, or impossible. Not open.** Everything here is either a boundary
-somebody chose or a property of a format that no evidence can change; none of
-it is work waiting to be done, and nothing here is closed by finding a file.
-Things that ARE waiting for a file are section 2 of Part 2 — including
-everything that used to sit here under *"rule #1 forbids inventing a format"*,
-which moved on 2026-08-21 because "we have not found a reference yet" is a
-gap, not a decision (DECISIONS.md). The brief HAS grown three times —
-multi-segment archives (M11), DiskDoubler and Now Compress (M12), and
-`.arc` + uuencode (M13) were all listed as out of scope until the maintainer
-asked for them — so "out of scope" means *today's* answer, not a refusal.
+somebody chose or a property of a format that no evidence can change; nothing
+here is closed by finding a file, and what is waiting for one is Part 2,
+section 2. "Out of scope" is today's answer and not a refusal — the brief has
+grown before, on request.
 
 ## Out by the brief
 
@@ -85,7 +69,7 @@ what the file is and extraction returns cleanly unsupported.
 
 ---
 
-## 1. DiskDoubler and SuperDisk!: what M12 and M14 left
+## 1. DiskDoubler and SuperDisk!: what is not verified
 
 Verification gaps — things this project has and has not checked.
 What it does not HAVE is section 2.
@@ -98,15 +82,12 @@ What it does not HAVE is section 2.
   unadjudicated. **What would close it:** an implementation that runs
   off a Mac — for these methods, transcribing one — or a copy of the
   same archive from a machine that never opened it.
-- **The Mac OS 9.2 tier has not re-run since M12, M13 or M14.** The other
-  three have: System 6 at 4 MB and at 1 MB (59/59 each, 2026-08-15, plus
-  both SuperDisk! payloads on both, 2026-08-20) and System 7.0.1
-  (**59/59, 2026-08-21**, the first run there with DiskDoubler, Now
-  Compress, ARC and uuencode in the sample). The OS 9 sample still
-  records DiskDoubler as a refusal, which is what it was when that tier
-  last ran, and FORMATS.md marks those rows pre-M12. **What would close
-  it:** an OS 9 sweep, which costs a full PowerPC boot per fixture —
-  tens of minutes, against five for the whole System 7 tier.
+- **The Mac OS 9.2 tier has not run since DiskDoubler, Now Compress, ARC
+  and uuencode were added.** The other three tiers have (FORMATS.md).
+  Its sample still records DiskDoubler as a refusal, which is what it
+  was when that tier last ran. **What would close it:** an OS 9 sweep,
+  which costs a full PowerPC boot per fixture — tens of minutes, against
+  five for the whole System 7 tier.
 
 ---
 
@@ -114,11 +95,10 @@ What it does not HAVE is section 2.
 
 **Not scope decisions, and not effort.** Every entry here is a format or a
 method whose decoder is written or writeable; what is missing is something to
-grade it against. They sit together because that is how they get closed — by
-somebody finding a file, not by somebody deciding. SuperDisk! left this list
-when a fixture turned out to contain its own decoder, and DiskDoubler methods
-1 and 7 when the application was run (BLOCKERS.md). The question to bring
-here is *what did I just find?*
+grade it against. They sit together across formats because that is how they
+close — by somebody finding a file, and the finding usually arrives from
+outside the format it settles. The question to bring here is *what did I just
+find?*
 
 Each says which of the two is missing, because the searches are different:
 
@@ -156,12 +136,9 @@ Unlike section 3, none of this is impossible here: a download would do it.
 - **DiskDoubler methods 2, 3, 4 and 5, ARC 0x0a/0x0b, and SuperDisk! methods
   10, 13 and 20.** No corpus fixture uses any of them and nothing reachable
   writes them, so an implementation could not be graded — code no oracle can
-  check is the same bargain LZH refuses. **Methods 1 and 7 were in this list
-  until 2026-08-20 and are now implemented**: DiskDoubler 3.7 writes method 1
-  from its own menu, and its distribution disk ships two method 7 files
-  (BLOCKERS.md, *Withdrawn claims*). What is left of the list is earlier
-  DiskDoubler work: 3.7's menu offers two software methods and neither is one
-  of them, and no COMPRESSOR older than 3.2 is reachable. What Macintosh
+  check is the same bargain LZH refuses. What is left is earlier DiskDoubler
+  work: 3.7's menu offers two software methods and neither is one of them,
+  and no COMPRESSOR older than 3.2 is reachable. What Macintosh
   Garden has, checked 2026-08-21 rather than assumed: **DiskDoubler 3.2**,
   whose `MENU 5019` offers the same two software methods as 3.7 ("Method A
   (fastest)", "Method B") and so writes the same two; **DDExpand 2.03**,
@@ -254,18 +231,3 @@ Unlike section 3, none of this is impossible here: a download would do it.
   arithmetic against them.
 - **MacRoman filename display and 8-bit characters above System 6.** The bytes
   are checked everywhere; how they *look* on 7 and 9 is not.
-
----
-
-## 6. Remedies ruled out by measurement
-
-- **Do not retry, on Mac heap pressure.** Both were measured while
-  StuffIt 5 / Arsenic was still short of the 1 MB floor, and both are dead
-  ends: `MaxMem()` before a retry (compaction may not move a `NewPtr`), and
-  relocatable blocks moved high with `MoveHHi` — it demonstrably works,
-  205,828 → 803,634, and changed `MaxBlock` at the refusal by under 500 B,
-  because the stranded heap was never about where the live blocks sat. Cited
-  from `src/sit_arsenic.c` and `mac/unclassic_mac.c`.
-
-Everything else that used to sit in this section is a scope decision and is
-now Part 1.
