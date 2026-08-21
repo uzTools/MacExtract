@@ -25,7 +25,7 @@ missing in OPEN_ITEMS.md.
 | M15 DiskDoubler 1 + 7 | The two methods "nothing reachable writes", written by DiskDoubler itself: method 1 (Unix compress, an 0x5a XOR over the DECODED bytes) is what its own "Method A" produces under Mini vMac, and method 7 (Stac LZS, stream and output both complemented) came off the 3.7 distribution disk, which Salient built on a machine with the Sigma card fitted. Graded by the bytes that went in, by the forks' own checksums, and by `unar`; methods 2-5 stay declined for want of a specimen | FORMATS.md ✦, DECISIONS.md, BLOCKERS.md, `tools/vmac/diskdoubler.py` |
 | M16 DiskDoubler Pro | The `DDA2` entry that carries no file header of its own — what DiskDoubler Pro writes for a file it could not shrink — and `SPLT`, its Split command's container, which becomes the fifth segmented scheme. XADMaster implements neither, so `unar` calls five of nine real DiskDoubler Pro archives corrupt and reads no `SPLT` part at all. Both derived from `ssokolow/diskdoubler-test-files`, a CC0 corpus that publishes the ORIGINALS beside the archives, and graded against them: 456 forks byte-exact | BLOCKERS.md, DECISIONS.md 2026-08-21, FORMATS.md ✦, `tools/run_ddtf.py`, `src/fmt_ddseg.c` |
 
-**The suite is 809 fixtures**, byte-exact against `unar` and, where `unar`
-fails, `macunpack`; 8,090 robustness variants clean. The Mac shell replays a
+**The suite is 916 fixtures**, byte-exact against `unar` and, where `unar`
+fails, `macunpack`; 9,160 robustness variants clean. The Mac shell replays a
 63-fixture sample byte-exact at 4 MB and at the 1 MB floor. Current figures
 and per-tier tables: FORMATS.md.

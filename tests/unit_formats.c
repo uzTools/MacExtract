@@ -185,6 +185,57 @@ static void test_applesingle(void)
     CHECK(cap.rlen[0] == 6 && memcmp(cap.rsrc[0], "RSRC!!", 6) == 0);
 }
 
+/* An AppleDouble sidecar with NO "real name" entry — the shape Netatalk
+ * writes, and the shape every `._X` beside an `X` on a Mac volume has.
+ * The name is then the host's, as it is for every other name-less
+ * format here; before 2026-08-21 the sink got an empty name and wrote a
+ * file called "_". */
+static void test_appledouble_noname(void)
+{
+    uint8_t arc[256];
+    MemIO m;
+    UncIO io;
+    UncAlloc al;
+    UncSink sk;
+    CapSink cap;
+    UncOptions opt;
+    static const uint8_t hint[] = "Foo";
+    uint32_t off = 26 + 12;
+
+    memset(arc, 0, sizeof arc);
+    put32(arc, 0x00051607u);                    /* AppleDouble */
+    put32(arc + 4, 0x00020000u);
+    memcpy(arc + 8, "Netatalk        ", 16);
+    arc[24] = 0; arc[25] = 1;
+    put32(arc + 26, 2); put32(arc + 30, off); put32(arc + 34, 6);
+    memcpy(arc + off, "RSRC!!", 6); off += 6;
+
+    memset(&opt, 0, sizeof opt);
+    opt.name_hint = hint;
+    opt.name_hint_len = (uint16_t)(sizeof hint - 1);
+    test_make_alloc(&al);
+    test_make_memio(&io, &m, arc, off);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_APPLESINGLE, &io, &sk, &al, NULL,
+                         &opt) == UNC_OK);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+    CHECK(cap.info[0].name_len == 3 &&
+          memcmp(cap.info[0].name, "Foo", 3) == 0);
+    CHECK(cap.rlen[0] == 6 && memcmp(cap.rsrc[0], "RSRC!!", 6) == 0);
+    CHECK(cap.dlen[0] == 0);
+
+    /* No hint, no name: the entry still extracts, and the host names it.
+     * This is the case the CLI cannot reach — it always has a filename —
+     * and a caller that passes none must not get a truncated read. */
+    test_make_memio(&io, &m, arc, off);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_APPLESINGLE, &io, &sk, &al, NULL,
+                         NULL) == UNC_OK);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+    CHECK(cap.info[0].name_len == 0);
+    CHECK(cap.rlen[0] == 6 && memcmp(cap.rsrc[0], "RSRC!!", 6) == 0);
+}
+
 /* ------------------------------------------------------------------ */
 /* M3: bit reader, serialized Huffman trees, PackIt                   */
 /* ------------------------------------------------------------------ */
@@ -2628,6 +2679,7 @@ void run_format_tests(void)
 {
     test_macbinary();
     test_applesingle();
+    test_appledouble_noname();
     test_bitin();
     test_huffman_tree();
     test_packit();

@@ -406,13 +406,28 @@ def check_interleave(vals):
                    + "; ".join(which) + f" over {rounds} rounds")
 
 
-def check(fixture, png, manifest_dir):
-    """Cross-check the on-screen grid against the Linux engine's output."""
+def check(fixture, png, manifest_dir, expect=False):
+    """Cross-check the on-screen grid against the Linux engine's output.
+
+    A fixture with no committed manifest is normally NOT graded: an
+    archive nobody has an oracle for could otherwise pass by agreeing
+    with nothing. `--expect` says grade it anyway, against this engine's
+    own Linux output — which is what the SuperDisk! archives and the
+    ArcMac specimens need, because they are payloads inside envelopes
+    and have no manifest of their own. What adjudicates the Linux side
+    for those is their own suite (run_superdisk.py, run_arc.py); this
+    run adds the Mac to a verdict already reached, rather than reaching
+    one on its own. TESTING.md.
+    """
     man = os.path.join(manifest_dir, os.path.basename(fixture) + ".json")
-    if not os.path.exists(man):
+    cmd = [sys.executable, os.path.join(REPO, "tools", "vmac_check.py")]
+    if os.path.exists(man):
+        cmd += [man, png]
+    elif expect:
+        cmd += ["--fixture", fixture, png]
+    else:
         return None, f"no oracle manifest for {os.path.basename(fixture)}"
-    r = subprocess.run([sys.executable, os.path.join(REPO, "tools", "vmac_check.py"),
-                        man, png], capture_output=True, text=True)
+    r = subprocess.run(cmd, capture_output=True, text=True)
     return r.returncode == 0, (r.stdout + r.stderr).strip()
 
 
@@ -443,6 +458,11 @@ def main():
                          "mv-<mem>, which runs ALL OUT. Pass mv-4M-1x for "
                          "authentic 7 MHz Mac Plus timing — the only build a "
                          "timing claim may be drawn from")
+    ap.add_argument("--expect", action="store_true",
+                    help="grade a file that has no oracle manifest against "
+                         "this engine's own Linux output — for archives that "
+                         "are payloads inside envelopes (SuperDisk!, the "
+                         "ArcMac specimens), which have no manifest")
     ap.add_argument("--json", help="write per-fixture results here")
     ap.add_argument("--pngdir", help="keep each run's final screenshot here")
     ap.add_argument("--keep-disks", action="store_true",
@@ -529,8 +549,8 @@ def main():
                 ok, detail = check_interleave(vals)
                 verdict = "PASS" if ok else ("SETUP" if ok is None else "FAIL")
             else:
-                ok, detail = check(fixture, png, manifest_dir)
-                verdict = "PASS" if ok else "FAIL"
+                ok, detail = check(fixture, png, manifest_dir, args.expect)
+                verdict = "PASS" if ok else ("SETUP" if ok is None else "FAIL")
             timing = ""
             if boot is not None and extract is not None:
                 timing = f" [boot {boot:.0f}s + extract {extract:.0f}s]"

@@ -61,6 +61,10 @@ CASES = {
                 "interactive:--wrapped"),
     "chain": ("a chained .sit.hqx: every layer off, intermediate removed",
               "interactive:--chain"),
+    "ddseg-real": (
+        "a DiskDoubler `SPLT` set CUT BY DISKDOUBLER ITSELF, both forks: "
+        "the one scheme the Mac had never joined",
+        "run"),
 }
 
 
@@ -111,6 +115,35 @@ def cut_cpt(fixture, workdir, anchor_name, drop_last=False):
     return anchor, [p for p in paths if p != anchor]
 
 
+def read_out_volume_forks(rundir, name):
+    """Both forks of one file off a kept Out volume, or (None, None).
+
+    `hcopy -r` gives the data fork only, which is all the other cases
+    need. A joined `SPLT` set is the one case where the resource fork
+    is most of the file, so this one goes through MacBinary.
+    """
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+    dest = os.path.join(env["HOME"], "got.bin")
+    try:
+        if subprocess.run(["hmount", os.path.join(rundir, "out.dsk")],
+                          env=env, capture_output=True).returncode != 0:
+            return None, None
+        r = subprocess.run(["hcopy", "-m", ":" + name, dest],
+                           env=env, capture_output=True)
+        subprocess.run(["humount"], env=env, capture_output=True)
+        if r.returncode != 0:
+            return None, None
+        blob = open(dest, "rb").read()
+        dlen = int.from_bytes(blob[83:87], "big")
+        rlen = int.from_bytes(blob[87:91], "big")
+        pad = lambda n: (n + 127) // 128 * 128
+        data = blob[128:128 + dlen]
+        rsrc = blob[128 + pad(dlen):128 + pad(dlen) + rlen]
+        return data, rsrc
+    finally:
+        shutil.rmtree(env["HOME"], ignore_errors=True)
+
+
 def read_out_volume(rundir, name):
     """One file off a kept Out volume, as bytes, or None."""
     env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
@@ -127,7 +160,70 @@ def read_out_volume(rundir, name):
         shutil.rmtree(env["HOME"], ignore_errors=True)
 
 
+# The real `SPLT` set the Mac case uses: registered from
+# ssokolow/diskdoubler-test-files by tools/run_ddtf.py --register. Both
+# forks, because the resource fork is the half a data-fork-only check
+# would miss, and DiskDoubler Pro 4.1.1 cut it.
+DDSEG_SET = "ddtf-ddpro411ad1.dd"
+DDSEG_RSRC = "ddtf-ddpro411ad1.dd.ad"
+
+
+def run_ddseg_real(case, mem, workdir):
+    """A set DiskDoubler itself cut, joined on the Mac.
+
+    Graded twice: the on-screen grid against this engine's Linux output
+    (`run.py --expect`, since a part has no oracle manifest — nothing
+    but DiskDoubler writes this container), and the joined FILE off the
+    Out volume against the file the corpus publishes, both forks. The
+    second is what makes the case worth its five minutes: the grid
+    aggregates and so cannot fail on a name, and the resource fork is
+    two thirds of what a joined `.sea` set contains.
+    """
+    parts = sorted(f for f in os.listdir(FIX)
+                   if f.startswith(DDSEG_SET + ".") and f[-1].isdigit())
+    whole = os.path.join(FIX, DDSEG_SET)
+    side = os.path.join(FIX, DDSEG_RSRC)
+    if len(parts) < 2 or not os.path.exists(whole) or not os.path.exists(side):
+        print(f"segcheck: SKIP {case} (no real SPLT set in fixtures/ — "
+              f"tools/run_ddtf.py --register)")
+        return None
+    sys.path.insert(0, os.path.join(REPO, "tools"))
+    from make_manifests import parse_appledouble           # noqa: E402
+    anchor = os.path.join(FIX, parts[0])
+    argv = [sys.executable, os.path.join(HERE, "run.py"), anchor,
+            "--mem", mem, "--expect", "--keep-disks"]
+    for i, e in enumerate(parts[1:]):
+        # Named nothing like part 1: a `SPLT` part is matched by the 26
+        # identity bytes in its header, never by its filename.
+        argv += ["--extra-file", f"{os.path.join(FIX, e)}:zzz-piece{i + 2}"]
+    r = subprocess.run(argv, capture_output=True, text=True)
+    out = r.stdout + r.stderr
+    kept = [l.split("disks kept in", 1)[1].strip()
+            for l in out.splitlines() if "disks kept in" in l]
+    if not kept:
+        return False, "run.py kept no disks to read"
+    # The app opens ARCHIVE_NAME and the joined file takes its name
+    # minus the extension: there is no name inside a `SPLT` part.
+    got, gotr = read_out_volume_forks(kept[0], R.ARCHIVE_NAME.rsplit(".", 1)[0])
+    shutil.rmtree(kept[0], ignore_errors=True)
+    want = open(whole, "rb").read()
+    wantr = parse_appledouble(side)[0]
+    if got is None:
+        return False, "the joined file is not on the Out volume"
+    if got != want or gotr != wantr:
+        return False, ("joined data %d B (want %d), rsrc %d B (want %d) — "
+                       "%s" % (len(got), len(want), len(gotr), len(wantr),
+                               "contents differ"))
+    grid = r.returncode == 0
+    return grid, ("joined byte-exact on the Mac, %d B data + %d B rsrc, "
+                  "and the grid agrees" % (len(want), len(wantr)) if grid else
+                  "the file is byte-exact but the grid did not: " +
+                  out.strip()[-200:])
+
+
 def run_scheme(case, mem, workdir):
+    if case == "ddseg-real":
+        return run_ddseg_real(case, mem, workdir)
     fixture = {"sit-scattered": "derived-Downer.sit"}.get(
         case, "derived-Education7.1.cpt")
     src = os.path.join(FIX, fixture)

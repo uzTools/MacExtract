@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "DDAP",
+   "data_sha256": "b8ed6ffae203de1a36bbd463b4edd568f2e8172907be8bb58d02151ca7292a99",
+   "data_size": 12288,
+   "name": "sources.ddpro11.ad1.dd.1",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "DDSP"
+  }
+ ],
+ "fixture": "ddtf-ddpro411ad1.dd.1.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "c4dbdbc24cce92e61bf5b814e3e3b2f3cd5d810a92bda46a32515ec43d3a2807",
+ "size": 16136
+}

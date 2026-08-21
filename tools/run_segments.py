@@ -1295,13 +1295,128 @@ def ddseg_behaviours(unclassic, case, d, whole, rsrc, parts, original,
     with open(parts[1], "wb") as f:
         f.write(body)
 
-    # And the join still works afterwards, so the two mutations above
+    # The payload CRC every `SPLT` part carries: one flipped payload
+    # byte must fail the join rather than produce a wrong file quietly.
+    # Both halves are checked, because a reader that ignored the stored
+    # CRC and one that ignored the payload would each pass one of them.
+    for tag, what, mutate in (("pay", "payload", lambda b: b[:dsynth.HEAD + 3] +
+                          bytes([b[dsynth.HEAD + 3] ^ 0x01]) +
+                               b[dsynth.HEAD + 4:]),
+                              ("crc", "stored CRC", lambda b: b[:48] +
+                               bytes([b[48] ^ 0x80]) + b[49:])):
+        body = open(parts[1], "rb").read()
+        if len(body) <= dsynth.HEAD + 4:
+            continue
+        with open(parts[1], "wb") as f:
+            f.write(mutate(body))
+        rc, out = ours_join(unclassic, parts[0],
+                            os.path.join(d, "_crc-" + tag))
+        fails.check(rc != 0, "ddseg/%s: a wrong %s must fail the join"
+                    % (case, what))
+        fails.check("checksum" in out.lower(),
+                    "ddseg/%s: wrong %s reported as %r"
+                    % (case, what, out.strip()))
+        with open(parts[1], "wb") as f:
+            f.write(body)
+
+    # And the join still works afterwards, so the mutations above
     # are testing the mutation rather than the directory.
     rc, out = ours_join(unclassic, parts[0], os.path.join(d, "_again"))
     fails.check(rc == 0 and
                 ddseg_joined(os.path.join(d, "_again"), parts[0])[0] == original,
                 "ddseg/%s: the set stopped joining after it was restored"
                 % case)
+
+
+# Sets DiskDoubler itself cut, published in
+# `ssokolow/diskdoubler-test-files` and registered as fixtures by
+# `tools/run_ddtf.py --register`. base fixture -> the AppleDouble
+# sidecar holding the original's resource fork, or None where the
+# original had none. What these grade that the generated sets cannot:
+# the generator writes headers this project derived, so a set built
+# from it grades the READER against our own reading of the layout.
+# These were cut by DiskDoubler Pro 4.1.1 and DiskDoubler 3.7.7, and
+# the file each one joins back into is published beside it.
+DDSEG_SPECIMENS = {
+    "ddtf-dd377ad.dd": None,
+    "ddtf-ddpro411ad1.dd": "ddtf-ddpro411ad1.dd.ad",
+    "ddtf-ddpro411ad1.sea": "ddtf-ddpro411ad1.sea.ad",
+}
+
+
+def ddseg_specimens(unclassic, workroot, fails):
+    """Join the real sets and compare with the file that was cut up."""
+    ran = 0
+    for base in sorted(DDSEG_SPECIMENS):
+        whole = os.path.join(FIXDIR, base)
+        parts = sorted(glob.glob(whole + ".[0-9]"))
+        if not os.path.exists(whole) or not parts:
+            continue
+        side = DDSEG_SPECIMENS[base]
+        rsrc = b""
+        if side:
+            sp = os.path.join(FIXDIR, side)
+            if not os.path.exists(sp):
+                continue
+            rsrc = parse_appledouble(sp)[0]
+        original = open(whole, "rb").read()
+        d = os.path.join(workroot, "ddseg-real-" + base)
+        os.makedirs(d)
+        # From the first part and from the last, as for the generated
+        # sets: the index is in the header, so either reaches the set.
+        for which in sorted({0, len(parts) - 1}):
+            dest = os.path.join(d, "_ours%d" % which)
+            rc, out = ours_join(unclassic, parts[which], dest)
+            fails.check(rc == 0, "ddseg/%s: the real set failed from part "
+                        "%d: %s" % (base, which + 1, out.strip()))
+            gotd, gotr = ddseg_joined(dest, parts[which])
+            fails.check(gotd == original,
+                        "ddseg/%s: the join is not the published file "
+                        "(from part %d)" % (base, which + 1))
+            fails.check(gotr == rsrc,
+                        "ddseg/%s: the joined resource fork is wrong (from "
+                        "part %d): %d bytes vs %d"
+                        % (base, which + 1, len(gotr), len(rsrc)))
+        # And the archive inside it reads the same way whether it
+        # arrived in one piece or in several.
+        rc, out = run_full(unclassic, parts[0], os.path.join(d, "_full"))
+        fails.check(rc == 0, "ddseg/%s: the joined archive did not extract: "
+                    "%s" % (base, out.strip()))
+        rc, out = run_full(unclassic, whole, os.path.join(d, "_unsplit"))
+        fails.check(rc == 0, "ddseg/%s: the unsplit archive did not extract: "
+                    "%s" % (base, out.strip()))
+        fails.check(read_tree(os.path.join(d, "_full")) ==
+                    read_tree(os.path.join(d, "_unsplit")),
+                    "ddseg/%s: joined and unsplit reads disagree" % base)
+        # The CRC DiskDoubler itself put in the header, checked against
+        # DiskDoubler's own payload: one flipped byte in a COPY of the
+        # last part must fail the join. The generated cases check the
+        # same thing against a CRC this project computed.
+        mut = os.path.join(d, "_mut")
+        os.makedirs(mut)
+        for p in parts:
+            shutil.copy(p, mut)
+        last = os.path.join(mut, os.path.basename(parts[-1]))
+        body = open(last, "rb").read()
+        with open(last, "wb") as f:
+            f.write(body[:200] + bytes([body[200] ^ 0x01]) + body[201:])
+        rc, out = ours_join(unclassic, os.path.join(mut,
+                            os.path.basename(parts[0])),
+                            os.path.join(d, "_mutout"))
+        fails.check(rc != 0, "ddseg/%s: a flipped payload byte in a real "
+                    "part must fail the join" % base)
+        fails.check("checksum" in out.lower(),
+                    "ddseg/%s: a corrupt real part reported as %r"
+                    % (base, out.strip()))
+
+        ran += 1
+        print("  specimen %s: %d parts cut by DiskDoubler — the published "
+              "file, byte for byte%s, and the part CRC catches a flipped "
+              "byte" % (base, len(parts), " (both forks)" if rsrc else ""))
+    if not ran:
+        print("run_segments: no real SPLT sets in fixtures/ "
+              "(tools/run_ddtf.py --register)")
+    return ran
 
 
 def main():
@@ -1340,7 +1455,7 @@ def main():
         print("run_segments: `zip` not found; skipping the zip5 split case")
         splitcases = [c for c in splitcases if c != "zip5"]
 
-    nspec = 0
+    nspec = nddspec = 0
     fails = Failures()
     workroot = tempfile.mkdtemp(prefix="unc-seg-")
     try:
@@ -1489,6 +1604,7 @@ def main():
                 d, whole, rsrc, parts, original = r
                 ddseg_behaviours(unclassic, c, d, whole, rsrc, parts,
                                  original, workroot, fails)
+        nddspec = ddseg_specimens(unclassic, workroot, fails)
     finally:
         if a.keep:
             print("kept: %s" % workroot)
@@ -1498,9 +1614,10 @@ def main():
     for f in fails:
         print("FAIL " + f)
     print("segments: %d StuffIt + %d spanned-zip + %d split + %d wrapped + "
-          "%d Compact Pro + %d DiskDoubler SPLT cases, %d failures"
+          "%d Compact Pro + %d DiskDoubler SPLT cases, %d real sets, "
+          "%d failures"
           % (len(cases), len(zipcases), len(splitcases), len(wrapcases),
-             len(cptcases), len(ddsegcases), len(fails)))
+             len(cptcases), len(ddsegcases), nspec + nddspec, len(fails)))
     return 1 if fails else 0
 
 

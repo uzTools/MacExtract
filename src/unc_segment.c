@@ -72,6 +72,16 @@ typedef struct SegJoin {
 
     uint32_t off;                  /* ADDRESSED: cursor within curpart */
     uint32_t pos;                  /* FLAT: logical read cursor */
+
+    /* `SPLT` only: a CRC of the open part's payload, accumulated as the
+     * bytes go past. Valid only while the part has been read from its
+     * first payload byte with no gap — crc_ok goes to 0 the moment a
+     * read starts anywhere else, because the sum can no longer be
+     * completed without re-reading the part, which on a one-drive Mac
+     * is a disk swap. See the check in seg_read. */
+    uint16_t crc;
+    uint32_t crc_pos;
+    int      crc_ok;
     uint32_t switches;             /* parts opened */
     uint32_t backward;             /* opens forced by a backward seek */
     int      err;                  /* sticky: UNC_ERR_SEGMENTED etc. */
@@ -181,6 +191,13 @@ static int seg_open(SegJoin *j, int part)
         if (end < j->start[part]) { seg_release(j); return UNC_ERR_CORRUPT; }
         j->start[part + 1] = end;
         j->known = part + 1;
+    }
+    /* A freshly opened part starts a fresh running CRC, whether it was
+     * opened for the first time or re-opened after a backward seek. */
+    if (j->desc->scheme == UNC_FORMAT_DDSEG) {
+        j->crc = 0;
+        j->crc_pos = j->start[part];
+        j->crc_ok = 1;
     }
     return UNC_OK;
 }
@@ -321,6 +338,31 @@ static int32_t seg_read(void *ctx, void *buf, int32_t len)
     }
     r = j->cur.read(j->cur.ctx, buf, len);
     if (r < 0) { j->err = UNC_ERR_IO; return -1; }
+
+    /* The `SPLT` payload CRC, checked for free when a part happens to
+     * be read straight through — which is what joining a set does, and
+     * the ONLY case this can see. A read that starts anywhere but where
+     * the running sum stopped abandons it for this part: the part is
+     * then joined unchecked, exactly as every other scheme here is.
+     * The joined FILE still adjudicates the set (OPEN_ITEMS.md). */
+    if (j->desc->scheme == UNC_FORMAT_DDSEG && r > 0) {
+        if (j->crc_ok && j->pos == j->crc_pos) {
+            j->crc = unc_crc16_xmodem(j->crc, buf, r);
+            j->crc_pos += (uint32_t)r;
+            if (j->crc_pos == j->start[j->curpart + 1]) {
+                uint8_t h[UNC_DDSEG_HEAD];
+                j->crc_ok = 0;               /* checked once, at the end */
+                if (unc_read_at(&j->cur, 0, h, UNC_DDSEG_HEAD) != UNC_OK ||
+                    unc_ddseg_stored_crc(h) != j->crc) {
+                    j->err = UNC_ERR_CRC;
+                    return -1;
+                }
+            }
+        } else {
+            j->crc_ok = 0;
+        }
+    }
+
     j->pos += (uint32_t)r;
     return r;
 }
@@ -400,6 +442,9 @@ int unc_extract_segments(const UncSegmentDesc *desc, UncVolumeSource *vs,
     j->pos = 0;
     j->switches = 0;
     j->backward = 0;
+    j->crc = 0;
+    j->crc_pos = 0;
+    j->crc_ok = 0;
     j->err = UNC_OK;
     j->io.ctx = j;
     j->io.read = seg_read;

@@ -1,0 +1,66 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "sources"
+  },
+  {
+   "creator": "????",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "sources/Test Image",
+   "rsrc_sha256": "4b8175653903645616d9e07627957ae0dba4c7ac3b3e9aa6afc8e07144dcfbb0",
+   "rsrc_size": 9134,
+   "type": "????"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "9734aef6d3788ba985e78f7b3785dc4817e770be92a4e5e57e64a92cc9c2fc25",
+   "data_size": 11,
+   "name": "sources/Test Text",
+   "rsrc_sha256": "5f0c7e77ac2430be40532730665ea27f0cf1088ac049e0c06851d62085b87315",
+   "rsrc_size": 332,
+   "type": "TEXT"
+  },
+  {
+   "data_sha256": "318d71cd4d027c6bec6917af3ddc3b7df0ec8b07031045a9cdd9052b94c7782e",
+   "data_size": 2694,
+   "name": "sources/testfile.PICT",
+   "rsrc_sha256": "011604ad448ef4451081d04bd395c2a974cab637877fb64b45e62ebe39bc452e",
+   "rsrc_size": 44549
+  },
+  {
+   "data_sha256": "e6023f4d96cd4e09b5958d443fd1f4aa3ccd0749dfc8fa79d7c99f2267c8f5d3",
+   "data_size": 1738,
+   "name": "sources/testfile.TIF",
+   "rsrc_sha256": "1c5bddae8478007ed34968015ebc7f13ccade7633f23c8ae1ecbf69c9157d206",
+   "rsrc_size": 44549
+  },
+  {
+   "data_sha256": "e514232511df1a4f4221a75c27523518c3c62a2fe6470fa56e430364428eecd1",
+   "data_size": 220,
+   "name": "sources/testfile.jpg",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "fdda20984cc1591419ec4583e24e72e4dba39d0b96608253f853a2dfb238ad1a",
+   "data_size": 87,
+   "name": "sources/testfile.png",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "b645efee0ed710034959eae942277a750d08687c30bcf0e9ec6ea7641527462f",
+   "data_size": 12,
+   "name": "sources/testfile.txt",
+   "rsrc_sha256": "f788dcd5313a531a27fc62a9b4c951a6653ef11b49f2262ee0796f72c5564b0a",
+   "rsrc_size": 332
+  }
+ ],
+ "fixture": "ddtf-ddpro411dd1.dd",
+ "format": "DiskDoubler",
+ "oracle": "the published originals in ssokolow/diskdoubler-test-files @c40c7dab3538 (testfile.TIF: unar 1.10.8 on the four DiskDoubler 3.7.7 archives, which agree; names and type/creator: lsar 1.10.8 on this file)",
+ "sha256": "4c3c12a2349d16842d48ce13ef2f4a63dc0975f191afc9d09745e174be8a6699",
+ "size": 5193
+}

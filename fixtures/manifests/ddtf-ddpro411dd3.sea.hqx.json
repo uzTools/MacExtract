@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "DSE2",
+   "data_sha256": "0d8703665bd1255b9a16a1f61d45fa532321ae3fd80f3b919e1ebe44ab1610cb",
+   "data_size": 4779,
+   "name": "sources.ddpro11.dd3.sea",
+   "rsrc_sha256": "3232a6a264855acef2d4d7d2a14fba0226356306750fd05e60f1d345e45ffff0",
+   "rsrc_size": 14128,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "ddtf-ddpro411dd3.sea.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "85a48d08c10d36a2e7ef796bc8c5a98df28b471dcc20beb77c8a02e7844c7a0a",
+ "size": 24370
+}

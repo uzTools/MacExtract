@@ -80,6 +80,7 @@ which fails CI if it drifts from the headings below it.
 - SuperDisk!, read out of SuperDisk!
 - 2026-08-20 — DiskDoubler methods 1 and 7, and what the application itself could write
 - 2026-08-21 — DiskDoubler Pro's stored entries, and a corpus that carries its own oracle
+- 2026-08-21 (later) — the DiskDoubler corpus becomes fixtures, and three claims it brought with it
 
 ---
 
@@ -3931,8 +3932,80 @@ Four things the specimens settled that a guess would have got wrong:
   already keeps for parts: **content disposes.** The suite's `numbered`
   case is exactly that collision and fails without it.
 
-The identity at `+4` and the payload CRC at `+48` are parsed and unused:
-what the first MEANS is unknown (it is equal across a set and different
-between sets, which is all the joiner needs), and checking the second would
-mean reading every part a second time — on a one-drive Mac, a disk swap each,
-which is the cost the whole scheme is arranged to avoid. OPEN_ITEMS.md.
+The identity at `+4` is parsed and unused: what it MEANS is unknown (it is
+equal across a set and different between sets, which is all the joiner needs).
+The payload CRC at `+48` was parsed and unused too, for the reason below it —
+checking it would mean reading every part a second time, a disk swap each on a
+one-drive Mac. **That was true of a SECOND pass and not of the first**, and
+the entry after this one is where the running check that follows from it
+lives. OPEN_ITEMS.md.
+
+## 2026-08-21 (later) — the DiskDoubler corpus becomes fixtures, and three claims it brought with it
+
+The corpus above was graded by a script that clones it (`tools/run_ddtf.py`)
+and `ci.sh` never saw a byte of it. It does now: `run_ddtf.py --register`
+copies all of it into `fixtures/`, writes a row per file in
+`fixtures/SOURCES.md` — a raw URL **pinned to the corpus commit**, so a later
+force-push cannot silently change what is fetched — and a manifest per file.
+115 fixtures; the suite went 809 → 916.
+
+**Nothing in those manifests is our own output**, which is the only thing that
+made this worth doing rather than convenient:
+
+- the forks are the published originals;
+- `testfile.TIF` has no original — it was made on the Mac — so its two forks
+  are `unar`'s decode of the four DiskDoubler 3.7.7 archives, which agree;
+- the entry NAMES are what `lsar` reads out of the 63 single-file containers,
+  which carry them, so every method contributes its own;
+- the `sources/` folder the DiskDoubler Pro archives put those files under is
+  `lsar`'s too, from the four entries it manages before giving up;
+- type/creator are recorded only where `lsar` reads them off that very
+  fixture, never borrowed from a sibling.
+
+The six `SPLT` parts and the two AppleDouble sidecars beside them are
+registered WITHOUT manifests: they are not archives to extract but what
+`run_segments.py` grades a joined set against. That closes the gap those
+generated sets could never close — a generator writes headers this project
+derived, so it grades the reader against our own reading of the layout, where
+these were cut by DiskDoubler and the file each joins back into is published
+beside it. `make_manifests.py` now refuses to rebuild a manifest whose oracle
+is not `unar`, because `--force` over this corpus would have replaced ground
+truth with an opinion, or — on the five archives `unar` cannot read — deleted
+it.
+
+**The corpus is three `SPLT` sets, not two.** The earlier entry says four
+parts across two sets; the clone has six across three, the third being the
+`.sea` self-extractor with its 14 KB resource fork. The CRC-16/XMODEM at `+48`
+is exact on all six (re-measured), and all three sets join back to the
+published file byte for byte, forks included. BLOCKERS.md carries the
+withdrawal.
+
+**The payload CRC is now checked, for free.** The reason it was not is
+re-read above: a SECOND pass over a part costs a disk swap. A FIRST pass costs
+nothing, and joining a set is exactly a first pass — so the joiner accumulates
+a CRC-16/XMODEM as the bytes go past and compares it at the part boundary. A
+read that starts anywhere but where the running sum stopped abandons the sum
+for that part (`crc_ok = 0`), so a backward seek costs the check rather than a
+swap, and the part is then joined unchecked exactly as every other scheme here
+is. Three lines of state in `SegJoin`, no allocation, no second read.
+**What it cannot do is promise**, and the promise is the part worth being
+careful about: this catches a corrupt part in the common case and says
+nothing in the uncommon one, which is why the joined FILE still adjudicates
+the set. The per-entry status a caller sees is `UNC_ERR_IO` while the archive
+result is `UNC_ERR_CRC` — the same shape as a missing part, where the entry
+reads as truncated and the archive says segmented, and for the same reason:
+`UncIO` has no channel for a reason, only for a failed read.
+
+**An AppleDouble sidecar with no name extracted as `_`.** Found by putting the
+corpus's two sidecars in `fixtures/`: `unar` names such a file after its host,
+we named it nothing, and the CLI sanitized nothing into `_`. Every other
+name-less format in this engine already takes the host's name through
+`opt.name_hint` — gzip, `.Z`, the DiskDoubler single-file container, `SPLT`,
+uuencode — and AppleSingle/AppleDouble was the one that did not, because every
+fixture in the corpus until now carried a real-name entry (id 3). Netatalk
+writes sidecars without one, which is every `._X` beside an `X` on a Mac
+volume. Four lines in `fmt_applesingle.c`, and a unit test that fails without
+them. The sidecars themselves stay manifest-less: our hint rule drops the last
+extension and `unar` keeps it, so a manifest for one would assert a naming
+convention rather than a decode, and DECISIONS.md already records why the hint
+is the way it is.

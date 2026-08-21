@@ -109,6 +109,7 @@ line is what makes the next one worth re-testing.
 | Alysis SuperDisk! has no reference anywhere, so rule #1 forbids reading it | both corpus archives are self-extracting: the layout, the method table and every codec are inside them | 2026-08-20 |
 | Nothing reachable writes DiskDoubler methods 1–5 or 7, so none can be graded | DiskDoubler 3.7 under Mini vMac writes method 1 from its own menu; its distribution disk ships two method 7 files | 2026-08-20 |
 | The three DiskDoubler containers are read; the corpus exercises every one | nine archives from `ssokolow/diskdoubler-test-files`: five fail at their third entry, on a `DDA2` entry type neither we nor XADMaster implement | 2026-08-21 |
+| The `SPLT` specimens are four parts across two sets | the same clone: six parts across three, the third with a 14 KB resource fork | 2026-08-21 |
 
 **DiskDoubler methods 1–5 and 7 "cannot be graded".** Declined per entry
 since M12 on the grounds that no corpus fixture uses one and nothing reachable
@@ -148,6 +149,17 @@ the nine real ones tried here. **No smell above found this one** — inputs
 from outside the corpus did, which is a sixth mechanism and the only one that
 needs no cleverness. What named the cause in minutes was the fifth.
 DECISIONS.md 2026-08-21.
+
+**Four `SPLT` parts, two sets.** Written into FORMATS.md and OPEN_ITEMS.md
+the day the scheme was derived, and the corpus it was derived from holds six
+parts across three sets — the third being the DiskDoubler Pro self-extractor,
+whose resource fork is 14,128 bytes. **Cost: the joiner's resource-fork path
+had a 342-byte fork behind it in real specimens, and 47 times that was sitting
+in the same directory**, along with the only set whose parts are 20 KB rather
+than 12. All three now join byte-exact, forks included, and the CRC at `+48`
+is exact on all six rather than on four. The smell is the oldest one here: a
+number copied forward instead of re-counted. Nothing re-derived it because
+the harness that reads the corpus grades files, and these are sets.
 
 **macunpack is not a second implementation of method 7.** Built with
 `-DUNTESTED` its `dd_lzss` segfaults on the first specimen: it takes the

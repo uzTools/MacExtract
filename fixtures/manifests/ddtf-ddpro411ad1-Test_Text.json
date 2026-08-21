@@ -1,0 +1,16 @@
+{
+ "entries": [
+  {
+   "data_sha256": "9734aef6d3788ba985e78f7b3785dc4817e770be92a4e5e57e64a92cc9c2fc25",
+   "data_size": 11,
+   "name": "ddtf-ddpro411ad1-Test_Text",
+   "rsrc_sha256": "5f0c7e77ac2430be40532730665ea27f0cf1088ac049e0c06851d62085b87315",
+   "rsrc_size": 332
+  }
+ ],
+ "fixture": "ddtf-ddpro411ad1-Test_Text",
+ "format": "DiskDoubler",
+ "oracle": "the published originals in ssokolow/diskdoubler-test-files @c40c7dab3538 (testfile.TIF: unar 1.10.8 on the four DiskDoubler 3.7.7 archives, which agree; names and type/creator: lsar 1.10.8 on this file)",
+ "sha256": "9572cf7a5b709401ebd42aa9c9c853d44dda8355f9b824b4d33c00c534cf64f0",
+ "size": 311
+}

@@ -148,6 +148,16 @@ int unc_appledouble_extract(UncCtx *c, UncFormat which)
         }
     }
 
+    /* A file with no "real name" entry has no name at all — Netatalk
+     * writes AppleDouble sidecars that way, and every `._X` beside an
+     * `X` on a Mac volume is one. The host's filename is then the only
+     * name there is, which is what every other name-less format here
+     * does (gzip, .Z, the DiskDoubler single-file container, `SPLT`,
+     * uuencode). Without this the sink is handed an empty name and
+     * writes "_". */
+    if (e.name_len == 0 && c->opt.name_hint && c->opt.name_hint_len)
+        unc_entry_set_name(&e, c->opt.name_hint, c->opt.name_hint_len);
+
     e.data_size = have_data ? datalen : 0;
     e.rsrc_size = have_rsrc ? rsrclen : 0;
     e.comp_data_size = e.data_size;

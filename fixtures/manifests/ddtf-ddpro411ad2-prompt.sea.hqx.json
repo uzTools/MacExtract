@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "DSE2",
+   "data_sha256": "ca08aaab6b5f0ba1df02802732205728fd74abbeb938b0a80b8aa50392d84d37",
+   "data_size": 14686,
+   "name": "sources.ddpro11.ad2.prompt.sea",
+   "rsrc_sha256": "e5a94e023acd863c833f080d266a1558f103492532bbdc6d5e0eccd77bbf2027",
+   "rsrc_size": 14158,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "ddtf-ddpro411ad2-prompt.sea.hqx",
+ "format": "BinHex",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "2c503590c290b730abbb0f11e94dbfefbf8fc0b61e9c5b298a2a981ab4dde978",
+ "size": 37922
+}

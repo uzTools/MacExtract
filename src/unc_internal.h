@@ -421,6 +421,11 @@ int unc_ddseg_match(const UncSegmentDesc *desc, const uint8_t *head,
 int unc_ddseg_payload(const UncSegmentDesc *desc, const uint8_t *head,
                       int32_t len, int part, uint32_t size,
                       uint32_t *payload);
+/* The CRC-16/XMODEM the part stores over its own payload. The joiner
+ * checks it against a running CRC when a part happens to be read
+ * straight through, which is the common case and not a guarantee
+ * (unc_segment.c). */
+uint16_t unc_ddseg_stored_crc(const uint8_t *head);
 
 /* One part of a spanned ("split") zip set (fmt_zipseg.c). The probe
  * needs the io handle because the only part that identifies itself

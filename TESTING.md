@@ -350,18 +350,27 @@ harness here.
 the bytes that went in, not against another decoder, and there is nothing to
 adjudicate:
 
-    tools/run_ddtf.py --fetch          # 456 forks, 0 mismatched (2026-08-21)
+    tools/run_ddtf.py --fetch          # 564 forks, 0 mismatched (2026-08-21)
 
-63 single-file containers, 9 archives, 10 self-extractors and their 10
-BinHexed copies. It is **not in `ci.sh`**: the corpus is a `git clone`, not a
-fixture (OPEN_ITEMS.md says what putting it in `fixtures/` would take).
+63 single-file containers, 9 archives and the same 9 BinHexed, 10
+self-extractors and the same 10 BinHexed.
+
+**It is now also in `ci.sh`, by a different route.** `run_ddtf.py --register`
+copies the corpus into `fixtures/` — a `SOURCES.md` row per file, with a raw
+URL pinned to the corpus commit — and writes a manifest per file built from
+the published originals, so `run_diff.py` grades all of it entry by entry on
+every run (107 fixtures; DECISIONS.md 2026-08-21 lists what in a manifest
+comes from where, and it is never our own output). `run_ddtf.py` itself stays
+the way to re-derive that from a fresh clone, which is the only thing that can
+notice the corpus changing.
 
 **What it cannot see**, beyond the docstring's list: it compares forks, so a
 regression in dates, type/creator or Finder flags passes it — the corpus's
 AppleDouble sidecars carry a Finder info block the Mac rewrote when the files
 were copied, so those fields are not oracle-grade here even though the forks
-are. It also skips the four `SPLT` parts, which the engine does read: they
-are two sets rather than two files, and this harness grades file by file.
+are. It also skips the six `SPLT` parts, which the engine does read: they are
+three sets rather than six files, and this harness grades file by file.
+`run_segments.py` has the sets, and `fixtures/` has the parts.
 
 **It can fail**: 25 mismatches against the build before the `DDA2` `0x1000`
 fix — five archives, ten self-extractors, and the forks under them.
@@ -403,7 +412,7 @@ sampled occurrence index **by trying to allocate the table and failing**
 CI forces it three ways:
 
 - `-DUNC_ARS_FORCE_SAMPLED` compiles the fast path out. The whole
-  809-fixture diff suite and all 8,090 robustness variants run through the
+  916-fixture diff suite and all 9,160 robustness variants run through the
   fallback under ASan+UBSan, and must be byte-exact.
 - `--budget 678392` (what a 1 MB Mac Plus leaves the engine) on the 31
   StuffIt 5 fixtures, with the normal adaptive build. This is the only step
@@ -621,7 +630,7 @@ file count from `l`.
 envelope — only `x` does — so the suite unwraps with `x -nr` first. That is
 also why the corpus-driven suites never reach this parser at all: to
 `run_robustness.sh` and `fuzz.py` these two fixtures are BinHex files, and all
-8,090 of their variants exercise the BinHex layer.
+9,160 of their variants exercise the BinHex layer.
 
 **116 corrupted variants** — ten truncations and forty-eight bit-flips per
 archive — therefore live here. They are FORCED with `-f "SuperDisk!"`: a
@@ -804,8 +813,12 @@ Behaviours: `--no-parts` must fail on a set of more than one and must
 SUCCEED on a set of one (a different code path — `unc_ddseg_extract`,
 with no volume source); a part of a foreign set in the same directory
 is ignored; a missing part fails and says so; a part that declares more
-payload than it holds is refused; and the set still joins afterwards, so
-the two mutations are testing the mutation and not the directory.
+payload than it holds is refused; one flipped PAYLOAD byte and one
+flipped byte of the STORED CRC must each fail the join with a checksum
+error — both halves, because a reader that ignored the stored CRC and
+one that ignored the payload would each pass one of them; and the set
+still joins afterwards, so the mutations are testing the mutation and
+not the directory.
 
 **Three of the cases are load-bearing, and that was confirmed by
 mutating the code they guard.** Removing the header-declared payload
@@ -816,9 +829,17 @@ that rule is protecting).
 
 **What it cannot see:** the layout. These parts are written from
 `src/fmt_ddseg.c`, so a case passing says the reader matches what was
-derived, never that what was derived matches DiskDoubler. The four real
-specimens are what say that, in `tools/run_ddtf.py`, and they are not in
-`ci.sh` (OPEN_ITEMS.md).
+derived, never that what was derived matches DiskDoubler.
+
+**What says that is in the same runner since 2026-08-21**: the three
+sets DiskDoubler itself cut, registered as fixtures (`run_ddtf.py
+--register`) and joined here from the first part and from the last. Each
+is compared with the file the corpus publishes beside it — both forks,
+the resource fork coming from the AppleDouble sidecar that is a fixture
+too — and then the joined archive is extracted and required to give what
+the unsplit one gives. One flipped byte in a COPY of a real part must
+fail the join on the CRC DiskDoubler wrote, which is the same assertion
+as above with the generator taken out of it.
 
 ### Plain `.NNN` splits (`tools/synth_split.py`, same runner)
 

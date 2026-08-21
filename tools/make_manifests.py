@@ -504,6 +504,21 @@ def main():
         if os.path.exists(out) and not args.force:
             skipped += 1
             continue
+        # Some manifests are not built from unar at all: the DiskDoubler
+        # corpus is graded against the files it was made from
+        # (tools/run_ddtf.py --register), and unar cannot read half of
+        # it. Rebuilding one here would replace ground truth with an
+        # opinion, or -- where the oracle fails -- delete it.
+        if os.path.exists(out):
+            try:
+                oracle = json.load(open(out)).get("oracle", "")
+            except ValueError:
+                oracle = ""
+            if not oracle.startswith("unar"):
+                print(f"  kept (oracle is not unar): {os.path.basename(fx)}",
+                      file=sys.stderr)
+                skipped += 1
+                continue
         m = build_manifest(fx)
         if m is None:
             failed += 1

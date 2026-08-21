@@ -7,7 +7,8 @@
  * exists. What is below was read off the four parts in
  * `ssokolow/diskdoubler-test-files` (CC0) and confirmed by
  * reassembling both sets byte for byte, forks included —
- * DECISIONS.md 2026-08-21, and `tools/run_ddseg.py` re-runs it.
+ * DECISIONS.md 2026-08-21; `tools/run_segments.py` re-runs it,
+ * against those same parts registered as fixtures.
  *
  * DiskDoubler's Split command cuts ANY file into numbered pieces; it
  * is not a DiskDoubler archive format, which is why the type and
@@ -39,11 +40,12 @@
  *     payload total, so a missing tail is detectable;
  *   - the part's own payload LENGTH is stored, so the joiner does not
  *     have to take the file's size as the payload's (unc_segment.c);
- *   - each payload carries a CRC, which nothing here checks: the flat
- *     joiner streams a part at most once and may seek backwards
- *     through it, and re-reading every part to check it would double
- *     the floppy time this scheme exists to spend carefully
- *     (OPEN_ITEMS.md).
+ *   - each payload carries a CRC. The joiner checks it whenever a
+ *     part is read straight through — it accumulates one as the bytes
+ *     go past and compares at the part boundary — and skips the check
+ *     on a part something seeked backwards inside, because re-reading
+ *     the part to finish the sum would cost a disk swap on the
+ *     one-drive Mac this scheme exists for (DECISIONS.md 2026-08-21).
  *   - there is NO name: the original file's name is the host's, from
  *     the part's own filename, exactly as for a plain .NNN split.
  *
@@ -120,6 +122,11 @@ static int ddseg_parse(const uint8_t *h, int32_t len, UncSegmentDesc *desc)
         desc->create_date  = unc_get_u32be(h + DS_CTIME);
     }
     return UNC_OK;
+}
+
+uint16_t unc_ddseg_stored_crc(const uint8_t *head)
+{
+    return unc_get_u16be(head + DS_CRC);
 }
 
 int unc_ddseg_probe(const uint8_t *head, int32_t len)

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """vmac_check.py <manifest.json> <macscreen.png>
+   vmac_check.py --fixture <archive> <macscreen.png>
 
 Verify one Mini vMac autotest run. Decodes the on-screen result grid
 (tools/decode_grid.py) and compares its aggregate to what the oracle says the
@@ -122,9 +123,7 @@ def aggregate_dir(root_dir, names=None):
     return nfiles, sdc, sdl, src, srl
 
 
-def expected_aggregate(manifest_path):
-    man = json.load(open(manifest_path))
-    fixture = os.path.join(os.path.dirname(manifest_path), "..", man["fixture"])
+def expected_from_fixture(fixture):
     tmp = tempfile.mkdtemp()
     try:
         subprocess.run([CLI, "x", "-nr", "--forks", "hidden", fixture,
@@ -135,15 +134,49 @@ def expected_aggregate(manifest_path):
         shutil.rmtree(tmp, ignore_errors=True)
 
 
+def expected_aggregate(manifest_path):
+    man = json.load(open(manifest_path))
+    fixture = os.path.join(os.path.dirname(manifest_path), "..", man["fixture"])
+    return expected_from_fixture(fixture)
+
+
 def main():
-    manifest, png = sys.argv[1], sys.argv[2]
+    # Two ways to say what to compare against, and they differ in ONE
+    # thing: whether a committed oracle manifest exists for the file.
+    #
+    #   <manifest.json> <png>       the fixture the manifest names
+    #   --fixture <path> <png>      any file, graded the same way
+    #
+    # Both grade the Mac against this engine's own Linux output, which
+    # is what the aggregate on screen can be compared with at all — the
+    # manifest only ever located the fixture. The difference is what
+    # adjudicates the LINUX side: for a fixture with a manifest, the
+    # differential suite does, entry by entry; for a file passed with
+    # --fixture, whatever suite grades that format does (run_superdisk.py,
+    # run_arc.py). Never nothing — and the line printed below says which,
+    # so a run cannot look better than it is (TESTING.md).
+    argv = sys.argv[1:]
+    if len(argv) == 3 and argv[0] == "--fixture":
+        manifest, fixture, png = None, argv[1], argv[2]
+    elif len(argv) == 2:
+        manifest, png = argv[0], argv[1]
+        fixture = None
+    else:
+        print(__doc__.strip())
+        return 2
     got = decode(png)
     if got is None:
         print("FAIL: no valid result grid on screen (app bombed or miscalibrated)")
         return 1
     nfiles, ret, errors, sdc, sdl, src, srl, peak = got
     ret_s = ret - (1 << 32) if ret >= (1 << 31) else ret   # signed
-    enf, esdc, esdl, esrc, esrl = expected_aggregate(manifest)
+    if manifest:
+        enf, esdc, esdl, esrc, esrl = expected_aggregate(manifest)
+    else:
+        enf, esdc, esdl, esrc, esrl = expected_from_fixture(fixture)
+        print(f"  reference: this engine's Linux CLI on "
+              f"{os.path.basename(fixture)} — no oracle manifest, so the "
+              f"Linux side is adjudicated by its own suite, not here")
 
     # A detect-only or otherwise-unsupported format yields 0 files from the
     # SAME engine's Linux CLI. Then the only correct behaviour on the Mac is to

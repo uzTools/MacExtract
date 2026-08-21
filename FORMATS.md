@@ -23,10 +23,10 @@ whole corpus for that format (engine allocations only, via
 | StuffIt segment (multi-part) | extract | — (join only; the joined file is the next layer) | 7 synthetic sets, oracle-adjudicated, + 3 with each part in its own envelope (CLI only) | 8 KB | full |
 | Zip segment (spanned, .z01…/.zip) | extract | store, deflate — the zip reader, over the joined parts | 5 generated sets, adjudicated 4 ways (source tree, `unar`, us split, us unsplit) | 12–13 KB¶ | full |
 | Compact Pro segment (multi-part) | extract | RLE / LZH+RLE — the Compact Pro reader, over the segments | 2 generated sets + 2 cut by Compact Pro 1.51 itself | 20 KB | full |
-| DiskDoubler split (`SPLT`) | extract | — (join only; the joined file is the next layer) | 4 real parts (2 sets, cut by DiskDoubler itself) + 8 generated sets, adjudicated against the bytes that were cut — no oracle exists | 8 KB | full |
+| DiskDoubler split (`SPLT`) | extract | — (join only; the joined file is the next layer) | 6 real parts (3 sets, cut by DiskDoubler itself, in `fixtures/`) + 8 generated sets, adjudicated against the published files they were cut from — no oracle exists | 8 KB | full |
 | Split file (plain .001/.002) | extract | — (join only; the joined file is the next layer) | 3 generated sets, adjudicated against the bytes that were cut, `unar` where it can join, and our unsplit read | 8 KB | full |
 | StuffIt X (.sitx) | detect only | — | — (no fixture) | — | — |
-| DiskDoubler (DD, DDAR, DDA2) | extract | 0 store, 1 Unix compress, 6/9 AD LZSS, 7 Stac LZS, 8 Compact Pro, 10 DDn; 2/3/4/5 declined per entry✦ | 6 fixtures + 4 specimens (2 written by DiskDoubler 3.7 under Mini vMac, 2 off its distribution disk) + 92 CC0 files graded against their own originals✦ | 10–108 KB✦ | full |
+| DiskDoubler (DD, DDAR, DDA2) | extract | 0 store, 1 Unix compress, 6/9 AD LZSS, 7 Stac LZS, 8 Compact Pro, 10 DDn; 2/3/4/5 declined per entry✦ | 88 fixtures (6 harvested + 82 CC0 files graded against their own originals, in `ci.sh` since 2026-08-21) + 19 BinHexed copies of those + 4 specimens (2 written by DiskDoubler 3.7 under Mini vMac, 2 off its distribution disk)✦ | 10–108 KB✦ | full |
 | Now Compress | extract | stored, LZSS, Huffman, Huffman+LZSS, "new" LZSS✧ | 2 real fixtures + 13 generated archives (all five shapes, adjudicated by `unar`); `synth-now-mixed.now` also has an `unar` manifest and is in the differential suite | 128 KB✧ | full |
 | ARC / ArcMac (.arc) | extract | 1/2 store, 3 RLE90, 4 squeeze+RLE90, 5/6/7 crunch, 8 12-bit LZW+RLE90, 9 13-bit LZW, 0x7f compress; ArcMac's two-fork payload since 2026-08-16★★★; 0x0a/0x0b (PKARC) declined per entry★ | 10 generated archives (methods 1-9, adjudicated by `unar`) + 3 written by Debian's `arc` 5.21q; `synth-arc-mixed.arc` also has an `unar` manifest and is in the differential suite | 4–32 KB★ | full |
 | uuencode (.uu, incl. UUTool) | extract | — (plain uu, UUTool's two-fork "MU" shape, and documents posted in several parts★★) | 7 generated cases, the two-fork ones adjudicated by macutils' `hexbin`; `synth-uu-mac.uu` is in the differential suite | 4 KB | full |
@@ -682,21 +682,25 @@ the opened part's, minus the `.N`. The payload is the DATA fork then the
 resource fork, the opposite of StuffIt's split.
 
 **No reference reads it** (MEASURED, 2026-08-21): `unar` 1.10.8
-recognizes neither a part nor the parts concatenated. Both specimen sets
-reassemble byte-exact, forks included, against the files they were cut
-from.
+recognizes neither a part nor the parts concatenated. All three specimen
+sets reassemble byte-exact, forks included, against the files they were
+cut from — including the 14,128-byte resource fork of the
+self-extractor, the largest fork any of them carries.
 
 Part opens are one per part, 0 backward. Peak heap is the 8 KB streaming
-buffer. Two header fields are parsed and unidentified — 4 bytes at
-offset 4, and a CRC-16/XMODEM of the payload at offset 48 that nothing
-checks (OPEN_ITEMS.md).
+buffer. The CRC-16/XMODEM at offset 48 is exact on all six specimen
+parts and is **checked while a part is read straight through**, which is
+what joining a set does (DECISIONS.md 2026-08-21). The 4 bytes at offset
+4 are parsed and unidentified (OPEN_ITEMS.md).
 
 ## Hardening
 
-- Differential: 809 fixtures byte-exact against `unar` manifests
-  (both forks + type/creator), `./ci.sh`. `run_diff.py` prints the
-  number it actually ran, plus two figures that must be read with it:
-  **23 forks across 11 fixtures are oracle-unadjudicated** (both
+- Differential: 916 fixtures byte-exact against `unar` manifests
+  (both forks + type/creator), `./ci.sh` — 107 of them since 2026-08-21,
+  the DiskDoubler corpus, whose manifests are built from the files it was
+  made from rather than from a decoder (TESTING.md). `run_diff.py` prints
+  the number it actually ran, plus two figures that must be read with it:
+  **27 forks across 12 fixtures are oracle-unadjudicated** (both
   implementations decline every one of them, so the engine's own CRC-16
   is the only check), and **7 entries are compressed with a method the
   ORACLE names as outside v1 scope** and are graded on their names and
@@ -1222,7 +1226,7 @@ with this archive."*
 | AppleLink `.pkg`, StuffIt SpaceSaver | with the add-on | no, and not sniffed either. Not a decision about scope any more — a decision about evidence: neither has a reference implementation or a published layout anywhere reachable, so rule #1 forbids writing one. OPEN_ITEMS.md, *Out of scope for v1*, records what was searched |
 | Chained expansion (`.sit.hqx`) | yes, and can be turned off | yes, `-nr` turns it off |
 | System 7 conveniences | drag-and-drop of files, folders and whole disks; watch folders; background expansion; Apple events | none; Standard File, one archive at a time |
-| Verification | none published | 809 fixtures byte-exact against `unar`/`macunpack` — bar the one uuencode fixture, which `unar` cannot read at all and whose ground truth is its generator's input, with `hexbin` agreeing |
+| Verification | none published | 916 fixtures byte-exact against `unar`/`macunpack` — bar the one uuencode fixture, which `unar` cannot read at all and whose ground truth is its generator's input, with `hexbin` agreeing |
 | Licence | free, closed | free, LGPL-2.1-or-later |
 | Memory partition | **not measured** — reading the app's `SIZE` resource needs an HFS reader this machine does not have | engine peak heap per format in the matrix above |
 

@@ -447,6 +447,89 @@ def session_with_subject(tag):
     return s, work, img
 
 
+# ------------------------------------------------------------------
+# The Split command
+# ------------------------------------------------------------------
+
+DD_SPLIT_Y = 75          # measured off probe/04-dd-menu.png, like the rest
+
+# Three files, split one after another in ONE session, to find out what
+# the 4 bytes at offset +4 of a `SPLT` header are (OPEN_ITEMS.md). They
+# are equal across the parts of a set and different between sets, and
+# every checksum tried over the payload, the forks and the file has been
+# ruled out. The two TWINS are byte-identical and are split minutes
+# apart; ODD differs in content and length. So:
+#
+#   twins equal, ODD different      -> a function of the CONTENT
+#   all three different, increasing -> a function of WHEN (a tick count)
+#   twins different by ~= the ticks between them   -> the same, measured
+#
+# Content that compresses badly, so Split has something to cut: a plain
+# counter would let DiskDoubler's own compression change the sizes.
+SPLIT_KB = 260
+
+
+def split_subject(seed):
+    """`SPLIT_KB` KB of bytes that depend on `seed` and nothing else."""
+    out = bytearray()
+    x = seed & 0xFFFFFFFF
+    while len(out) < SPLIT_KB * 1024:
+        x = (1103515245 * x + 12345) & 0xFFFFFFFF
+        out += x.to_bytes(4, "big")
+    return bytes(out)
+
+
+SPLIT_FILES = [("Twin A", split_subject(1)),
+               ("Twin B", split_subject(1)),
+               ("Odd", split_subject(2)[:SPLIT_KB * 1024 - 3072])]
+
+
+def session_with_files(tag, files):
+    """A booted Mac with the DiskDoubler INIT loaded and a work volume
+    holding `files` — [(name, data)] — beside the application."""
+    work = tempfile.mkdtemp(prefix="ddwork-")
+    apps = extract_app(work)
+    mbs = []
+    for i, (name, data) in enumerate(files):
+        p = os.path.join(work, "f%d.bin" % i)
+        open(p, "wb").write(macbinary(name, "TEXT", "ttxt", data, b""))
+        mbs.append(p)
+    img = os.path.join(work, "ddwork.img")
+    make_volume(img, "DDwork", apps + mbs)
+    if not os.path.exists(BOOT):
+        install()
+    s = Session(BOOT, [img], os.path.join(SPECIMENS, tag))
+    return s, work, img
+
+
+def probe_split(keep=False):
+    """Photograph what the Split command asks for. Everything after this
+    is coordinates read off these screenshots."""
+    s, work, img = session_with_files("probe-split", SPLIT_FILES)
+    try:
+        s.boot()
+        s.shot("desktop", wait=5.0)
+        s.mac.click(*VOLUME_ICON, double=True)
+        s.shot("volume", wait=10.0)
+        s.menu(DD_MENU_X, DD_SETTINGS_Y, "pick-settings")
+        personalize(s)
+        s.shot("settings", wait=15.0)
+        s.mac.click(*SETTINGS_OK)
+        time.sleep(2.0)
+        s.mac.key("t")                                  # select "Twin A"
+        s.shot("selected", wait=3.0)
+        s.peek(DD_MENU_X, "dd-menu")
+        s.menu(DD_MENU_X, DD_SPLIT_Y, "pick-split")
+        s.shot("split-dialog", wait=8.0)
+        s.shot("split-dialog-again", wait=10.0)
+    finally:
+        time.sleep(3)
+        s.close()
+    print("diskdoubler: screenshots in %s" % s.shots)
+    if not keep:
+        shutil.rmtree(work, ignore_errors=True)
+
+
 def probe(keep=False):
     """Boot with the INIT loaded and photograph the menus and dialogs.
     This is the step that measured every coordinate above."""
@@ -528,6 +611,125 @@ def make(which="A", keep=False):
     if not keep:
         shutil.rmtree(work, ignore_errors=True)
     return 0 if kept else 1
+
+
+# ------------------------------------------------------------------
+# The forks neither oracle can decode, graded by DiskDoubler itself
+# ------------------------------------------------------------------
+
+# Two corpus fixtures hold 11 forks that `unar` fails on and `macunpack`
+# — built with its own DiskDoubler support — fails on too, so nothing
+# grades our output for them (OPEN_ITEMS.md). Both are SELF-EXTRACTING,
+# which means each one carries a third implementation in its resource
+# fork, the same bargain superdisk.py and nowcompress.py already make.
+# The fixture named here is the ENVELOPE, because that is what still has
+# the resource fork: the derived `.sea` in fixtures/ is its data fork
+# alone, and a self-extractor without its code is just an archive.
+ADJUDICATE = {
+    "lha-expander-103.hqx": "derived-LHA_Expander_1.0.3.sea",
+    "terrain-man-20.hqx": "derived-Terrainman_2.0__.sea",
+}
+
+
+def adjudicate(fixture, keep=False):
+    """Run a DiskDoubler self-extractor under System 7 and compare every
+    fork it writes with what our engine makes of the same archive."""
+    sys.path.insert(0, os.path.join(REPO, "tools"))
+    from vmac_check import mask_reserved                   # noqa: E402
+    from superdisk import unwrap, read_forks               # noqa: E402
+
+    name_only = os.path.basename(fixture)
+    payload = ADJUDICATE.get(name_only)
+    fixpath = fixture if os.path.exists(fixture) else \
+        os.path.join(REPO, "fixtures", name_only)
+    if not os.path.exists(fixpath):
+        raise SystemExit("diskdoubler: no such fixture: %s" % fixture)
+    inner = os.path.join(REPO, "fixtures", payload) if payload else fixpath
+
+    work = tempfile.mkdtemp(prefix="ddadj-")
+    tag = "adj-" + name_only.split(".")[0]
+    name, ftype, creator, data, rsrc = unwrap(fixpath, work)
+    print("diskdoubler: %s — %s %s/%s, %d B data, %d B rsrc"
+          % (name_only, name, ftype, creator, len(data), len(rsrc)))
+    if not rsrc:
+        raise SystemExit("diskdoubler: %s has no resource fork, so there is "
+                         "no extractor in it to run" % name_only)
+    mb = os.path.join(work, "app.bin")
+    open(mb, "wb").write(macbinary(name, ftype, creator, data, rsrc))
+
+    img = os.path.join(work, "adj.img")
+    open(img, "wb").truncate(25 * 1024 * 1024)
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+    try:
+        subprocess.run(["hformat", "-l", "Adj", img], check=True,
+                       capture_output=True, env=env)
+        subprocess.run(["hmount", img], check=True, capture_output=True,
+                       env=env)
+        subprocess.run(["hcopy", "-m", mb, "Adj:"], check=True,
+                       capture_output=True, env=env)
+        subprocess.run(["humount"], check=True, capture_output=True, env=env)
+    finally:
+        shutil.rmtree(env["HOME"], ignore_errors=True)
+
+    s = Session(os.path.join(HOME, "Sys7.img"), [img],
+                os.path.join(SPECIMENS, tag))
+    try:
+        s.boot()
+        s.mac.click(*VOLUME_ICON, double=True)
+        s.shot("volume", wait=10.0)
+        # Select All then Open, never a measured coordinate: the Finder
+        # draws an icon where it likes, and a double-click on the wrong
+        # few pixels selects instead of launching — which is what a
+        # screenshot of the right window at the wrong moment looks like
+        # (superdisk.py learned this the expensive way).
+        s.mac.command_key("a")
+        time.sleep(2)
+        s.mac.command_key("o")
+        s.shot("launched", wait=45.0)
+        s.mac.key("Return")               # wherever it asks to put them
+        s.shot("expanding", wait=90.0)
+        s.mac.key("Return")
+        s.shot("done", wait=90.0)
+        s.mac.click(*VOLUME_ICON)
+        s.mac.command_key("y")            # Put Away: flush the writes
+        s.shot("ejected", wait=20.0)
+    finally:
+        time.sleep(5)
+        s.close()
+
+    theirs = read_forks(img)
+    ours = tempfile.mkdtemp(prefix="ddadj-ours-")
+    subprocess.run([cli(), "x", "--forks", "hidden", "-o", ours, inner],
+                   capture_output=True)
+    bad = seen = 0
+    for path, (ftype2, creator2, tdata, trsrc) in sorted(theirs.items()):
+        if path[-1] == name:
+            continue                                   # the extractor itself
+        mine = os.path.join(ours, *[p.replace("/", ":") for p in path])
+        head, tail = os.path.split(mine)
+        odata = open(mine, "rb").read() if os.path.isfile(mine) else b""
+        side = os.path.join(head, "._" + tail)
+        orsrc = open(side, "rb").read() if os.path.isfile(side) else b""
+        for fork, a, b in (("data", tdata, odata),
+                           ("rsrc", mask_reserved(trsrc),
+                            mask_reserved(orsrc))):
+            if not a and not b:
+                continue
+            seen += 1
+            same = a == b
+            bad += not same
+            shown = "/".join(path)
+            print("  %-40s %s/%s %-4s %8d B  %s"
+                  % (shown[-40:], ftype2, creator2, fork, len(a),
+                     "IDENTICAL" if same else "DIFFERS"))
+    shutil.rmtree(ours, ignore_errors=True)
+    if not keep:
+        shutil.rmtree(work, ignore_errors=True)
+    print("diskdoubler: %d fork(s) compared with DiskDoubler's own "
+          "extractor, %s" % (seen, "all identical" if not bad and seen
+                             else "%d DIFFER" % bad))
+    print("diskdoubler: screenshots in %s" % os.path.join(SPECIMENS, tag))
+    return 1 if (bad or not seen) else 0
 
 
 def forks_of(d, appledouble):
@@ -662,10 +864,16 @@ def main():
                     help="build a System 7 image with the DiskDoubler INIT")
     ap.add_argument("--probe", action="store_true",
                     help="boot the application and photograph each step")
+    ap.add_argument("--probe-split", action="store_true",
+                    help="photograph what the Split command asks for")
     ap.add_argument("--make", metavar="METHOD", nargs="?", const="A",
                     help="compress the subject with A, B, guess or both")
     ap.add_argument("--verify", action="store_true",
                     help="decode the specimens and check them against the input")
+    ap.add_argument("--adjudicate", metavar="FIXTURE",
+                    help="run a self-extracting fixture under System 7 and "
+                         "compare every fork it writes with ours (%s)"
+                         % ", ".join(sorted(ADJUDICATE)))
     ap.add_argument("--keep", action="store_true", help="keep the work dir")
     args = ap.parse_args()
     if args.setup:
@@ -676,12 +884,17 @@ def main():
         wild(args.extract)
     if args.probe:
         probe(args.keep)
+    if args.probe_split:
+        probe_split(args.keep)
     if args.make:
         make(args.make, args.keep)
+    if args.adjudicate:
+        return adjudicate(args.adjudicate, args.keep)
     if args.verify:
         return verify()
     if not (args.setup or args.install or args.wild or args.probe
-            or args.make or args.verify):
+            or args.probe_split or args.make or args.verify
+            or args.adjudicate):
         ap.print_help()
     return 0
 

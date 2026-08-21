@@ -11,7 +11,7 @@ Two kinds of thing live here, and they are kept apart on purpose:
 
 **Not** BLOCKERS.md, which records investigations that went wrong and the
 claims withdrawn from them. Nothing here stops the engine or the CLI, which are
-byte-exact against the oracle across 809 fixtures in `./ci.sh`.
+byte-exact against the oracle across 916 fixtures in `./ci.sh`.
 
 Detail lives in one place per finding — status in BLOCKERS.md, reasoning in
 DECISIONS.md, how to re-run in TESTING.md or `tools/vmac/README.md`, what needs
@@ -135,20 +135,6 @@ layouts come from a reference implementation or a spec, never from memory.
   (`derived-Terrainman_2.0__.sea`, `derived-LHA_Expander_1.0.3.sea`).
   `unar` fails on them and `macunpack` — built with its own DiskDoubler
   support — fails too. We extract them; nobody grades them.
-- **`ssokolow/diskdoubler-test-files` is not in `fixtures/`.** 92 CC0
-  files published beside the originals that made them — the only
-  DiskDoubler grading here that does not go through another decoder
-  (FORMATS.md), and `ci.sh` has never seen one. Two things ride on it:
-  every corpus fixture is a `DDAR` or `DDA2` archive, so the
-  single-file container (`0xABCD0054` at offset 0) reaches `ci.sh` only
-  through the unit test; and both this format and `SPLT` are otherwise
-  graded there against generated files, which grade the reader against
-  the layout and never the layout against DiskDoubler (TESTING.md).
-  **What would close it:** rows in `fixtures/SOURCES.md` and manifests,
-  with one wrinkle — `unar` fails on the five DiskDoubler Pro archives
-  and on all four `SPLT` parts, so their oracle has to be the published
-  originals, which is not a mode `run_diff.py` has. The same `--expect`
-  the SuperDisk! and ArcMac specimens have wanted since M13 covers it.
 - **No `SPLT` set has ever been joined on a Mac.** The application
   compiles with the scheme (`ci.sh` variant 4) and shares the joiner,
   the volume source and the "locate part N" dialog with the four
@@ -157,23 +143,18 @@ layouts come from a reference implementation or a spec, never from memory.
   `tools/vmac/run.py` on a set cut from a fixture — the same shape as
   the segmented-set runs of 2026-08-09 (FORMATS.md, "Segmented sets on
   a real emulated Mac Plus").
-- **A `SPLT` part's payload CRC is parsed and never checked.** The
-  header carries a CRC-16/XMODEM of that part's payload at `+48`
-  (identified 2026-08-21, exact on all four specimens); checking it
-  would cost a second full read of every part, which is a disk swap
-  each on a one-drive Mac (DECISIONS.md). **What would close it:** a
-  running check in the flat reader that fires when a part happens to be
-  read straight through — the common case, and not a guarantee. Until
-  then the joined FILE adjudicates the set, as for every other scheme
-  here.
 - **The 4 bytes at `+4` of a `SPLT` header are unidentified.** Equal
   across the parts of a set, different between sets, so they serve as
-  the identity and the joiner needs nothing more. They are not a
-  checksum of the payload (sum, rotating sum, CRC-16/ARC, CCITT and
-  XMODEM all tested), not either fork's length and not the file's.
-  **What would close it:** more sets, or DiskDoubler splitting a file
-  of known size under emulation — `tools/vmac/diskdoubler.py` already
-  drives the application.
+  the identity and the joiner needs nothing more. Three sets are known
+  and no checksum accounts for them: not of the payload, of either
+  fork, or of the file (sum, rotating sum, CRC-16/ARC, CCITT and XMODEM,
+  over data, resource and both, all tested 2026-08-21). Two of the three
+  sets have IDENTICAL data forks and different values, so whatever it
+  is, it is not a function of the data fork alone. **What would close
+  it:** DiskDoubler splitting files of known size and known time under
+  emulation — the same file twice would separate a content hash from a
+  clock, and `tools/vmac/diskdoubler.py --probe-split` is where that
+  starts.
 - **A `DDA2` stored entry with a resource fork has never been seen.**
   `+87` is read as that fork's XOR checksum by position, next to the
   data fork's at `+86`, which is measured on ten forks. Both stored
@@ -195,12 +176,14 @@ layouts come from a reference implementation or a spec, never from memory.
   tools/vmac/sample.txt` (Mini vMac, cheap) and an OS 9 sweep, which
   costs a full PowerPC boot per fixture.
 - **The SuperDisk! archives are in no `--list` file, on any tier**, because
-  they are payloads inside envelopes and `run.py` grades against a manifest
-  the format has none of. They were replayed by hand on both System 6 tiers
-  (FORMATS.md, "SuperDisk! on the Mac"), and a future sweep will silently
-  leave them out. **What would close it:** an oracle-free grading mode in
-  `run.py` — a `--expect` taking the Linux aggregate — which is also what the
-  ArcMac specimens have wanted since M13.
+  they are payloads inside envelopes and `run.py` graded only against a
+  manifest, which the format has none of. They were replayed by hand on both
+  System 6 tiers (FORMATS.md, "SuperDisk! on the Mac"), and a sweep would
+  silently leave them out. The grading mode they wanted exists since
+  2026-08-21 — `run.py --expect`, which takes the Linux aggregate for a file
+  with no manifest, as the ArcMac specimens have also wanted since M13.
+  **What would close it:** a sweep that includes them, and a `--list` file
+  that names the payloads.
 
 ---
 
