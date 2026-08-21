@@ -123,11 +123,6 @@ layouts come from a reference implementation or a spec, never from memory.
 
 ## 1. DiskDoubler and SuperDisk!: what M12 and M14 left
 
-- **Methods 2, 3, 4 and 5 are declined per entry** — a scope decision,
-  Part 1: nothing reachable writes one, so an implementation could not
-  be graded. Between them the two references cover three of the four
-  (macutils implements 3, XADMaster implements 4 and 5, both untested),
-  which is not the obstacle; a specimen is.
 - **A method 7 fork longer than one chunk has never been decoded.** The
   fork header counts its compressed chunks and gives each a 16-bit
   length; both specimens hold exactly one, and the codec reads the
@@ -140,24 +135,20 @@ layouts come from a reference implementation or a spec, never from memory.
   (`derived-Terrainman_2.0__.sea`, `derived-LHA_Expander_1.0.3.sea`).
   `unar` fails on them and `macunpack` — built with its own DiskDoubler
   support — fails too. We extract them; nobody grades them.
-- **The single-file container (`0xABCD0054` at offset 0) has no corpus
-  fixture.** Every DiskDoubler file in the corpus is a `DDAR` or `DDA2`
-  archive. It is not untested: 63 of them extract byte-exact against
-  their own originals (FORMATS.md). But none is in `fixtures/`, so
-  `ci.sh` still reaches the path only through the unit test, which also
-  covers the name coming from the host rather than the archive.
 - **`ssokolow/diskdoubler-test-files` is not in `fixtures/`.** 92 CC0
-  files, published beside the originals that made them, which is the
-  only DiskDoubler grading here that does not go through another
-  decoder — and `ci.sh` has never seen one. **What would close it:**
-  rows in `fixtures/SOURCES.md` and manifests, with one wrinkle: `unar`
-  fails on the five DiskDoubler Pro archives and on all four `SPLT`
-  parts, so their oracle has to be the published originals, which is
-  not a mode `run_diff.py` has. The same `--expect` the ArcMac and
-  SuperDisk! specimens have wanted since M13 would cover it. Until then
-  `ci.sh` grades both formats against generated files only (TESTING.md),
-  which grades the reader against the layout and never the layout
-  against DiskDoubler.
+  files published beside the originals that made them — the only
+  DiskDoubler grading here that does not go through another decoder
+  (FORMATS.md), and `ci.sh` has never seen one. Two things ride on it:
+  every corpus fixture is a `DDAR` or `DDA2` archive, so the
+  single-file container (`0xABCD0054` at offset 0) reaches `ci.sh` only
+  through the unit test; and both this format and `SPLT` are otherwise
+  graded there against generated files, which grade the reader against
+  the layout and never the layout against DiskDoubler (TESTING.md).
+  **What would close it:** rows in `fixtures/SOURCES.md` and manifests,
+  with one wrinkle — `unar` fails on the five DiskDoubler Pro archives
+  and on all four `SPLT` parts, so their oracle has to be the published
+  originals, which is not a mode `run_diff.py` has. The same `--expect`
+  the SuperDisk! and ArcMac specimens have wanted since M13 covers it.
 - **No `SPLT` set has ever been joined on a Mac.** The application
   compiles with the scheme (`ci.sh` variant 4) and shares the joiner,
   the volume source and the "locate part N" dialog with the four
