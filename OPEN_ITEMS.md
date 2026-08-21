@@ -112,8 +112,22 @@ Unlike section 3, none of this is impossible here: a download would do it.
 - **DiskDoubler methods 3, 4 and 5, ARC 0x0a/0x0b, and SuperDisk! methods
   10, 13 and 20.** No corpus fixture uses any of them and nothing reachable
   writes them, so an implementation could not be graded — code no oracle can
-  check is the same bargain LZH refuses. **Method 2 left this list on
-  2026-08-21**: Salient's 3.1.2 distribution floppy on WinWorld carries one
+  check is the same bargain LZH refuses.
+
+  **What is missing is a SPECIMEN, not a reference: all three DiskDoubler
+  methods have one, and the two references are complementary.** Checked in
+  the source rather than carried forward, 2026-08-21:
+
+  | method | XADMaster | macutils `dd.c` | what it would cost here |
+  |---|---|---|---|
+  | 3, RLE | none — `nameForMethod` only, no `case 3:` in the decode switch | **`dd_rle`**, behind `#ifdef UNTESTED`: an ESC byte, then a repeat count | ~20 lines; nothing in the engine to reuse |
+  | 4, Huffman | **`XADStuffItHuffmanHandle`** (untested), plus the 0x5a XOR and the 16-bit sum | declared but inside `#ifdef NOTIMPLEMENTED` | ~15 lines: that handle IS StuffIt method 3, which this engine already has as `sit_huffman` over `unc_huff_*`. The same shape as method 8 being Compact Pro in a DiskDoubler container |
+  | 5 | **shares method 2's branch** (untested), reading the tree count from a leading byte, 0 meaning 256 | `"???"`, name only | ~10 lines on top of `dd_m2` |
+
+  So none of the three is blocked on research or on effort, and two are
+  nearly free now that method 2 is in. Each is blocked on one file.
+
+  **Method 2 left this list on 2026-08-21**: Salient's 3.1.2 distribution floppy on WinWorld carries one
   fork of it, which is all a codec needs (DECISIONS.md, the Salient disk).
   That is also the shape of what would close the rest — a disk, not a
   reasoning step. What has been checked for the others, so nobody repeats

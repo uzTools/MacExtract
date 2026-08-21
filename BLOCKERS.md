@@ -146,7 +146,9 @@ same claim — that "the reference marks 3 and 4 unimplemented and 5 untested" �
 was also wrong in the direction that mattered less: XADMaster implements 4 and
 5 (untested) and macutils implements 3 (untested), so the references cover
 three of the four methods still declined. What is missing for those is a
-specimen, not code.
+specimen, not code. (Method 2 was implemented on 2026-08-21, so the three
+still declined are 3, 4 and 5 — and every one of them has a reference. Which
+one covers which, read out of the source: OPEN_ITEMS.md.)
 
 **`DDA2` was read as far as the corpus went, and the corpus stopped early.**
 Not one of the six DiskDoubler fixtures is a `DDA2` holding a file DiskDoubler
