@@ -131,8 +131,9 @@ Unlike section 3, none of this is impossible here: a download would do it.
   against its input by construction.
 
 - **StuffIt SpaceSaver's other three methods, and its dictionary.** The
-  format is read (FORMATS.md, *StuffIt SpaceSaver*): the container, method
-  0 and method 4. Three things are left, and none of them is the layout.
+  format is read and implemented (FORMATS.md, *StuffIt SpaceSaver*): the
+  container, method 0 and method 4, both replaying on a Mac Plus at the
+  floor target. Three things are left, and none of them is the layout.
   - **Methods 1, 2 and 3** are declined per entry. Their modules are in
     the software this was read out of — `CMod 3`, `CMod 4`, `CMod 11` —
     so this is transcription, not research. What is missing is a way to

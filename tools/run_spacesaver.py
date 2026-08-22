@@ -355,14 +355,78 @@ def synthetic(exe, verbose):
     return bad, len(cases)
 
 
+
+def emit(dirname):
+    """Write the two files the Macintosh tier is replayed with.
+
+    Not committed — no SpaceSaver file may be (TESTING.md) — so they are
+    made on demand. One is stored in both forks, which the Mac shell can
+    extract with no dictionary at all; the other needs one, and is here
+    to show the refusal happening the same way on both machines rather
+    than crashing on a 68000.
+
+        tools/run_spacesaver.py --emit /tmp/ssmac
+        tools/vmac/run.py --expect /tmp/ssmac/*.ss
+    """
+    os.makedirs(dirname, exist_ok=True)
+    data = b"SpaceSaver on a Mac Plus. " * 40
+    rsrc = bytes(bytearray(range(256))) * 2
+    h = bytearray(84)
+    h[0:4] = b"SIT!"
+    h[4:8] = b"DFD3"
+    h[8:12] = (3).to_bytes(4, "big")
+    h[12:16] = (84).to_bytes(4, "big")
+    h[16:20] = (0x41).to_bytes(4, "big")
+    h[20:24] = len(data).to_bytes(4, "big")
+    h[24:28] = len(data).to_bytes(4, "big")
+    h[28:32] = (84).to_bytes(4, "big")
+    h[36:40] = len(rsrc).to_bytes(4, "big")
+    h[40:44] = len(rsrc).to_bytes(4, "big")
+    h[44:48] = (84 + len(data)).to_bytes(4, "big")
+    h[52:56] = b"TEXT"
+    h[56:60] = b"ttxt"
+    body = bytes(h) + data + rsrc
+    body += b"\x00" * ((-len(body)) % 256)
+    stored = os.path.join(dirname, "Stored.ss")
+    open(stored, "wb").write(body)
+    print("spacesaver: %s (%d B, both forks stored)" % (stored, len(body)))
+
+    # Method 4 that needs NO dictionary: encoded with an empty preset, so
+    # every match reaches into what the file itself has already produced.
+    # This is the one that runs the bit decoder on the 68000.
+    body = (b"the quick brown fox jumps over the lazy dog. " * 300 +
+            bytes(bytearray(range(256))) * 4)
+    alg4 = os.path.join(dirname, "Alg4.ss")
+    open(alg4, "wb").write(container(encode_alg4(body, b""), len(body)))
+    print("spacesaver: %s (%d B, method 4, no dictionary needed)"
+          % (alg4, os.path.getsize(alg4)))
+
+    if not os.path.exists(PRESET):
+        print("spacesaver: no preset at %s, so no dictionary case" % PRESET)
+        return 0
+    preset = open(PRESET, "rb").read()
+    payload = preset[-3000:] + b"the quick brown fox " * 200
+    needs = os.path.join(dirname, "NeedsDict.ss")
+    open(needs, "wb").write(container(encode_alg4(payload, preset),
+                                      len(payload)))
+    print("spacesaver: %s (%d B, method 4, reaches into the dictionary)"
+          % (needs, os.path.getsize(needs)))
+    return 0
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--unclassic", default=os.path.join(REPO, "build",
                                                         "unclassic"))
     ap.add_argument("--timeout", type=int, default=120)
+    ap.add_argument("--emit", metavar="DIR",
+                    help="write the two files the Macintosh tier replays")
     ap.add_argument("-v", "--verbose", action="store_true")
     a = ap.parse_args()
+
+    if a.emit:
+        return emit(a.emit)
 
     bad = ran = fuzzed = fuzzbad = 0
     sbad, sran = synthetic(a.unclassic, a.verbose)

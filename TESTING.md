@@ -767,6 +767,15 @@ bit-flips — because `fuzz.py` and `run_robustness.py` both work from
 that trusted the sniff would exit clean having parsed nothing. `fuzz.py` also
 carries the header's magic now, so its garbage generator aims at this parser.
 
+**The Macintosh side is three files, not a suite.**
+`tools/run_spacesaver.py --emit DIR` writes them and `tools/vmac/run.py
+--expect DIR/*.ss` replays them: stored, method 4 without a dictionary, and
+method 4 that needs one. `--expect` grades a Mac run against this engine's
+own Linux output, the arrangement SuperDisk! and the ArcMac specimens
+already use, so what it proves is that the same bytes come out of a 68000 —
+not that either side is right. 3/3 at 4 MB and 3/3 at the 1 MB floor
+(2026-08-22; figures in FORMATS.md).
+
 **What this cannot see.** It grades methods 0 and 4 because that is what the
 machine that made the specimens writes — Gestalt `cput` picks 4 below a
 68030 (FORMATS.md). Methods 1, 2 and 3 are compiled into nothing: they are

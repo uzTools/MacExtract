@@ -31,7 +31,7 @@ whole corpus for that format (engine allocations only, via
 | ARC / ArcMac (.arc) | extract | 1/2 store, 3 RLE90, 4 squeeze+RLE90, 5/6/7 crunch, 8 12-bit LZW+RLE90, 9 13-bit LZW, 0x7f compress; ArcMac's two-fork payload since 2026-08-16★★★; 0x0a/0x0b (PKARC) declined per entry★ | 10 generated archives (methods 1-9, adjudicated by `unar`) + 3 written by Debian's `arc` 5.21q; `synth-arc-mixed.arc` also has an `unar` manifest and is in the differential suite | 4–32 KB★ | full |
 | uuencode (.uu, incl. UUTool) | extract | — (plain uu, UUTool's two-fork "MU" shape, and documents posted in several parts★★) | 7 generated cases, the two-fork ones adjudicated by macutils' `hexbin`; `synth-uu-mac.uu` is in the differential suite | 4 KB | full |
 | Alysis SuperDisk! (.X, .x) | extract | **both containers** (record-stream archive and single file); methods 1-4 and 5-8 (a finite-context predictor over a 13- or 16-bit context, with the flag bitmap and/or the literals Huffman-coded), 9 Huffman, 11 SlowFastB (LZSS); 10, 13 and 20 declined per entry✧✧ | 2 fixtures, 5 forks, adjudicated by the archives' OWN self-extractors on an emulated Mac, + 11 single-file specimens written by Alysis's own control panel (methods 1 and 6) and graded against their inputs | 72–115 KB✧✧ | full |
-| StuffIt SpaceSaver (`SPSV`) | extract | 0 stored, 4 "Alg 4" — an LZSS whose window starts loaded with a preset dictionary that ships inside SpaceSaver; 1, 2 and 3 declined per entry✦✦ | **none, and no specimen either**: nothing SpaceSaver wrote has ever been decoded here. Graded by a second implementation of the same reading (an encoder in `run_spacesaver.py`) and by unit tests✦✦ | 4 KB + the window (68 KB at its largest) | full |
+| StuffIt SpaceSaver (`SPSV`) | extract | 0 stored, 4 "Alg 4" — an LZSS whose window starts loaded with a preset dictionary that ships inside SpaceSaver; 1, 2 and 3 declined per entry✦✦ | **none, and no specimen either**: nothing SpaceSaver wrote has ever been decoded here. Graded by a second implementation of the same reading (an encoder in `run_spacesaver.py`) and by unit tests✦✦ | 4 KB stored, 68 KB with a 64 KB window (measured on a Mac Plus) | full |
 | LZH/LHA (-lh?-, -lz?-) | detect only | — | 1 real `-lh5-` archive, named + refused; unit test over every method byte | — | — |
 | DiskCopy 4.2 (.image) | detect only | — | synthetic 800K GCR + real 800K image; 0 false positives in 807 fixtures (re-measured 2026-08-15) | — | — |
 
@@ -599,6 +599,15 @@ and without one an entry that reaches into the dictionary fails rather than
 decoding to something wrong. The resource is byte-identical in the control
 panel and in `StuffIt Engine™`, so either file will do — and there is a second
 one, `PrAm` -4047, four spaces long, which nothing this engine writes selects.
+
+**Both methods run on a 68000**, which is the part no Linux test can show.
+`tools/run_spacesaver.py --emit` writes three files and `tools/vmac/run.py
+--expect` replays them on an emulated Mac Plus under System 6.0.8: a stored
+one (**1,040 B data + 512 B resource, peak 4,112 B**), a method 4 one that
+needs no dictionary (**14,524 B out, peak 69,664 B** — the 64 KB window plus
+the 4 KB input buffer), and one that reaches into the dictionary and must
+refuse (**0 files, peak 68 KB, no crash**). All three agree with the Linux
+CLI byte for byte, **at 4 MB and at the 1 MB floor target alike**.
 
 **Which is why the Macintosh application cannot expand these files and this
 is not a gap it is worth closing.** It could read the resource out of the
@@ -1437,7 +1446,7 @@ with this archive."*
 | `.arc` (ARC / ArcMac) | with the add-on | **yes since 2026-08-15**, methods 1-9; ArcMac's two-fork payload since 2026-08-16 (★★★ above) |
 | uuencode (`.uu`) | with the add-on | **yes since 2026-08-15**, plain and UUTool's two-fork shape |
 | AppleLink `.pkg` | with the add-on | no, and not sniffed either. Not a decision about scope any more — a decision about evidence: no reference implementation and no published layout anywhere reachable, so rule #1 forbids writing one. OPEN_ITEMS.md, *Waiting on a file this machine does not have*, records what was searched |
-| StuffIt SpaceSaver | with the add-on | **yes since 2026-08-22** — methods 0 and 4, which is what a 68000 writes; 1, 2 and 3 are declined per entry (*StuffIt SpaceSaver*, above) |
+| StuffIt SpaceSaver | with the add-on | **yes since 2026-08-22 on Linux**, methods 0 and 4 (what a 68000 writes), given SpaceSaver's own dictionary; 1, 2 and 3 declined per entry. The Macintosh application names one and does not expand it (*StuffIt SpaceSaver*, above) |
 | Chained expansion (`.sit.hqx`) | yes, and can be turned off | yes, `-nr` turns it off |
 | System 7 conveniences | drag-and-drop of files, folders and whole disks; watch folders; background expansion; Apple events | none; Standard File, one archive at a time |
 | Verification | none published | 919 fixtures byte-exact against `unar`/`macunpack` — bar the one uuencode fixture, which `unar` cannot read at all and whose ground truth is its generator's input, with `hexbin` agreeing |
