@@ -112,18 +112,18 @@ Unlike section 3, none of this is impossible here: a download would do it.
   3, 4 and 5) and **is "X does not survive" a claim about somebody's
   search?** (BLOCKERS.md, SuperDisk!'s compressor).
 
-- **SuperDisk!'s single-file container has never been read.** Its
-  compressor is in hand since 2026-08-22 and writes one on demand
-  (`tools/vmac/sdcompress.py --compress`), so this is **not** waiting on a
-  file any more — it is waiting on a layout. What a specimen looks like:
-  the uncompressed size twice, then type and creator, then the name as a
-  Pascal string; no `0x29`/`0x28` record stream, which is what this engine
-  reads. `unc_sniff` answers *unknown*. **What would close it:** the same
-  route the archive format took — read it out of the self-extractor's own
-  code, which every `.x` carries (DECISIONS.md, "SuperDisk!, read out of
-  SuperDisk!"). Methods 10, 13 and 20 likely arrive with it: the panel's
-  Compress and Speed axes are what a SlowFast**A**/**B**/**C** family
-  would be selected by, and only B is implemented.
+- **SuperDisk! methods 10, 13 and 20.** No corpus fixture uses any of
+  them, so an implementation could not be graded — code no oracle can
+  check is the same bargain LZH refuses. **What is missing is a
+  gradeable SPECIMEN, and the compressor that would write one is in
+  hand** (`tools/vmac/sdcompress.py`, since 2026-08-22): its control
+  panel has Compress (Off/Light/Tighter), Speed and Memory axes, and
+  every subject compressed so far came out method 1. The method table
+  read out of Disk Expander calls 10, 11 and 13 SlowFast**A**, **B** and
+  **C**, and a Speed control over a Slow/Fast family is where the other
+  two should be. **What would close it:** working through those axes and
+  reading the method back — each setting is a run, and the settings
+  persist into the boot image, which is a trap the harness now handles.
 
 - **AppleLink `.pkg` and StuffIt SpaceSaver.** Neither has a reference
   implementation or a published layout anywhere reachable. Searched

@@ -66,7 +66,7 @@ oracle and will lose it to `./ci.sh`'s `make clean`.
 | `ddencode.py` | **grade a method by WRITING it**: encode a fork, hand it to Salient's own 1991 DiskDoubler, and see whether it comes back. How methods 3, 4 and 5 were graded with no specimen |
 | `ndd.py` | the releases nothing here had run: Salient's **3.1.2** (1991, the oldest reachable — it has the only method 2 fork), **DiskDoubler 4.0** and **Norton DiskDoubler Pro 1.1** (Symantec — whose application is 4.1.1). `--specimens`, `--harvest` and `--grade` need no emulator |
 | `superdisk.py` | grade SuperDisk! with its own self-extractors, and `--on-mac`, which replays both payloads through our application |
-| `sdcompress.py` | the other half: Alysis's 1991 **SuperDisk! control panel**, which COMPRESSES. Writes a `.x` on demand — the thing methods 10, 13 and 20 were waiting for |
+| `sdcompress.py` | the other half: Alysis's 1991 **SuperDisk! control panel**, which COMPRESSES. It wrote the five specimens the single-file container was derived from, and `--verify` re-grades them |
 | `mkcollide.py` | build an archive whose names collide on HFS, and verify what `BumpName` did with them — nothing in the corpus collides |
 
 `tools/quickdraw-repro/` is a sibling that reuses `mkboot.py` and this
@@ -511,6 +511,15 @@ OPEN_ITEMS.md said did not survive (BLOCKERS.md).
     tools/vmac/sdcompress.py --panel      open the panel and photograph it
     tools/vmac/sdcompress.py --makefile   what "Make File" offers
     tools/vmac/sdcompress.py --compress   compress a subject, report the file
+    tools/vmac/sdcompress.py --specimens  compress all five subjects
+    tools/vmac/sdcompress.py --verify     read them back, compare with the input
+
+`--specimens` is the one that mattered: five subjects chosen to DISAGREE with
+each other, because the first specimen alone made the header layout look
+obvious and would have got it wrong — its data size, its total and its name
+length were indistinguishable. One has a resource fork, one is stamped 1990
+and 1995, one has a 20-character name (the only one that reveals the body is
+padded to an even offset), one is over 32 KB. `--verify` needs no emulator.
 
 Three things that cost a run each:
 

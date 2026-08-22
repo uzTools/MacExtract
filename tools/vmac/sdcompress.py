@@ -166,16 +166,36 @@ def install():
 SUBJECT = (b"Alysis SuperDisk! method probe. " * 300 +
            bytes(bytearray(range(256))) * 6)
 
-SUBJECTS = [("Alpha", "TEXT", "ttxt", SUBJECT, b""),
-            ("Beta", "TEXT", "ttxt", SUBJECT[:4000], b"")]
+# Chosen to separate the header fields from each other, not to be
+# convenient: the first specimen had its data size, its "second" size and
+# its name length all indistinguishable from one another.
+from ndd import make_rsrc, MAC_EPOCH_1990, MAC_EPOCH_1995   # noqa: E402
+
+SUBJECTS = [
+    # data 11,136 / no resource fork / 5-char name — the baseline
+    ("Alpha", "TEXT", "ttxt", SUBJECT, b"", None),
+    # a RESOURCE fork, so the two size fields at +0 and +4 come apart
+    ("Forked", "PICT", "8BIM", SUBJECT[:3000],
+     make_rsrc(b"\x1eSuperDisk single-file probe"), None),
+    # distinct dates, so any date field shows itself
+    ("Dated", "APPL", "MyAp", SUBJECT[:2000], b"",
+     (MAC_EPOCH_1990, MAC_EPOCH_1995)),
+    # a long name, to confirm the Pascal string and where the body starts
+    ("LongerNameHere 12345", "TEXT", "ttxt", SUBJECT[:1500], b"", None),
+    # over 32 KB of output, so the block chain has to be more than one
+    ("Big", "TEXT", "ttxt", SUBJECT * 4, b"", None),
+]
 
 
 def session(tag):
+    from ndd import macbinary_dated                      # noqa: E402
     work = tempfile.mkdtemp(prefix="sdwork-")
     mbs = []
-    for i, (n, t, c, d, r) in enumerate(SUBJECTS):
+    for i, (n, t, c, d, r, dates) in enumerate(SUBJECTS):
         p = os.path.join(work, "s%d.bin" % i)
-        open(p, "wb").write(macbinary(n, t, c, d, r))
+        mb = (macbinary_dated(n, t, c, d, r, *dates) if dates
+              else macbinary(n, t, c, d, r))
+        open(p, "wb").write(mb)
         mbs.append(p)
     img = os.path.join(work, "sdwork.img")
     make_volume(img, "SDwork", mbs, size_kb=8192)
@@ -441,6 +461,95 @@ def compress(keep=False):
     return 0
 
 
+def make_one(s, name, tag, first):
+    """One trip through "Make File" and its standard file dialog."""
+    s.mac.click(*MAKE_FILE)
+    s.shot("dialog-" + tag, wait=10.0)
+    if first:
+        s.mac.click(*SF_DESKTOP)
+        time.sleep(2.0)
+        s.mac._xdo("type", "--delay", "150", "SDwork")
+        time.sleep(1.5)
+        s.mac.key("Return")
+        s.shot("in-volume-" + tag, wait=8.0)
+    s.mac._xdo("type", "--delay", "150", name)
+    time.sleep(2.0)
+    s.shot("picked-" + tag, wait=0.5)
+    s.mac.key("Return")
+    s.shot("done-" + tag, wait=30.0)
+    s.mac.key("Return")                     # dismiss whatever it says
+    time.sleep(3.0)
+
+
+def specimens(keep=False):
+    """Compress every subject, so the header fields can be told apart.
+
+    The first specimen had its data size, its second size field and its
+    name length all equal or zero, which is exactly the shape that makes
+    a layout look obvious and be wrong.
+    """
+    s, work, img = session("specimens")
+    try:
+        open_panel(s)
+        for i, (name, _t, _c, _d, _r, _dt) in enumerate(SUBJECTS):
+            make_one(s, name, name.split()[0][:8], i == 0)
+        s.mac.click(*VOLUME_ICON)
+        s.mac.command_key("y")
+        s.shot("ejected", wait=15.0)
+    finally:
+        time.sleep(5)
+        s.close()
+    report(img, s.shots)
+    if not keep:
+        shutil.rmtree(work, ignore_errors=True)
+    return 0
+
+
+def verify(keep=False):
+    """Read the specimens back and compare with the bytes that went in.
+
+    The header layout was derived from these five, so this is the loop
+    that keeps it honest: change the reader and this says so without
+    booting anything. Resource forks are compared with bytes 16..127
+    masked, the convention `vmac_check.py` uses — the Resource Manager
+    stamps that window whenever it touches a file.
+    """
+    spec = os.path.join(SPECIMENS, "specimens")
+    if not os.path.isdir(spec):
+        raise SystemExit("sdcompress: no specimens yet — run --specimens")
+    bad = 0
+    for name, _t, _c, data, rsrc, _d in SUBJECTS:
+        f = os.path.join(spec, name + ".x")
+        if not os.path.exists(f):
+            print("sdcompress: %-22s MISSING" % name)
+            bad += 1
+            continue
+        tmp = tempfile.mkdtemp(prefix="sdv-")
+        try:
+            r = subprocess.run([cli(), "x", "--forks", "hidden", "-o", tmp, f],
+                               capture_output=True, text=True)
+            gd = gr = b""
+            for root, _dd, fs in os.walk(tmp):
+                for x in fs:
+                    q = os.path.join(root, x)
+                    if x.startswith("._"):
+                        gr = open(q, "rb").read()
+                    else:
+                        gd = open(q, "rb").read()
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+        mask = (lambda b: b[:16] + b"\0" * 112 + b[128:]
+                if len(b) >= 128 else b)
+        ok = (r.returncode == 0 and gd == data and mask(gr) == mask(rsrc))
+        print("sdcompress: %-22s data %-6d rsrc %-4d  %s"
+              % (name, len(gd), len(gr),
+                 "byte-exact" if ok else "DIFFERS"))
+        bad += 0 if ok else 1
+    print("sdcompress: %d of %d byte-exact against the bytes that went in"
+          % (len(SUBJECTS) - bad, len(SUBJECTS)))
+    return 1 if bad else 0
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -451,6 +560,10 @@ def main():
                     help="open the control panel and photograph it")
     ap.add_argument("--makefile", action="store_true",
                     help="press Make File and photograph what it offers")
+    ap.add_argument("--verify", action="store_true",
+                    help="read the specimens back and compare")
+    ap.add_argument("--specimens", action="store_true",
+                    help="compress every subject, for the header layout")
     ap.add_argument("--compress", action="store_true",
                     help="compress a subject and report the method")
     ap.add_argument("--make", action="store_true",
@@ -467,6 +580,10 @@ def main():
         panel(a.keep)
     elif a.makefile:
         makefile(a.keep)
+    elif a.verify:
+        return verify(a.keep)
+    elif a.specimens:
+        return specimens(a.keep)
     elif a.compress:
         return compress(a.keep)
     elif a.make:

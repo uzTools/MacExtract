@@ -30,7 +30,7 @@ whole corpus for that format (engine allocations only, via
 | Now Compress | extract | stored, LZSS, Huffman, Huffman+LZSS, "new" LZSS✧ | 2 real fixtures + 13 generated archives (all five shapes, adjudicated by `unar`); `synth-now-mixed.now` also has an `unar` manifest and is in the differential suite | 128 KB✧ | full |
 | ARC / ArcMac (.arc) | extract | 1/2 store, 3 RLE90, 4 squeeze+RLE90, 5/6/7 crunch, 8 12-bit LZW+RLE90, 9 13-bit LZW, 0x7f compress; ArcMac's two-fork payload since 2026-08-16★★★; 0x0a/0x0b (PKARC) declined per entry★ | 10 generated archives (methods 1-9, adjudicated by `unar`) + 3 written by Debian's `arc` 5.21q; `synth-arc-mixed.arc` also has an `unar` manifest and is in the differential suite | 4–32 KB★ | full |
 | uuencode (.uu, incl. UUTool) | extract | — (plain uu, UUTool's two-fork "MU" shape, and documents posted in several parts★★) | 7 generated cases, the two-fork ones adjudicated by macutils' `hexbin`; `synth-uu-mac.uu` is in the differential suite | 4 KB | full |
-| Alysis SuperDisk! (.X, .x) | extract | 1-4 and 5-8 (a finite-context predictor over a 13- or 16-bit context, with the flag bitmap and/or the literals Huffman-coded), 9 Huffman, 11 SlowFastB (LZSS); 10, 13 and 20 declined per entry✧✧ | 2 fixtures, 5 forks, adjudicated by the archives' OWN self-extractors on an emulated Mac | 72–115 KB✧✧ | full |
+| Alysis SuperDisk! (.X, .x) | extract | **both containers** (record-stream archive and single file); methods 1-4 and 5-8 (a finite-context predictor over a 13- or 16-bit context, with the flag bitmap and/or the literals Huffman-coded), 9 Huffman, 11 SlowFastB (LZSS); 10, 13 and 20 declined per entry✧✧ | 2 fixtures, 5 forks, adjudicated by the archives' OWN self-extractors on an emulated Mac, + 5 single-file specimens written by Alysis's own control panel and graded against their inputs | 72–115 KB✧✧ | full |
 | LZH/LHA (-lh?-, -lz?-) | detect only | — | 1 real `-lh5-` archive, named + refused; unit test over every method byte | — | — |
 | DiskCopy 4.2 (.image) | detect only | — | synthetic 800K GCR + real 800K image; 0 false positives in 807 fixtures (re-measured 2026-08-15) | — | — |
 
@@ -249,12 +249,18 @@ marking a stored block.
 | 11 | "SlowFastB" | LZSS, lengths 2-282, offsets 1-49120 |
 | 10, 13, 20 | "SlowFastA", "SlowFastC", "Tennessee" | **declined per entry** |
 
-**A second container exists and is not read** (2026-08-22): SuperDisk!'s
-single-file form, which its control panel's "Make File" writes. It opens with
-the uncompressed size twice, then type and creator, then a Pascal name — no
-record stream — so `unc_sniff` answers *unknown*. Specimens are producible on
-demand now that the compressor is in hand (`tools/vmac/sdcompress.py`);
-OPEN_ITEMS.md carries what would close it.
+**The single-file container joined on 2026-08-22.** SuperDisk! writes two
+shapes and this engine now reads both: the record-stream archive, and what
+its control panel's "Make File" produces — a 30-byte header, the name as a
+Pascal string padded to an even offset, then the same block chains, data fork
+first. It stands to the archive as DiskDoubler's `0xABCD0054` does to `DDAR`,
+and the payload needed no new codec. Derived from five specimens written by
+Alysis's own 1991 control panel under Mini vMac, chosen to separate the
+fields — one with a resource fork, one stamped 1990/1995, one with a
+20-character name, one over 32 KB — and **all five decode byte-exact against
+the bytes that went in**, dates, type, creator and Finder flags included
+(`tools/vmac/sdcompress.py --specimens`, then `--verify`; DECISIONS.md
+2026-08-22, later still).
 
 The corpus's two archives use 7 and 11. The method table is not guesswork:
 decoding method 11 yields Disk Expander 1.2's own resource fork, whose `Cmpr`

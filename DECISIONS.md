@@ -89,6 +89,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-21 (methods 3, 4 and 5) — writing DiskDoubler files so DiskDoubler can grade them
 - 2026-08-22 — one byte, and the eight forks that had no oracle
 - 2026-08-22 (later) — SuperDisk!'s compressor, which was said not to survive
+- 2026-08-22 (later still) — SuperDisk!'s other container, derived by making it
 
 ---
 
@@ -4571,3 +4572,65 @@ the filename", and renaming `Alpha` to `Alpha.x` under a loaded
 SuperDisk! changes nothing at all — measured, the bytes come back
 identical. `.x` is what the compressor NAMES its output. An hour went
 into driving the Finder's rename before the control panel was opened.
+
+## 2026-08-22 (later still) — SuperDisk!'s other container, derived by making it
+
+The container `sdcompress.py` found and could not read is now read. It is
+SuperDisk!'s **single-file** form — what "Make File" writes, and what the
+format's own help calls an auto-expanding file — and it stands to the
+archive exactly as DiskDoubler's `0xABCD0054` does to `DDAR`:
+
+    +0  (4) total uncompressed size, and it EQUALS +4 plus +8
+    +4  (4) data fork size          +8  (4) resource fork size
+    +12 (4) type                    +16 (4) creator
+    +20 (2) Finder flags
+    +22 (4) creation date           +26 (4) modification date
+    +30     the name, Pascal, padded to an even total length
+            then the data fork's blocks, then the resource fork's
+
+**The payload is the block chain this engine already decodes.** That was
+the hypothesis worth testing first and it cost nothing to test: the first
+specimen's bytes at the right offset read as `clen=2336, ulen=11136,
+method=1`, which is `sd_block_head`'s layout exactly. So the work was a
+35-byte header and a fork split, not a codec.
+
+### The layout was derived by choosing subjects that disagree
+
+The first specimen made the layout look obvious and would have got it
+wrong: an 11,136-byte file with no resource fork, whose `+0` and `+4`
+were therefore the same number and whose `+8` was zero. Five subjects
+chosen to separate the fields settled it in one session
+(`sdcompress.py --specimens`):
+
+| subject | what it pinned |
+|---|---|
+| `Forked`, a resource fork | `+0` is the TOTAL, `+4` data, `+8` resource — 3338 = 3000 + 338 |
+| `Dated`, stamped 1990 and 1995 | `+22` creation, `+26` modification, both exact |
+| `LongerNameHere 12345`, 20 chars | the Pascal name, and that the body is padded to an EVEN offset |
+| `Big`, 44,544 bytes | more than one block in the chain |
+| `Alpha`, the baseline | — |
+
+The even-padding rule is the one that would have been missed: three of
+the five names happen to make `31 + nlen` even on their own, and only the
+20-character one puts a junk byte (0xAA, not zero) where a reader that
+did not pad would look for a block header.
+
+**Graded by the bytes that went in**, the loop this project uses
+everywhere: all five come back byte-exact, resource fork included and the
+multi-block one included (`sdcompress.py --verify`). Dates, type, creator
+and Finder flags match what was stamped.
+
+### What is in `ci.sh` and what is not
+
+The specimens were written by a commercial application under emulation,
+so they cannot be regenerated in CI the way `ddencode.py --emit` files
+can — there is no encoder for this format and there will not be one. What
+`ci.sh` gets instead is a hand-built container using STORED blocks, which
+covers the header, the fork split, the metadata and the sniffer without a
+codec; the five real specimens cover the codec, on demand.
+
+The sniffer leans on `total == data + rsrc`. That is a 32-bit identity
+random data fails, and it is also what tells this container from an
+archive — whose first eight bytes nobody reads, so they could be
+anything. The unit test breaks the identity by one and requires the
+sniffer to let go of the file.

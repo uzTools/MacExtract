@@ -494,6 +494,7 @@ int unc_sitx_probe(const uint8_t *head, int32_t len);
 int unc_diskcopy_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_nowcompress_probe(const uint8_t *head, int32_t len);
 int unc_superdisk_probe(const uint8_t *head, int32_t len, UncIO *io);
+uint32_t unc_superdisk_single_body(const uint8_t *head, int32_t len);
 int unc_diskdoubler_probe(const uint8_t *head, int32_t len);
 int unc_lzh_probe(const uint8_t *head, int32_t len);
 

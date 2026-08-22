@@ -2420,6 +2420,76 @@ static void test_diskdoubler(void)
 
 
 /* ------------------------------------------------------------------ */
+/* SuperDisk!'s SINGLE-FILE container: no record stream, a fixed header */
+/* and then the same block chains, data fork first. Built here with     */
+/* STORED blocks so the header, the fork split and the metadata are     */
+/* tested without a codec; the five specimens Alysis's own control      */
+/* panel wrote are what grade the codec (DECISIONS.md 2026-08-22).      */
+/* ------------------------------------------------------------------ */
+
+static void test_superdisk_single(void)
+{
+    static const uint8_t want_d[20] = {
+        'a','u','t','o','-','e','x','p','a','n','d','i','n','g',' ',
+        'f','i','l','e','.'
+    };
+    static const uint8_t want_r[8] = { 1, 2, 3, 4, 250, 251, 252, 253 };
+    uint8_t one[128];
+    uint32_t n;
+    MemIO m;
+    UncIO io;
+    UncAlloc al;
+    UncSink sk;
+    CapSink cap;
+    UncOptions opt;
+    static const uint8_t hint[] = "SD";
+
+    for (n = 0; n < sizeof one; n++) one[n] = 0;
+    put32(one + 0, 28);                        /* total = data + rsrc */
+    put32(one + 4, 20);
+    put32(one + 8, 8);
+    memcpy(one + 12, "TEXT", 4);
+    memcpy(one + 16, "ttxt", 4);
+    one[20] = 0x12; one[21] = 0x34;            /* Finder flags */
+    put32(one + 22, 0xA1C2FC80u);              /* creation */
+    put32(one + 26, 0xABEACA80u);              /* modification */
+    one[30] = 4;
+    memcpy(one + 31, "Test", 4);
+    one[35] = 0xAA;                            /* the pad to an even body */
+    n = 36;
+    /* A stored block: bit 15, and the low bits are the block's whole
+     * length including these two, so ulen is that minus two. */
+    one[n++] = 0x80; one[n++] = 20 + 2;
+    memcpy(one + n, want_d, 20); n += 20;
+    one[n++] = 0x80; one[n++] = 8 + 2;
+    memcpy(one + n, want_r, 8); n += 8;
+
+    opt.list_only = 0; opt.test_only = 0;
+    opt.name_hint = hint;
+    opt.name_hint_len = (uint16_t)(sizeof hint - 1);
+    test_make_alloc(&al);
+    test_make_memio(&io, &m, one, n);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_SUPERDISK);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_SUPERDISK, &io, &sk, &al, NULL,
+                         &opt) == UNC_OK);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+    CHECK(cap.dlen[0] == 20);
+    CHECK(memcmp(cap.data[0], want_d, 20) == 0);
+    CHECK(cap.rlen[0] == 8);
+    CHECK(memcmp(cap.rsrc[0], want_r, 8) == 0);
+
+    /* `total == data + rsrc` is what tells this container from an
+     * archive whose first eight bytes nobody reads. Break it and the
+     * sniffer must not claim the file. */
+    put32(one + 0, 29);
+    test_make_memio(&io, &m, one, n);
+    CHECK(unc_sniff(&io) != UNC_FORMAT_SUPERDISK);
+    put32(one + 0, 28);
+}
+
+
+/* ------------------------------------------------------------------ */
 /* M12: Now Compress — the container, which the one fixture cannot     */
 /* reach (it holds a single file, one fork, no folders)                */
 /* ------------------------------------------------------------------ */
@@ -2959,6 +3029,7 @@ void run_format_tests(void)
     test_diskdoubler();
     test_nowcompress();
     test_superdisk();
+    test_superdisk_single();
     test_uu();
     test_arc();
 }

@@ -25,6 +25,27 @@
  * archive. A file's forks follow its record inline, DATA FIRST, each a
  * chain of blocks of at most 32 KB of output.
  *
+ * SuperDisk! also writes a SINGLE-FILE container — what its control
+ * panel's "Make File" produces, and what the format's own help calls an
+ * auto-expanding file. It stands to the archive as DiskDoubler's
+ * 0xABCD0054 does to `DDAR`: no record stream at all, a fixed header and
+ * then the same block chains, data fork first.
+ *
+ *   +0  (4) total uncompressed size, and it EQUALS +4 plus +8
+ *   +4  (4) data fork size          +8  (4) resource fork size
+ *   +12 (4) type                    +16 (4) creator
+ *   +20 (2) Finder flags
+ *   +22 (4) creation date           +26 (4) modification date
+ *   +30     the name as a Pascal string, padded to an even total
+ *           length, then the data fork's blocks, then the resource
+ *           fork's
+ *
+ * Derived 2026-08-22 by compressing five subjects chosen to separate the
+ * fields — one with a resource fork, one with distinct dates, one with a
+ * 20-character name, one over 32 KB — with Alysis's own 1991 control
+ * panel under Mini vMac (`tools/vmac/sdcompress.py --specimens`), and
+ * graded against the bytes that went in. DECISIONS.md 2026-08-22.
+ *
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
 #include "unc_internal.h"
@@ -105,12 +126,47 @@ static int sd_end_marker_ok(UncIO *io)
     return 1;
 }
 
+/* The single-file container's body offset, or 0 if the head does not
+ * look like one. `total == data + rsrc` is the load-bearing test: it is
+ * a 32-bit identity that random data fails, and it is what tells this
+ * container apart from an archive whose first eight bytes nobody
+ * reads. */
+uint32_t unc_superdisk_single_body(const uint8_t *head, int32_t len)
+{
+    uint32_t total, dlen, rlen, body, clen, ulen;
+    uint32_t nlen;
+
+    if (len < 40) return 0;
+    total = unc_get_u32be(head);
+    dlen  = unc_get_u32be(head + 4);
+    rlen  = unc_get_u32be(head + 8);
+    if (total == 0 || total > 0x7FFFFFFFu) return 0;
+    if (dlen > 0x7FFFFFFFu || rlen > 0x7FFFFFFFu) return 0;
+    if (total != dlen + rlen) return 0;
+    nlen = head[30];
+    if (nlen == 0 || nlen > 31) return 0;
+    body = 31u + nlen;
+    if (body & 1u) body++;
+    if ((int32_t)(body + 6u) > len) return 0;
+    /* and the first block header has to be one */
+    clen = unc_get_u16be(head + body);
+    if (clen & 0x8000u) {
+        if ((clen & 0x7FFFu) < 2 && clen != 0x8002u) return 0;
+        return body;
+    }
+    if (clen < 8) return 0;
+    ulen = unc_get_u16be(head + body + 2);
+    if (ulen == 0 || ulen > SD_BLOCKMAX) return 0;
+    return body;
+}
+
 int unc_superdisk_probe(const uint8_t *head, int32_t len, UncIO *io)
 {
     uint32_t start;
     int has_module, i;
 
     if (len < 40) return 0;
+    if (unc_superdisk_single_body(head, len)) return 1;
     /* Cheap rejection first: either a module signature sits where the
      * module chain would put it, or the ninth byte opens a record. */
     if (head[8] == SD_TAG_FILE || head[8] == SD_TAG_DIR) {
@@ -729,6 +785,65 @@ static void sd_path_leaf(const SdPath *p, UncEntryInfo *e,
     unc_entry_set_path(e, full, n);
 }
 
+/* The single-file container: one entry, two fork chains, no records. */
+static int sd_single(UncCtx *c, const uint8_t *head, uint32_t body)
+{
+    SdState s;
+    UncEntryInfo e;
+    uint32_t dlen, rlen, nlen, end;
+    int sret, err = UNC_OK, ferr = UNC_OK;
+
+    dlen = unc_get_u32be(head + 4);
+    rlen = unc_get_u32be(head + 8);
+    nlen = head[30];
+
+    s.c = c;
+    s.in.p = s.flags.p = s.table.p = s.win.p = 0;
+    s.in.cap = s.flags.cap = s.table.cap = s.win.cap = 0;
+    s.winlen = 0;
+    s.staged = 0;
+    s.fork = UNC_FORK_DATA;
+
+    unc_entry_clear(&e);
+    unc_entry_set_path(&e, head + 31, nlen);
+    e.data_size    = dlen;
+    e.rsrc_size    = rlen;
+    e.type         = unc_get_u32be(head + 12);
+    e.creator      = unc_get_u32be(head + 16);
+    e.finder_flags = unc_get_u16be(head + 20);
+    e.create_date  = unc_get_u32be(head + 22);
+    e.mod_date     = unc_get_u32be(head + 26);
+
+    /* Span both forks first, exactly as the archive walk does: a fork
+     * that cannot be stepped over is a corrupt file, not a short one. */
+    end = body;
+    if (dlen && (err = sd_fork_span(c, end, dlen, &end)) != UNC_OK) goto done;
+    if (rlen && (err = sd_fork_span(c, end, rlen, &end)) != UNC_OK) goto done;
+
+    sret = c->sink->begin_entry(c->sink->ctx, &e);
+    if (sret < 0) { err = UNC_ERR_SINK; goto done; }
+    if (sret == 0) {
+        if (!c->opt.list_only) {
+            if (dlen) { s.fork = UNC_FORK_DATA; ferr = sd_fork(&s, body, dlen); }
+            if (ferr == UNC_OK && rlen) {
+                uint32_t rat = body;
+                if (dlen) (void)sd_fork_span(c, body, dlen, &rat);
+                s.fork = UNC_FORK_RSRC;
+                ferr = sd_fork(&s, rat, rlen);
+            }
+        }
+        if (c->sink->end_entry(c->sink->ctx, ferr) < 0) err = UNC_ERR_SINK;
+        else if (ferr == UNC_ERR_SINK || ferr == UNC_ERR_ABORTED ||
+                 ferr == UNC_ERR_IO) err = ferr;
+    }
+done:
+    unc_free(c->al, s.in.p);
+    unc_free(c->al, s.flags.p);
+    unc_free(c->al, s.table.p);
+    unc_free(c->al, s.win.p);
+    return err;
+}
+
 int unc_superdisk_extract(UncCtx *c)
 {
     SdState s;
@@ -736,6 +851,16 @@ int unc_superdisk_extract(UncCtx *c)
     uint8_t rec[40];
     uint32_t at;
     int has_module, err = UNC_OK;
+
+    {   /* the single-file container first: it has no record stream, so
+         * the archive walk below would read its header as one */
+        uint8_t head[64];
+        uint32_t body;
+        if (unc_read_at(c->io, 0, head, (int32_t)sizeof head) == UNC_OK) {
+            body = unc_superdisk_single_body(head, (int32_t)sizeof head);
+            if (body) return sd_single(c, head, body);
+        }
+    }
 
     if ((err = sd_records_start(c->io, &at, &has_module)) != UNC_OK) return err;
 
