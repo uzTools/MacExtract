@@ -87,6 +87,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-21 (the Symantec release) — DiskDoubler's four publishers, and what the headerless record selects on
 - 2026-08-21 (the Salient disk) — method 2, and the archive nobody here searched
 - 2026-08-21 (methods 3, 4 and 5) — writing DiskDoubler files so DiskDoubler can grade them
+- 2026-08-22 — one byte, and the eight forks that had no oracle
 
 ---
 
@@ -4448,3 +4449,63 @@ could not be found* instead of launching anything. It is the shape
 damage is never the frame of the click that caused it**, and here three
 "the expander did not take it" lines were really one stale front
 application.
+
+## 2026-08-22 — one byte, and the eight forks that had no oracle
+
+Eight resource forks across two fixtures had been recorded as **not ground
+truth** since M12: `unar` refuses them, macunpack's DiskDoubler method table
+stops at 9 so it has no DDn at all, and the only other implementation is
+DiskDoubler's own expander — which runs on a Mac, and a Mac restamps a
+resource fork's system-reserved bytes 16..127 as it writes it. The item said
+what would close it was "an implementation that runs off a Mac". It has been
+sitting on this machine the whole time.
+
+**`unar`'s DDn reads exactly one byte past the fork's declared compressed
+length.** Declare one more and give it a pad byte and it decodes. Measured by
+sweeping 0, 1, 2, 4, 8 … 64 bytes of slack: it flips at 1 and stays fixed.
+
+The reproduction is 1,166 bytes — one `0xABCD0054` container, one file, two
+DDn forks — and it is `tools/xadmaster-ddn-repro/`, written up ready to post
+and **deliberately not posted**, on the same terms as the Retro68 report
+(OPEN_ITEMS.md). This project has a rule about attributing a root cause
+without a minimal reproduction, learned from the withdrawn `HOpen`
+attribution; the rule is why the sweep exists rather than a sentence saying
+"probably an off-by-one".
+
+**That `unar`'s output is then RIGHT is what makes it an oracle.** With the
+slack, all 33 forks of the two archives come back byte-for-byte equal to this
+engine's output — including the 16..127 window no Mac run can preserve — and
+equal to what DiskDoubler's own expander produced under System 7 outside that
+window. Three implementations, one answer.
+
+So the workaround IS the adjudication. `tools/run_ddforks.py` hands `unar`
+one fork at a time in a container carrying **the fixture's own compressed
+bytes, unmodified**, with two changes and no others: the declared compressed
+length is one larger, and one pad byte follows. The pad is shown to be inert
+rather than assumed — every fork is decoded twice, with 0x00 and with 0xFF,
+and both must agree before anything is recorded.
+
+Result: `oracle-unadjudicated` falls from **24 forks across 12 fixtures to 16
+across 10**, and both DiskDoubler fixtures leave the list entirely. The eight
+hashes are in the manifests with that provenance and `ci.sh` checks them on
+every run.
+
+### Two things worth keeping
+
+**A tool's bug is not always a wall.** The reasoning that filed this item was:
+the oracle fails, therefore there is no oracle. What was missing is that a
+decoder which fails on its input bound still has a correct codec behind it,
+and the bound is ours to set — we build the container we hand it. The general
+form, next to "an oracle you can only feed is still an oracle" from the
+methods 3-5 work: **an oracle that refuses one input may accept a
+presentation of the same bytes.** Neither of those changes what the tool is;
+both change what you ask it.
+
+**The pairing check earned its place immediately.** `run_ddforks.py --write`
+matches a manifest entry to an archive header before recording a hash, and
+the first version matched them by position. That is right for one fixture and
+wrong for the other — the manifest is ordered by name, the headers by
+position in the archive — and the guard caught it on the second file rather
+than writing one fork's hash under another fork's name, which `ci.sh` would
+then have enforced forever. Matching is now by the data fork's own hash, and
+a header that does not pair uniquely is an error rather than a guess.

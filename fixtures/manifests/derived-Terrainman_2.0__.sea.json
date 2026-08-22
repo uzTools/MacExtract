@@ -8,13 +8,13 @@
    "oracle_methods": [
     "DDn"
    ],
-   "type": "TEXT",
-   "unadjudicated": {
-    "rsrc": "Attempted to read more data than was available — but DiskDoubler's own self-extractor agrees on this fork with the resource header's OS-stamped bytes 16..127 masked (tools/vmac/diskdoubler.py --adjudicate, 2026-08-21)"
-   }
+   "rsrc_oracle": "unar 1.10.8 on this fork alone, with the declared compressed length one byte larger and one pad byte after it \u2014 the off-by-one its DDn reads past (tools/run_ddforks.py; DECISIONS.md 2026-08-22). The compressed bytes are the fixture's own, unmodified; 0x00 and 0xff pads give the same output",
+   "rsrc_sha256": "927d4922fd39f39aa85f89656c92981f4937334cc5fd708b18d3a9f6ffb12bec",
+   "rsrc_size": 492,
+   "type": "TEXT"
   },
   {
-   "creator": "M∑SH",
+   "creator": "M\u2211SH",
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "Terrainman 2.0",
@@ -27,30 +27,30 @@
   },
   {
    "is_dir": true,
-   "name": "Terrainman 2.0 ƒ"
+   "name": "Terrainman 2.0 \u0192"
   },
   {
    "creator": "ttxt",
    "data_sha256": "78cd490f44475ab9d3d5449a36f7ab3773d011365d47007c1e63a54ec9fc7595",
    "data_size": 5806,
-   "name": "Terrainman 2.0 ƒ/Comprehend me",
+   "name": "Terrainman 2.0 \u0192/Comprehend me",
    "oracle_methods": [
     "DDn"
    ],
-   "type": "TEXT",
-   "unadjudicated": {
-    "rsrc": "Attempted to read more data than was available — but DiskDoubler's own self-extractor agrees on this fork with the resource header's OS-stamped bytes 16..127 masked (tools/vmac/diskdoubler.py --adjudicate, 2026-08-21)"
-   }
+   "rsrc_oracle": "unar 1.10.8 on this fork alone, with the declared compressed length one byte larger and one pad byte after it \u2014 the off-by-one its DDn reads past (tools/run_ddforks.py; DECISIONS.md 2026-08-22). The compressed bytes are the fixture's own, unmodified; 0x00 and 0xff pads give the same output",
+   "rsrc_sha256": "d2e4baaeeaf30fcf22c4d7504dbae7db152c41981620e8846625f64ded60fcb4",
+   "rsrc_size": 2903,
+   "type": "TEXT"
   },
   {
    "is_dir": true,
-   "name": "Terrainman 2.0 ƒ/Is your terrain backwards?"
+   "name": "Terrainman 2.0 \u0192/Is your terrain backwards?"
   },
   {
    "creator": "ttxt",
    "data_sha256": "2cf901bc53778b904e1c42b668fb4c1209a2373ff0650d2271af6a367e9391e5",
    "data_size": 842,
-   "name": "Terrainman 2.0 ƒ/Is your terrain backwards?/How to adjust orientation",
+   "name": "Terrainman 2.0 \u0192/Is your terrain backwards?/How to adjust orientation",
    "oracle_methods": [
     "DDn"
    ],
@@ -62,7 +62,7 @@
    "creator": "8BIM",
    "data_sha256": "6871290c1d73d9bc0bb36bbc154ae9e8aa0965146fa78067617f0d5ec4ab96c7",
    "data_size": 1210,
-   "name": "Terrainman 2.0 ƒ/Is your terrain backwards?/R",
+   "name": "Terrainman 2.0 \u0192/Is your terrain backwards?/R",
    "oracle_methods": [
     "DDn"
    ],
@@ -72,26 +72,26 @@
   },
   {
    "is_dir": true,
-   "name": "Terrainman 2.0 ƒ/Pictures to try"
+   "name": "Terrainman 2.0 \u0192/Pictures to try"
   },
   {
    "creator": "8BIM",
    "data_sha256": "ca6f48564bf62a3279adea827c61ed1a2878b618f91079f46628a7a0c89d0a1c",
    "data_size": 12888,
-   "name": "Terrainman 2.0 ƒ/Pictures to try/Bacteria (use low height)",
+   "name": "Terrainman 2.0 \u0192/Pictures to try/Bacteria (use low height)",
    "oracle_methods": [
     "DDn"
    ],
-   "type": "PICT",
-   "unadjudicated": {
-    "rsrc": "Attempted to read more data than was available — but DiskDoubler's own self-extractor agrees on this fork with the resource header's OS-stamped bytes 16..127 masked (tools/vmac/diskdoubler.py --adjudicate, 2026-08-21)"
-   }
+   "rsrc_oracle": "unar 1.10.8 on this fork alone, with the declared compressed length one byte larger and one pad byte after it \u2014 the off-by-one its DDn reads past (tools/run_ddforks.py; DECISIONS.md 2026-08-22). The compressed bytes are the fixture's own, unmodified; 0x00 and 0xff pads give the same output",
+   "rsrc_sha256": "fdef9036f095abcceaf0327f1904217733d1ad8d81508234fc63c0c56ff955ac",
+   "rsrc_size": 563,
+   "type": "PICT"
   },
   {
    "creator": "8BIM",
    "data_sha256": "34b5c8d0dbeeb1549f20c13fe01c523da5d44e086c3726a934865784a9eda282",
    "data_size": 19240,
-   "name": "Terrainman 2.0 ƒ/Pictures to try/Bloop!",
+   "name": "Terrainman 2.0 \u0192/Pictures to try/Bloop!",
    "oracle_methods": [
     "DDn"
    ],
@@ -103,7 +103,7 @@
    "creator": "8BIM",
    "data_sha256": "d121b8514bd6a796dba525f1cb56eb57a1c2918cd9c6f92f9a2661c5b2c361db",
    "data_size": 15728,
-   "name": "Terrainman 2.0 ƒ/Pictures to try/Downtown",
+   "name": "Terrainman 2.0 \u0192/Pictures to try/Downtown",
    "oracle_methods": [
     "DDn"
    ],
@@ -116,7 +116,7 @@
    "data_oracle": "DiskDoubler's own self-extractor under System 7 (tools/vmac/diskdoubler.py --adjudicate)",
    "data_sha256": "5c93c09640e00d354892322e76e8b4d99c2c7191047d4b48f2333f656b474a5f",
    "data_size": 16524,
-   "name": "Terrainman 2.0 ƒ/Pictures to try/Gnarly cove",
+   "name": "Terrainman 2.0 \u0192/Pictures to try/Gnarly cove",
    "oracle_methods": [
     "DDn"
    ],
@@ -128,20 +128,20 @@
    "creator": "8BIM",
    "data_sha256": "b79e1daebcfd05a3231fcce64e979b7eb1bb12bba1061e74ad51fef03cf440ce",
    "data_size": 7650,
-   "name": "Terrainman 2.0 ƒ/Pictures to try/Rocky Countryside",
+   "name": "Terrainman 2.0 \u0192/Pictures to try/Rocky Countryside",
    "oracle_methods": [
     "DDn"
    ],
-   "type": "PICT",
-   "unadjudicated": {
-    "rsrc": "Attempted to read more data than was available — but DiskDoubler's own self-extractor agrees on this fork with the resource header's OS-stamped bytes 16..127 masked (tools/vmac/diskdoubler.py --adjudicate, 2026-08-21)"
-   }
+   "rsrc_oracle": "unar 1.10.8 on this fork alone, with the declared compressed length one byte larger and one pad byte after it \u2014 the off-by-one its DDn reads past (tools/run_ddforks.py; DECISIONS.md 2026-08-22). The compressed bytes are the fixture's own, unmodified; 0x00 and 0xff pads give the same output",
+   "rsrc_sha256": "77b2697bf8ab085991ccbd597b4dfc216d3aadef88a2443b9d42081c16e6eb1c",
+   "rsrc_size": 563,
+   "type": "PICT"
   },
   {
    "creator": "8BIM",
    "data_sha256": "d66f07422e8168b42527d2fa8c6b7428f488192b6d998034d4e66b80ed5f2f98",
    "data_size": 10150,
-   "name": "Terrainman 2.0 ƒ/Pictures to try/Swirly",
+   "name": "Terrainman 2.0 \u0192/Pictures to try/Swirly",
    "oracle_methods": [
     "DDn"
    ],
@@ -153,14 +153,14 @@
    "creator": "8BIM",
    "data_sha256": "5b853d5012c4ed2d863e4d69c0758a648281e82cd960c5a9965478dc9d160fc4",
    "data_size": 5376,
-   "name": "Terrainman 2.0 ƒ/Pictures to try/They call me Spike",
+   "name": "Terrainman 2.0 \u0192/Pictures to try/They call me Spike",
    "oracle_methods": [
     "DDn"
    ],
-   "type": "PICT",
-   "unadjudicated": {
-    "rsrc": "Attempted to read more data than was available — but DiskDoubler's own self-extractor agrees on this fork with the resource header's OS-stamped bytes 16..127 masked (tools/vmac/diskdoubler.py --adjudicate, 2026-08-21)"
-   }
+   "rsrc_oracle": "unar 1.10.8 on this fork alone, with the declared compressed length one byte larger and one pad byte after it \u2014 the off-by-one its DDn reads past (tools/run_ddforks.py; DECISIONS.md 2026-08-22). The compressed bytes are the fixture's own, unmodified; 0x00 and 0xff pads give the same output",
+   "rsrc_sha256": "1c31a36dcbc789e0c584f1c21cd423c88dac23bd6151e04e117774ff380f8e38",
+   "rsrc_size": 701,
+   "type": "PICT"
   }
  ],
  "fixture": "derived-Terrainman_2.0__.sea",

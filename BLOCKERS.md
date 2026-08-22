@@ -120,6 +120,7 @@ line is what makes the next one worth re-testing.
 | A `0x1000` record with a resource fork is waiting to be found | DiskDoubler 4.1.1 writes the form only for a fork-less file — all four cells of compressible x forked measured in one archive | 2026-08-21 |
 | No DiskDoubler COMPRESSOR older than 3.2 is reachable, so methods 2-5 cannot be graded | WinWorld carries Salient's **3.1.2** distribution floppy (1991), which holds a method 2 fork | 2026-08-21 |
 | DiskDoubler methods 3, 4 and 5 cannot be graded, because no specimen of them exists | the 1991 disk carries Salient's own expander: it reads forks THIS project encoded, and all three come back byte-exact | 2026-08-21 |
+| 8 resource forks have no off-Mac oracle, so they cannot be ground truth | `unar`'s DDn reads ONE byte past the declared compressed length; give it one and it decodes all 33 forks byte-exact | 2026-08-22 |
 
 **DiskDoubler methods 1–5 and 7 "cannot be graded".** Declined per entry
 since M12 on the grounds that no corpus fixture uses one and nothing reachable
@@ -161,6 +162,29 @@ the nine real ones tried here. **No smell above found this one** — inputs
 from outside the corpus did, which is a sixth mechanism and the only one that
 needs no cleverness. What named the cause in minutes was the fifth.
 DECISIONS.md 2026-08-21.
+
+**"These 8 forks have no second implementation."** `unar` refuses them,
+macunpack has no DDn at all, and DiskDoubler's own expander only runs on a
+Mac — which restamps a resource fork's bytes 16..127 as it writes it. Every
+step true, and the conclusion still did not follow: **`unar`'s DDn reads one
+byte past the fork's declared compressed length**, and the container is ours
+to build. Declare one more, append a pad byte, and all 33 forks of the two
+archives come back byte-for-byte equal to this engine and to what the Mac
+produced outside the stamped window. `oracle-unadjudicated` fell from 24
+forks across 12 fixtures to 16 across 10.
+
+**Cost: eight forks carried as "not ground truth" since M12**, and an
+OPEN_ITEMS entry that told three later sessions to go looking for an
+implementation that was already installed. The smell is the fourth again — *a
+limitation stated about the environment that is true only of one tool* — with
+a twist worth naming on its own: the limitation was true OF that tool, on
+that input. **An oracle that refuses one input may accept a presentation of
+the same bytes.** What is fixed is the tool's bug; what was ours to choose
+was what we handed it.
+
+The bug is reduced to a 1,166-byte reproduction in
+`tools/xadmaster-ddn-repro/`, because this file already records what
+attributing a root cause without one costs.
 
 **"Methods 3, 4 and 5 cannot be graded."** True of decoding, and the whole
 question was pointed the wrong way. Grading a decoder needs a specimen;

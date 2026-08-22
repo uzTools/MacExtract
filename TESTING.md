@@ -381,6 +381,35 @@ three sets rather than six files, and this harness grades file by file.
 **It can fail**: 25 mismatches against the build before the `DDA2` `0x1000`
 fix — five archives, ten self-extractors, and the forks under them.
 
+## The forks `unar` refuses (`tools/run_ddforks.py`, on demand)
+
+`unar` 1.10.8 fails on 11 of the 33 DiskDoubler DDn forks in
+`derived-LHA_Expander_1.0.3.sea` and `derived-Terrainman_2.0__.sea` with
+*Attempted to read more data than was available*. Its DDn reads one byte past
+the fork's declared compressed length; the codec behind it is correct
+(DECISIONS.md 2026-08-22, and `tools/xadmaster-ddn-repro/` for the 1,166-byte
+case).
+
+    tools/run_ddforks.py fixtures/derived-LHA_Expander_1.0.3.sea
+    tools/run_ddforks.py --write FIXTURE...     # record it in the manifests
+
+For each fork it builds a one-fork `0xABCD0054` container holding **the
+fixture's own compressed bytes, unmodified**, with the declared compressed
+length one larger and one pad byte after it, then compares `unar`'s output
+with ours. That is what adjudicated the 8 resource forks no off-Mac
+implementation could read.
+
+**What it cannot see:**
+
+- **It is not in `ci.sh`** — it needs `unar` on the path and rebuilds every
+  fork twice. What `ci.sh` checks is the *result*: the hashes it wrote are in
+  the manifests and `run_diff.py` enforces them on every run.
+- **It proves nothing about the pad byte's value**, so it does not assume:
+  every fork is decoded with 0x00 and with 0xFF and both must agree.
+- **It pairs manifest entries to archive headers by the data fork's hash**,
+  not by position — the two fixtures order their manifests differently — and
+  a header that does not pair uniquely is an error, not a guess.
+
 ## DiskDoubler methods 3, 4 and 5 (`tools/vmac/ddencode.py --emit`, in `ci.sh`)
 
 Three `synthetic:` fixtures — `synth-dd-m3.dd`, `synth-dd-m4.dd`,

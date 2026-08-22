@@ -114,16 +114,18 @@ window. Both: DECISIONS.md 2026-08-20.
 
 No DiskDoubler method is declined any more. What is still missing for 3, 4
 and 5 is a real specimen — every fork of them this project has seen, it
-wrote itself (OPEN_ITEMS.md). **11 forks across 2 fixtures
-were adjudicated by neither oracle** — `unar` fails on them and `macunpack`
-(built with its DiskDoubler support on) fails too. Both fixtures are
-self-extracting, so each carries DiskDoubler's own expander: running them
-under System 7 on 2026-08-21 compared **all 33 forks of the two archives and
-found all 33 identical** (`tools/vmac/diskdoubler.py --adjudicate`). Three
-data forks are recorded in the manifests with that provenance and are checked
-by `ci.sh` on every run; the 8 resource forks agree only with the OS-stamped
-header bytes 16..127 masked, so they stay unadjudicated and `run_diff.py`
-prints the two counts separately. DECISIONS.md 2026-08-15, 2026-08-21.
+wrote itself (OPEN_ITEMS.md). **11 forks across 2 fixtures were adjudicated
+by neither oracle** — `unar` failed on them and `macunpack` has no DDn at all
+— and **all 33 forks of both archives are now byte-exact against two other
+implementations.** DiskDoubler's own expander agrees under System 7 outside
+the resource header's OS-stamped bytes 16..127
+(`tools/vmac/diskdoubler.py --adjudicate`, 2026-08-21), and `unar` agrees
+everywhere including that window once handed one fork at a time with the
+declared compressed length one byte larger — the off-by-one its DDn reads
+past (`tools/run_ddforks.py`, 2026-08-22). Every hash is in the manifests and
+checked by `ci.sh`; `oracle-unadjudicated` fell from 24 forks across 12
+fixtures to **16 across 10**, and neither DiskDoubler fixture is on that list
+any more. DECISIONS.md 2026-08-15, 2026-08-21, 2026-08-22.
 
 **That masking window has independent evidence since 2026-08-21.**
 `DiskTester™` 3.7.7 ships DiskDoubler-compressed on the Norton DiskDoubler
