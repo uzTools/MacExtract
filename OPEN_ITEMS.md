@@ -130,20 +130,33 @@ Unlike section 3, none of this is impossible here: a download would do it.
   accounts for, and a lossy mode is a thing an extractor cannot grade
   against its input by construction.
 
-- **AppleLink `.pkg` and StuffIt SpaceSaver.** Neither has a reference
-  implementation or a published layout anywhere reachable. Searched
+- **StuffIt SpaceSaver.** No longer waiting on a file: the application is
+  in hand (`tools/vmac/spacesaver.py` lifts a standalone `SpaceSaver 5.0
+  Installer` off the Deluxe 5.0.1 CD, and 3.5.1 and 4.0 are two-floppy
+  sets on Macintosh Garden). **What blocks it is a machine to run it
+  on:** 5.0 wants System 7.5.3 and 8 MB, and forced past its own checks
+  on 7.0.1 it bombs with *unimplemented trap* — measured 2026-08-22, not
+  inferred. So either a **System 7.5.3 image** joins `System6.hfv` and
+  `Sys7.img`, or SpaceSaver is taken from the 3.5.1/4.0 set, which is the
+  era 7.0.1 fits. **And a decision that is the maintainer's:** Aladdin's
+  licence forbids reverse engineering, decompiling and disassembling, so
+  the route SuperDisk! took — reading a decoder out of `CODE` — is not
+  available here by analogy. Black-box derivation from specimens is, and
+  it is what derived SuperDisk!'s single-file container (DECISIONS.md
+  2026-08-22, SpaceSaver).
+
+- **AppleLink `.pkg`.** No reference
+  implementation and no published layout anywhere reachable. Searched
   2026-08-15: the only AppleLink format with documented internals is the
   Apple II `.acu` (CiderPress2's format notes, magic `fZink`), which that page
-  explicitly distinguishes from the Macintosh Package format; SpaceSaver has
-  no specification, no open implementation, and Aladdin's own later Expanders
-  dropped it. Neither can even be **sniffed** without inventing a magic
-  number, so a user gets *unknown* rather than a name. **What would change
-  it:** a specimen plus the original application, derived under Mini vMac the
-  way Compact Pro's segment layout and Now Compress's block shapes were — or
-  one published description. **A SELF-EXTRACTING specimen would settle it on
-  its own**, which is what the SuperDisk! withdrawal cost this project four
-  documents to learn (BLOCKERS.md); neither has one here, or a specimen of
-  any kind.
+  explicitly distinguishes from the Macintosh Package format. It cannot even
+  be **sniffed** without inventing a magic number, so a user gets *unknown*
+  rather than a name. **What would change it:** a specimen plus the original
+  application, derived under Mini vMac the way Compact Pro's segment layout
+  and Now Compress's block shapes were — or one published description. **A
+  SELF-EXTRACTING specimen would settle it on its own**, which is what the
+  SuperDisk! withdrawal cost this project four documents to learn
+  (BLOCKERS.md); there is none here, or a specimen of any kind.
 
 ---
 

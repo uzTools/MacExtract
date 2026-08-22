@@ -91,6 +91,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-22 (later) — SuperDisk!'s compressor, which was said not to survive
 - 2026-08-22 (later still) — SuperDisk!'s other container, derived by making it
 - 2026-08-22 (last) — the settings sweep, and the decoder that had never run
+- 2026-08-22 (SpaceSaver) — reachable, not yet runnable, and a licence question
 
 ---
 
@@ -4690,3 +4691,65 @@ It also says something about how the bug survived: the two branches of
 one function were sized by the same expression because the stored one is
 the one the corpus reaches, and nothing else ever asked. A constant
 shared between a tested path and an untested path is a place to look.
+
+## 2026-08-22 (SpaceSaver) — reachable, not yet runnable, and a licence question
+
+StuffIt SpaceSaver is one of two formats this project cannot NAME: no
+reference, no published layout, no specimen, so `unc_sniff` answers
+*unknown*. OPEN_ITEMS.md has carried it since that section existed, and
+the reason recorded was that nobody had a specimen or the application.
+
+**The application is reachable.** SpaceSaver ships inside StuffIt Deluxe,
+and Macintosh Garden has every era of it. Three distributions were
+opened here:
+
+- **3.5.1** and **4.0** — two-floppy InstallerMaker sets, payload inside
+  the installer; `unar` unwraps the MacBinary and stops at the
+  application, as expected.
+- **5.0.1's CD-ROM** (a 224 MB Apple-partitioned ISO that `hmount` opens
+  directly) — which carries a **standalone `SpaceSaver 5.0 Installer`**
+  beside the Deluxe one, and a `SpaceSaver User's Guide.pdf`.
+
+`tools/vmac/spacesaver.py` fetches the CD, lifts that installer off it
+and drives it.
+
+**It does not run on System 7.0.1, and that is measured rather than
+assumed.** The installer launches and shows its splash; past the licence
+it puts up two alerts in turn — *requires system software version 7.5.3,
+which this system does not have* and *requires 8000K of physical memory,
+which this system does not have* — both defaulting to No. Answer Yes to
+both and it bombs: **"Sorry, a system error occurred. 'SpaceSaver™ 5.0
+Installer' unimplemented trap."** So the version check is honest; 7.0.1
+does not have the traps it calls.
+
+Two routes remain, and neither is blocked on finding a file:
+
+- a **System 7.5.3 image** for Mini vMac, which is a new system image
+  beside `System6.hfv` and `Sys7.img`; or
+- **SpaceSaver from the 3.5.1 or 4.0 set**, which is the era 7.0.1 fits.
+  Both disks can be mounted at once, so the floppy swap an installer
+  would ask for need not happen.
+
+### The licence, which is the maintainer's call and not this session's
+
+The panel that has to be agreed to says, in terms: *"You may not modify,
+adapt, translate, reverse engineer, decompile, or disassemble the
+Software."*
+
+That matters because of how this project has read two other formats.
+SuperDisk! was derived by disassembling `CODE 2` out of a
+self-extractor, and FORMATS.md says so; DiskDoubler's methods were
+transcribed from references. **For SpaceSaver, the disassembly route is
+what the licence names.**
+
+The other route is untouched by it and is the one that has actually been
+working: **black-box derivation.** SuperDisk!'s single-file container was
+derived on 2026-08-22 from five specimens chosen to disagree with each
+other, without reading a byte of Alysis's code — compress known input,
+compare outputs, deduce. Running a program and examining files it wrote
+is not reverse engineering the program.
+
+So the position taken here, pending the maintainer: **specimens yes,
+disassembly no.** Nothing has been disassembled, and this entry exists so
+that a later session does not reach for `CODE` resources by analogy with
+SuperDisk! without noticing that the analogy carries a licence with it.

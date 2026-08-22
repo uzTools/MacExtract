@@ -66,6 +66,7 @@ oracle and will lose it to `./ci.sh`'s `make clean`.
 | `ddencode.py` | **grade a method by WRITING it**: encode a fork, hand it to Salient's own 1991 DiskDoubler, and see whether it comes back. How methods 3, 4 and 5 were graded with no specimen |
 | `ndd.py` | the releases nothing here had run: Salient's **3.1.2** (1991, the oldest reachable — it has the only method 2 fork), **DiskDoubler 4.0** and **Norton DiskDoubler Pro 1.1** (Symantec — whose application is 4.1.1). `--specimens`, `--harvest` and `--grade` need no emulator |
 | `superdisk.py` | grade SuperDisk! with its own self-extractors, and `--on-mac`, which replays both payloads through our application |
+| `spacesaver.py` | Aladdin's **SpaceSaver**, off the StuffIt Deluxe 5.0.1 CD. Reachable, and it does not run on 7.0.1 — see below before spending a boot on it |
 | `sdcompress.py` | the other half: Alysis's 1991 **SuperDisk! control panel**, which COMPRESSES. It wrote the five specimens the single-file container was derived from, and `--verify` re-grades them |
 | `mkcollide.py` | build an archive whose names collide on HFS, and verify what `BumpName` did with them — nothing in the corpus collides |
 
@@ -554,6 +555,34 @@ Three things that cost a run each:
   produced frames with the title inverted and no menu. Navigating the boot
   volume to `System Folder:Control Panels` is slower, reliable, and proves
   the panel is installed.
+
+## SpaceSaver — `spacesaver.py`, and why it does not run yet
+
+One of the two formats this project cannot name. The application is
+reachable — the Deluxe 5.0.1 CD carries a standalone installer — but
+**SpaceSaver 5.0 needs System 7.5.3 and 8 MB**, and forced past its own two
+"Install anyway?" alerts on 7.0.1 it bombs with *unimplemented trap*.
+
+    tools/vmac/spacesaver.py --setup     fetch the CD (156 MB), lift the installer
+    tools/vmac/spacesaver.py --probe     boot with it and photograph
+    tools/vmac/spacesaver.py --install   walk the installer as far as it goes
+
+Read DECISIONS.md 2026-08-22 (SpaceSaver) before going further: there is a
+licence question about how the format may be derived, and it is the
+maintainer's to answer.
+
+Three things that cost a run each, all about input reaching the installer:
+
+- **Its first input is swallowed.** A click on the licence panel's Agree and
+  a Return both leave it on screen; the panel only moves on the second. The
+  harness sends a click and then a Return.
+- **There are TWO "Install anyway?" alerts**, not one — 7.5.3 and 8000K —
+  and both default to **No**, so a blind Return quits the installer. The
+  frame after that looks exactly like a finished install: the Finder, with
+  the volume open.
+- **Wait longer than feels necessary.** A click sent before its dialog
+  appears lands on whatever is behind, and the next frame shows the dialog
+  still up — which reads as "the click missed the button" and is not.
 
 ## Grading a method by writing it — `ddencode.py`
 
