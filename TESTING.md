@@ -727,7 +727,7 @@ undecodable method BETWEEN two decodable entries.
 
 Added 2026-08-22. SpaceSaver has no oracle but itself — `unar` and
 `macunpack` do not know the format, so there is no manifest — and **it has no
-specimen yet either**: eleven emulator runs have driven every trigger the
+specimen yet either**: twelve emulator runs have driven every trigger the
 control panel offers and none of them compressed anything (OPEN_ITEMS.md,
 DECISIONS.md 2026-08-22, what will not compress). So today this suite runs
 its synthetic pass and skips the rest, and what is written below is what it

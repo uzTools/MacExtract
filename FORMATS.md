@@ -1446,7 +1446,7 @@ with this archive."*
 | Compact Pro comments | written out beside the extracted items | read and CRC'd, never surfaced |
 | `.arc` (ARC / ArcMac) | with the add-on | **yes since 2026-08-15**, methods 1-9; ArcMac's two-fork payload since 2026-08-16 (★★★ above) |
 | uuencode (`.uu`) | with the add-on | **yes since 2026-08-15**, plain and UUTool's two-fork shape |
-| AppleLink `.pkg` | with the add-on | no, and not sniffed either. Not a decision about scope any more — a decision about evidence: no reference implementation and no published layout anywhere reachable, so rule #1 forbids writing one. OPEN_ITEMS.md, *Waiting on a file this machine does not have*, records what was searched |
+| AppleLink `.pkg` | with the add-on | no, and not sniffed either — but no longer for want of a reference: StuffIt Deluxe 3.5.1 ships a `PKG Expand Translator` with 20 KB of 68k in it (BLOCKERS.md, 2026-08-22). What is missing is a specimen. OPEN_ITEMS.md records both |
 | StuffIt SpaceSaver | with the add-on | **yes since 2026-08-22 on Linux**, methods 0 and 4 (what a 68000 writes), given SpaceSaver's own dictionary; 1, 2 and 3 declined per entry. The Macintosh application names one and does not expand it (*StuffIt SpaceSaver*, above) |
 | Chained expansion (`.sit.hqx`) | yes, and can be turned off | yes, `-nr` turns it off |
 | System 7 conveniences | drag-and-drop of files, folders and whole disks; watch folders; background expansion; Apple events | none; Standard File, one archive at a time |

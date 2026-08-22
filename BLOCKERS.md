@@ -134,6 +134,7 @@ line is what makes the next one worth re-testing.
 | The `--namevol` run that did not boot was a one-off infrastructure failure | it reproduces exactly, and the cause is in the harness: the enrolled image was copied out of a KILLED emulator, so it is torn. Three runs were built on it | 2026-08-22 |
 | SpaceSaver's trigger is known: rename a file to end in `small` and it compresses | four runs that booted AND flushed do it correctly and nothing compresses; the OTHER rename rule on the same page fires on the same event, turning `Forked` into a StuffIt archive | 2026-08-22 |
 | SpaceSaver 3.5.1 is installed and running | its control panel runs; its EXTENSION shows no sign of it. With `~Magic Menu™` deleted the menu bar carried no icon menu at all, so the menu `STR# 1024` describes was never installed | 2026-08-22 |
+| AppleLink `.pkg` has no reference implementation anywhere reachable | the SpaceSaver image has had one all along: `Extensions:Aladdin:Translators:PKG Expand Translator`, whose `Name` resource is `AppleLinkPKG` and whose `Othe` resource is 20 KB of 68k with Aladdin's usual module preamble | 2026-08-22 |
 
 **DiskDoubler methods 1–5 and 7 "cannot be graded".** Declined per entry
 since M12 on the grounds that no corpus fixture uses one and nothing reachable
@@ -324,6 +325,28 @@ makes it one.
 COUNT, and never initialises the bit pointer it then reads through. The
 grading uses `unar` and the fork's own checksum instead. An `#ifdef UNTESTED`
 is a claim about the code, and this one is accurate.
+
+**"AppleLink `.pkg` has no reference implementation and no published layout
+anywhere reachable."** Searched on 2026-08-15, written up carefully, and true
+of the internet. It was not true of this machine: installing StuffIt Deluxe
+3.5.1 to chase SpaceSaver put `PKG Expand Translator` in
+`System Folder:Extensions:Aladdin:Translators`, one of fourteen translators
+beside `UnZip`, `tar` and `Unix Compress`. Its `Name` resource is the Pascal
+string `AppleLinkPKG`; its `Othe` resource is 20 KB of 68k opening with the
+same `600e 0000 <type>` preamble as the `CMod` modules this project has just
+finished reading; and StuffIt Deluxe's own *Translate* menu offers
+**PKG Expand…**. It was found by photographing that menu while looking for a
+SpaceSaver command.
+
+**Cost: nothing yet, and that is only because nobody has needed `.pkg`.** The
+smell is the one this file names first and keeps catching: **a claim that no
+implementation exists, made without opening the files already in hand.** It is
+the fifth of that exact shape — after StuffIt method 6, Now Compress's 1995
+archive, ArcMac's fork order and SuperDisk! — and this time the file arrived
+as a side effect of an investigation into something else. **What is
+outstanding is a specimen**: OPEN_ITEMS.md still has none, and a decoder with
+a reference but nothing to run it against is the bargain this project declines
+everywhere else.
 
 **"The trigger is a NAME RULE."** Found on the panel's *Compression and Other
 Settings* page, written up as the answer to five failed attempts, and repeated

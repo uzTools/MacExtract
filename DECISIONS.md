@@ -100,7 +100,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-22 (SpaceSaver, calling it) — the rename commits, the image does not see it
 - 2026-08-22 (SpaceSaver, the layout) — read out of the software, as recommended
 - 2026-08-22 (SpaceSaver, the codecs) — two of five, and a dictionary that is not ours
-- 2026-08-22 (SpaceSaver, what will not compress) — eleven runs, one thing that fired
+- 2026-08-22 (SpaceSaver, what will not compress) — twelve runs, one thing that fired
 
 ---
 
@@ -5179,10 +5179,10 @@ declined per entry for want of an oracle, exactly as LZH and
 DiskDoubler's own declined methods are. Their modules are in hand; it
 is the grading that is missing, and that has been the bargain since M14.
 
-## 2026-08-22 (SpaceSaver, what will not compress) — eleven runs, one thing that fired
+## 2026-08-22 (SpaceSaver, what will not compress) — twelve runs, one thing that fired
 
 The format is implemented; what is still missing is a file SpaceSaver
-wrote. Eleven runs went after one, every one of them on a machine that
+wrote. Twelve runs went after one, every one of them on a machine that
 booted and was **flushed** — Special ▸ Shut Down, the step whose absence
 invalidated the three earlier runs (BLOCKERS.md). What they establish:
 
@@ -5199,6 +5199,7 @@ invalidated the three earlier runs (BLOCKERS.md). What they establish:
 | the Compression page OK'd first, then the rename | nothing |
 | the preferences written, the machine REBOOTED, then the rename | nothing |
 | the installer re-run and shut down cleanly, so nothing is torn | the image has no preferences either — the installer does not write them |
+| `StuffIt Deluxe™` itself, menus photographed | no SpaceSaver command in either of its menus |
 
 **The `.SIT` result is the one that matters**, because it disproves the
 explanation everything else was resting on. The trigger page has two
@@ -5245,6 +5246,15 @@ that in the obvious way — boot, open the panel, OK it (which writes
 again, rename — and the subject still comes back byte-identical. So did
 a re-installation that ends in Shut Down rather than a kill, which was
 the other thing the image might have been missing.
+
+**The application is not a way round the extension.** `SSEn 1` lives in
+`StuffIt Engine™`, a shared library, so `StuffIt Deluxe™` was worth
+looking at — it is another client of the same engine and needs nothing
+from Control Panels. Its two menus are photographed
+(`specimens/spacesaver/deluxe/`): *Archive* is Stuff, UnStuff, Make
+Self-Extracting and the rest, and *Translate* is a list of formats to
+convert. Neither offers SpaceSaver compression. On this release the
+extension is the only client that asks for it.
 
 **And two mechanisms are ruled out by measurement rather than by
 argument.** The control panel's Finder flags are `0x2000` — `hasBundle`

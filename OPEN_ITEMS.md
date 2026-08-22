@@ -150,7 +150,7 @@ Unlike section 3, none of this is impossible here: a download would do it.
     it is the format's own shape, and it is recorded here so the next
     reader does not go looking for the bug.
   - **A specimen at all.** Nothing here has made SpaceSaver compress
-    anything: eleven runs on a machine that booted and was flushed drove
+    anything: twelve runs on a machine that booted and was flushed drove
     the panel's `small` rule (twice, once with the settings page OK'd
     first), an enrolled disk left idle for eighteen minutes, Magic
     Menu's *SpaceSaver Compress*, and `DropCompress™` launched and
@@ -167,18 +167,25 @@ Unlike section 3, none of this is impossible here: a download would do it.
     extension does load). `STR# 1001` has five reasons left. Or a file
     from anywhere. DECISIONS.md 2026-08-22, what will not compress.
 
-- **AppleLink `.pkg`.** No reference
-  implementation and no published layout anywhere reachable. Searched
-  2026-08-15: the only AppleLink format with documented internals is the
-  Apple II `.acu` (CiderPress2's format notes, magic `fZink`), which that page
-  explicitly distinguishes from the Macintosh Package format. It cannot even
-  be **sniffed** without inventing a magic number, so a user gets *unknown*
-  rather than a name. **What would change it:** a specimen plus the original
-  application, derived under Mini vMac the way Compact Pro's segment layout
-  and Now Compress's block shapes were — or one published description. **A
-  SELF-EXTRACTING specimen would settle it on its own**, which is what the
-  SuperDisk! withdrawal cost this project four documents to learn
-  (BLOCKERS.md); there is none here, or a specimen of any kind.
+- **AppleLink `.pkg`.** **A reference implementation is in hand since
+  2026-08-22** and was found by accident: the StuffIt Deluxe 3.5.1
+  installation made for SpaceSaver carries
+  `Extensions:Aladdin:Translators:PKG Expand Translator`, whose `Name`
+  resource is `AppleLinkPKG` and whose `Othe` resource is 20 KB of 68k
+  in the same module shape as the `CMod` compressors (BLOCKERS.md).
+  Nothing published still describes the format, and the search of
+  2026-08-15 stands: the only documented AppleLink format is the Apple
+  II `.acu`, which CiderPress2's notes explicitly distinguish from the
+  Macintosh Package. What has changed is that "rule #1 forbids writing
+  one" no longer applies — the layout can be read out of that resource
+  the way SpaceSaver's and SuperDisk!'s were.
+
+  **What is missing now is a specimen**, and that has not changed: a
+  decoder with a reference but nothing to run it against is the bargain
+  this project declines everywhere else. **What would close it:** one
+  `.pkg` file from anywhere — or the original AppleLink, which would
+  write one under Mini vMac the way Compact Pro's segment layout and Now
+  Compress's block shapes were derived.
 
 ---
 

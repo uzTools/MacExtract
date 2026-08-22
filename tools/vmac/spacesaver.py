@@ -2301,6 +2301,75 @@ def twoboot(keep=False):
     return report_volume(out, s2.shots)
 
 
+def deluxe(keep=False):
+    """Launch `StuffIt Deluxe™` and photograph its menus.
+
+    The compressor is in `SSEn 1` of `StuffIt Engine™`, and the engine
+    is a shared library — the extension in Control Panels is one client
+    of it, and the application is another. Every attempt so far has gone
+    through the extension, which on this machine does not install. The
+    application does not need it.
+
+    A probe, not an attempt: it opens each menu and photographs it, so
+    the next run knows what to click.
+    """
+    boot = os.path.join(WORK, "ssdeluxe.hfv")
+    shutil.copyfile(INSTALLED, boot)
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+    tmp = tempfile.mkdtemp(prefix="ssdlx-")
+    try:
+        subprocess.run(["hmount", boot], check=True, capture_output=True,
+                       env=env)
+        from ndd import macbinary_dated, MAC_EPOCH_1990   # noqa: E402
+        for n, t, c, d, r in SUBJECTS:
+            q = os.path.join(tmp, n + ".bin")
+            open(q, "wb").write(macbinary_dated(n, t, c, d, r,
+                                                MAC_EPOCH_1990,
+                                                MAC_EPOCH_1990))
+            subprocess.run(["hcopy", "-m", q, ":"], check=True,
+                           capture_output=True, env=env)
+        subprocess.run(["humount"], check=True, capture_output=True, env=env)
+    finally:
+        shutil.rmtree(env["HOME"], ignore_errors=True)
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    s = Session(boot, [], os.path.join(SPECIMENS, "deluxe"))
+    try:
+        s.boot()
+        s.shot("desktop", wait=14.0)
+        s.mac.click(250, 38)
+        time.sleep(2.5)
+        for _ in range(6):
+            s.mac.command_key("w")
+            time.sleep(2.0)
+        s.mac.click(470, 55, double=True)
+        s.shot("bootvol", wait=14.0)
+        s.mac.key("Escape")
+        time.sleep(0.6)
+        s.mac._xdo("type", "--delay", "120", "StuffIt D")
+        time.sleep(1.5)
+        s.mac.command_key("o")
+        s.shot("opened-folder", wait=14.0)
+        s.mac.key("Escape")
+        time.sleep(0.6)
+        s.mac._xdo("type", "--delay", "120", "StuffIt D")
+        time.sleep(1.5)
+        s.shot("selected-app", wait=0.5)
+        s.mac.command_key("o")
+        s.shot("launched", wait=40.0)
+        for x in (40, 80, 120, 165, 210, 255, 300):
+            s.peek(x, "menu-x%d" % x)
+        s.mac.command_key("q")
+        s.shot("quit", wait=20.0)
+        s.menu(SPECIAL_X, SHUT_DOWN_Y, "special-menu")
+        s.shot("shutting-down", wait=25.0)
+    finally:
+        time.sleep(8)
+        s.close()
+    print("spacesaver: screenshots in %s" % s.shots)
+    return 0
+
+
 # ---------------------------------------------------------------------------
 # Reading the format out of the software, which is what --layout does.
 #
@@ -2550,6 +2619,8 @@ def main():
                     help="boot the installed image and peek the menus")
     ap.add_argument("--install40", action="store_true",
                     help="run the 4.0 installer, trying each published code")
+    ap.add_argument("--deluxe", action="store_true",
+                    help="launch StuffIt Deluxe and photograph its menus")
     ap.add_argument("--twoboot", action="store_true",
                     help="write the preferences, reboot, then rename")
     ap.add_argument("--commit", action="store_true",
@@ -2614,6 +2685,8 @@ def main():
         probe_installed(a.keep)
     elif a.install40:
         install40(a.keep)
+    elif a.deluxe:
+        return deluxe(a.keep)
     elif a.twoboot:
         return twoboot(a.keep)
     elif a.commit:
