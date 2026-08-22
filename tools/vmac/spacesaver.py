@@ -778,6 +778,272 @@ def make_boot(keep=False):
     return 0
 
 
+# The control panel's 2x2 of icon buttons, measured off panel/06-panel.png:
+# the window's rules sit at y=118, y=213 and y=312, and the banner ends
+# around x=218, so the cells centre here.
+SS_IDLE_TIME = (260, 165)
+SS_COMPRESSION = (347, 165)
+SS_DONT_COMPRESS = (260, 262)
+
+
+def open_ss_panel(s):
+    """Boot the installed image and leave SpaceSaver's panel open."""
+    s.boot()
+    s.shot("desktop", wait=14.0)
+    s.mac.click(470, 55, double=True)
+    s.shot("bootvol", wait=12.0)
+    for prefix, tag in (("System F", "sysfolder"), ("Control P", "cpanels")):
+        s.mac.key("Escape")
+        time.sleep(0.6)
+        s.mac._xdo("type", "--delay", "120", prefix)
+        time.sleep(1.5)
+        s.mac.command_key("o")
+        s.shot("opened-" + tag, wait=14.0)
+    s.mac.key("Escape")
+    time.sleep(0.6)
+    s.mac._xdo("type", "--delay", "120", "~StuffIt")
+    time.sleep(2.0)
+    s.mac.command_key("o")
+    s.shot("panel", wait=25.0)
+
+
+def idle(keep=False):
+    """Photograph SpaceSaver's Idle Time page.
+
+    SpaceSaver is a background compressor: "SpaceSaver Compress" from the
+    Magic Menu leaves a file byte-identical, and this page is where the
+    delay before it acts is set. What the choices ARE decides how long a
+    run has to sit still afterwards.
+    """
+    work = tempfile.mkdtemp(prefix="sswork-")
+    img = os.path.join(work, "sswork.img")
+    make_volume(img, "SSwork", [], size_kb=4096)
+    s = Session(INSTALLED, [img], os.path.join(SPECIMENS, "idle"))
+    try:
+        open_ss_panel(s)
+        # "Compression & Other" FIRST. Idle Time opens a MODAL dialog, so
+        # a click aimed at the other button while it is up lands inside
+        # that dialog instead — on "Drive", as it happens — and the frame
+        # captioned "compression-page" shows the Idle Time page again.
+        # Twice each: every panel in this software swallows its first
+        # input.
+        s.mac.click(*SS_COMPRESSION)
+        time.sleep(4.0)
+        s.mac.click(*SS_COMPRESSION)
+        s.shot("compression-page", wait=10.0)
+        s.mac.key("Return")                     # dismiss it, whatever it is
+        s.shot("after-compression", wait=8.0)
+        s.mac.click(*SS_IDLE_TIME)
+        time.sleep(4.0)
+        s.mac.click(*SS_IDLE_TIME)
+        s.shot("idle-page", wait=8.0)
+    finally:
+        time.sleep(3)
+        s.close()
+    print("spacesaver: screenshots in %s" % s.shots)
+    if not keep:
+        shutil.rmtree(work, ignore_errors=True)
+
+
+# The Idle Time Settings dialog, measured off idle/06-idle-page.png.
+IDLE_MINUTES = (253, 99)
+IDLE_ADD = (336, 209)
+IDLE_OK = (427, 297)
+
+
+def enroll(keep=False):
+    """Enrol the startup disk with SpaceSaver and let it idle.
+
+    The Idle Time page says why nothing has compressed: *"but only if
+    they are located on the following disks:"* over an EMPTY list. Until
+    a disk is added, SpaceSaver has nothing it is allowed to touch. The
+    delay also defaults to ten minutes of no user activity, which no run
+    here has ever sat still for.
+
+    So: add the startup disk, set the delay to one minute, OK, close the
+    panel, and then do nothing at all for several minutes — the one thing
+    a screenshot harness never does.
+    """
+    import glob
+    boot = os.path.join(WORK, "ssenroll.hfv")
+    shutil.copyfile(INSTALLED, boot)
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+    tmp = tempfile.mkdtemp(prefix="ssen-")
+    try:
+        subprocess.run(["hmount", boot], check=True, capture_output=True,
+                       env=env)
+        # Dated 1990, not today. The page compresses "files not modified
+        # in the last 1 Months" and `hcopy` stamps whatever it writes with
+        # the current date — so freshly copied subjects are exactly the
+        # files SpaceSaver is configured to leave alone. MacBinary dates
+        # survive the copy (measured in `ndd.py --dates`).
+        from ndd import macbinary_dated, MAC_EPOCH_1990   # noqa: E402
+        for n, t, c, d, r in SUBJECTS:
+            q = os.path.join(tmp, n + ".bin")
+            open(q, "wb").write(macbinary_dated(n, t, c, d, r,
+                                                MAC_EPOCH_1990,
+                                                MAC_EPOCH_1990))
+            subprocess.run(["hcopy", "-m", q, ":"], check=True,
+                           capture_output=True, env=env)
+        subprocess.run(["humount"], check=True, capture_output=True, env=env)
+    finally:
+        shutil.rmtree(env["HOME"], ignore_errors=True)
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    before = set(glob.glob("/tmp/dd-*/boot.hfv"))
+    s = Session(boot, [], os.path.join(SPECIMENS, "enroll"))
+    try:
+        open_ss_panel(s)
+        s.mac.click(*SS_IDLE_TIME)
+        time.sleep(4.0)
+        s.mac.click(*SS_IDLE_TIME)
+        s.shot("idle-page", wait=10.0)
+        # The delay is left at its default ten minutes rather than
+        # edited: a backspace-and-retype of that field did not visibly
+        # change it, and out-waiting it is one parameter instead of two.
+        # enrol the startup disk, which is the drive the page already shows
+        s.mac.click(*IDLE_ADD)
+        time.sleep(3.0)
+        s.mac.click(*IDLE_ADD)
+        s.shot("added", wait=6.0)
+        s.mac.click(*IDLE_OK)
+        time.sleep(3.0)
+        s.mac.click(*IDLE_OK)
+        s.shot("settings-ok", wait=8.0)
+        s.mac.command_key("w")                  # close the control panel
+        s.shot("panel-closed", wait=8.0)
+        # And now the part that matters: sit absolutely still, for
+        # longer than the ten minutes the page asks for. Six was not
+        # enough — which is the whole reason nothing had compressed.
+        for i in range(11):
+            s.shot("idling%d" % i, wait=100.0)
+    finally:
+        time.sleep(8)
+        s.close()
+
+    cands = [p for p in glob.glob("/tmp/dd-*/boot.hfv") if p not in before]
+    if not cands:
+        cands = sorted(glob.glob("/tmp/dd-*/boot.hfv"),
+                       key=os.path.getmtime)[-1:]
+    out = sorted(cands, key=os.path.getmtime)[-1]
+    print("spacesaver: reading back %s" % out)
+    from superdisk import read_forks                    # noqa: E402
+    known = dict((n, d) for n, _t, _c, d, _r in SUBJECTS)
+    os.makedirs(s.shots, exist_ok=True)
+    hit = 0
+    for path, (ftype, creator, data, rsrc) in sorted(read_forks(out).items()):
+        if path[-1] not in known:
+            continue
+        orig = known[path[-1]]
+        changed = data != orig
+        print("spacesaver: %-10s %s/%s data %d (was %d) rsrc %d  %s"
+              % (path[-1], ftype, creator, len(data), len(orig), len(rsrc),
+                 "COMPRESSED" if changed else "unchanged"))
+        if changed:
+            hit += 1
+            q = os.path.join(s.shots, path[-1] + ".ss")
+            open(q, "wb").write(data)
+            if rsrc:
+                open(q + ".rsrc", "wb").write(rsrc)
+            print("             kept %s; first 32 %s" % (q, data[:32].hex()))
+    return 0 if hit else 1
+
+
+def namerule(keep=False):
+    """Trigger SpaceSaver the way it is actually configured to trigger.
+
+    Its "Compression and Other Settings" page reads: *Immediately
+    compress files, folders, and disks whose ... Name begins or ends
+    with: `small`*. That is the on-demand mechanism — a NAME rule — and
+    it is why "SpaceSaver Compress" from the Magic Menu, an enrolled
+    disk, 1990 dates and eighteen minutes of idling all left the subjects
+    byte-identical: none of them was ever called anything ending in
+    "small".
+
+    So the subjects are renamed in the Finder. Return opens an icon's
+    name for editing and Right-arrow drops the selection to the end, the
+    same pair `sdcompress.py` uses.
+    """
+    import glob
+    boot = os.path.join(WORK, "ssname.hfv")
+    shutil.copyfile(INSTALLED, boot)
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+    tmp = tempfile.mkdtemp(prefix="ssnm-")
+    try:
+        subprocess.run(["hmount", boot], check=True, capture_output=True,
+                       env=env)
+        for n, t, c, d, r in SUBJECTS:
+            q = os.path.join(tmp, n + ".bin")
+            open(q, "wb").write(macbinary(n, t, c, d, r))
+            subprocess.run(["hcopy", "-m", q, ":"], check=True,
+                           capture_output=True, env=env)
+        subprocess.run(["humount"], check=True, capture_output=True, env=env)
+    finally:
+        shutil.rmtree(env["HOME"], ignore_errors=True)
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    before = set(glob.glob("/tmp/dd-*/boot.hfv"))
+    s = Session(boot, [], os.path.join(SPECIMENS, "namerule"))
+    try:
+        s.boot()
+        s.shot("desktop", wait=14.0)
+        s.mac.click(470, 55, double=True)
+        s.shot("bootvol", wait=12.0)
+        # The installed system opens the "StuffIt Deluxe Folder" window at
+        # startup and it stays IN FRONT of the volume window, so a
+        # type-select goes to the wrong window and selects nothing. Click
+        # the volume window's title bar to raise it first.
+        s.mac.click(256, 259)
+        s.shot("raised", wait=6.0)
+        for name, letter in (("Alpha", "a"), ("Forked", "f")):
+            s.mac.key("Escape")
+            time.sleep(0.6)
+            s.mac.key(letter)
+            time.sleep(1.5)
+            s.shot("selected-" + name, wait=0.5)
+            s.mac.key("Return")           # open the name for editing
+            time.sleep(2.0)
+            s.mac.key("Right")            # to the end, keeping the name
+            time.sleep(0.8)
+            s.mac._xdo("type", "--delay", "150", "small")
+            time.sleep(1.5)
+            s.shot("typed-" + name, wait=0.5)
+            s.mac.key("Return")           # commit the rename
+            s.shot("renamed-" + name, wait=35.0)
+        s.shot("settled", wait=30.0)
+    finally:
+        time.sleep(8)
+        s.close()
+
+    cands = [p for p in glob.glob("/tmp/dd-*/boot.hfv") if p not in before]
+    if not cands:
+        cands = sorted(glob.glob("/tmp/dd-*/boot.hfv"),
+                       key=os.path.getmtime)[-1:]
+    out = sorted(cands, key=os.path.getmtime)[-1]
+    print("spacesaver: reading back %s" % out)
+    from superdisk import read_forks                    # noqa: E402
+    known = dict((n, d) for n, _t, _c, d, _r in SUBJECTS)
+    os.makedirs(s.shots, exist_ok=True)
+    hit = 0
+    for path, (ftype, creator, data, rsrc) in sorted(read_forks(out).items()):
+        base = path[-1]
+        orig = known.get(base) or known.get(base[:-5])
+        if orig is None:
+            continue
+        changed = data != orig
+        print("spacesaver: %-16s %s/%s data %d (was %d) rsrc %d  %s"
+              % (base, ftype, creator, len(data), len(orig), len(rsrc),
+                 "COMPRESSED" if changed else "unchanged"))
+        if changed:
+            hit += 1
+            q = os.path.join(s.shots, base + ".ss")
+            open(q, "wb").write(data)
+            if rsrc:
+                open(q + ".rsrc", "wb").write(rsrc)
+            print("             kept %s; first 48 %s" % (q, data[:48].hex()))
+    return 0 if hit else 1
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -795,6 +1061,12 @@ def main():
                     help="fetch StuffIt Deluxe 4.0")
     ap.add_argument("--keep-installed", action="store_true",
                     help="lift the installed boot image out of /tmp")
+    ap.add_argument("--namerule", action="store_true",
+                    help="rename subjects to end in 'small', its trigger")
+    ap.add_argument("--enroll", action="store_true",
+                    help="enrol the startup disk and let SpaceSaver idle")
+    ap.add_argument("--idle", action="store_true",
+                    help="photograph the Idle Time and Compression pages")
     ap.add_argument("--make-boot", action="store_true",
                     help="compress subjects that live on the startup disk")
     ap.add_argument("--panel", action="store_true",
@@ -823,6 +1095,12 @@ def main():
         setup40()
     elif a.keep_installed:
         keep_installed()
+    elif a.namerule:
+        return namerule(a.keep)
+    elif a.enroll:
+        return enroll(a.keep)
+    elif a.idle:
+        idle(a.keep)
     elif a.make_boot:
         return make_boot(a.keep)
     elif a.panel:

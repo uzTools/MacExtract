@@ -95,6 +95,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-22 (SpaceSaver, later) — both installers, and the wall that is not a licence clause
 - 2026-08-22 (SpaceSaver, last) — what the registration wall actually costs
 - 2026-08-22 (SpaceSaver, installed) — it runs, and it will not compress on demand
+- 2026-08-22 (SpaceSaver, the trigger) — a name rule, and why five attempts missed it
 
 ---
 
@@ -4886,3 +4887,53 @@ its minimum and leave the machine alone for longer than that.
 Everything needed for that is in place: the installed image is kept, the
 Magic Menu coordinates are measured, and `--make-boot` already puts
 subjects on the startup disk and reads them back out of the session copy.
+
+
+## 2026-08-22 (SpaceSaver, the trigger) — a name rule, and why five attempts missed it
+
+SpaceSaver is installed and running, and five separate attempts left the
+subjects byte-identical. The reason is on the control panel's second
+page, **Compression and Other Settings**:
+
+> *Immediately compress files, folders, and disks whose:*
+> ☒ *Name begins or ends with:* **`small`**
+
+**That is the trigger** — a name rule, not a command. It also explains
+every failure in order, and each of those failures had looked like its
+own separate problem:
+
+| tried | why it did nothing |
+|---|---|
+| Magic Menu's *SpaceSaver Compress* on a second volume | the file was never named to match |
+| the same on the startup disk | same |
+| enrolling the startup disk in *Idle Time* | that list governs the IDLE sweep, a different mechanism |
+| 1990 modification dates, to pass *"not modified in the last 1 Months"* | same |
+| eighteen minutes of genuine idling | same |
+
+The enrolment and the dates were not wasted — both are needed for the
+idle sweep and both are now known-good, photographed. But the on-demand
+path was never the Magic Menu at all.
+
+The mirror of this is worth keeping: **SuperDisk!'s `.x` is the RESULT of
+compressing and SpaceSaver's `small` is the CAUSE.** Two Macintosh
+compressors of the same era, both keyed on the file's name, in opposite
+directions — and this project has now guessed wrong about which way round
+each of them works.
+
+**What is left is harness, not format.** The subjects have to be renamed
+in the Finder so their names end in `small`, and the rename is not
+taking: the installed system opens its "StuffIt Deluxe Folder" window at
+startup and keeps it in FRONT of the volume window, so a type-select goes
+to the wrong window. Raising the volume window by its title bar did not
+fix it either. The frames after each attempt show the icons still called
+`Alpha` and `Forked`, which is the check that matters — the file names
+are read back off the volume on the host, not judged from a screenshot.
+
+Two cheaper routes than fighting the Finder, for whoever picks this up:
+
+- **Change the rule instead of the file.** The page's text field holds
+  `small`; typing `Alpha` into it makes the existing file match with no
+  rename at all.
+- **Name the subject correctly before it is ever copied in.** Whether
+  SpaceSaver acts on a file that simply appears with a matching name, or
+  only on a name CHANGE, is itself unmeasured — and one boot answers it.

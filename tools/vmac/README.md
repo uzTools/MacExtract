@@ -580,6 +580,22 @@ System 7.5.3**, which is the open route. DECISIONS.md 2026-08-22
     tools/vmac/spacesaver.py --setup40    fetch StuffIt Deluxe 4.0
     tools/vmac/spacesaver.py --install40  run it, trying each published code
 
+    tools/vmac/spacesaver.py --keep-installed  lift the installed image out of /tmp
+    tools/vmac/spacesaver.py --probe-installed boot it, peek the Magic Menu
+    tools/vmac/spacesaver.py --idle           the panel's two settings pages
+    tools/vmac/spacesaver.py --enroll         enrol the disk, then idle
+    tools/vmac/spacesaver.py --namerule       rename a subject to end in "small"
+
+**SpaceSaver's trigger is a NAME RULE**, not a command: its Compression and
+Other Settings page reads *"Immediately compress files … whose Name begins or
+ends with: `small`"*. `--namerule` is the mode that matters; the rename it
+does is not taking yet (DECISIONS.md 2026-08-22, the trigger).
+
+**Lift the installed image out of `/tmp`.** `run.py` boots from a COPY, so an
+installer's entire output lands in the session's temp dir and the original
+boot image still looks untouched — which reads as "the installer wrote
+nothing".
+
 **3.5.1 and 4.0 both reject every code Macintosh Garden publishes** — those
 are for 3.0.7 and 5.x, and 5.x is what cannot run here (7.5.3 and 8000K,
 against a 4 MB Plus). The open route is a Mac II-class Mini vMac variant

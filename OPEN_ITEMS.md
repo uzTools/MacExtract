@@ -156,15 +156,22 @@ Unlike section 3, none of this is impossible here: a download would do it.
   `~Magic Menu™` and the `StuffIt Engine™`, and it boots
   (`spacesaver.py --probe-installed`).
 
-  **What is left is one behaviour, not a blocker:** Magic Menu's
-  **SpaceSaver Compress** leaves a file byte-identical — checked by
-  reading the volume back, on a second volume and on the startup disk.
-  SpaceSaver is a BACKGROUND compressor and its panel's first button is
-  **Idle Time**; a harness that clicks a menu and screenshots 35 seconds
-  later never idles. **What would close it:** set Idle Time to its
-  minimum and leave the machine alone for longer than that, then read the
-  file back. The installed image is kept, the menu coordinates are
-  measured, and `--make-boot` already does the rest.
+  **The trigger is known and is a NAME RULE**, found on the panel's
+  *Compression and Other Settings* page: *"Immediately compress files,
+  folders, and disks whose … Name begins or ends with: `small`"*. That is
+  why Magic Menu's *SpaceSaver Compress*, an enrolled disk, 1990 dates
+  and eighteen minutes of idling all left the subjects byte-identical —
+  none of them was ever named to match (DECISIONS.md 2026-08-22, the
+  trigger).
+
+  **What is left is harness, not format.** The Finder rename that would
+  make a subject match is not taking: the installed system keeps its
+  "StuffIt Deluxe Folder" window in front of the volume window, and
+  raising the volume window did not fix it. **Two cheaper routes than
+  fighting the Finder:** type `Alpha` into the rule's text field so the
+  existing file matches, or name the subject `…small` before it is copied
+  in — whether SpaceSaver acts on a matching name appearing, or only on a
+  name CHANGE, is unmeasured and one boot answers it.
 
 - **AppleLink `.pkg`.** No reference
   implementation and no published layout anywhere reachable. Searched
