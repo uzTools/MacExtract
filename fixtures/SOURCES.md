@@ -862,6 +862,9 @@ Each line records how to re-fetch one. Use `tools/harvest.py --restore`.
 | superboomerangfixer.cpt | a2cfb0018c8d9760d090ab00abc1aaec8aa671d3c702db26a0a83e179069807f | 5248 | http://www.nic.funet.fi/pub/mac/appl/superboomerangfixer.cpt |
 | swapmap.bin | 8961fd04be131f99e0483596613df4582d7c388d7139b6917a2fbb8a732c1966 | 1148 | http://www.nic.funet.fi/pub/mac/fkey/swapmap.bin |
 | synth-arc-mixed.arc | db36b85b5f3a923adf2e6788414752d9112a9fa34ce2c4a03c7496ac6ff6ae78 | 9312 | synthetic:tools/synth_arc.py |
+| synth-dd-m3.dd | e08c20870cbe5dc089eb68ac302b40042e5ef186d0197162287ca77248b2ad9b | 941 | synthetic:tools/vmac/ddencode.py --emit m3 |
+| synth-dd-m4.dd | 2572bade92c22502ed54a7e550ff95e3a4d092f076ed77a1cf434f268781e5bf | 1179 | synthetic:tools/vmac/ddencode.py --emit m4 |
+| synth-dd-m5.dd | 1d0949a120fb108a732454278ca84247328ce53fdcb265278b24468dde6ac3fb | 600 | synthetic:tools/vmac/ddencode.py --emit m5 |
 | synth-exo-Z.Z | f11f802daae22d9df385686b78cbd06026e1ff6ae0467ff7b6c803ee29204df5 | 488 | synthetic:tools/synth_exo.py --kind Z |
 | synth-exo-gz-named.gz | 06cf163df204ed7bb5a8d70af55316def25bd4b171cacf268125cea36ab266ea | 99 | synthetic:tools/synth_exo.py --kind gz-named |
 | synth-exo-gz.gz | 78773b077a911bfe6f73f2c83aab4062f9691d411f9b7a011a7be5bdab6d1498 | 81 | synthetic:tools/synth_exo.py --kind gz |

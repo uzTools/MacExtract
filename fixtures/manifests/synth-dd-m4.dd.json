@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "UNCL",
+   "data_sha256": "2b06a120d116ee7f992becd54c91102725fc0b61a2be16bc480ca781357fec4e",
+   "data_size": 1145,
+   "name": "synth-dd-m4",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "UNCL"
+  }
+ ],
+ "fixture": "synth-dd-m4.dd",
+ "format": "DiskDoubler",
+ "oracle": "the bytes that went in, confirmed by Salient's own DiskDoubler 3.1.2 expanding this encoding under Mini vMac on 2026-08-21 (tools/vmac/ddencode.py --expand); method 5 also by DiskDoubler 4.1.1",
+ "sha256": "2572bade92c22502ed54a7e550ff95e3a4d092f076ed77a1cf434f268781e5bf",
+ "size": 1179
+}

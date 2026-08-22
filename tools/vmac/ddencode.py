@@ -43,17 +43,27 @@ sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(REPO, "tools"))
 import shutil                                                  # noqa: E402
 import time                                                    # noqa: E402
-import run as R                                                # noqa: E402
-from arcmac import macbinary                                   # noqa: E402
-from diskdoubler import (cli, header, describe, Session, make_volume,
-                         VOLUME_ICON)                          # noqa: E402
-from superdisk import read_forks                               # noqa: E402
-import ndd                                                     # noqa: E402
 
-HOME = R.VMAC_HOME
-WORK = os.path.join(HOME, "ddencode")
-SPECIMENS = os.path.join(HOME, "specimens", "ddencode")
-BOOT = os.path.join(WORK, "ddencboot.hfv")
+
+def _emu():
+    """Everything that needs the emulator, imported on use.
+
+    `--emit` regenerates a committed fixture and is run by
+    `check_docs.py` inside `ci.sh`, where there is no X server and no
+    disk image; a module-level import of the harness machinery would
+    make the whole of CI depend on them.
+    """
+    global R, macbinary, Session, make_volume, VOLUME_ICON, read_forks, ndd
+    global HOME, WORK, SPECIMENS, BOOT
+    import run as R                                            # noqa: F401
+    from arcmac import macbinary                               # noqa: F401
+    from diskdoubler import Session, make_volume, VOLUME_ICON   # noqa: F401
+    from superdisk import read_forks                           # noqa: F401
+    import ndd                                                 # noqa: F401
+    HOME = R.VMAC_HOME
+    WORK = os.path.join(HOME, "ddencode")
+    SPECIMENS = os.path.join(HOME, "specimens", "ddencode")
+    BOOT = os.path.join(WORK, "ddencboot.hfv")
 
 XOR = 0x5A          # applied when info1 >= 0x2a and info2's high bit is clear
 RLE_ESC = 0x90
@@ -324,6 +334,7 @@ def build(outdir=None):
 # ------------------------------------------------------------------
 
 def disk_files():
+    _emu()
     """`DiskDoubler™ INIT` and `DiskDoubler™ App` off the 3.1.2 floppy.
 
     Both are plain, not DiskDoubler-compressed — unlike everything in
@@ -341,6 +352,7 @@ def disk_files():
 
 
 def install():
+    _emu()
     """A System 7 boot image with the 1991 INIT loaded. The INIT is the
     half that does the work; the application beside it is what the menu
     launches, exactly as in 3.7 and 4.1.1."""
@@ -380,6 +392,7 @@ PLAIN = (b"Salient DiskDoubler 3.1.2 method probe. " * 300 +
 
 
 def session(tag, era="1991"):
+    _emu()
     """A booted Mac with the 1991 INIT loaded and a work volume holding
     the application, the four synthetic files and one plain subject."""
     work = tempfile.mkdtemp(prefix="ddencwork-")
@@ -422,6 +435,7 @@ def session(tag, era="1991"):
 
 
 def probe(keep=False):
+    _emu()
     """Photograph the 1991 INIT's Finder menu. Every coordinate the
     --expand run uses is measured off these frames, because 3.1.2's menu
     is not 3.7's and not 4.1.1's."""
@@ -442,6 +456,7 @@ def probe(keep=False):
 
 
 def probe_app(keep=False):
+    _emu()
     """Launch the 1991 application and photograph ITS menus.
 
     3.1.2's INIT adds no menu to the Finder's menu bar — that arrived
@@ -509,6 +524,7 @@ def open_by_name(s, prefix, tag):
 
 
 def expand(keep=False, era="1991"):
+    _emu()
     """Hand our synthetic method 3, 4 and 5 files to Salient's own 1991
     DiskDoubler and read back what it wrote.
 
@@ -598,12 +614,31 @@ def expand(keep=False, era="1991"):
     return 1 if bad else 0
 
 
+EMIT = {"m3": (3, 256), "m4": (4, 256), "m5": (5, 256)}
+
+
+def emit(which, out):
+    """One container, byte-for-byte reproducible.
+
+    These three are `fixtures/SOURCES.md` entries, so `check_docs.py`
+    regenerates them on every CI run and fails if this file ever writes
+    different bytes. Only the three Salient's own expander confirmed are
+    registered — the 16-tree method 5 variant is NOT, because both
+    expanders reject our construction of it (OPEN_ITEMS.md).
+    """
+    method, ntrees = EMIT[which]
+    open(out, "wb").write(container(SUBJECT, method, ntrees))
+    return 0
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--build", action="store_true",
                     help="write the containers and round-trip them here")
     ap.add_argument("-o", dest="outdir", help="where to write them")
+    ap.add_argument("--emit", choices=sorted(EMIT),
+                    help="write one container to -o, reproducibly")
     ap.add_argument("--install", action="store_true",
                     help="System 7 + the 1991 INIT")
     ap.add_argument("--probe", action="store_true",
@@ -616,6 +651,10 @@ def main():
                     help="which expander --expand uses (default 1991)")
     ap.add_argument("--keep", action="store_true", help="keep the work dir")
     a = ap.parse_args()
+    if a.emit:
+        if not a.outdir:
+            raise SystemExit("ddencode: --emit needs -o <path>")
+        return emit(a.emit, a.outdir)
     if a.build:
         return build(a.outdir)[1]
     if a.install:

@@ -29,7 +29,7 @@ missing in OPEN_ITEMS.md.
 | M19 DiskDoubler method 2 | Salient's own **3.1.2** floppy (1991), off WinWorld — older than any DiskDoubler this project had, and the answer to two open items. It carries the only method 2 fork anybody here has found, so the method is implemented and graded: an order-1 adaptive code, 256 splay trees chosen by the byte just produced, 1,536 B each and built on first use. It also carries 22 method 7 forks of up to **eight chunks** and 97,906 B, where the 3.7 disk's two hold one chunk each — which closes "a fork longer than one chunk has never been decoded". 24 containers, 0 failed | DECISIONS.md 2026-08-21 (the Salient disk), BLOCKERS.md, FORMATS.md ✦, `tools/vmac/ndd.py --specimens` |
 | M20 The last three methods | DiskDoubler methods **3, 4 and 5** — every method the format has is now read. None has a specimen, so they are graded the other way round: `ddencode.py` writes a fork and **Salient's own 1991 DiskDoubler expands it**, byte-exact for all three, with 4.1.1 confirming method 5 twice. Measured on the way: the 0x5a XOR applies to 1, 2 and 5 but not to 3 and 4 (XADMaster's case 4 disagrees, untested); 4.1.1 has dropped 3 and 4 outright; macutils' method 3 escape byte is `0x144`, unreachable, and is decimal 144 | DECISIONS.md 2026-08-21 (methods 3, 4 and 5), BLOCKERS.md, FORMATS.md ✦, `tools/vmac/ddencode.py` |
 
-**The suite is 916 fixtures**, byte-exact against `unar` and, where `unar`
-fails, `macunpack`; 9,160 robustness variants clean. The Mac shell replays a
+**The suite is 919 fixtures**, byte-exact against `unar` and, where `unar`
+fails, `macunpack`; 9,190 robustness variants clean. The Mac shell replays a
 59-fixture sample byte-exact at 4 MB and at the 1 MB floor on System 6.0.8,
 and on System 7.0.1. Current figures and per-tier tables: FORMATS.md.
