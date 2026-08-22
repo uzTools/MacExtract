@@ -164,14 +164,18 @@ Unlike section 3, none of this is impossible here: a download would do it.
   none of them was ever named to match (DECISIONS.md 2026-08-22, the
   trigger).
 
-  **What is left is harness, not format.** The Finder rename that would
-  make a subject match is not taking: the installed system keeps its
-  "StuffIt Deluxe Folder" window in front of the volume window, and
-  raising the volume window did not fix it. **Two cheaper routes than
-  fighting the Finder:** type `Alpha` into the rule's text field so the
-  existing file matches, or name the subject `…small` before it is copied
-  in — whether SpaceSaver acts on a matching name appearing, or only on a
-  name CHANGE, is unmeasured and one boot answers it.
+  **What is left is one keystroke.** A matching name merely APPEARING does
+  not fire it — measured, subjects pre-named `Alphasmall`/`smallForked` on
+  the enrolled disk, fourteen minutes, unchanged — so a rename EVENT is
+  required. The rename can be driven as far as the name box reading
+  `Alphasmall` (photographed); the commit does not reach the disk image,
+  one Return leaving it editing and two leaving `Alpha` on the volume.
+  **What would close it:** get that commit through — a click on empty
+  space inside the window is the untried one — or find why the Finder's
+  directory update does not reach the image when the installer's writes
+  did. Everything else is done: installed, registered, enrolled, dates
+  qualifying, panel On, trigger understood (DECISIONS.md 2026-08-22,
+  where it rests).
 
 - **AppleLink `.pkg`.** No reference
   implementation and no published layout anywhere reachable. Searched

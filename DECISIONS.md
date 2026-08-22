@@ -96,6 +96,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-22 (SpaceSaver, last) — what the registration wall actually costs
 - 2026-08-22 (SpaceSaver, installed) — it runs, and it will not compress on demand
 - 2026-08-22 (SpaceSaver, the trigger) — a name rule, and why five attempts missed it
+- 2026-08-22 (SpaceSaver, where it rests) — two things measured, one thing stuck
 
 ---
 
@@ -4937,3 +4938,42 @@ Two cheaper routes than fighting the Finder, for whoever picks this up:
 - **Name the subject correctly before it is ever copied in.** Whether
   SpaceSaver acts on a file that simply appears with a matching name, or
   only on a name CHANGE, is itself unmeasured — and one boot answers it.
+
+
+## 2026-08-22 (SpaceSaver, where it rests) — two things measured, one thing stuck
+
+Continuing the trigger work, two more results, both negative and both
+worth having because they close off guesses:
+
+**A matching name merely APPEARING does not fire it.** Subjects named
+`Alphasmall` and `smallForked` were copied onto the startup disk before
+boot, on the image where enrolling that disk in Idle Time actually stuck,
+with 1990 dates, and left for fourteen minutes. All three subjects
+including the deliberately non-matching `Control` came back
+byte-identical. So SpaceSaver watches for a name CHANGE, not for a name.
+
+**The Finder rename can be driven almost to the end.** After closing the
+"StuffIt Deluxe Folder" window the installed system opens at startup —
+which requires clicking its TITLE BAR first, because a click on empty
+desktop DEACTIVATES the front window and Cmd-W then has nothing to close
+— type-select selects the subject and the name box takes the text. A
+frame shows the icon reading **`Alphasmall`**, boxed and editing. What
+does not happen is the commit: one Return leaves it editing, two Returns
+leave the disk image still holding `Alpha`.
+
+So either the commit keystroke is not reaching the name box, or the
+Finder's directory update is not reaching the image the way the
+installer's writes did. Both are testable; neither was tested, because
+each attempt is a twenty-minute boot and six of them in a row produced
+the same three lines.
+
+**Judgement, recorded because it is the part worth transferring:** this
+was said to be the last run four separate times and was not. The
+diagnosis genuinely sharpened each time — wrong window, deactivated
+window, uncommitted name box — which is exactly the shape that keeps a
+session going one run past useful. The state is precise and written down;
+the next person should start from it rather than from another guess.
+
+What is NOT the blocker, all now measured: the software installs and
+runs, the registration is accepted, the disk enrols, the dates qualify,
+the panel says On, and the trigger is understood.

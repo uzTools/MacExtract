@@ -987,14 +987,29 @@ def namerule(keep=False):
     try:
         s.boot()
         s.shot("desktop", wait=14.0)
+        # CLOSE the "StuffIt Deluxe Folder" window the installed system
+        # opens at startup, rather than trying to raise the volume window
+        # past it — clicking that window's title bar did not raise it, and
+        # the type-select then went to the wrong window and selected
+        # nothing. Cmd-W closes whatever is front; do it a few times, then
+        # open the volume, which is now the only window there is.
+        # The FIRST input after boot is swallowed — the same thing both
+        # Aladdin installers do, and why three Cmd-Ws in a row left the
+        # window open while a later Cmd-O worked fine: that one was
+        # preceded by a click. So wake the input path with a harmless
+        # click on empty desktop, then close.
+        # On its TITLE BAR, not the desktop: a click on empty desktop
+        # DEACTIVATES the front window — the menu bar greys out View and
+        # Label — and Cmd-W then has nothing to close, which photographs
+        # identically to a Cmd-W that never arrived.
+        s.mac.click(250, 38)
+        time.sleep(2.5)
+        for _ in range(3):
+            s.mac.command_key("w")
+            time.sleep(2.5)
+        s.shot("windows-closed", wait=6.0)
         s.mac.click(470, 55, double=True)
-        s.shot("bootvol", wait=12.0)
-        # The installed system opens the "StuffIt Deluxe Folder" window at
-        # startup and it stays IN FRONT of the volume window, so a
-        # type-select goes to the wrong window and selects nothing. Click
-        # the volume window's title bar to raise it first.
-        s.mac.click(256, 259)
-        s.shot("raised", wait=6.0)
+        s.shot("bootvol", wait=14.0)
         for name, letter in (("Alpha", "a"), ("Forked", "f")):
             s.mac.key("Escape")
             time.sleep(0.6)
@@ -1008,7 +1023,13 @@ def namerule(keep=False):
             s.mac._xdo("type", "--delay", "150", "small")
             time.sleep(1.5)
             s.shot("typed-" + name, wait=0.5)
-            s.mac.key("Return")           # commit the rename
+            # Twice. One Return leaves the name box still open — the
+            # frame shows "Alphasmall" boxed and editing, which looks
+            # like a committed rename and is not. Everything in this
+            # software swallows an input somewhere.
+            s.mac.key("Return")
+            time.sleep(4.0)
+            s.mac.key("Return")
             s.shot("renamed-" + name, wait=35.0)
         s.shot("settled", wait=30.0)
     finally:
@@ -1044,6 +1065,96 @@ def namerule(keep=False):
     return 0 if hit else 1
 
 
+ENROLLED = os.path.join(WORK, "ssenrolled.hfv")
+
+
+def namefirst(keep=False):
+    """Put subjects on the disk ALREADY matching the rule, and wait.
+
+    The rule is *"Immediately compress files … whose Name begins or ends
+    with `small`"*, and renaming a file in the Finder to match has not
+    worked from this harness. So the name is right before the file ever
+    reaches the machine — which also answers something unmeasured:
+    whether SpaceSaver acts on a matching name APPEARING, or only on a
+    name CHANGE.
+
+    The base image is the one where enrolling the startup disk in Idle
+    Time actually stuck, so the idle sweep has somewhere to look too.
+    Both mechanisms get their chance in one boot.
+    """
+    import glob
+    base = ENROLLED if os.path.exists(ENROLLED) else INSTALLED
+    boot = os.path.join(WORK, "ssnamefirst.hfv")
+    shutil.copyfile(base, boot)
+    print("spacesaver: base image %s" % os.path.basename(base))
+
+    # Matching and non-matching, so the rule itself is the variable.
+    named = [("Alphasmall", "TEXT", "ttxt", SUBJECT, b""),
+             ("smallForked", "PICT", "8BIM", SUBJECT[:3000],
+              make_rsrc(b"\x1eSpaceSaver probe fork")),
+             ("Control", "TEXT", "ttxt", SUBJECT, b"")]
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+    tmp = tempfile.mkdtemp(prefix="ssnf-")
+    try:
+        subprocess.run(["hmount", boot], check=True, capture_output=True,
+                       env=env)
+        from ndd import macbinary_dated, MAC_EPOCH_1990   # noqa: E402
+        for n, t, c, d, r in named:
+            q = os.path.join(tmp, n + ".bin")
+            open(q, "wb").write(macbinary_dated(n, t, c, d, r,
+                                                MAC_EPOCH_1990,
+                                                MAC_EPOCH_1990))
+            subprocess.run(["hcopy", "-m", q, ":"], check=True,
+                           capture_output=True, env=env)
+        subprocess.run(["humount"], check=True, capture_output=True, env=env)
+    finally:
+        shutil.rmtree(env["HOME"], ignore_errors=True)
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    before = set(glob.glob("/tmp/dd-*/boot.hfv"))
+    s = Session(boot, [], os.path.join(SPECIMENS, "namefirst"))
+    try:
+        s.boot()
+        s.shot("desktop", wait=15.0)
+        # Show the volume so the Finder actually looks at the files, then
+        # leave the machine alone.
+        s.mac.click(470, 55, double=True)
+        s.shot("bootvol", wait=15.0)
+        for i in range(8):
+            s.shot("waiting%d" % i, wait=100.0)
+    finally:
+        time.sleep(8)
+        s.close()
+
+    cands = [p for p in glob.glob("/tmp/dd-*/boot.hfv") if p not in before]
+    if not cands:
+        cands = sorted(glob.glob("/tmp/dd-*/boot.hfv"),
+                       key=os.path.getmtime)[-1:]
+    out = sorted(cands, key=os.path.getmtime)[-1]
+    print("spacesaver: reading back %s" % out)
+    from superdisk import read_forks                    # noqa: E402
+    known = dict((n, d) for n, _t, _c, d, _r in named)
+    os.makedirs(s.shots, exist_ok=True)
+    hit = 0
+    for path, (ftype, creator, data, rsrc) in sorted(read_forks(out).items()):
+        base_n = path[-1]
+        if base_n not in known:
+            continue
+        orig = known[base_n]
+        changed = data != orig
+        print("spacesaver: %-14s %s/%s data %d (was %d) rsrc %d  %s"
+              % (base_n, ftype, creator, len(data), len(orig), len(rsrc),
+                 "COMPRESSED" if changed else "unchanged"))
+        if changed:
+            hit += 1
+            q = os.path.join(s.shots, base_n + ".ss")
+            open(q, "wb").write(data)
+            if rsrc:
+                open(q + ".rsrc", "wb").write(rsrc)
+            print("             kept %s; first 48 %s" % (q, data[:48].hex()))
+    return 0 if hit else 1
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -1061,6 +1172,8 @@ def main():
                     help="fetch StuffIt Deluxe 4.0")
     ap.add_argument("--keep-installed", action="store_true",
                     help="lift the installed boot image out of /tmp")
+    ap.add_argument("--namefirst", action="store_true",
+                    help="subjects already named to match the rule")
     ap.add_argument("--namerule", action="store_true",
                     help="rename subjects to end in 'small', its trigger")
     ap.add_argument("--enroll", action="store_true",
@@ -1095,6 +1208,8 @@ def main():
         setup40()
     elif a.keep_installed:
         keep_installed()
+    elif a.namefirst:
+        return namefirst(a.keep)
     elif a.namerule:
         return namerule(a.keep)
     elif a.enroll:
