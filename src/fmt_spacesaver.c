@@ -129,7 +129,11 @@ static int ss_head_ok(const SsHead *o)
         if (f->clen == 0) return 0;
         if (f->off < SS_HDRLEN || f->off > 0x7FFFFFFFu) return 0;
         if (f->off + f->clen < f->off) return 0;
-        if ((f->method & 0x7Fu) > 4) return 0;
+        /* The compressor byte is deliberately NOT checked. A file whose
+         * method this engine does not know is still a SpaceSaver file
+         * and is worth NAMING — the user gets the format instead of
+         * *unknown*, and the entry fails on its own (CLAUDE.md; the
+         * same bargain LZH gets). The two magics are eight bytes. */
     }
     return 1;
 }

@@ -2648,6 +2648,18 @@ static void test_spacesaver_alg4(void)
     CHECK(cap.dlen[0] == 12 && memcmp(cap.data[0], want, 12) == 0);
     f[33] = 4;
 
+    /* A method this engine has never heard of must still SNIFF as
+     * SpaceSaver — naming the format is what saves the user from
+     * *unknown* — and fail on the entry rather than on the file. */
+    f[33] = 9;
+    test_make_memio(&io, &m, f, 84 + n);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_SPACESAVER);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_SPACESAVER, &io, &sk, &al, NULL,
+                         &opt) == UNC_OK);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_ERR_UNSUPPORTED);
+    CHECK(cap.dlen[0] == 0);
+
     /* Methods 1, 2 and 3 are declined per entry, not per archive: the
      * entry is still named and its sizes still reported. */
     f[33] = 3;

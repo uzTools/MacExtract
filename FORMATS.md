@@ -576,9 +576,10 @@ first, at offset 84, and the other follows it — read each at its own offset.
 | 3 | 10 "Alg 3", 11 decompress-only, 15 PowerPC | 68030 and up / any / PowerPC | declined per entry |
 | 4 | 20 "Alg 4", 21 decompress-only | 68000-68020 / any | implemented |
 
-The index is the module's own byte at +0x20, not its resource id; the low byte
-there is a revision and the higher one wins; +0x24 is a CPU mask, bit
-31 − Gestalt `cput`. **The default is the CPU's**: index 4 below a 68030,
+A file whose compressor byte is none of these is still recognised and named —
+the entry fails, the file does not. The index is the module's own byte at
++0x20, not its resource id; the low byte there is a revision and the higher
+one wins; +0x24 is a CPU mask, bit 31 − Gestalt `cput`. **The default is the CPU's**: index 4 below a 68030,
 index 3 from a 68030 up, and the decompress-only modules accept every CPU so
 any Mac can read any file. That is also why 1, 2 and 3 are declined — no
 machine reachable here writes them, so an implementation could not be graded,
