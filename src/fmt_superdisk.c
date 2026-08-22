@@ -614,11 +614,21 @@ static int sd_block_body(SdState *s, uint32_t ulen, unsigned method,
         flags = body;
         at = fsize;
     } else {                                       /* @0x842 */
-        uint32_t i;
+        /* Only the bytes the bitmap actually needs are coded — one bit
+         * per output byte, so ceil(ulen/8) — where the STORED form at
+         * `fsize` carries four bytes of slack and a round-up beyond
+         * them. Asking the Huffman decoder for `fsize` bytes runs it off
+         * the end of the stream: measured on the first method 6 block
+         * ever decoded here, which wanted 1,300 and had 1,297
+         * (DECISIONS.md 2026-08-22, the settings sweep). The tail is
+         * zeroed so nothing downstream reads what was never coded. */
+        uint32_t i, nflags = (ulen + 7u) >> 3;
+        if (nflags > fsize) nflags = fsize;
         if ((e = sd_huff_start(&fh, body, bodylen, 0)) != UNC_OK) return e;
         if ((e = sd_need(s->c, &s->flags, fsize)) != UNC_OK) return e;
-        for (i = 0; i < fsize; i++)
+        for (i = 0; i < nflags; i++)
             if ((e = sd_huff_next(&fh, &s->flags.p[i])) != UNC_OK) return e;
+        for (i = nflags; i < fsize; i++) s->flags.p[i] = 0;
         flags = s->flags.p;
         at = sd_huff_end(&fh);
     }

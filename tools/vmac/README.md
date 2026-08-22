@@ -513,6 +513,23 @@ OPEN_ITEMS.md said did not survive (BLOCKERS.md).
     tools/vmac/sdcompress.py --compress   compress a subject, report the file
     tools/vmac/sdcompress.py --specimens  compress all five subjects
     tools/vmac/sdcompress.py --verify     read them back, compare with the input
+    tools/vmac/sdcompress.py --axes       photograph each settings axis
+    tools/vmac/sdcompress.py --sweep      the same bytes once per setting
+
+`--sweep` is the controlled experiment: identical content, one subject per
+setting, so the only thing differing between outputs is the setting. It found
+that Speed=Fast writes method **6** where everything else writes 1 — and
+method 6 was broken until it did.
+
+Two more traps it cost a run each to learn, on top of the two above:
+
+- **Close the panel with Cmd-W, not its close box.** A click at the measured
+  close-box coordinate did not close the window, so the next click — "Make
+  File" at a page-1 coordinate — landed on the settings page's **Off** button.
+  No dialog opened, and the file name meant for it was typed into the Finder,
+  which renamed a control panel to "Coff".
+- **Reopening lands on the last page shown**, so `reopen_panel` presses "Last
+  Page" twice before anything is clicked at a page-1 coordinate.
 
 `--specimens` is the one that mattered: five subjects chosen to DISAGREE with
 each other, because the first specimen alone made the header layout look

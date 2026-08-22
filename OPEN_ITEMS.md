@@ -118,12 +118,17 @@ Unlike section 3, none of this is impossible here: a download would do it.
   gradeable SPECIMEN, and the compressor that would write one is in
   hand** (`tools/vmac/sdcompress.py`, since 2026-08-22): its control
   panel has Compress (Off/Light/Tighter), Speed and Memory axes, and
-  every subject compressed so far came out method 1. The method table
-  read out of Disk Expander calls 10, 11 and 13 SlowFast**A**, **B** and
-  **C**, and a Speed control over a Slow/Fast family is where the other
-  two should be. **What would close it:** working through those axes and
-  reading the method back — each setting is a run, and the settings
-  persist into the boot image, which is a trap the harness now handles.
+  the axes have been walked (`--sweep`, 2026-08-22) and **everything it
+  can be made to write is method 1 or method 6** — Speed=Fast gives 6, the
+  rest give 1. So the Speed axis does select a method, and it does not
+  reach the SlowFast family. Method 11 needs the Add-In Module a corpus
+  archive carries, so 10, 13 and 20 plausibly need modules too, and the
+  1.7.3 control panel has no `Cmpr` resources either. **What would close
+  it:** an archive that uses one, or the Add-In Modules that carry them.
+  One lead not yet followed: the panel's own help offers **JPEG lossy**,
+  **lossy sound** and a **lossless sound/video** mode that no `Cmpr` name
+  accounts for, and a lossy mode is a thing an extractor cannot grade
+  against its input by construction.
 
 - **AppleLink `.pkg` and StuffIt SpaceSaver.** Neither has a reference
   implementation or a published layout anywhere reachable. Searched
@@ -190,16 +195,21 @@ Unlike section 3, none of this is impossible here: a download would do it.
   engine and sink semantics of a cancel are covered separately: unit tests,
   both write paths through the qemu-m68k mock in `ci.sh`, and `UNC_AT_CANCEL`
   on-Mac at 4 MB and 1 MB.
-- **SuperDisk! methods 1-6, 8 and 9 have never decoded anything.** Both corpus
-  archives use one method each — 7 and 11, counted block by block — so the
-  13-bit context (1-4), two of the four wide variants and Huffman-alone (9)
-  are transcribed and compiled and nothing more. The Huffman decoder itself
-  and the wide context ARE exercised, since method 7 is both. The unit test
-  cannot help: it builds stored blocks, because writing coded ones would mean
-  writing an encoder and grading this decoder against it. **What would change
-  it:** an archive that uses one of them, or the `Cmpr` modules run under
-  emulation as a second implementation — the same route the adjudication
-  already takes, applied per method instead of per archive.
+- **SuperDisk! methods 2, 3, 4, 5, 8 and 9 have never decoded anything.**
+  Both corpus archives use one method each — 7 and 11, counted block by
+  block — so most of the 13-bit context family, two of the four wide
+  variants and Huffman-alone (9) are transcribed and compiled and nothing
+  more. **1 and 6 left this list on 2026-08-22**, when Alysis's own control
+  panel was made to write them (`tools/vmac/sdcompress.py --sweep`): 11
+  specimens, all byte-exact — and **method 6 was broken until that day**,
+  asking its Huffman decoder for three flag bytes more than the block
+  codes (DECISIONS.md 2026-08-22, last). One of the two methods this entry
+  named failed on first contact, which is the argument for keeping the
+  entry. The unit test cannot help with the rest: it builds stored blocks,
+  because writing coded ones would mean writing an encoder and grading
+  this decoder against it. **What would change it:** a setting or an
+  archive that uses one of them, or the `Cmpr` modules run under emulation
+  as a second implementation.
 - **Methods 3, 4 and 5 have never decoded a fork this project did not
   write.** All three are byte-exact through Salient's own 1991 expander,
   which grades the reading of the format rather than the decoder

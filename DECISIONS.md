@@ -90,6 +90,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-22 — one byte, and the eight forks that had no oracle
 - 2026-08-22 (later) — SuperDisk!'s compressor, which was said not to survive
 - 2026-08-22 (later still) — SuperDisk!'s other container, derived by making it
+- 2026-08-22 (last) — the settings sweep, and the decoder that had never run
 
 ---
 
@@ -4634,3 +4635,58 @@ random data fails, and it is also what tells this container from an
 archive — whose first eight bytes nobody reads, so they could be
 anything. The unit test breaks the identity by one and requires the
 sniffer to let go of the file.
+
+## 2026-08-22 (last) — the settings sweep, and the decoder that had never run
+
+`sdcompress.py --sweep` compresses the SAME bytes once per control-panel
+setting, so the only thing differing between the outputs is the setting.
+Six settings, and the Speed axis moves the method:
+
+| setting | method | 10,376 bytes becomes |
+|---|---|---|
+| Speed = Fast | **6** | 884 |
+| Speed = Faster (the default) | 1 | 2,280 |
+| Speed = Fastest | 1 | 2,282 |
+| Speed = Fast, Compress = Off | **6** | 888 |
+| Speed = Fast, Compress = Tight | 1 | 2,284 |
+| Speed = Fast, Compress = Tighter | **6** | 892 |
+
+Methods 10, 13 and 20 are not among them: everything this compressor can
+be made to write is 1 or 6. The Compress axis does not move the method
+cleanly — "Fast + Tight" gave 1 where "Fast" alone gave 6 — which is
+either a second axis interacting or the harness not making both settings
+stick, and it is not worth resolving until there is a reason to think a
+setting reaches the SlowFast family at all.
+
+### Method 6 had never decoded anything, and did not work
+
+OPEN_ITEMS.md said so in as many words: methods 1-6, 8 and 9 were
+"transcribed and compiled and nothing more", because both corpus archives
+use one method each (7 and 11). The first method 6 block this project has
+ever seen failed with *file is truncated*.
+
+**The bug:** the flag bitmap is one bit per output byte, so
+`ceil(ulen/8)` bytes — 1,297 for a 10,376-byte block. This engine asked
+the Huffman decoder for `((ulen >> 3) + 4) & ~1` = 1,300 and ran off the
+end of the stream three bytes early. That `+4` and round-up are real, but
+they belong to the STORED bitmap, where they are slack the coded form
+does not carry; methods 1 and 3 take that branch and are unaffected,
+which is why method 7 — the one the corpus exercises — never showed it.
+
+Fixed, and the block decodes byte-exact. All eleven specimens the control
+panel has written now do: five that derived the container's header and
+six from the sweep, methods 1 and 6.
+
+### What this says about the untested list
+
+The §5 entry naming these methods as never having decoded anything was
+accurate, and it is the reason the failure was legible in seconds rather
+than being read as a bad specimen. **A list of code that has never run is
+worth keeping precisely because it predicts where the next bug is** — one
+of the two methods it named failed on first contact with real data, and
+the other passed.
+
+It also says something about how the bug survived: the two branches of
+one function were sized by the same expression because the stored one is
+the one the corpus reaches, and nothing else ever asked. A constant
+shared between a tested path and an untested path is a place to look.

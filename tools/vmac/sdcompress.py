@@ -187,11 +187,11 @@ SUBJECTS = [
 ]
 
 
-def session(tag):
+def session(tag, subjects=None):
     from ndd import macbinary_dated                      # noqa: E402
     work = tempfile.mkdtemp(prefix="sdwork-")
     mbs = []
-    for i, (n, t, c, d, r, dates) in enumerate(SUBJECTS):
+    for i, (n, t, c, d, r, dates) in enumerate(subjects or SUBJECTS):
         p = os.path.join(work, "s%d.bin" % i)
         mb = (macbinary_dated(n, t, c, d, r, *dates) if dates
               else macbinary(n, t, c, d, r))
@@ -461,6 +461,167 @@ def compress(keep=False):
     return 0
 
 
+# The settings page, measured off makefile/07-next-page.png. Three axis
+# icons down the left — the help text calls them the can, the rabbit and
+# the elephant — and three value buttons to their right that swap when an
+# axis is chosen.
+AXIS = {"compress": (133, 105), "speed": (133, 182), "memory": (133, 250)}
+VALUE = [(180, 74), (180, 99), (180, 123)]
+LAST_PAGE = (205, 303)
+
+
+def settings_page(s):
+    """Get from the panel's first page to the settings page."""
+    s.mac.click(*MORE_OPTIONS)
+    time.sleep(3.0)
+    s.mac.click(*NEXT_PAGE)
+    time.sleep(3.0)
+
+
+def axes(keep=False):
+    """Photograph each axis's value buttons.
+
+    The three values are not labelled until their axis is chosen, and the
+    help text only hints at them ("the rabbit will jump slower, indicating
+    the 'Fast' speed"). What they actually say decides how many runs the
+    method sweep needs.
+    """
+    s, work, img = session("axes")
+    try:
+        open_panel(s)
+        settings_page(s)
+        s.shot("settings", wait=4.0)
+        for name, xy in AXIS.items():
+            s.mac.click(*xy)
+            s.shot("axis-" + name, wait=4.0)
+    finally:
+        time.sleep(3)
+        s.close()
+    print("sdcompress: screenshots in %s" % s.shots)
+    if not keep:
+        shutil.rmtree(work, ignore_errors=True)
+
+
+# One subject per setting, all holding the SAME bytes, so the only thing
+# that differs between the outputs is the setting. Make File writes
+# `<name>.x` beside its input and never asks where, so distinct names are
+# how the outputs are told apart.
+SWEEP_DATA = (b"Alysis SuperDisk! settings sweep. " * 260 +
+              bytes(bytearray(range(256))) * 6)
+# The Speed axis first and alone: it is the one with three values over a
+# family the method table calls SlowFastA, SlowFastB and SlowFastC, and a
+# shorter sweep is a sweep that finishes. Names deliberately unlike any
+# control panel's, because a run that loses the panel types them into the
+# Finder — one did, and renamed a control panel to "Coff".
+# Each entry is a name and the settings to apply before compressing it.
+# Speed alone found method 6 where the default gives 1; pinning Speed at
+# "Fast" and walking Compress is the next place a method could change.
+SWEEP = [("Zfast", [("speed", 0)]),
+         ("Zfaster", [("speed", 1)]),
+         ("Zfastest", [("speed", 2)]),
+         ("Zfastoff", [("speed", 0), ("compress", 0)]),
+         ("Zfasttight", [("speed", 0), ("compress", 1)]),
+         ("Zfasttighter", [("speed", 0), ("compress", 2)])]
+
+
+def set_axis(s, axis, value, tag):
+    """Choose an axis, then one of its three values.
+
+    The panel's own text: changes "remain in effect until you change them
+    again, as long as you activate them by closing the control panel."
+    So the caller closes and reopens before compressing anything.
+    """
+    s.mac.click(*AXIS[axis])
+    time.sleep(2.5)
+    s.mac.click(*VALUE[value])
+    time.sleep(2.0)
+    s.shot("set-" + tag, wait=1.0)
+
+
+def reopen_panel(s, tag):
+    """Close the panel to activate the setting, then open it at page 1.
+
+    Cmd-W, not the close box: a click at the measured close-box
+    coordinate did NOT close the window in one run, and the next click —
+    "Make File" at a page-1 coordinate — landed on the settings page's
+    "Off" button instead, so no dialog opened and the name meant for it
+    was typed into the Finder, renaming a control panel to "Coff".
+    Closing by keystroke removes the coordinate from the chain.
+
+    Reopening lands on whichever page was last shown, so "Last Page" is
+    pressed twice to walk back to the front before anything is clicked
+    there.
+    """
+    s.mac.command_key("w")
+    s.shot("closed-" + tag, wait=5.0)
+    s.mac.key("Escape")
+    time.sleep(0.6)
+    s.mac._xdo("key", "space")
+    time.sleep(1.5)
+    s.mac.command_key("o")
+    s.shot("reopened-" + tag, wait=14.0)
+    for _ in range(2):
+        s.mac.click(*LAST_PAGE)
+        time.sleep(2.5)
+    s.shot("page1-" + tag, wait=2.0)
+
+
+def sweep(keep=False):
+    """Compress the same bytes once per setting and report each method."""
+    s, work, img = session("sweep",
+                           [(n, "TEXT", "ttxt", SWEEP_DATA, b"", None)
+                            for n, _st in SWEEP])
+    try:
+        open_panel(s)
+        first = True
+        for name, settings in SWEEP:
+            settings_page(s)
+            for axis, value in settings:
+                set_axis(s, axis, value, "%s-%s" % (name, axis))
+            reopen_panel(s, name)
+            make_one(s, name, name, first)
+            first = False
+        s.mac.click(*VOLUME_ICON)
+        s.mac.command_key("y")
+        s.shot("ejected", wait=15.0)
+    finally:
+        time.sleep(5)
+        s.close()
+    sweep_report(img, s.shots)
+    if not keep:
+        shutil.rmtree(work, ignore_errors=True)
+    return 0
+
+
+def sweep_report(img, shots):
+    """The method each setting produced, read out of the first block."""
+    import struct
+    from superdisk import read_forks                    # noqa: E402
+    os.makedirs(shots, exist_ok=True)
+    got = read_forks(img)
+    print("sdcompress: setting -> method")
+    for name, settings in SWEEP:
+        blob = None
+        for path, (_t, _c, data, _r) in got.items():
+            if path[-1] == name + ".x":
+                blob = data
+        if blob is None:
+            print("  %-14s %-22s (no output)" % (name, settings))
+            continue
+        open(os.path.join(shots, name + ".x"), "wb").write(blob)
+        try:
+            nlen = blob[30]
+            body = 31 + nlen
+            body += body & 1
+            clen, ulen, meth = struct.unpack_from(">HHH", blob, body)
+            stored = "stored" if (clen & 0x8000) else "method %d" % meth
+            print("  %-14s %-22s %-10s  %d -> %d bytes"
+                  % (name, settings, stored,
+                     struct.unpack_from(">I", blob, 4)[0], len(blob)))
+        except Exception as e:
+            print("  %-14s %-22s unreadable (%s)" % (name, settings, e))
+
+
 def make_one(s, name, tag, first):
     """One trip through "Make File" and its standard file dialog."""
     s.mac.click(*MAKE_FILE)
@@ -545,8 +706,39 @@ def verify(keep=False):
               % (name, len(gd), len(gr),
                  "byte-exact" if ok else "DIFFERS"))
         bad += 0 if ok else 1
+    swp = os.path.join(SPECIMENS, "sweep")
+    n = 0
+    if os.path.isdir(swp):
+        import struct
+        for name, settings in SWEEP:
+            f = os.path.join(swp, name + ".x")
+            if not os.path.exists(f):
+                continue
+            n += 1
+            blob = open(f, "rb").read()
+            nlen = blob[30]
+            body = 31 + nlen
+            body += body & 1
+            clen, ulen, meth = struct.unpack_from(">HHH", blob, body)
+            tmp = tempfile.mkdtemp(prefix="sdv-")
+            try:
+                r = subprocess.run([cli(), "x", "--forks", "hidden",
+                                    "-o", tmp, f], capture_output=True,
+                                   text=True)
+                gd = b""
+                for root, _dd, fs in os.walk(tmp):
+                    for x in fs:
+                        if not x.startswith("._"):
+                            gd = open(os.path.join(root, x), "rb").read()
+            finally:
+                shutil.rmtree(tmp, ignore_errors=True)
+            ok = r.returncode == 0 and gd == SWEEP_DATA
+            print("sdcompress: %-14s %-10s  %s"
+                  % (name, "stored" if (clen & 0x8000) else "method %d" % meth,
+                     "byte-exact" if ok else "DIFFERS"))
+            bad += 0 if ok else 1
     print("sdcompress: %d of %d byte-exact against the bytes that went in"
-          % (len(SUBJECTS) - bad, len(SUBJECTS)))
+          % (len(SUBJECTS) + n - bad, len(SUBJECTS) + n))
     return 1 if bad else 0
 
 
@@ -560,6 +752,10 @@ def main():
                     help="open the control panel and photograph it")
     ap.add_argument("--makefile", action="store_true",
                     help="press Make File and photograph what it offers")
+    ap.add_argument("--sweep", action="store_true",
+                    help="compress the same bytes once per setting")
+    ap.add_argument("--axes", action="store_true",
+                    help="photograph each settings axis's values")
     ap.add_argument("--verify", action="store_true",
                     help="read the specimens back and compare")
     ap.add_argument("--specimens", action="store_true",
@@ -580,6 +776,10 @@ def main():
         panel(a.keep)
     elif a.makefile:
         makefile(a.keep)
+    elif a.sweep:
+        return sweep(a.keep)
+    elif a.axes:
+        axes(a.keep)
     elif a.verify:
         return verify(a.keep)
     elif a.specimens:
