@@ -567,9 +567,22 @@ reachable — the Deluxe 5.0.1 CD carries a standalone installer — but
     tools/vmac/spacesaver.py --probe     boot with it and photograph
     tools/vmac/spacesaver.py --install   walk the installer as far as it goes
 
-Read DECISIONS.md 2026-08-22 (SpaceSaver) before going further: there is a
-licence question about how the format may be derived, and it is the
-maintainer's to answer.
+    tools/vmac/spacesaver.py --setup351   fetch the 3.5.1 two-floppy set
+    tools/vmac/spacesaver.py --probe351   boot with both floppies mounted
+    tools/vmac/spacesaver.py --install351 run the 3.5.1 installer
+
+**3.5.1 stops at a registration number** it will not accept an empty value
+for, and no serial was sought — the maintainer waived the licence's
+reverse-engineering clause, which is not the same permission. **5.0 needs
+System 7.5.3**, which is the open route. DECISIONS.md 2026-08-22
+(SpaceSaver, and SpaceSaver later) has both.
+
+**Every panel in both Aladdin installers swallows its first input.** A click
+on a button and a Return both leave the panel on screen; the second acts.
+Three runs went into reading that as a wrong coordinate — and the
+coordinates were measured off the frames and right. The tell: the frame
+after the input is IDENTICAL to the one before, where a genuine miss
+usually shows something else selected.
 
 Three things that cost a run each, all about input reaching the installer:
 

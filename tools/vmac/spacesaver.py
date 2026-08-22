@@ -236,6 +236,172 @@ def install(keep=False):
         shutil.rmtree(work, ignore_errors=True)
 
 
+# StuffIt Deluxe 3.5.1: a two-floppy InstallerMaker set, and the era
+# System 7.0.1 actually fits. Both floppies are mounted at once, so the
+# swap the installer would otherwise ask for never happens.
+D351 = os.path.join(WORK, "disks", "StuffIt Deluxe 3.5.1")
+SPLASH_CONTINUE = (313, 263)
+WELCOME_CONTINUE = (460, 314)   # the read-me panel, which comes BEFORE
+                                # the registration one — a walk that
+                                # assumed otherwise typed a name into the
+                                # read-me and then clicked Register on an
+                                # empty form
+REG_NAME = (300, 124)
+REG_ORG = (300, 146)
+REG_NUMBER = (300, 170)
+REG_REGISTER = (374, 204)
+INSTALLER_ICON = (145, 120)     # measured off the frame, not estimated: an
+                                # earlier guess of (168, 115) landed right of
+                                # the glyph and selected the volume behind it
+
+
+def disks351():
+    d1 = os.path.join(D351, "StuffIt Deluxe\u2122 Disk 1.hfv")
+    d2 = os.path.join(D351, "StuffIt Deluxe\u2122 Disk 2.hfv")
+    for d in (d1, d2):
+        if not os.path.exists(d):
+            raise SystemExit("spacesaver: %s missing — run --setup351" % d)
+    return d1, d2
+
+
+def setup351():
+    """Fetch StuffIt Deluxe 3.5.1 and lay its two floppies out raw.
+
+    The download is a MacBinary wrapping a `.sea` wrapping two DiskCopy
+    4.2 images; the 84-byte DiskCopy header comes off so Mini vMac can
+    mount them, the same step `diskdoubler.fetch` makes.
+    """
+    import struct
+    os.makedirs(WORK, exist_ok=True)
+    sea = os.path.join(WORK, "sd351.sea.bin")
+    if not os.path.exists(sea):
+        subprocess.run(["curl", "-sS", "-L", "-A", "Mozilla/5.0", "-e",
+                        CD_PAGE, "-o", sea,
+                        "https://old.mac.gdn/apps/stuffit-deluxe-351-sea.bin"],
+                       check=True)
+    inner = os.path.join(WORK, "t")
+    shutil.rmtree(inner, ignore_errors=True)
+    os.makedirs(inner)
+    subprocess.run([cli(), "x", "-nr", "-o", inner, sea], check=True,
+                   capture_output=True)
+    seaf = [os.path.join(inner, f) for f in os.listdir(inner)
+            if f.endswith(".sea")][0]
+    out = os.path.join(WORK, "disks")
+    shutil.rmtree(out, ignore_errors=True)
+    subprocess.run([cli(), "x", "-o", out, seaf], check=True,
+                   capture_output=True)
+    for root, _d, files in os.walk(out):
+        for f in files:
+            if not f.endswith(".img") or f.startswith("._"):
+                continue
+            p = os.path.join(root, f)
+            b = open(p, "rb").read()
+            dlen = struct.unpack_from(">I", b, 64)[0]
+            open(p[:-4] + ".hfv", "wb").write(b[84:84 + dlen])
+            print("spacesaver: %s -> %d bytes of HFS" % (f, dlen))
+    return disks351()
+
+
+def probe351(keep=False):
+    """Boot with both floppies mounted and photograph the desktop."""
+    d1, d2 = disks351()
+    work = tempfile.mkdtemp(prefix="sswork-")
+    mbs = []
+    for i, (n, t, c, d, r) in enumerate(SUBJECTS):
+        q = os.path.join(work, "s%d.bin" % i)
+        open(q, "wb").write(macbinary(n, t, c, d, r))
+        mbs.append(q)
+    img = os.path.join(work, "sswork.img")
+    make_volume(img, "SSwork", mbs, size_kb=16384)
+    if not os.path.exists(BOOT):
+        shutil.copyfile(os.path.join(HOME, "Sys7.img"), BOOT)
+    s = Session(BOOT, [d1, d2, img], os.path.join(SPECIMENS, "probe351"))
+    try:
+        s.boot()
+        s.shot("desktop", wait=8.0)
+        s.shot("desktop-2", wait=6.0)
+    finally:
+        time.sleep(3)
+        s.close()
+    print("spacesaver: screenshots in %s" % s.shots)
+    if not keep:
+        shutil.rmtree(work, ignore_errors=True)
+
+
+def session351(tag):
+    d1, d2 = disks351()
+    work = tempfile.mkdtemp(prefix="sswork-")
+    mbs = []
+    for i, (n, t, c, d, r) in enumerate(SUBJECTS):
+        q = os.path.join(work, "s%d.bin" % i)
+        open(q, "wb").write(macbinary(n, t, c, d, r))
+        mbs.append(q)
+    img = os.path.join(work, "sswork.img")
+    make_volume(img, "SSwork", mbs, size_kb=16384)
+    if not os.path.exists(BOOT):
+        shutil.copyfile(os.path.join(HOME, "Sys7.img"), BOOT)
+    s = Session(BOOT, [d1, d2, img], os.path.join(SPECIMENS, tag))
+    return s, work, img
+
+
+def install351(keep=False):
+    """Run StuffIt Deluxe 3.5.1's installer with both floppies mounted.
+
+    Disk 1's window opens itself on boot with the installer in it, so the
+    walk starts with a type-select. Every step is photographed because an
+    InstallerMaker flow is only knowable by looking, and because a blind
+    Return is what quit the 5.0 installer on an alert whose default was
+    No.
+    """
+    s, work, img = session351("install351")
+    try:
+        s.boot()
+        s.shot("desktop", wait=8.0)
+        # Double-click the icon rather than type-select it: Disk 1's
+        # window opens itself on boot but does not take the keyboard, so
+        # Escape-then-type selected nothing and Cmd-O opened nothing —
+        # and the frame after that is the Finder, which looks exactly
+        # like an installer that has not drawn yet.
+        s.mac.click(*INSTALLER_ICON, double=True)
+        s.shot("launched", wait=35.0)
+        s.mac.click(*SPLASH_CONTINUE)
+        s.shot("welcome", wait=20.0)
+        s.mac.click(*WELCOME_CONTINUE)
+        s.shot("registration", wait=20.0)
+        # A registration panel: name, organization, registration number,
+        # Cancel and Register. Whether the number is REQUIRED is the
+        # question — try a name and organization alone first rather than
+        # assuming, because the alternative is looking for a serial and
+        # that is a different thing from reading a file format.
+        s.mac.click(*REG_NAME)
+        time.sleep(1.0)
+        s.mac._xdo("type", "--delay", "120", "unclassic")
+        s.mac.click(*REG_ORG)
+        time.sleep(1.0)
+        s.mac._xdo("type", "--delay", "120", "test")
+        # The number field is left empty on purpose: the panel only
+        # insists on a NAME ("You must enter a name in order to register
+        # this product"), so no serial is needed and none is looked for.
+        s.shot("registration-filled", wait=2.0)
+        # Twice, with a wait: every panel in this installer swallows the
+        # first input it is given, and Register is no different — one
+        # click leaves the form on screen looking untouched.
+        s.mac.click(*REG_REGISTER)
+        time.sleep(6.0)
+        s.mac.click(*REG_REGISTER)
+        s.shot("after-register", wait=25.0)
+        for i in range(6):
+            s.mac.key("Return")
+            s.shot("step%d" % i, wait=20.0)
+    finally:
+        time.sleep(5)
+        s.close()
+    print("spacesaver: screenshots in %s" % s.shots)
+    print("spacesaver: boot image kept at %s" % BOOT)
+    if not keep:
+        shutil.rmtree(work, ignore_errors=True)
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -243,6 +409,12 @@ def main():
     ap.add_argument("--probe", action="store_true")
     ap.add_argument("--install", action="store_true",
                     help="walk the installer")
+    ap.add_argument("--setup351", action="store_true",
+                    help="fetch StuffIt Deluxe 3.5.1's two floppies")
+    ap.add_argument("--probe351", action="store_true",
+                    help="boot with both floppies mounted")
+    ap.add_argument("--install351", action="store_true",
+                    help="run the 3.5.1 installer")
     ap.add_argument("--keep", action="store_true")
     a = ap.parse_args()
     if a.setup:
@@ -251,6 +423,12 @@ def main():
         probe(a.keep)
     elif a.install:
         install(a.keep)
+    elif a.setup351:
+        setup351()
+    elif a.probe351:
+        probe351(a.keep)
+    elif a.install351:
+        install351(a.keep)
     else:
         ap.print_help()
     return 0

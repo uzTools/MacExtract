@@ -92,6 +92,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-22 (later still) — SuperDisk!'s other container, derived by making it
 - 2026-08-22 (last) — the settings sweep, and the decoder that had never run
 - 2026-08-22 (SpaceSaver) — reachable, not yet runnable, and a licence question
+- 2026-08-22 (SpaceSaver, later) — both installers, and the wall that is not a licence clause
 
 ---
 
@@ -4749,7 +4750,61 @@ other, without reading a byte of Alysis's code — compress known input,
 compare outputs, deduce. Running a program and examining files it wrote
 is not reverse engineering the program.
 
-So the position taken here, pending the maintainer: **specimens yes,
-disassembly no.** Nothing has been disassembled, and this entry exists so
-that a later session does not reach for `CODE` resources by analogy with
-SuperDisk! without noticing that the analogy carries a licence with it.
+So the position taken here was, pending the maintainer: **specimens yes,
+disassembly no.**
+
+**Answered 2026-08-22: the maintainer waived it and took responsibility**,
+so the disassembly route is open for SpaceSaver as it was for SuperDisk!.
+This entry stays because the reasoning is still the reasoning — and
+because one thing was NOT waived and was not attempted: see below.
+
+
+## 2026-08-22 (SpaceSaver, later) — both installers, and the wall that is not a licence clause
+
+With the licence question answered, both routes to a SpaceSaver specimen
+were run to the end. Both stop, for different reasons, and both are now
+measured rather than guessed.
+
+**SpaceSaver 5.0**, the standalone installer off the Deluxe 5.0.1 CD:
+needs System 7.5.3 and 8000K. Forced past both of its own "Install
+anyway?" alerts on 7.0.1 it bombs — *unimplemented trap*. It never asked
+for a registration number, but it never got that far either.
+
+**StuffIt Deluxe 3.5.1**, the era 7.0.1 actually fits: its installer runs
+perfectly. Splash, read-me, then a registration panel wanting a name, an
+organization and a **registration number**. A name alone is not enough —
+with the number blank and the name filled the panel simply does not
+advance, and pressing Register twice produces the reason: **"The
+registration number that you have entered is invalid."**
+
+**That wall was not climbed, and the distinction matters.** What the
+maintainer waived is the licence's reverse-engineering clause — reading a
+format out of software. A registration number is a licence ENFORCEMENT
+mechanism, and looking one up or deriving one is a different act from
+disassembling a decoder. Nothing here went looking for a serial. If that
+is also wanted it is a separate decision, and it should be an explicit
+one rather than something a session drifts into because it was already
+in the neighbourhood.
+
+**What is left, and it is clean:** a **System 7.5.3 image** beside
+`System6.hfv` and `Sys7.img`. The 5.0 installer's only objections were
+the system version and the memory, and 7.5.3 was released free by Apple;
+the emulator already runs three systems, so a fourth is plumbing rather
+than research. That route needs no serial and no waiver.
+
+### What was learned about driving this installer, which transfers
+
+Every panel in both Aladdin installers **swallows the first input it is
+given**. A click on a button and a Return both leave the panel on screen;
+the second one acts. Three runs were spent reading that as "the
+coordinate is wrong" — and the coordinates were measured off the frames
+and correct. The tell is that the frame after the input looks *identical*
+to the frame before it, where a genuine miss usually shows something
+else: a selected icon, a different window in front.
+
+The other trap is order. The 3.5.1 flow is splash → **read-me** →
+registration, and a walk that assumed splash → registration typed a name
+into the read-me and then clicked Register on an empty form, which
+produced *"You must enter a name in order to register this product"* —
+an error that describes the harness perfectly and the installer not at
+all.

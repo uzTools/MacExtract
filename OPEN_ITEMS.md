@@ -130,20 +130,25 @@ Unlike section 3, none of this is impossible here: a download would do it.
   accounts for, and a lossy mode is a thing an extractor cannot grade
   against its input by construction.
 
-- **StuffIt SpaceSaver.** No longer waiting on a file: the application is
-  in hand (`tools/vmac/spacesaver.py` lifts a standalone `SpaceSaver 5.0
-  Installer` off the Deluxe 5.0.1 CD, and 3.5.1 and 4.0 are two-floppy
-  sets on Macintosh Garden). **What blocks it is a machine to run it
-  on:** 5.0 wants System 7.5.3 and 8 MB, and forced past its own checks
-  on 7.0.1 it bombs with *unimplemented trap* — measured 2026-08-22, not
-  inferred. So either a **System 7.5.3 image** joins `System6.hfv` and
-  `Sys7.img`, or SpaceSaver is taken from the 3.5.1/4.0 set, which is the
-  era 7.0.1 fits. **And a decision that is the maintainer's:** Aladdin's
-  licence forbids reverse engineering, decompiling and disassembling, so
-  the route SuperDisk! took — reading a decoder out of `CODE` — is not
-  available here by analogy. Black-box derivation from specimens is, and
-  it is what derived SuperDisk!'s single-file container (DECISIONS.md
-  2026-08-22, SpaceSaver).
+- **StuffIt SpaceSaver.** Not waiting on a file: the application is in
+  hand both ways (`tools/vmac/spacesaver.py`). **Waiting on a System
+  7.5.3 image**, and both other routes are closed and measured:
+  - **5.0**, the standalone installer off the Deluxe 5.0.1 CD, wants
+    System 7.5.3 and 8000K; forced past both of its own "Install anyway?"
+    alerts on 7.0.1 it bombs with *unimplemented trap*. It never asked
+    for a registration number.
+  - **3.5.1**, the era 7.0.1 fits, installs fine up to a registration
+    panel that rejects an empty number: *"The registration number that
+    you have entered is invalid."* **No serial was sought.** The
+    licence's reverse-engineering clause was waived by the maintainer on
+    2026-08-22; a registration number is licence ENFORCEMENT, which is a
+    separate decision and has not been taken (DECISIONS.md, SpaceSaver
+    later).
+
+  **What would close it:** System 7.5.3 — free from Apple, and a fourth
+  system image beside `System6.hfv`, `Sys7.img` and the OS 9 one is
+  plumbing rather than research. The 5.0 installer's only objections were
+  the version and the memory.
 
 - **AppleLink `.pkg`.** No reference
   implementation and no published layout anywhere reachable. Searched
