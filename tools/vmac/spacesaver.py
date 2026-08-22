@@ -1023,13 +1023,16 @@ def namerule(keep=False):
             s.mac._xdo("type", "--delay", "150", "small")
             time.sleep(1.5)
             s.shot("typed-" + name, wait=0.5)
-            # Twice. One Return leaves the name box still open — the
-            # frame shows "Alphasmall" boxed and editing, which looks
-            # like a committed rename and is not. Everything in this
-            # software swallows an input somewhere.
-            s.mac.key("Return")
+            # Return does not commit this name box — one leaves it
+            # editing, two leave the old name on the volume. Enter is the
+            # keystroke a Finder name box actually takes, and clicking
+            # ANOTHER ICON commits it the way a person would. Both, in
+            # that order, and neither is destructive if the other already
+            # worked.
+            s.mac.key("KP_Enter")
             time.sleep(4.0)
-            s.mac.key("Return")
+            s.mac.click(155, 310)          # HyperCard, a different icon
+            time.sleep(4.0)
             s.shot("renamed-" + name, wait=35.0)
         s.shot("settled", wait=30.0)
     finally:
@@ -1155,6 +1158,98 @@ def namefirst(keep=False):
     return 0 if hit else 1
 
 
+def namevol(keep=False):
+    """Rename on a volume that can be PUT AWAY, so the change is flushed.
+
+    The rename itself was never the problem. A frame shows both subjects
+    committed on screen as `Alphasmall` and `Forkedsmall` — no edit box —
+    while the disk image still holds `Alpha` and `Forked`. HFS directory
+    changes sit in the cache until the volume is unmounted, and the boot
+    volume never is: the emulator is killed instead, and whatever the
+    Finder had not written goes with it. The installer's writes survived
+    because the system ran on for minutes afterwards.
+
+    So the subjects go on a SECOND volume, which Cmd-Y (Put Away)
+    unmounts — the flush every other harness here relies on — and that
+    volume is a file this side of the emulator, so no session copy has to
+    be hunted for either.
+    """
+    base = ENROLLED if os.path.exists(ENROLLED) else INSTALLED
+    boot = os.path.join(WORK, "ssnamevol.hfv")
+    shutil.copyfile(base, boot)
+
+    from ndd import macbinary_dated, MAC_EPOCH_1990       # noqa: E402
+    work = tempfile.mkdtemp(prefix="sswork-")
+    mbs = []
+    for n, t, c, d, r in SUBJECTS:
+        q = os.path.join(work, n + ".bin")
+        open(q, "wb").write(macbinary_dated(n, t, c, d, r,
+                                            MAC_EPOCH_1990, MAC_EPOCH_1990))
+        mbs.append(q)
+    img = os.path.join(work, "sswork.img")
+    make_volume(img, "SSwork", mbs, size_kb=16384)
+
+    s = Session(boot, [img], os.path.join(SPECIMENS, "namevol"))
+    try:
+        s.boot()
+        s.shot("desktop", wait=15.0)
+        s.mac.click(250, 38)                    # activate the stray window
+        time.sleep(2.5)
+        for _ in range(3):
+            s.mac.command_key("w")
+            time.sleep(2.5)
+        s.shot("windows-closed", wait=6.0)
+        s.mac.click(*VOLUME_ICON, double=True)  # SSwork
+        s.shot("volume", wait=14.0)
+        for name, letter in (("Alpha", "a"), ("Forked", "f")):
+            s.mac.key("Escape")
+            time.sleep(0.6)
+            s.mac.key(letter)
+            time.sleep(1.5)
+            s.shot("selected-" + name, wait=0.5)
+            s.mac.key("Return")
+            time.sleep(2.0)
+            s.mac.key("Right")
+            time.sleep(0.8)
+            s.mac._xdo("type", "--delay", "150", "small")
+            time.sleep(1.5)
+            s.mac.key("KP_Enter")
+            time.sleep(3.0)
+            s.mac.click(200, 150)               # empty space in the window
+            s.shot("renamed-" + name, wait=30.0)
+        s.shot("settled", wait=45.0)
+        s.mac.click(*VOLUME_ICON)
+        s.mac.command_key("y")                  # Put Away: the flush
+        s.shot("ejected", wait=25.0)
+    finally:
+        time.sleep(8)
+        s.close()
+
+    from superdisk import read_forks                    # noqa: E402
+    known = dict((n, d) for n, _t, _c, d, _r in SUBJECTS)
+    os.makedirs(s.shots, exist_ok=True)
+    hit = 0
+    for path, (ftype, creator, data, rsrc) in sorted(read_forks(img).items()):
+        b = path[-1]
+        orig = known.get(b) or known.get(b[:-5])
+        if orig is None:
+            continue
+        changed = data != orig
+        print("spacesaver: %-14s %s/%s data %d (was %d) rsrc %d  %s"
+              % (b, ftype, creator, len(data), len(orig), len(rsrc),
+                 "COMPRESSED" if changed else "unchanged"))
+        if changed:
+            hit += 1
+            q = os.path.join(s.shots, b + ".ss")
+            open(q, "wb").write(data)
+            if rsrc:
+                open(q + ".rsrc", "wb").write(rsrc)
+            print("             kept %s; first 48 %s" % (q, data[:48].hex()))
+    if not keep:
+        shutil.rmtree(work, ignore_errors=True)
+    return 0 if hit else 1
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -1172,6 +1267,8 @@ def main():
                     help="fetch StuffIt Deluxe 4.0")
     ap.add_argument("--keep-installed", action="store_true",
                     help="lift the installed boot image out of /tmp")
+    ap.add_argument("--namevol", action="store_true",
+                    help="rename on a volume that Put Away can flush")
     ap.add_argument("--namefirst", action="store_true",
                     help="subjects already named to match the rule")
     ap.add_argument("--namerule", action="store_true",
@@ -1208,6 +1305,8 @@ def main():
         setup40()
     elif a.keep_installed:
         keep_installed()
+    elif a.namevol:
+        return namevol(a.keep)
     elif a.namefirst:
         return namefirst(a.keep)
     elif a.namerule:

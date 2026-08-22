@@ -97,6 +97,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-22 (SpaceSaver, installed) — it runs, and it will not compress on demand
 - 2026-08-22 (SpaceSaver, the trigger) — a name rule, and why five attempts missed it
 - 2026-08-22 (SpaceSaver, where it rests) — two things measured, one thing stuck
+- 2026-08-22 (SpaceSaver, calling it) — the rename commits, the image does not see it
 
 ---
 
@@ -4977,3 +4978,48 @@ the next person should start from it rather than from another guess.
 What is NOT the blocker, all now measured: the software installs and
 runs, the registration is accepted, the disk enrols, the dates qualify,
 the panel says On, and the trigger is understood.
+
+
+## 2026-08-22 (SpaceSaver, calling it) — the rename commits, the image does not see it
+
+Two more results, and then a change of approach that should have come
+sooner.
+
+**The rename commits.** A frame shows both subjects renamed on screen —
+`Alphasmall` and `Forkedsmall`, no edit box, the Finder settled — while
+the disk image still holds `Alpha` and `Forked`. So every earlier reading
+of this ("the keystroke is not arriving", "the wrong window is in front")
+was wrong at the end: the Finder does the rename and **the change never
+reaches the image**. HFS directory updates sit in the cache; the boot
+volume is never unmounted, the emulator is killed instead, and what the
+Finder had not written goes with it. The installer's writes survived
+because the system ran on for minutes afterwards.
+
+Moving the subjects to a second volume so `Cmd-Y` could flush it was the
+right idea and produced nothing usable: **that run never booted.** Its
+first frame is already the striped garbage screen, so its "unchanged"
+result says nothing about anything.
+
+**Calling it.** Ten runs, twenty minutes each, and the last two added a
+non-deterministic infrastructure failure on top of an unconverged
+problem. More Finder driving is not the way to a specimen.
+
+### The approach that should be tried instead
+
+**Read the format out of the software.** `~StuffIt SpaceSaver™` is
+`cdev/SMKR` with a 289 KB resource fork, and the decompressor is in it.
+That is exactly the route SuperDisk! took — `CODE 2` out of a
+self-extractor, four documents' worth of format derived from it — and it
+has three advantages here that matter:
+
+- it needs **no working emulator interaction at all**, so it costs host
+  minutes rather than twenty-minute boots;
+- it is **repeatable**, where every run above depended on a click landing
+  and a cache flushing;
+- the licence clause that would have forbidden it was **waived by the
+  maintainer** on 2026-08-22.
+
+The specimen is still wanted eventually — a decoder wants something to be
+wrong against — but the layout can be had first, and a layout makes the
+format nameable, which is the thing OPEN_ITEMS.md has been asking for
+since that section existed.

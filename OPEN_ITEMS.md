@@ -164,18 +164,20 @@ Unlike section 3, none of this is impossible here: a download would do it.
   none of them was ever named to match (DECISIONS.md 2026-08-22, the
   trigger).
 
-  **What is left is one keystroke.** A matching name merely APPEARING does
-  not fire it — measured, subjects pre-named `Alphasmall`/`smallForked` on
-  the enrolled disk, fourteen minutes, unchanged — so a rename EVENT is
-  required. The rename can be driven as far as the name box reading
-  `Alphasmall` (photographed); the commit does not reach the disk image,
-  one Return leaving it editing and two leaving `Alpha` on the volume.
-  **What would close it:** get that commit through — a click on empty
-  space inside the window is the untried one — or find why the Finder's
-  directory update does not reach the image when the installer's writes
-  did. Everything else is done: installed, registered, enrolled, dates
-  qualifying, panel On, trigger understood (DECISIONS.md 2026-08-22,
-  where it rests).
+  **The rename commits and the image never sees it.** Photographed: both
+  subjects renamed on screen, no edit box, while the disk image still
+  holds the old names. HFS directory updates sit in the cache, the boot
+  volume is never unmounted, and the emulator is killed instead. A
+  matching name merely APPEARING does not fire the rule either — tested,
+  fourteen minutes on the enrolled disk, unchanged — so a rename EVENT is
+  required and its effect has to survive to the image.
+
+  **Recommended instead of more of that:** read the layout out of
+  `cdev/SMKR`'s 289 KB resource fork, which is where the decompressor is.
+  That is SuperDisk!'s route, it needs no emulator interaction, it is
+  repeatable, and the licence clause was waived. Ten runs went into
+  driving the Finder and the last two added an infrastructure failure on
+  top — one never booted at all (DECISIONS.md 2026-08-22, calling it).
 
 - **AppleLink `.pkg`.** No reference
   implementation and no published layout anywhere reachable. Searched
