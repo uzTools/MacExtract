@@ -54,6 +54,13 @@ derived-MacPass390.sea                     # 155792 B, DiskDoubler method 8, lar
 derived-DD_Expand.sea                      # 123399 B, DiskDoubler method 10 (DDn)
 derived-LHA_Expander_1.0.3.sea             # 79182 B, DDn with folders
 derived-Terrainman_2.0__.sea               # 167771 B, DDn + delta-1, deepest tree
+synth-dd-m3.dd                             # 941 B, DiskDoubler method 3 (RLE90), 8 KB peak
+synth-dd-m4.dd                             # 1179 B, method 4 (StuffIt Huffman), 9 KB peak
+synth-dd-m5.dd                             # 600 B, method 5 (splay, 256 trees) — 401,408 B
+#   peak, by far the largest allocation this engine has ever asked a Mac
+#   Plus for, and the only fixture that exercises the method 2 codec at
+#   full context count. Added 2026-08-22 with M19-M23's codecs; before
+#   that this list had nothing using DiskDoubler methods 2-5 at all.
 derived-Expand_Now_1.0.1.sea               # 61824 B, Now Compress
 # Four of those lines used to appear twice: MAZv143, DD_Expand, MacPass390
 # and Expand_Now were already in this list as REFUSAL cases when M12 added

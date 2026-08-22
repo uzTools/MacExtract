@@ -8,12 +8,15 @@ system the project claims:
 
 | tier | result |
 |---|---|
-| System 6.0.8, 4 MB Mac Plus (Mini vMac, a true 68000) | 59/59 sampled fixtures |
-| System 6.0.8, **1 MB** — the floor target | **59/59**; no memory-budget refusals remain |
-| System 7.0.1, 4 MB | **59/59**, re-run 2026-08-21 with everything M12–M14 added |
+| System 6.0.8, 4 MB Mac Plus (Mini vMac, a true 68000) | **62/62** sampled fixtures |
+| System 6.0.8, **1 MB** — the floor target | **62/62**; no memory-budget refusals remain, and DiskDoubler method 5's 396 KB allocation succeeds here |
+| System 7.0.1, 4 MB | **62/62** |
 | Mac OS 9.2 (QEMU PowerPC, 68LC040 emulation) | 13/13, plus HFS+ and the `SIZE` partition; DiskDoubler still recorded there as the refusal it was pre-M12 |
 
-Per-fixture tables and how the sample grew: FORMATS.md. How to re-run any of
+All three Mini vMac tiers re-run **2026-08-22**, with M15–M23's codecs in
+and three fixtures added to the sample for them — DiskDoubler methods 3, 4
+and 5, which nothing in the list had exercised. Per-fixture tables and how
+the sample grew: FORMATS.md. How to re-run any of
 it: `tools/vmac/README.md`. What no emulator here can settle:
 MANUAL_TESTS.md.
 

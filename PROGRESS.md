@@ -34,5 +34,5 @@ missing in OPEN_ITEMS.md.
 
 **The suite is 919 fixtures**, byte-exact against `unar` and, where `unar`
 fails, `macunpack`; 9,190 robustness variants clean. The Mac shell replays a
-59-fixture sample byte-exact at 4 MB and at the 1 MB floor on System 6.0.8,
-and on System 7.0.1. Current figures and per-tier tables: FORMATS.md.
+62-fixture sample byte-exact at 4 MB and at the 1 MB floor on System 6.0.8,
+and on System 7.0.1 — all three re-run 2026-08-22 with M15–M23 in. Current figures and per-tier tables: FORMATS.md.

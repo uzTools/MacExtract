@@ -225,10 +225,6 @@ Unlike section 3, none of this is impossible here: a download would do it.
   because it is XADMaster's reading and it fails as a per-entry checksum
   error rather than silently. **What would change it:** a method 5 fork
   with a non-zero count.
-- **The 392 KB path.** Methods 2 and 5 pay 1,536 B per distinct context
-  byte; a fork touching all 256 measures 401,408 B, which fits a 1 MB Mac
-  Plus on paper (FORMATS.md) and has never been run on one, nor under the
-  400 KB budget the rest of the corpus holds to.
 - **Files larger than the HFS 2 GB cap**, and the engine's 32-bit-only
   arithmetic against them.
 - **MacRoman filename display and 8-bit characters above System 6.** The bytes

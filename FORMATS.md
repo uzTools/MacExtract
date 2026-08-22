@@ -51,12 +51,14 @@ method 7 is 10 KB, whose whole state is a 2 KB window; method 1 is 17 KB on
 an 11 KB fork, sized from the input like every other `unc_lzw` caller; DDn is
 ~100 KB, its window sized from the entry up to the format's 64 KB plus a
 literal/offset buffer sized from each block's own header; and the 392 KB end
-is methods 2 and 5, which pay 1,536 B per distinct context byte (below). All
-of them fit the 678,392 B a 1 MB Mac Plus leaves the engine — measured on
-Linux; no on-Mac run has extracted one (OPEN_ITEMS.md). The **400 KB budget**
-column is about the corpus, and stays true of it: no fixture uses method 2 or
-5, and a method 5 fork touching all 256 contexts (401,408 B) is the one thing
-in this format that would not fit that budget.
+is methods 2 and 5, which pay 1,536 B per distinct context byte (below).
+**Measured on the Mac, 2026-08-22:** `synth-dd-m5.dd` touches all 256
+contexts and peaks at **405,520 B (396 KB)** on a 68000 — and passes at 4 MB,
+at the **1 MB floor**, and on System 7, which is the largest single
+allocation this engine has ever asked a Mac Plus for. Methods 3 and 4 are
+8,208 B and 9,508 B there, the cheapest in the format. The **400 KB budget**
+column is about the corpus and stays true of it: that one fork is the only
+thing in this format that would not fit that budget.
 
 **Methods 1 and 7 joined them on 2026-08-20**, when running DiskDoubler
 itself showed that both are reachable after all (BLOCKERS.md, *Withdrawn
@@ -912,7 +914,7 @@ the others, cautiously and from a single anchor.
 
 ## Real-hardware verification (Mini vMac — System 6.0.8, 4 MB Mac Plus, 68000)
 
-The Retro68 Mac shell was replayed against a 63-fixture sample spanning all
+The Retro68 Mac shell was replayed against a 62-fixture sample spanning all
 sixteen formats on a **real System 6.0.8 / 4 MB Mac Plus** under Mini vMac
 (a true 68000). Every extraction is verified ON THE MAC ITSELF: the app
 CRC-32s both forks after reading them back through the File Manager and the
@@ -920,7 +922,9 @@ result — painted to the framebuffer, read from a screenshot — is
 cross-checked against the same engine's Linux output (`tools/vmac_check.py`,
 `tools/decode_grid.py`).
 
-**59/59 byte-exact PASS** (2026-08-15, re-run after the BinHex line rule
+**62/62 byte-exact PASS** (2026-08-22, re-run with M15–M23's codecs in and
+three fixtures added for them — DiskDoubler methods 3, 4 and 5, which nothing
+in the sample had exercised; 59/59 on 2026-08-15, re-run after the BinHex line rule
 changed — every `.hqx` in the sample goes through it; 57/57 earlier the same
 day, before M13 added ARC and uuencode; 55/55 on 2026-08-08, before M12 added
 two names to the sample) — data forks exact, resource forks exact bar the
@@ -985,7 +989,7 @@ above System 6: Standard File returns a **working-directory** reference in
 is always running, so the `SIZE` partition governs the launch. Mini vMac's
 Mac Plus supports up to 7.5.5, so this is the same 68000 as every other row.
 
-**59/59 byte-exact PASS at 4 MB** (2026-08-21; 55/55 on 2026-08-08 and 44/44
+**62/62 byte-exact PASS at 4 MB** (2026-08-22; 59/59 on 2026-08-21, 55/55 on 2026-08-08 and 44/44
 before the sample grew) — the same committed sample, the same on-Mac CRC-32
 read-back. The 2026-08-21 run is the first on this tier since M12, M13 and M14,
 so it is the first that includes DiskDoubler, Now Compress, ARC and uuencode
@@ -1075,7 +1079,8 @@ RAM** — the project's floor target — one boot per fixture, same on-Mac
 CRC-32 verification (`tools/vmac/run.py --mem 1M --list tools/vmac/sample.txt`).
 The engine budget is derived from `FreeMem` at startup.
 
-**59/59 byte-exact PASS** (2026-08-15, with M13's two; 57/57 before them;
+**62/62 byte-exact PASS** (2026-08-22, with M19–M23's three; 59/59 on
+2026-08-15 with M13's two; 57/57 before them;
 55/55 on 2026-08-08 and 44/44 on 2026-08-07, before the recovered fixtures,
 the method-6 pair and M12's two joined the sample; the sample carried four
 duplicate lines until 2026-08-21, so those runs were 63, 61 and 55 files
