@@ -66,7 +66,7 @@ oracle and will lose it to `./ci.sh`'s `make clean`.
 | `ddencode.py` | **grade a method by WRITING it**: encode a fork, hand it to Salient's own 1991 DiskDoubler, and see whether it comes back. How methods 3, 4 and 5 were graded with no specimen |
 | `ndd.py` | the releases nothing here had run: Salient's **3.1.2** (1991, the oldest reachable — it has the only method 2 fork), **DiskDoubler 4.0** and **Norton DiskDoubler Pro 1.1** (Symantec — whose application is 4.1.1). `--specimens`, `--harvest` and `--grade` need no emulator |
 | `superdisk.py` | grade SuperDisk! with its own self-extractors, and `--on-mac`, which replays both payloads through our application |
-| `spacesaver.py` | Aladdin's **SpaceSaver**, off the StuffIt Deluxe 5.0.1 CD. Reachable, and it does not run on 7.0.1 — see below before spending a boot on it |
+| `spacesaver.py` | Aladdin's **SpaceSaver**, off the StuffIt Deluxe 5.0.1 CD. 3.5.1 runs; 5.0 does not run on 7.0.1. `--layout` reads the format out of it without booting anything — see below before spending a boot on it |
 | `sdcompress.py` | the other half: Alysis's 1991 **SuperDisk! control panel**, which COMPRESSES. It wrote the five specimens the single-file container was derived from, and `--verify` re-grades them |
 | `mkcollide.py` | build an archive whose names collide on HFS, and verify what `BumpName` did with them — nothing in the corpus collides |
 
@@ -556,9 +556,10 @@ Three things that cost a run each:
   volume to `System Folder:Control Panels` is slower, reliable, and proves
   the panel is installed.
 
-## SpaceSaver — `spacesaver.py`, and why it does not run yet
+## SpaceSaver — `spacesaver.py`, and what it will and will not do
 
-One of the two formats this project cannot name. The application is
+3.5.1 runs, its container has been read out of it (`--layout`, below), and
+it has still never compressed anything here. The application is
 reachable — the Deluxe 5.0.1 CD carries a standalone installer — but
 **SpaceSaver 5.0 needs System 7.5.3 and 8 MB**, and forced past its own two
 "Install anyway?" alerts on 7.0.1 it bombs with *unimplemented trap*.
@@ -585,6 +586,24 @@ System 7.5.3**, which is the open route. DECISIONS.md 2026-08-22
     tools/vmac/spacesaver.py --idle           the panel's two settings pages
     tools/vmac/spacesaver.py --enroll         enrol the disk, then idle
     tools/vmac/spacesaver.py --namerule       rename a subject to end in "small"
+
+    tools/vmac/spacesaver.py --layout         read the container out of the
+                                              installed panel and engine
+
+**`--layout` needs no emulator at all.** It lifts `~StuffIt SpaceSaver™`
+(`cdev/SMKR`) and `StuffIt Engine™` off `ssinstalled.hfv` with `hcopy`,
+parses their resource maps, and prints the compression header, the fork
+record, and the compressor table read from each `CMod` module's own bytes —
+plus the engine's MacsBug symbols, which name every routine the reading
+came from. It ends with **nine witnesses**: byte patterns that must be
+present in `SSEn 1` and `ACMP 1`, printed with the offset each was found
+at, so a different build of SpaceSaver makes it say MISSING and exit 1
+rather than silently confirm today's reading. The layout itself is in
+FORMATS.md, *StuffIt SpaceSaver's container*.
+
+What it cannot see: whether any of this describes a real compressed file.
+Nothing here has produced one, so every field is read from the writer, not
+from output — and the codecs are not read at all.
 
 **SpaceSaver's trigger is a NAME RULE**, not a command: its Compression and
 Other Settings page reads *"Immediately compress files … whose Name begins or

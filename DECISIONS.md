@@ -98,6 +98,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-22 (SpaceSaver, the trigger) — a name rule, and why five attempts missed it
 - 2026-08-22 (SpaceSaver, where it rests) — two things measured, one thing stuck
 - 2026-08-22 (SpaceSaver, calling it) — the rename commits, the image does not see it
+- 2026-08-22 (SpaceSaver, the layout) — read out of the software, as recommended
 
 ---
 
@@ -5023,3 +5024,69 @@ The specimen is still wanted eventually — a decoder wants something to be
 wrong against — but the layout can be had first, and a layout makes the
 format nameable, which is the thing OPEN_ITEMS.md has been asking for
 since that section existed.
+
+## 2026-08-22 (SpaceSaver, the layout) — read out of the software, as recommended
+
+The previous entry recommended reading the container out of `cdev/SMKR`
+instead of driving the Finder for an eleventh run. That is what this is,
+and it cost host minutes: **`tools/vmac/spacesaver.py --layout`, no
+emulator, repeatable.**
+
+**The layout is not in the control panel.** `~StuffIt SpaceSaver™`'s
+`ACMP 1` only sniffs — it reads eight bytes and compares two magics. The
+writer is `SSEn 1` in `StuffIt Engine™`, the resource beside it on the
+same image, and **it ships its MacsBug symbols**: 133 of them, including
+`ReadSSHeader`, `WriteSSHeader`, `DefaultSSHeader`, `UpdateSSHeader`,
+`CompressFork`, `ExpandFork`, `IsFileCmpressed` and `MakeDFile`. A
+symbol sits after its routine's RTS, so the table is also the routine
+boundaries. **Naming the file that carries the format is a step of its
+own** — the panel was the obvious place and had the smaller half.
+
+The container, the record and the module table are printed by `--layout`
+and tabulated in FORMATS.md; what follows is only what the reading turned
+on.
+
+### Four things the bytes say that a specimen would not have shown quickly
+
+- **The two fork records are fixed, the two streams are not.** Record 1
+  is always the data fork and record 2 always the resource fork —
+  `mExpandFile` writes them to those two refnums. But `mCompressFile`
+  compares the two lengths and gives offset 84, the byte after the
+  header, to the LARGER fork; the other follows it. A decoder that
+  assumes record order is stream order is right about half the time, and
+  a one-fork specimen can never catch it.
+- **A compressed file is recognised by its LENGTH.** `IsFileCmpressed`
+  refuses to open anything whose data fork length has a non-zero low
+  byte, unless the type is `SPSV`, and `mCompressFile` ends by rounding
+  the EOF up to a multiple of 256. The magic is the confirmation, not
+  the screen. That is a cheap test for a system extension that sees
+  every file the Finder touches — and it means `unc_sniff` must read the
+  magic anyway, because "multiple of 256" is not evidence of anything.
+- **The compressor byte is an index, not a resource id.** `CheckCompressor`
+  takes the high byte of the module's own word at +0x20 as the index and
+  the low byte as a revision, keeps the higher revision, and gates on a
+  CPU mask at +0x24 — bit 31 minus Gestalt `cput`, with PowerPC's
+  0x0101.. mapped down to 8. So `Alg 3` (68030 and up), its
+  decompress-only twin (everything) and its PowerPC build all claim
+  index 3, and a file says 3 whichever wrote it. **One number in a file,
+  three implementations, chosen by the machine reading it.**
+- **The default method is a CPU decision, and it is inverted from the
+  intuition.** 68000/68010/68020 get index 4, 68030 and up get index 3;
+  the masks agree (`Alg 4` is `f0000000`, `Alg 3` is `0fff0000`). The
+  slow machines get the cheaper algorithm, and the corresponding
+  decompress-only modules are `ffff0000`, so any Mac can read any file.
+
+### What is still missing, and what it is not
+
+Not the container: that is done. What is missing is the two bitstreams —
+index 3 and index 4 — which are `CMod 11` (7,536 bytes) and `CMod 21`
+(2,202 bytes), the decompress-only modules, sitting in the same resource
+fork this was read out of. Each is called at its module+0x10 vector with
+a parameter block of seven callbacks; the engine adds no framing of its
+own, so a fork's stream is exactly what the module wrote.
+
+**That is the SuperDisk! bargain again** (SuperDisk!, read out of
+SuperDisk!): the reference is in hand, so the remaining work is
+transcription and grading — and grading still wants a specimen, which
+`--make` has not produced. The difference from a week ago is that the
+format is now nameable without one.

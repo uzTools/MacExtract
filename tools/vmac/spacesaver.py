@@ -1,33 +1,32 @@
 #!/usr/bin/env python3
 """spacesaver.py — run Aladdin's SpaceSaver under Mini vMac.
 
-StuffIt SpaceSaver is one of the two formats this project cannot even
-NAME: no reference implementation, no published layout, and no specimen,
-so `unc_sniff` answers *unknown* and OPEN_ITEMS.md has carried it since
-the section existed.
-
-It is reachable. SpaceSaver ships inside StuffIt Deluxe, and the
-Deluxe 5.0.1 CD-ROM on Macintosh Garden carries a **standalone
-`SpaceSaver 5.0 Installer`** beside it — one installer on one volume,
-where the 3.5.1 and 4.0 distributions are two-floppy InstallerMaker sets.
+SpaceSaver ships inside StuffIt Deluxe, and the Deluxe 5.0.1 CD-ROM on
+Macintosh Garden carries a **standalone `SpaceSaver 5.0 Installer`**
+beside it — one installer on one volume, where the 3.5.1 and 4.0
+distributions are two-floppy InstallerMaker sets.
 
     tools/vmac/spacesaver.py --setup     fetch the CD, lift the installer
     tools/vmac/spacesaver.py --probe     boot with it and photograph
     tools/vmac/spacesaver.py --install   run the installer
     tools/vmac/spacesaver.py --make      compress a subject, keep the file
+    tools/vmac/spacesaver.py --layout    read the container out of the
+                                         installed panel and engine
 
-The goal in order of value: a specimen at all (which is what makes the
-format nameable), then what marks a compressed file, then the container.
-The route the container would take is the one SuperDisk! and DiskDoubler
-Pro both took — read it out of the software that writes it, and grade by
-compressing known bytes.
+**`--layout` is the one that pays**, and it boots nothing: the container
+was read out of Aladdin's own engine on 2026-08-22 (FORMATS.md, *StuffIt
+SpaceSaver's container*), the route SuperDisk! and DiskDoubler Pro both
+took. What is still wanted is a specimen — ten emulator runs have not
+produced one — and the two codecs, which sit in the same resource fork.
 
 Nothing here runs in `ci.sh`, and nothing it fetches is committed.
 """
 import argparse
 import hashlib
 import os
+import re
 import shutil
+import struct
 import subprocess
 import sys
 import tempfile
@@ -1250,6 +1249,206 @@ def namevol(keep=False):
     return 0 if hit else 1
 
 
+
+# ---------------------------------------------------------------------------
+# Reading the format out of the software, which is what --layout does.
+#
+# SpaceSaver's container is written and read by two resources on the
+# installed image: `SSEn 1` in `StuffIt Engine™`, which carries MacsBug
+# symbols and so names every routine, and `ACMP 1` in the control panel,
+# which only sniffs. Everything printed below is parsed out of those
+# bytes; DECISIONS.md (2026-08-22, the layout) records what the
+# disassembly of the named routines says and how it was read.
+
+# What the layout was read out of. Each entry is a byte pattern that must
+# be present in the named resource, so a different build of SpaceSaver
+# makes this print FAIL rather than silently confirm today's reading.
+WITNESSES = [
+    ("eng", "SSEn", 1, "ReadSSHeader: ioReqCount = 84 at offset 0",
+     b"\x70\x54\x2d\x40\xff\xf2"),
+    ("eng", "SSEn", 1, "ReadSSHeader: cmpi.l #'SIT!',(a3)",
+     b"\x0c\x93SIT!"),
+    ("eng", "SSEn", 1, "ReadSSHeader: cmpi.l #'DFD3',4(a3)",
+     b"\x0c\xabDFD3\x00\x04"),
+    ("eng", "SSEn", 1, "DefaultSSHeader: move.l #'SIT!',(a3)",
+     b"\x26\xbcSIT!"),
+    ("eng", "SSEn", 1, "DefaultSSHeader: version 3, header length 84",
+     b"\x70\x03\x27\x40\x00\x08\x70\x54\x27\x40\x00\x0c"),
+    ("eng", "SSEn", 1, "MakeDFile: type 'SPSV', creator 'SIT!'",
+     b"\x26\xbcSPSV\x27\x7cSIT!\x00\x04"),
+    ("eng", "SSEn", 1, "mCompressFile: EOF rounded up to a multiple of 256",
+     b"\x41\xe8\x00\xff\x20\x08\x02\x40\xff\x00"),
+    ("eng", "SSEn", 1, "IsFileCmpressed: type 'SPSV', or a data fork "
+     "length whose low byte is 0",
+     b"\x0c\xaeSPSV\xff\x28\x67\x0e\x20\x2e\xff\x3e"
+     b"\x02\x80\x00\x00\x00\xff"),
+    ("ss", "ACMP", 1, "the control panel reads 8 bytes and compares both",
+     b"\x0c\xaeSIT!"),
+]
+
+# The 84-byte header, and the 16-byte fork record inside it. Field names
+# are this project's; the software names none of them.
+SS_HEADER = [
+    (0, 4, "'SIT!'", "first magic"),
+    (4, 4, "'DFD3'", "second magic"),
+    (8, 4, "version", "3. UpdateSSHeader converts 1 and 2 in place"),
+    (12, 4, "header length", "84"),
+    (16, 4, "flags", "0x00000041 in everything this engine writes; "
+     "bit 0 required to compress, bit 0 or 1 to expand"),
+    (20, 16, "fork record", "DATA fork"),
+    (36, 16, "fork record", "RESOURCE fork"),
+    (52, 4, "fdType", "the file's type before compression"),
+    (56, 4, "fdCreator", "its creator"),
+    (60, 2, "fdFlags", "its Finder flags; six bits are restored from here"),
+    (62, 2, "zero", "set to 0 on every write"),
+    (64, 20, "reserved", "zeroed on every write"),
+]
+
+SS_FORK_RECORD = [
+    (0, 4, "compressed length", "bytes the module wrote"),
+    (4, 4, "original length", "0 means the fork is absent, and then the "
+     "two bytes below are 0 too"),
+    (8, 4, "offset", "from the start of the data fork"),
+    (12, 1, "parameter set", "indexes the engine's 'PrAm' resources; 0 in "
+     "everything this engine writes"),
+    (13, 1, "compressor", "index below, bit 7 = the PowerPC module"),
+    (14, 2, "zero", "cleared by SetupAFork"),
+]
+
+
+def resources(fork):
+    """A resource fork's bytes -> {type: {id: (name, data)}}.
+
+    Inside Macintosh I-121. The map holds a type list of (type, count-1,
+    offset) and, per type, a reference list of (id, name offset, attrs,
+    24-bit data offset, handle).
+    """
+    dataoff, mapoff, _, maplen = struct.unpack(">IIII", fork[:16])
+    m = fork[mapoff:mapoff + maplen]
+    typeoff, nameoff = struct.unpack(">HH", m[24:28])
+    out = {}
+    for i in range(struct.unpack(">H", m[typeoff:typeoff + 2])[0] + 1):
+        e = typeoff + 2 + i * 8
+        rtype = m[e:e + 4].decode("mac-roman")
+        count = struct.unpack(">H", m[e + 4:e + 6])[0] + 1
+        reflist = typeoff + struct.unpack(">H", m[e + 6:e + 8])[0]
+        out[rtype] = {}
+        for j in range(count):
+            r = reflist + j * 12
+            rid = struct.unpack(">h", m[r:r + 2])[0]
+            noff = struct.unpack(">h", m[r + 2:r + 4])[0]
+            doff = struct.unpack(">I", b"\0" + m[r + 5:r + 8])[0]
+            name = ""
+            if noff >= 0:
+                p = nameoff + noff
+                name = m[p + 1:p + 1 + m[p]].decode("mac-roman", "replace")
+            p = dataoff + doff
+            n = struct.unpack(">I", fork[p:p + 4])[0]
+            out[rtype][rid] = (name, fork[p + 4:p + 4 + n])
+    return out
+
+
+def macsbug_symbols(code):
+    """Offsets and names of the MacsBug symbols in a 68k code resource.
+
+    A symbol sits after its routine's RTS: a length byte 0x80|n, n name
+    bytes, padded to even, then a word. So the offset reported here is
+    where the routine ENDS, and the next one starts at name + 2.
+    """
+    out, i = [], 0
+    while i < len(code) - 2:
+        n = code[i] & 0x1f
+        if 0x81 <= code[i] <= 0x9f and n >= 3:
+            s = code[i + 1:i + 1 + n]
+            if re.fullmatch(rb"[A-Za-z_][A-Za-z0-9_ .]*", s):
+                out.append((i, s.decode()))
+                i += 1 + n
+                continue
+        i += 1
+    return out
+
+
+def layout():
+    """Read the container layout out of the installed SpaceSaver.
+
+    No emulator: the resources come off the disk image with `hcopy`, and
+    everything printed is parsed from them. `--make` would give a
+    specimen to check it against; this gives the layout without one.
+    """
+    from superdisk import read_forks                    # noqa: E402
+    if not os.path.exists(INSTALLED):
+        raise SystemExit("spacesaver: no installed image — run --install351 "
+                         "then --keep-installed")
+    forks, wanted = read_forks(INSTALLED), {}
+    for path, (ftype, creator, _data, rsrc) in forks.items():
+        if creator == "SMKR":
+            wanted["ss"] = (path[-1], ftype, creator, rsrc)
+        elif creator == "SITe":
+            wanted["eng"] = (path[-1], ftype, creator, rsrc)
+    for key in ("ss", "eng"):
+        if key not in wanted:
+            raise SystemExit("spacesaver: %s not on %s" % (key, INSTALLED))
+    res = {}
+    for key, (name, ftype, creator, rsrc) in wanted.items():
+        res[key] = resources(rsrc)
+        print("%-22s %s/%s  %d B resource fork, %d types"
+              % (name, ftype, creator, len(rsrc), len(res[key])))
+
+    print("\nThe engine's routines, from its own MacsBug symbols "
+          "(offset = where each ENDS):")
+    syms = macsbug_symbols(res["eng"]["SSEn"][1][1])
+    keep = ("SSHeader", "Fork", "File", "Compressor", "IsFileCmpressed")
+    for off, name in syms:
+        if any(k in name for k in keep):
+            print("  %06x  %s" % (off, name))
+    print("  ... %d symbols in all" % len(syms))
+
+    print("\nCompression header, 84 bytes at offset 0 of the data fork:")
+    for off, size, name, note in SS_HEADER:
+        print("  +%-3d %-3d %-18s %s" % (off, size, name, note))
+    print("\n  fork record, 16 bytes:")
+    for off, size, name, note in SS_FORK_RECORD:
+        print("    +%-3d %-2d %-18s %s" % (off, size, name, note))
+    print("\n  The two records are fixed: data first, then resource. The"
+          "\n  LARGER fork's stream is written first, at offset 84, and the"
+          "\n  other follows it — read each one at its own offset. The data"
+          "\n  fork's EOF is rounded up to a multiple of 256, which is how"
+          "\n  a compressed file is recognised without opening it; the"
+          "\n  compressed file's resource fork is empty.")
+
+    print("\nCompressor modules, each field read from the module's own "
+          "header:")
+    print("  %-4s %-4s %-3s %-3s %-9s %s"
+          % ("id", "idx", "rev", "ppc", "cpus", "name"))
+    for key in ("ss", "eng"):
+        for rid in sorted(res[key].get("CMod", {})):
+            name, code = res[key]["CMod"][rid]
+            sel, ppc, cpus = struct.unpack(">HHI", code[0x20:0x28])
+            print("  %-4d %-4d %-3d %-3s %08x  %s"
+                  % (rid, sel >> 8, sel & 0xff, "yes" if ppc else "-",
+                     cpus, name))
+        break                              # both files carry the same set
+    print("  idx is the fork record's compressor byte. A module runs on a"
+          "\n  CPU when bit (31 - Gestalt 'cput') of its mask is set, with"
+          "\n  PowerPC's 0x0101.. mapped down to 8..; where two modules"
+          "\n  claim the same idx the higher rev wins. Entry vectors are"
+          "\n  bra.w at +0x00, +0x08, +0x10 and +0x18: +0x08 compresses,"
+          "\n  +0x10 expands, and a PowerPC module's PEF starts at +0x2c.")
+
+    print("\nWhat this reading rests on:")
+    bad = 0
+    for key, rtype, rid, what, pattern in WITNESSES:
+        code = res[key].get(rtype, {}).get(rid, ("", b""))[1]
+        at = code.find(pattern)
+        bad += at < 0
+        print("  %-6s %s %s" % ("%s %d" % (rtype, rid),
+                                "%06x" % at if at >= 0 else "MISSING",
+                                what))
+    print("spacesaver: %d of %d witnesses found"
+          % (len(WITNESSES) - bad, len(WITNESSES)))
+    return 1 if bad else 0
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -1287,6 +1486,9 @@ def main():
                     help="boot the installed image and peek the menus")
     ap.add_argument("--install40", action="store_true",
                     help="run the 4.0 installer, trying each published code")
+    ap.add_argument("--layout", action="store_true",
+                    help="read the container layout out of the installed "
+                         "control panel and engine")
     ap.add_argument("--keep", action="store_true")
     a = ap.parse_args()
     if a.setup:
@@ -1325,6 +1527,8 @@ def main():
         probe_installed(a.keep)
     elif a.install40:
         install40(a.keep)
+    elif a.layout:
+        return layout()
     else:
         ap.print_help()
     return 0

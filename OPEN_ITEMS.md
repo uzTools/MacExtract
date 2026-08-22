@@ -130,54 +130,24 @@ Unlike section 3, none of this is impossible here: a download would do it.
   accounts for, and a lossy mode is a thing an extractor cannot grade
   against its input by construction.
 
-- **StuffIt SpaceSaver.** Not waiting on a file: the application is in
-  hand both ways (`tools/vmac/spacesaver.py`). **Waiting on a System
-  7.5.3 image**, and both other routes are closed and measured:
-  - **5.0**, the standalone installer off the Deluxe 5.0.1 CD, wants
-    System 7.5.3 and 8000K; forced past both of its own "Install anyway?"
-    alerts on 7.0.1 it bombs with *unimplemented trap*. It never asked
-    for a registration number.
-  - **3.5.1**, the era 7.0.1 fits, installs fine up to a registration
-    panel that rejects an empty number: *"The registration number that
-    you have entered is invalid."* **No serial was sought.** The
-    licence's reverse-engineering clause was waived by the maintainer on
-    2026-08-22; a registration number is licence ENFORCEMENT, which is a
-    separate decision and has not been taken (DECISIONS.md, SpaceSaver
-    later).
-
-  Macintosh Garden publishes codes for **3.0.7** and **5.x**; the
-  maintainer waived the licence question on 2026-08-22 and the published
-  codes were tried, four per boot. **3.5.1 and 4.0 reject all of them** —
-  they are not the versions the codes are for, and they are the only
-  versions this machine can run.
-
-  **3.5.1 is installed and running** since 2026-08-22, with a 3.5-specific
-  code: the image carries `~StuffIt SpaceSaver™` (`cdev/SMKR`),
-  `~Magic Menu™` and the `StuffIt Engine™`, and it boots
-  (`spacesaver.py --probe-installed`).
-
-  **The trigger is known and is a NAME RULE**, found on the panel's
-  *Compression and Other Settings* page: *"Immediately compress files,
-  folders, and disks whose … Name begins or ends with: `small`"*. That is
-  why Magic Menu's *SpaceSaver Compress*, an enrolled disk, 1990 dates
-  and eighteen minutes of idling all left the subjects byte-identical —
-  none of them was ever named to match (DECISIONS.md 2026-08-22, the
-  trigger).
-
-  **The rename commits and the image never sees it.** Photographed: both
-  subjects renamed on screen, no edit box, while the disk image still
-  holds the old names. HFS directory updates sit in the cache, the boot
-  volume is never unmounted, and the emulator is killed instead. A
-  matching name merely APPEARING does not fire the rule either — tested,
-  fourteen minutes on the enrolled disk, unchanged — so a rename EVENT is
-  required and its effect has to survive to the image.
-
-  **Recommended instead of more of that:** read the layout out of
-  `cdev/SMKR`'s 289 KB resource fork, which is where the decompressor is.
-  That is SuperDisk!'s route, it needs no emulator interaction, it is
-  repeatable, and the licence clause was waived. Ten runs went into
-  driving the Finder and the last two added an infrastructure failure on
-  top — one never booted at all (DECISIONS.md 2026-08-22, calling it).
+- **StuffIt SpaceSaver.** The container is no longer missing: it was read
+  out of Aladdin's own engine on 2026-08-22 and is tabulated in FORMATS.md
+  (*StuffIt SpaceSaver's container*), reproducible with
+  `tools/vmac/spacesaver.py --layout` — no emulator, and its nine
+  witnesses fail if a different build is ever put in front of it.
+  **Two things are left, and neither is a licence question:**
+  - **The two codecs.** Compressor index 3 and index 4, which are `CMod 11`
+    (7,536 B) and `CMod 21` (2,202 B) in the same resource fork — the
+    decompress-only modules, which accept every CPU. Reference-quality
+    material in hand, so this is transcription. **What would close it:**
+    writing them.
+  - **A specimen.** SpaceSaver 3.5.1 is installed and runs, its trigger is
+    a name rule, and nothing here has yet made it compress anything: the
+    Finder does the rename on screen and the change never reaches the disk
+    image (DECISIONS.md 2026-08-22, calling it). **What would close it:** a
+    rename event whose effect survives to the image, or any compressed file
+    from anywhere. Without one a codec cannot be graded, which is the bar
+    LZH and DiskDoubler's declined methods already set.
 
 - **AppleLink `.pkg`.** No reference
   implementation and no published layout anywhere reachable. Searched
