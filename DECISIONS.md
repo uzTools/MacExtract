@@ -99,6 +99,8 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-22 (SpaceSaver, where it rests) — two things measured, one thing stuck
 - 2026-08-22 (SpaceSaver, calling it) — the rename commits, the image does not see it
 - 2026-08-22 (SpaceSaver, the layout) — read out of the software, as recommended
+- 2026-08-22 (SpaceSaver, the codecs) — two of five, and a dictionary that is not ours
+- 2026-08-22 (SpaceSaver, what will not compress) — seven runs, one thing that fired
 
 ---
 
@@ -5090,3 +5092,143 @@ SuperDisk!): the reference is in hand, so the remaining work is
 transcription and grading — and grading still wants a specimen, which
 `--make` has not produced. The difference from a week ago is that the
 format is now nameable without one.
+
+## 2026-08-22 (SpaceSaver, the codecs) — two of five, and a dictionary that is not ours
+
+The layout entry above ends by saying what was left: the bitstreams, and a
+specimen to grade them against. This is the bitstreams.
+
+### The module interface, which is the same for all five
+
+`ExpandFork` @0x5ee6 builds one parameter block and calls the module at
+its own +0x10 vector. The block is seven callback pointers — read,
+write, get/set source position, source EOF, progress, debug — then the
+refcon they all take, the compressed and uncompressed lengths, a
+pointer and a length, and the work buffer and its size. **The module
+adds no framing of its own**, so a fork's compressed stream is exactly
+what the module wrote, at the offset its record gives.
+
+The wrappers at the head of every `CMod` (@0x2e, @0x4a, ...) name those
+fields precisely: each one calls `pb->[n]` with `pb->[28]` as the first
+argument, so the block's shape can be read off the module rather than
+guessed from the caller.
+
+### Method 0 is stored, and says so twice
+
+`CMod 1` is 374 bytes: its compressor sets the compressed length equal
+to the original and calls `XferData` @0xee, a read/write loop; its
+expander calls the same routine. Nothing else. A stored fork therefore
+has `clen == ulen`, which the reader checks.
+
+### Method 4 is an LZSS, and the shape is in FORMATS.md
+
+What is worth keeping here is not the layout but two things the code
+says that a specimen would not have shown quickly:
+
+- **A block's length counts its own header.** @0x4e8 subtracts `clen`
+  from a byte count that started at the block header, so the six bytes
+  are inside it. Reading `clen` as a payload length works for the first
+  block of a one-block fork and desynchronises on the second.
+- **The window is not reset per block.** @0x438 compacts it and keeps
+  going, so a match in block five may reach into block four. A decoder
+  that starts each block clean decodes the first one perfectly.
+
+### The finding that changes what an extractor can promise
+
+**SpaceSaver's window starts loaded with a preset dictionary, and the
+dictionary is Aladdin's.** @0x280 copies `pb->[44]` for `pb->[48]`
+bytes into the window immediately BEFORE the first output byte. Those
+two fields come from the engine: `ExpandFork` passes the master pointer
+of a `PrAm` resource and — through the glue at @0x3e4, which is
+`GetHandleSize` writing into an argument slot — its size. The resource
+is chosen by the fork record's byte at +12, which is 0 in everything
+this engine writes, and `LoadCompressors` @0x10c8 loads index 0 from
+`'PrAm'` **-4048**: 9,679 bytes whose first line is
+*"/\* Copyright (c) 1993 Aladdin Systems, Inc. This source code and
+specific concepts contained herein are confidential information and
+property of Aladdin Systems"*, followed by 68k mnemonics, C fragments
+and Mac boilerplate. It is a corpus of representative Macintosh file
+content — a preset dictionary in the zlib sense, and the giveaway that
+it is one is that the copyright notice is IN the compressible data.
+
+Three consequences, and they are the reason this is written up at
+length:
+
+- **A decoder cannot be correct without those bytes.** Every fork's
+  first matches reach into them.
+- **This project cannot ship them.** Same rule as the fixtures and the
+  ROM. So `UncOptions.preset` exists, `unclassic --preset FILE` fills
+  it from the user's own copy of SpaceSaver, and
+  `spacesaver.py --layout` writes the resource out beside the emulator's
+  other state.
+- **Absence has to be a failure, not a silence.** A window of zeroes
+  decodes to plausible-looking wrong bytes. The reader tracks how far
+  back the history actually reaches and refuses a distance beyond it,
+  which is a per-entry error; `run_spacesaver.py` re-runs every
+  specimen that passed WITHOUT the dictionary and requires it to fail.
+
+### Why 1, 2 and 3 are declined, and what the module table settles
+
+Each `CMod` carries a CPU mask at +0x24, and the masks say which
+machine can write which method: `Alg 4` is `f0000000` (68000 through
+68020), `Alg 3` is `0fff0000` (68030 and up, plus PowerPC), and the
+decompress-only builds are `ffff0000` — anybody can read anything. The
+engine's default follows the same split. So the only method this
+machine's Mac Plus can be made to write is 4, and 1, 2 and 3 are
+declined per entry for want of an oracle, exactly as LZH and
+DiskDoubler's own declined methods are. Their modules are in hand; it
+is the grading that is missing, and that has been the bargain since M14.
+
+## 2026-08-22 (SpaceSaver, what will not compress) — seven runs, one thing that fired
+
+The format is implemented; what is still missing is a file SpaceSaver
+wrote. Seven runs went after one, every one of them on a machine that
+booted and was **flushed** — Special ▸ Shut Down, the step whose absence
+invalidated the three earlier runs (BLOCKERS.md). What they establish:
+
+| driven | result |
+|---|---|
+| rename to end in `small`, the panel's compression rule | nothing |
+| the same, with the startup disk enrolled and 18 minutes idle | nothing |
+| Magic Menu ▸ *SpaceSaver Compress* on the selected file | nothing |
+| the same, disk enrolled first | the selection was wrong — void |
+| rename to add `.SIT`, the panel's OTHER rename rule | **a 228-byte StuffIt archive** |
+| `DropCompress™` launched with no document | no window at all, then it quits |
+| a subject dragged onto `DropCompress™` | the app highlights, nothing happens |
+
+**The `.SIT` result is the one that matters**, because it disproves the
+explanation everything else was resting on. The trigger page has two
+rename rules ticked; renaming `Forked` to `Forked.SIT` replaced it with
+a StuffIt archive and deleted the original. So the extension is loaded,
+it sees rename events, it acts on them, and its output survives to the
+image. **What does not happen is compression** — and that is now a
+statement about SpaceSaver's compressor rather than about the harness,
+which is the first time in this investigation that has been true.
+
+### Why this is written down rather than left as "still trying"
+
+Every earlier round of this ended with a hypothesis about the harness —
+the keystroke did not arrive, the wrong window was in front, the image
+was not flushed — and each was true once and then repaired. The
+remaining candidates are about the software, and they are worth
+recording because the next attempt should start from them rather than
+from the Finder again:
+
+- **the compression rule may not be a rename hook at all.** Its wording
+  is a property ("files … whose Name begins or ends with"), unlike the
+  suffix rule's event ("when its name is changed"). A file that already
+  matches has never been tested on a machine that booted — the run that
+  claimed to has been withdrawn;
+- **`Idle Now`.** `STR# 1024` is SpaceSaver's own menu — *Turn Idle-Time
+  On*, **Idle Now**, *Open Control Panel* — and the menu bar carries no
+  such menu while Magic Menu is installed. Removing `~Magic Menu™` from
+  the Control Panels folder before booting is one `hdel`, and *Idle Now*
+  is the only explicit "do it now" this software offers;
+- **the registration state.** 3.5.1 was installed with a code that the
+  panel accepted, and nothing has checked what *About SpaceSaver* says
+  about it.
+
+Nothing here blocks the reader: the container and both implemented
+methods are graded by an encoder written from the same disassembly, and
+the honest limit of that is written in TESTING.md. A specimen would
+raise it from *self-consistent* to *right*.

@@ -120,7 +120,8 @@ each one opens:
 | Encrypted archives | yes, if you know the password | no |
 | Several files posted in one BinHex message | yes | yes |
 | `.arc` and uuencoded (`.uu`) files | with the add-on | yes |
-| AppleLink `.pkg`, StuffIt SpaceSaver | with the add-on | no — SpaceSaver's container has been worked out, but not its compression; nothing published describes `.pkg` at all, and this project does not guess |
+| StuffIt SpaceSaver | with the add-on | yes, for what a 68k Mac writes — and it needs SpaceSaver's own dictionary file (see FORMATS.md) |
+| AppleLink `.pkg` | with the add-on | no — nothing published describes it at all, and this project does not guess |
 | DiskDoubler, Now Compress and SuperDisk! archives | no | yes |
 | What you install | the application, a StuffIt Engine extension, and the add-on for anything above | one application |
 | Source | free, closed | free, open (LGPL) |

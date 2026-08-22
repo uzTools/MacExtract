@@ -2188,6 +2188,13 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
 
     opt.list_only = 0;
     opt.test_only = 0;
+    /* SpaceSaver's preset dictionary is Aladdin's and this application
+     * does not carry one, so entries whose stream reaches into it fail
+     * cleanly rather than decoding to something wrong (OPEN_ITEMS.md).
+     * Set explicitly: this struct is filled field by field, so a field
+     * nobody assigns is stack garbage. */
+    opt.preset = NULL;
+    opt.preset_len = 0;
     /* Fallback name for formats that store none (gzip, .Z). The contract in
      * unclassic.h is "the archive filename minus its LAST extension", which
      * is what unar does and what cli/main.c passes; this used to pass the

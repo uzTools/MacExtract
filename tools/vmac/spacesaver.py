@@ -1250,6 +1250,752 @@ def namevol(keep=False):
 
 
 
+# The Finder's Special menu on this System 7.0.1 image, measured off
+# `namerule/01-desktop.png`: the title "Special" spans x=207..250, and
+# the menu is Clean Up Window / Empty Trash / - / Eject Disk / Erase Disk
+# / - / Restart / Shut Down, the same eight rows `arcmac.py` picks 123
+# out of on System 6.
+SPECIAL_X = 225
+SHUT_DOWN_Y = 123
+
+
+def specimen(keep=False):
+    """Rename the subjects so SpaceSaver compresses them, then SHUT DOWN.
+
+    Everything here is `--namerule`, which has been photographed doing
+    the rename correctly, plus the one step it was missing. Mini vMac
+    writes the guest's sectors through buffered stdio and flushes when a
+    volume is ejected; killing the emulator with the boot volume still
+    mounted throws away whatever the Finder had not written, which is why
+    ten runs read back byte-identical subjects. Special > Shut Down
+    ejects every volume. `arcmac.py`'s `shutdown()` says the same thing
+    and has said it since ARC specimens were made this way — this
+    harness simply never called it.
+
+    The subjects go on the BOOT volume, not a second one: the name rule
+    is what fires, the boot volume is the disk the panel is enrolled for,
+    and a shutdown flushes it just as well.
+    """
+    import glob
+    boot = os.path.join(WORK, "ssspec.hfv")
+    shutil.copyfile(INSTALLED, boot)
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+    tmp = tempfile.mkdtemp(prefix="ssspec-")
+    try:
+        subprocess.run(["hmount", boot], check=True, capture_output=True,
+                       env=env)
+        from ndd import macbinary_dated, MAC_EPOCH_1990   # noqa: E402
+        for n, t, c, d, r in SUBJECTS:
+            q = os.path.join(tmp, n + ".bin")
+            open(q, "wb").write(macbinary_dated(n, t, c, d, r,
+                                                MAC_EPOCH_1990,
+                                                MAC_EPOCH_1990))
+            subprocess.run(["hcopy", "-m", q, ":"], check=True,
+                           capture_output=True, env=env)
+        subprocess.run(["humount"], check=True, capture_output=True, env=env)
+    finally:
+        shutil.rmtree(env["HOME"], ignore_errors=True)
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    before = set(glob.glob("/tmp/dd-*/boot.hfv"))
+    s = Session(boot, [], os.path.join(SPECIMENS, "specimen"))
+    try:
+        s.boot()
+        s.shot("desktop", wait=14.0)
+        # Wake the input path with a click on the front window's TITLE
+        # bar, then close what the installed system opens at startup.
+        # Both notes are `--namerule`'s, measured.
+        s.mac.click(250, 38)
+        time.sleep(2.5)
+        for _ in range(3):
+            s.mac.command_key("w")
+            time.sleep(2.5)
+        s.shot("windows-closed", wait=6.0)
+        s.mac.click(470, 55, double=True)
+        s.shot("bootvol", wait=14.0)
+        for name, letter in (("Alpha", "a"), ("Forked", "f")):
+            s.mac.key("Escape")
+            time.sleep(0.6)
+            s.mac.key(letter)
+            time.sleep(1.5)
+            s.mac.key("Return")           # open the name for editing
+            time.sleep(2.0)
+            s.mac.key("Right")            # to the end, keeping the name
+            time.sleep(0.8)
+            s.mac._xdo("type", "--delay", "150", "small")
+            time.sleep(1.5)
+            s.mac.key("KP_Enter")         # Enter commits; Return does not
+            time.sleep(4.0)
+            s.mac.click(155, 310)         # another icon, as a person would
+            time.sleep(4.0)
+            s.shot("renamed-" + name, wait=35.0)
+        s.shot("settled", wait=45.0)
+        s.menu(SPECIAL_X, SHUT_DOWN_Y, "special-menu")
+        s.shot("shutting-down", wait=30.0)
+    finally:
+        time.sleep(8)
+        s.close()
+
+    cands = [p for p in glob.glob("/tmp/dd-*/boot.hfv") if p not in before]
+    if not cands:
+        cands = sorted(glob.glob("/tmp/dd-*/boot.hfv"),
+                       key=os.path.getmtime)[-1:]
+    out = sorted(cands, key=os.path.getmtime)[-1]
+    print("spacesaver: reading back %s" % out)
+    return report_specimen(out, s.shots)
+
+
+def report_specimen(img, shots, subjects=None):
+    """Say what came back, and keep anything that is a SpaceSaver file.
+
+    A changed subject is not enough on its own — the point of the run is
+    a file with `SIT!DFD3` at offset 0, so that is what is reported and
+    what decides the exit status.
+    """
+    from superdisk import read_forks                    # noqa: E402
+    known = dict((n, d) for n, _t, _c, d, _r in (subjects or SUBJECTS))
+    os.makedirs(shots, exist_ok=True)
+    hit = 0
+    for path, (ftype, creator, data, rsrc) in sorted(read_forks(img).items()):
+        base = path[-1]
+        orig = known.get(base) or known.get(base[:-5])
+        if orig is None:
+            continue
+        ss = data[:8] == b"SIT!DFD3"
+        print("spacesaver: %-16s %s/%s data %d (was %d) rsrc %d  %s"
+              % (base, ftype, creator, len(data), len(orig), len(rsrc),
+                 "SPACESAVER" if ss else
+                 ("changed, not a SpaceSaver file" if data != orig
+                  else "unchanged")))
+        if data == orig:
+            continue
+        q = os.path.join(SPECIMENS, base + ".ss")
+        open(q, "wb").write(data)
+        if rsrc:
+            open(q + ".rsrc", "wb").write(rsrc)
+        # The bytes that went in, beside what came out: this is the only
+        # oracle the format has, so the specimen is useless without it.
+        open(q + ".orig", "wb").write(orig)
+        print("             kept %s" % q)
+        hit += ss
+    return 0 if hit else 1
+
+
+# Matching and non-matching names, all dated 1990: the Idle Time page
+# compresses "files not modified in the last 1 Months", and the
+# Compression page's rule fires on a name that begins or ends with
+# "small". One boot gives both mechanisms their chance, and `Control`
+# says which of them fired.
+IDLE_SUBJECTS = [("Alphasmall", "TEXT", "ttxt", SUBJECT, b""),
+                 ("smallForked", "PICT", "8BIM", SUBJECT[:3000],
+                  make_rsrc(b"\x1eSpaceSaver probe fork")),
+                 ("Control", "TEXT", "ttxt", SUBJECT, b"")]
+
+
+def idlespec(keep=False):
+    """Enrol the startup disk, idle, and SHUT DOWN — all in one boot.
+
+    Both halves of this have been done before and neither result
+    survived. `--enroll` added the startup disk to the Idle Time list
+    and sat still for eighteen minutes, then the emulator was killed:
+    Mini vMac had not flushed the volume, so the image it left behind
+    was both unbootable and empty of whatever had happened. Every run
+    built on that image — `--namefirst`, `--namevol` — then failed to
+    boot at all, and each one's "unchanged" readback was recorded as a
+    measurement of SpaceSaver rather than of a dead machine.
+
+    So: one boot does the enrolling, the idling and the shutdown, and
+    the readback comes from an image that was flushed.
+    """
+    import glob
+    boot = os.path.join(WORK, "ssidle.hfv")
+    shutil.copyfile(INSTALLED, boot)
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+    tmp = tempfile.mkdtemp(prefix="ssidle-")
+    try:
+        subprocess.run(["hmount", boot], check=True, capture_output=True,
+                       env=env)
+        from ndd import macbinary_dated, MAC_EPOCH_1990   # noqa: E402
+        for n, t, c, d, r in IDLE_SUBJECTS:
+            q = os.path.join(tmp, n + ".bin")
+            open(q, "wb").write(macbinary_dated(n, t, c, d, r,
+                                                MAC_EPOCH_1990,
+                                                MAC_EPOCH_1990))
+            subprocess.run(["hcopy", "-m", q, ":"], check=True,
+                           capture_output=True, env=env)
+        subprocess.run(["humount"], check=True, capture_output=True, env=env)
+    finally:
+        shutil.rmtree(env["HOME"], ignore_errors=True)
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    before = set(glob.glob("/tmp/dd-*/boot.hfv"))
+    s = Session(boot, [], os.path.join(SPECIMENS, "idlespec"))
+    try:
+        open_ss_panel(s)
+        s.mac.click(*SS_IDLE_TIME)
+        time.sleep(4.0)
+        s.mac.click(*SS_IDLE_TIME)
+        s.shot("idle-page", wait=10.0)
+        s.mac.click(*IDLE_ADD)                  # enrol the startup disk
+        time.sleep(3.0)
+        s.mac.click(*IDLE_ADD)
+        s.shot("added", wait=6.0)
+        s.mac.click(*IDLE_OK)
+        time.sleep(3.0)
+        s.mac.click(*IDLE_OK)
+        s.shot("settings-ok", wait=8.0)
+        s.mac.command_key("w")                  # close the control panel
+        s.shot("panel-closed", wait=8.0)
+        # Sit absolutely still for longer than the ten minutes the page
+        # asks for. A screenshot is a host-side grab of the X window and
+        # injects no event, so it does not count as user activity.
+        for i in range(11):
+            s.shot("idling%d" % i, wait=100.0)
+        s.menu(SPECIAL_X, SHUT_DOWN_Y, "special-menu")
+        s.shot("shutting-down", wait=30.0)
+    finally:
+        time.sleep(8)
+        s.close()
+
+    cands = [p for p in glob.glob("/tmp/dd-*/boot.hfv") if p not in before]
+    if not cands:
+        cands = sorted(glob.glob("/tmp/dd-*/boot.hfv"),
+                       key=os.path.getmtime)[-1:]
+    out = sorted(cands, key=os.path.getmtime)[-1]
+    print("spacesaver: reading back %s" % out)
+    return report_specimen(out, s.shots, IDLE_SUBJECTS)
+
+
+def magic(keep=False):
+    """Ask Magic Menu to compress the subjects, then SHUT DOWN.
+
+    The one mechanism that needs neither a name rule nor an idle timer:
+    Magic Menu puts *SpaceSaver Compress* in the Finder's menu bar, and
+    it acts on the selection. It was tried once before and read back
+    unchanged — on an image nobody had flushed, which is now known to
+    measure nothing (BLOCKERS.md). Same command, on the boot volume,
+    ending in Special > Shut Down.
+    """
+    import glob
+    boot = os.path.join(WORK, "ssmagic.hfv")
+    shutil.copyfile(INSTALLED, boot)
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+    tmp = tempfile.mkdtemp(prefix="ssmagic-")
+    try:
+        subprocess.run(["hmount", boot], check=True, capture_output=True,
+                       env=env)
+        from ndd import macbinary_dated, MAC_EPOCH_1990   # noqa: E402
+        for n, t, c, d, r in SUBJECTS:
+            q = os.path.join(tmp, n + ".bin")
+            open(q, "wb").write(macbinary_dated(n, t, c, d, r,
+                                                MAC_EPOCH_1990,
+                                                MAC_EPOCH_1990))
+            subprocess.run(["hcopy", "-m", q, ":"], check=True,
+                           capture_output=True, env=env)
+        subprocess.run(["humount"], check=True, capture_output=True, env=env)
+    finally:
+        shutil.rmtree(env["HOME"], ignore_errors=True)
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    before = set(glob.glob("/tmp/dd-*/boot.hfv"))
+    s = Session(boot, [], os.path.join(SPECIMENS, "magic"))
+    try:
+        s.boot()
+        s.shot("desktop", wait=14.0)
+        s.mac.click(250, 38)                    # wake the input path
+        time.sleep(2.5)
+        for _ in range(3):
+            s.mac.command_key("w")
+            time.sleep(2.5)
+        s.shot("windows-closed", wait=6.0)
+        s.mac.click(470, 55, double=True)
+        s.shot("bootvol", wait=14.0)
+        for name, letter in (("Alpha", "a"), ("Forked", "f")):
+            s.mac.key("Escape")
+            time.sleep(0.6)
+            s.mac.key(letter)                   # type-select
+            time.sleep(1.5)
+            s.shot("selected-" + name, wait=0.5)
+            s.menu(MAGIC_X, MAGIC_COMPRESS_Y, "compress-" + name)
+            s.shot("after-" + name, wait=45.0)
+        s.shot("settled", wait=30.0)
+        s.menu(SPECIAL_X, SHUT_DOWN_Y, "special-menu")
+        s.shot("shutting-down", wait=30.0)
+    finally:
+        time.sleep(8)
+        s.close()
+
+    cands = [p for p in glob.glob("/tmp/dd-*/boot.hfv") if p not in before]
+    if not cands:
+        cands = sorted(glob.glob("/tmp/dd-*/boot.hfv"),
+                       key=os.path.getmtime)[-1:]
+    out = sorted(cands, key=os.path.getmtime)[-1]
+    print("spacesaver: reading back %s" % out)
+    return report_specimen(out, s.shots)
+
+
+# The SpaceSaver panel's close box, measured off `idlespec/09-panel-closed.png`
+# where Cmd-W did not close it: the window's title bar runs from x=163 to
+# x=392 at y=98..112, so the box is at its left end.
+SS_CLOSE_BOX = (171, 105)
+
+
+def enrollmagic(keep=False):
+    """Enrol the disk, THEN ask Magic Menu to compress. One boot.
+
+    Two mechanisms have now been driven correctly on a machine that
+    booted and was flushed, and neither compressed anything: idle time
+    with the disk enrolled (`--idlespec`), and Magic Menu's *SpaceSaver
+    Compress* on an unenrolled disk (`--magic`, whose menu shot shows the
+    item highlighted over the selected file). The Idle Time page's
+    wording is the remaining candidate — *"but only if they are located
+    on the following disks"* — so this run does both: enrol the startup
+    disk, close the panel, and then issue the command.
+    """
+    import glob
+    boot = os.path.join(WORK, "ssenrollmagic.hfv")
+    shutil.copyfile(INSTALLED, boot)
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+    tmp = tempfile.mkdtemp(prefix="ssem-")
+    try:
+        subprocess.run(["hmount", boot], check=True, capture_output=True,
+                       env=env)
+        from ndd import macbinary_dated, MAC_EPOCH_1990   # noqa: E402
+        for n, t, c, d, r in SUBJECTS:
+            q = os.path.join(tmp, n + ".bin")
+            open(q, "wb").write(macbinary_dated(n, t, c, d, r,
+                                                MAC_EPOCH_1990,
+                                                MAC_EPOCH_1990))
+            subprocess.run(["hcopy", "-m", q, ":"], check=True,
+                           capture_output=True, env=env)
+        subprocess.run(["humount"], check=True, capture_output=True, env=env)
+    finally:
+        shutil.rmtree(env["HOME"], ignore_errors=True)
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    before = set(glob.glob("/tmp/dd-*/boot.hfv"))
+    s = Session(boot, [], os.path.join(SPECIMENS, "enrollmagic"))
+    try:
+        open_ss_panel(s)
+        s.mac.click(*SS_IDLE_TIME)
+        time.sleep(4.0)
+        s.mac.click(*SS_IDLE_TIME)
+        s.shot("idle-page", wait=10.0)
+        s.mac.click(*IDLE_ADD)
+        time.sleep(3.0)
+        s.mac.click(*IDLE_ADD)
+        s.shot("added", wait=6.0)
+        s.mac.click(*IDLE_OK)
+        time.sleep(3.0)
+        s.mac.click(*IDLE_OK)
+        s.shot("settings-ok", wait=8.0)
+        s.mac.click(*SS_CLOSE_BOX)              # the panel's own close box
+        s.shot("panel-closed", wait=8.0)
+        for _ in range(3):                      # and the Finder's windows
+            s.mac.command_key("w")
+            time.sleep(2.5)
+        s.shot("windows-closed", wait=6.0)
+        s.mac.click(470, 55, double=True)
+        s.shot("bootvol", wait=14.0)
+        for name, letter in (("Alpha", "a"), ("Forked", "f")):
+            s.mac.key("Escape")
+            time.sleep(0.6)
+            s.mac.key(letter)
+            time.sleep(1.5)
+            s.shot("selected-" + name, wait=0.5)
+            s.menu(MAGIC_X, MAGIC_COMPRESS_Y, "compress-" + name)
+            s.shot("after-" + name, wait=45.0)
+        s.shot("settled", wait=30.0)
+        s.menu(SPECIAL_X, SHUT_DOWN_Y, "special-menu")
+        s.shot("shutting-down", wait=30.0)
+    finally:
+        time.sleep(8)
+        s.close()
+
+    cands = [p for p in glob.glob("/tmp/dd-*/boot.hfv") if p not in before]
+    if not cands:
+        cands = sorted(glob.glob("/tmp/dd-*/boot.hfv"),
+                       key=os.path.getmtime)[-1:]
+    out = sorted(cands, key=os.path.getmtime)[-1]
+    print("spacesaver: reading back %s" % out)
+    return report_specimen(out, s.shots)
+
+
+def rename_to(s, letter, suffix, tag):
+    """Type-select an icon and append `suffix` to its name, in place.
+
+    The sequence `--specimen` proved: Return opens the name box with the
+    whole name selected, Right drops the selection to the end, Enter
+    commits it (Return does not), and clicking another icon commits it
+    the way a person would.
+    """
+    s.mac.key("Escape")
+    time.sleep(0.6)
+    s.mac.key(letter)
+    time.sleep(1.5)
+    s.mac.key("Return")
+    time.sleep(2.0)
+    s.mac.key("Right")
+    time.sleep(0.8)
+    s.mac._xdo("type", "--delay", "150", suffix)
+    time.sleep(1.5)
+    s.mac.key("KP_Enter")
+    time.sleep(4.0)
+    s.mac.click(155, 310)                  # another icon commits it
+    time.sleep(3.0)
+    s.shot("renamed-" + tag, wait=35.0)
+
+
+def suffix(keep=False):
+    """Ask the SAME page for two different things, and see which fires.
+
+    The *Compression and Other Settings* page has two rename rules
+    ticked (photographed, `idle/06-compression-page.png`): compress
+    anything whose name begins or ends with `small`, and **stuff or
+    expand an item when `.SIT` is added to its name**. The first has
+    been driven correctly on a machine that booted and was flushed and
+    did nothing. The second is a different subsystem — Magic Menu's
+    stuffing rather than SpaceSaver's compressor — reading the same
+    rename event.
+
+    So: one boot, one rename each. If `.SIT` produces an archive and
+    `small` produces nothing, the rename event reaches the extension and
+    the compressor is what is refusing; if neither fires, no rename
+    reaches it at all and the trigger is not what the page says.
+    """
+    import glob
+    boot = os.path.join(WORK, "sssuffix.hfv")
+    shutil.copyfile(INSTALLED, boot)
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+    tmp = tempfile.mkdtemp(prefix="sssfx-")
+    try:
+        subprocess.run(["hmount", boot], check=True, capture_output=True,
+                       env=env)
+        from ndd import macbinary_dated, MAC_EPOCH_1990   # noqa: E402
+        for n, t, c, d, r in SUBJECTS:
+            q = os.path.join(tmp, n + ".bin")
+            open(q, "wb").write(macbinary_dated(n, t, c, d, r,
+                                                MAC_EPOCH_1990,
+                                                MAC_EPOCH_1990))
+            subprocess.run(["hcopy", "-m", q, ":"], check=True,
+                           capture_output=True, env=env)
+        subprocess.run(["humount"], check=True, capture_output=True, env=env)
+    finally:
+        shutil.rmtree(env["HOME"], ignore_errors=True)
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    before = set(glob.glob("/tmp/dd-*/boot.hfv"))
+    s = Session(boot, [], os.path.join(SPECIMENS, "suffix"))
+    try:
+        s.boot()
+        s.shot("desktop", wait=14.0)
+        s.mac.click(250, 38)
+        time.sleep(2.5)
+        for _ in range(6):                      # more windows than Cmd-Ws
+            s.mac.command_key("w")              # was the last run's mistake
+            time.sleep(2.0)
+        s.shot("windows-closed", wait=6.0)
+        s.mac.click(470, 55, double=True)
+        s.shot("bootvol", wait=14.0)
+        rename_to(s, "a", "small", "Alpha")     # the compression rule
+        rename_to(s, "f", ".SIT", "Forked")     # the stuffing rule
+        s.shot("settled", wait=45.0)
+        s.menu(SPECIAL_X, SHUT_DOWN_Y, "special-menu")
+        s.shot("shutting-down", wait=30.0)
+    finally:
+        time.sleep(8)
+        s.close()
+
+    cands = [p for p in glob.glob("/tmp/dd-*/boot.hfv") if p not in before]
+    if not cands:
+        cands = sorted(glob.glob("/tmp/dd-*/boot.hfv"),
+                       key=os.path.getmtime)[-1:]
+    out = sorted(cands, key=os.path.getmtime)[-1]
+    print("spacesaver: reading back %s" % out)
+    return report_volume(out, s.shots)
+
+
+def report_volume(img, shots):
+    """Everything at the root of the volume, not just what was expected.
+
+    A run that only looks up the names it put there cannot see a file
+    the Mac CREATED — and both rules on that page make a new file, one
+    of them deleting the original.
+    """
+    from superdisk import read_forks                    # noqa: E402
+    known = dict((n, d) for n, _t, _c, d, _r in SUBJECTS)
+    os.makedirs(SPECIMENS, exist_ok=True)
+    hit = 0
+    for path, (ftype, creator, data, rsrc) in sorted(read_forks(img).items()):
+        if len(path) != 1:
+            continue                            # root only
+        base = path[0]
+        orig = known.get(base) or known.get(base[:-5]) or known.get(base[:-4])
+        mark = ""
+        if data[:8] == b"SIT!DFD3":
+            mark = "  <- SPACESAVER"
+            hit += 1
+        elif data[:4] == b"SIT!":
+            mark = "  <- StuffIt archive"
+            hit += 1
+        elif orig is not None and data != orig:
+            mark = "  <- changed"
+        print("spacesaver: %-24s %s/%s data %7d rsrc %6d%s"
+              % (base, ftype, creator, len(data), len(rsrc), mark))
+        if mark:
+            # Only a SpaceSaver file gets the `.ss` name the suite globs
+            # for: the `.SIT` rename rule writes a StuffIt ARCHIVE, and a
+            # suite that grades it as a specimen fails on a file that was
+            # never a specimen.
+            ext = ".ss" if data[:8] == b"SIT!DFD3" else ".other"
+            q = os.path.join(SPECIMENS, base.replace("/", "_") + ext)
+            open(q, "wb").write(data)
+            if rsrc:
+                open(q + ".rsrc", "wb").write(rsrc)
+            if orig is not None:
+                open(q + ".orig", "wb").write(orig)
+            print("                          kept %s" % q)
+    return 0 if hit else 1
+
+
+# The Deluxe folder's names carry a Mac Roman trademark sign (0xAA), so
+# every path here goes to `hcd`/`hcopy` as RAW BYTES — the rule
+# `superdisk.read_forks` already states, and the reason a folder called
+# `Terrainman 2.0 ƒ` was once silently skipped.
+DELUXE = b"StuffIt Deluxe\xaa Folder"
+DROPDIR = b"Drag & Drop Applications"
+
+
+def drop(keep=False):
+    """Launch `DropCompress™` and hand it a subject.
+
+    What the rename runs established: a rename DOES reach the extension
+    — `Forked` renamed to `Forked.SIT` came back a 228-byte StuffIt
+    archive — and the *compress* rule on the same page still does
+    nothing. So the trigger is not the obstacle; SpaceSaver's compressor
+    is simply not being asked.
+
+    `DropCompress™` is what the Deluxe folder calls the droplet, and a
+    droplet launched with no document opens a file dialog. The subjects
+    are copied into ITS folder first, so the dialog lists them where it
+    opens and a type-select plus Return is the whole interaction.
+    """
+    import glob
+    boot = os.path.join(WORK, "ssdrop.hfv")
+    shutil.copyfile(INSTALLED, boot)
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+    tmp = tempfile.mkdtemp(prefix="ssdrop-")
+    try:
+        subprocess.run(["hmount", boot], check=True, capture_output=True,
+                       env=env)
+        subprocess.run([b"hcd", b":" + DELUXE + b":" + DROPDIR],
+                       check=True, capture_output=True, env=env)
+        from ndd import macbinary_dated, MAC_EPOCH_1990   # noqa: E402
+        for n, t, c, d, r in SUBJECTS:
+            q = os.path.join(tmp, n + ".bin")
+            open(q, "wb").write(macbinary_dated(n, t, c, d, r,
+                                                MAC_EPOCH_1990,
+                                                MAC_EPOCH_1990))
+            subprocess.run(["hcopy", "-m", q, ":"], check=True,
+                           capture_output=True, env=env)
+        subprocess.run(["humount"], check=True, capture_output=True, env=env)
+    finally:
+        shutil.rmtree(env["HOME"], ignore_errors=True)
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    before = set(glob.glob("/tmp/dd-*/boot.hfv"))
+    s = Session(boot, [], os.path.join(SPECIMENS, "drop"))
+    try:
+        s.boot()
+        s.shot("desktop", wait=14.0)
+        s.mac.click(250, 38)
+        time.sleep(2.5)
+        for _ in range(6):
+            s.mac.command_key("w")
+            time.sleep(2.0)
+        s.shot("windows-closed", wait=6.0)
+        s.mac.click(470, 55, double=True)
+        s.shot("bootvol", wait=14.0)
+        for prefix, tag in (("StuffIt D", "deluxe"), ("Drag", "dropdir")):
+            s.mac.key("Escape")
+            time.sleep(0.6)
+            s.mac._xdo("type", "--delay", "120", prefix)
+            time.sleep(1.5)
+            s.mac.command_key("o")
+            s.shot("opened-" + tag, wait=14.0)
+        s.mac.key("Escape")
+        time.sleep(0.6)
+        s.mac._xdo("type", "--delay", "120", "DropC")
+        time.sleep(1.5)
+        s.shot("selected-droplet", wait=0.5)
+        s.mac.command_key("o")
+        s.shot("droplet-open", wait=30.0)
+        # A Standard File dialog: type the name, then Open.
+        s.mac._xdo("type", "--delay", "150", "Alpha")
+        time.sleep(2.0)
+        s.shot("dialog-typed", wait=1.0)
+        s.mac.key("Return")
+        s.shot("after-open", wait=45.0)
+        s.shot("settled", wait=30.0)
+        s.mac.command_key("q")
+        s.shot("quit", wait=20.0)
+        s.menu(SPECIAL_X, SHUT_DOWN_Y, "special-menu")
+        s.shot("shutting-down", wait=30.0)
+    finally:
+        time.sleep(8)
+        s.close()
+
+    cands = [p for p in glob.glob("/tmp/dd-*/boot.hfv") if p not in before]
+    if not cands:
+        cands = sorted(glob.glob("/tmp/dd-*/boot.hfv"),
+                       key=os.path.getmtime)[-1:]
+    out = sorted(cands, key=os.path.getmtime)[-1]
+    print("spacesaver: reading back %s" % out)
+    return report_tree(out, s.shots)
+
+
+def report_tree(img, shots):
+    """Everything on the volume that is a SpaceSaver file or changed.
+
+    Not just the root: the subjects are in a folder three levels down,
+    and a droplet may write its output beside them or anywhere else.
+    """
+    from superdisk import read_forks                    # noqa: E402
+    known = dict((n, d) for n, _t, _c, d, _r in SUBJECTS)
+    os.makedirs(SPECIMENS, exist_ok=True)
+    hit = 0
+    for path, (ftype, creator, data, rsrc) in sorted(read_forks(img).items()):
+        base = path[-1]
+        orig = (known.get(base) or known.get(base[:-5]) or
+                known.get(base[:-4]))
+        mark = ""
+        if data[:8] == b"SIT!DFD3":
+            mark = "  <- SPACESAVER"
+        elif orig is not None and data != orig:
+            mark = "  <- changed"
+        elif orig is None:
+            continue
+        print("spacesaver: %-40s %s/%s data %7d rsrc %6d%s"
+              % ("/".join(path)[-40:], ftype, creator, len(data), len(rsrc),
+                 mark))
+        if mark:
+            hit += mark.endswith("SPACESAVER")
+            ext = ".ss" if data[:8] == b"SIT!DFD3" else ".other"
+            q = os.path.join(SPECIMENS, base.replace("/", "_") + ext)
+            open(q, "wb").write(data)
+            if rsrc:
+                open(q + ".rsrc", "wb").write(rsrc)
+            if orig is not None:
+                open(q + ".orig", "wb").write(orig)
+            print("     kept %s" % q)
+    return 0 if hit else 1
+
+
+# Icon positions inside the open `Drag & Drop Applications` window,
+# measured off `drop/07-droplet-open.png`. A Finder window remembers
+# where its icons are, so these are stable for this image.
+DROPLET_ICON = (62, 110)
+ALPHA_ICON = (122, 110)
+FORKED_ICON = (122, 157)
+
+
+def drag_icon(s, src, dst, tag):
+    """Drag one Finder icon onto another.
+
+    In several steps with a pause each: the Finder samples the mouse
+    once a tick, and a press-and-release two milliseconds apart is a
+    click on the source rather than a drag onto the target — the same
+    reason `interactive.py` sends Command chords as keydown/keyup.
+    """
+    ox, oy = s.mac.origin()
+    x = s.mac._xdo
+    x("mousemove", str(ox + src[0]), str(oy + src[1]))
+    time.sleep(0.6)
+    x("mousedown", "1")
+    time.sleep(0.8)
+    for k in range(1, 5):                       # four intermediate steps
+        ix = src[0] + (dst[0] - src[0]) * k // 4
+        iy = src[1] + (dst[1] - src[1]) * k // 4
+        x("mousemove", str(ox + ix), str(oy + iy))
+        time.sleep(0.5)
+    time.sleep(1.0)
+    s.shot("dragging-" + tag)
+    x("mouseup", "1")
+    time.sleep(2.0)
+
+
+def dragdrop(keep=False):
+    """Drop a subject ON `DropCompress™`, which is what a droplet is for.
+
+    Launching it with no document showed no dialog at all
+    (`drop/07-droplet-open.png`: the menu bar goes to `File` alone and
+    nothing opens), so the only way to give it a file is the way a
+    person would. Both icons sit in one window at positions the Finder
+    remembers, so the drag is two coordinates.
+    """
+    import glob
+    boot = os.path.join(WORK, "ssdrag.hfv")
+    shutil.copyfile(INSTALLED, boot)
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+    tmp = tempfile.mkdtemp(prefix="ssdrag-")
+    try:
+        subprocess.run(["hmount", boot], check=True, capture_output=True,
+                       env=env)
+        subprocess.run([b"hcd", b":" + DELUXE + b":" + DROPDIR],
+                       check=True, capture_output=True, env=env)
+        from ndd import macbinary_dated, MAC_EPOCH_1990   # noqa: E402
+        for n, t, c, d, r in SUBJECTS:
+            q = os.path.join(tmp, n + ".bin")
+            open(q, "wb").write(macbinary_dated(n, t, c, d, r,
+                                                MAC_EPOCH_1990,
+                                                MAC_EPOCH_1990))
+            subprocess.run(["hcopy", "-m", q, ":"], check=True,
+                           capture_output=True, env=env)
+        subprocess.run(["humount"], check=True, capture_output=True, env=env)
+    finally:
+        shutil.rmtree(env["HOME"], ignore_errors=True)
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    before = set(glob.glob("/tmp/dd-*/boot.hfv"))
+    s = Session(boot, [], os.path.join(SPECIMENS, "dragdrop"))
+    try:
+        s.boot()
+        s.shot("desktop", wait=14.0)
+        s.mac.click(250, 38)
+        time.sleep(2.5)
+        for _ in range(6):
+            s.mac.command_key("w")
+            time.sleep(2.0)
+        s.shot("windows-closed", wait=6.0)
+        s.mac.click(470, 55, double=True)
+        s.shot("bootvol", wait=14.0)
+        for prefix, tag in (("StuffIt D", "deluxe"), ("Drag", "dropdir")):
+            s.mac.key("Escape")
+            time.sleep(0.6)
+            s.mac._xdo("type", "--delay", "120", prefix)
+            time.sleep(1.5)
+            s.mac.command_key("o")
+            s.shot("opened-" + tag, wait=14.0)
+        drag_icon(s, ALPHA_ICON, DROPLET_ICON, "alpha")
+        s.shot("after-alpha", wait=60.0)
+        s.shot("settled", wait=45.0)
+        s.mac.command_key("q")                  # in case it is still up
+        s.shot("quit", wait=15.0)
+        s.menu(SPECIAL_X, SHUT_DOWN_Y, "special-menu")
+        s.shot("shutting-down", wait=30.0)
+    finally:
+        time.sleep(8)
+        s.close()
+
+    cands = [p for p in glob.glob("/tmp/dd-*/boot.hfv") if p not in before]
+    if not cands:
+        cands = sorted(glob.glob("/tmp/dd-*/boot.hfv"),
+                       key=os.path.getmtime)[-1:]
+    out = sorted(cands, key=os.path.getmtime)[-1]
+    print("spacesaver: reading back %s" % out)
+    return report_tree(out, s.shots)
+
+
 # ---------------------------------------------------------------------------
 # Reading the format out of the software, which is what --layout does.
 #
@@ -1435,6 +2181,19 @@ def layout():
           "\n  bra.w at +0x00, +0x08, +0x10 and +0x18: +0x08 compresses,"
           "\n  +0x10 expands, and a PowerPC module's PEF starts at +0x2c.")
 
+    # The preset dictionary, written out where the suite looks for it.
+    # It is Aladdin's, so it lives beside the ROM and the System image
+    # rather than in the repository (`tools/run_spacesaver.py`).
+    pram = res["ss"].get("PrAm", {})
+    for rid in sorted(pram):
+        name, data = pram[rid]
+        q = os.path.join(SPECIMENS, "PrAm%d.bin" % rid)
+        os.makedirs(SPECIMENS, exist_ok=True)
+        open(q, "wb").write(data)
+        print("\n'PrAm' %d: %d bytes, the LZSS window's preset contents "
+              "-> %s" % (rid, len(data), q))
+        print("  first 60: %r" % data[:60].decode("mac-roman", "replace"))
+
     print("\nWhat this reading rests on:")
     bad = 0
     for key, rtype, rid, what, pattern in WITNESSES:
@@ -1486,6 +2245,21 @@ def main():
                     help="boot the installed image and peek the menus")
     ap.add_argument("--install40", action="store_true",
                     help="run the 4.0 installer, trying each published code")
+    ap.add_argument("--dragdrop", action="store_true",
+                    help="drag a subject onto DropCompress")
+    ap.add_argument("--drop", action="store_true",
+                    help="hand a subject to DropCompress")
+    ap.add_argument("--suffix", action="store_true",
+                    help="drive both rename rules on the settings page")
+    ap.add_argument("--enrollmagic", action="store_true",
+                    help="enrol the disk, close the panel, then compress")
+    ap.add_argument("--magic", action="store_true",
+                    help="Magic Menu's SpaceSaver Compress, then shut down")
+    ap.add_argument("--idlespec", action="store_true",
+                    help="enrol the disk, idle, shut down — one boot")
+    ap.add_argument("--specimen", action="store_true",
+                    help="rename the subjects, then SHUT DOWN so the "
+                         "volume is flushed")
     ap.add_argument("--layout", action="store_true",
                     help="read the container layout out of the installed "
                          "control panel and engine")
@@ -1527,6 +2301,20 @@ def main():
         probe_installed(a.keep)
     elif a.install40:
         install40(a.keep)
+    elif a.dragdrop:
+        return dragdrop(a.keep)
+    elif a.drop:
+        return drop(a.keep)
+    elif a.suffix:
+        return suffix(a.keep)
+    elif a.enrollmagic:
+        return enrollmagic(a.keep)
+    elif a.magic:
+        return magic(a.keep)
+    elif a.idlespec:
+        return idlespec(a.keep)
+    elif a.specimen:
+        return specimen(a.keep)
     elif a.layout:
         return layout()
     else:

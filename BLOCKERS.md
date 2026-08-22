@@ -69,8 +69,8 @@ detect-only — disk images are out of scope for v1.
 
 **Kept deliberately, and this is the part of the file to read first.** Twice a
 live claim has been re-tested *because* it sat beside an already-withdrawn one,
-and one of those was worth 39/44 → 40/44 at the floor target. Seven mechanisms
-keep finding the next one, and the last two need no insight at all:
+and one of those was worth 39/44 → 40/44 at the floor target. Eight mechanisms
+keep finding the next one, and two of them need no insight at all:
 
 - a live claim sitting next to an already-withdrawn one;
 - **two files disagreeing** — a cross-file contradiction is a disproof nobody
@@ -92,6 +92,11 @@ keep finding the next one, and the last two need no insight at all:
   one of them, so counting those proves nothing. Count the records it does
   NOT cover instead — 30 `0x1000` entries fitted the claim and 45 in the same
   fifteen files contradicted it (below).
+- **a harness that ends its runs differently from the harness beside it.**
+  Added 2026-08-22: three SpaceSaver runs "measured unchanged" on a machine
+  that never booted, because their image had been copied out of a KILLED
+  emulator. `arcmac.py` had picked Special ▸ Shut Down for exactly that
+  reason since the ARC specimens; nothing compared the two.
 
 Each entry is what was claimed, what disproved it, and what it COST. The cost
 line is what makes the next one worth re-testing.
@@ -125,6 +130,9 @@ line is what makes the next one worth re-testing.
 | DiskDoubler methods 3, 4 and 5 cannot be graded, because no specimen of them exists | the 1991 disk carries Salient's own expander: it reads forks THIS project encoded, and all three come back byte-exact | 2026-08-21 |
 | 8 resource forks have no off-Mac oracle, so they cannot be ground truth | `unar`'s DDn reads ONE byte past the declared compressed length; give it one and it decodes all 33 forks byte-exact | 2026-08-22 |
 | SuperDisk!'s compressor does not survive here, only its expander | Macintosh Repository has the 1991 `SuperDisk!` control panel; it installs, runs, and compresses on demand | 2026-08-22 |
+| A matching name merely APPEARING does not fire SpaceSaver's rule — tested, fourteen minutes, unchanged | that run never booted: its own frames are the striped garbage screen, every one of them | 2026-08-22 |
+| The `--namevol` run that did not boot was a one-off infrastructure failure | it reproduces exactly, and the cause is in the harness: the enrolled image was copied out of a KILLED emulator, so it is torn. Three runs were built on it | 2026-08-22 |
+| SpaceSaver's trigger is known: rename a file to end in `small` and it compresses | four runs that booted AND flushed do it correctly and nothing compresses; the OTHER rename rule on the same page fires on the same event, turning `Forked` into a StuffIt archive | 2026-08-22 |
 
 **DiskDoubler methods 1–5 and 7 "cannot be graded".** Declined per entry
 since M12 on the grounds that no corpus fixture uses one and nothing reachable
@@ -315,6 +323,49 @@ makes it one.
 COUNT, and never initialises the bit pointer it then reads through. The
 grading uses `unar` and the fork's own checksum instead. An `#ifdef UNTESTED`
 is a claim about the code, and this one is accurate.
+
+**"The trigger is a NAME RULE."** Found on the panel's *Compression and Other
+Settings* page, written up as the answer to five failed attempts, and repeated
+in three files. The page does say it — *"Immediately compress files, folders,
+and disks whose Name begins or ends with: small"* — and the rule does not fire.
+Four runs renamed a subject to match, on a machine that booted and was shut
+down cleanly, and the file came back byte-identical every time. The disproof is
+on the same page: its OTHER rule, *"Stuff or expand item when its name is
+changed by adding the following suffixes: .SIT"*, fires on the same event —
+`Forked` renamed to `Forked.SIT` came back a 228-byte StuffIt archive with the
+original gone. So renames reach the extension, the extension acts, and its
+output survives; compression specifically does not happen.
+
+**Cost: five runs before the flush was fixed and four after it**, and a
+sentence in OPEN_ITEMS.md that made the specimen look one keystroke away for a
+day. **The smell is a familiar one wearing new clothes: the claim was read off
+the software's own UI rather than out of its behaviour.** A settings page is
+documentation, and this repository already distrusts documentation it has not
+run — that is why every method table here is derived from module headers rather
+than from a manual.
+
+**Three SpaceSaver runs that "measured unchanged" never booted.** The
+enrolled image every one of them started from — `--namefirst`,
+`--namevol` twice — was made by `--enroll`, which drove the control
+panel correctly (its own screenshot shows the startup disk added to the
+Idle Time list) and was then **killed**. Mini vMac writes a guest's
+sectors through buffered stdio and flushes when a volume is ejected, so
+what was copied out of `/tmp` was a torn image: it does not boot, and
+the runs built on it photographed the striped garbage screen and read
+their subjects back unchanged. Those readbacks were written up as facts
+about SpaceSaver — that a matching name appearing does not fire the
+rule, that eighteen minutes of idling changes nothing.
+
+**Cost: the specimen, for a day, and the whole of the trigger
+investigation.** "A rename EVENT is required" was inferred from one of
+these dead runs, and it sent five more at driving the Finder's name box.
+The fix was already in this repository and had been since the ARC
+specimens: `arcmac.py`'s `shutdown()` says *"killing the emulator with
+the volume still mounted loses everything the guest wrote"* and picks
+Special ▸ Shut Down instead. `spacesaver.py` simply never called it.
+**The smell is a new one worth keeping: a harness that ends its runs
+differently from the harness beside it.** Same emulator, same flush
+problem, one of them solved — and nothing compared them.
 
 **Alysis SuperDisk! "has no reference".** Filed under OPEN_ITEMS.md's
 *"rule #1 forbids inventing a format"* for as long as that section has

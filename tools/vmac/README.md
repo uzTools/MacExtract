@@ -96,6 +96,18 @@ The grid stays: it is proven, it needs nothing of the volume, and it reports
 liveness and setup failures that a disk cannot. What it cannot do is carry a
 NAME, which is why `checkdisk.py` now exists beside it.
 
+**A run that drives the FINDER ends with Special > Shut Down, and must.**
+Mini vMac writes the guest's sectors through buffered stdio and flushes
+when a volume is ejected, so killing the emulator with a volume still
+mounted loses whatever the Finder had not written — and an image COPIED
+out of a killed session is torn: it does not boot at all. `arcmac.py`
+picked Shut Down for that reason in M13; `spacesaver.py` did not, and
+three of its runs read their subjects back "unchanged" from a machine
+whose every frame is the striped garbage screen. One of those readbacks
+became a documented fact about the format (BLOCKERS.md). Either shut
+down, or put the subjects on a second volume and Put Away (Cmd-Y) — what
+`sdcompress.py` does.
+
 **The app is the boot shell.** The boot blocks' shell name (offset 0x1A) is
 rewritten from `Finder` to `unclassic`, so the ROM hands control straight to
 the application. No Finder, no synthetic double-click, no mouse automation —
@@ -324,11 +336,9 @@ Four things to know before re-running it:
   Operating System"; the verb is `arc a<modifiers> archive files`, documented
   under *ArcMac Command Summary* in the `ARCMAC.DOC` that ships with it. Pass
   `--cmd` (repeatable) to run anything else at that prompt.
-- **The run ends with Special ▸ Shut Down, and must.** Mini vMac buffers the
-  guest's sector writes and only flushes when the volume is ejected, so
-  killing the emulator with it still mounted loses the archive: the Finder
-  showed `Test.ARC` on screen while the host's copy of the image did not have
-  it.
+- **The run ends with Special ▸ Shut Down** — the general rule above; here
+  it is what the Finder showing `Test.ARC` on screen and the host's copy of
+  the image not having it cost.
 
 ## Asking DiskDoubler what it can write — `diskdoubler.py`
 
@@ -586,9 +596,20 @@ System 7.5.3**, which is the open route. DECISIONS.md 2026-08-22
     tools/vmac/spacesaver.py --idle           the panel's two settings pages
     tools/vmac/spacesaver.py --enroll         enrol the disk, then idle
     tools/vmac/spacesaver.py --namerule       rename a subject to end in "small"
+    tools/vmac/spacesaver.py --suffix         both rename rules, one boot
+    tools/vmac/spacesaver.py --magic          Magic Menu's SpaceSaver Compress
+    tools/vmac/spacesaver.py --enrollmagic    the same, disk enrolled first
+    tools/vmac/spacesaver.py --drop           launch DropCompress
+    tools/vmac/spacesaver.py --dragdrop       drop a subject on DropCompress
 
+    tools/vmac/spacesaver.py --specimen       rename, wait, SHUT DOWN, read back
+    tools/vmac/spacesaver.py --idlespec       enrol the disk, idle, shut down
     tools/vmac/spacesaver.py --layout         read the container out of the
                                               installed panel and engine
+
+Every mode from `--specimen` on ends with Special > Shut Down (the general
+rule at the top of this file): `ssenrolled.hfv`, made before that rule was
+followed here, does not boot.
 
 **`--layout` needs no emulator at all.** It lifts `~StuffIt SpaceSaver™`
 (`cdev/SMKR`) and `StuffIt Engine™` off `ssinstalled.hfv` with `hcopy`,
@@ -603,12 +624,17 @@ FORMATS.md, *StuffIt SpaceSaver's container*.
 
 What it cannot see: whether any of this describes a real compressed file.
 Nothing here has produced one, so every field is read from the writer, not
-from output — and the codecs are not read at all.
+from output.
 
-**SpaceSaver's trigger is a NAME RULE**, not a command: its Compression and
-Other Settings page reads *"Immediately compress files … whose Name begins or
-ends with: `small`"*. `--namerule` is the mode that matters; the rename it
-does is not taking yet (DECISIONS.md 2026-08-22, the trigger).
+**Nothing has made SpaceSaver compress anything**, and the modes above are
+the attempts: the panel's `small` name rule (`--specimen`), the same with
+the disk enrolled and the machine left idle (`--idlespec`), Magic Menu's
+*SpaceSaver Compress* (`--magic`, `--enrollmagic`), and `DropCompress™`
+both launched and dropped on (`--drop`, `--dragdrop`). One thing on that
+settings page DOES fire: `--suffix` renames a subject to end in `.SIT` and
+gets a StuffIt archive back, which is what makes the silence a fact about
+the compressor rather than about this harness (DECISIONS.md 2026-08-22,
+what will not compress; BLOCKERS.md for the withdrawn trigger).
 
 **Lift the installed image out of `/tmp`.** `run.py` boots from a COPY, so an
 installer's entire output lands in the session's temp dir and the original

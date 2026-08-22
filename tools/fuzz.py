@@ -20,6 +20,7 @@ MAGICS = [
     b"SIT!\x00\x01\x00\x00\x00\x00rLau",
     b"StuffIt (c)1997-2026 Aladdin Systems, Inc., "
     b"http://www.aladdinsys.com/StuffIt/\x0d\x0a",
+    b"SIT!DFD3\x00\x00\x00\x03\x00\x00\x00T",
     b"PMag", b"PMa4", b"\x01\x01\x00\x00", b"\x1f\x8b\x08", b"\x1f\x9d\x90",
     b"PK\x03\x04", b"(This file must be converted with BinHex 4.0)\r:",
 ]

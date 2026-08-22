@@ -2489,6 +2489,231 @@ static void test_superdisk_single(void)
 }
 
 
+
+/* ------------------------------------------------------------------ */
+/* StuffIt SpaceSaver — the container, the stream ORDER, Alg 4 and     */
+/* the preset dictionary.                                              */
+/*                                                                     */
+/* Built here rather than from a fixture: SpaceSaver has never been    */
+/* made to compress anything on this machine, so there is no specimen  */
+/* of any kind (OPEN_ITEMS.md). These test what the header says and    */
+/* what the bit stream means; they cannot say that a real SpaceSaver   */
+/* file is laid out this way. What they DO grade honestly is the       */
+/* refusal: a stream that reaches into the preset dictionary without   */
+/* one must fail rather than decode to something wrong.                */
+/* ------------------------------------------------------------------ */
+
+static void ss_head3(uint8_t *h, uint32_t dclen, uint32_t dulen,
+                     uint32_t doff, uint8_t dmethod,
+                     uint32_t rclen, uint32_t rulen,
+                     uint32_t roff, uint8_t rmethod)
+{
+    memset(h, 0, 84);
+    memcpy(h + 0, "SIT!", 4);
+    memcpy(h + 4, "DFD3", 4);
+    put32(h + 8, 3);
+    put32(h + 12, 84);
+    put32(h + 16, 0x41);
+    put32(h + 20, dclen); put32(h + 24, dulen); put32(h + 28, doff);
+    h[32] = 0; h[33] = dmethod;
+    put32(h + 36, rclen); put32(h + 40, rulen); put32(h + 44, roff);
+    h[48] = 0; h[49] = rmethod;
+    memcpy(h + 52, "TEXT", 4);
+    memcpy(h + 56, "ttxt", 4);
+    h[60] = 0x40; h[61] = 0x00;              /* isInvisible, restored */
+}
+
+static void test_spacesaver(void)
+{
+    static const uint8_t want_d[12] = "data fork!!";
+    static const uint8_t want_r[6]  = { 9, 8, 7, 6, 5, 4 };
+    static const uint8_t hint[] = "Report.txt";
+    uint8_t f[128];
+    MemIO m;
+    UncIO io;
+    UncAlloc al;
+    UncSink sk;
+    CapSink cap;
+    UncOptions opt;
+
+    /* mCompressFile @0x5538 gives offset 84 to the LARGER fork, so the
+     * records stay data-then-resource while the streams do not. Here
+     * the resource stream comes first, which only the offsets say. */
+    memset(f, 0, sizeof f);
+    ss_head3(f, 11, 11, 84 + 6, 0, 6, 6, 84, 0);
+    memcpy(f + 84, want_r, 6);
+    memcpy(f + 84 + 6, want_d, 11);
+
+    memset(&opt, 0, sizeof opt);
+    opt.name_hint = hint;
+    opt.name_hint_len = (uint16_t)(sizeof hint - 1);
+    test_make_alloc(&al);
+    test_make_memio(&io, &m, f, 84 + 17);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_SPACESAVER);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_SPACESAVER, &io, &sk, &al, NULL,
+                         &opt) == UNC_OK);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+    CHECK(cap.dlen[0] == 11 && memcmp(cap.data[0], want_d, 11) == 0);
+    CHECK(cap.rlen[0] == 6 && memcmp(cap.rsrc[0], want_r, 6) == 0);
+    CHECK(cap.info[0].type == 0x54455854u);          /* 'TEXT' */
+    CHECK(cap.info[0].creator == 0x74747874u);       /* 'ttxt' */
+    CHECK(cap.info[0].finder_flags == 0x4000);
+    /* The name is the host's, whole: SpaceSaver adds no extension, so
+     * ".txt" is part of it. */
+    CHECK(cap.info[0].name_len == 10);
+    CHECK(memcmp(cap.info[0].name, "Report.txt", 10) == 0);
+
+    /* Version 1 and 2 put the same things elsewhere; UpdateSSHeader
+     * @0x6520 is the map, and the data fork's stream came first. */
+    memset(f, 0, sizeof f);
+    memcpy(f + 0, "SIT!", 4);
+    memcpy(f + 4, "DFD3", 4);
+    put32(f + 8, 2);
+    put32(f + 16, 0x41);
+    f[21] = 0;                                   /* the method, both forks */
+    put32(f + 24, 11); put32(f + 32, 11);        /* data: clen, ulen */
+    put32(f + 28, 6);  put32(f + 36, 6);         /* rsrc: clen, ulen */
+    memcpy(f + 40, "TEXT", 4);
+    memcpy(f + 44, "ttxt", 4);
+    f[48] = 0x40;
+    memcpy(f + 84, want_d, 11);
+    memcpy(f + 84 + 11, want_r, 6);
+    test_make_memio(&io, &m, f, 84 + 17);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_SPACESAVER);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_SPACESAVER, &io, &sk, &al, NULL,
+                         &opt) == UNC_OK);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+    CHECK(cap.dlen[0] == 11 && memcmp(cap.data[0], want_d, 11) == 0);
+    CHECK(cap.rlen[0] == 6 && memcmp(cap.rsrc[0], want_r, 6) == 0);
+    CHECK(cap.info[0].finder_flags == 0x4000);
+
+    /* 'SIT!' alone is StuffIt's magic; it is the second long that makes
+     * this format, and neither probe may claim the other's file. */
+    memcpy(f + 4, "rLau", 4);
+    test_make_memio(&io, &m, f, 84 + 17);
+    CHECK(unc_sniff(&io) != UNC_FORMAT_SPACESAVER);
+    memcpy(f + 4, "DFD3", 4);
+}
+
+/* One block, wbits 8: three literals, a match of 6 at distance 3, then
+ * three more literals — "abcabcabcXYZ". Assembled bit by bit against
+ * `CMod 21` @0x462: flag bit first, LSB of each byte first, a match's
+ * length field biased by four. */
+static const uint8_t ss_alg4_vec[] = {
+    0x01, 0x00, 0x08,                    /* one block, 256-byte window */
+    0x0f, 0x00, 0x00,                    /* clen, header included      */
+    0x0c, 0x00, 0x00,                    /* ulen                       */
+    0xc3, 0x8a, 0x1d, 0x23, 0x06, 0x62, 0xcd, 0xaa, 0x05
+};
+
+static void test_spacesaver_alg4(void)
+{
+    static const uint8_t want[12] = "abcabcabcXYZ";
+    static const uint8_t hint[] = "Squeezed";
+    uint8_t f[160];
+    MemIO m;
+    UncIO io;
+    UncAlloc al;
+    UncSink sk;
+    CapSink cap;
+    UncOptions opt;
+    uint32_t n = (uint32_t)sizeof ss_alg4_vec;
+
+    memset(f, 0, sizeof f);
+    ss_head3(f, n, 12, 84, 4, 0, 0, 0, 0);
+    memcpy(f + 84, ss_alg4_vec, n);
+
+    memset(&opt, 0, sizeof opt);
+    opt.name_hint = hint;
+    opt.name_hint_len = (uint16_t)(sizeof hint - 1);
+    test_make_alloc(&al);
+    test_make_memio(&io, &m, f, 84 + n);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_SPACESAVER);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_SPACESAVER, &io, &sk, &al, NULL,
+                         &opt) == UNC_OK);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+    CHECK(cap.dlen[0] == 12 && memcmp(cap.data[0], want, 12) == 0);
+
+    /* bit 7 of the method byte only says WHICH BUILD of the module
+     * wrote the stream (@0x578e masks it off); the bits are the same. */
+    f[33] = 0x84;
+    test_make_memio(&io, &m, f, 84 + n);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_SPACESAVER, &io, &sk, &al, NULL,
+                         &opt) == UNC_OK);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+    CHECK(cap.dlen[0] == 12 && memcmp(cap.data[0], want, 12) == 0);
+    f[33] = 4;
+
+    /* Methods 1, 2 and 3 are declined per entry, not per archive: the
+     * entry is still named and its sizes still reported. */
+    f[33] = 3;
+    test_make_memio(&io, &m, f, 84 + n);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_SPACESAVER, &io, &sk, &al, NULL,
+                         &opt) == UNC_OK);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_ERR_UNSUPPORTED);
+    CHECK(cap.info[0].data_size == 12);
+    f[33] = 4;
+}
+
+/* The preset dictionary, and the refusal when it is absent. @0x280
+ * loads the window from the engine's 'PrAm' resource, so a match at a
+ * distance the output cannot reach is reading Aladdin's table. */
+static void test_spacesaver_preset(void)
+{
+    static const uint8_t preset[10] = "0123456789";
+    static const uint8_t hint[] = "Squeezed";
+    /* one token: a match of 10 at distance 10, which is entirely inside
+     * the preset — 0 flag, 5 bits of (10-4), 8 bits of 10. */
+    static const uint8_t vec[] = {
+        0x01, 0x00, 0x08,
+        0x08, 0x00, 0x00,
+        0x0a, 0x00, 0x00,
+        0x8c, 0x02
+    };
+    uint8_t f[160];
+    MemIO m;
+    UncIO io;
+    UncAlloc al;
+    UncSink sk;
+    CapSink cap;
+    UncOptions opt;
+    uint32_t n = (uint32_t)sizeof vec;
+
+    memset(f, 0, sizeof f);
+    ss_head3(f, n, 10, 84, 4, 0, 0, 0, 0);
+    memcpy(f + 84, vec, n);
+
+    memset(&opt, 0, sizeof opt);
+    opt.name_hint = hint;
+    opt.name_hint_len = (uint16_t)(sizeof hint - 1);
+    test_make_alloc(&al);
+
+    /* With the dictionary: the ten bytes are the dictionary's. */
+    opt.preset = preset;
+    opt.preset_len = (uint32_t)sizeof preset;
+    test_make_memio(&io, &m, f, 84 + n);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_SPACESAVER, &io, &sk, &al, NULL,
+                         &opt) == UNC_OK);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+    CHECK(cap.dlen[0] == 10 && memcmp(cap.data[0], preset, 10) == 0);
+
+    /* Without it: a per-entry failure, and NOT ten bytes of anything. */
+    opt.preset = NULL;
+    opt.preset_len = 0;
+    test_make_memio(&io, &m, f, 84 + n);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_SPACESAVER, &io, &sk, &al, NULL,
+                         &opt) == UNC_OK);
+    CHECK(cap.count == 1 && cap.status[0] != UNC_OK);
+    CHECK(cap.dlen[0] == 0);
+}
+
 /* ------------------------------------------------------------------ */
 /* M12: Now Compress — the container, which the one fixture cannot     */
 /* reach (it holds a single file, one fork, no folders)                */
@@ -3028,6 +3253,9 @@ void run_format_tests(void)
     test_binhex_multi();
     test_diskdoubler();
     test_nowcompress();
+    test_spacesaver();
+    test_spacesaver_alg4();
+    test_spacesaver_preset();
     test_superdisk();
     test_superdisk_single();
     test_uu();

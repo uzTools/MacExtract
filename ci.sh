@@ -51,6 +51,12 @@ python3 tools/run_now.py --unclassic build/san/unclassic \
 # --adjudicate); this replays that verdict by content.
 python3 tools/run_superdisk.py --unclassic build/san/unclassic \
     || fail "SuperDisk! tests"
+# StuffIt SpaceSaver has no oracle and no committed fixture either: what
+# grades it is a file SpaceSaver itself wrote under Mini vMac, which
+# lives beside the emulator's other state. Skips cleanly when there is
+# none, so this says nothing on a fresh clone (TESTING.md).
+python3 tools/run_spacesaver.py --unclassic build/san/unclassic \
+    || fail "SpaceSaver tests"
 
 echo "=== variant 1b: sampled inverse BWT (forced, + budget) ==="
 # The Arsenic decoder falls back to a sampled occurrence index when the

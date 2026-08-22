@@ -130,24 +130,32 @@ Unlike section 3, none of this is impossible here: a download would do it.
   accounts for, and a lossy mode is a thing an extractor cannot grade
   against its input by construction.
 
-- **StuffIt SpaceSaver.** The container is no longer missing: it was read
-  out of Aladdin's own engine on 2026-08-22 and is tabulated in FORMATS.md
-  (*StuffIt SpaceSaver's container*), reproducible with
-  `tools/vmac/spacesaver.py --layout` — no emulator, and its nine
-  witnesses fail if a different build is ever put in front of it.
-  **Two things are left, and neither is a licence question:**
-  - **The two codecs.** Compressor index 3 and index 4, which are `CMod 11`
-    (7,536 B) and `CMod 21` (2,202 B) in the same resource fork — the
-    decompress-only modules, which accept every CPU. Reference-quality
-    material in hand, so this is transcription. **What would close it:**
-    writing them.
-  - **A specimen.** SpaceSaver 3.5.1 is installed and runs, its trigger is
-    a name rule, and nothing here has yet made it compress anything: the
-    Finder does the rename on screen and the change never reaches the disk
-    image (DECISIONS.md 2026-08-22, calling it). **What would close it:** a
-    rename event whose effect survives to the image, or any compressed file
-    from anywhere. Without one a codec cannot be graded, which is the bar
-    LZH and DiskDoubler's declined methods already set.
+- **StuffIt SpaceSaver's other three methods, and its dictionary.** The
+  format is read (FORMATS.md, *StuffIt SpaceSaver*): the container, method
+  0 and method 4. Three things are left, and none of them is the layout.
+  - **Methods 1, 2 and 3** are declined per entry. Their modules are in
+    the software this was read out of — `CMod 3`, `CMod 4`, `CMod 11` —
+    so this is transcription, not research. What is missing is a way to
+    GRADE one: index 3 is chosen by Gestalt `cput` ≥ 4, so it takes a
+    68030 or better, and nothing here emulates one that runs SpaceSaver.
+    **What would close it:** a machine (or a setting) that writes them,
+    or a file from anywhere that uses one.
+  - **The preset dictionary is Aladdin's**, 9,679 bytes of `PrAm` -4048,
+    and the LZSS window starts loaded with it — so this project cannot
+    ship the thing its own decoder needs. The CLI takes `--preset FILE`.
+    **What would close it for a user:** the Macintosh application
+    reading the resource off the SpaceSaver in its own System Folder,
+    which is the one machine where it is certain to be present.
+  - **A specimen at all.** Nothing here has made SpaceSaver compress
+    anything: seven runs on a machine that booted and was flushed drove
+    the panel's `small` rule, an enrolled disk left idle for eighteen
+    minutes, Magic Menu's *SpaceSaver Compress*, and `DropCompress™`
+    launched and dropped on. The same page's `.SIT` rename rule DOES
+    fire, so the extension is alive and the silence belongs to the
+    compressor (DECISIONS.md 2026-08-22, what will not compress).
+    **What would close it:** `Idle Now` from SpaceSaver's own menu,
+    which the menu bar only carries when `~Magic Menu™` is not
+    installed — one `hdel` before booting; or a file from anywhere.
 
 - **AppleLink `.pkg`.** No reference
   implementation and no published layout anywhere reachable. Searched

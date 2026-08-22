@@ -11,7 +11,8 @@
  *   --raw-names    emit raw MacRoman bytes instead of UTF-8 names
  *   --forks <visible|hidden>  resource-fork sidecar naming
  *   --overwrite    write over existing output files (default: refuse)
- *   -f <format>    force format (name from `unclassic formats`)
+ *   --preset <f>   SpaceSaver's preset dictionary ('PrAm' -4048)
+ *   -f <format>    force format (the name `sniff` prints)
  *
  * The CLI is the only place libc I/O and malloc are used; the engine
  * sees callbacks only.
@@ -1212,6 +1213,9 @@ static void usage(void)
         "                 an envelope (Archive.sit.1.hqx) is unwrapped first\n"
         "  --no-parts     do not look for other parts\n"
         "  --ask          prompt on stdin for parts that were not found\n"
+        "  --preset <f>   SpaceSaver's preset dictionary: the 'PrAm' -4048\n"
+        "                 resource out of your own copy of SpaceSaver, which\n"
+        "                 its LZSS window starts loaded with (FORMATS.md)\n"
         "  --stats        print allocator statistics\n"
         "  -f <format>    force format\n"
         "  -v             verbose\n"
@@ -1241,6 +1245,10 @@ int main(int argc, char **argv)
     struct stat st;
     SegHost seg;
     const char *partargs[UNC_SEG_MAX_PARTS];
+    const char *presetfile = NULL;
+    /* SpaceSaver's preset dictionary is 9,679 bytes; this is the ceiling
+     * on what --preset will read, not a size anybody declared. */
+    static uint8_t presetbuf[64 * 1024];
     int nparts = 0, no_parts = 0, ask = 0;
 
     if (argc >= 2 && (strcmp(argv[1], "--version") == 0 ||
@@ -1270,6 +1278,8 @@ int main(int argc, char **argv)
         }
         else if (strcmp(argv[i], "--no-parts") == 0) no_parts = 1;
         else if (strcmp(argv[i], "--ask") == 0) ask = 1;
+        else if (strcmp(argv[i], "--preset") == 0 && i + 1 < argc)
+            presetfile = argv[++i];
         else if (strcmp(argv[i], "--stats") == 0) stats = 1;
         else if (strcmp(argv[i], "-f") == 0 && i + 1 < argc) force = argv[++i];
         else if (strcmp(argv[i], "-v") == 0) verbose = 1;
@@ -1384,9 +1394,45 @@ nextlayer:
         const char *dot;
         base = base ? base + 1 : file;
         dot = strrchr(base, '.');
+        /* SpaceSaver compresses a file in place and adds no extension,
+         * so the whole basename is the name — stripping one here would
+         * eat a real ".txt". */
+        if (fmt == UNC_FORMAT_SPACESAVER) dot = NULL;
         opt.name_hint = (const uint8_t *)base;
         opt.name_hint_len = (uint16_t)(dot && dot != base ? (size_t)(dot - base)
                                                           : strlen(base));
+    }
+
+    /* SpaceSaver's window starts loaded with a dictionary that ships
+     * inside SpaceSaver itself; without it, entries fail rather than
+     * decode to something wrong. Read once, freed at exit. */
+    if (presetfile && !opt.preset) {
+        FILE *pf = fopen(presetfile, "rb");
+        long n;
+        if (!pf) {
+            fprintf(stderr, "unclassic: %s: %s\n", presetfile, strerror(errno));
+            fclose(fio.f);
+            return 1;
+        }
+        if (fseek(pf, 0, SEEK_END) != 0 || (n = ftell(pf)) < 0 ||
+            fseek(pf, 0, SEEK_SET) != 0) n = -1;
+        /* Static rather than malloc: `main` returns from a dozen places
+         * and the engine holds this pointer for the whole run, so a
+         * heap buffer would need freeing on every one of them — which
+         * is how the sanitizer build first met this option. */
+        if (n > 0 && n <= (long)sizeof presetbuf &&
+            fread(presetbuf, 1, (size_t)n, pf) == (size_t)n) {
+            opt.preset = presetbuf;
+            opt.preset_len = (uint32_t)n;
+        } else {
+            n = -1;
+        }
+        fclose(pf);
+        if (n <= 0) {
+            fprintf(stderr, "unclassic: %s: not a usable preset\n", presetfile);
+            fclose(fio.f);
+            return 1;
+        }
     }
 
     if (strcmp(cmd, "l") == 0) {

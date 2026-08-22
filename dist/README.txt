@@ -30,6 +30,11 @@ forks, type and creator codes and dates all survive, so an extracted
 application simply runs. StuffIt X, LZH and Disk Copy 4.2 are recognised and
 named, not extracted; encrypted archives are out of scope.
 
+A StuffIt SpaceSaver file is recognised and its contents named, but this
+application cannot expand one: SpaceSaver's compression starts from a
+dictionary that ships inside SpaceSaver itself, and that dictionary is
+Aladdin's, not ours. The Linux tool takes a copy of it with --preset.
+
 Using it: open an archive, then say which folder the files should go into.
 That second dialog opens in the archive's own folder, so pressing Return
 puts them next to it; click Drive to send them to another disk instead.

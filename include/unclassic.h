@@ -77,6 +77,9 @@ typedef enum UncFormat {
     /* Brought in scope 2026-08-21; appended for the same ABI reason. */
     UNC_FORMAT_DDSEG,         /* one part of a DiskDoubler `SPLT` set   */
 
+    /* Brought in scope 2026-08-22; appended for the same ABI reason. */
+    UNC_FORMAT_SPACESAVER,    /* StuffIt SpaceSaver compressed file     */
+
     UNC_FORMAT__COUNT
 } UncFormat;
 
@@ -218,6 +221,15 @@ typedef struct UncOptions {
      * name. Raw bytes, not necessarily NUL-terminated. */
     const uint8_t *name_hint;
     uint16_t       name_hint_len;
+    /* SpaceSaver's LZSS starts with its window loaded from a preset
+     * dictionary that ships inside SpaceSaver itself ('PrAm' -4048,
+     * 9,679 bytes) — see FORMATS.md, "StuffIt SpaceSaver's container".
+     * That table is Aladdin's and is not in this repository, so a
+     * caller that has a copy passes it here. Without it, an entry whose
+     * stream reaches back into the dictionary fails as corrupt rather
+     * than decoding to something wrong. May be NULL. */
+    const uint8_t *preset;
+    uint32_t       preset_len;
 } UncOptions;
 
 /* ------------------------------------------------------------------ */

@@ -723,6 +723,57 @@ else is compiled and never run (OPEN_ITEMS.md, *Untested code*). The unit
 test carries what no fixture can: a two-fork file, so that fork order is asserted, and an
 undecodable method BETWEEN two decodable entries.
 
+## StuffIt SpaceSaver (`tools/run_spacesaver.py`, in `ci.sh`)
+
+Added 2026-08-22. SpaceSaver has no oracle but itself — `unar` and
+`macunpack` do not know the format, so there is no manifest — and **it has no
+specimen yet either**: seven emulator runs have driven every trigger the
+control panel offers and none of them compressed anything (OPEN_ITEMS.md,
+DECISIONS.md 2026-08-22, what will not compress). So today this suite runs
+its synthetic pass and skips the rest, and what is written below is what it
+does when a specimen arrives. Specimens live outside the repository, beside
+the emulator's ROM and System image, because a compressed file is what
+SpaceSaver made of a subject:
+
+    ~/.cache/unclassic/vmac/specimens/spacesaver/NAME.ss        the file
+    ~/.cache/unclassic/vmac/specimens/spacesaver/NAME.ss.orig   its input
+    ~/.cache/unclassic/vmac/specimens/spacesaver/PrAm-4048.bin  the preset
+
+`tools/vmac/spacesaver.py --idlespec` makes the first two (an emulator run);
+`--layout` writes the third out of the installed control panel. **With none
+of them present the suite prints what it skipped and returns 0**, so a fresh
+clone stays green and says nothing.
+
+**The synthetic pass is, for now, the whole of it.** An Alg 4 ENCODER, written from the
+same disassembly as the decoder, round-trips 200,000 bytes through a window
+that wraps and a dozen blocks, and a second case whose first 4 KB are the
+preset dictionary itself. Two implementations of one misreading would agree,
+so this is a consistency check and not an oracle — but it is the only thing
+that exercises the wrap, and a specimen small enough to make by hand never
+will.
+
+**The preset dictionary is checked as a refusal, not just as a feature.**
+SpaceSaver's LZSS window starts loaded with 9,679 bytes of Aladdin's own
+table, so a decoder that quietly starts from zeroes produces wrong bytes and
+says nothing. Every specimen that decodes correctly WITH the dictionary is
+run again without it, and what is asserted is that it fails rather than
+returning something the same length. That check only means anything because
+the first run passed on the same file.
+
+**58 corrupted variants per specimen** — ten truncations, forty-eight
+bit-flips — because `fuzz.py` and `run_robustness.py` both work from
+`fixtures/`, where no SpaceSaver file may be committed. They are FORCED with
+`-f "StuffIt SpaceSaver"`: a truncated header sniffs as *unknown*, and a run
+that trusted the sniff would exit clean having parsed nothing. `fuzz.py` also
+carries the header's magic now, so its garbage generator aims at this parser.
+
+**What this cannot see.** It grades methods 0 and 4 because that is what the
+machine that made the specimens writes — Gestalt `cput` picks 4 below a
+68030 (FORMATS.md). Methods 1, 2 and 3 are compiled into nothing: they are
+declined per entry, and the unit test asserts the declining. The unit tests
+also carry what no specimen here has: a resource fork whose stream is
+written BEFORE the data fork's, which is what the header's offsets are for.
+
 ## Segmented archives (`tools/run_segments.py`, in `ci.sh`)
 
 No segmented archive exists in the corpus — first measured 2026-08-08 and

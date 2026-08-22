@@ -45,6 +45,7 @@ static const UncFormatDesc unc_formats[] = {
     { UNC_FORMAT_ARC,         "ARC",             1 },
     { UNC_FORMAT_SUPERDISK,   "SuperDisk!",      1 },
     { UNC_FORMAT_DDSEG,       "DiskDoubler split", 1 },
+    { UNC_FORMAT_SPACESAVER,  "StuffIt SpaceSaver", 1 },
 };
 
 const char *unc_format_name(UncFormat f)
@@ -114,6 +115,10 @@ UncFormat unc_sniff(UncIO *io)
     /* DiskDoubler's `SPLT`: two copies of its magic, 90 bytes apart. */
     if (unc_ddseg_probe(head, len))     return UNC_FORMAT_DDSEG;
     if (unc_sitx_probe(head, len))      return UNC_FORMAT_SITX;
+    /* 'SIT!' again, but with 'DFD3' behind it: SpaceSaver's header, and
+     * the StuffIt probe above would never claim it (its second long is
+     * 'rLau'). */
+    if (unc_spacesaver_probe(head, len)) return UNC_FORMAT_SPACESAVER;
     if (unc_packit_probe(head, len))    return UNC_FORMAT_PACKIT;
     if (unc_gzip_probe(head, len))      return UNC_FORMAT_GZIP;
     if (unc_compressz_probe(head, len)) return UNC_FORMAT_COMPRESS_Z;
@@ -210,6 +215,7 @@ int unc_extract_as(UncFormat f, UncIO *io, UncSink *sink, UncAlloc *al,
     case UNC_FORMAT_UU:          return unc_uu_extract(&c);
     case UNC_FORMAT_ARC:         return unc_arc_extract(&c);
     case UNC_FORMAT_SUPERDISK:   return unc_superdisk_extract(&c);
+    case UNC_FORMAT_SPACESAVER:  return unc_spacesaver_extract(&c);
     case UNC_FORMAT_SITSEG:      return unc_sitseg_extract(&c);
     case UNC_FORMAT_DDSEG:       return unc_ddseg_extract(&c);
     case UNC_FORMAT_ZIPSEG:      return unc_zipseg_extract(&c);

@@ -31,6 +31,7 @@ whole corpus for that format (engine allocations only, via
 | ARC / ArcMac (.arc) | extract | 1/2 store, 3 RLE90, 4 squeeze+RLE90, 5/6/7 crunch, 8 12-bit LZW+RLE90, 9 13-bit LZW, 0x7f compress; ArcMac's two-fork payload since 2026-08-16★★★; 0x0a/0x0b (PKARC) declined per entry★ | 10 generated archives (methods 1-9, adjudicated by `unar`) + 3 written by Debian's `arc` 5.21q; `synth-arc-mixed.arc` also has an `unar` manifest and is in the differential suite | 4–32 KB★ | full |
 | uuencode (.uu, incl. UUTool) | extract | — (plain uu, UUTool's two-fork "MU" shape, and documents posted in several parts★★) | 7 generated cases, the two-fork ones adjudicated by macutils' `hexbin`; `synth-uu-mac.uu` is in the differential suite | 4 KB | full |
 | Alysis SuperDisk! (.X, .x) | extract | **both containers** (record-stream archive and single file); methods 1-4 and 5-8 (a finite-context predictor over a 13- or 16-bit context, with the flag bitmap and/or the literals Huffman-coded), 9 Huffman, 11 SlowFastB (LZSS); 10, 13 and 20 declined per entry✧✧ | 2 fixtures, 5 forks, adjudicated by the archives' OWN self-extractors on an emulated Mac, + 11 single-file specimens written by Alysis's own control panel (methods 1 and 6) and graded against their inputs | 72–115 KB✧✧ | full |
+| StuffIt SpaceSaver (`SPSV`) | extract | 0 stored, 4 "Alg 4" — an LZSS whose window starts loaded with a preset dictionary that ships inside SpaceSaver; 1, 2 and 3 declined per entry✦✦ | **none, and no specimen either**: nothing SpaceSaver wrote has ever been decoded here. Graded by a second implementation of the same reading (an encoder in `run_spacesaver.py`) and by unit tests✦✦ | 4 KB + the window (68 KB at its largest) | full |
 | LZH/LHA (-lh?-, -lz?-) | detect only | — | 1 real `-lh5-` archive, named + refused; unit test over every method byte | — | — |
 | DiskCopy 4.2 (.image) | detect only | — | synthetic 800K GCR + real 800K image; 0 false positives in 807 fixtures (re-measured 2026-08-15) | — | — |
 
@@ -290,6 +291,15 @@ budget. Neither peak is a ceiling anybody declared: the 64 KB step is the wide
 context table, allocated only for methods 5-8, and the 96 KB one is
 SlowFastB's window, allocated only when a method-11 block turns up.
 
+✦✦ **StuffIt SpaceSaver, in scope since 2026-08-22**, where every status
+file here used to say nobody has published how it is laid out. The header, the
+fork records, the module table and what each method is: *StuffIt SpaceSaver*,
+below. **It is the only format here graded by nothing but itself**: no oracle,
+no fixture, and — so far — no specimen, because SpaceSaver has not been made
+to compress anything on this machine (OPEN_ITEMS.md). What stands in for one
+is an encoder written from the same disassembly as the decoder, which is a
+consistency check and not an oracle (TESTING.md).
+
 †† **Multipart, in both directions, since 2026-08-15.** A `.hqx` file may hold
 more than one document, and a single document may have been posted in several
 parts — each part carrying its own mail header, so that joining them puts that
@@ -515,20 +525,20 @@ encoded on an emulated Mac, decoded on one. `unar` reads none of these: it
 cannot recognise the format at all, which is why the encoder had to be the
 oracle.
 
-## StuffIt SpaceSaver's container — read, not implemented
+## StuffIt SpaceSaver
 
-Read out of the software on 2026-08-22, not from a specimen: nothing here
-has ever produced one. **The reader is `tools/vmac/spacesaver.py --layout`**,
-which lifts the resources off the installed image and prints every figure
-below from their own bytes; DECISIONS.md (2026-08-22, the layout) says how
-it was read and what it turned on. Not in scope until a codec is written and
-something can grade it — OPEN_ITEMS.md, Part 2.
+**In scope since 2026-08-22**, read out of Aladdin's own engine rather than
+from a specimen — there is no specimen of any kind, and the layout came
+anyway. `tools/vmac/spacesaver.py --layout` prints every figure below out
+of the installed software's own bytes, with nine witnesses that fail if a
+different build is ever put in front of it; DECISIONS.md (2026-08-22, the
+layout / the codecs) is how it was read.
 
-The writer is `SSEn 1` in `StuffIt Engine™`, not the control panel: the panel's
-`ACMP 1` only reads eight bytes and compares the two magics. A compressed file
-carries type `SPSV`, creator `SIT!`, an EMPTY resource fork, and a data fork
-whose length is rounded up to a multiple of 256 — which is the screen the
-system extension applies before it opens anything.
+The writer is `SSEn 1` in `StuffIt Engine™`, not the control panel: the
+panel's `ACMP 1` only reads eight bytes and compares the two magics. A
+compressed file carries type `SPSV`, creator `SIT!`, an EMPTY resource fork,
+and a data fork whose length is rounded up to a multiple of 256 — which is the
+screen the system extension applies before it opens anything.
 
 | off | size | field |
 |---|---|---|
@@ -558,21 +568,35 @@ system extension applies before it opens anything.
 fork and record 2 the resource fork, but the LARGER fork's stream is written
 first, at offset 84, and the other follows it — read each at its own offset.
 
-| idx | modules (`CMod`) | runs on |
-|---|---|---|
-| 0 | 1 "Default Compressor" | any |
-| 1 | 3 "Original Fast Compressor" | any |
-| 2 | 4 "Original Slow Compressor" | any |
-| 3 | 10 "Alg 3", 11 decompress-only, 15 PowerPC | 68030 and up / any / PowerPC |
-| 4 | 20 "Alg 4", 21 decompress-only | 68000-68020 / any |
+| idx | modules (`CMod`) | runs on | status |
+|---|---|---|---|
+| 0 | 1 "Default Compressor" | any | stored, implemented |
+| 1 | 3 "Original Fast Compressor" | any | declined per entry |
+| 2 | 4 "Original Slow Compressor" | any | declined per entry |
+| 3 | 10 "Alg 3", 11 decompress-only, 15 PowerPC | 68030 and up / any / PowerPC | declined per entry |
+| 4 | 20 "Alg 4", 21 decompress-only | 68000-68020 / any | implemented |
 
 The index is the module's own byte at +0x20, not its resource id; the low byte
 there is a revision and the higher one wins; +0x24 is a CPU mask, bit
 31 − Gestalt `cput`. **The default is the CPU's**: index 4 below a 68030,
 index 3 from a 68030 up, and the decompress-only modules accept every CPU so
-any Mac can read any file. Neither bitstream is implemented — that is `CMod 11`
-(7,536 B) and `CMod 21` (2,202 B), in the same resource fork, called at
-module+0x10 with a block of seven callbacks and no framing of the engine's own.
+any Mac can read any file. That is also why 1, 2 and 3 are declined — no
+machine reachable here writes them, so an implementation could not be graded,
+the bargain LZH and DiskDoubler's declined methods already make.
+
+**Method 4 is an LZSS with a preset dictionary.** Three bytes of stream header
+(block count, then the window's width in bits), then that many blocks of a
+6-byte header — compressed length including those six bytes, then uncompressed
+length, both 24-bit little-endian — and a bit stream read LSB-first: `1` and
+eight bits is a literal, `0` and five bits of length plus *wbits* of distance
+is a copy of 4 + length bytes. The window slides across the whole fork.
+
+**It starts loaded with 9,679 bytes of Aladdin's `PrAm` -4048**, placed
+immediately before the first output byte, so the first matches in every fork
+read that table rather than anything in the file. It is not in this
+repository: `unclassic --preset FILE` takes a copy from your own SpaceSaver,
+and without one an entry that reaches into the dictionary fails rather than
+decoding to something wrong.
 
 ## Envelope auto-unwrap
 
@@ -1404,7 +1428,7 @@ with this archive."*
 | `.arc` (ARC / ArcMac) | with the add-on | **yes since 2026-08-15**, methods 1-9; ArcMac's two-fork payload since 2026-08-16 (★★★ above) |
 | uuencode (`.uu`) | with the add-on | **yes since 2026-08-15**, plain and UUTool's two-fork shape |
 | AppleLink `.pkg` | with the add-on | no, and not sniffed either. Not a decision about scope any more — a decision about evidence: no reference implementation and no published layout anywhere reachable, so rule #1 forbids writing one. OPEN_ITEMS.md, *Waiting on a file this machine does not have*, records what was searched |
-| StuffIt SpaceSaver | with the add-on | no, and not sniffed either — but the container is no longer unknown: it was read out of Aladdin's own engine on 2026-08-22 (*StuffIt SpaceSaver's container*, above). What is missing is the two codecs and a specimen to grade them against |
+| StuffIt SpaceSaver | with the add-on | **yes since 2026-08-22** — methods 0 and 4, which is what a 68000 writes; 1, 2 and 3 are declined per entry (*StuffIt SpaceSaver*, above) |
 | Chained expansion (`.sit.hqx`) | yes, and can be turned off | yes, `-nr` turns it off |
 | System 7 conveniences | drag-and-drop of files, folders and whole disks; watch folders; background expansion; Apple events | none; Standard File, one archive at a time |
 | Verification | none published | 919 fixtures byte-exact against `unar`/`macunpack` — bar the one uuencode fixture, which `unar` cannot read at all and whose ground truth is its generator's input, with `hexbin` agreeing |
