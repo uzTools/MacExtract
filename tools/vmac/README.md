@@ -66,6 +66,7 @@ oracle and will lose it to `./ci.sh`'s `make clean`.
 | `ddencode.py` | **grade a method by WRITING it**: encode a fork, hand it to Salient's own 1991 DiskDoubler, and see whether it comes back. How methods 3, 4 and 5 were graded with no specimen |
 | `ndd.py` | the releases nothing here had run: Salient's **3.1.2** (1991, the oldest reachable — it has the only method 2 fork), **DiskDoubler 4.0** and **Norton DiskDoubler Pro 1.1** (Symantec — whose application is 4.1.1). `--specimens`, `--harvest` and `--grade` need no emulator |
 | `superdisk.py` | grade SuperDisk! with its own self-extractors, and `--on-mac`, which replays both payloads through our application |
+| `sdcompress.py` | the other half: Alysis's 1991 **SuperDisk! control panel**, which COMPRESSES. Writes a `.x` on demand — the thing methods 10, 13 and 20 were waiting for |
 | `mkcollide.py` | build an archive whose names collide on HFS, and verify what `BumpName` did with them — nothing in the corpus collides |
 
 `tools/quickdraw-repro/` is a sibling that reuses `mkboot.py` and this
@@ -497,6 +498,36 @@ Four things here that the other two harnesses do not have:
 `--stored` grades itself: it reads the archive back with our own CLI and
 compares every fork with the bytes that went in, resource forks with 16..127
 masked, and returns non-zero on any mismatch.
+
+## SuperDisk!'s compressor — `sdcompress.py`
+
+`superdisk.py` grades this engine with SuperDisk!'s own expanders, which is
+all the corpus's self-extracting archives offer. This one runs the half that
+compresses: Alysis's 1991 ` SuperDisk!` control panel (`cdev`/`AlyS`), which
+OPEN_ITEMS.md said did not survive (BLOCKERS.md).
+
+    tools/vmac/sdcompress.py --setup      fetch it (Macintosh Repository)
+    tools/vmac/sdcompress.py --install    System 7 + the control panel
+    tools/vmac/sdcompress.py --panel      open the panel and photograph it
+    tools/vmac/sdcompress.py --makefile   what "Make File" offers
+    tools/vmac/sdcompress.py --compress   compress a subject, report the file
+
+Three things that cost a run each:
+
+- **The extension is the RESULT, not the trigger.** Renaming a file to
+  `Alpha.x` under a loaded SuperDisk! changes nothing — measured, the bytes
+  come back identical. `.x` is what the compressor names its output; the work
+  is done from the control panel's "Make File" button.
+- **Rebuild the boot image every run.** The panel saves its settings *and its
+  current page* into the System Folder, and Mini vMac writes back, so a
+  second run opens where the first left off and a coordinate measured on page
+  1 lands on page 2. One run clicked "Off" that way — turning compression off
+  — and photographed a settings page believing it was a file dialog.
+  `session()` re-copies `Sys7.img` unconditionally.
+- **The Apple menu is not worth fighting.** Two attempts at holding it open
+  produced frames with the title inverted and no menu. Navigating the boot
+  volume to `System Folder:Control Panels` is slower, reliable, and proves
+  the panel is installed.
 
 ## Grading a method by writing it — `ddencode.py`
 

@@ -101,18 +101,29 @@ Each says which of the two is missing, because the searches are different:
 
 Unlike section 3, none of this is impossible here: a download would do it.
 
-- **ARC 0x0a/0x0b, and SuperDisk! methods 10, 13 and 20.** No corpus
-  fixture uses any of them and nothing reachable writes them, so an
-  implementation could not be graded — code no oracle can check is the same
-  bargain LZH refuses. **What is missing is a gradeable SPECIMEN.**
-  SuperDisk! 10, 13 and 20 need no research at all — their 68k modules sit
-  in the corpus, named and complete (FORMATS.md ✧✧) — and still have
-  nothing to grade against, because only SuperDisk!'s expander survives
-  here and not its compressor. Before filing anything else here, ask the
-  question that emptied the DiskDoubler half of this entry on 2026-08-21:
-  **is there an implementation that could be FED?** An expander that
-  cannot be read from can still be handed a file somebody encoded
-  (DECISIONS.md, methods 3, 4 and 5).
+- **ARC 0x0a/0x0b.** No corpus fixture uses either and nothing reachable
+  writes them, so an implementation could not be graded — code no oracle
+  can check is the same bargain LZH refuses. **What is missing is a
+  gradeable SPECIMEN:** a `.arc` written by PKARC or PKPAK using method
+  0x0a or 0x0b. DOS-side, so the likeliest source is a shareware
+  collection rather than a Macintosh archive. Before filing anything else
+  here, ask the two questions that have emptied this section twice:
+  **is there an implementation that could be FED?** (DECISIONS.md, methods
+  3, 4 and 5) and **is "X does not survive" a claim about somebody's
+  search?** (BLOCKERS.md, SuperDisk!'s compressor).
+
+- **SuperDisk!'s single-file container has never been read.** Its
+  compressor is in hand since 2026-08-22 and writes one on demand
+  (`tools/vmac/sdcompress.py --compress`), so this is **not** waiting on a
+  file any more — it is waiting on a layout. What a specimen looks like:
+  the uncompressed size twice, then type and creator, then the name as a
+  Pascal string; no `0x29`/`0x28` record stream, which is what this engine
+  reads. `unc_sniff` answers *unknown*. **What would close it:** the same
+  route the archive format took — read it out of the self-extractor's own
+  code, which every `.x` carries (DECISIONS.md, "SuperDisk!, read out of
+  SuperDisk!"). Methods 10, 13 and 20 likely arrive with it: the panel's
+  Compress and Speed axes are what a SlowFast**A**/**B**/**C** family
+  would be selected by, and only B is implemented.
 
 - **AppleLink `.pkg` and StuffIt SpaceSaver.** Neither has a reference
   implementation or a published layout anywhere reachable. Searched

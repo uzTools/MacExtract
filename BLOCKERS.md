@@ -121,6 +121,7 @@ line is what makes the next one worth re-testing.
 | No DiskDoubler COMPRESSOR older than 3.2 is reachable, so methods 2-5 cannot be graded | WinWorld carries Salient's **3.1.2** distribution floppy (1991), which holds a method 2 fork | 2026-08-21 |
 | DiskDoubler methods 3, 4 and 5 cannot be graded, because no specimen of them exists | the 1991 disk carries Salient's own expander: it reads forks THIS project encoded, and all three come back byte-exact | 2026-08-21 |
 | 8 resource forks have no off-Mac oracle, so they cannot be ground truth | `unar`'s DDn reads ONE byte past the declared compressed length; give it one and it decodes all 33 forks byte-exact | 2026-08-22 |
+| SuperDisk!'s compressor does not survive here, only its expander | Macintosh Repository has the 1991 `SuperDisk!` control panel; it installs, runs, and compresses on demand | 2026-08-22 |
 
 **DiskDoubler methods 1–5 and 7 "cannot be graded".** Declined per entry
 since M12 on the grounds that no corpus fixture uses one and nothing reachable
@@ -162,6 +163,27 @@ the nine real ones tried here. **No smell above found this one** — inputs
 from outside the corpus did, which is a sixth mechanism and the only one that
 needs no cleverness. What named the cause in minutes was the fifth.
 DECISIONS.md 2026-08-21.
+
+**"SuperDisk!'s compressor does not survive here, only its expander."** The
+reason methods 10, 13 and 20 sat in *waiting on a file*. Macintosh Repository
+carries the 1991 ` SuperDisk!` control panel — `cdev`/`AlyS`, an 89 KB
+resource fork — and it is the half that compresses. It installs into
+`System Folder:Control Panels`, opens under System 7 with Compress
+(Off/Light/Tighter), Speed and Memory settings, and its "Make File" button
+turned an 11,136-byte subject into a 2,372-byte `.x` on the first run that
+reached it (`tools/vmac/sdcompress.py --compress`).
+
+**Cost: three methods filed as ungradeable, on a sentence about what
+survives that nobody had searched for.** The same site had already supplied
+the Symantec DiskDoubler release earlier the same day. The smell is the
+fourth again — a limitation stated about the environment — and the specific
+correction is dull and repeatable: **"X does not survive" is a claim about
+somebody's search, and it decays.**
+
+What it did NOT close: the archives it writes are a container this engine has
+never read — SuperDisk!'s single-file form, not the record stream the corpus
+uses (DECISIONS.md 2026-08-22, later). The item moved from *waiting on a
+file* to *waiting on a layout*, with the file now producible on demand.
 
 **"These 8 forks have no second implementation."** `unar` refuses them,
 macunpack has no DDn at all, and DiskDoubler's own expander only runs on a

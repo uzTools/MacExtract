@@ -249,6 +249,13 @@ marking a stored block.
 | 11 | "SlowFastB" | LZSS, lengths 2-282, offsets 1-49120 |
 | 10, 13, 20 | "SlowFastA", "SlowFastC", "Tennessee" | **declined per entry** |
 
+**A second container exists and is not read** (2026-08-22): SuperDisk!'s
+single-file form, which its control panel's "Make File" writes. It opens with
+the uncompressed size twice, then type and creator, then a Pascal name — no
+record stream — so `unc_sniff` answers *unknown*. Specimens are producible on
+demand now that the compressor is in hand (`tools/vmac/sdcompress.py`);
+OPEN_ITEMS.md carries what would close it.
+
 The corpus's two archives use 7 and 11. The method table is not guesswork:
 decoding method 11 yields Disk Expander 1.2's own resource fork, whose `Cmpr`
 resources are one module per method, each stating its number and its name

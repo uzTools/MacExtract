@@ -88,6 +88,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-21 (the Salient disk) — method 2, and the archive nobody here searched
 - 2026-08-21 (methods 3, 4 and 5) — writing DiskDoubler files so DiskDoubler can grade them
 - 2026-08-22 — one byte, and the eight forks that had no oracle
+- 2026-08-22 (later) — SuperDisk!'s compressor, which was said not to survive
 
 ---
 
@@ -4509,3 +4510,64 @@ position in the archive — and the guard caught it on the second file rather
 than writing one fork's hash under another fork's name, which `ci.sh` would
 then have enforced forever. Matching is now by the data fork's own hash, and
 a header that does not pair uniquely is an error rather than a guess.
+
+## 2026-08-22 (later) — SuperDisk!'s compressor, which was said not to survive
+
+OPEN_ITEMS.md said methods 10, 13 and 20 could not be graded because
+"SuperDisk!'s compressor does not survive here, only its expander".
+Macintosh Repository has it: the 1991 **` SuperDisk!` control panel**
+(`cdev`/`AlyS`, an 89 KB resource fork), which is the half that
+compresses. `tools/vmac/sdcompress.py` fetches it, installs it into
+`System Folder:Control Panels` and drives it.
+
+**It runs.** The panel opens under System 7 with a "Make File" button,
+three 3-D icon buttons (Auto X, Alerts, Security) and a paged settings
+area whose Compress page offers **Off / Light / Tighter** beside Speed
+and Memory axes. Its own text: *"SuperDisk!'s default setting is
+'Faster' compression."* Those axes are the reason to want it — the
+method table read out of Disk Expander calls 10, 11 and 13
+**SlowFastA, SlowFastB and SlowFastC**, and this engine implements 11.
+A speed control over a Slow/Fast family is where the other two live.
+
+**"Make File" compresses.** It puts up a standard file dialog; pointed at
+an 11,136-byte subject it wrote `Alpha.x`, an `APPL/AlYS` of 2,372 bytes
+data and a 5,730-byte resource fork — the `AutX` auto-expand stub the
+control panel carries. So specimens are now producible on demand, which
+is what the open item was waiting for.
+
+### What it produced is not the container this engine reads
+
+The corpus's two archives open with eight bytes nobody reads and then a
+record stream (`0x29` folder, `0x28` file). `Alpha.x` opens
+
+    0000 2b80  0000 2b80  0000 0000  'TEXT' 'ttxt' … 05 "Alpha" …
+
+— the uncompressed size twice, then type and creator, then the name as a
+Pascal string. No `0x29`, no `0x28`. **It is SuperDisk!'s single-file
+form**, the "auto-expanding file" its help strings talk about, and it
+stands in the same relation to the archive format as DiskDoubler's
+`0xABCD0054` does to `DDAR`. This project has never had one; `unc_sniff`
+answers *unknown* and forcing the format gives *archive structure is
+corrupt*, which is the honest answer to a container nobody has read.
+
+So the item that was "waiting on a file" is now waiting on a layout, and
+the file arrives whenever it is wanted.
+
+### Two traps, both photographed
+
+**The boot image accumulates the panel's state.** Mini vMac writes back,
+and this control panel saves its settings *and its current page* into the
+System Folder. A second run therefore opens where the first left off, so
+a coordinate measured on page 1 lands on page 2's buttons — one run
+clicked "Off", turning compression off, and photographed a settings page
+while the harness believed it had opened a file dialog. `session()` now
+rebuilds the boot image every time. This is the same shape `ddpro.py` and
+`superdisk.py` already record, with a new cause: not a mistimed click but
+a machine that remembers.
+
+**The extension is the result, not the trigger.** A summary of the format
+elsewhere says SuperDisk! compresses "by simply adding an extension to
+the filename", and renaming `Alpha` to `Alpha.x` under a loaded
+SuperDisk! changes nothing at all — measured, the bytes come back
+identical. `.x` is what the compressor NAMES its output. An hour went
+into driving the Finder's rename before the control panel was opened.
