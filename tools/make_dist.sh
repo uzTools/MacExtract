@@ -76,9 +76,11 @@ application simply runs. StuffIt X, LZH and Disk Copy 4.2 are recognised and
 named, not extracted; encrypted archives are out of scope.
 
 A StuffIt SpaceSaver file is recognised and its contents named, but this
-application cannot expand one: SpaceSaver's compression starts from a
-dictionary that ships inside SpaceSaver itself, and that dictionary is
-Aladdin's, not ours. The Linux tool takes a copy of it with --preset.
+application does not expand one. SpaceSaver compresses starting from a
+dictionary that lives inside SpaceSaver itself, so a Mac that has
+SpaceSaver opens these files without any help, and a Mac that does not
+has no dictionary to read. The Linux tool takes a copy of it with
+--preset, which is the case that matters: a file that has travelled.
 
 Using it: open an archive, then say which folder the files should go into.
 That second dialog opens in the archive's own folder, so pressing Return

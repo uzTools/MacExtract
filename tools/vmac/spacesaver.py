@@ -1996,6 +1996,203 @@ def dragdrop(keep=False):
     return report_tree(out, s.shots)
 
 
+# SpaceSaver's OWN menu, from `STR# 1024` in the control panel:
+#   About SpaceSaver Menu...;(-;Turn Idle-Time On;Idle Now;(-;Open Control Panel
+# Six rows at the usual 15-pixel pitch, two of them separators.
+SS_MENU_X = 283
+SS_MENU_IDLE_ON = 60
+SS_MENU_IDLE_NOW = 75
+
+
+def idlenow(keep=False):
+    """Ask SpaceSaver to do its idle sweep NOW, from its own menu.
+
+    `STR# 1024` is a menu this machine has never shown: the menu bar
+    carries Magic Menu's icon menu instead, and Magic Menu's own
+    *SpaceSaver Compress* does nothing. The one explicit "do it now"
+    this software has is **Idle Now**, in the menu SpaceSaver installs
+    when its *Show Menu* option is on — so this run deletes
+    `~Magic Menu™` from the Control Panels folder before booting and
+    takes the slot it was using.
+
+    The disk is enrolled first, because the idle sweep's own page says
+    it compresses "files not modified in the last 1 Months ... but only
+    if they are located on the following disks", and the subjects are
+    stamped 1990 for the same sentence.
+    """
+    import glob
+    boot = os.path.join(WORK, "ssidlenow.hfv")
+    shutil.copyfile(INSTALLED, boot)
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+    tmp = tempfile.mkdtemp(prefix="ssin-")
+    try:
+        subprocess.run(["hmount", boot], check=True, capture_output=True,
+                       env=env)
+        # The name carries a Mac Roman trademark sign; raw bytes, as
+        # everywhere else here.
+        r = subprocess.run([b"hdel",
+                            b":System Folder:Control Panels:~Magic Menu\xaa"],
+                           capture_output=True, env=env)
+        print("spacesaver: removed Magic Menu: %s"
+              % ("ok" if r.returncode == 0 else
+                 r.stderr.decode("utf-8", "replace").strip()))
+        from ndd import macbinary_dated, MAC_EPOCH_1990   # noqa: E402
+        for n, t, c, d, r2 in SUBJECTS:
+            q = os.path.join(tmp, n + ".bin")
+            open(q, "wb").write(macbinary_dated(n, t, c, d, r2,
+                                                MAC_EPOCH_1990,
+                                                MAC_EPOCH_1990))
+            subprocess.run(["hcopy", "-m", q, ":"], check=True,
+                           capture_output=True, env=env)
+        subprocess.run(["humount"], check=True, capture_output=True, env=env)
+    finally:
+        shutil.rmtree(env["HOME"], ignore_errors=True)
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    before = set(glob.glob("/tmp/dd-*/boot.hfv"))
+    s = Session(boot, [], os.path.join(SPECIMENS, "idlenow"))
+    try:
+        open_ss_panel(s)
+        s.mac.click(*SS_IDLE_TIME)
+        time.sleep(4.0)
+        s.mac.click(*SS_IDLE_TIME)
+        s.shot("idle-page", wait=10.0)
+        s.mac.click(*IDLE_ADD)
+        time.sleep(3.0)
+        s.mac.click(*IDLE_ADD)
+        s.shot("added", wait=6.0)
+        s.mac.click(*IDLE_OK)
+        time.sleep(3.0)
+        s.mac.click(*IDLE_OK)
+        s.shot("settings-ok", wait=8.0)
+        s.mac.click(*SS_CLOSE_BOX)
+        s.shot("panel-closed", wait=8.0)
+        for _ in range(6):
+            s.mac.command_key("w")
+            time.sleep(2.0)
+        s.shot("windows-closed", wait=6.0)
+        s.menu(SS_MENU_X, SS_MENU_IDLE_ON, "menu-idle-on")
+        s.shot("idle-on", wait=8.0)
+        s.menu(SS_MENU_X, SS_MENU_IDLE_NOW, "menu-idle-now")
+        s.shot("idle-now", wait=60.0)
+        s.shot("settled", wait=60.0)
+        s.menu(SPECIAL_X, SHUT_DOWN_Y, "special-menu")
+        s.shot("shutting-down", wait=30.0)
+    finally:
+        time.sleep(8)
+        s.close()
+
+    cands = [p for p in glob.glob("/tmp/dd-*/boot.hfv") if p not in before]
+    if not cands:
+        cands = sorted(glob.glob("/tmp/dd-*/boot.hfv"),
+                       key=os.path.getmtime)[-1:]
+    out = sorted(cands, key=os.path.getmtime)[-1]
+    print("spacesaver: reading back %s" % out)
+    return report_volume(out, s.shots)
+
+
+def parade(keep=False):
+    """Photograph the startup icon parade, which nothing here ever has.
+
+    Every run so far takes its first frame after the desktop has
+    settled, and an extension that fails to install says so THERE — a
+    crossed-out icon, or an alert that is gone by the time the Finder is
+    up. `STR# 1001` in the control panel has seven ways for SpaceSaver
+    to decline: the wrong system version, not enough memory, several
+    copies at startup, a locked preferences file or startup volume, not
+    enough free space, and "this copy has not been correctly installed".
+
+    The `Idle Now` run made this worth doing: with `~Magic Menu™`
+    deleted the menu bar carried NO icon menu at all, so the menu
+    SpaceSaver's own *Show Menu* option promises was never installed.
+    """
+    boot = os.path.join(WORK, "ssparade.hfv")
+    shutil.copyfile(INSTALLED, boot)
+    s = Session(boot, [], os.path.join(SPECIMENS, "parade"))
+    try:
+        # No boot() first: the point is the frames BEFORE the desktop —
+        # and Mini vMac runs unthrottled, so a Mac Plus is at the Finder
+        # about two seconds after the process starts. Sampling every 2.5 s
+        # photographed the settled desktop sixteen times.
+        for i in range(30):
+            s.shot("boot%02d" % i, wait=0.15)
+        s.boot()
+        s.shot("desktop", wait=10.0)
+    finally:
+        time.sleep(3)
+        s.close()
+    print("spacesaver: parade in %s" % s.shots)
+    return 0
+
+
+def commit(keep=False):
+    """OK the Compression page, THEN rename — in one boot.
+
+    Every earlier run assumed the rule on that page was in force because
+    the page draws it ticked, with `small` in the field. Nothing has
+    ever pressed OK on it and kept the result: `--idle` did press Return
+    (the page's default button is OK) but its image was killed, and
+    every other run opened the panel for the Idle Time page only.
+
+    So this one commits the page and renames a subject in the same boot,
+    and the machine is shut down afterwards like the rest.
+    """
+    import glob
+    boot = os.path.join(WORK, "sscommit.hfv")
+    shutil.copyfile(INSTALLED, boot)
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+    tmp = tempfile.mkdtemp(prefix="sscm-")
+    try:
+        subprocess.run(["hmount", boot], check=True, capture_output=True,
+                       env=env)
+        from ndd import macbinary_dated, MAC_EPOCH_1990   # noqa: E402
+        for n, t, c, d, r in SUBJECTS:
+            q = os.path.join(tmp, n + ".bin")
+            open(q, "wb").write(macbinary_dated(n, t, c, d, r,
+                                                MAC_EPOCH_1990,
+                                                MAC_EPOCH_1990))
+            subprocess.run(["hcopy", "-m", q, ":"], check=True,
+                           capture_output=True, env=env)
+        subprocess.run(["humount"], check=True, capture_output=True, env=env)
+    finally:
+        shutil.rmtree(env["HOME"], ignore_errors=True)
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    before = set(glob.glob("/tmp/dd-*/boot.hfv"))
+    s = Session(boot, [], os.path.join(SPECIMENS, "commit"))
+    try:
+        open_ss_panel(s)
+        s.mac.click(*SS_COMPRESSION)
+        time.sleep(4.0)
+        s.mac.click(*SS_COMPRESSION)
+        s.shot("compression-page", wait=10.0)
+        s.mac.key("Return")                     # OK is the default button
+        s.shot("committed", wait=10.0)
+        s.mac.click(*SS_CLOSE_BOX)
+        s.shot("panel-closed", wait=8.0)
+        for _ in range(6):
+            s.mac.command_key("w")
+            time.sleep(2.0)
+        s.shot("windows-closed", wait=6.0)
+        s.mac.click(470, 55, double=True)
+        s.shot("bootvol", wait=14.0)
+        rename_to(s, "a", "small", "Alpha")
+        s.shot("settled", wait=60.0)
+        s.menu(SPECIAL_X, SHUT_DOWN_Y, "special-menu")
+        s.shot("shutting-down", wait=30.0)
+    finally:
+        time.sleep(8)
+        s.close()
+
+    cands = [p for p in glob.glob("/tmp/dd-*/boot.hfv") if p not in before]
+    if not cands:
+        cands = sorted(glob.glob("/tmp/dd-*/boot.hfv"),
+                       key=os.path.getmtime)[-1:]
+    out = sorted(cands, key=os.path.getmtime)[-1]
+    print("spacesaver: reading back %s" % out)
+    return report_volume(out, s.shots)
+
+
 # ---------------------------------------------------------------------------
 # Reading the format out of the software, which is what --layout does.
 #
@@ -2245,6 +2442,12 @@ def main():
                     help="boot the installed image and peek the menus")
     ap.add_argument("--install40", action="store_true",
                     help="run the 4.0 installer, trying each published code")
+    ap.add_argument("--commit", action="store_true",
+                    help="OK the Compression page, then rename")
+    ap.add_argument("--parade", action="store_true",
+                    help="photograph the startup icons")
+    ap.add_argument("--idlenow", action="store_true",
+                    help="SpaceSaver's own menu: Idle Now")
     ap.add_argument("--dragdrop", action="store_true",
                     help="drag a subject onto DropCompress")
     ap.add_argument("--drop", action="store_true",
@@ -2301,6 +2504,12 @@ def main():
         probe_installed(a.keep)
     elif a.install40:
         install40(a.keep)
+    elif a.commit:
+        return commit(a.keep)
+    elif a.parade:
+        return parade(a.keep)
+    elif a.idlenow:
+        return idlenow(a.keep)
     elif a.dragdrop:
         return dragdrop(a.keep)
     elif a.drop:

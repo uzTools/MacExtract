@@ -100,7 +100,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-22 (SpaceSaver, calling it) — the rename commits, the image does not see it
 - 2026-08-22 (SpaceSaver, the layout) — read out of the software, as recommended
 - 2026-08-22 (SpaceSaver, the codecs) — two of five, and a dictionary that is not ours
-- 2026-08-22 (SpaceSaver, what will not compress) — seven runs, one thing that fired
+- 2026-08-22 (SpaceSaver, what will not compress) — nine runs, one thing that fired
 
 ---
 
@@ -5179,10 +5179,10 @@ declined per entry for want of an oracle, exactly as LZH and
 DiskDoubler's own declined methods are. Their modules are in hand; it
 is the grading that is missing, and that has been the bargain since M14.
 
-## 2026-08-22 (SpaceSaver, what will not compress) — seven runs, one thing that fired
+## 2026-08-22 (SpaceSaver, what will not compress) — nine runs, one thing that fired
 
 The format is implemented; what is still missing is a file SpaceSaver
-wrote. Seven runs went after one, every one of them on a machine that
+wrote. Nine runs went after one, every one of them on a machine that
 booted and was **flushed** — Special ▸ Shut Down, the step whose absence
 invalidated the three earlier runs (BLOCKERS.md). What they establish:
 
@@ -5195,15 +5195,19 @@ invalidated the three earlier runs (BLOCKERS.md). What they establish:
 | rename to add `.SIT`, the panel's OTHER rename rule | **a 228-byte StuffIt archive** |
 | `DropCompress™` launched with no document | no window at all, then it quits |
 | a subject dragged onto `DropCompress™` | the app highlights, nothing happens |
+| `~Magic Menu™` deleted, to get SpaceSaver's own menu | **no icon menu in the menu bar at all** |
+| the Compression page OK'd first, then the rename | nothing |
 
 **The `.SIT` result is the one that matters**, because it disproves the
 explanation everything else was resting on. The trigger page has two
 rename rules ticked; renaming `Forked` to `Forked.SIT` replaced it with
-a StuffIt archive and deleted the original. So the extension is loaded,
-it sees rename events, it acts on them, and its output survives to the
-image. **What does not happen is compression** — and that is now a
-statement about SpaceSaver's compressor rather than about the harness,
-which is the first time in this investigation that has been true.
+a StuffIt archive and deleted the original. So a rename event reaches an
+extension that acts on it, and that extension's output survives to the
+image — the harness does deliver a trigger, and a compressed file, when
+one is written, comes back. **What does not happen is SpaceSaver
+compression**, and the run below narrows why: the `.SIT` rule is Magic
+Menu's, and Magic Menu is the only one of the two extensions this
+machine has ever seen do anything.
 
 ### Why this is written down rather than left as "still trying"
 
@@ -5227,6 +5231,23 @@ from the Finder again:
 - **the registration state.** 3.5.1 was installed with a code that the
   panel accepted, and nothing has checked what *About SpaceSaver* says
   about it.
+
+**And the last two runs point somewhere better than any of that.** With
+`~Magic Menu™` deleted the menu bar carried no icon menu at all — so the
+menu SpaceSaver's own *Show Menu* option promises, `STR# 1024`'s
+*Turn Idle-Time On / Idle Now / Open Control Panel*, was never installed.
+Nothing else on this machine has ever needed SpaceSaver's EXTENSION: the
+control panel is a `cdev` and loads when the panel is opened, the `.SIT`
+rename rule is Magic Menu's, and every "SpaceSaver is running" reading so
+far has come from the panel drawing itself correctly. **The next question
+is not which trigger to pull but whether `INIT 0` installs at all**, and
+`STR# 1001` lists seven reasons it might decline — one of which,
+*"This copy of SpaceSaver has not been correctly installed. Please
+re-install from your master disks"*, is exactly what a two-floppy set
+driven by a screenshot harness might produce. The startup icon parade
+would say, and this machine cannot photograph it: Mini vMac runs
+unthrottled and is at the Finder before the first frame can be grabbed
+(`--parade`, 30 shots at 0.15 s, all of them the settled desktop).
 
 Nothing here blocks the reader: the container and both implemented
 methods are graded by an encoder written from the same disassembly, and

@@ -596,7 +596,16 @@ immediately before the first output byte, so the first matches in every fork
 read that table rather than anything in the file. It is not in this
 repository: `unclassic --preset FILE` takes a copy from your own SpaceSaver,
 and without one an entry that reaches into the dictionary fails rather than
-decoding to something wrong.
+decoding to something wrong. The resource is byte-identical in the control
+panel and in `StuffIt Engine™`, so either file will do — and there is a second
+one, `PrAm` -4047, four spaces long, which nothing this engine writes selects.
+
+**Which is why the Macintosh application cannot expand these files and this
+is not a gap it is worth closing.** It could read the resource out of the
+SpaceSaver in its own System Folder — but a Mac with SpaceSaver installed
+expands them transparently and needs no unarchiver, and a Mac without it has
+no dictionary to find. The case that matters is a file that has travelled,
+which is the case the CLI's `--preset` serves.
 
 ## Envelope auto-unwrap
 

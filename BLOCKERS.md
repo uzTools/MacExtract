@@ -133,6 +133,7 @@ line is what makes the next one worth re-testing.
 | A matching name merely APPEARING does not fire SpaceSaver's rule — tested, fourteen minutes, unchanged | that run never booted: its own frames are the striped garbage screen, every one of them | 2026-08-22 |
 | The `--namevol` run that did not boot was a one-off infrastructure failure | it reproduces exactly, and the cause is in the harness: the enrolled image was copied out of a KILLED emulator, so it is torn. Three runs were built on it | 2026-08-22 |
 | SpaceSaver's trigger is known: rename a file to end in `small` and it compresses | four runs that booted AND flushed do it correctly and nothing compresses; the OTHER rename rule on the same page fires on the same event, turning `Forked` into a StuffIt archive | 2026-08-22 |
+| SpaceSaver 3.5.1 is installed and running | its control panel runs; its EXTENSION shows no sign of it. With `~Magic Menu™` deleted the menu bar carried no icon menu at all, so the menu `STR# 1024` describes was never installed | 2026-08-22 |
 
 **DiskDoubler methods 1–5 and 7 "cannot be graded".** Declined per entry
 since M12 on the grounds that no corpus fixture uses one and nothing reachable
@@ -333,12 +334,16 @@ down cleanly, and the file came back byte-identical every time. The disproof is
 on the same page: its OTHER rule, *"Stuff or expand item when its name is
 changed by adding the following suffixes: .SIT"*, fires on the same event —
 `Forked` renamed to `Forked.SIT` came back a 228-byte StuffIt archive with the
-original gone. So renames reach the extension, the extension acts, and its
-output survives; compression specifically does not happen.
+original gone. So a rename reaches SOMETHING that acts on it and whose output
+survives to the image; compression specifically does not happen.
 
-**Cost: five runs before the flush was fixed and four after it**, and a
+**Cost: five runs before the flush was fixed and six after it**, and a
 sentence in OPEN_ITEMS.md that made the specimen look one keystroke away for a
-day. **The smell is a familiar one wearing new clothes: the claim was read off
+day. The `.SIT` rule that disproved it turned out to be Magic Menu's rather
+than SpaceSaver's, which is the second half of the same lesson: the page that
+offers a setting is not necessarily the software that acts on it.
+
+**The smell is a familiar one wearing new clothes: the claim was read off
 the software's own UI rather than out of its behaviour.** A settings page is
 documentation, and this repository already distrusts documentation it has not
 run — that is why every method table here is derived from module headers rather

@@ -142,20 +142,25 @@ Unlike section 3, none of this is impossible here: a download would do it.
     or a file from anywhere that uses one.
   - **The preset dictionary is Aladdin's**, 9,679 bytes of `PrAm` -4048,
     and the LZSS window starts loaded with it — so this project cannot
-    ship the thing its own decoder needs. The CLI takes `--preset FILE`.
-    **What would close it for a user:** the Macintosh application
-    reading the resource off the SpaceSaver in its own System Folder,
-    which is the one machine where it is certain to be present.
+    ship the thing its own decoder needs. The CLI takes `--preset FILE`
+    and either the control panel or `StuffIt Engine™` is a source; the
+    Macintosh application does not look for one, deliberately
+    (FORMATS.md, *StuffIt SpaceSaver*). **Nothing would close this** —
+    it is the format's own shape, and it is recorded here so the next
+    reader does not go looking for the bug.
   - **A specimen at all.** Nothing here has made SpaceSaver compress
-    anything: seven runs on a machine that booted and was flushed drove
-    the panel's `small` rule, an enrolled disk left idle for eighteen
-    minutes, Magic Menu's *SpaceSaver Compress*, and `DropCompress™`
-    launched and dropped on. The same page's `.SIT` rename rule DOES
-    fire, so the extension is alive and the silence belongs to the
-    compressor (DECISIONS.md 2026-08-22, what will not compress).
-    **What would close it:** `Idle Now` from SpaceSaver's own menu,
-    which the menu bar only carries when `~Magic Menu™` is not
-    installed — one `hdel` before booting; or a file from anywhere.
+    anything: nine runs on a machine that booted and was flushed drove
+    the panel's `small` rule (twice, once with the settings page OK'd
+    first), an enrolled disk left idle for eighteen minutes, Magic
+    Menu's *SpaceSaver Compress*, and `DropCompress™` launched and
+    dropped on. **What the last of them found is a better question than
+    another trigger:** with `~Magic Menu™` deleted the menu bar carries
+    no icon menu at all, so SpaceSaver's own menu — the one its *Show
+    Menu* option promises — was never installed, and nothing here has
+    ever needed its EXTENSION rather than its control panel.
+    **What would close it:** finding out why `INIT 0` does not install
+    (`STR# 1001` lists seven reasons it declines), or a file from
+    anywhere. DECISIONS.md 2026-08-22, what will not compress.
 
 - **AppleLink `.pkg`.** No reference
   implementation and no published layout anywhere reachable. Searched

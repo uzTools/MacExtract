@@ -601,6 +601,9 @@ System 7.5.3**, which is the open route. DECISIONS.md 2026-08-22
     tools/vmac/spacesaver.py --enrollmagic    the same, disk enrolled first
     tools/vmac/spacesaver.py --drop           launch DropCompress
     tools/vmac/spacesaver.py --dragdrop       drop a subject on DropCompress
+    tools/vmac/spacesaver.py --commit         OK the settings page, then rename
+    tools/vmac/spacesaver.py --idlenow        delete Magic Menu, use SpaceSaver's
+    tools/vmac/spacesaver.py --parade         photograph the startup icons
 
     tools/vmac/spacesaver.py --specimen       rename, wait, SHUT DOWN, read back
     tools/vmac/spacesaver.py --idlespec       enrol the disk, idle, shut down
@@ -632,9 +635,21 @@ the disk enrolled and the machine left idle (`--idlespec`), Magic Menu's
 *SpaceSaver Compress* (`--magic`, `--enrollmagic`), and `DropCompress™`
 both launched and dropped on (`--drop`, `--dragdrop`). One thing on that
 settings page DOES fire: `--suffix` renames a subject to end in `.SIT` and
-gets a StuffIt archive back, which is what makes the silence a fact about
-the compressor rather than about this harness (DECISIONS.md 2026-08-22,
-what will not compress; BLOCKERS.md for the withdrawn trigger).
+gets a StuffIt archive back — Magic Menu's doing, not SpaceSaver's.
+
+**`--idlenow` is the one that changed the question.** It deletes
+`~Magic Menu™` before booting so that SpaceSaver's own menu (`STR# 1024`:
+*Turn Idle-Time On*, **Idle Now**, *Open Control Panel*) has the menu bar
+to itself — and the menu bar came up with no icon menu at all. Nothing
+here has ever needed SpaceSaver's EXTENSION as opposed to its control
+panel, so the next thing to establish is whether `INIT 0` installs
+(DECISIONS.md 2026-08-22, what will not compress).
+
+**`--parade` cannot answer that, and says so.** It photographs the
+machine from the moment the emulator starts, 30 frames at 0.15 s, and
+every one of them is the settled desktop: Mini vMac runs unthrottled, so
+a Mac Plus is at the Finder before an X client can grab the first frame.
+The startup icon parade is not observable through this harness.
 
 **Lift the installed image out of `/tmp`.** `run.py` boots from a COPY, so an
 installer's entire output lands in the session's temp dir and the original
