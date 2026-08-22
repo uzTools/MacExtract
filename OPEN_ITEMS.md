@@ -145,10 +145,26 @@ Unlike section 3, none of this is impossible here: a download would do it.
     separate decision and has not been taken (DECISIONS.md, SpaceSaver
     later).
 
-  **What would close it:** System 7.5.3 — free from Apple, and a fourth
-  system image beside `System6.hfv`, `Sys7.img` and the OS 9 one is
-  plumbing rather than research. The 5.0 installer's only objections were
-  the version and the memory.
+  Macintosh Garden publishes codes for **3.0.7** and **5.x**; the
+  maintainer waived the licence question on 2026-08-22 and the published
+  codes were tried, four per boot. **3.5.1 and 4.0 reject all of them** —
+  they are not the versions the codes are for, and they are the only
+  versions this machine can run.
+
+  **3.5.1 is installed and running** since 2026-08-22, with a 3.5-specific
+  code: the image carries `~StuffIt SpaceSaver™` (`cdev/SMKR`),
+  `~Magic Menu™` and the `StuffIt Engine™`, and it boots
+  (`spacesaver.py --probe-installed`).
+
+  **What is left is one behaviour, not a blocker:** Magic Menu's
+  **SpaceSaver Compress** leaves a file byte-identical — checked by
+  reading the volume back, on a second volume and on the startup disk.
+  SpaceSaver is a BACKGROUND compressor and its panel's first button is
+  **Idle Time**; a harness that clicks a menu and screenshots 35 seconds
+  later never idles. **What would close it:** set Idle Time to its
+  minimum and leave the machine alone for longer than that, then read the
+  file back. The installed image is kept, the menu coordinates are
+  measured, and `--make-boot` already does the rest.
 
 - **AppleLink `.pkg`.** No reference
   implementation and no published layout anywhere reachable. Searched

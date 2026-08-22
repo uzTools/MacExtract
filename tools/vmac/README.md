@@ -577,12 +577,27 @@ reverse-engineering clause, which is not the same permission. **5.0 needs
 System 7.5.3**, which is the open route. DECISIONS.md 2026-08-22
 (SpaceSaver, and SpaceSaver later) has both.
 
+    tools/vmac/spacesaver.py --setup40    fetch StuffIt Deluxe 4.0
+    tools/vmac/spacesaver.py --install40  run it, trying each published code
+
+**3.5.1 and 4.0 both reject every code Macintosh Garden publishes** — those
+are for 3.0.7 and 5.x, and 5.x is what cannot run here (7.5.3 and 8000K,
+against a 4 MB Plus). The open route is a Mac II-class Mini vMac variant
+plus a 7.5.3 image.
+
 **Every panel in both Aladdin installers swallows its first input.** A click
 on a button and a Return both leave the panel on screen; the second acts.
 Three runs went into reading that as a wrong coordinate — and the
 coordinates were measured off the frames and right. The tell: the frame
 after the input is IDENTICAL to the one before, where a genuine miss
 usually shows something else selected.
+
+Two more, both of which produce frames that lie: **3.5.1's floppy opens its
+own window on boot and 4.0's does not**, so the same installer click lands on
+bare desktop and every frame after shows an empty Finder — which reads as
+"the installer quit". And **Cmd-A does not select a System 7 dialog field's
+text**: a run meant to try four codes typed all four in end to end and tested
+none, while reporting four attempts. Backspace the field empty.
 
 Three things that cost a run each, all about input reaching the installer:
 

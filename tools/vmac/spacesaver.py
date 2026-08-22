@@ -379,17 +379,23 @@ def install351(keep=False):
         s.mac.click(*REG_ORG)
         time.sleep(1.0)
         s.mac._xdo("type", "--delay", "120", "test")
-        # The number field is left empty on purpose: the panel only
-        # insists on a NAME ("You must enter a name in order to register
-        # this product"), so no serial is needed and none is looked for.
-        s.shot("registration-filled", wait=2.0)
-        # Twice, with a wait: every panel in this installer swallows the
-        # first input it is given, and Register is no different — one
-        # click leaves the form on screen looking untouched.
-        s.mac.click(*REG_REGISTER)
-        time.sleep(6.0)
-        s.mac.click(*REG_REGISTER)
-        s.shot("after-register", wait=25.0)
+        for code in CODES_35:
+            s.mac.click(*REG_NUMBER)
+            time.sleep(1.0)
+            for _ in range(40):
+                s.mac.key("BackSpace")      # Cmd-A does not select here
+            time.sleep(1.0)
+            s.mac._xdo("type", "--delay", "120", code)
+            time.sleep(1.5)
+            # Twice: every panel in this installer swallows its first
+            # input, Register included.
+            s.mac.click(*REG_REGISTER)
+            time.sleep(6.0)
+            s.mac.click(*REG_REGISTER)
+            s.shot("try-" + code[:9], wait=22.0)
+            s.mac.click(*REG_OK)            # dismiss "invalid", if shown
+            time.sleep(3.0)
+        s.shot("after-register", wait=15.0)
         for i in range(6):
             s.mac.key("Return")
             s.shot("step%d" % i, wait=20.0)
@@ -400,6 +406,376 @@ def install351(keep=False):
     print("spacesaver: boot image kept at %s" % BOOT)
     if not keep:
         shutil.rmtree(work, ignore_errors=True)
+
+
+D40 = os.path.join(WORK, "d40")
+
+# Published on Macintosh Garden's StuffIt Deluxe page for these
+# discontinued versions. "S" + five digits is the 3.0.7 scheme and 3.5.1
+# rejects it, so the DLX forms are tried too — several per boot, because
+# a boot is ten minutes and a wrong guess is cheap only if it shares one.
+# For 3.5 specifically. The Garden page's own codes are for 3.0.7 ("S"
+# and five digits) and 5.x (DLXF-/DLXG-), and 3.5.1 and 4.0 reject every
+# one of them.
+CODES_35 = ["DLXC-963-029519", "DLXC-907-029528"]
+CODES = ["S12345", "DLXF-0859-006229", "DLXG-1112-268709",
+         "DLXF-0835-001225"]
+
+REG_OK = (356, 143)          # the "invalid" alert's OK button
+
+
+def disks40():
+    out = []
+    for root, _d, files in os.walk(D40):
+        for f in sorted(files):
+            if f.endswith(".img") and not f.startswith("._") \
+                    and "Updater" not in f:
+                out.append(os.path.join(root, f))
+    if not out:
+        raise SystemExit("spacesaver: no 4.0 disks — run --setup40")
+    return out
+
+
+def setup40():
+    os.makedirs(WORK, exist_ok=True)
+    sit = os.path.join(WORK, "sd40.sit")
+    if not os.path.exists(sit):
+        subprocess.run(["curl", "-sS", "-L", "-A", "Mozilla/5.0", "-e",
+                        CD_PAGE, "-o", sit,
+                        "https://old.mac.gdn/apps/StuffIt_Deluxetm_4.0.sit"],
+                       check=True)
+    shutil.rmtree(D40, ignore_errors=True)
+    subprocess.run([cli(), "x", "-o", D40, sit], check=True,
+                   capture_output=True)
+    for d in disks40():
+        print("spacesaver: %s (%d B)" % (os.path.basename(d),
+                                         os.path.getsize(d)))
+    return disks40()
+
+
+def install40(keep=False):
+    """Run StuffIt Deluxe 4.0's installer, trying each published code.
+
+    Same shape as 3.5.1's — splash, read-me, registration — but untried,
+    and its disks are already raw HFS so no DiskCopy header comes off.
+    Every code is tried inside ONE boot: the invalid-number alert has an
+    OK button, so the form can be cleared and retyped without starting
+    the machine again.
+    """
+    disks = disks40()
+    work = tempfile.mkdtemp(prefix="sswork-")
+    mbs = []
+    for i, (n, t, c, d, r) in enumerate(SUBJECTS):
+        q = os.path.join(work, "s%d.bin" % i)
+        open(q, "wb").write(macbinary(n, t, c, d, r))
+        mbs.append(q)
+    img = os.path.join(work, "sswork.img")
+    make_volume(img, "SSwork", mbs, size_kb=16384)
+    if not os.path.exists(BOOT):
+        shutil.copyfile(os.path.join(HOME, "Sys7.img"), BOOT)
+    s = Session(BOOT, disks + [img], os.path.join(SPECIMENS, "install40"))
+    try:
+        s.boot()
+        s.shot("desktop", wait=10.0)
+        # 4.0's disk does NOT open its own window the way 3.5.1's does,
+        # so the volume is opened first. Without this the installer click
+        # lands on bare desktop and every step after it photographs an
+        # empty Finder — which reads as "the installer quit".
+        s.mac.click(470, 165, double=True)
+        s.shot("volume-open", wait=12.0)
+        s.mac.click(*INSTALLER_ICON, double=True)
+        s.shot("launched", wait=35.0)
+        s.mac.click(*SPLASH_CONTINUE)
+        s.shot("welcome", wait=20.0)
+        s.mac.click(*WELCOME_CONTINUE)
+        s.shot("registration", wait=20.0)
+        s.mac.click(*REG_NAME)
+        time.sleep(1.0)
+        s.mac._xdo("type", "--delay", "120", "unclassic")
+        for code in CODES:
+            s.mac.click(*REG_NUMBER)
+            time.sleep(1.0)
+            # Cmd-A does NOT select the text in a System 7 dialog field:
+            # one run typed all four codes into it end to end
+            # ("S12345DLXF-085DLXF-0835-001225DLX...") and tested none of
+            # them. Backspace enough times to empty it instead.
+            for _ in range(40):
+                s.mac.key("BackSpace")
+            time.sleep(1.0)
+            s.mac._xdo("type", "--delay", "120", code)
+            time.sleep(1.5)
+            s.mac.click(*REG_REGISTER)
+            time.sleep(5.0)
+            s.mac.click(*REG_REGISTER)
+            s.shot("try-" + code[:8], wait=18.0)
+            s.mac.click(*REG_OK)              # dismiss "invalid", if shown
+            time.sleep(3.0)
+        s.shot("after-codes", wait=10.0)
+    finally:
+        time.sleep(5)
+        s.close()
+    print("spacesaver: screenshots in %s" % s.shots)
+    if not keep:
+        shutil.rmtree(work, ignore_errors=True)
+
+
+INSTALLED = os.path.join(WORK, "ssinstalled.hfv")
+
+
+def keep_installed():
+    """Save the emulator's working copy of the boot image.
+
+    `run.py` boots from a COPY so every run starts pristine — which is
+    right for replaying fixtures and wrong for an installer, whose whole
+    output is the change to that image. The copy lives in the Session's
+    temp dir and survives the run, so it is lifted out afterwards. A
+    check of the ORIGINAL boot image after an install shows nothing and
+    reads as "the installer did not write anything".
+    """
+    import glob
+    cands = sorted(glob.glob("/tmp/dd-*/boot.hfv"), key=os.path.getmtime)
+    if not cands:
+        raise SystemExit("spacesaver: no session copy found")
+    shutil.copyfile(cands[-1], INSTALLED)
+    print("spacesaver: kept %s (%d B)" % (INSTALLED, os.path.getsize(INSTALLED)))
+    return INSTALLED
+
+
+def probe_installed(keep=False):
+    """Boot the image SpaceSaver was installed into and look around.
+
+    SpaceSaver is `cdev/SMKR` in Control Panels; StuffIt Deluxe also puts
+    `~Magic Menu` there, which is what adds Finder commands. Which of the
+    two compresses a file is the question.
+    """
+    if not os.path.exists(INSTALLED):
+        raise SystemExit("spacesaver: no installed image — run --install351 "
+                         "then --keep-installed")
+    work = tempfile.mkdtemp(prefix="sswork-")
+    mbs = []
+    for i, (n, t, c, d, r) in enumerate(SUBJECTS):
+        q = os.path.join(work, "s%d.bin" % i)
+        open(q, "wb").write(macbinary(n, t, c, d, r))
+        mbs.append(q)
+    img = os.path.join(work, "sswork.img")
+    make_volume(img, "SSwork", mbs, size_kb=16384)
+    s = Session(INSTALLED, [img], os.path.join(SPECIMENS, "installed"))
+    try:
+        s.boot()
+        s.shot("desktop", wait=12.0)
+        for x in (250, 281, 310, 340, 370):
+            s.peek(x, "menu-x%d" % x)
+    finally:
+        time.sleep(3)
+        s.close()
+    print("spacesaver: screenshots in %s" % s.shots)
+    if not keep:
+        shutil.rmtree(work, ignore_errors=True)
+
+
+# The Magic Menu, measured off installed/03-menu-x281.png. SpaceSaver
+# itself is a control panel with no commands of its own; Magic Menu is
+# what puts "SpaceSaver Compress" in the Finder's menu bar.
+MAGIC_X = 283
+MAGIC_COMPRESS_Y = 104
+
+
+def make(keep=False):
+    """Compress subjects with SpaceSaver and keep what it wrote."""
+    if not os.path.exists(INSTALLED):
+        raise SystemExit("spacesaver: no installed image")
+    work = tempfile.mkdtemp(prefix="sswork-")
+    mbs = []
+    for i, (n, t, c, d, r) in enumerate(SUBJECTS):
+        q = os.path.join(work, "s%d.bin" % i)
+        open(q, "wb").write(macbinary(n, t, c, d, r))
+        mbs.append(q)
+    img = os.path.join(work, "sswork.img")
+    make_volume(img, "SSwork", mbs, size_kb=16384)
+    s = Session(INSTALLED, [img], os.path.join(SPECIMENS, "make"))
+    try:
+        s.boot()
+        s.shot("desktop", wait=12.0)
+        s.mac.click(*VOLUME_ICON, double=True)
+        s.shot("volume", wait=12.0)
+        for name, letter in (("Alpha", "a"), ("Forked", "f")):
+            s.mac.key("Escape")
+            time.sleep(0.6)
+            s.mac.key(letter)
+            time.sleep(1.5)
+            s.shot("selected-" + name, wait=0.5)
+            ox, oy = s.mac.origin()
+            x = s.mac._xdo
+            x("mousemove", str(ox + MAGIC_X), str(oy + 8))
+            time.sleep(0.5)
+            x("mousedown", "1")
+            time.sleep(1.5)
+            x("mousemove", str(ox + MAGIC_X + 40),
+              str(oy + MAGIC_COMPRESS_Y))
+            time.sleep(1.2)
+            s.shot("pick-" + name)
+            x("mouseup", "1")
+            s.shot("compressed-" + name, wait=30.0)
+        s.mac.click(*VOLUME_ICON)
+        s.mac.command_key("y")
+        s.shot("ejected", wait=15.0)
+    finally:
+        time.sleep(5)
+        s.close()
+    report_make(img, s.shots)
+    if not keep:
+        shutil.rmtree(work, ignore_errors=True)
+    return 0
+
+
+def report_make(img, shots):
+    from superdisk import read_forks                    # noqa: E402
+    os.makedirs(shots, exist_ok=True)
+    known = dict((n, (d, r)) for n, _t, _c, d, r in SUBJECTS)
+    for path, (ftype, creator, data, rsrc) in sorted(read_forks(img).items()):
+        name = "/".join(path)
+        orig = known.get(path[-1])
+        mark = ""
+        if orig and (len(data) != len(orig[0]) or data != orig[0]):
+            mark = "  CHANGED (was %d B)" % len(orig[0])
+            out = os.path.join(shots, path[-1] + ".ss")
+            open(out, "wb").write(data)
+            if rsrc:
+                open(out + ".rsrc", "wb").write(rsrc)
+            mark += " -> kept %s" % out
+        print("spacesaver: %-24s %s/%s %8d %8d%s"
+              % (name, ftype, creator, len(data), len(rsrc), mark))
+        if data[:8]:
+            print("             first16 %s" % data[:16].hex())
+
+
+def panel(keep=False):
+    """Open the SpaceSaver control panel and photograph it.
+
+    "SpaceSaver Compress" from the Magic Menu leaves the file byte for
+    byte unchanged — read back off the volume, not judged from the
+    Finder, which would show the logical size either way. The likeliest
+    reason is that SpaceSaver ships switched OFF, and its control panel
+    is where that lives.
+    """
+    work = tempfile.mkdtemp(prefix="sswork-")
+    img = os.path.join(work, "sswork.img")
+    make_volume(img, "SSwork", [], size_kb=4096)
+    s = Session(INSTALLED, [img], os.path.join(SPECIMENS, "panel"))
+    try:
+        s.boot()
+        s.shot("desktop", wait=12.0)
+        # Down the boot volume to Control Panels, the route `sdcompress`
+        # settled on: the Apple menu is a timing fight and this proves
+        # the panel is installed.
+        s.mac.click(470, 55, double=True)
+        s.shot("bootvol", wait=12.0)
+        for prefix, tag in (("System F", "sysfolder"),
+                            ("Control P", "cpanels")):
+            s.mac.key("Escape")
+            time.sleep(0.6)
+            s.mac._xdo("type", "--delay", "120", prefix)
+            time.sleep(1.5)
+            s.mac.command_key("o")
+            s.shot("opened-" + tag, wait=14.0)
+        s.mac.key("Escape")
+        time.sleep(0.6)
+        s.mac._xdo("type", "--delay", "120", "~StuffIt")
+        time.sleep(2.0)
+        s.shot("selected-panel", wait=0.5)
+        s.mac.command_key("o")
+        s.shot("panel", wait=25.0)
+        s.shot("panel-2", wait=10.0)
+    finally:
+        time.sleep(3)
+        s.close()
+    print("spacesaver: screenshots in %s" % s.shots)
+    if not keep:
+        shutil.rmtree(work, ignore_errors=True)
+
+
+def make_boot(keep=False):
+    """Compress subjects that live on the STARTUP disk.
+
+    The panel shows SpaceSaver switched On, and "SpaceSaver Compress" on
+    a file sitting on a second volume changes nothing. SpaceSaver is a
+    disk-space saver for the disk you boot from, so the subjects go onto
+    the boot image itself — and the result is read back out of the
+    session's working COPY of that image, the same place the installer's
+    output had to be lifted from.
+    """
+    import glob
+    boot = os.path.join(WORK, "ssmake.hfv")
+    shutil.copyfile(INSTALLED, boot)
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+    tmp = tempfile.mkdtemp(prefix="ssmb-")
+    try:
+        subprocess.run(["hmount", boot], check=True, capture_output=True,
+                       env=env)
+        for n, t, c, d, r in SUBJECTS:
+            q = os.path.join(tmp, n + ".bin")
+            open(q, "wb").write(macbinary(n, t, c, d, r))
+            subprocess.run(["hcopy", "-m", q, ":"], check=True,
+                           capture_output=True, env=env)
+        subprocess.run(["humount"], check=True, capture_output=True, env=env)
+    finally:
+        shutil.rmtree(env["HOME"], ignore_errors=True)
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    before = set(glob.glob("/tmp/dd-*/boot.hfv"))
+    s = Session(boot, [], os.path.join(SPECIMENS, "makeboot"))
+    try:
+        s.boot()
+        s.shot("desktop", wait=14.0)
+        s.mac.click(470, 55, double=True)          # the startup disk
+        s.shot("bootvol", wait=12.0)
+        for name, letter in (("Alpha", "a"), ("Forked", "f")):
+            s.mac.key("Escape")
+            time.sleep(0.6)
+            s.mac.key(letter)
+            time.sleep(1.5)
+            s.shot("selected-" + name, wait=0.5)
+            ox, oy = s.mac.origin()
+            x = s.mac._xdo
+            x("mousemove", str(ox + MAGIC_X), str(oy + 8))
+            time.sleep(0.5)
+            x("mousedown", "1")
+            time.sleep(1.5)
+            x("mousemove", str(ox + MAGIC_X + 40),
+              str(oy + MAGIC_COMPRESS_Y))
+            time.sleep(1.2)
+            s.shot("pick-" + name)
+            x("mouseup", "1")
+            s.shot("after-" + name, wait=35.0)
+    finally:
+        time.sleep(8)
+        s.close()
+
+    cands = [p for p in glob.glob("/tmp/dd-*/boot.hfv") if p not in before]
+    if not cands:
+        cands = sorted(glob.glob("/tmp/dd-*/boot.hfv"),
+                       key=os.path.getmtime)[-1:]
+    out = sorted(cands, key=os.path.getmtime)[-1]
+    print("spacesaver: reading back %s" % out)
+    from superdisk import read_forks                    # noqa: E402
+    known = dict((n, d) for n, _t, _c, d, _r in SUBJECTS)
+    os.makedirs(s.shots, exist_ok=True)
+    for path, (ftype, creator, data, rsrc) in sorted(read_forks(out).items()):
+        if path[-1] not in known:
+            continue
+        orig = known[path[-1]]
+        changed = data != orig
+        print("spacesaver: %-10s %s/%s data %d (was %d) rsrc %d  %s"
+              % (path[-1], ftype, creator, len(data), len(orig), len(rsrc),
+                 "COMPRESSED" if changed else "unchanged"))
+        if changed:
+            q = os.path.join(s.shots, path[-1] + ".ss")
+            open(q, "wb").write(data)
+            if rsrc:
+                open(q + ".rsrc", "wb").write(rsrc)
+            print("             kept %s; first 32 bytes %s"
+                  % (q, data[:32].hex()))
+    return 0
 
 
 def main():
@@ -415,6 +791,20 @@ def main():
                     help="boot with both floppies mounted")
     ap.add_argument("--install351", action="store_true",
                     help="run the 3.5.1 installer")
+    ap.add_argument("--setup40", action="store_true",
+                    help="fetch StuffIt Deluxe 4.0")
+    ap.add_argument("--keep-installed", action="store_true",
+                    help="lift the installed boot image out of /tmp")
+    ap.add_argument("--make-boot", action="store_true",
+                    help="compress subjects that live on the startup disk")
+    ap.add_argument("--panel", action="store_true",
+                    help="open the SpaceSaver control panel")
+    ap.add_argument("--make", action="store_true",
+                    help="compress subjects with SpaceSaver")
+    ap.add_argument("--probe-installed", action="store_true",
+                    help="boot the installed image and peek the menus")
+    ap.add_argument("--install40", action="store_true",
+                    help="run the 4.0 installer, trying each published code")
     ap.add_argument("--keep", action="store_true")
     a = ap.parse_args()
     if a.setup:
@@ -429,6 +819,20 @@ def main():
         probe351(a.keep)
     elif a.install351:
         install351(a.keep)
+    elif a.setup40:
+        setup40()
+    elif a.keep_installed:
+        keep_installed()
+    elif a.make_boot:
+        return make_boot(a.keep)
+    elif a.panel:
+        panel(a.keep)
+    elif a.make:
+        return make(a.keep)
+    elif a.probe_installed:
+        probe_installed(a.keep)
+    elif a.install40:
+        install40(a.keep)
     else:
         ap.print_help()
     return 0

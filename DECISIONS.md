@@ -93,6 +93,8 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-22 (last) — the settings sweep, and the decoder that had never run
 - 2026-08-22 (SpaceSaver) — reachable, not yet runnable, and a licence question
 - 2026-08-22 (SpaceSaver, later) — both installers, and the wall that is not a licence clause
+- 2026-08-22 (SpaceSaver, last) — what the registration wall actually costs
+- 2026-08-22 (SpaceSaver, installed) — it runs, and it will not compress on demand
 
 ---
 
@@ -4808,3 +4810,79 @@ into the read-me and then clicked Register on an empty form, which
 produced *"You must enter a name in order to register this product"* —
 an error that describes the harness perfectly and the installer not at
 all.
+
+
+## 2026-08-22 (SpaceSaver, last) — what the registration wall actually costs
+
+The maintainer pointed at Macintosh Garden's StuffIt Deluxe page, which
+publishes registration codes for these discontinued versions. Using a
+published code for 30-year-old abandonware, in an emulator, to read a
+file format is a different act from defeating the check by
+disassembling it, and it is the one that was taken.
+
+**It does not open this door.** The codes the page gives are for **3.0.7**
+("S" and five digits) and for **5.0/5.0.1** (`DLXF-…`, `DLXG-…`). Both
+were tried against both installers this machine can run, four codes per
+boot with the field cleared between attempts:
+
+| installer | result |
+|---|---|
+| Deluxe 3.5.1 | every PAGE code *"The registration number that you have entered is invalid."* — but a 3.5-specific one the maintainer supplied (`DLXC-963-029519`) is accepted |
+| Deluxe 4.0 | every code rejected |
+
+The versions the codes are for are exactly the versions that cannot run
+here: **5.0 needs System 7.5.3 and 8000K**, and Mini vMac's Mac Plus tops
+out at **4 MB**, so a 7.5.3 image alone would still fail the memory check.
+
+**So the route is now specific, and it is infrastructure rather than
+research:** a Mini vMac variant emulating a Mac II-class machine with 8 MB
+or more, plus a System 7.5.3 image, and then the published 5.x code. The
+emulator is already built from source by `setup.sh` with variant flags,
+so the machine is a build option; the system image is a download beside
+the three already fetched.
+
+Two harness traps, both of which produced frames that lie:
+
+- **A disk that does not open its own window.** 3.5.1's floppy opens on
+  boot and 4.0's does not, so the same installer click landed on bare
+  desktop and every frame after it showed an empty Finder — which reads
+  as "the installer quit" and means "the installer was never opened".
+- **Cmd-A does not select the text in a System 7 dialog field.** A run
+  meant to try four codes typed all four into the field end to end
+  (`S12345DLXF-085DLXF-0835-001225DLX…`) and tested none of them, while
+  reporting four attempts. Backspacing the field empty is what works.
+
+
+## 2026-08-22 (SpaceSaver, installed) — it runs, and it will not compress on demand
+
+With a 3.5-specific registration code, StuffIt Deluxe 3.5.1's installer
+completes: *"Installation was successful."* The image now carries
+`~StuffIt SpaceSaver™` (`cdev/SMKR`, a 289 KB resource fork),
+`~Magic Menu™` and the `StuffIt Engine™` extension, and it boots.
+
+**The installed image had to be lifted out of `/tmp`.** `run.py` boots
+from a COPY so every run starts pristine — right for replaying fixtures,
+wrong for an installer, whose entire output IS the change to that image.
+Checking the original boot image after the install shows nothing and
+reads as "the installer wrote nothing"; the session's copy, which
+survives in its temp directory, has everything.
+`spacesaver.py --keep-installed` lifts it.
+
+**What is not working yet.** Magic Menu carries a **SpaceSaver Compress**
+command and SpaceSaver's own control panel shows it switched **On**.
+Selecting a file and choosing that command leaves the file
+**byte-identical** — verified by reading the volume back on the host, not
+by looking at the Finder, which would show the logical size either way.
+Tried on a second volume and on the startup disk itself: unchanged both
+times.
+
+**The next thing to try, and the reason:** the control panel's four
+buttons are *Idle Time*, *Compression & Other*, *Don't Compress* and
+*About*. SpaceSaver is a background compressor — it waits for the machine
+to be idle. A harness that clicks a menu and screenshots 35 seconds later
+never idles at all, and "Idle Time" is where the delay lives. Set it to
+its minimum and leave the machine alone for longer than that.
+
+Everything needed for that is in place: the installed image is kept, the
+Magic Menu coordinates are measured, and `--make-boot` already puts
+subjects on the startup disk and reads them back out of the session copy.
