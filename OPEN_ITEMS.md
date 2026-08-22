@@ -74,14 +74,34 @@ what the file is and extraction returns cleanly unsupported.
 Verification gaps — things this project has and has not checked.
 What it does not HAVE is section 2.
 
-- **8 resource forks across 2 fixtures are not ground truth**, though
-  DiskDoubler's own expander agrees with every one of them: 33 forks
-  compared under System 7 on 2026-08-21, all 33 identical, and the 3
-  data forks are in the manifests (DECISIONS.md, FORMATS.md). A
-  resource fork the Mac wrote is never byte-exact, so these 8 stay
-  unadjudicated. **What would close it:** an implementation that runs
-  off a Mac — for these methods, transcribing one — or a copy of the
-  same archive from a machine that never opened it.
+- **8 resource forks across 2 fixtures are not ground truth.** `unar`
+  gives up on them (*Attempted to read more data than was available*)
+  and macunpack's DiskDoubler method table stops at 9, so the only other
+  implementation is DiskDoubler's own expander — which runs **on** a Mac,
+  and a Mac rewrites the resource header's system-reserved bytes 16..127
+  as it writes the fork. All 33 forks of the two archives were compared
+  under System 7 on 2026-08-21 and all 33 are identical with that window
+  masked; the 3 data forks, which have no such window, are in the
+  manifests (DECISIONS.md, FORMATS.md). All 17 resource forks also parse
+  here as valid resource maps, headers self-consistent and every resource
+  readable — confidence, not adjudication, since the masked window
+  carries no resource by definition.
+
+  **What would close it, and what would not:**
+  - **NOT another emulator run.** The obstacle is the Mac. Every
+    expansion, on any Mac, under any System, by any DiskDoubler,
+    restamps those 112 bytes — so this is the one DiskDoubler question
+    Mini vMac cannot answer, and the harness that would seem to answer it
+    has already been run.
+  - **A second implementation of DDn that decodes OFF the Mac**, on
+    Linux. Transcribing XADMaster's again is not one: its DDn is the
+    thing that fails here.
+  - **A different distribution of the same files** — LHA Expander 1.0.3
+    or Terrainman 2.0 in an archive `unar` can read — whose forks would
+    carry the author's own bytes in 16..127. This is how `DiskTester`
+    got ground truth (FORMATS.md). Tried 2026-08-22 and not found:
+    funet's info-mac holds only these two uploads, macgui.com answered
+    503 and vintageapplemac.com 403.
 - **The Mac OS 9.2 tier has not run since DiskDoubler, Now Compress, ARC
   and uuencode were added.** The other three tiers have (FORMATS.md).
   Its sample still records DiskDoubler as a refusal, which is what it
