@@ -398,8 +398,15 @@ def install351(keep=False):
         for i in range(6):
             s.mac.key("Return")
             s.shot("step%d" % i, wait=20.0)
+        # And then SHUT DOWN. The first time this ran the emulator was
+        # killed here, and the image `--keep-installed` lifted has no
+        # `SpaceSaver Preferences` in it and an extension that never
+        # installs — the flush rule at the top of tools/vmac/README.md,
+        # paid for a second time.
+        s.menu(SPECIAL_X, SHUT_DOWN_Y, "special-menu")
+        s.shot("shutting-down", wait=40.0)
     finally:
-        time.sleep(5)
+        time.sleep(8)
         s.close()
     print("spacesaver: screenshots in %s" % s.shots)
     print("spacesaver: boot image kept at %s" % BOOT)
@@ -2193,6 +2200,107 @@ def commit(keep=False):
     return report_volume(out, s.shots)
 
 
+def newest_session_image(before):
+    """The boot image Mini vMac has just been writing to.
+
+    `run.py` boots from a COPY in the session's temp dir, so the image
+    that carries what the guest did is that copy, not the file passed in.
+    """
+    import glob
+    cands = [p for p in glob.glob("/tmp/dd-*/boot.hfv") if p not in before]
+    if not cands:
+        cands = sorted(glob.glob("/tmp/dd-*/boot.hfv"),
+                       key=os.path.getmtime)[-1:]
+    return sorted(cands, key=os.path.getmtime)[-1]
+
+
+def twoboot(keep=False):
+    """Create SpaceSaver's preferences, THEN reboot, THEN rename.
+
+    The installed image has no `SpaceSaver Preferences` file: the
+    installer never made one, and the control panel makes it the first
+    time it is OK'd. `STR# -4064` says what the extension does without
+    one — *"The SpaceSaver Preferences file could neither be found nor
+    created"* — and an extension installs at STARTUP, so on this image
+    it has never installed at all. That fits everything else: no
+    SpaceSaver menu even with Magic Menu deleted, and no trigger of any
+    kind doing anything.
+
+    So this takes two boots. The first opens the panel and OKs it, which
+    writes the preferences, and shuts down so they survive. The second
+    boots the image that now has them and renames a subject.
+    """
+    boot = os.path.join(WORK, "ssprefs.hfv")
+    shutil.copyfile(INSTALLED, boot)
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+    tmp = tempfile.mkdtemp(prefix="sstb-")
+    try:
+        subprocess.run(["hmount", boot], check=True, capture_output=True,
+                       env=env)
+        from ndd import macbinary_dated, MAC_EPOCH_1990   # noqa: E402
+        for n, t, c, d, r in SUBJECTS:
+            q = os.path.join(tmp, n + ".bin")
+            open(q, "wb").write(macbinary_dated(n, t, c, d, r,
+                                                MAC_EPOCH_1990,
+                                                MAC_EPOCH_1990))
+            subprocess.run(["hcopy", "-m", q, ":"], check=True,
+                           capture_output=True, env=env)
+        subprocess.run(["humount"], check=True, capture_output=True, env=env)
+    finally:
+        shutil.rmtree(env["HOME"], ignore_errors=True)
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    import glob
+    before = set(glob.glob("/tmp/dd-*/boot.hfv"))
+    s = Session(boot, [], os.path.join(SPECIMENS, "twoboot"))
+    try:
+        open_ss_panel(s)
+        s.mac.click(*SS_COMPRESSION)
+        time.sleep(4.0)
+        s.mac.click(*SS_COMPRESSION)
+        s.shot("compression-page", wait=10.0)
+        s.mac.key("Return")                     # OK writes the preferences
+        s.shot("committed", wait=10.0)
+        s.menu(SPECIAL_X, SHUT_DOWN_Y, "special-menu")
+        s.shot("shutting-down", wait=30.0)
+    finally:
+        time.sleep(8)
+        s.close()
+
+    ready = os.path.join(WORK, "ssready.hfv")
+    shutil.copyfile(newest_session_image(before), ready)
+    from superdisk import read_forks                    # noqa: E402
+    have = any(p[-1].startswith("SpaceSaver Pref")
+               for p in read_forks(ready))
+    print("spacesaver: preferences after boot 1: %s"
+          % ("written" if have else "STILL MISSING"))
+
+    before = set(glob.glob("/tmp/dd-*/boot.hfv"))
+    s2 = Session(ready, [], os.path.join(SPECIMENS, "twoboot2"))
+    try:
+        s2.boot()
+        s2.shot("desktop", wait=14.0)
+        s2.mac.click(250, 38)
+        time.sleep(2.5)
+        for _ in range(6):
+            s2.mac.command_key("w")
+            time.sleep(2.0)
+        s2.shot("windows-closed", wait=6.0)
+        s2.mac.click(470, 55, double=True)
+        s2.shot("bootvol", wait=14.0)
+        rename_to(s2, "a", "small", "Alpha")
+        s2.shot("settled", wait=60.0)
+        s2.menu(SPECIAL_X, SHUT_DOWN_Y, "special-menu")
+        s2.shot("shutting-down", wait=30.0)
+    finally:
+        time.sleep(8)
+        s2.close()
+
+    out = newest_session_image(before)
+    print("spacesaver: reading back %s" % out)
+    return report_volume(out, s2.shots)
+
+
 # ---------------------------------------------------------------------------
 # Reading the format out of the software, which is what --layout does.
 #
@@ -2442,6 +2550,8 @@ def main():
                     help="boot the installed image and peek the menus")
     ap.add_argument("--install40", action="store_true",
                     help="run the 4.0 installer, trying each published code")
+    ap.add_argument("--twoboot", action="store_true",
+                    help="write the preferences, reboot, then rename")
     ap.add_argument("--commit", action="store_true",
                     help="OK the Compression page, then rename")
     ap.add_argument("--parade", action="store_true",
@@ -2504,6 +2614,8 @@ def main():
         probe_installed(a.keep)
     elif a.install40:
         install40(a.keep)
+    elif a.twoboot:
+        return twoboot(a.keep)
     elif a.commit:
         return commit(a.keep)
     elif a.parade:

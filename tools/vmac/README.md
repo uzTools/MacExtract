@@ -604,6 +604,7 @@ System 7.5.3**, which is the open route. DECISIONS.md 2026-08-22
     tools/vmac/spacesaver.py --commit         OK the settings page, then rename
     tools/vmac/spacesaver.py --idlenow        delete Magic Menu, use SpaceSaver's
     tools/vmac/spacesaver.py --parade         photograph the startup icons
+    tools/vmac/spacesaver.py --twoboot        write the prefs, reboot, rename
 
     tools/vmac/spacesaver.py --specimen       rename, wait, SHUT DOWN, read back
     tools/vmac/spacesaver.py --idlespec       enrol the disk, idle, shut down
@@ -644,6 +645,11 @@ to itself — and the menu bar came up with no icon menu at all. Nothing
 here has ever needed SpaceSaver's EXTENSION as opposed to its control
 panel, so the next thing to establish is whether `INIT 0` installs
 (DECISIONS.md 2026-08-22, what will not compress).
+
+**The installed image is now a flushed one.** `--install351` ends with
+Shut Down as of 2026-08-22, and `ssinstalled.hfv` was remade with it; the
+one it replaces is kept beside it as `ssinstalled-torn.hfv`. It changed
+nothing about the compressor, and it removes a variable.
 
 **`--parade` cannot answer that, and says so.** It photographs the
 machine from the moment the emulator starts, 30 frames at 0.15 s, and

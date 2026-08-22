@@ -100,7 +100,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-22 (SpaceSaver, calling it) — the rename commits, the image does not see it
 - 2026-08-22 (SpaceSaver, the layout) — read out of the software, as recommended
 - 2026-08-22 (SpaceSaver, the codecs) — two of five, and a dictionary that is not ours
-- 2026-08-22 (SpaceSaver, what will not compress) — nine runs, one thing that fired
+- 2026-08-22 (SpaceSaver, what will not compress) — eleven runs, one thing that fired
 
 ---
 
@@ -5179,10 +5179,10 @@ declined per entry for want of an oracle, exactly as LZH and
 DiskDoubler's own declined methods are. Their modules are in hand; it
 is the grading that is missing, and that has been the bargain since M14.
 
-## 2026-08-22 (SpaceSaver, what will not compress) — nine runs, one thing that fired
+## 2026-08-22 (SpaceSaver, what will not compress) — eleven runs, one thing that fired
 
 The format is implemented; what is still missing is a file SpaceSaver
-wrote. Nine runs went after one, every one of them on a machine that
+wrote. Eleven runs went after one, every one of them on a machine that
 booted and was **flushed** — Special ▸ Shut Down, the step whose absence
 invalidated the three earlier runs (BLOCKERS.md). What they establish:
 
@@ -5197,6 +5197,8 @@ invalidated the three earlier runs (BLOCKERS.md). What they establish:
 | a subject dragged onto `DropCompress™` | the app highlights, nothing happens |
 | `~Magic Menu™` deleted, to get SpaceSaver's own menu | **no icon menu in the menu bar at all** |
 | the Compression page OK'd first, then the rename | nothing |
+| the preferences written, the machine REBOOTED, then the rename | nothing |
+| the installer re-run and shut down cleanly, so nothing is torn | the image has no preferences either — the installer does not write them |
 
 **The `.SIT` result is the one that matters**, because it disproves the
 explanation everything else was resting on. The trigger page has two
@@ -5232,7 +5234,26 @@ from the Finder again:
   panel accepted, and nothing has checked what *About SpaceSaver* says
   about it.
 
-**And the last two runs point somewhere better than any of that.** With
+**The preferences file was the best hypothesis and it is disproved.**
+`ssinstalled.hfv` has no `System Folder:Preferences:SpaceSaver
+Preferences` — the installer does not write one, and `STR# -4064` has
+the extension's complaint ready: *"The SpaceSaver Preferences file could
+neither be found nor created"*. Extensions install at startup, so on
+this image SpaceSaver's had never had one to read. `--twoboot` fixes
+that in the obvious way — boot, open the panel, OK it (which writes
+`Pref/SMKR`, 10,496 B, confirmed on the flushed image), shut down, boot
+again, rename — and the subject still comes back byte-identical. So did
+a re-installation that ends in Shut Down rather than a kill, which was
+the other thing the image might have been missing.
+
+**And two mechanisms are ruled out by measurement rather than by
+argument.** The control panel's Finder flags are `0x2000` — `hasBundle`
+alone, `hasNoINITs` clear — and byte for byte the same as
+`~Magic Menu™`'s, whose extension demonstrably does load. Whatever stops
+SpaceSaver installing, it is not the flag that tells the System not to
+look.
+
+**And the earlier runs point somewhere better than any of that.** With
 `~Magic Menu™` deleted the menu bar carried no icon menu at all — so the
 menu SpaceSaver's own *Show Menu* option promises, `STR# 1024`'s
 *Turn Idle-Time On / Idle Now / Open Control Panel*, was never installed.

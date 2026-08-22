@@ -150,7 +150,7 @@ Unlike section 3, none of this is impossible here: a download would do it.
     it is the format's own shape, and it is recorded here so the next
     reader does not go looking for the bug.
   - **A specimen at all.** Nothing here has made SpaceSaver compress
-    anything: nine runs on a machine that booted and was flushed drove
+    anything: eleven runs on a machine that booted and was flushed drove
     the panel's `small` rule (twice, once with the settings page OK'd
     first), an enrolled disk left idle for eighteen minutes, Magic
     Menu's *SpaceSaver Compress*, and `DropCompress™` launched and
@@ -159,9 +159,13 @@ Unlike section 3, none of this is impossible here: a download would do it.
     no icon menu at all, so SpaceSaver's own menu — the one its *Show
     Menu* option promises — was never installed, and nothing here has
     ever needed its EXTENSION rather than its control panel.
-    **What would close it:** finding out why `INIT 0` does not install
-    (`STR# 1001` lists seven reasons it declines), or a file from
-    anywhere. DECISIONS.md 2026-08-22, what will not compress.
+    **What would close it:** finding out why `INIT 0` does not install.
+    Ruled out already, by measurement: a missing preferences file (the
+    panel writes one, a reboot does not help), a torn installation (the
+    installer was re-run and shut down cleanly), and the `hasNoINITs`
+    Finder flag (clear, and identical to `~Magic Menu™`'s, whose
+    extension does load). `STR# 1001` has five reasons left. Or a file
+    from anywhere. DECISIONS.md 2026-08-22, what will not compress.
 
 - **AppleLink `.pkg`.** No reference
   implementation and no published layout anywhere reachable. Searched
