@@ -43,7 +43,7 @@ one, because parts are recognised by what is inside them:
 ## Download
 
 **[Latest release](https://github.com/jarreboum/unclassic/releases/latest)** —
-currently **v0.15.0**. If the release page shows anything older, the publish
+currently **v0.15.1**. If the release page shows anything older, the publish
 step did not run. Or take it straight from the tree:
 
 | | |

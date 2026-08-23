@@ -74,7 +74,7 @@ detect-only — disk images are out of scope for v1.
 
 **Kept deliberately, and this is the part of the file to read first.** Twice a
 live claim has been re-tested *because* it sat beside an already-withdrawn one,
-and one of those was worth 39/44 → 40/44 at the floor target. Nine mechanisms
+and one of those was worth 39/44 → 40/44 at the floor target. Ten mechanisms
 keep finding the next one, and two of them need no insight at all:
 
 - a live claim sitting next to an already-withdrawn one;
@@ -104,6 +104,12 @@ keep finding the next one, and two of them need no insight at all:
   wrote down, not about what is reachable — the algorithm was in the
   application all along, in a binary already in `fixtures/` and already
   being driven under emulation for something else.
+- **every input a suite grades against, made by one program.** Added
+  2026-08-23: `run_btoa.py` grades the decoder against btoa 5.2.1 itself,
+  which is the right oracle and is also a Unix program that has only ever
+  written LF. Twenty-one cases therefore agreed on a property none of them
+  chose. Ask what the generator never varies — for a text format read on a
+  Macintosh, the line ending is the first thing to ask about (below).
 - **a grep that cannot match what the file actually says.** Added
   2026-08-23, and it is the only mechanism here that hid a stale claim
   rather than finding one: `OPEN_ITEMS.md` still said Compact Pro's
@@ -606,6 +612,19 @@ the same day, by a decoder and a unit test that were wrong the same way, so
 the suite could not see it. **Three times now the answer to "nothing can grade
 this" was one search away**, and this time the withdrawn claim above is what
 made the third worth attempting.
+
+**`src/fmt_btoa.c` accepts CR and CRLF line endings.** Its own comment said
+exactly that, one line above code that SKIPPED carriage returns rather than
+ending the line on them. CRLF worked by accident — the LF ended the line — and
+CR alone, which is what every text file a Macintosh writes uses, ran the whole
+archive together into one line that no header matched. Measured by
+re-terminating the reference's own output: the CRLF copy decoded, the CR copy
+did not. **Cost:** v0.15 shipped a btoa decoder that could not read a btoa file
+written or re-saved on the machine this program is FOR — the one place the
+format's files actually are. **Why it survived:** all 21 cases in
+`tools/run_btoa.py` come out of btoa 5.2.1 on Linux, so the suite could vary
+length, alphabet, framing and framing checksum but never the line ending. Four
+cases now do, and they fail against the old code.
 
 ### Corrected figures and superseded write-ups
 

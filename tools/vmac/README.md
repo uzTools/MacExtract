@@ -1167,6 +1167,29 @@ Four things it will teach you, and each cost a run:
 - **The application renames what you type.** "Secret.sit" typed into
   File ▸ New becomes `Secret.sit.sit`.
 
+**The Translate menu's submenus cannot be selected here, and that is the
+harness's limit, not the application's.** `--btoa-peek` photographs the
+menu and its `btoa/atob ▸` submenu opens correctly; what never happens is
+the submenu ITEM highlighting. Three ways in were measured — a diagonal
+jump, a sideways entry along the submenu's own row, and stepped motion
+ten pixels at a time (specimen tags `btoa`, `btoa2`, `btoa3`) — and in
+all three the parent item stays highlighted, the item under the pointer
+does not, and the release selects nothing. Plain menus and every button
+in every dialog work, so this is hierarchical tracking specifically;
+*hypothesis*, unreduced: the Menu Manager wants mouse movement the
+emulator's pointer injection does not produce.
+
+That route is gone from the script because of how it failed: with no
+picker on screen, the clicks and Return meant for it went to the Finder
+and RENAMED the subject to `Subject.ascii` — a plausible-looking
+specimen containing the plain subject. What is left is `--btoa-drop`,
+which uses `DropConvert™` from the `Drag & Drop Applications` folder
+instead: its `Convert… ⌘C` needs no menu tracking, its picker takes the
+subject via Add, and it is reached entirely by keystroke and button.
+**It does not produce a file yet** — Convert closes the dialog and
+nothing is written anywhere on the volume — so the independent btoa
+specimen is still outstanding (TESTING.md, *btoa*).
+
 ### Asking Compact Pro about its own cipher — `cptcrypt.py`
 
     tools/vmac/cptcrypt.py --explore     photograph each step

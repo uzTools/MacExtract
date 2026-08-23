@@ -664,6 +664,14 @@ declared length is what ends the file: the encoder always writes whole
 five-character groups, so `(len - 1) & 3` says how many bytes of the
 last group are real.
 
+**CR, LF and CRLF all end a line.** The Unix encoder writes LF, but the
+machine this decoder is for writes CR and nothing else, so a file that
+reached a Mac and was saved there comes back CR-terminated; for CRLF the
+LF that follows reads as a blank line, which the format allows anywhere.
+Skipping CR instead — which is what the code did until 2026-08-23 — turns
+such a file into a single line that no header matches (*BLOCKERS.md*,
+withdrawn claims).
+
 **No corpus file, and no second reader.** `xbtoa` appears in none of
 the 903 fixtures, `unar` does not recognise the format and macutils
 never had it — so the grading is the original implementation itself.

@@ -57,8 +57,8 @@ method" was a fact about one tool, with the second oracle already sitting in
 `reference/`; "no second implementation exists" was written while a
 self-extracting fixture carried one in its own resource fork.
 
-`BLOCKERS.md` keeps all thirty-three withdrawn claims with **what each one cost**,
-and names the eight smells that keep finding the next one. The cheapest is a
+`BLOCKERS.md` keeps every withdrawn claim with **what each one cost**, and
+names the ten smells that keep finding the next one. The cheapest is a
 **cross-file contradiction**: two status files disagreeing is a disproof
 nobody has collected yet. A constant in the peak-RAM matrix is another —
 data-driven allocations vary with their input, so one that does not is usually
@@ -97,7 +97,10 @@ All of these cost real time here:
 - **Do not edit a shell script while it is running.** `sh` reads the file by
   offset, so an edit shifts what it executes next.
 - The Mac OS 9 pointer does not work at all; drive that guest from the
-  keyboard. Mini vMac's mouse is fine.
+  keyboard. Mini vMac's mouse is fine — except for **hierarchical menus,
+  whose submenu items never highlight and cannot be selected** however the
+  pointer is moved (three ways measured, `tools/vmac/README.md`). Find a
+  route that is not a submenu.
 - An emulator run is minutes; do not poll it every few seconds, and **do not
   read a timeout as a measurement of anything**.
 

@@ -229,6 +229,108 @@ def phase_btoa_peek(s):
         time.sleep(1.5)
 
 
+# Measured off btoapeek/08: pressing Translate and dragging to y=115
+# opens the btoa/atob submenu, which draws to the LEFT because the menu
+# is near the right edge of a 512-pixel screen. "Binary to ASCII..." is
+# its first item.
+# Measured off btoapeek/08: pressing Translate and dragging to y=115
+# opens the btoa/atob submenu, which draws to the LEFT because the menu
+# is near the right edge of a 512-pixel screen. "Binary to ASCII..." is
+# its first item — and it CANNOT BE SELECTED here. Three attempts (a
+# diagonal jump, a sideways entry, and stepped motion ten pixels at a
+# time, tags btoa/btoa2/btoa3): the submenu draws, the pointer sits on
+# the item, the item never highlights, and the release selects nothing.
+# The parent item stays highlighted throughout, so the Menu Manager
+# never hands tracking to the submenu.
+#
+# The route was removed rather than left in, because it fails into the
+# FINDER: the row click and Return meant for the save dialog renamed the
+# subject to `Subject.ascii`, which then looks exactly like a specimen
+# and is not one. `--btoa-drop` below is the way that does not do that.
+ASCII_NAME = "Subject.ascii"
+
+
+VOLUME_NAME = "System_7"
+DC_OPEN = (258, 146)
+DC_ADD = (258, 180)
+DC_CONVERT = (458, 289)
+
+
+def phase_btoa_drop(s, args):
+    """Have DropConvert(tm) — Aladdin's translator droplet — encode the
+    subject as btoa, so the decoder is graded by something other than
+    the Unix original.
+
+    The droplet, not the Translate menu: that menu's `btoa/atob` item is
+    a SUBMENU, and under xdotool the pointer reaches its "Binary to
+    ASCII..." without the item ever highlighting, so the release selects
+    nothing (`dconv/btoa2`). DropConvert has one menu with `Convert...
+    (Cmd-C)` in it and needs no drag at all.
+    """
+    x = s.mac._xdo
+    s.mac.key("Escape")
+    time.sleep(0.5)
+    x("type", "--delay", "120", "Drag")
+    time.sleep(1.2)
+    s.mac.command_key("o")
+    s.shot("droplets", wait=6.0)
+    s.mac.key("Escape")
+    time.sleep(0.5)
+    x("type", "--delay", "120", "DropConvert")
+    time.sleep(1.2)
+    s.mac.command_key("o")
+    s.shot("dc-launched", wait=25.0)
+
+    s.mac.command_key("c")                 # Convert...
+    s.shot("dc-picker", wait=6.0)
+    # Standard File opens in the droplet's own folder; the subject is one
+    # level up, in the application's folder. Command-Up is Standard
+    # File's "enclosing folder".
+    # Its picker is DropConvert's own, not Standard File: a file list on
+    # the left, an "Items to Convert" list on the right, Add/Remove
+    # between them — the Stuff dialog's shape. It opens in the droplet's
+    # own folder, and Command-Up goes to the DESKTOP rather than one
+    # level up (measured, btoadrop/05), so the way to the subject is
+    # down from there.
+    x("key", "--clearmodifiers", "Meta+Up")
+    s.shot("dc-desktop", wait=3.0)
+    for step, (typed, tag) in enumerate(((VOLUME_NAME, "volume"),
+                                         (APP_FOLDER[:7], "appfolder"))):
+        x("type", "--delay", "150", typed)
+        time.sleep(1.2)
+        s.mac.click(*DC_OPEN)
+        s.shot("dc-in-%s" % tag, wait=3.0)
+    x("type", "--delay", "150", SUBJECT_NAME)
+    time.sleep(1.2)
+    s.shot("dc-subject")
+    s.mac.click(*DC_ADD)
+    s.shot("dc-added", wait=2.0)
+    s.mac.click(*DC_CONVERT)
+    s.shot("dc-converting", wait=8.0)
+    s.shot("dc-settled", wait=12.0)
+    s.mac.command_key("q")
+    s.shot("dc-quit", wait=8.0)
+    s.menu(SPECIAL_X, SHUT_DOWN_Y, "special-menu")
+    s.shot("shutting-down", wait=35.0)
+
+
+def list_folder(image):
+    """What is in the application's folder now — the only way to see what
+    DropConvert decided to call its output, and in what format."""
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+    try:
+        if subprocess.run(["hmount", image], capture_output=True,
+                          env=env).returncode != 0:
+            return ""
+        out = subprocess.run(["hls", "-l",
+                              (":" + APP_FOLDER + ":").encode("mac_roman")],
+                             capture_output=True, env=env).stdout
+        subprocess.run(["humount"], capture_output=True, env=env)
+        return out.decode("mac_roman", "replace")
+    finally:
+        shutil.rmtree(env["HOME"], ignore_errors=True)
+
+
 def read_archive(image, outdir, name):
     """Copy the archive off as MacBinary — BOTH forks, because the
     password verifier is in the resource one.
@@ -272,6 +374,10 @@ def main():
                          "Tools, StuffIt Deluxe\u2122, Subject, Tutorial "
                          "Files — so 5, and the screenshot says whether that "
                          "was right")
+    ap.add_argument("--btoa-drop", action="store_true",
+                    help="encode the subject with the DropConvert droplet")
+    ap.add_argument("--droplet-peek", action="store_true",
+                    help="photograph the Drag_Drop Applications folder")
     ap.add_argument("--btoa-peek", action="store_true",
                     help="photograph the Translate menu item by item, to "
                          "find where the btoa/atob submenu is")
@@ -283,10 +389,27 @@ def main():
     os.makedirs(SPECIMENS, exist_ok=True)
 
     tag = args.tag or ("map" if args.map
-                       else "btoapeek" if args.btoa_peek else "make")
+                       else "btoapeek" if args.btoa_peek
+                       else "droplets" if args.droplet_peek
+                       else "btoadrop" if args.btoa_drop
+                       else "make")
     s, work, _img = session(tag)
     os.makedirs(os.path.join(SPECIMENS, tag), exist_ok=True)
     try:
+        # This one stays in the FINDER — the droplet is an application of
+        # its own and StuffIt Deluxe must not be running in front of it.
+        if args.droplet_peek or args.btoa_drop:
+            s.boot()
+            s.shot("desktop", wait=8.0)
+            s.mac.click(*FOLDER_TITLE)
+            time.sleep(1.5)
+            if args.btoa_drop:
+                phase_btoa_drop(s, args)
+                s.close()
+                print(list_folder(os.path.join(s.work, "boot.hfv")))
+                return 0
+            phase_droplet_peek(s)
+            return 0
         launch(s, args)
         if args.map:
             for x in (25, 60, 100, 145, 195, 245, 295, 345):
@@ -304,7 +427,8 @@ def main():
         return 0
     # The archive may be on either volume; look on both.
     got = None
-    for nm in (ARCHIVE_NAME + ".sit", ARCHIVE_NAME):
+    names = [ARCHIVE_NAME + ".sit", ARCHIVE_NAME]
+    for nm in names:
         got = read_archive(os.path.join(s.work, "boot.hfv"),
                            os.path.join(SPECIMENS, tag), nm)
         if got:
@@ -316,6 +440,7 @@ def main():
             shutil.rmtree(work, ignore_errors=True)
         return 1
     meta = {"made_by": "StuffIt Deluxe 3.5.1 on System 7.0.1 under Mini vMac",
+            "what": "encrypted .sit",
             "password": args.password,
             "subject": {"name": SUBJECT_NAME,
                         "data": SUBJECT_DATA.hex(),

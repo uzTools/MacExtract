@@ -118,6 +118,30 @@ def main():
         shutil.rmtree(out, ignore_errors=True)
         ran += 1
 
+        # Line endings. The reference writes LF, but the machine this
+        # decoder is FOR writes CR and nothing else, and a btoa file that
+        # reached a Mac and was saved by a Mac text editor comes back
+        # that way. Skipping CR instead of ending the line on it turned
+        # such a file into one enormous line, silently (fixed 2026-08-23);
+        # nothing else in the suite could see it, because everything else
+        # here is written by a Unix program.
+        for label, term in (("cr", b"\r"), ("crlf", b"\r\n")):
+            for ver in ("v5", "v4"):
+                src = open(os.path.join(tmp, "odd1.bin.%s.btoa" % ver),
+                           "rb").read()
+                enc = os.path.join(tmp, "eol.%s.%s.btoa" % (ver, label))
+                open(enc, "wb").write(src.replace(b"\n", term))
+                out = tempfile.mkdtemp()
+                subprocess.run([unclassic, "x", "-o", out, enc],
+                               capture_output=True)
+                got = sorted(os.listdir(out))
+                if len(got) != 1 or open(os.path.join(out, got[0]),
+                                         "rb").read() != data["odd1.bin"]:
+                    problems.append("%s line endings, %s: %r"
+                                    % (label.upper(), ver, got))
+                shutil.rmtree(out, ignore_errors=True)
+                ran += 1
+
         # In front of a mail header, which is how these travelled.
         mail = os.path.join(tmp, "mail.btoa")
         with open(mail, "wb") as f:

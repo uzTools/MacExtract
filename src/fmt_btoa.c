@@ -206,8 +206,13 @@ static int32_t btoa_read_line(UncBufIn *in, uint8_t *buf, int32_t cap)
         if (b < 0) return n > 0 ? n : -1;
         if (b == '\n') return n;
         if (b == '\r') {
-            /* Accept CR and CRLF: these travelled by mail. */
-            continue;
+            /* CR ends a line as surely as LF does. A Macintosh text file
+             * has ONLY CRs, and a Mac is where these are being read; the
+             * first version of this skipped CR instead, which quietly
+             * turned such a file into one enormous line. For CRLF the LF
+             * arrives next and reads as an empty line, which both callers
+             * already skip. */
+            return n;
         }
         if (n < cap) buf[n++] = (uint8_t)b;
         else return n;                 /* over-long: the caller decides */

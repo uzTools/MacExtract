@@ -621,11 +621,20 @@ mail header in front is stepped over; a flipped character and a
 truncated archive are errors; and prose containing the word `xbtoa` is
 not claimed as an archive.
 
+And the **line endings**, in both framings, because the encoder is a
+Unix program and writes only LF: the same stream re-terminated with CR
+and with CRLF has to decode identically. CR alone did not, until
+2026-08-23 (*BLOCKERS.md*, withdrawn claims) — 25 cases now, and the
+four new ones fail against the code they were written for.
+
 **What it cannot see.** The suite skips, loudly, without
 `reference/btoa` — so a fresh clone runs the two hand-built streams in
-`tests/unit_formats.c` and nothing else. And no file that a MAC wrote
-has been read: StuffIt Deluxe's `btoa/atob Translator` would be the one
-to ask, and it has not been.
+`tests/unit_formats.c` and nothing else. And every stream in it still
+comes out of ONE encoder: re-terminating the lines varies the property
+that encoder was hiding, but not the ones nobody has thought of. A file
+written by StuffIt Deluxe's own `btoa/atob Translator` would be the
+independent specimen; `tools/vmac/sitcrypt.py` has not managed to make
+one (*tools/vmac/README.md*, the Translate menu).
 
 ## Decryption (`tools/run_crypt.py`, in `ci.sh`)
 
