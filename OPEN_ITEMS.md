@@ -74,23 +74,14 @@ what the file is and extraction returns cleanly unsupported.
 Verification gaps — things this project has and has not checked.
 What it does not HAVE is section 2.
 
-- **The Mac OS 9.2 tier has not run since DiskDoubler, Now Compress, ARC
-  and uuencode were added.** The other three tiers have (FORMATS.md).
-  Its sample still records DiskDoubler as a refusal, which is what it
-  was when that tier last ran. **What would close it:** an OS 9 sweep,
-  which costs a full PowerPC boot per fixture — tens of minutes, against
-  five for the whole System 7 tier.
-
-- **Compact Pro's cipher is a reading of one binary that no second
-  implementation has graded.** Everything about it is in FORMATS.md
-  (*Compact Pro's cipher*) and DECISIONS.md (2026-08-23, *decryption*):
-  read out of Compact Pro 1.51's own `CODE` 3 in both directions, with
-  every address recorded, and self-consistent — but the run that was
-  meant to settle it found that the application refuses encrypted files
-  unless it is registered, and forging a registration is not something
-  this project will do. **What would close it:** a registered copy of
-  Compact Pro (then `tools/vmac/cptcrypt.py` is one command), or one
-  encrypted `.cpt` from anywhere with its password.
+- **The Mac OS 9.2 tier has not run since M12.** Everything from
+  DiskDoubler and Now Compress onwards postdates it — ARC, uuencode,
+  SuperDisk!, SpaceSaver, decryption and btoa — and its sample still
+  records DiskDoubler as a refusal, which is what it was when that tier
+  last ran. The other two tiers are re-run after every change
+  (BLOCKERS.md). **What would close it:** an OS 9 sweep, which costs a
+  full PowerPC boot per fixture — tens of minutes, against five for the
+  whole System 7 tier.
 
 ---
 

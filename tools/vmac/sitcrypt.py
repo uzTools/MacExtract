@@ -201,6 +201,34 @@ def phase_make(s, args):
     s.shot("shutting-down", wait=35.0)
 
 
+# The Translate menu, and the btoa/atob submenu inside it. Measured off
+# the --map screenshots; the submenu's y is what --btoa-peek finds.
+TRANSLATE_X = 295
+BTOA_ITEM_Y = 86
+
+
+def phase_btoa_peek(s):
+    """Photograph the Translate menu with the pointer walking down it.
+
+    The item wanted is a SUBMENU ("btoa/atob >"), so the shot has to be
+    taken with the pointer resting on it — that is what makes the
+    submenu draw, and its items' coordinates are what the real run
+    needs.
+    """
+    ox, oy = s.mac.origin()
+    x = s.mac._xdo
+    for y in (57, 72, 86, 100, 115):
+        x("mousemove", str(ox + TRANSLATE_X), str(oy + 8))
+        time.sleep(0.4)
+        x("mousedown", "1")
+        time.sleep(1.0)
+        x("mousemove", str(ox + TRANSLATE_X + 25), str(oy + y))
+        time.sleep(1.5)
+        s.shot("translate-y%d" % y)
+        x("mouseup", "1")
+        time.sleep(1.5)
+
+
 def read_archive(image, outdir, name):
     """Copy the archive off as MacBinary — BOTH forks, because the
     password verifier is in the resource one.
@@ -244,6 +272,9 @@ def main():
                          "Tools, StuffIt Deluxe\u2122, Subject, Tutorial "
                          "Files — so 5, and the screenshot says whether that "
                          "was right")
+    ap.add_argument("--btoa-peek", action="store_true",
+                    help="photograph the Translate menu item by item, to "
+                         "find where the btoa/atob submenu is")
     ap.add_argument("--tag", default=None,
                     help="name the specimen, so runs with different "
                          "password lengths do not overwrite each other")
@@ -251,7 +282,8 @@ def main():
     args = ap.parse_args()
     os.makedirs(SPECIMENS, exist_ok=True)
 
-    tag = args.tag or ("map" if args.map else "make")
+    tag = args.tag or ("map" if args.map
+                       else "btoapeek" if args.btoa_peek else "make")
     s, work, _img = session(tag)
     os.makedirs(os.path.join(SPECIMENS, tag), exist_ok=True)
     try:
@@ -259,6 +291,9 @@ def main():
         if args.map:
             for x in (25, 60, 100, 145, 195, 245, 295, 345):
                 s.peek(x, "menu-x%d" % x)
+            return 0
+        if args.btoa_peek:
+            phase_btoa_peek(s)
             return 0
         phase_make(s, args)
     finally:

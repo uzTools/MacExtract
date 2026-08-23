@@ -175,10 +175,11 @@ def register(mac, shot, args):
     """Type a registration into the shareware notice.
 
     Macintosh Garden publishes one for 1.51 (Name "Registered", Code
-    35427117) and this is what it is for. Whether it unlocks ENCRYPTION
-    is the question the run is asking: the routine at 0x485e enables
-    that only when the stored name ends with `*`, so an ordinary
-    registration may well leave the refusal in place.
+    35427117), and it is what unlocks ENCRYPTION: with it the refusal
+    goes away and the Add dialog's Encrypt checkbox appears. There is a
+    `*` test at 0x485e that suggested otherwise — a reading recorded in
+    BLOCKERS.md as withdrawn, because one branch of a routine is not the
+    routine.
     """
     name, code = args.register.split(":", 1)
     mac.click(*NAG_REGISTER)

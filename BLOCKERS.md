@@ -74,7 +74,7 @@ detect-only — disk images are out of scope for v1.
 
 **Kept deliberately, and this is the part of the file to read first.** Twice a
 live claim has been re-tested *because* it sat beside an already-withdrawn one,
-and one of those was worth 39/44 → 40/44 at the floor target. Eight mechanisms
+and one of those was worth 39/44 → 40/44 at the floor target. Nine mechanisms
 keep finding the next one, and two of them need no insight at all:
 
 - a live claim sitting next to an already-withdrawn one;
@@ -104,6 +104,17 @@ keep finding the next one, and two of them need no insight at all:
   wrote down, not about what is reachable — the algorithm was in the
   application all along, in a binary already in `fixtures/` and already
   being driven under emulation for something else.
+- **a grep that cannot match what the file actually says.** Added
+  2026-08-23, and it is the only mechanism here that hid a stale claim
+  rather than finding one: `OPEN_ITEMS.md` still said Compact Pro's
+  cipher was ungraded a day after the application graded it, and a
+  search for the exact sentence returned nothing — because the file
+  wraps it as `no second\n  implementation has graded` and grep is
+  line-based. The clean-up script that should have deleted the entry
+  had aborted on a later `assert` and written none of its edits, so the
+  false negative confirmed a failure. Collapse the wrapping before
+  searching prose, and never take a clean grep as evidence that an edit
+  landed — read the file.
 - **a harness that ends its runs differently from the harness beside it.**
   Added 2026-08-22: three SpaceSaver runs "measured unchanged" on a machine
   that never booted, because their image had been copied out of a KILLED
