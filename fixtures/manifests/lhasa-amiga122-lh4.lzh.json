@@ -1,0 +1,19 @@
+{
+ "entries": [
+  {
+   "data_sha256": "8177f97513213526df2cf6184d8ff986c675afb514d4e68a404010521b880643",
+   "data_size": 18092,
+   "name": "gpl-2",
+   "oracle_methods": [
+    "-lh4-"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  }
+ ],
+ "fixture": "lhasa-amiga122-lh4.lzh",
+ "format": "LZH",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "287586d14f052cb1e128cc87f6277a3da6e88431369e65c815666a67718e065c",
+ "size": 7125
+}

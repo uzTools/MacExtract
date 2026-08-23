@@ -1,0 +1,21 @@
+{
+ "entries": [
+  {
+   "creator": "????",
+   "data_sha256": "8177f97513213526df2cf6184d8ff986c675afb514d4e68a404010521b880643",
+   "data_size": 18092,
+   "name": "gpl-2",
+   "oracle_methods": [
+    "-lh1-"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "????"
+  }
+ ],
+ "fixture": "lhasa-maclha-l2_lh1.lzh",
+ "format": "LZH",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "94d978ddc8256682428b77646ecbdbd51bc871db59d92b63a225c98ccf1a6fde",
+ "size": 7290
+}

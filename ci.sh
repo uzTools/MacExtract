@@ -57,6 +57,13 @@ python3 tools/run_superdisk.py --unclassic build/san/unclassic \
 # writes, in both framings. Skips cleanly without reference/.
 python3 tools/run_btoa.py --unclassic build/san/unclassic \
     || fail "btoa tests"
+# LZH/LHA (M28). The corpus has one real `.lzh` and seven of lhasa's,
+# all in the diff suite above; this is the sweep over the rest of that
+# collection — 160-odd archives from fourteen writers — graded against
+# TWO other implementations, lhasa (independent) and LHa 1.14i (the
+# original, used as the encoder). Skips cleanly without reference/.
+python3 tools/run_lzh.py --unclassic build/san/unclassic \
+    || fail "LZH tests"
 # Decryption (M25). Nothing in the corpus is encrypted, so this suite
 # generates its own: `zip -P` and `arc g<pw>` write two of the five
 # schemes themselves, and the three with no encoder here — StuffIt

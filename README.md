@@ -43,7 +43,7 @@ one, because parts are recognised by what is inside them:
 ## Download
 
 **[Latest release](https://github.com/jarreboum/unclassic/releases/latest)** —
-currently **v0.15.1**. If the release page shows anything older, the publish
+currently **v0.16.0**. If the release page shows anything older, the publish
 step did not run. Or take it straight from the tree:
 
 | | |
@@ -60,9 +60,10 @@ notes.
 
 **Extracts:** StuffIt (`.sit`, classic and 5.x), Compact Pro (`.cpt`), BinHex
 (`.hqx`), MacBinary, PackIt (`.pit`), DiskDoubler (`.dd`, `DDAR`, `DDA2`), Now
-Compress, StuffIt SpaceSaver, Alysis SuperDisk! (`.X`), ARC (`.arc`),
-uuencoded files (`.uu`), btoa (`.ascii`), AppleSingle/AppleDouble, zip, gzip,
-tar and Unix compress (`.Z`). Resource forks, type and creator codes and dates all survive,
+Compress, StuffIt SpaceSaver, Alysis SuperDisk! (`.X`), ARC (`.arc`), LZH /
+LHA (`.lzh`, `.lha`, including the ones MacLHA wrote), uuencoded files
+(`.uu`), btoa (`.ascii`), AppleSingle/AppleDouble, zip, gzip, tar and Unix
+compress (`.Z`). Resource forks, type and creator codes and dates all survive,
 so an extracted application simply runs.
 
 Nested files like `.sit.hqx` or `.tar.Z` are unwrapped automatically, by
@@ -85,7 +86,7 @@ it is the format's rather than ours: an encrypted StuffIt archive keeps
 half its key in the file's resource fork, so a copy that lost the fork
 somewhere cannot be opened by anything.
 
-**Recognises but does not extract:** StuffIt X, LZH, Disk Copy 4.2 and
+**Recognises but does not extract:** StuffIt X, Disk Copy 4.2 and
 AppleLink packages (`.pkg`) — it tells you what the file is rather than
 failing obscurely.
 

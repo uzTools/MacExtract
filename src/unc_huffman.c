@@ -161,11 +161,23 @@ int unc_huff_decode(const UncHuff *h, UncBitIn *bi)
 
 int unc_canon_build(UncCanon *c, const uint8_t *lengths, int32_t nsyms)
 {
+    return unc_canon_build_ext(c, lengths, nsyms, c->symstore,
+                               UNC_CANON_MAX_SYMS);
+}
+
+/* The same build, over symbol storage the caller supplies. LZH's
+ * literal alphabet is 510 symbols, which does not fit the inline
+ * store, and growing that store would widen every UncCanon on every
+ * decoder's stack — dd_ddn holds three of them. */
+int unc_canon_build_ext(UncCanon *c, const uint8_t *lengths, int32_t nsyms,
+                        int16_t *symbuf, int32_t symcap)
+{
     int32_t i, l;
     uint32_t code, space;
     uint16_t idx[UNC_CANON_MAX_BITS + 1];
 
-    if (nsyms > UNC_CANON_MAX_SYMS) return UNC_ERR_CORRUPT;
+    if (nsyms > symcap) return UNC_ERR_CORRUPT;
+    c->sym = symbuf;
 
     for (l = 0; l <= UNC_CANON_MAX_BITS; l++) c->count[l] = 0;
     c->maxlen = 0;

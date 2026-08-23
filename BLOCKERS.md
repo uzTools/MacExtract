@@ -8,9 +8,9 @@ system the project claims:
 
 | tier | result |
 |---|---|
-| System 6.0.8, 4 MB Mac Plus (Mini vMac, a true 68000) | **62/62** sampled fixtures |
-| System 6.0.8, **1 MB** — the floor target | **62/62**; no memory-budget refusals remain, and DiskDoubler method 5's 396 KB allocation succeeds here |
-| System 7.0.1, 4 MB | **62/62** |
+| System 6.0.8, 4 MB Mac Plus (Mini vMac, a true 68000) | **67/67** sampled fixtures |
+| System 6.0.8, **1 MB** — the floor target | **67/67**; no memory-budget refusals remain, and DiskDoubler method 5's 396 KB allocation succeeds here |
+| System 7.0.1, 4 MB | **67/67** |
 | Mac OS 9.2 (QEMU PowerPC, 68LC040 emulation) | 13/13, plus HFS+ and the `SIZE` partition; DiskDoubler still recorded there as the refusal it was pre-M12 |
 
 All three Mini vMac tiers re-run **2026-08-22**, with M15–M23's codecs in
@@ -20,7 +20,10 @@ run again on **2026-08-23** against the decryption build, which is 20 KB
 larger and so leaves the 1 MB machine that much less heap: **62/62 on both**,
 with the three heaviest allocations (533 KB, 471 KB and method 5's 405 KB)
 unchanged. The 1 MB tier has been run again after each addition since — WinZip's
-AES, the StuffIt key correction and btoa — and is 62/62 every time. System 7 has not been re-run since 2026-08-22. Per-fixture tables and how
+AES, the StuffIt key correction and btoa — and was 62/62 every time. All
+three tiers were re-run on **2026-08-23** with LZH in and five `.lzh`
+fixtures added to the sample (M28): **67/67 on each**, the new ones costing
+4,112 B of heap at the small end and 41,364 B for a `-lh7-` entry. Per-fixture tables and how
 the sample grew: FORMATS.md. How to re-run any of
 it: `tools/vmac/README.md`. What no emulator here can settle:
 MANUAL_TESTS.md.

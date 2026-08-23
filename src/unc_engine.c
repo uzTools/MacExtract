@@ -32,7 +32,7 @@ static const UncFormatDesc unc_formats[] = {
     { UNC_FORMAT_DISKDOUBLER, "DiskDoubler",     1 },
     { UNC_FORMAT_DISKCOPY,    "DiskCopy image",  0 },
     { UNC_FORMAT_NOWCOMPRESS, "Now Compress",    1 },
-    { UNC_FORMAT_LZH,         "LZH",             0 },
+    { UNC_FORMAT_LZH,         "LZH",             1 },
     { UNC_FORMAT_SITSEG,      "StuffIt segment", 1 },
     { UNC_FORMAT_ZIPSEG,      "Zip segment",     1 },
     /* Extractable, but only as a SET: unc_extract_as has no case for it,
@@ -232,6 +232,7 @@ int unc_extract_as(UncFormat f, UncIO *io, UncSink *sink, UncAlloc *al,
     case UNC_FORMAT_UU:          return unc_uu_extract(&c);
     case UNC_FORMAT_BTOA:        return unc_btoa_extract(&c);
     case UNC_FORMAT_ARC:         return unc_arc_extract(&c);
+    case UNC_FORMAT_LZH:         return unc_lzh_extract(&c);
     case UNC_FORMAT_SUPERDISK:   return unc_superdisk_extract(&c);
     case UNC_FORMAT_SPACESAVER:  return unc_spacesaver_extract(&c);
     case UNC_FORMAT_SITSEG:      return unc_sitseg_extract(&c);

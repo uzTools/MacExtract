@@ -1,0 +1,19 @@
+{
+ "entries": [
+  {
+   "data_sha256": "8177f97513213526df2cf6184d8ff986c675afb514d4e68a404010521b880643",
+   "data_size": 18092,
+   "name": "gpl-2",
+   "oracle_methods": [
+    "-lh7-"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  }
+ ],
+ "fixture": "lhasa-unix114i-h2_lh7.lzh",
+ "format": "LZH",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "9583432d69fe54dc705b87144a4f7a638f4df5843a0e79e769d962680b5a0d5c",
+ "size": 6884
+}

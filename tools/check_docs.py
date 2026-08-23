@@ -135,6 +135,14 @@ def check_synthetic():
             argv = [sys.executable, str(ROOT / cmd.split()[0])] + \
                 cmd.split()[1:] + ["-o", out]
             r = subprocess.run(argv, capture_output=True)
+            # Exit 3 is the one generator that can be legitimately
+            # unable to run: tools/get_lhasa_fixture.py needs either
+            # reference/lhasa or a network, and a fresh offline clone
+            # has neither. Reported out loud, never silently passed.
+            if r.returncode == 3:
+                print(f"check_docs: {name}: generator unavailable here "
+                      f"({r.stderr.decode().strip()[:80]}) — row not checked")
+                continue
             if r.returncode != 0 or not os.path.exists(out):
                 bad.append(f"fixtures/SOURCES.md: {name} cannot be restored "
                            f"({cmd} -o ... exited {r.returncode})")

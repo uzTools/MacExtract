@@ -653,6 +653,59 @@ written by StuffIt Deluxe's own `btoa/atob Translator` would be the
 independent specimen; `tools/vmac/sitcrypt.py` has not managed to make
 one (*tools/vmac/README.md*, the Translate menu).
 
+## LZH / LHA (`tools/run_lzh.py`, in `ci.sh`)
+
+Added 2026-08-23, when LZH came into scope. The corpus contains exactly
+one `.lzh` and it is Amiga software; what grades the format is somebody
+else's test corpus, `reference/lhasa/test/archives` — **182 archives
+written by fourteen different LHA implementations**, MacLHA 2.24 among
+them (fetched by `tools/fetch_references.sh`; seven are fixtures too,
+with oracle manifests, so the differential suite holds the names, sizes
+and Mac type/creator codes).
+
+**Three graders, deliberately not interchangeable.**
+
+| grader | what it is | what it can catch |
+|---|---|---|
+| `unar` | XADMaster, which `src/fmt_lzh.c` is transcribed FROM | a transcription error, and nothing else — agreement here says the copy was faithful, not that the reading is right |
+| `lhasa` | an independent implementation, compiled out of `reference/lhasa` | a wrong reading that XADMaster shares |
+| LHa for UNIX 1.14i | the ORIGINAL program, compiled out of `reference/lha` and used as an **encoder** | a decoder that agrees with both readers and still cannot read what the format's own writer emits |
+
+The run reports how many archives each grader adjudicated (137 and 142
+of 182 at the time of writing) plus 12 generated sets — four methods
+(`-lh0-`, `-lh5-`, `-lh6-`, `-lh7-`) at three header levels, over five
+subjects chosen for what they make the encoder do: long runs, text,
+incompressible bytes, one byte and none.
+
+**What it cannot see**, all four named in the file itself:
+
+- The archives in its `SKIP` set — PMarc, `-lhx-`, LHArk's private
+  `-lh7-`, the self-extracting ones — are checked to be REFUSED and
+  nothing more. A change that made one of them extract is reported, not
+  caught.
+- `-lh2-` and `-lh3-`: nothing here has an archive that uses either
+  (OPEN_ITEMS.md).
+- **The resource fork of a MacLHA entry, unless this machine has made
+  one.** lhasa strips the MacBinary header and throws the resource fork
+  away, so on those archives it grades the data fork only — and all
+  sixteen MacLHA archives in lhasa's collection hold data-fork-only
+  files. What closes it is a specimen made here:
+  `tools/vmac/maclha.py --make` runs **MacLHA 2.00** under Mini vMac and
+  archives a file with a real resource fork, and this suite grades both
+  forks of it against the bytes that went in. It lives beside the
+  emulator, so a fresh clone skips that check and says so; the branch is
+  also covered off-Mac by a hand-built MacBinary payload in
+  `tests/unit_formats.c`.
+- Dates: the engine converts neither MS-DOS nor Unix timestamps
+  (FORMATS.md), so there is nothing to compare.
+
+Three archives are also excused by name, each with the measurement
+behind it: `unar` mis-reads one OS-9/68k level 2 archive (it stops after
+the first directory), and lhasa reads two level 0 archives as empty
+because both begin with a `-lhd-` entry whose name is zero bytes long.
+Excusing a grader on a named file is not the same as excusing a format,
+and the file says which is which.
+
 ## Decryption (`tools/run_crypt.py`, in `ci.sh`)
 
 Added 2026-08-23, when decryption came into scope. **Nothing in the

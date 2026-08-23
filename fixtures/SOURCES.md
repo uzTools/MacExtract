@@ -688,6 +688,13 @@ Each line records how to re-fetch one. Use `tools/harvest.py --restore`.
 | leemail11.sea | e49f6dd548f5108bbaf61fcd510053364ac53069a40c0cbc6983a2a6e367aef1 | 83072 | http://www.nic.funet.fi/pub/mac/comm/leemail11.sea |
 | letter-gothic-egg-0.hqx | 2df19003fcd61691e35a179edfdc7a1d43ecefb0e3ba4f8cdaeb3a03edb84865 | 109974 | http://www.nic.funet.fi/index/info-mac/font/letter-gothic-egg-0.hqx |
 | lha-expander-103.hqx | 12dcf9e5cc5a830e24dc5339dd33a483d63322149ef44754652796219193cff0 | 121325 | http://www.nic.funet.fi/index/info-mac/cmp/lha-expander-103.hqx |
+| lhasa-amiga122-lh4.lzh | 287586d14f052cb1e128cc87f6277a3da6e88431369e65c815666a67718e065c | 7125 | synthetic:tools/get_lhasa_fixture.py lha_amiga_122/lh4.lzh |
+| lhasa-larc333-lz5.lzs | ebacc5d6fa4f35ef4e2ff7176e9867e410e4dfc5922b5bcfb804185954e1ab89 | 8510 | synthetic:tools/get_lhasa_fixture.py larc333/lz5.lzs |
+| lhasa-maclha-l1_lh5.lzh | b01b7e8cb3792fd548707edcf0a0d50958534f74518b57bfc119daa186e877f7 | 7094 | synthetic:tools/get_lhasa_fixture.py maclha_224/l1_lh5.lzh |
+| lhasa-maclha-l1_subdir.lzh | 8472f224b045e73cc7a888e478c6aed94bcb1fd1d7f84d5848ebeba73e42a699 | 316 | synthetic:tools/get_lhasa_fixture.py maclha_224/l1_subdir.lzh |
+| lhasa-maclha-l2_lh1.lzh | 94d978ddc8256682428b77646ecbdbd51bc871db59d92b63a225c98ccf1a6fde | 7290 | synthetic:tools/get_lhasa_fixture.py maclha_224/l2_lh1.lzh |
+| lhasa-os2_208-h3_lh5.lzh | d980d1ddc47323fc860b0fb7829d72ce26afbe1f3f59f89e52f0eda54f425212 | 7075 | synthetic:tools/get_lhasa_fixture.py lha_os2_208/h3_lh5.lzh |
+| lhasa-unix114i-h2_lh7.lzh | 9583432d69fe54dc705b87144a4f7a638f4df5843a0e79e769d962680b5a0d5c | 6884 | synthetic:tools/get_lhasa_fixture.py lha_unix114i/h2_lh7.lzh |
 | library-isbn-barcoder-101.hqx | 0d08b1afe726ec2240c873a9801530143779c8cbc1b567f5f97c3ef0eab7ed21 | 274040 | http://www.nic.funet.fi/index/info-mac/sci/library-isbn-barcoder-101.hqx |
 | life_v1_0.cpt | a142d55e1153054d207a7dc6792c01ebf1d287cd0c125a2169af8cb45f6c4574 | 45394 | http://www.nic.funet.fi/pub/mac/games/life_v1_0.cpt |
 | lingo-library-15.hqx | f87c994cb8b922d9e5db71a5e81ededfe9e9eef51cb98d43ca012b39de7243b5 | 205025 | http://www.nic.funet.fi/index/info-mac/dev/lingo-library-15.hqx |

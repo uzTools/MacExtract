@@ -134,7 +134,8 @@ static int ss_head_ok(const SsHead *o)
          * method this engine does not know is still a SpaceSaver file
          * and is worth NAMING — the user gets the format instead of
          * *unknown*, and the entry fails on its own (CLAUDE.md; the
-         * same bargain LZH gets). The two magics are eight bytes. */
+         * same bargain StuffIt X gets). The two magics are eight
+         * bytes. */
     }
     return 1;
 }
@@ -360,8 +361,8 @@ static int ss_one_fork(SsState *s, const SsFork *f, uint8_t *iobuf,
     /* 1 "Original Fast", 2 "Original Slow" and 3 "Alg 3" are declined
      * per entry: their modules are in the software this was read out
      * of, but nothing reachable here writes them, so an implementation
-     * could not be graded. The bargain LZH and DiskDoubler's declined
-     * methods already make (OPEN_ITEMS.md). */
+     * could not be graded. The bargain LZH's `-lh2-`/`-lh3-` and
+     * DiskDoubler's declined methods already make (OPEN_ITEMS.md). */
     default: err = UNC_ERR_UNSUPPORTED; break;
     }
     if (s->win) {

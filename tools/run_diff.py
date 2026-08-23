@@ -41,6 +41,7 @@ IMPLEMENTED = {
     # same content in tools/run_uu.py. The manifest says so in its
     # "oracle" field (TESTING.md, "ARC and uuencode").
     "uuencode": "uuencode",                # M13
+    "LZH": "LZH",                          # M28
 }
 
 # Formats v1 names but does not extract. Until 2026-08-14 a fixture of one
@@ -51,7 +52,6 @@ IMPLEMENTED = {
 # the two things the claim actually promises: the NAME agrees with the
 # oracle's, and extraction refuses without writing anything.
 DETECT_ONLY = {
-    "LZH": "LZH",
     "StuffIt X": "StuffIt X",
     "DiskCopy": "Disk Copy 4.2",
 }
@@ -432,6 +432,15 @@ def main():
     if detect_ran:
         print(f"  detect-only: {detect_ran - detect_bad}/{detect_ran} named as "
               f"the oracle names them, and refused cleanly")
+    else:
+        # Said out loud rather than left as a line that stopped
+        # printing. LZH was the only detect-only fixture the corpus
+        # ever had, and it extracts since 2026-08-23; the formats left
+        # in DETECT_ONLY have no specimen here at all (OPEN_ITEMS.md),
+        # so this check has nothing to run on and grades nothing.
+        print("  detect-only: NO fixture exercises this path — the "
+              "formats still in DETECT_ONLY have no specimen in the "
+              "corpus (OPEN_ITEMS.md)")
     # No fixture is ever skipped for what OUR engine says about it; an
     # entry the oracle names as out of v1 scope is graded on its name and
     # on anything the engine did produce, and counted here.

@@ -33,7 +33,7 @@ whole corpus for that format (engine allocations only, via
 | uuencode (.uu, incl. UUTool) | extract | — (plain uu, UUTool's two-fork "MU" shape, and documents posted in several parts★★) | 7 generated cases, the two-fork ones adjudicated by macutils' `hexbin`; `synth-uu-mac.uu` is in the differential suite | 4 KB | full |
 | Alysis SuperDisk! (.X, .x) | extract | **both containers** (record-stream archive and single file); methods 1-4 and 5-8 (a finite-context predictor over a 13- or 16-bit context, with the flag bitmap and/or the literals Huffman-coded), 9 Huffman, 11 SlowFastB (LZSS); 10, 13 and 20 declined per entry✧✧ | 2 fixtures, 5 forks, adjudicated by the archives' OWN self-extractors on an emulated Mac, + 11 single-file specimens written by Alysis's own control panel (methods 1 and 6) and graded against their inputs | 72–115 KB✧✧ | full |
 | StuffIt SpaceSaver (`SPSV`) | extract | 0 stored, 4 "Alg 4" — an LZSS whose window starts loaded with a preset dictionary that ships inside SpaceSaver; 1, 2 and 3 declined per entry✦✦ | no oracle and no specimen — but **Aladdin's own encoder agrees with this decoder field for field** (`CMod 20`, 2026-08-23), which is what grades it, plus a synthetic round-trip and unit tests✦✦ | 4 KB stored, **36 KB** for what SpaceSaver writes (measured on a Mac Plus); 68 KB is the ceiling the width byte allows. The dictionary is 9.7 KB of static data, not heap | full |
-| LZH/LHA (-lh?-, -lz?-) | detect only | — | 1 real `-lh5-` archive, named + refused; unit test over every method byte | — | — |
+| LZH / LHA (.lzh, .lha) | extract | -lh0- store, -lh1- (LHarc's adaptive Huffman, shared with StuffIt method 5), -lh4-/-lh5-/-lh6-/-lh7- (static Huffman over a 4/8/32/64 KB window), -lhd- directories, LArc's -lz4-/-lz5-/-lzs-; header levels 0, 1, 2 and 3; **MacLHA's MacBinary payload unwrapped into two forks**; -lh2-/-lh3- declined per entry✵ | 8 fixtures (1 real Amiga archive + 7 of lhasa's) + **182 archives from fourteen writers**, each graded against `unar` and against lhasa, + 12 sets written by LHa 1.14i itself✵ | 4–74 KB✵ | full |
 | AppleLink package (.pkg) | detect only | — | no specimen anywhere: the probe is Aladdin's own recogniser, at 0 false positives across 928 fixtures (*AppleLink packages*, below) | — | — |
 | DiskCopy 4.2 (.image) | detect only | — | synthetic 800K GCR + real 800K image; 0 false positives in 807 fixtures (re-measured 2026-08-15) | — | — |
 
@@ -272,8 +272,8 @@ decoding method 11 yields Disk Expander 1.2's own resource fork, whose `Cmpr`
 resources are one module per method, each stating its number and its name
 (DECISIONS.md, "SuperDisk!, read out of SuperDisk!"). 10, 13 and 20 are
 declined because no fixture uses them and no encoder is reachable, so an
-implementation could not be graded — the bargain LZH and DiskDoubler's
-methods 1-5 and 7 already make.
+implementation could not be graded — the bargain LZH's `-lh2-`/`-lh3-`
+and DiskDoubler's methods 1-5 and 7 already make.
 
 **There is no oracle but the archives themselves.** `unar` and `macunpack`
 both stop at the BinHex envelope, so `fixtures/manifests/` describes the
@@ -585,7 +585,8 @@ one wins; +0x24 is a CPU mask, bit 31 − Gestalt `cput`. **The default is the C
 index 3 from a 68030 up, and the decompress-only modules accept every CPU so
 any Mac can read any file. That is also why 1, 2 and 3 are declined — no
 machine reachable here writes them, so an implementation could not be graded,
-the bargain LZH and DiskDoubler's declined methods already make.
+the bargain LZH's `-lh2-`/`-lh3-` and DiskDoubler's declined methods
+already make.
 
 **Method 4 is an LZSS with a preset dictionary.** Three bytes of stream header
 (block count as a 16-bit little-endian value, then the window's width in
@@ -635,6 +636,92 @@ flag — on Linux or on the Macintosh application, which cannot be handed a
 dictionary at all. That is the case this format turns up in: the file looks
 normal, its own application reads 84 bytes of header where the document
 should be, and nothing else on the disk says why.
+
+## LZH / LHA
+
+✵ **In scope since 2026-08-23** (M28), and detect-only until then
+because nothing here could grade a decoder: the
+Macintosh corpus contains no `.lzh` at all (measured; DECISIONS.md
+2026-08-14). What changed is the specimens. `reference/lhasa` ships
+**182 archives written by fourteen different LHA implementations** —
+MacLHA 2.24, LHa for Amiga/OS-2/OS-9/OSK/X68000, LHarc 1.13, LArc 3.33,
+LHMelt, LHArk, UNLHA32 — and `reference/lha` is LHa for UNIX 1.14i,
+the original, which this project can compile and run as an ENCODER.
+
+**Three graders, and they are not interchangeable** (TESTING.md):
+`unar` is XADMaster, which this decoder is transcribed from, so
+agreement with it establishes only that the copy was faithful; lhasa is
+an independent reading; LHa 1.14i writes archives whose plain text is
+already known. 137 archives are graded against `unar`, 142 against
+lhasa, 12 generated sets against their own input.
+
+**What the independent graders were worth**, in the first afternoon:
+
+| what | `unar` | lhasa | settled by |
+|---|---|---|---|
+| the 18 bytes of an -lz5- window the preload does not cover | zeros | (rotated: zeros) | LArc 3.33's own `initial.lzs`, an archive whose CONTENTS are the initial window — zeros. LHa 1.14i's `decode()` space-fills a dictionary its `decode_start_lz5` never touches |
+| an -lzs- window before anything is written | zeros | spaces | the stored CRC: **spaces**. Zero-filling fails `lzs.lzs` and passes `long.lzs`, which is what a difference that only shows on some files looks like |
+| LHa for OS-9/68k's level 2 header, two bytes short | fails all three of its archives | compensates by OS byte | lhasa, followed here |
+| a 1.2 MB -lh7- file | "Attempted to read more data than was available" | decodes | lhasa, byte-identical to this engine |
+| LHArk 0.4d's "-lh7-", which is a different algorithm | fails | decodes it as `-lk7-` | refused per entry here: LHArk marks itself with a space as the OS byte |
+| `-lzs-` at all | **cannot open one** — its recogniser omits `-lzs-` while its own parser has a decoder for it | reads it | this probe accepts `-lzs-`; the divergence from the oracle is deliberate and measured |
+
+**MacLHA writes a MacBinary stream and compresses that**, so a Macintosh
+entry's decoded bytes are a 128-byte header, the data fork padded to
+128, then the resource fork — and the entry's name, type, creator and
+dates are the Mac header's, not the LZH header's. The unwrap happens
+for OS byte `'m'` and no other: a level 0 header has no OS byte at all,
+and `unar` reads MacLHA's own level 0 archives as one 18,304-byte file
+where the level 1 copy of the same file is 18,092 plus metadata. Both
+readings are reproduced here. lhasa infers the same trigger from the
+same byte and then throws the resource fork away; this engine keeps it.
+
+**And MacLHA 2.00 needed one more rule than either reference has.**
+None of the sixteen MacLHA archives in lhasa's collection holds a file
+with a resource fork, so the split had never met a byte MacLHA wrote —
+until `tools/vmac/maclha.py` ran **MacLHA 2.00 itself** under Mini vMac
+and archived a two-fork file. Its MacBinary header has **both dates
+zero**, which XADMaster's MacBinary-I heuristic refuses (it requires
+them non-zero) and lhasa refuses too (it wants the modification date to
+match the LZH header's), so `unar` and lhasa both hand back the whole
+2,304-byte stream with the resource fork buried in it. This engine
+accepts it on arithmetic instead: the name in the Mac header must be
+the entry's, and the two fork lengths padded to 128 plus the header must
+come to exactly the uncompressed size. Both forks then come back
+byte-exact — 1,760 B and 333 B, graded against the bytes that went into
+the emulator (`tools/run_lzh.py`, which skips the check where no
+specimen has been made). The rule fires on nothing else: all 182
+archives and all 8 fixtures are unchanged.
+
+**Dates are not converted.** Levels 0 and 1 carry an MS-DOS timestamp
+and levels 2 and 3 a Unix one; neither is a Mac date, and this engine
+does what zip's reader does and reports none. A MacBinary payload's
+dates ARE used, because those are already Mac dates.
+
+**Symbolic links are reported, not created.** LHA stores one as a single
+entry named `link|target`; classic Mac OS has no symbolic links, so the
+entry is named and refused per entry — the answer tar's reader gives a
+link.
+
+**Peak heap 4–74 KB**, measured with `unclassic t --stats`: 4 KB for a
+stored entry, 8 KB for LArc, 16–18 KB for -lh5- and -lh1-, 41 KB for
+-lh6-, and **74,128 B** for a -lh7- entry big enough to need the whole
+64 KB window (`lh7_long.lzh`, 1.2 MB). The window is sized from the
+entry rather than from the method, the way StuffIt method 13's is, so
+the -lh7- fixtures in the corpus cost 41 KB rather than 74.
+
+**What is declined, and why it is declined rather than written:**
+`-lh2-` and `-lh3-` are implementable from `XADLZHOldHandles.m`, but no
+archive that uses either is reachable — not in the corpus, not among
+lhasa's fourteen writers, and nothing here writes one. PMarc
+(`-pm0-`/`-pm1-`/`-pm2-`), `-lhx-` and the self-extracting archives are
+out of scope (OPEN_ITEMS.md, part 1).
+
+**On the Mac** (2026-08-23), five `.lzh` fixtures byte-exact on System
+6.0.8 at 4 MB, at the **1 MB floor** and on System 7.0.1: peak heap
+4,112 B for the smallest, 41,364 B for the -lh7- one, 16,788 B for the
+five-entry Amiga archive — the Linux figures plus the shell's constant
+32 B, at every memory size.
 
 ## btoa, the other ASCII armour
 
@@ -1265,16 +1352,19 @@ the others, cautiously and from a single anchor.
 
 ## Real-hardware verification (Mini vMac — System 6.0.8, 4 MB Mac Plus, 68000)
 
-The Retro68 Mac shell was replayed against a 62-fixture sample spanning all
-sixteen formats on a **real System 6.0.8 / 4 MB Mac Plus** under Mini vMac
+The Retro68 Mac shell was replayed against a 67-fixture sample spanning all
+seventeen formats on a **real System 6.0.8 / 4 MB Mac Plus** under Mini vMac
 (a true 68000). Every extraction is verified ON THE MAC ITSELF: the app
 CRC-32s both forks after reading them back through the File Manager and the
 result — painted to the framebuffer, read from a screenshot — is
 cross-checked against the same engine's Linux output (`tools/vmac_check.py`,
 `tools/decode_grid.py`).
 
-**62/62 byte-exact PASS** (**2026-08-23**, re-run against the decryption
-build, which is 20 KB larger; 2026-08-22 with M15–M23's codecs in and
+**67/67 byte-exact PASS** (**2026-08-23**, with M28's LZH in and five
+`.lzh` fixtures added to the sample — MacLHA's MacBinary payload, `-lh7-`'s
+64 KB window, LArc's `-lz5-`, a five-entry Amiga archive and the smallest
+archive in the corpus; 62/62 earlier the same day, re-run against the
+decryption build, which is 20 KB larger; 2026-08-22 with M15–M23's codecs in and
 three fixtures added for them — DiskDoubler methods 3, 4 and 5, which nothing
 in the sample had exercised; 59/59 on 2026-08-15, re-run after the BinHex line rule
 changed — every `.hqx` in the sample goes through it; 57/57 earlier the same
@@ -1332,6 +1422,7 @@ On-Mac engine peak heap (high-water mark) by format, matching the Linux
 | StuffIt classic | 19–72 KB‖ |
 | Unix compress (.Z) | 15–219 KB§ |
 | StuffIt 5 (Arsenic) | 0.63–2.53 MB (block *fill* dependent — see †) |
+| LZH / LHA | 4–41 KB over the sample (4,112 B stored, 41,364 B for `-lh7-`); 74 KB is the format's ceiling, for an entry that fills a 64 KB window |
 | DiskDoubler / Now Compress | extracted and byte-exact on both Mini vMac tiers since 2026-08-15 (see above); the Mac OS 9 rows below still predate M12 |
 
 ## System 7 tier (Mini vMac — System 7.0.1, 4 MB Mac Plus, 68000)
@@ -1349,7 +1440,9 @@ above System 6: Standard File returns a **working-directory** reference in
 is always running, so the `SIZE` partition governs the launch. Mini vMac's
 Mac Plus supports up to 7.5.5, so this is the same 68000 as every other row.
 
-**62/62 byte-exact PASS at 4 MB** (2026-08-22; 59/59 on 2026-08-21, 55/55 on 2026-08-08 and 44/44
+**67/67 byte-exact PASS at 4 MB** (**2026-08-23**, with M28's five `.lzh`
+fixtures in and every codec since M15 — this tier's first run since
+2026-08-22; 62/62 then, 59/59 on 2026-08-21, 55/55 on 2026-08-08 and 44/44
 before the sample grew) — the same committed sample, the same on-Mac CRC-32
 read-back. The 2026-08-21 run is the first on this tier since M12, M13 and M14,
 so it is the first that includes DiskDoubler, Now Compress, ARC and uuencode
@@ -1434,12 +1527,14 @@ DiskDoubler rows above differ by 16 B for the same reason: one block.
 
 ## Floor target verification (Mini vMac — System 6.0.8, **1 MB** Mac Plus, 68000)
 
-The same 63-fixture sample was replayed on a Mini vMac built for **1 MB of
+The same 67-fixture sample was replayed on a Mini vMac built for **1 MB of
 RAM** — the project's floor target — one boot per fixture, same on-Mac
 CRC-32 verification (`tools/vmac/run.py --mem 1M --list tools/vmac/sample.txt`).
 The engine budget is derived from `FreeMem` at startup.
 
-**62/62 byte-exact PASS** (**2026-08-23**, re-run twice against the
+**67/67 byte-exact PASS** (**2026-08-23**, with M28's five `.lzh` fixtures
+in — the heaviest of them 41,364 B, so nothing here moved; 62/62 earlier the
+same day, re-run twice against the
 decryption build — 20 KB more code is 20 KB less heap on this machine, and
 the three heaviest allocations are unchanged at 533 KB, 471 KB and 405 KB;
 2026-08-22 with M19–M23's three; 59/59 on
@@ -1671,8 +1766,8 @@ which moved the non-archive row and nothing else):
 | PackIt | 5 | ❌ not in its list | ✅ |
 | DiskDoubler, Now Compress | 14 | ❌ | ✅ since 2026-08-15 |
 | Alysis SuperDisk! | 2 | ❌ not in its list | ✅ since 2026-08-20 |
-| LZH, StuffIt X | 2 | ❌ | detect-only, named |
-| **total** | **805** | **704 alone, 720 with the add-on** | **803 extract, 2 named** |
+| LZH, StuffIt X | 2 | ❌ | LZH ✅ since 2026-08-23; StuffIt X detect-only, named |
+| **total** | **805** | **704 alone, 720 with the add-on** | **804 extract, 1 named** |
 
 ✧✧✧ The 34 break down as 31 envelopes whose payload is a resource-only file,
 and 3 whose payload is a document: two HyperCard `STAK`s and one damaged
@@ -1706,13 +1801,14 @@ with this archive."*
 | btoa (`.ascii`) | with the add-on: a `btoa/atob Translator` ships in `Extensions:Aladdin:Translators` | yes, both framings (*btoa*, above) |
 | Multipart BinHex | *"Multipart BinHex files, such as those appearing in Internet newsgroup postings (e.g. comp.binaries.mac), are fully supported"* — multiple documents in one text file, and one file broken into several pieces | several documents in one file since 2026-08-15 (††, above); a document broken across FILES joins where the parts are named `.001`, `.002` … |
 | Compact Pro comments | written out beside the extracted items | **saved since 2026-08-23**: the Mac shell writes a `TEXT` document called `Comments` into the destination folder, the CLI writes `<archive>.comment.txt` and prints it on `l` and `t` |
+| `.lzh` / `.lha` (LZH / LHA) | not named anywhere in its documentation, and no translator for it ships in `Extensions:Aladdin:Translators` — a Macintosh user reached for a separate application, and the corpus holds one (`LHA Expander 1.0.3`) | **yes since 2026-08-23**, every method but -lh2-/-lh3-, all four header levels, and MacLHA's MacBinary payload split back into two forks (*LZH / LHA*, above) |
 | `.arc` (ARC / ArcMac) | with the add-on | **yes since 2026-08-15**, methods 1-9; ArcMac's two-fork payload since 2026-08-16 (★★★ above) |
 | uuencode (`.uu`) | with the add-on | **yes since 2026-08-15**, plain and UUTool's two-fork shape |
 | AppleLink `.pkg` | with the add-on | **named since 2026-08-23**, not expanded: the probe is Aladdin's own recogniser, read out of the `PKG Expand Translator` that StuffIt Deluxe 3.5.1 ships (*AppleLink packages*, above). What is missing is a specimen |
 | StuffIt SpaceSaver | with the add-on | **yes since 2026-08-22**, methods 0 and 4 (what a 68000 writes), with SpaceSaver's own dictionary built in since 2026-08-23 so nothing else is needed; 1, 2 and 3 declined per entry (*StuffIt SpaceSaver*, above) |
 | Chained expansion (`.sit.hqx`) | yes, and can be turned off | yes, `-nr` turns it off |
 | System 7 conveniences | drag-and-drop of files, folders and whole disks; watch folders; background expansion; Apple events | none; Standard File, one archive at a time |
-| Verification | none published | 919 fixtures byte-exact against `unar`/`macunpack` — bar the one uuencode fixture, which `unar` cannot read at all and whose ground truth is its generator's input, with `hexbin` agreeing |
+| Verification | none published | 927 fixtures byte-exact against `unar`/`macunpack` — bar the one uuencode fixture, which `unar` cannot read at all and whose ground truth is its generator's input, with `hexbin` agreeing |
 | Licence | free, closed | free, LGPL-2.1-or-later |
 | Memory partition | **not measured** — reading the app's `SIZE` resource needs an HFS reader this machine does not have | engine peak heap per format in the matrix above |
 

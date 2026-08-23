@@ -324,13 +324,20 @@ int unc_huff_decode(const UncHuff *h, UncBitIn *bi);
 typedef struct UncCanon {
     uint16_t count[UNC_CANON_MAX_BITS + 1]; /* codes per bit length */
     uint32_t first[UNC_CANON_MAX_BITS + 1]; /* first code value per length */
-    int16_t  sym[UNC_CANON_MAX_SYMS];       /* symbols in (len,sym) order */
+    int16_t *sym;                           /* symbols in (len,sym) order */
     int16_t  maxlen;
+    int16_t  symstore[UNC_CANON_MAX_SYMS];  /* what `sym` points at unless
+                                             * the caller supplied storage */
 } UncCanon;
 
 /* Build from per-symbol code lengths (0 = unused). Incomplete codes
  * are allowed; over-subscribed ones return UNC_ERR_CORRUPT. */
 int unc_canon_build(UncCanon *c, const uint8_t *lengths, int32_t nsyms);
+
+/* The same, over symbol storage the caller owns: for an alphabet
+ * larger than UNC_CANON_MAX_SYMS (LZH's 510 literals). */
+int unc_canon_build_ext(UncCanon *c, const uint8_t *lengths, int32_t nsyms,
+                        int16_t *symbuf, int32_t symcap);
 
 /* Decode one symbol, or -1 with bi->err set / on an invalid code. */
 int unc_canon_decode(const UncCanon *c, UncBitIn *bi);
@@ -587,6 +594,15 @@ int unc_sit_decode_fork(UncCtx *c, UncFork fork, uint32_t at,
                         uint16_t wantcrc, uint8_t *iobuf, uint32_t iocap,
                         uint8_t *obuf, uint32_t ocap, UncCrypt *cr);
 
+/* LHarc's -lh1- coder (unc_lzah.c): a 4 KB-window LZSS whose literals
+ * and lengths come from an adaptive Huffman tree of 314 leaves. Shared
+ * by StuffIt classic's method 5 and LZH's -lh1-, which are the same
+ * scheme — XADMaster instantiates one handle for both. `bi` is an
+ * MSB-first reader the caller has already positioned; `put` receives
+ * every decoded byte and returns UNC_OK or a per-entry error. */
+int unc_lzah_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen,
+                    int (*put)(void *ctx, uint8_t b), void *pctx);
+
 /* Arsenic (method 15) core, in sit_arsenic.c. */
 int unc_arsenic_decode(UncBufIn *in, UncAlloc *al, uint32_t outlen,
                        int (*put)(void *ctx, uint8_t b), void *pctx);
@@ -628,6 +644,10 @@ int unc_uu_extract(UncCtx *c);
 int unc_arc_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_arc_extract(UncCtx *c);
 
+/* LZH / LHA (fmt_lzh.c). */
+int unc_lzh_probe(const uint8_t *head, int32_t len);
+int unc_lzh_extract(UncCtx *c);
+
 /* Detect-only probes */
 int unc_sitx_probe(const uint8_t *head, int32_t len);
 int unc_diskcopy_probe(const uint8_t *head, int32_t len, UncIO *io);
@@ -637,6 +657,5 @@ int unc_spacesaver_probe(const uint8_t *head, int32_t len);
 int unc_applelink_probe(const uint8_t *head, int32_t len);
 uint32_t unc_superdisk_single_body(const uint8_t *head, int32_t len);
 int unc_diskdoubler_probe(const uint8_t *head, int32_t len);
-int unc_lzh_probe(const uint8_t *head, int32_t len);
 
 #endif /* UNC_INTERNAL_H */

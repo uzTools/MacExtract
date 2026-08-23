@@ -11,7 +11,7 @@ Two kinds of thing live here, and they are kept apart on purpose:
 
 **Not** BLOCKERS.md, which records investigations that went wrong and the
 claims withdrawn from them. Nothing here stops the engine or the CLI, which are
-byte-exact against the oracle across 919 fixtures in `./ci.sh`.
+byte-exact against the oracle across 927 fixtures in `./ci.sh`.
 
 Detail lives in one place per finding — status in BLOCKERS.md, reasoning in
 DECISIONS.md, how to re-run in TESTING.md or `tools/vmac/README.md`, what needs
@@ -43,7 +43,8 @@ grown before, on request.
 | StuffIt X (`.sitx`) | **detect-only** | out by the brief |
 | PKWARE "strong encryption" in a zip (flag 0x40) | **named, refused per entry** | its key material is in a record nothing here parses, and XADMaster refuses it too. Every OTHER encryption these formats have — including WinZip's AES, which postdates the machines by a decade and is read anyway — is decrypted since 2026-08-23 (FORMATS.md, *Encryption*) |
 | Disk images (Disk Copy 4.2) | **detect-only**, with a real probe | out by the brief — the probe matches a synthetic 800K GCR image and a real one, 0 false positives |
-| LZH / LHA extraction | **detect-only**, tested rather than asserted (DECISIONS.md 2026-08-14) | the corpus contains **no `.lzh` at all** — Macintosh software was not distributed that way — and Compact Pro's LZH is a different algorithm from LHA's, so it is ~550 new lines for nothing the corpus can grade |
+| PMarc (`-pm0-`, `-pm1-`, `-pm2-`) and `-lhx-` | **not recognised** | a different family behind an LZH-shaped header. PMarc is a Japanese PC format with its own coders, `-lhx-` is UNLHA32's extension; neither reached a Macintosh, and LZH itself only just did (2026-08-23) |
+| Self-extracting LZH (an executable with an archive behind it) | **not recognised** | the archive sits behind DOS, Amiga, Atari or X68000 machine code, and finding it means knowing each of those loaders. `unar` has a parser per platform; here the answer is to hand the `.lzh` itself to the extractor |
 | Zip64 spanned sets | `unc_zipseg_describe` answers `UNC_ERR_UNSUPPORTED`, cleanly | an EOCD with disk number `0xFFFF` defers to a locator nothing here parses. Zip64 postdates every machine this project targets by a decade and a set that needs it is 2 GB+; refusing it cleanly is the right answer, not a missing feature (2026-08-14) |
 
 Everything detect-only is **named** by `unc_sniff`, so a UI can tell the user
@@ -102,9 +103,19 @@ Each says which of the two is missing, because the searches are different:
 
 Unlike section 3, none of this is impossible here: a download would do it.
 
+- **LZH's `-lh2-` and `-lh3-`.** Both are implementable — the code is in
+  `reference/XADMaster/XADLZHOldHandles.m`, and it is transcription
+  rather than research — but no archive that uses either is reachable:
+  not in the corpus, not among the **fourteen** LHA implementations
+  whose output lhasa collects, and nothing here writes one. **What is
+  missing is a gradeable SPECIMEN.** XADMaster's recogniser calls the
+  pair "old experimental" and every writer since emits `-lh5-` or
+  better, so the likeliest source is a Japanese PC archive of the early
+  1990s rather than anything Macintosh.
+
 - **ARC 0x0a/0x0b.** No corpus fixture uses either and nothing reachable
   writes them, so an implementation could not be graded — code no oracle
-  can check is the same bargain LZH refuses. **What is missing is a
+  can check is the same bargain LZH's `-lh2-`/`-lh3-` make. **What is missing is a
   gradeable SPECIMEN:** a `.arc` written by PKARC or PKPAK using method
   0x0a or 0x0b. DOS-side, so the likeliest source is a shareware
   collection rather than a Macintosh archive. Before filing anything else

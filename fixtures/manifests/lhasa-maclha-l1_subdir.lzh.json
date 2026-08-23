@@ -1,0 +1,29 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "subdir"
+  },
+  {
+   "is_dir": true,
+   "name": "subdir/subdir2"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9",
+   "data_size": 11,
+   "name": "subdir/subdir2/hello.txt",
+   "oracle_methods": [
+    "-lh0-"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "lhasa-maclha-l1_subdir.lzh",
+ "format": "LZH",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "8472f224b045e73cc7a888e478c6aed94bcb1fd1d7f84d5848ebeba73e42a699",
+ "size": 316
+}

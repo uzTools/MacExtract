@@ -126,3 +126,13 @@ derived-MUSFMT10.ZIP                       # 171960 B
 # one is UUTool's shape, so it carries a resource fork and a type.
 synth-arc-mixed.arc                        # 9312 B
 synth-uu-mac.uu                            # 3020 B
+
+# LZH / LHA (M28, 2026-08-23). One real Amiga archive from the corpus
+# and four out of lhasa's collection: the smallest and the largest, the
+# two Mac ones (a MacBinary payload, which is the shape a Macintosh
+# archive has), the widest window (-lh7-) and LArc's -lz5-.
+lhasa-maclha-l1_subdir.lzh                 # 316 B    MacLHA, TEXT/ttxt, folders
+lhasa-unix114i-h2_lh7.lzh                  # 6884 B   -lh7-, 64 KB window
+lhasa-maclha-l1_lh5.lzh                    # 7094 B   MacLHA, MacBinary payload
+lhasa-larc333-lz5.lzs                      # 8510 B   LArc -lz5-
+aminet-lha_68k.lha                         # 167691 B -lh5-, five entries

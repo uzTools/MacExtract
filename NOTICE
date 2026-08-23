@@ -83,6 +83,22 @@ This project's decoders are transcriptions/ports of algorithms from:
     compiles it and decodes what it encodes). The names are mentioned,
     here and in the source. DECISIONS.md 2026-08-23 (btoa's licence).
 
+  * LHa for UNIX 1.14i (Yoshizaki, Tagawa, Oki, Watazaki, Okamoto,
+    1989-2000) and lhasa 0.4.0 (Simon Howard, ISC licence) — both
+    REFERENCES ONLY for `src/fmt_lzh.c` and `src/unc_lzah.c`, which are
+    transcribed from XADMaster's LZH handles as above. LHa is read as
+    the original statement of the header levels and of LArc's two
+    methods, and lhasa as an independent reading of both; the file
+    comments say which fact came from which, and three of them were
+    settled by neither but by an archive (DECISIONS.md 2026-08-23,
+    LZH). Neither is committed — `tools/fetch_references.sh` fetches
+    them — and neither is linked into anything shipped: LHa is
+    compiled at test time as an ENCODER and lhasa as a second decoder
+    (`tools/run_lzh.py`). lhasa's ~160 test archives are the specimens
+    that put the format in scope; seven are fixtures, fetched by URL
+    and never committed, like every other fixture
+    (fixtures/SOURCES.md).
+
   * "Stuffit Method 15 compression format" by Matthew T. Russotto —
     the only public specification of the StuffIt 5 "Arsenic"
     (BWT + MTF + arithmetic coding) method.

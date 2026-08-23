@@ -108,6 +108,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-23 (StuffIt's archive key) — the fold count, measured
 - 2026-08-23 (btoa's licence) — a reference that may not be transcribed
 - 2026-08-23 (Compact Pro comments) — a comment is saved, and it is still not a file
+- 2026-08-23 (LZH) — the format the corpus could not grade, graded by somebody else's corpus
 
 ---
 
@@ -5877,3 +5878,131 @@ FORBIDS a comment file where the oracle reports none. The oracle is `lsar`'s `XA
 and on System 6.0.8 (FORMATS.md, *Real-hardware verification*). Compact
 Pro's own name for it is a **Note**, and `tools/vmac/cptcrypt.py --note`
 types one into the application.
+
+## 2026-08-23 (LZH) — the format the corpus could not grade, graded by somebody else's corpus
+
+LZH/LHA was out of scope, and the reason was written down carefully in
+2026-08-14: **the corpus contains no `.lzh` at all**, measured over every
+fixture, because Macintosh software was essentially not distributed that
+way. The conclusion drawn from it — "~550 new lines for nothing the
+corpus can grade" — was about the CORPUS, and that is the part that
+turned out to be the wrong boundary. The maintainer put the format in
+scope; what made it cheap was not effort but **finding a corpus that is
+not ours**.
+
+`reference/lhasa` — Simon Howard's LHA decompressor, in Debian — ships
+**182 test archives written by fourteen different LHA implementations**:
+MacLHA 2.24, LHa for Amiga/OS-2/OS-9/OSK/X68000, LHarc 1.13, LArc 3.33,
+LHMelt, LHArk, UNLHA32, and generated cases for the methods no writer
+still emits. That is a better specimen set than this project has for any
+format it already had. `reference/lha` is LHa for UNIX 1.14i off
+archive.debian.org, the original program, which compiles here and is
+therefore an **encoder**.
+
+**Three graders, and the difference between them is the whole point.**
+`unar` is XADMaster, which `src/fmt_lzh.c` is transcribed from: where it
+agrees with us we have established that the copy was faithful and
+nothing else. lhasa is an independent reading of the format. LHa 1.14i
+writes archives whose plain text is already known. The suite
+(`tools/run_lzh.py`) runs all three, and the second one earned its place
+within an afternoon:
+
+- **`unar` cannot read LHA for OS-9/68k's level 2 headers.** That writer
+  stores the length of the REST of the header, so every one of its
+  archives is two bytes out; lhasa compensates by OS byte, XADMaster
+  does not, and following lhasa turned three failures into three
+  byte-exact extractions.
+- **`unar` fails a 1.2 MB `-lh7-` file** ("Attempted to read more data
+  than was available") that lhasa and this engine both decode, byte for
+  byte identically.
+- **`unar` cannot open an `-lzs-` archive** — its recogniser accepts
+  `-lz0-`, `-lz4-` and `-lz5-` and omits `-lzs-`, while its own parser
+  has a working `-lzs-` decoder behind that gate. This probe accepts it.
+  A cross-file contradiction inside the reference, of exactly the kind
+  BLOCKERS.md names: two halves of one program disagreeing about what
+  the program supports.
+
+**And two initial-window questions that only a specimen can answer.**
+LZSS windows here are preloaded, and the three references disagree about
+what is underneath the preload — XADMaster zero-fills, LHa 1.14i
+space-fills a dictionary its own `decode_start_lz5` never touches, and
+lhasa writes the same pattern rotated. The archives settled both, in
+opposite directions:
+
+- `-lz5-`: **zeros**. LArc 3.33's `initial.lzs` is an archive whose
+  CONTENTS are the initial window, and its first 18 bytes are zero.
+- `-lzs-`: **spaces**. There is no preload at all, and lhasa's
+  `lzs.lzs` fails its stored CRC-16 zero-filled and passes space-filled.
+
+Neither could have been settled by reasoning, and one of them cannot be
+settled by any archive that never reaches back that far — which is why
+`long.lzs` passes either way and `lzs.lzs` does not. **A difference that
+only some files can see is a difference that needs the file that sees
+it.**
+
+**MacLHA is the Macintosh half, and it is a MacBinary stream.** A Mac
+entry's decoded bytes are a 128-byte MacBinary header, the data fork
+padded to 128, then the resource fork; the entry's name, type, creator
+and dates come from that header. The trigger is the OS byte `'m'` and
+nothing else — `unar` reads MacLHA's own LEVEL 0 archives (which have no
+OS byte) as one 18,304-byte file where the level 1 copy of the same file
+is 18,092 bytes plus metadata, and lhasa infers the same rule from the
+same byte. So the peek runs in LISTING too, not only extraction: what
+the entry IS — its name, its forks, its type — is what the Mac header
+says, and a listing that disagreed with the extraction is a bug no diff
+suite could see.
+
+**One decoder was already here.** StuffIt classic's method 5 is
+LHarc's `-lh1-`: XADMaster instantiates the same handle for both, and
+this repository had transcribed it in M5. It moved to `src/unc_lzah.c`
+behind a byte callback rather than being copied — the arrangement
+DiskDoubler method 8 already has with Compact Pro's two stages, and for
+the same reason: a second copy of a decoder is a second thing to fix.
+
+**What is declined, and the shape of the argument.** `-lh2-` and
+`-lh3-` are transcribable from `XADLZHOldHandles.m` and are NOT written,
+because no archive that uses either is reachable — not in the corpus,
+not among fourteen writers, and nothing here emits one. That is the same
+bargain this project makes everywhere, and it is worth stating once more
+now that the bargain has been paid off twice from outside: the ARC and
+SuperDisk! entries in OPEN_ITEMS.md are waiting for exactly the kind of
+find that this milestone was. **"No oracle exists" is a claim about a
+search, and the search that matters is rarely inside the format.**
+
+LHArk 0.4d is the counter-example worth keeping: it writes its own
+algorithm behind an `-lh7-` label and marks itself with a space as the
+OS byte. Reading it as `-lh7-` produces plausible rubbish that fails the
+CRC; it is refused per entry instead, by the same OS byte lhasa uses to
+recognise it.
+
+**The specimen this milestone made itself found the one case both
+references decline.** Every MacLHA archive in reach — sixteen of them —
+holds a data-fork-only file, so the fork split had never been graded
+against a byte MacLHA wrote. `tools/vmac/maclha.py` runs **MacLHA 2.00**
+(which is already in the corpus, `derived-MacLHa_2.00.sit`) under Mini
+vMac and archives a file with a real resource fork. Its MacBinary
+header carries **zero for both dates**, and that is enough for every
+reader here to refuse the unwrap: XADMaster's MacBinary-I heuristic
+requires both dates non-zero, lhasa requires the modification date to
+be sane AND to match the LZH header's. `unar` and lhasa therefore
+return a 2,304-byte file with a resource fork inside it.
+
+What replaces the dates is lhasa's own length check with the clock
+taken out: the Mac header's name must be the entry's name, and the two
+fork lengths each padded to 128, plus the header, must come to exactly
+the uncompressed size. A data fork that passed that would have to agree
+with its container about its own length to the byte and carry the
+entry's name at offset 2. It fires on none of the 182 archives and none
+of the 8 fixtures, and it makes MacLHA 2.00's archives extract as two
+forks: 1,760 B and 333 B, byte-exact against what went into the
+emulator.
+
+**Two lessons, and the second is the reusable one.** The obvious one is
+that a heuristic tuned on files that have dates fails on files that do
+not. The other is that **the specimen was cheap because the encoder was
+already in the corpus** — MacLHA arrived years ago as a fixture to be
+extracted, not as a tool, and nobody had asked what it could write.
+That is the same move that settled ArcMac's fork order and DiskDoubler's
+methods 3, 4 and 5, and the question it comes from is worth writing
+down: *of the software this corpus is made of, which pieces are
+encoders?*

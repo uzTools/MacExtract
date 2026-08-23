@@ -925,26 +925,26 @@ static void test_zip(void)
     arc[cd + 10] = 0;
 }
 
-/* LZH/LHA is DETECT-ONLY: unc_sniff must name it so a UI can say what the
- * file is, and extraction must refuse cleanly. The corpus holds one real
- * LZH archive (aminet-lha_68k.lha, an Amiga -lh5- set — Macintosh software
- * was essentially never distributed this way, which is why the format is
- * detect-only at all), and run_diff.py grades that one on its NAME. This
- * covers what one file cannot: every method byte the reference accepts,
- * and every guard that must reject.
+/* LZH/LHA, in scope since 2026-08-23. The corpus and lhasa's collection
+ * cover the decoders (tools/run_lzh.py, fixtures/manifests); what a
+ * whole archive cannot isolate is covered here: every method byte the
+ * probe must accept and reject, the three header levels a hand-built
+ * archive can carry, the per-entry CRC failure, and MacLHA's MacBinary
+ * payload with a resource fork in it.
  *
  * Source: reference/XADMaster/XADLZHParser.m +recognizeFileWithHandle:,
  * which matches bytes[2..6] as "-lh?-" with ? in 0-7 or 'd', and "-lz?-"
- * with ? in 0, 4 or 5. Bytes 0 and 1 are the header size and its checksum
- * and are not part of the recognition. */
-static void test_lzh(void)
+ * with ? in 0, 4 or 5 — plus "-lzs-", which that recogniser omits and
+ * its own parser can decode (fmt_lzh.c). Bytes 0 and 1 are the header
+ * size and its checksum and are not part of the recognition. */
+static void test_lzh_probe(void)
 {
     uint8_t h[32];
     UncIO io;
     MemIO m;
     int i;
     static const char *ok_lh = "01234567d";
-    static const char *ok_lz = "045";
+    static const char *ok_lz = "045s";
     static const char *no_lh = "89abcex-";
     static const char *no_lz = "1236789";
 
@@ -991,19 +991,208 @@ static void test_lzh(void)
     h[6] = '-';
     test_make_memio(&io, &m, h, 6);            /* one byte short of a decision */
     CHECK(unc_sniff(&io) != UNC_FORMAT_LZH);
+}
 
-    /* Detect-only: named, and refused without pretending. */
+/* Build a level 0 or level 1 "-lh0-" (stored) entry into `out`, and
+ * return its length. Level 1 adds the OS byte and an empty extended
+ * header chain; both are what LHa itself writes. */
+static uint32_t lzh_make_entry(uint8_t *out, int level, const char *name,
+                               int os, const uint8_t *body, uint32_t blen)
+{
+    uint32_t nl = (uint32_t)strlen(name), i, at;
+    uint32_t base = 22 + nl + 2 + (level == 1 ? 3u : 0u);
+    uint16_t crc = unc_crc16_arc(0, body, (int32_t)blen);
+    uint32_t sum = 0;
+
+    for (i = 0; i < base; i++) out[i] = 0;
+    out[0] = (uint8_t)(base - 2);
+    out[2] = '-'; out[3] = 'l'; out[4] = 'h'; out[5] = '0'; out[6] = '-';
+    out[7]  = (uint8_t)blen; out[8]  = (uint8_t)(blen >> 8);
+    out[9]  = (uint8_t)(blen >> 16); out[10] = (uint8_t)(blen >> 24);
+    out[11] = out[7]; out[12] = out[8]; out[13] = out[9]; out[14] = out[10];
+    out[20] = (uint8_t)level;
+    out[21] = (uint8_t)nl;
+    for (i = 0; i < nl; i++) out[22 + i] = (uint8_t)name[i];
+    out[22 + nl] = (uint8_t)crc;
+    out[23 + nl] = (uint8_t)(crc >> 8);
+    if (level == 1) out[24 + nl] = (uint8_t)os;   /* then a zero ext size */
+    /* The checksum byte: every header byte from 2 on. Nothing in this
+     * reader looks at it, which is exactly why the test sets it — a
+     * future version that starts checking must not fail here. */
+    for (i = 2; i < base; i++) sum += out[i];
+    out[1] = (uint8_t)sum;
+    at = base;
+    for (i = 0; i < blen; i++) out[at + i] = body[i];
+    return at + blen;
+}
+
+static void test_lzh_extract(void)
+{
+    static const uint8_t body[] = "hello, LHarc";
+    uint8_t arc[1024];
+    uint32_t n;
+    UncIO io;
+    MemIO m;
+    UncAlloc al;
+    UncSink sk;
+    CapSink cap;
+
+    /* Level 0, one stored entry. */
+    n = lzh_make_entry(arc, 0, "hello.txt", 0, body, sizeof body - 1);
+    arc[n++] = 0;                                  /* end-of-archive */
+    test_make_memio(&io, &m, arc, n);
+    test_make_alloc(&al);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract(&io, &sk, &al, NULL, NULL) == UNC_OK);
+    CHECK(cap.count == 1);
+    CHECK(cap.status[0] == UNC_OK);
+    CHECK(cap.dlen[0] == sizeof body - 1);
+    CHECK(memcmp(cap.data[0], body, sizeof body - 1) == 0);
+    CHECK(strcmp((char *)cap.info[0].name, "hello.txt") == 0);
+
+    /* A wrong CRC is a per-entry error and not a dead archive. */
+    n = lzh_make_entry(arc, 0, "hello.txt", 0, body, sizeof body - 1);
+    arc[22 + 9] ^= 0xFF;
+    arc[n++] = 0;
+    test_make_memio(&io, &m, arc, n);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract(&io, &sk, &al, NULL, NULL) == UNC_OK);
+    CHECK(cap.count == 1);
+    CHECK(cap.status[0] == UNC_ERR_CRC);
+
+    /* Level 1: the same entry, with an OS byte and an empty extended
+     * header chain the walk has to step over to find the data. */
+    n = lzh_make_entry(arc, 1, "hello.txt", 'U', body, sizeof body - 1);
+    arc[n++] = 0;
+    test_make_memio(&io, &m, arc, n);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract(&io, &sk, &al, NULL, NULL) == UNC_OK);
+    CHECK(cap.count == 1);
+    CHECK(cap.status[0] == UNC_OK);
+    CHECK(cap.dlen[0] == sizeof body - 1);
+    CHECK(memcmp(cap.data[0], body, sizeof body - 1) == 0);
+
+    /* MacLHA: OS byte 'm' and a MacBinary stream as the payload, so the
+     * entry's forks, name, type and creator come from the Mac header
+     * and not from the LZH one. The resource fork is the half no
+     * `.lzh` fixture in the corpus carries. */
     {
-        UncAlloc al;
-        UncSink sk;
-        CapSink cap;
-        test_make_memio(&io, &m, h, sizeof h);
-        test_make_alloc(&al);
+        static const uint8_t dfork[] = "data fork bytes";
+        static const uint8_t rfork[] = "RSRC";
+        uint8_t mb[128 + 128 + 128];
+        uint32_t dlen = sizeof dfork - 1, rlen = sizeof rfork - 1, i;
+        uint16_t hcrc;
+
+        for (i = 0; i < sizeof mb; i++) mb[i] = 0;
+        mb[1] = 6;
+        memcpy(mb + 2, "Mac It", 6);
+        memcpy(mb + 65, "TEXTttxt", 8);
+        mb[83 + 3] = (uint8_t)dlen;
+        mb[87 + 3] = (uint8_t)rlen;
+        unc_put_u32be(mb + 91, 0x11223344u);       /* creation date */
+        unc_put_u32be(mb + 95, 0x55667788u);       /* modification   */
+        hcrc = unc_crc16_xmodem(0, mb, 124);
+        mb[124] = (uint8_t)(hcrc >> 8);
+        mb[125] = (uint8_t)hcrc;
+        memcpy(mb + 128, dfork, dlen);
+        memcpy(mb + 256, rfork, rlen);
+
+        n = lzh_make_entry(arc, 1, "macfile", 'm', mb, sizeof mb);
+        arc[n++] = 0;
+        test_make_memio(&io, &m, arc, n);
         cap_make(&sk, &cap);
-        CHECK(unc_extract_as(UNC_FORMAT_LZH, &io, &sk, &al, NULL, NULL)
-              == UNC_ERR_UNSUPPORTED);
-        CHECK(cap.count == 0);
+        CHECK(unc_extract(&io, &sk, &al, NULL, NULL) == UNC_OK);
+        CHECK(cap.count == 1);
+        CHECK(cap.status[0] == UNC_OK);
+        CHECK(cap.info[0].type == 0x54455854u);    /* 'TEXT' */
+        CHECK(cap.info[0].creator == 0x74747874u); /* 'ttxt' */
+        CHECK(cap.info[0].create_date == 0x11223344u);
+        CHECK(cap.info[0].mod_date == 0x55667788u);
+        CHECK(cap.dlen[0] == dlen);
+        CHECK(cap.rlen[0] == rlen);
+        CHECK(memcmp(cap.data[0], dfork, dlen) == 0);
+        CHECK(memcmp(cap.rsrc[0], rfork, rlen) == 0);
+        /* The name stays the LZH one: MacLHA writes the same name into
+         * both headers, and the oracle reports the archive's. */
+        CHECK(strcmp((char *)cap.info[0].name, "macfile") == 0);
+
+        /* MacLHA 2.00's shape: a MacBinary I header with BOTH DATES
+         * ZERO, which XADMaster's probe refuses (it requires them
+         * non-zero) and lhasa refuses too (it wants the modification
+         * date to match the LZH header's). The fallback accepts it on
+         * arithmetic instead — the name matches the entry's, and the
+         * two padded fork lengths plus the header come to exactly the
+         * uncompressed size. Measured on an archive MacLHA 2.00 wrote
+         * under Mini vMac (tools/vmac/maclha.py). */
+        {
+            uint8_t old124 = mb[124], old125 = mb[125];
+            unc_put_u32be(mb + 91, 0);
+            unc_put_u32be(mb + 95, 0);
+            mb[124] = mb[125] = 0;                 /* no MacBinary II CRC */
+            CHECK(unc_macbinary_probe(mb, 128, 0) == 0);   /* both refuse */
+            n = lzh_make_entry(arc, 1, "Mac It", 'm', mb, sizeof mb);
+            arc[n++] = 0;
+            test_make_memio(&io, &m, arc, n);
+            cap_make(&sk, &cap);
+            CHECK(unc_extract(&io, &sk, &al, NULL, NULL) == UNC_OK);
+            CHECK(cap.count == 1);
+            CHECK(cap.dlen[0] == dlen);
+            CHECK(cap.rlen[0] == rlen);
+            CHECK(memcmp(cap.rsrc[0], rfork, rlen) == 0);
+
+            /* The name has to be the entry's, or it is not this shape:
+             * the same bytes under a different entry name are one
+             * file again. */
+            n = lzh_make_entry(arc, 1, "Other", 'm', mb, sizeof mb);
+            arc[n++] = 0;
+            test_make_memio(&io, &m, arc, n);
+            cap_make(&sk, &cap);
+            CHECK(unc_extract(&io, &sk, &al, NULL, NULL) == UNC_OK);
+            CHECK(cap.dlen[0] == sizeof mb);
+            CHECK(cap.rlen[0] == 0);
+
+            /* And so does the arithmetic: one byte more of payload and
+             * the lengths no longer add up. */
+            n = lzh_make_entry(arc, 1, "Mac It", 'm', mb, sizeof mb - 1);
+            arc[n++] = 0;
+            test_make_memio(&io, &m, arc, n);
+            cap_make(&sk, &cap);
+            CHECK(unc_extract(&io, &sk, &al, NULL, NULL) == UNC_OK);
+            CHECK(cap.dlen[0] == sizeof mb - 1);
+            CHECK(cap.rlen[0] == 0);
+
+            mb[124] = old124;
+            mb[125] = old125;
+            unc_put_u32be(mb + 91, 0x11223344u);
+            unc_put_u32be(mb + 95, 0x55667788u);
+        }
+
+        /* The same bytes under any other OS byte are NOT unwrapped —
+         * one file, MacBinary header and padding included, which is
+         * what `unar` does with MacLHA's own level 0 archives. */
+        n = lzh_make_entry(arc, 1, "macfile", 'U', mb, sizeof mb);
+        arc[n++] = 0;
+        test_make_memio(&io, &m, arc, n);
+        cap_make(&sk, &cap);
+        CHECK(unc_extract(&io, &sk, &al, NULL, NULL) == UNC_OK);
+        CHECK(cap.count == 1);
+        CHECK(cap.dlen[0] == sizeof mb);
+        CHECK(cap.rlen[0] == 0);
+        CHECK(cap.info[0].type == 0);
     }
+
+    /* An unimplemented method is a per-entry refusal, not a broken
+     * archive: -lh2- and -lh3- are declined for want of a specimen
+     * (OPEN_ITEMS.md) and must say so entry by entry. */
+    n = lzh_make_entry(arc, 0, "old.txt", 0, body, sizeof body - 1);
+    arc[5] = '2';
+    arc[n++] = 0;
+    test_make_memio(&io, &m, arc, n);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract(&io, &sk, &al, NULL, NULL) == UNC_OK);
+    CHECK(cap.count == 1);
+    CHECK(cap.status[0] == UNC_ERR_UNSUPPORTED);
+    CHECK(cap.dlen[0] == 0);
 }
 
 /* DiskCopy 4.2 is DETECT-ONLY: unc_sniff must name it, and extraction must
@@ -3692,7 +3881,8 @@ void run_format_tests(void)
     test_tar();
     test_zip();
     test_diskcopy();
-    test_lzh();
+    test_lzh_probe();
+    test_lzh_extract();
     test_sitseg();
     test_zipseg();
     test_split();

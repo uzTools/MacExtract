@@ -107,23 +107,6 @@ int unc_diskcopy_probe(const uint8_t *h, int32_t l, UncIO *io)
     return 1;
 }
 
-/* LZH/LHA: "-lh?-" (lzh) or "-lz?-" (larc) method id at offset 2.
- * Source: reference/XADMaster/XADLZHParser.m. */
-int unc_lzh_probe(const uint8_t *head, int32_t len)
-{
-    if (len < 7) return 0;
-    if (head[2] != '-' || head[6] != '-') return 0;
-    if (head[3] == 'l' && head[4] == 'h') {
-        uint8_t m = head[5];
-        return (m >= '0' && m <= '7') || m == 'd';
-    }
-    if (head[3] == 'l' && head[4] == 'z') {
-        uint8_t m = head[5];
-        return m == '0' || m == '4' || m == '5';
-    }
-    return 0;
-}
-
 /* ------------------------------------------------------------------ */
 /* AppleLink package (`.pkg`) — detect only                            */
 /*                                                                     */

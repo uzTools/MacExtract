@@ -384,217 +384,6 @@ out:
 }
 
 /* ------------------------------------------------------------------ */
-/* Method 5: "LZAH" — LZSS (4 KB window) + adaptive Huffman with 314  */
-/* leaves (the LHarc -lh1- scheme), MSB-first bits. Static distance   */
-/* code (64 symbols) supplies the offset high bits.                   */
-/* Source: reference/XADMaster/XADLZHDynamicHandle.m (the handle      */
-/* XADStuffItParser actually uses for method 5) — LGPL, see NOTICE.   */
-/* ------------------------------------------------------------------ */
-
-#define LZAH_LEAVES 314
-#define LZAH_NODES  (2 * LZAH_LEAVES - 1)   /* 627 */
-#define LZAH_WINDOW 4096
-
-typedef struct Lzah {
-    /* Node storage, index-based transcription of XADLZHDynamicNode:
-     * children/parent are storage indices, -1 = none. nodes[] maps
-     * frequency rank -> storage index; st_index is its inverse. */
-    int16_t  st_left[LZAH_NODES], st_right[LZAH_NODES], st_parent[LZAH_NODES];
-    uint16_t st_freq[LZAH_NODES], st_value[LZAH_NODES], st_index[LZAH_NODES];
-    int16_t  nodes[LZAH_NODES];
-    int16_t  leafs[LZAH_LEAVES];             /* reconstructTree scratch */
-    UncCanon distance;
-    uint8_t  window[LZAH_WINDOW];
-} Lzah;
-
-/* Distance-code lengths, XADLZHDynamicHandle.m initWithHandle. */
-static const uint8_t lzah_distlengths[64] = {
-    3,4,4,4,5,5,5,5,5,5,5,5,6,6,6,6,
-    6,6,6,6,6,6,6,6,7,7,7,7,7,7,7,7,
-    7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
-    8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,
-};
-
-static void lzah_reset(Lzah *h)
-{
-    int32_t i;
-    for (i = 0; i < LZAH_NODES; i++) {
-        h->st_left[i] = h->st_right[i] = h->st_parent[i] = -1;
-        h->st_freq[i] = 0;
-        h->st_value[i] = 0;
-        h->nodes[i] = (int16_t)i;
-        h->st_index[i] = (uint16_t)i;
-    }
-    for (i = 0; i < LZAH_LEAVES; i++) {
-        int32_t idx = LZAH_NODES - 1 - i;
-        h->st_freq[idx] = 1;
-        h->st_value[idx] = (uint16_t)i;
-    }
-    for (i = LZAH_LEAVES - 2; i >= 0; i--) {
-        h->st_left[i]  = (int16_t)(2 * i + 1);
-        h->st_right[i] = (int16_t)(2 * i + 2);
-        h->st_parent[2 * i + 1] = (int16_t)i;
-        h->st_parent[2 * i + 2] = (int16_t)i;
-        h->st_freq[i] = (uint16_t)(h->st_freq[2 * i + 1] +
-                                   h->st_freq[2 * i + 2]);
-    }
-
-    /* Window preload (resetLZSSHandle): zeros, then the pattern.
-     * "TODO: Figure out if the initialization of the window differs
-     * between LHArc and StuffIt" — we follow what the oracle runs. */
-    for (i = 0; i < LZAH_WINDOW; i++) h->window[i] = 0;
-    for (i = 0; i < 256; i++) {
-        int32_t j;
-        for (j = 0; j < 13; j++) h->window[i * 13 + 18 + j] = (uint8_t)i;
-    }
-    for (i = 0; i < 256; i++) h->window[256 * 13 + 18 + i] = (uint8_t)i;
-    for (i = 0; i < 256; i++) h->window[256 * 13 + 256 + 18 + i] = (uint8_t)(255 - i);
-    for (i = 0; i < 128; i++) h->window[256 * 13 + 512 + 18 + i] = 0;
-    for (i = 0; i < 128 - 18; i++) h->window[256 * 13 + 512 + 128 + 18 + i] = ' ';
-}
-
-static void lzah_rearrange(Lzah *h, int16_t p)
-{
-    uint16_t p_index = h->st_index[p];
-    uint16_t q_index = p_index;
-    while (q_index > 0 &&
-           h->st_freq[h->nodes[q_index - 1]] < h->st_freq[p])
-        q_index--;
-    if (q_index < p_index) {
-        int16_t q = h->nodes[q_index];
-        int16_t new_q_parent = h->st_parent[p];
-        int16_t new_p_parent = h->st_parent[q];
-        int p_right, q_right;
-        if (new_q_parent < 0 || new_p_parent < 0) return;  /* root: cannot happen */
-        p_right = h->st_right[new_q_parent] == p;
-        q_right = h->st_right[new_p_parent] == q;
-        if (p_right) h->st_right[new_q_parent] = q;
-        else         h->st_left[new_q_parent] = q;
-        if (q_right) h->st_right[new_p_parent] = p;
-        else         h->st_left[new_p_parent] = p;
-        h->st_parent[p] = new_p_parent;
-        h->st_parent[q] = new_q_parent;
-        h->nodes[p_index] = q;
-        h->st_index[q] = p_index;
-        h->nodes[q_index] = p;
-        h->st_index[p] = q_index;
-    }
-}
-
-static void lzah_reconstruct(Lzah *h)
-{
-    int32_t n = 0, i;
-    int32_t leaf_index, branch_index, node_index, pair_index;
-
-    for (i = 0; i < LZAH_NODES; i++) {
-        int16_t s = h->nodes[i];
-        if (h->st_left[s] < 0 && h->st_right[s] < 0) {
-            h->st_freq[s] = (uint16_t)((h->st_freq[s] + 1) / 2);
-            h->leafs[n++] = s;
-        }
-    }
-
-    leaf_index = LZAH_LEAVES - 1;
-    branch_index = LZAH_LEAVES - 2;
-    node_index = LZAH_NODES - 1;
-    pair_index = LZAH_NODES - 2;
-
-    while (node_index >= 0) {
-        int16_t branch;
-        while (node_index >= pair_index) {
-            h->nodes[node_index] = h->leafs[leaf_index];
-            h->st_index[h->nodes[node_index]] = (uint16_t)node_index;
-            node_index--;
-            leaf_index--;
-        }
-        branch = (int16_t)branch_index--;
-        h->st_left[branch] = h->nodes[pair_index];
-        h->st_right[branch] = h->nodes[pair_index + 1];
-        h->st_parent[h->st_left[branch]] = branch;
-        h->st_parent[h->st_right[branch]] = branch;
-        h->st_freq[branch] = (uint16_t)(h->st_freq[h->st_left[branch]] +
-                                        h->st_freq[h->st_right[branch]]);
-        while (leaf_index >= 0 &&
-               h->st_freq[h->leafs[leaf_index]] <= h->st_freq[branch]) {
-            h->nodes[node_index] = h->leafs[leaf_index];
-            h->st_index[h->nodes[node_index]] = (uint16_t)node_index;
-            node_index--;
-            leaf_index--;
-        }
-        h->nodes[node_index] = branch;
-        h->st_index[branch] = (uint16_t)node_index;
-        node_index--;
-        pair_index -= 2;
-    }
-    h->st_parent[h->nodes[0]] = -1;
-}
-
-static void lzah_update(Lzah *h, int16_t node)
-{
-    if (h->st_freq[0] == 0x8000) lzah_reconstruct(h);
-    for (;;) {
-        h->st_freq[node]++;
-        if (h->st_parent[node] < 0) break;
-        lzah_rearrange(h, node);
-        node = h->st_parent[node];
-    }
-}
-
-static int sit_lzah_fork(SitFork *f, UncBufIn *in, uint32_t outlen,
-                         UncAlloc *al)
-{
-    Lzah *h;
-    UncBitIn bi;
-    uint32_t pos = 0;
-    int err = UNC_OK;
-
-    h = (Lzah *)unc_alloc(al, (uint32_t)sizeof *h);
-    if (!h) return UNC_ERR_MEM;
-    lzah_reset(h);
-    err = unc_canon_build(&h->distance, lzah_distlengths, 64);
-    if (err != UNC_OK) goto out;
-
-    unc_bitin_init(&bi, in);
-
-    while (pos < outlen) {
-        int16_t node = 0;   /* storage 0 is always the root */
-        int lit;
-        while (h->st_left[node] >= 0 || h->st_right[node] >= 0) {
-            int bit = unc_bitin_bit(&bi);
-            if (bit < 0) { err = bi.err; goto out; }
-            node = bit ? h->st_left[node] : h->st_right[node];
-            if (node < 0) { err = UNC_ERR_CORRUPT; goto out; }
-        }
-        lzah_update(h, node);
-        lit = h->st_value[node];
-
-        if (lit < 0x100) {
-            h->window[pos++ & (LZAH_WINDOW - 1)] = (uint8_t)lit;
-            if (sit_put(f, (uint8_t)lit) != UNC_OK) { err = UNC_ERR_SINK; goto out; }
-        } else {
-            int32_t mlen = lit - 0x100 + 3;
-            int32_t high = unc_canon_decode(&h->distance, &bi);
-            int32_t low, moff;
-            uint32_t from;
-            if (high < 0) { err = bi.err != UNC_OK ? bi.err : UNC_ERR_CORRUPT; goto out; }
-            low = unc_bitin_bits(&bi, 6);
-            if (low < 0) { err = bi.err; goto out; }
-            moff = (high << 6) + low + 1;
-            from = pos - (uint32_t)moff;
-            while (mlen-- > 0 && pos < outlen) {
-                uint8_t b = h->window[from++ & (LZAH_WINDOW - 1)];
-                h->window[pos++ & (LZAH_WINDOW - 1)] = b;
-                if (sit_put(f, b) != UNC_OK) { err = UNC_ERR_SINK; goto out; }
-            }
-        }
-    }
-
-out:
-    unc_free(al, h);
-    return err;
-}
-
-/* ------------------------------------------------------------------ */
 /* Method 6: "fixed Huffman" — a fork is a sequence of independent    */
 /* segments, each of which decodes to a PackBits stream that is then  */
 /* expanded into the fork.                                            */
@@ -871,7 +660,10 @@ out:
 }
 
 /* Method 15 put callback: byte into the SitFork staging buffer. */
-static int sit_arsenic_put(void *ctx, uint8_t b)
+/* Byte-at-a-time output adapter, for the two decoders that live
+ * outside this file: Arsenic (sit_arsenic.c) and the -lh1- coder
+ * shared with LZH (unc_lzah.c). */
+static int sit_put_cb(void *ctx, uint8_t b)
 {
     SitFork *f = (SitFork *)ctx;
     return sit_put(f, b);
@@ -909,12 +701,20 @@ int unc_sit_decode_fork(UncCtx *c, UncFork fork, uint32_t at,
     case 1:  err = sit_rle90(&f, &in, outlen); break;
     case 2:  err = sit_lzw(&f, &in, outlen, complen, c->al); break;
     case 3:  err = sit_huffman(&f, &in, outlen, c->al); break;
-    case 5:  err = sit_lzah_fork(&f, &in, outlen, c->al); break;
+    case 5:  {
+        /* "LZAH" is LHarc's -lh1- coder, and the oracle runs one handle
+         * for both; it lives in unc_lzah.c and fmt_lzh.c calls the same
+         * function. */
+        UncBitIn bi;
+        unc_bitin_init(&bi, &in);
+        err = unc_lzah_decode(c->al, &bi, outlen, sit_put_cb, &f);
+        break;
+    }
     case 6:  err = sit6_fork(&f, &in, outlen, c->al); break;
     case 8:  err = sit_mw_fork(&f, &in, outlen, c->al); break;
     case 13: err = sit13_fork(&f, &in, outlen, c->al); break;
     case 15: err = unc_arsenic_decode(&in, c->al, outlen,
-                                      sit_arsenic_put, &f); break;
+                                      sit_put_cb, &f); break;
     default: return UNC_ERR_UNSUPPORTED;
     }
     if (err == UNC_OK) err = sit_flush(&f);

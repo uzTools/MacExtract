@@ -20,6 +20,31 @@ if [ ! -d reference/btoa ]; then
     rm -f /tmp/btoa.tar.gz
 fi
 
+# LHa for UNIX 1.14i (Yoshizaki/Oki/Watazaki/Okamoto) — the ORIGINAL
+# LHA implementation, and the only encoder for the format this project
+# can reach. Debian carried it in non-free until sarge.
+if [ ! -d reference/lha ]; then
+    mkdir -p reference/lha
+    curl -sL -o /tmp/lha.tar.gz \
+        "http://archive.debian.org/debian/pool/non-free/l/lha/lha_1.14i.orig.tar.gz"
+    tar xzf /tmp/lha.tar.gz -C reference/lha --strip-components=1
+    rm -f /tmp/lha.tar.gz
+fi
+
+# lhasa 0.4.0 (Simon Howard) — an INDEPENDENT reading of LZH/LHA, and
+# more importantly ~160 test archives written by fourteen different LHA
+# implementations, MacLHA 2.24 among them. Those specimens are what
+# moved LZH from detect-only into scope (DECISIONS.md 2026-08-23);
+# seven of them are fixtures (fixtures/SOURCES.md) and the rest are
+# swept by tools/run_lzh.py.
+if [ ! -d reference/lhasa ]; then
+    mkdir -p reference/lhasa
+    curl -sL -o /tmp/lhasa.tar.xz \
+        "http://deb.debian.org/debian/pool/main/l/lhasa/lhasa_0.4.0.orig.tar.xz"
+    tar xJf /tmp/lhasa.tar.xz -C reference/lhasa --strip-components=1
+    rm -f /tmp/lhasa.tar.xz
+fi
+
 if [ ! -d reference/macutils ]; then
     mkdir -p reference/macutils
     curl -sL -o /tmp/macutils.tar.gz \
