@@ -106,32 +106,35 @@ def grade(exe, path, verbose):
         shutil.rmtree(work, ignore_errors=True)
 
 
-def no_preset(exe, path):
-    """Without the dictionary the entry must FAIL, not decode wrong.
+def builtin_matches(exe):
+    """The committed dictionary must be the one SpaceSaver actually has.
 
-    SpaceSaver's window starts loaded with 9,679 bytes of Aladdin's own
-    table, so a decoder that quietly starts from zeroes produces bytes
-    that are wrong and says nothing. This is the check that the refusal
-    is real; it only means something when the WITH-preset run above
-    passed on the same file.
+    `src/ss_dict.h` is generated from the `PrAm` resources of an
+    installed SpaceSaver and then committed, so the build needs neither
+    the emulator nor a copy of the software — and a generated file that
+    is committed is a file that can go stale. This compares the header's
+    bytes with the resource, whenever the resource is present.
     """
-    work = tempfile.mkdtemp(prefix="ssnp-")
-    try:
-        r = subprocess.run([exe, "x", "-o", work, path], capture_output=True,
-                           timeout=300)
-        name = os.path.basename(path)[:-3]
-        got = os.path.join(work, name)
-        want = open(path + ".orig", "rb").read()
-        data = open(got, "rb").read() if os.path.exists(got) else b""
-        if data == want:
-            return 0            # it never needed the dictionary
-        if r.returncode == 0 and len(data) == len(want):
-            print("spacesaver: %s: decoded WRONG bytes without the preset "
-                  "and did not say so" % name)
-            return 1
+    if not os.path.exists(PRESET):
         return 0
-    finally:
-        shutil.rmtree(work, ignore_errors=True)
+    want = open(PRESET, "rb").read()
+    hdr = os.path.join(REPO, "src", "ss_dict.h")
+    if not os.path.exists(hdr):
+        print("spacesaver: no src/ss_dict.h")
+        return 1
+    text = open(hdr).read()
+    start = text.index("ss_dict0[")
+    body = text[text.index("{", start) + 1:text.index("};", start)]
+    got = bytes(int(b, 16) for b in body.replace("\n", "").split(",")
+                if b.strip())
+    if got != want:
+        where = ("%d bytes against %d" % (len(got), len(want))
+                 if len(got) != len(want) else
+                 "the same length, different bytes")
+        print("spacesaver: src/ss_dict.h does not match the resource (%s) "
+              "— regenerate with tools/gen_ss_dict.py" % where)
+        return 1
+    return 0
 
 
 def robustness(exe, path, timeout):
@@ -347,8 +350,6 @@ def synthetic(exe, verbose):
             p = os.path.join(src, "Synth" + tag)
             open(p, "wb").write(container(stream, len(data)))
             args = [exe, "x", "-o", dst, p]
-            if pre:
-                args[4:4] = ["--preset", PRESET]
             r = subprocess.run(args, capture_output=True, timeout=600)
             got = os.path.join(dst, "Synth" + tag)
             out = open(got, "rb").read() if os.path.exists(got) else b""
@@ -442,6 +443,10 @@ def main():
     bad = ran = fuzzed = fuzzbad = 0
     sbad, sran = synthetic(a.unclassic, a.verbose)
     print("spacesaver: %d synthetic stream(s), %d failure(s)" % (sran, sbad))
+    dbad = builtin_matches(a.unclassic)
+    if not dbad and os.path.exists(PRESET):
+        print("spacesaver: the built-in dictionary matches the resource")
+    sbad += dbad
 
     files = specimens()
     if not files:
@@ -455,8 +460,6 @@ def main():
         b, n = grade(a.unclassic, p, a.verbose)
         bad += b
         ran += n
-        if n and not b and os.path.exists(PRESET):
-            bad += no_preset(a.unclassic, p)
         fb, fn = robustness(a.unclassic, p, a.timeout)
         fuzzbad += fb
         fuzzed += fn

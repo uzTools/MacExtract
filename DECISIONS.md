@@ -103,6 +103,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-22 (SpaceSaver, what will not compress) — twelve runs, one thing that fired
 - 2026-08-23 — AppleLink `.pkg`, named at last, and what a recogniser is
 - 2026-08-23 (SpaceSaver, the encoder agrees) — the cross-check that replaced a specimen
+- 2026-08-23 (SpaceSaver, the dictionary) — carrying 9,679 bytes that are not ours
 
 ---
 
@@ -5446,3 +5447,62 @@ reading of them — which is a much smaller target — and anything about
 the CONTAINER that all three engine routines happen to describe the same
 wrong way. The specimen hunt stays open (OPEN_ITEMS.md) and stops being
 the thing this format is waiting on.
+
+## 2026-08-23 (SpaceSaver, the dictionary) — carrying 9,679 bytes that are not ours
+
+**The maintainer's decision, taken on 2026-08-23**, and recorded here
+because it is a licence decision rather than an engineering one: the
+`PrAm` -4048 table ships inside this project.
+
+### What it changes
+
+Everything, for the case the format actually turns up in. A SpaceSaver
+file is a normal-looking document — right name, type, creator and icon —
+whose data fork is a compressed container, and the machine that made it
+expanded it transparently. Meet one on a floppy today and the
+application that wrote it reads 84 bytes of `SIT!DFD3` where the
+document should be. Until now this project could NAME that file and
+report both forks' sizes, and could only decode it if the user obtained
+a copy of SpaceSaver and passed `--preset`. A lone floppy carries no
+dictionary, so for the commonest case the answer was a diagnosis rather
+than a recovery. Now it is a recovery, everywhere, with no flags: the
+CLI, and the Macintosh application, which cannot be handed a file at
+all.
+
+### The decision, stated plainly
+
+The table's own first line is *"Copyright (c) 1993 Aladdin Systems, Inc.
+… Distribution is prohibited without written permission of Aladdin
+Systems"*, so the prohibition is part of the data being distributed. No
+permission has been given. The maintainer judged the risk acceptable for
+a 1993 product whose publisher's successors are being sought, asked for
+attribution and nothing more, and owns that call; it is written into
+`NOTICE` as an explicit exception to the LGPL grant, and into README.md
+where a user will see it.
+
+**What was NOT done, deliberately:** nothing was hidden, obfuscated or
+minimised. `src/ss_dict.h` says whose bytes they are in its header, the
+generator says so, `NOTICE` has a section for it, and the README's
+licence paragraph names it. If permission is refused later, deleting one
+generated header and one `else if` restores the previous behaviour.
+
+### Why the bytes had to be exact
+
+They are not a parameter anyone can approximate. The window is primed
+with them, so a match at a short distance reads the table rather than
+the file; a decoder with the wrong table produces output of exactly the
+right length that is silently wrong. That is why `--preset` was built
+first and why absence was a per-entry failure rather than a warning — and
+it is why "ship a smaller table" or "generate an equivalent one" are not
+options.
+
+### Two loose ends closed with it
+
+- **The record's byte at +12 is now honoured.** It selects the table:
+  0 is -4048, 1 is -4047 (four spaces), and anything else is refused per
+  entry rather than decoded with the wrong dictionary. It had been read
+  into the header struct and then ignored.
+- **A committed generated file can go stale**, so
+  `tools/run_spacesaver.py` compares `src/ss_dict.h` byte for byte with
+  the resource whenever an installed SpaceSaver is present, and says so.
+  It fails against a header with one byte changed.

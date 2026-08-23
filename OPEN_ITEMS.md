@@ -130,10 +130,12 @@ Unlike section 3, none of this is impossible here: a download would do it.
   accounts for, and a lossy mode is a thing an extractor cannot grade
   against its input by construction.
 
-- **StuffIt SpaceSaver's other three methods, and its dictionary.** The
+- **StuffIt SpaceSaver's other three methods.** The
   format is read and implemented (FORMATS.md, *StuffIt SpaceSaver*): the
   container, method 0 and method 4, both replaying on a Mac Plus at the
-  floor target. Three things are left, and none of them is the layout.
+  floor target, with SpaceSaver's own dictionary built in so that a file
+  needs nothing but itself. Two things are left, and neither is the
+  layout.
   - **Methods 1, 2 and 3** are declined per entry. Their modules are in
     the software this was read out of — `CMod 3`, `CMod 4`, `CMod 11` —
     so this is transcription, not research. What is missing is a way to
@@ -141,14 +143,6 @@ Unlike section 3, none of this is impossible here: a download would do it.
     68030 or better, and nothing here emulates one that runs SpaceSaver.
     **What would close it:** a machine (or a setting) that writes them,
     or a file from anywhere that uses one.
-  - **The preset dictionary is Aladdin's**, 9,679 bytes of `PrAm` -4048,
-    and the LZSS window starts loaded with it — so this project cannot
-    ship the thing its own decoder needs. The CLI takes `--preset FILE`
-    and either the control panel or `StuffIt Engine™` is a source; the
-    Macintosh application does not look for one, deliberately
-    (FORMATS.md, *StuffIt SpaceSaver*). **Nothing would close this** —
-    it is the format's own shape, and it is recorded here so the next
-    reader does not go looking for the bug.
   - **A specimen at all** — and it is worth less than it was. The
     bitstream it would check has been cross-read against Aladdin's own
     ENCODER (`CMod 20`), which agrees with this decoder field for field,

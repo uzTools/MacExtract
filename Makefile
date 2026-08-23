@@ -22,7 +22,14 @@ all: $(CLI_BIN) $(TEST_BIN)
 $(BUILD):
 	mkdir -p $(BUILD)
 
-$(BUILD)/%.o: src/%.c include/unclassic.h src/unc_internal.h | $(BUILD)
+# Every header, not two: `src/` carries GENERATED ones (sit6_tables.h,
+# sit13_tables.h, ss_dict.h), and an object left stale against one of
+# those is invisible until something downstream disagrees — which is how
+# a rebuilt engine and a stale reference binary came to disagree about
+# the same file on an emulated Mac (2026-08-23).
+ENGINE_HDR = include/unclassic.h $(wildcard src/*.h)
+
+$(BUILD)/%.o: src/%.c $(ENGINE_HDR) | $(BUILD)
 	$(CC) $(WARN) $(CFLAGS) $(INC) -c $< -o $@
 
 # third_party is exempt from our warning set (vendored code)

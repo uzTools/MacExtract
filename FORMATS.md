@@ -31,7 +31,7 @@ whole corpus for that format (engine allocations only, via
 | ARC / ArcMac (.arc) | extract | 1/2 store, 3 RLE90, 4 squeeze+RLE90, 5/6/7 crunch, 8 12-bit LZW+RLE90, 9 13-bit LZW, 0x7f compress; ArcMac's two-fork payload since 2026-08-16★★★; 0x0a/0x0b (PKARC) declined per entry★ | 10 generated archives (methods 1-9, adjudicated by `unar`) + 3 written by Debian's `arc` 5.21q; `synth-arc-mixed.arc` also has an `unar` manifest and is in the differential suite | 4–32 KB★ | full |
 | uuencode (.uu, incl. UUTool) | extract | — (plain uu, UUTool's two-fork "MU" shape, and documents posted in several parts★★) | 7 generated cases, the two-fork ones adjudicated by macutils' `hexbin`; `synth-uu-mac.uu` is in the differential suite | 4 KB | full |
 | Alysis SuperDisk! (.X, .x) | extract | **both containers** (record-stream archive and single file); methods 1-4 and 5-8 (a finite-context predictor over a 13- or 16-bit context, with the flag bitmap and/or the literals Huffman-coded), 9 Huffman, 11 SlowFastB (LZSS); 10, 13 and 20 declined per entry✧✧ | 2 fixtures, 5 forks, adjudicated by the archives' OWN self-extractors on an emulated Mac, + 11 single-file specimens written by Alysis's own control panel (methods 1 and 6) and graded against their inputs | 72–115 KB✧✧ | full |
-| StuffIt SpaceSaver (`SPSV`) | extract | 0 stored, 4 "Alg 4" — an LZSS whose window starts loaded with a preset dictionary that ships inside SpaceSaver; 1, 2 and 3 declined per entry✦✦ | no oracle and no specimen — but **Aladdin's own encoder agrees with this decoder field for field** (`CMod 20`, 2026-08-23), which is what grades it, plus a synthetic round-trip and unit tests✦✦ | 4 KB stored, **36 KB** for what SpaceSaver writes (measured on a Mac Plus); 68 KB is the ceiling the width byte allows | full |
+| StuffIt SpaceSaver (`SPSV`) | extract | 0 stored, 4 "Alg 4" — an LZSS whose window starts loaded with a preset dictionary that ships inside SpaceSaver; 1, 2 and 3 declined per entry✦✦ | no oracle and no specimen — but **Aladdin's own encoder agrees with this decoder field for field** (`CMod 20`, 2026-08-23), which is what grades it, plus a synthetic round-trip and unit tests✦✦ | 4 KB stored, **36 KB** for what SpaceSaver writes (measured on a Mac Plus); 68 KB is the ceiling the width byte allows. The dictionary is 9.7 KB of static data, not heap | full |
 | LZH/LHA (-lh?-, -lz?-) | detect only | — | 1 real `-lh5-` archive, named + refused; unit test over every method byte | — | — |
 | AppleLink package (.pkg) | detect only | — | no specimen anywhere: the probe is Aladdin's own recogniser, at 0 false positives across 928 fixtures (*AppleLink packages*, below) | — | — |
 | DiskCopy 4.2 (.image) | detect only | — | synthetic 800K GCR + real 800K image; 0 false positives in 807 fixtures (re-measured 2026-08-15) | — | — |
@@ -603,29 +603,37 @@ them). The decoder reads the width byte rather than assuming either.
 
 **It starts loaded with 9,679 bytes of Aladdin's `PrAm` -4048**, placed
 immediately before the first output byte, so the first matches in every fork
-read that table rather than anything in the file. It is not in this
-repository: `unclassic --preset FILE` takes a copy from your own SpaceSaver,
-and without one an entry that reaches into the dictionary fails rather than
-decoding to something wrong. The resource is byte-identical in the control
-panel and in `StuffIt Engine™`, so either file will do — and there is a second
-one, `PrAm` -4047, four spaces long, which nothing this engine writes selects.
+read that table rather than anything in the file. **Those bytes ship here**,
+in `src/ss_dict.h` — they are Aladdin's, `NOTICE` says so, and DECISIONS.md
+2026-08-23 records whose decision it was and why. Without exactly them a file
+decodes to output of the right length that is silently wrong, so there is no
+approximating it and no generating an equivalent.
+
+The record's byte at +12 chooses: 0 is -4048 and 1 is `PrAm` -4047, four
+spaces, which nothing this engine writes selects. Both are built in; anything
+else is refused per entry. `unclassic --preset FILE` overrides the choice, for
+a table this build does not carry. The resource is byte-identical in the
+control panel and in `StuffIt Engine™`, so either file will do as a source for
+`tools/gen_ss_dict.py`.
 
 **Both methods run on a 68000**, which is the part no Linux test can show.
 `tools/run_spacesaver.py --emit` writes three files and `tools/vmac/run.py
 --expect` replays them on an emulated Mac Plus under System 6.0.8: a stored
 one (**1,040 B data + 512 B resource, peak 4,112 B**), a method 4 one at the
 window width SpaceSaver writes (**14,524 B out, peak 36,896 B** — the 32 KB
-window plus the 4 KB input buffer), and one that reaches into the dictionary
-and must refuse (**0 files, peak 36 KB, no crash**). All three agree with the
-Linux CLI byte for byte, **at 4 MB and at the 1 MB floor target alike**
-(re-measured 2026-08-23, after the width was corrected from the ceiling).
+window plus the 4 KB input buffer), and one whose stream reaches into the
+dictionary, which the application expands with the built-in table
+(**7,000 B out, peak 36,896 B**). All three agree with the Linux CLI byte for
+byte, **at 4 MB and at the 1 MB floor target alike** (re-measured 2026-08-23,
+after the width was corrected from the ceiling and again after the dictionary
+was built in).
 
-**Which is why the Macintosh application cannot expand these files and this
-is not a gap it is worth closing.** It could read the resource out of the
-SpaceSaver in its own System Folder — but a Mac with SpaceSaver installed
-expands them transparently and needs no unarchiver, and a Mac without it has
-no dictionary to find. The case that matters is a file that has travelled,
-which is the case the CLI's `--preset` serves.
+**So a lone floppy is enough.** A SpaceSaver file that has travelled without
+the machine that made it needs nothing else — not a copy of SpaceSaver, not a
+flag — on Linux or on the Macintosh application, which cannot be handed a
+dictionary at all. That is the case this format turns up in: the file looks
+normal, its own application reads 84 bytes of header where the document
+should be, and nothing else on the disk says why.
 
 ## AppleLink packages, and why they are named but not opened
 
@@ -1502,7 +1510,7 @@ with this archive."*
 | `.arc` (ARC / ArcMac) | with the add-on | **yes since 2026-08-15**, methods 1-9; ArcMac's two-fork payload since 2026-08-16 (★★★ above) |
 | uuencode (`.uu`) | with the add-on | **yes since 2026-08-15**, plain and UUTool's two-fork shape |
 | AppleLink `.pkg` | with the add-on | **named since 2026-08-23**, not expanded: the probe is Aladdin's own recogniser, read out of the `PKG Expand Translator` that StuffIt Deluxe 3.5.1 ships (*AppleLink packages*, above). What is missing is a specimen |
-| StuffIt SpaceSaver | with the add-on | **yes since 2026-08-22 on Linux**, methods 0 and 4 (what a 68000 writes), given SpaceSaver's own dictionary; 1, 2 and 3 declined per entry. The Macintosh application names one and does not expand it (*StuffIt SpaceSaver*, above) |
+| StuffIt SpaceSaver | with the add-on | **yes since 2026-08-22**, methods 0 and 4 (what a 68000 writes), with SpaceSaver's own dictionary built in since 2026-08-23 so nothing else is needed; 1, 2 and 3 declined per entry (*StuffIt SpaceSaver*, above) |
 | Chained expansion (`.sit.hqx`) | yes, and can be turned off | yes, `-nr` turns it off |
 | System 7 conveniences | drag-and-drop of files, folders and whole disks; watch folders; background expansion; Apple events | none; Standard File, one archive at a time |
 | Verification | none published | 919 fixtures byte-exact against `unar`/`macunpack` — bar the one uuencode fixture, which `unar` cannot read at all and whose ground truth is its generator's input, with `hexbin` agreeing |

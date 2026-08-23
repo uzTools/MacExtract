@@ -29,6 +29,7 @@
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
 #include "unc_internal.h"
+#include "ss_dict.h"
 
 #define SS_HDRLEN   84u
 #define SS_MAGIC1   0x53495421u        /* 'SIT!' */
@@ -184,10 +185,15 @@ static int ss_emit(SsState *s, uint8_t b)
 /* The window starts loaded with a preset dictionary, and that is not
  * optional: @0x280 copies the engine's 'PrAm' resource into the bytes
  * immediately BEFORE the first output byte, so a match at a short
- * distance reads Aladdin's table rather than anything in the file.
- * The table is 9,679 bytes and is theirs; it is not in this repository,
- * so a caller supplies it (UncOptions.preset) or the entry fails when
- * the stream first reaches back into it. */
+ * distance reads Aladdin's table rather than anything in the file. The
+ * encoder places it identically (`CMod 20` @0x93e), which is where that
+ * reading was confirmed.
+ *
+ * Both tables are carried in ss_dict.h — they are Aladdin's, and NOTICE
+ * says so — because without the exact bytes a file decodes to something
+ * wrong rather than to nothing. The record's byte at +12 chooses; a
+ * caller may override the choice with UncOptions.preset, which is how a
+ * table this build does not have could still be used. */
 static void ss_preset(SsState *s, const uint8_t *p, uint32_t len)
 {
     uint32_t k;
@@ -244,6 +250,15 @@ static int ss_alg4(SsState *s, const SsFork *f, uint8_t *iobuf,
     s->history = 0;
     if (c->opt.preset && c->opt.preset_len)
         ss_preset(s, c->opt.preset, c->opt.preset_len);
+    else if (f->pset == 0)
+        ss_preset(s, ss_dict0, SS_DICT0_LEN);
+    else if (f->pset == 1)
+        ss_preset(s, ss_dict1, SS_DICT1_LEN);
+    else
+        /* A table this build does not have. Refusing is the only honest
+         * answer: decoding with the wrong dictionary produces bytes
+         * that look like a file and are not one. */
+        return UNC_ERR_UNSUPPORTED;
 
     while (nblocks-- > 0) {
         uint32_t clen = 0, ulen = 0, endpos;

@@ -120,7 +120,7 @@ each one opens:
 | Encrypted archives | yes, if you know the password | no |
 | Several files posted in one BinHex message | yes | yes |
 | `.arc` and uuencoded (`.uu`) files | with the add-on | yes |
-| StuffIt SpaceSaver | with the add-on | named, not expanded: SpaceSaver keeps the dictionary its files need inside itself. The Linux tool expands them given a copy of it |
+| StuffIt SpaceSaver | with the add-on | yes — including the dictionary its files need, which no other tool carries |
 | AppleLink `.pkg` | with the add-on | named, not expanded — no `.pkg` file has ever reached this project to check a reading against |
 | DiskDoubler, Now Compress and SuperDisk! archives | no | yes |
 | What you install | the application, a StuffIt Engine extension, and the add-on for anything above | one application |
@@ -189,3 +189,10 @@ No physical Macintosh has ever run it. Emulation is evidence, not proof.
 
 LGPL-2.1-or-later. Format details are transcribed from
 [XADMaster](https://github.com/MacPaw/XADMaster); see `NOTICE`.
+
+One thing here is not ours: `src/ss_dict.h` holds 9,679 bytes that are
+**copyright Aladdin Systems, Inc.** — the table StuffIt SpaceSaver primes
+its compression window with. Without exactly those bytes a SpaceSaver file
+cannot be decoded to the right ones, so they are carried for
+interoperability and marked as an exception in `NOTICE`. They are not
+covered by the LGPL grant.

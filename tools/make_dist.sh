@@ -76,12 +76,14 @@ application simply runs. StuffIt X, LZH, Disk Copy 4.2 and AppleLink
 packages are recognised and named, not extracted; encrypted archives are
 out of scope.
 
-A StuffIt SpaceSaver file is recognised and its contents named, but this
-application does not expand one. SpaceSaver compresses starting from a
-dictionary that lives inside SpaceSaver itself, so a Mac that has
-SpaceSaver opens these files without any help, and a Mac that does not
-has no dictionary to read. The Linux tool takes a copy of it with
---preset, which is the case that matters: a file that has travelled.
+StuffIt SpaceSaver files open too, and they are the ones that look like
+nothing is wrong: SpaceSaver compressed in place, so the file kept its
+name and icon and only that Mac could read it. On any other machine its
+own application finds a compressed header where the document should be.
+unclassic carries the table SpaceSaver primes its compression with -- the
+part no other tool has -- so a single file on a floppy is enough, with
+nothing else to install. (That table is copyright Aladdin Systems; see
+the NOTICE file in the source.)
 
 Using it: open an archive, then say which folder the files should go into.
 That second dialog opens in the archive's own folder, so pressing Return

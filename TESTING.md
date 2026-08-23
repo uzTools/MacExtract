@@ -786,13 +786,20 @@ where the preset dictionary sits (DECISIONS.md 2026-08-23, the encoder
 agrees). The synthetic pass checks that this code implements that reading;
 the cross-read is what checks the reading.
 
-**The preset dictionary is checked as a refusal, not just as a feature.**
-SpaceSaver's LZSS window starts loaded with 9,679 bytes of Aladdin's own
-table, so a decoder that quietly starts from zeroes produces wrong bytes and
-says nothing. Every specimen that decodes correctly WITH the dictionary is
-run again without it, and what is asserted is that it fails rather than
-returning something the same length. That check only means anything because
-the first run passed on the same file.
+**The dictionary is checked for drift, because it is generated AND
+committed.** `src/ss_dict.h` is written by `tools/gen_ss_dict.py` from the
+`PrAm` resources of an installed SpaceSaver, so the build needs neither the
+emulator nor a copy of the software — and a generated file that is committed
+is a file that can go stale. Whenever the resource is present the suite
+compares the two byte for byte, and says so. It fails against a header with
+one byte changed.
+
+The unit tests carry the rest of the contract: that the built-in table is
+used when a caller supplies none, that a caller's table overrides it (the
+same stream decoding to different bytes proves neither is being ignored),
+that the record's byte at +12 selects between the two built-in tables, and
+that a table this build does not have is refused rather than decoded with the
+wrong one.
 
 **58 corrupted variants per specimen** — ten truncations, forty-eight
 bit-flips — because `fuzz.py` and `run_robustness.py` both work from

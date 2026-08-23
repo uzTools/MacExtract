@@ -2672,22 +2672,25 @@ static void test_spacesaver_alg4(void)
     f[33] = 4;
 }
 
-/* The preset dictionary, and the refusal when it is absent. @0x280
- * loads the window from the engine's 'PrAm' resource, so a match at a
- * distance the output cannot reach is reading Aladdin's table. */
+/* The preset dictionary: which one, and who chooses it. @0x280 loads the
+ * window from a 'PrAm' resource before the first output byte, and the
+ * fork record's byte at +12 says which. Both tables are built in
+ * (ss_dict.h), and a caller may override the choice.
+ *
+ * The stream here is one token: a match of 10 at distance 10, entirely
+ * inside the dictionary, so its output IS the dictionary's last ten
+ * bytes and nothing of the file's own. */
 static void test_spacesaver_preset(void)
 {
     static const uint8_t preset[10] = "0123456789";
     static const uint8_t hint[] = "Squeezed";
-    /* one token: a match of 10 at distance 10, which is entirely inside
-     * the preset — 0 flag, 5 bits of (10-4), 8 bits of 10. */
     static const uint8_t vec[] = {
         0x01, 0x00, 0x08,
         0x08, 0x00, 0x00,
         0x0a, 0x00, 0x00,
         0x8c, 0x02
     };
-    uint8_t f[160];
+    uint8_t f[160], builtin[10];
     MemIO m;
     UncIO io;
     UncAlloc al;
@@ -2705,7 +2708,19 @@ static void test_spacesaver_preset(void)
     opt.name_hint_len = (uint16_t)(sizeof hint - 1);
     test_make_alloc(&al);
 
-    /* With the dictionary: the ten bytes are the dictionary's. */
+    /* No caller table: the built-in one is used, and the ten bytes are
+     * ITS tail — whatever they are, they are not the file's. */
+    test_make_memio(&io, &m, f, 84 + n);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_SPACESAVER, &io, &sk, &al, NULL,
+                         &opt) == UNC_OK);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+    CHECK(cap.dlen[0] == 10);
+    memcpy(builtin, cap.data[0], 10);
+
+    /* A caller's table overrides it, and the same stream then decodes to
+     * the caller's bytes instead. Both cannot be true of one decoder
+     * that ignores one of them. */
     opt.preset = preset;
     opt.preset_len = (uint32_t)sizeof preset;
     test_make_memio(&io, &m, f, 84 + n);
@@ -2714,18 +2729,32 @@ static void test_spacesaver_preset(void)
                          &opt) == UNC_OK);
     CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
     CHECK(cap.dlen[0] == 10 && memcmp(cap.data[0], preset, 10) == 0);
-
-    /* Without it: a per-entry failure, and NOT ten bytes of anything. */
+    CHECK(memcmp(builtin, preset, 10) != 0);
     opt.preset = NULL;
     opt.preset_len = 0;
+
+    /* Record byte +12 selects the table. Index 1 is the other 'PrAm'
+     * and is four spaces, so the same stream cannot decode at all — it
+     * reaches ten bytes back into a four-byte history. */
+    f[32] = 1;
     test_make_memio(&io, &m, f, 84 + n);
     cap_make(&sk, &cap);
     CHECK(unc_extract_as(UNC_FORMAT_SPACESAVER, &io, &sk, &al, NULL,
                          &opt) == UNC_OK);
     CHECK(cap.count == 1 && cap.status[0] != UNC_OK);
     CHECK(cap.dlen[0] == 0);
-}
 
+    /* And a table this build does not have is refused rather than
+     * decoded with the wrong one. */
+    f[32] = 7;
+    test_make_memio(&io, &m, f, 84 + n);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_SPACESAVER, &io, &sk, &al, NULL,
+                         &opt) == UNC_OK);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_ERR_UNSUPPORTED);
+    CHECK(cap.dlen[0] == 0);
+    f[32] = 0;
+}
 
 /* ------------------------------------------------------------------ */
 /* AppleLink package (`.pkg`) — detect only                           */
