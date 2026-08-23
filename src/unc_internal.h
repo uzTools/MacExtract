@@ -618,6 +618,8 @@ int unc_spacesaver_extract(UncCtx *c);
 
 /* uuencode, including UUTool's two-fork shape (fmt_uu.c). The probe
  * needs no io: a uu file identifies itself in its first lines. */
+int unc_btoa_probe(const uint8_t *head, int32_t len);
+int unc_btoa_extract(UncCtx *c);
 int unc_uu_probe(const uint8_t *head, int32_t len);
 int unc_uu_extract(UncCtx *c);
 

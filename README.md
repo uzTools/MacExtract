@@ -43,7 +43,7 @@ one, because parts are recognised by what is inside them:
 ## Download
 
 **[Latest release](https://github.com/jarreboum/unclassic/releases/latest)** —
-currently **v0.14.0**. If the release page shows anything older, the publish
+currently **v0.15.0**. If the release page shows anything older, the publish
 step did not run. Or take it straight from the tree:
 
 | | |
@@ -61,8 +61,8 @@ notes.
 **Extracts:** StuffIt (`.sit`, classic and 5.x), Compact Pro (`.cpt`), BinHex
 (`.hqx`), MacBinary, PackIt (`.pit`), DiskDoubler (`.dd`, `DDAR`, `DDA2`), Now
 Compress, StuffIt SpaceSaver, Alysis SuperDisk! (`.X`), ARC (`.arc`),
-uuencoded files (`.uu`), AppleSingle/AppleDouble, zip, gzip, tar and Unix
-compress (`.Z`). Resource forks, type and creator codes and dates all survive,
+uuencoded files (`.uu`), btoa (`.ascii`), AppleSingle/AppleDouble, zip, gzip,
+tar and Unix compress (`.Z`). Resource forks, type and creator codes and dates all survive,
 so an extracted application simply runs.
 
 Nested files like `.sit.hqx` or `.tar.Z` are unwrapped automatically, by

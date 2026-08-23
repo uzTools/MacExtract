@@ -28,7 +28,7 @@ extern "C" {
  * tools/make_dist.sh do now, and tools/check_docs.py fails the build if
  * this, README.md and dist/README.txt disagree. A constant nobody reads
  * is a constant that is wrong. */
-#define UNC_VERSION "0.14.0"
+#define UNC_VERSION "0.15.0"
 
 /* ------------------------------------------------------------------ */
 /* Formats                                                            */
@@ -82,6 +82,9 @@ typedef enum UncFormat {
 
     /* Named, not extracted, since 2026-08-23. */
     UNC_FORMAT_APPLELINK,     /* AppleLink package (`.pkg`)             */
+
+    /* Brought in scope 2026-08-23; appended for the same ABI reason. */
+    UNC_FORMAT_BTOA,          /* btoa/atob ASCII armour                 */
 
     UNC_FORMAT__COUNT
 } UncFormat;

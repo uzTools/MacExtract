@@ -8,6 +8,18 @@ mkdir -p reference/notes
 [ -d reference/XADMaster ] || \
     git clone --depth 1 https://github.com/MacPaw/XADMaster reference/XADMaster
 
+# btoa 5.2.1 (Paul Rutter, Joe Orost & Stefan Parmark, 1996) — the only
+# implementation of the format there is, and the one `atob.c` this
+# project's src/fmt_btoa.c is transcribed from. Debian carried it in
+# non-free until woody; archive.debian.org still has the tarball.
+if [ ! -d reference/btoa ]; then
+    mkdir -p reference/btoa
+    curl -sL -o /tmp/btoa.tar.gz \
+        "http://archive.debian.org/debian/pool/non-free/b/btoa/btoa_5.2.1.orig.tar.gz"
+    tar xzf /tmp/btoa.tar.gz -C reference/btoa --strip-components=1
+    rm -f /tmp/btoa.tar.gz
+fi
+
 if [ ! -d reference/macutils ]; then
     mkdir -p reference/macutils
     curl -sL -o /tmp/macutils.tar.gz \

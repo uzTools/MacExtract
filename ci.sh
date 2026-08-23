@@ -51,6 +51,12 @@ python3 tools/run_now.py --unclassic build/san/unclassic \
 # --adjudicate); this replays that verdict by content.
 python3 tools/run_superdisk.py --unclassic build/san/unclassic \
     || fail "SuperDisk! tests"
+# btoa/atob (M26). No corpus file and no second reader — `unar` does not
+# know the format — so the ORIGINAL implementation is the encoder: the
+# suite compiles reference/btoa and grades our decoder against what it
+# writes, in both framings. Skips cleanly without reference/.
+python3 tools/run_btoa.py --unclassic build/san/unclassic \
+    || fail "btoa tests"
 # Decryption (M25). Nothing in the corpus is encrypted, so this suite
 # generates its own: `zip -P` and `arc g<pw>` write two of the five
 # schemes themselves, and the three with no encoder here — StuffIt

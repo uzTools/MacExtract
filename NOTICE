@@ -60,6 +60,29 @@ This project's decoders are transcriptions/ports of algorithms from:
     two compression methods are transcribed from XADMaster and
     macutils, as above).
 
+  * btoa 5.2.1, by Paul Rutter, Joe Orost and Stefan Parmark (1996) —
+    and this one is a REFERENCE ONLY, deliberately, because its terms
+    are not ours. Its README says btoa "is in the public domain. You
+    may use it, give it away, and make improvements, as long as the
+    names of the developers are mentioned and you don't use it to earn
+    money. It may NOT be used commercially without my permission."
+    That is a non-commercial restriction, and Debian shipped it in
+    `non-free` for exactly that reason; it is incompatible with this
+    project's LGPL grant, under which somebody may charge for what they
+    do with unclassic.
+
+    So `src/fmt_btoa.c` implements the FORMAT — the two headers, the
+    base-85 alphabet, the `z` and `y` escapes, the three checksum
+    recurrences, the per-line check and the padding rule — and is not a
+    copy of `atob.c`'s code: no function, buffer or control structure is
+    carried over, and the file says which routines were read for which
+    fact. Format facts are not the developers' to license; their
+    implementation is, and it is not here. `reference/btoa` is fetched
+    by `tools/fetch_references.sh`, never committed, never linked into
+    anything, and used as a test-time oracle (`tools/run_btoa.py`
+    compiles it and decodes what it encodes). The names are mentioned,
+    here and in the source. DECISIONS.md 2026-08-23 (btoa's licence).
+
   * "Stuffit Method 15 compression format" by Matthew T. Russotto —
     the only public specification of the StuffIt 5 "Arsenic"
     (BWT + MTF + arithmetic coding) method.

@@ -29,6 +29,7 @@ whole corpus for that format (engine allocations only, via
 | DiskDoubler (DD, DDAR, DDA2) | extract | **all eleven**: 0 store, 1 Unix compress, 2/5 splay Huffman, 3 RLE90, 4 StuffIt Huffman, 6/9 AD LZSS, 7 Stac LZS, 8 Compact Pro, 10 DDn✦ | 88 fixtures (6 harvested + 82 CC0 files graded against their own originals, in `ci.sh` since 2026-08-21) + 19 BinHexed copies of those + 28 specimens (2 written by DiskDoubler 3.7 under Mini vMac, 2 off its distribution disk, 24 off Salient's 3.1.2 disk)✦ | 8–392 KB✦ | full |
 | Now Compress | extract | stored, LZSS, Huffman, Huffman+LZSS, "new" LZSS✧ | 2 real fixtures + 13 generated archives (all five shapes, adjudicated by `unar`); `synth-now-mixed.now` also has an `unar` manifest and is in the differential suite | 128 KB✧ | full |
 | ARC / ArcMac (.arc) | extract | 1/2 store, 3 RLE90, 4 squeeze+RLE90, 5/6/7 crunch, 8 12-bit LZW+RLE90, 9 13-bit LZW, 0x7f compress; ArcMac's two-fork payload since 2026-08-16★★★; 0x0a/0x0b (PKARC) declined per entry★; **garbled (password-XORed) members decrypted** | 10 generated archives (methods 1-9, adjudicated by `unar`) + 3 written by Debian's `arc` 5.21q; `synth-arc-mixed.arc` also has an `unar` manifest and is in the differential suite | 4–32 KB★ | full |
+| btoa (`xbtoa`/`.ascii`) | extract | — (base-85 ASCII armour; both the `xbtoa5` and the older `xbtoa Begin` framings)◆ | no corpus file and no second reader: graded against **btoa 5.2.1 itself**, which encodes the subjects `tools/run_btoa.py` decodes | 12 KB | full |
 | uuencode (.uu, incl. UUTool) | extract | — (plain uu, UUTool's two-fork "MU" shape, and documents posted in several parts★★) | 7 generated cases, the two-fork ones adjudicated by macutils' `hexbin`; `synth-uu-mac.uu` is in the differential suite | 4 KB | full |
 | Alysis SuperDisk! (.X, .x) | extract | **both containers** (record-stream archive and single file); methods 1-4 and 5-8 (a finite-context predictor over a 13- or 16-bit context, with the flag bitmap and/or the literals Huffman-coded), 9 Huffman, 11 SlowFastB (LZSS); 10, 13 and 20 declined per entry✧✧ | 2 fixtures, 5 forks, adjudicated by the archives' OWN self-extractors on an emulated Mac, + 11 single-file specimens written by Alysis's own control panel (methods 1 and 6) and graded against their inputs | 72–115 KB✧✧ | full |
 | StuffIt SpaceSaver (`SPSV`) | extract | 0 stored, 4 "Alg 4" — an LZSS whose window starts loaded with a preset dictionary that ships inside SpaceSaver; 1, 2 and 3 declined per entry✦✦ | no oracle and no specimen — but **Aladdin's own encoder agrees with this decoder field for field** (`CMod 20`, 2026-08-23), which is what grades it, plus a synthetic round-trip and unit tests✦✦ | 4 KB stored, **36 KB** for what SpaceSaver writes (measured on a Mac Plus); 68 KB is the ceiling the width byte allows. The dictionary is 9.7 KB of static data, not heap | full |
@@ -634,6 +635,51 @@ flag — on Linux or on the Macintosh application, which cannot be handed a
 dictionary at all. That is the case this format turns up in: the file looks
 normal, its own application reads 84 bytes of header where the document
 should be, and nothing else on the disk says why.
+
+## btoa, the other ASCII armour
+
+**In scope since 2026-08-23**, and it came out of a menu: StuffIt Deluxe
+3.5.1's Translate menu is built from the files in
+`System Folder:Extensions:Aladdin:Translators`, and there are fourteen
+of them. Thirteen are formats this project already reads —
+`AppleSingle`, `BinHex4`, `CompactPro`, `DeArc` (ARC), `MacBinary`,
+`Text`, `UUCode`, `UnPack` (PackIt: its own `STR#` 129 holds `.pit`),
+`UnZip`, `Unix Compress`, `tar`, and Segmenting and PKG below. The
+fourteenth was `btoa/atob`, and nothing here had heard of it.
+
+Paul Rutter's btoa is uuencode's rival from the Unix side: four bytes
+become five printable characters in base 85, which is 25% overhead
+against uuencode's 33%. A Mac met it the same way it met uuencode —
+over the wire from a Unix host — and Aladdin shipped a translator for
+it, which is what puts it inside this project's brief ("everything
+StuffIt Expander 4.0.2 expands", DECISIONS.md 2026-08-15).
+
+◆ **Two framings, and they differ in more than the header.** `xbtoa5`
+lines carry a checksum character of their own and the three
+whole-stream checksums cover the ENCODED characters; the older `xbtoa
+Begin` has neither the per-line check nor the same coverage — its
+checksums are over the DECODED bytes. Both are read. `z` stands for
+four zero bytes and, in version 5 only, `y` for four spaces. The
+declared length is what ends the file: the encoder always writes whole
+five-character groups, so `(len - 1) & 3` says how many bytes of the
+last group are real.
+
+**No corpus file, and no second reader.** `xbtoa` appears in none of
+the 903 fixtures, `unar` does not recognise the format and macutils
+never had it — so the grading is the original implementation itself.
+`tools/fetch_references.sh` fetches btoa 5.2.1 (Paul Rutter, Joe Orost
+and Stefan Parmark, 1996, from `archive.debian.org`), `src/fmt_btoa.c`
+is transcribed from its `atob.c`, and `tools/run_btoa.py` compiles the
+same source as an ENCODER and requires our decoder to reproduce what it
+writes — eight subjects across both framings, plus a mail-wrapped one,
+a flipped character, a truncated archive and prose that merely contains
+the word.
+
+One thing it inherits from the Unix side: the checksum called `R` is a
+32-bit rotate that the reference computes in a `long`, so a 64-bit host
+prints sixteen hex digits where a Mac prints eight. The low 32 bits are
+the same either way — the rotate tests bit 31 in both — and that is
+what is compared.
 
 ## Encryption
 
@@ -1608,11 +1654,11 @@ with this archive."*
 
 ### Capability by capability
 
-| | StuffIt Expander 4.0.2 | unclassic 0.10 |
+| | StuffIt Expander 4.0.2 | unclassic 0.15 |
 |---|---|---|
 | Floor system | System 6.0.5 (its Read Me) | System 6.0.8, measured on a 1 MB Mac Plus |
 | Everything beyond `.sit`/`.cpt`/`.hqx`/`.bin` | needs DropStuff with Expander Enhancer, *"a **System 7-only** shareware product"* | in the same free application, on System 6 |
-| Installed pieces | application + StuffIt Engine extension + the add-on | one 85 KB application, no extension, no installer |
+| Installed pieces | application + StuffIt Engine extension + the add-on | one 149 KB application, no extension, no installer |
 | StuffIt segmented sets | with the add-on, so System 7 only | yes, System 6 and up |
 | Compact Pro segmented sets | *"StuffIt Expander cannot expand encrypted or segmented Zip or Compact Pro files"* | yes |
 | Spanned zip sets | same sentence — no | yes |
@@ -1620,7 +1666,8 @@ with this archive."*
 | Parts still inside per-part envelopes | not claimed | yes, StuffIt sets |
 | How a part is identified | not stated | by its header, never by its filename (zip and `.NNN` sets excepted — see "Segmented archives") |
 | Segment joining, known defect | *"if the `Delete segments after joining` preference is selected, and you run out of disk space during a join operation, the first segment will be deleted even though the joining is not complete"* | parts are never deleted; the Mac shell removes only what it wrote |
-| Encrypted archives | yes — it prompts, and knows *"You have entered an incorrect password"* | detected and refused, out of scope |
+| Encrypted archives | yes — it prompts, and knows *"You have entered an incorrect password"* | yes, since 2026-08-23: StuffIt, StuffIt 5, PackIt, zip (PKWARE and WinZip AES), ARC — and **Compact Pro, which Expander cannot** (*"StuffIt Expander cannot expand encrypted or segmented Zip or Compact Pro files"*) |
+| btoa (`.ascii`) | with the add-on: a `btoa/atob Translator` ships in `Extensions:Aladdin:Translators` | yes, both framings (*btoa*, above) |
 | Multipart BinHex | *"Multipart BinHex files, such as those appearing in Internet newsgroup postings (e.g. comp.binaries.mac), are fully supported"* — multiple documents in one text file, and one file broken into several pieces | several documents in one file since 2026-08-15 (††, above); a document broken across FILES joins where the parts are named `.001`, `.002` … |
 | Compact Pro comments | written out beside the extracted items | read and CRC'd, never surfaced |
 | `.arc` (ARC / ArcMac) | with the add-on | **yes since 2026-08-15**, methods 1-9; ArcMac's two-fork payload since 2026-08-16 (★★★ above) |

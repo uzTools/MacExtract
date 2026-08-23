@@ -595,6 +595,38 @@ fork lengths big-endian, exactly as the decoder read them, so **the suite
 agreed with the bug** — the fix was to make the test build the entry the
 measured way and check both forks come back.
 
+## btoa (`tools/run_btoa.py`, in `ci.sh`)
+
+Added 2026-08-23. The corpus has no btoa file — `xbtoa` appears in none
+of the 903 — and no second READER exists: `unar` does not recognise the
+format and macutils never had it. What does exist is the original
+implementation, so the suite uses it as the ENCODER: it compiles
+`reference/btoa` (5.2.1, fetched by `tools/fetch_references.sh`) and
+requires our decoder to reproduce, byte for byte, what that encoder
+writes.
+
+Eight subjects, each chosen for what it makes the encoder do rather
+than for size: a run of zeros and a run of spaces (the `z` and `y`
+escapes, and `y` exists only in version 5), four lengths around a
+multiple of four (101, 102, 103, 104 — the last group is padded and
+only `(len-1)&3 + 1` of its bytes are real), every byte value, and a
+one-byte file. All eight in **both framings**, because `xbtoa5`
+checksums the encoded characters and `xbtoa Begin` checksums the
+decoded bytes, and a decoder with those the wrong way round passes one
+and fails the other.
+
+Also asserted: version 5's header names the file and that name is the
+entry's, version 4 has none and the host's hint is used instead; a
+mail header in front is stepped over; a flipped character and a
+truncated archive are errors; and prose containing the word `xbtoa` is
+not claimed as an archive.
+
+**What it cannot see.** The suite skips, loudly, without
+`reference/btoa` — so a fresh clone runs the two hand-built streams in
+`tests/unit_formats.c` and nothing else. And no file that a MAC wrote
+has been read: StuffIt Deluxe's `btoa/atob Translator` would be the one
+to ask, and it has not been.
+
 ## Decryption (`tools/run_crypt.py`, in `ci.sh`)
 
 Added 2026-08-23, when decryption came into scope. **Nothing in the

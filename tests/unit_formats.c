@@ -3484,6 +3484,72 @@ static void test_winzip_aes_pieces(void)
     }
 }
 
+/* btoa: both framings, on streams the reference encoder produced for
+ * "Mac\n" (tools/run_btoa.py grades the real thing against the real
+ * encoder; these two are here so `ci.sh` covers the format on a clone
+ * with no reference/ directory). The version 4 and version 5 lines
+ * differ in more than the header: v5 carries a per-line checksum
+ * character and sums the ENCODED characters, v4 sums the decoded
+ * bytes, so the two End lines disagree on a four-byte file. */
+static void test_btoa(void)
+{
+    static const char v5[] =
+        "xbtoa5 78 small.txt Begin\n"
+        "9jqN=q\n"
+        "xbtoa End N 4 4 E 51 S 1a4 R 97d\n";
+    static const char v4[] =
+        "xbtoa Begin\n"
+        "9jqN=\n"
+        "xbtoa End N 4 4 E 45 S 11f R 4bc\n";
+    MemIO m;
+    UncIO io;
+    UncAlloc al;
+    UncSink sk;
+    CapSink cap;
+
+    test_make_alloc(&al);
+
+    test_make_memio(&io, &m, (const uint8_t *)v5, (uint32_t)sizeof v5 - 1);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_BTOA);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_BTOA, &io, &sk, &al, NULL, NULL) == UNC_OK);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+    CHECK(cap.dlen[0] == 4 && memcmp(cap.data[0], "Mac\n", 4) == 0);
+    /* Version 5 names the file; the entry takes that name. */
+    CHECK(cap.info[0].name_len == 9 &&
+          memcmp(cap.info[0].name, "small.txt", 9) == 0);
+
+    test_make_memio(&io, &m, (const uint8_t *)v4, (uint32_t)sizeof v4 - 1);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_BTOA);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_BTOA, &io, &sk, &al, NULL, NULL) == UNC_OK);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+    CHECK(cap.dlen[0] == 4 && memcmp(cap.data[0], "Mac\n", 4) == 0);
+
+    /* A flipped body character must be a per-entry error. Establish
+     * that this test CAN fail: the same stream with one character
+     * changed has to come back wrong. */
+    {
+        char bad[sizeof v5];
+        memcpy(bad, v5, sizeof v5);
+        bad[27] = bad[27] == '!' ? '#' : '!';
+        test_make_memio(&io, &m, (const uint8_t *)bad, (uint32_t)sizeof v5 - 1);
+        cap_make(&sk, &cap);
+        CHECK(unc_extract_as(UNC_FORMAT_BTOA, &io, &sk, &al, NULL, NULL)
+              == UNC_OK);
+        CHECK(cap.count == 1 && cap.status[0] != UNC_OK);
+    }
+
+    /* Prose that merely contains the word is not an archive. */
+    {
+        static const char prose[] =
+            "I used xbtoa Begin once, years ago, and it worked.\n";
+        test_make_memio(&io, &m, (const uint8_t *)prose,
+                        (uint32_t)sizeof prose - 1);
+        CHECK(unc_sniff(&io) != UNC_FORMAT_BTOA);
+    }
+}
+
 static void test_resfork_find(void)
 {
     /* A minimal resource fork holding 'MKey' 0 = eight bytes. */
@@ -3557,5 +3623,6 @@ void run_format_tests(void)
     test_rc4();
     test_cpt_cipher();
     test_winzip_aes_pieces();
+    test_btoa();
     test_resfork_find();
 }

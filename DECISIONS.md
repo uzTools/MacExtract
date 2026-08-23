@@ -106,6 +106,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-23 (SpaceSaver, the dictionary) — carrying 9,679 bytes that are not ours
 - 2026-08-23 (decryption) — five schemes in, and the one with no second reader
 - 2026-08-23 (StuffIt's archive key) — the fold count, measured
+- 2026-08-23 (btoa's licence) — a reference that may not be transcribed
 
 ---
 
@@ -5601,14 +5602,15 @@ garbling with it (a stored entry's ciphertext XOR its plaintext is the
 password in capitals), where XADMaster uses the bytes as given. Neither
 is wrong for the files it wrote, so both are tried.
 
-### Compact Pro: read out of the application, and graded by nobody
+### Compact Pro: read out of the application, and graded by it
 
 The Unarchiver's own format notes say "the algorithm for this is
 unknown"; macutils skips the file; CptExpand's documentation says it
 "will not extract encrypted files"; StuffIt's Compact Pro translator
-answers "the file is password protected". It is the last format here
-with no second reader — so it was read out of Compact Pro 1.51's own
-`CODE` 3, both directions, and every address is in `src/unc_crypt.c`:
+answers "the file is password protected". No second READER exists — so
+it was read out of Compact Pro 1.51's own `CODE` 3, both directions,
+every address is in `src/unc_crypt.c`, and the application itself is
+what grades the result:
 
 - a **64-bit CRC** register, polynomial 0xEDB88320 in *both* halves
   (the table builder at 0x408e), seeded 0x0123456789ABCDEF (0x40fe);
@@ -5780,3 +5782,43 @@ The StuffIt 5 entry in OPEN_ITEMS.md is now the same shape, and is
 labelled with what this cost: two readings that agree with each other
 for exactly the inputs anybody would test are not evidence about
 anything.
+## 2026-08-23 (btoa's licence) — a reference that may not be transcribed
+
+Every other reference this project reads is LGPL or public domain, so
+"transcribe it and cite the file" has never needed a second thought.
+btoa is the first that does.
+
+Its README: *"Btoa is in the public domain. You may use it, give it
+away, and make improvements, as long as the names of the developers are
+mentioned and you don't use it to earn money. It may NOT be used
+commercially without my permission."* The first four words are wrong
+about the rest of the sentence — a non-commercial restriction is not
+the public domain, which is why Debian shipped btoa in `non-free` — and
+it is incompatible with LGPL-2.1, under which somebody may charge for
+what they do with unclassic.
+
+So the usual arrangement is split in two:
+
+- **The format** — two header lines, base 85 offset by `'!'`, `z` and
+  `y`, the three checksum recurrences, the per-line check, and
+  `(len-1)&3` for the padding — is read out of `atob.c`, `btoa.h`,
+  `chksum.h` and the man page, and implemented in `src/fmt_btoa.c`.
+  What a format IS cannot be licensed; the developers' expression of it
+  can, and none of it is in that file: no function, buffer or control
+  structure is carried across, and each fact is cited to the routine it
+  came from.
+- **The code** stays in `reference/`, which is fetched and never
+  committed, and is *used* as a test-time oracle — `tools/run_btoa.py`
+  compiles it and requires our decoder to reproduce what it encodes.
+  Using a program is not distributing a derivative of it, and this use
+  earns nobody anything.
+
+The names are mentioned, which is the one condition of that licence
+this project can and does meet: in `NOTICE`, in `src/fmt_btoa.c` and
+here.
+
+**Why not just skip the format.** Because the licence covers their
+program and not the wire format, and a Mac user with a `.ascii` file
+from a Unix host has the same problem as one with a `.uu` — which this
+already reads. Declining would have been a licence decision applied to
+the wrong object.

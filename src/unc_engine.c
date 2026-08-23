@@ -47,6 +47,7 @@ static const UncFormatDesc unc_formats[] = {
     { UNC_FORMAT_DDSEG,       "DiskDoubler split", 1 },
     { UNC_FORMAT_SPACESAVER,  "StuffIt SpaceSaver", 1 },
     { UNC_FORMAT_APPLELINK,   "AppleLink package", 0 },
+    { UNC_FORMAT_BTOA,        "btoa",            1 },
 };
 
 const char *unc_format_name(UncFormat f)
@@ -169,9 +170,12 @@ UncFormat unc_sniff(UncIO *io)
     if (unc_applelink_probe(head, len)) return UNC_FORMAT_APPLELINK;
 
     /* BinHex last: it scans for a banner amid mail garbage. uuencode
-     * sits beside it — same habitat, same kind of scan — and before it,
-     * because BinHex's probe reads on past its own banner and a uu file
-     * has none to find. */
+     * and btoa sit beside it — same habitat, same kind of scan — and
+     * before it, because BinHex's probe reads on past its own banner
+     * and neither of those has one to find. btoa goes first of the
+     * three: its marker is a whole word at the start of a line, where
+     * uuencode's is a "begin" that prose contains. */
+    if (unc_btoa_probe(head, len))      return UNC_FORMAT_BTOA;
     if (unc_uu_probe(head, len))        return UNC_FORMAT_UU;
     if (unc_binhex_probe(head, len, io)) return UNC_FORMAT_BINHEX;
 
@@ -226,6 +230,7 @@ int unc_extract_as(UncFormat f, UncIO *io, UncSink *sink, UncAlloc *al,
     case UNC_FORMAT_DISKDOUBLER: return unc_dd_extract(&c);
     case UNC_FORMAT_NOWCOMPRESS: return unc_now_extract(&c);
     case UNC_FORMAT_UU:          return unc_uu_extract(&c);
+    case UNC_FORMAT_BTOA:        return unc_btoa_extract(&c);
     case UNC_FORMAT_ARC:         return unc_arc_extract(&c);
     case UNC_FORMAT_SUPERDISK:   return unc_superdisk_extract(&c);
     case UNC_FORMAT_SPACESAVER:  return unc_spacesaver_extract(&c);
