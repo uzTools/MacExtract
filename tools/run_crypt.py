@@ -28,12 +28,11 @@ meets: a wrong password is REPORTED (never decoded to rubbish), no
 password at all leaves the archive walkable, and the retry callback is
 asked again after a refusal.
 
-One divergence is deliberate and is asserted rather than worked around:
-for StuffIt classic, Debian's `unar` 1.10.8 and the XADMaster master
-this engine transcribes derive the archive key differently once the
-password reaches EIGHT bytes (BLOCKERS.md). The oracle-graded fixtures
-therefore use a seven-byte password, and the long-password case is
-checked against our own round trip only, and says so.
+The StuffIt archive key's fold count was a divergence between the two
+references and is now MEASURED: three archives StuffIt Deluxe 3.5.1
+wrote, with passwords of 8, 9 and 17 characters, say it is ceil(len/8)
+folds — which neither reference implements (BLOCKERS.md). Those three
+archives are replayed here whenever the emulator has produced them.
 """
 import os
 import shutil
@@ -249,6 +248,38 @@ def main():
             shutil.rmtree(src, ignore_errors=True)
         else:
             print("run_crypt: no `zip`, PKWARE-cipher fixtures skipped")
+
+        # ---- StuffIt classic, against archives ALADDIN wrote ----------
+        # Three of them, with passwords of 8, 9 and 17 characters,
+        # written by StuffIt Deluxe 3.5.1 under Mini vMac
+        # (tools/vmac/sitcrypt.py). They are the only encrypted .sit
+        # files here that this project did not generate, and the reason
+        # they exist is that the archive key's fold count is not what
+        # either reference implements: 8 needs one fold, 9 needs two, 17
+        # needs three, and both XADMaster and `unar` get one of those
+        # wrong. Absent, this skips and says so.
+        sitdir = os.path.join(os.environ.get("UNC_VMAC_HOME",
+                              os.path.expanduser("~/.cache/unclassic/vmac")),
+                              "specimens", "sitcrypt")
+        seen = 0
+        for tag in sorted(os.listdir(sitdir)) if os.path.isdir(sitdir) else []:
+            meta = os.path.join(sitdir, tag, "made.json")
+            arch = os.path.join(sitdir, tag, "Secret.sit.bin")
+            if not (os.path.exists(meta) and os.path.exists(arch)):
+                continue
+            import json
+            m = json.load(open(meta))
+            sub = m["subject"]
+            want = {sub["name"]: bytes.fromhex(sub["data"]),
+                    sub["name"] + ".rsrc": bytes.fromhex(sub["rsrc"])}
+            check_one("stuffit deluxe 3.5.1 (%d-character password)"
+                      % len(m["password"]), arch, want, m["password"],
+                      unclassic, problems, oracle=False)
+            seen += 1
+            ran += 1
+        if not seen:
+            print("run_crypt: no StuffIt Deluxe specimens in %s — "
+                  "tools/vmac/sitcrypt.py writes them" % sitdir)
 
         # ---- Compact Pro, against archives IT wrote -------------------
         # No second implementation of this cipher exists anywhere, so

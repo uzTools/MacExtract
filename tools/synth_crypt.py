@@ -140,23 +140,24 @@ def sitdes_crypt(data, ks, enc):
 
 
 def sit_archive_key(password):
-    """The password, iterated into the archive key. Mirrors
-    keyForPasswordData:entryKey:MKey: exactly, including its loop."""
+    """The password, iterated into the archive key: one fold per
+    eight-byte block, ceil(len/8) of them.
+
+    Measured rather than transcribed — neither XADMaster nor `unar`
+    1.10.8 has this right, and three archives StuffIt Deluxe 3.5.1 wrote
+    say what it is (tools/vmac/sitcrypt.py).
+    """
     ak = bytearray(b"\x01\x23\x45\x67\x89\xab\xcd\xef")
     ks = sitdes_setkey(bytes(ak))
     length = len(password)
-    x = 0
-    while True:
+    for x in range((length + 7) // 8):
         block = bytearray(8)
         off = x << 3
-        n = 8 if (off <= length and length - off >= 8) else max(0, length - off)
+        n = min(8, length - off)
         block[:n] = password[off:off + n]
         for i in range(8):
             ak[i] ^= block[i] & 0x7F
         ak[:] = sitdes_crypt(bytes(ak), ks, True)
-        x += 1
-        if not ((((x * (length >> 3)) << 3) <= length) and length >= 8):
-            break
     return bytes(ak)
 
 

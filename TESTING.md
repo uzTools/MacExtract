@@ -615,6 +615,14 @@ verifier is the archive's `'MKey'` resource and the oracle needs the
 resource fork too; our CLI is given the bare `.sit` and finds the same
 resource in the sidecar file it writes itself.
 
+**StuffIt classic is graded by StuffIt Deluxe 3.5.1** when the emulator
+has been run: `tools/vmac/sitcrypt.py` has the application encrypt a
+known file under a chosen password and keeps the archive — as
+MacBinary, because the password verifier is in the archive's resource
+fork. Three are kept, with passwords of 8, 9 and 17 characters, and
+those lengths are not decoration: they are what showed that the fold
+count is ceil(len/8) and that neither reference implements it.
+
 **The ciphers run on a big-endian 68000 too.** `tests/run_mac_sink.sh`
 cross-compiles the unit tests with `m68k-linux-gnu-gcc -mcpu=68000` and
 runs them under `qemu-m68k`, so every cipher vector — DES, StuffItDES,
@@ -646,14 +654,13 @@ Also asserted, because they are what a user meets:
 **What this cannot see.** Three things, and the first is the one to
 remember:
 
-- **No file that Aladdin's or Bill Goodman's software actually
-  encrypted has ever been read here.** `unar` agreeing proves the two
-  readings of a cipher match; it cannot prove either matches what the
-  original wrote. The one place that bites is a password of **eight
-  bytes or more** in StuffIt classic, where `unar` 1.10.8 and current
-  XADMaster disagree outright (OPEN_ITEMS.md) — the oracle-graded cases
-  use a seven-byte password and the long one is checked against our own
-  round trip, labelled.
+- **StuffIt 5 is still graded only against `unar`.** Nothing here
+  writes an encrypted StuffIt 5 archive, so its RC4 case is a generated
+  file adjudicated by a second reading of the same reference. That is
+  the arrangement that hid a real bug in StuffIt CLASSIC until an
+  archive Aladdin's software wrote turned up (FORMATS.md, *StuffIt
+  classic's archive key*), so it is named here rather than counted as
+  coverage.
 - **Compact Pro is graded by Compact Pro**, when the emulator has been
   run: `tools/vmac/cptcrypt.py --make --probe` has the application
   itself encrypt three known subjects and keeps the archive beside the

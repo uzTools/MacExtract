@@ -715,24 +715,36 @@ int unc_crypt_sit(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen,
     uint8_t archivekey[8] = { 0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef };
     uint8_t archiveiv[8], verifyblock[8] = { 0, 0, 0, 0, 0, 0, 0, 4 };
     uint8_t filekey[8], fileiv[8];
-    uint32_t x = 0, length = pwlen;
+    uint32_t x, blocks, length = pwlen;
     int i;
 
+    /* One fold per eight-byte block of the password, and the count is
+     * ceil(length / 8) — MEASURED, on three archives StuffIt Deluxe
+     * 3.5.1 wrote under Mini vMac with passwords of 8, 9 and 17
+     * characters, which need 1, 2 and 3 folds (tools/vmac/sitcrypt.py;
+     * FORMATS.md, *StuffIt classic's archive key*).
+     *
+     * NEITHER reference has this. XADMaster's loop —
+     *   while ((((x * (length >> 3)) << 3) <= length) && length >= 8)
+     * — folds an extra ALL-ZERO block at exactly 8 and stops at two
+     * folds however long the password is, so it is wrong at 8 and at
+     * 17 and up; Debian's `unar` 1.10.8 folds one block whatever the
+     * length, so it is wrong at 9 and up. Each opens archives the other
+     * cannot, which is what the divergence looked like from here before
+     * an archive existed to ask. */
+    blocks = (length + 7u) >> 3;
     sitdes_setkey(archivekey, &ks);
-    do {
+    for (x = 0; x < blocks; x++) {
         uint8_t passblock[8];
-        uint32_t copybytes, off = x << 3;
+        uint32_t off = x << 3, n = length - off < 8u ? length - off : 8u;
 
         for (i = 0; i < 8; i++) passblock[i] = 0;
-        copybytes = off <= length && length - off >= 8 ? 8u
-                    : (off < length ? length - off : 0u);
-        for (i = 0; i < (int)copybytes; i++) passblock[i] = pw[off + (uint32_t)i];
+        for (i = 0; i < (int)n; i++) passblock[i] = pw[off + (uint32_t)i];
 
         for (i = 0; i < 8; i++) archivekey[i] ^= passblock[i] & 0x7f;
 
         sitdes_crypt(archivekey, &ks, 1);
-        ++x;
-    } while ((((x * (length >> 3)) << 3) <= length) && length >= 8);
+    }
 
     for (i = 0; i < 8; i++) archiveiv[i] = mkey[i];
     sitdes_setkey(archivekey, &ks);

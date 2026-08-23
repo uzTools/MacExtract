@@ -1,4 +1,4 @@
-unclassic v0.13.0 — bootstrap distribution
+unclassic v0.14.0 — bootstrap distribution
 =========================================
 
 A bare Classic Mac has no way to open a .sit/.cpt/.hqx until it HAS an

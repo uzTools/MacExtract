@@ -92,16 +92,6 @@ What it does not HAVE is section 2.
   Compact Pro (then `tools/vmac/cptcrypt.py` is one command), or one
   encrypted `.cpt` from anywhere with its password.
 
-- **StuffIt classic's archive key for passwords of EIGHT bytes or
-  more is not settled.** Debian's `unar` 1.10.8 and the XADMaster
-  master this engine transcribes iterate it differently; under eight
-  bytes they agree, and above it they do not. This engine follows the
-  reference in `reference/`, which is the newer reading. **What would
-  close it:** an encrypted StuffIt archive written by StuffIt with a
-  password of eight characters or more — the only thing that can say
-  which reading matches Aladdin's. `tools/run_crypt.py` uses a
-  seven-byte password for the oracle-graded cases and says so.
-
 ---
 
 ## 2. Waiting on a file this machine does not have
@@ -164,15 +154,17 @@ Unlike section 3, none of this is impossible here: a download would do it.
   **What would close it:** why `INIT 0` declines, or one file from
   anywhere.
 
-- **An encrypted archive written by ALADDIN's software.** Bill
-  Goodman's half of this closed on 2026-08-23: Compact Pro 1.51 writes
-  the specimens that grade its own cipher, both ways
-  (`tools/vmac/cptcrypt.py --make`). StuffIt's has not. Every encrypted
-  `.sit` and StuffIt 5 fixture here is generated and adjudicated by
-  `unar -p`, which grades the two readings against each other and
-  cannot grade either against what StuffIt actually wrote. **What is
-  missing is a gradeable SPECIMEN**, and one with a password of eight
-  characters or more would settle the divergence in section 1 as well.
+- **An encrypted StuffIt 5 archive.** StuffIt classic's half closed on
+  2026-08-23 — StuffIt Deluxe 3.5.1 writes the specimens now
+  (`tools/vmac/sitcrypt.py`), and they corrected the archive key —
+  but nothing here writes a StuffIt **5** one: 3.5.1 predates the
+  format and Deluxe 5.0.1 needs a System this machine does not run.
+  So RC4-encrypted `.sit5` is still generated here and adjudicated by
+  `unar -p`, which grades two readings against each other and neither
+  against Aladdin. **What is missing is a gradeable SPECIMEN.** The
+  classic case is the warning: there, both readings were wrong, and
+  they were wrong in ways that agreed with each other for exactly the
+  password lengths anybody would have tested.
 
 - **AppleLink `.pkg`: one file, which would settle two questions.**
   Named since 2026-08-23 from Aladdin's own recogniser (FORMATS.md,

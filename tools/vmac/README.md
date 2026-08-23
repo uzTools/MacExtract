@@ -1133,6 +1133,40 @@ Four things it will teach you if you drive another application here:
   stops changing rather than counting, because a fixed count either leaves
   a dialog up or types Return into the catalog window afterwards.
 
+### Making an encrypted StuffIt archive — `sitcrypt.py`
+
+    tools/vmac/sitcrypt.py --map                     photograph the menus
+    tools/vmac/sitcrypt.py --password swordfish --tag pw9
+
+StuffIt Deluxe 3.5.1 (installed by `spacesaver.py --install351`) writes
+StuffIt classic archives with passwords, and this drives it: File ▸ New,
+Archive ▸ Stuff… with **Encrypt with password** ticked, then the
+password twice. The archive comes off as MacBinary because the
+verifier — `'MKey'` 0 — is in its RESOURCE fork.
+
+It exists because the archive key's fold count was a standing
+disagreement between `unar` and XADMaster that no generated file could
+settle. Three runs settled it: 8, 9 and 17 characters need 1, 2 and 3
+folds, so the rule is ceil(len/8) and **neither reference has it**
+(FORMATS.md). `tools/run_crypt.py` replays whatever specimens are
+present.
+
+Four things it will teach you, and each cost a run:
+
+- **Shut Down can stall.** With the subject on a second volume, Shut
+  Down ejected it and the Finder asked for it back — so the boot volume
+  never flushed and the archive came off forty bytes short, with a
+  resource map claiming a length the file did not have. One volume.
+- **Rows are sixteen pixels apart, not fifteen.** At fifteen the click
+  for row 5 landed on row 4 and encrypted the 727 KB application
+  instead of the subject — perfectly, which is the sort of success that
+  reads as a failure.
+- **The invisible files count.** A volume's `Desktop DB` and `Desktop
+  DF` are listed by StuffIt's own dialog and sort before anything, so
+  row 0 is not your file.
+- **The application renames what you type.** "Secret.sit" typed into
+  File ▸ New becomes `Secret.sit.sit`.
+
 ### Asking Compact Pro about its own cipher — `cptcrypt.py`
 
     tools/vmac/cptcrypt.py --explore     photograph each step

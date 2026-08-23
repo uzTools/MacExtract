@@ -105,6 +105,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-23 (SpaceSaver, the encoder agrees) — the cross-check that replaced a specimen
 - 2026-08-23 (SpaceSaver, the dictionary) — carrying 9,679 bytes that are not ours
 - 2026-08-23 (decryption) — five schemes in, and the one with no second reader
+- 2026-08-23 (StuffIt's archive key) — the fold count, measured
 
 ---
 
@@ -5724,12 +5725,58 @@ every archive in the new suite is generated, and the point of
   shared misreading cannot survive. For StuffIt classic that means the
   fixture is MacBinary, because the oracle needs the resource fork too.
 
-One divergence turned up and is asserted rather than papered over:
-**Debian's `unar` 1.10.8 and the XADMaster master this engine
-transcribes derive the StuffIt archive key differently once the
-password reaches eight bytes.** Under eight they agree; at eight and
-above the newer code runs its iteration a second time. Which is right
-for files Aladdin wrote is not decidable here — no encrypted StuffIt
-archive exists on this machine — so the oracle-graded fixtures use a
-seven-byte password and the long-password case is checked against our
-own round trip and says so.
+One divergence turned up between the two references, and it was
+asserted rather than papered over: **`unar` 1.10.8 and current
+XADMaster derive the StuffIt archive key differently once the password
+reaches eight bytes.** It is now settled, and the answer is that
+**neither of them is right** — see the next entry.
+
+## 2026-08-23 (StuffIt's archive key) — the fold count, measured
+
+The open question was which reference matched Aladdin: `unar` 1.10.8 or
+current XADMaster. The answer is neither, and the way that came out is
+the transferable part.
+
+### What it is
+
+The password is folded into the archive key eight bytes at a time, and
+the number of folds is **ceil(len / 8)**. Three archives StuffIt Deluxe
+3.5.1 wrote under Mini vMac say so — passwords of 8, 9 and 17
+characters need 1, 2 and 3 folds (`tools/vmac/sitcrypt.py`; the table
+is in FORMATS.md). XADMaster's loop gives 2, 2, 2; `unar` 1.10.8 gives
+1, 1, 1. Each opens archives the other cannot, and this engine had
+shipped XADMaster's.
+
+### Why it survived a whole feature's worth of testing
+
+Because **every encrypted `.sit` in the project was one the project had
+generated**, and the generator was written from the same reading as the
+reader. `unar` adjudicated those files and disagreed — which was
+recorded as a divergence between two references rather than read as
+what it was: two implementations disagreeing about a file that neither
+of them wrote, with no third party in the room. The suite was green
+throughout. It was green because it was asking the wrong question.
+
+Under eight characters all three readings agree, and eight or fewer is
+what a person picks when testing a password. The specimen that broke it
+open was chosen the other way on purpose: nine characters, because nine
+is where the two references were known to differ. Then 8 and 17 were
+run to find the shape rather than to confirm the guess — and 8 is where
+OUR reading turned out to be the wrong one.
+
+### The rule this is an instance of
+
+`OPEN_ITEMS.md` had this as "waiting on a gradeable specimen", filed
+beside four others, and the entry was right. What it did not say — and
+what the DiskDoubler and Compact Pro entries did not say either — is
+that the software that WRITES the format is a specimen source, not just
+a grader. Three of this project's last four format corrections came
+from running the original application: Salient's expander for
+DiskDoubler 3-5, Compact Pro for its own cipher, and now StuffIt
+Deluxe. In each case the file that settled it did not have to be found;
+it had to be MADE.
+
+The StuffIt 5 entry in OPEN_ITEMS.md is now the same shape, and is
+labelled with what this cost: two readings that agree with each other
+for exactly the inputs anybody would test are not evidence about
+anything.
