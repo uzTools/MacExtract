@@ -5356,8 +5356,17 @@ MANIFEST — a text script naming files that sit beside it — and not a
 container at all. If that is right, `.pkg` is not something an
 unarchiver extracts, and naming it is the whole of the capability; the
 open item closes as a property of the format rather than as a gap.
-**What would settle it:** one `.pkg` file, or reading the expander's own
-walk (@0x2d6a onward) far enough to see it open a companion.
+**What would settle it:** one `.pkg` file — because reading further is
+no longer cheap. The expander opens the package itself (@0x2e00, `HOpen`
+with permission 3 falling back to 1) and then hands the work to the
+ENGINE: @0x334c and its neighbours do `GetResource('Eng ', 2)` /
+`('Eng ', 3)`, lock it, take its entry point and call it. The
+translator is a driver, and the decoding lives in 25 KB code resources
+inside `StuffIt Engine™` with no MacsBug symbols in them. Two more
+measured details on the way, both from @0x2e5c: a package's destination
+folder is its own name with `.pkg` stripped and `STR# 129` item 2,
+`" Folder"`, appended — so `Report.pkg` expands into `Report Folder` —
+and that is the only place item 3, `".pkg"`, is used.
 
 ### Why it stops at detect-only
 

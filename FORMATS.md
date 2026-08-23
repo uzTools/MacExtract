@@ -649,6 +649,12 @@ other formats by extension and type. **Hypothesis:** a package is a transfer
 manifest naming files that sit beside it, which would make naming it the whole
 capability. DECISIONS.md 2026-08-23 has the evidence and what would settle it.
 
+**Two more things the bytes say.** A package expands into a folder named
+after itself — `.pkg` stripped, `" Folder"` appended, so `Report.pkg` becomes
+`Report Folder` (@0x2e5c) — and the expansion itself is not in the translator
+at all: it opens the file and then calls `GetResource('Eng ', 2)` in
+`StuffIt Engine™` and jumps into it (@0x334c). The translator is a driver.
+
 **Detect only, and the reason is a specimen.** What a `Decode` line refers to
 has not been read out of the expander, and no `.pkg` file has ever reached
 this project, so there is nothing to grade a reading against. `tools/vmac/
