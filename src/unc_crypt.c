@@ -35,8 +35,11 @@
  *                this is unknown". It was read out of Compact Pro
  *                1.51's `CODE` 3: the key at 0x1892, the table at
  *                0x408e, the seed at 0x40fe, the encrypt loop at
- *                0x1152 and the decrypt loop at 0x1f08.
- *                DECISIONS.md 2026-08-23.
+ *                0x1152 and the decrypt loop at 0x1f08 — and then
+ *                graded by that application, both ways (FORMATS.md,
+ *                *Compact Pro's cipher*). The eight-byte preamble an
+ *                encrypted entry opens with is fmt_cpt.c's business,
+ *                not this file's. DECISIONS.md 2026-08-23.
  *
  * Sources: reference/XADMaster/XADStuffItDESHandle.m (StuffItDES, key
  * derivation and the fork cipher), XADStuffIt5Parser.m + XADRC4Handle.m,

@@ -5624,22 +5624,58 @@ with no second reader — so it was read out of Compact Pro 1.51's own
   one register runs across the resource fork and then the data fork of
   an entry and is reset for the next.
 
-**It is a hypothesis, and labelled one.** The plan was Salient's
-arrangement — write an archive with this cipher, hand it to the
-application, see whether the bytes come back (`tools/vmac/cptcrypt.py`)
-— and Compact Pro 1.51 opens the archive, lists every entry, marks each
-encrypted, and then refuses: *"This version of Compact Pro cannot
-validate or extract encrypted files."* That is not a build without the
-code; it is a **registration gate**. The routine at 0x47ca stores the
-personalisation string and enables encryption at 0x485e only when that
-string ends with `*`, and every copy in the corpus — 1.34 and 1.51 in
-four languages — carries the unregistered placeholder `********`.
-Forging a registration is not something this project will do, so the
-reading stands ungraded and OPEN_ITEMS.md says what would close it.
+**Graded by the application, both ways** — and the getting there is
+the part worth writing down, because two of the three things that went
+wrong were mine.
 
-What the run DID establish, and it is not nothing: Compact Pro accepts
-the container this project writes, agrees about every entry's sizes and
-type, and agrees that each is encrypted.
+The plan was Salient's arrangement: write an archive with this cipher,
+hand it to the application, see whether the bytes come back
+(`tools/vmac/cptcrypt.py`). An unregistered Compact Pro refuses —
+*"This version of Compact Pro cannot validate or extract encrypted
+files"* — and the reading of WHY was wrong. The routine at 0x47ca
+stores the personalisation string and 0x485e enables encryption when
+that string ends with `*`; from that I concluded a registration would
+not help unless its name ended in `*`, and said so. Registering with
+the code Macintosh Garden publishes (`Registered` / 35427117) opened
+the gate outright: the refusal went, the Add dialog's Encrypt checkbox
+appeared (0x4864 patches DITL 312 to move it into view), and the
+application both encrypted and decrypted. **Reading one branch is not
+reading the feature**, and the cost of the mistake was a paragraph in
+three files claiming the format could not be graded here.
+
+Then it still failed, and the second wrong thing was also mine.
+Compact Pro extracted our archive as *"The password supplied is
+incorrect or the archive is damaged"*, and its own archives would not
+decrypt under this engine either. The arithmetic said what the
+disassembly had not: three archives the application encrypted with
+data forks of 96, 100 and 103 bytes came back as 104, 108 and 111 —
+**a constant +8**, so not a block cipher's padding but a fixed
+preamble. An encrypted entry's stream opens with eight bytes that the
+reader decrypts and DISCARDS (`CODE` 3 @0x1f5e moves the read cursor
+past them), and their length is counted in the compressed size of the
+first fork that has any bytes. They are a salt: the register steps on
+them, so one password over the same bytes encrypts differently in two
+entries — which is why the recovered keystreams of three archives
+diverged at byte 0 and looked like a broken cipher.
+
+With that one line, everything agrees:
+
+- three RLE-only archives Compact Pro encrypted: every byte back;
+- one LZH-compressed two-fork archive it encrypted: both forks
+  byte-exact, which is also what proves the register runs across the
+  two forks without resetting;
+- an archive this project encrypted: Compact Pro extracted all three
+  entries, and its own CRC-32 over both decrypted forks passed.
+
+The third wrong thing was not ours and is worth recording so nobody
+chases it again: every RESOURCE fork extracted on that machine comes
+back with bytes changed a few dozen in. It is not Compact Pro — a
+corpus archive extracted by the same copy does it too — it is the Mac
+opening the extracted file's resource fork to draw its icon, and the
+Resource Manager writing the map's live fields back. `cptcrypt.py`
+compares data forks strictly and says so; what makes that sufficient is
+that Compact Pro checks the entry CRC over BOTH decrypted forks before
+it writes anything at all.
 
 ### WinZip's AES, which is out of era and in anyway
 

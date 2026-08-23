@@ -654,11 +654,13 @@ remember:
   XADMaster disagree outright (OPEN_ITEMS.md) — the oracle-graded cases
   use a seven-byte password and the long one is checked against our own
   round trip, labelled.
-- **Compact Pro is not in this suite at all**, because there is nothing
-  to grade it with: `tools/synth_cpt.py` writes an encrypted archive and
-  `tools/vmac/cptcrypt.py` hands it to Compact Pro 1.51, which refuses
-  encrypted files unless registered. What the suite would check is a
-  round trip through our own cipher, which is worth nothing.
+- **Compact Pro is graded by Compact Pro**, when the emulator has been
+  run: `tools/vmac/cptcrypt.py --make --probe` has the application
+  itself encrypt three known subjects and keeps the archive beside the
+  emulator's other state, and this suite extracts it and compares. On a
+  fresh clone there is no such archive and the case skips, loudly. A
+  round trip through our own cipher is deliberately NOT substituted for
+  it: it would grade nothing.
 - The **`arc` cases skip** when `build/arc/` is empty, which is what
   `ci.sh` leaves behind after `make clean`; run `tools/get_arc.sh`
   first to include them. The skip is printed, never silent.

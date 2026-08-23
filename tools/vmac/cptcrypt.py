@@ -46,6 +46,7 @@ own Compact Pro translator answers "the file is password protected",
 and The Unarchiver never implemented it. OPEN_ITEMS.md.
 """
 import argparse
+import json
 import os
 import shutil
 import subprocess
@@ -75,9 +76,29 @@ PASSWORD = "ohsecret"
 FINDER_VOLUME_ICON = (480, 40)
 FINDER_APP_ICON = (105, 105)
 NAG_NOT_YET = (433, 249)
+NAG_REGISTER = (81, 248)
 SF_FIRST_ROW = (150, 88)
 MENU_Y = 10
 MENUS = {"File": 45, "Edit": 80, "Archive": 135, "View": 190, "Misc": 232}
+
+# The Finder's Special menu, and Shut Down in it — arcmac.py's System 6
+# coordinates, and it releases 25 pixels to the RIGHT of the title so
+# the pointer is inside the menu rather than on its left edge.
+SPECIAL_X = 175
+SHUT_DOWN_Y = 123
+
+# The Add dialog (DITL 312) as a REGISTERED copy draws it — measured off
+# cptmake/m1-add-dialog.png. The Encrypt checkbox is the reason this
+# phase needs a registered copy at all: the routine at 0x4864 moves it
+# into view, and until then it sits at a negative rect.
+ADD_ENCRYPT = (128, 54)
+ADD_SUBJECT_ROW = (200, 206)
+ADD_BUTTON = (155, 302)
+ADD_DONE = (452, 302)
+ADD_ALL_BUTTON = (255, 302)
+ADD_ROW_H = 15
+ADD_PROBE_ROWS = (191, 206, 221)
+MADE_NAME = "Made.cpt"
 
 
 def cli():
@@ -104,9 +125,16 @@ def extract_app(workdir):
     return binpath
 
 
-def source_macbinary(workdir, password):
-    """The encrypted archive, as a PACT/CPCT file Standard File will show."""
-    blob = SCPT.build(password.encode("mac_roman"))
+def source_macbinary(workdir, password, fixture=None):
+    """The archive, as a PACT/CPCT file Standard File will show."""
+    if fixture:
+        blob = open(os.path.join(REPO, "fixtures", fixture), "rb").read()
+        if len(blob) < 8 or blob[0] != 1 or blob[1] != 1:
+            raise SystemExit("cptcrypt: %s is not a single-volume .cpt "
+                             "(a derived-*.cpt is the unwrapped form)"
+                             % fixture)
+    else:
+        blob = SCPT.build(password.encode("mac_roman") if password else None)
     open(os.path.join(workdir, "Secret.cpt"), "wb").write(blob)
     out = os.path.join(workdir, "source.bin")
     with open(out, "wb") as f:
@@ -115,14 +143,22 @@ def source_macbinary(workdir, password):
     return out
 
 
-def boot_image(workdir, password, system="System6.hfv"):
+def boot_image(workdir, password, system="System6.hfv", fixture=None,
+               make=False, probe=False):
     stock = os.path.join(R.VMAC_HOME, system)
     if not os.path.exists(stock):
         raise SystemExit(f"cptcrypt: no {system} — run tools/vmac/setup.sh")
     img = os.path.join(workdir, "boot-cptcrypt.hfv")
-    R.sh(sys.executable, os.path.join(HERE, "mkboot.py"), stock,
-         extract_app(workdir), img, "--finder", "--app-name", APP_NAME,
-         "--macbin", f"{source_macbinary(workdir, password)}:{SOURCE_NAME}")
+    argv = [sys.executable, os.path.join(HERE, "mkboot.py"), stock,
+            extract_app(workdir), img, "--finder", "--app-name", APP_NAME]
+    if make:
+        for path, nm in make_source(workdir, probe):
+            argv += ["--macbin", f"{path}:{nm}"]
+    else:
+        argv += ["--macbin",
+                 f"{source_macbinary(workdir, password, fixture)}:"
+                 f"{SOURCE_NAME}"]
+    R.sh(*argv)
     return img
 
 
@@ -143,6 +179,32 @@ def release(mac, x=None, y=None):
     time.sleep(1.0)
 
 
+def register(mac, shot, args):
+    """Type a registration into the shareware notice.
+
+    Macintosh Garden publishes one for 1.51 (Name "Registered", Code
+    35427117) and this is what it is for. Whether it unlocks ENCRYPTION
+    is the question the run is asking: the routine at 0x485e enables
+    that only when the stored name ends with `*`, so an ordinary
+    registration may well leave the refusal in place.
+    """
+    name, code = args.register.split(":", 1)
+    mac.click(*NAG_REGISTER)
+    time.sleep(2.5)
+    shot(mac, "3c-register-dialog.png")
+    mac._xdo("type", "--delay", "150", name)
+    time.sleep(1.0)
+    shot(mac, "3d-name-typed.png")
+    mac.key("Tab")
+    time.sleep(0.5)
+    mac._xdo("type", "--delay", "150", code)
+    time.sleep(1.0)
+    shot(mac, "3e-code-typed.png")
+    mac.key("Return")
+    time.sleep(3.0)
+    shot(mac, "3f-registered.png")
+
+
 def launch(mac, shot, args):
     if mac.settle(os.path.join(args.outdir, ".settle.png"),
                   interval=5.0, timeout=args.boot_timeout) is None:
@@ -156,9 +218,12 @@ def launch(mac, shot, args):
     mac.command_key("o")
     time.sleep(args.launch_wait)
     shot(mac, "3-launched.png")
-    mac.click(*NAG_NOT_YET)
-    time.sleep(2.0)
-    shot(mac, "3b-nag-dismissed.png")
+    if args.register:
+        register(mac, shot, args)
+    else:
+        mac.click(*NAG_NOT_YET)
+        time.sleep(2.0)
+        shot(mac, "3b-nag-dismissed.png")
 
 
 def open_source(mac, shot, args):
@@ -169,6 +234,128 @@ def open_source(mac, shot, args):
     mac.key("Return")
     time.sleep(args.launch_wait)
     shot(mac, "5-archive-open.png")
+
+
+# The file the --make phase compresses, and every property of it is
+# chosen so that the archive it lands in can be read for its CIPHER
+# ALONE. Both forks are pseudo-random, because Compact Pro picks LZH
+# when LZH helps and this must come back RLE-only (flags bits 1 and 2
+# clear); no byte is 0x81, so the RLE stage is a straight copy; and the
+# generator is a fixed LCG, so the specimen is reproducible.
+#
+# With all three, ciphertext XOR plaintext IS the keystream, which is
+# what turns a "wrong password" into a diff.
+MAKE_NAME = "Subject"
+
+
+def _incompressible(n, seed):
+    out = bytearray()
+    x = seed
+    while len(out) < n:
+        x = (x * 1103515245 + 12345) & 0x7FFFFFFF
+        b = (x >> 16) & 0xFF
+        if b != 0x81:
+            out.append(b)
+    return bytes(out)
+
+
+MAKE_DATA = _incompressible(600, 1)
+MAKE_RSRC = _incompressible(400, 7)
+
+# The probe set: data forks only, and two lengths chosen to separate the
+# possible padding rules. 100 and 103 both round up to 104 under "pad to
+# a multiple of eight" but to 104 and 104 under it too, while PKCS#5's
+# "always add one to eight" gives 104 and 104 as well — what actually
+# separates them is 96, which is already a multiple of eight: it stays
+# 96 under the first rule and becomes 104 under the second. All three
+# are incompressible, so the RLE stage is a copy and the compressed
+# length IS the cipher's.
+PROBES = [("P96", _incompressible(96, 11)),
+          ("P100", _incompressible(100, 13)),
+          ("P103", _incompressible(103, 17))]
+
+
+def make_source(workdir, probe=False):
+    """The file(s) the --make phase compresses, as MacBinary. `probe`
+    swaps the one two-fork subject for the three data-fork lengths that
+    separate the padding rules."""
+    if not probe:
+        out = os.path.join(workdir, "subject.bin")
+        with open(out, "wb") as f:
+            f.write(W.macbinary(MAKE_NAME, MAKE_DATA, MAKE_RSRC, b"TEXT",
+                                b"ttxt"))
+        return [(out, MAKE_NAME)]
+    made = []
+    for name, data in PROBES:
+        out = os.path.join(workdir, name + ".bin")
+        with open(out, "wb") as f:
+            f.write(W.macbinary(name, data, b"", b"TEXT", b"ttxt"))
+        made.append((out, name))
+    return made
+
+
+def save_specimen(workdir, args):
+    """Copy the archive Compact Pro wrote off the volume, with a JSON
+    saying what went into it — the specimen this format has never had.
+
+    It lands beside the emulator's other state rather than under
+    `build/`, for the reason cptsegment.py's does: the next `./ci.sh`
+    runs `make clean`.
+    """
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+    dest = os.path.join(args.outdir, MADE_NAME)
+    try:
+        r = subprocess.run(["hmount", os.path.join(workdir, "boot.hfv")],
+                           env=env, capture_output=True, text=True,
+                           errors="surrogateescape")
+        if r.returncode != 0:
+            raise SystemExit("cptcrypt: cannot mount the volume back")
+        vol = r.stdout.split('Volume name is "', 1)[1].split('"', 1)[0]
+        got = subprocess.run(["hcopy", "-r", f"{vol}:{MADE_NAME}", dest],
+                             env=env, capture_output=True)
+        subprocess.run(["humount"], env=env, capture_output=True)
+    finally:
+        shutil.rmtree(env["HOME"], ignore_errors=True)
+    if got.returncode != 0 or not os.path.exists(dest):
+        print("cptcrypt: the application wrote no archive — look at the "
+              "screenshots (a stray Return in Standard File saves into "
+              "whatever folder it walked into)")
+        return 1
+    subjects = ([{"name": n, "data": d.hex()} for n, d in PROBES]
+                if args.probe else
+                [{"name": MAKE_NAME, "data": MAKE_DATA.hex(),
+                  "rsrc": MAKE_RSRC.hex()}])
+    meta = {"made_by": "Compact Pro 1.51 on System 6.0.8 under Mini vMac",
+            "registered_as": args.register,
+            "password": args.password,
+            "probe": bool(args.probe),
+            "bytes": os.path.getsize(dest),
+            "subjects": subjects}
+    with open(os.path.join(args.outdir, "made.json"), "w") as f:
+        json.dump(meta, f, indent=1, sort_keys=True)
+    print(f"cptcrypt: {os.path.getsize(dest)} bytes -> {dest}")
+    print(f"cptcrypt: what went into it -> "
+          f"{os.path.join(args.outdir, 'made.json')}")
+    return 0
+
+
+def shutdown(mac, shot):
+    """Special > Shut Down, and NOT a kill.
+
+    Mini vMac writes the guest's sectors through buffered stdio and
+    flushes on eject, so killing the emulator leaves a volume whose
+    files are partly written. arcmac.py and spacesaver.py pick this
+    menu for the same reason."""
+    ox, oy = mac.origin()
+    mac._xdo("mousemove", str(ox + SPECIAL_X), str(oy + 8))
+    time.sleep(0.3)
+    mac._xdo("mousedown", "1")
+    time.sleep(1.0)
+    mac._xdo("mousemove", str(ox + SPECIAL_X + 25), str(oy + SHUT_DOWN_Y))
+    time.sleep(0.4)
+    mac._xdo("mouseup", "1")
+    time.sleep(20.0)
+    shot(mac, "z-shutdown.png")
 
 
 def read_volume(image, outdir, skip):
@@ -216,6 +403,69 @@ def macbinary_forks(path):
     return b[doff:doff + dlen], b[roff:roff + rlen]
 
 
+def phase_make(mac, shot, args):
+    """Have Compact Pro WRITE an encrypted archive.
+
+    A registered copy can, and this is the specimen the format has never
+    had here: an encrypted `.cpt` from the only implementation that
+    writes one. Registration leaves an untitled archive window open, so
+    there is no File > New to drive, and it also moves the Add dialog's
+    Encrypt checkbox into view — the routine at 0x4864 patches DITL 312,
+    which is why the coordinates above are measured off a REGISTERED
+    copy's screenshot and not off the resource.
+
+    The password is not asked for at Add time. Compact Pro takes it when
+    it writes the archive, and asks twice — once for it and once to
+    verify — so nothing may be typed blind before then: a stray Return
+    lands in Standard File and walks into a folder, which is how the
+    first attempt saved nothing anywhere.
+    """
+    mac.command_key("g")
+    time.sleep(3.0)
+    shot(mac, "m1-add-dialog.png")
+    mac.click(*ADD_ENCRYPT)
+    time.sleep(1.0)
+    shot(mac, "m2-encrypt-checked.png")
+    if args.probe:
+        # One click per subject, NOT Add All: the volume also holds the
+        # application and the System Folder, and Add All took all nine
+        # (which is a long compress and the wrong experiment).
+        # Alphabetical, so rows 3, 4 and 5 are P100, P103, P96.
+        for row in ADD_PROBE_ROWS:
+            mac.click(ADD_SUBJECT_ROW[0], row)
+            time.sleep(0.8)
+            mac.click(*ADD_BUTTON)
+            time.sleep(2.5)
+    else:
+        mac.click(*ADD_SUBJECT_ROW)
+        time.sleep(1.0)
+        mac.click(*ADD_BUTTON)
+        time.sleep(3.0)
+    shot(mac, "m3-added.png")
+    mac.click(*ADD_DONE)
+    time.sleep(2.5)
+    shot(mac, "m4-done.png")
+
+    mac.command_key("s")
+    time.sleep(3.0)
+    shot(mac, "m5-save-dialog.png")
+    mac._xdo("type", "--delay", "150", MADE_NAME)
+    time.sleep(1.0)
+    shot(mac, "m6-named.png")
+    mac.key("Return")
+    time.sleep(6.0)
+    shot(mac, "m7-password-asked.png")
+    for i in range(2):                    # type it, then verify it
+        for ch in args.password:
+            mac.key(ch)
+        time.sleep(1.0)
+        shot(mac, "m8-password-%d.png" % (i + 1))
+        mac.key("Return")
+        time.sleep(6.0)
+    time.sleep(10.0)
+    shot(mac, "m9-written.png")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--emu", default="mv-4M")
@@ -228,8 +478,36 @@ def main():
     ap.add_argument("--explore", action="store_true",
                     help="stop after opening the archive and photograph "
                          "every menu, so the next run knows what to click")
+    ap.add_argument("--register", metavar="NAME:CODE",
+                    help="type a registration into the shareware notice "
+                         "before doing anything else. Macintosh Garden "
+                         "publishes one for 1.51: 'Registered:35427117'")
+    ap.add_argument("--plain", action="store_true",
+                    help="write the archive UNENCRYPTED. Isolates the "
+                         "container from the cipher: if Compact Pro cannot "
+                         "read this one either, the cipher is not what is "
+                         "wrong")
+    ap.add_argument("--fixture",
+                    help="extract a CORPUS archive instead of a generated "
+                         "one, to see what the application does with a real "
+                         "one on this path (implies --plain)")
+    ap.add_argument("--make", action="store_true",
+                    help="have Compact Pro WRITE an encrypted archive, "
+                         "rather than read one — the specimen this format "
+                         "has never had")
+    ap.add_argument("--probe", action="store_true",
+                    help="with --make: compress three data-fork-only "
+                         "subjects of 96, 100 and 103 bytes instead of one "
+                         "two-fork file, which is what separates the "
+                         "padding rules")
+    ap.add_argument("--encrypt-at", metavar="X,Y",
+                    help="where the Add dialog's Encrypt checkbox is, "
+                         "measured off m1-add-dialog.png from a run "
+                         "without this")
     ap.add_argument("--keep", action="store_true")
     args = ap.parse_args()
+    if args.fixture:
+        args.plain = True
     os.makedirs(args.outdir, exist_ok=True)
 
     def shot(mac, name):
@@ -239,10 +517,20 @@ def main():
 
     workdir = tempfile.mkdtemp(prefix="cptcrypt-")
     try:
-        img = boot_image(workdir, args.password)
+        img = boot_image(workdir, None if args.plain else args.password,
+                         fixture=args.fixture, make=args.make,
+                         probe=args.probe)
         mac = Mac(img, args.emu, workdir)
         try:
             launch(mac, shot, args)
+            if args.make:
+                phase_make(mac, shot, args)
+                mac.command_key("q")
+                time.sleep(6.0)
+                shot(mac, "m10-quit.png")
+                shutdown(mac, shot)
+                mac.close()
+                return save_specimen(workdir, args)
             open_source(mac, shot, args)
             if args.explore:
                 for name, x in sorted(MENUS.items(), key=lambda kv: kv[1]):
@@ -258,21 +546,35 @@ def main():
             mac.command_key("e")
             time.sleep(4.0)
             shot(mac, "7-extract-dialog.png")
-            # The destination is the boot volume, which is where the
-            # dialog opens; Return takes it.
-            mac.key("Return")
+            # "Select Destination Folder..." — Return means Open, which
+            # walks INTO whatever folder is selected (it descended into
+            # StuffIt Expander's the first time and photographed a
+            # working machine doing nothing). The button that accepts
+            # the folder shown is Extract, and it has a keyboard
+            # equivalent.
+            mac.command_key("e")
             time.sleep(4.0)
             shot(mac, "8-password-prompt.png")
-            for ch in args.password:
-                mac.key(ch)
-            time.sleep(1.0)
-            shot(mac, "8b-password-typed.png")
-            mac.key("Return")
+            if not args.plain:
+                for ch in args.password:
+                    mac.key(ch)
+                time.sleep(1.0)
+                shot(mac, "8b-password-typed.png")
+                mac.key("Return")
             time.sleep(args.extract_wait)
             shot(mac, "9-extracted.png")
             mac.command_key("q")
             time.sleep(6.0)
             shot(mac, "9b-quit.png")
+            # SHUT DOWN, do not just close the emulator. Mini vMac
+            # writes the guest's sectors through buffered stdio and
+            # flushes on eject; a killed emulator leaves a volume whose
+            # forks are PARTLY written — which here looked like Compact
+            # Pro corrupting every resource fork 48 bytes in, and cost a
+            # long detour into a cipher that was not what was wrong.
+            # arcmac.py and spacesaver.py have picked this menu for the
+            # same reason.
+            shutdown(mac, shot)
         finally:
             mac.close()
 
@@ -288,23 +590,37 @@ def main():
                 bad += 1
                 continue
             gd, gr = macbinary_forks(p)
-            ok = gd == data and gr == rsrc
-            print(f"    {name:14s} data {len(gd)}/{len(data)} "
-                  f"rsrc {len(gr)}/{len(rsrc)} {'OK' if ok else 'DIFFERS'}")
-            if not ok:
+            # DATA forks are compared strictly. RESOURCE forks are not,
+            # and the reason is not Compact Pro: the Mac opens an
+            # extracted file's resource fork to draw its icon, and the
+            # Resource Manager writes the live fields of the map back —
+            # a corpus archive extracted by Compact Pro comes back with
+            # the same 22 bytes changed, and these subjects' forks are
+            # arbitrary bytes, so it rewrites more. What makes the
+            # comparison unnecessary is that Compact Pro checks the
+            # entry's CRC-32 over BOTH decrypted forks before it writes
+            # anything: a resource fork that decrypted wrongly would
+            # have produced "the password supplied is incorrect or the
+            # archive is damaged" and no file at all.
+            if gd != data:
+                print(f"    {name:14s} DATA FORK DIFFERS "
+                      f"({len(gd)} vs {len(data)})")
                 bad += 1
+            else:
+                note = "" if gr == rsrc else "  (rsrc restamped by the Mac)"
+                print(f"    {name:14s} data {len(gd)}/{len(data)} OK"
+                      f"   rsrc {len(gr)}/{len(rsrc)}{note}")
         for name in sorted(set(files) - set(want)):
             print(f"    (also on the volume: {name})")
         if bad:
-            print("cptcrypt: Compact Pro wrote nothing back. On an "
-                  "unregistered copy that is expected and is not a verdict "
-                  "on the cipher — see 7-extract-dialog.png and this "
-                  "file's header. Look at the screenshots before believing "
-                  "anything either way.")
+            print("cptcrypt: Compact Pro did not reproduce the input. If it "
+                  "put up 'cannot validate or extract encrypted files', the "
+                  "copy is unregistered and this says nothing about the "
+                  "cipher; look at 7-extract-dialog.png first.")
             return 1
-        print("cptcrypt: Compact Pro 1.51 extracted every entry byte for "
-              "byte — the cipher reading is confirmed by the application "
-              "that wrote the format.")
+        print("cptcrypt: Compact Pro 1.51 extracted every entry, and its "
+              "own CRC over both decrypted forks passed — the cipher is "
+              "confirmed by the application that wrote the format.")
         return 0
     finally:
         if args.keep:

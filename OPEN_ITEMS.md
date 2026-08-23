@@ -164,15 +164,15 @@ Unlike section 3, none of this is impossible here: a download would do it.
   **What would close it:** why `INIT 0` declines, or one file from
   anywhere.
 
-- **An encrypted archive written by the original software.** Every
-  fixture that exercises decryption is generated here, because nothing
-  in the corpus is encrypted (measured with `lsar -j` over all 903).
-  Three of the seven ciphers are written by somebody else's encoder
-  (`zip -P`, `7z -mem=AES256`, `arc g<pw>`) and three more are
-  adjudicated by `unar -p`, so the gap is narrow — but no file that Aladdin's or Bill Goodman's software
-  actually encrypted has ever been read here. **What is missing is a
-  gradeable SPECIMEN**, and one encrypted `.sit` with a long password
-  would settle the divergence in section 1 as well.
+- **An encrypted archive written by ALADDIN's software.** Bill
+  Goodman's half of this closed on 2026-08-23: Compact Pro 1.51 writes
+  the specimens that grade its own cipher, both ways
+  (`tools/vmac/cptcrypt.py --make`). StuffIt's has not. Every encrypted
+  `.sit` and StuffIt 5 fixture here is generated and adjudicated by
+  `unar -p`, which grades the two readings against each other and
+  cannot grade either against what StuffIt actually wrote. **What is
+  missing is a gradeable SPECIMEN**, and one with a password of eight
+  characters or more would settle the divergence in section 1 as well.
 
 - **AppleLink `.pkg`: one file, which would settle two questions.**
   Named since 2026-08-23 from Aladdin's own recogniser (FORMATS.md,

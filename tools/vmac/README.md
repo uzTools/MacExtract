@@ -1141,36 +1141,53 @@ Four things it will teach you if you drive another application here:
                                          extract it
 
 The arrangement that graded DiskDoubler methods 3-5 (`ddencode.py`),
-pointed at the one format whose encryption nothing else reads:
-`tools/synth_cpt.py` writes an archive encrypted with the cipher
-`src/unc_crypt.c` read out of Compact Pro 1.51's `CODE` 3, and the
-application is asked to extract it. If the bytes come back, the reading
-is right.
+pointed at the one format whose encryption nothing else reads. It runs
+both ways: `tools/synth_cpt.py` writes an archive with the cipher
+`src/unc_crypt.c` read out of Compact Pro 1.51's `CODE` 3 and the
+application is asked to extract it, and `--make` has the application
+encrypt known subjects for this engine to read back. Both agree since
+2026-08-23.
 
-**Measured 2026-08-23: it will not.** Compact Pro opens the archive,
-lists all three entries with the right sizes and type/creator, marks
-each encrypted — and answers Extract with *"This version of Compact Pro
-cannot validate or extract encrypted files."* The decrypt loop is in
-that binary at 0x1f08; what is missing is a **registration**. The
-routine at 0x47ca stores the personalisation string and enables
-encryption at 0x485e only when it ends with `*`, and all five copies in
-the corpus carry the unregistered placeholder `********`. Forging one is
-not something this project will do, so the harness is kept for the day
-somebody has a registered copy — it is then one command — and the
-cipher stays labelled a hypothesis (OPEN_ITEMS.md).
+    tools/vmac/cptcrypt.py --register "Registered:35427117" --make --probe
+    tools/vmac/cptcrypt.py --register "Registered:35427117"
 
-Two things it established anyway, and one lesson:
+**Encryption is behind the registration**, and Macintosh Garden
+publishes one for 1.51 (`Registered` / 35427117). Without it Compact
+Pro answers Extract with *"This version of Compact Pro cannot validate
+or extract encrypted files"* and the Add dialog's Encrypt checkbox sits
+at a negative rect; with it, both work — the code at 0x4864 patches
+DITL 312 to bring the checkbox into view.
 
-- Compact Pro **accepts the container this project writes**, agrees
-  about every entry, and agrees each is encrypted. That grades
-  `synth_cpt.py`'s container and the flag, if not the cipher.
-- No other implementation exists to try: CptExpand's manual says it
-  "will not extract encrypted files" and StuffIt's own Compact Pro
-  translator answers "the file is password protected".
+`--make` is the direction that matters most: the application ENCRYPTS
+three known subjects and the archive is kept in
+`$UNC_VMAC_HOME/specimens/cptmade/` with a `made.json` saying what went
+into it. `tools/run_crypt.py` replays that archive when it is there and
+skips loudly when it is not — it is the only encrypted specimen in this
+project written by the software that invented the format, and it is
+what turned the cipher from a reading into a measurement (FORMATS.md,
+*Compact Pro's cipher*).
+
+Four things it will teach you, and three of them cost a run:
+
+- **The +8 was invisible in the disassembly and obvious in the
+  arithmetic.** Data forks of 96, 100 and 103 bytes come out as 104,
+  108 and 111 — a constant eight, so a preamble and not a block
+  cipher's padding. `--probe` exists to ask exactly that question, and
+  three lengths is what it takes to answer it.
+- **Every resource fork extracted on that machine comes back
+  restamped**, a few dozen bytes in. Not Compact Pro: a corpus archive
+  does it too. It is the Finder opening the extracted file's resource
+  fork and the Resource Manager writing the map's live fields back. Do
+  not debug a cipher with it — compare data forks.
 - **The first row of Standard File is not your file.** The boot volume
   has an invisible `Desktop` file that sorts first, and clicking row one
   opened THAT — which the application reported as a file it could not
   read, i.e. exactly what a broken archive looks like.
+- **Nothing may be typed blind before the password dialog is on
+  screen.** Compact Pro asks for the password when it WRITES, not when
+  you click Add, so a Return typed early lands in Standard File and
+  walks into a folder — and the archive is saved somewhere you are not
+  looking, or not at all.
 
 ### Driving our own password dialog — `interactive.py --password`
 

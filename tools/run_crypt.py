@@ -250,6 +250,36 @@ def main():
         else:
             print("run_crypt: no `zip`, PKWARE-cipher fixtures skipped")
 
+        # ---- Compact Pro, against archives IT wrote -------------------
+        # No second implementation of this cipher exists anywhere, so
+        # the grading is the application's own: tools/vmac/cptcrypt.py
+        # --make has Compact Pro 1.51 encrypt known subjects under Mini
+        # vMac and keeps the archive beside the emulator's other state.
+        # Absent, this skips and says so; present, it is the only test
+        # here whose oracle is the software that invented the format.
+        made = os.path.join(os.environ.get("UNC_VMAC_HOME",
+                            os.path.expanduser("~/.cache/unclassic/vmac")),
+                            "specimens", "cptmade")
+        meta = os.path.join(made, "made.json")
+        if os.path.exists(meta):
+            import json
+            m = json.load(open(meta))
+            want = {}
+            for sub in m["subjects"]:
+                want[sub["name"]] = bytes.fromhex(sub["data"])
+                if sub.get("rsrc"):
+                    want[sub["name"] + ".rsrc"] = bytes.fromhex(sub["rsrc"])
+            check_one("compact pro (its own archive)",
+                      os.path.join(made, "Made.cpt"), want, m["password"],
+                      unclassic, problems, oracle=False)
+            check_refusal("compact pro wrong password",
+                          os.path.join(made, "Made.cpt"), unclassic, problems,
+                          ["-p", "nope"])
+            ran += 2
+        else:
+            print("run_crypt: no Compact Pro specimen in %s — "
+                  "tools/vmac/cptcrypt.py --make --probe writes one" % made)
+
         # ---- WinZip AES, from 7-Zip -----------------------------------
         # `unar` 1.10.8 cannot open one of these at ALL — every key
         # length, stored or deflated, comes back "Missing or wrong

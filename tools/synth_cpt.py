@@ -8,11 +8,13 @@ refuses it in as many words. src/unc_crypt.c reads it out of Compact
 Pro 1.51's own code (DECISIONS.md 2026-08-23), and a reading like that
 is a hypothesis until the application itself grades it.
 
-That is what this exists for. It writes an archive Compact Pro 1.51 can
-be handed under Mini vMac (tools/vmac/cptcrypt.py), so the ORIGINAL
-implementation decides whether the cipher was read correctly — the same
-arrangement that graded DiskDoubler methods 3, 4 and 5 against Salient's
-own expander.
+That is what this exists for, and it did: the archives it writes are
+handed to Compact Pro 1.51 under Mini vMac (tools/vmac/cptcrypt.py),
+which extracts them with its own CRC over both decrypted forks passing
+— the same arrangement that graded DiskDoubler methods 3, 4 and 5
+against Salient's own expander. The other direction is graded too, and
+is the stronger one: `cptcrypt.py --make` has the application encrypt
+known subjects for this engine to read back.
 
 Only the RLE method is written (flags bits 1 and 2 clear). That is a
 real Compact Pro method, it is what the reader calls method 0, and it
@@ -135,10 +137,24 @@ def build(password=None):
         crc = crc32(data, crc)
         if password is not None:
             # One cipher per ENTRY, running across the resource fork and
-            # then the data fork without resetting.
+            # then the data fork without resetting — and opening with
+            # EIGHT bytes that the reader decrypts and discards. They
+            # are a salt: the register steps on them, so two entries
+            # with the same password and the same content still encrypt
+            # differently. Compact Pro writes eight random ones; these
+            # are derived from the entry index so the fixture is
+            # reproducible. The eight are counted in the compressed
+            # length of the first fork that has any bytes.
             c = CptCipher(password)
+            salt = bytes((i * 37 + len(entries) * 11 + 5) & 0xFF
+                         for i in range(8))
+            head = c.encrypt(salt)
             rc = c.encrypt(rc)
             dc = c.encrypt(dc)
+            if rc:
+                rc = head + rc
+            else:
+                dc = head + dc
         entries.append((name, ftype, creator, len(body), rc, dc,
                         len(rsrc), len(data), crc))
         body += rc + dc

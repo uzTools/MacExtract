@@ -37,6 +37,9 @@
 #include "unc_internal.h"
 
 #define CPT_WINDOW   8192u      /* macutils CIRCSIZE */
+/* Eight bytes in front of an encrypted entry's stream: decrypted, then
+ * discarded. See cpt_entry_forks. */
+#define CPT_CRYPT_PREAMBLE 8u
 /* An index bigger than this is not worth an allocation attempt;
  * the record-at-a-time walk reads it either way. */
 #define CPT_INDEX_MAX 262144u
@@ -387,7 +390,8 @@ static int cpt_fork(UncCtx *c, UncFork fork, uint32_t vol, uint32_t at,
                     uint32_t outlen, int lzh, uint32_t *crc,
                     uint8_t *iobuf, uint32_t iocap,
                     uint8_t *obuf, uint32_t ocap,
-                    CptLzh *hz, uint8_t *window, UncCrypt *cr, int quiet)
+                    CptLzh *hz, uint8_t *window, UncCrypt *cr, int quiet,
+                    uint32_t skip)
 {
     UncBufIn in;
     CptRle rle;
@@ -398,6 +402,7 @@ static int cpt_fork(UncCtx *c, UncFork fork, uint32_t vol, uint32_t at,
          * compressed fork is empty, whatever the claimed output size. */
         return UNC_OK;
     }
+    if (complen < skip) return UNC_ERR_CORRUPT;
     {
         int serr = cpt_seek(c, vol, at);
         if (serr != UNC_OK) return serr;
@@ -408,6 +413,15 @@ static int cpt_fork(UncCtx *c, UncFork fork, uint32_t vol, uint32_t at,
      * so `cr` arrives already keyed and already advanced by whatever
      * the resource fork consumed. */
     if (cr) in.crypt = cr;
+    /* An encrypted entry's stream opens with eight bytes that are
+     * decrypted and thrown away — Compact Pro moves its read cursor
+     * past them (`CODE` 3 @0x1f5e) — and their length is counted in the
+     * first non-empty fork's compressed size. Reading them is not
+     * optional: they are what the cipher's state has consumed by the
+     * time the real data starts. */
+    while (skip-- > 0) {
+        if (unc_bufin_next(&in) < 0) return in.err;
+    }
 
     unc_cpt_rle_start(&rle, c, fork, outlen, *crc, obuf, ocap);
     rle.quiet = quiet;
@@ -429,13 +443,25 @@ static int cpt_entry_forks(UncCtx *c, uint32_t vol, uint32_t at,
                            uint8_t *obuf, uint32_t ocap, CptLzh *hz,
                            uint8_t *window, UncCrypt *cr, int quiet)
 {
-    int est = cpt_fork(c, UNC_FORK_RSRC, vol, at, rcomp, rsrclen,
-                       (int)(flags & 2), crc, iobuf, iocap, obuf, ocap,
-                       hz, window, cr, quiet);
+    /* The eight-byte preamble of an encrypted entry belongs to the FIRST
+     * fork that has any bytes at all, and is counted in its compressed
+     * length: a 400-byte resource fork is stored as 408, and a file with
+     * no resource fork puts the eight in front of the data fork
+     * (measured on three archives Compact Pro itself wrote). */
+    uint32_t rskip = 0, dskip = 0;
+    int est;
+
+    if (cr) {
+        if (rcomp) rskip = CPT_CRYPT_PREAMBLE;
+        else       dskip = CPT_CRYPT_PREAMBLE;
+    }
+    est = cpt_fork(c, UNC_FORK_RSRC, vol, at, rcomp, rsrclen,
+                   (int)(flags & 2), crc, iobuf, iocap, obuf, ocap,
+                   hz, window, cr, quiet, rskip);
     if (est == UNC_OK)
         est = cpt_fork(c, UNC_FORK_DATA, vol, at + rcomp, dcomp, datalen,
                        (int)(flags & 4), crc, iobuf, iocap, obuf, ocap,
-                       hz, window, cr, quiet);
+                       hz, window, cr, quiet, dskip);
     return est;
 }
 

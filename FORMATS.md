@@ -655,7 +655,7 @@ decryption suite*.
 | zip | **PKWARE's** three CRC-32-driven keys | the password bytes, folded in | **yes** — a check byte in the twelve-byte header | Info-ZIP wrote the fixture; `unar -p` reads it |
 | zip, WinZip **AES** | **AES** in counter mode, 128/192/256, with HMAC-SHA1 over the ciphertext | PBKDF2-HMAC-SHA1, 1000 rounds over a salt in the entry | **yes** — a two-byte verifier the derivation also produces | 7-Zip wrote the fixtures and verifies them; `unar` 1.10.8 cannot open one at all |
 | ARC | a repeating XOR of the password over the compressed bytes | the password itself, and `arc` 5.21q upper-cases it first (measured) | **no** — the format has no encryption flag at all | Debian's `arc` wrote the fixture; `unar -p` reads it |
-| Compact Pro | a **64-bit CRC** register; keystream is its second byte, stepped on each plaintext byte | nine bytes: a length capped at eight, and the password ADDED into eight accumulators in rotation | **no** — its own message says so | **nobody. See below.** |
+| Compact Pro | a **64-bit CRC** register; keystream is its second byte, stepped on each plaintext byte. The stream opens with **eight bytes that are decrypted and discarded** — a salt, so two entries with one password differ | nine bytes: a length capped at eight, and the password ADDED into eight accumulators in rotation | **no** — its own message says so | **Compact Pro itself**, both directions. See below |
 
 **The formats NOT in that table have no encryption to read**, and that
 is measured rather than assumed: a string sweep over the distribution
@@ -686,7 +686,7 @@ Three properties are worth stating because a user meets them:
   come out; PackIt, whose encrypted entries do not say where they end,
   resyncs on the next block magic as it always did.
 
-### Compact Pro's cipher: read out of the application, graded by nobody
+### Compact Pro's cipher: read out of the application, and graded by it
 
 This is the one format here whose encryption no second implementation
 reads — The Unarchiver's format notes say "the algorithm for this is
@@ -694,19 +694,33 @@ unknown", CptExpand's manual says it "will not extract encrypted
 files", and StuffIt's own Compact Pro translator answers "the file is
 password protected". So it was read out of Compact Pro 1.51's `CODE` 3
 in both directions (DECISIONS.md 2026-08-23, *decryption*), and
-`tools/vmac/cptcrypt.py` exists to have the application grade that
-reading the way Salient's expander graded DiskDoubler methods 3-5.
+`tools/vmac/cptcrypt.py` had the application grade that reading, the
+way Salient's expander graded DiskDoubler methods 3-5.
 
-**It cannot.** Compact Pro 1.51 opens an archive written with this
-cipher, lists all three entries with the right sizes and type/creator,
-marks each encrypted — and then refuses Extract with *"This version of
-Compact Pro cannot validate or extract encrypted files."* The decrypt
-loop is in that very binary; what is missing is a **registration**: the
-routine at 0x47ca enables encryption only when the stored
-personalisation string ends with `*`, and all five copies in the corpus
-(1.34, and 1.51 in four languages) carry the unregistered placeholder
-`********`. So the reading is a **hypothesis**, labelled one here and
-in OPEN_ITEMS.md, which says what would close it.
+**Both directions agree** (2026-08-23, `tools/vmac/cptcrypt.py`):
+
+| what | result |
+|---|---|
+| three archives **Compact Pro encrypted** (RLE-only, data forks of 96, 100 and 103 bytes) | every byte back, through our reader |
+| one **Compact Pro encrypted, LZH-compressed, two-fork** archive (196 B resource + 312 B data) | both forks byte-exact — which is also the check that the register runs across the two forks without resetting |
+| an archive **we encrypted**, handed to Compact Pro | it extracted all three entries, and its own CRC-32 over both decrypted forks passed |
+
+Encryption is gated behind **registration** — an unregistered copy
+answers Extract with *"This version of Compact Pro cannot validate or
+extract encrypted files"*, and the Add dialog's Encrypt checkbox sits
+at a negative rect until a registration moves it into view. Macintosh
+Garden publishes one for 1.51, and with it the gate opens.
+
+The eight-byte preamble is the part no reading of the decrypt loop
+alone would have caught: an encrypted entry's stream opens with eight
+bytes that the reader decrypts and **discards** (`CODE` 3 @0x1f5e moves
+the read cursor past them), and their length is counted in the
+compressed size of the first fork that has any bytes — a 400-byte
+resource fork is stored as 408. It is a salt: the register steps on
+them, so the same password over the same bytes encrypts differently in
+two entries. What found it was arithmetic on three archives the
+application wrote — 96→104, 100→108, 103→111, a constant +8 and
+therefore not a block cipher's padding.
 
 ## AppleLink packages, and why they are named but not opened
 
