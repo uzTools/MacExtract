@@ -3314,6 +3314,165 @@ static void test_arc(void)
     }
 }
 
+
+/* ------------------------------------------------------------------ */
+/* Ciphers                                                            */
+/*                                                                    */
+/* The primitives are graded against implementations that are not     */
+/* this one: the DES vectors below come from `openssl enc -des-ecb`   */
+/* and the MD5 ones from python3's hashlib, both re-runnable —        */
+/* tools/check_crypt.py regenerates every constant in this function.  */
+/* ------------------------------------------------------------------ */
+
+static void test_des(void)
+{
+    UncCrypt cr;
+    /* Key 0123456789abcdef over "Now is t": the FIPS example, and what
+     * `openssl enc -des-ecb -K 0123456789abcdef -nopad` produces. */
+    static const uint8_t key[8] = { 0x01,0x23,0x45,0x67,0x89,0xab,0xcd,0xef };
+    static const uint8_t plain[8] = { 'N','o','w',' ','i','s',' ','t' };
+    static const uint8_t cipher[8] = { 0x3f,0xa4,0x0e,0x8a,0x98,0x4d,0x48,0x15 };
+    uint8_t buf[8];
+    int i;
+
+    /* PackIt decodes by DES-DECRYPTING, which is the operation
+     * unc_crypt_apply performs, so the ciphertext must come back as
+     * the plaintext of the same key pair. */
+    unc_crypt_packit_des(&cr, key, 8);
+    memcpy(buf, cipher, 8);
+    unc_crypt_apply(&cr, buf, 8, 0);
+    CHECK(memcmp(buf, plain, 8) == 0);
+
+    /* And a second block runs on the same schedule (ECB: no state). */
+    unc_crypt_packit_des(&cr, key, 8);
+    for (i = 0; i < 8; i++) buf[i] = cipher[i];
+    unc_crypt_apply(&cr, buf, 8, 0);
+    CHECK(memcmp(buf, plain, 8) == 0);
+}
+
+static void test_md5(void)
+{
+    static const uint8_t empty[16] = {
+        0xd4,0x1d,0x8c,0xd9,0x8f,0x00,0xb2,0x04,
+        0xe9,0x80,0x09,0x98,0xec,0xf8,0x42,0x7e };
+    static const uint8_t abc[16] = {
+        0x90,0x01,0x50,0x98,0x3c,0xd2,0x4f,0xb0,
+        0xd6,0x96,0x3f,0x7d,0x28,0xe1,0x7f,0x72 };
+    uint8_t out[16], msg[80];
+    int i;
+
+    unc_md5((const uint8_t *)"", 0, out);
+    CHECK(memcmp(out, empty, 16) == 0);
+    unc_md5((const uint8_t *)"abc", 3, out);
+    CHECK(memcmp(out, abc, 16) == 0);
+    /* "abcdefghij..." — 64 bytes is exactly one block, so the padding
+     * needs a second one, and 80 exercises the ordinary tail. */
+    for (i = 0; i < 80; i++) msg[i] = (uint8_t)('a' + (i % 26));
+    unc_md5(msg, 64, out);
+    CHECK(out[0] == 0xa2 && out[15] == 0x2b);
+    unc_md5(msg, 80, out);
+    CHECK(out[0] == 0xe2 && out[15] == 0x9e);
+}
+
+static void test_rc4(void)
+{
+    /* RC4 test vector: key "Key", plaintext "Plaintext" ->
+     * BBF316E8D940AF0AD3 (RFC 6229 era, reproduced by python's
+     * ARC4 in tools/check_crypt.py). */
+    static const uint8_t want[9] = {
+        0xBB,0xF3,0x16,0xE8,0xD9,0x40,0xAF,0x0A,0xD3 };
+    UncCrypt cr;
+    uint8_t buf[9];
+    memcpy(buf, "Plaintext", 9);
+    unc_crypt_rc4(&cr, (const uint8_t *)"Key", 3);
+    unc_crypt_apply(&cr, buf, 9, 0);
+    CHECK(memcmp(buf, want, 9) == 0);
+    /* Symmetric, and the state carries across calls. */
+    unc_crypt_rc4(&cr, (const uint8_t *)"Key", 3);
+    unc_crypt_apply(&cr, buf, 4, 0);
+    unc_crypt_apply(&cr, buf + 4, 5, 4);
+    CHECK(memcmp(buf, "Plaintext", 9) == 0);
+}
+
+/* Compact Pro's cipher. These are NOT evidence about the format — no
+ * second implementation of it exists to produce them, and the numbers
+ * come from the same reading src/unc_crypt.c does (tools/synth_cpt.py,
+ * which is what feeds tools/vmac/cptcrypt.py). They are a regression
+ * guard: the day somebody changes a shift here, this says so. What
+ * would make them evidence is in OPEN_ITEMS.md. */
+static void test_cpt_cipher(void)
+{
+    static const uint8_t want[16] = {
+        0xd8,0x79,0x03,0x74,0xb7,0x1e,0xa9,0xcb,
+        0xc1,0x3d,0xc4,0x33,0x19,0x2f,0xee,0x3f };
+    /* A password over eight characters folds by ADDITION into eight
+     * accumulators, which is the one part of the key derivation a
+     * shorter password cannot exercise. */
+    static const uint8_t wantlong[8] = {
+        0x67,0xe9,0x32,0x46,0xc6,0x8f,0x59,0x6a };
+    UncCrypt cr;
+    uint8_t buf[16];
+    int i;
+
+    for (i = 0; i < 16; i++) buf[i] = 0;
+    unc_crypt_cpt(&cr, (const uint8_t *)"ohsecret", 8);
+    unc_crypt_apply(&cr, buf, 16, 0);
+    CHECK(memcmp(buf, want, 16) == 0);
+
+    /* The state carries across calls: decrypting in two pieces gives
+     * the same answer as decrypting in one. (It is not an involution —
+     * the register steps on the PLAINTEXT byte, so encrypting and
+     * decrypting are different walks; tools/synth_cpt.py has both.) */
+    for (i = 0; i < 16; i++) buf[i] = 0;
+    unc_crypt_cpt(&cr, (const uint8_t *)"ohsecret", 8);
+    unc_crypt_apply(&cr, buf, 5, 0);
+    unc_crypt_apply(&cr, buf + 5, 11, 5);
+    CHECK(memcmp(buf, want, 16) == 0);
+
+    for (i = 0; i < 8; i++) buf[i] = 0;
+    unc_crypt_cpt(&cr, (const uint8_t *)"a-very-long-password-indeed", 27);
+    unc_crypt_apply(&cr, buf, 8, 0);
+    CHECK(memcmp(buf, wantlong, 8) == 0);
+}
+
+static void test_resfork_find(void)
+{
+    /* A minimal resource fork holding 'MKey' 0 = eight bytes. */
+    uint8_t fork[16 + 12 + 30 + 2 + 8 + 12 + 2];
+    uint32_t off = 0, len = 0;
+    uint32_t dataoff = 16, mapoff = 16 + 12, i;
+
+    memset(fork, 0, sizeof fork);
+    unc_put_u32be(fork + 0, dataoff);
+    unc_put_u32be(fork + 4, mapoff);
+    unc_put_u32be(fork + 8, 12);                    /* data length      */
+    unc_put_u32be(fork + 12, (uint32_t)sizeof fork - mapoff);
+    unc_put_u32be(fork + dataoff, 8);               /* resource length  */
+    for (i = 0; i < 8; i++) fork[dataoff + 4 + i] = (uint8_t)(0x11 * i);
+    fork[mapoff + 24] = 0; fork[mapoff + 25] = 28;  /* type list offset */
+    {
+        uint8_t *tl = fork + mapoff + 28;
+        tl[0] = 0; tl[1] = 0;                       /* one type - 1     */
+        memcpy(tl + 2, "MKey", 4);
+        tl[6] = 0; tl[7] = 0;                       /* one ref - 1      */
+        tl[8] = 0; tl[9] = 10;                      /* ref list offset  */
+        tl[10] = 0; tl[11] = 0;                     /* id 0             */
+        tl[12] = 0; tl[13] = 0;                     /* name offset -1   */
+        tl[14] = 0;                                 /* attributes       */
+        tl[15] = 0; tl[16] = 0; tl[17] = 0;         /* data offset 0    */
+    }
+    CHECK(unc_resfork_find(fork, (uint32_t)sizeof fork, 0x4D4B6579u, 0,
+                           &off, &len) == UNC_OK);
+    CHECK(len == 8 && off == dataoff + 4);
+    CHECK(unc_resfork_find(fork, (uint32_t)sizeof fork, 0x4D4B6579u, 1,
+                           &off, &len) == UNC_ERR_FORMAT);
+    CHECK(unc_resfork_find(fork, (uint32_t)sizeof fork, 0x76657273u, 0,
+                           &off, &len) == UNC_ERR_FORMAT);
+    /* Truncation must be refused, not read past. */
+    CHECK(unc_resfork_find(fork, 20, 0x4D4B6579u, 0, &off, &len)
+          == UNC_ERR_FORMAT);
+}
+
 void run_format_tests(void)
 {
     test_macbinary();
@@ -3344,4 +3503,9 @@ void run_format_tests(void)
     test_superdisk_single();
     test_uu();
     test_arc();
+    test_des();
+    test_md5();
+    test_rc4();
+    test_cpt_cipher();
+    test_resfork_find();
 }

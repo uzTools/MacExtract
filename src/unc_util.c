@@ -285,6 +285,7 @@ void unc_bufin_init(UncBufIn *b, UncIO *io, UncProgressState *ps,
     b->len = b->pos = 0;
     b->lenfed = 0;
     b->limit = 0xFFFFFFFFu;
+    b->crypt = NULL;
     b->err = UNC_OK;
 }
 
@@ -331,22 +332,47 @@ void unc_bufin_init_mem(UncBufIn *b, const uint8_t *mem, uint32_t len)
     b->pos = 0;
     b->lenfed = len;
     b->limit = len;
+    b->crypt = NULL;   /* the bytes are already plain: a caller with a
+                        * cipher decrypts them before handing them over */
     b->err = UNC_OK;
 }
 
 int unc_bufin_next_slow(UncBufIn *b)
 {
     int32_t r;
-    uint32_t want = b->cap;
+    uint32_t want = b->cap, at = b->lenfed;
     if (b->err != UNC_OK) return -1;   /* sticky */
     if (b->limit - b->lenfed < want) want = b->limit - b->lenfed;
     if (want == 0) { b->err = UNC_ERR_TRUNCATED; return -1; }
-    r = b->io->read(b->io->ctx, b->buf, (int32_t)want);
-    if (r < 0)  { b->err = UNC_ERR_IO; return -1; }
-    if (r == 0) { b->err = UNC_ERR_TRUNCATED; return -1; }
+    if (b->crypt && b->crypt->blocksize > 1) {
+        /* A block cipher cannot decrypt half a block, and io->read is
+         * allowed to come up short, so fill the buffer rather than take
+         * what arrives. At a genuine EOF the tail is zero-padded to the
+         * block size, which is what the reference handles do
+         * (XADPackItDESHandle: memset the block, then break). */
+        uint32_t got = 0;
+        want -= want % b->crypt->blocksize;
+        if (want == 0) want = b->crypt->blocksize;
+        if (want > b->cap) want = b->cap;
+        while (got < want) {
+            int32_t n = b->io->read(b->io->ctx, b->buf + got,
+                                    (int32_t)(want - got));
+            if (n < 0)  { b->err = UNC_ERR_IO; return -1; }
+            if (n == 0) break;
+            got += (uint32_t)n;
+        }
+        if (got == 0) { b->err = UNC_ERR_TRUNCATED; return -1; }
+        while (got % b->crypt->blocksize) b->buf[got++] = 0;
+        r = (int32_t)got;
+    } else {
+        r = b->io->read(b->io->ctx, b->buf, (int32_t)want);
+        if (r < 0)  { b->err = UNC_ERR_IO; return -1; }
+        if (r == 0) { b->err = UNC_ERR_TRUNCATED; return -1; }
+    }
     b->len = (uint32_t)r;
     b->pos = 0;
     b->lenfed += (uint32_t)r;
+    if (b->crypt) unc_crypt_apply(b->crypt, b->buf, b->len, at);
     if (b->ps) {
         int e = unc_progress_add(b->ps, (uint32_t)r);
         if (e != UNC_OK) { b->err = e; return -1; }

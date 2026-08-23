@@ -43,7 +43,7 @@ one, because parts are recognised by what is inside them:
 ## Download
 
 **[Latest release](https://github.com/jarreboum/unclassic/releases/latest)** —
-currently **v0.12.0**. If the release page shows anything older, the publish
+currently **v0.13.0**. If the release page shows anything older, the publish
 step did not run. Or take it straight from the tree:
 
 | | |
@@ -76,9 +76,17 @@ Mac that made one could read it; anywhere else the application that wrote it
 finds nonsense. `unclassic` carries the table those files need, so a single
 file on a floppy is enough.
 
+**Password-protected archives** are opened too, in every format that has
+them: StuffIt, StuffIt 5, Compact Pro, PackIt, zip and ARC. The Mac
+application asks for the password when it reaches an entry that needs one,
+and asks again if the archive says no; on Linux it is `-p`. One catch, and
+it is the format's rather than ours: an encrypted StuffIt archive keeps
+half its key in the file's resource fork, so a copy that lost the fork
+somewhere cannot be opened by anything.
+
 **Recognises but does not extract:** StuffIt X, LZH, Disk Copy 4.2 and
 AppleLink packages (`.pkg`) — it tells you what the file is rather than
-failing obscurely. Encrypted archives are out of scope.
+failing obscurely.
 
 **Archives split across floppies** are joined for you: StuffIt, Compact Pro
 and DiskDoubler `SPLT` sets, spanned zip (`.z01` … `.zip`) and plain
@@ -106,7 +114,7 @@ each one opens:
 | PackIt (`.pit`) | not listed | yes |
 | Sets split across floppies | StuffIt sets, with the same add-on | StuffIt, Compact Pro, DiskDoubler, zip and `.001` sets |
 | Split zip or Compact Pro sets | "cannot expand" — its own Read Me | yes |
-| Encrypted archives | yes, if you know the password | no |
+| Encrypted archives | yes, if you know the password | yes, and Compact Pro's too, which nothing else reads |
 | Several files posted in one BinHex message | yes | yes |
 | `.arc` and uuencoded (`.uu`) files | with the add-on | yes |
 | StuffIt SpaceSaver | with the add-on | yes, dictionary included — which no other tool carries |
@@ -152,6 +160,7 @@ make
 build/unclassic l archive.sit           # list
 build/unclassic x archive.sit -o out    # extract
 build/unclassic sniff mystery.bin       # what is this?
+build/unclassic x secret.sit -p hunter2 # password-protected
 ```
 
 ## Is it any good?

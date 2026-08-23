@@ -39,6 +39,10 @@
 #define SIT5_ID          0xA5A5A5A5u
 #define SIT5_DIRECTORY   0x40
 #define SIT5_CRYPTED     0x20
+/* Archive-level flags (header byte 83). */
+#define SIT5_ARCH_14BYTES 0x10
+#define SIT5_ARCH_20      0x20
+#define SIT5_ARCH_CRYPTED 0x80
 
 /* The banner match string; \xFF bytes match anything (the four
  * digits of the second year vary). XADStuffIt5Parser.m. */
@@ -98,6 +102,37 @@ static void sit5_dir_add(Sit5Dirs *d, uint32_t offs,
     d->count++;
 }
 
+/* StuffIt 5's archive key is MD5(password) cut to five bytes, and the
+ * header carries MD5 of THAT, also cut to five: a password is graded
+ * before anything is decoded. Asks the host until one verifies.
+ * Source: XADStuffIt5Parser.m keyForEntryWithDictionary. */
+static int sit5_archive_key(UncCtx *c, const uint8_t hash[UNC_SIT5_KEYLEN],
+                            uint8_t key[UNC_SIT5_KEYLEN])
+{
+    int attempt = 0;
+    for (;;) {
+        int err = unc_password(c, attempt > 0);
+        if (err != UNC_OK) return err;
+        if (unc_crypt_sit5_key(c->pw, c->pwlen, hash, key) == UNC_OK)
+            return UNC_OK;
+        attempt++;
+    }
+}
+
+/* Each fork is RC4 under the archive key followed by the fork's own
+ * five bytes, which the entry header carries in clear. */
+static void sit5_fork_key(UncCrypt *cr, const uint8_t archivekey[UNC_SIT5_KEYLEN],
+                          const uint8_t forkkey[UNC_SIT5_KEYLEN])
+{
+    uint8_t key[2 * UNC_SIT5_KEYLEN];
+    int i;
+    for (i = 0; i < UNC_SIT5_KEYLEN; i++) {
+        key[i] = archivekey[i];
+        key[UNC_SIT5_KEYLEN + i] = forkkey[i];
+    }
+    unc_crypt_rc4(cr, key, (uint16_t)sizeof key);
+}
+
 int unc_sit5_extract(UncCtx *c)
 {
     uint8_t hdr[128], name[256];
@@ -105,6 +140,10 @@ int unc_sit5_extract(UncCtx *c)
     int32_t numentries, i;
     Sit5Dirs *dirs;
     uint8_t *iobuf, *obuf;
+    UncCrypt *cr;
+    uint8_t pwhash[UNC_SIT5_KEYLEN], archivekey[UNC_SIT5_KEYLEN];
+    uint8_t datakey[UNC_SIT5_KEYLEN], rsrckey[UNC_SIT5_KEYLEN];
+    int havehash = 0, havekey = 0;
     uint32_t iocap = 4096, ocap = 4096;
     int err = UNC_OK;
 
@@ -118,13 +157,29 @@ int unc_sit5_extract(UncCtx *c)
     numentries = unc_get_u16be(hdr + 92);
     firstoffs = unc_get_u32be(hdr + 94);
 
+    /* Optional blocks follow the fixed header, and one of them is the
+     * five-byte hash that says whether a password is the right one.
+     * Their order is fixed; only their presence is flagged.
+     * Source: XADStuffIt5Parser.m parse. */
+    if (hdr[83] & SIT5_ARCH_CRYPTED) {
+        uint32_t hp = 100;
+        uint8_t hb[8];
+        if (hdr[83] & SIT5_ARCH_14BYTES) hp += 14;
+        if (hdr[83] & SIT5_ARCH_20) hp += 4;   /* comment size, length_b */
+        if (unc_read_at(c->io, hp, hb, 6) != UNC_OK) return UNC_ERR_TRUNCATED;
+        if (hb[0] != UNC_SIT5_KEYLEN) return UNC_ERR_UNSUPPORTED;
+        for (i = 0; i < UNC_SIT5_KEYLEN; i++) pwhash[i] = hb[1 + i];
+        havehash = 1;
+    }
+
     dirs = (Sit5Dirs *)unc_alloc(c->al, (uint32_t)sizeof *dirs);
     if (!dirs) return UNC_ERR_MEM;
     dirs->count = 0;
     dirs->pool_used = 0;
-    iobuf = (uint8_t *)unc_alloc(c->al, iocap + ocap);
+    iobuf = (uint8_t *)unc_alloc(c->al, iocap + ocap + (uint32_t)sizeof *cr);
     if (!iobuf) { unc_free(c->al, dirs); return UNC_ERR_MEM; }
     obuf = iobuf + iocap;
+    cr = (UncCrypt *)(void *)(obuf + ocap);
 
     pos = firstoffs;
     for (i = 0; i < numentries; i++) {
@@ -135,6 +190,7 @@ int unc_sit5_extract(UncCtx *c)
         uint16_t datacrc, rsrccrc = 0;
         int entryver, flags, datamethod = 0, rsrcmethod = 0;
         int isdir = 0, encrypted;
+        int hasdatakey = 0, hasrsrckey = 0;
         uint32_t dirfiles = 0;
         UncEntryInfo e;
         int sret;
@@ -183,8 +239,14 @@ int unc_sit5_extract(UncCtx *c)
             datamethod = fb[0];
             hpos += 2;
             if (fb[1]) {                    /* password key bytes */
-                if (encrypted && datalen) hpos += fb[1];
-                else { err = UNC_ERR_CORRUPT; goto out; }
+                if (!encrypted || !datalen || fb[1] != UNC_SIT5_KEYLEN) {
+                    err = UNC_ERR_CORRUPT;
+                    goto out;
+                }
+                if (unc_read_at(c->io, hpos, datakey, UNC_SIT5_KEYLEN)
+                    != UNC_OK) { err = UNC_ERR_TRUNCATED; goto out; }
+                hasdatakey = 1;
+                hpos += fb[1];
             }
         }
 
@@ -229,8 +291,14 @@ int unc_sit5_extract(UncCtx *c)
             rsrcmethod = hdr[12];
             hpos += 14;
             if (hdr[13]) {                  /* rsrc password key */
-                if (encrypted && rsrclen) hpos += hdr[13];
-                else { err = UNC_ERR_CORRUPT; goto out; }
+                if (!encrypted || !rsrclen || hdr[13] != UNC_SIT5_KEYLEN) {
+                    err = UNC_ERR_CORRUPT;
+                    goto out;
+                }
+                if (unc_read_at(c->io, hpos, rsrckey, UNC_SIT5_KEYLEN)
+                    != UNC_OK) { err = UNC_ERR_TRUNCATED; goto out; }
+                hasrsrckey = 1;
+                hpos += hdr[13];
             }
         }
         datastart = hpos;
@@ -281,25 +349,39 @@ int unc_sit5_extract(UncCtx *c)
         if (sret == 0) {
             int est = UNC_OK;
             if (!c->opt.list_only) {
-                if (encrypted) {
+                if (encrypted && !havehash) {
+                    /* Encrypted, but the archive header carries no hash
+                     * to check a password against — nothing here can
+                     * derive the key. */
                     est = UNC_ERR_ENCRYPTED;
+                } else if (encrypted && !havekey &&
+                           (est = sit5_archive_key(c, pwhash, archivekey))
+                           != UNC_OK) {
+                    /* est is UNC_ERR_PASSWORD: no usable password */
                 } else if (datastart + rsrccomp < datastart ||
                            datastart + rsrccomp + datacomp < datastart ||
                            (fsize != UNC_SIZE_UNKNOWN &&
                             datastart + rsrccomp + datacomp > fsize)) {
                     est = UNC_ERR_TRUNCATED;
                 } else {
-                    if (flags2 & 1)
+                    if (encrypted) havekey = 1;
+                    if (flags2 & 1) {
+                        if (hasrsrckey) sit5_fork_key(cr, archivekey, rsrckey);
                         est = unc_sit_decode_fork(c, UNC_FORK_RSRC, datastart,
                                                   rsrccomp, rsrclen, rsrcmethod,
                                                   rsrccrc, iobuf, iocap,
-                                                  obuf, ocap);
-                    if (est == UNC_OK)
+                                                  obuf, ocap,
+                                                  hasrsrckey ? cr : NULL);
+                    }
+                    if (est == UNC_OK) {
+                        if (hasdatakey) sit5_fork_key(cr, archivekey, datakey);
                         est = unc_sit_decode_fork(c, UNC_FORK_DATA,
                                                   datastart + rsrccomp,
                                                   datacomp, datalen, datamethod,
                                                   datacrc, iobuf, iocap,
-                                                  obuf, ocap);
+                                                  obuf, ocap,
+                                                  hasdatakey ? cr : NULL);
+                    }
                 }
             }
             if (c->sink->end_entry(c->sink->ctx, est) < 0) {

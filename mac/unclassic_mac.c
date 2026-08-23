@@ -1895,6 +1895,172 @@ typedef struct {
     UncFormat fmt;        /* what this layer turned out to be */
 } ExtractShape;
 
+/* ------------------------------------------------------------------ */
+/* Asking for a password                                              */
+/*                                                                    */
+/* The engine calls this when an entry turns out to need one, and     */
+/* again — with a rising `attempt` — when the archive refuses what it */
+/* was given. Asking at that moment rather than up front is the whole */
+/* reason the engine takes a callback: most archives never need one,  */
+/* and the ones that do only say so partway through.                  */
+/*                                                                    */
+/* What is typed goes into gPassBuf and the field shows bullets. That */
+/* is done by swapping the character inside the filter, on its way to */
+/* the Dialog Manager — the same trick every Mac application used     */
+/* before there was a password field to ask for. A click in the field */
+/* or an arrow key would let the two diverge, so both are swallowed:  */
+/* the caret stays at the end and the buffer stays the truth.         */
+/* ------------------------------------------------------------------ */
+
+#ifndef UNC_MAC_AUTOTEST
+
+#define kPassDLOG       132
+#define kPassOKItem     1
+#define kPassCancelItem 2
+#define kPassTextItem   3
+#define kPassMsgItem    4
+#define kPassBullet     0xA5   /* MacRoman bullet */
+
+static Str63 gPassBuf;         /* what was actually typed */
+
+static pascal Boolean PassFilter(DialogPtr dlg, EventRecord *ev, short *item)
+{
+    char ch;
+    (void)dlg;
+    if (ev->what == mouseDown) {
+        /* Inside the field is the one click that could move the caret
+         * away from the end; everything else (the buttons) goes on. */
+        Point p = ev->where;
+        GrafPtr save;
+        short kind;
+        Handle h;
+        Rect box;
+        GetPort(&save);
+        SetPort((GrafPtr)dlg);
+        GlobalToLocal(&p);
+        SetPort(save);
+        GetDialogItem(dlg, kPassTextItem, &kind, &h, &box);
+        if (PtInRect(p, &box)) return true;      /* swallowed */
+        return false;
+    }
+    if (ev->what != keyDown && ev->what != autoKey) return false;
+    ch = (char)(ev->message & charCodeMask);
+    if ((ev->modifiers & cmdKey) != 0) return false;
+    if (ch == '\r' || ch == 3) { *item = kPassOKItem; return true; }
+    if (ch == 27) { *item = kPassCancelItem; return true; }
+    if (ch == 8) {                                /* backspace */
+        if (gPassBuf[0] > 0) gPassBuf[0]--;
+        return false;                             /* let the field shrink */
+    }
+    if (ch == 28 || ch == 29 || ch == 30 || ch == 31) return true; /* arrows */
+    if ((unsigned char)ch < 32) return false;
+    if (gPassBuf[0] >= UNC_PASSWORD_MAX) return true;   /* full: ignore */
+    gPassBuf[++gPassBuf[0]] = (unsigned char)ch;
+    /* Show a bullet instead of what was typed. */
+    ev->message = (ev->message & ~(long)charCodeMask) | kPassBullet;
+    return false;
+}
+
+typedef struct {
+    Str63       name;      /* the archive, for the message */
+    WindowPtr   hide;      /* the progress dialog, out of the way */
+} PassHost;
+
+static int MacAskPassword(void *ctx, uint8_t *buf, uint16_t cap,
+                          uint16_t *len, int attempt)
+{
+    PassHost *ph = (PassHost *)ctx;
+    DialogPtr dlg;
+    Str255 msg;
+    short hit, kind, i;
+    Handle h;
+    Rect box;
+    ModalFilterUPP filter;
+
+    msg[0] = 0;
+    if (attempt > 0)
+        PStrCat(msg, "That password was refused. ");
+    PStrCat(msg, "\"");
+    for (i = 0; i < (short)ph->name[0] && msg[0] < 180; i++)
+        msg[++msg[0]] = ph->name[i + 1];
+    PStrCat(msg, "\" is encrypted. Type its password, or click Cancel to "
+                 "skip the entries that need one.");
+    ParamText(msg, "\p", "\p", "\p");
+
+    if (ph->hide) HideWindow(ph->hide);
+    dlg = GetNewDialog(kPassDLOG, NULL, (WindowPtr)-1);
+    if (!dlg) {
+        if (ph->hide) ShowWindow(ph->hide);
+        return 0;
+    }
+    gPassBuf[0] = 0;
+    GetDialogItem(dlg, kPassTextItem, &kind, &h, &box);
+    SelectDialogItemText(dlg, kPassTextItem, 0, 0);
+    /* The OK button is the default one; draw its ring. */
+    GetDialogItem(dlg, kPassOKItem, &kind, &h, &box);
+    InsetRect(&box, -4, -4);
+    SetPort((GrafPtr)dlg);
+    PenSize(3, 3);
+    FrameRoundRect(&box, 16, 16);
+    PenSize(1, 1);
+
+    filter = NewModalFilterUPP(PassFilter);
+    do {
+        ModalDialog(filter, &hit);
+    } while (hit != kPassOKItem && hit != kPassCancelItem);
+    DisposeDialog(dlg);
+    if (ph->hide) ShowWindow(ph->hide);
+
+    if (hit != kPassOKItem || gPassBuf[0] == 0) {
+        gPassBuf[0] = 0;
+        return 0;
+    }
+    *len = gPassBuf[0] > cap ? cap : gPassBuf[0];
+    for (i = 0; i < (short)*len; i++) buf[i] = gPassBuf[i + 1];
+    gPassBuf[0] = 0;               /* do not leave it in the data segment */
+    return 1;
+}
+
+/* StuffIt classic keeps the block that verifies a password in the
+ * ARCHIVE's resource fork ('MKey' 0). Read it here, as plain bytes
+ * rather than through the Resource Manager: this is somebody else's
+ * file and its map may be anything, and unc_resfork_find bounds-checks
+ * every field it follows. A fork bigger than the cap is not read at
+ * all — that is a self-extracting archive, and an encrypted one of
+ * those is a thing Compact Pro cannot even create. Returns 1 if eight
+ * bytes were found. */
+#define kMKeyForkMax 32768L
+
+static int LoadMKey(short vol, long dir, ConstStr255Param name,
+                    uint8_t out[8])
+{
+    short refNum;
+    long size = 0, got;
+    Ptr buf;
+    uint32_t off = 0, len = 0;
+    int ok = 0;
+
+    if (MyOpenFork(vol, dir, name, fsRdPerm, 1, &refNum) != noErr) return 0;
+    GetEOF(refNum, &size);
+    if (size <= 0 || size > kMKeyForkMax) { FSClose(refNum); return 0; }
+    buf = NewPtr(size);
+    if (!buf) { FSClose(refNum); return 0; }
+    got = size;
+    if (FSRead(refNum, &got, buf) == noErr && got == size &&
+        unc_resfork_find((const uint8_t *)buf, (uint32_t)size,
+                         0x4D4B6579UL /* 'MKey' */, 0, &off, &len) == UNC_OK &&
+        len == 8) {
+        long i;
+        for (i = 0; i < 8; i++) out[i] = ((unsigned char *)buf)[off + i];
+        ok = 1;
+    }
+    DisposePtr(buf);
+    FSClose(refNum);
+    return ok;
+}
+
+#endif /* !UNC_MAC_AUTOTEST */
+
 /* `origVol`/`origDir` is the folder the USER's file came from, which is
  * not where this layer's file is once an envelope has been taken off —
  * and it is where the other parts of a wrapped set are still sitting.
@@ -1924,6 +2090,11 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
     short famStemLen = 0;
     int famSplit = 0, famZip = 0;
     UncFormat extractedAs = UNC_FORMAT_UNKNOWN;
+#ifndef UNC_MAC_AUTOTEST
+    UncPasswordSource passSrc;
+    PassHost passHost;
+    uint8_t mkeyBuf[8];
+#endif
 
     *entries = *errors = 0;
 
@@ -2195,6 +2366,26 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
      * nobody assigns is stack garbage. */
     opt.preset = NULL;
     opt.preset_len = 0;
+    /* Encrypted entries. The password is asked for when one turns up,
+     * not before — see MacAskPassword — and the 'MKey' resource is the
+     * key material a StuffIt classic archive keeps outside its stream. */
+    opt.password = NULL;
+    opt.password_len = 0;
+    opt.ask = NULL;
+    opt.mkey = NULL;
+#ifndef UNC_MAC_AUTOTEST
+    {
+        short i;
+        passHost.hide = prog ? (WindowPtr)((Progress *)prog->ctx)->dlg : NULL;
+        passHost.name[0] = name[0] > 63 ? 63 : name[0];
+        for (i = 0; i < (short)passHost.name[0]; i++)
+            passHost.name[i + 1] = name[i + 1];
+        passSrc.ctx = &passHost;
+        passSrc.ask = MacAskPassword;
+        opt.ask = &passSrc;
+        if (LoadMKey(inVol, inDir, name, mkeyBuf)) opt.mkey = mkeyBuf;
+    }
+#endif
     /* Fallback name for formats that store none (gzip, .Z). The contract in
      * unclassic.h is "the archive filename minus its LAST extension", which
      * is what unar does and what cli/main.c passes; this used to pass the

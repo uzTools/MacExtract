@@ -38,6 +38,18 @@ This project's decoders are transcriptions/ports of algorithms from:
     The archives themselves are fetched by URL, never committed
     (fixtures/SOURCES.md).
 
+  * Compact Pro (Bill Goodman, 1990-1995). Its ENCRYPTION is the one
+    scheme in this project that no reference implementation reads and
+    no publication describes; The Unarchiver's own format notes say
+    "the algorithm for this is unknown". `src/unc_crypt.c` implements
+    it from the format's own 68k code, read out of Compact Pro 1.51's
+    `CODE` 3 — the key derivation, the 64-bit CRC table, the seed and
+    both the encrypt and decrypt loops, each cited by address in that
+    file. No code was copied; every routine named there is an offset in
+    a binary this project does not redistribute (the container and its
+    two compression methods are transcribed from XADMaster and
+    macutils, as above).
+
   * "Stuffit Method 15 compression format" by Matthew T. Russotto —
     the only public specification of the StuffIt 5 "Arsenic"
     (BWT + MTF + arithmetic coding) method.

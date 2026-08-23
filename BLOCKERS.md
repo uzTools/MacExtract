@@ -15,7 +15,11 @@ system the project claims:
 
 All three Mini vMac tiers re-run **2026-08-22**, with M15–M23's codecs in
 and three fixtures added to the sample for them — DiskDoubler methods 3, 4
-and 5, which nothing in the list had exercised. Per-fixture tables and how
+and 5, which nothing in the list had exercised. The two System 6 tiers were
+run again on **2026-08-23** against the decryption build, which is 16 KB
+larger and so leaves the 1 MB machine that much less heap: **62/62 on both**,
+with the three heaviest allocations (533 KB, 471 KB and method 5's 405 KB)
+unchanged. System 7 has not been re-run since 2026-08-22. Per-fixture tables and how
 the sample grew: FORMATS.md. How to re-run any of
 it: `tools/vmac/README.md`. What no emulator here can settle:
 MANUAL_TESTS.md.
@@ -92,6 +96,13 @@ keep finding the next one, and two of them need no insight at all:
   one of them, so counting those proves nothing. Count the records it does
   NOT cover instead — 30 `0x1000` entries fitted the claim and 45 in the same
   fifteen files contradicted it (below).
+- **a limitation you inherited from the reference rather than measured.**
+  Added 2026-08-23: "the algorithm for this is unknown" is a sentence in
+  The Unarchiver's format notes about Compact Pro's encryption, and this
+  project had been repeating it. It is a statement about what somebody
+  wrote down, not about what is reachable — the algorithm was in the
+  application all along, in a binary already in `fixtures/` and already
+  being driven under emulation for something else.
 - **a harness that ends its runs differently from the harness beside it.**
   Added 2026-08-22: three SpaceSaver runs "measured unchanged" on a machine
   that never booted, because their image had been copied out of a KILLED
@@ -136,6 +147,8 @@ line is what makes the next one worth re-testing.
 | SpaceSaver 3.5.1 is installed and running | its control panel runs; its EXTENSION shows no sign of it. With `~Magic Menu™` deleted the menu bar carried no icon menu at all, so the menu `STR# 1024` describes was never installed | 2026-08-22 |
 | AppleLink `.pkg` has no reference implementation anywhere reachable | the SpaceSaver image has had one all along: `Extensions:Aladdin:Translators:PKG Expand Translator`, whose `Name` resource is `AppleLinkPKG` and whose `Othe` resource is 20 KB of 68k with Aladdin's usual module preamble | 2026-08-22 |
 | AppleLink `.pkg` cannot be sniffed without inventing a magic number | true of magic numbers, false of sniffing: Aladdin's own recogniser reads three whitespace-delimited TOKENS, and `unclassic sniff` now does the same at 0 false positives across 928 fixtures | 2026-08-23 |
+| Compact Pro's encryption algorithm is unknown, so an encrypted `.cpt` can only be reported | Compact Pro 1.51's own `CODE` 3: the key at 0x1892, the 64-bit CRC table at 0x408e, the seed at 0x40fe, and the encrypt and decrypt loops at 0x1152 and 0x1f08 | 2026-08-23 |
+| The corpus is large enough that some of it must be encrypted, so a decryption suite has fixtures | `lsar -j` over all 903 fixtures: `XADIsEncrypted` is 0 for every entry in every one | 2026-08-23 |
 
 **DiskDoubler methods 1–5 and 7 "cannot be graded".** Declined per entry
 since M12 on the grounds that no corpus fixture uses one and nothing reachable

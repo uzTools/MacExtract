@@ -293,6 +293,58 @@ static void rsrc_path(const char *path, int hidden, char *out, size_t outsz)
         snprintf(out, outsz, "._%s", path);
 }
 
+/* StuffIt classic keeps the block that verifies a password in the
+ * ARCHIVE's resource fork ('MKey' 0), so an encrypted .sit can only be
+ * decrypted where that fork survived. On this side of the world it
+ * survives as the sidecar file this program itself writes when it takes
+ * a MacBinary or BinHex envelope off — so look for it under both
+ * spellings, and say nothing if there is none. */
+static int load_mkey(const char *path, int hidden, uint8_t out[8])
+{
+    static uint8_t fork[256 * 1024];
+    char rp[1100];
+    int which;
+
+    for (which = 0; which < 2; which++) {
+        FILE *f;
+        size_t n;
+        uint32_t off = 0, len = 0;
+        rsrc_path(path, which == 0 ? hidden : !hidden, rp, sizeof rp);
+        f = fopen(rp, "rb");
+        if (!f) continue;
+        n = fread(fork, 1, sizeof fork, f);
+        fclose(f);
+        if (unc_resfork_find(fork, (uint32_t)n, 0x4D4B6579u /* 'MKey' */, 0,
+                             &off, &len) == UNC_OK && len == 8) {
+            memcpy(out, fork + off, 8);
+            return 1;
+        }
+    }
+    return 0;
+}
+
+/* --ask: prompt for a password on the terminal, and again when the
+ * archive rejects the one given. Returning 0 (an empty line, or EOF)
+ * is how the user says "skip it", and the entry then fails cleanly. */
+static int cli_ask_password(void *ctx, uint8_t *buf, uint16_t cap,
+                            uint16_t *len, int attempt)
+{
+    char line[UNC_PASSWORD_MAX + 2];
+    size_t n;
+    (void)ctx;
+    fprintf(stderr, attempt ? "password (wrong, try again, empty to skip): "
+                            : "password (empty to skip): ");
+    fflush(stderr);
+    if (!fgets(line, (int)sizeof line, stdin)) return 0;
+    n = strlen(line);
+    while (n > 0 && (line[n - 1] == '\n' || line[n - 1] == '\r')) line[--n] = 0;
+    if (n == 0) return 0;
+    if (n > cap) n = cap;
+    memcpy(buf, line, n);
+    *len = (uint16_t)n;
+    return 1;
+}
+
 /* The envelope currently being unwrapped is exempt from the clobber
  * check: it is deleted moments after the inner layer succeeds, and an
  * inner entry may legitimately carry its name. */
@@ -1216,6 +1268,10 @@ static void usage(void)
         "  --preset <f>   SpaceSaver's preset dictionary: the 'PrAm' -4048\n"
         "                 resource out of your own copy of SpaceSaver, which\n"
         "                 its LZSS window starts loaded with (FORMATS.md)\n"
+        "  -p <pw>        password for encrypted entries; \"-\" reads one\n"
+        "                 line from stdin. With --ask and no -p, each\n"
+        "                 archive that needs one is asked for, and asked\n"
+        "                 again when the password is refused\n"
         "  --stats        print allocator statistics\n"
         "  -f <format>    force format\n"
         "  -v             verbose\n"
@@ -1245,7 +1301,10 @@ int main(int argc, char **argv)
     struct stat st;
     SegHost seg;
     const char *partargs[UNC_SEG_MAX_PARTS];
-    const char *presetfile = NULL;
+    const char *presetfile = NULL, *password = NULL;
+    static char pwbuf[UNC_PASSWORD_MAX + 2];
+    static uint8_t mkeybuf[8];
+    UncPasswordSource pwsrc;
     /* SpaceSaver's preset dictionary is 9,679 bytes; this is the ceiling
      * on what --preset will read, not a size anybody declared. */
     static uint8_t presetbuf[64 * 1024];
@@ -1280,6 +1339,7 @@ int main(int argc, char **argv)
         else if (strcmp(argv[i], "--ask") == 0) ask = 1;
         else if (strcmp(argv[i], "--preset") == 0 && i + 1 < argc)
             presetfile = argv[++i];
+        else if (strcmp(argv[i], "-p") == 0 && i + 1 < argc) password = argv[++i];
         else if (strcmp(argv[i], "--stats") == 0) stats = 1;
         else if (strcmp(argv[i], "-f") == 0 && i + 1 < argc) force = argv[++i];
         else if (strcmp(argv[i], "-v") == 0) verbose = 1;
@@ -1331,6 +1391,35 @@ nextlayer:
     prog.tick = prog_tick;
 
     memset(&opt, 0, sizeof opt);
+
+    /* A password given on the command line, or read from stdin once so
+     * that it does not sit in the process table. */
+    if (password) {
+        if (strcmp(password, "-") == 0) {
+            size_t n;
+            if (!fgets(pwbuf, (int)sizeof pwbuf, stdin)) pwbuf[0] = 0;
+            n = strlen(pwbuf);
+            while (n > 0 && (pwbuf[n - 1] == '\n' || pwbuf[n - 1] == '\r'))
+                pwbuf[--n] = 0;
+            opt.password = (const uint8_t *)pwbuf;
+            opt.password_len = (uint16_t)n;
+        } else {
+            size_t n = strlen(password);
+            if (n > UNC_PASSWORD_MAX) n = UNC_PASSWORD_MAX;
+            opt.password = (const uint8_t *)password;
+            opt.password_len = (uint16_t)n;
+        }
+    } else if (ask) {
+        pwsrc.ctx = NULL;
+        pwsrc.ask = cli_ask_password;
+        opt.ask = &pwsrc;
+    }
+
+    /* The archive's own resource fork, if this machine has it beside
+     * the data fork: the one piece of key material a .sit does not
+     * carry in its stream. */
+    if (load_mkey(file, hidden_forks, mkeybuf)) opt.mkey = mkeybuf;
+    else opt.mkey = NULL;
 
     if (force) {
         fmt = format_by_name(force);

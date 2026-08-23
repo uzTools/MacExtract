@@ -541,6 +541,97 @@ static int arc_entry_data(UncCtx *c, UncBufIn *in, int method,
     return UNC_OK;
 }
 
+/* ARC's "garble": the password is XORed over the COMPRESSED bytes,
+ * repeating, and nothing in the file says it was done — SEA's format
+ * has no encryption flag and XADMaster says so in as many words ("we
+ * should somehow figure out if an ARC file is actually encrypted;
+ * however, there seems to be no way to do this"). The only evidence is
+ * the entry's own CRC, which means a candidate key can only be graded
+ * by decoding the whole entry.
+ *
+ * So where a password is available at all, the entry is decoded once
+ * WITHOUT writing to find the key that checks out, and then again to
+ * write it. Deciding as it wrote would mean handing the sink the output
+ * of a wrong key and then appending the output of the right one to it —
+ * which is exactly what the first version of this did.
+ *
+ * Source: XADARCParser.m + XADXORHandle.m. */
+static int arc_run(UncCtx *c, UncCrypt *cr, uint8_t *iobuf, uint32_t iocap,
+                   uint32_t at, int method, uint32_t compsize,
+                   uint32_t outsize, uint16_t crc16, int write,
+                   uint32_t dsplit, const uint8_t *pw, uint16_t pwlen)
+{
+    UncBufIn in;
+    if (c->io->seek(c->io->ctx, at) < 0) return UNC_ERR_IO;
+    unc_bufin_init(&in, c->io, &c->ps, iobuf, iocap);
+    in.limit = compsize;
+    if (pw) {
+        unc_crypt_xor(cr, pw, pwlen);
+        in.crypt = cr;
+    }
+    return arc_entry_data(c, &in, method, compsize, outsize, crc16, write,
+                          dsplit);
+}
+
+static int arc_entry_data_pw(UncCtx *c, UncCrypt *cr, uint8_t *iobuf,
+                             uint32_t iocap, uint32_t at, int method,
+                             uint32_t compsize, uint32_t outsize,
+                             uint16_t crc16, int write, uint32_t dsplit)
+{
+    int est, attempt = 0;
+
+    if (!c->opt.password && !c->opt.ask)
+        return arc_run(c, cr, iobuf, iocap, at, method, compsize, outsize,
+                       crc16, write, dsplit, NULL, 0);
+
+    /* Not garbled at all is the usual case, and the one to establish
+     * first: a password given for an archive that does not need one
+     * must not break it. */
+    est = arc_run(c, cr, iobuf, iocap, at, method, compsize, outsize, crc16,
+                  0, dsplit, NULL, 0);
+    if (est == UNC_OK)
+        return write ? arc_run(c, cr, iobuf, iocap, at, method, compsize,
+                               outsize, crc16, write, dsplit, NULL, 0)
+                     : UNC_OK;
+    if (est != UNC_ERR_CRC && est != UNC_ERR_CORRUPT) return est;
+
+    for (;;) {
+        uint8_t pw[UNC_PASSWORD_MAX];
+        uint16_t i, n;
+        int upper;
+
+        est = unc_password(c, attempt > 0);
+        if (est != UNC_OK) return attempt ? UNC_ERR_PASSWORD : UNC_ERR_CRC;
+
+        /* Twice per password: as typed, then upper-cased. `arc` 5.21q
+         * upper-cases the password before garbling with it (measured: a
+         * stored entry's ciphertext XOR its plaintext is the password in
+         * capitals), which is the DOS lineage's habit; XADMaster uses
+         * the bytes as given. Neither is wrong, so try both — the format
+         * carries nothing that could tell them apart. */
+        for (upper = 0; upper < 2; upper++) {
+            int same = 1;
+            n = c->pwlen;
+            for (i = 0; i < n; i++) {
+                uint8_t b = c->pw[i];
+                pw[i] = (upper && b >= 'a' && b <= 'z') ? (uint8_t)(b - 32) : b;
+                if (pw[i] != c->pw[i]) same = 0;
+            }
+            if (upper && same) break;
+            est = arc_run(c, cr, iobuf, iocap, at, method, compsize, outsize,
+                          crc16, 0, dsplit, pw, n);
+            if (est == UNC_OK)
+                return write ? arc_run(c, cr, iobuf, iocap, at, method,
+                                       compsize, outsize, crc16, write,
+                                       dsplit, pw, n)
+                             : UNC_OK;
+            if (est != UNC_ERR_CRC && est != UNC_ERR_CORRUPT) return est;
+        }
+        if (!c->opt.ask) return UNC_ERR_PASSWORD;
+        attempt++;
+    }
+}
+
 int unc_arc_extract(UncCtx *c)
 {
     uint8_t hdr[ARC_HDR_MIN + 12];
@@ -550,7 +641,7 @@ int unc_arc_extract(UncCtx *c)
     uint8_t  path[UNC_NAME_MAX + 1];
     uint32_t plen = 0;
     int err = UNC_OK, any = 0, arcmac = 0;
-    UncBufIn in;
+    UncCrypt *cr;
 
     /* ArcMac? Its Mac header precedes the PC one; the whole file is
      * either one shape or the other. */
@@ -561,8 +652,9 @@ int unc_arc_extract(UncCtx *c)
             arcmac = 1;
     }
 
-    iobuf = (uint8_t *)unc_alloc(c->al, iocap);
+    iobuf = (uint8_t *)unc_alloc(c->al, iocap + (uint32_t)sizeof *cr);
     if (!iobuf) return UNC_ERR_MEM;
+    cr = (UncCrypt *)(void *)(iobuf + iocap);
 
     for (;;) {
         UncEntryInfo e;
@@ -619,17 +711,11 @@ int unc_arc_extract(UncCtx *c)
                  * The CRC covers the concatenation, so it grades the
                  * split as well as the decode. */
                 est = UNC_OK;
-                if (!c->opt.list_only) {
-                    if (c->io->seek(c->io->ctx, pos) < 0) {
-                        est = UNC_ERR_IO;
-                    } else {
-                        unc_bufin_init(&in, c->io, &c->ps, iobuf, iocap);
-                        in.limit = compsize;
-                        est = arc_entry_data(c, &in, method & 0x7f, compsize,
-                                             uncompsize, crc16,
-                                             !c->opt.test_only, dlen);
-                    }
-                }
+                if (!c->opt.list_only)
+                    est = arc_entry_data_pw(c, cr, iobuf, iocap, pos,
+                                            method & 0x7f, compsize,
+                                            uncompsize, crc16,
+                                            !c->opt.test_only, dlen);
                 if (c->sink->end_entry(c->sink->ctx, est) < 0) {
                     err = UNC_ERR_SINK;
                     break;
@@ -692,16 +778,10 @@ int unc_arc_extract(UncCtx *c)
         if (sret < 0) { err = UNC_ERR_SINK; break; }
         if (sret == 0) {
             est = UNC_OK;
-            if (!c->opt.list_only) {
-                if (c->io->seek(c->io->ctx, pos) < 0) {
-                    est = UNC_ERR_IO;
-                } else {
-                    unc_bufin_init(&in, c->io, &c->ps, iobuf, iocap);
-                    in.limit = compsize;
-                    est = arc_entry_data(c, &in, method, compsize, uncompsize,
-                                         crc16, !c->opt.test_only, uncompsize);
-                }
-            }
+            if (!c->opt.list_only)
+                est = arc_entry_data_pw(c, cr, iobuf, iocap, pos, method,
+                                        compsize, uncompsize, crc16,
+                                        !c->opt.test_only, uncompsize);
             if (c->sink->end_entry(c->sink->ctx, est) < 0) {
                 err = UNC_ERR_SINK;
                 break;

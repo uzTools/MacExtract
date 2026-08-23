@@ -595,6 +595,58 @@ fork lengths big-endian, exactly as the decoder read them, so **the suite
 agreed with the bug** — the fix was to make the test build the entry the
 measured way and check both forks come back.
 
+## Decryption (`tools/run_crypt.py`, in `ci.sh`)
+
+Added 2026-08-23, when decryption came into scope. **Nothing in the
+corpus is encrypted** — `lsar -j` over all 903 fixtures reports
+`XADIsEncrypted` 0 for every entry — so this suite writes every archive
+it grades, and the whole design is about not grading a decoder against a
+generator that shares its reading.
+
+Two of the six ciphers need no generator here: **`zip -P`** writes the
+PKWARE-cipher fixtures (stored and deflated) and **`arc g<password>`**
+the garbled ARC ones, so those owe nothing to this project. The other
+four — StuffIt classic's StuffItDES, StuffIt 5's RC4, and PackIt's XOR
+and DES — have no encoder on this machine, so `tools/synth_crypt.py`
+writes them and **`unar -p` adjudicates**: a different implementation of
+each cipher, extracting the same file with the same password, byte for
+byte. For StuffIt classic the fixture is MacBinary, because the password
+verifier is the archive's `'MKey'` resource and the oracle needs the
+resource fork too; our CLI is given the bare `.sit` and finds the same
+resource in the sidecar file it writes itself.
+
+Also asserted, because they are what a user meets:
+
+- a **wrong** password is reported per entry and produces no output —
+  checked with `t`, which decodes and discards, so a pass there would
+  mean a CRC agreed with rubbish;
+- **no** password leaves the archive walkable: PackIt's two clear
+  entries either side of the encrypted ones still come out;
+- an encrypted StuffIt classic archive **without** its resource fork
+  reports "encrypted", not "wrong password" — there is no key to try;
+- ARC opens under both the password as typed and the password
+  upper-cased, because `arc` 5.21q keys on the capitals.
+
+**What this cannot see.** Three things, and the first is the one to
+remember:
+
+- **No file that Aladdin's or Bill Goodman's software actually
+  encrypted has ever been read here.** `unar` agreeing proves the two
+  readings of a cipher match; it cannot prove either matches what the
+  original wrote. The one place that bites is a password of **eight
+  bytes or more** in StuffIt classic, where `unar` 1.10.8 and current
+  XADMaster disagree outright (OPEN_ITEMS.md) — the oracle-graded cases
+  use a seven-byte password and the long one is checked against our own
+  round trip, labelled.
+- **Compact Pro is not in this suite at all**, because there is nothing
+  to grade it with: `tools/synth_cpt.py` writes an encrypted archive and
+  `tools/vmac/cptcrypt.py` hands it to Compact Pro 1.51, which refuses
+  encrypted files unless registered. What the suite would check is a
+  round trip through our own cipher, which is worth nothing.
+- The **`arc` cases skip** when `build/arc/` is empty, which is what
+  `ci.sh` leaves behind after `make clean`; run `tools/get_arc.sh`
+  first to include them. The skip is printed, never silent.
+
 ## Now Compress: the archives the corpus does not have (`tools/run_now.py`, in `ci.sh`)
 
 Added 2026-08-15. The corpus's one real fixture reaches two block shapes; the other

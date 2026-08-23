@@ -1,4 +1,4 @@
-unclassic v0.12.0 — bootstrap distribution
+unclassic v0.13.0 — bootstrap distribution
 =========================================
 
 A bare Classic Mac has no way to open a .sit/.cpt/.hqx until it HAS an
@@ -28,8 +28,15 @@ rather than trusting the name, and a .hqx holding several files -- one
 newsgroup posting, several attachments -- gives you all of them. Resource
 forks, type and creator codes and dates all survive, so an extracted
 application simply runs. StuffIt X, LZH, Disk Copy 4.2 and AppleLink
-packages are recognised and named, not extracted; encrypted archives are
-out of scope.
+packages are recognised and named, not extracted.
+
+Password-protected archives open too -- StuffIt, StuffIt 5, Compact Pro,
+PackIt, zip and ARC. You are asked for the password when an entry that
+needs one comes up, and asked again if the archive refuses it. One
+catch, and it belongs to the format rather than to this program: an
+encrypted StuffIt archive keeps half of its key in the file's RESOURCE
+fork, so a copy that lost the fork on its way here cannot be opened by
+anything.
 
 StuffIt SpaceSaver files open too, and they are the ones that look like
 nothing is wrong: SpaceSaver compressed in place, so the file kept its

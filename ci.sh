@@ -51,6 +51,13 @@ python3 tools/run_now.py --unclassic build/san/unclassic \
 # --adjudicate); this replays that verdict by content.
 python3 tools/run_superdisk.py --unclassic build/san/unclassic \
     || fail "SuperDisk! tests"
+# Decryption (M25). Nothing in the corpus is encrypted, so this suite
+# generates its own: `zip -P` and `arc g<pw>` write two of the five
+# schemes themselves, and the three with no encoder here — StuffIt
+# classic, StuffIt 5, PackIt — are generated and then adjudicated by
+# `unar -p`, which is a different implementation of each cipher.
+python3 tools/run_crypt.py --unclassic build/san/unclassic \
+    || fail "decryption tests"
 # StuffIt SpaceSaver has no oracle and no committed fixture either: what
 # grades it is a file SpaceSaver itself wrote under Mini vMac, which
 # lives beside the emulator's other state. Skips cleanly when there is

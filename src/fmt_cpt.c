@@ -114,6 +114,7 @@ void unc_cpt_rle_start(CptRle *r, UncCtx *c, UncFork fork,
     r->saved = 0;
     r->obuf = obuf;
     r->ocap = ocap;
+    r->quiet = 0;
     r->olen = 0;
     r->err = UNC_OK;
     r->crc16 = 0;
@@ -126,7 +127,7 @@ int unc_cpt_rle_flush(CptRle *r)
     r->crc = unc_crc32(r->crc, r->obuf, (int32_t)r->olen);
     if (r->want_crc16)
         r->crc16 = unc_crc16_arc(r->crc16, r->obuf, (int32_t)r->olen);
-    if (!r->c->opt.test_only &&
+    if (!r->c->opt.test_only && !r->quiet &&
         r->c->sink->write(r->c->sink->ctx, r->fork, r->obuf,
                           (int32_t)r->olen) < 0) {
         r->err = UNC_ERR_SINK;
@@ -386,7 +387,7 @@ static int cpt_fork(UncCtx *c, UncFork fork, uint32_t vol, uint32_t at,
                     uint32_t outlen, int lzh, uint32_t *crc,
                     uint8_t *iobuf, uint32_t iocap,
                     uint8_t *obuf, uint32_t ocap,
-                    CptLzh *hz, uint8_t *window)
+                    CptLzh *hz, uint8_t *window, UncCrypt *cr, int quiet)
 {
     UncBufIn in;
     CptRle rle;
@@ -403,8 +404,13 @@ static int cpt_fork(UncCtx *c, UncFork fork, uint32_t vol, uint32_t at,
     }
     unc_bufin_init(&in, c->io, &c->ps, iobuf, iocap);
     in.limit = complen;   /* corrupt streams must not read past the fork */
+    /* The cipher runs across BOTH forks of an entry without resetting,
+     * so `cr` arrives already keyed and already advanced by whatever
+     * the resource fork consumed. */
+    if (cr) in.crypt = cr;
 
     unc_cpt_rle_start(&rle, c, fork, outlen, *crc, obuf, ocap);
+    rle.quiet = quiet;
     if (lzh) err = unc_cpt_lzh_fork(&rle, &in, hz, window, CPT_BLOCK);
     else     err = unc_cpt_rle_fork(&rle, &in, complen);
     if (err == UNC_OK && rle.remaining > 0) err = UNC_ERR_TRUNCATED;
@@ -412,6 +418,79 @@ static int cpt_fork(UncCtx *c, UncFork fork, uint32_t vol, uint32_t at,
         if (unc_cpt_rle_flush(&rle) != UNC_OK) err = rle.err;
     *crc = rle.crc;
     return err;
+}
+
+/* Both forks of one entry, in the order they are stored: resource
+ * first, then data, with one CRC-32 across the pair. */
+static int cpt_entry_forks(UncCtx *c, uint32_t vol, uint32_t at,
+                           uint32_t rcomp, uint32_t dcomp,
+                           uint32_t rsrclen, uint32_t datalen, uint32_t flags,
+                           uint32_t *crc, uint8_t *iobuf, uint32_t iocap,
+                           uint8_t *obuf, uint32_t ocap, CptLzh *hz,
+                           uint8_t *window, UncCrypt *cr, int quiet)
+{
+    int est = cpt_fork(c, UNC_FORK_RSRC, vol, at, rcomp, rsrclen,
+                       (int)(flags & 2), crc, iobuf, iocap, obuf, ocap,
+                       hz, window, cr, quiet);
+    if (est == UNC_OK)
+        est = cpt_fork(c, UNC_FORK_DATA, vol, at + rcomp, dcomp, datalen,
+                       (int)(flags & 4), crc, iobuf, iocap, obuf, ocap,
+                       hz, window, cr, quiet);
+    return est;
+}
+
+/* ------------------------------------------------------------------ */
+/* Encrypted entries                                                  */
+/*                                                                    */
+/* Compact Pro stores NOTHING that verifies a password — its own       */
+/* message says so ("The password supplied is incorrect or the archive */
+/* is damaged"), and the entry's CRC-32 is the only evidence there is. */
+/* So a candidate key can only be graded by decoding the whole entry,  */
+/* and an encrypted entry is therefore decoded TWICE: once writing     */
+/* nothing, to find the key, and once to write it.                     */
+/*                                                                    */
+/* Every encrypted entry pays that, not just the first. Grading the    */
+/* first one and then trusting the password would save a pass, and     */
+/* would be wrong for an archive whose files were added in two         */
+/* sittings under two passwords: the second entry's CRC would fail     */
+/* with its output already half written. Twice through a floppy-sized  */
+/* entry is the cheaper mistake.                                       */
+/* ------------------------------------------------------------------ */
+
+static int cpt_encrypted_entry(UncCtx *c, uint32_t vol,
+                               uint32_t at, uint32_t rcomp, uint32_t dcomp,
+                               uint32_t rsrclen, uint32_t datalen,
+                               uint32_t flags, uint32_t filecrc,
+                               uint8_t *iobuf, uint32_t iocap,
+                               uint8_t *obuf, uint32_t ocap, CptLzh *hz,
+                               uint8_t *window, UncCrypt *cr)
+{
+    uint32_t crc;
+    int est, attempt = 0;
+
+    for (;;) {
+        est = unc_password(c, attempt > 0);
+        if (est != UNC_OK) return est;      /* nothing (more) to try */
+        crc = 0xFFFFFFFFu;
+        unc_crypt_cpt(cr, c->pw, c->pwlen);
+        est = cpt_entry_forks(c, vol, at, rcomp, dcomp, rsrclen, datalen,
+                              flags, &crc, iobuf, iocap, obuf, ocap,
+                              hz, window, cr, 1);
+        if (est == UNC_ERR_ABORTED || est == UNC_ERR_IO) return est;
+        if (est == UNC_OK && crc == filecrc) break;
+        /* Wrong key, or a damaged entry: indistinguishable here, and
+         * the caller was the one who offered a password. */
+        attempt++;
+    }
+    if (c->opt.test_only) return UNC_OK;    /* that pass WAS the test */
+
+    crc = 0xFFFFFFFFu;
+    unc_crypt_cpt(cr, c->pw, c->pwlen);
+    est = cpt_entry_forks(c, vol, at, rcomp, dcomp, rsrclen, datalen,
+                          flags, &crc, iobuf, iocap, obuf, ocap,
+                          hz, window, cr, 0);
+    if (est == UNC_OK && crc != filecrc) est = UNC_ERR_CRC;
+    return est;
 }
 
 /* ------------------------------------------------------------------ */
@@ -436,6 +515,7 @@ int unc_cpt_extract(UncCtx *c)
     uint16_t plen = 0;
     uint32_t idxvol;
     CptIndex ix;
+    UncCrypt *cr;
     int err = UNC_OK;
 
     fsize = c->io->size(c->io->ctx);
@@ -458,10 +538,13 @@ int unc_cpt_extract(UncCtx *c)
     commentlen = meta[6];
     ipos = offset + 7 + commentlen;
 
-    iobuf = (uint8_t *)unc_alloc(c->al, iocap + ocap + CPT_WINDOW);
+    iobuf = (uint8_t *)unc_alloc(c->al,
+                                 iocap + ocap + CPT_WINDOW +
+                                 (uint32_t)sizeof *cr);
     if (!iobuf) return UNC_ERR_MEM;
     obuf = iobuf + iocap;
     window = obuf + ocap;
+    cr = (UncCrypt *)(void *)(window + CPT_WINDOW);
     hz = (CptLzh *)unc_alloc(c->al, (uint32_t)sizeof *hz);
     if (!hz) { unc_free(c->al, iobuf); return UNC_ERR_MEM; }
 
@@ -600,8 +683,13 @@ int unc_cpt_extract(UncCtx *c)
             if (sret > 0) continue;               /* skipped: no decode */
 
             est = UNC_OK;
-            if (flags & 1) {
-                est = UNC_ERR_ENCRYPTED;
+            if (c->opt.list_only && (flags & 1)) {
+                est = UNC_OK;                     /* metadata only */
+            } else if (flags & 1) {
+                est = cpt_encrypted_entry(c, filevol, fileoffs,
+                                          rcomp, dcomp, rsrclen, datalen,
+                                          flags, filecrc, iobuf, iocap,
+                                          obuf, ocap, hz, window, cr);
             } else if (c->opt.list_only) {
                 est = UNC_OK;                     /* metadata only */
             } else if (fileoffs + rcomp < fileoffs ||
@@ -616,15 +704,10 @@ int unc_cpt_extract(UncCtx *c)
                 est = UNC_ERR_CORRUPT;            /* forks outside file */
             } else {
                 crc = 0xFFFFFFFFu;
-                est = cpt_fork(c, UNC_FORK_RSRC, filevol, fileoffs,
-                               rcomp, rsrclen,
-                               flags & 2, &crc, iobuf, iocap, obuf, ocap,
-                               hz, window);
-                if (est == UNC_OK)
-                    est = cpt_fork(c, UNC_FORK_DATA, filevol,
-                                   fileoffs + rcomp,
-                                   dcomp, datalen, flags & 4, &crc,
-                                   iobuf, iocap, obuf, ocap, hz, window);
+                est = cpt_entry_forks(c, filevol, fileoffs, rcomp, dcomp,
+                                      rsrclen, datalen, flags, &crc,
+                                      iobuf, iocap, obuf, ocap, hz, window,
+                                      NULL, 0);
                 if (est == UNC_OK && crc != filecrc) est = UNC_ERR_CRC;
             }
             if (c->sink->end_entry(c->sink->ctx, est) < 0) {

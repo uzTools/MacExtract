@@ -488,10 +488,49 @@ static int zip_emit(void *ctx, const uint8_t *p, int32_t n)
     return exo_emit(ctx, p, n);
 }
 
+/* Decode one entry's data from a reader already positioned at it (and,
+ * for an encrypted entry, already past the twelve-byte encryption
+ * header and reading through a cipher). Accumulates the CRC-32 the
+ * caller compares against the directory's. */
+static int zip_decode(UncCtx *c, UncBufIn *in, ExoSink *es, uint32_t method,
+                      uint32_t usize, uint32_t *crc,
+                      uint8_t *obuf, uint32_t ocap)
+{
+    uint32_t produced = 0;
+    int est;
+
+    if (method == 0) {
+        uint32_t left = usize;
+        est = UNC_OK;
+        while (left > 0) {
+            int b = unc_bufin_next(in);
+            if (b < 0) { est = in->err; break; }
+            obuf[produced % ocap] = (uint8_t)b;
+            if (++produced % ocap == 0) {
+                *crc = unc_crc32(*crc, obuf, (int32_t)ocap);
+                est = exo_emit(es, obuf, (int32_t)ocap);
+                if (est != UNC_OK) break;
+            }
+            left--;
+        }
+        if (est == UNC_OK && produced % ocap) {
+            *crc = unc_crc32(*crc, obuf, (int32_t)(produced % ocap));
+            est = exo_emit(es, obuf, (int32_t)(produced % ocap));
+        }
+        return est;
+    }
+
+    est = unc_inflate_raw(in, c->al, obuf, ocap, usize, &produced, crc,
+                          zip_emit, es);
+    if (est == UNC_OK && produced != usize) est = UNC_ERR_TRUNCATED;
+    return est;
+}
+
 int unc_zip_extract(UncCtx *c)
 {
     uint32_t eocd = 0, scanend;
     uint8_t *iobuf = NULL, *obuf, *cdbuf = NULL;
+    UncCrypt *cr;
     uint32_t iocap = 4096, ocap = 8192;
     uint32_t nentries, cdoffs, cdsize, cdrel, disknum, cddisk;
     uint32_t lastpart0 = 0;
@@ -539,9 +578,12 @@ int unc_zip_extract(UncCtx *c)
         return UNC_ERR_CORRUPT;
     }
 
-    iobuf = (uint8_t *)unc_alloc(c->al, iocap + ocap);
+    /* The cipher state rides along with the two buffers: one allocation,
+     * and ~450 bytes that only an encrypted archive ever touches. */
+    iobuf = (uint8_t *)unc_alloc(c->al, iocap + ocap + (uint32_t)sizeof *cr);
     if (!iobuf) return UNC_ERR_MEM;
     obuf = iobuf + iocap;
+    cr = (UncCrypt *)(void *)(obuf + ocap);
 
     /* Read the whole central directory once, so that walking it does not
      * interleave with reading entry data. On one file that saves seeks;
@@ -639,7 +681,13 @@ int unc_zip_extract(UncCtx *c)
         } else if (sret == 0) {
             est = UNC_OK;
             if (!c->opt.list_only) {
-                if (flags & 0x0001) {
+                if ((flags & 0x0001) && ((flags & 0x0040) || method == 99)) {
+                    /* Two schemes this does not read: PKWARE's "strong
+                     * encryption", whose key material is in a record
+                     * nothing here parses (XADMaster refuses it too),
+                     * and WinZip's AES, which is method 99 — both
+                     * postdate every machine this targets by a decade.
+                     * OPEN_ITEMS.md. */
                     est = UNC_ERR_ENCRYPTED;
                 } else if (method != 0 && method != 8) {
                     est = UNC_ERR_UNSUPPORTED;
@@ -647,6 +695,8 @@ int unc_zip_extract(UncCtx *c)
                     /* Local header gives the true data offset (its
                      * name/extra lengths may differ from the CD's). */
                     uint8_t lh[30];
+                    int attempt = 0;
+                  retry_entry:
                     est = zip_seek(c, startdisk, lhoffs);
                     if (est != UNC_OK) {
                         /* fall through to end_entry with this status */
@@ -656,7 +706,7 @@ int unc_zip_extract(UncCtx *c)
                         est = UNC_ERR_CORRUPT;
                     } else {
                         UncBufIn in;
-                        uint32_t crc = 0xFFFFFFFFu, produced = 0;
+                        uint32_t crc = 0xFFFFFFFFu;
                         ExoSink es;
                         es.c = c;
                         /* The data follows the header's own name and
@@ -665,37 +715,52 @@ int unc_zip_extract(UncCtx *c)
                          * part and continue in the next. */
                         est = zip_skip(c, (uint32_t)unc_get_u16le(lh + 26) +
                                           unc_get_u16le(lh + 28));
-                        if (est != UNC_OK) {
-                            /* fall through */
-                        } else if (method == 0) {
-                            uint32_t left = usize;
-                            est = UNC_OK;
-                            unc_bufin_init(&in, c->io, &c->ps, iobuf, iocap);
-                            in.limit = csize;
-                            while (left > 0 && est == UNC_OK) {
-                                int b = unc_bufin_next(&in);
-                                if (b < 0) { est = in.err; break; }
-                                obuf[produced % ocap] = (uint8_t)b;
-                                if (++produced % ocap == 0) {
-                                    crc = unc_crc32(crc, obuf, (int32_t)ocap);
-                                    est = exo_emit(&es, obuf, (int32_t)ocap);
+                        if (est == UNC_OK && (flags & 0x0001)) {
+                            /* PKWARE's stream cipher. Twelve bytes of
+                             * header come first; the last of them is a
+                             * check byte — the top byte of the CRC, or
+                             * of the local time field where the CRC is
+                             * only in the data descriptor. One byte in
+                             * 256 gets a wrong password past it, which
+                             * the entry CRC then catches. */
+                            uint8_t test = (uint8_t)((flags & 0x0008)
+                                ? (unc_get_u32le(lh + 10) >> 8)
+                                : (wantcrc >> 24));
+                            est = unc_password(c, attempt > 0);
+                            if (est == UNC_OK) {
+                                int k;
+                                if (csize < 12) est = UNC_ERR_CORRUPT;
+                                else {
+                                    unc_crypt_zip(cr, c->pw, c->pwlen);
+                                    unc_bufin_init(&in, c->io, &c->ps,
+                                                   iobuf, iocap);
+                                    in.limit = csize;
+                                    in.crypt = cr;
+                                    for (k = 0; k < 12; k++) {
+                                        int b = unc_bufin_next(&in);
+                                        if (b < 0) { est = in.err; break; }
+                                        if (k == 11 && (uint8_t)b != test)
+                                            est = UNC_ERR_PASSWORD;
+                                    }
                                 }
-                                left--;
+                                if (est == UNC_ERR_PASSWORD) {
+                                    attempt++;
+                                    goto retry_entry;
+                                }
+                                if (est == UNC_OK)
+                                    est = zip_decode(c, &in, &es, method,
+                                                     usize, &crc, obuf, ocap);
+                                if (est == UNC_OK &&
+                                    (crc ^ 0xFFFFFFFFu) != wantcrc)
+                                    est = UNC_ERR_CRC;
                             }
-                            if (est == UNC_OK && produced % ocap) {
-                                crc = unc_crc32(crc, obuf,
-                                                (int32_t)(produced % ocap));
-                                est = exo_emit(&es, obuf,
-                                               (int32_t)(produced % ocap));
-                            }
-                        } else {
+                            goto entry_done;
+                        }
+                        if (est == UNC_OK) {
                             unc_bufin_init(&in, c->io, &c->ps, iobuf, iocap);
                             in.limit = csize;
-                            est = unc_inflate_raw(&in, c->al, obuf, ocap,
-                                                  usize, &produced, &crc,
-                                                  zip_emit, &es);
-                            if (est == UNC_OK && produced != usize)
-                                est = UNC_ERR_TRUNCATED;
+                            est = zip_decode(c, &in, &es, method, usize,
+                                             &crc, obuf, ocap);
                         }
                         if (est == UNC_OK &&
                             (crc ^ 0xFFFFFFFFu) != wantcrc)
@@ -703,6 +768,7 @@ int unc_zip_extract(UncCtx *c)
                     }
                 }
             }
+          entry_done:
             if (c->sink->end_entry(c->sink->ctx, est) < 0) {
                 err = UNC_ERR_SINK;
                 break;

@@ -12,11 +12,11 @@ whole corpus for that format (engine allocations only, via
 | MacBinary I/II/III | extract | — | 233 fixtures | 8 KB | full |
 | AppleSingle/Double | extract | — | (unit tests + envelopes) | 8 KB | full |
 | BinHex 4 (.hqx) | extract | RLE90; several documents in one file, and one document posted in several parts†† | 179 fixtures | 8 KB | full |
-| PackIt (.pit) | extract | store, Huffman; encrypted detected | 4 fixtures (1 real + 3 synthetic PMa4) | 9 KB | full |
-| Compact Pro (.cpt) | extract | RLE, LZH+RLE | 108 fixtures | 19 KB | full |
-| StuffIt classic (.sit) | extract | 0 store, 1 RLE90*, 2 LZW, 3 Huffman, 5 LZAH, 6 fixed Huffman‡, 8 MW, 13 LZSS+Huffman; encrypted detected | 227 fixtures‡‡ | 8–76 KB‖ | full |
-| StuffIt 5 (.sit) | extract | 0, 13, 15 Arsenic; encrypted detected | 31 fixtures | 0.15–2.53 MB† | 23 of 31 fixtures extract FULLY; the rest refuse per entry |
-| Zip | extract | store, deflate; others & encrypted per-entry errors | 5 fixtures (2 of them PKZIP 1.x, graded on names and entry counts only — Implode is out of v1 scope, and `unar` adjudicates 5 of their 7 entries) | 12–54 KB¶ | full |
+| PackIt (.pit) | extract | store, Huffman; **PMa5 and PMa6 decrypted** (an XOR keyed by DES's PC-1, and DES) | 4 fixtures (1 real + 3 synthetic PMa4) | 9 KB | full |
+| Compact Pro (.cpt) | extract | RLE, LZH+RLE; **encrypted entries decrypted**, from a reading of the application nobody has graded (*Encryption*, below) | 108 fixtures | 19 KB | full |
+| StuffIt classic (.sit) | extract | 0 store, 1 RLE90*, 2 LZW, 3 Huffman, 5 LZAH, 6 fixed Huffman‡, 8 MW, 13 LZSS+Huffman; **encrypted forks decrypted** (StuffItDES, and the 'MKey' resource — *Encryption*, below) | 227 fixtures‡‡ | 8–76 KB‖ | full |
+| StuffIt 5 (.sit) | extract | 0, 13, 15 Arsenic; **encrypted forks decrypted** (RC4 under MD5(password)) | 31 fixtures | 0.15–2.53 MB† | 23 of 31 fixtures extract FULLY; the rest refuse per entry |
+| Zip | extract | store, deflate, **PKWARE's cipher**; other methods, WinZip AES and PKWARE strong encryption are per-entry errors | 5 fixtures (2 of them PKZIP 1.x, graded on names and entry counts only — Implode is out of v1 scope, and `unar` adjudicates 5 of their 7 entries) | 12–54 KB¶ | full |
 | Gzip | extract | deflate | 3 fixtures | 51 KB | full |
 | Unix compress (.Z) | extract | LZW ≤16 bit | 4 fixtures | 219 KB§ | full |
 | Tar (ustar/v7) | extract | — (links reported unsupported) | 3 fixtures (2 real 1990 v7 tars) + unit tests | 8 KB | full |
@@ -28,7 +28,7 @@ whole corpus for that format (engine allocations only, via
 | StuffIt X (.sitx) | detect only | — | — (no fixture) | — | — |
 | DiskDoubler (DD, DDAR, DDA2) | extract | **all eleven**: 0 store, 1 Unix compress, 2/5 splay Huffman, 3 RLE90, 4 StuffIt Huffman, 6/9 AD LZSS, 7 Stac LZS, 8 Compact Pro, 10 DDn✦ | 88 fixtures (6 harvested + 82 CC0 files graded against their own originals, in `ci.sh` since 2026-08-21) + 19 BinHexed copies of those + 28 specimens (2 written by DiskDoubler 3.7 under Mini vMac, 2 off its distribution disk, 24 off Salient's 3.1.2 disk)✦ | 8–392 KB✦ | full |
 | Now Compress | extract | stored, LZSS, Huffman, Huffman+LZSS, "new" LZSS✧ | 2 real fixtures + 13 generated archives (all five shapes, adjudicated by `unar`); `synth-now-mixed.now` also has an `unar` manifest and is in the differential suite | 128 KB✧ | full |
-| ARC / ArcMac (.arc) | extract | 1/2 store, 3 RLE90, 4 squeeze+RLE90, 5/6/7 crunch, 8 12-bit LZW+RLE90, 9 13-bit LZW, 0x7f compress; ArcMac's two-fork payload since 2026-08-16★★★; 0x0a/0x0b (PKARC) declined per entry★ | 10 generated archives (methods 1-9, adjudicated by `unar`) + 3 written by Debian's `arc` 5.21q; `synth-arc-mixed.arc` also has an `unar` manifest and is in the differential suite | 4–32 KB★ | full |
+| ARC / ArcMac (.arc) | extract | 1/2 store, 3 RLE90, 4 squeeze+RLE90, 5/6/7 crunch, 8 12-bit LZW+RLE90, 9 13-bit LZW, 0x7f compress; ArcMac's two-fork payload since 2026-08-16★★★; 0x0a/0x0b (PKARC) declined per entry★; **garbled (password-XORed) members decrypted** | 10 generated archives (methods 1-9, adjudicated by `unar`) + 3 written by Debian's `arc` 5.21q; `synth-arc-mixed.arc` also has an `unar` manifest and is in the differential suite | 4–32 KB★ | full |
 | uuencode (.uu, incl. UUTool) | extract | — (plain uu, UUTool's two-fork "MU" shape, and documents posted in several parts★★) | 7 generated cases, the two-fork ones adjudicated by macutils' `hexbin`; `synth-uu-mac.uu` is in the differential suite | 4 KB | full |
 | Alysis SuperDisk! (.X, .x) | extract | **both containers** (record-stream archive and single file); methods 1-4 and 5-8 (a finite-context predictor over a 13- or 16-bit context, with the flag bitmap and/or the literals Huffman-coded), 9 Huffman, 11 SlowFastB (LZSS); 10, 13 and 20 declined per entry✧✧ | 2 fixtures, 5 forks, adjudicated by the archives' OWN self-extractors on an emulated Mac, + 11 single-file specimens written by Alysis's own control panel (methods 1 and 6) and graded against their inputs | 72–115 KB✧✧ | full |
 | StuffIt SpaceSaver (`SPSV`) | extract | 0 stored, 4 "Alg 4" — an LZSS whose window starts loaded with a preset dictionary that ships inside SpaceSaver; 1, 2 and 3 declined per entry✦✦ | no oracle and no specimen — but **Aladdin's own encoder agrees with this decoder field for field** (`CMod 20`, 2026-08-23), which is what grades it, plus a synthetic round-trip and unit tests✦✦ | 4 KB stored, **36 KB** for what SpaceSaver writes (measured on a Mac Plus); 68 KB is the ceiling the width byte allows. The dictionary is 9.7 KB of static data, not heap | full |
@@ -635,6 +635,73 @@ dictionary at all. That is the case this format turns up in: the file looks
 normal, its own application reads 84 bytes of header where the document
 should be, and nothing else on the disk says why.
 
+## Encryption
+
+**In scope since 2026-08-23.** Six ciphers across five formats, and one
+thing to know before the table: **nothing in the corpus is encrypted.**
+Measured, not assumed — `lsar -j` over all 903 fixtures reports
+`XADIsEncrypted` 0 for every entry — so every archive that exercises
+any of this is generated by `tools/synth_crypt.py`,
+`tools/synth_cpt.py`, `zip -P` or `arc g<password>`, and graded by
+`unar -p` where a second implementation exists. TESTING.md, *the
+decryption suite*.
+
+| format | cipher | key from the password | verified before decoding? | graded by |
+|---|---|---|---|---|
+| StuffIt classic | an eight-byte feedback XOR, keyed through **StuffItDES** (a DES with its own key schedule and no initial permutation) | iterated DES over the password, then the archive's `'MKey'` resource, then sixteen bytes stored at the end of each fork | **yes** — the 'MKey' block checks against itself | `unar -p`, on the MacBinary form (the oracle needs the resource fork too) |
+| StuffIt 5 | **RC4** | MD5(password) cut to five bytes, then the fork's own five | **yes** — MD5 of that key against a hash in the archive header | `unar -p` |
+| PackIt `PMa5` | XOR, key applied **modulo seven** over eight bytes | DES's PC-1 permutation of the first eight password bytes | in effect — the entry header is inside the ciphertext and carries a CRC | `unar -p` |
+| PackIt `PMa6` | **DES**, ECB; the operation that DECODES is DES's decrypt | the first eight password bytes | the same | `unar -p` |
+| zip | **PKWARE's** three CRC-32-driven keys | the password bytes, folded in | **yes** — a check byte in the twelve-byte header | Info-ZIP wrote the fixture; `unar -p` reads it |
+| ARC | a repeating XOR of the password over the compressed bytes | the password itself, and `arc` 5.21q upper-cases it first (measured) | **no** — the format has no encryption flag at all | Debian's `arc` wrote the fixture; `unar -p` reads it |
+| Compact Pro | a **64-bit CRC** register; keystream is its second byte, stepped on each plaintext byte | nine bytes: a length capped at eight, and the password ADDED into eight accumulators in rotation | **no** — its own message says so | **nobody. See below.** |
+
+**The formats NOT in that table have no encryption to read**, and that
+is measured rather than assumed: a string sweep over the distribution
+images this project already keeps — DiskDoubler 3.1.2, 3.7 and Norton
+DiskDoubler Pro, Now Utilities 5.0.1, the Alysis control panel and
+StuffIt Deluxe's engine — finds no password feature in any of
+DiskDoubler, Now Compress, SuperDisk! or SpaceSaver. (The hits on two
+of those volumes are System 7's own File Sharing and Chooser.) BinHex,
+MacBinary, AppleSingle/Double, uuencode, tar, gzip and `.Z` have
+nowhere to put one.
+
+Three properties are worth stating because a user meets them:
+
+- **An encrypted StuffIt classic archive that lost its resource fork
+  cannot be decrypted by anything.** `'MKey'` 0 is half the key
+  material and it is not in the stream. The entry reports "encrypted"
+  rather than asking for a password it could not use.
+- **A wrong password is reported, never decoded to rubbish.** Where the
+  format verifies, that is immediate; where it does not (ARC, Compact
+  Pro), the entry is decoded once writing nothing to find the key and
+  again to write it, so a wrong key never reaches the output.
+- **An encrypted entry does not stop the walk.** The entries around it
+  come out; PackIt, whose encrypted entries do not say where they end,
+  resyncs on the next block magic as it always did.
+
+### Compact Pro's cipher: read out of the application, graded by nobody
+
+This is the one format here whose encryption no second implementation
+reads — The Unarchiver's format notes say "the algorithm for this is
+unknown", CptExpand's manual says it "will not extract encrypted
+files", and StuffIt's own Compact Pro translator answers "the file is
+password protected". So it was read out of Compact Pro 1.51's `CODE` 3
+in both directions (DECISIONS.md 2026-08-23, *decryption*), and
+`tools/vmac/cptcrypt.py` exists to have the application grade that
+reading the way Salient's expander graded DiskDoubler methods 3-5.
+
+**It cannot.** Compact Pro 1.51 opens an archive written with this
+cipher, lists all three entries with the right sizes and type/creator,
+marks each encrypted — and then refuses Extract with *"This version of
+Compact Pro cannot validate or extract encrypted files."* The decrypt
+loop is in that very binary; what is missing is a **registration**: the
+routine at 0x47ca enables encryption only when the stored
+personalisation string ends with `*`, and all five copies in the corpus
+(1.34, and 1.51 in four languages) carry the unregistered placeholder
+`********`. So the reading is a **hypothesis**, labelled one here and
+in OPEN_ITEMS.md, which says what would close it.
+
 ## AppleLink packages, and why they are named but not opened
 
 **Named since 2026-08-23.** Every status file here used to say `.pkg` had no
@@ -1087,7 +1154,8 @@ result — painted to the framebuffer, read from a screenshot — is
 cross-checked against the same engine's Linux output (`tools/vmac_check.py`,
 `tools/decode_grid.py`).
 
-**62/62 byte-exact PASS** (2026-08-22, re-run with M15–M23's codecs in and
+**62/62 byte-exact PASS** (**2026-08-23**, re-run against the decryption
+build, which is 16 KB larger; 2026-08-22 with M15–M23's codecs in and
 three fixtures added for them — DiskDoubler methods 3, 4 and 5, which nothing
 in the sample had exercised; 59/59 on 2026-08-15, re-run after the BinHex line rule
 changed — every `.hqx` in the sample goes through it; 57/57 earlier the same
@@ -1244,7 +1312,10 @@ RAM** — the project's floor target — one boot per fixture, same on-Mac
 CRC-32 verification (`tools/vmac/run.py --mem 1M --list tools/vmac/sample.txt`).
 The engine budget is derived from `FreeMem` at startup.
 
-**62/62 byte-exact PASS** (2026-08-22, with M19–M23's three; 59/59 on
+**62/62 byte-exact PASS** (**2026-08-23**, re-run against the decryption
+build — 16 KB more code is 16 KB less heap on this machine, and the three
+heaviest allocations are unchanged at 533 KB, 471 KB and 405 KB;
+2026-08-22 with M19–M23's three; 59/59 on
 2026-08-15 with M13's two; 57/57 before them;
 55/55 on 2026-08-08 and 44/44 on 2026-08-07, before the recovered fixtures,
 the method-6 pair and M12's two joined the sample; the sample carried four

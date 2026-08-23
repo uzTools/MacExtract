@@ -25,6 +25,17 @@ static inline uint32_t unc_get_u32be(const uint8_t *p)
            ((uint32_t)p[2] << 8)  |  (uint32_t)p[3];
 }
 
+/* The one writer: the fork ciphers work on whole 32-bit halves, and a
+ * byte-wise store is the only way to put one back without an unaligned
+ * dereference. */
+static inline void unc_put_u32be(uint8_t *p, uint32_t v)
+{
+    p[0] = (uint8_t)(v >> 24);
+    p[1] = (uint8_t)(v >> 16);
+    p[2] = (uint8_t)(v >> 8);
+    p[3] = (uint8_t)v;
+}
+
 /* Little-endian variants (zip/gzip live in that world). */
 static inline uint16_t unc_get_u16le(const uint8_t *p)
 {
@@ -99,6 +110,66 @@ int unc_progress_add(UncProgressState *ps, uint32_t n);
 int unc_progress_at(UncProgressState *ps, uint32_t done);
 
 /* ------------------------------------------------------------------ */
+/* Ciphers (src/unc_crypt.c)                                          */
+/*                                                                    */
+/* One state struct for all six, because a decoder does not care       */
+/* which it is reading through: it attaches a UncCrypt to its UncBufIn */
+/* and every refill is decrypted before the decoder sees a byte.       */
+/* ------------------------------------------------------------------ */
+
+enum {
+    UNC_CRYPT_NONE = 0,
+    UNC_CRYPT_XOR,        /* ARC: password repeated over the stream    */
+    UNC_CRYPT_PIT_XOR,    /* PackIt PMa5                               */
+    UNC_CRYPT_PIT_DES,    /* PackIt PMa6                               */
+    UNC_CRYPT_SIT_DES,    /* StuffIt classic fork cipher               */
+    UNC_CRYPT_RC4,        /* StuffIt 5                                 */
+    UNC_CRYPT_ZIP,        /* PKWARE's zip stream cipher                */
+    UNC_CRYPT_CPT         /* Compact Pro's 64-bit CRC keystream        */
+};
+
+#define UNC_SIT5_KEYLEN 5      /* 40 bits, all StuffIt 5 uses          */
+
+typedef struct UncCrypt {
+    int      kind;
+    uint32_t blocksize;    /* 1, or 8 for the two block ciphers: what
+                            * a refill must be a whole number of      */
+    uint8_t  key[UNC_PASSWORD_MAX];  /* XOR / PackIt key material.
+                            * A whole password long, not eight: ARC
+                            * repeats the password itself, and a key cut
+                            * to eight decodes a longer one to rubbish. */
+    uint16_t keylen;
+    uint8_t  ks[16][8];    /* DES subkeys, eight six-bit groups a round */
+    uint32_t a, b, c, d;   /* StuffIt classic fork cipher state         */
+    uint8_t  s[256];       /* RC4                                       */
+    uint8_t  si, sj;
+    uint32_t k0, k1, k2;   /* zip                                       */
+    uint32_t hi, lo;       /* Compact Pro's 64-bit register             */
+} UncCrypt;
+
+void unc_crypt_xor(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen);
+void unc_crypt_packit_xor(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen);
+void unc_crypt_packit_des(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen);
+int  unc_crypt_zip(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen);
+void unc_crypt_cpt(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen);
+void unc_crypt_zip_update(UncCrypt *cr, uint8_t plain);
+void unc_crypt_rc4(UncCrypt *cr, const uint8_t *key, uint16_t keylen);
+int  unc_crypt_sit5_key(const uint8_t *pw, uint16_t pwlen,
+                        const uint8_t hash[UNC_SIT5_KEYLEN],
+                        uint8_t out[UNC_SIT5_KEYLEN]);
+int  unc_crypt_sit(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen,
+                   const uint8_t entrykey[16], const uint8_t mkey[8]);
+
+/* Decrypt `len` bytes in place; `pos` is buf[0]'s offset within the
+ * encrypted stream (used by the two position-keyed ciphers, ignored by
+ * the stateful ones, which require sequential calls). */
+void unc_crypt_apply(UncCrypt *cr, uint8_t *buf, uint32_t len, uint32_t pos);
+
+/* MD5 of a short message. Exposed for the unit tests, which grade it
+ * against published digests. */
+void unc_md5(const uint8_t *msg, uint32_t len, uint8_t out[16]);
+
+/* ------------------------------------------------------------------ */
 /* Buffered byte-wise input reader                                    */
 /* Many decoders consume input a byte at a time; UncBufIn batches the */
 /* io->read calls and drives the progress pump on each refill.        */
@@ -116,6 +187,12 @@ typedef struct UncBufIn {
                               * bounds a substream (e.g. one compressed
                               * fork) so corrupt data cannot read past
                               * its end into unrelated bytes */
+    UncCrypt         *crypt; /* NULL: the stream is plaintext. Set AFTER
+                              * unc_bufin_init and BEFORE the first read:
+                              * a refill already in the buffer is not
+                              * revisited. Every refill is decrypted as
+                              * it arrives, so no decoder above this
+                              * knows the difference. */
     int               err;   /* sticky: UNC_OK until EOF/error */
 } UncBufIn;
 
@@ -336,6 +413,16 @@ typedef struct UncSegMap {
     uint16_t  nparts;
 } UncSegMap;
 
+/* Where the password in hand came from. A rejected one moves the state
+ * along rather than being asked for twice. */
+enum {
+    UNC_PW_UNSET = 0,   /* nothing tried yet                          */
+    UNC_PW_STATIC,      /* opt.password is in c->pw                    */
+    UNC_PW_TRIED,       /* opt.password was tried and rejected         */
+    UNC_PW_ASKED,       /* opt.ask supplied what is in c->pw           */
+    UNC_PW_NONE         /* the host has nothing (more) to offer        */
+};
+
 typedef struct UncCtx {
     UncIO            *io;
     UncSink          *sink;
@@ -343,7 +430,19 @@ typedef struct UncCtx {
     const UncSegMap  *segmap;   /* NULL unless the archive is joined */
     UncProgressState  ps;
     UncOptions        opt;
+    /* The password for this archive, fetched the first time an entry
+     * needs one and kept for the rest of the walk: every format here
+     * keys every entry from the same password. */
+    uint8_t           pw[UNC_PASSWORD_MAX];
+    uint16_t          pwlen;
+    uint8_t           pwstate;
+    int               pwattempt;
 } UncCtx;
+
+/* Get a password to try. `again` = the last one was rejected. Returns
+ * UNC_OK with c->pw/c->pwlen valid, or UNC_ERR_PASSWORD when the host
+ * has none left. */
+int unc_password(UncCtx *c, int again);
 
 /* ------------------------------------------------------------------ */
 /* Compact Pro's two decode stages, shared with DiskDoubler method 8,   */
@@ -366,6 +465,10 @@ typedef struct CptRle {
     uint8_t  saved;       /* last emitted byte (repeat source) */
     uint8_t *obuf;        /* staging buffer */
     uint32_t ocap, olen;
+    int      quiet;       /* decode but write nothing: what a password
+                           * candidate is graded by, since Compact Pro
+                           * stores no verifier and the entry CRC is the
+                           * only evidence a key was right */
     int      err;         /* sticky */
 } CptRle;
 
@@ -449,7 +552,7 @@ int unc_zip_scan_eocd(void *ctx, UncZipReadAt rd, uint32_t end, uint32_t *at);
 int unc_sit_decode_fork(UncCtx *c, UncFork fork, uint32_t at,
                         uint32_t complen, uint32_t outlen, int method,
                         uint16_t wantcrc, uint8_t *iobuf, uint32_t iocap,
-                        uint8_t *obuf, uint32_t ocap);
+                        uint8_t *obuf, uint32_t ocap, UncCrypt *cr);
 
 /* Arsenic (method 15) core, in sit_arsenic.c. */
 int unc_arsenic_decode(UncBufIn *in, UncAlloc *al, uint32_t outlen,

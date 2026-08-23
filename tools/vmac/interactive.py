@@ -237,6 +237,7 @@ class Mac:
 # is clicked. Standard File pre-selects the first item and mkboot strips the
 # volume to one archive, so the first row IS the archive.
 SF_FIRST_ROW = (150, 137)
+SF_ROW_HEIGHT = 16      # one Standard File row, at the system font size
 
 # How long the screen must hold still before an extraction is called
 # finished, in seconds. Not a poll interval: see Mac.settle, where the
@@ -1233,6 +1234,90 @@ def phase_segments(args, appbin, workdir, shot):
     return verdict == "BYTE-EXACT"
 
 
+def phase_password(args, appbin, workdir, shot):
+    """Does the application ask for a password, and take one?
+
+    The engine asks its host for a password when an entry turns out to
+    need one — not before — so the only way to see that path is to drive
+    the dialog. The archive is the encrypted StuffIt classic one
+    tools/synth_crypt.py writes, which is also the one shape where the
+    key material is NOT in the file being read: 'MKey' lives in the
+    archive's resource fork, so this checks the Mac side of that too.
+    A MacBinary file is what carries both forks onto the volume.
+
+    Two asks, deliberately: the first password given is WRONG, so the
+    dialog has to come back saying so. That is the retry path, and it is
+    the one a user meets most.
+
+    Ends on the extracted bytes read off the volume, so the phase can
+    fail on its own rather than on somebody reading a screenshot.
+    """
+    sys.path.insert(0, os.path.join(R.REPO, "tools"))
+    import synth_crypt as SC                                # noqa: E402
+    import synth_wrapped as W                               # noqa: E402
+
+    password = "hushnow"
+    sit, rsrc = SC.build_sit_des(password.encode("mac_roman"))
+    binpath = os.path.join(workdir, "secret.bin")
+    open(binpath, "wb").write(W.macbinary("Secret.sit", sit, rsrc,
+                                          b"SIT!", b"SIT!"))
+    stock = os.path.join(R.VMAC_HOME, args.system)
+    bootimg = os.path.join(workdir, "boot-password.hfv")
+    R.sh(sys.executable, os.path.join(HERE, "mkboot.py"), stock, appbin,
+         bootimg, "--macbin", f"{binpath}:Secret.sit")
+
+    scratch = os.path.join(args.outdir, ".settle.png")
+    mac = Mac(bootimg, args.emu, workdir)
+    try:
+        if mac.settle(scratch, interval=5.0, timeout=args.boot_timeout) is None:
+            raise SystemExit("interactive: the machine never settled")
+        shot(mac, "pw-1-sfgetfile.png")
+        # SECOND row: the boot volume has an invisible-to-the-Finder
+        # `Desktop` file that sorts before `Secret.sit`, and clicking
+        # the first row opens that instead — which looks exactly like a
+        # failure to read the archive.
+        mac.click(SF_FIRST_ROW[0], SF_FIRST_ROW[1] + SF_ROW_HEIGHT)
+        mac.key("Return")                     # Open -> destination dialog
+        time.sleep(3.0)
+        shot(mac, "pw-2-destination.png")
+        mac.key("Return")                     # Save -> extraction starts
+        time.sleep(8.0)
+        shot(mac, "pw-3-asked.png")
+        for ch in "wrongone":                 # the refused one, first
+            mac.key(ch)
+        shot(mac, "pw-4-typed-wrong.png")
+        mac.key("Return")
+        time.sleep(4.0)
+        shot(mac, "pw-5-asked-again.png")
+        for ch in password:
+            mac.key(ch)
+        shot(mac, "pw-6-typed.png")
+        mac.key("Return")
+        mac.settle(scratch, interval=5.0, quiet=EXTRACT_QUIET,
+                   timeout=args.complete_timeout)
+        shot(mac, "pw-7-complete.png")
+    finally:
+        mac.close()
+        if os.path.exists(scratch):
+            os.remove(scratch)
+
+    written = os.path.join(workdir, "boot.hfv")
+    bad = 0
+    for name, data, rsrcfork in SC.SIT_CASES:
+        got = read_joined(written, name.encode("mac_roman"), workdir)
+        if got is None:
+            print(f"interactive: {name!r} is not on the volume")
+            bad += 1
+            continue
+        if got != data:
+            print(f"interactive: {name!r} came out {len(got)} bytes, "
+                  f"wanted {len(data)}")
+            bad += 1
+    print("interactive: password dialog "
+          + ("WORKS — every entry decrypted" if not bad else "FAILED"))
+    return bad == 0
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -1295,6 +1380,13 @@ def main():
                          "WRONG part first. Ends by reading the joined file "
                          "back off the boot volume and comparing it to the "
                          "fixture, so this phase can fail on its own.")
+    ap.add_argument("--password", action="store_true",
+                    help="the password phase: extract an ENCRYPTED archive, "
+                         "answer the dialog wrongly once and then correctly, "
+                         "and check on the host that every entry came out. "
+                         "Ignores the fixture argument: the archive is "
+                         "generated, because nothing in the corpus is "
+                         "encrypted.")
     ap.add_argument("--e2e", action="store_true",
                     help="run the Finder end-to-end phase INSTEAD of the "
                          "cancel phases: launch by double-click, navigate "
@@ -1320,6 +1412,14 @@ def main():
     if args.diskswap:
         try:
             ok = phase_diskswap(args, appbin, workdir, shot)
+        finally:
+            shutil.rmtree(workdir, ignore_errors=True)
+        print(f"interactive: screenshots in {args.outdir} — LOOK AT THEM.")
+        return 0 if ok else 1
+
+    if args.password:
+        try:
+            ok = phase_password(args, appbin, workdir, shot)
         finally:
             shutil.rmtree(workdir, ignore_errors=True)
         print(f"interactive: screenshots in {args.outdir} — LOOK AT THEM.")

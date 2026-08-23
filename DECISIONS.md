@@ -104,6 +104,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-23 — AppleLink `.pkg`, named at last, and what a recogniser is
 - 2026-08-23 (SpaceSaver, the encoder agrees) — the cross-check that replaced a specimen
 - 2026-08-23 (SpaceSaver, the dictionary) — carrying 9,679 bytes that are not ours
+- 2026-08-23 (decryption) — five schemes in, and the one with no second reader
 
 ---
 
@@ -5506,3 +5507,161 @@ options.
   `tools/run_spacesaver.py` compares `src/ss_dict.h` byte for byte with
   the resource whenever an installed SpaceSaver is present, and says so.
   It fails against a header with one byte changed.
+
+## 2026-08-23 (decryption) — five schemes in, and the one with no second reader
+
+Decryption was out of scope for v1 and is in scope from 2026-08-23, on
+request. Six ciphers across five formats; four of them are transcribed
+from XADMaster, one is read out of an application, and the interesting
+decisions are about **evidence**, not about ciphers.
+
+### What a password is, in this engine
+
+A cipher is not a decoder here. It is a filter on `UncBufIn`, the one
+buffered reader every format already reads its compressed bytes
+through: `in.crypt = cr` and every refill is decrypted before the
+decoder above sees a byte. That is why five formats and eight codecs
+gained encryption support without a single decoder changing — the
+StuffIt LZAH decoder does not know it is reading through DES any more
+than it knows it is reading from a floppy.
+
+Two things follow from putting it there, and both are in
+`unc_bufin_next_slow`:
+
+- **A block cipher cannot decrypt half a block.** `io->read` is allowed
+  to come up short, so when a cipher with `blocksize > 1` is attached
+  the refill fills the buffer instead of taking what arrives, and at a
+  genuine EOF it zero-pads the tail to the block size — which is what
+  the reference handles do (`XADPackItDESHandle`: memset the block,
+  then break).
+- **The stateful ciphers require the reads to be sequential**, which
+  `UncBufIn` already guarantees: it only moves forward, and a decoder
+  that needs to jump re-initialises the whole reader. Where a format
+  needs the cipher to start somewhere other than where the reader is —
+  PackIt, whose entries are one continuous stream — the reader is
+  reopened at the entry instead (`pit_reopen`).
+
+The password itself arrives one of two ways, and the second is the one
+that shaped the API: `opt.password` for a host that has one up front,
+or `opt.ask`, a callback the engine invokes **when an entry turns out
+to need one**. On a Mac the natural moment to put up a dialog is that
+moment and not before, and where the format can tell a wrong password
+from a right one the callback is asked again with a rising `attempt`,
+which is what makes "that password was refused" possible at all.
+
+### Verification, and why it decides where the retry loop goes
+
+The five schemes differ in one respect that matters more than the
+cryptography: whether the archive can say NO before anything is decoded.
+
+| format | what verifies a password | so a retry is |
+|---|---|---|
+| StuffIt classic | the 'MKey' resource decrypts to a block that checks against itself | free, before any output |
+| StuffIt 5 | MD5(MD5(password)) against a five-byte hash in the archive header | free |
+| zip | the twelfth byte of the encryption header against the CRC's top byte | free — one wrong password in 256 gets past it, and the entry CRC catches that |
+| PackIt | nothing; but the 94-byte entry header is INSIDE the ciphertext and carries a CRC | free, because the header is decoded first anyway |
+| ARC | nothing at all | costs a whole decode |
+| Compact Pro | nothing at all — its own message says so: *"The password supplied is incorrect **or the archive is damaged**"* | costs a whole decode |
+
+The last two are why `arc_entry_data_pw` and `cpt_encrypted_entry`
+decode each entry TWICE where a password is in play: once writing
+nothing, to find the key, and once to write it. Deciding as it wrote
+would mean handing the sink the output of a wrong key and then
+appending the output of the right one to it, which is exactly what the
+first version of the ARC path did — `cmp` said the file differed while
+the exit status said success. Compact Pro pays it only on the first
+encrypted entry: one password covers an archive, so once one has
+checked out the rest decode straight through.
+
+### StuffIt classic keeps its key outside the archive
+
+'MKey' 0 is a RESOURCE, in the archive's resource fork, and it is half
+the material every file key is built from. A `.sit` that arrived as a
+bare data fork — downloaded, or unstuffed by something that dropped the
+fork — **cannot be decrypted by anything**, this engine included, and
+the entry reports `UNC_ERR_ENCRYPTED` rather than asking for a password
+it could not use. That is a property of the format and not a gap.
+
+Where the fork does survive, both hosts find it without a Resource
+Manager: `unc_resfork_find` walks a raw fork with every field bounds
+checked, the CLI hands it the sidecar file it writes itself when it
+takes a MacBinary or BinHex envelope off, and the Mac application reads
+the fork as plain bytes (`PBHOpenRFSync`) rather than opening somebody
+else's resource map with the Resource Manager.
+
+### ARC has no encryption flag, so the reader must not assume
+
+SEA's format stores nothing to say a member was garbled — XADMaster
+says so in as many words. So a password given up front is applied, and
+a host that can ASK is only asked **once the plain read has failed its
+CRC**, which is the only evidence the format offers. Measured while
+building the fixture: `arc` 5.21q **upper-cases the password** before
+garbling with it (a stored entry's ciphertext XOR its plaintext is the
+password in capitals), where XADMaster uses the bytes as given. Neither
+is wrong for the files it wrote, so both are tried.
+
+### Compact Pro: read out of the application, and graded by nobody
+
+The Unarchiver's own format notes say "the algorithm for this is
+unknown"; macutils skips the file; CptExpand's documentation says it
+"will not extract encrypted files"; StuffIt's Compact Pro translator
+answers "the file is password protected". It is the last format here
+with no second reader — so it was read out of Compact Pro 1.51's own
+`CODE` 3, both directions, and every address is in `src/unc_crypt.c`:
+
+- a **64-bit CRC** register, polynomial 0xEDB88320 in *both* halves
+  (the table builder at 0x408e), seeded 0x0123456789ABCDEF (0x40fe);
+- the **key** at 0x1892: nine bytes, a length capped at eight and the
+  password's bytes ADDED into eight accumulators in rotation, so a
+  password of eight characters or fewer is its own key; those bytes are
+  then folded into the register one at a time;
+- the **keystream** is the register's second byte, and the register is
+  then stepped on the PLAINTEXT byte — the encrypt loop at 0x1152 and
+  the decrypt loop at 0x1f08 are exact inverses, which is the one
+  internal cross-check available;
+- **scope**: `InitCrypt` is called once per FILE, immediately before the
+  fork loop (0xac in the compress path, 0x14e0 in the expand path), so
+  one register runs across the resource fork and then the data fork of
+  an entry and is reset for the next.
+
+**It is a hypothesis, and labelled one.** The plan was Salient's
+arrangement — write an archive with this cipher, hand it to the
+application, see whether the bytes come back (`tools/vmac/cptcrypt.py`)
+— and Compact Pro 1.51 opens the archive, lists every entry, marks each
+encrypted, and then refuses: *"This version of Compact Pro cannot
+validate or extract encrypted files."* That is not a build without the
+code; it is a **registration gate**. The routine at 0x47ca stores the
+personalisation string and enables encryption at 0x485e only when that
+string ends with `*`, and every copy in the corpus — 1.34 and 1.51 in
+four languages — carries the unregistered placeholder `********`.
+Forging a registration is not something this project will do, so the
+reading stands ungraded and OPEN_ITEMS.md says what would close it.
+
+What the run DID establish, and it is not nothing: Compact Pro accepts
+the container this project writes, agrees about every entry's sizes and
+type, and agrees that each is encrypted.
+
+### The fixtures, and what grades them
+
+Nothing in the corpus is encrypted — measured, not assumed: `lsar -j`
+over all 903 fixtures reports `XADIsEncrypted` 0 for every entry. So
+every archive in the new suite is generated, and the point of
+`tools/run_crypt.py` is that generation grades nothing on its own:
+
+- `zip -P` and `arc g<password>` are somebody else's encoders, so those
+  two fixtures owe nothing to this project's reading;
+- StuffIt classic, StuffIt 5 and PackIt have no encoder here, so
+  `tools/synth_crypt.py` writes them and **`unar -p` adjudicates** —
+  a different implementation of each cipher, which is the check a
+  shared misreading cannot survive. For StuffIt classic that means the
+  fixture is MacBinary, because the oracle needs the resource fork too.
+
+One divergence turned up and is asserted rather than papered over:
+**Debian's `unar` 1.10.8 and the XADMaster master this engine
+transcribes derive the StuffIt archive key differently once the
+password reaches eight bytes.** Under eight they agree; at eight and
+above the newer code runs its iteration a second time. Which is right
+for files Aladdin wrote is not decidable here — no encrypted StuffIt
+archive exists on this machine — so the oracle-graded fixtures use a
+seven-byte password and the long-password case is checked against our
+own round trip and says so.

@@ -75,11 +75,12 @@ const char *unc_strerror(int err)
     case UNC_ERR_CRC:         return "checksum mismatch";
     case UNC_ERR_TRUNCATED:   return "file is truncated";
     case UNC_ERR_UNSUPPORTED: return "recognized but unsupported";
-    case UNC_ERR_ENCRYPTED:   return "encrypted (unsupported)";
+    case UNC_ERR_ENCRYPTED:   return "encrypted by a scheme we cannot read";
     case UNC_ERR_ABORTED:     return "aborted";
     case UNC_ERR_SINK:        return "output error";
     case UNC_ERR_CORRUPT:     return "archive structure is corrupt";
     case UNC_ERR_SEGMENTED:   return "multi-segment archive (missing segments)";
+    case UNC_ERR_PASSWORD:    return "wrong password, or none given";
     default:                  return "unknown error";
     }
 }
@@ -200,7 +201,12 @@ int unc_extract_as(UncFormat f, UncIO *io, UncSink *sink, UncAlloc *al,
     if (opt) c.opt = *opt;
     else { c.opt.list_only = 0; c.opt.test_only = 0;
            c.opt.name_hint = 0; c.opt.name_hint_len = 0;
-           c.opt.preset = 0; c.opt.preset_len = 0; }
+           c.opt.preset = 0; c.opt.preset_len = 0;
+           c.opt.password = 0; c.opt.password_len = 0;
+           c.opt.ask = 0; c.opt.mkey = 0; }
+    c.pwlen = 0;
+    c.pwstate = UNC_PW_UNSET;
+    c.pwattempt = 0;
 
     if (io->seek(io->ctx, 0) < 0) return UNC_ERR_IO;
 

@@ -85,6 +85,33 @@ resource 'DITL' (131, purgeable) {
     }
 };
 
+/* Password dialog, for an encrypted entry. Four items, in the order the
+ * code tests them (kPassOKItem..kPassMsgItem in unclassic_mac.c):
+ *
+ *   1  OK       the default button, so Return takes it
+ *   2  Cancel   "do without this entry"; the walk goes on
+ *   3  editText the field. What is TYPED goes into the code's own
+ *               buffer and the field only ever shows bullets — the
+ *               filter in PassFilter swaps the character on its way in,
+ *               which is how a Mac hid a password before there was a
+ *               password field to ask for
+ *   4  the message, which names the archive and, on a second ask, says
+ *      the last one was refused
+ */
+resource 'DLOG' (132, purgeable) {
+    { 80, 60, 214, 452 }, dBoxProc, visible, noGoAway, 0, 132, "",
+    noAutoCenter
+};
+
+resource 'DITL' (132, purgeable) {
+    {
+        { 102, 302, 122, 372 }, Button     { enabled, "OK" };
+        { 102, 216, 122, 286 }, Button     { enabled, "Cancel" };
+        {  72,  20,  88, 372 }, EditText   { enabled, "" };
+        {  10,  20,  64, 372 }, StaticText { disabled, "^0" };
+    }
+};
+
 /* MultiFinder/System 7 friendliness; System 6 Finder ignores it (there the
  * app just gets all free RAM). Preferred 4 MB lets the engine use a large
  * runtime budget on a roomy machine (Arsenic/SIT5 needs ~2.6 MB); minimum

@@ -28,7 +28,7 @@ extern "C" {
  * tools/make_dist.sh do now, and tools/check_docs.py fails the build if
  * this, README.md and dist/README.txt disagree. A constant nobody reads
  * is a constant that is wrong. */
-#define UNC_VERSION "0.12.0"
+#define UNC_VERSION "0.13.0"
 
 /* ------------------------------------------------------------------ */
 /* Formats                                                            */
@@ -104,11 +104,12 @@ enum {
     UNC_ERR_CRC         = -4,   /* checksum mismatch (per entry)        */
     UNC_ERR_TRUNCATED   = -5,   /* file ends before the data does       */
     UNC_ERR_UNSUPPORTED = -6,   /* recognized but not extractable       */
-    UNC_ERR_ENCRYPTED   = -7,   /* entry/archive is encrypted           */
+    UNC_ERR_ENCRYPTED   = -7,   /* encrypted by a scheme we cannot read */
     UNC_ERR_ABORTED     = -8,   /* progress callback requested stop     */
     UNC_ERR_SINK        = -9,   /* sink callback reported failure       */
     UNC_ERR_CORRUPT     = -10,  /* internal structure inconsistency     */
-    UNC_ERR_SEGMENTED   = -11   /* multi-segment archive, parts missing */
+    UNC_ERR_SEGMENTED   = -11,  /* multi-segment archive, parts missing */
+    UNC_ERR_PASSWORD    = -12   /* encrypted, and no usable password      */
 };
 
 /* Human-readable message for an error code. */
@@ -208,6 +209,40 @@ typedef struct UncProgress {
 } UncProgress;
 
 /* ------------------------------------------------------------------ */
+/* Passwords                                                          */
+/*                                                                    */
+/* Five of the formats here can encrypt an entry, and each of them    */
+/* derives its key from a password the archive does not contain:      */
+/* StuffIt classic (DES), StuffIt 5 (RC4), PackIt (an XOR whose key   */
+/* is the DES key permutation, or DES), zip (PKWARE's stream cipher   */
+/* or WinZip's AES), and ARC (a plain repeating XOR).                 */
+/*                                                                    */
+/* A host supplies one of two ways: `password`, set before the call,  */
+/* or `ask`, called the first time an entry actually needs one — the  */
+/* second exists because on a Mac the natural moment to put up a      */
+/* dialog is when the archive turns out to need it, not before. Where */
+/* the format can TELL a wrong password from a right one (all but     */
+/* ARC), `ask` is called again with a rising `attempt` until it       */
+/* either verifies or the host gives up.                              */
+/* ------------------------------------------------------------------ */
+
+#define UNC_PASSWORD_MAX 64   /* raw bytes; no format here uses more   */
+
+typedef struct UncPasswordSource {
+    void *ctx;
+    /* Write up to `cap` raw password bytes into buf and set *len.
+     * Return 1 if a password was supplied, 0 if the user declined —
+     * the entry then fails with UNC_ERR_PASSWORD and the walk goes on.
+     * `attempt` is 0 the first time and rises each time a password
+     * this callback supplied was REJECTED by the archive, so a host
+     * can say "wrong password, try again" rather than repeating
+     * itself. The bytes are the password's own encoding: MacRoman for
+     * the Mac formats, which is what a Mac dialog produces anyway. */
+    int (*ask)(void *ctx, uint8_t *buf, uint16_t cap, uint16_t *len,
+               int attempt);
+} UncPasswordSource;
+
+/* ------------------------------------------------------------------ */
 /* Options                                                            */
 /* ------------------------------------------------------------------ */
 
@@ -233,7 +268,37 @@ typedef struct UncOptions {
      * than decoding to something wrong. May be NULL. */
     const uint8_t *preset;
     uint32_t       preset_len;
+    /* Password for encrypted entries, raw bytes; NULL if the host has
+     * none to offer up front. Not NUL-terminated, so an empty password
+     * (which zip permits) is a non-NULL pointer with password_len 0. */
+    const uint8_t *password;
+    uint16_t       password_len;
+    /* Asked when an entry needs a password and none has verified yet.
+     * May be NULL, in which case `password` is the only one tried. */
+    const UncPasswordSource *ask;
+    /* StuffIt classic keeps the block that VERIFIES a password, and
+     * half of the material the file keys are built from, in the
+     * ARCHIVE's own resource fork — 'MKey' 0, eight bytes. It is
+     * therefore not in the bytes UncIO reads, and an encrypted .sit
+     * whose resource fork was lost cannot be decrypted by anything,
+     * this engine included. A host that has the fork passes those
+     * eight bytes here (unc_resfork_find will locate them in a raw
+     * fork; a Mac may as well ask the Resource Manager). NULL if the
+     * host has no resource fork for the archive. */
+    const uint8_t *mkey;
 } UncOptions;
+
+/* Locate one resource in a raw resource fork. Returns UNC_OK and sets
+ * `off` and `len` to the resource's data within `fork`, or returns
+ * UNC_ERR_FORMAT.
+ * Provided because the one piece of key material this engine cannot
+ * read out of the archive stream lives in a resource fork, and a host
+ * without a Resource Manager would otherwise have to parse one itself.
+ * Source: Inside Macintosh: More Macintosh Toolbox, "Resource File
+ * Format" (offsets transcribed in src/unc_crypt.c). */
+int unc_resfork_find(const uint8_t *fork, uint32_t forklen,
+                     uint32_t type, int16_t id,
+                     uint32_t *off, uint32_t *len);
 
 /* ------------------------------------------------------------------ */
 /* Entry points                                                       */

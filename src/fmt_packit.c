@@ -24,9 +24,14 @@
  * reference/macutils/macunpack/pit.c — LGPL, see NOTICE.
  * (XADMaster ignores the header CRC; macutils checks it (pit.c
  * pit_filehdr) — we check it.)
- * The encrypted-entry resync (scan forward for the next magic) is
- * macutils' strategy; XADMaster instead decrypts with a password,
- * which is out of scope for v1.
+ * PMa5 and PMa6 are decrypted where a password is available; without
+ * one the entry is reported and the reader resyncs by scanning for the
+ * next magic, which is macutils' strategy (pit.c "trying to sync") and
+ * the only thing possible, since an undecodable entry does not say
+ * where it ends. XADMaster's two handles are the reference for both
+ * ciphers, and for the rule that the next block begins at the next
+ * EIGHT-byte boundary after an encrypted one rather than the next
+ * byte.
  *
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
@@ -120,19 +125,43 @@ static int pit_resync(UncBufIn *in, uint8_t out[4])
     }
 }
 
+/* Is this failure the kind a different password might fix? A wrong key
+ * makes the Huffman tree, and then the header, into nonsense; an I/O
+ * error or an abort is nobody's password and must not be retried. */
+static int pit_retryable(int err)
+{
+    return err == UNC_ERR_CORRUPT || err == UNC_ERR_TRUNCATED;
+}
+
+/* Re-position the reader at an absolute offset, optionally through a
+ * cipher. PackIt reads the whole archive as one stream, so this is only
+ * needed where an encrypted entry begins (a cipher has to start at the
+ * entry, not at the file) and where one ends. */
+static int pit_reopen(UncCtx *c, UncBufIn *in, uint8_t *iobuf, uint32_t iocap,
+                      uint32_t abs, UncCrypt *cr)
+{
+    if (c->io->seek(c->io->ctx, abs) < 0) return UNC_ERR_IO;
+    unc_bufin_init(in, c->io, &c->ps, iobuf, iocap);
+    in->crypt = cr;
+    return UNC_OK;
+}
+
 int unc_packit_extract(UncCtx *c)
 {
     uint8_t *iobuf, *obuf;
     uint32_t iocap = 4096, ocap = 4096;
     UncHuff *huff;
+    UncCrypt *cr;
     UncBufIn in;
     uint8_t magic[4];
+    uint32_t base = 0;         /* file offset the reader was opened at */
     int err = UNC_OK;
     int first = 1;
 
-    iobuf = (uint8_t *)unc_alloc(c->al, iocap + ocap);
+    iobuf = (uint8_t *)unc_alloc(c->al, iocap + ocap + (uint32_t)sizeof *cr);
     if (!iobuf) return UNC_ERR_MEM;
     obuf = iobuf + iocap;
+    cr = (UncCrypt *)(void *)(obuf + ocap);
     huff = (UncHuff *)unc_alloc(c->al, (uint32_t)sizeof *huff);
     if (!huff) { unc_free(c->al, iobuf); return UNC_ERR_MEM; }
 
@@ -145,7 +174,8 @@ int unc_packit_extract(UncCtx *c)
         uint8_t hdr[PIT_HDR];
         uint32_t namelen, datasize, rsrcsize;
         uint16_t crc, storedcrc;
-        int comp, encrypted, sret, eerr;
+        uint32_t start;
+        int comp, encrypted, sret, eerr, attempt;
 
         /* Read block magic. */
         {
@@ -176,22 +206,43 @@ resynced:
 
         comp      = magic[3] != 'g';
         encrypted = magic[3] == '5' || magic[3] == '6';
+        start = base + unc_bufin_tell(&in);
+        attempt = 0;
 
+      attempt_entry:
         if (encrypted) {
-            /* Report a nameless encrypted entry, then resync. */
-            unc_entry_clear(&e);
-            sret = c->sink->begin_entry(c->sink->ctx, &e);
-            if (sret < 0) { err = UNC_ERR_SINK; goto out; }
-            if (sret == 0 &&
-                c->sink->end_entry(c->sink->ctx, UNC_ERR_ENCRYPTED) < 0) {
-                err = UNC_ERR_SINK;
+            /* The cipher starts at the entry, so the reader has to as
+             * well. PMa5 is the XOR, PMa6 is DES. */
+            int perr = unc_password(c, attempt > 0);
+            if (perr != UNC_OK) {
+                /* No password to try. Report the entry — nameless,
+                 * because its name is inside the ciphertext — and
+                 * resync: nothing here can say where it ends. */
+                if (pit_reopen(c, &in, iobuf, iocap, start, NULL) != UNC_OK) {
+                    err = UNC_ERR_IO;
+                    goto out;
+                }
+                base = start;
+                unc_entry_clear(&e);
+                sret = c->sink->begin_entry(c->sink->ctx, &e);
+                if (sret < 0) { err = UNC_ERR_SINK; goto out; }
+                if (sret == 0 && c->sink->end_entry(c->sink->ctx, perr) < 0) {
+                    err = UNC_ERR_SINK;
+                    goto out;
+                }
+                if (pit_resync(&in, magic) != UNC_OK) {
+                    err = UNC_OK;   /* clean EOF while scanning */
+                    goto out;
+                }
+                goto resynced;
+            }
+            if (magic[3] == '5') unc_crypt_packit_xor(cr, c->pw, c->pwlen);
+            else                 unc_crypt_packit_des(cr, c->pw, c->pwlen);
+            if (pit_reopen(c, &in, iobuf, iocap, start, cr) != UNC_OK) {
+                err = UNC_ERR_IO;
                 goto out;
             }
-            if (pit_resync(&in, magic) != UNC_OK) {
-                err = UNC_OK;   /* clean EOF while scanning */
-                goto out;
-            }
-            goto resynced;
+            base = start;
         }
 
         st.in = &in;
@@ -200,15 +251,33 @@ resynced:
         unc_bitin_init(&st.bits, &in);
         if (comp) {
             err = unc_huff_read_tree(huff, &st.bits);
-            if (err != UNC_OK) goto out;
+            if (err != UNC_OK) {
+                if (encrypted && pit_retryable(err)) {
+                    err = UNC_OK;
+                    attempt++;
+                    goto attempt_entry;
+                }
+                goto out;
+            }
             st.huff = huff;
         }
 
         err = pit_read(&st, hdr, PIT_HDR);
-        if (err != UNC_OK) goto out;
+        if (err != UNC_OK) {
+            if (encrypted && pit_retryable(err)) {
+                err = UNC_OK;
+                attempt++;
+                goto attempt_entry;
+            }
+            goto out;
+        }
 
-        /* Header CRC over the first 92 bytes (source: macutils pit.c). */
+        /* Header CRC over the first 92 bytes (source: macutils pit.c).
+         * PackIt stores nothing that verifies a password, so for an
+         * encrypted entry this IS the verification: a wrong key makes
+         * a header that does not check, and the host is asked again. */
         if (unc_crc16_xmodem(0, hdr, PIT_HDR - 2) != unc_get_u16be(hdr + 92)) {
+            if (encrypted) { attempt++; goto attempt_entry; }
             err = UNC_ERR_CORRUPT;
             goto out;
         }
@@ -278,6 +347,18 @@ resynced:
          * bit reader only buffers whole bytes and unc_bitin_align
          * discards the remainder of the current byte. */
         unc_bitin_align(&st.bits);
+        if (encrypted) {
+            /* ... and after an ENCRYPTED one, at the next eight-byte
+             * boundary, the cipher's block size (XADPackItParser.m:
+             * end = start + ((offset + 7) & ~7)). The reader is holding
+             * decrypted bytes, so it has to be reopened either way. */
+            uint32_t end = start + ((unc_bufin_tell(&in) + 7u) & ~7u);
+            if (pit_reopen(c, &in, iobuf, iocap, end, NULL) != UNC_OK) {
+                err = UNC_ERR_IO;
+                goto out;
+            }
+            base = end;
+        }
     }
 
 out:

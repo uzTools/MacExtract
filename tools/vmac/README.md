@@ -54,7 +54,7 @@ oracle and will lose it to `./ci.sh`'s `make clean`.
 | `setup.sh` | fetch + build the emulator, the ROM and a System 6.0.8 image into `$UNC_VMAC_HOME` (default `~/.cache/unclassic/vmac/`) |
 | `mkboot.py` | strip that image to System + Finder and make it boot straight into the application |
 | `run.py` | build the disks, boot, screenshot, decode, check |
-| `interactive.py` | drive the real UI (SFGetFile, progress dialog, Cancel, Cmd-.) and photograph each step |
+| `interactive.py` | drive the real UI (SFGetFile, progress dialog, Cancel, Cmd-., the password dialog) and photograph each step |
 | `os9.py` | boot Mac OS 9 on emulated PowerPC, launch the application from the keyboard, and check both forks of what it wrote — see below |
 | `os9probe.py` | diagnostic: which input primitives actually reach the Mac OS 9 guest? Not part of any suite |
 | `os9sample.txt` | the fixtures replayed on Mac OS 9 — one per format, since each costs a whole boot |
@@ -1132,6 +1132,62 @@ Four things it will teach you if you drive another application here:
   segment size and the archive decide. The driver stops when the screen
   stops changing rather than counting, because a fixed count either leaves
   a dialog up or types Return into the catalog window afterwards.
+
+### Asking Compact Pro about its own cipher — `cptcrypt.py`
+
+    tools/vmac/cptcrypt.py --explore     photograph each step
+    tools/vmac/cptcrypt.py               write an encrypted archive with
+                                         our cipher, and have Compact Pro
+                                         extract it
+
+The arrangement that graded DiskDoubler methods 3-5 (`ddencode.py`),
+pointed at the one format whose encryption nothing else reads:
+`tools/synth_cpt.py` writes an archive encrypted with the cipher
+`src/unc_crypt.c` read out of Compact Pro 1.51's `CODE` 3, and the
+application is asked to extract it. If the bytes come back, the reading
+is right.
+
+**Measured 2026-08-23: it will not.** Compact Pro opens the archive,
+lists all three entries with the right sizes and type/creator, marks
+each encrypted — and answers Extract with *"This version of Compact Pro
+cannot validate or extract encrypted files."* The decrypt loop is in
+that binary at 0x1f08; what is missing is a **registration**. The
+routine at 0x47ca stores the personalisation string and enables
+encryption at 0x485e only when it ends with `*`, and all five copies in
+the corpus carry the unregistered placeholder `********`. Forging one is
+not something this project will do, so the harness is kept for the day
+somebody has a registered copy — it is then one command — and the
+cipher stays labelled a hypothesis (OPEN_ITEMS.md).
+
+Two things it established anyway, and one lesson:
+
+- Compact Pro **accepts the container this project writes**, agrees
+  about every entry, and agrees each is encrypted. That grades
+  `synth_cpt.py`'s container and the flag, if not the cipher.
+- No other implementation exists to try: CptExpand's manual says it
+  "will not extract encrypted files" and StuffIt's own Compact Pro
+  translator answers "the file is password protected".
+- **The first row of Standard File is not your file.** The boot volume
+  has an invisible `Desktop` file that sorts first, and clicking row one
+  opened THAT — which the application reported as a file it could not
+  read, i.e. exactly what a broken archive looks like.
+
+### Driving our own password dialog — `interactive.py --password`
+
+    tools/vmac/interactive.py --password -o shots fixtures/anything.sit
+
+The fixture argument is ignored: the archive is generated, because
+nothing in the corpus is encrypted. It is the encrypted StuffIt classic
+one `tools/synth_crypt.py` writes, delivered as MacBinary so that both
+forks arrive — which is the point, since that format keeps its password
+verifier (`'MKey'` 0) in the archive's **resource fork** and this is the
+only phase that exercises the Mac side of reading it.
+
+The walk answers the dialog **wrongly first**, so the retry path is
+driven too, and ends by reading the extracted bytes off the volume and
+comparing them, so the phase fails on its own rather than on somebody
+reading a screenshot. Verified on System 6.0.8: both asks, the second
+one saying "That password was refused", and every entry byte-exact.
 
 ### Replaying the segment work — `segcheck.py`
 

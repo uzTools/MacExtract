@@ -41,7 +41,7 @@ grown before, on request.
 |---|---|---|
 | Compression | not implemented | this is an extractor |
 | StuffIt X (`.sitx`) | **detect-only** | out by the brief |
-| Encrypted archives | **detected and reported** | out by the brief; PackIt PMa5/6 resync rather than fail |
+| WinZip AES in a zip (method 99), and PKWARE "strong encryption" | **named, refused per entry** | both postdate every machine this targets by a decade; the second keeps its key material in a record nothing here parses, and XADMaster refuses it too. Ordinary password-encrypted entries in all five formats that have them ARE decrypted since 2026-08-23 (FORMATS.md, *Encryption*) |
 | Disk images (Disk Copy 4.2) | **detect-only**, with a real probe | out by the brief — the probe matches a synthetic 800K GCR image and a real one, 0 false positives |
 | LZH / LHA extraction | **detect-only**, tested rather than asserted (DECISIONS.md 2026-08-14) | the corpus contains **no `.lzh` at all** — Macintosh software was not distributed that way — and Compact Pro's LZH is a different algorithm from LHA's, so it is ~550 new lines for nothing the corpus can grade |
 | Zip64 spanned sets | `unc_zipseg_describe` answers `UNC_ERR_UNSUPPORTED`, cleanly | an EOCD with disk number `0xFFFF` defers to a locator nothing here parses. Zip64 postdates every machine this project targets by a decade and a set that needs it is 2 GB+; refusing it cleanly is the right answer, not a missing feature (2026-08-14) |
@@ -69,7 +69,7 @@ what the file is and extraction returns cleanly unsupported.
 
 ---
 
-## 1. DiskDoubler and SuperDisk!: what is not verified
+## 1. What is not verified
 
 Verification gaps — things this project has and has not checked.
 What it does not HAVE is section 2.
@@ -80,6 +80,27 @@ What it does not HAVE is section 2.
   was when that tier last ran. **What would close it:** an OS 9 sweep,
   which costs a full PowerPC boot per fixture — tens of minutes, against
   five for the whole System 7 tier.
+
+- **Compact Pro's cipher is a reading of one binary that no second
+  implementation has graded.** Everything about it is in FORMATS.md
+  (*Compact Pro's cipher*) and DECISIONS.md (2026-08-23, *decryption*):
+  read out of Compact Pro 1.51's own `CODE` 3 in both directions, with
+  every address recorded, and self-consistent — but the run that was
+  meant to settle it found that the application refuses encrypted files
+  unless it is registered, and forging a registration is not something
+  this project will do. **What would close it:** a registered copy of
+  Compact Pro (then `tools/vmac/cptcrypt.py` is one command), or one
+  encrypted `.cpt` from anywhere with its password.
+
+- **StuffIt classic's archive key for passwords of EIGHT bytes or
+  more is not settled.** Debian's `unar` 1.10.8 and the XADMaster
+  master this engine transcribes iterate it differently; under eight
+  bytes they agree, and above it they do not. This engine follows the
+  reference in `reference/`, which is the newer reading. **What would
+  close it:** an encrypted StuffIt archive written by StuffIt with a
+  password of eight characters or more — the only thing that can say
+  which reading matches Aladdin's. `tools/run_crypt.py` uses a
+  seven-byte password for the oracle-graded cases and says so.
 
 ---
 
@@ -142,6 +163,16 @@ Unlike section 3, none of this is impossible here: a download would do it.
   agrees field for field (DECISIONS.md 2026-08-23, the encoder agrees).
   **What would close it:** why `INIT 0` declines, or one file from
   anywhere.
+
+- **An encrypted archive written by the original software.** Every
+  fixture that exercises decryption is generated here, because nothing
+  in the corpus is encrypted (measured with `lsar -j` over all 903).
+  Two of the six ciphers are written by somebody else's encoder (`zip
+  -P`, `arc g<pw>`) and three more are adjudicated by `unar -p`, so the
+  gap is narrow — but no file that Aladdin's or Bill Goodman's software
+  actually encrypted has ever been read here. **What is missing is a
+  gradeable SPECIMEN**, and one encrypted `.sit` with a long password
+  would settle the divergence in section 1 as well.
 
 - **AppleLink `.pkg`: one file, which would settle two questions.**
   Named since 2026-08-23 from Aladdin's own recogniser (FORMATS.md,

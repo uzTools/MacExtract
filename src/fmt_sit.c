@@ -882,18 +882,20 @@ static int sit_arsenic_put(void *ctx, uint8_t b)
 int unc_sit_decode_fork(UncCtx *c, UncFork fork, uint32_t at,
                         uint32_t complen, uint32_t outlen, int method,
                         uint16_t wantcrc, uint8_t *iobuf, uint32_t iocap,
-                        uint8_t *obuf, uint32_t ocap)
+                        uint8_t *obuf, uint32_t ocap, UncCrypt *cr)
 {
     UncBufIn in;
     SitFork f;
     int err;
 
-    if (method & SIT_ENCRYPTED) return UNC_ERR_ENCRYPTED;
     if (outlen == 0) return UNC_OK;
 
     if (c->io->seek(c->io->ctx, at) < 0) return UNC_ERR_IO;
     unc_bufin_init(&in, c->io, &c->ps, iobuf, iocap);
     in.limit = complen;
+    /* An encrypted fork is decrypted as it is read, so every method
+     * below sees exactly what it would have seen unencrypted. */
+    if (cr) in.crypt = cr;
 
     f.c = c;
     f.fork = fork;
@@ -924,6 +926,42 @@ int unc_sit_decode_fork(UncCtx *c, UncFork fork, uint32_t at,
 }
 
 /* ------------------------------------------------------------------ */
+/* Encryption                                                         */
+/*                                                                    */
+/* An encrypted fork carries sixteen bytes of key material at its END  */
+/* (so its compressed length is sixteen more than the ciphertext), and */
+/* the byte at header offset 104/105 says how many bytes the last      */
+/* plaintext block was padded with — which nothing here reads, because */
+/* every method stops when it has produced the fork's declared length  */
+/* and so never consumes the padding. XADMaster shortens the stream by */
+/* it instead; same result. The other half of the key is the           */
+/* ARCHIVE's 'MKey' resource, which is in its resource fork and not in */
+/* the stream at all: without it nothing can decrypt this, and the     */
+/* entry fails UNC_ERR_ENCRYPTED rather than asking for a password it  */
+/* could not use.                                                     */
+/* Source: XADStuffItParser.m decryptHandleForEntryWithDictionary.     */
+/* ------------------------------------------------------------------ */
+
+static int sit_fork_crypt(UncCtx *c, UncCrypt *cr, uint32_t at,
+                          uint32_t complen)
+{
+    uint8_t entrykey[16];
+    int attempt = 0;
+
+    if (!c->opt.mkey) return UNC_ERR_ENCRYPTED;
+    if (complen < 16) return UNC_ERR_CORRUPT;
+    if (unc_read_at(c->io, at + complen - 16, entrykey, 16) != UNC_OK)
+        return UNC_ERR_TRUNCATED;
+    for (;;) {
+        int err = unc_password(c, attempt > 0);
+        if (err != UNC_OK) return err;
+        err = unc_crypt_sit(cr, c->pw, c->pwlen, entrykey, c->opt.mkey);
+        if (err == UNC_OK) return UNC_OK;
+        attempt++;              /* the archive rejected it; ask again */
+    }
+}
+
+/* ------------------------------------------------------------------ */
 /* Container walk                                                     */
 /* ------------------------------------------------------------------ */
 
@@ -938,6 +976,7 @@ int unc_sit_extract(UncCtx *c)
     uint16_t pathlens[SIT_MAX_DEPTH];
     int depth = 0;
     uint8_t *iobuf, *obuf;
+    UncCrypt *cr;
     uint32_t iocap = 4096, ocap = 4096;
     int err = UNC_OK;
 
@@ -949,9 +988,10 @@ int unc_sit_extract(UncCtx *c)
     if (fsize != UNC_SIZE_UNKNOWN && totalsize > fsize) totalsize = fsize;
     pos = 22;
 
-    iobuf = (uint8_t *)unc_alloc(c->al, iocap + ocap);
+    iobuf = (uint8_t *)unc_alloc(c->al, iocap + ocap + (uint32_t)sizeof *cr);
     if (!iobuf) return UNC_ERR_MEM;
     obuf = iobuf + iocap;
+    cr = (UncCrypt *)(void *)(obuf + ocap);
 
     while (pos + SIT_FILEHDRSIZE <= totalsize) {
         uint32_t namelen, rmeth, dmeth, rlen, dlen, rcomp, dcomp, start;
@@ -1038,16 +1078,34 @@ int unc_sit_extract(UncCtx *c)
                     (fsize != UNC_SIZE_UNKNOWN && start + rcomp + dcomp > fsize)) {
                     est = UNC_ERR_TRUNCATED;   /* forks extend past EOF */
                 } else {
-                    est = unc_sit_decode_fork(c, UNC_FORK_RSRC, start,
-                                   rcomp, rlen,
-                                   (int)rmeth, unc_get_u16be(hdr + 100),
-                                   iobuf, iocap, obuf, ocap);
+                    /* Sixteen bytes of key sit at the end of an
+                     * encrypted fork and are not part of its stream. */
+                    uint32_t rc = rcomp, dc = dcomp;
+                    int renc = (rmeth & SIT_ENCRYPTED) && rlen;
+                    int denc = (dmeth & SIT_ENCRYPTED) && dlen;
+
+                    est = UNC_OK;
+                    if (renc) {
+                        est = sit_fork_crypt(c, cr, start, rcomp);
+                        if (est == UNC_OK) rc -= 16;
+                    }
+                    if (est == UNC_OK)
+                        est = unc_sit_decode_fork(c, UNC_FORK_RSRC, start,
+                                       rc, rlen,
+                                       (int)rmeth, unc_get_u16be(hdr + 100),
+                                       iobuf, iocap, obuf, ocap,
+                                       renc ? cr : NULL);
+                    if (est == UNC_OK && denc) {
+                        est = sit_fork_crypt(c, cr, start + rcomp, dcomp);
+                        if (est == UNC_OK) dc -= 16;
+                    }
                     if (est == UNC_OK)
                         est = unc_sit_decode_fork(c, UNC_FORK_DATA,
                                        start + rcomp,
-                                       dcomp, dlen, (int)dmeth,
+                                       dc, dlen, (int)dmeth,
                                        unc_get_u16be(hdr + 102),
-                                       iobuf, iocap, obuf, ocap);
+                                       iobuf, iocap, obuf, ocap,
+                                       denc ? cr : NULL);
                 }
             }
             if (c->sink->end_entry(c->sink->ctx, est) < 0) {
