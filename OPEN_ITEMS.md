@@ -172,10 +172,15 @@ Unlike section 3, none of this is impossible here: a download would do it.
   a package is text whose first token is `Decode` and whose third is
   `to` or `into` (FORMATS.md, *AppleLink packages*). Two things are
   left:
-  - **What a `Decode` line refers to.** The expander's own path
-    (`Othe` 0 @0x2bca) has not been read, so it is not known whether a
-    package carries its payload or names companion files. That is
-    reading, not research: the translator is in hand.
+  - **Whether there is anything to extract at all.** Three measured
+    things say probably not: the identify path resolves its operand
+    with `PBGetCatInfo`, the errors are *"No items matching: "* and
+    *"Destination not found: "*, and the translator carries
+    recognisers for eight OTHER formats by extension and type. The
+    hypothesis is that a package is a transfer manifest — a text script
+    naming files beside it — in which case this item closes as a
+    property of the format rather than as a gap (DECISIONS.md
+    2026-08-23).
   - **A specimen**, which is why the first item has not been done. A
     decoder with a reference but nothing to run it against is the
     bargain this project declines everywhere else — for LZH, for

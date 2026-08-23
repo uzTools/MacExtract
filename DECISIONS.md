@@ -5331,14 +5331,40 @@ tell. That is a property of the format, not a defect in the probe, and
 it is written down rather than papered over with an extra condition
 nobody has evidence for. 928 fixtures, 0 false positives.
 
+### What a `Decode` line refers to — and why that may end the item
+
+Three things are measured, and together they point one way:
+
+- **The operand is looked up in the FILE SYSTEM.** The identify path
+  takes token 2, hands it to the engine (@0xdb4, callback selector 13,
+  which returns a handle of 38-byte records), copies one out and calls
+  @0x1266 / @0x128c — both of which fill a `CInfoPBRec` with a
+  vRefNum, a dirID and a name and call `_HFSDispatch` **selector 9,
+  `PBGetCatInfo`**. That is a catalogue lookup, not an offset in the
+  package.
+- **Its errors are file-system errors.** `STR# 129` carries
+  *"No items matching: "* and *"Destination not found: "*. Neither
+  sentence has a meaning inside a self-contained archive.
+- **The translator carries recognisers for eight other formats** —
+  `.HQX`, `.TGZ`, `.GZ`, `.ZIP`, `.ARC`, `.Z`, `.UUE`, `.UU`, plus type
+  `PACT`, creator `EXTR` and type `HBSF` — each a small routine over an
+  FSSpec. A reader for a self-contained archive has no use for those; a
+  driver that hands each named file to the right decoder has every use.
+
+**Hypothesis, on those three:** an AppleLink package is a transfer
+MANIFEST — a text script naming files that sit beside it — and not a
+container at all. If that is right, `.pkg` is not something an
+unarchiver extracts, and naming it is the whole of the capability; the
+open item closes as a property of the format rather than as a gap.
+**What would settle it:** one `.pkg` file, or reading the expander's own
+walk (@0x2d6a onward) far enough to see it open a companion.
+
 ### Why it stops at detect-only
 
-The expander's own path (@0x2bca) has not been read, so what a `Decode`
-line refers to — payload inside the file, or companion files beside it —
-is not established. It could be read; the translator is in hand. What
-cannot be had is a `.pkg` file to grade the reading against, and a
-decoder no oracle can check is the bargain this project declines for
-LZH, for DiskDoubler's methods 2-5, and for SpaceSaver's methods 1-3.
-Naming the file costs nothing and is worth having on its own: it is the
-difference between *unknown* and a format with a name, which is what
-`unc_sniff` exists for.
+Even if the hypothesis is wrong and a package does carry its payload,
+there is no `.pkg` file here to grade a decoder against, and a decoder
+no oracle can check is the bargain this project declines for LZH, for
+DiskDoubler's methods 2-5 and for SpaceSaver's 1-3. Naming the file
+costs nothing and is worth having on its own: it is the difference
+between *unknown* and a format with a name, which is what `unc_sniff`
+exists for.

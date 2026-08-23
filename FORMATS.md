@@ -641,6 +641,14 @@ strong as Aladdin's: a text file that happens to begin *"Decode this to that"*
 is a package as far as either program can tell. Measured against the corpus —
 **928 fixtures, 0 false positives**.
 
+**It may not be an archive at all.** Three measured things point that way:
+the identify path resolves its operand with `PBGetCatInfo` (`_HFSDispatch`
+selector 9), the errors in `STR# 129` are *"No items matching: "* and
+*"Destination not found: "*, and the translator carries recognisers for eight
+other formats by extension and type. **Hypothesis:** a package is a transfer
+manifest naming files that sit beside it, which would make naming it the whole
+capability. DECISIONS.md 2026-08-23 has the evidence and what would settle it.
+
 **Detect only, and the reason is a specimen.** What a `Decode` line refers to
 has not been read out of the expander, and no `.pkg` file has ever reached
 this project, so there is nothing to grade a reading against. `tools/vmac/
