@@ -177,6 +177,13 @@ Unlike section 3, none of this is impossible here: a download would do it.
   real Plus with a Chooser extension or two has less free heap than any number
   recorded here.
 - **Real PowerPC hardware: never run.** Mac OS 9 is verified under QEMU only.
+- **A btoa file written by a Mac.** Every stream the btoa decoder is graded
+  against comes out of one encoder, btoa 5.2.1 on Linux (TESTING.md, *btoa*).
+  The independent one would be Aladdin's own `btoa/atob Translator`, and it is
+  reachable only through a hierarchical menu, which cannot be selected under
+  Mini vMac (`tools/vmac/README.md`, *sitcrypt.py*). What would close it: a
+  route to that translator that is not a submenu — `--btoa-drop` is the attempt
+  and does not write a file yet.
 - **The XADMaster DDn report is not filed.** Its DDn reads one byte past a
   fork's declared compressed length; reduced to a 1,166-byte reproduction and
   written up ready to post in `tools/xadmaster-ddn-repro/`. **Deliberately
