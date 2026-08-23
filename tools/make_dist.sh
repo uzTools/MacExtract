@@ -66,7 +66,7 @@ so there is one download for every Mac.
 
 What it opens: StuffIt (.sit, classic and 5.x), Compact Pro (.cpt), BinHex
 (.hqx), MacBinary, PackIt (.pit), DiskDoubler (.dd, DDAR, DDA2), Now Compress,
-Alysis SuperDisk! (.X), ARC (.arc), uuencoded files (.uu),
+StuffIt SpaceSaver, Alysis SuperDisk! (.X), ARC (.arc), uuencoded files (.uu),
 AppleSingle/AppleDouble, zip, gzip, tar and Unix compress (.Z). Nested files
 like .sit.hqx or .tar.Z are unwrapped automatically, by looking inside them
 rather than trusting the name, and a .hqx holding several files -- one

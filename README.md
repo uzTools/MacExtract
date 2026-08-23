@@ -43,9 +43,8 @@ one, because parts are recognised by what is inside them:
 ## Download
 
 **[Latest release](https://github.com/jarreboum/unclassic/releases/latest)** —
-currently **v0.11.0**. If the release page shows anything older, the
-publish step did not run and what is below is newer than what is there.
-Or take it straight from the tree:
+currently **v0.12.0**. If the release page shows anything older, the publish
+step did not run. Or take it straight from the tree:
 
 | | |
 |---|---|
@@ -59,49 +58,39 @@ notes.
 
 ## What it opens
 
-**Extracts:** StuffIt (`.sit`, classic and 5.x), Compact Pro (`.cpt`),
-BinHex (`.hqx`), MacBinary, PackIt (`.pit`), DiskDoubler (`.dd`, `DDAR`,
-`DDA2`), Now Compress, Alysis SuperDisk! (`.X`), ARC (`.arc`), uuencoded
-files (`.uu`), AppleSingle/AppleDouble, zip, gzip, tar, Unix compress
-(`.Z`).
+**Extracts:** StuffIt (`.sit`, classic and 5.x), Compact Pro (`.cpt`), BinHex
+(`.hqx`), MacBinary, PackIt (`.pit`), DiskDoubler (`.dd`, `DDAR`, `DDA2`), Now
+Compress, StuffIt SpaceSaver, Alysis SuperDisk! (`.X`), ARC (`.arc`),
+uuencoded files (`.uu`), AppleSingle/AppleDouble, zip, gzip, tar and Unix
+compress (`.Z`). Resource forks, type and creator codes and dates all survive,
+so an extracted application simply runs.
 
 Nested files like `.sit.hqx` or `.tar.Z` are unwrapped automatically, by
-looking inside them rather than trusting the name. A `.hqx` that holds
-several files — one newsgroup posting, several attachments — gives you
-all of them, not just the first — and so does a `.uu` file, which on top of
-that carries the resource fork and the type when UUTool made it. A file that
-was posted in several parts also works: join the parts and the mail headers
-between them are stepped over. Resource
-forks, type and creator codes and dates all survive, so an extracted
-application simply runs.
+looking inside them rather than trusting the name — and a `.hqx` or `.uu`
+holding several files, or one file posted in several parts, gives you all of
+it rather than the first piece.
 
-**Recognises but does not extract:** StuffIt X, LZH, Disk Copy 4.2. It tells you what the file is rather than failing
-obscurely.
+SpaceSaver files are the odd ones. They look like ordinary documents — right
+name, right icon — because SpaceSaver compressed them in place, and only the
+Mac that made one could read it; anywhere else the application that wrote it
+finds nonsense. `unclassic` carries the table those files need, so a single
+file on a floppy is enough.
 
-**Archives split across floppies:** a StuffIt segmented set is joined back
-together for you. Open the first part and the rest are found beside it; if a
-part is somewhere else — another folder, another disk — you are asked to
-point at it, and putting the disk in is enough: the part is picked up as soon
-as the disk appears, with nothing to click. Parts are recognised by what is
-inside them, so it does not matter what they are called or whether they are
-all in one place. Send the
-output to a different disk from the parts, which is the only thing that works
-when the parts are on floppies you have to keep swapping.
+**Recognises but does not extract:** StuffIt X, LZH, Disk Copy 4.2 and
+AppleLink packages (`.pkg`) — it tells you what the file is rather than
+failing obscurely. Encrypted archives are out of scope.
 
-The other ways an archive gets split are joined too, on the Macintosh
-as well as on Linux: sets made by **Compact Pro** or by **DiskDoubler's
-Split command** (open any part — they recognise each other by what is
-inside them), zip archives split into `.z01`, `.z02` … `.zip`, and plain
-`.001`/`.002` splits. For those last two the names are the only thing
-that says which parts belong together, so keep them.
-
-Sets whose parts are each still in their own BinHex or MacBinary wrapper
-(`Archive.sit.1.hqx`, `Archive.sit.2.hqx`) — which is how these were
-usually downloaded — are joined as well: open the first part and the
-rest are found inside their wrappers. It does not mind if only some of
-them still are.
-
-Encrypted archives are out of scope.
+**Archives split across floppies** are joined for you: StuffIt, Compact Pro
+and DiskDoubler `SPLT` sets, spanned zip (`.z01` … `.zip`) and plain
+`.001`/`.002` splits. Open the first part and the rest are found beside it; if
+one is elsewhere you are asked to point at it, and putting the disk in is
+enough — the part is picked up as soon as the disk appears, with nothing to
+click. The Mac-format sets recognise each other by what is inside them, so
+names and folders do not matter; for zip and `.NNN` sets the names are all
+there is, so keep them. Parts still wrapped individually
+(`Archive.sit.1.hqx`) are joined too, and it does not mind if only some of
+them still are. Send the output to a different disk from the parts, which is
+the only thing that works when you are swapping floppies.
 
 ## Compared with StuffIt Expander 4.0.2
 
@@ -120,8 +109,8 @@ each one opens:
 | Encrypted archives | yes, if you know the password | no |
 | Several files posted in one BinHex message | yes | yes |
 | `.arc` and uuencoded (`.uu`) files | with the add-on | yes |
-| StuffIt SpaceSaver | with the add-on | yes — including the dictionary its files need, which no other tool carries |
-| AppleLink `.pkg` | with the add-on | named, not expanded — no `.pkg` file has ever reached this project to check a reading against |
+| StuffIt SpaceSaver | with the add-on | yes, dictionary included — which no other tool carries |
+| AppleLink `.pkg` | with the add-on | named, not expanded |
 | DiskDoubler, Now Compress and SuperDisk! archives | no | yes |
 | What you install | the application, a StuffIt Engine extension, and the add-on for anything above | one application |
 | Source | free, closed | free, open (LGPL) |
@@ -167,7 +156,7 @@ build/unclassic sniff mystery.bin       # what is this?
 
 ## Is it any good?
 
-It is checked against [The Unarchiver](https://theunarchiver.com/) on 804 real
+It is checked against [The Unarchiver](https://theunarchiver.com/) on 919 real
 archives, byte for byte, both forks. The Macintosh application is checked the
 same way *while running on* an emulated Mac Plus, a System 7 machine and a
 Mac OS 9 PowerPC — not only on Linux.
@@ -190,9 +179,7 @@ No physical Macintosh has ever run it. Emulation is evidence, not proof.
 LGPL-2.1-or-later. Format details are transcribed from
 [XADMaster](https://github.com/MacPaw/XADMaster); see `NOTICE`.
 
-One thing here is not ours: `src/ss_dict.h` holds 9,679 bytes that are
-**copyright Aladdin Systems, Inc.** — the table StuffIt SpaceSaver primes
-its compression window with. Without exactly those bytes a SpaceSaver file
-cannot be decoded to the right ones, so they are carried for
-interoperability and marked as an exception in `NOTICE`. They are not
-covered by the LGPL grant.
+One exception, marked as one in `NOTICE`: `src/ss_dict.h` holds 9,679 bytes
+that are **copyright Aladdin Systems, Inc.** — the table SpaceSaver primes its
+compression with, which its files cannot be decoded without. Carried for
+interoperability, and not covered by the LGPL grant.

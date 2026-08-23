@@ -113,81 +113,44 @@ Unlike section 3, none of this is impossible here: a download would do it.
   search?** (BLOCKERS.md, SuperDisk!'s compressor).
 
 - **SuperDisk! methods 10, 13 and 20.** No corpus fixture uses any of
-  them, so an implementation could not be graded — code no oracle can
-  check is the same bargain LZH refuses. **What is missing is a
-  gradeable SPECIMEN, and the compressor that would write one is in
-  hand** (`tools/vmac/sdcompress.py`, since 2026-08-22): its control
-  panel has Compress (Off/Light/Tighter), Speed and Memory axes, and
-  the axes have been walked (`--sweep`, 2026-08-22) and **everything it
-  can be made to write is method 1 or method 6** — Speed=Fast gives 6, the
-  rest give 1. So the Speed axis does select a method, and it does not
-  reach the SlowFast family. Method 11 needs the Add-In Module a corpus
-  archive carries, so 10, 13 and 20 plausibly need modules too, and the
-  1.7.3 control panel has no `Cmpr` resources either. **What would close
-  it:** an archive that uses one, or the Add-In Modules that carry them.
-  One lead not yet followed: the panel's own help offers **JPEG lossy**,
-  **lossy sound** and a **lossless sound/video** mode that no `Cmpr` name
-  accounts for, and a lossy mode is a thing an extractor cannot grade
+  them, so an implementation could not be graded. **What is missing is a
+  gradeable SPECIMEN, and the compressor is in hand and cannot write
+  one**: every setting of Alysis's own control panel produces method 1
+  or 6 (`sdcompress.py --sweep`), and 11 needs an Add-In Module that a
+  corpus archive happens to carry, so these three plausibly need modules
+  too. **What would close it:** an archive that uses one, or the Add-In
+  Modules. One lead not followed: the panel's help offers JPEG lossy,
+  lossy sound and a lossless sound/video mode that no `Cmpr` name
+  accounts for — and a lossy mode is something an extractor cannot grade
   against its input by construction.
 
-- **StuffIt SpaceSaver's other three methods.** The
-  format is read and implemented (FORMATS.md, *StuffIt SpaceSaver*): the
-  container, method 0 and method 4, both replaying on a Mac Plus at the
-  floor target, with SpaceSaver's own dictionary built in so that a file
-  needs nothing but itself. Two things are left, and neither is the
-  layout.
-  - **Methods 1, 2 and 3** are declined per entry. Their modules are in
-    the software this was read out of — `CMod 3`, `CMod 4`, `CMod 11` —
-    so this is transcription, not research. What is missing is a way to
-    GRADE one: index 3 is chosen by Gestalt `cput` ≥ 4, so it takes a
-    68030 or better, and nothing here emulates one that runs SpaceSaver.
-    **What would close it:** a machine (or a setting) that writes them,
-    or a file from anywhere that uses one.
-  - **A specimen at all** — and it is worth less than it was. The
-    bitstream it would check has been cross-read against Aladdin's own
-    ENCODER (`CMod 20`), which agrees with this decoder field for field,
-    so a specimen would now only catch a misreading shared by both of
-    their routines and this project's reading of them (DECISIONS.md
-    2026-08-23, the encoder agrees). Nothing here has made SpaceSaver
-    compress anything: twelve runs on a machine that booted and was
-    flushed drove
-    the panel's `small` rule (twice, once with the settings page OK'd
-    first), an enrolled disk left idle for eighteen minutes, Magic
-    Menu's *SpaceSaver Compress*, and `DropCompress™` launched and
-    dropped on. **What the last of them found is a better question than
-    another trigger:** with `~Magic Menu™` deleted the menu bar carries
-    no icon menu at all, so SpaceSaver's own menu — the one its *Show
-    Menu* option promises — was never installed, and nothing here has
-    ever needed its EXTENSION rather than its control panel.
-    **What would close it:** finding out why `INIT 0` does not install.
-    Ruled out already, by measurement: a missing preferences file (the
-    panel writes one, a reboot does not help), a torn installation (the
-    installer was re-run and shut down cleanly), and the `hasNoINITs`
-    Finder flag (clear, and identical to `~Magic Menu™`'s, whose
-    extension does load). `STR# 1001` has five reasons left. Or a file
-    from anywhere. DECISIONS.md 2026-08-22, what will not compress.
+- **StuffIt SpaceSaver's methods 1, 2 and 3.** The format is read and
+  implemented — container, method 0, method 4, dictionary included
+  (FORMATS.md, *StuffIt SpaceSaver*). The other three are declined per
+  entry: their modules are in hand, so this is transcription rather
+  than research, but nothing reachable writes one — index 3 takes a
+  68030 or better, and the engine's default never selects 1 or 2.
+  **What is missing is a gradeable SPECIMEN:** any file that uses one.
 
-- **AppleLink `.pkg` is named but not opened.** The recogniser was read
-  out of Aladdin's `PKG Expand Translator` on 2026-08-23 and shipped —
-  a package is text whose first token is `Decode` and whose third is
-  `to` or `into` (FORMATS.md, *AppleLink packages*). Two things are
-  left:
-  - **Whether there is anything to extract at all.** Three measured
-    things say probably not: the identify path resolves its operand
-    with `PBGetCatInfo`, the errors are *"No items matching: "* and
-    *"Destination not found: "*, and the translator carries
-    recognisers for eight OTHER formats by extension and type. The
-    hypothesis is that a package is a transfer manifest — a text script
-    naming files beside it — in which case this item closes as a
-    property of the format rather than as a gap (DECISIONS.md
-    2026-08-23).
-  - **A specimen**, which is why the first item has not been done. A
-    decoder with a reference but nothing to run it against is the
-    bargain this project declines everywhere else — for LZH, for
-    DiskDoubler's declined methods, and for SpaceSaver's. **What would
-    close it:** one `.pkg` file from anywhere, or the original
-    AppleLink, which would write one under Mini vMac the way Compact
-    Pro's segment layout and Now Compress's block shapes were derived.
+- **A SpaceSaver file written by SpaceSaver.** Twelve emulator runs have
+  driven every trigger its control panel offers and none of them
+  compressed anything, because its extension does not install here;
+  three causes are ruled out by measurement and five of `STR# 1001`'s
+  seven refusals are untested (DECISIONS.md 2026-08-22, what will not
+  compress). **Worth less than it was**: the bitstream a specimen would
+  check has since been cross-read against Aladdin's own encoder and
+  agrees field for field (DECISIONS.md 2026-08-23, the encoder agrees).
+  **What would close it:** why `INIT 0` declines, or one file from
+  anywhere.
+
+- **AppleLink `.pkg`: one file, which would settle two questions.**
+  Named since 2026-08-23 from Aladdin's own recogniser (FORMATS.md,
+  *AppleLink packages*), and detect-only because nothing here can grade
+  a decoder. Three measured things suggest there is nothing to decode —
+  that a package is a transfer manifest naming files beside it rather
+  than a container — in which case this closes as a property of the
+  format (DECISIONS.md 2026-08-23). **What is missing is a specimen**,
+  which answers both.
 
 ---
 
@@ -240,20 +203,15 @@ Unlike section 3, none of this is impossible here: a download would do it.
   both write paths through the qemu-m68k mock in `ci.sh`, and `UNC_AT_CANCEL`
   on-Mac at 4 MB and 1 MB.
 - **SuperDisk! methods 2, 3, 4, 5, 8 and 9 have never decoded anything.**
-  Both corpus archives use one method each — 7 and 11, counted block by
-  block — so most of the 13-bit context family, two of the four wide
-  variants and Huffman-alone (9) are transcribed and compiled and nothing
-  more. **1 and 6 left this list on 2026-08-22**, when Alysis's own control
-  panel was made to write them (`tools/vmac/sdcompress.py --sweep`): 11
-  specimens, all byte-exact — and **method 6 was broken until that day**,
-  asking its Huffman decoder for three flag bytes more than the block
-  codes (DECISIONS.md 2026-08-22, last). One of the two methods this entry
-  named failed on first contact, which is the argument for keeping the
-  entry. The unit test cannot help with the rest: it builds stored blocks,
-  because writing coded ones would mean writing an encoder and grading
-  this decoder against it. **What would change it:** a setting or an
-  archive that uses one of them, or the `Cmpr` modules run under emulation
-  as a second implementation.
+  Both corpus archives use one method each — 7 and 11 — so most of the
+  13-bit context family, two of the four wide variants and Huffman-alone
+  are transcribed, compiled and never run. The unit test cannot help: it
+  builds stored blocks, because writing coded ones would mean grading
+  this decoder against an encoder written from the same reading. That
+  the entry is worth keeping is not a guess — when 1 and 6 left it on
+  2026-08-22, one of the two turned out to be broken (DECISIONS.md
+  2026-08-22, last). **What would change it:** an archive that uses one,
+  or the `Cmpr` modules run under emulation as a second implementation.
 - **Methods 3, 4 and 5 have never decoded a fork this project did not
   write.** All three are byte-exact through Salient's own 1991 expander,
   which grades the reading of the format rather than the decoder

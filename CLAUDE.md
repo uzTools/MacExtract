@@ -17,9 +17,10 @@ of it — and the engine passes a **919-fixture** differential suite against
 `unar` and, where `unar` fails, `macunpack`, plus 9,190 robustness variants.
 The Macintosh application extracts byte-exact on **System 6.0.8 at 4 MB and at
 the 1 MB floor target** (62/62 sampled fixtures each), on System 7.0.1, and on
-Mac OS 9.2 under QEMU including HFS+. System 6 is the target for the
-interactive UI and is driven there end to end; above it the UI is deliberate
-scope, not an open item.
+Mac OS 9.2 under QEMU including HFS+ — that last tier predates four formats
+and is the one verification gap (OPEN_ITEMS.md). System 6 is the target for
+the interactive UI and is driven there end to end; above it the UI is
+deliberate scope, not an open item.
 
 **Do not re-plan or re-run completed milestones.** The authoritative status is:
 
@@ -51,12 +52,10 @@ fact to choose from.
 ## The habit that produced everything valuable here
 
 **Re-test the claims this repository already makes.** Nearly every real gain
-came from that rather than from new features: two false claims from the M10
-period were each costing a capability; an allocation sized from a DECLARED
-ceiling rather than from the data cost 50 fixtures their real peak; "there is
-no oracle for this method" was a fact about one tool with the second oracle
-already sitting in `reference/`; and "no second implementation exists" was
-written while a self-extracting fixture carried one in its resource fork.
+came from that rather than from new features: "there is no oracle for this
+method" was a fact about one tool, with the second oracle already sitting in
+`reference/`; "no second implementation exists" was written while a
+self-extracting fixture carried one in its own resource fork.
 
 `BLOCKERS.md` keeps all thirty-three withdrawn claims with **what each one cost**,
 and names the eight smells that keep finding the next one. The cheapest is a
@@ -107,53 +106,45 @@ All of these cost real time here:
 - **Never invent format details.** Magic numbers, header layouts and algorithm parameters come from a reference implementation or spec, with a `/* Source: ... */` comment. Never guess from memory. `reference/` is read-only and never modified; `tools/fetch_references.sh` repopulates it.
 - **A root cause that has never been reduced to a minimal reproduction is a hypothesis, not a finding.** Label it as such in the docs, and build the repro before acting on it or reporting it upstream. This rule was learned the hard way — see the withdrawn `HOpen` attribution in `BLOCKERS.md`.
 - **Never weaken a test to make it pass.** CRC mismatches are per-entry errors, not skips.
-- **When adding a harness, write down what it CANNOT see.** The on-screen result grid carries a file count and summed CRCs, so it could never fail on a filename — and a real defect in the gzip/.Z fallback name survived in the corpus for weeks because nothing recorded that blind spot. An aggregate check cannot fail on a property it never aggregates.
+- **When adding a harness, write down what it CANNOT see.** An aggregate check cannot fail on a property it never aggregates: the on-screen result grid carries a file count and summed CRCs, so a real defect in the gzip/.Z fallback NAME survived in the corpus for weeks.
 - **68000 discipline** (non-negotiable — it is what made the port compile and run first try): byte-wise big-endian reads only, zero unaligned dereferences; no recursion, call depth ≤ 4 KB; 32-bit arithmetic in hot paths; no libc in the engine — all I/O, allocation and progress via caller callbacks; no global mutable state; allocation failure is a per-entry error, never per-archive; progress callback every 8–16 KB with clean abort.
 - **`./ci.sh` green before every commit.** Small, focused commits. Code, comments and docs in English.
-- **`dist/` is a committed binary and goes stale silently.** It is the only download this project offers. Rebuild it with `tools/make_dist.sh` and commit the result in the SAME commit as any change to `mac/` or `src/`, and re-check that `dist/README.txt` still describes what the application does — it claimed large StuffIt 5 archives fail on a small Mac for a day after they stopped doing so.
+- **`dist/` is a committed binary and goes stale silently**, and it is the only download this project offers. Rebuild it with `tools/make_dist.sh` in the SAME commit as any change to `mac/` or `src/`, and re-read `dist/README.txt` — it once described a limitation that had been fixed the day before.
 - **LGPL-2.1-or-later**, forced by transcribing XADMaster; keep `NOTICE` accurate.
 - Fixture archives are copyrighted and never committed — only `fixtures/SOURCES.md` and the manifests. Same rule for the Mac ROM and System image under `tools/vmac/`.
 - Work autonomously through a task list; log non-obvious decisions in `DECISIONS.md`; if something cannot be made to pass after genuine effort, write it up in `BLOCKERS.md` and move on rather than stalling.
 
 ## Cutting a release
 
-Pushing a `v*` tag publishes a GitHub release with the application attached.
-`.github/workflows/release.yml` does it, using the runner's own
-`GITHUB_TOKEN`. **Verified end to end on v0.5, 2026-08-07.**
+Pushing a `v*` tag publishes a GitHub release with the application attached
+(`.github/workflows/release.yml`, the runner's own `GITHUB_TOKEN`; verified end
+to end on v0.5). A deploy-key push may add workflow files and a deploy-key tag
+push does trigger one — both settled, do not re-litigate.
 
 ```sh
+# bump UNC_VERSION in include/unclassic.h FIRST
 sh tools/make_dist.sh                    # rebuild dist/ from current source
 # commit dist/ + docs, ./ci.sh green, push main FIRST
-git tag -a v0.8 -m "..."                 # annotated; the message is the tag's
-git push origin v0.8
+git tag -a v0.12 -m "..."                # annotated; the message is the tag's
+git push origin v0.12
 ```
 
-Four things will bite you, all of them cost a step on v0.5:
+Five things bite, and each cost a step once:
 
-- **Tag the commit that contains the workflow.** Actions reads the workflow
-  from the ref that was pushed, so a tag pointing at a commit predating
-  `release.yml` publishes nothing, silently. Push `main` before tagging.
-- **The release notes are `dist/README.txt`**, verbatim. It is a user-facing
-  download page, not a changelog — check it still describes the application
-  before tagging.
+- **`UNC_VERSION` is the source of truth.** `make_dist.sh` writes it into
+  `dist/README.txt`, `--version` prints it, README.md names it, and
+  `check_docs.py` fails if they disagree. It sat at "0.4.0" through four
+  releases because nothing read it.
+- **Push `main` before tagging.** Actions reads the workflow from the ref that
+  was pushed, so a tag on a commit predating `release.yml` publishes nothing,
+  silently.
 - **`dist/` must be current.** The workflow publishes what is committed; it
-  does not build. It fails if an asset is missing or empty, but it cannot tell
-  that a present asset is three versions old.
-- **Bump `UNC_VERSION` in `include/unclassic.h` first.** It is the source of
-  truth: `make_dist.sh` writes it into `dist/README.txt`, `unclassic --version`
-  prints it, README.md names it, and `check_docs.py` (first step of `ci.sh`)
-  fails if any of them disagree. It sat at "0.4.0" through four releases
-  because nothing read it.
-- **Confirming the page is the maintainer's, and it has always worked.** Every
-  tag so far published (maintainer, 2026-08-14). This machine still cannot
-  see it — deploy key, no `gh`, no token, 404 from the Releases API — so
-  confirm the TAG with `git ls-remote --tags origin`, report that, and leave
-  the page to somebody who can load it. The version on the page is what makes
-  a failed publish obvious without any API at all.
-
-A deploy-key push *is* allowed to add files under `.github/workflows/`, and a
-deploy-key tag push *does* trigger a workflow. Both were open questions before
-v0.5 and both are now settled; do not re-litigate them.
+  does not build, and it cannot tell that a present asset is three versions old.
+- **The release notes are `dist/README.txt`, verbatim** — a download page, not
+  a changelog. Re-read it before tagging.
+- **This machine cannot see the release page** (deploy key, no `gh`, no token,
+  404 from the API). Confirm the TAG with `git ls-remote --tags origin`, report
+  that, and leave the page to somebody who can load it.
 
 ## Writing things down
 
@@ -167,8 +158,8 @@ there:
 - **Correct figures in place.** Change the number where it lives and note the correction once. Never add a section that supersedes an earlier section: that is how one file came to state three different boot times, all of them presented as fact.
 - **Withdrawn claims are collected, not interleaved**, and each records what it COST. That is what separates a claim that was merely wrong from one that displaced a capability — and the cost line is what makes the next one worth re-testing.
 - **Label every claim: measured, hypothesis, or withdrawn.** An unlabelled claim is read as measured. This is the documentation half of the reproduction rule above.
-- **Closing an item means moving it, not annotating it.** Keep the method if it transfers to the next problem and drop the narrative — but keep it where that KIND of thing lives: the lesson in `DECISIONS.md`, a disproved assertion under *Withdrawn claims* in `BLOCKERS.md`, a milestone in `PROGRESS.md`, a figure in `FORMATS.md`. Delete the item from the file that was tracking it as open. A "closed, kept for the method" list inside a gaps file is the failure mode: OPEN_ITEMS.md grew nineteen such rows, fifteen of them already written up in full elsewhere, and the file stopped being readable as a list of what is left (2026-08-09).
-- **Re-narration is the way these docs actually grow, and the duplication rule does not catch it.** A verbatim-sentence scan across all nine documents on 2026-08-09 found exactly ONE repeated sentence — and FORMATS.md was still telling the streaming-sink story, the four-step Arsenic story and the LZW-bound derivation in full, each of which is a DECISIONS.md entry, one of them a BLOCKERS.md bullet as well. Paraphrase evades the rule. So: **if you are writing a paragraph that explains WHY in any file other than DECISIONS.md, stop** — state the claim, give the number, cite the entry. That pass took FORMATS.md from 757 lines to 617 without losing a table or a measured figure.
+- **Closing an item means moving it, not annotating it.** Keep the method where that KIND of thing lives — the lesson in `DECISIONS.md`, a disproved assertion in `BLOCKERS.md`, a milestone in `PROGRESS.md`, a figure in `FORMATS.md` — and DELETE the item from the file that tracked it as open. A "closed, kept for the method" list inside a gaps file is the failure mode; OPEN_ITEMS.md once grew nineteen such rows and stopped being readable as a list of what is left.
+- **Re-narration is how these docs actually grow, and the no-duplication rule does not catch it** — paraphrase evades it, and a verbatim-sentence scan once found one repeated sentence in nine files that were nonetheless telling three stories twice each. So: **if you are writing a paragraph that explains WHY in any file other than DECISIONS.md, stop.** State the claim, give the number, cite the entry.
 - **No plans in status docs.** "The next attempt is one run, not three" is dead weight the moment it is done. Plans belong in the conversation or a commit message.
 - **Never cite `FILE.md:NN`.** Line numbers drift silently and are then wrong without anyone noticing. Cite the section or table row by name.
 
@@ -185,11 +176,10 @@ how long they will be waiting.
   no history, no withdrawn claims. Those belong in the files above; link to
   them at the end and let the reader choose to go deeper.
 - **Show the application.** Screenshots live in `docs/screens/` and come from
-  `tools/vmac/interactive.py`, so they are real frames from a real emulated
-  Mac rather than mockups. Re-take them whenever the UI changes, and **look at
-  each one before committing it** — that harness clicks fixed coordinates and
-  will happily photograph the wrong window (`tools/vmac/README.md`). One of the four
-  currently in the repo was wrong for exactly that reason on 2026-08-07.
+  `tools/vmac/interactive.py` — real frames from an emulated Mac, not mockups.
+  Re-take them when the UI changes, and **look at each one before committing
+  it**: that harness clicks fixed coordinates and will happily photograph the
+  wrong window, which is how a wrong screenshot once shipped.
 - **Every command in it must be run before it ships.** A README is the most
   copy-pasted file in a project and the least tested.
 - **Round the numbers.** "16 minutes", not "966 s". Precision belongs in
