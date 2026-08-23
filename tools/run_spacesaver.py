@@ -194,10 +194,17 @@ def robustness(exe, path, timeout):
 # wrap at all.
 # ------------------------------------------------------------------
 
-WBITS = 16
+# 15, because that is what Aladdin's encoder writes: `CMod 20` @0xe24
+# stores a literal 15 as the stream header's third byte, so a real file
+# has a 32,768-byte window. The decoder reads the byte and accepts 1..16
+# — the field is a byte and the decompressor honours it — so the suite
+# runs both this and the ceiling.
+WBITS = 15
 MAXDIST = (1 << WBITS) - 1
 MINLEN, MAXLEN = 4, 35
-BLOCK = 32768
+# 65,536 of OUTPUT per block: @0x8fc computes the block count as
+# ceil(ulen / 65536) and @0xa02 reads that much input at a time.
+BLOCK = 65536
 
 
 class BitWriter:
@@ -221,14 +228,15 @@ class BitWriter:
         return bytes(self.out)
 
 
-def encode_alg4(data, preset=b""):
+def encode_alg4(data, preset=b"", wbits=WBITS):
     """Greedy LZSS in SpaceSaver's shape: flag bit, then either 8 bits of
     literal or 5 bits of (length - 4) and WBITS bits of distance."""
-    hist = preset[-MAXDIST:] if preset else b""
+    maxdist = (1 << wbits) - 1
+    hist = preset[-maxdist:] if preset else b""
     base = len(hist)
     buf = bytearray(hist) + bytearray(data)
     index = {}
-    for i in range(max(0, base - MAXDIST), base - 3):
+    for i in range(max(0, base - maxdist), base - 3):
         index.setdefault(bytes(buf[i:i + 4]), []).append(i)
 
     blocks = []
@@ -244,7 +252,7 @@ def encode_alg4(data, preset=b""):
             if len(key) == 4:
                 for cand in reversed(index.get(key, [])[-24:]):
                     dist = pos - cand
-                    if dist < 1 or dist > MAXDIST:
+                    if dist < 1 or dist > maxdist:
                         continue
                     n = 0
                     while (n < MAXLEN and pos + n < stop and
@@ -257,7 +265,7 @@ def encode_alg4(data, preset=b""):
             if best_len >= MINLEN:
                 w.put(0, 1)
                 w.put(best_len - MINLEN, 5)
-                w.put(best_dist, WBITS)
+                w.put(best_dist, wbits)
                 take = best_len
             else:
                 w.put(1, 1)
@@ -272,7 +280,7 @@ def encode_alg4(data, preset=b""):
         blocks.append((w.done(), produced))
 
     out = bytearray()
-    out += bytes([len(blocks) & 0xff, (len(blocks) >> 8) & 0xff, WBITS])
+    out += bytes([len(blocks) & 0xff, (len(blocks) >> 8) & 0xff, wbits])
     for payload, ulen in blocks:
         clen = len(payload) + 6
         out += bytes([clen & 0xff, (clen >> 8) & 0xff, (clen >> 16) & 0xff])
@@ -316,6 +324,9 @@ def synthetic(exe, verbose):
     preset = open(PRESET, "rb").read() if os.path.exists(PRESET) else b""
 
     cases = [("plain", body, b"")]
+    # The ceiling as well as what the encoder writes: 16 is the widest
+    # window the byte can ask for, and nothing real emits it.
+    cases.append(("wide", body[:60000], b""))
     if preset:
         # A payload that starts with 4 KB of the dictionary itself: every
         # match at the start reaches back into the preset.
@@ -325,7 +336,7 @@ def synthetic(exe, verbose):
     bad = 0
     try:
         for tag, data, pre in cases:
-            stream = encode_alg4(data, pre)
+            stream = encode_alg4(data, pre, 16 if tag == "wide" else WBITS)
             # The archive and the output go in different directories:
             # the entry's name IS the archive's, so one directory means
             # the extractor refusing to write over its own input.

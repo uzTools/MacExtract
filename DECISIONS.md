@@ -102,6 +102,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-22 (SpaceSaver, the codecs) — two of five, and a dictionary that is not ours
 - 2026-08-22 (SpaceSaver, what will not compress) — twelve runs, one thing that fired
 - 2026-08-23 — AppleLink `.pkg`, named at last, and what a recogniser is
+- 2026-08-23 (SpaceSaver, the encoder agrees) — the cross-check that replaced a specimen
 
 ---
 
@@ -5377,3 +5378,71 @@ DiskDoubler's methods 2-5 and for SpaceSaver's 1-3. Naming the file
 costs nothing and is worth having on its own: it is the difference
 between *unknown* and a format with a name, which is what `unc_sniff`
 exists for.
+
+## 2026-08-23 (SpaceSaver, the encoder agrees) — the cross-check that replaced a specimen
+
+Method 4 was the weakest-graded thing in this tree, and the weakness was
+precise rather than vague. **The container is triple-sourced**: the
+writer (`mCompressFile`), the reader (`mExpandFile`) and the version
+converter (`UpdateSSHeader`) each describe the same 84 bytes and agree.
+**The codec was single-sourced** — one routine, `CMod 21` @0x15a — and
+the encoder in `run_spacesaver.py` was written from that same reading,
+so a misreading would be invisible: encoder and decoder would agree and
+both be wrong. A specimen was the only thing that could falsify it, and
+twelve emulator runs had not produced one.
+
+`CMod 20` is the same algorithm's FULL module, and its `+0x08` entry is
+a real compressor rather than the `moveq #103` stub its decompress-only
+sibling carries. Aladdin's encoder and decoder are different code paths.
+Reading the encoder is therefore an independent second source, and it
+costs an hour with no emulator.
+
+**Every field that was single-sourced is confirmed, and two are new:**
+
+| claim | where the encoder says it |
+|---|---|
+| stream header: block count as u16, low byte first | @0xe1c writes `fp@(-17)` then `fp@(-35)` |
+| then a byte, which is the window width in bits | @0xe24 writes a literal **15** |
+| block header: `clen` as u24, low byte first | @0xe2c-@0xe3e, @0xe42-@0xe50 |
+| `clen` counts the 6 header bytes | it is `a3 - blockStart` after the header was reserved |
+| the 3 stream bytes are NOT in the first block's `clen` | @0xe28 subtracts 3, and only for the first |
+| then `ulen` as u24, low byte first | @0xe52-@0xe66 |
+| a literal is 9 bits: a 1, then the byte | @0xb4c: `(byte << 1) | 1`, width 9 |
+| a match is 21 bits: a 0, 5 bits, 15 bits | @0xd2c: width 21, and 1+5+15 = 21 |
+| the 5-bit field is length MINUS FOUR | @0xd1e: `subqw #4` before it is shifted up by 1 |
+| the distance sits above it | @0xd1c: `lsll #6` — bits 6..20 |
+| bits pack LSB-first, flushed low byte first | @0xb7e-@0xb94 |
+| the window slides across blocks | @0xe92: it shifts the buffer down by `ulen` and keeps the rest |
+| **the preset dictionary ends immediately before the first output byte** | @0x93e copies `pramSize` bytes to `fp@(-12) - pramSize` |
+
+That last row is the one that mattered most. It was the most
+speculative thing in the whole reading — a claim about where 9,679 bytes
+of somebody else's table sit relative to a pointer — and the encoder
+places it identically, from its own side, in its own routine.
+
+### Two figures this corrects
+
+- **A real file's window is 32,768 bytes, not 65,536.** The encoder
+  writes 15 into the width byte, always. The decoder reads the byte and
+  accepts 1..16 because the field is a byte and the reference's
+  decompressor honours it, so 16 stays supported and is now exercised
+  separately — but the peak this format costs in practice is **36,864 B**
+  (32 KB window + the 4 KB input buffer), measured, where FORMATS.md
+  had recorded the 69,632 B ceiling. That is the mistake this repository
+  warns about in its own words: a number taken from what a field COULD
+  say rather than from what the data does say.
+- **A block covers 65,536 bytes of output.** @0x8fc computes the block
+  count as `ceil(ulen / 65536)` and @0xa02 reads that much input at a
+  time. The decoder never assumed a size — it reads each block's `ulen`
+  — so it is unaffected, and the synthetic encoder now matches.
+
+### What a specimen would still be worth
+
+Less than it was, and it is worth saying how much less. It would no
+longer be the only check on the bitstream; two independently written
+routines now agree about every field of it. What it would still catch is
+a misreading shared by BOTH of Aladdin's routines and this project's
+reading of them — which is a much smaller target — and anything about
+the CONTAINER that all three engine routines happen to describe the same
+wrong way. The specimen hunt stays open (OPEN_ITEMS.md) and stops being
+the thing this format is waiting on.

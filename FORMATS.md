@@ -31,7 +31,7 @@ whole corpus for that format (engine allocations only, via
 | ARC / ArcMac (.arc) | extract | 1/2 store, 3 RLE90, 4 squeeze+RLE90, 5/6/7 crunch, 8 12-bit LZW+RLE90, 9 13-bit LZW, 0x7f compress; ArcMac's two-fork payload since 2026-08-16★★★; 0x0a/0x0b (PKARC) declined per entry★ | 10 generated archives (methods 1-9, adjudicated by `unar`) + 3 written by Debian's `arc` 5.21q; `synth-arc-mixed.arc` also has an `unar` manifest and is in the differential suite | 4–32 KB★ | full |
 | uuencode (.uu, incl. UUTool) | extract | — (plain uu, UUTool's two-fork "MU" shape, and documents posted in several parts★★) | 7 generated cases, the two-fork ones adjudicated by macutils' `hexbin`; `synth-uu-mac.uu` is in the differential suite | 4 KB | full |
 | Alysis SuperDisk! (.X, .x) | extract | **both containers** (record-stream archive and single file); methods 1-4 and 5-8 (a finite-context predictor over a 13- or 16-bit context, with the flag bitmap and/or the literals Huffman-coded), 9 Huffman, 11 SlowFastB (LZSS); 10, 13 and 20 declined per entry✧✧ | 2 fixtures, 5 forks, adjudicated by the archives' OWN self-extractors on an emulated Mac, + 11 single-file specimens written by Alysis's own control panel (methods 1 and 6) and graded against their inputs | 72–115 KB✧✧ | full |
-| StuffIt SpaceSaver (`SPSV`) | extract | 0 stored, 4 "Alg 4" — an LZSS whose window starts loaded with a preset dictionary that ships inside SpaceSaver; 1, 2 and 3 declined per entry✦✦ | **none, and no specimen either**: nothing SpaceSaver wrote has ever been decoded here. Graded by a second implementation of the same reading (an encoder in `run_spacesaver.py`) and by unit tests✦✦ | 4 KB stored, 68 KB with a 64 KB window (measured on a Mac Plus) | full |
+| StuffIt SpaceSaver (`SPSV`) | extract | 0 stored, 4 "Alg 4" — an LZSS whose window starts loaded with a preset dictionary that ships inside SpaceSaver; 1, 2 and 3 declined per entry✦✦ | no oracle and no specimen — but **Aladdin's own encoder agrees with this decoder field for field** (`CMod 20`, 2026-08-23), which is what grades it, plus a synthetic round-trip and unit tests✦✦ | 4 KB stored, **36 KB** for what SpaceSaver writes (measured on a Mac Plus); 68 KB is the ceiling the width byte allows | full |
 | LZH/LHA (-lh?-, -lz?-) | detect only | — | 1 real `-lh5-` archive, named + refused; unit test over every method byte | — | — |
 | AppleLink package (.pkg) | detect only | — | no specimen anywhere: the probe is Aladdin's own recogniser, at 0 false positives across 928 fixtures (*AppleLink packages*, below) | — | — |
 | DiskCopy 4.2 (.image) | detect only | — | synthetic 800K GCR + real 800K image; 0 false positives in 807 fixtures (re-measured 2026-08-15) | — | — |
@@ -587,11 +587,19 @@ machine reachable here writes them, so an implementation could not be graded,
 the bargain LZH and DiskDoubler's declined methods already make.
 
 **Method 4 is an LZSS with a preset dictionary.** Three bytes of stream header
-(block count, then the window's width in bits), then that many blocks of a
-6-byte header — compressed length including those six bytes, then uncompressed
-length, both 24-bit little-endian — and a bit stream read LSB-first: `1` and
-eight bits is a literal, `0` and five bits of length plus *wbits* of distance
-is a copy of 4 + length bytes. The window slides across the whole fork.
+(block count as a 16-bit little-endian value, then the window's width in
+bits), then that many blocks of a 6-byte header — compressed length including
+those six bytes but not the three above them, then uncompressed length, both
+24-bit little-endian — and a bit stream read LSB-first: `1` and eight bits is
+a literal, `0` and five bits of length plus *wbits* of distance is a copy of
+4 + length bytes. The window slides across the whole fork.
+
+**Every one of those fields is confirmed by Aladdin's ENCODER as well as its
+decoder** — `CMod 20`'s compressor, a different routine in a different module
+(DECISIONS.md 2026-08-23, the encoder agrees). Two figures come from it: the
+encoder always writes **15** as the width, so a real file's window is 32,768
+bytes, and a block covers **65,536 bytes of output** (`ceil(ulen / 65536)` of
+them). The decoder reads the width byte rather than assuming either.
 
 **It starts loaded with 9,679 bytes of Aladdin's `PrAm` -4048**, placed
 immediately before the first output byte, so the first matches in every fork
@@ -605,11 +613,12 @@ one, `PrAm` -4047, four spaces long, which nothing this engine writes selects.
 **Both methods run on a 68000**, which is the part no Linux test can show.
 `tools/run_spacesaver.py --emit` writes three files and `tools/vmac/run.py
 --expect` replays them on an emulated Mac Plus under System 6.0.8: a stored
-one (**1,040 B data + 512 B resource, peak 4,112 B**), a method 4 one that
-needs no dictionary (**14,524 B out, peak 69,664 B** — the 64 KB window plus
-the 4 KB input buffer), and one that reaches into the dictionary and must
-refuse (**0 files, peak 68 KB, no crash**). All three agree with the Linux
-CLI byte for byte, **at 4 MB and at the 1 MB floor target alike**.
+one (**1,040 B data + 512 B resource, peak 4,112 B**), a method 4 one at the
+window width SpaceSaver writes (**14,524 B out, peak 36,896 B** — the 32 KB
+window plus the 4 KB input buffer), and one that reaches into the dictionary
+and must refuse (**0 files, peak 36 KB, no crash**). All three agree with the
+Linux CLI byte for byte, **at 4 MB and at the 1 MB floor target alike**
+(re-measured 2026-08-23, after the width was corrected from the ceiling).
 
 **Which is why the Macintosh application cannot expand these files and this
 is not a gap it is worth closing.** It could read the resource out of the

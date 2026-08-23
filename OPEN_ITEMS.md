@@ -149,8 +149,14 @@ Unlike section 3, none of this is impossible here: a download would do it.
     (FORMATS.md, *StuffIt SpaceSaver*). **Nothing would close this** —
     it is the format's own shape, and it is recorded here so the next
     reader does not go looking for the bug.
-  - **A specimen at all.** Nothing here has made SpaceSaver compress
-    anything: twelve runs on a machine that booted and was flushed drove
+  - **A specimen at all** — and it is worth less than it was. The
+    bitstream it would check has been cross-read against Aladdin's own
+    ENCODER (`CMod 20`), which agrees with this decoder field for field,
+    so a specimen would now only catch a misreading shared by both of
+    their routines and this project's reading of them (DECISIONS.md
+    2026-08-23, the encoder agrees). Nothing here has made SpaceSaver
+    compress anything: twelve runs on a machine that booted and was
+    flushed drove
     the panel's `small` rule (twice, once with the settings page OK'd
     first), an enrolled disk left idle for eighteen minutes, Magic
     Menu's *SpaceSaver Compress*, and `DropCompress™` launched and

@@ -755,7 +755,9 @@ specimen yet either**: twelve emulator runs have driven every trigger the
 control panel offers and none of them compressed anything (OPEN_ITEMS.md,
 DECISIONS.md 2026-08-22, what will not compress). So today this suite runs
 its synthetic pass and skips the rest, and what is written below is what it
-does when a specimen arrives. Specimens live outside the repository, beside
+does when a specimen arrives — and a specimen is worth less than it was,
+because the reading it would check has since been cross-read against
+Aladdin's encoder (below). Specimens live outside the repository, beside
 the emulator's ROM and System image, because a compressed file is what
 SpaceSaver made of a subject:
 
@@ -768,13 +770,21 @@ SpaceSaver made of a subject:
 of them present the suite prints what it skipped and returns 0**, so a fresh
 clone stays green and says nothing.
 
-**The synthetic pass is, for now, the whole of it.** An Alg 4 ENCODER, written from the
-same disassembly as the decoder, round-trips 200,000 bytes through a window
-that wraps and a dozen blocks, and a second case whose first 4 KB are the
-preset dictionary itself. Two implementations of one misreading would agree,
-so this is a consistency check and not an oracle — but it is the only thing
-that exercises the wrap, and a specimen small enough to make by hand never
-will.
+**The synthetic pass, and what now stands behind it.** An Alg 4 ENCODER,
+written from the same disassembly as the decoder, round-trips 200,000 bytes
+through a window that wraps and a dozen blocks, a case at the widest window
+the width byte allows, and one whose first 4 KB are the preset dictionary
+itself. **Two implementations of one misreading would agree**, so on its own
+this is a consistency check and not an oracle.
+
+What makes it more than that is a second reading: **Aladdin's own encoder**
+— `CMod 20`'s compressor, a different routine in a different module from the
+decompressor everything was first read out of — **agrees field for field**:
+the stream header, the block header, which bytes `clen` counts, the 9-bit
+literal, the 21-bit match, the length bias of four, LSB-first packing, and
+where the preset dictionary sits (DECISIONS.md 2026-08-23, the encoder
+agrees). The synthetic pass checks that this code implements that reading;
+the cross-read is what checks the reading.
 
 **The preset dictionary is checked as a refusal, not just as a feature.**
 SpaceSaver's LZSS window starts loaded with 9,679 bytes of Aladdin's own
