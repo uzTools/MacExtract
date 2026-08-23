@@ -615,6 +615,14 @@ verifier is the archive's `'MKey'` resource and the oracle needs the
 resource fork too; our CLI is given the bare `.sit` and finds the same
 resource in the sidecar file it writes itself.
 
+**The ciphers run on a big-endian 68000 too.** `tests/run_mac_sink.sh`
+cross-compiles the unit tests with `m68k-linux-gnu-gcc -mcpu=68000` and
+runs them under `qemu-m68k`, so every cipher vector — DES, StuffItDES,
+MD5, RC4, the zip and Compact Pro keystreams, SHA-1, HMAC-SHA1, PBKDF2
+and AES — is checked where the word order is the target's. Nothing else
+does: no fixture in the Mac sample is encrypted, and the differential
+suite is little-endian x86.
+
 **WinZip's AES has no second reader here**, so its four cases are
 graded the other way round: **7-Zip** writes them (256, 192, 128, and
 one stored), verifies them itself, and our output must equal the bytes
