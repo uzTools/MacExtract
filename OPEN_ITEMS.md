@@ -167,25 +167,22 @@ Unlike section 3, none of this is impossible here: a download would do it.
     extension does load). `STR# 1001` has five reasons left. Or a file
     from anywhere. DECISIONS.md 2026-08-22, what will not compress.
 
-- **AppleLink `.pkg`.** **A reference implementation is in hand since
-  2026-08-22** and was found by accident: the StuffIt Deluxe 3.5.1
-  installation made for SpaceSaver carries
-  `Extensions:Aladdin:Translators:PKG Expand Translator`, whose `Name`
-  resource is `AppleLinkPKG` and whose `Othe` resource is 20 KB of 68k
-  in the same module shape as the `CMod` compressors (BLOCKERS.md).
-  Nothing published still describes the format, and the search of
-  2026-08-15 stands: the only documented AppleLink format is the Apple
-  II `.acu`, which CiderPress2's notes explicitly distinguish from the
-  Macintosh Package. What has changed is that "rule #1 forbids writing
-  one" no longer applies — the layout can be read out of that resource
-  the way SpaceSaver's and SuperDisk!'s were.
-
-  **What is missing now is a specimen**, and that has not changed: a
-  decoder with a reference but nothing to run it against is the bargain
-  this project declines everywhere else. **What would close it:** one
-  `.pkg` file from anywhere — or the original AppleLink, which would
-  write one under Mini vMac the way Compact Pro's segment layout and Now
-  Compress's block shapes were derived.
+- **AppleLink `.pkg` is named but not opened.** The recogniser was read
+  out of Aladdin's `PKG Expand Translator` on 2026-08-23 and shipped —
+  a package is text whose first token is `Decode` and whose third is
+  `to` or `into` (FORMATS.md, *AppleLink packages*). Two things are
+  left:
+  - **What a `Decode` line refers to.** The expander's own path
+    (`Othe` 0 @0x2bca) has not been read, so it is not known whether a
+    package carries its payload or names companion files. That is
+    reading, not research: the translator is in hand.
+  - **A specimen**, which is why the first item has not been done. A
+    decoder with a reference but nothing to run it against is the
+    bargain this project declines everywhere else — for LZH, for
+    DiskDoubler's declined methods, and for SpaceSaver's. **What would
+    close it:** one `.pkg` file from anywhere, or the original
+    AppleLink, which would write one under Mini vMac the way Compact
+    Pro's segment layout and Now Compress's block shapes were derived.
 
 ---
 

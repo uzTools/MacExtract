@@ -46,6 +46,7 @@ static const UncFormatDesc unc_formats[] = {
     { UNC_FORMAT_SUPERDISK,   "SuperDisk!",      1 },
     { UNC_FORMAT_DDSEG,       "DiskDoubler split", 1 },
     { UNC_FORMAT_SPACESAVER,  "StuffIt SpaceSaver", 1 },
+    { UNC_FORMAT_APPLELINK,   "AppleLink package", 0 },
 };
 
 const char *unc_format_name(UncFormat f)
@@ -161,6 +162,11 @@ UncFormat unc_sniff(UncIO *io)
     if (unc_diskcopy_probe(head, len, io)) return UNC_FORMAT_DISKCOPY;
     if (unc_macbinary_probe(head, len, io)) return UNC_FORMAT_MACBINARY;
 
+    /* An AppleLink package is TEXT, so it sits with the other text
+     * formats — and before them, because its test is three whole tokens
+     * and theirs are scans for a line that may be anywhere. */
+    if (unc_applelink_probe(head, len)) return UNC_FORMAT_APPLELINK;
+
     /* BinHex last: it scans for a banner amid mail garbage. uuencode
      * sits beside it — same habitat, same kind of scan — and before it,
      * because BinHex's probe reads on past its own banner and a uu file
@@ -193,7 +199,8 @@ int unc_extract_as(UncFormat f, UncIO *io, UncSink *sink, UncAlloc *al,
     c.ps.hold = 0;
     if (opt) c.opt = *opt;
     else { c.opt.list_only = 0; c.opt.test_only = 0;
-           c.opt.name_hint = 0; c.opt.name_hint_len = 0; }
+           c.opt.name_hint = 0; c.opt.name_hint_len = 0;
+           c.opt.preset = 0; c.opt.preset_len = 0; }
 
     if (io->seek(io->ctx, 0) < 0) return UNC_ERR_IO;
 

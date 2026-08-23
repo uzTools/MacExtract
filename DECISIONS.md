@@ -101,6 +101,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-22 (SpaceSaver, the layout) — read out of the software, as recommended
 - 2026-08-22 (SpaceSaver, the codecs) — two of five, and a dictionary that is not ours
 - 2026-08-22 (SpaceSaver, what will not compress) — twelve runs, one thing that fired
+- 2026-08-23 — AppleLink `.pkg`, named at last, and what a recogniser is
 
 ---
 
@@ -5284,3 +5285,60 @@ Nothing here blocks the reader: the container and both implemented
 methods are graded by an encoder written from the same disassembly, and
 the honest limit of that is written in TESTING.md. A specimen would
 raise it from *self-consistent* to *right*.
+
+## 2026-08-23 — AppleLink `.pkg`, named at last, and what a recogniser is
+
+The `PKG Expand Translator` found on 2026-08-22 is Aladdin's reader for
+the format this project has never been able to name. This is what it
+says, and what was shipped from it.
+
+### Where the format's identity actually lives
+
+The translator does no file I/O at all — no `_Read`, no `_Open`, 23
+`_HFSDispatch` calls and nothing else — because the engine hands it the
+file as a HANDLE and it works over memory. Its entry is
+`main(pb, selector)`, and bit 1 of the selector is the "can you take
+this?" call: at @0xec6 it points the callback at `pb@(0)`, runs @0x2952
+over `pb@(4)`, and answers `-1` or `0` in `pb@(8)`.
+
+@0x2952 does not look at a magic number. It calls a TOKENIZER (@0xf18)
+that skips space, tab and CR, honours double quotes and treats
+backslash as an escape inside them, and it accepts the file when
+
+    token 1 == "Decode"        (@0x2996, `_CmpString`, case-insensitive)
+    token 3 == "to" or "into"  (@0x2a04, @0x2a24)
+
+**An AppleLink package is a text script.** `STR# 129` is the rest of the
+vocabulary — `convert`, `noConvert`, ` Folder`, and the errors
+*"Destination not found: "* and *"No items matching: "* — and the
+identify path reads token 2 as a name and looks it up, which is why the
+second error exists at all.
+
+### The claim this disproves, and the assumption under it
+
+OPEN_ITEMS.md had said `.pkg` "cannot even be sniffed without inventing
+a magic number, so a user gets *unknown* rather than a name". That
+sentence is not about AppleLink. It is about an unstated assumption —
+**that recognising a format means matching bytes at a fixed offset** —
+and the moment a real recogniser was in front of it, the assumption was
+the only thing holding it up. The test was there to be COPIED, which is
+exactly what rule #1 asks for and the opposite of guessing.
+
+`unclassic sniff` implements those three tokens and nothing more, so it
+is exactly as strong as Aladdin's and no stronger: a text file that
+begins *"Decode this to that"* is a package as far as either program can
+tell. That is a property of the format, not a defect in the probe, and
+it is written down rather than papered over with an extra condition
+nobody has evidence for. 928 fixtures, 0 false positives.
+
+### Why it stops at detect-only
+
+The expander's own path (@0x2bca) has not been read, so what a `Decode`
+line refers to — payload inside the file, or companion files beside it —
+is not established. It could be read; the translator is in hand. What
+cannot be had is a `.pkg` file to grade the reading against, and a
+decoder no oracle can check is the bargain this project declines for
+LZH, for DiskDoubler's methods 2-5, and for SpaceSaver's methods 1-3.
+Naming the file costs nothing and is worth having on its own: it is the
+difference between *unknown* and a format with a name, which is what
+`unc_sniff` exists for.

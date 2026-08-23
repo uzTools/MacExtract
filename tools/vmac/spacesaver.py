@@ -2582,6 +2582,78 @@ def layout():
     return 1 if bad else 0
 
 
+# What the AppleLink `.pkg` reading rests on, in the translator's own
+# bytes. Same idea as WITNESSES above: a different build makes this
+# print MISSING rather than silently confirm today's reading.
+PKG_WITNESSES = [
+    ("the tokenizer skips space, tab and CR", b"\x0c\x13\x00\x20\x67"),
+    ("token 1 is compared with STR# 129 item 1",
+     b"\x2f\x3c\x00\x01\x00\x81"),
+    ("token 3 is compared with item 4 (\"to\")",
+     b"\x2f\x3c\x00\x04\x00\x81"),
+    ("and with item 9 (\"into\")", b"\x2f\x3c\x00\x09\x00\x81"),
+]
+
+
+def pkg(keep=False):
+    """Read AppleLink `.pkg`'s recogniser out of Aladdin's translator.
+
+    The StuffIt Deluxe 3.5.1 installation made for SpaceSaver carries
+    fourteen translators, and one of them is `PKG Expand Translator` —
+    the only implementation of AppleLink's package format this project
+    has ever had sight of (BLOCKERS.md). No emulator: the resources come
+    off the disk image with `hcopy` and everything below is parsed from
+    them.
+    """
+    from superdisk import read_forks                    # noqa: E402
+    import struct
+    if not os.path.exists(INSTALLED):
+        raise SystemExit("spacesaver: no installed image")
+    forks = read_forks(INSTALLED)
+    found = None
+    for path, (ftype, creator, _d, rsrc) in forks.items():
+        if path[-1] == "PKG Expand Translator":
+            found = (path, ftype, creator, rsrc)
+    if not found:
+        raise SystemExit("spacesaver: no PKG Expand Translator on %s"
+                         % INSTALLED)
+    path, ftype, creator, rsrc = found
+    print("%s  %s/%s  %d B resource fork" % ("/".join(path), ftype, creator,
+                                             len(rsrc)))
+    res = resources(rsrc)
+    name = res["Name"][0][1]
+    code = res["Othe"][0][1]
+    print("  'Name' 0: %r — what the engine calls this translator"
+          % name[1:1 + name[0]].decode("mac-roman"))
+    print("  'Othe' 0: %d bytes of 68k" % len(code))
+
+    strs = res["STR#"][129][1]
+    cnt = struct.unpack(">H", strs[:2])[0]
+    p, items = 2, []
+    for _ in range(cnt):
+        n = strs[p]
+        items.append(strs[p + 1:p + 1 + n].decode("mac-roman", "replace"))
+        p += 1 + n
+    print("\n  'STR#' 129, which is the grammar's vocabulary:")
+    for i, it in enumerate(items, 1):
+        print("    %2d  %r" % (i, it))
+
+    print("\n  The recogniser @0x2952 accepts a file when its first"
+          "\n  whitespace-delimited token is item 1 and its third is item 4"
+          "\n  or item 9 — so a package is TEXT, and that is its whole"
+          "\n  magic. `unclassic sniff` implements exactly that and no more.")
+
+    print("\n  What this reading rests on:")
+    bad = 0
+    for what, pattern in PKG_WITNESSES:
+        at = code.find(pattern)
+        bad += at < 0
+        print("    %-8s %s" % ("%06x" % at if at >= 0 else "MISSING", what))
+    print("spacesaver: %d of %d witnesses found"
+          % (len(PKG_WITNESSES) - bad, len(PKG_WITNESSES)))
+    return 1 if bad else 0
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -2644,6 +2716,9 @@ def main():
     ap.add_argument("--specimen", action="store_true",
                     help="rename the subjects, then SHUT DOWN so the "
                          "volume is flushed")
+    ap.add_argument("--pkg", action="store_true",
+                    help="read AppleLink .pkg's recogniser out of the "
+                         "translator beside SpaceSaver")
     ap.add_argument("--layout", action="store_true",
                     help="read the container layout out of the installed "
                          "control panel and engine")
@@ -2709,6 +2784,8 @@ def main():
         return idlespec(a.keep)
     elif a.specimen:
         return specimen(a.keep)
+    elif a.pkg:
+        return pkg(a.keep)
     elif a.layout:
         return layout()
     else:

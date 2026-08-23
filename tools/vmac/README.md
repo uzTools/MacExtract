@@ -610,6 +610,8 @@ System 7.5.3**, which is the open route. DECISIONS.md 2026-08-22
     tools/vmac/spacesaver.py --idlespec       enrol the disk, idle, shut down
     tools/vmac/spacesaver.py --layout         read the container out of the
                                               installed panel and engine
+    tools/vmac/spacesaver.py --pkg            read AppleLink .pkg's recogniser
+                                              out of the translator beside it
 
 Every mode from `--specimen` on ends with Special > Shut Down (the general
 rule at the top of this file): `ssenrolled.hfv`, made before that rule was
@@ -625,6 +627,12 @@ present in `SSEn 1` and `ACMP 1`, printed with the offset each was found
 at, so a different build of SpaceSaver makes it say MISSING and exit 1
 rather than silently confirm today's reading. The layout itself is in
 FORMATS.md, *StuffIt SpaceSaver's container*.
+
+**`--pkg` is in this file because the translator is on this image.** The same
+installation carries fourteen of Aladdin's translators, and one of them reads
+AppleLink packages — the format this project could not name until 2026-08-23.
+It prints that translator's `Name`, its vocabulary and its recogniser, with
+four witnesses; FORMATS.md, *AppleLink packages*, is what came of it.
 
 What it cannot see: whether any of this describes a real compressed file.
 Nothing here has produced one, so every field is read from the writer, not

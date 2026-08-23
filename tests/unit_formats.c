@@ -2726,6 +2726,48 @@ static void test_spacesaver_preset(void)
     CHECK(cap.dlen[0] == 0);
 }
 
+
+/* ------------------------------------------------------------------ */
+/* AppleLink package (`.pkg`) — detect only                           */
+/*                                                                    */
+/* The whole magic is three tokens, which is what Aladdin's own        */
+/* reader checks (`PKG Expand Translator`, `Othe` 0 @0x2952). These    */
+/* assert the shape of that test rather than the format: there is no   */
+/* `.pkg` file here to check a reading against, and the probe is the   */
+/* only thing shipped.                                                 */
+/* ------------------------------------------------------------------ */
+
+static void ss_sniff_is(const char *text, UncFormat want)
+{
+    MemIO m;
+    UncIO io;
+    uint32_t n = 0;
+    while (text[n]) n++;
+    test_make_memio(&io, &m, (const uint8_t *)text, n);
+    CHECK(unc_sniff(&io) == want);
+}
+
+static void test_applelink(void)
+{
+    /* What the translator accepts. */
+    ss_sniff_is("Decode \"My File\" to \"Some Folder\"\r",
+                UNC_FORMAT_APPLELINK);
+    ss_sniff_is("Decode Thing into Folder\r", UNC_FORMAT_APPLELINK);
+    /* Case-insensitive, as _CmpString is called there. */
+    ss_sniff_is("DECODE thing TO folder\r", UNC_FORMAT_APPLELINK);
+    /* Leading whitespace is skipped by the same tokenizer. */
+    ss_sniff_is("\r\n   Decode thing to folder\r", UNC_FORMAT_APPLELINK);
+
+    /* And what it does not. A prefix is not a token... */
+    ss_sniff_is("Decoder ring to nowhere\r", UNC_FORMAT_UNKNOWN);
+    /* ...the third token has to be there and has to be one of two... */
+    ss_sniff_is("Decode thing\r", UNC_FORMAT_UNKNOWN);
+    ss_sniff_is("Decode thing from folder\r", UNC_FORMAT_UNKNOWN);
+    /* ...and prose that merely starts with the word is not a package. */
+    ss_sniff_is("Decode the message by hand, then send it to Bob.\r",
+                UNC_FORMAT_UNKNOWN);
+}
+
 /* ------------------------------------------------------------------ */
 /* M12: Now Compress — the container, which the one fixture cannot     */
 /* reach (it holds a single file, one fork, no folders)                */
@@ -3265,6 +3307,7 @@ void run_format_tests(void)
     test_binhex_multi();
     test_diskdoubler();
     test_nowcompress();
+    test_applelink();
     test_spacesaver();
     test_spacesaver_alg4();
     test_spacesaver_preset();

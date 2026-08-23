@@ -80,6 +80,9 @@ typedef enum UncFormat {
     /* Brought in scope 2026-08-22; appended for the same ABI reason. */
     UNC_FORMAT_SPACESAVER,    /* StuffIt SpaceSaver compressed file     */
 
+    /* Named, not extracted, since 2026-08-23. */
+    UNC_FORMAT_APPLELINK,     /* AppleLink package (`.pkg`)             */
+
     UNC_FORMAT__COUNT
 } UncFormat;
 

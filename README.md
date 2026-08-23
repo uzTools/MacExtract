@@ -121,7 +121,7 @@ each one opens:
 | Several files posted in one BinHex message | yes | yes |
 | `.arc` and uuencoded (`.uu`) files | with the add-on | yes |
 | StuffIt SpaceSaver | with the add-on | named, not expanded: SpaceSaver keeps the dictionary its files need inside itself. The Linux tool expands them given a copy of it |
-| AppleLink `.pkg` | with the add-on | no — nothing published describes it, and no `.pkg` file has ever reached this project to check a guess against |
+| AppleLink `.pkg` | with the add-on | named, not expanded — no `.pkg` file has ever reached this project to check a reading against |
 | DiskDoubler, Now Compress and SuperDisk! archives | no | yes |
 | What you install | the application, a StuffIt Engine extension, and the add-on for anything above | one application |
 | Source | free, closed | free, open (LGPL) |

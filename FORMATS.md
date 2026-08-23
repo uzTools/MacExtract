@@ -33,6 +33,7 @@ whole corpus for that format (engine allocations only, via
 | Alysis SuperDisk! (.X, .x) | extract | **both containers** (record-stream archive and single file); methods 1-4 and 5-8 (a finite-context predictor over a 13- or 16-bit context, with the flag bitmap and/or the literals Huffman-coded), 9 Huffman, 11 SlowFastB (LZSS); 10, 13 and 20 declined per entry✧✧ | 2 fixtures, 5 forks, adjudicated by the archives' OWN self-extractors on an emulated Mac, + 11 single-file specimens written by Alysis's own control panel (methods 1 and 6) and graded against their inputs | 72–115 KB✧✧ | full |
 | StuffIt SpaceSaver (`SPSV`) | extract | 0 stored, 4 "Alg 4" — an LZSS whose window starts loaded with a preset dictionary that ships inside SpaceSaver; 1, 2 and 3 declined per entry✦✦ | **none, and no specimen either**: nothing SpaceSaver wrote has ever been decoded here. Graded by a second implementation of the same reading (an encoder in `run_spacesaver.py`) and by unit tests✦✦ | 4 KB stored, 68 KB with a 64 KB window (measured on a Mac Plus) | full |
 | LZH/LHA (-lh?-, -lz?-) | detect only | — | 1 real `-lh5-` archive, named + refused; unit test over every method byte | — | — |
+| AppleLink package (.pkg) | detect only | — | no specimen anywhere: the probe is Aladdin's own recogniser, at 0 false positives across 928 fixtures (*AppleLink packages*, below) | — | — |
 | DiskCopy 4.2 (.image) | detect only | — | synthetic 800K GCR + real 800K image; 0 false positives in 807 fixtures (re-measured 2026-08-15) | — | — |
 
 ✦ **DiskDoubler, in scope since 2026-08-15** (M12), where every status file
@@ -616,6 +617,37 @@ SpaceSaver in its own System Folder — but a Mac with SpaceSaver installed
 expands them transparently and needs no unarchiver, and a Mac without it has
 no dictionary to find. The case that matters is a file that has travelled,
 which is the case the CLI's `--preset` serves.
+
+## AppleLink packages, and why they are named but not opened
+
+**Named since 2026-08-23.** Every status file here used to say `.pkg` had no
+reference implementation anywhere reachable and could not even be sniffed
+without inventing a magic number. The first half was withdrawn on 2026-08-22
+(BLOCKERS.md) — installing StuffIt Deluxe 3.5.1 to chase SpaceSaver put
+`Extensions:Aladdin:Translators:PKG Expand Translator` on the disk — and this
+is the second half.
+
+**A package is TEXT.** The translator's recogniser (`Othe` 0 @0x2952) pulls
+whitespace-delimited tokens out of the file — @0xf18, which skips space, tab
+and CR, honours double quotes and treats backslash as an escape inside them —
+and accepts the file when the first token is `Decode` and the third is `to` or
+`into`, compared with `_CmpString` and so case-insensitive. `STR# 129` is the
+rest of the vocabulary: `Decode`, `to`, `into`, `convert`, `noConvert`,
+` Folder`, `.pkg`, and the errors *"Destination not found: "* and *"No items
+matching: "*.
+
+`unclassic sniff` implements that test and nothing more, so it is exactly as
+strong as Aladdin's: a text file that happens to begin *"Decode this to that"*
+is a package as far as either program can tell. Measured against the corpus —
+**928 fixtures, 0 false positives**.
+
+**Detect only, and the reason is a specimen.** What a `Decode` line refers to
+has not been read out of the expander, and no `.pkg` file has ever reached
+this project, so there is nothing to grade a reading against. `tools/vmac/
+spacesaver.py --pkg` re-derives everything above out of the translator on the
+installed image, with four witnesses that fail if a different build is ever
+put in front of it.
+
 
 ## Envelope auto-unwrap
 
@@ -1446,7 +1478,7 @@ with this archive."*
 | Compact Pro comments | written out beside the extracted items | read and CRC'd, never surfaced |
 | `.arc` (ARC / ArcMac) | with the add-on | **yes since 2026-08-15**, methods 1-9; ArcMac's two-fork payload since 2026-08-16 (★★★ above) |
 | uuencode (`.uu`) | with the add-on | **yes since 2026-08-15**, plain and UUTool's two-fork shape |
-| AppleLink `.pkg` | with the add-on | no, and not sniffed either — but no longer for want of a reference: StuffIt Deluxe 3.5.1 ships a `PKG Expand Translator` with 20 KB of 68k in it (BLOCKERS.md, 2026-08-22). What is missing is a specimen. OPEN_ITEMS.md records both |
+| AppleLink `.pkg` | with the add-on | **named since 2026-08-23**, not expanded: the probe is Aladdin's own recogniser, read out of the `PKG Expand Translator` that StuffIt Deluxe 3.5.1 ships (*AppleLink packages*, above). What is missing is a specimen |
 | StuffIt SpaceSaver | with the add-on | **yes since 2026-08-22 on Linux**, methods 0 and 4 (what a 68000 writes), given SpaceSaver's own dictionary; 1, 2 and 3 declined per entry. The Macintosh application names one and does not expand it (*StuffIt SpaceSaver*, above) |
 | Chained expansion (`.sit.hqx`) | yes, and can be turned off | yes, `-nr` turns it off |
 | System 7 conveniences | drag-and-drop of files, folders and whole disks; watch folders; background expansion; Apple events | none; Standard File, one archive at a time |

@@ -27,8 +27,9 @@ like .sit.hqx or .tar.Z are unwrapped automatically, by looking inside them
 rather than trusting the name, and a .hqx holding several files -- one
 newsgroup posting, several attachments -- gives you all of them. Resource
 forks, type and creator codes and dates all survive, so an extracted
-application simply runs. StuffIt X, LZH and Disk Copy 4.2 are recognised and
-named, not extracted; encrypted archives are out of scope.
+application simply runs. StuffIt X, LZH, Disk Copy 4.2 and AppleLink
+packages are recognised and named, not extracted; encrypted archives are
+out of scope.
 
 A StuffIt SpaceSaver file is recognised and its contents named, but this
 application does not expand one. SpaceSaver compresses starting from a

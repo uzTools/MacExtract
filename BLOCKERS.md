@@ -135,6 +135,7 @@ line is what makes the next one worth re-testing.
 | SpaceSaver's trigger is known: rename a file to end in `small` and it compresses | four runs that booted AND flushed do it correctly and nothing compresses; the OTHER rename rule on the same page fires on the same event, turning `Forked` into a StuffIt archive | 2026-08-22 |
 | SpaceSaver 3.5.1 is installed and running | its control panel runs; its EXTENSION shows no sign of it. With `~Magic Menu™` deleted the menu bar carried no icon menu at all, so the menu `STR# 1024` describes was never installed | 2026-08-22 |
 | AppleLink `.pkg` has no reference implementation anywhere reachable | the SpaceSaver image has had one all along: `Extensions:Aladdin:Translators:PKG Expand Translator`, whose `Name` resource is `AppleLinkPKG` and whose `Othe` resource is 20 KB of 68k with Aladdin's usual module preamble | 2026-08-22 |
+| AppleLink `.pkg` cannot be sniffed without inventing a magic number | true of magic numbers, false of sniffing: Aladdin's own recogniser reads three whitespace-delimited TOKENS, and `unclassic sniff` now does the same at 0 false positives across 928 fixtures | 2026-08-23 |
 
 **DiskDoubler methods 1–5 and 7 "cannot be graded".** Declined per entry
 since M12 on the grounds that no corpus fixture uses one and nothing reachable
@@ -325,6 +326,21 @@ makes it one.
 COUNT, and never initialises the bit pointer it then reads through. The
 grading uses `unar` and the fork's own checksum instead. An `#ifdef UNTESTED`
 is a claim about the code, and this one is accurate.
+
+**"It cannot even be sniffed without inventing a magic number, so a user gets
+*unknown* rather than a name."** Written on 2026-08-15 beside the search that
+found no published layout, and it survived the withdrawal above by one day:
+the reference had been found, and the sentence about sniffing was left
+standing on its own. It rests on an assumption nobody stated — that
+recognising a format means matching bytes at a fixed offset. AppleLink's does
+not. `PKG Expand Translator`'s recogniser tokenizes the file as text and
+checks three words, so the test was there to be copied rather than invented,
+and copying it is what rule #1 asks for.
+
+**Cost: a day, and it would have been the life of the project.** The smell is
+the one this file calls *a limitation stated about the environment that is
+true only of one tool* — here, true only of one TECHNIQUE. Read every "cannot
+be done" for the assumption it is really about.
 
 **"AppleLink `.pkg` has no reference implementation and no published layout
 anywhere reachable."** Searched on 2026-08-15, written up carefully, and true

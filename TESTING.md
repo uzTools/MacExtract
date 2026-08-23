@@ -723,6 +723,30 @@ else is compiled and never run (OPEN_ITEMS.md, *Untested code*). The unit
 test carries what no fixture can: a two-fork file, so that fork order is asserted, and an
 undecodable method BETWEEN two decodable entries.
 
+## AppleLink packages (unit tests + a corpus sweep)
+
+Added 2026-08-23. `.pkg` is detect-only, so what there is to test is the
+probe, and it is tested two ways.
+
+**Eight unit checks** assert the shape of Aladdin's own recogniser rather than
+the format: the two accepted third tokens, case-insensitivity, leading
+whitespace, and four near-misses — a prefix that is not a token (`Decoder`), a
+missing third token, a wrong one, and prose. They fail against a probe that
+stops checking the third token.
+
+**The corpus sweep is the part that matters.** A text-shaped probe can only be
+trusted by how often it is wrong about files that are not packages, so
+`unclassic sniff` was run over all **928 fixtures**: 0 said AppleLink. That is
+the DiskCopy standard — its probe was graded the same way — and it is the only
+evidence available while no `.pkg` file exists here.
+
+**What this cannot see.** Whether a real package would be recognised. The
+probe is a transcription of the reference's test, and the reference is the
+only thing that says what a package looks like; nothing here closes that loop
+(OPEN_ITEMS.md). `tools/vmac/spacesaver.py --pkg` re-derives the test from the
+translator and prints four witnesses, which is a check on the transcription,
+not on the format.
+
 ## StuffIt SpaceSaver (`tools/run_spacesaver.py`, in `ci.sh`)
 
 Added 2026-08-22. SpaceSaver has no oracle but itself — `unar` and
