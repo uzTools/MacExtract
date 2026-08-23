@@ -136,6 +136,13 @@ def check(rundir):
     # '/' as ':', and the Mac shell caps each component at 31 characters
     # (ComponentToStr63).
     expected = {}
+    # The two hosts save an archive COMMENT under different names — the
+    # CLI derives one from the archive's filename, the Mac shell writes
+    # "Comments" into the destination folder — so the mapping says so
+    # here rather than the comparison reporting one MISSING and one
+    # UNEXPECTED. The bytes are identical on both sides and are compared
+    # like any other file's.
+    comment_file = os.path.basename(asmac) + ".comment.txt"
     for root, _d, files in os.walk(ref):
         # The reference is extracted with `--forks hidden`, so a sidecar is
         # exactly a "._" file and an archive entry never is. The Mac has no
@@ -146,6 +153,9 @@ def check(rundir):
                 continue
             rel = os.path.relpath(os.path.join(root, f), ref)
             comps = [unicodedata.normalize("NFC", c) for c in rel.split(os.sep)]
+            if comps == [comment_file]:
+                expected[("Comments",)] = comps
+                continue
             expected[tuple(c.replace(":", "/")[:31] for c in comps)] = comps
 
     problems = []

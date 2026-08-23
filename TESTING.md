@@ -97,6 +97,23 @@ names for that entry (`XADCompressionName`; two forks can differ, so it
 is a list). Nothing in the engine reads it; it exists so a harness can
 ask what an entry is compressed with without asking the engine.
 
+Plus, for an archive that carries one, `comment`: the archive's own
+comment as the oracle reports it (`lsarProperties.XADComment`). The key
+is absent when there is none, so a manifest without it says "no
+comment" and never "not looked for". `tools/run_diff.py` requires the
+comment file the CLI writes (`<fixture>.comment.txt`) to hold exactly
+those bytes in MacRoman and `unclassic l` to print the line; an archive
+with no `comment` key may write no such file, which the suite's
+"unexpected output" check already enforces — and that half is not
+decoration: it is what found five of the seven. **Seven fixtures in the
+corpus carry a comment**, measured by sweeping all 928 with `lsar`: six
+Compact Pro archives (`derived-DigSim_RAM_Circuit.cpt`, *"Hi there."*,
+written in 1990, and the five Compact Pro Package installers), and one
+zip whose 495-byte end-of-central-directory comment this engine does
+not surface — `run_diff.py` names that format in `COMMENT_NOT_SAVED`
+rather than inferring the excuse from our own output (OPEN_ITEMS.md,
+part 2, section 4).
+
 ### When the oracle fails on an entry
 
 `unar` sometimes fails on individual entries while walking the rest of

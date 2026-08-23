@@ -292,9 +292,13 @@ def main():
                             os.path.expanduser("~/.cache/unclassic/vmac")),
                             "specimens", "cptmade")
         meta = os.path.join(made, "made.json")
-        if os.path.exists(meta):
-            import json
-            m = json.load(open(meta))
+        # `--plain` writes the same made.json with a null password (the
+        # comment specimen is one), and an unencrypted archive proves
+        # nothing about a cipher — so the password, not the file, is
+        # what says there is something here to grade.
+        import json
+        m = json.load(open(meta)) if os.path.exists(meta) else {}
+        if m.get("password"):
             want = {}
             for sub in m["subjects"]:
                 want[sub["name"]] = bytes.fromhex(sub["data"])
@@ -308,7 +312,7 @@ def main():
                           ["-p", "nope"])
             ran += 2
         else:
-            print("run_crypt: no Compact Pro specimen in %s — "
+            print("run_crypt: no ENCRYPTED Compact Pro specimen in %s — "
                   "tools/vmac/cptcrypt.py --make --probe writes one" % made)
 
         # ---- WinZip AES, from 7-Zip -----------------------------------

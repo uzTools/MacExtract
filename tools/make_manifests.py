@@ -144,7 +144,8 @@ def parse_oracle_failures(text):
 
 
 def lsar_metadata(fixture):
-    """Return (formatname, {name: (type, creator)}, {name: [method, ...]}).
+    """Return (formatname, {name: (type, creator)}, {name: [method, ...]},
+    archive comment or None).
 
     The method names are the ORACLE's own (`XADCompressionName`), one set
     per entry name because a two-fork entry is two lsar records and the
@@ -161,8 +162,12 @@ def lsar_metadata(fixture):
         # (e.g. binary XADNextSolidEntry keys in PackIt archives).
         data = json.loads(out.stdout.decode("utf-8", "replace"), strict=False)
     except Exception:
-        return None, {}, {}
+        return None, {}, {}, None
     fmt = data.get("lsarFormatName")
+    # The archive's OWN comment, which belongs to no entry. XADMaster
+    # reports it as a parser property; it is the ground truth for what
+    # this engine now writes out beside the extracted items.
+    comment = data.get("lsarProperties", {}).get("XADComment")
     meta, methods = {}, {}
     for e in data.get("lsarContents", []):
         name = norm(e.get("XADFileName", ""))
@@ -172,7 +177,7 @@ def lsar_metadata(fixture):
         m = e.get("XADCompressionName")
         if m:
             methods.setdefault(name, set()).add(m)
-    return fmt, meta, {k: sorted(v) for k, v in methods.items()}
+    return fmt, meta, {k: sorted(v) for k, v in methods.items()}, comment
 
 
 # --- second oracle: macunpack ----------------------------------------
@@ -307,7 +312,7 @@ def adjudicate_with_macunpack(fixture_path, entries):
 
 def build_manifest(fixture_path, verbose=False):
     name = os.path.basename(fixture_path)
-    fmt, meta, methods = lsar_metadata(fixture_path)
+    fmt, meta, methods, comment = lsar_metadata(fixture_path)
     # The "._" sidecar namespace is disjoint from real archive names in
     # every fixture harvested so far, which is why forks are taken from
     # `-k hidden` — but an entry literally named "._X" would collide
@@ -472,7 +477,7 @@ def build_manifest(fixture_path, verbose=False):
     # file. Every consumer looks entries up by name; none depends on the
     # order they were walked in.
     entries.sort(key=lambda e: e["name"])
-    return {
+    man = {
         "fixture": name,
         "sha256": sha256_file(fixture_path),
         "size": os.path.getsize(fixture_path),
@@ -480,6 +485,11 @@ def build_manifest(fixture_path, verbose=False):
         "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
         "entries": entries,
     }
+    # Absent unless the archive carries one, so a manifest without the
+    # key means "no comment" and never "not looked for".
+    if comment:
+        man["comment"] = comment
+    return man
 
 
 def main():

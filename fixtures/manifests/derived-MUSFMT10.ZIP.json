@@ -1,4 +1,5 @@
 {
+ "comment": "THE COMPUTER MUSIC FORMATS COLLECTION\rversion 1.0 by Jamal Hannah, 5/2/94\r\rContains specifications (and effects!) for the following music file\rformats: MOD, MED, FastTracker, StarTracker, XTracker,\rScreamTracker 3, Farandole, MultiTracker, TakeTracker, Oktalyzer,\rPro-16, Studio Session, UltraTracker, GraveMod, ROL, 669 and General-Midi.\r\rIf you have more info, or corrections, please write:\r\rJamal Hannah\rP.O. Box 992\rCambridge, MA 02140-0009\r\rEmail: jamal@gnu.ai.mit.edu or jah@world.std.com\r",
  "entries": [
   {
    "data_sha256": "eeeefc228aaa989d4bf621311ef05f7782fba63d63df40cdc6d3a211162f14c3",

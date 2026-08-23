@@ -97,6 +97,10 @@ Using it: open an archive, then say which folder the files should go into.
 That second dialog opens in the archive's own folder, so pressing Return
 puts them next to it; click Drive to send them to another disk instead.
 
+If a Compact Pro archive carries a note -- the comment whoever made it
+typed in -- it is written into that folder as a text file called
+Comments, rather than thrown away with the wrapper.
+
 Archives split across floppies: a StuffIt segmented set is joined back
 together. Open the first part; the rest are found beside it, and if one is
 somewhere else you are asked for it. Putting the disk in is the whole answer

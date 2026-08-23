@@ -1224,6 +1224,20 @@ project written by the software that invented the format, and it is
 what turned the cipher from a reading into a measurement (FORMATS.md,
 *Compact Pro's cipher*).
 
+`--note TEXT` types a comment into **Archive > Note...**, which is what
+Compact Pro calls the archive comment, before the archive is saved:
+
+    tools/vmac/cptcrypt.py --register "Registered:35427117" --make \
+        --plain --note 'First line.\nSecond line.' --outdir ...
+
+`\n` is a line break in the note. Two things about that dialog, both
+measured 2026-08-23: **Return does not press OK** — the field is
+multi-line and a Return puts a CR in the text, so the first run typed
+its Save, its filename and its quit into a dialog still on screen and
+wrote no archive at all — and the OK button therefore has to be
+clicked. `--plain` writes the archive unencrypted, which is what a
+comment specimen wants: nothing is asked for a password.
+
 Four things it will teach you, and three of them cost a run:
 
 - **The +8 was invisible in the disassembly and obvious in the

@@ -11,6 +11,7 @@
  *   --raw-names    emit raw MacRoman bytes instead of UTF-8 names
  *   --forks <visible|hidden>  resource-fork sidecar naming
  *   --overwrite    write over existing output files (default: refuse)
+ *   --no-comment   do not save the archive's own comment
  *   --preset <f>   SpaceSaver's preset dictionary ('PrAm' -4048)
  *   -f <format>    force format (the name `sniff` prints)
  *
@@ -190,6 +191,9 @@ typedef struct {
     const char *unwrap_src;     /* envelope being unwrapped, or NULL   */
     int         mac_encoding;   /* names are MacRoman */
     int         verbose;
+    const char *archive;        /* the archive's own filename: the
+                                 * comment file is named after it       */
+    int         no_comment;     /* --no-comment: read it, drop it       */
     FILE       *data_f, *rsrc_f;
     char        cur_path[1024];
     UncEntryInfo cur;
@@ -449,6 +453,79 @@ static int sink_end(void *ctx, int status)
     return 0;
 }
 
+/* An archive comment belongs to the archive, not to any entry, so it
+ * cannot be an entry: it is written beside the extracted items as
+ * "<archive>.comment.txt" — a name derived from the archive's, so that
+ * it cannot collide with one of the archive's own. Listing or testing
+ * prints it instead, since neither writes files.
+ *
+ * PRINTED text is decoded from MacRoman like a filename (--raw-names
+ * keeps the raw bytes); the SAVED file is the archive's bytes exactly,
+ * MacRoman and CR line endings and all. That split is deliberate:
+ * printing is display, where the terminal's encoding wins, but the file
+ * is the comment itself, and the Mac shell writes the same bytes into
+ * its own "Comments" document — so the two hosts save one thing, and a
+ * harness can compare them directly. */
+static int sink_comment(void *ctx, const uint8_t *buf, uint16_t len)
+{
+    DiskSink *s = (DiskSink *)ctx;
+    char text[UNC_COMMENT_MAX * 3 + 1];
+    char path[1200];
+    const char *base;
+    size_t o = 0;
+    uint16_t i;
+    struct stat st;
+    FILE *f;
+
+    if (s->no_comment) return 0;
+
+    if (s->list_only || s->test_only) {
+        for (i = 0; i < len; i++) {
+            uint8_t b = buf[i];
+            /* A Mac ends a line with CR, and a CR sent to a terminal
+             * returns the carriage and overwrites what was printed —
+             * measured on a two-line note Compact Pro 1.51 wrote. The
+             * SAVED file keeps the CR; only the printed copy changes. */
+            if (b == '\r') {
+                if (i + 1 < len && buf[i + 1] == '\n') i++;
+                text[o++] = '\n';
+            }
+            else if (b < 0x80 || s->raw_names || !s->mac_encoding)
+                text[o++] = (char)b;
+            else o += (size_t)utf8_put(text + o, macroman_high[b - 0x80]);
+        }
+        text[o] = 0;
+        printf("comment: %s\n", text);
+        return 0;
+    }
+
+    base = s->archive ? strrchr(s->archive, '/') : NULL;
+    base = base ? base + 1 : (s->archive ? s->archive : "archive");
+    if ((size_t)snprintf(path, sizeof path, "%s/%s.comment.txt",
+                         s->outdir, base) >= sizeof path) {
+        fprintf(stderr, "unclassic: comment: output path too long\n");
+        return 0;
+    }
+    if (!s->overwrite && stat(path, &st) == 0) {
+        fprintf(stderr, "unclassic: %s: output path already exists; "
+                "the archive comment was not written (use --overwrite)\n",
+                path);
+        return 0;
+    }
+    f = fopen(path, "wb");
+    if (!f || fwrite(buf, 1, len, f) != len) {
+        fprintf(stderr, "unclassic: %s: %s\n", path, strerror(errno));
+        if (f) fclose(f);
+        return 0;    /* a comment is not worth failing the archive over */
+    }
+    if (fclose(f) != 0) {
+        fprintf(stderr, "unclassic: %s: %s\n", path, strerror(errno));
+        return 0;
+    }
+    if (s->verbose) printf("  %s (archive comment)\n", path);
+    return 0;
+}
+
 /* ------------------------------------------------------------------ */
 /* Progress                                                           */
 /* ------------------------------------------------------------------ */
@@ -571,6 +648,7 @@ static int env_run(const char *path, EnvSink *es)
     sk.begin_entry = env_begin;
     sk.write = env_write;
     sk.end_entry = env_end;
+    sk.comment = NULL;    /* an envelope layer carries none */
     prog.ctx = NULL;
     prog.tick = prog_tick;
 
@@ -1272,6 +1350,14 @@ static void usage(void)
         "                 line from stdin. With --ask and no -p, each\n"
         "                 archive that needs one is asked for, and asked\n"
         "                 again when the password is refused\n"
+        "  --no-comment   do not save the archive's own comment. By\n"
+        "                 default a Compact Pro archive's comment is\n"
+        "                 written beside the extracted items as\n"
+        "                 <archive>.comment.txt, and printed by l and t\n"
+        "  --no-comment   do not save the archive's own comment. By\n"
+        "                 default a Compact Pro archive's comment is\n"
+        "                 written beside the extracted items as\n"
+        "                 <archive>.comment.txt, and printed by l and t\n"
         "  --stats        print allocator statistics\n"
         "  -f <format>    force format\n"
         "  -v             verbose\n"
@@ -1282,6 +1368,7 @@ int main(int argc, char **argv)
 {
     const char *cmd, *file = NULL, *outdir = ".", *force = NULL;
     int raw_names = 0, verbose = 0, stats = 0, hidden_forks = 0, overwrite = 0;
+    int no_comment = 0;
     uint32_t budget = 0;
     int i;
 
@@ -1340,6 +1427,7 @@ int main(int argc, char **argv)
         else if (strcmp(argv[i], "--preset") == 0 && i + 1 < argc)
             presetfile = argv[++i];
         else if (strcmp(argv[i], "-p") == 0 && i + 1 < argc) password = argv[++i];
+        else if (strcmp(argv[i], "--no-comment") == 0) no_comment = 1;
         else if (strcmp(argv[i], "--stats") == 0) stats = 1;
         else if (strcmp(argv[i], "-f") == 0 && i + 1 < argc) force = argv[++i];
         else if (strcmp(argv[i], "-v") == 0) verbose = 1;
@@ -1376,6 +1464,8 @@ nextlayer:
 
     memset(&sink, 0, sizeof sink);
     sink.outdir = outdir;
+    sink.archive = file;
+    sink.no_comment = no_comment;
     sink.raw_names = raw_names;
     sink.hidden_forks = hidden_forks;
     sink.overwrite = overwrite;
@@ -1386,6 +1476,7 @@ nextlayer:
     sk.begin_entry = sink_begin;
     sk.write = sink_write;
     sk.end_entry = sink_end;
+    sk.comment = sink_comment;
 
     prog.ctx = NULL;
     prog.tick = prog_tick;

@@ -330,6 +330,11 @@ int main(int argc, char **argv)
     sink.vRefNum = 1; sink.rootDirID = 0;
     sk.ctx = &sink; sk.begin_entry = sink_begin;
     sk.write = sink_write; sk.end_entry = sink_end;
+    /* The Mac shell's own comment writer, mock Toolbox and all: an
+     * archive comment lands as a "Comments" file in the destination
+     * folder, and tools/check_mac_sink.py compares it with what the
+     * oracle read out of the same archive. */
+    sk.comment = sink_comment;
 
     memset(&opt, 0, sizeof opt);
 

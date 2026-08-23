@@ -605,6 +605,25 @@ int unc_cpt_extract(UncCtx *c)
 
 
 
+    /* The archive comment, which belongs to no entry and so has no
+     * place in the stream of forks: it goes to the sink's own comment
+     * callback, once, before the first entry. A host that has none set
+     * gets what every host got before — the bytes are part of the index
+     * the probe already CRC'd, and nothing more happens to them.
+     * iobuf is the scratch: 4 KB against a length that is one byte. */
+    if (commentlen && c->sink->comment) {
+        if (cpt_index_read(c, &ix, offset + 7, iobuf,
+                           (int32_t)commentlen) != UNC_OK) {
+            err = UNC_ERR_TRUNCATED;
+            goto out;
+        }
+        if (c->sink->comment(c->sink->ctx, iobuf,
+                             (uint16_t)commentlen) < 0) {
+            err = UNC_ERR_SINK;
+            goto out;
+        }
+    }
+
     remaining[0] = nentries;
     pathlen[0] = 0;
 

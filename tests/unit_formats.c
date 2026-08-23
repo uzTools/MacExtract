@@ -19,6 +19,11 @@ typedef struct {
     uint32_t dlen[8], rlen[8];
     int status[8];
     int count;
+    /* The archive's own comment, and how many times it was delivered:
+     * an archive without one must not call back at all. */
+    uint8_t comment[UNC_COMMENT_MAX];
+    uint16_t comment_len;
+    int comments;
 } CapSink;
 
 static int cap_begin(void *ctx, const UncEntryInfo *info)
@@ -49,6 +54,19 @@ static int cap_end(void *ctx, int status)
     return 0;
 }
 
+static int cap_comment(void *ctx, const uint8_t *buf, uint16_t len)
+{
+    CapSink *s = (CapSink *)ctx;
+    if (len > UNC_COMMENT_MAX) return -1;
+    memcpy(s->comment, buf, len);
+    s->comment_len = len;
+    s->comments++;
+    /* The comment must arrive BEFORE the first entry, and this is where
+     * that is checked: by the time any entry has been seen, it is late. */
+    if (s->count) return -1;
+    return 0;
+}
+
 static void cap_make(UncSink *sk, CapSink *s)
 {
     memset(s, 0, sizeof *s);
@@ -56,6 +74,7 @@ static void cap_make(UncSink *sk, CapSink *s)
     sk->begin_entry = cap_begin;
     sk->write = cap_write;
     sk->end_entry = cap_end;
+    sk->comment = cap_comment;
 }
 
 /* ------------------------------------------------------------------ */
@@ -430,9 +449,11 @@ static void test_canon(void)
     CHECK(unc_canon_build(&cn, lens, 3) == UNC_ERR_CORRUPT);
 }
 
-/* Build a one-entry RLE-only Compact Pro archive around `comp`. */
+/* Build a one-entry RLE-only Compact Pro archive around `comp`, with
+ * the archive comment `cmt` (NULL for none — what most archives have). */
 static uint32_t cpt_synth(uint8_t *out, const uint8_t *comp, uint32_t clen,
-                          const uint8_t *plain, uint32_t plen)
+                          const uint8_t *plain, uint32_t plen,
+                          const uint8_t *cmt, uint32_t cmtlen)
 {
     uint32_t off = 8 + clen, crc;
     uint8_t *ix = out + off;
@@ -442,10 +463,11 @@ static uint32_t cpt_synth(uint8_t *out, const uint8_t *comp, uint32_t clen,
     put32(out + 4, off);
     memcpy(out + 8, comp, clen);
 
-    /* index: u32 crc, u16 nentries, u8 commentlen, one file entry */
+    /* index: u32 crc, u16 nentries, u8 commentlen, comment, one file entry */
     ix[4] = 0; ix[5] = 1;          /* nentries = 1 */
-    ix[6] = 0;                     /* no comment */
-    e = ix + 7;
+    ix[6] = (uint8_t)cmtlen;
+    if (cmtlen) memcpy(ix + 7, cmt, cmtlen);
+    e = ix + 7 + cmtlen;
     e[0] = 4; memcpy(e + 1, "test", 4);
     memset(e + 5, 0, 45);
     e[5] = 1;                      /* volume */
@@ -456,9 +478,9 @@ static uint32_t cpt_synth(uint8_t *out, const uint8_t *comp, uint32_t clen,
     /* flags 0 (@32), rsrclen 0 (@34), datalen (@38), rcomp 0, dcomp */
     put32(e + 38, plen);
     put32(e + 46, clen);
-    crc = unc_crc32(0xFFFFFFFFu, ix + 4, 3 + 50);
+    crc = unc_crc32(0xFFFFFFFFu, ix + 4, (int32_t)(3 + cmtlen + 50));
     put32(ix, crc);                /* index CRC */
-    return off + 7 + 50;
+    return off + 7 + cmtlen + 50;
 }
 
 static void test_cpt(void)
@@ -470,7 +492,8 @@ static void test_cpt(void)
     static const uint8_t plain[] = { 0x41, 0x42, 0x42, 0x42, 0x42, 0x42,
                                      0x43, 0x81, 0x82, 0x81, 0x44 };
     uint8_t arc[256];
-    uint32_t len = cpt_synth(arc, comp, sizeof comp, plain, sizeof plain);
+    uint32_t len = cpt_synth(arc, comp, sizeof comp, plain, sizeof plain,
+                             NULL, 0);
     MemIO m;
     UncIO io;
     UncAlloc al;
@@ -514,6 +537,71 @@ static void test_cpt(void)
     cap_make(&sk, &cap);
     CHECK(unc_extract_as(UNC_FORMAT_COMPACTPRO, &io, &sk, &al, NULL, NULL)
           != UNC_OK || cap.count == 0 || cap.status[0] != UNC_OK);
+
+    /* This archive has no comment, so the sink must not be told about
+     * one. An empty comment and no comment are the same thing here. */
+    CHECK(cap.comments == 0);
+}
+
+/* The archive's own comment: Compact Pro is the only format that has
+ * one, and until 2026-08-23 the engine read it, folded it into the
+ * index CRC and dropped it. */
+static void test_cpt_comment(void)
+{
+    static const uint8_t comp[] = { 0x41 };
+    static const uint8_t plain[] = { 0x41 };
+    /* A comment as a Mac writes one: two lines separated by CR, and an
+     * 8-bit MacRoman byte (0xA5, bullet) that no ASCII reading gets
+     * right. Neither is rewritten on the way out. */
+    static const uint8_t cmt[] = { 'R', 'e', 'a', 'd', ' ', 0xA5, '\r',
+                                   'm', 'e' };
+    uint8_t arc[512], big[512], full[UNC_COMMENT_MAX];
+    uint32_t len, i;
+    MemIO m;
+    UncIO io;
+    UncAlloc al;
+    UncSink sk;
+    CapSink cap;
+
+    test_make_alloc(&al);
+
+    len = cpt_synth(arc, comp, sizeof comp, plain, sizeof plain,
+                    cmt, sizeof cmt);
+    test_make_memio(&io, &m, arc, len);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_COMPACTPRO);
+    cap_make(&sk, &cap);
+    /* cap_comment refuses a comment that arrives after an entry, which
+     * would fail this call: reaching UNC_OK is the ordering check. */
+    CHECK(unc_extract_as(UNC_FORMAT_COMPACTPRO, &io, &sk, &al, NULL, NULL)
+          == UNC_OK);
+    CHECK(cap.comments == 1);
+    CHECK(cap.comment_len == sizeof cmt);
+    CHECK(memcmp(cap.comment, cmt, sizeof cmt) == 0);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+
+    /* The longest one the format can express: the length is a byte. */
+    for (i = 0; i < sizeof full; i++) full[i] = (uint8_t)('a' + i % 26);
+    len = cpt_synth(big, comp, sizeof comp, plain, sizeof plain,
+                    full, sizeof full);
+    test_make_memio(&io, &m, big, len);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_COMPACTPRO, &io, &sk, &al, NULL, NULL)
+          == UNC_OK);
+    CHECK(cap.comments == 1 && cap.comment_len == UNC_COMMENT_MAX);
+    CHECK(memcmp(cap.comment, full, sizeof full) == 0);
+
+    /* A sink with no comment callback is not a broken sink: it is every
+     * host that has no use for one, and the archive must extract as it
+     * always did. */
+    test_make_memio(&io, &m, arc, (uint32_t)(len = cpt_synth(
+        arc, comp, sizeof comp, plain, sizeof plain, cmt, sizeof cmt)));
+    cap_make(&sk, &cap);
+    sk.comment = NULL;
+    CHECK(unc_extract_as(UNC_FORMAT_COMPACTPRO, &io, &sk, &al, NULL, NULL)
+          == UNC_OK);
+    CHECK(cap.comments == 0);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+    CHECK(cap.dlen[0] == sizeof plain);
 }
 
 /* ------------------------------------------------------------------ */
@@ -3598,6 +3686,7 @@ void run_format_tests(void)
     test_packit();
     test_canon();
     test_cpt();
+    test_cpt_comment();
     test_sit();
     test_gzip();
     test_tar();

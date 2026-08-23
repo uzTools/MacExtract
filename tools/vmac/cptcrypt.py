@@ -92,6 +92,19 @@ ADD_ROW_H = 15
 ADD_PROBE_ROWS = (191, 206, 221)
 MADE_NAME = "Made.cpt"
 
+# Archive > Note... — what Compact Pro calls the archive comment. It is
+# the last item of that menu and the only step here without a keyboard
+# equivalent, so it needs a coordinate; measured off 6-menu-Archive.png,
+# which `--explore` photographs.
+NOTE_Y = 156
+# The Note dialog's OK button, measured off n2-note-dialog.png. Return
+# does NOT press it: the note field is multi-line and Return puts a CR
+# in the text (measured 2026-08-23 — the first run typed its Save, its
+# filename and its quit into a dialog that was still open, and wrote no
+# archive at all). So `--note` takes `\n` for a line break and OK is
+# clicked.
+NOTE_OK = (451, 243)
+
 
 def cli():
     exe = os.path.join(REPO, "build", "dev", "unclassic")
@@ -320,7 +333,8 @@ def save_specimen(workdir, args):
                   "rsrc": MAKE_RSRC.hex()}])
     meta = {"made_by": "Compact Pro 1.51 on System 6.0.8 under Mini vMac",
             "registered_as": args.register,
-            "password": args.password,
+            "password": None if args.plain else args.password,
+            "note": args.note,
             "probe": bool(args.probe),
             "bytes": os.path.getsize(dest),
             "subjects": subjects}
@@ -396,6 +410,32 @@ def macbinary_forks(path):
     return b[doff:doff + dlen], b[roff:roff + rlen]
 
 
+def set_note(mac, shot, args):
+    """Archive > Note... — type the archive's comment into the
+    application that writes them.
+
+    The comment is a property of the ARCHIVE, not of any file in it, and
+    this is where Compact Pro puts it. Whatever is typed here comes back
+    out of the index as `commentlen` bytes (src/fmt_cpt.c), so a run of
+    this is the only evidence available that the two are the same thing.
+    """
+    pull_down(mac, MENUS["Archive"])
+    shot(mac, "n1-archive-menu.png")
+    release(mac, MENUS["Archive"] + 25, NOTE_Y)
+    time.sleep(2.5)
+    shot(mac, "n2-note-dialog.png")
+    for i, line in enumerate(args.note.split("\\n")):
+        if i:
+            mac.key("Return")          # a line break IN the note
+        mac._xdo("type", "--delay", "120", line)
+        time.sleep(0.8)
+    time.sleep(1.0)
+    shot(mac, "n3-note-typed.png")
+    mac.click(*NOTE_OK)
+    time.sleep(2.5)
+    shot(mac, "n4-note-set.png")
+
+
 def phase_make(mac, shot, args):
     """Have Compact Pro WRITE an encrypted archive.
 
@@ -416,7 +456,8 @@ def phase_make(mac, shot, args):
     mac.command_key("g")
     time.sleep(3.0)
     shot(mac, "m1-add-dialog.png")
-    mac.click(*ADD_ENCRYPT)
+    if not args.plain:
+        mac.click(*ADD_ENCRYPT)
     time.sleep(1.0)
     shot(mac, "m2-encrypt-checked.png")
     if args.probe:
@@ -439,6 +480,9 @@ def phase_make(mac, shot, args):
     time.sleep(2.5)
     shot(mac, "m4-done.png")
 
+    if args.note:
+        set_note(mac, shot, args)
+
     mac.command_key("s")
     time.sleep(3.0)
     shot(mac, "m5-save-dialog.png")
@@ -448,13 +492,17 @@ def phase_make(mac, shot, args):
     mac.key("Return")
     time.sleep(6.0)
     shot(mac, "m7-password-asked.png")
-    for i in range(2):                    # type it, then verify it
-        for ch in args.password:
-            mac.key(ch)
-        time.sleep(1.0)
-        shot(mac, "m8-password-%d.png" % (i + 1))
-        mac.key("Return")
-        time.sleep(6.0)
+    # An unencrypted archive is never asked for a password: with --plain
+    # the Save has already written it, and typing into the window that
+    # is actually there would edit the archive rather than confirm it.
+    if not args.plain:
+        for i in range(2):                # type it, then verify it
+            for ch in args.password:
+                mac.key(ch)
+            time.sleep(1.0)
+            shot(mac, "m8-password-%d.png" % (i + 1))
+            mac.key("Return")
+            time.sleep(6.0)
     time.sleep(10.0)
     shot(mac, "m9-written.png")
 
@@ -497,6 +545,12 @@ def main():
                     help="where the Add dialog's Encrypt checkbox is, "
                          "measured off m1-add-dialog.png from a run "
                          "without this")
+    ap.add_argument("--note", metavar="TEXT",
+                    help="with --make: type TEXT into Archive > Note..., "
+                         "which is Compact Pro's name for the archive "
+                         "comment, before the archive is saved. A literal "
+                         "\\n is a line break in the note, which the Mac "
+                         "stores as CR")
     ap.add_argument("--keep", action="store_true")
     args = ap.parse_args()
     if args.fixture:

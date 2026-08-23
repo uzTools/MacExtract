@@ -48,6 +48,21 @@ def main():
             p = normpath(os.path.normpath(os.path.join(rel, leaf)))
             produced[p] = os.path.join(root, f)
     bad = 0
+    # The archive's own comment: the Mac shell writes it beside the
+    # extracted items as a "Comments" document, so the oracle's
+    # XADComment is compared against that file's bytes — which are
+    # MacRoman, because that is what a Mac writes.
+    want = man.get("comment")
+    if want is not None:
+        p = produced.pop("Comments", None)
+        if not p:
+            print("  MISSING archive comment file 'Comments'")
+            bad += 1
+        else:
+            got = open(p, "rb").read()
+            if got != want.encode("mac_roman"):
+                print(f"  MISMATCH archive comment {got!r}")
+                bad += 1
     for e in man["entries"]:
         if e.get("is_dir"):
             continue

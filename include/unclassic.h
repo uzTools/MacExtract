@@ -186,6 +186,8 @@ typedef struct UncEntryInfo {
 /* Sink — receives decoded output                                     */
 /* ------------------------------------------------------------------ */
 
+#define UNC_COMMENT_MAX 255   /* Compact Pro writes the length in a byte */
+
 typedef struct UncSink {
     void *ctx;
     /* Called once per entry before any writes. Return 0 to accept,
@@ -197,6 +199,17 @@ typedef struct UncSink {
     /* Entry finished; status is UNC_OK or a per-entry error (e.g.
      * UNC_ERR_CRC). Return 0 to continue with next entry, <0 to abort. */
     int (*end_entry)(void *ctx, int status);
+    /* The archive's OWN comment — text that belongs to the archive
+     * rather than to any entry. Called once, before the first
+     * begin_entry, and only when the archive carries a non-empty one.
+     * `buf` holds `len` raw bytes (MacRoman for the Mac formats), not
+     * NUL-terminated, 1..UNC_COMMENT_MAX; it is the engine's and is
+     * not valid after the call returns. Return 0 to continue, <0 to
+     * abort the archive (UNC_ERR_SINK).
+     * MAY BE NULL: the comment is then read and checksummed as part of
+     * the index and nothing else happens, which is what every host did
+     * before 2026-08-23. Compact Pro is the only v1 format with one. */
+    int (*comment)(void *ctx, const uint8_t *buf, uint16_t len);
 } UncSink;
 
 /* ------------------------------------------------------------------ */

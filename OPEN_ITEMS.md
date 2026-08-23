@@ -45,7 +45,6 @@ grown before, on request.
 | Disk images (Disk Copy 4.2) | **detect-only**, with a real probe | out by the brief — the probe matches a synthetic 800K GCR image and a real one, 0 false positives |
 | LZH / LHA extraction | **detect-only**, tested rather than asserted (DECISIONS.md 2026-08-14) | the corpus contains **no `.lzh` at all** — Macintosh software was not distributed that way — and Compact Pro's LZH is a different algorithm from LHA's, so it is ~550 new lines for nothing the corpus can grade |
 | Zip64 spanned sets | `unc_zipseg_describe` answers `UNC_ERR_UNSUPPORTED`, cleanly | an EOCD with disk number `0xFFFF` defers to a locator nothing here parses. Zip64 postdates every machine this project targets by a decade and a set that needs it is 2 GB+; refusing it cleanly is the right answer, not a missing feature (2026-08-14) |
-| Compact Pro archive comments | read, CRC'd, discarded | Expander 4.0.2 writes them out beside the extracted items; a comment is not a file and the sink writes files. Recorded so the difference is a decision rather than an oversight |
 
 Everything detect-only is **named** by `unc_sniff`, so a UI can tell the user
 what the file is and extraction returns cleanly unsupported.
@@ -202,6 +201,15 @@ Unlike section 3, none of this is impossible here: a download would do it.
 
 ## 4. Known unknowns, not being chased
 
+- **A zip's end-of-central-directory comment is read past and dropped.**
+  `UncSink` has carried a comment callback since 2026-08-23 and Compact
+  Pro's fills it; `fmt_exo.c` still skips zip's, which one corpus
+  fixture has 495 bytes of (`derived-MUSFMT10.ZIP`). Not chased because
+  a zip comment is usually the writer's boilerplate rather than
+  somebody's note, and `unar` does not write one out either. **What
+  would close it:** the EOCD comment length is already parsed — one
+  call to the callback, and the manifest's `comment` key stops being
+  excused for `Zip` in `tools/run_diff.py`.
 - **Why the pointer does not work under QEMU on Mac OS 9.** Measured to
   0.0000 effect across five mouse primitives; the mechanism behind that has no
   reproduction and is labelled a guess. The keyboard route works, so this costs

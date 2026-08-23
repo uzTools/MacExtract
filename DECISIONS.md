@@ -107,6 +107,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-23 (decryption) — five schemes in, and the one with no second reader
 - 2026-08-23 (StuffIt's archive key) — the fold count, measured
 - 2026-08-23 (btoa's licence) — a reference that may not be transcribed
+- 2026-08-23 (Compact Pro comments) — a comment is saved, and it is still not a file
 
 ---
 
@@ -5822,3 +5823,57 @@ program and not the wire format, and a Mac user with a `.ascii` file
 from a Unix host has the same problem as one with a `.uu` — which this
 already reads. Declining would have been a licence decision applied to
 the wrong object.
+
+## 2026-08-23 (Compact Pro comments) — a comment is saved, and it is still not a file
+
+Compact Pro's index opens with a comment — one length byte and up to
+255 MacRoman bytes, belonging to the archive rather than to any entry.
+Until now the engine read it, folded it into the index CRC and dropped
+it, and OPEN_ITEMS.md called that a decision: *"a comment is not a file
+and the sink writes files"*. The second half of that sentence was true;
+the conclusion did not follow. The sink writes files because nothing
+had ever asked it to carry anything else.
+
+**Where it comes out.** `UncSink` gains an optional `comment` callback,
+delivered once before the first `begin_entry`. Not an entry with a
+synthetic name: an entry has forks, a type and a creator, and inventing
+one would put a file in every listing, every entry count and every
+differential comparison — `unar` reports the comment as an archive
+PROPERTY and writes no such file, so the corpus would have disagreed
+with its own oracle on 108 fixtures to carry nine bytes. Not a new
+entry point either, because the comment is found half way through the
+index walk and a second entry point would mean a second walk.
+
+**Why the sink and not the options.** `UncOptions` is where the other
+host-supplied callback lives (`UncPasswordSource`), and appending there
+would have been the smaller diff. But an archive comment is OUTPUT, and
+every host that already distinguishes list from extract has to answer
+the same question for it that it answers for a fork. Six sinks are
+constructed in this repository; all six now say what they want, and a
+`NULL` means exactly what it meant before the field existed.
+
+**What each host does with it.** The CLI writes
+`<archive>.comment.txt` beside the extracted items — a name derived
+from the archive's, so it cannot collide with an entry of the
+archive's own — and `l` and `t` print it instead, since neither writes
+files. The Mac shell writes a `TEXT`/`ttxt` document called `Comments`
+into the destination folder, which is where StuffIt Expander puts one.
+
+**Printed text is decoded; saved bytes are not.** The CLI decodes
+MacRoman to UTF-8 when it PRINTS the comment, like a filename, and
+writes the archive's own bytes when it SAVES it — CR line endings
+included. The alternative was to transcode the file too, which reads
+better in a Linux terminal and would have made the two hosts save
+different bytes for the same comment: `checkdisk.py` compares the Mac's
+output against the CLI's file by file, and `vmac_check.py` sums their
+CRCs, so an 8-bit comment would have failed both for no defect at all.
+The comment is data, and the file is the comment.
+
+**What grades it.** Six corpus archives have carried a real one for
+thirty years and nobody had looked — no fixture had to be invented for
+this, and five of the six were found by the half of the new check that
+FORBIDS a comment file where the oracle reports none. The oracle is `lsar`'s `XADComment` (TESTING.md,
+*Manifest format*); the Mac path is graded by the mock-Toolbox sink test
+and on System 6.0.8 (FORMATS.md, *Real-hardware verification*). Compact
+Pro's own name for it is a **Note**, and `tools/vmac/cptcrypt.py --note`
+types one into the application.

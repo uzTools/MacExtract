@@ -1026,6 +1026,82 @@ static int sink_end(void *ctx, int status)
     return 0;
 }
 
+/* The archive's OWN comment (Compact Pro is the only format that has
+ * one). It belongs to no entry, so it cannot arrive as one: it is
+ * written beside the extracted items — a TeachText document named
+ * "Comments" in the destination folder, holding the comment's bytes,
+ * which are already MacRoman and already CR-separated because a Mac
+ * wrote them.
+ *
+ * Called before the first entry, so an archive that ALSO holds a file
+ * called "Comments" takes the collision suffix sink_begin already
+ * applies to it ("Comments~1"); the comment keeps the plain name.
+ *
+ * Never fails the archive: a comment that could not be written is worth
+ * less than the files that can be, so every error returns 0 and the
+ * walk goes on. It is not counted in fileCount either — that count is
+ * what ExtractOne reads to decide whether a layer was an envelope. */
+static int sink_comment(void *ctx, const uint8_t *buf, uint16_t len)
+{
+    MacSink *s = (MacSink *)ctx;
+    static const char kName[] = "Comments";
+    Str63 name, base;
+    short ref = 0;
+    long count = (long)len;
+    int i, attempt;
+    OSErr err;
+
+    for (i = 0; kName[i]; i++) name[i + 1] = (unsigned char)kName[i];
+    name[0] = (unsigned char)i;
+    BlockMoveData(name, base, name[0] + 1);
+
+    for (attempt = 0; ; attempt++) {
+        err = MyHCreate(s->vRefNum, s->rootDirID, name);
+        if (err == noErr) break;
+        if (err != dupFNErr || attempt >= 9) return 0;
+        BlockMoveData(base, name, base[0] + 1);
+        BumpName(name, attempt + 1);
+    }
+
+    if (MyOpenFork(s->vRefNum, s->rootDirID, name, fsWrPerm, 0,
+                   &ref) != noErr) {
+        MyHDelete(s->vRefNum, s->rootDirID, name);
+        return 0;
+    }
+    if (len && (FSWrite(ref, &count, (Ptr)buf) != noErr ||
+                count != (long)len)) {
+        FSClose(ref);
+        MyHDelete(s->vRefNum, s->rootDirID, name);
+        return 0;
+    }
+    FSClose(ref);
+    FlushVol(NULL, s->vRefNum);
+
+    /* 'TEXT'/'ttxt': a document TeachText and SimpleText open, on every
+     * system this application runs on. Spelled numerically because the
+     * mock build compiles as C99, where a multi-character constant is
+     * implementation-defined. */
+    {
+        CInfoPBRec pb;
+        Str63 nm;
+        BlockMoveData(name, nm, name[0] + 1);
+        pb.hFileInfo.ioNamePtr = nm;
+        pb.hFileInfo.ioVRefNum = s->vRefNum;
+        pb.hFileInfo.ioDirID = s->rootDirID;
+        pb.hFileInfo.ioFDirIndex = 0;
+        if (PBGetCatInfoSync(&pb) == noErr) {
+            pb.hFileInfo.ioFlFndrInfo.fdType = 0x54455854L;      /* TEXT */
+            pb.hFileInfo.ioFlFndrInfo.fdCreator = 0x74747874L;   /* ttxt */
+            pb.hFileInfo.ioDirID = s->rootDirID;   /* PBGetCatInfo clobbers */
+            PBSetCatInfoSync(&pb);
+        }
+    }
+#ifdef UNC_MAC_AUTOTEST
+    unc_at_record(s->vRefNum, s->rootDirID, name);
+#endif
+    return 0;
+}
+
 /* ------------------------------------------------------------------ */
 /* Extraction driver                                                  */
 /* ------------------------------------------------------------------ */
@@ -1399,6 +1475,7 @@ static int EnvRun(short vol, long dir, ConstStr255Param nm, EnvSink *es,
     sk.begin_entry = env_begin;
     sk.write = env_write;
     sk.end_entry = env_end;
+    sk.comment = NULL;    /* an envelope layer carries none */
     prog.ctx = NULL;
     prog.tick = NULL;
     rc = unc_extract_as(fmt, &eio, &sk, al, NULL, NULL);
@@ -2356,6 +2433,7 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
     sk.begin_entry = sink_begin;
     sk.write = sink_write;
     sk.end_entry = sink_end;
+    sk.comment = sink_comment;
 
     opt.list_only = 0;
     opt.test_only = 0;
@@ -3265,7 +3343,11 @@ int main(void)
         /* E2E "launches by double-click" check: overwrite errors/CRC slots with
          * the first file's on-Mac Finder info — should be the archive's
          * type/creator with the inited bit (0x0100) CLEARED, which is exactly
-         * what makes the Finder treat an extracted APPL as launchable. */
+         * what makes the Finder treat an extracted APPL as launchable.
+         * "First" is the first file the sink WROTE, so for an archive that
+         * carries a comment that is the 'TEXT'/'ttxt' Comments document and
+         * not an entry at all. No fixture used with UNC_AT_META has one; if
+         * one ever does, this reads the wrong file rather than failing. */
         if (gATnrec > 0) {
             CInfoPBRec pb; Str63 nm;
             BlockMoveData(gATrec[0].name, nm, gATrec[0].name[0] + 1);

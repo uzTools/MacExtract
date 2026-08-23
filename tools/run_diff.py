@@ -185,6 +185,15 @@ UNSUPPORTED = "recognized but unsupported"
 # reduce/shrink and tar links belong here the day a fixture has one.
 ORACLE_OUT_OF_SCOPE = {"Implode"}
 
+# Formats whose archive comment the ORACLE reports and this engine
+# deliberately does not save: zip's end-of-central-directory comment,
+# which fmt_exo.c reads past (OPEN_ITEMS.md, part 2, section 4). Named
+# rather than inferred from our own output, so a Compact Pro comment
+# that stopped being saved still fails the suite. A comment file for a
+# format in this set is still forbidden — the "unexpected output" check
+# sees it.
+COMMENT_NOT_SAVED = {"Zip"}
+
 
 def out_of_scope(entry):
     """True when the ORACLE says every method of this entry is outside v1
@@ -297,6 +306,48 @@ def check_fixture(unclassic, man, verbose, budget=0):
                     problems.append(
                         f"{name!r}: type/creator {t}/{c} != "
                         f"{e['type']}/{e.get('creator')}")
+        # The archive's OWN comment. It is not an entry — it has no
+        # forks and no name of its own — so it is graded here rather
+        # than in the entry loop: the oracle's XADComment (recorded in
+        # the manifest by tools/make_manifests.py) against the file the
+        # CLI writes beside the extracted items, and against the line
+        # `unclassic l` prints. A manifest without the key asserts the
+        # opposite: nothing may be written, which the "unexpected
+        # output" check below already enforces.
+        want = man.get("comment")
+        cname = normpath(man["fixture"] + ".comment.txt")
+        if want and man.get("format") in COMMENT_NOT_SAVED:
+            want = None
+        if want:
+            # Popped only when one is expected: popping unconditionally
+            # would let a comment file written for an archive that has
+            # none slip past the "unexpected output" check below, which
+            # is the half of this that fails closed.
+            cpath = files.pop(cname, None)
+            if cpath is None:
+                problems.append(f"missing archive comment: {cname!r}")
+            else:
+                # The file holds the archive's own bytes, which are
+                # MacRoman; the oracle reports the same bytes decoded.
+                # Encoded STRICTLY: `errors="replace"` would turn a
+                # character the oracle read some other way into '?' and
+                # compare that, which is a comparison that cannot fail.
+                got = open(cpath, "rb").read()
+                try:
+                    wantb = want.encode("mac_roman")
+                except UnicodeEncodeError:
+                    wantb = None
+                    problems.append(
+                        f"manifest comment is not MacRoman: {want!r}")
+                if wantb is not None and got != wantb:
+                    problems.append(
+                        f"archive comment {got!r} != {want!r}")
+            # Printed, a CR line break becomes a newline (a raw CR
+            # overwrites the terminal line), so the expected text is a
+            # block rather than one line.
+            listed = "comment: " + want.replace("\r\n", "\n").replace("\r", "\n")
+            if listed not in lr.stdout.decode("utf-8", "replace"):
+                problems.append(f"listing does not print {listed!r}")
         for leftover in files:
             problems.append(f"unexpected output: {leftover!r}")
     return problems, unadjudicated, masked
