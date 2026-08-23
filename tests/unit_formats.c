@@ -3435,6 +3435,55 @@ static void test_cpt_cipher(void)
     CHECK(memcmp(buf, wantlong, 8) == 0);
 }
 
+/* SHA-1, HMAC-SHA1, PBKDF2 and AES: the four WinZip's AES is built
+ * from, each against something that is not this project — hashlib,
+ * hmac, hashlib.pbkdf2_hmac and `openssl enc -aes-*-ecb`. Regenerate
+ * with tools/check_crypt.py. */
+static void test_winzip_aes_pieces(void)
+{
+    UncCrypt cr;
+    UncHmac m;
+    uint8_t out[20], buf[16];
+    int i;
+
+    /* SHA-1 is reached through HMAC here, which is how the engine uses
+     * it; an all-zero key of 64 bytes makes the inner block a known
+     * constant, so a broken SHA-1 cannot hide behind a broken HMAC. */
+    unc_hmac_init_test(&m, (const uint8_t *)"key", 3);
+    unc_hmac_update(&m, (const uint8_t *)
+                    "The quick brown fox jumps over the lazy dog", 43);
+    unc_hmac_final(&m, out);
+    CHECK(out[0] == 0xde && out[1] == 0x7c && out[19] == 0xd9);
+
+    /* AES-256 and AES-128, forward direction, FIPS-197 shape. */
+    for (i = 0; i < 16; i++) buf[i] = (uint8_t)i;
+    {
+        uint8_t key[32];
+        static const uint8_t want256[16] = {
+            0x5a,0x6e,0x04,0x57,0x08,0xfb,0x71,0x96,
+            0xf0,0x2e,0x55,0x3d,0x02,0xc3,0xa6,0x92 };
+        static const uint8_t want128[16] = {
+            0x0a,0x94,0x0b,0xb5,0x41,0x6e,0xf0,0x45,
+            0xf1,0xc3,0x94,0x58,0xc6,0x53,0xea,0x5a };
+        for (i = 0; i < 32; i++) key[i] = (uint8_t)i;
+        unc_aes_encrypt_test(&cr, key, 32, buf);
+        CHECK(memcmp(buf, want256, 16) == 0);
+        for (i = 0; i < 16; i++) buf[i] = (uint8_t)i;
+        unc_aes_encrypt_test(&cr, key, 16, buf);
+        CHECK(memcmp(buf, want128, 16) == 0);
+    }
+
+    /* PBKDF2 with the iteration count WinZip uses, at the length an
+     * AES-256 entry needs (two 32-byte keys and the verifier). */
+    {
+        uint8_t derived[66];
+        unc_pbkdf2_test((const uint8_t *)"password", 8,
+                        (const uint8_t *)"salt", 4, 1000, derived, 66);
+        CHECK(derived[0] == 0x6e && derived[1] == 0x88 &&
+              derived[64] == 0xa3 && derived[65] == 0x0b);
+    }
+}
+
 static void test_resfork_find(void)
 {
     /* A minimal resource fork holding 'MKey' 0 = eight bytes. */
@@ -3507,5 +3556,6 @@ void run_format_tests(void)
     test_md5();
     test_rc4();
     test_cpt_cipher();
+    test_winzip_aes_pieces();
     test_resfork_find();
 }

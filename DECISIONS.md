@@ -5511,9 +5511,9 @@ options.
 ## 2026-08-23 (decryption) — five schemes in, and the one with no second reader
 
 Decryption was out of scope for v1 and is in scope from 2026-08-23, on
-request. Six ciphers across five formats; four of them are transcribed
-from XADMaster, one is read out of an application, and the interesting
-decisions are about **evidence**, not about ciphers.
+request. Seven ciphers across five formats; five of them are
+transcribed from XADMaster, one is read out of an application, and the
+interesting decisions are about **evidence**, not about ciphers.
 
 ### What a password is, in this engine
 
@@ -5640,6 +5640,38 @@ reading stands ungraded and OPEN_ITEMS.md says what would close it.
 What the run DID establish, and it is not nothing: Compact Pro accepts
 the container this project writes, agrees about every entry's sizes and
 type, and agrees that each is encrypted.
+
+### WinZip's AES, which is out of era and in anyway
+
+Method 99 with extra field 0x9901 is a 2003 extension, a decade past
+every machine this targets, and it was written off as out of scope
+until the rest of the work made the objection look thin: the file IS a
+zip, this reads zips, and refusing one entry of it is a worse answer
+than a slow one. So it is implemented — PBKDF2-HMAC-SHA1 over a salt in
+the entry, AES in counter mode, and ten bytes of HMAC-SHA1 over the
+ciphertext.
+
+Three things kept it small enough to belong on a Mac Plus:
+
+- **Counter mode encrypts to decrypt**, so only the FORWARD cipher is
+  needed. No inverse S box, no inverse mix-columns, and the tables that
+  make those fast are four kilobytes that do not ship.
+- **One 256-byte S box** and a column mix computed with `xtime`, rather
+  than the usual four kilobytes of T tables. Slower per block, and this
+  is not the format anybody has a megabyte of.
+- The **key derivation** is where the time goes: 1000 rounds of
+  HMAC-SHA1, and for AES-256 that is four 20-byte blocks, so ~8,000
+  SHA-1 compressions — seconds on a 68000, once per entry, before any
+  output appears.
+
+The oracle situation is inverted from every other scheme here.
+**Debian's `unar` 1.10.8 cannot open a WinZip AES zip at all** — every
+key length, stored or deflated, comes back "Missing or wrong password"
+— so there is no second reader to agree with. What grades it instead is
+the ENCODER: 7-Zip writes the archive, verifies it itself, and our
+output has to equal the bytes that went in. The authentication code
+does the rest, and the suite flips a ciphertext byte to prove it is
+being checked.
 
 ### The fixtures, and what grades them
 

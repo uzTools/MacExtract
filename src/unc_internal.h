@@ -112,7 +112,7 @@ int unc_progress_at(UncProgressState *ps, uint32_t done);
 /* ------------------------------------------------------------------ */
 /* Ciphers (src/unc_crypt.c)                                          */
 /*                                                                    */
-/* One state struct for all six, because a decoder does not care       */
+/* One state struct for all seven, because a decoder does not care     */
 /* which it is reading through: it attaches a UncCrypt to its UncBufIn */
 /* and every refill is decrypted before the decoder sees a byte.       */
 /* ------------------------------------------------------------------ */
@@ -125,8 +125,23 @@ enum {
     UNC_CRYPT_SIT_DES,    /* StuffIt classic fork cipher               */
     UNC_CRYPT_RC4,        /* StuffIt 5                                 */
     UNC_CRYPT_ZIP,        /* PKWARE's zip stream cipher                */
-    UNC_CRYPT_CPT         /* Compact Pro's 64-bit CRC keystream        */
+    UNC_CRYPT_CPT,        /* Compact Pro's 64-bit CRC keystream        */
+    UNC_CRYPT_AES         /* WinZip's AES, in counter mode             */
 };
+
+/* HMAC-SHA1: two saved SHA-1 states, so the outer hash never re-keys.
+ * Only WinZip's AES uses it — for the key derivation and for the ten
+ * bytes of authentication code an AES entry ends with. */
+typedef struct UncSha1 {
+    uint32_t h[5];
+    uint32_t len;          /* bytes hashed so far */
+    uint8_t  buf[64];
+    uint32_t have;
+} UncSha1;
+
+typedef struct UncHmac {
+    UncSha1 in, out;
+} UncHmac;
 
 #define UNC_SIT5_KEYLEN 5      /* 40 bits, all StuffIt 5 uses          */
 
@@ -145,6 +160,12 @@ typedef struct UncCrypt {
     uint8_t  si, sj;
     uint32_t k0, k1, k2;   /* zip                                       */
     uint32_t hi, lo;       /* Compact Pro's 64-bit register             */
+    /* WinZip AES: the expanded key (15 rounds at most), the counter and
+     * its keystream block, and the authentication state. */
+    uint8_t  rk[16 * 15];
+    int      aesrounds;
+    uint8_t  ctr[16], ctrbuf[16], ctrpos;
+    UncHmac  hmac;
 } UncCrypt;
 
 void unc_crypt_xor(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen);
@@ -159,6 +180,18 @@ int  unc_crypt_sit5_key(const uint8_t *pw, uint16_t pwlen,
                         uint8_t out[UNC_SIT5_KEYLEN]);
 int  unc_crypt_sit(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen,
                    const uint8_t entrykey[16], const uint8_t mkey[8]);
+int  unc_crypt_winzip_aes(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen,
+                          const uint8_t *salt, int keybytes,
+                          const uint8_t verifier[2]);
+void unc_hmac_update(UncHmac *m, const uint8_t *p, uint32_t n);
+/* Test hooks; nothing in the engine calls these. */
+void unc_hmac_init_test(UncHmac *m, const uint8_t *key, uint32_t keylen);
+void unc_pbkdf2_test(const uint8_t *pw, uint32_t pwlen,
+                     const uint8_t *salt, uint32_t saltlen,
+                     uint32_t iterations, uint8_t *out, uint32_t outlen);
+void unc_aes_encrypt_test(UncCrypt *cr, const uint8_t *key, int keybytes,
+                          uint8_t block[16]);
+void unc_hmac_final(UncHmac *m, uint8_t out[20]);
 
 /* Decrypt `len` bytes in place; `pos` is buf[0]'s offset within the
  * encrypted stream (used by the two position-keyed ciphers, ignored by

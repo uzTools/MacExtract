@@ -45,3 +45,32 @@ for label, m in (("''", b""), ("'abc'", b"abc"),
     print("MD5  %-10s -> %s" % (label, hashlib.md5(m).hexdigest()))
 
 print("RC4  key='Key' 'Plaintext' -> %s" % rc4(b"Key", b"Plaintext").hex())
+
+
+def winzip_aes_vectors():
+    """The pieces WinZip's AES needs, from hashlib and openssl."""
+    import hmac as H
+    print("SHA1 'abc' -> %s" % hashlib.sha1(b"abc").hexdigest())
+    print("SHA1 64 bytes 'a'*64 -> %s" % hashlib.sha1(b"a" * 64).hexdigest())
+    print("HMAC-SHA1 key='key' msg='The quick brown fox jumps over the lazy "
+          "dog' -> %s"
+          % H.new(b"key", b"The quick brown fox jumps over the lazy dog",
+                  hashlib.sha1).hexdigest())
+    print("PBKDF2-HMAC-SHA1 pw='password' salt='salt' 1000 iters, 66 bytes ->\n"
+          "  %s" % hashlib.pbkdf2_hmac("sha1", b"password", b"salt", 1000,
+                                       66).hex())
+    key = bytes(range(32))
+    block = bytes(range(16))
+    out = subprocess.run(
+        ["openssl", "enc", "-aes-256-ecb", "-K", key.hex(), "-nopad"],
+        input=block, capture_output=True, check=True).stdout[:16]
+    print("AES-256 encrypt of 000102..0f under key 000102..1f -> %s"
+          % out.hex())
+    key16 = bytes(range(16))
+    out = subprocess.run(
+        ["openssl", "enc", "-aes-128-ecb", "-K", key16.hex(), "-nopad"],
+        input=block, capture_output=True, check=True).stdout[:16]
+    print("AES-128 same plaintext, key 000102..0f -> %s" % out.hex())
+
+
+winzip_aes_vectors()

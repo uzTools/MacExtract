@@ -16,7 +16,7 @@ whole corpus for that format (engine allocations only, via
 | Compact Pro (.cpt) | extract | RLE, LZH+RLE; **encrypted entries decrypted**, from a reading of the application nobody has graded (*Encryption*, below) | 108 fixtures | 19 KB | full |
 | StuffIt classic (.sit) | extract | 0 store, 1 RLE90*, 2 LZW, 3 Huffman, 5 LZAH, 6 fixed Huffman‡, 8 MW, 13 LZSS+Huffman; **encrypted forks decrypted** (StuffItDES, and the 'MKey' resource — *Encryption*, below) | 227 fixtures‡‡ | 8–76 KB‖ | full |
 | StuffIt 5 (.sit) | extract | 0, 13, 15 Arsenic; **encrypted forks decrypted** (RC4 under MD5(password)) | 31 fixtures | 0.15–2.53 MB† | 23 of 31 fixtures extract FULLY; the rest refuse per entry |
-| Zip | extract | store, deflate, **PKWARE's cipher**; other methods, WinZip AES and PKWARE strong encryption are per-entry errors | 5 fixtures (2 of them PKZIP 1.x, graded on names and entry counts only — Implode is out of v1 scope, and `unar` adjudicates 5 of their 7 entries) | 12–54 KB¶ | full |
+| Zip | extract | store, deflate, **PKWARE's cipher and WinZip's AES** (128/192/256); other methods and PKWARE strong encryption are per-entry errors | 5 fixtures (2 of them PKZIP 1.x, graded on names and entry counts only — Implode is out of v1 scope, and `unar` adjudicates 5 of their 7 entries) | 12–54 KB¶ | full |
 | Gzip | extract | deflate | 3 fixtures | 51 KB | full |
 | Unix compress (.Z) | extract | LZW ≤16 bit | 4 fixtures | 219 KB§ | full |
 | Tar (ustar/v7) | extract | — (links reported unsupported) | 3 fixtures (2 real 1990 v7 tars) + unit tests | 8 KB | full |
@@ -637,7 +637,7 @@ should be, and nothing else on the disk says why.
 
 ## Encryption
 
-**In scope since 2026-08-23.** Six ciphers across five formats, and one
+**In scope since 2026-08-23.** Seven ciphers across five formats, and one
 thing to know before the table: **nothing in the corpus is encrypted.**
 Measured, not assumed — `lsar -j` over all 903 fixtures reports
 `XADIsEncrypted` 0 for every entry — so every archive that exercises
@@ -653,6 +653,7 @@ decryption suite*.
 | PackIt `PMa5` | XOR, key applied **modulo seven** over eight bytes | DES's PC-1 permutation of the first eight password bytes | in effect — the entry header is inside the ciphertext and carries a CRC | `unar -p` |
 | PackIt `PMa6` | **DES**, ECB; the operation that DECODES is DES's decrypt | the first eight password bytes | the same | `unar -p` |
 | zip | **PKWARE's** three CRC-32-driven keys | the password bytes, folded in | **yes** — a check byte in the twelve-byte header | Info-ZIP wrote the fixture; `unar -p` reads it |
+| zip, WinZip **AES** | **AES** in counter mode, 128/192/256, with HMAC-SHA1 over the ciphertext | PBKDF2-HMAC-SHA1, 1000 rounds over a salt in the entry | **yes** — a two-byte verifier the derivation also produces | 7-Zip wrote the fixtures and verifies them; `unar` 1.10.8 cannot open one at all |
 | ARC | a repeating XOR of the password over the compressed bytes | the password itself, and `arc` 5.21q upper-cases it first (measured) | **no** — the format has no encryption flag at all | Debian's `arc` wrote the fixture; `unar -p` reads it |
 | Compact Pro | a **64-bit CRC** register; keystream is its second byte, stepped on each plaintext byte | nine bytes: a length capped at eight, and the password ADDED into eight accumulators in rotation | **no** — its own message says so | **nobody. See below.** |
 
@@ -676,6 +677,11 @@ Three properties are worth stating because a user meets them:
   format verifies, that is immediate; where it does not (ARC, Compact
   Pro), the entry is decoded once writing nothing to find the key and
   again to write it, so a wrong key never reaches the output.
+- **A WinZip AES entry is graded by its authentication code, not its
+  CRC.** AE-2 stores no CRC at all, so the ten bytes of HMAC-SHA1 after
+  the data are the only check — and they are checked. AE-1's CRC is
+  checked as well. The 1000-round key derivation is the slow part on a
+  68000: seconds, once per entry, before any output appears.
 - **An encrypted entry does not stop the walk.** The entries around it
   come out; PackIt, whose encrypted entries do not say where they end,
   resyncs on the next block magic as it always did.
@@ -1155,7 +1161,7 @@ cross-checked against the same engine's Linux output (`tools/vmac_check.py`,
 `tools/decode_grid.py`).
 
 **62/62 byte-exact PASS** (**2026-08-23**, re-run against the decryption
-build, which is 16 KB larger; 2026-08-22 with M15–M23's codecs in and
+build, which is 20 KB larger; 2026-08-22 with M15–M23's codecs in and
 three fixtures added for them — DiskDoubler methods 3, 4 and 5, which nothing
 in the sample had exercised; 59/59 on 2026-08-15, re-run after the BinHex line rule
 changed — every `.hqx` in the sample goes through it; 57/57 earlier the same
@@ -1312,9 +1318,9 @@ RAM** — the project's floor target — one boot per fixture, same on-Mac
 CRC-32 verification (`tools/vmac/run.py --mem 1M --list tools/vmac/sample.txt`).
 The engine budget is derived from `FreeMem` at startup.
 
-**62/62 byte-exact PASS** (**2026-08-23**, re-run against the decryption
-build — 16 KB more code is 16 KB less heap on this machine, and the three
-heaviest allocations are unchanged at 533 KB, 471 KB and 405 KB;
+**62/62 byte-exact PASS** (**2026-08-23**, re-run twice against the
+decryption build — 20 KB more code is 20 KB less heap on this machine, and
+the three heaviest allocations are unchanged at 533 KB, 471 KB and 405 KB;
 2026-08-22 with M19–M23's three; 59/59 on
 2026-08-15 with M13's two; 57/57 before them;
 55/55 on 2026-08-08 and 44/44 on 2026-08-07, before the recovered fixtures,

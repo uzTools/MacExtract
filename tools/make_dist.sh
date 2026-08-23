@@ -75,13 +75,13 @@ forks, type and creator codes and dates all survive, so an extracted
 application simply runs. StuffIt X, LZH, Disk Copy 4.2 and AppleLink
 packages are recognised and named, not extracted.
 
-Password-protected archives open too -- StuffIt, StuffIt 5, Compact Pro,
-PackIt, zip and ARC. You are asked for the password when an entry that
-needs one comes up, and asked again if the archive refuses it. One
-catch, and it belongs to the format rather than to this program: an
-encrypted StuffIt archive keeps half of its key in the file's RESOURCE
-fork, so a copy that lost the fork on its way here cannot be opened by
-anything.
+Password-protected archives open too -- StuffIt, StuffIt 5, Compact
+Pro, PackIt, zip (the old cipher and WinZip's AES) and ARC. You are
+asked for the password when an entry that needs one comes up, and
+asked again if the archive refuses it. One catch, and it belongs to
+the format rather than to this program: an encrypted StuffIt archive
+keeps half of its key in the file's RESOURCE fork, so a copy that lost
+the fork on its way here cannot be opened by anything.
 
 StuffIt SpaceSaver files open too, and they are the ones that look like
 nothing is wrong: SpaceSaver compressed in place, so the file kept its

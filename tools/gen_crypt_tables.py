@@ -17,6 +17,12 @@ Both are transcriptions, not derivations from memory:
     message-word indices of reference/XADMaster/Crypto/md5.c, pulled out
     of its unrolled STEP() list so the loop here can be a loop.
 
+  * `unc_aes_sbox` is the AES substitution box, taken from
+    reference/XADMaster/Crypto/aestab.c's `sb_data` — the same 256
+    bytes FIPS-197 tabulates, and the generator checks them against the
+    standard construction (inverse in GF(2^8), then the affine map)
+    rather than trusting the extraction.
+
   * `unc_cpt_crc64` is the byte table of the 64-bit CRC Compact Pro
     keys its cipher with. There is no reference implementation and no
     published description of that cipher: it was read out of Compact
@@ -116,6 +122,45 @@ def sit_sptrans():
 
 
 SITSP = sit_sptrans()
+
+# ---- AES, from reference/XADMaster/Crypto/aestab.c ---------------------
+def aes_sbox():
+    src = open("reference/XADMaster/Crypto/aestab.c").read()
+    i = src.index("#define sb_data(w) {")
+    nums = [int(x, 16)
+            for x in re.findall(r"w\(0x([0-9a-f]{2})\)", src[i:i + 6000])]
+    box = nums[:256]
+    assert len(box) == 256 and len(set(box)) == 256
+
+    # The same table, built the way FIPS-197 defines it: the
+    # multiplicative inverse in GF(2^8) modulo x^8+x^4+x^3+x+1, then the
+    # affine transform. Extraction and construction have to agree.
+    p = q = 1
+    inv = [0] * 256
+    while True:
+        p = p ^ ((p << 1) & 0xFF) ^ (0x1B if p & 0x80 else 0)
+        q ^= q << 1
+        q ^= q << 2
+        q ^= q << 4
+        q &= 0xFF
+        if q & 0x80:
+            q ^= 0x09
+        inv[p] = q
+        if p == 1:
+            break
+    built = []
+    for x in range(256):
+        v = inv[x] if x else 0
+        r = v
+        for _ in range(4):
+            v = ((v << 1) | (v >> 7)) & 0xFF
+            r ^= v
+        built.append(r ^ 0x63)
+    assert built == box, "the AES S box does not match its own definition"
+    return box
+
+
+AES_SBOX = aes_sbox()
 
 # ---- Compact Pro's 64-bit CRC table ------------------------------------
 # Transcribed as an ALGORITHM from Compact Pro 1.51 `CODE` 3 @0x408e:
@@ -223,6 +268,10 @@ def main():
     print("/* The StuffIt variant's own table: a little-endian DES, so its")
     print(" * bit order is not the one above. Verbatim from XADMaster. */")
     emit_u32_2d("unc_sitdes_sp", SITSP)
+    print("/* AES: the substitution box. Only the FORWARD cipher is here —")
+    print(" * WinZip's AES runs in counter mode, which encrypts to decrypt,")
+    print(" * so the inverse box and inverse mix-columns are never used. */")
+    emit_u8("unc_aes_sbox", AES_SBOX, 16)
     print("/* Compact Pro's cipher: a 64-bit CRC, high half then low. */")
     emit_u32_2d("unc_cpt_crc64", CPTCRC, 2)
     print("/* MD5: per-step message-word index, rotation and constant. */")

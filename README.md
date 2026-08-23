@@ -77,7 +77,8 @@ finds nonsense. `unclassic` carries the table those files need, so a single
 file on a floppy is enough.
 
 **Password-protected archives** are opened too, in every format that has
-them: StuffIt, StuffIt 5, Compact Pro, PackIt, zip and ARC. The Mac
+them: StuffIt, StuffIt 5, Compact Pro, PackIt, zip (both the old cipher
+and WinZip's AES) and ARC. The Mac
 application asks for the password when it reaches an entry that needs one,
 and asks again if the archive says no; on Linux it is `-p`. One catch, and
 it is the format's rather than ours: an encrypted StuffIt archive keeps

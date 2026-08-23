@@ -13,8 +13,12 @@ is required to agree THREE ways, exactly as the ARC suite is:
   3. what our CLI extracts.
 
 Where the encoder is somebody else's, it is used: `zip -P` writes the
-PKWARE-cipher fixtures and `arc g<password>` the garbled ARC ones, so
-those two owe nothing at all to this project's reading. StuffIt
+PKWARE-cipher fixtures, `7z -mem=AES256` the WinZip AES ones and `arc
+g<password>` the garbled ARC ones, so those owe nothing at all to this
+project's reading. WinZip AES has no second READER here — Debian's
+`unar` 1.10.8 cannot open one at any key length — so its cases are
+graded by the encoder and the bytes that went in, plus a flipped
+ciphertext byte that the ten-byte authentication code must catch. StuffIt
 classic, StuffIt 5 and PackIt have no encoder available on this
 machine, so tools/synth_crypt.py writes them and point 2 is what makes
 them worth having.
@@ -245,6 +249,47 @@ def main():
             shutil.rmtree(src, ignore_errors=True)
         else:
             print("run_crypt: no `zip`, PKWARE-cipher fixtures skipped")
+
+        # ---- WinZip AES, from 7-Zip -----------------------------------
+        # `unar` 1.10.8 cannot open one of these at ALL — every key
+        # length, stored or deflated, comes back "Missing or wrong
+        # password" — so the oracle here is the ENCODER plus the bytes
+        # that went in, and 7-Zip's own `t` on the same archive.
+        if shutil.which("7z"):
+            src = tempfile.mkdtemp()
+            payload = {"deflated.txt": b"a line that compresses\n" * 50,
+                       "random.bin": bytes((i * 53 + 29) & 0xFF
+                                           for i in range(4000))}
+            for n, b in payload.items():
+                open(os.path.join(src, n), "wb").write(b)
+            for label, zargs in (("aes256", ["-mem=AES256"]),
+                                 ("aes192", ["-mem=AES192"]),
+                                 ("aes128", ["-mem=AES128"]),
+                                 ("aes256-stored", ["-mem=AES256", "-mx=0"])):
+                z = os.path.join(tmp, label + ".zip")
+                r = run(["7z", "a", "-tzip", "-p" + LONG_PW] + zargs + [z] +
+                        [os.path.join(src, n) for n in payload])
+                if r.returncode != 0 or not os.path.exists(z):
+                    problems.append("%s: 7z would not write it" % label)
+                    continue
+                check_one(label, z, payload, LONG_PW, unclassic, problems,
+                          oracle=False)
+                check_refusal("%s wrong password" % label, z, unclassic,
+                              problems, ["-p", "nope"])
+                # The ten-byte authentication code is what grades an AES
+                # entry — AE-2 stores no CRC at all — so a flipped
+                # ciphertext byte must be caught.
+                blob = bytearray(open(z, "rb").read())
+                blob[len(blob) // 2] ^= 0x01
+                bad = os.path.join(tmp, label + "-bad.zip")
+                open(bad, "wb").write(bytes(blob))
+                r = run([unclassic, "t", "-p", LONG_PW, bad])
+                if r.returncode == 0:
+                    problems.append("%s: a flipped byte was accepted" % label)
+                ran += 3
+            shutil.rmtree(src, ignore_errors=True)
+        else:
+            print("run_crypt: no `7z`, WinZip AES fixtures skipped")
 
         # ---- ARC, from Debian's `arc` if it is here -------------------
         if os.path.exists(ARC_BIN):

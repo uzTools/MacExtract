@@ -2,7 +2,7 @@
  * unc_crypt.c — the ciphers the encrypting formats use, and the layer
  * that puts one underneath a decoder.
  *
- * Six schemes, one per format that can encrypt an entry:
+ * Seven schemes across the five formats that can encrypt an entry:
  *
  *   ARC          a plain repeating XOR of the password over the
  *                compressed bytes (XADXORHandle).
@@ -21,6 +21,11 @@
  *                followed by the entry's own five key bytes.
  *   zip          PKWARE's stream cipher, three CRC-32-driven keys
  *                updated from each plaintext byte.
+ *   zip, AES     WinZip's: PBKDF2-HMAC-SHA1 over a salt in the entry,
+ *                AES in counter mode (which encrypts to decrypt, so
+ *                only the forward cipher is here), and ten bytes of
+ *                HMAC-SHA1 over the ciphertext, which is the only
+ *                check an AE-2 entry carries.
  *   Compact Pro  a 64-bit CRC register, seeded 0x0123456789ABCDEF,
  *                folded over the password and then over each PLAINTEXT
  *                byte; the keystream is the register's second byte.
@@ -298,6 +303,265 @@ void unc_md5(const uint8_t *msg, uint32_t len, uint8_t out[16])
     }
 }
 
+static void crypt_clear(UncCrypt *cr, int kind, uint32_t blocksize);
+
+/* ------------------------------------------------------------------ */
+/* SHA-1, HMAC-SHA1 and PBKDF2 (WinZip's AES, and nothing else)        */
+/* Source: reference/XADMaster/Crypto/sha.c and hmac_sha1.c, and the    */
+/* key derivation in XADWinZipAESHandle.m (DeriveKey), which is         */
+/* PBKDF2 with 1000 iterations. LGPL / public domain — see NOTICE.      */
+/* ------------------------------------------------------------------ */
+
+static void sha1_block(uint32_t h[5], const uint8_t *p)
+{
+    uint32_t w[80], a, b, c, d, e;
+    int i;
+
+    for (i = 0; i < 16; i++) w[i] = unc_get_u32be(p + 4 * i);
+    for (i = 16; i < 80; i++)
+        w[i] = rotl32(w[i - 3] ^ w[i - 8] ^ w[i - 14] ^ w[i - 16], 1);
+
+    a = h[0]; b = h[1]; c = h[2]; d = h[3]; e = h[4];
+    for (i = 0; i < 80; i++) {
+        uint32_t f, k, t;
+        if (i < 20)      { f = (b & c) | (~b & d);           k = 0x5a827999u; }
+        else if (i < 40) { f = b ^ c ^ d;                    k = 0x6ed9eba1u; }
+        else if (i < 60) { f = (b & c) | (b & d) | (c & d);  k = 0x8f1bbcdcu; }
+        else             { f = b ^ c ^ d;                    k = 0xca62c1d6u; }
+        t = rotl32(a, 5) + f + e + k + w[i];
+        e = d; d = c; c = rotl32(b, 30); b = a; a = t;
+    }
+    h[0] += a; h[1] += b; h[2] += c; h[3] += d; h[4] += e;
+}
+
+static void sha1_init(UncSha1 *s)
+{
+    s->h[0] = 0x67452301u; s->h[1] = 0xefcdab89u; s->h[2] = 0x98badcfeu;
+    s->h[3] = 0x10325476u; s->h[4] = 0xc3d2e1f0u;
+    s->len = 0;
+    s->have = 0;
+}
+
+static void sha1_update(UncSha1 *s, const uint8_t *p, uint32_t n)
+{
+    s->len += n;
+    while (n > 0) {
+        uint32_t k = 64 - s->have;
+        uint32_t i;
+        if (k > n) k = n;
+        for (i = 0; i < k; i++) s->buf[s->have + i] = p[i];
+        s->have += k;
+        p += k;
+        n -= k;
+        if (s->have == 64) { sha1_block(s->h, s->buf); s->have = 0; }
+    }
+}
+
+static void sha1_final(UncSha1 *s, uint8_t out[20])
+{
+    uint32_t bits = s->len << 3, hi = s->len >> 29;
+    uint8_t pad = 0x80;
+    int i;
+    sha1_update(s, &pad, 1);
+    pad = 0;
+    while (s->have != 56) sha1_update(s, &pad, 1);
+    /* The length field is 64 bits; a fork is under 2 GB, so the top
+     * three bits are all that can be set above 32. */
+    { uint8_t l[8];
+      l[0] = 0; l[1] = 0; l[2] = 0; l[3] = (uint8_t)hi;
+      unc_put_u32be(l + 4, bits);
+      sha1_update(s, l, 8); }
+    for (i = 0; i < 5; i++) unc_put_u32be(out + 4 * i, s->h[i]);
+}
+
+/* HMAC-SHA1, kept as two saved states so the outer hash does not have
+ * to re-key: exactly what hmac_sha1.c does. */
+static void hmac_init(UncHmac *m, const uint8_t *key, uint32_t keylen)
+{
+    uint8_t block[64], digest[20];
+    uint32_t i;
+
+    if (keylen > 64) {
+        UncSha1 s;
+        sha1_init(&s);
+        sha1_update(&s, key, keylen);
+        sha1_final(&s, digest);
+        key = digest;
+        keylen = 20;
+    }
+    for (i = 0; i < 64; i++) block[i] = i < keylen ? (uint8_t)(key[i] ^ 0x36)
+                                                  : 0x36;
+    sha1_init(&m->in);
+    sha1_update(&m->in, block, 64);
+    for (i = 0; i < 64; i++) block[i] = i < keylen ? (uint8_t)(key[i] ^ 0x5c)
+                                                  : 0x5c;
+    sha1_init(&m->out);
+    sha1_update(&m->out, block, 64);
+}
+
+void unc_hmac_update(UncHmac *m, const uint8_t *p, uint32_t n)
+{
+    sha1_update(&m->in, p, n);
+}
+
+void unc_hmac_final(UncHmac *m, uint8_t out[20])
+{
+    uint8_t digest[20];
+    sha1_final(&m->in, digest);
+    sha1_update(&m->out, digest, 20);
+    sha1_final(&m->out, out);
+}
+
+/* PBKDF2-HMAC-SHA1, as XADWinZipAESHandle's DeriveKey. */
+static void pbkdf2(const uint8_t *pw, uint32_t pwlen,
+                   const uint8_t *salt, uint32_t saltlen,
+                   uint32_t iterations, uint8_t *out, uint32_t outlen)
+{
+    uint32_t block, done = 0;
+
+    for (block = 1; done < outlen; block++) {
+        UncHmac m;
+        uint8_t counter[4], buf[20], acc[20];
+        uint32_t j, n;
+
+        counter[0] = (uint8_t)(block >> 24); counter[1] = (uint8_t)(block >> 16);
+        counter[2] = (uint8_t)(block >> 8);  counter[3] = (uint8_t)block;
+        hmac_init(&m, pw, pwlen);
+        unc_hmac_update(&m, salt, saltlen);
+        unc_hmac_update(&m, counter, 4);
+        unc_hmac_final(&m, buf);
+        for (j = 0; j < 20; j++) acc[j] = buf[j];
+
+        for (j = 1; j < iterations; j++) {
+            uint32_t k;
+            hmac_init(&m, pw, pwlen);
+            unc_hmac_update(&m, buf, 20);
+            unc_hmac_final(&m, buf);
+            for (k = 0; k < 20; k++) acc[k] ^= buf[k];
+        }
+        n = outlen - done < 20 ? outlen - done : 20;
+        for (j = 0; j < n; j++) out[done + j] = acc[j];
+        done += n;
+    }
+}
+
+/* Three hooks for the unit tests, which grade these against hashlib
+ * and openssl. Nothing in the engine calls them. */
+void unc_hmac_init_test(UncHmac *m, const uint8_t *key, uint32_t keylen)
+{
+    hmac_init(m, key, keylen);
+}
+
+void unc_pbkdf2_test(const uint8_t *pw, uint32_t pwlen,
+                     const uint8_t *salt, uint32_t saltlen,
+                     uint32_t iterations, uint8_t *out, uint32_t outlen)
+{
+    pbkdf2(pw, pwlen, salt, saltlen, iterations, out, outlen);
+}
+
+/* ------------------------------------------------------------------ */
+/* AES, forward direction only                                         */
+/*                                                                    */
+/* Counter mode encrypts to decrypt, so the inverse cipher is never    */
+/* needed and neither are its tables: one 256-byte S box and the       */
+/* column mix, which costs speed and saves four kilobytes on a machine */
+/* that has one megabyte. Source: FIPS-197 as implemented in           */
+/* reference/XADMaster/Crypto/aeskey.c and aescrypt.c.                 */
+/* ------------------------------------------------------------------ */
+
+static uint8_t xtime(uint8_t x)
+{
+    return (uint8_t)((x << 1) ^ ((x & 0x80) ? 0x1b : 0));
+}
+
+static void aes_setkey(UncCrypt *cr, const uint8_t *key, int keybytes)
+{
+    int nk = keybytes / 4;                 /* 4, 6 or 8 words */
+    int total = (nk + 7) * 4;              /* (rounds + 1) * 4 words */
+    uint8_t rcon = 1;
+    int i;
+
+    cr->aesrounds = nk + 6;
+    for (i = 0; i < keybytes; i++) cr->rk[i] = key[i];
+    for (i = nk; i < total; i++) {
+        uint8_t t[4];
+        int j;
+        for (j = 0; j < 4; j++) t[j] = cr->rk[(i - 1) * 4 + j];
+        if (i % nk == 0) {
+            uint8_t tmp = t[0];
+            t[0] = (uint8_t)(unc_aes_sbox[t[1]] ^ rcon);
+            t[1] = unc_aes_sbox[t[2]];
+            t[2] = unc_aes_sbox[t[3]];
+            t[3] = unc_aes_sbox[tmp];
+            rcon = xtime(rcon);
+        } else if (nk > 6 && i % nk == 4) {
+            for (j = 0; j < 4; j++) t[j] = unc_aes_sbox[t[j]];
+        }
+        for (j = 0; j < 4; j++)
+            cr->rk[i * 4 + j] = (uint8_t)(cr->rk[(i - nk) * 4 + j] ^ t[j]);
+    }
+}
+
+static void aes_encrypt_block(const UncCrypt *cr, uint8_t st[16])
+{
+    int round, i;
+
+    for (i = 0; i < 16; i++) st[i] ^= cr->rk[i];
+    for (round = 1; round <= cr->aesrounds; round++) {
+        uint8_t t[16];
+        /* SubBytes + ShiftRows, in the column-major order AES uses:
+         * byte (r,c) lives at 4*c + r and row r rotates left by r. */
+        for (i = 0; i < 16; i++)
+            t[i] = unc_aes_sbox[st[(i + 4 * (i & 3)) & 15]];
+        if (round != cr->aesrounds) {
+            for (i = 0; i < 16; i += 4) {          /* MixColumns */
+                uint8_t a0 = t[i], a1 = t[i + 1], a2 = t[i + 2], a3 = t[i + 3];
+                uint8_t x = (uint8_t)(a0 ^ a1 ^ a2 ^ a3);
+                st[i]     = (uint8_t)(a0 ^ x ^ xtime((uint8_t)(a0 ^ a1)));
+                st[i + 1] = (uint8_t)(a1 ^ x ^ xtime((uint8_t)(a1 ^ a2)));
+                st[i + 2] = (uint8_t)(a2 ^ x ^ xtime((uint8_t)(a2 ^ a3)));
+                st[i + 3] = (uint8_t)(a3 ^ x ^ xtime((uint8_t)(a3 ^ a0)));
+            }
+        } else {
+            for (i = 0; i < 16; i++) st[i] = t[i];
+        }
+        for (i = 0; i < 16; i++) st[i] ^= cr->rk[round * 16 + i];
+    }
+}
+
+void unc_aes_encrypt_test(UncCrypt *cr, const uint8_t *key, int keybytes,
+                          uint8_t block[16])
+{
+    aes_setkey(cr, key, keybytes);
+    aes_encrypt_block(cr, block);
+}
+
+/* WinZip's AES: PBKDF2 over the salt gives an encryption key, an
+ * authentication key and a two-byte verifier, and the data is a counter
+ * mode stream with the counter LITTLE-endian and starting at 1.
+ * Source: XADWinZipAESHandle.m. `keybytes` is 16, 24 or 32; `salt` is
+ * keybytes/2 long. Returns UNC_ERR_PASSWORD if the verifier disagrees. */
+int unc_crypt_winzip_aes(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen,
+                         const uint8_t *salt, int keybytes,
+                         const uint8_t verifier[2])
+{
+    uint8_t keybuf[2 * 32 + 2];
+    int i;
+
+    crypt_clear(cr, UNC_CRYPT_AES, 1);
+    pbkdf2(pw, pwlen, salt, (uint32_t)(keybytes / 2), 1000, keybuf,
+           (uint32_t)(2 * keybytes + 2));
+    if (keybuf[2 * keybytes] != verifier[0] ||
+        keybuf[2 * keybytes + 1] != verifier[1])
+        return UNC_ERR_PASSWORD;
+
+    aes_setkey(cr, keybuf, keybytes);
+    hmac_init(&cr->hmac, keybuf + keybytes, (uint32_t)keybytes);
+    for (i = 0; i < 16; i++) cr->ctr[i] = 0;
+    cr->ctrpos = 0;
+    return UNC_OK;
+}
+
 /* ------------------------------------------------------------------ */
 /* Constructors                                                        */
 /* ------------------------------------------------------------------ */
@@ -561,6 +825,22 @@ void unc_crypt_apply(UncCrypt *cr, uint8_t *buf, uint32_t len, uint32_t pos)
             lo = ((cr->hi << 24) | (cr->lo >> 8)) ^ unc_cpt_crc64[idx][1];
             cr->hi = (cr->hi >> 8) ^ unc_cpt_crc64[idx][0];
             cr->lo = lo;
+        }
+        break;
+
+    case UNC_CRYPT_AES:
+        /* Counter mode, and the authentication code is over the
+         * CIPHERtext, so it is fed before the XOR. */
+        unc_hmac_update(&cr->hmac, buf, len);
+        for (i = 0; i < len; i++) {
+            if (cr->ctrpos == 0) {
+                int k;
+                for (k = 0; k < 8; k++) if (++cr->ctr[k] != 0) break;
+                for (k = 0; k < 16; k++) cr->ctrbuf[k] = cr->ctr[k];
+                aes_encrypt_block(cr, cr->ctrbuf);
+            }
+            buf[i] ^= cr->ctrbuf[cr->ctrpos];
+            cr->ctrpos = (uint8_t)((cr->ctrpos + 1) & 15);
         }
         break;
 

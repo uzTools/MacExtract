@@ -41,7 +41,7 @@ grown before, on request.
 |---|---|---|
 | Compression | not implemented | this is an extractor |
 | StuffIt X (`.sitx`) | **detect-only** | out by the brief |
-| WinZip AES in a zip (method 99), and PKWARE "strong encryption" | **named, refused per entry** | both postdate every machine this targets by a decade; the second keeps its key material in a record nothing here parses, and XADMaster refuses it too. Ordinary password-encrypted entries in all five formats that have them ARE decrypted since 2026-08-23 (FORMATS.md, *Encryption*) |
+| PKWARE "strong encryption" in a zip (flag 0x40) | **named, refused per entry** | its key material is in a record nothing here parses, and XADMaster refuses it too. Every OTHER encryption these formats have — including WinZip's AES, which postdates the machines by a decade and is read anyway — is decrypted since 2026-08-23 (FORMATS.md, *Encryption*) |
 | Disk images (Disk Copy 4.2) | **detect-only**, with a real probe | out by the brief — the probe matches a synthetic 800K GCR image and a real one, 0 false positives |
 | LZH / LHA extraction | **detect-only**, tested rather than asserted (DECISIONS.md 2026-08-14) | the corpus contains **no `.lzh` at all** — Macintosh software was not distributed that way — and Compact Pro's LZH is a different algorithm from LHA's, so it is ~550 new lines for nothing the corpus can grade |
 | Zip64 spanned sets | `unc_zipseg_describe` answers `UNC_ERR_UNSUPPORTED`, cleanly | an EOCD with disk number `0xFFFF` defers to a locator nothing here parses. Zip64 postdates every machine this project targets by a decade and a set that needs it is 2 GB+; refusing it cleanly is the right answer, not a missing feature (2026-08-14) |
@@ -167,9 +167,9 @@ Unlike section 3, none of this is impossible here: a download would do it.
 - **An encrypted archive written by the original software.** Every
   fixture that exercises decryption is generated here, because nothing
   in the corpus is encrypted (measured with `lsar -j` over all 903).
-  Two of the six ciphers are written by somebody else's encoder (`zip
-  -P`, `arc g<pw>`) and three more are adjudicated by `unar -p`, so the
-  gap is narrow — but no file that Aladdin's or Bill Goodman's software
+  Three of the seven ciphers are written by somebody else's encoder
+  (`zip -P`, `7z -mem=AES256`, `arc g<pw>`) and three more are
+  adjudicated by `unar -p`, so the gap is narrow — but no file that Aladdin's or Bill Goodman's software
   actually encrypted has ever been read here. **What is missing is a
   gradeable SPECIMEN**, and one encrypted `.sit` with a long password
   would settle the divergence in section 1 as well.

@@ -603,7 +603,7 @@ corpus is encrypted** — `lsar -j` over all 903 fixtures reports
 it grades, and the whole design is about not grading a decoder against a
 generator that shares its reading.
 
-Two of the six ciphers need no generator here: **`zip -P`** writes the
+Two of the seven ciphers need no generator here: **`zip -P`** writes the
 PKWARE-cipher fixtures (stored and deflated) and **`arc g<password>`**
 the garbled ARC ones, so those owe nothing to this project. The other
 four — StuffIt classic's StuffItDES, StuffIt 5's RC4, and PackIt's XOR
@@ -614,6 +614,14 @@ byte. For StuffIt classic the fixture is MacBinary, because the password
 verifier is the archive's `'MKey'` resource and the oracle needs the
 resource fork too; our CLI is given the bare `.sit` and finds the same
 resource in the sidecar file it writes itself.
+
+**WinZip's AES has no second reader here**, so its four cases are
+graded the other way round: **7-Zip** writes them (256, 192, 128, and
+one stored), verifies them itself, and our output must equal the bytes
+that went in — `unar` 1.10.8 cannot open one at any key length. Each
+case also has a ciphertext byte flipped, because an AE-2 entry stores
+no CRC and the ten-byte authentication code is the only thing that can
+catch it.
 
 Also asserted, because they are what a user meets:
 

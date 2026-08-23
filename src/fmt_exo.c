@@ -609,6 +609,8 @@ int unc_zip_extract(UncCtx *c)
     for (i = 0; i < nentries; i++) {
         uint32_t method, flags, wantcrc, csize, usize;
         uint32_t namelen, extralen, commentlen, lhoffs, startdisk;
+        int aeskeybytes, aesversion;
+        uint32_t aesmethod;
         const uint8_t *cd, *namep;
         uint8_t namebuf[256];
         uint32_t nread;
@@ -657,6 +659,37 @@ int unc_zip_extract(UncCtx *c)
             }
         }
 
+        /* WinZip's AES puts the real compression method, the key
+         * length and its own version in extra field 0x9901; method
+         * 99 means "look there". Source: XADZipParser.m. */
+        aeskeybytes = 0;
+        aesversion = 0;
+        aesmethod = method;
+        if (method == 99 && (flags & 0x0001) && cdbuf && extralen >= 11 &&
+            cdrel + 46 + namelen + extralen <= cdsize) {
+            const uint8_t *ex = cdbuf + cdrel + 46 + namelen;
+            uint32_t left = extralen;
+            while (left >= 4) {
+                uint32_t id = unc_get_u16le(ex);
+                uint32_t sz = unc_get_u16le(ex + 2);
+                if (sz + 4 > left) break;
+                if (id == 0x9901 && sz >= 7) {
+                    uint32_t ver = unc_get_u16le(ex + 4);
+                    uint32_t vendor = unc_get_u16le(ex + 6);
+                    uint32_t strength = ex[8];
+                    if ((ver == 1 || ver == 2) && vendor == 0x4541 &&
+                        strength >= 1 && strength <= 3) {
+                        aesversion = (int)ver;
+                        aeskeybytes = (int)(8 + 8 * strength);  /* 16/24/32 */
+                        aesmethod = unc_get_u16le(ex + 9);
+                    }
+                    break;
+                }
+                ex += 4 + sz;
+                left -= 4 + sz;
+            }
+        }
+
         unc_entry_clear(&e);
         {
             uint32_t plen = nread;
@@ -681,15 +714,18 @@ int unc_zip_extract(UncCtx *c)
         } else if (sret == 0) {
             est = UNC_OK;
             if (!c->opt.list_only) {
-                if ((flags & 0x0001) && ((flags & 0x0040) || method == 99)) {
-                    /* Two schemes this does not read: PKWARE's "strong
-                     * encryption", whose key material is in a record
-                     * nothing here parses (XADMaster refuses it too),
-                     * and WinZip's AES, which is method 99 — both
-                     * postdate every machine this targets by a decade.
-                     * OPEN_ITEMS.md. */
+                if ((flags & 0x0001) && (flags & 0x0040)) {
+                    /* PKWARE's "strong encryption": its key material is
+                     * in a record nothing here parses, and XADMaster
+                     * refuses it too. OPEN_ITEMS.md. */
                     est = UNC_ERR_ENCRYPTED;
-                } else if (method != 0 && method != 8) {
+                } else if (method == 99 && (flags & 0x0001) &&
+                           !aeskeybytes) {
+                    /* Method 99 says "see the AES extra field", and
+                     * there is not one (or it is a version or a key
+                     * length this does not read). */
+                    est = UNC_ERR_ENCRYPTED;
+                } else if (aesmethod != 0 && aesmethod != 8) {
                     est = UNC_ERR_UNSUPPORTED;
                 } else {
                     /* Local header gives the true data offset (its
@@ -715,6 +751,57 @@ int unc_zip_extract(UncCtx *c)
                          * part and continue in the next. */
                         est = zip_skip(c, (uint32_t)unc_get_u16le(lh + 26) +
                                           unc_get_u16le(lh + 28));
+                        if (est == UNC_OK && aeskeybytes) {
+                            /* WinZip's AES: a salt, a two-byte password
+                             * verifier, the data, and ten bytes of
+                             * HMAC-SHA1 over the ciphertext. The key
+                             * derivation is 1000 rounds of PBKDF2 and
+                             * is the slow part on a 68000 — seconds,
+                             * once per entry. */
+                            uint8_t hdrbuf[16 + 2];
+                            uint32_t overhead =
+                                (uint32_t)(aeskeybytes / 2) + 2u + 10u;
+                            est = unc_password(c, attempt > 0);
+                            if (est != UNC_OK) goto entry_done;
+                            if (csize < overhead) { est = UNC_ERR_CORRUPT;
+                                                    goto entry_done; }
+                            if (unc_read_full(c->io, hdrbuf,
+                                    (int32_t)(aeskeybytes / 2) + 2) != UNC_OK) {
+                                est = UNC_ERR_TRUNCATED;
+                                goto entry_done;
+                            }
+                            est = unc_crypt_winzip_aes(cr, c->pw, c->pwlen,
+                                    hdrbuf, aeskeybytes,
+                                    hdrbuf + aeskeybytes / 2);
+                            if (est == UNC_ERR_PASSWORD) {
+                                attempt++;
+                                goto retry_entry;
+                            }
+                            unc_bufin_init(&in, c->io, &c->ps, iobuf, iocap);
+                            in.limit = csize - overhead;
+                            in.crypt = cr;
+                            est = zip_decode(c, &in, &es, aesmethod, usize,
+                                             &crc, obuf, ocap);
+                            if (est == UNC_OK) {
+                                /* The ten bytes after the data are the
+                                 * authentication code, and they are what
+                                 * grades an AES entry: AE-2 stores no
+                                 * CRC at all. */
+                                uint8_t want[10], got[20];
+                                unc_hmac_final(&cr->hmac, got);
+                                if (unc_read_full(c->io, want, 10) != UNC_OK)
+                                    est = UNC_ERR_TRUNCATED;
+                                else {
+                                    int q;
+                                    for (q = 0; q < 10; q++)
+                                        if (want[q] != got[q]) est = UNC_ERR_CRC;
+                                }
+                            }
+                            if (est == UNC_OK && aesversion == 1 &&
+                                (crc ^ 0xFFFFFFFFu) != wantcrc)
+                                est = UNC_ERR_CRC;
+                            goto entry_done;
+                        }
                         if (est == UNC_OK && (flags & 0x0001)) {
                             /* PKWARE's stream cipher. Twelve bytes of
                              * header come first; the last of them is a

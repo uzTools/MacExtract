@@ -16,10 +16,11 @@ system the project claims:
 All three Mini vMac tiers re-run **2026-08-22**, with M15–M23's codecs in
 and three fixtures added to the sample for them — DiskDoubler methods 3, 4
 and 5, which nothing in the list had exercised. The two System 6 tiers were
-run again on **2026-08-23** against the decryption build, which is 16 KB
+run again on **2026-08-23** against the decryption build, which is 20 KB
 larger and so leaves the 1 MB machine that much less heap: **62/62 on both**,
 with the three heaviest allocations (533 KB, 471 KB and method 5's 405 KB)
-unchanged. System 7 has not been re-run since 2026-08-22. Per-fixture tables and how
+unchanged. The 1 MB tier was run a second time after WinZip's AES went in:
+62/62 again. System 7 has not been re-run since 2026-08-22. Per-fixture tables and how
 the sample grew: FORMATS.md. How to re-run any of
 it: `tools/vmac/README.md`. What no emulator here can settle:
 MANUAL_TESTS.md.

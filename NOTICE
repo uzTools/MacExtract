@@ -38,6 +38,16 @@ This project's decoders are transcriptions/ports of algorithms from:
     The archives themselves are fetched by URL, never committed
     (fixtures/SOURCES.md).
 
+  * The cryptographic primitives five of the encryption schemes need —
+    DES, MD5, RC4, SHA-1 and AES — are transcribed from XADMaster's
+    own `Crypto/` directory (des.c, md5.c, sha.c, hmac_sha1.c, the
+    Gladman AES tables) and from the handles that use them; the tables
+    are precomputed by `tools/gen_crypt_tables.py` because this engine
+    may not have global mutable state, and the generator checks the AES
+    S box against its own definition rather than trusting the copy.
+    Each is graded in `tests/unit_formats.c` against an implementation
+    that is not ours — python's hashlib and hmac, and `openssl enc`.
+
   * Compact Pro (Bill Goodman, 1990-1995). Its ENCRYPTION is the one
     scheme in this project that no reference implementation reads and
     no publication describes; The Unarchiver's own format notes say
