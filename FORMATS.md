@@ -1399,17 +1399,18 @@ the ones a user waits through.
 | `ACInfo_Comm.sit.bin` | opening a MacBinary envelope | 757,559 | 163,776 | **−78.4 %** |
 | `alpha401.cpt` | the same, Compact Pro inside | 761,290 | 167,655 | **−78.0 %** |
 | `xmasbeeps.sit` | the same, StuffIt inside | 789,219 | 195,059 | **−75.3 %** |
-| `derived-Library_ISBN_Barcoder.sit` (`--budget 597036`) | StuffIt 5, sampled index | 2,346,708,561 | 698,745,332 | **−70.2 %** |
+| `derived-Library_ISBN_Barcoder.sit` (`--budget 597036`) | StuffIt 5, sampled index | 2,346,708,561 | 697,304,583 | **−70.3 %** |
 | `derived-SyntheticReferences2.0.sea` | Now Compress | 791,938,983 | 419,972,116 | **−47.0 %** |
-| `derived-Terrainman_2.0__.sea` | DiskDoubler DDn | 52,194,820 | 32,424,130 | **−37.9 %** |
-| `derived-a2basic.dmg.sit` (`--budget 597036`) | StuffIt 5, sampled index | 487,403,395 | 315,620,026 | **−35.2 %** |
-| `derived-EmpireBuilderDemo.sit` | StuffIt, serialized-tree Huffman | 48,971,940 | 32,777,032 | **−33.1 %** |
-| `derived-XferIt_1.5b4.sea` | Compact Pro | 114,726,855 | 80,415,849 | **−29.9 %** |
+| `derived-Terrainman_2.0__.sea` | DiskDoubler DDn | 52,194,820 | 32,424,007 | **−37.9 %** |
+| `derived-EmpireBuilderDemo.sit` | StuffIt, serialized-tree Huffman | 48,971,940 | 31,422,881 | **−35.8 %** |
+| `derived-a2basic.dmg.sit` (`--budget 597036`) | StuffIt 5, sampled index | 487,403,395 | 315,159,205 | **−35.3 %** |
+| `derived-XferIt_1.5b4.sea` | Compact Pro | 114,726,855 | 77,335,095 | **−32.6 %** |
+| `PCCTS.tar.gz` | gzip (zlib inflate + our CRC-32) | 6,342,819 | 5,411,475 | **−14.7 %** |
+| `derived-MUSFMT10.ZIP` | zip (deflate) | 13,728,964 | 12,068,337 | **−12.1 %** |
+| `derived-xmasbeeps.sit` | StuffIt classic method 2 (LZW) | 34,270,500 | 30,635,054 | **−10.6 %** |
 | `a2ps.V4.3.tar.Z` | Unix compress (LZW) | 4,648,124 | 4,212,836 | **−9.4 %** |
-| `derived-xmasbeeps.sit` | StuffIt classic method 2 (LZW) | 34,270,500 | 31,782,342 | **−7.3 %** |
-| `macburger-helper.hqx` | BinHex | 26,385,143 | 24,637,108 | **−6.6 %** |
-| `4acalc.zip` | a real zip | 151,835 | 151,784 | −0.0 % |
-| `PCCTS.tar.gz` | gzip (zlib inflate) | 6,342,819 | 6,342,758 | −0.0 % |
+| `macburger-helper.hqx` | BinHex | 26,385,143 | 24,054,217 | **−8.8 %** |
+| `4acalc.zip` | a real zip, 8 KB | 151,835 | 151,784 | −0.0 % |
 
 **Read the two StuffIt 5 rows with `Budget` in mind.** Both builds are capped
 at 597,036 B, the figure the machine actually gives the engine — but the older
@@ -1423,8 +1424,19 @@ sections down: 1,898 s → 1,384 s.
 `unc_zipseg_probe` runs on every file, and the scan itself became a pointer
 walk. MacBinary is 234 of the 929 fixtures.
 
-**A real zip is unchanged**, which is the control: it finds its
-end-of-central-directory record in the first window and always did.
+**A real zip is unchanged**, which is the control: `4acalc.zip` is 8 KB, it
+finds its end-of-central-directory record in the first window and always
+did, and nothing in it is hot enough to move.
+
+**The three CRC functions are four bytes per loop test, walked with a
+pointer.** They are the most shared loop in the engine — every format's fork
+CRC comes through one of them — and `unc_crc32` alone was **40.7 %** of a
+gzip extraction, where zlib does the inflating and this does everything
+else. That is what moves gzip and zip off the flat line they sat on through
+every earlier change, and it is 4 % on the Huffman formats besides. **Not**
+slicing-by-4, which is the usual next step: that wants aligned 32-bit reads
+of the input, which the 68000 discipline forbids, and a table four times the
+size. Same bytes in, same table, same answer, 384 B of code.
 
 **Both Huffman decoders now peek eight bits and look the code up**, and they
 are separate decoders: `unc_canon_decode` reads canonical code lengths

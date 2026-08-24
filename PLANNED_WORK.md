@@ -51,10 +51,14 @@ found is in BLOCKERS.md.
 
 ## 1. Five windows allocated at the format's ceiling, not the entry's size
 
-**This is memory, not time**, which is why it sits below the two items above:
-every one of these formats already fits the 1 MB floor target with room to
-spare (`FORMATS.md`'s peak column), so what it buys is headroom rather than
-seconds. It is listed because the class is real and completely enumerated.
+**This is memory, not time**, and every one of these formats already fits
+the 1 MB floor target with room to spare (`FORMATS.md`'s peak column), so
+what it buys is headroom rather than seconds. It is listed because the class
+is real and completely enumerated — and it got more interesting on
+2026-08-24, when the two Huffman lookup tables put 3–6 KB back onto Compact
+Pro, DiskDoubler and Now Compress. Now Compress in particular allocates
+131,072 B from three compile-time constants *before a single entry is read*,
+which is the largest single unearned allocation left in the engine.
 
 **How it was found, because the method is repeatable and needs no insight:**
 CLAUDE.md names the smell — *a constant in the peak-RAM matrix is usually a
