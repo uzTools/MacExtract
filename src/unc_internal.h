@@ -353,9 +353,12 @@ uint32_t unc_bitin_bytepos(const UncBitIn *b);
  * more than the needed 511"; internal nodes only need child slots. */
 #define UNC_HUFF_MAX_INTERNAL 320
 
-/* Bits looked up at once by unc_huff_decode's fast path — the same
- * trade as UNC_CANON_FAST_BITS, on the other Huffman decoder. */
-#define UNC_HUFF_FAST_BITS 8
+/* The same trade on the other Huffman decoder, and the same answer:
+ * 8 -> 10 is 8.7 % of derived-EmpireBuilderDemo.sit and 11 only 1.2 %
+ * more. Entries are uint16_t here (the symbol is stored), so the table
+ * is 2 KB. The length is packed into the low four bits, which holds any
+ * K up to 15. */
+#define UNC_HUFF_FAST_BITS 10
 
 typedef struct UncHuff {
     /* child[side][node]: value >= 0 is a node index, < 0 is a leaf
@@ -395,11 +398,19 @@ int unc_huff_decode(const UncHuff *h, UncBitIn *bi);
 #define UNC_CANON_MAX_BITS 31   /* method-13 tables reach 18; the
                                  * serialized form could go higher */
 
-/* Bits looked up at once by unc_canon_decode's fast path. Eight costs
- * 256 bytes of table and covers every code of eight bits or fewer —
- * which, Huffman being Huffman, is most of the SYMBOLS DECODED even
- * where it is a minority of the alphabet. */
-#define UNC_CANON_FAST_BITS 8
+/* Bits looked up at once by unc_canon_decode's fast path, and the size of
+ * the table that answers them: 1 byte per entry, so 1 KB.
+ *
+ * TEN rather than eight, measured. Eight covers every code of eight bits
+ * or fewer, which for a 256-symbol alphabet is most of the symbols
+ * decoded — but Now Compress codes 0x122 of them and DiskDoubler DDn 257,
+ * and there the tail past eight bits is where the time was. Going 8 -> 10
+ * is another 17.0 % of a Now Compress run, 8.0 % of DiskDoubler and 7.8 %
+ * of Compact Pro; 11 adds 2.7 % more and 12 a further 0.7 %, for two and
+ * four times the table. The build cost is 1 << K writes per code table,
+ * and archives of many small entries were checked for it: keyAhead.cpt
+ * got FASTER at 10, so the fill is not what those pay. */
+#define UNC_CANON_FAST_BITS 10
 
 typedef struct UncCanon {
     uint16_t count[UNC_CANON_MAX_BITS + 1]; /* codes per bit length */

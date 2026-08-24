@@ -13,7 +13,7 @@ whole corpus for that format (engine allocations only, via
 | AppleSingle/Double | extract | — | (unit tests + envelopes) | 8 KB | full |
 | BinHex 4 (.hqx) | extract | RLE90; several documents in one file, and one document posted in several parts†† | 179 fixtures | 8 KB | full |
 | PackIt (.pit) | extract | store, Huffman; **PMa5 and PMa6 decrypted** (an XOR keyed by DES's PC-1, and DES) | 4 fixtures (1 real + 3 synthetic PMa4) | 9 KB | full |
-| Compact Pro (.cpt) | extract | RLE, LZH+RLE; **encrypted entries decrypted**, from a reading of the application that the application then graded, both directions (*Compact Pro's cipher*, below); the archive **comment** is saved rather than dropped | 108 fixtures | 19 KB | full |
+| Compact Pro (.cpt) | extract | RLE, LZH+RLE; **encrypted entries decrypted**, from a reading of the application that the application then graded, both directions (*Compact Pro's cipher*, below); the archive **comment** is saved rather than dropped | 108 fixtures | 24 KB | full |
 | StuffIt classic (.sit) | extract | 0 store, 1 RLE90*, 2 LZW, 3 Huffman, 5 LZAH, 6 fixed Huffman‡, 8 MW, 13 LZSS+Huffman; **encrypted forks decrypted** (StuffItDES, and the 'MKey' resource — *Encryption*, below) | 227 fixtures‡‡ | 8–76 KB‖ | full |
 | StuffIt 5 (.sit) | extract | 0, 13, 15 Arsenic; **encrypted forks decrypted** (RC4 under MD5(password)) | 31 fixtures | 0.15–2.53 MB† | 23 of 31 fixtures extract FULLY; the rest refuse per entry |
 | Zip | extract | store, deflate, **PKWARE's cipher and WinZip's AES** (128/192/256); other methods and PKWARE strong encryption are per-entry errors | 5 fixtures (2 of them PKZIP 1.x, graded on names and entry counts only — Implode is out of v1 scope, and `unar` adjudicates 5 of their 7 entries) | 12–54 KB¶ | full |
@@ -27,7 +27,7 @@ whole corpus for that format (engine allocations only, via
 | Split file (plain .001/.002) | extract | — (join only; the joined file is the next layer) | 3 generated sets, adjudicated against the bytes that were cut, `unar` where it can join, and our unsplit read | 8 KB | full |
 | StuffIt X (.sitx) | detect only | — | — (no fixture) | — | — |
 | DiskDoubler (DD, DDAR, DDA2) | extract | **all eleven**: 0 store, 1 Unix compress, 2/5 splay Huffman, 3 RLE90, 4 StuffIt Huffman, 6/9 AD LZSS, 7 Stac LZS, 8 Compact Pro, 10 DDn✦ | 88 fixtures (6 harvested + 82 CC0 files graded against their own originals, in `ci.sh` since 2026-08-21) + 19 BinHexed copies of those + 28 specimens (2 written by DiskDoubler 3.7 under Mini vMac, 2 off its distribution disk, 24 off Salient's 3.1.2 disk)✦ | 8–392 KB✦ | full |
-| Now Compress | extract | stored, LZSS, Huffman, Huffman+LZSS, "new" LZSS✧ | 2 real fixtures + 13 generated archives (all five shapes, adjudicated by `unar`); `synth-now-mixed.now` also has an `unar` manifest and is in the differential suite | 128 KB✧ | full |
+| Now Compress | extract | stored, LZSS, Huffman, Huffman+LZSS, "new" LZSS✧ | 2 real fixtures + 13 generated archives (all five shapes, adjudicated by `unar`); `synth-now-mixed.now` also has an `unar` manifest and is in the differential suite | 134 KB✧ | full |
 | ARC / ArcMac (.arc) | extract | 1/2 store, 3 RLE90, 4 squeeze+RLE90, 5/6/7 crunch, 8 12-bit LZW+RLE90, 9 13-bit LZW, 0x7f compress; ArcMac's two-fork payload since 2026-08-16★★★; 0x0a/0x0b (PKARC) declined per entry★; **garbled (password-XORed) members decrypted** | 10 generated archives (methods 1-9, adjudicated by `unar`) + 3 written by Debian's `arc` 5.21q; `synth-arc-mixed.arc` also has an `unar` manifest and is in the differential suite | 4–32 KB★ | full |
 | btoa (`xbtoa`/`.ascii`) | extract | — (base-85 ASCII armour; both the `xbtoa5` and the older `xbtoa Begin` framings)◆ | no corpus file and no second reader: graded against **btoa 5.2.1 itself**, which encodes the subjects `tools/run_btoa.py` decodes | 12 KB | full |
 | uuencode (.uu, incl. UUTool) | extract | — (plain uu, UUTool's two-fork "MU" shape, and documents posted in several parts★★) | 7 generated cases, the two-fork ones adjudicated by macutils' `hexbin`; `synth-uu-mac.uu` is in the differential suite | 4 KB | full |
@@ -1400,13 +1400,13 @@ the ones a user waits through.
 | `alpha401.cpt` | the same, Compact Pro inside | 761,290 | 167,655 | **−78.0 %** |
 | `xmasbeeps.sit` | the same, StuffIt inside | 789,219 | 195,059 | **−75.3 %** |
 | `derived-Library_ISBN_Barcoder.sit` (`--budget 597036`) | StuffIt 5, sampled index | 2,346,708,561 | 698,745,332 | **−70.2 %** |
-| `derived-SyntheticReferences2.0.sea` | Now Compress | 791,938,983 | 506,115,223 | **−36.1 %** |
+| `derived-SyntheticReferences2.0.sea` | Now Compress | 791,938,983 | 419,972,116 | **−47.0 %** |
+| `derived-Terrainman_2.0__.sea` | DiskDoubler DDn | 52,194,820 | 32,424,130 | **−37.9 %** |
 | `derived-a2basic.dmg.sit` (`--budget 597036`) | StuffIt 5, sampled index | 487,403,395 | 315,620,026 | **−35.2 %** |
-| `derived-Terrainman_2.0__.sea` | DiskDoubler DDn | 52,194,820 | 35,231,340 | **−32.5 %** |
-| `derived-EmpireBuilderDemo.sit` | StuffIt, serialized-tree Huffman | 48,971,940 | 35,907,173 | **−26.7 %** |
-| `derived-XferIt_1.5b4.sea` | Compact Pro | 114,726,855 | 87,245,888 | **−24.0 %** |
+| `derived-EmpireBuilderDemo.sit` | StuffIt, serialized-tree Huffman | 48,971,940 | 32,777,032 | **−33.1 %** |
+| `derived-XferIt_1.5b4.sea` | Compact Pro | 114,726,855 | 80,415,849 | **−29.9 %** |
 | `a2ps.V4.3.tar.Z` | Unix compress (LZW) | 4,648,124 | 4,212,836 | **−9.4 %** |
-| `derived-xmasbeeps.sit` | StuffIt classic method 2 (LZW) | 34,270,500 | 31,720,758 | **−7.4 %** |
+| `derived-xmasbeeps.sit` | StuffIt classic method 2 (LZW) | 34,270,500 | 31,782,342 | **−7.3 %** |
 | `macburger-helper.hqx` | BinHex | 26,385,143 | 24,637,108 | **−6.6 %** |
 | `4acalc.zip` | a real zip | 151,835 | 151,784 | −0.0 % |
 | `PCCTS.tar.gz` | gzip (zlib inflate) | 6,342,819 | 6,342,758 | −0.0 % |
@@ -1439,6 +1439,18 @@ to.
 `unc_bitin_bits` takes its n bits in one masked shift when the window holds
 them, instead of n calls to the single-bit reader. That is another 6 to 10
 points on DiskDoubler and Now Compress on top of the table.
+
+**Both tables are TEN bits wide, and that was measured rather than
+assumed.** Eight is the textbook figure and covers every code of eight bits
+or fewer, which for a 256-symbol alphabet is most of the symbols decoded.
+Now Compress codes 0x122 symbols and DiskDoubler DDn 257, and there the
+tail past eight bits was where the time still was: 8 → 10 is a further
+**17.0 %** of a Now Compress run, 8.0 % of DiskDoubler, 7.8 % of Compact
+Pro and 8.7 % of the tree decoder's StuffIt fixture. 11 adds 2.7 % more and
+12 a further 0.7 %, for two and four times the table, so 10 is the knee.
+The cost is 1 KB (canonical) or 2 KB (tree) per table and `1 << K` writes
+per build; archives of many small entries were checked for that build cost
+and `derived-keyAhead.cpt` got *faster*.
 
 ### What is still hot, measured on the same runs
 
@@ -1650,7 +1662,7 @@ On-Mac engine peak heap (high-water mark) by format, matching the Linux
 |---|---|
 | MacBinary / BinHex / Tar | 8 KB |
 | PackIt | 9 KB |
-| Compact Pro | 19 KB |
+| Compact Pro | 24 KB |
 | Zip | 12–53 KB (re-measured 2026-08-09, was 12–65: see ¶) |
 | Gzip | 51 KB |
 | StuffIt classic | 19–72 KB‖ |
@@ -1715,17 +1727,25 @@ System 6**, and it is demonstrated by the 55/55 run below.
 The seven fixtures M12 added, replayed on both tiers the day the formats
 landed. **Identical numbers at 4 MB and at 1 MB** — nothing in either decoder
 varies with the machine, and the on-Mac peak agrees with the Linux figure to
-the shell's constant 16 B:
+the shell's constant 16 B. **Peaks re-measured 2026-08-24**, when the two
+Huffman decoders gained lookup tables and DiskDoubler DDn's and Now
+Compress's code tables moved off the stack; the previous column is in
+brackets:
 
 | Fixture | Format / method | Files | Peak heap on the Mac | Data | Rsrc |
 |---|---|---|---|---|---|
 | `derived-DandStoQIF2.sea` | DiskDoubler AD1 (9) | 3 | 16,400 B | 20,918 B | 24,562 B |
-| `derived-MAZv143.sea` | DiskDoubler Compact Pro (8) | 2 | 19,318 B | 57,078 B | 40,079 B |
-| `derived-MacPass390.sea` | DiskDoubler Compact Pro (8) | 3 | 19,318 B | 0 B | 351,825 B |
-| `derived-DD_Expand.sea` | DiskDoubler DDn (10) | 1 | 102,432 B | 0 B | 270,362 B |
-| `derived-LHA_Expander_1.0.3.sea` | DiskDoubler DDn, folders | 5 | 110,624 B | 69,776 B | 82,778 B |
-| `derived-Terrainman_2.0__.sea` | DiskDoubler DDn + delta-1 | 12 | 106,528 B | 95,860 B | 245,265 B |
-| `derived-Expand_Now_1.0.1.sea` | Now Compress | 1 | 131,088 B | 0 B | 88,942 B |
+| `derived-MAZv143.sea` | DiskDoubler Compact Pro (8) | 2 | 22,594 B (was 19,318) | 57,078 B | 40,079 B |
+| `derived-MacPass390.sea` | DiskDoubler Compact Pro (8) | 3 | 22,594 B (was 19,318) | 0 B | 351,825 B |
+| `derived-DD_Expand.sea` | DiskDoubler DDn (10) | 1 | 108,610 B (was 102,432) | 0 B | 270,362 B |
+| `derived-LHA_Expander_1.0.3.sea` | DiskDoubler DDn, folders | 5 | 116,802 B (was 110,624) | 69,776 B | 82,778 B |
+| `derived-Terrainman_2.0__.sea` | DiskDoubler DDn + delta-1 | 12 | 112,706 B (was 106,528) | 95,860 B | 245,265 B |
+| `derived-Expand_Now_1.0.1.sea` | Now Compress | 1 | 137,250 B (was 131,088) | 0 B | 88,942 B |
+
+**The 3–6 KB each row gained is the lookup tables**, and it is bought back
+many times over: those same fixtures decode 30–47 % fewer instructions
+(*Decode cost*). `derived-DandStoQIF2.sea` is unchanged because AD LZSS has
+no Huffman stage at all.
 
 `derived-DandStoQIF2.sea` was in the sample before M12 as a REFUSAL case —
 the only one there has ever been — and is now an extraction.
