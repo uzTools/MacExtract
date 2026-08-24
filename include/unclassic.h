@@ -28,7 +28,7 @@ extern "C" {
  * tools/make_dist.sh do now, and tools/check_docs.py fails the build if
  * this, README.md and dist/README.txt disagree. A constant nobody reads
  * is a constant that is wrong. */
-#define UNC_VERSION "0.16.0"
+#define UNC_VERSION "0.17.0"
 
 /* ------------------------------------------------------------------ */
 /* Formats                                                            */

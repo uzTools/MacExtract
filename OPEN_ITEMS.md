@@ -189,6 +189,15 @@ Unlike section 3, none of this is impossible here: a download would do it.
   real Plus with a Chooser extension or two has less free heap than any number
   recorded here.
 - **Real PowerPC hardware: never run.** Mac OS 9 is verified under QEMU only.
+- **The COLOUR icon members are unverified.** `ICN#`/`ics#` are photographed
+  bound and drawn by a real Finder (DECISIONS.md 2026-08-24, *the icon*),
+  but Mini vMac emulates a 1-bit Mac Plus, so `icl4`/`ics4`/`icl8`/`ics8`
+  have never been displayed by anything. The 256-colour indices also assume
+  the Macintosh palette is a 6x6x6 cube at `36*r + 6*g + b` with black at
+  255 — **reconstructed, not transcribed from a reference**, and stated as
+  such in `tools/icon/make_icon.py`. What would close it: opening the
+  application's folder on the Mac OS 9 tier (`tools/vmac/os9.py`, which has
+  colour) and photographing the icon, or a reference for the system palette.
 - **The full-disk ALERT is unverified.** That a full destination volume
   stops the run after one error is measured (`tools/vmac/README.md`,
   *Filling the destination on purpose*); that the user is then shown "The

@@ -113,6 +113,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-24 (the performance pass, part two) — what re-profiling found that the plan had not
 - 2026-08-24 (PLANNED_WORK.md, closed) — the file is gone, and what it left behind
 - 2026-08-24 (the reserve) — a constant that suited one machine of the two
+- 2026-08-24 (the icon) — four things the resources alone do not do
 
 ---
 
@@ -6341,3 +6342,55 @@ it costs, not what it is for** — so the number sets the shape of the rule
 MANUAL_TESTS.md carries the two things only iron can settle: a floppy and
 an AppleShare volume with an extension loaded, and MultiFinder at the
 declared minimum.
+
+---
+
+## 2026-08-24 (the icon) — four things the resources alone do not do
+
+The icon family arrived as a generator: `tools/icon/make_icon.py`, which
+draws an open carton lettered EXTRACT with a document and a block, and emits
+`ICN#`, `ics#`, `icl4`, `ics4`, `icl8`, `ics8`, `FREF` and `BNDL` at ID 128.
+Correct resources, and on their own they produced **nothing** — the Finder
+drew the generic application diamond. Four separate things were missing, and
+each one alone is enough to leave it looking exactly the same.
+
+**How they were found is the point: by booting a real Finder and looking.**
+`interactive.py --e2e` photographs the boot volume's window
+(`e2e-2-volume.png`), and the icon was still the generic diamond after the
+first fix, and after the second, and after the third. Nothing in the build
+output ever said a word. A resource file that compiles, an application that
+launches and an icon that never appears are perfectly compatible.
+
+1. **`#include "Multiverse.r"`.** Retro68's Rez carries no built-in type
+   declarations; without it the file stops at `Can't find type definition
+   for 'ICN#'`. The only RInclude declaring these eight types.
+2. **The creator code.** `add_application()` defaults it to `'????'`, and
+   the Finder binds an icon by matching the `BNDL` owner to the creator. The
+   generator stamps `'UNCL'`, so the build has to as well.
+3. **`hasBundle` (0x2000) in the file's Finder info.** Rez takes `-t` and
+   `-c` and has no option for the flags, so a built application has
+   `0x0000` and the Finder never looks at the `BNDL` at all.
+   `tools/icon/set_bundle_bit.py` sets it after the build: MacBinary byte
+   73, with the header CRC at 124 recomputed because byte 73 is inside the
+   range it covers, and the `.dsk` **rebuilt** from the patched MacBinary
+   rather than edited — `hcopy -m` carries the flags across, and hfsutils
+   cannot set them in place (`hattrib -b` blesses a system folder, which is
+   a different thing entirely).
+4. **The signature resource** — type = the creator code, ID 0. The Finder
+   wants it present to register an application's bundle. This was the last
+   one, and with the other three already right the icon still did not
+   appear until it was added.
+
+And a fifth, on the harness side rather than the application's: the stock
+System 6 image carries a **`Desktop` file** at its root, the Finder's cache
+of which application owns which icon. `mkboot.py` deleted every root item
+except the System Folder and left that one, because it enumerates with
+`hdir` and `hdir` hides invisible files unless given `-a`. A user does the
+same thing by holding Cmd-Option at startup; the harness now deletes the
+file.
+
+**The transferable lesson is about what "it built" is worth.** Every one of
+these five produced a clean build, a working application, and the wrong
+icon. The only instrument that could see any of them was a screenshot of a
+real Finder — which is why `README.md` already requires that its screenshots
+be real frames, and why this project keeps a harness that can take them.

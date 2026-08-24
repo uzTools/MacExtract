@@ -116,6 +116,15 @@ class HFS:
 def strip_system_folder(hfs):
     """Delete every root-level item except the System Folder, and everything
     inside the System Folder except System and Finder."""
+    # The Desktop file first, and explicitly, because `ls` cannot see it:
+    # `hdir` hides invisible files unless given -a, and the Desktop file is
+    # invisible. It is the Finder's cache of which application owns which
+    # icon, and a stale one is why an application with a correct 'BNDL',
+    # a matching creator and hasBundle set still draws the generic diamond
+    # (measured 2026-08-24 — interactive.py --e2e photographed exactly
+    # that, twice, before this line existed). The Finder rebuilds it on the
+    # next boot, which is what holding Cmd-Option at startup does by hand.
+    hfs.run("hdel", hfs.path("Desktop"), check=False)
     for isdir, name in hfs.ls(hfs.path()):
         if name == SYS_FOLDER:
             continue

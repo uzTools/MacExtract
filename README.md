@@ -11,6 +11,11 @@ There is a Linux command-line version too, built from the same engine.
 
 ## What it looks like
 
+It arrives looking like this — an open carton lettered EXTRACT, drawn for
+1-bit, 16-colour and 256-colour screens:
+
+![The unclassic icon on a System 6 desktop](docs/screens/0-icon.png)
+
 Pick an archive:
 
 ![Standard File dialog listing archive.sit](docs/screens/1-open.png)
@@ -43,7 +48,7 @@ one, because parts are recognised by what is inside them:
 ## Download
 
 **[Latest release](https://github.com/jarreboum/unclassic/releases/latest)** —
-currently **v0.16.0**. If the release page shows anything older, the publish
+currently **v0.17.0**. If the release page shows anything older, the publish
 step did not run. Or take it straight from the tree:
 
 | | |

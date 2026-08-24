@@ -1,4 +1,4 @@
-unclassic v0.16.0 — bootstrap distribution
+unclassic v0.17.0 — bootstrap distribution
 =========================================
 
 A bare Classic Mac has no way to open a .sit/.cpt/.hqx until it HAS an
@@ -48,6 +48,11 @@ unclassic carries the table SpaceSaver primes its compression with -- the
 part no other tool has -- so a single file on a floppy is enough, with
 nothing else to install. (That table is copyright Aladdin Systems; see
 the NOTICE file in the source.)
+
+The application has its own icon -- an open carton lettered EXTRACT --
+drawn for 1-bit, 16-colour and 256-colour screens. If it shows up as a plain
+document or a generic diamond, the Finder is using a stale Desktop file:
+restart holding Command and Option, and say yes to rebuilding it.
 
 If you run MultiFinder or System 7, the size in the application's Get Info
 window matters. It asks for 4 MB, runs in as little as 400 KB, and at about
