@@ -32,14 +32,16 @@ target_include_directories(unclassic PRIVATE
 # show up most (FORMATS.md, `Per-file -O2`). Do not re-try it without a
 # harness that resolves better than 20 s on a 22-minute run.
 
-# zlib's crc32.c compiles a set of "braided" tables whenever W is defined,
-# and W defaults to 4 on anything that is not x86-64 or aarch64 — so the
-# 68000 build carried them. Z_TESTW=0 leaves W undefined. The engine uses
-# raw inflate (inflateInit2(&zs, -15)), so zlib never computes a CRC;
-# unc_crc32 does. FORMATS.md, `Resident memory`, has the bytes.
+# zlib is used for ONE thing here, raw inflate, and two defines say so.
+# Z_TESTW=0 drops crc32.c's braided tables (W defaults to 4 on anything
+# that is not x86-64 or aarch64, so the 68000 build carried them); the
+# engine's CRC is unc_crc32. NO_GZIP drops inflate.c's gzip-wrapper state
+# machine, which fmt_exo.c makes unreachable by reading the gzip header
+# and trailer itself. Neither modifies third_party/zlib. Together they are
+# 8,704 B of the application — FORMATS.md, `Resident memory`.
 set_source_files_properties(
     ${ZLIB_SRC} TARGET_DIRECTORY unclassic
-    PROPERTIES COMPILE_DEFINITIONS Z_TESTW=0)
+    PROPERTIES COMPILE_DEFINITIONS "Z_TESTW=0;NO_GZIP")
 
 # Plain 68000 floor: no 68020+ instructions.
 target_compile_options(unclassic PRIVATE -mcpu=68000 -Os -Wno-multichar

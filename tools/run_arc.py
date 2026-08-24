@@ -107,6 +107,69 @@ def main():
             check(os.path.join(tmp, f), want, unclassic, problems)
             ran += 1
 
+        # Damage every generated archive, systematically.
+        #
+        # ARC is the thinnest-graded format here: the corpus has ONE ARC
+        # fixture, so `run_robustness.sh` gives the whole format ten
+        # variants, and until 2026-08-24 the only other damaged input was
+        # the single flipped byte below. That is a poor net under decoders
+        # whose tables are indexed by a code read straight from the
+        # stream — crunch reads 12 bits and uses them as an array
+        # subscript — so this sweeps truncations and bit flips across
+        # every method the generator writes.
+        #
+        # WHAT IS ASSERTED is only what can be: not that a damaged archive
+        # fails, because a flip can land in a byte nothing checks, but
+        # that the extractor exits 0..2 (never by signal), and that when
+        # it does return success every file it wrote is byte-for-byte
+        # ours. The suite runs under ASan+UBSan in ci.sh, and the exit
+        # rule is what turns a sanitizer abort into a reported failure
+        # rather than an ordinary refusal.
+        for f in sorted(os.listdir(tmp)):
+            if not f.endswith(".arc") or f == "damaged.arc":
+                continue
+            blob = open(os.path.join(tmp, f), "rb").read()
+            variants = []
+            for cut in (1, 2, 3, 5, 8, 13, 21, 34):
+                if len(blob) > cut:
+                    variants.append(("trunc%d" % cut, blob[:-cut]))
+            for at in range(0, len(blob), max(1, len(blob) // 12)):
+                b = bytearray(blob)
+                b[at] ^= 0xFF
+                variants.append(("flip%d" % at, bytes(b)))
+            for tag, payload in variants:
+                bad = os.path.join(tmp, "dmg-%s-%s" % (tag, f))
+                open(bad, "wb").write(payload)
+                out = tempfile.mkdtemp()
+                try:
+                    r = run([unclassic, "x", "-o", out, bad])
+                    # The SAME rule run_robustness.py uses, and for the
+                    # same reason: a non-zero exit is fine (the archive is
+                    # damaged), but death by signal or an exit outside
+                    # 0..2 is a sanitizer abort or a crash, and those are
+                    # what this exists to find. Checking only "did it
+                    # write wrong bytes" would have let an ASan trip pass
+                    # as an ordinary refusal — which it did, in the first
+                    # draft of this sweep.
+                    if r.returncode < 0 or r.returncode > 2:
+                        problems.append("%s: exit %d"
+                                        % (os.path.basename(bad),
+                                           r.returncode))
+                    if r.returncode == 0:
+                        # Accepted: then every file it wrote must be one
+                        # of ours, byte for byte. A damaged archive that
+                        # "succeeds" with different bytes is the failure
+                        # this is looking for.
+                        for name, content in data.items():
+                            got = extracted(out, name)
+                            if got is not None and got != content:
+                                problems.append(
+                                    "%s: accepted, but %s came out wrong"
+                                    % (os.path.basename(bad), name))
+                finally:
+                    shutil.rmtree(out, ignore_errors=True)
+                ran += 1
+
         # A per-entry CRC failure must stay per-entry: the entry after a
         # damaged one still comes out.
         one = os.path.join(tmp, "synth-arc-m2.arc")

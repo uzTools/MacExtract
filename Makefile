@@ -34,13 +34,22 @@ $(BUILD)/%.o: src/%.c $(ENGINE_HDR) | $(BUILD)
 
 # third_party is exempt from our warning set (vendored code).
 #
-# Z_TESTW=0 leaves W undefined, which drops crc32.c's braided tables and
-# the code that reads them. The engine calls inflateInit2(&zs, -15) — RAW
-# inflate — so zlib never computes a CRC at all; unc_crc32 does. On the
-# Mac target that is 5,120 B of permanently-resident A5 world (FORMATS.md,
-# `Resident memory`).
+# Two defines, both because the engine uses zlib for ONE thing: raw
+# inflate, via inflateInit2(&zs, -15).
+#
+#   Z_TESTW=0  leaves W undefined, dropping crc32.c's braided tables and
+#              the code that reads them. zlib never computes a CRC here;
+#              unc_crc32 does. 5,120 B of A5 world.
+#   NO_GZIP    drops inflate.c's gzip-wrapper state machine — the header
+#              parse, the name/comment/extra fields and their CRC. The
+#              engine reads the gzip header and trailer itself in
+#              fmt_exo.c and hands zlib a raw stream, so none of it was
+#              ever reachable. 2,618 B of code.
+#
+# Neither modifies third_party/zlib, which stays vendored unmodified.
+# FORMATS.md, `Resident memory`, has the figures.
 $(BUILD)/zlib_%.o: third_party/zlib/%.c | $(BUILD)
-	$(CC) -std=c99 $(CFLAGS) -DZ_TESTW=0 -Ithird_party/zlib -c $< -o $@
+	$(CC) -std=c99 $(CFLAGS) -DZ_TESTW=0 -DNO_GZIP -Ithird_party/zlib -c $< -o $@
 
 $(CLI_BIN): cli/main.c $(ENGINE_OBJ) $(THIRD_OBJ) | $(BUILD)
 	$(CC) $(WARN) $(CFLAGS) $(INC) cli/main.c $(ENGINE_OBJ) $(THIRD_OBJ) -o $@

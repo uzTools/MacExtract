@@ -1351,6 +1351,39 @@ from 80 KB to under 28 KB to reach it. That is headroom the Toolbox and File
 Manager use during output writes, on the one machine nothing here can test on
 real hardware. Whatever the reserve is worth, it is not a rung.
 
+### Budget sweep: only one format ever runs out
+
+`tools/run_budget.py` over the whole corpus at a 400 KB cap — well under the
+597,036 B a 1 MB Mac Plus actually leaves the engine (*Budget*):
+
+| format | fixtures | limited | peak |
+|---|---|---|---|
+| ARC | 1 | **0** | 33,732 B |
+| Compact Pro | 108 | **0** | 31,111 B |
+| StuffIt | 227 | **0** | 81,212 B |
+| Now Compress | 3 | **0** | 137,264 B |
+| DiskDoubler | 91 | **0** | 401,408 B |
+| StuffIt 5 | 23 | **8** | 409,273 B |
+
+**StuffIt 5 is the only format that has ever exceeded a budget**, which is
+why it is the only one with a memory-for-time path. It is also the answer to
+the standing question of whether the remaining fixed-size windows — ARC's
+28,672 B crunch tables, Now Compress's 131,072 B of block buffers,
+SpaceSaver's 68 KB ceiling — are worth sizing from the entry: they would
+recover memory nothing is asking for, and cost code to do it. Two of that
+family WERE done, and both because they changed what a machine can extract
+rather than what it reports: SuperDisk's window (*Alysis SuperDisk!*) and
+zip's inflate window, where `synth-exo-zip-deflate.zip` fell 53,515 →
+24,843 B. gzip's cannot be done at all — its ISIZE is in the trailer, so
+`fmt_exo.c` passes `UNC_SIZE_UNKNOWN` and gets deflate's full 32 KB.
+
+There is nothing for a generic adaptive mechanism to work on today, and one
+could not be graded against this corpus. It becomes real the day a format
+with a megabyte-class window arrives, and the Arsenic answer will not simply
+port to it — DECISIONS.md (2026-08-03, the LZW table) is the recorded case
+of that same fix failing on the second problem. LZH is not that format:
+64 KB of window worst case, and it halves.
+
 ### Per-file `-O2`
 
 **Tried and rejected, 2026-08-24.** Everything builds at `-Os`;

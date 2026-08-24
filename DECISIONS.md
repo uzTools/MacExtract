@@ -111,6 +111,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-23 (LZH) — the format the corpus could not grade, graded by somebody else's corpus
 - 2026-08-24 (the performance pass) — four proposals measured, two of them dead
 - 2026-08-24 (the performance pass, part two) — what re-profiling found that the plan had not
+- 2026-08-24 (PLANNED_WORK.md, closed) — the file is gone, and what it left behind
 
 ---
 
@@ -6202,3 +6203,84 @@ The lesson is narrow and useful: **a described behaviour with no file:line
 beside it is a guess in the shape of a reading.** The step that was wrong
 was the only step with no citation, and one run against a full disk settled
 it in two minutes.
+
+---
+
+## 2026-08-24 (PLANNED_WORK.md, closed) — the file is gone, and what it left behind
+
+The plan file opened on 2026-08-23 with seven numbered items and closed a day
+later with none. Four landed, **five were disproved by measurement**, and the
+three biggest wins of the pass were not on it at all (see the entry above).
+It is deleted rather than annotated, which is what its own preamble asked
+for: a plan file that keeps completed rows stops being readable as a list of
+what is left.
+
+### Why three of its five window items were closed rather than done
+
+The last item was "size five windows from the entry, not the format's
+ceiling". Two were done — SuperDisk's and zip's — and both because they
+changed **what a machine can extract**, not what it reports: an entry in
+`alysis-disk-expander-12` that a 50,000 B budget used to refuse now comes
+out, and a small-entry zip halved its peak.
+
+The other three were closed on one command. `tools/run_budget.py` over the
+whole corpus at a 400 KB cap says **only StuffIt 5 ever refuses anything**
+(FORMATS.md, *Budget sweep*); ARC peaks at 33,732 B, Now Compress at
+137,264, and neither is anywhere near a limit. Sizing them would add code —
+which is the wrong direction for the one priority they could serve — to
+recover memory nothing is asking for.
+
+**The transferable part is the order of operations.** "This allocation is
+bigger than it needs to be" is true of all five and is not, by itself, a
+reason to change any of them. The question that separated the two worth
+doing from the three that were not took a single existing tool and no
+insight at all: *does anything actually fail for want of this memory?*
+
+### Why zlib stays
+
+`NO_GZIP` and `Z_TESTW=0` take 8,704 B out of the application between them
+and neither modifies the vendored source: the engine uses zlib for raw
+inflate only, reads the gzip header and trailer itself, and computes its own
+CRC, so the gzip-wrapper state machine and the braided CRC tables were never
+reachable.
+
+The transcribed replacement is **declined, not deferred**. It would recover
+perhaps 10 KB more, and `inflate_fast` is 52.65 % of a gzip extraction
+(measured) while the compact inflates worth transcribing are deliberately
+bit-at-a-time and roughly an order of magnitude slower. That trades this
+project's second priority for its third on the one format where the engine
+does almost nothing itself. The thing to write, if it is ever revisited, is
+not a smaller decoder but a raw-only one that keeps a table-driven fast
+path — a project with a risk budget, not a cleanup.
+
+### Checked and empty — recorded so nobody looks again
+
+Each of these is a place a reader will otherwise re-propose.
+
+- **The launch path.** Between double-click and the file dialog the
+  application does six Toolbox inits, `InitCursor`, `FlushEvents`, one
+  trap-availability test, and goes straight into `SFGetFile`. No resource
+  preloading, no volume scan, no window built before the dialog — and the
+  Segment Loader's own cost is ≈ 0.16 s of an 8.9 s boot (FORMATS.md,
+  *Launch*).
+- **The progress path.** `prog_tick` throttles to ~10 Hz off `TickCount` and
+  returns before any drawing, so `ARS_PROGRESS_STEP` at 256 bytes costs a
+  trap and a compare.
+- **Opening an archive** deliberately calls `unc_segment_describe` rather
+  than a full `unc_sniff`, to avoid walking a Compact Pro index twice on a
+  7 MHz machine.
+- **The compile line** is `-O3 -DNDEBUG -mcpu=68000 -Os ...`, where `-O3`
+  comes from `CMAKE_BUILD_TYPE=Release` and `-Os` from the target options.
+  **Last wins, so the application is built `-Os`**, whatever `flags.make`
+  looks like at a glance.
+- **Narrowing hot-path arithmetic to 16 bits** would help a 68000, and
+  CLAUDE.md forbids it deliberately.
+- **`ars_next_symbol`'s linear symbol search** averages **10.4 iterations
+  per decoded symbol**, which is what kills replacing its division with a
+  multiply per iteration: ten `__mulsi3` calls cost a 68000 more than one
+  `__udivsi3`. The search is 9.9 % of the slowest run and has no obviously
+  cheaper shape — a running cumulative array would have to be updated on
+  every `ars_model_bump`.
+- **`adler32.o`, 994 B.** Raw inflate never calls it; inflate.c still
+  references it from the zlib-wrapper path, and cutting that would mean
+  editing the vendored source.

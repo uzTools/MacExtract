@@ -41,7 +41,31 @@ int unc_inflate_raw(UncBufIn *in, UncAlloc *al,
     zs.opaque = al;
     zs.next_in = Z_NULL;
     zs.avail_in = 0;
-    if (inflateInit2(&zs, -15) != Z_OK) return UNC_ERR_MEM;
+
+    /* Size the sliding window from the entry rather than from deflate's
+     * ceiling. A back-reference can never reach further back than the
+     * number of bytes produced so far, so a stream that declares N bytes
+     * of output cannot use a distance of N or more — and zlib allocates
+     * 1 << wbits for the window whatever the stream turns out to need.
+     * A 200-byte zip entry was taking 32 KB.
+     *
+     * Only when the size is KNOWN, which in practice means zip: gzip's
+     * ISIZE is in the trailer and this decoder has not read it yet, so
+     * fmt_exo.c passes UNC_SIZE_UNKNOWN and gets the full window.
+     *
+     * A corrupt entry that declares less than it produces already fails
+     * with UNC_ERR_CORRUPT at the `total + got > maxout` test below; with
+     * a short window zlib may reach Z_DATA_ERROR first, which this
+     * function also reports as UNC_ERR_CORRUPT. The kind of failure does
+     * not change, which is what the robustness variants check. */
+    {
+        int wbits = 15;
+        if (maxout != UNC_SIZE_UNKNOWN && maxout > 0) {
+            wbits = 9;
+            while (wbits < 15 && ((uint32_t)1 << wbits) < maxout) wbits++;
+        }
+        if (inflateInit2(&zs, -wbits) != Z_OK) return UNC_ERR_MEM;
+    }
 
     for (;;) {
         if (zs.avail_in == 0) {
