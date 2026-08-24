@@ -26,7 +26,7 @@ it is worth an afternoon: that is what turned section 2 from 200 KB into
 
 | # | step | costs | buys |
 |---|---|---|---|
-| 1 | Size five windows and tables from the entry, not the format's ceiling | small each | ~128 KB (Now Compress), up to 64 KB (SuperDisk and SpaceSaver), ~30 KB (zip/gzip), ~28 KB (ARC crunch) — **memory, not time** |
+| 1 | Size the remaining **four** windows from the entry, not the format's ceiling | small each, and each needs its own reading | ~32 KB of Now Compress's 128, up to 64 KB (SpaceSaver), ~30 KB (zip/gzip), ~28 KB (ARC crunch) — **memory, not time**, and every figure below is smaller than this list first claimed |
 | 2 | A transcribed inflate to replace zlib | a rewrite | ~12 KB code + 9 KB rodata, paid for in risk. Last of everything here |
 
 **Three more are closed rather than done**, and each is in `BLOCKERS.md`
@@ -49,7 +49,14 @@ found is in BLOCKERS.md.
 
 ---
 
-## 1. Five windows allocated at the format's ceiling, not the entry's size
+## 1. Four windows allocated at the format's ceiling, not the entry's size
+
+**SuperDisk was the fifth and is done** (2026-08-24) — see the struck-out
+entry below, and read it first: the bound this list gave for it was wrong
+twice, and doing it broke a test *by succeeding*. Expect the same of the
+rest. Every one of the four below has had its description corrected against
+the code since, and none is the copy-and-paste the original wording
+suggested.
 
 **This is memory, not time**, and every one of these formats already fits
 the 1 MB floor target with room to spare (`FORMATS.md`'s peak column), so
