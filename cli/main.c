@@ -75,6 +75,10 @@ typedef struct {
     uint32_t used;
     uint32_t high_water;
     uint32_t failed;     /* count of refused allocations */
+    /* The largest shortfall, so a refusal can say HOW MUCH more was
+     * wanted rather than only that there was not enough. Measured at the
+     * moment of refusal, so it cannot disagree with what happened. */
+    uint32_t shortby;
 } BudgetAlloc;
 
 #define BA_HDR 16  /* keep payload 16-byte aligned */
@@ -85,6 +89,8 @@ static void *ba_alloc(void *ctx, uint32_t size)
     uint8_t *p;
     if (size == 0 || size > 0x7FFFFFFFu - BA_HDR) return NULL;
     if (ba->budget && ba->used + size > ba->budget) {
+        uint32_t need = ba->used + size - ba->budget;
+        if (need > ba->shortby) ba->shortby = need;
         ba->failed++;
         return NULL;
     }
@@ -1989,6 +1995,13 @@ nextlayer:
     if (sink.errors) {
         fprintf(stderr, "unclassic: %d of %d entries failed\n",
                 sink.errors, sink.entries);
+        /* Say by how much, once, on its own line: the per-entry lines are
+         * what the harnesses read, so the number goes here rather than
+         * into them. Only when a budget was actually set — without one
+         * there is nothing to be short OF. */
+        if (ba.shortby)
+            fprintf(stderr, "unclassic: %u bytes more memory would have "
+                            "been needed\n", (unsigned)ba.shortby);
         return 1;
     }
 

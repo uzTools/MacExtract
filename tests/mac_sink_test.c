@@ -286,6 +286,42 @@ int main(int argc, char **argv)
         }
         return ok ? 0 : 1;
     }
+    if (argc >= 2 && strcmp(argv[1], "--shortfall") == 0) {
+        /* The number the low-memory alert quotes.
+         *
+         * mal_alloc records the LARGEST amount by which a request exceeded
+         * the remaining budget, and the Mac shell turns that into "Needs
+         * NNNK more memory" — the one thing a user can act on. The alert
+         * itself is UI and is not compiled here, but the arithmetic behind
+         * it is, and it is the half that can silently go wrong.
+         *
+         * Deliberately exact rather than "greater than zero": a shortfall
+         * that is merely non-zero would still pass if the sign, the +16
+         * header or the choice of largest-so-far were wrong. */
+        MacAlloc a;
+        long want = 100000L;
+        int ok = 1;
+        a.budget = a.initial = 40000L;
+        a.lowmark = a.budget;
+        gShortBy = 0;
+        if (mal_alloc(&a, (uint32_t)want) != NULL) {
+            fprintf(stderr, "shortfall: the over-budget request was ALLOWED\n");
+            ok = 0;
+        }
+        if (gShortBy != want + 16 - 40000L) {
+            fprintf(stderr, "shortfall: got %ld, wanted %ld\n",
+                    gShortBy, want + 16 - 40000L);
+            ok = 0;
+        }
+        /* A second, smaller shortfall must not displace the larger one. */
+        if (mal_alloc(&a, (uint32_t)50000L) == NULL && gShortBy != want + 16 - 40000L) {
+            fprintf(stderr, "shortfall: a smaller refusal overwrote the largest\n");
+            ok = 0;
+        }
+        fprintf(stderr, "shortfall: %ld bytes reported for a %ld request "
+                        "against a %ld budget\n", gShortBy, want, 40000L);
+        return ok ? 0 : 1;
+    }
     if (argc < 3) { fprintf(stderr, "usage: %s <archive> <outdir>\n", argv[0]); return 2; }
     snprintf(gOutDir, sizeof gOutDir, "%s", argv[2]);
     mkdir(gOutDir, 0755);

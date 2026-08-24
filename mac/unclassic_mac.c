@@ -246,6 +246,23 @@ static uint32_t fio_size(void *ctx) { return ((FileIO *)ctx)->size; }
 /* ------------------------------------------------------------------ */
 /* UncAlloc over NewPtr with a budget                                 */
 /* ------------------------------------------------------------------ */
+/* What a memory refusal COST, kept so the alert at the end can say it.
+ *
+ * "Out of memory" on its own leaves the user guessing at the Get Info box.
+ * The allocator is the one place that knows the number, and it knows it at
+ * the moment of refusal rather than by predicting anything — so this is
+ * measured, not estimated, and cannot disagree with what actually happened.
+ *
+ * The two refusals have OPPOSITE fixes and are kept apart: over budget
+ * means the partition is too small, and a NewPtr that fails while the
+ * budget still had room means the heap has no piece big enough, which a
+ * bigger partition may not cure and quitting something else will.
+ *
+ * NOT inside UNC_AT_BUDGET: that build is a diagnostic and these two are
+ * the shipped message. */
+static long gShortBy;      /* largest budget shortfall, in bytes; 0 = none */
+static int  gShortPiece;   /* NewPtr failed though the budget allowed it   */
+
 #ifdef UNC_AT_BUDGET
 /* The result grid reports what the engine USED and never what it was
  * ALLOWED, so a budget refusal and a genuine shortage look identical on
@@ -335,6 +352,12 @@ static void *mal_alloc(void *ctx, uint32_t size)
     MacAlloc *a = (MacAlloc *)ctx;
     Ptr p;
     if ((long)size + 16 > a->budget) {
+        /* How much more the budget would have had to be, at this moment.
+         * The engine already holds initial - budget, so this is exactly
+         * what the application's memory size is short by. Keep the
+         * LARGEST: it is the one that has to be covered. */
+        long shortby = (long)size + 16 - a->budget;
+        if (shortby > gShortBy) gShortBy = shortby;
 #ifdef UNC_AT_BUDGET
         if (gRefusedWhy == 0) { gRefusedSize = (long)size; gRefusedWhy = 1; }
 #endif
@@ -357,6 +380,7 @@ static void *mal_alloc(void *ctx, uint32_t size)
     p = NewPtr((long)size + 16);
 #endif
     if (p == NULL) {
+        gShortPiece = 1;
 #ifdef UNC_AT_BUDGET
         if (gRefusedWhy == 0) { gRefusedSize = (long)size; gRefusedWhy = 2;
                                 gRefusedMaxBlk = MaxBlock();
@@ -2542,6 +2566,8 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
     sink.pr = NULL;
     sink.wrOSErr = noErr;
     gLastWriteErr = noErr;
+    gShortBy = 0;
+    gShortPiece = 0;
     sk.ctx = &sink;
     sk.begin_entry = sink_begin;
     sk.write = sink_write;
@@ -3649,6 +3675,26 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
                              "Only what they contained was extracted.");
     else if (ret == UNC_ERR_IO && entries == 0)
         ShowNote(kErrorALRT, "\pCould not open the archive.");
+    else if (gShortBy > 0) {
+        /* Ahead of the two generic messages, and covering both of them: a
+         * memory shortfall is the same answer whether one entry failed or
+         * the whole archive did, and it is the only failure here the user
+         * can actually do something about. The number is what turns "it
+         * did not work" into one thing to go and do — it is exactly what
+         * the memory size in Get Info has to grow by. Rounded UP to the
+         * next 8K, so it is round enough to type and never short. */
+        Str255 s;
+        s[0] = 0;
+        PStrCat(s, "Needs ");
+        PStrCatNum(s, (gShortBy + 8191L) / 8192L * 8L);
+        PStrCat(s, "K more memory. Give unclassic more in Get Info.");
+        ShowNote(kErrorALRT, s);
+    }
+    else if (gShortPiece)
+        /* The budget had room and the Memory Manager still could not find
+         * one piece that big, so a bigger memory size need not help. */
+        ShowNote(kErrorALRT, "\pNot enough memory in one piece. "
+                             "Quit other programs and try again.");
     else if (ret != UNC_OK)
         ShowNote(kErrorALRT, "\pThis file could not be extracted.");
     else if (errors)

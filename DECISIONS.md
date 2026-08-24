@@ -114,6 +114,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-24 (PLANNED_WORK.md, closed) — the file is gone, and what it left behind
 - 2026-08-24 (the reserve) — a constant that suited one machine of the two
 - 2026-08-24 (the icon) — four things the resources alone do not do
+- 2026-08-24 (the low-memory message) — saying the number, and where it can be graded
 
 ---
 
@@ -6394,3 +6395,52 @@ these five produced a clean build, a working application, and the wrong
 icon. The only instrument that could see any of them was a screenshot of a
 real Finder — which is why `README.md` already requires that its screenshots
 be real frames, and why this project keeps a harness that can take them.
+
+---
+
+## 2026-08-24 (the low-memory message) — saying the number, and where it can be graded
+
+"Out of memory" told a user nothing they could act on: the memory size in
+Get Info is a box wanting a number, and the application knew the number and
+did not say it.
+
+**Claim (measured).** `mal_alloc` refuses when `size + 16 > budget`, and the
+difference is exactly how much larger the application's memory partition
+would have had to be at that moment. It is kept as a run-level MAXIMUM,
+because that is the one that has to be covered. The Mac alert rounds it up
+to the next 8K — round enough to type, and never short:
+
+    Needs 64K more memory. Give unclassic more in Get Info.
+
+**The two refusals are kept apart, because their fixes are opposite.** Over
+budget means the partition is too small. A `NewPtr` that fails while the
+budget still had room means the heap has no single piece that big, which a
+bigger partition need not cure and quitting something else will — so that
+one says so instead.
+
+**Why it is measured rather than predicted, which is the whole point.** A
+pre-flight check would have to model each format's sizing a second time, in
+a second place, from header fields that can lie. This number comes from the
+allocator at the moment it said no. It cannot disagree with what happened.
+
+### Where the verification actually landed, and where it did not
+
+The arithmetic is graded in `ci.sh`: `mac_sink_test --shortfall` asserts the
+figure **exactly** rather than merely non-zero, so a wrong sign, a missing
+16-byte header or a first-instead-of-largest would all fail it. It was
+sabotaged to confirm it can: a 16-byte error takes the suite to exit 1.
+
+**The alert itself has never been photographed**, and the reason is worth
+recording because it cost three emulator runs. `interactive.py`'s default
+phase cancels both of its extractions on purpose — it exists to test Cancel
+and Cmd-. — so it never reaches a result alert at all; and `--e2e` had
+already returned to the Finder by the time it took its `complete` frame.
+Neither is a fault in the code under test, and neither announced itself:
+what they produced was the *generic* alert, which looks exactly like the new
+one failing to fire. OPEN_ITEMS.md carries what would close it.
+
+**The lesson is about instruments, not about memory.** A harness that
+"drives the UI" drives the UI it was written for. Before reading a
+screenshot as evidence about a code path, check that the harness goes down
+that path — twice here it did not, and the frame it returned was perfectly
+plausible.

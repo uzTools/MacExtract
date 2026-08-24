@@ -56,7 +56,10 @@ verify ./build/mac_sink_asan ram   # exercise the Mac app's RAM-slurp/xio_* path
 # Cmd-. / per-entry-error cleanup: sink_end must delete the file an aborted
 # entry created in sink_begin (no partial output left behind).
 ./build/mac_sink_asan --cancel "$(mktemp -d)" || { echo "mac-sink: cancel-cleanup FAILED"; exit 1; }
-echo "mac-sink: native OK (file + RAM paths + cancel cleanup)"
+# The figure the low-memory alert quotes. UI cannot be tested here; the
+# arithmetic behind it can, and it is the half that can go wrong quietly.
+./build/mac_sink_asan --shortfall || { echo "mac-sink: shortfall FAILED"; exit 1; }
+echo "mac-sink: native OK (file + RAM paths + cancel cleanup + shortfall)"
 
 # The alternative write path. The default streams each chunk straight to the
 # File Manager; UNC_MAC_STAGE_WRITES accumulates whole forks in RAM and writes
