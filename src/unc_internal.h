@@ -256,7 +256,11 @@ static inline int unc_bufin_next(UncBufIn *b)
 
 typedef struct UncBitIn {
     UncBufIn *in;
-    uint32_t  bitbuf;   /* up to 24 buffered bits, right-aligned */
+    uint32_t  bitbuf;   /* up to 32 buffered bits. MSB mode: the next bit
+                         * is at position nbits-1, so bits are right-
+                         * aligned and a refill shifts in at the bottom.
+                         * LE mode: the next bit is at position 0 and a
+                         * refill ors in above.                          */
     int32_t   nbits;
     int       le;       /* LSB-first bit order within each byte
                          * (StuffIt method 13; everything else is MSB) */
@@ -296,6 +300,33 @@ static inline int unc_bitin_bit(UncBitIn *b)
         return bit;
     }
     return (int)((b->bitbuf >> b->nbits) & 1u);
+}
+
+/* Top up bitbuf to at least `n` bits (n <= 24) from bytes ALREADY in the
+ * UncBufIn's window, and say whether it got there.
+ *
+ * "Already in the window" is the whole design. It never calls into io, so
+ * it cannot pull a byte across a substream's `limit`, cannot set the
+ * sticky error early, and cannot turn a stream that ends exactly on a
+ * symbol boundary into a truncation. At a window boundary it simply
+ * fails and the caller takes its bit-at-a-time path, which is correct
+ * whatever is buffered. The two functions that convert a bit position
+ * back into a byte position — unc_bitin_align and unc_bitin_bytepos —
+ * count whole buffered bytes rather than discarding them, so a caller
+ * that byte-aligns and asks where it is gets the same answer it did when
+ * nothing was ever buffered ahead. */
+static inline int unc_bitin_fill(UncBitIn *b, int n)
+{
+    UncBufIn *in = b->in;
+    while (b->nbits < n) {
+        uint32_t byte;
+        if (in->pos >= in->len) return 0;
+        byte = in->buf[in->pos++];
+        if (b->le) b->bitbuf |= byte << b->nbits;
+        else       b->bitbuf = (b->bitbuf << 8) | byte;
+        b->nbits += 8;
+    }
+    return 1;
 }
 /* Next n bits (n <= 24) as an MSB-first integer, or -1 with err set.
  * (MSB mode only.) */
@@ -351,11 +382,25 @@ int unc_huff_decode(const UncHuff *h, UncBitIn *bi);
 #define UNC_CANON_MAX_BITS 31   /* method-13 tables reach 18; the
                                  * serialized form could go higher */
 
+/* Bits looked up at once by unc_canon_decode's fast path. Eight costs
+ * 256 bytes of table and covers every code of eight bits or fewer —
+ * which, Huffman being Huffman, is most of the SYMBOLS DECODED even
+ * where it is a minority of the alphabet. */
+#define UNC_CANON_FAST_BITS 8
+
 typedef struct UncCanon {
     uint16_t count[UNC_CANON_MAX_BITS + 1]; /* codes per bit length */
     uint32_t first[UNC_CANON_MAX_BITS + 1]; /* first code value per length */
+    uint16_t cbase[UNC_CANON_MAX_BITS + 1]; /* sym[] index length l starts at */
     int16_t *sym;                           /* symbols in (len,sym) order */
     int16_t  maxlen;
+    /* Next UNC_CANON_FAST_BITS bits -> the length of the code that
+     * starts there, or 0 when it is longer than that and the
+     * bit-at-a-time walk has to run. The symbol itself is not stored:
+     * codes of one length are consecutive from first[l], so it is
+     * sym[cbase[l] + (code - first[l])], which is two shifts and a
+     * subtract against the 256 extra bytes a symbol table would cost. */
+    uint8_t  fastlen[1u << UNC_CANON_FAST_BITS];
     int16_t  symstore[UNC_CANON_MAX_SYMS];  /* what `sym` points at unless
                                              * the caller supplied storage */
 } UncCanon;

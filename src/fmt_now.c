@@ -87,13 +87,20 @@ static int now_read_code(UncCanon *c, const uint8_t *src, uint32_t len,
     return unc_canon_build(c, lengths, numvalues);
 }
 
+/* The code tables a block needs, on the heap rather than on the frame.
+ * An UncCanon is ~1.3 KB and now_newlzss holds two while calling
+ * now_huffman, which held a third: 4,960 B in one chain, under
+ * unc_now_extract's own 1.2 KB, for 5,632 B against CLAUDE.md's 4 KB
+ * call-depth rule (measured, m68k -Os -fstack-usage). They ride in the
+ * same allocation as the block buffers. */
+struct NowCodes { UncCanon one, main, off; };
+
 /* Decode one Huffman-coded region. Returns the output length, or a
  * negative error. Source: UnpackHuffman. */
 static int32_t now_huffman(const uint8_t *src, uint32_t srclen,
                            uint8_t *dst, uint32_t dstcap, int32_t numvalues,
-                           int *err)
+                           UncCanon *code, int *err)
 {
-    UncCanon code;
     NowBits b;
     uint32_t used = 0, at, numbits;
     int32_t out = 0;
@@ -103,7 +110,7 @@ static int32_t now_huffman(const uint8_t *src, uint32_t srclen,
     if (srclen < 1) { *err = UNC_ERR_TRUNCATED; return -1; }
     endbits = src[0];
 
-    e = now_read_code(&code, src + 1, srclen - 1, numvalues, &used);
+    e = now_read_code(code, src + 1, srclen - 1, numvalues, &used);
     if (e != UNC_OK) { *err = e; return -1; }
 
     at = 1 + used;
@@ -120,7 +127,7 @@ static int32_t now_huffman(const uint8_t *src, uint32_t srclen,
     while (now_bit_offset(&b) < numbits) {
         int sym;
         if ((uint32_t)out >= dstcap) { *err = UNC_ERR_CORRUPT; return -1; }
-        sym = unc_canon_decode(&code, &b.bi);
+        sym = unc_canon_decode(code, &b.bi);
         if (sym < 0) { *err = b.bi.err ? b.bi.err : UNC_ERR_CORRUPT; return -1; }
         dst[out++] = (uint8_t)sym;
     }
@@ -212,11 +219,10 @@ static const uint16_t now_off_base[0x38] = {
  * this block's output starts. Source: UnpackNewLZSS. */
 static int32_t now_newlzss(const uint8_t *src, uint32_t srclen,
                            uint8_t *base, uint8_t *dst, uint32_t dstcap,
-                           int *err)
+                           struct NowCodes *cd, int *err)
 {
     uint8_t header[0x15a];
     uint8_t lengths[0x122];
-    UncCanon maincode, offcode;
     NowBits b;
     uint32_t at, headersize, numbits;
     int32_t out = 0, i, n;
@@ -230,7 +236,7 @@ static int32_t now_newlzss(const uint8_t *src, uint32_t srclen,
     if (headersize > srclen - at) { *err = UNC_ERR_TRUNCATED; return -1; }
 
     n = now_huffman(src + at, headersize, header, (uint32_t)sizeof header,
-                    20, &e);
+                    20, &cd->one, &e);
     if (n < 0) { *err = e; return -1; }
     if (n != (int32_t)sizeof header) { *err = UNC_ERR_CORRUPT; return -1; }
 
@@ -239,12 +245,12 @@ static int32_t now_newlzss(const uint8_t *src, uint32_t srclen,
     if (at > srclen) { *err = UNC_ERR_TRUNCATED; return -1; }
 
     for (i = 0; i < 0x122; i++) lengths[i] = header[i];
-    if ((e = unc_canon_build(&maincode, lengths, 0x122)) != UNC_OK) {
+    if ((e = unc_canon_build(&cd->main, lengths, 0x122)) != UNC_OK) {
         *err = e; return -1;
     }
     for (i = 0; i < 0x38; i++)
         lengths[i] = header[i + 0x122] ? (uint8_t)(header[i + 0x122] - 2) : 0;
-    if ((e = unc_canon_build(&offcode, lengths, 0x38)) != UNC_OK) {
+    if ((e = unc_canon_build(&cd->off, lengths, 0x38)) != UNC_OK) {
         *err = e; return -1;
     }
 
@@ -256,7 +262,7 @@ static int32_t now_newlzss(const uint8_t *src, uint32_t srclen,
 
     now_bits_start(&b, src + at, srclen - at);
     while (now_bit_offset(&b) < numbits) {
-        int sym = unc_canon_decode(&maincode, &b.bi);
+        int sym = unc_canon_decode(&cd->main, &b.bi);
         uint32_t length, offset, k;
         int sel;
         if (sym < 0) { *err = b.bi.err ? b.bi.err : UNC_ERR_CORRUPT; return -1; }
@@ -275,7 +281,7 @@ static int32_t now_newlzss(const uint8_t *src, uint32_t srclen,
         }
         length += 2;
 
-        sel = unc_canon_decode(&offcode, &b.bi);
+        sel = unc_canon_decode(&cd->off, &b.bi);
         if (sel < 0) { *err = b.bi.err ? b.bi.err : UNC_ERR_CORRUPT; return -1; }
         if (sel >= 0x38) { *err = UNC_ERR_CORRUPT; return -1; }
         offset = now_off_base[sel];
@@ -301,6 +307,7 @@ static int32_t now_newlzss(const uint8_t *src, uint32_t srclen,
 
 typedef struct NowStream {
     UncCtx  *c;
+    struct NowCodes *cd;   /* code tables, off the stack — see below */
     uint8_t *inblock;      /* NOW_INBLOCK  */
     uint8_t *outblock;     /* NOW_OUTBLOCK */
     uint8_t *dict;         /* NOW_HISTORY  */
@@ -474,7 +481,7 @@ static int now_next_block(NowStream *st)
             if (unc_read_full(c->io, outstart, (int32_t)length) != UNC_OK)
                 return UNC_ERR_TRUNCATED;
             mid = now_huffman(outstart, length, st->inblock, NOW_INBLOCK,
-                              0x100, &err);
+                              0x100, &st->cd->one, &err);
             if (mid < 0) return err;
             out = now_lzss(st->inblock, (uint32_t)mid, outstart,
                            NOW_OUTBLOCK - NOW_HISTORY, &err);
@@ -482,13 +489,14 @@ static int now_next_block(NowStream *st)
             if (unc_read_full(c->io, st->inblock, (int32_t)length) != UNC_OK)
                 return UNC_ERR_TRUNCATED;
             out = now_huffman(st->inblock, length, outstart,
-                              NOW_OUTBLOCK - NOW_HISTORY, 0x100, &err);
+                              NOW_OUTBLOCK - NOW_HISTORY, 0x100,
+                              &st->cd->one, &err);
         }
     } else if (flags & 0x40) {                    /* new LZSS */
         if (unc_read_full(c->io, st->inblock, (int32_t)length) != UNC_OK)
             return UNC_ERR_TRUNCATED;
         out = now_newlzss(st->inblock, length, st->outblock, outstart,
-                          NOW_OUTBLOCK - NOW_HISTORY, &err);
+                          NOW_OUTBLOCK - NOW_HISTORY, st->cd, &err);
     } else if (flags & 0x1F) {                    /* LZSS only */
         if (unc_read_full(c->io, st->inblock, (int32_t)length) != UNC_OK)
             return UNC_ERR_TRUNCATED;
@@ -580,12 +588,18 @@ int unc_now_extract(UncCtx *c)
     totalentries = unc_get_u32be(hdr);
     if (totalentries == 0 || totalentries > 0xFFFFu) return UNC_ERR_FORMAT;
 
-    mem = (uint8_t *)unc_alloc(c->al, NOW_INBLOCK + NOW_OUTBLOCK + NOW_HISTORY);
+    /* One allocation for the block buffers AND the code tables. The
+     * tables go FIRST so their alignment is the allocator's own; the
+     * three buffer sizes are powers of two, so nothing after them is
+     * misaligned either. */
+    mem = (uint8_t *)unc_alloc(c->al, (uint32_t)sizeof *st.cd
+                               + NOW_INBLOCK + NOW_OUTBLOCK + NOW_HISTORY);
     if (!mem) return UNC_ERR_MEM;
     st.c = c;
-    st.inblock  = mem;
-    st.outblock = mem + NOW_INBLOCK;
-    st.dict     = mem + NOW_INBLOCK + NOW_OUTBLOCK;
+    st.cd       = (struct NowCodes *)(void *)mem;
+    st.inblock  = mem + sizeof *st.cd;
+    st.outblock = st.inblock + NOW_INBLOCK;
+    st.dict     = st.outblock + NOW_OUTBLOCK;
     {
         uint32_t i;
         for (i = 0; i < NOW_HISTORY; i++) st.dict[i] = 0;

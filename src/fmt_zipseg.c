@@ -62,21 +62,25 @@
  * engine — the describe path, whole-file extraction and segmented
  * extraction all come here.
  *
- * The window is 2 KB rather than the 512 B it was, because the cost that
+ * The window is 1 KB rather than the 512 B it was, because the cost that
  * matters is not the instructions. A whole zip finds its record in the
  * first window and pays one read; a file that is NOT a zip walks the
  * whole 65,557 bytes, which at 512 B was up to 129 SetFPos + FSRead
  * pairs — on a floppy, a head move and 64 KB read per archive opened.
- * At 2 KB it is 33. Widening does not change how many BYTES are scanned
+ * At 1 KB it is 65. Widening does not change how many BYTES are scanned
  * and so buys only ~6 % of the instructions (measured); the reads are
  * the point, and no Linux measurement here can show them.
+ *
+ * It stops at 1 KB rather than the 4 KB that would make the reads 17,
+ * because this window IS the frame: at 4 KB it would be the deepest
+ * stack chain in the engine on its own (FORMATS.md, `Stack`).
  *
  * `end` is one past the last byte that may be scanned: the file size
  * for a whole archive, the LAST PART's size for a segmented one, since
  * that is where a zip writes the record.
  *
  * Returns UNC_OK with *at set, or UNC_ERR_FORMAT if there is none. */
-#define ZS_WINDOW 2048u
+#define ZS_WINDOW 1024u
 
 int unc_zip_scan_eocd(void *ctx, UncZipReadAt rd, uint32_t end, uint32_t *at)
 {

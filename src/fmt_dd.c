@@ -666,10 +666,18 @@ static int ddn_seek(DdnState *st, UncCtx *c, UncBufIn *in, uint8_t *iobuf,
     return UNC_OK;
 }
 
-static int dd_ddn(DdFork *o, UncCtx *c, DdnState *st, UncBufIn *in,
-                  uint8_t *iobuf, uint32_t iocap)
+/* The three code tables of a DDn block. On the heap, not the stack: an
+ * UncCanon is ~1.3 KB and this function holds three at once, which put
+ * the unc_dd_extract -> dd_fork -> dd_ddn chain at 6,664 B (measured,
+ * m68k -Os -fstack-usage) against CLAUDE.md's 4 KB call-depth rule.
+ * Not against the machine — the shell asks for 32 KB of stack, so this
+ * was over the RULE and nowhere near the limit — but the rule is what
+ * keeps the engine portable to a host that did not ask. */
+typedef struct DdnCodes { UncCanon len, off, lit; } DdnCodes;
+
+static int dd_ddn_run(DdFork *o, UncCtx *c, DdnState *st, UncBufIn *in,
+                      uint8_t *iobuf, uint32_t iocap, DdnCodes *cd)
 {
-    UncCanon lencode, offcode;
     UncBitIn bi;
     uint8_t lenbuf[257];
     uint32_t nextblock = st->base, wpos = 0;
@@ -761,12 +769,12 @@ static int dd_ddn(DdFork *o, UncCtx *c, DdnState *st, UncBufIn *in,
         lits = st->lit + numoffsets * 2u;
 
         /* offsets */
-        if ((err = ddn_read_code(st, &offcode, in, lenbuf, &codeend)) != UNC_OK)
+        if ((err = ddn_read_code(st, &cd->off, in, lenbuf, &codeend)) != UNC_OK)
             return err;
         if ((err = ddn_seek(st, c, in, iobuf, iocap, codeend)) != UNC_OK) return err;
         unc_bitin_init(&bi, in);
         for (i = 0; (uint32_t)i < numoffsets; i++) {
-            int slot = unc_canon_decode(&offcode, &bi);
+            int slot = unc_canon_decode(&cd->off, &bi);
             if (slot < 0) return bi.err ? bi.err : UNC_ERR_CORRUPT;
             if (slot < 4) offs[i] = (uint16_t)(slot + 1);
             else {
@@ -782,13 +790,12 @@ static int dd_ddn(DdFork *o, UncCtx *c, DdnState *st, UncBufIn *in,
         if ((err = ddn_seek(st, c, in, iobuf, iocap, literalstart)) != UNC_OK)
             return err;
         if (flags & 0x80) {
-            UncCanon litcode;
-            if ((err = ddn_read_code(st, &litcode, in, lenbuf, &codeend)) != UNC_OK)
+            if ((err = ddn_read_code(st, &cd->lit, in, lenbuf, &codeend)) != UNC_OK)
                 return err;
             if ((err = ddn_seek(st, c, in, iobuf, iocap, codeend)) != UNC_OK) return err;
             unc_bitin_init(&bi, in);
             for (i = 0; (uint32_t)i < numliterals; i++) {
-                int sym = unc_canon_decode(&litcode, &bi);
+                int sym = unc_canon_decode(&cd->lit, &bi);
                 if (sym < 0) return bi.err ? bi.err : UNC_ERR_CORRUPT;
                 lits[i] = (uint8_t)sym;
             }
@@ -802,13 +809,13 @@ static int dd_ddn(DdFork *o, UncCtx *c, DdnState *st, UncBufIn *in,
         /* lengths, and the walk they drive */
         if ((err = ddn_seek(st, c, in, iobuf, iocap, lengthstart)) != UNC_OK)
             return err;
-        if ((err = ddn_read_code(st, &lencode, in, lenbuf, &codeend)) != UNC_OK)
+        if ((err = ddn_read_code(st, &cd->len, in, lenbuf, &codeend)) != UNC_OK)
             return err;
         if ((err = ddn_seek(st, c, in, iobuf, iocap, codeend)) != UNC_OK) return err;
         unc_bitin_init(&bi, in);
 
         while (produced < uncompsize) {
-            int code = unc_canon_decode(&lencode, &bi);
+            int code = unc_canon_decode(&cd->len, &bi);
 
             uint32_t length, k;
             if (code < 0) return bi.err ? bi.err : UNC_ERR_CORRUPT;
@@ -855,6 +862,19 @@ static int dd_ddn(DdFork *o, UncCtx *c, DdnState *st, UncBufIn *in,
 
 /* Window size for DDn: the format's 64 KB, or the entry if smaller —
  * the same reasoning as StuffIt method 13 (DECISIONS.md 2026-08-06). */
+/* Thin wrapper so the ~3.8 KB of code tables is allocated and freed in
+ * one place rather than at each of dd_ddn_run's two dozen early exits. */
+static int dd_ddn(DdFork *o, UncCtx *c, DdnState *st, UncBufIn *in,
+                  uint8_t *iobuf, uint32_t iocap)
+{
+    DdnCodes *cd = (DdnCodes *)unc_alloc(c->al, (uint32_t)sizeof *cd);
+    int err;
+    if (!cd) return UNC_ERR_MEM;             /* per-entry, not fatal */
+    err = dd_ddn_run(o, c, st, in, iobuf, iocap, cd);
+    unc_free(c->al, cd);
+    return err;
+}
+
 static uint32_t dd_window_for(uint32_t size)
 {
     uint32_t w = 1024;

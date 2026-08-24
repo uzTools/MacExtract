@@ -52,8 +52,19 @@ int32_t unc_bitin_bits_le(UncBitIn *b, int n)
     return v;
 }
 
+/* Drop the rest of the byte the reader is inside, and hand any WHOLE
+ * bytes unc_bitin_fill moved into bitbuf ahead of it back to the window
+ * they came from. Zeroing both fields was right only while nbits could
+ * never exceed 8; a caller that byte-aligns may go on reading the
+ * UncBufIn directly — fmt_cpt.c does, between Huffman blocks — and
+ * would otherwise skip whatever had been read ahead.
+ *
+ * Giving them back is exact: unc_bitin_fill only ever takes bytes that
+ * are already in the window, and it cannot run while nbits >= 8, so the
+ * window cannot have been refilled underneath them. */
 void unc_bitin_align(UncBitIn *b)
 {
+    b->in->pos -= (uint32_t)((b->nbits & ~7) >> 3);
     b->nbits = 0;
     b->bitbuf = 0;
 }
@@ -61,7 +72,12 @@ void unc_bitin_align(UncBitIn *b)
 uint32_t unc_bitin_bytepos(const UncBitIn *b)
 {
     /* Bytes handed out by the bufin, minus whole bytes still buffered
-     * in bitbuf. (Bytes handed out = fed from io - unread in window.) */
+     * in bitbuf. (Bytes handed out = fed from io - unread in window.)
+     *
+     * This is the byte position ROUNDED UP, which is what both callers
+     * want — a bit reader half-way through a byte has consumed that
+     * byte — and it stays the ceiling however many whole bytes
+     * unc_bitin_fill has moved ahead, so read-ahead does not shift it. */
     uint32_t consumed = b->in->lenfed - (b->in->len - b->in->pos);
     return consumed - ((uint32_t)b->nbits >> 3);
 }
@@ -188,9 +204,24 @@ int unc_canon_build_ext(UncCanon *c, const uint8_t *lengths, int32_t nsyms,
     idx[1] = 0;
     for (l = 1; l < c->maxlen; l++)
         idx[l + 1] = (uint16_t)(idx[l] + c->count[l]);
+    for (l = 1; l <= c->maxlen; l++) c->cbase[l] = idx[l];
     for (i = 0; i < nsyms; i++) {
         int len = lengths[i];
         if (len) c->sym[idx[len]++] = (int16_t)i;
+    }
+
+    /* The fast table. Codes of one length are consecutive from
+     * first[l], so their UNC_CANON_FAST_BITS-bit prefixes are the
+     * consecutive run [first[l] << (K-l), (first[l]+count[l]) << (K-l)),
+     * which the over-subscription check above has already bounded by
+     * 1 << K. */
+    for (i = 0; i < (int32_t)(1u << UNC_CANON_FAST_BITS); i++)
+        c->fastlen[i] = 0;
+    for (l = 1; l <= c->maxlen && l <= UNC_CANON_FAST_BITS; l++) {
+        uint32_t shift = (uint32_t)(UNC_CANON_FAST_BITS - l);
+        uint32_t at = c->first[l] << shift;
+        uint32_t n  = (uint32_t)c->count[l] << shift;
+        while (n-- > 0) c->fastlen[at++] = (uint8_t)l;
     }
     return UNC_OK;
 }
@@ -199,6 +230,28 @@ int unc_canon_decode(const UncCanon *c, UncBitIn *bi)
 {
     uint32_t code = 0, base = 0;
     int l;
+
+    /* One peek, one table lookup, one consume — instead of a call into
+     * the bit reader and two array compares PER BIT. This function was
+     * 28-32 % of a DiskDoubler or Now Compress run and 20 % of a
+     * Compact Pro one, plus the bit reads inlined into it again.
+     *
+     * MSB mode only: StuffIt method 13 reads LSB-first and takes the
+     * walk below, which is what it always did. The walk is also the
+     * fallback whenever the window has fewer than eight bits left, so
+     * nothing here depends on the fill succeeding. */
+    if (!bi->le && unc_bitin_fill(bi, UNC_CANON_FAST_BITS)) {
+        uint32_t peek = (bi->bitbuf >> (bi->nbits - UNC_CANON_FAST_BITS))
+                        & ((1u << UNC_CANON_FAST_BITS) - 1u);
+        int fl = c->fastlen[peek];
+        if (fl) {
+            bi->nbits -= fl;
+            return c->sym[c->cbase[fl]
+                          + ((peek >> (UNC_CANON_FAST_BITS - fl))
+                             - c->first[fl])];
+        }
+    }
+
     for (l = 1; l <= c->maxlen; l++) {
         int bit = unc_bitin_bit(bi);
         if (bit < 0) return -1;
