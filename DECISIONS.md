@@ -110,6 +110,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-23 (Compact Pro comments) — a comment is saved, and it is still not a file
 - 2026-08-23 (LZH) — the format the corpus could not grade, graded by somebody else's corpus
 - 2026-08-24 (the performance pass) — four proposals measured, two of them dead
+- 2026-08-24 (the performance pass, part two) — what re-profiling found that the plan had not
 
 ---
 
@@ -6144,3 +6145,60 @@ limit, and the cheapest time to measure one is when something is about to
 push against it. `-fstack-usage` plus the relocations in the linked
 objects gives the whole call graph's worst path in one command; there is
 no reason this was not known.
+
+---
+
+## 2026-08-24 (the performance pass, part two) — what re-profiling found that the plan had not
+
+`PLANNED_WORK.md` was written from one profile, and every item it named was
+real. The three biggest wins of this second pass were **not on it**, and the
+reason is worth keeping: the plan profiled the tree once and then ordered
+itself, but each landed change re-orders what is left. Re-profiling after
+the first pass put three functions on top that the original run had ranked
+below the noise it was chasing.
+
+- **`unc_huff_decode` at 48 % of `derived-EmpireBuilderDemo.sit`.** The plan
+  fixed `unc_canon_decode` and stopped, because that is the decoder four
+  formats share. There is a SECOND Huffman decoder — the serialized tree
+  used by StuffIt method 3, DiskDoubler method 4 and PackIt — and once the
+  canonical one was cheap, it was the largest single cost in the corpus's
+  StuffIt fixture. Same remedy, one difference: an arbitrary tree has no
+  arithmetic that recovers a symbol from its code, so its table stores the
+  symbol where the canonical one stores only a length.
+- **`unc_bitin_bits` at 9–13 %** of DiskDoubler and Now Compress, looping n
+  times through the single-bit reader. It became a masked shift the moment
+  `unc_bitin_fill` existed — which the canonical-decoder work had added for
+  its own reasons. **A tool built for one job made a second one trivial, and
+  nothing would have noticed without a second profile.**
+- **BinHex's `% 3` per output byte**, in the same class as the three divides
+  the plan did name, in the file it did not look at.
+
+**The rule: re-profile after each landed change, not once per plan.** A
+profile is a snapshot of a tree whose shape the next commit changes.
+
+### Two inline fast paths that measured worse, for the same reason
+
+Twice now, giving a hot function an inline fast path with the rare cases
+behind a call has measured SLOWER than leaving it alone: `unc_bitin_bit`
+(3.1–6.6 % worse) and BinHex's `bh_get_bits` (−5.5 % against −6.6 %
+without). Both times the cause is the same — the opaque call forces the
+state the fast path just loaded back to memory around it, and the compiler
+was already doing better with the whole function in view.
+
+**So: "make the hot function inline" is not a transformation, it is a
+hypothesis.** The version that worked, in `unc_bitin_bit`, was the one with
+NO call left in it at all.
+
+### Filling the disk on purpose
+
+`run.py --out-kb` sizes the destination volume, which is how the full-disk
+path was reached for the first time. It immediately disproved the plan's
+description of it: 9 files written, **one** error, eight entries never
+attempted, because thirteen of the fourteen extractors end the archive on a
+sink failure. The write-up had described that path in four numbered steps
+and traced three of them to lines.
+
+The lesson is narrow and useful: **a described behaviour with no file:line
+beside it is a guess in the shape of a reading.** The step that was wrong
+was the only step with no citation, and one run against a full disk settled
+it in two minutes.

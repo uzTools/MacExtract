@@ -353,12 +353,25 @@ uint32_t unc_bitin_bytepos(const UncBitIn *b);
  * more than the needed 511"; internal nodes only need child slots. */
 #define UNC_HUFF_MAX_INTERNAL 320
 
+/* Bits looked up at once by unc_huff_decode's fast path — the same
+ * trade as UNC_CANON_FAST_BITS, on the other Huffman decoder. */
+#define UNC_HUFF_FAST_BITS 8
+
 typedef struct UncHuff {
     /* child[side][node]: value >= 0 is a node index, < 0 is a leaf
      * holding symbol -(value+1). */
     int16_t child[2][UNC_HUFF_MAX_INTERNAL];
     int16_t nnodes;
     int16_t root;       /* node index, or negative leaf code */
+    /* Next UNC_HUFF_FAST_BITS bits -> (symbol << 4) | length, or 0 when
+     * the code is longer than that and the walk below has to run. The
+     * symbol IS stored here, unlike the canonical decoder's table: this
+     * tree is arbitrary, so there is no arithmetic that recovers it.
+     * Eight bits and 255 symbols fit a uint16_t with room for the
+     * length. Zero throughout when the root is a bare leaf, because
+     * that case must consume NO bits and a table entry cannot say so. */
+    uint16_t fast[1u << UNC_HUFF_FAST_BITS];
+    int16_t  fastok;
 } UncHuff;
 
 /* Build from the serialized form. Iterative (explicit stack), caps

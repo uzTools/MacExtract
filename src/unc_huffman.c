@@ -29,9 +29,21 @@ void unc_bitin_init_le(UncBitIn *b, UncBufIn *in)
     b->le = 1;
 }
 
+/* Take n bits in one go when the window already holds them, which is the
+ * common case: unc_bitin_fill only moves bytes that are in the UncBufIn's
+ * buffer already, so this cannot read ahead across a substream boundary or
+ * set the sticky error early (see the header). Callgrind put this function
+ * at 9-13 % of a DiskDoubler or Now Compress run doing it one bit at a
+ * time, through a call each. The per-bit loop stays as the fallback and is
+ * what runs at a window boundary and in LSB-first mode. */
 int32_t unc_bitin_bits(UncBitIn *b, int n)
 {
     int32_t v = 0;
+    if (n <= 0) return 0;
+    if (!b->le && n <= 24 && unc_bitin_fill(b, n)) {
+        b->nbits -= n;
+        return (int32_t)((b->bitbuf >> b->nbits) & ((1u << n) - 1u));
+    }
     while (n-- > 0) {
         int bit = unc_bitin_bit(b);
         if (bit < 0) return -1;
@@ -44,6 +56,13 @@ int32_t unc_bitin_bits_le(UncBitIn *b, int n)
 {
     int32_t v = 0;
     int i;
+    if (n <= 0) return 0;
+    if (b->le && n <= 24 && unc_bitin_fill(b, n)) {
+        v = (int32_t)(b->bitbuf & ((1u << n) - 1u));
+        b->bitbuf >>= n;
+        b->nbits -= n;
+        return v;
+    }
     for (i = 0; i < n; i++) {
         int bit = unc_bitin_bit(b);
         if (bit < 0) return -1;
@@ -86,6 +105,35 @@ uint32_t unc_bitin_bytepos(const UncBitIn *b)
 /* Tree building (iterative — engine forbids recursion)               */
 /* ------------------------------------------------------------------ */
 
+/* Map every UNC_HUFF_FAST_BITS-bit prefix to the code that starts there,
+ * by walking the tree once per prefix — 256 walks of at most eight steps,
+ * paid once per tree against a decode that walks it per symbol.
+ *
+ * A tree whose root is already a leaf gets no table: that code consumes
+ * NO bits, and every entry here consumes at least one. `fastok` says so
+ * and unc_huff_decode falls back to the walk, which handles it. */
+static void huff_build_fast(UncHuff *h)
+{
+    uint32_t p;
+
+    h->fastok = 0;
+    if (h->root < 0) return;
+    for (p = 0; p < (1u << UNC_HUFF_FAST_BITS); p++) {
+        int16_t cur = h->root;
+        int l;
+        h->fast[p] = 0;
+        for (l = 1; l <= UNC_HUFF_FAST_BITS; l++) {
+            int bit = (int)((p >> (UNC_HUFF_FAST_BITS - l)) & 1u);
+            cur = h->child[bit][cur];
+            if (cur < 0) {
+                h->fast[p] = (uint16_t)(((-(cur + 1)) << 4) | l);
+                break;
+            }
+        }
+    }
+    h->fastok = 1;
+}
+
 int unc_huff_read_tree(UncHuff *h, UncBitIn *bi)
 {
     /* Stack of pending child slots: (node << 1) | side, filled in the
@@ -127,7 +175,7 @@ int unc_huff_read_tree(UncHuff *h, UncBitIn *bi)
             stack[sp++] = (int16_t)((val << 1) | 0);
         }
 
-        if (sp == 0) return UNC_OK;   /* every slot filled: done */
+        if (sp == 0) { huff_build_fast(h); return UNC_OK; }
     }
 }
 
@@ -135,6 +183,23 @@ int unc_huff_decode(const UncHuff *h, UncBitIn *bi)
 {
     int16_t cur = h->root;
     int32_t guard = 0;
+
+    /* One peek and one lookup for any code of eight bits or fewer, which
+     * is most of the symbols decoded. This walk was 48 % of a StuffIt
+     * method-3 run (`derived-EmpireBuilderDemo.sit`) doing it a bit at a
+     * time. MSB mode only, and the walk below is the fallback whenever
+     * the window holds fewer than eight bits, so nothing depends on the
+     * peek succeeding. */
+    if (h->fastok && !bi->le && unc_bitin_fill(bi, UNC_HUFF_FAST_BITS)) {
+        uint32_t peek = (bi->bitbuf >> (bi->nbits - UNC_HUFF_FAST_BITS))
+                        & ((1u << UNC_HUFF_FAST_BITS) - 1u);
+        uint16_t e = h->fast[peek];
+        if (e) {
+            bi->nbits -= (int32_t)(e & 15u);
+            return (int)(e >> 4);
+        }
+    }
+
     while (cur >= 0) {
         int bit = unc_bitin_bit(bi);
         if (bit < 0) return -1;

@@ -1396,19 +1396,20 @@ the ones a user waits through.
 
 | Fixture | What it exercises | before | after | |
 |---|---|---|---|---|
-| `ACInfo_Comm.sit.bin` | opening a MacBinary envelope | 757,587 | 163,776 | **−78.4 %** |
-| `alpha401.cpt` | the same, Compact Pro inside | 761,294 | 167,655 | **−78.0 %** |
-| `xmasbeeps.sit` | the same, StuffIt inside | 789,223 | 195,059 | **−75.3 %** |
-| `derived-Library_ISBN_Barcoder.sit` (`--budget 597036`) | StuffIt 5, sampled index | 2,346,708,561 | 698,750,330 | **−70.2 %** |
-| `derived-a2basic.dmg.sit` (`--budget 597036`) | the same | 487,403,395 | 315,620,173 | **−35.2 %** |
-| `derived-SyntheticReferences2.0.sea` | Now Compress | 791,938,983 | 580,795,762 | **−26.7 %** |
-| `derived-Terrainman_2.0__.sea` | DiskDoubler DDn | 52,194,820 | 38,820,708 | **−25.6 %** |
-| `derived-XferIt_1.5b4.sea` | Compact Pro | 114,726,883 | 93,798,977 | **−18.2 %** |
+| `ACInfo_Comm.sit.bin` | opening a MacBinary envelope | 757,559 | 163,776 | **−78.4 %** |
+| `alpha401.cpt` | the same, Compact Pro inside | 761,290 | 167,655 | **−78.0 %** |
+| `xmasbeeps.sit` | the same, StuffIt inside | 789,219 | 195,059 | **−75.3 %** |
+| `derived-Library_ISBN_Barcoder.sit` (`--budget 597036`) | StuffIt 5, sampled index | 2,346,708,561 | 698,745,332 | **−70.2 %** |
+| `derived-SyntheticReferences2.0.sea` | Now Compress | 791,938,983 | 506,115,223 | **−36.1 %** |
+| `derived-a2basic.dmg.sit` (`--budget 597036`) | StuffIt 5, sampled index | 487,403,395 | 315,620,026 | **−35.2 %** |
+| `derived-Terrainman_2.0__.sea` | DiskDoubler DDn | 52,194,820 | 35,231,340 | **−32.5 %** |
+| `derived-EmpireBuilderDemo.sit` | StuffIt, serialized-tree Huffman | 48,971,940 | 35,907,173 | **−26.7 %** |
+| `derived-XferIt_1.5b4.sea` | Compact Pro | 114,726,855 | 87,245,888 | **−24.0 %** |
 | `a2ps.V4.3.tar.Z` | Unix compress (LZW) | 4,648,124 | 4,212,836 | **−9.4 %** |
-| `derived-xmasbeeps.sit` | StuffIt classic method 2 (LZW) | 34,270,528 | 31,800,657 | **−7.2 %** |
-| `macburger-helper.hqx` | BinHex | 26,385,171 | 26,135,120 | −0.9 % |
-| `4acalc.zip` | a real zip | 151,851 | 151,784 | −0.0 % |
-| `PCCTS.tar.gz` | gzip (zlib inflate) | 6,342,823 | 6,342,758 | −0.0 % |
+| `derived-xmasbeeps.sit` | StuffIt classic method 2 (LZW) | 34,270,500 | 31,720,758 | **−7.4 %** |
+| `macburger-helper.hqx` | BinHex | 26,385,143 | 24,637,108 | **−6.6 %** |
+| `4acalc.zip` | a real zip | 151,835 | 151,784 | −0.0 % |
+| `PCCTS.tar.gz` | gzip (zlib inflate) | 6,342,819 | 6,342,758 | −0.0 % |
 
 **Read the two StuffIt 5 rows with `Budget` in mind.** Both builds are capped
 at 597,036 B, the figure the machine actually gives the engine — but the older
@@ -1425,6 +1426,20 @@ walk. MacBinary is 234 of the 929 fixtures.
 **A real zip is unchanged**, which is the control: it finds its
 end-of-central-directory record in the first window and always did.
 
+**Both Huffman decoders now peek eight bits and look the code up**, and they
+are separate decoders: `unc_canon_decode` reads canonical code lengths
+(Compact Pro, DiskDoubler DDn, Now Compress, StuffIt 13, LZH) and
+`unc_huff_decode` walks a serialized TREE (StuffIt method 3, DiskDoubler
+method 4, PackIt). The second was found by re-profiling after the first
+landed — it was 48 % of `derived-EmpireBuilderDemo.sit` and the original
+plan had not named it. Its table stores the symbol, because an arbitrary
+tree has no arithmetic that recovers one; the canonical table does not need
+to.
+
+`unc_bitin_bits` takes its n bits in one masked shift when the window holds
+them, instead of n calls to the single-bit reader. That is another 6 to 10
+points on DiskDoubler and Now Compress on top of the table.
+
 ### What is still hot, measured on the same runs
 
 `ars_next_symbol`'s linear symbol search averages **10.4 iterations per
@@ -1434,6 +1449,16 @@ kills the obvious idea of replacing `code / renorm` with a multiply per
 iteration — ten `__mulsi3` calls would cost a 68000 more than one
 `__udivsi3`. The divisions are now unsigned, which deletes `__divsi3`'s sign
 wrapper; gcc had **already** merged the third one the plan expected to find.
+
+**BinHex is the one left with an obvious shape and no obvious fix.**
+`bh_get_bits` is still 38 % of a large `.hqx` — 600,000 calls at about
+sixteen instructions each, over half of them call overhead — and giving it
+an inline fast path with the rare cases behind a call measured **worse**
+(−5.5 % against −6.6 % without it), for the same reason the bit reader did:
+the opaque call forces the cursor fields back to memory. What is left is
+decoding four groups to three bytes in a batch, which changes what a stream
+truncated mid-triple does, and that is graded by 9,270 robustness variants
+rather than argued.
 
 `-flto` is not available: it crashes Retro68's gcc 16.1.0 with an internal
 compiler error (`write_symbol, at lto-streamer-out.cc:3097`, during IPA pass
