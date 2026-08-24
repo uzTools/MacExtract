@@ -62,14 +62,25 @@
  * engine — the describe path, whole-file extraction and segmented
  * extraction all come here.
  *
+ * The window is 2 KB rather than the 512 B it was, because the cost that
+ * matters is not the instructions. A whole zip finds its record in the
+ * first window and pays one read; a file that is NOT a zip walks the
+ * whole 65,557 bytes, which at 512 B was up to 129 SetFPos + FSRead
+ * pairs — on a floppy, a head move and 64 KB read per archive opened.
+ * At 2 KB it is 33. Widening does not change how many BYTES are scanned
+ * and so buys only ~6 % of the instructions (measured); the reads are
+ * the point, and no Linux measurement here can show them.
+ *
  * `end` is one past the last byte that may be scanned: the file size
  * for a whole archive, the LAST PART's size for a segmented one, since
  * that is where a zip writes the record.
  *
  * Returns UNC_OK with *at set, or UNC_ERR_FORMAT if there is none. */
+#define ZS_WINDOW 2048u
+
 int unc_zip_scan_eocd(void *ctx, UncZipReadAt rd, uint32_t end, uint32_t *at)
 {
-    uint8_t win[512 + 3];
+    uint8_t win[ZS_WINDOW + 3];
     uint32_t back = end < ZS_EOCD_MAXBACK ? end : ZS_EOCD_MAXBACK;
     uint32_t floor_ = end - back;     /* earliest offset worth reading */
     uint32_t hiend = end;             /* exclusive end of this window */
@@ -77,7 +88,7 @@ int unc_zip_scan_eocd(void *ctx, UncZipReadAt rd, uint32_t end, uint32_t *at)
     if (end < ZS_EOCD_FIXED) return UNC_ERR_FORMAT;
 
     while (hiend > floor_) {
-        uint32_t span = hiend - floor_ < 512u ? hiend - floor_ : 512u;
+        uint32_t span = hiend - floor_ < ZS_WINDOW ? hiend - floor_ : ZS_WINDOW;
         uint32_t start = hiend - span;
         /* Carry 3 bytes of the NEXT window down so a signature
          * straddling the boundary is still seen whole. */
@@ -86,14 +97,19 @@ int unc_zip_scan_eocd(void *ctx, UncZipReadAt rd, uint32_t end, uint32_t *at)
          * In the topmost window there is nothing past `hiend`, so the
          * last three positions cannot hold a signature at all. */
         uint32_t hi = take >= 3u ? take - 3u : 0u;
+        const uint8_t *p;
         uint32_t i;
 
         if (hi > span) hi = span;
         if (rd(ctx, start, win, (int32_t)take) != UNC_OK)
             return UNC_ERR_FORMAT;
-        for (i = hi; i-- > 0; ) {
-            if (win[i] == 'P' && win[i + 1] == 'K' &&
-                win[i + 2] == 5 && win[i + 3] == 6) {
+        /* Walked with a pointer rather than indexed: this is 64 KB of
+         * byte compares for every archive that is not a zip, and the
+         * indexed form recomputed win + i four times a byte. */
+        p = win + hi;
+        while (p-- > win) {
+            if (p[0] == 'P' && p[1] == 'K' && p[2] == 5 && p[3] == 6) {
+                i = (uint32_t)(p - win);
                 /* The record must fit in what is being scanned. */
                 if (start + i + ZS_EOCD_FIXED > end) continue;
                 *at = start + i;
