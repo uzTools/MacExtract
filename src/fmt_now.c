@@ -308,9 +308,15 @@ static int32_t now_newlzss(const uint8_t *src, uint32_t srclen,
 typedef struct NowStream {
     UncCtx  *c;
     struct NowCodes *cd;   /* code tables, off the stack — see below */
-    uint8_t *inblock;      /* NOW_INBLOCK  */
-    uint8_t *outblock;     /* NOW_OUTBLOCK */
-    uint8_t *dict;         /* NOW_HISTORY  */
+    uint8_t *inblock;      /* [incap]                                    */
+    uint8_t *outblock;     /* [hist + blkcap]                            */
+    uint8_t *dict;         /* [hist]                                     */
+    /* Sized from the archive's largest fork rather than from the
+     * format's ceilings — see unc_now_extract. hist <= NOW_HISTORY and
+     * blkcap <= st->blkcap, always. */
+    uint32_t hist;
+    uint32_t blkcap;
+    uint32_t incap;
     /* Where the current block's output sits and how much is left of it,
      * so a fork can be served across block boundaries. */
     uint8_t *avail;
@@ -440,7 +446,7 @@ static int now_next_block(NowStream *st)
 {
     UncCtx *c = st->c;
     uint8_t rec[8];
-    uint8_t *outstart = st->outblock + NOW_HISTORY;
+    uint8_t *outstart = st->outblock + st->hist;
     uint32_t offset, length, i;
     int32_t out;
     int flags, first, err;
@@ -465,13 +471,13 @@ static int now_next_block(NowStream *st)
         break;
     }
 
-    if (length > NOW_INBLOCK) return UNC_ERR_CORRUPT;
+    if (length > st->incap) return UNC_ERR_CORRUPT;
 
     /* A block that starts a stream reaches back into the history the
      * PREVIOUS stream left behind. The reference calls this absurd and
      * does it anyway; so do we, because the bytes require it. */
     if (first)
-        for (i = 0; i < NOW_HISTORY; i++) st->outblock[i] = st->dict[i];
+        for (i = 0; i < st->hist; i++) st->outblock[i] = st->dict[i];
 
     if (c->io->seek(c->io->ctx, offset) < 0) return UNC_ERR_IO;
 
@@ -480,28 +486,28 @@ static int now_next_block(NowStream *st)
             int32_t mid;
             if (unc_read_full(c->io, outstart, (int32_t)length) != UNC_OK)
                 return UNC_ERR_TRUNCATED;
-            mid = now_huffman(outstart, length, st->inblock, NOW_INBLOCK,
+            mid = now_huffman(outstart, length, st->inblock, st->incap,
                               0x100, &st->cd->one, &err);
             if (mid < 0) return err;
             out = now_lzss(st->inblock, (uint32_t)mid, outstart,
-                           NOW_OUTBLOCK - NOW_HISTORY, &err);
+                           st->blkcap, &err);
         } else {                                  /* Huffman only */
             if (unc_read_full(c->io, st->inblock, (int32_t)length) != UNC_OK)
                 return UNC_ERR_TRUNCATED;
             out = now_huffman(st->inblock, length, outstart,
-                              NOW_OUTBLOCK - NOW_HISTORY, 0x100,
+                              st->blkcap, 0x100,
                               &st->cd->one, &err);
         }
     } else if (flags & 0x40) {                    /* new LZSS */
         if (unc_read_full(c->io, st->inblock, (int32_t)length) != UNC_OK)
             return UNC_ERR_TRUNCATED;
         out = now_newlzss(st->inblock, length, st->outblock, outstart,
-                          NOW_OUTBLOCK - NOW_HISTORY, st->cd, &err);
+                          st->blkcap, st->cd, &err);
     } else if (flags & 0x1F) {                    /* LZSS only */
         if (unc_read_full(c->io, st->inblock, (int32_t)length) != UNC_OK)
             return UNC_ERR_TRUNCATED;
         out = now_lzss(st->inblock, length, outstart,
-                       NOW_OUTBLOCK - NOW_HISTORY, &err);
+                       st->blkcap, &err);
     } else {                                      /* stored */
         if (unc_read_full(c->io, outstart, (int32_t)length) != UNC_OK)
             return UNC_ERR_TRUNCATED;
@@ -513,10 +519,10 @@ static int now_next_block(NowStream *st)
     /* The window slides by the block's length: what was written at
      * outstart ends up just below it, and the last 32 KB become the
      * history for the next block. */
-    for (i = 0; i < NOW_HISTORY; i++)
+    for (i = 0; i < st->hist; i++)
         st->outblock[i] = st->outblock[i + (uint32_t)out];
     if (first)
-        for (i = 0; i < NOW_HISTORY; i++) st->dict[i] = st->outblock[i];
+        for (i = 0; i < st->hist; i++) st->dict[i] = st->outblock[i];
 
     st->avail = outstart - out;
     st->availlen = (uint32_t)out;
@@ -588,21 +594,81 @@ int unc_now_extract(UncCtx *c)
     totalentries = unc_get_u32be(hdr);
     if (totalentries == 0 || totalentries > 0xFFFFu) return UNC_ERR_FORMAT;
 
-    /* One allocation for the block buffers AND the code tables. The
-     * tables go FIRST so their alignment is the allocator's own; the
-     * three buffer sizes are powers of two, so nothing after them is
-     * misaligned either. */
-    mem = (uint8_t *)unc_alloc(c->al, (uint32_t)sizeof *st.cd
-                               + NOW_INBLOCK + NOW_OUTBLOCK + NOW_HISTORY);
-    if (!mem) return UNC_ERR_MEM;
-    st.c = c;
-    st.cd       = (struct NowCodes *)(void *)mem;
-    st.inblock  = mem + sizeof *st.cd;
-    st.outblock = st.inblock + NOW_INBLOCK;
-    st.dict     = st.outblock + NOW_OUTBLOCK;
+    /* Size the block buffers from the archive's LARGEST FORK, not from
+     * the format's three ceilings.
+     *
+     * This allocation happens once per archive, before a single entry is
+     * read, and at the ceilings it is 131,072 B. That is not headroom
+     * anybody was spending: a Macintosh application's heap is its
+     * MultiFinder partition, `unclassic.r` declares a 400 KB minimum, and
+     * 150 KB of that partition is the application's own code. Measured at
+     * a 110,000 B budget — about what the minimum partition leaves — Now
+     * Compress opened NONE of its three fixtures, refused at this line
+     * with a high-water of zero. A per-archive allocation that fails is
+     * also the one shape the engine's contract does not allow: allocation
+     * failure is supposed to be per ENTRY.
+     *
+     * The entry table carries each fork's uncompressed size at +86 and
+     * +90, and ONE STREAM CARRIES BOTH FORKS — resource first, then data
+     * — so the bound is their SUM, not the larger of the two. (Learned
+     * from a unit test: a stream of one 11-byte block holding a 5-byte
+     * resource fork and a 6-byte data fork overran a capacity of 6.)
+     * One pass over the table bounds all three:
+     *
+     *   hist   <= NOW_HISTORY, and a back-reference cannot reach further
+     *            back than the fork has produced, so <= maxout too
+     *   blkcap <= NOW_OUTBLOCK - NOW_HISTORY, and one block's output is
+     *            part of a fork, so <= maxout
+     *   incap  is left at NOW_INBLOCK: a block's COMPRESSED length is not
+     *            bounded by its output, and `length > incap` is a
+     *            corruption test, so shrinking it could refuse a valid
+     *            archive. 32 KB of the 128 stays.
+     *
+     * The tables go FIRST so their alignment is the allocator's own, and
+     * everything after them is bytes. */
     {
-        uint32_t i;
-        for (i = 0; i < NOW_HISTORY; i++) st.dict[i] = 0;
+        uint32_t maxout = 0, i, scanat = at, left = totalentries;
+        while (left-- > 0) {
+            uint32_t d, r;
+            if (c->io->seek(c->io->ctx, scanat) < 0) return UNC_ERR_IO;
+            if (unc_read_full(c->io, hdr, NOW_ENTRY) != UNC_OK) break;
+            scanat += NOW_ENTRY;
+            d = unc_get_u32be(hdr + 86);
+            r = unc_get_u32be(hdr + 90);
+            /* Saturate rather than wrap: a damaged header can declare
+             * anything, and the two ceilings below clamp it anyway. */
+            if (d > 0xFFFFFFFFu - r) d = 0xFFFFFFFFu - r;
+            if (d + r > maxout) maxout = d + r;
+        }
+        st.hist   = maxout < NOW_HISTORY ? maxout : NOW_HISTORY;
+        st.blkcap = maxout < (NOW_OUTBLOCK - NOW_HISTORY)
+                    ? maxout : (NOW_OUTBLOCK - NOW_HISTORY);
+        st.incap  = NOW_INBLOCK;
+        /* A zero-length archive still needs somewhere to decode into. */
+        if (st.blkcap == 0) st.blkcap = 1;
+
+        /* Listing needs none of this. Without the test, `l` on a Now
+         * archive fails outright in a partition too small to decode it —
+         * which is the one thing a user in that position can still
+         * usefully do. */
+        mem = NULL;
+        if (!c->opt.list_only) {
+            mem = (uint8_t *)unc_alloc(c->al, (uint32_t)sizeof *st.cd
+                                       + st.incap + st.hist + st.blkcap
+                                       + st.hist);
+            if (!mem) return UNC_ERR_MEM;
+        }
+        st.c = c;
+        if (mem) {
+            st.cd       = (struct NowCodes *)(void *)mem;
+            st.inblock  = mem + sizeof *st.cd;
+            st.outblock = st.inblock + st.incap;
+            st.dict     = st.outblock + st.hist + st.blkcap;
+            for (i = 0; i < st.hist; i++) st.dict[i] = 0;
+        } else {
+            st.cd = NULL;
+            st.inblock = st.outblock = st.dict = NULL;
+        }
     }
 
     path.len = 0;

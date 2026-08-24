@@ -6223,18 +6223,40 @@ changed **what a machine can extract**, not what it reports: an entry in
 `alysis-disk-expander-12` that a 50,000 B budget used to refuse now comes
 out, and a small-entry zip halved its peak.
 
-The other three were closed on one command. `tools/run_budget.py` over the
-whole corpus at a 400 KB cap says **only StuffIt 5 ever refuses anything**
-(FORMATS.md, *Budget sweep*); ARC peaks at 33,732 B, Now Compress at
-137,264, and neither is anywhere near a limit. Sizing them would add code —
-which is the wrong direction for the one priority they could serve — to
-recover memory nothing is asking for.
+The other three were closed on one command — `tools/run_budget.py` over the
+whole corpus at a 400 KB cap, which says only StuffIt 5 ever refuses
+anything — and **one of them was reopened within the hour**, because that
+command was run in the wrong configuration.
 
-**The transferable part is the order of operations.** "This allocation is
-bigger than it needs to be" is true of all five and is not, by itself, a
-reason to change any of them. The question that separated the two worth
-doing from the three that were not took a single existing tool and no
-insight at all: *does anything actually fail for want of this memory?*
+**The correction, and it is the useful part of this entry.** 597,036 B is
+what a 1 MB Mac Plus leaves the engine with the machine to itself. Under
+MultiFinder, and on System 7 and later, the application gets a PARTITION
+that the user sets in Get Info; `unclassic.r` declares a 400 KB minimum, and
+150 KB of that is the application's own code. Measured on System 7.0.1 with
+the preferred size built down to 400 KB: **`FreeMem()` 212,056 B, budget
+130,136 B** — four and a half times tighter.
+
+At 130,136 B **Now Compress opened none of its three fixtures.** Its
+131,072 B of block buffers are allocated once per archive, before an entry
+is read, so the failure was not even per-entry: the archive was refused
+whole, with a high-water of zero. The entry table carries each fork's
+uncompressed size, and one stream carries both forks, so the bound is their
+sum; sized that way the small fixture peaks at 84,248 B and opens. Listing
+skips the allocation entirely now, because `l` needs no buffers and is the
+one thing a user in a small partition can still usefully do.
+
+**So the order of operations was right and the input was wrong.** "This
+allocation is bigger than it needs to be" is true of all five and is not, by
+itself, a reason to change any of them; *does anything actually fail for
+want of this memory?* is the right next question. But a "nothing fails"
+answer is only as good as the configuration it was taken in — and the
+configuration a user can choose is not the one a test harness defaults to.
+**Ask which machine the green result came from, and whether the user can
+pick a worse one.**
+
+ARC (33,732 B) and SpaceSaver (36 KB) still fit at 130,136 B and stay on
+their ceilings, but that is now recorded as a fact about today's corpus and
+today's minimum partition rather than as a property of those decoders.
 
 ### Why zlib stays
 

@@ -1344,6 +1344,25 @@ index got 25 % smaller and moved the ISBN fixture onto a different rung on
 Linux but not on the Mac. **A cross-validation that agrees is not evidence
 that its input is right when the thing it drives is quantised.**
 
+**And 597,036 B is the System 6 whole-machine case, which is the ROOMY
+one.** Under MultiFinder and on System 7 and later the application gets a
+PARTITION, and `unclassic.r` declares a 400 KB minimum — a user who accepts
+that in Get Info, or a machine that cannot spare the 4 MB preferred size,
+gets it. Measured 2026-08-24 on System 7.0.1 with the preferred size built
+down to 400 KB, `-D UNC_AT_BUDGET`: **`FreeMem()` 212,056 B, budget
+130,136 B.** The partition also holds the application's own ~150 KB of code
+and its 32 KB stack, which is where the rest of the 400 KB goes.
+
+**So there are two budgets, four and a half times apart**, and a figure
+measured on the roomy one says nothing about the tight one:
+
+| | budget |
+|---|---|
+| System 6.0.8, 1 MB, no MultiFinder (whole machine) | **597,036 B** |
+| System 7 / MultiFinder at the declared 400 KB minimum | **130,136 B** |
+
+Both are `FreeMem()` less `kMemReserve`, taken when extraction begins.
+
 **`kMemReserve` cannot be traded for speed** (derived from the above, and it
 closes PLANNED_WORK.md's proposal to try): the next `target` rung for the
 slowest fixture needs a 650,222 B peak, so the reserve would have to fall
@@ -1351,33 +1370,53 @@ from 80 KB to under 28 KB to reach it. That is headroom the Toolbox and File
 Manager use during output writes, on the one machine nothing here can test on
 real hardware. Whatever the reserve is worth, it is not a rung.
 
-### Budget sweep: only one format ever runs out
+### Budget sweep: the corpus at both budgets
 
-`tools/run_budget.py` over the whole corpus at a 400 KB cap — well under the
-597,036 B a 1 MB Mac Plus actually leaves the engine (*Budget*):
+`tools/run_budget.py` runs the whole corpus under a cap. Run it at the
+figure that matters — and **the figure that matters is the MultiFinder one**
+(*Budget*), because that is the one a user can choose:
 
-| format | fixtures | limited | peak |
+| format | fixtures | limited at 130,136 B | peak |
 |---|---|---|---|
-| ARC | 1 | **0** | 33,732 B |
-| Compact Pro | 108 | **0** | 31,111 B |
-| StuffIt | 227 | **0** | 81,212 B |
-| Now Compress | 3 | **0** | 137,264 B |
-| DiskDoubler | 91 | **0** | 401,408 B |
-| StuffIt 5 | 23 | **8** | 409,273 B |
+| BinHex | 204 | 0 | 8,192 B |
+| Compact Pro | 108 | 0 | 31,111 B |
+| StuffIt | 227 | 0 | 81,212 B |
+| LZH | 8 | 0 | 44,624 B |
+| Gzip | 3 | 0 | 52,216 B |
+| **Now Compress** | 3 | **2** | 84,248 B |
+| DiskDoubler | 91 | 1 | 129,536 B |
+| Unix compress | 4 | 1 | 120,880 B |
+| StuffIt 5 | 31 | **21** | 130,097 B |
 
-**StuffIt 5 is the only format that has ever exceeded a budget**, which is
-why it is the only one with a memory-for-time path. It is also the answer to
-the standing question of whether the remaining fixed-size windows — ARC's
-28,672 B crunch tables, Now Compress's 131,072 B of block buffers,
-SpaceSaver's 68 KB ceiling — are worth sizing from the entry: they would
-recover memory nothing is asking for, and cost code to do it. Two of that
-family WERE done, and both because they changed what a machine can extract
-rather than what it reports: SuperDisk's window (*Alysis SuperDisk!*) and
-zip's inflate window, where `synth-exo-zip-deflate.zip` fell 53,515 →
-24,843 B. gzip's cannot be done at all — its ISIZE is in the trailer, so
-`fmt_exo.c` passes `UNC_SIZE_UNKNOWN` and gets deflate's full 32 KB.
+At the roomy System 6 budget of 597,036 B only StuffIt 5 refuses anything
+(8 of 31), which is why it is the only format with a memory-for-time path.
+**At 130,136 B that picture is quite different**, and it is the reason the
+fixed-size windows are worth sizing from the entry after all:
 
-There is nothing for a generic adaptive mechanism to work on today, and one
+- **Now Compress allocated 131,072 B per ARCHIVE, before an entry was
+  read**, and at 130,136 B that failed — so it opened NONE of its three
+  fixtures, refused with a high-water of zero. Sized from the largest
+  fork (2026-08-24) it is 84,248 B for the small one, which opens. A
+  per-archive allocation failure is also the one shape the engine's
+  contract does not allow: failure is supposed to be per ENTRY. Listing
+  now skips the allocation entirely, so `l` works in any partition.
+- **SuperDisk's window** was a flat 98,304 B and is now bounded by the
+  fork: 117,294 → 85,943 B, and `Read Me` in `alysis-disk-expander-12`
+  extracts under a 50,000 B budget where it used to be refused.
+- **zip's inflate window** was deflate's full 32 KB per entry;
+  `synth-exo-zip-deflate.zip` fell 53,515 → 24,843 B. gzip's cannot be
+  done at all — its ISIZE is in the trailer, so `fmt_exo.c` passes
+  `UNC_SIZE_UNKNOWN`.
+
+**ARC (33,732 B) and SpaceSaver (36 KB measured, 68 KB ceiling) still fit
+at 130,136 B**, so they stay on their ceilings — but note that this is a
+measurement about today's corpus and today's minimum partition, not a
+property of those decoders. ARC's is the awkward one if it is ever needed:
+its tables are indexed by a 12-bit code read straight from the stream, so a
+smaller allocation changes what a damaged file does, and it needs
+`unc_lzw.c`'s two-number treatment.
+
+There is still nothing for a generic adaptive mechanism to work on, and one
 could not be graded against this corpus. It becomes real the day a format
 with a megabyte-class window arrives, and the Arsenic answer will not simply
 port to it — DECISIONS.md (2026-08-03, the LZW table) is the recorded case
