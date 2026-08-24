@@ -225,7 +225,7 @@ class Display:
 
 
 def run_one(fixture, mem, timeout, poll, workdir, bootimg, keep_png=None,
-            emu_dir=None, extras=()):
+            emu_dir=None, extras=(), out_kb=FLOPPY_KB):
     """Boot the Mac on one fixture.
 
     Returns (values or None, seconds, png, emulator-exited). The last one
@@ -244,7 +244,10 @@ def run_one(fixture, mem, timeout, poll, workdir, bootimg, keep_png=None,
     png = os.path.join(workdir, "screen.png")
     shutil.copyfile(bootimg, boot)          # every run starts from a pristine
     make_floppy(indsk, "In", payload=fixture, extras=extras)  # image: System 6
-    make_floppy(outdsk, "Out")                  # boot volume as it goes
+    # `out_kb` exists to make the DESTINATION run out of room on purpose:
+    # the full-disk path is otherwise unreachable, and a path nothing has
+    # ever executed is not a path anyone should trust. See --out-kb.
+    make_floppy(outdsk, "Out", size_kb=out_kb)  # boot volume as it goes
 
     dpy = Display()
     started = time.time()
@@ -473,6 +476,14 @@ def main():
                          "fixture. Used for the other parts of a segmented "
                          "set, whose names are deliberately unlike the "
                          "fixture's: the app matches them by header, not name")
+    ap.add_argument("--out-kb", type=int, default=FLOPPY_KB,
+                    help="size of the DESTINATION volume in KB (default "
+                         f"{FLOPPY_KB}). Make it too small for the fixture "
+                         "and the run exercises the full-disk path: the "
+                         "shell should stop the run once, with ret = "
+                         "UNC_ERR_ABORTED (-8), rather than failing every "
+                         "remaining entry. It reports FAIL by construction "
+                         "-- read the numbers, not the verdict.")
     ap.add_argument("-D", dest="defines", action="append", default=[],
                     metavar="UNC_...",
                     help="extra build switch for the application, e.g. "
@@ -534,7 +545,7 @@ def main():
         try:
             vals, secs, png, died, boot, extract = run_one(
                 fixture, args.mem, args.timeout, args.poll, workdir, bootimg,
-                keep, args.emu, extras=extras)
+                keep, args.emu, extras=extras, out_kb=args.out_kb)
             status = AT_STATUS.get(signed32(vals[1])) if vals else None
             if vals is None and died:
                 verdict, detail = "EMUDIED", (

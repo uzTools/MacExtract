@@ -26,6 +26,12 @@ target_include_directories(unclassic PRIVATE
     ${ENGINE_DIR}/third_party/zlib
 )
 
+# Everything builds at -Os, sit_arsenic.c included, and that was TESTED
+# rather than assumed: building that one file at -O2 costs 1,536 B and
+# measured 1,304 s against -Os's 1,284 s on the fixture where it should
+# show up most (FORMATS.md, `Per-file -O2`). Do not re-try it without a
+# harness that resolves better than 20 s on a 22-minute run.
+
 # zlib's crc32.c compiles a set of "braided" tables whenever W is defined,
 # and W defaults to 4 on anything that is not x86-64 or aarch64 — so the
 # 68000 build carried them. Z_TESTW=0 leaves W undefined. The engine uses

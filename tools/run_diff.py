@@ -362,8 +362,11 @@ def main():
     ap.add_argument("--format", help="only fixtures of this lsar format")
     ap.add_argument("--budget", type=int, default=0,
                     help="run under an allocation cap, in bytes: every "
-                         "fixture must still come out byte-exact. 678392 is "
-                         "what a 1 MB Mac Plus leaves the engine.")
+                         "fixture must still come out byte-exact. 597036 is "
+                         "what a 1 MB Mac Plus leaves the engine: FreeMem() "
+                         "at launch, 678,956 B, LESS the shell's 80 KB "
+                         "kMemReserve. Do not use the FreeMem figure alone; "
+                         "that mistake sat here for weeks (BLOCKERS.md).")
     ap.add_argument("--max-size", type=int, default=0,
                     help="only fixtures at most this many bytes. For build "
                          "variants that are correct but slow, where the point "

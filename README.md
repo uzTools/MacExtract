@@ -150,7 +150,7 @@ On a 1 MB Mac Plus, the slowest machine supported:
 | A few KB, any format | seconds |
 | 300 KB StuffIt or BinHex | 2–3 minutes |
 | 200 KB StuffIt 5 | 13 minutes |
-| 640 KB StuffIt 5, worst case measured | 23 minutes |
+| 640 KB StuffIt 5, worst case measured | 21 minutes |
 
 StuffIt 5 is in a class of its own — its compression was designed for machines
 a decade newer. Everything else is quick, and a faster Mac is proportionally

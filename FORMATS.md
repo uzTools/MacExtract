@@ -106,8 +106,8 @@ header of its own. DECISIONS.md 2026-08-21 (the Salient disk).
 constant.** A tree is 1,536 B and is built only when its context first
 occurs: the method 2 specimen — 60 contexts in 564 bytes — measures
 **101,888 B**, and a synthetic method 5 fork touching all 256 measures
-**401,408 B** (`unclassic t --stats`), which still fits the 678,392 B a 1 MB
-Mac Plus leaves the engine. Methods 3 and 4 are the cheapest in the format at
+**401,408 B** (`unclassic t --stats`), which still fits the 597,036 B a 1 MB
+Mac Plus leaves the engine (*Resident memory, stack and launch*, `Budget`). Methods 3 and 4 are the cheapest in the format at
 **8,192 B** and **9,476 B**, being two buffers and, for 4, one Huffman
 table.
 
@@ -1310,6 +1310,55 @@ That is why the CODE resource is not segmented (BLOCKERS.md, *Withdrawn
 claims*), and why moving `ss_dict.h` or the StuffIt tables out of the A5 world
 would buy nothing at launch: they are data, so they carry no relocations.
 
+### Budget
+
+**What a 1 MB Mac Plus actually leaves the engine is 597,036 B** — measured
+2026-08-24 with `run.py --mem 1M -D UNC_AT_BUDGET`, which reports
+`FreeMem()` at **678,956 B** and the shell's `kMemReserve` at 80 KB. This is
+the number `ci.sh` caps the StuffIt 5 run at and the number every `--budget`
+figure in this file is drawn from.
+
+**It was 678,392 B everywhere until then, and that was 91 KB too generous.**
+Two fixtures now agree with the Mac to 48 bytes at 597,036 (*Floor target
+verification*); at 678,392 the ISBN fixture was out by 90,981. The old figure
+was not obviously wrong when it was taken — it reproduced the machine's peak
+then, to 54 bytes — and it went stale silently because the budget is
+`FreeMem()` at the moment extraction begins, so it falls every time the
+application or its dialogs get bigger. Nothing re-measured it for seventeen
+days.
+
+**What hid it for those seventeen days is the shape of the dial**, and it is
+the reusable part: `target` halves, so a budget error smaller than the gap
+between two rungs changes nothing observable. It became visible only when the
+index got 25 % smaller and moved the ISBN fixture onto a different rung on
+Linux but not on the Mac. **A cross-validation that agrees is not evidence
+that its input is right when the thing it drives is quantised.**
+
+**`kMemReserve` cannot be traded for speed** (derived from the above, and it
+closes PLANNED_WORK.md's proposal to try): the next `target` rung for the
+slowest fixture needs a 650,222 B peak, so the reserve would have to fall
+from 80 KB to under 28 KB to reach it. That is headroom the Toolbox and File
+Manager use during output writes, on the one machine nothing here can test on
+real hardware. Whatever the reserve is worth, it is not a rung.
+
+### Per-file `-O2`
+
+**Tried and rejected, 2026-08-24.** Everything builds at `-Os`;
+`sit_arsenic.c` is the one file where that looks like the wrong trade,
+because it is 4 KB of code that runs for twenty minutes while every other
+decoder runs for seconds. Building that one file at `-O2`:
+
+| | app | ISBN at 1 MB, 1x |
+|---|---|---|
+| `-Os` | 154,240 B | **1,284 s** |
+| `-O2` on `sit_arsenic.c` | 155,776 B | **1,304 s** |
+
+**1,536 B for an effect that is at or below the harness's resolution and not
+in the right direction.** The two runs are exactly one poll interval apart at
+`--poll 20`, which is the finest poll these runs tolerate, so the honest
+reading is "≤ 20 s, sign unknown" — and that does not buy 1.5 KB. Do not
+re-try without a harness that resolves better on a 22-minute run.
+
 ### Stack
 
 **Measure it; do not assume it.** One command gives every function's frame:
@@ -1350,8 +1399,8 @@ the ones a user waits through.
 | `ACInfo_Comm.sit.bin` | opening a MacBinary envelope | 757,587 | 163,776 | **−78.4 %** |
 | `alpha401.cpt` | the same, Compact Pro inside | 761,294 | 167,655 | **−78.0 %** |
 | `xmasbeeps.sit` | the same, StuffIt inside | 789,223 | 195,059 | **−75.3 %** |
-| `derived-Library_ISBN_Barcoder.sit` (`--budget 678392`) | StuffIt 5, sampled index | 1,195,256,733 | 457,281,109 | **−61.7 %** |
-| `derived-a2basic.dmg.sit` (`--budget 678392`) | the same | 487,403,423 | 328,865,968 | **−32.5 %** |
+| `derived-Library_ISBN_Barcoder.sit` (`--budget 597036`) | StuffIt 5, sampled index | 2,346,708,561 | 698,750,330 | **−70.2 %** |
+| `derived-a2basic.dmg.sit` (`--budget 597036`) | the same | 487,403,395 | 315,620,173 | **−35.2 %** |
 | `derived-SyntheticReferences2.0.sea` | Now Compress | 791,938,983 | 580,795,762 | **−26.7 %** |
 | `derived-Terrainman_2.0__.sea` | DiskDoubler DDn | 52,194,820 | 38,820,708 | **−25.6 %** |
 | `derived-XferIt_1.5b4.sea` | Compact Pro | 114,726,883 | 93,798,977 | **−18.2 %** |
@@ -1360,6 +1409,13 @@ the ones a user waits through.
 | `macburger-helper.hqx` | BinHex | 26,385,171 | 26,135,120 | −0.9 % |
 | `4acalc.zip` | a real zip | 151,851 | 151,784 | −0.0 % |
 | `PCCTS.tar.gz` | gzip (zlib inflate) | 6,342,823 | 6,342,758 | −0.0 % |
+
+**Read the two StuffIt 5 rows with `Budget` in mind.** Both builds are capped
+at 597,036 B, the figure the machine actually gives the engine — but the older
+build falls to `target` 256 there where the newer one holds 512, so part of
+that −70.2 % is a whole rung of the memory-for-time dial rather than cheaper
+instructions. The number a user waits through is the Mac Plus wall clock two
+sections down: 1,898 s → 1,384 s.
 
 **The three envelope rows are the same change and it is not a decoder at all:**
 `unc_macbinary_probe` moved ahead of the 64 KB backwards scan that
@@ -1414,9 +1470,9 @@ extract time only, on a purpose-built 1 MB 1x emulator (`build_mv mv-1M-1x
 | Fixture | Output | 4 MB — transform table | 1 MB — sampled index | ratio |
 |---|---|---|---|---|
 | `derived-a2basic.dmg.sit` | 205,019 B | **587 s** (peak 1,031,525 B) | **762 s** (peak 482,345 B) | 1.30x |
-| `derived-Library_ISBN_Barcoder.sit` | 641,115 B | **768 s** (peak 1,682,142 B) | **1,384 s** (peak 559,289 B) | 1.80x |
+| `derived-Library_ISBN_Barcoder.sit` | 641,115 B | **768 s** (peak 1,682,142 B) | **1,284 s** (peak 559,805 B) | 1.67x |
 
-**The fallback costs 1.30x to 1.80x, and Arsenic is still the slow one.**
+**The fallback costs 1.30x to 1.67x, and Arsenic is still the slow one.**
 Ten minutes for a 205 KB output is what the *fast* path costs a 7 MHz 68000;
 before 2026-08-07 a 1 MB machine could not extract either entry at all. The
 ratio widens with block fill, and neither the x86 ratio nor one fixture scaled
@@ -1433,22 +1489,26 @@ proposal the same measurement killed.
 **The 4 MB column did NOT change and was not re-measured**: those runs take
 the transform vector and never touch the sampled index or its scan.
 
-Both 1 MB figures were re-run on the final build. The unsigned-division change
-that landed last is worth **20 s of the 1,404** on the ISBN fixture (1.4 %) and
-nothing measurable on `derived-a2basic.dmg.sit`, which is the honest size of
-deleting a libgcc sign wrapper twice per decoded symbol — the scan and the
-index are where the rest of it came from.
+Both 1 MB figures were re-run on the build that carries them. Two of the
+smaller changes have their own measurements: the unsigned divisions are worth
+**20 s of 1,404** on the ISBN fixture (1.4 %) and nothing measurable on
+`derived-a2basic.dmg.sit`, and replacing the per-output-byte binary search
+over `cum[]` with a 512-byte coarse table is worth **100 s of 1,384** (7.2 %)
+for 512 bytes of heap and no code at all.
 
-**One thing the Linux model got wrong, and it is worth knowing.** Three bytes
-per sample buys 25 % more density at the same budget, and under
-`--budget 678392` — the figure that reproduces this machine's peak to 54 bytes
-— it moves `derived-Library_ISBN_Barcoder.sit` from `target` 512 to 1024, a
-650,222 B high-water. **The real 1 MB Mac stayed at 512**, taking the saving as
-55 KB of headroom instead of as density: its peak fell to 559,289 B rather than
-rising to ~650 KB. So the budget figure models the CEILING and not what the
-Memory Manager will actually hand out in one piece — a **hypothesis**, since
-nothing here has reduced it to a reproduction; `UNC_AT_BUDGET` reports
-`MaxBlock` and `FreeMem` at a refusal and would settle it in one boot.
+**Poll no faster than 20 s on these runs.** `--poll 5` and below report a
+bogus FAIL after about five seconds, with a nonsense value in the grid's `ret`
+slot — four times out of four here, against five clean runs at `--poll 20`.
+The alive-grid-read-mid-paint explanation is a **hypothesis**; the pattern is
+measured. The short 4 MB runs in the table above are a different regime and
+`--poll 3` is fine for them.
+
+**Three bytes per sample buys 25 % more density at the same budget**, and on
+Linux that moves `derived-Library_ISBN_Barcoder.sit` from `target` 512 to 1024
+— if the budget is big enough. **The real 1 MB Mac stayed at 512**, taking the
+saving as 55 KB of headroom instead of as density. That disagreement is what
+found the budget error in *Budget* below: the machine's is 597,036 B, not the
+678,392 B every simulation here was using.
 
 All four figures were measured with one emulator running at a time. The 4 MB
 pair supersedes an earlier one (537 s / 927 s) taken before the progress
@@ -1726,11 +1786,14 @@ within a rounding step, so the fills are confirmed by two independent routes —
 and the 4× transform vector (487 KB, 772 KB and 1,263 KB respectively) is
 visibly the dominant term, which is what the sampled inverse BWT went after.
 
-**The CLI's `--budget` simulation is now cross-validated against the real Mac
-allocator.** `unclassic --budget 678392` on Linux predicted 560,535 B and
-614,080 B for those two; the Mac measured 560,589 B and 614,134 B — 54 bytes
-apart in both cases. That is worth stating because every budget figure
-elsewhere in this file is a Linux number.
+**The CLI's `--budget` simulation is cross-validated against the real Mac
+allocator**, and was re-validated on 2026-08-24 after the budget itself turned
+out to have drifted. `unclassic --budget 597036` predicts 482,297 B and
+559,241 B for those two; the Mac measures 482,345 B and 559,289 B — **48 bytes
+apart in both cases**. That is worth stating because every budget figure
+elsewhere in this file is a Linux number. The superseded pair (560,535 /
+614,080 against 560,589 / 614,134, at `--budget 678392`) agreed just as well
+when it was taken; see *Budget* for why that stopped being true.
 
 **This tier moved four times in six days, 39/44 → 44/44**, one DECISIONS.md
 entry per step and none of them a decoder change until the last:

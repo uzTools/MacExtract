@@ -26,122 +26,30 @@ it is worth an afternoon: that is what turned section 2 from 200 KB into
 
 | # | step | costs | buys |
 |---|---|---|---|
-| 1 | Hoist and unsign the Arsenic divides, narrow its multiplies | one function | `ars_next_symbol` is **13.1 %** of the slowest fixture's remaining instructions, and a 68000 has no divide instruction at all |
-| 2 | `SetEOF` the output fork at create time | three lines | one extent allocation per fork instead of per 8 KB, and `dskFulErr` *before* the entry decodes |
-| 3 | The rest of the disk-full handling | small | a full disk becomes legible instead of 100 identical errors |
-| 4 | Size five windows and tables from the entry, not the format's ceiling | small each | ~128 KB (Now Compress), up to 64 KB (SuperDisk and SpaceSaver), ~30 KB (zip/gzip), ~28 KB (ARC crunch) — **memory, not time**, so it is below the two above |
-| 5 | The small loop items | small each | the index binary search **1.75 %**, per-file `-O2` |
-| 6 | `kMemReserve`, then the budget sweep | a build | 32-80 KB into the extraction budget |
-| 7 | A transcribed inflate to replace zlib | a rewrite | ~12 KB code + 9 KB rodata, paid for in risk. Last of everything here |
+| 1 | Size five windows and tables from the entry, not the format's ceiling | small each | ~128 KB (Now Compress), up to 64 KB (SuperDisk and SpaceSaver), ~30 KB (zip/gzip), ~28 KB (ARC crunch) — **memory, not time** |
+| 2 | A transcribed inflate to replace zlib | a rewrite | ~12 KB code + 9 KB rodata, paid for in risk. Last of everything here |
+
+**Three more are closed rather than done**, and each is in `BLOCKERS.md`
+with what it cost: the **index binary search** and **per-file `-O2`** (the
+first landed and is worth 7.2 % on a real Mac Plus; the second measured
+1,536 B bigger and no faster, and is not in the tree), the **`SetEOF`**
+and **disk-full** pair (SetEOF landed; the disk-full proposal's premise —
+"every remaining entry then fails the same way" — turned out to be false
+for thirteen of fourteen formats, and the real work was six lines in
+`fmt_arc.c`), and:
+
+**`kMemReserve` is closed, not done.** It was here as "32-80 KB into the
+extraction budget"; measuring the budget instead of assuming it showed there
+is nothing to buy. The next `target` rung for the slowest fixture needs a
+650,222 B peak against a 597,036 B budget, so the reserve would have to fall
+from 80 KB to under 28 KB to reach it — and that is headroom the Toolbox and
+File Manager use during output writes, on the one machine nothing here can
+test on real hardware. FORMATS.md, *Budget*; the 91 KB error that measurement
+found is in BLOCKERS.md.
 
 ---
 
-## 1. The Arsenic symbol loop divides twice, signed, where once unsigned would do
-
-**Claim (measured — disassembly of `sit_arsenic.o` built with the Mac
-target's flags).** `ars_next_symbol`, with `ars_dec_advance` inlined into it,
-calls `__divsi3` twice and `__mulsi3` twice per decoded symbol. Three separate
-things are wrong with that, and none of them needs assembly:
-
-- **The source divides three times, and the compiler merged two of them.** The
-  guard in `ars_next_symbol` and the `frequency` line below it share a
-  subexpression and are CSE'd; `renorm` inside `ars_dec_advance` is not,
-  because gcc cannot prove `d` and `m` do not alias across the symbol-search
-  loop, so it reloads `d->range` and `m->totalfrequency` and divides again.
-  **Hoisting into locals is what defeats that**, and it is worth one of two
-  divides — not two of three, as an earlier draft of this section said.
-- **The divides are signed for no reason.** `range`, `code` and
-  `totalfrequency` are `int32_t` and all are provably non-negative
-  (`range <= 2^25`, `code <= range`, `totalfrequency >= 2`). `__divsi3` is a
-  wrapper that handles sign and then calls `__udivsi3_internal`; casting the
-  operands to `uint32_t` at the division site deletes that layer.
-- **Both multiplies are 32x32 where 32x16 would do.** `renorm * symlow` and
-  `symsize * renorm` each have one operand bounded by `totalfrequency <= 1032`
-  (every model is initialised with `frequencylimit` 256 or 1024).
-  `__mulsi3` is three `MULU.W`; a 32x16 multiply is two.
-
-The transformation is arithmetically identical either way, so byte-exactness
-holds by construction.
-
-**What can and cannot see it:** the win does not appear on Linux — an x86 has
-a hardware 32-bit divide and a 68000 does not — so `ci.sh` cannot grade it.
-Measure it on the Mac, or by counting calls.
-
-**Why assembly is not the answer here (measured).** libgcc's `__udivsi3`
-(`lb1sf68.S`) already fast-paths a 16-bit divisor with two `DIVU.W`, and
-`totalfrequency <= 1032` always takes that path. Hand-written division would
-save the `jsr`, the `d2` save/restore and the sign wrapper — call overhead,
-perhaps 15 % of the divide cost, against 50 % for the free hoist. The only
-candidate worth three lines of inline asm is the 32x16 multiply above, and
-only if the profile says the multiplies matter. Against that, an m68k assembly
-path is graded by the emulator harness (67 fixtures, one boot each) while the
-927-fixture suite grades its C fallback, which is this repository's own "a test
-that passes may not be testing anything" trap.
-
-**Assembly for SIZE is not worth considering at all.** `-Os` C is already
-dense and the application's 116 KB of code is 25 format decoders, zlib and
-tables, not one hot loop; rewriting the whole of `sit_arsenic.c` (4,032 B
-measured) might recover 1-1.5 KB.
-
----
-
-## 2. `SetEOF` the output fork at create time
-
-The streaming `sink_begin` creates the file and pre-allocates nothing, so
-every 8 KB `FSWrite` extends the fork and HFS rewrites the extent map. One
-`SetEOF` when `info->data_size` is known allocates it once.
-
-It is also the cheapest part of section 3: `SetEOF` returns `dskFulErr`
-**before the entry is decoded**, which turns "fail every remaining entry
-mid-write, twenty minutes in" into "refuse this entry now" for every format
-that reports a size.
-
----
-
-## 3. Destination disk space: there is no pre-flight check (measured)
-
-**Claim:** the application never asks the destination volume how much room it
-has. `PBHGetVInfo` appears in `mac/unclassic_mac.c` only for volume
-enumeration.
-
-**What happens when the disk fills**, read out of the write path:
-
-1. `FSWrite` fails mid-entry inside `sink_write`, which sets `wrErr` and
-   returns −1.
-2. The entry fails; `sink_end` deletes the partial file, so nothing incomplete
-   is left behind.
-3. The error is counted and **extraction continues** — every remaining entry
-   then fails the same way, one error each.
-4. The `OSErr` is discarded at the `!= noErr` test, so `dskFulErr` is
-   indistinguishable from a genuine I/O error. Nothing can tell the user the
-   disk is full.
-
-**Consequence:** the failure is safe but illegible. A user who fills a volume
-half way through a 200-entry archive sees 100 identical unexplained entry
-errors.
-
-**Proposed, after the `SetEOF` of section 2:**
-
-- **Keep the `OSErr`.** Carry it in `MacSink` so the cause survives to the
-  result grid.
-- **Treat `dskFulErr` as terminal for the run.** Stop and report it once
-  rather than failing every remaining entry against a volume that cannot
-  accept them.
-- **Pre-flight where the format allows it.** `ioVFrBlk × ioVAlBlkSiz` from
-  `PBHGetVInfo` against a listing pass (`opt.list_only` exists) gives an exact
-  answer for formats that carry sizes in a listable directory, and
-  `UNC_SIZE_UNKNOWN` is a real case in the sink, so the honest behaviour is
-  *warn when the total is known, fall back to the terminal-error path when it
-  is not*. Any check must also count the resource fork and round each fork up
-  to the volume's allocation block.
-
-**What this cannot see:** a volume that fills from another process during a
-long extraction. The mid-write path stays the backstop whatever the pre-flight
-says.
-
----
-
-## 4. Five windows allocated at the format's ceiling, not the entry's size
+## 1. Five windows allocated at the format's ceiling, not the entry's size
 
 **This is memory, not time**, which is why it sits below the two items above:
 every one of these formats already fits the 1 MB floor target with room to
@@ -209,70 +117,7 @@ of which allocates a window at all.
 
 ---
 
-## 5. The small items in the same loop
-
-- **`ars_index_next` binary-searches 256 entries per output byte.** Eight
-  compares to find which byte value owns sorted index `k`, before the sample
-  scan even starts. A coarse `k >> shift` -> candidate-value table of 1-2 KB
-  replaces them with one lookup and a short walk. **Measured at 1.75 %** — a
-  small item, and not to be confused with the sentinel scan, which was 77 %
-  and is done.
-- **Per-file optimisation level.** Everything builds at `-Os`.
-  `sit_arsenic.c` is 4,032 bytes of code (measured); building that one file at
-  `-O2` is a one-line CMake change and costs perhaps 2 KB.
-- **Measure before touching:** `ars_next_symbol` linearly scans up to
-  `numsymbols - 1` entries accumulating frequencies, and `mtfmodel[6]` has
-  128 symbols. High MTF ranks are rare in BWT output, so the expected
-  iteration count is probably low.
-
-**Checked and nothing there: the launch path.** Between double-click and the
-file dialog the application does six Toolbox inits (`InitGraf` through
-`InitDialogs`), `InitCursor`, `FlushEvents`, one trap-availability test, and
-goes straight into `SFGetFile`. No resource preloading, no volume scan, no
-window built before the dialog. And the Segment Loader's own cost is now
-measured and is ≈ 0.16 s of an 8.9 s boot (`FORMATS.md`, *Launch*), so there
-is nothing here at all. Recorded as a null result so the next reader does not
-look again.
-
-**Checked and not proposed:** the progress path. `prog_tick` already throttles
-to ~10 Hz off `TickCount` and returns before any drawing, so
-`ARS_PROGRESS_STEP` at 256 bytes costs a trap and a compare — it is already
-right. Two more of the same kind: opening an archive deliberately calls
-`unc_segment_describe` rather than a full `unc_sniff`, to avoid walking a
-Compact Pro index twice on a 7 MHz machine (the comment in
-`mac/unclassic_mac.c` says so); and the compile line is
-`-O3 -DNDEBUG -mcpu=68000 -Os ...`, where the `-O3` comes from
-`CMAKE_BUILD_TYPE=Release` and the `-Os` from the target options — **last
-wins, so the application is built `-Os`**, whatever `flags.make` looks like at
-a glance. All recorded so they are not re-derived as opportunities, along with
-narrowing hot-path arithmetic to 16 bits, which would help a 68000 and which
-CLAUDE.md forbids deliberately.
-
----
-
-## 6. `kMemReserve` is 80 KB and nothing records why
-
-`mac/unclassic_mac.c` keeps `kMemReserve` = 80 KB of heap back from the
-engine's budget. Grepping `DECISIONS.md`, `BLOCKERS.md` and `OPEN_ITEMS.md`
-finds no entry that chose that value (measured: no match). It is exactly the
-shape CLAUDE.md names as worth re-testing: a constant nobody has questioned.
-
-`UNC_AT_BUDGET` already reports whether a refusal came from the budget or from
-`NewPtr`, with `MaxBlock` and `FreeMem` at the moment of refusal, so trying 48
-or 64 KB is one build and one boot. It is real headroom for the Toolbox and
-File Manager during output writes, so a reduction needs the full 1 MB sample
-rather than one fixture.
-
-**What recovered heap buys is continuous, not a cliff.** `ars_index_build`
-halves `target` until the allocator accepts; each halving halves the index and
-doubles the scan distance. It does NOT flip an entry onto the fast transform
-vector: that needs `35 KB parser + capacity + 4 x fill`, and any fill above
-131,072 puts the peak ~144 KB above the whole 1 MB budget. The capacity rung,
-not the budget, sets that cliff.
-
----
-
-## 7. zlib, and what it costs to keep
+## 2. zlib, and what it costs to keep
 
 `unc_inflate.c` is only a bridge to zlib, which exists solely for deflate and
 costs 7,824 B of code plus 2,675 B of rodata for `inflate.o` alone, and 12 KB
@@ -286,6 +131,39 @@ it would need a host table-fetch callback — so that is a design decision, not
 an optimisation. And the launch measurement says what it would buy: those are
 data, not pointers, so they carry no relocations and cost the Segment Loader
 a read and nothing else.
+
+---
+
+## Checked and empty — do not re-propose these
+
+Carried forward from items that have since landed or died, because each is
+a place a reader will otherwise look again.
+
+- **The launch path.** Between double-click and the file dialog the
+  application does six Toolbox inits (`InitGraf` through `InitDialogs`),
+  `InitCursor`, `FlushEvents`, one trap-availability test, and goes straight
+  into `SFGetFile`. No resource preloading, no volume scan, no window built
+  before the dialog. And the Segment Loader's own cost is measured at
+  ≈ 0.16 s of an 8.9 s boot (`FORMATS.md`, *Launch*), so there is nothing
+  here at all.
+- **The progress path.** `prog_tick` already throttles to ~10 Hz off
+  `TickCount` and returns before any drawing, so `ARS_PROGRESS_STEP` at 256
+  bytes costs a trap and a compare — it is already right.
+- **Opening an archive** deliberately calls `unc_segment_describe` rather
+  than a full `unc_sniff`, to avoid walking a Compact Pro index twice on a
+  7 MHz machine (the comment in `mac/unclassic_mac.c` says so).
+- **The compile line** is `-O3 -DNDEBUG -mcpu=68000 -Os ...`, where the
+  `-O3` comes from `CMAKE_BUILD_TYPE=Release` and the `-Os` from the target
+  options — **last wins, so the application is built `-Os`**, whatever
+  `flags.make` looks like at a glance.
+- **Narrowing hot-path arithmetic to 16 bits** would help a 68000 and
+  CLAUDE.md forbids it deliberately.
+- **`ars_next_symbol`'s linear symbol search** averages **10.4 iterations
+  per decoded symbol** (measured), which is what kills replacing its
+  division with a multiply per iteration: ten `__mulsi3` calls cost a 68000
+  more than one `__udivsi3`. The search itself is 9.9 % of the slowest run
+  and has no obviously cheaper shape — a running cumulative array would have
+  to be updated on every `ars_model_bump`.
 
 ---
 

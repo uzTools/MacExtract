@@ -226,11 +226,25 @@ static const uint16_t ars_randtable[256] = {
 /* ------------------------------------------------------------------ */
 
 /* Sampled occurrence index — the low-memory inverse BWT (see below). */
+/* Entries in the coarse value table below. 512 slots against at most 256
+ * boundaries means half a boundary per slot, so the walk after the lookup
+ * is normally none and never more than the boundaries that fall in one
+ * slot. 512 bytes, against an index that is hundreds of kilobytes. */
+#define ARS_VTAB_BITS 9
+#define ARS_VTAB_SIZE (1u << ARS_VTAB_BITS)
+
 typedef struct ArsIndex {
     uint32_t cum[256];     /* first sorted index of byte value c */
     uint32_t base[256];    /* which SAMPLE c's samples start at */
     uint32_t nsamples;
     uint8_t  shift[256];   /* one sample per 1 << shift[c] occurrences */
+    /* Which byte value owns sorted index k, to within a short forward
+     * walk: vtab[k >> vshift] is the largest c whose range starts at or
+     * before k rounded down to a slot. It replaces a binary search over
+     * cum[] that ran ONCE PER OUTPUT BYTE — eight iterations, each a
+     * 32-bit load from a 1 KB array, on a processor with no cache. */
+    uint8_t  vtab[ARS_VTAB_SIZE];
+    uint32_t vshift;
     /* [nsamples * 3]; over-allocated by the caller. THREE bytes per
      * sample, not four: a sample is a position inside the block, and
      * blockbits is 4 stream bits plus 9, so a block is at most 1 << 24
@@ -398,6 +412,21 @@ static int ars_index_build(Arsenic *a, UncAlloc *al)
         ix->shift[c] = shift[c];
         running += counts[c];
     }
+
+    /* The coarse value table. vshift is chosen so the whole block maps
+     * into ARS_VTAB_SIZE slots; slot j answers for k = j << vshift, and
+     * ars_index_next walks forward from there. Built by sweeping the
+     * values in order rather than searching per slot. */
+    {
+        uint32_t vs = 0, j = 0, cc = 0;
+        while ((n >> vs) >= ARS_VTAB_SIZE) vs++;
+        ix->vshift = vs;
+        for (j = 0; j < ARS_VTAB_SIZE; j++) {
+            uint32_t at = j << vs;
+            while (cc < 255u && ix->cum[cc + 1u] <= at) cc++;
+            ix->vtab[j] = (uint8_t)cc;
+        }
+    }
     running = 0;
     for (c = 0; c < 256; c++) {
         ix->base[c] = running;
@@ -437,13 +466,10 @@ static uint32_t ars_index_next(const Arsenic *a, uint32_t k)
 {
     const ArsIndex *ix = a->index;
     uint8_t *block = a->block;
-    uint32_t lo = 0, hi = 255, c, r, sh, i, rem, n = a->numbytes;
+    uint32_t c, r, sh, i, rem, n = a->numbytes;
 
-    while (lo < hi) {
-        uint32_t mid = (lo + hi + 1u) >> 1;
-        if (ix->cum[mid] <= k) lo = mid; else hi = mid - 1;
-    }
-    c = lo;
+    c = ix->vtab[k >> ix->vshift];
+    while (c < 255u && ix->cum[c + 1u] <= k) c++;
     sh = ix->shift[c];
     r = k - ix->cum[c];
     {

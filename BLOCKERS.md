@@ -130,6 +130,20 @@ keep finding the next one, and two of them need no insight at all:
   since M9. One instrumented run — four minutes — turned ~200 KB into
   29 KB and deleted the proposal. If a number was DERIVED, the cheapest
   disproof is to print it.
+- **a claim about "what the code does" that names no line.** Added
+  2026-08-24: the disk-full write-up described the failure path in four
+  numbered steps, and step 3 — "the error is counted and extraction
+  continues" — was the one step that was never traced to a line. Thirteen
+  extractors contained its refutation. **A described behaviour with no
+  file:line beside it is a guess in the shape of a reading**, and the
+  cheapest disproof is to make it happen: one run against a full disk.
+- **a cross-validation whose output is quantised.** Added 2026-08-24: the
+  `--budget` simulation agreed with the real Mac allocator to 54 bytes while
+  its budget was 91 KB wrong, because `target` halves and an error smaller
+  than the gap between two rungs changes nothing observable. It surfaced only
+  when an unrelated change moved one fixture onto a different rung. **Ask what
+  resolution an agreement actually has** before reading it as confirmation of
+  the inputs.
 - **a limit nobody has ever measured against.** Added 2026-08-24: the
   4 KB call-depth rule was exceeded by 66 %, in code that ships and
   passes, and the only reason anyone looked was that a change was about
@@ -187,6 +201,8 @@ line is what makes the next one worth re-testing.
 | A multi-block Arsenic entry gets the declared 512 KB block, so shrinking it to its fill returns ~200 KB to the sampled index | instrumenting `blockcap - numbytes` at `ars_bwt_prepare`: the largest block in the corpus is `cap=352,160 fill=323,384`, waste **28,776 B**, and neither slow fixture ever allocates 512 KB — `ars_block_reserve` has sized the first allocation at `min(outlen, blocksize)` since M9. The index needs 225,528 B at target 512 and 346,836 B at 1024, so 29 KB does not move the dial by one step | 2026-08-24 |
 | Segmenting the CODE resource keeps ~61 KB out of the launch path and makes startup cheaper | ballast, three runs each at authentic 7 MHz: 64 KB of resident data with no relocations costs **nothing measurable**, and 64 KB carrying 16,384 relocations costs **1.1 s**. The whole application has **2,376** relocations, so everything it pays at launch for its own size is ≈ 0.16 s of an 8.9 s boot | 2026-08-24 |
 | Engine call depth is at most 4 KB (CLAUDE.md's own rule) | `m68k -Os -fstack-usage` over the call graph: `unc_dd_extract -> dd_fork -> dd_ddn` was **6,664 B** and Now Compress **5,632 B**. Never recorded, never tested, and it had never failed. Both formats' code tables moved to the heap; the deepest chain is now **3,290 B**. The rule was exceeded; the MACHINE never was — `kStackBump` gives the shell 32 KB of stack, not the 8 KB default, which the first write-up of this row got wrong | 2026-08-24 |
+| A 1 MB Mac Plus leaves the engine 678,392 B, and `--budget 678392` reproduces it | `run.py --mem 1M -D UNC_AT_BUDGET`: `FreeMem()` is 678,956 B and the shell keeps 80 KB back, so the budget is **597,036 B** — 91 KB less. At 597,036 the CLI predicts the Mac's peak to **48 bytes on two fixtures**; at 678,392 it was out by 90,981 on one of them. **Cost: `ci.sh`'s floor-target run was 91 KB more generous than the floor target for seventeen days**, and the figure had reproduced the machine to 54 bytes when it was taken — the budget is `FreeMem()` when extraction starts, so it falls as the application grows, and nothing re-measured it | 2026-08-24 |
+| When the destination disk fills, extraction continues and every remaining entry fails the same way, one error each | filling an 800 KB destination on purpose (`run.py --out-kb 800`) with a 17-entry archive: **9 files written, ONE error**, and `ret` = `UNC_ERR_SINK`. Thirteen of the fourteen extractors already end the archive on a sink failure — the line is in `fmt_sit.c` and its copies — so the behaviour the proposal wanted was already there for all but one. **Cost: a shell-side `diskFull` flag, a `Progress` coupling and a `PBHGetVInfo` call were written and then deleted**; what the case actually needed was six lines in `fmt_arc.c`, the one format that was out of step, and keeping the `OSErr` so the alert can say *which* failure it was | 2026-08-24 |
 | Widening the end-of-central-directory scan window is what makes sniffing cheaper | it is worth ~6 % of the instructions and the rest is the byte scan. A POINTER walk over the same window is -30 % of an envelope open, and moving `unc_macbinary_probe` ahead of the scan is -78 % — the scan was never run for 234 of 929 fixtures' worth of work | 2026-08-24 |
 
 **DiskDoubler methods 1–5 and 7 "cannot be graded".** Declined per entry

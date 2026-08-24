@@ -501,7 +501,7 @@ CI forces it three ways:
 - `-DUNC_ARS_FORCE_SAMPLED` compiles the fast path out. The whole
   927-fixture diff suite and all 9,270 robustness variants run through the
   fallback under ASan+UBSan, and must be byte-exact.
-- `--budget 678392` (what a 1 MB Mac Plus leaves the engine) on the 31
+- `--budget 597036` (what a 1 MB Mac Plus leaves the engine) on the 31
   StuffIt 5 fixtures, with the normal adaptive build. This is the only step
   that exercises *choosing*, and the halving of `target`.
 - `-DARS_INDEX_TARGET=1` forces the deep end of the dial, where a query's

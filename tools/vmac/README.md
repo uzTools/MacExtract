@@ -53,7 +53,7 @@ oracle and will lose it to `./ci.sh`'s `make clean`.
 | `segcheck.py` | **replay every segmented-archive scenario in one command** — the four joining schemes, parts inside envelopes, and a chained file, across both harnesses |
 | `setup.sh` | fetch + build the emulator, the ROM and a System 6.0.8 image into `$UNC_VMAC_HOME` (default `~/.cache/unclassic/vmac/`) |
 | `mkboot.py` | strip that image to System + Finder and make it boot straight into the application |
-| `run.py` | build the disks, boot, screenshot, decode, check |
+| `run.py` | build the disks, boot, screenshot, decode, check. `--out-kb` sizes the DESTINATION volume, which is how the full-disk path is reached at all — see below |
 | `interactive.py` | drive the real UI (SFGetFile, progress dialog, Cancel, Cmd-., the password dialog) and photograph each step |
 | `os9.py` | boot Mac OS 9 on emulated PowerPC, launch the application from the keyboard, and check both forks of what it wrote — see below |
 | `os9probe.py` | diagnostic: which input primitives actually reach the Mac OS 9 guest? Not part of any suite |
@@ -179,6 +179,23 @@ can still be interrogated:
 Still true and still the trap: **do not poll every few seconds**, because
 decoding a 512x342 grid in Python steals the CPU from the emulator you are
 timing.
+
+**And on a LONG 1x run it does worse than steal CPU: it reports a bogus
+FAIL.** `--poll 5` and below finish in about five seconds with `nfiles 0` and
+a nonsense value in the grid's `ret` slot — four times out of four on
+`derived-Library_ISBN_Barcoder.sit` at `--mem 1M --emu mv-1M-1x` (twice at
+`--poll 5`, once at `--poll 2`, once at `--poll 1`), against five clean runs
+at `--poll 20`. **Use `--poll 20` for the Arsenic fixtures**; the timings in
+FORMATS.md were taken there. The likely cause is a poll landing while the app
+is still painting its "alive" grid, so `ret` holds neither a result nor the
+running sentinel and run.py takes it as final — that is a **hypothesis**, and
+the failure pattern is what is measured. The short 4 MB runs are a different
+regime and `--poll 3` is fine for them (`timing.txt` uses it).
+
+**Two 22-minute runs were spent finding this out**, on an A/B that then could
+not be resolved: `-Os` and `-O2` builds of `sit_arsenic.c` came out exactly
+one poll interval apart at `--poll 20` and both `--poll 5` re-runs failed
+instantly. FORMATS.md, *Per-file `-O2`*.
 
 **Wall-clock time is not Mac Plus time — except in a 1x build.** `setup.sh`
 produces four emulators, because RAM size and speed are both compile-time
@@ -932,6 +949,28 @@ Results are not repeated here; each line says where they live.
 | `UNC_AT_PROGRESS` | how fast is the engine actually going, mid-run | BLOCKERS.md "Timing on a 7 MHz Mac Plus" |
 | `UNC_MAC_SLURP_ARCHIVE` | rebuilds the old read-whole-archive-into-RAM path | DECISIONS.md 2026-08-02 |
 | `UNC_MAC_STAGE_WRITES` | the older whole-fork staging write path (also in `ci.sh`) | TESTING.md |
+
+### Filling the destination on purpose — `--out-kb`
+
+    run.py --mem 1M --out-kb 800 fixtures/derived-OTCFM68KGlue.sit
+
+`hformat` refuses anything under 800 KB, so the smallest destination is an
+800 KB volume and the fixture has to be one whose output exceeds it;
+`derived-OTCFM68KGlue.sit` (17 entries, ~1 MB out) and
+`derived-XferIt_1.5b4.sea` (10 entries, 926 KB out) both do.
+
+It reports FAIL by construction — fewer files came out than the oracle
+expects. **Read the numbers.** What it proves is that the run STOPS: 9 files
+written, `errors` = **1**, `ret` = −9 (`UNC_ERR_SINK`), and the eight
+remaining entries never attempted. That is the check behind the withdrawn
+claim in BLOCKERS.md that a full disk produces one error per remaining
+entry; it does not, because every extractor ends the archive on a sink
+failure.
+
+**What it cannot see:** the alert the user is shown. That lives in the
+interactive build, which this harness does not run — `interactive.py` does.
+The message is chosen from `gLastWriteErr`, and only the choosing is
+untested.
 
 ### Why an entry is refused — `UNC_AT_BUDGET`
 

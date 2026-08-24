@@ -1399,7 +1399,9 @@ does not size anything: here the requirement itself is reduced.
 `ars_inverse_bwt` builds a transform vector costing **4 bytes per block byte**,
 and it is the dominant allocation in the decoder. OPEN_ITEMS.md had the
 arithmetic: `Library_ISBN` needed 1,854,208 B against the 678,392 B a 1 MB Mac
-Plus leaves the engine, of which 1,293,536 B was that one vector. No placement,
+Plus was then thought to leave the engine — 597,036 B as re-measured on
+2026-08-24, which only widens the gap — of which 1,293,536 B was that one
+vector. No placement,
 reserve tuning or defragmentation can close a gap that size — only needing less
 can.
 

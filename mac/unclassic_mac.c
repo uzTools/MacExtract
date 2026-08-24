@@ -565,7 +565,9 @@ typedef struct {
     short        openRef;            /* refNum of the open fork, 0 if none  */
     int          openIsRsrc;         /* which fork openRef refers to        */
     uint32_t     dataPos, rsrcPos;   /* bytes written to each fork so far   */
+    int          dataSized, rsrcSized; /* SetEOF already done for this fork */
     int          wrErr;              /* a write failed; fail the entry      */
+    OSErr        wrOSErr;            /* the FIRST write error of this entry */
 #else
     /* Staging write path: forks are accumulated in RAM and written in
      * sink_end at shallow depth. Costs the shell one whole fork of RAM,
@@ -718,6 +720,7 @@ static int sink_begin(void *ctx, const UncEntryInfo *info)
     s->openRef = 0;
     s->openIsRsrc = 0;
     s->dataPos = s->rsrcPos = 0;
+    s->dataSized = s->rsrcSized = 0;
     s->wrErr = 0;
 #else
     s->dataBuf = s->rsrcBuf = NULL;
@@ -851,8 +854,71 @@ static OSErr StreamSelect(MacSink *s, int isRsrc)
                      isRsrc, &s->openRef);
     if (err != noErr) { s->openRef = 0; return err; }
     s->openIsRsrc = isRsrc;
+
+    /* Ask for the whole fork at once, the first time it is opened.
+     *
+     * Two things fall out of one call. HFS allocates the extent (or as few
+     * as the volume's fragmentation allows) ONCE, instead of extending the
+     * fork and rewriting the extent record every 8 KB — this is a streaming
+     * writer, so without it a 300 KB fork is 37 separate extensions.
+     *
+     * And a volume that cannot hold the fork says so HERE, before the entry
+     * is decoded, rather than at some FSWrite twenty minutes in. That is the
+     * difference between "this entry will not fit" and a hundred identical
+     * unexplained failures, one per remaining entry.
+     *
+     * Only when the size is known: UNC_SIZE_UNKNOWN is a real case (a
+     * streamed gzip has no length until it ends), and those forks keep the
+     * old grow-as-you-go behaviour. sink_end trims back to what was actually
+     * written, so a short or failed entry leaves exactly the file it left
+     * before. */
+    {
+        int *sized = isRsrc ? &s->rsrcSized : &s->dataSized;
+        uint32_t want = isRsrc ? s->cur.rsrc_size : s->cur.data_size;
+        if (!*sized) {
+            *sized = 1;
+            if (want != UNC_SIZE_UNKNOWN && want > 0) {
+                err = SetEOF(s->openRef, (long)want);
+                if (err != noErr) return err;   /* dskFulErr lands here */
+            }
+        }
+    }
+
     pos = isRsrc ? s->rsrcPos : s->dataPos;
     return SetFPos(s->openRef, fsFromStart, (long)pos);
+}
+
+/* The first write error of the RUN, not of the entry.
+ *
+ * Every extractor treats a sink failure as the end of the archive, so a
+ * full destination volume already stops the run — what was missing is
+ * that the OSErr was dropped at the `!= noErr` test, leaving "the disk is
+ * full" indistinguishable from a media error. This carries it out to the
+ * alert. File-scope because the sink is local to RunExtract and the alert
+ * is in ExtractOne, and threading an out-parameter through five call
+ * sites to move one OSErr is the worse trade. */
+static OSErr gLastWriteErr = noErr;
+
+/* Trim a fork back to what was actually written.
+ *
+ * StreamSelect asks for the whole declared size at first open. A correct
+ * archive then delivers exactly that, and this does nothing; a damaged one
+ * can deliver less, and without this the file would keep the difference as
+ * whatever HFS left in the blocks it had just allocated. Only reopens when
+ * there is something to trim, which on the 67-fixture sample is never. */
+static void StreamTrim(MacSink *s, int isRsrc)
+{
+    short ref;
+    uint32_t pos  = isRsrc ? s->rsrcPos : s->dataPos;
+    uint32_t want = isRsrc ? s->cur.rsrc_size : s->cur.data_size;
+    int sized     = isRsrc ? s->rsrcSized : s->dataSized;
+
+    if (!sized || want == UNC_SIZE_UNKNOWN || pos >= want) return;
+    if (MyOpenFork(s->vRefNum, s->curDirID, s->curName, fsWrPerm,
+                   isRsrc, &ref) != noErr) return;
+    (void)SetEOF(ref, (long)pos);
+    (void)FSClose(ref);
+    FlushVol(NULL, s->vRefNum);
 }
 
 #endif  /* !UNC_MAC_STAGE_WRITES */
@@ -869,9 +935,14 @@ static int sink_write(void *ctx, UncFork fork, const void *buf, int32_t len)
 
     if (len <= 0) return 0;
     if (s->wrErr) return -1;
-    if (StreamSelect(s, fork == UNC_FORK_RSRC) != noErr) {
-        s->wrErr = 1;
-        return -1;
+    {
+        OSErr serr = StreamSelect(s, fork == UNC_FORK_RSRC);
+        if (serr != noErr) {
+            s->wrErr = 1;
+            if (s->wrOSErr == noErr) s->wrOSErr = serr;
+            gLastWriteErr = s->wrOSErr;
+            return -1;
+        }
     }
     /* Write in bounded pieces: FSWrite takes a byte count, and keeping it
      * small bounds how much the File Manager does per call in this deep,
@@ -879,9 +950,15 @@ static int sink_write(void *ctx, UncFork fork, const void *buf, int32_t len)
     while (todo > 0) {
         long count = (long)(todo < 8192u ? todo : 8192u);
         long want = count;
-        if (FSWrite(s->openRef, &count, (Ptr)((const char *)buf + off)) != noErr
-            || count != want) {
+        OSErr werr = FSWrite(s->openRef, &count,
+                             (Ptr)((const char *)buf + off));
+        if (werr != noErr || count != want) {
             s->wrErr = 1;
+            /* Keep the FIRST OSErr. The grid and the alert could not tell
+             * dskFulErr from a media error before, so a full disk read as a
+             * hundred unexplained entry failures. */
+            if (s->wrOSErr == noErr) s->wrOSErr = (werr != noErr ? werr : ioErr);
+            gLastWriteErr = s->wrOSErr;
             return -1;
         }
         off += (uint32_t)want;
@@ -964,6 +1041,10 @@ static int sink_end(void *ctx, int status)
      * entry's open can fail for want of file-control blocks. */
     if (StreamClose(s) != noErr && status == UNC_OK) status = UNC_ERR_SINK;
     if (s->wrErr && status == UNC_OK) status = UNC_ERR_SINK;
+    if (status == UNC_OK && !s->cur.is_dir) {
+        StreamTrim(s, 0);
+        StreamTrim(s, 1);
+    }
 #else
     if (s->bufErr && status == UNC_OK) status = UNC_ERR_MEM;
 
@@ -2429,6 +2510,8 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
     sink.lastName[0] = 0;
     sink.lastDir = 0;
     sink.pr = NULL;
+    sink.wrOSErr = noErr;
+    gLastWriteErr = noErr;
     sk.ctx = &sink;
     sk.begin_entry = sink_begin;
     sk.write = sink_write;
@@ -3519,7 +3602,15 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
 
     if (pr.dlg) DisposeDialog(pr.dlg);
 
-    if (pr.cancelled || ret == UNC_ERR_ABORTED)
+    if (gLastWriteErr == dskFulErr)
+        /* The engine has already stopped the run — every extractor treats a
+         * sink failure as the end of the archive — so all that was missing
+         * was being able to say WHICH failure. Before this the OSErr was
+         * dropped at the `!= noErr` test and a full disk read as "this file
+         * could not be extracted". */
+        ShowNote(kErrorALRT, "\pThe disk is full. Everything extracted "
+                             "before it filled up is there; the rest is not.");
+    else if (pr.cancelled || ret == UNC_ERR_ABORTED)
         ShowNote(kDoneALRT, "\pExtraction cancelled.");
     else if (ret == UNC_ERR_SEGMENTED)
         /* A part of a segmented set was never located. Whatever the parts

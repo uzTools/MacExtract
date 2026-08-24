@@ -36,6 +36,7 @@ typedef void          *WindowPtr;
 #define dupFNErr     (-48)
 #define fnfErr       (-43)
 #define ioErr        (-36)
+#define dskFulErr    (-34)
 #define fsRdPerm     1
 #define fsWrPerm     2
 #define fsFromStart  1

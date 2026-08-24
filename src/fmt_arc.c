@@ -720,6 +720,18 @@ int unc_arc_extract(UncCtx *c)
                     err = UNC_ERR_SINK;
                     break;
                 }
+                /* A sink failure ends the ARCHIVE, not just the entry: the
+                 * host could not write this one and will not be able to
+                 * write the next either, so carrying on turns a full disk
+                 * into one identical error per remaining entry. Every other
+                 * format here already did this; ARC was the one that did
+                 * not (measured 2026-08-24, filling the destination volume
+                 * with `run.py --out-kb`). */
+                if (est == UNC_ERR_SINK || est == UNC_ERR_ABORTED ||
+                    est == UNC_ERR_IO) {
+                    err = est;
+                    break;
+                }
             }
             any = 1;
             pos += compsize;
@@ -784,6 +796,11 @@ int unc_arc_extract(UncCtx *c)
                                         !c->opt.test_only, uncompsize);
             if (c->sink->end_entry(c->sink->ctx, est) < 0) {
                 err = UNC_ERR_SINK;
+                break;
+            }
+            if (est == UNC_ERR_SINK || est == UNC_ERR_ABORTED ||
+                est == UNC_ERR_IO) {
+                err = est;
                 break;
             }
         }

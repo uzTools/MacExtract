@@ -46,12 +46,15 @@ Everything that *can* be automated already is, and lives elsewhere:
 This is the machine the project is designed around, and the one where an
 emulator is least trustworthy. Do these first.
 
-- [ ] **Free heap on a stock machine.** Record `FreeMem()` at launch (the
-      application reports its budget) and compare with the ~678,392 B the
-      emulated 1 MB machine leaves. The emulated figure comes from a stripped
-      System Folder with no INITs; a real Plus with a Chooser extension or two
-      has less, and every 1 MB number in FORMATS.md is derived from that
-      budget.
+- [ ] **Free heap on a stock machine.** Record `FreeMem()` at launch and
+      compare with the **678,956 B** the emulated 1 MB machine leaves
+      (measured 2026-08-24, `-D UNC_AT_BUDGET`). Note which number you are
+      comparing: the engine's BUDGET is that figure less the shell's 80 KB
+      `kMemReserve`, i.e. **597,036 B**, and conflating the two is a mistake
+      this project has already made and shipped (BLOCKERS.md). The emulated
+      figure comes from a stripped System Folder with no INITs; a real Plus
+      with a Chooser extension or two has less, and every 1 MB number in
+      FORMATS.md is derived from that budget.
 - [ ] **A real 800K floppy, end to end.** Extract from a floppy onto a floppy.
       Emulated disks are host files: they never seek, never fail and never run
       out mid-write.
