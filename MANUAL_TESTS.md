@@ -55,6 +55,23 @@ emulator is least trustworthy. Do these first.
       figure comes from a stripped System Folder with no INITs; a real Plus
       with a Chooser extension or two has less, and every 1 MB number in
       FORMATS.md is derived from that budget.
+- [ ] **How much heap the Toolbox really needs while the engine is at its
+      peak.** The reserve held back from the engine is a quarter of
+      `FreeMem()`, clamped to [32 KB, 80 KB] (`kMemReserveMin`/`Max` in
+      `mac/unclassic_mac.c`). Measured under Mini vMac, the Toolbox and File
+      Manager took **under 1 KB** at the tightest moment of all 67 sample
+      fixtures — but that is a stripped System Folder with no INITs, a
+      RAM-backed disk and no fragmentation. Do the same on iron with a
+      Chooser extension loaded, extracting onto a **floppy** and onto an
+      **AppleShare volume**, and watch whether anything comes close to the
+      floor. If 32 KB is comfortable there, the floor can come down and
+      every small-partition budget grows with it; if it is not, the floor
+      needs raising and this is the only way anyone would find out.
+- [ ] **MultiFinder at the declared minimum.** Set the partition to 400 KB
+      in Get Info and open one archive of each format. The emulated figure
+      is `FreeMem()` 211,960 B and a 158,970 B budget (FORMATS.md,
+      *Budget*); a real machine has less, and this is the configuration a
+      user can choose and the harness cannot default to.
 - [ ] **A real 800K floppy, end to end.** Extract from a floppy onto a floppy.
       Emulated disks are host files: they never seek, never fail and never run
       out mid-write.

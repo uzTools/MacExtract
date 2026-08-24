@@ -53,7 +53,33 @@
 #define kDetailItem     4
 
 #define kStackBump      (24L * 1024)   /* extra stack over the 8 KB default */
-#define kMemReserve     (80L * 1024)   /* heap headroom kept from the engine */
+/* Heap kept back from the engine for the Toolbox and File Manager.
+ *
+ * A QUARTER of what is free, between a 32 KB floor and the 80 KB this was
+ * a flat constant of until 2026-08-24, because the two configurations this
+ * application runs in are four and a half times apart and one constant
+ * cannot suit both. On a 1 MB Mac Plus with the machine to itself
+ * FreeMem() is ~681 KB and a quarter is over 80 KB, so the cap holds and
+ * nothing changes there — every verified figure on that tier stays exactly
+ * as measured. Under MultiFinder at the 400 KB minimum partition
+ * `unclassic.r` declares, FreeMem() is 212,056 B, and a flat 80 KB is
+ * 38 % of the heap held back from a machine that has none to spare.
+ *
+ * What it is worth keeping back was measured rather than assumed: with a
+ * probe recording the lowest FreeMem() seen during writes across all 67
+ * fixtures of the 1 MB sample, the tightest moment left **121 KB** free,
+ * and the Toolbox and File Manager together took **under 1 KB** while the
+ * engine was at its peak. So even the floor is generous by that evidence.
+ *
+ * WHAT THAT EVIDENCE CANNOT SEE, and why the floor is 32 KB rather than
+ * the kilobyte measured: a stripped System Folder with no INITs, a
+ * RAM-backed emulated disk, and no fragmentation pressure. A real Plus
+ * with a Chooser extension, a floppy's File Manager buffers or an
+ * AppleShare volume all cost more, and the reserve also has to cover a
+ * dialog or an alert drawn while the engine holds its peak. MANUAL_TESTS.md
+ * carries this as something only real hardware can settle. */
+#define kMemReserveMax  (80L * 1024)
+#define kMemReserveMin  (32L * 1024)
 
 #ifndef ioDirMask
 #define ioDirMask 0x10   /* ioFlAttrib bit 4 = "is a directory"
@@ -2487,12 +2513,16 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
      * off disk there is no buffer to subtract first, so on the floor target
      * the engine now gets the archive's size back — which is what decided
      * which StuffIt 5 entries it could afford. */
+    {
+        long freenow = FreeMem();
+        long reserve = freenow / 4;
+        if (reserve > kMemReserveMax) reserve = kMemReserveMax;
+        if (reserve < kMemReserveMin) reserve = kMemReserveMin;
 #ifdef UNC_AT_BUDGET
-    gFreeAtStart = FreeMem();
-    ma.budget = gFreeAtStart - kMemReserve;
-#else
-    ma.budget = FreeMem() - kMemReserve;
+        gFreeAtStart = freenow;
 #endif
+        ma.budget = freenow - reserve;
+    }
     if (ma.budget < 32L * 1024) ma.budget = 32L * 1024;
     ma.initial = ma.budget;      /* for peak-usage = initial - lowmark */
 #ifdef UNC_AT_BUDGET

@@ -112,6 +112,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-24 (the performance pass) — four proposals measured, two of them dead
 - 2026-08-24 (the performance pass, part two) — what re-profiling found that the plan had not
 - 2026-08-24 (PLANNED_WORK.md, closed) — the file is gone, and what it left behind
+- 2026-08-24 (the reserve) — a constant that suited one machine of the two
 
 ---
 
@@ -6306,3 +6307,37 @@ Each of these is a place a reader will otherwise re-propose.
 - **`adler32.o`, 994 B.** Raw inflate never calls it; inflate.c still
   references it from the zlib-wrapper path, and cutting that would mean
   editing the vendored source.
+
+---
+
+## 2026-08-24 (the reserve) — a constant that suited one machine of the two
+
+`kMemReserve` was a flat 80 KB from M10 and nothing recorded why. It is now
+a quarter of `FreeMem()`, clamped to [32 KB, 80 KB].
+
+**Claim (measured).** The two configurations this application runs in are
+four and a half times apart: 678,956 B free with a 1 MB Mac Plus to itself,
+211,960 B in the 400 KB minimum partition `unclassic.r` declares. A flat
+80 KB is 12 % of the first and **38 %** of the second.
+
+**Evidence for what the reserve is worth.** A probe recording the lowest
+`FreeMem()` seen during writes, across all 67 fixtures of the 1 MB sample:
+the tightest moment left 121,124 B free, and the Toolbox and File Manager
+together took **under 1 KB** while the engine sat at its peak.
+
+**Consequence.** A quarter, capped at the old 80 KB, changes nothing on the
+tier where every figure in FORMATS.md was measured — a quarter of 678,956
+exceeds the cap — and gives the minimum partition 158,970 B instead of
+130,136. That is what takes Now Compress from opening none of its three
+fixtures there to opening all three, and StuffIt 5 from 10 to 15.
+
+**Why a floor of 32 KB and not the kilobyte measured**, which is the part
+worth transferring: the measurement is of the best case and the reserve
+exists for the worst. A stripped System Folder, a RAM-backed disk and no
+fragmentation are exactly the conditions under which a safety margin looks
+unnecessary. **Measuring how much of a safety margin is used tells you what
+it costs, not what it is for** — so the number sets the shape of the rule
+(proportional, not constant) and the caution sets its floor.
+MANUAL_TESTS.md carries the two things only iron can settle: a floppy and
+an AppleShare volume with an extension loaded, and MultiFinder at the
+declared minimum.

@@ -1356,12 +1356,33 @@ and its 32 KB stack, which is where the rest of the 400 KB goes.
 **So there are two budgets, four and a half times apart**, and a figure
 measured on the roomy one says nothing about the tight one:
 
-| | budget |
-|---|---|
-| System 6.0.8, 1 MB, no MultiFinder (whole machine) | **597,036 B** |
-| System 7 / MultiFinder at the declared 400 KB minimum | **130,136 B** |
+| | free | reserve | budget |
+|---|---|---|---|
+| System 6.0.8, 1 MB, no MultiFinder (whole machine) | 678,956 B | 80 KB (cap) | **597,036 B** |
+| System 7 / MultiFinder at the declared 400 KB minimum | 211,960 B | 53,014 B | **158,970 B** |
 
-Both are `FreeMem()` less `kMemReserve`, taken when extraction begins.
+Both are `FreeMem()` less the reserve, taken when extraction begins.
+
+**The reserve is a QUARTER of free, clamped to [32 KB, 80 KB]** — it was a
+flat 80 KB until 2026-08-24. On the roomy tier a quarter exceeds the cap, so
+that tier is unchanged and every figure measured on it stands. In the
+minimum partition a flat 80 KB was **38 % of the whole heap** held back from
+a machine with none to spare; the quarter rule makes it 53,014 B and the
+budget 130,136 → **158,970 B**, which is what takes Now Compress from
+opening none of its fixtures there to opening all three (*Budget sweep*).
+
+**What the reserve is worth was measured, for the first time.** A probe
+recording the lowest `FreeMem()` seen during writes, over all 67 fixtures of
+the 1 MB sample: the tightest moment left **121,124 B** free, and the
+Toolbox and File Manager together took **under 1 KB** while the engine sat
+at its peak. By that evidence even the 32 KB floor is generous.
+
+**What that evidence cannot see**, which is why the floor is 32 KB and not
+the kilobyte measured: a stripped System Folder with no INITs, a RAM-backed
+emulated disk, and no fragmentation pressure. A real Plus with a Chooser
+extension, a floppy's File Manager buffers or an AppleShare volume all cost
+more, and the reserve also covers a dialog or an alert drawn while the
+engine holds its peak. MANUAL_TESTS.md carries it.
 
 **`kMemReserve` cannot be traded for speed** (derived from the above, and it
 closes PLANNED_WORK.md's proposal to try): the next `target` rung for the
@@ -1376,17 +1397,22 @@ real hardware. Whatever the reserve is worth, it is not a rung.
 figure that matters — and **the figure that matters is the MultiFinder one**
 (*Budget*), because that is the one a user can choose:
 
-| format | fixtures | limited at 130,136 B | peak |
+| format | fixtures | limited at 158,970 B | peak |
 |---|---|---|---|
 | BinHex | 204 | 0 | 8,192 B |
 | Compact Pro | 108 | 0 | 31,111 B |
 | StuffIt | 227 | 0 | 81,212 B |
 | LZH | 8 | 0 | 44,624 B |
 | Gzip | 3 | 0 | 52,216 B |
-| **Now Compress** | 3 | **2** | 84,248 B |
-| DiskDoubler | 91 | 1 | 129,536 B |
+| **Now Compress** | 3 | **0** | 137,264 B |
+| DiskDoubler | 91 | 1 | 158,720 B |
 | Unix compress | 4 | 1 | 120,880 B |
-| StuffIt 5 | 31 | **21** | 130,097 B |
+| StuffIt 5 | 31 | **16** | 158,165 B |
+
+Before the two 2026-08-24 changes — Now Compress sized from the fork, and
+the adaptive reserve — the same sweep at the then-budget of 130,136 B had
+Now Compress at **2 limited of 3 with a peak of zero** (refused whole,
+before an entry was read) and StuffIt 5 at 21 limited.
 
 At the roomy System 6 budget of 597,036 B only StuffIt 5 refuses anything
 (8 of 31), which is why it is the only format with a memory-for-time path.
@@ -1395,11 +1421,12 @@ fixed-size windows are worth sizing from the entry after all:
 
 - **Now Compress allocated 131,072 B per ARCHIVE, before an entry was
   read**, and at 130,136 B that failed — so it opened NONE of its three
-  fixtures, refused with a high-water of zero. Sized from the largest
-  fork (2026-08-24) it is 84,248 B for the small one, which opens. A
-  per-archive allocation failure is also the one shape the engine's
-  contract does not allow: failure is supposed to be per ENTRY. Listing
-  now skips the allocation entirely, so `l` works in any partition.
+  fixtures, refused with a high-water of zero. Sized from the largest fork
+  (2026-08-24) the small one is 84,248 B, and with the adaptive reserve
+  all three open. A per-archive allocation failure is also the one shape
+  the engine's contract does not allow: failure is supposed to be per
+  ENTRY. Listing now skips the allocation entirely, so `l` works in any
+  partition.
 - **SuperDisk's window** was a flat 98,304 B and is now bounded by the
   fork: 117,294 → 85,943 B, and `Read Me` in `alysis-disk-expander-12`
   extracts under a 50,000 B budget where it used to be refused.

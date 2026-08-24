@@ -323,7 +323,15 @@ int main(int argc, char **argv)
         }
     }
 
-    ma.budget = FreeMem() - kMemReserve;
+    /* The same rule the shell uses: a quarter of free, clamped. See the
+     * kMemReserve comment in mac/unclassic_mac.c for why it is not a
+     * constant any more. */
+    {
+        long reserve = FreeMem() / 4;
+        if (reserve > kMemReserveMax) reserve = kMemReserveMax;
+        if (reserve < kMemReserveMin) reserve = kMemReserveMin;
+        ma.budget = FreeMem() - reserve;
+    }
     al.ctx = &ma; al.alloc = mal_alloc; al.free = mal_free;
 
     memset(&sink, 0, sizeof sink);
