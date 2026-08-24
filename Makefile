@@ -32,9 +32,15 @@ ENGINE_HDR = include/unclassic.h $(wildcard src/*.h)
 $(BUILD)/%.o: src/%.c $(ENGINE_HDR) | $(BUILD)
 	$(CC) $(WARN) $(CFLAGS) $(INC) -c $< -o $@
 
-# third_party is exempt from our warning set (vendored code)
+# third_party is exempt from our warning set (vendored code).
+#
+# Z_TESTW=0 leaves W undefined, which drops crc32.c's braided tables and
+# the code that reads them. The engine calls inflateInit2(&zs, -15) — RAW
+# inflate — so zlib never computes a CRC at all; unc_crc32 does. On the
+# Mac target that is 5,120 B of permanently-resident A5 world (FORMATS.md,
+# `Resident memory`).
 $(BUILD)/zlib_%.o: third_party/zlib/%.c | $(BUILD)
-	$(CC) -std=c99 $(CFLAGS) -Ithird_party/zlib -c $< -o $@
+	$(CC) -std=c99 $(CFLAGS) -DZ_TESTW=0 -Ithird_party/zlib -c $< -o $@
 
 $(CLI_BIN): cli/main.c $(ENGINE_OBJ) $(THIRD_OBJ) | $(BUILD)
 	$(CC) $(WARN) $(CFLAGS) $(INC) cli/main.c $(ENGINE_OBJ) $(THIRD_OBJ) -o $@

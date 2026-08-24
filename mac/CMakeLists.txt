@@ -26,6 +26,15 @@ target_include_directories(unclassic PRIVATE
     ${ENGINE_DIR}/third_party/zlib
 )
 
+# zlib's crc32.c compiles a set of "braided" tables whenever W is defined,
+# and W defaults to 4 on anything that is not x86-64 or aarch64 — so the
+# 68000 build carried them. Z_TESTW=0 leaves W undefined. The engine uses
+# raw inflate (inflateInit2(&zs, -15)), so zlib never computes a CRC;
+# unc_crc32 does. FORMATS.md, `Resident memory`, has the bytes.
+set_source_files_properties(
+    ${ZLIB_SRC} TARGET_DIRECTORY unclassic
+    PROPERTIES COMPILE_DEFINITIONS Z_TESTW=0)
+
 # Plain 68000 floor: no 68020+ instructions.
 target_compile_options(unclassic PRIVATE -mcpu=68000 -Os -Wno-multichar
                        -ffunction-sections
