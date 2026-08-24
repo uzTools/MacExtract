@@ -197,15 +197,23 @@ def robustness(exe, fixture, timeout):
 def budget(exe, fixture, entries):
     """An entry too big for the budget is that ENTRY's error.
 
-    Both forks in `alysis-disk-expander-12` are method 11, whose 96 KB
-    window is the whole allocation, so a budget of 50,000 refuses every
-    one of them — which is what makes it a usable probe. What is being
-    checked is not that they fail but that the archive KEEPS GOING: the
-    engine's contract is that allocation failure is per-entry, never
-    per-archive (CLAUDE.md, 68000 discipline). Returning UNC_ERR_MEM
-    from the record loop instead abandoned the rest of the archive at
-    the first oversized fork, and the only visible difference is which
-    entries are named in the errors."""
+    Both forks in `alysis-disk-expander-12` are method 11, and the budget
+    here is chosen so that EVERY one of them is refused — which is what
+    makes it a usable probe. What is being checked is not that they fail
+    but that the archive KEEPS GOING: the engine's contract is that
+    allocation failure is per-entry, never per-archive (CLAUDE.md, 68000
+    discipline). Returning UNC_ERR_MEM from the record loop instead
+    abandoned the rest of the archive at the first oversized fork, and the
+    only visible difference is which entries are named in the errors.
+
+    **The budget was 50,000 until 2026-08-24 and had to come down to
+    20,000.** Not because the check got weaker — it asserts exactly what
+    it did — but because its precondition stopped holding: SlowFastB's
+    window was a flat 96 KB whatever the fork, and is now sized from the
+    fork, so `Read Me` began fitting inside 50,000 and extracting. A probe
+    that works by making everything fail has to be re-aimed whenever the
+    thing it aims at gets smaller, and it says so on the tin: at 50,000 it
+    reports 1 of 2 entries named and calls that stopping early."""
     src = os.path.join(REPO, "fixtures", fixture)
     if not os.path.exists(src):
         return 0, 0
@@ -216,7 +224,7 @@ def budget(exe, fixture, entries):
                           capture_output=True).returncode != 0:
             return 0, 0
         payload = os.path.join(env, PAYLOAD[fixture])
-        r = subprocess.run([exe, "x", "--budget", "50000", "-o",
+        r = subprocess.run([exe, "x", "--budget", "20000", "-o",
                             os.path.join(work, "out"), payload],
                            capture_output=True, text=True)
         named = [n for n, _, _ in entries

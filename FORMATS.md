@@ -31,7 +31,7 @@ whole corpus for that format (engine allocations only, via
 | ARC / ArcMac (.arc) | extract | 1/2 store, 3 RLE90, 4 squeeze+RLE90, 5/6/7 crunch, 8 12-bit LZW+RLE90, 9 13-bit LZW, 0x7f compress; ArcMac's two-fork payload since 2026-08-16★★★; 0x0a/0x0b (PKARC) declined per entry★; **garbled (password-XORed) members decrypted** | 10 generated archives (methods 1-9, adjudicated by `unar`) + 3 written by Debian's `arc` 5.21q; `synth-arc-mixed.arc` also has an `unar` manifest and is in the differential suite | 4–32 KB★ | full |
 | btoa (`xbtoa`/`.ascii`) | extract | — (base-85 ASCII armour; both the `xbtoa5` and the older `xbtoa Begin` framings)◆ | no corpus file and no second reader: graded against **btoa 5.2.1 itself**, which encodes the subjects `tools/run_btoa.py` decodes | 12 KB | full |
 | uuencode (.uu, incl. UUTool) | extract | — (plain uu, UUTool's two-fork "MU" shape, and documents posted in several parts★★) | 7 generated cases, the two-fork ones adjudicated by macutils' `hexbin`; `synth-uu-mac.uu` is in the differential suite | 4 KB | full |
-| Alysis SuperDisk! (.X, .x) | extract | **both containers** (record-stream archive and single file); methods 1-4 and 5-8 (a finite-context predictor over a 13- or 16-bit context, with the flag bitmap and/or the literals Huffman-coded), 9 Huffman, 11 SlowFastB (LZSS); 10, 13 and 20 declined per entry✧✧ | 2 fixtures, 5 forks, adjudicated by the archives' OWN self-extractors on an emulated Mac, + 11 single-file specimens written by Alysis's own control panel (methods 1 and 6) and graded against their inputs | 72–115 KB✧✧ | full |
+| Alysis SuperDisk! (.X, .x) | extract | **both containers** (record-stream archive and single file); methods 1-4 and 5-8 (a finite-context predictor over a 13- or 16-bit context, with the flag bitmap and/or the literals Huffman-coded), 9 Huffman, 11 SlowFastB (LZSS); 10, 13 and 20 declined per entry✧✧ | 2 fixtures, 5 forks, adjudicated by the archives' OWN self-extractors on an emulated Mac, + 11 single-file specimens written by Alysis's own control panel (methods 1 and 6) and graded against their inputs | 72–84 KB✧✧ | full |
 | StuffIt SpaceSaver (`SPSV`) | extract | 0 stored, 4 "Alg 4" — an LZSS whose window starts loaded with a preset dictionary that ships inside SpaceSaver; 1, 2 and 3 declined per entry✦✦ | no oracle and no specimen — but **Aladdin's own encoder agrees with this decoder field for field** (`CMod 20`, 2026-08-23), which is what grades it, plus a synthetic round-trip and unit tests✦✦ | 4 KB stored, **36 KB** for what SpaceSaver writes (measured on a Mac Plus); 68 KB is the ceiling the width byte allows. The dictionary is 9.7 KB of static data, not heap | full |
 | LZH / LHA (.lzh, .lha) | extract | -lh0- store, -lh1- (LHarc's adaptive Huffman, shared with StuffIt method 5), -lh4-/-lh5-/-lh6-/-lh7- (static Huffman over a 4/8/32/64 KB window), -lhd- directories, LArc's -lz4-/-lz5-/-lzs-; header levels 0, 1, 2 and 3; **MacLHA's MacBinary payload unwrapped into two forks**; -lh2-/-lh3- declined per entry✵ | 8 fixtures (1 real Amiga archive + 7 of lhasa's) + **182 archives from fourteen writers**, each graded against `unar` and against lhasa, + 12 sets written by LHa 1.14i itself✵ | 4–74 KB✵ | full |
 | AppleLink package (.pkg) | detect only | — | no specimen anywhere: the probe is Aladdin's own recogniser, at 0 false positives across 928 fixtures (*AppleLink packages*, below) | — | — |
@@ -287,11 +287,21 @@ corrupted variants, which nothing else covers — `t` does not unwrap envelopes,
 so the corpus-driven robustness and fuzz suites only ever reach the BinHex
 layer.
 
-Peak heap **74,220 B** for `SD! Utilities.x` and **117,294 B** for
+Peak heap **74,220 B** for `SD! Utilities.x` and **85,943 B** for
 `Disk Expander .X` (`unclassic t --stats`); both extract fully under a 400 KB
 budget. Neither peak is a ceiling anybody declared: the 64 KB step is the wide
-context table, allocated only for methods 5-8, and the 96 KB one is
-SlowFastB's window, allocated only when a method-11 block turns up.
+context table, allocated only for methods 5-8, and SlowFastB's window is
+allocated only when a method-11 block turns up.
+
+**`Disk Expander .X` was 117,294 B until 2026-08-24**, when that window
+stopped being a flat 98,304 B and started being sized from the fork. It is
+history carried across blocks plus the block in hand, so one block's `ulen`
+does not bound it — but the fork does, because the history is the bytes
+produced so far and is capped at `SD_WINDOW`. The visible effect is not the
+31 KB: it is that `Read Me` now extracts under a 50,000 B budget where it
+used to be refused, which is also why `run_superdisk.py`'s budget probe had
+to be re-aimed from 50,000 to 20,000 (TESTING.md is not the place — the
+docstring in that file says it).
 
 ✦✦ **StuffIt SpaceSaver, in scope since 2026-08-22**, where every status
 file here used to say nobody has published how it is laid out. The header, the
@@ -1538,7 +1548,10 @@ proposal the same measurement killed.
 **The 4 MB column did NOT change and was not re-measured**: those runs take
 the transform vector and never touch the sampled index or its scan.
 
-Both 1 MB figures were re-run on the build that carries them. Two of the
+Both 1 MB figures were re-run on the build that first carried them, and
+everything landed since moves the ISBN fixture by **0.2 % on Linux** —
+below this harness's 20 s resolution on a 22-minute run, so they stand
+rather than being re-measured for a change that could not show. Two of the
 smaller changes have their own measurements: the unsigned divisions are worth
 **20 s of 1,404** on the ISBN fixture (1.4 %) and nothing measurable on
 `derived-a2basic.dmg.sit`, and replacing the per-output-byte binary search

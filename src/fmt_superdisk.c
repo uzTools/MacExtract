@@ -757,9 +757,17 @@ static int sd_fork(SdState *s, uint32_t at, uint32_t want)
         s->in.p[body + 4] = s->in.p[body + 5] = 0;
         s->in.p[body + 6] = s->in.p[body + 7] = 0;
 
-        if (method == 11 &&
-            (e = sd_need(c, &s->win, SD_WINDOW + SD_BLOCKMAX)) != UNC_OK)
-            return e;
+        if (method == 11) {
+            /* SlowFastB's window is history CARRIED ACROSS blocks plus the
+             * block being decoded, so it is not bounded by one block's
+             * ulen — but it is bounded by the FORK: `have` is the bytes
+             * produced so far, capped at SD_WINDOW, and `have + ulen`
+             * therefore never exceeds `want`, the fork's whole output.
+             * A fork smaller than 96 KB gets a window its own size. */
+            uint32_t need = SD_WINDOW + SD_BLOCKMAX;
+            if (want < need) need = want;
+            if ((e = sd_need(c, &s->win, need)) != UNC_OK) return e;
+        }
         if ((e = sd_block_body(s, ulen, method, s->in.p, body + 2u)) != UNC_OK)
             return e;
         if ((e = unc_progress_add(&c->ps, clen)) != UNC_OK) return e;

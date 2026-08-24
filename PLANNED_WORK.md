@@ -90,21 +90,51 @@ halves down to `outlen` in `fmt_lzh.c`.
   128 KB. Awkward to fix because the buffer is per-archive: size it once from
   the largest entry in the table, not per entry — per-entry reallocation is
   how the Arsenic fragmentation trail gets re-created (`BLOCKERS.md`).
-- **`src/fmt_superdisk.c`: `sd_need(c, &s->win, SD_WINDOW + SD_BLOCKMAX)`**
-  takes 64 KB unconditionally for SlowFastB, where `min(ulen, SD_WINDOW)` is
-  provably enough.
+  **And only a third of it is actually available**: `NOW_OUTBLOCK` holds
+  `NOW_HISTORY` plus one block's output and both are format-mandated, so
+  what a table pre-scan can size is `NOW_INBLOCK`, 32 KB of the 128. Read
+  that before budgeting an afternoon for it.
+- ~~**`src/fmt_superdisk.c`**~~ **— done 2026-08-24, and the bound this list
+  gave for it was wrong twice.** The allocation is 98,304 B, not 64 KB, and
+  `min(ulen, SD_WINDOW)` is not a bound at all: SlowFastB's window is
+  history CARRIED ACROSS blocks, so one block's `ulen` says nothing about
+  it. What does bound it is the FORK — `have` is the bytes produced so far
+  capped at `SD_WINDOW`, so `have + ulen` never exceeds `want`. A fork
+  smaller than 96 KB now gets a window its own size, and `Read Me` in
+  `alysis-disk-expander-12` extracts under a 50,000 B budget where it used
+  to be refused.
+
+  **It also broke a test by succeeding**, which is worth knowing before
+  doing the other four: `run_superdisk.py`'s budget probe works by making
+  every entry fail, and its 50,000 B budget had been chosen against the
+  flat 96 KB. It is 20,000 now. A probe that works by making everything
+  fail has to be re-aimed whenever the thing it aims at gets smaller.
 - **`src/fmt_arc.c`: `ARC_CRUNCH_SIZE * 6u + ARC_STACK_SIZE`** is 28,672 B
   flat for methods 5, 6 and 7, whatever the entry's size — ARC's 32 KB top
-  end. Crunch **is** LZW, so this is the identical defect `unc_lzw.c` already
-  had and already fixed, and the bound is computed in that same file:
+  end. Crunch **is** LZW, so this is the same shape `unc_lzw.c` already
+  fixed, and the bound is computed in that same file:
   `insize / 9 * 8 + insize % 9 * 8 / 9`, the most codes a stream of that
-  length can define. The ARC header carries the compressed size. **The fix
-  exists in this repository and never reached ARC's private copy of the
-  algorithm.**
+  length can define. The ARC header carries the compressed size.
+
+  **It is not the identical defect, and copying the fix straight over is
+  wrong.** `unc_lzw.c` keeps `maxsymbols` at the declared ceiling while
+  allocating `capsymbols`, and has `lzw_grow` as a net for an
+  under-estimate. ARC's arrays are indexed by a 12-bit code READ FROM THE
+  STREAM — `d->used[entry]`, `d->parent[entry]` — so a corrupt code beyond
+  the cap currently lands on an unused slot and decodes on, and against a
+  smaller array it would have to become an error. That is a change in what
+  a damaged file does, not just in what it allocates, and it needs the same
+  two-number treatment `unc_lzw.c` has.
 - **`src/fmt_spacesaver.c`: the window is `s->wsize`**, from the entry's width
   byte, where `min(ulen + preset dictionary, wsize)` would do — the 68 KB
-  ceiling FORMATS.md notes against a 36 KB measured peak. The preset
-  dictionary must still fit, which is why the bound is not simply `ulen`.
+  ceiling FORMATS.md notes against a 36 KB measured peak. `f->ulen` is the
+  whole fork and is known before `ss_alg4` runs, so the bound is real; the
+  window is circular and masked, so the new size must stay a power of two,
+  and it must not fall below the dictionary's own length or `ss_preset`
+  truncates the dictionary and changes what a long-distance match reads.
+  **Ungraded in this environment**: `run_spacesaver.py` needs a specimen
+  that only Mini vMac's saved state has, and skips without one (`ci.sh`
+  says so on every run). Do this one where that specimen exists.
 
 **Checked and legitimately constant, so that nobody re-checks them:** Compact
 Pro's `CPT_WINDOW` is 8192 because macutils' `CIRCSIZE` is and the format
