@@ -1391,6 +1391,35 @@ from 80 KB to under 28 KB to reach it. That is headroom the Toolbox and File
 Manager use during output writes, on the one machine nothing here can test on
 real hardware. Whatever the reserve is worth, it is not a rung.
 
+### How low it goes
+
+Two different floors, both binary-searched with `tools/run_budget.py` over
+the whole corpus (2026-08-24). A sweep is two seconds, so these are searched
+rather than sampled:
+
+| | budget | partition |
+|---|---|---|
+| every archive at least OPENS — entries named, folders made, each failure per entry | **27,596 B** | ~252 KB |
+| every fixture EXTRACTS FULLY — nothing budget-limited at all | **566,009 B** | **~826 KB** |
+
+The partition column is `budget + reserve + 197,640 B`, and that overhead —
+the application's own code, its 32 KB stack and the A5 world — is measured,
+not modelled: 409,600 − 211,960 at a 400 KB partition and 870,400 − 672,760
+at an 850 KB one, **197,640 both times**.
+
+**So: give it about 850 KB in Get Info and everything in the corpus comes
+out whole.** At the declared 400 KB minimum every archive still opens and
+lists; 16 of 31 StuffIt 5 fixtures and two others fail per entry, with a
+message naming each.
+
+**The opens-floor was 137,264 B until 2026-08-24** — Now Compress's block
+buffers, the engine's only per-ARCHIVE allocation, which returned
+UNC_ERR_MEM and refused the whole archive: no listing, no entry names,
+nothing. Against a 158,970 B budget at the minimum partition that left
+**21,706 B of headroom**, on an application that grew twenty-four kilobytes
+in two versions. It fails per entry now, like everything else, and the floor
+is five times lower.
+
 ### Budget sweep: the corpus at both budgets
 
 `tools/run_budget.py` runs the whole corpus under a cap. Run it at the

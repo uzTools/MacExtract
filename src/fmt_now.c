@@ -647,16 +647,24 @@ int unc_now_extract(UncCtx *c)
         /* A zero-length archive still needs somewhere to decode into. */
         if (st.blkcap == 0) st.blkcap = 1;
 
-        /* Listing needs none of this. Without the test, `l` on a Now
-         * archive fails outright in a partition too small to decode it —
-         * which is the one thing a user in that position can still
-         * usefully do. */
+        /* Listing needs none of this, and a failure to get it is NOT the
+         * archive's failure.
+         *
+         * This is the engine's only per-ARCHIVE allocation, and the
+         * contract is that allocation failure is per entry, never per
+         * archive (CLAUDE.md, 68000 discipline). Returning UNC_ERR_MEM
+         * here refused the whole archive — no listing, no entry names,
+         * nothing — and it made this one buffer the floor for whether
+         * ANY Now archive opens at all: 137,264 B, against a 158,970 B
+         * budget in the 400 KB minimum partition. Twenty-two kilobytes
+         * of headroom, on an application that grew twenty-four in two
+         * versions. Now the entries are still walked and named, and each
+         * one that needs the buffer fails on its own. */
         mem = NULL;
         if (!c->opt.list_only) {
             mem = (uint8_t *)unc_alloc(c->al, (uint32_t)sizeof *st.cd
                                        + st.incap + st.hist + st.blkcap
                                        + st.hist);
-            if (!mem) return UNC_ERR_MEM;
         }
         st.c = c;
         if (mem) {
@@ -711,7 +719,10 @@ int unc_now_extract(UncCtx *c)
             if (sret < 0) { err = UNC_ERR_SINK; break; }
             if (sret == 0) {
                 int ferr = UNC_OK;
-                if (!c->opt.list_only && (datasize || rsrcsize)) {
+                if (!c->opt.list_only && (datasize || rsrcsize) &&
+                    st.inblock == NULL) {
+                    ferr = UNC_ERR_MEM;       /* per entry, not per archive */
+                } else if (!c->opt.list_only && (datasize || rsrcsize)) {
                     ferr = now_stream_open(&st, datastart);
                     /* The forks come out of the stream in the order the
                      * archive stores them: resource first, then data. */

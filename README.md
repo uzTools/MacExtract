@@ -156,6 +156,14 @@ StuffIt 5 is in a class of its own — its compression was designed for machines
 a decade newer. Everything else is quick, and a faster Mac is proportionally
 faster.
 
+## How much memory to give it
+
+Only matters under MultiFinder or System 7, where the application gets the
+size set in its Get Info window. It asks for 4 MB, runs in as little as
+400 KB, and **at about 850 KB every archive in the test sample comes out
+whole**. Below that it still opens everything and lists what is inside; the
+entries too big to fit are named, one message each, and the rest extract.
+
 ## Linux
 
 ```sh
