@@ -170,9 +170,16 @@ int32_t unc_lzw_read(UncLzw *z, uint8_t *out, int32_t want)
     int32_t produced = 0;
 
     while (produced < want) {
-        /* Drain the pending chain first. */
-        while (z->chainpos > 0 && produced < want)
-            out[produced++] = z->chain[--z->chainpos];
+        /* Drain the pending chain first. Both bounds are known before the
+         * loop, so take the smaller once rather than testing two conditions
+         * per byte: this is the hot path of StuffIt classic method 2, .Z,
+         * ARC methods 8/9 and DiskDoubler method 1, and callgrind put a
+         * fifth of a StuffIt classic run on the two-condition form. */
+        if (z->chainpos > 0) {
+            int32_t n = z->chainpos;
+            if (n > want - produced) n = want - produced;
+            while (n-- > 0) out[produced++] = z->chain[--z->chainpos];
+        }
         if (produced == want) break;
 
         {

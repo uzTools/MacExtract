@@ -29,23 +29,6 @@ void unc_bitin_init_le(UncBitIn *b, UncBufIn *in)
     b->le = 1;
 }
 
-int unc_bitin_bit(UncBitIn *b)
-{
-    if (b->nbits == 0) {
-        int byte = unc_bufin_next(b->in);
-        if (byte < 0) { b->err = b->in->err; return -1; }
-        b->bitbuf = (uint32_t)byte;
-        b->nbits = 8;
-    }
-    b->nbits--;
-    if (b->le) {
-        int bit = (int)(b->bitbuf & 1u);
-        b->bitbuf >>= 1;
-        return bit;
-    }
-    return (int)((b->bitbuf >> b->nbits) & 1u);
-}
-
 int32_t unc_bitin_bits(UncBitIn *b, int n)
 {
     int32_t v = 0;

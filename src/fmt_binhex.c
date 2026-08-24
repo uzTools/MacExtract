@@ -69,11 +69,14 @@ int unc_binhex_probe(const uint8_t *head, int32_t len, UncIO *io)
         }
         scanned++;
         window[w] = (uint8_t)ch;
-        w = (w + 1) % 40;
+        if (++w == 40) w = 0;
         if (have < 40) have++;
         if (have == 40) {
-            for (i = 0; i < 40; i++)
-                if (window[(w + i) % 40] != (uint8_t)bh_banner[i]) break;
+            int32_t j = w;
+            for (i = 0; i < 40; i++) {
+                if (window[j] != (uint8_t)bh_banner[i]) break;
+                if (++j == 40) j = 0;
+            }
             if (i == 40) found = 1;
         }
     }
@@ -266,17 +269,27 @@ static int bh_find_banner(UncBufIn *in, int limited)
     int ch;
 
     /* Rolling comparison without shifting: circular buffer holding the
-     * last 40 bytes; oldest byte lives at index w. */
+     * last 40 bytes; oldest byte lives at index w.
+     *
+     * The wrap is a conditional subtract, not a `%`. Both indices are
+     * already below 40 so it is exact — and the divisor being a constant
+     * does not save a 68000, which has no 32-bit multiply for gcc to
+     * build a magic-number reciprocal out of, so `% 40` inside a
+     * 40-iteration inner loop was 40 calls to __umodsi3 per byte of mail
+     * header scanned. */
     for (;;) {
         uint32_t i = 0;
         ch = unc_bufin_next(in);
         if (ch < 0) return UNC_ERR_FORMAT;
         window[w] = (uint8_t)ch;
-        w = (w + 1) % 40;
+        if (++w == 40) w = 0;
         if (have < 40) have++;
         if (have == 40) {
-            for (i = 0; i < 40; i++)
-                if (window[(w + i) % 40] != (uint8_t)bh_banner[i]) break;
+            uint32_t j = w;
+            for (i = 0; i < 40; i++) {
+                if (window[j] != (uint8_t)bh_banner[i]) break;
+                if (++j == 40) j = 0;
+            }
             if (i == 40) break;
         }
         if (limited && ++scanned > 4 * BH_SNIFF_LIMIT) return UNC_ERR_FORMAT;

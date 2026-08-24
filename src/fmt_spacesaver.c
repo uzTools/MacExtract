@@ -63,6 +63,11 @@ typedef struct SsState {
     UncFork  fork;
     uint8_t *win;       /* sliding window, circular                    */
     uint32_t wsize;
+    uint32_t wmask;     /* wsize - 1: wsize is 1 << wbits, but it is a
+                         * RUNTIME value, so gcc cannot turn the two
+                         * circular `%` below into a mask and emits a
+                         * call to __umodsi3 — once per copied byte on a
+                         * machine with no divide instruction at all   */
     uint32_t wpos;      /* where the next produced byte goes           */
     uint32_t history;   /* bytes reachable behind wpos (preset + out)  */
     uint8_t  stage[SS_STAGE];
@@ -203,7 +208,7 @@ static void ss_preset(SsState *s, const uint8_t *p, uint32_t len)
         len = s->wsize;
     }
     for (k = 0; k < len; k++)
-        s->win[(s->wsize - len + k) % s->wsize] = p[k];
+        s->win[(s->wsize - len + k) & s->wmask] = p[k];
     s->wpos = 0;
     s->history = len;
 }
@@ -245,6 +250,7 @@ static int ss_alg4(SsState *s, const SsFork *f, uint8_t *iobuf,
     if (wbits < 1 || wbits > SS_MAXWBITS) return UNC_ERR_UNSUPPORTED;
 
     s->wsize = 1u << wbits;
+    s->wmask = s->wsize - 1u;
     s->win = (uint8_t *)unc_alloc(c->al, s->wsize);
     if (!s->win) return UNC_ERR_MEM;
     s->wpos = 0;
@@ -300,7 +306,7 @@ static int ss_alg4(SsState *s, const SsFork *f, uint8_t *iobuf,
             if (dist == 0 || dist > s->history) return UNC_ERR_CORRUPT;
             if (n > endpos - produced) return UNC_ERR_CORRUPT;
             while (n-- > 0) {
-                uint8_t byte = s->win[(s->wpos + s->wsize - dist) % s->wsize];
+                uint8_t byte = s->win[(s->wpos + s->wsize - dist) & s->wmask];
                 int e = ss_emit(s, byte);
                 if (e != UNC_OK) return e;
                 produced++;

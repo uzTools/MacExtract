@@ -346,13 +346,22 @@ static int dd_m2(DdFork *o, UncCtx *c, UncBufIn *in, int xorval, int ntrees)
 {
     UncBitIn bi;
     DdM2 m;
+    uint8_t ctxof[256];
     int err = UNC_OK, i, ctx = 0;
 
     /* Method 2 fixes this at 256; method 5 reads it from the stream, and
-     * 0 there means 256. Guarded because it divides below: a zero that
-     * reached the modulo would be a crash on a malformed file, which is
-     * the one failure the fork's checksum cannot turn into an error. */
+     * 0 there means 256. Guarded because byte % ntrees is what selects
+     * the tree: a zero reaching that would be a crash on a malformed
+     * file, which is the one failure the fork's checksum cannot turn
+     * into an error. */
     if (ntrees <= 0 || ntrees > 256) ntrees = 256;
+
+    /* ...and the modulo itself runs ONCE PER OUTPUT BYTE. The 256 = 256
+     * case is already a special case in the source; the other branch
+     * still called __modsi3 per byte on a 68000, which has no divide.
+     * A 256-entry table built once answers both. */
+    for (i = 0; i < 256; i++)
+        ctxof[i] = (uint8_t)(ntrees == 256 ? i : i % ntrees);
 
     for (i = 0; i < 256; i++) m.tree[i] = NULL;
     unc_bitin_init(&bi, in);
@@ -371,7 +380,7 @@ static int dd_m2(DdFork *o, UncCtx *c, UncBufIn *in, int xorval, int ntrees)
         if (err != UNC_OK) break;
         byte = node - 0x100;
         dd_m2_splay(t, byte);
-        ctx = ntrees == 256 ? byte : byte % ntrees;
+        ctx = ctxof[byte];
         if ((err = dd_out_byte(o, (uint8_t)(byte ^ xorval))) != UNC_OK) break;
     }
 

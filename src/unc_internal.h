@@ -265,8 +265,38 @@ typedef struct UncBitIn {
 
 void unc_bitin_init(UncBitIn *b, UncBufIn *in);
 void unc_bitin_init_le(UncBitIn *b, UncBufIn *in);
-/* Next single bit (0/1), or -1 with err set. */
-int unc_bitin_bit(UncBitIn *b);
+/* Next single bit (0/1), or -1 with err set.
+ *
+ * Inline for the same reason unc_bufin_next is: this is called once per
+ * BIT by every canonical-Huffman format (Compact Pro, DiskDoubler, Now
+ * Compress, StuffIt methods 3/13, LZH) and several times per symbol by
+ * Arsenic's renormalisation, and seven calls in eight need nothing but
+ * the buffered byte. Callgrind put 2.1-13.7 % of various runs in the
+ * call itself.
+ *
+ * The REFILL is inline too, and that is not incidental: a version whose
+ * refill was an out-of-line unc_bitin_bit_slow() measured 3.1-6.6 %
+ * WORSE than the plain function on Compact Pro, DiskDoubler and Now
+ * Compress, because the opaque call forced bitbuf/nbits/le to be
+ * reloaded around every eighth bit — and unc_canon_decode compiles in
+ * the same translation unit unc_bitin_bit used to live in, where gcc
+ * was already inlining the whole of it with that state in registers. */
+static inline int unc_bitin_bit(UncBitIn *b)
+{
+    if (b->nbits == 0) {
+        int byte = unc_bufin_next(b->in);
+        if (byte < 0) { b->err = b->in->err; return -1; }
+        b->bitbuf = (uint32_t)byte;
+        b->nbits = 8;
+    }
+    b->nbits--;
+    if (b->le) {
+        int bit = (int)(b->bitbuf & 1u);
+        b->bitbuf >>= 1;
+        return bit;
+    }
+    return (int)((b->bitbuf >> b->nbits) & 1u);
+}
 /* Next n bits (n <= 24) as an MSB-first integer, or -1 with err set.
  * (MSB mode only.) */
 int32_t unc_bitin_bits(UncBitIn *b, int n);
