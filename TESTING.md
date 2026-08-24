@@ -387,6 +387,10 @@ comes from where, and it is never our own output). `run_ddtf.py` itself stays
 the way to re-derive that from a fresh clone, which is the only thing that can
 notice the corpus changing.
 
+It DOES see a name containing a control character — `Icon` + CR, a custom
+folder icon — since 2026-08-24; until then `checkdisk.walk` stripped the CR
+and reported the file as missing (DECISIONS.md, *`Icon\r`*).
+
 **What it cannot see**, beyond the docstring's list: it compares forks, so a
 regression in dates, type/creator or Finder flags passes it — the corpus's
 AppleDouble sidecars carry a Finder info block the Mac rewrote when the files

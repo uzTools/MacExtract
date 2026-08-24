@@ -62,7 +62,13 @@ def walk(env, mac_dir=(), depth=0):
         if mac_dir else []
     listing = hfs(env, "hls", "-a", "-F", "-1", *arg)
     for raw in listing.stdout.split(b"\n"):
-        entry = raw.rstrip().decode("mac_roman")
+        # NOT rstrip(): a carriage return is a legal HFS filename character
+        # and `Icon\r` is what every custom folder icon on a Mac is called,
+        # so stripping trailing whitespace renamed it to `Icon` and the
+        # comparison then failed on a file that was present and correct.
+        # `hls -1` terminates each line with \n and adds nothing else, so
+        # splitting on \n has already removed everything that is not name.
+        entry = raw.decode("mac_roman")
         if not entry:
             continue
         isdir = entry.endswith(":")

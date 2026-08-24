@@ -3676,15 +3676,15 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
          * was being able to say WHICH failure. Before this the OSErr was
          * dropped at the `!= noErr` test and a full disk read as "this file
          * could not be extracted". */
-        ShowNote(kErrorALRT, "\pThe disk is full. Everything extracted "
-                             "before it filled up is there; the rest is not.");
+        ShowNote(kErrorALRT, "\pThe disk is full. Free up some space "
+                             "and try again.");
     else if (pr.cancelled || ret == UNC_ERR_ABORTED)
         ShowNote(kDoneALRT, "\pExtraction cancelled.");
     else if (ret == UNC_ERR_SEGMENTED)
         /* A part of a segmented set was never located. Whatever the parts
          * on hand did decode has been written and is worth saying so. */
-        ShowNote(kErrorALRT, "\pSome parts of this archive were not found. "
-                             "Only what they contained was extracted.");
+        ShowNote(kErrorALRT, "\pThis archive has more parts. "
+                             "Find them and try again.");
     else if (ret == UNC_ERR_IO && entries == 0)
         ShowNote(kErrorALRT, "\pCould not open the archive.");
     else if (gShortBy > 0) {
@@ -3705,7 +3705,7 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
     else if (gShortPiece)
         /* The budget had room and the Memory Manager still could not find
          * one piece that big, so a bigger memory size need not help. */
-        ShowNote(kErrorALRT, "\pNot enough memory in one piece. "
+        ShowNote(kErrorALRT, "\pMemory is too broken up. "
                              "Quit other programs and try again.");
     else if (ret != UNC_OK)
         ShowNote(kErrorALRT, "\pThis file could not be extracted.");

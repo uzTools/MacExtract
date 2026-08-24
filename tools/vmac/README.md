@@ -1094,6 +1094,25 @@ fixed time, and a run that fails BEFORE then leaves its result alert up in
 that frame. Photographed 2026-08-24: *Needs 72K more memory. Give unclassic
 more in Get Info.*
 
+The same build trick photographs the OTHER two failure alerts, which no
+headless harness runs:
+
+    # the disk is full — the real gLastWriteErr path, without a full disk
+    sed -i 's#(Ptr)((const char \*)buf + off));#&\n        { static int nw = 0; if (++nw > 2) werr = dskFulErr; }#' \
+        mac/unclassic_mac.c
+    # memory too fragmented — that branch fires on any run
+    sed -i 's/        gShortPiece = 0;/&\n        gShortPiece = 1;/' mac/unclassic_mac.c
+
+`run.py --out-kb` already measures that a genuinely full volume returns
+`dskFulErr` here and stops the run; what these show is the sentence the user
+is given afterwards. Photographed 2026-08-24, both two lines.
+
+**The alert box is two lines wide, and the wrap is not obvious.** Measured
+off those frames, it breaks between 32 and 36 characters, so a message over
+about 60 characters draws a third line that sits level with the OK button
+and looks broken. Three shipped strings did; they were shortened. Check a
+new one by eye on a frame, not by counting.
+
 **When a frame is ambiguous, make the alert say which branch drew it.**
 Temporarily replacing the generic `ret != UNC_OK` branch with one that
 `PStrCatNum`s `ret`, `gShortBy`, `gShortPiece`, `entries` and `errors` ended

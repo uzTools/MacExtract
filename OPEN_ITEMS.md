@@ -198,13 +198,6 @@ Unlike section 3, none of this is impossible here: a download would do it.
   such in `tools/icon/make_icon.py`. What would close it: opening the
   application's folder on the Mac OS 9 tier (`tools/vmac/os9.py`, which has
   colour) and photographing the icon, or a reference for the system palette.
-- **The full-disk ALERT is unverified.** That a full destination volume
-  stops the run after one error is measured (`tools/vmac/README.md`,
-  *Filling the destination on purpose*); that the user is then shown "The
-  disk is full" rather than the generic message is not. The choice is one
-  comparison against `gLastWriteErr` in the interactive build, which the
-  headless harness does not run. What would close it: a full-disk case in
-  `interactive.py`, which drives the real UI and photographs each step.
 - **A btoa file written by a Mac.** Every stream the btoa decoder is graded
   against comes out of one encoder, btoa 5.2.1 on Linux (TESTING.md, *btoa*).
   The independent one would be Aladdin's own `btoa/atob Translator`, and it is

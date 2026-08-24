@@ -115,6 +115,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-24 (the reserve) — a constant that suited one machine of the two
 - 2026-08-24 (the icon) — four things the resources alone do not do
 - 2026-08-24 (the low-memory message) — saying the number, and where it can be graded
+- 2026-08-24 (`Icon\r`) — an instrument that quietly normalised what it measured
 
 ---
 
@@ -6449,3 +6450,32 @@ screenshot as evidence about a code path, make the harness *say* which path
 it took — the run that settled it printed `ret`, `gShortBy`, `gShortPiece`,
 `entries` and `errors` into the alert box, and `entries = 0` gave the answer
 in one frame after three runs of guessing.
+
+## 2026-08-24 (`Icon\r`) — an instrument that quietly normalised what it measured
+
+**Claim (measured).** `checkdisk.walk`, which reads every name off an HFS
+volume for both `run.py` and `interactive.py`, called `.rstrip()` on each
+line of `hls` output. A carriage return is a legal HFS filename character —
+and `Icon` + CR is what every custom folder icon on a Macintosh is named —
+so a file that was present and correct was reported under a different name
+and counted as missing. Reduced to a repro without an emulator: `hcopy` a
+file to `T:Icon\r`, and `walk` returns `('Icon',)`.
+
+**Consequence.** `interactive.py` had been reporting "phase 2 output
+INCOMPLETE" for `derived-AuthoRize_2.0.sit`, naming `:AuthoRize 2.0:Icon`.
+With the strip removed it reports COMPLETE — which also establishes, for the
+first time, that the Mac application writes a filename containing a control
+character correctly. Nothing else moved: dot-files, `/` inside a name, 8-bit
+MacRoman and nesting were re-checked against the same repro.
+
+**The lesson is the one this repository keeps relearning, in a new place.**
+`.rstrip()` is defensive habit — remove whatever the line ends with — and it
+is exactly wrong when the thing being measured may legitimately END with
+whitespace. The suite could not fail on this and could not pass on it
+either: it just reported a name that was never on the disk. **Ask of any
+comparison what it NORMALISES before comparing, and whether the input is
+allowed to contain what is being normalised away.**
+
+**Why it survived.** No fixture in the graded 927 has a control character in
+a name, so the suite that would have caught it was never handed the case.
+The one fixture that does was picked, for something unrelated, today.
