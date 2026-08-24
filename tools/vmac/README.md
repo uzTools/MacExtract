@@ -1072,6 +1072,35 @@ the fixture, the Mac writes nothing, the archive returns `UNC_OK`, and an entry
 is counted as refused — without that first condition a negative test would pass
 just as happily on an empty archive. Three-system table in FORMATS.md.
 
+### Forcing a memory refusal on screen
+
+The `SIZE` edit above is the wrong instrument for this one, and finding that
+out cost four runs. A partition is only enforced under MultiFinder — System
+7 and up — and `interactive.py`'s Standard File clicks are calibrated for
+System 6; on System 7 they select the wrong item and the application answers
+`UNC_ERR_FORMAT` about a file that is not an archive. That frame looks like
+a code failure and is not.
+
+Cap the budget instead, in a throwaway build, on the machine the harness can
+drive:
+
+    sed -i 's/ma.budget = freenow - reserve;/ma.budget = 150000L; (void)reserve;/' \
+        mac/unclassic_mac.c
+    interactive.py --emu mv-4M -o /tmp/alert fixtures/derived-AuthoRize_2.0.sit
+    git checkout mac/unclassic_mac.c    # temporary, on purpose — wrap it in a trap
+
+The alert is in `2-extracting.png`: the default phase clicks Cancel at a
+fixed time, and a run that fails BEFORE then leaves its result alert up in
+that frame. Photographed 2026-08-24: *Needs 72K more memory. Give unclassic
+more in Get Info.*
+
+**When a frame is ambiguous, make the alert say which branch drew it.**
+Temporarily replacing the generic `ret != UNC_OK` branch with one that
+`PStrCatNum`s `ret`, `gShortBy`, `gShortPiece`, `entries` and `errors` ended
+three runs of guessing in one frame — `entries = 0` said the archive had
+never been opened, which no amount of staring at the shipped wording could
+have told anyone.
+
 ### Driving the real UI
 
     interactive.py                  # progress dialog, Cancel, Cmd-., at 1x

@@ -688,6 +688,13 @@ cases now do, and they fail against the old code.
   and a dead X window reads as pure black.
 - **The `mio_seek` eofErr fix** is correct and kept, but it was not the M10
   blocker either.
+- **"`interactive.py`'s default phase never reaches a result alert"** was
+  written into DECISIONS.md on 2026-08-24 and is wrong. That phase clicks
+  Cancel at a fixed time; an extraction that FAILS before then leaves its
+  result alert on screen, and the `extracting` frame photographs it. Which
+  is how the low-memory alert was finally photographed, on the phase already
+  declared unable to show it. **Cost:** one day, and the item it was the
+  stated reason for was in OPEN_ITEMS.md the whole time.
 - **The Mac OS 9 harness was damaging its own disk image** by booting the
   master in place and never hashing it. Fixed: the published SHA-1 is verified
   before every run and the master is copied to a throwaway

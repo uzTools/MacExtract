@@ -2565,9 +2565,11 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
     sink.lastDir = 0;
     sink.pr = NULL;
     sink.wrOSErr = noErr;
-    gLastWriteErr = noErr;
-    gShortBy = 0;
-    gShortPiece = 0;
+    /* gLastWriteErr, gShortBy and gShortPiece are NOT reset here. They
+     * describe the whole operation the user asked for, and ExtractOne
+     * calls this once per ENVELOPE LAYER — so a reset here would let the
+     * last layer wipe what an earlier one recorded. ExtractOne clears
+     * them once, before its loop. */
     sk.ctx = &sink;
     sk.begin_entry = sink_begin;
     sk.write = sink_write;
@@ -3595,6 +3597,16 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
 
         BlockMoveData(name, curName, name[0] + 1);
         delName[0] = 0;
+
+        /* Once per operation, not once per layer: these three are what
+         * the alert at the end is built from, and an envelope chain runs
+         * the loop below several times. Not measured against a chained
+         * fixture that runs out of memory mid-chain — no such specimen
+         * here — but the single-layer wording is verified on screen
+         * (BLOCKERS.md, tier results). */
+        gLastWriteErr = noErr;
+        gShortBy = 0;
+        gShortPiece = 0;
 
         for (depth = 0; depth < 8; depth++) {
             ret = RunExtract(curVol, curDir, curName, outVol, outDir,

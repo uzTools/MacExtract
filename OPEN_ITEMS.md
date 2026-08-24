@@ -198,16 +198,6 @@ Unlike section 3, none of this is impossible here: a download would do it.
   such in `tools/icon/make_icon.py`. What would close it: opening the
   application's folder on the Mac OS 9 tier (`tools/vmac/os9.py`, which has
   colour) and photographing the icon, or a reference for the system palette.
-- **The low-memory ALERT is unverified on screen.** That the shortfall is
-  computed correctly is graded in `ci.sh` (`mac_sink --shortfall`, exact to
-  the byte, on native ASan and big-endian m68k), and the CLI prints the same
-  figure. What has NOT been photographed is the alert itself. Three attempts
-  failed on harness shape rather than on the code: `interactive.py`'s default
-  phase CANCELS both of its extractions deliberately (it is testing Cancel
-  and Cmd-.), so it never reaches a result alert, and `--e2e` had moved on to
-  the Finder by the time it took its `complete` frame. What would close it: a
-  phase that runs one extraction to completion against a partition too small
-  for the archive, and screenshots the alert before dismissing it.
 - **The full-disk ALERT is unverified.** That a full destination volume
   stops the run after one error is measured (`tools/vmac/README.md`,
   *Filling the destination on purpose*); that the user is then shown "The

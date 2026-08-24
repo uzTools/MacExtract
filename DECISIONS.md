@@ -6423,24 +6423,29 @@ pre-flight check would have to model each format's sizing a second time, in
 a second place, from header fields that can lie. This number comes from the
 allocator at the moment it said no. It cannot disagree with what happened.
 
-### Where the verification actually landed, and where it did not
+### Where the verification landed
 
 The arithmetic is graded in `ci.sh`: `mac_sink_test --shortfall` asserts the
 figure **exactly** rather than merely non-zero, so a wrong sign, a missing
 16-byte header or a first-instead-of-largest would all fail it. It was
 sabotaged to confirm it can: a 16-byte error takes the suite to exit 1.
 
-**The alert itself has never been photographed**, and the reason is worth
-recording because it cost three emulator runs. `interactive.py`'s default
-phase cancels both of its extractions on purpose — it exists to test Cancel
-and Cmd-. — so it never reaches a result alert at all; and `--e2e` had
-already returned to the Finder by the time it took its `complete` frame.
-Neither is a fault in the code under test, and neither announced itself:
-what they produced was the *generic* alert, which looks exactly like the new
-one failing to fire. OPEN_ITEMS.md carries what would close it.
+**The alert is photographed** (2026-08-24, `interactive.py` default phase,
+System 6.0.8, `derived-AuthoRize_2.0.sit`): *Needs 72K more memory. Give
+unclassic more in Get Info.* The method is in `tools/vmac/README.md`,
+*Forcing a memory refusal on screen* — and the method is the transferable
+part, because the obvious route does not work. Shrinking the `SIZE`
+partition only bites under MultiFinder, i.e. System 7, and the default
+phase's Standard File clicks are calibrated for System 6; on System 7 they
+open the wrong item, so the application reports `UNC_ERR_FORMAT` on a file
+that is not an archive. Capping `ma.budget` in a throwaway build creates
+the same refusal on the machine the harness can actually drive.
 
-**The lesson is about instruments, not about memory.** A harness that
-"drives the UI" drives the UI it was written for. Before reading a
-screenshot as evidence about a code path, check that the harness goes down
-that path — twice here it did not, and the frame it returned was perfectly
-plausible.
+**The lesson is about instruments, not about memory.** Four emulator runs
+went into this, and every one of them returned a plausible frame:
+a *generic* failure alert looks exactly like the new one not firing, and so
+does an alert about a file that was never opened. Before reading a
+screenshot as evidence about a code path, make the harness *say* which path
+it took — the run that settled it printed `ret`, `gShortBy`, `gShortPiece`,
+`entries` and `errors` into the alert box, and `entries = 0` gave the answer
+in one frame after three runs of guessing.
