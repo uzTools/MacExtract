@@ -209,10 +209,28 @@ static const uint16_t ars_randtable[256] = {
 /* Sampled occurrence index — the low-memory inverse BWT (see below). */
 typedef struct ArsIndex {
     uint32_t cum[256];     /* first sorted index of byte value c */
-    uint32_t base[256];    /* where c's samples start in pos[] */
+    uint32_t base[256];    /* which SAMPLE c's samples start at */
     uint32_t nsamples;
     uint8_t  shift[256];   /* one sample per 1 << shift[c] occurrences */
-    uint32_t pos[1];       /* [nsamples]; over-allocated by the caller */
+    /* [nsamples * 3]; over-allocated by the caller. THREE bytes per
+     * sample, not four: a sample is a position inside the block, and
+     * blockbits is 4 stream bits plus 9, so a block is at most 1 << 24
+     * bytes and a position at most (1 << 24) - 1. That is exactly what
+     * three bytes hold, and it is 25 % of the index given back.
+     *
+     * The index is a pure time-for-memory dial — `target` halves until
+     * the allocator accepts, and each halving doubles the scan distance
+     * — so a quarter off its size is a quarter more density at the same
+     * budget, and on derived-Library_ISBN_Barcoder.sit at the 1 MB
+     * budget it is the difference between target 512 and target 1024
+     * (measured: 260,705 B against 346,836 B for the same 86,131
+     * samples, in 290,391 B of room). Reading a position costs two
+     * shifts and two ors more than a word load, once per query, against
+     * a scan of blocklen/target bytes.
+     *
+     * Byte-wise big-endian, which the 68000 discipline wants anyway:
+     * pos[] needs no alignment and there is no unaligned dereference. */
+    uint8_t  pos[3];
 } ArsIndex;
 
 typedef struct Arsenic {
@@ -348,7 +366,7 @@ static int ars_index_build(Arsenic *a, UncAlloc *al)
         total = ars_index_plan(counts, target, shift);
         /* Never ask for more than the table we already could not get. */
         if (total <= n) {
-            ix = (ArsIndex *)unc_alloc(al, (uint32_t)sizeof *ix + total * 4u);
+            ix = (ArsIndex *)unc_alloc(al, (uint32_t)sizeof *ix + total * 3u);
             if (ix) break;
         }
         if (target == 1) return UNC_ERR_MEM;   /* per-entry, not fatal */
@@ -369,8 +387,12 @@ static int ars_index_build(Arsenic *a, UncAlloc *al)
     for (i = 0; i < 256; i++) occ[i] = 0;
     for (i = 0; i < n; i++) {
         c = a->block[i];
-        if ((occ[c] & ((1u << shift[c]) - 1u)) == 0)
-            ix->pos[ix->base[c] + (occ[c] >> shift[c])] = i;
+        if ((occ[c] & ((1u << shift[c]) - 1u)) == 0) {
+            uint8_t *p = &ix->pos[(ix->base[c] + (occ[c] >> shift[c])) * 3u];
+            p[0] = (uint8_t)(i >> 16);
+            p[1] = (uint8_t)(i >> 8);
+            p[2] = (uint8_t)i;
+        }
         occ[c]++;
     }
 
@@ -381,13 +403,21 @@ static int ars_index_build(Arsenic *a, UncAlloc *al)
 /* One step of the walk, from the sampled index. Equivalent to
  * transform[k], and provably in range: the binary search lands on the
  * value c whose sorted range holds k, so r < counts[c] and the r-th
- * occurrence of c exists at or after the sample it starts from. The
- * i < n bound is belt-and-braces; it costs one compare per byte scanned
- * and makes a corrupt block impossible to walk out of the buffer. */
+ * occurrence of c exists at or after the sample it starts from.
+ *
+ * The scan below is the hottest line in the engine: callgrind puts
+ * 77.4 % of a budgeted derived-Library_ISBN_Barcoder.sit run and 62.6 %
+ * of derived-a2basic.dmg.sit on it. It used to test two things per byte,
+ * `i < n` and the byte itself. A SENTINEL removes the first: block[n]
+ * holds a copy of the value being searched for, so every scan stops at n
+ * at the latest and the bound is checked once per scan instead of once
+ * per byte. ars_block_reserve allocates blockcap + 1 for exactly this,
+ * and the corrupt case still cannot walk out of the buffer — a scan that
+ * reaches the sentinel ends the walk and returns 0, as it did before. */
 static uint32_t ars_index_next(const Arsenic *a, uint32_t k)
 {
     const ArsIndex *ix = a->index;
-    const uint8_t *block = a->block;
+    uint8_t *block = a->block;
     uint32_t lo = 0, hi = 255, c, r, sh, i, rem, n = a->numbytes;
 
     while (lo < hi) {
@@ -397,10 +427,17 @@ static uint32_t ars_index_next(const Arsenic *a, uint32_t k)
     c = lo;
     sh = ix->shift[c];
     r = k - ix->cum[c];
-    i = ix->pos[ix->base[c] + (r >> sh)];
+    {
+        const uint8_t *p = &ix->pos[(ix->base[c] + (r >> sh)) * 3u];
+        i = ((uint32_t)p[0] << 16) | ((uint32_t)p[1] << 8) | (uint32_t)p[2];
+    }
 
-    for (rem = r & ((1u << sh) - 1u); rem; rem--) {
-        do { i++; } while (i < n && block[i] != (uint8_t)c);
+    rem = r & ((1u << sh) - 1u);
+    if (rem) {
+        block[n] = (uint8_t)c;
+        do {
+            do { i++; } while (block[i] != (uint8_t)c);
+        } while (i < n && --rem);
     }
     return i < n ? i : 0;
 }
@@ -459,7 +496,11 @@ static int ars_bwt_prepare(Arsenic *a, UncAlloc *al)
  * The transient during a growth is old + new = 1.5x the new capacity, which is
  * below the later peak of capacity + 4x fill, so growing never sets the high
  * water mark. There is no realloc in the allocator API by design (see
- * DECISIONS.md), hence alloc-copy-free. */
+ * DECISIONS.md), hence alloc-copy-free.
+ *
+ * One byte more than blockcap is always allocated: block[numbytes] is the
+ * sentinel ars_index_next writes, which is what lets its scan drop its bound
+ * test. blockcap itself is unchanged, so nothing else sees the spare byte. */
 static int ars_block_reserve(Arsenic *a, UncAlloc *al, uint32_t need)
 {
     uint8_t *nb;
@@ -496,7 +537,7 @@ static int ars_block_reserve(Arsenic *a, UncAlloc *al, uint32_t need)
      * more than the format says the block can hold. */
     if (cap > a->blocksize) cap = a->blocksize;
 
-    nb = (uint8_t *)unc_alloc(al, cap);
+    nb = (uint8_t *)unc_alloc(al, cap + 1u);           /* +1: the sentinel */
     if (!nb) return UNC_ERR_MEM;                       /* per-entry, not fatal */
     for (i = 0; i < a->numbytes; i++) nb[i] = a->block[i];
     unc_free(al, a->block);
