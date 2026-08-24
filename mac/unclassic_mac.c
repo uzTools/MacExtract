@@ -2855,7 +2855,8 @@ static void at_report_file(const uint32_t *vals, int nvals)
     if (gATreportVol == 0) return;
     /* Written in small pieces rather than built in one buffer: 128 records of
      * a Str63 is over 8 KB, and this application runs inside a 4 KB call-depth
-     * budget on an 8 KB stack. */
+     * budget — see kStackBump, which raises the stack to 32 KB, and
+     * FORMATS.md's `Stack` for what the engine actually reaches. */
     (void)MyHDelete(gATreportVol, fsRtDirID, "\preport");
     if (MyHCreate(gATreportVol, fsRtDirID, "\preport") != noErr) return;
     if (MyOpenFork(gATreportVol, fsRtDirID, "\preport", fsWrPerm, 0,

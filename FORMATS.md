@@ -1414,9 +1414,9 @@ extract time only, on a purpose-built 1 MB 1x emulator (`build_mv mv-1M-1x
 | Fixture | Output | 4 MB — transform table | 1 MB — sampled index | ratio |
 |---|---|---|---|---|
 | `derived-a2basic.dmg.sit` | 205,019 B | **587 s** (peak 1,031,525 B) | **762 s** (peak 482,345 B) | 1.30x |
-| `derived-Library_ISBN_Barcoder.sit` | 641,115 B | **768 s** (peak 1,682,142 B) | **1,404 s** (peak 559,289 B) | 1.83x |
+| `derived-Library_ISBN_Barcoder.sit` | 641,115 B | **768 s** (peak 1,682,142 B) | **1,384 s** (peak 559,289 B) | 1.80x |
 
-**The fallback costs 1.30x to 1.83x, and Arsenic is still the slow one.**
+**The fallback costs 1.30x to 1.80x, and Arsenic is still the slow one.**
 Ten minutes for a 205 KB output is what the *fast* path costs a 7 MHz 68000;
 before 2026-08-07 a 1 MB machine could not extract either entry at all. The
 ratio widens with block fill, and neither the x86 ratio nor one fixture scaled
@@ -1432,6 +1432,12 @@ proposal the same measurement killed.
 
 **The 4 MB column did NOT change and was not re-measured**: those runs take
 the transform vector and never touch the sampled index or its scan.
+
+Both 1 MB figures were re-run on the final build. The unsigned-division change
+that landed last is worth **20 s of the 1,404** on the ISBN fixture (1.4 %) and
+nothing measurable on `derived-a2basic.dmg.sit`, which is the honest size of
+deleting a libgcc sign wrapper twice per decoded symbol — the scan and the
+index are where the rest of it came from.
 
 **One thing the Linux model got wrong, and it is worth knowing.** Three bytes
 per sample buys 25 % more density at the same budget, and under

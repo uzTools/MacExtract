@@ -181,7 +181,9 @@ Unlike section 3, none of this is impossible here: a download would do it.
 ## 3. Cannot be closed in this environment
 
 - **Real 68k hardware: never run.** No genuine floppy I/O, no real media errors
-  mid-write, no real 8 KB stack underneath a real ROM's own usage. The
+  mid-write, no real stack underneath a real ROM's own usage — 32 KB of it,
+  since `kStackBump` takes 24 KB off `ApplLimit` on top of the 8 KB default
+  (FORMATS.md, *Stack*, which has the deepest chain the engine reaches). The
   per-entry I/O error path has never seen an actual I/O failure. The 1 MB
   figures come from an emulated 1 MB machine with a stripped System Folder; a
   real Plus with a Chooser extension or two has less free heap than any number
