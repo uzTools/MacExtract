@@ -124,6 +124,17 @@ keep finding the next one, and two of them need no insight at all:
   false negative confirmed a failure. Collapse the wrapping before
   searching prose, and never take a clean grep as evidence that an edit
   landed — read the file.
+- **an arithmetic model of code you did not open.** Added 2026-08-24:
+  `PLANNED_WORK.md` costed a saving from a formula over what the
+  allocator was documented to do, and the code had done something else
+  since M9. One instrumented run — four minutes — turned ~200 KB into
+  29 KB and deleted the proposal. If a number was DERIVED, the cheapest
+  disproof is to print it.
+- **a limit nobody has ever measured against.** Added 2026-08-24: the
+  4 KB call-depth rule was exceeded by 66 %, in code that ships and
+  passes, and the only reason anyone looked was that a change was about
+  to add 320 bytes to a struct. Measure a limit when something pushes at
+  it; that is the one moment the measurement is free.
 - **a harness that ends its runs differently from the harness beside it.**
   Added 2026-08-22: three SpaceSaver runs "measured unchanged" on a machine
   that never booted, because their image had been copied out of a KILLED
@@ -173,6 +184,10 @@ line is what makes the next one worth re-testing.
 | StuffIt classic's archive key is XADMaster's loop, and the open question is only whether `unar` 1.10.8 or current XADMaster matches Aladdin | three archives StuffIt Deluxe 3.5.1 wrote, with passwords of 8, 9 and 17 characters: the fold count is **ceil(len/8)**, so XADMaster is wrong at 8 and at 17+ (it folds an all-zero block at 8 and never more than two) and `unar` 1.10.8 is wrong at 9+ (it folds one). Neither reference had it, and this engine had shipped XADMaster's | 2026-08-23 |
 | Compact Pro corrupts every resource fork it extracts, 48 bytes in | a CORPUS archive extracted by the same copy comes back with 22 bytes changed in the same way: the Mac opens an extracted file's resource fork to draw its icon and the Resource Manager writes the map's live fields back. Nothing to do with Compact Pro, and nothing to do with the cipher — but it cost an afternoon before a real archive was tried | 2026-08-23 |
 | The corpus is large enough that some of it must be encrypted, so a decryption suite has fixtures | `lsar -j` over all 903 fixtures: `XADIsEncrypted` is 0 for every entry in every one | 2026-08-23 |
+| A multi-block Arsenic entry gets the declared 512 KB block, so shrinking it to its fill returns ~200 KB to the sampled index | instrumenting `blockcap - numbytes` at `ars_bwt_prepare`: the largest block in the corpus is `cap=352,160 fill=323,384`, waste **28,776 B**, and neither slow fixture ever allocates 512 KB — `ars_block_reserve` has sized the first allocation at `min(outlen, blocksize)` since M9. The index needs 225,528 B at target 512 and 346,836 B at 1024, so 29 KB does not move the dial by one step | 2026-08-24 |
+| Segmenting the CODE resource keeps ~61 KB out of the launch path and makes startup cheaper | ballast, three runs each at authentic 7 MHz: 64 KB of resident data with no relocations costs **nothing measurable**, and 64 KB carrying 16,384 relocations costs **1.1 s**. The whole application has **2,376** relocations, so everything it pays at launch for its own size is ≈ 0.16 s of an 8.9 s boot | 2026-08-24 |
+| Engine call depth is at most 4 KB (CLAUDE.md's own rule) | `m68k -Os -fstack-usage` over the call graph: `unc_dd_extract -> dd_fork -> dd_ddn` was **6,664 B** and Now Compress **5,632 B**. Never recorded, never tested, and it had never failed. Both formats' code tables moved to the heap; the deepest chain is now **3,290 B**. The rule was exceeded; the MACHINE never was — `kStackBump` gives the shell 32 KB of stack, not the 8 KB default, which the first write-up of this row got wrong | 2026-08-24 |
+| Widening the end-of-central-directory scan window is what makes sniffing cheaper | it is worth ~6 % of the instructions and the rest is the byte scan. A POINTER walk over the same window is -30 % of an envelope open, and moving `unc_macbinary_probe` ahead of the scan is -78 % — the scan was never run for 234 of 929 fixtures' worth of work | 2026-08-24 |
 
 **DiskDoubler methods 1–5 and 7 "cannot be graded".** Declined per entry
 since M12 on the grounds that no corpus fixture uses one and nothing reachable

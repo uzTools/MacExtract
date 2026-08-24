@@ -1239,14 +1239,14 @@ no more than that, and matches on all 26 identity bytes anyway.
 
 ## Hardening
 
-- Differential: 919 fixtures byte-exact against `unar` manifests
+- Differential: 927 fixtures byte-exact against `unar` manifests
   (both forks + type/creator), `./ci.sh` — 107 of them since 2026-08-21,
   the DiskDoubler corpus, whose manifests are built from the files it was
   made from rather than from a decoder (TESTING.md). `run_diff.py` prints
   the number it actually ran, plus two figures that must be read with it:
-  **24 forks across 12 fixtures are oracle-unadjudicated** — both
+  **16 forks across 10 fixtures are oracle-unadjudicated** — both
   implementations decline every one of them, so the engine's own CRC-16
-  is the only byte-exact check; 8 of the 24 have since been compared
+  is the only byte-exact check; 8 more were compared
   with DiskDoubler's own expander on an emulated Mac and agree with the
   resource header's OS-stamped bytes masked, which `run_diff.py` reports
   as its own line — and **7 entries are compressed with a method the
@@ -1263,6 +1263,126 @@ no more than that, and matches on all 26 identity bytes anyway.
   4,000 cases clean at M9, 150-case smoke in every CI run.
 - 32-bit `-m32` build runs the full suite (68000 discipline: no
   unaligned access, no recursion, 32-bit arithmetic in hot paths).
+
+## Resident memory, stack and launch (Mac target)
+
+Everything here is measured on the Retro68 target's own flags
+(`-mcpu=68000 -Os -ffunction-sections`), summed per object, on 2026-08-24.
+
+| | code | rodata |
+|---|---|---|
+| engine (`src/*.c`) | 92,580 | 25,437 |
+| zlib | 11,682 | 4,369 |
+| Mac shell | 11,784 | 732 |
+| **total** | **116,046** | **30,538** |
+
+The application ships as 154,240 B of MacBinary (`dist/unclassic.bin`). Both
+halves are resident for the whole session: the link line produces a single
+`unclassic.code.bin` that the Segment Loader reads at launch, and
+`Elf2Mac/LdScript.cc` emits `*(.rodata*)` inside the `.data` output section —
+the A5 global world, allocated once and never purgeable.
+
+The five largest objects are `unc_crypt.c` (7,654 + 7,032),
+`unclassic_mac.c` (11,784 + 732), `fmt_spacesaver.c` (2,528 + 9,694, almost
+all of it `ss_dict.h`), `inflate.c` (7,824 + 2,675) and `fmt_dd.c`
+(10,194 + 12).
+
+### Launch
+
+**A kilobyte of code is not a kilobyte of launch time; a RELOCATION is.**
+Measured by ballast — a block of resident data compiled in behind a temporary
+define and referenced from the startup path so `-gc-sections` keeps it — three
+runs each on `mv-4M-1x` (authentic 7 MHz), System 6.0.8, booting straight into
+the application:
+
+| build | app | relocations | boot |
+|---|---|---|---|
+| shipping | 150,144 B | 2,376 | **8.9 s** |
+| + 64 KB of `const unsigned char[]` | 215,680 B | 2,376 | **8.9 s** |
+| + 64 KB as 16,384 pointers | 232,064 B | 18,682 | **10.0 s** |
+
+64 KB that carries no relocations is **below the harness's 0.1 s resolution**;
+64 KB that carries 16,306 more is 1.1 s, about **67 µs per relocation**. The
+whole application has **2,376**, so everything it pays at launch for its own
+size is ≈ **0.16 s of an 8.9 s boot** — the rest is System 6 booting.
+
+That is why the CODE resource is not segmented (BLOCKERS.md, *Withdrawn
+claims*), and why moving `ss_dict.h` or the StuffIt tables out of the A5 world
+would buy nothing at launch: they are data, so they carry no relocations.
+
+### Stack
+
+**Measure it; do not assume it.** One command gives every function's frame:
+
+    m68k-apple-macos-gcc -mcpu=68000 -Os -std=c99 -Iinclude -Isrc \
+        -fstack-usage -c src/FILE.c -o /dev/null
+
+and the call graph comes from the relocations in the linked objects
+(`m68k-apple-macos-objdump -dr`), so the worst path is a sum over the two.
+
+| | before 2026-08-24 | now |
+|---|---|---|
+| deepest chain in the engine | 6,664 B (`unc_dd_extract` → `dd_fork` → `dd_ddn`) | **3,290 B** |
+| Now Compress chain | 5,632 B | ~1,400 B |
+| largest single frame | 3,740 B (`dd_fork`) | **2,352 B** (`ars_index_build`) |
+
+The 6,664 B chain **exceeded CLAUDE.md's 4 KB call-depth rule by 66 %**, for
+months, in code that ships and passes on a real 1 MB Mac Plus. It never came
+near the machine: `mac/unclassic_mac.c` runs
+`SetApplLimit(LMGetApplLimit() - kStackBump)` with `kStackBump` = 24 KB, so
+the shell has **32 KB of stack**, not the 8 KB default. The rule is what keeps
+the engine portable to a host that did not ask for more.
+
+What fixed it: DiskDoubler's three `UncCanon` and Now Compress's two moved to
+the heap (~3.9 KB each, per fork and per archive respectively), and the zip
+end-of-central-directory scan window stopped at 1 KB rather than the 4 KB that
+would have made it the deepest frame in the engine on its own.
+
+## Decode cost, before and after the 2026-08-24 pass (Linux, callgrind `Ir`)
+
+Instruction counts, not cycles, and immune to what else is running on the box —
+which wall clock here is not. Use them as ratios between builds of the same
+engine, never as predicted runtime; the Mac Plus figures two sections down are
+the ones a user waits through.
+
+| Fixture | What it exercises | before | after | |
+|---|---|---|---|---|
+| `ACInfo_Comm.sit.bin` | opening a MacBinary envelope | 757,587 | 163,776 | **−78.4 %** |
+| `alpha401.cpt` | the same, Compact Pro inside | 761,294 | 167,655 | **−78.0 %** |
+| `xmasbeeps.sit` | the same, StuffIt inside | 789,223 | 195,059 | **−75.3 %** |
+| `derived-Library_ISBN_Barcoder.sit` (`--budget 678392`) | StuffIt 5, sampled index | 1,195,256,733 | 457,281,109 | **−61.7 %** |
+| `derived-a2basic.dmg.sit` (`--budget 678392`) | the same | 487,403,423 | 328,865,968 | **−32.5 %** |
+| `derived-SyntheticReferences2.0.sea` | Now Compress | 791,938,983 | 580,795,762 | **−26.7 %** |
+| `derived-Terrainman_2.0__.sea` | DiskDoubler DDn | 52,194,820 | 38,820,708 | **−25.6 %** |
+| `derived-XferIt_1.5b4.sea` | Compact Pro | 114,726,883 | 93,798,977 | **−18.2 %** |
+| `a2ps.V4.3.tar.Z` | Unix compress (LZW) | 4,648,124 | 4,212,836 | **−9.4 %** |
+| `derived-xmasbeeps.sit` | StuffIt classic method 2 (LZW) | 34,270,528 | 31,800,657 | **−7.2 %** |
+| `macburger-helper.hqx` | BinHex | 26,385,171 | 26,135,120 | −0.9 % |
+| `4acalc.zip` | a real zip | 151,851 | 151,784 | −0.0 % |
+| `PCCTS.tar.gz` | gzip (zlib inflate) | 6,342,823 | 6,342,758 | −0.0 % |
+
+**The three envelope rows are the same change and it is not a decoder at all:**
+`unc_macbinary_probe` moved ahead of the 64 KB backwards scan that
+`unc_zipseg_probe` runs on every file, and the scan itself became a pointer
+walk. MacBinary is 234 of the 929 fixtures.
+
+**A real zip is unchanged**, which is the control: it finds its
+end-of-central-directory record in the first window and always did.
+
+### What is still hot, measured on the same runs
+
+`ars_next_symbol`'s linear symbol search averages **10.4 iterations per
+decoded symbol** (471,500 symbol decodes on the ISBN fixture; the loop's two
+lines are 4.52 % + 5.37 % of the run against 0.72 % for both divisions). That
+kills the obvious idea of replacing `code / renorm` with a multiply per
+iteration — ten `__mulsi3` calls would cost a 68000 more than one
+`__udivsi3`. The divisions are now unsigned, which deletes `__divsi3`'s sign
+wrapper; gcc had **already** merged the third one the plan expected to find.
+
+`-flto` is not available: it crashes Retro68's gcc 16.1.0 with an internal
+compiler error (`write_symbol, at lto-streamer-out.cc:3097`, during IPA pass
+`modref`) on `mac/unclassic_mac.c`. Tried 2026-08-24, clear pass/fail, do not
+re-try without a newer toolchain.
 
 ## Measured on a 7 MHz Mac Plus (Mini vMac 1x, System 6.0.8, 4 MB)
 
@@ -1293,18 +1413,40 @@ extract time only, on a purpose-built 1 MB 1x emulator (`build_mv mv-1M-1x
 
 | Fixture | Output | 4 MB — transform table | 1 MB — sampled index | ratio |
 |---|---|---|---|---|
-| `derived-a2basic.dmg.sit` | 205,019 B | **587 s** (peak 1,031,525 B) | **966 s** (peak 560,589 B) | 1.65x |
-| `derived-Library_ISBN_Barcoder.sit` | 641,115 B | **768 s** (peak 1,682,142 B) | **1,898 s** (peak 614,134 B) | 2.47x |
+| `derived-a2basic.dmg.sit` | 205,019 B | **587 s** (peak 1,031,525 B) | **762 s** (peak 482,345 B) | 1.30x |
+| `derived-Library_ISBN_Barcoder.sit` | 641,115 B | **768 s** (peak 1,682,142 B) | **1,404 s** (peak 559,289 B) | 1.83x |
 
-**The fallback costs 1.65x to 2.47x, and Arsenic was already the slow one.**
+**The fallback costs 1.30x to 1.83x, and Arsenic is still the slow one.**
 Ten minutes for a 205 KB output is what the *fast* path costs a 7 MHz 68000;
 before 2026-08-07 a 1 MB machine could not extract either entry at all. The
 ratio widens with block fill, and neither the x86 ratio nor one fixture scaled
 by output size predicts these — DECISIONS.md 2026-08-07 for both.
 
-All four figures were measured on one build, with one emulator running at a
-time. They supersede an earlier pair (537 s / 927 s) taken before the progress
-rewrite; DECISIONS.md 2026-08-07 records the ~40 s between the two sets as
+**The 1 MB column is the 2026-08-24 performance pass.** It was 966 s (peak
+560,589 B) and 1,898 s (peak 614,134 B) before, which is where the "1.65x to
+2.47x" this section used to state came from. What changed: a sentinel byte
+removed the bound test from the scan that was 77 % of the second run, and the
+index's sample positions went from four bytes to three. Both are byte-exact by
+construction; DECISIONS.md 2026-08-24 has the reasoning and BLOCKERS.md the
+proposal the same measurement killed.
+
+**The 4 MB column did NOT change and was not re-measured**: those runs take
+the transform vector and never touch the sampled index or its scan.
+
+**One thing the Linux model got wrong, and it is worth knowing.** Three bytes
+per sample buys 25 % more density at the same budget, and under
+`--budget 678392` — the figure that reproduces this machine's peak to 54 bytes
+— it moves `derived-Library_ISBN_Barcoder.sit` from `target` 512 to 1024, a
+650,222 B high-water. **The real 1 MB Mac stayed at 512**, taking the saving as
+55 KB of headroom instead of as density: its peak fell to 559,289 B rather than
+rising to ~650 KB. So the budget figure models the CEILING and not what the
+Memory Manager will actually hand out in one piece — a **hypothesis**, since
+nothing here has reduced it to a reproduction; `UNC_AT_BUDGET` reports
+`MaxBlock` and `FreeMem` at a refusal and would settle it in one boot.
+
+All four figures were measured with one emulator running at a time. The 4 MB
+pair supersedes an earlier one (537 s / 927 s) taken before the progress
+rewrite; DECISIONS.md 2026-08-07 records the ~40 s between those two sets as
 unexplained.
 
 **8/8, and the shape is the useful part: for small archives the BOOT dominates
@@ -1321,9 +1463,10 @@ timeouts chosen for it mislead three times. BLOCKERS.md.
 
 ## Relative decode cost per format (Linux, same engine)
 
-Absolute Mac Plus timings are still missing (BLOCKERS.md says why), but the
-engine's *relative* cost is a property of the code and transfers to any CPU as
-a ratio. Measured with `unclassic t`, best of three, on the release build:
+The engine's *relative* cost is a property of the code and transfers to any CPU
+as a ratio. (Absolute Mac Plus figures are two sections up; this table is the
+shape, not the clock.) Measured with `unclassic t`, best of three, on the
+release build:
 
 | Fixture | Format | In KB | Out KB | ms | in KB/s |
 |---|---|---|---|---|---|

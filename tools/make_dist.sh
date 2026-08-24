@@ -123,8 +123,8 @@ instead — those two schemes put nothing inside the files that says which set
 they belong to, so keep the names they came with.
 
 Every archive in the test sample extracts byte-exact on a 1 MB Mac Plus,
-StuffIt 5 (Arsenic) included. Arsenic is slow on a 68000 — 16 minutes for a
-200 KB archive, half an hour for the largest tested — and the progress dialog
+StuffIt 5 (Arsenic) included. Arsenic is slow on a 68000 — 13 minutes for a
+200 KB archive, 23 for the largest tested — and the progress dialog
 shows a time estimate for that reason. Everything else takes seconds to a few
 minutes. If an entry genuinely will not fit, that entry is skipped with a
 message and the rest of the archive still extracts.

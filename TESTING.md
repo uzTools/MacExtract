@@ -499,7 +499,7 @@ sampled occurrence index **by trying to allocate the table and failing**
 CI forces it three ways:
 
 - `-DUNC_ARS_FORCE_SAMPLED` compiles the fast path out. The whole
-  919-fixture diff suite and all 9,190 robustness variants run through the
+  927-fixture diff suite and all 9,270 robustness variants run through the
   fallback under ASan+UBSan, and must be byte-exact.
 - `--budget 678392` (what a 1 MB Mac Plus leaves the engine) on the 31
   StuffIt 5 fixtures, with the normal adaptive build. This is the only step
@@ -888,7 +888,7 @@ file count from `l`.
 envelope — only `x` does — so the suite unwraps with `x -nr` first. That is
 also why the corpus-driven suites never reach this parser at all: to
 `run_robustness.sh` and `fuzz.py` these two fixtures are BinHex files, and all
-9,190 of their variants exercise the BinHex layer.
+9,270 of the suite's variants exercise the BinHex layer.
 
 **116 corrupted variants** — ten truncations and forty-eight bit-flips per
 archive — therefore live here. They are FORCED with `-f "SuperDisk!"`: a

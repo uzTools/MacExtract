@@ -109,6 +109,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-23 (btoa's licence) — a reference that may not be transcribed
 - 2026-08-23 (Compact Pro comments) — a comment is saved, and it is still not a file
 - 2026-08-23 (LZH) — the format the corpus could not grade, graded by somebody else's corpus
+- 2026-08-24 (the performance pass) — four proposals measured, two of them dead
 
 ---
 
@@ -6006,3 +6007,138 @@ That is the same move that settled ArcMac's fork order and DiskDoubler's
 methods 3, 4 and 5, and the question it comes from is worth writing
 down: *of the software this corpus is made of, which pieces are
 encoders?*
+
+---
+
+## 2026-08-24 (the performance pass) — four proposals measured, two of them dead
+
+`PLANNED_WORK.md` arrived from a branch written at v0.12.0 and was worked
+through in the order it proposed. Most of it held. The two items that did
+not are the useful part of this entry, because both were disproved by a
+measurement that took minutes and neither could have been disproved by
+reading.
+
+### The Arsenic block's unused tail is 29 KB, not 200
+
+**Claim (withdrawn).** `PLANNED_WORK.md` section 2: a multi-block Arsenic
+entry gets the declared 512 KB block while the largest fill in the corpus
+is 323,384 B, so shrinking the block to its fill returns ~200 KB to the
+sampled index and buys "~4x less scanning". It came with a named
+fragmentation trap and needed a shrink operation the allocator does not
+have.
+
+**Evidence.** One instrumented run printing `blockcap - numbytes` at
+`ars_bwt_prepare`. The largest block in `derived-Library_ISBN_Barcoder.sit`
+is `cap=352,160 fill=323,384`, waste **28,776 B**; `derived-a2basic.dmg.sit`
+is `cap=205,019 fill=197,515`, waste **7,504 B**. Neither entry ever
+allocates 512 KB, because `ars_block_reserve` already sizes the first
+allocation at `min(outlen, blocksize)` and both entries' whole output is
+smaller than a block.
+
+**Consequence.** The prize is 29 KB, and the index needs 225,528 B at
+target 512 against 346,836 B at target 1024 — so 29 KB does not move the
+dial by one step, let alone two. Section 2 is dead, and its trap with it.
+
+**What the same run found instead**, which is the transferable part: the
+index costs four bytes per sample and a sample is a position inside a
+block, and `blockbits` is four stream bits plus nine, so a position is at
+most `(1 << 24) - 1`. **Three bytes is exact.** A quarter off the index is
+a quarter more density at the same budget, and 260,705 B against 290,391 B
+of room is target 1024 where 346,836 B was not. That is half the scan
+distance on the slowest fixture in the corpus, for a change that also
+deletes the last unaligned word load in that structure.
+
+**The lesson is the one CLAUDE.md already states and this file keeps
+re-earning.** The section's arithmetic was a model of the allocator, not a
+reading of it, and the model was two years out of date — the fix it
+assumed was missing had been made in M9. *Instrument the number before
+budgeting for it*; the run cost four minutes and deleted a day's work.
+
+### 61 KB of deferred code is worth under a second at launch
+
+**Claim (withdrawn).** `PLANNED_WORK.md` section 7.4: segmenting the CODE
+resource keeps ~61 KB out of the launch path, and "startup gets cheaper,
+not dearer". The section labelled itself unverified and said, correctly,
+that *no launch-time baseline is measured anywhere in this repository*.
+
+**Evidence, and the method matters more than the number.** Ballast: a
+block of resident data compiled into the Mac shell behind a temporary
+define, referenced from the startup path so `-gc-sections` keeps it, with
+the application otherwise unchanged. Three runs each on `mv-4M-1x`
+(authentic 7 MHz), System 6.0.8:
+
+| build | app | relocations | boot |
+|---|---|---|---|
+| shipping | 150,144 B | ~2,300 | **8.9 s** (3/3) |
+| + 64 KB as `const unsigned char[]` | 215,680 B | ~2,300 | **8.9 s** (3/3) |
+| + 64 KB as 16,384 pointers | 232,064 B | 18,682 | **10.0 s** (3/3) |
+
+**The first ballast measured nothing, and that is the finding.** A byte
+array carries no relocations, so it costs the Segment Loader a read and
+nothing else — 64 KB of it is below the 0.1 s the harness resolves. The
+cost is entirely the RELOCATIONS: 16,306 more of them are 1.1 s, about
+**67 µs each** at 7 MHz. The whole shipping application has **2,376**, so
+everything it pays at launch for its own size is ≈ 0.16 s of an 8.9 s
+boot.
+
+**Consequence.** Segmentation cannot buy what it is not spending. It would
+also need every format's `probe` moved into one translation unit —
+~20 files — or opening any archive would touch every segment. Dead, and
+recorded here rather than in `OPEN_ITEMS.md` because nothing is open: the
+question is answered.
+
+**Generalise it: an unmeasured cost is not a small cost, it is an unknown
+one, and this repository has a harness that could have said so at any
+point in the last three weeks.** The ballast trick is reusable — it prices
+a resource by adding some, which needs no refactor to try.
+
+### The same fix, twice, in opposite directions: inlining the bit reader
+
+`unc_bitin_bit` was an out-of-line call taken once per bit. Making it
+`static inline` with the refill left behind an out-of-line
+`unc_bitin_bit_slow()` measured **3.1 to 6.6 % WORSE** on Compact Pro,
+DiskDoubler and Now Compress. Inlining the refill as well measured
+**1.0 % better** on the same fixtures and a further 1.0 point on Arsenic.
+
+**Why**, and it is not obvious from the source: `unc_canon_decode` lives
+in the translation unit `unc_bitin_bit` lived in, so gcc was *already*
+inlining the whole of it there with `bitbuf`, `nbits` and `le` in
+registers. Introducing an opaque call for the refill forced all three back
+to memory around every eighth bit. The formats that gained were the ones
+calling it from another file — which is the case the proposal was written
+for and the only case it was right about.
+
+**The rule this yields:** before moving a function to a header for the
+callers that cannot inline it, check what it costs the callers that
+already could. A function's cost is not a property of the function.
+
+### A shared decoder's tables belong wherever the deepest caller can afford
+
+`unc_canon_decode`'s fast table is 320 B on an `UncCanon`. DiskDoubler
+held three `UncCanon` and Now Compress two, **on the stack**, and the
+measurement that had to be taken before adding a byte to them found the
+rule already broken: `m68k -Os -fstack-usage` over the call graph put
+`unc_dd_extract -> dd_fork -> dd_ddn` at **6,664 B** and Now Compress at
+**5,632 B**, against CLAUDE.md's own 4 KB call-depth limit.
+
+**Not against the machine, and the correction is worth recording because
+the first draft of this entry got it wrong.** `mac/unclassic_mac.c` opens
+with `SetApplLimit(LMGetApplLimit() - kStackBump)` and `kStackBump` is
+24 KB, so the application runs on **32 KB of stack**, not the 8 KB
+default. Nothing was ever close to overflowing; a 1 MB Mac Plus extracts
+both formats byte-exact today and did before. What was broken was the
+RULE, which exists so the engine stays portable to a host that did not
+ask for more — and the way to check it was to read the host, not to
+assume the platform default.
+
+Both sets moved to the heap and the deepest chain in the engine is now
+**3,290 B**. The zip end-of-central-directory scan window stopped at 1 KB
+for the same reason rather than the 4 KB that would have made its reads
+17 instead of 65: at 4 KB that one buffer would have been the deepest
+frame there was.
+
+**The transferable half:** a limit with no measurement behind it is not a
+limit, and the cheapest time to measure one is when something is about to
+push against it. `-fstack-usage` plus the relocations in the linked
+objects gives the whole call graph's worst path in one command; there is
+no reason this was not known.

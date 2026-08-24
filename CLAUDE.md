@@ -14,7 +14,7 @@ The engine is the product. The Mac app is a thin shell.
 **M0–M28 are DONE and nothing is in flight.** Every family in FORMATS.md's
 table extracts — that table is the count, and this file does not keep a copy
 of it — and the engine passes a **927-fixture** differential suite against
-`unar` and, where `unar` fails, `macunpack`, plus 9,190 robustness variants.
+`unar` and, where `unar` fails, `macunpack`, plus 9,270 robustness variants.
 The Macintosh application extracts byte-exact on **System 6.0.8 at 4 MB and at
 the 1 MB floor target** (67/67 sampled fixtures each), on System 7.0.1, and on
 Mac OS 9.2 under QEMU including HFS+ — that last tier predates four formats
@@ -110,7 +110,7 @@ All of these cost real time here:
 - **A root cause that has never been reduced to a minimal reproduction is a hypothesis, not a finding.** Label it as such in the docs, and build the repro before acting on it or reporting it upstream. This rule was learned the hard way — see the withdrawn `HOpen` attribution in `BLOCKERS.md`.
 - **Never weaken a test to make it pass.** CRC mismatches are per-entry errors, not skips.
 - **When adding a harness, write down what it CANNOT see.** An aggregate check cannot fail on a property it never aggregates: the on-screen result grid carries a file count and summed CRCs, so a real defect in the gzip/.Z fallback NAME survived in the corpus for weeks.
-- **68000 discipline** (non-negotiable — it is what made the port compile and run first try): byte-wise big-endian reads only, zero unaligned dereferences; no recursion, call depth ≤ 4 KB; 32-bit arithmetic in hot paths; no libc in the engine — all I/O, allocation and progress via caller callbacks; no global mutable state; allocation failure is a per-entry error, never per-archive; progress callback every 8–16 KB with clean abort.
+- **68000 discipline** (non-negotiable — it is what made the port compile and run first try): byte-wise big-endian reads only, zero unaligned dereferences; no recursion, call depth ≤ 4 KB — **measure it, do not assume it**: the rule was exceeded by 66 % for months in shipping code and nothing noticed (`FORMATS.md`, *Stack*, has the one-command method); 32-bit arithmetic in hot paths; no libc in the engine — all I/O, allocation and progress via caller callbacks; no global mutable state; allocation failure is a per-entry error, never per-archive; progress callback every 8–16 KB with clean abort.
 - **`./ci.sh` green before every commit.** Small, focused commits. Code, comments and docs in English.
 - **`dist/` is a committed binary and goes stale silently**, and it is the only download this project offers. Rebuild it with `tools/make_dist.sh` in the SAME commit as any change to `mac/` or `src/`, and re-read `dist/README.txt` — it once described a limitation that had been fixed the day before.
 - **LGPL-2.1-or-later**, forced by transcribing XADMaster; keep `NOTICE` accurate.

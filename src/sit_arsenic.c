@@ -90,10 +90,15 @@ static void ars_dec_init(ArsDecoder *d, UncBitIn *bi)
     d->code = (hi << 13) | lo;
 }
 
+/* `renorm` is range/symtot, which the caller has ALREADY computed to find
+ * the symbol. It is passed in rather than recomputed: gcc cannot common
+ * the two, because it cannot prove `d` and `m` do not alias across the
+ * symbol-search loop, so it reloaded both fields and divided again. On a
+ * 68000 that is a second call to a libgcc helper per decoded symbol, on
+ * a machine with no divide instruction. */
 static void ars_dec_advance(ArsDecoder *d, int32_t symlow, int32_t symsize,
-                            int32_t symtot)
+                            int32_t symtot, int32_t renorm)
 {
-    int32_t renorm = d->range / symtot;
     int32_t lowincr = renorm * symlow;
 
     d->code -= lowincr;
@@ -110,19 +115,33 @@ static void ars_dec_advance(ArsDecoder *d, int32_t symlow, int32_t symsize,
 
 static int32_t ars_next_symbol(ArsDecoder *d, ArsModel *m)
 {
-    int32_t frequency, cumulative, n;
+    int32_t frequency, cumulative, n, renorm;
     if (d->err != UNC_OK) return -1;
-    if (m->totalfrequency == 0 || d->range / m->totalfrequency == 0) {
+
+    /* All three operands are provably non-negative in a valid stream:
+     * `range` is renormalised to (ARS_HALF, 2^25], `code` lies in
+     * [0, range) by the decoder's own invariant, and every model is
+     * initialised with a positive total. Stating that as a guard is what
+     * lets the two divisions below be done UNSIGNED — __divsi3 is a sign
+     * wrapper that then calls the unsigned helper, and a 68000 has no
+     * divide instruction to make either of them free. The guard replaces
+     * the narrower `totalfrequency == 0` test and cannot fire on a valid
+     * stream; on a corrupt one it is the same UNC_ERR_CORRUPT, sooner. */
+    if (d->range <= 0 || m->totalfrequency <= 0 || d->code < 0) {
         d->err = UNC_ERR_CORRUPT;
         return -1;
     }
-    frequency = d->code / (d->range / m->totalfrequency);
+    renorm = (int32_t)((uint32_t)d->range / (uint32_t)m->totalfrequency);
+    if (renorm == 0) { d->err = UNC_ERR_CORRUPT; return -1; }
+
+    frequency = (int32_t)((uint32_t)d->code / (uint32_t)renorm);
     cumulative = 0;
     for (n = 0; n < m->numsymbols - 1; n++) {
         if (cumulative + m->symbols[n].frequency > frequency) break;
         cumulative += m->symbols[n].frequency;
     }
-    ars_dec_advance(d, cumulative, m->symbols[n].frequency, m->totalfrequency);
+    ars_dec_advance(d, cumulative, m->symbols[n].frequency, m->totalfrequency,
+                    renorm);
     if (d->err != UNC_OK) return -1;
     ars_model_bump(m, n);
     return m->symbols[n].symbol;
