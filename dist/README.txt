@@ -1,4 +1,4 @@
-unclassic v0.18.0 — bootstrap distribution
+unclassic v0.19.0 — bootstrap distribution
 =========================================
 
 A bare Classic Mac has no way to open a .sit/.cpt/.hqx until it HAS an
@@ -68,6 +68,12 @@ puts them next to it; click Drive to send them to another disk instead.
 If a Compact Pro archive carries a note -- the comment whoever made it
 typed in -- it is written into that folder as a text file called
 Comments, rather than thrown away with the wrapper.
+
+Very occasionally a file uses a compression method this version does not
+know. That entry is skipped and the rest of the archive still comes out,
+and the message says so rather than blaming your machine. Those files are
+worth reporting -- most of the methods here were added because somebody
+sent one -- and the Linux version names the method for you.
 
 Archives split across floppies: a StuffIt segmented set is joined back
 together. Open the first part; the rest are found beside it, and if one is
