@@ -529,7 +529,7 @@ static int lzh_decode(UncCtx *c, const LzhEnt *e, LzhOut *o, uint8_t *iobuf,
     else if (lzh_is(e->method, "-lh1-")) {
         UncBitIn bi;
         unc_bitin_init(&bi, &in);
-        err = unc_lzah_decode(c->al, &bi, e->origsize, lzh_put, o);
+        err = unc_lzah_decode(c->al, &bi, e->origsize, UNC_LZAH_LH1, lzh_put, o);
     }
     else if (lzh_is(e->method, "-lh4-"))
         err = lzh_static(o, &in, e->origsize, 12, c->al);

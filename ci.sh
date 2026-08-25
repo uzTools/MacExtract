@@ -39,6 +39,11 @@ python3 tools/run_arc.py --unclassic build/san/unclassic || fail "ARC tests"
 # their archives come from PAK 2.51 under DOSBox (tools/pak.py) or from
 # the two real specimens. Skips politely when neither is present.
 python3 tools/run_pak.py --unclassic build/san/unclassic || fail "PAK method tests"
+# The OTHER method 0x0a: ARC 7.x's Trimmed, which shares the number
+# with PAK's Crushed. This suite also checks the discriminator, by
+# holding the same input files under both dialects.
+python3 tools/run_arcplus.py --unclassic build/san/unclassic \
+    || fail "ARC+Plus (Trimmed) tests"
 python3 tools/run_uu.py --unclassic build/san/unclassic || fail "uuencode tests"
 # Now Compress has exactly one REAL fixture, and it reaches two of the
 # five shapes a block can have. The rest — and the offset-delta search,

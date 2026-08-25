@@ -708,7 +708,24 @@ int unc_lzdyn_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen,
 int unc_lzst0_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen,
                      int (*put)(void *ctx, uint8_t b), void *pctx);
 
-int unc_lzah_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen,
+/* Adaptive-Huffman LZSS, in two dialects that share a tree of 314
+ * leaves and differ only in what the codes above 0xff mean and in what
+ * the window starts as:
+ *
+ *   UNC_LZAH_LH1      LHarc's -lh1- and StuffIt method 5: 0x100 is a
+ *                     match of 3, and the window carries XADMaster's
+ *                     preload (value runs, ramps, zeros, spaces).
+ *   UNC_LZAH_TRIMMED  ARC 7.x's "Trimmed": 0x100 is a STOP code, 0x101
+ *                     is a match of 3 (so 3..59, one shorter than
+ *                     -lh1-), and the window starts as zeros.
+ *                     Source: reference/deark/foreign/lzhuf.h,
+ *                     lzhuf_Decode_init's is_arc_trimmed branch, and
+ *                     modules/arc.c's decompressor_trimmed, which
+ *                     chains RLE90 after it. */
+#define UNC_LZAH_LH1      0
+#define UNC_LZAH_TRIMMED  1
+
+int unc_lzah_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen, int mode,
                     int (*put)(void *ctx, uint8_t b), void *pctx);
 
 /* Arsenic (method 15) core, in sit_arsenic.c. */

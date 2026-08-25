@@ -129,6 +129,7 @@ derived-MUSFMT10.ZIP                       # 171960 B
 # 413 KB and would not fit the destination volume beside the rest (M33).
 synth-arc-mixed.arc                        # 9312 B
 arc2pak1.pak                               # 4986 B   PAK, method 0x0a (crushed)
+derived-ARCDOS.arc                         # 110023 B ARC 7.x, method 0x0a (trimmed)
 synth-uu-mac.uu                            # 3020 B
 
 # LZH / LHA (M28, 2026-08-23). One real Amiga archive from the corpus

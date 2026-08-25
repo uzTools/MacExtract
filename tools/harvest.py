@@ -210,6 +210,34 @@ def restore():
         # design (it cannot tell which payload a caller meant). The
         # PAK specimen that grades ARC method 0x0b travels inside a
         # four-file zip and is reachable no other way.
+        # `derived:arcplus:<parent>:<member>` carves a DOS
+        # self-extractor's payload out of a zipped distribution and
+        # takes one STORED member of it — structurally, with no
+        # decoder involved, so a fixture that grades a decoder is not
+        # produced by one (tools/arcplus.py --carve).
+        if url.startswith("derived:arcplus:"):
+            _, _, parent, member = url.split(":", 3)
+            path = os.path.join(FIXDIR, name)
+            with tempfile.TemporaryDirectory() as tmp:
+                subprocess.run(["unzip", "-o", "-q",
+                                os.path.join(FIXDIR, parent), "-d", tmp],
+                               capture_output=True, timeout=300)
+                sfx = None
+                for root, _, files in os.walk(tmp):
+                    for f in files:
+                        if f.upper().endswith(".EXE"):
+                            sfx = os.path.join(root, f)
+                if sfx:
+                    subprocess.run([sys.executable,
+                                    os.path.join(ROOT, "tools", "arcplus.py"),
+                                    "--carve", sfx, "--member", member,
+                                    "-o", path], capture_output=True, timeout=300)
+            if os.path.exists(path) and sha256_bytes(open(path, "rb").read()) == sha:
+                ok += 1
+            else:
+                print(f"  carve failed or hash mismatch: {name}")
+                bad += 1
+            continue
         if url.startswith("derived:member:"):
             _, _, parent, member = url.split(":", 3)
             path = os.path.join(FIXDIR, name)

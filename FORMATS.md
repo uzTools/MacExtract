@@ -28,7 +28,7 @@ whole corpus for that format (engine allocations only, via
 | StuffIt X (.sitx) | detect only | — | — (no fixture) | — | — |
 | DiskDoubler (DD, DDAR, DDA2) | extract | **all eleven**: 0 store, 1 Unix compress, 2/5 splay Huffman, 3 RLE90, 4 StuffIt Huffman, 6/9 AD LZSS, 7 Stac LZS, 8 Compact Pro, 10 DDn✦ | 88 fixtures (6 harvested + 82 CC0 files graded against their own originals, in `ci.sh` since 2026-08-21) + 19 BinHexed copies of those + 28 specimens (2 written by DiskDoubler 3.7 under Mini vMac, 2 off its distribution disk, 24 off Salient's 3.1.2 disk)✦ | 8–392 KB✦ | full |
 | Now Compress | extract | stored, LZSS, Huffman, Huffman+LZSS, "new" LZSS✧ | 2 real fixtures + 13 generated archives (all five shapes, adjudicated by `unar`); `synth-now-mixed.now` also has an `unar` manifest and is in the differential suite | 134 KB✧ | full |
-| ARC / ArcMac (.arc) | extract | 1/2 store, 3 RLE90, 4 squeeze+RLE90, 5/6/7 crunch, 8 12-bit LZW+RLE90, 9 13-bit LZW, **0x0a crushed and 0x0b distilled (PAK) since 2026-08-25**, 0x7f compress; ArcMac's two-fork payload since 2026-08-16★★★; **garbled (password-XORed) members decrypted** | 10 generated archives (methods 1-9, adjudicated by `unar`) + 3 written by Debian's `arc` 5.21q; **2 real PAK specimens + 7 archives PAK 2.51 wrote under DOSBox** (`tools/pak.py`); `synth-arc-mixed.arc`, `arc2pak1.pak` and `derived-INTRECHO.pak` have manifests and are in the differential suite | 4–46.5 KB★ | full |
+| ARC / ArcMac (.arc) | extract | 1/2 store, 3 RLE90, 4 squeeze+RLE90, 5/6/7 crunch, 8 12-bit LZW+RLE90, 9 13-bit LZW, **0x0a crushed (PAK) and 0x0b distilled since 2026-08-25, 0x0a trimmed (ARC 7.x) and the ARC 7 container since 2026-08-25**, 0x7f compress; ArcMac's two-fork payload since 2026-08-16★★★; **garbled (password-XORed) members decrypted** | 10 generated archives (methods 1-9, adjudicated by `unar`) + 3 written by Debian's `arc` 5.21q; **2 real PAK specimens + 7 archives PAK 2.51 wrote under DOSBox** (`tools/pak.py`); `synth-arc-mixed.arc`, `arc2pak1.pak` and `derived-INTRECHO.pak` have manifests and are in the differential suite | 4–46.5 KB★ | full |
 | btoa (`xbtoa`/`.ascii`) | extract | — (base-85 ASCII armour; both the `xbtoa5` and the older `xbtoa Begin` framings)◆ | no corpus file and no second reader: graded against **btoa 5.2.1 itself**, which encodes the subjects `tools/run_btoa.py` decodes | 12 KB | full |
 | uuencode (.uu, incl. UUTool) | extract | — (plain uu, UUTool's two-fork "MU" shape, and documents posted in several parts★★) | 7 generated cases, the two-fork ones adjudicated by macutils' `hexbin`; `synth-uu-mac.uu` is in the differential suite | 4 KB | full |
 | Alysis SuperDisk! (.X, .x) | extract | **both containers** (record-stream archive and single file); methods 1-4 and 5-8 (a finite-context predictor over a 13- or 16-bit context, with the flag bitmap and/or the literals Huffman-coded), 9 Huffman, 10 SlowFastA and 11 SlowFastB (LZSS); 13 declined per entry, and 20 is an encoder for 11 rather than a method of its own✧✧ | 2 fixtures, 5 forks, adjudicated by the archives' OWN self-extractors on an emulated Mac, + 11 single-file specimens written by Alysis's own control panel (methods 1 and 6) and graded against their inputs, + every method 1..9 through Alysis's own Add-In Modules under qemu-m68k (`tools/sdmodule/`) | 72–84 KB✧✧ | full |
@@ -582,8 +582,8 @@ with the output so far, and an 8 KB window **pre-filled with spaces**.
 Peak heap, measured per method: stored and RLE90 4,096 B,
 squeeze 5,124 B, the compress methods 6,660–6,664 B, crunch **32,768 B** —
 a 4096-entry table at 6 B an entry plus a 4 KB stack — Distilled 14,764 B,
-and Crushed **46,520 B**, the format's ceiling: five 8,192-entry arrays plus
-a 500-byte window. uuencode is a flat 4,096 B, whatever the file holds,
+Trimmed 20,628 B, and Crushed **46,520 B**, the format's ceiling: five
+8,192-entry arrays plus a 500-byte window. uuencode is a flat 4,096 B, whatever the file holds,
 because it decodes a line at a time.
 
 **Byte-exact on a real emulated Mac Plus at 4 MB and at the 1 MB floor**
@@ -598,7 +598,9 @@ fixtures since M13.
 identical at 4 MB and at 1 MB; it is in `sample.txt` from M33.
 `derived-INTRECHO.pak` (0x0b), run separately because its 918,631 B of
 output needs `--out-kb 1600`: 10 files, **14,790 B peak**, again the same at
-both memory sizes. That run grades against the manifest whose six hardest
+both memory sizes. `derived-ARCDOS.arc` (0x0a as ARC 7 means it) followed on
+the same day: 3 files, 232,668 B out, **20,642 B peak**, 4 MB and 1 MB alike,
+and it is in `sample.txt` too. That run grades against the manifest whose six hardest
 entries are deark's, so the 68000 build is checked on exactly the members
 `unar` decodes wrongly. **What was NOT re-run:** the other 67 fixtures of the
 sample, at either size. M33 changed `fmt_arc.c` alone and grew the
@@ -606,8 +608,30 @@ application by 2,048 B, against a floor-target margin of ~64 KB between the
 largest allocation (533 KB) and the budget (597,036 B); the 20 KB growth of
 2026-08-23 is the precedent for when a full re-run is owed.
 
-**How 0x0a and 0x0b are graded, since neither has an oracle in the ordinary
-sense.** Four ways, and each covers what the ones before it cannot:
+★★ **Method 0x0a is two methods, and which one an archive means is the
+ARCHIVE's property** (2026-08-25). PAK calls it Crushed; ARC 7.x — "ARC
+Plus", SEA's last version — calls it **Trimmed** and means LHarc's `-lh1-`
+coder with a stop code, match lengths one shorter (3..59), a window of zeros
+rather than `-lh1-`'s preload, and RLE90 after it. `src/unc_lzah.c` therefore
+serves three formats: StuffIt method 5, LZH `-lh1-` and this.
+
+`arc_dialect()` decides once per archive, on deark's two signals: an
+informational item (0x14/0x15) or a subdirectory (0x1e), which ARC 6/7 write
+and PAK does not; and PAK's extended records after the end-of-archive marker,
+which start `0xfe` and a byte no greater than 4. **Trimmed only when the first
+is present and the second is not** — where neither appears the answer is
+Crushed, because PAK 1.0 wrote neither and its archives are the ones in this
+corpus. A wrong answer costs the entry its CRC; it cannot pass quietly.
+
+**The ARC 7 container had to be read before any of that mattered.** Every
+archive ARC+Plus writes opens with a 0x14 item whose name field is empty and
+whose uncompressed length is 0, which this walk rejected as corrupt — and
+`unar` still does, so **XADMaster cannot open an ARC 7 archive at all**. The
+items are skipped; what they carry is a version string ("ARC 7.12 by SEA,
+Inc.") and per-file notes.
+
+**How these three methods are graded, since none has an oracle in the
+ordinary sense.** Five ways, and each covers what the ones before it cannot:
 
 | grader | covers | reaches |
 |---|---|---|
@@ -615,9 +639,11 @@ sense.** Four ways, and each covers what the ones before it cannot:
 | the bytes that went in | the generated corpus only | 7 archives, `tools/pak.py` |
 | deark (0x0b) and `unar` (0x0a) | byte-for-byte, independently implemented | 13 members of the two real specimens, all 7 generated archives |
 | PAK 2.51 itself, extracting under DOSBox | the period-accurate case: the writer reads it back | the 9 members of the PAK distribution, byte-identical |
+| a plain copy of the same file from a different CD | the case with no decoder in it at all | `XARC.EXE`, 21,174 B, Trimmed in ARC+Plus's own distribution and uncompressed in `swsii/072/XARC.ZIP` — byte-identical |
 
-`unar` is **not** consulted about 0x0b and deark cannot be consulted about
-0x0a: the first is wrong about that method and the second does not implement
+`unar` is **not** consulted about 0x0b, cannot be consulted about Trimmed
+(it does not open the container), and deark cannot be consulted about
+Crushed: the first is wrong about that method and the second does not implement
 this one (BLOCKERS.md). The two real specimens are `arc2pak1.pak` (3 members,
 0x0a, 1988) and `derived-INTRECHO.pak` (10 members, 0x0b); both are in the
 differential suite, the second with six of its ten entries adjudicated by
@@ -1383,7 +1409,7 @@ no more than that, and matches on all 26 identity bytes anyway.
 
 ## Hardening
 
-- Differential: 930 fixtures byte-exact against `unar` manifests
+- Differential: 932 fixtures byte-exact against `unar` manifests
   (both forks + type/creator), `./ci.sh` — 107 of them since 2026-08-21,
   the DiskDoubler corpus, whose manifests are built from the files it was
   made from rather than from a decoder (TESTING.md). `run_diff.py` prints
@@ -1753,7 +1779,7 @@ an inline fast path with the rare cases behind a call measured **worse**
 (−5.5 % against −6.6 % without it), for the same reason the bit reader did:
 the opaque call forces the cursor fields back to memory. What is left is
 decoding four groups to three bytes in a batch, which changes what a stream
-truncated mid-triple does, and that is graded by 9,300 robustness variants
+truncated mid-triple does, and that is graded by 9,320 robustness variants
 rather than argued.
 
 `-flto` is not available: it crashes Retro68's gcc 16.1.0 with an internal
@@ -2352,7 +2378,7 @@ with this archive."*
 | StuffIt SpaceSaver | with the add-on | **yes since 2026-08-22**, methods 0 and 4 (what a 68000 writes), with SpaceSaver's own dictionary built in since 2026-08-23 so nothing else is needed; 1, 2 and 3 declined per entry (*StuffIt SpaceSaver*, above) |
 | Chained expansion (`.sit.hqx`) | yes, and can be turned off | yes, `-nr` turns it off |
 | System 7 conveniences | drag-and-drop of files, folders and whole disks; watch folders; background expansion; Apple events | none; Standard File, one archive at a time |
-| Verification | none published | 930 fixtures byte-exact against `unar`/`macunpack` — bar the one uuencode fixture, which `unar` cannot read at all and whose ground truth is its generator's input, with `hexbin` agreeing |
+| Verification | none published | 932 fixtures byte-exact against `unar`/`macunpack` — bar the one uuencode fixture, which `unar` cannot read at all and whose ground truth is its generator's input, with `hexbin` agreeing |
 | Licence | free, closed | free, LGPL-2.1-or-later |
 | Memory partition | **not measured** — reading the app's `SIZE` resource needs an HFS reader this machine does not have | engine peak heap per format in the matrix above |
 

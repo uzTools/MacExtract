@@ -122,6 +122,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-25 (SuperDisk! method 10) — a codec with no data, graded three ways
 - 2026-08-25 (SuperDisk! method 20) — the method that turned out to be an encoder
 - 2026-08-25 (ARC 0x0a and 0x0b) — the wrong attribution, and an oracle that was wrong
+- 2026-08-25 (ARC 7.x Trimmed) — the gap filed without looking, and the codec already in the tree
 
 ---
 
@@ -6810,3 +6811,74 @@ implemented here: there is no Trimmed specimen to test either the decoder or
 the heuristic against, and a discriminator that has never seen the case it
 discriminates is a guess with a test suite. It is in OPEN_ITEMS.md as a
 specimen wanted.
+
+## 2026-08-25 (ARC 7.x Trimmed) — the gap filed without looking, and the codec already in the tree
+
+Method 0x0a's other meaning now extracts too, hours after the entry saying it
+could not was written. Four things are worth keeping.
+
+### The open item was a claim, and it had no evidence
+
+`OPEN_ITEMS.md` gained "ARC method 0x0a written by ARC 7.x… **what is missing
+is a gradeable SPECIMEN**" on the same day, in the same session, as the
+withdrawn claim directly above it — which was about a search that named the
+wrong tool and therefore found nothing. Nobody had searched for a Trimmed
+specimen at all.
+
+Once asked, the answer took two minutes: the ArchiveTeam wiki lists ARC+Plus
+7.10 and 7.12 with direct links, `ARC712.ZIP` is one HTTP GET, and **the
+distribution is itself the specimen** — its own installer archive holds four
+Trimmed members, and the nested `ARCDOS.ARC` holds three more, including
+`ARC.EXE`, the writer.
+
+**A gaps file is not exempt from the evidence rule.** Everything else in this
+repository is labelled measured, hypothesis or withdrawn; an OPEN_ITEMS entry
+asserting what is missing is a claim of the same kind, and "I did not look" is
+not a finding. The mechanism is in BLOCKERS.md.
+
+### The decoder was already here, twice over
+
+Trimmed is LHarc's `-lh1-`: the same adaptive-Huffman tree of 314 leaves, the
+same 64-entry distance code, the same 4 KB window. It differs in three
+details — 0x100 is a stop code rather than a match of 3, so lengths run 3..59
+instead of 3..60; and the window starts as **zeros** where `-lh1-` carries
+XADMaster's preload of value runs, ramps and spaces. `src/unc_lzah.c` gained a
+mode argument and nine lines; StuffIt method 5 and LZH `-lh1-` pass
+`UNC_LZAH_LH1` and are untouched.
+
+**That is the second time in one day that a "new" codec was a parameter on an
+old one** — Distilled needed a window filled with spaces, Trimmed a window
+filled with zeros, and both were single constants inside decoders this project
+already shipped. Ask what an unfamiliar method is a DIALECT of before writing
+it: deark's own structure said so out loud (`is_arc_trimmed` is a field in its
+lh1 parameter block), and reading that saved the work.
+
+### One method decides per ARCHIVE, and it is pushed rather than pulled
+
+`arc_dialect()` walks the headers once and answers Crushed or Trimmed for the
+whole file, on the two signals deark uses. The result rides in the `method`
+int above the header byte, which is what lets it survive the password path —
+that path decodes the same entry up to four times, and a per-entry decision
+taken twice could differ.
+
+The decode itself is the only PUSH path in `fmt_arc.c`: every other method is
+pulled a byte at a time by `arc_byte()`, but `unc_lzah.c` drives its own loop
+and is shared with two other formats. **Inverting a decoder three formats
+depend on, to suit one method, would have put 930 fixtures at risk to save
+fifteen lines** — so RLE90 is written a second time, in push form, next to the
+pull version it mirrors.
+
+### A copy with no decoder in it beats every oracle
+
+The strongest single check on Trimmed is not deark and not the CRC. ARC+Plus's
+distribution carries `XARC.EXE` compressed with Trimmed; a different CD
+(`swsii/072/XARC.ZIP`) carries the same 21,174-byte file **uncompressed**. The
+two are byte-identical, which is a statement no implementation had a hand in.
+
+The same archive gave a lesson about what a CRC failure means: three of its
+eight members fail, and **two of those are STORED** — a straight byte copy no
+decoder can get wrong. deark fails exactly the same three. That copy of
+`ARC712.EXE` is damaged, and the way to know it was to notice that the failing
+set includes members with no codec in them at all. **When several entries fail
+at once, look for one whose decoder does nothing**; if that one fails too, the
+argument is about the file rather than the code.

@@ -43,7 +43,7 @@ static const uint8_t lzah_distlengths[64] = {
     8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,
 };
 
-static void lzah_reset(Lzah *h)
+static void lzah_reset(Lzah *h, int mode)
 {
     int32_t i;
     for (i = 0; i < LZAH_NODES; i++) {
@@ -69,8 +69,16 @@ static void lzah_reset(Lzah *h)
 
     /* Window preload (resetLZSSHandle): zeros, then the pattern.
      * "TODO: Figure out if the initialization of the window differs
-     * between LHArc and StuffIt" — we follow what the oracle runs. */
+     * between LHArc and StuffIt" — we follow what the oracle runs.
+     *
+     * ARC's Trimmed takes the zeros and NOT the pattern: deark passes
+     * history_fill_val = 0 and its ring buffer starts zeroed
+     * (reference/deark/foreign/lzhuf.h, lzhuf_Decode_init). A Trimmed
+     * member whose first match reaches back past the start of the data
+     * is what tells the two apart, and the entry's CRC is what says
+     * so. */
     for (i = 0; i < LZAH_WINDOW; i++) h->window[i] = 0;
+    if (mode == UNC_LZAH_TRIMMED) return;
     for (i = 0; i < 256; i++) {
         int32_t j;
         for (j = 0; j < 13; j++) h->window[i * 13 + 18 + j] = (uint8_t)i;
@@ -168,7 +176,7 @@ static void lzah_update(Lzah *h, int16_t node)
     }
 }
 
-int unc_lzah_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen,
+int unc_lzah_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen, int mode,
                     int (*put)(void *ctx, uint8_t b), void *pctx)
 {
     Lzah *h;
@@ -177,7 +185,7 @@ int unc_lzah_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen,
 
     h = (Lzah *)unc_alloc(al, (uint32_t)sizeof *h);
     if (!h) return UNC_ERR_MEM;
-    lzah_reset(h);
+    lzah_reset(h, mode);
     err = unc_canon_build(&h->distance, lzah_distlengths, 64);
     if (err != UNC_OK) goto out;
 
@@ -197,8 +205,11 @@ int unc_lzah_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen,
             h->window[pos++ & (LZAH_WINDOW - 1)] = (uint8_t)lit;
             err = put(pctx, (uint8_t)lit);
             if (err != UNC_OK) goto out;
+        } else if (mode == UNC_LZAH_TRIMMED && lit == 0x100) {
+            goto out;                     /* Trimmed's stop code */
         } else {
             int32_t mlen = lit - 0x100 + 3;
+            if (mode == UNC_LZAH_TRIMMED) mlen--;   /* 0x101 is 3 */
             int32_t high = unc_canon_decode(&h->distance, bi);
             int32_t low, moff;
             uint32_t from;

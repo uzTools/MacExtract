@@ -26,9 +26,14 @@ This project's decoders are transcriptions/ports of algorithms from:
     into anything shipped.
 
   * deark, by Jason Summers — https://github.com/jsummers/deark, MIT.
-    The reading of ARC/PAK method 0x0b ("Distilled") in
-    `src/fmt_arc.c` follows deark's `src/fmtutil-lzh.c` rather than
-    XADMaster's handle for that method, because XADMaster's is wrong
+    Two ARC methods in `src/fmt_arc.c` follow deark rather than
+    XADMaster: 0x0b ("Distilled"), whose reading comes from deark's
+    `src/fmtutil-lzh.c`, and 0x0a as ARC 7.x means it ("Trimmed"),
+    whose parameters — a stop code, match lengths 3..59 and a
+    zero-filled window — come from `foreign/lzhuf.h`'s
+    `is_arc_trimmed` branch, with the dialect test that tells Trimmed
+    from PAK's Crushed taken from `modules/arc.c`. The first is
+    followed instead of XADMaster's because XADMaster's is wrong
     about one thing and the CRC PAK stored says so: the 8 KB window
     starts full of spaces (BLOCKERS.md). No code was copied — the file
     states the facts it took and cites them — and deark's own

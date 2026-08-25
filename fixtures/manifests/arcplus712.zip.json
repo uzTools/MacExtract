@@ -1,0 +1,21 @@
+{
+ "entries": [
+  {
+   "data_oracle": "deark (Deark version: 1.7.3-1)",
+   "data_sha256": "d959c23b10ab34af24846e0ab8781bb74f1cb9b1326c90fe5eb912a0618e3107",
+   "data_size": 335656,
+   "name": "ARC712.EXE",
+   "oracle_methods": [
+    "None"
+   ],
+   "unadjudicated": {
+    "rsrc": "oracle wrote no output for this fork"
+   }
+  }
+ ],
+ "fixture": "arcplus712.zip",
+ "format": "Zip",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "671fac68b1ddf79f25bff4e48a4c6dd58cb35d483d99eb8a2c08c0341b71acdf",
+ "size": 335774
+}

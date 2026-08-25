@@ -707,7 +707,7 @@ int unc_sit_decode_fork(UncCtx *c, UncFork fork, uint32_t at,
          * function. */
         UncBitIn bi;
         unc_bitin_init(&bi, &in);
-        err = unc_lzah_decode(c->al, &bi, outlen, sit_put_cb, &f);
+        err = unc_lzah_decode(c->al, &bi, outlen, UNC_LZAH_LH1, sit_put_cb, &f);
         break;
     }
     case 6:  err = sit6_fork(&f, &in, outlen, c->al); break;

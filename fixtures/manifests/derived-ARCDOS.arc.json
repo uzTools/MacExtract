@@ -1,0 +1,33 @@
+{
+ "entries": [
+  {
+   "data_oracle": "deark",
+   "data_sha256": "86652b0eae81133e3a11b380cbe25f0ec750fafce522b47b826a50448daa0014",
+   "data_size": 85934,
+   "name": "ARC.EXE",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_oracle": "deark",
+   "data_sha256": "1571182ae5f1b4bf6ad8a0cbbb42b77e828f291774c156123d5a54fec95c43b1",
+   "data_size": 136593,
+   "name": "EZARC.EXE",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_oracle": "deark",
+   "data_sha256": "66062d0715b3b90b7ce216529af8365bf6b669f4b7bf35accf6348e947ba0340",
+   "data_size": 10141,
+   "name": "XARC.EXE",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  }
+ ],
+ "fixture": "derived-ARCDOS.arc",
+ "format": "ARC",
+ "oracle": "deark (ARC 7.x is a format `unar` does not read)",
+ "sha256": "509046cef7240b17c2aa1ceb211a91a081cea002e7ac4b0f6bf2c71cd6480c30",
+ "size": 110023
+}

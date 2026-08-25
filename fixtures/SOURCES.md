@@ -43,6 +43,7 @@ Each line records how to re-fetch one. Use `tools/harvest.py --restore`.
 | appledraw51.cpt | 70ae6b677233144d2cef680f5b6d4540407ef81c13b204c52e9a3f4c7ab68501 | 91372 | http://www.nic.funet.fi/pub/mac/da/appledraw51.cpt |
 | applejam.cpt | c595f6c984c6e92de0c7678011602e3683fadc4f3b7872dec197f7c5ab459982 | 43776 | http://www.nic.funet.fi/pub/mac/comm/applejam.cpt |
 | arc2pak1.pak | ab24d2b79298784c3b4c1d21eae71976385006eb5d7f1f950b14ff68c613df54 | 4986 | http://cd.textfiles.com/carousel/ATARI/ARC2PAK1.PAK |
+| arcplus712.zip | 671fac68b1ddf79f25bff4e48a4c6dd58cb35d483d99eb8a2c08c0341b71acdf | 335774 | http://cd.textfiles.com/svplatinum/CDR31/ARC712.ZIP |
 | ascbeep.sit | 1873c9fdd955cdda0c1ffa397278fad1df1174378f6ce636e1171c2c388d0628 | 16971 | http://www.nic.funet.fi/pub/mac/sound/ascbeep.sit |
 | ascii-converter.hqx | d301500fe97dbbace805833b611cb9ffcd79d32959ebf7a4aa2da5a3a7ed1050 | 157931 | http://www.nic.funet.fi/index/info-mac/disk/ascii-converter.hqx |
 | atview.sit | 7ef01e43ef6588ec31b8bf369b6695e90bc6acf41905262cad1cd9d8bf33e978 | 9912 | http://www.nic.funet.fi/pub/mac/da/atview.sit |
@@ -244,6 +245,7 @@ Each line records how to re-fetch one. Use `tools/harvest.py --restore`.
 | derived-3d_windows.sea | e42bdad41407625cf3324f43d29ac473007f2dc206b5cfa974e31a92139f7b37 | 8395 | derived:unar-nr:3d_windows.sea.bin |
 | derived-800saywhat301j.sit | d3788d31eb57ea17cc0a218fbc2167f50be59f536bd899d97334363a9fcf8f7f | 91648 | derived:unar-nr:800saywhat-301-jp.hqx |
 | derived-ACInfo_Comm.sit | e142c1131f3d5c0a63d58a3cf91be090e143cf4488d78d01a6461d8024ae0e08 | 158830 | derived:unar-nr:ACInfo_Comm.sit.bin |
+| derived-ARCDOS.arc | 509046cef7240b17c2aa1ceb211a91a081cea002e7ac4b0f6bf2c71cd6480c30 | 110023 | derived:arcplus:arcplus712.zip:ARCDOS.ARC |
 | derived-ASCbeep.sit | 41d971d935998f2b8fa7a489bc4fc5df00a7992fba8377d8e49b49b4edc4b1a9 | 16843 | derived:unar-nr:ascbeep.sit |
 | derived-AT_View.sit | 5846254c591f2119655690591d881fd0ddd9d26d9979cdbe788c43082a1934f0 | 9784 | derived:unar-nr:atview.sit |
 | derived-AdobeNumbers.sit | 213630e36fd8373f00de3027d102ee3b02e1d7f92de466ccb08b3c4a46931ea3 | 8934 | derived:unar-nr:adobenumbers.sit |

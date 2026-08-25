@@ -11,7 +11,7 @@ Two kinds of thing live here, and they are kept apart on purpose:
 
 **Not** BLOCKERS.md, which records investigations that went wrong and the
 claims withdrawn from them. Nothing here stops the engine or the CLI, which are
-byte-exact against the oracle across 930 fixtures in `./ci.sh`.
+byte-exact against the oracle across 932 fixtures in `./ci.sh`.
 
 Detail lives in one place per finding — status in BLOCKERS.md, reasoning in
 DECISIONS.md, how to re-run in TESTING.md or `tools/vmac/README.md`, what needs
@@ -112,24 +112,15 @@ Each says which of the two is missing, because the searches are different:
 
 Unlike section 3, none of this is impossible here: a download would do it.
 
-- **ARC method 0x0a written by ARC 7.x, which calls it Trimmed.** The
-  method number is shared: PAK's Crushed and ARC Plus's Trimmed
-  (RLE90 + LZH with adaptive Huffman) are different algorithms at
-  0x0a, and `src/fmt_arc.c` decodes it as Crushed, which is what PAK
-  wrote. A Trimmed member therefore fails its CRC rather than
-  extracting — an error, not silent corruption. **What is missing is a
-  gradeable SPECIMEN:** an archive ARC 7.x wrote. The reference exists
-  (deark's `decompressor_trimmed`, and its author's write-up), and so
-  does the DISCRIMINATOR — deark separates the two by whether the file
-  carries PAK extended records or ARC archive-info items — but neither
-  a decoder nor a heuristic will be written without a file to run them
-  against. Before filing anything else here, ask the three questions
-  that have emptied this section three times: **is there an
-  implementation that could be FED?** (DECISIONS.md, methods 3, 4 and
-  5), **is "X does not survive" a claim about somebody's search?**
-  (BLOCKERS.md, SuperDisk!'s compressor), and **does the search name
-  the right tool?** (BLOCKERS.md, 2026-08-25 — this entry's predecessor
-  spent a year looking for PKARC files that never existed).
+**Four questions before filing anything here**, each of which has emptied
+this section at least once: **is there an implementation that could be
+FED?** (DECISIONS.md, methods 3, 4 and 5); **is "X does not survive" a claim
+about somebody's search?** (BLOCKERS.md, SuperDisk!'s compressor); **does
+the search name the right tool?** (BLOCKERS.md 2026-08-25 — a year was spent
+looking for PKARC files that never existed); and **have you looked at all?**
+An entry here is a claim and takes the same evidence as any other: the ARC 7
+row was filed and disproved the same day, and its specimen was the writer's
+own distribution (BLOCKERS.md, the same date).
 
 - **SuperDisk! method 13.** No corpus fixture uses it, and every
   setting of Alysis's own control panel produces method 1 or 6

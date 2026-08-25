@@ -82,6 +82,15 @@ offers it the forks `unar` failed. `unar` remains the oracle for 0x0a
 else. Both are outranked by the CRC-16 PAK stored per member, which is
 the only check in this format no decoder here can influence.
 
+**`unar` does not read ARC 7.x at all.** Every archive ARC+Plus writes
+opens with an informational item (method 0x14), and XADMaster's parser
+stops there — `unar` and `lsar` both answer "Couldn't recognize the
+archive format". It also reads method 0x0a as Crushed unconditionally,
+so it could not grade Trimmed even given the container. deark reads
+both, which is why `tools/run_arcplus.py` consults it and not `unar`,
+and why `fixtures/manifests/derived-ARCDOS.arc.json` is registered by
+that tool rather than built by `make_manifests.py` (TESTING.md).
+
 **Detect-only gap — RESOLVED.** DiskCopy 4.2 was named in `unc_sniff` and
 never detected, for want of a reference. One was obtained
 (`reference/notes/DiskCopy42.md`) and the probe is real: a synthetic 800K GCR
@@ -174,6 +183,14 @@ keep finding the next one, and two of them need no insight at all:
   passes, and the only reason anyone looked was that a change was about
   to add 320 bytes to a struct. Measure a limit when something pushes at
   it; that is the one moment the measurement is free.
+- **a gap you filed yourself, in the file that holds gaps.** Added
+  2026-08-25, hours after the row below it: OPEN_ITEMS.md gained "what is
+  missing is a gradeable SPECIMEN" for ARC 7.x's Trimmed, and nobody had
+  searched for one. The writer was two minutes away and its own
+  distribution was the specimen. **An OPEN_ITEMS entry is a claim and
+  takes the same evidence as any other**; "I did not look" is not a
+  finding, and a gaps file is the one place where an unexamined claim
+  reads as a decision.
 - **a search that names the wrong tool.** Added 2026-08-25: the entry
   for ARC methods 0x0a/0x0b said to look for "a `.arc` written by PKARC
   or PKPAK", and PKARC and PKPAK never wrote either — both are PAK's,
@@ -239,6 +256,7 @@ line is what makes the next one worth re-testing.
 | Only StuffIt 5 ever runs out of memory, so the remaining fixed-size windows recover memory nothing is asking for | that was measured at ONE budget — 597,036 B, the System 6 whole-machine case. Under MultiFinder the application gets a PARTITION, `unclassic.r` declares a 400 KB minimum, and the budget there is **130,136 B** (measured on System 7.0.1 with the preferred size built down to 400 KB). At that figure **Now Compress opened NONE of its three fixtures** — its 131,072 B per-archive allocation failed before an entry was read. **Cost: three window items were closed as pointless on 2026-08-24 and one of them reopened the same day**, when a reader asked what happens under MultiFinder. The sweep now runs at both budgets (FORMATS.md, *Budget sweep*) | 2026-08-24 |
 | SpaceSaver's extension does not install on this machine, so the question is whether `INIT 0` runs at all | a boot that never opens the control panel leaves `System Folder:Preferences:SpaceSaver Preferences` (`Pref/SMKR`, 10,496 B) on an image that had none — **with the INIT patched and unpatched alike**, so its one silent gate (`_Button` and the Shift key at INIT 0 @0x2a6c, the ordinary "hold this to disable") was never closing. Every OTHER refusal it has ends in `NMInstall` with a `STR# 1001` message, which is an alert once the Finder is up, and no run has ever photographed one. **Cost: twelve emulator runs and an open item aimed at the install** — where what has never fired is the TRIGGER. It also reattributes the prefs file, which 2026-08-22 credited to OK-ing the panel | 2026-08-25 |
 | ARC methods 0x0a (Crushed) and 0x0b (Distilled) are PKARC's | the format's own history: both are **PAK's**, from NoGate Consulting — 0x0b introduced in PAK v2.0, July 1989. **Cost: the search that would have closed the item was aimed at two programs that never wrote either method**, and it was written into four files, so re-reading them confirmed itself. The specimens were one HTTP fetch each from `cd.textfiles.com` | 2026-08-25 |
+| ARC 7.x's Trimmed is waiting on a gradeable specimen (OPEN_ITEMS.md, filed 2026-08-25) | the ArchiveTeam wiki lists ARC+Plus 7.10 and 7.12 with direct links; `ARC712.ZIP` is one HTTP GET, its installer archive holds four Trimmed members and a nested one holds three more — **including the writer**, which then generates a corpus under DOSBox. **Cost: none, because it was caught the same day** — but it was filed one paragraph below a withdrawn claim about exactly this mistake, and the entry would have read as a decision for as long as it stood | 2026-08-25 |
 | Nothing reachable writes 0x0a/0x0b, so an implementation could not be graded | PAK 2.51 (1990) runs here, headless, under a DOSBox unpacked without root — and writes both on demand (`/CR`, `/O`). It also EXTRACTS, so it grades its own output. **Cost: the methods were declined for a year on the strength of it**, and two real specimens carrying 13 members between them were reachable the whole time | 2026-08-25 |
 | `unar` is the oracle for every ARC method, so a transcription error cannot survive it | `unar` decodes method 0x0b **wrong**: right length, wrong bytes, on 6 of the 10 members of `derived-INTRECHO.pak` and on a 1,800-byte case generated here. XADMaster starts Distilled's 8 KB window at zero; PAK fills it with spaces. Upstream is unchanged since 2018, so transcribing the obvious reference would have shipped the bug — and a synthetic round trip would have agreed with it | 2026-08-25 |
 | SuperDisk!'s block header carries a 16-bit method, and method 9's Huffman region begins after that header | Alysis's own Add-In Module for method 9, run under qemu-m68k (`tools/sdmodule/`): it reads the region AT the length word, and the reference dispatches on the low byte alone (CODE 2 @0x6ba, @0x712). A real method 9 block says 0x0809 there, so this engine answered `UNC_ERR_UNSUPPORTED` to every one of them. **Cost: method 9 could not have decoded a single real block since it was written**, and nothing said so — no fixture uses it, the unit test builds stored blocks, and "transcribed, compiled and never run" was filed in OPEN_ITEMS.md as a risk rather than tested. The second implementation was inside a corpus fixture the whole time | 2026-08-25 |

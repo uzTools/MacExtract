@@ -65,9 +65,29 @@
 #define ARC_M_SQUASHED    0x09
 #define ARC_M_CRUSHED     0x0a
 #define ARC_M_DISTILLED   0x0b
+#define ARC_M_INFO        0x14   /* archive info      (ARC 7.x)      */
+#define ARC_M_FILEINFO    0x15   /* extended file info                */
+#define ARC_M_OSINFO      0x16   /* OS-specific info                  */
 #define ARC_M_DIR         0x1e
 #define ARC_M_DIREND      0x1f
 #define ARC_M_COMPRESSED  0x7f
+
+/* Informational items, not members: an ordinary header whose payload
+ * is metadata. ARC 7.x writes 0x14 first in every archive it makes,
+ * which is why an ARC+Plus file was not recognised as ARC at all until
+ * these were walked (neither `unar` nor deark-less tooling reads one).
+ * They are skipped: what they carry is a version string and per-file
+ * notes this extractor has nothing to do with. */
+#define arc_is_item(m) ((m) == ARC_M_INFO || (m) == ARC_M_FILEINFO || \
+                        (m) == ARC_M_OSINFO)
+
+/* Carried in the `method` int above the byte a header holds: this
+ * archive's 0x0a is ARC 7.x's Trimmed, not PAK's Crushed. The two
+ * share a method number and are different algorithms, so the decision
+ * is the ARCHIVE's, taken once by arc_dialect() and then travelling
+ * with the entry — including through the password path, which decodes
+ * the same entry up to four times. */
+#define ARC_F_TRIMMED     0x1000
 
 #define ARC_HDR_MIN       0x1d   /* 0x1a, method, 13 name, 4+2+2+2, 4 */
 #define ARC_NAME_LEN      13
@@ -912,10 +932,13 @@ int unc_arc_probe(const uint8_t *head, int32_t len, UncIO *io)
     if (head[0] != 0x1a) return 0;
     method = head[1];
     if (method == 0) return 0;
-    if (method != ARC_M_DIR && method != ARC_M_DIREND &&
+    if (method != ARC_M_DIR && method != ARC_M_DIREND && !arc_is_item(method) &&
         (method & 0x7f) > ARC_M_DISTILLED && (method & 0x7f) != ARC_M_COMPRESSED)
         return 0;
-    if (!arc_name_ok(head + 2)) return 0;
+    /* An informational item's name field is empty and its uncompressed
+     * length is 0 while its payload is not, so neither the name check
+     * nor the size relation below applies to one. */
+    if (!arc_is_item(method) && !arc_name_ok(head + 2)) return 0;
 
     compsize = unc_get_u32le(head + 0x0f);
     if (method == ARC_M_STORED_OLD) {
@@ -924,8 +947,9 @@ int unc_arc_probe(const uint8_t *head, int32_t len, UncIO *io)
     } else {
         if (len < 0x1d) return 0;
         uncompsize = unc_get_u32le(head + 0x19);
+        if (compsize > 0x1000000u) return 0;
         if (uncompsize > 0x1000000u) return 0;
-        if (compsize > uncompsize) return 0;
+        if (!arc_is_item(method) && compsize > uncompsize) return 0;
         nextoff = 0x1du + compsize;
         if (method & 0x80) nextoff += 12u;
     }
@@ -961,6 +985,114 @@ static int arc_emit(UncCtx *c, uint32_t at, const uint8_t *buf, int32_t n,
     return UNC_OK;
 }
 
+/* ------------------------------------------------------------------ */
+/* Trimmed (method 0x0a, ARC 7.x) — the OTHER 0x0a                    */
+/*                                                                    */
+/* -lh1-'s adaptive-Huffman LZSS with a stop code, one shorter match  */
+/* range and a window of zeros (unc_lzah.c), then RLE90. It shares a  */
+/* method number with PAK's Crushed and is a different algorithm, so  */
+/* which one an archive means is decided by arc_dialect() below.      */
+/*                                                                    */
+/* This is the one method here that PUSHES. Everything else is pulled */
+/* a byte at a time by arc_byte(), but unc_lzah.c drives its own loop */
+/* and is shared with StuffIt method 5 and LZH, so the RLE90 filter   */
+/* is written a second time in push form rather than inverting a      */
+/* decoder three formats depend on.                                   */
+/*                                                                    */
+/* Source: reference/deark/modules/arc.c, decompressor_trimmed.       */
+/* ------------------------------------------------------------------ */
+
+/* Returned by the sink callback when the declared length is reached,
+ * so a stream that would run on stops at once. Any non-zero return
+ * aborts unc_lzah_decode; this one is mapped back to success. */
+#define ARC_TRIM_DONE  (-999)
+
+typedef struct ArcTrim {
+    UncCtx  *c;
+    uint8_t  out[512];
+    int32_t  n;
+    uint32_t produced, outsize, dsplit;
+    uint16_t crc;
+    int      write;
+    int      esc, last;          /* RLE90 filter, push side */
+} ArcTrim;
+
+static int arc_trim_flush(ArcTrim *t)
+{
+    int err = UNC_OK;
+    if (t->n <= 0) return UNC_OK;
+    t->crc = unc_crc16_arc(t->crc, t->out, t->n);
+    if (t->write)
+        err = arc_emit(t->c, t->produced - (uint32_t)t->n, t->out, t->n,
+                       t->dsplit);
+    t->n = 0;
+    return err;
+}
+
+/* One byte of the FINAL output. */
+static int arc_trim_emit(ArcTrim *t, int b)
+{
+    if (t->outsize != UNC_SIZE_UNKNOWN && t->produced >= t->outsize)
+        return ARC_TRIM_DONE;
+    t->out[t->n++] = (uint8_t)b;
+    t->produced++;
+    if (t->n == (int32_t)sizeof t->out) return arc_trim_flush(t);
+    return UNC_OK;
+}
+
+/* One byte out of the LZH layer, through RLE90. The run count is
+ * inclusive of the byte already emitted, as arc_byte() reads it. */
+static int arc_trim_put(void *ctx, uint8_t b)
+{
+    ArcTrim *t = (ArcTrim *)ctx;
+    int i, err;
+
+    if (t->esc) {
+        t->esc = 0;
+        if (b == 0) { t->last = 0x90; return arc_trim_emit(t, 0x90); }
+        if (b == 1) return UNC_ERR_CORRUPT;
+        for (i = 0; i < (int)b - 1; i++) {
+            err = arc_trim_emit(t, t->last);
+            if (err != UNC_OK) return err;
+        }
+        return UNC_OK;
+    }
+    if (b == 0x90) { t->esc = 1; return UNC_OK; }
+    t->last = b;
+    return arc_trim_emit(t, b);
+}
+
+static int arc_entry_trimmed(UncCtx *c, UncBufIn *in, uint32_t outsize,
+                             uint16_t crc16, int write, uint32_t dsplit)
+{
+    ArcTrim t;
+    UncBitIn bi;
+    uint32_t cap;
+    int err;
+
+    t.c = c; t.n = 0; t.produced = 0; t.outsize = outsize;
+    t.dsplit = dsplit; t.crc = 0; t.write = write;
+    t.esc = 0; t.last = 0;
+
+    /* The LZH layer's own output is what RLE90 consumes, and RLE90
+     * both expands (a run) and contracts (a literal 0x90, which costs
+     * two bytes to say), so the cap is twice the declared length. */
+    cap = (outsize == UNC_SIZE_UNKNOWN || outsize > 0x7fffffffu)
+              ? 0xffffffffu : outsize * 2u + 2u;
+
+    unc_bitin_init(&bi, in);          /* MSB-first, as -lh1- is */
+    err = unc_lzah_decode(c->al, &bi, cap, UNC_LZAH_TRIMMED, arc_trim_put, &t);
+    if (err == ARC_TRIM_DONE) err = UNC_OK;
+    if (err == UNC_OK) err = arc_trim_flush(&t);
+    else (void)arc_trim_flush(&t);
+
+    if (err != UNC_OK) return err;
+    if (outsize != UNC_SIZE_UNKNOWN && t.produced != outsize)
+        return UNC_ERR_TRUNCATED;
+    if (t.crc != crc16) return UNC_ERR_CRC;
+    return UNC_OK;
+}
+
 /* Decode one entry's stream into the sink, checking the CRC.         */
 static int arc_entry_data(UncCtx *c, UncBufIn *in, int method,
                           uint32_t compsize, uint32_t outsize, uint16_t crc16,
@@ -972,6 +1104,11 @@ static int arc_entry_data(UncCtx *c, UncBufIn *in, int method,
     uint32_t produced = 0;
     uint16_t crc = 0;
     int err;
+
+    /* 0x0a is two methods. Which one this archive means was decided
+     * once, by arc_dialect(), and rides in the method int. */
+    if ((method & 0x7f) == ARC_M_CRUSHED && (method & ARC_F_TRIMMED))
+        return arc_entry_trimmed(c, in, outsize, crc16, write, dsplit);
 
     err = arc_dec_init(&d, c, in, method, compsize);
     if (err != UNC_OK) { arc_dec_free(&d); return err; }
@@ -1097,6 +1234,49 @@ static int arc_entry_data_pw(UncCtx *c, UncCrypt *cr, uint8_t *iobuf,
     }
 }
 
+/* Which dialect's 0x0a this archive holds, decided once for the whole
+ * file. Two signals, and they are the ones deark uses
+ * (reference/deark/modules/arc.c: member_cb_for_prescan sets
+ * has_arc_extensions, do_pak_trailer sets has_pak_trailer):
+ *
+ *   - an informational item (0x14, 0x15) or a subdirectory (0x1e) is
+ *     something ARC 6/7 writes and PAK does not;
+ *   - extended records after the end-of-archive marker — 0xfe then a
+ *     byte no greater than 4 — are PAK's, from v1.5 on.
+ *
+ * Trimmed only when the first is present and the second is not, which
+ * is deark's rule. Where neither appears the answer is Crushed:
+ * PAK 1.0 wrote neither and its archives are the ones in this corpus,
+ * and a wrong answer costs the entry its CRC rather than passing
+ * quietly. */
+static int arc_dialect(UncCtx *c)
+{
+    uint8_t h[ARC_HDR_MIN], t[2];
+    uint32_t pos = 0, compsize;
+    int ext = 0, guard = 0;
+
+    for (;;) {
+        if (++guard > 8192) return ext;
+        if (unc_read_at(c->io, pos, h, ARC_HDR_MIN) != UNC_OK) return ext;
+        if (h[0] != 0x1a) return ext;
+        if (h[1] == 0) {                          /* end of archive */
+            if (unc_read_at(c->io, pos + 2u, t, 2) == UNC_OK &&
+                t[0] == 0xfe && t[1] <= 4)
+                return 0;                         /* PAK's own trailer */
+            return ext;
+        }
+        if (arc_is_item(h[1]) || h[1] == ARC_M_DIR) ext = 1;
+        compsize = unc_get_u32le(h + 0x0f);
+        if (compsize > 0x4000000u) return ext;
+        if (h[1] == ARC_M_STORED_OLD) {
+            pos += 0x19u + compsize;
+        } else {
+            pos += 0x1du + compsize;
+            if (h[1] & 0x80) pos += 12u;
+        }
+    }
+}
+
 int unc_arc_extract(UncCtx *c)
 {
     uint8_t hdr[ARC_HDR_MIN + 12];
@@ -1105,7 +1285,7 @@ int unc_arc_extract(UncCtx *c)
     uint32_t pos = 0;
     uint8_t  path[UNC_NAME_MAX + 1];
     uint32_t plen = 0;
-    int err = UNC_OK, any = 0, arcmac = 0;
+    int err = UNC_OK, any = 0, arcmac = 0, trimmed = 0;
     UncCrypt *cr;
 
     /* ArcMac? Its Mac header precedes the PC one; the whole file is
@@ -1116,6 +1296,9 @@ int unc_arc_extract(UncCtx *c)
             probe[AM_MAGIC1] == 0x1b && probe[AM_MAGIC2] == 0x1a)
             arcmac = 1;
     }
+    /* ArcMac is 1988 Macintosh software and predates both claimants to
+     * 0x0a, so the question is only asked of the plain container. */
+    if (!arcmac) trimmed = arc_dialect(c) ? ARC_F_TRIMMED : 0;
 
     iobuf = (uint8_t *)unc_alloc(c->al, iocap + (uint32_t)sizeof *cr);
     if (!iobuf) return UNC_ERR_MEM;
@@ -1227,6 +1410,11 @@ int unc_arc_extract(UncCtx *c)
             if (method & 0x80) pos += 12u;            /* Archimedes fields */
         }
 
+        /* Informational items carry no name and are not members. They
+         * come before the name check because an empty name is exactly
+         * what one has. */
+        if (arc_is_item(method)) { pos += compsize; continue; }
+
         if (!arc_name_ok(hdr + 2)) { err = UNC_ERR_CORRUPT; break; }
 
         if (method == ARC_M_DIR) {
@@ -1256,7 +1444,8 @@ int unc_arc_extract(UncCtx *c)
         if (sret == 0) {
             est = UNC_OK;
             if (!c->opt.list_only)
-                est = arc_entry_data_pw(c, cr, iobuf, iocap, pos, method,
+                est = arc_entry_data_pw(c, cr, iobuf, iocap, pos,
+                                        method | trimmed,
                                         compsize, uncompsize, crc16,
                                         !c->opt.test_only, uncompsize);
             if (c->sink->end_entry(c->sink->ctx, est) < 0) {

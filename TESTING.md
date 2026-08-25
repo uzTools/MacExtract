@@ -529,7 +529,7 @@ sampled occurrence index **by trying to allocate the table and failing**
 CI forces it three ways:
 
 - `-DUNC_ARS_FORCE_SAMPLED` compiles the fast path out. The whole
-  930-fixture diff suite and all 9,300 robustness variants run through the
+  932-fixture diff suite and all 9,320 robustness variants run through the
   fallback under ASan+UBSan, and must be byte-exact.
 - `--budget 597036` (what a 1 MB Mac Plus leaves the engine) on the 31
   StuffIt 5 fixtures, with the normal adaptive build. This is the only step
@@ -692,6 +692,49 @@ every archive written by PAK 1.x, whose self-extractors interleave
 remarks differently. And method 0x0a is decoded as Crushed unconditionally:
 an ARC 7.x member, which uses the same number for *Trimmed*, fails its CRC
 here rather than extracting (OPEN_ITEMS.md).
+
+## ARC 7.x's Trimmed (`tools/run_arcplus.py`, `tools/arcplus.py`, in `ci.sh`)
+
+Added 2026-08-25, and it exists because **method 0x0a is two methods**: PAK's
+Crushed (the suite above) and ARC 7.x's Trimmed, a different algorithm at the
+same number.
+
+    python3 tools/arcplus.py --setup            # ARC+Plus 7.12, needs network
+    python3 tools/arcplus.py --make DIR
+    python3 tools/run_arcplus.py --unclassic build/rel/unclassic
+    python3 tools/run_arcplus.py --register     # the real fixture's manifest
+
+`--setup` needs no third-party tool: the distribution is a DOS
+self-extractor, and `--carve` finds the archive inside it structurally — the
+offset whose header chain walks cleanly to the end-of-archive marker — then
+copies out the nested `ARCDOS.ARC`, which is STORED. Only the last step,
+lifting `ARC.EXE` out of that, uses a decoder, and it uses ours. **That is a
+bootstrap, not a grading**: what grades the decoder is listed below, and none
+of it is ours.
+
+**What grades what.** The CRC-16 ARC+Plus stored; the input bytes, for the
+three generated archives; **deark**; and one file with no decoder in it at
+all — `XARC.EXE` is Trimmed inside the distribution and uncompressed in
+another CD's `XARC.ZIP`, and the two are byte-identical. `unar` is not
+consulted and cannot be: it does not recognise an ARC 7 archive at all
+(BLOCKERS.md), which is also why `fixtures/manifests/derived-ARCDOS.arc.json`
+is REGISTERED by this tool rather than built by `make_manifests.py` — the
+same arrangement DiskDoubler has, and `make_manifests.py` refuses to
+overwrite a manifest whose oracle is not `unar`.
+
+**The discriminator has its own test**, and it is the one that matters most
+here: `arc7-text.arc` and `pak-crushed-text.pak` hold the same input files
+under the same method number, written by the two different programs. If
+`arc_dialect()` regresses, exactly one of them stops extracting. Both
+directions were checked by breaking it on purpose — forcing Crushed fails the
+ARC 7 side, forcing Trimmed fails the PAK side.
+
+**What this cannot see.** ARC 7 has no switch to force Trimmed, so what the
+corpus covers is what its inputs persuade the compressor to do; and ARC 6.x,
+which also writes informational items but never Trimmed, has no specimen here
+at all. The dialect rule treats an archive with items and no PAK trailer as
+Trimmed, so a hypothetical ARC 6 archive using method 0x0a would be read
+wrongly — it would fail its CRC rather than pass quietly.
 
 ## btoa (`tools/run_btoa.py`, in `ci.sh`)
 
@@ -1032,7 +1075,7 @@ file count from `l`.
 envelope — only `x` does — so the suite unwraps with `x -nr` first. That is
 also why the corpus-driven suites never reach this parser at all: to
 `run_robustness.sh` and `fuzz.py` these two fixtures are BinHex files, and all
-9,300 of the suite's variants exercise the BinHex layer.
+9,320 of the suite's variants exercise the BinHex layer.
 
 **116 corrupted variants** — ten truncations and forty-eight bit-flips per
 archive — therefore live here. They are FORCED with `-f "SuperDisk!"`: a
