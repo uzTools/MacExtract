@@ -699,6 +699,11 @@ int unc_sit_decode_fork(UncCtx *c, UncFork fork, uint32_t at,
  * scheme — XADMaster instantiates one handle for both. `bi` is an
  * MSB-first reader the caller has already positioned; `put` receives
  * every decoded byte and returns UNC_OK or a per-entry error. */
+/* LHarc's -lh2-: both codes adaptive, and the position tree grows with
+ * the output. src/unc_lzdyn.c. */
+int unc_lzdyn_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen,
+                     int (*put)(void *ctx, uint8_t b), void *pctx);
+
 int unc_lzah_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen,
                     int (*put)(void *ctx, uint8_t b), void *pctx);
 

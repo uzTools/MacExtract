@@ -118,7 +118,8 @@ Very occasionally a file uses a compression method this version does not
 know. That entry is skipped and the rest of the archive still comes out,
 and the message says so rather than blaming your machine. Those files are
 worth reporting -- most of the methods here were added because somebody
-sent one -- and the Linux version names the method for you.
+sent one -- and the Linux version names the method for you, which is the
+part that makes a report worth sending.
 
 Archives split across floppies: a StuffIt segmented set is joined back
 together. Open the first part; the rest are found beside it, and if one is

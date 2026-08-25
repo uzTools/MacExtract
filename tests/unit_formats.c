@@ -1182,10 +1182,12 @@ static void test_lzh_extract(void)
     }
 
     /* An unimplemented method is a per-entry refusal, not a broken
-     * archive: -lh2- and -lh3- are declined for want of a specimen
-     * (OPEN_ITEMS.md) and must say so entry by entry. */
+     * archive. This was -lh2- until 2026-08-25, when that method landed
+     * and the test failed — correctly, because its premise had changed.
+     * -lh3- is what is left declined (OPEN_ITEMS.md), and this has to
+     * move again if it ever lands. */
     n = lzh_make_entry(arc, 0, "old.txt", 0, body, sizeof body - 1);
-    arc[5] = '2';
+    arc[5] = '3';
     arc[n++] = 0;
     test_make_memio(&io, &m, arc, n);
     cap_make(&sk, &cap);

@@ -884,6 +884,45 @@ under it. `synth-now-mixed.now` is a fixture with a manifest, so adding the
 line is all it would take; the sample's counts in FORMATS.md would then need
 re-measuring, which is why it is not there already.
 
+## LZH's -lh2- (`tools/run_lzh.py`, in `ci.sh`)
+
+Added 2026-08-25. `-lh2-` is one of the two LZH methods this project could
+not grade: no corpus archive uses it, `lhasa` has no decoder for it, and the
+LHa in `reference/` carries the coder without ever selecting it. The
+maintained fork DOES decode it and — like everything else — cannot write one.
+
+So the encoder was added. `sh tools/build_lha_lh2.sh` fetches that fork's
+source at a pinned commit into `reference/`, where it stays exactly as
+downloaded; `run_lzh.py` builds it on demand with
+`tools/lha-lh2/lh2-encoder.patch` applied — the mirror of its own
+`decode_p_dyn`, plus the schedule the position tree grows on. The split
+matters: the first arrangement kept the built encoder in `build/` alone,
+where `ci.sh`'s `make clean` deleted it, and the whole `-lh2-` grading went
+quiet without failing. **The data is then the reference implementation's, not ours**, and each
+archive is verified by that program's own decoder before this engine is
+handed one.
+
+Nine subjects at three header levels, **15 `-lh2-` entries** per run. Two
+things keep it from passing vacuously:
+
+- **The method of every entry is read out of the headers**, and fewer than
+  three `-lh2-` entries in an archive fails the run. LHa falls back to
+  `-lh0-` for anything it cannot shrink, so comparing bytes alone would have
+  graded nothing and said so cheerfully.
+- **The encoder's own decoder runs first.** If it refuses an archive, the
+  archive is at fault rather than this engine — worth separating when the
+  encoder is a patch this project wrote.
+
+Demonstrated failing: inverting the tree walk's bit sense gives
+`-lh2- level 2: text.txt missing` and `zeros.bin differs`.
+
+**What it cannot see.** The window preload (spaces) is unobservable: zeroing
+it changes no result, because LHa's encoder never emits a match reaching
+back past the start of the output. And the patch is deliberately
+conservative — a match whose position symbol has no node yet goes out as
+literals — so a real 1990 encoder may have used offsets at a boundary these
+specimens never reach.
+
 ## Alysis SuperDisk! (`tools/run_superdisk.py`, in `ci.sh`)
 
 Added 2026-08-20. The corpus holds two SuperDisk! archives and no oracle

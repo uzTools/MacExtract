@@ -1,0 +1,246 @@
+diff -ru lhapin2/src/dhuf.c lhap3/src/dhuf.c
+--- lhapin2/src/dhuf.c	2026-07-22 22:40:25.000000000 +0000
++++ lhap3/src/dhuf.c	2026-08-25 10:09:10.158666265 +0000
+@@ -19,6 +19,10 @@
+ static int      avail, n1;
+ static int      most_p, nn;
+ static unsigned long nextcount;
++/* How many position symbols have a node. Symbol 0 exists from
++   start_p_dyn; make_new_node adds one at a time, on a schedule driven by
++   how many bytes have been produced. */
++static int      p_nodes = 1;
+ /* ------------------------------------------------------------------------ */
+ void
+ start_c_dyn( /* void */ )
+@@ -215,6 +219,8 @@
+ {
+     int             q, r;
+ 
++    p_nodes++;
++
+     r = most_p + 1;
+     q = r + 1;
+     s_node[~(child[r] = child[most_p])] = r;
+@@ -233,7 +239,7 @@
+ }
+ 
+ /* ------------------------------------------------------------------------ */
+-static void
++void
+ encode_c_dyn(unsigned int c)
+ {
+     unsigned int    bits;
+@@ -264,6 +270,79 @@
+ }
+ 
+ /* ------------------------------------------------------------------------ */
++/* -lh2- ENCODING, added by the unclassic project (not upstream).
++
++   Upstream decodes -lh2- and cannot write it, so nothing reachable makes
++   one and a decoder for it cannot be graded. These are the mirror of
++   decode_p_dyn below; archives they produce are verified by THIS
++   program's own decoder before anything else reads them. */
++unsigned long
++encode_p_dyn_maxoff(void)
++{
++    /* The largest offset the position tree can express WITHOUT advancing
++       it: the caller decides literal-or-match before a symbol is emitted,
++       and the decoder only grows the tree when it decodes a position. */
++    unsigned long pending = 0, nc = nextcount;
++
++    while (nc != 0xffffffff && (unsigned long)encode_count > nc) {
++        pending++;
++        nc += 64;
++        if (nc >= (unsigned)nn)
++            nc = 0xffffffff;
++    }
++    return ((unsigned long)(p_nodes + pending) << 6) - 1;
++}
++
++void
++encode_p_dyn(unsigned int off)
++{
++    unsigned int bits;
++    int p, cnt;
++    unsigned int j = off >> 6;
++
++    while ((unsigned long)encode_count > nextcount) {
++        make_new_node(nextcount / 64);
++        if ((nextcount += 64) >= (unsigned)nn)
++            nextcount = 0xffffffff;
++    }
++    cnt = bits = 0;
++    p = s_node[j + N_CHAR];
++    /* While the tree has ONE leaf it IS the root, and the decoder reads no
++       bits for it (its `while (c > 0)` never runs). Walking up from the
++       root instead of emitting nothing is an infinite loop. */
++    if (p != ROOT_P) {
++        do {
++            bits >>= 1;
++            if (p & 1)
++                bits |= 0x80000000L;
++            cnt++;
++        } while ((p = parent[p]) != ROOT_P);
++    }
++    if (cnt > 0) {
++        if (cnt <= 16)
++            putcode(cnt, bits >> 16);
++        else {
++            putcode(16, bits >> 16);
++            putbits(cnt - 16, bits);
++        }
++    }
++    putbits(6, off & 0x3f);
++    update_p(j);
++}
++
++void
++encode_start_dyn(void)
++{
++    p_nodes = 1;
++    n_max = 286;
++    maxmatch = MAXMATCH;
++    init_putbits();
++    encode_count = 0;
++    start_c_dyn();
++    start_p_dyn();
++}
++
++/* ------------------------------------------------------------------------ */
+ /* lh1, 2 */
+ unsigned short
+ decode_c_dyn( /* void */ )
+diff -ru lhapin2/src/lha.h lhap3/src/lha.h
+--- lhapin2/src/lha.h	2026-07-22 22:40:25.000000000 +0000
++++ lhap3/src/lha.h	2026-08-25 10:09:10.164666289 +0000
+@@ -366,6 +366,13 @@
+ EXTERN unsigned short dicbit;
+ EXTERN unsigned short maxmatch;
+ EXTERN off_t decode_count;
++/* unclassic addition: the encoder's output position, which -lh2-'s
++   position tree needs, and the functions that write -lh2-. */
++EXTERN off_t encode_count;
++void encode_start_dyn(void);
++void encode_c_dyn(unsigned int c);
++void encode_p_dyn(unsigned int off);
++unsigned long encode_p_dyn_maxoff(void);
+ EXTERN unsigned long loc;           /* short -> long .. Changed N.Watazaki */
+ EXTERN unsigned char *text;         /* encoding buffer */
+ EXTERN unsigned char *dtext;        /* decoding buffer */
+diff -ru lhapin2/src/lharc.c lhap3/src/lharc.c
+--- lhapin2/src/lharc.c	2026-07-22 22:40:25.000000000 +0000
++++ lhap3/src/lharc.c	2026-08-25 10:09:10.164666289 +0000
+@@ -245,7 +245,7 @@
+     };
+     int i;
+ 
+-    char short_options[256] = "q[012]vnfto[567]dizg012ew:x:";
++    char short_options[256] = "q[012]vnfto[2567]dizg012ew:x:"  /* 2: unclassic */;
+     /* "[...]" means optional 1 byte argument (original extention) */
+ 
+ #if HAVE_LIBAPPLEFILE
+@@ -334,6 +334,9 @@
+                 break;
+             }
+             switch (*optarg) {
++            case '2':           /* unclassic: -lh2- */
++                compress_method = LZHUFF2_METHOD_NUM;
++                break;
+             case '5':
+                 compress_method = LZHUFF5_METHOD_NUM;
+                 break;
+diff -ru lhapin2/src/slide.c lhap3/src/slide.c
+--- lhapin2/src/slide.c	2026-07-22 22:40:25.000000000 +0000
++++ lhap3/src/slide.c	2026-08-25 10:09:10.164666289 +0000
+@@ -34,7 +34,15 @@
+         (((hash) << 5) \
+            ^ text[(pos) + 2]         ) & (unsigned)(HSHSIZ - 1);
+ 
+-static struct encode_option encode_define[2] = {
++/* -lh2-: the dynamic code for symbols AND positions (unclassic addition) */
++static void output_dyn2(unsigned int code, unsigned int pos)
++{
++    encode_c_dyn(code);
++    if (code >= 0x100)
++        encode_p_dyn(pos);
++}
++
++static struct encode_option encode_define[3] = {
+ #if defined(__STDC__) || defined(AIX)
+     /* lh1 */
+     { output_dyn,
+@@ -43,7 +51,11 @@
+     /* lh4, 5, 6, 7 */
+     { output_st1,
+      (void (*) ()) encode_start_st1,
+-     (void (*) ()) encode_end_st1}
++     (void (*) ()) encode_end_st1},
++    /* lh2 */
++    { output_dyn2,
++     (void (*) ()) encode_start_dyn,
++     (void (*) ()) encode_end_dyn}
+ #else
+     /* lh1 */
+     {(int (*) ()) output_dyn,
+@@ -52,7 +64,11 @@
+     /* lh4, 5, 6, 7 */
+     {(int (*) ()) output_st1,
+      (int (*) ()) encode_start_st1,
+-     (int (*) ()) encode_end_st1}
++     (int (*) ()) encode_end_st1},
++    /* lh2 */
++    {(int (*) ()) output_dyn2,
++     (int (*) ()) encode_start_dyn,
++     (int (*) ()) encode_end_dyn}
+ #endif
+ };
+ 
+@@ -111,6 +127,11 @@
+         maxmatch = 60;
+         dicbit = LZHUFF1_DICBIT;    /* 12 bits  Changed N.Watazaki */
+         break;
++    case LZHUFF2_METHOD_NUM:
++        encode_set = encode_define[2];
++        maxmatch = MAXMATCH;
++        dicbit = LZHUFF2_DICBIT;    /* 13 bits */
++        break;
+     case LZHUFF5_METHOD_NUM:
+         encode_set = encode_define[1];
+         maxmatch = MAXMATCH;
+@@ -302,6 +323,7 @@
+     outfile = interface->outfile;
+     origsize = interface->original;
+     compsize = count = 0L;
++    encode_count = 0;
+     unpackable = 0;
+ 
+     INITIALIZE_CRC(crc);
+@@ -328,6 +350,12 @@
+         search_dict(token, pos, last.len-1, &match);
+         insert_hash(token, pos);
+ 
++        /* -lh2- only: a match whose position symbol has no node yet
++           cannot be expressed, so it goes out as literals instead. */
++        if (encode_set.output == output_dyn2 && last.len >= THRESHOLD
++            && (unsigned long)((last.off - 1) & (dicsiz - 1))
++                   > encode_p_dyn_maxoff())
++            last.len = 0;
+         if (match.len > last.len || last.len < THRESHOLD) {
+             /* output a letter */
+             encode_set.output(text[pos - 1], 0);
+@@ -335,6 +363,7 @@
+             fprintf(fout, "%u C %02X\n", count, text[pos-1]);
+ #endif
+             count++;
++            encode_count = count;
+         } else {
+             /* output length and offset */
+             encode_set.output(last.len + (256 - THRESHOLD),
+@@ -356,6 +385,7 @@
+             }
+ #endif
+             count += last.len;
++            encode_count = count;
+ 
+             --last.len;
+             while (--last.len > 0) {

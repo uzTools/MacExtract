@@ -2025,12 +2025,13 @@ nextlayer:
         if (sink.unsup_method)
             fprintf(stderr, "unclassic: the first is %s method %d.\n",
                     unc_format_name(fmt), sink.unsup_method);
+        /* No URL, on purpose: a link names a host, an account and a
+         * project, and all three outlive their spelling badly. Somebody
+         * who has this program can find where it came from. */
         fprintf(stderr,
-                "unclassic: if you can share this file, please open an issue "
-                "at\n"
-                "unclassic:   https://github.com/jarreboum/unclassic/issues\n"
-                "unclassic: a specimen is exactly what is needed to add "
-                "support.\n");
+                "unclassic: if you can share this file, please open an "
+                "issue — a specimen\n"
+                "unclassic: is exactly what is needed to add support.\n");
     }
     if (sink.errors) {
         fprintf(stderr, "unclassic: %d of %d entries failed\n",

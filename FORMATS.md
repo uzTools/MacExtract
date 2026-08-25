@@ -33,7 +33,7 @@ whole corpus for that format (engine allocations only, via
 | uuencode (.uu, incl. UUTool) | extract | — (plain uu, UUTool's two-fork "MU" shape, and documents posted in several parts★★) | 7 generated cases, the two-fork ones adjudicated by macutils' `hexbin`; `synth-uu-mac.uu` is in the differential suite | 4 KB | full |
 | Alysis SuperDisk! (.X, .x) | extract | **both containers** (record-stream archive and single file); methods 1-4 and 5-8 (a finite-context predictor over a 13- or 16-bit context, with the flag bitmap and/or the literals Huffman-coded), 9 Huffman, 10 SlowFastA and 11 SlowFastB (LZSS); 13 declined per entry, and 20 is an encoder for 11 rather than a method of its own✧✧ | 2 fixtures, 5 forks, adjudicated by the archives' OWN self-extractors on an emulated Mac, + 11 single-file specimens written by Alysis's own control panel (methods 1 and 6) and graded against their inputs, + every method 1..9 through Alysis's own Add-In Modules under qemu-m68k (`tools/sdmodule/`) | 72–84 KB✧✧ | full |
 | StuffIt SpaceSaver (`SPSV`) | extract | 0 stored, 4 "Alg 4" — an LZSS whose window starts loaded with a preset dictionary that ships inside SpaceSaver; 1, 2 and 3 declined per entry✦✦ | no oracle and no specimen — but **Aladdin's own encoder agrees with this decoder field for field** (`CMod 20`, 2026-08-23), which is what grades it, plus a synthetic round-trip and unit tests✦✦ | 4 KB stored, **36 KB** for what SpaceSaver writes (measured on a Mac Plus); 68 KB is the ceiling the width byte allows. The dictionary is 9.7 KB of static data, not heap | full |
-| LZH / LHA (.lzh, .lha) | extract | -lh0- store, -lh1- (LHarc's adaptive Huffman, shared with StuffIt method 5), -lh4-/-lh5-/-lh6-/-lh7- (static Huffman over a 4/8/32/64 KB window), -lhd- directories, LArc's -lz4-/-lz5-/-lzs-; header levels 0, 1, 2 and 3; **MacLHA's MacBinary payload unwrapped into two forks**; -lh2-/-lh3- declined per entry✵ | 8 fixtures (1 real Amiga archive + 7 of lhasa's) + **182 archives from fourteen writers**, each graded against `unar` and against lhasa, + 12 sets written by LHa 1.14i itself✵ | 4–74 KB✵ | full |
+| LZH / LHA (.lzh, .lha) | extract | -lh0- store, -lh1- (LHarc's adaptive Huffman, shared with StuffIt method 5), **-lh2- (both codes adaptive, the position tree growing with the output)**, -lh4-/-lh5-/-lh6-/-lh7- (static Huffman over a 4/8/32/64 KB window), -lhd- directories, LArc's -lz4-/-lz5-/-lzs-; header levels 0, 1, 2 and 3; **MacLHA's MacBinary payload unwrapped into two forks**; -lh3- declined per entry✵ | 8 fixtures (1 real Amiga archive + 7 of lhasa's) + **182 archives from fourteen writers**, each graded against `unar` and against lhasa, + 12 sets written by LHa 1.14i itself, + 15 -lh2- entries from a locally patched copy of it✵ | 4–74 KB✵ | full |
 | AppleLink package (.pkg) | detect only | — | no specimen anywhere: the probe is Aladdin's own recogniser, at 0 false positives across 928 fixtures (*AppleLink packages*, below) | — | — |
 | DiskCopy 4.2 (.image) | detect only | — | synthetic 800K GCR + real 800K image; 0 false positives in 807 fixtures (re-measured 2026-08-15) | — | — |
 
@@ -789,12 +789,27 @@ stored entry, 8 KB for LArc, 16–18 KB for -lh5- and -lh1-, 41 KB for
 entry rather than from the method, the way StuffIt method 13's is, so
 the -lh7- fixtures in the corpus cost 41 KB rather than 74.
 
-**What is declined, and why it is declined rather than written:**
-`-lh2-` and `-lh3-` are implementable from `XADLZHOldHandles.m`, but no
-archive that uses either is reachable — not in the corpus, not among
-lhasa's fourteen writers, and nothing here writes one. PMarc
-(`-pm0-`/`-pm1-`/`-pm2-`), `-lhx-` and the self-extracting archives are
-out of scope (OPEN_ITEMS.md, part 1).
+**`-lh2-` reads since 2026-08-25, and the encoder for it is this
+project's.** Both codes are adaptive there — the literal/length tree
+`-lh1-` also uses, plus a position tree that GROWS with the output, one
+leaf per 64 bytes, so an offset only becomes expressible once enough has
+been produced. Transcribed from `XADLZHOldHandles.m`
+(`LHAdecode_start_dyn`, `_c_dyn`, `_p_dyn` and the tree they share),
+cross-read against LHa's own `dhuf.c`, in `src/unc_lzdyn.c`.
+
+Nothing writes one, which is what kept it out: lhasa has no decoder,
+the LHa in `reference/` carries the coder without selecting it, and even
+the maintained fork — which decodes it properly — cannot write one. So
+`tools/build_lha_lh2.sh` teaches that fork to, and the archives it makes
+are verified by its own decoder before this engine sees them. **15
+`-lh2-` entries across three header levels in `ci.sh`**, byte-exact,
+with the run failing if fewer than three entries of an archive really
+used the method (TESTING.md).
+
+**What is still declined:** `-lh3-`, whose coder is different again
+(static, blocked) and whose encoder is absent from the fork for the same
+reason `-lh2-`'s was. PMarc (`-pm0-`/`-pm1-`/`-pm2-`), `-lhx-` and the
+self-extracting archives are out of scope (OPEN_ITEMS.md, part 1).
 
 **On the Mac** (2026-08-23), five `.lzh` fixtures byte-exact on System
 6.0.8 at 4 MB, at the **1 MB floor** and on System 7.0.1: peak heap
@@ -2280,7 +2295,7 @@ with this archive."*
 | btoa (`.ascii`) | with the add-on: a `btoa/atob Translator` ships in `Extensions:Aladdin:Translators` | yes, both framings (*btoa*, above) |
 | Multipart BinHex | *"Multipart BinHex files, such as those appearing in Internet newsgroup postings (e.g. comp.binaries.mac), are fully supported"* — multiple documents in one text file, and one file broken into several pieces | several documents in one file since 2026-08-15 (††, above); a document broken across FILES joins where the parts are named `.001`, `.002` … |
 | Compact Pro comments | written out beside the extracted items | **saved since 2026-08-23**: the Mac shell writes a `TEXT` document called `Comments` into the destination folder, the CLI writes `<archive>.comment.txt` and prints it on `l` and `t` |
-| `.lzh` / `.lha` (LZH / LHA) | not named anywhere in its documentation, and no translator for it ships in `Extensions:Aladdin:Translators` — a Macintosh user reached for a separate application, and the corpus holds one (`LHA Expander 1.0.3`) | **yes since 2026-08-23**, every method but -lh2-/-lh3-, all four header levels, and MacLHA's MacBinary payload split back into two forks (*LZH / LHA*, above) |
+| `.lzh` / `.lha` (LZH / LHA) | not named anywhere in its documentation, and no translator for it ships in `Extensions:Aladdin:Translators` — a Macintosh user reached for a separate application, and the corpus holds one (`LHA Expander 1.0.3`) | **yes since 2026-08-23**, every method but -lh3-, all four header levels, and MacLHA's MacBinary payload split back into two forks (*LZH / LHA*, above) |
 | `.arc` (ARC / ArcMac) | with the add-on | **yes since 2026-08-15**, methods 1-9; ArcMac's two-fork payload since 2026-08-16 (★★★ above) |
 | uuencode (`.uu`) | with the add-on | **yes since 2026-08-15**, plain and UUTool's two-fork shape |
 | AppleLink `.pkg` | with the add-on | **named since 2026-08-23**, not expanded: the probe is Aladdin's own recogniser, read out of the `PKG Expand Translator` that StuffIt Deluxe 3.5.1 ships (*AppleLink packages*, above). What is missing is a specimen |

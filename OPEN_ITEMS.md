@@ -111,36 +111,22 @@ Each says which of the two is missing, because the searches are different:
 
 Unlike section 3, none of this is impossible here: a download would do it.
 
-- **LZH's `-lh2-` and `-lh3-`.** Both are implementable — the code is in
-  `reference/XADMaster/XADLZHOldHandles.m`, and it is transcription
-  rather than research — but no archive that uses either is reachable:
-  not in the corpus, not among the **fourteen** LHA implementations
-  whose output lhasa collects, and nothing here writes one. **What is
-  missing is a gradeable SPECIMEN.** XADMaster's recogniser calls the
-  pair "old experimental" and every writer since emits `-lh5-` or
-  better, so the likeliest source is a Japanese PC archive of the early
-  1990s rather than anything Macintosh.
+- **LZH's `-lh3-`.** `-lh2-` left this entry on 2026-08-25, and the way
+  it left says what `-lh3-` needs. Nothing writes either: MacLHA 2.00's
+  Type menu is `LHa`, `LHarc`, `None` (that is `-lh5-`, `-lh1-`,
+  `-lh0-`; the `-lh2-`/`-lh3-` strings in its fork are its READ table,
+  one contiguous run in `DATA` 0), lhasa has no decoder for either, and
+  the LHa in `reference/` carries both coders without ever selecting
+  them. What broke the deadlock was **teaching the maintained fork to
+  encode** (`tools/build_lha_lh2.sh`), which made data that its own
+  decoder verifies.
 
-  Three things measured 2026-08-25, so nobody re-checks them:
-
-  - **MacLHA 2.00 cannot write one**, and it is the Macintosh writer
-    this project has. Its Type menu offers `LHa`, `LHarc` and `None`
-    — that is `-lh5-`, `-lh1-` and `-lh0-` — and the `-lh2-`/`-lh3-`
-    strings in its resource fork are one contiguous table in `DATA` 0
-    (`-lh0-` through `-lz4-`, five bytes apart), which is what it can
-    READ. Its hierarchical Type menu, which `maclha.py` cannot reach,
-    would not have helped: there is nothing new in it.
-  - **Nothing here can decode one either.** lhasa has no `lh2`/`lh3`
-    decoder at all, and LHa for UNIX 1.14i carries the coders
-    (`dhuf.c`, `shuf.c`) but never selects them — `decode_lzhuf()`
-    names lh0, lzs, lh1, lh4, lz5, lh6 and lh7, and anything else
-    falls to `default` and is decoded as `-lh5-`. So a transcription
-    would have one reference and no second implementation, which is
-    NOT the position SuperDisk!'s method 10 was in when it landed.
-  - **But a specimen would grade itself.** Every LZH entry header
-    carries a CRC-16/ARC of the decoded bytes, and this engine checks
-    it (`fmt_lzh.c`). One real `-lh2-` archive is therefore both the
-    specimen and the oracle.
+  `-lh3-` needs the same treatment and it is a different coder: static
+  and blocked (`shuf.c`'s `decode_start_st0`), so the encoder is not the
+  mirror that `-lh2-`'s was — it has to build and transmit a table per
+  block. **What would close it:** that encoder, or one real `-lh3-`
+  archive, which would grade itself: every LZH entry header carries a
+  CRC-16/ARC of the decoded bytes and this engine checks it.
 
 - **ARC 0x0a/0x0b.** No corpus fixture uses either and nothing reachable
   writes them, so an implementation could not be graded — code no oracle
