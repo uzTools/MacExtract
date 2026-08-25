@@ -205,6 +205,31 @@ def restore():
         ok += 1
     # Re-derive derived fixtures now that parents are present.
     for name, sha, url in deferred:
+        # `derived:member:<parent>:<member>` names ONE file out of an
+        # envelope holding several, which `derive_one` refuses by
+        # design (it cannot tell which payload a caller meant). The
+        # PAK specimen that grades ARC method 0x0b travels inside a
+        # four-file zip and is reachable no other way.
+        if url.startswith("derived:member:"):
+            _, _, parent, member = url.split(":", 3)
+            path = os.path.join(FIXDIR, name)
+            with tempfile.TemporaryDirectory() as tmp:
+                subprocess.run(["unar", "-nr", "-D", "-f", "-q", "-k", "skip",
+                                "-o", tmp, os.path.join(FIXDIR, parent)],
+                               capture_output=True, timeout=300)
+                found = None
+                for root, _, files in os.walk(tmp):
+                    for f in files:
+                        if f == member:
+                            found = os.path.join(root, f)
+                if found:
+                    shutil.copy(found, path)
+            if os.path.exists(path) and sha256_bytes(open(path, "rb").read()) == sha:
+                ok += 1
+            else:
+                print(f"  member extract failed or hash mismatch: {name}")
+                bad += 1
+            continue
         parent = url.split(":", 2)[2]
         tmprows = dict(rows)
         tmprows.pop(name, None)

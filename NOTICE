@@ -25,6 +25,19 @@ This project's decoders are transcriptions/ports of algorithms from:
     differential test suite (TESTING.md) — test-time only, not linked
     into anything shipped.
 
+  * deark, by Jason Summers — https://github.com/jsummers/deark, MIT.
+    The reading of ARC/PAK method 0x0b ("Distilled") in
+    `src/fmt_arc.c` follows deark's `src/fmtutil-lzh.c` rather than
+    XADMaster's handle for that method, because XADMaster's is wrong
+    about one thing and the CRC PAK stored says so: the 8 KB window
+    starts full of spaces (BLOCKERS.md). No code was copied — the file
+    states the facts it took and cites them — and deark's own
+    documentation of the format (entropymine.wordpress.com,
+    "ARC/PAK's Distilled compression scheme") is cited alongside it.
+    A build of deark is also the oracle for that method in the test
+    suite (TESTING.md, tools/build_deark.sh): test-time only, never
+    linked into anything shipped.
+
   * Alysis SuperDisk! / Disk Expander (Alysis Software Corporation,
     1991-1992). No public specification of this format exists and no
     other implementation of it does either, so `src/fmt_superdisk.c`

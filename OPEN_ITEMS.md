@@ -11,7 +11,7 @@ Two kinds of thing live here, and they are kept apart on purpose:
 
 **Not** BLOCKERS.md, which records investigations that went wrong and the
 claims withdrawn from them. Nothing here stops the engine or the CLI, which are
-byte-exact against the oracle across 927 fixtures in `./ci.sh`.
+byte-exact against the oracle across 930 fixtures in `./ci.sh`.
 
 Detail lives in one place per finding — status in BLOCKERS.md, reasoning in
 DECISIONS.md, how to re-run in TESTING.md or `tools/vmac/README.md`, what needs
@@ -42,9 +42,10 @@ grown before, on request.
 | Compression | not implemented | this is an extractor |
 | StuffIt X (`.sitx`) | **detect-only** | out by the brief |
 | PKWARE "strong encryption" in a zip (flag 0x40) | **named, refused per entry** | its key material is in a record nothing here parses, and XADMaster refuses it too. Every OTHER encryption these formats have — including WinZip's AES, which postdates the machines by a decade and is read anyway — is decrypted since 2026-08-23 (FORMATS.md, *Encryption*) |
-| Disk images (Disk Copy 4.2) | **detect-only**, with a real probe | out by the brief — the probe matches a synthetic 800K GCR image and a real one, 0 false positives |
+| Disk images | **out by the brief**; Disk Copy 4.2 (`.image`) is **detect-only**, with a real probe | extracting one means a filesystem, not a codec. The probe matches a synthetic 800K GCR image and a real one, 0 false positives. Naming the OTHER disk-image extensions is open, and detect-only is all it would ever be (part 2, section 6) |
 | PMarc (`-pm0-`, `-pm1-`, `-pm2-`) and `-lhx-` | **not recognised** | a different family behind an LZH-shaped header. PMarc is a Japanese PC format with its own coders, `-lhx-` is UNLHA32's extension; neither reached a Macintosh, and LZH itself only just did (2026-08-23) |
 | Self-extracting LZH (an executable with an archive behind it) | **not recognised** | the archive sits behind DOS, Amiga, Atari or X68000 machine code, and finding it means knowing each of those loaders. `unar` has a parser per platform; here the answer is to hand the `.lzh` itself to the extractor |
+| RAR, 7z, bzip2, xz, and the rest of Keka's modern list (lzip, zstd, brotli, lrzip, AAR, WIM, zipx, cab, msi, cpio, pax, …) | **not recognised** | modern, PC-side formats. None of them is a Macintosh archive format, none carries a resource fork or Finder metadata, and every one is served by a maintained extractor on any machine that can run one. A file in one of these beside classic Mac software is a wrapper somebody applied recently, and unwrapping it is that tool's job, not this one's (raised 2026-08-25, Macintosh Garden forum, *Archive formats*) |
 | Zip64 spanned sets | `unc_zipseg_describe` answers `UNC_ERR_UNSUPPORTED`, cleanly | an EOCD with disk number `0xFFFF` defers to a locator nothing here parses. Zip64 postdates every machine this project targets by a decade and a set that needs it is 2 GB+; refusing it cleanly is the right answer, not a missing feature (2026-08-14) |
 
 Everything detect-only is **named** by `unc_sniff`, so a UI can tell the user
@@ -111,16 +112,24 @@ Each says which of the two is missing, because the searches are different:
 
 Unlike section 3, none of this is impossible here: a download would do it.
 
-- **ARC 0x0a/0x0b.** No corpus fixture uses either and nothing reachable
-  writes them, so an implementation could not be graded — code no oracle
-  can check is the same bargain LZH's `-lh2-`/`-lh3-` make. **What is missing is a
-  gradeable SPECIMEN:** a `.arc` written by PKARC or PKPAK using method
-  0x0a or 0x0b. DOS-side, so the likeliest source is a shareware
-  collection rather than a Macintosh archive. Before filing anything else
-  here, ask the two questions that have emptied this section twice:
-  **is there an implementation that could be FED?** (DECISIONS.md, methods
-  3, 4 and 5) and **is "X does not survive" a claim about somebody's
-  search?** (BLOCKERS.md, SuperDisk!'s compressor).
+- **ARC method 0x0a written by ARC 7.x, which calls it Trimmed.** The
+  method number is shared: PAK's Crushed and ARC Plus's Trimmed
+  (RLE90 + LZH with adaptive Huffman) are different algorithms at
+  0x0a, and `src/fmt_arc.c` decodes it as Crushed, which is what PAK
+  wrote. A Trimmed member therefore fails its CRC rather than
+  extracting — an error, not silent corruption. **What is missing is a
+  gradeable SPECIMEN:** an archive ARC 7.x wrote. The reference exists
+  (deark's `decompressor_trimmed`, and its author's write-up), and so
+  does the DISCRIMINATOR — deark separates the two by whether the file
+  carries PAK extended records or ARC archive-info items — but neither
+  a decoder nor a heuristic will be written without a file to run them
+  against. Before filing anything else here, ask the three questions
+  that have emptied this section three times: **is there an
+  implementation that could be FED?** (DECISIONS.md, methods 3, 4 and
+  5), **is "X does not survive" a claim about somebody's search?**
+  (BLOCKERS.md, SuperDisk!'s compressor), and **does the search name
+  the right tool?** (BLOCKERS.md, 2026-08-25 — this entry's predecessor
+  spent a year looking for PKARC files that never existed).
 
 - **SuperDisk! method 13.** No corpus fixture uses it, and every
   setting of Alysis's own control panel produces method 1 or 6
@@ -307,3 +316,43 @@ Unlike section 3, none of this is impossible here: a download would do it.
   with a non-zero count.
 - **Files larger than the HFS 2 GB cap**, and the engine's 32-bit-only
   arithmetic against them.
+
+---
+
+## 6. Not implemented, and nothing blocks it
+
+Neither a reference nor a specimen is missing here — only the code. That is
+what separates this section from section 2, and it is why each entry names
+what would grade it rather than what would close it.
+
+- **base64 and MIME (`.b64`, `.mime`) are not read, and are not a scope
+  decision either — they were simply never listed.** Every sibling
+  encoding this corpus meets is implemented (BinHex, uuencode, btoa,
+  MacBinary, AppleSingle/Double); base64 is the one that is neither in
+  FORMATS.md's table nor in part 1, and `.b64` was a real Usenet and
+  AOL-era carrier for MacBinary payloads. **The reference is already in
+  `reference/`:** deark's `modules/xfer.c` decodes plain base64 and the
+  `begin-base64 <mode> <name>` framing that `.b64` files carry, in its
+  uuencode module beside the `begin` shape `fmt_uu.c` was written from.
+  **What would grade it:** deark itself, and `base64 -d` on a payload
+  this project encodes — the same bargain btoa took (TESTING.md,
+  *btoa*), with the envelope auto-unwrap making `.bin.b64` fall out for
+  free. Raised 2026-08-25 from the Macintosh Garden forum thread
+  *Archive formats*, which lists `.b64` and `.mime` among what a
+  downloader actually meets.
+
+- **The other disk-image extensions are not named: `.dmg`, `.iso`,
+  `.cdr`, `.toast`, `.img`, `.smi`, `.cpgz`.** Extraction stays out by
+  the brief (part 1) — what is open is only that `unc_sniff` returns
+  UNKNOWN for them, so a UI cannot tell the user what the file is, which
+  is the one thing detect-only exists to do. The same forum thread
+  reports the cost of that silence: `.image` files are routinely
+  mistaken for JPEGs and passed over. **What would grade it:** the
+  measurement the Disk Copy 4.2 and AppleLink probes were held to — 0
+  false positives across the corpus (FORMATS.md, the format table, and
+  *AppleLink packages*). **The probes are not one shape.** `.smi` is an
+  application with an image behind it and `.cpgz` is cpio under gzip, so
+  both have something to match; a raw `.iso`, `.img` or `.cdr` has no
+  header of its own at all, and naming one means probing the filesystem
+  inside it — a reference this project does not yet have, and rule #1
+  applies.

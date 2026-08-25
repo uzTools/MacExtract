@@ -310,6 +310,75 @@ def adjudicate_with_macunpack(fixture_path, entries):
     return filled
 
 
+# --- third oracle: deark -----------------------------------------------
+# The primary oracle is not merely SILENT about ARC/PAK method 0x0b, it
+# is WRONG: `unar` starts Distilled's 8 KB window at zero where PAK
+# fills it with spaces, so it returns the right length and the wrong
+# bytes, and reports the entry as a checksum failure (BLOCKERS.md).
+# Those entries arrive here unadjudicated, which is correct and useless.
+# deark implements that method independently and agrees with the CRC PAK
+# itself stored, so it is offered the forks the others left open.
+#
+# It is a DATA-fork oracle only: deark has no notion of a resource fork
+# for these formats, and an entry that needs one stays unadjudicated.
+DEARK = os.path.join(ROOT, "build", "deark", "deark")
+DEARK_ID = "deark"
+
+
+def deark_id():
+    """The oracle string, with the version deark reports."""
+    try:
+        r = subprocess.run([DEARK, "-version"], capture_output=True, timeout=30)
+        v = r.stdout.decode("utf-8", "replace").strip().splitlines()[0]
+        return f"deark ({v})"
+    except Exception:
+        return DEARK_ID
+
+
+def adjudicate_with_deark(fixture_path, entries):
+    if not any("unadjudicated" in e for e in entries):
+        return 0
+    if not os.path.exists(DEARK):
+        MISSING_ORACLE.add(os.path.basename(fixture_path))
+        return 0
+
+    # deark names its output <prefix>.<index>.<member name>, and the
+    # index is the member's position in the archive. Matching on the
+    # name alone would be ambiguous in an archive holding the same name
+    # twice, so both must agree, and a name that appears twice is
+    # refused outright.
+    seen = {}
+    for e in entries:
+        seen[e["name"]] = seen.get(e["name"], 0) + 1
+
+    with tempfile.TemporaryDirectory() as tmp:
+        try:
+            r = subprocess.run([DEARK, "-od", tmp, "-o", "m",
+                                os.path.abspath(fixture_path)],
+                               capture_output=True, timeout=600)
+        except subprocess.TimeoutExpired:
+            return 0
+        if r.returncode != 0:
+            return 0
+        filled = 0
+        for i, e in enumerate(entries):
+            un = e.get("unadjudicated")
+            if not un or "data" not in un or seen.get(e["name"], 0) != 1:
+                continue
+            p = os.path.join(tmp, "m.%03d.%s" % (i, e["name"]))
+            if not os.path.exists(p):
+                continue
+            blob = open(p, "rb").read()
+            e["data_size"] = len(blob)
+            e["data_sha256"] = hashlib.sha256(blob).hexdigest()
+            e["data_oracle"] = deark_id()
+            del un["data"]
+            if not un:
+                del e["unadjudicated"]
+            filled += 1
+        return filled
+
+
 def build_manifest(fixture_path, verbose=False):
     name = os.path.basename(fixture_path)
     fmt, meta, methods, comment = lsar_metadata(fixture_path)
@@ -473,6 +542,16 @@ def build_manifest(fixture_path, verbose=False):
     if filled:
         print(f"  second oracle adjudicated {filled} fork(s) of {name}",
               file=sys.stderr)
+    filled = adjudicate_with_deark(fixture_path, entries)
+    if filled:
+        print(f"  deark adjudicated {filled} fork(s) of {name}",
+              file=sys.stderr)
+    # The warning about a missing second oracle is about forks that are
+    # STILL open. A fixture the third oracle finished is not one of
+    # them, and saying so would send the next reader to build a tool
+    # that had nothing left to decide.
+    if not any("unadjudicated" in e for e in entries):
+        MISSING_ORACLE.discard(name)
     # Canonical order, so a rebuild on another machine produces the same
     # file. Every consumer looks entries up by name; none depends on the
     # order they were walked in.

@@ -1,0 +1,121 @@
+{
+ "entries": [
+  {
+   "data_sha256": "a293520ae049bdbf517bb7f91fb3bfa80c826adbca17e98dbd643859f96aa960",
+   "data_size": 1960,
+   "name": "AREAFIX.HLP",
+   "oracle_methods": [
+    "Distilled"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_oracle": "deark (Deark version: 1.7.3-1)",
+   "data_sha256": "f3fa28baf32bed15414403b14db0e259e01ffa0ff4ef98d6ef006f41be4e42f1",
+   "data_size": 11527,
+   "name": "IEINFO.DOC",
+   "oracle_methods": [
+    "Distilled"
+   ],
+   "unadjudicated": {
+    "rsrc": "oracle wrote no output for this fork"
+   }
+  },
+  {
+   "data_oracle": "deark (Deark version: 1.7.3-1)",
+   "data_sha256": "3f872991f2a403cb5437209137e8636b12ff117579c3f781a5f4198650335e4e",
+   "data_size": 68329,
+   "name": "IEMANUAL.DOC",
+   "oracle_methods": [
+    "Distilled"
+   ],
+   "unadjudicated": {
+    "rsrc": "oracle wrote no output for this fork"
+   }
+  },
+  {
+   "data_oracle": "deark (Deark version: 1.7.3-1)",
+   "data_sha256": "11026d43509340daee131ba4787fb92f8089731bc4176224090aa64268dc5397",
+   "data_size": 45745,
+   "name": "IENEW.DOC",
+   "oracle_methods": [
+    "Distilled"
+   ],
+   "unadjudicated": {
+    "rsrc": "oracle wrote no output for this fork"
+   }
+  },
+  {
+   "data_sha256": "d811ccd14c52e44c79406a79d60bfb87f724c3b264a566f886e254f8ab65e46a",
+   "data_size": 297528,
+   "name": "IESETUP.EXE",
+   "oracle_methods": [
+    "Distilled"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "d9c79a081f2daa1ddada6c50d7c9208cabf2328f1766640a4dca9034061caf4e",
+   "data_size": 92022,
+   "name": "IESETUP.HLP",
+   "oracle_methods": [
+    "Distilled"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "3a4e3bb48070dae3a4ec030ff3b928bc2bace35b440f61c397994fa2109e8742",
+   "data_size": 384939,
+   "name": "INTRECHO.EXE",
+   "oracle_methods": [
+    "Distilled"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_oracle": "deark (Deark version: 1.7.3-1)",
+   "data_sha256": "be4e47b1841de3c307e509fa3a0a4c7a5e9cb8d749a1d4d49c18f76b39ce028a",
+   "data_size": 1742,
+   "name": "LICENSE.DOC",
+   "oracle_methods": [
+    "Distilled"
+   ],
+   "unadjudicated": {
+    "rsrc": "oracle wrote no output for this fork"
+   }
+  },
+  {
+   "data_oracle": "deark (Deark version: 1.7.3-1)",
+   "data_sha256": "342dfb2dc1546a53bf18f3a0af0bea6b7e7d47fc87642730485854f141a77600",
+   "data_size": 2670,
+   "name": "ORDER.USA",
+   "oracle_methods": [
+    "Distilled"
+   ],
+   "unadjudicated": {
+    "rsrc": "oracle wrote no output for this fork"
+   }
+  },
+  {
+   "data_oracle": "deark (Deark version: 1.7.3-1)",
+   "data_sha256": "0ed78c95e8c4d4aa6b44f6ca97220ff41be7e76b11bddb4673538e7c4400fa6e",
+   "data_size": 12169,
+   "name": "PRICE.DOC",
+   "oracle_methods": [
+    "Distilled"
+   ],
+   "unadjudicated": {
+    "rsrc": "oracle wrote no output for this fork"
+   }
+  }
+ ],
+ "fixture": "derived-INTRECHO.pak",
+ "format": "ARC",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "ab32da9f42d88b4a8a3f52b0e158570acb1f093242f574374f4db118b32f6b41",
+ "size": 413417
+}

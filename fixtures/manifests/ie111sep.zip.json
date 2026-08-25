@@ -1,0 +1,49 @@
+{
+ "entries": [
+  {
+   "data_sha256": "5dcfb84575a2aca1e88c8364628ff402655c91bdf092d7a302f360767c7dcb68",
+   "data_size": 390,
+   "name": "FILE_ID.DIZ",
+   "oracle_methods": [
+    "Deflate"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "08c8f924557e694f476dcdc646b60debb79ff5d206c82a59d959d26ee7bf8bc2",
+   "data_size": 46944,
+   "name": "INSTALL.EXE",
+   "oracle_methods": [
+    "Deflate"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "ab32da9f42d88b4a8a3f52b0e158570acb1f093242f574374f4db118b32f6b41",
+   "data_size": 413417,
+   "name": "INTRECHO.PAK",
+   "oracle_methods": [
+    "Deflate"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "ddfe8cb60e7640053964f995b863d2bc00b01c3df91b0f9c41d13478a2bfee65",
+   "data_size": 1853,
+   "name": "README.1ST",
+   "oracle_methods": [
+    "Deflate"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  }
+ ],
+ "fixture": "ie111sep.zip",
+ "format": "Zip",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "a50ff41a9f41caba6748d369bf0e24589f389077c3c9d0641c578ee79a1e55d0",
+ "size": 440538
+}

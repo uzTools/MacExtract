@@ -42,6 +42,7 @@ Each line records how to re-fetch one. Use `tools/harvest.py --restore`.
 | apple-art.hqx | b997468857402a74ef6aaef508bbd1db67ffc4b02e0f48b96722815ff46e8bd6 | 198339 | http://www.nic.funet.fi/index/info-mac/art/apple-art.hqx |
 | appledraw51.cpt | 70ae6b677233144d2cef680f5b6d4540407ef81c13b204c52e9a3f4c7ab68501 | 91372 | http://www.nic.funet.fi/pub/mac/da/appledraw51.cpt |
 | applejam.cpt | c595f6c984c6e92de0c7678011602e3683fadc4f3b7872dec197f7c5ab459982 | 43776 | http://www.nic.funet.fi/pub/mac/comm/applejam.cpt |
+| arc2pak1.pak | ab24d2b79298784c3b4c1d21eae71976385006eb5d7f1f950b14ff68c613df54 | 4986 | http://cd.textfiles.com/carousel/ATARI/ARC2PAK1.PAK |
 | ascbeep.sit | 1873c9fdd955cdda0c1ffa397278fad1df1174378f6ce636e1171c2c388d0628 | 16971 | http://www.nic.funet.fi/pub/mac/sound/ascbeep.sit |
 | ascii-converter.hqx | d301500fe97dbbace805833b611cb9ffcd79d32959ebf7a4aa2da5a3a7ed1050 | 157931 | http://www.nic.funet.fi/index/info-mac/disk/ascii-converter.hqx |
 | atview.sit | 7ef01e43ef6588ec31b8bf369b6695e90bc6acf41905262cad1cd9d8bf33e978 | 9912 | http://www.nic.funet.fi/pub/mac/da/atview.sit |
@@ -368,6 +369,7 @@ Each line records how to re-fetch one. Use `tools/harvest.py --restore`.
 | derived-HQXer_1.1.sit | d3dd99682721886f9e37ba18885a36d64ce1d35c5a414d46959f77365c32da6e | 36433 | derived:unar-nr:hqxer-11.hqx |
 | derived-Helium_1.0.sit | 1c78a081482189ab50c25ba813ef552942e98fa2190ebe94fb0556e661351239 | 26951 | derived:unar-nr:helium10.sit |
 | derived-INITLoader.sit | ef0888464861888ff4c25d6841d9952a17951bf01b621ac66375462383c3c8bd | 28680 | derived:unar-nr:initloader.sit |
+| derived-INTRECHO.pak | ab32da9f42d88b4a8a3f52b0e158570acb1f093242f574374f4db118b32f6b41 | 413417 | derived:member:ie111sep.zip:INTRECHO.PAK |
 | derived-IbacomSecurity1.0.sit | f34155277b93e822ed89821a5d01128aae7bca6c8753cbc7d44ab702accc81eb | 63426 | derived:unar-nr:ibacom-security-10.hqx |
 | derived-Indexer_Script_1.0.sit | d17316906120658c91e512eaf0e823efd5e9fa9919d6d995db54b4f732c34a7d | 14204 | derived:unar-nr:indexer-script-10-as.hqx |
 | derived-Infinity_Rasterizer_1.2__.sit | efde7c642d3ce82c41b4ff3cf7330975d986ee1b54cb400d7a8fa9c9f30fbfce | 31248 | derived:unar-nr:rasterizer-12.hqx |
@@ -668,6 +670,7 @@ Each line records how to re-fetch one. Use `tools/harvest.py --restore`.
 | helium10.sit | aa5c2e4def8a8aeb5b63183ca37b117078f384c41debf01ec0db57751474e898 | 27136 | http://www.nic.funet.fi/pub/mac/cp/helium10.sit |
 | hqxer-11.hqx | 990bd57e5a8eb156934c1409a0ec42442d95e1bb5b2169ae668398b0d8e59ccb | 50667 | http://www.nic.funet.fi/index/info-mac/cmp/hqxer-11.hqx |
 | ibacom-security-10.hqx | a9b7bb3a6af0d2428b8124e10e2540b094ff786f9b96ccad3579b1ccf3ee5c3b | 88263 | http://www.nic.funet.fi/index/info-mac/data/ibacom-security-10.hqx |
+| ie111sep.zip | a50ff41a9f41caba6748d369bf0e24589f389077c3c9d0641c578ee79a1e55d0 | 440538 | http://cd.textfiles.com/nopv18/007A/IE111SEP.ZIP |
 | indexer-script-10-as.hqx | ffd96e62ff6b3ebc5ad6a498ac5425e9321aa4ea8b89016ef24bb8e8a451caa3 | 19867 | http://www.nic.funet.fi/index/info-mac/disk/indexer-script-10-as.hqx |
 | initescape.cpt | 62938966b7bf4b4900422ee70314fbc6f40aeaffdaf685488c5a584b3421a930 | 13952 | http://www.nic.funet.fi/pub/mac/init/initescape.cpt |
 | initloader.sit | 202a9f8f3c94c986fc24bfc324496b80f9421abadf3cdfe4cf51fc09e48b1008 | 28928 | http://www.nic.funet.fi/pub/mac/cp/initloader.sit |

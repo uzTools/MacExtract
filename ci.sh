@@ -35,6 +35,10 @@ python3 tools/run_segments.py --unclassic build/san/unclassic \
 # so both suites generate their own and hand them to a second
 # implementation to grade: `unar` for ARC, `hexbin` for the UUTool shape.
 python3 tools/run_arc.py --unclassic build/san/unclassic || fail "ARC tests"
+# ARC methods 0x0a/0x0b are PAK's, and nothing on Linux writes them, so
+# their archives come from PAK 2.51 under DOSBox (tools/pak.py) or from
+# the two real specimens. Skips politely when neither is present.
+python3 tools/run_pak.py --unclassic build/san/unclassic || fail "PAK method tests"
 python3 tools/run_uu.py --unclassic build/san/unclassic || fail "uuencode tests"
 # Now Compress has exactly one REAL fixture, and it reaches two of the
 # five shapes a block can have. The rest — and the offset-delta search,

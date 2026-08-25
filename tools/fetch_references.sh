@@ -45,6 +45,13 @@ if [ ! -d reference/lhasa ]; then
     rm -f /tmp/lhasa.tar.xz
 fi
 
+# deark (Jason Summers) — the SECOND implementation of ARC/PAK method
+# 0x0b (Distilled), independent of XADMaster and the only one that gets
+# it right: its window starts full of spaces, XADMaster's starts at zero
+# (DECISIONS.md). Also the reading src/fmt_arc.c follows for that method.
+[ -d reference/deark ] || \
+    git clone --depth 1 https://github.com/jsummers/deark reference/deark
+
 if [ ! -d reference/macutils ]; then
     mkdir -p reference/macutils
     curl -sL -o /tmp/macutils.tar.gz \

@@ -184,6 +184,25 @@ different reason — the two fixtures that were being skipped whole started
 being graded, and a skipped fixture's unadjudicated forks had been counted
 nowhere. See "When our engine declines an entry", below.
 
+### A third oracle, for one method (`tools/build_deark.sh`)
+
+Since 2026-08-25 the forks `unar` AND `macunpack` leave open are offered to
+**deark**, recorded the same way (`"data_oracle": "deark (Deark version:
+…)"`). It exists for one method and one reason: `unar` decodes ARC/PAK
+method 0x0b (Distilled) **wrong** — right length, wrong bytes, on 6 of the
+10 members of `derived-INTRECHO.pak` — because XADMaster starts the 8 KB
+window at zero where PAK fills it with spaces (BLOCKERS.md). Those entries
+arrive as checksum failures, which is correct of `unar` and useless as
+ground truth; deark implements the method independently and agrees with the
+CRC PAK stored. `sh tools/build_deark.sh` copies `reference/deark` to
+`build/deark/` and builds it; nothing is patched and it needs only a C
+compiler.
+
+It is a **data-fork oracle only** — deark has no notion of a resource fork
+for these formats — and it is matched to entries by position AND name, with
+a name two entries share refused outright, the same rule the `macunpack`
+path uses.
+
 **What this cannot see:** `macunpack` is where our method-6 decoder was
 transcribed from (`src/fmt_sit.c`, `src/sit6_tables.h`), so on method 6 it
 adjudicates a transcription against its source rather than two independent
@@ -510,7 +529,7 @@ sampled occurrence index **by trying to allocate the table and failing**
 CI forces it three ways:
 
 - `-DUNC_ARS_FORCE_SAMPLED` compiles the fast path out. The whole
-  927-fixture diff suite and all 9,270 robustness variants run through the
+  930-fixture diff suite and all 9,300 robustness variants run through the
   fallback under ASan+UBSan, and must be byte-exact.
 - `--budget 597036` (what a 1 MB Mac Plus leaves the engine) on the 31
   StuffIt 5 fixtures, with the normal adaptive build. This is the only step
@@ -622,6 +641,57 @@ neither runs in `ci.sh`. Until 2026-08-16 that unit test also encoded the
 fork lengths big-endian, exactly as the decoder read them, so **the suite
 agreed with the bug** — the fix was to make the test build the entry the
 measured way and check both forks come back.
+
+## ARC's PAK methods (`tools/run_pak.py`, `tools/pak.py`, in `ci.sh`)
+
+Added 2026-08-25 for methods **0x0a (Crushed)** and **0x0b (Distilled)**,
+which are PAK's rather than PKARC's and are the one part of ARC no Linux
+program writes. So the archives are not generated here at all: they come
+from **PAK 2.51 itself (NoGate Consulting, 1990), run headless under
+DOSBox**.
+
+    python3 tools/pak.py --setup              # DOSBox + PAK 2.51, needs network
+    python3 tools/pak.py --make DIR           # write the corpus
+    python3 tools/pak.py --list ARCHIVE       # methods, sizes and CRCs
+    python3 tools/run_pak.py --unclassic build/rel/unclassic
+
+`--setup` needs **no root**: it `apt-get download`s DOSBox and its
+dependency closure and unpacks the `.deb`s into `$UNC_PAK_HOME`
+(default `~/.cache/unclassic/pak/`), then fetches `PAK251.EXE` and lets
+it self-extract in the guest. No X server either — `SDL_VIDEODRIVER=dummy`
+is enough. `run_pak.py` skips politely when neither the corpus nor a
+`.pak` fixture is present, so a fresh clone is unaffected.
+
+**What grades what.** Four graders, because no single one covers the
+format:
+
+1. the **CRC-16 PAK stored** per member, over the decoded bytes — the only
+   check here that no decoder can influence, and the one that caught the
+   oracle;
+2. the input bytes, for the seven generated archives;
+3. **deark for 0x0b and `unar` for 0x0a**, byte for byte. They are not
+   interchangeable: deark does not implement Crushed, and `unar` gets
+   Distilled wrong, so consulting the wrong one would fail a correct
+   decoder;
+4. PAK 2.51 extracting under DOSBox — the writer reading its own archive
+   back. Not automated in `ci.sh`; it is what verified the nine members of
+   the PAK distribution.
+
+**What the corpus is chosen to reach**, since the two real specimens do
+not reach it: `pak-crushed-big.pak` fills the 8,192-symbol table and fires
+the replacement scan 49,751 times and the inverted-literal framing 13,009
+times; `REPEAT.TXT` exists so that matches reach back into the
+space-filled window, which is the case a decoder can get wrong while
+looking right. Damage sweeps — truncations and bit flips — run over every
+archive under 120 KB, asserting the usual rule: a damaged archive may
+refuse, but must not exit outside 0..2 or die by signal.
+
+**What this cannot see.** The generated corpus is one compressor's output
+at one setting each, so anything PAK 2.51 never emits is untested — as is
+every archive written by PAK 1.x, whose self-extractors interleave
+remarks differently. And method 0x0a is decoded as Crushed unconditionally:
+an ARC 7.x member, which uses the same number for *Trimmed*, fails its CRC
+here rather than extracting (OPEN_ITEMS.md).
 
 ## btoa (`tools/run_btoa.py`, in `ci.sh`)
 
@@ -962,7 +1032,7 @@ file count from `l`.
 envelope — only `x` does — so the suite unwraps with `x -nr` first. That is
 also why the corpus-driven suites never reach this parser at all: to
 `run_robustness.sh` and `fuzz.py` these two fixtures are BinHex files, and all
-9,270 of the suite's variants exercise the BinHex layer.
+9,300 of the suite's variants exercise the BinHex layer.
 
 **116 corrupted variants** — ten truncations and forty-eight bit-flips per
 archive — therefore live here. They are FORCED with `-f "SuperDisk!"`: a

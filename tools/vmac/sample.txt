@@ -124,7 +124,11 @@ derived-MUSFMT10.ZIP                       # 171960 B
 # corpus, so both are generated: tools/synth_arc.py and tools/synth_uu.py.
 # The ARC one holds all nine implemented methods in one archive; the uu
 # one is UUTool's shape, so it carries a resource fork and a type.
+# arc2pak1.pak is real, 1988, and carries the format's LARGEST allocation
+# (method 0x0a, 46,520 B) in its smallest form — the 0x0b specimen is
+# 413 KB and would not fit the destination volume beside the rest (M33).
 synth-arc-mixed.arc                        # 9312 B
+arc2pak1.pak                               # 4986 B   PAK, method 0x0a (crushed)
 synth-uu-mac.uu                            # 3020 B
 
 # LZH / LHA (M28, 2026-08-23). One real Amiga archive from the corpus

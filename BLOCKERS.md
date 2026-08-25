@@ -23,7 +23,12 @@ unchanged. The 1 MB tier has been run again after each addition since — WinZip
 AES, the StuffIt key correction and btoa — and was 62/62 every time. All
 three tiers were re-run on **2026-08-23** with LZH in and five `.lzh`
 fixtures added to the sample (M28): **67/67 on each**, the new ones costing
-4,112 B of heap at the small end and 41,364 B for a `-lh7-` entry. Per-fixture tables and how
+4,112 B of heap at the small end and 41,364 B for a `-lh7-` entry. M33's two
+PAK methods were run on **2026-08-25** at 4 MB and at the 1 MB floor —
+`arc2pak1.pak` (0x0a, 46,546 B peak, now in the sample) and
+`derived-INTRECHO.pak` (0x0b, 14,790 B, 918,631 B of output, `--out-kb 1600`)
+— **1/1 at each size, four runs**; the rest of the sample was not re-run for
+a 2,048 B binary growth, which FORMATS.md (*ARC*) states in full. Per-fixture tables and how
 the sample grew: FORMATS.md. How to re-run any of
 it: `tools/vmac/README.md`. What no emulator here can settle:
 MANUAL_TESTS.md.
@@ -64,6 +69,18 @@ cell stamped over by the cursor's saved background. The stock build survives the
 Reproduced twice. The two things that must be right before the test means
 anything are in `tools/vmac/README.md`; both early attempts "passed" while
 testing nothing.
+
+**The oracle is wrong about one method, and the suites know it.** `unar`
+decodes ARC/PAK method 0x0b (Distilled) to the right length and the wrong
+bytes wherever a match reaches back past the start of the data, because
+XADMaster starts the 8 KB window at zero and PAK fills it with spaces
+(withdrawn claims, below; the reasoning is in DECISIONS.md). So for that
+one method the oracle is **deark**, built by `tools/build_deark.sh`, and
+`tools/run_pak.py` never consults `unar` about it; `make_manifests.py`
+offers it the forks `unar` failed. `unar` remains the oracle for 0x0a
+(Crushed), which deark does not implement at all, and for everything
+else. Both are outranked by the CRC-16 PAK stored per member, which is
+the only check in this format no decoder here can influence.
 
 **Detect-only gap — RESOLVED.** DiskCopy 4.2 was named in `unc_sniff` and
 never detected, for want of a reference. One was obtained
@@ -157,6 +174,14 @@ keep finding the next one, and two of them need no insight at all:
   passes, and the only reason anyone looked was that a change was about
   to add 320 bytes to a struct. Measure a limit when something pushes at
   it; that is the one moment the measurement is free.
+- **a search that names the wrong tool.** Added 2026-08-25: the entry
+  for ARC methods 0x0a/0x0b said to look for "a `.arc` written by PKARC
+  or PKPAK", and PKARC and PKPAK never wrote either — both are PAK's,
+  from NoGate Consulting. A search for a file that cannot exist returns
+  nothing for as long as anyone runs it, and reads as evidence of
+  scarcity. **Check the attribution before hunting the artifact**; one
+  search for the FORMAT settled it, and the specimens were two
+  downloads away.
 - **a harness that ends its runs differently from the harness beside it.**
   Added 2026-08-22: three SpaceSaver runs "measured unchanged" on a machine
   that never booted, because their image had been copied out of a KILLED
@@ -213,6 +238,9 @@ line is what makes the next one worth re-testing.
 | When the destination disk fills, extraction continues and every remaining entry fails the same way, one error each | filling an 800 KB destination on purpose (`run.py --out-kb 800`) with a 17-entry archive: **9 files written, ONE error**, and `ret` = `UNC_ERR_SINK`. Thirteen of the fourteen extractors already end the archive on a sink failure — the line is in `fmt_sit.c` and its copies — so the behaviour the proposal wanted was already there for all but one. **Cost: a shell-side `diskFull` flag, a `Progress` coupling and a `PBHGetVInfo` call were written and then deleted**; what the case actually needed was six lines in `fmt_arc.c`, the one format that was out of step, and keeping the `OSErr` so the alert can say *which* failure it was | 2026-08-24 |
 | Only StuffIt 5 ever runs out of memory, so the remaining fixed-size windows recover memory nothing is asking for | that was measured at ONE budget — 597,036 B, the System 6 whole-machine case. Under MultiFinder the application gets a PARTITION, `unclassic.r` declares a 400 KB minimum, and the budget there is **130,136 B** (measured on System 7.0.1 with the preferred size built down to 400 KB). At that figure **Now Compress opened NONE of its three fixtures** — its 131,072 B per-archive allocation failed before an entry was read. **Cost: three window items were closed as pointless on 2026-08-24 and one of them reopened the same day**, when a reader asked what happens under MultiFinder. The sweep now runs at both budgets (FORMATS.md, *Budget sweep*) | 2026-08-24 |
 | SpaceSaver's extension does not install on this machine, so the question is whether `INIT 0` runs at all | a boot that never opens the control panel leaves `System Folder:Preferences:SpaceSaver Preferences` (`Pref/SMKR`, 10,496 B) on an image that had none — **with the INIT patched and unpatched alike**, so its one silent gate (`_Button` and the Shift key at INIT 0 @0x2a6c, the ordinary "hold this to disable") was never closing. Every OTHER refusal it has ends in `NMInstall` with a `STR# 1001` message, which is an alert once the Finder is up, and no run has ever photographed one. **Cost: twelve emulator runs and an open item aimed at the install** — where what has never fired is the TRIGGER. It also reattributes the prefs file, which 2026-08-22 credited to OK-ing the panel | 2026-08-25 |
+| ARC methods 0x0a (Crushed) and 0x0b (Distilled) are PKARC's | the format's own history: both are **PAK's**, from NoGate Consulting — 0x0b introduced in PAK v2.0, July 1989. **Cost: the search that would have closed the item was aimed at two programs that never wrote either method**, and it was written into four files, so re-reading them confirmed itself. The specimens were one HTTP fetch each from `cd.textfiles.com` | 2026-08-25 |
+| Nothing reachable writes 0x0a/0x0b, so an implementation could not be graded | PAK 2.51 (1990) runs here, headless, under a DOSBox unpacked without root — and writes both on demand (`/CR`, `/O`). It also EXTRACTS, so it grades its own output. **Cost: the methods were declined for a year on the strength of it**, and two real specimens carrying 13 members between them were reachable the whole time | 2026-08-25 |
+| `unar` is the oracle for every ARC method, so a transcription error cannot survive it | `unar` decodes method 0x0b **wrong**: right length, wrong bytes, on 6 of the 10 members of `derived-INTRECHO.pak` and on a 1,800-byte case generated here. XADMaster starts Distilled's 8 KB window at zero; PAK fills it with spaces. Upstream is unchanged since 2018, so transcribing the obvious reference would have shipped the bug — and a synthetic round trip would have agreed with it | 2026-08-25 |
 | SuperDisk!'s block header carries a 16-bit method, and method 9's Huffman region begins after that header | Alysis's own Add-In Module for method 9, run under qemu-m68k (`tools/sdmodule/`): it reads the region AT the length word, and the reference dispatches on the low byte alone (CODE 2 @0x6ba, @0x712). A real method 9 block says 0x0809 there, so this engine answered `UNC_ERR_UNSUPPORTED` to every one of them. **Cost: method 9 could not have decoded a single real block since it was written**, and nothing said so — no fixture uses it, the unit test builds stored blocks, and "transcribed, compiled and never run" was filed in OPEN_ITEMS.md as a risk rather than tested. The second implementation was inside a corpus fixture the whole time | 2026-08-25 |
 | A SuperDisk! single-file container is recognised whatever its size | the head was read as a fixed 64 bytes and a short read failed the lot, so any container under 64 B — the format's own floor is 40 — came back "archive structure is corrupt". Found by a 60-byte synthetic one; the read now asks for what is there | 2026-08-25 |
 | Widening the end-of-central-directory scan window is what makes sniffing cheaper | it is worth ~6 % of the instructions and the rest is the byte scan. A POINTER walk over the same window is -30 % of an envelope open, and moving `unc_macbinary_probe` ahead of the scan is -78 % — the scan was never run for 234 of 929 fixtures' worth of work | 2026-08-24 |

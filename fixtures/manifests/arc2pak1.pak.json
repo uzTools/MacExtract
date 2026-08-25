@@ -1,0 +1,39 @@
+{
+ "entries": [
+  {
+   "data_sha256": "d351b10d557b112f0d0aa644872bc64948d02f61f9445e4b16bfa97bb023eac4",
+   "data_size": 1159,
+   "name": "ARC2PAK.DOC",
+   "oracle_methods": [
+    "Crushed"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "5e180f91aada7ff5830f4dcf10cc1974bed8fe6bc43055f710453eb1c2bd71a5",
+   "data_size": 5296,
+   "name": "ARC2PAK.EXE",
+   "oracle_methods": [
+    "Crushed"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "07f28b446a44dc9e6fa89464b5ff523b38429168451f411f0f1af673008165e6",
+   "data_size": 413,
+   "name": "WHEREIS.COM",
+   "oracle_methods": [
+    "Crushed"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  }
+ ],
+ "fixture": "arc2pak1.pak",
+ "format": "ARC",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "ab24d2b79298784c3b4c1d21eae71976385006eb5d7f1f950b14ff68c613df54",
+ "size": 4986
+}

@@ -121,6 +121,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-25 (SpaceSaver's INIT) — it installs, and it always did
 - 2026-08-25 (SuperDisk! method 10) — a codec with no data, graded three ways
 - 2026-08-25 (SuperDisk! method 20) — the method that turned out to be an encoder
+- 2026-08-25 (ARC 0x0a and 0x0b) — the wrong attribution, and an oracle that was wrong
 
 ---
 
@@ -3230,9 +3231,13 @@ neither format was allowed into the suite without one.
 
 **What is declined, and the difference between the two reasons.**
 
-- ARC methods 0x0a (Crushed) and 0x0b (Distilled) are PKARC's. Nothing
+- ~~ARC methods 0x0a (Crushed) and 0x0b (Distilled) are PKARC's. Nothing
   reachable writes them, so an implementation could not be graded — the
-  DiskDoubler rule (2026-08-15), unchanged.
+  DiskDoubler rule (2026-08-15), unchanged.~~ **Both halves of that were
+  wrong and both were withdrawn on 2026-08-25**: the methods are PAK's,
+  from NoGate Consulting, and PAK 2.51 writes them here under DOSBox.
+  They extract. See 2026-08-25 (*ARC 0x0a and 0x0b*), which is also
+  where the reasoning lives.
 - **ArcMac** is different and worth recording. Its entries ARE walked: the
   Mac header is documented in `reference/macutils/macunpack/arc.h`, offset by
   offset, so name, type, creator and both fork lengths come out and the entry
@@ -6721,3 +6726,87 @@ own published header had it — the module table is `thisModuleNumber`,
 `compressAddress`, `decompressAddress`, so half of an entry may simply be
 absent — and this project had been reading that table as a method list since
 the day it found it.
+
+## 2026-08-25 (ARC 0x0a and 0x0b) — the wrong attribution, and an oracle that was wrong
+
+Both methods now extract, graded against the CRC-16 their compressor wrote in
+1988 and 1990. Three things about how that happened are worth carrying.
+
+### The search named a program that never wrote them
+
+`OPEN_ITEMS.md` asked for "a `.arc` written by PKARC or PKPAK using method
+0x0a or 0x0b", and no such file exists: Crushed and Distilled are **PAK's**,
+from NoGate Consulting, the second introduced in PAK v2.0 in July 1989.
+PKARC's contribution to this list is method 9. The attribution was in four
+files, and re-reading them confirmed itself each time.
+
+One search for the FORMAT — not for the file — settled it, and the specimens
+followed in minutes: `ARC2PAK1.PAK` (three Crushed members, 1988) and
+`IE111SEP.ZIP` → `INTRECHO.PAK` (ten Distilled ones), both named by the
+ArchiveTeam file-format wiki's PAK page, both a plain HTTP GET from
+`cd.textfiles.com`. **A search that names the wrong tool returns nothing for
+as long as anyone runs it, and the nothing reads as scarcity.**
+
+### The oracle was wrong, and only the archive's own CRC could say so
+
+`unar` — this project's primary oracle, and the reference `fmt_arc.c` is
+transcribed from — decodes Distilled to the **right length and the wrong
+bytes** on 6 of the 10 members of a real archive. XADMaster's
+`XADARCDistillHandle.m` starts the 8 KB window at zero; PAK fills it with
+spaces, as LZHUF.C does, and the compressor emits matches into it. Every
+match that reaches back past the start of the data therefore returns NULs
+where the file has spaces — which is why it is text members that fail and
+binaries that pass.
+
+deark implements the method independently and agrees with the stored CRC on
+all 21 Distilled members in reach, so it is the reference this decoder
+follows and the oracle the suite grades it with. Upstream XADMaster is
+byte-identical to our `reference/` copy and untouched since 2018, so
+transcribing the obvious reference would have shipped the bug.
+
+**What makes this different from an ordinary transcription error is what
+would have hidden it.** The engine's other ARC methods are graded by
+generating archives and handing them to `unar`; that arrangement is what
+caught the crunch decoder reading its codes LSB-first (2026-08-15). Here it
+would have failed the other way round: a generator written from the same
+reading, or `unar` itself, would have agreed with a wrong decoder, and the
+entry's CRC — computed over the DECODED bytes — is the one participant that
+could not be talked into it. **When the reference and the oracle are the same
+codebase, the format's own checksum is not a formality; it is the only
+independent party in the room.** The same sentence, from the other side, is
+2026-08-08's: ask what evidence a tolerance rests on.
+
+### The compressor still runs, and that is the corpus
+
+Nothing on Linux writes either method, but the program that wrote both does:
+**PAK 2.51 runs headless under DOSBox**, unpacked without root, and takes
+`/CR` and `/O` to force Crushed and Distilled respectively
+(`tools/pak.py`). That turns a two-specimen format into one with a corpus:
+seven generated archives whose contents are chosen to reach the paths the
+real specimens do not. Measured on the generated corpus, `pak-crushed-big.pak`
+alone fires Crushed's table-full replacement scan **49,751 times** and its
+inverted-literal mode **13,009 times**, neither of which either real
+specimen reaches at all; `pak-distilled-text.pak` and the real archive
+between them cover all seven tiers of the offset ladder and 12 matches into
+the pre-filled window.
+
+It also extracts, so the 1990 compressor grades its own output: the nine
+members of the PAK distribution come back byte-for-byte identical whether
+PAK 2.51 expands them under emulation or this engine does on Linux.
+
+**The transferable part is that "nothing reachable writes it" is a claim
+about reach, not about the format** — the same shape as DiskDoubler 3.7
+under Mini vMac (2026-08-20) and SuperDisk!'s control panel (2026-08-22).
+The third instance in five days; the question to ask first is now "what wrote
+it, and where does that program still run?"
+
+### What was NOT done, and why
+
+Method 0x0a is ambiguous — ARC 7.x uses it for Trimmed, a different
+algorithm. This engine decodes it as Crushed, and a Trimmed member fails its
+CRC instead of extracting. deark disambiguates by looking for PAK extended
+records versus ARC archive-info items, which is implementable, and it is not
+implemented here: there is no Trimmed specimen to test either the decoder or
+the heuristic against, and a discriminator that has never seen the case it
+discriminates is a guess with a test suite. It is in OPEN_ITEMS.md as a
+specimen wanted.
