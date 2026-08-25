@@ -1633,6 +1633,86 @@ def magic(keep=False):
     return report_specimen(out, s.shots)
 
 
+def magicname(keep=False):
+    """The two halves in ONE run: a matching NAME and a menu command.
+
+    `INIT 1` patches `_MenuSelect`, `_MenuKey` and `_PBEject`, and
+    installs its own menu behind a preference byte by patching
+    `_DrawMenuBar` and `_SystemMenu`. **Nothing patches the File
+    Manager**, so a rename is not an event and cannot fire anything —
+    which is what every naming run has been waiting for. The name rule
+    is a FILTER; something else has to ask.
+
+    So: subjects that already END in `small` when they are copied onto
+    the image — no Finder rename needed if the name is only a filter —
+    and then Magic Menu's *SpaceSaver Compress* on each selection, the
+    command `--magic` uses. `--namerule` did the first half, `--magic`
+    the second, and no run has done both.
+    """
+    import glob
+    boot = os.path.join(WORK, "ssmagicname.hfv")
+    shutil.copyfile(INSTALLED, boot)
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+    tmp = tempfile.mkdtemp(prefix="ssmn-")
+    # THREE sizes, because mCompressFile @0x5510 refuses a file whose
+    # every fork is smaller than a threshold its caller passes in, and
+    # returns -37 for it — an OSErr, not an alert. Every subject any run
+    # has ever used is 11 KB or less, so a size gate would have refused
+    # all fourteen of them silently. A 400 KB subject settles it.
+    big = (b"SpaceSaver probe, at length. " * 14000)[:400000]
+    named = [(n + " small", t, c, d, r) for n, t, c, d, r in SUBJECTS]
+    named.append(("Bigone small", "TEXT", "ttxt", big, b""))
+    try:
+        subprocess.run(["hmount", boot], check=True, capture_output=True,
+                       env=env)
+        for n, t, c, d, r in named:
+            q = os.path.join(tmp, n.replace(" ", "_") + ".bin")
+            open(q, "wb").write(macbinary(n, t, c, d, r))
+            subprocess.run(["hcopy", "-m", q, ":"], check=True,
+                           capture_output=True, env=env)
+        subprocess.run(["humount"], check=True, capture_output=True, env=env)
+    finally:
+        shutil.rmtree(env["HOME"], ignore_errors=True)
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    before = set(glob.glob("/tmp/dd-*/boot.hfv"))
+    s = Session(boot, [], os.path.join(SPECIMENS, "magicname"))
+    try:
+        s.boot()
+        s.shot("desktop", wait=14.0)
+        s.mac.click(250, 38)
+        time.sleep(2.5)
+        for _ in range(3):
+            s.mac.command_key("w")
+            time.sleep(2.5)
+        s.shot("windows-closed", wait=6.0)
+        s.mac.click(470, 55, double=True)
+        s.shot("bootvol", wait=14.0)
+        for name, letter in (("Bigone", "b"), ("Alpha", "a"),
+                             ("Forked", "f")):
+            s.mac.key("Escape")
+            time.sleep(0.6)
+            s.mac.key(letter)
+            time.sleep(1.5)
+            s.shot("selected-" + name, wait=0.5)
+            s.menu(MAGIC_X, MAGIC_COMPRESS_Y, "compress-" + name)
+            s.shot("after-" + name, wait=45.0)
+        s.shot("settled", wait=30.0)
+        s.menu(SPECIAL_X, SHUT_DOWN_Y, "special-menu")
+        s.shot("shutting-down", wait=30.0)
+    finally:
+        time.sleep(8)
+        s.close()
+
+    cands = [p for p in glob.glob("/tmp/dd-*/boot.hfv") if p not in before]
+    if not cands:
+        cands = sorted(glob.glob("/tmp/dd-*/boot.hfv"),
+                       key=os.path.getmtime)[-1:]
+    out = sorted(cands, key=os.path.getmtime)[-1]
+    print("spacesaver: reading back %s" % out)
+    return report_specimen(out, s.shots)
+
+
 # The SpaceSaver panel's close box, measured off `idlespec/09-panel-closed.png`
 # where Cmd-W did not close it: the window's title bar runs from x=163 to
 # x=392 at y=98..112, so the box is at its left end.
@@ -1696,7 +1776,8 @@ def enrollmagic(keep=False):
         s.shot("windows-closed", wait=6.0)
         s.mac.click(470, 55, double=True)
         s.shot("bootvol", wait=14.0)
-        for name, letter in (("Alpha", "a"), ("Forked", "f")):
+        for name, letter in (("Bigone", "b"), ("Alpha", "a"),
+                             ("Forked", "f")):
             s.mac.key("Escape")
             time.sleep(0.6)
             s.mac.key(letter)
@@ -2812,6 +2893,8 @@ def main():
                     help="drive both rename rules on the settings page")
     ap.add_argument("--enrollmagic", action="store_true",
                     help="enrol the disk, close the panel, then compress")
+    ap.add_argument("--magicname", action="store_true",
+                    help="a matching NAME and a menu command in one run")
     ap.add_argument("--magic", action="store_true",
                     help="Magic Menu's SpaceSaver Compress, then shut down")
     ap.add_argument("--idlespec", action="store_true",
@@ -2884,6 +2967,8 @@ def main():
         return suffix(a.keep)
     elif a.enrollmagic:
         return enrollmagic(a.keep)
+    elif a.magicname:
+        return magicname(a.keep)
     elif a.magic:
         return magic(a.keep)
     elif a.idlespec:

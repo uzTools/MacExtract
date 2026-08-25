@@ -811,7 +811,8 @@ a table this build does not carry. The resource is byte-identical in the
 control panel and in `StuffIt Engine™`, so either file will do as a source for
 `tools/gen_ss_dict.py`.
 
-**Both methods run on a 68000**, which is the part no Linux test can show.
+**Methods 0 and 4 run on a 68000**, which is the part no Linux test can show;
+methods 1, 2 and 3 have never been replayed there (OPEN_ITEMS.md).
 `tools/run_spacesaver.py --emit` writes three files and `tools/vmac/run.py
 --expect` replays them on an emulated Mac Plus under System 6.0.8: a stored
 one (**1,040 B data + 512 B resource, peak 4,112 B**), a method 4 one at the

@@ -705,7 +705,10 @@ run here; `hcopy` it and read its `Opts 1` resource, which carries the `small`
 name rule. What it does NOT explain is why the rule never fires.
 
 **Nothing has made SpaceSaver compress anything**, and the modes above are
-the attempts: the panel's `small` name rule (`--specimen`), the same with
+the attempts. `--magicname` (2026-08-25) is the one that eliminated two
+suspects at once — a matching NAME and a menu command in the same run, then
+again with a 400 KB subject — and `INIT 1` is where the trigger machinery
+actually is (OPEN_ITEMS.md; every earlier session read `INIT 0`): the panel's `small` name rule (`--specimen`), the same with
 the disk enrolled and the machine left idle (`--idlespec`), Magic Menu's
 *SpaceSaver Compress* (`--magic`, `--enrollmagic`), and `DropCompress™`
 both launched and dropped on (`--drop`, `--dragdrop`). One thing on that
