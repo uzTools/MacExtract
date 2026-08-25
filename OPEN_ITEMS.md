@@ -157,13 +157,35 @@ own distribution (BLOCKERS.md, the same date).
   accounts for — and a lossy mode is something an extractor cannot grade
   against its input by construction.
 
-- **StuffIt SpaceSaver's methods 1, 2 and 3.** The format is read and
-  implemented — container, method 0, method 4, dictionary included
-  (FORMATS.md, *StuffIt SpaceSaver*). The other three are declined per
-  entry: their modules are in hand, so this is transcription rather
-  than research, but nothing reachable writes one — index 3 takes a
-  68030 or better, and the engine's default never selects 1 or 2.
-  **What is missing is a gradeable SPECIMEN:** any file that uses one.
+- **StuffIt SpaceSaver's method 3 ("Alg 3").** Methods 1 and 2 landed on
+  2026-08-25 once `tools/ssmodule/` could write specimens; 3 did not,
+  and it is the one with real work left in it. What is read already:
+  the stream framing is method 4's (a 16-bit block count, a width byte,
+  then 6-byte block headers), the codec is an LZ77 whose literals and
+  lengths share a **308-symbol** Huffman alphabet and whose distances
+  use a second of `4 * wbits + 3` symbols, both decoded LSB-first
+  through a 256-entry fast table with a tree walk behind it
+  (`CMod 11` @0x152e), a match copies `4 + length` bytes, and the
+  length and distance values come from base + extra-bit tables the
+  module builds in its `init` and passes in its private block.
+
+  The code lengths arrive through a **recursive meta-coder** (@0xe26):
+  a control byte gives the raw symbol width (2..5 bits), a value added
+  to every plain symbol, an escape that means "length 0", and a bit
+  that says the symbols are themselves Huffman-coded — by the same
+  routine, called on itself. The top symbol means "repeat the previous
+  length, 3 + the next symbol times".
+
+  **The trap, and the reason this is not a morning's work:** the
+  canonical code assignment is ordered by `qsort` (@0x15a, a Hoare
+  partition recursing on the smaller half) over the code lengths, and
+  that sort is NOT stable — so which symbol gets which code among
+  equal lengths depends on that exact partitioning. Both sides run the
+  same routine so the format is self-consistent, but a decoder written
+  here has to reproduce the sort itself, without recursion (CLAUDE.md).
+  Codes are then bit-reversed for the LSB-first stream (@0x324).
+  **What would close it:** those pieces, then the same grading methods
+  1 and 2 already pass.
 
 - **A SpaceSaver file written by SpaceSaver.** Thirteen emulator runs
   have driven every trigger its control panel offers and none of them
@@ -175,7 +197,11 @@ own distribution (BLOCKERS.md, the same date).
   photographed (BLOCKERS.md). **Worth less than it was**: the bitstream
   a specimen would check has since been cross-read against Aladdin's own
   encoder and agrees field for field (DECISIONS.md 2026-08-23, the
-  encoder agrees). **What would close it:** why the TRIGGER never fires
+  encoder agrees) — and that encoder has since been RUN, on Linux, over
+  every method the format has (`tools/ssmodule/`). What is left to this
+  item is the application rather than the codec: the method choice, the
+  256-byte rounding and the header are SpaceSaver's, not a module's.
+  **What would close it:** why the TRIGGER never fires
   — the `small` name rule is in the preferences the INIT writes, and
   renaming a file to match it still returns the file unchanged — or one
   SpaceSaver file from anywhere.

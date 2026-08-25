@@ -42,6 +42,11 @@ HEAD = '''/*
  *
  * The fork record's byte at +12 selects one: 0 is `PrAm` -4048 and 1 is
  * `PrAm` -4047. Everything SpaceSaver writes uses 0.
+ *
+ * `ss_m2_default` is the third table and the smallest: method 2 fills
+ * 4,096 dictionary entries with a pointer to `CMod 4`'s own last
+ * eighteen bytes, so a code whose entry was never filled copies THOSE —
+ * and the compressor does emit such codes.
  */
 #ifndef UNC_SS_DICT_H
 #define UNC_SS_DICT_H
@@ -71,6 +76,7 @@ def main():
     src = sys.argv[1] if len(sys.argv) > 1 else DEFAULT
     files = [("ss_dict0", -4048, os.path.join(src, "PrAm-4048.bin")),
              ("ss_dict1", -4047, os.path.join(src, "PrAm-4047.bin"))]
+    m2 = os.path.join(src, "CMod4.bin")
     for _, _rid, p in files:
         if not os.path.exists(p):
             sys.exit("gen_ss_dict: %s not found — run "
@@ -79,6 +85,23 @@ def main():
     for name, rid, p in files:
         with open(p, "rb") as f:
             emit(out, name, rid, f.read())
+    if os.path.exists(m2):
+        with open(m2, "rb") as f:
+            tail = f.read()[-18:]
+        out.append("/* `CMod 4`'s last 18 bytes: what an unfilled method 2 "
+                   "dictionary entry")
+        out.append(" * points at (@0x6fc fills the table with it). sha256 %s */"
+                   % hashlib.sha256(tail).hexdigest()[:32])
+        out.append("#define SS_M2_DEFAULT_LEN %du" % len(tail))
+        out.append("static const uint8_t ss_m2_default[%d] = {" % len(tail))
+        for i in range(0, len(tail), 12):
+            out.append("    %s," % ", ".join("0x%02x" % b
+                                             for b in tail[i:i + 12]))
+        out.append("};")
+        out.append("")
+    else:
+        sys.exit("gen_ss_dict: %s not found — run "
+                 "tools/vmac/spacesaver.py --layout first" % m2)
     out.append(TAIL.strip("\n"))
     with open(DST, "w") as f:
         f.write("\n".join(out) + "\n")

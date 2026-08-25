@@ -106,6 +106,34 @@ def grade(exe, path, verbose):
         shutil.rmtree(work, ignore_errors=True)
 
 
+def m2_default_matches():
+    """...and so must the eighteen bytes method 2 falls back on.
+
+    They are `CMod 4`'s own tail, generated into `src/ss_dict.h` by the
+    same tool. A dictionary entry that was never filled points at them
+    (DECISIONS.md 2026-08-25, methods 1 and 2), so a stale copy decodes
+    those matches to the wrong bytes and nothing else notices.
+    """
+    mod = os.path.join(SPECIMENS, "CMod4.bin")
+    if not os.path.exists(mod):
+        return 0
+    want = open(mod, "rb").read()[-18:]
+    text = open(os.path.join(REPO, "src", "ss_dict.h")).read()
+    if "ss_m2_default[" not in text:
+        print("spacesaver: src/ss_dict.h has no ss_m2_default — regenerate "
+              "with tools/gen_ss_dict.py")
+        return 1
+    start = text.index("ss_m2_default[")
+    body = text[text.index("{", start) + 1:text.index("};", start)]
+    got = bytes(int(b, 16) for b in body.replace("\n", "").split(",")
+                if b.strip())
+    if got != want:
+        print("spacesaver: ss_m2_default does not match `CMod 4`'s tail "
+              "— regenerate with tools/gen_ss_dict.py")
+        return 1
+    return 0
+
+
 def builtin_matches(exe):
     """The committed dictionary must be the one SpaceSaver actually has.
 
@@ -443,7 +471,7 @@ def main():
     bad = ran = fuzzed = fuzzbad = 0
     sbad, sran = synthetic(a.unclassic, a.verbose)
     print("spacesaver: %d synthetic stream(s), %d failure(s)" % (sran, sbad))
-    dbad = builtin_matches(a.unclassic)
+    dbad = builtin_matches(a.unclassic) + m2_default_matches()
     if not dbad and os.path.exists(PRESET):
         print("spacesaver: the built-in dictionary matches the resource")
     sbad += dbad

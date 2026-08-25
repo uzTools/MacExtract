@@ -14,6 +14,11 @@
  *
  * The fork record's byte at +12 selects one: 0 is `PrAm` -4048 and 1 is
  * `PrAm` -4047. Everything SpaceSaver writes uses 0.
+ *
+ * `ss_m2_default` is the third table and the smallest: method 2 fills
+ * 4,096 dictionary entries with a pointer to `CMod 4`'s own last
+ * eighteen bytes, so a code whose entry was never filled copies THOSE —
+ * and the compressor does emit such codes.
  */
 #ifndef UNC_SS_DICT_H
 #define UNC_SS_DICT_H
@@ -836,6 +841,14 @@ static const uint8_t ss_dict0[9679] = {
 #define SS_DICT1_LEN 4u
 static const uint8_t ss_dict1[4] = {
     0x20, 0x20, 0x20, 0x20,
+};
+
+/* `CMod 4`'s last 18 bytes: what an unfilled method 2 dictionary entry
+ * points at (@0x6fc fills the table with it). sha256 0b8da1f89e0ac8a57a636ea1f776579c */
+#define SS_M2_DEFAULT_LEN 18u
+static const uint8_t ss_m2_default[18] = {
+    0x20, 0x20, 0x20, 0x20, 0x20, 0xa9, 0x31, 0x39, 0x39, 0x31, 0x20, 0x41,
+    0x6c, 0x61, 0x64, 0x64, 0x69, 0x6e,
 };
 
 #endif /* UNC_SS_DICT_H */

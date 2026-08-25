@@ -1187,6 +1187,55 @@ misreading of what the original COMPRESSOR emits does not. The one
 disagreement the two references have with each other is counted separately
 and printed, not hidden (FORMATS.md, the method table).
 
+## SpaceSaver's own codecs (`tools/ssmodule/`, in `ci.sh`)
+
+Added 2026-08-25, and it needs no Macintosh either. Each SpaceSaver method
+is a `CMod` resource holding a **compressor at +0x08 and an expander at
++0x10**, so the modules are both the specimen generator and the second
+implementation — for the three methods this engine declines as much as for
+the two it reads. `ssmod_run.c` builds the parameter block `ExpandFork`
+builds and calls a vector under `qemu-m68k`; the driver lifts the modules
+and the preset dictionary out of the installed control panel with no
+emulator, and runs in about 3 seconds.
+
+    tools/ssmodule/run_ssmodule.py --unclassic build/unclassic
+    tools/ssmodule/run_ssmodule.py --keep        # leave one .ss per method
+
+1. **Round trip through Aladdin's code alone** — each module compresses a
+   subject and the matching expander decodes it, both decompress-only
+   builds included. This has to pass before any comparison with this engine
+   means anything, because it is what says the parameter block and the
+   callbacks are right.
+2. **Negative controls** — a corrupted stream, and methods 3 and 4 decoded
+   without the preset dictionary. Both must come back wrong.
+3. **A stored block built by hand**, which both Original expanders must
+   return verbatim: flag byte 1 at +0, big-endian payload length at +4,
+   payload at +8.
+4. **This engine against the module** for methods 0, 1, 2 and 4 —
+   byte-exact — and method 3 asserted to fail as the entry, not the
+   file. `IMPLEMENTED` at the top of the driver is the list, and it has
+   to match `src/fmt_spacesaver.c`: a method in one and not the other
+   fails this phase from either side.
+5. `--keep` writes one specimen per method into
+   `specimens/spacesaver/modules/` beside the emulator's other state. They
+   go in a subdirectory on purpose: `run_spacesaver.py` grades every `.ss`
+   next to it, and three of the five use a method this engine does not
+   implement.
+
+**What it cannot see.** The modules know nothing about the 84-byte header,
+so this grades codecs and not files — the method choice, the 256-byte
+rounding and the header are the application's, and a file SpaceSaver itself
+wrote would still settle things this cannot (OPEN_ITEMS.md). The subjects
+are ours, so a codec that mishandles input no test here builds stays
+invisible. And two of the modules do not run end to end: the Original
+compressors execute an F-line `0xFFFF` on the branch that stores a block
+verbatim, which is counted rather than emulated — nothing here invents what
+that word meant (DECISIONS.md 2026-08-25, SpaceSaver's codecs).
+
+**Every module call has a timeout, and it is not decoration.** `CMod 3`
+does not terminate on a corrupted stream; without the timeout the negative
+control hangs the suite, which is how it was found.
+
 ## AppleLink packages (unit tests + a corpus sweep)
 
 Added 2026-08-23. `.pkg` is detect-only, so what there is to test is the

@@ -204,7 +204,7 @@ No physical Macintosh has ever run it. Emulation is evidence, not proof.
 LGPL-2.1-or-later. Format details are transcribed from
 [XADMaster](https://github.com/MacPaw/XADMaster); see `NOTICE`.
 
-One exception, marked as one in `NOTICE`: `src/ss_dict.h` holds 9,679 bytes
-that are **copyright Aladdin Systems, Inc.** — the table SpaceSaver primes its
+One exception, marked as one in `NOTICE`: `src/ss_dict.h` holds about 9.7 KB
+that are **copyright Aladdin Systems, Inc.** — the tables SpaceSaver primes its
 compression with, which its files cannot be decoded without. Carried for
 interoperability, and not covered by the LGPL grant.

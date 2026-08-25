@@ -130,6 +130,10 @@ DATA THAT IS NOT OURS AND IS SHIPPED ANYWAY
     beside it. They are not code and no algorithm was copied: they are
     the table SpaceSaver's LZSS starts its window with, so a compressed
     file cannot be decoded to the right bytes without exactly these.
+    The same header carries **eighteen more bytes of theirs** (added
+    2026-08-25): the tail of the `CMod 4` resource, which is the string
+    every unfilled entry of method 2's dictionary points at, so a
+    method 2 fork that names one cannot be decoded without it either.
     Everything else in this repository is either ours, LGPL, CC0, or
     fetched rather than committed. This is the exception, it is marked
     as one, and it is not covered by this project's LGPL grant.

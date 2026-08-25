@@ -97,6 +97,14 @@ python3 tools/run_crypt.py --unclassic build/san/unclassic \
 # none, so this says nothing on a fresh clone (TESTING.md).
 python3 tools/run_spacesaver.py --unclassic build/san/unclassic \
     || fail "SpaceSaver tests"
+# ...and SpaceSaver's own codecs, off the Macintosh: each `CMod` module
+# holds a compressor as well as an expander, and qemu-m68k runs either
+# (tools/ssmodule/). That is where a specimen of methods 1, 2 and 3 comes
+# from — nothing else here writes one — and it grades what this engine
+# reads for the two methods it implements. Needs the installed control
+# panel in the emulator cache; skips cleanly without it.
+python3 tools/ssmodule/run_ssmodule.py --unclassic build/san/unclassic \
+    || fail "SpaceSaver module differential"
 
 echo "=== variant 1b: sampled inverse BWT (forced, + budget) ==="
 # The Arsenic decoder falls back to a sampled occurrence index when the

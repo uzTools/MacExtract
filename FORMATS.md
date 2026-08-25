@@ -375,11 +375,13 @@ docstring in that file says it).
 ✦✦ **StuffIt SpaceSaver, in scope since 2026-08-22**, where every status
 file here used to say nobody has published how it is laid out. The header, the
 fork records, the module table and what each method is: *StuffIt SpaceSaver*,
-below. **It is the only format here graded by nothing but itself**: no oracle,
-no fixture, and — so far — no specimen, because SpaceSaver has not been made
-to compress anything on this machine (OPEN_ITEMS.md). What stands in for one
-is an encoder written from the same disassembly as the decoder, which is a
-consistency check and not an oracle (TESTING.md).
+below. It has no oracle and no fixture, and
+SpaceSaver itself has still not been made to compress anything on this machine
+(OPEN_ITEMS.md) — but since 2026-08-25 it is **not** graded by nothing but
+itself: Aladdin's own `CMod` codecs run under `qemu-m68k` and write the
+specimens (`tools/ssmodule/`, TESTING.md). The encoder written from the same
+disassembly as the decoder remains a consistency check rather than an oracle,
+and is now the weaker of the two.
 
 †† **Multipart, in both directions, since 2026-08-15.** A `.hqx` file may hold
 more than one document, and a single document may have been posted in several
@@ -721,9 +723,9 @@ first, at offset 84, and the other follows it — read each at its own offset.
 | idx | modules (`CMod`) | runs on | status |
 |---|---|---|---|
 | 0 | 1 "Default Compressor" | any | stored, implemented |
-| 1 | 3 "Original Fast Compressor" | any | declined per entry |
-| 2 | 4 "Original Slow Compressor" | any | declined per entry |
-| 3 | 10 "Alg 3", 11 decompress-only, 15 PowerPC | 68030 and up / any / PowerPC | declined per entry |
+| 1 | 3 "Original Fast Compressor" | any | **implemented** — LZSS, 12-bit distance* |
+| 2 | 4 "Original Slow Compressor" | any | **implemented** — a 4,096-entry position table* |
+| 3 | 10 "Alg 3", 11 decompress-only, 15 PowerPC | 68030 and up / any / PowerPC | declined per entry; a specimen on demand* |
 | 4 | 20 "Alg 4", 21 decompress-only | 68000-68020 / any | implemented |
 
 A file whose compressor byte is none of these is still recognised and named —
@@ -731,10 +733,35 @@ the entry fails, the file does not. The index is the module's own byte at
 +0x20, not its resource id; the low byte there is a revision and the higher
 one wins; +0x24 is a CPU mask, bit 31 − Gestalt `cput`. **The default is the CPU's**: index 4 below a 68030,
 index 3 from a 68030 up, and the decompress-only modules accept every CPU so
-any Mac can read any file. That is also why 1, 2 and 3 are declined — no
-machine reachable here writes them, so an implementation could not be graded,
-the bargain LZH's `-lh2-`/`-lh3-` and DiskDoubler's declined methods
-already make.
+any Mac can read any file. That was also why 1, 2 and 3 were declined, and **it stopped being true on
+2026-08-25**: * `tools/ssmodule/` runs the modules themselves under
+`qemu-m68k`, compressor as well as expander, so every method the format has
+writes and reads on demand — 71 round trips through Aladdin's own code, in 3
+seconds (TESTING.md). **Methods 1 and 2 were implemented the same day** on
+the strength of it, and 34 forks Aladdin's compressors wrote read back
+byte-exact here. Method 3 is still declined, now for want of the codec
+rather than of a specimen (OPEN_ITEMS.md).
+
+**Methods 1 and 2 share a framing and nothing else.** Both read an 8-byte
+block header — a first byte that says "stored" and a 32-bit big-endian
+payload length — and loop until the fork's declared length is produced.
+Both spend 16 flag bits at a time, LSB first, one per item, and both encode
+a match in two bytes: `(B1 & 0x0F) + 3` bytes long, with `B1`'s high nibble
+and `B2` making twelve more bits. What those twelve bits MEAN is where they
+part:
+
+| | method 1, `CMod 3` | method 2, `CMod 4` |
+|---|---|---|
+| the twelve bits | a distance | an index into a 4,096-entry table of positions |
+| the table | — | 512 buckets of 8, filled by a 3-byte hash of the output, one rotating slot shared by the whole table |
+| an entry never filled | — | copies `CMod 4`'s own last 18 bytes, a copyright string, and real streams DO reach it |
+| the flag word | a counter, 16 items | a sentinel bit above the word, tested once per item |
+| window | 4 KB is enough (12-bit distance) | 64 KB: the table's positions are anywhere in the block |
+| peak heap | 4 KB + 4 KB I/O | 64 KB + 16 KB table + 4 KB I/O |
+
+Neither uses the preset dictionary — `CMod 3` and `CMod 4` never read the
+parameter block past +52 (measured) — and method 3 needs it as much as
+method 4 does: with a null pointer that module faults outright.
 
 **Method 4 is an LZSS with a preset dictionary.** Three bytes of stream header
 (block count as a 16-bit little-endian value, then the window's width in

@@ -2647,6 +2647,17 @@ def layout():
           "\n  bra.w at +0x00, +0x08, +0x10 and +0x18: +0x08 compresses,"
           "\n  +0x10 expands, and a PowerPC module's PEF starts at +0x2c.")
 
+    # The modules themselves, written out where `tools/ssmodule/` and
+    # `gen_ss_dict.py` look for them: `CMod 4`'s last eighteen bytes are
+    # what an unfilled method 2 table entry points at, so they are
+    # needed to decode as much as the `PrAm` table below is.
+    for rid in sorted(res["ss"].get("CMod", {})):
+        _n, code = res["ss"]["CMod"][rid]
+        os.makedirs(SPECIMENS, exist_ok=True)
+        q = os.path.join(SPECIMENS, "CMod%d.bin" % rid)
+        with open(q, "wb") as f:
+            f.write(code)
+
     # The preset dictionary, written out where the suite looks for it.
     # It is Aladdin's, so it lives beside the ROM and the System image
     # rather than in the repository (`tools/run_spacesaver.py`).

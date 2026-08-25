@@ -16,7 +16,16 @@
  *     - the module interface: ExpandFork @0x5ee6, and the callback
  *       wrappers at the head of every `CMod` resource;
  *     - method 0: `CMod 1` "Default Compressor", XferData @0xee;
+ *     - method 1: `CMod 3` "Original Fast Compressor", @0x156 for the
+ *       block framing and @0x634 for the codec;
+ *     - method 2: `CMod 4` "Original Slow Compressor", @0x136 and
+ *       @0x6e8 — the same framing, a different codec;
  *     - method 4: `CMod 21` "Alg 4 (decompress only)", @0x15a.
+ *
+ *   Methods 1, 2 and 3 were declined per entry until 2026-08-25 for
+ *   want of anything that writes them; `tools/ssmodule/` runs the
+ *   modules' own compressors under qemu-m68k, which is what grades
+ *   them now (TESTING.md).
  *
  *   DECISIONS.md 2026-08-22 (the layout) and (the codecs) record how
  *   each was read; FORMATS.md tabulates the container.
@@ -72,6 +81,9 @@ typedef struct SsState {
     uint32_t history;   /* bytes reachable behind wpos (preset + out)  */
     uint8_t  stage[SS_STAGE];
     uint32_t staged;
+    uint32_t produced;  /* method 2 only: the cursor its table indexes */
+    uint32_t *m2tab;    /* method 2 only: 4,096 positions, or UNSET    */
+    uint32_t m2slot;    /* method 2 only: the rotating slot, 0..7      */
 } SsState;
 
 /* ------------------------------------------------------------------ */
@@ -326,6 +338,315 @@ ioerr:
     return in.err != UNC_OK ? in.err : UNC_ERR_TRUNCATED;
 }
 
+
+/* ------------------------------------------------------------------ */
+/* Methods 1 and 2 — the "Original" compressors' block framing         */
+/*                                                                     */
+/* `CMod 3` @0x156 and `CMod 4` @0x136 are the same loop: read an       */
+/* 8-byte block header, read the payload it declares, decode it, write  */
+/* it out, and go round until the fork's declared length has been       */
+/* produced. The header is four bytes whose FIRST says "this block is   */
+/* stored" (@0x1b6 compares it with 1 and skips the decoder), then the  */
+/* payload's length as a 32-bit big-endian value (@0x19a reads it and   */
+/* asks for exactly that many bytes).                                   */
+/*                                                                      */
+/* The block's own output buffer is reused block after block (@0x202    */
+/* writes it out and the next call starts at the same address), so a    */
+/* match reaches back at most as far as this decoder's window does.     */
+/* ------------------------------------------------------------------ */
+
+#define SS_ORIG_HDR   8u
+#define SS_ORIG_WBITS 12               /* the distance field's width */
+
+/* Method 1 — "Original Fast", `CMod 3` @0x634.
+ *
+ * Sixteen flags in a little-endian 16-bit word, used LSB first
+ * (@0x8c8 `lsrw #1` then `bcc` to the literal). A clear bit is a
+ * literal byte; a set bit is two more bytes B1 B2, and @0x672 splits
+ * them as
+ *
+ *     length   = (B1 & 0x0F) + 3        two copies then a dbf loop
+ *     distance = ((B1 & 0xF0) << 4) | B2
+ *
+ * — the high nibble of B1 carries the distance's top four bits, which
+ * is why the second `moveb` at @0x67e lands INSIDE the shifted value
+ * rather than beside it. The copy is byte at a time and may overlap.
+ * The block ends when the payload is exactly consumed (@0x8b4 compares
+ * the two pointers for equality before every item). */
+static int ss_orig1(SsState *s, UncBufIn *in, uint32_t plen,
+                    uint32_t *produced, uint32_t room)
+{
+    uint32_t flags = 0, nflags = 0, left = plen;
+    int b1, b2, e;
+
+    while (left > 0) {
+        if (nflags == 0) {
+            if (left < 2) return UNC_ERR_CORRUPT;
+            if ((b1 = unc_bufin_next(in)) < 0) return in->err;
+            if ((b2 = unc_bufin_next(in)) < 0) return in->err;
+            flags = (uint32_t)b1 | ((uint32_t)b2 << 8);
+            nflags = 16;
+            left -= 2;
+            continue;
+        }
+        nflags--;
+        if ((flags & 1u) == 0) {                  /* a literal */
+            flags >>= 1;
+            if ((b1 = unc_bufin_next(in)) < 0) return in->err;
+            left--;
+            if (*produced == room) return UNC_ERR_CORRUPT;
+            if ((e = ss_emit(s, (uint8_t)b1)) != UNC_OK) return e;
+            (*produced)++;
+            continue;
+        }
+        flags >>= 1;
+        if (left < 2) return UNC_ERR_CORRUPT;
+        if ((b1 = unc_bufin_next(in)) < 0) return in->err;
+        if ((b2 = unc_bufin_next(in)) < 0) return in->err;
+        left -= 2;
+        {
+            uint32_t n = (uint32_t)(b1 & 0x0F) + 3u;
+            uint32_t dist = ((uint32_t)(b1 & 0xF0) << 4) | (uint32_t)b2;
+            /* The reference would happily subtract a distance that
+             * reaches behind everything it has produced and copy the
+             * previous block's leftovers, or in the first block the
+             * work buffer's uninitialised bytes. That is not a
+             * decodable file, so it is a per-entry error here. */
+            if (dist == 0 || dist > s->history) return UNC_ERR_CORRUPT;
+            if (n > room - *produced) return UNC_ERR_CORRUPT;
+            while (n-- > 0) {
+                uint8_t byte =
+                    s->win[(s->wpos + s->wsize - dist) & s->wmask];
+                if ((e = ss_emit(s, byte)) != UNC_OK) return e;
+                (*produced)++;
+            }
+        }
+    }
+    return UNC_OK;
+}
+
+
+/* Method 2 — "Original Slow", `CMod 4` @0x6e8.
+ *
+ * The same flag bits and the same two bytes per match, and then it
+ * diverges: those twelve bits are not a distance but an INDEX into a
+ * table of 4,096 positions the decoder maintains alongside the encoder
+ * (@0x81a scales the code by four and loads a pointer out of the work
+ * buffer). The table is 512 buckets of 8, and both sides fill it with
+ * the same three-byte hash of the output they have just produced:
+ *
+ *     h = (((p[1] + p[2]) & 0xFF) + 2 * ((p[0] + p[2]) & 0xFF)) & 511
+ *
+ * — the two additions are 8-bit and the doubling is not (@0x83c..0x848,
+ * `addb`, `addb`, `addw`). An entry goes at `h * 8 + slot`, where slot
+ * is one rotating counter shared by the whole table (@0x85a, `andl` with
+ * 7). Three insertions exist, and getting any of them out of step
+ * desynchronises every later code:
+ *
+ *   - after every THIRD consecutive literal, the three bytes that end
+ *     at the output cursor (@0x8b6), leaving the counter at 2 so the
+ *     next literal inserts again one byte along;
+ *   - before a match, whatever literals are pending: one at
+ *     `out - pending`, and a second one byte later when exactly two
+ *     were pending (@0x85e subtracts 2 and tests, so 1 and 3 do not);
+ *   - after a match, the position the copy STARTED at, into the same
+ *     bucket the code named — `code & ~7` plus the rotating slot
+ *     (@0x88e).
+ *
+ * A code whose entry was never filled points at the module's own last
+ * eighteen bytes, `"     \xa91991 Aladdin"` (@0x6fc fills all 4,096
+ * entries with that address), and **the compressor does emit such
+ * codes** — five of the eight subjects in `tools/ssmodule/`'s sweep
+ * reach one, so this is not a theoretical branch. They are carried in
+ * `ss_dict.h` beside the preset dictionary, on the same terms and for
+ * the same reason: without them the file decodes to something wrong
+ * rather than to nothing. The longest match the format can ask for is
+ * eighteen bytes, which is why the string is that long.
+ */
+#define SS_M2_ENTRIES 4096u
+#define SS_M2_UNSET   0xFFFFFFFFu
+#define SS_M2_WBITS   16               /* the block's own output, ring-buffered */
+
+static uint32_t ss_m2_hash(SsState *s, uint32_t pos)
+{
+    /* The three bytes at `pos`, which are always within reach: every
+     * insertion names a position at most two bytes behind the cursor. */
+    uint32_t d = s->produced - pos;
+    uint32_t i = (s->wpos + s->wsize - d) & s->wmask;
+    uint32_t b0 = s->win[i];
+    uint32_t b1 = s->win[(i + 1) & s->wmask];
+    uint32_t b2 = s->win[(i + 2) & s->wmask];
+    return (((b1 + b2) & 0xFFu) + 2u * ((b0 + b2) & 0xFFu)) & 511u;
+}
+
+static void ss_m2_insert(SsState *s, uint32_t index, uint32_t pos)
+{
+    s->m2tab[index & (SS_M2_ENTRIES - 1u)] = pos;
+    s->m2slot = (s->m2slot + 1u) & 7u;
+}
+
+static int ss_orig2(SsState *s, UncBufIn *in, uint32_t plen,
+                    uint32_t *produced, uint32_t room)
+{
+    uint32_t flags = 1, left = plen, pending = 0;
+    int b1, b2, e;
+
+    for (b1 = 0; b1 < (int)SS_M2_ENTRIES; b1++) s->m2tab[b1] = SS_M2_UNSET;
+    s->m2slot = 0;
+
+    while (left > 0) {
+        /* The sentinel is tested ONCE per item, at the loop head
+         * (@0x7de), and the item that follows a reload is decoded
+         * without testing it again — which matters, because a flag
+         * word of exactly 0x0001 looks like an exhausted one. Testing
+         * again there costs 16 items every time such a word appears,
+         * and the output stays right until the first of them is a
+         * match. */
+        if ((flags & 0xFFFFu) == 1u) {
+            if (left < 2) return UNC_ERR_CORRUPT;
+            if ((b1 = unc_bufin_next(in)) < 0) return in->err;
+            if ((b2 = unc_bufin_next(in)) < 0) return in->err;
+            flags = (uint32_t)b1 | ((uint32_t)b2 << 8) | 0x10000u;
+            left -= 2;
+            if (left == 0) break;                 /* @0x7d8 checks first */
+        }
+        if ((flags & 1u) == 0) {                  /* a literal */
+            flags >>= 1;
+            if ((b1 = unc_bufin_next(in)) < 0) return in->err;
+            left--;
+            if (*produced == room) return UNC_ERR_CORRUPT;
+            if ((e = ss_emit(s, (uint8_t)b1)) != UNC_OK) return e;
+            (*produced)++;
+            s->produced = *produced;
+            if (++pending == 3u) {
+                uint32_t at = *produced - 3u;
+                ss_m2_insert(s, ss_m2_hash(s, at) * 8u + s->m2slot, at);
+                pending = 2u;
+            }
+            continue;
+        }
+        flags >>= 1;
+        if (left < 2) return UNC_ERR_CORRUPT;
+        if ((b1 = unc_bufin_next(in)) < 0) return in->err;
+        if ((b2 = unc_bufin_next(in)) < 0) return in->err;
+        left -= 2;
+        {
+            uint32_t start = *produced;
+            uint32_t n = (uint32_t)(b1 & 0x0F) + 3u;
+            uint32_t code = ((uint32_t)(b1 & 0xF0) << 4) | (uint32_t)b2;
+            uint32_t src = s->m2tab[code], dist;
+
+            if (src == SS_M2_UNSET) {
+                /* Out of the module's own tail, byte by byte, exactly
+                 * as the reference's pointer walks it. */
+                uint32_t k;
+                if (n > room - start) return UNC_ERR_CORRUPT;
+                if (n > SS_M2_DEFAULT_LEN) return UNC_ERR_CORRUPT;
+                for (k = 0; k < n; k++) {
+                    if ((e = ss_emit(s, ss_m2_default[k])) != UNC_OK) return e;
+                    (*produced)++;
+                }
+                s->produced = *produced;
+                if (pending > 0) {
+                    uint32_t at = start - pending;
+                    ss_m2_insert(s, ss_m2_hash(s, at) * 8u + s->m2slot, at);
+                    if (pending == 2u)
+                        ss_m2_insert(s,
+                                     ss_m2_hash(s, at + 1u) * 8u + s->m2slot,
+                                     at + 1u);
+                    pending = 0;
+                }
+                ss_m2_insert(s, (code & ~7u) + s->m2slot, start);
+                continue;
+            }
+            if (src > start) return UNC_ERR_CORRUPT;
+            dist = start - src;
+            if (dist == 0 || dist > s->history) return UNC_ERR_CORRUPT;
+            if (n > room - start) return UNC_ERR_CORRUPT;
+            while (n-- > 0) {
+                uint8_t byte =
+                    s->win[(s->wpos + s->wsize - dist) & s->wmask];
+                if ((e = ss_emit(s, byte)) != UNC_OK) return e;
+                (*produced)++;
+            }
+            s->produced = *produced;
+            if (pending > 0) {
+                uint32_t at = start - pending;
+                ss_m2_insert(s, ss_m2_hash(s, at) * 8u + s->m2slot, at);
+                if (pending == 2u)
+                    ss_m2_insert(s, ss_m2_hash(s, at + 1u) * 8u + s->m2slot,
+                                 at + 1u);
+                pending = 0;
+            }
+            ss_m2_insert(s, (code & ~7u) + s->m2slot, start);
+        }
+    }
+    return UNC_OK;
+}
+
+static int ss_orig(SsState *s, const SsFork *f, uint8_t *iobuf,
+                   uint32_t iocap, unsigned method)
+{
+    UncCtx *c = s->c;
+    UncBufIn in;
+    uint32_t produced = 0, consumed = 0;
+    int e;
+
+    if (c->io->seek(c->io->ctx, f->off) < 0) return UNC_ERR_IO;
+    unc_bufin_init(&in, c->io, &c->ps, iobuf, iocap);
+    in.limit = f->clen;
+
+    /* Method 1 never reaches further back than its 12-bit distance;
+     * method 2's table holds positions anywhere in the block it is
+     * decoding, and a block is what the compressor read in one go. */
+    s->wsize = 1u << (method == 1 ? SS_ORIG_WBITS : SS_M2_WBITS);
+    s->wmask = s->wsize - 1u;
+    s->win = (uint8_t *)unc_alloc(c->al, s->wsize);
+    if (!s->win) return UNC_ERR_MEM;
+    s->wpos = 0;
+    s->history = 0;
+    s->produced = 0;
+    if (method == 2) {
+        s->m2tab = (uint32_t *)unc_alloc(c->al,
+                                         SS_M2_ENTRIES * sizeof(uint32_t));
+        if (!s->m2tab) return UNC_ERR_MEM;
+    }
+
+    while (produced < f->ulen) {
+        uint8_t hdr[SS_ORIG_HDR];
+        uint32_t plen;
+        int i, b;
+
+        if (SS_ORIG_HDR > f->clen - consumed) return UNC_ERR_CORRUPT;
+        for (i = 0; i < (int)SS_ORIG_HDR; i++) {
+            if ((b = unc_bufin_next(&in)) < 0) return in.err;
+            hdr[i] = (uint8_t)b;
+        }
+        consumed += SS_ORIG_HDR;
+        plen = unc_get_u32be(hdr + 4);
+        if (plen > f->clen - consumed) return UNC_ERR_CORRUPT;
+
+        if (hdr[0] == 1) {                        /* stored, @0x1b6 */
+            if (plen > f->ulen - produced) return UNC_ERR_CORRUPT;
+            while (plen-- > 0) {
+                if ((b = unc_bufin_next(&in)) < 0) return in.err;
+                if ((e = ss_emit(s, (uint8_t)b)) != UNC_OK) return e;
+                produced++;
+                consumed++;
+            }
+            s->produced = produced;
+            continue;
+        }
+        s->produced = produced;
+        e = method == 1 ? ss_orig1(s, &in, plen, &produced, f->ulen)
+                        : ss_orig2(s, &in, plen, &produced, f->ulen);
+        if (e != UNC_OK) return e;
+        consumed += plen;
+    }
+    if (produced != f->ulen) return UNC_ERR_CORRUPT;
+    return ss_flush(s);
+}
+
 /* ------------------------------------------------------------------ */
 /* Method 0 — stored, `CMod 1` XferData @0xee: read, write, repeat.    */
 /* ------------------------------------------------------------------ */
@@ -360,20 +681,25 @@ static int ss_one_fork(SsState *s, const SsFork *f, uint8_t *iobuf,
     unsigned m = f->method & 0x7Fu;   /* bit 7 only says which build of
                                        * the module wrote it (@0x578e) */
     s->win = 0;
+    s->m2tab = 0;
     s->staged = 0;
     switch (m) {
     case 0:  err = ss_stored(s, f); break;
+    case 1:
+    case 2:  err = ss_orig(s, f, iobuf, iocap, m); break;
     case 4:  err = ss_alg4(s, f, iobuf, iocap); break;
-    /* 1 "Original Fast", 2 "Original Slow" and 3 "Alg 3" are declined
-     * per entry: their modules are in the software this was read out
-     * of, but nothing reachable here writes them, so an implementation
-     * could not be graded. The bargain LZH's `-lh2-`/`-lh3-` and
-     * DiskDoubler's declined methods already make (OPEN_ITEMS.md). */
+    /* 3 "Alg 3" is still declined per entry: its module runs
+     * (TESTING.md), so what is missing is the codec rather than a
+     * specimen (OPEN_ITEMS.md). */
     default: err = UNC_ERR_UNSUPPORTED; break;
     }
     if (s->win) {
         unc_free(s->c->al, s->win);
         s->win = 0;
+    }
+    if (s->m2tab) {
+        unc_free(s->c->al, s->m2tab);
+        s->m2tab = 0;
     }
     return err;
 }

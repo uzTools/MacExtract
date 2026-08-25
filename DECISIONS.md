@@ -124,6 +124,8 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-25 (ARC 0x0a and 0x0b) — the wrong attribution, and an oracle that was wrong
 - 2026-08-25 (ARC 7.x Trimmed) — the gap filed without looking, and the codec already in the tree
 - 2026-08-25 (zip entry counts) — a count that wraps into success
+- 2026-08-25 (SpaceSaver's codecs, off the Macintosh) — the specimen problem, solved by the compressor
+- 2026-08-25 (SpaceSaver methods 1 and 2) — two codecs the day the specimens arrived
 
 ---
 
@@ -6933,3 +6935,126 @@ field IS the format's ceiling: no second record exists to consult, so 65,535
 is a limit of `.cpt` rather than a reading of one. This is the same shape as the
 gzip/.Z fallback NAME defect (CLAUDE.md): an aggregate that agrees cannot fail
 on what it never counted.
+
+
+## 2026-08-25 (SpaceSaver's codecs, off the Macintosh) — the specimen problem, solved by the compressor
+
+Methods 1, 2 and 3 were declined per entry on one claim: nothing
+reachable WRITES them, so an implementation could not be graded
+(2026-08-22, the codecs). That claim was about the ENGINE's choice of
+method — index 4 below a 68030, index 3 above, and 1 and 2 never — and
+it was read as if it were about the codecs. It is not. **The `CMod`
+modules compress as well as expand, and they run on Linux.**
+
+`tools/ssmodule/` is that, and it is `tools/sdmodule/` applied to a
+second format three days later: lift the modules out, call them under
+`qemu-m68k`, and use them as both the specimen generator and the second
+implementation. Every method the format has now round-trips through
+Aladdin's own code in **3 seconds**, with no Macintosh in it.
+
+### What had to be read rather than guessed
+
+- **The seven callback slots are NAMED by the engine's own MacsBug
+  symbols.** `ExpandFork` installs `cReadSource`, `cWriteDest`,
+  `cGetSourceFPos`, `cSetSourceFPos`, `cGetSourceEOF`, `cProgress` and
+  `cDebug` at +0..+24 — so the block's shape is Aladdin's own
+  vocabulary, not an inference from how many arguments a thunk pushes.
+- **`cReadSource` takes its count by reference and `cWriteDest` by
+  value.** Reading both as FSRead-shaped is the first crash.
+- **Every vector takes two arguments**, the parameter block and the
+  private block the module's own `init` allocated (`LoadCompressors`
+  @0x11a0 keeps one per module; `mExpandFile` @0x57e6 passes it).
+  `CMod 10` reads five fields out of it immediately, so Alg 3 called
+  with one argument dereferences the stack.
+- **Alg 3 needs the preset dictionary as much as Alg 4 does** — with a
+  null pointer it faults outright, and a stream compressed with it
+  decodes wrong without it. Methods 1 and 2 never touch those fields.
+
+### Two properties of the "Original" modules, and why neither is patched over
+
+**Their store-this-block path is an F-line word.** `CMod 3` @0x5e4 and
+`CMod 4` @0x6ba execute `0xFFFF`, which no 68000 can, on the branch that
+gives up on a block; about a third of the subjects reach it. What that
+word stands for cannot be read off the code, so nothing is emulated for
+it — the run is counted and every other kind of fault is a failure.
+The path is covered from the other side instead: a stored block built
+by hand is returned verbatim by both expanders, which is how its layout
+is known (flag byte 1 at +0, big-endian payload length at +4, payload at
++8). Guessing at `0xFFFF` would have been inventing a format detail;
+asking the expander what a stored block looks like is not.
+
+**`CMod 3` does not terminate on a corrupted stream.** It spins rather
+than refusing, which is worth knowing twice over: every module call
+needs a timeout, and the decoder this project will write must bound
+itself by the fork's declared length rather than trusting the blocks.
+
+### The lesson, which is about the CONTROL and not about SpaceSaver
+
+The negative controls were built by picking a case out of the sweep, and
+the pick was wrong twice in a row:
+
+| picked | why it could never fail |
+|---|---|
+| the largest stream | that is the random subject — all literals, so it decodes identically with no dictionary at all |
+| the best-compressing stream | that is 40,000 zeroes, which decode to zeroes however the stream is damaged |
+
+Both printed a passing control. The fix is not a better heuristic: the
+control subject is now one deliberate file — ordinary prose,
+compressible, no long runs — and the phase refuses to trust either check
+unless that subject actually compressed. **A control whose subject is
+chosen by an extremum is choosing the degenerate case**, which is the
+same failure as a tolerance whose evidence is our own output
+(CLAUDE.md).
+
+## 2026-08-25 (SpaceSaver methods 1 and 2) — two codecs the day the specimens arrived
+
+The entry above ends with the modules running. This is what that was
+for: methods 1 and 2 are implemented, and 34 forks Aladdin's own
+compressors wrote read back byte-exact (FORMATS.md has the shapes).
+Both were transcribed from `CMod 3` @0x634 and `CMod 4` @0x6e8 and
+graded by generating specimens with the matching compressor — the loop
+M32 built for SuperDisk! and this format could not use until today.
+
+Three things are worth keeping, and none of them is the codec.
+
+### The oracle finds what a reading cannot
+
+Method 1 was right first time. Method 2 was wrong twice, and neither
+bug was visible in the disassembly:
+
+- **A code whose table entry was never filled copies the module's own
+  copyright string.** The table is initialised with a pointer to
+  `CMod 4`'s last eighteen bytes, and five of eight subjects reach one.
+  Reading that as "cannot happen" would have been the natural
+  assumption; the compressor disproved it in a second.
+- **A flag word of exactly `0x0001` looks like an exhausted one.** The
+  sentinel lives above the sixteen flag bits, and the module tests it
+  once per item at the loop head — never again for the item that
+  follows a reload. Testing it again costs sixteen items, and the
+  OUTPUT STAYS CORRECT until the first of those items is a match, which
+  is why it survived 387 bytes of agreement before failing.
+
+### How the second one was actually found
+
+Reading harder would not have found it: the table maintenance and the
+hash were both confirmed correct by direct probe (build a stream of
+sixteen literals and one match, sweep all 4,096 codes through the
+module, and compare what each one copies — it agreed everywhere).
+
+What found it was **`qemu-m68k -one-insn-per-tb -d exec`**: log every
+instruction the module executes, keep the two program counters that are
+the literal branch and the match branch, and diff that string against
+the same string from our decoder. The first difference was event 290 of
+306, and it named the bug exactly — the module decoded a match where we
+reloaded a second flag word. An execution trace is a cheap oracle for
+"which branch did it take", and this repository now has the recipe.
+
+### The general shape, which is not about SpaceSaver
+
+**A decoder that agrees for a while is not a decoder that agrees.**
+Both of method 2's bugs produce correct output until a specific,
+uncommon input turns up: an unfilled dictionary entry, or a flag word
+whose value is 1. Neither is rare enough to be safe and neither is
+common enough to show up in a small test. The sweep that caught them
+runs eleven subjects through every method in three seconds, which is
+the whole argument for making specimens cheap rather than precious.
