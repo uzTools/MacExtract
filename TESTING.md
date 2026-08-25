@@ -932,7 +932,9 @@ lifts the modules out of the fixture and runs three phases.
    which must not match. A comparison that has never failed is not evidence.
 2. **The specimens Alysis's own 1991 control panel wrote**
    (`tools/vmac/sdcompress.py`), when they are in the emulator cache:
-   14 blocks of methods 1 and 6, byte-exact both ways.
+   18 blocks of methods 1 and 6, byte-exact both ways — four of them
+   compressed on purpose (`--boundary`) to chase the one disagreement
+   below, and they closed off the way it was supposed to be reachable.
 3. **Synthetic blocks for methods 1..9**, built from this engine's reading
    and put through both readers.
 

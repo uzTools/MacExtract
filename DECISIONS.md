@@ -6562,9 +6562,21 @@ framing error shows, a misunderstanding of what the original COMPRESSOR emits
 does not.
 
 **The one place the two references disagree is written down rather than
-smoothed over.** When a coded flag bitmap ends exactly on a 32-bit refill
-boundary, the 1991 self-extractor and the 1992 module part company over where
-the literals begin, by one refill. This engine follows 1991, which is what
-every reachable specimen was written by. The harness counts those cases
-separately and names them; OPEN_ITEMS.md says what would settle it. A harness
-that had quietly skipped them would have looked cleaner and known less.
+smoothed over.** When a coded flag bitmap ends exactly on a 32-bit refill,
+the 1991 self-extractor and the 1992 module part company over where the
+literals begin, by one refill. This engine follows 1991, which is what every
+reachable specimen was written by. The harness counts those cases separately
+and names them; a harness that had quietly skipped them would have looked
+cleaner and known less.
+
+**And the first thing that came of naming it was that its own "what would
+close this" line was wrong.** It said: ask the 1991 compressor for a block
+whose `ceil(ulen/8)` is a multiple of four. Four subjects were sized to do
+exactly that (`sdcompress.py --boundary`), the panel wrote all four as method
+6, and **both readers decode all four byte-exact**. The reason is the
+predicate, not the format: the harness's synthetic Huffman is a flat 8-bit
+code, so its bit length is eight times the byte count, where the real panel
+codes each flag in ONE bit and the length is data-dependent. A byte count
+that looks like a boundary is not one. The gap is still open; what would
+close it is a real block measured to end on a 32-bit refill, and choosing a
+subject size does not produce one.

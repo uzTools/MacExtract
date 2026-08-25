@@ -1266,7 +1266,99 @@ SPECIAL_X = 225
 SHUT_DOWN_Y = 123
 
 
-def specimen(keep=False):
+def init0_gate(fork):
+    """Where INIT 0 decides not to install, and what the byte there is.
+
+    Found 2026-08-25 by disassembling the control panel's own `INIT 0`
+    (the cdev carries INIT 0 and INIT 1; the panel is what has always
+    worked here, the extension is what never has):
+
+        2a50  link   a6,#-26
+        2a5c  _SysEnvirons          ; the record at fp@(-22)
+        2a5e  move.l fp@(-18),fp@(-26)
+        2a66  _Button               ; hold the mouse down to disable
+        2a6a  bne.s  2a74           ; ...and 2a74 shows ICN# -4063 and RETURNS
+        2a6c  btst   #0,fp@(-23)    ; a byte of what was just copied
+        2a72  beq.s  2a8c           ; clear -> on to the named checks
+
+    **Everything SpaceSaver can complain about is behind that branch**:
+    no Gestalt trap is STR# 1001 #1, a missing `PERS` resource is #20, a
+    'SLip' Gestalt already registered is #8, and each of those sets a
+    reason and shows the same failed icon at the end. The early exit at
+    2a74 sets no reason at all — and Mini vMac cannot photograph the
+    startup icon parade (`--parade`, 30 shots, all of them the settled
+    desktop), so twelve runs saw neither.
+
+    Returns the offset of the branch byte within the resource fork.
+    """
+    import sys as _sys
+    _sys.path.insert(0, os.path.join(REPO, "tools", "sdmodule"))
+    from run_sdmodule import resource_data                # noqa: E402
+    res = resource_data(fork)
+    blob = None
+    for rid, _name, data in res.get("INIT", []):
+        if rid == 0:
+            blob = data
+    if blob is None:
+        raise SystemExit("spacesaver: the control panel has no INIT 0")
+    at = fork.find(blob[:64])
+    if at < 0 or fork.find(blob[:64], at + 1) >= 0:
+        raise SystemExit("spacesaver: cannot place INIT 0 in the fork")
+    if blob[0x2A72] != 0x67:
+        raise SystemExit("spacesaver: INIT 0 @0x2a72 is %02x, not a BEQ — "
+                         "this is a different build" % blob[0x2A72])
+    return at + 0x2A72
+
+
+def patch_init(keep=False):
+    """Turn that BEQ into a BRA, and see what SpaceSaver does next.
+
+    A one-byte change to a local test image, to answer a question twelve
+    emulator runs could not: is the gate above what has kept every run
+    empty, or is the extension refusing for one of the reasons it has
+    strings for? Anything this run produces is written by Alysis's own
+    compressor — the patch is in the install decision, not in the codec —
+    but it is a PATCHED run and every result from it says so.
+    """
+    out = os.path.join(WORK, "sspatched.hfv")
+    shutil.copyfile(INSTALLED, out)
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+    tmp = tempfile.mkdtemp(prefix="sspatch-")
+    try:
+        subprocess.run(["hmount", out], check=True, capture_output=True,
+                       env=env)
+        listing = subprocess.run(["hls", "-a", ":System Folder:Control Panels:"],
+                                 capture_output=True, env=env).stdout
+        names = [n.strip() for n in listing.split(b"\n") if b"SpaceSaver" in n]
+        if not names:
+            raise SystemExit("spacesaver: no control panel on the image")
+        path = b":System Folder:Control Panels:" + names[0]
+        mb = os.path.join(tmp, "panel.bin")
+        subprocess.run(["hcopy", "-m", path, mb.encode()], check=True,
+                       capture_output=True, env=env)
+        blob = bytearray(open(mb, "rb").read())
+        dl = struct.unpack(">I", blob[0x53:0x57])[0]
+        ro = 128 + ((dl + 127) & ~127)
+        # The MacBinary CRC covers the header, not the forks, so a byte
+        # patched in place needs no header repair.
+        off = ro + init0_gate(bytes(blob[ro:]))
+        print("spacesaver: INIT 0 gate at MacBinary offset %d (%02x -> 60)"
+              % (off, blob[off]))
+        blob[off] = 0x60
+        open(mb, "wb").write(bytes(blob))
+        subprocess.run(["hdel", path], check=True, capture_output=True, env=env)
+        subprocess.run(["hcopy", "-m", mb.encode(),
+                        b":System Folder:Control Panels:"], check=True,
+                       capture_output=True, env=env)
+        subprocess.run(["humount"], check=True, capture_output=True, env=env)
+    finally:
+        shutil.rmtree(env["HOME"], ignore_errors=True)
+        shutil.rmtree(tmp, ignore_errors=True)
+    print("spacesaver: patched image at %s" % out)
+    return specimen(keep, base=out, tag="patched")
+
+
+def specimen(keep=False, base=None, tag="specimen"):
     """Rename the subjects so SpaceSaver compresses them, then SHUT DOWN.
 
     Everything here is `--namerule`, which has been photographed doing
@@ -1284,8 +1376,8 @@ def specimen(keep=False):
     and a shutdown flushes it just as well.
     """
     import glob
-    boot = os.path.join(WORK, "ssspec.hfv")
-    shutil.copyfile(INSTALLED, boot)
+    boot = os.path.join(WORK, "ss%s.hfv" % ("spec" if tag == "specimen" else tag))
+    shutil.copyfile(base or INSTALLED, boot)
     env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
     tmp = tempfile.mkdtemp(prefix="ssspec-")
     try:
@@ -1305,7 +1397,7 @@ def specimen(keep=False):
         shutil.rmtree(tmp, ignore_errors=True)
 
     before = set(glob.glob("/tmp/dd-*/boot.hfv"))
-    s = Session(boot, [], os.path.join(SPECIMENS, "specimen"))
+    s = Session(boot, [], os.path.join(SPECIMENS, tag))
     try:
         s.boot()
         s.shot("desktop", wait=14.0)
@@ -2713,6 +2805,9 @@ def main():
                     help="Magic Menu's SpaceSaver Compress, then shut down")
     ap.add_argument("--idlespec", action="store_true",
                     help="enrol the disk, idle, shut down — one boot")
+    ap.add_argument("--patch-init", action="store_true",
+                    help="open INIT 0's install gate on a copy of the image, "
+                         "then run --specimen against it")
     ap.add_argument("--specimen", action="store_true",
                     help="rename the subjects, then SHUT DOWN so the "
                          "volume is flushed")
@@ -2784,6 +2879,8 @@ def main():
         return idlespec(a.keep)
     elif a.specimen:
         return specimen(a.keep)
+    elif a.patch_init:
+        return patch_init(a.keep)
     elif a.pkg:
         return pkg(a.keep)
     elif a.layout:

@@ -257,15 +257,17 @@ Unlike section 3, none of this is impossible here: a download would do it.
 
 - **SuperDisk!, where a Huffman region's neighbour begins.** The two
   Alysis implementations disagree with each other by one 32-bit refill
-  when a coded flag bitmap ends exactly on a refill boundary: this
-  engine follows the 1991 self-extractor, the 1992 Add-In Module reads
-  four bytes further (FORMATS.md, the method table). Nothing reachable
-  writes such a block — every specimen and both archives decode
-  identically under both — so this is not known to cost anything.
-  **What would close it:** one block whose `ceil(ulen/8)` is a multiple
-  of four from Alysis's own 1991 compressor, which
-  `tools/vmac/sdcompress.py --compress` can be asked for with a subject
-  sized to hit it.
+  when a coded flag bitmap ends exactly on a refill: this engine follows
+  the 1991 self-extractor, the 1992 Add-In Module has already fetched the
+  next long (FORMATS.md, the method table). Reachable only through
+  `tools/sdmodule/`'s own encoder; all 18 real blocks — both corpus
+  archives and Alysis's own compressor, including four subjects made for
+  this on 2026-08-25 — decode identically under both, so it is not known
+  to cost anything. **What would close it:** a real block whose coded
+  flag bitstream is a multiple of 32 bits. Sizing the subject does NOT
+  produce one, which is what those four established: the 1991 panel
+  codes the flags one bit each, so the bit length is data-dependent and
+  the byte count says nothing about it.
 - **Methods 3, 4 and 5 have never decoded a fork this project did not
   write.** All three are byte-exact through Salient's own 1991 expander,
   which grades the reading of the format rather than the decoder

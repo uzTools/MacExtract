@@ -546,16 +546,28 @@ def on_the_refill_boundary(method, ulen):
 
     A Huffman region's next neighbour starts at the bit reader's cursor plus
     two, and the cursor moves in 32-bit refills. When the coded flag bitmap
-    ends EXACTLY on a refill boundary the 1991 self-extractor's reading (this
-    engine's, CODE 2 @0x84a) and the 1992 module's differ by one refill, so
-    they part company over where the literals begin.
+    ends EXACTLY on a refill — the reader's bit budget hits zero and nothing
+    asks for more — the 1991 self-extractor this engine follows leaves the
+    cursor there and the 1992 module has already fetched the next long, so
+    they part company by four bytes over where the literals begin. Measured
+    both ways: at ulen 64 (8 flag bytes, 64 bits) this engine reads a block
+    with two bytes of slack and the module wants six; at ulen 300 (38 bytes,
+    304 bits) they agree.
 
-    Nothing reachable writes such a block: every specimen Alysis's own 1991
-    control panel produced, and both corpus archives, decode identically
-    under both. Which reading is right is therefore **open** — measured
-    2026-08-25, not settled — and what would settle it is one block whose
-    ceil(ulen/8) is a multiple of four, written by that compressor
-    (`tools/vmac/sdcompress.py --compress` with a subject sized to hit it).
+    **This is reachable only through the harness's own encoder.** The flat
+    8-bit code it writes makes the bit length a fixed multiple of the byte
+    count; a real block's flags are coded (the 1991 compressor writes a
+    ONE-bit code for them), so its bit length is data-dependent and the
+    predicate below does not describe it. All 18 real blocks in reach —
+    both corpus archives and 18 blocks from Alysis's own compressor,
+    including four subjects sized on purpose for this — decode identically
+    under both readers.
+
+    So which reading is right where they differ is **open**, and it is not
+    known to cost anything. What would settle it is a real block whose coded
+    flag bitstream is a multiple of 32 bits, which has to be found by
+    MEASURING what the compressor writes rather than by choosing a subject
+    size.
     """
     if method not in (2, 4, 6, 8):
         return False

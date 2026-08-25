@@ -270,15 +270,20 @@ fixture and calls them under `qemu-m68k`. Results, in `./ci.sh`:
 | what | through both readers |
 |---|---|
 | corpus blocks (method 11) | 4, byte-exact |
-| specimens Alysis's own compressor wrote (methods 1 and 6) | 14, byte-exact |
+| specimens Alysis's own compressor wrote (methods 1 and 6) | 18, byte-exact |
 | synthetic blocks, methods 1-9 | byte-exact, except the refill boundary below |
 
 The one disagreement is where a Huffman region's neighbour begins when the
 coded flag bitmap ends **exactly** on a 32-bit refill: this engine follows the
-1991 self-extractor (cursor + 2) and the 1992 module reads one refill
-further. Nothing reachable writes such a block — every specimen and both
-archives decode identically under both — so which is right is **open**
-(OPEN_ITEMS.md).
+1991 self-extractor (cursor + 2) and the 1992 module has already fetched the
+next long (cursor + 6). Measured at ulen 64 and absent at ulen 300.
+**Only the harness's own encoder reaches it** — its flat 8-bit code ties the
+bit length to the byte count, where a real block's flags are coded one bit
+each and the length is data-dependent. Four subjects were compressed by
+Alysis's own 1991 panel on purpose to look for it (`sdcompress.py
+--boundary`, 2026-08-25) and all four came back byte-exact under both
+readers, as do all 18. Which reading is right where they differ is **open**
+and costs nothing so far (OPEN_ITEMS.md).
 
 **The single-file container joined on 2026-08-22.** SuperDisk! writes two
 shapes and this engine now reads both: the record-stream archive, and what
