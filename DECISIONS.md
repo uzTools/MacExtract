@@ -126,6 +126,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-25 (zip entry counts) — a count that wraps into success
 - 2026-08-25 (SpaceSaver's codecs, off the Macintosh) — the specimen problem, solved by the compressor
 - 2026-08-25 (SpaceSaver methods 1 and 2) — two codecs the day the specimens arrived
+- 2026-08-25 (SpaceSaver method 3) — the codec whose code assignment is a quicksort
 
 ---
 
@@ -7058,3 +7059,50 @@ whose value is 1. Neither is rare enough to be safe and neither is
 common enough to show up in a small test. The sweep that caught them
 runs eleven subjects through every method in three seconds, which is
 the whole argument for making specimens cheap rather than precious.
+
+## 2026-08-25 (SpaceSaver method 3) — the codec whose code assignment is a quicksort
+
+Alg 3 is implemented, so every method StuffIt SpaceSaver has now
+decodes. FORMATS.md has the shape; this is the two things in it that
+would not have been guessed, and the one that changes how the next
+codec should be approached.
+
+### The code assignment is a sort, and the sort is not stable
+
+`CMod 11` @0x27c assigns canonical codes in the order @0x15a's
+quicksort leaves the code lengths in — a Hoare partition pivoting on
+the first element, recursing into the smaller half. Among symbols of
+equal length, which one gets which code is therefore a property of
+that partitioning and nothing else. Both sides of the format run the
+same routine, so it is self-consistent; **any other implementation has
+to reproduce the sort itself.** This one does, iteratively, because the
+engine forbids recursion (CLAUDE.md) — the smaller half goes on an
+explicit 32-entry stack.
+
+It is worth naming the trap because it is invisible from the outside: a
+decoder that sorts stably decodes most blocks correctly, because most
+blocks have few ties.
+
+### The tables are rules, not data
+
+The length and distance bases look like the sort of thing that gets
+transcribed as a table of magic numbers. They are not: the module's own
+init computes them (@0x1a04, @0x1aa0), `extra[i] = i < 4 ? 0 :
+(i - 4) >> 2` from a base of 0 for lengths and the same shape from 1
+for distances. Reading the init rather than dumping the arrays is what
+makes them checkable, and it is why nothing new had to be carried in
+`ss_dict.h` for this method.
+
+### The order that made it cheap
+
+**Prototype in Python against the module, then port.** The prototype
+decoded ten subjects byte-identically before a line of C was written,
+and the C then worked on its first run — which is not how method 2
+went, at two bugs and an execution trace. The difference was not the
+codec's difficulty. It was that a Python prototype can be rewritten in
+a minute while a hypothesis is still cheap, and that the module was
+sitting there to grade each attempt in three seconds.
+
+The generalisation for the next one: **when a reference implementation
+can be RUN, the expensive step is no longer reading it — it is the
+round trip between a guess and a verdict.** Shorten that first.

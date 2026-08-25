@@ -28,6 +28,9 @@ Four phases, and the first two are what make the third mean anything:
   2. **negative controls** — a corrupted stream, and method 4 decoded
      without the preset dictionary. Both must come back wrong, because
      a comparison that has never failed is not evidence;
+  2b. **corrupted specimens through this engine**, which must refuse
+     rather than crash or hang — the corpus has no SpaceSaver fixture,
+     so `run_robustness.py` never sees these codecs;
   3. **this engine against the module**, for the methods it implements
      (0 and 4): the module writes, `unclassic` reads, and the result
      must be the subject byte for byte;
@@ -105,7 +108,7 @@ METHODS = {
 # +52, measured). Passing it anyway would hide a codec that started to.
 NEEDS_PRESET = (3, 4)
 
-IMPLEMENTED = (0, 1, 2, 4)         # what src/fmt_spacesaver.c decodes
+IMPLEMENTED = (0, 1, 2, 3, 4)      # what src/fmt_spacesaver.c decodes
 
 
 def subjects(n_random, seed):
@@ -431,6 +434,59 @@ def phase_engine(exe_unc, written, preset, verbose):
     return bad == 0 and ok > 0
 
 
+def phase_fuzz(exe_unc, written, preset, cases, seed):
+    """Corrupt what the module wrote and require a clean refusal.
+
+    The engine's own robustness suite has no SpaceSaver fixture to work
+    on (there is none in the corpus), so the specimens this harness
+    makes are the only place these three codecs meet damaged input.
+    What is checked is what `run_robustness.py` checks everywhere else:
+    the process exits, and it exits as itself rather than as a signal.
+    """
+    rng = random.Random(seed)
+    bad = ran = 0
+    tmp = tempfile.mkdtemp(prefix="ssmod-fuzz-")
+    try:
+        out = os.path.join(tmp, "out")
+        os.makedirs(out)
+        for method, cases_ in sorted(written.items()):
+            if method == 0:
+                continue
+            label, data, stream = max(cases_, key=lambda c: len(c[2]))
+            if not data:
+                continue
+            from run_spacesaver import container
+            base = container(stream, len(data), method=method)
+            for _ in range(cases):
+                b = bytearray(base)
+                for _ in range(rng.randrange(1, 5)):
+                    b[rng.randrange(84, len(b))] ^= 1 << rng.randrange(8)
+                p = os.path.join(tmp, "f.ss")
+                with open(p, "wb") as f:
+                    f.write(bytes(b))
+                cmd = [exe_unc, "x", "-o", out, "--overwrite"]
+                if preset and method in NEEDS_PRESET:
+                    cmd += ["--preset", preset]
+                cmd.append(p)
+                try:
+                    r = subprocess.run(cmd, capture_output=True, text=True,
+                                       timeout=60)
+                except subprocess.TimeoutExpired:
+                    print("ssmodule: method %d: a corrupted stream did not "
+                          "terminate" % method)
+                    bad += 1
+                    continue
+                ran += 1
+                if r.returncode not in (0, 1):
+                    print("ssmodule: method %d: corrupted stream exited %d\n%s"
+                          % (method, r.returncode, (r.stderr or "")[-400:]))
+                    bad += 1
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    print("ssmodule: %d corrupted variant(s), %d bad" % (ran, bad))
+    return bad == 0
+
+
 def phase_keep(written, preset):
     """Keep one specimen per method, where the suite already looks.
 
@@ -465,6 +521,8 @@ def main():
     ap.add_argument("--cases", type=int, default=4,
                     help="mixed subjects per method (default 4)")
     ap.add_argument("--seed", type=int, default=20260825)
+    ap.add_argument("--fuzz", type=int, default=40,
+                    help="corrupted variants per method (default 40)")
     ap.add_argument("--cpu", default="m68030",
                     help="the CPU qemu emulates; Alg 3 is a 68030 codec")
     ap.add_argument("--keep", action="store_true",
@@ -493,8 +551,9 @@ def main():
         b = phase_controls(exe, mods, preset, args.cpu)
         s_ = phase_stored(exe, mods, args.cpu)
         c = phase_engine(args.unclassic, written, preset, args.verbose)
+        z = phase_fuzz(args.unclassic, written, preset, args.fuzz, args.seed)
         d = phase_keep(written, preset) if args.keep else True
-        return 0 if (a and b and s_ and c and d) else 1
+        return 0 if (a and b and s_ and c and z and d) else 1
     finally:
         shutil.rmtree(workdir, ignore_errors=True)
 

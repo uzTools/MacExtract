@@ -32,7 +32,7 @@ whole corpus for that format (engine allocations only, via
 | btoa (`xbtoa`/`.ascii`) | extract | — (base-85 ASCII armour; both the `xbtoa5` and the older `xbtoa Begin` framings)◆ | no corpus file and no second reader: graded against **btoa 5.2.1 itself**, which encodes the subjects `tools/run_btoa.py` decodes | 12 KB | full |
 | uuencode (.uu, incl. UUTool) | extract | — (plain uu, UUTool's two-fork "MU" shape, and documents posted in several parts★★) | 7 generated cases, the two-fork ones adjudicated by macutils' `hexbin`; `synth-uu-mac.uu` is in the differential suite | 4 KB | full |
 | Alysis SuperDisk! (.X, .x) | extract | **both containers** (record-stream archive and single file); methods 1-4 and 5-8 (a finite-context predictor over a 13- or 16-bit context, with the flag bitmap and/or the literals Huffman-coded), 9 Huffman, 10 SlowFastA and 11 SlowFastB (LZSS); 13 declined per entry, and 20 is an encoder for 11 rather than a method of its own✧✧ | 2 fixtures, 5 forks, adjudicated by the archives' OWN self-extractors on an emulated Mac, + 11 single-file specimens written by Alysis's own control panel (methods 1 and 6) and graded against their inputs, + every method 1..9 through Alysis's own Add-In Modules under qemu-m68k (`tools/sdmodule/`) | 72–84 KB✧✧ | full |
-| StuffIt SpaceSaver (`SPSV`) | extract | 0 stored, 4 "Alg 4" — an LZSS whose window starts loaded with a preset dictionary that ships inside SpaceSaver; 1, 2 and 3 declined per entry✦✦ | no oracle and no specimen — but **Aladdin's own encoder agrees with this decoder field for field** (`CMod 20`, 2026-08-23), which is what grades it, plus a synthetic round-trip and unit tests✦✦ | 4 KB stored, **36 KB** for what SpaceSaver writes (measured on a Mac Plus); 68 KB is the ceiling the width byte allows. The dictionary is 9.7 KB of static data, not heap | full |
+| StuffIt SpaceSaver (`SPSV`) | extract | **every method the format has**: 0 stored, 1 and 2 (the "Original" LZSS pair), 3 "Alg 3" (Huffman + LZ77), 4 "Alg 4" — the last two starting their window loaded with a preset dictionary that ships inside SpaceSaver✦✦ | no oracle and no fixture, but **Aladdin's own compressors run under `qemu-m68k` and 44 forks they wrote read back byte-exact** (`tools/ssmodule/`, 2026-08-25), plus 160 corrupted variants, a synthetic round-trip and unit tests✦✦ | 4 KB stored, 8 KB method 1, 84 KB method 2, 41 KB method 3, **36 KB** for what SpaceSaver writes (measured on a Mac Plus); 68 KB is the ceiling the width byte allows. The dictionary is 9.7 KB of static data, not heap | full |
 | LZH / LHA (.lzh, .lha) | extract | -lh0- store, -lh1- (LHarc's adaptive Huffman, shared with StuffIt method 5), **-lh2- (both codes adaptive, the position tree growing with the output)**, **-lh3- (static, rebuilt per block)**, -lh4-/-lh5-/-lh6-/-lh7- (static Huffman over a 4/8/32/64 KB window), -lhd- directories, LArc's -lz4-/-lz5-/-lzs-; header levels 0, 1, 2 and 3; **MacLHA's MacBinary payload unwrapped into two forks**; every method the format has except PMarc✵ | 8 fixtures (1 real Amiga archive + 7 of lhasa's) + **182 archives from fourteen writers**, each graded against `unar` and against lhasa, + 12 sets written by LHa 1.14i itself, + 15 -lh2- and 6 -lh3- entries generated for the purpose✵ | 4–74 KB✵ | full |
 | AppleLink package (.pkg) | detect only | — | no specimen anywhere: the probe is Aladdin's own recogniser, at 0 false positives across 928 fixtures (*AppleLink packages*, below) | — | — |
 | DiskCopy 4.2 (.image) | detect only | — | synthetic 800K GCR + real 800K image; 0 false positives in 807 fixtures (re-measured 2026-08-15) | — | — |
@@ -378,10 +378,11 @@ fork records, the module table and what each method is: *StuffIt SpaceSaver*,
 below. It has no oracle and no fixture, and
 SpaceSaver itself has still not been made to compress anything on this machine
 (OPEN_ITEMS.md) — but since 2026-08-25 it is **not** graded by nothing but
-itself: Aladdin's own `CMod` codecs run under `qemu-m68k` and write the
-specimens (`tools/ssmodule/`, TESTING.md). The encoder written from the same
-disassembly as the decoder remains a consistency check rather than an oracle,
-and is now the weaker of the two.
+itself: Aladdin's own `CMod` codecs run under `qemu-m68k`, write the specimens
+and read them back (`tools/ssmodule/`, TESTING.md). **All five methods are
+implemented as of that day.** The encoder written from the same disassembly as
+the decoder remains a consistency check rather than an oracle, and is now the
+weaker of the two.
 
 †† **Multipart, in both directions, since 2026-08-15.** A `.hqx` file may hold
 more than one document, and a single document may have been posted in several
@@ -725,7 +726,7 @@ first, at offset 84, and the other follows it — read each at its own offset.
 | 0 | 1 "Default Compressor" | any | stored, implemented |
 | 1 | 3 "Original Fast Compressor" | any | **implemented** — LZSS, 12-bit distance* |
 | 2 | 4 "Original Slow Compressor" | any | **implemented** — a 4,096-entry position table* |
-| 3 | 10 "Alg 3", 11 decompress-only, 15 PowerPC | 68030 and up / any / PowerPC | declined per entry; a specimen on demand* |
+| 3 | 10 "Alg 3", 11 decompress-only, 15 PowerPC | 68030 and up / any / PowerPC | **implemented** — Huffman + LZ77* |
 | 4 | 20 "Alg 4", 21 decompress-only | 68000-68020 / any | implemented |
 
 A file whose compressor byte is none of these is still recognised and named —
@@ -737,10 +738,11 @@ any Mac can read any file. That was also why 1, 2 and 3 were declined, and **it 
 2026-08-25**: * `tools/ssmodule/` runs the modules themselves under
 `qemu-m68k`, compressor as well as expander, so every method the format has
 writes and reads on demand — 71 round trips through Aladdin's own code, in 3
-seconds (TESTING.md). **Methods 1 and 2 were implemented the same day** on
-the strength of it, and 34 forks Aladdin's compressors wrote read back
-byte-exact here. Method 3 is still declined, now for want of the codec
-rather than of a specimen (OPEN_ITEMS.md).
+seconds (TESTING.md). **All three were implemented the same day** on the
+strength of it, and 44 forks Aladdin's compressors wrote read back
+byte-exact here — so every method this format has is now read, and the
+per-entry refusal is left for a compressor byte no version of SpaceSaver
+ever wrote.
 
 **Methods 1 and 2 share a framing and nothing else.** Both read an 8-byte
 block header — a first byte that says "stored" and a 32-bit big-endian
@@ -758,6 +760,22 @@ part:
 | the flag word | a counter, 16 items | a sentinel bit above the word, tested once per item |
 | window | 4 KB is enough (12-bit distance) | 64 KB: the table's positions are anywhere in the block |
 | peak heap | 4 KB + 4 KB I/O | 64 KB + 16 KB table + 4 KB I/O |
+
+**Method 3 is a Huffman LZ77, and its shape is deflate-like without being
+deflate.** The framing is method 4's — a 16-bit block count, a width byte,
+then blocks of a 6-byte header — and inside each block:
+
+| | |
+|---|---|
+| alphabets | 308 literal/length symbols and `4 * wbits + 3` distances, both LSB-first |
+| a match | `4 + length`, from base tables the module's init COMPUTES: length extra `i<4 ? 0 : (i-4)>>2` from 0, distance extra `i<3 ? 0 : (i-3)>>2` from 1 |
+| the code lengths | a **recursive meta-coder**: a control byte gives a 2–5 bit raw width, an added constant, an escape meaning "length 0", and a bit saying the symbols are themselves Huffman-coded — by the same routine on its own alphabet. The top symbol repeats the previous length `3 + next` times |
+| the code assignment | canonical, bit-reversed, **in the order a non-stable quicksort leaves the lengths in** (`CMod 11` @0x15a) — so a decoder has to reproduce that sort, which this one does iteratively because the engine forbids recursion |
+| peak heap | 32 KB window + ~5 KB of tables + 4 KB I/O = **41 KB** on a 120 KB fork |
+
+Measured on that fork, the five methods cost **4 KB, 8 KB, 84 KB, 41 KB and
+36 KB** and compress it to 120,000 / 81,140 / 67,412 / 48,636 / 66,936 bytes
+— Alg 3 is the best of them, which is why a 68030 selects it.
 
 Neither uses the preset dictionary — `CMod 3` and `CMod 4` never read the
 parameter block past +52 (measured) — and method 3 needs it as much as
@@ -2434,7 +2452,7 @@ with this archive."*
 | `.arc` (ARC / ArcMac) | with the add-on | **yes since 2026-08-15**, methods 1-9; ArcMac's two-fork payload since 2026-08-16 (★★★ above) |
 | uuencode (`.uu`) | with the add-on | **yes since 2026-08-15**, plain and UUTool's two-fork shape |
 | AppleLink `.pkg` | with the add-on | **named since 2026-08-23**, not expanded: the probe is Aladdin's own recogniser, read out of the `PKG Expand Translator` that StuffIt Deluxe 3.5.1 ships (*AppleLink packages*, above). What is missing is a specimen |
-| StuffIt SpaceSaver | with the add-on | **yes since 2026-08-22**, methods 0 and 4 (what a 68000 writes), with SpaceSaver's own dictionary built in since 2026-08-23 so nothing else is needed; 1, 2 and 3 declined per entry (*StuffIt SpaceSaver*, above) |
+| StuffIt SpaceSaver | with the add-on | **yes since 2026-08-22**, and since 2026-08-25 **every method the format has** — 0, 1, 2, 3 and 4 — with SpaceSaver's own dictionary built in so nothing else is needed (*StuffIt SpaceSaver*, above) |
 | Chained expansion (`.sit.hqx`) | yes, and can be turned off | yes, `-nr` turns it off |
 | System 7 conveniences | drag-and-drop of files, folders and whole disks; watch folders; background expansion; Apple events | none; Standard File, one archive at a time |
 | Verification | none published | 932 fixtures byte-exact against `unar`/`macunpack` — bar the one uuencode fixture, which `unar` cannot read at all and whose ground truth is its generator's input, with `hexbin` agreeing |

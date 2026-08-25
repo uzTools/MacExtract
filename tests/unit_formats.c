@@ -2947,9 +2947,11 @@ static void test_spacesaver_alg4(void)
     CHECK(cap.count == 1 && cap.status[0] == UNC_ERR_UNSUPPORTED);
     CHECK(cap.dlen[0] == 0);
 
-    /* Methods 1, 2 and 3 are declined per entry, not per archive: the
-     * entry is still named and its sizes still reported. */
-    f[33] = 3;
+    /* A method no version of SpaceSaver ever wrote is declined per
+     * ENTRY, not per archive: the entry is still named and its sizes
+     * still reported. Methods 0..4 all decode as of 2026-08-25
+     * (FORMATS.md), so this is method 5 — reserved, and refused. */
+    f[33] = 5;
     test_make_memio(&io, &m, f, 84 + n);
     cap_make(&sk, &cap);
     CHECK(unc_extract_as(UNC_FORMAT_SPACESAVER, &io, &sk, &al, NULL,

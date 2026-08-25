@@ -1211,12 +1211,15 @@ emulator, and runs in about 3 seconds.
 3. **A stored block built by hand**, which both Original expanders must
    return verbatim: flag byte 1 at +0, big-endian payload length at +4,
    payload at +8.
-4. **This engine against the module** for methods 0, 1, 2 and 4 —
-   byte-exact — and method 3 asserted to fail as the entry, not the
-   file. `IMPLEMENTED` at the top of the driver is the list, and it has
-   to match `src/fmt_spacesaver.c`: a method in one and not the other
-   fails this phase from either side.
-5. `--keep` writes one specimen per method into
+4. **This engine against the module** for every method the format has —
+   byte-exact, 44 forks. `IMPLEMENTED` at the top of the driver is the
+   list, and it has to match `src/fmt_spacesaver.c`: a method in one and
+   not the other fails this phase from either side.
+5. **Corrupted specimens through this engine**, 40 per method: the
+   corpus has no SpaceSaver fixture, so this is the only place these
+   codecs meet damaged input. Each must exit as itself rather than as a
+   signal, and must exit at all.
+6. `--keep` writes one specimen per method into
    `specimens/spacesaver/modules/` beside the emulator's other state. They
    go in a subdirectory on purpose: `run_spacesaver.py` grades every `.ss`
    next to it, and three of the five use a method this engine does not
@@ -1332,10 +1335,12 @@ not that either side is right. 3/3 at 4 MB and 3/3 at the 1 MB floor
 
 **What this cannot see.** It grades methods 0 and 4 because that is what the
 machine that made the specimens writes — Gestalt `cput` picks 4 below a
-68030 (FORMATS.md). Methods 1, 2 and 3 are compiled into nothing: they are
-declined per entry, and the unit test asserts the declining. The unit tests
-also carry what no specimen here has: a resource fork whose stream is
-written BEFORE the data fork's, which is what the header's offsets are for.
+68030 (FORMATS.md). Methods 1, 2 and 3 are graded off the Macintosh instead,
+against the modules that write them (*SpaceSaver's own codecs*, below); what
+the unit test still asserts is the per-ENTRY refusal, now for method 5, which
+no version of SpaceSaver ever wrote. The unit tests also carry what no
+specimen here has: a resource fork whose stream is written BEFORE the data
+fork's, which is what the header's offsets are for.
 
 ## Segmented archives (`tools/run_segments.py`, in `ci.sh`)
 
