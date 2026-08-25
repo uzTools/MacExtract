@@ -31,7 +31,7 @@ whole corpus for that format (engine allocations only, via
 | ARC / ArcMac (.arc) | extract | 1/2 store, 3 RLE90, 4 squeeze+RLE90, 5/6/7 crunch, 8 12-bit LZW+RLE90, 9 13-bit LZW, 0x7f compress; ArcMac's two-fork payload since 2026-08-16★★★; 0x0a/0x0b (PKARC) declined per entry★; **garbled (password-XORed) members decrypted** | 10 generated archives (methods 1-9, adjudicated by `unar`) + 3 written by Debian's `arc` 5.21q; `synth-arc-mixed.arc` also has an `unar` manifest and is in the differential suite | 4–32 KB★ | full |
 | btoa (`xbtoa`/`.ascii`) | extract | — (base-85 ASCII armour; both the `xbtoa5` and the older `xbtoa Begin` framings)◆ | no corpus file and no second reader: graded against **btoa 5.2.1 itself**, which encodes the subjects `tools/run_btoa.py` decodes | 12 KB | full |
 | uuencode (.uu, incl. UUTool) | extract | — (plain uu, UUTool's two-fork "MU" shape, and documents posted in several parts★★) | 7 generated cases, the two-fork ones adjudicated by macutils' `hexbin`; `synth-uu-mac.uu` is in the differential suite | 4 KB | full |
-| Alysis SuperDisk! (.X, .x) | extract | **both containers** (record-stream archive and single file); methods 1-4 and 5-8 (a finite-context predictor over a 13- or 16-bit context, with the flag bitmap and/or the literals Huffman-coded), 9 Huffman, 11 SlowFastB (LZSS); 10, 13 and 20 declined per entry✧✧ | 2 fixtures, 5 forks, adjudicated by the archives' OWN self-extractors on an emulated Mac, + 11 single-file specimens written by Alysis's own control panel (methods 1 and 6) and graded against their inputs | 72–84 KB✧✧ | full |
+| Alysis SuperDisk! (.X, .x) | extract | **both containers** (record-stream archive and single file); methods 1-4 and 5-8 (a finite-context predictor over a 13- or 16-bit context, with the flag bitmap and/or the literals Huffman-coded), 9 Huffman, 11 SlowFastB (LZSS); 10, 13 and 20 declined per entry✧✧ | 2 fixtures, 5 forks, adjudicated by the archives' OWN self-extractors on an emulated Mac, + 11 single-file specimens written by Alysis's own control panel (methods 1 and 6) and graded against their inputs, + every method 1..9 through Alysis's own Add-In Modules under qemu-m68k (`tools/sdmodule/`) | 72–84 KB✧✧ | full |
 | StuffIt SpaceSaver (`SPSV`) | extract | 0 stored, 4 "Alg 4" — an LZSS whose window starts loaded with a preset dictionary that ships inside SpaceSaver; 1, 2 and 3 declined per entry✦✦ | no oracle and no specimen — but **Aladdin's own encoder agrees with this decoder field for field** (`CMod 20`, 2026-08-23), which is what grades it, plus a synthetic round-trip and unit tests✦✦ | 4 KB stored, **36 KB** for what SpaceSaver writes (measured on a Mac Plus); 68 KB is the ceiling the width byte allows. The dictionary is 9.7 KB of static data, not heap | full |
 | LZH / LHA (.lzh, .lha) | extract | -lh0- store, -lh1- (LHarc's adaptive Huffman, shared with StuffIt method 5), -lh4-/-lh5-/-lh6-/-lh7- (static Huffman over a 4/8/32/64 KB window), -lhd- directories, LArc's -lz4-/-lz5-/-lzs-; header levels 0, 1, 2 and 3; **MacLHA's MacBinary payload unwrapped into two forks**; -lh2-/-lh3- declined per entry✵ | 8 fixtures (1 real Amiga archive + 7 of lhasa's) + **182 archives from fourteen writers**, each graded against `unar` and against lhasa, + 12 sets written by LHa 1.14i itself✵ | 4–74 KB✵ | full |
 | AppleLink package (.pkg) | detect only | — | no specimen anywhere: the probe is Aladdin's own recogniser, at 0 false positives across 928 fixtures (*AppleLink packages*, below) | — | — |
@@ -250,9 +250,35 @@ marking a stored block.
 | 3 | — | bitmap stored, literals Huffman-coded |
 | 4 | — | both Huffman-coded |
 | 5-8 | — | 1-4 again, over a 16-bit context instead of a 13-bit one |
-| 9 | "30% Solution" | Huffman alone |
+| 9 | "30% Solution" | Huffman alone, its region starting at the block's LENGTH word✦ |
 | 11 | "SlowFastB" | LZSS, lengths 2-282, offsets 1-49120 |
 | 10, 13, 20 | "SlowFastA", "SlowFastC", "Tennessee" | **declined per entry** |
+
+✦ **And the method is the low BYTE of that word, not the word.** Method 9
+keeps its Huffman `startbits` in the high byte, so a 16-bit read of a real
+method 9 block gives 0x0809 and this engine refused it as unsupported until
+2026-08-25 (BLOCKERS.md). Both halves come from the reference dispatching on
+`a2@(3)` — CODE 2 @0x6ba — and calling the Huffman routine with `a2`
+unchanged for method 9 (@0x712) where the 1..4 family advances past four
+bytes first (@0x812).
+
+**Every method 1..9 now has a second implementation, and it runs on Linux.**
+Disk Expander 1.2's `Cmpr` resources are one Add-In Module per codec — 68k
+with no Toolbox in them — and `tools/sdmodule/` lifts them out of the corpus
+fixture and calls them under `qemu-m68k`. Results, in `./ci.sh`:
+
+| what | through both readers |
+|---|---|
+| corpus blocks (method 11) | 4, byte-exact |
+| specimens Alysis's own compressor wrote (methods 1 and 6) | 14, byte-exact |
+| synthetic blocks, methods 1-9 | byte-exact, except the refill boundary below |
+
+The one disagreement is where a Huffman region's neighbour begins when the
+coded flag bitmap ends **exactly** on a 32-bit refill: this engine follows the
+1991 self-extractor (cursor + 2) and the 1992 module reads one refill
+further. Nothing reachable writes such a block — every specimen and both
+archives decode identically under both — so which is right is **open**
+(OPEN_ITEMS.md).
 
 **The single-file container joined on 2026-08-22.** SuperDisk! writes two
 shapes and this engine now reads both: the record-stream archive, and what
@@ -271,9 +297,9 @@ The corpus's two archives use 7 and 11. The method table is not guesswork:
 decoding method 11 yields Disk Expander 1.2's own resource fork, whose `Cmpr`
 resources are one module per method, each stating its number and its name
 (DECISIONS.md, "SuperDisk!, read out of SuperDisk!"). 10, 13 and 20 are
-declined because no fixture uses them and no encoder is reachable, so an
-implementation could not be graded — the bargain LZH's `-lh2-`/`-lh3-`
-and DiskDoubler's methods 1-5 and 7 already make.
+declined because no fixture uses them — their modules ARE in hand, and
+runnable (`tools/sdmodule/run_sdmodule.py --list` names all seven), so what
+is missing is a block to decode rather than a reference.
 
 **There is no oracle but the archives themselves.** `unar` and `macunpack`
 both stop at the BinHex envelope, so `fixtures/manifests/` describes the

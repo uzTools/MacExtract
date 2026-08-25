@@ -685,7 +685,14 @@ static int sd_block_head(UncCtx *c, uint32_t at, uint32_t *clen,
     if (unc_read_at(c->io, at, hdr, 6) != UNC_OK) return UNC_ERR_TRUNCATED;
     *clen   = n;
     *ulen   = unc_get_u16be(hdr + 2);
-    *method = unc_get_u16be(hdr + 4);
+    /* The method is the LOW byte of that word, not the word: the
+     * reference dispatches on `a2@(3)` with a2 at the length word
+     * (CODE 2 @0x6ba, and the Add-In Modules' own dispatch), and the
+     * high byte carries something else — method 9 keeps its Huffman
+     * `startbits` there. Read as a word it was 0x0809 for a method 9
+     * block, which this engine then refused as unsupported (2026-08-25,
+     * BLOCKERS.md). */
+    *method = hdr[5];
     if (*ulen == 0 || *ulen > SD_BLOCKMAX) return UNC_ERR_CORRUPT;
     return UNC_OK;
 }
@@ -719,7 +726,7 @@ static int sd_fork(SdState *s, uint32_t at, uint32_t want)
 
     s->winlen = 0;
     while (done < want) {
-        uint32_t clen, ulen, body;
+        uint32_t clen, ulen, body, head;
         unsigned method;
         int stored;
 
@@ -744,14 +751,21 @@ static int sd_fork(SdState *s, uint32_t at, uint32_t want)
         }
         if (ulen > want - done) return UNC_ERR_CORRUPT;
 
-        body = clen - 6u;
+        /* Where the decoder is handed the block. Method 9 gets it at the
+         * LENGTH word — its Huffman header starts there, so `left` is
+         * the same word as `ulen` and `startbits` is the byte the method
+         * word shares with the method itself. CODE 2 calls the Huffman
+         * routine with a2 unchanged for method 9 (@0x712) where the
+         * 1..4 family advances it past four bytes first (@0x812). */
+        head = (method == 9) ? 2u : 6u;
+        body = clen - head;
         /* The reference hands the decoder the two bytes that follow the
          * block as well — they are the next block's length — so keep
          * them, plus slack for a bit reader that peeks past the end. */
         if ((e = sd_need(c, &s->in, body + 8u)) != UNC_OK) return e;
         s->in.p[body] = s->in.p[body + 1] = 0;
-        if (unc_read_at(c->io, at + 6, s->in.p, (int32_t)(body + 2u)) != UNC_OK &&
-            unc_read_at(c->io, at + 6, s->in.p, (int32_t)body) != UNC_OK)
+        if (unc_read_at(c->io, at + head, s->in.p, (int32_t)(body + 2u)) != UNC_OK &&
+            unc_read_at(c->io, at + head, s->in.p, (int32_t)body) != UNC_OK)
             return UNC_ERR_TRUNCATED;
         s->in.p[body + 2] = s->in.p[body + 3] = 0;
         s->in.p[body + 4] = s->in.p[body + 5] = 0;
@@ -871,11 +885,20 @@ int unc_superdisk_extract(UncCtx *c)
     int has_module, err = UNC_OK;
 
     {   /* the single-file container first: it has no record stream, so
-         * the archive walk below would read its header as one */
+         * the archive walk below would read its header as one.
+         *
+         * Only as much head as there IS: the smallest container this
+         * format can write is 40 bytes — 30 of header, a one-character
+         * name, and an eight-byte block — and asking for 64 turned every
+         * one under that into "archive structure is corrupt". Found
+         * 2026-08-25 with a synthetic 60-byte container
+         * (tools/sdmodule/). */
         uint8_t head[64];
-        uint32_t body;
-        if (unc_read_at(c->io, 0, head, (int32_t)sizeof head) == UNC_OK) {
-            body = unc_superdisk_single_body(head, (int32_t)sizeof head);
+        uint32_t body, size = c->io->size(c->io->ctx);
+        int32_t n = (int32_t)sizeof head;
+        if (size != UNC_SIZE_UNKNOWN && size < sizeof head) n = (int32_t)size;
+        if (n >= 40 && unc_read_at(c->io, 0, head, n) == UNC_OK) {
+            body = unc_superdisk_single_body(head, n);
             if (body) return sd_single(c, head, body);
         }
     }

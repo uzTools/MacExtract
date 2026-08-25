@@ -51,6 +51,12 @@ python3 tools/run_now.py --unclassic build/san/unclassic \
 # --adjudicate); this replays that verdict by content.
 python3 tools/run_superdisk.py --unclassic build/san/unclassic \
     || fail "SuperDisk! tests"
+# ...and the same format's SECOND implementation, off the Macintosh:
+# Alysis's own Add-In Modules, lifted out of a corpus fixture and run under
+# qemu-m68k (tools/sdmodule/). Every method 1..9 goes through both readers.
+# Skips cleanly without qemu-m68k or the cross-compiler.
+python3 tools/sdmodule/run_sdmodule.py --unclassic build/san/unclassic \
+    || fail "SuperDisk! module differential"
 # btoa/atob (M26). No corpus file and no second reader — `unar` does not
 # know the format — so the ORIGINAL implementation is the encoder: the
 # suite compiles reference/btoa and grades our decoder against what it

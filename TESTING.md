@@ -910,10 +910,45 @@ that wrong is entries that are silently never reached.
 **What this cannot see.** The hashes were produced by this reader before they
 were confirmed on the emulator, so they are a regression fence and not an
 oracle; re-confirming them means re-running `--adjudicate`. It also grades
-two methods, 7 and 11, because that is what the two archives use — everything
-else is compiled and never run (OPEN_ITEMS.md, *Untested code*). The unit
+two methods, 7 and 11, because that is what the two archives use. The unit
 test carries what no fixture can: a two-fork file, so that fork order is asserted, and an
-undecodable method BETWEEN two decodable entries.
+undecodable method BETWEEN two decodable entries. **Every other method is
+graded by the suite below**, which did not exist until 2026-08-25.
+
+## SuperDisk!'s second implementation (`tools/sdmodule/`, in `ci.sh`)
+
+Added 2026-08-25, and it needs no Macintosh. Disk Expander 1.2 — which
+`fixtures/alysis-disk-expander-12.hqx` carries and this engine extracts —
+holds one `Cmpr` resource per codec: a "SuperDisk! Add-In Module", 68k code
+with no Toolbox in it. `sdmod_run.c` is built for m68k-linux and calls one
+under `qemu-m68k` with the parameter block INIT 32 fills in; the driver
+lifts the modules out of the fixture and runs three phases.
+
+    tools/sdmodule/run_sdmodule.py --unclassic build/unclassic
+    tools/sdmodule/run_sdmodule.py --list        # the seven modules
+
+1. **Every real block in both corpus archives** whose method has a module,
+   against what this engine wrote — and then one block CORRUPTED on purpose,
+   which must not match. A comparison that has never failed is not evidence.
+2. **The specimens Alysis's own 1991 control panel wrote**
+   (`tools/vmac/sdcompress.py`), when they are in the emulator cache:
+   14 blocks of methods 1 and 6, byte-exact both ways.
+3. **Synthetic blocks for methods 1..9**, built from this engine's reading
+   and put through both readers.
+
+**The callback is the part to know about.** "Tighter" decodes methods 2, 3,
+4, 6, 7 and 8, and it hands its Huffman regions back to its CALLER to decode
+— `jsr` through a field of the parameter block — so the runner has to be a
+dispatcher as well as a loader. Without one it jumps to address zero.
+
+**What it cannot see.** A synthetic Huffman region is written with a flat
+8-bit table, so no real tree shape is exercised: what is graded is the
+framing, the flag bitmap and the context predictor. Methods 10, 13 and 20
+have modules but no block to feed them. And agreement is not correctness
+where both sides came from one reading — a framing error shows up, a
+misreading of what the original COMPRESSOR emits does not. The one
+disagreement the two references have with each other is counted separately
+and printed, not hidden (FORMATS.md, the method table).
 
 ## AppleLink packages (unit tests + a corpus sweep)
 

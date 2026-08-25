@@ -622,6 +622,101 @@ def sweep_report(img, shots):
             print("  %-14s %-22s unreadable (%s)" % (name, settings, e))
 
 
+# Subjects sized to put the END of a coded flag bitmap exactly on a 32-bit
+# refill boundary. That is the one place Alysis's own two implementations
+# disagree — the 1991 self-extractor this engine follows puts the literals at
+# the bit reader's cursor plus two, the 1992 Add-In Module reads one refill
+# further (OPEN_ITEMS.md, FORMATS.md's method table) — and no reachable
+# specimen was ever on it. One block per subject, because a file under 32 KB
+# is one block, so `ulen` IS the subject's size and the bitmap is
+# ceil(ulen/8) bytes.
+#
+#   ceil(size/8) % 4 == 0  ->  on the boundary
+BOUNDARY = [("Qbound1", 1024),     # 128 flag bytes: ON it
+            ("Qctrl1", 1000),      # 125: not, and the control
+            ("Qbound2", 2048),     # 256: on it
+            ("Qctrl2", 2040)]      # 255: not
+
+
+def boundary(keep=False):
+    """Ask the 1991 compressor for a block on the refill boundary.
+
+    Speed "Fast" is what the sweep found produces method 6 — the wide
+    variant with a Huffman-coded flag bitmap — where the default gives
+    method 1 and no bitmap to code.
+    """
+    s, work, img = session("boundary",
+                           [(n, "TEXT", "ttxt", SWEEP_DATA[:sz], b"", None)
+                            for n, sz in BOUNDARY])
+    try:
+        open_panel(s)
+        settings_page(s)
+        set_axis(s, "speed", 0, "fast")
+        reopen_panel(s, "fast")
+        for i, (name, _sz) in enumerate(BOUNDARY):
+            make_one(s, name, name, i == 0)
+        s.mac.click(*VOLUME_ICON)
+        s.mac.command_key("y")
+        s.shot("ejected", wait=15.0)
+    finally:
+        time.sleep(5)
+        s.close()
+    rc = boundary_report(img, s.shots)
+    if not keep:
+        shutil.rmtree(work, ignore_errors=True)
+    return rc
+
+
+def boundary_report(img, shots):
+    """What the compressor wrote, and whether this engine reads it back.
+
+    The verdict is one comparison: the subject bytes that went in against
+    what `unclassic x` gets out. If a block on the boundary comes back
+    byte-exact, this engine's reading is the compressor's, and the 1992
+    module — which `tools/sdmodule/run_sdmodule.py` will then disagree
+    with on the same file — is the one that is wrong.
+    """
+    import struct
+    from superdisk import read_forks                    # noqa: E402
+    os.makedirs(shots, exist_ok=True)
+    got = read_forks(img)
+    bad = 0
+    for name, size in BOUNDARY:
+        blob = None
+        for path, (_t, _c, data, _r) in got.items():
+            if path[-1] == name + ".x":
+                blob = data
+        if blob is None:
+            print("sdcompress: %-10s (no output)" % name)
+            bad += 1
+            continue
+        out = os.path.join(shots, name + ".x")
+        open(out, "wb").write(blob)
+        nlen = blob[30]
+        body = 31 + nlen
+        body += body & 1
+        clen, ulen, meth = struct.unpack_from(">HHH", blob, body)
+        nflags = min((ulen + 7) >> 3, ((ulen >> 3) + 4) & ~1)
+        tmp = tempfile.mkdtemp(prefix="sdb-")
+        try:
+            subprocess.run([cli(), "x", "-o", tmp, out],
+                           capture_output=True, text=True)
+            f = os.path.join(tmp, name)
+            back = open(f, "rb").read() if os.path.exists(f) else b""
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+        ok = back == SWEEP_DATA[:size]
+        bad += not ok
+        print("sdcompress: %-10s ulen %5d method %2d flags %4d %-14s -> %s"
+              % (name, ulen, 0 if (clen & 0x8000) else meth, nflags,
+                 "ON THE BOUNDARY" if nflags % 4 == 0 else "not on it",
+                 "byte-exact" if ok else "WRONG"))
+    print("sdcompress: specimens in %s — now run "
+          "tools/sdmodule/run_sdmodule.py, which grades the same blocks "
+          "through the 1992 module" % shots)
+    return 1 if bad else 0
+
+
 def make_one(s, name, tag, first):
     """One trip through "Make File" and its standard file dialog."""
     s.mac.click(*MAKE_FILE)
@@ -764,6 +859,9 @@ def main():
                     help="compress a subject and report the method")
     ap.add_argument("--make", action="store_true",
                     help="rename subjects so SuperDisk! compresses them")
+    ap.add_argument("--boundary", action="store_true",
+                    help="compress subjects sized to land a coded flag "
+                         "bitmap on a 32-bit refill boundary")
     ap.add_argument("--keep", action="store_true")
     a = ap.parse_args()
     if a.setup:
@@ -788,6 +886,8 @@ def main():
         return compress(a.keep)
     elif a.make:
         return make(a.keep)
+    elif a.boundary:
+        return boundary(a.keep)
     else:
         ap.print_help()
     return 0

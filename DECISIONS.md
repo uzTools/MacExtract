@@ -117,6 +117,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-24 (the low-memory message) — saying the number, and where it can be graded
 - 2026-08-24 (`Icon\r`) — an instrument that quietly normalised what it measured
 - 2026-08-25 (the System 7 UI) — the dialog is a different dialog, and where it opens
+- 2026-08-25 (SuperDisk!'s second implementation) — the oracle was inside the corpus, and it runs on Linux
 
 ---
 
@@ -6517,3 +6518,53 @@ this tier, and it was true — but it named the cheaper half of the problem.
 A harness that navigates by coordinate has TWO assumptions about every
 dialog: where the items are, and what is in them. The first fails visibly;
 the second produces a plausible frame of the wrong directory.
+
+
+## 2026-08-25 (SuperDisk!'s second implementation) — the oracle was inside the corpus, and it runs on Linux
+
+**Claim (measured).** Alysis's own decoders run under `qemu-m68k` on this
+machine, in milliseconds, with no Macintosh anywhere: Disk Expander 1.2's
+`Cmpr` resources are one Add-In Module per codec, 68k code that touches no
+Toolbox, and `tools/sdmodule/` lifts all seven out of a corpus fixture and
+calls them. Every method 1..9 now goes through two implementations in
+`./ci.sh` — 4 corpus blocks, 14 blocks Alysis's own 1991 compressor wrote,
+and synthetic blocks for the six methods no reachable file uses.
+
+**It found a defect the moment it ran.** Method 9's Huffman region starts at
+the block's LENGTH word, not after the six-byte header, and the method is the
+low BYTE of the word above it — the high byte is that region's `startbits`.
+Read as a 16-bit field a real method 9 block says 0x0809, so this engine
+refused every one of them. BLOCKERS.md has the row and the cost.
+
+### Why this was reachable and nobody reached it
+
+The modules were FOUND on 2026-08-22 — DECISIONS.md that day lists the whole
+method table, read out of these same resources — and used as a table of
+names. What was not asked is whether they would RUN. They are
+position-independent, they take a parameter block in A0, and the only thing
+between them and a Linux process is that one of them ("Tighter") calls its
+caller back to decode a sub-region: a `jsr` through a field of the parameter
+block, which is address zero unless somebody puts a dispatcher there. That
+callback is thirty lines.
+
+**The general form is worth keeping:** a reference implementation for a 68k
+format is often a subroutine, not an application, and a subroutine does not
+need an emulated Macintosh — it needs a calling convention. `qemu-m68k` was
+already in this repository's CI for the cipher vectors.
+
+### What the harness cannot see, and why it says so out loud
+
+A synthetic block is built from THIS engine's reading, so the Huffman regions
+carry a flat 8-bit table nothing real would emit: what is graded is the
+framing, the flag bitmap and the context predictor, not the code assignment.
+And agreement is not correctness where both sides share one reading — a
+framing error shows, a misunderstanding of what the original COMPRESSOR emits
+does not.
+
+**The one place the two references disagree is written down rather than
+smoothed over.** When a coded flag bitmap ends exactly on a 32-bit refill
+boundary, the 1991 self-extractor and the 1992 module part company over where
+the literals begin, by one refill. This engine follows 1991, which is what
+every reachable specimen was written by. The harness counts those cases
+separately and names them; OPEN_ITEMS.md says what would settle it. A harness
+that had quietly skipped them would have looked cleaner and known less.

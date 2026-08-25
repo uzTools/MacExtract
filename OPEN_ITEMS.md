@@ -136,10 +136,13 @@ Unlike section 3, none of this is impossible here: a download would do it.
   them, so an implementation could not be graded. **What is missing is a
   gradeable SPECIMEN, and the compressor is in hand and cannot write
   one**: every setting of Alysis's own control panel produces method 1
-  or 6 (`sdcompress.py --sweep`), and 11 needs an Add-In Module that a
-  corpus archive happens to carry, so these three plausibly need modules
-  too. **What would close it:** an archive that uses one, or the Add-In
-  Modules. One lead not followed: the panel's help offers JPEG lossy,
+  or 6 (`sdcompress.py --sweep`). **Their modules are NOT missing** —
+  all three are in Disk Expander 1.2's `Cmpr` resources inside a corpus
+  fixture, and `tools/sdmodule/run_sdmodule.py --list` names them — so
+  they are a reference to transcribe from and an oracle to grade
+  against, and what is left is one block to decode. Until 2026-08-25
+  this entry said the modules were one of the two things that would
+  close it; they had been in reach since the day method 11 was read. One lead not followed: the panel's help offers JPEG lossy,
   lossy sound and a lossless sound/video mode that no `Cmpr` name
   accounts for — and a lossy mode is something an extractor cannot grade
   against its input by construction.
@@ -252,16 +255,17 @@ Unlike section 3, none of this is impossible here: a download would do it.
 
 ## 5. Untested code, named so it is not mistaken for tested
 
-- **SuperDisk! methods 2, 3, 4, 5, 8 and 9 have never decoded anything.**
-  Both corpus archives use one method each — 7 and 11 — so most of the
-  13-bit context family, two of the four wide variants and Huffman-alone
-  are transcribed, compiled and never run. The unit test cannot help: it
-  builds stored blocks, because writing coded ones would mean grading
-  this decoder against an encoder written from the same reading. That
-  the entry is worth keeping is not a guess — when 1 and 6 left it on
-  2026-08-22, one of the two turned out to be broken (DECISIONS.md
-  2026-08-22, last). **What would change it:** an archive that uses one,
-  or the `Cmpr` modules run under emulation as a second implementation.
+- **SuperDisk!, where a Huffman region's neighbour begins.** The two
+  Alysis implementations disagree with each other by one 32-bit refill
+  when a coded flag bitmap ends exactly on a refill boundary: this
+  engine follows the 1991 self-extractor, the 1992 Add-In Module reads
+  four bytes further (FORMATS.md, the method table). Nothing reachable
+  writes such a block — every specimen and both archives decode
+  identically under both — so this is not known to cost anything.
+  **What would close it:** one block whose `ceil(ulen/8)` is a multiple
+  of four from Alysis's own 1991 compressor, which
+  `tools/vmac/sdcompress.py --compress` can be asked for with a subject
+  sized to hit it.
 - **Methods 3, 4 and 5 have never decoded a fork this project did not
   write.** All three are byte-exact through Salient's own 1991 expander,
   which grades the reading of the format rather than the decoder
