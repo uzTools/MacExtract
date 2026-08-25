@@ -574,6 +574,112 @@ static int sd_slowfastb(SdState *s, const uint8_t *src, uint32_t len,
 }
 
 /* ------------------------------------------------------------------ */
+/* SlowFastA, method 10 — `Cmpr` 21 @0x8a                             */
+/* ------------------------------------------------------------------ */
+
+/* An LZSS with a control word ahead of every 32 items, MSB first: a set
+ * bit is one literal byte, a clear one a match. A match is two bytes —
+ * the high nibble of the first is the length, the remaining twelve bits
+ * are the offset — and it copies `nibble + 2` bytes from `out - offset
+ * + 1`. Twelve bits of 0xF00 or more is an escape: the field's low byte
+ * and one further byte make a sixteen-bit offset. An offset of zero ends
+ * the block.
+ *
+ * **The length is nibble + 2 and not 2*(nibble+1)**, which is the whole
+ * reason this decoder was graded before it was believed: the copy is one
+ * unconditional MOVEB followed by a DBF whose target is the SECOND move
+ * (@0xfc, @0xfe, @0x100), so the loop body is one byte, not two. Read
+ * as a pair it decodes a stream this engine's own test encoder wrote and
+ * disagrees with the module on every match — measured 2026-08-25.
+ *
+ *   Source: the module itself — `Cmpr` 21 of the Disk Expander 1.2
+ *   extension, which `fixtures/alysis-disk-expander-12.hqx` carries and
+ *   this engine extracts. Code at 0x8a: the control word is built at
+ *   0xc4, literals copied at 0xd8, the two-byte match read at 0xe0, the
+ *   twenty-bit escape taken at 0x10a, and the block ends at 0xee where
+ *   the offset field is zero. The parameter block it arrives on is
+ *   Alysis's own published one (tools/sdmodule/sdmod_run.c).
+ *
+ * **No corpus archive uses method 10 and nothing reachable writes one**,
+ * so the module IS the oracle: `tools/sdmodule/run_sdmodule.py` runs it
+ * under qemu-m68k over the same streams this decoder is given and
+ * requires the same bytes out.
+ *
+ * One case is refused rather than copied: an offset of 1 addresses the
+ * byte being written, so the reference copies whatever its destination
+ * buffer happened to hold. That is not a decodable stream, and a
+ * compressor cannot mean it. */
+static int sd_slowfasta(SdState *s, const uint8_t *src, uint32_t len,
+                        uint32_t ulen)
+{
+    uint8_t *win = s->win.p;
+    uint32_t have = s->winlen;          /* history carried across blocks */
+    uint32_t out = 0, at = 0, ctrl = 0;
+    unsigned nbit = 0;
+    int e;
+
+    for (;;) {
+        uint32_t off, n, from;
+
+        if (nbit == 0) {
+            if (at + 4 > len) return UNC_ERR_TRUNCATED;
+            ctrl = unc_get_u32be(src + at);
+            at += 4;
+            nbit = 32;
+        }
+        if (ctrl & 0x80000000u) {                 /* @0xd8: a literal */
+            if (at >= len) return UNC_ERR_TRUNCATED;
+            if (out >= ulen) return UNC_ERR_CORRUPT;
+            win[have + out] = src[at++];
+            out++;
+            ctrl <<= 1;
+            nbit--;
+            continue;
+        }
+        ctrl <<= 1;
+        nbit--;
+
+        if (at + 2 > len) return UNC_ERR_TRUNCATED;
+        n   = (uint32_t)(src[at] >> 4);
+        off = (((uint32_t)src[at] << 8) | src[at + 1]) & 0xFFFu;
+        at += 2;
+        if (off == 0) break;                      /* @0xee */
+        if (off >= 0xF00u) {                      /* @0x10a: sixteen bits */
+            /* ASL.W #8 shifts the marker nibble out of the word, so the
+             * wide offset is the field's LOW byte joined with the next
+             * one — 0..65535, which is the window — and not the marker
+             * carried along into a twenty-bit number. */
+            if (at >= len) return UNC_ERR_TRUNCATED;
+            off = ((off & 0xFFu) << 8) | src[at++];
+            if (off == 0) return UNC_ERR_CORRUPT;
+        }
+        n += 2u;                                  /* @0xfc + @0xfe..@0x100 */
+        if (off < 2u || off - 1u > have + out) return UNC_ERR_CORRUPT;
+        from = have + out - (off - 1u);
+        if (out + n > ulen) return UNC_ERR_CORRUPT;
+        while (n--) {
+            win[have + out] = win[from];
+            out++;
+            from++;
+        }
+    }
+    if (out != ulen) return UNC_ERR_CORRUPT;
+
+    for (out = 0; out < ulen; out++)
+        if ((e = sd_emit(s, win[have + out])) != UNC_OK) return e;
+
+    if (have + ulen > SD_WINDOW) {
+        uint32_t drop = have + ulen - SD_WINDOW;
+        uint32_t i;
+        for (i = 0; i < SD_WINDOW; i++) win[i] = win[drop + i];
+        s->winlen = SD_WINDOW;
+    } else {
+        s->winlen = have + ulen;
+    }
+    return UNC_OK;
+}
+
+/* ------------------------------------------------------------------ */
 /* One block                                                          */
 /* ------------------------------------------------------------------ */
 
@@ -591,6 +697,8 @@ static int sd_block_body(SdState *s, uint32_t ulen, unsigned method,
 
     if (method == 11)
         return sd_slowfastb(s, body, bodylen, ulen);
+    if (method == 10)
+        return sd_slowfasta(s, body, bodylen, ulen);
     if (method == 9) {
         uint32_t i;
         if ((e = sd_huff_start(&lh, body, bodylen, 0)) != UNC_OK) return e;
@@ -771,7 +879,7 @@ static int sd_fork(SdState *s, uint32_t at, uint32_t want)
         s->in.p[body + 4] = s->in.p[body + 5] = 0;
         s->in.p[body + 6] = s->in.p[body + 7] = 0;
 
-        if (method == 11) {
+        if (method == 11 || method == 10) {
             /* SlowFastB's window is history CARRIED ACROSS blocks plus the
              * block being decoded, so it is not bounded by one block's
              * ulen — but it is bounded by the FORK: `have` is the bytes

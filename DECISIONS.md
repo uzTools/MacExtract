@@ -119,6 +119,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-25 (the System 7 UI) — the dialog is a different dialog, and where it opens
 - 2026-08-25 (SuperDisk!'s second implementation) — the oracle was inside the corpus, and it runs on Linux
 - 2026-08-25 (SpaceSaver's INIT) — it installs, and it always did
+- 2026-08-25 (SuperDisk! method 10) — a codec with no data, graded three ways
 
 ---
 
@@ -6638,3 +6639,44 @@ states. The preferences file is written FRESH at every boot from an image
 that has none, so what those defaults actually say — and whether the rule is
 even enabled in them — is the next thing to read, and it can be read off the
 image with `hcopy` rather than driven.
+
+
+## 2026-08-25 (SuperDisk! method 10) — a codec with no data, graded three ways
+
+**Claim (measured).** SlowFastA is implemented and correct against Alysis's
+own decoder: 20 cases where the bytes a test encoder started from, this
+engine's decode, and the module's decode are all equal, including the
+wide-offset escape. `ci.sh` carries the check.
+
+The format: a 32-bit control word ahead of every 32 items, MSB first, a set
+bit being one literal byte and a clear one a two-byte match — high nibble the
+length, low twelve bits the offset — copying `nibble + 2` bytes from
+`out - offset + 1`, with a zero offset ending the block and a field of 0xF00
+or more escaping to a wider one.
+
+### Why this was worth doing at all, when nothing writes method 10
+
+Because "an implementation could not be graded" had stopped being true. The
+module is a decoder that runs on Linux (`tools/sdmodule/`), so a transcription
+has an oracle whether or not a single archive in the world uses the method.
+What is left is a scope question — three codecs no reachable file uses — and
+10 is the one whose module runs end to end, so it is the one that landed.
+
+### The two things the oracle caught, both invisible without it
+
+- **The match length is `nibble + 2`, not `2*(nibble+1)`.** The copy is one
+  unconditional `MOVEB` at 0xfc followed by a `DBF` whose target is the
+  SECOND move at 0xfe — so the loop body is one byte. Read as a pair, the
+  decoder agreed with this project's own test encoder on every case and with
+  the module on none.
+- **The wide offset is sixteen bits, not twenty.** `ASL.W #8` shifts the
+  marker nibble out of the word, so the escape joins the field's LOW byte
+  with the next one. Carried along, the marker would put every wide match
+  about a megabyte behind the output — which no window reaches, and which a
+  reading that never ran would have shipped.
+
+**The lesson is the one this repository already had, in a new place: an
+encoder and a decoder written from one reading agree with each other by
+construction.** Three-way agreement is the cheapest way to make that
+worthless — and it cost nothing here, because the third voice was a 302-byte
+resource inside a fixture the suite already extracts.

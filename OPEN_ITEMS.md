@@ -132,24 +132,29 @@ Unlike section 3, none of this is impossible here: a download would do it.
   3, 4 and 5) and **is "X does not survive" a claim about somebody's
   search?** (BLOCKERS.md, SuperDisk!'s compressor).
 
-- **SuperDisk! methods 10, 13 and 20.** No corpus fixture uses any of
-  them, so an implementation could not be graded. **What is missing is a
-  gradeable SPECIMEN, and the compressor is in hand and cannot write
-  one**: every setting of Alysis's own control panel produces method 1
-  or 6 (`sdcompress.py --sweep`). **Their modules are NOT missing** —
-  all three are in Disk Expander 1.2's `Cmpr` resources inside a corpus
-  fixture, and `tools/sdmodule/run_sdmodule.py --list` names them — so
-  they are a reference to transcribe from and an oracle to grade
-  against, and what is left is one block to decode. Until 2026-08-25
-  this entry said the modules were one of the two things that would
-  close it; they had been in reach since the day method 11 was read.
-  **And "an implementation could not be graded" is no longer the reason
-  to decline them**: a decoder can be graded against its module on
-  arbitrary bytes, no specimen and no encoder needed, which is what
-  `tools/sdmodule/` does for methods 1..9. What is left is a scope
-  choice — three codecs no reachable file uses — not an impossibility.
-  **The writer was searched for on 2026-08-25 and not found.** The
-  vendor's own technology page names SuperDisk! **2.x** as the release
+- **SuperDisk! methods 13 and 20.** No corpus fixture uses any of
+  them, and every setting of Alysis's own control panel produces method
+  1 or 6 (`sdcompress.py --sweep`). **Method 10 left this entry on
+  2026-08-25**: its module runs, so it was transcribed and graded
+  against itself three ways (FORMATS.md, the method table). These two
+  cannot be, and each for its own reason:
+
+  - **13's module traps.** It dies on an A-line instruction under
+    `tools/sdmodule/`'s runner — it wants Toolbox services the runner
+    does not answer. **What would close it:** those few traps
+    emulated, which is the same shape of work as the callback that
+    made "Tighter" run.
+  - **20's module only compresses.** It answers `badCommandError` to
+    the decompress command, and no expander for method 20 exists in
+    any Alysis product in reach — Disk Expander 1.2, eDisk 1.2, More
+    Disk Space 1.1 and Resource Compressor 2.0 were all read. It DOES
+    compress here (4,800 bytes to 94 under `qemu-m68k`), so a
+    transcribed decoder could be graded by round trip against bytes
+    it wrote. **What would close it:** that transcription, or an
+    expander from a release nobody here has.
+
+  The writer of all three was searched for on 2026-08-25 and not found.
+  The vendor's own technology page names SuperDisk! **2.x** as the release
   with "faster and tighter compression algorithms"; it is not on
   Macintosh Repository, Macintosh Garden, Info-Mac's `cmp` directory or
   in archive.org's index, and the two 1.x releases that survive have no

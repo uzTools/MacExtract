@@ -937,6 +937,13 @@ lifts the modules out of the fixture and runs three phases.
    below, and they closed off the way it was supposed to be reachable.
 3. **Synthetic blocks for methods 1..9**, built from this engine's reading
    and put through both readers.
+4. **Method 10 three ways** (added 2026-08-25, when the method was
+   implemented): a stream this harness encodes, decoded by this engine and
+   by SlowFastA's own module, with all three required equal. Nothing in
+   reach writes method 10, so this is the only grading it has — and it
+   earned its keep on the first run, where the match length was read as
+   `2*(nibble+1)` against the reference's `nibble + 2` and the module said
+   so on every match.
 
 **The callback is the part to know about.** "Tighter" decodes methods 2, 3,
 4, 6, 7 and 8, and it hands its Huffman regions back to its CALLER to decode
@@ -952,8 +959,10 @@ it is not the writer of methods 10, 13 and 20 either (OPEN_ITEMS.md).
 
 **What it cannot see.** A synthetic Huffman region is written with a flat
 8-bit table, so no real tree shape is exercised: what is graded is the
-framing, the flag bitmap and the context predictor. Methods 10, 13 and 20
-have modules but no block to feed them. And agreement is not correctness
+framing, the flag bitmap and the context predictor. Method 10's cases are
+one block each, so the history carried BETWEEN blocks is exercised only by
+the code it shares with SlowFastB; 13 and 20 have modules that cannot be
+run end to end here at all (OPEN_ITEMS.md). And agreement is not correctness
 where both sides came from one reading — a framing error shows up, a
 misreading of what the original COMPRESSOR emits does not. The one
 disagreement the two references have with each other is counted separately

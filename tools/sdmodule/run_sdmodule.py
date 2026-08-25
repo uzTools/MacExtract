@@ -650,6 +650,97 @@ def phase_specimens(unclassic, mods, workdir, verbose=False):
     return bad == 0
 
 
+def encode_method10(rnd, nitems):
+    """A method 10 stream, and the bytes it must decode to.
+
+    Written from this engine's reading — which is exactly why the module
+    grades it: a decoder that agrees only with its own encoder agrees with
+    nothing. The first run of this pair disagreed with Alysis's module on
+    every match, because the length was read as 2*(nibble+1) where the
+    reference copies nibble+2 (the DBF's target is the second MOVEB, not
+    the pair).
+    """
+    out = bytearray()
+    items = []
+    for _ in range(8):                       # something to point back at
+        b = rnd.randrange(256)
+        items.append((True, bytes([b])))
+        out.append(b)
+    for _ in range(nitems):
+        if len(out) < 4 or rnd.random() < 0.45:
+            b = rnd.randrange(256)
+            items.append((True, bytes([b])))
+            out.append(b)
+            continue
+        nib = rnd.randrange(0, 16)
+        n = nib + 2
+        back = rnd.randrange(1, min(len(out), 60000) + 1)
+        off = back + 1                       # the reference reads out-off+1
+        if off < 2 or off > 0xFFFF:
+            continue
+        wide = off >= 0xF00 or rnd.random() < 0.25
+        if wide:                             # the escape: marker nibble 0xF
+            payload = bytes([(nib << 4) | 0x0F, (off >> 8) & 0xFF, off & 0xFF])
+        else:
+            payload = bytes([(nib << 4) | ((off >> 8) & 0x0F), off & 0xFF])
+        src = len(out) - back
+        for i in range(n):
+            out.append(out[src + i])
+        items.append((False, payload))
+    items.append((False, b"\x00\x00"))      # offset zero ends the block
+    body = bytearray()
+    i = 0
+    while i < len(items):
+        chunk = items[i:i + 32]
+        ctrl = 0
+        for j, (lit, _) in enumerate(chunk):
+            if lit:
+                ctrl |= 1 << (31 - j)
+        body += struct.pack(">I", ctrl)
+        for _, payload in chunk:
+            body += payload
+        i += 32
+    return bytes(body), bytes(out)
+
+
+def phase_method10(unclassic, mods, workdir, cases, seed, verbose=False):
+    """Method 10, three ways: the bytes, this engine, and Alysis's module.
+
+    Nothing in reach writes a method 10 block — both corpus archives use 7
+    and 11, and the 1991 control panel writes 1 or 6 — so the stream is
+    built here and the module is what says the reading is right. Every case
+    has to come out equal three ways.
+
+    What it cannot see: one block per case, so the history carried BETWEEN
+    blocks is exercised only by the shape of the code it shares with
+    SlowFastB; and a real compressor's choice of matches is not modelled,
+    only the format's grammar.
+    """
+    if 10 not in mods:
+        print("sdmodule: no method 10 module — skipping")
+        return True
+    rnd = random.Random(seed)
+    agree = bad = 0
+    for _ in range(cases):
+        body, want = encode_method10(rnd, rnd.choice([40, 150, 400]))
+        block = struct.pack(">HHH", 6 + len(body), len(want), 10) + body
+        a = ours(unclassic, block, len(want), workdir)
+        b, status = run_module(mods, 10, block[2:], max(len(want), 0x8000))
+        oka = a == want
+        okb = b is not None and b[:len(want)] == want
+        if oka and okb:
+            agree += 1
+        else:
+            bad += 1
+            if bad <= 2:
+                print(f"sdmodule: method 10 DISAGREES at ulen {len(want)}: "
+                      f"this engine {'==' if oka else '!='} the bytes, module "
+                      f"{'==' if okb else '!='} them (status {status})")
+    print(f"sdmodule: method 10 (SlowFastA): {agree} case(s) equal three ways, "
+          f"{bad} wrong")
+    return bad == 0 and agree > 0
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--unclassic", default=os.path.join(REPO, "build", "unclassic"))
@@ -681,7 +772,9 @@ def main():
         b = phase_specimens(args.unclassic, mods, workdir, args.verbose)
         c = phase_synth(args.unclassic, mods, workdir, args.cases, args.seed,
                         args.verbose)
-        return 0 if (a and b and c) else 1
+        e = phase_method10(args.unclassic, mods, workdir, args.cases,
+                           args.seed, args.verbose)
+        return 0 if (a and b and c and e) else 1
     finally:
         shutil.rmtree(workdir, ignore_errors=True)
 

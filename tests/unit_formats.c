@@ -3258,7 +3258,11 @@ static void test_superdisk(void)
     at += 30;
     arc[at] = 0; arc[at + 1] = 12;                   /* clen: 6 + 6 bytes */
     arc[at + 2] = 0; arc[at + 3] = 4;                /* ulen                */
-    arc[at + 4] = 0; arc[at + 5] = 10;               /* method 10, SlowFastA */
+    /* Method 13 (SlowFastC), which is declined per entry. This was
+     * method 10 until 2026-08-25, when SlowFastA was implemented — the
+     * test wants a method NOTHING here can read, so it has to move when
+     * one lands. 13 and 20 are what is left (OPEN_ITEMS.md). */
+    arc[at + 4] = 0; arc[at + 5] = 13;
     at += 12;
 
     at = sd_rec(arc, at, 0x2a, "");                  /* close the folder */
