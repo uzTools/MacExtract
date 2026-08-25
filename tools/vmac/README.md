@@ -1076,13 +1076,16 @@ just as happily on an empty archive. Three-system table in FORMATS.md.
 
 The `SIZE` edit above is the wrong instrument for this one, and finding that
 out cost four runs. A partition is only enforced under MultiFinder — System
-7 and up — and `interactive.py`'s Standard File clicks are calibrated for
-System 6; on System 7 they select the wrong item and the application answers
-`UNC_ERR_FORMAT` about a file that is not an archive. That frame looks like
-a code failure and is not.
+7 and up — and until 2026-08-25 `interactive.py`'s Standard File clicks were
+calibrated for System 6 alone; on System 7 they selected the wrong item and
+the application answered `UNC_ERR_FORMAT` about a file that is not an
+archive. That frame looks like a code failure and is not. The clicks are
+per-system now (below), so the `SIZE` route is available again — it is still
+two boots and a Get Info against one throwaway build.
 
 Cap the budget instead, in a throwaway build, on the machine the harness can
-drive:
+drive (the System 7 objection below is gone since 2026-08-25 — the phase runs
+there now — but this recipe is still the cheaper instrument):
 
     sed -i 's/ma.budget = freenow - reserve;/ma.budget = 150000L; (void)reserve;/' \
         mac/unclassic_mac.c
@@ -1123,6 +1126,7 @@ have told anyone.
 ### Driving the real UI
 
     interactive.py                  # progress dialog, Cancel, Cmd-., at 1x
+    interactive.py --system Sys7.img  # the same, on the System 7 tier
     interactive.py --e2e            # Finder desktop: double-click launch, SFGetFile,
                                     # volume navigation, an extracted APPL launching
     interactive.py --segments       # the "locate part N" alert for a split archive
@@ -1135,6 +1139,19 @@ have told anyone.
     interactive.py --diskswap       # insert the missing part's disk mid-run
 
 Run them one at a time (see "This box has one core", above).
+
+**On System 7 the dialog is not the same dialog, and the clicks know it
+since 2026-08-25.** System 7 draws its own Standard File — a directory
+pop-up above the list, a Desktop button beside it — whose first row sits ten
+points higher, so a System 6 coordinate selects the SECOND item. `calibrate()`
+picks the row off `SF_ROWS` for the system being booted, and a system with no
+entry there is refused rather than clicked at. The other half is WHERE the
+dialog opens: System 7's Process Manager gives each application its own
+default directory, so under the boot-shell arrangement it opens inside the
+System Folder listing `Finder`, `System` and the application.
+`sf_to_volume_root()` presses Desktop and opens the volume — two clicks, no
+menu tracking — and does nothing at all on System 6, which opens at the root
+already.
 
 `--e2e` leaves the **Finder** in place instead of installing the application as
 the boot shell, which is the only way to launch the application the way a

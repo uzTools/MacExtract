@@ -1350,6 +1350,16 @@ part boundary (27 failures). Both were reverted.
     every output name must be under that folder and none at the volume
     root — which is where a working-directory mistake would put them.
 
+    **The default phase runs on both Mini vMac tiers**, and since
+    2026-08-25 `--system Sys7.img` is one of them: `ProgressPump()`'s
+    `WaitNextEvent` side, the Cancel button through `DialogSelect`,
+    Cmd-. through the keyDown check beside it, and the SFGetFile
+    repaint afterwards. Its fixture is chosen with 8-bit names, so the
+    same run also photographs System 7 drawing MacRoman — the one
+    thing the byte comparisons cannot see. What it does NOT cover is
+    Mac OS 9, where the application has only ever been driven to
+    completion (OPEN_ITEMS.md, section 1).
+
 **What each layer can see is not the same, and that matters.** Layer 7
 compares a count, two summed CRC-32s and two summed lengths. A summed
 CRC cannot carry a filename, so layer 7 has never checked an output

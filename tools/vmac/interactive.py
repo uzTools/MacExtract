@@ -239,6 +239,57 @@ class Mac:
 SF_FIRST_ROW = (150, 137)
 SF_ROW_HEIGHT = 16      # one Standard File row, at the system font size
 
+# ...and the row is not in the same place on both systems. System 7 replaces
+# the Standard File dialog with its own — a directory pop-up menu above the
+# list, a Desktop button beside it — and its first row sits ten points higher.
+# A System 6 coordinate lands on the SECOND item there, which is how a System 7
+# run came to report UNC_ERR_FORMAT about a file that is not an archive
+# (DECISIONS.md 2026-08-24, the low-memory message). Measured off this
+# harness's own frames, one per system.
+SF_ROWS = {"System6.hfv": (150, 137), "Sys7.img": (150, 127)}
+
+# System 7's Desktop button, which System 6's dialog does not have. Measured
+# off the same frame.
+SF7_DESKTOP = (374, 160)
+
+
+def calibrate(system):
+    """Point the Standard File coordinates at the system about to be booted.
+
+    Rebinds rather than threading `system` through twenty call sites: one run
+    boots one system, and a phase that silently used the other system's
+    geometry is exactly the failure this exists to stop.
+    """
+    global SF_FIRST_ROW, SF_SUBFOLDER_ROW, SF_SECOND_ROW
+    row = SF_ROWS.get(system)
+    if row is None:
+        raise SystemExit(f"interactive: no Standard File geometry for {system} "
+                         f"— boot it once, look at the first frame, and add "
+                         f"its first row to SF_ROWS")
+    SF_FIRST_ROW = SF_SUBFOLDER_ROW = row
+    SF_SECOND_ROW = (row[0], row[1] + SF_ROW_HEIGHT)
+
+
+def sf_to_volume_root(mac, system):
+    """Bring Standard File to the BOOT VOLUME's root, wherever it opened.
+
+    System 6 opens there already. System 7's Process Manager gives every
+    application a default directory — its own — so under the boot-shell
+    arrangement the dialog opens inside the System Folder, listing `Finder`,
+    `System` and the application. Desktop, then the volume, is a two-click
+    route to the root that needs no menu tracking.
+
+    The volume is taken to be the first row of the desktop listing, which
+    holds only mounted volumes: true with one volume mounted, and the phases
+    that mount a second one navigate with Drive instead.
+    """
+    if system == "System6.hfv":
+        return
+    mac.click(*SF7_DESKTOP)
+    time.sleep(2.0)
+    mac.click(*SF_FIRST_ROW, double=True)
+    time.sleep(3.0)
+
 # How long the screen must hold still before an extraction is called
 # finished, in seconds. Not a poll interval: see Mac.settle, where the
 # reason it has to be this long is that the progress dialog repaints once
@@ -307,6 +358,7 @@ FINDER_EXTRACTED_APPL = (367, 104)
 # The working-directory phase's own coordinates. SF_SUBFOLDER_ROW is the row
 # the folder occupies in SFGetFile's list; FINDER_FOLDER_ICON is that folder on
 # the Finder desktop afterwards. Both measured off this phase's screenshots.
+# calibrate() re-points this at the booted system's own first row.
 SF_SUBFOLDER_ROW = (150, 137)
 
 # Finder icon positions differ between the two system images, because each
@@ -668,7 +720,8 @@ SEG_SKIP = (311, 192)
 SEG_CANCEL = (225, 192)
 
 # Rows in Standard File's list are 16 points apart; the first is SF_FIRST_ROW.
-SF_SECOND_ROW = (SF_FIRST_ROW[0], SF_FIRST_ROW[1] + 16)
+# calibrate() recomputes this for the booted system.
+SF_SECOND_ROW = (SF_FIRST_ROW[0], SF_FIRST_ROW[1] + SF_ROW_HEIGHT)
 
 
 def cut_into_parts(fixture, workdir, n=3):
@@ -1395,6 +1448,7 @@ def main():
                          "extracted. Needs a fixture containing an APPL.")
     args = ap.parse_args()
 
+    calibrate(args.system)
     os.makedirs(args.outdir, exist_ok=True)
     appbin = build_interactive_app()
     workdir = tempfile.mkdtemp(prefix="vmac-interactive-")
@@ -1497,6 +1551,7 @@ def main():
             raise SystemExit("interactive: the machine never settled — no SFGetFile")
         shot(mac, "1-launched.png")
 
+        sf_to_volume_root(mac, args.system)  # System 7 opens in the System Folder
         mac.click(*SF_FIRST_ROW)            # select the archive
         mac.key("Return")                   # Open
         shot(mac, "1b-destination.png")     # "Extract the files into..."
@@ -1532,6 +1587,7 @@ def main():
     try:
         if mac.settle(scratch, interval=5.0, timeout=args.boot_timeout) is None:
             raise SystemExit("interactive: second boot never settled")
+        sf_to_volume_root(mac, args.system)
         mac.click(*SF_FIRST_ROW)
         mac.key("Return")
         accept_destination(mac)

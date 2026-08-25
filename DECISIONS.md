@@ -116,6 +116,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-24 (the icon) — four things the resources alone do not do
 - 2026-08-24 (the low-memory message) — saying the number, and where it can be graded
 - 2026-08-24 (`Icon\r`) — an instrument that quietly normalised what it measured
+- 2026-08-25 (the System 7 UI) — the dialog is a different dialog, and where it opens
 
 ---
 
@@ -6439,7 +6440,8 @@ part, because the obvious route does not work. Shrinking the `SIZE`
 partition only bites under MultiFinder, i.e. System 7, and the default
 phase's Standard File clicks are calibrated for System 6; on System 7 they
 open the wrong item, so the application reports `UNC_ERR_FORMAT` on a file
-that is not an archive. Capping `ma.budget` in a throwaway build creates
+that is not an archive (fixed 2026-08-25 — the clicks are per-system now, and
+the wrong item turned out to be the wrong DIRECTORY: see that day's entry). Capping `ma.budget` in a throwaway build creates
 the same refusal on the machine the harness can actually drive.
 
 **The lesson is about instruments, not about memory.** Four emulator runs
@@ -6479,3 +6481,39 @@ allowed to contain what is being normalised away.**
 **Why it survived.** No fixture in the graded 927 has a control character in
 a name, so the suite that would have caught it was never handed the case.
 The one fixture that does was picked, for something unrelated, today.
+
+
+## 2026-08-25 (the System 7 UI) — the dialog is a different dialog, and where it opens
+
+**Claim (measured).** The interactive application's cancel paths now run on
+System 7.0.1 as well as 6.0.8: `ProgressPump()`'s `WaitNextEvent` side
+repainting a percentage and an estimate, the Cancel button through
+`DialogSelect`, Cmd-. through the keyDown check beside it, and the SFGetFile
+repaint after the alert. Photographed 2026-08-25 with
+`derived-Education7.1.cpt`, and the run's own name assertion — every output
+name off the volume the Mac wrote to — reports COMPLETE.
+
+**Two things stood between the harness and that tier, and only one of them
+was known.** The known one is geometry: System 7 draws its own Standard File
+dialog, with a directory pop-up above the list, and its first row sits ten
+points higher, so every System 6 coordinate selects the second item. The
+other is the current directory. System 7's Process Manager gives each
+application a default directory of its own, so the boot-shell arrangement —
+which is how every phase here installs the application — opens the dialog
+inside the **System Folder**, listing `Finder`, `System` and the application.
+The first row was not "the wrong row"; it was the right row of the wrong
+directory, and the application dutifully reported `UNC_ERR_FORMAT` about
+`Finder`. Desktop, then the volume, is two clicks and no menu tracking.
+
+**Consequence beyond the UI.** The same run photographs System 7's Standard
+File drawing `spinning brain ƒ` — a folder the application created from
+MacRoman bytes — which is the only tier below Mac OS 9 where how a name
+LOOKS had never been seen. The bytes were already checked everywhere; the
+glyphs were not checked anywhere but System 6.
+
+**The transferable part.** "The clicks are calibrated for System 6" was
+written down (2026-08-24, the low-memory message) as a reason not to run
+this tier, and it was true — but it named the cheaper half of the problem.
+A harness that navigates by coordinate has TWO assumptions about every
+dialog: where the items are, and what is in them. The first fails visibly;
+the second produces a plausible frame of the wrong directory.

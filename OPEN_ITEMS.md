@@ -83,6 +83,14 @@ What it does not HAVE is section 2.
   full PowerPC boot per fixture — tens of minutes, against five for the
   whole System 7 tier.
 
+- **Two things only that tier can show, and it has never been asked
+  for either.** The interactive UI's cancel routes — Cmd-., the Cancel
+  button, the dialog repainting afterwards — run on System 6.0.8 and,
+  since 2026-08-25, on System 7.0.1 (TESTING.md, layer 10); on Mac OS 9
+  the application has only ever been driven to completion. And how an
+  8-bit MacRoman filename LOOKS there is unphotographed: the bytes are
+  checked on every tier, the glyphs on the two Mini vMac ones.
+
 ---
 
 ## 2. Waiting on a file this machine does not have
@@ -244,15 +252,6 @@ Unlike section 3, none of this is impossible here: a download would do it.
 
 ## 5. Untested code, named so it is not mistaken for tested
 
-- **The interactive UI above System 6 is deliberate scope**, not a gap
-  (2026-08-02). System 6 is the UI's target and it is driven end to end there.
-  What that leaves unexercised: `ProgressPump()` branches on `gHasWNE`, and the
-  cancel routes inside it — Cmd-., the Cancel button via `DialogSelect`, the
-  dialog repainting — have only ever run on the `GetNextEvent` side. Mac OS 9
-  runs the `WaitNextEvent` side, but only where nothing is cancelled. The
-  engine and sink semantics of a cancel are covered separately: unit tests,
-  both write paths through the qemu-m68k mock in `ci.sh`, and `UNC_AT_CANCEL`
-  on-Mac at 4 MB and 1 MB.
 - **SuperDisk! methods 2, 3, 4, 5, 8 and 9 have never decoded anything.**
   Both corpus archives use one method each — 7 and 11 — so most of the
   13-bit context family, two of the four wide variants and Huffman-alone
@@ -280,5 +279,3 @@ Unlike section 3, none of this is impossible here: a download would do it.
   with a non-zero count.
 - **Files larger than the HFS 2 GB cap**, and the engine's 32-bit-only
   arithmetic against them.
-- **MacRoman filename display and 8-bit characters above System 6.** The bytes
-  are checked everywhere; how they *look* on 7 and 9 is not.
