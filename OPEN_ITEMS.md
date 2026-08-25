@@ -132,28 +132,25 @@ Unlike section 3, none of this is impossible here: a download would do it.
   3, 4 and 5) and **is "X does not survive" a claim about somebody's
   search?** (BLOCKERS.md, SuperDisk!'s compressor).
 
-- **SuperDisk! methods 13 and 20.** No corpus fixture uses any of
-  them, and every setting of Alysis's own control panel produces method
-  1 or 6 (`sdcompress.py --sweep`). **Method 10 left this entry on
-  2026-08-25**: its module runs, so it was transcribed and graded
-  against itself three ways (FORMATS.md, the method table). These two
-  cannot be, and each for its own reason:
+- **SuperDisk! method 13.** No corpus fixture uses it, and every
+  setting of Alysis's own control panel produces method 1 or 6
+  (`sdcompress.py --sweep`). **Two of the three methods that used to
+  sit here left on 2026-08-25**: 10 was transcribed from its module and
+  graded three ways, and **20 turned out not to be a block method at
+  all** — its module is an ENCODER whose output declares method 11
+  (FORMATS.md, the method table). 13 is the same shape as 20 —
+  command 2 only — and what leaves it open is that its output is not
+  shaped like a block here: it writes `length+8`, the word 13, then a
+  **32-bit** uncompressed length, where every block this container
+  holds has a six-byte header with a 16-bit one. **What would close
+  it:** a file that actually contains one, which would say whether
+  method 13 lives in a different container (the extension's
+  `compressFile` command has its own) or whether the block header has
+  a shape this project has not seen. The module itself is no longer
+  the obstacle: it runs, given the 64 KB working buffer it demands and
+  the one `_BlockMove` the runner now answers.
 
-  - **13's module traps.** It dies on an A-line instruction under
-    `tools/sdmodule/`'s runner — it wants Toolbox services the runner
-    does not answer. **What would close it:** those few traps
-    emulated, which is the same shape of work as the callback that
-    made "Tighter" run.
-  - **20's module only compresses.** It answers `badCommandError` to
-    the decompress command, and no expander for method 20 exists in
-    any Alysis product in reach — Disk Expander 1.2, eDisk 1.2, More
-    Disk Space 1.1 and Resource Compressor 2.0 were all read. It DOES
-    compress here (4,800 bytes to 94 under `qemu-m68k`), so a
-    transcribed decoder could be graded by round trip against bytes
-    it wrote. **What would close it:** that transcription, or an
-    expander from a release nobody here has.
-
-  The writer of all three was searched for on 2026-08-25 and not found.
+  The writer of all of them was searched for on 2026-08-25 and not found.
   The vendor's own technology page names SuperDisk! **2.x** as the release
   with "faster and tighter compression algorithms"; it is not on
   Macintosh Repository, Macintosh Garden, Info-Mac's `cmp` directory or

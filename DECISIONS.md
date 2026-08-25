@@ -120,6 +120,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-25 (SuperDisk!'s second implementation) — the oracle was inside the corpus, and it runs on Linux
 - 2026-08-25 (SpaceSaver's INIT) — it installs, and it always did
 - 2026-08-25 (SuperDisk! method 10) — a codec with no data, graded three ways
+- 2026-08-25 (SuperDisk! method 20) — the method that turned out to be an encoder
 
 ---
 
@@ -6680,3 +6681,43 @@ encoder and a decoder written from one reading agree with each other by
 construction.** Three-way agreement is the cheapest way to make that
 worthless — and it cost nothing here, because the third voice was a 302-byte
 resource inside a fixture the suite already extracts.
+
+
+## 2026-08-25 (SuperDisk! method 20) — the method that turned out to be an encoder
+
+**Claim (measured).** There is no method 20 bitstream. Module 20
+("Tennessee") answers `badCommandError` to the decompress command and
+compresses on command 2, and every block it writes declares **method 11** in
+its own header — five inputs from 4 KB of zeros to 30 KB of text, each
+decoded back to the bytes that went in by this engine. It declines random
+data with `inadequateCompressionError`, which is the code Alysis's published
+header gives for exactly that.
+
+So "implement method 20" was never a task. A block that carried 20 could not
+be read by Alysis's own expander either: its dispatcher hands method 9 and up
+to the module of that number (INIT 32 @0x50c8), which for 20 is this one, and
+it refuses.
+
+### What the work produced instead
+
+**A compressor for method 11**, which nothing else in reach is. The corpus
+has four SlowFastB blocks; this writes as many as anybody wants, and
+`tools/sdmodule/` now grades the decoder against blocks Alysis's own encoder
+made. A decoder that had only ever seen four blocks now sees any number.
+
+### The shape of the mistake, which is the transferable part
+
+The entry said "methods 10, 13 and 20 are declined because no fixture uses
+them", and every re-reading of it — including this project's own, twice —
+took *method* to mean a bitstream. It is a **module number**: the identity of
+a codec in a library, and a codec may implement compression, decompression or
+both. Two of the three turned out not to be what the word implied: 20
+compresses only, and 13 does too. The list was three codecs with no data; it
+was really one codec with no data, one codec with no decoder to need, and one
+that was implementable all along.
+
+**Ask what a number identifies before asking why nothing uses it.** Alysis's
+own published header had it — the module table is `thisModuleNumber`,
+`compressAddress`, `decompressAddress`, so half of an entry may simply be
+absent — and this project had been reading that table as a method list since
+the day it found it.

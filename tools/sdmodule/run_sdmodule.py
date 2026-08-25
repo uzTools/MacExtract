@@ -741,6 +741,70 @@ def phase_method10(unclassic, mods, workdir, cases, seed, verbose=False):
     return bad == 0 and agree > 0
 
 
+def phase_tennessee(unclassic, mods, workdir, verbose=False):
+    """What method 20 turns out to be, and five blocks it writes for free.
+
+    Module 20 ("Tennessee") answers `badCommandError` to the decompress
+    command and compresses on command 2 — and what it emits is a block
+    whose own header declares **method 11**. So method 20 is a codec ID
+    for an ENCODER, not a block method: there is no method 20 bitstream
+    to implement, and a block that did carry 20 could not be decoded by
+    Alysis's own expander either, whose dispatcher would hand it to this
+    module (INIT 32 @0x50c8) and be refused.
+
+    The useful consequence is that it writes SlowFastB blocks on demand,
+    which is a compressor for method 11 that nothing else here has: the
+    corpus's method 11 blocks are four, and these are as many as anybody
+    wants. Each is decoded by this engine and required to come back equal
+    to what went in.
+
+    Inputs it declines with `inadequateCompressionError` (-2) — random
+    bytes, or anything too short to pay for itself — are not failures.
+    """
+    if 20 not in mods:
+        print("sdmodule: no method 20 module — skipping")
+        return True
+    rnd = random.Random(3)
+    cases = [
+        ("zeros", b"\x00" * 4096),
+        ("text", b"the quick brown fox. " * 300),
+        ("counting", bytes(range(256)) * 16),
+        ("runs", b"".join(bytes([rnd.randrange(256)]) * rnd.randrange(1, 40)
+                          for _ in range(300))),
+        ("big", (b"SuperDisk method 20 probe. " * 1200)[:30000]),
+    ]
+    ok = bad = declined = 0
+    for name, data in cases:
+        out, status = run_module(mods, 20, data, len(data), selector=2)
+        if out is None or len(out) < 4:
+            if status == -2:
+                declined += 1
+                continue
+            bad += 1
+            print(f"sdmodule: Tennessee failed on {name}: {status}")
+            continue
+        ulen, method = struct.unpack(">HH", out[:4])
+        block = struct.pack(">H", 2 + len(out)) + out
+        back = ours(unclassic, block, ulen, workdir)
+        if method != 11:
+            bad += 1
+            print(f"sdmodule: Tennessee wrote method {method} for {name}, "
+                  f"not 11 — method 20 may be a block method after all")
+        elif back != data:
+            bad += 1
+            print(f"sdmodule: this engine does not read back Tennessee's "
+                  f"{name} block ({len(data)} B in)")
+        else:
+            ok += 1
+            if verbose:
+                print(f"sdmodule: Tennessee {name}: {len(data)} -> "
+                      f"{len(out)} B, method 11, byte-exact")
+    print(f"sdmodule: method 20 (Tennessee) is an ENCODER: {ok} block(s) it "
+          f"wrote declare method 11 and decode byte-exact here, "
+          f"{declined} input(s) it declined as incompressible, {bad} wrong")
+    return bad == 0 and ok > 0
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--unclassic", default=os.path.join(REPO, "build", "unclassic"))
@@ -774,7 +838,8 @@ def main():
                         args.verbose)
         e = phase_method10(args.unclassic, mods, workdir, args.cases,
                            args.seed, args.verbose)
-        return 0 if (a and b and c and e) else 1
+        f = phase_tennessee(args.unclassic, mods, workdir, args.verbose)
+        return 0 if (a and b and c and e and f) else 1
     finally:
         shutil.rmtree(workdir, ignore_errors=True)
 

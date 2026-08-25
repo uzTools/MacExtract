@@ -951,6 +951,11 @@ lifts the modules out of the fixture and runs three phases.
    earned its keep on the first run, where the match length was read as
    `2*(nibble+1)` against the reference's `nibble + 2` and the module said
    so on every match.
+5. **Tennessee**, which is method 20's module and turns out to be an
+   ENCODER: five blocks it writes must declare method 11 and must decode
+   back here to the bytes that went in. That is also the only compressor
+   for method 11 in reach — the corpus has four such blocks, and this
+   makes as many as wanted.
 
 **The callback is the part to know about.** "Tighter" decodes methods 2, 3,
 4, 6, 7 and 8, and it hands its Huffman regions back to its CALLER to decode

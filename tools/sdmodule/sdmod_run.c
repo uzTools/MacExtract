@@ -75,6 +75,7 @@
 #include <setjmp.h>
 #include <signal.h>
 #include <sys/mman.h>
+#include <ucontext.h>
 
 #define PB_SIZE    64
 #define MAX_MODS   16
@@ -87,10 +88,61 @@ static volatile int g_signal;
 static struct { unsigned method; unsigned char *code; } g_mods[MAX_MODS];
 static int g_nmods;
 
-static void on_signal(int sig)
+static void *g_code;                    /* where the module was mapped */
+static size_t g_codelen;
+static volatile long g_where = -1;      /* fault offset within it, or -1 */
+
+/* The one Toolbox trap a module asks for.
+ *
+ * SlowFastC's compressor calls `_BlockMove` (A02E) at its own 0x10ec —
+ * A0 source, A1 destination, D0 count, per Inside Macintosh: Memory. A
+ * user-mode process has no Toolbox, so the A-line word raises SIGILL;
+ * answering it here is four lines and turns "this module traps" into
+ * "this module runs". Anything else A-line is still a fault, and is
+ * reported with the offset inside the module so it can be read.
+ */
+static int serve_trap(void *uc)
 {
+    ucontext_t *u = (ucontext_t *)uc;
+    greg_t *g;
+    unsigned short op;
+    if (!u) return 0;
+    g = u->uc_mcontext.gregs;
+    op = *(unsigned short *)(size_t)g[R_PC];
+    if (op != 0xA02Eu) return 0;                 /* not _BlockMove */
+    memmove((void *)(size_t)g[R_A1], (void *)(size_t)g[R_A0],
+            (size_t)(unsigned long)g[R_D0]);
+    g[R_PC] += 2;                                /* step over the trap */
+    return 1;
+}
+
+static void on_signal_info(int sig, siginfo_t *si, void *uc)
+{
+    if (sig == SIGILL && serve_trap(uc)) return;
     g_signal = sig;
+    /* Where in the MODULE it died, which is the only useful thing to
+     * know: "signal 4" says nothing, "offset 0xd4" is an instruction you
+     * can go and read. si_addr is the faulting instruction for SIGILL. */
+    g_where = -1;
+    if (si && si->si_addr) {
+        unsigned char *p = (unsigned char *)si->si_addr;
+        if (g_code && p >= (unsigned char *)g_code &&
+            p < (unsigned char *)g_code + g_codelen)
+            g_where = (long)(p - (unsigned char *)g_code);
+    }
     longjmp(g_escape, 1);
+}
+
+static void arm_signals(void)
+{
+    struct sigaction sa;
+    memset(&sa, 0, sizeof sa);
+    sa.sa_sigaction = on_signal_info;
+    sa.sa_flags = SA_SIGINFO;
+    sigaction(SIGSEGV, &sa, NULL);
+    sigaction(SIGBUS,  &sa, NULL);
+    sigaction(SIGILL,  &sa, NULL);
+    sigaction(SIGFPE,  &sa, NULL);
 }
 
 static unsigned char *slurp(const char *path, size_t *len)
@@ -211,6 +263,7 @@ static unsigned char *load_manifest(const char *path)
         if (code == MAP_FAILED) { perror("mmap"); exit(2); }
         memcpy(code, blob, len);
         free(blob);
+        if (!g_code) { g_code = code; g_codelen = len; }
         g_mods[g_nmods].method = method;
         g_mods[g_nmods].code = code + entry;
         if (!first) first = code + entry;
@@ -244,8 +297,12 @@ int main(int argc, char **argv)
     if (argc > 7) pre = slurp(argv[7], &prelen);
 
     /* The wide methods index a 64K table, the narrow ones 8K; the module
-     * refuses a wide block if +16 says the table is too small. */
-    tablesize = (method >= 5 && method <= 8) ? 0x10000u : 0x2000u;
+     * refuses a wide block if +16 says the table is too small. The
+     * modules numbered 9 and up want 64K too — SlowFastC compares
+     * workingBufferSize against 65536 and DEBUGGERs below it (@0xa2),
+     * which is what an 8K buffer looked like from the outside: a module
+     * that "traps on an A-line instruction". */
+    tablesize = (method >= 5) ? 0x10000u : 0x2000u;
 
     /* Source and destination live in ONE mapping, because the modules hand
      * each other buffers and the output can come back in either. The source
@@ -274,14 +331,27 @@ int main(int argc, char **argv)
     put16(pb + 36, selector);
     put16(pb + 40, method);
 
-    signal(SIGSEGV, on_signal);
-    signal(SIGBUS,  on_signal);
-    signal(SIGILL,  on_signal);
-    signal(SIGFPE,  on_signal);
+    arm_signals();
+
+    /* `requiresInitialization` (0x0400 in moduleCharacteristics) means the
+     * module wants command 1 on this parameter block before the real one.
+     * SDMOD_INIT asks for that; the modules that do not need it answer
+     * command 1 with callResult 0 and change nothing. */
+    if (getenv("SDMOD_INIT")) {
+        put16(pb + 36, 1u);
+        if (setjmp(g_escape) == 0) {
+            call_module(entry, pb);
+        } else {
+            printf("signal=%d at=%ld (during initialize)\n", g_signal, g_where);
+            return 3;
+        }
+        put16(pb + 36, (unsigned)selector);
+    }
+
     if (setjmp(g_escape) == 0) {
         call_module(entry, pb);
     } else {
-        printf("signal=%d\n", g_signal);
+        printf("signal=%d at=%ld\n", g_signal, g_where);
         return 3;
     }
 
