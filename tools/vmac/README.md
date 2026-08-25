@@ -544,6 +544,7 @@ OPEN_ITEMS.md said did not survive (BLOCKERS.md).
     tools/vmac/sdcompress.py --verify     read them back, compare with the input
     tools/vmac/sdcompress.py --axes       photograph each settings axis
     tools/vmac/sdcompress.py --sweep      the same bytes once per setting
+    tools/vmac/sdcompress.py --boundary   subjects sized for a refill boundary
 
 `--sweep` is the controlled experiment: identical content, one subject per
 setting, so the only thing differing between outputs is the setting. It found
@@ -559,6 +560,15 @@ Two more traps it cost a run each to learn, on top of the two above:
   which renamed a control panel to "Coff".
 - **Reopening lands on the last page shown**, so `reopen_panel` presses "Last
   Page" twice before anything is clicked at a page-1 coordinate.
+
+**`--boundary` is the one that disproved its own premise** (2026-08-25). It
+compresses four subjects at Speed=Fast, sized so that `ceil(ulen/8)` is and
+is not a multiple of four, to find a block where the 1991 self-extractor and
+the 1992 Add-In Module read the end of a Huffman region differently
+(`tools/sdmodule/`). All four came back method 6 and byte-exact under both:
+the panel codes each flag bit in ONE bit, so the byte count says nothing
+about where the bitstream ends. It prints the flag count and the verdict per
+subject, and the specimens it leaves are graded by `run_sdmodule.py`.
 
 `--specimens` is the one that mattered: five subjects chosen to DISAGREE with
 each other, because the first specimen alone made the header layout look
@@ -625,6 +635,7 @@ System 7.5.3**, which is the open route. DECISIONS.md 2026-08-22
     tools/vmac/spacesaver.py --twoboot        write the prefs, reboot, rename
 
     tools/vmac/spacesaver.py --specimen       rename, wait, SHUT DOWN, read back
+    tools/vmac/spacesaver.py --patch-init     open INIT 0's install gate first
     tools/vmac/spacesaver.py --idlespec       enrol the disk, idle, shut down
     tools/vmac/spacesaver.py --layout         read the container out of the
                                               installed panel and engine

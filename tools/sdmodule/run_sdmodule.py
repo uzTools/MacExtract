@@ -468,15 +468,21 @@ def phase_corpus(unclassic, mods, workdir, verbose=False):
                 done += ulen
 
             # ...and the same comparison against a block that has been
-            # tampered with, which must NOT match.
+            # tampered with, which must NOT match. Against the bytes THAT
+            # block is responsible for: comparing a later block's output
+            # with the fork's first bytes would "fail to match" for a
+            # reason that has nothing to do with the tampering.
+            at = 0
             for (p, clen, ulen, meth, stored) in blocks:
                 if stored or meth not in mods or clen < 40:
+                    at += ulen
                     continue
                 src = bytearray(container[p + 2:p + clen])
                 src[20] ^= 0x01
                 got, _status = run_module(mods, meth, bytes(src),
-                                          max(ulen, 0x8000))
-                if got is not None and got[:ulen] == want[:ulen]:
+                                          max(ulen, 0x8000),
+                                          prefix=want[:at])
+                if got is not None and got[:ulen] == want[at:at + ulen]:
                     print("sdmodule: THE COMPARISON CANNOT FAIL — a corrupted "
                           f"block still matched ({fixture} {path} @{p:x})")
                     bad += 1
