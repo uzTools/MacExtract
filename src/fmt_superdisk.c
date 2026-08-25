@@ -958,6 +958,17 @@ static int sd_single(UncCtx *c, const uint8_t *head, uint32_t body)
      * that cannot be stepped over is a corrupt file, not a short one. */
     end = body;
     if (dlen && (err = sd_fork_span(c, end, dlen, &end)) != UNC_OK) goto done;
+    {   /* the method each fork opens with, for the host to name */
+        uint32_t bclen, bulen;
+        unsigned bmeth;
+        int bstored;
+        if (dlen && sd_block_head(c, body, &bclen, &bulen, &bmeth,
+                                  &bstored) == UNC_OK)
+            e.method_data = (uint8_t)(bstored ? 0 : bmeth);
+        if (rlen && sd_block_head(c, end, &bclen, &bulen, &bmeth,
+                                  &bstored) == UNC_OK)
+            e.method_rsrc = (uint8_t)(bstored ? 0 : bmeth);
+    }
     if (rlen && (err = sd_fork_span(c, end, rlen, &end)) != UNC_OK) goto done;
 
     sret = c->sink->begin_entry(c->sink->ctx, &e);
@@ -1090,9 +1101,27 @@ int unc_superdisk_extract(UncCtx *c)
          * lengths are the only route to the next record, so a fork we
          * cannot decode must still be stepped over. */
         {
-            uint32_t end = at;
+            uint32_t end = at, dend = at;
             if (dlen && (err = sd_fork_span(c, end, dlen, &end)) != UNC_OK) break;
+            dend = end;
             if (rlen && (err = sd_fork_span(c, end, rlen, &end)) != UNC_OK) break;
+
+            /* The method each fork opens with, for the host to name in a
+             * message. Informational only — a fork's chain may in
+             * principle change method between blocks — but it is what a
+             * user needs when an entry comes back unsupported, and what
+             * makes a bug report about it actionable. */
+            {
+                uint32_t bclen, bulen;
+                unsigned bmeth;
+                int bstored;
+                if (dlen && sd_block_head(c, at, &bclen, &bulen, &bmeth,
+                                          &bstored) == UNC_OK)
+                    e.method_data = (uint8_t)(bstored ? 0 : bmeth);
+                if (rlen && sd_block_head(c, dend, &bclen, &bulen, &bmeth,
+                                          &bstored) == UNC_OK)
+                    e.method_rsrc = (uint8_t)(bstored ? 0 : bmeth);
+            }
 
             sret = c->sink->begin_entry(c->sink->ctx, &e);
             if (sret < 0) { err = UNC_ERR_SINK; break; }

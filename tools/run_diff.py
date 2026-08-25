@@ -170,11 +170,22 @@ def parse_entry_errors(stderr):
     return errs
 
 
-UNSUPPORTED = "recognized but unsupported"
+def said_unsupported(msg):
+    """True when our binary declined an entry for UNC_ERR_UNSUPPORTED.
+
+    Two shapes since 2026-08-25 — the generic one and the one that names
+    the method, which is what makes a bug report about it actionable —
+    and both end the same way. Matching the ENDING rather than the whole
+    sentence keeps this from breaking every time the wording is improved,
+    which is what it did the day the wording was improved.
+
+    The excuse itself is still anchored to the ORACLE (see below): this
+    only says which of our errors is eligible for one."""
+    return msg.endswith("is not supported yet")
 
 # Compression methods v1 does not implement, NAMED AS THE ORACLE NAMES
 # THEM (`XADCompressionName`, recorded per entry in the manifest). An
-# entry our engine declines with "recognized but unsupported" is excused
+# entry our engine declines as unsupported (said_unsupported) is excused
 # only if the oracle says its method is one of these — so the excuse is
 # anchored to lsar, and a regression that made a SUPPORTED method report
 # "unsupported" cannot buy itself an excuse. FORMATS.md is the scope.
@@ -224,7 +235,7 @@ def check_fixture(unclassic, man, verbose, budget=0):
         if r.returncode != 0:
             unexplained = {n: er for n, er in un_errs.items()
                            if n not in excused
-                           and not (er == UNSUPPORTED and n in outofscope)}
+                           and not (said_unsupported(er) and n in outofscope)}
             if unexplained or not un_errs:
                 problems.append(
                     f"exit {r.returncode}: {r.stderr.decode()[:300]}")

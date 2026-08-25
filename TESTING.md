@@ -232,13 +232,20 @@ A per-entry error from `unclassic` is tolerated in exactly two cases, and
   implement — `oracle_methods` against `run_diff.py`'s
   `ORACLE_OUT_OF_SCOPE`, which today holds `Implode` and nothing else.
 
+Which of OUR errors is eligible for that excuse is `said_unsupported()`,
+and it matches the END of the message rather than the whole of it: the
+per-entry line names the method when the format states one ("method 6 is
+not supported yet"), and a matcher spelled out in full broke the day that
+wording improved. **The excuse is still the oracle's**; this only decides
+eligibility.
+
 Anything else fails the fixture, including a non-zero exit with no
 per-entry report at all, and including every whole-archive error (those
 name the FIXTURE path, which can never match an entry name).
 
 **Why it is anchored outside our own output.** Until 2026-08-08 a fixture
-was skipped whole when every entry our binary reported failed with
-"recognized but unsupported". Two consequences, both measured on
+was skipped whole when every entry our binary reported failed as
+unsupported. Two consequences, both measured on
 2026-08-08:
 
 - it discarded ground truth. `4acalc.zip` and `4alnch11.zip` carry
@@ -248,7 +255,7 @@ was skipped whole when every entry our binary reported failed with
   false since per-entry manifests landed**, and the disproof was sitting
   in the manifests themselves.
 - it could not fail. A regression that made a *supported* method report
-  "recognized but unsupported" for a whole archive converted a failure
+  itself unsupported for a whole archive converted a failure
   into a skip, and the mitigation on record was a printed count for a
   human to notice. Demonstrated with a stub binary: `derived-Export.sit`,
   fully adjudicated, passed as a skip. It fails now.

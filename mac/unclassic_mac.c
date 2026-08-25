@@ -262,6 +262,10 @@ static uint32_t fio_size(void *ctx) { return ((FileIO *)ctx)->size; }
  * the shipped message. */
 static long gShortBy;      /* largest budget shortfall, in bytes; 0 = none */
 static int  gShortPiece;   /* NewPtr failed though the budget allowed it   */
+/* Entries whose METHOD this build cannot read, for the alert that asks
+ * for the file rather than blaming the machine. Run-level like the two
+ * above, and reset by RunExtract. */
+static int  gUnsupported;
 
 #ifdef UNC_AT_BUDGET
 /* The result grid reports what the engine USED and never what it was
@@ -598,7 +602,7 @@ typedef struct {
     long         curDirID;     /* directory of the current entry */
     Str63        curName;      /* sanitized current file name */
     UncEntryInfo cur;
-    int          entries, errors;
+    int          entries, errors, unsupported;
     /* The shape of what was written, for the envelope unwrap in
      * ExtractOne: one file and no folders is what an envelope layer
      * looks like, and lastName/lastDir say where it landed. */
@@ -1152,6 +1156,10 @@ static int sink_end(void *ctx, int status)
         MyHDelete(s->vRefNum, s->curDirID, s->curName);
     }
     if (status != UNC_OK) s->errors++;
+    /* Kept apart from the rest: an entry this build cannot read YET is
+     * the one failure whose answer is the file itself, and the alert
+     * says so rather than "some entries could not be extracted". */
+    if (status == UNC_ERR_UNSUPPORTED) s->unsupported++;
     if (s->cur.is_dir) s->dirCount++;
     else s->fileCount++;
     return 0;
@@ -2559,7 +2567,8 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
 
     sink.vRefNum = outVol;
     sink.rootDirID = outDir;
-    sink.entries = sink.errors = 0;
+    sink.entries = sink.errors = sink.unsupported = 0;
+    gUnsupported = 0;
     sink.fileCount = sink.dirCount = 0;
     sink.lastName[0] = 0;
     sink.lastDir = 0;
@@ -2677,6 +2686,7 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
     FlushVol(NULL, outVol);
     *entries = sink.entries;
     *errors = sink.errors;
+    gUnsupported = sink.unsupported;
     if (shape) {
         shape->fileCount = sink.fileCount;
         shape->dirCount = sink.dirCount;
@@ -3709,6 +3719,13 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
                              "Quit other programs and try again.");
     else if (ret != UNC_OK)
         ShowNote(kErrorALRT, "\pThis file could not be extracted.");
+    else if (gUnsupported)
+        /* Ahead of the generic one: this is the failure whose answer is
+         * the FILE, and a user who knows that can send it. Two lines —
+         * the alert wraps between 32 and 36 characters and a third line
+         * sits level with the OK button (tools/vmac/README.md). */
+        ShowNote(kErrorALRT, "\pSome entries use a method this version "
+                             "cannot read yet.");
     else if (errors)
         ShowNote(kErrorALRT, "\pSome entries could not be extracted.");
     else

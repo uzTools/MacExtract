@@ -205,6 +205,8 @@ typedef struct {
     UncEntryInfo cur;
     uint32_t    data_written, rsrc_written;
     int         entries, errors;
+    int         unsupported;    /* entries whose METHOD this build lacks */
+    int         unsup_method;   /* the first such method, for the message */
     /* For envelope auto-unwrap: shape of what was extracted. */
     int         file_count, dir_count;
     char        last_ok_path[1024];
@@ -444,7 +446,24 @@ static int sink_end(void *ctx, int status)
 
     if (status != UNC_OK) {
         s->errors++;
-        fprintf(stderr, "unclassic: %s: %s\n", name, unc_strerror(status));
+        if (status == UNC_ERR_UNSUPPORTED) {
+            /* Name the method. A report that says "method 13" is one
+             * somebody can act on; "unsupported" is not. The id is
+             * informational (UncEntryInfo), and 0 means the format did
+             * not state one. */
+            unsigned m = s->cur.method_data ? s->cur.method_data
+                                            : s->cur.method_rsrc;
+            if (!s->unsupported) s->unsup_method = (int)m;
+            s->unsupported++;
+            if (m)
+                fprintf(stderr, "unclassic: %s: method %u is not supported "
+                                "yet\n", name, m);
+            else
+                fprintf(stderr, "unclassic: %s: %s\n", name,
+                        unc_strerror(status));
+        } else {
+            fprintf(stderr, "unclassic: %s: %s\n", name, unc_strerror(status));
+        }
     } else if (s->verbose && !s->list_only) {
         printf("  %s (%u data, %u rsrc)\n", name, s->data_written, s->rsrc_written);
     }
@@ -1991,6 +2010,27 @@ nextlayer:
     if (ret != UNC_OK) {
         fprintf(stderr, "unclassic: %s: %s\n", file, unc_strerror(ret));
         return 1;
+    }
+    if (sink.unsupported) {
+        /* The one failure a user can do something about that is not
+         * about their machine: this build cannot read that method YET,
+         * and the file itself is what would fix that. Every method this
+         * engine has ever added past the first came from somebody's
+         * file — so ask for it, once, with the method named. */
+        fprintf(stderr,
+                "unclassic: %d entr%s use%s a compression method this build "
+                "cannot read yet.\n",
+                sink.unsupported, sink.unsupported == 1 ? "y" : "ies",
+                sink.unsupported == 1 ? "s" : "");
+        if (sink.unsup_method)
+            fprintf(stderr, "unclassic: the first is %s method %d.\n",
+                    unc_format_name(fmt), sink.unsup_method);
+        fprintf(stderr,
+                "unclassic: if you can share this file, please open an issue "
+                "at\n"
+                "unclassic:   https://github.com/jarreboum/unclassic/issues\n"
+                "unclassic: a specimen is exactly what is needed to add "
+                "support.\n");
     }
     if (sink.errors) {
         fprintf(stderr, "unclassic: %d of %d entries failed\n",

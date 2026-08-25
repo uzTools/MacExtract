@@ -75,7 +75,7 @@ const char *unc_strerror(int err)
     case UNC_ERR_MEM:         return "out of memory (budget exceeded)";
     case UNC_ERR_CRC:         return "checksum mismatch";
     case UNC_ERR_TRUNCATED:   return "file is truncated";
-    case UNC_ERR_UNSUPPORTED: return "recognized but unsupported";
+    case UNC_ERR_UNSUPPORTED: return "this compression method is not supported yet";
     case UNC_ERR_ENCRYPTED:   return "encrypted by a scheme we cannot read";
     case UNC_ERR_ABORTED:     return "aborted";
     case UNC_ERR_SINK:        return "output error";
