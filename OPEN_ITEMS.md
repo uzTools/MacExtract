@@ -147,7 +147,20 @@ Unlike section 3, none of this is impossible here: a download would do it.
   to decline them**: a decoder can be graded against its module on
   arbitrary bytes, no specimen and no encoder needed, which is what
   `tools/sdmodule/` does for methods 1..9. What is left is a scope
-  choice — three codecs no reachable file uses — not an impossibility. One lead not followed: the panel's help offers JPEG lossy,
+  choice — three codecs no reachable file uses — not an impossibility.
+  **The writer was searched for on 2026-08-25 and not found.** The
+  vendor's own technology page names SuperDisk! **2.x** as the release
+  with "faster and tighter compression algorithms"; it is not on
+  Macintosh Repository, Macintosh Garden, Info-Mac's `cmp` directory or
+  in archive.org's index, and the two 1.x releases that survive have no
+  module loader in them at all (no `Cmpr`, no "Add-In", measured). Of
+  the later Alysis products that carry the module library, **Alysis
+  Resource Compressor 2.0** (1993) compresses into APPLE's container
+  with `defProcID` 0 rather than a `Cmpr` codec
+  (`tools/vmac/rescomp.py`), and eDisk 1.2 and More Disk Space 1.1 carry
+  only methods 1, 11 and a 13 named " Copy". The one candidate left in
+  hand is Disk Expander 1.2's own extension, whose `INIT 32` has a
+  compress path walking a method table. One lead not followed: the panel's help offers JPEG lossy,
   lossy sound and a lossless sound/video mode that no `Cmpr` name
   accounts for — and a lossy mode is something an extractor cannot grade
   against its input by construction.

@@ -943,6 +943,13 @@ lifts the modules out of the fixture and runs three phases.
 — `jsr` through a field of the parameter block — so the runner has to be a
 dispatcher as well as a loader. Without one it jumps to address zero.
 
+`tools/vmac/rescomp.py` is the sibling that went looking for data for the
+three methods this suite can only load: Alysis Resource Compressor 2.0
+(1993) carries the whole codec library, and `--modules` lists it without an
+emulator. What it settled is negative and worth keeping — driven under Mini
+vMac it compresses into Apple's resource container, not a `Cmpr` stream, so
+it is not the writer of methods 10, 13 and 20 either (OPEN_ITEMS.md).
+
 **What it cannot see.** A synthetic Huffman region is written with a flat
 8-bit table, so no real tree shape is exercised: what is graded is the
 framing, the flag bitmap and the context predictor. Methods 10, 13 and 20

@@ -594,6 +594,35 @@ Three things that cost a run each:
   volume to `System Folder:Control Panels` is slower, reliable, and proves
   the panel is installed.
 
+## Alysis Resource Compressor 2.0 — `rescomp.py`
+
+The hunt for something that WRITES SuperDisk!'s methods 10, 13 and 20. The
+vendor's technology page names SuperDisk! 2.x as the release with the newer
+codecs and no archive has it; this 1993 application does carry the whole
+library — `Cmpr` 3, 5, 19, 21, 22 (SlowFastB **and** Tennessee end to end),
+23 and 26, the same bodies as Disk Expander 1.2's.
+
+    tools/vmac/rescomp.py --modules    list them; no emulator, no X
+    tools/vmac/rescomp.py --probe      boot it, photograph its menus
+    tools/vmac/rescomp.py --compress   compress a subject and read it back
+
+**It compresses, and it is still not the writer.** 8,001 bytes of `STR`
+became 472 — and what it wrote is Apple's compressed-resource container
+(`A89F6572`, version 8, `defProcID` **0**), not a `Cmpr` stream: none of the
+seven modules reproduces the subject from that payload. Its help has no codec
+choice in it. The modules are there for its Decompress button.
+
+Two things it cost, both worth copying:
+
+- **Aim the Special menu at a measured coordinate.** The first run borrowed
+  118 from another harness and hit **Restart**. The subject came back with its
+  new resource data written and its old resource MAP still in place, which
+  parses as garbage — a torn read that looks exactly like a format finding
+  until you notice the fork is still its original length. Shut Down is at 139.
+- **The read-back is the result, not the screen.** The on-screen `Cmprssd`
+  column said 472 in both runs; only the flushed volume showed whether the
+  file had actually been rewritten.
+
 ## SpaceSaver — `spacesaver.py`, and what it will and will not do
 
 3.5.1 runs, its container has been read out of it (`--layout`, below), and

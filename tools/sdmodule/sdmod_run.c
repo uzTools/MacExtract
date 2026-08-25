@@ -7,26 +7,44 @@
  * executed under `qemu-m68k`, the same way the cipher vectors already run
  * (tests/run_mac_sink.sh). No emulator, no boot, no screenshot.
  *
- *   Source: the caller is `INIT 32` of the Disk Expander 1.2 extension —
- *   the expand path at 0x5054..0x50a6 fills the block, and the dispatcher at
- *   0x50c8 picks a module by method. The fields below are the ones it sets.
+ *   Source: Alysis published this interface. `SuperDisk! Modules.h` is
+ *   reproduced on the vendor's own technology page (alysis.us/sdtechnology.htm,
+ *   read 2026-08-25 through the Wayback Machine), and it names every field
+ *   below: sourceBuffer 0, destinationBuffer 4, password 8, workingBuffer 12,
+ *   workingBufferSize 16, inCount 20, outCount 24, callAddress 28, checksum 32,
+ *   command 36, callResult 38, whichModule 40, moduleList 42, userMessage 46,
+ *   blockNumber 52, fileParameterBlock 56 — with commands 1 initialize,
+ *   2 compress, 3 decompress, 4 compressFile, 5 decompressFile, and errors
+ *   -1 badCommand, -2 inadequateCompression, -3 noSuchModule,
+ *   -4 inadequateWorking, -5 checksum. The second source is the caller:
+ *   `INIT 32` of the Disk Expander 1.2 extension, whose expand path at
+ *   0x5054..0x50a6 fills the block and whose dispatcher at 0x50c8 picks a
+ *   module by method. **Everything this file was written from by disassembly
+ *   agrees with the published header field for field**, which is why the
+ *   names below are Alysis's rather than the ones the disassembly suggested.
  *
- *     +0  (4) source: the block's length word, its method word, then the body
- *     +4  (4) destination buffer — and, AFTER the call, where the output
- *             actually is: "Tighter" ping-pongs between the two buffers and
- *             leaves its result in the one it was given as SOURCE. The
- *             extension reads the pointer back (`moveal %a0@(4),%a0` at
- *             INIT 32 @0x50b8) rather than assuming, and so does this
- *     +12 (4) the context table
- *     +16 (4) its size — 0x2000 narrow, 0x10000 wide
- *     +20 (4) the length being worked on
- *     +24 (4) OUT: bytes produced
- *     +28 (4) a CALLBACK: "decode the region I have just pointed you at"
- *     +36 (2) selector: 1 = "can you?", 3 = expand (2 = compress)
- *     +38 (2) OUT: status, 0 = ok, negative = refused
- *     +40 (2) the method number — which the callback dispatches on
- *     +52 (4) a serial the extension increments per call
- *     +60 (4) OUT: where a sub-decode left its cursor
+ *     +0  (4) sourceBuffer: the block's length word, its method word, body
+ *     +4  (4) destinationBuffer — and, AFTER the call, where the output
+ *             actually is: a module may declare `replacesDestination`
+ *             (0x4000), and "Tighter" does, ping-ponging between the two
+ *             buffers and leaving its result in the one it was given as
+ *             SOURCE. The extension reads the pointer back (`moveal
+ *             %a0@(4),%a0` at INIT 32 @0x50b8) rather than assuming
+ *     +12 (4) workingBuffer — the context table
+ *     +16 (4) workingBufferSize: 0x2000 narrow, 0x10000 wide
+ *     +20 (4) inCount, the length being worked on
+ *     +24 (4) OUT: outCount, bytes produced
+ *     +28 (4) callAddress — "decode the region I have just pointed you at"
+ *     +36 (2) command: 1 initialize, 2 compress, 3 decompress
+ *     +38 (2) OUT: callResult, 0 = ok, negative = refused
+ *     +40 (2) whichModule — which the callback dispatches on
+ *     +52 (4) blockNumber, a serial the extension increments per call
+ *     +60 (4) miscelaneous — where a sub-decode leaves its cursor
+ *
+ * And the module's own header, same source: moduleIdentifier 4 (the
+ * signature), moduleNumber 28, moduleSize 38, moduleCharacteristics 42,
+ * modulePreferredExtension 44, moduleName 60. `carryOverWorking` (0x2000)
+ * is the flag behind the `prefix` argument below.
  *
  * **The callback is not optional.** "Tighter" decodes methods 2, 3, 4, 6, 7
  * and 8, and for the Huffman-coded flag bitmap it points the parameter block
