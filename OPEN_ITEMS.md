@@ -142,7 +142,12 @@ Unlike section 3, none of this is impossible here: a download would do it.
   they are a reference to transcribe from and an oracle to grade
   against, and what is left is one block to decode. Until 2026-08-25
   this entry said the modules were one of the two things that would
-  close it; they had been in reach since the day method 11 was read. One lead not followed: the panel's help offers JPEG lossy,
+  close it; they had been in reach since the day method 11 was read.
+  **And "an implementation could not be graded" is no longer the reason
+  to decline them**: a decoder can be graded against its module on
+  arbitrary bytes, no specimen and no encoder needed, which is what
+  `tools/sdmodule/` does for methods 1..9. What is left is a scope
+  choice — three codecs no reachable file uses — not an impossibility. One lead not followed: the panel's help offers JPEG lossy,
   lossy sound and a lossless sound/video mode that no `Cmpr` name
   accounts for — and a lossy mode is something an extractor cannot grade
   against its input by construction.
@@ -155,16 +160,20 @@ Unlike section 3, none of this is impossible here: a download would do it.
   68030 or better, and the engine's default never selects 1 or 2.
   **What is missing is a gradeable SPECIMEN:** any file that uses one.
 
-- **A SpaceSaver file written by SpaceSaver.** Twelve emulator runs have
-  driven every trigger its control panel offers and none of them
-  compressed anything, because its extension does not install here;
-  three causes are ruled out by measurement and five of `STR# 1001`'s
-  seven refusals are untested (DECISIONS.md 2026-08-22, what will not
-  compress). **Worth less than it was**: the bitstream a specimen would
-  check has since been cross-read against Aladdin's own encoder and
-  agrees field for field (DECISIONS.md 2026-08-23, the encoder agrees).
-  **What would close it:** why `INIT 0` declines, or one file from
-  anywhere.
+- **A SpaceSaver file written by SpaceSaver.** Thirteen emulator runs
+  have driven every trigger its control panel offers and none of them
+  compressed anything. **The extension is not the reason, which is new
+  on 2026-08-25**: a boot that never opens the panel writes
+  `Preferences:SpaceSaver Preferences` onto an image that had none, so
+  `INIT 0` runs and installs — and its every named refusal would have
+  put up a Notification Manager alert, which no run has ever
+  photographed (BLOCKERS.md). **Worth less than it was**: the bitstream
+  a specimen would check has since been cross-read against Aladdin's own
+  encoder and agrees field for field (DECISIONS.md 2026-08-23, the
+  encoder agrees). **What would close it:** why the TRIGGER never fires
+  — the `small` name rule is in the preferences the INIT writes, and
+  renaming a file to match it still returns the file unchanged — or one
+  SpaceSaver file from anywhere.
 
 - **An encrypted StuffIt 5 archive.** StuffIt classic's half closed on
   2026-08-23 — StuffIt Deluxe 3.5.1 writes the specimens now
@@ -213,9 +222,17 @@ Unlike section 3, none of this is impossible here: a download would do it.
   against comes out of one encoder, btoa 5.2.1 on Linux (TESTING.md, *btoa*).
   The independent one would be Aladdin's own `btoa/atob Translator`, and it is
   reachable only through a hierarchical menu, which cannot be selected under
-  Mini vMac (`tools/vmac/README.md`, *sitcrypt.py*). What would close it: a
-  route to that translator that is not a submenu — `--btoa-drop` is the attempt
-  and does not write a file yet.
+  Mini vMac (`tools/vmac/README.md`, *sitcrypt.py*). **`--btoa-drop` was never
+  going to work**: `DropConvert™` is `APPL/SITC` and its own strings —
+  `Archive.sit`, `.sit`, `Archive.sea`, `.sea`, *"Unable to convert this
+  archive…"* — say it converts ARCHIVES between StuffIt and self-extracting,
+  not documents between encodings (measured 2026-08-25, off the installed
+  image with `hcopy`; no emulator). What would close it: a route to the
+  translator that is not a submenu. One is untried and is the shape of
+  `tools/sdmodule/` — a translator is a subroutine (`main(pb, selector)`,
+  DECISIONS.md 2026-08-23), so it could run under `qemu-m68k` like Alysis's
+  codecs do, except that it calls Toolbox traps and would need a few of them
+  answered.
 - **The XADMaster DDn report is not filed.** Its DDn reads one byte past a
   fork's declared compressed length; reduced to a 1,166-byte reproduction and
   written up ready to post in `tools/xadmaster-ddn-repro/`. **Deliberately
@@ -268,14 +285,14 @@ Unlike section 3, none of this is impossible here: a download would do it.
   produce one, which is what those four established: the 1991 panel
   codes the flags one bit each, so the bit length is data-dependent and
   the byte count says nothing about it.
-- **Methods 3, 4 and 5 have never decoded a fork this project did not
-  write.** All three are byte-exact through Salient's own 1991 expander,
+- **DiskDoubler's methods 3, 4 and 5 have never decoded a fork this
+  project did not write.** All three are byte-exact through Salient's own 1991 expander,
   which grades the reading of the format rather than the decoder
   (DECISIONS.md, methods 3, 4 and 5) — so what is untested is every
   encoding our own encoder does not emit: run lengths it never chooses,
   Huffman tree shapes it never builds, contexts it never reaches.
   **What would change it:** one real fork of any of the three.
-- **Method 5's tree-count byte is only confirmed at 0.** 0 means 256 and
+- **DiskDoubler method 5's tree-count byte is only confirmed at 0.** 0 means 256 and
   expands byte-exact under both the 1991 and the 4.1.1 expander; a count of
   16 is rejected by both with *Checksum failed*, and encoder and decoder
   here share one reading, so the shared reading of the non-zero case is

@@ -118,6 +118,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-24 (`Icon\r`) — an instrument that quietly normalised what it measured
 - 2026-08-25 (the System 7 UI) — the dialog is a different dialog, and where it opens
 - 2026-08-25 (SuperDisk!'s second implementation) — the oracle was inside the corpus, and it runs on Linux
+- 2026-08-25 (SpaceSaver's INIT) — it installs, and it always did
 
 ---
 
@@ -6580,3 +6581,60 @@ codes each flag in ONE bit and the length is data-dependent. A byte count
 that looks like a boundary is not one. The gap is still open; what would
 close it is a real block measured to end on a 32-bit refill, and choosing a
 subject size does not produce one.
+
+
+## 2026-08-25 (SpaceSaver's INIT) — it installs, and it always did
+
+**Claim (measured).** A boot of the installed image that never opens the
+control panel leaves `System Folder:Preferences:SpaceSaver Preferences`
+(`Pref/SMKR`, 10,496 B) on an image that had none. Two runs, one with the
+extension's own install gate patched open and one without it, and both wrote
+it. So `INIT 0` runs, and gets far enough to write its preferences, on this
+machine — which is the opposite of what OPEN_ITEMS.md, PROGRESS.md's M24 line
+and BLOCKERS.md had been saying since 2026-08-22.
+
+### What the code says, which is what made the measurement worth taking
+
+`~StuffIt SpaceSaver™` is a `cdev` carrying `INIT 0` and `INIT 1`. The INIT's
+install path opens:
+
+    2a50  link   a6,#-26
+    2a5c  _GetKeys           ; the KeyMap at fp@(-22)
+    2a66  _Button
+    2a6a  bne.s  2a74        ; ...and 2a74 shows ICN# -4063 and RETURNS
+    2a6c  btst   #0,fp@(-23) ; KeyMap byte 7 bit 0 = key code 56 = SHIFT
+    2a72  beq.s  2a8c        ; not held -> on to the named checks
+
+That is the ordinary "hold the mouse or Shift at startup to disable" bypass,
+and it is the ONLY way this extension declines without saying so. Everything
+else it can refuse for — no Gestalt trap (`STR# 1001` #1), no `PERS` resource
+(#20), a 'SLip' Gestalt already registered (#8), a locked volume (#9), a full
+one (#10), anything else (#3) — ends at @0x2c8a in **`NMInstall`** with the
+message as `nmStr`, which is an alert once the Finder is up.
+
+**So the twelve runs tabulated on 2026-08-22 already contained the answer.**
+Every one of them photographed a clean desktop; not one showed an alert. A
+refusal with a name could not have happened, and the only silent exit is a
+bypass nobody was triggering. `--patch-init` turned that branch into a BRA on
+a copy of the image to check the last possibility — that the emulator looked
+like Shift was held — and the run is indistinguishable from the unpatched
+one, down to the preferences file.
+
+### The lesson, which is not about SpaceSaver
+
+The question this repository had written down was *"whether `INIT 0` installs
+at all"*, and it had been carried for three days as the thing to find out
+next. It was answerable from resources already on the disk — a 13,638-byte
+INIT and a `STR#` — without booting anything, and the boot that settled it
+measured a FILE rather than a screenshot. **When a harness keeps coming back
+with "nothing happened", ask what the software would have done if it had
+refused.** Software that refuses usually says so; if the screen is clean, the
+refusal is not where you are looking.
+
+**What is left is the trigger, and it is now the whole question.** The
+extension is installed and the subjects still come back byte-identical after
+being renamed to end in `small`, which is the rule its own Compression page
+states. The preferences file is written FRESH at every boot from an image
+that has none, so what those defaults actually say — and whether the rule is
+even enabled in them — is the next thing to read, and it can be read off the
+image with `hcopy` rather than driven.

@@ -667,6 +667,14 @@ What it cannot see: whether any of this describes a real compressed file.
 Nothing here has produced one, so every field is read from the writer, not
 from output.
 
+**The extension installs, and finding that out needed no screenshot**
+(2026-08-25). A boot that never opens the control panel leaves
+`System Folder:Preferences:SpaceSaver Preferences` (`Pref/SMKR`, 10,496 B) on
+an image that had none — patched and unpatched alike, so `--patch-init`'s one
+silent gate was never closing. That file is the signature to check after any
+run here; `hcopy` it and read its `Opts 1` resource, which carries the `small`
+name rule. What it does NOT explain is why the rule never fires.
+
 **Nothing has made SpaceSaver compress anything**, and the modes above are
 the attempts: the panel's `small` name rule (`--specimen`), the same with
 the disk enrolled and the machine left idle (`--idlespec`), Magic Menu's
