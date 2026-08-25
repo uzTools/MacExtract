@@ -518,13 +518,18 @@ def phase_synth(unclassic, mods, workdir, cases, seed, verbose=False):
             if a is None:
                 ourfail += 1
                 continue
+            # The boundary check comes first: where the literals are Huffman
+            # coded too (4 and 8), landing four bytes out does not decode to
+            # something wrong, it runs the module off the end and it dies.
+            # Same cause, and counting it as a refusal would hide that.
+            if on_the_refill_boundary(method, ulen):
+                boundary += 1
+                continue
             if b is None:
                 refused += 1
                 continue
             if a == payload and b[:ulen] == payload:
                 agree += 1
-            elif on_the_refill_boundary(method, ulen):
-                boundary += 1
             else:
                 differ += 1
                 if differ <= 2:

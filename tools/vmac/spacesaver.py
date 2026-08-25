@@ -1376,7 +1376,7 @@ def specimen(keep=False, base=None, tag="specimen"):
     and a shutdown flushes it just as well.
     """
     import glob
-    boot = os.path.join(WORK, "ss%s.hfv" % ("spec" if tag == "specimen" else tag))
+    boot = os.path.join(WORK, "ss%s-run.hfv" % tag)
     shutil.copyfile(base or INSTALLED, boot)
     env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
     tmp = tempfile.mkdtemp(prefix="ssspec-")
