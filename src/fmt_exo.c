@@ -568,6 +568,60 @@ int unc_zip_extract(UncCtx *c)
     cdsize   = unc_get_u32le(eo + 12);
     cdoffs   = unc_get_u32le(eo + 16);
 
+    /* Zip64 end-of-central-directory, when there is one.
+     *
+     * Every field above is 16 or 32 bits, so an archive with more than
+     * 65,535 entries (or one that outgrows 4 GB) carries the real counts
+     * in a second record, and a 20-byte LOCATOR immediately before the
+     * one just read says where. Without this, a 70,000-entry zip walks
+     * 65,535 entries and reports success: the count does not overflow
+     * into an error, it wraps into a smaller archive.
+     *
+     * Only the counts are taken. A value that does not fit 32 bits means
+     * a file this engine cannot address at all (offsets are uint32
+     * throughout, unclassic.h), and is refused cleanly rather than
+     * truncated — Zip64 proper stays out of scope (OPEN_ITEMS.md, part
+     * 1). Both halves of each 64-bit field are read as two uint32s and
+     * the high half is only ever compared against zero, so no 64-bit
+     * arithmetic enters the engine.
+     *
+     * Source: reference/XADMaster/XADZipParser.m,
+     * -parseWithCentralDirectoryAtOffset:zip64Offset: — record layout,
+     * field order and the 0x06064b50 / 0x07064b50 signatures. */
+    if (eocd >= 20) {
+        uint8_t lo[20];
+        if (zip_seek(c, lastpart0, eocd - 20) == UNC_OK &&
+            unc_read_full(c->io, lo, 20) == UNC_OK &&
+            unc_get_u32le(lo) == 0x07064b50u) {
+            uint32_t z64disk = unc_get_u32le(lo + 4);
+            uint32_t z64lo   = unc_get_u32le(lo + 8);
+            uint32_t z64hi   = unc_get_u32le(lo + 12);
+            uint8_t  z6[56];
+
+            if (z64hi != 0) return UNC_ERR_UNSUPPORTED;
+            err = zip_seek(c, z64disk, z64lo);   /* SEGMENTED if the
+                                                  * record is on a part
+                                                  * we were not given */
+            if (err != UNC_OK) return err;
+            if (unc_read_full(c->io, z6, 56) != UNC_OK)
+                return UNC_ERR_TRUNCATED;
+            if (unc_get_u32le(z6) == 0x06064b50u) {
+                /* numentries, central size and central offset are each
+                 * 64-bit here; the high half of any of them puts the
+                 * archive out of reach. */
+                if (unc_get_u32le(z6 + 36) != 0 ||
+                    unc_get_u32le(z6 + 44) != 0 ||
+                    unc_get_u32le(z6 + 52) != 0)
+                    return UNC_ERR_UNSUPPORTED;
+                disknum  = unc_get_u32le(z6 + 16);
+                cddisk   = unc_get_u32le(z6 + 20);
+                nentries = unc_get_u32le(z6 + 32);
+                cdsize   = unc_get_u32le(z6 + 40);
+                cdoffs   = unc_get_u32le(z6 + 48);
+            }
+        }
+    }
+
     /* The set the archive says it is must be the set that was assembled.
      * This is the check that catches parts put in the wrong order or
      * taken from the wrong archive, because filenames put them there and

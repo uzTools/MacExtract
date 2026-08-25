@@ -199,6 +199,16 @@ keep finding the next one, and two of them need no insight at all:
   scarcity. **Check the attribution before hunting the artifact**; one
   search for the FORMAT settled it, and the specimens were two
   downloads away.
+- **a scope decision that names a BIGGER version of the problem than the
+  one you have.** Added 2026-08-25: "Zip64 is out of scope, and refusing
+  it cleanly is the right answer" was written about files larger than
+  4 GB, and it read as though it covered everything with Zip64 in the
+  name. It did not cover the case that actually occurs — an archive of
+  ordinary size with more than 65,535 entries — which was not refused at
+  all, cleanly or otherwise: it was silently truncated to 65,535. **When
+  a decision refuses a format, ask which of that format's uses it
+  actually refuses**, and whether the cheap one hides behind the
+  expensive one's name.
 - **a harness that ends its runs differently from the harness beside it.**
   Added 2026-08-22: three SpaceSaver runs "measured unchanged" on a machine
   that never booted, because their image had been copied out of a KILLED
@@ -210,6 +220,7 @@ line is what makes the next one worth re-testing.
 
 | claim | disproved by | withdrawn |
 |---|---|---|
+| A zip with more than 65,535 entries is covered by the Zip64 refusal, which returns cleanly unsupported | it was not refused at all: a 70,000-entry archive listed and extracted **65,535 entries and exited 0**, where `unzip` and CPython's `zipfile` both count 70,000. The count is 16 bits and saturates, so the truncated archive is internally consistent and nothing downstream can notice. **Cost: no fixture was ever within 65,506 entries of the boundary** — the largest zip in 932 is 29 — so neither the differential suite nor 9,320 robustness variants could have failed on it, and the scope decision that appeared to cover it was about files larger than 4 GB. The engine's other size limits all fail loudly; this one did not | 2026-08-25 |
 | Retro68's `HOpen` glue is broken on System 6 | `tools/retro68-hopen-repro/`, 10 cases | 2026-07-25 |
 | Three non-relocatable staging blocks bomb the Memory Manager | `UNC_AT_SEPARATE_BLOCKS` | 2026-07-25 |
 | `derived-RWAsm_Folder.sit` fails on a 4 MB Mac Plus | committed harness re-run | 2026-07-25 |

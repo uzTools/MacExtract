@@ -46,7 +46,7 @@ grown before, on request.
 | PMarc (`-pm0-`, `-pm1-`, `-pm2-`) and `-lhx-` | **not recognised** | a different family behind an LZH-shaped header. PMarc is a Japanese PC format with its own coders, `-lhx-` is UNLHA32's extension; neither reached a Macintosh, and LZH itself only just did (2026-08-23) |
 | Self-extracting LZH (an executable with an archive behind it) | **not recognised** | the archive sits behind DOS, Amiga, Atari or X68000 machine code, and finding it means knowing each of those loaders. `unar` has a parser per platform; here the answer is to hand the `.lzh` itself to the extractor |
 | RAR, 7z, bzip2, xz, and the rest of Keka's modern list (lzip, zstd, brotli, lrzip, AAR, WIM, zipx, cab, msi, cpio, pax, …) | **not recognised** | modern, PC-side formats. None of them is a Macintosh archive format, none carries a resource fork or Finder metadata, and every one is served by a maintained extractor on any machine that can run one. A file in one of these beside classic Mac software is a wrapper somebody applied recently, and unwrapping it is that tool's job, not this one's (raised 2026-08-25, Macintosh Garden forum, *Archive formats*) |
-| Zip64 spanned sets | `unc_zipseg_describe` answers `UNC_ERR_UNSUPPORTED`, cleanly | an EOCD with disk number `0xFFFF` defers to a locator nothing here parses. Zip64 postdates every machine this project targets by a decade and a set that needs it is 2 GB+; refusing it cleanly is the right answer, not a missing feature (2026-08-14) |
+| Zip64 for files larger than 4 GB | **read for its COUNTS since 2026-08-25; over-4-GB fields refused per archive**, and `unc_zipseg_describe` still answers `UNC_ERR_UNSUPPORTED` for a spanned set | the entry count, central-directory size and offset are taken from the Zip64 record as `uint32` halves, which is what makes a 70,000-entry archive extract (FORMATS.md, *Size limits*). ADDRESSING past 4 GB is the part that stays out: it would put 64-bit offsets in `UncIO` and every format would pay for them on a 68000. A field whose high half is set returns `UNC_ERR_UNSUPPORTED` (2026-08-14, revised 2026-08-25) |
 
 Everything detect-only is **named** by `unc_sniff`, so a UI can tell the user
 what the file is and extraction returns cleanly unsupported.
@@ -265,6 +265,15 @@ own distribution (BLOCKERS.md, the same date).
   would close it:** the EOCD comment length is already parsed — one
   call to the callback, and the manifest's `comment` key stops being
   excused for `Zip` in `tools/run_diff.py`.
+- **A tar member over the 2 GB cap aborts the whole archive, not the
+  entry.** Measured 2026-08-25: a tar of `[1 GiB, 3 GiB, 1 GiB]` lists
+  the first member and stops, so the third is lost though its position
+  is known from the padded length. Every other per-entry failure in
+  this engine is per-entry (`CLAUDE.md`). Not chased because a 2 GB
+  member cannot exist on the machines this targets — HFS caps a fork
+  there — so the case is reachable only from a foreign tar. **What
+  would close it:** skipping the member and reporting the error through
+  the sink, with a case in `tools/run_ziplarge.py`'s shape to hold it.
 - **Why the pointer does not work under QEMU on Mac OS 9.** Measured to
   0.0000 effect across five mouse primitives; the mechanism behind that has no
   reproduction and is labelled a guess. The keyboard route works, so this costs
@@ -305,8 +314,14 @@ own distribution (BLOCKERS.md, the same date).
   because it is XADMaster's reading and it fails as a per-entry checksum
   error rather than silently. **What would change it:** a method 5 fork
   with a non-zero count.
-- **Files larger than the HFS 2 GB cap**, and the engine's 32-bit-only
-  arithmetic against them.
+- **The Mac binary's own size ceiling has never been exercised.** The
+  Linux limits are measured (FORMATS.md, *Size limits*): 4 GB per
+  container, 2 GB per declared tar member, no ceiling on streamed
+  output. The Mac shell's are not — `SetFPos` takes a signed `long`,
+  which puts its ceiling at 2 GB, and HFS caps a fork there anyway.
+  **What would close it:** nothing available here. An HFS volume large
+  enough to hold a 2 GB file is beyond what any emulator tier runs, so
+  this is a MANUAL_TESTS.md-shaped question rather than a suite one.
 
 ---
 

@@ -123,6 +123,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-25 (SuperDisk! method 20) — the method that turned out to be an encoder
 - 2026-08-25 (ARC 0x0a and 0x0b) — the wrong attribution, and an oracle that was wrong
 - 2026-08-25 (ARC 7.x Trimmed) — the gap filed without looking, and the codec already in the tree
+- 2026-08-25 (zip entry counts) — a count that wraps into success
 
 ---
 
@@ -6882,3 +6883,53 @@ decoder can get wrong. deark fails exactly the same three. That copy of
 set includes members with no codec in them at all. **When several entries fail
 at once, look for one whose decoder does nothing**; if that one fails too, the
 argument is about the file rather than the code.
+
+## 2026-08-25 (zip entry counts) — a count that wraps into success
+
+A forum thread claimed no Mac OS 9 application can unpack a full mirror of
+`ftp.apple.com`, not even StuffIt Expander 7.0.3. Asking what OUR ceiling is
+turned up four limits, three of them harmless and one a defect.
+
+**The defect: a zip with 70,000 entries listed and extracted 65,535 of them
+and exited 0.** `unzip` and CPython's `zipfile` both say 70,000. The
+end-of-central-directory record counts entries in 16 bits, and past 65,535 the
+real count lives in a Zip64 record — so the field does not overflow into an
+error, **it wraps into a smaller archive that is internally consistent**. Every
+other limit measured the same day fails loudly: a container past 4 GB stops
+the walk with `UNC_ERR_CORRUPT` and a non-zero exit, a tar member past 2 GB is
+refused by an explicit guard. This one produced a clean success with 4,465
+files missing.
+
+**Why nothing here could have caught it.** The largest zip in 932 fixtures has
+**29 entries**. No robustness variant reaches 65,536 either, because the
+variants perturb a fixture rather than grow one. A suite built entirely from
+harvested files cannot fail on a property no harvested file has, and the
+corpus is 65,506 entries short of the boundary.
+
+**Two different projects wear the name "Zip64", and only one of them was
+taken.** Recovering a COUNT needs no 64-bit arithmetic: the entry total, the
+central directory's size and its offset are read as two `uint32`s each, and
+the high half is only ever compared against zero. Addressing a file that is
+actually larger than 4 GB is the other project — it puts 64-bit offsets in
+`UncIO` and every format pays for them, on a 68000 where each 64-bit operation
+is a libgcc call. So the record is read for its counts, and any field whose
+high half is set returns `UNC_ERR_UNSUPPORTED` cleanly. Zip64 proper stays out
+of scope (OPEN_ITEMS.md, part 1), and the floor target pays nothing.
+
+**What was deliberately not implemented.** XADMaster carries a kludge for
+writers that exceed 65,535 entries WITHOUT emitting a Zip64 record: if the
+central directory has room for another 65,536 records, it assumes there are
+some and keeps going. It is a heuristic about broken files, and nothing here
+has one to grade it against — the same bargain this project declines
+everywhere else. Named here so the next reader knows it was seen and passed
+over, not missed.
+
+**The general lesson, and it is not about zip.** Ask of any width in a format
+whether exceeding it produces an ERROR or a smaller valid structure. A length
+that overflows is caught by the next checksum; a COUNT that saturates is
+consistent with everything downstream of it, so nothing catches it. The other
+16-bit count this engine reads is Compact Pro's `nentries`, and there the
+field IS the format's ceiling: no second record exists to consult, so 65,535
+is a limit of `.cpt` rather than a reading of one. This is the same shape as the
+gzip/.Z fallback NAME defect (CLAUDE.md): an aggregate that agrees cannot fail
+on what it never counted.

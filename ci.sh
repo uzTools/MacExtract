@@ -45,6 +45,11 @@ python3 tools/run_pak.py --unclassic build/san/unclassic || fail "PAK method tes
 python3 tools/run_arcplus.py --unclassic build/san/unclassic \
     || fail "ARC+Plus (Trimmed) tests"
 python3 tools/run_uu.py --unclassic build/san/unclassic || fail "uuencode tests"
+# A zip counts its entries in 16 bits, so past 65,535 the count comes
+# from the Zip64 record instead. Generated: nothing in the corpus is
+# that large, and the failure it guards against is silent.
+python3 tools/run_ziplarge.py --unclassic build/san/unclassic \
+    || fail "large-zip (Zip64 entry count) tests"
 # Now Compress has exactly one REAL fixture, and it reaches two of the
 # five shapes a block can have. The rest — and the offset-delta search,
 # and folders, and several files in one archive — are generated the same

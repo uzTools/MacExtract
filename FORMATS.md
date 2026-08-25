@@ -1434,6 +1434,38 @@ no more than that, and matches on all 26 identity bytes anyway.
 - 32-bit `-m32` build runs the full suite (68000 discipline: no
   unaligned access, no recursion, 32-bit arithmetic in hot paths).
 
+## Size limits
+
+**Measured 2026-08-25** on Linux x86-64 (`-O2`), with sparse subjects built
+for the purpose. A corrupted copy of the 3 GiB gzip fails as it should, so the
+passes are testing something.
+
+| what | limit | past it |
+|---|---|---|
+| container, any format | **4 GiB** | `UncIO`'s `seek`/`tell`/`size` are `uint32` (`unclassic.h`). A 5 GiB tar lists 4 members, then `UNC_ERR_CORRUPT`, exit 1 |
+| declared entry size, tar | **2 GiB** | an explicit guard in `fmt_exo.c`; ends the whole tar walk |
+| declared entry size, zip | 4 GiB − 1 | the format's own field. A 3 GiB stored entry lists and CRC-verifies |
+| decoded output, streamed (gzip) | **none found** | 3 GiB and 5 GiB both verify, exit 0. The output size is never held, so nothing bounds it |
+| zip entry count | 4,294,967,295 | the Zip64 record's count is read as a `uint32`; a 70,000-entry archive extracts all 70,000 (below) |
+| Mac binary | 2 GiB, **not measured** | `SetFPos` takes a signed `long` (`mac/unclassic_mac.c`), and HFS caps a fork at 2 GB anyway (OPEN_ITEMS.md) |
+
+The tar boundary is exact: a 2 GiB − 1024 member lists, a 2 GiB one
+(0x80000000) does not.
+
+**A zip's entry count is 16 bits, and until 2026-08-25 exceeding it was
+silent.** 70,000 entries listed and extracted 65,535 of them and exited 0;
+`unzip` and CPython's `zipfile` both say 70,000. The count now comes from the
+Zip64 end-of-central-directory record when there is one, read as `uint32`
+halves so that no 64-bit arithmetic enters the engine; a field whose high half
+is set is an archive this engine cannot address, and returns
+`UNC_ERR_UNSUPPORTED`. Zip64 proper — files actually larger than 4 GB —
+remains out of scope (OPEN_ITEMS.md, part 1). `tools/run_ziplarge.py` holds
+the boundary from both sides, in `ci.sh` since 2026-08-25; DECISIONS.md
+2026-08-25 has why a count is worse than a length.
+
+**The corpus could not have caught it: the largest zip in 932 fixtures has 29
+entries**, and the robustness variants perturb a fixture rather than grow one.
+
 ## Resident memory, stack and launch (Mac target)
 
 Everything here is measured on the Retro68 target's own flags

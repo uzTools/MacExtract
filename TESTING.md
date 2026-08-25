@@ -830,6 +830,37 @@ because both begin with a `-lhd-` entry whose name is zero bytes long.
 Excusing a grader on a named file is not the same as excusing a format,
 and the file says which is which.
 
+## Large zips (`tools/run_ziplarge.py`, in `ci.sh`)
+
+Added 2026-08-25. A zip counts its entries in 16 bits; past 65,535 the count
+lives in a Zip64 record. A reader that trusts the 16-bit field does not fail
+on such an archive — it walks 65,535 entries and reports success, which is how
+a 70,000-entry zip lost 4,465 files silently until that date (FORMATS.md,
+*Size limits*).
+
+The corpus cannot reach this: **the largest zip in 932 fixtures has 29
+entries**, and robustness variants perturb a fixture rather than grow one. So
+the subjects are generated, and graded by three things that are not our
+output — CPython's `zipfile`, which wrote them and whose `namelist()` is the
+intended count; `lsar`, an independent reader over the same file, skipped if
+absent; and the boundary itself, since 65,535 (no Zip64 record) and 65,536
+(one) are both built and a reader that ignores Zip64 passes the first and
+fails the second.
+
+Two failure paths are asserted as well, both reached by editing a generated
+archive: a locator whose record sits past 4 GB must be REFUSED rather than
+truncated to something addressable, and a locator pointing at bytes that are
+not a Zip64 record must fall back to the 16-bit count rather than failing the
+archive — XADMaster's behaviour, which `fmt_exo.c` follows.
+
+**Established that it can fail**: against the previous commit's `fmt_exo.c`,
+two of the five cases fail (the 65,536 count and the past-4-GB refusal).
+
+**What it cannot see.** Every subject here is a few megabytes with a large
+entry COUNT. Nothing in `ci.sh` opens an archive that is actually larger than
+4 GB, or an entry that is — those limits were measured by hand and live in
+FORMATS.md, *Size limits*, not in any suite.
+
 ## Decryption (`tools/run_crypt.py`, in `ci.sh`)
 
 Added 2026-08-23, when decryption came into scope. **Nothing in the
