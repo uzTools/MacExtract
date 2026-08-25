@@ -112,11 +112,6 @@ DATA THAT IS NOT OURS AND IS SHIPPED ANYWAY
     beside it. They are not code and no algorithm was copied: they are
     the table SpaceSaver's LZSS starts its window with, so a compressed
     file cannot be decoded to the right bytes without exactly these.
-    The table's own first line says distribution is prohibited without
-    Aladdin's written permission. That permission has not been given;
-    the maintainer decided on 2026-08-23 to carry the table anyway, for
-    interoperability with a format whose publisher's successors are
-    being sought, and to say so here (DECISIONS.md, "the dictionary").
     Everything else in this repository is either ours, LGPL, CC0, or
     fetched rather than committed. This is the exception, it is marked
     as one, and it is not covered by this project's LGPL grant.
