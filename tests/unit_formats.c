@@ -1181,13 +1181,21 @@ static void test_lzh_extract(void)
         CHECK(cap.info[0].type == 0);
     }
 
-    /* An unimplemented method is a per-entry refusal, not a broken
-     * archive. This was -lh2- until 2026-08-25, when that method landed
-     * and the test failed — correctly, because its premise had changed.
-     * -lh3- is what is left declined (OPEN_ITEMS.md), and this has to
-     * move again if it ever lands. */
+    /* A method with no decoder is a per-entry refusal, not a broken
+     * archive. This asked about -lh2- until 2026-08-25 and then -lh3-,
+     * and both landed the same day, each time failing this check —
+     * correctly, because its premise had changed.
+     *
+     * It now uses -lz0-, and the choice is deliberate: a method that does
+     * not exist at all (-lh9-) is rejected by the PROBE, so the archive
+     * stops being an archive and the per-entry contract is never reached.
+     * -lz0- is what the probe accepts and nothing decodes — XADMaster's
+     * recogniser takes it while its own parser has no case for it, and
+     * this probe copies that recogniser deliberately
+     * (unc_lzh_probe's comment). */
     n = lzh_make_entry(arc, 0, "old.txt", 0, body, sizeof body - 1);
-    arc[5] = '3';
+    arc[4] = 'z';
+    arc[5] = '0';
     arc[n++] = 0;
     test_make_memio(&io, &m, arc, n);
     cap_make(&sk, &cap);

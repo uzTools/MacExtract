@@ -923,6 +923,30 @@ conservative — a match whose position symbol has no node yet goes out as
 literals — so a real 1990 encoder may have used offsets at a boundary these
 specimens never reach.
 
+### `-lh3-`, which needed no patch at all
+
+`-lh3-` is a STATIC code rebuilt per block, so teaching LHa to write it
+would mean building and transmitting a table rather than mirroring a tree.
+The encoder is in `run_lzh.py` instead — a small one whose only job is to
+produce streams **LHa accepts** — and the guard is that LHa extracts every
+archive before this engine is handed it. Six entries per run, including the
+two escapes a real compressor would rarely emit and a decoder must still
+read: the "this block is one symbol" form (three code lengths of 1, then
+the symbol) and an explicitly sent position tree where the format otherwise
+supplies a fixed one.
+
+Breaking the block's symbol count by one fails it: `one.bin missing`,
+`single.bin differs`, `ptree.txt differs`.
+
+**And the guard earned itself immediately.** The first encoder wrote a
+single-symbol file as a tree with one code of length 1, and a position tree
+of 128 eight-bit codes. Both are INCOMPLETE tables; LHa refuses them
+("Bad table (case b)") and **this engine decoded them without complaint** —
+its canonical builder accepts an incomplete code where LHa will not. So the
+suite feeds it only complete ones, and that difference is written here
+rather than discovered later: a corrupt `-lh3-` table is a per-entry error
+in LHa and garbage output here.
+
 ## Alysis SuperDisk! (`tools/run_superdisk.py`, in `ci.sh`)
 
 Added 2026-08-20. The corpus holds two SuperDisk! archives and no oracle

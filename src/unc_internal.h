@@ -704,6 +704,10 @@ int unc_sit_decode_fork(UncCtx *c, UncFork fork, uint32_t at,
 int unc_lzdyn_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen,
                      int (*put)(void *ctx, uint8_t b), void *pctx);
 
+/* LHarc's -lh3-: a static code rebuilt per block. src/unc_lzdyn.c. */
+int unc_lzst0_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen,
+                     int (*put)(void *ctx, uint8_t b), void *pctx);
+
 int unc_lzah_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen,
                     int (*put)(void *ctx, uint8_t b), void *pctx);
 

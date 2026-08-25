@@ -44,6 +44,7 @@ What this suite CANNOT see:
     Unix timestamps (FORMATS.md), so there is nothing to compare.
 """
 import hashlib
+import struct
 import os
 import shutil
 import subprocess
@@ -510,6 +511,188 @@ def lh2(unclassic, problems):
     return graded
 
 
+# ---------------------------------------------------------------- -lh3-
+#
+# LHa DECODES -lh3- and cannot write it, and teaching it to would mean
+# building and transmitting a table per block rather than mirroring a
+# shared tree, as -lh2-'s patch does. So the encoder is here instead: a
+# minimal one, whose only job is to produce streams THE REFERENCE accepts.
+# Every archive it makes is extracted by LHa itself before this engine is
+# handed one, so the grading is still three-way — the bytes, LHa, and us.
+
+LH3_N1, LH3_NP, LH3_CBIT, LH3_LENFIELD, LH3_BUFBITS = 286, 128, 9, 4, 16
+
+
+class _Bits:
+    def __init__(self):
+        self.bits = []
+
+    def put(self, value, n):
+        for i in range(n - 1, -1, -1):
+            self.bits.append((value >> i) & 1)
+
+    def bytes(self):
+        while len(self.bits) % 8:
+            self.bits.append(0)
+        return bytes(int("".join(str(b) for b in self.bits[i:i + 8]), 2)
+                     for i in range(0, len(self.bits), 8))
+
+
+def _huff_lengths(freqs, limit):
+    live = [(f, i) for i, f in enumerate(freqs) if f]
+    if not live:
+        return [0] * len(freqs)
+    if len(live) == 1:
+        out = [0] * len(freqs)
+        out[live[0][1]] = 1
+        return out
+    import heapq
+    nodes = [(f, [i]) for f, i in live]
+    heapq.heapify(nodes)
+    out = [0] * len(freqs)
+    while len(nodes) > 1:
+        f1, s1 = heapq.heappop(nodes)
+        f2, s2 = heapq.heappop(nodes)
+        for sym in s1 + s2:
+            out[sym] += 1
+        heapq.heappush(nodes, (f1 + f2, s1 + s2))
+    if max(out) > limit:
+        return [limit if x else 0 for x in out]
+    return out
+
+
+def _canon(lengths):
+    codes, code = {}, 0
+    top = max(lengths) if any(lengths) else 0
+    for bits in range(1, top + 1):
+        for sym, l in enumerate(lengths):
+            if l == bits:
+                codes[sym] = code
+                code += 1
+        code <<= 1
+    return codes
+
+
+def lh3_stream(data, single=False, send_p_tree=False):
+    """One -lh3- block. `single` uses the format's "this block is one
+    symbol" escape — three code lengths of 1 in a row, then the symbol —
+    and `send_p_tree` sends a position tree instead of leaving the
+    decoder to use the fixed one. Both are paths a decoder can only reach
+    if something writes them."""
+    out = _Bits()
+    out.put(len(data), LH3_BUFBITS)
+    # One distinct symbol cannot be sent as a tree: a single code of
+    # length 1 is an INCOMPLETE table and LHa refuses it ("Bad table (case
+    # b)"), which is what the escape exists for. Found by the guard below,
+    # not by reading — this engine's canonical builder accepts such a
+    # table and would have decoded it happily forever.
+    if len(set(data)) <= 1 and data:
+        single = True
+    if single:
+        for _ in range(3):
+            out.put(1, 1)
+            out.put(0, LH3_LENFIELD)     # length 1, sent as 1 - 1
+        out.put(data[0], LH3_CBIT)
+        codes, lens = None, None
+    else:
+        freqs = [0] * LH3_N1
+        for b in data:
+            freqs[b] += 1
+        lens = _huff_lengths(freqs, 15)
+        codes = _canon(lens)
+        for i in range(LH3_N1):
+            if lens[i]:
+                out.put(1, 1)
+                out.put(lens[i] - 1, LH3_LENFIELD)
+            else:
+                out.put(0, 1)
+    if send_p_tree:
+        out.put(1, 1)
+        # Seven bits each over 128 symbols is a COMPLETE code; eight is
+        # half a table and LHa says so.
+        for _ in range(LH3_NP):
+            out.put(7, LH3_LENFIELD)
+    else:
+        out.put(0, 1)                    # the fixed table
+    if not single:
+        for b in data:
+            out.put(codes[b], lens[b])
+    return out.bytes()
+
+
+def lh3_crc16(data):
+    crc = 0
+    for b in data:
+        crc ^= b
+        for _ in range(8):
+            crc = (crc >> 1) ^ 0xA001 if crc & 1 else crc >> 1
+    return crc
+
+
+def lh3_archive(entries):
+    """A level-0 .lzh of -lh3- entries: [(name, data, kwargs)]."""
+    out = b""
+    for name, data, kw in entries:
+        packed = lh3_stream(data, **kw)
+        nb = name.encode("latin1")
+        head = (b"-lh3-" + struct.pack("<I", len(packed))
+                + struct.pack("<I", len(data))
+                + struct.pack("<I", 0x50000000)
+                + bytes([0x20, 0x00, len(nb)]) + nb
+                + struct.pack("<H", lh3_crc16(data)))
+        out += bytes([len(head), sum(head) & 0xFF]) + head + packed
+    return out + b"\x00"
+
+
+def lh3(unclassic, problems):
+    """-lh3-, three ways: the bytes, LHa's decoder, and this engine."""
+    if not build_lh2():          # the same binary; it DECODES -lh3-
+        print("run_lzh: no LHa that decodes -lh3- — those cases are skipped")
+        return 0
+    text = b"LHarc 1.13 wrote -lh3- and almost nothing else ever did.\n" * 40
+    cases = [
+        ("text.txt", text, {}),
+        ("runs.bin", b"=" * 400 + b"\0" * 600 + b"ab" * 300, {}),
+        ("random.bin", bytes((i * 37 + (i >> 3) * 101) & 0xFF
+                             for i in range(4000)), {}),
+        ("one.bin", b"x", {}),               # one symbol: takes the escape
+        # The two escapes, which a compressor would rarely emit and a
+        # decoder still has to read.
+        ("single.bin", b"Q" * 5000, {"single": True}),
+        ("ptree.txt", text, {"send_p_tree": True}),
+    ]
+    graded = 0
+    work = tempfile.mkdtemp()
+    try:
+        arc = os.path.join(work, "lh3.lzh")
+        open(arc, "wb").write(lh3_archive(cases))
+        # LHa first: if IT cannot read the archive, the archive is wrong.
+        out_ref = os.path.join(work, "ref")
+        os.makedirs(out_ref)
+        r = subprocess.run([LH2_BIN, "x", arc], cwd=out_ref,
+                           capture_output=True)
+        for name, data, _kw in cases:
+            q = os.path.join(out_ref, name)
+            if r.returncode != 0 or not os.path.exists(q) \
+                    or open(q, "rb").read() != data:
+                problems.append("the -lh3- encoder wrote %s that LHa itself "
+                                "does not read back" % name)
+        out = os.path.join(work, "ours")
+        os.makedirs(out)
+        us_extract(unclassic, arc, out)
+        for name, data, _kw in cases:
+            q = os.path.join(out, name)
+            if not os.path.exists(q):
+                problems.append("-lh3-: %s missing" % name)
+            elif open(q, "rb").read() != data:
+                problems.append("-lh3-: %s differs" % name)
+            else:
+                graded += 1
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+    return graded
+
+
 def maclha(unclassic, problems):
     """The archive MacLHA itself wrote, if this machine has made one.
 
@@ -582,13 +765,14 @@ def main():
         print("run_lzh: no reference/lha — the generated cases are skipped")
 
     old = lh2(unclassic, problems)
+    old3 = lh3(unclassic, problems)
 
     for p in problems:
         print("run_lzh: FAIL: %s" % p)
     print("run_lzh: %d archive(s) checked (%d against unar, %d against "
           "lhasa), %d generated set(s), %d MacLHA specimen(s), "
-          "%d -lh2- entr(y/ies)"
-          % (ran, by_unar, by_lhasa, gen, mac, old))
+          "%d -lh2- and %d -lh3- entr(y/ies)"
+          % (ran, by_unar, by_lhasa, gen, mac, old, old3))
     return 1 if problems else 0
 
 

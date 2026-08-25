@@ -521,6 +521,11 @@ static int lzh_decode(UncCtx *c, const LzhEnt *e, LzhOut *o, uint8_t *iobuf,
         unc_bitin_init(&bi, &in);
         err = unc_lzdyn_decode(c->al, &bi, e->origsize, lzh_put, o);
     }
+    else if (lzh_is(e->method, "-lh3-")) {
+        UncBitIn bi;
+        unc_bitin_init(&bi, &in);
+        err = unc_lzst0_decode(c->al, &bi, e->origsize, lzh_put, o);
+    }
     else if (lzh_is(e->method, "-lh1-")) {
         UncBitIn bi;
         unc_bitin_init(&bi, &in);

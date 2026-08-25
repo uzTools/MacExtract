@@ -1,5 +1,7 @@
 /*
- * unc_lzdyn.c — LHarc's -lh2- coder: an 8 KB-window LZSS in which BOTH
+ * unc_lzdyn.c — LHarc's two old coders, -lh2- and -lh3-.
+ *
+ * -lh2-: an 8 KB-window LZSS in which BOTH
  * codes are adaptive. The literal/length code is the dynamic Huffman
  * tree -lh1- also uses; the position code is a second dynamic tree that
  * GROWS as output is produced — a new leaf every 64 bytes, so an offset
@@ -21,6 +23,15 @@
  * archives with a locally patched copy of that program (which can encode
  * -lh2- where the stock one cannot) and requires this decoder and LHa's
  * to return the same bytes. TESTING.md, "LZH's old methods".
+ *
+ * -lh3- is the other half of this file and shares only the outer loop:
+ * a STATIC code, rebuilt per block, where -lh2- adapts continuously. Its
+ * block head is a 16-bit symbol count, then a literal/length tree sent as
+ * one 4-bit length per symbol, then either a position tree in the same
+ * shape or a fixed one the format keeps for the purpose. Source: the same
+ * XADMaster file (`LHAdecode_start_st0`, `_c_st0`, `_p_st0`,
+ * `LHAread_tree_c`, `LHAread_tree_p`, `LHAready_made`), cross-read against
+ * LHa's `shuf.c`.
  *
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
@@ -236,7 +247,7 @@ static int lzd_walk(Lzdyn *h, UncBitIn *bi, int32_t root, int32_t *out)
 
 static int lzd_decode_c(Lzdyn *h, UncBitIn *bi, int32_t *out)
 {
-    int32_t c;
+    int32_t c = 0;
     int e = lzd_walk(h, bi, LZD_ROOT_C, &c);
     if (e != UNC_OK) return e;
     if (c < 0 || c >= LZD_TREESIZE) return UNC_ERR_CORRUPT;
@@ -252,7 +263,7 @@ static int lzd_decode_c(Lzdyn *h, UncBitIn *bi, int32_t *out)
 
 static int lzd_decode_p(Lzdyn *h, UncBitIn *bi, int32_t *out)
 {
-    int32_t c, low;
+    int32_t c = 0, low;
     int e;
 
     /* The tree grows on the OUTPUT's schedule, not the input's. */
@@ -317,6 +328,198 @@ int unc_lzdyn_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen,
             if ((err = lzd_decode_p(h, bi, &pos)) != UNC_OK) goto out;
             from = (loc - (uint32_t)pos - 1) & (LZD_DICSIZ - 1);
             h->count += (uint32_t)len;
+            while (len-- > 0 && done < outlen) {
+                uint8_t b = h->window[from++ & (LZD_DICSIZ - 1)];
+                h->window[loc++ & (LZD_DICSIZ - 1)] = b;
+                loc &= LZD_DICSIZ - 1;
+                done++;
+                if ((err = put(pctx, b)) != UNC_OK) goto out;
+            }
+        }
+    }
+
+out:
+    unc_free(al, h);
+    return err;
+}
+
+/* ------------------------------------------------------------------ */
+/* -lh3-: a static code, rebuilt per block                            */
+/* ------------------------------------------------------------------ */
+
+#define LZS_N1        286      /* the literal/length alphabet          */
+#define LZS_NP        128      /* 8 KB window / 64                     */
+#define LZS_CBIT      9        /* the "one symbol only" escape's width */
+#define LZS_LENFIELD  4        /* a code length, as sent               */
+#define LZS_EXTRABITS 8        /* the long-match escape                */
+#define LZS_BUFBITS   16       /* the block's symbol count             */
+
+typedef struct Lzst0 {
+    uint8_t  c_len[LZS_N1];
+    uint8_t  pt_len[LZS_NP];
+    UncCanon c_canon, p_canon;
+    int32_t  c_single, p_single;   /* -1, or the block's ONLY symbol */
+    int32_t  blocksize;            /* symbols left in this block     */
+    uint8_t  window[LZD_DICSIZ];
+} Lzst0;
+
+/* The position code the format keeps for blocks that send none.
+ * @LHAready_made, table 1 ("8K buf"). */
+static void lzs_ready_made(Lzst0 *h)
+{
+    static const int tbl[] = { 0x01, 0x01, 0x03, 0x06, 0x0D, 0x1F, 0x4E, -1 };
+    int32_t i, j = 2, k = 0;
+
+    for (i = 0; i < LZS_NP; i++) {
+        while (tbl[k] >= 0 && tbl[k] == i) { j++; k++; }
+        h->pt_len[i] = (uint8_t)j;
+    }
+}
+
+/* One 4-bit length per symbol, with a bit ahead of each saying whether
+ * the symbol occurs at all. Three lengths of 1 in a row is not a code:
+ * it means the block holds ONE symbol, named next. @LHAread_tree_c. */
+static int lzs_read_tree_c(Lzst0 *h, UncBitIn *bi)
+{
+    int32_t i = 0, v;
+
+    h->c_single = -1;
+    while (i < LZS_N1) {
+        int bit = unc_bitin_bit(bi);
+        if (bit < 0) return bi->err;
+        if (bit) {
+            v = unc_bitin_bits(bi, LZS_LENFIELD);
+            if (v < 0) return bi->err;
+            h->c_len[i] = (uint8_t)(v + 1);
+        } else {
+            h->c_len[i] = 0;
+        }
+        if (++i == 3 && h->c_len[0] == 1 && h->c_len[1] == 1
+                     && h->c_len[2] == 1) {
+            v = unc_bitin_bits(bi, LZS_CBIT);
+            if (v < 0) return bi->err;
+            h->c_single = v;
+            return UNC_OK;
+        }
+    }
+    return unc_canon_build(&h->c_canon, h->c_len, LZS_N1);
+}
+
+/* The same shape for positions, minus the presence bit and the +1.
+ * @LHAread_tree_p. */
+static int lzs_read_tree_p(Lzst0 *h, UncBitIn *bi)
+{
+    int32_t i = 0, v;
+
+    h->p_single = -1;
+    while (i < LZS_NP) {
+        v = unc_bitin_bits(bi, LZS_LENFIELD);
+        if (v < 0) return bi->err;
+        h->pt_len[i] = (uint8_t)v;
+        if (++i == 3 && h->pt_len[0] == 1 && h->pt_len[1] == 1
+                     && h->pt_len[2] == 1) {
+            v = unc_bitin_bits(bi, LZD_DICBIT - 6);
+            if (v < 0) return bi->err;
+            h->p_single = v;
+            return UNC_OK;
+        }
+    }
+    return UNC_OK;
+}
+
+static int lzs_block_head(Lzst0 *h, UncBitIn *bi)
+{
+    int32_t n = unc_bitin_bits(bi, LZS_BUFBITS);
+    int bit, e;
+
+    if (n < 0) return bi->err;
+    h->blocksize = n;
+    if ((e = lzs_read_tree_c(h, bi)) != UNC_OK) return e;
+    if ((bit = unc_bitin_bit(bi)) < 0) return bi->err;
+    if (bit) {
+        if ((e = lzs_read_tree_p(h, bi)) != UNC_OK) return e;
+    } else {
+        h->p_single = -1;
+        lzs_ready_made(h);
+    }
+    if (h->p_single < 0)
+        return unc_canon_build(&h->p_canon, h->pt_len, LZS_NP);
+    return UNC_OK;
+}
+
+static int lzs_decode_c(Lzst0 *h, UncBitIn *bi, int32_t *out)
+{
+    int32_t j;
+    int e;
+
+    if (h->blocksize == 0) {
+        if ((e = lzs_block_head(h, bi)) != UNC_OK) return e;
+        /* A block of zero symbols would spin forever rather than end. */
+        if (h->blocksize == 0) return UNC_ERR_CORRUPT;
+    }
+    h->blocksize--;
+    if (h->c_single >= 0) {
+        j = h->c_single;               /* no bits: the block is one symbol */
+    } else {
+        j = unc_canon_decode(&h->c_canon, bi);
+        if (j < 0) return bi->err != UNC_OK ? bi->err : UNC_ERR_CORRUPT;
+    }
+    if (j == LZS_N1 - 1) {
+        int32_t extra = unc_bitin_bits(bi, LZS_EXTRABITS);
+        if (extra < 0) return bi->err;
+        j += extra;
+    }
+    *out = j;
+    return UNC_OK;
+}
+
+static int lzs_decode_p(Lzst0 *h, UncBitIn *bi, int32_t *out)
+{
+    int32_t j, low;
+
+    if (h->p_single >= 0) {
+        j = h->p_single;
+    } else {
+        j = unc_canon_decode(&h->p_canon, bi);
+        if (j < 0) return bi->err != UNC_OK ? bi->err : UNC_ERR_CORRUPT;
+    }
+    low = unc_bitin_bits(bi, 6);
+    if (low < 0) return bi->err;
+    *out = (j << 6) + low;
+    return UNC_OK;
+}
+
+int unc_lzst0_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen,
+                     int (*put)(void *ctx, uint8_t b), void *pctx)
+{
+    Lzst0 *h;
+    uint32_t loc = 0, done = 0;
+    uint32_t i;
+    int err = UNC_OK;
+
+    h = (Lzst0 *)unc_alloc(al, (uint32_t)sizeof *h);
+    if (!h) return UNC_ERR_MEM;
+    for (i = 0; i < LZS_N1; i++) h->c_len[i] = 0;
+    for (i = 0; i < LZS_NP; i++) h->pt_len[i] = 0;
+    for (i = 0; i < LZD_DICSIZ; i++) h->window[i] = ' ';
+    h->c_single = h->p_single = -1;
+    h->blocksize = 0;
+
+    while (done < outlen) {
+        int32_t c = 0;
+        if ((err = lzs_decode_c(h, bi, &c)) != UNC_OK) goto out;
+        if (c <= 255) {
+            h->window[loc++ & (LZD_DICSIZ - 1)] = (uint8_t)c;
+            loc &= LZD_DICSIZ - 1;
+            done++;
+            if ((err = put(pctx, (uint8_t)c)) != UNC_OK) goto out;
+        } else {
+            int32_t len = c - (0x100 - LZD_THRESHOLD);
+            int32_t pos = 0;
+            uint32_t from;
+            if (len <= 0) { err = UNC_ERR_CORRUPT; goto out; }
+            if ((err = lzs_decode_p(h, bi, &pos)) != UNC_OK) goto out;
+            from = (loc - (uint32_t)pos - 1) & (LZD_DICSIZ - 1);
             while (len-- > 0 && done < outlen) {
                 uint8_t b = h->window[from++ & (LZD_DICSIZ - 1)];
                 h->window[loc++ & (LZD_DICSIZ - 1)] = b;

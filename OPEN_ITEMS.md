@@ -111,23 +111,6 @@ Each says which of the two is missing, because the searches are different:
 
 Unlike section 3, none of this is impossible here: a download would do it.
 
-- **LZH's `-lh3-`.** `-lh2-` left this entry on 2026-08-25, and the way
-  it left says what `-lh3-` needs. Nothing writes either: MacLHA 2.00's
-  Type menu is `LHa`, `LHarc`, `None` (that is `-lh5-`, `-lh1-`,
-  `-lh0-`; the `-lh2-`/`-lh3-` strings in its fork are its READ table,
-  one contiguous run in `DATA` 0), lhasa has no decoder for either, and
-  the LHa in `reference/` carries both coders without ever selecting
-  them. What broke the deadlock was **teaching the maintained fork to
-  encode** (`tools/build_lha_lh2.sh`), which made data that its own
-  decoder verifies.
-
-  `-lh3-` needs the same treatment and it is a different coder: static
-  and blocked (`shuf.c`'s `decode_start_st0`), so the encoder is not the
-  mirror that `-lh2-`'s was — it has to build and transmit a table per
-  block. **What would close it:** that encoder, or one real `-lh3-`
-  archive, which would grade itself: every LZH entry header carries a
-  CRC-16/ARC of the decoded bytes and this engine checks it.
-
 - **ARC 0x0a/0x0b.** No corpus fixture uses either and nothing reachable
   writes them, so an implementation could not be graded — code no oracle
   can check is the same bargain LZH's `-lh2-`/`-lh3-` make. **What is missing is a
