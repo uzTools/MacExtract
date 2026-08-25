@@ -121,6 +121,27 @@ Unlike section 3, none of this is impossible here: a download would do it.
   better, so the likeliest source is a Japanese PC archive of the early
   1990s rather than anything Macintosh.
 
+  Three things measured 2026-08-25, so nobody re-checks them:
+
+  - **MacLHA 2.00 cannot write one**, and it is the Macintosh writer
+    this project has. Its Type menu offers `LHa`, `LHarc` and `None`
+    — that is `-lh5-`, `-lh1-` and `-lh0-` — and the `-lh2-`/`-lh3-`
+    strings in its resource fork are one contiguous table in `DATA` 0
+    (`-lh0-` through `-lz4-`, five bytes apart), which is what it can
+    READ. Its hierarchical Type menu, which `maclha.py` cannot reach,
+    would not have helped: there is nothing new in it.
+  - **Nothing here can decode one either.** lhasa has no `lh2`/`lh3`
+    decoder at all, and LHa for UNIX 1.14i carries the coders
+    (`dhuf.c`, `shuf.c`) but never selects them — `decode_lzhuf()`
+    names lh0, lzs, lh1, lh4, lz5, lh6 and lh7, and anything else
+    falls to `default` and is decoded as `-lh5-`. So a transcription
+    would have one reference and no second implementation, which is
+    NOT the position SuperDisk!'s method 10 was in when it landed.
+  - **But a specimen would grade itself.** Every LZH entry header
+    carries a CRC-16/ARC of the decoded bytes, and this engine checks
+    it (`fmt_lzh.c`). One real `-lh2-` archive is therefore both the
+    specimen and the oracle.
+
 - **ARC 0x0a/0x0b.** No corpus fixture uses either and nothing reachable
   writes them, so an implementation could not be graded — code no oracle
   can check is the same bargain LZH's `-lh2-`/`-lh3-` make. **What is missing is a
