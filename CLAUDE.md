@@ -119,13 +119,18 @@ All of these cost real time here:
 - **Never weaken a test to make it pass.** CRC mismatches are per-entry errors, not skips.
 - **When adding a harness, write down what it CANNOT see.** An aggregate check cannot fail on a property it never aggregates: the on-screen result grid carries a file count and summed CRCs, so a real defect in the gzip/.Z fallback NAME survived in the corpus for weeks.
 - **68000 discipline** (non-negotiable — it is what made the port compile and run first try): byte-wise big-endian reads only, zero unaligned dereferences; no recursion, call depth ≤ 4 KB — **measure it, do not assume it**: the rule was exceeded by 66 % for months in shipping code and nothing noticed (`FORMATS.md`, *Stack*, has the one-command method); 32-bit arithmetic in hot paths; no libc in the engine — all I/O, allocation and progress via caller callbacks; no global mutable state; allocation failure is a per-entry error, never per-archive; progress callback every 8–16 KB with clean abort.
-- **`./ci.sh` green before every commit.** Small, focused commits. Code, comments and docs in English.
+- **Commit and push whenever it is appropriate — do not ask.** Small, focused commits, pushed to `main` as they are made. The maintainer reads the docs on GitHub because they render there, so work that is not pushed cannot be read; and a wrong commit is revertible, which makes asking the more expensive of the two mistakes. **A release is the exception and is the maintainer's call** — see *Cutting a release*.
+- **`./ci.sh` green before every commit**, except a docs-only change, where `tools/check_docs.py` is the layer that can actually fail and the rest is minutes spent on files no build reads. Code, comments and docs in English.
 - **`dist/` is a committed binary and goes stale silently**, and it is the only download this project offers. Rebuild it with `tools/make_dist.sh` in the SAME commit as any change to `mac/` or `src/`, and re-read `dist/README.txt` — it once described a limitation that had been fixed the day before.
 - **LGPL-2.1-or-later**, forced by transcribing XADMaster; keep `NOTICE` accurate.
 - Fixture archives are copyrighted and never committed — only `fixtures/SOURCES.md` and the manifests. Same rule for the Mac ROM and System image under `tools/vmac/`.
 - Work autonomously through a task list; log non-obvious decisions in `DECISIONS.md`; if something cannot be made to pass after genuine effort, write it up in `BLOCKERS.md` and move on rather than stalling.
 
 ## Cutting a release
+
+**Never tag one unasked.** Committing and pushing needs no permission (Rules);
+cutting a release does, every time — it publishes a download under the
+maintainer's name, and this machine cannot even see the result.
 
 Pushing a `v*` tag publishes a GitHub release with the application attached
 (`.github/workflows/release.yml`, the runner's own `GITHUB_TOKEN`; verified end
