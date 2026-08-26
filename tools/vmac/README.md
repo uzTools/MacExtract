@@ -1313,13 +1313,15 @@ the boot shell, which is the only way to launch the application the way a
 person does and the only way to launch what it extracted. Both runs photograph
 every step, and `docs/screens/` comes from here.
 
-**It cannot photograph a legible icon label.** The volume window holds four
+**It cannot photograph a legible icon label**, so `docs/screens/0-icon.png`
+comes from `mountcheck.py --open` instead. The `--e2e` volume window holds four
 items in one row, one of them the empty `StuffIt Expander™ 4.0.1 Folder` that
 `mkboot.py` cannot delete, and the Finder paints overlapping labels in HFS
-catalog order — which is by name. `MacExtract` sorts before `StuffIt…`, so the
-folder's label is drawn over it and the application's name does not appear in
-`e2e-2-volume.png`; the icon itself is unobstructed. Anything that needs the
-name read off the screen needs a different window.
+catalog order — which is by name. `MacExtract` sorts before `StuffIt…`, so that
+folder's label lands on top of the application's and the name is unreadable in
+`e2e-2-volume.png`; the icon itself is unobstructed. `mountcheck.py --open`
+opens `dist/MacExtract.dsk`, whose volume holds the application and nothing
+else, so there is nothing to collide with.
 
 What a pass looks like, and the fixtures that make it checkable: `--e2e` uses
 `derived-ScrollbarPattern.sit`, whose entry is an application — so the last

@@ -11,10 +11,10 @@ There is a Linux command-line version too, built from the same engine.
 
 ## What it looks like
 
-It arrives looking like this — an open carton lettered EXTRACT, drawn for
-1-bit, 16-colour and 256-colour screens:
+It arrives looking like this — one 179K application on an 800K floppy, an open
+carton lettered EXTRACT, drawn for 1-bit, 16-colour and 256-colour screens:
 
-![The MacExtract icon on a System 6 desktop](docs/screens/0-icon.png)
+![The floppy image open on a System 6 desktop, holding one item: MacExtract](docs/screens/0-icon.png)
 
 Pick an archive:
 
@@ -47,7 +47,7 @@ one, because parts are recognised by what is inside them:
 
 ## Download
 
-**[Latest release](https://github.com/jarreboum/unclassic/releases/latest)** —
+**[Latest release](https://github.com/jarreboum/MacExtract/releases/latest)** —
 currently **v0.24.0**. If the release page shows anything older, the publish
 step did not run. Or take it straight from the tree:
 
