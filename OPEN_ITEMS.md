@@ -196,11 +196,13 @@ own distribution (BLOCKERS.md, the same date).
   not change.
 
   **The name rule is inert; the rule beside it is not** (2026-08-25,
-  four runs, each renaming IN THE FINDER with a control in the same
+  five runs, each renaming IN THE FINDER with a control in the same
   boot). `Forked` -> `Forked.SIT` becomes a StuffIt archive every time,
   so the watcher is awake; `Alphasmall`, `Alpha small` and `small Alpha`
   all come back untouched, so it is not the spacing and not which end
-  the keyword goes on. The 5.0 User's Guide — in the emulator cache,
+  the keyword goes on. Nor is it the kind of item: renaming the DISK to
+  `System_7_0_1 small` — the guide's own "everything contained on that
+  disk gets compressed" — commits the name and compresses nothing. The 5.0 User's Guide — in the emulator cache,
   and worth reading before the next attempt — says the two default
   keywords are `small` (compress) and `big` (NEVER compress), that
   attaching one "immediately compresses that item", and that the

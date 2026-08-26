@@ -1713,6 +1713,91 @@ def magicname(keep=False):
     return report_specimen(out, s.shots)
 
 
+def volname(keep=False):
+    """Attach the keyword to the DISK, which is what the guide suggests.
+
+    "If you attach a compress keyword to a disk or folder, everything
+    contained on that disk or in that folder gets compressed" — the 5.0
+    User's Guide, page 12. Every attempt so far has renamed FILES; a
+    volume rename is a different Finder operation and a different path
+    through whatever watches names.
+    """
+    import glob
+    boot = os.path.join(WORK, "ssvolname.hfv")
+    shutil.copyfile(INSTALLED, boot)
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+    tmp = tempfile.mkdtemp(prefix="ssvn-")
+    try:
+        subprocess.run(["hmount", boot], check=True, capture_output=True,
+                       env=env)
+        from ndd import macbinary_dated, MAC_EPOCH_1990   # noqa: E402
+        for n, t, c, d, r in SUBJECTS:
+            q = os.path.join(tmp, n + ".bin")
+            open(q, "wb").write(macbinary_dated(n, t, c, d, r,
+                                                MAC_EPOCH_1990,
+                                                MAC_EPOCH_1990))
+            subprocess.run(["hcopy", "-m", q, ":"], check=True,
+                           capture_output=True, env=env)
+        subprocess.run(["humount"], check=True, capture_output=True, env=env)
+    finally:
+        shutil.rmtree(env["HOME"], ignore_errors=True)
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    before = set(glob.glob("/tmp/dd-*/boot.hfv"))
+    s = Session(boot, [], os.path.join(SPECIMENS, "volname"))
+    try:
+        s.boot()
+        s.shot("desktop", wait=16.0)
+        s.mac.click(250, 38)
+        time.sleep(2.5)
+        for _ in range(3):
+            s.mac.command_key("w")
+            time.sleep(2.5)
+        s.shot("windows-closed", wait=6.0)
+        # The volume icon itself, top right of the desktop.
+        s.mac.click(470, 55)
+        time.sleep(2.0)
+        s.shot("volume-selected", wait=1.0)
+        s.mac.key("Return")                 # open the name box
+        time.sleep(2.5)
+        s.mac.key("Right")
+        time.sleep(0.8)
+        s.mac._xdo("type", "--delay", "150", " small")
+        time.sleep(1.5)
+        s.shot("volume-typed", wait=1.0)
+        s.mac.key("KP_Enter")
+        time.sleep(5.0)
+        s.mac.click(250, 200)               # commit by clicking the desktop
+        s.shot("volume-renamed", wait=45.0)
+        for i in range(4):
+            s.shot("settling%d" % i, wait=60.0)
+        s.menu(SPECIAL_X, SHUT_DOWN_Y, "special-menu")
+        s.shot("shutting-down", wait=45.0)
+    finally:
+        time.sleep(10)
+        s.close()
+
+    cands = [p for p in glob.glob("/tmp/dd-*/boot.hfv") if p not in before]
+    if not cands:
+        cands = sorted(glob.glob("/tmp/dd-*/boot.hfv"),
+                       key=os.path.getmtime)[-1:]
+    out = sorted(cands, key=os.path.getmtime)[-1]
+    print("spacesaver: reading back %s" % out)
+    from superdisk import read_forks                    # noqa: E402
+    hit = 0
+    for path, (ftype, creator, data, rsrc) in sorted(read_forks(out).items()):
+        if len(path) > 1 or not path:
+            continue
+        mark = "SPACESAVER FILE" if data[:8] == b"SIT!DFD3" else ""
+        print("spacesaver: %-18s %s/%s %8d B %s"
+              % (path[-1], ftype, creator, len(data), mark))
+        if mark:
+            hit += 1
+            q = os.path.join(s.shots, path[-1].replace(" ", "_") + ".ss")
+            open(q, "wb").write(data)
+    return 0 if hit else 1
+
+
 def twonames(keep=False):
     """The control: fire the rule that WORKS beside the one that does not.
 
@@ -3924,6 +4009,8 @@ def main():
                     help="drive both rename rules on the settings page")
     ap.add_argument("--enrollmagic", action="store_true",
                     help="enrol the disk, close the panel, then compress")
+    ap.add_argument("--volname", action="store_true",
+                    help="attach the keyword to the DISK, not a file")
     ap.add_argument("--twonames", action="store_true",
                     help="rename one file .SIT and one small, same boot")
     ap.add_argument("--enrollrename", action="store_true",
@@ -4022,6 +4109,8 @@ def main():
         return suffix(a.keep)
     elif a.enrollmagic:
         return enrollmagic(a.keep)
+    elif a.volname:
+        return volname(a.keep)
     elif a.twonames:
         return twonames(a.keep)
     elif a.enrollrename:
