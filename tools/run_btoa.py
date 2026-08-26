@@ -177,6 +177,38 @@ def main():
             problems.append("a truncated archive was accepted")
         ran += 1
 
+        # The End line's R field, in the width a 32-BIT machine writes.
+        # `Crot` is a `long` in btoa.c and the rotate assumes that is 32
+        # bits, so this reference — built here on LP64 — prints sixteen
+        # hex digits where every machine the format was written for
+        # printed eight. The low 32 bits are the same value either way
+        # (the carry the rotate adds does not depend on the bits above
+        # 31), and the Macintosh specimen `sitcrypt.py --btoa-send`
+        # produced is in the eight-digit form. So both are decoded, and
+        # a wrong eight-digit R is still an error: without this the
+        # suite could only ever see the form its own reference emits.
+        for ver in ("v5", "v4"):
+            src = open(os.path.join(tmp, "odd1.bin.%s.btoa" % ver),
+                       "rb").read()
+            lines = src.split(b"\n")
+            end = max(i for i, ln in enumerate(lines) if ln.startswith(b"x"))
+            fields = lines[end].split()
+            if len(fields) < 11 or len(fields[10]) <= 8:
+                continue                       # already the narrow form
+            for label, tail in (("32bit", fields[10][-8:]),
+                                ("32bit-wrong", b"%08x"
+                                 % ((int(fields[10][-8:], 16) ^ 1)))):
+                lines[end] = b" ".join(fields[:10] + [tail])
+                enc = os.path.join(tmp, "rot.%s.%s.btoa" % (ver, label))
+                open(enc, "wb").write(b"\n".join(lines))
+                bad = subprocess.run([unclassic, "t", enc],
+                                     capture_output=True).returncode != 0
+                if bad != label.endswith("wrong"):
+                    problems.append("R in the 32-bit width, %s, %s: %s"
+                                    % (ver, label,
+                                       "refused" if bad else "accepted"))
+                ran += 1
+
         # Prose that happens to contain the marker is not an archive.
         prose = os.path.join(tmp, "prose.txt")
         open(prose, "wb").write(b"this mentions xbtoa but not at a line "

@@ -768,14 +768,22 @@ and with CRLF has to decode identically. CR alone did not, until
 2026-08-23 (*BLOCKERS.md*, withdrawn claims) — 25 cases now, and the
 four new ones fail against the code they were written for.
 
+Since 2026-08-26 it also asserts the End line's `R` field in the width
+a **32-bit** machine writes it: the reference computes that checksum in
+a `long` and prints sixteen hex digits on this host where the Macintosh
+writes eight (FORMATS.md, *btoa*). Four cases, two framings; the narrow
+form must decode and a wrong narrow form must not.
+
 **What it cannot see.** The suite skips, loudly, without
 `reference/btoa` — so a fresh clone runs the two hand-built streams in
-`tests/unit_formats.c` and nothing else. And every stream in it still
-comes out of ONE encoder: re-terminating the lines varies the property
-that encoder was hiding, but not the ones nobody has thought of. A file
-written by StuffIt Deluxe's own `btoa/atob Translator` would be the
-independent specimen; `tools/vmac/sitcrypt.py` has not managed to make
-one (*tools/vmac/README.md*, the Translate menu).
+`tests/unit_formats.c` and nothing else. And every stream IN `ci.sh`
+still comes out of ONE encoder: re-terminating the lines and narrowing
+`R` vary properties that encoder was hiding, but not the ones nobody has
+thought of. The independent specimen exists as of 2026-08-26 —
+`tools/vmac/sitcrypt.py --btoa-send` has Aladdin's own `btoa/atob
+Translator` write one, and it decodes byte-exact (FORMATS.md, *btoa*) —
+but it is a specimen made on demand under an emulator, not a fixture, so
+nothing in `ci.sh` replays it.
 
 ## base64 and MIME (`tools/run_mime.py`, in `ci.sh`)
 

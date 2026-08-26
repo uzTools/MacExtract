@@ -29,7 +29,7 @@ whole corpus for that format (engine allocations only, via
 | DiskDoubler (DD, DDAR, DDA2) | extract | **all eleven**: 0 store, 1 Unix compress, 2/5 splay Huffman, 3 RLE90, 4 StuffIt Huffman, 6/9 AD LZSS, 7 Stac LZS, 8 Compact Pro, 10 DDn✦ | 88 fixtures (6 harvested + 82 CC0 files graded against their own originals, in `ci.sh` since 2026-08-21) + 19 BinHexed copies of those + 28 specimens (2 written by DiskDoubler 3.7 under Mini vMac, 2 off its distribution disk, 24 off Salient's 3.1.2 disk)✦ | 8–392 KB✦ | full |
 | Now Compress | extract | stored, LZSS, Huffman, Huffman+LZSS, "new" LZSS✧ | 2 real fixtures + 13 generated archives (all five shapes, adjudicated by `unar`); `synth-now-mixed.now` also has an `unar` manifest and is in the differential suite | 134 KB✧ | full |
 | ARC / ArcMac (.arc) | extract | 1/2 store, 3 RLE90, 4 squeeze+RLE90, 5/6/7 crunch, 8 12-bit LZW+RLE90, 9 13-bit LZW, **0x0a crushed (PAK) and 0x0b distilled since 2026-08-25, 0x0a trimmed (ARC 7.x) and the ARC 7 container since 2026-08-25**, 0x7f compress; ArcMac's two-fork payload since 2026-08-16★★★; **garbled (password-XORed) members decrypted** | 10 generated archives (methods 1-9, adjudicated by `unar`) + 3 written by Debian's `arc` 5.21q; **2 real PAK specimens + 7 archives PAK 2.51 wrote under DOSBox** (`tools/pak.py`); `synth-arc-mixed.arc`, `arc2pak1.pak` and `derived-INTRECHO.pak` have manifests and are in the differential suite | 4–46.5 KB★ | full |
-| btoa (`xbtoa`/`.ascii`) | extract | — (base-85 ASCII armour; both the `xbtoa5` and the older `xbtoa Begin` framings)◆ | no corpus file and no second reader: graded against **btoa 5.2.1 itself**, which encodes the subjects `tools/run_btoa.py` decodes | 12 KB | full |
+| btoa (`xbtoa`/`.ascii`) | extract | — (base-85 ASCII armour; both the `xbtoa5` and the older `xbtoa Begin` framings)◆ | no corpus file and no second reader: graded against **btoa 5.2.1 itself**, which encodes the subjects `tools/run_btoa.py` decodes, **plus a stream written by Aladdin's own `btoa/atob Translator`** on an emulated Mac (`sitcrypt.py --btoa-send`)◆ | 12 KB | full |
 | base64 (`.b64`, `.mime`) | extract | — (bare, and the `begin-base64`/`====` framing sharutils writes; several documents in one file)◇ | no corpus file and no Macintosh specimen: graded against **deark** and, through the messages that carry it, **munpack 1.6** | 5 KB◇ | full |
 | MIME message (`.mim`, `.eml`) | extract | — (multipart to 4 levels, base64, quoted-printable and 7bit/8bit parts, and **multipart/appledouble**, which carries both forks and the Finder info)◇ | no corpus file: graded against **munpack 1.6**, the implementation `src/fmt_mime.c` is transcribed from, over 48 generated cases | 8 KB◇ | full |
 | uuencode (.uu, incl. UUTool) | extract | — (plain uu, UUTool's two-fork "MU" shape, and documents posted in several parts★★) | 7 generated cases, the two-fork ones adjudicated by macutils' `hexbin`; `synth-uu-mac.uu` is in the differential suite | 4 KB | full |
@@ -1004,7 +1004,25 @@ One thing it inherits from the Unix side: the checksum called `R` is a
 32-bit rotate that the reference computes in a `long`, so a 64-bit host
 prints sixteen hex digits where a Mac prints eight. The low 32 bits are
 the same either way — the rotate tests bit 31 in both — and that is
-what is compared.
+what is compared. **Both widths are now measured rather than reasoned**:
+the Macintosh specimen below ends `R fcd84997` where this machine's
+reference writes `R 273efff1fcd84997` for the same payload.
+
+**A stream written by Aladdin, 2026-08-26.** Every other btoa file this
+project has ever seen came out of `reference/btoa` compiled here, so a
+decoder that only understood what that binary emits would have passed
+everything. `tools/vmac/sitcrypt.py --btoa-send` has StuffIt Deluxe
+3.5.1's own `btoa/atob Translator` encode a subject on an emulated Mac
+Plus (*tools/vmac/README.md*), and what came back:
+
+- It writes the **older `xbtoa Begin` framing**, not `xbtoa5` — the half
+  of the decoder the Unix reference reaches only with `-o`.
+- It **MacBinary-wraps first**: `Subject` becomes `Subject.MBin.ascii`,
+  640 bytes of MacBinary inside 732 bytes of armour. The subject came
+  back byte-exact through both layers.
+- Against btoa 5.2.1 encoding the same payload with `-o`, the two
+  streams are **identical but for the width of `R`** — twelve lines, one
+  difference, and it is the 64-bit `long` above.
 
 ## base64 and MIME, the armour that replaced the others
 

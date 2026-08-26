@@ -225,21 +225,6 @@ own distribution (BLOCKERS.md, the same date).
   such in `tools/icon/make_icon.py`. What would close it: opening the
   application's folder on the Mac OS 9 tier (`tools/vmac/os9.py`, which has
   colour) and photographing the icon, or a reference for the system palette.
-- **A btoa file written by a Mac.** Every stream the btoa decoder is graded
-  against comes out of one encoder, btoa 5.2.1 on Linux (TESTING.md, *btoa*).
-  The independent one would be Aladdin's own `btoa/atob Translator`, and it is
-  reachable only through a hierarchical menu, which cannot be selected under
-  Mini vMac (`tools/vmac/README.md`, *sitcrypt.py*). **`--btoa-drop` was never
-  going to work**: `DropConvert™` is `APPL/SITC` and its own strings —
-  `Archive.sit`, `.sit`, `Archive.sea`, `.sea`, *"Unable to convert this
-  archive…"* — say it converts ARCHIVES between StuffIt and self-extracting,
-  not documents between encodings (measured 2026-08-25, off the installed
-  image with `hcopy`; no emulator). What would close it: a route to the
-  translator that is not a submenu. One is untried and is the shape of
-  `tools/sdmodule/` — a translator is a subroutine (`main(pb, selector)`,
-  DECISIONS.md 2026-08-23), so it could run under `qemu-m68k` like Alysis's
-  codecs do, except that it calls Toolbox traps and would need a few of them
-  answered.
 - **The XADMaster DDn report is not filed.** Its DDn reads one byte past a
   fork's declared compressed length; reduced to a 1,166-byte reproduction and
   written up ready to post in `tools/xadmaster-ddn-repro/`. **Deliberately
@@ -258,6 +243,22 @@ own distribution (BLOCKERS.md, the same date).
 
 ## 4. Known unknowns, not being chased
 
+- **btoa and uuencode are not in the envelope auto-unwrap list, and a
+  real btoa file needs them to be.** Measured 2026-08-26, on the
+  specimen Aladdin's own translator wrote (FORMATS.md, *btoa*): that
+  translator MacBinary-wraps before it encodes, so its output is
+  `Subject.MBin.ascii` and `unclassic x` stops at the MacBinary layer
+  and leaves it there. Both layers read correctly one at a time — the
+  chain is what is missing. `env_is_envelope` in `cli/main.c` and
+  `IsEnvelopeFormat` in `mac/unclassic_mac.c` list MacBinary, BinHex,
+  AppleSingle/Double, gzip, `.Z` and base64; btoa's payload is a single
+  anonymous stream with no forks, which is exactly the argument that put
+  base64 in the list (DECISIONS.md 2026-08-26). Not chased in the change
+  that found it because that list is the one thing both hosts must agree
+  on and `dist/` is rebuilt with it. **What would close it:** btoa in
+  both lists, a chained case in `tools/run_btoa.py`, and a `dist/`
+  rebuild in the same commit. uuencode has the same shape and no
+  specimen showing it — the wrapped-uu case has never been seen here.
 - **A zip's end-of-central-directory comment is read past and dropped.**
   `UncSink` has carried a comment callback since 2026-08-23 and Compact
   Pro's fills it; `fmt_exo.c` still skips zip's, which one corpus

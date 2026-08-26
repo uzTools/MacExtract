@@ -75,6 +75,11 @@ oracle and will lose it to `./ci.sh`'s `make clean`.
 directory's `Display`/emulator plumbing to answer one narrow question about
 System 6's Toolbox. It is where `mkboot.py --finder` came from.
 
+`tools/aetran/` is the other sibling: a Retro68 application that sends one
+Apple event to another application, which is how the btoa/atob translator is
+reached without its inaccessible submenu (`sitcrypt.py --btoa-send`, below).
+It is built by that harness, never by `ci.sh`, and it is System 7 only.
+
 The verification halves live one directory up because they are useful on their
 own: `tools/decode_grid.py` (screenshot → eight numbers) and
 `tools/vmac_check.py` (those numbers vs. the oracle).
@@ -1411,13 +1416,52 @@ emulator's pointer injection does not produce.
 That route is gone from the script because of how it failed: with no
 picker on screen, the clicks and Return meant for it went to the Finder
 and RENAMED the subject to `Subject.ascii` — a plausible-looking
-specimen containing the plain subject. What is left is `--btoa-drop`,
-which uses `DropConvert™` from the `Drag & Drop Applications` folder
-instead: its `Convert… ⌘C` needs no menu tracking, its picker takes the
-subject via Add, and it is reached entirely by keystroke and button.
-**It does not produce a file yet** — Convert closes the dialog and
-nothing is written anywhere on the volume — so the independent btoa
-specimen is still outstanding (TESTING.md, *btoa*).
+specimen containing the plain subject. `--btoa-drop`, which drove
+`DropConvert™` instead, never wrote a file either and never could:
+`DropConvert™` converts ARCHIVES between StuffIt and self-extracting
+(OPEN_ITEMS.md, part 1). **Neither is the route.** `--btoa-send` is.
+
+### The translator, driven by Apple event — `--btoa-send`
+
+    tools/vmac/sitcrypt.py --btoa-send
+
+**No menu at all.** StuffIt Deluxe 3.5.1's `aete` declares a `translate`
+event — `SIT!`/`TRAN`, direct object an alias, `trnm` the translator's
+name, `encd` the direction, `dest` where to put the result — and its
+`SIZE` -1 is `0xd8e8`, isHighLevelEventAware and localAndRemoteHLEvents
+both set. The Apple Event Manager is in System 7.0.1 whether or not
+AppleScript is (it is not, on this image), so the submenu is not the only
+door and never was.
+
+`tools/aetran/` is the sender: a Retro68 application of about 400 lines
+that the harness cross-compiles and copies onto the volume beside the
+subject. The Finder opens it — one type-select and ⌘O, the only thing
+this mode drives — and everything after that happens inside the
+Macintosh, where no coordinate can miss: it finds its own folder through
+`GetProcessInformation`, launches StuffIt Deluxe itself with
+`LaunchApplication`, sends the event, and writes the reply's `errn` to a
+text file called `AEResult` beside itself. The specimen lands in
+`$UNC_VMAC_HOME/specimens/sitcrypt/btoasend/`, and the harness grades it
+with our own CLI and diffs it against btoa 5.2.1.
+
+Four things it measured, each of which cost a step:
+
+- **The `aete` says what the terms MEAN, not what the handler accepts.**
+  Six shapes of the same event were sent in one boot. `dest` as an
+  `fss ` naming the not-yet-existing OUTPUT FILE is the only one that
+  failed — `errn -1700`, `errAECoercionFail`. Every shape naming an
+  existing FOLDER, and every shape naming no destination at all, was
+  accepted. The destination is a place, not a name.
+- **`encd` is the direction, and its default is DECODE.** The shapes that
+  omitted it left a zero-byte `Subject.dec` beside the real output.
+- **The translator wraps before it encodes.** `Subject` comes back as
+  `Subject.MBin.ascii`: MacBinary first, btoa over that. So the output is
+  found by its type and creator (`TEXT`/`asci`) and not by a name — the
+  mistake the abandoned menu route made — and the grading takes the two
+  layers off separately.
+- **It writes the OLDER framing.** `xbtoa Begin` … `xbtoa End`, not
+  `xbtoa5`, which is the half of the decoder the Unix reference only
+  reaches with `-o` (FORMATS.md, *btoa*).
 
 ### Asking Compact Pro about its own cipher — `cptcrypt.py`
 

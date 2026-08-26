@@ -735,6 +735,22 @@ format's files actually are. **Why it survived:** all 21 cases in
 length, alphabet, framing and framing checksum but never the line ending. Four
 cases now do, and they fail against the old code.
 
+**The `btoa/atob Translator` is reachable only through a hierarchical menu.**
+The submenu half is true and stands (three ways in were measured under Mini
+vMac and none selects an item, `tools/vmac/README.md`). The conclusion drawn
+from it was not: the menu is not the only door. StuffIt Deluxe 3.5.1's `aete`
+declares a `translate` event — `SIT!`/`TRAN` — and its `SIZE` -1 has
+isHighLevelEventAware set, so ONE Apple event runs the translator with no menu
+tracking, no coordinate and no scripting language installed. All of that was
+readable off the disk image with `hcopy` and no emulator at all. **Cost:**
+three months of the btoa decoder graded against a single encoder, an
+`--btoa-drop` route built and abandoned against an application that converts
+archives rather than encodings, and an open item that named the wrong obstacle
+("a route that is not a submenu" — it was never the menu). **Why it survived:**
+the first attempt asked *how do I click this item*, and every later one
+inherited the question. What the application will do is in its resources; what
+a harness can click is not the same list.
+
 ### Corrected figures and superseded write-ups
 
 - **The OS 9 boot time** was recorded as "about four minutes", then "20-45

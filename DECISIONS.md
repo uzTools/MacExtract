@@ -129,6 +129,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-25 (SpaceSaver method 3) — the codec whose code assignment is a quicksort
 - 2026-08-26 (an encrypted StuffIt 5 archive) — the pointer that was said not to work
 - 2026-08-26 — base64 and MIME, and an oracle that is wrong three times
+- 2026-08-26 (the btoa translator, by Apple event) — the door nobody tried
 
 ---
 
@@ -7278,3 +7279,82 @@ files**, and the diff and robustness suites (932 fixtures, 9,320 variants)
 are unchanged with both probes in place. The cost is that a base64 file too
 short to have a shape cannot be recognised bare; with the `begin-base64`
 marker it can.
+
+
+## 2026-08-26 (the btoa translator, by Apple event) — the door nobody tried
+
+The btoa decoder had been graded against one encoder since it was written:
+`reference/btoa` 5.2.1, compiled here. The independent encoder was known and
+was 30 cm away — Aladdin's `btoa/atob Translator`, installed on the same disk
+image StuffIt Deluxe 3.5.1 runs from — and three attempts to reach it had
+failed, because all three asked the same question: **how do I click that
+menu item?** The item is in a hierarchical submenu, submenu items cannot be
+selected under Mini vMac, and the answer to the question was correctly "you
+cannot". The item was never the only way to run the code behind it.
+
+### What the application says it will do is in its own resources
+
+Four readings off the disk image with `hcopy`, no emulator, in about ten
+minutes:
+
+- `MENU` 132 (`Translate`) holds two items and neither is a translator: the
+  translator entries are built at RUNTIME from the files in
+  `Extensions:Aladdin:Translators`, so there was never a `MENU` resource to
+  patch a Command key into either.
+- The `aete` declares a `translate` event — `SIT!`/`TRAN`, direct object an
+  alias, `trnm` the translator's name, `encd` the direction, `dest` the
+  destination — beside `stuff`, `unstuff`, `segment`, `join` and `do script`.
+- `SIZE` -1 is `0xd8e8`: isHighLevelEventAware **and** localAndRemoteHLEvents.
+  The application accepts events; nothing had asked it to.
+- Aladdin's own `Translate Sample`, a compiled script in `Scripting Tools`,
+  contains the literal bytes `.SIT!TRANnull … alis … trnm`. The vendor's
+  sample sends exactly the event that was wanted.
+
+The generalisation is the entry's title. **A route that a harness cannot
+drive is not the same list as a route the application does not have**, and
+the second list is written down inside the application. This project already
+reads resource forks for a living; it had simply never pointed that at the
+question of how to make a program DO something.
+
+### Apple events need no scripting language
+
+The image runs System 7.0.1 with no AppleScript on it, and the reflex answer —
+install AppleScript, or drive the Script Editor — would have added an OSA
+dependency to a 68000 Mac Plus. It is not needed: the Apple Event Manager is
+part of System 7 itself, and any application can send an event. `tools/aetran/`
+is a ~400-line Retro68 application that finds its own folder through
+`GetProcessInformation`, launches StuffIt Deluxe with `LaunchApplication`,
+sends `SIT!`/`TRAN`, and writes the reply's `errn` to a text file. One
+type-select and one ⌘O in the Finder is the entire on-screen part of the run.
+
+### The dictionary says what the terms mean, not what the handler accepts
+
+The first send came back `-1700`, `errAECoercionFail`, for an event built
+exactly as the `aete` describes. Rather than guess again at a cost of one boot
+per guess, the sender was given a table of six shapes and sent them all in one
+boot, logging each reply. The answer: `dest` as an `fss ` naming the
+not-yet-existing output FILE is the only shape that fails; every shape naming
+an existing FOLDER and every shape naming no destination at all succeeds. A
+destination is a place. And `encd` is the direction with a default of DECODE —
+the shapes that omitted it left a zero-byte `Subject.dec` behind, which is the
+sort of evidence a single-shape run would have had to infer.
+
+**Send the matrix, not the guess**, whenever the round trip is minutes and the
+parameter space is small. It is the same economy as `--layout` reading a
+container out of a control panel instead of booting it.
+
+### What the specimen was worth
+
+The stream that came back uses the older `xbtoa Begin` framing, MacBinary-wraps
+the file before encoding it, and is byte-identical to `reference/btoa -o` over
+the same payload **except for the width of the End line's `R` field** — eight
+hex digits where this host writes sixteen, because `Crot` is a `long` and the
+reference's rotate assumes that is 32 bits. FORMATS.md had that difference
+written down as reasoning; it is now measured, and `run_btoa.py` asserts the
+narrow form in `ci.sh`.
+
+It also showed something the suite could not: a real btoa file from a Mac is
+`X.MBin.ascii`, an armour around a MacBinary wrapper, and `unclassic x` stops
+at the wrapper because btoa is not in the envelope auto-unwrap list
+(OPEN_ITEMS.md, section 4). Every layer reads; the chain does not. That is
+what one file from outside your own toolchain is for.
