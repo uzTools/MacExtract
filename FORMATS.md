@@ -1018,7 +1018,7 @@ decryption suite*.
 | format | cipher | key from the password | verified before decoding? | graded by |
 |---|---|---|---|---|
 | StuffIt classic | an eight-byte feedback XOR, keyed through **StuffItDES** (a DES with its own key schedule and no initial permutation) | iterated DES over the password — **ceil(len/8) folds, measured** (below) — then the archive's `'MKey'` resource, then sixteen bytes stored at the end of each fork | **yes** — the 'MKey' block checks against itself | **StuffIt Deluxe 3.5.1 itself**, on three archives it wrote; `unar -p` on the generated ones |
-| StuffIt 5 | **RC4** | MD5(password) cut to five bytes, then the fork's own five | **yes** — MD5 of that key against a hash in the archive header | `unar -p` |
+| StuffIt 5 | **RC4** | MD5(password) cut to five bytes, then the fork's own five | **yes** — MD5 of that key against a hash in the archive header | **DropStuff 5.0.1 itself**, on three archives it wrote under Mac OS 9.2 (*StuffIt 5's RC4*, below); `unar -p` |
 | PackIt `PMa5` | XOR, key applied **modulo seven** over eight bytes | DES's PC-1 permutation of the first eight password bytes | in effect — the entry header is inside the ciphertext and carries a CRC | `unar -p` |
 | PackIt `PMa6` | **DES**, ECB; the operation that DECODES is DES's decrypt | the first eight password bytes | the same | `unar -p` |
 | zip | **PKWARE's** three CRC-32-driven keys | the password bytes, folded in | **yes** — a check byte in the twelve-byte header | Info-ZIP wrote the fixture; `unar -p` reads it |
@@ -1054,6 +1054,33 @@ Three properties are worth stating because a user meets them:
 - **An encrypted entry does not stop the walk.** The entries around it
   come out; PackIt, whose encrypted entries do not say where they end,
   resyncs on the next block magic as it always did.
+
+### StuffIt 5's RC4: graded by Aladdin's own writer
+
+**Measured 2026-08-26.** Three archives written by **DropStuff 5.0.1** —
+Aladdin's own StuffIt Engine — running on Mac OS 9.2 under QEMU, on the
+transfer volume the host reads back (`tools/vmac/os9mouse.py`; TESTING.md,
+*the decryption suite*). The specimens live in the cache, not the repository:
+
+| specimen | password | forks | what this engine returns |
+|---|---|---|---|
+| `enc-pass.sit`, 296 B | `pass` (4) | data | byte-exact |
+| `enc-swordfish.sit`, 312 B | `swordfish` (9) | data | byte-exact; a wrong password is refused, not decoded |
+| `enc-twofork.sit`, 378 B | `abcdefghijklmnopq` (17) | data **and resource** | **both forks** byte-exact |
+
+`unar -p` returns the same bytes on all three (its resource fork arrives
+AppleDouble-wrapped; the payload matches). The lengths are the ones that
+matter: at 4, 9 and 17 characters the classic format's fold count differs,
+and **StuffIt 5 shows no such length dependence** — its key is MD5 of the
+whole password, so the two-fold question the classic key raised does not
+arise here. The two-fork specimen is the one that grades the per-fork key.
+
+**The application that writes them is not StuffIt Deluxe.** Deluxe 5.0.1
+installs on Mac OS 9.2 and its installer runs, but the Deluxe application
+quits at launch with *"an update to this software is required for
+compatibility with the improved Mac OS file system"* — it predates HFS+, and
+the guest's boot volume is HFS+. DropStuff, installed beside it, runs
+unaffected and shares the same engine. See DECISIONS.md 2026-08-26.
 
 ### StuffIt classic's archive key: ceil(len/8), and neither reference has it
 
@@ -2318,10 +2345,10 @@ a 2 GB image copy) against Mini vMac's ~5 s, so this tier samples for breadth of
 format, and the memory-budget spread `sample.txt` exercises is a 1 MB question
 on a 512 MB machine.
 
-**The Finder is driven from the keyboard.** The pointer does not work in this
-guest at all — five mouse primitives measured at exactly zero effect, cursor
-pinned to screen corners. See BLOCKERS.md, and `tools/vmac/os9probe.py` for
-the measurement.
+**The Finder is driven from the keyboard**, because a fixture run needs no
+coordinates. The pointer works too — stepped, and never through the absolute
+`usb-tablet` (`tools/vmac/os9mouse.py`); the older "five primitives at zero
+effect" reading is withdrawn, BLOCKERS.md.
 
 ### Onto HFS+ (the same machine, the boot volume instead of the transfer disk)
 

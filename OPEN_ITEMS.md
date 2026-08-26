@@ -196,18 +196,6 @@ own distribution (BLOCKERS.md, the same date).
   never appeared in any frame, even with `~Magic Menu™` deleted. Or one
   SpaceSaver file from anywhere.
 
-- **An encrypted StuffIt 5 archive.** StuffIt classic's half closed on
-  2026-08-23 — StuffIt Deluxe 3.5.1 writes the specimens now
-  (`tools/vmac/sitcrypt.py`), and they corrected the archive key —
-  but nothing here writes a StuffIt **5** one: 3.5.1 predates the
-  format and Deluxe 5.0.1 needs a System this machine does not run.
-  So RC4-encrypted `.sit5` is still generated here and adjudicated by
-  `unar -p`, which grades two readings against each other and neither
-  against Aladdin. **What is missing is a gradeable SPECIMEN.** The
-  classic case is the warning: there, both readings were wrong, and
-  they were wrong in ways that agreed with each other for exactly the
-  password lengths anybody would have tested.
-
 - **AppleLink `.pkg`: one file, which would settle two questions.**
   Named since 2026-08-23 from Aladdin's own recogniser (FORMATS.md,
   *AppleLink packages*), and detect-only because nothing here can grade
@@ -290,10 +278,6 @@ own distribution (BLOCKERS.md, the same date).
   there — so the case is reachable only from a foreign tar. **What
   would close it:** skipping the member and reporting the error through
   the sink, with a case in `tools/run_ziplarge.py`'s shape to hold it.
-- **Why the pointer does not work under QEMU on Mac OS 9.** Measured to
-  0.0000 effect across five mouse primitives; the mechanism behind that has no
-  reproduction and is labelled a guess. The keyboard route works, so this costs
-  nothing.
 - **Names HFS+ permits that HFS does not.** Probably unreachable from this
   binary at all — the classic File Manager caps components at 31 characters on
   either filesystem — but that is unproven either way.

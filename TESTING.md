@@ -920,13 +920,16 @@ Also asserted, because they are what a user meets:
 **What this cannot see.** Three things, and the first is the one to
 remember:
 
-- **StuffIt 5 is still graded only against `unar`.** Nothing here
-  writes an encrypted StuffIt 5 archive, so its RC4 case is a generated
-  file adjudicated by a second reading of the same reference. That is
-  the arrangement that hid a real bug in StuffIt CLASSIC until an
-  archive Aladdin's software wrote turned up (FORMATS.md, *StuffIt
-  classic's archive key*), so it is named here rather than counted as
-  coverage.
+- **StuffIt 5's suite cases are still generated files**, adjudicated by
+  `unar` — which is one reading, not two. What settles the cipher is
+  kept outside the suite: three archives **DropStuff 5.0.1 wrote** on
+  Mac OS 9.2 (FORMATS.md, *StuffIt 5's RC4*), at passwords of 4, 9 and
+  17 characters with one of them two-forked. They are not committed and
+  not regenerated automatically; re-make them with
+  `tools/vmac/os9mouse.py` (`tools/vmac/README.md`, *Mac OS 9 with the
+  pointer*) and check them by hand:
+
+      unclassic x -p swordfish -o /tmp/out ~/.cache/unclassic/sit5/specimens/enc-swordfish.sit
 - **Compact Pro is graded by Compact Pro**, when the emulator has been
   run: `tools/vmac/cptcrypt.py --make --probe` has the application
   itself encrypt three known subjects and keeps the archive beside the

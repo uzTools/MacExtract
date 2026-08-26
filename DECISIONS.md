@@ -127,6 +127,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-25 (SpaceSaver's codecs, off the Macintosh) — the specimen problem, solved by the compressor
 - 2026-08-25 (SpaceSaver methods 1 and 2) — two codecs the day the specimens arrived
 - 2026-08-25 (SpaceSaver method 3) — the codec whose code assignment is a quicksort
+- 2026-08-26 (an encrypted StuffIt 5 archive) — the pointer that was said not to work
 
 ---
 
@@ -7106,3 +7107,65 @@ sitting there to grade each attempt in three seconds.
 The generalisation for the next one: **when a reference implementation
 can be RUN, the expensive step is no longer reading it — it is the
 round trip between a guess and a verdict.** Shorten that first.
+
+## 2026-08-26 (an encrypted StuffIt 5 archive) — the pointer that was said not to work
+
+The open item asked for a specimen written by Aladdin, because the two
+readings adjudicating our RC4 were `unar` and this project's own generator,
+which is not two readings at all. It is closed: **DropStuff 5.0.1 wrote
+three** on Mac OS 9.2, and all three come back byte-exact (FORMATS.md,
+*StuffIt 5's RC4*).
+
+Four things are worth carrying forward.
+
+### Position and click are different primitives, and conflating them cost the tier
+
+The 2026-08-02 probe measured five clicks in Mac OS 9 and got 0.0000 from
+every one, and the conclusion written down was "the pointer does not work".
+Every one of those clicks fired with the cursor pinned in a screen corner,
+because the harness made an ABSOLUTE `usb-tablet` the active device — which
+Mac OS 9 has no driver for — and because a relative mouse saturates at ±63 px
+per ADB packet, so one big delta never arrives anywhere. The probe never
+established that it could POSITION the cursor before it tested clicking, so
+its zeros were a fact about the cursor's position and not about the button.
+
+The rule this suggests is narrow and reusable: **establish the primitive one
+level down before measuring the one you care about**, and make the first
+target something that MUST respond — here, a modal alert's default button,
+whose disappearance is unambiguous. Two of this run's own click tests landed
+on a menu bar that a modal was suppressing, and those zeros meant nothing
+either.
+
+### What defeats frame-differencing, and what beats it
+
+Locating a cursor by diffing screenshots fails on anything else that moves:
+the menu-bar clock ticks, a text caret blinks, a progress bar fills. Masking
+"pixels that changed between two idle reference frames" is not enough — a
+caret's phase can alias with any fixed sampling interval, which it did, and
+the locator then reported "cursor not seen" inside every dialog with a text
+field. What works is **shape**: cluster the changed pixels and take the
+largest blob, because an arrow is ~100 pixels and a caret is a sliver.
+
+A corollary the harness now depends on: positioning costs ~40 s, which is
+longer than a classic sticky menu stays open. Command keys have no timeout;
+menus are not worth driving.
+
+### An application can refuse the FILE SYSTEM, not the OS version
+
+Deluxe 5.0.1 is documented for System 7.5.3 through Mac OS 8.5, so the
+expectation was that Mac OS 9.2 might reject it. It installs there without
+complaint. What fails is the Deluxe application at launch: *"an update to
+this software is required for compatibility with the improved Mac OS file
+system"* — it predates HFS+, and the boot volume is HFS+. **DropStuff, from
+the same installer and using the same StuffIt Engine, runs unaffected**, so
+the specimen was written by the tool that had no such problem. Reading the
+version requirement would never have predicted either half.
+
+### A nag whose buttons move is an automation hazard, not an inconvenience
+
+DropStuff's evaluation notice shuffles its four buttons on every appearance.
+A fixed "Not Yet" coordinate therefore hits "Order Info" sooner or later,
+which opens an order-form save dialog that swallows every subsequent
+keystroke — including the ones meant for the password prompt. One specimen
+cycle was lost that way, and it looked like a timing problem. The harness now
+matches the button's LABEL against a template before clicking it.

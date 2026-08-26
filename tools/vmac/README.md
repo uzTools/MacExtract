@@ -903,13 +903,19 @@ re-fetches: the harness once booted the master in place and never hashed it,
 so the drift was invisible until the local copy stopped matching archive.org
 and the volume read back hardware-locked (BLOCKERS.md, *Corrected figures*).
 
-**The Finder is driven from the keyboard.** The pointer does not work in this
-guest: `os9probe.py` measured five mouse primitives at exactly 0.0000 effect
-each, and located the cursor only ever in screen corners, never at a requested
-position. Typing selects an icon by name, Cmd-Down opens it, Cmd-Q quits — no
-coordinates, no double-click threshold. `os9probe.py` is kept as a diagnostic;
-run it if clicking or typing ever appears to stop working, because it answers
-"which link broke?" in one boot instead of inferring it from a non-event.
+**`os9.py` drives the Finder from the keyboard, and it does not have to.**
+Typing selects an icon by name and Cmd-Down opens it — no coordinates, no
+double-click threshold — which is why every fixture run goes that way and
+still should: it is faster and it cannot mis-aim.
+
+But the reason it was written that way is withdrawn. `os9probe.py` measured
+five mouse primitives at 0.0000 each on 2026-08-02 and concluded the pointer
+was unusable; all five fired with the cursor pinned in a corner, because the
+harness selects an absolute `usb-tablet` this guest has no driver for, and
+because one large delta to a relative mouse saturates at ±63 px per ADB
+packet. **`os9mouse.py` positions the cursor to within 3 px and clicks**
+(BLOCKERS.md, *Withdrawn claims*), which is what made an installer and an
+encrypted specimen possible. See *Mac OS 9 with the pointer*, below.
 
 **`--hfsplus` writes to a volume the host cannot read.** The boot volume is
 HFS+ inside an HFS wrapper — wrapper MDB signature `0x4244 'BD'`,
@@ -944,6 +950,40 @@ already mounts and repoints only the `Apple_HFS` entry. A map built by hand
 from the format documentation — correct-looking DDR, correct-looking entries,
 status word copied off a real disk — was silently ignored: no volume, no
 error, nothing to debug. Cloning a known-good head worked first time.
+
+## Mac OS 9 with the pointer — `os9mouse.py`
+
+What `os9.py`'s keyboard route cannot do is operate an application: click a
+checkbox, walk an installer, answer a dialog. `os9mouse.py` does, and it is
+what produced the StuffIt 5 encryption specimens (FORMATS.md, *StuffIt 5's
+RC4*).
+
+    python3 -c "import sys; sys.path.insert(0,'tools/vmac'); import os9mouse; \
+                m = os9mouse.Mac(cd=True); m.settle(); m.png('desk')"
+
+It is a module rather than a command because every session is a different
+dozen steps. The pieces:
+
+| call | does |
+|---|---|
+| `Mac(cd=True, xfer=True)` | boot from a qcow2 overlay on the 2 GB master, with the Deluxe CD and the transfer volume attached |
+| `Mac(attach=True)` | connect to a guest already running, so successive scripts drive one boot |
+| `m.goto(x, y)` / `m.click(x, y, double=)` | closed-loop positioning, then a click |
+| `m.key("meta_l-s")`, `m.typestr("text")` | keystrokes; **prefer these** — see the timing note |
+| `m.shot(tag)` / `m.png(tag)` | screendump straight to PPM (no ImageMagick) and a PNG to look at |
+| `m.settle()` | wait until the screen stops changing, with a floor |
+| `find_not_yet(frame)` | locate DropStuff's "Not Yet" button, which moves |
+
+Four things it knows that cost a run each, all in the module's own docstring:
+the absolute pointer is inert; the menu-bar clock and a blinking caret both
+defeat frame-differencing (hence `largest_blob`); positioning takes ~40 s,
+which is longer than a sticky menu stays open, so use Command keys; and
+DropStuff's nag shuffles its buttons, so the label is matched, not assumed.
+
+**Getting a file back out** is the same trick as everywhere else here: write
+it to the plain-HFS transfer volume, then unmount that volume from inside the
+guest (select it, Cmd-Y) so the guest flushes, and read the Apple_HFS
+partition with hfsutils. The boot volume is HFS+ and the host cannot read it.
 
 ## Checking a run off the disk instead of off the screen
 

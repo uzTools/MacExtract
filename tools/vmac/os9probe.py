@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 """os9probe.py — does a click land where it is aimed under Mac OS 9?
 
-**It does not. Answered 2026-08-02, and this is the run that answered it:**
+**Its 2026-08-02 answer, "no", is WITHDRAWN** (BLOCKERS.md; the pointer
+positions to within 3 px and clicks, `tools/vmac/os9mouse.py`). Every mouse
+probe below fired with the cursor pinned in a corner, because this file asks
+for the absolute `usb-tablet` that Mac OS 9 has no driver for, and because a
+single large delta to the relative mouse saturates at ±63 px per ADB packet.
+The keyboard probes (6-10) are still exactly what they say. The run:
 
     YES  64.0000  0 the pointer moves at all (whole-screen pixels)
     NO    0.0000  1 held press pulls a menu down
@@ -17,8 +22,11 @@
 
 Every mouse probe is exactly zero and every keyboard probe works. Probe 0's 64
 pixels are the arrow cursor itself, in one screen corner and then the other;
-the cursor never reached any of three requested desktop positions. So `os9.py`
-drives the Finder from the keyboard, and probes 6-10 are the sequence it uses.
+the cursor never reached any of three requested desktop positions — which is
+the symptom of a saturated relative delta, not of a dead pointer, and reading
+it as the latter is what this file got wrong. `os9.py` drives the Finder from
+the keyboard, probes 6-10 are the sequence it uses, and that remains the right
+route for fixture runs: it needs no coordinates.
 
 Kept as a diagnostic, not as part of any suite: run it if input ever appears to
 stop working, because it says WHICH link broke in one boot.

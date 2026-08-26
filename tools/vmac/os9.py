@@ -26,7 +26,8 @@ byte-for-byte check of the output:
     waits for the desktop rather than predicting it.
   * The transfer volume mounts and appears on the desktop.
   * The 68k application launches from it and extracts, driven entirely from
-    the KEYBOARD — the pointer does not work in this guest, see
+    the KEYBOARD — which needs no coordinates; the pointer works as well,
+    see tools/vmac/os9mouse.py and
     XFER_VOLUME_ICON — and `verify_output()` then pulls both forks of what it
     wrote straight out of the transfer image and compares them against the
     same engine's Linux output.
@@ -75,7 +76,10 @@ QEMU_HOME = os.path.join(os.path.dirname(R.VMAC_HOME), "qemu-ppc")
 # boot disk ("untitled") first, then the transfer volume ("unclassic").
 #
 # NOTHING DRIVES THE GUEST WITH THESE ANY MORE, and they are kept only because
-# they are correct and were expensive to measure. The pointer is unusable here:
+# they are correct and were expensive to measure. The pointer is NOT unusable —
+# see tools/vmac/os9mouse.py, which positions it to within 3 px and clicks, and
+# BLOCKERS.md for what the probe below actually measured. This harness stays on
+# the keyboard because a fixture run needs no coordinates. The old note:
 # tools/vmac/os9probe.py, 2026-08-02, measured five separate mouse probes on a
 # booted desktop — a held press on a menu bar title, its release, a click on
 # bare desktop, a single click on this icon and a double click on it — and
@@ -358,8 +362,8 @@ class Qemu:
         """Send keystrokes by QEMU keycode name.
 
         This is how the Finder is driven here. See the note at
-        XFER_VOLUME_ICON: the pointer does not work in this guest and the
-        keyboard does, completely — measured, not assumed."""
+        XFER_VOLUME_ICON: the keyboard drives this guest completely, and it
+        needs no coordinates. (The pointer is usable too — os9mouse.py.)"""
         for k in names:
             self.mon(f"sendkey {k}", wait)
 

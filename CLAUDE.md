@@ -96,11 +96,13 @@ All of these cost real time here:
   network in the foreground, in chunks that fit the timeout.
 - **Do not edit a shell script while it is running.** `sh` reads the file by
   offset, so an edit shifts what it executes next.
-- The Mac OS 9 pointer does not work at all; drive that guest from the
-  keyboard. Mini vMac's mouse is fine — except for **hierarchical menus,
-  whose submenu items never highlight and cannot be selected** however the
-  pointer is moved (three ways measured, `tools/vmac/README.md`). Find a
-  route that is not a submenu.
+- The Mac OS 9 pointer works, but only stepped: ≤40 px at a time with a
+  closed loop, and never through the absolute `usb-tablet`, which that guest
+  ignores (`tools/vmac/os9mouse.py`). Positioning takes ~40 s — longer than a
+  sticky menu stays open — so drive menus with Command keys. Mini vMac's mouse
+  is fine — except for **hierarchical menus, whose submenu items never
+  highlight and cannot be selected** however the pointer is moved (three ways
+  measured, `tools/vmac/README.md`). Find a route that is not a submenu.
 - An emulator run is minutes; do not poll it every few seconds, and **do not
   read a timeout as a measurement of anything**.
 
