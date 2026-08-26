@@ -195,9 +195,30 @@ own distribution (BLOCKERS.md, the same date).
   holding `Alphasmall`, `Bigonesmall`, `Forkedsmall` — and the files do
   not change.
 
-  **What would close it:** why one rule on that page fires and the other
-  does not, when both are ticked and the event is the same rename. Or
-  one SpaceSaver file from anywhere.
+  **The name rule is inert; the rule beside it is not** (2026-08-25,
+  four runs, each renaming IN THE FINDER with a control in the same
+  boot). `Forked` -> `Forked.SIT` becomes a StuffIt archive every time,
+  so the watcher is awake; `Alphasmall`, `Alpha small` and `small Alpha`
+  all come back untouched, so it is not the spacing and not which end
+  the keyword goes on. The 5.0 User's Guide — in the emulator cache,
+  and worth reading before the next attempt — says the two default
+  keywords are `small` (compress) and `big` (NEVER compress), that
+  attaching one "immediately compresses that item", and that the
+  keyword may be at either end.
+
+  So StuffIt Deluxe's *Archive via Rename* works and SpaceSaver's
+  *name-based compression* does not, on a machine where the panel shows
+  SpaceSaver **On**, the disk enrolled, and *SpaceSaver Info...*
+  answering correctly about the file. Every SpaceSaver WRITE path
+  declines in silence; every StuffIt-side operation works.
+
+  **What would close it:** what makes the engine refuse a SpaceSaver
+  compress while serving a Stuff. Two leads, neither examined:
+  `STR# 1001` #6 is *"SpaceSaver could not find the latest version of
+  the StuffIt Engine"* — a refusal that would be raised at STARTUP,
+  which this harness cannot photograph (tools/vmac/README.md, the icon
+  parade) — and the panel's `PERS -4064` carries a name with the serial
+  field zeroed. Or one SpaceSaver file from anywhere.
 - **AppleLink `.pkg`: one file, which would settle two questions.**
   Named since 2026-08-23 from Aladdin's own recogniser (FORMATS.md,
   *AppleLink packages*), and detect-only because nothing here can grade

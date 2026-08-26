@@ -1713,6 +1713,106 @@ def magicname(keep=False):
     return report_specimen(out, s.shots)
 
 
+def twonames(keep=False):
+    """The control: fire the rule that WORKS beside the one that does not.
+
+    2026-08-25: `Forked` -> `Forked.SIT` became a StuffIt archive in the
+    same boot where `Alpha` -> `Alphasmall` did nothing, so the watcher
+    is alive and the `small` rule is what is inert. The suffix here now
+    has a LEADING SPACE — `Alpha small` — because the page says "Name
+    begins or ends WITH", and every run that used a spaced name had it
+    applied by `hcopy`, where no rename ever happened.
+
+    Both are ticked on the same page and both are name rules on the same
+    event — `.SIT` has been seen to turn a file into a StuffIt archive,
+    `small` has never done anything. Renaming one subject each way in
+    ONE boot says whether the mechanism is alive at that moment, which
+    no run so far can: every `small` run that measured nothing might
+    have been a boot where nothing was watching at all.
+    """
+    import glob
+    boot = os.path.join(WORK, "sstwonames.hfv")
+    shutil.copyfile(INSTALLED, boot)
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+    tmp = tempfile.mkdtemp(prefix="sstn-")
+    try:
+        subprocess.run(["hmount", boot], check=True, capture_output=True,
+                       env=env)
+        from ndd import macbinary_dated, MAC_EPOCH_1990   # noqa: E402
+        for n, t, c, d, r in SUBJECTS:
+            q = os.path.join(tmp, n + ".bin")
+            open(q, "wb").write(macbinary_dated(n, t, c, d, r,
+                                                MAC_EPOCH_1990,
+                                                MAC_EPOCH_1990))
+            subprocess.run(["hcopy", "-m", q, ":"], check=True,
+                           capture_output=True, env=env)
+        subprocess.run(["humount"], check=True, capture_output=True, env=env)
+    finally:
+        shutil.rmtree(env["HOME"], ignore_errors=True)
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    before = set(glob.glob("/tmp/dd-*/boot.hfv"))
+    s = Session(boot, [], os.path.join(SPECIMENS, "twonames"))
+    try:
+        s.boot()
+        s.shot("desktop", wait=16.0)
+        s.mac.click(250, 38)
+        time.sleep(2.5)
+        for _ in range(3):
+            s.mac.command_key("w")
+            time.sleep(2.5)
+        s.mac.click(470, 55, double=True)
+        s.shot("bootvol", wait=14.0)
+        # Alpha -> Alphasmall (the rule that has never fired),
+        # Forked -> Forked.SIT (the rule that has).
+        # The keyword at the BEGINNING, which the guide calls the more
+        # useful form — Left goes to the start of the name box, Right to
+        # its end. `Alphasmall` and `Alpha small` have both been tried
+        # and neither fired; `.SIT` fires in the same boot either way.
+        for name, letter, where, text in (("Alpha", "a", "Left", "small "),
+                                          ("Forked", "f", "Right", ".SIT")):
+            s.mac.key("Escape")
+            time.sleep(0.6)
+            s.mac.key(letter)
+            time.sleep(1.5)
+            s.shot("selected-" + name, wait=0.5)
+            s.mac.key("Return")
+            time.sleep(2.0)
+            s.mac.key(where)
+            time.sleep(0.8)
+            s.mac._xdo("type", "--delay", "150", text)
+            time.sleep(1.5)
+            s.shot("typed-" + name, wait=0.5)
+            s.mac.key("KP_Enter")
+            time.sleep(4.0)
+            s.mac.click(155, 310)
+            time.sleep(5.0)
+            s.shot("after-" + name, wait=45.0)
+        s.shot("settled", wait=60.0)
+        s.menu(SPECIAL_X, SHUT_DOWN_Y, "special-menu")
+        s.shot("shutting-down", wait=45.0)
+    finally:
+        time.sleep(10)
+        s.close()
+
+    cands = [p for p in glob.glob("/tmp/dd-*/boot.hfv") if p not in before]
+    if not cands:
+        cands = sorted(glob.glob("/tmp/dd-*/boot.hfv"),
+                       key=os.path.getmtime)[-1:]
+    out = sorted(cands, key=os.path.getmtime)[-1]
+    print("spacesaver: reading back %s" % out)
+    from superdisk import read_forks                    # noqa: E402
+    for path, (ftype, creator, data, rsrc) in sorted(read_forks(out).items()):
+        if not any(k in path[-1] for k in ("Alpha", "Forked")):
+            continue
+        what = ("SpaceSaver file" if data[:8] == b"SIT!DFD3"
+                else "StuffIt archive" if data[:4] in (b"SIT!", b"StuffIt")
+                else "unchanged")
+        print("spacesaver: %-16s %s/%s %8d B  %s"
+              % (path[-1], ftype, creator, len(data), what))
+    return 0
+
+
 def enrollrename(keep=False):
     """Enrol the disk, THEN rename in the Finder. The untried cell.
 
@@ -3824,6 +3924,8 @@ def main():
                     help="drive both rename rules on the settings page")
     ap.add_argument("--enrollmagic", action="store_true",
                     help="enrol the disk, close the panel, then compress")
+    ap.add_argument("--twonames", action="store_true",
+                    help="rename one file .SIT and one small, same boot")
     ap.add_argument("--enrollrename", action="store_true",
                     help="enrol the disk, then rename in the Finder")
     ap.add_argument("--uirename", action="store_true",
@@ -3920,6 +4022,8 @@ def main():
         return suffix(a.keep)
     elif a.enrollmagic:
         return enrollmagic(a.keep)
+    elif a.twonames:
+        return twonames(a.keep)
     elif a.enrollrename:
         return enrollrename(a.keep)
     elif a.uirename:
