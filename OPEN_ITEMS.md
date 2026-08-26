@@ -84,16 +84,6 @@ What it does not HAVE is section 2.
   full PowerPC boot per fixture — tens of minutes, against five for the
   whole System 7 tier.
 
-- **SpaceSaver's methods 1, 2 and 3 have never run on a Macintosh.**
-  They are graded on Linux against the modules that write them; the
-  three specimens the emulator harness replays are still the stored one
-  and two of method 4 (FORMATS.md, *StuffIt SpaceSaver*). The 68000
-  figures are compile-time and static — an any-CPU module, a 1,160 B
-  frame, peaks of 8, 84 and 41 KB — which is reasoning, not a run.
-  **What would close it:** three more specimens through
-  `run_spacesaver.py --emit` and `tools/vmac/run.py --expect`, at 4 MB
-  and at the 1 MB floor.
-
 - **Two things only that tier can show, and it has never been asked
   for either.** The interactive UI's cancel routes — Cmd-., the Cancel
   button, the dialog repainting afterwards — run on System 6.0.8 and,

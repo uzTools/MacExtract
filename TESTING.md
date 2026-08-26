@@ -1220,10 +1220,12 @@ emulator, and runs in about 3 seconds.
    codecs meet damaged input. Each must exit as itself rather than as a
    signal, and must exit at all.
 6. `--keep` writes one specimen per method into
-   `specimens/spacesaver/modules/` beside the emulator's other state. They
-   go in a subdirectory on purpose: `run_spacesaver.py` grades every `.ss`
-   next to it, and three of the five use a method this engine does not
-   implement.
+   `specimens/spacesaver/modules/` beside the emulator's other state, in a
+   subdirectory so that `run_spacesaver.py` — which grades every `.ss`
+   next to it against the emulator's own specimens — does not adopt them.
+   **They are what the Macintosh tier replays for methods 1, 2 and 3**:
+   `tools/vmac/run.py --expect .../modules/m1.ss ...`, 3/3 at 4 MB and 3/3
+   at the 1 MB floor (FORMATS.md, *StuffIt SpaceSaver*).
 
 **What it cannot see.** The modules know nothing about the 84-byte header,
 so this grades codecs and not files — the method choice, the 256-byte

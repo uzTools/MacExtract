@@ -811,8 +811,7 @@ a table this build does not carry. The resource is byte-identical in the
 control panel and in `StuffIt Engine™`, so either file will do as a source for
 `tools/gen_ss_dict.py`.
 
-**Methods 0 and 4 run on a 68000**, which is the part no Linux test can show;
-methods 1, 2 and 3 have never been replayed there (OPEN_ITEMS.md).
+**Every method runs on a 68000**, which is the part no Linux test can show.
 `tools/run_spacesaver.py --emit` writes three files and `tools/vmac/run.py
 --expect` replays them on an emulated Mac Plus under System 6.0.8: a stored
 one (**1,040 B data + 512 B resource, peak 4,112 B**), a method 4 one at the
@@ -823,6 +822,19 @@ dictionary, which the application expands with the built-in table
 byte, **at 4 MB and at the 1 MB floor target alike** (re-measured 2026-08-23,
 after the width was corrected from the ceiling and again after the dictionary
 was built in).
+
+**Methods 1, 2 and 3 joined them on 2026-08-25**, the day they were
+implemented: `tools/ssmodule/run_ssmodule.py --keep` writes one specimen per
+method out of Aladdin's own compressors and `run.py --expect` replays those
+too. All three extract the same 76,800-byte fork byte-exact, **3/3 at 4 MB
+and 3/3 at the 1 MB floor**, and the peaks are what the Linux CLI predicted
+to the kilobyte:
+
+| method | peak on the Mac | what it is |
+|---|---|---|
+| 1 "Original Fast" | **8,224 B** | a 4 KB window and the 4 KB input buffer |
+| 2 "Original Slow" | **86,064 B** | a 64 KB window, a 16 KB position table, the input buffer |
+| 3 "Alg 3" | **42,112 B** | a 32 KB window, ~5 KB of Huffman tables, the input buffer |
 
 **So a lone floppy is enough.** A SpaceSaver file that has travelled without
 the machine that made it needs nothing else — not a copy of SpaceSaver, not a
