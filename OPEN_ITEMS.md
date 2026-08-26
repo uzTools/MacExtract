@@ -238,23 +238,6 @@ own distribution (BLOCKERS.md, the same date).
   such in `tools/icon/make_icon.py`. What would close it: opening the
   application's folder on the Mac OS 9 tier (`tools/vmac/os9.py`, which has
   colour) and photographing the icon, or a reference for the system palette.
-- **v0.24.0 is tagged but was never published, and the reason is not known
-  from here.** `git ls-remote --tags origin` shows the annotated tag on
-  `928e00c`; `main` was pushed before it, so the workflow is on the ref Actions
-  reads; `release.yml` parses and differs from the copy that shipped v0.23.0
-  only in the two asset filenames; both assets are committed and non-empty. The
-  release page still shows v0.23.0. Every unauthenticated API call is a 404
-  because the repository is private, so this machine cannot see whether a run
-  was even queued. **Hypothesis, untested:** the repository was renamed to
-  MacExtract between v0.23.0 and this tag, and that is the only variable that
-  changed. Free-plan Actions minutes for a private repository are the other
-  candidate and would fit the timing just as well. **What would close it:** one
-  look at the Actions tab, which separates the three cases — no run queued (the
-  tag push did not trigger), a run that failed (the step says why), or a run
-  blocked on billing. Failing that, the release can be created by hand from
-  anywhere holding a token, since the workflow only ever published committed
-  files: `gh release create v0.24.0 dist/MacExtract.bin dist/MacExtract.dsk
-  --title v0.24.0 --notes-file dist/README.txt`.
 - **The XADMaster DDn report is not filed.** Its DDn reads one byte past a
   fork's declared compressed length; reduced to a 1,166-byte reproduction and
   written up ready to post in `tools/xadmaster-ddn-repro/`. **Deliberately

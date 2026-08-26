@@ -133,6 +133,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-26 (disk images) — read the volume, not the extension
 - 2026-08-27 — a name is only worth something inside the frame the user came with
 - 2026-08-26 — the project is renamed MacExtract, and the API is not
+- 2026-08-26 — the tag that did not fire
 
 ---
 
@@ -7565,3 +7566,30 @@ thirty-odd call sites read `UNC_VMAC_HOME`. Nothing failed, because both fall
 back to the same default — so pointing `UNC_VMAC_HOME` at a different emulator
 tree moved every harness except those two, silently. Unified on
 `UNC_VMAC_HOME`. The `UNC_` prefix stays for the same reason the C API's does.
+
+## 2026-08-26 — the tag that did not fire
+
+v0.24.0 was tagged and pushed and no release appeared. Everything checkable
+from this machine was right: the annotated tag on the remote at `928e00c`,
+`main` pushed before it so the workflow sat on the ref Actions reads,
+`release.yml` parsing and differing from the copy that shipped v0.23.0 only in
+the two asset filenames, both assets committed and non-empty. **Deleting the
+remote tag and pushing the same tag object again published it**, assets and
+notes intact.
+
+**Why the first push produced nothing is a hypothesis, not a finding.** The
+repository had been renamed to MacExtract shortly before, and that is the only
+variable that changed since v0.23.0 shipped — but this is one observation,
+reproducing it would mean renaming the repository again, and no release is
+worth that. Free-plan Actions minutes on a private repository fit the timing
+equally well and were never ruled out.
+
+What is worth carrying is smaller and does not depend on the cause. **A pushed
+tag is evidence that a tag exists.** This machine authenticates with a deploy
+key against a private repository, so every unauthenticated API call is a 404
+(2026-08-07, *releases are published by Actions*) — which means the step
+between "tag pushed" and "release published" is unobservable from here in both
+directions: it cannot be confirmed, and its failure cannot be noticed either.
+It was reported as a release published, and it was not one. The remedy is one
+line in CLAUDE.md's release procedure — re-push the tag if the page does not
+show the new version — and the discipline of saying which of the two happened.

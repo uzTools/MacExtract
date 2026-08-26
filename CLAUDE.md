@@ -127,9 +127,9 @@ to end on v0.5, and it shipped every release through v0.23.0). A deploy-key
 push may add workflow files, and a deploy-key tag push did trigger one for
 those — do not re-derive either from first principles.
 
-**It did not fire for v0.24.0, and why is open** (OPEN_ITEMS.md). A pushed tag
-is therefore evidence that a tag exists and nothing more — which is what the
-last step below has always said.
+**A pushed tag is evidence that a tag exists and nothing more.** v0.24.0 was
+tagged correctly and no release appeared; re-pushing the same tag object
+published it (DECISIONS.md 2026-08-26, *the tag that did not fire*).
 
 ```sh
 # bump UNC_VERSION in include/unclassic.h FIRST
@@ -139,7 +139,7 @@ git tag -a v0.12 -m "..."                # annotated; the message is the tag's
 git push origin v0.12
 ```
 
-Five things bite, and each cost a step once:
+Six things bite, and each cost a step once:
 
 - **`UNC_VERSION` is the source of truth.** `make_dist.sh` writes it into
   `dist/README.txt`, `--version` prints it, README.md names it, and
@@ -154,7 +154,12 @@ Five things bite, and each cost a step once:
   a changelog. Re-read it before tagging.
 - **This machine cannot see the release page** (deploy key, no `gh`, no token,
   404 from the API). Confirm the TAG with `git ls-remote --tags origin`, report
-  that, and leave the page to somebody who can load it.
+  that, and leave the page to somebody who can load it. Report it as a tag
+  pushed, never as a release published — the difference is the whole of what
+  this machine can and cannot know.
+- **If the page does not show the new version, re-push the tag**, same object:
+  `git push origin :refs/tags/vX.Y.Z && git push origin vX.Y.Z`. That published
+  v0.24.0 after the first push produced nothing.
 
 ## Writing things down
 
