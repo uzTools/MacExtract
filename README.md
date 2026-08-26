@@ -48,7 +48,7 @@ one, because parts are recognised by what is inside them:
 ## Download
 
 **[Latest release](https://github.com/jarreboum/unclassic/releases/latest)** —
-currently **v0.22.0**. If the release page shows anything older, the publish
+currently **v0.23.0**. If the release page shows anything older, the publish
 step did not run. Or take it straight from the tree:
 
 | | |
@@ -67,8 +67,8 @@ notes.
 (`.hqx`), MacBinary, PackIt (`.pit`), DiskDoubler (`.dd`, `DDAR`, `DDA2`), Now
 Compress, StuffIt SpaceSaver, Alysis SuperDisk! (`.X`), ARC (`.arc`), LZH /
 LHA (`.lzh`, `.lha`, including the ones MacLHA wrote), uuencoded files
-(`.uu`), btoa (`.ascii`), AppleSingle/AppleDouble, zip, gzip, tar and Unix
-compress (`.Z`). Resource forks, type and creator codes and dates all survive,
+(`.uu`), btoa (`.ascii`), base64 and MIME mail attachments (`.b64`, `.mim`),
+AppleSingle/AppleDouble, zip, gzip, tar and Unix compress (`.Z`). Resource forks, type and creator codes and dates all survive,
 so an extracted application simply runs.
 
 Nested files like `.sit.hqx` or `.tar.Z` are unwrapped automatically, by
@@ -125,6 +125,7 @@ each one opens:
 | Several files posted in one BinHex message | yes | yes |
 | The note somebody typed into a Compact Pro archive | written out beside the files | same — a `Comments` document in the folder |
 | `.arc` and uuencoded (`.uu`) files | with the add-on | yes |
+| A Mac file mailed as a MIME attachment | no translator for it | yes — both forks, from `multipart/appledouble` |
 | StuffIt SpaceSaver | with the add-on | yes, dictionary included — which no other tool carries |
 | AppleLink `.pkg` | with the add-on | named, not expanded |
 | DiskDoubler, Now Compress and SuperDisk! archives | no | yes |

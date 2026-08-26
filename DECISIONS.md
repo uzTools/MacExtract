@@ -128,6 +128,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-25 (SpaceSaver methods 1 and 2) — two codecs the day the specimens arrived
 - 2026-08-25 (SpaceSaver method 3) — the codec whose code assignment is a quicksort
 - 2026-08-26 (an encrypted StuffIt 5 archive) — the pointer that was said not to work
+- 2026-08-26 — base64 and MIME, and an oracle that is wrong three times
 
 ---
 
@@ -7169,3 +7170,111 @@ which opens an order-form save dialog that swallows every subsequent
 keystroke — including the ones meant for the password prompt. One specimen
 cycle was lost that way, and it looked like a timing problem. The harness now
 matches the button's LABEL against a template before clicking it.
+
+## 2026-08-26 — base64 and MIME, and an oracle that is wrong three times
+
+Asked for, and neither in scope nor out of it: OPEN_ITEMS.md's part 1 does
+not mention base64, and part 2 does not either. The brief has grown three
+times before on request (ARC and uuencode, SuperDisk!, btoa), and this is the
+fourth.
+
+**Why it belongs here rather than in the "modern PC formats" row.** base64 is
+what BinHex, uuencode and btoa all became. A Macintosh file that travelled by
+mail after about 1993 travelled as `multipart/appledouble`: an
+`application/applefile` part carrying the resource fork, the real name and
+the Finder info, then the data fork. That is a classic-Mac transport encoding
+with a resource fork in it, which is exactly the line OPEN_ITEMS.md draws
+around what a modern extractor is not the right tool for.
+
+**The reference, and what it costs.** mpack/munpack 1.6 (John G. Myers,
+Carnegie Mellon, 1994) is where the format's Macintosh side came from — its
+own tree holds `macfile.c`, `macos.c` and `README.mac`, the port that wrote
+these messages. The CMU licence is permissive, so unlike btoa (2026-08-23,
+*a reference that may not be transcribed*) this one may be **transcribed**,
+and `src/fmt_mime.c` is: the header rule, the parameter parser, the boundary
+rule, `from64`, `fromqp`, and the order the filename is looked for in.
+
+### An explicit stack where the reference recurses
+
+`handleMessage` calls `handleMultipart` calls `handleMessage`. The engine may
+not recurse at all (CLAUDE.md), so the walk keeps a stack of at most four
+boundaries and loops: parse a part's headers, find the next boundary line,
+emit or skip, pop the levels that boundary closed. The file is walked
+linearly either way — a part ENDS at the next boundary — so nothing is lost,
+and the reference's own rule that an enclosing boundary closes everything
+inside it falls out of scanning the stack outermost-first, as `pendingboundary`
+does.
+
+The walker is ~2 KB of struct, which on the stack would have been the
+deepest frame in the engine. It goes in the same heap block as its buffers
+(`unc_mime_extract`, one allocation), and the chain the format adds is under
+1 KB — measured, not assumed, with `-fstack-usage` (FORMATS.md, *Stack*).
+
+### The oracle is wrong in three places, and each one has a reproduction
+
+Grading against munpack found three divergences. Each was reduced to a
+minimal case before being called a finding, which is rule #2:
+
+1. **It never uses a `Content-Disposition` filename.** `getDispositionFilename`
+   matches the token `filename` and then requires the next non-space
+   character to be `';'` — where the `'='` is. It falls through to the next
+   `';'`, finds none, and returns null, so every such part is written as
+   `part1`. Reproduction: one part, `Content-Disposition: attachment;
+   filename="b.bin"`, base64 body; munpack writes `part1`. We follow mpack's
+   own documented order (disposition first, `name` second), which is also
+   RFC 2183's.
+2. **It cannot read the CRLF form a mailer writes.** `ParseHeaders` ends the
+   headers on a line that is `"\n"`; with CRLF that line is `"\r\n"`, so the
+   blank line is pushed back and becomes the first two bytes of the body, and
+   a quoted-printable soft break `=\r\n` is decoded as a bad hex escape,
+   inventing one byte per line. mpack is a text-mode reader on a system where
+   CRLF has already become LF. This engine reads bytes and handles both, so
+   the suite gives each implementation the form it was written for.
+3. **It drops a decoded `\r`.** `fromqp` writes the byte only `if (c !=
+   '\r')`. But `=0D` is an explicit encoding of a byte, and dropping it
+   corrupts any binary attachment that contains one. We keep it, and
+   `run_mime.py` asserts it with a subject munpack is not asked to grade.
+
+None of the three is a bug in the transcription; all three are the reason
+"graded by a second implementation" has to mean *and the disagreements are
+adjudicated*, not *and they matched*.
+
+### deark and mpack disagree about a group that ends short, and deark is right
+
+A base64 stream that stops mid-group implies bytes: two characters are one
+byte, three are two. deark writes them with a warning; mpack drops them
+("Premature EOF"). deark's reading is followed, because the alternative
+loses real data from a file that is otherwise fine — and a truncated stream
+is not detectable anyway. base64 carries no length and no checksum, so a
+message cut in half decodes short and silently, exactly as a uuencoded set
+missing its middle part does (OPEN_ITEMS.md). The suite asserts that outcome
+rather than describing it.
+
+### base64 unwraps as an envelope; MIME does not
+
+`.sit.b64` should come out as the archive, so `UNC_FORMAT_BASE64` joins
+MacBinary, BinHex, AppleSingle/Double, gzip and `.Z` in both hosts'
+envelope lists. `UNC_FORMAT_MIME` deliberately does not, though a `.mim`
+usually holds an archive too: the unwrapper DELETES the layer it consumed,
+and a MIME part can carry a resource fork that would go with it. base64 has
+one anonymous stream and cannot.
+
+### The probe claims a message only when there is something to extract
+
+Mail headers are not evidence: a BinHex posting and a uuencoded one both
+have them, and both are files this project already reads. The MIME probe
+therefore wants a `Content-Type` **and** a boundary, a filename, or a
+base64/quoted-printable encoding; and both new probes run LAST in
+`unc_sniff`, after BinHex, uuencode and btoa. A mail message with a `.hqx`
+in its body stays a BinHex file — asserted in `run_mime.py`, because probe
+order is the kind of thing that changes by accident.
+
+Bare base64 has no marker at all, so its probe leans on shape: four or more
+full lines of one width between 40 and 76, every character in the alphabet,
+and a last line that closes the stream — head AND tail, because a file whose
+head is base64-shaped and whose end is not is something else with an
+attachment in it. Measured at **0 false positives across all 940 fixture
+files**, and the diff and robustness suites (932 fixtures, 9,320 variants)
+are unchanged with both probes in place. The cost is that a base64 file too
+short to have a shape cannot be recognised bare; with the `begin-base64`
+marker it can.

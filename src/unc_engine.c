@@ -48,6 +48,8 @@ static const UncFormatDesc unc_formats[] = {
     { UNC_FORMAT_SPACESAVER,  "StuffIt SpaceSaver", 1 },
     { UNC_FORMAT_APPLELINK,   "AppleLink package", 0 },
     { UNC_FORMAT_BTOA,        "btoa",            1 },
+    { UNC_FORMAT_BASE64,      "base64",          1 },
+    { UNC_FORMAT_MIME,        "MIME message",    1 },
 };
 
 const char *unc_format_name(UncFormat f)
@@ -194,6 +196,16 @@ UncFormat unc_sniff(UncIO *io)
     if (unc_uu_probe(head, len))        return UNC_FORMAT_UU;
     if (unc_binhex_probe(head, len, io)) return UNC_FORMAT_BINHEX;
 
+    /* Last of all, and deliberately: base64 has no marker at all in its
+     * bare shape, and a MIME message is claimed only when it carries a
+     * part to extract. Everything the three probes above read — a
+     * BinHex banner, a "begin" line with a length that agrees, btoa's
+     * word — is a stronger claim on the same kind of file, and a mail
+     * message with a .hqx in its body is a BinHex file that happens to
+     * have headers rather than a message with an attachment. */
+    if (unc_mime_probe(head, len, io))  return UNC_FORMAT_MIME;
+    if (unc_b64_probe(head, len, io))   return UNC_FORMAT_BASE64;
+
     return UNC_FORMAT_UNKNOWN;
 }
 
@@ -246,6 +258,8 @@ int unc_extract_as(UncFormat f, UncIO *io, UncSink *sink, UncAlloc *al,
     case UNC_FORMAT_NOWCOMPRESS: return unc_now_extract(&c);
     case UNC_FORMAT_UU:          return unc_uu_extract(&c);
     case UNC_FORMAT_BTOA:        return unc_btoa_extract(&c);
+    case UNC_FORMAT_BASE64:      return unc_b64_extract(&c);
+    case UNC_FORMAT_MIME:        return unc_mime_extract(&c);
     case UNC_FORMAT_ARC:         return unc_arc_extract(&c);
     case UNC_FORMAT_LZH:         return unc_lzh_extract(&c);
     case UNC_FORMAT_SUPERDISK:   return unc_superdisk_extract(&c);

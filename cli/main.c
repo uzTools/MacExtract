@@ -574,7 +574,13 @@ static int env_is_envelope(UncFormat f)
 {
     return f == UNC_FORMAT_MACBINARY || f == UNC_FORMAT_BINHEX ||
            f == UNC_FORMAT_APPLESINGLE || f == UNC_FORMAT_APPLEDOUBLE ||
-           f == UNC_FORMAT_GZIP || f == UNC_FORMAT_COMPRESS_Z;
+           f == UNC_FORMAT_GZIP || f == UNC_FORMAT_COMPRESS_Z ||
+           /* base64 and not MIME, though both usually hold an archive:
+            * an envelope layer is DELETED once the layer under it comes
+            * out, and a MIME part can carry a resource fork that would
+            * go with it. base64 has one anonymous stream and no forks
+            * at all (DECISIONS.md 2026-08-26). */
+           f == UNC_FORMAT_BASE64;
 }
 
 /* Sink for taking one envelope off a file, in either of two modes.

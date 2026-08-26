@@ -777,6 +777,50 @@ written by StuffIt Deluxe's own `btoa/atob Translator` would be the
 independent specimen; `tools/vmac/sitcrypt.py` has not managed to make
 one (*tools/vmac/README.md*, the Translate menu).
 
+## base64 and MIME (`tools/run_mime.py`, in `ci.sh`)
+
+Added 2026-08-26. The corpus has neither: no `.mim`, no `.b64` and no
+saved mail message — the sniff sweep claims none of the 940 fixture
+files. So every case is generated, and a generated case graded by its
+own generator proves nothing (*ARC and uuencode*, DECISIONS.md). Two
+other implementations grade instead:
+
+- **munpack 1.6** (CMU), which `src/fmt_mime.c` is transcribed from,
+  built out of `reference/mpack` by `tools/build_mpack.sh`. It reads
+  the same message and has to produce the same bytes.
+- **deark**, an independent base64 implementation, built by
+  `tools/build_deark.sh` — already the third oracle for ARC 0x0b.
+
+48 cases. The base64 half: four lengths around a group boundary (the
+last group padded with none, one or two `=`), every byte value, a
+one-byte file, two documents in one file, and the same document with
+CR, LF and CRLF line endings. The MIME half: a single base64
+attachment, a multipart with a note and two attachments, a
+quoted-printable part, an unencoded part, a part with no filename at
+all (`part1`, which is what munpack calls it), an LF-only message —
+and **multipart/appledouble**, both forks, the type and creator, the
+resource-only case with no data part, and one nested inside a
+`multipart/mixed`.
+
+**The three places the oracle is wrong**, each with a reproduction in
+DECISIONS.md 2026-08-26: munpack never uses a `Content-Disposition`
+filename, cannot read the CRLF form a mailer writes, and drops a
+decoded `=0D`. So the comparison gives each implementation the input it
+was written for (munpack gets the LF form), compares BYTES rather than
+names, and the `=0D` case is asserted against a subject munpack is not
+asked to grade. Averaging those away would have hidden all three.
+
+**What it cannot see.** Neither grader knows what a resource fork is:
+the Unix munpack writes an `application/applefile` part out whole and
+deark has no notion of one, so **nothing here adjudicates the fork
+JOIN except this project's own AppleDouble decoder** — which 932 corpus
+fixtures grade against `unar`, and which the suite feeds the same
+applefile part on its own to say so out loud. And base64 carries no
+length and no checksum anywhere, so a truncated message decodes short
+and silently; the suite asserts that outcome, so the day the format
+turns out to have a check, it says so. It skips, loudly, without
+`reference/mpack`.
+
 ## LZH / LHA (`tools/run_lzh.py`, in `ci.sh`)
 
 Added 2026-08-23, when LZH came into scope. The corpus contains exactly

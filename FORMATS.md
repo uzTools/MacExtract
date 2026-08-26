@@ -30,6 +30,8 @@ whole corpus for that format (engine allocations only, via
 | Now Compress | extract | stored, LZSS, Huffman, Huffman+LZSS, "new" LZSS✧ | 2 real fixtures + 13 generated archives (all five shapes, adjudicated by `unar`); `synth-now-mixed.now` also has an `unar` manifest and is in the differential suite | 134 KB✧ | full |
 | ARC / ArcMac (.arc) | extract | 1/2 store, 3 RLE90, 4 squeeze+RLE90, 5/6/7 crunch, 8 12-bit LZW+RLE90, 9 13-bit LZW, **0x0a crushed (PAK) and 0x0b distilled since 2026-08-25, 0x0a trimmed (ARC 7.x) and the ARC 7 container since 2026-08-25**, 0x7f compress; ArcMac's two-fork payload since 2026-08-16★★★; **garbled (password-XORed) members decrypted** | 10 generated archives (methods 1-9, adjudicated by `unar`) + 3 written by Debian's `arc` 5.21q; **2 real PAK specimens + 7 archives PAK 2.51 wrote under DOSBox** (`tools/pak.py`); `synth-arc-mixed.arc`, `arc2pak1.pak` and `derived-INTRECHO.pak` have manifests and are in the differential suite | 4–46.5 KB★ | full |
 | btoa (`xbtoa`/`.ascii`) | extract | — (base-85 ASCII armour; both the `xbtoa5` and the older `xbtoa Begin` framings)◆ | no corpus file and no second reader: graded against **btoa 5.2.1 itself**, which encodes the subjects `tools/run_btoa.py` decodes | 12 KB | full |
+| base64 (`.b64`, `.mime`) | extract | — (bare, and the `begin-base64`/`====` framing sharutils writes; several documents in one file)◇ | no corpus file and no Macintosh specimen: graded against **deark** and, through the messages that carry it, **munpack 1.6** | 5 KB◇ | full |
+| MIME message (`.mim`, `.eml`) | extract | — (multipart to 4 levels, base64, quoted-printable and 7bit/8bit parts, and **multipart/appledouble**, which carries both forks and the Finder info)◇ | no corpus file: graded against **munpack 1.6**, the implementation `src/fmt_mime.c` is transcribed from, over 48 generated cases | 8 KB◇ | full |
 | uuencode (.uu, incl. UUTool) | extract | — (plain uu, UUTool's two-fork "MU" shape, and documents posted in several parts★★) | 7 generated cases, the two-fork ones adjudicated by macutils' `hexbin`; `synth-uu-mac.uu` is in the differential suite | 4 KB | full |
 | Alysis SuperDisk! (.X, .x) | extract | **both containers** (record-stream archive and single file); methods 1-4 and 5-8 (a finite-context predictor over a 13- or 16-bit context, with the flag bitmap and/or the literals Huffman-coded), 9 Huffman, 10 SlowFastA and 11 SlowFastB (LZSS); 13 declined per entry, and 20 is an encoder for 11 rather than a method of its own✧✧ | 2 fixtures, 5 forks, adjudicated by the archives' OWN self-extractors on an emulated Mac, + 11 single-file specimens written by Alysis's own control panel (methods 1 and 6) and graded against their inputs, + every method 1..9 through Alysis's own Add-In Modules under qemu-m68k (`tools/sdmodule/`) | 72–84 KB✧✧ | full |
 | StuffIt SpaceSaver (`SPSV`) | extract | **every method the format has**: 0 stored, 1 and 2 (the "Original" LZSS pair), 3 "Alg 3" (Huffman + LZ77), 4 "Alg 4" — the last two starting their window loaded with a preset dictionary that ships inside SpaceSaver✦✦ | no oracle and no fixture, but **Aladdin's own compressors run under `qemu-m68k` and 44 forks they wrote read back byte-exact** (`tools/ssmodule/`, 2026-08-25), plus 160 corrupted variants, a synthetic round-trip and unit tests✦✦ | 4 KB stored, 8 KB method 1, 84 KB method 2, 41 KB method 3, **36 KB** for what SpaceSaver writes (measured on a Mac Plus); 68 KB is the ceiling the width byte allows. The dictionary is 9.7 KB of static data, not heap | full |
@@ -1003,6 +1005,75 @@ One thing it inherits from the Unix side: the checksum called `R` is a
 prints sixteen hex digits where a Mac prints eight. The low 32 bits are
 the same either way — the rotate tests bit 31 in both — and that is
 what is compared.
+
+## base64 and MIME, the armour that replaced the others
+
+**In scope since 2026-08-26** (M36), on request. base64 is what
+uuencode, BinHex and btoa all became once mail grew MIME: three bytes
+into four characters, 33% overhead, and — unlike every armour before it
+— a container standard around it that says what the bytes ARE.
+
+Three shapes are read, and one of them is the reason this matters on a
+Macintosh:
+
+- **A bare base64 body**, the whole file. No marker of any kind, so the
+  probe leans on the shape: four or more full lines of one width
+  between 40 and 76 characters, every character in the alphabet, and a
+  last line that closes the stream. It is the LAST probe `unc_sniff`
+  runs. ◇ **A file too short to have that shape cannot be recognised**
+  — four characters on one line is not evidence of anything — and
+  `tools/run_mime.py` asserts exactly that rather than leaving it to be
+  found.
+- **`begin-base64 <mode> <name>` … `====`**, which is what sharutils'
+  `base64` and `uuencode -m` write. This one carries a name, and
+  several documents in one file are read, as uuencode's and BinHex's
+  are.
+- **A MIME message**: `multipart/*` to four levels, `base64`,
+  `quoted-printable` and unencoded parts, the filename taken from
+  `Content-Disposition` first and `Content-Type` second. A `text/…`
+  part with no filename is the note the sender typed and is not written
+  out — which is munpack's rule, not an invention here.
+
+**multipart/appledouble (RFC 1740) is the point.** An
+`application/applefile` part in front of the data part carries the
+resource fork, the real name and the Finder info, and the two come out
+as ONE file with both forks and its type and creator — the same thing
+MacBinary does for a file on disk. A message whose appledouble has no
+data part at all is a resource-only file, which on a Macintosh is most
+of them, and it extracts as one.
+
+**No recursion, so no boundary stack on the C stack either.** mpack
+recurses through nested multiparts; this walks them with an explicit
+stack of four boundaries, and the whole walker — 2 KB of it — lives in
+the same heap block as its buffers. The deepest chain the format adds
+is under 1 KB (`unc_mime_extract` → `mime_emit` → `mime_dec_run` →
+`mime_dec_next`), against a 4 KB budget; the probe's own frame is
+904 B, and it is a leaf.
+
+◇ **Peak heap is flat: 5,097 B for base64 and 8,322 B for MIME, on a
+4 MB message as on a 40-byte one** (`unclassic t --stats`). Nothing
+here is sized from the input — the buffers are an I/O window, a line, a
+header and the 512-byte prefix of an applefile part — which is the same
+reason uuencode's 4 KB is flat. A constant in this matrix is usually a
+declared ceiling nobody questioned (CLAUDE.md); this one is a decoder
+that never allocates from a field.
+
+**On the Macintosh, 2026-08-26.** A multipart/appledouble message
+carrying both forks extracts on an emulated Mac Plus (68000, System
+6.0.8) at 4 MB **and at the 1 MB floor**, identical to the Linux CLI on
+every field of the result grid — one file, no errors, data CRC
+0xB0C0DF2A over 768 B and resource CRC 0x76D73227 over 340 B — with
+peak heap **8,288 B** there against 8,322 B on Linux, the difference
+being four-byte pointers inside the walker. There is no oracle manifest
+for a generated file, so `run.py` reports FAIL and the grid is the
+result, the same way SuperDisk!'s two archives are read
+(`tools/vmac/README.md`).
+
+**No corpus file, and no Macintosh specimen.** The sniff sweep claims
+none of the 940 fixture files, so every case is generated and graded by
+two other implementations — munpack 1.6 and deark (TESTING.md, *base64
+and MIME*). What is still missing is a message a MACINTOSH wrote
+(OPEN_ITEMS.md).
 
 ## Encryption
 
@@ -2491,6 +2562,7 @@ with this archive."*
 | `.lzh` / `.lha` (LZH / LHA) | not named anywhere in its documentation, and no translator for it ships in `Extensions:Aladdin:Translators` — a Macintosh user reached for a separate application, and the corpus holds one (`LHA Expander 1.0.3`) | **yes since 2026-08-23**, every method, all four header levels, and MacLHA's MacBinary payload split back into two forks (*LZH / LHA*, above) |
 | `.arc` (ARC / ArcMac) | with the add-on | **yes since 2026-08-15**, methods 1-9; ArcMac's two-fork payload since 2026-08-16 (★★★ above) |
 | uuencode (`.uu`) | with the add-on | **yes since 2026-08-15**, plain and UUTool's two-fork shape |
+| base64 and MIME (`.b64`, `.mim`) | no translator for either ships in `Extensions:Aladdin:Translators`, and neither is named in its documentation — the fourteen are listed under *btoa*, above | **yes since 2026-08-26**, including multipart/appledouble, which is the only one of these formats that carries a resource fork (*base64 and MIME*, above) |
 | AppleLink `.pkg` | with the add-on | **named since 2026-08-23**, not expanded: the probe is Aladdin's own recogniser, read out of the `PKG Expand Translator` that StuffIt Deluxe 3.5.1 ships (*AppleLink packages*, above). What is missing is a specimen |
 | StuffIt SpaceSaver | with the add-on | **yes since 2026-08-22**, and since 2026-08-25 **every method the format has** — 0, 1, 2, 3 and 4 — with SpaceSaver's own dictionary built in so nothing else is needed (*StuffIt SpaceSaver*, above) |
 | Chained expansion (`.sit.hqx`) | yes, and can be turned off | yes, `-nr` turns it off |

@@ -3843,6 +3843,85 @@ static void test_btoa(void)
     }
 }
 
+/* base64 and MIME. tools/run_mime.py grades both against munpack and
+ * deark; these are here so `ci.sh` covers them on a clone with no
+ * reference/ directory, and they are hand-built rather than generated:
+ * "Mac\n" is `TWFjCg==`, which anyone can check by eye. */
+static void test_base64_mime(void)
+{
+    static const char wrapped[] =
+        "begin-base64 644 small.txt\n"
+        "TWFjCg==\n"
+        "====\n";
+    /* An appledouble message: an application/applefile part carrying a
+     * real name, the Finder info and a four-byte resource fork, then
+     * the data fork. The applefile is 26 + 3*12 = 62 bytes of header
+     * and table, then "small.txt", 32 bytes of Finder info, "RSRC". */
+    static const char msg[] =
+        "From: someone\r\n"
+        "MIME-Version: 1.0\r\n"
+        "Content-Type: multipart/appledouble; boundary=\"=b=\"\r\n"
+        "\r\n"
+        "--=b=\r\n"
+        "Content-Type: application/applefile\r\n"
+        "Content-Transfer-Encoding: base64\r\n"
+        "\r\n"
+        "AAUWBwACAAAAAAAAAAAAAAAAAAAAAAAAAAMAAAADAAAAPgAAAAkAAAAJAAAARwAA\r\n"
+        "ACAAAAACAAAAZwAAAARzbWFsbC50eHRURVhUVFRYVAAAAAAAAAAAAAAAAAAAAAAA\r\n"
+        "AAAAAAAAAFJTUkM=\r\n"
+        "--=b=\r\n"
+        "Content-Type: application/octet-stream\r\n"
+        "Content-Transfer-Encoding: base64\r\n"
+        "\r\n"
+        "TWFjCg==\r\n"
+        "--=b=--\r\n";
+    MemIO m;
+    UncIO io;
+    UncAlloc al;
+    UncSink sk;
+    CapSink cap;
+
+    test_make_alloc(&al);
+
+    /* The named base64 shape, which carries a filename. */
+    test_make_memio(&io, &m, (const uint8_t *)wrapped, (uint32_t)sizeof wrapped - 1);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_BASE64);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_BASE64, &io, &sk, &al, NULL, NULL) == UNC_OK);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+    CHECK(cap.dlen[0] == 4 && memcmp(cap.data[0], "Mac\n", 4) == 0);
+    CHECK(cap.info[0].name_len == 9 &&
+          memcmp(cap.info[0].name, "small.txt", 9) == 0);
+
+    /* multipart/appledouble: one entry, both forks, and the type and
+     * creator out of the applefile's Finder-info entry. */
+    test_make_memio(&io, &m, (const uint8_t *)msg, (uint32_t)sizeof msg - 1);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_MIME);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_MIME, &io, &sk, &al, NULL, NULL) == UNC_OK);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+    CHECK(cap.dlen[0] == 4 && memcmp(cap.data[0], "Mac\n", 4) == 0);
+    CHECK(cap.rlen[0] == 4 && memcmp(cap.rsrc[0], "RSRC", 4) == 0);
+    CHECK(cap.info[0].type == 0x54455854u);         /* 'TEXT' */
+    CHECK(cap.info[0].creator == 0x54545854u);      /* 'TTXT' */
+    CHECK(cap.info[0].name_len == 9 &&
+          memcmp(cap.info[0].name, "small.txt", 9) == 0);
+
+    /* Neither probe may claim ordinary text: the message needs
+     * something to extract, and a bare base64 body needs the shape of
+     * one. Establish that these tests can fail — the two streams above
+     * DO get claimed, three lines up each. */
+    {
+        static const char prose[] =
+            "Subject: not a message\n"
+            "This is a note about Content-Type: and base64, in prose.\n";
+        test_make_memio(&io, &m, (const uint8_t *)prose,
+                        (uint32_t)sizeof prose - 1);
+        CHECK(unc_sniff(&io) != UNC_FORMAT_MIME);
+        CHECK(unc_sniff(&io) != UNC_FORMAT_BASE64);
+    }
+}
+
 static void test_resfork_find(void)
 {
     /* A minimal resource fork holding 'MKey' 0 = eight bytes. */
@@ -3919,5 +3998,6 @@ void run_format_tests(void)
     test_cpt_cipher();
     test_winzip_aes_pieces();
     test_btoa();
+    test_base64_mime();
     test_resfork_find();
 }

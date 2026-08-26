@@ -247,6 +247,40 @@ static inline int unc_bufin_next(UncBufIn *b)
     return unc_bufin_next_slow(b);
 }
 
+/* The next byte WITHOUT consuming it, or -1 at EOF (which sets the
+ * sticky error, as reading it would have). One byte of lookahead is
+ * enough for the only caller: unc_readline, which has to take CRLF as a
+ * single terminator. */
+static inline int unc_bufin_peek(UncBufIn *b)
+{
+    int c;
+    if (b->pos < b->len) return b->buf[b->pos];
+    c = unc_bufin_next_slow(b);
+    if (c < 0) return -1;
+    b->pos--;                       /* next_slow refilled, then consumed */
+    return c;
+}
+
+/* ------------------------------------------------------------------ */
+/* Text line reader (unc_util.c)                                      */
+/*                                                                    */
+/* CR, LF and CRLF all end a line, and a last line need not be        */
+/* terminated at all — the rule reference/macutils/hexbin/readline.c   */
+/* states, and the one a btoa file saved on a Mac needed (FORMATS.md,  */
+/* "btoa"). Unlike the readers inside fmt_uu.c and fmt_btoa.c, this    */
+/* one consumes CRLF as ONE terminator instead of letting the LF come  */
+/* back as an empty line: those two formats may ignore a blank line    */
+/* anywhere, and MIME may not — a blank line is where a part's headers */
+/* stop and its body starts.                                          */
+/*                                                                    */
+/* Fills buf (cap bytes, NUL-terminated) and *len with the line, minus */
+/* the terminator; a longer line is truncated and the rest skipped.    */
+/* *eof is set once the stream ends. Returns UNC_ERR_TRUNCATED when    */
+/* there was nothing left to read at all.                             */
+/* ------------------------------------------------------------------ */
+int unc_readline(UncBufIn *in, uint8_t *buf, int32_t cap, int32_t *len,
+                 int *eof);
+
 /* ------------------------------------------------------------------ */
 /* MSB-first bit reader over UncBufIn                                 */
 /* (Classic Mac compressors emit bits high-to-low within each byte;   */
@@ -763,6 +797,34 @@ int unc_btoa_probe(const uint8_t *head, int32_t len);
 int unc_btoa_extract(UncCtx *c);
 int unc_uu_probe(const uint8_t *head, int32_t len);
 int unc_uu_extract(UncCtx *c);
+
+/* base64 (fmt_b64.c), and the streaming decoder MIME shares with it.
+ *
+ * Source: reference/mpack/decode.c from64() and
+ * reference/deark/modules/xfer.c do_base64_internal(), which agree on
+ * every byte that matters: characters outside the alphabet are skipped
+ * rather than refused (mailers wrap, indent and re-flow these streams),
+ * '=' ends the data, and a group left part-decoded yields the bytes it
+ * implies — two characters one byte, three characters two. */
+typedef struct UncB64 {
+    uint8_t q[4];        /* six-bit values of the group so far */
+    int     n;
+    int     done;        /* '=' seen: the data ended there */
+} UncB64;
+
+void unc_b64_reset(UncB64 *b);
+/* Bytes written to out (0..3). Skips what is not in the alphabet. */
+int  unc_b64_feed(UncB64 *b, int ch, uint8_t out[3]);
+/* The tail of a group left over at end of stream (0..2 bytes). */
+int  unc_b64_flush(UncB64 *b, uint8_t out[3]);
+
+int unc_b64_probe(const uint8_t *head, int32_t len, UncIO *io);
+int unc_b64_extract(UncCtx *c);
+
+/* MIME messages (fmt_mime.c). The probe scans past the mail headers,
+ * which are longer than the sniff window, so it takes io. */
+int unc_mime_probe(const uint8_t *head, int32_t len, UncIO *io);
+int unc_mime_extract(UncCtx *c);
 
 /* ARC / ArcMac (fmt_arc.c). The probe reads the next header to place
  * this one, so it takes io. */

@@ -77,6 +77,12 @@ python3 tools/sdmodule/run_sdmodule.py --unclassic build/san/unclassic \
 # writes, in both framings. Skips cleanly without reference/.
 python3 tools/run_btoa.py --unclassic build/san/unclassic \
     || fail "btoa tests"
+# base64 and MIME (M36). No corpus file either — the sniff sweep claims
+# none of the 940 — so the cases are generated and graded by TWO other
+# implementations: munpack 1.6, which src/fmt_mime.c is transcribed
+# from, and deark for the base64 half. Skips cleanly without reference/.
+python3 tools/run_mime.py --unclassic build/san/unclassic \
+    || fail "base64/MIME tests"
 # LZH/LHA (M28). The corpus has one real `.lzh` and seven of lhasa's,
 # all in the diff suite above; this is the sweep over the rest of that
 # collection — 160-odd archives from fourteen writers — graded against

@@ -43,6 +43,25 @@ This project's decoders are transcriptions/ports of algorithms from:
     suite (TESTING.md, tools/build_deark.sh): test-time only, never
     linked into anything shipped.
 
+  * mpack/munpack 1.6, by John G. Myers — Copyright (c) 1993, 1994
+    Carnegie Mellon University. Permissive: "Permission to use, copy,
+    modify, distribute, and sell this software and its documentation
+    for any purpose is hereby granted without fee, provided that the
+    above copyright notice appear in all copies and that both that
+    copyright notice and this permission notice appear in supporting
+    documentation, and that the name of Carnegie Mellon University not
+    be used in advertising or publicity pertaining to distribution of
+    the software without specific, written prior permission."
+    `src/fmt_mime.c` is transcribed from `decode.c` (the header and
+    parameter rules, parseEncoding, from64, fromqp, and the order a
+    filename is looked for in), `part.c` (the boundary rule), and
+    `macfile.c` (the applefile entry ids); `src/fmt_b64.c` follows the
+    same from64 alongside deark. Where this project deviates it is
+    recorded and reproduced (DECISIONS.md 2026-08-26). A build of
+    munpack is also the second oracle for those formats in the test
+    suite (TESTING.md, tools/build_mpack.sh): test-time only, never
+    linked into anything shipped.
+
   * Alysis SuperDisk! / Disk Expander (Alysis Software Corporation,
     1991-1992). No public specification of this format exists and no
     other implementation of it does either, so `src/fmt_superdisk.c`

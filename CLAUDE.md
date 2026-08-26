@@ -11,7 +11,7 @@ The engine is the product. The Mac app is a thin shell.
 
 ## Where things stand
 
-**M0–M35 are DONE and nothing is in flight.** Every family in FORMATS.md's
+**M0–M36 are DONE and nothing is in flight.** Every family in FORMATS.md's
 table extracts — that table is the count, and this file does not keep a copy
 of it — and the engine passes a **932-fixture** differential suite against
 `unar` and, where `unar` fails, `macunpack`, plus 9,320 robustness variants.

@@ -409,3 +409,30 @@ int unc_bufin_next_slow(UncBufIn *b)
     }
     return b->buf[b->pos++];
 }
+
+/* See unc_internal.h for what this reader does that fmt_uu.c's and
+ * fmt_btoa.c's do not: it takes CRLF as one terminator. */
+int unc_readline(UncBufIn *in, uint8_t *buf, int32_t cap, int32_t *len,
+                 int *eof)
+{
+    int32_t n = 0;
+
+    for (;;) {
+        int c = unc_bufin_next(in);
+        if (c < 0) {
+            if (in->err != UNC_ERR_TRUNCATED) return in->err;
+            *eof = 1;
+            break;
+        }
+        if (c == '\r') {
+            if (unc_bufin_peek(in) == '\n') (void)unc_bufin_next(in);
+            break;
+        }
+        if (c == '\n') break;
+        if (n < cap - 1) buf[n++] = (uint8_t)c;
+    }
+    buf[n] = 0;
+    *len = n;
+    if (*eof && n == 0) return UNC_ERR_TRUNCATED;
+    return UNC_OK;
+}

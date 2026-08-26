@@ -52,6 +52,21 @@ fi
 [ -d reference/deark ] || \
     git clone --depth 1 https://github.com/jsummers/deark reference/deark
 
+# mpack/munpack 1.6 (John G. Myers, Carnegie Mellon University) — the
+# reference for MIME (src/fmt_mime.c) and, built by tools/build_mpack.sh,
+# the second implementation that suite grades against. Its tree carries
+# the MACINTOSH port as well (macfile.c, macos.c, README.mac), which is
+# where multipart/appledouble came from in the first place: the CMU
+# licence is permissive, so unlike btoa this one may be transcribed.
+# ftp.andrew.cmu.edu is long gone; Debian still ships the same tarball.
+if [ ! -d reference/mpack ]; then
+    mkdir -p reference/mpack
+    curl -sL -o /tmp/mpack.tar.gz \
+        "http://deb.debian.org/debian/pool/main/m/mpack/mpack_1.6.orig.tar.gz"
+    tar xzf /tmp/mpack.tar.gz -C reference/mpack --strip-components=1
+    rm -f /tmp/mpack.tar.gz
+fi
+
 if [ ! -d reference/macutils ]; then
     mkdir -p reference/macutils
     curl -sL -o /tmp/macutils.tar.gz \
