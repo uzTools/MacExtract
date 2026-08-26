@@ -157,70 +157,18 @@ own distribution (BLOCKERS.md, the same date).
   accounts for — and a lossy mode is something an extractor cannot grade
   against its input by construction.
 
-- **A SpaceSaver file written by SpaceSaver.** Nothing here has made
-  the application compress anything. Only the CONTAINER now rests on it:
-  every codec is graded against Aladdin's own modules, but the method
-  choice, the 256-byte rounding and the 84-byte header are the
-  application's, and this engine reads them from containers it builds
-  itself (FORMATS.md, *StuffIt SpaceSaver*).
+- **A SpaceSaver file written by SpaceSaver.** Every codec is graded
+  against Aladdin's own modules (FORMATS.md, *StuffIt SpaceSaver*), so
+  what rests on this is the CONTAINER: the method the application picks
+  for its CPU, the data fork's length rounded up to 256 bytes, the
+  84-byte header, and the type, creator and Finder flags it moves
+  aside — all currently read from containers this project builds
+  itself. **Nothing here can make the application compress anything**;
+  about twenty emulator runs are accounted for in BLOCKERS.md, and the
+  request now sits in MANUAL_TESTS.md §6, for somebody with a copy of
+  SpaceSaver and a Macintosh. **What would close it:** one SpaceSaver
+  file, with the original beside it.
 
-  **Nine conditions are now known to hold at once** (2026-08-25, each
-  photographed): SpaceSaver switched On in its panel; the startup volume
-  ENROLLED in the Idle Time list, which the installed image leaves
-  empty; subjects named to match the `small` rule; dated 1990, older
-  than that page's "not modified in the last 1 Months"; *Idle Now*
-  picked from SpaceSaver's OWN menu with the item highlighted; the panel
-  closed with its close box, since Cmd-W does not close it; nine minutes
-  without input afterwards; a 400 KB subject beside the 11 KB one; and,
-  in other runs, Magic Menu's *SpaceSaver Compress* on the selection.
-  Every write path declines in silence — no `STR# 1001` alert, no
-  progress window — while *SpaceSaver Info...* reports the file
-  correctly, so the engine is reachable and answering.
-
-  Eliminated by running them: the name rule, a size floor, the type
-  exemption list (`Exem 1000` holds `PACT`, `MooV`, `JPEG`, `INIT`,
-  `cdev` — not `TEXT` or `PICT`), and the idea that a rename is an
-  event at all (`INIT 1` patches `_MenuSelect`, `_MenuKey` and
-  `_PBEject`, and nothing in the File Manager).
-
-  **The panel's own defaults, read with Cancel and changed nothing**
-  (`--pages`): *Compression and Other* has BOTH name rules ticked —
-  "Name begins or ends with `small`" and "Stuff or expand item when its
-  name is changed by adding or removing .SIT/.SEA" — and the second one
-  is the rule this project has already seen FIRE, so rename events do
-  reach the software. *Idle Time* ships with an EMPTY list of disks,
-  which is a real gate nobody had checked. Enrolling the disk and then
-  renaming in the Finder, both in one flushed boot (`--enrollrename`),
-  still compresses nothing: the names commit — the volume comes back
-  holding `Alphasmall`, `Bigonesmall`, `Forkedsmall` — and the files do
-  not change.
-
-  **The name rule is inert; the rule beside it is not** (2026-08-25,
-  five runs, each renaming IN THE FINDER with a control in the same
-  boot). `Forked` -> `Forked.SIT` becomes a StuffIt archive every time,
-  so the watcher is awake; `Alphasmall`, `Alpha small` and `small Alpha`
-  all come back untouched, so it is not the spacing and not which end
-  the keyword goes on. Nor is it the kind of item: renaming the DISK to
-  `System_7_0_1 small` — the guide's own "everything contained on that
-  disk gets compressed" — commits the name and compresses nothing. The 5.0 User's Guide — in the emulator cache,
-  and worth reading before the next attempt — says the two default
-  keywords are `small` (compress) and `big` (NEVER compress), that
-  attaching one "immediately compresses that item", and that the
-  keyword may be at either end.
-
-  So StuffIt Deluxe's *Archive via Rename* works and SpaceSaver's
-  *name-based compression* does not, on a machine where the panel shows
-  SpaceSaver **On**, the disk enrolled, and *SpaceSaver Info...*
-  answering correctly about the file. Every SpaceSaver WRITE path
-  declines in silence; every StuffIt-side operation works.
-
-  **What would close it:** what makes the engine refuse a SpaceSaver
-  compress while serving a Stuff. Two leads, neither examined:
-  `STR# 1001` #6 is *"SpaceSaver could not find the latest version of
-  the StuffIt Engine"* — a refusal that would be raised at STARTUP,
-  which this harness cannot photograph (tools/vmac/README.md, the icon
-  parade) — and the panel's `PERS -4064` carries a name with the serial
-  field zeroed. Or one SpaceSaver file from anywhere.
 - **AppleLink `.pkg`: one file, which would settle two questions.**
   Named since 2026-08-23 from Aladdin's own recogniser (FORMATS.md,
   *AppleLink packages*), and detect-only because nothing here can grade
@@ -229,6 +177,31 @@ own distribution (BLOCKERS.md, the same date).
   than a container — in which case this closes as a property of the
   format (DECISIONS.md 2026-08-23). **What is missing is a specimen**,
   which answers both.
+
+- **A MIME message written by a MACINTOSH.** Every message the reader is
+  graded against was built by `tools/run_mime.py` or read by munpack on
+  Linux (TESTING.md, *base64 and MIME*). The independent specimen would be
+  one written on the machine this is for — by mpack's own Macintosh port,
+  by Eudora (1.2 is in the corpus as `eudora12qa.bin`), or by Claris
+  Emailer — because what it would settle is the half no Unix tool has: how
+  a real Mac laid out the `application/applefile` part, and what it put in
+  the Finder-info entry. **What is missing is a gradeable specimen.**
+
+- **A MIME part encoded `x-uuencode`, inside a multipart.** mpack decodes
+  those; this does not. A uuencoded body posted to mail IS read — the
+  uuencode probe runs before the MIME one and steps over the headers
+  (FORMATS.md, *uuencode*) — so what is missing is only the case where one
+  part of a MULTIPART message is uuencoded and another part is what the
+  user wants. No specimen has been seen; the decoder is the uu one, which
+  already exists.
+
+- **`message/partial`: a message split across several FILES is not
+  reassembled.** munpack does it, keyed by the `id` parameter and a
+  reassembly directory. Here each file decodes on its own, and a part that
+  is half an attachment yields half a file. The engine already joins
+  multi-file sets four other ways (FORMATS.md, *Segmented archives*), so
+  what is missing is a specimen to grade the fifth against, not a
+  mechanism.
 
 ---
 

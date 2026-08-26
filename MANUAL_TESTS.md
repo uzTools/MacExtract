@@ -195,6 +195,43 @@ Extraction correctness
 - [ ] **The progress dialog uses `DialogSelect` without a filterProc.** Confirm
       the Cancel button highlights when clicked.
 
+## 6. A file that SpaceSaver itself wrote
+
+This one is not about the application at all — it is the last gap in a
+FORMAT, and it needs a copy of StuffIt SpaceSaver driven by a person.
+
+- [ ] **Compress one file with SpaceSaver and send the result**, along
+      with the original. Any version, any Macintosh, real or emulated.
+      A file of a few KB is enough; two, one with a resource fork, is
+      better.
+
+**Why nobody here can do it.** SpaceSaver 3.5.1 installs and runs under
+Mini vMac, its control panel opens, and *SpaceSaver Info…* reports
+correctly on a selected file — but every path that would WRITE a
+compressed file declines in silence: the `small` keyword on a file name
+or on the disk, Magic Menu's *SpaceSaver Compress*, *Idle Now* with the
+volume enrolled, and DropCompress. In the same boots, StuffIt Deluxe's
+own *Archive via Rename* fires every time, so the machine is healthy and
+the Finder events arrive. Roughly twenty emulator runs; what is
+eliminated and what is left is in `OPEN_ITEMS.md` and `BLOCKERS.md`.
+
+**What it would settle.** Every SpaceSaver CODEC is already graded
+against Aladdin's own modules, which run on Linux under `qemu-m68k`
+(`tools/ssmodule/`) — methods 0, 1, 2, 3 and 4 all decode byte-exact.
+What has never been checked against a real file is the CONTAINER: the
+method the application picks for the machine it runs on, the data fork's
+length rounded up to 256 bytes, the 84-byte header, and the type,
+creator and Finder flags it moves aside. Those are read from containers
+this project builds itself.
+
+**What to record.** The file, the original, the SpaceSaver version, and
+the Macintosh it ran on (a 68030 or better writes method 3, a 68000
+writes method 4 — so the CPU decides what the specimen exercises).
+`tools/run_spacesaver.py` grades a `.ss` against a `.orig` placed beside
+it in the emulator's specimen directory.
+
+---
+
 ---
 
 ## What a failure here would change
