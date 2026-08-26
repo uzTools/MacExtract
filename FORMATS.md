@@ -1026,7 +1026,9 @@ Plus (*tools/vmac/README.md*), and what came back:
 
 ## base64 and MIME, the armour that replaced the others
 
-**In scope since 2026-08-26** (M36), on request. base64 is what
+**In scope since 2026-08-26** (M36), on request — and an open item since
+2026-08-25, raised from the Macintosh Garden forum thread *Archive formats*,
+which lists `.b64` and `.mime` among what a downloader actually meets. base64 is what
 uuencode, BinHex and btoa all became once mail grew MIME: three bytes
 into four characters, 33% overhead, and — unlike every armour before it
 — a container standard around it that says what the bytes ARE.

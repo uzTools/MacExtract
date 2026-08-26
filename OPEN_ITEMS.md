@@ -330,28 +330,12 @@ Neither a reference nor a specimen is missing here — only the code. That is
 what separates this section from section 2, and it is why each entry names
 what would grade it rather than what would close it.
 
-- **base64 and MIME (`.b64`, `.mime`) are not read, and are not a scope
-  decision either — they were simply never listed.** Every sibling
-  encoding this corpus meets is implemented (BinHex, uuencode, btoa,
-  MacBinary, AppleSingle/Double); base64 is the one that is neither in
-  FORMATS.md's table nor in part 1, and `.b64` was a real Usenet and
-  AOL-era carrier for MacBinary payloads. **The reference is already in
-  `reference/`:** deark's `modules/xfer.c` decodes plain base64 and the
-  `begin-base64 <mode> <name>` framing that `.b64` files carry, in its
-  uuencode module beside the `begin` shape `fmt_uu.c` was written from.
-  **What would grade it:** deark itself, and `base64 -d` on a payload
-  this project encodes — the same bargain btoa took (TESTING.md,
-  *btoa*), with the envelope auto-unwrap making `.bin.b64` fall out for
-  free. Raised 2026-08-25 from the Macintosh Garden forum thread
-  *Archive formats*, which lists `.b64` and `.mime` among what a
-  downloader actually meets.
-
 - **The other disk-image extensions are not named: `.dmg`, `.iso`,
   `.cdr`, `.toast`, `.img`, `.smi`, `.cpgz`.** Extraction stays out by
   the brief (part 1) — what is open is only that `unc_sniff` returns
   UNKNOWN for them, so a UI cannot tell the user what the file is, which
-  is the one thing detect-only exists to do. The same forum thread
-  reports the cost of that silence: `.image` files are routinely
+  is the one thing detect-only exists to do. The Macintosh Garden forum
+  thread *Archive formats* (2026-08-25) reports the cost of that silence: `.image` files are routinely
   mistaken for JPEGs and passed over. **What would grade it:** the
   measurement the Disk Copy 4.2 and AppleLink probes were held to — 0
   false positives across the corpus (FORMATS.md, the format table, and

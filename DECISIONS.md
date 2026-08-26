@@ -7174,10 +7174,25 @@ matches the button's LABEL against a template before clicking it.
 
 ## 2026-08-26 — base64 and MIME, and an oracle that is wrong three times
 
-Asked for, and neither in scope nor out of it: OPEN_ITEMS.md's part 1 does
-not mention base64, and part 2 does not either. The brief has grown three
-times before on request (ARC and uuencode, SuperDisk!, btoa), and this is the
-fourth.
+Asked for — and **already filed**, which the session that implemented it did
+not notice until afterwards. OPEN_ITEMS.md's part 1 does not mention base64,
+so it was never out of scope; part 2's section 6 ("Not implemented, and
+nothing blocks it") had named it since 2026-08-25, raised from the Macintosh
+Garden forum thread *Archive formats* — with the reference already identified
+(deark's `modules/xfer.c`, in `reference/` for ARC) and the grading bargain
+already proposed. That entry is now deleted, the format being read.
+
+**The lesson is CLAUDE.md's own, and it still cost a search.** "Read
+OPEN_ITEMS.md before starting work on a format" was followed for part 1 and
+the head of part 2; the one section that had the answer was below a truncated
+grep. Everything in it was then re-derived from scratch — the same reference,
+the same oracle, the same `.b64` framing. **Cost:** no wrong code, but an
+afternoon of searching for what one paragraph already said, and a status file
+that spent one commit contradicting itself (section 2 waiting on a specimen
+for a format section 6 called unimplemented).
+
+The brief has grown three times before on request (ARC and uuencode,
+SuperDisk!, btoa), and this is the fourth.
 
 **Why it belongs here rather than in the "modern PC formats" row.** base64 is
 what BinHex, uuencode and btoa all became. A Macintosh file that travelled by
