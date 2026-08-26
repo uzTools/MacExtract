@@ -123,8 +123,13 @@ All of these cost real time here:
 
 Pushing a `v*` tag publishes a GitHub release with the application attached
 (`.github/workflows/release.yml`, the runner's own `GITHUB_TOKEN`; verified end
-to end on v0.5). A deploy-key push may add workflow files and a deploy-key tag
-push does trigger one — both settled, do not re-litigate.
+to end on v0.5, and it shipped every release through v0.23.0). A deploy-key
+push may add workflow files, and a deploy-key tag push did trigger one for
+those — do not re-derive either from first principles.
+
+**It did not fire for v0.24.0, and why is open** (OPEN_ITEMS.md). A pushed tag
+is therefore evidence that a tag exists and nothing more — which is what the
+last step below has always said.
 
 ```sh
 # bump UNC_VERSION in include/unclassic.h FIRST
