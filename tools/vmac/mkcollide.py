@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """mkcollide.py — build a tar whose entries COLLIDE once the Mac renames them.
 
-`BumpName()` in mac/unclassic_mac.c appends `~1`..`~9` when a sanitized name
+`BumpName()` in mac/macextract_mac.c appends `~1`..`~9` when a sanitized name
 already exists on the output volume. It is real code on a real path — it is
 what produced `archive.sit~1` when the gzip/.Z fallback name collided with the
 archive itself — but nothing has ever verified it, and nothing in the corpus

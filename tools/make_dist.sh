@@ -1,13 +1,13 @@
 #!/bin/sh
-# make_dist.sh — assemble the "bootstrap" distribution for getting unclassic
+# make_dist.sh — assemble the "bootstrap" distribution for getting MacExtract
 # onto a classic Mac that has no unarchiver yet (chicken-and-egg: you can't
 # ship the tool as a .sit if you need the tool to open a .sit).
 #
 # Produces, under dist/:
-#   unclassic.bin  — the application as UNCOMPRESSED MacBinary. Drop it on any
+#   MacExtract.bin  — the application as UNCOMPRESSED MacBinary. Drop it on any
 #                    Mac with a MacBinary-aware transfer (ImportFl, most terminal
 #                    programs, or a network mount); no unarchiver required.
-#   unclassic.dsk  — an 800K HFS floppy image holding the application. Write it
+#   MacExtract.dsk  — an 800K HFS floppy image holding the application. Write it
 #                    to a real 800K floppy, or mount it in Mini vMac / Basilisk /
 #                    SheepShaver, then drag the app onto your startup disk.
 #   README.txt     — the two paragraphs above, for the download.
@@ -30,35 +30,35 @@ cd "$(dirname "$0")/.."
 sh tools/build_mac.sh
 
 SRC=build/mac
-if [ ! -f "$SRC/unclassic.bin" ] || [ ! -f "$SRC/unclassic.dsk" ]; then
+if [ ! -f "$SRC/MacExtract.bin" ] || [ ! -f "$SRC/MacExtract.dsk" ]; then
     echo "make_dist: no Mac build at $SRC — a Retro68 toolchain is required"
     echo "make_dist: (tools/build_mac.sh says where to get one)"
     exit 1
 fi
 
 mkdir -p dist
-cp "$SRC/unclassic.bin" dist/unclassic.bin
-cp "$SRC/unclassic.dsk" dist/unclassic.dsk
+cp "$SRC/MacExtract.bin" dist/MacExtract.bin
+cp "$SRC/MacExtract.dsk" dist/MacExtract.dsk
 VERSION=$(sed -n 's/^#define UNC_VERSION "\(.*\)"/\1/p' include/unclassic.h)
 [ -n "$VERSION" ] || { echo "make_dist: no UNC_VERSION in include/unclassic.h" >&2; exit 1; }
 
 cat > dist/README.txt <<TXT
-unclassic v$VERSION — bootstrap distribution
-=========================================
+MacExtract v$VERSION — bootstrap distribution
+==========================================
 
 A bare Classic Mac has no way to open a .sit/.cpt/.hqx until it HAS an
-unarchiver, so unclassic ships in two forms that need no unarchiver:
+unarchiver, so MacExtract ships in two forms that need no unarchiver:
 
-  unclassic.bin  The application as uncompressed MacBinary. Transfer it to
-                 the Mac with any MacBinary-aware method (ImportFl, a terminal
-                 program's MacBinary receive, an AppleShare/AFP mount). The
-                 wrapper unpacks to the real application on arrival.
+  MacExtract.bin  The application as uncompressed MacBinary. Transfer it to
+                  the Mac with any MacBinary-aware method (ImportFl, a terminal
+                  program's MacBinary receive, an AppleShare/AFP mount). The
+                  wrapper unpacks to the real application on arrival.
 
-  unclassic.dsk  An 800K HFS floppy image containing the application. Write it
-                 to a physical 800K floppy (a Mac Plus reads 400K/800K GCR
-                 floppies only), or mount it in an emulator (Mini vMac,
-                 Basilisk II, SheepShaver), then drag unclassic onto your
-                 startup disk.
+  MacExtract.dsk  An 800K HFS floppy image containing the application. Write it
+                  to a physical 800K floppy (a Mac Plus reads 400K/800K GCR
+                  floppies only), or mount it in an emulator (Mini vMac,
+                  Basilisk II, SheepShaver), then drag MacExtract onto your
+                  startup disk.
 
 Floor target: System 6.0.x on a 1 MB Mac Plus (68000). The same binary runs
 unchanged through Mac OS 9 and adapts its memory use to the machine at runtime,
@@ -92,7 +92,7 @@ StuffIt SpaceSaver files open too, and they are the ones that look like
 nothing is wrong: SpaceSaver compressed in place, so the file kept its
 name and icon and only that Mac could read it. On any other machine its
 own application finds a compressed header where the document should be.
-unclassic carries the table SpaceSaver primes its compression with -- the
+MacExtract carries the table SpaceSaver primes its compression with -- the
 part no other tool has -- so a single file on a floppy is enough, with
 nothing else to install. (That table is copyright Aladdin Systems; see
 the NOTICE file in the source.)
@@ -159,12 +159,12 @@ has ever run it. Worth knowing before you commit a floppy to it.
 License: LGPL-2.1-or-later. See LICENSE and NOTICE in the source tree.
 TXT
 
-echo "make_dist: wrote dist/unclassic.bin ($(wc -c < dist/unclassic.bin) B),"
-echo "make_dist:       dist/unclassic.dsk ($(wc -c < dist/unclassic.dsk) B), dist/README.txt"
+echo "make_dist: wrote dist/MacExtract.bin ($(wc -c < dist/MacExtract.bin) B),"
+echo "make_dist:       dist/MacExtract.dsk ($(wc -c < dist/MacExtract.dsk) B), dist/README.txt"
 
 # Cheap proof that the two artifacts carry the same application: the .dsk's
 # copy round-trips back to a MacBinary whose resource fork — which is the
-# whole of an APPL — matches the one in dist/unclassic.bin byte for byte.
+# whole of an APPL — matches the one in dist/MacExtract.bin byte for byte.
 #
 # hfsutils does that properly, through the catalog. Without it the check
 # still runs, weaker: the fork must appear verbatim in the image. A machine
@@ -174,13 +174,13 @@ echo "make_dist:       dist/unclassic.dsk ($(wc -c < dist/unclassic.dsk) B), dis
 if command -v hmount >/dev/null 2>&1; then
     HOME_SAVE=$HOME
     HOME=$(mktemp -d); export HOME
-    hmount dist/unclassic.dsk >/dev/null
-    hcopy -m "unclassic:unclassic" "$HOME/roundtrip.bin"
+    hmount dist/MacExtract.dsk >/dev/null
+    hcopy -m "MacExtract:MacExtract" "$HOME/roundtrip.bin"
     humount >/dev/null
     python3 - "$HOME/roundtrip.bin" <<'PY'
 import sys
 a = open(sys.argv[1], 'rb').read()
-b = open('dist/unclassic.bin', 'rb').read()
+b = open('dist/MacExtract.bin', 'rb').read()
 rl = int.from_bytes(b[87:91], 'big')
 same = a[128:128 + rl] == b[128:128 + rl]
 print(f"make_dist: .dsk round-trip: {rl} B resource fork, "
@@ -192,8 +192,8 @@ PY
 else
     python3 - <<'PY'
 import sys
-b = open('dist/unclassic.bin', 'rb').read()
-img = open('dist/unclassic.dsk', 'rb').read()
+b = open('dist/MacExtract.bin', 'rb').read()
+img = open('dist/MacExtract.dsk', 'rb').read()
 rl = int.from_bytes(b[87:91], 'big')
 fork = b[128:128 + rl]
 found = fork in img

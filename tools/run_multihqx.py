@@ -68,11 +68,11 @@ def macbinary_forks(path):
     return md5(b[128:128 + dl]), md5(b[ro:ro + rl])
 
 
-def extract(unclassic, path, args=()):
+def extract(macextract, path, args=()):
     """Returns (returncode, {data md5: rsrc md5}) for one file."""
     tmp = tempfile.mkdtemp()
     try:
-        r = subprocess.run([unclassic, "x", "-nr", "--forks", "hidden",
+        r = subprocess.run([macextract, "x", "-nr", "--forks", "hidden",
                             "-o", tmp, path, *args],
                            capture_output=True, timeout=300)
         return r.returncode, forks_of(tmp)
@@ -98,13 +98,13 @@ def hexbin_forks(path):
         shutil.rmtree(tmp, ignore_errors=True)
 
 
-def check(unclassic, parts, tmpdir):
+def check(macextract, parts, tmpdir):
     problems = []
 
     # What each document decodes to on its own is the expectation.
     want = {}
     for p in parts:
-        rc, got = extract(unclassic, os.path.join(FIXDIR, p))
+        rc, got = extract(macextract, os.path.join(FIXDIR, p))
         if rc != 0:
             problems.append(f"{p} alone: exit {rc}")
         want.update(got)
@@ -116,7 +116,7 @@ def check(unclassic, parts, tmpdir):
                 out.write(BETWEEN)
             out.write(open(os.path.join(FIXDIR, p), "rb").read())
 
-    rc, got = extract(unclassic, joined)
+    rc, got = extract(macextract, joined)
     if rc != 0:
         problems.append(f"joined: exit {rc}")
     if got != want:
@@ -136,7 +136,7 @@ def check(unclassic, parts, tmpdir):
     whole = open(joined, "rb").read()
     with open(cut, "wb") as f:
         f.write(whole[:-len(whole) // (2 * len(parts))])
-    rc, got = extract(unclassic, cut)
+    rc, got = extract(macextract, cut)
     if rc == 0:
         problems.append("truncated last document: exit 0, should report it")
     if len(got) < len(parts) - 1:
@@ -149,14 +149,14 @@ def check(unclassic, parts, tmpdir):
         f.write(open(os.path.join(FIXDIR, parts[0]), "rb").read())
         f.write(b"\n(This file must be converted with BinHex 4.0)\n"
                 b"and here the posting stops\n")
-    rc, _ = extract(unclassic, liar)
+    rc, _ = extract(macextract, liar)
     if rc == 0:
         problems.append("banner with no document: exit 0, should report it")
 
     return problems
 
 
-def check_posted(unclassic, tmp):
+def check_posted(macextract, tmp):
     """ONE document cut across several postings, each part carrying its
     own mail header — the other half of "multipart", and the half that
     puts junk INSIDE the stream rather than between documents.
@@ -174,7 +174,7 @@ def check_posted(unclassic, tmp):
     lines = open(src, "rb").read().split(b"\n")
     half = len(lines) // 2
 
-    rc, want = extract(unclassic, src)
+    rc, want = extract(macextract, src)
     if rc != 0:
         problems.append(f"posted: the fixture alone exits {rc}")
 
@@ -186,7 +186,7 @@ def check_posted(unclassic, tmp):
         f.write(b"[ part 2 of 2 -- append to part 1 ]\n\n")
         f.write(b"\n".join(lines[half:]))
 
-    rc, got = extract(unclassic, posted)
+    rc, got = extract(macextract, posted)
     if rc != 0:
         problems.append(f"posted: exit {rc}")
     if got != want:
@@ -198,7 +198,7 @@ def check_posted(unclassic, tmp):
     edged = os.path.join(tmp, "edged.hqx")
     with open(edged, "wb") as f:
         f.write(b"\n".join(lines[:half]) + b"\nAB:CD\n" + b"\n".join(lines[half:]))
-    rc, _ = extract(unclassic, edged)
+    rc, _ = extract(macextract, edged)
     if rc == 0:
         problems.append("edged: alphabet-only junk mid-stream was accepted "
                         "silently; the CRC should have objected")
@@ -206,12 +206,12 @@ def check_posted(unclassic, tmp):
 
 
 def main():
-    unclassic = os.path.join(ROOT, "build/san/unclassic")
+    macextract = os.path.join(ROOT, "build/san/macextract")
     argv = sys.argv[1:]
-    if argv and argv[0] == "--unclassic":
-        unclassic = argv[1]
+    if argv and argv[0] == "--macextract":
+        macextract = argv[1]
     elif argv:
-        unclassic = argv[0]
+        macextract = argv[0]
 
     missing = [p for p in PARTS
                if not os.path.exists(os.path.join(FIXDIR, p))]
@@ -224,7 +224,7 @@ def main():
         for n in (2, 3):
             sub = os.path.join(tmp, str(n))
             os.makedirs(sub)
-            problems = check(unclassic, PARTS[:n], sub)
+            problems = check(macextract, PARTS[:n], sub)
             hard = [p for p in problems if not p.startswith("NOTE:")]
             for p in problems:
                 print(f"    {p}")
@@ -234,7 +234,7 @@ def main():
             else:
                 print(f"multihqx ok: {n} documents in one file")
 
-        problems = check_posted(unclassic, os.path.join(tmp, "posted"))
+        problems = check_posted(macextract, os.path.join(tmp, "posted"))
         for p in problems:
             print(f"    {p}")
         if problems:

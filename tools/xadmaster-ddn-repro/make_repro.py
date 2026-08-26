@@ -15,7 +15,7 @@ Then, with unar 1.10.8:
 
     unar -f /tmp/repro.dd     ->  Failed! (Attempted to read more data
                                   than was available), both forks
-    unclassic x /tmp/repro.dd ->  both forks, byte-exact against
+    macextract x /tmp/repro.dd ->  both forks, byte-exact against
                                   DiskDoubler's own expander
 """
 import argparse

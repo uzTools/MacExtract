@@ -43,7 +43,7 @@ import arcmac as A                                  # noqa: E402
 from interactive import Mac                         # noqa: E402
 
 HOME = os.environ.get("UNC_VMAC_HOME",
-                      os.path.expanduser("~/.cache/unclassic/vmac"))
+                      os.path.expanduser("~/.cache/macextract/vmac"))
 SPECIMENS = os.path.join(HOME, "specimens", "maclha")
 FIXTURE = os.path.join(REPO, "fixtures", "derived-MacLHa_2.00.sit")
 

@@ -7,7 +7,7 @@ Three generators, seeded and reproducible:
   2. splice: concatenate random slices of two fixtures;
   3. garbage: pure random bytes with a real format magic prefix.
 
-Every case runs `unclassic t --budget 4M` (the sanitizer build) with a
+Every case runs `macextract t --budget 4M` (the sanitizer build) with a
 timeout. Any nonzero-but-clean exit is fine; crashes (signals),
 sanitizer aborts, or timeouts fail the run.
 """
@@ -59,8 +59,8 @@ def mutate(data, rng):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--unclassic",
-                    default=os.path.join(ROOT, "build/san/unclassic"))
+    ap.add_argument("--macextract",
+                    default=os.path.join(ROOT, "build/san/macextract"))
     ap.add_argument("-n", "--iterations", type=int, default=500)
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--timeout", type=float, default=20.0)
@@ -98,7 +98,7 @@ def main():
                 f.write(blob)
             try:
                 r = subprocess.run(
-                    [args.unclassic, "t", "--budget", str(4 << 20), path],
+                    [args.macextract, "t", "--budget", str(4 << 20), path],
                     capture_output=True, timeout=args.timeout)
             except subprocess.TimeoutExpired:
                 bad += 1

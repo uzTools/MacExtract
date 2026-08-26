@@ -2,10 +2,10 @@
 """run_diff.py — differential acceptance tests.
 
 For every manifest in fixtures/manifests/ whose fixture is present:
-  1. `unclassic x` into a temp dir
+  1. `macextract x` into a temp dir
   2. compare every entry byte-for-byte against the oracle manifest:
      data fork sha256+size, resource fork sha256+size, and type/creator
-     when recorded (via `unclassic l`).
+     when recorded (via `macextract l`).
 
 Formats the engine does not implement yet are skipped (reported), not
 failed: milestones land one format at a time. A manifest whose format
@@ -57,18 +57,18 @@ DETECT_ONLY = {
 }
 
 
-def check_detect_only(unclassic, fx, ourname):
+def check_detect_only(macextract, fx, ourname):
     """A format v1 names but does not extract. Two promises, both checked:
     `sniff` agrees with the oracle about WHAT it is, and `x` refuses
     without writing anything. Returns a list of problems."""
     bad = []
-    r = subprocess.run([unclassic, "sniff", fx], capture_output=True,
+    r = subprocess.run([macextract, "sniff", fx], capture_output=True,
                        timeout=120)
     got = r.stdout.decode("utf-8", "replace").strip()
     if got != ourname:
         bad.append(f"sniff says {got!r}, the oracle says {ourname!r}")
     with tempfile.TemporaryDirectory() as tmp:
-        r = subprocess.run([unclassic, "x", "-o", tmp, fx],
+        r = subprocess.run([macextract, "x", "-o", tmp, fx],
                            capture_output=True, timeout=300)
         files, dirs = collect_outputs(tmp)
         if r.returncode == 0:
@@ -82,7 +82,7 @@ def check_detect_only(unclassic, fx, ourname):
 def norm(name):
     # NFC-normalize, and neutralize path-separator sanitization
     # differences: classic Mac names may contain '/', which unar writes
-    # as '_' and unclassic as ':' — map all three to '_' on both sides.
+    # as '_' and macextract as ':' — map all three to '_' on both sides.
     n = unicodedata.normalize("NFC", name)
     return n.replace(":", "_").replace("/", "_")
 
@@ -103,7 +103,7 @@ def normpath(path):
 def sidecar(path):
     """Resource-fork sidecar path for an entry: "dir/file" -> "dir/._file".
 
-    Both sides of the diff use the "._" prefix (`unclassic --forks
+    Both sides of the diff use the "._" prefix (`macextract --forks
     hidden`, `unar -k hidden`) rather than a ".rsrc" suffix, because
     the suffix collides with real entries in archives that hold both
     "X" and "X.rsrc". DECISIONS.md, 2026-08-08.
@@ -126,7 +126,7 @@ def collect_outputs(tmp):
 
 
 def parse_listing(out):
-    """Parse `unclassic l` output -> {name: (type, creator) or (None, None)}.
+    """Parse `macextract l` output -> {name: (type, creator) or (None, None)}.
 
     Every listed entry is recorded, not only those with type/creator: the
     listing is how an entry the engine cannot extract is checked to be
@@ -148,14 +148,14 @@ def parse_listing(out):
     return meta
 
 
-ENTRY_ERR = re.compile(r"^unclassic: (.*): (.*)$")
-TALLY = re.compile(r"^unclassic: (\d+) of (\d+) entries failed$")
+ENTRY_ERR = re.compile(r"^macextract: (.*): (.*)$")
+TALLY = re.compile(r"^macextract: (\d+) of (\d+) entries failed$")
 
 
 def parse_entry_errors(stderr):
     """Return {normalized entry name: reason}.
 
-    `unclassic` reports a failed entry as "unclassic: NAME: reason"; the
+    `macextract` reports a failed entry as "macextract: NAME: reason"; the
     whole-archive errors it prints instead name the FIXTURE path, and are
     left in the dict deliberately — they must never be excused as
     per-entry.
@@ -214,14 +214,14 @@ def out_of_scope(entry):
     return bool(m) and all(x in ORACLE_OUT_OF_SCOPE for x in m)
 
 
-def check_fixture(unclassic, man, verbose, budget=0):
+def check_fixture(macextract, man, verbose, budget=0):
     fx = os.path.join(FIXDIR, man["fixture"])
     cap = ["--budget", str(budget)] if budget else []
     problems, unadjudicated, masked = [], 0, 0
     excused = {normpath(e["name"]) for e in man["entries"]
                if e.get("unadjudicated")}
     with tempfile.TemporaryDirectory() as tmp:
-        r = subprocess.run([unclassic, "x", "-nr", "--forks", "hidden",
+        r = subprocess.run([macextract, "x", "-nr", "--forks", "hidden",
                             "-o", tmp, fx] + cap,
                            capture_output=True, timeout=300)
         un_errs = parse_entry_errors(r.stderr.decode("utf-8", "replace"))
@@ -241,7 +241,7 @@ def check_fixture(unclassic, man, verbose, budget=0):
                     f"exit {r.returncode}: {r.stderr.decode()[:300]}")
         files, dirs = collect_outputs(tmp)
 
-        lr = subprocess.run([unclassic, "l", fx] + cap,
+        lr = subprocess.run([macextract, "l", fx] + cap,
                             capture_output=True, timeout=60)
         listing = parse_listing(lr.stdout.decode("utf-8", "replace"))
 
@@ -322,7 +322,7 @@ def check_fixture(unclassic, man, verbose, budget=0):
         # than in the entry loop: the oracle's XADComment (recorded in
         # the manifest by tools/make_manifests.py) against the file the
         # CLI writes beside the extracted items, and against the line
-        # `unclassic l` prints. A manifest without the key asserts the
+        # `macextract l` prints. A manifest without the key asserts the
         # opposite: nothing may be written, which the "unexpected
         # output" check below already enforces.
         want = man.get("comment")
@@ -366,7 +366,7 @@ def check_fixture(unclassic, man, verbose, budget=0):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--unclassic", default=os.path.join(ROOT, "build/san/unclassic"))
+    ap.add_argument("--macextract", default=os.path.join(ROOT, "build/san/macextract"))
     ap.add_argument("--all", action="store_true",
                     help="run even not-yet-implemented formats")
     ap.add_argument("-v", "--verbose", action="store_true")
@@ -407,7 +407,7 @@ def main():
         if not args.all and fmt not in IMPLEMENTED:
             if fmt in DETECT_ONLY:
                 detect_ran += 1
-                bad = check_detect_only(args.unclassic, fxpath,
+                bad = check_detect_only(args.macextract, fxpath,
                                         DETECT_ONLY[fmt])
                 if bad:
                     detect_bad += 1
@@ -421,7 +421,7 @@ def main():
             continue
         ran += 1
         problems, unadj, masked = check_fixture(
-            args.unclassic, man, args.verbose, args.budget)
+            args.macextract, man, args.verbose, args.budget)
         unadj_masked += masked
         oos_entries += sum(1 for e in man["entries"] if out_of_scope(e))
         if unadj:

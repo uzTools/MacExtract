@@ -144,9 +144,9 @@ def setup():
     # test. That is fine for a bootstrap and not for grading: what
     # grades the decoder is deark, the archives' own CRCs, and the
     # plain copy of XARC.EXE another CD carries (TESTING.md).
-    cli = os.path.join(ROOT, "build", "rel", "unclassic")
+    cli = os.path.join(ROOT, "build", "rel", "macextract")
     if not os.path.exists(cli):
-        cli = os.path.join(ROOT, "build", "unclassic")
+        cli = os.path.join(ROOT, "build", "macextract")
     if not os.path.exists(cli):
         print("arcplus: no CLI built; run `make BUILD=build/rel`", file=sys.stderr)
         return 1

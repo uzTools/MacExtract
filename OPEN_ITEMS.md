@@ -45,12 +45,12 @@ grown before, on request.
 | Disk images (`.image`, `.img`, `.iso`, `.cdr`, `.toast`, `.dmg`, `.smi`) | **not recognised**, since 2026-08-27, and not extracted | extracting one means a filesystem rather than a codec, and NAMING one turned out to be worth nothing either: a disk image is not an archive, so telling a user who came to an unarchiver "this is a disk image" leaves them exactly where "not recognized" does — nothing extracted, and the next move is a different program in both cases. Disk Copy 4.2 had been detect-only since M9 and went the same day, for the same reason. The probes are complete, graded and kept in `attic/` (DECISIONS.md 2026-08-27) |
 | PMarc (`-pm0-`, `-pm1-`, `-pm2-`) and `-lhx-` | **not recognised** | a different family behind an LZH-shaped header. PMarc is a Japanese PC format with its own coders, `-lhx-` is UNLHA32's extension; neither reached a Macintosh, and LZH itself only just did (2026-08-23) |
 | Self-extracting LZH (an executable with an archive behind it) | **not recognised** | the archive sits behind DOS, Amiga, Atari or X68000 machine code, and finding it means knowing each of those loaders. `unar` has a parser per platform; here the answer is to hand the `.lzh` itself to the extractor |
-| RAR, 7z, bzip2, xz, Cabinet, Zoo, ar/`.deb`, cpio, ARJ | **named since 2026-08-27, never extracted** | extraction stays out for the reason it always did: none is a Macintosh archive format, none carries a resource fork or Finder metadata, and every one is served by a maintained extractor on any machine that can run one (raised 2026-08-25, Macintosh Garden forum, *Archive formats*). NAMING them is in, and it is the one thing this program can honestly contribute to a file it will never open: somebody who opens an unarchiver believes they have an archive, so "not recognized" reads as "your file is damaged" and sends them to re-download it, where "unclassic cannot open RAR files" sends them to a program that can (FORMATS.md, *Archives named but not extracted*) |
+| RAR, 7z, bzip2, xz, Cabinet, Zoo, ar/`.deb`, cpio, ARJ | **named since 2026-08-27, never extracted** | extraction stays out for the reason it always did: none is a Macintosh archive format, none carries a resource fork or Finder metadata, and every one is served by a maintained extractor on any machine that can run one (raised 2026-08-25, Macintosh Garden forum, *Archive formats*). NAMING them is in, and it is the one thing this program can honestly contribute to a file it will never open: somebody who opens an unarchiver believes they have an archive, so "not recognized" reads as "your file is damaged" and sends them to re-download it, where "MacExtract cannot open RAR files" sends them to a program that can (FORMATS.md, *Archives named but not extracted*) |
 | Zip64 for files larger than 4 GB | **read for its COUNTS since 2026-08-25; over-4-GB fields refused per archive**, and `unc_zipseg_describe` still answers `UNC_ERR_UNSUPPORTED` for a spanned set | the entry count, central-directory size and offset are taken from the Zip64 record as `uint32` halves, which is what makes a 70,000-entry archive extract (FORMATS.md, *Size limits*). ADDRESSING past 4 GB is the part that stays out: it would put 64-bit offsets in `UncIO` and every format would pay for them on a 68000. A field whose high half is set returns `UNC_ERR_UNSUPPORTED` (2026-08-14, revised 2026-08-25) |
 
 Everything detect-only is **named** by `unc_sniff`, and both front ends say
 the name: the CLI prints *"recognized as RAR, which v1 cannot extract"* and
-the Macintosh application's alert reads *"unclassic cannot open RAR files."*
+the Macintosh application's alert reads *"MacExtract cannot open RAR files."*
 (photographed on System 6.0.8, 2026-08-27). Extraction returns cleanly
 unsupported either way.
 
@@ -260,10 +260,10 @@ own distribution (BLOCKERS.md, the same date).
   real btoa file needs them to be.** Measured 2026-08-26, on the
   specimen Aladdin's own translator wrote (FORMATS.md, *btoa*): that
   translator MacBinary-wraps before it encodes, so its output is
-  `Subject.MBin.ascii` and `unclassic x` stops at the MacBinary layer
+  `Subject.MBin.ascii` and `macextract x` stops at the MacBinary layer
   and leaves it there. Both layers read correctly one at a time — the
   chain is what is missing. `env_is_envelope` in `cli/main.c` and
-  `IsEnvelopeFormat` in `mac/unclassic_mac.c` list MacBinary, BinHex,
+  `IsEnvelopeFormat` in `mac/macextract_mac.c` list MacBinary, BinHex,
   AppleSingle/Double, gzip, `.Z` and base64; btoa's payload is a single
   anonymous stream with no forks, which is exactly the argument that put
   base64 in the list (DECISIONS.md 2026-08-26). Not chased in the change

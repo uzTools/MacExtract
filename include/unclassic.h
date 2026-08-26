@@ -1,5 +1,5 @@
 /*
- * unclassic.h — public API of libunclassic.
+ * unclassic.h — public API of libmacextract.
  *
  * A portable, dependency-free C99 decompression engine for classic
  * Macintosh archive and encoding formats (System 6 → Mac OS 9 era).
@@ -24,11 +24,11 @@ extern "C" {
 #endif
 
 /* The version, and the ONE place it is written. It sat at "0.4.0" through
- * four releases because nothing read it — `unclassic --version` and
+ * four releases because nothing read it — `macextract --version` and
  * tools/make_dist.sh do now, and tools/check_docs.py fails the build if
  * this, README.md and dist/README.txt disagree. A constant nobody reads
  * is a constant that is wrong. */
-#define UNC_VERSION "0.23.0"
+#define UNC_VERSION "0.24.0"
 
 /* ------------------------------------------------------------------ */
 /* Formats                                                            */

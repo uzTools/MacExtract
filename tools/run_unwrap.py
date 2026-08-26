@@ -23,13 +23,13 @@ CHAINS = [
 ]
 
 
-def check(unclassic, outer, manifest):
+def check(macextract, outer, manifest):
     fx = os.path.join(FIXDIR, outer)
     with open(os.path.join(FIXDIR, "manifests", manifest)) as f:
         man = json.load(f)
     problems = []
     with tempfile.TemporaryDirectory() as tmp:
-        r = subprocess.run([unclassic, "x", "--forks", "hidden", "-o", tmp, fx],
+        r = subprocess.run([macextract, "x", "--forks", "hidden", "-o", tmp, fx],
                            capture_output=True, timeout=300)
         if r.returncode != 0:
             problems.append(f"exit {r.returncode}: {r.stderr.decode()[:200]}")
@@ -56,8 +56,8 @@ def check(unclassic, outer, manifest):
 
 
 def main():
-    unclassic = sys.argv[1] if len(sys.argv) > 1 else \
-        os.path.join(ROOT, "build/san/unclassic")
+    macextract = sys.argv[1] if len(sys.argv) > 1 else \
+        os.path.join(ROOT, "build/san/macextract")
     fails = 0
     ran = 0
     for outer, manifest in CHAINS:
@@ -66,7 +66,7 @@ def main():
             print(f"unwrap: SKIP {outer} (fixture/manifest absent)")
             continue
         ran += 1
-        problems = check(unclassic, outer, manifest)
+        problems = check(macextract, outer, manifest)
         if problems:
             fails += 1
             print(f"UNWRAP FAIL {outer}")

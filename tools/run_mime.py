@@ -18,7 +18,7 @@ What neither can grade is the RESOURCE fork: the Unix munpack has no
 notion of one and writes an application/applefile part out whole, deark
 has no notion of one either. The appledouble cases carry their own
 adjudicator instead — the applefile part is a plain AppleDouble file,
-and `unclassic` reads one of those through a decoder (fmt_applesingle.c)
+and `macextract` reads one of those through a decoder (fmt_applesingle.c)
 that 932 corpus fixtures grade against `unar`. TESTING.md says this in
 the same words.
 
@@ -81,7 +81,7 @@ def applefile(name, rsrc, type_creator=b"APPLTTXT"):
     finfo = type_creator + b"\x00\x20" + b"\x00" * 22
     parts = [(3, name), (9, finfo), (2, rsrc)]
     off = 26 + 12 * len(parts)
-    hdr = struct.pack(">II16sH", 0x00051607, 0x00020000, b"unclassic" + b"\0" * 7,
+    hdr = struct.pack(">II16sH", 0x00051607, 0x00020000, b"macextract" + b"\0" * 7,
                       len(parts))
     body = b""
     for eid, payload in parts:
@@ -107,11 +107,11 @@ def message(parts, ctype=None, boundary=b"=_bnd_=", headers=b""):
     return out
 
 
-def extract(unclassic, path, extra=()):
+def extract(macextract, path, extra=()):
     """Extract with the CLI; returns {name: bytes} including forks."""
     out = tempfile.mkdtemp()
     try:
-        subprocess.run([unclassic, "x", "-nr", "-o", out] + list(extra) + [path],
+        subprocess.run([macextract, "x", "-nr", "-o", out] + list(extra) + [path],
                        capture_output=True)
         got = {}
         for root, _dirs, files in os.walk(out):
@@ -158,12 +158,12 @@ def deark_bytes(deark, path, module=None):
 
 
 def main():
-    unclassic = os.path.join(ROOT, "build", "unclassic")
+    macextract = os.path.join(ROOT, "build", "macextract")
     args = sys.argv[1:]
-    if "--unclassic" in args:
-        unclassic = args[args.index("--unclassic") + 1]
-    if not os.path.exists(unclassic):
-        print("run_mime: no CLI at %s" % unclassic)
+    if "--macextract" in args:
+        macextract = args[args.index("--macextract") + 1]
+    if not os.path.exists(macextract):
+        print("run_mime: no CLI at %s" % macextract)
         return 1
 
     munpack = build("build_mpack.sh", "build/mpack/munpack")
@@ -201,7 +201,7 @@ def main():
         }
         for name, content in sorted(subjects.items()):
             bare = write(name + ".b64", base64.encodebytes(content))
-            got = extract(unclassic, bare)
+            got = extract(macextract, bare)
             check("bare base64 %s" % name, list(got.values()) == [content],
                   "wrote %r" % {k: len(v) for k, v in got.items()})
             if deark:
@@ -211,7 +211,7 @@ def main():
             wrapped = write(name + ".w.b64",
                             b"begin-base64 644 " + name.encode() + b"\n"
                             + base64.encodebytes(content) + b"====\n")
-            got = extract(unclassic, wrapped)
+            got = extract(macextract, wrapped)
             check("begin-base64 %s" % name, got == {name: content},
                   "wrote %r" % sorted(got))
             if deark:
@@ -225,9 +225,9 @@ def main():
         tiny = write("tiny.w.b64", b"begin-base64 644 tiny.bin\n"
                      + base64.encodebytes(b"!") + b"====\n")
         check("begin-base64, a one-byte file",
-              extract(unclassic, tiny) == {"tiny.bin": b"!"})
+              extract(macextract, tiny) == {"tiny.bin": b"!"})
         tinybare = write("tiny.b64", base64.encodebytes(b"!"))
-        r = subprocess.run([unclassic, "sniff", tinybare], capture_output=True)
+        r = subprocess.run([macextract, "sniff", tinybare], capture_output=True)
         check("a bare base64 file too short to have a shape is not claimed",
               b"base64" not in r.stdout,
               r.stdout.decode(errors="replace").strip())
@@ -239,7 +239,7 @@ def main():
                     + b"and a word between them\n"
                     + b"begin-base64 644 second.bin\n"
                     + base64.encodebytes(b"second" * 40) + b"====\n")
-        got = extract(unclassic, two)
+        got = extract(macextract, two)
         check("two documents in one file",
               got == {"first.bin": b"first" * 40,
                       "second.bin": b"second" * 40},
@@ -252,7 +252,7 @@ def main():
             p = write("eol.%s.b64" % label,
                       (b"begin-base64 644 eol.bin\n"
                        + base64.encodebytes(DATA) + b"====\n").replace(b"\n", eol))
-            got = extract(unclassic, p)
+            got = extract(macextract, p)
             check("begin-base64, %s line endings" % label.upper(),
                   got == {"eol.bin": DATA}, "wrote %r" % sorted(got))
 
@@ -262,7 +262,7 @@ def main():
         prose = write("prose.txt",
                       b"Dear reader,\nthis mentions begin-base64 in passing\n"
                       b"and is otherwise an ordinary note about nothing.\n")
-        r = subprocess.run([unclassic, "sniff", prose], capture_output=True)
+        r = subprocess.run([macextract, "sniff", prose], capture_output=True)
         check("prose is not claimed", b"base64" not in r.stdout,
               r.stdout.decode(errors="replace").strip())
 
@@ -330,7 +330,7 @@ def main():
 
         for name, msg, expect in cases:
             p = write(name.replace(" ", "_").replace(",", "") + ".mim", msg)
-            got = extract(unclassic, p)
+            got = extract(macextract, p)
             check("MIME: %s" % name, got == expect,
                   "wrote %r, wanted %r" % (sorted(got), sorted(expect)))
             # munpack reads the same message, LF-terminated: mpack 1.6
@@ -360,14 +360,14 @@ def main():
                   message([(b'Content-Type: application/octet-stream; name="c.bin"\r\n'
                             b"Content-Transfer-Encoding: quoted-printable\r\n",
                             qp(b"one\rtwo\r\nthree"))]))
-        got = extract(unclassic, p)
+        got = extract(macextract, p)
         check("quoted-printable: =0D is a byte, not a line ending",
               got == {"c.bin": b"one\rtwo\r\nthree"},
               "wrote %r" % {k: v for k, v in got.items()})
 
         # LF-only, which is what a message saved by a Unix mailer has.
         p = write("lfonly.mim", cases[1][1].replace(b"\r\n", b"\n"))
-        got = extract(unclassic, p)
+        got = extract(macextract, p)
         check("MIME: LF line endings", got == cases[1][2],
               "wrote %r" % sorted(got))
 
@@ -381,12 +381,12 @@ def main():
                        b"Content-Transfer-Encoding: base64\r\n", b64(DATA))],
                      ctype=b'multipart/appledouble; name="My Mac File"')
         p = write("appledouble.mim", ad)
-        got = extract(unclassic, p)
+        got = extract(macextract, p)
         check("appledouble: both forks",
               got.get("My Mac File") == DATA and
               got.get("My Mac File.rsrc") == RSRC,
               "wrote %r" % {k: len(v) for k, v in got.items()})
-        r = subprocess.run([unclassic, "l", p], capture_output=True)
+        r = subprocess.run([macextract, "l", p], capture_output=True)
         check("appledouble: type and creator", b"APPL/TTXT" in r.stdout,
               r.stdout.decode(errors="replace").strip())
         mp = munpack_files(munpack, p)
@@ -397,7 +397,7 @@ def main():
         # decoder that reads THOSE is graded by 932 corpus fixtures.
         # That is what stands in for an oracle on the resource fork.
         p2 = write("applefile.ad", af)
-        got2 = extract(unclassic, p2)
+        got2 = extract(macextract, p2)
         check("appledouble: the applefile part reads as AppleDouble",
               any(v == RSRC for v in got2.values()),
               "wrote %r" % {k: len(v) for k, v in got2.items()})
@@ -408,7 +408,7 @@ def main():
                         b64(applefile(b"Rsrc Only", RSRC)))],
                       ctype=b"multipart/appledouble")
         p = write("rsrconly.mim", adr)
-        got = extract(unclassic, p)
+        got = extract(macextract, p)
         check("appledouble: resource fork with no data part",
               got.get("Rsrc Only.rsrc") == RSRC,
               "wrote %r" % {k: len(v) for k, v in got.items()})
@@ -428,7 +428,7 @@ def main():
                            b"--inner--\r\n")],
                          ctype=b"multipart/mixed", boundary=b"outer")
         p = write("nested.mim", nested)
-        got = extract(unclassic, p)
+        got = extract(macextract, p)
         check("appledouble nested in a multipart/mixed",
               got.get("Nested") == DATA and got.get("Nested.rsrc") == RSRC,
               "wrote %r" % {k: len(v) for k, v in got.items()})
@@ -444,14 +444,14 @@ def main():
                     b"MIME-Version: 1.0\r\nContent-Type: text/plain\r\n\r\n"
                     b"(This file must be converted with BinHex 4.0)\r\n"
                     b":#R4bB@a[E'8ZFQpY,R0cmr$8!*!%!3#3\"!d0!*!$%J!!N!3\"!!!:\r\n")
-        r = subprocess.run([unclassic, "sniff", hqx], capture_output=True)
+        r = subprocess.run([macextract, "sniff", hqx], capture_output=True)
         check("a BinHex posting is still BinHex", b"BinHex" in r.stdout,
               r.stdout.decode(errors="replace").strip())
 
         # A message with nothing to extract is not an archive.
         note = write("note.mim",
                      message([(b"Content-Type: text/plain\r\n", TEXT)]))
-        r = subprocess.run([unclassic, "sniff", note], capture_output=True)
+        r = subprocess.run([macextract, "sniff", note], capture_output=True)
         check("a plain note is not claimed", b"MIME" not in r.stdout,
               r.stdout.decode(errors="replace").strip())
 
@@ -464,7 +464,7 @@ def main():
                              (b"Content-Type: text/html\r\n",
                               b"<html><body>the same note</body></html>\r\n")],
                             ctype=b"multipart/alternative"))
-        r = subprocess.run([unclassic, "x", "-o", tmp + "/altout", alt],
+        r = subprocess.run([macextract, "x", "-o", tmp + "/altout", alt],
                            capture_output=True)
         check("a note with no attachment refuses cleanly",
               r.returncode != 0 and not os.listdir(tmp + "/altout"),
@@ -474,7 +474,7 @@ def main():
         colon = write("colon.txt",
                       b"Note: this is a plain text file\nwith no MIME in it\n"
                       b"at all, only a first line that has a colon.\n")
-        r = subprocess.run([unclassic, "sniff", colon], capture_output=True)
+        r = subprocess.run([macextract, "sniff", colon], capture_output=True)
         check("a colon on line one is not a message", b"MIME" not in r.stdout,
               r.stdout.decode(errors="replace").strip())
 
@@ -485,7 +485,7 @@ def main():
         # day a check turns out to exist this says so.
         full = cases[0][1]
         cut = write("cut.mim", full[:len(full) - 200])
-        got = extract(unclassic, cut)
+        got = extract(macextract, cut)
         check("a truncated message decodes short, and silently",
               len(got) == 1 and 0 < len(list(got.values())[0]) < len(DATA),
               "wrote %r" % {k: len(v) for k, v in got.items()})

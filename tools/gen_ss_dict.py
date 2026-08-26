@@ -23,7 +23,7 @@ import os
 import sys
 
 DEFAULT = os.path.expanduser(
-    "~/.cache/unclassic/vmac/specimens/spacesaver")
+    "~/.cache/macextract/vmac/specimens/spacesaver")
 DST = "src/ss_dict.h"
 
 HEAD = '''/*

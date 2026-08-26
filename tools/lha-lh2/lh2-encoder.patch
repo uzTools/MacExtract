@@ -34,7 +34,7 @@ diff -ru lhapin2/src/dhuf.c lhap3/src/dhuf.c
  }
  
  /* ------------------------------------------------------------------------ */
-+/* -lh2- ENCODING, added by the unclassic project (not upstream).
++/* -lh2- ENCODING, added by the MacExtract project (not upstream).
 +
 +   Upstream decodes -lh2- and cannot write it, so nothing reachable makes
 +   one and a decoder for it cannot be graded. These are the mirror of
@@ -117,7 +117,7 @@ diff -ru lhapin2/src/lha.h lhap3/src/lha.h
  EXTERN unsigned short dicbit;
  EXTERN unsigned short maxmatch;
  EXTERN off_t decode_count;
-+/* unclassic addition: the encoder's output position, which -lh2-'s
++/* MacExtract addition: the encoder's output position, which -lh2-'s
 +   position tree needs, and the functions that write -lh2-. */
 +EXTERN off_t encode_count;
 +void encode_start_dyn(void);
@@ -135,7 +135,7 @@ diff -ru lhapin2/src/lharc.c lhap3/src/lharc.c
      int i;
  
 -    char short_options[256] = "q[012]vnfto[567]dizg012ew:x:";
-+    char short_options[256] = "q[012]vnfto[2567]dizg012ew:x:"  /* 2: unclassic */;
++    char short_options[256] = "q[012]vnfto[2567]dizg012ew:x:"  /* 2: MacExtract */;
      /* "[...]" means optional 1 byte argument (original extention) */
  
  #if HAVE_LIBAPPLEFILE
@@ -143,7 +143,7 @@ diff -ru lhapin2/src/lharc.c lhap3/src/lharc.c
                  break;
              }
              switch (*optarg) {
-+            case '2':           /* unclassic: -lh2- */
++            case '2':           /* MacExtract: -lh2- */
 +                compress_method = LZHUFF2_METHOD_NUM;
 +                break;
              case '5':
@@ -157,7 +157,7 @@ diff -ru lhapin2/src/slide.c lhap3/src/slide.c
             ^ text[(pos) + 2]         ) & (unsigned)(HSHSIZ - 1);
  
 -static struct encode_option encode_define[2] = {
-+/* -lh2-: the dynamic code for symbols AND positions (unclassic addition) */
++/* -lh2-: the dynamic code for symbols AND positions (MacExtract addition) */
 +static void output_dyn2(unsigned int code, unsigned int pos)
 +{
 +    encode_c_dyn(code);

@@ -1,7 +1,7 @@
 {
  "entries": [
   {
-   "data_sha256": "964880c4f1f66495fad65f67d8e948a86dd55c64854d94b6a287754e4b7e865d",
+   "data_sha256": "5dc48193652cd26ca6920a3154e9a83c6f62ea13ca00df8bccda905e722b4abe",
    "data_size": 20480,
    "name": "synth-exo-tar-Z.tar",
    "oracle_methods": [
@@ -14,6 +14,6 @@
  "fixture": "synth-exo-tar-Z.tar.Z",
  "format": "Compress",
  "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
- "sha256": "34aa448a4b609264c4aa7a683c4c54ffcfa321b8ecbaa54a45d14df1901dfd88",
- "size": 5465
+ "sha256": "ef13c8a0dc3d1ffb378c33d7acce5272547ea3d5875b4b8289a10a96eb5cb9f9",
+ "size": 5476
 }

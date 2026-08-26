@@ -3,7 +3,7 @@
 #
 # Locates a Retro68 toolchain via (in order): $RETRO68, m68k-apple-macos-gcc
 # in PATH, or /opt/Retro68-build/toolchain. Skips gracefully when absent.
-# Output: build/mac/unclassic.{APPL,bin,dsk}
+# Output: build/mac/macextract.{APPL,bin,dsk}
 set -e
 cd "$(dirname "$0")/.."
 
@@ -29,6 +29,6 @@ cmake -B build/mac -S mac \
       -DCMAKE_TOOLCHAIN_FILE="$CMAKEFILE" \
       -DCMAKE_BUILD_TYPE=Release >/dev/null
 cmake --build build/mac -- -j"$(nproc)"
-ls -la build/mac/unclassic.APPL build/mac/unclassic.bin build/mac/unclassic.dsk
+ls -la build/mac/MacExtract.APPL build/mac/MacExtract.bin build/mac/MacExtract.dsk
 echo "mac: OK — this only proves it compiles. tools/vmac/run.py replays fixtures"
 echo "mac: on a real emulated Mac Plus; tools/vmac/README.md is how to run it."

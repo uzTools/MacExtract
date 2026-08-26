@@ -38,22 +38,22 @@ TRIMMED = 0x0A
 ITEMS = (0x14, 0x15, 0x16)
 
 
-def check(unclassic, archive, want, problems, expect_trimmed=True):
+def check(macextract, archive, want, problems, expect_trimmed=True):
     base = os.path.basename(archive)
     listed = arcplus.members(archive)
     if expect_trimmed and not any(m == TRIMMED for m, *_ in listed):
         problems.append("%s: holds no 0x0a member" % base)
         return
 
-    r = subprocess.run([unclassic, "t", archive], capture_output=True)
+    r = subprocess.run([macextract, "t", archive], capture_output=True)
     if r.returncode != 0:
-        problems.append("%s: `unclassic t` exited %d: %s"
+        problems.append("%s: `macextract t` exited %d: %s"
                         % (base, r.returncode,
                            r.stderr.decode("utf-8", "replace").strip()[:200]))
 
     out = tempfile.mkdtemp()
     try:
-        subprocess.run([unclassic, "x", "-o", out, archive], capture_output=True)
+        subprocess.run([macextract, "x", "-o", out, archive], capture_output=True)
         ours = {}
         for m, name, _at, _cs, _us, _crc in listed:
             if m in ITEMS:
@@ -94,7 +94,7 @@ def check(unclassic, archive, want, problems, expect_trimmed=True):
         shutil.rmtree(out, ignore_errors=True)
 
 
-def check_dialect(unclassic, problems):
+def check_dialect(macextract, problems):
     """The same bytes, compressed by both claimants to method 0x0a.
 
     If the discriminator regresses, exactly one of these two stops
@@ -106,7 +106,7 @@ def check_dialect(unclassic, problems):
     for p, who in ((a7, "ARC 7 Trimmed"), (pk, "PAK Crushed")):
         if not os.path.exists(p):
             continue
-        r = subprocess.run([unclassic, "t", p], capture_output=True)
+        r = subprocess.run([macextract, "t", p], capture_output=True)
         if r.returncode != 0:
             problems.append("dialect: %s (%s) failed — the 0x0a "
                             "discriminator picked the wrong method"
@@ -179,14 +179,14 @@ def register(problems=None):
 
 
 def main():
-    unclassic = os.path.join(ROOT, "build", "unclassic")
+    macextract = os.path.join(ROOT, "build", "macextract")
     args = sys.argv[1:]
-    if "--unclassic" in args:
-        unclassic = args[args.index("--unclassic") + 1]
+    if "--macextract" in args:
+        macextract = args[args.index("--macextract") + 1]
     if "--register" in args:
         return register()
-    if not os.path.exists(unclassic):
-        print("run_arcplus: no CLI at %s" % unclassic)
+    if not os.path.exists(macextract):
+        print("run_arcplus: no CLI at %s" % macextract)
         return 1
 
     corpus = os.path.join(pak.HOME, "arc7corpus")
@@ -219,16 +219,16 @@ def main():
         p = os.path.join(corpus, f)
         want = {n: inputs[n] for _m, n, _a, _c, _u, _r in arcplus.members(p)
                 if n in inputs}
-        check(unclassic, p, want, problems)
+        check(macextract, p, want, problems)
         ran += 1
     for p in real:
-        check(unclassic, p, {}, problems)
+        check(macextract, p, {}, problems)
         ran += 1
-    check_dialect(unclassic, problems)
+    check_dialect(macextract, problems)
 
     for p in [os.path.join(corpus, f) for f in generated] + real:
         if os.path.getsize(p) < 120000:
-            run_pak.damage(unclassic, p, problems)
+            run_pak.damage(macextract, p, problems)
 
     if problems:
         for p in problems[:40]:

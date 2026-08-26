@@ -2,7 +2,7 @@
  *
  * WHY THIS EXISTS
  * ---------------
- * unclassic's BLOCKERS.md carried this, filed under "real test-harness lessons
+ * macextract's BLOCKERS.md carried this, filed under "real test-harness lessons
  * (not app bugs)":
  *
  *     QuickDraw drawing (NewWindow/EraseRect) bombs "out of memory" when
@@ -39,7 +39,7 @@
  *                      heap fragmentation is the classic explanation for a
  *                      QuickDraw allocation failing with megabytes free
  *
- * License: LGPL-2.1-or-later, like the rest of unclassic.
+ * License: LGPL-2.1-or-later, like the rest of macextract.
  */
 
 #include <Devices.h>
@@ -54,7 +54,7 @@
 #include <TextEdit.h>
 #include <Windows.h>
 
-#define kStackBump  (24L * 1024)     /* matches mac/unclassic_mac.c */
+#define kStackBump  (24L * 1024)     /* matches mac/macextract_mac.c */
 #define kTestFile   "\pQDReproTest"
 #define kChunk      2048L
 #define kDataBytes  (64L * 1024)     /* data fork written, then read back  */
@@ -189,7 +189,7 @@ static void s_num(char *dst, long v)
 /* ------------------------------------------------------------------ */
 /* File Manager, driven exactly as the application drives it            */
 /* ------------------------------------------------------------------ */
-/* Explicit, fully-zeroed HFS param blocks — the shape mac/unclassic_mac.c
+/* Explicit, fully-zeroed HFS param blocks — the shape mac/macextract_mac.c
  * settled on. Using the same calls matters: the claim is about what the File
  * Manager leaves behind, so a different route to the disk would test a
  * different thing. */

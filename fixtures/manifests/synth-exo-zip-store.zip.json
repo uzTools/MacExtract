@@ -1,8 +1,8 @@
 {
  "entries": [
   {
-   "data_sha256": "944d759a8ff1c6367f61721f455db242cfa5de7c0873ee4c6f927e50fcf65d1b",
-   "data_size": 540,
+   "data_sha256": "ab6214ae699ed996d9359e044c8d14d1eb78f7bd815ef59075dab814ff0c1b43",
+   "data_size": 560,
    "name": "README.txt",
    "oracle_methods": [
     "None"
@@ -52,6 +52,6 @@
  "fixture": "synth-exo-zip-store.zip",
  "format": "Zip",
  "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
- "sha256": "2902496bae5852f8be45dcdc4c7f191166327a87f584deba6193f0d027834c43",
- "size": 8384
+ "sha256": "41013301e866c46e0c63b5915ac0098d9fbc045f64edaeaf6bf4ac37da16df04",
+ "size": 8404
 }

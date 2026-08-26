@@ -47,8 +47,8 @@ def build(script, binary):
     return path if r.returncode == 0 and os.path.exists(path) else None
 
 
-def sniff(unclassic, path):
-    return subprocess.run([unclassic, "sniff", path], capture_output=True,
+def sniff(macextract, path):
+    return subprocess.run([macextract, "sniff", path], capture_output=True,
                           text=True).stdout.strip()
 
 
@@ -134,12 +134,12 @@ def arj_header(size=34, crc_ok=True):
 
 
 def main():
-    unclassic = os.path.join(ROOT, "build", "unclassic")
+    macextract = os.path.join(ROOT, "build", "macextract")
     args = sys.argv[1:]
-    if "--unclassic" in args:
-        unclassic = args[args.index("--unclassic") + 1]
-    if not os.path.exists(unclassic):
-        print("run_foreign: no CLI at %s" % unclassic)
+    if "--macextract" in args:
+        macextract = args[args.index("--macextract") + 1]
+    if not os.path.exists(macextract):
+        print("run_foreign: no CLI at %s" % macextract)
         return 1
 
     deark = build("build_deark.sh", "build/deark/deark")
@@ -153,13 +153,13 @@ def main():
             problems.append("%s: %s" % (label, detail or "failed"))
 
     def named(label, path, want):
-        got = sniff(unclassic, path)
+        got = sniff(macextract, path)
         check(label, got == want, "sniffed as %r, wanted %r" % (got, want))
 
     def unnamed(label, data):
         p = os.path.join(tmp, "neg.bin")
         open(p, "wb").write(data)
-        got = sniff(unclassic, p)
+        got = sniff(macextract, p)
         check(label, got == "unknown", "claimed as %r" % got)
 
     try:
@@ -177,7 +177,7 @@ def main():
 
         # ...and extraction is refused cleanly, with the name in the message.
         for path, want in sorted(real.items()):
-            r = subprocess.run([unclassic, "x", "-o", tmp, path],
+            r = subprocess.run([macextract, "x", "-o", tmp, path],
                                capture_output=True, text=True)
             check("%s refused by name" % os.path.basename(path),
                   r.returncode != 0 and want in r.stderr,
@@ -238,7 +238,7 @@ def main():
             if not os.path.isfile(p) or name.endswith(".md"):
                 continue
             seen += 1
-            got = sniff(unclassic, p)
+            got = sniff(macextract, p)
             if got in foreign:
                 claimed.append("%s (%s)" % (name, got))
         if seen:

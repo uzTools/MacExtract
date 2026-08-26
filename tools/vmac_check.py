@@ -28,7 +28,7 @@ from decode_grid import decode
 # exact output. The CLI output is itself verified byte-exact against the
 # committed oracle manifests by the main differential suite.
 CLI = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..",
-                   "build", "rel", "unclassic")
+                   "build", "rel", "macextract")
 
 
 def crc(b):

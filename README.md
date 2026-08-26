@@ -1,9 +1,9 @@
-# unclassic
+# MacExtract
 
 **Open old Macintosh archives — on the Macintosh they came from.**
 
 A `.sit` file from 1995 is easy to open on a modern machine and surprisingly
-hard to open on the machine it was made for. `unclassic` is an unarchiver for
+hard to open on the machine it was made for. `macextract` is an unarchiver for
 Classic Mac OS that runs on everything from a 1986 Mac Plus with 1 MB of RAM
 up to Mac OS 9 — one application, no extensions, no installer.
 
@@ -14,7 +14,7 @@ There is a Linux command-line version too, built from the same engine.
 It arrives looking like this — an open carton lettered EXTRACT, drawn for
 1-bit, 16-colour and 256-colour screens:
 
-![The unclassic icon on a System 6 desktop](docs/screens/0-icon.png)
+![The MacExtract icon on a System 6 desktop](docs/screens/0-icon.png)
 
 Pick an archive:
 
@@ -48,13 +48,13 @@ one, because parts are recognised by what is inside them:
 ## Download
 
 **[Latest release](https://github.com/jarreboum/unclassic/releases/latest)** —
-currently **v0.23.0**. If the release page shows anything older, the publish
+currently **v0.24.0**. If the release page shows anything older, the publish
 step did not run. Or take it straight from the tree:
 
 | | |
 |---|---|
-| [`dist/unclassic.bin`](dist/unclassic.bin) | the application as uncompressed MacBinary — transfer it with anything MacBinary-aware |
-| [`dist/unclassic.dsk`](dist/unclassic.dsk) | an 800K HFS floppy image — write it to a real floppy, or mount it in Mini vMac, Basilisk II or SheepShaver |
+| [`dist/MacExtract.bin`](dist/MacExtract.bin) | the application as uncompressed MacBinary — transfer it with anything MacBinary-aware |
+| [`dist/MacExtract.dsk`](dist/MacExtract.dsk) | an 800K HFS floppy image — write it to a real floppy, or mount it in Mini vMac, Basilisk II or SheepShaver |
 
 Both hold the same application and neither needs an unarchiver to open, which
 is the point: a bare Mac has no way to unpack a `.sit` until it already has
@@ -79,7 +79,7 @@ it rather than the first piece.
 SpaceSaver files are the odd ones. They look like ordinary documents — right
 name, right icon — because SpaceSaver compressed them in place, and only the
 Mac that made one could read it; anywhere else the application that wrote it
-finds nonsense. `unclassic` carries the table those files need, so a single
+finds nonsense. `macextract` carries the table those files need, so a single
 file on a floppy is enough.
 
 **Password-protected archives** are opened too, in every format that has
@@ -93,7 +93,7 @@ somewhere cannot be opened by anything.
 
 **Recognises but does not extract:** StuffIt X, AppleLink packages
 (`.pkg`), and the PC-side archives — RAR, 7-Zip, xz, bzip2, Cabinet, Zoo,
-ARJ, cpio and `ar`/`.deb`. You get *"unclassic cannot open RAR files."*
+ARJ, cpio and `ar`/`.deb`. You get *"MacExtract cannot open RAR files."*
 rather than something that looks like a damaged download: the archive is
 fine, and a modern unarchiver will open it.
 
@@ -115,7 +115,7 @@ Expander is what you would otherwise reach for on the machine itself. It is
 free, it was the standard, and on System 7 it is nicer to use. Here is what
 each one opens:
 
-| | StuffIt Expander 4.0.2 | unclassic |
+| | StuffIt Expander 4.0.2 | MacExtract |
 |---|---|---|
 | StuffIt, Compact Pro, BinHex, MacBinary | yes | yes |
 | StuffIt 5 archives | no — needs Expander 5 or later | yes |
@@ -176,10 +176,10 @@ entries too big to fit are named, one message each, and the rest extract.
 
 ```sh
 make
-build/unclassic l archive.sit           # list
-build/unclassic x archive.sit -o out    # extract
-build/unclassic sniff mystery.bin       # what is this?
-build/unclassic x secret.sit -p hunter2 # password-protected
+build/macextract l archive.sit           # list
+build/macextract x archive.sit -o out    # extract
+build/macextract sniff mystery.bin       # what is this?
+build/macextract x secret.sit -p hunter2 # password-protected
 ```
 
 ## Is it any good?

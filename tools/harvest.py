@@ -41,7 +41,7 @@ def sha256_bytes(blob):
 
 
 def fetch(url, timeout=120):
-    req = urllib.request.Request(url, headers={"User-Agent": "unclassic-harvest/1.0"})
+    req = urllib.request.Request(url, headers={"User-Agent": "macextract-harvest/1.0"})
     with urllib.request.urlopen(req, timeout=timeout) as r:
         return r.read()
 

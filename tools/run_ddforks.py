@@ -38,7 +38,7 @@ import sys
 import tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CLI = os.path.join(ROOT, "build/rel/unclassic")
+CLI = os.path.join(ROOT, "build/rel/macextract")
 MANIFESTS = os.path.join(ROOT, "fixtures", "manifests")
 DD_MAGIC = b"\xab\xcd\x00\x54"
 

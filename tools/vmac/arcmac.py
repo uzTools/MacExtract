@@ -83,7 +83,7 @@ SUBJECT_NAME = "TwoForks"
 
 def cli():
     for build in ("rel", "san", ""):
-        p = os.path.join(REPO, "build", build, "unclassic")
+        p = os.path.join(REPO, "build", build, "macextract")
         if os.path.exists(p):
             return p
     raise SystemExit("arcmac: build the CLI first (make)")

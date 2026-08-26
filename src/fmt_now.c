@@ -600,7 +600,7 @@ int unc_now_extract(UncCtx *c)
      * This allocation happens once per archive, before a single entry is
      * read, and at the ceilings it is 131,072 B. That is not headroom
      * anybody was spending: a Macintosh application's heap is its
-     * MultiFinder partition, `unclassic.r` declares a 400 KB minimum, and
+     * MultiFinder partition, `macextract.r` declares a 400 KB minimum, and
      * 150 KB of that partition is the application's own code. Measured at
      * a 110,000 B budget — about what the minimum partition leaves — Now
      * Compress opened NONE of its three fixtures, refused at this line

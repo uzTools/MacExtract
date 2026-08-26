@@ -79,7 +79,7 @@ directory it ran in was never committed — and it is not worth chasing further.
 The correct conclusion is the narrow one: **there is no reason to avoid
 QuickDraw after File Manager activity on System 6.**
 
-`at_report()` in `mac/unclassic_mac.c` still pokes the framebuffer, and still
+`at_report()` in `mac/macextract_mac.c` still pokes the framebuffer, and still
 should: it must be able to report a result even when the machine is in a state
 where the Toolbox is not to be trusted, it needs no allocation and cannot
 fail, and it is the only channel that survives a bomb. That is now its reason,

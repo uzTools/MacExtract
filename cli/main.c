@@ -1,10 +1,10 @@
 /*
- * unclassic CLI — Linux frontend for libunclassic.
+ * macextract CLI — Linux frontend for libmacextract.
  *
  * Commands:
- *   unclassic l <file>            list entries
- *   unclassic x <file>            extract
- *   unclassic t <file>            test (decode + CRC check, no output)
+ *   macextract l <file>            list entries
+ *   macextract x <file>            extract
+ *   macextract t <file>            test (decode + CRC check, no output)
  * Options:
  *   -o <dir>       output directory (default .)
  *   --budget <N>   allocation cap in bytes (simulate a small Mac)
@@ -388,7 +388,7 @@ static FILE *sink_open_fork(DiskSink *s, UncFork fork)
     if (!s->overwrite && stat(path, &st) == 0 &&
         !sink_unwrap_exempt(s, path)) {
         s->clobber = 1;
-        fprintf(stderr, "unclassic: %s: output path already exists; re-run "
+        fprintf(stderr, "macextract: %s: output path already exists; re-run "
                 "with --forks hidden to keep both forks, or --overwrite\n",
                 path);
         return NULL;
@@ -410,7 +410,7 @@ static int sink_write(void *ctx, UncFork fork, const void *buf, int32_t len)
         *fp = sink_open_fork(s, fork);
         if (!*fp) {
             if (!s->clobber)   /* sink_open_fork already explained that one */
-                fprintf(stderr, "unclassic: cannot create output for %s: %s\n",
+                fprintf(stderr, "macextract: cannot create output for %s: %s\n",
                         s->cur_path, strerror(errno));
             return -1;
         }
@@ -456,13 +456,13 @@ static int sink_end(void *ctx, int status)
             if (!s->unsupported) s->unsup_method = (int)m;
             s->unsupported++;
             if (m)
-                fprintf(stderr, "unclassic: %s: method %u is not supported "
+                fprintf(stderr, "macextract: %s: method %u is not supported "
                                 "yet\n", name, m);
             else
-                fprintf(stderr, "unclassic: %s: %s\n", name,
+                fprintf(stderr, "macextract: %s: %s\n", name,
                         unc_strerror(status));
         } else {
-            fprintf(stderr, "unclassic: %s: %s\n", name, unc_strerror(status));
+            fprintf(stderr, "macextract: %s: %s\n", name, unc_strerror(status));
         }
     } else if (s->verbose && !s->list_only) {
         printf("  %s (%u data, %u rsrc)\n", name, s->data_written, s->rsrc_written);
@@ -528,23 +528,23 @@ static int sink_comment(void *ctx, const uint8_t *buf, uint16_t len)
     base = base ? base + 1 : (s->archive ? s->archive : "archive");
     if ((size_t)snprintf(path, sizeof path, "%s/%s.comment.txt",
                          s->outdir, base) >= sizeof path) {
-        fprintf(stderr, "unclassic: comment: output path too long\n");
+        fprintf(stderr, "macextract: comment: output path too long\n");
         return 0;
     }
     if (!s->overwrite && stat(path, &st) == 0) {
-        fprintf(stderr, "unclassic: %s: output path already exists; "
+        fprintf(stderr, "macextract: %s: output path already exists; "
                 "the archive comment was not written (use --overwrite)\n",
                 path);
         return 0;
     }
     f = fopen(path, "wb");
     if (!f || fwrite(buf, 1, len, f) != len) {
-        fprintf(stderr, "unclassic: %s: %s\n", path, strerror(errno));
+        fprintf(stderr, "macextract: %s: %s\n", path, strerror(errno));
         if (f) fclose(f);
         return 0;    /* a comment is not worth failing the archive over */
     }
     if (fclose(f) != 0) {
-        fprintf(stderr, "unclassic: %s: %s\n", path, strerror(errno));
+        fprintf(stderr, "macextract: %s: %s\n", path, strerror(errno));
         return 0;
     }
     if (s->verbose) printf("  %s (archive comment)\n", path);
@@ -799,7 +799,7 @@ static void seg_record(SegHost *h, int part, const char *path)
 /* what rule #1 forbids.                                              */
 /* ------------------------------------------------------------------ */
 
-#define SEG_PEELDIR ".unclassic-parts"
+#define SEG_PEELDIR ".macextract-parts"
 
 /* Make the directory decoded parts go in. It is inside the output
  * directory, which the caller has already created and is the one place
@@ -1250,7 +1250,7 @@ static int seg_ask(SegHost *h, int part)
     for (;;) {
         size_t n;
         int got;
-        fprintf(stderr, "unclassic: locate part %d of \"%s\" "
+        fprintf(stderr, "macextract: locate part %d of \"%s\" "
                         "(path, or empty to give up): ", part, h->desc.name);
         fflush(stderr);
         if (!fgets(line, sizeof line, stdin)) return 0;
@@ -1272,7 +1272,7 @@ static int seg_ask(SegHost *h, int part)
                 seg_record(h, part, line);
                 return 1;
             }
-            fprintf(stderr, "unclassic: %s: cannot read that file\n", line);
+            fprintf(stderr, "macextract: %s: cannot read that file\n", line);
             continue;
         }
 
@@ -1282,10 +1282,10 @@ static int seg_ask(SegHost *h, int part)
         if (!got) got = seg_wrapped_part_of(h, line);
         if (got == part) { seg_record(h, part, line); return 1; }
         if (got)
-            fprintf(stderr, "unclassic: that is part %d of the same set; "
+            fprintf(stderr, "macextract: that is part %d of the same set; "
                             "part %d is what is needed\n", got, part);
         else
-            fprintf(stderr, "unclassic: that file is not part of \"%s\"\n",
+            fprintf(stderr, "macextract: that file is not part of \"%s\"\n",
                     h->desc.name);
     }
 }
@@ -1352,7 +1352,7 @@ static UncFormat format_by_name(const char *s)
 static void usage(void)
 {
     fprintf(stderr,
-        "usage: unclassic <l|x|t|sniff> [options] <file>\n"
+        "usage: macextract <l|x|t|sniff> [options] <file>\n"
         "  l      list archive contents\n"
         "  x      extract\n"
         "  t      test integrity (decode, verify CRCs, discard output)\n"
@@ -1430,7 +1430,7 @@ int main(int argc, char **argv)
 
     if (argc >= 2 && (strcmp(argv[1], "--version") == 0 ||
                       strcmp(argv[1], "-V") == 0)) {
-        printf("unclassic %s\n", UNC_VERSION);
+        printf("macextract %s\n", UNC_VERSION);
         return 0;
     }
     if (argc < 3) { usage(); return 2; }
@@ -1451,7 +1451,7 @@ int main(int argc, char **argv)
         else if (strcmp(argv[i], "-nr") == 0) no_recurse = 1;
         else if (strcmp(argv[i], "--part") == 0 && i + 1 < argc) {
             if (nparts < UNC_SEG_MAX_PARTS) partargs[nparts++] = argv[++i];
-            else { fprintf(stderr, "unclassic: too many --part\n"); return 2; }
+            else { fprintf(stderr, "macextract: too many --part\n"); return 2; }
         }
         else if (strcmp(argv[i], "--no-parts") == 0) no_parts = 1;
         else if (strcmp(argv[i], "--ask") == 0) ask = 1;
@@ -1475,7 +1475,7 @@ nextlayer:
     memset(&fio, 0, sizeof fio);
     fio.f = fopen(file, "rb");
     if (!fio.f) {
-        fprintf(stderr, "unclassic: %s: %s\n", file, strerror(errno));
+        fprintf(stderr, "macextract: %s: %s\n", file, strerror(errno));
         return 1;
     }
     if (stat(file, &st) == 0) fio.size = (uint32_t)st.st_size;
@@ -1546,7 +1546,7 @@ nextlayer:
     if (force) {
         fmt = format_by_name(force);
         if (fmt == UNC_FORMAT_UNKNOWN) {
-            fprintf(stderr, "unclassic: unknown format '%s'\n", force);
+            fprintf(stderr, "macextract: unknown format '%s'\n", force);
             return 2;
         }
     } else {
@@ -1587,12 +1587,12 @@ nextlayer:
     }
 
     if (fmt == UNC_FORMAT_UNKNOWN) {
-        fprintf(stderr, "unclassic: %s: format not recognized\n", file);
+        fprintf(stderr, "macextract: %s: format not recognized\n", file);
         fclose(fio.f);
         return 1;
     }
     if (!unc_format_extractable(fmt)) {
-        fprintf(stderr, "unclassic: %s: recognized as %s, which v1 cannot extract\n",
+        fprintf(stderr, "macextract: %s: recognized as %s, which v1 cannot extract\n",
                 file, unc_format_name(fmt));
         fclose(fio.f);
         return 1;
@@ -1621,7 +1621,7 @@ nextlayer:
         FILE *pf = fopen(presetfile, "rb");
         long n;
         if (!pf) {
-            fprintf(stderr, "unclassic: %s: %s\n", presetfile, strerror(errno));
+            fprintf(stderr, "macextract: %s: %s\n", presetfile, strerror(errno));
             fclose(fio.f);
             return 1;
         }
@@ -1640,7 +1640,7 @@ nextlayer:
         }
         fclose(pf);
         if (n <= 0) {
-            fprintf(stderr, "unclassic: %s: not a usable preset\n", presetfile);
+            fprintf(stderr, "macextract: %s: not a usable preset\n", presetfile);
             fclose(fio.f);
             return 1;
         }
@@ -1685,7 +1685,7 @@ nextlayer:
 
             self = splitfam_split(file, dirbuf, sizeof dirbuf, &stem, &stemlen);
             if (self < 1) {
-                fprintf(stderr, "unclassic: %s: not a NAME.NNN part\n", file);
+                fprintf(stderr, "macextract: %s: not a NAME.NNN part\n", file);
                 fclose(fio.f);
                 return 1;
             }
@@ -1706,7 +1706,7 @@ nextlayer:
                     if (p > highest) highest = p;
                     seg_record(&seg, p, partargs[i]);
                 } else {
-                    fprintf(stderr, "unclassic: %s: no .NNN extension to "
+                    fprintf(stderr, "macextract: %s: no .NNN extension to "
                             "place it by, ignored\n", partargs[i]);
                 }
             }
@@ -1717,14 +1717,14 @@ nextlayer:
                  * reach 999 and a member numbered past our ceiling is
                  * either a set too big to read or a stray file, and
                  * nothing here can tell which. */
-                fprintf(stderr, "unclassic: \"%s\": a part numbered %d is "
+                fprintf(stderr, "macextract: \"%s\": a part numbered %d is "
                         "beside it, and this reads at most %d parts\n",
                         seg.desc.name, highest, UNC_SEG_MAX_PARTS);
                 fclose(fio.f);
                 return 1;
             }
             if (run < 1) {
-                fprintf(stderr, "unclassic: %s: part 1 of \"%s\" is not "
+                fprintf(stderr, "macextract: %s: part 1 of \"%s\" is not "
                         "beside it\n", file, seg.desc.name);
                 fclose(fio.f);
                 return 1;
@@ -1733,7 +1733,7 @@ nextlayer:
              * between is missing. Refused, unless --ask means the user
              * is standing by to produce it. */
             if (beyond && !ask) {
-                fprintf(stderr, "unclassic: part %d of \"%s\" is missing "
+                fprintf(stderr, "macextract: part %d of \"%s\" is missing "
                         "(a later part is there)\n", run + 1, seg.desc.name);
                 fclose(fio.f);
                 return 1;
@@ -1749,7 +1749,7 @@ nextlayer:
             for (i = 1; i <= run; i++) {
                 if (seg.path[i]) continue;
                 if (!ask || !seg_ask(&seg, i)) {
-                    fprintf(stderr, "unclassic: part %d of \"%s\" is "
+                    fprintf(stderr, "macextract: part %d of \"%s\" is "
                             "missing\n", i, seg.desc.name);
                     fclose(fio.f);
                     return 1;
@@ -1773,7 +1773,7 @@ nextlayer:
             const char *base;
 
             if (unc_segment_describe(&io, &seg.desc) != UNC_OK) {
-                fprintf(stderr, "unclassic: %s: not a readable segment "
+                fprintf(stderr, "macextract: %s: not a readable segment "
                         "header\n", file);
                 fclose(fio.f);
                 return 1;
@@ -1782,7 +1782,7 @@ nextlayer:
             for (i = 0; i < nparts; i++) {
                 int p = seg_part_of(&seg, partargs[i]);
                 if (p) seg_record(&seg, p, partargs[i]);
-                else fprintf(stderr, "unclassic: %s: not a segment of this "
+                else fprintf(stderr, "macextract: %s: not a segment of this "
                              "set, ignored\n", partargs[i]);
             }
             seg_scan_dir(&seg, file, 0);
@@ -1815,7 +1815,7 @@ nextlayer:
                     fclose(cf);
                 }
                 if (!fin) {
-                    fprintf(stderr, "unclassic: %s: this is one segment of a "
+                    fprintf(stderr, "macextract: %s: this is one segment of a "
                             "Compact Pro set; the last segment, the one "
                             "holding the index, is not beside it\n", file);
                     fclose(fio.f);
@@ -1865,7 +1865,7 @@ nextlayer:
 
             seg_scan_zip_family(&seg, file, 0, lastpath, sizeof lastpath);
             if (!lastpath[0]) {
-                fprintf(stderr, "unclassic: %s: this is one part of a spanned "
+                fprintf(stderr, "macextract: %s: this is one part of a spanned "
                         "zip; the last part (named .zip) is not beside it\n",
                         file);
                 fclose(fio.f);
@@ -1873,7 +1873,7 @@ nextlayer:
             }
             lf = fopen(lastpath, "rb");
             if (!lf) {
-                fprintf(stderr, "unclassic: %s: %s\n", lastpath,
+                fprintf(stderr, "macextract: %s: %s\n", lastpath,
                         strerror(errno));
                 fclose(fio.f);
                 return 1;
@@ -1890,7 +1890,7 @@ nextlayer:
             derr = unc_segment_describe(&lio, &seg.desc);
             fclose(lf);
             if (derr != UNC_OK) {
-                fprintf(stderr, "unclassic: %s: %s\n", lastpath,
+                fprintf(stderr, "macextract: %s: %s\n", lastpath,
                         unc_strerror(derr));
                 fclose(fio.f);
                 return 1;
@@ -1910,13 +1910,13 @@ nextlayer:
                 int p = zip_ext_part(partargs[i]);
                 if (p == ZIPFAM_LAST) p = (int)seg.desc.nparts;
                 if (p) seg_record(&seg, p, partargs[i]);
-                else fprintf(stderr, "unclassic: %s: no .zNN or .zip "
+                else fprintf(stderr, "macextract: %s: no .zNN or .zip "
                              "extension to place it by, ignored\n",
                              partargs[i]);
             }
         } else {
             if (unc_segment_describe(&io, &seg.desc) != UNC_OK) {
-                fprintf(stderr, "unclassic: %s: not a readable segment header\n",
+                fprintf(stderr, "macextract: %s: not a readable segment header\n",
                         file);
                 fclose(fio.f);
                 return 1;
@@ -1957,7 +1957,7 @@ nextlayer:
                 int p = seg_part_of(&seg, partargs[i]);
                 if (p) seg_record(&seg, p, partargs[i]);
                 else if (!seg_wrapped_part_of(&seg, partargs[i]))
-                    fprintf(stderr, "unclassic: %s: not part of \"%s\", "
+                    fprintf(stderr, "macextract: %s: not part of \"%s\", "
                             "ignored\n", partargs[i], seg.desc.name);
             }
             seg_scan_dir(&seg, file, 0);
@@ -1989,7 +1989,7 @@ nextlayer:
 
         scratch = malloc(unc_segment_scratch_size());
         if (!scratch) {
-            fprintf(stderr, "unclassic: out of memory\n");
+            fprintf(stderr, "macextract: out of memory\n");
             fclose(fio.f);
             return 1;
         }
@@ -2014,7 +2014,7 @@ nextlayer:
                 ba.high_water, ba.failed);
 
     if (ret != UNC_OK) {
-        fprintf(stderr, "unclassic: %s: %s\n", file, unc_strerror(ret));
+        fprintf(stderr, "macextract: %s: %s\n", file, unc_strerror(ret));
         return 1;
     }
     if (sink.unsupported) {
@@ -2024,30 +2024,30 @@ nextlayer:
          * engine has ever added past the first came from somebody's
          * file — so ask for it, once, with the method named. */
         fprintf(stderr,
-                "unclassic: %d entr%s use%s a compression method this build "
+                "macextract: %d entr%s use%s a compression method this build "
                 "cannot read yet.\n",
                 sink.unsupported, sink.unsupported == 1 ? "y" : "ies",
                 sink.unsupported == 1 ? "s" : "");
         if (sink.unsup_method)
-            fprintf(stderr, "unclassic: the first is %s method %d.\n",
+            fprintf(stderr, "macextract: the first is %s method %d.\n",
                     unc_format_name(fmt), sink.unsup_method);
         /* No URL, on purpose: a link names a host, an account and a
          * project, and all three outlive their spelling badly. Somebody
          * who has this program can find where it came from. */
         fprintf(stderr,
-                "unclassic: if you can share this file, please open an "
+                "macextract: if you can share this file, please open an "
                 "issue — a specimen\n"
-                "unclassic: is exactly what is needed to add support.\n");
+                "macextract: is exactly what is needed to add support.\n");
     }
     if (sink.errors) {
-        fprintf(stderr, "unclassic: %d of %d entries failed\n",
+        fprintf(stderr, "macextract: %d of %d entries failed\n",
                 sink.errors, sink.entries);
         /* Say by how much, once, on its own line: the per-entry lines are
          * what the harnesses read, so the number goes here rather than
          * into them. Only when a budget was actually set — without one
          * there is nothing to be short OF. */
         if (ba.shortby)
-            fprintf(stderr, "unclassic: %u bytes more memory would have "
+            fprintf(stderr, "macextract: %u bytes more memory would have "
                             "been needed\n", (unsigned)ba.shortby);
         return 1;
     }

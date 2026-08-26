@@ -55,9 +55,9 @@ def run(cmd):
     return subprocess.run(cmd, capture_output=True)
 
 
-def check(archive, want, unclassic, problems):
+def check(archive, want, macextract, problems):
     for who, cmd in (("unar", ["unar", "-q", "-f", "-o", None, archive]),
-                     ("us", [unclassic, "x", "-o", None, archive])):
+                     ("us", [macextract, "x", "-o", None, archive])):
         out = tempfile.mkdtemp()
         try:
             r = run([c if c is not None else out for c in cmd])
@@ -78,12 +78,12 @@ def check(archive, want, unclassic, problems):
 
 
 def main():
-    unclassic = os.path.join(ROOT, "build", "unclassic")
+    macextract = os.path.join(ROOT, "build", "macextract")
     args = sys.argv[1:]
-    if "--unclassic" in args:
-        unclassic = args[args.index("--unclassic") + 1]
-    if not os.path.exists(unclassic):
-        print("run_arc: no CLI at %s" % unclassic)
+    if "--macextract" in args:
+        macextract = args[args.index("--macextract") + 1]
+    if not os.path.exists(macextract):
+        print("run_arc: no CLI at %s" % macextract)
         return 1
     if shutil.which("unar") is None:
         print("run_arc: SKIPPED — no `unar` to adjudicate with")
@@ -104,7 +104,7 @@ def main():
                 want = {"m%d.bin" % m: data["text.txt"] for m in range(1, 10)}
             else:
                 want = data
-            check(os.path.join(tmp, f), want, unclassic, problems)
+            check(os.path.join(tmp, f), want, macextract, problems)
             ran += 1
 
         # Damage every generated archive, systematically.
@@ -142,7 +142,7 @@ def main():
                 open(bad, "wb").write(payload)
                 out = tempfile.mkdtemp()
                 try:
-                    r = run([unclassic, "x", "-o", out, bad])
+                    r = run([macextract, "x", "-o", out, bad])
                     # The SAME rule run_robustness.py uses, and for the
                     # same reason: a non-zero exit is fine (the archive is
                     # damaged), but death by signal or an exit outside
@@ -178,7 +178,7 @@ def main():
         bad = os.path.join(tmp, "damaged.arc")
         open(bad, "wb").write(bytes(blob))
         out = tempfile.mkdtemp()
-        r = run([unclassic, "x", "-o", out, bad])
+        r = run([macextract, "x", "-o", out, bad])
         if r.returncode == 0:
             problems.append("damaged.arc: a flipped payload byte was accepted")
         if extracted(out, "tiny.txt") != data["tiny.txt"]:
@@ -202,7 +202,7 @@ def main():
                 subprocess.run([ARC_BIN, flags, arch] + sorted(data),
                                cwd=src, capture_output=True)
                 if os.path.exists(arch):
-                    check(arch, data, unclassic, problems)
+                    check(arch, data, macextract, problems)
                     ran += 1
                 else:
                     problems.append("%s.arc: arc wrote nothing" % label)

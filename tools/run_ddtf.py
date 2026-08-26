@@ -369,7 +369,7 @@ def register(corpus):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--unclassic", default=os.path.join(REPO, "build", "unclassic"))
+    ap.add_argument("--macextract", default=os.path.join(REPO, "build", "macextract"))
     ap.add_argument("--corpus", default="/tmp/diskdoubler-test-files")
     ap.add_argument("--fetch", action="store_true",
                     help="git clone the corpus to --corpus first")
@@ -401,7 +401,7 @@ def main():
         for v in variants:
             for name in sorted(os.listdir(os.path.join(build, v))):
                 out = os.path.join(tmp, "one", v, name)
-                rc, err = extract(args.unclassic, os.path.join(build, v, name), out)
+                rc, err = extract(args.macextract, os.path.join(build, v, name), out)
                 if rc != 0:
                     chk.bad.append("%s/%s: %s" % (v, name, err))
                     continue
@@ -442,7 +442,7 @@ def main():
             else:
                 continue                      # .sit wrappers, .dd.1/.2 SPLT
             out = os.path.join(tmp, kind, name)
-            rc, err = extract(args.unclassic, path, out)
+            rc, err = extract(args.macextract, path, out)
             if rc != 0:
                 chk.bad.append("%s: %s" % (name, err))
                 continue

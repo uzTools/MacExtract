@@ -15,7 +15,7 @@ this there is no oracle for the format at all.
 The archive is unwrapped from its envelope with our own CLI, rebuilt as
 MacBinary and put on a 25 MB volume; System 7 boots, the application is
 double-clicked, its "Save the expanded file as:" box is accepted with
-Return, and every fork it wrote is compared with `unclassic x`.
+Return, and every fork it wrote is compared with `macextract x`.
 
 Resource forks are compared with bytes 16..127 masked, the convention
 `tools/vmac_check.py` uses: the Resource Manager stamps that region
@@ -45,7 +45,7 @@ FIXTURES = ["alysis-disk-expander-12.hqx", "super-disk-utility.hqx"]
 
 
 def cli():
-    exe = os.path.join(REPO, "build", "unclassic")
+    exe = os.path.join(REPO, "build", "macextract")
     if not os.path.exists(exe):
         subprocess.run(["make", "-C", REPO], check=True, capture_output=True)
     return exe

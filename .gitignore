@@ -2,7 +2,7 @@
 build/
 *.o
 *.a
-unclassic
+macextract
 
 # Fixture archives are copyrighted software — never committed.
 # Only manifests + SOURCES.md (provenance) are tracked.

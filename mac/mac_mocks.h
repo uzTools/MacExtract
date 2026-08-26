@@ -1,6 +1,6 @@
 /*
  * mac_mocks.h — Linux-backed mock of the classic Mac Toolbox subset
- * that unclassic_mac.c's sink/allocator/io code uses. Lets the ACTUAL
+ * that macextract_mac.c's sink/allocator/io code uses. Lets the ACTUAL
  * Mac sink code be compiled and run on Linux (native or, more usefully,
  * big-endian m68k via qemu) under ASan/Valgrind, so memory bugs in the
  * sink glue are caught deterministically.  Test build only

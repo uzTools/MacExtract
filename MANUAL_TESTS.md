@@ -23,14 +23,14 @@ Everything that *can* be automated already is, and lives elsewhere:
 
 ## Before you start
 
-- **Get the application.** `dist/` holds a built `unclassic.dsk` (an 800K
-  floppy image) and a MacBinary `unclassic.bin`; both are committed so a person
-  with an old Mac and no compiler can download one. `dist/unclassic.dsk` is
+- **Get the application.** `dist/` holds a built `MacExtract.dsk` (an 800K
+  floppy image) and a MacBinary `MacExtract.bin`; both are committed so a person
+  with an old Mac and no compiler can download one. `dist/MacExtract.dsk` is
   confirmed to mount on System 6.0.8 (`tools/vmac/mountcheck.py`, 2026-08-01) —
   under emulation, which is exactly the kind of claim this file exists to
   re-test.
 - **Bring archives over as MacBinary (`.bin`).** ImportFl or similar drops the
-  wrapper; unclassic itself can unwrap MacBinary if the file arrives with a
+  wrapper; MacExtract itself can unwrap MacBinary if the file arrives with a
   flattened fork.
 - **Use archives whose contents you can check.** Anything in
   `fixtures/SOURCES.md` has a committed manifest, so what should come out is
@@ -58,7 +58,7 @@ emulator is least trustworthy. Do these first.
 - [ ] **How much heap the Toolbox really needs while the engine is at its
       peak.** The reserve held back from the engine is a quarter of
       `FreeMem()`, clamped to [32 KB, 80 KB] (`kMemReserveMin`/`Max` in
-      `mac/unclassic_mac.c`). Measured under Mini vMac, the Toolbox and File
+      `mac/macextract_mac.c`). Measured under Mini vMac, the Toolbox and File
       Manager took **under 1 KB** at the tightest moment of all 67 sample
       fixtures — but that is a stripped System Folder with no INITs, a
       RAM-backed disk and no fragmentation. Do the same on iron with a
@@ -116,7 +116,7 @@ Toolbox revisions, sometimes a different CPU.
       and switch to another application: it must stay responsive and the
       extraction must finish (the `WaitNextEvent` path).
 - [ ] **The `SIZE` partition on a small machine.** 4 MB preferred / 400 KB
-      minimum is in `mac/unclassic.r`. Set the application's memory low in Get
+      minimum is in `mac/macextract.r`. Set the application's memory low in Get
       Info and confirm a large Arsenic entry is refused per entry with an
       alert, rather than the application failing to launch.
 

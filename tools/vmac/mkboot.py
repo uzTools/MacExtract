@@ -8,7 +8,7 @@ Takes the stock image fetched by setup.sh and produces a boot volume that
      — this matters on the 1 MB floor-target machine, where a handful of INITs
      is the difference between a result and a dead machine, and it is what
      makes the peak-heap numbers comparable between runs; and
-  2. launches the unclassic autotest application AT BOOT instead of the
+  2. launches the macextract autotest application AT BOOT instead of the
      Finder, by rewriting the boot blocks' shell name (offset 0x1A: a Str15
      naming the application the ROM hands control to, normally "Finder").
      No mouse automation, no double-click, no Finder — the machine boots
@@ -19,7 +19,7 @@ Usage:
               [--macbin FILE:MACNAME]... [--app-name NAME] [--finder]
 
 <app.bin> is the MacBinary produced by a Retro68 build (tools/vmac/run.py
-builds unclassic's); its resource fork is what makes it an application, so it
+builds macextract's); its resource fork is what makes it an application, so it
 is copied in MacBinary mode.
 
 --data copies a host file into the volume as a plain data fork. MACNAME may
@@ -34,7 +34,7 @@ own application opens, because it opens what it is given by name — but another
 application's Standard File filters on TYPE, so an archive copied with --data
 is invisible to it. That is what this is for (tools/vmac/cptsegment.py).
 
---app-name sets the application's name on the volume (default "unclassic"),
+--app-name sets the application's name on the volume (default "MacExtract"),
 which is also the boot-block shell name.
 
 --finder leaves the Finder as the boot shell and puts the application at the
@@ -49,7 +49,7 @@ import os, re, shutil, subprocess, sys, tempfile
 # 12 characters, always followed by one space and then the item's name.
 LISTING_DATE = re.compile(r"[A-Z][a-z]{2} [ \d]\d (?: \d{4}|\d\d:\d\d) (.+)$")
 
-DEFAULT_APP = "unclassic"       # also the boot-block shell name, below
+DEFAULT_APP = "MacExtract"       # also the boot-block shell name, below
 SYS_FOLDER = "System Folder"
 KEEP = {"System", "Finder"}     # everything else in the System Folder goes
 

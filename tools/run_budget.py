@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """run_budget.py — simulate a small Mac: run the whole corpus through
-`unclassic t --budget N` (default 400 KB) and report, per format, which
+`macextract t --budget N` (default 400 KB) and report, per format, which
 fixtures cannot be fully verified under the cap and why.
 
 Per-entry failures under budget pressure are expected and acceptable
@@ -16,8 +16,8 @@ FIXDIR = os.path.join(ROOT, "fixtures")
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--unclassic",
-                    default=os.path.join(ROOT, "build/rel/unclassic"))
+    ap.add_argument("--macextract",
+                    default=os.path.join(ROOT, "build/rel/macextract"))
     ap.add_argument("--budget", type=int, default=400 * 1024)
     ap.add_argument("-v", "--verbose", action="store_true")
     args = ap.parse_args()
@@ -35,7 +35,7 @@ def main():
             continue
         fmt = man.get("format") or "?"
         r = subprocess.run(
-            [args.unclassic, "t", "--stats", "--budget", str(args.budget), fx],
+            [args.macextract, "t", "--stats", "--budget", str(args.budget), fx],
             capture_output=True, timeout=300)
         errtext = r.stderr.decode("utf-8", "replace")
         hw = re.search(r"high-water (\d+)", errtext)

@@ -437,7 +437,7 @@ def macbinary_forks(path):
 
 
 def decode_layer(cli, path, outdir, extra=()):
-    """One `unclassic x` of `path` into a fresh directory. Returns
+    """One `macextract x` of `path` into a fresh directory. Returns
     (name, bytes) for the single file it yielded, or (None, None)."""
     got = tempfile.mkdtemp(prefix="btoa-out-", dir=outdir)
     r = subprocess.run([cli, "x", "-o", got, path] + list(extra),
@@ -457,7 +457,7 @@ def grade_btoa(outdir, ascii_path):
 
     TWO layers, because the translator wraps before it encodes: the btoa
     stream holds a MacBinary file and the MacBinary file holds the
-    subject. `unclassic` takes them one at a time here rather than being
+    subject. `macextract` takes them one at a time here rather than being
     trusted to chain them, so the grade says which layer was read.
 
     Then encode the same PAYLOAD with btoa 5.2.1 and diff the streams.
@@ -467,7 +467,7 @@ def grade_btoa(outdir, ascii_path):
     import run_btoa as RB                                # noqa: E402
     cli = None
     for build in ("rel", "san", ""):
-        p = os.path.join(REPO, "build", build, "unclassic")
+        p = os.path.join(REPO, "build", build, "macextract")
         if os.path.exists(p):
             cli = p
             break

@@ -33,7 +33,7 @@ from decode_grid import decode                                # noqa: E402
 # would silently throw away ~80 MB of downloads and both emulator builds.
 DEFAULT_VMAC_HOME = os.path.join(
     os.environ.get("XDG_CACHE_HOME", os.path.expanduser("~/.cache")),
-    "unclassic", "vmac")
+    "macextract", "vmac")
 VMAC_HOME = os.environ.get("UNC_VMAC_HOME", DEFAULT_VMAC_HOME)
 # Mini vMac's X window is always titled "minivmac", whatever -n the build used,
 # and is exactly the 512x342 Mac screen with no border.
@@ -42,7 +42,7 @@ FLOPPY_KB = 1440           # a real 1.44 MB floppy; Mini vMac mounts it as one
 ARCHIVE_NAME = "archive.sit"
 
 # Non-result statuses the app can paint in the grid's `ret` slot. Kept in step
-# with the kAt* codes in mac/unclassic_mac.c.
+# with the kAt* codes in mac/macextract_mac.c.
 AT_RUNNING = -1000         # alive, still working — keep waiting
 UNC_ERR_ABORTED = -8       # include/unclassic.h
 AT_STATUS = {-1000: "app alive, extraction not finished",
@@ -129,7 +129,7 @@ def build_autotest_app(defines=()):
                    check=True, capture_output=True, env=env)
     subprocess.run(["cmake", "--build", bdir, "--", "-j", str(os.cpu_count())],
                    check=True, capture_output=True, env=env)
-    return os.path.join(bdir, "unclassic.bin")
+    return os.path.join(bdir, "MacExtract.bin")
 
 
 def build_boot_image(appbin, dest, system="System6.hfv"):

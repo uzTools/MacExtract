@@ -3,14 +3,14 @@
  *
  * WHY THIS EXISTS
  * ---------------
- * unclassic spent a long debugging session on a Mac shell that could not open
+ * macextract spent a long debugging session on a Mac shell that could not open
  * any file on System 6.0.8, and the failure was written up as "Retro68's HOpen
  * glue returns noErr but never writes back the refNum". This program was built
  * to turn that claim into something a maintainer could reproduce.
  *
  * IT DOES NOT REPRODUCE. See RESULTS below: across ten cases, HOpen and a
  * hand-filled PBHOpenSync behave identically, and HOpen always writes the
- * refNum. The original diagnosis was wrong; the real fault was in unclassic,
+ * refNum. The original diagnosis was wrong; the real fault was in macextract,
  * not in Retro68. This file is kept as the evidence for that correction and
  * as a regression test for the glue.
  *
@@ -59,7 +59,7 @@
  * The four cases 1-4 vary only the stack contents and ioMisc, to test the
  * uninitialised-field theory; 5-8 use a real vRefNum, a real dirID and write
  * permission, as an application actually would; 9-10 cross volumes, which is
- * what unclassic does (archive on one disk, output on another); 11 is the
+ * what macextract does (archive on one disk, output on another); 11 is the
  * non-hierarchical OpenDF, addressing the default volume exactly as 1-4 do,
  * so its paramErr cannot be confused with a missing file.
  *

@@ -87,11 +87,11 @@ def extracted(outdir, name):
     return None
 
 
-def check_one(label, archive, want, password, unclassic, problems,
+def check_one(label, archive, want, password, macextract, problems,
               oracle=True):
     """`want` maps output name -> bytes. Names ending in .rsrc are
     resource forks, which both extractors write under that name."""
-    cmds = [("us", [unclassic, "x", "-o", None, "-p", password, archive])]
+    cmds = [("us", [macextract, "x", "-o", None, "-p", password, archive])]
     if oracle:
         cmds.insert(0, ("unar", ["unar", "-q", "-f", "-p", password,
                                  "-o", None, archive]))
@@ -117,12 +117,12 @@ def check_one(label, archive, want, password, unclassic, problems,
             shutil.rmtree(out, ignore_errors=True)
 
 
-def check_refusal(label, archive, unclassic, problems, args=(),
+def check_refusal(label, archive, macextract, problems, args=(),
                   expect="wrong password"):
     """A wrong or missing password must be reported per entry, and must
     never produce output. `t` decodes and discards, so a success here
     would mean the CRC passed on rubbish."""
-    r = run([unclassic, "t", archive] + list(args))
+    r = run([macextract, "t", archive] + list(args))
     if r.returncode == 0:
         problems.append("%s: %s was accepted" % (label, expect))
     msg = r.stderr.decode("utf-8", "replace")
@@ -137,12 +137,12 @@ def synth(kind, path, password):
 
 
 def main():
-    unclassic = os.path.join(ROOT, "build", "unclassic")
+    macextract = os.path.join(ROOT, "build", "macextract")
     args = sys.argv[1:]
-    if "--unclassic" in args:
-        unclassic = args[args.index("--unclassic") + 1]
-    if not os.path.exists(unclassic):
-        print("run_crypt: no CLI at %s" % unclassic)
+    if "--macextract" in args:
+        macextract = args[args.index("--macextract") + 1]
+    if not os.path.exists(macextract):
+        print("run_crypt: no CLI at %s" % macextract)
         return 1
     if shutil.which("unar") is None:
         print("run_crypt: SKIPPED — no `unar` to adjudicate with")
@@ -167,16 +167,16 @@ def main():
         synth("sit-des", p, SHORT_PW)
         synth("sit-des", p + ".bin", SHORT_PW)
         check_one("sit-des (unar, MacBinary)", p + ".bin", want, SHORT_PW,
-                  unclassic, problems)
-        check_one("sit-des (us, sidecar fork)", p, want, SHORT_PW, unclassic,
+                  macextract, problems)
+        check_one("sit-des (us, sidecar fork)", p, want, SHORT_PW, macextract,
                   problems, oracle=False)
-        check_refusal("sit-des wrong password", p, unclassic, problems,
+        check_refusal("sit-des wrong password", p, macextract, problems,
                       ["-p", "nothush"])
         # Without the resource fork there is no verifier and no key: the
         # entry must say "encrypted", not "wrong password".
         bare = os.path.join(tmp, "nokey.sit")
         shutil.copyfile(p, bare)
-        check_refusal("sit-des without 'MKey'", bare, unclassic, problems,
+        check_refusal("sit-des without 'MKey'", bare, macextract, problems,
                       ["-p", SHORT_PW], expect="encrypted")
         ran += 4
 
@@ -185,7 +185,7 @@ def main():
         pl = os.path.join(tmp, "sit-des-long.sit")
         synth("sit-des", pl, LONG_PW)
         check_one("sit-des (long password, no oracle)", pl, want, LONG_PW,
-                  unclassic, problems, oracle=False)
+                  macextract, problems, oracle=False)
         ran += 1
 
         # ---- StuffIt 5 (RC4) ------------------------------------------
@@ -196,10 +196,10 @@ def main():
                 want[name + ".rsrc"] = rsrc
         p = os.path.join(tmp, "sit5-rc4.sit")
         synth("sit5-rc4", p, LONG_PW)
-        check_one("sit5-rc4", p, want, LONG_PW, unclassic, problems)
-        check_refusal("sit5 wrong password", p, unclassic, problems,
+        check_one("sit5-rc4", p, want, LONG_PW, macextract, problems)
+        check_refusal("sit5 wrong password", p, macextract, problems,
                       ["-p", "wrong"])
-        check_refusal("sit5 no password", p, unclassic, problems)
+        check_refusal("sit5 no password", p, macextract, problems)
         ran += 3
 
         # ---- PackIt PMa5 (XOR) and PMa6 (DES) -------------------------
@@ -212,11 +212,11 @@ def main():
         for kind in ("packit-xor", "packit-des"):
             p = os.path.join(tmp, kind + ".pit")
             synth(kind, p, LONG_PW)
-            check_one(kind, p, want, LONG_PW, unclassic, problems)
+            check_one(kind, p, want, LONG_PW, macextract, problems)
             # A wrong password must not stop the walk: the two clear
             # entries either side of the encrypted ones still come out.
             out = tempfile.mkdtemp()
-            r = run([unclassic, "x", "-o", out, "-p", "wrong", p])
+            r = run([macextract, "x", "-o", out, "-p", "wrong", p])
             if r.returncode == 0:
                 problems.append("%s: a wrong password was accepted" % kind)
             for n in ("Read Me", "Trailer"):
@@ -239,10 +239,10 @@ def main():
                 z = os.path.join(tmp, label + ".zip")
                 run(["zip", "-q", "-j", "-P", LONG_PW] + zargs +
                     [z] + [os.path.join(src, n) for n in payload])
-                check_one(label, z, payload, LONG_PW, unclassic, problems)
-                check_refusal("%s wrong password" % label, z, unclassic,
+                check_one(label, z, payload, LONG_PW, macextract, problems)
+                check_refusal("%s wrong password" % label, z, macextract,
                               problems, ["-p", "nope"])
-                check_refusal("%s no password" % label, z, unclassic,
+                check_refusal("%s no password" % label, z, macextract,
                               problems)
                 ran += 3
             shutil.rmtree(src, ignore_errors=True)
@@ -259,7 +259,7 @@ def main():
         # needs three, and both XADMaster and `unar` get one of those
         # wrong. Absent, this skips and says so.
         sitdir = os.path.join(os.environ.get("UNC_VMAC_HOME",
-                              os.path.expanduser("~/.cache/unclassic/vmac")),
+                              os.path.expanduser("~/.cache/macextract/vmac")),
                               "specimens", "sitcrypt")
         seen = 0
         for tag in sorted(os.listdir(sitdir)) if os.path.isdir(sitdir) else []:
@@ -274,7 +274,7 @@ def main():
                     sub["name"] + ".rsrc": bytes.fromhex(sub["rsrc"])}
             check_one("stuffit deluxe 3.5.1 (%d-character password)"
                       % len(m["password"]), arch, want, m["password"],
-                      unclassic, problems, oracle=False)
+                      macextract, problems, oracle=False)
             seen += 1
             ran += 1
         if not seen:
@@ -289,7 +289,7 @@ def main():
         # Absent, this skips and says so; present, it is the only test
         # here whose oracle is the software that invented the format.
         made = os.path.join(os.environ.get("UNC_VMAC_HOME",
-                            os.path.expanduser("~/.cache/unclassic/vmac")),
+                            os.path.expanduser("~/.cache/macextract/vmac")),
                             "specimens", "cptmade")
         meta = os.path.join(made, "made.json")
         # `--plain` writes the same made.json with a null password (the
@@ -306,9 +306,9 @@ def main():
                     want[sub["name"] + ".rsrc"] = bytes.fromhex(sub["rsrc"])
             check_one("compact pro (its own archive)",
                       os.path.join(made, "Made.cpt"), want, m["password"],
-                      unclassic, problems, oracle=False)
+                      macextract, problems, oracle=False)
             check_refusal("compact pro wrong password",
-                          os.path.join(made, "Made.cpt"), unclassic, problems,
+                          os.path.join(made, "Made.cpt"), macextract, problems,
                           ["-p", "nope"])
             ran += 2
         else:
@@ -337,9 +337,9 @@ def main():
                 if r.returncode != 0 or not os.path.exists(z):
                     problems.append("%s: 7z would not write it" % label)
                     continue
-                check_one(label, z, payload, LONG_PW, unclassic, problems,
+                check_one(label, z, payload, LONG_PW, macextract, problems,
                           oracle=False)
-                check_refusal("%s wrong password" % label, z, unclassic,
+                check_refusal("%s wrong password" % label, z, macextract,
                               problems, ["-p", "nope"])
                 # The ten-byte authentication code is what grades an AES
                 # entry — AE-2 stores no CRC at all — so a flipped
@@ -348,7 +348,7 @@ def main():
                 blob[len(blob) // 2] ^= 0x01
                 bad = os.path.join(tmp, label + "-bad.zip")
                 open(bad, "wb").write(bytes(blob))
-                r = run([unclassic, "t", "-p", LONG_PW, bad])
+                r = run([macextract, "t", "-p", LONG_PW, bad])
                 if r.returncode == 0:
                     problems.append("%s: a flipped byte was accepted" % label)
                 ran += 3
@@ -370,14 +370,14 @@ def main():
             # so the archive is keyed on the CAPITALS: the oracle only
             # opens it with those, and we must open it with either.
             check_one("arc garble (as `arc` keyed it)", garbled, payload,
-                      LONG_PW.upper(), unclassic, problems)
+                      LONG_PW.upper(), macextract, problems)
             check_one("arc garble (as the user typed it)", garbled, payload,
-                      LONG_PW, unclassic, problems, oracle=False)
+                      LONG_PW, macextract, problems, oracle=False)
             ran += 2
             # And with no password at all it must fail, not emit rubbish.
             # Garbled input reaches the decoder as nonsense, so which of
             # the two failures comes out depends on the method.
-            r = run([unclassic, "t", garbled])
+            r = run([macextract, "t", garbled])
             if r.returncode == 0:
                 problems.append("arc garble: opened without a password")
             ran += 1

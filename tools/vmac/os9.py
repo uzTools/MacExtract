@@ -73,7 +73,7 @@ QEMU_HOME = os.path.join(os.path.dirname(R.VMAC_HOME), "qemu-ppc")
 
 # Desktop icon positions on the settled 1024x768 Mac OS 9 desktop, measured
 # off desktop.png. Volumes stack down the right-hand edge in mount order: the
-# boot disk ("untitled") first, then the transfer volume ("unclassic").
+# boot disk ("untitled") first, then the transfer volume ("MacExtract").
 #
 # NOTHING DRIVES THE GUEST WITH THESE ANY MORE, and they are kept only because
 # they are correct and were expensive to measure. The pointer is NOT unusable —
@@ -426,7 +426,7 @@ def launch_by_keyboard(q, outdir, wait=240.0):
          done. Cmd-Q quits it; it asks "are you sure", and Return confirms.
          Until it is gone the Finder is not the front application.
       2. Typing selects by name in the Finder, and Cmd-Down opens the
-         selection. "unc" matches the transfer volume `unclassic` and not the
+         selection. "unc" matches the transfer volume `macextract` and not the
          boot volume `untitled`.
       3. Inside the volume window the same two keystrokes launch the
          application, whose SFGetFile opens with `archive.sit` already
@@ -550,7 +550,7 @@ def _ostype(b):
 # What the Finder and the harness put on the volume themselves; anything else
 # is output the application wrote. Applied at the volume root only — a FOLDER
 # with one of these names inside an archive is the archive's business.
-NOT_OUTPUT = {"archive.sit", "unclassic", "Desktop DB", "Desktop DF",
+NOT_OUTPUT = {"archive.sit", "MacExtract", "Desktop DB", "Desktop DF",
               "Desktop Folder", "TheVolumeSettingsFolder", "Trash"}
 
 
@@ -606,7 +606,7 @@ def mac_dir_to_rel(mac_dir):
 def verify_output(xfer, fixture, workdir):
     """Compare what the Mac wrote against the same engine's Linux output.
 
-    Returns (ok, list of report lines). The reference is `unclassic x -nr`:
+    Returns (ok, list of report lines). The reference is `macextract x -nr`:
     single-level, because the Mac shell calls unc_extract once with no
     auto-unwrap loop — the same reasoning, and the same flag, as
     tools/vmac_check.py."""
@@ -625,7 +625,7 @@ def verify_output(xfer, fixture, workdir):
     ref = os.path.join(workdir, "linux-out")
     shutil.rmtree(ref, ignore_errors=True)
     os.makedirs(ref)
-    cli = os.path.join(R.REPO, "build", "rel", "unclassic")
+    cli = os.path.join(R.REPO, "build", "rel", "macextract")
     # Run the reference against a copy named exactly what the Mac saw. For
     # gzip and .Z the engine has no stored name and falls back to the archive
     # filename minus its last extension, so the reference has to be given the
@@ -634,7 +634,7 @@ def verify_output(xfer, fixture, workdir):
     # mkapmdisk.py always writes the archive to the volume as `archive.sit`.
     # The copy lives outside the output directory so it cannot collide with
     # the output, which is also true of the archive on the Mac after the fix
-    # in mac/unclassic_mac.c.
+    # in mac/macextract_mac.c.
     asmac = os.path.join(workdir, "as-the-mac-saw-it", "archive.sit")
     os.makedirs(os.path.dirname(asmac), exist_ok=True)
     shutil.copyfile(fixture, asmac)
@@ -747,7 +747,7 @@ def verify_output(xfer, fixture, workdir):
 # environment can read it, which is why the answer has to come back another
 # way: the AUTOTEST build reads both forks back through the File Manager on
 # the Mac, CRC-32s them, and now also writes that plus every output NAME to a
-# file on the plain-HFS input volume (at_report_file in mac/unclassic_mac.c).
+# file on the plain-HFS input volume (at_report_file in mac/macextract_mac.c).
 #
 # It finds its volumes by name — "In" and "Out" — so pointing it at HFS+ needs
 # no new code at all: rename the boot volume to `Out` in the Finder, from the
@@ -781,7 +781,7 @@ def read_report(path):
 def mac_leaf(name):
     """A CLI output filename as the Mac shell would write it.
 
-    ComponentToStr63() in mac/unclassic_mac.c: undo the engine's '/'->':'
+    ComponentToStr63() in mac/macextract_mac.c: undo the engine's '/'->':'
     swap and cap at 31 characters. That cap is the whole reason this run
     exists — HFS+ permits 255-character names, but a 68k application reaching
     it through the classic File Manager is still limited to 31, and whether
@@ -850,7 +850,7 @@ def run_hfsplus(fixture, outdir, args):
     xfer = os.path.join(outdir, "transfer.img")
     R.sh(sys.executable, os.path.join(HERE, "mkapmdisk.py"), DISK, xfer,
          "32", "In",
-         "--macbinary", f"{appbin}:unclassic",
+         "--macbinary", f"{appbin}:MacExtract",
          "--data", f"{fixture}:archive.sit")
 
     verify_disk()
@@ -892,7 +892,7 @@ def run_hfsplus(fixture, outdir, args):
                                    WINDOW_RECT, scratch, timeout=60.0)
         print(f"os9: In volume opened ({frac:.4f} changed in {secs:.0f}s)")
         shot("23-in-open")
-        q.key("u", "n", "c", "meta_l-down")       # launch `unclassic`
+        q.key("u", "n", "c", "meta_l-down")       # launch `macextract`
 
         # Wait for the REPORT FILE, not for anything on the screen.
         #
@@ -971,7 +971,7 @@ def verify_hfsplus(xfer, fixture, workdir, wrapper=None, expect_refusal=False):
     ref = os.path.join(workdir, "linux-out")
     shutil.rmtree(ref, ignore_errors=True)
     os.makedirs(ref)
-    cli = os.path.join(R.REPO, "build", "rel", "unclassic")
+    cli = os.path.join(R.REPO, "build", "rel", "macextract")
     subprocess.run([cli, "x", "-nr", "--forks", "hidden", fixture, "-o", ref],
                    capture_output=True)
 
@@ -1128,8 +1128,8 @@ def run_one(fixture, appbin, outdir, args):
     os.makedirs(outdir, exist_ok=True)
     xfer = os.path.join(outdir, "transfer.img")
     R.sh(sys.executable, os.path.join(HERE, "mkapmdisk.py"), DISK, xfer,
-         "32", "unclassic",
-         "--macbinary", f"{appbin}:unclassic",
+         "32", "MacExtract",
+         "--macbinary", f"{appbin}:MacExtract",
          "--data", f"{fixture}:archive.sit")
 
     verify_disk()

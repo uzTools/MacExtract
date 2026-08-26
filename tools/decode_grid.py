@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """decode_grid.py <macscreen.png> — decode the Mini vMac autotest bit grid.
 
-The Mac app (mac/unclassic_mac.c, at_report) writes its results straight to
+The Mac app (mac/macextract_mac.c, at_report) writes its results straight to
 the framebuffer as a black/white grid on the 512x342 Mac screen: three solid
 calibration squares at known screen positions, then a 16-bit sync word 0xA55A
 followed by eight 32-bit values, MSB first, row-major across 16 columns.

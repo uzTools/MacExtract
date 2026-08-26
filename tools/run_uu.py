@@ -37,11 +37,11 @@ def read(p):
     return open(p, "rb").read() if os.path.exists(p) else None
 
 
-def check_ours(unclassic, path, want, problems):
+def check_ours(macextract, path, want, problems):
     """want: {name: (data fork, rsrc fork)}"""
     out = tempfile.mkdtemp()
     try:
-        r = subprocess.run([unclassic, "x", "-o", out, path],
+        r = subprocess.run([macextract, "x", "-o", out, path],
                            capture_output=True)
         if r.returncode != 0:
             problems.append("%s: exit %d (%s)"
@@ -78,12 +78,12 @@ def check_hexbin(path, forks, problems):
 
 
 def main():
-    unclassic = os.path.join(ROOT, "build", "unclassic")
+    macextract = os.path.join(ROOT, "build", "macextract")
     args = sys.argv[1:]
-    if "--unclassic" in args:
-        unclassic = args[args.index("--unclassic") + 1]
-    if not os.path.exists(unclassic):
-        print("run_uu: no CLI at %s" % unclassic)
+    if "--macextract" in args:
+        macextract = args[args.index("--macextract") + 1]
+    if not os.path.exists(macextract):
+        print("run_uu: no CLI at %s" % macextract)
         return 1
 
     problems = []
@@ -103,7 +103,7 @@ def main():
             "synth-uu-mac-nrsrc.uu": {"Data Only": (DATA, b"")},
         }
         for name, want in cases.items():
-            check_ours(unclassic, os.path.join(tmp, name), want, problems)
+            check_ours(macextract, os.path.join(tmp, name), want, problems)
             ran += 1
 
         if shutil.which("hexbin"):
@@ -120,7 +120,7 @@ def main():
         cr = os.path.join(tmp, "cr.uu")
         blob = open(os.path.join(tmp, "synth-uu-multi.uu"), "rb").read()
         open(cr, "wb").write(blob.replace(b"\n", b"\r"))
-        check_ours(unclassic, cr,
+        check_ours(macextract, cr,
                    {"first.txt": (b"first file\n", b""),
                     "second.bin": (bytes(range(200)), b"")}, problems)
         ran += 1
@@ -135,7 +135,7 @@ def main():
             "From: someone\nSubject: hello.txt (1/2)\n\n" + "".join(lines[:half]) +
             "\nFrom: someone\nSubject: hello.txt (2/2)\n\n"
             "[ part 2 of 2 -- append to part 1 ]\n\n" + "".join(lines[half:]))
-        check_ours(unclassic, posted, {"hello.txt": (DATA, b"")}, problems)
+        check_ours(macextract, posted, {"hello.txt": (DATA, b"")}, problems)
         ran += 1
 
         # The same set as separate files, joined by the .001/.002 scheme
@@ -145,7 +145,7 @@ def main():
             "From: someone\nSubject: hello.txt (1/2)\n\n" + "".join(lines[:half]))
         open(os.path.join(tmp, "split.uu.002"), "w").write(
             "From: someone\nSubject: hello.txt (2/2)\n\n" + "".join(lines[half:]))
-        check_ours(unclassic, os.path.join(tmp, "split.uu.001"),
+        check_ours(macextract, os.path.join(tmp, "split.uu.001"),
                    {"hello.txt": (DATA, b"")}, problems)
         ran += 1
 
@@ -157,7 +157,7 @@ def main():
         third = len(lines) // 3
         open(gap, "w").write("".join(lines[:third]) + "".join(lines[2 * third:]))
         out = tempfile.mkdtemp()
-        r = subprocess.run([unclassic, "x", "-o", out, gap], capture_output=True)
+        r = subprocess.run([macextract, "x", "-o", out, gap], capture_output=True)
         got = read(os.path.join(out, "hello.txt"))
         if r.returncode != 0 or got is None or len(got) >= len(DATA):
             problems.append("gap.uu: a set missing a middle part no longer "
@@ -169,7 +169,7 @@ def main():
         prose = os.path.join(tmp, "prose.txt")
         open(prose, "w").write("To begin with, nothing here is encoded.\n"
                                "begin the day with a walk\n")
-        r = subprocess.run([unclassic, "sniff", prose], capture_output=True)
+        r = subprocess.run([macextract, "sniff", prose], capture_output=True)
         if b"uuencode" in r.stdout:
             problems.append("prose.txt: prose containing 'begin' sniffed as uu")
         ran += 1
@@ -178,7 +178,7 @@ def main():
         lines = open(os.path.join(tmp, "synth-uu-plain.uu")).read().splitlines()
         open(cut, "w").write("\n".join(lines[:6]) + "\n")
         out = tempfile.mkdtemp()
-        r = subprocess.run([unclassic, "x", "-o", out, cut], capture_output=True)
+        r = subprocess.run([macextract, "x", "-o", out, cut], capture_output=True)
         if r.returncode == 0:
             problems.append("cut.uu: a truncated document was accepted")
         shutil.rmtree(out, ignore_errors=True)

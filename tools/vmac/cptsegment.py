@@ -66,7 +66,7 @@ CASES = {
 
 
 def cli():
-    exe = os.path.join(REPO, "build", "dev", "unclassic")
+    exe = os.path.join(REPO, "build", "dev", "macextract")
     if not os.path.exists(exe):
         R.sh("make", "-C", REPO, "BUILD=build/dev", "all")
     return exe

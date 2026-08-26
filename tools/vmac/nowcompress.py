@@ -87,7 +87,7 @@ SUB_FASTER_Y = {"archive": 225, "compress": 291}
 SUB_SMALLER_Y = {"archive": 239, "compress": 305}
 
 
-def keystream(n, seed=b"unclassic-now"):
+def keystream(n, seed=b"macextract-now"):
     """Incompressible bytes that are the same on every run."""
     out, block = bytearray(), seed
     while len(out) < n:
@@ -189,7 +189,7 @@ def _resource(rsrc, want_type):
 
 def cli():
     for build in ("rel", "san", ""):
-        p = os.path.join(REPO, "build", build, "unclassic")
+        p = os.path.join(REPO, "build", build, "macextract")
         if os.path.exists(p):
             return p
     raise SystemExit("nowcompress: build the CLI first (make)")

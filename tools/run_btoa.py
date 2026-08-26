@@ -65,12 +65,12 @@ def subjects():
 
 
 def main():
-    unclassic = os.path.join(ROOT, "build", "unclassic")
+    macextract = os.path.join(ROOT, "build", "macextract")
     args = sys.argv[1:]
-    if "--unclassic" in args:
-        unclassic = args[args.index("--unclassic") + 1]
-    if not os.path.exists(unclassic):
-        print("run_btoa: no CLI at %s" % unclassic)
+    if "--macextract" in args:
+        macextract = args[args.index("--macextract") + 1]
+    if not os.path.exists(macextract):
+        print("run_btoa: no CLI at %s" % macextract)
         return 1
     if not build():
         print("run_btoa: SKIPPED — no reference/btoa (tools/fetch_references.sh)")
@@ -95,7 +95,7 @@ def main():
                     continue
                 out = tempfile.mkdtemp()
                 try:
-                    subprocess.run([unclassic, "x", "-o", out, enc],
+                    subprocess.run([macextract, "x", "-o", out, enc],
                                    capture_output=True)
                     got = sorted(os.listdir(out))
                     if len(got) != 1:
@@ -111,7 +111,7 @@ def main():
         # entry is called instead — the gzip rule.
         enc = os.path.join(tmp, "text.txt.v5.btoa")
         out = tempfile.mkdtemp()
-        subprocess.run([unclassic, "x", "-o", out, enc], capture_output=True)
+        subprocess.run([macextract, "x", "-o", out, enc], capture_output=True)
         if os.listdir(out) != ["text.txt"]:
             problems.append("v5: the header's name was not used (%r)"
                             % os.listdir(out))
@@ -132,7 +132,7 @@ def main():
                 enc = os.path.join(tmp, "eol.%s.%s.btoa" % (ver, label))
                 open(enc, "wb").write(src.replace(b"\n", term))
                 out = tempfile.mkdtemp()
-                subprocess.run([unclassic, "x", "-o", out, enc],
+                subprocess.run([macextract, "x", "-o", out, enc],
                                capture_output=True)
                 got = sorted(os.listdir(out))
                 if len(got) != 1 or open(os.path.join(out, got[0]),
@@ -148,7 +148,7 @@ def main():
             f.write(b"From: nobody\nSubject: here it is\n\n")
             f.write(open(os.path.join(tmp, "odd1.bin.v5.btoa"), "rb").read())
         out = tempfile.mkdtemp()
-        subprocess.run([unclassic, "x", "-o", out, mail], capture_output=True)
+        subprocess.run([macextract, "x", "-o", out, mail], capture_output=True)
         got = sorted(os.listdir(out))
         if len(got) != 1 or open(os.path.join(out, got[0]), "rb").read() \
                 != data["odd1.bin"]:
@@ -165,14 +165,14 @@ def main():
         bad[i] = ord("#") if bad[i] != ord("#") else ord("!")
         broken = os.path.join(tmp, "broken.btoa")
         open(broken, "wb").write(bytes(bad))
-        if subprocess.run([unclassic, "t", broken],
+        if subprocess.run([macextract, "t", broken],
                           capture_output=True).returncode == 0:
             problems.append("a flipped character was accepted")
         ran += 1
 
         cut = os.path.join(tmp, "cut.btoa")
         open(cut, "wb").write(good[:len(good) // 2])
-        if subprocess.run([unclassic, "t", cut],
+        if subprocess.run([macextract, "t", cut],
                           capture_output=True).returncode == 0:
             problems.append("a truncated archive was accepted")
         ran += 1
@@ -201,7 +201,7 @@ def main():
                 lines[end] = b" ".join(fields[:10] + [tail])
                 enc = os.path.join(tmp, "rot.%s.%s.btoa" % (ver, label))
                 open(enc, "wb").write(b"\n".join(lines))
-                bad = subprocess.run([unclassic, "t", enc],
+                bad = subprocess.run([macextract, "t", enc],
                                      capture_output=True).returncode != 0
                 if bad != label.endswith("wrong"):
                     problems.append("R in the 32-bit width, %s, %s: %s"
@@ -213,7 +213,7 @@ def main():
         prose = os.path.join(tmp, "prose.txt")
         open(prose, "wb").write(b"this mentions xbtoa but not at a line "
                                 b"start, so it is not one\n")
-        r = subprocess.run([unclassic, "sniff", prose], capture_output=True)
+        r = subprocess.run([macextract, "sniff", prose], capture_output=True)
         if b"btoa" in r.stdout:
             problems.append("prose containing the marker was claimed")
         ran += 1

@@ -21,7 +21,7 @@ the Mac OS 9 harness, which reads its volume, caught it on its first sweep.
 Each directory must hold the `out.dsk` of a finished run. The fixture is
 identified from the `in.dsk` beside it, so no bookkeeping is needed.
 
-Compares, per file, against `unclassic x -nr`: both forks byte for byte
+Compares, per file, against `macextract x -nr`: both forks byte for byte
 (resource forks through the same reserved-header mask vmac_check.py uses),
 the type/creator, and — the point — the set of NAMES, recursively.
 """
@@ -34,7 +34,7 @@ sys.path.insert(0, os.path.join(REPO, "tools"))
 import os9                                                   # noqa: E402
 from vmac_check import mask_reserved, aggregate_dir           # noqa: E402
 
-CLI = os.path.join(REPO, "build", "rel", "unclassic")
+CLI = os.path.join(REPO, "build", "rel", "macextract")
 
 
 def hfs(env, *argv):

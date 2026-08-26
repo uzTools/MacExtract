@@ -10,15 +10,15 @@ already use. There is not one yet (OPEN_ITEMS.md), so what runs today
 is the synthetic pass at the bottom of this file.
 
     tools/vmac/spacesaver.py --idlespec      make one (an emulator run)
-    tools/run_spacesaver.py --unclassic build/unclassic
+    tools/run_spacesaver.py --macextract build/macextract
 
 Specimens live outside the repository, beside the emulator's other
 state, because they are what SpaceSaver made of a subject rather than
 anything this project may distribute:
 
-    ~/.cache/unclassic/vmac/specimens/spacesaver/NAME.ss        the file
-    ~/.cache/unclassic/vmac/specimens/spacesaver/NAME.ss.orig   its input
-    ~/.cache/unclassic/vmac/specimens/spacesaver/PrAm-4048.bin  the preset
+    ~/.cache/macextract/vmac/specimens/spacesaver/NAME.ss        the file
+    ~/.cache/macextract/vmac/specimens/spacesaver/NAME.ss.orig   its input
+    ~/.cache/macextract/vmac/specimens/spacesaver/PrAm-4048.bin  the preset
 
 The preset dictionary is Aladdin's ('PrAm' -4048, 9,679 bytes) and is
 NOT committed either; `tools/vmac/spacesaver.py --layout --keep` writes
@@ -39,8 +39,8 @@ import sys
 import tempfile
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-HOME = os.environ.get("UNCLASSIC_VMAC_HOME",
-                      os.path.expanduser("~/.cache/unclassic/vmac"))
+HOME = os.environ.get("UNC_VMAC_HOME",
+                      os.path.expanduser("~/.cache/macextract/vmac"))
 SPECIMENS = os.path.join(HOME, "specimens", "spacesaver")
 PRESET = os.path.join(SPECIMENS, "PrAm-4048.bin")
 
@@ -457,8 +457,8 @@ def emit(dirname):
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--unclassic", default=os.path.join(REPO, "build",
-                                                        "unclassic"))
+    ap.add_argument("--macextract", default=os.path.join(REPO, "build",
+                                                        "macextract"))
     ap.add_argument("--timeout", type=int, default=120)
     ap.add_argument("--emit", metavar="DIR",
                     help="write the two files the Macintosh tier replays")
@@ -469,9 +469,9 @@ def main():
         return emit(a.emit)
 
     bad = ran = fuzzed = fuzzbad = 0
-    sbad, sran = synthetic(a.unclassic, a.verbose)
+    sbad, sran = synthetic(a.macextract, a.verbose)
     print("spacesaver: %d synthetic stream(s), %d failure(s)" % (sran, sbad))
-    dbad = builtin_matches(a.unclassic) + m2_default_matches()
+    dbad = builtin_matches(a.macextract) + m2_default_matches()
     if not dbad and os.path.exists(PRESET):
         print("spacesaver: the built-in dictionary matches the resource")
     sbad += dbad
@@ -485,10 +485,10 @@ def main():
               "into it will fail" % PRESET)
 
     for p in files:
-        b, n = grade(a.unclassic, p, a.verbose)
+        b, n = grade(a.macextract, p, a.verbose)
         bad += b
         ran += n
-        fb, fn = robustness(a.unclassic, p, a.timeout)
+        fb, fn = robustness(a.macextract, p, a.timeout)
         fuzzbad += fb
         fuzzed += fn
     print("spacesaver: %d specimen(s), %d failure(s); %d corrupted variants, "

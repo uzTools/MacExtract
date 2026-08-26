@@ -5,7 +5,7 @@ differential manifests (built from The Unarchiver's `unar`; see
 TESTING.md); every one passes, plus 10 corruption variants each in the
 robustness suite. "Peak RAM" = allocator high-water mark across the
 whole corpus for that format (engine allocations only, via
-`unclassic t --stats`).
+`macextract t --stats`).
 
 | Format | Status | Methods | Oracle coverage | Peak RAM | 400 KB budget |
 |---|---|---|---|---|---|
@@ -50,7 +50,7 @@ Delta-1 preprocessing is applied where the header asks for it, outside the
 checksum, which is where the reference puts it.
 
 Peak heap 8 KB–392 KB on Linux and the same on a Mac Plus at 4 MB and 1 MB
-(`unclassic t --stats`; FORMATS.md, "DiskDoubler and Now Compress on the
+(`macextract t --stats`; FORMATS.md, "DiskDoubler and Now Compress on the
 Mac"): the 8 KB end is method 3, which is two buffers and no state at all;
 method 7 is 10 KB, whose whole state is a 2 KB window; method 1 is 17 KB on
 an 11 KB fork, sized from the input like every other `unc_lzw` caller; DDn is
@@ -108,7 +108,7 @@ header of its own. DECISIONS.md 2026-08-21 (the Salient disk).
 constant.** A tree is 1,536 B and is built only when its context first
 occurs: the method 2 specimen — 60 contexts in 564 bytes — measures
 **101,888 B**, and a synthetic method 5 fork touching all 256 measures
-**401,408 B** (`unclassic t --stats`), which still fits the 597,036 B a 1 MB
+**401,408 B** (`macextract t --stats`), which still fits the 597,036 B a 1 MB
 Mac Plus leaves the engine (*Resident memory, stack and launch*, `Budget`). Methods 3 and 4 are the cheapest in the format at
 **8,192 B** and **9,476 B**, being two buffers and, for 4, one Huffman
 table.
@@ -359,7 +359,7 @@ so the corpus-driven robustness and fuzz suites only ever reach the BinHex
 layer.
 
 Peak heap **74,220 B** for `SD! Utilities.x` and **85,943 B** for
-`Disk Expander .X` (`unclassic t --stats`); both extract fully under a 400 KB
+`Disk Expander .X` (`macextract t --stats`); both extract fully under a 400 KB
 budget. Neither peak is a ceiling anybody declared: the 64 KB step is the wide
 context table, allocated only for methods 5-8, and SlowFastB's window is
 allocated only when a method-11 block turns up.
@@ -390,7 +390,7 @@ weaker of the two.
 more than one document, and a single document may have been posted in several
 parts — each part carrying its own mail header, so that joining them puts that
 header in the MIDDLE of the stream. The second case was added later the same
-day, after the first was: `unclassic x posted.hqx.001` used to report the entry
+day, after the first was: `macextract x posted.hqx.001` used to report the entry
 truncated, because the `:` in `From:` is BinHex's terminator. The rule that
 fixes it is `reference/macutils/hexbin/hqx.c`'s — judge each LINE and skip one
 holding "intermediate garbage" — and it works because the BinHex alphabet omits
@@ -467,7 +467,7 @@ recover the declared block size — the earlier "128 KB (14 fixtures) / 256 KB
 (9) / 512 KB (8)" figures were inferred by dividing peak by five and are
 withdrawn (BLOCKERS.md, *Withdrawn claims*).
 
-Measured peak heap over the corpus (`unclassic t --stats`): **min
+Measured peak heap over the corpus (`macextract t --stats`): **min
 0.15 MB / median 0.59 MB / mean 0.92 MB / max 2.53 MB**, the maximum
 being the entries that genuinely fill a 512 KB block (35 KB + 512 KB +
 2048 KB) — **exactly two fixtures reach 524,257 B of fill**, which is the
@@ -808,7 +808,7 @@ approximating it and no generating an equivalent.
 
 The record's byte at +12 chooses: 0 is -4048 and 1 is `PrAm` -4047, four
 spaces, which nothing this engine writes selects. Both are built in; anything
-else is refused per entry. `unclassic --preset FILE` overrides the choice, for
+else is refused per entry. `macextract --preset FILE` overrides the choice, for
 a table this build does not carry. The resource is byte-identical in the
 control panel and in `StuffIt Engine™`, so either file will do as a source for
 `tools/gen_ss_dict.py`.
@@ -911,7 +911,7 @@ entry named `link|target`; classic Mac OS has no symbolic links, so the
 entry is named and refused per entry — the answer tar's reader gives a
 link.
 
-**Peak heap 4–74 KB**, measured with `unclassic t --stats`: 4 KB for a
+**Peak heap 4–74 KB**, measured with `macextract t --stats`: 4 KB for a
 stored entry, 8 KB for LArc, 16–18 KB for -lh5- and -lh1-, 41 KB for
 -lh6-, and **74,128 B** for a -lh7- entry big enough to need the whole
 64 KB window (`lh7_long.lzh`, 1.2 MB). The window is sized from the
@@ -1071,7 +1071,7 @@ is under 1 KB (`unc_mime_extract` → `mime_emit` → `mime_dec_run` →
 904 B, and it is a leaf.
 
 ◇ **Peak heap is flat: 5,097 B for base64 and 8,322 B for MIME, on a
-4 MB message as on a 40-byte one** (`unclassic t --stats`). Nothing
+4 MB message as on a 40-byte one** (`macextract t --stats`). Nothing
 here is sized from the input — the buffers are an I/O window, a line, a
 header and the 512-byte prefix of an applefile part — which is the same
 reason uuencode's 4 KB is flat. A constant in this matrix is usually a
@@ -1272,7 +1272,7 @@ rest of the vocabulary: `Decode`, `to`, `into`, `convert`, `noConvert`,
 ` Folder`, `.pkg`, and the errors *"Destination not found: "* and *"No items
 matching: "*.
 
-`unclassic sniff` implements that test and nothing more, so it is exactly as
+`macextract sniff` implements that test and nothing more, so it is exactly as
 strong as Aladdin's: a text file that happens to begin *"Decode this to that"*
 is a package as far as either program can tell. Measured against the corpus —
 **928 fixtures, 0 false positives**.
@@ -1336,7 +1336,7 @@ all three parseable by p7zip. They are not in the corpus, so `ci.sh` does not
 repeat it.
 
 **Both front ends say the name.** The CLI prints *"recognized as RAR, which
-v1 cannot extract"*; the Macintosh application's alert reads **"unclassic
+v1 cannot extract"*; the Macintosh application's alert reads **"MacExtract
 cannot open RAR files."**, photographed on System 6.0.8 on 2026-08-27
 (`tools/vmac/README.md`, *Photographing the detect-only alert*). That
 sentence is the point of the whole file: the archive is intact, and the next
@@ -1351,7 +1351,7 @@ to the cpio inside it, and that cpio is now named too.
 
 ## Envelope auto-unwrap
 
-`unclassic x` unwraps chained envelopes by content sniffing
+`macextract x` unwraps chained envelopes by content sniffing
 (never by extension): MacBinary, BinHex, AppleSingle/Double, gzip and
 .Z layers that yield exactly one file are recursively extracted and
 the intermediate deleted (`-nr` disables; depth ≤ 8). Verified chains:
@@ -1387,7 +1387,7 @@ self-terminating** (`rsrclen + datalen` is the exact payload total, so no part
 count is stored anywhere and none is needed).
 
 **The join is read strictly forward: 0 backward crossings**, measured
-over the 3-part and 12-part cases (`unclassic x --stats` reports part
+over the 3-part and 12-part cases (`macextract x --stats` reports part
 opens and how many were backward). That is what decides the cost on
 removable media — a backward crossing is a disk the user has to put
 back — so it is measured rather than assumed.
@@ -1405,7 +1405,7 @@ envelopes, wrapper names that say nothing, and parts in three
 directories all join byte-exact; `unar` handed part 1 of such a set
 unwraps that part alone and exits 0. **In the Mac shell too since
 2026-08-14**, where a decoded part lands on the output volume as
-`unclassic part N` and is deleted when the join is over. Not for the two
+`MacExtract part N` and is deleted when the join is over. Not for the two
 name-placed schemes, on Linux or Mac: a wrapped part's filename is the
 wrapper's, and no reference says what that should look like
 (DECISIONS.md 2026-08-13).
@@ -1673,7 +1673,7 @@ passes are testing something.
 | declared entry size, zip | 4 GiB − 1 | the format's own field. A 3 GiB stored entry lists and CRC-verifies |
 | decoded output, streamed (gzip) | **none found** | 3 GiB and 5 GiB both verify, exit 0. The output size is never held, so nothing bounds it |
 | zip entry count | 4,294,967,295 | the Zip64 record's count is read as a `uint32`; a 70,000-entry archive extracts all 70,000 (below) |
-| Mac binary | 2 GiB, **not measured** | `SetFPos` takes a signed `long` (`mac/unclassic_mac.c`), and HFS caps a fork at 2 GB anyway (OPEN_ITEMS.md) |
+| Mac binary | 2 GiB, **not measured** | `SetFPos` takes a signed `long` (`mac/macextract_mac.c`), and HFS caps a fork at 2 GB anyway (OPEN_ITEMS.md) |
 
 The tar boundary is exact: a 2 GiB − 1024 member lists, a 2 GiB one
 (0x80000000) does not.
@@ -1704,14 +1704,14 @@ Everything here is measured on the Retro68 target's own flags
 | Mac shell | 11,784 | 732 |
 | **total** | **116,046** | **30,538** |
 
-The application ships as 154,240 B of MacBinary (`dist/unclassic.bin`). Both
+The application ships as 176,640 B of MacBinary (`dist/MacExtract.bin`). Both
 halves are resident for the whole session: the link line produces a single
-`unclassic.code.bin` that the Segment Loader reads at launch, and
+`MacExtract.code.bin` that the Segment Loader reads at launch, and
 `Elf2Mac/LdScript.cc` emits `*(.rodata*)` inside the `.data` output section —
 the A5 global world, allocated once and never purgeable.
 
 The five largest objects are `unc_crypt.c` (7,654 + 7,032),
-`unclassic_mac.c` (11,784 + 732), `fmt_spacesaver.c` (2,528 + 9,694, almost
+`macextract_mac.c` (11,784 + 732), `fmt_spacesaver.c` (2,528 + 9,694, almost
 all of it `ss_dict.h`), `inflate.c` (7,824 + 2,675) and `fmt_dd.c`
 (10,194 + 12).
 
@@ -1764,7 +1764,7 @@ that its input is right when the thing it drives is quantised.**
 
 **And 597,036 B is the System 6 whole-machine case, which is the ROOMY
 one.** Under MultiFinder and on System 7 and later the application gets a
-PARTITION, and `unclassic.r` declares a 400 KB minimum — a user who accepts
+PARTITION, and `macextract.r` declares a 400 KB minimum — a user who accepts
 that in Get Info, or a machine that cannot spare the 4 MB preferred size,
 gets it. Measured 2026-08-24 on System 7.0.1 with the preferred size built
 down to 400 KB, `-D UNC_AT_BUDGET`: **`FreeMem()` 212,056 B, budget
@@ -1933,7 +1933,7 @@ and the call graph comes from the relocations in the linked objects
 
 The 6,664 B chain **exceeded CLAUDE.md's 4 KB call-depth rule by 66 %**, for
 months, in code that ships and passes on a real 1 MB Mac Plus. It never came
-near the machine: `mac/unclassic_mac.c` runs
+near the machine: `mac/macextract_mac.c` runs
 `SetApplLimit(LMGetApplLimit() - kStackBump)` with `kStackBump` = 24 KB, so
 the shell has **32 KB of stack**, not the 8 KB default. The rule is what keeps
 the engine portable to a host that did not ask for more.
@@ -2042,7 +2042,7 @@ rather than argued.
 
 `-flto` is not available: it crashes Retro68's gcc 16.1.0 with an internal
 compiler error (`write_symbol, at lto-streamer-out.cc:3097`, during IPA pass
-`modref`) on `mac/unclassic_mac.c`. Tried 2026-08-24, clear pass/fail, do not
+`modref`) on `mac/macextract_mac.c`. Tried 2026-08-24, clear pass/fail, do not
 re-try without a newer toolchain.
 
 ## Measured on a 7 MHz Mac Plus (Mini vMac 1x, System 6.0.8, 4 MB)
@@ -2139,7 +2139,7 @@ timeouts chosen for it mislead three times. BLOCKERS.md.
 
 The engine's *relative* cost is a property of the code and transfers to any CPU
 as a ratio. (Absolute Mac Plus figures are two sections up; this table is the
-shape, not the clock.) Measured with `unclassic t`, best of three, on the
+shape, not the clock.) Measured with `macextract t`, best of three, on the
 release build:
 
 | Fixture | Format | In KB | Out KB | ms | in KB/s |
@@ -2414,7 +2414,7 @@ visibly the dominant term, which is what the sampled inverse BWT went after.
 
 **The CLI's `--budget` simulation is cross-validated against the real Mac
 allocator**, and was re-validated on 2026-08-24 after the budget itself turned
-out to have drifted. `unclassic --budget 597036` predicts 482,297 B and
+out to have drifted. `macextract --budget 597036` predicts 482,297 B and
 559,241 B for those two; the Mac measures 482,345 B and 559,289 B — **48 bytes
 apart in both cases**. That is worth stating because every budget figure
 elsewhere in this file is a Linux number. The superseded pair (560,535 /
@@ -2485,7 +2485,7 @@ each in its own boot from a pristine copy of the master image:
 
 This tier reads its result **off the disk rather than the screen** — both forks
 of every extracted file lifted out with hfsutils and compared byte for byte
-against `unclassic x -nr` — so unlike the Mini vMac tiers it compares **names,
+against `macextract x -nr` — so unlike the Mini vMac tiers it compares **names,
 folder structure and 8-bit characters** too, which is how it caught the gzip/.Z
 fallback-name defect on its first sweep (TESTING.md for what each layer can and
 cannot see). `derived-XferIt_1.5b4.sea` alone lands 10 files three folders deep,
@@ -2578,7 +2578,7 @@ its behaviour.
 
 **Where the Expander column comes from.** Its own distribution,
 `stuffit_expander_4.0.2.sea_.bin` from Macintosh Garden: MacBinary around a
-StuffIt self-extracting archive around a 400K HFS image. `unclassic x` walked
+StuffIt self-extracting archive around a 400K HFS image. `macextract x` walked
 the chain and produced an image byte-identical to `unar`'s (410,624 B, md5
 `888c0ca0b93f6ee0ff67e89926e20f83`), and every quotation below is a string
 read out of that image — the shipped Read Me, the "What's new" file and the
@@ -2589,12 +2589,12 @@ later versions did, never for what 4.0.2 does.
 
 805 files in `fixtures/` — the corpus as it stood before M13 added two
 generated ones — classified by INNERMOST format — envelopes unwrapped
-with `x -nr` first, then `unclassic sniff` — because both tools decode BinHex
+with `x -nr` first, then `macextract sniff` — because both tools decode BinHex
 and MacBinary and then continue into what was inside (measured 2026-08-15,
 re-measured the same day after M12: the total read 807 and the corpus is 805,
 which moved the non-archive row and nothing else):
 
-| Innermost format | files | Expander 4.0.2 | unclassic 0.10 |
+| Innermost format | files | Expander 4.0.2 | MacExtract 0.10 |
 |---|---|---|---|
 | StuffIt classic, incl. `.sea` | 454 | ✅ | ✅ |
 | Compact Pro, incl. `.sea` | 216 | ✅ | ✅ |
@@ -2623,7 +2623,7 @@ with this archive."*
 
 ### Capability by capability
 
-| | StuffIt Expander 4.0.2 | unclassic 0.15 |
+| | StuffIt Expander 4.0.2 | MacExtract 0.15 |
 |---|---|---|
 | Floor system | System 6.0.5 (its Read Me) | System 6.0.8, measured on a 1 MB Mac Plus |
 | Everything beyond `.sit`/`.cpt`/`.hqx`/`.bin` | needs DropStuff with Expander Enhancer, *"a **System 7-only** shareware product"* | in the same free application, on System 6 |

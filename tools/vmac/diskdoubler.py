@@ -87,7 +87,7 @@ SUBJECT_DATA = (b"DiskDoubler method probe. " * 400 +
 
 def cli():
     for build in ("rel", "san", ""):
-        p = os.path.join(REPO, "build", build, "unclassic")
+        p = os.path.join(REPO, "build", build, "macextract")
         if os.path.exists(p):
             return p
     raise SystemExit("diskdoubler: build the CLI first (make)")
@@ -406,7 +406,7 @@ def personalize(s):
     rather than once."""
     s.shot("personalize", wait=15.0)
     s.mac.click(300, 95)
-    s.mac._xdo("type", "--delay", "120", "unclassic")
+    s.mac._xdo("type", "--delay", "120", "MacExtract")
     s.mac.key("Tab")
     s.mac._xdo("type", "--delay", "120", "test")
     s.mac.click(415, 214)                               # OK, no default button

@@ -45,9 +45,9 @@ def build(path, n):
             z.writestr("f%06d.txt" % i, b"x")
 
 
-def ours_list(unclassic, path):
+def ours_list(macextract, path):
     """Entry names as our CLI lists them, or None if it failed."""
-    r = subprocess.run([unclassic, "l", path], capture_output=True)
+    r = subprocess.run([macextract, "l", path], capture_output=True)
     if r.returncode != 0:
         return None
     names = []
@@ -67,8 +67,8 @@ def lsar_count(path):
     return len(r.stdout.decode("utf-8", "replace").splitlines()) - 1
 
 
-def check_count(unclassic, path, want, label, problems):
-    got = ours_list(unclassic, path)
+def check_count(macextract, path, want, label, problems):
+    got = ours_list(macextract, path)
     if got is None:
         problems.append("%s: listing failed, expected %d entries" % (label, want))
         return
@@ -83,7 +83,7 @@ def check_count(unclassic, path, want, label, problems):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--unclassic", default="build/unclassic")
+    ap.add_argument("--macextract", default="build/macextract")
     args = ap.parse_args()
 
     problems = []
@@ -98,7 +98,7 @@ def main():
             want = len(zipfile.ZipFile(p).namelist())
             if want != n:                     # the generator itself
                 problems.append("n%d.zip: zipfile wrote %d entries" % (n, want))
-            check_count(args.unclassic, p, n, "n%d.zip" % n, problems)
+            check_count(args.macextract, p, n, "n%d.zip" % n, problems)
             ran += 1
 
         # An ordinary small file that carries Zip64 structures anyway:
@@ -110,7 +110,7 @@ def main():
                 f.write(payload)
         out = os.path.join(tmp, "out")
         os.mkdir(out)
-        r = subprocess.run([args.unclassic, "x", "-o", out, p],
+        r = subprocess.run([args.macextract, "x", "-o", out, p],
                            capture_output=True)
         got = os.path.join(out, "hello.txt")
         if r.returncode != 0 or not os.path.exists(got):
@@ -130,7 +130,7 @@ def main():
         else:
             raw[loc + 12:loc + 16] = struct.pack("<I", 1)   # offset high word
             open(p, "wb").write(bytes(raw))
-            r = subprocess.run([args.unclassic, "l", p], capture_output=True)
+            r = subprocess.run([args.macextract, "l", p], capture_output=True)
             if r.returncode == 0:
                 problems.append("far64.zip: a record past 4 GB was accepted")
         ran += 1
@@ -146,7 +146,7 @@ def main():
         else:
             raw[rec:rec + 4] = b"PK\x06\x05"
             open(p, "wb").write(bytes(raw))
-            got = ours_list(args.unclassic, p)
+            got = ours_list(args.macextract, p)
             if got is None or len(got) != 65535:
                 problems.append("nosig64.zip: expected the 16-bit count "
                                 "(65535), got %s"

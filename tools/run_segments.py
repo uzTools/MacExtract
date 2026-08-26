@@ -55,7 +55,7 @@ guard does not fire for an empty string, so the volume scan reads the
 wrong directory. Ground truth built that way is silently truncated.
 Every oracle call here therefore passes an ABSOLUTE path.
 
-Usage: run_segments.py [--unclassic build/dev/unclassic] [--case NAME]
+Usage: run_segments.py [--macextract build/dev/macextract] [--case NAME]
 """
 import argparse, glob, json, os, re, shutil, struct, subprocess, sys, tempfile
 
@@ -161,9 +161,9 @@ def oracle_extract(part_path, dest):
     return r.returncode, r.stdout.decode("utf-8", "replace")
 
 
-def ours_extract(unclassic, part_path, dest, extra=()):
+def ours_extract(macextract, part_path, dest, extra=()):
     os.makedirs(dest, exist_ok=True)
-    r = run([unclassic, "x", "-nr", "--forks", "hidden", "-o", dest]
+    r = run([macextract, "x", "-nr", "--forks", "hidden", "-o", dest]
             + list(extra) + [part_path])
     return r.returncode, r.stdout.decode("utf-8", "replace")
 
@@ -190,7 +190,7 @@ def expected_tree(name, payload, rsrclen):
     return t
 
 
-def case_run(unclassic, case, workroot, fails):
+def case_run(macextract, case, workroot, fails):
     d = os.path.join(workroot, case)
     os.makedirs(d)
     rawname, payload, rsrclen, datalen = synth.CASES[case](d)
@@ -214,8 +214,8 @@ def case_run(unclassic, case, workroot, fails):
     fails.check(rc == 0, "%s: oracle failed: %s" % (case, out.strip()))
     got_oracle = read_tree(os.path.join(d, "_oracle"), appledouble=True)
 
-    rc, out = ours_extract(unclassic, first, os.path.join(d, "_ours"))
-    fails.check(rc == 0, "%s: unclassic failed: %s" % (case, out.strip()))
+    rc, out = ours_extract(macextract, first, os.path.join(d, "_ours"))
+    fails.check(rc == 0, "%s: macextract failed: %s" % (case, out.strip()))
     got_ours = read_tree(os.path.join(d, "_ours"))
 
     fails.check(got_oracle == want,
@@ -231,10 +231,10 @@ def case_run(unclassic, case, workroot, fails):
 # --- spanned zip ---------------------------------------------------------
 
 
-def zip_stats(unclassic, part_path, dest):
+def zip_stats(macextract, part_path, dest):
     """Extract with --stats and return (rc, output, the segments line)."""
     os.makedirs(dest, exist_ok=True)
-    r = run([unclassic, "x", "-nr", "--stats", "-o", dest,
+    r = run([macextract, "x", "-nr", "--stats", "-o", dest,
              os.path.abspath(part_path)])
     out = r.stdout.decode("utf-8", "replace")
     line = "".join(l for l in out.splitlines() if l.startswith("segments:"))
@@ -307,7 +307,7 @@ def zip_floor(parts):
     return state["opens"], state["back"]
 
 
-def zip_case_run(unclassic, case, workroot, fails):
+def zip_case_run(macextract, case, workroot, fails):
     d = os.path.join(workroot, case)
     os.makedirs(d)
     src, parts, whole = zsynth.CASES[case](d)
@@ -328,21 +328,21 @@ def zip_case_run(unclassic, case, workroot, fails):
 
     # Ours, from the last part and from the first. A user has whichever
     # one they double-clicked, so both have to reach the same set.
-    rc, out = ours_extract(unclassic, os.path.abspath(last),
+    rc, out = ours_extract(macextract, os.path.abspath(last),
                            os.path.join(d, "_last"))
-    fails.check(rc == 0, "%s: unclassic failed on the last part: %s"
+    fails.check(rc == 0, "%s: macextract failed on the last part: %s"
                 % (case, out.strip()))
     got_last = read_tree(os.path.join(d, "_last"))
 
-    rc, out = ours_extract(unclassic, os.path.abspath(first),
+    rc, out = ours_extract(macextract, os.path.abspath(first),
                            os.path.join(d, "_first"))
-    fails.check(rc == 0, "%s: unclassic failed on the first part: %s"
+    fails.check(rc == 0, "%s: macextract failed on the first part: %s"
                 % (case, out.strip()))
     got_first = read_tree(os.path.join(d, "_first"))
 
     # The same content, not split: no joiner, no address translation.
-    rc, out = ours_extract(unclassic, whole, os.path.join(d, "_whole"))
-    fails.check(rc == 0, "%s: unclassic failed on the unsplit archive: %s"
+    rc, out = ours_extract(macextract, whole, os.path.join(d, "_whole"))
+    fails.check(rc == 0, "%s: macextract failed on the unsplit archive: %s"
                 % (case, out.strip()))
     got_whole = read_tree(os.path.join(d, "_whole"))
 
@@ -360,7 +360,7 @@ def zip_case_run(unclassic, case, workroot, fails):
     return d, src, parts, whole, want
 
 
-def zip_behaviours(unclassic, case, d, parts, whole, want, workroot, fails):
+def zip_behaviours(macextract, case, d, parts, whole, want, workroot, fails):
     """The parts of the scheme that byte-exactness cannot see."""
     last, first = parts[-1], parts[0]
     multi = len(parts) > 1
@@ -371,7 +371,7 @@ def zip_behaviours(unclassic, case, d, parts, whole, want, workroot, fails):
     # the floor for a day, written up as the format's doing, because
     # nothing compared it against anything (DECISIONS.md 2026-08-10).
     if multi:
-        rc, out, line = zip_stats(unclassic, last, os.path.join(d, "_stats"))
+        rc, out, line = zip_stats(macextract, last, os.path.join(d, "_stats"))
         floor = zip_floor(parts)
         if fails.check(bool(line) and floor is not None,
                        "%s: no segment line or no floor" % case):
@@ -386,13 +386,13 @@ def zip_behaviours(unclassic, case, d, parts, whole, want, workroot, fails):
         # `zip -s` that did not split: an ordinary archive with a marker
         # in front of it. It must extract with the part machinery
         # explicitly turned OFF, because nothing is missing.
-        rc, out = ours_extract(unclassic, os.path.abspath(last),
+        rc, out = ours_extract(macextract, os.path.abspath(last),
                                os.path.join(d, "_np"), extra=["--no-parts"])
         fails.check(rc == 0, "%s: --no-parts refused a one-file archive: %s"
                     % (case, out.strip()))
         fails.check(read_tree(os.path.join(d, "_np")) == want,
                     "%s: --no-parts gave different bytes" % case)
-        r = run([unclassic, "sniff", os.path.abspath(last)])
+        r = run([macextract, "sniff", os.path.abspath(last)])
         fails.check(r.stdout.decode().strip() == "Zip",
                     "%s: a set of one sniffed as %r"
                     % (case, r.stdout.decode().strip()))
@@ -414,7 +414,7 @@ def zip_behaviours(unclassic, case, d, parts, whole, want, workroot, fails):
         if fails.check(peak is not None, "%s: --stats printed no peak" % case):
             lean = os.path.join(d, "_lean")
             os.makedirs(lean, exist_ok=True)
-            r = run([unclassic, "x", "-nr", "--budget",
+            r = run([macextract, "x", "-nr", "--budget",
                      str(int(peak.group(1)) - 1), "--stats", "--forks",
                      "hidden", "-o", lean, os.path.abspath(last)])
             lout = r.stdout.decode("utf-8", "replace")
@@ -444,12 +444,12 @@ def zip_behaviours(unclassic, case, d, parts, whole, want, workroot, fails):
         fails.check(r.returncode != 0,
                     "%s: the oracle accepted a middle part; the premise "
                     "that it cannot be identified is wrong" % case)
-        rc, out = ours_extract(unclassic, os.path.abspath(mid),
+        rc, out = ours_extract(macextract, os.path.abspath(mid),
                                os.path.join(d, "_mid"))
         fails.check(rc != 0, "%s: a middle part must not extract" % case)
 
     # --no-parts must refuse, not extract a truncated archive.
-    rc, out = ours_extract(unclassic, os.path.abspath(last),
+    rc, out = ours_extract(macextract, os.path.abspath(last),
                            os.path.join(d, "_np"), extra=["--no-parts"])
     fails.check(rc != 0, "%s: --no-parts must not extract a spanned set" % case)
     fails.check("segment" in out.lower(),
@@ -458,7 +458,7 @@ def zip_behaviours(unclassic, case, d, parts, whole, want, workroot, fails):
     # A missing part: named as a segment problem, not as a broken zip.
     hidden = os.path.join(workroot, "hidden-" + case)
     shutil.move(first, hidden)
-    rc, out = ours_extract(unclassic, os.path.abspath(last),
+    rc, out = ours_extract(macextract, os.path.abspath(last),
                            os.path.join(d, "_gap"))
     fails.check(rc != 0, "%s: a missing part must fail" % case)
     fails.check("segment" in out.lower(),
@@ -466,7 +466,7 @@ def zip_behaviours(unclassic, case, d, parts, whole, want, workroot, fails):
 
     # --ask puts it back, over the same engine callback the Mac dialog
     # uses. This is the only way a part outside the folder is reachable.
-    r = subprocess.run([unclassic, "x", "-nr", "--ask", "-o",
+    r = subprocess.run([macextract, "x", "-nr", "--ask", "-o",
                         os.path.join(d, "_ask"), os.path.abspath(last)],
                        input=(hidden + "\n").encode(),
                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -486,7 +486,7 @@ def zip_behaviours(unclassic, case, d, parts, whole, want, workroot, fails):
         ba, bb = open(a, "rb").read(), open(b, "rb").read()
         open(a, "wb").write(bb)
         open(b, "wb").write(ba)
-        rc, out = ours_extract(unclassic, os.path.abspath(last),
+        rc, out = ours_extract(macextract, os.path.abspath(last),
                                os.path.join(d, "_swapped"))
         fails.check(rc != 0,
                     "%s: parts in the wrong order extracted cleanly" % case)
@@ -496,13 +496,13 @@ def zip_behaviours(unclassic, case, d, parts, whole, want, workroot, fails):
         # And a part replaced by something entirely foreign.
         foreign = os.urandom(os.path.getsize(a))
         open(a, "wb").write(foreign)
-        rc, out = ours_extract(unclassic, os.path.abspath(last),
+        rc, out = ours_extract(macextract, os.path.abspath(last),
                                os.path.join(d, "_foreign"))
         fails.check(rc != 0, "%s: a foreign part extracted cleanly" % case)
         open(a, "wb").write(ba)
 
     # Back to health, so a mutation that leaked would be caught here.
-    rc, out = ours_extract(unclassic, os.path.abspath(last),
+    rc, out = ours_extract(macextract, os.path.abspath(last),
                            os.path.join(d, "_again"))
     fails.check(rc == 0 and read_tree(os.path.join(d, "_again")) == want,
                 "%s: the set did not survive the mutation tests" % case)
@@ -517,21 +517,21 @@ def joined_file(dest, whole):
     return open(p, "rb").read() if os.path.exists(p) else None
 
 
-def ours_join(unclassic, part_path, dest, extra=()):
+def ours_join(macextract, part_path, dest, extra=()):
     """Extract with -nr, which stops at the joined file itself."""
-    return ours_extract(unclassic, os.path.abspath(part_path), dest, extra)
+    return ours_extract(macextract, os.path.abspath(part_path), dest, extra)
 
 
-def run_full(unclassic, path, dest):
+def run_full(macextract, path, dest):
     """Extract WITHOUT -nr: a joined archive is unwrapped in place, the
     way a user gets it."""
     os.makedirs(dest, exist_ok=True)
-    r = run([unclassic, "x", "--forks", "hidden", "-o", dest,
+    r = run([macextract, "x", "--forks", "hidden", "-o", dest,
              os.path.abspath(path)])
     return r.returncode, r.stdout.decode("utf-8", "replace")
 
 
-def split_case_run(unclassic, case, workroot, fails):
+def split_case_run(macextract, case, workroot, fails):
     d = os.path.join(workroot, case)
     os.makedirs(d)
     kind, whole, parts, src = ssynth.CASES[case](d)
@@ -541,8 +541,8 @@ def split_case_run(unclassic, case, workroot, fails):
 
     # Ours, from part 1. The comparison is against the bytes that were
     # cut up, so this case needs no oracle to be adjudicated at all.
-    rc, out = ours_join(unclassic, parts[0], os.path.join(d, "_ours"))
-    fails.check(rc == 0, "%s: unclassic failed: %s" % (case, out.strip()))
+    rc, out = ours_join(macextract, parts[0], os.path.join(d, "_ours"))
+    fails.check(rc == 0, "%s: macextract failed: %s" % (case, out.strip()))
     fails.check(joined_file(os.path.join(d, "_ours"), whole) == original,
                 "%s: the join is not the file that was cut up" % case)
 
@@ -568,10 +568,10 @@ def split_case_run(unclassic, case, workroot, fails):
     # An archive payload can be checked all the way through, against an
     # opinion that owes nothing to the joiner: our own unsplit read.
     if src is not None:
-        rc, out = run_full(unclassic, parts[0], os.path.join(d, "_full"))
+        rc, out = run_full(macextract, parts[0], os.path.join(d, "_full"))
         fails.check(rc == 0, "%s: joined archive did not extract: %s"
                     % (case, out.strip()))
-        rc, out = run_full(unclassic, whole, os.path.join(d, "_unsplit"))
+        rc, out = run_full(macextract, whole, os.path.join(d, "_unsplit"))
         fails.check(rc == 0, "%s: unsplit archive did not extract: %s"
                     % (case, out.strip()))
         stem = os.path.basename(src)
@@ -588,7 +588,7 @@ def split_case_run(unclassic, case, workroot, fails):
     return d, kind, whole, parts, original
 
 
-def split_behaviours(unclassic, case, d, kind, whole, parts, original,
+def split_behaviours(macextract, case, d, kind, whole, parts, original,
                      workroot, fails):
     """What byte-exactness cannot see — including, deliberately, the two
     things this scheme cannot promise."""
@@ -598,14 +598,14 @@ def split_behaviours(unclassic, case, d, kind, whole, parts, original,
     # the run is walked from .001 whichever member was opened.
     for i in (1, n - 1):
         dest = os.path.join(d, "_from%d" % (i + 1))
-        rc, out = ours_join(unclassic, parts[i], dest)
+        rc, out = ours_join(macextract, parts[i], dest)
         fails.check(rc == 0 and joined_file(dest, whole) == original,
                     "%s: opening part %d gave a different join" % (case, i + 1))
 
     # A flat join is read strictly forward, so the floor is one open per
     # part and no backward crossing. Unlike a spanned zip there is no
     # directory at the end to reach first.
-    r = run([unclassic, "x", "-nr", "--stats", "-o", os.path.join(d, "_stats"),
+    r = run([macextract, "x", "-nr", "--stats", "-o", os.path.join(d, "_stats"),
              os.path.abspath(parts[0])])
     out = r.stdout.decode("utf-8", "replace")
     line = "".join(l for l in out.splitlines() if l.startswith("segments:"))
@@ -617,7 +617,7 @@ def split_behaviours(unclassic, case, d, kind, whole, parts, original,
                     "%d / 0" % ((case,) + got + (n,)))
 
     # --no-parts hands the file back to the sniff, which sees one slice.
-    rc, out = ours_join(unclassic, parts[0], os.path.join(d, "_np"),
+    rc, out = ours_join(macextract, parts[0], os.path.join(d, "_np"),
                         extra=["--no-parts"])
     fails.check(joined_file(os.path.join(d, "_np"), whole) is None,
                 "%s: --no-parts produced the joined file" % case)
@@ -631,7 +631,7 @@ def split_behaviours(unclassic, case, d, kind, whole, parts, original,
     # rule removed entirely.
     stray = "%s.%03d" % (whole, n + 2)
     open(stray, "wb").write(b"JUNKJUNK")
-    rc, out = ours_join(unclassic, parts[0], os.path.join(d, "_stray"))
+    rc, out = ours_join(macextract, parts[0], os.path.join(d, "_stray"))
     fails.check(rc != 0, "%s: a stray numbered member was joined" % case)
     fails.check("part %d" % (n + 1) in out,
                 "%s: stray member reported as %r" % (case, out.strip()))
@@ -647,7 +647,7 @@ def split_behaviours(unclassic, case, d, kind, whole, parts, original,
     # message: three digits reach 999 and the joiner stops at 256.
     stray = "%s.900" % whole
     open(stray, "wb").write(b"JUNKJUNK")
-    rc, out = ours_join(unclassic, parts[0], os.path.join(d, "_over"))
+    rc, out = ours_join(macextract, parts[0], os.path.join(d, "_over"))
     fails.check(rc != 0 and "256" in out,
                 "%s: a member numbered 900 reported as %r" % (case, out.strip()))
     os.remove(stray)
@@ -655,7 +655,7 @@ def split_behaviours(unclassic, case, d, kind, whole, parts, original,
     # A gap with something beyond it: refused, and named.
     hidden = os.path.join(workroot, "hidden-%s" % case)
     shutil.move(parts[1], hidden)
-    rc, out = ours_join(unclassic, parts[0], os.path.join(d, "_gap"))
+    rc, out = ours_join(macextract, parts[0], os.path.join(d, "_gap"))
     fails.check(rc != 0, "%s: a missing middle part must fail" % case)
     fails.check("part 2" in out, "%s: missing part reported as %r"
                 % (case, out.strip()))
@@ -663,7 +663,7 @@ def split_behaviours(unclassic, case, d, kind, whole, parts, original,
     # --ask puts it back, over the engine callback the Mac dialog uses.
     dest = os.path.join(d, "_ask")
     os.makedirs(dest, exist_ok=True)
-    r = subprocess.run([unclassic, "x", "-nr", "--ask", "-o", dest,
+    r = subprocess.run([macextract, "x", "-nr", "--ask", "-o", dest,
                         os.path.abspath(parts[0])],
                        input=(hidden + "\n").encode(),
                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -684,7 +684,7 @@ def split_behaviours(unclassic, case, d, kind, whole, parts, original,
     tail = os.path.join(workroot, "tail-%s" % case)
     shutil.move(parts[-1], tail)
     dest = os.path.join(d, "_tail")
-    rc, out = ours_join(unclassic, parts[0], dest)
+    rc, out = ours_join(macextract, parts[0], dest)
     if kind == "blob":
         got = joined_file(dest, whole)
         fails.check(rc == 0 and got is not None and len(got) < len(original)
@@ -693,7 +693,7 @@ def split_behaviours(unclassic, case, d, kind, whole, parts, original,
                     "prefix — nothing in this scheme can detect that, so "
                     "find out what did before believing it" % case)
     else:
-        rc2, out2 = run_full(unclassic, parts[0], os.path.join(d, "_tailfull"))
+        rc2, out2 = run_full(macextract, parts[0], os.path.join(d, "_tailfull"))
         fails.check(rc2 != 0,
                     "%s: an archive missing its tail extracted cleanly" % case)
     shutil.move(tail, parts[-1])
@@ -714,7 +714,7 @@ def split_behaviours(unclassic, case, d, kind, whole, parts, original,
     #        offsets and checksums throw it out.
     if kind != "blob" and n > 3:
         undo = swap(1, 2)
-        rc2, out2 = run_full(unclassic, parts[0], os.path.join(d, "_swapmid"))
+        rc2, out2 = run_full(macextract, parts[0], os.path.join(d, "_swapmid"))
         fails.check(rc2 != 0, "%s: parts 2 and 3 swapped extracted cleanly; "
                     "the payload is what adjudicates a split and it did not"
                     % case)
@@ -729,7 +729,7 @@ def split_behaviours(unclassic, case, d, kind, whole, parts, original,
     #        recognized (DECISIONS.md 2026-08-10).
     undo = swap(0, 1)
     dest = os.path.join(d, "_swapped")
-    rc, out = ours_join(unclassic, parts[0], dest)
+    rc, out = ours_join(macextract, parts[0], dest)
     fails.check(rc == 0 and joined_file(dest, whole) != original,
                 "%s: a swap across part 1 was caught; nothing in this "
                 "scheme can do that, so find out what did before "
@@ -738,7 +738,7 @@ def split_behaviours(unclassic, case, d, kind, whole, parts, original,
 
     # Back to health, so a mutation that leaked would be caught here.
     dest = os.path.join(d, "_again")
-    rc, out = ours_join(unclassic, parts[0], dest)
+    rc, out = ours_join(macextract, parts[0], dest)
     fails.check(rc == 0 and joined_file(dest, whole) == original,
                 "%s: the set did not survive the mutation tests" % case)
 
@@ -755,7 +755,7 @@ CPT_CASES = {
 
 SPECIMENS = os.path.join(
     os.environ.get("UNC_VMAC_HOME",
-                   os.path.expanduser("~/.cache/unclassic/vmac")), "specimens")
+                   os.path.expanduser("~/.cache/macextract/vmac")), "specimens")
 
 
 def cpt_parts(d):
@@ -808,7 +808,7 @@ def cpt_floor(fixture_path, seg_size):
     return opens, back
 
 
-def cpt_case_run(unclassic, case, workroot, fails):
+def cpt_case_run(macextract, case, workroot, fails):
     """A segmented Compact Pro set, cut in Python the way the application
     cuts one.
 
@@ -835,12 +835,12 @@ def cpt_case_run(unclassic, case, workroot, fails):
         return None
 
     # What the archive holds, by a path with no joiner in it.
-    rc, out = run_full(unclassic, src, os.path.join(d, "_whole"))
+    rc, out = run_full(macextract, src, os.path.join(d, "_whole"))
     fails.check(rc == 0, "%s: the unsegmented archive failed: %s"
                 % (case, out.strip()))
     want = read_tree(os.path.join(d, "_whole"))
 
-    rc, out = run_full(unclassic, parts[-1], os.path.join(d, "_ours"))
+    rc, out = run_full(macextract, parts[-1], os.path.join(d, "_ours"))
     fails.check(rc == 0, "%s: the segmented set failed: %s" % (case, out.strip()))
     got = read_tree(os.path.join(d, "_ours"))
     fails.check(got == want,
@@ -857,7 +857,7 @@ def cpt_case_run(unclassic, case, workroot, fails):
     return d, setdir, parts, want
 
 
-def cpt_behaviours(unclassic, case, d, setdir, parts, want, workroot, fails):
+def cpt_behaviours(macextract, case, d, setdir, parts, want, workroot, fails):
     fixture, seg_size, _why = CPT_CASES[case]
 
     # ANY segment reaches the set. The application itself requires the
@@ -865,7 +865,7 @@ def cpt_behaviours(unclassic, case, d, setdir, parts, want, workroot, fails):
     # the set's identity, so there is no reason a reader should.
     for i in (0, len(parts) // 2):
         dest = os.path.join(d, "_from%d" % (i + 1))
-        rc, out = run_full(unclassic, parts[i], dest)
+        rc, out = run_full(macextract, parts[i], dest)
         fails.check(rc == 0 and read_tree(dest) == want,
                     "%s: opening segment %d gave a different result: %s"
                     % (case, i + 1, out.strip()))
@@ -882,7 +882,7 @@ def cpt_behaviours(unclassic, case, d, setdir, parts, want, workroot, fails):
         victim = os.path.basename(parts[1])
         os.remove(os.path.join(decoy, victim))
         shutil.copyfile(cpt_parts(other)[1], os.path.join(decoy, victim))
-        rc, out = run_full(unclassic, os.path.join(decoy, os.path.basename(parts[-1])),
+        rc, out = run_full(macextract, os.path.join(decoy, os.path.basename(parts[-1])),
                            os.path.join(d, "_decoyout"))
         fails.check(rc != 0, "%s: a segment of another set was accepted" % case)
         fails.check("segment" in out.lower(),
@@ -892,10 +892,10 @@ def cpt_behaviours(unclassic, case, d, setdir, parts, want, workroot, fails):
     gap = os.path.join(d, "_gap")
     shutil.copytree(setdir, gap)
     os.remove(os.path.join(gap, os.path.basename(parts[1])))
-    rc, out = run_full(unclassic, os.path.join(gap, os.path.basename(parts[-1])),
+    rc, out = run_full(macextract, os.path.join(gap, os.path.basename(parts[-1])),
                        os.path.join(d, "_gapout"))
     fails.check(rc != 0, "%s: a missing segment must fail" % case)
-    rc, out = run_full_with(unclassic, parts[-1], os.path.join(d, "_np"),
+    rc, out = run_full_with(macextract, parts[-1], os.path.join(d, "_np"),
                             ["--no-parts"])
     fails.check(rc != 0, "%s: --no-parts must not extract a set" % case)
 
@@ -904,12 +904,12 @@ def cpt_behaviours(unclassic, case, d, setdir, parts, want, workroot, fails):
     # and changes nothing else. Run one byte under the run's own
     # high-water mark, which lands on exactly that block because it is
     # allocated last (src/fmt_cpt.c).
-    r = run([unclassic, "x", "--forks", "hidden", "--stats", "-o",
+    r = run([macextract, "x", "--forks", "hidden", "--stats", "-o",
              os.path.join(d, "_hw"), os.path.abspath(parts[-1])])
     hw = re.search(r"high-water (\d+)", r.stdout.decode("utf-8", "replace"))
     if fails.check(bool(hw), "%s: --stats printed no high-water" % case):
         dest = os.path.join(d, "_tight")
-        rc, out = run_full_with(unclassic, parts[-1], dest,
+        rc, out = run_full_with(macextract, parts[-1], dest,
                                 ["--stats", "--budget",
                                  str(int(hw.group(1)) - 1)])
         fails.check(rc == 0, "%s: refusing the index buffer broke the read: %s"
@@ -926,7 +926,7 @@ def cpt_behaviours(unclassic, case, d, setdir, parts, want, workroot, fails):
                         "fallback was never taken" % case)
 
     # Part opens against a floor derived from the archive's own directory.
-    r = run([unclassic, "x", "--forks", "hidden", "--stats", "-o",
+    r = run([macextract, "x", "--forks", "hidden", "--stats", "-o",
              os.path.join(d, "_stats"), os.path.abspath(parts[-1])])
     out = r.stdout.decode("utf-8", "replace")
     line = [l for l in out.splitlines() if l.startswith("segments:")]
@@ -941,7 +941,7 @@ def cpt_behaviours(unclassic, case, d, setdir, parts, want, workroot, fails):
                     % (case, got[0], got[1], floor[0], floor[1]))
 
 
-def cpt_specimens(unclassic, workroot, fails):
+def cpt_specimens(macextract, workroot, fails):
     """The real thing, when it is here: sets cut by Compact Pro 1.51
     itself (tools/vmac/cptsegment.py). The generator above is checked
     against these byte for byte by `cptsegment.py --verify`; this checks
@@ -961,9 +961,9 @@ def cpt_specimens(unclassic, workroot, fails):
         parts = cpt_parts(os.path.join(SPECIMENS, case))
         d = os.path.join(workroot, "specimen-" + case)
         os.makedirs(d)
-        rc, out = run_full(unclassic, src, os.path.join(d, "_whole"))
+        rc, out = run_full(macextract, src, os.path.join(d, "_whole"))
         fails.check(rc == 0, "specimen %s: the archive failed" % case)
-        rc, out = run_full(unclassic, parts[-1], os.path.join(d, "_ours"))
+        rc, out = run_full(macextract, parts[-1], os.path.join(d, "_ours"))
         fails.check(rc == 0, "specimen %s: the real set failed: %s"
                     % (case, out.strip()))
         fails.check(read_tree(os.path.join(d, "_ours"))
@@ -1007,7 +1007,7 @@ def wrapper_name(case, part):
     return rename.get(part, part) + wsynth.ENVELOPES[env][1]
 
 
-def wrapped_case_run(unclassic, case, workroot, fails):
+def wrapped_case_run(macextract, case, workroot, fails):
     """A set whose parts are each in their own envelope — what a real
     download of one looks like: Archive.sit.1.hqx, Archive.sit.2.hqx.
 
@@ -1040,15 +1040,15 @@ def wrapped_case_run(unclassic, case, workroot, fails):
 
     # Ours, the way a user gets it: no -nr, because taking the envelope
     # off is the layer under test.
-    rc, out = run_full(unclassic, first, os.path.join(d, "_ours"))
-    fails.check(rc == 0, "%s: unclassic failed: %s" % (case, out.strip()))
+    rc, out = run_full(macextract, first, os.path.join(d, "_ours"))
+    fails.check(rc == 0, "%s: macextract failed: %s" % (case, out.strip()))
     got = read_tree(os.path.join(d, "_ours"))
     fails.check(got == want,
                 "%s: ours disagrees with the generator: %s vs %s"
                 % (case, sorted(got), sorted(want)))
 
     # The same set, unwrapped: an opinion that owes nothing to the peel.
-    rc, out = run_full(unclassic, os.path.join(plain, "Test.sit.1"),
+    rc, out = run_full(macextract, os.path.join(plain, "Test.sit.1"),
                        os.path.join(d, "_plain"))
     fails.check(rc == 0, "%s: the unwrapped set failed: %s" % (case, out.strip()))
     fails.check(got == read_tree(os.path.join(d, "_plain")),
@@ -1056,7 +1056,7 @@ def wrapped_case_run(unclassic, case, workroot, fails):
 
     # Nothing of ours is left in the output directory.
     fails.check(not os.path.exists(os.path.join(d, "_ours",
-                                                ".unclassic-parts")),
+                                                ".macextract-parts")),
                 "%s: the decoded parts were left behind" % case)
 
     rc, out = oracle_extract(first, os.path.join(d, "_oracle"))
@@ -1066,7 +1066,7 @@ def wrapped_case_run(unclassic, case, workroot, fails):
     return d, plain, wrapped, first, want
 
 
-def wrapped_behaviours(unclassic, case, d, plain, wrapped, first, want, fails):
+def wrapped_behaviours(macextract, case, d, plain, wrapped, first, want, fails):
     """What byte-exactness cannot see: what gets in, and what does not."""
     # A wrapped part of a DIFFERENT set, named exactly like the one that
     # is missing. The envelope comes off and the fingerprint decides, so
@@ -1082,14 +1082,14 @@ def wrapped_behaviours(unclassic, case, d, plain, wrapped, first, want, fails):
     wsynth.wrap_file(os.path.join(other, sorted(os.listdir(other))[1]),
                      decoy, per_part.get("Test.sit.2", default),
                      dest_name=gone.rsplit(".", 1)[0])
-    rc, out = run_full(unclassic,
+    rc, out = run_full(macextract,
                        os.path.join(decoy, wrapper_name(case, "Test.sit.1")),
                        os.path.join(d, "_decoy"))
     fails.check(rc != 0, "%s: a foreign wrapped part was accepted" % case)
     fails.check("segment" in out.lower(),
                 "%s: foreign wrapped part reported as %r" % (case, out.strip()))
     fails.check(not os.path.exists(os.path.join(d, "_decoy",
-                                                ".unclassic-parts")),
+                                                ".macextract-parts")),
                 "%s: a failed join left its decoded parts behind" % case)
 
     # Parts collected from three directories, under three names, in two
@@ -1101,7 +1101,7 @@ def wrapped_behaviours(unclassic, case, d, plain, wrapped, first, want, fails):
                          os.path.join(scat, sub),
                          "hqx" if i != 2 else "bin",
                          dest_name="disk%d" % i)
-    rc, out = run_full_with(unclassic,
+    rc, out = run_full_with(macextract,
                             os.path.join(scat, "a", "disk1.hqx"),
                             os.path.join(d, "_scat"),
                             ["--part", os.path.join(scat, "b", "disk2.bin"),
@@ -1119,7 +1119,7 @@ def wrapped_behaviours(unclassic, case, d, plain, wrapped, first, want, fails):
     shutil.copytree(plain, beside)
     wsynth.wrap_file(os.path.join(plain, "Test.sit.2"), beside, "hqx",
                      dest_name="spare")
-    r = run([unclassic, "x", "-v", "--forks", "hidden", "-o",
+    r = run([macextract, "x", "-v", "--forks", "hidden", "-o",
              os.path.join(d, "_beside_out"), os.path.join(beside, "Test.sit.1")])
     out = r.stdout.decode("utf-8", "replace")
     fails.check(r.returncode == 0,
@@ -1138,7 +1138,7 @@ def wrapped_behaviours(unclassic, case, d, plain, wrapped, first, want, fails):
     os.remove(os.path.join(half, "Test.sit.2"))
     wsynth.wrap_file(os.path.join(plain, "Test.sit.2"), half, "hqx",
                      dest_name="whatever-it-was-called")
-    r = run([unclassic, "x", "-v", "--forks", "hidden", "-o",
+    r = run([macextract, "x", "-v", "--forks", "hidden", "-o",
              os.path.join(d, "_half_out"), os.path.join(half, "Test.sit.1")])
     out = r.stdout.decode("utf-8", "replace")
     fails.check(r.returncode == 0, "%s: a half-unstuffed set failed: %s"
@@ -1150,9 +1150,9 @@ def wrapped_behaviours(unclassic, case, d, plain, wrapped, first, want, fails):
                 "%s: the half-unstuffed set gave different bytes" % case)
 
 
-def run_full_with(unclassic, path, dest, extra):
+def run_full_with(macextract, path, dest, extra):
     os.makedirs(dest, exist_ok=True)
-    r = run([unclassic, "x", "--forks", "hidden", "-o", dest]
+    r = run([macextract, "x", "--forks", "hidden", "-o", dest]
             + list(extra) + [os.path.abspath(path)])
     return r.returncode, r.stdout.decode("utf-8", "replace")
 
@@ -1186,7 +1186,7 @@ def ddseg_joined(dest, part_path):
             open(rsrc, "rb").read() if os.path.exists(rsrc) else b"")
 
 
-def ddseg_case_run(unclassic, case, workroot, fails):
+def ddseg_case_run(macextract, case, workroot, fails):
     d = os.path.join(workroot, "ddseg-" + case)
     os.makedirs(d)
     whole, rsrc, parts, src = dsynth.CASES[case](d)
@@ -1196,8 +1196,8 @@ def ddseg_case_run(unclassic, case, workroot, fails):
     # its header, so the set is reachable from any member.
     for which in sorted({0, len(parts) - 1}):
         dest = os.path.join(d, "_ours%d" % which)
-        rc, out = ours_join(unclassic, parts[which], dest)
-        fails.check(rc == 0, "ddseg/%s: unclassic failed from part %d: %s"
+        rc, out = ours_join(macextract, parts[which], dest)
+        fails.check(rc == 0, "ddseg/%s: macextract failed from part %d: %s"
                     % (case, which + 1, out.strip()))
         gotd, gotr = ddseg_joined(dest, parts[which])
         fails.check(gotd == original,
@@ -1218,10 +1218,10 @@ def ddseg_case_run(unclassic, case, workroot, fails):
                 "ddseg/%s: the oracle read a SPLT part after all" % case)
 
     if src is not None:
-        rc, out = run_full(unclassic, parts[0], os.path.join(d, "_full"))
+        rc, out = run_full(macextract, parts[0], os.path.join(d, "_full"))
         fails.check(rc == 0, "ddseg/%s: joined archive did not extract: %s"
                     % (case, out.strip()))
-        rc, out = run_full(unclassic, whole, os.path.join(d, "_unsplit"))
+        rc, out = run_full(macextract, whole, os.path.join(d, "_unsplit"))
         fails.check(rc == 0, "ddseg/%s: unsplit archive did not extract: %s"
                     % (case, out.strip()))
         fails.check(read_tree(os.path.join(d, "_full")) ==
@@ -1230,7 +1230,7 @@ def ddseg_case_run(unclassic, case, workroot, fails):
     return d, whole, rsrc, parts, original
 
 
-def ddseg_behaviours(unclassic, case, d, whole, rsrc, parts, original,
+def ddseg_behaviours(macextract, case, d, whole, rsrc, parts, original,
                      workroot, fails):
     """What byte-exactness cannot see: the four ways a set can be wrong,
     and the two properties no other scheme here has."""
@@ -1240,7 +1240,7 @@ def ddseg_behaviours(unclassic, case, d, whole, rsrc, parts, original,
     # declares the part count, so a reader that quietly emitted the one
     # part it was handed would be discarding a fact it had.
     dest = os.path.join(d, "_alone")
-    rc, out = ours_join(unclassic, parts[0], dest, extra=("--no-parts",))
+    rc, out = ours_join(macextract, parts[0], dest, extra=("--no-parts",))
     if n > 1:
         fails.check(rc != 0, "ddseg/%s: --no-parts must fail on a %d-part set"
                     % (case, n))
@@ -1264,7 +1264,7 @@ def ddseg_behaviours(unclassic, case, d, whole, rsrc, parts, original,
     with open(other, "wb") as f:
         f.write(dsynth.part_header(0x1234567, 200, 0, 1, n, pay) + pay)
     dest = os.path.join(d, "_intruder")
-    rc, out = ours_join(unclassic, parts[0], dest)
+    rc, out = ours_join(macextract, parts[0], dest)
     fails.check(rc == 0, "ddseg/%s: an intruder broke the set: %s"
                 % (case, out.strip()))
     fails.check(ddseg_joined(dest, parts[0])[0] == original,
@@ -1274,7 +1274,7 @@ def ddseg_behaviours(unclassic, case, d, whole, rsrc, parts, original,
     # A missing part must fail, and say what is wrong with it.
     hidden = os.path.join(workroot, "ddseg-hidden-" + case)
     shutil.move(parts[1], hidden)
-    rc, out = ours_join(unclassic, parts[0], os.path.join(d, "_gap"))
+    rc, out = ours_join(macextract, parts[0], os.path.join(d, "_gap"))
     fails.check(rc != 0, "ddseg/%s: a missing part must fail" % case)
     fails.check("segment" in out.lower(),
                 "ddseg/%s: missing part reported as %r" % (case, out.strip()))
@@ -1288,7 +1288,7 @@ def ddseg_behaviours(unclassic, case, d, whole, rsrc, parts, original,
                              paylen=len(pay) + 4096)
     with open(parts[1], "wb") as f:
         f.write(lie + pay)
-    rc, out = ours_join(unclassic, parts[0], os.path.join(d, "_short"))
+    rc, out = ours_join(macextract, parts[0], os.path.join(d, "_short"))
     fails.check(rc != 0,
                 "ddseg/%s: a part declaring more payload than it holds must "
                 "fail" % case)
@@ -1309,7 +1309,7 @@ def ddseg_behaviours(unclassic, case, d, whole, rsrc, parts, original,
             continue
         with open(parts[1], "wb") as f:
             f.write(mutate(body))
-        rc, out = ours_join(unclassic, parts[0],
+        rc, out = ours_join(macextract, parts[0],
                             os.path.join(d, "_crc-" + tag))
         fails.check(rc != 0, "ddseg/%s: a wrong %s must fail the join"
                     % (case, what))
@@ -1321,7 +1321,7 @@ def ddseg_behaviours(unclassic, case, d, whole, rsrc, parts, original,
 
     # And the join still works afterwards, so the mutations above
     # are testing the mutation rather than the directory.
-    rc, out = ours_join(unclassic, parts[0], os.path.join(d, "_again"))
+    rc, out = ours_join(macextract, parts[0], os.path.join(d, "_again"))
     fails.check(rc == 0 and
                 ddseg_joined(os.path.join(d, "_again"), parts[0])[0] == original,
                 "ddseg/%s: the set stopped joining after it was restored"
@@ -1344,7 +1344,7 @@ DDSEG_SPECIMENS = {
 }
 
 
-def ddseg_specimens(unclassic, workroot, fails):
+def ddseg_specimens(macextract, workroot, fails):
     """Join the real sets and compare with the file that was cut up."""
     ran = 0
     for base in sorted(DDSEG_SPECIMENS):
@@ -1366,7 +1366,7 @@ def ddseg_specimens(unclassic, workroot, fails):
         # sets: the index is in the header, so either reaches the set.
         for which in sorted({0, len(parts) - 1}):
             dest = os.path.join(d, "_ours%d" % which)
-            rc, out = ours_join(unclassic, parts[which], dest)
+            rc, out = ours_join(macextract, parts[which], dest)
             fails.check(rc == 0, "ddseg/%s: the real set failed from part "
                         "%d: %s" % (base, which + 1, out.strip()))
             gotd, gotr = ddseg_joined(dest, parts[which])
@@ -1379,10 +1379,10 @@ def ddseg_specimens(unclassic, workroot, fails):
                         % (base, which + 1, len(gotr), len(rsrc)))
         # And the archive inside it reads the same way whether it
         # arrived in one piece or in several.
-        rc, out = run_full(unclassic, parts[0], os.path.join(d, "_full"))
+        rc, out = run_full(macextract, parts[0], os.path.join(d, "_full"))
         fails.check(rc == 0, "ddseg/%s: the joined archive did not extract: "
                     "%s" % (base, out.strip()))
-        rc, out = run_full(unclassic, whole, os.path.join(d, "_unsplit"))
+        rc, out = run_full(macextract, whole, os.path.join(d, "_unsplit"))
         fails.check(rc == 0, "ddseg/%s: the unsplit archive did not extract: "
                     "%s" % (base, out.strip()))
         fails.check(read_tree(os.path.join(d, "_full")) ==
@@ -1400,7 +1400,7 @@ def ddseg_specimens(unclassic, workroot, fails):
         body = open(last, "rb").read()
         with open(last, "wb") as f:
             f.write(body[:200] + bytes([body[200] ^ 0x01]) + body[201:])
-        rc, out = ours_join(unclassic, os.path.join(mut,
+        rc, out = ours_join(macextract, os.path.join(mut,
                             os.path.basename(parts[0])),
                             os.path.join(d, "_mutout"))
         fails.check(rc != 0, "ddseg/%s: a flipped payload byte in a real "
@@ -1421,14 +1421,14 @@ def ddseg_specimens(unclassic, workroot, fails):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--unclassic", default="build/dev/unclassic")
+    ap.add_argument("--macextract", default="build/dev/macextract")
     ap.add_argument("--case", action="append")
     ap.add_argument("--keep", action="store_true")
     a = ap.parse_args()
 
-    unclassic = os.path.abspath(a.unclassic)
-    if not os.path.exists(unclassic):
-        print("run_segments: no such binary: %s" % unclassic)
+    macextract = os.path.abspath(a.macextract)
+    if not os.path.exists(macextract):
+        print("run_segments: no such binary: %s" % macextract)
         return 2
     if shutil.which("unar") is None:
         print("run_segments: unar not found; skipping (oracle unavailable)")
@@ -1461,7 +1461,7 @@ def main():
     try:
         results = {}
         for c in cases:
-            r = case_run(unclassic, c, workroot, fails)
+            r = case_run(macextract, c, workroot, fails)
             if r:
                 results[c] = r
 
@@ -1473,7 +1473,7 @@ def main():
             # the part number comes from the header, so discovery walks
             # back to part 1 on its own.
             third = os.path.join(d, "Test.sit.3")
-            rc, out = ours_extract(unclassic, third, os.path.join(d, "_from3"))
+            rc, out = ours_extract(macextract, third, os.path.join(d, "_from3"))
             fails.check(rc == 0, "basic3: opening part 3 failed: %s" % out.strip())
             fails.check(read_tree(os.path.join(d, "_from3")) == want,
                         "basic3: opening part 3 gave different bytes")
@@ -1482,14 +1482,14 @@ def main():
             # rather than dying as a generic I/O failure.
             hidden = os.path.join(workroot, "hidden-part2")
             shutil.move(os.path.join(d, "Test.sit.2"), hidden)
-            rc, out = ours_extract(unclassic, first, os.path.join(d, "_gap"))
+            rc, out = ours_extract(macextract, first, os.path.join(d, "_gap"))
             fails.check(rc != 0, "basic3: a missing part must fail")
             fails.check("segment" in out.lower(),
                         "basic3: missing part reported as %r" % out.strip())
 
             # --ask: the CLI stand-in for the Mac dialog. Same engine
             # callback, driven from stdin.
-            r = subprocess.run([unclassic, "x", "-nr", "--forks", "hidden",
+            r = subprocess.run([macextract, "x", "-nr", "--forks", "hidden",
                                 "--ask", "-o", os.path.join(d, "_ask"), first],
                                input=(hidden + "\n").encode(),
                                stdout=subprocess.PIPE,
@@ -1503,7 +1503,7 @@ def main():
             # not accepted because it is next in line.
             solo = os.path.join(workroot, "single", "Solo.sit.1")
             if os.path.exists(solo):
-                r = subprocess.run([unclassic, "x", "-nr", "--ask", "-o",
+                r = subprocess.run([macextract, "x", "-nr", "--ask", "-o",
                                     os.path.join(d, "_askbad"), first],
                                    input=(solo + "\n\n").encode(),
                                    stdout=subprocess.PIPE,
@@ -1516,7 +1516,7 @@ def main():
             shutil.move(hidden, os.path.join(d, "Test.sit.2"))
 
             # --part, and how many times the joiner moved between parts.
-            r = run([unclassic, "x", "-nr", "--forks", "hidden", "--stats",
+            r = run([macextract, "x", "-nr", "--forks", "hidden", "--stats",
                      "-o", os.path.join(d, "_stats"), first])
             out = r.stdout.decode("utf-8", "replace")
             line = [l for l in out.splitlines() if l.startswith("segments:")]
@@ -1530,7 +1530,7 @@ def main():
             d, first, name, want = results["single"]
             # One part is a whole set: no volume source needed, so even
             # --no-parts extracts it.
-            rc, out = ours_extract(unclassic, first, os.path.join(d, "_np"),
+            rc, out = ours_extract(macextract, first, os.path.join(d, "_np"),
                                    extra=["--no-parts"])
             fails.check(rc == 0, "single: --no-parts failed: %s" % out.strip())
             fails.check(read_tree(os.path.join(d, "_np")) == want,
@@ -1540,7 +1540,7 @@ def main():
             d, first, _n, _w = results["basic3"]
             # ...while a multi-part set under --no-parts must refuse
             # rather than extract a truncated file.
-            rc, out = ours_extract(unclassic, first, os.path.join(d, "_np"),
+            rc, out = ours_extract(macextract, first, os.path.join(d, "_np"),
                                    extra=["--no-parts"])
             fails.check(rc != 0, "basic3: --no-parts must not extract")
             fails.check("segment" in out.lower(),
@@ -1555,7 +1555,7 @@ def main():
 
         if "many12" in results:
             d, first, _n, _w = results["many12"]
-            r = run([unclassic, "x", "-nr", "--stats", "-o",
+            r = run([macextract, "x", "-nr", "--stats", "-o",
                      os.path.join(d, "_stats"), first])
             out = r.stdout.decode("utf-8", "replace")
             line = [l for l in out.splitlines() if l.startswith("segments:")]
@@ -1566,45 +1566,45 @@ def main():
 
         # --- spanned zip ------------------------------------------------
         for c in zipcases:
-            r = zip_case_run(unclassic, c, workroot, fails)
+            r = zip_case_run(macextract, c, workroot, fails)
             if r:
                 d, _src, parts, whole, want = r
-                zip_behaviours(unclassic, c, d, parts, whole, want,
+                zip_behaviours(macextract, c, d, parts, whole, want,
                                workroot, fails)
 
         # --- Compact Pro segments ---------------------------------------
         for c in cptcases:
-            r = cpt_case_run(unclassic, c, workroot, fails)
+            r = cpt_case_run(macextract, c, workroot, fails)
             if r:
                 d, setdir, parts, want = r
-                cpt_behaviours(unclassic, c, d, setdir, parts, want,
+                cpt_behaviours(macextract, c, d, setdir, parts, want,
                                workroot, fails)
-        nspec = cpt_specimens(unclassic, workroot, fails)
+        nspec = cpt_specimens(macextract, workroot, fails)
 
         # --- parts inside envelopes -------------------------------------
         for c in wrapcases:
-            r = wrapped_case_run(unclassic, c, workroot, fails)
+            r = wrapped_case_run(macextract, c, workroot, fails)
             if r:
                 d, plain, wrapped, first, want = r
-                wrapped_behaviours(unclassic, c, d, plain, wrapped, first,
+                wrapped_behaviours(macextract, c, d, plain, wrapped, first,
                                    want, fails)
 
         # --- plain NAME.001 splits --------------------------------------
         for c in splitcases:
-            r = split_case_run(unclassic, c, workroot, fails)
+            r = split_case_run(macextract, c, workroot, fails)
             if r:
                 d, kind, whole, parts, original = r
-                split_behaviours(unclassic, c, d, kind, whole, parts,
+                split_behaviours(macextract, c, d, kind, whole, parts,
                                  original, workroot, fails)
 
         # --- DiskDoubler `SPLT` sets ------------------------------------
         for c in ddsegcases:
-            r = ddseg_case_run(unclassic, c, workroot, fails)
+            r = ddseg_case_run(macextract, c, workroot, fails)
             if r:
                 d, whole, rsrc, parts, original = r
-                ddseg_behaviours(unclassic, c, d, whole, rsrc, parts,
+                ddseg_behaviours(macextract, c, d, whole, rsrc, parts,
                                  original, workroot, fails)
-        nddspec = ddseg_specimens(unclassic, workroot, fails)
+        nddspec = ddseg_specimens(macextract, workroot, fails)
     finally:
         if a.keep:
             print("kept: %s" % workroot)

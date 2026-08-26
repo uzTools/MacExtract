@@ -66,7 +66,7 @@ Nothing was deleted or rewritten, so it is a move rather than a port:
 - **pycdlib** wrote the ISO; `lsar` confirmed it independently.
 - **The real images are still on this machine** and cost nothing to
   re-run: Retro68's 800K `.dsk` volumes under `/opt/Retro68-build`, the
-  emulator tiers' disks under `~/.cache/unclassic` (up to the 2 GB
+  emulator tiers' disks under `~/.cache/macextract` (up to the 2 GB
   `qemu-ppc/MacOS9.img`), and `vmac/spacesaver/STUFFIT_DLX_SS_501.ISO`, a
   224 MB Toast hybrid CD that is Apple-partitioned rather than ISO 9660.
 - **The negative tests were mutation-tested**, one corroborating field at

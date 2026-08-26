@@ -1,4 +1,4 @@
-# unclassic — Makefile
+# MacExtract — Makefile
 # Engine is C99, no VLAs. Build variants are driven by ci.sh.
 
 CC      ?= gcc
@@ -14,7 +14,7 @@ ENGINE_OBJ = $(patsubst src/%.c,$(BUILD)/%.o,$(ENGINE_SRC))
 THIRD_SRC = $(wildcard third_party/zlib/*.c)
 THIRD_OBJ = $(patsubst third_party/zlib/%.c,$(BUILD)/zlib_%.o,$(THIRD_SRC))
 
-CLI_BIN   = $(BUILD)/unclassic
+CLI_BIN   = $(BUILD)/macextract
 TEST_BIN  = $(BUILD)/unit_tests
 
 all: $(CLI_BIN) $(TEST_BIN)

@@ -83,7 +83,7 @@ def build_interactive_app():
                    check=True, capture_output=True, env=env)
     subprocess.run(["cmake", "--build", bdir, "--", "-j", str(os.cpu_count())],
                    check=True, capture_output=True, env=env)
-    return os.path.join(bdir, "unclassic.bin")
+    return os.path.join(bdir, "MacExtract.bin")
 
 
 class Mac:
@@ -357,7 +357,7 @@ FINDER_VOLUME_ICON = (480, 40)      # boot disk, top right of the desktop
 # the application. Measured off e2e-2-volume.png.
 FINDER_APP_ICON = (240, 110)
 # The extracted application, sixth and last item once the run has finished
-# (System Folder, archive.sit, that empty folder, unclassic, then the two
+# (System Folder, archive.sit, that empty folder, macextract, then the two
 # entries of derived-ScrollbarPattern.sit). Measured off e2e-7; a different
 # fixture puts it somewhere else.
 FINDER_EXTRACTED_APPL = (367, 104)
@@ -413,7 +413,7 @@ def accept_destination(mac, pause=3.0):
 # points down and right of the open dialog, ON PURPOSE, so that the second
 # dialog visibly moves rather than looking like the first one redrawn.
 # Measured off 1b-destination.png; if that offset changes in
-# `mac/unclassic_mac.c`, this moves with it.
+# `mac/macextract_mac.c`, this moves with it.
 SFPUT_DRIVE = (337 + 30, 181 + 30)
 
 
@@ -593,9 +593,9 @@ def phase_wd(args, appbin, workdir, shot):
 
         mac.click(*FINDER_VOLUME_ICON, double=True)       # open the boot volume
         time.sleep(4.0)
-        shot(mac, "wd-2-volume.png")                      # Archives + unclassic
+        shot(mac, "wd-2-volume.png")                      # Archives + macextract
 
-        mac.click(*icons["app"], double=True)             # launch unclassic
+        mac.click(*icons["app"], double=True)             # launch macextract
         time.sleep(args.launch_wait)
         shot(mac, "wd-3-sfgetfile.png")                   # at the volume root
 
@@ -681,7 +681,7 @@ def phase_e2e(args, appbin, workdir, shot):
         time.sleep(4.0)
         shot(mac, "e2e-2-volume.png")
 
-        mac.click(*FINDER_APP_ICON, double=True)         # launch unclassic
+        mac.click(*FINDER_APP_ICON, double=True)         # launch macextract
         time.sleep(args.launch_wait)
         shot(mac, "e2e-3-sfgetfile.png")
 
@@ -721,7 +721,7 @@ def phase_e2e(args, appbin, workdir, shot):
 
 # The "locate part N" alert (ALRT 131). Its default button is item 1,
 # Find..., so that one is reached with Return and never needs a coordinate.
-# Skip and Cancel do: DLOG-style arithmetic off mac/unclassic.r, where the
+# Skip and Cancel do: DLOG-style arithmetic off mac/macextract.r, where the
 # ALRT is at (top 90, left 80) and the DITL rects are {92,196,112,266} and
 # {92,110,112,180}, giving the centres below. THEY MOVE IF THE ALERT DOES.
 SEG_SKIP = (311, 192)
@@ -973,17 +973,17 @@ def phase_wrapped(args, appbin, workdir, shot):
         if not m:
             continue
         nm = m.group(1)
-        if nm in ("System Folder", "Desktop", "unclassic") or \
+        if nm in ("System Folder", "Desktop", "MacExtract") or \
                 nm.startswith("StuffIt Expander") or nm in onvol:
             continue
         got.add(nm)
 
     ref = os.path.join(workdir, "_cli")
     os.makedirs(ref, exist_ok=True)
-    R.sh(os.path.join(R.REPO, "build", "dev", "unclassic"), "x", "-o", ref,
+    R.sh(os.path.join(R.REPO, "build", "dev", "macextract"), "x", "-o", ref,
          os.path.join(d, "Apart.sit.1.hqx"))
     want = set(os.listdir(ref))
-    left = [g for g in got if g.startswith("unclassic part")]
+    left = [g for g in got if g.startswith("MacExtract part")]
     ok = got == want and not left
     print(f"interactive: the volume holds {sorted(got)}")
     print(f"interactive: the Linux CLI gives {sorted(want)}")
@@ -1039,7 +1039,7 @@ def phase_chain(args, appbin, workdir, shot):
     finally:
         shutil.rmtree(home, ignore_errors=True)
     ignore = {"System Folder", "StuffIt Expander\u2122 4.0.1 Folder", "Desktop",
-              "unclassic", onmac}
+              "MacExtract", onmac}
     got = set()
     for line in listing.splitlines():
         m = LISTING_DATE.search(line)
@@ -1050,7 +1050,7 @@ def phase_chain(args, appbin, workdir, shot):
     # What the Linux CLI makes of the same file, recursion and all.
     ref = os.path.join(workdir, "_cli")
     os.makedirs(ref, exist_ok=True)
-    R.sh(os.path.join(R.REPO, "build", "dev", "unclassic"), "x", "-o", ref,
+    R.sh(os.path.join(R.REPO, "build", "dev", "macextract"), "x", "-o", ref,
          args.fixture)
     want = set(os.listdir(ref))
 
@@ -1130,14 +1130,14 @@ def phase_named(args, appbin, workdir, shot):
         if not m:
             continue
         nm = m.group(1)
-        if nm in ("System Folder", "Desktop", "unclassic") or \
+        if nm in ("System Folder", "Desktop", "MacExtract") or \
                 nm.startswith("StuffIt Expander") or nm in onvol:
             continue
         got.add(nm)
 
     ref = os.path.join(workdir, "_cli")
     os.makedirs(ref, exist_ok=True)
-    R.sh(os.path.join(R.REPO, "build", "dev", "unclassic"), "x", "-o", ref,
+    R.sh(os.path.join(R.REPO, "build", "dev", "macextract"), "x", "-o", ref,
          parts[0])
     want = set(os.listdir(ref))
     ok = got == want

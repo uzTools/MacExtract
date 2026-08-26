@@ -1,4 +1,4 @@
-# TESTING.md — how unclassic is validated
+# TESTING.md — how MacExtract is validated
 
 ## Layers
 
@@ -62,7 +62,7 @@ writes nothing for a 0-byte data fork. That is an empty data fork, not
 a lost one — confirmed against `lsar`'s `XADIsResourceFork` and the
 container's entry ids, not assumed.
 
-`unclassic` writes `<file>.rsrc` by default like unar, and `._<file>`
+`macextract` writes `<file>.rsrc` by default like unar, and `._<file>`
 under `--forks hidden`; the differential harnesses pass that flag so
 both sides of the comparison use the unambiguous form.
 
@@ -102,7 +102,7 @@ comment as the oracle reports it (`lsarProperties.XADComment`). The key
 is absent when there is none, so a manifest without it says "no
 comment" and never "not looked for". `tools/run_diff.py` requires the
 comment file the CLI writes (`<fixture>.comment.txt`) to hold exactly
-those bytes in MacRoman and `unclassic l` to print the line; an archive
+those bytes in MacRoman and `macextract l` to print the line; an archive
 with no `comment` key may write no such file, which the suite's
 "unexpected output" check already enforces — and that half is not
 decoration: it is what found five of the seven. **Seven fixtures in the
@@ -243,7 +243,7 @@ Gzip, tar or DiskDoubler, and it fails whole-archive far more often than
 
 ### When our engine declines an entry
 
-A per-entry error from `unclassic` is tolerated in exactly two cases, and
+A per-entry error from `macextract` is tolerated in exactly two cases, and
 **both are the oracle's word, never ours**:
 
 - the oracle failed that same entry (it is `unadjudicated`), or
@@ -294,7 +294,7 @@ The engine emits raw MacRoman filename bytes; the CLI converts to
 UTF-8 (table in `cli/main.c`). `run_diff.py` NFC-normalizes both the
 manifest names and the engine's output paths before comparing, and
 compares forks by SHA-256. Type/creator are compared through
-`unclassic l` output. Dates are recorded loosely but not compared (v1;
+`macextract l` output. Dates are recorded loosely but not compared (v1;
 see DECISIONS.md).
 
 ## Corpus
@@ -333,7 +333,7 @@ only part of the restore path that can be checked offline.
    (2026-08-07) that is **23 of 31** fixtures rather than 11, the rest
    giving a clean per-entry "out of memory". Results in FORMATS.md.
 6. **Fuzzing** (`tools/fuzz.py`): seeded, reproducible
-   mutation/splice/magic-garbage cases through `unclassic t` under the
+   mutation/splice/magic-garbage cases through `macextract t` under the
    sanitizer build; nonzero exits are fine, signals/sanitizer
    aborts/hangs fail. 4,000 cases at M9; every CI run does a 150-case
    smoke.
@@ -562,17 +562,17 @@ exercised deliberately, by hand:
 
     # 1. the bound never under-estimates: hard-disable growth
     #    (make lzw_grow return UNC_ERR_MEM as its first statement)
-    UNCLASSIC=build/never/unclassic sh tests/run_diff.sh      # expect 803/803
+    MACEXTRACT=build/never/macextract sh tests/run_diff.sh      # expect 803/803
 
     # 2. the safety net is correct: force it to run on every stream
     make BUILD=build/tiny CFLAGS="-O1 -g \
         -fsanitize=address,undefined,alignment -fno-sanitize-recover=all \
         -DUNC_LZW_TINY_TABLE" all
-    UNCLASSIC=build/tiny/unclassic sh tests/run_diff.sh       # expect 803/803
+    MACEXTRACT=build/tiny/macextract sh tests/run_diff.sh       # expect 803/803
 
     # 3. these fixtures CAN fail on this code: starve the table AND
     #    skip the add instead of growing
-    UNCLASSIC=build/probe/unclassic sh tests/run_diff.sh      # expect ~90 FAILURES
+    MACEXTRACT=build/probe/macextract sh tests/run_diff.sh      # expect ~90 FAILURES
 
 `UNC_LZW_TINY_TABLE` is committed and forces the initial capacity to 258.
 Steps 1 and 3 are one-line local edits and are deliberately NOT build flags:
@@ -653,11 +653,11 @@ DOSBox**.
     python3 tools/pak.py --setup              # DOSBox + PAK 2.51, needs network
     python3 tools/pak.py --make DIR           # write the corpus
     python3 tools/pak.py --list ARCHIVE       # methods, sizes and CRCs
-    python3 tools/run_pak.py --unclassic build/rel/unclassic
+    python3 tools/run_pak.py --macextract build/rel/macextract
 
 `--setup` needs **no root**: it `apt-get download`s DOSBox and its
 dependency closure and unpacks the `.deb`s into `$UNC_PAK_HOME`
-(default `~/.cache/unclassic/pak/`), then fetches `PAK251.EXE` and lets
+(default `~/.cache/macextract/pak/`), then fetches `PAK251.EXE` and lets
 it self-extract in the guest. No X server either — `SDL_VIDEODRIVER=dummy`
 is enough. `run_pak.py` skips politely when neither the corpus nor a
 `.pak` fixture is present, so a fresh clone is unaffected.
@@ -701,7 +701,7 @@ same number.
 
     python3 tools/arcplus.py --setup            # ARC+Plus 7.12, needs network
     python3 tools/arcplus.py --make DIR
-    python3 tools/run_arcplus.py --unclassic build/rel/unclassic
+    python3 tools/run_arcplus.py --macextract build/rel/macextract
     python3 tools/run_arcplus.py --register     # the real fixture's manifest
 
 `--setup` needs no third-party tool: the distribution is a DOS
@@ -981,7 +981,7 @@ remember:
   `tools/vmac/os9mouse.py` (`tools/vmac/README.md`, *Mac OS 9 with the
   pointer*) and check them by hand:
 
-      unclassic x -p swordfish -o /tmp/out ~/.cache/unclassic/sit5/specimens/enc-swordfish.sit
+      macextract x -p swordfish -o /tmp/out ~/.cache/macextract/sit5/specimens/enc-swordfish.sit
 - **Compact Pro is graded by Compact Pro**, when the emulator has been
   run: `tools/vmac/cptcrypt.py --make --probe` has the application
   itself encrypt three known subjects and keeps the archive beside the
@@ -1193,7 +1193,7 @@ with no Toolbox in it. `sdmod_run.c` is built for m68k-linux and calls one
 under `qemu-m68k` with the parameter block INIT 32 fills in; the driver
 lifts the modules out of the fixture and runs three phases.
 
-    tools/sdmodule/run_sdmodule.py --unclassic build/unclassic
+    tools/sdmodule/run_sdmodule.py --macextract build/macextract
     tools/sdmodule/run_sdmodule.py --list        # the seven modules
 
 1. **Every real block in both corpus archives** whose method has a module,
@@ -1253,7 +1253,7 @@ builds and calls a vector under `qemu-m68k`; the driver lifts the modules
 and the preset dictionary out of the installed control panel with no
 emulator, and runs in about 3 seconds.
 
-    tools/ssmodule/run_ssmodule.py --unclassic build/unclassic
+    tools/ssmodule/run_ssmodule.py --macextract build/macextract
     tools/ssmodule/run_ssmodule.py --keep        # leave one .ss per method
 
 1. **Round trip through Aladdin's code alone** — each module compresses a
@@ -1309,7 +1309,7 @@ stops checking the third token.
 
 **The corpus sweep is the part that matters.** A text-shaped probe can only be
 trusted by how often it is wrong about files that are not packages, so
-`unclassic sniff` was run over all **928 fixtures**: 0 said AppleLink. That is
+`macextract sniff` was run over all **928 fixtures**: 0 said AppleLink. That is
 the DiskCopy standard — its probe was graded the same way — and it is the only
 evidence available while no `.pkg` file exists here.
 
@@ -1327,7 +1327,7 @@ Added 2026-08-27, replacing the disk-image suite that came out the same day
 the signature, its neighbours, and the corpus.
 
 ```sh
-python3 tools/run_foreign.py --unclassic build/dev/unclassic
+python3 tools/run_foreign.py --macextract build/dev/macextract
 ```
 
 **Three grades of case, and the suite says which is which.** bzip2, xz, 7z,
@@ -1372,9 +1372,9 @@ Aladdin's encoder (below). Specimens live outside the repository, beside
 the emulator's ROM and System image, because a compressed file is what
 SpaceSaver made of a subject:
 
-    ~/.cache/unclassic/vmac/specimens/spacesaver/NAME.ss        the file
-    ~/.cache/unclassic/vmac/specimens/spacesaver/NAME.ss.orig   its input
-    ~/.cache/unclassic/vmac/specimens/spacesaver/PrAm-4048.bin  the preset
+    ~/.cache/macextract/vmac/specimens/spacesaver/NAME.ss        the file
+    ~/.cache/macextract/vmac/specimens/spacesaver/NAME.ss.orig   its input
+    ~/.cache/macextract/vmac/specimens/spacesaver/PrAm-4048.bin  the preset
 
 `tools/vmac/spacesaver.py --idlespec` makes the first two (an emulator run);
 `--layout` writes the third out of the installed control panel. **With none
@@ -1730,7 +1730,7 @@ part boundary (27 failures). Both were reverted.
    application is launched from the Finder by keyboard, and afterwards
    the transfer volume — a plain file on the host — is mounted with
    hfsutils and **both forks of every output file are compared byte for
-   byte** against `unclassic x -nr`.
+   byte** against `macextract x -nr`.
 
 9. **Reading the Mini vMac Out volume** (`tools/vmac/run.py --keep-disks`
    then `tools/vmac/checkdisk.py /tmp/vmacrun-*/`): the same comparison

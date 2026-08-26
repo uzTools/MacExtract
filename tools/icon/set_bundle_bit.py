@@ -15,10 +15,10 @@ it could have been found.
 Two artifacts need it, because they are produced side by side and travel
 separately:
 
-  unclassic.bin   MacBinary. Flags live at offset 73 (high byte) and 101
+  MacExtract.bin   MacBinary. Flags live at offset 73 (high byte) and 101
                   (low byte), and byte 73 is inside the range the header
                   CRC at 124 covers, so the CRC is recomputed.
-  unclassic.dsk   an HFS image. Rebuilt from the patched MacBinary rather
+  MacExtract.dsk   an HFS image. Rebuilt from the patched MacBinary rather
                   than edited: `hcopy -m` carries the Finder flags across,
                   and hfsutils has no way to set them in place (`hattrib
                   -b` blesses a system folder, which is a different thing

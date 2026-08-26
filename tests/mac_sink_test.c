@@ -1,6 +1,6 @@
 /*
  * mac_sink_test.c — run the ACTUAL Mac sink/allocator/io code
- * (mac/unclassic_mac.c) against the real engine on Linux, using a
+ * (mac/macextract_mac.c) against the real engine on Linux, using a
  * Linux-backed mock Toolbox. Purpose: catch memory bugs in the Mac
  * glue deterministically, especially on big-endian m68k (qemu-m68k),
  * which the real Linux CLI sink never exercises.
@@ -219,7 +219,7 @@ OSErr PBDirCreateSync(HParamBlockRec *pb)
 
 /* Pull in the actual sink/allocator/io code under test. */
 #define UNC_SINK_TEST
-#include "../mac/unclassic_mac.c"
+#include "../mac/macextract_mac.c"
 
 /* ------------------------------------------------------------------ */
 /* Drive the engine through the Mac sink on a real archive.           */
@@ -360,7 +360,7 @@ int main(int argc, char **argv)
     }
 
     /* The same rule the shell uses: a quarter of free, clamped. See the
-     * kMemReserve comment in mac/unclassic_mac.c for why it is not a
+     * kMemReserve comment in mac/macextract_mac.c for why it is not a
      * constant any more. */
     {
         long reserve = FreeMem() / 4;

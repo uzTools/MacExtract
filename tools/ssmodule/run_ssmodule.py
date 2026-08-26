@@ -15,7 +15,7 @@ arrangement `tools/sdmodule/` already uses for SuperDisk!'s Add-In
 Modules. That makes the modules both the specimen generator and the
 second implementation, for every method the format has:
 
-    tools/ssmodule/run_ssmodule.py --unclassic build/unclassic
+    tools/ssmodule/run_ssmodule.py --macextract build/macextract
 
 Four phases, and the first two are what make the third mean anything:
 
@@ -32,7 +32,7 @@ Four phases, and the first two are what make the third mean anything:
      rather than crash or hang — the corpus has no SpaceSaver fixture,
      so `run_robustness.py` never sees these codecs;
   3. **this engine against the module**, for the methods it implements
-     (0 and 4): the module writes, `unclassic` reads, and the result
+     (0 and 4): the module writes, `macextract` reads, and the result
      must be the subject byte for byte;
   4. **what the module writes for 1, 2 and 3 is kept**, as `.ss` files
      beside the emulator's other state, so that an implementation of
@@ -87,8 +87,8 @@ REPO = os.path.dirname(os.path.dirname(HERE))
 sys.path.insert(0, os.path.join(REPO, "tools"))
 sys.path.insert(0, os.path.join(REPO, "tools", "vmac"))
 
-HOME = os.environ.get("UNCLASSIC_VMAC_HOME",
-                      os.path.expanduser("~/.cache/unclassic/vmac"))
+HOME = os.environ.get("UNC_VMAC_HOME",
+                      os.path.expanduser("~/.cache/macextract/vmac"))
 SPECIMENS = os.path.join(HOME, "specimens", "spacesaver")
 
 # Which module writes each method, and which one reads it back. The
@@ -516,8 +516,8 @@ def phase_keep(written, preset):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--unclassic",
-                    default=os.path.join(REPO, "build", "unclassic"))
+    ap.add_argument("--macextract",
+                    default=os.path.join(REPO, "build", "macextract"))
     ap.add_argument("--cases", type=int, default=4,
                     help="mixed subjects per method (default 4)")
     ap.add_argument("--seed", type=int, default=20260825)
@@ -550,8 +550,8 @@ def main():
                                      args.verbose)
         b = phase_controls(exe, mods, preset, args.cpu)
         s_ = phase_stored(exe, mods, args.cpu)
-        c = phase_engine(args.unclassic, written, preset, args.verbose)
-        z = phase_fuzz(args.unclassic, written, preset, args.fuzz, args.seed)
+        c = phase_engine(args.macextract, written, preset, args.verbose)
+        z = phase_fuzz(args.macextract, written, preset, args.fuzz, args.seed)
         d = phase_keep(written, preset) if args.keep else True
         return 0 if (a and b and s_ and c and z and d) else 1
     finally:

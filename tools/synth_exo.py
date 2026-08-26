@@ -21,7 +21,7 @@ def build_tree(root, rng):
     os.makedirs(os.path.join(root, "docs"))
     os.makedirs(os.path.join(root, "bin"))
     with open(os.path.join(root, "README.txt"), "w") as f:
-        f.write("unclassic synthetic corpus\n" * 20)
+        f.write("macextract synthetic corpus\n" * 20)
     with open(os.path.join(root, "docs", "manual.txt"), "w") as f:
         f.write("the quick brown fox jumps over the lazy dog\n" * 50)
     with open(os.path.join(root, "bin", "blob.dat"), "wb") as f:

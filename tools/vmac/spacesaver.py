@@ -374,7 +374,7 @@ def install351(keep=False):
         # that is a different thing from reading a file format.
         s.mac.click(*REG_NAME)
         time.sleep(1.0)
-        s.mac._xdo("type", "--delay", "120", "unclassic")
+        s.mac._xdo("type", "--delay", "120", "MacExtract")
         s.mac.click(*REG_ORG)
         time.sleep(1.0)
         s.mac._xdo("type", "--delay", "120", "test")
@@ -497,7 +497,7 @@ def install40(keep=False):
         s.shot("registration", wait=20.0)
         s.mac.click(*REG_NAME)
         time.sleep(1.0)
-        s.mac._xdo("type", "--delay", "120", "unclassic")
+        s.mac._xdo("type", "--delay", "120", "MacExtract")
         for code in CODES:
             s.mac.click(*REG_NUMBER)
             time.sleep(1.0)
@@ -2187,7 +2187,7 @@ def freshinstall(keep=False):
         # (DECISIONS.md 2026-08-22, what the registration wall costs).
         s.mac.click(*REG_NAME)
         time.sleep(1.0)
-        s.mac._xdo("type", "--delay", "120", "unclassic")
+        s.mac._xdo("type", "--delay", "120", "MacExtract")
         s.mac.click(*REG_ORG)
         time.sleep(1.0)
         s.mac._xdo("type", "--delay", "120", "test")
@@ -3941,7 +3941,7 @@ def pkg(keep=False):
     print("\n  The recogniser @0x2952 accepts a file when its first"
           "\n  whitespace-delimited token is item 1 and its third is item 4"
           "\n  or item 9 — so a package is TEXT, and that is its whole"
-          "\n  magic. `unclassic sniff` implements exactly that and no more.")
+          "\n  magic. `macextract sniff` implements exactly that and no more.")
 
     print("\n  What this reading rests on:")
     bad = 0

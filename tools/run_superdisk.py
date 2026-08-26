@@ -9,7 +9,7 @@ once, on an emulated Mac, by the archives' own self-extractors
 (`tools/vmac/superdisk.py --adjudicate`); this replays that verdict
 offline by fork content.
 
-    tools/run_superdisk.py --unclassic build/unclassic
+    tools/run_superdisk.py --macextract build/macextract
 
 Every hash below was produced by THIS reader and then confirmed
 fork-for-fork against what the original extractor wrote on a System 7
@@ -244,28 +244,28 @@ def main():
     ap = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--unclassic", default=os.path.join(REPO, "build", "unclassic"))
+    ap.add_argument("--macextract", default=os.path.join(REPO, "build", "macextract"))
     ap.add_argument("-v", "--verbose", action="store_true")
     ap.add_argument("--timeout", type=float, default=30.0)
     a = ap.parse_args()
 
     bad = total = 0
     for fixture, entries in sorted(EXPECTED.items()):
-        b, n = run_one(a.unclassic, fixture, entries, a.verbose)
+        b, n = run_one(a.macextract, fixture, entries, a.verbose)
         bad += b
         total += n
     print("superdisk: %d fork(s) checked, %d bad" % (total, bad))
 
     rbad = rran = 0
     for fixture in sorted(EXPECTED):
-        b, n = robustness(a.unclassic, fixture, a.timeout)
+        b, n = robustness(a.macextract, fixture, a.timeout)
         rbad += b
         rran += n
     print("superdisk: %d corrupted variant(s), %d bad" % (rran, rbad))
 
     gbad = gran = 0
     for fixture, entries in sorted(EXPECTED.items()):
-        b, n = budget(a.unclassic, fixture, entries)
+        b, n = budget(a.macextract, fixture, entries)
         gbad += b
         gran += n
     print("superdisk: %d budget run(s), %d bad" % (gran, gbad))

@@ -1,5 +1,5 @@
 /*
- * unit_main.c — unit tests for libunclassic internals.
+ * unit_main.c — unit tests for libmacextract internals.
  * Uses libc freely (test code runs on Linux only).
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */

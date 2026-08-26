@@ -10,7 +10,7 @@ Four of them, all cheap enough to run first in ci.sh:
    without anyone noticing; CLAUDE.md requires citing the section by name.
    Source files (`foo.c:41`) are fine - only `*.md:NN` is checked.
 3. The version agrees in all three places it is written: UNC_VERSION in
-   include/unclassic.h (the source of truth, which `unclassic --version`
+   include/unclassic.h (the source of truth, which `macextract --version`
    prints), the download section of README.md, and the first line of
    dist/README.txt, which make_dist.sh generates from the header. That
    constant sat at "0.4.0" through four releases because nothing read it

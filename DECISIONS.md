@@ -132,6 +132,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-26 (the btoa translator, by Apple event) — the door nobody tried
 - 2026-08-26 (disk images) — read the volume, not the extension
 - 2026-08-27 — a name is only worth something inside the frame the user came with
+- 2026-08-26 — the project is renamed MacExtract, and the API is not
 
 ---
 
@@ -210,7 +211,7 @@ which fails CI if it drifts from the headings below it.
   window XADMaster inspects) with a rolling 40-byte comparison.
 - **Filename sanitization differences are normalized in the harness,
   not imitated:** for '/' in Mac filenames unar-on-Linux emits '_' while
-  unclassic emits ':' (the classic Mac swap). `run_diff.py` maps
+  MacExtract emits ':' (the classic Mac swap). `run_diff.py` maps
   [:/] → '_' on both sides, per path component. The engine still emits
   raw bytes.
 
@@ -278,7 +279,7 @@ which fails CI if it drifts from the headings below it.
   `derived-BootTime.cpt` and `derived-GNU_Chess_3.0.cpt` stay
   corpus-only. True of the `.rsrc`-suffix convention, and it was the
   convention that was chosen, not a property of the archives:
-  `unar -k hidden` and `unclassic --forks hidden` name the sidecar
+  `unar -k hidden` and `macextract --forks hidden` name the sidecar
   `._X`, which collides with nothing. Both fixtures now have manifests.
   BLOCKERS.md *Withdrawn claims*; DECISIONS.md 2026-08-08.
 - **`UncBufIn.limit`** bounds every compressed fork substream so
@@ -444,7 +445,7 @@ which fails CI if it drifts from the headings below it.
   PBDirCreateSync, `GetApplLimit` glue is absent (LMGetApplLimit
   low-memory accessor used instead), and `ioDirMask` is defined
   locally (ioFlAttrib bit 4, Inside Macintosh: Files).
-- **`unclassic.dsk` is a mountable HFS image, not a bootable one:**
+- **`MacExtract.dsk` is a mountable HFS image, not a bootable one:**
   booting needs a System file, which cannot be redistributed. The
   image mounts in Mini vMac; drag the app onto any System 6..9 boot
   disk (MANUAL_TESTS.md).
@@ -537,7 +538,7 @@ reading the HFS image back with hfsutils. Findings:
   definitively rules out an endianness or decode bug behind the Mac
   crash (the `-m32` build already covered LE 32-bit; qemu-m68k covers
   BE 32-bit).
-- **The Mac sink is now a testable unit.** `mac/unclassic_mac.c` guards
+- **The Mac sink is now a testable unit.** `mac/macextract_mac.c` guards
   its Toolbox includes and UI functions behind `UNC_SINK_TEST`;
   `mac/mac_mocks.h` + `tests/mac_sink_test.c` provide a Linux-backed
   mock Toolbox so the ACTUAL sink/allocator/io code runs against the
@@ -547,7 +548,7 @@ reading the HFS image back with hfsutils. Findings:
   guards it against regressions — the Linux CLI's own sink never
   exercises this code.
 - **[SUPERSEDED — "environmental" was as far as this reasoning could get, and
-  it was wrong: the cause was in unclassic's own File Manager calls, and the
+  it was wrong: the cause was in MacExtract's own File Manager calls, and the
   param-block rewrite fixed it. See the M10 sections below.]**
   The write crash is environmental, not a code-logic bug. With both
   the engine and the sink C proven byte-exact on BE 68000, and every
@@ -603,7 +604,7 @@ BLOCKERS.md for the full write-up. Key decisions:
   resource-only file in two blocks works; a 43 KB two-fork file in three
   crashes. Fix: one contiguous block holding the data region then the
   resource region, so block count stays at two like the single-fork case
-  (`sharedBuf` in `mac/unclassic_mac.c`). Confirmed on real Mini vMac
+  (`sharedBuf` in `mac/macextract_mac.c`). Confirmed on real Mini vMac
   (app idles, no bomb) and proven byte-exact for both forks off-Mac via
   `UNC_MAC_FORCE_SHAREBUF` in `tests/run_mac_sink.sh` (ASan + qemu-m68k).
   Guarded `#ifndef UNC_SINK_TEST`; a rare unknown-fork-size two-fork entry
@@ -639,7 +640,7 @@ BLOCKERS.md for the full write-up. Key decisions:
   16..127 masked) and paints an 8-value aggregate straight to the framebuffer
   (`qd.screenBits`, `at_report`); the host decodes a screenshot
   (`tools/decode_grid.py` + `tools/vmac_check.py`, referenced against
-  `unclassic x -nr`). ~~QuickDraw (NewWindow/EraseRect) bombs after any File
+  `macextract x -nr`). ~~QuickDraw (NewWindow/EraseRect) bombs after any File
   Manager activity, so the framebuffer poke is deliberate~~ — **that
   justification is WITHDRAWN 2026-08-01: it does not reproduce
   (`tools/quickdraw-repro/`, twelve configurations, every QuickDraw call clean
@@ -650,7 +651,7 @@ BLOCKERS.md for the full write-up. Key decisions:
   the desktop over the grid.
 - **[WITHDRAWN 2026-08-01 — this entry is wrong. See the M7 entry it tried to
   correct.]** ~~Arsenic block sizes are 128 KB (dominant) / 256 KB / 512 KB, not
-  "always 512 KB". Measured via `unclassic x --stats` across the 31-fixture SIT5
+  "always 512 KB". Measured via `macextract x --stats` across the 31-fixture SIT5
   corpus: 14 use 128 KB, 9 use 256 KB, 8 use 512 KB; peak heap ≈ 5× block =
   0.64–2.6 MB.~~ All 484 Arsenic streams in the corpus declare **512 KB**; the
   M7 entry was right all along. The mistake was the method: `--stats` reports
@@ -944,7 +945,7 @@ waits for the emulator to exit and then reads it: the Apple_HFS partition is
 lifted out at the offset `mkapmdisk.py` wrote it at, hfsutils mounts it, and
 `hcopy -m` pulls each extracted file off as MacBinary — which is how both
 forks come across in one file, since hfsutils cannot copy a resource fork on
-its own. The forks are then compared byte for byte with `unclassic x -nr`.
+its own. The forks are then compared byte for byte with `macextract x -nr`.
 
 This is strictly stronger than the screen grid: it compares bytes rather than
 a CRC of them, it needs no pixel decoding, it reports which file and which
@@ -971,7 +972,7 @@ The cause was in the Mac shell, not the harness. `unclassic.h` documents
 extension, and `RunExtract()` passed the whole Pascal string. So opening
 `foo.gz` on any Mac wrote a file called `foo.gz`, which collided with the
 archive sitting beside it and became `foo.gz~1`, where every other
-implementation writes `foo`. Fixed in `mac/unclassic_mac.c` with the same
+implementation writes `foo`. Fixed in `mac/macextract_mac.c` with the same
 rule the CLI uses, including "a leading dot is not an extension".
 
 The lesson is about what a test is blind to rather than about the bug: **an
@@ -1590,7 +1591,7 @@ which reads as 9% of the fast path and 4% of the slow one.
   also changed nothing: 582 s. This is the strongest constraint available: a
   30x reduction in callbacks bought zero, so whatever costs 40 s is not paid
   per callback. It also rules out `ars_scale`'s 32-bit divisions.
-- *The engine change costing x86 time.* It does not. Ten runs of `unclassic t`
+- *The engine change costing x86 time.* It does not. Ten runs of `macextract t`
   on the same fixture: 19 ms before, 19 ms after.
 
 **What it IS, as far as the evidence goes.** Copying only the four changed
@@ -1685,7 +1686,7 @@ entry identical, only the recorded `oracle` string differs. The two
 conventions agreed everywhere both could speak, and differed only where one
 of them could not speak at all.
 
-The CLI needed `--forks hidden` for the same reason: `unclassic` wrote
+The CLI needed `--forks hidden` for the same reason: `macextract` wrote
 `NAME.rsrc` too, so the harness had been comparing two trees written in the
 same ambiguous encoding — a mistake inside that encoding could cancel out
 between them. The default stays `visible`, matching unar; the harnesses pass
@@ -1734,7 +1735,7 @@ default cannot. It also covers more than the sidecar case: two entries with
 identical names, and re-extracting into a directory that already holds output,
 had the same shape and the same silence.
 
-One exemption: the envelope being unwrapped. `unclassic x` writes an
+One exemption: the envelope being unwrapped. `macextract x` writes an
 intermediate file, recurses into it, and deletes it when the inner layer
 succeeds — so that file exists while the inner layer is writing, and an inner
 entry may legitimately carry its name. The sink holds a pointer to that path
@@ -1857,7 +1858,7 @@ Four things here transfer:
   is instead checked against unar's own failure count and against `lsar`'s
   independent entry list.
 - **An excuse must be anchored to the other implementation, not to ours.**
-  A per-entry error from `unclassic` is tolerated only where the oracle
+  A per-entry error from `macextract` is tolerated only where the oracle
   failed that same entry — a condition our code cannot influence. Tolerating
   "recognized but unsupported" in general would have been far easier and
   would have silently excused every StuffIt fixture the day someone broke the
@@ -2190,7 +2191,7 @@ differing.
 -4000 was read out of the System file's own resource fork (`hcopy -m`
 the System off the image, walk the resource map; the parser was
 cross-checked by reproducing our `DITL` 128 item for item against
-`mac/unclassic.r`). Ten items, of which item 10 is an *enabled*
+`mac/macextract.r`). Ten items, of which item 10 is an *enabled*
 `statText` with empty text at rect t=1044 l=20 b=1145 r=116 — a
 thousand points below a dialog that is 348x200. Item 2, a button, is
 parked the same way at t=1152. So the empty text item exists; nothing
@@ -2893,7 +2894,7 @@ extraction has to flush for itself.
 **Wrapped parts then followed the CLI's shape**, with one difference
 that is the whole reason it was ranked last: a decoded part needs
 somewhere to live. On Linux that is a temp file beside the output; here
-it is `unclassic part N` on the OUTPUT volume, deleted when the join is
+it is `MacExtract part N` on the OUTPUT volume, deleted when the join is
 over — the one place this application knows it may write. The search is
 rationed the same way, by `SegHaveAll`: envelopes are opened only while
 the set is short of a part, so a complete set opens nothing. StuffIt
@@ -5194,7 +5195,7 @@ length:
 - **A decoder cannot be correct without those bytes.** Every fork's
   first matches reach into them.
 - **This project cannot ship them.** Same rule as the fixtures and the
-  ROM. So `UncOptions.preset` exists, `unclassic --preset FILE` fills
+  ROM. So `UncOptions.preset` exists, `macextract --preset FILE` fills
   it from the user's own copy of SpaceSaver, and
   `spacesaver.py --layout` writes the resource out beside the emulator's
   other state.
@@ -5360,7 +5361,7 @@ and the moment a real recogniser was in front of it, the assumption was
 the only thing holding it up. The test was there to be COPIED, which is
 exactly what rule #1 asks for and the opposite of guessing.
 
-`unclassic sniff` implements those three tokens and nothing more, so it
+`macextract sniff` implements those three tokens and nothing more, so it
 is exactly as strong as Aladdin's and no stronger: a text file that
 begins *"Decode this to that"* is a package as far as either program can
 tell. That is a property of the format, not a defect in the probe, and
@@ -5826,7 +5827,7 @@ commercially without my permission."* The first four words are wrong
 about the rest of the sentence — a non-commercial restriction is not
 the public domain, which is why Debian shipped btoa in `non-free` — and
 it is incompatible with LGPL-2.1, under which somebody may charge for
-what they do with unclassic.
+what they do with MacExtract.
 
 So the usual arrangement is split in two:
 
@@ -6150,7 +6151,7 @@ rule already broken: `m68k -Os -fstack-usage` over the call graph put
 **5,632 B**, against CLAUDE.md's own 4 KB call-depth limit.
 
 **Not against the machine, and the correction is worth recording because
-the first draft of this entry got it wrong.** `mac/unclassic_mac.c` opens
+the first draft of this entry got it wrong.** `mac/macextract_mac.c` opens
 with `SetApplLimit(LMGetApplLimit() - kStackBump)` and `kStackBump` is
 24 KB, so the application runs on **32 KB of stack**, not the 8 KB
 default. Nothing was ever close to overflowing; a 1 MB Mac Plus extracts
@@ -6255,7 +6256,7 @@ command was run in the wrong configuration.
 **The correction, and it is the useful part of this entry.** 597,036 B is
 what a 1 MB Mac Plus leaves the engine with the machine to itself. Under
 MultiFinder, and on System 7 and later, the application gets a PARTITION
-that the user sets in Get Info; `unclassic.r` declares a 400 KB minimum, and
+that the user sets in Get Info; `macextract.r` declares a 400 KB minimum, and
 150 KB of that is the application's own code. Measured on System 7.0.1 with
 the preferred size built down to 400 KB: **`FreeMem()` 212,056 B, budget
 130,136 B** — four and a half times tighter.
@@ -6340,7 +6341,7 @@ a quarter of `FreeMem()`, clamped to [32 KB, 80 KB].
 
 **Claim (measured).** The two configurations this application runs in are
 four and a half times apart: 678,956 B free with a 1 MB Mac Plus to itself,
-211,960 B in the 400 KB minimum partition `unclassic.r` declares. A flat
+211,960 B in the 400 KB minimum partition `macextract.r` declares. A flat
 80 KB is 12 % of the first and **38 %** of the second.
 
 **Evidence for what the reserve is worth.** A probe recording the lowest
@@ -6388,7 +6389,7 @@ launches and an icon that never appears are perfectly compatible.
    for 'ICN#'`. The only RInclude declaring these eight types.
 2. **The creator code.** `add_application()` defaults it to `'????'`, and
    the Finder binds an icon by matching the `BNDL` owner to the creator. The
-   generator stamps `'UNCL'`, so the build has to as well.
+   generator stamps `'MExt'`, so the build has to as well.
 3. **`hasBundle` (0x2000) in the file's Finder info.** Rez takes `-t` and
    `-c` and has no option for the flags, so a built application has
    `0x0000` and the Finder never looks at the `BNDL` at all.
@@ -6431,7 +6432,7 @@ would have had to be at that moment. It is kept as a run-level MAXIMUM,
 because that is the one that has to be covered. The Mac alert rounds it up
 to the next 8K — round enough to type, and never short:
 
-    Needs 64K more memory. Give unclassic more in Get Info.
+    Needs 64K more memory. Give MacExtract more in Get Info.
 
 **The two refusals are kept apart, because their fixes are opposite.** Over
 budget means the partition is too small. A `NewPtr` that fails while the
@@ -6453,7 +6454,7 @@ sabotaged to confirm it can: a 16-byte error takes the suite to exit 1.
 
 **The alert is photographed** (2026-08-24, `interactive.py` default phase,
 System 6.0.8, `derived-AuthoRize_2.0.sit`): *Needs 72K more memory. Give
-unclassic more in Get Info.* The method is in `tools/vmac/README.md`,
+MacExtract more in Get Info.* The method is in `tools/vmac/README.md`,
 *Forcing a memory refusal on screen* — and the method is the transferable
 part, because the obvious route does not work. Shrinking the `SIZE`
 partition only bites under MultiFinder, i.e. System 7, and the default
@@ -7372,7 +7373,7 @@ written down as reasoning; it is now measured, and `run_btoa.py` asserts the
 narrow form in `ci.sh`.
 
 It also showed something the suite could not: a real btoa file from a Mac is
-`X.MBin.ascii`, an armour around a MacBinary wrapper, and `unclassic x` stops
+`X.MBin.ascii`, an armour around a MacBinary wrapper, and `macextract x` stops
 at the wrapper because btoa is not in the envelope auto-unwrap list
 (OPEN_ITEMS.md, section 4). Every layer reads; the chain does not. That is
 what one file from outside your own toolchain is for.
@@ -7474,7 +7475,7 @@ code a library caller sees, `UNC_ERR_UNSUPPORTED` against `UNC_ERR_FORMAT`.
 
 **Where it stops being true is the user's frame.** Somebody who opens an
 unarchiver is telling you they believe they have an archive. Inside that
-frame a name is an instruction: *"unclassic cannot open RAR files"* says the
+frame a name is an instruction: *"MacExtract cannot open RAR files"* says the
 download is fine and sends them to a program that opens it, where *"not
 recognized"* says the file is broken and sends them to download it again.
 Outside that frame a name is trivia: a disk image is not an archive, so
@@ -7511,7 +7512,7 @@ a suite covers it.
 The argument above only holds if the sentence reaches the user, and until
 today it did not: the Mac shell had never said what a detect-only file was,
 for any of the five formats it could name, since M9. It does now, and it is
-photographed on System 6.0.8 — **"unclassic cannot open RAR files."** The
+photographed on System 6.0.8 — **"MacExtract cannot open RAR files."** The
 string is built from `unc_format_name`, so the longest name in the table draws
 46 characters against the ~60 the alert wraps at.
 
@@ -7522,3 +7523,45 @@ images named, 0 false positives, four branches each mutation-tested. What
 changed was the answer to whether they belonged in the product, and that is a
 different fact about the same code. `UNC_FORMAT_DISKCOPY_RETIRED` stays in the
 public enum as a reserved slot so that no enumerator after it moved.
+
+## 2026-08-26 — the project is renamed MacExtract, and the API is not
+
+The project name became **MacExtract**. Everything a person reads changed with
+it: the documents, the Linux CLI (`macextract`), the application as the Finder
+shows it (`MacExtract`), the two downloads (`dist/MacExtract.bin`,
+`dist/MacExtract.dsk`) and the alert strings the Mac shell builds.
+
+**The public C API deliberately did not change.** `unc_*`, `UNC_*` and
+`include/unclassic.h` keep their names: they are the surface an LGPL consumer
+compiles against, the library has been published through v0.23.0, and a rename
+there buys a consistent spelling at the price of breaking every caller. The
+split is the decision, not an oversight — `libmacextract` in prose and
+`unc_extract()` in code are the same library.
+
+**The creator code moved `'UNCL'` → `'MExt'`, which is not free.** The Finder
+binds an icon family to an application by matching the `BNDL` owner to the
+creator (M31), so the code, the `BNDL`, the signature resource and
+`tools/icon/make_icon.py` all had to move together; `mac/macextract_icons.r` was
+regenerated rather than hand-edited, and the bitmaps came out byte-identical.
+The cost lands on anyone who already has the old application: their desktop
+database still binds `'UNCL'`, so the icon goes generic until it is rebuilt —
+which is what the Command-Option restart note in `dist/README.txt` covers.
+The `UNCL` that `tools/synth_now.py` and `tools/vmac/ddencode.py` stamp into
+synthetic containers was left alone: it is payload the manifests record as
+expected output, so moving it would rebuild fixtures to say nothing new.
+
+**A rename can change a fixture.** `tools/synth_exo.py` fills its corpus with
+the project's own name, so four fixtures (`synth-exo-tar`, `-tar-Z`,
+`-zip-deflate`, `-zip-store`) regenerated 1 byte per repetition longer and
+`check_docs.py` caught it. They were rebuilt, their manifests re-derived from
+`unar` 1.10.8 — the same oracle string they already recorded — and
+`fixtures/SOURCES.md` corrected. The 9-byte literal in `tests/unit_formats.c`
+was NOT renamed: `NLIT` hard-codes its length, and it is payload rather than a
+name.
+
+**The rename found a variable with two spellings.** `tools/run_spacesaver.py`
+and `tools/ssmodule/run_ssmodule.py` read `UNCLASSIC_VMAC_HOME`; the other
+thirty-odd call sites read `UNC_VMAC_HOME`. Nothing failed, because both fall
+back to the same default — so pointing `UNC_VMAC_HOME` at a different emulator
+tree moved every harness except those two, silently. Unified on
+`UNC_VMAC_HOME`. The `UNC_` prefix stays for the same reason the C API's does.

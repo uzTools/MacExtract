@@ -671,7 +671,7 @@ def boundary_report(img, shots):
     """What the compressor wrote, and whether this engine reads it back.
 
     The verdict is one comparison: the subject bytes that went in against
-    what `unclassic x` gets out. If a block on the boundary comes back
+    what `macextract x` gets out. If a block on the boundary comes back
     byte-exact, this engine's reading is the compressor's, and the 1992
     module — which `tools/sdmodule/run_sdmodule.py` will then disagree
     with on the same file — is the one that is wrong.

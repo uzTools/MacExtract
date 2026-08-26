@@ -10,7 +10,7 @@ grade fmt_arc.c come from the original DOS binary, run headless.
     tools/pak.py --make DIR     write the generated corpus into DIR
     tools/pak.py --check DIR    extract it with the CLI and compare
 
-Everything lands in $UNC_PAK_HOME (default ~/.cache/unclassic/pak/), and
+Everything lands in $UNC_PAK_HOME (default ~/.cache/macextract/pak/), and
 nothing here is committed: DOSBox is a Debian package, PAK is shareware.
 
 Three things about this harness are worth knowing before changing it:
@@ -40,7 +40,7 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 HOME = os.environ.get("UNC_PAK_HOME",
-                      os.path.expanduser("~/.cache/unclassic/pak"))
+                      os.path.expanduser("~/.cache/macextract/pak"))
 DOS = os.path.join(HOME, "dos")          # the DOSBox C: drive
 ROOTFS = os.path.join(HOME, "root")      # unpacked .deb tree
 

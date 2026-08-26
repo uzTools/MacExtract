@@ -262,8 +262,8 @@ def main():
     appbin = build_interactive_app()
     xfer = os.path.join(args.outdir, "transfer.img")
     R.sh(sys.executable, os.path.join(HERE, "mkapmdisk.py"), O.DISK, xfer,
-         "32", "unclassic",
-         "--macbinary", f"{appbin}:unclassic",
+         "32", "MacExtract",
+         "--macbinary", f"{appbin}:MacExtract",
          "--data", f"{args.fixture}:archive.sit")
 
     O.verify_disk()

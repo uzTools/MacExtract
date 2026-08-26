@@ -1,4 +1,4 @@
-unclassic — a universal unarchiver for Classic Mac OS formats
+MacExtract — a universal unarchiver for Classic Mac OS formats
 Licensed under LGPL-2.1-or-later (see LICENSE).
 
 This project's decoders are transcriptions/ports of algorithms from:
@@ -106,7 +106,7 @@ This project's decoders are transcriptions/ports of algorithms from:
     That is a non-commercial restriction, and Debian shipped it in
     `non-free` for exactly that reason; it is incompatible with this
     project's LGPL grant, under which somebody may charge for what they
-    do with unclassic.
+    do with MacExtract.
 
     So `src/fmt_btoa.c` implements the FORMAT — the two headers, the
     base-85 alphabet, the `z` and `y` escapes, the three checksum

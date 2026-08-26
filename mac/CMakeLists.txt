@@ -4,10 +4,10 @@
 #     -DCMAKE_TOOLCHAIN_FILE=$RETRO68/m68k-apple-macos/cmake/retro68.toolchain.cmake
 #   cmake --build build-mac
 #
-# Produces unclassic.APPL/.bin/.dsk (mountable in Mini vMac; copy the
+# Produces MacExtract.APPL/.bin/.dsk (mountable in Mini vMac; copy the
 # application onto a System 6..9 boot disk to run). See tools/vmac/README.md.
 cmake_minimum_required(VERSION 3.10)
-project(unclassic_mac C)
+project(macextract_mac C)
 
 set(ENGINE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/..)
 file(GLOB ENGINE_SRC ${ENGINE_DIR}/src/*.c)
@@ -16,20 +16,20 @@ file(GLOB ZLIB_SRC ${ENGINE_DIR}/third_party/zlib/*.c)
 # CREATOR is not decoration: the Finder binds an icon family to an
 # application by matching the 'BNDL' owner to the application's creator
 # code, and Retro68 defaults that to '????'. Without this the icons are in
-# the file and the Finder never shows them. Keep 'UNCL' in step with the
+# the file and the Finder never shows them. Keep 'MExt' in step with the
 # CREATOR constant in tools/icon/make_icon.py, which stamps the 'BNDL'.
-add_application(unclassic
-    CREATOR "UNCL"
-    unclassic_mac.c
+add_application(MacExtract
+    CREATOR "MExt"
+    macextract_mac.c
     ${ENGINE_SRC}
     ${ZLIB_SRC}
-    unclassic.r
+    macextract.r
     # Icon family + 'FREF'/'BNDL', generated. A SEPARATE file from
-    # unclassic.r, which holds the dialogs, the alerts and 'SIZE'.
-    unclassic_icons.r
+    # macextract.r, which holds the dialogs, the alerts and 'SIZE'.
+    macextract_icons.r
 )
 
-target_include_directories(unclassic PRIVATE
+target_include_directories(MacExtract PRIVATE
     ${ENGINE_DIR}/include
     ${ENGINE_DIR}/src
     ${ENGINE_DIR}/third_party/zlib
@@ -49,11 +49,11 @@ target_include_directories(unclassic PRIVATE
 # and trailer itself. Neither modifies third_party/zlib. Together they are
 # 8,704 B of the application — FORMATS.md, `Resident memory`.
 set_source_files_properties(
-    ${ZLIB_SRC} TARGET_DIRECTORY unclassic
+    ${ZLIB_SRC} TARGET_DIRECTORY MacExtract
     PROPERTIES COMPILE_DEFINITIONS "Z_TESTW=0;NO_GZIP")
 
 # Plain 68000 floor: no 68020+ instructions.
-target_compile_options(unclassic PRIVATE -mcpu=68000 -Os -Wno-multichar
+target_compile_options(MacExtract PRIVATE -mcpu=68000 -Os -Wno-multichar
                        -ffunction-sections
                        # UNC_MAC_AUTOTEST builds a headless self-driving variant
                        # (no SFGetFile/alerts) used by the Mini vMac harness in
@@ -120,16 +120,16 @@ target_compile_options(unclassic PRIVATE -mcpu=68000 -Os -Wno-multichar
                        # archive's size in budget; this keeps the older path
                        # buildable for comparison.
                        $<$<BOOL:$ENV{UNC_MAC_SLURP_ARCHIVE}>:-DUNC_MAC_SLURP_ARCHIVE>)
-target_link_options(unclassic PRIVATE -Wl,-gc-sections)
+target_link_options(MacExtract PRIVATE -Wl,-gc-sections)
 
 # The Finder ignores a 'BNDL' unless the file's hasBundle flag is set, and
 # nothing in the Retro68 chain sets it — Rez takes -t and -c and has no
 # option for the Finder flags. Hooked to the APPL target rather than to
 # tools/build_mac.sh because run.py and interactive.py drive CMake
 # directly, and the icon has to be right in the builds that photograph it.
-add_custom_command(TARGET unclassic_APPL POST_BUILD
+add_custom_command(TARGET MacExtract_APPL POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E echo "-- setting hasBundle"
     COMMAND python3 ${ENGINE_DIR}/tools/icon/set_bundle_bit.py
-            $<TARGET_FILE_DIR:unclassic>/unclassic.bin
-            $<TARGET_FILE_DIR:unclassic>/unclassic.dsk unclassic
+            $<TARGET_FILE_DIR:MacExtract>/MacExtract.bin
+            $<TARGET_FILE_DIR:MacExtract>/MacExtract.dsk MacExtract
     VERBATIM)

@@ -9,14 +9,14 @@
 # shape: "Source/UnZip.π" carries a 7,048 B resource fork and
 # "Source/UnZip.π.rsrc" is a real, resource-only entry of 5,656 B.
 #
-# Env: UNCLASSIC = path to the CLI binary (default build/san/unclassic)
+# Env: MACEXTRACT = path to the CLI binary (default build/san/macextract)
 #
 # Skips politely when the fixture is absent (fixtures are not committed).
 
 set -e
 cd "$(dirname "$0")/.."
 
-UNCLASSIC="${UNCLASSIC:-build/san/unclassic}"
+MACEXTRACT="${MACEXTRACT:-build/san/macextract}"
 FIXTURE=fixtures/derived-Unzip101.sit
 
 if [ ! -f "$FIXTURE" ]; then
@@ -33,7 +33,7 @@ trap 'rm -rf "$tmp"' EXIT
 #    wrote. This is the case that used to lose 7,048 bytes in silence.
 out="$tmp/default"
 mkdir -p "$out"
-if "$UNCLASSIC" x -nr -o "$out" "$FIXTURE" >"$tmp/1.out" 2>"$tmp/1.err"; then
+if "$MACEXTRACT" x -nr -o "$out" "$FIXTURE" >"$tmp/1.out" 2>"$tmp/1.err"; then
     fail "default forks: expected a nonzero exit on the collision"
 fi
 grep -q "output path already exists" "$tmp/1.err" \
@@ -44,7 +44,7 @@ sz=$(wc -c < "$out/Source/UnZip.π.rsrc")
 # 2. `--forks hidden` is the way out, and gets both entries whole.
 out="$tmp/hidden"
 mkdir -p "$out"
-"$UNCLASSIC" x -nr --forks hidden -o "$out" "$FIXTURE" \
+"$MACEXTRACT" x -nr --forks hidden -o "$out" "$FIXTURE" \
     || fail "--forks hidden: expected a clean extraction"
 sz=$(wc -c < "$out/Source/._UnZip.π")
 [ "$sz" = 7048 ] || fail "--forks hidden: ._UnZip.π is $sz bytes, want 7048"
@@ -55,11 +55,11 @@ sz=$(wc -c < "$out/Source/._UnZip.π.rsrc")
 #    directory that already holds output.
 out="$tmp/overwrite"
 mkdir -p "$out"
-"$UNCLASSIC" x -nr --overwrite -o "$out" "$FIXTURE" \
+"$MACEXTRACT" x -nr --overwrite -o "$out" "$FIXTURE" \
     || fail "--overwrite: expected a zero exit"
-"$UNCLASSIC" x -nr --overwrite -o "$out" "$FIXTURE" \
+"$MACEXTRACT" x -nr --overwrite -o "$out" "$FIXTURE" \
     || fail "--overwrite: expected a zero exit on re-extraction"
-if "$UNCLASSIC" x -nr -o "$out" "$FIXTURE" >/dev/null 2>&1; then
+if "$MACEXTRACT" x -nr -o "$out" "$FIXTURE" >/dev/null 2>&1; then
     fail "re-extracting without --overwrite should refuse"
 fi
 

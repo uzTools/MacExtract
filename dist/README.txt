@@ -1,19 +1,19 @@
-unclassic v0.23.0 — bootstrap distribution
-=========================================
+MacExtract v0.24.0 — bootstrap distribution
+==========================================
 
 A bare Classic Mac has no way to open a .sit/.cpt/.hqx until it HAS an
-unarchiver, so unclassic ships in two forms that need no unarchiver:
+unarchiver, so MacExtract ships in two forms that need no unarchiver:
 
-  unclassic.bin  The application as uncompressed MacBinary. Transfer it to
-                 the Mac with any MacBinary-aware method (ImportFl, a terminal
-                 program's MacBinary receive, an AppleShare/AFP mount). The
-                 wrapper unpacks to the real application on arrival.
+  MacExtract.bin  The application as uncompressed MacBinary. Transfer it to
+                  the Mac with any MacBinary-aware method (ImportFl, a terminal
+                  program's MacBinary receive, an AppleShare/AFP mount). The
+                  wrapper unpacks to the real application on arrival.
 
-  unclassic.dsk  An 800K HFS floppy image containing the application. Write it
-                 to a physical 800K floppy (a Mac Plus reads 400K/800K GCR
-                 floppies only), or mount it in an emulator (Mini vMac,
-                 Basilisk II, SheepShaver), then drag unclassic onto your
-                 startup disk.
+  MacExtract.dsk  An 800K HFS floppy image containing the application. Write it
+                  to a physical 800K floppy (a Mac Plus reads 400K/800K GCR
+                  floppies only), or mount it in an emulator (Mini vMac,
+                  Basilisk II, SheepShaver), then drag MacExtract onto your
+                  startup disk.
 
 Floor target: System 6.0.x on a 1 MB Mac Plus (68000). The same binary runs
 unchanged through Mac OS 9 and adapts its memory use to the machine at runtime,
@@ -47,7 +47,7 @@ StuffIt SpaceSaver files open too, and they are the ones that look like
 nothing is wrong: SpaceSaver compressed in place, so the file kept its
 name and icon and only that Mac could read it. On any other machine its
 own application finds a compressed header where the document should be.
-unclassic carries the table SpaceSaver primes its compression with -- the
+MacExtract carries the table SpaceSaver primes its compression with -- the
 part no other tool has -- so a single file on a floppy is enough, with
 nothing else to install. (That table is copyright Aladdin Systems; see
 the NOTICE file in the source.)

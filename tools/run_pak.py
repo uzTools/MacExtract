@@ -11,7 +11,7 @@ What grades the output, in the order the evidence is worth having:
 
   1. The CRC-16 PAK stored per member, over the DECODED bytes. It was
      written by the 1990 compressor, so it is the one check that no
-     decoder here can influence — including ours. `unclassic t` fails
+     decoder here can influence — including ours. `macextract t` fails
      the entry if it disagrees.
   2. For generated archives, the bytes that went in.
   3. deark for 0x0b and `unar` for 0x0a, where they are installed —
@@ -56,8 +56,8 @@ def deark_bin():
     return shutil.which("deark")
 
 
-def extract_us(unclassic, archive, out):
-    return subprocess.run([unclassic, "x", "-o", out, archive],
+def extract_us(macextract, archive, out):
+    return subprocess.run([macextract, "x", "-o", out, archive],
                           capture_output=True)
 
 
@@ -65,7 +65,7 @@ def read(path):
     return open(path, "rb").read() if os.path.exists(path) else None
 
 
-def check_archive(unclassic, archive, want, problems):
+def check_archive(macextract, archive, want, problems):
     """want: {member name: bytes} for what the archive should hold, or
     {} when the archive is a real specimen and only its own CRCs and the
     second implementations can say."""
@@ -77,15 +77,15 @@ def check_archive(unclassic, archive, want, problems):
         return
 
     # 1. The archive's own CRCs.
-    r = subprocess.run([unclassic, "t", archive], capture_output=True)
+    r = subprocess.run([macextract, "t", archive], capture_output=True)
     if r.returncode != 0:
-        problems.append("%s: `unclassic t` exited %d: %s"
+        problems.append("%s: `macextract t` exited %d: %s"
                         % (base, r.returncode,
                            r.stderr.decode("utf-8", "replace").strip()[:200]))
 
     out = tempfile.mkdtemp()
     try:
-        extract_us(unclassic, archive, out)
+        extract_us(macextract, archive, out)
         ours = {}
         for _m, name, _c, _s in listed:
             got = read(os.path.join(out, name))
@@ -141,7 +141,7 @@ def check_archive(unclassic, archive, want, problems):
         shutil.rmtree(out, ignore_errors=True)
 
 
-def damage(unclassic, archive, problems):
+def damage(macextract, archive, problems):
     """The rule run_arc.py and run_robustness.py use: a damaged archive
     may refuse, but it may not die by signal or exit outside 0..2, which
     is what turns a sanitizer abort into a reported failure. Crushed
@@ -166,7 +166,7 @@ def damage(unclassic, archive, problems):
             open(bad, "wb").write(payload)
             out = tempfile.mkdtemp()
             try:
-                r = subprocess.run([unclassic, "x", "-o", out, bad],
+                r = subprocess.run([macextract, "x", "-o", out, bad],
                                    capture_output=True, timeout=300)
                 if r.returncode < 0 or r.returncode > 2:
                     problems.append("%s %s: exit %d"
@@ -192,12 +192,12 @@ def real_specimens():
 
 
 def main():
-    unclassic = os.path.join(ROOT, "build", "unclassic")
+    macextract = os.path.join(ROOT, "build", "macextract")
     args = sys.argv[1:]
-    if "--unclassic" in args:
-        unclassic = args[args.index("--unclassic") + 1]
-    if not os.path.exists(unclassic):
-        print("run_pak: no CLI at %s" % unclassic)
+    if "--macextract" in args:
+        macextract = args[args.index("--macextract") + 1]
+    if not os.path.exists(macextract):
+        print("run_pak: no CLI at %s" % macextract)
         return 1
 
     corpus = os.path.join(pak.HOME, "corpus")
@@ -224,17 +224,17 @@ def main():
         p = os.path.join(corpus, f)
         listed = pak.members(p)
         want = {n: inputs[n] for _m, n, _c, _s in listed if n in inputs}
-        check_archive(unclassic, p, want, problems)
+        check_archive(macextract, p, want, problems)
         ran += 1
     for p in specimens:
-        check_archive(unclassic, p, {}, problems)
+        check_archive(macextract, p, {}, problems)
         ran += 1
 
     # Damage only the small ones: the point is the decoder's loops, and
     # a 300 KB archive multiplied by 20 variants buys nothing but time.
     for p in [os.path.join(corpus, f) for f in generated] + specimens:
         if os.path.getsize(p) < 120000:
-            damage(unclassic, p, problems)
+            damage(macextract, p, problems)
 
     if problems:
         for p in problems[:40]:

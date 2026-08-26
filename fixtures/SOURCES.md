@@ -880,10 +880,10 @@ Each line records how to re-fetch one. Use `tools/harvest.py --restore`.
 | synth-exo-Z.Z | f11f802daae22d9df385686b78cbd06026e1ff6ae0467ff7b6c803ee29204df5 | 488 | synthetic:tools/synth_exo.py --kind Z |
 | synth-exo-gz-named.gz | 06cf163df204ed7bb5a8d70af55316def25bd4b171cacf268125cea36ab266ea | 99 | synthetic:tools/synth_exo.py --kind gz-named |
 | synth-exo-gz.gz | 78773b077a911bfe6f73f2c83aab4062f9691d411f9b7a011a7be5bdab6d1498 | 81 | synthetic:tools/synth_exo.py --kind gz |
-| synth-exo-tar-Z.tar.Z | 34aa448a4b609264c4aa7a683c4c54ffcfa321b8ecbaa54a45d14df1901dfd88 | 5465 | synthetic:tools/synth_exo.py --kind tar-Z |
-| synth-exo-tar.tar | 964880c4f1f66495fad65f67d8e948a86dd55c64854d94b6a287754e4b7e865d | 20480 | synthetic:tools/synth_exo.py --kind tar |
-| synth-exo-zip-deflate.zip | 7b6dcc8cd9d64e25b771d13049c12b8f04a24f4464d9578b178006d89918f179 | 3709 | synthetic:tools/synth_exo.py --kind zip-deflate |
-| synth-exo-zip-store.zip | 2902496bae5852f8be45dcdc4c7f191166327a87f584deba6193f0d027834c43 | 8384 | synthetic:tools/synth_exo.py --kind zip-store |
+| synth-exo-tar-Z.tar.Z | ef13c8a0dc3d1ffb378c33d7acce5272547ea3d5875b4b8289a10a96eb5cb9f9 | 5476 | synthetic:tools/synth_exo.py --kind tar-Z |
+| synth-exo-tar.tar | 5dc48193652cd26ca6920a3154e9a83c6f62ea13ca00df8bccda905e722b4abe | 20480 | synthetic:tools/synth_exo.py --kind tar |
+| synth-exo-zip-deflate.zip | 7764dab45911f96a647ad0f250393f4648fefb21eb311013028d39845398e219 | 3713 | synthetic:tools/synth_exo.py --kind zip-deflate |
+| synth-exo-zip-store.zip | 41013301e866c46e0c63b5915ac0098d9fbc045f64edaeaf6bf4ac37da16df04 | 8404 | synthetic:tools/synth_exo.py --kind zip-store |
 | synth-now-mixed.now | e87810e9df1e0a663436531cc7ab2f34153b81fffcefd10b467ccbd7dc6f89ae | 7803 | synthetic:tools/synth_now.py |
 | synth-packit-1.pit | 97e30f742867f12346937fae54cb9b274328602a5a9ee6801810e5e004183879 | 3385 | synthetic:tools/synth_pit.py --seed 1 |
 | synth-packit-2.pit | 8c9fbb2e5a777c11937624ed5ed6885c59b730d27d8092a9dc7a9c0f6d877f7a | 3367 | synthetic:tools/synth_pit.py --seed 2 |

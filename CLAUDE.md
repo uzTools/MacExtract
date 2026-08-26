@@ -1,10 +1,10 @@
-# CLAUDE.md — standing instructions for **unclassic**
+# CLAUDE.md — standing instructions for **MacExtract**
 
 *An open-source universal unarchiver for Classic Mac OS (System 6 → Mac OS 9).*
 
 ## Mission
 
-1. **`libunclassic`** — a portable, dependency-free C99 extraction engine for classic Macintosh archive and encoding formats, plus a Linux CLI (`unclassic`).
+1. **`libmacextract`** — a portable, dependency-free C99 extraction engine for classic Macintosh archive and encoding formats, plus a Linux CLI (`macextract`).
 2. **A Retro68 Toolbox application** wrapping the same engine. Floor target: **System 6.0.x, 68000, 1 MB RAM**; the same binary must run unchanged through Mac OS 9.
 
 The engine is the product. The Mac app is a thin shell.

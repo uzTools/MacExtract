@@ -1,5 +1,5 @@
 /*
- * unc_internal.h — shared internals of libunclassic.
+ * unc_internal.h — shared internals of libmacextract.
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
 #ifndef UNC_INTERNAL_H

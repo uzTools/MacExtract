@@ -4,7 +4,7 @@ A standalone Retro68 application that compares Retro68's `HOpen` / `HOpenRF` /
 `HOpenDF` glue against hand-filled `PBHOpenSync` param blocks, on a real
 System 6.0.8 Mac Plus.
 
-It exists because unclassic's Mac shell was, for a while, believed to be broken
+It exists because MacExtract's Mac shell was, for a while, believed to be broken
 by "Retro68's `HOpen` glue returns `noErr` but never writes back the refNum".
 **That claim does not reproduce.** This program is the evidence for withdrawing
 it — see `DECISIONS.md` in the repository root — and doubles as a regression

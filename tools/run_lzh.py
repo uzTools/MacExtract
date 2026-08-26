@@ -57,7 +57,7 @@ LHA_SRC = os.path.abspath(os.path.join(ROOT, "reference", "lha"))
 ARCHIVES = os.path.join(LHASA_SRC, "test", "archives")
 LHASA_BIN = os.path.abspath(os.path.join(ROOT, "build", "lhasa", "lhasa"))
 VMAC_HOME = os.environ.get("UNC_VMAC_HOME",
-                           os.path.expanduser("~/.cache/unclassic/vmac"))
+                           os.path.expanduser("~/.cache/macextract/vmac"))
 MACLHA = os.path.join(VMAC_HOME, "specimens", "maclha")
 LHA_BIN = os.path.abspath(os.path.join(ROOT, "build", "lha", "lha"))
 
@@ -216,13 +216,13 @@ def build_lha():
     return r.returncode == 0 and os.path.exists(LHA_BIN)
 
 
-def us_extract(unclassic, archive, out):
-    return subprocess.run([unclassic, "x", "-nr", "--forks", "hidden",
+def us_extract(macextract, archive, out):
+    return subprocess.run([macextract, "x", "-nr", "--forks", "hidden",
                            "-o", out, archive], capture_output=True,
                           timeout=600)
 
 
-def sweep(unclassic, problems):
+def sweep(macextract, problems):
     """Every archive in lhasa's collection, against unar and lhasa."""
     ran = graded_unar = graded_lhasa = 0
     names = []
@@ -235,7 +235,7 @@ def sweep(unclassic, problems):
         archive = os.path.join(ARCHIVES, name)
         ours = tempfile.mkdtemp()
         try:
-            r = us_extract(unclassic, archive, ours)
+            r = us_extract(macextract, archive, ours)
             if name in SKIP:
                 # Refused, and nothing written.
                 if r.returncode == 0 or os.listdir(ours):
@@ -337,7 +337,7 @@ def subjects():
     }
 
 
-def generated(unclassic, problems):
+def generated(macextract, problems):
     """LHa 1.14i writes; we read; the bytes must be what went in."""
     ran = 0
     work = tempfile.mkdtemp()
@@ -361,7 +361,7 @@ def generated(unclassic, problems):
                     continue
                 out = tempfile.mkdtemp()
                 try:
-                    us_extract(unclassic, arc, out)
+                    us_extract(macextract, arc, out)
                     for fname, content in sorted(data.items()):
                         p = os.path.join(out, fname)
                         if not os.path.exists(p):
@@ -446,7 +446,7 @@ def archive_methods(path):
     return out
 
 
-def lh2(unclassic, problems):
+def lh2(macextract, problems):
     """-lh2-, which nothing in the world writes any more.
 
     `tools/build_lha_lh2.sh` teaches LHa for UNIX to write it — upstream
@@ -496,7 +496,7 @@ def lh2(unclassic, problems):
                 continue
             out = tempfile.mkdtemp()
             try:
-                us_extract(unclassic, arc, out)
+                us_extract(macextract, arc, out)
                 for fname, content in sorted(data.items()):
                     q = os.path.join(out, fname)
                     if not os.path.exists(q):
@@ -644,7 +644,7 @@ def lh3_archive(entries):
     return out + b"\x00"
 
 
-def lh3(unclassic, problems):
+def lh3(macextract, problems):
     """-lh3-, three ways: the bytes, LHa's decoder, and this engine."""
     if not build_lh2():          # the same binary; it DECODES -lh3-
         print("run_lzh: no LHa that decodes -lh3- — those cases are skipped")
@@ -679,7 +679,7 @@ def lh3(unclassic, problems):
                                 "does not read back" % name)
         out = os.path.join(work, "ours")
         os.makedirs(out)
-        us_extract(unclassic, arc, out)
+        us_extract(macextract, arc, out)
         for name, data, _kw in cases:
             q = os.path.join(out, name)
             if not os.path.exists(q):
@@ -693,7 +693,7 @@ def lh3(unclassic, problems):
     return graded
 
 
-def maclha(unclassic, problems):
+def maclha(macextract, problems):
     """The archive MacLHA itself wrote, if this machine has made one.
 
     `tools/vmac/maclha.py` runs MacLHA 2.00 under Mini vMac and archives
@@ -713,7 +713,7 @@ def maclha(unclassic, problems):
     for a in arcs:
         out = tempfile.mkdtemp()
         try:
-            r = us_extract(unclassic, os.path.join(MACLHA, a), out)
+            r = us_extract(macextract, os.path.join(MACLHA, a), out)
             got = snapshot(out)
             names = [k for k in got if not os.path.basename(k).startswith("._")]
             if r.returncode != 0 or len(names) != 1:
@@ -740,12 +740,12 @@ def maclha(unclassic, problems):
 
 
 def main():
-    unclassic = os.path.join(ROOT, "build", "unclassic")
+    macextract = os.path.join(ROOT, "build", "macextract")
     args = sys.argv[1:]
-    if "--unclassic" in args:
-        unclassic = args[args.index("--unclassic") + 1]
-    if not os.path.exists(unclassic):
-        print("run_lzh: no CLI at %s" % unclassic)
+    if "--macextract" in args:
+        macextract = args[args.index("--macextract") + 1]
+    if not os.path.exists(macextract):
+        print("run_lzh: no CLI at %s" % macextract)
         return 1
     if not os.path.isdir(ARCHIVES):
         print("run_lzh: SKIPPED — no reference/lhasa "
@@ -756,16 +756,16 @@ def main():
         return 0
 
     problems = []
-    ran, by_unar, by_lhasa = sweep(unclassic, problems)
-    mac = maclha(unclassic, problems)
+    ran, by_unar, by_lhasa = sweep(macextract, problems)
+    mac = maclha(macextract, problems)
     gen = 0
     if build_lha():
-        gen = generated(unclassic, problems)
+        gen = generated(macextract, problems)
     else:
         print("run_lzh: no reference/lha — the generated cases are skipped")
 
-    old = lh2(unclassic, problems)
-    old3 = lh3(unclassic, problems)
+    old = lh2(macextract, problems)
+    old3 = lh3(macextract, problems)
 
     for p in problems:
         print("run_lzh: FAIL: %s" % p)

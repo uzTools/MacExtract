@@ -1,8 +1,8 @@
 {
  "entries": [
   {
-   "data_sha256": "944d759a8ff1c6367f61721f455db242cfa5de7c0873ee4c6f927e50fcf65d1b",
-   "data_size": 540,
+   "data_sha256": "ab6214ae699ed996d9359e044c8d14d1eb78f7bd815ef59075dab814ff0c1b43",
+   "data_size": 560,
    "name": "README.txt",
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0
@@ -40,6 +40,6 @@
  "fixture": "synth-exo-tar.tar",
  "format": "Tar",
  "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
- "sha256": "964880c4f1f66495fad65f67d8e948a86dd55c64854d94b6a287754e4b7e865d",
+ "sha256": "5dc48193652cd26ca6920a3154e9a83c6f62ea13ca00df8bccda905e722b4abe",
  "size": 20480
 }

@@ -7,10 +7,10 @@ down the right-hand edge; one that does not, does not — and the difference is
 the whole point, because hfsutils will happily read an image that classic Mac
 OS refuses (`tools/vmac/mkapmdisk.py` learned that the hard way on OS 9).
 
-    tools/vmac/mountcheck.py dist/unclassic.dsk -o /tmp/shots
+    tools/vmac/mountcheck.py dist/MacExtract.dsk -o /tmp/shots
 
 This is what backs the claim that the bootstrap distribution's 800K image is
-usable: `dist/unclassic.dsk` has to mount on a machine that has no unarchiver
+usable: `dist/MacExtract.dsk` has to mount on a machine that has no unarchiver
 and no way to get one, or the distribution does not solve the problem it
 exists for.
 

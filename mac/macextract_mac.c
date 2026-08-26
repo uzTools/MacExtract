@@ -1,6 +1,6 @@
 /*
- * unclassic_mac.c — minimal Macintosh Toolbox shell around
- * libunclassic. Compile-only target (M10): built with Retro68 for
+ * macextract_mac.c — minimal Macintosh Toolbox shell around
+ * libmacextract. Compile-only target (M10): built with Retro68 for
  * plain 68000, floor System 6.0.x on a 1 MB Mac Plus; the same binary
  * runs unchanged through Mac OS 9.
  *
@@ -62,7 +62,7 @@
  * FreeMem() is ~681 KB and a quarter is over 80 KB, so the cap holds and
  * nothing changes there — every verified figure on that tier stays exactly
  * as measured. Under MultiFinder at the 400 KB minimum partition
- * `unclassic.r` declares, FreeMem() is 212,056 B, and a flat 80 KB is
+ * `macextract.r` declares, FreeMem() is 212,056 B, and a flat 80 KB is
  * 38 % of the heap held back from a machine that has none to spare.
  *
  * What it is worth keeping back was measured rather than assumed: with a
@@ -1664,10 +1664,10 @@ static int SegWrappedPartOf(SegHost *h, short vol, long dir,
     if (part < 1) return 0;
     if (h->loc[part].name[0]) return part;      /* already have that one */
 
-    /* "unclassic part N" — on the output volume, which is the one place
+    /* "MacExtract part N" — on the output volume, which is the one place
      * this application knows it may write. */
     tmp[0] = 0;
-    PStrCat(tmp, "unclassic part ");
+    PStrCat(tmp, "MacExtract part ");
     PStrCatNum(tmp, (long)part);
     MyHDelete(h->tmpVol, h->tmpDir, tmp);        /* a stale one, if any */
     if (MyHCreate(h->tmpVol, h->tmpDir, tmp) != noErr) return 0;
@@ -1722,7 +1722,7 @@ static void SegPeelClean(SegHost *h)
     for (p = 1; p <= kSegMaxKnown; p++) {
         Str255 tmp;
         tmp[0] = 0;
-        PStrCat(tmp, "unclassic part ");
+        PStrCat(tmp, "MacExtract part ");
         PStrCatNum(tmp, (long)p);
         MyHDelete(h->tmpVol, h->tmpDir, tmp);
     }
@@ -3717,7 +3717,7 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
         s[0] = 0;
         PStrCat(s, "Needs ");
         PStrCatNum(s, (gShortBy + 8191L) / 8192L * 8L);
-        PStrCat(s, "K more memory. Give unclassic more in Get Info.");
+        PStrCat(s, "K more memory. Give MacExtract more in Get Info.");
         ShowNote(kErrorALRT, s);
     }
     else if (gShortPiece)
@@ -3736,7 +3736,7 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
          * in the table makes 46. */
         Str255 s;
         s[0] = 0;
-        PStrCat(s, "unclassic cannot open ");
+        PStrCat(s, "MacExtract cannot open ");
         PStrCat(s, unc_format_name(topFmt));
         PStrCat(s, " files.");
         ShowNote(kErrorALRT, s);

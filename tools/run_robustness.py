@@ -2,7 +2,7 @@
 """run_robustness.py — corrupted-input tests.
 
 For every implemented-format fixture: generate truncated and bit-flipped
-variants and require `unclassic t` to terminate quickly with a normal
+variants and require `macextract t` to terminate quickly with a normal
 exit code. Death by signal (sanitizer abort, segfault) or timeout (hang)
 is a failure. Deterministic: RNG seeded per fixture name.
 """
@@ -30,7 +30,7 @@ def variants(blob, seed):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--unclassic", default=os.path.join(ROOT, "build/san/unclassic"))
+    ap.add_argument("--macextract", default=os.path.join(ROOT, "build/san/macextract"))
     ap.add_argument("--timeout", type=float, default=30.0)
     args = ap.parse_args()
 
@@ -55,7 +55,7 @@ def main():
                 tf.write(var)
                 vpath = tf.name
             try:
-                r = subprocess.run([args.unclassic, "t", vpath],
+                r = subprocess.run([args.macextract, "t", vpath],
                                    capture_output=True, timeout=args.timeout)
                 if r.returncode < 0 or r.returncode > 2:
                     bad += 1

@@ -65,20 +65,20 @@ def forks(root, path, who):
     return data, rsrc or b"", typ, creator
 
 
-def command(who, unclassic, archive, out):
+def command(who, macextract, archive, out):
     if who == "unar":
         return ["unar", "-q", "-f", "-nr", "-D", "-k", "hidden", "-o", out,
                 archive]
-    return [unclassic, "x", "-o", out, archive]
+    return [macextract, "x", "-o", out, archive]
 
 
-def extract_and_compare(who, unclassic, archive, want, problems):
+def extract_and_compare(who, macextract, archive, want, problems):
     """Run one extractor and compare everything it wrote. Returns its
     exit status, which the caller judges: usually it must be 0."""
     name = os.path.basename(archive)
     out = tempfile.mkdtemp()
     try:
-        r = run(command(who, unclassic, archive, out))
+        r = run(command(who, macextract, archive, out))
         for path, content in sorted(want.items()):
             if content is None:
                 if not os.path.isdir(os.path.join(out, path)):
@@ -106,11 +106,11 @@ def extract_and_compare(who, unclassic, archive, want, problems):
         shutil.rmtree(out, ignore_errors=True)
 
 
-def check(archive, want, unclassic, problems):
+def check(archive, want, macextract, problems):
     """`want` is path -> (data, rsrc), or None for a folder."""
     name = os.path.basename(archive)
     for who in ("unar", "us"):
-        r = extract_and_compare(who, unclassic, archive, want, problems)
+        r = extract_and_compare(who, macextract, archive, want, problems)
         if r.returncode != 0:
             problems.append("%s: %s exited %d (%s)"
                             % (name, who, r.returncode,
@@ -118,13 +118,13 @@ def check(archive, want, unclassic, problems):
                                .replace("\n", " | ")[-160:]))
 
 
-def check_metadata(archive, unclassic, problems):
+def check_metadata(archive, macextract, problems):
     """Type and creator, which the fork comparison cannot see. Ours comes
     from `l -v`; the oracle's from the Finder info in its AppleDouble
     sidecar, which it writes only for an entry that has a resource
     fork."""
     name = os.path.basename(archive)
-    r = run([unclassic, "l", "-v", archive])
+    r = run([macextract, "l", "-v", archive])
     listed = {}
     for line in r.stdout.decode("mac-roman").splitlines()[1:]:
         parts = line.split(None, 4)
@@ -148,7 +148,7 @@ def check_metadata(archive, unclassic, problems):
         shutil.rmtree(out, ignore_errors=True)
 
 
-def check_refusals(tmp, unclassic, problems):
+def check_refusals(tmp, macextract, problems):
     """Two mutations, both of which must be noticed. Without them the
     suite could only ever report success — a comparison nothing has been
     shown to fail is not evidence (CLAUDE.md)."""
@@ -170,7 +170,7 @@ def check_refusals(tmp, unclassic, problems):
     open(bad, "wb").write(bytes(flipped))
     out = tempfile.mkdtemp()
     try:
-        run([unclassic, "x", "-o", out, bad])
+        run([macextract, "x", "-o", out, bad])
         got = open(os.path.join(out, "text"), "rb").read()
         if got == synth_now.sample_data()["text"]:
             problems.append("flipped.now: a flipped payload byte changed "
@@ -188,7 +188,7 @@ def check_refusals(tmp, unclassic, problems):
     open(bad, "wb").write(bytes(broken))
     out = tempfile.mkdtemp()
     try:
-        r = run([unclassic, "x", "-o", out, bad])
+        r = run([macextract, "x", "-o", out, bad])
         if r.returncode == 0:
             problems.append("broken.now: a damaged block table was accepted")
         u = run(["unar", "-q", "-f", "-nr", "-D", "-o", out, bad])
@@ -199,7 +199,7 @@ def check_refusals(tmp, unclassic, problems):
         shutil.rmtree(out, ignore_errors=True)
 
 
-def check_empty_stream(tmp, unclassic, problems):
+def check_empty_stream(tmp, macextract, problems):
     """A zero-length file in the middle of an archive: the one shape
     where the two implementations disagree, and where WE are right.
 
@@ -214,13 +214,13 @@ def check_empty_stream(tmp, unclassic, problems):
     it, this says so instead of quietly agreeing.
     """
     archive, want = synth_now.write_empty_stream(tmp)
-    r = extract_and_compare("us", unclassic, archive, want, problems)
+    r = extract_and_compare("us", macextract, archive, want, problems)
     if r.returncode != 0:
         problems.append("synth-now-empty.now: we exited %d on an empty file "
                         "in the middle" % r.returncode)
     out = tempfile.mkdtemp()
     try:
-        u = run(command("unar", unclassic, archive, out))
+        u = run(command("unar", macextract, archive, out))
     finally:
         shutil.rmtree(out, ignore_errors=True)
     if u.returncode == 0:
@@ -251,7 +251,7 @@ REAL_FORKS = {
 }
 
 
-def check_real_fixture(unclassic, problems):
+def check_real_fixture(macextract, problems):
     """The corpus's second real archive, if it has been fetched."""
     import hashlib
     import struct
@@ -262,7 +262,7 @@ def check_real_fixture(unclassic, problems):
         return 0
     out = tempfile.mkdtemp()
     try:
-        r = run([unclassic, "x", "--forks", "hidden", "-o", out, archive])
+        r = run([macextract, "x", "--forks", "hidden", "-o", out, archive])
         if r.returncode != 0:
             problems.append("%s: we exited %d" % (REAL_FIXTURE, r.returncode))
         for path, (dhash, rhash) in REAL_FORKS.items():
@@ -301,7 +301,7 @@ def check_real_fixture(unclassic, problems):
     return 1
 
 
-def check_encoder_specimens(unclassic, problems):
+def check_encoder_specimens(macextract, problems):
     """Archives written by Now Compress itself, if they have been made.
 
     `tools/vmac/nowcompress.py` drives Now QuickFiler 5.0.1 under Mini
@@ -313,7 +313,7 @@ def check_encoder_specimens(unclassic, problems):
     """
     home = os.environ.get("UNC_VMAC_HOME") or os.path.join(
         os.environ.get("XDG_CACHE_HOME", os.path.expanduser("~/.cache")),
-        "unclassic", "vmac")
+        "macextract", "vmac")
     root = os.path.join(home, "specimens", "now")
     if not os.path.isdir(root):
         print("run_now: no encoder specimens (tools/vmac/nowcompress.py) — "
@@ -328,12 +328,12 @@ def check_encoder_specimens(unclassic, problems):
             if not f.endswith(".dat"):
                 continue
             archive = os.path.join(d, f)
-            r = run([unclassic, "l", archive])
+            r = run([macextract, "l", archive])
             if b"Now Compress" not in r.stdout + r.stderr:
                 continue          # an uncompressed file the encoder declined
             out = tempfile.mkdtemp()
             try:
-                x = run([unclassic, "x", "-o", out, archive])
+                x = run([macextract, "x", "-o", out, archive])
                 if x.returncode != 0:
                     problems.append("%s/%s: we exited %d" % (case, f,
                                                              x.returncode))
@@ -354,12 +354,12 @@ def check_encoder_specimens(unclassic, problems):
 
 
 def main():
-    unclassic = os.path.join(ROOT, "build", "unclassic")
+    macextract = os.path.join(ROOT, "build", "macextract")
     args = sys.argv[1:]
-    if "--unclassic" in args:
-        unclassic = args[args.index("--unclassic") + 1]
-    if not os.path.exists(unclassic):
-        print("run_now: no CLI at %s" % unclassic)
+    if "--macextract" in args:
+        macextract = args[args.index("--macextract") + 1]
+    if not os.path.exists(macextract):
+        print("run_now: no CLI at %s" % macextract)
         return 1
     if shutil.which("unar") is None:
         print("run_now: SKIPPED — no `unar` to adjudicate with")
@@ -371,15 +371,15 @@ def main():
     try:
         made = synth_now.write_all(tmp)
         for archive in sorted(made):
-            check(archive, made[archive], unclassic, problems)
+            check(archive, made[archive], macextract, problems)
             ran += 1
-        check_metadata(os.path.join(tmp, "synth-now-tree.now"), unclassic,
+        check_metadata(os.path.join(tmp, "synth-now-tree.now"), macextract,
                        problems)
-        check_refusals(tmp, unclassic, problems)
-        check_empty_stream(tmp, unclassic, problems)
+        check_refusals(tmp, macextract, problems)
+        check_empty_stream(tmp, macextract, problems)
         ran += 3
-        ran += check_real_fixture(unclassic, problems)
-        ran += check_encoder_specimens(unclassic, problems)
+        ran += check_real_fixture(macextract, problems)
+        ran += check_encoder_specimens(macextract, problems)
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 

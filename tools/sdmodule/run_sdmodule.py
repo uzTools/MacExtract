@@ -12,7 +12,7 @@ carries and this engine extracts — has one `Cmpr` resource per codec, each a
 self-contained 68k decoder with no Toolbox in it. `sdmod_run.c` calls one
 under `qemu-m68k`; this drives it.
 
-    tools/sdmodule/run_sdmodule.py --unclassic build/unclassic
+    tools/sdmodule/run_sdmodule.py --macextract build/macextract
 
 Four things happen, and the first three are what make the last trustworthy:
 
@@ -126,7 +126,7 @@ def module_entry(blob):
     return i
 
 
-def modules(unclassic, workdir):
+def modules(macextract, workdir):
     """Lift every Add-In Module out of the corpus fixture.
 
     They are not one per resource: `Cmpr` 22 holds SlowFastB and Tennessee
@@ -134,7 +134,7 @@ def modules(unclassic, workdir):
     """
     out = os.path.join(workdir, "dexp")
     os.makedirs(out, exist_ok=True)
-    r = sh(unclassic, "x", "-o", out, os.path.join(REPO, "fixtures", MODULE_FIXTURE))
+    r = sh(macextract, "x", "-o", out, os.path.join(REPO, "fixtures", MODULE_FIXTURE))
     if r.returncode != 0:
         raise SystemExit(f"sdmodule: extracting {MODULE_FIXTURE} failed:\n{r.stderr}")
     fork = open(os.path.join(out, MODULE_FILE), "rb").read()
@@ -308,14 +308,14 @@ def single_container(block, ulen, name=b"T"):
     return hdr + block
 
 
-def ours(unclassic, block, ulen, workdir):
+def ours(macextract, block, ulen, workdir):
     """What this engine makes of one block, or None if it refuses it."""
     p = os.path.join(workdir, "one.x")
     out = os.path.join(workdir, "one")
     shutil.rmtree(out, ignore_errors=True)
     os.makedirs(out)
     open(p, "wb").write(single_container(block, ulen))
-    r = sh(unclassic, "x", "-o", out, p)
+    r = sh(macextract, "x", "-o", out, p)
     f = os.path.join(out, "T")
     if r.returncode != 0 or not os.path.exists(f):
         return None
@@ -409,7 +409,7 @@ def synth_block9(payload):
 
 # ------------------------------------------------------------------- phases
 
-def phase_corpus(unclassic, mods, workdir, verbose=False):
+def phase_corpus(macextract, mods, workdir, verbose=False):
     """Every real block whose method has a module, both ways.
 
     The reference is what this engine extracts, read back per fork; the
@@ -422,7 +422,7 @@ def phase_corpus(unclassic, mods, workdir, verbose=False):
         payload = os.path.join(workdir, "payload")
         shutil.rmtree(payload, ignore_errors=True)
         os.makedirs(payload)
-        r = sh(unclassic, "x", "-nr", "-o", payload,
+        r = sh(macextract, "x", "-nr", "-o", payload,
                os.path.join(REPO, "fixtures", fixture))
         if r.returncode != 0:
             raise SystemExit(f"sdmodule: unwrapping {fixture} failed:\n{r.stderr}")
@@ -435,7 +435,7 @@ def phase_corpus(unclassic, mods, workdir, verbose=False):
         full = os.path.join(workdir, "full")
         shutil.rmtree(full, ignore_errors=True)
         os.makedirs(full)
-        r = sh(unclassic, "x", "-o", full, os.path.join(REPO, "fixtures", fixture))
+        r = sh(macextract, "x", "-o", full, os.path.join(REPO, "fixtures", fixture))
         if r.returncode != 0:
             raise SystemExit(f"sdmodule: extracting {fixture} failed:\n{r.stderr}")
 
@@ -492,7 +492,7 @@ def phase_corpus(unclassic, mods, workdir, verbose=False):
     return bad == 0 and ok > 0
 
 
-def phase_synth(unclassic, mods, workdir, cases, seed, verbose=False):
+def phase_synth(macextract, mods, workdir, cases, seed, verbose=False):
     """Blocks this engine builds, through both implementations.
 
     Every method here is one no archive in reach uses, so there is nothing
@@ -518,7 +518,7 @@ def phase_synth(unclassic, mods, workdir, cases, seed, verbose=False):
             flagbits = [rnd.random() < 0.9 for _ in range(ulen)]
             block = (synth_block9(payload) if method == 9
                      else synth_block(method, payload, flagbits))
-            a = ours(unclassic, block, ulen, workdir)
+            a = ours(macextract, block, ulen, workdir)
             b, status = run_module(mods, method, block[2:],
                                    max(ulen, 0x8000))
             if a is None:
@@ -587,7 +587,7 @@ def on_the_refill_boundary(method, ulen):
     return nflags % 4 == 0
 
 
-def phase_specimens(unclassic, mods, workdir, verbose=False):
+def phase_specimens(macextract, mods, workdir, verbose=False):
     """The blocks Alysis's own 1991 control panel wrote, through its own
     1992 module.
 
@@ -598,7 +598,7 @@ def phase_specimens(unclassic, mods, workdir, verbose=False):
     so this phase is skipped when they are not there.
     """
     home = os.environ.get("UNC_VMAC_HOME",
-                          os.path.expanduser("~/.cache/unclassic/vmac"))
+                          os.path.expanduser("~/.cache/macextract/vmac"))
     root = os.path.join(home, "specimens", "sdcompress")
     paths = sorted(glob.glob(os.path.join(root, "*", "*.x")))
     if not paths:
@@ -619,7 +619,7 @@ def phase_specimens(unclassic, mods, workdir, verbose=False):
         out = os.path.join(workdir, "spec")
         shutil.rmtree(out, ignore_errors=True)
         os.makedirs(out)
-        if sh(unclassic, "x", "-o", out, path).returncode != 0:
+        if sh(macextract, "x", "-o", out, path).returncode != 0:
             continue
         p = body
         for want in (dlen, rlen):
@@ -703,7 +703,7 @@ def encode_method10(rnd, nitems):
     return bytes(body), bytes(out)
 
 
-def phase_method10(unclassic, mods, workdir, cases, seed, verbose=False):
+def phase_method10(macextract, mods, workdir, cases, seed, verbose=False):
     """Method 10, three ways: the bytes, this engine, and Alysis's module.
 
     Nothing in reach writes a method 10 block — both corpus archives use 7
@@ -724,7 +724,7 @@ def phase_method10(unclassic, mods, workdir, cases, seed, verbose=False):
     for _ in range(cases):
         body, want = encode_method10(rnd, rnd.choice([40, 150, 400]))
         block = struct.pack(">HHH", 6 + len(body), len(want), 10) + body
-        a = ours(unclassic, block, len(want), workdir)
+        a = ours(macextract, block, len(want), workdir)
         b, status = run_module(mods, 10, block[2:], max(len(want), 0x8000))
         oka = a == want
         okb = b is not None and b[:len(want)] == want
@@ -741,7 +741,7 @@ def phase_method10(unclassic, mods, workdir, cases, seed, verbose=False):
     return bad == 0 and agree > 0
 
 
-def phase_tennessee(unclassic, mods, workdir, verbose=False):
+def phase_tennessee(macextract, mods, workdir, verbose=False):
     """What method 20 turns out to be, and five blocks it writes for free.
 
     Module 20 ("Tennessee") answers `badCommandError` to the decompress
@@ -785,7 +785,7 @@ def phase_tennessee(unclassic, mods, workdir, verbose=False):
             continue
         ulen, method = struct.unpack(">HH", out[:4])
         block = struct.pack(">H", 2 + len(out)) + out
-        back = ours(unclassic, block, ulen, workdir)
+        back = ours(macextract, block, ulen, workdir)
         if method != 11:
             bad += 1
             print(f"sdmodule: Tennessee wrote method {method} for {name}, "
@@ -807,7 +807,7 @@ def phase_tennessee(unclassic, mods, workdir, verbose=False):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--unclassic", default=os.path.join(REPO, "build", "unclassic"))
+    ap.add_argument("--macextract", default=os.path.join(REPO, "build", "macextract"))
     ap.add_argument("--cases", type=int, default=12,
                     help="synthetic blocks per method (default 12)")
     ap.add_argument("--seed", type=int, default=7)
@@ -826,19 +826,19 @@ def main():
 
     workdir = tempfile.mkdtemp(prefix="sdmodule-")
     try:
-        mods = modules(args.unclassic, workdir)
+        mods = modules(args.macextract, workdir)
         print("sdmodule: modules in the corpus: "
               + ", ".join(f"{m} ({mods[m][0]}, {len(mods[m][1])} B)"
                           for m in sorted(mods)))
         if args.list:
             return 0
-        a = phase_corpus(args.unclassic, mods, workdir, args.verbose)
-        b = phase_specimens(args.unclassic, mods, workdir, args.verbose)
-        c = phase_synth(args.unclassic, mods, workdir, args.cases, args.seed,
+        a = phase_corpus(args.macextract, mods, workdir, args.verbose)
+        b = phase_specimens(args.macextract, mods, workdir, args.verbose)
+        c = phase_synth(args.macextract, mods, workdir, args.cases, args.seed,
                         args.verbose)
-        e = phase_method10(args.unclassic, mods, workdir, args.cases,
+        e = phase_method10(args.macextract, mods, workdir, args.cases,
                            args.seed, args.verbose)
-        f = phase_tennessee(args.unclassic, mods, workdir, args.verbose)
+        f = phase_tennessee(args.macextract, mods, workdir, args.verbose)
         return 0 if (a and b and c and e and f) else 1
     finally:
         shutil.rmtree(workdir, ignore_errors=True)

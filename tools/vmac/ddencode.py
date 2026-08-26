@@ -500,7 +500,7 @@ PERS_OK = (416, 237)
 def personalize(s):
     s.shot("personalize", wait=20.0)
     s.mac.click(*PERS_NAME)
-    s.mac._xdo("type", "--delay", "120", "unclassic")
+    s.mac._xdo("type", "--delay", "120", "MacExtract")
     s.mac.click(*PERS_ORG)
     s.mac._xdo("type", "--delay", "120", "test")
     s.shot("personalize-filled", wait=1.0)

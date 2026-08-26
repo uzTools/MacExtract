@@ -9,7 +9,7 @@
 # whole tree, and re-downloading 80 MB because someone ran the test suite is
 # not a reasonable thing to do to anybody.
 #
-#   $UNC_VMAC_HOME   (default: ~/.cache/unclassic/vmac/)
+#   $UNC_VMAC_HOME   (default: ~/.cache/macextract/vmac/)
 #     vMac.ROM          128 KB Macintosh Plus ROM (checksum 4D1F8172)
 #     System6.hfv       20 MB System 6.0.8 hard-disk image
 #     Sys7.img          10 MB System 7.0.1 hard-disk image (the System 7 tier)
@@ -26,7 +26,7 @@
 set -e
 cd "$(dirname "$0")/../.."
 REPO=$(pwd)
-VMAC_HOME=${UNC_VMAC_HOME:-${XDG_CACHE_HOME:-$HOME/.cache}/unclassic/vmac}
+VMAC_HOME=${UNC_VMAC_HOME:-${XDG_CACHE_HOME:-$HOME/.cache}/macextract/vmac}
 mkdir -p "$VMAC_HOME"
 cd "$VMAC_HOME"
 
@@ -99,7 +99,7 @@ build_mv() {    # build_mv <dir> <memsize> <speed>
     ( cd "$1"
       gcc -o setup_t setup/tool.c
       ./setup_t -t lx64 -m Plus -mem "$2" -speed "$3" -as 0 -bg 1 \
-                -sound 0 -magnify 0 -drives 6 -n "unclassic-$2" > setup.sh
+                -sound 0 -magnify 0 -drives 6 -n "macextract-$2" > setup.sh
       bash setup.sh >/dev/null
       make >/dev/null 2>&1 )
     [ -x "$1/minivmac" ] || { echo "setup: failed to build $1/minivmac" >&2; exit 1; }

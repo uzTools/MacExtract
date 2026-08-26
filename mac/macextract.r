@@ -1,12 +1,12 @@
 /*
- * unclassic.r — resources for the unclassic Macintosh shell.
+ * macextract.r — resources for the macextract Macintosh shell.
  * Compiled with Retro68's Rez. License: LGPL-2.1-or-later.
  */
 #include "Dialogs.r"
 #include "Processes.r"
 
 /* Progress dialog. Four items, and the order is the item numbering the
- * code uses (kCancelItem..kDetailItem in unclassic_mac.c):
+ * code uses (kCancelItem..kDetailItem in macextract_mac.c):
  *
  *   1  Cancel button          also reachable as Cmd-.
  *   2  status   "Extracting <name>"
@@ -59,7 +59,7 @@ resource 'DITL' (130, purgeable) {
 
 /* "Locate part N" alert, for a segmented archive whose next part was not
  * found beside the one that was opened. Three buttons, in the order the
- * code tests them (kSegFindItem..kSegCancelItem in unclassic_mac.c):
+ * code tests them (kSegFindItem..kSegCancelItem in macextract_mac.c):
  *
  *   1  Find...   opens Standard File so the user can point at it, on any
  *                mounted volume — including a disk inserted just now
@@ -86,7 +86,7 @@ resource 'DITL' (131, purgeable) {
 };
 
 /* Password dialog, for an encrypted entry. Four items, in the order the
- * code tests them (kPassOKItem..kPassMsgItem in unclassic_mac.c):
+ * code tests them (kPassOKItem..kPassMsgItem in macextract_mac.c):
  *
  *   1  OK       the default button, so Return takes it
  *   2  Cancel   "do without this entry"; the walk goes on

@@ -1,6 +1,6 @@
 #!/bin/sh
 # run_mac_sink.sh — exercise the ACTUAL Mac shell sink/allocator/io
-# code (mac/unclassic_mac.c) against the real engine on Linux, through
+# code (mac/macextract_mac.c) against the real engine on Linux, through
 # a mock Toolbox (tests/mac_sink_test.c). Catches memory/endianness
 # bugs in the Mac glue that the Linux CLI's own sink never touches.
 #

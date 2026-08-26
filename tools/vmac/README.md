@@ -51,7 +51,7 @@ both runs drew on one display and screenshotted each other's emulator. Three
 fixtures "failed" with another run's numbers before anyone noticed the numbers
 belonged to a different archive. Xvfb now picks the display itself
 (`-displayfd`) and reports it back. Do NOT run
-anything else alongside `os9.py`, which uses `build/rel/unclassic` as its
+anything else alongside `os9.py`, which uses `build/rel/macextract` as its
 oracle and will lose it to `./ci.sh`'s `make clean`.
 
 ## What the pieces do
@@ -59,7 +59,7 @@ oracle and will lose it to `./ci.sh`'s `make clean`.
 | file | role |
 |---|---|
 | `segcheck.py` | **replay every segmented-archive scenario in one command** — the four joining schemes, parts inside envelopes, and a chained file, across both harnesses |
-| `setup.sh` | fetch + build the emulator, the ROM and a System 6.0.8 image into `$UNC_VMAC_HOME` (default `~/.cache/unclassic/vmac/`) |
+| `setup.sh` | fetch + build the emulator, the ROM and a System 6.0.8 image into `$UNC_VMAC_HOME` (default `~/.cache/macextract/vmac/`) |
 | `mkboot.py` | strip that image to System + Finder and make it boot straight into the application |
 | `run.py` | build the disks, boot, screenshot, decode, check. `--out-kb` sizes the DESTINATION volume, which is how the full-disk path is reached at all — see below |
 | `interactive.py` | drive the real UI (SFGetFile, progress dialog, Cancel, Cmd-., the password dialog) and photograph each step |
@@ -97,7 +97,7 @@ own: `tools/decode_grid.py` (screenshot → eight numbers) and
 **Results come off the SCREEN — and, since 2026-08-02, off the disk as well.**
 The app paints its results as a black/white bit grid (three calibration
 squares, a sync word, eight 32-bit values) which a screenshot captures exactly;
-see `at_report()` in `mac/unclassic_mac.c`. That is what `run.py` decodes.
+see `at_report()` in `mac/macextract_mac.c`. That is what `run.py` decodes.
 
 The reason it was the *only* channel used to be a claim that Mini vMac's
 write-back is "lazy and partial — it will commit one fork of a file and not the
@@ -123,7 +123,7 @@ down, or put the subjects on a second volume and Put Away (Cmd-Y) — what
 `sdcompress.py` does.
 
 **The app is the boot shell.** The boot blocks' shell name (offset 0x1A) is
-rewritten from `Finder` to `unclassic`, so the ROM hands control straight to
+rewritten from `Finder` to `macextract`, so the ROM hands control straight to
 the application. No Finder, no synthetic double-click, no mouse automation —
 the machine boots into the test and nothing else runs.
 
@@ -867,7 +867,7 @@ it has is the archives themselves: both are self-extracting applications.
 The archive is unwrapped from its envelope with our own CLI, rebuilt as
 MacBinary, put alone on a 25 MB volume and launched under System 7; its "Save
 the expanded file as:" box is accepted with Return, and every fork it wrote is
-read back off the image with `hfsutils` and compared with `unclassic x`.
+read back off the image with `hfsutils` and compared with `macextract x`.
 Resource forks are compared with bytes 16..127 masked, the `vmac_check.py`
 convention. The verdict is 5 forks across the 2 archives, all identical
 (2026-08-20; FORMATS.md ✧✧). Screenshots land in
@@ -893,7 +893,7 @@ Two things to know before re-running it:
 two archives are read off the grid directly, exactly as the ArcMac specimens
 are. They are payloads rather than fixtures, so unwrap them first:
 
-    unclassic x -nr -o /tmp/sd fixtures/alysis-disk-expander-12.hqx
+    macextract x -nr -o /tmp/sd fixtures/alysis-disk-expander-12.hqx
     tools/vmac/run.py --pngdir /tmp/p "/tmp/sd/Disk Expander .X"
     tools/decode_grid.py "/tmp/p/Disk Expander .X.png"
 
@@ -904,7 +904,7 @@ the same engine's Linux aggregate:
     python3 -c "import sys; sys.path.insert(0,'tools'); \
       from vmac_check import aggregate_dir; print(aggregate_dir('DIR'))"
 
-over a `unclassic x -nr --forks hidden` of the same payload. Both archives
+over a `macextract x -nr --forks hidden` of the same payload. Both archives
 matched at 4 MB and at 1 MB on 2026-08-20; the numbers are in FORMATS.md,
 "SuperDisk! on the Mac".
 
@@ -988,7 +988,7 @@ plain host file. After the emulator exits, `verify_output()` lifts the
 Apple_HFS partition out, mounts it with hfsutils, pulls each extracted file
 off as MacBinary (`hcopy -m`, which is the only way to get a resource fork
 through hfsutils) and compares **both forks byte for byte** against
-`unclassic x -nr`. A mismatch names the file and the fork; a volume the guest
+`macextract x -nr`. A mismatch names the file and the fork; a volume the guest
 never flushed fails to mount rather than passing quietly.
 
 `mkapmdisk.py` clones its partition map and drivers from a disk Mac OS 9
@@ -1196,11 +1196,11 @@ characters, then `~1` makes 31. Archive order decides who keeps the plain name.
 
 ### The `SIZE` partition
 
-    sed -i 's/4096 \* 1024, 400 \* 1024/600 * 1024, 400 * 1024/' mac/unclassic.r
+    sed -i 's/4096 \* 1024, 400 \* 1024/600 * 1024, 400 * 1024/' mac/macextract.r
     run.py --system Sys7.img fixtures/derived-KeyGraphics.sit
     run.py                   fixtures/derived-KeyGraphics.sit
     os9.py fixtures/derived-KeyGraphics.sit -o <dir> --hfsplus --expect-refusal
-    git checkout mac/unclassic.r        # the edit is temporary, on purpose
+    git checkout mac/macextract.r        # the edit is temporary, on purpose
 
 A partition big enough to launch and too small for a 512 KB Arsenic block,
 against a fixture that needs ~656 KB and passes at 4 MB. `--expect-refusal`
@@ -1225,13 +1225,13 @@ drive (the System 7 objection below is gone since 2026-08-25 — the phase runs
 there now — but this recipe is still the cheaper instrument):
 
     sed -i 's/ma.budget = freenow - reserve;/ma.budget = 150000L; (void)reserve;/' \
-        mac/unclassic_mac.c
+        mac/macextract_mac.c
     interactive.py --emu mv-4M -o /tmp/alert fixtures/derived-AuthoRize_2.0.sit
-    git checkout mac/unclassic_mac.c    # temporary, on purpose — wrap it in a trap
+    git checkout mac/macextract_mac.c    # temporary, on purpose — wrap it in a trap
 
 The alert is in `2-extracting.png`: the default phase clicks Cancel at a
 fixed time, and a run that fails BEFORE then leaves its result alert up in
-that frame. Photographed 2026-08-24: *Needs 72K more memory. Give unclassic
+that frame. Photographed 2026-08-24: *Needs 72K more memory. Give MacExtract
 more in Get Info.*
 
 ### Photographing the detect-only alert
@@ -1243,7 +1243,7 @@ memory one is — the run fails before the phase clicks Cancel.
     interactive.py --emu mv-4M -o /tmp/rarshot /tmp/Sample.rar
 
 Photographed 2026-08-27 with a RAR archive out of libarchive's test suite:
-**"unclassic cannot open RAR files."**, one line, the alert's default OK
+**"MacExtract cannot open RAR files."**, one line, the alert's default OK
 button. Any of the named-but-declined formats does it (FORMATS.md, *Archives
 named but not extracted*); the sentence is built from `unc_format_name`, so
 the longest of them draws 46 characters and still fits two lines.
@@ -1257,9 +1257,9 @@ headless harness runs:
 
     # the disk is full — the real gLastWriteErr path, without a full disk
     sed -i 's#(Ptr)((const char \*)buf + off));#&\n        { static int nw = 0; if (++nw > 2) werr = dskFulErr; }#' \
-        mac/unclassic_mac.c
+        mac/macextract_mac.c
     # memory too fragmented — that branch fires on any run
-    sed -i 's/        gShortPiece = 0;/&\n        gShortPiece = 1;/' mac/unclassic_mac.c
+    sed -i 's/        gShortPiece = 0;/&\n        gShortPiece = 1;/' mac/macextract_mac.c
 
 `run.py --out-kb` already measures that a genuinely full volume returns
 `dskFulErr` here and stops the run; what these show is the sentence the user
@@ -1312,6 +1312,14 @@ already.
 the boot shell, which is the only way to launch the application the way a
 person does and the only way to launch what it extracted. Both runs photograph
 every step, and `docs/screens/` comes from here.
+
+**It cannot photograph a legible icon label.** The volume window holds four
+items in one row, one of them the empty `StuffIt Expander™ 4.0.1 Folder` that
+`mkboot.py` cannot delete, and the Finder paints overlapping labels in HFS
+catalog order — which is by name. `MacExtract` sorts before `StuffIt…`, so the
+folder's label is drawn over it and the application's name does not appear in
+`e2e-2-volume.png`; the icon itself is unobstructed. Anything that needs the
+name read off the screen needs a different window.
 
 What a pass looks like, and the fixtures that make it checkable: `--e2e` uses
 `derived-ScrollbarPattern.sit`, whose entry is an application — so the last
