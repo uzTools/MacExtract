@@ -108,11 +108,10 @@ with no `comment` key may write no such file, which the suite's
 decoration: it is what found five of the seven. **Seven fixtures in the
 corpus carry a comment**, measured by sweeping all 928 with `lsar`: six
 Compact Pro archives (`derived-DigSim_RAM_Circuit.cpt`, *"Hi there."*,
-written in 1990, and the five Compact Pro Package installers), and one
-zip whose 495-byte end-of-central-directory comment this engine does
-not surface — `run_diff.py` names that format in `COMMENT_NOT_SAVED`
-rather than inferring the excuse from our own output (OPEN_ITEMS.md,
-part 2, section 4).
+written in 1990, and the five Compact Pro Package installers), and
+`derived-MUSFMT10.ZIP`, whose 495-byte end-of-central-directory comment
+has been saved since 2026-08-26. All seven are graded; no format is
+excused.
 
 ### When the oracle fails on an entry
 

@@ -16,7 +16,7 @@ whole corpus for that format (engine allocations only, via
 | Compact Pro (.cpt) | extract | RLE, LZH+RLE; **encrypted entries decrypted**, from a reading of the application that the application then graded, both directions (*Compact Pro's cipher*, below); the archive **comment** is saved rather than dropped | 108 fixtures | 24 KB | full |
 | StuffIt classic (.sit) | extract | 0 store, 1 RLE90*, 2 LZW, 3 Huffman, 5 LZAH, 6 fixed Huffman‡, 8 MW, 13 LZSS+Huffman; **encrypted forks decrypted** (StuffItDES, and the 'MKey' resource — *Encryption*, below) | 227 fixtures‡‡ | 8–76 KB‖ | full |
 | StuffIt 5 (.sit) | extract | 0, 13, 15 Arsenic; **encrypted forks decrypted** (RC4 under MD5(password)) | 31 fixtures | 0.15–2.53 MB† | 23 of 31 fixtures extract FULLY; the rest refuse per entry |
-| Zip | extract | store, deflate, **PKWARE's cipher and WinZip's AES** (128/192/256); other methods and PKWARE strong encryption are per-entry errors | 5 fixtures (2 of them PKZIP 1.x, graded on names and entry counts only — Implode is out of v1 scope, and `unar` adjudicates 5 of their 7 entries) | 12–54 KB¶ | full |
+| Zip | extract | store, deflate, **PKWARE's cipher and WinZip's AES** (128/192/256); other methods and PKWARE strong encryption are per-entry errors; the archive **comment** is saved rather than dropped (*The archive comment*, below) | 5 fixtures (2 of them PKZIP 1.x, graded on names and entry counts only — Implode is out of v1 scope, and `unar` adjudicates 5 of their 7 entries) | 12–54 KB¶ | full |
 | Gzip | extract | deflate | 3 fixtures | 51 KB | full |
 | Unix compress (.Z) | extract | LZW ≤16 bit | 4 fixtures | 219 KB§ | full |
 | Tar (ustar/v7) | extract | — (links reported unsupported) | 3 fixtures (2 real 1990 v7 tars) + unit tests | 8 KB | full |
@@ -1237,19 +1237,33 @@ therefore not a block cipher's padding.
 
 ### The archive comment, which Compact Pro calls a Note
 
-One length byte and up to 255 MacRoman bytes at the top of the index,
-belonging to the archive rather than to any entry. **Saved since
-2026-08-23** rather than read, CRC'd and dropped: the CLI writes
-`<archive>.comment.txt` beside the extracted items and prints it on `l`
-and `t`, the Mac shell writes a `TEXT`/`ttxt` document called
-`Comments` into the destination folder (DECISIONS.md 2026-08-23).
+Text belonging to the archive rather than to any entry. **Two formats in
+scope carry one**, and both are saved rather than read and dropped: the
+CLI writes `<archive>.comment.txt` beside the extracted items and prints
+it on `l` and `t`, the Mac shell writes a `TEXT`/`ttxt` document called
+`Comments` into the destination folder (DECISIONS.md 2026-08-23,
+2026-08-26).
 
-Graded twice, in both directions:
+| format | where it sits | ceiling | saved since |
+|---|---|---|---|
+| Compact Pro | one length byte at the top of the index, then MacRoman bytes | 255 | 2026-08-23 |
+| Zip | a two-byte length in the end-of-central-directory record, then the bytes, at the very end of the file | 65,535 | 2026-08-26 |
+
+`UNC_COMMENT_MAX` is therefore 65,535 and is **not a buffer size a host
+may adopt**; the engine hands over its own. A comment it cannot allocate
+for or read is dropped, and the archive still extracts.
+
+Graded three ways, in both directions:
 
 | what | result |
 |---|---|
-| the **six** corpus archives that carry one — `derived-DigSim_RAM_Circuit.cpt` (*"Hi there."*, 1990) and the five Compact Pro Package installers, whose notes run to 250 bytes over several CR-separated lines, one of them Shift-JIS mislabelled as MacRoman | the saved file and the printed line equal `lsar`'s `XADComment`, in `ci.sh` |
+| the **six** corpus Compact Pro archives that carry one — `derived-DigSim_RAM_Circuit.cpt` (*"Hi there."*, 1990) and the five Compact Pro Package installers, whose notes run to 250 bytes over several CR-separated lines, one of them Shift-JIS mislabelled as MacRoman | the saved file and the printed line equal `lsar`'s `XADComment`, in `ci.sh` |
+| the **one** corpus zip that carries one, `derived-MUSFMT10.ZIP` — 495 bytes of author, address and format list from 1994, twice what a Note can hold | the same, plus the Mac shell's `Comments` document byte-for-byte against the oracle on x86-64 and under qemu-m68k (`tests/run_mac_sink.sh`) |
 | a **two-line note typed into Compact Pro 1.51** under Mini vMac (`cptcrypt.py --make --plain --note`) | 61 bytes back byte-exact, the line break stored as a **CR** exactly where Return was pressed, `lsar` agreeing |
+
+Neither costs peak RAM: the zip comment's allocation is taken and freed
+before the extraction buffers, and `derived-MUSFMT10.ZIP` measures the
+same 54,856-byte high-water mark with the comment saved as without it.
 
 The CR is why the two hosts differ in one place and only one: the saved
 file keeps it, and the line the CLI PRINTS turns it into a newline,
@@ -2639,7 +2653,7 @@ with this archive."*
 | Encrypted archives | yes — it prompts, and knows *"You have entered an incorrect password"* | yes, since 2026-08-23: StuffIt, StuffIt 5, PackIt, zip (PKWARE and WinZip AES), ARC — and **Compact Pro, which Expander cannot** (*"StuffIt Expander cannot expand encrypted or segmented Zip or Compact Pro files"*) |
 | btoa (`.ascii`) | with the add-on: a `btoa/atob Translator` ships in `Extensions:Aladdin:Translators` | yes, both framings (*btoa*, above) |
 | Multipart BinHex | *"Multipart BinHex files, such as those appearing in Internet newsgroup postings (e.g. comp.binaries.mac), are fully supported"* — multiple documents in one text file, and one file broken into several pieces | several documents in one file since 2026-08-15 (††, above); a document broken across FILES joins where the parts are named `.001`, `.002` … |
-| Compact Pro comments | written out beside the extracted items | **saved since 2026-08-23**: the Mac shell writes a `TEXT` document called `Comments` into the destination folder, the CLI writes `<archive>.comment.txt` and prints it on `l` and `t` |
+| Archive comments | written out beside the extracted items | **saved since 2026-08-23** for Compact Pro and **2026-08-26** for zip: the Mac shell writes a `TEXT` document called `Comments` into the destination folder, the CLI writes `<archive>.comment.txt` and prints it on `l` and `t` |
 | `.lzh` / `.lha` (LZH / LHA) | not named anywhere in its documentation, and no translator for it ships in `Extensions:Aladdin:Translators` — a Macintosh user reached for a separate application, and the corpus holds one (`LHA Expander 1.0.3`) | **yes since 2026-08-23**, every method, all four header levels, and MacLHA's MacBinary payload split back into two forks (*LZH / LHA*, above) |
 | `.arc` (ARC / ArcMac) | with the add-on | **yes since 2026-08-15**, methods 1-9; ArcMac's two-fork payload since 2026-08-16 (★★★ above) |
 | uuencode (`.uu`) | with the add-on | **yes since 2026-08-15**, plain and UUTool's two-fork shape |

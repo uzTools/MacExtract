@@ -632,6 +632,49 @@ int unc_zip_extract(UncCtx *c)
         return UNC_ERR_CORRUPT;
     }
 
+    /* The archive's OWN comment, which a zip writes immediately after
+     * the record just read. It belongs to no entry, so it leaves by the
+     * sink's own callback, once, before the first begin_entry — the
+     * same route Compact Pro's takes (fmt_cpt.c).
+     *
+     * It gets an allocation of its own, freed before the extraction
+     * buffers are taken, so a comment shows up in peak RAM only while
+     * it is being delivered and a host with no comment callback pays
+     * nothing at all. zip states the length in 16 bits, so the ceiling
+     * is 64 KB; the one corpus archive that has a comment has 495
+     * bytes of it. An allocation that fails drops the comment and
+     * extracts the archive, because the comment is worth less than the
+     * entries — the same trade both hosts already make when they
+     * cannot write it out (cli/main.c, mac/macextract_mac.c).
+     *
+     * Source: reference/XADMaster/XADZipParser.m,
+     * -parseWithCentralDirectoryAtOffset:zip64Offset: — the comment
+     * length is the u16 at EOCD+20 and the bytes follow the record,
+     * which is what `lsar` reports as XADComment. */
+    {
+        uint32_t clen = unc_get_u16le(eo + 20);
+
+        /* The scanner accepts a record whose comment runs off the end
+         * of the file — it only requires the fixed 22 bytes to fit
+         * (fmt_zipseg.c). Bounding the length by what is actually
+         * there does not change the OUTCOME, because the read below
+         * would fail anyway; what it buys is the allocation, which a
+         * length field of 0xFFFF would otherwise make 64 KB on a
+         * machine that has a megabyte. */
+        if (clen && c->sink->comment && clen <= scanend - eocd - 22u) {
+            uint8_t *cbuf = (uint8_t *)unc_alloc(c->al, clen);
+            if (cbuf) {
+                int cret = 0;
+                if (zip_seek(c, lastpart0, eocd + 22u) == UNC_OK &&
+                    unc_read_full(c->io, cbuf, (int32_t)clen) == UNC_OK)
+                    cret = c->sink->comment(c->sink->ctx, cbuf,
+                                            (uint16_t)clen);
+                unc_free(c->al, cbuf);
+                if (cret < 0) return UNC_ERR_SINK;
+            }
+        }
+    }
+
     /* The cipher state rides along with the two buffers: one allocation,
      * and ~450 bytes that only an encrypted archive ever touches. */
     iobuf = (uint8_t *)unc_alloc(c->al, iocap + ocap + (uint32_t)sizeof *cr);

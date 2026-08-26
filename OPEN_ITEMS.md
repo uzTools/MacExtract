@@ -219,14 +219,6 @@ all** (BLOCKERS.md, the ARC 7 row, filed and disproved the same day).
   it:** btoa in both lists, a chained case in `tools/run_btoa.py`, and a
   `dist/` rebuild in the same commit. uuencode has the same shape, and no
   specimen showing it has ever been seen here.
-- **A zip's end-of-central-directory comment is read past and dropped.**
-  `UncSink` has carried a comment callback since 2026-08-23 and Compact Pro's
-  fills it; `fmt_exo.c` still skips zip's, which one corpus fixture has 495
-  bytes of (`derived-MUSFMT10.ZIP`). Not chased because a zip comment is
-  usually boilerplate and `unar` does not write one out either. **What would
-  close it:** the EOCD comment length is already parsed — one call to the
-  callback, and the manifest's `comment` key stops being excused for `Zip` in
-  `tools/run_diff.py`.
 - **A tar member over the 2 GB cap aborts the whole archive, not the entry.**
   Measured 2026-08-25: a tar of `[1 GiB, 3 GiB, 1 GiB]` lists the first member
   and stops, so the third is lost though its position is known. Every other

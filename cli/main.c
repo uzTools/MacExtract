@@ -494,7 +494,11 @@ static int sink_end(void *ctx, int status)
 static int sink_comment(void *ctx, const uint8_t *buf, uint16_t len)
 {
     DiskSink *s = (DiskSink *)ctx;
-    char text[UNC_COMMENT_MAX * 3 + 1];
+    /* Flushed as it fills rather than held whole: a zip states its
+     * comment length in two bytes, so UNC_COMMENT_MAX is 64 KB and
+     * sizing a buffer by it would put 192 KB on the stack. Three bytes
+     * is the most one input byte can produce. */
+    char text[384];
     char path[1200];
     const char *base;
     size_t o = 0;
@@ -505,8 +509,13 @@ static int sink_comment(void *ctx, const uint8_t *buf, uint16_t len)
     if (s->no_comment) return 0;
 
     if (s->list_only || s->test_only) {
+        fputs("comment: ", stdout);
         for (i = 0; i < len; i++) {
             uint8_t b = buf[i];
+            if (o + 3 > sizeof text) {
+                fwrite(text, 1, o, stdout);
+                o = 0;
+            }
             /* A Mac ends a line with CR, and a CR sent to a terminal
              * returns the carriage and overwrites what was printed —
              * measured on a two-line note Compact Pro 1.51 wrote. The
@@ -519,8 +528,8 @@ static int sink_comment(void *ctx, const uint8_t *buf, uint16_t len)
                 text[o++] = (char)b;
             else o += (size_t)utf8_put(text + o, macroman_high[b - 0x80]);
         }
-        text[o] = 0;
-        printf("comment: %s\n", text);
+        if (o) fwrite(text, 1, o, stdout);
+        putchar('\n');
         return 0;
     }
 
@@ -1382,12 +1391,8 @@ static void usage(void)
         "                 archive that needs one is asked for, and asked\n"
         "                 again when the password is refused\n"
         "  --no-comment   do not save the archive's own comment. By\n"
-        "                 default a Compact Pro archive's comment is\n"
-        "                 written beside the extracted items as\n"
-        "                 <archive>.comment.txt, and printed by l and t\n"
-        "  --no-comment   do not save the archive's own comment. By\n"
-        "                 default a Compact Pro archive's comment is\n"
-        "                 written beside the extracted items as\n"
+        "                 default a Compact Pro or zip archive's comment\n"
+        "                 is written beside the extracted items as\n"
         "                 <archive>.comment.txt, and printed by l and t\n"
         "  --stats        print allocator statistics\n"
         "  -f <format>    force format\n"

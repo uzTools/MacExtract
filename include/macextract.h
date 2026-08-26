@@ -208,7 +208,10 @@ typedef struct UncEntryInfo {
 /* Sink — receives decoded output                                     */
 /* ------------------------------------------------------------------ */
 
-#define UNC_COMMENT_MAX 255   /* Compact Pro writes the length in a byte */
+/* The largest an archive comment can be: zip writes its length in two
+ * bytes, Compact Pro in one. A host must not size a fixed buffer by
+ * this — the engine hands over its own. */
+#define UNC_COMMENT_MAX 65535u
 
 typedef struct UncSink {
     void *ctx;
@@ -228,9 +231,13 @@ typedef struct UncSink {
      * NUL-terminated, 1..UNC_COMMENT_MAX; it is the engine's and is
      * not valid after the call returns. Return 0 to continue, <0 to
      * abort the archive (UNC_ERR_SINK).
-     * MAY BE NULL: the comment is then read and checksummed as part of
-     * the index and nothing else happens, which is what every host did
-     * before 2026-08-23. Compact Pro is the only v1 format with one. */
+     * MAY BE NULL: nothing else then happens to the comment (Compact
+     * Pro's is still read and checksummed as part of the index, zip's
+     * is not read at all), which is what every host did before
+     * 2026-08-23.
+     * Compact Pro and zip are the v1 formats that carry one.
+     * A comment the engine cannot buffer or read is DROPPED, not
+     * turned into an error: it is worth less than the entries. */
     int (*comment)(void *ctx, const uint8_t *buf, uint16_t len);
 } UncSink;
 

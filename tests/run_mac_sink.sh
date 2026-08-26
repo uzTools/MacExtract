@@ -17,13 +17,16 @@ cd "$(dirname "$0")/.."
 # A spread of fixtures: different StuffIt methods, a CPT with nested
 # folders, an Arsenic SIT5 (big block), a resource-only entry, and a THINK C
 # project holding both "X" and a real "X.rsrc" — two files that only collide
-# if the sidecar convention makes them (2026-08-08), and the one archive in
-# the corpus that carries an archive COMMENT, which the shell writes out as
-# a document of its own (2026-08-23).
+# if the sidecar convention makes them (2026-08-08), and the two archives in
+# the corpus that carry an archive COMMENT, which the shell writes out as a
+# document of its own: a Compact Pro Note (2026-08-23) and the one zip whose
+# end-of-central-directory comment is 495 bytes, twice what a Note can hold
+# (2026-08-26).
 FIXTURES="derived-ASCbeep.sit derived-apple.art.sit alpha401.cpt \
           derived-Compact_Pro_Package derived-resforkkiller.sit \
           derived-PackIt.pit synth-exo-tar.tar derived-Unzip101.sit \
-          derived-BootTime.cpt derived-DigSim_RAM_Circuit.cpt"
+          derived-BootTime.cpt derived-DigSim_RAM_Circuit.cpt \
+          derived-MUSFMT10.ZIP"
 
 # Two-fork files (non-empty data AND resource fork) — the case where the
 # data and resource paths can disagree, so every write variant is proven

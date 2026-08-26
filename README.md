@@ -123,7 +123,7 @@ each one opens:
 | Split zip or Compact Pro sets | "cannot expand" — its own Read Me | yes |
 | Encrypted archives | yes, if you know the password | yes, and Compact Pro's too, which nothing else reads |
 | Several files posted in one BinHex message | yes | yes |
-| The note somebody typed into a Compact Pro archive | written out beside the files | same — a `Comments` document in the folder |
+| The note somebody typed into a Compact Pro or zip archive | written out beside the files | same — a `Comments` document in the folder |
 | `.arc` and uuencoded (`.uu`) files | with the add-on | yes |
 | A Mac file mailed as a MIME attachment | no translator for it | yes — both forks, from `multipart/appledouble` |
 | StuffIt SpaceSaver | with the add-on | yes, dictionary included — which no other tool carries |

@@ -134,6 +134,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-26 — a name is only worth something inside the frame the user came with
 - 2026-08-26 — the project is renamed MacExtract, and the API is not
 - 2026-08-26 — the tag that did not fire
+- 2026-08-26 (zip comments) — the second format with one, and the ceiling that moved
 
 ---
 
@@ -7608,3 +7609,49 @@ directions: it cannot be confirmed, and its failure cannot be noticed either.
 It was reported as a release published, and it was not one. The remedy is one
 line in CLAUDE.md's release procedure — re-push the tag if the page does not
 show the new version — and the discipline of saying which of the two happened.
+
+## 2026-08-26 (zip comments) — the second format with one, and the ceiling that moved
+
+An end-of-central-directory comment is up to 65,535 bytes at the very end of
+a zip. `fmt_exo.c` parsed its length in order to step over it and dropped the
+bytes; OPEN_ITEMS.md excused that as *"a zip comment is usually boilerplate
+and `unar` does not write one out either"*. The corpus disagrees in one
+place: `derived-MUSFMT10.ZIP` carries 495 bytes of author, address and format
+list from 1994, and that is the only place in the archive where any of it is
+written down.
+
+**It leaves by the route Compact Pro's does** and nothing was invented for
+it: the same `UncSink.comment` callback, the CLI's `<archive>.comment.txt`
+and printed `comment:` line, the Mac shell's `TEXT`/`ttxt` document called
+`Comments` (2026-08-23, *Compact Pro comments*). A second format's comment
+reached both hosts with no host change at all, which is the argument for
+having put it in the sink rather than in `UncEntryInfo` in the first place.
+
+**What did have to change is the ceiling.** `UNC_COMMENT_MAX` was 255 because
+Compact Pro writes the length in a byte; zip writes it in two, and the corpus
+fixture is already twice the old maximum. The constant is now 65,535 and **a
+host may no longer size a fixed buffer by it** — the CLI printed through a
+`UNC_COMMENT_MAX * 3 + 1` array on the stack, which at the new value is
+192 KB, and now flushes in 384-byte pieces. That is the transferable half: a
+constant named for one format's field width goes wrong the moment a second
+format has the same concept, and what breaks is a buffer sized from it, far
+from where the constant lives.
+
+**The comment gets an allocation of its own, taken and released before the
+extraction buffers.** A 64 KB ceiling is a real fraction of a 1 MB Mac's
+heap, so it must not stand alongside the 12 KB of I/O buffers and the central
+directory; measured on the fixture, the allocator's high-water mark for that
+archive is 54,856 bytes before and after the change. An allocation that
+fails, or a length running off the end of the file, drops the comment and
+extracts the archive — the trade both hosts already make when they cannot
+write the comment out.
+
+**Graded by the suites that already existed.** `run_diff.py` compared
+`lsar`'s `XADComment` against the CLI's file and printed line for every
+fixture except a named set holding `Zip`; deleting that set was the whole
+change there, and both halves fail when the delivery is taken back out
+(verified by taking it out). `tests/run_mac_sink.sh` gained the fixture, so
+the Mac shell's `Comments` document is now graded byte-for-byte against the
+oracle on x86-64 and under qemu-m68k. The unit test covers what no fixture
+has: a comment longer than Compact Pro could express, a length that runs past
+the end of the file, and a host with no callback at all.

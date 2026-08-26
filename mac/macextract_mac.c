@@ -1165,12 +1165,12 @@ static int sink_end(void *ctx, int status)
     return 0;
 }
 
-/* The archive's OWN comment (Compact Pro is the only format that has
- * one). It belongs to no entry, so it cannot arrive as one: it is
- * written beside the extracted items — a TeachText document named
- * "Comments" in the destination folder, holding the comment's bytes,
- * which are already MacRoman and already CR-separated because a Mac
- * wrote them.
+/* The archive's OWN comment (Compact Pro's Note, or a zip's
+ * end-of-central-directory comment). It belongs to no entry, so it
+ * cannot arrive as one: it is written beside the extracted items — a
+ * TeachText document named "Comments" in the destination folder,
+ * holding the comment's bytes, which are already MacRoman and already
+ * CR-separated because a Mac wrote them.
  *
  * Called before the first entry, so an archive that ALSO holds a file
  * called "Comments" takes the collision suffix sink_begin already

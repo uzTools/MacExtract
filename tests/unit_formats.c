@@ -20,8 +20,11 @@ typedef struct {
     int status[8];
     int count;
     /* The archive's own comment, and how many times it was delivered:
-     * an archive without one must not call back at all. */
-    uint8_t comment[UNC_COMMENT_MAX];
+     * an archive without one must not call back at all. Sized for what
+     * these tests hand in rather than for UNC_COMMENT_MAX, which is
+     * zip's 64 KB ceiling; cap_comment refuses anything longer, so a
+     * test that outgrows it fails loudly instead of truncating. */
+    uint8_t comment[2048];
     uint16_t comment_len;
     int comments;
 } CapSink;
@@ -57,7 +60,7 @@ static int cap_end(void *ctx, int status)
 static int cap_comment(void *ctx, const uint8_t *buf, uint16_t len)
 {
     CapSink *s = (CapSink *)ctx;
-    if (len > UNC_COMMENT_MAX) return -1;
+    if (len > sizeof s->comment) return -1;
     memcpy(s->comment, buf, len);
     s->comment_len = len;
     s->comments++;
@@ -555,7 +558,9 @@ static void test_cpt_comment(void)
      * right. Neither is rewritten on the way out. */
     static const uint8_t cmt[] = { 'R', 'e', 'a', 'd', ' ', 0xA5, '\r',
                                    'm', 'e' };
-    uint8_t arc[512], big[512], full[UNC_COMMENT_MAX];
+    /* 255 is what COMPACT PRO can express — its length is one byte —
+     * and no longer what the sink's contract allows. */
+    uint8_t arc[512], big[512], full[255];
     uint32_t len, i;
     MemIO m;
     UncIO io;
@@ -587,7 +592,7 @@ static void test_cpt_comment(void)
     cap_make(&sk, &cap);
     CHECK(unc_extract_as(UNC_FORMAT_COMPACTPRO, &io, &sk, &al, NULL, NULL)
           == UNC_OK);
-    CHECK(cap.comments == 1 && cap.comment_len == UNC_COMMENT_MAX);
+    CHECK(cap.comments == 1 && cap.comment_len == sizeof full);
     CHECK(memcmp(cap.comment, full, sizeof full) == 0);
 
     /* A sink with no comment callback is not a broken sink: it is every
@@ -774,6 +779,12 @@ static void put32le(uint8_t *p, uint32_t v)
     p[2] = (uint8_t)(v >> 16); p[3] = (uint8_t)(v >> 24);
 }
 
+static void put16le(uint8_t *p, uint32_t v)
+{
+    p[0] = (uint8_t)(v & 0xFF);
+    p[1] = (uint8_t)((v >> 8) & 0xFF);
+}
+
 static void test_gzip(void)
 {
     /* gzip header + one stored deflate block + CRC/ISIZE trailer. */
@@ -863,49 +874,72 @@ static void test_tar(void)
     arc[148] ^= 1;
 }
 
+/* One stored entry: LFH + data + central dir + EOCD, followed by
+ * `cmtlen` bytes of ARCHIVE comment. `cdp` and `eop` come back with the
+ * offsets of the central directory and of the EOCD, for a caller that
+ * wants to spoil a field of either. `out` needs 256 bytes plus the
+ * comment. */
+#define ZIP_SYNTH_PAYLOAD "zip stored data"
+
+static uint32_t zip_synth(uint8_t *out, const uint8_t *cmt, uint32_t cmtlen,
+                          uint32_t *cdp, uint32_t *eop)
+{
+    static const char *payload = ZIP_SYNTH_PAYLOAD;
+    static const char *name = "f.txt";
+    uint32_t n = (uint32_t)strlen(payload), nl = (uint32_t)strlen(name);
+    uint32_t crc, lfh = 0, cd, eocd;
+
+    memset(out, 0, 256 + cmtlen);
+    crc = unc_crc32(0xFFFFFFFFu, (const uint8_t *)payload, (int32_t)n)
+          ^ 0xFFFFFFFFu;
+
+    /* local file header */
+    memcpy(out, "PK\x03\x04", 4);
+    out[4] = 20;
+    put32le(out + 14, crc);
+    put32le(out + 18, n);
+    put32le(out + 22, n);
+    out[26] = (uint8_t)nl;
+    memcpy(out + 30, name, nl);
+    memcpy(out + 30 + nl, payload, n);
+    cd = 30 + nl + n;
+
+    memcpy(out + cd, "PK\x01\x02", 4);
+    put32le(out + cd + 16, crc);
+    put32le(out + cd + 20, n);
+    put32le(out + cd + 24, n);
+    out[cd + 28] = (uint8_t)nl;
+    put32le(out + cd + 42, lfh);
+    memcpy(out + cd + 46, name, nl);
+    eocd = cd + 46 + nl;
+
+    memcpy(out + eocd, "PK\x05\x06", 4);
+    out[eocd + 8] = 1; out[eocd + 10] = 1;       /* entry counts */
+    put32le(out + eocd + 12, eocd - cd);         /* cd size */
+    put32le(out + eocd + 16, cd);                /* cd offset */
+    put16le(out + eocd + 20, (uint16_t)cmtlen);  /* .ZIP file comment */
+    if (cmtlen) memcpy(out + eocd + 22, cmt, cmtlen);
+
+    if (cdp) *cdp = cd;
+    if (eop) *eop = eocd;
+    return eocd + 22 + cmtlen;
+}
+
 static void test_zip(void)
 {
-    /* One stored entry: LFH + data + central dir + EOCD. */
-    static const char *payload = "zip stored data";
+    static const char *payload = ZIP_SYNTH_PAYLOAD;
     static const char *name = "f.txt";
     uint8_t arc[256];
     uint32_t n = (uint32_t)strlen(payload), nl = (uint32_t)strlen(name);
-    uint32_t crc, lfh = 0, cd, eocd, len;
+    uint32_t cd, eocd, len;
     MemIO m;
     UncIO io;
     UncAlloc al;
     UncSink sk;
     CapSink cap;
 
-    memset(arc, 0, sizeof arc);
-    crc = unc_crc32(0xFFFFFFFFu, (const uint8_t *)payload, (int32_t)n)
-          ^ 0xFFFFFFFFu;
-
-    /* local file header */
-    memcpy(arc, "PK\x03\x04", 4);
-    arc[4] = 20;
-    put32le(arc + 14, crc);
-    put32le(arc + 18, n);
-    put32le(arc + 22, n);
-    arc[26] = (uint8_t)nl;
-    memcpy(arc + 30, name, nl);
-    memcpy(arc + 30 + nl, payload, n);
-    cd = 30 + nl + n;
-
-    memcpy(arc + cd, "PK\x01\x02", 4);
-    put32le(arc + cd + 16, crc);
-    put32le(arc + cd + 20, n);
-    put32le(arc + cd + 24, n);
-    arc[cd + 28] = (uint8_t)nl;
-    put32le(arc + cd + 42, lfh);
-    memcpy(arc + cd + 46, name, nl);
-    eocd = cd + 46 + nl;
-
-    memcpy(arc + eocd, "PK\x05\x06", 4);
-    arc[eocd + 8] = 1; arc[eocd + 10] = 1;       /* entry counts */
-    put32le(arc + eocd + 12, eocd - cd);         /* cd size */
-    put32le(arc + eocd + 16, cd);                /* cd offset */
-    len = eocd + 22;
+    len = zip_synth(arc, NULL, 0, &cd, &eocd);
+    (void)eocd;
 
     test_make_memio(&io, &m, arc, len);
     CHECK(unc_sniff(&io) == UNC_FORMAT_ZIP);
@@ -923,6 +957,74 @@ static void test_zip(void)
     CHECK(unc_extract_as(UNC_FORMAT_ZIP, &io, &sk, &al, NULL, NULL) == UNC_OK);
     CHECK(cap.count == 1 && cap.status[0] == UNC_ERR_UNSUPPORTED);
     arc[cd + 10] = 0;
+}
+
+/* A zip's end-of-central-directory comment, which the engine read past
+ * and dropped until 2026-08-26. It leaves by the same sink callback
+ * Compact Pro's does, and it is the reason that callback's length is no
+ * longer bounded by 255: zip states it in two bytes, and the one corpus
+ * archive that has one has 495 (FORMATS.md, *The archive comment*). */
+static void test_zip_comment(void)
+{
+    uint8_t arc[256 + 512];
+    uint8_t cmt[400];
+    uint32_t i, cd, eocd, len;
+    MemIO m;
+    UncIO io;
+    UncAlloc al;
+    UncSink sk;
+    CapSink cap;
+
+    test_make_alloc(&al);
+
+    /* Longer than a Compact Pro comment can be, with an 8-bit MacRoman
+     * byte in it that no ASCII reading gets right, and a CR: neither is
+     * rewritten on the way out. */
+    for (i = 0; i < sizeof cmt; i++) cmt[i] = (uint8_t)('a' + i % 26);
+    cmt[3] = 0xA5;
+    cmt[7] = '\r';
+
+    len = zip_synth(arc, cmt, sizeof cmt, &cd, &eocd);
+    test_make_memio(&io, &m, arc, len);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_ZIP);
+    cap_make(&sk, &cap);
+    /* cap_comment refuses a comment that arrives after an entry, so
+     * reaching UNC_OK is the ordering check as well. */
+    CHECK(unc_extract_as(UNC_FORMAT_ZIP, &io, &sk, &al, NULL, NULL) == UNC_OK);
+    CHECK(cap.comments == 1);
+    CHECK(cap.comment_len == sizeof cmt);
+    CHECK(memcmp(cap.comment, cmt, sizeof cmt) == 0);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+
+    /* A length that runs off the end of the file describes bytes that
+     * are not there: no comment, and no failure either — the entries
+     * are all still readable. (This grades the OUTCOME. The length
+     * check in fmt_exo.c bounds the allocation rather than the result,
+     * so removing it leaves this passing.) */
+    put16le(arc + eocd + 20, 0xFFFFu);
+    test_make_memio(&io, &m, arc, len);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_ZIP, &io, &sk, &al, NULL, NULL) == UNC_OK);
+    CHECK(cap.comments == 0);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+
+    /* No comment at all: the sink must not be told about one. */
+    len = zip_synth(arc, NULL, 0, &cd, &eocd);
+    test_make_memio(&io, &m, arc, len);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_ZIP, &io, &sk, &al, NULL, NULL) == UNC_OK);
+    CHECK(cap.comments == 0);
+
+    /* And a host with no comment callback is not a broken host: the
+     * archive extracts exactly as it did before 2026-08-26. */
+    len = zip_synth(arc, cmt, sizeof cmt, &cd, &eocd);
+    test_make_memio(&io, &m, arc, len);
+    cap_make(&sk, &cap);
+    sk.comment = NULL;
+    CHECK(unc_extract_as(UNC_FORMAT_ZIP, &io, &sk, &al, NULL, NULL) == UNC_OK);
+    CHECK(cap.comments == 0);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+    CHECK(cap.dlen[0] == strlen(ZIP_SYNTH_PAYLOAD));
 }
 
 /* LZH/LHA, in scope since 2026-08-23. The corpus and lhasa's collection
@@ -1377,12 +1479,6 @@ static void test_sitseg(void)
 /* the host assembled. tools/run_segments.py covers real `zip -s`      */
 /* output against the oracle.                                         */
 /* ------------------------------------------------------------------ */
-
-static void put16le(uint8_t *p, uint32_t v)
-{
-    p[0] = (uint8_t)(v & 0xFF);
-    p[1] = (uint8_t)((v >> 8) & 0xFF);
-}
 
 /* One stored entry called "f", its data at `dataoff` within part
  * `startdisk`, plus a central directory and an EOCD claiming `ndisks`
@@ -4017,6 +4113,7 @@ void run_format_tests(void)
     test_gzip();
     test_tar();
     test_zip();
+    test_zip_comment();
     test_lzh_probe();
     test_lzh_extract();
     test_sitseg();

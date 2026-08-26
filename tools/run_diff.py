@@ -196,15 +196,6 @@ def said_unsupported(msg):
 # reduce/shrink and tar links belong here the day a fixture has one.
 ORACLE_OUT_OF_SCOPE = {"Implode"}
 
-# Formats whose archive comment the ORACLE reports and this engine
-# deliberately does not save: zip's end-of-central-directory comment,
-# which fmt_exo.c reads past (OPEN_ITEMS.md, part 2, section 4). Named
-# rather than inferred from our own output, so a Compact Pro comment
-# that stopped being saved still fails the suite. A comment file for a
-# format in this set is still forbidden — the "unexpected output" check
-# sees it.
-COMMENT_NOT_SAVED = {"Zip"}
-
 
 def out_of_scope(entry):
     """True when the ORACLE says every method of this entry is outside v1
@@ -327,8 +318,6 @@ def check_fixture(macextract, man, verbose, budget=0):
         # output" check below already enforces.
         want = man.get("comment")
         cname = normpath(man["fixture"] + ".comment.txt")
-        if want and man.get("format") in COMMENT_NOT_SAVED:
-            want = None
         if want:
             # Popped only when one is expected: popping unconditionally
             # would let a comment file written for an archive that has

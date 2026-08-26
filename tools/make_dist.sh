@@ -113,8 +113,8 @@ Using it: open an archive, then say which folder the files should go into.
 That second dialog opens in the archive's own folder, so pressing Return
 puts them next to it; click Drive to send them to another disk instead.
 
-If a Compact Pro archive carries a note -- the comment whoever made it
-typed in -- it is written into that folder as a text file called
+If a Compact Pro or zip archive carries a note -- the comment whoever
+made it typed in -- it is written into that folder as a text file called
 Comments, rather than thrown away with the wrapper.
 
 Very occasionally a file uses a compression method this version does not
