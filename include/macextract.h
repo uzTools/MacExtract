@@ -1,5 +1,5 @@
 /*
- * unclassic.h — public API of libmacextract.
+ * macextract.h — public API of libmacextract.
  *
  * A portable, dependency-free C99 decompression engine for classic
  * Macintosh archive and encoding formats (System 6 → Mac OS 9 era).
@@ -13,8 +13,8 @@
  *
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
-#ifndef UNCLASSIC_H
-#define UNCLASSIC_H
+#ifndef MACEXTRACT_H
+#define MACEXTRACT_H
 
 #include <stdint.h>
 #include <stddef.h>
@@ -570,4 +570,4 @@ void unc_segment_stats(const void *scratch, uint32_t *part_switches,
 #ifdef __cplusplus
 }
 #endif
-#endif /* UNCLASSIC_H */
+#endif /* MACEXTRACT_H */

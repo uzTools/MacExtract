@@ -39,8 +39,8 @@ fi
 mkdir -p dist
 cp "$SRC/MacExtract.bin" dist/MacExtract.bin
 cp "$SRC/MacExtract.dsk" dist/MacExtract.dsk
-VERSION=$(sed -n 's/^#define UNC_VERSION "\(.*\)"/\1/p' include/unclassic.h)
-[ -n "$VERSION" ] || { echo "make_dist: no UNC_VERSION in include/unclassic.h" >&2; exit 1; }
+VERSION=$(sed -n 's/^#define UNC_VERSION "\(.*\)"/\1/p' include/macextract.h)
+[ -n "$VERSION" ] || { echo "make_dist: no UNC_VERSION in include/macextract.h" >&2; exit 1; }
 
 cat > dist/README.txt <<TXT
 MacExtract v$VERSION — bootstrap distribution

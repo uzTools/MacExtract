@@ -19,7 +19,7 @@
 #include <sys/stat.h>
 
 #include "../mac/mac_mocks.h"
-#include "unclassic.h"
+#include "macextract.h"
 
 /* ------------------------------------------------------------------ */
 /* Mock Toolbox: a tiny open-file table backed by Linux fds.          */

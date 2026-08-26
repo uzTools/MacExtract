@@ -3,7 +3,7 @@
  * Uses libc freely (test code runs on Linux only).
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
-#include "unclassic.h"
+#include "macextract.h"
 #include "unc_internal.h"
 
 #include <stdio.h>

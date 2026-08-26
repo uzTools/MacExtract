@@ -5,7 +5,7 @@
 #ifndef UNC_INTERNAL_H
 #define UNC_INTERNAL_H
 
-#include "unclassic.h"
+#include "macextract.h"
 
 /* ------------------------------------------------------------------ */
 /* Byte-wise big-endian readers.                                      */

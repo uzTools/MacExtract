@@ -132,7 +132,7 @@ tagged correctly and no release appeared; re-pushing the same tag object
 published it (DECISIONS.md 2026-08-26, *the tag that did not fire*).
 
 ```sh
-# bump UNC_VERSION in include/unclassic.h FIRST
+# bump UNC_VERSION in include/macextract.h FIRST
 sh tools/make_dist.sh                    # rebuild dist/ from current source
 # commit dist/ + docs, ./ci.sh green, push main FIRST
 git tag -a v0.12 -m "..."                # annotated; the message is the tag's

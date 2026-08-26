@@ -42,7 +42,7 @@
 #include <Windows.h>
 #endif
 
-#include "unclassic.h"
+#include "macextract.h"
 
 #define kProgressDLOG   128
 #define kDoneALRT       129
@@ -1326,7 +1326,7 @@ static int SegPartOf(SegHost *h, short vol, long dir, ConstStr255Param name)
 /* spanned zip are recognizable at all, and a split part is not even   */
 /* that. So the family is decided by filename, exactly as the Linux    */
 /* CLI decides it, and what keeps a wrong file out is not this scan    */
-/* but the check the engine makes on the ASSEMBLED set (unclassic.h,   */
+/* but the check the engine makes on the ASSEMBLED set (macextract.h,  */
 /* unc_extract_segments). Names propose; content disposes.            */
 /*                                                                    */
 /* Filenames here are Str63 — a length byte and MacRoman bytes — so    */
@@ -2617,7 +2617,7 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
     }
 #endif
     /* Fallback name for formats that store none (gzip, .Z). The contract in
-     * unclassic.h is "the archive filename minus its LAST extension", which
+     * macextract.h is "the archive filename minus its LAST extension", which
      * is what unar does and what cli/main.c passes; this used to pass the
      * whole name, so opening `foo.gz` on a Mac wrote a file called `foo.gz`
      * — colliding with the archive itself, hence `foo.gz~1` — where every
@@ -2653,7 +2653,7 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
         sh->hide = prog ? ((Progress *)prog->ctx)->dlg : NULL;
 #endif
         /* Optional members are the NULL ones, so this must start
-         * zeroed (unclassic.h). `size` stays NULL deliberately: this
+         * zeroed (macextract.h). `size` stays NULL deliberately: this
          * host reads floppies, and answering it would mean sending the
          * user after disks to put a denominator on a progress bar. */
         {

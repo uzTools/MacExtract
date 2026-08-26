@@ -44,7 +44,7 @@ ARCHIVE_NAME = "archive.sit"
 # Non-result statuses the app can paint in the grid's `ret` slot. Kept in step
 # with the kAt* codes in mac/macextract_mac.c.
 AT_RUNNING = -1000         # alive, still working — keep waiting
-UNC_ERR_ABORTED = -8       # include/unclassic.h
+UNC_ERR_ABORTED = -8       # include/macextract.h
 AT_STATUS = {-1000: "app alive, extraction not finished",
              -1001: 'no volume named "In" mounted (bad disk set)',
              -1002: 'no volume named "Out" mounted (bad disk set)'}

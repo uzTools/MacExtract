@@ -20,7 +20,7 @@
  *
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
-#include "unclassic.h"
+#include "macextract.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -957,7 +957,7 @@ static void seg_scan_dir(SegHost *h, const char *anchor, int wrapped)
 /* `^NAME\.(zip|z[0-9]{2})$`, matched case-insensitively against the   */
 /* directory the opened part came from.) What keeps a wrong file out   */
 /* is not this scan but the structural check the engine makes on the   */
-/* assembled set; see unc_extract_segments in unclassic.h.             */
+/* assembled set; see unc_extract_segments in macextract.h.            */
 /* ------------------------------------------------------------------ */
 
 static int ascii_lower(int ch)

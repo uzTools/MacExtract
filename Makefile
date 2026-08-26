@@ -27,7 +27,7 @@ $(BUILD):
 # those is invisible until something downstream disagrees — which is how
 # a rebuilt engine and a stale reference binary came to disagree about
 # the same file on an emulated Mac (2026-08-23).
-ENGINE_HDR = include/unclassic.h $(wildcard src/*.h)
+ENGINE_HDR = include/macextract.h $(wildcard src/*.h)
 
 $(BUILD)/%.o: src/%.c $(ENGINE_HDR) | $(BUILD)
 	$(CC) $(WARN) $(CFLAGS) $(INC) -c $< -o $@

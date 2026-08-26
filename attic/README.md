@@ -45,7 +45,7 @@ Nothing was deleted or rewritten, so it is a move rather than a port:
    `unc_arc_probe`: Disk Copy first, then the volume probe. Both belong
    ahead of the text probes (BinHex, uuencode, btoa, MIME, base64),
    whose tests are scans rather than fixed offsets.
-3. `include/unclassic.h` still carries `UNC_FORMAT_DISKCOPY_RETIRED`, a
+3. `include/macextract.h` still carries `UNC_FORMAT_DISKCOPY_RETIRED`, a
    reserved slot kept so that no enumerator after it changed value when
    the probe went. Rename it and append a new enumerator for the volume
    probe — appending is the rule, so nothing shifts.

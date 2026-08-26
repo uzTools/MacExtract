@@ -1668,7 +1668,7 @@ passes are testing something.
 
 | what | limit | past it |
 |---|---|---|
-| container, any format | **4 GiB** | `UncIO`'s `seek`/`tell`/`size` are `uint32` (`unclassic.h`). A 5 GiB tar lists 4 members, then `UNC_ERR_CORRUPT`, exit 1 |
+| container, any format | **4 GiB** | `UncIO`'s `seek`/`tell`/`size` are `uint32` (`macextract.h`). A 5 GiB tar lists 4 members, then `UNC_ERR_CORRUPT`, exit 1 |
 | declared entry size, tar | **2 GiB** | an explicit guard in `fmt_exo.c`; ends the whole tar walk |
 | declared entry size, zip | 4 GiB − 1 | the format's own field. A 3 GiB stored entry lists and CRC-verifies |
 | decoded output, streamed (gzip) | **none found** | 3 GiB and 5 GiB both verify, exit 0. The output size is never held, so nothing bounds it |

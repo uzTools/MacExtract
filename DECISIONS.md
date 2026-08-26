@@ -967,7 +967,7 @@ not survive being summed into a CRC total. The first OS 9 sweep failed on
 Linux wrote `archive`. Both fixtures are in `sample.txt` and both had been
 passing on Mini vMac for weeks.
 
-The cause was in the Mac shell, not the harness. `unclassic.h` documents
+The cause was in the Mac shell, not the harness. `macextract.h` documents
 `name_hint` — the fallback name for formats that store none, gzip and .Z — as
 "the archive filename minus its last extension"; `cli/main.c` strips the
 extension, and `RunExtract()` passed the whole Pascal string. So opening
@@ -2067,7 +2067,7 @@ joiner reports an unavailable part as EOF, so the entry ends as a
 per-entry `UNC_ERR_TRUNCATED` with its partial output kept and the sink
 told, while the call returns `UNC_ERR_SEGMENTED` — the first code path
 in the project that ever produces that error, which had been declared
-in `unclassic.h` since M0 and returned by nothing.
+in `macextract.h` since M0 and returned by nothing.
 
 **Backward crossings are measured, not assumed.** A backward seek
 across a part boundary re-opens a part, which on removable media is a
@@ -7532,12 +7532,27 @@ it: the documents, the Linux CLI (`macextract`), the application as the Finder
 shows it (`MacExtract`), the two downloads (`dist/MacExtract.bin`,
 `dist/MacExtract.dsk`) and the alert strings the Mac shell builds.
 
-**The public C API deliberately did not change.** `unc_*`, `UNC_*` and
-`include/unclassic.h` keep their names: they are the surface an LGPL consumer
-compiles against, the library has been published through v0.23.0, and a rename
-there buys a consistent spelling at the price of breaking every caller. The
-split is the decision, not an oversight — `libmacextract` in prose and
-`unc_extract()` in code are the same library.
+**The `unc_*` / `UNC_*` / `Unc*` prefix deliberately did not change**, and the
+reason is not compatibility. Nothing installs a header — the Makefile has
+`all`, `test` and `clean`, and a release ships `MacExtract.bin` and
+`MacExtract.dsk` — so anyone building on the engine has vendored the tree at a
+pinned commit and is untouched until they choose to update. The reason is that
+**the prefix does not spell the old name.** Nowhere in this repository is
+`unc_` expanded, and `unc_extract()` reads as "uncompress" or "unarchive" at
+least as readily as "unclassic"; `unclassic_extract()` would have had to go.
+Against that: 6,145 occurrences across every source file, 211 more cited by
+name in these documents — many inside dated entries, so renaming them rewrites
+the record of what was decided — and `git log -S` archaeology buried in a
+project whose docs lean on it. The split is the decision, not an oversight:
+`libmacextract` in prose and `unc_extract()` in code are the same library.
+
+**The header filename was the exception, and moved on 2026-08-26.**
+`include/unclassic.h` spelled the old name outright and was what five
+`#include` lines said, which is the one place the argument above does not hold.
+Renaming it to `macextract.h` touched 26 lines and could not change the
+binary: with no `__FILE__` and no `assert()` anywhere in `src/`, `mac/` or
+`cli/`, the Mac payload rebuilt byte-identical, so `dist/` was left matching
+the published v0.24.0 assets exactly rather than churned for new timestamps.
 
 **The creator code moved `'UNCL'` → `'MExt'`, which is not free.** The Finder
 binds an icon family to an application by matching the `BNDL` owner to the

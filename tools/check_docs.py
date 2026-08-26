@@ -10,7 +10,7 @@ Four of them, all cheap enough to run first in ci.sh:
    without anyone noticing; CLAUDE.md requires citing the section by name.
    Source files (`foo.c:41`) are fine - only `*.md:NN` is checked.
 3. The version agrees in all three places it is written: UNC_VERSION in
-   include/unclassic.h (the source of truth, which `macextract --version`
+   include/macextract.h (the source of truth, which `macextract --version`
    prints), the download section of README.md, and the first line of
    dist/README.txt, which make_dist.sh generates from the header. That
    constant sat at "0.4.0" through four releases because nothing read it
@@ -81,10 +81,10 @@ def check_version():
     """UNC_VERSION, README.md's download section and dist/README.txt's
     first line must agree."""
     bad = []
-    header = (ROOT / "include" / "unclassic.h").read_text()
+    header = (ROOT / "include" / "macextract.h").read_text()
     m = VERSION_RE.search(header)
     if not m:
-        return ["include/unclassic.h: no UNC_VERSION"]
+        return ["include/macextract.h: no UNC_VERSION"]
     ver = m.group(1)
 
     readme = (ROOT / "README.md").read_text()

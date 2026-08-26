@@ -579,7 +579,7 @@ int unc_zip_extract(UncCtx *c)
      *
      * Only the counts are taken. A value that does not fit 32 bits means
      * a file this engine cannot address at all (offsets are uint32
-     * throughout, unclassic.h), and is refused cleanly rather than
+     * throughout, macextract.h), and is refused cleanly rather than
      * truncated — Zip64 proper stays out of scope (OPEN_ITEMS.md, part
      * 1). Both halves of each 64-bit field are read as two uint32s and
      * the high half is only ever compared against zero, so no 64-bit
@@ -625,7 +625,7 @@ int unc_zip_extract(UncCtx *c)
     /* The set the archive says it is must be the set that was assembled.
      * This is the check that catches parts put in the wrong order or
      * taken from the wrong archive, because filenames put them there and
-     * a filename is evidence of nothing (see unclassic.h). */
+     * a filename is evidence of nothing (see macextract.h). */
     if (!c->segmap) {
         if (disknum != 0) return UNC_ERR_SEGMENTED;
     } else if ((uint32_t)c->segmap->nparts != disknum + 1) {

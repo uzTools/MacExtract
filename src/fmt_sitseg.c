@@ -131,7 +131,7 @@ int unc_segment_match(const UncSegmentDesc *desc,
         return unc_ddseg_match(desc, head, len);
     /* A scheme whose parts carry no identity cannot answer this. Said
      * explicitly rather than left to fall out of a failed header parse,
-     * because the two outcomes mean opposite things (see unclassic.h). */
+     * because the two outcomes mean opposite things (see macextract.h). */
     if (desc->scheme != UNC_FORMAT_SITSEG) return 0;
     if (sitseg_parse(head, len, &cand) != UNC_OK) return 0;
     if (cand.name_len != desc->name_len) return 0;
