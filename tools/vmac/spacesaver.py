@@ -1713,6 +1713,378 @@ def magicname(keep=False):
     return report_specimen(out, s.shots)
 
 
+def enrollrename(keep=False):
+    """Enrol the disk, THEN rename in the Finder. The untried cell.
+
+    Read off the panel with `--pages`, changing nothing: the
+    *Compression and Other* page has **both** rules ticked — "Name
+    begins or ends with `small`" and "Stuff or expand item when its name
+    is changed by adding or removing .SIT/.SEA" — and the second is the
+    one this project has already seen FIRE, so rename events are
+    noticed. The *Idle Time* page, meanwhile, ships with an EMPTY list
+    of disks.
+
+    So the hypothesis is that the `small` rule is gated on the disk
+    being enrolled and the `.SIT` rule is not. `--enroll` enrolled but
+    never renamed; `--namerule` renamed but never enrolled. This does
+    both, in one boot, and shuts down so the volume is flushed.
+    """
+    import glob
+    boot = os.path.join(WORK, "ssenrollrename.hfv")
+    shutil.copyfile(INSTALLED, boot)
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+    tmp = tempfile.mkdtemp(prefix="sser-")
+    big = (b"SpaceSaver probe, at length. " * 14000)[:400000]
+    plain = list(SUBJECTS) + [("Bigone", "TEXT", "ttxt", big, b"")]
+    try:
+        subprocess.run(["hmount", boot], check=True, capture_output=True,
+                       env=env)
+        from ndd import macbinary_dated, MAC_EPOCH_1990   # noqa: E402
+        for n, t, c, d, r in plain:
+            q = os.path.join(tmp, n + ".bin")
+            open(q, "wb").write(macbinary_dated(n, t, c, d, r,
+                                                MAC_EPOCH_1990,
+                                                MAC_EPOCH_1990))
+            subprocess.run(["hcopy", "-m", q, ":"], check=True,
+                           capture_output=True, env=env)
+        subprocess.run(["humount"], check=True, capture_output=True, env=env)
+    finally:
+        shutil.rmtree(env["HOME"], ignore_errors=True)
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    before = set(glob.glob("/tmp/dd-*/boot.hfv"))
+    s = Session(boot, [], os.path.join(SPECIMENS, "enrollrename"))
+    try:
+        open_ss_panel(s)
+        s.mac.click(*SS_IDLE_TIME)
+        time.sleep(3.0)
+        s.mac.click(*SS_IDLE_TIME)
+        s.shot("idle-page", wait=10.0)
+        s.mac.click(*IDLE_ADD)
+        time.sleep(3.0)
+        s.mac.click(*IDLE_ADD)
+        s.shot("added", wait=6.0)
+        s.mac.click(*IDLE_OK)
+        time.sleep(3.0)
+        s.mac.click(*IDLE_OK)
+        s.shot("settings-ok", wait=8.0)
+        s.mac.click(*SS_CLOSE_BOX)
+        time.sleep(2.0)
+        s.mac.click(*SS_CLOSE_BOX)
+        s.shot("panel-closed", wait=8.0)
+        for _ in range(3):
+            s.mac.command_key("w")
+            time.sleep(2.5)
+        s.shot("windows-closed", wait=6.0)
+        s.mac.click(470, 55, double=True)
+        s.shot("bootvol", wait=14.0)
+        for name, letter in (("Bigone", "b"), ("Alpha", "a"),
+                             ("Forked", "f")):
+            s.mac.key("Escape")
+            time.sleep(0.6)
+            s.mac.key(letter)
+            time.sleep(1.5)
+            s.shot("selected-" + name, wait=0.5)
+            s.mac.key("Return")
+            time.sleep(2.0)
+            s.mac.key("Right")
+            time.sleep(0.8)
+            s.mac._xdo("type", "--delay", "150", "small")
+            time.sleep(1.5)
+            s.shot("typed-" + name, wait=0.5)
+            s.mac.key("KP_Enter")
+            time.sleep(4.0)
+            s.mac.click(155, 310)
+            time.sleep(4.0)
+            s.shot("renamed-" + name, wait=40.0)
+        for i in range(3):
+            s.shot("settling%d" % i, wait=60.0)
+        s.menu(SPECIAL_X, SHUT_DOWN_Y, "special-menu")
+        s.shot("shutting-down", wait=45.0)
+    finally:
+        time.sleep(10)
+        s.close()
+
+    cands = [p for p in glob.glob("/tmp/dd-*/boot.hfv") if p not in before]
+    if not cands:
+        cands = sorted(glob.glob("/tmp/dd-*/boot.hfv"),
+                       key=os.path.getmtime)[-1:]
+    out = sorted(cands, key=os.path.getmtime)[-1]
+    print("spacesaver: reading back %s" % out)
+    from superdisk import read_forks                    # noqa: E402
+    hit = 0
+    for path, (ftype, creator, data, rsrc) in sorted(read_forks(out).items()):
+        if not any(k in path[-1] for k in ("Alpha", "Forked", "Bigone")):
+            continue
+        print("spacesaver: %-16s %s/%s data %d rsrc %d head=%r"
+              % (path[-1], ftype, creator, len(data), len(rsrc), data[:8]))
+        if data[:8] == b"SIT!DFD3":
+            hit += 1
+            q = os.path.join(s.shots, path[-1].replace(" ", "_") + ".ss")
+            open(q, "wb").write(data)
+            print("             A SPACESAVER FILE: kept %s" % q)
+    return 0 if hit else 1
+
+
+def uirename(keep=False):
+    """Rename through the Finder, on the freshly installed system.
+
+    A name written by `hcopy` matches the rule but nothing ever
+    happened: no rename, no close, no event. The panel says
+    *"Immediately compress files ... whose Name begins or ends with"*,
+    so the rename itself is the event, and it has to be done the way a
+    person does it — select, Return, type, Enter, then click another
+    icon, which is what actually commits a Finder name box.
+
+    Runs against `ssboot.hfv`, the image `--freshinstall` leaves behind,
+    so nothing here depends on the much-patched older install.
+    """
+    import glob
+    src = BOOT if os.path.exists(BOOT) else INSTALLED
+    boot = os.path.join(WORK, "ssuirename.hfv")
+    shutil.copyfile(src, boot)
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+    tmp = tempfile.mkdtemp(prefix="ssui-")
+    big = (b"SpaceSaver probe, at length. " * 14000)[:400000]
+    plain = list(SUBJECTS) + [("Bigone", "TEXT", "ttxt", big, b"")]
+    try:
+        subprocess.run(["hmount", boot], check=True, capture_output=True,
+                       env=env)
+        from ndd import macbinary_dated, MAC_EPOCH_1990   # noqa: E402
+        for n, t, c, d, r in plain:
+            q = os.path.join(tmp, n + ".bin")
+            open(q, "wb").write(macbinary_dated(n, t, c, d, r,
+                                                MAC_EPOCH_1990,
+                                                MAC_EPOCH_1990))
+            subprocess.run(["hcopy", "-m", q, ":"], check=True,
+                           capture_output=True, env=env)
+        subprocess.run(["humount"], check=True, capture_output=True, env=env)
+    finally:
+        shutil.rmtree(env["HOME"], ignore_errors=True)
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    before = set(glob.glob("/tmp/dd-*/boot.hfv"))
+    s = Session(boot, [], os.path.join(SPECIMENS, "uirename"))
+    try:
+        s.boot()
+        s.shot("desktop", wait=16.0)
+        s.mac.click(250, 38)
+        time.sleep(2.5)
+        for _ in range(3):
+            s.mac.command_key("w")
+            time.sleep(2.5)
+        s.shot("windows-closed", wait=6.0)
+        s.mac.click(470, 55, double=True)
+        s.shot("bootvol", wait=14.0)
+        for name, letter in (("Bigone", "b"), ("Alpha", "a"),
+                             ("Forked", "f")):
+            s.mac.key("Escape")
+            time.sleep(0.6)
+            s.mac.key(letter)
+            time.sleep(1.5)
+            s.shot("selected-" + name, wait=0.5)
+            s.mac.key("Return")            # open the name box
+            time.sleep(2.0)
+            s.mac.key("Right")             # keep the name, go to its end
+            time.sleep(0.8)
+            s.mac._xdo("type", "--delay", "150", "small")
+            time.sleep(1.5)
+            s.shot("typed-" + name, wait=0.5)
+            s.mac.key("KP_Enter")          # Return leaves it editing
+            time.sleep(4.0)
+            s.mac.click(155, 310)          # another icon commits it
+            time.sleep(4.0)
+            s.shot("renamed-" + name, wait=40.0)
+        for i in range(4):
+            s.shot("settling%d" % i, wait=60.0)
+        s.menu(SPECIAL_X, SHUT_DOWN_Y, "special-menu")
+        s.shot("shutting-down", wait=45.0)
+    finally:
+        time.sleep(10)
+        s.close()
+
+    cands = [p for p in glob.glob("/tmp/dd-*/boot.hfv") if p not in before]
+    if not cands:
+        cands = sorted(glob.glob("/tmp/dd-*/boot.hfv"),
+                       key=os.path.getmtime)[-1:]
+    out = sorted(cands, key=os.path.getmtime)[-1]
+    print("spacesaver: reading back %s" % out)
+    from superdisk import read_forks                    # noqa: E402
+    hit = 0
+    for path, (ftype, creator, data, rsrc) in sorted(read_forks(out).items()):
+        if not any(k in path[-1] for k in ("Alpha", "Forked", "Bigone")):
+            continue
+        print("spacesaver: %-14s %s/%s data %d rsrc %d head=%r"
+              % (path[-1], ftype, creator, len(data), len(rsrc), data[:8]))
+        if data[:8] == b"SIT!DFD3":
+            hit += 1
+            q = os.path.join(s.shots, path[-1].replace(" ", "_") + ".ss")
+            open(q, "wb").write(data)
+            print("             A SPACESAVER FILE: kept %s" % q)
+    return 0 if hit else 1
+
+
+def pages(keep=False):
+    """Read every page of the panel, CHANGING NOTHING.
+
+    On a freshly installed copy, what is already switched on is what a
+    user would be using. Each of the four buttons — Idle Time,
+    Compression & Other, Don't Compress, About SpaceSaver — is opened
+    and photographed, then dismissed with Cancel so that nothing is
+    written back. Only after reading these is it worth touching a
+    setting.
+    """
+    boot = os.path.join(WORK, "sspages.hfv")
+    src = BOOT if os.path.exists(BOOT) else INSTALLED
+    shutil.copyfile(src, boot)
+    s = Session(boot, [], os.path.join(SPECIMENS, "pages"))
+    try:
+        open_ss_panel(s)
+        s.shot("panel-main", wait=6.0)
+        for spot, tag in ((SS_IDLE_TIME, "idle-time"),
+                          (SS_COMPRESSION, "compression-other"),
+                          (SS_DONT_COMPRESS, "dont-compress")):
+            s.mac.click(*spot)
+            time.sleep(3.0)
+            s.mac.click(*spot)            # the first input is swallowed
+            s.shot("page-" + tag, wait=12.0)
+            s.shot("page-" + tag + "-again", wait=6.0)
+            s.mac.key("Escape")           # Cancel: change nothing
+            time.sleep(2.5)
+            s.mac.key("Escape")
+            s.shot("after-" + tag, wait=6.0)
+    finally:
+        time.sleep(6)
+        s.close()
+    print("spacesaver: frames in %s" % s.shots)
+    return 0
+
+
+INSTALL_BUTTON = (390, 278)     # "Install" on the Standard Install panel
+DEST_INSTALL = (378, 220)       # "Install" on the destination chooser
+WARN_YES = (399, 137)           # "Yes" on the restart warning
+
+
+def freshinstall(keep=False):
+    """Install SpaceSaver the way a user would, onto a FRESH system.
+
+    Every install so far has layered onto `ssboot.hfv`, which
+    `session351` only copies from the stock system when it does not
+    already exist — so the installed image this project has been driving
+    for a fortnight has had installers run over it repeatedly, with
+    patched INITs and deleted extensions in between. This starts from
+    the stock `Sys7.img` every time.
+
+    Two differences from `--install351`, both about being a user rather
+    than a script: the registration number is left EMPTY instead of
+    being fed codes that are known to be rejected, and every installer
+    panel is photographed before anything is pressed — an Easy/Custom
+    choice would decide whether SpaceSaver is installed at all, and
+    pressing Return six times accepts whatever is in front of it.
+    """
+    if os.path.exists(BOOT):
+        os.remove(BOOT)                       # a genuinely fresh system
+    s, work, img = session351("freshinstall")
+    try:
+        s.boot()
+        s.shot("desktop", wait=10.0)
+        s.mac.click(*INSTALLER_ICON, double=True)
+        s.shot("launched", wait=40.0)
+        s.mac.click(*SPLASH_CONTINUE)
+        s.shot("welcome", wait=22.0)
+        s.mac.click(*WELCOME_CONTINUE)
+        s.shot("registration", wait=22.0)
+        # Name, organisation AND the serial. Leaving it empty gets
+        # "The registration number that you have entered is invalid."
+        # and the alert does not take Return — measured 2026-08-25, a
+        # whole run spent stuck on it. `DLXC-963-029519` is the 3.5
+        # code the maintainer supplied and the one 3.5.1 accepts
+        # (DECISIONS.md 2026-08-22, what the registration wall costs).
+        s.mac.click(*REG_NAME)
+        time.sleep(1.0)
+        s.mac._xdo("type", "--delay", "120", "unclassic")
+        s.mac.click(*REG_ORG)
+        time.sleep(1.0)
+        s.mac._xdo("type", "--delay", "120", "test")
+        s.mac.click(*REG_NUMBER)
+        time.sleep(1.0)
+        s.mac._xdo("type", "--delay", "120", CODES_35[0])
+        s.shot("registration-filled", wait=3.0)
+        s.mac.click(*REG_REGISTER)
+        time.sleep(5.0)
+        s.mac.click(*REG_REGISTER)
+        s.shot("after-register", wait=25.0)
+        # Standard Install, then the destination chooser, then the
+        # success alert. Photograph BEFORE each Return so the panel being
+        # accepted is on record.
+        # Click the buttons rather than pressing Return: one run got
+        # through on Return and the next sat on the destination chooser
+        # with the same keystroke, which is the swallowed-first-input
+        # behaviour every panel in this installer has. Coordinates read
+        # off `07-standard-install.png` and `08-destination.png`.
+        # ONE click per button — a button is not an icon — and WALK the
+        # pointer to it first. A warp followed immediately by a click
+        # lands short (the same thing that made a menu pick open the
+        # neighbouring menu), and 66 px short of "Yes" is "No".
+        ox, oy = s.mac.origin(cached=False)
+
+        def press(mx, my, tag=None):
+            out = subprocess.run(["xdotool", "getmouselocation", "--shell"],
+                                 env=s.mac.env, capture_output=True,
+                                 text=True).stdout
+            g = dict(l.split("=", 1) for l in out.strip().splitlines()
+                     if "=" in l)
+            hx, hy = int(g.get("X", 0)), int(g.get("Y", 0))
+            tx, ty = ox + mx, oy + my
+            n = max(abs(tx - hx), abs(ty - hy)) // 30 + 1
+            for i in range(1, n + 1):
+                s.mac._xdo("mousemove", str(hx + (tx - hx) * i // n),
+                           str(hy + (ty - hy) * i // n))
+                time.sleep(0.25)
+            time.sleep(1.0)
+            if tag:
+                s.shot(tag)
+            s.mac._xdo("click", "1")
+            time.sleep(2.5)
+
+        s.shot("standard-install", wait=16.0)
+        press(*INSTALL_BUTTON, tag="on-install-button")
+        s.shot("destination", wait=18.0)
+        press(*DEST_INSTALL, tag="on-dest-install")
+        # "Your Macintosh needs to be restarted after installation is
+        # complete. Do you wish to continue?" — Yes. The copy happens
+        # after this and BEFORE any restart, so answering it is safe.
+        # This installer's alerts default to NO (tools/vmac/README.md), so
+        # Return is not the answer here — click Yes, walked, with the
+        # pointer photographed ON it before the button goes down.
+        s.shot("restart-warning", wait=18.0)
+        press(*WARN_YES, tag="on-yes")
+        s.shot("copying", wait=55.0)
+        s.shot("copying-2", wait=55.0)
+        s.shot("success", wait=45.0)
+        # **Do not press Restart.** That alert's only button restarts the
+        # guest, and Mini vMac flushes a volume on EJECT or shutdown, not
+        # on a guest restart — so the whole install is discarded and the
+        # image comes back stock (measured 2026-08-25: "Installation was
+        # successful", then a disk with nothing on it). Quit the
+        # installer instead and shut down through the Finder, which is
+        # what flushes.
+        s.mac.command_key("q")
+        s.shot("after-quit", wait=20.0)
+        s.mac.command_key("q")
+        s.shot("after-quit-2", wait=20.0)
+        s.menu(SPECIAL_X, SHUT_DOWN_Y, "special-menu")
+        s.shot("shutting-down", wait=50.0)
+    finally:
+        time.sleep(10)
+        s.close()
+    print("spacesaver: screenshots in %s" % s.shots)
+    print("spacesaver: fresh boot image at %s" % BOOT)
+    if not keep:
+        shutil.rmtree(work, ignore_errors=True)
+    return 0
+
+
 def enrollidle(keep=False):
     """Enrol the disk AND pick Idle Now, in one boot that is flushed.
 
@@ -3452,6 +3824,14 @@ def main():
                     help="drive both rename rules on the settings page")
     ap.add_argument("--enrollmagic", action="store_true",
                     help="enrol the disk, close the panel, then compress")
+    ap.add_argument("--enrollrename", action="store_true",
+                    help="enrol the disk, then rename in the Finder")
+    ap.add_argument("--uirename", action="store_true",
+                    help="rename in the Finder on the fresh install")
+    ap.add_argument("--pages", action="store_true",
+                    help="photograph every panel page, changing nothing")
+    ap.add_argument("--freshinstall", action="store_true",
+                    help="install onto a stock system, photographing each panel")
     ap.add_argument("--enrollidle", action="store_true",
                     help="enrol the disk and pick Idle Now, one flushed boot")
     ap.add_argument("--idleenrolled", action="store_true",
@@ -3540,6 +3920,14 @@ def main():
         return suffix(a.keep)
     elif a.enrollmagic:
         return enrollmagic(a.keep)
+    elif a.enrollrename:
+        return enrollrename(a.keep)
+    elif a.uirename:
+        return uirename(a.keep)
+    elif a.pages:
+        return pages(a.keep)
+    elif a.freshinstall:
+        return freshinstall(a.keep)
     elif a.enrollidle:
         return enrollidle(a.keep)
     elif a.idleenrolled:

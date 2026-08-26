@@ -183,11 +183,21 @@ own distribution (BLOCKERS.md, the same date).
   event at all (`INIT 1` patches `_MenuSelect`, `_MenuKey` and
   `_PBEject`, and nothing in the File Manager).
 
-  **What would close it:** why a reachable engine refuses every write
-  path. The unexamined lead is personalisation — the panel's
-  `PERS -4064` is the name `unclassic` with the serial field zeroed, and
-  `STR# 1001` #18 and #20 are about copies that are unregistered or
-  installed wrong. Or one SpaceSaver file from anywhere.
+  **The panel's own defaults, read with Cancel and changed nothing**
+  (`--pages`): *Compression and Other* has BOTH name rules ticked —
+  "Name begins or ends with `small`" and "Stuff or expand item when its
+  name is changed by adding or removing .SIT/.SEA" — and the second one
+  is the rule this project has already seen FIRE, so rename events do
+  reach the software. *Idle Time* ships with an EMPTY list of disks,
+  which is a real gate nobody had checked. Enrolling the disk and then
+  renaming in the Finder, both in one flushed boot (`--enrollrename`),
+  still compresses nothing: the names commit — the volume comes back
+  holding `Alphasmall`, `Bigonesmall`, `Forkedsmall` — and the files do
+  not change.
+
+  **What would close it:** why one rule on that page fires and the other
+  does not, when both are ticked and the event is the same rename. Or
+  one SpaceSaver file from anywhere.
 - **AppleLink `.pkg`: one file, which would settle two questions.**
   Named since 2026-08-23 from Aladdin's own recogniser (FORMATS.md,
   *AppleLink packages*), and detect-only because nothing here can grade

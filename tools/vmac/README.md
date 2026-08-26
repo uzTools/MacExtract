@@ -751,6 +751,27 @@ installer's entire output lands in the session's temp dir and the original
 boot image still looks untouched — which reads as "the installer wrote
 nothing".
 
+**Installing it, panel by panel** (measured 2026-08-25, `--freshinstall`):
+Standard Install — whose text says it installs "the complete StuffIt
+Deluxe™ and StuffIt SpaceSaver™ packages" — then a destination chooser,
+then *"Your Macintosh needs to be restarted after installation is
+complete. Do you wish to continue?"*, then the copy, then *"Installation
+was successful ... needs to be restarted"* with **Restart** as its only
+button.
+
+**Do not press Restart.** Mini vMac flushes a volume on eject or
+shutdown, not on a guest restart, so pressing it throws the whole
+install away: the image comes back stock and unbootable, which reads as
+"the installer did nothing". Quit with Cmd-Q and shut down through the
+Finder instead.
+
+Three input rules, each of which cost a run here: **a button is clicked
+ONCE** (only icons are double-clicked); **walk the pointer to it** —
+a warp followed immediately by a click lands short, and 66 px short of
+"Yes" is "No"; and **these alerts default to No**, so Return does not
+mean yes. `--freshinstall` photographs the pointer sitting on each
+button before the click, which is the only way a miss is visible.
+
 **3.5.1 and 4.0 both reject every code Macintosh Garden publishes** — those
 are for 3.0.7 and 5.x, and 5.x is what cannot run here (7.5.3 and 8000K,
 against a 4 MB Plus). The open route is a Mac II-class Mini vMac variant
