@@ -130,6 +130,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-26 (an encrypted StuffIt 5 archive) — the pointer that was said not to work
 - 2026-08-26 — base64 and MIME, and an oracle that is wrong three times
 - 2026-08-26 (the btoa translator, by Apple event) — the door nobody tried
+- 2026-08-26 (disk images) — read the volume, not the extension
 
 ---
 
@@ -7176,8 +7177,9 @@ matches the button's LABEL against a template before clicking it.
 
 Asked for — and **already filed**, which the session that implemented it did
 not notice until afterwards. OPEN_ITEMS.md's part 1 does not mention base64,
-so it was never out of scope; part 2's section 6 ("Not implemented, and
-nothing blocks it") had named it since 2026-08-25, raised from the Macintosh
+so it was never out of scope; part 2's then-section 6 ("Not implemented, and
+nothing blocks it" — emptied and deleted on 2026-08-26 when its last entry,
+the disk images, was closed) had named it since 2026-08-25, raised from the Macintosh
 Garden forum thread *Archive formats* — with the reference already identified
 (deark's `modules/xfer.c`, in `reference/` for ARC) and the grading bargain
 already proposed. That entry is now deleted, the format being read.
@@ -7189,7 +7191,7 @@ grep. Everything in it was then re-derived from scratch — the same reference,
 the same oracle, the same `.b64` framing. **Cost:** no wrong code, but an
 afternoon of searching for what one paragraph already said, and a status file
 that spent one commit contradicting itself (section 2 waiting on a specimen
-for a format section 6 called unimplemented).
+for a format that section called unimplemented).
 
 The brief has grown three times before on request (ARC and uuencode,
 SuperDisk!, btoa), and this is the fourth.
@@ -7373,3 +7375,81 @@ It also showed something the suite could not: a real btoa file from a Mac is
 at the wrapper because btoa is not in the envelope auto-unwrap list
 (OPEN_ITEMS.md, section 4). Every layer reads; the chain does not. That is
 what one file from outside your own toolchain is for.
+
+## 2026-08-26 (disk images) — read the volume, not the extension
+
+The open item asked for seven extensions to be named: `.dmg`, `.iso`, `.cdr`,
+`.toast`, `.img`, `.smi`, `.cpgz`. It reads as seven jobs and it is not: an
+extension is not evidence, this engine has never sniffed one, and the file
+behind six of those names is the same thing — a byte-for-byte image of a
+volume. So the probe reads the volume. Four structures cover the list: an HFS
+master directory block, an HFS+/HFSX volume header, an Apple Partition Map,
+and an ISO 9660 descriptor pair in any of its four sector layouts (FORMATS.md,
+*Disk images*, has each one and its source).
+
+**Every one of the four came out of `reference/deark`,** whose `hfs`, `apm`
+and `iso9660` modules already identify exactly these structures — the same
+tree that has been the third oracle for ARC since M33. The reference was in
+the repository before the item was filed; what the item called "a reference
+this project does not yet have" was a directory nobody had grepped. That is
+the second time this month (base64, the same file, the same week).
+
+**The item's own framing was wrong in a useful way.** It said `.smi` and
+`.cpgz` "have something to match" while a raw `.iso` or `.img` "has no header
+of its own at all". Backwards: `.cpgz` is gzip and was already named, `.smi`
+is NDIF whose data fork carries no signature anywhere, and the raw images are
+precisely the ones with a structure to find — because the volume is the
+structure. **An item that reasons about file NAMES is worth re-reading before
+it is worked on.**
+
+### What is corroborated, and what a 16-bit signature is worth
+
+Three of the four branches carry a second field, because deark's own identify
+functions do: HFS wants an allocation block size that is a nonzero multiple of
+512, APM wants a map entry in sector 1 *and* in sector 2, ISO 9660 wants a
+descriptor at sector 16 *and* at sector 17. HFS+ has nothing — deark reads
+`"H+"` and parses no further, and rule #1 forbids inventing the field at
+offset 40 from memory. What corroborates it here is not a format detail at
+all: **an image of a disk is a whole number of 512-byte sectors**, so the
+file's own length has to be one. That is a claim about images, not about
+HFS+, and it is labelled as ours in the source.
+
+### The negative case has to be written the way the probe is entered
+
+`run_diskimage.py`'s APM negative first zeroed the block at 1024 — and a
+mutant with the sector-1 read deleted passed it, because 1024 is where the
+branch *starts*: spoil it and the branch is never entered, so the missing
+check is never reached. Zeroing 512 instead kills that mutant. All four
+corroborations were then mutation-tested one at a time, which is the only
+reason this is known. **A negative test proves nothing about a check the
+input never reaches**, and the way to find out is to delete the check and
+watch.
+
+### The specimens were already on the machine
+
+138 real disk images: Retro68's 800K test volumes, every emulator tier's HFS
+and Apple-partitioned disk up to the 2 GB Mac OS 9 image, two 1.44 MB
+Macintosh Garden floppies, and a 224 MB Toast hybrid CD that turns out to be
+Apple-partitioned rather than ISO 9660. No download, and no synthetic image
+standing in for a real one — the only generated positives are the ISO cases,
+because nothing here writes a CD (`reference/pycdlib` does, and deark and
+`lsar` both confirm what it wrote).
+
+### The tier figures were describing a smaller sample than the file held
+
+Re-running the three Mini vMac tiers for a binary change is routine here, and
+this time it returned **69/69** where every status file said 67/67. Nothing
+regressed: M33 and M34 added two ARC fixtures to `sample.txt` on 2026-08-25
+and re-ran only those two, so the sweep figures had quietly become claims
+about a 67-fixture subset of a 69-fixture list. Corrected in place
+(BLOCKERS.md, the tier table; FORMATS.md, the three tier sections).
+
+**A sample list is a number two places carry**, the file and the write-up,
+and only one of them changes when a fixture is added. The cheap guard is the
+one that caught it: the sweep prints its own denominator, so run the whole
+list rather than the fixture you added.
+
+The two things still unnamed are **compressed** images, and the NDIF one is
+measured rather than assumed: the one NDIF file here opens straight into
+compressed data, its chunk map is a `bcem` resource, and its fork is not even
+a whole number of sectors. UDIF wants a reference (OPEN_ITEMS.md, part 2).

@@ -50,6 +50,7 @@ static const UncFormatDesc unc_formats[] = {
     { UNC_FORMAT_BTOA,        "btoa",            1 },
     { UNC_FORMAT_BASE64,      "base64",          1 },
     { UNC_FORMAT_MIME,        "MIME message",    1 },
+    { UNC_FORMAT_DISKIMAGE,   "disk image",      0 },
 };
 
 const char *unc_format_name(UncFormat f)
@@ -180,6 +181,14 @@ UncFormat unc_sniff(UncIO *io)
      * land on the next header or the end marker. */
     if (unc_arc_probe(head, len, io))   return UNC_FORMAT_ARC;
     if (unc_diskcopy_probe(head, len, io)) return UNC_FORMAT_DISKCOPY;
+    /* Every other disk image, read by the volume inside it rather than by
+     * an extension. It sits beside DiskCopy and before the text probes:
+     * its tests are structural, at fixed offsets and corroborated, where
+     * theirs are scans for a line that may be anywhere — and a disk image
+     * with the word "begin" somewhere in its boot blocks is still a disk
+     * image. It costs a file that reaches here one 24-byte read, plus up
+     * to four more past 32 KB for the CD layouts. */
+    if (unc_diskimage_probe(head, len, io)) return UNC_FORMAT_DISKIMAGE;
 
     /* An AppleLink package is TEXT, so it sits with the other text
      * formats — and before them, because its test is three whole tokens

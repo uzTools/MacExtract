@@ -38,6 +38,7 @@ whole corpus for that format (engine allocations only, via
 | LZH / LHA (.lzh, .lha) | extract | -lh0- store, -lh1- (LHarc's adaptive Huffman, shared with StuffIt method 5), **-lh2- (both codes adaptive, the position tree growing with the output)**, **-lh3- (static, rebuilt per block)**, -lh4-/-lh5-/-lh6-/-lh7- (static Huffman over a 4/8/32/64 KB window), -lhd- directories, LArc's -lz4-/-lz5-/-lzs-; header levels 0, 1, 2 and 3; **MacLHA's MacBinary payload unwrapped into two forks**; every method the format has except PMarc✵ | 8 fixtures (1 real Amiga archive + 7 of lhasa's) + **182 archives from fourteen writers**, each graded against `unar` and against lhasa, + 12 sets written by LHa 1.14i itself, + 15 -lh2- and 6 -lh3- entries generated for the purpose✵ | 4–74 KB✵ | full |
 | AppleLink package (.pkg) | detect only | — | no specimen anywhere: the probe is Aladdin's own recogniser, at 0 false positives across 928 fixtures (*AppleLink packages*, below) | — | — |
 | DiskCopy 4.2 (.image) | detect only | — | synthetic 800K GCR + real 800K image; 0 false positives in 807 fixtures (re-measured 2026-08-15) | — | — |
+| Disk images: HFS, HFS+/HFSX, Apple-partitioned, ISO 9660 (.img, .iso, .cdr, .toast, a raw .dmg) | detect only | — | 135 real images here, 800 KB to 2 GB, all named; a real ISO written by pycdlib and graded by deark and `lsar`; 0 false positives in 940 fixtures (*Disk images*, below) | — | — |
 
 ✦ **DiskDoubler, in scope since 2026-08-15** (M12), where every status file
 here used to call it detect-only. Three containers — a single compressed file
@@ -1299,6 +1300,55 @@ installed image, with four witnesses that fail if a different build is ever
 put in front of it.
 
 
+## Disk images
+
+**Named since 2026-08-26**, extraction still out by the brief (OPEN_ITEMS.md,
+part 1). Disk Copy 4.2 was the only image this engine could name; the rest —
+`.img`, `.iso`, `.cdr`, `.toast`, an uncompressed `.dmg`, and whatever else a
+mirror calls them — came back UNKNOWN, which reads to a user as a corrupt
+archive.
+
+**Nothing is read from the extension.** What those files share is the volume
+inside them, so `unc_diskimage_probe` reads that, in four shapes:
+
+| structure | test | source |
+|---|---|---|
+| HFS master directory block | `"BD"` at 1024, allocation block size a nonzero multiple of 512 | `de_identify_hfs`, deark `modules/hfs.c` |
+| HFS+ / HFSX volume header | `"H+"` or `"HX"` at 1024, in a file that is a whole number of sectors | the signatures deark's `modules/apm.c` reads at partition+1024 |
+| Apple Partition Map | `"PM\0\0"` at 512 **and** at 1024 | `de_identify_apm`, deark `modules/apm.c` |
+| ISO 9660 / High Sierra / CD-I | a volume descriptor at sector 16 and at sector 17, in any of the four sector layouts (2048; 2336+8; 2352+16; 2352+24) | `cdsig_at`, `de_identify_iso9660`, `cdraw_detect_params`, deark `modules/iso9660.c` |
+
+**Measured.** 138 real disk images are on this machine — Retro68's 800K test
+volumes, the emulator tiers' HFS and Apple-partitioned disks up to 2 GB, two
+1.44 MB Macintosh Garden floppy images, and a 224 MB Toast hybrid CD. 116 are
+HFS and 19 Apple-partitioned, and **all 135 are named**; the other three are
+two Disk Copy 4.2 files, which the older probe names, and one NDIF fork
+(below). **0 false positives across the 940 fixtures**, which is the
+measurement the Disk Copy and AppleLink probes were held to.
+
+**What is not named, and why.**
+
+- **NDIF and UDIF (`.dmg`, compressed `.img`, `.smi`).** An NDIF data fork
+  carries no signature at all: it opens straight into compressed data and the
+  chunk map is a `bcem` resource (DECISIONS.md, Now Compress — the decoder is
+  in `tools/vmac/nowcompress.py`, not the engine). Measured on the one NDIF
+  here, whose 1,357,517-byte fork is not even a whole number of sectors.
+  UDIF's `koly` trailer has no reference implementation in `reference/`, and
+  rule #1 applies. A raw `.dmg` — Apple-partitioned or bare HFS+ — is named
+  by the table above.
+- **MFS**, the 400K single-directory filesystem: no reference here reads it.
+- **HFS+ has no specimen and no oracle.** deark reads the two signatures but
+  parses no further, and nothing on this machine writes an HFS+ volume. The
+  one within reach is the Mac OS 9 guest's own boot volume, and it reads
+  `"BD"` at 1024 — an HFS wrapper with the HFS+ volume inside it (measured on
+  `MacOS9.img`'s single `Apple_HFS` partition) — so the HFS branch is what
+  claims it. **Hypothesis, on one volume:** that is what Mac OS 8.1–9 does
+  with every HFS+ volume it makes, and the bare `"H+"` form is Mac OS X-era
+  tooling's. The branch is graded by hand-built headers only (TESTING.md,
+  *Disk images*).
+- **`.cpgz` needs nothing.** It is gzip, is named Gzip, and unwraps to the
+  cpio inside it — a modern PC format, out by the brief.
+
 ## Envelope auto-unwrap
 
 `unclassic x` unwraps chained envelopes by content sniffing
@@ -2119,7 +2169,7 @@ the others, cautiously and from a single anchor.
 
 ## Real-hardware verification (Mini vMac — System 6.0.8, 4 MB Mac Plus, 68000)
 
-The Retro68 Mac shell was replayed against a 67-fixture sample spanning all
+The Retro68 Mac shell was replayed against a 69-fixture sample spanning all
 seventeen formats on a **real System 6.0.8 / 4 MB Mac Plus** under Mini vMac
 (a true 68000). Every extraction is verified ON THE MAC ITSELF: the app
 CRC-32s both forks after reading them back through the File Manager and the
@@ -2127,7 +2177,11 @@ result — painted to the framebuffer, read from a screenshot — is
 cross-checked against the same engine's Linux output (`tools/vmac_check.py`,
 `tools/decode_grid.py`).
 
-**67/67 byte-exact PASS** (**2026-08-23**, with M28's LZH in and five
+**69/69 byte-exact PASS** (**2026-08-26**, re-run for M37's disk-image
+probe, and the first run to cover the whole sample: M33 and M34 added
+`arc2pak1.pak` and `derived-ARCDOS.arc` on 2026-08-25 and no tier had
+been re-run since, so every "67/67" below was a sample two fixtures
+smaller than the file said. 67/67 on **2026-08-23**, with M28's LZH in and five
 `.lzh` fixtures added to the sample — MacLHA's MacBinary payload, `-lh7-`'s
 64 KB window, LArc's `-lz5-`, a five-entry Amiga archive and the smallest
 archive in the corpus; 62/62 earlier the same day, re-run against the
@@ -2207,8 +2261,11 @@ above System 6: Standard File returns a **working-directory** reference in
 is always running, so the `SIZE` partition governs the launch. Mini vMac's
 Mac Plus supports up to 7.5.5, so this is the same 68000 as every other row.
 
-**67/67 byte-exact PASS at 4 MB** (**2026-08-23**, with M28's five `.lzh`
-fixtures in and every codec since M15 — this tier's first run since
+**69/69 byte-exact PASS at 4 MB** (**2026-08-26**, re-run for M37's
+disk-image probe and the first run to cover the whole sample — see the
+System 6.0.8 4 MB tier for the two fixtures every earlier figure here
+was missing; 67/67 on **2026-08-23**, with M28's five `.lzh`
+fixtures in and every codec since M15 — that tier's first run since
 2026-08-22; 62/62 then, 59/59 on 2026-08-21, 55/55 on 2026-08-08 and 44/44
 before the sample grew) — the same committed sample, the same on-Mac CRC-32
 read-back. The 2026-08-21 run is the first on this tier since M12, M13 and M14,
@@ -2302,12 +2359,15 @@ DiskDoubler rows above differ by 16 B for the same reason: one block.
 
 ## Floor target verification (Mini vMac — System 6.0.8, **1 MB** Mac Plus, 68000)
 
-The same 67-fixture sample was replayed on a Mini vMac built for **1 MB of
+The same 69-fixture sample was replayed on a Mini vMac built for **1 MB of
 RAM** — the project's floor target — one boot per fixture, same on-Mac
 CRC-32 verification (`tools/vmac/run.py --mem 1M --list tools/vmac/sample.txt`).
 The engine budget is derived from `FreeMem` at startup.
 
-**67/67 byte-exact PASS** (**2026-08-23**, with M28's five `.lzh` fixtures
+**69/69 byte-exact PASS** (**2026-08-26**, re-run for M37's disk-image probe
+and the first run to cover the whole sample — see the System 6.0.8 4 MB tier
+for the two fixtures every earlier figure here was missing; 67/67 on
+**2026-08-23**, with M28's five `.lzh` fixtures
 in — the heaviest of them 41,364 B, so nothing here moved; 62/62 earlier the
 same day, re-run twice against the
 decryption build — 20 KB more code is 20 KB less heap on this machine, and

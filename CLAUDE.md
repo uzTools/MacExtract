@@ -11,12 +11,12 @@ The engine is the product. The Mac app is a thin shell.
 
 ## Where things stand
 
-**M0–M36 are DONE and nothing is in flight.** Every family in FORMATS.md's
+**M0–M37 are DONE and nothing is in flight.** Every family in FORMATS.md's
 table extracts — that table is the count, and this file does not keep a copy
 of it — and the engine passes a **932-fixture** differential suite against
 `unar` and, where `unar` fails, `macunpack`, plus 9,320 robustness variants.
 The Macintosh application extracts byte-exact on **System 6.0.8 at 4 MB and at
-the 1 MB floor target** (67/67 sampled fixtures each), on System 7.0.1, and on
+the 1 MB floor target** (69/69 sampled fixtures each), on System 7.0.1, and on
 Mac OS 9.2 under QEMU including HFS+ — that last tier predates four formats
 and is the one verification gap (OPEN_ITEMS.md). System 6 is the target for
 the interactive UI and is driven there end to end; above it the UI is

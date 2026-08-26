@@ -67,6 +67,18 @@ if [ ! -d reference/mpack ]; then
     rm -f /tmp/mpack.tar.gz
 fi
 
+# pycdlib 1.14.0 (Chris Lalancette) — a pure-Python ISO 9660 WRITER, and
+# the only one this machine can run: there is no genisoimage, xorriso or
+# pip here. tools/run_diskimage.py uses it as the encoder for the CD half
+# of the disk-image probe, the way run_btoa.py uses btoa itself.
+if [ ! -d reference/pycdlib ]; then
+    mkdir -p reference/pycdlib
+    curl -sL -o /tmp/pycdlib.tar.gz \
+        "https://files.pythonhosted.org/packages/source/p/pycdlib/pycdlib-1.14.0.tar.gz"
+    tar xzf /tmp/pycdlib.tar.gz -C reference/pycdlib --strip-components=1
+    rm -f /tmp/pycdlib.tar.gz
+fi
+
 if [ ! -d reference/macutils ]; then
     mkdir -p reference/macutils
     curl -sL -o /tmp/macutils.tar.gz \

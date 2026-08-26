@@ -838,6 +838,9 @@ int unc_lzh_extract(UncCtx *c);
 /* Detect-only probes */
 int unc_sitx_probe(const uint8_t *head, int32_t len);
 int unc_diskcopy_probe(const uint8_t *head, int32_t len, UncIO *io);
+/* Every other disk image. All four volume signatures sit past the sniff
+ * window, so `head` is unused and the probe reads through io. */
+int unc_diskimage_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_nowcompress_probe(const uint8_t *head, int32_t len);
 int unc_superdisk_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_spacesaver_probe(const uint8_t *head, int32_t len);

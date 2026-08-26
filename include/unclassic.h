@@ -90,6 +90,11 @@ typedef enum UncFormat {
     UNC_FORMAT_BASE64,        /* base64, bare or "begin-base64"         */
     UNC_FORMAT_MIME,          /* a MIME message, incl. appledouble      */
 
+    /* Named, not extracted, since 2026-08-26: every disk image that is
+     * not DiskCopy 4.2 — HFS, HFS+/HFSX, Apple-partitioned, ISO 9660 —
+     * however it is named (.iso, .cdr, .toast, .img, a raw .dmg).      */
+    UNC_FORMAT_DISKIMAGE,
+
     UNC_FORMAT__COUNT
 } UncFormat;
 

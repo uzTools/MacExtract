@@ -91,9 +91,12 @@ it is the format's rather than ours: an encrypted StuffIt archive keeps
 half its key in the file's resource fork, so a copy that lost the fork
 somewhere cannot be opened by anything.
 
-**Recognises but does not extract:** StuffIt X, Disk Copy 4.2 and
-AppleLink packages (`.pkg`) — it tells you what the file is rather than
-failing obscurely.
+**Recognises but does not extract:** StuffIt X, AppleLink packages
+(`.pkg`) and disk images — Disk Copy 4.2 (`.image`), and the HFS, HFS+,
+Apple-partitioned and ISO 9660 kind however they are named (`.img`,
+`.iso`, `.cdr`, `.toast`, an uncompressed `.dmg`). It tells you what the
+file is rather than failing obscurely; opening a disk image is a job for
+a mounter, not an unarchiver.
 
 **Archives split across floppies** are joined for you: StuffIt, Compact Pro
 and DiskDoubler `SPLT` sets, spanned zip (`.z01` … `.zip`) and plain

@@ -1279,6 +1279,142 @@ static void test_diskcopy(void)
     }
 }
 
+/* Every OTHER disk image is detect-only for the same reason. The four
+ * volume structures the probe reads live past the sniff window, so each
+ * case here is a buffer with something at 512, 1024 or sector 16 and
+ * nothing anywhere else — which is also the point: none of these is a
+ * plausible archive, and the probe must not need them to be.
+ *
+ * tools/run_diskimage.py is where real images are graded (an ISO written
+ * by pycdlib, an HFS volume written by hformat, both confirmed by deark);
+ * this is the part that runs with no reference tree at all. */
+static void test_diskimage(void)
+{
+    uint8_t img[4096];
+    uint8_t *cd;
+    UncIO io;
+    MemIO m;
+    int i;
+
+    /* HFS: "BD" at 1024, allocation block size a nonzero multiple of 512. */
+    for (i = 0; i < (int)sizeof img; i++) img[i] = 0;
+    img[1024] = 'B'; img[1025] = 'D';
+    img[1044] = 0x00; img[1045] = 0x00; img[1046] = 0x20; img[1047] = 0x00;
+    test_make_memio(&io, &m, img, sizeof img);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_DISKIMAGE);
+
+    img[1046] = 0x00; img[1047] = 0x00;              /* size 0 */
+    test_make_memio(&io, &m, img, sizeof img);
+    CHECK(unc_sniff(&io) != UNC_FORMAT_DISKIMAGE);
+    img[1047] = 0x64;                                /* 100: not a sector */
+    test_make_memio(&io, &m, img, sizeof img);
+    CHECK(unc_sniff(&io) != UNC_FORMAT_DISKIMAGE);
+
+    /* HFS+ and HFSX: the signature, plus a file that is whole sectors. */
+    for (i = 0; i < (int)sizeof img; i++) img[i] = 0;
+    img[1024] = 'H'; img[1025] = '+';
+    test_make_memio(&io, &m, img, sizeof img);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_DISKIMAGE);
+    img[1025] = 'X';
+    test_make_memio(&io, &m, img, sizeof img);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_DISKIMAGE);
+    test_make_memio(&io, &m, img, sizeof img - 3);
+    CHECK(unc_sniff(&io) != UNC_FORMAT_DISKIMAGE);
+    /* ...and a volume too short to hold a header is not one either. */
+    test_make_memio(&io, &m, img, 1024 + 512);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_DISKIMAGE);
+    test_make_memio(&io, &m, img, 1024);
+    CHECK(unc_sniff(&io) != UNC_FORMAT_DISKIMAGE);
+
+    /* Apple Partition Map: an entry in sector 1 AND in sector 2. */
+    for (i = 0; i < (int)sizeof img; i++) img[i] = 0;
+    img[512] = 'P'; img[513] = 'M';
+    img[1024] = 'P'; img[1025] = 'M';
+    test_make_memio(&io, &m, img, sizeof img);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_DISKIMAGE);
+    img[512] = 0;                                    /* sector 1 gone */
+    test_make_memio(&io, &m, img, sizeof img);
+    CHECK(unc_sniff(&io) != UNC_FORMAT_DISKIMAGE);
+    img[512] = 'P'; img[1024] = 0;                   /* sector 2 gone */
+    test_make_memio(&io, &m, img, sizeof img);
+    CHECK(unc_sniff(&io) != UNC_FORMAT_DISKIMAGE);
+    /* The two reserved bytes are part of the signature deark matches. */
+    img[1024] = 'P'; img[1025] = 'M'; img[1026] = 1;
+    test_make_memio(&io, &m, img, sizeof img);
+    CHECK(unc_sniff(&io) != UNC_FORMAT_DISKIMAGE);
+
+    /* ISO 9660 and its two relatives, at 2048-byte sectors: a descriptor
+     * at sector 16 and another at sector 17. 36 KB is past what belongs
+     * on this stack. */
+    cd = (uint8_t *)malloc(36864);
+    CHECK(cd != NULL);
+    if (cd) {
+        static const char *sig[3] = { "CD001", "CD-I ", "CDROM" };
+        int k;
+        for (k = 0; k < 3; k++) {
+            int at = (k == 2) ? 8 : 0;               /* High Sierra is at +8 */
+            int j;
+            for (i = 0; i < 36864; i++) cd[i] = 0;
+            for (j = 0; j < 2; j++) {
+                uint8_t *d = cd + 2048 * (16 + j) + at;
+                d[0] = (uint8_t)(j == 0 ? 1 : 255);  /* primary, terminator */
+                for (i = 0; i < 5; i++) d[1 + i] = (uint8_t)sig[k][i];
+            }
+            test_make_memio(&io, &m, cd, 36864);
+            CHECK(unc_sniff(&io) == UNC_FORMAT_DISKIMAGE);
+
+            /* Sector 16 alone is not enough. */
+            for (i = 0; i < 8; i++) cd[2048 * 17 + at + i] = 0;
+            test_make_memio(&io, &m, cd, 36864);
+            CHECK(unc_sniff(&io) != UNC_FORMAT_DISKIMAGE);
+        }
+
+        /* A descriptor type deark rejects (4..254) is rejected here too. */
+        for (i = 0; i < 36864; i++) cd[i] = 0;
+        for (i = 0; i < 2; i++) {
+            uint8_t *d = cd + 2048 * (16 + i);
+            int j;
+            d[0] = 9;
+            for (j = 0; j < 5; j++) d[1 + j] = (uint8_t)"CD001"[j];
+        }
+        test_make_memio(&io, &m, cd, 36864);
+        CHECK(unc_sniff(&io) != UNC_FORMAT_DISKIMAGE);
+        free(cd);
+    }
+
+    /* The raw CD layouts: 2352-byte sectors with the data 16 bytes in. */
+    cd = (uint8_t *)malloc(2352 * 18);
+    CHECK(cd != NULL);
+    if (cd) {
+        int j;
+        for (i = 0; i < 2352 * 18; i++) cd[i] = 0;
+        for (j = 0; j < 2; j++) {
+            uint8_t *d = cd + 2352 * (16 + j) + 16;
+            d[0] = (uint8_t)(j == 0 ? 1 : 255);
+            for (i = 0; i < 5; i++) d[1 + i] = (uint8_t)"CD001"[i];
+        }
+        test_make_memio(&io, &m, cd, 2352 * 18);
+        CHECK(unc_sniff(&io) == UNC_FORMAT_DISKIMAGE);
+        free(cd);
+    }
+
+    /* Detect-only: named, and extraction refused cleanly. */
+    {
+        UncAlloc al;
+        UncSink sk;
+        CapSink cap;
+        for (i = 0; i < (int)sizeof img; i++) img[i] = 0;
+        img[1024] = 'H'; img[1025] = '+';
+        test_make_memio(&io, &m, img, sizeof img);
+        test_make_alloc(&al);
+        cap_make(&sk, &cap);
+        CHECK(unc_extract_as(UNC_FORMAT_DISKIMAGE, &io, &sk, &al, NULL, NULL)
+              == UNC_ERR_UNSUPPORTED);
+        CHECK(cap.count == 0);
+        CHECK(!unc_format_extractable(UNC_FORMAT_DISKIMAGE));
+    }
+}
+
 /* ------------------------------------------------------------------ */
 /* StuffIt segments (multi-part sets)                                 */
 /* ------------------------------------------------------------------ */
@@ -3976,6 +4112,7 @@ void run_format_tests(void)
     test_tar();
     test_zip();
     test_diskcopy();
+    test_diskimage();
     test_lzh_probe();
     test_lzh_extract();
     test_sitseg();

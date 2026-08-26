@@ -8,9 +8,9 @@ system the project claims:
 
 | tier | result |
 |---|---|
-| System 6.0.8, 4 MB Mac Plus (Mini vMac, a true 68000) | **67/67** sampled fixtures |
-| System 6.0.8, **1 MB** — the floor target | **67/67**; no memory-budget refusals remain, and DiskDoubler method 5's 396 KB allocation succeeds here |
-| System 7.0.1, 4 MB | **67/67** |
+| System 6.0.8, 4 MB Mac Plus (Mini vMac, a true 68000) | **69/69** sampled fixtures |
+| System 6.0.8, **1 MB** — the floor target | **69/69**; no memory-budget refusals remain, and DiskDoubler method 5's 396 KB allocation succeeds here |
+| System 7.0.1, 4 MB | **69/69** |
 | Mac OS 9.2 (QEMU PowerPC, 68LC040 emulation) | 13/13, plus HFS+ and the `SIZE` partition; DiskDoubler still recorded there as the refusal it was pre-M12 |
 
 All three Mini vMac tiers re-run **2026-08-22**, with M15–M23's codecs in
@@ -28,7 +28,12 @@ PAK methods were run on **2026-08-25** at 4 MB and at the 1 MB floor —
 `arc2pak1.pak` (0x0a, 46,546 B peak, now in the sample) and
 `derived-INTRECHO.pak` (0x0b, 14,790 B, 918,631 B of output, `--out-kb 1600`)
 — **1/1 at each size, four runs**; the rest of the sample was not re-run for
-a 2,048 B binary growth, which FORMATS.md (*ARC*) states in full. Per-fixture tables and how
+a 2,048 B binary growth, which FORMATS.md (*ARC*) states in full. All three
+Mini vMac tiers were re-run on **2026-08-26** for M37's disk-image probe:
+**69/69 on each**, and that is the first sweep to cover the whole sample —
+M33 and M34 had added `arc2pak1.pak` and `derived-ARCDOS.arc` on 2026-08-25
+without a full re-run, so every "67/67" above describes a sample two
+fixtures smaller than `sample.txt` already held. Per-fixture tables and how
 the sample grew: FORMATS.md. How to re-run any of
 it: `tools/vmac/README.md`. What no emulator here can settle:
 MANUAL_TESTS.md.
