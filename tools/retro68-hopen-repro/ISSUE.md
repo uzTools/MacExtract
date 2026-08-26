@@ -1,9 +1,10 @@
 # Ready-to-post upstream issue (github.com/autc04/Retro68)
 
-Not filed from this environment: there is no `gh` CLI and no GitHub
-credentials here (an unauthenticated POST to the issues API returns 401).
-Post it manually if you want it upstream. Reproduction code:
-`tools/retro68-hopen-repro/`.
+**Not filed, and not to be filed from here.** The maintainer posts this from
+his own account (MANUAL_TESTS.md §7, CLAUDE.md Rules) — no session working in
+this repository should submit it. It is also not possible from here: there is
+no `gh` CLI and no GitHub credentials (an unauthenticated POST to the issues
+API returns 401). Reproduction code: `tools/retro68-hopen-repro/`.
 
 Scope note: this is a *small* issue. The much larger claim this investigation
 started from — "`HOpen` returns `noErr` without writing the refNum on System 6"

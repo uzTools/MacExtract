@@ -11,7 +11,7 @@ can be read and put back.
 
 ## What is here
 
-**The disk-image probes** (retired 2026-08-27, added 2026-08-26 and, for
+**The disk-image probes** (added and retired on 2026-08-26 and, for
 Disk Copy 4.2, M9):
 
 | file | was |
@@ -29,7 +29,7 @@ unarchiver is telling you they believe they have an archive, and naming
 something outside that frame changes nothing they can do: the file is
 still not extracted and the next move is still not this program. Naming
 an archive this engine declines is the opposite case, and that is what
-took their place (`src/fmt_foreign.c`). DECISIONS.md 2026-08-27 has the
+took their place (`src/fmt_foreign.c`). DECISIONS.md 2026-08-26 has the
 argument; OPEN_ITEMS.md part 1 records disk images as out of scope in
 both directions now, extraction and naming.
 
@@ -54,7 +54,7 @@ Nothing was deleted or rewritten, so it is a move rather than a port:
    functions from `test_all` in `tests/unit_main.c`.
 6. `run_diskimage.py` → `tools/`, and a line in `ci.sh`. It needs
    `reference/pycdlib` (a pure-Python ISO writer, which
-   `tools/fetch_references.sh` fetched until 2026-08-27 — the entry is in
+   `tools/fetch_references.sh` fetched until 2026-08-26 — the entry is in
    that file's history), `hformat` from hfsutils, and `deark`. It skips
    each part by name when its tool is missing.
 

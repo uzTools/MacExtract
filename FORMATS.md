@@ -1,6 +1,6 @@
 # FORMATS.md — format support matrix
 
-Status after M0–M9. "Oracle coverage" = fixtures with byte-exact
+Status after M0–M38. "Oracle coverage" = fixtures with byte-exact
 differential manifests (built from The Unarchiver's `unar`; see
 TESTING.md); every one passes, plus 10 corruption variants each in the
 robustness suite. "Peak RAM" = allocator high-water mark across the
@@ -175,8 +175,9 @@ here and compared (`tools/run_ddtf.py`):
 
 The TIFF in each set has no published original — it was made on the Mac — and
 comes out identical from all nine independent compressions, forks included.
-None of these is in `fixtures/` (OPEN_ITEMS.md); what `ci.sh` covers instead
-is in TESTING.md.
+115 of these became fixtures in M17, with a pinned URL and a manifest each,
+so `run_diff.py` grades them on every run; how they were registered is in
+TESTING.md.
 
 ✧ **Now Compress, in scope since 2026-08-15** (M12). The archive is a flat
 entry table nested by a per-directory entry count, then one compressed stream
@@ -1301,7 +1302,7 @@ put in front of it.
 
 ## Archives named but not extracted
 
-**Named since 2026-08-27**, extraction still out by the brief (OPEN_ITEMS.md,
+**Named since 2026-08-26**, extraction still out by the brief (OPEN_ITEMS.md,
 part 1). Nine PC-side families, one probe, `src/fmt_foreign.c`:
 
 | format | test | source |
@@ -1328,7 +1329,7 @@ positives across the 940 fixtures.**
 
 **RAR and RAR 5 are the two with no oracle in `ci.sh`** — nothing here writes
 one, deark has no module for them, and p7zip will not identify a stub it
-cannot parse. Measured once instead, on **2026-08-27**:
+cannot parse. Measured once instead, on **2026-08-26**:
 `test_read_format_rar.rar`, `test_read_format_rar5_stored.rar` and
 `test_read_format_cab_filename_cp932.cab` from libarchive's test suite
 (uudecoded by this engine's own `.uu` reader), all three named correctly and
@@ -1337,7 +1338,7 @@ repeat it.
 
 **Both front ends say the name.** The CLI prints *"recognized as RAR, which
 v1 cannot extract"*; the Macintosh application's alert reads **"MacExtract
-cannot open RAR files."**, photographed on System 6.0.8 on 2026-08-27
+cannot open RAR files."**, photographed on System 6.0.8 on 2026-08-26
 (`tools/vmac/README.md`, *Photographing the detect-only alert*). That
 sentence is the point of the whole file: the archive is intact, and the next
 move is a program that opens it.
@@ -1673,7 +1674,7 @@ passes are testing something.
 | declared entry size, zip | 4 GiB − 1 | the format's own field. A 3 GiB stored entry lists and CRC-verifies |
 | decoded output, streamed (gzip) | **none found** | 3 GiB and 5 GiB both verify, exit 0. The output size is never held, so nothing bounds it |
 | zip entry count | 4,294,967,295 | the Zip64 record's count is read as a `uint32`; a 70,000-entry archive extracts all 70,000 (below) |
-| Mac binary | 2 GiB, **not measured** | `SetFPos` takes a signed `long` (`mac/macextract_mac.c`), and HFS caps a fork at 2 GB anyway (OPEN_ITEMS.md) |
+| Mac binary | 2 GiB, **not measured** | `SetFPos` takes a signed `long` (`mac/macextract_mac.c`), and HFS caps a fork at 2 GB anyway; exercising it needs real hardware (MANUAL_TESTS.md §3) |
 
 The tar boundary is exact: a 2 GiB − 1024 member lists, a 2 GiB one
 (0x80000000) does not.

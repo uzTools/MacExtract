@@ -131,7 +131,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-26 — base64 and MIME, and an oracle that is wrong three times
 - 2026-08-26 (the btoa translator, by Apple event) — the door nobody tried
 - 2026-08-26 (disk images) — read the volume, not the extension
-- 2026-08-27 — a name is only worth something inside the frame the user came with
+- 2026-08-26 — a name is only worth something inside the frame the user came with
 - 2026-08-26 — the project is renamed MacExtract, and the API is not
 - 2026-08-26 — the tag that did not fire
 
@@ -7457,7 +7457,7 @@ measured rather than assumed: the one NDIF file here opens straight into
 compressed data, its chunk map is a `bcem` resource, and its fork is not even
 a whole number of sectors. UDIF wants a reference (OPEN_ITEMS.md, part 2).
 
-## 2026-08-27 — a name is only worth something inside the frame the user came with
+## 2026-08-26 — a name is only worth something inside the frame the user came with
 
 Yesterday's disk-image probe was removed the day after it shipped, and nine
 PC-side archive formats were named in its place. Both halves come out of one

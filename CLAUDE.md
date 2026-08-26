@@ -11,14 +11,16 @@ The engine is the product. The Mac app is a thin shell.
 
 ## Where things stand
 
-**M0–M38 are DONE and nothing is in flight.** Every family in FORMATS.md's
-table extracts — that table is the count, and this file does not keep a copy
-of it — and the engine passes a **932-fixture** differential suite against
+**M0–M38 are DONE and nothing is in flight.** Every Macintosh archive family
+in FORMATS.md's table extracts, and the rest of that table is named-only or
+detect-only by decision — that table is the count, and this file does not keep
+a copy of it. The engine passes a **932-fixture** differential suite against
 `unar` and, where `unar` fails, `macunpack`, plus 9,320 robustness variants.
 The Macintosh application extracts byte-exact on **System 6.0.8 at 4 MB and at
 the 1 MB floor target** (69/69 sampled fixtures each), on System 7.0.1, and on
-Mac OS 9.2 under QEMU including HFS+ — that last tier predates four formats
-and is the one verification gap (OPEN_ITEMS.md). System 6 is the target for
+Mac OS 9.2 under QEMU including HFS+ — that last tier has not run since M12,
+so it predates eight formats, and it is the one verification gap
+(OPEN_ITEMS.md). System 6 is the target for
 the interactive UI and is driven there end to end; above it the UI is
 deliberate scope, not an open item.
 
@@ -28,16 +30,19 @@ deliberate scope, not an open item.
 |---|---|---|
 | `PROGRESS.md` | what each milestone delivered, one line each | at session start |
 | `OPEN_ITEMS.md` | **what is out of scope** (part 1), then what is still missing and what would close each (part 2) | at session start |
-| `BLOCKERS.md` | the tier results, and **every claim this project has withdrawn**, with what it cost | at session start |
+| `BLOCKERS.md` | the tier results and what is load-bearing (its first two sections), then **every claim this project has withdrawn**, with what it cost | first two sections at session start; the archive when re-testing a claim |
 | `FORMATS.md` | format × status × peak RAM, and every per-fixture table | for a number |
 | `DECISIONS.md` | why anything is the way it is, oldest first, with a Contents index | via the index, for one entry |
 | `TESTING.md` | how each suite works and what it cannot see | before changing a suite |
 | `tools/vmac/README.md` | how to run the emulator harnesses and probes | before booting anything |
-| `MANUAL_TESTS.md` | only what no emulator here can settle | when something needs hardware |
+| `MANUAL_TESTS.md` | what only somebody outside this machine can do — hardware, a copy of the software, an account to post from | when something needs one of those |
 
-Those first three are ~8k tokens together. The rest is reference — opening the
-one the task touches beats reading them all. **A claim you are about to rely
-on, contradict or re-test is always worth opening the source for.**
+That session-start reading is ~7.5k tokens (PROGRESS 2k, OPEN_ITEMS 4k,
+BLOCKERS' first two sections 1.5k), measured 2026-08-26; BLOCKERS'
+withdrawn-claims archive is another 15k and is reference, not orientation.
+The rest is reference too — opening the one the task touches beats reading
+them all. **A claim you are about to rely on, contradict or re-test is always
+worth opening the source for.**
 
 **Scope is not stated in this file.** What is in, what is detect-only and what
 the formats themselves make impossible is OPEN_ITEMS.md, **Part 1 — Out of
@@ -110,6 +115,7 @@ All of these cost real time here:
 
 - **Never invent format details.** Magic numbers, header layouts and algorithm parameters come from a reference implementation or spec, with a `/* Source: ... */` comment. Never guess from memory. `reference/` is read-only and never modified; `tools/fetch_references.sh` repopulates it.
 - **A root cause that has never been reduced to a minimal reproduction is a hypothesis, not a finding.** Label it as such in the docs, and build the repro before acting on it or reporting it upstream. This rule was learned the hard way — see the withdrawn `HOpen` attribution in `BLOCKERS.md`.
+- **Never file the upstream bug reports.** `tools/xadmaster-ddn-repro/` and `tools/retro68-hopen-repro/` are written up and ready to post; the maintainer posts them from his own account (MANUAL_TESTS.md §7). Improve a repro if you have reason to — do not submit one.
 - **Never weaken a test to make it pass.** CRC mismatches are per-entry errors, not skips.
 - **When adding a harness, write down what it CANNOT see.** An aggregate check cannot fail on a property it never aggregates: the on-screen result grid carries a file count and summed CRCs, so a real defect in the gzip/.Z fallback NAME survived in the corpus for weeks.
 - **68000 discipline** (non-negotiable — it is what made the port compile and run first try): byte-wise big-endian reads only, zero unaligned dereferences; no recursion, call depth ≤ 4 KB — **measure it, do not assume it**: the rule was exceeded by 66 % for months in shipping code and nothing noticed (`FORMATS.md`, *Stack*, has the one-command method); 32-bit arithmetic in hot paths; no libc in the engine — all I/O, allocation and progress via caller callbacks; no global mutable state; allocation failure is a per-entry error, never per-archive; progress callback every 8–16 KB with clean abort.
@@ -168,7 +174,7 @@ most findings written up three or four times. Keep them from getting back
 there:
 
 - **Status first.** Every status file opens with the current state — tallies, what works, what is open — readable in a minute. History goes below that line, never above it.
-- **One home per finding.** Status → `BLOCKERS.md`. Reasoning and transferable lessons → `DECISIONS.md`. How to re-run an automated suite → `TESTING.md`; an emulator harness or probe → `tools/vmac/README.md`. What only real hardware can answer → `MANUAL_TESTS.md`. Numbers and per-fixture tables → `FORMATS.md`. Gaps → `OPEN_ITEMS.md`. Cross-reference; do not repeat. A finding written in two files disagrees with itself within a week — which this repository treats as a bug, so do not create the opportunity.
+- **One home per finding.** Status → `BLOCKERS.md`. Reasoning and transferable lessons → `DECISIONS.md`. How to re-run an automated suite → `TESTING.md`; an emulator harness or probe → `tools/vmac/README.md`. What only somebody outside this machine can do → `MANUAL_TESTS.md`. Numbers and per-fixture tables → `FORMATS.md`. Gaps → `OPEN_ITEMS.md`. Cross-reference; do not repeat. A finding written in two files disagrees with itself within a week — which this repository treats as a bug, so do not create the opportunity.
 - **A finding is claim, evidence, consequence.** Three lines. Expand only where the *reasoning* is the part worth transferring.
 - **Correct figures in place.** Change the number where it lives and note the correction once. Never add a section that supersedes an earlier section: that is how one file came to state three different boot times, all of them presented as fact.
 - **Withdrawn claims are collected, not interleaved**, and each records what it COST. That is what separates a claim that was merely wrong from one that displaced a capability — and the cost line is what makes the next one worth re-testing.

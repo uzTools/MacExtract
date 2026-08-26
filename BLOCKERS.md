@@ -30,8 +30,8 @@ PAK methods were run on **2026-08-25** at 4 MB and at the 1 MB floor —
 — **1/1 at each size, four runs**; the rest of the sample was not re-run for
 a 2,048 B binary growth, which FORMATS.md (*ARC*) states in full. All three
 Mini vMac tiers were re-run on **2026-08-26** for M37's disk-image probe and
-again on **2026-08-27** for M38, which changed the application as well as the
-engine (the detect-only alert): **69/69 on each, both days**. The first of
+again the same day for M38, which changed the application as well as the
+engine (the detect-only alert): **69/69 on each, both times**. The first of
 those was also the first sweep to cover the whole sample —
 M33 and M34 had added `arc2pak1.pak` and `derived-ARCDOS.arc` on 2026-08-25
 without a full re-run, so every "67/67" above describes a sample two

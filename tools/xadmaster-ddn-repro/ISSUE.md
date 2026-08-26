@@ -1,9 +1,11 @@
 # Ready-to-post upstream issue (github.com/MacPaw/XADMaster)
 
-**Not filed from this environment**, for the same reason as
-`tools/retro68-hopen-repro/`: no `gh` CLI and no credentials here, and an
-unauthenticated POST to the issues API returns 401. Post it manually if you
-want it upstream. Reproduction: `make_repro.py` in this directory.
+**Not filed, and not to be filed from here.** The maintainer posts this from
+his own account (MANUAL_TESTS.md §7, CLAUDE.md Rules) — no session working in
+this repository should submit it. It is also not possible from here, for the
+same reason as `tools/retro68-hopen-repro/`: no `gh` CLI, no credentials, and
+an unauthenticated POST to the issues API returns 401. Reproduction:
+`make_repro.py` in this directory.
 
 ---
 

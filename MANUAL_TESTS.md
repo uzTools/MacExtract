@@ -1,13 +1,15 @@
-# MANUAL_TESTS.md — what only a person with real hardware can settle
+# MANUAL_TESTS.md — what only a person outside this machine can settle
 
 **Status: none of it has been done.** No physical Macintosh has ever run this
 application. Everything the repository claims was observed under emulation —
 Mini vMac for System 6.0.8 and 7.0.1, QEMU for Mac OS 9.2 — and emulation is
 evidence, not proof.
 
-This file is the to-do list for whoever has the machines. Each item says what
-to do, why no emulator here can answer it, and what to record. Nothing below
-is a known failure; it is unverified, which is a different thing.
+This file is the to-do list for whoever has what this machine does not — the
+hardware (§1–§5), a copy of the software (§6), or an account to post from
+(§7). Each item says what to do, why nothing here can answer it, and what to
+record. Nothing below is a known failure; it is unverified, which is a
+different thing.
 
 Everything that *can* be automated already is, and lives elsewhere:
 
@@ -82,10 +84,12 @@ emulator is least trustworthy. Do these first.
       stays alive and continues with the next entry.
 - [ ] **A full disk.** Extract something larger than the free space. Same
       expectation as above; no crash, no hang.
-- [ ] **The stack against a real 8 KB.** The application bumps `SetApplLimit`
-      and the engine promises a call chain under 4 KB. On silicon the ROM's own
-      stack use sits underneath it. Extract a deeply nested archive (a `.cpt`
-      with folders, e.g. `derived-Education7.1.cpt`) and confirm no crash.
+- [ ] **The stack against a real 32 KB.** `kStackBump` takes 24 KB off
+      `ApplLimit` on top of the 8 KB default, so the shell runs on 32 KB
+      (FORMATS.md, *Stack*), against a deepest measured chain of 3,290 B. On
+      silicon the ROM's own stack use sits underneath that. Extract a deeply
+      nested archive (a `.cpt` with folders, e.g. `derived-Education7.1.cpt`)
+      and confirm no crash.
 - [ ] **Address errors.** A real 68000 traps unaligned word access; x86 and the
       emulator tolerate patterns it would not. CI's `-fsanitize=alignment` and
       the qemu-m68k mock are the current defence and neither is the CPU. Any
@@ -231,6 +235,33 @@ writes method 4 — so the CPU decides what the specimen exercises).
 it in the emulator's specimen directory.
 
 ---
+
+## 7. Two bug reports, written and not posted
+
+Neither needs a Macintosh — they need an account. Both are reduced to a
+reproduction and written up ready to send; what is missing is somebody to post
+them, because an unauthenticated POST to either issues API returns 401 from
+here. **No session working in this repository should submit them** (CLAUDE.md,
+Rules): they go from the maintainer's own account.
+
+- [ ] **XADMaster reads one byte past a DDn fork's declared compressed
+      length.** Swept 0,1,2,4…64 and it flips at 1; reduced to a 1,166-byte
+      reproduction. Text and repro generator: `tools/xadmaster-ddn-repro/`
+      (`ISSUE.md`, `make_repro.py`). Upstream is MacPaw/XADMaster. What that
+      byte is worth here is in FORMATS.md; the adjudication it unblocked was
+      M21.
+- [ ] **Retro68's `_OpenDF` trap is System 7 and neither wrapper falls back.**
+      `OpenDF`/`HOpenDF` do not fall back to a plain open on `paramErr`, so
+      both are unusable on System 6, where `FSOpen` in the same file does fall
+      back. Measured as cases 8 and 11 of `tools/retro68-hopen-repro/`; text in
+      that directory's `ISSUE.md`. Upstream is autc04/Retro68. **Note the
+      history before writing anything further:** an earlier attribution of the
+      M10 write-path failure to a broken `HOpen` was withdrawn (BLOCKERS.md),
+      and this report is the narrower claim that survived it.
+
+**What to record.** The issue URL, in `BLOCKERS.md` beside the claim it
+belongs to. If either is rejected or explained upstream, that is a withdrawn
+claim and goes in the same file with what it cost.
 
 ---
 

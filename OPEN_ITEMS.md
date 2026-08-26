@@ -42,16 +42,16 @@ grown before, on request.
 | Compression | not implemented | this is an extractor |
 | StuffIt X (`.sitx`) | **detect-only** | out by the brief |
 | PKWARE "strong encryption" in a zip (flag 0x40) | **named, refused per entry** | its key material is in a record nothing here parses, and XADMaster refuses it too. Every OTHER encryption these formats have — including WinZip's AES, which postdates the machines by a decade and is read anyway — is decrypted since 2026-08-23 (FORMATS.md, *Encryption*) |
-| Disk images (`.image`, `.img`, `.iso`, `.cdr`, `.toast`, `.dmg`, `.smi`) | **not recognised**, since 2026-08-27, and not extracted | extracting one means a filesystem rather than a codec, and NAMING one turned out to be worth nothing either: a disk image is not an archive, so telling a user who came to an unarchiver "this is a disk image" leaves them exactly where "not recognized" does — nothing extracted, and the next move is a different program in both cases. Disk Copy 4.2 had been detect-only since M9 and went the same day, for the same reason. The probes are complete, graded and kept in `attic/` (DECISIONS.md 2026-08-27) |
+| Disk images (`.image`, `.img`, `.iso`, `.cdr`, `.toast`, `.dmg`, `.smi`) | **not recognised**, since 2026-08-26, and not extracted | extracting one means a filesystem rather than a codec, and naming one is worth nothing either: a disk image is not an archive, so the name leaves a user exactly where "not recognized" does. Disk Copy 4.2 went the same day, for the same reason. The probes are complete, graded and kept in `attic/` (DECISIONS.md 2026-08-26) |
 | PMarc (`-pm0-`, `-pm1-`, `-pm2-`) and `-lhx-` | **not recognised** | a different family behind an LZH-shaped header. PMarc is a Japanese PC format with its own coders, `-lhx-` is UNLHA32's extension; neither reached a Macintosh, and LZH itself only just did (2026-08-23) |
 | Self-extracting LZH (an executable with an archive behind it) | **not recognised** | the archive sits behind DOS, Amiga, Atari or X68000 machine code, and finding it means knowing each of those loaders. `unar` has a parser per platform; here the answer is to hand the `.lzh` itself to the extractor |
-| RAR, 7z, bzip2, xz, Cabinet, Zoo, ar/`.deb`, cpio, ARJ | **named since 2026-08-27, never extracted** | extraction stays out for the reason it always did: none is a Macintosh archive format, none carries a resource fork or Finder metadata, and every one is served by a maintained extractor on any machine that can run one (raised 2026-08-25, Macintosh Garden forum, *Archive formats*). NAMING them is in, and it is the one thing this program can honestly contribute to a file it will never open: somebody who opens an unarchiver believes they have an archive, so "not recognized" reads as "your file is damaged" and sends them to re-download it, where "MacExtract cannot open RAR files" sends them to a program that can (FORMATS.md, *Archives named but not extracted*) |
+| RAR, 7z, bzip2, xz, Cabinet, Zoo, ar/`.deb`, cpio, ARJ | **named since 2026-08-26, never extracted** | none is a Macintosh archive format, none carries a resource fork or Finder metadata, and every one is served by a maintained extractor on any machine that can run one (raised 2026-08-25, Macintosh Garden forum, *Archive formats*). NAMING them is in — the name is an instruction inside the frame the user arrived with (DECISIONS.md 2026-08-26; FORMATS.md, *Archives named but not extracted*) |
 | Zip64 for files larger than 4 GB | **read for its COUNTS since 2026-08-25; over-4-GB fields refused per archive**, and `unc_zipseg_describe` still answers `UNC_ERR_UNSUPPORTED` for a spanned set | the entry count, central-directory size and offset are taken from the Zip64 record as `uint32` halves, which is what makes a 70,000-entry archive extract (FORMATS.md, *Size limits*). ADDRESSING past 4 GB is the part that stays out: it would put 64-bit offsets in `UncIO` and every format would pay for them on a 68000. A field whose high half is set returns `UNC_ERR_UNSUPPORTED` (2026-08-14, revised 2026-08-25) |
 
 Everything detect-only is **named** by `unc_sniff`, and both front ends say
 the name: the CLI prints *"recognized as RAR, which v1 cannot extract"* and
 the Macintosh application's alert reads *"MacExtract cannot open RAR files."*
-(photographed on System 6.0.8, 2026-08-27). Extraction returns cleanly
+(photographed on System 6.0.8, 2026-08-26). Extraction returns cleanly
 unsupported either way.
 
 ## Limits of the formats themselves
@@ -78,9 +78,9 @@ unsupported either way.
 Verification gaps — things this project has and has not checked.
 What it does not HAVE is section 2.
 
-- **The Mac OS 9.2 tier has not run since M12.** Everything from
-  DiskDoubler and Now Compress onwards postdates it — ARC, uuencode,
-  SuperDisk!, SpaceSaver, decryption and btoa — and its sample still
+- **The Mac OS 9.2 tier has not run since M12.** Eight formats postdate
+  it — ARC, uuencode, SuperDisk!, SpaceSaver, btoa, LZH, base64 and MIME —
+  as do decryption and the named-only family, and its sample still
   records DiskDoubler as a refusal, which is what it was when that tier
   last ran. The other two tiers are re-run after every change
   (BLOCKERS.md). **What would close it:** an OS 9 sweep, which costs a
@@ -95,13 +95,21 @@ What it does not HAVE is section 2.
   8-bit MacRoman filename LOOKS there is unphotographed: the bytes are
   checked on every tier, the glyphs on the two Mini vMac ones.
 
+- **The COLOUR icon members have never been displayed.** `ICN#` and `ics#`
+  are photographed bound and drawn by a real Finder (DECISIONS.md
+  2026-08-24, *the icon*), but Mini vMac emulates a 1-bit Mac Plus, so
+  `icl4`/`ics4`/`icl8`/`ics8` have been drawn by nothing. **What would
+  close it:** opening the application's folder on the Mac OS 9 tier
+  (`tools/vmac/os9.py`, which has colour) and photographing it. The
+  palette those members are indexed against is a separate gap, in
+  section 2.
+
 ---
 
 ## 2. Waiting on a file this machine does not have
 
-**Not scope decisions, and not effort.** Every entry here is a format or a
-method whose decoder is written or writeable; what is missing is something to
-grade it against. They sit together across formats because that is how they
+**Not scope decisions, and not effort.** Everything here is written or
+writeable; what is missing is something to grade it against. They sit together across formats because that is how they
 close — by somebody finding a file, and the finding usually arrives from
 outside the format it settles. The question to bring here is *what did I just
 find?*
@@ -113,74 +121,53 @@ Each says which of the two is missing, because the searches are different:
 - a **gradeable specimen** — a file written by something else, so our output
   has something to be wrong against.
 
-Unlike section 3, none of this is impossible here: a download would do it.
+None of this is impossible here: a download would do it.
 
-**Four questions before filing anything here**, each of which has emptied
-this section at least once: **is there an implementation that could be
-FED?** (DECISIONS.md, methods 3, 4 and 5); **is "X does not survive" a claim
-about somebody's search?** (BLOCKERS.md, SuperDisk!'s compressor); **does
-the search name the right tool?** (BLOCKERS.md 2026-08-25 — a year was spent
-looking for PKARC files that never existed); and **have you looked at all?**
-An entry here is a claim and takes the same evidence as any other: the ARC 7
-row was filed and disproved the same day, and its specimen was the writer's
-own distribution (BLOCKERS.md, the same date).
+**Four questions before filing anything here**, each of which has emptied this
+section at least once: is there an implementation that could be **FED**
+(DECISIONS.md, methods 3, 4 and 5); is *"X does not survive"* a claim about
+somebody's **search** (BLOCKERS.md, SuperDisk!'s compressor); does the search
+name the **right tool** (BLOCKERS.md 2026-08-25); and **have you looked at
+all** (BLOCKERS.md, the ARC 7 row, filed and disproved the same day).
 
 - **Five archive formats are still unnamed for want of a reference:
   zstd, lzip, brotli, lrzip and WIM.** Missing: a **reference**. Nine
-  others were named on 2026-08-27 out of `reference/XADMaster` and
-  `reference/deark` (FORMATS.md, *Archives named but not extracted*);
-  these five have a magic number in the world and none in this tree, and
-  rule #1 does not bend for a constant that is easy to look up. Extraction
-  stays out of scope regardless — this is one `if` per format and a row in
-  a table. **What would close it:** an implementation or spec in
-  `reference/` for any of them.
+  others were named on 2026-08-26 out of `reference/XADMaster` and
+  `reference/deark` (FORMATS.md, *Archives named but not extracted*); rule #1
+  does not bend for a constant that is easy to look up. Extraction stays out
+  of scope either way (Part 1). **What would close it:** an implementation or
+  spec in `reference/` for any of them.
 
-- **SuperDisk! method 13.** No corpus fixture uses it, and every
-  setting of Alysis's own control panel produces method 1 or 6
-  (`sdcompress.py --sweep`). **Two of the three methods that used to
-  sit here left on 2026-08-25**: 10 was transcribed from its module and
-  graded three ways, and **20 turned out not to be a block method at
-  all** — its module is an ENCODER whose output declares method 11
-  (FORMATS.md, the method table). 13 is the same shape as 20 —
-  command 2 only — and what leaves it open is that its output is not
-  shaped like a block here: it writes `length+8`, the word 13, then a
-  **32-bit** uncompressed length, where every block this container
-  holds has a six-byte header with a 16-bit one. **What would close
-  it:** a file that actually contains one, which would say whether
-  method 13 lives in a different container (the extension's
-  `compressFile` command has its own) or whether the block header has
-  a shape this project has not seen. The module itself is no longer
-  the obstacle: it runs, given the 64 KB working buffer it demands and
-  the one `_BlockMove` the runner now answers.
+- **SuperDisk! method 13.** No corpus fixture uses it, and every setting of
+  Alysis's own control panel produces method 1 or 6 (`sdcompress.py --sweep`).
+  Its module is command-2 only, like method 20's, and its output is not shaped
+  like a block here: it writes `length+8`, the word 13, then a **32-bit**
+  uncompressed length, where every block this container holds has a six-byte
+  header with a 16-bit one. The module itself is no longer the obstacle — it
+  runs, given the 64 KB working buffer it demands and the one `_BlockMove` the
+  runner now answers. **What would close it:** a file that actually contains
+  one, which would say whether method 13 lives in a different container or
+  whether the block header has a shape this project has not seen.
 
-  The writer of all of them was searched for on 2026-08-25 and not found.
-  The vendor's own technology page names SuperDisk! **2.x** as the release
-  with "faster and tighter compression algorithms"; it is not on
-  Macintosh Repository, Macintosh Garden, Info-Mac's `cmp` directory or
-  in archive.org's index, and the two 1.x releases that survive have no
-  module loader in them at all (no `Cmpr`, no "Add-In", measured). Of
-  the later Alysis products that carry the module library, **Alysis
-  Resource Compressor 2.0** (1993) compresses into APPLE's container
-  with `defProcID` 0 rather than a `Cmpr` codec
-  (`tools/vmac/rescomp.py`), and eDisk 1.2 and More Disk Space 1.1 carry
-  only methods 1, 11 and a 13 named " Copy". The one candidate left in
-  hand is Disk Expander 1.2's own extension, whose `INIT 32` has a
-  compress path walking a method table. One lead not followed: the panel's help offers JPEG lossy,
-  lossy sound and a lossless sound/video mode that no `Cmpr` name
-  accounts for — and a lossy mode is something an extractor cannot grade
-  against its input by construction.
+  Missing: a **gradeable specimen**. The writer was searched for on 2026-08-25
+  and not found — SuperDisk! 2.x is on no archive this project can reach, the
+  two surviving 1.x releases have no module loader in them at all, and of the
+  later Alysis products that carry the module library, Alysis Resource
+  Compressor 2.0 compresses into Apple's container and eDisk 1.2 and More Disk
+  Space 1.1 carry only methods 1, 11 and a 13 named " Copy" (DECISIONS.md
+  2026-08-25; `tools/vmac/rescomp.py`). One lead not followed: Disk Expander
+  1.2's `INIT 32` has a compress path walking a method table.
 
-- **A SpaceSaver file written by SpaceSaver.** Every codec is graded
-  against Aladdin's own modules (FORMATS.md, *StuffIt SpaceSaver*), so
-  what rests on this is the CONTAINER: the method the application picks
-  for its CPU, the data fork's length rounded up to 256 bytes, the
-  84-byte header, and the type, creator and Finder flags it moves
-  aside — all currently read from containers this project builds
-  itself. **Nothing here can make the application compress anything**;
-  about twenty emulator runs are accounted for in BLOCKERS.md, and the
-  request now sits in MANUAL_TESTS.md §6, for somebody with a copy of
-  SpaceSaver and a Macintosh. **What would close it:** one SpaceSaver
-  file, with the original beside it.
+- **A SpaceSaver file written by SpaceSaver.** Every codec is graded against
+  Aladdin's own modules (FORMATS.md, *StuffIt SpaceSaver*), so what rests on
+  this is the CONTAINER: the method the application picks for its CPU, the
+  data fork's length rounded up to 256 bytes, the 84-byte header, and the
+  type, creator and Finder flags it moves aside — all currently read from
+  containers this project builds itself. **Nothing here can make the
+  application compress anything**; about twenty emulator runs are accounted
+  for in BLOCKERS.md, and the request now sits in MANUAL_TESTS.md §6.
+  Missing: a **gradeable specimen** — one SpaceSaver file, with the original
+  beside it.
 
 - **AppleLink `.pkg`: one file, which would settle two questions.**
   Named since 2026-08-23 from Aladdin's own recogniser (FORMATS.md,
@@ -218,121 +205,60 @@ own distribution (BLOCKERS.md, the same date).
 
 ---
 
-## 3. Cannot be closed in this environment
+## 3. Small, open, and deliberately deferred
 
-- **Real 68k hardware: never run.** No genuine floppy I/O, no real media errors
-  mid-write, no real stack underneath a real ROM's own usage — 32 KB of it,
-  since `kStackBump` takes 24 KB off `ApplLimit` on top of the 8 KB default
-  (FORMATS.md, *Stack*, which has the deepest chain the engine reaches). The
-  per-entry I/O error path has never seen an actual I/O failure. The 1 MB
-  figures come from an emulated 1 MB machine with a stripped System Folder; a
-  real Plus with a Chooser extension or two has less free heap than any number
-  recorded here.
-- **Real PowerPC hardware: never run.** Mac OS 9 is verified under QEMU only.
-- **The COLOUR icon members are unverified.** `ICN#`/`ics#` are photographed
-  bound and drawn by a real Finder (DECISIONS.md 2026-08-24, *the icon*),
-  but Mini vMac emulates a 1-bit Mac Plus, so `icl4`/`ics4`/`icl8`/`ics8`
-  have never been displayed by anything. The 256-colour indices also assume
-  the Macintosh palette is a 6x6x6 cube at `36*r + 6*g + b` with black at
-  255 — **reconstructed, not transcribed from a reference**, and stated as
-  such in `tools/icon/make_icon.py`. What would close it: opening the
-  application's folder on the Mac OS 9 tier (`tools/vmac/os9.py`, which has
-  colour) and photographing the icon, or a reference for the system palette.
-- **The XADMaster DDn report is not filed.** Its DDn reads one byte past a
-  fork's declared compressed length; reduced to a 1,166-byte reproduction and
-  written up ready to post in `tools/xadmaster-ddn-repro/`. **Deliberately
-  not submitted, and no future session should submit it** — same terms as the
-  Retro68 report below, and not possible from here either.
-- **The Retro68 `OpenDF`/`HOpenDF` report is not filed.** The `_OpenDF` trap is
-  System 7 and neither falls back to a plain open on `paramErr`, so both are
-  unusable on System 6; `FSOpen` in the same file does fall back. Measured,
-  cases 8 and 11 of `tools/retro68-hopen-repro/`, written up in that
-  directory's `ISSUE.md`. **Deliberately not submitted, and no future session
-  should submit it** — the maintainer will post it from his own account. (It is
-  also not possible from here: an unauthenticated POST to the issues API
-  returns 401.)
-
----
-
-## 4. Known unknowns, not being chased
-
-- **btoa and uuencode are not in the envelope auto-unwrap list, and a
-  real btoa file needs them to be.** Measured 2026-08-26, on the
-  specimen Aladdin's own translator wrote (FORMATS.md, *btoa*): that
-  translator MacBinary-wraps before it encodes, so its output is
-  `Subject.MBin.ascii` and `macextract x` stops at the MacBinary layer
-  and leaves it there. Both layers read correctly one at a time — the
-  chain is what is missing. `env_is_envelope` in `cli/main.c` and
-  `IsEnvelopeFormat` in `mac/macextract_mac.c` list MacBinary, BinHex,
-  AppleSingle/Double, gzip, `.Z` and base64; btoa's payload is a single
-  anonymous stream with no forks, which is exactly the argument that put
-  base64 in the list (DECISIONS.md 2026-08-26). Not chased in the change
-  that found it because that list is the one thing both hosts must agree
-  on and `dist/` is rebuilt with it. **What would close it:** btoa in
-  both lists, a chained case in `tools/run_btoa.py`, and a `dist/`
-  rebuild in the same commit. uuencode has the same shape and no
-  specimen showing it — the wrapped-uu case has never been seen here.
+- **btoa and uuencode are not in the envelope auto-unwrap list, and a real
+  btoa file needs them to be.** Measured 2026-08-26 on the specimen Aladdin's
+  own translator wrote (FORMATS.md, *btoa*): it MacBinary-wraps before it
+  encodes, so its output is `Subject.MBin.ascii` and `macextract x` stops at
+  the MacBinary layer. Both layers read correctly one at a time; the chain is
+  what is missing. Not chased in the change that found it because
+  `env_is_envelope` in `cli/main.c` and `IsEnvelopeFormat` in
+  `mac/macextract_mac.c` are the one thing both hosts must agree on and
+  `dist/` is rebuilt with them (DECISIONS.md 2026-08-26). **What would close
+  it:** btoa in both lists, a chained case in `tools/run_btoa.py`, and a
+  `dist/` rebuild in the same commit. uuencode has the same shape, and no
+  specimen showing it has ever been seen here.
 - **A zip's end-of-central-directory comment is read past and dropped.**
-  `UncSink` has carried a comment callback since 2026-08-23 and Compact
-  Pro's fills it; `fmt_exo.c` still skips zip's, which one corpus
-  fixture has 495 bytes of (`derived-MUSFMT10.ZIP`). Not chased because
-  a zip comment is usually the writer's boilerplate rather than
-  somebody's note, and `unar` does not write one out either. **What
-  would close it:** the EOCD comment length is already parsed — one
-  call to the callback, and the manifest's `comment` key stops being
-  excused for `Zip` in `tools/run_diff.py`.
-- **A tar member over the 2 GB cap aborts the whole archive, not the
-  entry.** Measured 2026-08-25: a tar of `[1 GiB, 3 GiB, 1 GiB]` lists
-  the first member and stops, so the third is lost though its position
-  is known from the padded length. Every other per-entry failure in
-  this engine is per-entry (`CLAUDE.md`). Not chased because a 2 GB
-  member cannot exist on the machines this targets — HFS caps a fork
-  there — so the case is reachable only from a foreign tar. **What
-  would close it:** skipping the member and reporting the error through
-  the sink, with a case in `tools/run_ziplarge.py`'s shape to hold it.
-- **Names HFS+ permits that HFS does not.** Probably unreachable from this
-  binary at all — the classic File Manager caps components at 31 characters on
-  either filesystem — but that is unproven either way.
+  `UncSink` has carried a comment callback since 2026-08-23 and Compact Pro's
+  fills it; `fmt_exo.c` still skips zip's, which one corpus fixture has 495
+  bytes of (`derived-MUSFMT10.ZIP`). Not chased because a zip comment is
+  usually boilerplate and `unar` does not write one out either. **What would
+  close it:** the EOCD comment length is already parsed — one call to the
+  callback, and the manifest's `comment` key stops being excused for `Zip` in
+  `tools/run_diff.py`.
+- **A tar member over the 2 GB cap aborts the whole archive, not the entry.**
+  Measured 2026-08-25: a tar of `[1 GiB, 3 GiB, 1 GiB]` lists the first member
+  and stops, so the third is lost though its position is known. Every other
+  failure in this engine is per-entry (CLAUDE.md). Not chased because a 2 GB
+  member cannot exist on the machines this targets. **What would close it:**
+  skipping the member and reporting through the sink, with a case in
+  `tools/run_ziplarge.py`'s shape.
 
 ---
 
-## 5. Untested code, named so it is not mistaken for tested
+## 4. Untested code, named so it is not mistaken for tested
 
-- **SuperDisk!, where a Huffman region's neighbour begins.** The two
-  Alysis implementations disagree with each other by one 32-bit refill
-  when a coded flag bitmap ends exactly on a refill: this engine follows
-  the 1991 self-extractor, the 1992 Add-In Module has already fetched the
-  next long (FORMATS.md, the method table). Reachable only through
-  `tools/sdmodule/`'s own encoder; all 18 real blocks — both corpus
-  archives and Alysis's own compressor, including four subjects made for
-  this on 2026-08-25 — decode identically under both, so it is not known
-  to cost anything. **What would close it:** a real block whose coded
-  flag bitstream is a multiple of 32 bits. Sizing the subject does NOT
-  produce one, which is what those four established: the 1991 panel
-  codes the flags one bit each, so the bit length is data-dependent and
-  the byte count says nothing about it.
-- **DiskDoubler's methods 3, 4 and 5 have never decoded a fork this
-  project did not write.** All three are byte-exact through Salient's own 1991 expander,
-  which grades the reading of the format rather than the decoder
-  (DECISIONS.md, methods 3, 4 and 5) — so what is untested is every
-  encoding our own encoder does not emit: run lengths it never chooses,
-  Huffman tree shapes it never builds, contexts it never reaches.
-  **What would change it:** one real fork of any of the three.
-- **DiskDoubler method 5's tree-count byte is only confirmed at 0.** 0 means 256 and
-  expands byte-exact under both the 1991 and the 4.1.1 expander; a count of
-  16 is rejected by both with *Checksum failed*, and encoder and decoder
-  here share one reading, so the shared reading of the non-zero case is
-  what is wrong — or non-zero counts do not occur. The branch is kept
-  because it is XADMaster's reading and it fails as a per-entry checksum
-  error rather than silently. **What would change it:** a method 5 fork
-  with a non-zero count.
-- **The Mac binary's own size ceiling has never been exercised.** The
-  Linux limits are measured (FORMATS.md, *Size limits*): 4 GB per
-  container, 2 GB per declared tar member, no ceiling on streamed
-  output. The Mac shell's are not — `SetFPos` takes a signed `long`,
-  which puts its ceiling at 2 GB, and HFS caps a fork there anyway.
-  **What would close it:** nothing available here. An HFS volume large
-  enough to hold a 2 GB file is beyond what any emulator tier runs, so
-  this is a MANUAL_TESTS.md-shaped question rather than a suite one.
+- **SuperDisk!, where a Huffman region's neighbour begins.** The two Alysis
+  implementations disagree by one 32-bit refill when a coded flag bitmap ends
+  exactly on a refill: this engine follows the 1991 self-extractor, the 1992
+  Add-In Module has already fetched the next long (FORMATS.md, the method
+  table). All 18 real blocks decode identically under both, so it is not known
+  to cost anything. **What would close it:** a real block whose coded flag
+  bitstream is a multiple of 32 bits — and sizing the subject does not produce
+  one, because the 1991 panel codes the flags one bit each.
+- **DiskDoubler's methods 3, 4 and 5 have never decoded a fork this project
+  did not write.** All three are byte-exact through Salient's own 1991
+  expander, which grades the reading of the format rather than the decoder
+  (DECISIONS.md, methods 3, 4 and 5); what is untested is every encoding our
+  own encoder does not emit. **What would change it:** one real fork of any of
+  the three.
+- **DiskDoubler method 5's tree-count byte is only confirmed at 0.** 0 means
+  256 and expands byte-exact under both the 1991 and the 4.1.1 expander; a
+  count of 16 is rejected by both, and encoder and decoder here share one
+  reading, so either that shared reading of the non-zero case is wrong or
+  non-zero counts do not occur. The branch is kept because it is XADMaster's
+  reading and it fails as a per-entry checksum error rather than silently.
+  **What would change it:** a method 5 fork with a non-zero count.
 
 

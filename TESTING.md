@@ -1322,7 +1322,7 @@ not on the format.
 
 ## Archives named but not extracted (`tools/run_foreign.py`, in `ci.sh`)
 
-Added 2026-08-27, replacing the disk-image suite that came out the same day
+Added 2026-08-26, replacing the disk-image suite that came out the same day
 (`attic/`). `src/fmt_foreign.c` is signatures and nothing else, so the test is
 the signature, its neighbours, and the corpus.
 

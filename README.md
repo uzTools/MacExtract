@@ -68,13 +68,13 @@ notes.
 Compress, StuffIt SpaceSaver, Alysis SuperDisk! (`.X`), ARC (`.arc`), LZH /
 LHA (`.lzh`, `.lha`, including the ones MacLHA wrote), uuencoded files
 (`.uu`), btoa (`.ascii`), base64 and MIME mail attachments (`.b64`, `.mim`),
-AppleSingle/AppleDouble, zip, gzip, tar and Unix compress (`.Z`). Resource forks, type and creator codes and dates all survive,
-so an extracted application simply runs.
+AppleSingle/AppleDouble, zip, gzip, tar and Unix compress (`.Z`). Resource
+forks, type and creator codes and dates all survive, so an extracted
+application simply runs.
 
 Nested files like `.sit.hqx` or `.tar.Z` are unwrapped automatically, by
 looking inside them rather than trusting the name — and a `.hqx` or `.uu`
-holding several files, or one file posted in several parts, gives you all of
-it rather than the first piece.
+holding several files, or one posted in several parts, gives you all of it.
 
 SpaceSaver files are the odd ones. They look like ordinary documents — right
 name, right icon — because SpaceSaver compressed them in place, and only the
@@ -83,13 +83,12 @@ finds nonsense. `macextract` carries the table those files need, so a single
 file on a floppy is enough.
 
 **Password-protected archives** are opened too, in every format that has
-them: StuffIt, StuffIt 5, Compact Pro, PackIt, zip (both the old cipher
-and WinZip's AES) and ARC. The Mac
-application asks for the password when it reaches an entry that needs one,
-and asks again if the archive says no; on Linux it is `-p`. One catch, and
-it is the format's rather than ours: an encrypted StuffIt archive keeps
-half its key in the file's resource fork, so a copy that lost the fork
-somewhere cannot be opened by anything.
+them: StuffIt, StuffIt 5, Compact Pro, PackIt, zip (both the old cipher and
+WinZip's AES) and ARC. The Mac application asks when it reaches an entry that
+needs one, and asks again if the archive says no; on Linux it is `-p`. One
+catch, and it is the format's rather than ours: an encrypted StuffIt archive
+keeps half its key in the file's resource fork, so a copy that lost the fork
+cannot be opened by anything.
 
 **Recognises but does not extract:** StuffIt X, AppleLink packages
 (`.pkg`), and the PC-side archives — RAR, 7-Zip, xz, bzip2, Cabinet, Zoo,
@@ -101,13 +100,12 @@ fine, and a modern unarchiver will open it.
 and DiskDoubler `SPLT` sets, spanned zip (`.z01` … `.zip`) and plain
 `.001`/`.002` splits. Open the first part and the rest are found beside it; if
 one is elsewhere you are asked to point at it, and putting the disk in is
-enough — the part is picked up as soon as the disk appears, with nothing to
-click. The Mac-format sets recognise each other by what is inside them, so
-names and folders do not matter; for zip and `.NNN` sets the names are all
-there is, so keep them. Parts still wrapped individually
-(`Archive.sit.1.hqx`) are joined too, and it does not mind if only some of
-them still are. Send the output to a different disk from the parts, which is
-the only thing that works when you are swapping floppies.
+enough — the part is picked up as soon as it appears, with nothing to click.
+The Mac-format sets recognise each other by what is inside them, so names and
+folders do not matter; for zip and `.NNN` sets the names are all there is, so
+keep them. Parts still wrapped individually (`Archive.sit.1.hqx`) are joined
+too. Send the output to a different disk from the parts, which is the only
+thing that works when you are swapping floppies.
 
 ## Compared with StuffIt Expander 4.0.2
 
@@ -184,10 +182,11 @@ build/macextract x secret.sit -p hunter2 # password-protected
 
 ## Is it any good?
 
-It is checked against [The Unarchiver](https://theunarchiver.com/) on 919 real
+It is checked against [The Unarchiver](https://theunarchiver.com/) on 932 real
 archives, byte for byte, both forks. The Macintosh application is checked the
-same way *while running on* an emulated Mac Plus, a System 7 machine and a
-Mac OS 9 PowerPC — not only on Linux.
+same way *while running on* an emulated Mac Plus and a System 7 machine — not
+only on Linux. It runs on Mac OS 9 too, but that check last ran before eight
+of the formats above were added.
 
 No physical Macintosh has ever run it. Emulation is evidence, not proof.
 

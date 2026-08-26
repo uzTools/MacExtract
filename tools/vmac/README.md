@@ -38,7 +38,7 @@ measured on a different list:
 display race below is fixed, but the two runs still share one CMake build
 directory per define-set (`build/mac-autotest`), and two `cmake -B` on it at
 the same moment ends with one of them exiting 1 before it boots anything
-(measured 2026-08-27). Once the build exists both runs find it up to date and
+(measured 2026-08-26). Once the build exists both runs find it up to date and
 overlap cleanly, which is why parallel tiers usually work: the first run of
 the day is the one that collides.
 
@@ -1242,7 +1242,7 @@ memory one is — the run fails before the phase clicks Cancel.
 
     interactive.py --emu mv-4M -o /tmp/rarshot /tmp/Sample.rar
 
-Photographed 2026-08-27 with a RAR archive out of libarchive's test suite:
+Photographed 2026-08-26 with a RAR archive out of libarchive's test suite:
 **"MacExtract cannot open RAR files."**, one line, the alert's default OK
 button. Any of the named-but-declined formats does it (FORMATS.md, *Archives
 named but not extracted*); the sentence is built from `unc_format_name`, so
