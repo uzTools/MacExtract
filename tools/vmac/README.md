@@ -705,10 +705,22 @@ run here; `hcopy` it and read its `Opts 1` resource, which carries the `small`
 name rule. What it does NOT explain is why the rule never fires.
 
 **Nothing has made SpaceSaver compress anything**, and the modes above are
-the attempts. `--magicname` (2026-08-25) is the one that eliminated two
-suspects at once — a matching NAME and a menu command in the same run, then
-again with a 400 KB subject — and `INIT 1` is where the trigger machinery
-actually is (OPEN_ITEMS.md; every earlier session read `INIT 0`): the panel's `small` name rule (`--specimen`), the same with
+the attempts. Four were added on 2026-08-25 and between them they moved the
+question a long way (OPEN_ITEMS.md): `--magicname` (a matching NAME and a
+menu command in one run), `--info` (ask *SpaceSaver Info...* about a file —
+it answers, so the engine is reachable), `--ssmenu` (press every icon slot
+across the bar and photograph what opens) and `--enrollidle` (enrol the
+volume, close the panel with its close box, pick *Idle Now*, stay still,
+shut down).
+
+**SpaceSaver's own menu is at x=425, not 283.** 283 is where Magic Menu's
+icon is, and `SS_MENU_X` said 283 — which is why `--idlenow` deleted Magic
+Menu, pressed the hole it left, and reported no icon menu at all. When a
+mouse-driven mode here does nothing, suspect the coordinate before the Mac:
+`--calib` parks the pointer at known Mac positions and photographs each, and
+the newer modes print `xdotool getmouselocation` beside what they asked for.
+
+The modes below are the older attempts: the panel's `small` name rule (`--specimen`), the same with
 the disk enrolled and the machine left idle (`--idlespec`), Magic Menu's
 *SpaceSaver Compress* (`--magic`, `--enrollmagic`), and `DropCompress™`
 both launched and dropped on (`--drop`, `--dragdrop`). One thing on that

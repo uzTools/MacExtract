@@ -1713,6 +1713,558 @@ def magicname(keep=False):
     return report_specimen(out, s.shots)
 
 
+def enrollidle(keep=False):
+    """Enrol the disk AND pick Idle Now, in one boot that is flushed.
+
+    Every earlier attempt was missing one of the three things that have
+    to hold together, and each was missing a different one:
+
+      * a name matching the `small` rule — `--namerule` had it,
+        `--magic` did not;
+      * SpaceSaver's OWN menu, whose icon is at x=425 and not at Magic
+        Menu's 283 (measured 2026-08-25, `--ssmenu`);
+      * an ENROLLED volume — the Idle Time page's list is empty on the
+        installed image, so the scan has nothing it may touch, and the
+        one image that had a volume in it (`ssenrolled.hfv`) is the torn
+        one `enroll()` left behind by never shutting down (BLOCKERS.md).
+
+    So this does all three in a single boot and ends with Shut Down, so
+    what it wrote survives.
+    """
+    import glob
+    boot = os.path.join(WORK, "ssenrollidle.hfv")
+    shutil.copyfile(INSTALLED, boot)
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+    tmp = tempfile.mkdtemp(prefix="ssei-")
+    big = (b"SpaceSaver probe, at length. " * 14000)[:400000]
+    named = [(n + " small", t, c, d, r) for n, t, c, d, r in SUBJECTS]
+    named.append(("Bigone small", "TEXT", "ttxt", big, b""))
+    try:
+        subprocess.run(["hmount", boot], check=True, capture_output=True,
+                       env=env)
+        from ndd import macbinary_dated, MAC_EPOCH_1990   # noqa: E402
+        for n, t, c, d, r in named:
+            q = os.path.join(tmp, n.replace(" ", "_") + ".bin")
+            open(q, "wb").write(macbinary_dated(n, t, c, d, r,
+                                                MAC_EPOCH_1990,
+                                                MAC_EPOCH_1990))
+            subprocess.run(["hcopy", "-m", q, ":"], check=True,
+                           capture_output=True, env=env)
+        subprocess.run(["humount"], check=True, capture_output=True, env=env)
+    finally:
+        shutil.rmtree(env["HOME"], ignore_errors=True)
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    before = set(glob.glob("/tmp/dd-*/boot.hfv"))
+    s = Session(boot, [], os.path.join(SPECIMENS, "enrollidle"))
+    try:
+        open_ss_panel(s)
+        s.mac.click(*SS_IDLE_TIME)
+        time.sleep(4.0)
+        s.mac.click(*SS_IDLE_TIME)              # the first input is swallowed
+        s.shot("idle-page", wait=10.0)
+        s.mac.click(*IDLE_ADD)
+        time.sleep(3.0)
+        s.mac.click(*IDLE_ADD)
+        s.shot("added", wait=6.0)
+        s.mac.click(*IDLE_OK)
+        time.sleep(3.0)
+        s.mac.click(*IDLE_OK)
+        s.shot("settings-ok", wait=8.0)
+        # Cmd-W does not close this panel — measured on
+        # `idlespec/09-panel-closed.png`, which is why SS_CLOSE_BOX
+        # exists. Leaving it open leaves SpaceSaver's own window
+        # frontmost, which is the opposite of idle.
+        s.mac.click(*SS_CLOSE_BOX)
+        time.sleep(2.0)
+        s.mac.click(*SS_CLOSE_BOX)
+        s.shot("panel-closed", wait=8.0)
+        s.mac.command_key("w")                  # and the folder behind it
+        s.shot("folder-closed", wait=6.0)
+
+        ox, oy = s.mac.origin(cached=False)
+        x = s.mac._xdo
+
+        def walk(mx, my):
+            out = subprocess.run(["xdotool", "getmouselocation", "--shell"],
+                                 env=s.mac.env, capture_output=True,
+                                 text=True).stdout
+            g = dict(l.split("=", 1) for l in out.strip().splitlines()
+                     if "=" in l)
+            hx, hy = int(g.get("X", 0)), int(g.get("Y", 0))
+            tx, ty = ox + mx, oy + my
+            n = max(abs(tx - hx), abs(ty - hy)) // 30 + 1
+            for i in range(1, n + 1):
+                x("mousemove", str(hx + (tx - hx) * i // n),
+                  str(hy + (ty - hy) * i // n))
+                time.sleep(0.25)
+            time.sleep(0.8)
+
+        walk(SS_MENU_X, 8)
+        x("mousedown", "1")
+        time.sleep(1.6)
+        s.shot("menu-opened")
+        walk(SS_MENU_X - 60, SS_MENU_IDLE_NOW)
+        s.shot("hover-idlenow")
+        x("mouseup", "1")
+        s.shot("after-pick", wait=30.0)
+        # Then leave it alone. A screenshot is not input, so the guest
+        # goes on believing nobody is there.
+        for i in range(6):
+            s.shot("working%d" % i, wait=90.0)
+        s.menu(SPECIAL_X, SHUT_DOWN_Y, "special-menu")
+        s.shot("shutting-down", wait=45.0)
+    finally:
+        time.sleep(10)
+        s.close()
+
+    cands = [p for p in glob.glob("/tmp/dd-*/boot.hfv") if p not in before]
+    if not cands:
+        cands = sorted(glob.glob("/tmp/dd-*/boot.hfv"),
+                       key=os.path.getmtime)[-1:]
+    out = sorted(cands, key=os.path.getmtime)[-1]
+    print("spacesaver: reading back %s" % out)
+    from superdisk import read_forks                    # noqa: E402
+    hit = 0
+    for path, (ftype, creator, data, rsrc) in sorted(read_forks(out).items()):
+        if not path[-1].endswith("small"):
+            continue
+        print("spacesaver: %-14s %s/%s data %d rsrc %d head=%r"
+              % (path[-1], ftype, creator, len(data), len(rsrc), data[:8]))
+        if data[:8] == b"SIT!DFD3":
+            hit += 1
+            q = os.path.join(s.shots, path[-1].replace(" ", "_") + ".ss")
+            open(q, "wb").write(data)
+            print("             A SPACESAVER FILE: kept %s" % q)
+    return 0 if hit else 1
+
+
+def idleenrolled(keep=False):
+    """Idle Now, on a volume that is actually ENROLLED.
+
+    The last missing half. `--idlepick` picked *Idle Now* correctly from
+    SpaceSaver's own menu (x=425, measured) and nothing happened, and the
+    preferences say why: the volume-list blob on `ssinstalled.hfv` is
+    empty, while the image a previous session enrolled carries
+    `System_7_0_1`. Idle-time compression scans enrolled volumes, so on
+    the base image it has nothing to scan.
+
+    So: boot the enrolled image, put subjects matching the `small` rule
+    on it, and pick Idle Now.
+    """
+    import glob
+    base = os.path.join(WORK, "ssenrolled.hfv")
+    if not os.path.exists(base):
+        raise SystemExit("spacesaver: no ssenrolled.hfv — run --enroll first")
+    boot = os.path.join(WORK, "ssidleenrolled.hfv")
+    shutil.copyfile(base, boot)
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+    tmp = tempfile.mkdtemp(prefix="ssie-")
+    big = (b"SpaceSaver probe, at length. " * 14000)[:400000]
+    named = [(n + " small", t, c, d, r) for n, t, c, d, r in SUBJECTS]
+    named.append(("Bigone small", "TEXT", "ttxt", big, b""))
+    try:
+        subprocess.run(["hmount", boot], check=True, capture_output=True,
+                       env=env)
+        for n, t, c, d, r in named:
+            q = os.path.join(tmp, n.replace(" ", "_") + ".bin")
+            open(q, "wb").write(macbinary(n, t, c, d, r))
+            subprocess.run(["hcopy", "-m", q, ":"], check=True,
+                           capture_output=True, env=env)
+        subprocess.run(["humount"], check=True, capture_output=True, env=env)
+    finally:
+        shutil.rmtree(env["HOME"], ignore_errors=True)
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    before = set(glob.glob("/tmp/dd-*/boot.hfv"))
+    s = Session(boot, [], os.path.join(SPECIMENS, "idleenrolled"))
+    try:
+        s.boot()
+        s.shot("desktop", wait=16.0)
+        s.mac.click(250, 38)
+        time.sleep(2.5)
+        for _ in range(3):
+            s.mac.command_key("w")
+            time.sleep(2.5)
+        s.shot("windows-closed", wait=6.0)
+
+        ox, oy = s.mac.origin(cached=False)
+        x = s.mac._xdo
+
+        def walk(mx, my):
+            out = subprocess.run(["xdotool", "getmouselocation", "--shell"],
+                                 env=s.mac.env, capture_output=True,
+                                 text=True).stdout
+            g = dict(l.split("=", 1) for l in out.strip().splitlines()
+                     if "=" in l)
+            hx, hy = int(g.get("X", 0)), int(g.get("Y", 0))
+            tx, ty = ox + mx, oy + my
+            n = max(abs(tx - hx), abs(ty - hy)) // 30 + 1
+            for i in range(1, n + 1):
+                x("mousemove", str(hx + (tx - hx) * i // n),
+                  str(hy + (ty - hy) * i // n))
+                time.sleep(0.25)
+            time.sleep(0.8)
+
+        walk(SS_MENU_X, 8)
+        x("mousedown", "1")
+        time.sleep(1.6)
+        s.shot("opened")
+        walk(SS_MENU_X - 60, SS_MENU_IDLE_NOW)
+        s.shot("hover-idlenow")
+        x("mouseup", "1")
+        s.shot("after-pick", wait=30.0)
+        s.shot("working", wait=60.0)
+        s.shot("working-2", wait=90.0)
+        s.shot("settled", wait=60.0)
+        s.menu(SPECIAL_X, SHUT_DOWN_Y, "special-menu")
+        s.shot("shutting-down", wait=40.0)
+    finally:
+        time.sleep(8)
+        s.close()
+
+    cands = [p for p in glob.glob("/tmp/dd-*/boot.hfv") if p not in before]
+    if not cands:
+        cands = sorted(glob.glob("/tmp/dd-*/boot.hfv"),
+                       key=os.path.getmtime)[-1:]
+    out = sorted(cands, key=os.path.getmtime)[-1]
+    print("spacesaver: reading back %s" % out)
+    return report_specimen(out, s.shots)
+
+
+def calib(keep=False):
+    """Where does a Mac coordinate actually land? Measure, do not assume.
+
+    Two runs on 2026-08-25 asked for the same x and hit points ~140 px
+    apart, so the mapping from Mac coordinates to X coordinates is not
+    what the harness assumes — and a click that misses still lands on
+    something, which is why a wrong pick photographs a plausible screen.
+    This moves the pointer to known Mac positions along the menu bar and
+    photographs each, so the offset can be read off the frames.
+    """
+    boot = os.path.join(WORK, "sscalib.hfv")
+    shutil.copyfile(INSTALLED, boot)
+    s = Session(boot, [], os.path.join(SPECIMENS, "calib"))
+    try:
+        s.boot()
+        s.shot("desktop", wait=14.0)
+        win = s.mac.dpy.window()
+        out = subprocess.run(["xdotool", "getwindowgeometry", "--shell", win],
+                             env=s.mac.env, capture_output=True,
+                             text=True).stdout
+        print("spacesaver: window geometry:\n%s" % out.strip())
+        print("spacesaver: origin() returns %r" % (s.mac.origin(),))
+        ox, oy = s.mac.origin()
+        for x in (100, 283, 425, 470):
+            s.mac._xdo("mousemove", str(ox + x), str(oy + 100))
+            time.sleep(1.0)
+            s.shot("at-x%d" % x)
+    finally:
+        time.sleep(5)
+        s.close()
+    print("spacesaver: frames in %s" % s.shots)
+    return 0
+
+
+def idlepick(keep=False):
+    """Drive SpaceSaver's menu by hand, photographing every step.
+
+    `Session.menu` drags to `title_x + 25`, which for a menu at the RIGHT
+    edge of the bar is outside the box: System 7 shifts a dropdown left
+    to fit the screen, so SpaceSaver's spans roughly x=258..443 under an
+    icon at 425. This presses on the icon, shoots BEFORE moving so the
+    menu that opened is identifiable, then hovers each item.
+    """
+    import glob
+    boot = os.path.join(WORK, "ssidlepick.hfv")
+    shutil.copyfile(INSTALLED, boot)
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+    tmp = tempfile.mkdtemp(prefix="ssip-")
+    big = (b"SpaceSaver probe, at length. " * 14000)[:400000]
+    named = [(n + " small", t, c, d, r) for n, t, c, d, r in SUBJECTS]
+    named.append(("Bigone small", "TEXT", "ttxt", big, b""))
+    try:
+        subprocess.run(["hmount", boot], check=True, capture_output=True,
+                       env=env)
+        for n, t, c, d, r in named:
+            q = os.path.join(tmp, n.replace(" ", "_") + ".bin")
+            open(q, "wb").write(macbinary(n, t, c, d, r))
+            subprocess.run(["hcopy", "-m", q, ":"], check=True,
+                           capture_output=True, env=env)
+        subprocess.run(["humount"], check=True, capture_output=True, env=env)
+    finally:
+        shutil.rmtree(env["HOME"], ignore_errors=True)
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    before = set(glob.glob("/tmp/dd-*/boot.hfv"))
+    s = Session(boot, [], os.path.join(SPECIMENS, "idlepick"))
+    try:
+        s.boot()
+        s.shot("desktop", wait=14.0)
+        s.mac.click(250, 38)
+        time.sleep(2.5)
+        for _ in range(3):
+            s.mac.command_key("w")
+            time.sleep(2.5)
+        s.shot("windows-closed", wait=6.0)
+
+        ox, oy = s.mac.origin(cached=False)   # never trust the cache here
+        print("spacesaver: origin at pick time: %d,%d" % (ox, oy))
+        x = s.mac._xdo
+
+        def where():
+            out = subprocess.run(["xdotool", "getmouselocation", "--shell"],
+                                 env=s.mac.env, capture_output=True,
+                                 text=True).stdout
+            g = dict(l.split("=", 1) for l in out.strip().splitlines()
+                     if "=" in l)
+            return int(g.get("X", -1)), int(g.get("Y", -1))
+
+        def settle(mx, my):
+            """Walk the pointer there, and say where it actually ended up.
+
+            A single long warp does not arrive: jumping from (250, 38) to
+            (425, 8) pressed at Mac x=283 and opened the neighbouring
+            menu — twice, with the origin verified correct both times
+            (2026-08-25). The sweep that walks the bar in ~15 px steps
+            lands every time, so this walks too, and logs the host
+            pointer so a miss is visible in the log rather than only in
+            a frame nobody reads.
+            """
+            hx, hy = where()
+            tx, ty = ox + mx, oy + my
+            steps = max(abs(tx - hx), abs(ty - hy)) // 30 + 1
+            for i in range(1, steps + 1):
+                x("mousemove", str(hx + (tx - hx) * i // steps),
+                  str(hy + (ty - hy) * i // steps))
+                time.sleep(0.25)
+            time.sleep(0.8)
+            gx, gy = where()
+            print("spacesaver: asked Mac(%d,%d) -> host(%d,%d), pointer at "
+                  "host(%d,%d) = Mac(%d,%d)"
+                  % (mx, my, tx, ty, gx, gy, gx - ox, gy - oy))
+
+        settle(SS_MENU_X, 8)
+        x("mousedown", "1")
+        time.sleep(1.8)
+        s.shot("opened")                       # which menu IS this?
+        for y, tag in ((SS_MENU_IDLE_ON, "hover-toggle"),
+                       (SS_MENU_IDLE_NOW, "hover-idlenow")):
+            settle(SS_MENU_X - 60, y)
+            s.shot(tag)
+        x("mouseup", "1")
+        s.shot("after-pick", wait=30.0)
+        s.shot("working", wait=60.0)
+        s.shot("settled", wait=60.0)
+        s.menu(SPECIAL_X, SHUT_DOWN_Y, "special-menu")
+        s.shot("shutting-down", wait=40.0)
+    finally:
+        time.sleep(8)
+        s.close()
+
+    cands = [p for p in glob.glob("/tmp/dd-*/boot.hfv") if p not in before]
+    if not cands:
+        cands = sorted(glob.glob("/tmp/dd-*/boot.hfv"),
+                       key=os.path.getmtime)[-1:]
+    out = sorted(cands, key=os.path.getmtime)[-1]
+    print("spacesaver: reading back %s" % out)
+    return report_specimen(out, s.shots)
+
+
+def idlemenu(keep=False):
+    """Ask SpaceSaver's own menu to compress, with matching names present.
+
+    The menu's toggle reads *Turn Idle Time Off*, so idle-time
+    compression is already ON; *Idle Now* runs the scan without waiting
+    for the machine to go quiet. The subjects are named to match the
+    `small` rule, which is the filter that scan applies.
+    """
+    import glob
+    boot = os.path.join(WORK, "ssidlemenu.hfv")
+    shutil.copyfile(INSTALLED, boot)
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+    tmp = tempfile.mkdtemp(prefix="ssim-")
+    big = (b"SpaceSaver probe, at length. " * 14000)[:400000]
+    named = [(n + " small", t, c, d, r) for n, t, c, d, r in SUBJECTS]
+    named.append(("Bigone small", "TEXT", "ttxt", big, b""))
+    try:
+        subprocess.run(["hmount", boot], check=True, capture_output=True,
+                       env=env)
+        for n, t, c, d, r in named:
+            q = os.path.join(tmp, n.replace(" ", "_") + ".bin")
+            open(q, "wb").write(macbinary(n, t, c, d, r))
+            subprocess.run(["hcopy", "-m", q, ":"], check=True,
+                           capture_output=True, env=env)
+        subprocess.run(["humount"], check=True, capture_output=True, env=env)
+    finally:
+        shutil.rmtree(env["HOME"], ignore_errors=True)
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    before = set(glob.glob("/tmp/dd-*/boot.hfv"))
+    s = Session(boot, [], os.path.join(SPECIMENS, "idlemenu"))
+    try:
+        s.boot()
+        s.shot("desktop", wait=14.0)
+        s.mac.click(250, 38)
+        time.sleep(2.5)
+        for _ in range(3):
+            s.mac.command_key("w")
+            time.sleep(2.5)
+        s.shot("windows-closed", wait=6.0)
+        s.menu(SS_MENU_X, SS_IDLE_NOW_Y, "idle-now")
+        s.shot("working", wait=45.0)
+        s.shot("working-2", wait=60.0)
+        s.shot("settled", wait=60.0)
+        s.menu(SPECIAL_X, SHUT_DOWN_Y, "special-menu")
+        s.shot("shutting-down", wait=40.0)
+    finally:
+        time.sleep(8)
+        s.close()
+
+    cands = [p for p in glob.glob("/tmp/dd-*/boot.hfv") if p not in before]
+    if not cands:
+        cands = sorted(glob.glob("/tmp/dd-*/boot.hfv"),
+                       key=os.path.getmtime)[-1:]
+    out = sorted(cands, key=os.path.getmtime)[-1]
+    print("spacesaver: reading back %s" % out)
+    return report_specimen(out, s.shots)
+
+
+def ssmenu(keep=False):
+    """Find SpaceSaver's OWN menu, then use it.
+
+    `STR# 1024` is *About SpaceSaver Menu...;(-;Turn Idle-Time On;Idle
+    Now;(-;Open Control Panel*, and `STR# -4064` calls the mechanism
+    "Idle Time Compression ... while your computer is inactive". So the
+    name rule is a FILTER the idle scanner applies, and the scanner is
+    what has to be switched on — which is what this menu does.
+
+    `--idlenow` went looking for it with `~Magic Menu™` DELETED and
+    found no icon menu, at Magic Menu's own x. A System 7 menu bar puts
+    extension icons at the RIGHT end, so this photographs every icon
+    position across the right of the bar before choosing anything.
+    """
+    import glob
+    boot = os.path.join(WORK, "ssmenu.hfv")
+    shutil.copyfile(INSTALLED, boot)
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+    tmp = tempfile.mkdtemp(prefix="ssmenu-")
+    big = (b"SpaceSaver probe, at length. " * 14000)[:400000]
+    named = [(n + " small", t, c, d, r) for n, t, c, d, r in SUBJECTS]
+    named.append(("Bigone small", "TEXT", "ttxt", big, b""))
+    try:
+        subprocess.run(["hmount", boot], check=True, capture_output=True,
+                       env=env)
+        for n, t, c, d, r in named:
+            q = os.path.join(tmp, n.replace(" ", "_") + ".bin")
+            open(q, "wb").write(macbinary(n, t, c, d, r))
+            subprocess.run(["hcopy", "-m", q, ":"], check=True,
+                           capture_output=True, env=env)
+        subprocess.run(["humount"], check=True, capture_output=True, env=env)
+    finally:
+        shutil.rmtree(env["HOME"], ignore_errors=True)
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    s = Session(boot, [], os.path.join(SPECIMENS, "ssmenu"))
+    try:
+        s.boot()
+        s.shot("desktop", wait=14.0)
+        s.mac.click(250, 38)
+        time.sleep(2.5)
+        for _ in range(3):
+            s.mac.command_key("w")
+            time.sleep(2.5)
+        s.shot("windows-closed", wait=6.0)
+        # Photograph every icon slot, shooting straight after the PRESS so
+        # the frame names the menu that opened rather than whatever the
+        # drag afterwards wandered into. The origin is re-queried because
+        # a cached (0,0) shifts every coordinate 144 px (interactive.py).
+        ox, oy = s.mac.origin(cached=False)
+        print("spacesaver: origin %d,%d" % (ox, oy))
+        xdo = s.mac._xdo
+        for bx in (270, 285, 300, 400, 415, 425, 440, 455, 470, 485):
+            xdo("mousemove", str(ox + bx), str(oy + 8))
+            time.sleep(0.5)
+            xdo("mousedown", "1")
+            time.sleep(1.4)
+            s.shot("press-x%d" % bx)
+            xdo("mouseup", "1")
+            time.sleep(0.8)
+            s.mac.key("Escape")
+            time.sleep(0.6)
+        s.shot("after-sweep", wait=4.0)
+    finally:
+        time.sleep(6)
+        s.close()
+    print("spacesaver: frames in %s" % s.shots)
+    return 0
+
+
+MAGIC_INFO_Y = MAGIC_COMPRESS_Y + 16      # the item below Compress
+
+
+def ssinfo(keep=False):
+    """Ask the application what it thinks of the file.
+
+    *SpaceSaver Compress* is silent when it declines — `mCompressFile`
+    @0x549c returns an `OSErr`, and only some refusals reach the
+    `STR# 1001` alerts. The menu item BELOW it, *SpaceSaver Info...*,
+    exists to report on a selection, so it is the cheapest question to
+    ask after `--magicname` showed the command running and doing
+    nothing (OPEN_ITEMS.md).
+
+    Same subjects as `--magicname`, including the 400 KB one: select,
+    choose Info, photograph whatever it says.
+    """
+    import glob
+    boot = os.path.join(WORK, "ssinfo.hfv")
+    shutil.copyfile(INSTALLED, boot)
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+    tmp = tempfile.mkdtemp(prefix="ssinfo-")
+    big = (b"SpaceSaver probe, at length. " * 14000)[:400000]
+    named = [(n + " small", t, c, d, r) for n, t, c, d, r in SUBJECTS]
+    named.append(("Bigone small", "TEXT", "ttxt", big, b""))
+    try:
+        subprocess.run(["hmount", boot], check=True, capture_output=True,
+                       env=env)
+        for n, t, c, d, r in named:
+            q = os.path.join(tmp, n.replace(" ", "_") + ".bin")
+            open(q, "wb").write(macbinary(n, t, c, d, r))
+            subprocess.run(["hcopy", "-m", q, ":"], check=True,
+                           capture_output=True, env=env)
+        subprocess.run(["humount"], check=True, capture_output=True, env=env)
+    finally:
+        shutil.rmtree(env["HOME"], ignore_errors=True)
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    s = Session(boot, [], os.path.join(SPECIMENS, "ssinfo"))
+    try:
+        s.boot()
+        s.shot("desktop", wait=14.0)
+        s.mac.click(250, 38)
+        time.sleep(2.5)
+        for _ in range(3):
+            s.mac.command_key("w")
+            time.sleep(2.5)
+        s.mac.click(470, 55, double=True)
+        s.shot("bootvol", wait=14.0)
+        s.mac.key("Escape")
+        time.sleep(0.6)
+        s.mac.key("b")                      # Bigone small
+        time.sleep(1.5)
+        s.shot("selected", wait=0.5)
+        s.menu(MAGIC_X, MAGIC_INFO_Y, "info-menu")
+        s.shot("info-dialog", wait=20.0)
+        s.shot("info-dialog-again", wait=10.0)
+        s.mac.key("Return")
+        s.shot("after-return", wait=8.0)
+    finally:
+        time.sleep(6)
+        s.close()
+    print("spacesaver: frames in %s" % s.shots)
+    return 0
+
+
 # The SpaceSaver panel's close box, measured off `idlespec/09-panel-closed.png`
 # where Cmd-W did not close it: the window's title bar runs from x=163 to
 # x=392 at y=98..112, so the box is at its left end.
@@ -2179,7 +2731,14 @@ def dragdrop(keep=False):
 # SpaceSaver's OWN menu, from `STR# 1024` in the control panel:
 #   About SpaceSaver Menu...;(-;Turn Idle-Time On;Idle Now;(-;Open Control Panel
 # Six rows at the usual 15-pixel pitch, two of them separators.
-SS_MENU_X = 283
+#
+# **x is 425, MEASURED** (`--ssmenu`, 2026-08-25): press each slot across
+# the bar and photograph what opens. It was 283 here — Magic Menu's icon —
+# which is why `--idlenow` deleted `~Magic Menu™` to give SpaceSaver the
+# bar to itself and then reported "no icon menu at all": it was pressing
+# the hole Magic Menu had left. System 7 puts extension icons at the RIGHT
+# end, and SpaceSaver's dropdown is shifted left to fit, spanning x=258..443.
+SS_MENU_X = 425
 SS_MENU_IDLE_ON = 60
 SS_MENU_IDLE_NOW = 75
 
@@ -2893,6 +3452,20 @@ def main():
                     help="drive both rename rules on the settings page")
     ap.add_argument("--enrollmagic", action="store_true",
                     help="enrol the disk, close the panel, then compress")
+    ap.add_argument("--enrollidle", action="store_true",
+                    help="enrol the disk and pick Idle Now, one flushed boot")
+    ap.add_argument("--idleenrolled", action="store_true",
+                    help="Idle Now on a volume that is enrolled")
+    ap.add_argument("--calib", action="store_true",
+                    help="measure where a Mac coordinate actually lands")
+    ap.add_argument("--idlepick", action="store_true",
+                    help="drive SpaceSaver's own menu with explicit geometry")
+    ap.add_argument("--idlemenu", action="store_true",
+                    help="SpaceSaver's own menu: Idle Now, names matching")
+    ap.add_argument("--ssmenu", action="store_true",
+                    help="photograph the menu-bar icons and find SpaceSaver's")
+    ap.add_argument("--info", action="store_true",
+                    help="ask Magic Menu's SpaceSaver Info... about a file")
     ap.add_argument("--magicname", action="store_true",
                     help="a matching NAME and a menu command in one run")
     ap.add_argument("--magic", action="store_true",
@@ -2967,6 +3540,20 @@ def main():
         return suffix(a.keep)
     elif a.enrollmagic:
         return enrollmagic(a.keep)
+    elif a.enrollidle:
+        return enrollidle(a.keep)
+    elif a.idleenrolled:
+        return idleenrolled(a.keep)
+    elif a.calib:
+        return calib(a.keep)
+    elif a.idlepick:
+        return idlepick(a.keep)
+    elif a.idlemenu:
+        return idlemenu(a.keep)
+    elif a.ssmenu:
+        return ssmenu(a.keep)
+    elif a.info:
+        return ssinfo(a.keep)
     elif a.magicname:
         return magicname(a.keep)
     elif a.magic:

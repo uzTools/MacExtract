@@ -158,44 +158,36 @@ own distribution (BLOCKERS.md, the same date).
   against its input by construction.
 
 - **A SpaceSaver file written by SpaceSaver.** Nothing here has made
-  the application compress anything — thirteen runs, every trigger its
-  control panel offers (BLOCKERS.md). Only the CONTAINER now rests on
-  it: every codec is graded against Aladdin's own modules, but the
-  method choice, the 256-byte rounding and the 84-byte header are the
+  the application compress anything. Only the CONTAINER now rests on it:
+  every codec is graded against Aladdin's own modules, but the method
+  choice, the 256-byte rounding and the 84-byte header are the
   application's, and this engine reads them from containers it builds
   itself (FORMATS.md, *StuffIt SpaceSaver*).
 
-  **Two suspects were eliminated on 2026-08-25, by running them.**
-  `--magicname` puts a matching NAME and a menu command in the same run,
-  which no previous run did — subjects called `... small` on the boot
-  volume, then Magic Menu's *SpaceSaver Compress* on each, and the
-  frames show the command enabled, highlighted, and applied to the right
-  selection. Nothing was compressed, with no alert and no progress
-  dialog. Repeated with a **400 KB** subject beside the 11 KB and 3 KB
-  ones: unchanged as well. So it is neither the name rule nor a size
-  floor.
+  **Nine conditions are now known to hold at once** (2026-08-25, each
+  photographed): SpaceSaver switched On in its panel; the startup volume
+  ENROLLED in the Idle Time list, which the installed image leaves
+  empty; subjects named to match the `small` rule; dated 1990, older
+  than that page's "not modified in the last 1 Months"; *Idle Now*
+  picked from SpaceSaver's OWN menu with the item highlighted; the panel
+  closed with its close box, since Cmd-W does not close it; nine minutes
+  without input afterwards; a 400 KB subject beside the 11 KB one; and,
+  in other runs, Magic Menu's *SpaceSaver Compress* on the selection.
+  Every write path declines in silence — no `STR# 1001` alert, no
+  progress window — while *SpaceSaver Info...* reports the file
+  correctly, so the engine is reachable and answering.
 
-  **Where the decision is made, from the disassembly** (measured, but
-  none of it is the cause):
+  Eliminated by running them: the name rule, a size floor, the type
+  exemption list (`Exem 1000` holds `PACT`, `MooV`, `JPEG`, `INIT`,
+  `cdev` — not `TEXT` or `PICT`), and the idea that a rename is an
+  event at all (`INIT 1` patches `_MenuSelect`, `_MenuKey` and
+  `_PBEject`, and nothing in the File Manager).
 
-  - `INIT 1` — the resource every previous session skipped in favour of
-    `INIT 0` — patches `_MenuSelect`, `_MenuKey` and `_PBEject`, and
-    patches `_DrawMenuBar`/`_SystemMenu` when `Gestalt('sysv')` is
-    0x0700 or later (@0x203a), which this System 7.0.1 image satisfies.
-    **Nothing patches the File Manager**, so a rename is not an event
-    and the name rule is only a filter.
-  - `mCompressFile` @0x549c refuses a file that already has an SS header
-    and refuses one whose every fork is smaller than a threshold its
-    CALLER passes (@0x5510), returning -37 — an `OSErr`, not one of the
-    `STR# 1001` alerts, which is why a refusal has never been
-    photographed.
-
-  **What would close it:** what Magic Menu's *SpaceSaver Compress*
-  actually passes the engine, or whether the engine's SpaceSaver feature
-  is enabled at all at runtime — its own icon menu (`STR# 1024`) has
-  never appeared in any frame, even with `~Magic Menu™` deleted. Or one
-  SpaceSaver file from anywhere.
-
+  **What would close it:** why a reachable engine refuses every write
+  path. The unexamined lead is personalisation — the panel's
+  `PERS -4064` is the name `unclassic` with the serial field zeroed, and
+  `STR# 1001` #18 and #20 are about copies that are unregistered or
+  installed wrong. Or one SpaceSaver file from anywhere.
 - **AppleLink `.pkg`: one file, which would settle two questions.**
   Named since 2026-08-23 from Aladdin's own recogniser (FORMATS.md,
   *AppleLink packages*), and detect-only because nothing here can grade

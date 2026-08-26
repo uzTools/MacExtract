@@ -108,11 +108,19 @@ class Mac:
     def _xdo(self, *args):
         subprocess.run(["xdotool", *args], env=self.env, capture_output=True)
 
-    def origin(self):
+    def origin(self, cached=True):
         """Top-left of the Mac screen within the X root, so Mac coordinates can
         be clicked directly. With no window manager the emulator lands wherever
-        it likes, and hard-coding an offset silently clicks the desktop."""
-        if self._origin is None:
+        it likes, and hard-coding an offset silently clicks the desktop.
+
+        **Re-query it when a run depends on the answer.** The window is
+        512x342 at (144, 129) once the emulator has placed it, and 0 before
+        that; a cached (0, 0) puts every later Mac coordinate 144 px left
+        and 129 px up, which lands on something plausible rather than on
+        nothing. Measured 2026-08-25: a menu click asking for x=425 opened
+        the menu whose icon is at x=283, and the run photographed the wrong
+        menu while reporting a successful pick."""
+        if self._origin is None or not cached:
             win = self.dpy.window()
             if not win:
                 raise SystemExit("interactive: emulator window never appeared")
