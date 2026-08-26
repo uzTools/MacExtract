@@ -1205,216 +1205,6 @@ static void test_lzh_extract(void)
     CHECK(cap.dlen[0] == 0);
 }
 
-/* DiskCopy 4.2 is DETECT-ONLY: unc_sniff must name it, and extraction must
- * refuse cleanly rather than pretend. The probe is deliberately strict (the
- * magic word is only 16 bits), so also check that each guard rejects. */
-static void test_diskcopy(void)
-{
-    uint8_t h[128];
-    UncIO io;
-    MemIO m;
-    int i;
-
-    /* Minimal valid 800K GCR header: name, dataSize 819200, tags 19200. */
-    for (i = 0; i < (int)sizeof h; i++) h[i] = 0;
-    h[0] = 4;                                    /* Pascal name length */
-    h[1] = 'D'; h[2] = 'i'; h[3] = 's'; h[4] = 'k';
-    h[0x40] = 0x00; h[0x41] = 0x0C; h[0x42] = 0x80; h[0x43] = 0x00;  /* 819200 */
-    h[0x44] = 0x00; h[0x45] = 0x00; h[0x46] = 0x4B; h[0x47] = 0x00;  /*  19200 */
-    h[0x50] = 0x01;                              /* GCR CLV dsdd (800K) */
-    h[0x51] = 0x22;                              /* format byte, not checked */
-    h[0x52] = 0x01; h[0x53] = 0x00;              /* magic "private word" */
-
-    test_make_memio(&io, &m, h, sizeof h);
-    CHECK(unc_sniff(&io) == UNC_FORMAT_DISKCOPY);
-
-    /* A tagless GCR image is equally valid. */
-    h[0x44] = h[0x45] = h[0x46] = h[0x47] = 0;
-    test_make_memio(&io, &m, h, sizeof h);
-    CHECK(unc_sniff(&io) == UNC_FORMAT_DISKCOPY);
-
-    /* 1440K MFM, which can never carry tags. */
-    h[0x40] = 0x00; h[0x41] = 0x16; h[0x42] = 0x80; h[0x43] = 0x00;  /* 1474560 */
-    h[0x50] = 0x03;
-    test_make_memio(&io, &m, h, sizeof h);
-    CHECK(unc_sniff(&io) == UNC_FORMAT_DISKCOPY);
-    h[0x47] = 0x0C;                              /* ...so any tag size is wrong */
-    test_make_memio(&io, &m, h, sizeof h);
-    CHECK(unc_sniff(&io) != UNC_FORMAT_DISKCOPY);
-    h[0x47] = 0x00;
-
-    /* Encoding must agree with the declared data size. */
-    h[0x50] = 0x01;                              /* says 800K, size says 1440K */
-    test_make_memio(&io, &m, h, sizeof h);
-    CHECK(unc_sniff(&io) != UNC_FORMAT_DISKCOPY);
-    h[0x50] = 0x03;
-
-    /* Unknown encoding, over-long Pascal name, wrong magic: all rejected. */
-    h[0x50] = 0x07;
-    test_make_memio(&io, &m, h, sizeof h);
-    CHECK(unc_sniff(&io) != UNC_FORMAT_DISKCOPY);
-    h[0x50] = 0x03;
-
-    h[0] = 64;
-    test_make_memio(&io, &m, h, sizeof h);
-    CHECK(unc_sniff(&io) != UNC_FORMAT_DISKCOPY);
-    h[0] = 4;
-
-    h[0x53] = 0x01;
-    test_make_memio(&io, &m, h, sizeof h);
-    CHECK(unc_sniff(&io) != UNC_FORMAT_DISKCOPY);
-    h[0x53] = 0x00;
-
-    /* Detect-only: it is named, but extracting it is refused cleanly. */
-    {
-        UncAlloc al;
-        UncSink sk;
-        CapSink cap;
-        test_make_memio(&io, &m, h, sizeof h);
-        test_make_alloc(&al);
-        cap_make(&sk, &cap);
-        CHECK(unc_extract_as(UNC_FORMAT_DISKCOPY, &io, &sk, &al, NULL, NULL)
-              == UNC_ERR_UNSUPPORTED);
-        CHECK(cap.count == 0);
-    }
-}
-
-/* Every OTHER disk image is detect-only for the same reason. The four
- * volume structures the probe reads live past the sniff window, so each
- * case here is a buffer with something at 512, 1024 or sector 16 and
- * nothing anywhere else — which is also the point: none of these is a
- * plausible archive, and the probe must not need them to be.
- *
- * tools/run_diskimage.py is where real images are graded (an ISO written
- * by pycdlib, an HFS volume written by hformat, both confirmed by deark);
- * this is the part that runs with no reference tree at all. */
-static void test_diskimage(void)
-{
-    uint8_t img[4096];
-    uint8_t *cd;
-    UncIO io;
-    MemIO m;
-    int i;
-
-    /* HFS: "BD" at 1024, allocation block size a nonzero multiple of 512. */
-    for (i = 0; i < (int)sizeof img; i++) img[i] = 0;
-    img[1024] = 'B'; img[1025] = 'D';
-    img[1044] = 0x00; img[1045] = 0x00; img[1046] = 0x20; img[1047] = 0x00;
-    test_make_memio(&io, &m, img, sizeof img);
-    CHECK(unc_sniff(&io) == UNC_FORMAT_DISKIMAGE);
-
-    img[1046] = 0x00; img[1047] = 0x00;              /* size 0 */
-    test_make_memio(&io, &m, img, sizeof img);
-    CHECK(unc_sniff(&io) != UNC_FORMAT_DISKIMAGE);
-    img[1047] = 0x64;                                /* 100: not a sector */
-    test_make_memio(&io, &m, img, sizeof img);
-    CHECK(unc_sniff(&io) != UNC_FORMAT_DISKIMAGE);
-
-    /* HFS+ and HFSX: the signature, plus a file that is whole sectors. */
-    for (i = 0; i < (int)sizeof img; i++) img[i] = 0;
-    img[1024] = 'H'; img[1025] = '+';
-    test_make_memio(&io, &m, img, sizeof img);
-    CHECK(unc_sniff(&io) == UNC_FORMAT_DISKIMAGE);
-    img[1025] = 'X';
-    test_make_memio(&io, &m, img, sizeof img);
-    CHECK(unc_sniff(&io) == UNC_FORMAT_DISKIMAGE);
-    test_make_memio(&io, &m, img, sizeof img - 3);
-    CHECK(unc_sniff(&io) != UNC_FORMAT_DISKIMAGE);
-    /* ...and a volume too short to hold a header is not one either. */
-    test_make_memio(&io, &m, img, 1024 + 512);
-    CHECK(unc_sniff(&io) == UNC_FORMAT_DISKIMAGE);
-    test_make_memio(&io, &m, img, 1024);
-    CHECK(unc_sniff(&io) != UNC_FORMAT_DISKIMAGE);
-
-    /* Apple Partition Map: an entry in sector 1 AND in sector 2. */
-    for (i = 0; i < (int)sizeof img; i++) img[i] = 0;
-    img[512] = 'P'; img[513] = 'M';
-    img[1024] = 'P'; img[1025] = 'M';
-    test_make_memio(&io, &m, img, sizeof img);
-    CHECK(unc_sniff(&io) == UNC_FORMAT_DISKIMAGE);
-    img[512] = 0;                                    /* sector 1 gone */
-    test_make_memio(&io, &m, img, sizeof img);
-    CHECK(unc_sniff(&io) != UNC_FORMAT_DISKIMAGE);
-    img[512] = 'P'; img[1024] = 0;                   /* sector 2 gone */
-    test_make_memio(&io, &m, img, sizeof img);
-    CHECK(unc_sniff(&io) != UNC_FORMAT_DISKIMAGE);
-    /* The two reserved bytes are part of the signature deark matches. */
-    img[1024] = 'P'; img[1025] = 'M'; img[1026] = 1;
-    test_make_memio(&io, &m, img, sizeof img);
-    CHECK(unc_sniff(&io) != UNC_FORMAT_DISKIMAGE);
-
-    /* ISO 9660 and its two relatives, at 2048-byte sectors: a descriptor
-     * at sector 16 and another at sector 17. 36 KB is past what belongs
-     * on this stack. */
-    cd = (uint8_t *)malloc(36864);
-    CHECK(cd != NULL);
-    if (cd) {
-        static const char *sig[3] = { "CD001", "CD-I ", "CDROM" };
-        int k;
-        for (k = 0; k < 3; k++) {
-            int at = (k == 2) ? 8 : 0;               /* High Sierra is at +8 */
-            int j;
-            for (i = 0; i < 36864; i++) cd[i] = 0;
-            for (j = 0; j < 2; j++) {
-                uint8_t *d = cd + 2048 * (16 + j) + at;
-                d[0] = (uint8_t)(j == 0 ? 1 : 255);  /* primary, terminator */
-                for (i = 0; i < 5; i++) d[1 + i] = (uint8_t)sig[k][i];
-            }
-            test_make_memio(&io, &m, cd, 36864);
-            CHECK(unc_sniff(&io) == UNC_FORMAT_DISKIMAGE);
-
-            /* Sector 16 alone is not enough. */
-            for (i = 0; i < 8; i++) cd[2048 * 17 + at + i] = 0;
-            test_make_memio(&io, &m, cd, 36864);
-            CHECK(unc_sniff(&io) != UNC_FORMAT_DISKIMAGE);
-        }
-
-        /* A descriptor type deark rejects (4..254) is rejected here too. */
-        for (i = 0; i < 36864; i++) cd[i] = 0;
-        for (i = 0; i < 2; i++) {
-            uint8_t *d = cd + 2048 * (16 + i);
-            int j;
-            d[0] = 9;
-            for (j = 0; j < 5; j++) d[1 + j] = (uint8_t)"CD001"[j];
-        }
-        test_make_memio(&io, &m, cd, 36864);
-        CHECK(unc_sniff(&io) != UNC_FORMAT_DISKIMAGE);
-        free(cd);
-    }
-
-    /* The raw CD layouts: 2352-byte sectors with the data 16 bytes in. */
-    cd = (uint8_t *)malloc(2352 * 18);
-    CHECK(cd != NULL);
-    if (cd) {
-        int j;
-        for (i = 0; i < 2352 * 18; i++) cd[i] = 0;
-        for (j = 0; j < 2; j++) {
-            uint8_t *d = cd + 2352 * (16 + j) + 16;
-            d[0] = (uint8_t)(j == 0 ? 1 : 255);
-            for (i = 0; i < 5; i++) d[1 + i] = (uint8_t)"CD001"[i];
-        }
-        test_make_memio(&io, &m, cd, 2352 * 18);
-        CHECK(unc_sniff(&io) == UNC_FORMAT_DISKIMAGE);
-        free(cd);
-    }
-
-    /* Detect-only: named, and extraction refused cleanly. */
-    {
-        UncAlloc al;
-        UncSink sk;
-        CapSink cap;
-        for (i = 0; i < (int)sizeof img; i++) img[i] = 0;
-        img[1024] = 'H'; img[1025] = '+';
-        test_make_memio(&io, &m, img, sizeof img);
-        test_make_alloc(&al);
-        cap_make(&sk, &cap);
-        CHECK(unc_extract_as(UNC_FORMAT_DISKIMAGE, &io, &sk, &al, NULL, NULL)
-              == UNC_ERR_UNSUPPORTED);
-        CHECK(cap.count == 0);
-        CHECK(!unc_format_extractable(UNC_FORMAT_DISKIMAGE));
-    }
-}
-
 /* ------------------------------------------------------------------ */
 /* StuffIt segments (multi-part sets)                                 */
 /* ------------------------------------------------------------------ */
@@ -3201,6 +2991,122 @@ static void ss_sniff_is(const char *text, UncFormat want)
     CHECK(unc_sniff(&io) == want);
 }
 
+/* ------------------------------------------------------------------ */
+/* Foreign archives: named, never extracted (src/fmt_foreign.c)        */
+/*                                                                     */
+/* Signatures only, so the tests are the signature and its neighbours: */
+/* every accepted magic, and for each one the near-miss that must be   */
+/* refused. tools/run_foreign.py is where real archives written by     */
+/* bzip2, xz, 7z, cpio and ar are put through the same probe; this is  */
+/* the half that needs no tools installed.                             */
+/* ------------------------------------------------------------------ */
+static void fgn_is(const uint8_t *data, int32_t len, UncFormat want)
+{
+    UncIO io;
+    MemIO m;
+    test_make_memio(&io, &m, data, (uint32_t)len);
+    CHECK(unc_sniff(&io) == want);
+}
+
+/* A signature followed by enough zeros that no length test is what
+ * rejects it: 64 bytes past the longest magic here. */
+static void fgn_sig(const char *sig, int32_t siglen, UncFormat want)
+{
+    uint8_t buf[128];
+    int32_t i;
+    for (i = 0; i < (int32_t)sizeof buf; i++) buf[i] = 0;
+    for (i = 0; i < siglen; i++) buf[i] = (uint8_t)sig[i];
+    fgn_is(buf, (int32_t)sizeof buf, want);
+}
+
+static void test_foreign(void)
+{
+    uint8_t buf[128];
+    int32_t i;
+
+    /* RAR: three generations, and the eighth byte is what separates the
+     * two that share a signature. */
+    fgn_sig("Rar!\x1a\x07\x00", 7, UNC_FORMAT_RAR);
+    fgn_sig("Rar!\x1a\x07\x01\x00", 8, UNC_FORMAT_RAR5);
+    fgn_sig("RE~^", 4, UNC_FORMAT_RAR);                  /* RAR 1.3/1.4 */
+    fgn_sig("Rar!\x1a\x07\x02", 7, UNC_FORMAT_UNKNOWN);
+
+    fgn_sig("7z\xbc\xaf\x27\x1c\x00", 7, UNC_FORMAT_7Z);
+    fgn_sig("7z\xbc\xaf\x27\x1c\x01", 7, UNC_FORMAT_UNKNOWN);
+
+    /* "\xfd7..." would eat the 7 as a third hex digit. */
+    fgn_sig("\xfd" "7zXZ\x00", 6, UNC_FORMAT_XZ);
+    fgn_sig("\xfd" "7zXZ\x01", 6, UNC_FORMAT_UNKNOWN);
+
+    /* bzip2 needs the level digit AND one of the two stream magics: the
+     * second is an empty archive, which has no block in it. */
+    fgn_sig("BZh9\x31\x41\x59\x26\x53\x59", 10, UNC_FORMAT_BZIP2);
+    fgn_sig("BZh1\x17\x72\x45\x38\x50\x90", 10, UNC_FORMAT_BZIP2);
+    fgn_sig("BZh9", 4, UNC_FORMAT_UNKNOWN);
+    fgn_sig("BZh0\x31\x41\x59\x26\x53\x59", 10, UNC_FORMAT_UNKNOWN);
+
+    fgn_sig("MSCF", 4, UNC_FORMAT_CAB);
+    fgn_sig("!<arch>\x0a", 8, UNC_FORMAT_AR);
+    fgn_sig("!<arch>!", 8, UNC_FORMAT_UNKNOWN);
+
+    /* cpio: three ASCII magics and both byte orders of the binary one. */
+    fgn_sig("070707", 6, UNC_FORMAT_CPIO);
+    fgn_sig("070701", 6, UNC_FORMAT_CPIO);
+    fgn_sig("070702", 6, UNC_FORMAT_CPIO);
+    fgn_sig("070703", 6, UNC_FORMAT_UNKNOWN);
+    fgn_sig("\xc7\x71", 2, UNC_FORMAT_CPIO);
+    fgn_sig("\x71\xc7", 2, UNC_FORMAT_CPIO);
+
+    /* Zoo's magic is at 0x14, so the same four bytes at 0 are nothing. */
+    for (i = 0; i < (int32_t)sizeof buf; i++) buf[i] = 0;
+    buf[0x14] = 0xdc; buf[0x15] = 0xa7; buf[0x16] = 0xc4; buf[0x17] = 0xfd;
+    fgn_is(buf, (int32_t)sizeof buf, UNC_FORMAT_ZOO);
+    fgn_sig("\xdc\xa7\xc4\xfd", 4, UNC_FORMAT_UNKNOWN);
+
+    /* ARJ: two bytes of magic, so the header size and its CRC-32 are what
+     * make it a claim. */
+    {
+        uint8_t arj[64];
+        uint32_t crc;
+        int32_t hlen = 34;
+        for (i = 0; i < (int32_t)sizeof arj; i++) arj[i] = 0;
+        arj[0] = 0x60; arj[1] = 0xea;
+        arj[2] = (uint8_t)hlen; arj[3] = 0;          /* little-endian */
+        arj[4] = 34; arj[5] = 11; arj[6] = 1; arj[7] = 1; arj[8] = 2;
+        crc = ~unc_crc32(0xFFFFFFFFu, arj + 4, hlen);
+        arj[4 + hlen + 0] = (uint8_t)crc;
+        arj[4 + hlen + 1] = (uint8_t)(crc >> 8);
+        arj[4 + hlen + 2] = (uint8_t)(crc >> 16);
+        arj[4 + hlen + 3] = (uint8_t)(crc >> 24);
+        fgn_is(arj, (int32_t)sizeof arj, UNC_FORMAT_ARJ);
+
+        arj[4 + hlen] ^= 0xff;                        /* broken CRC */
+        fgn_is(arj, (int32_t)sizeof arj, UNC_FORMAT_UNKNOWN);
+        arj[4 + hlen] ^= 0xff;
+
+        arj[2] = 0; arj[3] = 0x10;                    /* size 4096: too big */
+        fgn_is(arj, (int32_t)sizeof arj, UNC_FORMAT_UNKNOWN);
+    }
+
+    /* Named, and refused without writing anything. */
+    {
+        UncIO io;
+        MemIO m;
+        UncAlloc al;
+        UncSink sk;
+        CapSink cap;
+        for (i = 0; i < (int32_t)sizeof buf; i++) buf[i] = 0;
+        buf[0] = 'M'; buf[1] = 'S'; buf[2] = 'C'; buf[3] = 'F';
+        test_make_memio(&io, &m, buf, sizeof buf);
+        test_make_alloc(&al);
+        cap_make(&sk, &cap);
+        CHECK(unc_extract(&io, &sk, &al, NULL, NULL) == UNC_ERR_UNSUPPORTED);
+        CHECK(cap.count == 0);
+        CHECK(!unc_format_extractable(UNC_FORMAT_CAB));
+        CHECK(!unc_format_extractable(UNC_FORMAT_RAR));
+    }
+}
+
 static void test_applelink(void)
 {
     /* What the translator accepts. */
@@ -4111,8 +4017,6 @@ void run_format_tests(void)
     test_gzip();
     test_tar();
     test_zip();
-    test_diskcopy();
-    test_diskimage();
     test_lzh_probe();
     test_lzh_extract();
     test_sitseg();
@@ -4122,6 +4026,7 @@ void run_format_tests(void)
     test_diskdoubler();
     test_nowcompress();
     test_applelink();
+    test_foreign();
     test_spacesaver();
     test_spacesaver_alg4();
     test_spacesaver_preset();

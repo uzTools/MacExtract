@@ -30,7 +30,6 @@ static const UncFormatDesc unc_formats[] = {
     { UNC_FORMAT_TAR,         "Tar",             1 },
     { UNC_FORMAT_SITX,        "StuffIt X",       0 },
     { UNC_FORMAT_DISKDOUBLER, "DiskDoubler",     1 },
-    { UNC_FORMAT_DISKCOPY,    "DiskCopy image",  0 },
     { UNC_FORMAT_NOWCOMPRESS, "Now Compress",    1 },
     { UNC_FORMAT_LZH,         "LZH",             1 },
     { UNC_FORMAT_SITSEG,      "StuffIt segment", 1 },
@@ -50,7 +49,17 @@ static const UncFormatDesc unc_formats[] = {
     { UNC_FORMAT_BTOA,        "btoa",            1 },
     { UNC_FORMAT_BASE64,      "base64",          1 },
     { UNC_FORMAT_MIME,        "MIME message",    1 },
-    { UNC_FORMAT_DISKIMAGE,   "disk image",      0 },
+    /* Named, never extracted (src/fmt_foreign.c). */
+    { UNC_FORMAT_RAR,         "RAR",             0 },
+    { UNC_FORMAT_RAR5,        "RAR 5",           0 },
+    { UNC_FORMAT_7Z,          "7-Zip",           0 },
+    { UNC_FORMAT_XZ,          "xz",              0 },
+    { UNC_FORMAT_BZIP2,       "bzip2",           0 },
+    { UNC_FORMAT_CAB,         "Microsoft Cabinet", 0 },
+    { UNC_FORMAT_ZOO,         "Zoo",             0 },
+    { UNC_FORMAT_AR,          "ar archive",      0 },
+    { UNC_FORMAT_CPIO,        "cpio",            0 },
+    { UNC_FORMAT_ARJ,         "ARJ",             0 },
 };
 
 const char *unc_format_name(UncFormat f)
@@ -128,6 +137,17 @@ UncFormat unc_sniff(UncIO *io)
     if (unc_packit_probe(head, len))    return UNC_FORMAT_PACKIT;
     if (unc_gzip_probe(head, len))      return UNC_FORMAT_GZIP;
     if (unc_compressz_probe(head, len)) return UNC_FORMAT_COMPRESS_Z;
+    /* The PC-side archives, all of them a constant at a fixed offset, so
+     * the whole set costs a handful of byte compares on a buffer already
+     * read. They sit with the other magic numbers and ahead of
+     * MacBinary's CRC for the same reason MacBinary sits ahead of the
+     * zip scan: a test that cannot be wrong should not be paid for
+     * twice. Nothing here can take a file from a Mac format — every one
+     * is a constant no Mac archive begins with (fmt_foreign.c). */
+    {
+        UncFormat fgn = unc_foreign_probe(head, len);
+        if (fgn != UNC_FORMAT_UNKNOWN) return fgn;
+    }
     /* MacBinary has no magic number, only a header CRC and structural
      * constraints, which is why it used to sit LAST — the weakest test
      * claims a file only when nothing stronger has. It is here instead
@@ -180,15 +200,6 @@ UncFormat unc_sniff(UncIO *io)
      * header: a printable 13-byte name, a known method, and sizes that
      * land on the next header or the end marker. */
     if (unc_arc_probe(head, len, io))   return UNC_FORMAT_ARC;
-    if (unc_diskcopy_probe(head, len, io)) return UNC_FORMAT_DISKCOPY;
-    /* Every other disk image, read by the volume inside it rather than by
-     * an extension. It sits beside DiskCopy and before the text probes:
-     * its tests are structural, at fixed offsets and corroborated, where
-     * theirs are scans for a line that may be anywhere — and a disk image
-     * with the word "begin" somewhere in its boot blocks is still a disk
-     * image. It costs a file that reaches here one 24-byte read, plus up
-     * to four more past 32 KB for the CD layouts. */
-    if (unc_diskimage_probe(head, len, io)) return UNC_FORMAT_DISKIMAGE;
 
     /* An AppleLink package is TEXT, so it sits with the other text
      * formats — and before them, because its test is three whole tokens

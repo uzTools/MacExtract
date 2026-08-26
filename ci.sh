@@ -90,12 +90,13 @@ python3 tools/run_mime.py --unclassic build/san/unclassic \
 # original, used as the encoder). Skips cleanly without reference/.
 python3 tools/run_lzh.py --unclassic build/san/unclassic \
     || fail "LZH tests"
-# Disk images (detect-only). The engine must NAME an image and refuse it,
-# and must not claim an archive: the four volume structures are generated
-# by pycdlib, hfsutils and deark's own field offsets, and deark grades
-# every one it has a module for. Skips cleanly without reference/.
-python3 tools/run_diskimage.py --unclassic build/san/unclassic \
-    || fail "disk-image tests"
+# The archives this engine NAMES and never extracts (RAR, 7z, xz, bzip2,
+# Cabinet, Zoo, ar, cpio, ARJ). Signatures only, so the suite writes real
+# archives with the tools that are here, grades the synthetic ones with
+# deark, spoils every corroborating field, and sweeps the corpus — a Mac
+# archive named as a PC one would be worse than no name at all.
+python3 tools/run_foreign.py --unclassic build/san/unclassic \
+    || fail "foreign-archive naming tests"
 # Decryption (M25). Nothing in the corpus is encrypted, so this suite
 # generates its own: `zip -P` and `arc g<pw>` write two of the five
 # schemes themselves, and the three with no encoder here — StuffIt

@@ -34,6 +34,14 @@ measured on a different list:
 | System 7.0.1, 4 MB, 55 fixtures | `run.py --system Sys7.img --list sample.txt` | ~5.1 s per fixture, one boot each |
 | Mac OS 9.2, 13 fixtures | `os9.py --list os9sample.txt --launch` | tens of minutes — one full PowerPC boot per fixture |
 
+**Stagger the start by a few seconds when the application has changed.** The
+display race below is fixed, but the two runs still share one CMake build
+directory per define-set (`build/mac-autotest`), and two `cmake -B` on it at
+the same moment ends with one of them exiting 1 before it boots anything
+(measured 2026-08-27). Once the build exists both runs find it up to date and
+overlap cleanly, which is why parallel tiers usually work: the first run of
+the day is the one that collides.
+
 Run the two Mini vMac tiers in parallel if you have the cores — **safe since
 2026-08-15**, and it was not before: `Display` looked for a free X display by
 testing `/tmp/.X<n>-lock` and then starting Xvfb on it, which is check-then-act.
@@ -1225,6 +1233,24 @@ The alert is in `2-extracting.png`: the default phase clicks Cancel at a
 fixed time, and a run that fails BEFORE then leaves its result alert up in
 that frame. Photographed 2026-08-24: *Needs 72K more memory. Give unclassic
 more in Get Info.*
+
+### Photographing the detect-only alert
+
+No build trick and no fixture: hand the application a file it NAMES and
+cannot open, and the alert is in `2-extracting.png` for the same reason the
+memory one is — the run fails before the phase clicks Cancel.
+
+    interactive.py --emu mv-4M -o /tmp/rarshot /tmp/Sample.rar
+
+Photographed 2026-08-27 with a RAR archive out of libarchive's test suite:
+**"unclassic cannot open RAR files."**, one line, the alert's default OK
+button. Any of the named-but-declined formats does it (FORMATS.md, *Archives
+named but not extracted*); the sentence is built from `unc_format_name`, so
+the longest of them draws 46 characters and still fits two lines.
+
+**`interactive.py` exits 1 on this run and that is not a failure**: its
+phase-2 check is that the CLI and the Mac agree on extracted output, and
+there is no output to agree about. The screenshot is the result.
 
 The same build trick photographs the OTHER two failure alerts, which no
 headless harness runs:

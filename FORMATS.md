@@ -37,8 +37,7 @@ whole corpus for that format (engine allocations only, via
 | StuffIt SpaceSaver (`SPSV`) | extract | **every method the format has**: 0 stored, 1 and 2 (the "Original" LZSS pair), 3 "Alg 3" (Huffman + LZ77), 4 "Alg 4" — the last two starting their window loaded with a preset dictionary that ships inside SpaceSaver✦✦ | no oracle and no fixture, but **Aladdin's own compressors run under `qemu-m68k` and 44 forks they wrote read back byte-exact** (`tools/ssmodule/`, 2026-08-25), plus 160 corrupted variants, a synthetic round-trip and unit tests✦✦ | 4 KB stored, 8 KB method 1, 84 KB method 2, 41 KB method 3, **36 KB** for what SpaceSaver writes (measured on a Mac Plus); 68 KB is the ceiling the width byte allows. The dictionary is 9.7 KB of static data, not heap | full |
 | LZH / LHA (.lzh, .lha) | extract | -lh0- store, -lh1- (LHarc's adaptive Huffman, shared with StuffIt method 5), **-lh2- (both codes adaptive, the position tree growing with the output)**, **-lh3- (static, rebuilt per block)**, -lh4-/-lh5-/-lh6-/-lh7- (static Huffman over a 4/8/32/64 KB window), -lhd- directories, LArc's -lz4-/-lz5-/-lzs-; header levels 0, 1, 2 and 3; **MacLHA's MacBinary payload unwrapped into two forks**; every method the format has except PMarc✵ | 8 fixtures (1 real Amiga archive + 7 of lhasa's) + **182 archives from fourteen writers**, each graded against `unar` and against lhasa, + 12 sets written by LHa 1.14i itself, + 15 -lh2- and 6 -lh3- entries generated for the purpose✵ | 4–74 KB✵ | full |
 | AppleLink package (.pkg) | detect only | — | no specimen anywhere: the probe is Aladdin's own recogniser, at 0 false positives across 928 fixtures (*AppleLink packages*, below) | — | — |
-| DiskCopy 4.2 (.image) | detect only | — | synthetic 800K GCR + real 800K image; 0 false positives in 807 fixtures (re-measured 2026-08-15) | — | — |
-| Disk images: HFS, HFS+/HFSX, Apple-partitioned, ISO 9660 (.img, .iso, .cdr, .toast, a raw .dmg) | detect only | — | 135 real images here, 800 KB to 2 GB, all named; a real ISO written by pycdlib and graded by deark and `lsar`; 0 false positives in 940 fixtures (*Disk images*, below) | — | — |
+| RAR, RAR 5, 7-Zip, xz, bzip2, Cabinet, Zoo, ar/.deb, cpio, ARJ | **named only**, never extracted | — | archives written here by bzip2, xz, 7z, cpio and ar and confirmed by p7zip; real RAR, RAR 5 and CAB out of libarchive's test suite; synthetic Zoo, ARJ and Cabinet identified by deark; 0 false positives in 940 fixtures (*Archives named but not extracted*, below) | — | — |
 
 ✦ **DiskDoubler, in scope since 2026-08-15** (M12), where every status file
 here used to call it detect-only. Three containers — a single compressed file
@@ -1300,54 +1299,55 @@ installed image, with four witnesses that fail if a different build is ever
 put in front of it.
 
 
-## Disk images
+## Archives named but not extracted
 
-**Named since 2026-08-26**, extraction still out by the brief (OPEN_ITEMS.md,
-part 1). Disk Copy 4.2 was the only image this engine could name; the rest —
-`.img`, `.iso`, `.cdr`, `.toast`, an uncompressed `.dmg`, and whatever else a
-mirror calls them — came back UNKNOWN, which reads to a user as a corrupt
-archive.
+**Named since 2026-08-27**, extraction still out by the brief (OPEN_ITEMS.md,
+part 1). Nine PC-side families, one probe, `src/fmt_foreign.c`:
 
-**Nothing is read from the extension.** What those files share is the volume
-inside them, so `unc_diskimage_probe` reads that, in four shapes:
-
-| structure | test | source |
+| format | test | source |
 |---|---|---|
-| HFS master directory block | `"BD"` at 1024, allocation block size a nonzero multiple of 512 | `de_identify_hfs`, deark `modules/hfs.c` |
-| HFS+ / HFSX volume header | `"H+"` or `"HX"` at 1024, in a file that is a whole number of sectors | the signatures deark's `modules/apm.c` reads at partition+1024 |
-| Apple Partition Map | `"PM\0\0"` at 512 **and** at 1024 | `de_identify_apm`, deark `modules/apm.c` |
-| ISO 9660 / High Sierra / CD-I | a volume descriptor at sector 16 and at sector 17, in any of the four sector layouts (2048; 2336+8; 2352+16; 2352+24) | `cdsig_at`, `de_identify_iso9660`, `cdraw_detect_params`, deark `modules/iso9660.c` |
+| RAR 1.5–4.x | `Rar!` 1a 07 00 | `IsRARSignature`, XADMaster `XADRARParser.m` |
+| RAR 5 | `Rar!` 1a 07 01 00 | `IsRAR5Signature`, XADMaster `XADRAR5Parser.m` |
+| RAR 1.3/1.4 | `RE~^` | `IsAncientRARSignature`, same file |
+| 7-Zip | `7z` bc af 27 1c 00 | `Is7ZipSignature`, XADMaster `XAD7ZipParser.m` |
+| xz | fd `7zXZ` 00 | XADMaster `XADXZParser.m` |
+| bzip2 | `BZh` + level digit + the block **or** end-of-stream magic | XADMaster `XADBzip2Parser.m` |
+| Microsoft Cabinet | `MSCF` | XADMaster `XADCABParser.m` |
+| Zoo | dc a7 c4 fd **at 0x14** | XADMaster `XADZooParser.m`, deark `zoo.c` |
+| ar / `.deb` | `!<arch>` 0a | deark `ar.c`, `de_identify_ar` |
+| cpio | `070707`, `070701`, `070702`, or the binary magic in either byte order | deark `cpio.c`, `identify_cpio_internal` |
+| ARJ | 60 ea at 0, header size 32..2600, header CRC-32 | XADMaster `XADARJParser.m` (the CRC), deark `arj.c` (the bounds) |
 
-**Measured.** 138 real disk images are on this machine — Retro68's 800K test
-volumes, the emulator tiers' HFS and Apple-partitioned disks up to 2 GB, two
-1.44 MB Macintosh Garden floppy images, and a 224 MB Toast hybrid CD. 116 are
-HFS and 19 Apple-partitioned, and **all 135 are named**; the other three are
-two Disk Copy 4.2 files, which the older probe names, and one NDIF fork
-(below). **0 false positives across the 940 fixtures**, which is the
-measurement the Disk Copy and AppleLink probes were held to.
+**What grades them** (`tools/run_foreign.py`, in `ci.sh`): archives written
+here by bzip2, xz, 7z, cpio in its three header shapes and ar — each one then
+opened by p7zip, so the subject is known to be a real archive before the probe
+is asked about it; synthetic Zoo, ARJ and Cabinet headers identified by
+**deark**; and every corroborating field spoiled in turn, each of those
+negatives mutation-tested against a probe with that field removed. **0 false
+positives across the 940 fixtures.**
 
-**What is not named, and why.**
+**RAR and RAR 5 are the two with no oracle in `ci.sh`** — nothing here writes
+one, deark has no module for them, and p7zip will not identify a stub it
+cannot parse. Measured once instead, on **2026-08-27**:
+`test_read_format_rar.rar`, `test_read_format_rar5_stored.rar` and
+`test_read_format_cab_filename_cp932.cab` from libarchive's test suite
+(uudecoded by this engine's own `.uu` reader), all three named correctly and
+all three parseable by p7zip. They are not in the corpus, so `ci.sh` does not
+repeat it.
 
-- **NDIF and UDIF (`.dmg`, compressed `.img`, `.smi`).** An NDIF data fork
-  carries no signature at all: it opens straight into compressed data and the
-  chunk map is a `bcem` resource (DECISIONS.md, Now Compress — the decoder is
-  in `tools/vmac/nowcompress.py`, not the engine). Measured on the one NDIF
-  here, whose 1,357,517-byte fork is not even a whole number of sectors.
-  UDIF's `koly` trailer has no reference implementation in `reference/`, and
-  rule #1 applies. A raw `.dmg` — Apple-partitioned or bare HFS+ — is named
-  by the table above.
-- **MFS**, the 400K single-directory filesystem: no reference here reads it.
-- **HFS+ has no specimen and no oracle.** deark reads the two signatures but
-  parses no further, and nothing on this machine writes an HFS+ volume. The
-  one within reach is the Mac OS 9 guest's own boot volume, and it reads
-  `"BD"` at 1024 — an HFS wrapper with the HFS+ volume inside it (measured on
-  `MacOS9.img`'s single `Apple_HFS` partition) — so the HFS branch is what
-  claims it. **Hypothesis, on one volume:** that is what Mac OS 8.1–9 does
-  with every HFS+ volume it makes, and the bare `"H+"` form is Mac OS X-era
-  tooling's. The branch is graded by hand-built headers only (TESTING.md,
-  *Disk images*).
-- **`.cpgz` needs nothing.** It is gzip, is named Gzip, and unwraps to the
-  cpio inside it — a modern PC format, out by the brief.
+**Both front ends say the name.** The CLI prints *"recognized as RAR, which
+v1 cannot extract"*; the Macintosh application's alert reads **"unclassic
+cannot open RAR files."**, photographed on System 6.0.8 on 2026-08-27
+(`tools/vmac/README.md`, *Photographing the detect-only alert*). That
+sentence is the point of the whole file: the archive is intact, and the next
+move is a program that opens it.
+
+**Five are still unnamed** — zstd, lzip, brotli, lrzip and WIM — because no
+implementation or spec for them is in `reference/`, and rule #1 does not bend
+for a constant that would be easy to look up (OPEN_ITEMS.md, part 2). A
+`.zipx` needs nothing: it is a zip, the zip probe claims it, and its entries
+are refused one at a time by method. A `.cpgz` is gzip, the gzip layer unwraps
+to the cpio inside it, and that cpio is now named too.
 
 ## Envelope auto-unwrap
 

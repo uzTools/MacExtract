@@ -3547,6 +3547,7 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
     Progress pr;
     UncProgress prog;
     int ret, entries, errors;
+    UncFormat topFmt = UNC_FORMAT_UNKNOWN;
 
     pr.dlg = GetNewDialog(kProgressDLOG, NULL, (WindowPtr)-1);
     pr.cancelled = false;
@@ -3609,6 +3610,10 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
 
         BlockMoveData(name, curName, name[0] + 1);
         delName[0] = 0;
+        /* What the FIRST layer turned out to be, kept for the alert: a
+         * file this engine names but cannot open is the one failure whose
+         * answer is a different program, and the name is the answer. */
+        shape.fmt = UNC_FORMAT_UNKNOWN;
 
         /* Once per operation, not once per layer: these three are what
          * the alert at the end is built from, and an envelope chain runs
@@ -3624,6 +3629,7 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
             ret = RunExtract(curVol, curDir, curName, outVol, outDir,
                              vRefNum, dirID,
                              &prog, &entries, &errors, &shape);
+            if (depth == 0) topFmt = shape.fmt;
             /* This layer worked, so the envelope it came out of is
              * litter now. Removed before the next layer runs, so a
              * chain does not leave a trail of intermediates. */
@@ -3719,6 +3725,22 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
          * one piece that big, so a bigger memory size need not help. */
         ShowNote(kErrorALRT, "\pMemory is too broken up. "
                              "Quit other programs and try again.");
+    else if (ret == UNC_ERR_UNSUPPORTED && entries == 0 &&
+             topFmt != UNC_FORMAT_UNKNOWN && !unc_format_extractable(topFmt)) {
+        /* Ahead of the generic message, and the reason detect-only exists
+         * at all: this file is not damaged and re-downloading it will not
+         * help — it is a format somebody else's program opens. Naming it
+         * is the whole of what this program can contribute to a file it
+         * will never extract (DECISIONS.md 2026-08-27). Kept short: the
+         * alert wraps between 32 and 36 characters, and the longest name
+         * in the table makes 46. */
+        Str255 s;
+        s[0] = 0;
+        PStrCat(s, "unclassic cannot open ");
+        PStrCat(s, unc_format_name(topFmt));
+        PStrCat(s, " files.");
+        ShowNote(kErrorALRT, s);
+    }
     else if (ret != UNC_OK)
         ShowNote(kErrorALRT, "\pThis file could not be extracted.");
     else if (gUnsupported)

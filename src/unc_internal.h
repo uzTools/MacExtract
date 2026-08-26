@@ -835,12 +835,13 @@ int unc_arc_extract(UncCtx *c);
 int unc_lzh_probe(const uint8_t *head, int32_t len);
 int unc_lzh_extract(UncCtx *c);
 
+/* Foreign archives (fmt_foreign.c): PC-side formats named but never
+ * extracted. One probe for all of them; returns the format or
+ * UNC_FORMAT_UNKNOWN. Head buffer only, no io. */
+UncFormat unc_foreign_probe(const uint8_t *head, int32_t len);
+
 /* Detect-only probes */
 int unc_sitx_probe(const uint8_t *head, int32_t len);
-int unc_diskcopy_probe(const uint8_t *head, int32_t len, UncIO *io);
-/* Every other disk image. All four volume signatures sit past the sniff
- * window, so `head` is unused and the probe reads through io. */
-int unc_diskimage_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_nowcompress_probe(const uint8_t *head, int32_t len);
 int unc_superdisk_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_spacesaver_probe(const uint8_t *head, int32_t len);

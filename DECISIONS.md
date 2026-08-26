@@ -131,6 +131,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-26 — base64 and MIME, and an oracle that is wrong three times
 - 2026-08-26 (the btoa translator, by Apple event) — the door nobody tried
 - 2026-08-26 (disk images) — read the volume, not the extension
+- 2026-08-27 — a name is only worth something inside the frame the user came with
 
 ---
 
@@ -7453,3 +7454,71 @@ The two things still unnamed are **compressed** images, and the NDIF one is
 measured rather than assumed: the one NDIF file here opens straight into
 compressed data, its chunk map is a `bcem` resource, and its fork is not even
 a whole number of sectors. UDIF wants a reference (OPEN_ITEMS.md, part 2).
+
+## 2026-08-27 — a name is only worth something inside the frame the user came with
+
+Yesterday's disk-image probe was removed the day after it shipped, and nine
+PC-side archive formats were named in its place. Both halves come out of one
+observation, which arrived as a question about the first: *a known format that
+is not extracted is treated exactly the same way an unknown one is — nothing
+is extracted either way, and it does not change what the user can do about
+it.*
+
+**That was true as stated, and measurable.** On the Macintosh application the
+two paths were byte-identical: no output, and *"This file could not be
+extracted."* — the same sentence a corrupt archive gets. The envelope-unwrap
+chain behaves the same for both (`!unc_format_extractable(inner)` breaks the
+loop either way). The whole difference was one line of CLI text and the error
+code a library caller sees, `UNC_ERR_UNSUPPORTED` against `UNC_ERR_FORMAT`.
+640 bytes of 68000 code for that.
+
+**Where it stops being true is the user's frame.** Somebody who opens an
+unarchiver is telling you they believe they have an archive. Inside that
+frame a name is an instruction: *"unclassic cannot open RAR files"* says the
+download is fine and sends them to a program that opens it, where *"not
+recognized"* says the file is broken and sends them to download it again.
+Outside that frame a name is trivia: a disk image is not an archive, so
+naming one leaves the user exactly where silence does — a different program
+either way, and nothing this one can do.
+
+So the test for detect-only is not "can we identify it?" but **"is the user
+already in the frame where the name is an instruction?"** Archives yes, disk
+images no. Disk Copy 4.2 had been detect-only since M9 and went out with the
+new probe, for the same reason and on the same day.
+
+### Naming the archives is nine `if`s, and the references were already here
+
+`reference/XADMaster` recognises RAR (three generations), 7-Zip, xz, bzip2,
+Cabinet, Zoo and ARJ; `reference/deark` recognises ar, cpio, Zoo and ARJ.
+Every constant in `src/fmt_foreign.c` is transcribed from one of those, with
+the function it came from named in the comment. Five formats stayed out for
+having no reference in the tree — zstd, lzip, brotli, lrzip, WIM — and rule #1
+does not bend for a magic number that would be easy to look up (OPEN_ITEMS.md,
+part 2).
+
+**A specimen that the oracle cannot parse proves nothing about a probe.**
+bzip2, xz, 7z, cpio and ar are written here by their own tools, and the suite
+then asserts that **p7zip opens each one** before believing the probe's
+answer about it. Zoo, ARJ and Cabinet are hand-built headers that deark must
+identify. RAR and RAR 5 have no oracle in `ci.sh` at all — no writer here, no
+deark module, and p7zip declines to name a stub it cannot parse — so they were
+measured once against real archives out of libarchive's test suite, which this
+engine's own uuencode reader decoded, and the docs say so rather than implying
+a suite covers it.
+
+### The alert is what makes any of this real
+
+The argument above only holds if the sentence reaches the user, and until
+today it did not: the Mac shell had never said what a detect-only file was,
+for any of the five formats it could name, since M9. It does now, and it is
+photographed on System 6.0.8 — **"unclassic cannot open RAR files."** The
+string is built from `unc_format_name`, so the longest name in the table draws
+46 characters against the ~60 the alert wraps at.
+
+**The code was moved rather than deleted.** `attic/` keeps the disk-image
+probes, their unit tests and their suite verbatim, with a README saying what
+putting them back would take, because nothing about them was wrong: 135 real
+images named, 0 false positives, four branches each mutation-tested. What
+changed was the answer to whether they belonged in the product, and that is a
+different fact about the same code. `UNC_FORMAT_DISKCOPY_RETIRED` stays in the
+public enum as a reserved slot so that no enumerator after it moved.

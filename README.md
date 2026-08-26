@@ -92,11 +92,10 @@ half its key in the file's resource fork, so a copy that lost the fork
 somewhere cannot be opened by anything.
 
 **Recognises but does not extract:** StuffIt X, AppleLink packages
-(`.pkg`) and disk images — Disk Copy 4.2 (`.image`), and the HFS, HFS+,
-Apple-partitioned and ISO 9660 kind however they are named (`.img`,
-`.iso`, `.cdr`, `.toast`, an uncompressed `.dmg`). It tells you what the
-file is rather than failing obscurely; opening a disk image is a job for
-a mounter, not an unarchiver.
+(`.pkg`), and the PC-side archives — RAR, 7-Zip, xz, bzip2, Cabinet, Zoo,
+ARJ, cpio and `ar`/`.deb`. You get *"unclassic cannot open RAR files."*
+rather than something that looks like a damaged download: the archive is
+fine, and a modern unarchiver will open it.
 
 **Archives split across floppies** are joined for you: StuffIt, Compact Pro
 and DiskDoubler `SPLT` sets, spanned zip (`.z01` … `.zip`) and plain

@@ -42,15 +42,17 @@ grown before, on request.
 | Compression | not implemented | this is an extractor |
 | StuffIt X (`.sitx`) | **detect-only** | out by the brief |
 | PKWARE "strong encryption" in a zip (flag 0x40) | **named, refused per entry** | its key material is in a record nothing here parses, and XADMaster refuses it too. Every OTHER encryption these formats have — including WinZip's AES, which postdates the machines by a decade and is read anyway — is decrypted since 2026-08-23 (FORMATS.md, *Encryption*) |
-| Disk images | **out by the brief**; **detect-only, and named since 2026-08-26** — Disk Copy 4.2 (`.image`), and HFS, HFS+/HFSX, Apple-partitioned and ISO 9660 volumes however the file is named (`.img`, `.iso`, `.cdr`, `.toast`, a raw `.dmg`) | extracting one means a filesystem, not a codec. Naming one does not: the probes read the volume rather than the extension, at 135 real images named and 0 false positives in 940 fixtures (FORMATS.md, *Disk images*). Compressed images — NDIF, UDIF — are the residue, and want a reference (part 2, section 2) |
+| Disk images (`.image`, `.img`, `.iso`, `.cdr`, `.toast`, `.dmg`, `.smi`) | **not recognised**, since 2026-08-27, and not extracted | extracting one means a filesystem rather than a codec, and NAMING one turned out to be worth nothing either: a disk image is not an archive, so telling a user who came to an unarchiver "this is a disk image" leaves them exactly where "not recognized" does — nothing extracted, and the next move is a different program in both cases. Disk Copy 4.2 had been detect-only since M9 and went the same day, for the same reason. The probes are complete, graded and kept in `attic/` (DECISIONS.md 2026-08-27) |
 | PMarc (`-pm0-`, `-pm1-`, `-pm2-`) and `-lhx-` | **not recognised** | a different family behind an LZH-shaped header. PMarc is a Japanese PC format with its own coders, `-lhx-` is UNLHA32's extension; neither reached a Macintosh, and LZH itself only just did (2026-08-23) |
 | Self-extracting LZH (an executable with an archive behind it) | **not recognised** | the archive sits behind DOS, Amiga, Atari or X68000 machine code, and finding it means knowing each of those loaders. `unar` has a parser per platform; here the answer is to hand the `.lzh` itself to the extractor |
-| RAR, 7z, bzip2, xz, and the rest of Keka's modern list (lzip, zstd, brotli, lrzip, AAR, WIM, zipx, cab, msi, cpio, pax, …) | **not recognised** | modern, PC-side formats. None of them is a Macintosh archive format, none carries a resource fork or Finder metadata, and every one is served by a maintained extractor on any machine that can run one. A file in one of these beside classic Mac software is a wrapper somebody applied recently, and unwrapping it is that tool's job, not this one's (raised 2026-08-25, Macintosh Garden forum, *Archive formats*) |
+| RAR, 7z, bzip2, xz, Cabinet, Zoo, ar/`.deb`, cpio, ARJ | **named since 2026-08-27, never extracted** | extraction stays out for the reason it always did: none is a Macintosh archive format, none carries a resource fork or Finder metadata, and every one is served by a maintained extractor on any machine that can run one (raised 2026-08-25, Macintosh Garden forum, *Archive formats*). NAMING them is in, and it is the one thing this program can honestly contribute to a file it will never open: somebody who opens an unarchiver believes they have an archive, so "not recognized" reads as "your file is damaged" and sends them to re-download it, where "unclassic cannot open RAR files" sends them to a program that can (FORMATS.md, *Archives named but not extracted*) |
 | Zip64 for files larger than 4 GB | **read for its COUNTS since 2026-08-25; over-4-GB fields refused per archive**, and `unc_zipseg_describe` still answers `UNC_ERR_UNSUPPORTED` for a spanned set | the entry count, central-directory size and offset are taken from the Zip64 record as `uint32` halves, which is what makes a 70,000-entry archive extract (FORMATS.md, *Size limits*). ADDRESSING past 4 GB is the part that stays out: it would put 64-bit offsets in `UncIO` and every format would pay for them on a 68000. A field whose high half is set returns `UNC_ERR_UNSUPPORTED` (2026-08-14, revised 2026-08-25) |
 
-Everything detect-only is **named** by `unc_sniff`, so a UI can tell the user
-what the file is and extraction returns cleanly unsupported. The CLI says the
-name; the Macintosh application does not yet (part 2, section 6).
+Everything detect-only is **named** by `unc_sniff`, and both front ends say
+the name: the CLI prints *"recognized as RAR, which v1 cannot extract"* and
+the Macintosh application's alert reads *"unclassic cannot open RAR files."*
+(photographed on System 6.0.8, 2026-08-27). Extraction returns cleanly
+unsupported either way.
 
 ## Limits of the formats themselves
 
@@ -123,19 +125,15 @@ An entry here is a claim and takes the same evidence as any other: the ARC 7
 row was filed and disproved the same day, and its specimen was the writer's
 own distribution (BLOCKERS.md, the same date).
 
-- **A COMPRESSED disk image is not named: NDIF and UDIF (`.dmg`,
-  a compressed `.img`, `.smi`).** Missing: a **reference**. The four
-  volume structures behind an uncompressed image are all named since
-  2026-08-26 (FORMATS.md, *Disk images*), and these two are the residue.
-  An NDIF data fork opens straight into compressed data with no
-  signature anywhere in it — its chunk map is a `bcem` resource, measured
-  on the one NDIF file here — so naming it means reading the resource
-  fork, which arrives only inside an envelope this engine already names.
-  UDIF's `koly` trailer is documented outside this tree, and rule #1
-  forbids writing it from memory. **What would close it:** a UDIF reader
-  or spec in `reference/` for the trailer; for NDIF, a decision about
-  whether a resource fork is in the probe's reach at all. Detect-only
-  either way — extraction stays out by the brief.
+- **Five archive formats are still unnamed for want of a reference:
+  zstd, lzip, brotli, lrzip and WIM.** Missing: a **reference**. Nine
+  others were named on 2026-08-27 out of `reference/XADMaster` and
+  `reference/deark` (FORMATS.md, *Archives named but not extracted*);
+  these five have a magic number in the world and none in this tree, and
+  rule #1 does not bend for a constant that is easy to look up. Extraction
+  stays out of scope regardless — this is one `if` per format and a row in
+  a table. **What would close it:** an implementation or spec in
+  `reference/` for any of them.
 
 - **SuperDisk! method 13.** No corpus fixture uses it, and every
   setting of Alysis's own control panel produces method 1 or 6
@@ -300,16 +298,6 @@ own distribution (BLOCKERS.md, the same date).
 
 ## 5. Untested code, named so it is not mistaken for tested
 
-- **The disk-image probe's HFS+/HFSX branch has never seen a real
-  volume.** The other three branches are graded against images written
-  by pycdlib, hformat and deark's own field offsets, and against 135
-  real images here; this one is hand-built headers. Nothing on this
-  machine writes an HFS+ volume, deark reads the signature but parses no
-  further, and the one HFS+ volume within reach — the Mac OS 9 guest's own
-  boot disk — reads `"BD"` at 1024, because it sits inside an HFS wrapper,
-  so the HFS branch claims it instead (FORMATS.md, *Disk images*).
-  **What would close it:** one `.dmg` or `.img` with `"H+"` at 1024.
-
 - **SuperDisk!, where a Huffman region's neighbour begins.** The two
   Alysis implementations disagree with each other by one 32-bit refill
   when a coded flag bitmap ends exactly on a refill: this engine follows
@@ -348,23 +336,3 @@ own distribution (BLOCKERS.md, the same date).
   this is a MANUAL_TESTS.md-shaped question rather than a suite one.
 
 
----
-
-## 6. Not implemented, and nothing blocks it
-
-Neither a reference nor a specimen is missing here — only the code. That is
-what separates this section from section 2, and it is why each entry names
-what would grade it rather than what would close it.
-
-- **The Macintosh application never says WHAT a detect-only file is.** The
-  engine names five of them and the CLI prints the name — *"recognized as
-  disk image, which v1 cannot extract"* — but the Mac shell's result alert
-  falls through to *"This file could not be extracted."*, which is what it
-  also says for a corrupt archive. Telling the user what the file is is the
-  only thing detect-only exists to do, so on the shipped application it
-  currently does nothing. Not specific to disk images: StuffIt X, Disk Copy
-  4.2 and AppleLink packages have read this way since M9. **What would grade
-  it:** the alert photographed on System 6.0.8, the way every other wording
-  in that chain was (BLOCKERS.md, the tier results) — the alert wraps between
-  32 and 36 characters, and `unc_format_name` is a C string the existing
-  `PStrCat` already takes.

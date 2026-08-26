@@ -54,7 +54,10 @@ typedef enum UncFormat {
     /* Detect-only (named so a UI can tell the user what the file is) */
     UNC_FORMAT_SITX,          /* .sitx — StuffIt X (unsupported v1)   */
     UNC_FORMAT_DISKDOUBLER,   /* DiskDoubler (unsupported v1)         */
-    UNC_FORMAT_DISKCOPY,      /* .image — DiskCopy 4.2 disk image     */
+    /* RETIRED 2026-08-27 (attic/), and kept as a reserved slot so that
+     * no enumerator after it changes value: it shipped in every
+     * release up to v0.23.0. unc_sniff never returns it now.       */
+    UNC_FORMAT_DISKCOPY_RETIRED,
     UNC_FORMAT_NOWCOMPRESS,   /* Now Compress archive                 */
     UNC_FORMAT_LZH,           /* .lzh/.lha                            */
 
@@ -90,10 +93,20 @@ typedef enum UncFormat {
     UNC_FORMAT_BASE64,        /* base64, bare or "begin-base64"         */
     UNC_FORMAT_MIME,          /* a MIME message, incl. appledouble      */
 
-    /* Named, not extracted, since 2026-08-26: every disk image that is
-     * not DiskCopy 4.2 — HFS, HFS+/HFSX, Apple-partitioned, ISO 9660 —
-     * however it is named (.iso, .cdr, .toast, .img, a raw .dmg).      */
-    UNC_FORMAT_DISKIMAGE,
+    /* Named, not extracted, since 2026-08-27 (src/fmt_foreign.c). None
+     * of these is a Macintosh format and none is in scope to extract;
+     * what naming them buys is a user who came here with an archive
+     * being told which one it is, instead of "not recognized".      */
+    UNC_FORMAT_RAR,           /* .rar — RAR 1.3/1.4 and 1.5-4.x         */
+    UNC_FORMAT_RAR5,          /* .rar — RAR 5                           */
+    UNC_FORMAT_7Z,            /* .7z                                    */
+    UNC_FORMAT_XZ,            /* .xz                                    */
+    UNC_FORMAT_BZIP2,         /* .bz2                                   */
+    UNC_FORMAT_CAB,           /* .cab — Microsoft Cabinet               */
+    UNC_FORMAT_ZOO,           /* .zoo                                   */
+    UNC_FORMAT_AR,            /* ar / .deb                              */
+    UNC_FORMAT_CPIO,          /* .cpio, and the payload of a .cpgz      */
+    UNC_FORMAT_ARJ,           /* .arj                                   */
 
     UNC_FORMAT__COUNT
 } UncFormat;
