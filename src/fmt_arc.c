@@ -142,8 +142,7 @@ typedef struct ArcDec {
 
     /* RLE90 filter state (XADRLE90Handle). */
     int        rle;          /* filter enabled                        */
-    int        rle_last;
-    int32_t    rle_count;
+    UncRle90   rle90;
 
     /* Squeeze (XADSqueezeHandle). */
     UncBitIn   bit;
@@ -741,22 +740,16 @@ static int arc_raw_byte(ArcDec *d)
  * Source: XADRLE90Handle.m. */
 static int arc_byte(ArcDec *d)
 {
-    int b, c;
-
     if (!d->rle) return arc_raw_byte(d);
-
-    if (d->rle_count) { d->rle_count--; return d->rle_last; }
-
-    b = arc_raw_byte(d);
-    if (b < 0) return b;
-    if (b != 0x90) { d->rle_last = b; return b; }
-
-    c = arc_raw_byte(d);
-    if (c < 0) return c;
-    if (c == 0) { d->rle_last = 0x90; return 0x90; }
-    if (c == 1) return -2;
-    d->rle_count = c - 2;
-    return d->rle_last;
+    for (;;) {
+        int b, v = unc_rle90_take(&d->rle90);
+        if (v >= 0) return v;
+        b = arc_raw_byte(d);
+        if (b < 0) return b;
+        v = unc_rle90_feed(&d->rle90, b);
+        /* A byte, or UNC_ERR_CORRUPT, which this caller reads as < -1. */
+        if (v != UNC_RLE90_MORE) return v;
+    }
 }
 
 /* ------------------------------------------------------------------ */
@@ -774,8 +767,7 @@ static int arc_dec_init(ArcDec *d, UncCtx *c, UncBufIn *in, int method,
     d->method = method & 0x7f;
     d->left = compsize;
     d->rle = 0;
-    d->rle_last = 0;
-    d->rle_count = 0;
+    unc_rle90_init(&d->rle90, 1);
     d->sq_eof = 0;
     d->started = 0;
     d->lzw_open = 0;
@@ -969,21 +961,6 @@ int unc_arc_probe(const uint8_t *head, int32_t len, UncIO *io)
  * plain ARC, the header's data-fork length for ArcMac. A run can straddle
  * the boundary, so it is written in at most two pieces.
  * Source: the fork order is measured, tools/vmac/arcmac.py. */
-static int arc_emit(UncCtx *c, uint32_t at, const uint8_t *buf, int32_t n,
-                    uint32_t dsplit)
-{
-    if (at < dsplit) {
-        int32_t k = (int32_t)(dsplit - at);
-        if (k > n) k = n;
-        if (c->sink->write(c->sink->ctx, UNC_FORK_DATA, buf, k) != 0)
-            return UNC_ERR_SINK;
-        buf += k;
-        n -= k;
-    }
-    if (n > 0 && c->sink->write(c->sink->ctx, UNC_FORK_RSRC, buf, n) != 0)
-        return UNC_ERR_SINK;
-    return UNC_OK;
-}
 
 /* ------------------------------------------------------------------ */
 /* Trimmed (method 0x0a, ARC 7.x) — the OTHER 0x0a                    */
@@ -1008,58 +985,41 @@ static int arc_emit(UncCtx *c, uint32_t at, const uint8_t *buf, int32_t n,
 #define ARC_TRIM_DONE  (-999)
 
 typedef struct ArcTrim {
-    UncCtx  *c;
-    uint8_t  out[512];
-    int32_t  n;
-    uint32_t produced, outsize, dsplit;
-    uint16_t crc;
-    int      write;
-    int      esc, last;          /* RLE90 filter, push side */
+    UncForkOut out;
+    uint8_t    buf[UNC_STAGE];
+    uint32_t   outsize;
+    UncRle90   rle;              /* the filter, driven from the push side */
 } ArcTrim;
 
-static int arc_trim_flush(ArcTrim *t)
-{
-    int err = UNC_OK;
-    if (t->n <= 0) return UNC_OK;
-    t->crc = unc_crc16_arc(t->crc, t->out, t->n);
-    if (t->write)
-        err = arc_emit(t->c, t->produced - (uint32_t)t->n, t->out, t->n,
-                       t->dsplit);
-    t->n = 0;
-    return err;
-}
-
-/* One byte of the FINAL output. */
+/* One byte of the FINAL output, until the entry's declared length is
+ * reached; the LZH layer above has no idea where that is. */
 static int arc_trim_emit(ArcTrim *t, int b)
 {
-    if (t->outsize != UNC_SIZE_UNKNOWN && t->produced >= t->outsize)
+    if (t->outsize != UNC_SIZE_UNKNOWN &&
+        unc_fork_pos(&t->out) >= t->outsize)
         return ARC_TRIM_DONE;
-    t->out[t->n++] = (uint8_t)b;
-    t->produced++;
-    if (t->n == (int32_t)sizeof t->out) return arc_trim_flush(t);
-    return UNC_OK;
+    return unc_fork_put(&t->out, (uint8_t)b);
 }
 
 /* One byte out of the LZH layer, through RLE90. The run count is
  * inclusive of the byte already emitted, as arc_byte() reads it. */
+/* One byte out of the LZH layer, through RLE90 — the same filter the
+ * pull side above runs, driven from the other end. */
 static int arc_trim_put(void *ctx, uint8_t b)
 {
     ArcTrim *t = (ArcTrim *)ctx;
-    int i, err;
+    int v = unc_rle90_feed(&t->rle, b);
+    int err;
 
-    if (t->esc) {
-        t->esc = 0;
-        if (b == 0) { t->last = 0x90; return arc_trim_emit(t, 0x90); }
-        if (b == 1) return UNC_ERR_CORRUPT;
-        for (i = 0; i < (int)b - 1; i++) {
-            err = arc_trim_emit(t, t->last);
-            if (err != UNC_OK) return err;
-        }
-        return UNC_OK;
+    if (v == UNC_RLE90_MORE) return UNC_OK;
+    if (v < 0) return v;
+    err = arc_trim_emit(t, v);
+    while (err == UNC_OK) {
+        v = unc_rle90_take(&t->rle);
+        if (v == UNC_RLE90_MORE) break;
+        err = arc_trim_emit(t, v);
     }
-    if (b == 0x90) { t->esc = 1; return UNC_OK; }
-    t->last = b;
-    return arc_trim_emit(t, b);
+    return err;
 }
 
 static int arc_entry_trimmed(UncCtx *c, UncBufIn *in, uint32_t outsize,
@@ -1070,9 +1030,11 @@ static int arc_entry_trimmed(UncCtx *c, UncBufIn *in, uint32_t outsize,
     uint32_t cap;
     int err;
 
-    t.c = c; t.n = 0; t.produced = 0; t.outsize = outsize;
-    t.dsplit = dsplit; t.crc = 0; t.write = write;
-    t.esc = 0; t.last = 0;
+    unc_fork_out(&t.out, c, UNC_FORK_DATA, write, UNC_CK_CRC16_ARC,
+                 t.buf, UNC_STAGE);
+    unc_fork_split(&t.out, 0, dsplit, dsplit, 0xFFFFFFFFu);
+    t.outsize = outsize;
+    unc_rle90_init(&t.rle, 1);
 
     /* The LZH layer's own output is what RLE90 consumes, and RLE90
      * both expands (a run) and contracts (a literal 0x90, which costs
@@ -1083,13 +1045,13 @@ static int arc_entry_trimmed(UncCtx *c, UncBufIn *in, uint32_t outsize,
     unc_bitin_init(&bi, in);          /* MSB-first, as -lh1- is */
     err = unc_lzah_decode(c->al, &bi, cap, UNC_LZAH_TRIMMED, arc_trim_put, &t);
     if (err == ARC_TRIM_DONE) err = UNC_OK;
-    if (err == UNC_OK) err = arc_trim_flush(&t);
-    else (void)arc_trim_flush(&t);
+    if (err == UNC_OK) err = unc_fork_flush(&t.out);
+    else (void)unc_fork_flush(&t.out);
 
     if (err != UNC_OK) return err;
-    if (outsize != UNC_SIZE_UNKNOWN && t.produced != outsize)
+    if (outsize != UNC_SIZE_UNKNOWN && unc_fork_pos(&t.out) != outsize)
         return UNC_ERR_TRUNCATED;
-    if (t.crc != crc16) return UNC_ERR_CRC;
+    if (t.out.crc16 != crc16) return UNC_ERR_CRC;
     return UNC_OK;
 }
 
@@ -1099,10 +1061,8 @@ static int arc_entry_data(UncCtx *c, UncBufIn *in, int method,
                           int write, uint32_t dsplit)
 {
     ArcDec d;
-    uint8_t out[512];
-    int32_t n = 0;
-    uint32_t produced = 0;
-    uint16_t crc = 0;
+    UncForkOut o;
+    uint8_t out[UNC_STAGE];
     int err;
 
     /* 0x0a is two methods. Which one this archive means was decided
@@ -1113,33 +1073,25 @@ static int arc_entry_data(UncCtx *c, UncBufIn *in, int method,
     err = arc_dec_init(&d, c, in, method, compsize);
     if (err != UNC_OK) { arc_dec_free(&d); return err; }
 
+    unc_fork_out(&o, c, UNC_FORK_DATA, write, UNC_CK_CRC16_ARC,
+                 out, UNC_STAGE);
+    unc_fork_split(&o, 0, dsplit, dsplit, 0xFFFFFFFFu);
+
     for (;;) {
         int b;
-        if (outsize != UNC_SIZE_UNKNOWN && produced >= outsize) break;
+        if (outsize != UNC_SIZE_UNKNOWN && unc_fork_pos(&o) >= outsize) break;
         b = arc_byte(&d);
         if (b == -1) break;
         if (b < -1) { err = UNC_ERR_CORRUPT; break; }
-        out[n++] = (uint8_t)b;
-        produced++;
-        if (n == (int32_t)sizeof out) {
-            crc = unc_crc16_arc(crc, out, n);
-            if (write) {
-                err = arc_emit(c, produced - (uint32_t)n, out, n, dsplit);
-                if (err != UNC_OK) break;
-            }
-            n = 0;
-        }
+        if ((err = unc_fork_put(&o, (uint8_t)b)) != UNC_OK) break;
     }
-    if (err == UNC_OK && n > 0) {
-        crc = unc_crc16_arc(crc, out, n);
-        if (write)
-            err = arc_emit(c, produced - (uint32_t)n, out, n, dsplit);
-    }
+    if (err == UNC_OK) err = unc_fork_flush(&o);
     arc_dec_free(&d);
 
     if (err != UNC_OK) return err;
-    if (outsize != UNC_SIZE_UNKNOWN && produced != outsize) return UNC_ERR_TRUNCATED;
-    if (crc != crc16) return UNC_ERR_CRC;
+    if (outsize != UNC_SIZE_UNKNOWN && unc_fork_pos(&o) != outsize)
+        return UNC_ERR_TRUNCATED;
+    if (o.crc16 != crc16) return UNC_ERR_CRC;
     return UNC_OK;
 }
 

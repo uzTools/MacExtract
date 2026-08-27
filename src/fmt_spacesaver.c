@@ -72,7 +72,8 @@ typedef struct SsHead {
 
 /* Decoder state for one fork. */
 typedef struct SsState {
-    UncStage out;       /* the sink, the fork, and the staging buffer  */
+    UncForkOut out;     /* the sink, the fork, and the staging buffer  */
+    uint8_t  sbuf[UNC_STAGE];
     uint8_t *win;       /* sliding window, circular                    */
     uint32_t wsize;
     uint32_t wmask;     /* wsize - 1: wsize is 1 << wbits, but it is a
@@ -178,11 +179,11 @@ int unc_spacesaver_probe(const uint8_t *head, int32_t len)
 /* ------------------------------------------------------------------ */
 
 /* One decoded byte: staged for the sink, and into the sliding window.
- * The staging half is shared (unc_stage_put); the window is SpaceSaver's
+ * The staging half is shared (unc_fork_put); the window is SpaceSaver's
  * own and is why this is not just a call to it. */
 static int ss_emit(SsState *s, uint8_t b)
 {
-    int e = unc_stage_put(&s->out, b);
+    int e = unc_fork_put(&s->out, b);
     if (e != UNC_OK) return e;
     s->win[s->wpos] = b;
     if (++s->wpos == s->wsize) s->wpos = 0;
@@ -322,7 +323,7 @@ static int ss_alg4(SsState *s, const SsFork *f, uint8_t *iobuf,
         in.limit = f->clen - consumed;
     }
     if (produced != f->ulen) return UNC_ERR_CORRUPT;
-    return unc_stage_flush(&s->out);
+    return unc_fork_flush(&s->out);
 
 ioerr:
     return in.err != UNC_OK ? in.err : UNC_ERR_TRUNCATED;
@@ -632,7 +633,7 @@ static int ss_orig(SsState *s, const SsFork *f, uint8_t *iobuf,
         consumed += plen;
     }
     if (produced != f->ulen) return UNC_ERR_CORRUPT;
-    return unc_stage_flush(&s->out);
+    return unc_fork_flush(&s->out);
 }
 
 /* ------------------------------------------------------------------ */
@@ -1003,7 +1004,7 @@ static int ss_alg3(SsState *s, const SsFork *f, uint8_t *iobuf,
         in.limit = f->clen - consumed;
     }
     if (produced != f->ulen) return UNC_ERR_CORRUPT;
-    return unc_stage_flush(&s->out);
+    return unc_fork_flush(&s->out);
 
 ioerr:
     return in.err != UNC_OK ? in.err : UNC_ERR_TRUNCATED;
@@ -1024,7 +1025,7 @@ static int ss_stored(SsState *s, const SsFork *f)
         if (unc_read_at(c->io, at, s->out.buf, (int32_t)take) != UNC_OK)
             return UNC_ERR_TRUNCATED;
         s->out.len = take;
-        if (unc_stage_flush(&s->out) != UNC_OK) return UNC_ERR_SINK;
+        if (unc_fork_flush(&s->out) != UNC_OK) return UNC_ERR_SINK;
         if (unc_progress_add(&c->ps, take) != UNC_OK) return UNC_ERR_ABORTED;
         at += take;
         left -= take;
@@ -1045,7 +1046,6 @@ static int ss_one_fork(SsState *s, const SsFork *f, uint8_t *iobuf,
     s->win = 0;
     s->m2tab = 0;
     s->a3 = 0;
-    s->out.len = 0;
     switch (m) {
     case 0:  err = ss_stored(s, f); break;
     case 1:
@@ -1105,10 +1105,14 @@ int unc_spacesaver_extract(UncCtx *c)
                 ferr = UNC_ERR_MEM;
             } else {
                 int i;
-                s.out.c = c;
                 for (i = 0; i < 2 && ferr == UNC_OK; i++) {
                     if (h.fork[i].ulen == 0) continue;
-                    s.out.fork = i ? UNC_FORK_RSRC : UNC_FORK_DATA;
+                    /* The guard is this format's: a test-only run
+                     * decodes and checksums but writes nothing. */
+                    unc_fork_out(&s.out, c,
+                                 i ? UNC_FORK_RSRC : UNC_FORK_DATA,
+                                 !c->opt.test_only && !c->opt.list_only,
+                                 UNC_CK_NONE, s.sbuf, UNC_STAGE);
                     ferr = ss_one_fork(&s, &h.fork[i], iobuf, SS_IOBUF);
                 }
                 unc_free(c->al, iobuf);

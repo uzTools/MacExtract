@@ -85,9 +85,7 @@ int unc_btoa_probe(const uint8_t *head, int32_t len)
 
 typedef struct BtoaState {
     UncCtx  *c;
-    uint8_t *obuf;
-    uint32_t ocap, olen;
-    uint32_t written;        /* bytes handed to the sink so far        */
+    UncForkOut out;
     uint32_t want;           /* declared length, or UNC_SIZE_UNKNOWN   */
     /* the three whole-stream checksums (atob.c chksum.h) */
     uint32_t eor, sum, rot;
@@ -99,24 +97,13 @@ typedef struct BtoaState {
     int      err;
 } BtoaState;
 
-static int btoa_flush(BtoaState *s)
-{
-    if (s->olen == 0) return UNC_OK;
-    if (!s->c->opt.test_only &&
-        s->c->sink->write(s->c->sink->ctx, UNC_FORK_DATA, s->obuf,
-                          (int32_t)s->olen) < 0)
-        return UNC_ERR_SINK;
-    s->olen = 0;
-    return UNC_OK;
-}
-
+/* One decoded byte, dropped once the declared length is reached: the
+ * final quad carries up to three bytes the file does not have. */
 static int btoa_put(BtoaState *s, uint8_t b)
 {
-    if (s->want != UNC_SIZE_UNKNOWN && s->written >= s->want) return UNC_OK;
-    s->obuf[s->olen++] = b;
-    s->written++;
-    if (s->olen == s->ocap) return btoa_flush(s);
-    return UNC_OK;
+    if (s->want != UNC_SIZE_UNKNOWN && unc_fork_pos(&s->out) >= s->want)
+        return UNC_OK;
+    return unc_fork_put(&s->out, b);
 }
 
 /* chksum.h, verbatim: xor, sum of (ch + 1), and a rotate-left-1 that
@@ -287,10 +274,8 @@ int unc_btoa_extract(UncCtx *c)
     unc_bufin_init(&in, c->io, &c->ps, iobuf, iocap);
 
     s.c = c;
-    s.obuf = obuf;
-    s.ocap = ocap;
-    s.olen = 0;
-    s.written = 0;
+    unc_fork_out(&s.out, c, UNC_FORK_DATA, !c->opt.test_only,
+                 UNC_CK_NONE, obuf, ocap);
     s.want = UNC_SIZE_UNKNOWN;
     s.eor = s.sum = s.rot = 0;
     s.code = 0;
@@ -389,8 +374,8 @@ int unc_btoa_extract(UncCtx *c)
                 est = UNC_ERR_SINK;
                 break;
             }
-            if (btoa_flush(&s) != UNC_OK) { est = UNC_ERR_SINK; break; }
-            if (s.written != n1) est = UNC_ERR_TRUNCATED;
+            if (unc_fork_flush(&s.out) != UNC_OK) { est = UNC_ERR_SINK; break; }
+            if (unc_fork_pos(&s.out) != n1) est = UNC_ERR_TRUNCATED;
             else if (oeor != s.eor || osum != s.sum || orot != s.rot)
                 est = UNC_ERR_CRC;
             break;
@@ -418,7 +403,7 @@ int unc_btoa_extract(UncCtx *c)
             }
         }
     }
-    if (est != UNC_OK) btoa_flush(&s);
+    if (est != UNC_OK) (void)unc_fork_flush(&s.out);
 
     if (c->sink->end_entry(c->sink->ctx, est) < 0) err = UNC_ERR_SINK;
     unc_free(c->al, iobuf);

@@ -202,13 +202,23 @@ static int sd_need(UncCtx *c, SdBuf *b, uint32_t want)
 }
 
 typedef struct SdState {
-    UncStage out;        /* the sink, the fork, and the staging buffer   */
+    UncForkOut out;      /* the sink, the fork, and the staging buffer   */
+    uint8_t  sbuf[UNC_STAGE];
     SdBuf    in;         /* one block, exactly as the reference reads it */
     SdBuf    flags;      /* the predictor's flag bitmap, when Huffman-coded */
     SdBuf    table;      /* the predictor's context table                 */
     SdBuf    win;        /* SlowFastB's history + the current block       */
     uint32_t winlen;     /* bytes of history live in win                  */
 } SdState;
+
+/* Start one fork's output. The guard is this format's: a list-only or
+ * test-only run decodes and checksums but writes nothing. */
+static void sd_out_start(SdState *s, UncCtx *c, UncFork fork)
+{
+    unc_fork_out(&s->out, c, fork,
+                 !c->opt.test_only && !c->opt.list_only,
+                 UNC_CK_NONE, s->sbuf, UNC_STAGE);
+}
 
 /* ------------------------------------------------------------------ */
 /* Huffman — CODE 2 @0x884                                            */
@@ -383,7 +393,7 @@ static int sd_context(SdState *s, uint32_t ulen, const uint8_t *flags,
     /* The two raw bytes that seed the output but not the context. */
     for (i = 0; i < 2 && done < ulen; i++) {
         if ((e = sd_lit(lits, &b)) != UNC_OK) return e;
-        if ((e = unc_stage_put(&s->out, b)) != UNC_OK) return e;
+        if ((e = unc_fork_put(&s->out, b)) != UNC_OK) return e;
         done++;
     }
 
@@ -400,7 +410,7 @@ static int sd_context(SdState *s, uint32_t ulen, const uint8_t *flags,
             if ((e = sd_lit(lits, &b)) != UNC_OK) return e;
             tbl[ctx] = b;
         }
-        if ((e = unc_stage_put(&s->out, b)) != UNC_OK) return e;
+        if ((e = unc_fork_put(&s->out, b)) != UNC_OK) return e;
         done++;
         nbit--;
         ctx = (ctx << shift) & 0xFFFFu;
@@ -532,7 +542,7 @@ static int sd_slowfastb(SdState *s, const uint8_t *src, uint32_t len,
     if (out != ulen) return UNC_ERR_CORRUPT;
 
     for (out = 0; out < ulen; out++)
-        if ((e = unc_stage_put(&s->out, win[have + out])) != UNC_OK) return e;
+        if ((e = unc_fork_put(&s->out, win[have + out])) != UNC_OK) return e;
 
     /* Slide the history: the last SD_WINDOW bytes of the fork so far. */
     if (have + ulen > SD_WINDOW) {
@@ -639,7 +649,7 @@ static int sd_slowfasta(SdState *s, const uint8_t *src, uint32_t len,
     if (out != ulen) return UNC_ERR_CORRUPT;
 
     for (out = 0; out < ulen; out++)
-        if ((e = unc_stage_put(&s->out, win[have + out])) != UNC_OK) return e;
+        if ((e = unc_fork_put(&s->out, win[have + out])) != UNC_OK) return e;
 
     if (have + ulen > SD_WINDOW) {
         uint32_t drop = have + ulen - SD_WINDOW;
@@ -678,7 +688,7 @@ static int sd_block_body(SdState *s, uint32_t ulen, unsigned method,
         for (i = 0; i < ulen; i++) {
             uint8_t b;
             if ((e = sd_huff_next(&lh, &b)) != UNC_OK) return e;
-            if ((e = unc_stage_put(&s->out, b)) != UNC_OK) return e;
+            if ((e = unc_fork_put(&s->out, b)) != UNC_OK) return e;
         }
         return UNC_OK;
     }
@@ -817,13 +827,13 @@ static int sd_fork(SdState *s, uint32_t at, uint32_t want)
         if (stored) {
             uint32_t n = ulen, off = at + 2;
             if (n > want - done) n = want - done;
-            if ((e = unc_stage_flush(&s->out)) != UNC_OK) return e;
+            if ((e = unc_fork_flush(&s->out)) != UNC_OK) return e;
             while (n > 0) {
                 uint32_t take = n < UNC_STAGE ? n : UNC_STAGE;
                 if (unc_read_at(c->io, off, s->out.buf, (int32_t)take) != UNC_OK)
                     return UNC_ERR_TRUNCATED;
                 s->out.len = take;
-                if ((e = unc_stage_flush(&s->out)) != UNC_OK) return e;
+                if ((e = unc_fork_flush(&s->out)) != UNC_OK) return e;
                 if ((e = unc_progress_add(&c->ps, take)) != UNC_OK) return e;
                 off += take; done += take; n -= take;
             }
@@ -869,7 +879,7 @@ static int sd_fork(SdState *s, uint32_t at, uint32_t want)
         done += ulen;
         at += clen;
     }
-    return unc_stage_flush(&s->out);
+    return unc_fork_flush(&s->out);
 }
 
 /* ------------------------------------------------------------------ */
@@ -888,12 +898,10 @@ static int sd_single(UncCtx *c, const uint8_t *head, uint32_t body)
     rlen = unc_get_u32be(head + 8);
     nlen = head[30];
 
-    s.out.c = c;
     s.in.p = s.flags.p = s.table.p = s.win.p = 0;
     s.in.cap = s.flags.cap = s.table.cap = s.win.cap = 0;
     s.winlen = 0;
-    s.out.len = 0;
-    s.out.fork = UNC_FORK_DATA;
+    sd_out_start(&s, c, UNC_FORK_DATA);
 
     unc_entry_clear(&e);
     unc_entry_set_path(&e, head + 31, nlen);
@@ -926,11 +934,12 @@ static int sd_single(UncCtx *c, const uint8_t *head, uint32_t body)
     if (sret < 0) { err = UNC_ERR_SINK; goto done; }
     if (sret == 0) {
         if (!c->opt.list_only) {
-            if (dlen) { s.out.fork = UNC_FORK_DATA; ferr = sd_fork(&s, body, dlen); }
+            if (dlen) { sd_out_start(&s, c, UNC_FORK_DATA);
+                        ferr = sd_fork(&s, body, dlen); }
             if (ferr == UNC_OK && rlen) {
                 uint32_t rat = body;
                 if (dlen) (void)sd_fork_span(c, body, dlen, &rat);
-                s.out.fork = UNC_FORK_RSRC;
+                sd_out_start(&s, c, UNC_FORK_RSRC);
                 ferr = sd_fork(&s, rat, rlen);
             }
         }
@@ -974,12 +983,10 @@ int unc_superdisk_extract(UncCtx *c)
 
     if ((err = sd_records_start(c->io, &at, &has_module)) != UNC_OK) return err;
 
-    s.out.c = c;
     s.in.p = s.flags.p = s.table.p = s.win.p = 0;
     s.in.cap = s.flags.cap = s.table.cap = s.win.cap = 0;
     s.winlen = 0;
-    s.out.len = 0;
-    s.out.fork = UNC_FORK_DATA;
+    sd_out_start(&s, c, UNC_FORK_DATA);
     unc_path_init(&path);
 
     for (;;) {
@@ -1067,13 +1074,13 @@ int unc_superdisk_extract(UncCtx *c)
             if (sret < 0) { err = UNC_ERR_SINK; break; }
             if (sret == 0) {
                 int ferr = UNC_OK;
-                s.out.len = 0;
                 if (!c->opt.list_only) {
-                    if (dlen) { s.out.fork = UNC_FORK_DATA; ferr = sd_fork(&s, at, dlen); }
+                    if (dlen) { sd_out_start(&s, c, UNC_FORK_DATA);
+                                ferr = sd_fork(&s, at, dlen); }
                     if (ferr == UNC_OK && rlen) {
                         uint32_t rat = at;
                         if (dlen) (void)sd_fork_span(c, at, dlen, &rat);
-                        s.out.fork = UNC_FORK_RSRC;
+                        sd_out_start(&s, c, UNC_FORK_RSRC);
                         ferr = sd_fork(&s, rat, rlen);
                     }
                 }

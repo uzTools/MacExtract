@@ -2045,7 +2045,7 @@ and the call graph comes from the relocations in the linked objects
 
 | | before 2026-08-24 | now |
 |---|---|---|
-| deepest chain in the engine | 6,664 B (`unc_dd_extract` → `dd_fork` → `dd_ddn`) | **3,290 B** |
+| deepest chain in the engine | 6,664 B (`unc_dd_extract` → `dd_fork` → `dd_ddn`) | **3,334 B** |
 | Now Compress chain | 5,632 B | ~1,400 B |
 | largest single frame | 3,740 B (`dd_fork`) | **2,352 B** (`ars_index_build`) |
 
@@ -2055,6 +2055,9 @@ near the machine: `mac/macextract_mac.c` runs
 `SetApplLimit(LMGetApplLimit() - kStackBump)` with `kStackBump` = 24 KB, so
 the shell has **32 KB of stack**, not the 8 KB default. The rule is what keeps
 the engine portable to a host that did not ask for more.
+
+That 3,290 B became 3,334 B on 2026-08-27, when `dd_fork` gained 44 bytes to
+the shared fork writer (DECISIONS.md, *the fork writer and the filter*).
 
 What fixed it: DiskDoubler's three `UncCanon` and Now Compress's two moved to
 the heap (~3.9 KB each, per fork and per archive respectively), and the zip
@@ -2092,6 +2095,13 @@ build falls to `target` 256 there where the newer one holds 512, so part of
 that −70.2 % is a whole rung of the memory-for-time dial rather than cheaper
 instructions. The number a user waits through is the Mac Plus wall clock two
 sections down: 1,898 s → 1,384 s.
+
+**The 2026-08-27 consolidation cost 0.86 % of that back**, measured the same
+way over a 14-fixture set: BinHex +2.3 to +3.6 %, LZH +1.4 %, ARC +0.7 %,
+Compact Pro +0.04 %, StuffIt unchanged, and DiskDoubler **−5.4 %**. That is
+the price of one fork writer and one RLE90 filter in place of nine and five;
+three cheaper shapes were tried first and were worse (DECISIONS.md, *the fork
+writer and the filter*).
 
 **The three envelope rows are the same change and it is not a decoder at all:**
 `unc_macbinary_probe` moved ahead of the 64 KB backwards scan that

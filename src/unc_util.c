@@ -485,15 +485,84 @@ int unc_copy_fork(UncCtx *c, UncFork fork, uint32_t size,
     return UNC_OK;
 }
 
-int unc_stage_flush(UncStage *s)
+void unc_fork_out(UncForkOut *o, UncCtx *c, UncFork fork, int write,
+                  int ck, uint8_t *buf, uint32_t cap)
 {
-    UncCtx *c = s->c;
-    if (s->len == 0) return UNC_OK;
-    if (!c->opt.test_only && !c->opt.list_only &&
-        c->sink->write(c->sink->ctx, s->fork, s->buf, (int32_t)s->len) < 0)
+    o->c = c;
+    o->fork = fork;
+    o->buf = buf;
+    o->cap = cap;
+    o->len = 0;
+    o->written = 0;
+    o->ck = (uint8_t)ck;
+    o->write = (uint8_t)(write != 0);
+    o->split = 0;
+    o->crc16 = 0;
+    o->crc32 = 0;
+    o->dstart = o->dend = o->rstart = o->rend = 0;
+}
+
+void unc_fork_split(UncForkOut *o, uint32_t dstart, uint32_t dend,
+                    uint32_t rstart, uint32_t rend)
+{
+    o->split = 1;
+    o->dstart = dstart;
+    o->dend = dend;
+    o->rstart = rstart;
+    o->rend = rend;
+}
+
+/* The part of the staged run that falls inside [start, end), to `fork`. */
+static int fork_span(UncForkOut *o, UncFork fork, uint32_t start, uint32_t end)
+{
+    uint32_t from = o->written, to = o->written + o->len;
+    if (from < start) from = start;
+    if (to > end) to = end;
+    if (from >= to) return UNC_OK;
+    if (o->c->sink->write(o->c->sink->ctx, fork,
+                          o->buf + (from - o->written),
+                          (int32_t)(to - from)) != 0)
         return UNC_ERR_SINK;
-    s->len = 0;
     return UNC_OK;
+}
+
+int unc_fork_flush(UncForkOut *o)
+{
+    int err = UNC_OK;
+
+    if (o->len == 0) return UNC_OK;
+
+    /* The checksum is over what was DECODED, so it is taken whether or
+     * not the bytes are written: a test-only run and a password
+     * candidate are both graded by it. */
+    switch (o->ck) {
+    case UNC_CK_CRC16_ARC:
+        o->crc16 = unc_crc16_arc(o->crc16, o->buf, (int32_t)o->len);
+        break;
+    case UNC_CK_CRC32_16:
+        o->crc16 = unc_crc16_arc(o->crc16, o->buf, (int32_t)o->len);
+        /* fall through */
+    case UNC_CK_CRC32:
+        o->crc32 = unc_crc32(o->crc32, o->buf, (int32_t)o->len);
+        break;
+    default:
+        break;
+    }
+
+    if (o->write) {
+        if (o->split) {
+            err = fork_span(o, UNC_FORK_DATA, o->dstart, o->dend);
+            if (err == UNC_OK)
+                err = fork_span(o, UNC_FORK_RSRC, o->rstart, o->rend);
+        } else if (o->c->sink->write(o->c->sink->ctx, o->fork, o->buf,
+                                     (int32_t)o->len) < 0) {
+            err = UNC_ERR_SINK;
+        }
+    }
+
+    o->written += o->len;
+    o->len = 0;
+    return err;
 }
 
 /* ------------------------------------------------------------------ */

@@ -33,12 +33,9 @@
 /* ------------------------------------------------------------------ */
 
 typedef struct DdFork {
-    UncCtx  *c;
-    UncFork  fork;
+    UncForkOut out;
     uint32_t left;        /* output bytes still owed */
     uint32_t sum;         /* running byte sum, masked to 16 bits */
-    uint8_t *obuf;
-    uint32_t ocap, olen;
     /* Delta preprocessing (type 1, distance 1): each decompressed byte
      * is an increment on the byte `dist` back. It sits OUTSIDE the
      * checksum, which is why the sum is taken before the transform.
@@ -55,24 +52,18 @@ static void dd_out_start(DdFork *o, UncCtx *c, UncFork fork, uint32_t len,
                          uint8_t *obuf, uint32_t ocap, uint32_t dist)
 {
     uint32_t i;
-    o->c = c; o->fork = fork; o->left = len; o->sum = 0; o->xsum = 0;
+    unc_fork_out(&o->out, c, fork,
+                 !c->opt.test_only && !c->opt.list_only,
+                 UNC_CK_NONE, obuf, ocap);
+    o->left = len; o->sum = 0; o->xsum = 0;
     o->sumadj = 0;
-    o->obuf = obuf; o->ocap = ocap; o->olen = 0;
     o->dist = dist; o->dpos = 0;
     for (i = 0; i < sizeof o->dbuf; i++) o->dbuf[i] = 0;
 }
 
-static int dd_out_flush(DdFork *o)
-{
-    if (o->olen == 0) return UNC_OK;
-    if (!o->c->opt.test_only && !o->c->opt.list_only &&
-        o->c->sink->write(o->c->sink->ctx, o->fork, o->obuf,
-                          (int32_t)o->olen) < 0)
-        return UNC_ERR_SINK;
-    o->olen = 0;
-    return UNC_OK;
-}
-
+/* One decoded byte. The sum and the XOR are taken over what the codec
+ * produced, BEFORE the delta transform, which is why they cannot move
+ * into the shared writer's flush the way a CRC does. */
 static int dd_out_byte(DdFork *o, uint8_t b)
 {
     if (o->left == 0) return UNC_OK;      /* trailing filler is dropped */
@@ -83,10 +74,11 @@ static int dd_out_byte(DdFork *o, uint8_t b)
         o->dbuf[o->dpos & 0xFFu] = b;
         o->dpos++;
     }
-    o->obuf[o->olen++] = b;
-    o->left--;
-    if (o->olen == o->ocap) return dd_out_flush(o);
-    return UNC_OK;
+    {
+        int e = unc_fork_put(&o->out, b);
+        o->left--;
+        return e;
+    }
 }
 
 /* ---- method 0: stored -------------------------------------------- */
@@ -416,39 +408,34 @@ static int dd_m2(DdFork *o, UncCtx *c, UncBufIn *in, int xorval, int ntrees)
  * reference/XADMaster/XADRLE90Handle.m (the same filter, and the
  * escape byte).
  */
-#define DD_RLE_ESC 0x90u
-
 static int dd_rle(DdFork *o, UncBufIn *in, uint32_t complen, int xorval)
 {
-    uint32_t i = 0;
-    int last = 0, err;
+    UncRle90 r;
+    uint32_t left = complen;
+    int err;
 
-    while (i < complen && o->left > 0) {
-        int b = unc_bufin_next(in);
-        if (b < 0) return in->err;
-        i++;
-        if ((uint32_t)b != DD_RLE_ESC) {
-            last = b;
-            if ((err = dd_out_byte(o, (uint8_t)(b ^ xorval))) != UNC_OK)
-                return err;
-            continue;
+    /* Lenient on ESC 1: macutils' dd_rle emits nothing for it rather
+     * than failing (unc_internal.h, RLE90). */
+    unc_rle90_init(&r, 0);
+
+    while (o->left > 0) {
+        int v = unc_rle90_take(&r);
+        if (v < 0) {
+            int b;
+            /* The compressed side is bounded by complen, not by the
+             * stream. An escape still waiting for its count when it
+             * runs out is a truncated stream; anything else is the end
+             * of one. */
+            if (left == 0) return r.esc ? UNC_ERR_TRUNCATED : UNC_OK;
+            left--;
+            b = unc_bufin_next(in);
+            if (b < 0) return in->err;
+            v = unc_rle90_feed(&r, b);
+            if (v == UNC_RLE90_MORE) continue;
+            if (v < 0) return v;
         }
-        if (i >= complen) return UNC_ERR_TRUNCATED;
-        b = unc_bufin_next(in);
-        if (b < 0) return in->err;
-        i++;
-        if (b == 0) {                          /* a literal escape byte */
-            last = (int)DD_RLE_ESC;
-            if ((err = dd_out_byte(o, (uint8_t)(DD_RLE_ESC ^ (uint32_t)xorval))) != UNC_OK)
-                return err;
-            continue;
-        }
-        /* n copies in total, one of which is already out. The count is a
-         * single byte, so a run is bounded by 255 whatever the file
-         * says, and `o->left` bounds it again. */
-        while (--b > 0 && o->left > 0)
-            if ((err = dd_out_byte(o, (uint8_t)(last ^ xorval))) != UNC_OK)
-                return err;
+        if ((err = dd_out_byte(o, (uint8_t)(v ^ xorval))) != UNC_OK)
+            return err;
     }
     return UNC_OK;
 }
@@ -943,7 +930,9 @@ static int dd_fork(UncCtx *c, UncFork fork, uint32_t at, uint32_t complen,
             sub += (uint32_t)b;
         }
         unc_cpt_rle_start(&rle, c, fork, uncomplen, 0, mem + iocap, ocap);
-        rle.want_crc16 = 1;
+        /* This container checks a CRC-16/ARC that Compact Pro
+         * itself does not keep. */
+        rle.out.ck = UNC_CK_CRC32_16;
         if (sub == 0) {
             hz = (CptLzh *)unc_alloc(c->al, (uint32_t)sizeof *hz);
             window = (uint8_t *)unc_alloc(c->al, CPT_DD_WINDOW);
@@ -960,7 +949,7 @@ static int dd_fork(UncCtx *c, UncFork fork, uint32_t at, uint32_t complen,
         unc_free(c->al, window);
         if (err == UNC_OK) err = unc_cpt_rle_flush(&rle);
         if (err == UNC_OK && rle.remaining != 0) err = UNC_ERR_TRUNCATED;
-        if (err == UNC_OK && crc != 0 && rle.crc16 != crc) err = UNC_ERR_CRC;
+        if (err == UNC_OK && crc != 0 && rle.out.crc16 != crc) err = UNC_ERR_CRC;
         unc_free(c->al, mem);
         return err;
     } else if (m == 1) {
@@ -1028,7 +1017,7 @@ m2done: ;
         err = dd_store(&o, &in, complen);
     }
 
-    if (err == UNC_OK) err = dd_out_flush(&o);
+    if (err == UNC_OK) err = unc_fork_flush(&o.out);
     if (err == UNC_OK && o.left != 0) err = UNC_ERR_TRUNCATED;
     /* Methods 0..5 carry a 16-bit sum of the decompressed bytes; the
      * AD and DD methods carry per-block XORs instead and store 0 here.

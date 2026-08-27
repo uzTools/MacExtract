@@ -109,43 +109,27 @@ void unc_cpt_rle_start(CptRle *r, UncCtx *c, UncFork fork,
                           uint32_t outlen, uint32_t crc,
                           uint8_t *obuf, uint32_t ocap)
 {
-    r->c = c;
-    r->fork = fork;
+    unc_fork_out(&r->out, c, fork, !c->opt.test_only, UNC_CK_CRC32,
+                 obuf, ocap);
+    r->out.crc32 = crc;
     r->remaining = outlen;
-    r->crc = crc;
     r->state = CPT_RLE_NONE;
     r->saved = 0;
-    r->obuf = obuf;
-    r->ocap = ocap;
-    r->quiet = 0;
-    r->olen = 0;
     r->err = UNC_OK;
-    r->crc16 = 0;
-    r->want_crc16 = 0;
 }
 
 int unc_cpt_rle_flush(CptRle *r)
 {
-    if (r->olen == 0) return UNC_OK;
-    r->crc = unc_crc32(r->crc, r->obuf, (int32_t)r->olen);
-    if (r->want_crc16)
-        r->crc16 = unc_crc16_arc(r->crc16, r->obuf, (int32_t)r->olen);
-    if (!r->c->opt.test_only && !r->quiet &&
-        r->c->sink->write(r->c->sink->ctx, r->fork, r->obuf,
-                          (int32_t)r->olen) < 0) {
-        r->err = UNC_ERR_SINK;
-        return r->err;
-    }
-    r->olen = 0;
-    return UNC_OK;
+    int e = unc_fork_flush(&r->out);
+    if (e != UNC_OK) r->err = e;
+    return e;
 }
 
 static int cpt_rle_emit(CptRle *r, uint8_t b)
 {
-    r->obuf[r->olen++] = b;
+    int e = unc_fork_put(&r->out, b);
     r->remaining--;
-    if (r->olen == r->ocap) return unc_cpt_rle_flush(r);
-    return UNC_OK;
+    return e;
 }
 
 /* Feed one post-LZ byte through the RLE state machine. */
@@ -424,13 +408,15 @@ static int cpt_fork(UncCtx *c, UncFork fork, uint32_t vol, uint32_t at,
     }
 
     unc_cpt_rle_start(&rle, c, fork, outlen, *crc, obuf, ocap);
-    rle.quiet = quiet;
+    /* A password candidate is graded by the CRC alone; it must not
+     * reach the sink. */
+    if (quiet) rle.out.write = 0;
     if (lzh) err = unc_cpt_lzh_fork(&rle, &in, hz, window, CPT_BLOCK);
     else     err = unc_cpt_rle_fork(&rle, &in, complen);
     if (err == UNC_OK && rle.remaining > 0) err = UNC_ERR_TRUNCATED;
     if (err == UNC_OK || err == UNC_ERR_TRUNCATED || err == UNC_ERR_CORRUPT)
         if (unc_cpt_rle_flush(&rle) != UNC_OK) err = rle.err;
-    *crc = rle.crc;
+    *crc = rle.out.crc32;
     return err;
 }
 

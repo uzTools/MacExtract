@@ -109,8 +109,7 @@ typedef struct BhDec {
     uint8_t  prev_bits;
     int      eof;         /* saw terminating ':' */
     /* RLE layer */
-    uint8_t  rle_byte;
-    uint32_t rle_num;
+    UncRle90 rle;
     int      err;         /* sticky decoder error */
 } BhDec;
 
@@ -124,8 +123,7 @@ static void bh_init(BhDec *d, UncCtx *c, uint8_t *storage, uint32_t cap)
     d->phase = 0;
     d->prev_bits = 0;
     d->eof = 0;
-    d->rle_byte = 0;
-    d->rle_num = 0;
+    unc_rle90_init(&d->rle, 1);
     d->llen = d->lpos = 0;
     d->err = UNC_OK;
 }
@@ -228,29 +226,25 @@ static int bh_decode_byte(BhDec *d)
 /* Next fully decoded byte (post-RLE). 0x90 <count>: count==0 emits a
  * literal 0x90; count==1 is illegal; else the previous byte repeats
  * count-1 more times. */
+/* Next fully decoded byte (post-RLE), or -1 with d->err set.
+ *
+ * The loop is the cheapest of three shapes measured here: straight-line
+ * (two inlined unc_rle90_feed bodies) and a fast/slow split both grew
+ * this past the point where gcc inlines it into bh_fork, and cost 10 %
+ * and 4 % of a .hqx run against this one's 2-3 %. DECISIONS.md
+ * 2026-08-27, the fork writer and the filter. */
 static int bh_next(BhDec *d)
 {
-    int byte, count;
     if (d->err != UNC_OK) return -1;
-    if (d->rle_num) {
-        d->rle_num--;
-        return d->rle_byte;
+    for (;;) {
+        int b, v = unc_rle90_take(&d->rle);
+        if (v >= 0) return v;
+        b = bh_decode_byte(d);
+        if (b < 0) return -1;                    /* d->err is set */
+        v = unc_rle90_feed(&d->rle, b);
+        if (v >= 0) return v;
+        if (v != UNC_RLE90_MORE) { d->err = UNC_ERR_CORRUPT; return -1; }
     }
-    byte = bh_decode_byte(d);
-    if (byte < 0) return -1;
-    if (byte != 0x90) {
-        d->rle_byte = (uint8_t)byte;
-        return byte;
-    }
-    count = bh_decode_byte(d);
-    if (count < 0) return -1;
-    if (count == 0) {
-        d->rle_byte = 0x90;
-        return 0x90;
-    }
-    if (count == 1) { d->err = UNC_ERR_CORRUPT; return -1; }
-    d->rle_num = (uint32_t)count - 2;
-    return d->rle_byte;
 }
 
 /* ------------------------------------------------------------------ */
@@ -362,8 +356,7 @@ static void bh_reset(BhDec *d)
     d->phase = 0;
     d->prev_bits = 0;
     d->eof = 0;
-    d->rle_byte = 0;
-    d->rle_num = 0;
+    unc_rle90_init(&d->rle, 1);
     d->err = UNC_OK;
 }
 

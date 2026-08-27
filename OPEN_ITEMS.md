@@ -265,60 +265,31 @@ all** (BLOCKERS.md, the ARC 7 row, filed and disproved the same day).
 **Nothing here is a defect.** Every format extracts byte-exact; what is
 filed is that the code AROUND the codecs is copied rather than shared, and
 what that has already cost. The codecs are not the subject — those are
-different algorithms and stay that way. The reasoning, and the four
+different algorithms and stay that way. The reasoning, and the six
 differences that are NOT duplication, are in DECISIONS.md 2026-08-27
-(*the scaffolding audit*).
+(*the scaffolding audit*, and *the fork writer and the filter*).
 
-- **Six fork writers.** `SitFork`, `DdFork`, `LzhOut`, `CptRle`,
-  `BtoaState` and `ArcTrim` are one type written six times: a staging
-  buffer, a checksum, a `flush()` that guards on the options and calls
-  `sink->write`, and a `put()` that flushes when the buffer is full. They
-  differ on four axes and nothing else — which checksum, whether output
-  stops at a declared length, one fork or two spans, and how "write or
-  don't" is spelled. That last is spelled **four ways**: `!test_only`
-  (StuffIt, btoa), `!test_only && !list_only` (DiskDoubler, and `UncStage`
-  for SpaceSaver and SuperDisk!), a `write` flag the caller sets (LZH,
-  ARC), and `!test_only && !quiet` (Compact Pro, where `quiet` grades a
-  password candidate). Nothing is wrong today only because every caller
-  ALSO wraps decode in `if (!opt.list_only)`: the rule is enforced twice,
-  which is how it came to be written four ways without anything noticing.
-  **What would close it:** one `UncForkOut` over those four axes.
-  `int (*put)(void *, uint8_t)` is already the shared convention —
-  `unc_lzah_decode`, `unc_lzdyn_decode` and `unc_arsenic_decode` all take
-  one, and `UncStage` (`unc_util.c`) is the staging third of it already
-  written. **Read to the closing brace of each before merging any two:**
-  two of these look alike for eight lines and then stop (DECISIONS.md
-  2026-08-27, *the scaffolding audit*).
+- **SpaceSaver's Huffman builder checks less than the shared one does.**
+  `ss_a3_build` rejects an over-subscribed table with
+  `code > (1u << (L + 1))` where `unc_canon_build_ext` uses
+  `space > (1u << l)`, which is the stricter and the correct test. It has
+  never been shown to matter — 160 corrupted variants and 44 forks from
+  Aladdin's own compressor pass either way — and it is NOT closed by
+  sharing the builder, which was measured and declined (DECISIONS.md
+  2026-08-27, *the fork writer and the filter*). **What would close it:**
+  the stricter test, and a corrupted-variant run to show nothing real
+  depended on the looser one.
 
-- **Five RLE90 filters.** `sit_rle90`, `bh_next`, `dd_rle`, `arc_byte` and
-  `arc_trim_put`. Two are pull-shaped, two push-shaped and one a bulk loop,
-  which is why they were never shared. They have also drifted: ESC-1 is
-  `UNC_ERR_CORRUPT` in StuffIt, BinHex and ARC, and a silently accepted
-  no-op in `dd_rle`. That may well be right for DiskDoubler — macutils'
-  `dd_rle` is its reference — but as written it cannot be told apart from
-  an oversight. **What would close it:** one filter parameterised on escape
-  byte and strictness, so the difference is an argument rather than an
-  accident.
-
-- **Smaller, and mechanical.** A canonical-Huffman builder written twice:
-  `ss_a3_build`/`ss_a3_sym` reimplements `unc_canon_build_ext`/
-  `unc_canon_decode` for one reason — the symbol order its own quicksort
-  produces — and carries a weaker over-subscription check as a result
-  (`code > (1u << (L + 1))` against the shared `space > (1u << l)`); a
-  builder taking a pre-ordered symbol list would leave `fmt_spacesaver.c`
-  holding only the sort. `sd_huff_bit` hand-rolls the MSB-first bit reading
-  that `UncBitIn` over `unc_bufin_init_mem` already does, which is the
-  shape `NowBits` in `fmt_now.c` uses — with one behaviour to settle first,
-  that `sd_huff_bit` fails a stream ending mid-word where `UncBitIn` pads.
-  Probes come in three signatures, which is why `unc_sniff` is a 120-line
-  if-chain rather than a walk over an ordered table; the ordering it argues
-  for is the valuable part of it and survives as table-row comments.
-  `dd_fork` repeats the same `unc_alloc` / `unc_bufin_init` /
-  `dd_out_start` prologue in nine branches — nine `unc_bufin_init` calls
-  in that one function — where a per-method "extra bytes" table would hoist
-  all three out. `unc_segment.c` dispatches on `desc->scheme` at six sites
-  and both hosts do it again, though the per-scheme functions
-  (`unc_ddseg_match`, `unc_cptseg_match`, `unc_ddseg_payload`, the four
-  `*_describe`) already exist and would fill a vtable as they stand. And
-  `4096` is a bare literal in eleven files; `fmt_spacesaver.c` is the one
-  that names it.
+- **Smaller, and mechanical.** Probes come in three signatures, which is
+  why `unc_sniff` is a 120-line if-chain rather than a walk over an
+  ordered table; the ordering it argues for is the valuable part of it
+  and survives as table-row comments. `dd_fork` repeats the same
+  `unc_alloc` / `unc_bufin_init` / `dd_out_start` prologue in nine
+  branches — nine `unc_bufin_init` calls in that one function — where a
+  per-method "extra bytes" table would hoist all three out.
+  `unc_segment.c` dispatches on `desc->scheme` at six sites and both
+  hosts do it again, though the per-scheme functions (`unc_ddseg_match`,
+  `unc_cptseg_match`, `unc_ddseg_payload`, the four `*_describe`)
+  already exist and would fill a vtable as they stand. And `4096` is a
+  bare literal in eleven files; `fmt_spacesaver.c` is the one that names
+  it.

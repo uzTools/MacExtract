@@ -687,35 +687,161 @@ int unc_copy_fork(UncCtx *c, UncFork fork, uint32_t size,
                   uint8_t *buf, uint32_t bufsz);
 
 /* ------------------------------------------------------------------ */
-/* Output staging                                                     */
+/* RLE90                                                              */
 /*                                                                    */
-/* A decoder that produces one byte at a time hands the sink runs      */
-/* rather than bytes. SpaceSaver and SuperDisk! wrote the same pair    */
-/* of functions for it; the rest of the engine still has its own       */
-/* (OPEN_ITEMS.md, part 2 section 4, *eight fork writers*).            */
+/* An escape byte followed by a count: ESC 0 is a literal escape, and  */
+/* ESC n means the byte before it stands n times in total, so n-1      */
+/* more follow the one already out. Five formats here run it —         */
+/* StuffIt method 1, BinHex, DiskDoubler method 3, and ARC both        */
+/* before and after its LZH layer — and each had written it out.       */
+/*                                                                    */
+/* They agreed on everything except ESC 1, a run of one that no        */
+/* encoder emits: four call it corrupt, and DiskDoubler's reference    */
+/* (macutils' dd_rle, whose `while (--b > 0)` simply emits nothing)    */
+/* lets it pass. That is the `strict` flag, and it is the whole of the */
+/* difference — which is worth knowing, because five copies could not  */
+/* say whether it was a decision or a slip (OPEN_ITEMS.md, part 2      */
+/* section 4).                                                        */
+/*                                                                    */
+/* Source: reference/XADMaster/XADRLE90Handle.m.                       */
 /* ------------------------------------------------------------------ */
 
+#define UNC_RLE90_ESC  0x90
+#define UNC_RLE90_MORE (-256)   /* nothing to emit; feed another raw byte */
+
+typedef struct UncRle90 {
+    uint8_t  last;      /* the byte a run repeats                      */
+    uint8_t  esc;       /* an escape is waiting for its count byte     */
+    uint8_t  strict;    /* nonzero: ESC 1 is UNC_ERR_CORRUPT           */
+    uint16_t run;       /* bytes still owed by the run in progress     */
+} UncRle90;
+
+static inline void unc_rle90_init(UncRle90 *r, int strict)
+{
+    r->last = 0;
+    r->esc = 0;
+    r->strict = (uint8_t)(strict != 0);
+    r->run = 0;
+}
+
+/* The two halves are inline and take no callback, which is the whole
+ * shape of this: the caller reads its own source and writes its own
+ * output, so nothing here is reached through a pointer. Measured —
+ * a callback version of the same filter cost a .hqx run 15 %, because
+ * BinHex puts every byte it decodes through it (DECISIONS.md
+ * 2026-08-27, the fork writer and the filter). */
+
+/* The next byte of a run in progress, or UNC_RLE90_MORE if none is. */
+static inline int unc_rle90_take(UncRle90 *r)
+{
+    if (!r->run) return UNC_RLE90_MORE;
+    r->run--;
+    return r->last;
+}
+
+/* Feed one RAW byte. Returns the byte to emit, UNC_RLE90_MORE when
+ * there is nothing yet (the escape was consumed, or a lenient run of
+ * one produced nothing), or UNC_ERR_CORRUPT. A run that starts here
+ * yields its first byte; unc_rle90_take drains the rest.
+ *
+ * After a raw byte that was the escape, r->esc stays set until the
+ * count arrives — which is how a caller tells a stream that ended
+ * cleanly from one that ended holding an escape. DiskDoubler is the
+ * only reader that has to make that distinction. */
+static inline int unc_rle90_feed(UncRle90 *r, int b)
+{
+    if (r->esc) {
+        r->esc = 0;
+        if (b == 0) { r->last = UNC_RLE90_ESC; return UNC_RLE90_ESC; }
+        if (b == 1) return r->strict ? UNC_ERR_CORRUPT : UNC_RLE90_MORE;
+        r->run = (uint16_t)(b - 2);
+        return r->last;
+    }
+    if (b == UNC_RLE90_ESC) { r->esc = 1; return UNC_RLE90_MORE; }
+    r->last = (uint8_t)b;
+    return b;
+}
+
+/* ------------------------------------------------------------------ */
+/* Fork output                                                        */
+/*                                                                    */
+/* Every decoder here ends the same way: stage the bytes it produces  */
+/* so the sink sees runs rather than bytes, keep a checksum over      */
+/* them, and write them where the entry says. Eight formats wrote     */
+/* that out separately (OPEN_ITEMS.md, part 2 section 4).             */
+/*                                                                    */
+/* What is deliberately NOT here is per-byte work only one format     */
+/* knows about: DiskDoubler's delta transform and running sum, btoa's */
+/* three whole-stream checksums, and — the one worth stating — the    */
+/* CAP at the entry's declared length. Four formats have one and in   */
+/* every one of them the same counter is also the decode loop's own   */
+/* condition, so hoisting it here would have bought nothing and cost  */
+/* every other format a compare per byte in its hottest loop. Those   */
+/* formats keep their own put(), which ends in unc_fork_put.          */
+/* ------------------------------------------------------------------ */
+
+/* Which checksum the writer keeps over what it produces. A format    */
+/* whose checksum is per-byte, or is taken over something other than  */
+/* the output, keeps its own and asks for NONE.                       */
+enum {
+    UNC_CK_NONE = 0,
+    UNC_CK_CRC16_ARC,   /* StuffIt classic, LZH, ARC                  */
+    UNC_CK_CRC32,       /* Compact Pro                                */
+    UNC_CK_CRC32_16     /* Compact Pro inside a DiskDoubler container:
+                         * the CRC-32 it always keeps, and the
+                         * CRC-16/ARC that container checks against   */
+};
+
+/* Staging size for a writer whose buffer is not the caller's own. */
 #define UNC_STAGE 512u
 
-typedef struct UncStage {
+typedef struct UncForkOut {
     UncCtx  *c;
-    UncFork  fork;
-    uint32_t len;
-    uint8_t  buf[UNC_STAGE];
-} UncStage;
+    UncFork  fork;       /* destination, unless `split` is set        */
+    uint8_t *buf;        /* staging, owned by the caller              */
+    uint32_t cap, len;
+    uint32_t written;    /* bytes already handed to the sink          */
+    uint8_t  ck;
+    /* 0: decode and checksum, write nothing. WHAT that means is the
+     * caller's: `test_only` alone for some formats, that and
+     * `list_only` for others, and Compact Pro's password grading needs
+     * a third answer. Four spellings, and they are now four visible
+     * arguments rather than four flush functions that looked alike. */
+    uint8_t  write;
+    uint8_t  split;      /* nonzero: route by the four spans below    */
+    uint16_t crc16;
+    uint32_t crc32;
+    /* Two forks inside ONE decoded stream, as absolute positions in
+     * it: MacLHA compresses a MacBinary payload and ArcMac splits at
+     * one offset. Only meaningful while `split` is set. */
+    uint32_t dstart, dend, rstart, rend;
+} UncForkOut;
 
-int unc_stage_flush(UncStage *s);
+/* `write` and `ck` as above; `buf`/`cap` are the caller's staging.
+ * A format that seeds its checksum (Compact Pro carries one CRC-32
+ * across both forks) assigns o->crc32 afterwards. */
+void unc_fork_out(UncForkOut *o, UncCtx *c, UncFork fork, int write,
+                  int ck, uint8_t *buf, uint32_t cap);
+
+/* Route what follows to two forks by position in the decoded stream. */
+void unc_fork_split(UncForkOut *o, uint32_t dstart, uint32_t dend,
+                    uint32_t rstart, uint32_t rend);
+
+int unc_fork_flush(UncForkOut *o);
+
+/* Bytes produced so far, staged and written together. */
+static inline uint32_t unc_fork_pos(const UncForkOut *o)
+{
+    return o->written + o->len;
+}
 
 /* One decoded byte. Stays inline: this is a per-byte call in the
- * hottest loop either format has, and the 68000 pays for a real one
+ * hottest loop every format has, and the 68000 pays for a real one
  * (DECISIONS.md 2026-08-24, the performance pass). */
-static inline int unc_stage_put(UncStage *s, uint8_t b)
+static inline int unc_fork_put(UncForkOut *o, uint8_t b)
 {
-    if (s->len == UNC_STAGE) {
-        int e = unc_stage_flush(s);
-        if (e != UNC_OK) return e;
-    }
-    s->buf[s->len++] = b;
+    o->buf[o->len++] = b;
+    if (o->len == o->cap) return unc_fork_flush(o);
     return UNC_OK;
 }
 
@@ -727,23 +853,14 @@ static inline int unc_stage_put(UncStage *s, uint8_t b)
 /* ------------------------------------------------------------------ */
 
 typedef struct CptRle {
-    /* DiskDoubler method 8 reuses this stage and needs the archive's own
-     * CRC-16/ARC over the decompressed bytes; Compact Pro itself does not
-     * ask for it. See fmt_dd.c. */
-    uint16_t crc16;
-    int      want_crc16;
-    UncCtx  *c;
-    UncFork  fork;
+    /* The CRC-32 is Compact Pro's and runs across BOTH forks, so the
+     * caller seeds out.crc32; the CRC-16/ARC is only asked for by the
+     * DiskDoubler container that borrows this stage, which says so by
+     * setting out.ck to UNC_CK_CRC32_16. See fmt_dd.c. */
+    UncForkOut out;
     uint32_t remaining;   /* output bytes still owed */
-    uint32_t crc;         /* running fork CRC (shared across forks) */
     int      state;
     uint8_t  saved;       /* last emitted byte (repeat source) */
-    uint8_t *obuf;        /* staging buffer */
-    uint32_t ocap, olen;
-    int      quiet;       /* decode but write nothing: what a password
-                           * candidate is graded by, since Compact Pro
-                           * stores no verifier and the entry CRC is the
-                           * only evidence a key was right */
     int      err;         /* sticky */
 } CptRle;
 

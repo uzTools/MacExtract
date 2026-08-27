@@ -96,72 +96,26 @@ typedef struct LzhEnt {
 /* an 18,092-byte one with a Mac header on it. Measured, not assumed.   */
 /* ------------------------------------------------------------------ */
 
-typedef struct LzhOut {
-    UncCtx  *c;
-    uint16_t crc;
-    int      write;         /* nonzero: write to the sink              */
-    uint32_t pos;           /* decoded bytes produced so far           */
-    uint32_t base;          /* stream offset of buf[0]                 */
-    /* Fork spans within the decoded stream. Without a Mac header the
-     * data span is the whole of it and the resource span is empty. */
-    uint32_t dstart, dend, rstart, rend;
-    uint8_t  buf[512];
-    uint32_t blen;
-} LzhOut;
-
-static void lzh_out_init(LzhOut *o, UncCtx *c, int write)
+/* One decoded stream, routed to one fork or two. MacLHA compresses a
+ * MacBinary payload, so the spans are set again once its header has
+ * been read; until then everything is the data fork. */
+static void lzh_out_start(UncForkOut *o, UncCtx *c, uint8_t *buf, int write)
 {
-    o->c = c;
-    o->crc = 0;
-    o->write = write;
-    o->pos = o->base = o->blen = 0;
-    o->dstart = 0;
-    o->dend = 0xFFFFFFFFu;
-    o->rstart = o->rend = 0;
-}
-
-/* Write the part of [from, to) that falls inside [start, end) to `fork`. */
-static int lzh_span(LzhOut *o, UncFork fork, uint32_t start, uint32_t end)
-{
-    uint32_t from = o->base, to = o->base + o->blen;
-    if (from < start) from = start;
-    if (to > end) to = end;
-    if (from >= to) return UNC_OK;
-    if (o->c->sink->write(o->c->sink->ctx, fork, o->buf + (from - o->base),
-                          (int32_t)(to - from)) != 0)
-        return UNC_ERR_SINK;
-    return UNC_OK;
-}
-
-static int lzh_flush(LzhOut *o)
-{
-    int err = UNC_OK;
-    if (o->blen == 0) return UNC_OK;
-    o->crc = unc_crc16_arc(o->crc, o->buf, (int32_t)o->blen);
-    if (o->write) {
-        err = lzh_span(o, UNC_FORK_DATA, o->dstart, o->dend);
-        if (err == UNC_OK)
-            err = lzh_span(o, UNC_FORK_RSRC, o->rstart, o->rend);
-    }
-    o->base += o->blen;
-    o->blen = 0;
-    return err;
+    unc_fork_out(o, c, UNC_FORK_DATA, write, UNC_CK_CRC16_ARC,
+                 buf, UNC_STAGE);
+    unc_fork_split(o, 0, 0xFFFFFFFFu, 0, 0);
 }
 
 static int lzh_put(void *ctx, uint8_t b)
 {
-    LzhOut *o = (LzhOut *)ctx;
-    o->buf[o->blen++] = b;
-    o->pos++;
-    if (o->blen == sizeof o->buf) return lzh_flush(o);
-    return UNC_OK;
+    return unc_fork_put((UncForkOut *)ctx, b);
 }
 
 /* ------------------------------------------------------------------ */
 /* -lh0-, -lz4-, -pm0-: stored                                         */
 /* ------------------------------------------------------------------ */
 
-static int lzh_store(LzhOut *o, UncBufIn *in, uint32_t outlen)
+static int lzh_store(UncForkOut *o, UncBufIn *in, uint32_t outlen)
 {
     uint32_t i;
     for (i = 0; i < outlen; i++) {
@@ -201,7 +155,7 @@ static void lzh_preload(uint8_t *w)
     for (i = 0; i < 128 - 18; i++) w[256 * 13 + 512 + 128 + 18 + i] = ' ';
 }
 
-static int lzh_larc(LzhOut *o, UncBufIn *in, uint32_t outlen, UncAlloc *al,
+static int lzh_larc(UncForkOut *o, UncBufIn *in, uint32_t outlen, UncAlloc *al,
                     int lz5)
 {
     uint32_t wsize = lz5 ? 4096u : 2048u;
@@ -402,7 +356,7 @@ static int lzh_read_literal_code(LzhStatic *s, UncBitIn *bi)
                                LZH_NC);
 }
 
-static int lzh_static(LzhOut *o, UncBufIn *in, uint32_t outlen, int wbits,
+static int lzh_static(UncForkOut *o, UncBufIn *in, uint32_t outlen, int wbits,
                       UncAlloc *al)
 {
     LzhStatic *s;
@@ -496,7 +450,7 @@ static int lzh_is(const uint8_t *m, const char *want)
 }
 
 /* Decode one entry's stream into `o`. Per-entry status. */
-static int lzh_decode(UncCtx *c, const LzhEnt *e, LzhOut *o, uint8_t *iobuf,
+static int lzh_decode(UncCtx *c, const LzhEnt *e, UncForkOut *o, uint8_t *iobuf,
                       uint32_t iocap)
 {
     UncBufIn in;
@@ -546,10 +500,10 @@ static int lzh_decode(UncCtx *c, const LzhEnt *e, LzhOut *o, uint8_t *iobuf,
     else
         return UNC_ERR_UNSUPPORTED;
 
-    if (err == UNC_OK) err = lzh_flush(o);
+    if (err == UNC_OK) err = unc_fork_flush(o);
     if (err != UNC_OK) return err;
-    if (o->pos != e->origsize) return UNC_ERR_TRUNCATED;
-    if (o->crc != e->crc) return UNC_ERR_CRC;
+    if (unc_fork_pos(o) != e->origsize) return UNC_ERR_TRUNCATED;
+    if (o->crc16 != e->crc) return UNC_ERR_CRC;
     return UNC_OK;
 }
 
@@ -829,7 +783,8 @@ int unc_lzh_extract(UncCtx *c)
 
     for (;;) {
         LzhEnt e;
-        LzhOut o;
+        UncForkOut o;
+        uint8_t    obuf[UNC_STAGE];
         UncEntryInfo info;
         uint8_t mb[128];
         uint32_t next = 0;
@@ -882,7 +837,7 @@ int unc_lzh_extract(UncCtx *c)
          * same nothing for the same reason. Where a MacBinary header
          * follows, its Mac dates are used instead — below. */
 
-        lzh_out_init(&o, c, !c->opt.test_only);
+        lzh_out_start(&o, c, obuf, !c->opt.test_only);
 
         /* MacLHA's payload: peek the first 128 decoded bytes and let
          * the MacBinary probe decide. Decoding twice costs one header's
@@ -897,18 +852,18 @@ int unc_lzh_extract(UncCtx *c)
              * costs no stack: 128 bytes of output, then reset. It must
              * write NOTHING — begin_entry has not been called yet — so
              * the sink is switched off for the duration. */
-            lzh_out_init(&o, c, 0);
+            lzh_out_start(&o, c, obuf, 0);
             e.origsize = 128;
             (void)lzh_decode(c, &e, &o, iobuf, iocap);
             e.origsize = want;
-            if (o.pos == 128) {
+            if (unc_fork_pos(&o) == 128) {
                 uint32_t k;
                 for (k = 0; k < 128; k++) mb[k] = o.buf[k];
                 mac = unc_macbinary_probe(mb, 128, 0) ||
                       lzh_maclha_header(mb, e.origsize, info.name,
                                         info.name_len);
             }
-            lzh_out_init(&o, c, !c->opt.test_only);
+            lzh_out_start(&o, c, obuf, !c->opt.test_only);
         }
         if (mac) {
             uint32_t sec = unc_get_u16be(mb + 120);
@@ -920,8 +875,7 @@ int unc_lzh_extract(UncCtx *c)
                 rs + rlen > e.origsize) {
                 mac = 0;
             } else {
-                o.dstart = ds; o.dend = ds + dlen;
-                o.rstart = rs; o.rend = rs + rlen;
+                unc_fork_split(&o, ds, ds + dlen, rs, rs + rlen);
                 info.data_size = dlen;
                 info.rsrc_size = rlen;
                 info.type = unc_get_u32be(mb + 65);

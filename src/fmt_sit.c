@@ -60,41 +60,15 @@ int unc_sit_probe(const uint8_t *head, int32_t len)
 /* (through obuf) to the sink and accumulates the CRC-16/ARC.         */
 /* ------------------------------------------------------------------ */
 
-typedef struct SitFork {
-    UncCtx  *c;
-    UncFork  fork;
-    uint16_t crc;
-    uint8_t *obuf;
-    uint32_t ocap, olen;
-} SitFork;
-
-static int sit_flush(SitFork *f)
-{
-    if (f->olen == 0) return UNC_OK;
-    f->crc = unc_crc16_arc(f->crc, f->obuf, (int32_t)f->olen);
-    if (!f->c->opt.test_only &&
-        f->c->sink->write(f->c->sink->ctx, f->fork, f->obuf,
-                          (int32_t)f->olen) < 0)
-        return UNC_ERR_SINK;
-    f->olen = 0;
-    return UNC_OK;
-}
-
-static int sit_put(SitFork *f, uint8_t b)
-{
-    f->obuf[f->olen++] = b;
-    if (f->olen == f->ocap) return sit_flush(f);
-    return UNC_OK;
-}
 
 /* Method 0: stored. */
-static int sit_store(SitFork *f, UncBufIn *in, uint32_t outlen)
+static int sit_store(UncForkOut *f, UncBufIn *in, uint32_t outlen)
 {
     uint32_t i;
     for (i = 0; i < outlen; i++) {
         int b = unc_bufin_next(in);
         if (b < 0) return in->err;
-        if (sit_put(f, (uint8_t)b) != UNC_OK) return UNC_ERR_SINK;
+        if (unc_fork_put(f, (uint8_t)b) != UNC_OK) return UNC_ERR_SINK;
     }
     return UNC_OK;
 }
@@ -102,41 +76,30 @@ static int sit_store(SitFork *f, UncBufIn *in, uint32_t outlen)
 /* Method 1: RLE90 — 0x90 0x00 is a literal 0x90; 0x90 n>=2 repeats
  * the previous byte n-1 more times; 0x90 0x01 is illegal.
  * Source: XADRLE90Handle.m. */
-static int sit_rle90(SitFork *f, UncBufIn *in, uint32_t outlen)
+static int sit_rle90(UncForkOut *f, UncBufIn *in, uint32_t outlen)
 {
+    UncRle90 r;
     uint32_t left = outlen;
-    uint8_t repeated = 0;
+
+    unc_rle90_init(&r, 1);
     while (left > 0) {
-        int b = unc_bufin_next(in);
-        if (b < 0) return in->err;
-        if (b != 0x90) {
-            repeated = (uint8_t)b;
-            if (sit_put(f, repeated) != UNC_OK) return UNC_ERR_SINK;
-            left--;
-        } else {
-            int c = unc_bufin_next(in);
-            if (c < 0) return in->err;
-            if (c == 0) {
-                repeated = 0x90;
-                if (sit_put(f, repeated) != UNC_OK) return UNC_ERR_SINK;
-                left--;
-            } else if (c == 1) {
-                return UNC_ERR_CORRUPT;
-            } else {
-                uint32_t n = (uint32_t)c - 1;
-                while (n-- > 0 && left > 0) {
-                    if (sit_put(f, repeated) != UNC_OK) return UNC_ERR_SINK;
-                    left--;
-                }
-            }
+        int v = unc_rle90_take(&r);
+        if (v < 0) {
+            int b = unc_bufin_next(in);
+            if (b < 0) return in->err;
+            v = unc_rle90_feed(&r, b);
+            if (v == UNC_RLE90_MORE) continue;
+            if (v < 0) return v;                 /* UNC_ERR_CORRUPT */
         }
+        if (unc_fork_put(f, (uint8_t)v) != UNC_OK) return UNC_ERR_SINK;
+        left--;
     }
     return UNC_OK;
 }
 
 /* Method 2: compress LZW, 14-bit codes, block mode (flags 0x8e in
  * XADStuffItParser.m). */
-static int sit_lzw(SitFork *f, UncBufIn *in, uint32_t outlen, uint32_t complen,
+static int sit_lzw(UncForkOut *f, UncBufIn *in, uint32_t outlen, uint32_t complen,
                    UncAlloc *al)
 {
     UncLzw z;
@@ -144,14 +107,14 @@ static int sit_lzw(SitFork *f, UncBufIn *in, uint32_t outlen, uint32_t complen,
     int err = unc_lzw_init(&z, al, in, 14, 1, complen);
     if (err != UNC_OK) return err;
     while (left > 0) {
-        uint32_t space = f->ocap - f->olen;
+        uint32_t space = f->cap - f->len;
         int32_t want = left < space ? (int32_t)left : (int32_t)space;
-        int32_t got = unc_lzw_read(&z, f->obuf + f->olen, want);
+        int32_t got = unc_lzw_read(&z, f->buf + f->len, want);
         if (got < 0) { err = (int)got; goto out; }
         if (got == 0) { err = UNC_ERR_TRUNCATED; goto out; }
-        f->olen += (uint32_t)got;
+        f->len += (uint32_t)got;
         left -= (uint32_t)got;
-        if (f->olen == f->ocap && (err = sit_flush(f)) != UNC_OK) goto out;
+        if (f->len == f->cap && (err = unc_fork_flush(f)) != UNC_OK) goto out;
     }
 out:
     unc_lzw_free(&z, al);
@@ -160,7 +123,7 @@ out:
 
 /* Method 3: Huffman with the bit-serialized tree (shared with
  * PackIt; source XADStuffItHuffmanHandle.m). */
-static int sit_huffman(SitFork *f, UncBufIn *in, uint32_t outlen,
+static int sit_huffman(UncForkOut *f, UncBufIn *in, uint32_t outlen,
                        UncAlloc *al)
 {
     UncBitIn bi;
@@ -179,7 +142,7 @@ static int sit_huffman(SitFork *f, UncBufIn *in, uint32_t outlen,
                 err = bi.err != UNC_OK ? bi.err : UNC_ERR_CORRUPT;
                 break;
             }
-            if (sit_put(f, (uint8_t)sym) != UNC_OK) { err = UNC_ERR_SINK; break; }
+            if (unc_fork_put(f, (uint8_t)sym) != UNC_OK) { err = UNC_ERR_SINK; break; }
         }
     }
     unc_free(al, h);
@@ -282,7 +245,7 @@ static int sit13_parse_code(UncCanon *cn, UncBitIn *bi, uint8_t *lengths,
     return unc_canon_build(cn, lengths, nsyms);
 }
 
-static int sit13_fork(SitFork *f, UncBufIn *in, uint32_t outlen,
+static int sit13_fork(UncForkOut *f, UncBufIn *in, uint32_t outlen,
                       UncAlloc *al)
 {
     Sit13 *hz;
@@ -346,7 +309,7 @@ static int sit13_fork(SitFork *f, UncBufIn *in, uint32_t outlen,
         if (sym < 0x100) {
             curr = &hz->first;
             window[pos++ & (win - 1)] = (uint8_t)sym;
-            if (sit_put(f, (uint8_t)sym) != UNC_OK) { err = UNC_ERR_SINK; goto out; }
+            if (unc_fork_put(f, (uint8_t)sym) != UNC_OK) { err = UNC_ERR_SINK; goto out; }
         } else {
             int32_t mlen, moff, bl;
             curr = second;
@@ -371,7 +334,7 @@ static int sit13_fork(SitFork *f, UncBufIn *in, uint32_t outlen,
                 while (mlen-- > 0 && pos < outlen) {
                     uint8_t b = window[from++ & (win - 1)];
                     window[pos++ & (win - 1)] = b;
-                    if (sit_put(f, b) != UNC_OK) { err = UNC_ERR_SINK; goto out; }
+                    if (unc_fork_put(f, b) != UNC_OK) { err = UNC_ERR_SINK; goto out; }
                 }
             }
         }
@@ -448,7 +411,7 @@ static int sit6_u32(UncBufIn *in, uint32_t *out)
  * Source: sit_fixhuf's tail loop. A control byte below 0x80 introduces
  * n + 1 literals, 0x80 is a no-op, and above that it repeats the next
  * byte 0x101 - n times. */
-static int sit6_packbits(SitFork *f, const uint8_t *seg, uint32_t seglen,
+static int sit6_packbits(UncForkOut *f, const uint8_t *seg, uint32_t seglen,
                          uint32_t *left)
 {
     uint32_t p = 0;
@@ -458,7 +421,7 @@ static int sit6_packbits(SitFork *f, const uint8_t *seg, uint32_t seglen,
             n++;
             if (seglen - p < n) return UNC_ERR_CORRUPT;
             while (n-- > 0 && *left > 0) {
-                if (sit_put(f, seg[p++]) != UNC_OK) return UNC_ERR_SINK;
+                if (unc_fork_put(f, seg[p++]) != UNC_OK) return UNC_ERR_SINK;
                 (*left)--;
             }
         } else if (n != 0x80) {
@@ -467,7 +430,7 @@ static int sit6_packbits(SitFork *f, const uint8_t *seg, uint32_t seglen,
             if (p >= seglen) return UNC_ERR_CORRUPT;
             v = seg[p++];
             while (n-- > 0 && *left > 0) {
-                if (sit_put(f, v) != UNC_OK) return UNC_ERR_SINK;
+                if (unc_fork_put(f, v) != UNC_OK) return UNC_ERR_SINK;
                 (*left)--;
             }
         }
@@ -512,7 +475,7 @@ static int sit6_huffseg(UncBufIn *in, uint8_t *seg, uint32_t explen,
     return *used <= segbytes ? UNC_OK : UNC_ERR_CORRUPT;
 }
 
-static int sit6_fork(SitFork *f, UncBufIn *in, uint32_t outlen, UncAlloc *al)
+static int sit6_fork(UncForkOut *f, UncBufIn *in, uint32_t outlen, UncAlloc *al)
 {
     uint8_t *seg = NULL;
     uint32_t segcap = 0;
@@ -600,7 +563,7 @@ typedef struct SitMw {
 } SitMw;
 
 /* Emit the chain for ptr (SITMW_out). */
-static int mw_out(SitFork *f, SitMw *m, int32_t ptr, uint32_t *pos,
+static int mw_out(UncForkOut *f, SitMw *m, int32_t ptr, uint32_t *pos,
                   uint32_t outlen)
 {
     uint32_t sp = 1;
@@ -614,13 +577,13 @@ static int mw_out(SitFork *f, SitMw *m, int32_t ptr, uint32_t *pos,
         }
         if (*pos < outlen) {
             (*pos)++;
-            if (sit_put(f, (uint8_t)ptr) != UNC_OK) return UNC_ERR_SINK;
+            if (unc_fork_put(f, (uint8_t)ptr) != UNC_OK) return UNC_ERR_SINK;
         }
     }
     return UNC_OK;
 }
 
-static int sit_mw_fork(SitFork *f, UncBufIn *in, uint32_t outlen,
+static int sit_mw_fork(UncForkOut *f, UncBufIn *in, uint32_t outlen,
                        UncAlloc *al)
 {
     SitMw *m;
@@ -659,14 +622,14 @@ out:
     return err;
 }
 
-/* Method 15 put callback: byte into the SitFork staging buffer. */
+/* Method 15 put callback: one byte into the fork writer. */
 /* Byte-at-a-time output adapter, for the two decoders that live
  * outside this file: Arsenic (sit_arsenic.c) and the -lh1- coder
  * shared with LZH (unc_lzah.c). */
 static int sit_put_cb(void *ctx, uint8_t b)
 {
-    SitFork *f = (SitFork *)ctx;
-    return sit_put(f, b);
+    UncForkOut *f = (UncForkOut *)ctx;
+    return unc_fork_put(f, b);
 }
 
 /* Decode one fork (shared with the SIT5 container). Returns a
@@ -677,7 +640,7 @@ int unc_sit_decode_fork(UncCtx *c, UncFork fork, uint32_t at,
                         uint8_t *obuf, uint32_t ocap, UncCrypt *cr)
 {
     UncBufIn in;
-    SitFork f;
+    UncForkOut f;
     int err;
 
     if (outlen == 0) return UNC_OK;
@@ -689,12 +652,8 @@ int unc_sit_decode_fork(UncCtx *c, UncFork fork, uint32_t at,
      * below sees exactly what it would have seen unencrypted. */
     if (cr) in.crypt = cr;
 
-    f.c = c;
-    f.fork = fork;
-    f.crc = 0;
-    f.obuf = obuf;
-    f.ocap = ocap;
-    f.olen = 0;
+    unc_fork_out(&f, c, fork, !c->opt.test_only, UNC_CK_CRC16_ARC,
+                 obuf, ocap);
 
     switch (method & 0x0f) {
     case 0:  err = sit_store(&f, &in, outlen); break;
@@ -717,10 +676,10 @@ int unc_sit_decode_fork(UncCtx *c, UncFork fork, uint32_t at,
                                       sit_put_cb, &f); break;
     default: return UNC_ERR_UNSUPPORTED;
     }
-    if (err == UNC_OK) err = sit_flush(&f);
+    if (err == UNC_OK) err = unc_fork_flush(&f);
     /* Method 15 carries its own CRC-32, checked inside the decoder;
      * the header CRC-16 field is not meaningful for it. */
-    if (err == UNC_OK && (method & 0x0f) != 15 && f.crc != wantcrc)
+    if (err == UNC_OK && (method & 0x0f) != 15 && f.crc16 != wantcrc)
         err = UNC_ERR_CRC;
     return err;
 }

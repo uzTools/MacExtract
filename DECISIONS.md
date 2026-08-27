@@ -140,6 +140,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-27 (the Zip64 escape at 2 GB) — a ceiling that was half what it said
 - 2026-08-27 (the name cap) — a clamp the host cannot see is a rename nobody asked for
 - 2026-08-27 (the scaffolding audit) — the codec is the format, the code around it is not
+- 2026-08-27 (the fork writer and the filter) — a shared hot path, measured three ways
 
 ---
 
@@ -8051,3 +8052,80 @@ through `end_entry`, and the Mac shell tracks its own cancel flag — which
 is why nothing caught it in a year. They now say what the other seventeen
 say. **A predicate spelled out at nineteen sites has nineteen chances to
 be spelled wrong, and no way for the odd one out to be seen as odd.**
+
+---
+
+## 2026-08-27 (the fork writer and the filter) — a shared hot path, measured three ways
+
+The two large items from *the scaffolding audit* landed the same day:
+`UncForkOut`, which is now the only thing in the engine that stages
+decoded bytes and hands them to the sink, and `UncRle90`, which is the
+only place the 0x90 run filter is written. 932 fixtures byte-exact,
+9,320 robustness variants clean. What is worth writing down is not that
+they landed but what they cost, because the first version of each was
+slower and the fixtures could not see it.
+
+**The inventory was one short at each end.** The audit counted eight fork
+writers; ARC had a ninth written inline inside `arc_entry_data`, found
+only by reading for `arc_emit`'s callers. And the audit called
+`ss_emit`/`sd_emit` the same function, which cost a CI cycle on the day
+before. **Count by reading, not by scanning.**
+
+**What is deliberately not in `UncForkOut`: the cap.** Four formats stop
+at the entry's declared length, and the obvious design puts that in
+`put()`. In every one of the four the same counter is ALSO the decode
+loop's own condition — `o->left`, `r->remaining`, `s->want`,
+`t->outsize` — so hoisting it would have bought nothing and cost every
+other format a compare per byte in its hottest loop. The writer holds
+staging, the checksum, the write guard and the two-fork routing; the cap
+stays with the decoder that already had to know it.
+
+**The filter went through three shapes and the fixtures liked all
+three.** A callback (`src`/`emit` function pointers, the obvious shape)
+cost a `.hqx` run **27 %**: BinHex puts every decoded byte through the
+filter, and gcc would not devirtualise the pointer. Inlining the filter
+but keeping the callback got that to 15 %. What worked was removing the
+callbacks entirely — `unc_rle90_feed` and `unc_rle90_take`, both inline,
+with each caller reading its own source and writing its own output. Two
+further shapes were tried on top and both were WORSE, because they grew
+`bh_next` past the point where gcc inlines it into `bh_fork`: straight
+-lining it (two inlined `feed` bodies) cost 10 %, and a fast/slow split
+of the kind `UncBufIn` uses cost 4 %. The loop that survives costs 2-3 %.
+
+**One instruction per byte was 2 % of a Compact Pro run.** The first
+`cpt_rle_emit` decremented `r->remaining` before calling the writer,
+where the original had stored the byte first. Same work, same
+instruction count on paper; +2.14 % measured, and reordering the two
+lines brought it back to +0.04 %. **On a per-byte path, "the same
+instructions in a different order" is not a rhetorical phrase — measure
+the order too.**
+
+**The net, and it is a cost.** +0.86 % across a 14-fixture set
+(FORMATS.md, *Decode cost*): BinHex +2.3 to +3.6 %, LZH +1.4 %, ARC
++0.7 %, StuffIt and Compact Pro unchanged, and DiskDoubler **5.4 %
+faster** because `dd_out_byte` came out better than it went in. Stack:
+`dd_fork` +44 B, which moves the deepest chain in the engine to 3,334 B
+against a 4 KB rule. This project has killed optimisations on
+measurement before; it is only fair to record that this simplification
+was bought, not free.
+
+**Two of the four audit items turned out to be correctly unshared, and
+both were settled by a number rather than by taste:**
+
+- **SpaceSaver's Huffman builder must not become `UncCanon`.**
+  `sizeof(UncCanon)` is **2,064 bytes**, most of it a 1 KB fast table
+  whose own comment says the build cost is `1 << K` writes per table and
+  that it pays for itself on alphabets of 256 symbols and up. `SsA3`
+  holds SEVEN Huffman tables — five meta levels of at most 32 symbols
+  each, rebuilt every block, plus the literal and distance pair — so the
+  swap would add ~14 KB to a method whose peak is a measured 41 KB, on a
+  format that has to fit the 1 MB floor. `ss_a3_sort` was always going to
+  stay (the format's symbol order comes from a non-stable quicksort);
+  what this settles is that the builder around it stays too.
+- **`sd_huff_bit` must not become `UncBitIn`.** It refills 32 bits at a
+  time, and `sd_huff_end` derives *where the next region begins* from the
+  cursor that refill leaves — `h->pos + 2`. A byte-granular reader would
+  put that cursor somewhere else. This is the same boundary OPEN_ITEMS.md
+  records as an open question, where Alysis's own 1991 and 1992
+  implementations disagree by one refill; changing the reader would move
+  the engine off the 1991 answer it was deliberately pinned to.
