@@ -984,7 +984,7 @@ suite nor its variants could reach either limit. They are graded by
 CPython's `zipfile` and `tarfile`, which wrote them and have no such
 limit, and by `unzip -l` and `tar tf` where those exist.
 
-Nine cases over four carriers, the allocator's budget and the output
+Ten cases over five carriers, the allocator's budget and the output
 directory: a zip whose long
 entry is extracted under the shortened name while the entry beside it is
 untouched; two zip entries that differ only past the cut, which must both
@@ -1006,14 +1006,23 @@ central directory does not fit a 64 KB budget is read a record at a
 time, the name really is gone, and the notice must give the length and
 say so rather than present the shortened name as the archive's.
 
-**Established that it can fail**: against the engine and CLI of two
-commits earlier, nineteen assertions fail.
+The fifth carrier is the Macintosh shape of the same defect, added the
+same day: a path that reaches the cap by SUMMING rather than by holding
+one long name. `tools/synth_now.py` writes a nine-deep tree of 31-byte
+components — 296 bytes, and no name in it remarkable — and the notice
+must carry every byte of it. `lsar`, which has no such cap, is asked for
+the same path. What this grades for Now Compress is `unc_path_leaf`,
+which DiskDoubler and SuperDisk! also run.
 
-**What it cannot see.** The Macintosh formats' own path builders reach
-the engine's cap only by nesting folders deep enough to sum past 255
-bytes, and nothing here synthesises such a container; they set the same
-flag through the same funnel. The Mac application does not consume the
-flag at all, and does not number collisions.
+**Established that it can fail**: against the engine and CLI of two
+commits earlier, nineteen assertions fail; the nested-path case fails
+three ways against the commit before it, including a reported length of
+287 bytes for a 296-byte path.
+
+**What it cannot see.** DiskDoubler's and SuperDisk!'s own header walks
+never reach the cap here — no fixture nests that deep and nothing
+writes either container (OPEN_ITEMS.md). The Mac application does not
+consume the flag at all, and does not number collisions.
 
 ## Decryption (`tools/run_crypt.py`, in `ci.sh`)
 
@@ -1449,10 +1458,13 @@ digit, Zoo's magic at offset 0 instead of 0x14, ARJ with a broken header CRC
 and with a size out of bounds, `070703`, `!<arch>!`. Each was mutation-tested
 against a probe with that field deleted.
 
-**And the corpus is swept**: not one of the 940 fixtures may come back as a
+**And the corpus is swept**: not one of the fixtures may come back as a
 foreign archive. Naming a Macintosh archive as a PC one is worse than not
 naming it, because the user would then be sent to a program that cannot open
-it either.
+it either. **One fixture is exempt and graded rather than skipped**:
+`synth-os9-rar.rar` is a RAR on purpose — the Mac OS 9 tier boots one file per
+format and needed something to raise the refusal alert (2026-08-27) — so the
+sweep requires it to sniff as RAR and requires everything else not to.
 
 **What this cannot see.** Whether a real Zoo, ARJ or Cabinet archive is named —
 those three are graded on headers built here, which deark identifies but which

@@ -220,19 +220,17 @@ all** (BLOCKERS.md, the ARC 7 row, filed and disproved the same day).
   deep-tree `.sit`, which nothing in the corpus provides (FORMATS.md,
   *Name limits*).
 
-- **Three formats report a cut name without the name.** DiskDoubler, Now
-  Compress and SuperDisk! assemble their paths in a private 255-byte buffer
-  — `unc_path_leaf`, which all three now share — and set
-  `name_truncated = 1`; none of the three calls `unc_entry_long_name`, so
-  the host is told a name was shortened and never told what it was. The
-  formats that go through the shared helpers report 2 and hand the whole
-  name over. The components are read out of headers the walk is still
-  holding at the moment of the cut, so the limit is OURS rather than the
-  format's — which is the test DECISIONS.md 2026-08-27 (*the name cap*)
-  sets for this exact case. **Hypothesis:** no corpus fixture has a path
-  long enough to reach it, so the degraded notice has been read rather
-  than seen. **What would close it:** a synthetic deep-tree archive in one
-  of the three, and the assembled path handed to `unc_entry_long_name`.
+- **DiskDoubler and SuperDisk! reach the path cap through code that is
+  tested, in a container nothing here writes.** `unc_path_leaf` keeps the
+  uncut path since 2026-08-27 (DECISIONS.md, *the path builder's own
+  cap*), and `tools/run_names.py` grades it on a nine-deep Now Compress
+  tree against `unar`. The other two formats run that same helper, and
+  neither has a fixture whose path sums past 255 bytes: what is untested
+  is their own header walks — DiskDoubler's 63-byte components and two
+  level schemes, SuperDisk!'s up-directory record — not the assembly.
+  **What would close it:** a deep-tree `DDAR` and a deep-tree SuperDisk!
+  record stream. Nothing here writes either container, and `unar` reads
+  the first, so DiskDoubler's is a writer away from being graded.
 
 - **SuperDisk!, where a Huffman region's neighbour begins.** The two Alysis
   implementations disagree by one 32-bit refill when a coded flag bitmap ends

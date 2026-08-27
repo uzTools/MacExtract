@@ -569,18 +569,59 @@ int unc_fork_flush(UncForkOut *o)
 /* A folder path being walked                                         */
 /* ------------------------------------------------------------------ */
 
-void unc_path_init(UncPath *p)
+/* The host's long-name buffer, or NULL when there is none to write to.
+ * Two bytes is the smallest one that can hold anything at all. */
+static uint8_t *path_longbuf(const UncPath *p, uint32_t *cap)
+{
+    if (!p->c || !p->c->opt.long_name || p->c->opt.long_name_cap < 2)
+        return NULL;
+    *cap = p->c->opt.long_name_cap;
+    return p->c->opt.long_name;
+}
+
+/* Add one component to the uncut path: write what fits at `at` in the
+ * host's buffer, and return where the next component would start.
+ * Counting continues past the end of that buffer — that is how the
+ * caller learns the whole name did not fit — and saturates at 65,535,
+ * which is all `name_full_len` can carry. */
+static uint32_t path_full_add(const UncPath *p, uint32_t at,
+                              const uint8_t *name, uint32_t nlen)
+{
+    uint32_t cap = 0, i, room;
+    uint8_t *out = path_longbuf(p, &cap);
+    if (!out) {                              /* nothing to write: count */
+        uint32_t want = at + (at ? 1u : 0u) + nlen;
+        return want > 65535u ? 65535u : want;
+    }
+    room = cap - 1u;                         /* keep one for the NUL */
+    if (at) {
+        if (at < room) out[at] = '/';
+        if (at < 65535u) at++;
+    }
+    for (i = 0; i < nlen; i++) {
+        uint8_t ch = name[i] == '/' ? (uint8_t)':' : name[i];
+        if (at < room) out[at] = ch;
+        if (at >= 65535u) break;
+        at++;
+    }
+    return at;
+}
+
+void unc_path_init(UncPath *p, struct UncCtx *c)
 {
     p->len = 0;
     p->depth = 0;
     p->truncdepth = 0;
     p->buf[0] = 0;
+    p->c = c;
+    p->full = 0;
 }
 
 int unc_path_push(UncPath *p, const uint8_t *name, uint32_t nlen)
 {
     uint32_t i;
     if (p->depth >= UNC_PATH_MAXDEPTH) return UNC_ERR_CORRUPT;
+    p->fullstack[p->depth] = p->full;
     p->stack[p->depth++] = p->len;
     if (p->len && p->len < UNC_NAME_MAX) p->buf[p->len++] = '/';
     for (i = 0; i < nlen && p->len < UNC_NAME_MAX; i++) {
@@ -589,12 +630,16 @@ int unc_path_push(UncPath *p, const uint8_t *name, uint32_t nlen)
     }
     if (i < nlen && !p->truncdepth) p->truncdepth = p->depth;
     p->buf[p->len] = 0;
+    p->full = (uint16_t)path_full_add(p, p->full, name, nlen);
     return UNC_OK;
 }
 
 void unc_path_pop(UncPath *p)
 {
-    if (p->depth > 0) p->len = p->stack[--p->depth];
+    if (p->depth > 0) {
+        p->full = p->fullstack[p->depth - 1];
+        p->len = p->stack[--p->depth];
+    }
     if (p->truncdepth > p->depth) p->truncdepth = 0;
     p->buf[p->len] = 0;
 }
@@ -603,7 +648,8 @@ void unc_path_leaf(const UncPath *p, UncEntryInfo *e,
                    const uint8_t *name, uint32_t nlen)
 {
     uint8_t full[UNC_NAME_MAX + 1];
-    uint32_t n = p->len, i;
+    uint32_t n = p->len, i, want, cap = 0;
+    uint8_t *out;
     if (n > UNC_NAME_MAX) n = UNC_NAME_MAX;
     for (i = 0; i < n; i++) full[i] = p->buf[i];
     if (n && n < UNC_NAME_MAX) full[n++] = '/';
@@ -611,10 +657,18 @@ void unc_path_leaf(const UncPath *p, UncEntryInfo *e,
         uint8_t ch = name[i];
         full[n++] = (uint8_t)(ch == '/' ? ':' : ch);
     }
-    if (i < nlen || p->truncdepth) {
-        uint32_t want = (uint32_t)p->len + (p->len ? 1u : 0u) + nlen;
-        e->name_truncated = 1;
-        e->name_full_len = (uint16_t)(want > 65535u ? 65535u : want);
-    }
+    /* The uncut path is assembled whether or not this entry needs it:
+     * a folder cut on the way down was cut before anyone knew which
+     * leaf would want the length back. */
+    want = path_full_add(p, p->full, name, nlen);
     unc_entry_set_path(e, full, n);
+    if (i < nlen || p->truncdepth) {
+        e->name_truncated = 1;
+        e->name_full_len = (uint16_t)want;
+        out = path_longbuf(p, &cap);
+        if (out && want < cap) {         /* every byte of it is in there */
+            out[want] = 0;
+            e->name_truncated = 2;
+        }
+    }
 }

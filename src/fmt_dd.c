@@ -1144,7 +1144,7 @@ static int dd_archive(UncCtx *c)
     uint32_t at = 78;      /* 'DDAR' + 74 header bytes */
     int err;
 
-    unc_path_init(&path);
+    unc_path_init(&path, c);
 
     for (;;) {
         uint32_t magic, datasize, rsrcsize, start;
@@ -1178,8 +1178,12 @@ static int dd_archive(UncCtx *c)
 
         unc_entry_clear(&e);
         if (isdir) {
+            /* The folder's own path is the leaf of the path it is being
+             * pushed onto, which is where the whole name is reported
+             * from; taking it out of path.buf afterwards would report a
+             * name already cut to UNC_NAME_MAX. */
+            unc_path_leaf(&path, &e, hdr + 5, nlen);
             if ((err = unc_path_push(&path, hdr + 5, nlen)) != UNC_OK) return err;
-            unc_entry_set_path(&e, path.buf, path.len);
             e.is_dir = 1;
             e.create_date = unc_get_u32be(hdr + 78);
             e.mod_date    = unc_get_u32be(hdr + 82);
@@ -1237,7 +1241,7 @@ static int dd_archive2(UncCtx *c)
     uint32_t at = 62;      /* 'DDA2' + 58 header bytes */
     int lastlevel = 0, err;
 
-    unc_path_init(&path);
+    unc_path_init(&path, c);
 
     for (;;) {
         uint32_t start = at, totalsize, nlen;
@@ -1269,8 +1273,8 @@ static int dd_archive2(UncCtx *c)
              * is written against. Source: XADDiskDoublerParser.m
              * parseArchive2 (currdir=name, lastdirlevel untouched). */
             if (unc_read_full(c->io, hdr + 46, 16) != UNC_OK) break;
+            unc_path_leaf(&path, &e, hdr + 7, nlen);   /* before the push */
             if ((err = unc_path_push(&path, hdr + 7, nlen)) != UNC_OK) return err;
-            unc_entry_set_path(&e, path.buf, path.len);
             e.is_dir = 1;
             e.create_date = unc_get_u32be(hdr + 54);
             e.mod_date    = unc_get_u32be(hdr + 58);

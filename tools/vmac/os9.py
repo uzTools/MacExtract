@@ -426,8 +426,10 @@ def launch_by_keyboard(q, outdir, wait=240.0):
          done. Cmd-Q quits it; it asks "are you sure", and Return confirms.
          Until it is gone the Finder is not the front application.
       2. Typing selects by name in the Finder, and Cmd-Down opens the
-         selection. "unc" matches the transfer volume `macextract` and not the
-         boot volume `untitled`.
+         selection. "mac" matches the transfer volume `MacExtract` and not
+         the boot volume `untitled` — nor `Mail`, which is why two letters
+         are not enough. It typed "unc" until 2026-08-27, from before the
+         project was renamed, and selected nothing at all.
       3. Inside the volume window the same two keystrokes launch the
          application, whose SFGetFile opens with `archive.sit` already
          selected — it sorts first — so Return opens it.
@@ -462,11 +464,11 @@ def launch_by_keyboard(q, outdir, wait=240.0):
     time.sleep(4)
     front = shot("11-assistant-quit")
 
-    q.key("u", "n", "c", "meta_l-down")          # select and open the volume
+    q.key("m", "a", "c", "meta_l-down")          # select and open the volume
     step(front, "volume window opened", 60.0)
     vol = shot("12-volume-open")
 
-    q.key("u", "n", "c", "meta_l-down")          # select and launch the app
+    q.key("m", "a", "c", "meta_l-down")          # select and launch the app
     step(vol, "application launched", wait)
     sfg = shot("13-sfgetfile")
 
@@ -654,6 +656,24 @@ def verify_output(xfer, fixture, workdir):
             expected.add(rel)
     expected = {unicodedata.normalize("NFC", e) for e in expected}
 
+    # The Mac writes each COMPONENT the way ComponentToStr63() does — the
+    # engine's ':' back to '/', cut at 31 characters — so the two sides
+    # spell some names differently while both being right. `mac_of` maps
+    # the name the Mac would write to the reference path it came from,
+    # and everything below compares in the Mac's spelling. Added
+    # 2026-08-27 with the SuperDisk! fixture, whose archive holds
+    # `SD! Utilities : MacWrite`: a colon on Linux and a slash on the
+    # Mac, which the set comparison would otherwise call one missing file
+    # and one unexpected one. The HFS+ path has done this since M12.
+    mac_of = {}
+    collided = {}
+    for e in sorted(expected):
+        m = "/".join(mac_leaf(c) for c in e.split("/"))
+        if m in mac_of:
+            collided[m] = [mac_of[m], e]
+        mac_of[m] = e
+    expected = set(mac_of)
+
     if not expected and not names:
         # Both sides produced nothing, which for a detect-only format is the
         # CORRECT outcome and not a failure: the engine recognises it and
@@ -686,6 +706,13 @@ def verify_output(xfer, fixture, workdir):
             f"is also a name the harness or the Finder puts on the volume, so "
             f"the two cannot be told apart. Rename the archive on the transfer "
             f"disk, or pick another fixture."]
+    if collided:
+        run("humount")
+        return False, lines + [
+            f"cannot check this fixture: {sorted(collided.values())} shorten "
+            f"to one name on the Mac, and the shell does not number a "
+            f"collision (OPEN_ITEMS.md), so one file is lost and the harness "
+            f"cannot say which."]
     missing = expected - set(names)
     extra = set(names) - expected
     if missing:
@@ -714,8 +741,9 @@ def verify_output(xfer, fixture, workdir):
                          f"{c.stderr.decode(errors='replace').strip()}")
             continue
         typ, crt, data, rsrc = macbinary_forks(mb)
-        want_d = os.path.join(ref, name)
-        head, _, tail = name.rpartition("/")
+        refrel = mac_of.get(name, name)     # the reference's spelling of it
+        want_d = os.path.join(ref, refrel)
+        head, _, tail = refrel.rpartition("/")
         want_r = os.path.join(ref, head, "._" + tail) if head \
             else os.path.join(ref, "._" + tail)
         for label, got, path, mask in (("data", data, want_d, False),
@@ -892,7 +920,7 @@ def run_hfsplus(fixture, outdir, args):
                                    WINDOW_RECT, scratch, timeout=60.0)
         print(f"os9: In volume opened ({frac:.4f} changed in {secs:.0f}s)")
         shot("23-in-open")
-        q.key("u", "n", "c", "meta_l-down")       # launch `macextract`
+        q.key("m", "a", "c", "meta_l-down")       # launch `MacExtract`
 
         # Wait for the REPORT FILE, not for anything on the screen.
         #

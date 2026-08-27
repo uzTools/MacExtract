@@ -145,6 +145,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-27 (the fast table StuffIt could not reach) — a gate that read as a property of the format
 - 2026-08-27 (the tree that was walked a bit at a time) — ARC's Squeeze and Distilled get a first-bits table
 - 2026-08-27 (what the tables left behind) — the profile moves, and the next thing is never the thing on the list
+- 2026-08-27 (the path builder's own cap) — the bytes were still in the walk
 
 ---
 
@@ -8390,3 +8391,50 @@ recover a field it already had. One line: **−2.33 %** on that fixture,
 every format in the corpus: **1,098,529,621 Ir before the harmonisation,
 1,011,192,657 after it and the three decoder changes — −7.95 %** — with
 the engine 2 KB smaller on the target than when it started.
+
+---
+
+## 2026-08-27 (the path builder's own cap) — the bytes were still in the walk
+
+`unc_path_leaf` reported a cut name without the name, and reported the
+wrong length for it. A nine-deep Now Compress tree of 31-byte components
+is a 296-byte path; the notice said *the archive's name is 287 bytes;
+the rest was cut before it reached us*, which is two claims and both are
+false — the length is 296, and nothing had been cut before it reached
+us. The helper had cut the path into its own 255-byte buffer one
+component at a time on the way DOWN, so by the time a leaf asked, the
+bytes were gone and the length was the length of what survived.
+
+**Where the fix goes is the whole point.** The three formats that use
+this — DiskDoubler, Now Compress, SuperDisk! — hold every component in a
+header the walk is still reading when the cut happens, so nothing is
+unrecoverable here the way MIME's 512-byte header is. `UncPath` now
+carries the uncut LENGTH, and writes the uncut BYTES straight into
+`UncOptions.long_name` as it descends: `full` is both the length and the
+write offset, so a pop restores the text as well as the count, and a
+host that passed no buffer (the Mac shell) pays one addition per
+component. No second engine buffer: the one place with room for a
+65,535-byte name is the host's.
+
+**It uncovered a second defect one layer down, and that is the part
+worth keeping.** `unc_extract_as` builds its `UncCtx` on the stack, and
+where the caller passes no `UncOptions` it zeroed *a list of the
+fields*. The list was written when the struct had nine members and was
+never revisited, so `long_name` — added earlier the same day — was a
+pointer read off an uninitialised stack for every in-tree caller. It had
+been harmless only because nothing had yet asked for the buffer on that
+path; the moment three formats asked once per entry, the unit tests
+segfaulted at `-O2` and passed under ASan at `-O1`, which is how a
+stale initialiser looks from the outside. It zeroes the whole struct
+now. **A per-field initialiser is a list that has to be maintained;
+nothing tells you when it stops being complete.**
+
+**What it cost to find, and what that says.** Nothing found it for
+months, because the three formats' own fixtures have short paths and the
+only suite that reaches the cap generates zip, tar, uuencode and
+AppleSingle — carriers where ONE name is long. A path that sums past the
+cap is a different shape of the same defect, and the suite that could
+not see it said so in its own docstring (*"nothing here synthesises such
+a container"*). **A named blind spot in a passing suite is a bug report
+with no reproduction attached.** `tools/synth_now.py` writes the
+container; `unar`, which has no cap, gives the path that was meant.

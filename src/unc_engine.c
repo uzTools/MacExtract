@@ -286,12 +286,19 @@ int unc_extract_as(UncFormat f, UncIO *io, UncSink *sink, UncAlloc *al,
     c.ps.done = 0;
     c.ps.since_tick = 0;
     c.ps.hold = 0;
-    if (opt) c.opt = *opt;
-    else { c.opt.list_only = 0; c.opt.test_only = 0;
-           c.opt.name_hint = 0; c.opt.name_hint_len = 0;
-           c.opt.preset = 0; c.opt.preset_len = 0;
-           c.opt.password = 0; c.opt.password_len = 0;
-           c.opt.ask = 0; c.opt.mkey = 0; }
+    if (opt) {
+        c.opt = *opt;
+    } else {
+        /* Zero the WHOLE struct, not a list of its fields. The list was
+         * written when UncOptions had nine members and was never
+         * revisited: `long_name` joined it on 2026-08-27 and every
+         * caller passing NULL — which the unit tests do — then read a
+         * pointer off an uninitialised stack. It segfaulted the first
+         * time an entry asked for the buffer. */
+        uint8_t *p = (uint8_t *)&c.opt;
+        uint32_t i;
+        for (i = 0; i < sizeof c.opt; i++) p[i] = 0;
+    }
     c.pwlen = 0;
     c.pwstate = UNC_PW_UNSET;
     c.pwattempt = 0;

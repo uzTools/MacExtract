@@ -954,6 +954,16 @@ Typing selects an icon by name and Cmd-Down opens it — no coordinates, no
 double-click threshold — which is why every fixture run goes that way and
 still should: it is faster and it cannot mis-aim.
 
+**What it CAN do is aim at a name that no longer exists.** It typed `u`, `n`,
+`c` from before the project was renamed to MacExtract (2026-08-26), so the
+selection landed on nothing and Cmd-Down opened whatever the Finder had
+selected instead — the System Folder, photographed in `13-sfgetfile.png` of a
+run that reported "application launched" and extracted nothing. The rename had
+changed the volume and the application in `run_one` and left the keystrokes,
+and no OS 9 run happened between the two to notice. It types `m`, `a`, `c`
+now — three letters, because `Mail` is on that desktop too. **A harness that
+selects by name has a dependency on that name that nothing compiles.**
+
 But the reason it was written that way is withdrawn. `os9probe.py` measured
 five mouse primitives at 0.0000 each on 2026-08-02 and concluded the pointer
 was unusable; all five fired with the cursor pinned in a corner, because the
@@ -981,6 +991,17 @@ carrying the same values `at_report()` would paint, plus every output name,
 because the framebuffer grid is invisible on a 32-bit screen. That the output
 really landed on HFS+ is checked by mounting the volume's HFS *wrapper*: if
 the files were on plain HFS they would be visible there, and they are not.
+
+**The two sides spell some names differently, and both are right.** The Mac
+writes each component as `ComponentToStr63()` does — the engine's `':'` back to
+`'/'`, cut at 31 characters — so `SD! Utilities : MacWrite` on Linux is
+`SD! Utilities / MacWrite` on the volume. `verify_output()` maps the reference
+names through `mac_leaf()` before comparing (the HFS+ path always did) and
+fails the fixture outright when two of them map to ONE Mac name, because the
+shell does not number a collision and the file that lost is simply gone.
+**What this costs**: a name the Mac cut at 31 characters now compares equal to
+the whole one, so this tier cannot see an over-long name. Nothing in the
+sample has one; `run_names.py` is where that lives.
 
 **The result is checked off the disk image, not off the screen.** Mini vMac
 needs the on-screen CRC grid; QEMU does not, because the transfer volume is a

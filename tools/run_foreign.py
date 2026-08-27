@@ -228,7 +228,16 @@ def main():
         unnamed("ar without its terminating newline", b"!<arch>!" + bytes(64))
 
         # 5. The corpus: not one Macintosh archive is a foreign one.
+        #
+        # One fixture IS a foreign archive on purpose: the Mac OS 9 tier
+        # boots one file per format and needed something to raise the
+        # "MacExtract cannot open RAR files." alert with
+        # (tools/vmac/os9sample.txt). It is checked here rather than
+        # excused — an exception that is only skipped is an exception
+        # nobody grades — so it must be claimed as RAR, and the sweep
+        # over everything else must claim nothing.
         fixtures = os.path.join(ROOT, "fixtures")
+        deliberate = {"synth-os9-rar.rar": "RAR"}
         foreign = {"RAR", "RAR 5", "7-Zip", "xz", "bzip2",
                    "Microsoft Cabinet", "Zoo", "ar archive", "cpio", "ARJ"}
         claimed, seen = [], 0
@@ -239,6 +248,11 @@ def main():
                 continue
             seen += 1
             got = sniff(macextract, p)
+            if name in deliberate:
+                check("the corpus's one deliberate %s (%s)"
+                      % (deliberate[name], name), got == deliberate[name],
+                      "sniffs as %r" % got)
+                continue
             if got in foreign:
                 claimed.append("%s (%s)" % (name, got))
         if seen:

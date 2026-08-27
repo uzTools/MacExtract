@@ -665,7 +665,7 @@ int unc_now_extract(UncCtx *c)
         }
     }
 
-    unc_path_init(&path);
+    unc_path_init(&path, c);
 
     while (seen < totalentries) {
         UncEntryInfo e;

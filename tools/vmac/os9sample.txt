@@ -33,6 +33,27 @@
 # Every entry is checked byte-for-byte, both forks, against the same engine's
 # Linux output — see verify_output() in os9.py. Results in FORMATS.md.
 
+# Eight formats and one refusal were added on 2026-08-27, when this tier
+# was re-run for the first time since M12 (2026-08-15). Everything below
+# the first block postdates that run. Three of them had no fixture at
+# all — every other suite generates its subjects into a temporary
+# directory — so tools/synth_os9.py writes one of each into fixtures/,
+# and SOURCES.md regenerates them.
+#
+# Two formats are deliberately NOT here, and neither is a scope decision:
+#
+#   StuffIt SpaceSaver  the only specimens are the ones Aladdin's own
+#                       compressor modules wrote under qemu-m68k, which
+#                       live in the emulator cache and cannot be
+#                       committed or regenerated on a clone. Run it by
+#                       path instead:
+#                         os9.py ~/.cache/macextract/vmac/specimens/\
+#                                spacesaver/modules/m4.ss --launch
+#   an encrypted entry  the application asks for a password in a dialog,
+#                       and launch_by_keyboard() drives the Finder, not
+#                       the application. The password dialog is driven
+#                       on both Mini vMac tiers (TESTING.md, layer 10).
+
 export-hc.hqx                              # BinHex, 3127 B
 derived-keyAhead.cpt                       # Compact Pro, 863 B
 synth-exo-Z.Z                              # compress, 488 B
@@ -46,3 +67,26 @@ derived-XferIt_1.5b4.sea                   # Compact Pro self-extracting, 285495
 derived-DandStoQIF2.sea                    # DiskDoubler, extracted since M12, 30562 B
 synth-exo-tar.tar                          # tar, 20480 B
 synth-exo-zip-deflate.zip                  # zip, 3709 B
+
+# Added 2026-08-27 (see the note at the top).
+synth-arc-mixed.arc                        # ARC, all nine methods, 9312 B
+synth-uu-mac.uu                            # uuencode, UUTool's two-fork
+                                           #   shape and a type, 3020 B
+lhasa-maclha-l1_lh5.lzh                    # LZH, MacLHA's MacBinary payload
+                                           #   split back into two forks —
+                                           #   the Mac shape of the format,
+                                           #   not the smallest file, 7094 B
+derived-SD__Utilities.x                    # Alysis SuperDisk!, 14078 B: the
+                                           #   payload of a corpus
+                                           #   self-extractor, folders, a
+                                           #   resource fork, and two names
+                                           #   holding the ':'/'/' swap
+synth-os9-btoa.btoa                        # btoa 5.2.1, version 5 framing
+synth-os9-mime.mim                         # multipart/appledouble: one file,
+                                           #   both forks, type and creator
+synth-os9-rar.rar                          # NOT extracted: the alert reading
+                                           #   "MacExtract cannot open RAR
+                                           #   files." (M38). Both sides
+                                           #   produce nothing and agree,
+                                           #   which verify_output() treats
+                                           #   as the pass it is

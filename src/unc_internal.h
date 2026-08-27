@@ -579,6 +579,8 @@ static inline int unc_fatal(int err)
 /* All three formats that use this chose 24 independently. */
 #define UNC_PATH_MAXDEPTH 24
 
+struct UncCtx;
+
 typedef struct UncPath {
     uint8_t  buf[UNC_NAME_MAX + 1];
     uint16_t len;
@@ -588,9 +590,17 @@ typedef struct UncPath {
      * A leaf under it carries a path that is not the archive's even
      * when the leaf itself fitted. */
     int      truncdepth;
+    /* The same path UNCUT: its length, saturating at 65,535, and — when
+     * the host offered UncOptions.long_name — its bytes, written there
+     * as the walk descends. `full` is both the length and the write
+     * offset, so a pop restores the buffer as well as the count. The
+     * context is held for that buffer alone and may be NULL. */
+    struct UncCtx *c;
+    uint16_t full;
+    uint16_t fullstack[UNC_PATH_MAXDEPTH];
 } UncPath;
 
-void unc_path_init(UncPath *p);
+void unc_path_init(UncPath *p, struct UncCtx *c);
 
 /* Descend into `name`. UNC_ERR_CORRUPT at UNC_PATH_MAXDEPTH with
  * NOTHING changed, so a caller that would rather carry on than fail
@@ -601,7 +611,10 @@ int  unc_path_push(UncPath *p, const uint8_t *name, uint32_t nlen);
 
 void unc_path_pop(UncPath *p);
 
-/* The full path of a leaf, without disturbing the stack. */
+/* The full path of a leaf, without disturbing the stack. Where the path
+ * does not fit UNC_NAME_MAX it reports the WHOLE length in
+ * e->name_full_len, and hands the whole name to the host through
+ * UncOptions.long_name when there is room for it (name_truncated 2). */
 void unc_path_leaf(const UncPath *p, UncEntryInfo *e,
                    const uint8_t *name, uint32_t nlen);
 

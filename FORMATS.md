@@ -1781,6 +1781,7 @@ than 1 when it was filled:
 | AppleSingle real name | the whole name, re-read from the file |
 | the filesystem, not the engine | the whole name — the engine carried it |
 | uuencode `begin` line | the whole name: the line is kept in the host's buffer as it streams past, rather than dropped at 96 bytes |
+| a Macintosh folder path that SUMS past the cap (DiskDoubler, Now Compress, SuperDisk!) | the whole path: `unc_path_leaf` writes it into the host's buffer as it descends, since 2026-08-27 |
 | LZH, btoa's name field, MIME's applefile name | the length, from the field |
 | zip with the directory streamed (budget too small for it), btoa's or MIME's cut LINE | the length where the field states it, and *"the rest was cut before it reached us"* — never the shortened name presented as the archive's |
 
@@ -1805,7 +1806,8 @@ cannot be what cuts a name.
 fixtures is 120 bytes**, under half the engine's cap, so neither the
 differential suite nor 9,320 robustness variants could ever have reached
 it. `tools/run_names.py` holds both caps from both sides in zip, tar,
-uuencode and AppleSingle, in `ci.sh` since 2026-08-27.
+uuencode, AppleSingle and a nine-deep Now Compress tree, in `ci.sh`
+since 2026-08-27.
 
 ## Resident memory, stack and launch (Mac target)
 
@@ -1819,10 +1821,14 @@ Everything here is measured on the Retro68 target's own flags
 | Mac shell | 11,784 | 732 |
 | **total** | **116,046** | **30,538** |
 
-The application ships as 179,328 B of MacBinary (`dist/MacExtract.bin`,
-rebuilt 2026-08-27; 2,176 B of that is the same day's Zip64 extra-field walk
+The application ships as **178,432 B** of MacBinary (`dist/MacExtract.bin`,
+rebuilt 2026-08-27; 1,280 B of that is the same day's Zip64 extra-field walk
 and the name-truncation reporting, and the table above predates both. The
-shell passes NULL for `UncOptions.long_name`, so none of it is heap). Both
+shell passes NULL for `UncOptions.long_name`, so none of it is heap — the
+uncut path costs the three walks 52 bytes of stack each and no heap at all).
+The figure stood at "179,328 B" for part of that day against a file that was
+178,176: it was written from a build that was never the one committed, and the
+correction is what a `stat` of the shipped file says. Both
 halves are resident for the whole session: the link line produces a single
 `MacExtract.code.bin` that the Segment Loader reads at launch, and
 `Elf2Mac/LdScript.cc` emits `*(.rodata*)` inside the `.data` output section —
@@ -2045,7 +2051,7 @@ and the call graph comes from the relocations in the linked objects
 
 | | before 2026-08-24 | now |
 |---|---|---|
-| deepest chain in the engine | 6,664 B (`unc_dd_extract` → `dd_fork` → `dd_ddn`) | **3,330 B** |
+| deepest chain in the engine | 6,664 B (`unc_dd_extract` → `dd_fork` → `dd_ddn`) | **3,386 B** |
 | Now Compress chain | 5,632 B | ~1,400 B |
 | largest single frame | 3,740 B (`dd_fork`) | **2,352 B** (`ars_index_build`) |
 
@@ -2059,7 +2065,10 @@ the engine portable to a host that did not ask for more.
 That 3,290 B became 3,330 B on 2026-08-27: `dd_fork` gained 44 bytes to the
 shared fork writer and gave 4 back when its prologue was hoisted out of nine
 branches (DECISIONS.md, *the fork writer and the filter*, and *the shapes that
-were left*).
+were left*). It is **3,386 B** since later the same day: `UncPath` keeps the
+uncut path length per level, which is 56 bytes in `unc_dd_extract` and 52 in
+each of the other two walk frames (DECISIONS.md, *the path builder's own
+cap*).
 
 What fixed it: DiskDoubler's three `UncCanon` and Now Compress's two moved to
 the heap (~3.9 KB each, per fork and per archive respectively), and the zip

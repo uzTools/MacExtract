@@ -989,7 +989,7 @@ int unc_superdisk_extract(UncCtx *c)
     s.in.cap = s.flags.cap = s.table.cap = s.win.cap = 0;
     s.winlen = 0;
     sd_out_start(&s, c, UNC_FORK_DATA);
-    unc_path_init(&path);
+    unc_path_init(&path, c);
 
     for (;;) {
         uint32_t nlen, dlen, rlen, p;

@@ -482,6 +482,7 @@ Each line records how to re-fetch one. Use `tools/harvest.py --restore`.
 | derived-Retrospect2iPatch.sit | 6a7925fc96289e1561c233c70849e6cab32de419e2cda70951590f0666d3aa89 | 28161 | derived:unar-nr:retrospect-2i-patch.hqx |
 | derived-Robert_s_Text_Cleanup.sit | 4df95148cda6aa7b1ffcef7b4a4c5ccb0553be60a25a41397bbe40a45650db90 | 55457 | derived:unar-nr:robert_s-text-cleanup-10.hqx |
 | derived-SCSIOdometer_v1.2.cpt | beb97bfef28c0bb9dc6863e98d48aa2528360e0b4951cd93f21de283259df4be | 10263 | derived:unar-nr:scsiodometer12.cpt |
+| derived-SD__Utilities.x | d8a2b9033f2be1d11dce6a51cf6d8d3a0e7f838ef6f8ec486668cea3ccfacedd | 14078 | derived:member:super-disk-utility.hqx:SD! Utilities.x |
 | derived-SITdoc.sit | 3e797f5f6f04f1b951d29cfb0bc77a96d81516aa2448859a04bce293caefd504 | 33612 | derived:unar-nr:sitdoc.sit |
 | derived-SNDPatchV2.sit | 1102b6b5a6c158ef123e40758d8b5929691512de3c408642e65e279f00764317 | 64383 | derived:unar-nr:sndpatch2.sit |
 | derived-Sabine_Doscbthm.sit | 744aceae203bcf195d88d73d3774e44d5113bc96abf6b8c354f8c59bc8aec68f | 14571 | derived:unar-nr:sabine-doscbthm.hqx |
@@ -885,6 +886,9 @@ Each line records how to re-fetch one. Use `tools/harvest.py --restore`.
 | synth-exo-zip-deflate.zip | 7764dab45911f96a647ad0f250393f4648fefb21eb311013028d39845398e219 | 3713 | synthetic:tools/synth_exo.py --kind zip-deflate |
 | synth-exo-zip-store.zip | 41013301e866c46e0c63b5915ac0098d9fbc045f64edaeaf6bf4ac37da16df04 | 8404 | synthetic:tools/synth_exo.py --kind zip-store |
 | synth-now-mixed.now | e87810e9df1e0a663436531cc7ab2f34153b81fffcefd10b467ccbd7dc6f89ae | 7803 | synthetic:tools/synth_now.py |
+| synth-os9-btoa.btoa | 084b016918298e544fe23e403799cf44979bf87f7d1d2dd88cba5496eb5cc24c | 731 | synthetic:tools/synth_os9.py --kind btoa |
+| synth-os9-mime.mim | 394ebaa16ef4a21a972f69bfdde73ef3a44038b72041c6742413b2d12ffcefd6 | 1248 | synthetic:tools/synth_os9.py --kind mime |
+| synth-os9-rar.rar | 0f3a316838cf548420de828977df1bfa5fe20a667a05446aaab7d0251c8401ad | 71 | synthetic:tools/synth_os9.py --kind rar |
 | synth-packit-1.pit | 97e30f742867f12346937fae54cb9b274328602a5a9ee6801810e5e004183879 | 3385 | synthetic:tools/synth_pit.py --seed 1 |
 | synth-packit-2.pit | 8c9fbb2e5a777c11937624ed5ed6885c59b730d27d8092a9dc7a9c0f6d877f7a | 3367 | synthetic:tools/synth_pit.py --seed 2 |
 | synth-packit-3.pit | 3102287e41ab3fa714b8a2a0a62e00319773b95f7333f169dbb7769c1e5c35f5 | 3381 | synthetic:tools/synth_pit.py --seed 3 |
