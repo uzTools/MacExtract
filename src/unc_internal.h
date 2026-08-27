@@ -567,9 +567,9 @@ static inline int unc_fatal(int err)
 /* with '/', the classic '/'->':' swap applied per component, and a    */
 /* note of the depth at which a FOLDER name was first cut to fit.      */
 /* DiskDoubler, Now Compress and SuperDisk! each wrote this out        */
-/* (OPEN_ITEMS.md, part 2 section 4); StuffIt and Compact Pro do the   */
-/* same job through unc_entry_path_append, which is the other half of  */
-/* it and is what unc_path_leaf ends in.                              */
+/* (DECISIONS.md 2026-08-27, the scaffolding audit); StuffIt and       */
+/* Compact Pro do the same job through unc_entry_path_append, which is */
+/* the other half of it and is what unc_path_leaf ends in.             */
 /*                                                                    */
 /* Components are pushed and popped by LENGTH, never by re-scanning    */
 /* for a separator, and there is no recursion anywhere in it.          */
@@ -606,9 +606,27 @@ void unc_path_leaf(const UncPath *p, UncEntryInfo *e,
 
 /* ------------------------------------------------------------------ */
 /* Per-format sniffers and extractors                                 */
-/* Each fmt_*.c exposes: a cheap content probe (bounded reads from    */
-/* offset 0) and an extractor.                                        */
+/*                                                                    */
+/* Each fmt_*.c exposes a cheap content probe and an extractor, and   */
+/* both have ONE shape:                                               */
+/*                                                                    */
+/*   UncFormat probe(const uint8_t *head, int32_t len, UncIO *io);    */
+/*   int       extract(UncCtx *c);                                    */
+/*                                                                    */
+/* The probe reads `head` — the first UNC_SNIFF_HEAD bytes, already   */
+/* read — and answers with the format it claims or UNC_FORMAT_UNKNOWN.*/
+/* `io` is there for the probes that need more than the head (a       */
+/* MacBinary CRC, tar at 257, a Compact Pro trailer, a zip's EOCD);   */
+/* the rest take it and ignore it, which is the price of unc_sniff    */
+/* being an ORDERED TABLE rather than a chain of twenty-eight `if`s.  */
+/* Returning the format rather than a flag is what lets one probe     */
+/* answer for several: AppleSingle and AppleDouble share a magic, and */
+/* fmt_foreign.c answers for ten PC formats at once.                  */
 /* ------------------------------------------------------------------ */
+
+struct UncCtx;
+typedef UncFormat (*UncProbe)(const uint8_t *head, int32_t len, UncIO *io);
+typedef int (*UncExtract)(struct UncCtx *c);
 
 /* Reading a segmented archive by the addresses it actually stores.
  *
@@ -700,8 +718,8 @@ int unc_copy_fork(UncCtx *c, UncFork fork, uint32_t size,
 /* (macutils' dd_rle, whose `while (--b > 0)` simply emits nothing)    */
 /* lets it pass. That is the `strict` flag, and it is the whole of the */
 /* difference — which is worth knowing, because five copies could not  */
-/* say whether it was a decision or a slip (OPEN_ITEMS.md, part 2      */
-/* section 4).                                                        */
+/* say whether it was a decision or a slip (DECISIONS.md 2026-08-27,   */
+/* the fork writer and the filter).                                   */
 /*                                                                    */
 /* Source: reference/XADMaster/XADRLE90Handle.m.                       */
 /* ------------------------------------------------------------------ */
@@ -768,7 +786,8 @@ static inline int unc_rle90_feed(UncRle90 *r, int b)
 /* Every decoder here ends the same way: stage the bytes it produces  */
 /* so the sink sees runs rather than bytes, keep a checksum over      */
 /* them, and write them where the entry says. Eight formats wrote     */
-/* that out separately (OPEN_ITEMS.md, part 2 section 4).             */
+/* that out separately (DECISIONS.md 2026-08-27, the fork writer      */
+/* and the filter).                                                   */
 /*                                                                    */
 /* What is deliberately NOT here is per-byte work only one format     */
 /* knows about: DiskDoubler's delta transform and running sum, btoa's */
@@ -794,6 +813,13 @@ enum {
 
 /* Staging size for a writer whose buffer is not the caller's own. */
 #define UNC_STAGE 512u
+
+/* The staging a format allocates for itself: UncBufIn's input side,
+ * and the output side of a decoder that hands back runs. It was a
+ * bare 4096 in eleven files and named in one, which is how a size
+ * nobody chose becomes a size nobody can change. A format that wants
+ * a different one says so with a constant of its own. */
+#define UNC_IOBUF 4096u
 
 typedef struct UncForkOut {
     UncCtx  *c;
@@ -876,21 +902,22 @@ int unc_cpt_rle_fork(CptRle *rle, UncBufIn *in, uint32_t complen);
 int unc_cpt_rle_flush(CptRle *r);
 
 
-int unc_macbinary_probe(const uint8_t *head, int32_t len, UncIO *io);
+UncFormat unc_macbinary_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_macbinary_extract(UncCtx *c);
-int unc_applesingle_probe(const uint8_t *head, int32_t len, UncFormat *out);
-int unc_appledouble_extract(UncCtx *c, UncFormat which);
-int unc_binhex_probe(const uint8_t *head, int32_t len, UncIO *io);
+UncFormat unc_applesingle_probe(const uint8_t *head, int32_t len,
+                                UncIO *io);
+int unc_appledouble_extract(UncCtx *c);
+UncFormat unc_binhex_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_binhex_extract(UncCtx *c);
-int unc_packit_probe(const uint8_t *head, int32_t len);
+UncFormat unc_packit_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_packit_extract(UncCtx *c);
-int unc_cpt_probe(const uint8_t *head, int32_t len, UncIO *io);
+UncFormat unc_cpt_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_cpt_extract(UncCtx *c);
-int unc_cptseg_probe(const uint8_t *head, int32_t len, UncIO *io);
+UncFormat unc_cptseg_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_cptseg_describe(UncIO *io, UncSegmentDesc *desc);
 int unc_cptseg_match(const UncSegmentDesc *desc, const uint8_t *head,
                      int32_t len);
-int unc_sit_probe(const uint8_t *head, int32_t len);       /* classic */
+UncFormat unc_sit_probe(const uint8_t *head, int32_t len, UncIO *io);       /* classic */
 int unc_sit_extract(UncCtx *c);
 
 /* One part of a StuffIt segmented set (fmt_sitseg.c). unc_sitseg_emit
@@ -898,17 +925,19 @@ int unc_sit_extract(UncCtx *c);
  * UNC_SEG_HEAD for a lone part, 0 for the stream unc_segment.c joins.
  * `data_first` says which fork the stream begins with — StuffIt puts
  * the resource fork first, DiskDoubler's `SPLT` the data fork. */
-int unc_sitseg_probe(const uint8_t *head, int32_t len);
+UncFormat unc_sitseg_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_sitseg_extract(UncCtx *c);
 int unc_sitseg_emit(UncCtx *c, const UncSegmentDesc *desc, uint32_t base,
                     int data_first);
 int unc_sitseg_describe(UncIO *io, UncSegmentDesc *desc);
+int unc_sitseg_match(const UncSegmentDesc *desc,
+                     const uint8_t *head, int32_t len);
 
 /* One part of a DiskDoubler `SPLT` set (fmt_ddseg.c). unc_ddseg_payload
  * is what the joiner asks a freshly opened part: how many of its bytes
  * are payload, given that the part declares it and also re-proves that
  * it belongs to this set and is this part. */
-int unc_ddseg_probe(const uint8_t *head, int32_t len);
+UncFormat unc_ddseg_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_ddseg_extract(UncCtx *c);
 int unc_ddseg_describe(UncIO *io, UncSegmentDesc *desc);
 int unc_ddseg_match(const UncSegmentDesc *desc, const uint8_t *head,
@@ -925,7 +954,7 @@ uint16_t unc_ddseg_stored_crc(const uint8_t *head);
 /* One part of a spanned ("split") zip set (fmt_zipseg.c). The probe
  * needs the io handle because the only part that identifies itself
  * unambiguously does so at the END of the file. */
-int unc_zipseg_probe(const uint8_t *head, int32_t len, UncIO *io);
+UncFormat unc_zipseg_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_zipseg_extract(UncCtx *c);
 int unc_zipseg_describe(UncIO *io, UncSegmentDesc *desc);
 
@@ -995,15 +1024,15 @@ int unc_inflate_raw(UncBufIn *in, UncAlloc *al,
                     uint32_t maxout, uint32_t *produced, uint32_t *crc,
                     int (*emit)(void *ctx, const uint8_t *p, int32_t n),
                     void *ectx);
-int unc_sit5_probe(const uint8_t *head, int32_t len);
+UncFormat unc_sit5_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_sit5_extract(UncCtx *c);
-int unc_zip_probe(const uint8_t *head, int32_t len);
+UncFormat unc_zip_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_zip_extract(UncCtx *c);
-int unc_gzip_probe(const uint8_t *head, int32_t len);
+UncFormat unc_gzip_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_gzip_extract(UncCtx *c);
-int unc_compressz_probe(const uint8_t *head, int32_t len);
+UncFormat unc_compressz_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_compressz_extract(UncCtx *c);
-int unc_tar_probe(const uint8_t *head, int32_t len);
+UncFormat unc_tar_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_tar_extract(UncCtx *c);
 int unc_dd_extract(UncCtx *c);
 int unc_now_extract(UncCtx *c);
@@ -1012,9 +1041,9 @@ int unc_spacesaver_extract(UncCtx *c);
 
 /* uuencode, including UUTool's two-fork shape (fmt_uu.c). The probe
  * needs no io: a uu file identifies itself in its first lines. */
-int unc_btoa_probe(const uint8_t *head, int32_t len);
+UncFormat unc_btoa_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_btoa_extract(UncCtx *c);
-int unc_uu_probe(const uint8_t *head, int32_t len);
+UncFormat unc_uu_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_uu_extract(UncCtx *c);
 
 /* base64 (fmt_b64.c), and the streaming decoder MIME shares with it.
@@ -1037,35 +1066,36 @@ int  unc_b64_feed(UncB64 *b, int ch, uint8_t out[3]);
 /* The tail of a group left over at end of stream (0..2 bytes). */
 int  unc_b64_flush(UncB64 *b, uint8_t out[3]);
 
-int unc_b64_probe(const uint8_t *head, int32_t len, UncIO *io);
+UncFormat unc_b64_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_b64_extract(UncCtx *c);
 
 /* MIME messages (fmt_mime.c). The probe scans past the mail headers,
  * which are longer than the sniff window, so it takes io. */
-int unc_mime_probe(const uint8_t *head, int32_t len, UncIO *io);
+UncFormat unc_mime_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_mime_extract(UncCtx *c);
 
 /* ARC / ArcMac (fmt_arc.c). The probe reads the next header to place
  * this one, so it takes io. */
-int unc_arc_probe(const uint8_t *head, int32_t len, UncIO *io);
+UncFormat unc_arc_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_arc_extract(UncCtx *c);
 
 /* LZH / LHA (fmt_lzh.c). */
-int unc_lzh_probe(const uint8_t *head, int32_t len);
+UncFormat unc_lzh_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_lzh_extract(UncCtx *c);
 
 /* Foreign archives (fmt_foreign.c): PC-side formats named but never
  * extracted. One probe for all of them; returns the format or
  * UNC_FORMAT_UNKNOWN. Head buffer only, no io. */
-UncFormat unc_foreign_probe(const uint8_t *head, int32_t len);
+UncFormat unc_foreign_probe(const uint8_t *head, int32_t len,
+                            UncIO *io);
 
 /* Detect-only probes */
-int unc_sitx_probe(const uint8_t *head, int32_t len);
-int unc_nowcompress_probe(const uint8_t *head, int32_t len);
-int unc_superdisk_probe(const uint8_t *head, int32_t len, UncIO *io);
-int unc_spacesaver_probe(const uint8_t *head, int32_t len);
-int unc_applelink_probe(const uint8_t *head, int32_t len);
+UncFormat unc_sitx_probe(const uint8_t *head, int32_t len, UncIO *io);
+UncFormat unc_nowcompress_probe(const uint8_t *head, int32_t len, UncIO *io);
+UncFormat unc_superdisk_probe(const uint8_t *head, int32_t len, UncIO *io);
+UncFormat unc_spacesaver_probe(const uint8_t *head, int32_t len, UncIO *io);
+UncFormat unc_applelink_probe(const uint8_t *head, int32_t len, UncIO *io);
 uint32_t unc_superdisk_single_body(const uint8_t *head, int32_t len);
-int unc_diskdoubler_probe(const uint8_t *head, int32_t len);
+UncFormat unc_diskdoubler_probe(const uint8_t *head, int32_t len, UncIO *io);
 
 #endif /* UNC_INTERNAL_H */

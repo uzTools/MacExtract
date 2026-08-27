@@ -715,19 +715,22 @@ static int lzh_header(UncCtx *c, uint32_t pos, LzhEnt *e, UncEntryInfo *info,
  * OWN parser has a decoder for -lzs- — so `unar` cannot open a file it
  * can decode (checked: "Couldn't recognize the archive format" on
  * lhasa's lzs specimens). This probe accepts it. */
-int unc_lzh_probe(const uint8_t *head, int32_t len)
+UncFormat unc_lzh_probe(const uint8_t *head, int32_t len, UncIO *io)
 {
-    if (len < 7) return 0;
-    if (head[2] != '-' || head[6] != '-') return 0;
+    (void)io;
+    if (len < 7) return UNC_FORMAT_UNKNOWN;
+    if (head[2] != '-' || head[6] != '-') return UNC_FORMAT_UNKNOWN;
     if (head[3] == 'l' && head[4] == 'h') {
         uint8_t m = head[5];
-        return (m >= '0' && m <= '7') || m == 'd';
+        return ((m >= '0' && m <= '7') || m == 'd')
+           ? UNC_FORMAT_LZH : UNC_FORMAT_UNKNOWN;
     }
     if (head[3] == 'l' && head[4] == 'z') {
         uint8_t m = head[5];
-        return m == '0' || m == '4' || m == '5' || m == 's';
+        return (m == '0' || m == '4' || m == '5' || m == 's')
+           ? UNC_FORMAT_LZH : UNC_FORMAT_UNKNOWN;
     }
-    return 0;
+    return UNC_FORMAT_UNKNOWN;
 }
 
 /* Is this 128-byte block MacLHA's MacBinary header, when the ordinary
@@ -774,7 +777,7 @@ static int lzh_maclha_header(const uint8_t *mb, uint32_t origsize,
 int unc_lzh_extract(UncCtx *c)
 {
     uint8_t *iobuf;
-    uint32_t iocap = 4096;
+    uint32_t iocap = UNC_IOBUF;
     uint32_t pos = 0;
     int err = UNC_OK, any = 0;
 

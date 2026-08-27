@@ -41,9 +41,90 @@
  */
 #include "unc_internal.h"
 
+/* ------------------------------------------------------------------ */
+/* The join schemes                                                   */
+/*                                                                    */
+/* One row each, and the ORDER is the order unc_segment_describe tries */
+/* them in. Everything that used to be a scheme test in the middle of  */
+/* the joiner is a named property here, so adding a sixth scheme is a  */
+/* row rather than a search (DECISIONS.md 2026-08-27, the shapes    */
+/* that were left).                                                 */
+/* ------------------------------------------------------------------ */
+
+#define SEG_HEAD_MAX UNC_DDSEG_HEAD   /* the longest header a hook reads */
+
+typedef struct SegScheme {
+    UncFormat scheme;
+    /* The archive stores (part, offset) pairs, so the joiner keeps them
+     * as pairs instead of flattening the set. See the file header. */
+    uint8_t   addressed;
+    /* The joined stream starts with the DATA fork. StuffIt's split puts
+     * the resource fork first; DiskDoubler's puts the data fork. */
+    uint8_t   data_first;
+    /* A part carries no header at all - no identity, no length, not
+     * even a magic. The host's names and sizes are the whole map, and
+     * the descriptor is the host's to build. */
+    uint8_t   anonymous;
+    /* Describe the set a file belongs to, or UNC_ERR_FORMAT. NULL for
+     * a scheme whose parts carry nothing to read. */
+    int      (*describe)(UncIO *io, UncSegmentDesc *desc);
+    /* Which part of a set this file is, or 0. NULL where the parts
+     * carry no identity - which is not the same as "no", and
+     * macextract.h says why. */
+    int      (*match)(const UncSegmentDesc *d, const uint8_t *head,
+                      int32_t len);
+    /* This part's payload length out of its OWN header. NULL means the
+     * host's part size is all there is to go on. */
+    int      (*payload)(const UncSegmentDesc *d, const uint8_t *head,
+                        int32_t len, int part, uint32_t size,
+                        uint32_t *out);
+    /* The CRC a part stores over its own payload, checked for free when
+     * the part is read straight through. NULL for none. */
+    uint16_t (*stored_crc)(const uint8_t *head);
+    uint32_t  head_len;      /* bytes the two hooks above want read */
+    /* The reader for a scheme whose parts hold an ARCHIVE. NULL when
+     * they join into one FILE, which unc_sitseg_emit writes. */
+    int      (*extract)(UncCtx *c);
+} SegScheme;
+
+static const SegScheme seg_schemes[] = {
+    /* StuffIt first: it decides on 100 bytes at offset 0, where the zip
+     * scheme has to hunt backwards from the end of the file. */
+    { UNC_FORMAT_SITSEG, 0, 0, 0, unc_sitseg_describe, unc_sitseg_match,
+      NULL, NULL, 0, NULL },
+    /* Compact Pro next: like StuffIt it decides on a header at offset 0,
+     * where the zip scheme has to hunt backwards from the end. Unlike
+     * StuffIt, a part that is not the LAST one answers with nparts == 0
+     * - it knows the set it belongs to but not how big the set is, and
+     * the host is expected to go and find the final segment. */
+    { UNC_FORMAT_CPTSEG, 1, 0, 0, unc_cptseg_describe, unc_cptseg_match,
+      NULL, NULL, 0, unc_cpt_extract },
+    /* DiskDoubler's `SPLT`, also decided on a header at offset 0 - and
+     * on a second copy of its magic at offset 90, so it is the cheapest
+     * of the four to refuse. It is also the only scheme whose parts
+     * state their own payload length and check their own CRC. */
+    { UNC_FORMAT_DDSEG, 0, 1, 0, unc_ddseg_describe, unc_ddseg_match,
+      unc_ddseg_payload, unc_ddseg_stored_crc, UNC_DDSEG_HEAD, NULL },
+    { UNC_FORMAT_ZIPSEG, 1, 0, 0, unc_zipseg_describe, NULL,
+      NULL, NULL, 0, unc_zip_extract },
+    /* SPLIT last and describe-less: a part of a plain NAME.001 split is
+     * an anonymous slice of bytes, so nothing here can recognise one.
+     * A host that has decided by name builds the descriptor itself. */
+    { UNC_FORMAT_SPLIT, 0, 0, 1, NULL, NULL, NULL, NULL, 0, NULL }
+};
+
+static const SegScheme *seg_scheme(UncFormat f)
+{
+    unsigned i;
+    for (i = 0; i < sizeof seg_schemes / sizeof seg_schemes[0]; i++)
+        if (seg_schemes[i].scheme == f) return &seg_schemes[i];
+    return NULL;
+}
+
 typedef struct SegJoin {
     UncIO                 io;      /* what the engine reads through */
     const UncSegmentDesc *desc;
+    const SegScheme      *sc;
     UncVolumeSource      *vs;
 
     /* SPLIT only: the caller's descriptor with the sizes filled in.
@@ -94,26 +175,28 @@ uint32_t unc_segment_scratch_size(void)
 
 int unc_segment_describe(UncIO *io, UncSegmentDesc *desc)
 {
-    int err;
+    unsigned i;
 
     if (!io || !desc) return UNC_ERR_FORMAT;
-    /* StuffIt first: it decides on 100 bytes at offset 0, where the zip
-     * scheme has to hunt backwards from the end of the file. */
-    err = unc_sitseg_describe(io, desc);
-    if (err == UNC_OK) return UNC_OK;
-    /* Compact Pro next: like StuffIt it decides on a header at offset 0,
-     * where the zip scheme has to hunt backwards from the end. Unlike
-     * StuffIt, a part that is not the LAST one answers with nparts == 0
-     * — it knows the set it belongs to but not how big the set is, and
-     * the host is expected to go and find the final segment. */
-    err = unc_cptseg_describe(io, desc);
-    if (err == UNC_OK) return UNC_OK;
-    /* DiskDoubler's `SPLT`, also decided on a header at offset 0 — and
-     * on a second copy of its magic at offset 90, so it is the cheapest
-     * of the four to refuse. */
-    err = unc_ddseg_describe(io, desc);
-    if (err == UNC_OK) return UNC_OK;
-    return unc_zipseg_describe(io, desc);
+    for (i = 0; i < sizeof seg_schemes / sizeof seg_schemes[0]; i++)
+        if (seg_schemes[i].describe &&
+            seg_schemes[i].describe(io, desc) == UNC_OK)
+            return UNC_OK;
+    return UNC_ERR_FORMAT;
+}
+
+int unc_segment_match(const UncSegmentDesc *d,
+                      const uint8_t *head, int32_t len)
+{
+    const SegScheme *sc;
+
+    if (!d || !head) return 0;
+    sc = seg_scheme(d->scheme);
+    /* A scheme whose parts carry no identity cannot answer this. Said
+     * explicitly rather than left to fall out of a failed header parse,
+     * because the two outcomes mean opposite things (see macextract.h). */
+    if (!sc || !sc->match) return 0;
+    return sc->match(d, head, len);
 }
 
 void unc_segment_stats(const void *scratch, uint32_t *part_switches,
@@ -179,12 +262,12 @@ static int seg_open(SegJoin *j, int part)
          * same header re-proves that this file belongs to this set and
          * is this part. Every other scheme here has to take what the
          * host handed it. */
-        if (j->desc->scheme == UNC_FORMAT_DDSEG) {
-            uint8_t h[UNC_DDSEG_HEAD];
-            int e = unc_read_at(&j->cur, 0, h, UNC_DDSEG_HEAD);
+        if (j->sc->payload) {
+            uint8_t h[SEG_HEAD_MAX];
+            int e = unc_read_at(&j->cur, 0, h, (int32_t)j->sc->head_len);
             if (e == UNC_OK)
-                e = unc_ddseg_payload(j->desc, h, UNC_DDSEG_HEAD, part,
-                                      size, &payload);
+                e = j->sc->payload(j->desc, h, (int32_t)j->sc->head_len,
+                                   part, size, &payload);
             if (e != UNC_OK) { seg_release(j); return e; }
         }
         end = j->start[part] + payload;
@@ -194,7 +277,7 @@ static int seg_open(SegJoin *j, int part)
     }
     /* A freshly opened part starts a fresh running CRC, whether it was
      * opened for the first time or re-opened after a backward seek. */
-    if (j->desc->scheme == UNC_FORMAT_DDSEG) {
+    if (j->sc->stored_crc) {
         j->crc = 0;
         j->crc_pos = j->start[part];
         j->crc_ok = 1;
@@ -345,15 +428,16 @@ static int32_t seg_read(void *ctx, void *buf, int32_t len)
      * the running sum stopped abandons it for this part: the part is
      * then joined unchecked, exactly as every other scheme here is.
      * The joined FILE still adjudicates the set (OPEN_ITEMS.md). */
-    if (j->desc->scheme == UNC_FORMAT_DDSEG && r > 0) {
+    if (j->sc->stored_crc && r > 0) {
         if (j->crc_ok && j->pos == j->crc_pos) {
             j->crc = unc_crc16_xmodem(j->crc, buf, r);
             j->crc_pos += (uint32_t)r;
             if (j->crc_pos == j->start[j->curpart + 1]) {
-                uint8_t h[UNC_DDSEG_HEAD];
+                uint8_t h[SEG_HEAD_MAX];
                 j->crc_ok = 0;               /* checked once, at the end */
-                if (unc_read_at(&j->cur, 0, h, UNC_DDSEG_HEAD) != UNC_OK ||
-                    unc_ddseg_stored_crc(h) != j->crc) {
+                if (unc_read_at(&j->cur, 0, h,
+                                (int32_t)j->sc->head_len) != UNC_OK ||
+                    j->sc->stored_crc(h) != j->crc) {
                     j->err = UNC_ERR_CRC;
                     return -1;
                 }
@@ -418,11 +502,8 @@ int unc_extract_segments(const UncSegmentDesc *desc, UncVolumeSource *vs,
 
     if (!desc || !vs || !vs->need || !scratch || !sink || !al)
         return UNC_ERR_IO;
-    if (desc->scheme != UNC_FORMAT_SITSEG && desc->scheme != UNC_FORMAT_ZIPSEG
-        && desc->scheme != UNC_FORMAT_SPLIT
-        && desc->scheme != UNC_FORMAT_CPTSEG
-        && desc->scheme != UNC_FORMAT_DDSEG)
-        return UNC_ERR_UNSUPPORTED;
+    j->sc = seg_scheme(desc->scheme);
+    if (!j->sc) return UNC_ERR_UNSUPPORTED;
     if (desc->nparts > UNC_SEG_MAX_PARTS) return UNC_ERR_UNSUPPORTED;
     /* Neither a size nor a count is a set nobody can tell the end of. */
     if (desc->nparts == 0 && desc->total == UNC_SIZE_UNKNOWN)
@@ -432,8 +513,7 @@ int unc_extract_segments(const UncSegmentDesc *desc, UncVolumeSource *vs,
     j->vs = vs;
     j->curpart = 0;
     j->cursize = 0;
-    j->addressed = (desc->scheme == UNC_FORMAT_ZIPSEG ||
-                    desc->scheme == UNC_FORMAT_CPTSEG);
+    j->addressed = j->sc->addressed;
     j->start[1] = 0;
     j->known = 1;
     j->total = desc->total;
@@ -461,7 +541,7 @@ int unc_extract_segments(const UncSegmentDesc *desc, UncVolumeSource *vs,
      * for (a directory lookup). Measuring instead — opening every part
      * before extracting — is the prepass the addressed mode exists to
      * avoid, and on removable media it is a disk swap each. */
-    if (desc->scheme == UNC_FORMAT_SPLIT) {
+    if (j->sc->anonymous) {
         if (desc->nparts == 0) return UNC_ERR_CORRUPT;
         if (j->total == UNC_SIZE_UNKNOWN) j->total = seg_total_if_free(j);
         if (j->total == UNC_SIZE_UNKNOWN) return UNC_ERR_CORRUPT;
@@ -496,15 +576,12 @@ int unc_extract_segments(const UncSegmentDesc *desc, UncVolumeSource *vs,
     else { c.opt.list_only = 0; c.opt.test_only = 0;
            c.opt.name_hint = 0; c.opt.name_hint_len = 0; }
 
-    if (desc->scheme == UNC_FORMAT_ZIPSEG)
-        ret = unc_zip_extract(&c);
-    else if (desc->scheme == UNC_FORMAT_CPTSEG)
-        ret = unc_cpt_extract(&c);
+    if (j->sc->extract)
+        ret = j->sc->extract(&c);
     else
         /* SITSEG, SPLIT (the copy above) and DDSEG all join into one
          * file; only the fork order differs. */
-        ret = unc_sitseg_emit(&c, j->desc, 0,
-                              desc->scheme == UNC_FORMAT_DDSEG);
+        ret = unc_sitseg_emit(&c, j->desc, 0, j->sc->data_first);
     seg_release(j);
 
     /* A missing part is the archive's verdict, not the entry's: the

@@ -158,26 +158,28 @@ uint32_t unc_superdisk_single_body(const uint8_t *head, int32_t len)
     return body;
 }
 
-int unc_superdisk_probe(const uint8_t *head, int32_t len, UncIO *io)
+UncFormat unc_superdisk_probe(const uint8_t *head, int32_t len, UncIO *io)
 {
     uint32_t start;
     int has_module, i;
 
-    if (len < 40) return 0;
-    if (unc_superdisk_single_body(head, len)) return 1;
+    if (len < 40) return UNC_FORMAT_UNKNOWN;
+    if (unc_superdisk_single_body(head, len)) return UNC_FORMAT_SUPERDISK;
     /* Cheap rejection first: either a module signature sits where the
      * module chain would put it, or the ninth byte opens a record. */
     if (head[8] == SD_TAG_FILE || head[8] == SD_TAG_DIR) {
         for (i = 9; i < 16; i++)
             if (head[i] != 0) break;
         if (i == 16 && head[16] >= 1 && head[16] <= 31)
-            return sd_end_marker_ok(io);
-        return 0;
+            return (sd_end_marker_ok(io))
+           ? UNC_FORMAT_SUPERDISK : UNC_FORMAT_UNKNOWN;
+        return UNC_FORMAT_UNKNOWN;
     }
     for (i = 0; i < 24; i++)
-        if (head[16 + i] != (uint8_t)sd_modsig[i]) return 0;
-    if (sd_records_start(io, &start, &has_module) != UNC_OK) return 0;
-    return sd_end_marker_ok(io);
+        if (head[16 + i] != (uint8_t)sd_modsig[i]) return UNC_FORMAT_UNKNOWN;
+    if (sd_records_start(io, &start, &has_module) != UNC_OK) return UNC_FORMAT_UNKNOWN;
+    return (sd_end_marker_ok(io))
+           ? UNC_FORMAT_SUPERDISK : UNC_FORMAT_UNKNOWN;
 }
 
 /* ------------------------------------------------------------------ */

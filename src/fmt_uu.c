@@ -256,8 +256,9 @@ static int uu_line_is_data(const uint8_t *p, int32_t len)
 
 /* Shared with uu_section: a line belongs to the stream only if it can
  * be one. See the comment there for what that buys and what it costs. */
-int unc_uu_probe(const uint8_t *head, int32_t len)
+UncFormat unc_uu_probe(const uint8_t *head, int32_t len, UncIO *io)
 {
+    (void)io;
     int32_t i = 0;
 
     while (i < len) {
@@ -276,12 +277,13 @@ int unc_uu_probe(const uint8_t *head, int32_t len)
                 ne = i;
                 while (i < len && (head[i] == '\n' || head[i] == '\r')) i++;
                 if (ne == ns) continue;                 /* blank */
-                return uu_line_is_data(head + ns, ne - ns);
+                return (uu_line_is_data(head + ns, ne - ns))
+           ? UNC_FORMAT_UU : UNC_FORMAT_UNKNOWN;
             }
-            return 0;   /* begin line, but the file ends there */
+            return UNC_FORMAT_UNKNOWN;   /* begin line, but the file ends there */
         }
     }
-    return 0;
+    return UNC_FORMAT_UNKNOWN;
 }
 
 /* ------------------------------------------------------------------ */
@@ -472,7 +474,7 @@ static int uu_scan_doc(UncCtx *c, UncBufIn *in, uint32_t base, UuLine *l,
 int unc_uu_extract(UncCtx *c)
 {
     uint8_t *iobuf;
-    uint32_t iocap = 4096;
+    uint32_t iocap = UNC_IOBUF;
     UncBufIn in;
     UuLine l;
     UuDoc d;

@@ -2045,7 +2045,7 @@ and the call graph comes from the relocations in the linked objects
 
 | | before 2026-08-24 | now |
 |---|---|---|
-| deepest chain in the engine | 6,664 B (`unc_dd_extract` → `dd_fork` → `dd_ddn`) | **3,334 B** |
+| deepest chain in the engine | 6,664 B (`unc_dd_extract` → `dd_fork` → `dd_ddn`) | **3,330 B** |
 | Now Compress chain | 5,632 B | ~1,400 B |
 | largest single frame | 3,740 B (`dd_fork`) | **2,352 B** (`ars_index_build`) |
 
@@ -2056,8 +2056,10 @@ near the machine: `mac/macextract_mac.c` runs
 the shell has **32 KB of stack**, not the 8 KB default. The rule is what keeps
 the engine portable to a host that did not ask for more.
 
-That 3,290 B became 3,334 B on 2026-08-27, when `dd_fork` gained 44 bytes to
-the shared fork writer (DECISIONS.md, *the fork writer and the filter*).
+That 3,290 B became 3,330 B on 2026-08-27: `dd_fork` gained 44 bytes to the
+shared fork writer and gave 4 back when its prologue was hoisted out of nine
+branches (DECISIONS.md, *the fork writer and the filter*, and *the shapes that
+were left*).
 
 What fixed it: DiskDoubler's three `UncCanon` and Now Compress's two moved to
 the heap (~3.9 KB each, per fork and per archive respectively), and the zip

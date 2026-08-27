@@ -46,7 +46,6 @@
 #define SS_HDRLEN   84u
 #define SS_MAGIC1   0x53495421u        /* 'SIT!' */
 #define SS_MAGIC2   0x44464433u        /* 'DFD3' */
-#define SS_IOBUF    4096u
 #define SS_MAXWBITS 16                 /* 64 KB, the largest window the
                                         * module's own arithmetic allows */
 
@@ -160,18 +159,20 @@ static int ss_head_ok(const SsHead *o)
     return 1;
 }
 
-int unc_spacesaver_probe(const uint8_t *head, int32_t len)
+UncFormat unc_spacesaver_probe(const uint8_t *head, int32_t len, UncIO *io)
 {
+    (void)io;
     SsHead o;
-    if (len < (int32_t)SS_HDRLEN) return 0;
-    if (unc_get_u32be(head) != SS_MAGIC1) return 0;
-    if (unc_get_u32be(head + 4) != SS_MAGIC2) return 0;
+    if (len < (int32_t)SS_HDRLEN) return UNC_FORMAT_UNKNOWN;
+    if (unc_get_u32be(head) != SS_MAGIC1) return UNC_FORMAT_UNKNOWN;
+    if (unc_get_u32be(head + 4) != SS_MAGIC2) return UNC_FORMAT_UNKNOWN;
     /* Version 3 states its own header length and it is always 84;
      * ReadSSHeader reads exactly that many bytes before looking. */
     if (unc_get_u32be(head + 8) >= 3 && unc_get_u32be(head + 12) != SS_HDRLEN)
-        return 0;
+        return UNC_FORMAT_UNKNOWN;
     ss_parse(head, &o);
-    return ss_head_ok(&o);
+    return (ss_head_ok(&o))
+           ? UNC_FORMAT_SPACESAVER : UNC_FORMAT_UNKNOWN;
 }
 
 /* ------------------------------------------------------------------ */
@@ -1082,7 +1083,7 @@ int unc_spacesaver_extract(UncCtx *c)
 
     if (unc_read_at(c->io, 0, hdr, (int32_t)SS_HDRLEN) != UNC_OK)
         return UNC_ERR_TRUNCATED;
-    if (!unc_spacesaver_probe(hdr, (int32_t)SS_HDRLEN)) return UNC_ERR_FORMAT;
+    if (!unc_spacesaver_probe(hdr, (int32_t)SS_HDRLEN, NULL)) return UNC_ERR_FORMAT;
     ss_parse(hdr, &h);
 
     unc_entry_clear(&e);
@@ -1100,7 +1101,7 @@ int unc_spacesaver_extract(UncCtx *c)
     if (sret < 0) return UNC_ERR_SINK;
     if (sret == 0) {
         if (!c->opt.list_only) {
-            iobuf = (uint8_t *)unc_alloc(c->al, SS_IOBUF);
+            iobuf = (uint8_t *)unc_alloc(c->al, UNC_IOBUF);
             if (!iobuf) {
                 ferr = UNC_ERR_MEM;
             } else {
@@ -1113,7 +1114,7 @@ int unc_spacesaver_extract(UncCtx *c)
                                  i ? UNC_FORK_RSRC : UNC_FORK_DATA,
                                  !c->opt.test_only && !c->opt.list_only,
                                  UNC_CK_NONE, s.sbuf, UNC_STAGE);
-                    ferr = ss_one_fork(&s, &h.fork[i], iobuf, SS_IOBUF);
+                    ferr = ss_one_fork(&s, &h.fork[i], iobuf, UNC_IOBUF);
                 }
                 unc_free(c->al, iobuf);
             }

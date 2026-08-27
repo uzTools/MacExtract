@@ -13,6 +13,11 @@
  */
 #include "unc_internal.h"
 
+/* Twice UNC_IOBUF. These readers move whole runs rather than bytes:
+ * inflate hands back a block at a time, LZW a phrase, and tar copies
+ * member data straight through. */
+#define EXO_BUF (2u * UNC_IOBUF)
+
 /* Shared emit callback: write to sink data fork. */
 typedef struct ExoSink {
     UncCtx *c;
@@ -38,15 +43,17 @@ static void exo_hint_name(UncCtx *c, UncEntryInfo *e)
 /* gzip (RFC 1952)                                                    */
 /* ------------------------------------------------------------------ */
 
-int unc_gzip_probe(const uint8_t *head, int32_t len)
+UncFormat unc_gzip_probe(const uint8_t *head, int32_t len, UncIO *io)
 {
-    return len >= 3 && head[0] == 0x1F && head[1] == 0x8B && head[2] == 8;
+    (void)io;
+    return (len >= 3 && head[0] == 0x1F && head[1] == 0x8B && head[2] == 8)
+           ? UNC_FORMAT_GZIP : UNC_FORMAT_UNKNOWN;
 }
 
 int unc_gzip_extract(UncCtx *c)
 {
     uint8_t hdr[10], *iobuf, *obuf;
-    uint32_t iocap = 4096, ocap = 8192;
+    uint32_t iocap = UNC_IOBUF, ocap = EXO_BUF;
     UncBufIn in;
     UncEntryInfo e;
     ExoSink es;
@@ -136,15 +143,17 @@ out:
 /* Unix compress .Z                                                   */
 /* ------------------------------------------------------------------ */
 
-int unc_compressz_probe(const uint8_t *head, int32_t len)
+UncFormat unc_compressz_probe(const uint8_t *head, int32_t len, UncIO *io)
 {
-    return len >= 3 && head[0] == 0x1F && head[1] == 0x9D;
+    (void)io;
+    return (len >= 3 && head[0] == 0x1F && head[1] == 0x9D)
+           ? UNC_FORMAT_COMPRESS_Z : UNC_FORMAT_UNKNOWN;
 }
 
 int unc_compressz_extract(UncCtx *c)
 {
     uint8_t hdr[3], *iobuf, *obuf;
-    uint32_t iocap = 4096, ocap = 8192;
+    uint32_t iocap = UNC_IOBUF, ocap = EXO_BUF;
     UncBufIn in;
     UncLzw z;
     UncEntryInfo e;
@@ -240,16 +249,17 @@ static int tar_field_ok(const uint8_t *p, int32_t n)
     return i == n;
 }
 
-int unc_tar_probe(const uint8_t *head, int32_t len)
+UncFormat unc_tar_probe(const uint8_t *head, int32_t len, UncIO *io)
 {
+    (void)io;
     int32_t i;
-    if (len < 512) return 0;
-    if (!tar_checksum_ok(head)) return 0;
+    if (len < 512) return UNC_FORMAT_UNKNOWN;
+    if (!tar_checksum_ok(head)) return UNC_FORMAT_UNKNOWN;
 
     /* POSIX/old-GNU: "ustar" magic at 257 plus the checksum. */
     if (head[257] == 'u' && head[258] == 's' && head[259] == 't' &&
         head[260] == 'a' && head[261] == 'r')
-        return 1;
+        return UNC_FORMAT_TAR;
 
     /* Pre-POSIX v7 tar has NO magic. XADTarParser falls back to the
      * *filename* for these, which our content-only rule forbids, so
@@ -258,17 +268,17 @@ int unc_tar_probe(const uint8_t *head, int32_t len)
      *   - name: NUL-terminated printable, non-empty
      *   - mode/uid/gid/size/mtime: octal fields
      *   - typeflag: NUL or '0'..'7' */
-    if (head[0] == 0) return 0;
+    if (head[0] == 0) return UNC_FORMAT_UNKNOWN;
     for (i = 0; i < 100 && head[i]; i++)
-        if (head[i] < 0x20 || head[i] == 0x7F) return 0;
-    if (i == 100) return 0;                    /* name not terminated */
-    if (!tar_field_ok(head + 100, 8)) return 0;   /* mode  */
-    if (!tar_field_ok(head + 108, 8)) return 0;   /* uid   */
-    if (!tar_field_ok(head + 116, 8)) return 0;   /* gid   */
-    if (!tar_field_ok(head + 124, 12)) return 0;  /* size  */
-    if (!tar_field_ok(head + 136, 12)) return 0;  /* mtime */
-    if (head[156] != 0 && (head[156] < '0' || head[156] > '7')) return 0;
-    return 1;
+        if (head[i] < 0x20 || head[i] == 0x7F) return UNC_FORMAT_UNKNOWN;
+    if (i == 100) return UNC_FORMAT_UNKNOWN;                    /* name not terminated */
+    if (!tar_field_ok(head + 100, 8)) return UNC_FORMAT_UNKNOWN;   /* mode  */
+    if (!tar_field_ok(head + 108, 8)) return UNC_FORMAT_UNKNOWN;   /* uid   */
+    if (!tar_field_ok(head + 116, 8)) return UNC_FORMAT_UNKNOWN;   /* gid   */
+    if (!tar_field_ok(head + 124, 12)) return UNC_FORMAT_UNKNOWN;  /* size  */
+    if (!tar_field_ok(head + 136, 12)) return UNC_FORMAT_UNKNOWN;  /* mtime */
+    if (head[156] != 0 && (head[156] < '0' || head[156] > '7')) return UNC_FORMAT_UNKNOWN;
+    return UNC_FORMAT_TAR;
 }
 
 int unc_tar_extract(UncCtx *c)
@@ -278,7 +288,7 @@ int unc_tar_extract(UncCtx *c)
     int seen = 0;
     int err = UNC_OK;
     uint8_t *iobuf;
-    uint32_t iocap = 8192;
+    uint32_t iocap = EXO_BUF;
 
     fsize = c->io->size(c->io->ctx);
     iobuf = (uint8_t *)unc_alloc(c->al, iocap);
@@ -442,14 +452,15 @@ int unc_tar_extract(UncCtx *c)
 /* zip (EOCD + central directory; store and deflate)                  */
 /* ------------------------------------------------------------------ */
 
-int unc_zip_probe(const uint8_t *head, int32_t len)
+UncFormat unc_zip_probe(const uint8_t *head, int32_t len, UncIO *io)
 {
-    if (len < 4) return 0;
+    (void)io;
+    if (len < 4) return UNC_FORMAT_UNKNOWN;
     /* Local file header or (rarely first) central dir / EOCD magic. */
     if (head[0] == 'P' && head[1] == 'K' &&
         ((head[2] == 3 && head[3] == 4) ||
          (head[2] == 5 && head[3] == 6)))    /* empty archive */
-        return 1;
+        return UNC_FORMAT_ZIP;
     /* A local header displaced to offset 4: what a splitting zip writes
      * when it puts a marker in front. That archive may be a set of one,
      * in which case it is an ordinary zip and reads as one — the four
@@ -457,8 +468,9 @@ int unc_zip_probe(const uint8_t *head, int32_t len)
      * Source: reference/XADMaster/XADZipParser.m
      * +recognizeFileWithHandle:, `bytes[4..7] == PK\3\4`. Segmented
      * sets are caught before this by unc_zipseg_probe. */
-    return len >= 8 && head[4] == 'P' && head[5] == 'K' &&
-           head[6] == 3 && head[7] == 4;
+    return (len >= 8 && head[4] == 'P' && head[5] == 'K' &&
+           head[6] == 3 && head[7] == 4)
+           ? UNC_FORMAT_ZIP : UNC_FORMAT_UNKNOWN;
 }
 
 /* A zip stores every address as (part, offset within that part). For an
@@ -620,7 +632,7 @@ int unc_zip_extract(UncCtx *c)
     uint32_t eocd = 0, scanend;
     uint8_t *iobuf = NULL, *obuf, *cdbuf = NULL;
     UncCrypt *cr;
-    uint32_t iocap = 4096, ocap = 8192;
+    uint32_t iocap = UNC_IOBUF, ocap = EXO_BUF;
     uint32_t nentries, cdoffs, cdsize, cdrel, disknum, cddisk;
     uint32_t lastpart0 = 0;
     uint8_t eo[22];

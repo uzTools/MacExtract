@@ -50,12 +50,14 @@ static const char sit5_banner[] =
     "StuffIt (c)1997-\xFF\xFF\xFF\xFF"
     " Aladdin Systems, Inc., http://www.aladdinsys.com/StuffIt/\x0d\x0a";
 
-int unc_sit5_probe(const uint8_t *head, int32_t len)
+UncFormat unc_sit5_probe(const uint8_t *head, int32_t len, UncIO *io)
 {
+    (void)io;
     const char *m = sit5_banner;
-    if (len < 100) return 0;
+    if (len < 100) return UNC_FORMAT_UNKNOWN;
     while (*m && (*head == (uint8_t)*m || (uint8_t)*m == 0xFF)) { m++; head++; }
-    return *m == 0;
+    return (*m == 0)
+           ? UNC_FORMAT_SIT5 : UNC_FORMAT_UNKNOWN;
 }
 
 /* Map from directory entry offset -> its path, for parent lookup.
@@ -144,13 +146,13 @@ int unc_sit5_extract(UncCtx *c)
     uint8_t pwhash[UNC_SIT5_KEYLEN], archivekey[UNC_SIT5_KEYLEN];
     uint8_t datakey[UNC_SIT5_KEYLEN], rsrckey[UNC_SIT5_KEYLEN];
     int havehash = 0, havekey = 0;
-    uint32_t iocap = 4096, ocap = 4096;
+    uint32_t iocap = UNC_IOBUF, ocap = UNC_IOBUF;
     int err = UNC_OK;
 
     fsize = c->io->size(c->io->ctx);
 
     if (unc_read_at(c->io, 0, hdr, 100) != UNC_OK) return UNC_ERR_FORMAT;
-    if (!unc_sit5_probe(hdr, 100)) return UNC_ERR_FORMAT;
+    if (!unc_sit5_probe(hdr, 100, NULL)) return UNC_ERR_FORMAT;
     if (hdr[82] != 5) return UNC_ERR_FORMAT;      /* archive version */
     /* 80-byte banner, u8 version, u8 flags, u32 totalsize @84,
      * u32 ? @88, u16 numfiles @92, u32 firstoffs @94, u16 crc @98. */

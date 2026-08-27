@@ -40,7 +40,7 @@ static const char bh_banner[40] = "(This file must be converted with BinHex";
 /* Probe: banner within the head buffer, then EOL, whitespace, ':'.   */
 /* ------------------------------------------------------------------ */
 
-int unc_binhex_probe(const uint8_t *head, int32_t len, UncIO *io)
+UncFormat unc_binhex_probe(const uint8_t *head, int32_t len, UncIO *io)
 {
     /* The banner can sit deep inside mail headers/digests, so scan up
      * to BH_SNIFF_LIMIT bytes (XADMaster inspects 8 KB too): first the
@@ -52,7 +52,7 @@ int unc_binhex_probe(const uint8_t *head, int32_t len, UncIO *io)
     int found = 0;
 
     /* Earlier probes may have moved the position; continue after head. */
-    if (io->seek(io->ctx, (uint32_t)len) < 0) return 0;
+    if (io->seek(io->ctx, (uint32_t)len) < 0) return UNC_FORMAT_UNKNOWN;
 
     while (!found && scanned < BH_SNIFF_LIMIT) {
         int ch;
@@ -80,7 +80,8 @@ int unc_binhex_probe(const uint8_t *head, int32_t len, UncIO *io)
             if (i == 40) found = 1;
         }
     }
-    return found;
+    return (found)
+           ? UNC_FORMAT_BINHEX : UNC_FORMAT_UNKNOWN;
 }
 
 /* ------------------------------------------------------------------ */
@@ -439,7 +440,7 @@ int unc_binhex_extract(UncCtx *c)
 {
     BhDec d;
     uint8_t *iobuf, *obuf;
-    uint32_t iocap = 4096, ocap = 4096;
+    uint32_t iocap = UNC_IOBUF, ocap = UNC_IOBUF;
     uint32_t docs;
     int err;
 

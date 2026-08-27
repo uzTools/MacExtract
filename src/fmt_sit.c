@@ -40,19 +40,20 @@
 #define SIT_ENDFOLDER   0x21
 #define SIT_METHODMASK  0x7F  /* ~0x80 */
 
-int unc_sit_probe(const uint8_t *head, int32_t len)
+UncFormat unc_sit_probe(const uint8_t *head, int32_t len, UncIO *io)
 {
+    (void)io;
     /* Source: XADStuffItParser.m recognizeFileWithHandle. */
-    if (len < 14) return 0;
-    if (unc_get_u32be(head + 10) != 0x724c6175u) return 0;   /* 'rLau' */
-    if (unc_get_u32be(head) == 0x53495421u) return 1;        /* 'SIT!' */
+    if (len < 14) return UNC_FORMAT_UNKNOWN;
+    if (unc_get_u32be(head + 10) != 0x724c6175u) return UNC_FORMAT_UNKNOWN;   /* 'rLau' */
+    if (unc_get_u32be(head) == 0x53495421u) return UNC_FORMAT_SIT;        /* 'SIT!' */
     if (head[0] == 'S' && head[1] == 'T') {                  /* installers */
         if (head[2] == 'i' &&
-            (head[3] == 'n' || (head[3] >= '0' && head[3] <= '9'))) return 1;
+            (head[3] == 'n' || (head[3] >= '0' && head[3] <= '9'))) return UNC_FORMAT_SIT;
         if (head[2] >= '0' && head[2] <= '9' &&
-            head[3] >= '0' && head[3] <= '9') return 1;
+            head[3] >= '0' && head[3] <= '9') return UNC_FORMAT_SIT;
     }
-    return 0;
+    return UNC_FORMAT_UNKNOWN;
 }
 
 /* ------------------------------------------------------------------ */
@@ -736,13 +737,13 @@ int unc_sit_extract(UncCtx *c)
     int depth = 0;
     uint8_t *iobuf, *obuf;
     UncCrypt *cr;
-    uint32_t iocap = 4096, ocap = 4096;
+    uint32_t iocap = UNC_IOBUF, ocap = UNC_IOBUF;
     int err = UNC_OK;
 
     fsize = c->io->size(c->io->ctx);
 
     if (unc_read_at(c->io, 0, hdr, 22) != UNC_OK) return UNC_ERR_FORMAT;
-    if (!unc_sit_probe(hdr, 22)) return UNC_ERR_FORMAT;
+    if (!unc_sit_probe(hdr, 22, NULL)) return UNC_ERR_FORMAT;
     totalsize = unc_get_u32be(hdr + 6);
     if (fsize != UNC_SIZE_UNKNOWN && totalsize > fsize) totalsize = fsize;
     pos = 22;

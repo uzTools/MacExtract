@@ -156,26 +156,28 @@ static int zs_head_is_first_part(const uint8_t *head, int32_t len)
            head[6] == 3 && head[7] == 4;
 }
 
-int unc_zipseg_probe(const uint8_t *head, int32_t len, UncIO *io)
+UncFormat unc_zipseg_probe(const uint8_t *head, int32_t len, UncIO *io)
 {
     uint32_t fsize, at, disknum, cddisk;
 
-    if (!io) return 0;
+    if (!io) return UNC_FORMAT_UNKNOWN;
     fsize = io->size(io->ctx);
-    if (fsize == UNC_SIZE_UNKNOWN) return 0;
+    if (fsize == UNC_SIZE_UNKNOWN) return UNC_FORMAT_UNKNOWN;
 
     if (zs_find_eocd(io, fsize, &at) == UNC_OK) {
-        if (zs_read_eocd(io, at, &disknum, &cddisk) != UNC_OK) return 0;
+        if (zs_read_eocd(io, at, &disknum, &cddisk) != UNC_OK) return UNC_FORMAT_UNKNOWN;
         /* An EOCD that says "disk 0" describes a set of one, i.e. an
          * ordinary zip — including the one `zip -s` writes when the
          * archive did not need splitting after all. */
-        return disknum != 0;
+        return (disknum != 0)
+           ? UNC_FORMAT_ZIPSEG : UNC_FORMAT_UNKNOWN;
     }
 
     /* No EOCD anywhere: this cannot be a whole archive. If it has the
      * first part's shape, say so; unc_zip_probe would otherwise claim
      * it and the failure would read as "not a zip". */
-    return zs_head_is_first_part(head, len);
+    return (zs_head_is_first_part(head, len))
+           ? UNC_FORMAT_ZIPSEG : UNC_FORMAT_UNKNOWN;
 }
 
 int unc_zipseg_describe(UncIO *io, UncSegmentDesc *desc)

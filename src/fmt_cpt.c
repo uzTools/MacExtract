@@ -53,41 +53,42 @@
 /* its own.                                                           */
 /* ------------------------------------------------------------------ */
 
-int unc_cpt_probe(const uint8_t *head, int32_t len, UncIO *io)
+UncFormat unc_cpt_probe(const uint8_t *head, int32_t len, UncIO *io)
 {
     uint8_t buf[256];   /* max chunk: 255-byte archive comment; entries
                          * are smaller (127-byte name + 45 meta) */
     uint32_t offset, crc, storedcrc, fsize;
     uint32_t nentries, commentlen, i;
 
-    if (len < 8 || head[0] != 1) return 0;
+    if (len < 8 || head[0] != 1) return UNC_FORMAT_UNKNOWN;
     offset = unc_get_u32be(head + 4);
     fsize = io->size(io->ctx);
     if (fsize != UNC_SIZE_UNKNOWN && (offset + 7 < offset || offset + 7 > fsize))
-        return 0;
+        return UNC_FORMAT_UNKNOWN;
 
-    if (unc_read_at(io, offset, buf, 7) != UNC_OK) return 0;
+    if (unc_read_at(io, offset, buf, 7) != UNC_OK) return UNC_FORMAT_UNKNOWN;
     storedcrc = unc_get_u32be(buf);
     crc = unc_crc32(0xFFFFFFFFu, buf + 4, 3);
     nentries = unc_get_u16be(buf + 4);
     commentlen = buf[6];
 
     if (commentlen) {
-        if (unc_read_full(io, buf, (int32_t)commentlen) != UNC_OK) return 0;
+        if (unc_read_full(io, buf, (int32_t)commentlen) != UNC_OK) return UNC_FORMAT_UNKNOWN;
         crc = unc_crc32(crc, buf, (int32_t)commentlen);
     }
 
     for (i = 0; i < nentries; i++) {
         uint32_t namelen, metalen, left;
-        if (unc_read_full(io, buf, 1) != UNC_OK) return 0;
+        if (unc_read_full(io, buf, 1) != UNC_OK) return UNC_FORMAT_UNKNOWN;
         crc = unc_crc32(crc, buf, 1);
         namelen = buf[0] & 0x7f;
         metalen = (buf[0] & 0x80) ? 2 : 45;
         left = namelen + metalen;
-        if (unc_read_full(io, buf, (int32_t)left) != UNC_OK) return 0;
+        if (unc_read_full(io, buf, (int32_t)left) != UNC_OK) return UNC_FORMAT_UNKNOWN;
         crc = unc_crc32(crc, buf, (int32_t)left);
     }
-    return crc == storedcrc;
+    return (crc == storedcrc)
+           ? UNC_FORMAT_COMPACTPRO : UNC_FORMAT_UNKNOWN;
 }
 
 /* ------------------------------------------------------------------ */
@@ -522,7 +523,7 @@ int unc_cpt_extract(UncCtx *c)
     UncEntryInfo e;
     uint8_t *iobuf, *obuf, *window;
     CptLzh *hz;
-    uint32_t iocap = 4096, ocap = 4096;
+    uint32_t iocap = UNC_IOBUF, ocap = UNC_IOBUF;
     uint8_t path[UNC_NAME_MAX + 1];
     uint16_t plen = 0;
     uint32_t idxvol;

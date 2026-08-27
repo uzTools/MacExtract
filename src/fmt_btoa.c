@@ -55,8 +55,9 @@
 
 #define BTOA_LINE_MAX 256      /* btoa.h caps a line at 78 + slack     */
 
-int unc_btoa_probe(const uint8_t *head, int32_t len)
+UncFormat unc_btoa_probe(const uint8_t *head, int32_t len, UncIO *io)
 {
+    (void)io;
     /* "xbtoa Begin" or "xbtoa5 ", at the start of some line within the
      * bytes we were handed — a btoa file may arrive with mail headers
      * in front of it, exactly as a BinHex or uuencoded one does. */
@@ -71,14 +72,14 @@ int unc_btoa_probe(const uint8_t *head, int32_t len)
                 head[i + 6] == 'B' && head[i + 7] == 'e' &&
                 head[i + 8] == 'g' && head[i + 9] == 'i' &&
                 head[i + 10] == 'n')
-                return 1;
-            if (head[i + 5] == '5' && head[i + 6] == ' ') return 1;
+                return UNC_FORMAT_BTOA;
+            if (head[i + 5] == '5' && head[i + 6] == ' ') return UNC_FORMAT_BTOA;
         }
         while (j < len && (head[j] == '\n' || head[j] == '\r')) j++;
         if (j == i) break;
         i = j;
     }
-    return 0;
+    return UNC_FORMAT_UNKNOWN;
 }
 
 /* ------------------------------------------------------------------ */
@@ -252,7 +253,7 @@ int unc_btoa_extract(UncCtx *c)
     UncBufIn in;
     BtoaState s;
     uint8_t *iobuf, *obuf, *line;
-    uint32_t iocap = 4096, ocap = 4096;
+    uint32_t iocap = UNC_IOBUF, ocap = UNC_IOBUF;
     int32_t n;
     int newver = 0, perline = 0, started = 0;
     uint8_t name[UNC_NAME_MAX + 1];

@@ -62,20 +62,22 @@
  * data with an 8-byte hat, and there is nothing else in it to check.
  * The FINAL segment is checked properly — unc_cpt_probe walks its index
  * CRC — so a set is only ever adjudicated by the part that can be. */
-int unc_cptseg_probe(const uint8_t *head, int32_t len, UncIO *io)
+UncFormat unc_cptseg_probe(const uint8_t *head, int32_t len, UncIO *io)
 {
     uint32_t idx;
 
-    if (len < CPTS_HDR || head[0] != 1) return 0;
+    if (len < CPTS_HDR || head[0] != 1) return UNC_FORMAT_UNKNOWN;
     idx = unc_get_u32be(head + 4);
-    if (head[1] == 0) return 0;                  /* there is no volume 0 */
-    if (head[1] == 1) return idx == 0;           /* first of a set       */
+    if (head[1] == 0) return UNC_FORMAT_UNKNOWN;                  /* there is no volume 0 */
+    if (head[1] == 1) return (idx == 0)
+           ? UNC_FORMAT_CPTSEG : UNC_FORMAT_UNKNOWN;           /* first of a set       */
     /* Volume 2+: a segment. If it carries an index it is the final one,
      * and then it must survive the same walk an archive does — that is
      * the one check available here, and it is worth making, because a
      * final segment is also the file this scheme is opened by. */
-    if (idx == 0) return 1;
-    return unc_cpt_probe(head, len, io);
+    if (idx == 0) return UNC_FORMAT_CPTSEG;
+    return (unc_cpt_probe(head, len, io))
+           ? UNC_FORMAT_CPTSEG : UNC_FORMAT_UNKNOWN;
 }
 
 int unc_cptseg_describe(UncIO *io, UncSegmentDesc *desc)

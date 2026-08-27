@@ -179,7 +179,7 @@ static int b64_bare_probe(const uint8_t *head, int32_t len, UncIO *io)
     return 1;
 }
 
-int unc_b64_probe(const uint8_t *head, int32_t len, UncIO *io)
+UncFormat unc_b64_probe(const uint8_t *head, int32_t len, UncIO *io)
 {
     int32_t i = 0;
 
@@ -198,13 +198,15 @@ int unc_b64_probe(const uint8_t *head, int32_t len, UncIO *io)
                 ne = i;
                 while (i < len && (head[i] == '\n' || head[i] == '\r')) i++;
                 if (ne == ns) continue;
-                return b64_line_ok(head + ns, ne - ns);
+                return (b64_line_ok(head + ns, ne - ns))
+           ? UNC_FORMAT_BASE64 : UNC_FORMAT_UNKNOWN;
             }
-            return 0;
+            return UNC_FORMAT_UNKNOWN;
         }
     }
 
-    return b64_bare_probe(head, len, io);
+    return (b64_bare_probe(head, len, io))
+           ? UNC_FORMAT_BASE64 : UNC_FORMAT_UNKNOWN;
 }
 
 /* ------------------------------------------------------------------ */

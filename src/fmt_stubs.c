@@ -8,31 +8,35 @@
 
 /* StuffIt X: 8-byte magic "StuffIt!" or "StuffIt?".
  * Source: reference/XADMaster/XADStuffItXParser.m. */
-int unc_sitx_probe(const uint8_t *head, int32_t len)
+UncFormat unc_sitx_probe(const uint8_t *head, int32_t len, UncIO *io)
 {
-    if (len < 8) return 0;
-    return head[0] == 'S' && head[1] == 't' && head[2] == 'u' &&
+    (void)io;
+    if (len < 8) return UNC_FORMAT_UNKNOWN;
+    return (head[0] == 'S' && head[1] == 't' && head[2] == 'u' &&
            head[3] == 'f' && head[4] == 'f' && head[5] == 'I' &&
-           head[6] == 't' && (head[7] == '!' || head[7] == '?');
+           head[6] == 't' && (head[7] == '!' || head[7] == '?'))
+           ? UNC_FORMAT_SITX : UNC_FORMAT_UNKNOWN;
 }
 
 /* Now Compress: 00 02 magic, plausible file count, Pascal name, and a
  * byte-sum checksum over bytes 24..129 stored at 130.
  * Source: reference/XADMaster/XADNowCompressParser.m. */
-int unc_nowcompress_probe(const uint8_t *head, int32_t len)
+UncFormat unc_nowcompress_probe(const uint8_t *head, int32_t len, UncIO *io)
 {
+    (void)io;
     uint32_t nfiles, sum;
     int32_t i;
-    if (len < 134) return 0;
-    if (head[0] != 0x00 || head[1] != 0x02) return 0;
+    if (len < 134) return UNC_FORMAT_UNKNOWN;
+    if (head[0] != 0x00 || head[1] != 0x02) return UNC_FORMAT_UNKNOWN;
     nfiles = unc_get_u32be(head + 8);
-    if (nfiles == 0 || nfiles > 0xFFFF) return 0;
-    if (head[24] == 0 || head[24] > 31) return 0;
+    if (nfiles == 0 || nfiles > 0xFFFF) return UNC_FORMAT_UNKNOWN;
+    if (head[24] == 0 || head[24] > 31) return UNC_FORMAT_UNKNOWN;
     for (i = 0; i < head[24]; i++)
-        if (head[25 + i] < 32) return 0;
+        if (head[25 + i] < 32) return UNC_FORMAT_UNKNOWN;
     sum = 0;
     for (i = 24; i < 130; i++) sum += head[i];
-    return sum == unc_get_u32be(head + 130);
+    return (sum == unc_get_u32be(head + 130))
+           ? UNC_FORMAT_NOWCOMPRESS : UNC_FORMAT_UNKNOWN;
 }
 
 /* DiskDoubler: 0xABCD0054 magic + XMODEM CRC of the 82-byte header
@@ -40,17 +44,18 @@ int unc_nowcompress_probe(const uint8_t *head, int32_t len)
  * Source: reference/XADMaster/XADDiskDoublerParser.m — its
  * reversed-table CRC formulation equals plain CRC-16/XMODEM, see
  * DECISIONS.md M0. */
-int unc_diskdoubler_probe(const uint8_t *head, int32_t len)
+UncFormat unc_diskdoubler_probe(const uint8_t *head, int32_t len, UncIO *io)
 {
+    (void)io;
     if (len >= 84 && unc_get_u32be(head) == 0xABCD0054u) {
         uint16_t crc = unc_get_u16be(head + 82);
-        if (crc == 0 || crc == unc_crc16_xmodem(0, head, 82)) return 1;
+        if (crc == 0 || crc == unc_crc16_xmodem(0, head, 82)) return UNC_FORMAT_DISKDOUBLER;
     }
     if (len >= 78 && unc_get_u32be(head) == 0x44444152u &&    /* 'DDAR' */
-        unc_get_u16be(head + 76) == unc_crc16_xmodem(0, head, 76)) return 1;
+        unc_get_u16be(head + 76) == unc_crc16_xmodem(0, head, 76)) return UNC_FORMAT_DISKDOUBLER;
     if (len >= 62 && unc_get_u32be(head) == 0x44444132u &&    /* 'DDA2' */
-        unc_get_u16be(head + 60) == unc_crc16_xmodem(0, head, 60)) return 1;
-    return 0;
+        unc_get_u16be(head + 60) == unc_crc16_xmodem(0, head, 60)) return UNC_FORMAT_DISKDOUBLER;
+    return UNC_FORMAT_UNKNOWN;
 }
 
 /* ------------------------------------------------------------------ */
@@ -110,18 +115,20 @@ static int al_is(const char *tok, const char *want)
     return *want == 0 && *tok == 0;
 }
 
-int unc_applelink_probe(const uint8_t *head, int32_t len)
+UncFormat unc_applelink_probe(const uint8_t *head, int32_t len, UncIO *io)
 {
+    (void)io;
     char tok[32];
     int32_t at;
 
-    if (len < 12) return 0;
+    if (len < 12) return UNC_FORMAT_UNKNOWN;
     at = al_token(head, len, 0, tok, (int32_t)sizeof tok);
-    if (at < 0 || !al_is(tok, "decode")) return 0;
+    if (at < 0 || !al_is(tok, "decode")) return UNC_FORMAT_UNKNOWN;
     /* token 2 is what to decode, and may be anything at all */
     at = al_token(head, len, at, tok, (int32_t)sizeof tok);
-    if (at < 0 || tok[0] == 0) return 0;
+    if (at < 0 || tok[0] == 0) return UNC_FORMAT_UNKNOWN;
     at = al_token(head, len, at, tok, (int32_t)sizeof tok);
-    if (at < 0) return 0;
-    return al_is(tok, "to") || al_is(tok, "into");
+    if (at < 0) return UNC_FORMAT_UNKNOWN;
+    return (al_is(tok, "to") || al_is(tok, "into"))
+           ? UNC_FORMAT_APPLELINK : UNC_FORMAT_UNKNOWN;
 }

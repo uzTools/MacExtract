@@ -256,19 +256,6 @@ all** (BLOCKERS.md, the ARC 7 row, filed and disproved the same day).
   reading and it fails as a per-entry checksum error rather than silently.
   **What would change it:** a method 5 fork with a non-zero count.
 
-
-
----
-
-## 4. The same scaffolding, written once per format
-
-**Nothing here is a defect.** Every format extracts byte-exact; what is
-filed is that the code AROUND the codecs is copied rather than shared, and
-what that has already cost. The codecs are not the subject — those are
-different algorithms and stay that way. The reasoning, and the six
-differences that are NOT duplication, are in DECISIONS.md 2026-08-27
-(*the scaffolding audit*, and *the fork writer and the filter*).
-
 - **SpaceSaver's Huffman builder checks less than the shared one does.**
   `ss_a3_build` rejects an over-subscribed table with
   `code > (1u << (L + 1))` where `unc_canon_build_ext` uses
@@ -279,17 +266,3 @@ differences that are NOT duplication, are in DECISIONS.md 2026-08-27
   2026-08-27, *the fork writer and the filter*). **What would close it:**
   the stricter test, and a corrupted-variant run to show nothing real
   depended on the looser one.
-
-- **Smaller, and mechanical.** Probes come in three signatures, which is
-  why `unc_sniff` is a 120-line if-chain rather than a walk over an
-  ordered table; the ordering it argues for is the valuable part of it
-  and survives as table-row comments. `dd_fork` repeats the same
-  `unc_alloc` / `unc_bufin_init` / `dd_out_start` prologue in nine
-  branches — nine `unc_bufin_init` calls in that one function — where a
-  per-method "extra bytes" table would hoist all three out.
-  `unc_segment.c` dispatches on `desc->scheme` at six sites and both
-  hosts do it again, though the per-scheme functions (`unc_ddseg_match`,
-  `unc_cptseg_match`, `unc_ddseg_payload`, the four `*_describe`)
-  already exist and would fill a vtable as they stand. And `4096` is a
-  bare literal in eleven files; `fmt_spacesaver.c` is the one that names
-  it.

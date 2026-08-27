@@ -32,20 +32,20 @@
  * 35064 days = 3029529600 s = 0xB492F400 (naive time, no leap secs). */
 #define AS_EPOCH_2000_AS_MAC 0xB492F400u
 
-int unc_applesingle_probe(const uint8_t *head, int32_t len, UncFormat *out)
+UncFormat unc_applesingle_probe(const uint8_t *head, int32_t len, UncIO *io)
 {
     uint32_t magic, version;
-    if (len < 8) return 0;
+    (void)io;
+    if (len < 8) return UNC_FORMAT_UNKNOWN;
     magic = unc_get_u32be(head);
     version = unc_get_u32be(head + 4);
     if (magic != AS_MAGIC_SINGLE && magic != AS_MAGIC_DOUBLE &&
         magic != AS_MAGIC_SINGLE_LE && magic != AS_MAGIC_DOUBLE_LE)
-        return 0;
-    if (version != AS_VERSION && version != AS_VERSION_LE) return 0;
-    if (out)
-        *out = (magic == AS_MAGIC_SINGLE || magic == AS_MAGIC_SINGLE_LE)
-             ? UNC_FORMAT_APPLESINGLE : UNC_FORMAT_APPLEDOUBLE;
-    return 1;
+        return UNC_FORMAT_UNKNOWN;
+    if (version != AS_VERSION && version != AS_VERSION_LE)
+        return UNC_FORMAT_UNKNOWN;
+    return (magic == AS_MAGIC_SINGLE || magic == AS_MAGIC_SINGLE_LE)
+         ? UNC_FORMAT_APPLESINGLE : UNC_FORMAT_APPLEDOUBLE;
 }
 
 /* Cap on the entry table: real files have <10 entries; 64 is generous
@@ -64,7 +64,7 @@ static int as_stream_fork(UncCtx *c, UncFork fork, uint32_t offs,
     return unc_copy_fork(c, fork, size, buf, bufsz);
 }
 
-int unc_appledouble_extract(UncCtx *c, UncFormat which)
+int unc_appledouble_extract(UncCtx *c)
 {
     uint8_t hdr[26];
     uint8_t etab[AS_MAX_ENTRIES * 12];
@@ -78,7 +78,6 @@ int unc_appledouble_extract(UncCtx *c, UncFormat which)
     uint32_t dataoffs = 0, datalen = 0, rsrcoffs = 0, rsrclen = 0;
     int have_data = 0, have_rsrc = 0;
 
-    (void)which;
 
     err = unc_read_at(c->io, 0, hdr, 26);
     if (err != UNC_OK) return err;

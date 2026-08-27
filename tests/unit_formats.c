@@ -1422,7 +1422,7 @@ static void test_sitseg(void)
         CHECK(unc_segment_match(&desc, other, UNC_SEG_HEAD - 1) == 0);
         /* Part 0 is not a part. */
         seg_head(other, 0, "Thing.sit", 100, 200, 0x11223344u);
-        CHECK(unc_sitseg_probe(other, UNC_SEG_HEAD) == 0);
+        CHECK(unc_sitseg_probe(other, UNC_SEG_HEAD, NULL) == 0);
     }
 
     /* --- a set of one part needs no volume source ----------------- */

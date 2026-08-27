@@ -39,14 +39,15 @@
 
 #define PIT_HDR 94
 
-int unc_packit_probe(const uint8_t *head, int32_t len)
+UncFormat unc_packit_probe(const uint8_t *head, int32_t len, UncIO *io)
 {
+    (void)io;
     /* Source: XADPackItParser.m recognizeFileWithHandle. */
-    if (len < 4) return 0;
+    if (len < 4) return UNC_FORMAT_UNKNOWN;
     if (head[0] == 'P' && head[1] == 'M' && head[2] == 'a' &&
         (head[3] == 'g' || head[3] == '4' || head[3] == '5' || head[3] == '6'))
-        return 1;
-    return 0;
+        return UNC_FORMAT_PACKIT;
+    return UNC_FORMAT_UNKNOWN;
 }
 
 /* Decoder for one entry's byte stream: either raw bufin bytes (PMag)
@@ -149,7 +150,7 @@ static int pit_reopen(UncCtx *c, UncBufIn *in, uint8_t *iobuf, uint32_t iocap,
 int unc_packit_extract(UncCtx *c)
 {
     uint8_t *iobuf, *obuf;
-    uint32_t iocap = 4096, ocap = 4096;
+    uint32_t iocap = UNC_IOBUF, ocap = UNC_IOBUF;
     UncHuff *huff;
     UncCrypt *cr;
     UncBufIn in;

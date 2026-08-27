@@ -134,9 +134,11 @@ uint16_t unc_ddseg_stored_crc(const uint8_t *head)
     return unc_get_u16be(head + DS_CRC);
 }
 
-int unc_ddseg_probe(const uint8_t *head, int32_t len)
+UncFormat unc_ddseg_probe(const uint8_t *head, int32_t len, UncIO *io)
 {
-    return ddseg_parse(head, len, NULL) == UNC_OK;
+    (void)io;
+    return (ddseg_parse(head, len, NULL) == UNC_OK)
+           ? UNC_FORMAT_DDSEG : UNC_FORMAT_UNKNOWN;
 }
 
 int unc_ddseg_describe(UncIO *io, UncSegmentDesc *desc)

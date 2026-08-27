@@ -89,8 +89,10 @@ static int cpio_head(const uint8_t *h, int32_t len)
 
 /* The whole set, strongest magic first. Returns the format, or
  * UNC_FORMAT_UNKNOWN. */
-UncFormat unc_foreign_probe(const uint8_t *head, int32_t len)
+UncFormat unc_foreign_probe(const uint8_t *head, int32_t len,
+                            UncIO *io)
 {
+    (void)io;
     /* RAR, all three generations. 1.5-4.x and 5.x share their first
      * seven bytes and differ in the eighth, so 5 is tested first;
      * "RE~^" is RAR 1.3/1.4, which predates the signature.

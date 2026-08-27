@@ -954,7 +954,7 @@ static int mime_probe_header(const uint8_t *h, int32_t hlen, uint8_t *pb,
     return *saw_ctype && *saw_signal;
 }
 
-int unc_mime_probe(const uint8_t *head, int32_t len, UncIO *io)
+UncFormat unc_mime_probe(const uint8_t *head, int32_t len, UncIO *io)
 {
     /* Deliberately small: this frame is on the sniff path, which every
      * file that reaches the end of unc_sniff pays for. 512 bytes of
@@ -968,7 +968,7 @@ int unc_mime_probe(const uint8_t *head, int32_t len, UncIO *io)
     int32_t n = 0, i = 0;
     int saw_ctype = 0, saw_signal = 0;
 
-    if (len < 16 || !io) return 0;
+    if (len < 16 || !io) return UNC_FORMAT_UNKNOWN;
 
     /* The file has to START like a message: a header line, or the "From "
      * line an mbox begins with. */
@@ -976,7 +976,7 @@ int unc_mime_probe(const uint8_t *head, int32_t len, UncIO *io)
         int32_t e = 0;
         while (e < len && head[e] != '\n' && head[e] != '\r') e++;
         if (!mime_is_header(head, e) &&
-            !mime_ci_prefix(head, e, "from ")) return 0;
+            !mime_ci_prefix(head, e, "from ")) return UNC_FORMAT_UNKNOWN;
     }
 
     size = io->size(io->ctx);
@@ -1020,7 +1020,7 @@ int unc_mime_probe(const uint8_t *head, int32_t len, UncIO *io)
             }
             if (hn > 0) {
                 if (mime_probe_header(hb, hn, pb, &saw_ctype, &saw_signal))
-                    return 1;
+                    return UNC_FORMAT_MIME;
                 hn = 0;
             }
             if (e == s) continue;               /* the end of the headers */
@@ -1032,7 +1032,7 @@ int unc_mime_probe(const uint8_t *head, int32_t len, UncIO *io)
         pos += (uint32_t)n;
     }
     if (hn > 0 && mime_probe_header(hb, hn, pb, &saw_ctype, &saw_signal))
-        return 1;
+        return UNC_FORMAT_MIME;
 
-    return 0;
+    return UNC_FORMAT_UNKNOWN;
 }

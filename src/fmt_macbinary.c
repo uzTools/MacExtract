@@ -86,10 +86,11 @@ static int mb_version(const uint8_t *b, int32_t len)
     return 1;
 }
 
-int unc_macbinary_probe(const uint8_t *head, int32_t len, UncIO *io)
+UncFormat unc_macbinary_probe(const uint8_t *head, int32_t len, UncIO *io)
 {
     (void)io;
-    return mb_version(head, len) > 0;
+    return (mb_version(head, len) > 0)
+           ? UNC_FORMAT_MACBINARY : UNC_FORMAT_UNKNOWN;
 }
 
 /* Stream `size` fork bytes from the current position to the sink,

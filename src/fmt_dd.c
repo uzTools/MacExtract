@@ -868,14 +868,84 @@ static uint32_t dd_window_for(uint32_t size)
     return w;
 }
 
+/* Compact Pro compression in a DiskDoubler container: sixteen bytes
+ * whose sum decides whether the LZH stage is present, then Compact
+ * Pro's RLE either way, and the fork's checksum is a CRC-16/ARC over
+ * the result. It is the one method that does not decode through
+ * DdFork — Compact Pro's stage carries its own writer and its own
+ * checksum — which is why it sits outside dd_fork's dispatch instead
+ * of inside it.
+ * Source: XADDiskDoublerParser.m handleForEntryWithDictionary, case 8. */
+static int dd_fork_cpt(UncCtx *c, UncFork fork, uint32_t complen,
+                       uint32_t uncomplen, uint16_t crc)
+{
+    uint32_t iocap = UNC_IOBUF, ocap = UNC_IOBUF;
+    CptRle rle;
+    CptLzh *hz = NULL;
+    uint8_t *window = NULL, *mem;
+    uint32_t sub = 0;
+    int i, err;
+
+    mem = (uint8_t *)unc_alloc(c->al, iocap + ocap);
+    if (!mem) return UNC_ERR_MEM;
+    {
+        UncBufIn in;
+        unc_bufin_init(&in, c->io, &c->ps, mem, iocap);
+        for (i = 0; i < 16; i++) {
+            int b = unc_bufin_next(&in);
+            if (b < 0) { unc_free(c->al, mem); return in.err; }
+            sub += (uint32_t)b;
+        }
+        unc_cpt_rle_start(&rle, c, fork, uncomplen, 0, mem + iocap, ocap);
+        /* This container checks a CRC-16/ARC that Compact Pro itself
+         * does not keep. */
+        rle.out.ck = UNC_CK_CRC32_16;
+        if (sub == 0) {
+            hz = (CptLzh *)unc_alloc(c->al, (uint32_t)sizeof *hz);
+            window = (uint8_t *)unc_alloc(c->al, CPT_DD_WINDOW);
+            if (!hz || !window) {
+                unc_free(c->al, hz); unc_free(c->al, window);
+                unc_free(c->al, mem);
+                return UNC_ERR_MEM;
+            }
+            err = unc_cpt_lzh_fork(&rle, &in, hz, window, 0xFFF0u);
+        } else {
+            err = unc_cpt_rle_fork(&rle, &in, complen - 16u);
+        }
+    }
+    unc_free(c->al, hz);
+    unc_free(c->al, window);
+    if (err == UNC_OK) err = unc_cpt_rle_flush(&rle);
+    if (err == UNC_OK && rle.remaining != 0) err = UNC_ERR_TRUNCATED;
+    if (err == UNC_OK && crc != 0 && rle.out.crc16 != crc) err = UNC_ERR_CRC;
+    unc_free(c->al, mem);
+    return err;
+}
+
+/* Working memory each method wants BEHIND the input and output staging,
+ * so that the one allocation and the one UncBufIn are set up once
+ * rather than in every branch of the dispatch. */
+#define DD_LZC_STAGE 2048u          /* LZW hands back runs, not bytes  */
+
+static uint32_t dd_extra(int m, uint32_t uncomplen)
+{
+    switch (m) {
+    case 1:            return DD_LZC_STAGE;
+    case 6: case 9:    return DD_AD_BLOCK;
+    case 7:            return DD_STAC_WINDOW;
+    case 10:           return dd_window_for(uncomplen);
+    default:           return 0;
+    }
+}
+
 static int dd_fork(UncCtx *c, UncFork fork, uint32_t at, uint32_t complen,
                    uint32_t uncomplen, int method, int delta, uint16_t crc,
                    int xorval, int xorsum)
 {
-    uint8_t *mem = NULL;
+    uint8_t *mem, *work;
     UncBufIn in;
     DdFork o;
-    uint32_t iocap = 4096, ocap = 4096;
+    uint32_t iocap = UNC_IOBUF, ocap = UNC_IOBUF;
     int err, m = method & 0x7F;
 
     if (uncomplen == 0) return UNC_OK;
@@ -892,15 +962,53 @@ static int dd_fork(UncCtx *c, UncFork fork, uint32_t at, uint32_t complen,
 
     if (c->io->seek(c->io->ctx, at) < 0) return UNC_ERR_IO;
 
-    if (m == 10) {
+    if (m == 8) return dd_fork_cpt(c, fork, complen, uncomplen, crc);
+
+    mem = (uint8_t *)unc_alloc(c->al, iocap + ocap + dd_extra(m, uncomplen));
+    if (!mem) return UNC_ERR_MEM;
+    unc_bufin_init(&in, c->io, &c->ps, mem, iocap);
+    dd_out_start(&o, c, fork, uncomplen, mem + iocap, ocap,
+                 delta == 1 ? 1u : 0u);
+    work = mem + iocap + ocap;
+
+    switch (m) {
+    case 0:
+        err = dd_store(&o, &in, complen);
+        break;
+    case 1:
+        err = dd_lzc(&o, c, &in, complen, xorval, work, DD_LZC_STAGE);
+        break;
+    case 2:
+    case 5: {
+        int ntrees = 256;
+        if (m == 5) {
+            /* Method 5 is method 2 with the tree count in front of the
+             * bit stream, 0 meaning 256.
+             * Source: XADDiskDoublerParser.m case 5. */
+            int nb = unc_bufin_next(&in);
+            if (nb < 0) { err = in.err; break; }
+            ntrees = nb == 0 ? 256 : nb;
+        }
+        err = dd_m2(&o, c, &in, xorval, ntrees);
+        break;
+    }
+    case 3:
+        err = dd_rle(&o, &in, complen, 0);
+        break;
+    case 4:
+        err = dd_huffman(&o, c, &in, 0);
+        break;
+    case 6:
+    case 9:
+        err = dd_adn(&o, &in, work);
+        break;
+    case 7:
+        err = dd_stac(&o, &in, work, complen);
+        break;
+    default: {                                       /* method 10, DDn */
         DdnState st;
-        uint32_t wsize = dd_window_for(uncomplen);
-        mem = (uint8_t *)unc_alloc(c->al, iocap + ocap + wsize);
-        if (!mem) return UNC_ERR_MEM;
-        unc_bufin_init(&in, c->io, &c->ps, mem, iocap);
-        dd_out_start(&o, c, fork, uncomplen, mem + iocap, ocap,
-                     delta == 1 ? 1u : 0u);
-        st.win = mem + iocap + ocap;
+        uint32_t wsize = dd_extra(10, uncomplen);
+        st.win = work;
         st.wsize = wsize;
         st.wmask = wsize - 1;
         st.lit = NULL;
@@ -908,113 +1016,8 @@ static int dd_fork(UncCtx *c, UncFork fork, uint32_t at, uint32_t complen,
         st.base = at;
         err = dd_ddn(&o, c, &st, &in, mem, iocap);
         unc_free(c->al, st.lit);
-    } else if (m == 8) {
-        /* Compact Pro compression in a DiskDoubler container: sixteen
-         * bytes whose sum decides whether the LZH stage is present, then
-         * Compact Pro's RLE either way, and the fork's checksum is a
-         * CRC-16/ARC over the result.
-         * Source: XADDiskDoublerParser.m handleForEntryWithDictionary,
-         * case 8. */
-        CptRle rle;
-        CptLzh *hz = NULL;
-        uint8_t *window = NULL;
-        uint32_t sub = 0;
-        int i;
-
-        mem = (uint8_t *)unc_alloc(c->al, iocap + ocap);
-        if (!mem) return UNC_ERR_MEM;
-        unc_bufin_init(&in, c->io, &c->ps, mem, iocap);
-        for (i = 0; i < 16; i++) {
-            int b = unc_bufin_next(&in);
-            if (b < 0) { unc_free(c->al, mem); return in.err; }
-            sub += (uint32_t)b;
-        }
-        unc_cpt_rle_start(&rle, c, fork, uncomplen, 0, mem + iocap, ocap);
-        /* This container checks a CRC-16/ARC that Compact Pro
-         * itself does not keep. */
-        rle.out.ck = UNC_CK_CRC32_16;
-        if (sub == 0) {
-            hz = (CptLzh *)unc_alloc(c->al, (uint32_t)sizeof *hz);
-            window = (uint8_t *)unc_alloc(c->al, CPT_DD_WINDOW);
-            if (!hz || !window) {
-                unc_free(c->al, hz); unc_free(c->al, window);
-                unc_free(c->al, mem);
-                return UNC_ERR_MEM;
-            }
-            err = unc_cpt_lzh_fork(&rle, &in, hz, window, 0xFFF0u);
-        } else {
-            err = unc_cpt_rle_fork(&rle, &in, complen - 16u);
-        }
-        unc_free(c->al, hz);
-        unc_free(c->al, window);
-        if (err == UNC_OK) err = unc_cpt_rle_flush(&rle);
-        if (err == UNC_OK && rle.remaining != 0) err = UNC_ERR_TRUNCATED;
-        if (err == UNC_OK && crc != 0 && rle.out.crc16 != crc) err = UNC_ERR_CRC;
-        unc_free(c->al, mem);
-        return err;
-    } else if (m == 1) {
-        /* A staging buffer for the LZW output, which arrives in runs
-         * rather than a byte at a time; the codec's own table is its
-         * own allocation. */
-        uint32_t stage = 2048;
-        mem = (uint8_t *)unc_alloc(c->al, iocap + ocap + stage);
-        if (!mem) return UNC_ERR_MEM;
-        unc_bufin_init(&in, c->io, &c->ps, mem, iocap);
-        dd_out_start(&o, c, fork, uncomplen, mem + iocap, ocap,
-                     delta == 1 ? 1u : 0u);
-        err = dd_lzc(&o, c, &in, complen, xorval, mem + iocap + ocap, stage);
-    } else if (m == 2 || m == 5) {
-        int ntrees = 256;
-        mem = (uint8_t *)unc_alloc(c->al, iocap + ocap);
-        if (!mem) return UNC_ERR_MEM;
-        unc_bufin_init(&in, c->io, &c->ps, mem, iocap);
-        dd_out_start(&o, c, fork, uncomplen, mem + iocap, ocap,
-                     delta == 1 ? 1u : 0u);
-        if (m == 5) {
-            /* Method 5 is method 2 with the tree count in front of the
-             * bit stream, 0 meaning 256.
-             * Source: XADDiskDoublerParser.m case 5. */
-            int nb = unc_bufin_next(&in);
-            if (nb < 0) { err = in.err; goto m2done; }
-            ntrees = nb == 0 ? 256 : nb;
-        }
-        err = dd_m2(&o, c, &in, xorval, ntrees);
-m2done: ;
-    } else if (m == 3) {
-        mem = (uint8_t *)unc_alloc(c->al, iocap + ocap);
-        if (!mem) return UNC_ERR_MEM;
-        unc_bufin_init(&in, c->io, &c->ps, mem, iocap);
-        dd_out_start(&o, c, fork, uncomplen, mem + iocap, ocap,
-                     delta == 1 ? 1u : 0u);
-        err = dd_rle(&o, &in, complen, 0);
-    } else if (m == 4) {
-        mem = (uint8_t *)unc_alloc(c->al, iocap + ocap);
-        if (!mem) return UNC_ERR_MEM;
-        unc_bufin_init(&in, c->io, &c->ps, mem, iocap);
-        dd_out_start(&o, c, fork, uncomplen, mem + iocap, ocap,
-                     delta == 1 ? 1u : 0u);
-        err = dd_huffman(&o, c, &in, 0);
-    } else if (m == 7) {
-        mem = (uint8_t *)unc_alloc(c->al, iocap + ocap + DD_STAC_WINDOW);
-        if (!mem) return UNC_ERR_MEM;
-        unc_bufin_init(&in, c->io, &c->ps, mem, iocap);
-        dd_out_start(&o, c, fork, uncomplen, mem + iocap, ocap,
-                     delta == 1 ? 1u : 0u);
-        err = dd_stac(&o, &in, mem + iocap + ocap, complen);
-    } else if (m == 6 || m == 9) {
-        mem = (uint8_t *)unc_alloc(c->al, iocap + ocap + DD_AD_BLOCK);
-        if (!mem) return UNC_ERR_MEM;
-        unc_bufin_init(&in, c->io, &c->ps, mem, iocap);
-        dd_out_start(&o, c, fork, uncomplen, mem + iocap, ocap,
-                     delta == 1 ? 1u : 0u);
-        err = dd_adn(&o, &in, mem + iocap + ocap);
-    } else {
-        mem = (uint8_t *)unc_alloc(c->al, iocap + ocap);
-        if (!mem) return UNC_ERR_MEM;
-        unc_bufin_init(&in, c->io, &c->ps, mem, iocap);
-        dd_out_start(&o, c, fork, uncomplen, mem + iocap, ocap,
-                     delta == 1 ? 1u : 0u);
-        err = dd_store(&o, &in, complen);
+        break;
+    }
     }
 
     if (err == UNC_OK) err = unc_fork_flush(&o.out);

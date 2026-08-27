@@ -94,9 +94,11 @@ static int sitseg_parse(const uint8_t *h, int32_t len, UncSegmentDesc *desc)
     return UNC_OK;
 }
 
-int unc_sitseg_probe(const uint8_t *head, int32_t len)
+UncFormat unc_sitseg_probe(const uint8_t *head, int32_t len, UncIO *io)
 {
-    return sitseg_parse(head, len, NULL) == UNC_OK;
+    (void)io;
+    return (sitseg_parse(head, len, NULL) == UNC_OK)
+           ? UNC_FORMAT_SITSEG : UNC_FORMAT_UNKNOWN;
 }
 
 int unc_sitseg_describe(UncIO *io, UncSegmentDesc *desc)
@@ -113,26 +115,16 @@ int unc_sitseg_describe(UncIO *io, UncSegmentDesc *desc)
     return err;
 }
 
-int unc_segment_match(const UncSegmentDesc *desc,
-                      const uint8_t *head, int32_t len)
+/* Does this file belong to the set `desc` describes, and as which part?
+ * A StuffIt part carries the original's name and a fingerprint; both
+ * must agree. 0 = it does not belong, or cannot be told.
+ * The dispatch across schemes is unc_segment_match, in unc_segment.c. */
+int unc_sitseg_match(const UncSegmentDesc *desc,
+                     const uint8_t *head, int32_t len)
 {
     UncSegmentDesc cand;
     int32_t i;
 
-    if (!desc || !head) return 0;
-    /* Compact Pro fingerprints a set too — two bytes of identity in
-     * every segment — so it answers this as well; its rule lives with
-     * its own header, in fmt_cptseg.c. */
-    if (desc->scheme == UNC_FORMAT_CPTSEG)
-        return unc_cptseg_match(desc, head, len);
-    /* So does a DiskDoubler `SPLT` part, and with more of it: index,
-     * count and both fork lengths. Its rule lives in fmt_ddseg.c. */
-    if (desc->scheme == UNC_FORMAT_DDSEG)
-        return unc_ddseg_match(desc, head, len);
-    /* A scheme whose parts carry no identity cannot answer this. Said
-     * explicitly rather than left to fall out of a failed header parse,
-     * because the two outcomes mean opposite things (see macextract.h). */
-    if (desc->scheme != UNC_FORMAT_SITSEG) return 0;
     if (sitseg_parse(head, len, &cand) != UNC_OK) return 0;
     if (cand.name_len != desc->name_len) return 0;
     for (i = 0; i < (int32_t)desc->name_len; i++)

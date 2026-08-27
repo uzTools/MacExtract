@@ -141,6 +141,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-27 (the name cap) — a clamp the host cannot see is a rename nobody asked for
 - 2026-08-27 (the scaffolding audit) — the codec is the format, the code around it is not
 - 2026-08-27 (the fork writer and the filter) — a shared hot path, measured three ways
+- 2026-08-27 (the shapes that were left) — one probe signature, one scheme table, one buffer size
 
 ---
 
@@ -8129,3 +8130,78 @@ both were settled by a number rather than by taste:**
   records as an open question, where Alysis's own 1991 and 1992
   implementations disagree by one refill; changing the reader would move
   the engine off the 1991 answer it was deliberately pinned to.
+
+---
+
+## 2026-08-27 (the shapes that were left) — one probe signature, one scheme table, one buffer size
+
+The last of the scaffolding audit, and the part that is about SHAPE
+rather than about copied code: four places where the engine knew a thing
+per format and expressed it as a search instead of a table.
+
+**Twenty-eight probes, three signatures, and one reason.** `unc_sniff`
+was a 120-line chain of `if (unc_X_probe(...)) return UNC_FORMAT_X;`
+because the probes could not be put in an array: most took
+`(head, len)`, nine also took `io`, AppleSingle took a `UncFormat *` to
+say WHICH of two it had found, and `unc_foreign_probe` answered for ten
+formats by returning one. That last pair is the whole explanation — a
+probe that can answer for several formats cannot return a flag. So the
+signature is now
+
+    UncFormat probe(const uint8_t *head, int32_t len, UncIO *io);
+
+for all twenty-eight: the format it claims, or UNC_FORMAT_UNKNOWN. The
+probes that do not need `io` take it and ignore it, which is the price
+of the array, and `unc_sniff` is a walk over `unc_sniff_order[]` with the
+ordering argument kept as comments on the rows it argues about. The same
+table now dispatches extraction: `unc_formats[]` gained an extractor
+column, so `unc_extract_as`'s 26-case switch is a lookup, and the three
+functions that scanned that table separately share one `unc_desc()`.
+
+**`unc_appledouble_extract` lost an argument nobody read.** It took the
+format to distinguish AppleSingle from AppleDouble and its first line was
+`(void)which;` — the layouts differ only in what is present, which the
+entry table already says. Both rows now point at the same function.
+
+**The segment joiner had six `desc->scheme ==` tests and every one of
+them was a property with no name.** They are named now, in one row per
+scheme: `addressed` (the archive stores part/offset pairs),
+`data_first` (which fork the joined stream starts with), `anonymous` (a
+part carries no header at all, so the descriptor is the host's to
+build), and function slots for `describe`, `match`, `payload`,
+`stored_crc` and `extract`. Three of those slots are filled by
+DiskDoubler alone and NULL everywhere else, which is exactly the shape
+the `if (scheme == UNC_FORMAT_DDSEG)` tests were hiding. `unc_segment_match`
+moved to `unc_segment.c` where the dispatch belongs, and the StuffIt
+half of it became `unc_sitseg_match` beside the header it parses.
+
+**The audit was wrong about the hosts, and the correction is the
+interesting part.** It said both hosts dispatch on `scheme` too "though
+the per-scheme functions already exist". They do dispatch on it — and on
+a DIFFERENT question. What `cli/main.c` and the Mac shell decide is
+which sibling FILE to go looking for: `.zip` for a spanned set's last
+part, `.z01`, `.001`, a `SPLT` part by its own header. That is naming on
+a filesystem, and the engine has never touched a file — it is the rule
+the whole `UncVolumeSource` design exists to keep. **Two dispatches on
+the same enum are not necessarily the same dispatch**; the question is
+what each one is asking. This one stays where it is.
+
+**`dd_fork` had its prologue nine times.** Every branch of the method
+dispatch repeated the same `unc_alloc` / `unc_bufin_init` /
+`dd_out_start`, differing only in how much working memory it wanted
+behind the two buffers. That difference is now `dd_extra()`, a five-line
+table, and the prologue happens once — nine `unc_bufin_init` calls in
+that file became three. Method 8 came OUT of the dispatch rather than
+into it: it decodes through Compact Pro's stage, which carries its own
+writer and its own checksum, so it never shared the prologue in the
+first place and now says so as `dd_fork_cpt`.
+
+**And `4096` is `UNC_IOBUF`.** It was a bare literal in eleven files and
+named in one. A size nobody chose is a size nobody can change.
+
+**Free, measured.** +0.01 % instructions over the same 14-fixture set —
+sniffing runs once per file and dispatch once per archive, so there was
+nothing there to cost. `dd_fork`'s frame came DOWN 4 bytes, putting the
+deepest chain in the engine at 3,330 B (FORMATS.md, *Stack*). With this
+the scaffolding audit's list is empty and OPEN_ITEMS.md's section 4 is
+gone, which is what a gaps list is for.
