@@ -460,3 +460,92 @@ int unc_readline(UncBufIn *in, uint8_t *buf, int32_t cap, int32_t *len,
     if (*eof && n == 0) return UNC_ERR_TRUNCATED;
     return UNC_OK;
 }
+
+/* ------------------------------------------------------------------ */
+/* Sink helpers                                                       */
+/* ------------------------------------------------------------------ */
+
+int unc_copy_fork(UncCtx *c, UncFork fork, uint32_t size,
+                  uint8_t *buf, uint32_t bufsz)
+{
+    uint32_t left = size;
+    while (left > 0) {
+        int32_t want = (int32_t)(left < bufsz ? left : bufsz);
+        int32_t r = c->io->read(c->io->ctx, buf, want);
+        int e;
+        if (r < 0) return UNC_ERR_IO;
+        if (r == 0) return UNC_ERR_TRUNCATED;
+        if (!c->opt.test_only &&
+            c->sink->write(c->sink->ctx, fork, buf, r) < 0)
+            return UNC_ERR_SINK;
+        left -= (uint32_t)r;
+        e = unc_progress_add(&c->ps, (uint32_t)r);
+        if (e != UNC_OK) return e;
+    }
+    return UNC_OK;
+}
+
+int unc_stage_flush(UncStage *s)
+{
+    UncCtx *c = s->c;
+    if (s->len == 0) return UNC_OK;
+    if (!c->opt.test_only && !c->opt.list_only &&
+        c->sink->write(c->sink->ctx, s->fork, s->buf, (int32_t)s->len) < 0)
+        return UNC_ERR_SINK;
+    s->len = 0;
+    return UNC_OK;
+}
+
+/* ------------------------------------------------------------------ */
+/* A folder path being walked                                         */
+/* ------------------------------------------------------------------ */
+
+void unc_path_init(UncPath *p)
+{
+    p->len = 0;
+    p->depth = 0;
+    p->truncdepth = 0;
+    p->buf[0] = 0;
+}
+
+int unc_path_push(UncPath *p, const uint8_t *name, uint32_t nlen)
+{
+    uint32_t i;
+    if (p->depth >= UNC_PATH_MAXDEPTH) return UNC_ERR_CORRUPT;
+    p->stack[p->depth++] = p->len;
+    if (p->len && p->len < UNC_NAME_MAX) p->buf[p->len++] = '/';
+    for (i = 0; i < nlen && p->len < UNC_NAME_MAX; i++) {
+        uint8_t ch = name[i];
+        p->buf[p->len++] = (uint8_t)(ch == '/' ? ':' : ch);
+    }
+    if (i < nlen && !p->truncdepth) p->truncdepth = p->depth;
+    p->buf[p->len] = 0;
+    return UNC_OK;
+}
+
+void unc_path_pop(UncPath *p)
+{
+    if (p->depth > 0) p->len = p->stack[--p->depth];
+    if (p->truncdepth > p->depth) p->truncdepth = 0;
+    p->buf[p->len] = 0;
+}
+
+void unc_path_leaf(const UncPath *p, UncEntryInfo *e,
+                   const uint8_t *name, uint32_t nlen)
+{
+    uint8_t full[UNC_NAME_MAX + 1];
+    uint32_t n = p->len, i;
+    if (n > UNC_NAME_MAX) n = UNC_NAME_MAX;
+    for (i = 0; i < n; i++) full[i] = p->buf[i];
+    if (n && n < UNC_NAME_MAX) full[n++] = '/';
+    for (i = 0; i < nlen && n < UNC_NAME_MAX; i++) {
+        uint8_t ch = name[i];
+        full[n++] = (uint8_t)(ch == '/' ? ':' : ch);
+    }
+    if (i < nlen || p->truncdepth) {
+        uint32_t want = (uint32_t)p->len + (p->len ? 1u : 0u) + nlen;
+        e->name_truncated = 1;
+        e->name_full_len = (uint16_t)(want > 65535u ? 65535u : want);
+    }
+    unc_entry_set_path(e, full, n);
+}

@@ -769,7 +769,7 @@ static int mime_emit(MimeCtx *m, const MimeHdrs *h, const MimePart *data,
 
     if (m->c->sink->end_entry(m->c->sink->ctx, est) < 0) return UNC_ERR_SINK;
     *any = 1;
-    if (est == UNC_ERR_SINK || est == UNC_ERR_ABORTED || est == UNC_ERR_IO)
+    if (unc_fatal(est))
         return est;
     return UNC_OK;
 }

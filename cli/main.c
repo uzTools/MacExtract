@@ -887,32 +887,13 @@ static int prog_tick(void *ctx, uint32_t done, uint32_t total)
 /* Envelopes                                                          */
 /*                                                                    */
 /* One file in, one file out: the layers a real download is chained    */
-/* from (.sit.hqx, .cpt.bin, .tar.Z). ONE list, read both by the       */
-/* auto-unwrap at the end of main and by wrapped-part discovery below; */
-/* two lists would drift apart.                                       */
+/* from (.sit.hqx, .cpt.bin, .tar.Z). WHICH formats those are is the   */
+/* engine's to say — unc_format_is_envelope(), and the table behind it */
+/* in src/unc_engine.c has the reasoning. It was a list here and a     */
+/* second copy in the Mac shell until 2026-08-27, and the two          */
+/* disagreed for a day.                                               */
 /* ------------------------------------------------------------------ */
 
-static int env_is_envelope(UncFormat f)
-{
-    return f == UNC_FORMAT_MACBINARY || f == UNC_FORMAT_BINHEX ||
-           f == UNC_FORMAT_APPLESINGLE || f == UNC_FORMAT_APPLEDOUBLE ||
-           f == UNC_FORMAT_GZIP || f == UNC_FORMAT_COMPRESS_Z ||
-           /* base64 and not MIME, though both usually hold an archive:
-            * an envelope layer is DELETED once the layer under it comes
-            * out, and a MIME part can carry a resource fork that would
-            * go with it. base64 has one anonymous stream and no forks
-            * at all (DECISIONS.md 2026-08-26). */
-           f == UNC_FORMAT_BASE64 ||
-           /* The other two armours, for the same reason and with the
-            * same guard: a real btoa file off a Mac is MacBinary inside
-            * armour (FORMATS.md, *btoa*), and uuencode's UUTool shape
-            * carries its own forks the way BinHex does, so neither can
-            * strand a fork on a layer that is deleted. Both yield one
-            * document or none; a several-document uu file has
-            * file_count > 1 and does not reach here
-            * (DECISIONS.md 2026-08-27). */
-           f == UNC_FORMAT_BTOA || f == UNC_FORMAT_UU;
-}
 
 /* Sink for taking one envelope off a file, in either of two modes.
  *
@@ -1000,7 +981,7 @@ static int env_run(const char *path, EnvSink *es)
     eio.size = fio_size;
 
     fmt = unc_sniff(&eio);
-    if (!env_is_envelope(fmt)) { fclose(f.f); return 0; }
+    if (!unc_format_is_envelope(fmt)) { fclose(f.f); return 0; }
 
     memset(&ba, 0, sizeof ba);          /* budget 0: no cap */
     al.ctx = &ba;
@@ -2419,7 +2400,7 @@ nextlayer:
      * .cpt.bin, .tar.Z ...): when an envelope format yielded exactly
      * one file, sniff it and extract in place. -nr disables. */
     if (strcmp(cmd, "x") == 0 && !no_recurse && depth < 8 &&
-        (env_is_envelope(fmt) ||
+        (unc_format_is_envelope(fmt) ||
          fmt == UNC_FORMAT_SITSEG || fmt == UNC_FORMAT_SPLIT ||
          fmt == UNC_FORMAT_DDSEG) &&
         sink.file_count == 1 && sink.dir_count == 0 &&

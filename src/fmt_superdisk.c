@@ -55,10 +55,8 @@
 #define SD_TAG_DIR    0x29u
 #define SD_TAG_UPDIR  0x2Au
 
-#define SD_MAXDEPTH   24u
 #define SD_BLOCKMAX   0x8000u      /* the largest ulen a block may claim */
 #define SD_WINDOW     0x10000u     /* SlowFastB reaches back 49120 bytes */
-#define SD_STAGE      512u         /* output staging, so the sink sees runs */
 #define SD_MODULEMAX  64u          /* modules before we call it a loop      */
 
 /* The signature every Add-In Module carries at its own offset 4. */
@@ -204,38 +202,13 @@ static int sd_need(UncCtx *c, SdBuf *b, uint32_t want)
 }
 
 typedef struct SdState {
-    UncCtx  *c;
+    UncStage out;        /* the sink, the fork, and the staging buffer   */
     SdBuf    in;         /* one block, exactly as the reference reads it */
     SdBuf    flags;      /* the predictor's flag bitmap, when Huffman-coded */
     SdBuf    table;      /* the predictor's context table                 */
     SdBuf    win;        /* SlowFastB's history + the current block       */
     uint32_t winlen;     /* bytes of history live in win                  */
-    uint8_t  stage[SD_STAGE];
-    uint32_t staged;
-    UncFork  fork;
 } SdState;
-
-static int sd_flush(SdState *s)
-{
-    UncCtx *c = s->c;
-    if (s->staged == 0) return UNC_OK;
-    if (!c->opt.test_only && !c->opt.list_only &&
-        c->sink->write(c->sink->ctx, s->fork, s->stage,
-                       (int32_t)s->staged) < 0)
-        return UNC_ERR_SINK;
-    s->staged = 0;
-    return UNC_OK;
-}
-
-static int sd_emit(SdState *s, uint8_t b)
-{
-    if (s->staged == SD_STAGE) {
-        int e = sd_flush(s);
-        if (e != UNC_OK) return e;
-    }
-    s->stage[s->staged++] = b;
-    return UNC_OK;
-}
 
 /* ------------------------------------------------------------------ */
 /* Huffman — CODE 2 @0x884                                            */
@@ -410,7 +383,7 @@ static int sd_context(SdState *s, uint32_t ulen, const uint8_t *flags,
     /* The two raw bytes that seed the output but not the context. */
     for (i = 0; i < 2 && done < ulen; i++) {
         if ((e = sd_lit(lits, &b)) != UNC_OK) return e;
-        if ((e = sd_emit(s, b)) != UNC_OK) return e;
+        if ((e = unc_stage_put(&s->out, b)) != UNC_OK) return e;
         done++;
     }
 
@@ -427,7 +400,7 @@ static int sd_context(SdState *s, uint32_t ulen, const uint8_t *flags,
             if ((e = sd_lit(lits, &b)) != UNC_OK) return e;
             tbl[ctx] = b;
         }
-        if ((e = sd_emit(s, b)) != UNC_OK) return e;
+        if ((e = unc_stage_put(&s->out, b)) != UNC_OK) return e;
         done++;
         nbit--;
         ctx = (ctx << shift) & 0xFFFFu;
@@ -559,7 +532,7 @@ static int sd_slowfastb(SdState *s, const uint8_t *src, uint32_t len,
     if (out != ulen) return UNC_ERR_CORRUPT;
 
     for (out = 0; out < ulen; out++)
-        if ((e = sd_emit(s, win[have + out])) != UNC_OK) return e;
+        if ((e = unc_stage_put(&s->out, win[have + out])) != UNC_OK) return e;
 
     /* Slide the history: the last SD_WINDOW bytes of the fork so far. */
     if (have + ulen > SD_WINDOW) {
@@ -666,7 +639,7 @@ static int sd_slowfasta(SdState *s, const uint8_t *src, uint32_t len,
     if (out != ulen) return UNC_ERR_CORRUPT;
 
     for (out = 0; out < ulen; out++)
-        if ((e = sd_emit(s, win[have + out])) != UNC_OK) return e;
+        if ((e = unc_stage_put(&s->out, win[have + out])) != UNC_OK) return e;
 
     if (have + ulen > SD_WINDOW) {
         uint32_t drop = have + ulen - SD_WINDOW;
@@ -705,14 +678,14 @@ static int sd_block_body(SdState *s, uint32_t ulen, unsigned method,
         for (i = 0; i < ulen; i++) {
             uint8_t b;
             if ((e = sd_huff_next(&lh, &b)) != UNC_OK) return e;
-            if ((e = sd_emit(s, b)) != UNC_OK) return e;
+            if ((e = unc_stage_put(&s->out, b)) != UNC_OK) return e;
         }
         return UNC_OK;
     }
     if (method >= 5 && method <= 8) { wide = 1; method -= 4; }
     if (method < 1 || method > 4) return UNC_ERR_UNSUPPORTED;
 
-    if ((e = sd_need(s->c, &s->table, wide ? 0x10000u : 0x2000u)) != UNC_OK)
+    if ((e = sd_need(s->out.c, &s->table, wide ? 0x10000u : 0x2000u)) != UNC_OK)
         return e;
 
     fsize = (((ulen >> 3) + 4u) & ~1u);
@@ -733,7 +706,7 @@ static int sd_block_body(SdState *s, uint32_t ulen, unsigned method,
         uint32_t i, nflags = (ulen + 7u) >> 3;
         if (nflags > fsize) nflags = fsize;
         if ((e = sd_huff_start(&fh, body, bodylen, 0)) != UNC_OK) return e;
-        if ((e = sd_need(s->c, &s->flags, fsize)) != UNC_OK) return e;
+        if ((e = sd_need(s->out.c, &s->flags, fsize)) != UNC_OK) return e;
         for (i = 0; i < nflags; i++)
             if ((e = sd_huff_next(&fh, &s->flags.p[i])) != UNC_OK) return e;
         for (i = nflags; i < fsize; i++) s->flags.p[i] = 0;
@@ -828,7 +801,7 @@ static int sd_fork_span(UncCtx *c, uint32_t at, uint32_t want, uint32_t *end)
 
 static int sd_fork(SdState *s, uint32_t at, uint32_t want)
 {
-    UncCtx *c = s->c;
+    UncCtx *c = s->out.c;
     uint32_t done = 0;
     int e;
 
@@ -844,13 +817,13 @@ static int sd_fork(SdState *s, uint32_t at, uint32_t want)
         if (stored) {
             uint32_t n = ulen, off = at + 2;
             if (n > want - done) n = want - done;
-            if ((e = sd_flush(s)) != UNC_OK) return e;
+            if ((e = unc_stage_flush(&s->out)) != UNC_OK) return e;
             while (n > 0) {
-                uint32_t take = n < SD_STAGE ? n : SD_STAGE;
-                if (unc_read_at(c->io, off, s->stage, (int32_t)take) != UNC_OK)
+                uint32_t take = n < UNC_STAGE ? n : UNC_STAGE;
+                if (unc_read_at(c->io, off, s->out.buf, (int32_t)take) != UNC_OK)
                     return UNC_ERR_TRUNCATED;
-                s->staged = take;
-                if ((e = sd_flush(s)) != UNC_OK) return e;
+                s->out.len = take;
+                if ((e = unc_stage_flush(&s->out)) != UNC_OK) return e;
                 if ((e = unc_progress_add(&c->ps, take)) != UNC_OK) return e;
                 off += take; done += take; n -= take;
             }
@@ -896,41 +869,12 @@ static int sd_fork(SdState *s, uint32_t at, uint32_t want)
         done += ulen;
         at += clen;
     }
-    return sd_flush(s);
+    return unc_stage_flush(&s->out);
 }
 
 /* ------------------------------------------------------------------ */
 /* The record stream                                                  */
 /* ------------------------------------------------------------------ */
-
-typedef struct SdPath {
-    uint8_t  buf[UNC_NAME_MAX + 1];
-    uint16_t len;
-    uint16_t stack[SD_MAXDEPTH];
-    int      truncdepth;           /* see DdPath in fmt_dd.c */
-    int      depth;
-} SdPath;
-
-static void sd_path_leaf(const SdPath *p, UncEntryInfo *e,
-                         const uint8_t *name, uint32_t nlen)
-{
-    uint8_t full[UNC_NAME_MAX + 1];
-    uint32_t n = p->len, i;
-    if (n > UNC_NAME_MAX) n = UNC_NAME_MAX;
-    for (i = 0; i < n; i++) full[i] = p->buf[i];
-    if (n && n < UNC_NAME_MAX) full[n++] = '/';
-    for (i = 0; i < nlen && n < UNC_NAME_MAX; i++) {
-        uint8_t ch = name[i];
-        full[n++] = (uint8_t)(ch == '/' ? ':' : ch);
-    }
-    /* Either the folder path or the leaf ran out of room. */
-    if (i < nlen || p->truncdepth) {
-        uint32_t want = (uint32_t)p->len + (p->len ? 1u : 0u) + nlen;
-        e->name_truncated = 1;
-        e->name_full_len = (uint16_t)(want > 65535u ? 65535u : want);
-    }
-    unc_entry_set_path(e, full, n);
-}
 
 /* The single-file container: one entry, two fork chains, no records. */
 static int sd_single(UncCtx *c, const uint8_t *head, uint32_t body)
@@ -944,12 +888,12 @@ static int sd_single(UncCtx *c, const uint8_t *head, uint32_t body)
     rlen = unc_get_u32be(head + 8);
     nlen = head[30];
 
-    s.c = c;
+    s.out.c = c;
     s.in.p = s.flags.p = s.table.p = s.win.p = 0;
     s.in.cap = s.flags.cap = s.table.cap = s.win.cap = 0;
     s.winlen = 0;
-    s.staged = 0;
-    s.fork = UNC_FORK_DATA;
+    s.out.len = 0;
+    s.out.fork = UNC_FORK_DATA;
 
     unc_entry_clear(&e);
     unc_entry_set_path(&e, head + 31, nlen);
@@ -982,17 +926,16 @@ static int sd_single(UncCtx *c, const uint8_t *head, uint32_t body)
     if (sret < 0) { err = UNC_ERR_SINK; goto done; }
     if (sret == 0) {
         if (!c->opt.list_only) {
-            if (dlen) { s.fork = UNC_FORK_DATA; ferr = sd_fork(&s, body, dlen); }
+            if (dlen) { s.out.fork = UNC_FORK_DATA; ferr = sd_fork(&s, body, dlen); }
             if (ferr == UNC_OK && rlen) {
                 uint32_t rat = body;
                 if (dlen) (void)sd_fork_span(c, body, dlen, &rat);
-                s.fork = UNC_FORK_RSRC;
+                s.out.fork = UNC_FORK_RSRC;
                 ferr = sd_fork(&s, rat, rlen);
             }
         }
         if (c->sink->end_entry(c->sink->ctx, ferr) < 0) err = UNC_ERR_SINK;
-        else if (ferr == UNC_ERR_SINK || ferr == UNC_ERR_ABORTED ||
-                 ferr == UNC_ERR_IO) err = ferr;
+        else if (unc_fatal(ferr)) err = ferr;
     }
 done:
     unc_free(c->al, s.in.p);
@@ -1005,7 +948,7 @@ done:
 int unc_superdisk_extract(UncCtx *c)
 {
     SdState s;
-    SdPath  path;
+    UncPath path;
     uint8_t rec[40];
     uint32_t at;
     int has_module, err = UNC_OK;
@@ -1031,15 +974,13 @@ int unc_superdisk_extract(UncCtx *c)
 
     if ((err = sd_records_start(c->io, &at, &has_module)) != UNC_OK) return err;
 
-    s.c = c;
+    s.out.c = c;
     s.in.p = s.flags.p = s.table.p = s.win.p = 0;
     s.in.cap = s.flags.cap = s.table.cap = s.win.cap = 0;
     s.winlen = 0;
-    s.staged = 0;
-    s.fork = UNC_FORK_DATA;
-    path.len = 0;
-    path.depth = 0;
-    path.truncdepth = 0;
+    s.out.len = 0;
+    s.out.fork = UNC_FORK_DATA;
+    unc_path_init(&path);
 
     for (;;) {
         uint32_t nlen, dlen, rlen, p;
@@ -1052,12 +993,7 @@ int unc_superdisk_extract(UncCtx *c)
         if (tag == SD_TAG_END) break;
         if (tag == SD_TAG_UPDIR) {
             at += 8;
-            if (path.depth > 0) {
-                path.depth--;
-                path.len = path.stack[path.depth];
-                if (path.truncdepth > path.depth) path.truncdepth = 0;
-                path.buf[path.len] = 0;
-            }
+            unc_path_pop(&path);
             continue;
         }
         if (tag != SD_TAG_FILE && tag != SD_TAG_DIR) { err = UNC_ERR_CORRUPT; break; }
@@ -1073,7 +1009,7 @@ int unc_superdisk_extract(UncCtx *c)
         if (p & 1u) p++;                          /* @0x336: pad to even */
 
         unc_entry_clear(&e);
-        sd_path_leaf(&path, &e, rec, nlen);
+        unc_path_leaf(&path, &e, rec, nlen);
 
         if (tag == SD_TAG_DIR) {
             uint8_t info[20];
@@ -1081,15 +1017,9 @@ int unc_superdisk_extract(UncCtx *c)
             e.is_dir = 1;
             if (c->sink->begin_entry(c->sink->ctx, &e) < 0) { err = UNC_ERR_SINK; break; }
             if (c->sink->end_entry(c->sink->ctx, UNC_OK) < 0) { err = UNC_ERR_SINK; break; }
-            if (path.depth < (int)SD_MAXDEPTH) {
-                uint32_t i;
-                path.stack[path.depth++] = path.len;
-                if (path.len && path.len < UNC_NAME_MAX) path.buf[path.len++] = '/';
-                for (i = 0; i < nlen && path.len < UNC_NAME_MAX; i++)
-                    path.buf[path.len++] = (uint8_t)(rec[i] == '/' ? ':' : rec[i]);
-                if (i < nlen && !path.truncdepth) path.truncdepth = path.depth;
-                path.buf[path.len] = 0;
-            }
+            /* Too deep to descend leaves the entries under the parent,
+             * which is what this walk did before the push was shared. */
+            (void)unc_path_push(&path, rec, nlen);
             at = p + 20;
             continue;
         }
@@ -1137,21 +1067,20 @@ int unc_superdisk_extract(UncCtx *c)
             if (sret < 0) { err = UNC_ERR_SINK; break; }
             if (sret == 0) {
                 int ferr = UNC_OK;
-                s.staged = 0;
+                s.out.len = 0;
                 if (!c->opt.list_only) {
-                    if (dlen) { s.fork = UNC_FORK_DATA; ferr = sd_fork(&s, at, dlen); }
+                    if (dlen) { s.out.fork = UNC_FORK_DATA; ferr = sd_fork(&s, at, dlen); }
                     if (ferr == UNC_OK && rlen) {
                         uint32_t rat = at;
                         if (dlen) (void)sd_fork_span(c, at, dlen, &rat);
-                        s.fork = UNC_FORK_RSRC;
+                        s.out.fork = UNC_FORK_RSRC;
                         ferr = sd_fork(&s, rat, rlen);
                     }
                 }
                 if (c->sink->end_entry(c->sink->ctx, ferr) < 0) { err = UNC_ERR_SINK; break; }
                 /* Not UNC_ERR_MEM: an entry that will not fit is that
                  * entry's error, and the next one may be smaller. */
-                if (ferr == UNC_ERR_SINK || ferr == UNC_ERR_ABORTED ||
-                    ferr == UNC_ERR_IO) { err = ferr; break; }
+                if (unc_fatal(ferr)) { err = ferr; break; }
             }
             at = end;
         }

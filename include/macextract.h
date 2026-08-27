@@ -117,6 +117,12 @@ const char *unc_format_name(UncFormat f);
 /* Nonzero if the engine can extract this format (vs. detect-only). */
 int unc_format_extractable(UncFormat f);
 
+/* Nonzero if this format holds exactly one file and is worth looking
+ * inside: what a host unwraps to reach the archive underneath
+ * (.sit.hqx, .cpt.bin, .tar.Z). Not every format that yields one file —
+ * see the table in src/unc_engine.c for which and why. */
+int unc_format_is_envelope(UncFormat f);
+
 /* ------------------------------------------------------------------ */
 /* Error codes (negative; 0 = success)                                */
 /* ------------------------------------------------------------------ */

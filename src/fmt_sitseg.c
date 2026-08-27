@@ -150,26 +150,6 @@ int unc_segment_match(const UncSegmentDesc *desc,
 /* the archive usually inside it is the next layer's problem.          */
 /* ------------------------------------------------------------------ */
 
-static int sitseg_stream_fork(UncCtx *c, UncFork fork, uint32_t size,
-                              uint8_t *buf, uint32_t bufsz)
-{
-    uint32_t left = size;
-    while (left > 0) {
-        int32_t want = (int32_t)(left < bufsz ? left : bufsz);
-        int32_t r = c->io->read(c->io->ctx, buf, want);
-        int e;
-        if (r < 0) return UNC_ERR_IO;
-        if (r == 0) return UNC_ERR_TRUNCATED;
-        if (!c->opt.test_only &&
-            c->sink->write(c->sink->ctx, fork, buf, r) < 0)
-            return UNC_ERR_SINK;
-        left -= (uint32_t)r;
-        e = unc_progress_add(&c->ps, (uint32_t)r);
-        if (e != UNC_OK) return e;
-    }
-    return UNC_OK;
-}
-
 /* Emit the single entry described by `desc`, reading its forks from
  * `base` onwards. `base` is UNC_SEG_HEAD for a lone part read
  * directly, and 0 for the joined stream the joiner presents.
@@ -213,15 +193,15 @@ int unc_sitseg_emit(UncCtx *c, const UncSegmentDesc *desc, uint32_t base,
             /* Whichever fork the stream begins with: StuffIt's split
              * puts the resource fork first, DiskDoubler's the data. */
             if (err == UNC_OK)
-                err = sitseg_stream_fork(c, f1, n1, buf, bufsz);
+                err = unc_copy_fork(c, f1, n1, buf, bufsz);
             if (err == UNC_OK)
-                err = sitseg_stream_fork(c, f2, n2, buf, bufsz);
+                err = unc_copy_fork(c, f2, n2, buf, bufsz);
             unc_free(c->al, buf);
         }
     }
 
     if (c->sink->end_entry(c->sink->ctx, err) < 0) return UNC_ERR_SINK;
-    if (err == UNC_ERR_SINK || err == UNC_ERR_ABORTED || err == UNC_ERR_IO)
+    if (unc_fatal(err))
         return err;
     return UNC_OK;
 }

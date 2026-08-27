@@ -60,23 +60,8 @@ static uint32_t as_get_u32(const uint8_t *p, int be)
 static int as_stream_fork(UncCtx *c, UncFork fork, uint32_t offs,
                           uint32_t size, uint8_t *buf, uint32_t bufsz)
 {
-    uint32_t left = size;
     if (c->io->seek(c->io->ctx, offs) < 0) return UNC_ERR_IO;
-    while (left > 0) {
-        int32_t want = (int32_t)(left < bufsz ? left : bufsz);
-        int32_t r = c->io->read(c->io->ctx, buf, want);
-        if (r < 0) return UNC_ERR_IO;
-        if (r == 0) return UNC_ERR_TRUNCATED;
-        if (!c->opt.test_only &&
-            c->sink->write(c->sink->ctx, fork, buf, r) < 0)
-            return UNC_ERR_SINK;
-        left -= (uint32_t)r;
-        {
-            int e = unc_progress_add(&c->ps, (uint32_t)r);
-            if (e != UNC_OK) return e;
-        }
-    }
-    return UNC_OK;
+    return unc_copy_fork(c, fork, size, buf, bufsz);
 }
 
 int unc_appledouble_extract(UncCtx *c, UncFormat which)
@@ -204,7 +189,7 @@ int unc_appledouble_extract(UncCtx *c, UncFormat which)
     }
 
     if (c->sink->end_entry(c->sink->ctx, err) < 0) return UNC_ERR_SINK;
-    if (err == UNC_ERR_SINK || err == UNC_ERR_ABORTED || err == UNC_ERR_IO)
+    if (unc_fatal(err))
         return err;
     return UNC_OK;
 }

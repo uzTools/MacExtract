@@ -46,7 +46,6 @@
 #define SS_HDRLEN   84u
 #define SS_MAGIC1   0x53495421u        /* 'SIT!' */
 #define SS_MAGIC2   0x44464433u        /* 'DFD3' */
-#define SS_STAGE    512u               /* output staging, as elsewhere  */
 #define SS_IOBUF    4096u
 #define SS_MAXWBITS 16                 /* 64 KB, the largest window the
                                         * module's own arithmetic allows */
@@ -73,8 +72,7 @@ typedef struct SsHead {
 
 /* Decoder state for one fork. */
 typedef struct SsState {
-    UncCtx  *c;
-    UncFork  fork;
+    UncStage out;       /* the sink, the fork, and the staging buffer  */
     uint8_t *win;       /* sliding window, circular                    */
     uint32_t wsize;
     uint32_t wmask;     /* wsize - 1: wsize is 1 << wbits, but it is a
@@ -84,8 +82,6 @@ typedef struct SsState {
                          * machine with no divide instruction at all   */
     uint32_t wpos;      /* where the next produced byte goes           */
     uint32_t history;   /* bytes reachable behind wpos (preset + out)  */
-    uint8_t  stage[SS_STAGE];
-    uint32_t staged;
     uint32_t produced;  /* method 2 only: the cursor its table indexes */
     struct SsA3 *a3;    /* method 3 only: its tables, all one allocation */
     uint32_t *m2tab;    /* method 2 only: 4,096 positions, or UNSET    */
@@ -181,25 +177,13 @@ int unc_spacesaver_probe(const uint8_t *head, int32_t len)
 /* Output staging and the sliding window                               */
 /* ------------------------------------------------------------------ */
 
-static int ss_flush(SsState *s)
-{
-    UncCtx *c = s->c;
-    if (s->staged == 0) return UNC_OK;
-    if (!c->opt.test_only && !c->opt.list_only &&
-        c->sink->write(c->sink->ctx, s->fork, s->stage,
-                       (int32_t)s->staged) < 0)
-        return UNC_ERR_SINK;
-    s->staged = 0;
-    return UNC_OK;
-}
-
+/* One decoded byte: staged for the sink, and into the sliding window.
+ * The staging half is shared (unc_stage_put); the window is SpaceSaver's
+ * own and is why this is not just a call to it. */
 static int ss_emit(SsState *s, uint8_t b)
 {
-    if (s->staged == SS_STAGE) {
-        int e = ss_flush(s);
-        if (e != UNC_OK) return e;
-    }
-    s->stage[s->staged++] = b;
+    int e = unc_stage_put(&s->out, b);
+    if (e != UNC_OK) return e;
     s->win[s->wpos] = b;
     if (++s->wpos == s->wsize) s->wpos = 0;
     if (s->history < s->wsize) s->history++;
@@ -248,7 +232,7 @@ static void ss_preset(SsState *s, const uint8_t *p, uint32_t len)
 static int ss_alg4(SsState *s, const SsFork *f, uint8_t *iobuf,
                    uint32_t iocap)
 {
-    UncCtx *c = s->c;
+    UncCtx *c = s->out.c;
     UncBufIn in;
     uint32_t nblocks, produced = 0, consumed = 3;
     int wbits, b, i;
@@ -338,12 +322,11 @@ static int ss_alg4(SsState *s, const SsFork *f, uint8_t *iobuf,
         in.limit = f->clen - consumed;
     }
     if (produced != f->ulen) return UNC_ERR_CORRUPT;
-    return ss_flush(s);
+    return unc_stage_flush(&s->out);
 
 ioerr:
     return in.err != UNC_OK ? in.err : UNC_ERR_TRUNCATED;
 }
-
 
 /* ------------------------------------------------------------------ */
 /* Methods 1 and 2 — the "Original" compressors' block framing         */
@@ -430,7 +413,6 @@ static int ss_orig1(SsState *s, UncBufIn *in, uint32_t plen,
     }
     return UNC_OK;
 }
-
 
 /* Method 2 — "Original Slow", `CMod 4` @0x6e8.
  *
@@ -593,7 +575,7 @@ static int ss_orig2(SsState *s, UncBufIn *in, uint32_t plen,
 static int ss_orig(SsState *s, const SsFork *f, uint8_t *iobuf,
                    uint32_t iocap, unsigned method)
 {
-    UncCtx *c = s->c;
+    UncCtx *c = s->out.c;
     UncBufIn in;
     uint32_t produced = 0, consumed = 0;
     int e;
@@ -650,7 +632,7 @@ static int ss_orig(SsState *s, const SsFork *f, uint8_t *iobuf,
         consumed += plen;
     }
     if (produced != f->ulen) return UNC_ERR_CORRUPT;
-    return ss_flush(s);
+    return unc_stage_flush(&s->out);
 }
 
 /* ------------------------------------------------------------------ */
@@ -888,7 +870,7 @@ static int ss_a3_lengths(SsState *s, UncBitIn *bi, uint8_t *out, uint32_t n)
 static int ss_alg3(SsState *s, const SsFork *f, uint8_t *iobuf,
                    uint32_t iocap)
 {
-    UncCtx *c = s->c;
+    UncCtx *c = s->out.c;
     UncBufIn in;
     UncBitIn bi;
     uint32_t nblocks, produced = 0, consumed = 3;
@@ -1021,7 +1003,7 @@ static int ss_alg3(SsState *s, const SsFork *f, uint8_t *iobuf,
         in.limit = f->clen - consumed;
     }
     if (produced != f->ulen) return UNC_ERR_CORRUPT;
-    return ss_flush(s);
+    return unc_stage_flush(&s->out);
 
 ioerr:
     return in.err != UNC_OK ? in.err : UNC_ERR_TRUNCATED;
@@ -1033,16 +1015,16 @@ ioerr:
 
 static int ss_stored(SsState *s, const SsFork *f)
 {
-    UncCtx *c = s->c;
+    UncCtx *c = s->out.c;
     uint32_t left = f->ulen, at = f->off;
 
     if (f->clen != f->ulen) return UNC_ERR_CORRUPT;
     while (left > 0) {
-        uint32_t take = left < SS_STAGE ? left : SS_STAGE;
-        if (unc_read_at(c->io, at, s->stage, (int32_t)take) != UNC_OK)
+        uint32_t take = left < UNC_STAGE ? left : UNC_STAGE;
+        if (unc_read_at(c->io, at, s->out.buf, (int32_t)take) != UNC_OK)
             return UNC_ERR_TRUNCATED;
-        s->staged = take;
-        if (ss_flush(s) != UNC_OK) return UNC_ERR_SINK;
+        s->out.len = take;
+        if (unc_stage_flush(&s->out) != UNC_OK) return UNC_ERR_SINK;
         if (unc_progress_add(&c->ps, take) != UNC_OK) return UNC_ERR_ABORTED;
         at += take;
         left -= take;
@@ -1063,7 +1045,7 @@ static int ss_one_fork(SsState *s, const SsFork *f, uint8_t *iobuf,
     s->win = 0;
     s->m2tab = 0;
     s->a3 = 0;
-    s->staged = 0;
+    s->out.len = 0;
     switch (m) {
     case 0:  err = ss_stored(s, f); break;
     case 1:
@@ -1075,15 +1057,15 @@ static int ss_one_fork(SsState *s, const SsFork *f, uint8_t *iobuf,
     default: err = UNC_ERR_UNSUPPORTED; break;
     }
     if (s->win) {
-        unc_free(s->c->al, s->win);
+        unc_free(s->out.c->al, s->win);
         s->win = 0;
     }
     if (s->m2tab) {
-        unc_free(s->c->al, s->m2tab);
+        unc_free(s->out.c->al, s->m2tab);
         s->m2tab = 0;
     }
     if (s->a3) {
-        unc_free(s->c->al, s->a3);
+        unc_free(s->out.c->al, s->a3);
         s->a3 = 0;
     }
     return err;
@@ -1123,18 +1105,17 @@ int unc_spacesaver_extract(UncCtx *c)
                 ferr = UNC_ERR_MEM;
             } else {
                 int i;
-                s.c = c;
+                s.out.c = c;
                 for (i = 0; i < 2 && ferr == UNC_OK; i++) {
                     if (h.fork[i].ulen == 0) continue;
-                    s.fork = i ? UNC_FORK_RSRC : UNC_FORK_DATA;
+                    s.out.fork = i ? UNC_FORK_RSRC : UNC_FORK_DATA;
                     ferr = ss_one_fork(&s, &h.fork[i], iobuf, SS_IOBUF);
                 }
                 unc_free(c->al, iobuf);
             }
         }
         if (c->sink->end_entry(c->sink->ctx, ferr) < 0) err = UNC_ERR_SINK;
-        else if (ferr == UNC_ERR_SINK || ferr == UNC_ERR_ABORTED ||
-                 ferr == UNC_ERR_IO) err = ferr;
+        else if (unc_fatal(ferr)) err = ferr;
     }
     return err;
 }

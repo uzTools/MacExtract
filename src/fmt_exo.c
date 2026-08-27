@@ -125,6 +125,7 @@ int unc_gzip_extract(UncCtx *c)
         }
     }
     if (c->sink->end_entry(c->sink->ctx, est) < 0) err = UNC_ERR_SINK;
+    if (unc_fatal(est)) err = est;
 
 out:
     unc_free(c->al, iobuf);
@@ -192,7 +193,7 @@ int unc_compressz_extract(UncCtx *c)
         }
     }
     if (c->sink->end_entry(c->sink->ctx, est) < 0) err = UNC_ERR_SINK;
-    if (est == UNC_ERR_SINK || est == UNC_ERR_ABORTED) err = est;
+    if (unc_fatal(est)) err = est;
 
 out:
     unc_free(c->al, iobuf);
@@ -409,8 +410,7 @@ int unc_tar_extract(UncCtx *c)
                     err = UNC_ERR_SINK;
                     break;
                 }
-                if (est == UNC_ERR_SINK || est == UNC_ERR_ABORTED ||
-                    est == UNC_ERR_IO) {
+                if (unc_fatal(est)) {
                     err = est;
                     break;
                 }
@@ -1081,8 +1081,7 @@ int unc_zip_extract(UncCtx *c)
                 err = UNC_ERR_SINK;
                 break;
             }
-            if (est == UNC_ERR_SINK || est == UNC_ERR_ABORTED ||
-                est == UNC_ERR_IO) {
+            if (unc_fatal(est)) {
                 err = est;
                 break;
             }

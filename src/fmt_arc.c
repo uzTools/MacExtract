@@ -1375,8 +1375,7 @@ int unc_arc_extract(UncCtx *c)
                  * format here already did this; ARC was the one that did
                  * not (measured 2026-08-24, filling the destination volume
                  * with `run.py --out-kb`). */
-                if (est == UNC_ERR_SINK || est == UNC_ERR_ABORTED ||
-                    est == UNC_ERR_IO) {
+                if (unc_fatal(est)) {
                     err = est;
                     break;
                 }
@@ -1452,8 +1451,7 @@ int unc_arc_extract(UncCtx *c)
                 err = UNC_ERR_SINK;
                 break;
             }
-            if (est == UNC_ERR_SINK || est == UNC_ERR_ABORTED ||
-                est == UNC_ERR_IO) {
+            if (unc_fatal(est)) {
                 err = est;
                 break;
             }

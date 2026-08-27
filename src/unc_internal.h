@@ -549,6 +549,61 @@ void unc_entry_set_path(UncEntryInfo *e, const uint8_t *path, uint32_t len);
  * Truncates at UNC_NAME_MAX, setting e->name_truncated. */
 void unc_entry_path_append(UncEntryInfo *e, const uint8_t *comp, uint32_t len);
 
+/* Is this per-entry status one that ends the whole walk? A decoder
+ * failure belongs to its entry and the next one is still worth trying;
+ * a dead sink, a user who cancelled and an unreadable file do not get
+ * better by reading on. Every archive walk asks this, and it was
+ * written out at nineteen sites before it was a function. */
+static inline int unc_fatal(int err)
+{
+    return err == UNC_ERR_SINK || err == UNC_ERR_ABORTED ||
+           err == UNC_ERR_IO;
+}
+
+/* ------------------------------------------------------------------ */
+/* A folder path being walked                                         */
+/*                                                                    */
+/* What an entry table needs while it descends: components joined      */
+/* with '/', the classic '/'->':' swap applied per component, and a    */
+/* note of the depth at which a FOLDER name was first cut to fit.      */
+/* DiskDoubler, Now Compress and SuperDisk! each wrote this out        */
+/* (OPEN_ITEMS.md, part 2 section 4); StuffIt and Compact Pro do the   */
+/* same job through unc_entry_path_append, which is the other half of  */
+/* it and is what unc_path_leaf ends in.                              */
+/*                                                                    */
+/* Components are pushed and popped by LENGTH, never by re-scanning    */
+/* for a separator, and there is no recursion anywhere in it.          */
+/* ------------------------------------------------------------------ */
+
+/* All three formats that use this chose 24 independently. */
+#define UNC_PATH_MAXDEPTH 24
+
+typedef struct UncPath {
+    uint8_t  buf[UNC_NAME_MAX + 1];
+    uint16_t len;
+    uint16_t stack[UNC_PATH_MAXDEPTH];
+    int      depth;
+    /* Depth at which a FOLDER name was first cut to fit, 0 for none.
+     * A leaf under it carries a path that is not the archive's even
+     * when the leaf itself fitted. */
+    int      truncdepth;
+} UncPath;
+
+void unc_path_init(UncPath *p);
+
+/* Descend into `name`. UNC_ERR_CORRUPT at UNC_PATH_MAXDEPTH with
+ * NOTHING changed, so a caller that would rather carry on than fail
+ * may ignore the result — which is what two of the three formats do,
+ * landing the entries under the parent instead of refusing the
+ * archive. */
+int  unc_path_push(UncPath *p, const uint8_t *name, uint32_t nlen);
+
+void unc_path_pop(UncPath *p);
+
+/* The full path of a leaf, without disturbing the stack. */
+void unc_path_leaf(const UncPath *p, UncEntryInfo *e,
+                   const uint8_t *name, uint32_t nlen);
+
 /* ------------------------------------------------------------------ */
 /* Per-format sniffers and extractors                                 */
 /* Each fmt_*.c exposes: a cheap content probe (bounded reads from    */
@@ -622,6 +677,47 @@ void unc_entry_long_name(UncCtx *c, UncEntryInfo *e, const uint8_t *name,
  * UNC_OK with c->pw/c->pwlen valid, or UNC_ERR_PASSWORD when the host
  * has none left. */
 int unc_password(UncCtx *c, int again);
+
+/* Copy `size` bytes from the CURRENT io position straight to the sink,
+ * in `bufsz` chunks, pumping progress. For a fork that is stored rather
+ * than compressed, which is every fork of MacBinary, AppleSingle and a
+ * StuffIt segment. Positioning before and padding after are the
+ * caller's. */
+int unc_copy_fork(UncCtx *c, UncFork fork, uint32_t size,
+                  uint8_t *buf, uint32_t bufsz);
+
+/* ------------------------------------------------------------------ */
+/* Output staging                                                     */
+/*                                                                    */
+/* A decoder that produces one byte at a time hands the sink runs      */
+/* rather than bytes. SpaceSaver and SuperDisk! wrote the same pair    */
+/* of functions for it; the rest of the engine still has its own       */
+/* (OPEN_ITEMS.md, part 2 section 4, *eight fork writers*).            */
+/* ------------------------------------------------------------------ */
+
+#define UNC_STAGE 512u
+
+typedef struct UncStage {
+    UncCtx  *c;
+    UncFork  fork;
+    uint32_t len;
+    uint8_t  buf[UNC_STAGE];
+} UncStage;
+
+int unc_stage_flush(UncStage *s);
+
+/* One decoded byte. Stays inline: this is a per-byte call in the
+ * hottest loop either format has, and the 68000 pays for a real one
+ * (DECISIONS.md 2026-08-24, the performance pass). */
+static inline int unc_stage_put(UncStage *s, uint8_t b)
+{
+    if (s->len == UNC_STAGE) {
+        int e = unc_stage_flush(s);
+        if (e != UNC_OK) return e;
+    }
+    s->buf[s->len++] = b;
+    return UNC_OK;
+}
 
 /* ------------------------------------------------------------------ */
 /* Compact Pro's two decode stages, shared with DiskDoubler method 8,   */

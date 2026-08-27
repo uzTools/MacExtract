@@ -945,8 +945,7 @@ int unc_lzh_extract(UncCtx *c)
              * three are not the entry's: the host asked to stop, the
              * sink failed, or the archive is unreadable. Same rule the
              * tar reader applies (fmt_exo.c). */
-            if (est == UNC_ERR_ABORTED || est == UNC_ERR_SINK ||
-                est == UNC_ERR_IO) {
+            if (unc_fatal(est)) {
                 err = est;
                 break;
             }

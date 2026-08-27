@@ -912,8 +912,7 @@ int unc_sit_extract(UncCtx *c)
                 err = UNC_ERR_SINK;
                 goto out;
             }
-            if (est == UNC_ERR_SINK || est == UNC_ERR_ABORTED ||
-                est == UNC_ERR_IO) {
+            if (unc_fatal(est)) {
                 err = est;
                 goto out;
             }

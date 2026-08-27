@@ -26,7 +26,6 @@
 #define DD_DDA2    0x44444132u    /* 'DDA2' */
 
 #define DD_FILEHDR 80             /* after the 4-byte magic */
-#define DD_MAXDEPTH 24            /* folder nesting; no recursion anywhere */
 #define CPT_DD_WINDOW 8192u       /* Compact Pro's LZH window */
 
 /* ------------------------------------------------------------------ */
@@ -1139,85 +1138,21 @@ static int dd_emit(UncCtx *c, UncEntryInfo *e, const DdFile *f, uint32_t at)
     }
 
     if (c->sink->end_entry(c->sink->ctx, err) < 0) return UNC_ERR_SINK;
-    if (err == UNC_ERR_SINK || err == UNC_ERR_ABORTED || err == UNC_ERR_IO)
+    if (unc_fatal(err))
         return err;
     return UNC_OK;
-}
-
-/* A path builder shared by both walks: components pushed and popped by
- * length, never by re-scanning, and no recursion. */
-typedef struct DdPath {
-    uint8_t  buf[UNC_NAME_MAX + 1];
-    uint16_t len;
-    uint16_t stack[DD_MAXDEPTH];
-    int      depth;
-    /* Depth at which a FOLDER name was first cut to fit, 0 for none.
-     * A leaf under it carries a path that is not the archive's even
-     * when the leaf itself fitted. */
-    int      truncdepth;
-} DdPath;
-
-static void dd_path_init(DdPath *p)
-{
-    p->len = 0;
-    p->depth = 0;
-    p->truncdepth = 0;
-}
-
-static int dd_path_push(DdPath *p, const uint8_t *name, uint32_t nlen)
-{
-    uint32_t i;
-    if (p->depth >= DD_MAXDEPTH) return UNC_ERR_CORRUPT;
-    p->stack[p->depth++] = p->len;
-    if (p->len && p->len < UNC_NAME_MAX) p->buf[p->len++] = '/';
-    for (i = 0; i < nlen && p->len < UNC_NAME_MAX; i++) {
-        uint8_t ch = name[i];
-        p->buf[p->len++] = (uint8_t)(ch == '/' ? ':' : ch);
-    }
-    if (i < nlen && !p->truncdepth) p->truncdepth = p->depth;
-    p->buf[p->len] = 0;
-    return UNC_OK;
-}
-
-static void dd_path_pop(DdPath *p)
-{
-    if (p->depth > 0) p->len = p->stack[--p->depth];
-    if (p->truncdepth > p->depth) p->truncdepth = 0;
-    p->buf[p->len] = 0;
-}
-
-/* Build a full path for a leaf without disturbing the folder stack. */
-static void dd_path_leaf(const DdPath *p, UncEntryInfo *e,
-                         const uint8_t *name, uint32_t nlen)
-{
-    uint8_t full[UNC_NAME_MAX + 1];
-    uint32_t n = p->len, i;
-    if (n > UNC_NAME_MAX) n = UNC_NAME_MAX;
-    for (i = 0; i < n; i++) full[i] = p->buf[i];
-    if (n && n < UNC_NAME_MAX) full[n++] = '/';
-    for (i = 0; i < nlen && n < UNC_NAME_MAX; i++) {
-        uint8_t ch = name[i];
-        full[n++] = (uint8_t)(ch == '/' ? ':' : ch);
-    }
-    /* Either the folder path or the leaf ran out of room. */
-    if (i < nlen || p->truncdepth) {
-        uint32_t want = (uint32_t)p->len + (p->len ? 1u : 0u) + nlen;
-        e->name_truncated = 1;
-        e->name_full_len = (uint16_t)(want > 65535u ? 65535u : want);
-    }
-    unc_entry_set_path(e, full, n);
 }
 
 /* ---- 'DDAR' ------------------------------------------------------- */
 
 static int dd_archive(UncCtx *c)
 {
-    DdPath path;
+    UncPath path;
     uint8_t hdr[124];
     uint32_t at = 78;      /* 'DDAR' + 74 header bytes */
     int err;
 
-    dd_path_init(&path);
+    unc_path_init(&path);
 
     for (;;) {
         uint32_t magic, datasize, rsrcsize, start;
@@ -1244,14 +1179,14 @@ static int dd_archive(UncCtx *c)
         start = at + 124;
 
         if (enddir) {
-            dd_path_pop(&path);
+            unc_path_pop(&path);
             at = start;
             continue;
         }
 
         unc_entry_clear(&e);
         if (isdir) {
-            if ((err = dd_path_push(&path, hdr + 5, nlen)) != UNC_OK) return err;
+            if ((err = unc_path_push(&path, hdr + 5, nlen)) != UNC_OK) return err;
             unc_entry_set_path(&e, path.buf, path.len);
             e.is_dir = 1;
             e.create_date = unc_get_u32be(hdr + 78);
@@ -1262,7 +1197,7 @@ static int dd_archive(UncCtx *c)
             continue;
         }
 
-        dd_path_leaf(&path, &e, hdr + 5, nlen);
+        unc_path_leaf(&path, &e, hdr + 5, nlen);
 
         if (unc_get_u16be(hdr + 94) & 0x20) {
             /* Stored in the archive with no file header of its own. */
@@ -1305,12 +1240,12 @@ static int dd_archive(UncCtx *c)
 
 static int dd_archive2(UncCtx *c)
 {
-    DdPath path;
+    UncPath path;
     uint8_t hdr[96];
     uint32_t at = 62;      /* 'DDA2' + 58 header bytes */
     int lastlevel = 0, err;
 
-    dd_path_init(&path);
+    unc_path_init(&path);
 
     for (;;) {
         uint32_t start = at, totalsize, nlen;
@@ -1331,7 +1266,7 @@ static int dd_archive2(UncCtx *c)
 
         if (dirlevel < 0) { at = start + totalsize; continue; }
 
-        while (lastlevel > dirlevel) { dd_path_pop(&path); lastlevel--; }
+        while (lastlevel > dirlevel) { unc_path_pop(&path); lastlevel--; }
         lastlevel = dirlevel;
 
         unc_entry_clear(&e);
@@ -1342,7 +1277,7 @@ static int dd_archive2(UncCtx *c)
              * is written against. Source: XADDiskDoublerParser.m
              * parseArchive2 (currdir=name, lastdirlevel untouched). */
             if (unc_read_full(c->io, hdr + 46, 16) != UNC_OK) break;
-            if ((err = dd_path_push(&path, hdr + 7, nlen)) != UNC_OK) return err;
+            if ((err = unc_path_push(&path, hdr + 7, nlen)) != UNC_OK) return err;
             unc_entry_set_path(&e, path.buf, path.len);
             e.is_dir = 1;
             e.create_date = unc_get_u32be(hdr + 54);
@@ -1353,7 +1288,7 @@ static int dd_archive2(UncCtx *c)
             continue;
         }
 
-        dd_path_leaf(&path, &e, hdr + 7, nlen);
+        unc_path_leaf(&path, &e, hdr + 7, nlen);
 
         if ((entrytype & 0xF000) == 0x1000) {
             /* Stored in the archive with no file header of its own.

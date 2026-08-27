@@ -8014,3 +8014,40 @@ FORMATS.md's peak-RAM matrix: a shared fork writer changes allocation
 shape, so those figures must be re-measured rather than assumed to carry
 over — and a figure that does NOT move after the change is the smell
 CLAUDE.md already names, not a reassurance.
+
+**What landed the same day.** Five of the items, at once: `unc_copy_fork`
+(three copies of a stored-fork loop), `unc_fatal` (the triage, nineteen
+sites), `UncPath` (three folder-path stacks and their three identical
+leaf builders), `UncStage` (the staging half of two decoders) and
+`unc_format_is_envelope` (the list that was living in both hosts). 460
+lines out, 380 in, 932 fixtures byte-exact. None of it touches an
+allocation, so the peak-RAM matrix is unaffected and was not re-measured;
+what WAS measured is the stack, because moving a function out of line
+moves a frame. The largest frame is unchanged, the deepest chain's
+members (`dd_fork`, `dd_ddn`) were not touched, and the two walks that
+had `*_path_leaf` inlined into them lost ~250 bytes of frame and gained
+one 288-byte call below them — a chain ~40 bytes deeper, against a 4 KB
+rule and a 3,290-byte worst case that is somewhere else entirely.
+
+**The near-miss, which is the part worth keeping.** `ss_emit` and
+`sd_emit` matched for eight lines under a duplicate scan that normalises
+identifiers, and that scan is what put them in the inventory as the same
+function. They are not: SpaceSaver's also advances its sliding window,
+three lines past where the match ends. Folding them together compiled
+clean, sniffed clean, extracted a plausible-looking file, and failed
+three unit tests on the preset dictionary. **A duplicate detector reports
+a PREFIX, not a function** — read to the closing brace of both before
+deleting either. It is also the clearest case this project has had for
+the rule about a test being able to fail: nothing else in the run noticed.
+
+**Two behaviour changes, and they are why `unc_fatal` was worth more than
+the lines it saved.** gzip propagated no per-entry status at all and `.Z`
+omitted `UNC_ERR_IO`, so `unc_gzip_extract` returned `UNC_OK` for a
+decode that was cancelled or failed on I/O. Both date to M8, neither was
+recorded as a decision, and they are exactly the two sites out of
+nineteen where the predicate was written rather than copied. Neither was
+observable through either host — both learn of a per-entry failure
+through `end_entry`, and the Mac shell tracks its own cancel flag — which
+is why nothing caught it in a year. They now say what the other seventeen
+say. **A predicate spelled out at nineteen sites has nineteen chances to
+be spelled wrong, and no way for the odd one out to be seen as odd.**

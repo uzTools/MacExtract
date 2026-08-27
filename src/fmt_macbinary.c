@@ -99,21 +99,8 @@ int unc_macbinary_probe(const uint8_t *head, int32_t len, UncIO *io)
 static int mb_stream_fork(UncCtx *c, UncFork fork, uint32_t size,
                           uint8_t *buf, uint32_t bufsz)
 {
-    uint32_t left = size;
-    while (left > 0) {
-        int32_t want = (int32_t)(left < bufsz ? left : bufsz);
-        int32_t r = c->io->read(c->io->ctx, buf, want);
-        if (r < 0) return UNC_ERR_IO;
-        if (r == 0) return UNC_ERR_TRUNCATED;
-        if (!c->opt.test_only &&
-            c->sink->write(c->sink->ctx, fork, buf, r) < 0)
-            return UNC_ERR_SINK;
-        left -= (uint32_t)r;
-        {
-            int e = unc_progress_add(&c->ps, (uint32_t)r);
-            if (e != UNC_OK) return e;
-        }
-    }
+    int err = unc_copy_fork(c, fork, size, buf, bufsz);
+    if (err != UNC_OK) return err;
     /* Skip zero padding to the next 128-byte boundary. */
     return unc_skip(c->io, MB_PAD(size) - size);
 }
@@ -169,7 +156,7 @@ int unc_macbinary_extract(UncCtx *c)
 
     if (c->sink->end_entry(c->sink->ctx, err) < 0) return UNC_ERR_SINK;
     /* Per-entry errors were reported via end_entry; fatal ones stop us. */
-    if (err == UNC_ERR_SINK || err == UNC_ERR_ABORTED || err == UNC_ERR_IO)
+    if (unc_fatal(err))
         return err;
     return UNC_OK;
 }

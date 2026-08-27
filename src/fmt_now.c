@@ -27,7 +27,6 @@
 #define NOW_OUTBLOCK  0x10000u    /* history + one block's output       */
 #define NOW_INBLOCK   0x8000u     /* staging for a block's input        */
 #define NOW_ENTRY     110u        /* bytes per entry in the table       */
-#define NOW_MAXDEPTH  24
 #define NOW_MAXBLOCKS 0x2000u     /* the reference's own search bound   */
 
 /* ------------------------------------------------------------------ */
@@ -557,40 +556,13 @@ static int now_fork(NowStream *st, UncFork fork, uint32_t want)
 /* The entry table                                                    */
 /* ------------------------------------------------------------------ */
 
-typedef struct NowPath {
-    uint8_t  buf[UNC_NAME_MAX + 1];
-    uint16_t len;
-    uint16_t stack[NOW_MAXDEPTH];
-    uint32_t left[NOW_MAXDEPTH];   /* entries still owed at this level */
-    int      depth;
-    int      truncdepth;           /* see DdPath in fmt_dd.c */
-} NowPath;
-
-static void now_path_leaf(const NowPath *p, UncEntryInfo *e,
-                          const uint8_t *name, uint32_t nlen)
-{
-    uint8_t full[UNC_NAME_MAX + 1];
-    uint32_t n = p->len, i;
-    if (n > UNC_NAME_MAX) n = UNC_NAME_MAX;
-    for (i = 0; i < n; i++) full[i] = p->buf[i];
-    if (n && n < UNC_NAME_MAX) full[n++] = '/';
-    for (i = 0; i < nlen && n < UNC_NAME_MAX; i++) {
-        uint8_t ch = name[i];
-        full[n++] = (uint8_t)(ch == '/' ? ':' : ch);
-    }
-    /* Either the folder path or the leaf ran out of room. */
-    if (i < nlen || p->truncdepth) {
-        uint32_t want = (uint32_t)p->len + (p->len ? 1u : 0u) + nlen;
-        e->name_truncated = 1;
-        e->name_full_len = (uint16_t)(want > 65535u ? 65535u : want);
-    }
-    unc_entry_set_path(e, full, n);
-}
-
 int unc_now_extract(UncCtx *c)
 {
     uint8_t hdr[NOW_ENTRY];
-    NowPath path;
+    UncPath path;
+    /* Entries still owed at each level, which is Now Compress's own
+     * way of closing a folder and not part of the shared path. */
+    uint32_t owed[UNC_PATH_MAXDEPTH];
     NowStream st;
     uint8_t *mem;
     uint32_t totalentries, seen = 0, at = 24;
@@ -686,9 +658,7 @@ int unc_now_extract(UncCtx *c)
         }
     }
 
-    path.len = 0;
-    path.depth = 0;
-    path.truncdepth = 0;
+    unc_path_init(&path);
 
     while (seen < totalentries) {
         UncEntryInfo e;
@@ -709,7 +679,7 @@ int unc_now_extract(UncCtx *c)
         numdir    = unc_get_u16be(hdr + 82);
 
         unc_entry_clear(&e);
-        now_path_leaf(&path, &e, hdr + 1, nlen);
+        unc_path_leaf(&path, &e, hdr + 1, nlen);
         e.type         = unc_get_u32be(hdr + 38);
         e.creator      = unc_get_u32be(hdr + 42);
         e.finder_flags = unc_get_u16be(hdr + 46);
@@ -743,8 +713,7 @@ int unc_now_extract(UncCtx *c)
                     err = UNC_ERR_SINK;
                     break;
                 }
-                if (ferr == UNC_ERR_SINK || ferr == UNC_ERR_ABORTED ||
-                    ferr == UNC_ERR_IO) {
+                if (unc_fatal(ferr)) {
                     err = ferr;
                     break;
                 }
@@ -755,31 +724,17 @@ int unc_now_extract(UncCtx *c)
          * then opens one of its own. Levels close when their count runs
          * out, which is how an empty folder closes immediately.
          * Source: parseDirectoryWithParent, which does it by recursing. */
-        if (path.depth > 0 && path.left[path.depth - 1] > 0)
-            path.left[path.depth - 1]--;
+        if (path.depth > 0 && owed[path.depth - 1] > 0)
+            owed[path.depth - 1]--;
 
-        if ((flags & 0x10) && path.depth < NOW_MAXDEPTH) {
-            path.stack[path.depth] = path.len;
-            path.left[path.depth] = numdir;
-            path.depth++;
-            if (path.len && path.len < UNC_NAME_MAX) path.buf[path.len++] = '/';
-            {
-                uint32_t i;
-                for (i = 0; i < nlen && path.len < UNC_NAME_MAX; i++) {
-                    uint8_t ch = hdr[1 + i];
-                    path.buf[path.len++] = (uint8_t)(ch == '/' ? ':' : ch);
-                }
-                if (i < nlen && !path.truncdepth) path.truncdepth = path.depth;
-            }
-            path.buf[path.len] = 0;
-        }
+        /* Too deep to descend leaves the entries under the parent, which
+         * is what this walk did before the push was shared and is not
+         * the same as refusing the archive. */
+        if ((flags & 0x10) && unc_path_push(&path, hdr + 1, nlen) == UNC_OK)
+            owed[path.depth - 1] = numdir;
 
-        while (path.depth > 0 && path.left[path.depth - 1] == 0) {
-            path.depth--;
-            path.len = path.stack[path.depth];
-            if (path.truncdepth > path.depth) path.truncdepth = 0;
-            path.buf[path.len] = 0;
-        }
+        while (path.depth > 0 && owed[path.depth - 1] == 0)
+            unc_path_pop(&path);
     }
 
     unc_free(c->al, mem);

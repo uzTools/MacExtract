@@ -1568,23 +1568,6 @@ static int env_end(void *ctx, int status)
     return 0;
 }
 
-/* The formats that hold exactly one file and are worth looking inside:
- * the same set cli/main.c unwraps, and deliberately NOT every format that
- * happens to yield one file. A zip or a StuffIt archive containing a
- * single archive is an ARCHIVE — its contents are the answer, and going
- * round again would extract something the user did not ask for. The two
- * hosts disagreed about this for exactly one day (DECISIONS.md). */
-static int IsEnvelopeFormat(UncFormat f)
-{
-    return f == UNC_FORMAT_MACBINARY || f == UNC_FORMAT_BINHEX ||
-           f == UNC_FORMAT_APPLESINGLE || f == UNC_FORMAT_APPLEDOUBLE ||
-           f == UNC_FORMAT_GZIP || f == UNC_FORMAT_COMPRESS_Z ||
-           /* base64 and not MIME, btoa and uuencode: see the same list
-            * in cli/main.c. The two hosts must agree on it. */
-           f == UNC_FORMAT_BASE64 ||
-           f == UNC_FORMAT_BTOA || f == UNC_FORMAT_UU;
-}
-
 /* Run one envelope layer of a file into `es`. 0 if it is not one. */
 static int EnvRun(short vol, long dir, ConstStr255Param nm, EnvSink *es,
                   UncAlloc *al)
@@ -1610,7 +1593,7 @@ static int EnvRun(short vol, long dir, ConstStr255Param nm, EnvSink *es,
     eio.size = fio_size;
 
     fmt = unc_sniff(&eio);
-    if (!IsEnvelopeFormat(fmt)) {
+    if (!unc_format_is_envelope(fmt)) {
         FSClose(ref);
         return 0;
     }
@@ -3651,7 +3634,7 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
                 !shape.name[0]) break;
             /* Only an envelope — or a segmented set, which yields the
              * file it was cut from — has another layer under it. */
-            if (!IsEnvelopeFormat(shape.fmt) &&
+            if (!unc_format_is_envelope(shape.fmt) &&
                 shape.fmt != UNC_FORMAT_SITSEG &&
                 shape.fmt != UNC_FORMAT_DDSEG &&
                 shape.fmt != UNC_FORMAT_SPLIT) break;

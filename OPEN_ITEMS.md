@@ -222,7 +222,7 @@ all** (BLOCKERS.md, the ARC 7 row, filed and disproved the same day).
 
 - **Three formats report a cut name without the name.** DiskDoubler, Now
   Compress and SuperDisk! assemble their paths in a private 255-byte buffer
-  — `dd_path_leaf` and its two copies, section 4 — and set
+  — `unc_path_leaf`, which all three now share — and set
   `name_truncated = 1`; none of the three calls `unc_entry_long_name`, so
   the host is told a name was shortened and never told what it was. The
   formats that go through the shared helpers report 2 and hand the whole
@@ -269,35 +269,26 @@ different algorithms and stay that way. The reasoning, and the four
 differences that are NOT duplication, are in DECISIONS.md 2026-08-27
 (*the scaffolding audit*).
 
-- **Eight fork writers.** `SitFork`, `DdFork`, `LzhOut`, `CptRle`,
-  `BtoaState`, `ArcTrim` and the staging halves of `SsState` and `SdState`
-  are one type written eight times: a staging buffer, a checksum, a
-  `flush()` that guards on the options and calls `sink->write`, and a
-  `put()` that flushes when the buffer is full. They differ on four axes
-  and nothing else — which checksum, whether output stops at a declared
-  length, one fork or two spans, and how "write or don't" is spelled. That
-  last is spelled **four ways**: `!test_only` (StuffIt, btoa),
-  `!test_only && !list_only` (DiskDoubler, SpaceSaver, SuperDisk!), a
-  `write` flag the caller sets (LZH, ARC), and `!test_only && !quiet`
-  (Compact Pro, where `quiet` grades a password candidate). Nothing is
-  wrong today only because every caller ALSO wraps decode in
-  `if (!opt.list_only)`: the rule is enforced twice, which is how it came
-  to be written four ways without anything noticing. **What would close
-  it:** one `UncForkOut` in `unc_util.c` over those four axes.
+- **Six fork writers.** `SitFork`, `DdFork`, `LzhOut`, `CptRle`,
+  `BtoaState` and `ArcTrim` are one type written six times: a staging
+  buffer, a checksum, a `flush()` that guards on the options and calls
+  `sink->write`, and a `put()` that flushes when the buffer is full. They
+  differ on four axes and nothing else — which checksum, whether output
+  stops at a declared length, one fork or two spans, and how "write or
+  don't" is spelled. That last is spelled **four ways**: `!test_only`
+  (StuffIt, btoa), `!test_only && !list_only` (DiskDoubler, and `UncStage`
+  for SpaceSaver and SuperDisk!), a `write` flag the caller sets (LZH,
+  ARC), and `!test_only && !quiet` (Compact Pro, where `quiet` grades a
+  password candidate). Nothing is wrong today only because every caller
+  ALSO wraps decode in `if (!opt.list_only)`: the rule is enforced twice,
+  which is how it came to be written four ways without anything noticing.
+  **What would close it:** one `UncForkOut` over those four axes.
   `int (*put)(void *, uint8_t)` is already the shared convention —
   `unc_lzah_decode`, `unc_lzdyn_decode` and `unc_arsenic_decode` all take
-  one.
-
-- **Three folder-path stacks, and a fourth mechanism.** `DdPath`, `NowPath`
-  and `SdPath` carry the same fields, and `dd_path_leaf`, `now_path_leaf`
-  and `sd_path_leaf` are the same function under three names, identical
-  once the struct type is substituted. Only `fmt_dd.c` factored out push
-  and pop; the other two inline the same `truncdepth` bookkeeping in their
-  walk loops. StuffIt and Compact Pro do the same job a fourth way, with a
-  `path[]`/`pathlens[]` pair over the shared `unc_entry_path_append`.
-  **This is the one that has already cost something — section 3.** **What
-  would close it:** one `UncPath` built on `unc_entry_path_append`, which
-  is the mechanism that already reports a cut.
+  one, and `UncStage` (`unc_util.c`) is the staging third of it already
+  written. **Read to the closing brace of each before merging any two:**
+  two of these look alike for eight lines and then stop (DECISIONS.md
+  2026-08-27, *the scaffolding audit*).
 
 - **Five RLE90 filters.** `sit_rle90`, `bh_next`, `dd_rle`, `arc_byte` and
   `arc_trim_put`. Two are pull-shaped, two push-shaped and one a bulk loop,
@@ -308,33 +299,6 @@ differences that are NOT duplication, are in DECISIONS.md 2026-08-27
   an oversight. **What would close it:** one filter parameterised on escape
   byte and strictness, so the difference is an argument rather than an
   accident.
-
-- **Three copies of the stream-a-fork loop.** `as_stream_fork`,
-  `mb_stream_fork` and `sitseg_stream_fork` are the same fifteen lines —
-  read, `test_only` guard, `sink->write`, `unc_progress_add`. The
-  differences are an opening seek and a trailing pad-skip, both the
-  caller's business. **What would close it:** `unc_copy_fork()` in
-  `unc_util.c`.
-
-- **The fatal-error triage, written out nineteen times.**
-  `est == UNC_ERR_SINK || est == UNC_ERR_ABORTED || est == UNC_ERR_IO`
-  appears at nineteen sites in fifteen files. Eighteen agree; `.Z` omits
-  `UNC_ERR_IO`, and gzip has no triage at all, so `unc_gzip_extract`
-  returns `UNC_OK` for a decode that was aborted or failed on I/O. **Not
-  currently observable:** both hosts learn of a per-entry failure through
-  `end_entry`, and the Mac shell tracks its own cancel flag rather than
-  reading the return. **What would close it:** `unc_fatal(int)`, one line,
-  which makes the eighteen agree and the two odd ones either deliberate or
-  gone.
-
-- **The envelope list lives in both hosts and in neither library.**
-  `env_is_envelope` in `cli/main.c` and `IsEnvelopeFormat` in
-  `mac/macextract_mac.c` are the same predicate over `UncFormat`, and each
-  carries a comment saying the two must agree — they disagreed for a day
-  once (DECISIONS.md 2026-08-14). Which formats hold exactly one file is a
-  property of a format, not of a host. **What would close it:** a third
-  column in `unc_formats[]` beside `extractable`, exposed as
-  `unc_format_is_envelope()`.
 
 - **Smaller, and mechanical.** A canonical-Huffman builder written twice:
   `ss_a3_build`/`ss_a3_sym` reimplements `unc_canon_build_ext`/

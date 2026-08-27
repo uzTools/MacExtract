@@ -12,54 +12,74 @@ typedef struct UncFormatDesc {
     UncFormat   fmt;
     const char *name;
     int         extractable;
+    /* Holds exactly one file and is worth looking inside: the layers a
+     * real download is chained from (.sit.hqx, .cpt.bin, .tar.Z). NOT
+     * every format that happens to yield one file — a zip holding a
+     * single archive is an ARCHIVE, and going round again would extract
+     * something the user did not ask for.
+     *
+     * It lives here because it is a property of a FORMAT, and it lived
+     * in both hosts before that: they disagreed for a day (DECISIONS.md
+     * 2026-08-14), which is what a list kept in two places does.
+     *
+     * base64 and not MIME, though both usually hold an archive: an
+     * envelope layer is DELETED once the layer under it comes out, and
+     * a MIME part can carry a resource fork that would go with it.
+     * base64 has one anonymous stream and no forks at all. btoa and
+     * uuencode are in for the same reason with the same guard — a real
+     * btoa file off a Mac is MacBinary inside armour, and uuencode's
+     * UUTool shape carries its own forks the way BinHex does, so
+     * neither can strand a fork on a layer that is deleted
+     * (DECISIONS.md 2026-08-26, 2026-08-27). */
+    int         envelope;
 } UncFormatDesc;
 
 static const UncFormatDesc unc_formats[] = {
-    { UNC_FORMAT_UNKNOWN,     "unknown",         0 },
-    { UNC_FORMAT_MACBINARY,   "MacBinary",       1 },
-    { UNC_FORMAT_APPLESINGLE, "AppleSingle",     1 },
-    { UNC_FORMAT_APPLEDOUBLE, "AppleDouble",     1 },
-    { UNC_FORMAT_BINHEX,      "BinHex 4",        1 },
-    { UNC_FORMAT_PACKIT,      "PackIt",          1 },
-    { UNC_FORMAT_COMPACTPRO,  "Compact Pro",     1 },
-    { UNC_FORMAT_SIT,         "StuffIt",         1 },
-    { UNC_FORMAT_SIT5,        "StuffIt 5",       1 },
-    { UNC_FORMAT_ZIP,         "Zip",             1 },
-    { UNC_FORMAT_GZIP,        "Gzip",            1 },
-    { UNC_FORMAT_COMPRESS_Z,  "Unix compress",   1 },
-    { UNC_FORMAT_TAR,         "Tar",             1 },
-    { UNC_FORMAT_SITX,        "StuffIt X",       0 },
-    { UNC_FORMAT_DISKDOUBLER, "DiskDoubler",     1 },
-    { UNC_FORMAT_NOWCOMPRESS, "Now Compress",    1 },
-    { UNC_FORMAT_LZH,         "LZH",             1 },
-    { UNC_FORMAT_SITSEG,      "StuffIt segment", 1 },
-    { UNC_FORMAT_ZIPSEG,      "Zip segment",     1 },
+    { UNC_FORMAT_UNKNOWN,     "unknown",             0, 0 },
+    { UNC_FORMAT_MACBINARY,   "MacBinary",           1, 1 },
+    { UNC_FORMAT_APPLESINGLE, "AppleSingle",         1, 1 },
+    { UNC_FORMAT_APPLEDOUBLE, "AppleDouble",         1, 1 },
+    { UNC_FORMAT_BINHEX,      "BinHex 4",            1, 1 },
+    { UNC_FORMAT_PACKIT,      "PackIt",              1, 0 },
+    { UNC_FORMAT_COMPACTPRO,  "Compact Pro",         1, 0 },
+    { UNC_FORMAT_SIT,         "StuffIt",             1, 0 },
+    { UNC_FORMAT_SIT5,        "StuffIt 5",           1, 0 },
+    { UNC_FORMAT_ZIP,         "Zip",                 1, 0 },
+    { UNC_FORMAT_GZIP,        "Gzip",                1, 1 },
+    { UNC_FORMAT_COMPRESS_Z,  "Unix compress",       1, 1 },
+    { UNC_FORMAT_TAR,         "Tar",                 1, 0 },
+    { UNC_FORMAT_SITX,        "StuffIt X",           0, 0 },
+    { UNC_FORMAT_DISKDOUBLER, "DiskDoubler",         1, 0 },
+    { UNC_FORMAT_NOWCOMPRESS, "Now Compress",        1, 0 },
+    { UNC_FORMAT_LZH,         "LZH",                 1, 0 },
+    { UNC_FORMAT_SITSEG,      "StuffIt segment",     1, 0 },
+    { UNC_FORMAT_ZIPSEG,      "Zip segment",         1, 0 },
     /* Extractable, but only as a SET: unc_extract_as has no case for it,
      * because one part of a plain split is an anonymous slice of bytes
      * and there is no header to read it as. The host decides by name
      * and calls unc_extract_segments. */
-    { UNC_FORMAT_SPLIT,       "Split file",      1 },
-    { UNC_FORMAT_CPTSEG,      "Compact Pro segment", 1 },
-    { UNC_FORMAT_UU,          "uuencode",        1 },
-    { UNC_FORMAT_ARC,         "ARC",             1 },
-    { UNC_FORMAT_SUPERDISK,   "SuperDisk!",      1 },
-    { UNC_FORMAT_DDSEG,       "DiskDoubler split", 1 },
-    { UNC_FORMAT_SPACESAVER,  "StuffIt SpaceSaver", 1 },
-    { UNC_FORMAT_APPLELINK,   "AppleLink package", 0 },
-    { UNC_FORMAT_BTOA,        "btoa",            1 },
-    { UNC_FORMAT_BASE64,      "base64",          1 },
-    { UNC_FORMAT_MIME,        "MIME message",    1 },
+    { UNC_FORMAT_SPLIT,       "Split file",          1, 0 },
+    { UNC_FORMAT_CPTSEG,      "Compact Pro segment", 1, 0 },
+    { UNC_FORMAT_UU,          "uuencode",            1, 1 },
+    { UNC_FORMAT_ARC,         "ARC",                 1, 0 },
+    { UNC_FORMAT_SUPERDISK,   "SuperDisk!",          1, 0 },
+    { UNC_FORMAT_DDSEG,       "DiskDoubler split",   1, 0 },
+    { UNC_FORMAT_SPACESAVER,  "StuffIt SpaceSaver",  1, 0 },
+    { UNC_FORMAT_APPLELINK,   "AppleLink package",   0, 0 },
+    { UNC_FORMAT_BTOA,        "btoa",                1, 1 },
+    { UNC_FORMAT_BASE64,      "base64",              1, 1 },
+    { UNC_FORMAT_MIME,        "MIME message",        1, 0 },
     /* Named, never extracted (src/fmt_foreign.c). */
-    { UNC_FORMAT_RAR,         "RAR",             0 },
-    { UNC_FORMAT_RAR5,        "RAR 5",           0 },
-    { UNC_FORMAT_7Z,          "7-Zip",           0 },
-    { UNC_FORMAT_XZ,          "xz",              0 },
-    { UNC_FORMAT_BZIP2,       "bzip2",           0 },
-    { UNC_FORMAT_CAB,         "Microsoft Cabinet", 0 },
-    { UNC_FORMAT_ZOO,         "Zoo",             0 },
-    { UNC_FORMAT_AR,          "ar archive",      0 },
-    { UNC_FORMAT_CPIO,        "cpio",            0 },
-    { UNC_FORMAT_ARJ,         "ARJ",             0 },
+    { UNC_FORMAT_RAR,         "RAR",                 0, 0 },
+    { UNC_FORMAT_RAR5,        "RAR 5",               0, 0 },
+    { UNC_FORMAT_7Z,          "7-Zip",               0, 0 },
+    { UNC_FORMAT_XZ,          "xz",                  0, 0 },
+    { UNC_FORMAT_BZIP2,       "bzip2",               0, 0 },
+    { UNC_FORMAT_CAB,         "Microsoft Cabinet",   0, 0 },
+    { UNC_FORMAT_ZOO,         "Zoo",                 0, 0 },
+    { UNC_FORMAT_AR,          "ar archive",          0, 0 },
+    { UNC_FORMAT_CPIO,        "cpio",                0, 0 },
+    { UNC_FORMAT_ARJ,         "ARJ",                 0, 0 },
 };
 
 const char *unc_format_name(UncFormat f)
@@ -75,6 +95,14 @@ int unc_format_extractable(UncFormat f)
     unsigned i;
     for (i = 0; i < sizeof unc_formats / sizeof unc_formats[0]; i++)
         if (unc_formats[i].fmt == f) return unc_formats[i].extractable;
+    return 0;
+}
+
+int unc_format_is_envelope(UncFormat f)
+{
+    unsigned i;
+    for (i = 0; i < sizeof unc_formats / sizeof unc_formats[0]; i++)
+        if (unc_formats[i].fmt == f) return unc_formats[i].envelope;
     return 0;
 }
 

@@ -337,8 +337,7 @@ resynced:
         }
 
         /* Fatal conditions end the archive walk. */
-        if (eerr == UNC_ERR_SINK || eerr == UNC_ERR_ABORTED ||
-            eerr == UNC_ERR_IO || eerr == UNC_ERR_TRUNCATED) {
+        if (unc_fatal(eerr) || eerr == UNC_ERR_TRUNCATED) {
             err = eerr == UNC_ERR_TRUNCATED ? UNC_OK : eerr;
             goto out;
         }
