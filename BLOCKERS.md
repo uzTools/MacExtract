@@ -11,7 +11,7 @@ system the project claims:
 | System 6.0.8, 4 MB Mac Plus (Mini vMac, a true 68000) | **69/69** sampled fixtures |
 | System 6.0.8, **1 MB** — the floor target | **69/69**; no memory-budget refusals remain, and DiskDoubler method 5's 396 KB allocation succeeds here |
 | System 7.0.1, 4 MB | **69/69** |
-| Mac OS 9.2 (QEMU PowerPC, 68LC040 emulation) | 13/13, plus HFS+ and the `SIZE` partition; DiskDoubler still recorded there as the refusal it was pre-M12 |
+| Mac OS 9.2 (QEMU PowerPC, 68LC040 emulation) | **20/20** sampled fixtures, re-run 2026-08-27 after standing at 13/13 since M12; plus HFS+ and the `SIZE` partition |
 
 All three Mini vMac tiers re-run **2026-08-22**, with M15–M23's codecs in
 and three fixtures added to the sample for them — DiskDoubler methods 3, 4

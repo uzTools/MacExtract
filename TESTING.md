@@ -1844,7 +1844,11 @@ part boundary (27 failures). Both were reverted.
    application is launched from the Finder by keyboard, and afterwards
    the transfer volume — a plain file on the host — is mounted with
    hfsutils and **both forks of every output file are compared byte for
-   byte** against `macextract x -nr`.
+   byte** against `macextract x` — with the auto-unwrap loop ON, because
+   this harness launches the INTERACTIVE build, which takes envelopes
+   off. (It used `-nr` until 2026-08-27, which is right only for the
+   autotest build; `tools/vmac/README.md` has what that cost.)
+   **20/20 on the committed sample**, 2026-08-27.
 
 9. **Reading the Mini vMac Out volume** (`tools/vmac/run.py --keep-disks`
    then `tools/vmac/checkdisk.py /tmp/vmacrun-*/`): the same comparison

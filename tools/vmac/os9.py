@@ -571,12 +571,24 @@ def _walk_volume(env, mac_dir="", depth=0):
     came back as two different manglings on the two sides and compared unequal
     while both were in fact correct.
 
-    `hls` takes an HFS path, so no `hcd` state is involved. Returns paths in
-    POSIX form; `_mac_path()` turns one back into the colon form hcopy wants.
+    `hls` takes an HFS path, so no `hcd` state is involved. Returns
+    `{POSIX-ish relative path: the HFS path hcopy wants}` — a dict rather
+    than a list because the two cannot be derived from each other. A
+    classic Mac name may CONTAIN '/' (it is ':' that is forbidden, which
+    is why the engine swaps the two), so joining components with '/'
+    produces a string that cannot be split back: `SD! Utilities /
+    MSWord4.0` inside `PLEASE READ` came out as
+    `:Read Me and More:PLEASE READ:SD! Utilities : MSWord4.0` and hcopy
+    answered "no such file or directory" for a file that was there and
+    correct. The HFS path is therefore built from the components while
+    the walk still has them, and the POSIX one is kept only for
+    comparing against Linux, where the same ambiguity is harmless
+    because both sides build it the same way. (2026-08-27, the first
+    fixture here whose names hold the swap.)
     """
     if depth > 8:                       # archives here are not this deep
-        return []
-    out = []
+        return {}
+    out = {}
     listing = subprocess.run(["hls", "-F", "-1"] + ([mac_dir] if mac_dir else []),
                              capture_output=True, env=env)
     for raw in listing.stdout.split(b"\n"):
@@ -588,15 +600,18 @@ def _walk_volume(env, mac_dir="", depth=0):
         if depth == 0 and name in NOT_OUTPUT:
             continue
         rel = f"{mac_dir_to_rel(mac_dir)}/{name}" if mac_dir else name
+        hfs = (mac_dir or ":") + name
         if isdir:
-            out += _walk_volume(env, _mac_path(rel) + ":", depth + 1)
+            out.update(_walk_volume(env, hfs + ":", depth + 1))
         else:
-            out.append(unicodedata.normalize("NFC", rel))
+            out[unicodedata.normalize("NFC", rel)] = hfs
     return out
 
 
 def _mac_path(rel):
-    """A POSIX-ish relative path as an absolute HFS path (`:a:b:c`)."""
+    """A POSIX-ish relative path as an absolute HFS path (`:a:b:c`).
+
+    Only correct where no component contains '/' — see _walk_volume."""
     return ":" + rel.replace("/", ":")
 
 
@@ -608,10 +623,19 @@ def mac_dir_to_rel(mac_dir):
 def verify_output(xfer, fixture, workdir):
     """Compare what the Mac wrote against the same engine's Linux output.
 
-    Returns (ok, list of report lines). The reference is `macextract x -nr`:
-    single-level, because the Mac shell calls unc_extract once with no
-    auto-unwrap loop — the same reasoning, and the same flag, as
-    tools/vmac_check.py."""
+    Returns (ok, list of report lines). The reference is `macextract x`,
+    with the auto-unwrap loop ON, because THIS harness launches the
+    INTERACTIVE build and that one takes envelopes off (`ExtractOne` in
+    mac/macextract_mac.c). It ran `-nr` until 2026-08-27, copied from
+    tools/vmac_check.py, where it is right for a different reason: the
+    AUTOTEST build calls RunExtract once and has no such loop. os9.py
+    changed which application it launches and the reference stayed put,
+    which nothing could notice while this tier was not being run —
+    `export-hc.hqx` failed as "MISSING Export.sit, UNEXPECTED Export"
+    on a Mac that had correctly opened the BinHex, then the StuffIt
+    inside it, and written the HyperCard stack byte-for-byte.
+    The `--hfsplus` path below runs the autotest build and keeps
+    `-nr`."""
     lines, ok = [], True
     hfs = hfs_partition(xfer, os.path.join(workdir, "xfer.hfs"))
     home = os.path.join(workdir, "hfshome")
@@ -640,7 +664,7 @@ def verify_output(xfer, fixture, workdir):
     asmac = os.path.join(workdir, "as-the-mac-saw-it", "archive.sit")
     os.makedirs(os.path.dirname(asmac), exist_ok=True)
     shutil.copyfile(fixture, asmac)
-    subprocess.run([cli, "x", "-nr", "--forks", "hidden", asmac, "-o", ref],
+    subprocess.run([cli, "x", "--forks", "hidden", asmac, "-o", ref],
                    capture_output=True)
 
     # Everything the reference wrote, as relative paths. The reference is
@@ -732,7 +756,7 @@ def verify_output(xfer, fixture, workdir):
         # the argument has to go back out as MacRoman bytes rather than as the
         # UTF-8 Python would encode by default.
         c = subprocess.run(["hcopy", "-m",
-                            _mac_path(name).encode("mac_roman", "replace"),
+                            names[name].encode("mac_roman", "replace"),
                             mb.encode()],
                            capture_output=True, env=env)
         if c.returncode != 0:

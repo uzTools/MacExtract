@@ -2414,7 +2414,7 @@ On-Mac engine peak heap (high-water mark) by format, matching the Linux
 | Unix compress (.Z) | 15–219 KB§ |
 | StuffIt 5 (Arsenic) | 0.63–2.53 MB (block *fill* dependent — see †) |
 | LZH / LHA | 4–41 KB over the sample (4,112 B stored, 41,364 B for `-lh7-`); 74 KB is the format's ceiling, for an entry that fills a 64 KB window |
-| DiskDoubler / Now Compress | extracted and byte-exact on both Mini vMac tiers since 2026-08-15 (see above); the Mac OS 9 rows below still predate M12 |
+| DiskDoubler / Now Compress | extracted and byte-exact on both Mini vMac tiers since 2026-08-15 (see above), and on Mac OS 9 since 2026-08-27 |
 
 ## System 7 tier (Mini vMac — System 7.0.1, 4 MB Mac Plus, 68000)
 
@@ -2629,15 +2629,16 @@ and the only one where the 68k binary does not run on a 68k CPU: Mac OS 9.2 on
 emulated PowerPC executes it through the **68LC040 emulator** built into the
 system. Nothing above System 7 had ever run it.
 
-**13/13 byte-exact** — `tools/vmac/os9sample.txt`, one fixture per format,
-each in its own boot from a pristine copy of the master image:
+**20/20 byte-exact**, re-run 2026-08-27 — `tools/vmac/os9sample.txt`, one
+fixture per format, each in its own boot from a pristine copy of the master
+image:
 
     tools/vmac/os9.py --setup                                   # once
     tools/vmac/os9.py --list tools/vmac/os9sample.txt -o <dir> --launch
 
 | fixture | format | files | data bytes | rsrc bytes | result |
 |---|---|---|---|---|---|
-| `export-hc.hqx` | BinHex | 1 | 1,615 | 0 | ✅ byte-exact |
+| `export-hc.hqx` | BinHex, and the StuffIt inside it | 1 | 6,944 | 0 | ✅ byte-exact |
 | `derived-keyAhead.cpt` | Compact Pro | 1 | 0 | 1,233 | ✅ byte-exact |
 | `synth-exo-Z.Z` | compress | 1 | 2,200 | 0 | ✅ byte-exact |
 | `synth-exo-gz.gz` | gzip | 1 | 2,200 | 0 | ✅ byte-exact |
@@ -2647,11 +2648,25 @@ each in its own boot from a pristine copy of the master image:
 | `derived-DDT.sit` | StuffIt with a resource fork | 2 | 1,473 | 3,504 | ✅ byte-exact |
 | `derived-KeyGraphics.sit` | StuffIt 5 / Arsenic | 1 | 0 | 33,484 | ✅ byte-exact |
 | `derived-XferIt_1.5b4.sea` | Compact Pro self-extracting | 10 | 679,423 | 268,752 | ✅ byte-exact |
-| `derived-DandStoQIF2.sea` | DiskDoubler: must REFUSE | 0 | — | — | ✅ declined, as Linux did **then** — pre-M12, not re-run |
-| `synth-exo-tar.tar` | tar | 4 | 7,788 | 0 | ✅ byte-exact |
-| `synth-exo-zip-deflate.zip` | zip | 4 | 7,788 | 0 | ✅ byte-exact |
+| `derived-DandStoQIF2.sea` | DiskDoubler | 3 | 20,918 | 24,562 | ✅ byte-exact — **extracted here for the first time**; it was this tier's refusal case until 2026-08-27, a verdict from before M12 |
+| `synth-exo-tar.tar` | tar | 4 | 7,808 | 0 | ✅ byte-exact |
+| `synth-exo-zip-deflate.zip` | zip | 4 | 7,808 | 0 | ✅ byte-exact |
+| `synth-arc-mixed.arc` | ARC, all nine methods | 9 | 16,200 | 0 | ✅ byte-exact |
+| `synth-uu-mac.uu` | uuencode, UUTool's two-fork shape | 1 | 1,350 | 768 | ✅ byte-exact |
+| `lhasa-maclha-l1_lh5.lzh` | LZH, MacLHA's MacBinary payload | 1 | 18,092 | 0 | ✅ byte-exact |
+| `derived-SD__Utilities.x` | Alysis SuperDisk! | 3 | 9,916 | 14,389 | ✅ byte-exact, including two names holding the `':'`/`'/'` swap |
+| `synth-os9-btoa.btoa` | btoa | 1 | 504 | 0 | ✅ byte-exact |
+| `synth-os9-mime.mim` | multipart/appledouble | 1 | 320 | 176 | ✅ byte-exact, both forks and the type |
+| `synth-os9-rar.rar` | RAR: must REFUSE | 0 | — | — | ✅ declined, and Linux declines the same file; the alert is photographed |
 
-**13/13**, 32 files, 712,481 data bytes and 309,358 resource-fork bytes compared.
+**20/20**, 51 files, 785,150 data bytes and 349,253 resource-fork bytes
+compared. The eight formats that postdate the previous sweep — ARC, uuencode,
+SuperDisk!, btoa, LZH, base64/MIME and the named-but-declined family, plus
+DiskDoubler's promotion from refusal to extraction — all passed first time;
+the two failures in that sweep were both in the HARNESS and are written up in
+`tools/vmac/README.md`. The colour icon members and the refusal alert were
+photographed out of the same run's ordinary screenshots (DECISIONS.md
+2026-08-24, *the icon*).
 
 This tier reads its result **off the disk rather than the screen** — both forks
 of every extracted file lifted out with hfsutils and compared byte for byte

@@ -78,31 +78,26 @@ unsupported either way.
 Verification gaps — things this project has and has not checked.
 What it does not HAVE is section 2.
 
-- **The Mac OS 9.2 tier has not run since M12.** Eight formats postdate
-  it — ARC, uuencode, SuperDisk!, SpaceSaver, btoa, LZH, base64 and MIME —
-  as do decryption and the named-only family, and its sample still
-  records DiskDoubler as a refusal, which is what it was when that tier
-  last ran. The other two tiers are re-run after every change
-  (BLOCKERS.md). **What would close it:** an OS 9 sweep, which costs a
-  full PowerPC boot per fixture — tens of minutes, against five for the
-  whole System 7 tier.
+- **Two things only the Mac OS 9 tier can show, and it has never been
+  asked for either.** The interactive UI's cancel routes — Cmd-., the
+  Cancel button, the dialog repainting afterwards — run on System 6.0.8
+  and, since 2026-08-25, on System 7.0.1 (TESTING.md, layer 10); on Mac
+  OS 9 the application has only ever been driven to completion, which
+  the 2026-08-27 sweep did not change. And how an 8-bit MacRoman
+  filename LOOKS there is unphotographed: the bytes are checked on every
+  tier, the glyphs on the two Mini vMac ones. **What would close it:**
+  `os9.py` already drives the Finder and the Standard File dialog by
+  keyboard, so the cancel routes need a variant of `launch_by_keyboard`
+  that presses Cmd-. rather than Return, and the glyph question needs a
+  fixture with an 8-bit name in the OS 9 sample — `derived-Education7.1.cpt`
+  or PackIt's `Appé`, which is already there and was never photographed.
 
-- **Two things only that tier can show, and it has never been asked
-  for either.** The interactive UI's cancel routes — Cmd-., the Cancel
-  button, the dialog repainting afterwards — run on System 6.0.8 and,
-  since 2026-08-25, on System 7.0.1 (TESTING.md, layer 10); on Mac OS 9
-  the application has only ever been driven to completion. And how an
-  8-bit MacRoman filename LOOKS there is unphotographed: the bytes are
-  checked on every tier, the glyphs on the two Mini vMac ones.
-
-- **The COLOUR icon members have never been displayed.** `ICN#` and `ics#`
-  are photographed bound and drawn by a real Finder (DECISIONS.md
-  2026-08-24, *the icon*), but Mini vMac emulates a 1-bit Mac Plus, so
-  `icl4`/`ics4`/`icl8`/`ics8` have been drawn by nothing. **What would
-  close it:** opening the application's folder on the Mac OS 9 tier
-  (`tools/vmac/os9.py`, which has colour) and photographing it. The
-  palette those members are indexed against is a separate gap, in
-  section 2.
+  Two formats are also absent from the sample for reasons that are not
+  scope: **SpaceSaver**, whose only specimens are cache-only and cannot
+  be committed or regenerated on a clone, and an **encrypted entry**,
+  because the application asks for the password in a dialog and the
+  harness drives the Finder rather than the application
+  (`tools/vmac/os9sample.txt` says both in place).
 
 ---
 

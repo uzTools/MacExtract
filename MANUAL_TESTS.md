@@ -140,6 +140,16 @@ Verified under QEMU only, through the 68LC040 emulator.
 - [ ] **8-bit MacRoman names on screen.** The bytes are checked everywhere; how
       they *look* above System 6 is not. `derived-Education7.1.cpt` has a
       `spinning brain ƒ` folder and PackIt's synthetic fixtures have `Appé`.
+- [ ] **The application's icon at 16 COLOURS.** `icl4` and `ics4` are the two
+      members of the icon family that nothing here can display, and it is a
+      hard limit rather than a missing step (measured 2026-08-27): the QEMU
+      `mac99` guest offers exactly one colour depth — its Monitors control
+      panel lists "Millions" and greys out "Grays" — and booted at
+      `-g 1024x768x4` it does not reach the Finder at all, stopping in
+      OpenBIOS. Mini vMac is a 1-bit Mac Plus. So the 1-bit and 8-bit members
+      are photographed (DECISIONS.md 2026-08-24, *the icon*) and the 4-bit
+      pair needs a screen set to 16 colours on real hardware, or an emulator
+      with a 4-bit video mode.
 
 ## 4. The interactive application, on any real machine
 

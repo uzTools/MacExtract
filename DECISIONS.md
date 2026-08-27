@@ -6431,6 +6431,24 @@ icon. The only instrument that could see any of them was a screenshot of a
 real Finder — which is why `README.md` already requires that its screenshots
 be real frames, and why this project keeps a harness that can take them.
 
+**The COLOUR members were drawn for the first time on 2026-08-27**, and by a
+tier that was being re-run for another reason entirely: Mini vMac emulates a
+1-bit Mac Plus, so `ICN#` and `ics#` were all that had ever appeared. Mac OS
+9.2 runs at 32-bit colour, and the Finder picks the deepest member it has —
+`icl8` in the volume window (`docs/screens/0b-icon-os9-color.png`) and `ics8`
+in the Standard File dialog's own list, both out of the sweep's ordinary
+per-fixture screenshots. **The two 4-bit members `icl4` and `ics4` have still
+been drawn by nothing, and no emulator here can draw them** — which was
+measured rather than assumed, the same day and by the obvious two steps.
+The guest's own Monitors control panel offers **one** colour depth,
+"Millions", with "Grays" disabled: the depth cannot be changed from inside.
+And booting the same disk with `-g 1024x768x4` does not reach the Finder at
+all — it stops in OpenBIOS after *"unable to find a usable NVRAM
+partition"*. A Finder draws the deepest member the screen can take, so at
+32-bit it will always choose `icl8`. That pair therefore moved to
+MANUAL_TESTS.md, where the things this machine cannot do live, rather than
+staying an open item it could close.
+
 ---
 
 ## 2026-08-24 (the low-memory message) — saying the number, and where it can be graded

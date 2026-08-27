@@ -992,6 +992,16 @@ because the framebuffer grid is invisible on a 32-bit screen. That the output
 really landed on HFS+ is checked by mounting the volume's HFS *wrapper*: if
 the files were on plain HFS they would be visible there, and they are not.
 
+**The reference is `macextract x`, unwrap loop ON.** This harness launches
+the INTERACTIVE build, which takes envelopes off in `ExtractOne`; `-nr` is
+right for the AUTOTEST build, which `--hfsplus` and the Mini vMac tiers use.
+os9.py ran `-nr` until 2026-08-27 because it once launched the autotest build
+too, and the tier was not re-run in between: `export-hc.hqx` came back as
+"MISSING Export.sit, UNEXPECTED Export" from a Mac that had correctly opened
+the BinHex, then the StuffIt inside it, and written the HyperCard stack byte
+for byte. **When a harness changes what it drives, its oracle is part of what
+changed.**
+
 **The two sides spell some names differently, and both are right.** The Mac
 writes each component as `ComponentToStr63()` does — the engine's `':'` back to
 `'/'`, cut at 31 characters — so `SD! Utilities : MacWrite` on Linux is
