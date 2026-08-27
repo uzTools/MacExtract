@@ -74,6 +74,7 @@ typedef struct MimeHdrs {
     int32_t  bndlen;
     uint8_t  name[UNC_NAME_MAX + 1];
     uint32_t namelen;
+    uint8_t  name_trunc;         /* the header named more than fits */
     int      cte;
     uint32_t body;               /* absolute offset of the first body byte */
 } MimeHdrs;
@@ -98,6 +99,7 @@ typedef struct MimeApple {
     int      have_rsrc;
     uint8_t  name[UNC_NAME_MAX + 1];
     uint32_t namelen;
+    uint8_t  name_trunc;         /* the part named more than fits */
     uint32_t type, creator;
     uint16_t flags;
     int      have_finfo;
@@ -116,6 +118,8 @@ typedef struct MimeCtx {
     int      appledouble[MIME_MAX_DEPTH];
     uint8_t  mname[MIME_MAX_DEPTH][UNC_NAME_MAX + 1];
     uint32_t mnamelen[MIME_MAX_DEPTH];
+    uint8_t  mnametrunc[MIME_MAX_DEPTH];
+    uint8_t  hdrcut;             /* the header being read did not fit */
     int      depth;
     int      partno;             /* for the "part1", "part2" names  */
     /* The walk's working state lives here rather than on the stack:
@@ -183,7 +187,7 @@ static int mime_is_header(const uint8_t *s, int32_t len)
  * `; key="value"`, the quoted form honouring '\' escapes.
  * Source: reference/mpack/decode.c ParseContent()/getParam(). */
 static uint32_t mime_param(const uint8_t *h, int32_t hlen, const char *key,
-                           uint8_t *out, uint32_t cap)
+                           uint8_t *out, uint32_t cap, int *trunc)
 {
     int32_t i = 0;
     int32_t klen = mime_strlen(key);
@@ -212,20 +216,23 @@ static uint32_t mime_param(const uint8_t *h, int32_t hlen, const char *key,
         i++;
         while (i < hlen && mime_is_space(h[i])) i++;
         {
-            uint32_t n = 0;
+            uint32_t n = 0, seen = 0;
             if (i < hlen && h[i] == '"') {
                 i++;
                 while (i < hlen && h[i] != '"') {
                     if (h[i] == '\\' && i + 1 < hlen) i++;
+                    seen++;
                     if (n < cap) out[n++] = h[i];
                     i++;
                 }
             } else {
                 while (i < hlen && h[i] != ';' && !mime_is_space(h[i])) {
+                    seen++;
                     if (n < cap) out[n++] = h[i];
                     i++;
                 }
             }
+            if (trunc) *trunc = seen > n;
             return n;
         }
     }
@@ -286,11 +293,14 @@ static void mime_hdr_apply(MimeCtx *m, MimeHdrs *h, int which, int32_t hlen)
     case MIME_H_TYPE:
         mime_ctype_of(m->hdr, hlen, h->ctype);
         h->bndlen = (int32_t)mime_param(m->hdr, hlen, "boundary",
-                                        h->bnd, MIME_BND_MAX);
+                                        h->bnd, MIME_BND_MAX, NULL);
         h->bnd[h->bndlen] = 0;
-        if (h->namelen == 0)
+        if (h->namelen == 0) {
+            int t = 0;
             h->namelen = mime_param(m->hdr, hlen, "name",
-                                    h->name, UNC_NAME_MAX);
+                                    h->name, UNC_NAME_MAX, &t);
+            h->name_trunc = (uint8_t)(t || m->hdrcut);
+        }
         break;
     case MIME_H_CTE:
         h->cte = mime_cte_of(m->hdr, hlen);
@@ -298,9 +308,10 @@ static void mime_hdr_apply(MimeCtx *m, MimeHdrs *h, int which, int32_t hlen)
     case MIME_H_DISP:
         /* The disposition's filename wins over the type's name. */
         {
+            int t = 0;
             uint32_t n = mime_param(m->hdr, hlen, "filename",
-                                    h->name, UNC_NAME_MAX);
-            if (n) h->namelen = n;
+                                    h->name, UNC_NAME_MAX, &t);
+            if (n) { h->namelen = n; h->name_trunc = (uint8_t)(t || m->hdrcut); }
         }
         break;
     default:
@@ -326,6 +337,7 @@ static int mime_headers(MimeCtx *m, uint32_t pos, MimeHdrs *h)
     h->bnd[0] = 0;
     h->name[0] = 0;
     h->namelen = 0;
+    h->name_trunc = 0;
     h->cte = MIME_CTE_NONE;
 
     err = mime_seek(m, pos);
@@ -352,6 +364,7 @@ static int mime_headers(MimeCtx *m, uint32_t pos, MimeHdrs *h)
             if (which != MIME_H_NONE) {
                 while (i < llen && hlen < MIME_HDR_MAX)
                     m->hdr[hlen++] = m->line[i++];
+                if (i < llen) m->hdrcut = 1;
                 m->hdr[hlen] = 0;
             }
             continue;
@@ -366,6 +379,7 @@ static int mime_headers(MimeCtx *m, uint32_t pos, MimeHdrs *h)
         mime_hdr_apply(m, h, which, hlen);
         which = MIME_H_NONE;
         hlen = 0;
+        m->hdrcut = 0;
         inhdr = 1;
         {
             int32_t k;
@@ -379,6 +393,7 @@ static int mime_headers(MimeCtx *m, uint32_t pos, MimeHdrs *h)
             if (which != MIME_H_NONE) {
                 int32_t i = k;
                 while (i < llen && hlen < MIME_HDR_MAX) m->hdr[hlen++] = m->line[i++];
+                if (i < llen) m->hdrcut = 1;
                 m->hdr[hlen] = 0;
             }
         }
@@ -612,6 +627,7 @@ static int mime_read_applefile(MimeCtx *m, const MimePart *p, MimeApple *a)
     a->rsrc_off = a->rsrc_len = 0;
     a->have_rsrc = a->have_finfo = 0;
     a->namelen = 0;
+    a->name_trunc = 0;
     a->type = a->creator = 0;
     a->flags = 0;
 
@@ -646,6 +662,7 @@ static int mime_read_applefile(MimeCtx *m, const MimePart *p, MimeApple *a)
                 uint32_t k, nl = elen > UNC_NAME_MAX ? UNC_NAME_MAX : elen;
                 for (k = 0; k < nl; k++) a->name[k] = m->afbuf[off + k];
                 a->namelen = nl;
+                a->name_trunc = (uint8_t)(elen > nl);
             }
             break;
         case AF_ID_FINFO:
@@ -690,13 +707,19 @@ static int mime_emit(MimeCtx *m, const MimeHdrs *h, const MimePart *data,
     /* The name, best first: the applefile's own, then this part's
      * filename, then the name on the multipart that holds them both,
      * then mpack's "partN". */
-    if (have_af && a->namelen)
+    if (have_af && a->namelen) {
         unc_entry_set_name(&e, a->name, a->namelen);
-    else if (h && h->namelen)
+        if (a->name_trunc) e.name_truncated = 1;
+    }
+    else if (h && h->namelen) {
         unc_entry_set_name(&e, h->name, h->namelen);
-    else if (m->depth > 0 && m->mnamelen[m->depth - 1])
+        if (h->name_trunc) e.name_truncated = 1;
+    }
+    else if (m->depth > 0 && m->mnamelen[m->depth - 1]) {
         unc_entry_set_name(&e, m->mname[m->depth - 1],
                            m->mnamelen[m->depth - 1]);
+        if (m->mnametrunc[m->depth - 1]) e.name_truncated = 1;
+    }
     else {
         int k = 0, v = m->partno, digits = 0, j;
         char tmp[8];
@@ -788,6 +811,7 @@ int unc_mime_extract(UncCtx *c)
     m->depth = 0;
     m->partno = 0;
     m->base = 0;
+    m->hdrcut = 0;
 
     /* Every part costs at least a header line, so a message cannot have
      * more parts than it has bytes; the guard is against a walk that
@@ -809,6 +833,7 @@ int unc_mime_extract(UncCtx *c)
                 mime_ci_prefix(m->h.ctype, MIME_CTYPE_MAX,
                                "multipart/appledouble") ? 1 : 0;
             m->mnamelen[d] = m->h.namelen;
+            m->mnametrunc[d] = m->h.name_trunc;
             if (m->h.namelen) {
                 uint32_t k;
                 for (k = 0; k < m->h.namelen; k++) m->mname[d][k] = m->h.name[k];
@@ -909,11 +934,11 @@ static int mime_probe_header(const uint8_t *h, int32_t hlen, uint8_t *pb,
         /* A boundary, or a part that names a file: either is something
          * to extract. A Content-Type alone is not — every mail message
          * has one. */
-        if (mime_param(h, hlen, "boundary", pb, MIME_BND_MAX) > 0 ||
-            mime_param(h, hlen, "name", pb, MIME_BND_MAX) > 0)
+        if (mime_param(h, hlen, "boundary", pb, MIME_BND_MAX, NULL) > 0 ||
+            mime_param(h, hlen, "name", pb, MIME_BND_MAX, NULL) > 0)
             *saw_signal = 1;
     } else if (mime_ci_prefix(h, hlen, "content-disposition:")) {
-        if (mime_param(h, hlen, "filename", pb, MIME_BND_MAX) > 0)
+        if (mime_param(h, hlen, "filename", pb, MIME_BND_MAX, NULL) > 0)
             *saw_signal = 1;
     } else if ((k = mime_ci_prefix(h, hlen, "content-transfer-encoding:"))) {
         if (mime_cte_of(h + k, hlen - k) != MIME_CTE_NONE)

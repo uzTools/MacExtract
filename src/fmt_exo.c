@@ -898,6 +898,9 @@ int unc_zip_extract(UncCtx *c)
             int isdir = plen > 0 && namep[plen - 1] == '/';
             while (plen > 0 && namep[plen - 1] == '/') plen--;
             unc_entry_set_path(&e, namep, plen);  /* '/' native, raw bytes */
+            /* The record's name was cut to `namebuf` before the funnel
+             * could see how long it really was. */
+            if (namelen > nread) e.name_truncated = 1;
             e.is_dir = (uint8_t)isdir;
         }
         e.data_size = e.is_dir ? 0 : usize;

@@ -39,6 +39,24 @@ typedef struct {
     uint32_t size;
 } FileIO;
 
+/* `UncIO` addresses a file with a uint32 by decision (FORMATS.md, *Size
+ * limits*), and (uint32_t)st_size WRAPS a larger one into a plausible
+ * small file — a 4.5 GB zip looked like 237 MB of nonsense and was
+ * reported as "not a recognized archive", a true refusal with a false
+ * reason. Say what is actually wrong, and hand the engine the largest
+ * size it can state rather than a wrapped one: a tar still lists the
+ * members that live under 4 GB, which is worth more than a clean
+ * refusal of the whole file. */
+static uint32_t file_size32(const struct stat *st, const char *path)
+{
+    if ((uint64_t)st->st_size > 0xFFFFFFFFu) {
+        fprintf(stderr, "macextract: %s: file is larger than 4 GB; this engine "
+                        "addresses the first 4 GB of it\n", path);
+        return 0xFFFFFFFFu;
+    }
+    return (uint32_t)st->st_size;
+}
+
 static int32_t fio_read(void *ctx, void *buf, int32_t len)
 {
     FileIO *io = (FileIO *)ctx;
@@ -158,6 +176,13 @@ static int utf8_put(char *out, unsigned cp)
  * components already carry the classic '/'->':' swap, and ':' is
  * POSIX-legal in a filename). mac_encoding: nonzero → components are
  * MacRoman, else pass through. "." and ".." components are defused. */
+/* Room for any name the engine can hand over: UNC_NAME_MAX bytes of
+ * MacRoman, each of which can become three bytes of UTF-8, plus the
+ * terminator and the slack name_to_fs keeps. 512 was not enough — a
+ * path of accented components could reach 765 and was cut here, after
+ * the engine had carried it whole. */
+#define FS_NAME_MAX (UNC_NAME_MAX * 3 + 8)
+
 static void name_to_fs(const uint8_t *name, uint32_t len, int mac_encoding,
                        int raw, char *out, size_t outsz)
 {
@@ -245,7 +270,7 @@ static void mkdirs_for(char *path)
 static int sink_begin(void *ctx, const UncEntryInfo *info)
 {
     DiskSink *s = (DiskSink *)ctx;
-    char name[512];
+    char name[FS_NAME_MAX];
 
     s->cur = *info;
     s->data_written = s->rsrc_written = 0;
@@ -253,6 +278,22 @@ static int sink_begin(void *ctx, const UncEntryInfo *info)
 
     name_to_fs(info->name, info->name_len, s->mac_encoding, s->raw_names,
                name, sizeof name);
+
+    if (info->name_truncated) {
+        /* The engine carries UNC_NAME_MAX bytes of a name and this one
+         * was longer, so the path we would write is a different file
+         * from the one in the archive. On a filesystem with room for
+         * the whole name that is a per-entry failure, not a rename to
+         * be made quietly (DECISIONS.md 2026-08-27, the name cap).
+         * Listing and testing still report the entry — a cut name is
+         * more use there than none — but the run does not exit 0. */
+        fprintf(stderr, "macextract: %s: name is longer than %d bytes and "
+                        "cannot be written whole%s\n",
+                name, UNC_NAME_MAX,
+                (s->list_only || s->test_only) ? "" : "; not extracted");
+        s->errors++;
+        if (!s->list_only && !s->test_only) return 1;
+    }
 
     if (s->list_only) {
         char t[13], c[13];
@@ -273,7 +314,16 @@ static int sink_begin(void *ctx, const UncEntryInfo *info)
 
     if (s->test_only) return 0;
 
-    snprintf(s->cur_path, sizeof s->cur_path, "%s/%s", s->outdir, name);
+    if ((size_t)snprintf(s->cur_path, sizeof s->cur_path, "%s/%s",
+                         s->outdir, name) >= sizeof s->cur_path) {
+        /* Truncating here would write one file under another's name,
+         * the same failure the engine's own cap used to have. */
+        fprintf(stderr, "macextract: %s: output path is too long for this "
+                        "output directory; not extracted\n", name);
+        s->cur_path[0] = 0;
+        s->errors++;
+        return 1;
+    }
     if (info->is_dir) {
         mkdirs_for(s->cur_path);
         mkdir(s->cur_path, 0777);
@@ -424,7 +474,7 @@ static int sink_write(void *ctx, UncFork fork, const void *buf, int32_t len)
 static int sink_end(void *ctx, int status)
 {
     DiskSink *s = (DiskSink *)ctx;
-    char name[512];
+    char name[FS_NAME_MAX];
 
     if (!s->test_only && !s->list_only) {
         /* An entry with a data fork of size 0 still gets an empty file.
@@ -1492,7 +1542,7 @@ nextlayer:
         fprintf(stderr, "macextract: %s: %s\n", file, strerror(errno));
         return 1;
     }
-    if (stat(file, &st) == 0) fio.size = (uint32_t)st.st_size;
+    if (stat(file, &st) == 0) fio.size = file_size32(&st, file);
     else fio.size = UNC_SIZE_UNKNOWN;
 
     io.ctx = &fio;
@@ -1541,7 +1591,13 @@ nextlayer:
             opt.password_len = (uint16_t)n;
         } else {
             size_t n = strlen(password);
-            if (n > UNC_PASSWORD_MAX) n = UNC_PASSWORD_MAX;
+            if (n > UNC_PASSWORD_MAX) {
+                /* Truncating it silently would report "wrong password"
+                 * for a password the user typed correctly. */
+                fprintf(stderr, "macextract: password is longer than %d bytes, "
+                                "which no format here uses\n", UNC_PASSWORD_MAX);
+                return 1;
+            }
             opt.password = (const uint8_t *)password;
             opt.password_len = (uint16_t)n;
         }

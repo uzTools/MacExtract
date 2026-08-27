@@ -907,6 +907,7 @@ typedef struct SdPath {
     uint8_t  buf[UNC_NAME_MAX + 1];
     uint16_t len;
     uint16_t stack[SD_MAXDEPTH];
+    int      truncdepth;           /* see DdPath in fmt_dd.c */
     int      depth;
 } SdPath;
 
@@ -922,6 +923,8 @@ static void sd_path_leaf(const SdPath *p, UncEntryInfo *e,
         uint8_t ch = name[i];
         full[n++] = (uint8_t)(ch == '/' ? ':' : ch);
     }
+    /* Either the folder path or the leaf ran out of room. */
+    if (i < nlen || p->truncdepth) e->name_truncated = 1;
     unc_entry_set_path(e, full, n);
 }
 
@@ -1032,6 +1035,7 @@ int unc_superdisk_extract(UncCtx *c)
     s.fork = UNC_FORK_DATA;
     path.len = 0;
     path.depth = 0;
+    path.truncdepth = 0;
 
     for (;;) {
         uint32_t nlen, dlen, rlen, p;
@@ -1047,6 +1051,7 @@ int unc_superdisk_extract(UncCtx *c)
             if (path.depth > 0) {
                 path.depth--;
                 path.len = path.stack[path.depth];
+                if (path.truncdepth > path.depth) path.truncdepth = 0;
                 path.buf[path.len] = 0;
             }
             continue;
@@ -1078,6 +1083,7 @@ int unc_superdisk_extract(UncCtx *c)
                 if (path.len && path.len < UNC_NAME_MAX) path.buf[path.len++] = '/';
                 for (i = 0; i < nlen && path.len < UNC_NAME_MAX; i++)
                     path.buf[path.len++] = (uint8_t)(rec[i] == '/' ? ':' : rec[i]);
+                if (i < nlen && !path.truncdepth) path.truncdepth = path.depth;
                 path.buf[path.len] = 0;
             }
             at = p + 20;

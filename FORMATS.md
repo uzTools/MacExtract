@@ -1689,7 +1689,7 @@ passes are testing something.
 
 | what | limit | past it |
 |---|---|---|
-| container, any format | **4 GiB** | `UncIO`'s `seek`/`tell`/`size` are `uint32` (`macextract.h`). A 5 GiB tar lists 4 members, then `UNC_ERR_CORRUPT`, exit 1 |
+| container, any format | **4 GiB** | `UncIO`'s `seek`/`tell`/`size` are `uint32` (`macextract.h`). A 5 GiB tar lists 4 members, then `UNC_ERR_CORRUPT`, exit 1. Since 2026-08-27 the CLI says *"larger than 4 GB; this engine addresses the first 4 GB of it"* where it opens the file, and hands the engine `0xFFFFFFFF` rather than a wrapped size — a 4.5 GB tar still lists the four members under the boundary. `(uint32_t)st_size` WRAPS, so a 4.5 GB zip used to be reported as "not a recognized archive": a true refusal with a false reason |
 | declared entry size, tar | **2 GiB** | an explicit guard in `fmt_exo.c`. Since 2026-08-27 a per-ENTRY refusal (`UNC_ERR_TOOLARGE`, listed with `?` for a size): the header states how long the member is, so the walk resumes at the next one. It ended the whole tar until that date |
 | declared entry size, zip | 4 GiB − 1 | the format's own field. A 3 GiB stored entry lists and CRC-verifies. A Zip64 extra field can state more; past 4 GiB the entry lists `?` and is refused alone (`UNC_ERR_TOOLARGE`) |
 | entry POSITION, zip | 4 GiB | past 2 GB the directory holds `0xFFFFFFFF` and the real offset is in extra field 0x0001, read since 2026-08-27 (below); an offset whose high half is set is refused per entry |
@@ -1745,6 +1745,42 @@ holds the boundary in one sparse subject with entries on both sides of it;
 BLOCKERS.md has what the wrong ceiling cost, DECISIONS.md 2026-08-27 (*the
 escape that arrives at 2 GB*) why the two Zip64 refusals differ.
 
+## Name limits
+
+**Measured 2026-08-27.** A name is carried in `UncEntryInfo.name`, which
+is `UNC_NAME_MAX` (255) bytes plus a terminator inside a struct that is
+**296 bytes on the 68000 target** and travels on a 4 KB call stack, so a
+longer name cannot be carried at all. Until this date it was cut and
+nothing said so — a 457-byte zip path listed and extracted as 255 bytes,
+exit 0, under a name that was not the archive's.
+
+| cap | value | what meets it |
+|---|---|---|
+| `UNC_NAME_MAX` | 255 | every format; the engine's own |
+| ustar `prefix` + `/` + `name` | 256 | tar states one byte more than the engine carries |
+| uuencode line buffer | 96 | a `begin` line's name is cut here first, before the cap above |
+| btoa line buffer | 256 | `xbtoa5 N name Begin` — the name is inside the line |
+| one MIME header | 512 | a `Content-Type` `name=` or `Content-Disposition` `filename=` |
+| CLI output path | 1,024 | `outdir/name`; refused per entry since 2026-08-27, cut silently before |
+
+One cap was removed instead of reported: the CLI turned a name into a
+filesystem name through a 512-byte buffer, and 255 bytes of MacRoman can
+become 765 of UTF-8, so it is now sized from `UNC_NAME_MAX` and cannot
+be what cuts a name.
+
+The engine sets `UncEntryInfo.name_truncated` at every one of the rest
+and leaves the policy to the host: the CLI makes it a per-entry failure
+(the entry is not written, the ones around it are, the run exits
+non-zero), while the Macintosh application shortens every name to 31
+characters per component by policy and does not consume the flag
+(OPEN_ITEMS.md). Reasoning: DECISIONS.md 2026-08-27, *the name cap*.
+
+**The corpus could not have caught it: the longest name in 932 fixtures
+is 120 bytes**, less than half the cap, so neither the differential
+suite nor 9,320 robustness variants could ever have reached it.
+`tools/run_names.py` holds the boundary from both sides in zip, tar and
+uuencode, in `ci.sh` since 2026-08-27.
+
 ## Resident memory, stack and launch (Mac target)
 
 Everything here is measured on the Retro68 target's own flags
@@ -1757,9 +1793,9 @@ Everything here is measured on the Retro68 target's own flags
 | Mac shell | 11,784 | 732 |
 | **total** | **116,046** | **30,538** |
 
-The application ships as 177,536 B of MacBinary (`dist/MacExtract.bin`,
-rebuilt 2026-08-27; 384 B of that is the Zip64 extra-field walk added the same
-day, and the table above predates it). Both
+The application ships as 178,304 B of MacBinary (`dist/MacExtract.bin`,
+rebuilt 2026-08-27; 1,152 B of that is the same day's Zip64 extra-field walk
+and the name-truncation reporting, and the table above predates both). Both
 halves are resident for the whole session: the link line produces a single
 `MacExtract.code.bin` that the Segment Loader reads at launch, and
 `Elf2Mac/LdScript.cc` emits `*(.rodata*)` inside the `.data` output section —

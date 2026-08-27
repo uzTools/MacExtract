@@ -1151,9 +1151,18 @@ typedef struct DdPath {
     uint16_t len;
     uint16_t stack[DD_MAXDEPTH];
     int      depth;
+    /* Depth at which a FOLDER name was first cut to fit, 0 for none.
+     * A leaf under it carries a path that is not the archive's even
+     * when the leaf itself fitted. */
+    int      truncdepth;
 } DdPath;
 
-static void dd_path_init(DdPath *p) { p->len = 0; p->depth = 0; }
+static void dd_path_init(DdPath *p)
+{
+    p->len = 0;
+    p->depth = 0;
+    p->truncdepth = 0;
+}
 
 static int dd_path_push(DdPath *p, const uint8_t *name, uint32_t nlen)
 {
@@ -1165,6 +1174,7 @@ static int dd_path_push(DdPath *p, const uint8_t *name, uint32_t nlen)
         uint8_t ch = name[i];
         p->buf[p->len++] = (uint8_t)(ch == '/' ? ':' : ch);
     }
+    if (i < nlen && !p->truncdepth) p->truncdepth = p->depth;
     p->buf[p->len] = 0;
     return UNC_OK;
 }
@@ -1172,6 +1182,7 @@ static int dd_path_push(DdPath *p, const uint8_t *name, uint32_t nlen)
 static void dd_path_pop(DdPath *p)
 {
     if (p->depth > 0) p->len = p->stack[--p->depth];
+    if (p->truncdepth > p->depth) p->truncdepth = 0;
     p->buf[p->len] = 0;
 }
 
@@ -1188,6 +1199,8 @@ static void dd_path_leaf(const DdPath *p, UncEntryInfo *e,
         uint8_t ch = name[i];
         full[n++] = (uint8_t)(ch == '/' ? ':' : ch);
     }
+    /* Either the folder path or the leaf ran out of room. */
+    if (i < nlen || p->truncdepth) e->name_truncated = 1;
     unc_entry_set_path(e, full, n);
 }
 

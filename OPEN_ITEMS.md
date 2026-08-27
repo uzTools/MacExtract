@@ -207,6 +207,17 @@ all** (BLOCKERS.md, the ARC 7 row, filed and disproved the same day).
 
 ## 3. Untested code, named so it is not mistaken for tested
 
+- **The Macintosh application does not read `UncEntryInfo.name_truncated`.**
+  Added 2026-08-27, when the engine started reporting a name it had to cut.
+  The CLI makes it a per-entry failure; the Mac shell shortens every name to
+  31 characters per component anyway, so it behaves exactly as it did before
+  — which is defensible and undecided rather than done. A folder tree deep
+  enough to sum past 255 bytes would put a Mac file under a name that is not
+  the archive's, silently, as it always has. **What would close it:** a
+  decision about what the alert should say, and a tier run against a
+  synthetic deep-tree `.sit`, which nothing in the corpus provides
+  (FORMATS.md, *Name limits*).
+
 - **SuperDisk!, where a Huffman region's neighbour begins.** The two Alysis
   implementations disagree by one 32-bit refill when a coded flag bitmap ends
   exactly on a refill: this engine follows the 1991 self-extractor, the 1992

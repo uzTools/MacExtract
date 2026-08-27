@@ -218,6 +218,14 @@ keep finding the next one, and two of them need no insight at all:
   expensive one's name. **The same decision hid a second use two days
   later** (2026-08-27): the per-ENTRY Zip64 escape, which a writer
   reaches for at 2 GB and not at 4.
+- **a limit applied by CLAMPING rather than by refusing.** Added
+  2026-08-27, after it produced three findings in three days: the zip
+  entry count saturating at 65,535, a Zip64 escape read as a literal
+  offset, and a 457-byte name cut to 255 and written under the wrong
+  filename, all three exiting 0. A clamp leaves a result that is
+  internally consistent, so nothing downstream can notice; a refusal
+  cannot hide. **Where a constant meets data from the archive, ask what
+  happens to the archive that exceeds it, and who is told.**
 - **a harness that ends its runs differently from the harness beside it.**
   Added 2026-08-22: three SpaceSaver runs "measured unchanged" on a machine
   that never booted, because their image had been copied out of a KILLED
@@ -229,6 +237,7 @@ line is what makes the next one worth re-testing.
 
 | claim | disproved by | withdrawn |
 |---|---|---|
+| The engine's size limits all fail loudly, the zip entry count aside | two more were silent, found by sweeping for the shape rather than for a bug. A **457-byte zip path** listed and extracted as 255 bytes and exited 0, under a name that was not the archive's, where `unzip` showed all 457; and a container over 4 GiB was refused with *"not a recognized archive"* because `(uint32_t)st_size` wraps in the CLI — a true refusal with a false reason. **Cost: the longest name in 932 fixtures is 120 bytes**, under half the cap, so no fixture and none of the 9,320 variants could reach it, and the wrong name was the kind a user would blame on their own machine | 2026-08-27 |
 | The engine reads any container up to 4 GiB, and past that it fails loudly | not for a zip written past 2 GB: a 3.4 GB archive of 23,400 entries listed every one of them and then **failed 21,352 under `t`**, each with `UNC_ERR_CORRUPT`, the first at 0x80015800 and the last one to pass at 0x7FF157D5. CPython's `zipfile` escapes a local-header offset at `ZIP64_LIMIT` (2³¹ − 1), putting the real value in extra field 0x0001, which `fmt_exo.c` did not read. **Cost: the ceiling in FORMATS.md was wrong by half for every zip any conservative writer produced between 2 and 4 GB**, and neither suite that names itself after the question could see it — `run_ziplarge.py`'s subjects are megabytes with large COUNTS, `run_sizelimits.py`'s large zip entry is the only entry and sits at offset 0. Listing was unaffected throughout, so the archive looked healthy right up to extraction | 2026-08-27 |
 | A zip with more than 65,535 entries is covered by the Zip64 refusal, which returns cleanly unsupported | it was not refused at all: a 70,000-entry archive listed and extracted **65,535 entries and exited 0**, where `unzip` and CPython's `zipfile` both count 70,000. The count is 16 bits and saturates, so the truncated archive is internally consistent and nothing downstream can notice. **Cost: no fixture was ever within 65,506 entries of the boundary** — the largest zip in 932 is 29 — so neither the differential suite nor 9,320 robustness variants could have failed on it, and the scope decision that appeared to cover it was about files larger than 4 GB. The engine's other size limits all fail loudly; this one did not | 2026-08-25 |
 | Retro68's `HOpen` glue is broken on System 6 | `tools/retro68-hopen-repro/`, 10 cases | 2026-07-25 |

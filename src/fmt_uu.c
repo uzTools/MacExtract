@@ -52,6 +52,7 @@
 
 typedef struct UuLine {
     uint8_t  buf[UU_LINE_MAX + 1];
+    uint8_t  cut;            /* the line was longer than the buffer */
     int32_t  len;
     int      eof;      /* set once the stream ended */
     uint32_t start;    /* absolute offset the line began at */
@@ -79,6 +80,7 @@ static int uu_readline(UncBufIn *in, uint32_t base, UuLine *l)
     int c;
 
     l->len = 0;
+    l->cut = 0;
     l->start = uu_abs(base, in);
     for (;;) {
         c = unc_bufin_next(in);
@@ -94,6 +96,7 @@ static int uu_readline(UncBufIn *in, uint32_t base, UuLine *l)
          * UncBufIn only seeks forward. */
         if (c == '\n' || c == '\r') break;
         if (l->len < UU_LINE_MAX) l->buf[l->len++] = (uint8_t)c;
+        else l->cut = 1;        /* a name on this line is short by the rest */
     }
     l->buf[l->len] = 0;
     if (l->eof && l->len == 0) return UNC_ERR_TRUNCATED;   /* nothing left */
@@ -258,6 +261,7 @@ typedef struct UuDoc {
     UuSection data, rsrc, finfo;
     uint8_t   name[UNC_NAME_MAX + 1];
     uint32_t  name_len;
+    uint8_t   name_trunc;   /* the "begin" line named more than fits */
     uint8_t   info[16];              /* type, creator, flags, ...      */
 } UuDoc;
 
@@ -330,6 +334,7 @@ static int uu_scan_doc(UncCtx *c, UncBufIn *in, uint32_t base, UuLine *l,
     d->data.present = d->rsrc.present = d->finfo.present = 0;
     d->data.bytes = d->rsrc.bytes = d->finfo.bytes = 0;
     d->name_len = 0;
+    d->name_trunc = 0;
     {
         int i;
         for (i = 0; i < 16; i++) d->info[i] = 0;
@@ -337,7 +342,11 @@ static int uu_scan_doc(UncCtx *c, UncBufIn *in, uint32_t base, UuLine *l,
 
     d->start = l->start;
     uu_name_from_begin(l, &nm, &nlen);
-    if (nlen > UNC_NAME_MAX) nlen = UNC_NAME_MAX;
+    if (nlen > UNC_NAME_MAX) {
+        nlen = UNC_NAME_MAX;
+        d->name_trunc = 1;
+    }
+    if (l->cut) d->name_trunc = 1;
     {
         uint32_t i;
         for (i = 0; i < nlen; i++) d->name[i] = nm[i];
@@ -440,6 +449,7 @@ int unc_uu_extract(UncCtx *c)
                 unc_entry_set_name(&e, c->opt.name_hint, c->opt.name_hint_len);
         } else {
             unc_entry_set_name(&e, d.name, d.name_len);
+            if (d.name_trunc) e.name_truncated = 1;
         }
         e.data_size = d.data.bytes;
         e.rsrc_size = d.rsrc.bytes;

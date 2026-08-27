@@ -56,6 +56,11 @@ python3 tools/run_ziplarge.py --macextract build/san/macextract \
 # GNU tar, which has neither limit.
 python3 tools/run_sizelimits.py --macextract build/san/macextract \
     || fail "size-limit tests"
+# The third limit of the same family, and the one that was silent until
+# 2026-08-27: a name longer than UNC_NAME_MAX. Generated, because the
+# longest name in the corpus is 120 bytes.
+python3 tools/run_names.py --macextract build/san/macextract \
+    || fail "over-long name tests"
 # Now Compress has exactly one REAL fixture, and it reaches two of the
 # five shapes a block can have. The rest — and the offset-delta search,
 # and folders, and several files in one archive — are generated the same

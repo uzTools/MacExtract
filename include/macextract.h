@@ -203,6 +203,17 @@ typedef struct UncEntryInfo {
     uint8_t  is_dir;        /* directory entry (no forks)     */
     uint8_t  method_data;   /* format-specific method id (informational) */
     uint8_t  method_rsrc;
+    /* Set when the archive's name for this entry was LONGER than
+     * UNC_NAME_MAX and `name` holds only the first UNC_NAME_MAX bytes
+     * of it. The engine cannot carry more (the buffer is part of this
+     * struct, which a 68000 host puts on a 4 KB stack), and it does not
+     * decide what that means: a host writing to a filesystem with room
+     * for the whole name should treat it as a per-entry failure rather
+     * than write a file under a name nobody asked for, while a host
+     * that shortens every name to fit its own filesystem — the classic
+     * Mac one does, at 31 characters — has already made that choice.
+     * Before 2026-08-27 the truncation happened with nothing said. */
+    uint8_t  name_truncated;
 } UncEntryInfo;
 
 /* ------------------------------------------------------------------ */

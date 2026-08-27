@@ -82,7 +82,10 @@ int unc_entry_set_name(UncEntryInfo *e, const uint8_t *name, uint32_t len)
      * (':' cannot occur in an HFS name, '/' can), so '/' in e->name is
      * always a path separator. zip/tar set e->name directly. */
     uint32_t i;
-    if (len > UNC_NAME_MAX) len = UNC_NAME_MAX; /* truncate, keep going */
+    if (len > UNC_NAME_MAX) {   /* truncate, keep going, and SAY so */
+        len = UNC_NAME_MAX;
+        e->name_truncated = 1;
+    }
     for (i = 0; i < len; i++)
         e->name[i] = name[i] == '/' ? (uint8_t)':' : name[i];
     e->name[len] = 0;
@@ -93,7 +96,10 @@ int unc_entry_set_name(UncEntryInfo *e, const uint8_t *name, uint32_t len)
 void unc_entry_set_path(UncEntryInfo *e, const uint8_t *path, uint32_t len)
 {
     uint32_t i;
-    if (len > UNC_NAME_MAX) len = UNC_NAME_MAX;
+    if (len > UNC_NAME_MAX) {
+        len = UNC_NAME_MAX;
+        e->name_truncated = 1;
+    }
     for (i = 0; i < len; i++) e->name[i] = path[i];
     e->name[len] = 0;
     e->name_len = (uint16_t)len;
@@ -106,6 +112,7 @@ void unc_entry_path_append(UncEntryInfo *e, const uint8_t *comp, uint32_t len)
     if (o > 0 && o < UNC_NAME_MAX) e->name[o++] = '/';
     for (i = 0; i < len && o < UNC_NAME_MAX; i++)
         e->name[o++] = comp[i] == '/' ? (uint8_t)':' : comp[i];
+    if (i < len) e->name_truncated = 1;   /* the component did not fit */
     e->name[o] = 0;
     e->name_len = (uint16_t)o;
 }

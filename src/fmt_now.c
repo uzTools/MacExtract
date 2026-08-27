@@ -563,6 +563,7 @@ typedef struct NowPath {
     uint16_t stack[NOW_MAXDEPTH];
     uint32_t left[NOW_MAXDEPTH];   /* entries still owed at this level */
     int      depth;
+    int      truncdepth;           /* see DdPath in fmt_dd.c */
 } NowPath;
 
 static void now_path_leaf(const NowPath *p, UncEntryInfo *e,
@@ -577,6 +578,8 @@ static void now_path_leaf(const NowPath *p, UncEntryInfo *e,
         uint8_t ch = name[i];
         full[n++] = (uint8_t)(ch == '/' ? ':' : ch);
     }
+    /* Either the folder path or the leaf ran out of room. */
+    if (i < nlen || p->truncdepth) e->name_truncated = 1;
     unc_entry_set_path(e, full, n);
 }
 
@@ -681,6 +684,7 @@ int unc_now_extract(UncCtx *c)
 
     path.len = 0;
     path.depth = 0;
+    path.truncdepth = 0;
 
     while (seen < totalentries) {
         UncEntryInfo e;
@@ -761,6 +765,7 @@ int unc_now_extract(UncCtx *c)
                     uint8_t ch = hdr[1 + i];
                     path.buf[path.len++] = (uint8_t)(ch == '/' ? ':' : ch);
                 }
+                if (i < nlen && !path.truncdepth) path.truncdepth = path.depth;
             }
             path.buf[path.len] = 0;
         }
@@ -768,6 +773,7 @@ int unc_now_extract(UncCtx *c)
         while (path.depth > 0 && path.left[path.depth - 1] == 0) {
             path.depth--;
             path.len = path.stack[path.depth];
+            if (path.truncdepth > path.depth) path.truncdepth = 0;
             path.buf[path.len] = 0;
         }
     }

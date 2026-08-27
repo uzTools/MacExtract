@@ -971,6 +971,41 @@ multi-gigabyte entry is still unexercised — on the Mac target it is
 unreachable anyway, since HFS caps a fork at 2 GB. Skips politely where there
 is no `tar` or no sparse files.
 
+## Over-long names (`tools/run_names.py`, in `ci.sh`)
+
+Added 2026-08-27, the third limit of the same family and the one that
+was silent: a name longer than `UNC_NAME_MAX` was cut, and the entry
+was written under a name that was not the archive's, exit 0
+(FORMATS.md, *Name limits*).
+
+The subjects are generated because **the longest name in 932 fixtures is
+120 bytes** — under half the cap, so neither the differential suite nor
+its variants could have reached it. They are graded by CPython's
+`zipfile` and `tarfile`, which wrote them and have no such limit, and by
+`unzip -l` and `tar tf` where those exist.
+
+Five cases, in three carriers plus the CLI itself, because the cap is
+met in several different places: a zip whose long entry must be refused while the short one
+beside it still comes out byte-exact; the boundary from both sides in
+one zip, 255 bytes written whole and 256 refused; a tar whose ustar
+`prefix + '/' + name` states 256 bytes, which the format can express and
+this engine cannot; and a uuencode `begin` line, which reaches the other
+name funnel and is cut by a 96-byte LINE buffer before the cap applies —
+reported the same way, which is the point.
+
+A fifth case covers the CLI's own: `outdir/name` goes into a
+1024-byte buffer, and cutting the path it writes to is the same defect
+one layer up.
+
+**Established that it can fail**: against the previous commit's engine
+and CLI, all five cases fail, eleven assertions in total.
+
+**What it cannot see.** The Macintosh formats' own path builders reach
+the cap only by nesting folders deep enough to sum past 255 bytes, and
+nothing here synthesises such a container; they set the same flag
+through the same funnel. The Mac application does not consume the flag
+at all.
+
 ## Decryption (`tools/run_crypt.py`, in `ci.sh`)
 
 Added 2026-08-23, when decryption came into scope. **Nothing in the

@@ -579,7 +579,8 @@ static void lzh_add_path(UncEntryInfo *e, const uint8_t *p, uint32_t len,
  * stepped over — the dates in 0x41/0x54 are Unix or Windows time and
  * this engine does not convert either (see the entry loop). */
 static int lzh_ext(UncCtx *c, uint32_t at, uint32_t size, uint8_t *name,
-                   uint32_t *namelen, uint8_t *dir, uint32_t *dirlen)
+                   uint32_t *namelen, uint8_t *dir, uint32_t *dirlen,
+                   UncEntryInfo *info)
 {
     uint8_t type;
     uint32_t n;
@@ -587,7 +588,10 @@ static int lzh_ext(UncCtx *c, uint32_t at, uint32_t size, uint8_t *name,
     if (size < 1) return UNC_ERR_CORRUPT;
     if (unc_read_at(c->io, at, &type, 1) != UNC_OK) return UNC_ERR_TRUNCATED;
     n = size - 1;
-    if (n > UNC_NAME_MAX) n = UNC_NAME_MAX;
+    if (n > UNC_NAME_MAX) {
+        n = UNC_NAME_MAX;
+        if (type == 0x01 || type == 0x02) info->name_truncated = 1;
+    }
     if (type == 0x01 && n > 0) {
         if (unc_read_at(c->io, at + 1, name, (int32_t)n) != UNC_OK)
             return UNC_ERR_TRUNCATED;
@@ -639,7 +643,10 @@ static int lzh_header(UncCtx *c, uint32_t pos, LzhEnt *e, UncEntryInfo *info,
          * dropped (XADLZHParser puts it in XADCommentKey). */
         for (k = 0; k < namelen; k++)
             if (h[nameat + k] == 0) { namelen = k; break; }
-        if (namelen > UNC_NAME_MAX) namelen = UNC_NAME_MAX;
+        if (namelen > UNC_NAME_MAX) {
+            namelen = UNC_NAME_MAX;
+            info->name_truncated = 1;
+        }
         for (k = 0; k < namelen; k++) extname[k] = h[nameat + k];
         extnamelen = namelen;
         e->crc = unc_get_u16le(h + 22 + h[LZH_H_NAMELEN]);
@@ -662,7 +669,7 @@ static int lzh_header(UncCtx *c, uint32_t pos, LzhEnt *e, UncEntryInfo *info,
                 if (extsize == 0) break;
                 if (extsize < 3 || extsize > e->compsize) return UNC_ERR_CORRUPT;
                 if (lzh_ext(c, at + 2, extsize - 2, extname, &extnamelen,
-                            extdir, &extdirlen) != UNC_OK)
+                            extdir, &extdirlen, info) != UNC_OK)
                     return UNC_ERR_TRUNCATED;
                 e->compsize -= extsize;
                 hdrsize += extsize;
@@ -711,7 +718,7 @@ static int lzh_header(UncCtx *c, uint32_t pos, LzhEnt *e, UncEntryInfo *info,
             if (extsize < w + 1 || at + extsize > headerend)
                 return UNC_ERR_CORRUPT;
             if (lzh_ext(c, at + w, extsize - w, extname, &extnamelen,
-                        extdir, &extdirlen) != UNC_OK)
+                        extdir, &extdirlen, info) != UNC_OK)
                 return UNC_ERR_TRUNCATED;
             at += extsize;
         }
@@ -726,8 +733,9 @@ static int lzh_header(UncCtx *c, uint32_t pos, LzhEnt *e, UncEntryInfo *info,
      * (0xff-separated) then the name. Without a directory header the
      * name itself may carry separators — 0xff, a DOS backslash or a
      * Unix slash. Built here rather than into a local, because an
-     * UncEntryInfo is 280 bytes and this call chain has a 4 KB
-     * budget (CLAUDE.md, 68000 discipline). */
+     * UncEntryInfo is 296 bytes on the 68000 target (measured
+     * 2026-08-27; the 280 that stood here was never right) and this
+     * call chain has a 4 KB budget (CLAUDE.md, 68000 discipline). */
     if (extdirlen) {
         lzh_add_path(info, extdir, extdirlen, 0);
         if (extnamelen) lzh_add_path(info, extname, extnamelen, 0);

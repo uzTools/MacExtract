@@ -138,6 +138,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-27 — the last two armours become envelopes, and MIME still does not
 - 2026-08-27 (a member over 2 GB) — the entry is not the archive
 - 2026-08-27 (the Zip64 escape at 2 GB) — a ceiling that was half what it said
+- 2026-08-27 (the name cap) — a clamp the host cannot see is a rename nobody asked for
 
 ---
 
@@ -7833,3 +7834,70 @@ Two things the miss is worth remembering for:
   everything with Zip64 in the name; on 2026-08-25 that hid an ordinary
   archive with too many entries, and it hid this one for two days more. Asking
   which USES a scope decision refuses is worth doing once per use, not once.
+
+## 2026-08-27 (the name cap) — a clamp the host cannot see is a rename nobody asked for
+
+A sweep for limits applied by CLAMPING rather than by refusing — asked
+for after the Zip64 escape turned up the same shape — found the biggest
+one in `UncEntryInfo` itself. `name` is `UNC_NAME_MAX` (255) bytes; a
+457-byte zip path listed and extracted as 255 bytes and **exited 0**,
+while `unzip` showed all 457. The file written was a different file from
+the one in the archive, and nothing anywhere said so.
+
+**Why not just carry the name.** `UncEntryInfo` is 296 bytes on the
+68000 target (measured; the "280 bytes" that stood in `fmt_lzh.c` was
+never right) and it travels on a 4 KB call stack. A name field big
+enough for zip's own maximum would be 65,535 bytes. The cap is the
+right decision; being silent about it was not.
+
+**Why the ENGINE does not refuse.** The obvious fix — fail the entry
+where the name is cut — is wrong on the target platform. The Macintosh
+application shortens every name to 31 characters per component anyway,
+because that is what HFS takes, and a folder tree eight deep with
+full-length names sums past 255 bytes without anything being unusual
+about it. Refusing in the engine would deny a Mac user files that the
+Mac shell would have named correctly by its own rule. So the engine
+reports — `UncEntryInfo.name_truncated`, set at every cap — and the host
+decides. The CLI, writing to a filesystem with room for the whole name,
+makes it a per-entry failure; the Mac shell ignores it, which is the
+same behaviour it had before and the right one there.
+
+**Listing still shows the entry.** A cut name is more use to somebody
+looking for a file than no row at all, so `l` and `t` print the entry
+and the warning; only `x` withholds the file. The run exits non-zero
+either way, because the archive holds something this engine cannot
+name.
+
+**The cap is not the only cap.** Three line buffers cut a name before
+`UNC_NAME_MAX` is reached — uuencode's 96-byte line (a `begin` line's
+name dies there first), btoa's 256, and MIME's 512-byte header. Each now
+sets the same flag, because a host cannot tell them apart and has no use
+for the difference. The one clamp deliberately left silent is a
+segmented set's DESCRIPTOR name, which comes from the host's own
+filename rather than from the archive, and the archive comment, which is
+dropped by an older decision that says why.
+
+**Saying so is not the same as refusing.** The first attempt at the
+over-4-GB diagnosis refused the file where the CLI opens it, which reads
+as the tidy answer and cost a capability: a tar is walked sequentially,
+so its members under 4 GB list and extract, and `run_sizelimits.py`
+failed within the hour on exactly that. The message stands and the walk
+goes on, with `0xFFFFFFFF` — the largest size `UncIO` can state —
+handed over in place of a wrapped one.
+
+**The host had two of its own.** The CLI turned a name into a filesystem
+name through a 512-byte buffer, and 255 bytes of MacRoman become up to
+765 of UTF-8 — so a path of accented components was cut AFTER the engine
+had carried it whole. That one is sized from `UNC_NAME_MAX` rather than
+reported: a cap that cannot be met is better than a cap that is
+announced. The other, `outdir/name` in a 1024-byte buffer, cannot be
+sized away — the output directory is the user's — so it is refused per
+entry, which is what the archive-comment path beside it already did.
+
+**The general shape, since this is the third instance.** A limit that
+CLAMPS produces a result that is internally consistent, so nothing
+downstream can notice: the zip entry count saturating at 65,535
+(2026-08-25), the Zip64 escape read as a literal offset (2026-08-27),
+and this. A limit that REFUSES cannot hide. When a constant meets data
+from the archive, the question is not "is the constant big enough" but
+"what happens to the archive that exceeds it, and who is told".

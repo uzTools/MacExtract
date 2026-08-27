@@ -270,6 +270,7 @@ int unc_btoa_extract(UncCtx *c)
     int newver = 0, perline = 0, started = 0;
     uint8_t name[UNC_NAME_MAX + 1];
     uint16_t namelen = 0;
+    int      nametrunc = 0;
     UncEntryInfo e;
     int sret, err = UNC_OK, est = UNC_OK;
 
@@ -312,6 +313,10 @@ int unc_btoa_extract(UncCtx *c)
                     perline = (int)btoa_dec(line + off[1], flen[1]);
                     if (!(flen[2] == 1 && line[off[2]] == '-')) {
                         int32_t k;
+                        /* The line itself may have been cut at
+                         * BTOA_LINE_MAX, which cuts the name in it. */
+                        nametrunc = flen[2] > UNC_NAME_MAX ||
+                                    n >= BTOA_LINE_MAX;
                         namelen = (uint16_t)(flen[2] > UNC_NAME_MAX
                                              ? UNC_NAME_MAX : flen[2]);
                         for (k = 0; k < namelen; k++)
@@ -338,6 +343,7 @@ int unc_btoa_extract(UncCtx *c)
     if (namelen) unc_entry_set_name(&e, name, namelen);
     else if (c->opt.name_hint && c->opt.name_hint_len)
         unc_entry_set_name(&e, c->opt.name_hint, c->opt.name_hint_len);
+    if (namelen && nametrunc) e.name_truncated = 1;
     e.data_size = UNC_SIZE_UNKNOWN;
     e.rsrc_size = 0;
 

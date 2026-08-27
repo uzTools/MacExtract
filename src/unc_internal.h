@@ -546,7 +546,7 @@ void unc_entry_set_path(UncEntryInfo *e, const uint8_t *path, uint32_t len);
 /* Append one Mac path component to e->name ('/'-separated path),
  * applying the classic reversible '/'->':' swap to the component
  * (':' cannot occur in an HFS name, '/' can — see DECISIONS.md M4).
- * Truncates at UNC_NAME_MAX. */
+ * Truncates at UNC_NAME_MAX, setting e->name_truncated. */
 void unc_entry_path_append(UncEntryInfo *e, const uint8_t *comp, uint32_t len);
 
 /* ------------------------------------------------------------------ */
