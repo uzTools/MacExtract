@@ -1062,11 +1062,17 @@ def phase_chain(args, appbin, workdir, shot):
                 not m.group(1).startswith("StuffIt Expander"):
             got.add(m.group(1))
 
-    # What the Linux CLI makes of the same file, recursion and all.
+    # What the Linux CLI makes of the same file, recursion and all. The
+    # same binary every other reference in this file uses: this named
+    # `build/dev` until 2026-08-27, which nothing here builds, so the
+    # phase died on a traceback for anyone who had run `./ci.sh` and
+    # nothing else.
+    if not os.path.exists(CD.CLI):
+        print(f"interactive: no CLI at {CD.CLI} — run `make BUILD=build/rel`")
+        return False
     ref = os.path.join(workdir, "_cli")
     os.makedirs(ref, exist_ok=True)
-    R.sh(os.path.join(R.REPO, "build", "dev", "macextract"), "x", "-o", ref,
-         args.fixture)
+    R.sh(CD.CLI, "x", "-o", ref, args.fixture)
     want = set(os.listdir(ref))
 
     ok = got == want
