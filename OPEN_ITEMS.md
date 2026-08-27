@@ -255,14 +255,3 @@ all** (BLOCKERS.md, the ARC 7 row, filed and disproved the same day).
   non-zero counts do not occur. The branch is kept because it is XADMaster's
   reading and it fails as a per-entry checksum error rather than silently.
   **What would change it:** a method 5 fork with a non-zero count.
-
-- **SpaceSaver's Huffman builder checks less than the shared one does.**
-  `ss_a3_build` rejects an over-subscribed table with
-  `code > (1u << (L + 1))` where `unc_canon_build_ext` uses
-  `space > (1u << l)`, which is the stricter and the correct test. It has
-  never been shown to matter — 160 corrupted variants and 44 forks from
-  Aladdin's own compressor pass either way — and it is NOT closed by
-  sharing the builder, which was measured and declined (DECISIONS.md
-  2026-08-27, *the fork writer and the filter*). **What would close it:**
-  the stricter test, and a corrupted-variant run to show nothing real
-  depended on the looser one.

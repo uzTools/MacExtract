@@ -747,7 +747,14 @@ static int ss_a3_build(SsHuff *h, uint8_t *len, uint16_t *idx,
         at += h->count[L];
         code = (code + h->count[L]) << 1;
         /* A code that would not fit its own length is a corrupt table,
-         * not something to keep decoding with. */
+         * not something to keep decoding with.
+         *
+         * This IS unc_canon_build_ext's Kraft check, spelled in terms of
+         * the `code` this loop already carries: code is exactly twice
+         * that function's `space` at every length, so `code > 1<<(L+1)`
+         * and `space > 1<<L` are one predicate. Written down because the
+         * two spellings were read as two tests once, and filed as a gap
+         * that did not exist (BLOCKERS.md, withdrawn claims). */
         if (code > (1u << (L + 1))) return UNC_ERR_CORRUPT;
     }
     return UNC_OK;

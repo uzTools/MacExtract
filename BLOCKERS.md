@@ -146,6 +146,12 @@ keep finding the next one, and two of them need no insight at all:
   written LF. Twenty-one cases therefore agreed on a property none of them
   chose. Ask what the generator never varies — for a text format read on a
   Macintosh, the line ending is the first thing to ask about (below).
+- **a difference you read rather than ran.** Added 2026-08-27: two
+  checks were called "the same test, one of them weaker" on the strength
+  of how they were WRITTEN — different variable, different constant.
+  They compute the same predicate. Comparing two pieces of code by
+  appearance answers a question about spelling; run both over their
+  inputs and compare the answers (below).
 - **a grep that cannot match what the file actually says.** Added
   2026-08-23, and it is the only mechanism here that hid a stale claim
   rather than finding one: `OPEN_ITEMS.md` still said Compact Pro's
@@ -772,6 +778,26 @@ archives rather than encodings, and an open item that named the wrong obstacle
 the first attempt asked *how do I click this item*, and every later one
 inherited the question. What the application will do is in its resources; what
 a harness can click is not the same list.
+
+- **"SpaceSaver's Huffman builder checks less than the shared one
+  does"** — filed 2026-08-27 during the scaffolding audit, withdrawn the
+  same day. `ss_a3_build` rejects an over-subscribed code table with
+  `code > (1u << (L + 1))` and `unc_canon_build_ext` with
+  `space > (1u << l)`, and the second was called the stricter of the two
+  on the strength of reading them. They are one predicate: both
+  accumulators start at zero, `code` updates as `2*(code + count[L])`
+  and `space` as `2*space + count[l]`, so `code` is exactly twice
+  `space` at every length and the two thresholds differ by the same
+  factor of two. Checked as well as derived — the two loops run
+  side by side over every table with maxlen <= 4 and counts <= 8, and
+  over 20 million random tables up to SpaceSaver's own 24-bit ceiling:
+  **zero disagreements, and 19 million of those tables were rejected**,
+  so the check demonstrably fires. **Cost:** small, and it is here for
+  the mechanism rather than the price — an item filed, moved between two
+  sections of OPEN_ITEMS.md, and cited once. What it would have cost is
+  the fix: "tighten the looser check" would have changed a line of a
+  decoder graded against Aladdin's own compressor, to no effect,
+  and left a comment claiming a difference that was never there.
 
 ### Corrected figures and superseded write-ups
 
