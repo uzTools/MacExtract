@@ -7697,6 +7697,30 @@ deleted (FORMATS.md, the interactive tier table). It had to be that harness:
 unwrap loop, so no sweep this project has ever run could see a chain on the
 Mac at all. `tools/vmac_check.py` said the opposite in a comment until today.
 
+### The second grader had the same stale claim, and it was load-bearing
+
+Correcting `vmac_check.py`'s comment was worth doing again next door.
+`interactive.py`'s `expected_names` — "the names the Mac should have written",
+used by `--wd`, `--dest` and the default phase — also graded with `-nr`, and
+its docstring said it made "the same mapping checkdisk.py makes". Both halves
+were false. checkdisk.py grades the AUTOTEST build, where `-nr` is right;
+these phases drive the SHIPPED application, which unwraps. And checkdisk.py
+maps the CLI's `<archive>.comment.txt` onto the `Comments` document the Mac
+shell writes, which `expected_names` had never learned.
+
+Measured, not reasoned: on `boogers-152.hqx` the old reference wanted
+`boogers152.sit` on the volume, and `--wd` with the fixed one reports the
+volume holding `:Archives:boogers1.5.2ƒ:BOOGERS! 1.5.2` and
+`:Archives:boogers1.5.2ƒ:read_boogers.txt` with no intermediate beside them —
+so the phase would have called a correct application WRONG for any chained
+fixture. `--chain` had been working around this the whole time by building its
+own reference without `-nr`, twenty lines further down the same file.
+
+**"The same mapping X makes" is a claim, and it decays like any other.** Two
+copies of one grader drifted apart in the same file; what found them was
+asking what a harness's reference actually rests on, not reading either
+comment.
+
 **Both suites were mutation-tested by taking the two names back out**: the
 four chained cases fail without them and pass with them, so what they measure
 is the chain and not the decoders that already worked (CLAUDE.md — a test that

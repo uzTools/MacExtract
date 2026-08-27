@@ -440,12 +440,23 @@ def volume_names(img):
 def expected_names(fixture, workdir):
     """The names the Mac should have written, as component tuples.
 
-    The same mapping checkdisk.py makes: extract with the CLI, drop the
-    "._" sidecars (a resource fork is part of the file on a Mac), undo the
-    engine's reversible '/'->':' swap and cap each component at 31
-    characters as ComponentToStr63 does. The fixture is copied to
-    `archive.sit` first because that is the name the Mac saw, and gzip/.Z
-    derive an output name from the archive's.
+    The same mapping checkdisk.py makes, less one difference that matters:
+    extract with the CLI, drop the "._" sidecars (a resource fork is part
+    of the file on a Mac), map the CLI's `<archive>.comment.txt` to the
+    `Comments` document the Mac shell writes instead, undo the engine's
+    reversible '/'->':' swap and cap each component at 31 characters as
+    ComponentToStr63 does. The fixture is copied to `archive.sit` first
+    because that is the name the Mac saw, and gzip/.Z derive an output
+    name from the archive's.
+
+    **The difference: no `-nr` here.** checkdisk.py grades the AUTOTEST
+    build, which calls RunExtract once; these phases drive the shipped
+    application, which has unwrapped envelope chains since 2026-08-14. A
+    single-level reference says a chained fixture should leave
+    `boogers152.sit` on the volume, where the application leaves the two
+    files inside it — so every phase using this would have failed on any
+    chained fixture, in the direction that looks like an application bug
+    (DECISIONS.md 2026-08-27).
 
     What this CANNOT see: it compares NAMES only. A file of the right name
     and the wrong bytes passes here — run.py and checkdisk.py are what
@@ -459,8 +470,9 @@ def expected_names(fixture, workdir):
     os.makedirs(os.path.dirname(asmac), exist_ok=True)
     shutil.copyfile(fixture, asmac)
     ref = os.path.join(workdir, "linux-out")
-    subprocess.run([CD.CLI, "x", "-nr", "--forks", "hidden", asmac, "-o", ref],
+    subprocess.run([CD.CLI, "x", "--forks", "hidden", asmac, "-o", ref],
                    capture_output=True)
+    comment_file = os.path.basename(asmac) + ".comment.txt"
     want = set()
     for root, _dirs, files in os.walk(ref):
         for f in files:
@@ -468,6 +480,9 @@ def expected_names(fixture, workdir):
                 continue
             rel = os.path.relpath(os.path.join(root, f), ref)
             comps = [unicodedata.normalize("NFC", c) for c in rel.split(os.sep)]
+            if comps == [comment_file]:
+                want.add(("Comments",))
+                continue
             want.add(tuple(c.replace(":", "/")[:31] for c in comps))
     if not want:
         print(f"interactive: the CLI extracted nothing from {fixture} — "

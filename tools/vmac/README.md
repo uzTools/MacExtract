@@ -1653,6 +1653,13 @@ fixture with `tools/synth_wrapped.py`'s `macbinary()`, encode that with
 Pick a payload with no resource fork: the phase compares the Linux CLI's
 directory listing, where a fork is a `.rsrc` sidecar the Mac does not have.
 
+**Which reference a phase grades against follows from which build it runs.**
+`run.py`, `checkdisk.py` and `os9.py` drive the autotest build and compare
+against `macextract x -nr`; `interactive.py` drives the shipped application
+and compares against the CLI with recursion left on, plus the `Comments`
+mapping checkdisk.py makes. `expected_names` had the autotest form until
+2026-08-27 (DECISIONS.md).
+
 ### Putting a disk in while the Mac is running
 
 `xdnd_insert.c` is a minimal XDND drag SOURCE, built on demand into
