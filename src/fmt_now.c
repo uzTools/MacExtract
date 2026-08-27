@@ -50,7 +50,14 @@ static void now_bits_start(NowBits *b, const uint8_t *mem, uint32_t len)
  * the bit reader is still holding. */
 static uint32_t now_bit_offset(const NowBits *b)
 {
-    return unc_bufin_tell(&b->in) * 8u - (uint32_t)b->bi.nbits;
+    /* unc_bufin_tell() reduces to `pos` here and is not called: a
+     * NowBits is always memory-backed (now_bits_start), so lenfed ==
+     * len and `lenfed - (len - pos)` is `pos`. This sits in the
+     * condition of the two decode loops below and so runs once per
+     * SYMBOL — two million times on
+     * derived-SyntheticReferences2.0.sea, where computing it the long
+     * way was 4.5 % of the run (DECISIONS.md 2026-08-27). */
+    return b->in.pos * 8u - (uint32_t)b->bi.nbits;
 }
 
 /* ------------------------------------------------------------------ */

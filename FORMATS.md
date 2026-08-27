@@ -2125,9 +2125,16 @@ ceiling is **unchanged** at 46,686 B — re-measured across every `.arc`
 and `.pak` fixture, and set by one of those LZW methods (DECISIONS.md,
 *the tree that was walked a bit at a time*).
 
+**And a one-line third.** `now_bit_offset` sits in the condition of both
+Now Compress decode loops, so it ran once per symbol — two million times
+on `derived-SyntheticReferences2.0.sea` — and computed an absolute bit
+position through `unc_bufin_tell`. A `NowBits` is always memory-backed,
+where that call reduces to `pos`: **−2.33 %** on that fixture, −0.7 % on
+`synth-now-mixed.now`.
+
 **Where that leaves the three tiers.** Over the same 48 fixtures,
-1,098,529,621 Ir before the harmonisation and **1,021,099,385** after all
-of it: **−7.05 %**.
+1,098,529,621 Ir before the harmonisation and **1,011,192,657** after all
+of it: **−7.95 %**.
 
 **The three envelope rows are the same change and it is not a decoder at all:**
 `unc_macbinary_probe` moved ahead of the 64 KB backwards scan that

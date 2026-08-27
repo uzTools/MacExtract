@@ -144,6 +144,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-27 (the shapes that were left) — one probe signature, one scheme table, one buffer size
 - 2026-08-27 (the fast table StuffIt could not reach) — a gate that read as a property of the format
 - 2026-08-27 (the tree that was walked a bit at a time) — ARC's Squeeze and Distilled get a first-bits table
+- 2026-08-27 (what the tables left behind) — the profile moves, and the next thing is never the thing on the list
 
 ---
 
@@ -8340,3 +8341,52 @@ uses one of the LZW methods this change does not touch.
 **Where the three tiers plus the two decoders leave the engine:**
 1,098,529,621 Ir before the harmonisation, **1,021,099,385** after —
 **−7.05 %** over the two largest fixtures of every format in the corpus.
+
+---
+
+## 2026-08-27 (what the tables left behind) — the profile moves, and the next thing is never the thing on the list
+
+Asked whether `unc_bitin_bit`'s per-bit `if (b->le)` was the last
+optimisation left. It was third on a list written before two tables
+landed, and re-profiling answered the question differently: **it is no
+longer worth doing, because the traffic that made it visible is gone.**
+It cost ~1.1 % of a Compact Pro run when three decoders walked their
+codes a bit at a time; `unc_canon_decode` and ARC's trees now resolve
+almost every symbol in one lookup, and the single-bit reader does not
+appear in the top of any profile. **A ranked list of optimisations is
+only ranked against the profile it was made on. Re-profile after every
+one you take.**
+
+**What re-profiling actually found.** The largest run in the corpus is
+no longer ARC — it is Now Compress at 424 M Ir, and 4.5 % of it was the
+CONDITION of its two decode loops. `now_bit_offset()` sits in
+`while (now_bit_offset(&b) < numbits)`, so it ran once per symbol —
+1,993,952 times on `derived-SyntheticReferences2.0.sea` — and computed
+an absolute bit position by calling `unc_bufin_tell()` and multiplying.
+A `NowBits` is always memory-backed (`now_bits_start` →
+`unc_bufin_init_mem`), and there `lenfed == len`, so
+`lenfed - (len - pos)` is `pos` and the call is two subtractions to
+recover a field it already had. One line: **−2.33 %** on that fixture,
+−0.73 % on `synth-now-mixed.now`.
+
+**Two that are measured and NOT taken, both for the same reason.**
+
+- **A symbol per `UncCanon` fast-table entry, as zlib has.** It would
+  take `unc_canon_decode` from 64 instructions a symbol to roughly 55 —
+  three array loads become one — which is ~4 % of a Now Compress run.
+  It costs 2 KB per table, and Now Compress holds two at once and
+  DiskDoubler three, against peaks FORMATS.md states to the byte for a
+  machine with 1 MB. Speed bought with the scarce resource is the trade
+  this project has refused before and should refuse by default; it is
+  the maintainer's to reverse, not a decision to make quietly in a
+  profile.
+- **Slice-by-4 CRCs.** `unc_crc32` is 6.8 % of a Compact Pro run and
+  `unc_crc16_arc` 9.2 % of a StuffIt one, and a four-way table is 2-3×
+  faster for 4× the table — 1 KB to 4 KB. That is code space rather
+  than heap, which is the usual objection and does not apply, but it is
+  still 3 KB on a 177 KB application for a few percent of two formats.
+
+**Where the whole sequence lands.** Over the two largest fixtures of
+every format in the corpus: **1,098,529,621 Ir before the harmonisation,
+1,011,192,657 after it and the three decoder changes — −7.95 %** — with
+the engine 2 KB smaller on the target than when it started.
