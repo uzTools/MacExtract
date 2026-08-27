@@ -139,6 +139,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-27 (a member over 2 GB) — the entry is not the archive
 - 2026-08-27 (the Zip64 escape at 2 GB) — a ceiling that was half what it said
 - 2026-08-27 (the name cap) — a clamp the host cannot see is a rename nobody asked for
+- 2026-08-27 (the scaffolding audit) — the codec is the format, the code around it is not
 
 ---
 
@@ -7945,3 +7946,71 @@ downstream can notice: the zip entry count saturating at 65,535
 and this. A limit that REFUSES cannot hide. When a constant meets data
 from the archive, the question is not "is the constant big enough" but
 "what happens to the archive that exceeds it, and who is told".
+
+---
+
+## 2026-08-27 (the scaffolding audit) — the codec is the format, the code around it is not
+
+A review asked why there is so much per-format code. Reading `src/` for
+that question rather than for a bug found the answer in a different place
+than expected: the **codecs** are as format-specific as they look and
+should stay that way, and it is the **scaffolding around them** — the
+thing that stages decoded bytes, checksums them and hands them to the
+sink, the thing that maintains a folder path, the thing that decides
+whether an error is fatal to the walk — that is written once per format.
+The inventory and what would close each is OPEN_ITEMS.md, part 2 section
+4; this entry is the why.
+
+**How it accumulated, which is not carelessness.** Every format arrived
+as a milestone graded against an oracle, and the cheapest correct move
+each time was to write the fork writer next to the codec that fed it.
+Nothing in that loop ever asks whether the writer already exists — the
+fixtures pass either way. The proof that it is habit rather than
+necessity is the ORDER: `unc_entry_path_append` and `unc_entry_set_path`
+were already in `unc_util.c` when `DdPath`, `NowPath` and `SdPath` were
+written, and all three do the same job beside them rather than through
+them.
+
+**The lesson, and it generalises past this repository: a shared helper
+only helps the formats that call it.** The name-cut reporting landed
+2026-08-27 (*the name cap*) in `unc_entry_set_name` and
+`unc_entry_path_append`, and every format that routes through those
+reports `name_truncated = 2` with the whole name behind it. The three
+that keep their own path stack got the half that is `name_truncated = 1`:
+they say a name was cut and cannot say what it was, while holding the
+components that would answer. So when a feature lands in a shared helper,
+**the question is not who calls it — it is who does not**, and that list
+is the blast radius. The same shape put a format property in host code
+twice: `env_is_envelope` and `IsEnvelopeFormat` are one predicate about
+`UncFormat` living in two shells, which is why they could disagree, and
+did for a day (2026-08-14).
+
+**Four things that look like the same duplication and are not.** Filed
+here so nobody spends a session unifying them:
+
+- **Now Compress's whole-buffer decoders.** `now_lzss`, `now_newlzss` and
+  `now_huffman` take `const uint8_t *src` / `uint8_t *dst` where every
+  other format streams. That is the format: a table of blocks, each at
+  most 32 KB of output against a 32 KB history, which is exactly why its
+  peak is a flat 128 KB. Putting it on the streaming contract would trade
+  a measured constant for a worse one.
+- **`SdLz`.** SuperDisk!'s LZSS bit reader is LSB-first WITHIN a 16-bit
+  big-endian word, which is not what a byte-wise LE reader produces —
+  `unc_bitin_init_le` would decode garbage. Its neighbour `SdHuff` is
+  MSB-first over bytes in order and IS the shared reader; the two sit
+  four hundred lines apart and only one of them is duplication.
+- **`ss_a3_sort`.** SpaceSaver's symbol order comes from the module's own
+  non-stable quicksort, not from `(length, symbol)`, so the sort has to
+  be transcribed. What need not be is the builder around it.
+- **The codecs.** Arsenic, DDn, sit13, SlowFastA/B, the SpaceSaver
+  methods: different algorithms that happen to share a bit reader.
+
+**Why it is worth doing at all, and the one thing to watch.** Most
+refactors of this size are unverifiable, which is why they are usually a
+bad trade. Here 932 fixtures byte-exact plus 9,320 robustness variants
+mean a scaffolding change either passes or does not, which makes this one
+of the few places where the trade is good. The thing to watch is
+FORMATS.md's peak-RAM matrix: a shared fork writer changes allocation
+shape, so those figures must be re-measured rather than assumed to carry
+over — and a figure that does NOT move after the change is the smell
+CLAUDE.md already names, not a reassurance.
