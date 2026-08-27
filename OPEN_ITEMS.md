@@ -205,19 +205,7 @@ all** (BLOCKERS.md, the ARC 7 row, filed and disproved the same day).
 
 ---
 
-## 3. Small, open, and deliberately deferred
-
-- **A tar member over the 2 GB cap aborts the whole archive, not the entry.**
-  Measured 2026-08-25: a tar of `[1 GiB, 3 GiB, 1 GiB]` lists the first member
-  and stops, so the third is lost though its position is known. Every other
-  failure in this engine is per-entry (CLAUDE.md). Not chased because a 2 GB
-  member cannot exist on the machines this targets. **What would close it:**
-  skipping the member and reporting through the sink, with a case in
-  `tools/run_ziplarge.py`'s shape.
-
----
-
-## 4. Untested code, named so it is not mistaken for tested
+## 3. Untested code, named so it is not mistaken for tested
 
 - **SuperDisk!, where a Huffman region's neighbour begins.** The two Alysis
   implementations disagree by one 32-bit refill when a coded flag bitmap ends

@@ -136,6 +136,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-26 — the tag that did not fire
 - 2026-08-26 (zip comments) — the second format with one, and the ceiling that moved
 - 2026-08-27 — the last two armours become envelopes, and MIME still does not
+- 2026-08-27 (a member over 2 GB) — the entry is not the archive
 
 ---
 
@@ -7377,8 +7378,9 @@ narrow form in `ci.sh`.
 
 It also showed something the suite could not: a real btoa file from a Mac is
 `X.MBin.ascii`, an armour around a MacBinary wrapper, and `macextract x` stops
-at the wrapper because btoa is not in the envelope auto-unwrap list
-(OPEN_ITEMS.md, section 4). Every layer reads; the chain does not. That is
+at the wrapper because btoa is not in the envelope auto-unwrap list — open
+then, closed since, btoa and uuencode both being envelopes now.
+Every layer reads; the chain does not. That is
 what one file from outside your own toolchain is for.
 
 ## 2026-08-26 (disk images) — read the volume, not the extension
@@ -7727,3 +7729,49 @@ is the chain and not the decoders that already worked (CLAUDE.md — a test that
 passes may not be testing anything). The other three new cases are controls
 and pass either way: `-nr` stops at the wrapper in both suites, and two
 uuencoded documents in one file do not chain.
+
+## 2026-08-27 (a member over 2 GB) — the entry is not the archive
+
+`fmt_exo.c` refused a tar member over 2 GB by ending the walk, which cost
+every member behind it: a tar of `[4 KiB, 2.5 GiB, 11 B]` listed one file of
+three, and the third was lost though its position was written in a header the
+reader had already parsed. It is now a per-entry refusal — the member is
+reported through the sink with a new code, `UNC_ERR_TOOLARGE`, and the walk
+resumes where that member's own header says the next one begins.
+
+**A cap that ends a walk is only justified when the walk cannot continue.**
+Those are separate questions and this guard had answered them together. The
+one that genuinely ends a tar is the NEXT position leaving 32 bits — the 4 GB
+container limit every format shares — and that check moved to the advance,
+*after* the member is reported, so the last member a header describes is still
+named. `[1.5, 1.5, 1.5 GiB, small]` lists three of four and exits 1, which is
+the older documented behaviour preserved rather than re-derived. The
+advance is computed in 64 bits, which on a 68000 is a libgcc call — once
+per 512-byte header, in the same expression that already parsed a 12-digit
+octal field into an `int64_t`, and nowhere near a decode loop.
+
+**Why a new error code rather than `UNC_ERR_UNSUPPORTED`.** The obvious reuse
+would have printed "this compression method is not supported yet" over a
+stored file, and the CLI's follow-up asks the user to send the specimen in —
+here, a 2.5 GB file, for a limitation no specimen can advance. Thirteen small
+negatives were already public API; a fourteenth is cheaper than a message that
+sends somebody down the wrong road.
+
+**Only tar can pose the question.** Every other format in scope declares an
+entry's size in a 32-bit field, so no value it can hold is out of reach: zip's
+ceiling is the format's own, and the Macintosh formats inherit HFS's 2 GB. The
+other `0x7FFFFFFF` guards in `src/` read as the same rule and are not — probe
+rejections decide whether a file is recognized at all, and the segmented-set
+descriptors in `fmt_sitseg.c` and `fmt_ddseg.c` describe one file, so
+refusing the set IS the per-entry answer. Checked rather than assumed, by
+editing a StuffIt fixture's second entry to declare 0xFFFFFFFF and repairing
+the header CRC: it lists as `?`, fails alone, and the other eight entries are
+untouched. Repairing the CRC was the whole point — the first attempt left it
+stale and the reader refused the archive at the header, which measures the
+header check and not the size (FORMATS.md, *Size limits*).
+
+`tools/run_sizelimits.py` holds all of it in `ci.sh`, on sparse subjects
+graded by GNU tar: a 4.5 GB archive costs a few kilobytes of disk because
+every oversized member is a hole. That also bounds what it proves — the holes
+are never read, so the read path over a multi-gigabyte entry remains
+unexercised, and on the Mac target it is unreachable anyway.

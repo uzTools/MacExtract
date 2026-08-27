@@ -924,9 +924,36 @@ archive — XADMaster's behaviour, which `fmt_exo.c` follows.
 two of the five cases fail (the 65,536 count and the past-4-GB refusal).
 
 **What it cannot see.** Every subject here is a few megabytes with a large
-entry COUNT. Nothing in `ci.sh` opens an archive that is actually larger than
-4 GB, or an entry that is — those limits were measured by hand and live in
-FORMATS.md, *Size limits*, not in any suite.
+entry COUNT. Sizes are the next suite's subject.
+
+## Size limits (`tools/run_sizelimits.py`, in `ci.sh`)
+
+Added 2026-08-27. Two boundaries live in `UncIO`'s `uint32` and they are not
+the same boundary: a MEMBER over 2 GB cannot be extracted, and a POSITION
+over 4 GB cannot be addressed at all. Until that date the first behaved like
+the second — one oversized tar member ended the whole walk, losing every
+member behind it (FORMATS.md, *Size limits*).
+
+The subjects are generated, because nothing in the corpus is remotely this
+large, and **sparse**: an oversized member is a hole, so a 4.5 GB archive
+costs a few kilobytes of disk and no time. They are graded by **GNU tar**,
+which has none of these limits and therefore states the member list each
+subject is supposed to have.
+
+Four cases: an oversized member between two ordinary ones (all three listed,
+the big one refused per entry, both small ones out byte-exact and the archive
+exiting non-zero); the boundary from both sides, 2 GiB − 1024 listing a size
+and 2 GiB (0x80000000) listing `?`; and — so the two limits are not confused
+— a member whose POSITION passes 4 GB, which still ends the walk with
+`UNC_ERR_CORRUPT`.
+
+**Established that it can fail**: against the previous commit's `fmt_exo.c`,
+three of the four cases fail.
+
+**What it cannot see.** The holes are never read, so the read path over a
+multi-gigabyte entry is still unexercised — on the Mac target it is
+unreachable anyway, since HFS caps a fork at 2 GB. Skips politely where there
+is no `tar` or no sparse files.
 
 ## Decryption (`tools/run_crypt.py`, in `ci.sh`)
 

@@ -1690,14 +1690,26 @@ passes are testing something.
 | what | limit | past it |
 |---|---|---|
 | container, any format | **4 GiB** | `UncIO`'s `seek`/`tell`/`size` are `uint32` (`macextract.h`). A 5 GiB tar lists 4 members, then `UNC_ERR_CORRUPT`, exit 1 |
-| declared entry size, tar | **2 GiB** | an explicit guard in `fmt_exo.c`; ends the whole tar walk |
+| declared entry size, tar | **2 GiB** | an explicit guard in `fmt_exo.c`. Since 2026-08-27 a per-ENTRY refusal (`UNC_ERR_TOOLARGE`, listed with `?` for a size): the header states how long the member is, so the walk resumes at the next one. It ended the whole tar until that date |
 | declared entry size, zip | 4 GiB − 1 | the format's own field. A 3 GiB stored entry lists and CRC-verifies |
 | decoded output, streamed (gzip) | **none found** | 3 GiB and 5 GiB both verify, exit 0. The output size is never held, so nothing bounds it |
 | zip entry count | 4,294,967,295 | the Zip64 record's count is read as a `uint32`; a 70,000-entry archive extracts all 70,000 (below) |
 | Mac binary | 2 GiB, **not measured** | `SetFPos` takes a signed `long` (`mac/macextract_mac.c`), and HFS caps a fork at 2 GB anyway; exercising it needs real hardware (MANUAL_TESTS.md §3) |
 
-The tar boundary is exact: a 2 GiB − 1024 member lists, a 2 GiB one
-(0x80000000) does not.
+The tar boundary is exact: a 2 GiB − 1024 member lists its size, a 2 GiB one
+(0x80000000) lists `?` and fails as an entry. `tools/run_sizelimits.py` holds
+both sides and the 4 GB one, in `ci.sh` since 2026-08-27.
+
+**Only tar can express a size the engine cannot address.** Every other format
+in scope states an entry's size in a 32-bit field, so no value over-reaches:
+zip's 4 GiB − 1 is the format's own ceiling, and the Macintosh formats inherit
+HFS's 2 GB. The other `0x7FFFFFFF` guards in `src/` are a different thing —
+probe rejections (SpaceSaver, SuperDisk!, MacBinary: the file is not
+recognized, so there is no walk to end) and segmented-set descriptors
+(`fmt_sitseg.c`, `fmt_ddseg.c`, where the set describes one file and there is
+no other entry to lose). Measured 2026-08-27 on a StuffIt fixture whose second
+entry was edited to declare 0xFFFFFFFF, header CRC recomputed: it lists as `?`,
+fails alone, and the other eight entries are unaffected.
 
 **A zip's entry count is 16 bits, and until 2026-08-25 exceeding it was
 silent.** 70,000 entries listed and extracted 65,535 of them and exited 0;
@@ -1725,7 +1737,8 @@ Everything here is measured on the Retro68 target's own flags
 | Mac shell | 11,784 | 732 |
 | **total** | **116,046** | **30,538** |
 
-The application ships as 176,640 B of MacBinary (`dist/MacExtract.bin`). Both
+The application ships as 177,152 B of MacBinary (`dist/MacExtract.bin`,
+rebuilt 2026-08-27; the figure here had drifted 512 B behind the file). Both
 halves are resident for the whole session: the link line produces a single
 `MacExtract.code.bin` that the Segment Loader reads at launch, and
 `Elf2Mac/LdScript.cc` emits `*(.rodata*)` inside the `.data` output section —

@@ -50,6 +50,11 @@ python3 tools/run_uu.py --macextract build/san/macextract || fail "uuencode test
 # that large, and the failure it guards against is silent.
 python3 tools/run_ziplarge.py --macextract build/san/macextract \
     || fail "large-zip (Zip64 entry count) tests"
+# The other half of the same question: a member over 2 GB is refused per
+# ENTRY, a position over 4 GB ends the walk. Sparse subjects, graded by
+# GNU tar, which has neither limit.
+python3 tools/run_sizelimits.py --macextract build/san/macextract \
+    || fail "size-limit tests"
 # Now Compress has exactly one REAL fixture, and it reaches two of the
 # five shapes a block can have. The rest — and the offset-delta search,
 # and folders, and several files in one archive — are generated the same

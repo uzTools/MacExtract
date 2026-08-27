@@ -94,6 +94,7 @@ const char *unc_strerror(int err)
     case UNC_ERR_CORRUPT:     return "archive structure is corrupt";
     case UNC_ERR_SEGMENTED:   return "multi-segment archive (missing segments)";
     case UNC_ERR_PASSWORD:    return "wrong password, or none given";
+    case UNC_ERR_TOOLARGE:    return "entry is larger than 2 GB";
     default:                  return "unknown error";
     }
 }

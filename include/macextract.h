@@ -134,7 +134,8 @@ enum {
     UNC_ERR_SINK        = -9,   /* sink callback reported failure       */
     UNC_ERR_CORRUPT     = -10,  /* internal structure inconsistency     */
     UNC_ERR_SEGMENTED   = -11,  /* multi-segment archive, parts missing */
-    UNC_ERR_PASSWORD    = -12   /* encrypted, and no usable password      */
+    UNC_ERR_PASSWORD    = -12,  /* encrypted, and no usable password      */
+    UNC_ERR_TOOLARGE    = -13   /* entry past this engine's 32-bit reach  */
 };
 
 /* Human-readable message for an error code. */

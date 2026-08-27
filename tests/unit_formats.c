@@ -872,6 +872,30 @@ static void test_tar(void)
     test_make_memio(&io, &m, arc, sizeof arc);
     CHECK(unc_sniff(&io) != UNC_FORMAT_TAR);
     arc[148] ^= 1;
+
+    /* A member past the 32-bit reach is a PER-ENTRY refusal: the first
+     * member still extracts, the big one is reported as an entry, and
+     * the walk ends without declaring the archive corrupt. That the
+     * member AFTER it is still read cannot be shown here — it lies
+     * gigabytes away — and is what tools/run_sizelimits.py grades
+     * against GNU tar. */
+    memcpy(arc + 1024, arc, 512);
+    memcpy(arc + 1024, "huge.bin\0\0\0\0\0", 13);
+    snprintf((char *)arc + 1024 + 124, 12, "%011o", 0x80000000u);
+    memset(arc + 1024 + 148, ' ', 8);
+    sum = 0;
+    for (i = 0; i < 512; i++) sum += arc[1024 + i];
+    snprintf((char *)arc + 1024 + 148, 8, "%06o", sum);
+    arc[1024 + 155] = ' ';
+
+    test_make_memio(&io, &m, arc, sizeof arc);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_TAR, &io, &sk, &al, NULL, NULL) == UNC_OK);
+    CHECK(cap.count == 2);
+    CHECK(cap.status[0] == UNC_OK && cap.dlen[0] == n);
+    CHECK(cap.status[1] == UNC_ERR_TOOLARGE);
+    CHECK(cap.info[1].data_size == UNC_SIZE_UNKNOWN);
+    memset(arc + 1024, 0, 512);
 }
 
 /* One stored entry: LFH + data + central dir + EOCD, followed by

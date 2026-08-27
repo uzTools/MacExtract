@@ -285,8 +285,9 @@ int unc_tar_extract(UncCtx *c)
 
     for (;;) {
         int64_t size;
-        uint32_t datalen, padded;
-        int typeflag, zero = 1, sret, est, isdir;
+        uint32_t datalen;
+        int typeflag, zero = 1, sret, est, isdir, oversize;
+        int64_t next;
         int32_t i;
         UncEntryInfo e;
         uint8_t path[256];
@@ -308,9 +309,18 @@ int unc_tar_extract(UncCtx *c)
 
         size = tar_octal(h + 124, 12);
         typeflag = h[156];
-        if (size < 0 || size > 0x7FFFFFFF) { err = UNC_ERR_CORRUPT; break; }
-        datalen = (uint32_t)size;
-        padded = (datalen + 511u) & ~511u;
+        if (size < 0) { err = UNC_ERR_CORRUPT; break; }
+        /* A member past the engine's 32-bit reach is refused as an
+         * ENTRY, not as an archive: its header states how long it is,
+         * so where the NEXT member begins is known exactly and the
+         * rest of the tar still reads. What ends the walk is the NEXT
+         * member's position leaving 32 bits — the 4 GB container limit,
+         * which is every format's (FORMATS.md, *Size limits*), and it
+         * is checked after this member is reported rather than before,
+         * so the last one a header describes is still named. */
+        oversize = size > 0x7FFFFFFF;
+        datalen = oversize ? UNC_SIZE_UNKNOWN : (uint32_t)size;
+        next = (int64_t)pos + 512 + ((size + 511) & ~(int64_t)511);
 
         /* Name: ustar prefix + '/' + name (raw bytes, '/' native). */
         if (h[345] && h[257] == 'u') {   /* prefix field in use */
@@ -342,8 +352,8 @@ int unc_tar_extract(UncCtx *c)
         }
         if (plen == 0 && isdir) {
             /* The "./" root entry itself: nothing to create. */
-            if (pos + 512 + padded < pos) { err = UNC_ERR_CORRUPT; break; }
-            pos += 512 + padded;
+            if (next > (int64_t)0xFFFFFFFFu) { err = UNC_ERR_CORRUPT; break; }
+            pos = (uint32_t)next;
             continue;
         }
 
@@ -361,7 +371,8 @@ int unc_tar_extract(UncCtx *c)
                 err = UNC_ERR_SINK;
                 break;
             }
-        } else if (typeflag == '0' || typeflag == 0) {   /* regular file */
+        } else if (!oversize &&
+                   (typeflag == '0' || typeflag == 0)) {  /* regular file */
             e.data_size = datalen;
             e.comp_data_size = datalen;
             sret = c->sink->begin_entry(c->sink->ctx, &e);
@@ -402,19 +413,22 @@ int unc_tar_extract(UncCtx *c)
                 }
             }
         } else {
-            /* Links, devices, GNU extensions: reported, not extracted. */
+            /* Links, devices, GNU extensions and members over 2 GB:
+             * reported, not extracted. */
             e.data_size = datalen;
             sret = c->sink->begin_entry(c->sink->ctx, &e);
             if (sret < 0) { err = UNC_ERR_SINK; break; }
             if (sret == 0 &&
-                c->sink->end_entry(c->sink->ctx, UNC_ERR_UNSUPPORTED) < 0) {
+                c->sink->end_entry(c->sink->ctx, oversize
+                                   ? UNC_ERR_TOOLARGE
+                                   : UNC_ERR_UNSUPPORTED) < 0) {
                 err = UNC_ERR_SINK;
                 break;
             }
         }
 
-        if (pos + 512 + padded < pos) { err = UNC_ERR_CORRUPT; break; }
-        pos += 512 + padded;
+        if (next > (int64_t)0xFFFFFFFFu) { err = UNC_ERR_CORRUPT; break; }
+        pos = (uint32_t)next;
     }
 
     unc_free(c->al, iobuf);
