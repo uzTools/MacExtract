@@ -137,6 +137,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-26 (zip comments) — the second format with one, and the ceiling that moved
 - 2026-08-27 — the last two armours become envelopes, and MIME still does not
 - 2026-08-27 (a member over 2 GB) — the entry is not the archive
+- 2026-08-27 (the Zip64 escape at 2 GB) — a ceiling that was half what it said
 
 ---
 
@@ -7757,9 +7758,12 @@ here, a 2.5 GB file, for a limitation no specimen can advance. Thirteen small
 negatives were already public API; a fourteenth is cheaper than a message that
 sends somebody down the wrong road.
 
-**Only tar can pose the question.** Every other format in scope declares an
-entry's size in a 32-bit field, so no value it can hold is out of reach: zip's
-ceiling is the format's own, and the Macintosh formats inherit HFS's 2 GB. The
+**Only tar can pose the question** — corrected 2026-08-27, same day: a zip
+carrying Zip64 extra fields poses it too, and the sentence below was written
+without checking (*the Zip64 escape at 2 GB*). Every other format in scope
+declares an entry's size in a 32-bit field, so no value it can hold is out of
+reach: without a Zip64 field zip's ceiling is the format's own, and the
+Macintosh formats inherit HFS's 2 GB. The
 other `0x7FFFFFFF` guards in `src/` read as the same rule and are not — probe
 rejections decide whether a file is recognized at all, and the segmented-set
 descriptors in `fmt_sitseg.c` and `fmt_ddseg.c` describe one file, so
@@ -7775,3 +7779,57 @@ graded by GNU tar: a 4.5 GB archive costs a few kilobytes of disk because
 every oversized member is a hole. That also bounds what it proves — the holes
 are never read, so the read path over a multi-gigabyte entry remains
 unexercised, and on the Mac target it is unreachable anyway.
+
+## 2026-08-27 (the Zip64 escape at 2 GB) — a ceiling that was half what it said
+
+A question about behaviour over a network filesystem — many small entries, a
+large container — turned up something the suites could not: a 3.4 GB zip of
+23,400 entries **listed all 23,400 and then failed 21,352 of them**, one per
+entry at or past 0x80000000. The documented ceiling was 4 GiB, the container
+was well under it, and every offset in the file fit in 32 bits.
+
+**The boundary belongs to the WRITER, not to the format.** A central-directory
+record whose local-header offset passes CPython's `ZIP64_LIMIT` — 2³¹ − 1, not
+2³² − 1 — is written as `0xFFFFFFFF` with the real offset in extra field
+0x0001. `fmt_exo.c` read extra field 0x9901 (WinZip AES) and no other, so it
+seeked to 0xFFFFFFFF, found no local header, and returned `UNC_ERR_CORRUPT`.
+Where the threshold sits is the writer's choice, and the two measured here
+differ: CPython escapes at 2³¹ − 1, while Info-ZIP 3.0 writing the same three
+files does not escape at all at 2.2 GB — its entries past 0x80000000 carry
+plain 32-bit offsets, so an Info-ZIP archive of that size always read
+correctly, and 7-Zip sidesteps the question by ordering the large member last.
+"We read a zip up to 4 GiB" was therefore true or false depending on which
+tool had written the file, and nothing here had asked.
+
+**Reading the escape costs no 64-bit arithmetic.** Any archive this engine can
+open at all is under 4 GiB, so the escaped value's high half is zero in every
+case that can arise; it is read as two `uint32` halves exactly as the
+end-of-central-directory record has been since 2026-08-25, and a high half
+that is set refuses the entry. The whole fix is one extra-field walk shared
+with the AES one — APPNOTE 4.5.3 fields appear only where the matching
+directory field holds its escape, and in a fixed order, so the record has to
+be walked rather than indexed (XADMaster's `XADZipParser.m` reads it the same
+way, and its comment records that stopping at the first recognised field is a
+bug somebody else already found).
+
+**Per entry, and the same error code for a size and a position.** The
+directory is intact in both cases, so the neighbours are readable and the
+refusal belongs to the entry — the argument in the entry above this one. A
+size past 4 GB and a position past 4 GB are one condition worth one code, and
+`UNC_ERR_TOOLARGE`'s message became *"entry is past this engine's 32-bit
+reach"*: the old wording named the tar case only, and would have said "larger
+than 2 GB" over a 40-byte entry that merely sits too far along.
+
+Two things the miss is worth remembering for:
+
+- **A limit measured on subjects you generated measures your generator.**
+  `run_sizelimits.py` proves a 3 GiB zip entry lists and verifies — one entry,
+  at offset 0, where no writer emits an escape. `run_ziplarge.py` builds
+  70,000 entries and a few megabytes. Neither could produce a large OFFSET,
+  which is the only thing that triggers this, and both looked like coverage of
+  "large zips".
+- **The scope smell fired twice on the same decision.** "Zip64 is out of scope"
+  named the expensive project (64-bit addressing) and was read as covering
+  everything with Zip64 in the name; on 2026-08-25 that hid an ordinary
+  archive with too many entries, and it hid this one for two days more. Asking
+  which USES a scope decision refuses is worth doing once per use, not once.

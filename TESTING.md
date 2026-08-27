@@ -899,8 +899,8 @@ and the file says which is which.
 
 ## Large zips (`tools/run_ziplarge.py`, in `ci.sh`)
 
-Added 2026-08-25. A zip counts its entries in 16 bits; past 65,535 the count
-lives in a Zip64 record. A reader that trusts the 16-bit field does not fail
+Added 2026-08-25, extended 2026-08-27. A zip counts its entries in 16 bits;
+past 65,535 the count lives in a Zip64 record. A reader that trusts the 16-bit field does not fail
 on such an archive — it walks 65,535 entries and reports success, which is how
 a 70,000-entry zip lost 4,465 files silently until that date (FORMATS.md,
 *Size limits*).
@@ -920,11 +920,27 @@ truncated to something addressable, and a locator pointing at bytes that are
 not a Zip64 record must fall back to the 16-bit count rather than failing the
 archive — XADMaster's behaviour, which `fmt_exo.c` follows.
 
-**Established that it can fail**: against the previous commit's `fmt_exo.c`,
-two of the five cases fail (the 65,536 count and the past-4-GB refusal).
+Four more cases were added 2026-08-27, for the OTHER Zip64 structure — the
+per-entry escape, which arrives at 2 GB rather than 4 (FORMATS.md, *Size
+limits*). `offsets.zip` is a single **sparse** subject holding one entry just
+under 0x80000000 and three past it, so it costs a few kilobytes of disk; the
+generator asserts that it straddles the boundary, and CPython's `zipfile`
+grades the construction — the names, the payload behind the hole, and that the
+entries past the boundary carry a Zip64 field while the one under it does not.
+Every entry must then verify under `t`. The remaining three are synthetic and
+cost nothing: an escape whose value is small and honest must extract as if it
+were not escaped, and an escaped position or size whose high half is set must
+refuse **that entry alone** and leave the walk and its neighbours intact.
 
-**What it cannot see.** Every subject here is a few megabytes with a large
-entry COUNT. Sizes are the next suite's subject.
+**Established that it can fail**: against the previous commit's `fmt_exo.c`,
+six of the nine cases fail — the 65,536 count, the past-4-GB locator, and all
+four of the per-entry cases, three of them as `UNC_ERR_CORRUPT`.
+
+**What it cannot see.** No subject here is over 4 GB, and the only large one
+is 2 GB of hole: the read path over a multi-gigabyte entry is not exercised,
+and the over-4-GB refusals are reached by writing a high half rather than by
+building an archive that has one. Sizes are the next suite's subject. Skips
+the offset cases politely where the filesystem has no sparse files.
 
 ## Size limits (`tools/run_sizelimits.py`, in `ci.sh`)
 

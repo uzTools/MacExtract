@@ -47,7 +47,8 @@ python3 tools/run_arcplus.py --macextract build/san/macextract \
 python3 tools/run_uu.py --macextract build/san/macextract || fail "uuencode tests"
 # A zip counts its entries in 16 bits, so past 65,535 the count comes
 # from the Zip64 record instead. Generated: nothing in the corpus is
-# that large, and the failure it guards against is silent.
+# that large, and the failure it guards against is silent. Also the
+# per-ENTRY Zip64 escape, which arrives at 2 GB and not at 4.
 python3 tools/run_ziplarge.py --macextract build/san/macextract \
     || fail "large-zip (Zip64 entry count) tests"
 # The other half of the same question: a member over 2 GB is refused per

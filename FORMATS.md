@@ -1691,7 +1691,8 @@ passes are testing something.
 |---|---|---|
 | container, any format | **4 GiB** | `UncIO`'s `seek`/`tell`/`size` are `uint32` (`macextract.h`). A 5 GiB tar lists 4 members, then `UNC_ERR_CORRUPT`, exit 1 |
 | declared entry size, tar | **2 GiB** | an explicit guard in `fmt_exo.c`. Since 2026-08-27 a per-ENTRY refusal (`UNC_ERR_TOOLARGE`, listed with `?` for a size): the header states how long the member is, so the walk resumes at the next one. It ended the whole tar until that date |
-| declared entry size, zip | 4 GiB − 1 | the format's own field. A 3 GiB stored entry lists and CRC-verifies |
+| declared entry size, zip | 4 GiB − 1 | the format's own field. A 3 GiB stored entry lists and CRC-verifies. A Zip64 extra field can state more; past 4 GiB the entry lists `?` and is refused alone (`UNC_ERR_TOOLARGE`) |
+| entry POSITION, zip | 4 GiB | past 2 GB the directory holds `0xFFFFFFFF` and the real offset is in extra field 0x0001, read since 2026-08-27 (below); an offset whose high half is set is refused per entry |
 | decoded output, streamed (gzip) | **none found** | 3 GiB and 5 GiB both verify, exit 0. The output size is never held, so nothing bounds it |
 | zip entry count | 4,294,967,295 | the Zip64 record's count is read as a `uint32`; a 70,000-entry archive extracts all 70,000 (below) |
 | Mac binary | 2 GiB, **not measured** | `SetFPos` takes a signed `long` (`mac/macextract_mac.c`), and HFS caps a fork at 2 GB anyway; exercising it needs real hardware (MANUAL_TESTS.md §3) |
@@ -1700,10 +1701,12 @@ The tar boundary is exact: a 2 GiB − 1024 member lists its size, a 2 GiB one
 (0x80000000) lists `?` and fails as an entry. `tools/run_sizelimits.py` holds
 both sides and the 4 GB one, in `ci.sh` since 2026-08-27.
 
-**Only tar can express a size the engine cannot address.** Every other format
-in scope states an entry's size in a 32-bit field, so no value over-reaches:
-zip's 4 GiB − 1 is the format's own ceiling, and the Macintosh formats inherit
-HFS's 2 GB. The other `0x7FFFFFFF` guards in `src/` are a different thing —
+**Two formats can express a size the engine cannot address: tar, and a zip
+carrying Zip64 extra fields.** Every other format in scope states an entry's
+size in a 32-bit field, so no value over-reaches: without a Zip64 field zip's
+4 GiB − 1 is the format's own ceiling, and the Macintosh formats inherit HFS's
+2 GB. A Zip64 extra field states a size and a position in 64 bits, and one
+whose high half is set is refused per ENTRY since 2026-08-27. The other `0x7FFFFFFF` guards in `src/` are a different thing —
 probe rejections (SpaceSaver, SuperDisk!, MacBinary: the file is not
 recognized, so there is no walk to end) and segmented-set descriptors
 (`fmt_sitseg.c`, `fmt_ddseg.c`, where the set describes one file and there is
@@ -1725,6 +1728,23 @@ the boundary from both sides, in `ci.sh` since 2026-08-25; DECISIONS.md
 **The corpus could not have caught it: the largest zip in 932 fixtures has 29
 entries**, and the robustness variants perturb a fixture rather than grow one.
 
+**A zip's per-entry Zip64 escape arrives at 2 GB, not 4, and until 2026-08-27
+nothing behind it extracted.** A central-directory record whose local-header
+offset passes CPython's `ZIP64_LIMIT` (2³¹ − 1) holds `0xFFFFFFFF`, with the
+real offset in extra field 0x0001; `fmt_exo.c` read only extra field 0x9901
+(WinZip AES), so it seeked to `0xFFFFFFFF`, found no local header and returned
+`UNC_ERR_CORRUPT` — per entry, over and over. Measured on a 3.4 GB archive of
+23,400 entries written by CPython's `zipfile`: it LISTED all 23,400 (the
+directory is intact) and then failed **21,352 of them**, every one at or past
+0x80000000, `big/02047.bin` at 0x7FF157D5 passing and `big/02048.bin` at
+0x80015800 failing. The same archive now verifies whole, exit 0. The escape is
+read as `uint32` halves like the end-of-central-directory record's, so no
+64-bit arithmetic enters the engine, and a high half that is set refuses that
+entry alone (`UNC_ERR_TOOLARGE`) rather than the archive. `tools/run_ziplarge.py`
+holds the boundary in one sparse subject with entries on both sides of it;
+BLOCKERS.md has what the wrong ceiling cost, DECISIONS.md 2026-08-27 (*the
+escape that arrives at 2 GB*) why the two Zip64 refusals differ.
+
 ## Resident memory, stack and launch (Mac target)
 
 Everything here is measured on the Retro68 target's own flags
@@ -1737,8 +1757,9 @@ Everything here is measured on the Retro68 target's own flags
 | Mac shell | 11,784 | 732 |
 | **total** | **116,046** | **30,538** |
 
-The application ships as 177,152 B of MacBinary (`dist/MacExtract.bin`,
-rebuilt 2026-08-27; the figure here had drifted 512 B behind the file). Both
+The application ships as 177,536 B of MacBinary (`dist/MacExtract.bin`,
+rebuilt 2026-08-27; 384 B of that is the Zip64 extra-field walk added the same
+day, and the table above predates it). Both
 halves are resident for the whole session: the link line produces a single
 `MacExtract.code.bin` that the Segment Loader reads at launch, and
 `Elf2Mac/LdScript.cc` emits `*(.rodata*)` inside the `.data` output section —

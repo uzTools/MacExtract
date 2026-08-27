@@ -540,6 +540,78 @@ static int zip_decode(UncCtx *c, UncBufIn *in, ExoSink *es, uint32_t method,
     return est;
 }
 
+/* One central-directory record's extra fields. Two matter here: WinZip's
+ * AES (0x9901) and Zip64 (0x0001).
+ *
+ * A Zip64 field holds only those values whose central-directory field
+ * carries the escape (0xFFFFFFFF, or 0xFFFF for a disk number), in the
+ * fixed order uncompressed size, compressed size, local-header offset,
+ * start disk — so the record has to be walked in order, not indexed, and
+ * the scan cannot stop at the first field it recognises.
+ * Source: XADMaster XADZipParser.m, -parseCentralDirectoryRecord
+ * (extid==1), quoting APPNOTE.TXT 4.5.3.
+ *
+ * Each Zip64 value is 64 bits and this engine addresses 32, so the low
+ * half is taken and the high half must be zero — the same rule the
+ * end-of-central-directory record is read by (DECISIONS.md 2026-08-25).
+ * A high half that is set refuses that ENTRY and leaves the walk alone
+ * (UNC_ERR_TOOLARGE), whether it is a size this engine cannot hold or a
+ * position it cannot reach. The ARCHIVE-level Zip64 fields are a
+ * different refusal: they end the walk with UNC_ERR_UNSUPPORTED,
+ * because without them there is no directory to walk. */
+typedef struct {
+    uint32_t usize, csize, lhoffs, startdisk;
+    int      aeskeybytes, aesversion;
+    uint32_t aesmethod;
+    int      err;                /* UNC_OK, or this entry's refusal */
+} ZipExtra;
+
+static void zip_extra_scan(const uint8_t *ex, uint32_t exlen,
+                           uint32_t method, uint32_t flags, ZipExtra *z)
+{
+    while (exlen >= 4) {
+        uint32_t id = unc_get_u16le(ex);
+        uint32_t sz = unc_get_u16le(ex + 2);
+        if (sz + 4u > exlen) break;
+        if (id == 0x0001) {
+            uint32_t at = 4;
+            if (z->usize == 0xFFFFFFFFu && at + 8u <= sz + 4u) {
+                if (unc_get_u32le(ex + at + 4)) z->err = UNC_ERR_TOOLARGE;
+                else z->usize = unc_get_u32le(ex + at);
+                at += 8;
+            }
+            if (z->csize == 0xFFFFFFFFu && at + 8u <= sz + 4u) {
+                if (unc_get_u32le(ex + at + 4)) z->err = UNC_ERR_TOOLARGE;
+                else z->csize = unc_get_u32le(ex + at);
+                at += 8;
+            }
+            if (z->lhoffs == 0xFFFFFFFFu && at + 8u <= sz + 4u) {
+                if (unc_get_u32le(ex + at + 4)) z->err = UNC_ERR_TOOLARGE;
+                else z->lhoffs = unc_get_u32le(ex + at);
+                at += 8;
+            }
+            if (z->startdisk == 0xFFFFu && at + 4u <= sz + 4u)
+                z->startdisk = unc_get_u32le(ex + at);
+        } else if (id == 0x9901 && sz >= 7 && method == 99 &&
+                   (flags & 0x0001)) {
+            /* WinZip's AES puts the real compression method, the key
+             * length and its own version here; method 99 means "look
+             * there". Source: XADZipParser.m. */
+            uint32_t ver = unc_get_u16le(ex + 4);
+            uint32_t vendor = unc_get_u16le(ex + 6);
+            uint32_t strength = ex[8];
+            if ((ver == 1 || ver == 2) && vendor == 0x4541 &&
+                strength >= 1 && strength <= 3) {
+                z->aesversion = (int)ver;
+                z->aeskeybytes = (int)(8 + 8 * strength);  /* 16/24/32 */
+                z->aesmethod = unc_get_u16le(ex + 9);
+            }
+        }
+        ex += 4 + sz;
+        exlen -= 4 + sz;
+    }
+}
+
 int unc_zip_extract(UncCtx *c)
 {
     uint32_t eocd = 0, scanend;
@@ -721,6 +793,7 @@ int unc_zip_extract(UncCtx *c)
         uint32_t method, flags, wantcrc, csize, usize;
         uint32_t namelen, extralen, commentlen, lhoffs, startdisk;
         int aeskeybytes, aesversion;
+        int z64err;
         uint32_t aesmethod;
         const uint8_t *cd, *namep;
         uint8_t namebuf[256];
@@ -770,35 +843,53 @@ int unc_zip_extract(UncCtx *c)
             }
         }
 
-        /* WinZip's AES puts the real compression method, the key
-         * length and its own version in extra field 0x9901; method
-         * 99 means "look there". Source: XADZipParser.m. */
-        aeskeybytes = 0;
-        aesversion = 0;
-        aesmethod = method;
-        if (method == 99 && (flags & 0x0001) && cdbuf && extralen >= 11 &&
-            cdrel + 46 + namelen + extralen <= cdsize) {
-            const uint8_t *ex = cdbuf + cdrel + 46 + namelen;
-            uint32_t left = extralen;
-            while (left >= 4) {
-                uint32_t id = unc_get_u16le(ex);
-                uint32_t sz = unc_get_u16le(ex + 2);
-                if (sz + 4 > left) break;
-                if (id == 0x9901 && sz >= 7) {
-                    uint32_t ver = unc_get_u16le(ex + 4);
-                    uint32_t vendor = unc_get_u16le(ex + 6);
-                    uint32_t strength = ex[8];
-                    if ((ver == 1 || ver == 2) && vendor == 0x4541 &&
-                        strength >= 1 && strength <= 3) {
-                        aesversion = (int)ver;
-                        aeskeybytes = (int)(8 + 8 * strength);  /* 16/24/32 */
-                        aesmethod = unc_get_u16le(ex + 9);
-                    }
-                    break;
+        /* The extra fields, for AES and for Zip64. Where the directory
+         * is in memory they are read in place; where it is being
+         * streamed a record at a time they are fetched behind the name,
+         * bounded by `exbuf` — a Zip64 field is 32 bytes at most and an
+         * AES one 11, and both are written first by every writer seen. */
+        {
+            ZipExtra z;
+            uint8_t exbuf[64];
+            const uint8_t *ex = NULL;
+            uint32_t exlen = 0;
+
+            z.usize = usize;
+            z.csize = csize;
+            z.lhoffs = lhoffs;
+            z.startdisk = startdisk;
+            z.aeskeybytes = 0;
+            z.aesversion = 0;
+            z.aesmethod = method;
+            z.err = UNC_OK;
+            if (cdbuf) {
+                if (extralen && cdrel + 46 + namelen + extralen <= cdsize) {
+                    ex = cdbuf + cdrel + 46 + namelen;
+                    exlen = extralen;
                 }
-                ex += 4 + sz;
-                left -= 4 + sz;
+            } else if (extralen) {
+                exlen = extralen < sizeof exbuf ? extralen
+                                                : (uint32_t)sizeof exbuf;
+                if (zip_seek(c, cddisk, cdoffs + cdrel + 46 + namelen)
+                        == UNC_OK &&
+                    unc_read_full(c->io, exbuf, (int32_t)exlen) == UNC_OK)
+                    ex = exbuf;
+                else
+                    exlen = 0;
             }
+            if (ex) zip_extra_scan(ex, exlen, method, flags, &z);
+            /* A value the escape stands for and Zip64 did not supply
+             * stays 0xFFFFFFFF, which is UNC_SIZE_UNKNOWN: the entry
+             * lists with `?` for its size, exactly as an oversized tar
+             * member does. */
+            usize = z.usize;
+            csize = z.csize;
+            lhoffs = z.lhoffs;
+            startdisk = z.startdisk;
+            aeskeybytes = z.aeskeybytes;
+            aesversion = z.aesversion;
+            aesmethod = z.aesmethod;
+            z64err = z.err;
         }
 
         unc_entry_clear(&e);
@@ -838,6 +929,11 @@ int unc_zip_extract(UncCtx *c)
                     est = UNC_ERR_ENCRYPTED;
                 } else if (aesmethod != 0 && aesmethod != 8) {
                     est = UNC_ERR_UNSUPPORTED;
+                } else if (z64err != UNC_OK) {
+                    /* Zip64 states this entry's size or position past
+                     * what a uint32 reaches. Per entry: the directory
+                     * is intact, so the next one is still found. */
+                    est = z64err;
                 } else {
                     /* Local header gives the true data offset (its
                      * name/extra lengths may differ from the CD's). */
