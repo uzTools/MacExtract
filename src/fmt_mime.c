@@ -100,6 +100,7 @@ typedef struct MimeApple {
     uint8_t  name[UNC_NAME_MAX + 1];
     uint32_t namelen;
     uint8_t  name_trunc;         /* the part named more than fits */
+    uint32_t name_full;          /* by how much, where the part says */
     uint32_t type, creator;
     uint16_t flags;
     int      have_finfo;
@@ -628,6 +629,7 @@ static int mime_read_applefile(MimeCtx *m, const MimePart *p, MimeApple *a)
     a->have_rsrc = a->have_finfo = 0;
     a->namelen = 0;
     a->name_trunc = 0;
+    a->name_full = 0;
     a->type = a->creator = 0;
     a->flags = 0;
 
@@ -663,6 +665,7 @@ static int mime_read_applefile(MimeCtx *m, const MimePart *p, MimeApple *a)
                 for (k = 0; k < nl; k++) a->name[k] = m->afbuf[off + k];
                 a->namelen = nl;
                 a->name_trunc = (uint8_t)(elen > nl);
+                a->name_full = elen;
             }
             break;
         case AF_ID_FINFO:
@@ -709,7 +712,11 @@ static int mime_emit(MimeCtx *m, const MimeHdrs *h, const MimePart *data,
      * then mpack's "partN". */
     if (have_af && a->namelen) {
         unc_entry_set_name(&e, a->name, a->namelen);
-        if (a->name_trunc) e.name_truncated = 1;
+        if (a->name_trunc) {
+            e.name_truncated = 1;
+            e.name_full_len = (uint16_t)(a->name_full > 65535u ? 65535u
+                                                               : a->name_full);
+        }
     }
     else if (h && h->namelen) {
         unc_entry_set_name(&e, h->name, h->namelen);

@@ -612,6 +612,12 @@ typedef struct UncCtx {
     int               pwattempt;
 } UncCtx;
 
+/* Hand the host the WHOLE name of an entry whose name had to be cut,
+ * where the format still has it (UncOptions.long_name). Does nothing
+ * without a buffer; sets e->name_truncated to 2 when it filled one. */
+void unc_entry_long_name(UncCtx *c, UncEntryInfo *e, const uint8_t *name,
+                         uint32_t len);
+
 /* Get a password to try. `again` = the last one was rejected. Returns
  * UNC_OK with c->pw/c->pwlen valid, or UNC_ERR_PASSWORD when the host
  * has none left. */

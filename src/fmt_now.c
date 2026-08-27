@@ -579,7 +579,11 @@ static void now_path_leaf(const NowPath *p, UncEntryInfo *e,
         full[n++] = (uint8_t)(ch == '/' ? ':' : ch);
     }
     /* Either the folder path or the leaf ran out of room. */
-    if (i < nlen || p->truncdepth) e->name_truncated = 1;
+    if (i < nlen || p->truncdepth) {
+        uint32_t want = (uint32_t)p->len + (p->len ? 1u : 0u) + nlen;
+        e->name_truncated = 1;
+        e->name_full_len = (uint16_t)(want > 65535u ? 65535u : want);
+    }
     unc_entry_set_path(e, full, n);
 }
 

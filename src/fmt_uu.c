@@ -53,6 +53,15 @@
 typedef struct UuLine {
     uint8_t  buf[UU_LINE_MAX + 1];
     uint8_t  cut;            /* the line was longer than the buffer */
+    uint32_t dropped;        /* by this many bytes, all off the end */
+    /* Where a line too long for `buf` is kept whole: the host's
+     * UncOptions.long_name, or NULL. Only the "begin" line is ever
+     * worth keeping, so once its name has been lifted out `locked`
+     * stops a later line from writing over it. */
+    uint8_t *over;
+    uint32_t over_cap;
+    uint32_t over_len;
+    uint8_t  locked;
     int32_t  len;
     int      eof;      /* set once the stream ended */
     uint32_t start;    /* absolute offset the line began at */
@@ -81,6 +90,8 @@ static int uu_readline(UncBufIn *in, uint32_t base, UuLine *l)
 
     l->len = 0;
     l->cut = 0;
+    l->dropped = 0;
+    if (!l->locked) l->over_len = 0;
     l->start = uu_abs(base, in);
     for (;;) {
         c = unc_bufin_next(in);
@@ -96,7 +107,22 @@ static int uu_readline(UncBufIn *in, uint32_t base, UuLine *l)
          * UncBufIn only seeks forward. */
         if (c == '\n' || c == '\r') break;
         if (l->len < UU_LINE_MAX) l->buf[l->len++] = (uint8_t)c;
-        else l->cut = 1;        /* a name on this line is short by the rest */
+        else {
+            /* Past the line buffer. The bytes are only lost if nobody
+             * asked for them: with a host buffer the whole line is kept
+             * there, starting with the part already in `buf`. */
+            l->cut = 1;
+            l->dropped++;
+            if (l->over && !l->locked && l->over_cap > 1) {
+                if (l->over_len == 0) {
+                    int32_t k;
+                    for (k = 0; k < l->len; k++) l->over[k] = l->buf[k];
+                    l->over_len = (uint32_t)l->len;
+                }
+                if (l->over_len < l->over_cap - 1u)
+                    l->over[l->over_len++] = (uint8_t)c;
+            }
+        }
     }
     l->buf[l->len] = 0;
     if (l->eof && l->len == 0) return UNC_ERR_TRUNCATED;   /* nothing left */
@@ -170,24 +196,36 @@ static int uu_tag_is(const UuLine *l, const char *tag)
 /* Name out of a begin line. UUTool quotes a Mac name; plain uuencode
  * writes a bare filename. mu.c takes everything after the first '"'
  * and drops the last character. */
-static void uu_name_from_begin(const UuLine *l, const uint8_t **name,
-                               uint32_t *len)
+/* Where the name sits inside a "begin" line. Takes the bytes rather
+ * than the UuLine, so it can run over the whole line kept in the host's
+ * buffer as well as over the first UU_LINE_MAX of it. */
+static void uu_name_span(const uint8_t *buf, int32_t len, int32_t *soff,
+                         int32_t *eoff)
 {
     int32_t i, s, e;
 
-    for (i = 6; i < l->len; i++) if (l->buf[i] == '"') break;
-    if (i < l->len) {                     /* quoted: UUTool */
+    for (i = 6; i < len; i++) if (buf[i] == '"') break;
+    if (i < len) {                        /* quoted: UUTool */
         s = i + 1;
-        e = l->len;
-        if (e > s && l->buf[e - 1] == '"') e--;
+        e = len;
+        if (e > s && buf[e - 1] == '"') e--;
     } else {                              /* bare: skip "begin <mode> " */
         s = 6;
-        while (s < l->len && l->buf[s] != ' ') s++;   /* the mode */
-        while (s < l->len && l->buf[s] == ' ') s++;
-        e = l->len;
-        while (e > s && (l->buf[e - 1] == ' ' || l->buf[e - 1] == '\t')) e--;
+        while (s < len && buf[s] != ' ') s++;   /* the mode */
+        while (s < len && buf[s] == ' ') s++;
+        e = len;
+        while (e > s && (buf[e - 1] == ' ' || buf[e - 1] == '\t')) e--;
     }
     if (e < s) e = s;
+    *soff = s;
+    *eoff = e;
+}
+
+static void uu_name_from_begin(const UuLine *l, const uint8_t **name,
+                               uint32_t *len)
+{
+    int32_t s, e;
+    uu_name_span(l->buf, l->len, &s, &e);
     *name = l->buf + s;
     *len  = (uint32_t)(e - s);
 }
@@ -262,6 +300,9 @@ typedef struct UuDoc {
     uint8_t   name[UNC_NAME_MAX + 1];
     uint32_t  name_len;
     uint8_t   name_trunc;   /* the "begin" line named more than fits */
+    uint32_t  name_full;    /* what the name's length was, 0 if unknown */
+    uint8_t   name_have_full; /* and the whole of it is in the host's
+                               * buffer (UncOptions.long_name) */
     uint8_t   info[16];              /* type, creator, flags, ...      */
 } UuDoc;
 
@@ -335,6 +376,9 @@ static int uu_scan_doc(UncCtx *c, UncBufIn *in, uint32_t base, UuLine *l,
     d->data.bytes = d->rsrc.bytes = d->finfo.bytes = 0;
     d->name_len = 0;
     d->name_trunc = 0;
+    d->name_full = 0;
+    d->name_have_full = 0;
+    l->locked = 0;          /* this document may keep its own name */
     {
         int i;
         for (i = 0; i < 16; i++) d->info[i] = 0;
@@ -346,7 +390,27 @@ static int uu_scan_doc(UncCtx *c, UncBufIn *in, uint32_t base, UuLine *l,
         nlen = UNC_NAME_MAX;
         d->name_trunc = 1;
     }
-    if (l->cut) d->name_trunc = 1;
+    if (l->cut) {
+        /* The name is the last thing on a "begin" line, so the bytes
+         * the buffer dropped are exactly the ones missing from it. */
+        d->name_trunc = 1;
+        d->name_full = nlen + l->dropped;
+        if (l->over && l->over_len > 6) {
+            /* The whole line was kept: move the name to the front of
+             * the host's buffer and hold it there, so the data lines
+             * behind it do not write over it. */
+            int32_t s2, e2;
+            uu_name_span(l->over, (int32_t)l->over_len, &s2, &e2);
+            if (e2 > s2) {
+                uint32_t k, n2 = (uint32_t)(e2 - s2);
+                for (k = 0; k < n2; k++) l->over[k] = l->over[(uint32_t)s2 + k];
+                l->over[n2] = 0;
+                l->over_len = n2;
+                l->locked = 1;
+                d->name_have_full = 1;
+            }
+        }
+    }
     {
         uint32_t i;
         for (i = 0; i < nlen; i++) d->name[i] = nm[i];
@@ -415,6 +479,11 @@ int unc_uu_extract(UncCtx *c)
     int err = UNC_OK, any = 0;
     uint32_t pos = 0;
 
+    l.over = c->opt.long_name;
+    l.over_cap = c->opt.long_name_cap;
+    l.over_len = 0;
+    l.locked = 0;
+
     iobuf = (uint8_t *)unc_alloc(c->al, iocap);
     if (!iobuf) return UNC_ERR_MEM;
 
@@ -449,7 +518,11 @@ int unc_uu_extract(UncCtx *c)
                 unc_entry_set_name(&e, c->opt.name_hint, c->opt.name_hint_len);
         } else {
             unc_entry_set_name(&e, d.name, d.name_len);
-            if (d.name_trunc) e.name_truncated = 1;
+            if (d.name_trunc) {
+                e.name_truncated = d.name_have_full ? 2 : 1;
+                e.name_full_len = (uint16_t)(d.name_full > 65535u ? 65535u
+                                                                  : d.name_full);
+            }
         }
         e.data_size = d.data.bytes;
         e.rsrc_size = d.rsrc.bytes;

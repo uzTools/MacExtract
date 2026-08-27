@@ -589,8 +589,11 @@ static int lzh_ext(UncCtx *c, uint32_t at, uint32_t size, uint8_t *name,
     if (unc_read_at(c->io, at, &type, 1) != UNC_OK) return UNC_ERR_TRUNCATED;
     n = size - 1;
     if (n > UNC_NAME_MAX) {
+        if (type == 0x01 || type == 0x02) {
+            info->name_truncated = 1;
+            info->name_full_len = (uint16_t)(n > 65535u ? 65535u : n);
+        }
         n = UNC_NAME_MAX;
-        if (type == 0x01 || type == 0x02) info->name_truncated = 1;
     }
     if (type == 0x01 && n > 0) {
         if (unc_read_at(c->io, at + 1, name, (int32_t)n) != UNC_OK)
@@ -644,8 +647,9 @@ static int lzh_header(UncCtx *c, uint32_t pos, LzhEnt *e, UncEntryInfo *info,
         for (k = 0; k < namelen; k++)
             if (h[nameat + k] == 0) { namelen = k; break; }
         if (namelen > UNC_NAME_MAX) {
-            namelen = UNC_NAME_MAX;
             info->name_truncated = 1;
+            info->name_full_len = (uint16_t)namelen;
+            namelen = UNC_NAME_MAX;
         }
         for (k = 0; k < namelen; k++) extname[k] = h[nameat + k];
         extnamelen = namelen;

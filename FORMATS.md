@@ -1747,12 +1747,14 @@ escape that arrives at 2 GB*) why the two Zip64 refusals differ.
 
 ## Name limits
 
-**Measured 2026-08-27.** A name is carried in `UncEntryInfo.name`, which
-is `UNC_NAME_MAX` (255) bytes plus a terminator inside a struct that is
-**296 bytes on the 68000 target** and travels on a 4 KB call stack, so a
-longer name cannot be carried at all. Until this date it was cut and
-nothing said so — a 457-byte zip path listed and extracted as 255 bytes,
-exit 0, under a name that was not the archive's.
+**Measured 2026-08-27.** A name meets two caps on its way to disk, and
+neither is negotiable. The ENGINE carries it in `UncEntryInfo.name`,
+`UNC_NAME_MAX` (255) bytes plus a terminator inside a struct that is
+**296 bytes on the 68000 target** and travels on a 4 KB call stack; the
+FILESYSTEM takes what `pathconf` says, which is 255 bytes per component
+and 4,096 per path on ext4 and less on others. Until this date the first
+cut names silently — a 457-byte zip path extracted as 255 bytes, exit 0,
+under a name that was not the archive's.
 
 | cap | value | what meets it |
 |---|---|---|
@@ -1761,25 +1763,49 @@ exit 0, under a name that was not the archive's.
 | uuencode line buffer | 96 | a `begin` line's name is cut here first, before the cap above |
 | btoa line buffer | 256 | `xbtoa5 N name Begin` — the name is inside the line |
 | one MIME header | 512 | a `Content-Type` `name=` or `Content-Disposition` `filename=` |
-| CLI output path | 1,024 | `outdir/name`; refused per entry since 2026-08-27, cut silently before |
+| AppleSingle real name | 255 | was 64 until 2026-08-27, which cut a name no other format would have |
+| `pathconf(_PC_NAME_MAX)` | 255 on ext4 | one component: 255 MacRoman bytes are up to 765 of UTF-8 |
+| `pathconf(_PC_PATH_MAX)` | 4,096 on ext4 | `outdir/name`, and the only one of these that refuses |
 
-One cap was removed instead of reported: the CLI turned a name into a
-filesystem name through a 512-byte buffer, and 255 bytes of MacRoman can
-become 765 of UTF-8, so it is now sized from `UNC_NAME_MAX` and cannot
-be what cuts a name.
+**The notice is text, so it is not the filesystem's to constrain.** It
+carries the archive's own name IN FULL wherever the format still holds
+the bytes when the cut is made — the host passes a buffer in
+`UncOptions.long_name` (the CLI: 64 KB; the Mac shell: NULL, which costs
+nothing and loses only the text), and `name_truncated` reads 2 rather
+than 1 when it was filled:
 
-The engine sets `UncEntryInfo.name_truncated` at every one of the rest
-and leaves the policy to the host: the CLI makes it a per-entry failure
-(the entry is not written, the ones around it are, the run exits
-non-zero), while the Macintosh application shortens every name to 31
-characters per component by policy and does not consume the flag
-(OPEN_ITEMS.md). Reasoning: DECISIONS.md 2026-08-27, *the name cap*.
+| where the cut happens | the notice gives |
+|---|---|
+| zip, directory in memory | the whole name |
+| tar (`prefix` + `/` + `name`) | the whole name |
+| AppleSingle real name | the whole name, re-read from the file |
+| the filesystem, not the engine | the whole name — the engine carried it |
+| uuencode `begin` line | the whole name: the line is kept in the host's buffer as it streams past, rather than dropped at 96 bytes |
+| LZH, btoa's name field, MIME's applefile name | the length, from the field |
+| zip with the directory streamed (budget too small for it), btoa's or MIME's cut LINE | the length where the field states it, and *"the rest was cut before it reached us"* — never the shortened name presented as the archive's |
 
-**The corpus could not have caught it: the longest name in 932 fixtures
-is 120 bytes**, less than half the cap, so neither the differential
-suite nor 9,320 robustness variants could ever have reached it.
-`tools/run_names.py` holds the boundary from both sides in zip, tar and
-uuencode, in `ci.sh` since 2026-08-27.
+The CLI's policy is a filesystem's: **shorten and carry on.** The file is
+extracted under the shortened name, a component is cut on a UTF-8
+character boundary, a name that collides *because* of the shortening is
+numbered `~1`, `~2` … rather than refused, and every shortened name is
+listed in a notice at the end of the run, with the length the archive
+stated where the format knows it. The run still exits 0 — nothing
+failed. Only a path past `_PC_PATH_MAX` is refused per entry, because no
+shortening of a name makes a path shorter than the directory it goes in.
+The Macintosh application shortens to 31 characters per component by its
+own rule and does not consume the flag (OPEN_ITEMS.md). Reasoning:
+DECISIONS.md 2026-08-27, *the name cap*.
+
+One cap was removed rather than reported: the CLI turned a name into a
+filesystem name through a 512-byte buffer, which is short of the 765 an
+all-MacRoman name can need, so it is sized from `UNC_NAME_MAX` now and
+cannot be what cuts a name.
+
+**The corpus could not have caught any of it: the longest name in 932
+fixtures is 120 bytes**, under half the engine's cap, so neither the
+differential suite nor 9,320 robustness variants could ever have reached
+it. `tools/run_names.py` holds both caps from both sides in zip, tar,
+uuencode and AppleSingle, in `ci.sh` since 2026-08-27.
 
 ## Resident memory, stack and launch (Mac target)
 
@@ -1793,9 +1819,10 @@ Everything here is measured on the Retro68 target's own flags
 | Mac shell | 11,784 | 732 |
 | **total** | **116,046** | **30,538** |
 
-The application ships as 178,304 B of MacBinary (`dist/MacExtract.bin`,
-rebuilt 2026-08-27; 1,152 B of that is the same day's Zip64 extra-field walk
-and the name-truncation reporting, and the table above predates both). Both
+The application ships as 179,328 B of MacBinary (`dist/MacExtract.bin`,
+rebuilt 2026-08-27; 2,176 B of that is the same day's Zip64 extra-field walk
+and the name-truncation reporting, and the table above predates both. The
+shell passes NULL for `UncOptions.long_name`, so none of it is heap). Both
 halves are resident for the whole session: the link line produces a single
 `MacExtract.code.bin` that the Segment Loader reads at launch, and
 `Elf2Mac/LdScript.cc` emits `*(.rodata*)` inside the `.data` output section —

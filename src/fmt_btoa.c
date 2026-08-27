@@ -271,6 +271,7 @@ int unc_btoa_extract(UncCtx *c)
     uint8_t name[UNC_NAME_MAX + 1];
     uint16_t namelen = 0;
     int      nametrunc = 0;
+    int32_t  namefull = 0;
     UncEntryInfo e;
     int sret, err = UNC_OK, est = UNC_OK;
 
@@ -315,6 +316,7 @@ int unc_btoa_extract(UncCtx *c)
                         int32_t k;
                         /* The line itself may have been cut at
                          * BTOA_LINE_MAX, which cuts the name in it. */
+                        namefull = flen[2];
                         nametrunc = flen[2] > UNC_NAME_MAX ||
                                     n >= BTOA_LINE_MAX;
                         namelen = (uint16_t)(flen[2] > UNC_NAME_MAX
@@ -343,7 +345,13 @@ int unc_btoa_extract(UncCtx *c)
     if (namelen) unc_entry_set_name(&e, name, namelen);
     else if (c->opt.name_hint && c->opt.name_hint_len)
         unc_entry_set_name(&e, c->opt.name_hint, c->opt.name_hint_len);
-    if (namelen && nametrunc) e.name_truncated = 1;
+    if (namelen && nametrunc) {
+        e.name_truncated = 1;
+        /* Known when the NAME was too long; not when the line it sat on
+         * was cut, since the name is not the last field on it. */
+        if (namefull > UNC_NAME_MAX)
+            e.name_full_len = (uint16_t)(namefull > 65535 ? 65535 : namefull);
+    }
     e.data_size = UNC_SIZE_UNKNOWN;
     e.rsrc_size = 0;
 

@@ -83,8 +83,9 @@ int unc_entry_set_name(UncEntryInfo *e, const uint8_t *name, uint32_t len)
      * always a path separator. zip/tar set e->name directly. */
     uint32_t i;
     if (len > UNC_NAME_MAX) {   /* truncate, keep going, and SAY so */
-        len = UNC_NAME_MAX;
         e->name_truncated = 1;
+        e->name_full_len = (uint16_t)(len > 65535u ? 65535u : len);
+        len = UNC_NAME_MAX;
     }
     for (i = 0; i < len; i++)
         e->name[i] = name[i] == '/' ? (uint8_t)':' : name[i];
@@ -97,12 +98,24 @@ void unc_entry_set_path(UncEntryInfo *e, const uint8_t *path, uint32_t len)
 {
     uint32_t i;
     if (len > UNC_NAME_MAX) {
-        len = UNC_NAME_MAX;
         e->name_truncated = 1;
+        e->name_full_len = (uint16_t)(len > 65535u ? 65535u : len);
+        len = UNC_NAME_MAX;
     }
     for (i = 0; i < len; i++) e->name[i] = path[i];
     e->name[len] = 0;
     e->name_len = (uint16_t)len;
+}
+
+void unc_entry_long_name(UncCtx *c, UncEntryInfo *e, const uint8_t *name,
+                         uint32_t len)
+{
+    uint32_t i, n;
+    if (!c->opt.long_name || c->opt.long_name_cap < 2 || !len) return;
+    n = len < c->opt.long_name_cap - 1u ? len : c->opt.long_name_cap - 1u;
+    for (i = 0; i < n; i++) c->opt.long_name[i] = name[i];
+    c->opt.long_name[n] = 0;
+    e->name_truncated = 2;      /* 1 says it was cut; 2 says where it is */
 }
 
 void unc_entry_path_append(UncEntryInfo *e, const uint8_t *comp, uint32_t len)
@@ -112,7 +125,11 @@ void unc_entry_path_append(UncEntryInfo *e, const uint8_t *comp, uint32_t len)
     if (o > 0 && o < UNC_NAME_MAX) e->name[o++] = '/';
     for (i = 0; i < len && o < UNC_NAME_MAX; i++)
         e->name[o++] = comp[i] == '/' ? (uint8_t)':' : comp[i];
-    if (i < len) e->name_truncated = 1;   /* the component did not fit */
+    if (i < len) {                        /* the component did not fit */
+        uint32_t want = (uint32_t)e->name_len + (e->name_len ? 1u : 0u) + len;
+        e->name_truncated = 1;
+        e->name_full_len = (uint16_t)(want > 65535u ? 65535u : want);
+    }
     e->name[o] = 0;
     e->name_len = (uint16_t)o;
 }

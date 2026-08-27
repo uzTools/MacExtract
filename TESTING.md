@@ -973,38 +973,47 @@ is no `tar` or no sparse files.
 
 ## Over-long names (`tools/run_names.py`, in `ci.sh`)
 
-Added 2026-08-27, the third limit of the same family and the one that
-was silent: a name longer than `UNC_NAME_MAX` was cut, and the entry
-was written under a name that was not the archive's, exit 0
-(FORMATS.md, *Name limits*).
+Added 2026-08-27. Two caps meet a name — the engine's `UNC_NAME_MAX`
+(255) and the filesystem's `pathconf` answers — and until that date the
+first cut names with nothing said, so a 457-byte path extracted under a
+name that was not the archive's (FORMATS.md, *Name limits*).
 
 The subjects are generated because **the longest name in 932 fixtures is
-120 bytes** — under half the cap, so neither the differential suite nor
-its variants could have reached it. They are graded by CPython's
-`zipfile` and `tarfile`, which wrote them and have no such limit, and by
-`unzip -l` and `tar tf` where those exist.
+120 bytes** — under half the engine's cap, so neither the differential
+suite nor its variants could reach either limit. They are graded by
+CPython's `zipfile` and `tarfile`, which wrote them and have no such
+limit, and by `unzip -l` and `tar tf` where those exist.
 
-Five cases, in three carriers plus the CLI itself, because the cap is
-met in several different places: a zip whose long entry must be refused while the short one
-beside it still comes out byte-exact; the boundary from both sides in
-one zip, 255 bytes written whole and 256 refused; a tar whose ustar
-`prefix + '/' + name` states 256 bytes, which the format can express and
-this engine cannot; and a uuencode `begin` line, which reaches the other
-name funnel and is cut by a 96-byte LINE buffer before the cap applies —
-reported the same way, which is the point.
+Nine cases over four carriers, the allocator's budget and the output
+directory: a zip whose long
+entry is extracted under the shortened name while the entry beside it is
+untouched; two zip entries that differ only past the cut, which must both
+come out with the second numbered `~1`; the engine's cap from both sides,
+255 written whole and 256 shortened; a tar whose ustar `prefix + '/' +
+name` states 256 bytes; a uuencode `begin` line, cut by a 96-byte line
+buffer before the cap is reached; an AppleSingle whose 200 MacRoman bytes
+are 400 of UTF-8, which the engine carries whole and one directory entry
+cannot take; and the output path from both sides — a legal 1 KB directory
+that must be written to, and one past `PATH_MAX` that must be refused.
+That last subject is built by walking into it, because the kernel will
+not take a path that long in one `mkdir` either.
 
-A fifth case covers the CLI's own: `outdir/name` goes into a
-1024-byte buffer, and cutting the path it writes to is the same defect
-one layer up.
+Each case also asserts what the NOTICE says: the archive's own name in
+full where the format still held it — `collide.zip`'s two names differ
+only past the cut, so the notice is the only place they can be told
+apart at all. A ninth case reaches the other side of that: a zip whose
+central directory does not fit a 64 KB budget is read a record at a
+time, the name really is gone, and the notice must give the length and
+say so rather than present the shortened name as the archive's.
 
-**Established that it can fail**: against the previous commit's engine
-and CLI, all five cases fail, eleven assertions in total.
+**Established that it can fail**: against the engine and CLI of two
+commits earlier, nineteen assertions fail.
 
 **What it cannot see.** The Macintosh formats' own path builders reach
-the cap only by nesting folders deep enough to sum past 255 bytes, and
-nothing here synthesises such a container; they set the same flag
-through the same funnel. The Mac application does not consume the flag
-at all.
+the engine's cap only by nesting folders deep enough to sum past 255
+bytes, and nothing here synthesises such a container; they set the same
+flag through the same funnel. The Mac application does not consume the
+flag at all, and does not number collisions.
 
 ## Decryption (`tools/run_crypt.py`, in `ci.sh`)
 

@@ -83,7 +83,10 @@ int unc_appledouble_extract(UncCtx *c, UncFormat which)
 {
     uint8_t hdr[26];
     uint8_t etab[AS_MAX_ENTRIES * 12];
-    uint8_t tmp[64];
+    /* Big enough for the longest name the engine carries: this
+     * was 64 until 2026-08-27, which cut a real-name entry
+     * without saying so (DECISIONS.md, the name cap). */
+    uint8_t tmp[UNC_NAME_MAX + 1];
     UncEntryInfo e;
     uint32_t magic, filesize;
     int be, i, n, err, sret;
@@ -126,8 +129,25 @@ int unc_appledouble_extract(UncCtx *c, UncFormat which)
         case 3: /* real name */
             if (elen > 0) {
                 uint32_t nl = elen < sizeof tmp ? elen : (uint32_t)sizeof tmp;
-                if (unc_read_at(c->io, offs, tmp, (int32_t)nl) == UNC_OK)
+                if (unc_read_at(c->io, offs, tmp, (int32_t)nl) == UNC_OK) {
                     unc_entry_set_name(&e, tmp, nl);
+                    if (elen > nl) {
+                        e.name_truncated = 1;
+                        e.name_full_len = (uint16_t)(elen > 65535u ? 65535u
+                                                                   : elen);
+                        /* The entry is still on disk in front of us, so
+                         * a host with room can be handed all of it. */
+                        if (c->opt.long_name && c->opt.long_name_cap > 1) {
+                            uint32_t want = elen < c->opt.long_name_cap - 1u
+                                          ? elen : c->opt.long_name_cap - 1u;
+                            if (unc_read_at(c->io, offs, c->opt.long_name,
+                                            (int32_t)want) == UNC_OK) {
+                                c->opt.long_name[want] = 0;
+                                e.name_truncated = 2;
+                            }
+                        }
+                    }
+                }
             }
             break;
         case 8: /* dates: always big-endian, epoch 2000 (see ref) */

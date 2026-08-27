@@ -213,7 +213,13 @@ typedef struct UncEntryInfo {
      * that shortens every name to fit its own filesystem — the classic
      * Mac one does, at 31 characters — has already made that choice.
      * Before 2026-08-27 the truncation happened with nothing said. */
-    uint8_t  name_truncated;
+    uint8_t  name_truncated;   /* 0 = whole; 1 = cut; 2 = cut, and the
+                                * WHOLE name is in UncOptions.long_name */
+    /* How long the name was BEFORE it was cut, saturating at 65,535, or
+     * 0 where the format cannot say — a name cut by a line buffer took
+     * its own length with it. The bytes themselves are gone: they are
+     * never held anywhere, which is the point of the cap. */
+    uint16_t name_full_len;
 } UncEntryInfo;
 
 /* ------------------------------------------------------------------ */
@@ -333,6 +339,19 @@ typedef struct UncOptions {
     /* Asked when an entry needs a password and none has verified yet.
      * May be NULL, in which case `password` is the only one tried. */
     const UncPasswordSource *ask;
+    /* Where to put a name that does not fit `UncEntryInfo.name`. A host
+     * with room — one whose display is text rather than a filesystem —
+     * passes a buffer here, and the engine writes the WHOLE name into
+     * it (raw bytes, NUL-terminated, cut only at `long_name_cap`)
+     * wherever the format still holds it when the cut is made;
+     * `name_truncated` is then 2 rather than 1. NULL, and the classic
+     * Mac shell passes NULL, costs nothing and loses only the text: the
+     * length is still reported in `name_full_len`.
+     * A format that has already dropped the bytes by then — uuencode's
+     * 96-byte line buffer, MIME's 512-byte header — cannot fill this,
+     * and says so by leaving `name_truncated` at 1. */
+    uint8_t *long_name;
+    uint32_t long_name_cap;
     /* StuffIt classic keeps the block that VERIFIES a password, and
      * half of the material the file keys are built from, in the
      * ARCHIVE's own resource fork — 'MKey' 0, eight bytes. It is

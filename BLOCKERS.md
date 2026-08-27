@@ -223,9 +223,12 @@ keep finding the next one, and two of them need no insight at all:
   entry count saturating at 65,535, a Zip64 escape read as a literal
   offset, and a 457-byte name cut to 255 and written under the wrong
   filename, all three exiting 0. A clamp leaves a result that is
-  internally consistent, so nothing downstream can notice; a refusal
-  cannot hide. **Where a constant meets data from the archive, ask what
-  happens to the archive that exceeds it, and who is told.**
+  internally consistent, so nothing downstream can notice. The answer is
+  not always to refuse — a filesystem has always shortened a name it
+  cannot take, and the CLI now does the same and numbers the collisions
+  — but it is always to TELL somebody. **Where a constant meets data
+  from the archive, ask what happens to the archive that exceeds it, and
+  who is told.**
 - **a harness that ends its runs differently from the harness beside it.**
   Added 2026-08-22: three SpaceSaver runs "measured unchanged" on a machine
   that never booted, because their image had been copied out of a KILLED

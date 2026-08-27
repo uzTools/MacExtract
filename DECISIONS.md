@@ -7857,16 +7857,56 @@ because that is what HFS takes, and a folder tree eight deep with
 full-length names sums past 255 bytes without anything being unusual
 about it. Refusing in the engine would deny a Mac user files that the
 Mac shell would have named correctly by its own rule. So the engine
-reports — `UncEntryInfo.name_truncated`, set at every cap — and the host
-decides. The CLI, writing to a filesystem with room for the whole name,
-makes it a per-entry failure; the Mac shell ignores it, which is the
-same behaviour it had before and the right one there.
+reports — `UncEntryInfo.name_truncated`, and `name_full_len` where the
+format can say how long the name was — and the host decides.
 
-**Listing still shows the entry.** A cut name is more use to somebody
-looking for a file than no row at all, so `l` and `t` print the entry
-and the warning; only `x` withholds the file. The run exits non-zero
-either way, because the archive holds something this engine cannot
-name.
+**Why the CLI does not refuse either, decided the same day.** The first
+version of this made a cut name a per-entry failure in the CLI, on the
+argument that a file written under a name that is not the archive's is
+worse than no file. The maintainer's call went the other way, and it is
+the better one: **the Linux CLI should be constrained by the files and
+the filesystem it writes to, exactly like the Mac client.** A filesystem
+that cannot take a name has always shortened it and carried on — that is
+what an 8.3 volume did, numbering `~1`, `~2` where shortening made two
+names one — and a user who wanted the file is not served by being handed
+nothing. So: extract under the shortened name, cut components on UTF-8
+boundaries at `pathconf(_PC_NAME_MAX)` rather than at a constant of
+ours, number a collision that the shortening caused, and list every
+shortened name in a notice at the end of the run. Exit 0: nothing
+failed. The one refusal left is a path past `_PC_PATH_MAX`, because no
+shortening of a NAME makes a path shorter than the directory it goes in.
+
+**The notice lists the original names, because a notice is text.**
+Corrected the same day, on the maintainer's point: what a screen can
+show is not the filesystem's business, and the first version of the
+notice gave only the name as written plus a length. The bytes are gone
+from `UncEntryInfo` — that is the point of the cap — but they are not
+gone from the FORMAT at the moment the cut is made: zip's directory is
+in memory, tar's `path[256]` holds all 256, AppleSingle's name entry is
+still on disk in front of the reader. So `UncOptions.long_name` is a
+buffer the HOST provides, the engine fills it where it can, and
+`name_truncated` reads 2 rather than 1 to say it did. The CLI passes
+64 KB — the largest name zip or tar can state, and it is only ever
+displayed; the Mac shell passes NULL and pays nothing.
+
+**uuencode looked like the exception and was not.** Its `begin` line goes
+through a 96-byte line buffer, so the name was gone before anything
+could read it — but that buffer is ours, not the format's, and the bytes
+are streaming past at the moment they are dropped. They are now kept in
+the host's buffer instead, from the part already in the line buffer
+onwards, and the name is lifted out of the line and held there while the
+data lines behind it are read. **A limit worth reporting is worth asking
+whether it is the format's or your own first**; this one was ours, and
+three formats' worth of "we cannot know" turned out to be one line
+buffer.
+
+What genuinely cannot be recovered is a name whose bytes were dropped
+before the engine ever held them: a zip whose central directory does not
+fit the allocator's budget is read one record at a time, and MIME's
+512-byte header and btoa's 256-byte line do the same to a name that sits
+inside them. There the notice gives the length where the field states it
+and says *the rest was cut before it reached us* — the one thing it must
+never do is present the shortened name as the archive's.
 
 **The cap is not the only cap.** Three line buffers cut a name before
 `UNC_NAME_MAX` is reached — uuencode's 96-byte line (a `begin` line's
@@ -7885,14 +7925,18 @@ failed within the hour on exactly that. The message stands and the walk
 goes on, with `0xFFFFFFFF` — the largest size `UncIO` can state —
 handed over in place of a wrapped one.
 
-**The host had two of its own.** The CLI turned a name into a filesystem
-name through a 512-byte buffer, and 255 bytes of MacRoman become up to
-765 of UTF-8 — so a path of accented components was cut AFTER the engine
-had carried it whole. That one is sized from `UNC_NAME_MAX` rather than
-reported: a cap that cannot be met is better than a cap that is
-announced. The other, `outdir/name` in a 1024-byte buffer, cannot be
-sized away — the output directory is the user's — so it is refused per
-entry, which is what the archive-comment path beside it already did.
+**The host had three of its own.** The CLI turned a name into a
+filesystem name through a 512-byte buffer, and 255 bytes of MacRoman
+become up to 765 of UTF-8 — so a path of accented components was cut
+AFTER the engine had carried it whole. That one is sized from
+`UNC_NAME_MAX` rather than reported: a cap that cannot be met is better
+than a cap that is announced. `outdir/name` sat in a 1024-byte buffer,
+which is a quarter of what this filesystem takes; it is `PATH_MAX` now,
+and the limit that remains is the filesystem's own. And AppleSingle's
+real-name entry was read into 64 bytes — a cap the first sweep missed
+because it is spelled `sizeof tmp` rather than `UNC_NAME_MAX`, which is
+worth remembering about greps: **the constant you are looking for may
+not be the constant that is written.**
 
 **The general shape, since this is the third instance.** A limit that
 CLAMPS produces a result that is internally consistent, so nothing

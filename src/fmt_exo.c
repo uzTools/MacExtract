@@ -359,6 +359,9 @@ int unc_tar_extract(UncCtx *c)
 
         unc_entry_clear(&e);
         unc_entry_set_path(&e, path, plen);
+        /* ustar can state 256 bytes (155 + '/' + 100) and the engine
+         * carries 255, so `path` still holds what the entry lost. */
+        if (e.name_truncated) unc_entry_long_name(c, &e, path, plen);
         e.mod_date = 0;
         e.rsrc_size = 0;
 
@@ -900,7 +903,15 @@ int unc_zip_extract(UncCtx *c)
             unc_entry_set_path(&e, namep, plen);  /* '/' native, raw bytes */
             /* The record's name was cut to `namebuf` before the funnel
              * could see how long it really was. */
-            if (namelen > nread) e.name_truncated = 1;
+            if (namelen > nread) {
+                e.name_truncated = 1;
+                e.name_full_len = (uint16_t)(namelen > 65535u ? 65535u
+                                                              : namelen);
+                /* Where the directory is in memory the whole name is
+                 * still there, so a host with room can be given it. */
+                if (cdbuf && cdrel + 46 + namelen <= cdsize)
+                    unc_entry_long_name(c, &e, cdbuf + cdrel + 46, namelen);
+            }
             e.is_dir = (uint8_t)isdir;
         }
         e.data_size = e.is_dir ? 0 : usize;

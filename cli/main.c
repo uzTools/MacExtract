@@ -29,6 +29,7 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <unistd.h>
 
 /* ------------------------------------------------------------------ */
 /* File-backed UncIO                                                  */
@@ -207,9 +208,102 @@ static void name_to_fs(const uint8_t *name, uint32_t len, int mac_encoding,
     out[o] = 0;
 }
 
+/* The archive's own name as text, for the notice at the end of a run.
+ * Decoded the way name_to_fs decodes one, but with no cap and no
+ * defusing: this goes to a screen, not to a directory entry, and a
+ * screen is not the filesystem's to constrain. Control bytes become
+ * '?' so a name cannot move the cursor. Returns malloc'd UTF-8. */
+static char *name_to_text(const uint8_t *name, size_t len, int mac_encoding,
+                          int raw)
+{
+    char *out = (char *)malloc(len * 3 + 2);
+    size_t i, o = 0;
+    if (!out) return NULL;
+    for (i = 0; i < len; i++) {
+        uint8_t b = name[i];
+        if (b < 0x20 || b == 0x7F) out[o++] = '?';
+        else if (b < 0x80 || raw || !mac_encoding) out[o++] = (char)b;
+        else o += (size_t)utf8_put(out + o, macroman_high[b - 0x80]);
+    }
+    out[o] = 0;
+    return out;
+}
+
+/* The largest name a format here can state: zip and tar count theirs in
+ * 16 bits. Only ever displayed, so this is not a filesystem question. */
+#define UNC_LONGNAME_CAP 65536u
+
+/* Room for an output path: the filesystem's own PATH_MAX plus the
+ * resource-fork convention and slack. */
+#define PATHBUF 4200
+
+/* ---- fitting a name to what the filesystem takes --------------------
+ *
+ * The engine cuts a name at UNC_NAME_MAX and says so (UncEntryInfo).
+ * What fits on the DISK is a second question and the answer is the
+ * filesystem's, not ours: `pathconf(_PC_NAME_MAX)` for one directory
+ * entry, `_PC_PATH_MAX` for the whole path. A component that does not
+ * fit is cut on a UTF-8 character boundary — cutting mid-character
+ * would put a byte on disk that is not a name in any encoding — and a
+ * file whose shortened name is already taken is numbered ~1, ~2 …, the
+ * way an 8.3 filesystem numbered what it had to shorten.
+ * DECISIONS.md 2026-08-27, *the name cap*. */
+
+/* The largest k <= max that does not split a UTF-8 character. */
+static size_t utf8_fit(const char *str, size_t max)
+{
+    size_t k = strlen(str);
+    if (k <= max) return k;
+    k = max;
+    while (k > 0 && ((unsigned char)str[k] & 0xC0) == 0x80) k--;
+    return k;
+}
+
+/* Cut every component of `name` in place to `nmax` bytes; the LAST one
+ * also leaves `reserve` free for the resource-fork convention, so both
+ * forks of an entry keep the same base. Returns nonzero if it cut. */
+static int fs_fit_name(char *name, size_t nmax, size_t reserve)
+{
+    char *p = name;
+    int cut = 0;
+
+    while (*p) {
+        char *slash = strchr(p, '/');
+        size_t len = slash ? (size_t)(slash - p) : strlen(p);
+        size_t max = slash ? nmax : (nmax > reserve ? nmax - reserve : 1);
+        if (len > max) {
+            size_t keep;
+            char c = p[len];
+            p[len] = 0;
+            keep = utf8_fit(p, max);
+            p[len] = c;
+            if (keep == 0) { p[0] = '_'; keep = 1; }  /* one huge character */
+            memmove(p + keep, p + len, strlen(p + len) + 1);
+            cut = 1;
+            len = keep;
+        }
+        if (!p[len]) break;
+        p += len + 1;
+    }
+    return cut;
+}
+
 /* ------------------------------------------------------------------ */
 /* Disk sink                                                          */
 /* ------------------------------------------------------------------ */
+
+/* One name that had to be shortened, for the notice at the end of the
+ * run. `full` is how long the archive's own name was, 0 where the
+ * format could not say; the name ITSELF is not recoverable — the engine
+ * never holds the bytes past its cap. */
+typedef struct {
+    char    *path;      /* what was written, relative to the output dir */
+    char    *orig;      /* the archive's own name in full, or NULL where
+                         * the format had already dropped the bytes    */
+    unsigned full;      /* the archive's own name length, 0 if unknown  */
+    unsigned need;      /* bytes the name wanted on THIS filesystem, or 0 */
+    int      numbered;
+} CutName;
 
 typedef struct {
     const char *outdir;
@@ -226,7 +320,13 @@ typedef struct {
                                  * comment file is named after it       */
     int         no_comment;     /* --no-comment: read it, drop it       */
     FILE       *data_f, *rsrc_f;
-    char        cur_path[1024];
+    const uint8_t *long_name;   /* UncOptions.long_name: the whole name
+                                 * of the entry the engine had to cut */
+    long        fs_name_max;    /* pathconf(_PC_NAME_MAX) on outdir */
+    long        fs_path_max;    /* pathconf(_PC_PATH_MAX) on outdir */
+    CutName    *cuts;           /* names shortened, for the end notice */
+    int         ncuts, cutcap;
+    char        cur_path[PATHBUF];
     UncEntryInfo cur;
     uint32_t    data_written, rsrc_written;
     int         entries, errors;
@@ -234,7 +334,7 @@ typedef struct {
     int         unsup_method;   /* the first such method, for the message */
     /* For envelope auto-unwrap: shape of what was extracted. */
     int         file_count, dir_count;
-    char        last_ok_path[1024];
+    char        last_ok_path[PATHBUF];
 } DiskSink;
 
 /* Render a type/creator code for the listing. High bytes are MacRoman
@@ -267,6 +367,132 @@ static void mkdirs_for(char *path)
     }
 }
 
+/* Both are defined below, next to the conventions they implement. */
+static void rsrc_path(const char *path, int hidden, char *out, size_t outsz);
+static int sink_unwrap_exempt(DiskSink *s, const char *path);
+
+/* Is this path (or its resource-fork sidecar) already on disk? The
+ * envelope being unwrapped does not count — it is deleted moments
+ * later and an inner entry may legitimately carry its name. */
+static int path_taken(DiskSink *s, const char *path)
+{
+    struct stat st;
+    char rp[PATHBUF];
+    if (stat(path, &st) == 0 && !sink_unwrap_exempt(s, path)) return 1;
+    rsrc_path(path, s->hidden_forks, rp, sizeof rp);
+    return stat(rp, &st) == 0 && !sink_unwrap_exempt(s, rp);
+}
+
+/* A name we had to shorten can collide with one already written, and
+ * two entries that differ only past the cut collide every time. Number
+ * the second ~1, the third ~2, rather than refusing it. Returns nonzero
+ * if a number was used. Directories are never numbered: two folders
+ * that shorten alike merge, which is what the children need. */
+static int sink_number_path(DiskSink *s, size_t leafmax)
+{
+    char base[PATHBUF];
+    char *leaf;
+    int n;
+
+    leaf = strrchr(s->cur_path, '/');
+    leaf = leaf ? leaf + 1 : s->cur_path;
+    snprintf(base, sizeof base, "%s", leaf);
+    for (n = 1; n <= 999; n++) {
+        char suffix[8];
+        size_t keep;
+        int slen = snprintf(suffix, sizeof suffix, "~%d", n);
+        keep = utf8_fit(base, leafmax > (size_t)slen ? leafmax - (size_t)slen
+                                                     : 0);
+        memcpy(leaf, base, keep);
+        memcpy(leaf + keep, suffix, (size_t)slen + 1);
+        if (!path_taken(s, s->cur_path)) return 1;
+    }
+    snprintf(leaf, sizeof base, "%s", base);   /* give up; the clobber
+                                                * rule speaks instead */
+    return 0;
+}
+
+/* Remember a shortened name for the notice at the end of the run. */
+static void sink_note_cut(DiskSink *s, const char *path, const char *orig,
+                          unsigned full, unsigned need, int numbered)
+{
+    size_t n;
+    char *copy;
+    if (s->ncuts == s->cutcap) {
+        int cap = s->cutcap ? s->cutcap * 2 : 8;
+        CutName *p = (CutName *)realloc(s->cuts, (size_t)cap * sizeof *p);
+        if (!p) return;            /* the notice is not worth failing over */
+        s->cuts = p;
+        s->cutcap = cap;
+    }
+    n = strlen(path) + 1;
+    copy = (char *)malloc(n);
+    if (!copy) return;
+    memcpy(copy, path, n);
+    s->cuts[s->ncuts].path = copy;
+    s->cuts[s->ncuts].orig = NULL;
+    if (orig) {
+        size_t on = strlen(orig) + 1;
+        char *oc = (char *)malloc(on);
+        if (oc) {
+            memcpy(oc, orig, on);
+            s->cuts[s->ncuts].orig = oc;
+        }
+    }
+    s->cuts[s->ncuts].full = full;
+    s->cuts[s->ncuts].need = need;
+    s->cuts[s->ncuts].numbered = numbered;
+    s->ncuts++;
+}
+
+/* The notice itself: what was shortened, and how long the archive said
+ * the name was. Printed once at the end of a layer, then forgotten. */
+static void sink_report_cuts(DiskSink *s)
+{
+    int i;
+    if (!s->ncuts) return;
+    fprintf(stderr, "macextract: %d name%s did not fit and %s shortened:\n",
+            s->ncuts, s->ncuts == 1 ? "" : "s",
+            s->ncuts == 1 ? "was" : "were");
+    for (i = 0; i < s->ncuts; i++) {
+        if (s->cuts[i].orig) {
+            /* The archive's name, whole, whatever the disk could take. */
+            fprintf(stderr, "macextract:   %s\n", s->cuts[i].orig);
+            fprintf(stderr, "macextract:     written as %s", s->cuts[i].path);
+        } else {
+            fprintf(stderr, "macextract:   %s", s->cuts[i].path);
+            if (s->cuts[i].full)
+                fprintf(stderr, "  (the archive's name is %u bytes; the rest "
+                                "was cut before it reached us)",
+                        s->cuts[i].full);
+            else if (!s->cuts[i].need)
+                fprintf(stderr, "  (the archive's name is longer; the rest "
+                                "was cut before it reached us)");
+        }
+        if (s->cuts[i].need)
+            fprintf(stderr, "  (needs %u bytes, this filesystem takes %ld)",
+                    s->cuts[i].need, s->fs_name_max);
+        if (s->cuts[i].numbered)
+            fprintf(stderr, "  (numbered: the shortened name was taken)");
+        fprintf(stderr, "\n");
+        free(s->cuts[i].path);
+        free(s->cuts[i].orig);
+    }
+    free(s->cuts);
+    s->cuts = NULL;
+    s->ncuts = s->cutcap = 0;
+}
+
+/* The archive's own name for this entry, as text, or NULL where the
+ * format had already dropped the bytes before the engine saw them.
+ * Caller frees. */
+static char *sink_orig_name(DiskSink *s, const UncEntryInfo *info)
+{
+    if (info->name_truncated != 2 || !s->long_name) return NULL;
+    return name_to_text(s->long_name, strlen((const char *)s->long_name),
+                        s->mac_encoding, s->raw_names);
+}
+
 static int sink_begin(void *ctx, const UncEntryInfo *info)
 {
     DiskSink *s = (DiskSink *)ctx;
@@ -279,24 +505,16 @@ static int sink_begin(void *ctx, const UncEntryInfo *info)
     name_to_fs(info->name, info->name_len, s->mac_encoding, s->raw_names,
                name, sizeof name);
 
-    if (info->name_truncated) {
-        /* The engine carries UNC_NAME_MAX bytes of a name and this one
-         * was longer, so the path we would write is a different file
-         * from the one in the archive. On a filesystem with room for
-         * the whole name that is a per-entry failure, not a rename to
-         * be made quietly (DECISIONS.md 2026-08-27, the name cap).
-         * Listing and testing still report the entry — a cut name is
-         * more use there than none — but the run does not exit 0. */
-        fprintf(stderr, "macextract: %s: name is longer than %d bytes and "
-                        "cannot be written whole%s\n",
-                name, UNC_NAME_MAX,
-                (s->list_only || s->test_only) ? "" : "; not extracted");
-        s->errors++;
-        if (!s->list_only && !s->test_only) return 1;
-    }
-
     if (s->list_only) {
         char t[13], c[13];
+        /* Nothing is written, so the filesystem's caps do not apply —
+         * but the engine's did, and the row below is then not the
+         * archive's name. Say so once, at the end, as extraction does. */
+        if (info->name_truncated) {
+            char *orig = sink_orig_name(s, info);
+            sink_note_cut(s, name, orig, info->name_full_len, 0, 0);
+            free(orig);
+        }
         fourcc_str(info->type, t);
         fourcc_str(info->creator, c);
         if (info->is_dir)
@@ -312,18 +530,63 @@ static int sink_begin(void *ctx, const UncEntryInfo *info)
         return 1; /* skip data */
     }
 
-    if (s->test_only) return 0;
-
-    if ((size_t)snprintf(s->cur_path, sizeof s->cur_path, "%s/%s",
-                         s->outdir, name) >= sizeof s->cur_path) {
-        /* Truncating here would write one file under another's name,
-         * the same failure the engine's own cap used to have. */
-        fprintf(stderr, "macextract: %s: output path is too long for this "
-                        "output directory; not extracted\n", name);
-        s->cur_path[0] = 0;
-        s->errors++;
-        return 1;
+    if (s->test_only) {
+        if (info->name_truncated) {
+            char *orig = sink_orig_name(s, info);
+            sink_note_cut(s, name, orig, info->name_full_len, 0, 0);
+            free(orig);
+        }
+        return 0;
     }
+
+    /* Fit the name to the filesystem, not to a constant of ours: the
+     * engine has already cut it at UNC_NAME_MAX if it had to, and what
+     * one directory entry takes is pathconf's answer. Both cuts land
+     * in the same notice at the end of the run. */
+    {
+        /* Room for the resource-fork convention, so both forks of an
+         * entry keep the same base — but only for an entry that HAS
+         * one, or a 255-byte zip name would be shortened to make room
+         * for a sidecar that is never written. */
+        size_t reserve = info->rsrc_size == 0 ? 0u
+                       : (s->hidden_forks ? 2u : 5u);   /* "._" or ".rsrc" */
+        size_t leafmax = (size_t)s->fs_name_max > reserve
+                       ? (size_t)s->fs_name_max - reserve : 1u;
+        char before[FS_NAME_MAX];
+        unsigned need = (unsigned)strlen(name);
+        int fitted;
+        snprintf(before, sizeof before, "%s", name);
+        fitted = fs_fit_name(name, (size_t)s->fs_name_max, reserve);
+        int cut = info->name_truncated || fitted;
+        int numbered = 0;
+
+        if ((size_t)snprintf(s->cur_path, sizeof s->cur_path, "%s/%s",
+                             s->outdir, name) >= sizeof s->cur_path ||
+            strlen(s->cur_path) >= (size_t)s->fs_path_max) {
+            /* This one IS the filesystem's answer: no shortening of a
+             * name can make a path shorter than its directory. */
+            fprintf(stderr, "macextract: %s: the output path is longer than "
+                            "this filesystem takes (%ld bytes); not "
+                            "extracted\n", name, s->fs_path_max);
+            s->cur_path[0] = 0;
+            s->errors++;
+            return 1;
+        }
+        if (cut && !info->is_dir && !s->overwrite &&
+            path_taken(s, s->cur_path))
+            numbered = sink_number_path(s, leafmax);
+        if (cut) {
+            const char *shown = s->cur_path + strlen(s->outdir);
+            char *orig = sink_orig_name(s, info);
+            while (*shown == '/') shown++;
+            /* Where the FILESYSTEM was the limit, the engine carried the
+             * whole name and `before` still holds it. */
+            sink_note_cut(s, shown, orig ? orig : (fitted ? before : NULL),
+                          info->name_full_len, fitted ? need : 0u, numbered);
+            free(orig);
+        }
+    }
+
     if (info->is_dir) {
         mkdirs_for(s->cur_path);
         mkdir(s->cur_path, 0777);
@@ -428,7 +691,7 @@ static int sink_unwrap_exempt(DiskSink *s, const char *path)
  * re-extracting into a used directory wants. */
 static FILE *sink_open_fork(DiskSink *s, UncFork fork)
 {
-    char path[1100];
+    char path[PATHBUF];
     struct stat st;
     if (fork == UNC_FORK_DATA)
         snprintf(path, sizeof path, "%s", s->cur_path);
@@ -1475,11 +1738,13 @@ int main(int argc, char **argv)
     UncSink sk;
     UncProgress prog;
     UncOptions opt;
+    static uint8_t *longname;      /* freed at exit by the OS: one buffer
+                                    * for every layer of an envelope */
     UncFormat fmt;
     int ret;
     int no_recurse = 0, depth = 0;
     const char *origfile;       /* the file named on the command line */
-    char curfile[1024], delfile[1024];
+    char curfile[PATHBUF], delfile[PATHBUF];
     struct stat st;
     SegHost seg;
     const char *partargs[UNC_SEG_MAX_PARTS];
@@ -1559,6 +1824,15 @@ nextlayer:
 
     memset(&sink, 0, sizeof sink);
     sink.outdir = outdir;
+    /* What this filesystem takes, asked rather than assumed: ext4 gives
+     * 255 and 4096, but eCryptfs gives 143 and a FAT volume less
+     * again. The fallbacks are POSIX's minimums where pathconf will not
+     * say (it returns -1 with errno unset for "no limit"). */
+    sink.fs_name_max = pathconf(outdir, _PC_NAME_MAX);
+    if (sink.fs_name_max <= 0 || sink.fs_name_max > 255) sink.fs_name_max = 255;
+    sink.fs_path_max = pathconf(outdir, _PC_PATH_MAX);
+    if (sink.fs_path_max <= 0 || sink.fs_path_max > PATHBUF - 8)
+        sink.fs_path_max = PATHBUF - 8;
     sink.archive = file;
     sink.no_comment = no_comment;
     sink.raw_names = raw_names;
@@ -1577,6 +1851,14 @@ nextlayer:
     prog.tick = prog_tick;
 
     memset(&opt, 0, sizeof opt);
+    /* Somewhere for a name the engine cannot carry. It is only ever
+     * shown, never written, so the size is the largest a format can
+     * state rather than anything the filesystem has to say about it.
+     * A run without it loses the text and keeps the length. */
+    if (!longname) longname = (uint8_t *)malloc(UNC_LONGNAME_CAP);
+    opt.long_name = longname;
+    opt.long_name_cap = longname ? UNC_LONGNAME_CAP : 0;
+    sink.long_name = longname;
 
     /* A password given on the command line, or read from stdin once so
      * that it does not sit in the process table. */
@@ -1750,7 +2032,7 @@ nextlayer:
              * one directory, and the joined file is called NAME. */
             const char *stem;
             size_t stemlen;
-            char dirbuf[1024];
+            char dirbuf[PATHBUF];
             int self, highest, beyond = 0, run;
 
             self = splitfam_split(file, dirbuf, sizeof dirbuf, &stem, &stemlen);
@@ -1839,7 +2121,7 @@ nextlayer:
              * part we were given, collect the rest, then take the count
              * from the final one. */
             int i2, fin = 0;
-            char dirbuf[1024];
+            char dirbuf[PATHBUF];
             const char *base;
 
             if (unc_segment_describe(&io, &seg.desc) != UNC_OK) {
@@ -1926,7 +2208,7 @@ nextlayer:
             char lastpath[1200];
             const char *stem;
             size_t stemlen;
-            char dirbuf[1024];
+            char dirbuf[PATHBUF];
             FILE *lf;
             FileIO lio_f;
             UncIO lio;
@@ -2109,6 +2391,7 @@ nextlayer:
                 "issue — a specimen\n"
                 "macextract: is exactly what is needed to add support.\n");
     }
+    sink_report_cuts(&sink);
     if (sink.errors) {
         fprintf(stderr, "macextract: %d of %d entries failed\n",
                 sink.errors, sink.entries);
