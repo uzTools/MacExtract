@@ -143,6 +143,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-27 (the fork writer and the filter) — a shared hot path, measured three ways
 - 2026-08-27 (the shapes that were left) — one probe signature, one scheme table, one buffer size
 - 2026-08-27 (the fast table StuffIt could not reach) — a gate that read as a property of the format
+- 2026-08-27 (the tree that was walked a bit at a time) — ARC's Squeeze and Distilled get a first-bits table
 
 ---
 
@@ -8270,3 +8271,72 @@ measured first: per entry the build is free, per small block it may cost
 more than it saves. That is the question `UNC_CANON_FAST_BITS`'s own
 comment records asking about `keyAhead.cpt`, and it is why this entry
 stops here.
+
+---
+
+## 2026-08-27 (the tree that was walked a bit at a time) — ARC's Squeeze and Distilled get a first-bits table
+
+The other half of the same reading. `unc_canon_decode` had a lookup
+table StuffIt could not reach; ARC's Squeeze and Distilled have no
+canonical codes at all — they store an explicit tree of node pairs and
+walked it one bit at a time, with a bounds check and a node load per
+bit. `arc_raw_byte` was **81 % of the largest single run in the corpus**
+(`derived-INTRECHO.pak`, 146 M Ir) at 129 instructions per output byte.
+
+**The measurement that authorised it is the one the previous entry said
+to make.** A table is only worth building if it is built rarely enough.
+Instrumented on that fixture: **10 trees for 295,185 symbols** — the
+trees are read once per ENTRY, not per block — and the code lengths are
+
+| bits | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11+ |
+|---|---|---|---|---|---|---|---|---|---|
+| share | 13.2 % | 6.7 % | 4.9 % | 9.9 % | 18.3 % | 16.6 % | 19.9 % | 8.6 % | 1.8 % |
+
+7.0 bits a symbol on average and **98.2 % of them ten or fewer**, so a
+ten-bit table resolves nearly all of them in one lookup and the walk
+stays as the fallback for the rest.
+
+**Indexed raw, and that is the opposite of the StuffIt case decided an
+hour earlier.** Both readers are LSB-first. `unc_canon_decode` assembles
+its codes MSB-first, so its window has to be reversed before it indexes
+the table; ARC's walk consumes the first bit as the first branch, so the
+bit that leaves the stream first is bit 0 of both the window and the
+index and nothing is turned round. **The bit order of the STREAM and the
+bit order a code is ASSEMBLED in are different questions**, and the two
+changes needed opposite answers on the same day.
+
+**The builder runs the decoder's own walk.** Each tree got a `step`
+function — child, leaf, or bad — and the walk and the table builder both
+go through it, so a table cannot disagree with the walk it replaces. The
+table is filled by walking every one of the 1,024 window values rather
+than by traversing the tree once: a thousand short walks per tree is
+nothing against the two million steps it saves, and a builder that
+cannot diverge is worth more here than a clever one.
+
+**One divergence nearly did get in.** The first Squeeze fast path
+returned the table's symbol after checking only for the 256 end code,
+where the walk also refuses anything above 255. Caught by reading the
+two side by side before it ran — but it is the second time in two days
+that a fast path silently dropped a refusal the slow path made, and the
+first one (`ss_emit`) shipped as far as CI. **When a fast path replaces
+a walk, list what the walk REFUSES, not just what it returns.**
+
+**Result, over the 48-fixture set:**
+
+| | before | after | |
+|---|---|---|---|
+| `derived-INTRECHO.pak` | 146,326,346 | 89,159,573 | **−39.07 %** |
+| `synth-arc-mixed.arc` | 2,040,944 | 1,960,599 | −3.94 % |
+| ARC's LZW methods | | | 0.00 %, no tree to walk |
+| **TOTAL** | 1,078,346,090 | 1,021,099,385 | **−5.31 %** |
+
+**Cost.** +654 B of `fmt_arc.o` text; +2,560 B of heap for a Distilled
+entry (two tables) and +2,048 B for a Squeeze one; +8 B of stack. ARC's
+documented peak of 46.5 KB is **unmoved**: re-measured by bisecting the
+allocation budget over every `.arc` and `.pak` fixture, the ceiling is
+46,686 B both before and after, and it is set by `arc2pak1.pak`, which
+uses one of the LZW methods this change does not touch.
+
+**Where the three tiers plus the two decoders leave the engine:**
+1,098,529,621 Ir before the harmonisation, **1,021,099,385** after —
+**−7.05 %** over the two largest fixtures of every format in the corpus.

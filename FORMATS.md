@@ -2115,6 +2115,20 @@ Every other `UncCanon` user gained 0.8 to 1.3 % as well, because the
 direction test moved from inside the peek to once per call
 (DECISIONS.md, *the fast table StuffIt could not reach*).
 
+**And the same table over ARC's own trees took another 5.31 % off**, the
+same day. Squeeze and Distilled store an explicit tree of node pairs and
+walked it a bit at a time — 7.0 bits a symbol, of which 98.2 % are ten or
+fewer. `derived-INTRECHO.pak`, the largest single run in the corpus:
+146,326,346 → **89,159,573**, −39.1 %; `synth-arc-mixed.arc` −3.9 %. The
+LZW methods are unmoved, having no tree to walk. ARC's peak allocation
+ceiling is **unchanged** at 46,686 B — re-measured across every `.arc`
+and `.pak` fixture, and set by one of those LZW methods (DECISIONS.md,
+*the tree that was walked a bit at a time*).
+
+**Where that leaves the three tiers.** Over the same 48 fixtures,
+1,098,529,621 Ir before the harmonisation and **1,021,099,385** after all
+of it: **−7.05 %**.
+
 **The three envelope rows are the same change and it is not a decoder at all:**
 `unc_macbinary_probe` moved ahead of the 64 KB backwards scan that
 `unc_zipseg_probe` runs on every file, and the scan itself became a pointer

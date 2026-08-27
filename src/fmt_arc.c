@@ -147,6 +147,7 @@ typedef struct ArcDec {
     /* Squeeze (XADSqueezeHandle). */
     UncBitIn   bit;
     int16_t   *nodes;
+    uint16_t  *sq_fast;   /* first-bits table over `nodes`   */
     int32_t    numnodes;
     int        sq_eof;
 
@@ -179,6 +180,8 @@ typedef struct ArcDec {
     /* Distilled (method 0x0b). */
     uint16_t  *di_nodes;     /* [628], the stored decode tree          */
     int16_t   *di_off;       /* [64*2], the fixed offset code as a tree */
+    uint16_t  *di_fast;      /* first-bits table over di_nodes          */
+    uint16_t  *di_offfast;   /* and over di_off                         */
     uint8_t   *di_win;       /* [8192], starts full of spaces          */
     int32_t    di_numnodes;
     int32_t    di_wpos;      /* next window write position             */
@@ -195,6 +198,46 @@ typedef struct ArcDec {
 /* ------------------------------------------------------------------ */
 /* Squeeze                                                            */
 /* ------------------------------------------------------------------ */
+
+/* ------------------------------------------------------------------ */
+/* First-bits tables over the node trees                              */
+/*                                                                    */
+/* Squeeze and Distilled both store an explicit tree of node pairs and */
+/* walked it a bit at a time. Measured on derived-INTRECHO.pak: 7.0    */
+/* bits a symbol over 295,185 symbols, and the tree read TEN times for */
+/* all of them — so a table over the first bits is built once per      */
+/* entry and paid back thousands of times. 98.2 % of that fixture's    */
+/* symbols are ten bits or fewer.                                     */
+/*                                                                    */
+/* An entry is the code length in the top four bits and the symbol in  */
+/* the low twelve; 0 means "longer than the table, walk it". The       */
+/* window is indexed RAW: these readers are LSB-first, so the bit that */
+/* leaves the stream first is bit 0 of both the window and the index   */
+/* and nothing has to be turned round — unlike unc_canon_decode, whose */
+/* codes are assembled MSB-first (DECISIONS.md 2026-08-27).            */
+/*                                                                    */
+/* The table is filled by RUNNING the walk, through the same step      */
+/* functions the decoders use, over every window value. A thousand     */
+/* short walks per tree is nothing against the two million steps it    */
+/* saves, and a builder that CANNOT disagree with the walk is worth    */
+/* more here than a clever one.                                       */
+/* ------------------------------------------------------------------ */
+
+#define ARC_TREE_LEAF  (-1)
+#define ARC_TREE_BAD   (-2)
+
+#define ARC_FAST_BITS  10
+#define ARC_FAST_SIZE  (1u << ARC_FAST_BITS)
+#define ARC_FAST_MASK  (ARC_FAST_SIZE - 1u)
+#define ARC_OFF_BITS    8
+#define ARC_OFF_SIZE   (1u << ARC_OFF_BITS)
+#define ARC_OFF_MASK   (ARC_OFF_SIZE - 1u)
+
+enum { ARC_T_SQ, ARC_T_DIST, ARC_T_OFF };
+
+/* Defined once all three step functions are, below. */
+static void arc_tree_table(const ArcDec *d, int which, int32_t root,
+                           uint16_t *tab, int bits);
 
 static int arc_squeeze_init(ArcDec *d)
 {
@@ -215,29 +258,53 @@ static int arc_squeeze_init(ArcDec *d)
     }
     unc_bitin_init_le(&d->bit, d->in);
     d->sq_eof = 0;
+    arc_tree_table(d, ARC_T_SQ, 0, d->sq_fast, ARC_FAST_BITS);
     return UNC_OK;
 }
 
 /* -1 = end of stream, -2 = corrupt/short. */
+/* One step down the tree: the child of `node` on `bit`, ARC_TREE_LEAF
+ * with *sym set, or ARC_TREE_BAD. The table builder below walks with
+ * this same function, so a table can never disagree with the walk. */
+static int32_t arc_squeeze_step(const ArcDec *d, int32_t node, int bit,
+                                int32_t *sym)
+{
+    int32_t v;
+    if (2 * node + bit >= d->numnodes) return ARC_TREE_BAD;
+    v = d->nodes[2 * node + bit];
+    if (v < 0) { *sym = -(v + 1); return ARC_TREE_LEAF; }
+    return v;
+}
+
 static int arc_squeeze_byte(ArcDec *d)
 {
-    int32_t node = 0;
+    int32_t node = 0, sym = 0;
     int depth = 0;
 
     if (d->sq_eof) return -1;
+
+    if (unc_bitin_fill(&d->bit, ARC_FAST_BITS)) {
+        unsigned e = d->sq_fast[d->bit.bitbuf & ARC_FAST_MASK];
+        if (e) {
+            d->bit.nbits -= (int32_t)(e >> 12);
+            d->bit.bitbuf >>= (e >> 12);
+            sym = (int32_t)(e & 0xFFFu);
+            if (sym == 256) { d->sq_eof = 1; return -1; }
+            if (sym > 255) return -2;
+            return (int)sym;
+        }
+    }
+
     for (;;) {
         int bit = unc_bitin_bit(&d->bit);
-        int32_t v;
         if (bit < 0) return -1;                 /* input ran out */
-        if (2 * node + bit >= d->numnodes) return -2;
-        v = d->nodes[2 * node + bit];
-        if (v < 0) {
-            int sym = (int)(-(v + 1));
+        node = arc_squeeze_step(d, node, bit, &sym);
+        if (node == ARC_TREE_LEAF) {
             if (sym == 256) { d->sq_eof = 1; return -1; }
             if (sym < 0 || sym > 255) return -2;
-            return sym;
+            return (int)sym;
         }
-        node = v;
+        if (node == ARC_TREE_BAD) return -2;
         if (++depth > 64) return -2;            /* cyclic tree */
     }
 }
@@ -607,11 +674,70 @@ static int arc_distill_init(ArcDec *d)
     d->di_written = 0;
     d->di_msrc = d->di_mlen = 0;
 
-    return arc_dist_offtree(d);
+    arc_tree_table(d, ARC_T_DIST, d->di_numnodes - 2, d->di_fast,
+                   ARC_FAST_BITS);
+    if (arc_dist_offtree(d) != UNC_OK) return UNC_ERR_CORRUPT;
+    arc_tree_table(d, ARC_T_OFF, 0, d->di_offfast, ARC_OFF_BITS);
+    return UNC_OK;
 }
 
 /* How many extra bits the offset carries, from how much has been
  * decoded. Source: distilled_get_num_extra_bits(), deark. */
+/* The Distilled main tree: a value past the end of the table is a leaf.
+ * Shared by the walk and the table builder — see the block above. */
+static int32_t arc_dist_step(const ArcDec *d, int32_t node, int bit,
+                             int32_t *sym)
+{
+    int32_t v;
+    if (node < 0 || node + bit >= d->di_numnodes) return ARC_TREE_BAD;
+    v = (int32_t)d->di_nodes[node + bit];
+    if (v >= d->di_numnodes) { *sym = v - d->di_numnodes; return ARC_TREE_LEAF; }
+    return v;
+}
+
+/* The fixed offset tree: negative is a leaf, and 0 is not a child
+ * because node 0 is the root. */
+static int32_t arc_off_step(const ArcDec *d, int32_t node, int bit,
+                            int32_t *sym)
+{
+    int32_t v = d->di_off[node * 2 + bit];
+    if (v < 0) { *sym = -(v + 1); return ARC_TREE_LEAF; }
+    if (v == 0) return ARC_TREE_BAD;
+    return v;
+}
+
+static int32_t arc_tree_step(const ArcDec *d, int which, int32_t node,
+                             int bit, int32_t *sym)
+{
+    if (which == ARC_T_SQ)   return arc_squeeze_step(d, node, bit, sym);
+    if (which == ARC_T_DIST) return arc_dist_step(d, node, bit, sym);
+    return arc_off_step(d, node, bit, sym);
+}
+
+static void arc_tree_table(const ArcDec *d, int which, int32_t root,
+                           uint16_t *tab, int bits)
+{
+    uint32_t n = 1u << bits, w;
+
+    for (w = 0; w < n; w++) {
+        int32_t node = root, sym = 0;
+        int i;
+        tab[w] = 0;
+        for (i = 0; i < bits; i++) {
+            node = arc_tree_step(d, which, node, (int)((w >> i) & 1u), &sym);
+            if (node == ARC_TREE_LEAF) {
+                /* A symbol the walk would refuse is left out, so the
+                 * walk runs and refuses it exactly as it always did. */
+                if (sym >= 0 && sym < 4096)
+                    tab[w] = (uint16_t)(((uint32_t)(i + 1) << 12)
+                                        | (uint32_t)sym);
+                break;
+            }
+            if (node == ARC_TREE_BAD) break;
+        }
+    }
+}
+
 static int arc_dist_extrabits(uint32_t written)
 {
     uint32_t n = written + 60;
@@ -643,17 +769,26 @@ static int arc_distill_byte(ArcDec *d)
 
     /* One symbol from the stored tree: node pairs, walked by bit,
      * a value past the end of the table being a leaf. */
-    cur = d->di_numnodes - 2;
-    depth = 0;
-    for (;;) {
-        int32_t v;
-        bit = unc_bitin_bit(&d->bit);
-        if (bit < 0) return -1;
-        if (cur < 0 || cur + bit >= d->di_numnodes) return -2;
-        v = (int32_t)d->di_nodes[cur + bit];
-        if (v >= d->di_numnodes) { sym = v - d->di_numnodes; break; }
-        cur = v;
-        if (++depth > 64) return -2;
+    sym = -1;
+    if (unc_bitin_fill(&d->bit, ARC_FAST_BITS)) {
+        unsigned e = d->di_fast[d->bit.bitbuf & ARC_FAST_MASK];
+        if (e) {
+            d->bit.nbits -= (int32_t)(e >> 12);
+            d->bit.bitbuf >>= (e >> 12);
+            sym = (int32_t)(e & 0xFFFu);
+        }
+    }
+    if (sym < 0) {
+        cur = d->di_numnodes - 2;
+        depth = 0;
+        for (;;) {
+            bit = unc_bitin_bit(&d->bit);
+            if (bit < 0) return -1;
+            cur = arc_dist_step(d, cur, bit, &sym);
+            if (cur == ARC_TREE_LEAF) break;
+            if (cur == ARC_TREE_BAD) return -2;
+            if (++depth > 64) return -2;
+        }
     }
 
     if (sym > ARC_DIST_MAXSYM) return -2;
@@ -662,17 +797,26 @@ static int arc_distill_byte(ArcDec *d)
 
     mlen = sym - 254;
 
-    cur = 0;
-    depth = 0;
-    for (;;) {
-        int32_t v;
-        bit = unc_bitin_bit(&d->bit);
-        if (bit < 0) return -1;
-        v = d->di_off[cur * 2 + bit];
-        if (v < 0) { osym = -(v + 1); break; }
-        if (v == 0) return -2;
-        cur = v;
-        if (++depth > 8) return -2;
+    osym = -1;
+    if (unc_bitin_fill(&d->bit, ARC_OFF_BITS)) {
+        unsigned e = d->di_offfast[d->bit.bitbuf & ARC_OFF_MASK];
+        if (e) {
+            d->bit.nbits -= (int32_t)(e >> 12);
+            d->bit.bitbuf >>= (e >> 12);
+            osym = (int32_t)(e & 0xFFFu);
+        }
+    }
+    if (osym < 0) {
+        cur = 0;
+        depth = 0;
+        for (;;) {
+            bit = unc_bitin_bit(&d->bit);
+            if (bit < 0) return -1;
+            cur = arc_off_step(d, cur, bit, &osym);
+            if (cur == ARC_TREE_LEAF) break;
+            if (cur == ARC_TREE_BAD) return -2;
+            if (++depth > 8) return -2;
+        }
     }
 
     extra = arc_dist_extrabits(d->di_written);
@@ -782,9 +926,11 @@ static int arc_dec_init(ArcDec *d, UncCtx *c, UncBufIn *in, int method,
         d->rle = 1;
         break;
     case ARC_M_SQUEEZED:
-        d->mem = (uint8_t *)unc_alloc(c->al, ARC_SQ_MAXNODES * 2u);
+        d->mem = (uint8_t *)unc_alloc(c->al,
+                     ARC_SQ_MAXNODES * 2u + ARC_FAST_SIZE * 2u);
         if (!d->mem) return UNC_ERR_MEM;
-        d->nodes = (int16_t *)(void *)d->mem;
+        d->nodes   = (int16_t *)(void *)d->mem;
+        d->sq_fast = (uint16_t *)(void *)(d->mem + ARC_SQ_MAXNODES * 2u);
         d->rle = 1;
         err = arc_squeeze_init(d);
         break;
@@ -839,11 +985,17 @@ static int arc_dec_init(ArcDec *d, UncCtx *c, UncBufIn *in, int method,
         /* nodes[628] u16 | offtree[64*2] i16 | win[8192] */
         d->mem = (uint8_t *)unc_alloc(c->al,
                      ARC_DIST_MAXNODES * 2u + ARC_DIST_OFFNODES * 4u
+                     + ARC_FAST_SIZE * 2u + ARC_OFF_SIZE * 2u
                      + ARC_DIST_WIN);
         if (!d->mem) return UNC_ERR_MEM;
-        d->di_nodes = (uint16_t *)(void *)d->mem;
-        d->di_off   = (int16_t *)(void *)(d->mem + ARC_DIST_MAXNODES * 2u);
-        d->di_win   = d->mem + ARC_DIST_MAXNODES * 2u + ARC_DIST_OFFNODES * 4u;
+        d->di_nodes   = (uint16_t *)(void *)d->mem;
+        d->di_off     = (int16_t *)(void *)(d->mem + ARC_DIST_MAXNODES * 2u);
+        d->di_fast    = (uint16_t *)(void *)(d->mem + ARC_DIST_MAXNODES * 2u
+                                             + ARC_DIST_OFFNODES * 4u);
+        d->di_offfast = d->di_fast + ARC_FAST_SIZE;
+        d->di_win     = d->mem + ARC_DIST_MAXNODES * 2u
+                        + ARC_DIST_OFFNODES * 4u
+                        + ARC_FAST_SIZE * 2u + ARC_OFF_SIZE * 2u;
         err = arc_distill_init(d);
         break;
     case ARC_M_CRUNCH8:
