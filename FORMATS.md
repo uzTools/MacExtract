@@ -2098,12 +2098,22 @@ that −70.2 % is a whole rung of the memory-for-time dial rather than cheaper
 instructions. The number a user waits through is the Mac Plus wall clock two
 sections down: 1,898 s → 1,384 s.
 
-**The 2026-08-27 consolidation cost 0.86 % of that back**, measured the same
-way over a 14-fixture set: BinHex +2.3 to +3.6 %, LZH +1.4 %, ARC +0.7 %,
-Compact Pro +0.04 %, StuffIt unchanged, and DiskDoubler **−5.4 %**. That is
-the price of one fork writer and one RLE90 filter in place of nine and five;
-three cheaper shapes were tried first and were worse (DECISIONS.md, *the fork
-writer and the filter*).
+**The 2026-08-27 consolidation cost 0.44 %**, measured the same way over
+48 fixtures — the two largest of every format in the corpus. BinHex +2.3 to
++3.6 %, ARC +0.7 to +4.4 %, LZH +0.7 to +3.1 %, DiskDoubler **−5.3 %**,
+everything else within half a percent. That is the price of one fork writer
+and one RLE90 filter in place of nine and five; three cheaper shapes were
+tried first and were worse (DECISIONS.md, *the fork writer and the filter*).
+
+**The LSB fast path took 2.26 % off the same 48**, the same day and more
+than paying for it. `unc_canon_decode`'s table was MSB-only, so StuffIt
+classic — the one format that both uses `UncCanon` and reads LSB-first —
+walked its codes a bit at a time at **189 instructions a symbol against 58**
+for a format that reached the table. Method 13 on
+`derived-Ultimate_Copland_1.1.sit.1`: 46,880,099 → **28,909,746**, −38.3 %.
+Every other `UncCanon` user gained 0.8 to 1.3 % as well, because the
+direction test moved from inside the peek to once per call
+(DECISIONS.md, *the fast table StuffIt could not reach*).
 
 **The three envelope rows are the same change and it is not a decoder at all:**
 `unc_macbinary_probe` moved ahead of the 64 KB backwards scan that

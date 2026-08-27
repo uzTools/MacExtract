@@ -142,6 +142,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-27 (the scaffolding audit) — the codec is the format, the code around it is not
 - 2026-08-27 (the fork writer and the filter) — a shared hot path, measured three ways
 - 2026-08-27 (the shapes that were left) — one probe signature, one scheme table, one buffer size
+- 2026-08-27 (the fast table StuffIt could not reach) — a gate that read as a property of the format
 
 ---
 
@@ -8205,3 +8206,67 @@ nothing there to cost. `dd_fork`'s frame came DOWN 4 bytes, putting the
 deepest chain in the engine at 3,330 B (FORMATS.md, *Stack*). With this
 the scaffolding audit's list is empty and OPEN_ITEMS.md's section 4 is
 gone, which is what a gaps list is for.
+
+---
+
+## 2026-08-27 (the fast table StuffIt could not reach) — a gate that read as a property of the format
+
+`unc_canon_decode` has had a 10-bit lookup table since M29, and it was
+gated on `!bi->le`. The comment beside it said StuffIt method 13 "reads
+LSB-first and takes the walk below, which is what it always did", which
+is true and reads like a fact about the format. It is a fact about how
+the table is indexed.
+
+**What it cost, measured on the same function.** 58 instructions a
+symbol for Compact Pro, which reaches the table; **189** for StuffIt
+method 13, which does not. On `derived-Ultimate_Copland_1.1.sit.1`,
+`unc_canon_decode` was 27,809,569 Ir over 146,952 symbols — 59 % of the
+whole run — and callgrind showed the fast-path lines executing **zero**
+times. The codes are the same canonical codes either way; only the order
+the stream hands the bits over differs.
+
+**So the window is turned round, not the table.** One reversal of the
+peeked ten bits through a 256-byte const table, and everything after it
+— `fastlen[]`, the shift, `first[]`, `cbase[]` — is the code that was
+already there. zlib solves the same problem by storing a symbol per
+table entry, which needs no reversal and would be right on a machine
+with memory: here it is 2 KB more per `UncCanon`, and DiskDoubler holds
+three at once and Now Compress two, on the heap, inside budgets
+FORMATS.md states to the byte. The reversal table is 256 bytes of const
+shared by every `UncCanon` there is, and the struct does not grow.
+
+**The first version was slower for everybody else, and that is the part
+worth keeping.** Folding both directions into one expression — a ternary
+for the peek and an `if` for the consume — put two branches per SYMBOL
+on the MSB path where there had been one per CALL. Now Compress lost
+2.56 %, Compact Pro 1.87 %, LZH 2.65 %, and the whole change came to
+−0.24 % overall: a 38 % win on one format paid for out of everyone
+else's pocket. Hoisting the direction to a single test at the top of the
+function — two fast-path blocks, one branch — turned that into −2.26 %
+overall with **every** `UncCanon` user faster. **A shared hot path has no
+cheap `if`: the question is not how many branches you added but how
+often each one runs.**
+
+**Two of the three formats I expected to benefit do not use this decoder
+at all.** The finding was first written up as "StuffIt method 13,
+SpaceSaver method 3 and ARC read LSB-first and all fall back to the
+walk". They do all read LSB-first — and `fmt_spacesaver.c` contains no
+`UncCanon` at all (it has `SsHuff`, transcribed from Aladdin's own
+non-stable sort, 2026-08-27 *the fork writer and the filter*), while
+ARC's Squeezed, Crushed and Distilled walk explicit node arrays of their
+own. `fmt_sit.c` is the only file that both reads LSB-first and calls
+`unc_canon_decode`. The measurement caught it: two of the three fixtures
+moved 0.00 %. **"Reads LSB-first" and "uses the shared decoder" are two
+lists, and I had intersected them by eye.**
+
+**What is left, measured and not done.** `arc_raw_byte` is 81 % of the
+largest single run in the corpus (`derived-INTRECHO.pak`, 146 M Ir) at
+129 instructions per output byte, because Distilled walks its Huffman
+tree one bit at a time — ~10.5 bit-steps a symbol, of which the bounds
+check alone is 8.4 % of the run. The same style of table would fit, but
+those trees are explicit node arrays rather than canonical codes, so
+nothing here drops in, and how often each tree is rebuilt has to be
+measured first: per entry the build is free, per small block it may cost
+more than it saves. That is the question `UNC_CANON_FAST_BITS`'s own
+comment records asking about `keyAhead.cpt`, and it is why this entry
+stops here.

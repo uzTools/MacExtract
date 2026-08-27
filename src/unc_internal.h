@@ -445,6 +445,7 @@ int unc_huff_decode(const UncHuff *h, UncBitIn *bi);
  * and archives of many small entries were checked for it: keyAhead.cpt
  * got FASTER at 10, so the fill is not what those pay. */
 #define UNC_CANON_FAST_BITS 10
+#define UNC_CANON_FAST_MASK ((1u << UNC_CANON_FAST_BITS) - 1u)
 
 typedef struct UncCanon {
     uint16_t count[UNC_CANON_MAX_BITS + 1]; /* codes per bit length */
