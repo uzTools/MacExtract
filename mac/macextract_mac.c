@@ -1579,8 +1579,10 @@ static int IsEnvelopeFormat(UncFormat f)
     return f == UNC_FORMAT_MACBINARY || f == UNC_FORMAT_BINHEX ||
            f == UNC_FORMAT_APPLESINGLE || f == UNC_FORMAT_APPLEDOUBLE ||
            f == UNC_FORMAT_GZIP || f == UNC_FORMAT_COMPRESS_Z ||
-           /* base64 and not MIME: see the same list in cli/main.c. */
-           f == UNC_FORMAT_BASE64;
+           /* base64 and not MIME, btoa and uuencode: see the same list
+            * in cli/main.c. The two hosts must agree on it. */
+           f == UNC_FORMAT_BASE64 ||
+           f == UNC_FORMAT_BTOA || f == UNC_FORMAT_UU;
 }
 
 /* Run one envelope layer of a file into `es`. 0 if it is not one. */

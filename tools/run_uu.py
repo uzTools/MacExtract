@@ -28,6 +28,7 @@ import tempfile
 ROOT = os.path.join(os.path.dirname(__file__), "..")
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import synth_uu                                     # noqa: E402
+from synth_wrapped import macbinary                 # noqa: E402
 
 DATA = b"the quick brown fox jumps over the lazy dog.\n" * 30
 RSRC = bytes(range(256)) * 3
@@ -162,6 +163,63 @@ def main():
         if r.returncode != 0 or got is None or len(got) >= len(DATA):
             problems.append("gap.uu: a set missing a middle part no longer "
                             "decodes short and silent — re-read OPEN_ITEMS.md")
+        shutil.rmtree(out, ignore_errors=True)
+        ran += 1
+
+        # CHAINED, since 2026-08-27: uuencode is an envelope, so a
+        # document holding a MacBinary file is opened all the way down
+        # and the intermediate deleted. No specimen of this has ever
+        # been seen here — btoa's has (FORMATS.md, *btoa*), and the two
+        # armours have the same shape, which is why they went in
+        # together (DECISIONS.md 2026-08-27).
+        inner = b"the file that was posted, not the wrapper\n" * 6
+        mb = macbinary("Subject", inner)
+        chain = os.path.join(tmp, "Subject.bin.uu")
+        open(chain, "w").write(synth_uu.plain("Subject.bin", mb))
+        out = tempfile.mkdtemp()
+        subprocess.run([macextract, "x", "-o", out, chain], capture_output=True)
+        if sorted(os.listdir(out)) != ["Subject"] or \
+                read(os.path.join(out, "Subject")) != inner:
+            problems.append("chained plain: %r" % sorted(os.listdir(out)))
+        shutil.rmtree(out, ignore_errors=True)
+        ran += 1
+
+        # The UUTool shape chains too, and its resource fork goes with
+        # the layer it is a fork OF — the wrapper's, not the payload's.
+        # Same as BinHex, which has done this since M9.
+        mchain = os.path.join(tmp, "mac-chain.uu")
+        open(mchain, "w").write(synth_uu.uutool("Wrapped.bin", mb,
+                                                bytes(range(256)),
+                                                b"????", b"????"))
+        out = tempfile.mkdtemp()
+        subprocess.run([macextract, "x", "-o", out, mchain], capture_output=True)
+        if sorted(os.listdir(out)) != ["Subject"] or \
+                read(os.path.join(out, "Subject")) != inner:
+            problems.append("chained UUTool: %r" % sorted(os.listdir(out)))
+        shutil.rmtree(out, ignore_errors=True)
+        ran += 1
+
+        # -nr stops at the wrapper: the chain is the recursion, not
+        # something the uu decoder started doing.
+        out = tempfile.mkdtemp()
+        subprocess.run([macextract, "x", "-nr", "-o", out, chain],
+                       capture_output=True)
+        if sorted(os.listdir(out)) != ["Subject.bin"]:
+            problems.append("chained, -nr: %r" % sorted(os.listdir(out)))
+        shutil.rmtree(out, ignore_errors=True)
+        ran += 1
+
+        # And the guard that makes the newsgroup shape safe: a file
+        # holding SEVERAL documents yields several files, so there is no
+        # single layer to recurse into and both wrappers survive.
+        two = os.path.join(tmp, "two.uu")
+        open(two, "w").write(synth_uu.plain("One.bin", mb) +
+                             synth_uu.plain("Two.bin", mb))
+        out = tempfile.mkdtemp()
+        subprocess.run([macextract, "x", "-o", out, two], capture_output=True)
+        if sorted(os.listdir(out)) != ["One.bin", "Two.bin"]:
+            problems.append("two documents unwrapped: %r"
+                            % sorted(os.listdir(out)))
         shutil.rmtree(out, ignore_errors=True)
         ran += 1
 

@@ -27,6 +27,9 @@ ROOT = os.path.join(os.path.dirname(__file__), "..")
 SRC = os.path.abspath(os.path.join(ROOT, "reference", "btoa"))
 BIN = os.path.abspath(os.path.join(ROOT, "build", "btoa", "btoa"))
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from synth_wrapped import macbinary                  # noqa: E402
+
 
 def build():
     """Compile the reference. It is 1996 K&R C, so the warnings are
@@ -153,6 +156,50 @@ def main():
         if len(got) != 1 or open(os.path.join(out, got[0]), "rb").read() \
                 != data["odd1.bin"]:
             problems.append("mail-wrapped: %r" % got)
+        shutil.rmtree(out, ignore_errors=True)
+        ran += 1
+
+        # THE SHAPE A REAL ONE HAS. Aladdin's own translator
+        # MacBinary-wraps before it encodes, so a btoa file off a Mac is
+        # `Subject.MBin.ascii` — armour around a wrapper (FORMATS.md,
+        # *btoa*). Both layers always read; until 2026-08-27 the CHAIN
+        # did not, because btoa was not an envelope. Both framings, since
+        # the Macintosh one is the older `xbtoa Begin`.
+        inner = b"payload that travelled as MacBinary inside armour\n" * 7
+        wrapped = os.path.join(tmp, "Subject.MBin")
+        open(wrapped, "wb").write(macbinary("Subject", inner))
+        for label, flags in (("v5", []), ("v4", ["-o"])):
+            # Each in its own directory so the file can carry the name
+            # the specimen carries: the v4 framing has no name of its
+            # own, and the entry is then called after the archive.
+            d = os.path.join(tmp, "chain-" + label)
+            os.mkdir(d)
+            enc = os.path.join(d, "Subject.MBin.ascii")
+            with open(enc, "wb") as f:
+                subprocess.run([BIN] + flags + [wrapped], stdout=f,
+                               stderr=subprocess.DEVNULL)
+            out = tempfile.mkdtemp()
+            subprocess.run([macextract, "x", "-o", out, enc],
+                           capture_output=True)
+            got = sorted(os.listdir(out))
+            if got != ["Subject"]:
+                # A leftover here is the MacBinary layer: unwrapped but
+                # not deleted, or not unwrapped at all.
+                problems.append("chained %s: wrote %r, wanted the file "
+                                "inside the wrapper alone" % (label, got))
+            elif open(os.path.join(out, "Subject"), "rb").read() != inner:
+                problems.append("chained %s: bytes differ" % label)
+            shutil.rmtree(out, ignore_errors=True)
+            ran += 1
+
+        # And -nr still stops at the wrapper, which is what says the
+        # chain is the recursion rather than something the decoder does.
+        enc = os.path.join(tmp, "chain-v4", "Subject.MBin.ascii")
+        out = tempfile.mkdtemp()
+        subprocess.run([macextract, "x", "-nr", "-o", out, enc],
+                       capture_output=True)
+        if sorted(os.listdir(out)) != ["Subject.MBin"]:
+            problems.append("-nr: %r" % sorted(os.listdir(out)))
         shutil.rmtree(out, ignore_errors=True)
         ran += 1
 

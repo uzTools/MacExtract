@@ -135,6 +135,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-26 — the project is renamed MacExtract, and the API is not
 - 2026-08-26 — the tag that did not fire
 - 2026-08-26 (zip comments) — the second format with one, and the ceiling that moved
+- 2026-08-27 — the last two armours become envelopes, and MIME still does not
 
 ---
 
@@ -7655,3 +7656,50 @@ the Mac shell's `Comments` document is now graded byte-for-byte against the
 oracle on x86-64 and under qemu-m68k. The unit test covers what no fixture
 has: a comment longer than Compact Pro could express, a length that runs past
 the end of the file, and a host with no callback at all.
+
+## 2026-08-27 — the last two armours become envelopes, and MIME still does not
+
+btoa and uuencode extracted perfectly and chained not at all. A real btoa
+file off a Mac is `Subject.MBin.ascii` — Aladdin's translator MacBinary-wraps
+before it encodes (FORMATS.md, *btoa*) — so `macextract x` decoded the armour,
+wrote the MacBinary layer, and stopped one layer short of the file the user
+came for. Both layers had always read; only the recursion was missing, because
+`env_is_envelope` did not name them.
+
+**The list is the decision, not the decoder.** Nothing in `src/` changed.
+`UNC_FORMAT_BTOA` and `UNC_FORMAT_UU` join `env_is_envelope` in `cli/main.c`
+and `IsEnvelopeFormat` in `mac/macextract_mac.c`, which are one list kept in
+two places because the two hosts must agree on it and `dist/` is built from
+the second.
+
+**The test for membership is the one base64 was admitted under**: an envelope
+layer is DELETED once the layer beneath it comes out, so a format may join
+only if a fork it carries belongs to the layer being deleted rather than to
+something else. MacBinary, BinHex and the UUTool shape of uuencode all carry
+the wrapper's own forks, and those are litter once the wrapper is consumed.
+MIME still does not qualify and is still out: an `appledouble` part can be the
+resource fork of a SIBLING part, and deleting the message would take it. That
+is why this is two lines and not a rule change.
+
+**uuencode went in on shape rather than on a specimen**, which is worth saying
+out loud. None has ever been seen here — the argument is that it is the same
+armour around the same wrapper, and the guard that makes it safe is one the
+chain already had: several documents in one file yield several files, and the
+recursion needs exactly one. The newsgroup shape therefore cannot chain at
+all, which `run_uu.py` now asserts rather than assumes.
+
+**Measured on the Macintosh, not inferred from the CLI.** `interactive.py
+--chain` drove both armours through the real application at 1x, three layers
+deep — btoa or uuencode around MacBinary around a DiskDoubler archive — and
+each came down to the one file the Linux CLI produces, with both intermediates
+deleted (FORMATS.md, the interactive tier table). It had to be that harness:
+`run.py` drives the autotest build, which calls `RunExtract` once and has no
+unwrap loop, so no sweep this project has ever run could see a chain on the
+Mac at all. `tools/vmac_check.py` said the opposite in a comment until today.
+
+**Both suites were mutation-tested by taking the two names back out**: the
+four chained cases fail without them and pass with them, so what they measure
+is the chain and not the decoders that already worked (CLAUDE.md — a test that
+passes may not be testing anything). The other three new cases are controls
+and pass either way: `-nr` stops at the wrapper in both suites, and two
+uuencoded documents in one file do not chain.

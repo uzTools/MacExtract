@@ -1644,6 +1644,15 @@ found the application had no envelope unwrap at all (BLOCKERS.md), so it
 is worth keeping even though it now passes: it is the only thing that
 tests the claim README.md makes to users.
 
+**It is also the only harness here that can see a chain at all.** `run.py`
+drives the `-DUNC_MAC_AUTOTEST` build, which calls `RunExtract` once; the
+unwrap loop is in the interactive application and nowhere else. `--chain`
+takes any file, so a specimen for a new envelope is three lines — wrap a
+fixture with `tools/synth_wrapped.py`'s `macbinary()`, encode that with
+`reference/btoa` or `synth_uu.plain()`, and hand the result to `--chain`.
+Pick a payload with no resource fork: the phase compares the Linux CLI's
+directory listing, where a fork is a `.rsrc` sidecar the Mac does not have.
+
 ### Putting a disk in while the Mac is running
 
 `xdnd_insert.c` is a minimal XDND drag SOURCE, built on demand into

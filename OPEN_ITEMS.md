@@ -207,18 +207,6 @@ all** (BLOCKERS.md, the ARC 7 row, filed and disproved the same day).
 
 ## 3. Small, open, and deliberately deferred
 
-- **btoa and uuencode are not in the envelope auto-unwrap list, and a real
-  btoa file needs them to be.** Measured 2026-08-26 on the specimen Aladdin's
-  own translator wrote (FORMATS.md, *btoa*): it MacBinary-wraps before it
-  encodes, so its output is `Subject.MBin.ascii` and `macextract x` stops at
-  the MacBinary layer. Both layers read correctly one at a time; the chain is
-  what is missing. Not chased in the change that found it because
-  `env_is_envelope` in `cli/main.c` and `IsEnvelopeFormat` in
-  `mac/macextract_mac.c` are the one thing both hosts must agree on and
-  `dist/` is rebuilt with them (DECISIONS.md 2026-08-26). **What would close
-  it:** btoa in both lists, a chained case in `tools/run_btoa.py`, and a
-  `dist/` rebuild in the same commit. uuencode has the same shape, and no
-  specimen showing it has ever been seen here.
 - **A tar member over the 2 GB cap aborts the whole archive, not the entry.**
   Measured 2026-08-25: a tar of `[1 GiB, 3 GiB, 1 GiB]` lists the first member
   and stops, so the third is lost though its position is known. Every other

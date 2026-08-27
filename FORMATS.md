@@ -1020,7 +1020,9 @@ Plus (*tools/vmac/README.md*), and what came back:
   of the decoder the Unix reference reaches only with `-o`.
 - It **MacBinary-wraps first**: `Subject` becomes `Subject.MBin.ascii`,
   640 bytes of MacBinary inside 732 bytes of armour. The subject came
-  back byte-exact through both layers.
+  back byte-exact through both layers — one layer at a time until
+  2026-08-27, when btoa and uuencode joined the envelope list above and
+  the chain opened in one pass.
 - Against btoa 5.2.1 encoding the same payload with `-o`, the two
   streams are **identical but for the width of `R`** — twelve lines, one
   difference, and it is the 64-bit `long` above.
@@ -1367,10 +1369,13 @@ to the cpio inside it, and that cpio is now named too.
 ## Envelope auto-unwrap
 
 `macextract x` unwraps chained envelopes by content sniffing
-(never by extension): MacBinary, BinHex, AppleSingle/Double, gzip and
-.Z layers that yield exactly one file are recursively extracted and
-the intermediate deleted (`-nr` disables; depth ≤ 8). Verified chains:
-`.sit.bin`, `.sit.hqx`, `.tar.Z` (tools/run_unwrap.py, in CI).
+(never by extension): MacBinary, BinHex, AppleSingle/Double, gzip, .Z,
+base64, btoa and uuencode layers that yield exactly one file are
+recursively extracted and the intermediate deleted (`-nr` disables;
+depth ≤ 8). MIME is deliberately not on that list (DECISIONS.md
+2026-08-26 and 2026-08-27). Verified chains: `.sit.bin`, `.sit.hqx`,
+`.tar.Z` (tools/run_unwrap.py, in CI), `Subject.MBin.ascii` and a
+uuencoded MacBinary document (tools/run_btoa.py, tools/run_uu.py).
 
 A **StuffIt segment** is an envelope too, and joins that list: the
 parts are joined, the file inside comes out, and if that file is an
@@ -1519,6 +1524,7 @@ there on 2026-08-21** and is in the table. The StuffIt table below is from
 | `.NNN` split, 4 MB and **1 MB** | `interactive.py --named split`, opened at part 1 of 3 | joined file **byte-exact** |
 | Parts inside envelopes, 4 MB and **1 MB** | `interactive.py --wrapped`: part 1 as `Apart.sit.1.hqx`, part 2 as `zzz-download.bin`, part 3 as `Other.9.hqx` | same contents as the Linux CLI on the same three files, and no decoded parts left on the volume |
 | A chained file (`.sit.hqx`), 4 MB and **1 MB** | `interactive.py --chain` | every layer comes off and the intermediate is removed — which this application did NOT do before 2026-08-14 (BLOCKERS.md) |
+| A chained file, three layers deep, 4 MB | `interactive.py --chain` on `chain.dd.ascii` and `chain.dd.uu` — btoa and uuencode around a MacBinary around a DiskDoubler archive | both come all the way down to `Doc`, the same one file the Linux CLI produces, with both intermediates deleted (2026-08-27) |
 | DiskDoubler `SPLT`, 4 MB | `segcheck.py --case ddseg-real`: two parts **cut by DiskDoubler Pro 4.1.1 itself**, part 2 on the volume as `zzz-piece2` | the joined file off the Out volume equals the file the corpus publishes — 15,918 B data + 342 B resource fork, the latter with the OS-stamped header bytes masked — and the grid agrees, peak heap 8,208 B |
 
 The two name-placed schemes go through the real UI rather than the

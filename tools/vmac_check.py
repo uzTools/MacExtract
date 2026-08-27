@@ -23,9 +23,10 @@ import sys, os, zlib, json, struct, subprocess, tempfile, shutil
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from decode_grid import decode
 
-# The reference is the SAME engine's Linux CLI, single-level (`-nr`): the Mac
-# shell calls unc_extract once (no auto-unwrap loop), so `-nr` reproduces its
-# exact output. The CLI output is itself verified byte-exact against the
+# The reference is the SAME engine's Linux CLI, single-level (`-nr`): the
+# AUTOTEST build calls RunExtract once and has no auto-unwrap loop, so `-nr`
+# reproduces its exact output. The shipped application does unwrap chains, and
+# nothing here can see that — `interactive.py --chain` is what tests it. The CLI output is itself verified byte-exact against the
 # committed oracle manifests by the main differential suite.
 CLI = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..",
                    "build", "rel", "macextract")

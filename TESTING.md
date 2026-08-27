@@ -619,6 +619,15 @@ covered: a mail banner in front, several documents in one file, CR line
 endings, and the two ways it must fail (prose containing the word
 "begin" is not an archive; a truncated document is an error).
 
+**Chained documents** since 2026-08-27, uuencode having become an
+envelope: a plain document and a UUTool document each holding a
+MacBinary file must yield the file inside it and no wrapper, `-nr` must
+stop at the wrapper, and a file of TWO documents must not chain at all —
+that last is the guard the newsgroup shape rests on, so it is asserted
+rather than assumed. All four were run against a build with uuencode
+taken back out of `env_is_envelope`: the two chained cases fail there,
+and the `-nr` and two-document cases are controls that pass either way.
+
 **Multipart postings** are covered in both suites since 2026-08-15:
 `run_uu.py` joins two postings (headers and all), runs the same set
 through the `.001`/`.002` split scheme so the whole chain is exercised
@@ -772,6 +781,13 @@ a **32-bit** machine writes it: the reference computes that checksum in
 a `long` and prints sixteen hex digits on this host where the Macintosh
 writes eight (FORMATS.md, *btoa*). Four cases, two framings; the narrow
 form must decode and a wrong narrow form must not.
+
+And since 2026-08-27 the **chain**, which is the shape a real one has:
+the reference encodes a MacBinary file, the CLI has to write what was
+inside the wrapper and delete the wrapper, in both framings, and `-nr`
+has to stop at the wrapper. Three cases; the two chained ones fail against a
+build with btoa taken back out of `env_is_envelope`, and the `-nr` one
+is the control that has to pass either way (DECISIONS.md 2026-08-27).
 
 **What it cannot see.** The suite skips, loudly, without
 `reference/btoa` — so a fresh clone runs the two hand-built streams in

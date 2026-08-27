@@ -589,7 +589,16 @@ static int env_is_envelope(UncFormat f)
             * out, and a MIME part can carry a resource fork that would
             * go with it. base64 has one anonymous stream and no forks
             * at all (DECISIONS.md 2026-08-26). */
-           f == UNC_FORMAT_BASE64;
+           f == UNC_FORMAT_BASE64 ||
+           /* The other two armours, for the same reason and with the
+            * same guard: a real btoa file off a Mac is MacBinary inside
+            * armour (FORMATS.md, *btoa*), and uuencode's UUTool shape
+            * carries its own forks the way BinHex does, so neither can
+            * strand a fork on a layer that is deleted. Both yield one
+            * document or none; a several-document uu file has
+            * file_count > 1 and does not reach here
+            * (DECISIONS.md 2026-08-27). */
+           f == UNC_FORMAT_BTOA || f == UNC_FORMAT_UU;
 }
 
 /* Sink for taking one envelope off a file, in either of two modes.
