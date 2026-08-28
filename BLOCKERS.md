@@ -870,6 +870,30 @@ a harness can click is not the same list.
   The shell was doing it by another route, which is what the source
   comment beside it says.
 
+- **"The two Alysis implementations disagree about where a Huffman
+  region's neighbour begins, and only the harness's own encoder reaches
+  it."** Written 2026-08-25, withdrawn 2026-08-28. They never disagreed.
+  `sd_huff_bit` fetches a long only when a bit is asked for and Alysis's
+  reader has already fetched it, so where a coded flag bitmap ends
+  exactly on a 32-bit refill the cursor `sd_huff_end` adds 2 to was four
+  bytes short — and every literal after it came back wrong. **Cost:** a
+  silent decode defect in SuperDisk! methods 2, 4, 6 and 8, reachable by
+  about one block in 32 of any such fork, live from the day the format
+  went in (2026-08-20) until 2026-08-28. **Why it survived:** the claim
+  was two mistakes propping each other up. The subjects meant to reach
+  the boundary were sized `ceil(size/8) % 4 == 0`, which is a rule about
+  the harness's own flat 8-bit code and about nothing the panel writes,
+  so all four missed by 2 to 5 bits — and the miss was then written down
+  as "a real block cannot reach it", which is how a live defect became a
+  documented property of the format. Meanwhile the differential harness
+  SKIPPED every synthetic block that did reach it, which is a tolerance
+  resting on our own output: the one case that could have failed was the
+  one case excused. Both are gone; the specimens were manufactured by
+  measuring what the compressor actually writes (`tools/sdhuff.py`: the
+  panel codes each flag BYTE in one bit, so the bitmap is `nflags + 5`
+  bits and the size CAN be aimed), and all nine methods now agree 12/12
+  with no skip.
+
 ### Corrected figures and superseded write-ups
 
 - **The OS 9 boot time** was recorded as "about four minutes", then "20-45

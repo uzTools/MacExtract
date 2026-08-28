@@ -54,10 +54,11 @@ def _emu():
     make the whole of CI depend on them.
     """
     global R, macbinary, Session, make_volume, VOLUME_ICON, read_forks, ndd
-    global HOME, WORK, SPECIMENS, BOOT
+    global HOME, WORK, SPECIMENS, BOOT, header, cli, describe
     import run as R                                            # noqa: F401
     from arcmac import macbinary                               # noqa: F401
-    from diskdoubler import Session, make_volume, VOLUME_ICON   # noqa: F401
+    from diskdoubler import (Session, make_volume, VOLUME_ICON,
+                             header, cli, describe)            # noqa: F401
     from superdisk import read_forks                           # noqa: F401
     import ndd                                                 # noqa: F401
     HOME = R.VMAC_HOME
@@ -292,8 +293,17 @@ SUBJECT = (b"DiskDoubler method probe. " * 12 +
            b"z" +
            b"the quick brown fox jumps over the lazy dog. " * 6)
 
+# Method 5's leading byte is a TREE COUNT, and Salient's own 1991
+# expander takes exactly four values: `CODE` 11 of `DiskDoubler™ App`
+# validates it at 0x1dfc against 32, 64, 128 and 256, turns 0 into 256
+# at 0x228c, refuses anything else with error -20999, refuses a count
+# larger than the trees it could allocate with -20998, and masks the
+# next context with count-1 at 0x1fbc — which is `byte % count` for
+# every legal value, and what `enc_splay` writes. So `Splay16` is
+# refused by design and not by disagreement (DECISIONS.md 2026-08-28),
+# and `Splay128` is the non-zero count the format actually allows.
 SUBJECTS = [("Rle", 3, 256), ("Huff", 4, 256), ("Splay", 5, 256),
-            ("Splay16", 5, 16)]
+            ("Splay128", 5, 128), ("Splay16", 5, 16)]
 
 
 def build(outdir=None):
@@ -301,6 +311,7 @@ def build(outdir=None):
     CLI. Encoder and decoder are both ours, so this grades the
     transcription and not the format — but it is the step that has to
     pass before an emulator run is worth booting."""
+    _emu()                      # for `header`; imports only, no emulator
     outdir = outdir or tempfile.mkdtemp(prefix="ddenc-")
     os.makedirs(outdir, exist_ok=True)
     bad = 0
@@ -554,7 +565,8 @@ def expand(keep=False, era="1991"):
         #    icons, which the --probe frame shows, so the Finder hands
         #    them to DiskDoubler.
         for prefix, tag in (("Rle", "rle"), ("Huff", "huff"),
-                            ("Splay16", "splay16"), ("Splay", "splay")):
+                            ("Splay16", "splay16"), ("Splay128", "splay128"),
+                            ("Splay", "splay")):
             # Click the window's title bar first. After the previous file
             # the front application may not be the Finder, and a Cmd-O
             # sent to whatever IS front opens ITS Open dialog — which is

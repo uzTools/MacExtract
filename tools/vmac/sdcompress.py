@@ -39,6 +39,7 @@ sys.path.insert(0, os.path.join(REPO, "tools"))
 import run as R                                        # noqa: E402
 from arcmac import macbinary                           # noqa: E402
 from diskdoubler import (cli, Session, make_volume, VOLUME_ICON)  # noqa: E402
+import sdhuff                                           # noqa: E402
 
 # Macintosh Repository's one-shot token, the same three-request dance
 # `ndd.py` documents.
@@ -626,16 +627,24 @@ def sweep_report(img, shots):
 # refill boundary. That is the one place Alysis's own two implementations
 # disagree — the 1991 self-extractor this engine follows puts the literals at
 # the bit reader's cursor plus two, the 1992 Add-In Module reads one refill
-# further (OPEN_ITEMS.md, FORMATS.md's method table) — and no reachable
-# specimen was ever on it. One block per subject, because a file under 32 KB
-# is one block, so `ulen` IS the subject's size and the bitmap is
-# ceil(ulen/8) bytes.
+# further (OPEN_ITEMS.md, FORMATS.md's method table). One block per subject,
+# because a file under 32 KB is one block, so `ulen` IS the subject's size
+# and the bitmap is ceil(ulen/8) BYTES.
 #
-#   ceil(size/8) % 4 == 0  ->  on the boundary
-BOUNDARY = [("Qbound1", 1024),     # 128 flag bytes: ON it
-            ("Qctrl1", 1000),      # 125: not, and the control
-            ("Qbound2", 2048),     # 256: on it
-            ("Qctrl2", 2040)]      # 255: not
+# The first four subjects (2026-08-25) were sized `ceil(size/8) % 4 == 0`,
+# which is a rule about a flat 8-bit code and about nothing the panel writes;
+# all four missed, and the conclusion drawn was that a subject size cannot
+# reach the boundary at all. **Measured 2026-08-28** (`tools/sdhuff.py`, over
+# those same four blocks): the panel codes each flag BYTE in ONE bit — 0xff,
+# eight predictions right — and this subject's five other flag bytes in two,
+# so the bitmap is `nflags + 5` bits. The four came to 130, 133, 260 and 261
+# bits: 2, 5, 4 and 5 past a refill.
+#
+#   nflags = ceil(size/8),  bits = nflags + 5,  bits % 32 == 0  ->  on it
+BOUNDARY = [("Qhit1", 1240),       # 155 flag bytes -> 160 bits: ON it
+            ("Qoff1", 1248),       # 156 -> 161: one bit past, the control
+            ("Qhit2", 2008),       # 251 -> 256 bits: ON it
+            ("Qoff2", 2016)]       # 252 -> 257: the control
 
 
 def boundary(keep=False):
@@ -696,7 +705,9 @@ def boundary_report(img, shots):
         body = 31 + nlen
         body += body & 1
         clen, ulen, meth = struct.unpack_from(">HHH", blob, body)
-        nflags = min((ulen + 7) >> 3, ((ulen >> 3) + 4) & ~1)
+        m = sdhuff.flag_bits(blob[body + 6:body + (clen & 0x7FFF)], ulen) \
+            if not (clen & 0x8000) and sdhuff.coded_bitmap(meth) else None
+        nflags = sdhuff.nflags_for(ulen)
         tmp = tempfile.mkdtemp(prefix="sdb-")
         try:
             subprocess.run([cli(), "x", "-o", tmp, out],
@@ -707,9 +718,13 @@ def boundary_report(img, shots):
             shutil.rmtree(tmp, ignore_errors=True)
         ok = back == SWEEP_DATA[:size]
         bad += not ok
-        print("sdcompress: %-10s ulen %5d method %2d flags %4d %-14s -> %s"
-              % (name, ulen, 0 if (clen & 0x8000) else meth, nflags,
-                 "ON THE BOUNDARY" if nflags % 4 == 0 else "not on it",
+        where = ("no coded bitmap" if m is None else
+                 "RUN, no bits" if m["run"] else
+                 "%d bits, %%32=%d%s" % (m["bits"], m["bits"] % 32,
+                                         " ON THE BOUNDARY"
+                                         if m["boundary"] else ""))
+        print("sdcompress: %-10s ulen %5d method %2d flags %4d %-26s -> %s"
+              % (name, ulen, 0 if (clen & 0x8000) else meth, nflags, where,
                  "byte-exact" if ok else "WRONG"))
     print("sdcompress: specimens in %s — now run "
           "tools/sdmodule/run_sdmodule.py, which grades the same blocks "

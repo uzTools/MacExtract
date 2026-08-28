@@ -574,14 +574,23 @@ Two more traps it cost a run each to learn, on top of the two above:
 - **Reopening lands on the last page shown**, so `reopen_panel` presses "Last
   Page" twice before anything is clicked at a page-1 coordinate.
 
-**`--boundary` is the one that disproved its own premise** (2026-08-25). It
-compresses four subjects at Speed=Fast, sized so that `ceil(ulen/8)` is and
-is not a multiple of four, to find a block where the 1991 self-extractor and
-the 1992 Add-In Module read the end of a Huffman region differently
-(`tools/sdmodule/`). All four came back method 6 and byte-exact under both:
-the panel codes each flag bit in ONE bit, so the byte count says nothing
-about where the bitstream ends. It prints the flag count and the verdict per
-subject, and the specimens it leaves are graded by `run_sdmodule.py`.
+**`--boundary` is the one that found a decode defect** — on its second
+attempt, 2026-08-28. It compresses four subjects at Speed=Fast, sized so the
+coded flag bitmap ends exactly on a 32-bit refill, which is where this engine
+read the literals four bytes early.
+
+The sizing is the whole of it. The first four subjects (2026-08-25) used
+`ceil(ulen/8) % 4 == 0` — a rule about the flat 8-bit code
+`tools/sdmodule/run_sdmodule.py` writes, and about nothing the panel writes —
+missed by 2 to 5 bits, and the miss was written up as "a real block cannot
+reach it". `tools/sdhuff.py` measures what the panel actually writes: it codes
+each flag BYTE in one bit, so the bitmap is `nflags + 5` bits for this subject
+and `ceil(ulen/8) + 5 ≡ 0 (mod 32)` is the aim. 1240 and 2008 bytes land on
+160 and 256 bits; 1248 and 2016 are one bit past, as controls. All four came
+back method 6; the two on the boundary were wrong from byte 0 and are
+byte-exact since the fix (DECISIONS.md 2026-08-28). It prints the measured bit
+count and the verdict per subject, and the specimens it leaves are graded by
+`run_sdmodule.py`.
 
 `--specimens` is the one that mattered: five subjects chosen to DISAGREE with
 each other, because the first specimen alone made the header layout look

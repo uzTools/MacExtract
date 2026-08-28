@@ -152,6 +152,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-28 (the exception one front end had) — a rule implemented in one shell is not implemented
 - 2026-08-28 (the walk nobody had descended) — writing the container is what tests the walk
 - 2026-08-28 (the front end that was already doing it) — read the shell, not the flag
+- 2026-08-28 (the refill boundary) — the specimen that could not be made, made
 
 ---
 
@@ -8726,3 +8727,41 @@ that reaches the caps, and by then `tools/synth_dd.py` existed to write one. **A
 without a test is not tested by reading it** — three one-line breakages of the
 shell fail this suite in three different ways, and the first of them is the
 line the bullet said to write.
+
+
+## 2026-08-28 (the refill boundary) — the specimen that could not be made, made
+
+OPEN_ITEMS.md wanted "a real block whose coded flag bitstream is a multiple of
+32 bits" and said in the same breath that sizing a subject does not produce
+one, "because the 1991 panel codes the flags one bit each". Both halves came
+from four subjects compressed on purpose in August and sized
+`ceil(size/8) % 4 == 0`.
+
+**That rule describes the harness's own encoder.** It writes a flat 8-bit code,
+so its bit length is eight times its byte count; the panel writes a real
+Huffman code, and what it codes is each flag BYTE — 0xff, eight predictions
+right, in one bit. Measuring the four blocks (`tools/sdhuff.py`, the same
+reader as `fmt_superdisk.c` with a counter in it) gives 130, 133, 260 and 261
+bits for 125, 128, 255 and 256 flag bytes: **nflags + 5**, the five two-bit
+codes being this subject's only other flag bytes, all of them in its first 40
+bytes. So the bit length is a function of the SIZE after all, and
+`ceil(ulen/8) + 5 ≡ 0 (mod 32)` is the aim. 1240 bytes lands on 160 bits and
+2008 on 256; 1248 and 2016 are one bit past, as controls.
+
+**The panel wrote all four, and this engine got the two on the boundary wrong
+from byte 0.** So the reading was ours, not the format's: the two Alysis
+implementations agree with each other and always did (BLOCKERS.md).
+
+**The fix is in the READER, not in the `+ 2`.** `sd_huff_bit` fetches a long
+only when a bit is asked for; the compressor's reader has already fetched it.
+So the cursor `sd_huff_end` adds 2 to is four bytes further on whenever the
+last symbol ended exactly on a refill, and that is the whole correction. It
+was tempting to write the four bytes into the constant instead, which would
+have been right for these blocks and wrong for every other one.
+
+**Two things this is a lesson about.** A tolerance that rests on our own output
+cannot fail: `run_sdmodule.py` SKIPPED every synthetic block that reached the
+boundary, and that skip was the one case that would have caught this. And a
+measurement missing its target is not evidence about the target — four
+subjects sized by the wrong rule missed by 2 to 5 bits, and the miss was
+written up as a property of the format rather than of the arithmetic.

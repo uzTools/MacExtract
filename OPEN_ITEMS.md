@@ -204,14 +204,6 @@ all** (BLOCKERS.md, the ARC 7 row, filed and disproved the same day).
   emulated Mac, which has never been handed a stream this project
   wrote.
 
-- **SuperDisk!, where a Huffman region's neighbour begins.** The two Alysis
-  implementations disagree by one 32-bit refill when a coded flag bitmap ends
-  exactly on a refill: this engine follows the 1991 self-extractor, the 1992
-  Add-In Module has already fetched the next long (FORMATS.md, the method
-  table). All 18 real blocks decode identically under both, so it is not known
-  to cost anything. **What would close it:** a real block whose coded flag
-  bitstream is a multiple of 32 bits — and sizing the subject does not produce
-  one, because the 1991 panel codes the flags one bit each.
 - **DiskDoubler's methods 3, 4 and 5 have never decoded a fork this project
   did not write.** All three are byte-exact through Salient's own 1991
   expander, which grades the reading of the format rather than the decoder

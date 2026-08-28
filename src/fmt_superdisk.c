@@ -339,10 +339,22 @@ static int sd_huff_next(SdHuff *h, uint8_t *out)
 }
 
 /* Where the region after a Huffman-coded one begins: the reference
- * takes the cursor the bit reader left and adds 2 (@0x84a). */
+ * takes the cursor the bit reader left and adds 2 (@0x84a).
+ *
+ * The cursor is not this reader's cursor when the last symbol ended
+ * exactly on a 32-bit refill. `sd_huff_bit` fetches a long only when a
+ * bit is asked for; the compressor's reader has already fetched it, so
+ * its cursor is four bytes further on and everything after the region
+ * starts there. MEASURED 2026-08-28 on blocks Alysis's own 1991 panel
+ * wrote for the purpose: at 160 and 256 flag bits every literal came
+ * back wrong under `+2` alone and byte-exact under this, while 161 and
+ * 257 bits are unaffected either way (DECISIONS.md, the refill
+ * boundary). The 1992 Add-In Module reads them the same way, which is
+ * the disagreement this closes. */
 static uint32_t sd_huff_end(const SdHuff *h)
 {
-    return h->run ? h->pos : h->pos + 2u;
+    if (h->run) return h->pos;
+    return h->pos + (h->nbits == 0 ? 4u : 0u) + 2u;
 }
 
 /* ------------------------------------------------------------------ */

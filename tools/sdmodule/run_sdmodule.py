@@ -378,11 +378,17 @@ def synth_block(method, payload, flagbits):
     if base in (1, 3):
         body = bytes(flags[:fsize])
     else:
-        # Two bytes of slack after a Huffman region: the next one starts at
-        # the bit reader's cursor PLUS TWO (sd_huff_end, from CODE 2 @0x84a),
-        # and the cursor is a whole number of 32-bit refills.
+        # Slack after a Huffman region: the next one starts at the bit
+        # reader's cursor PLUS TWO (sd_huff_end, from CODE 2 @0x84a), and
+        # the cursor is a whole number of 32-bit refills — SIX when the
+        # coded stream ended exactly on one, because the reader that wrote
+        # it had already fetched the next long. This flat 8-bit code makes
+        # that whenever the payload is a multiple of four bytes, where a
+        # real block reaches it by its own bit count; the four blocks
+        # Alysis's own compressor wrote on the boundary are what measured
+        # the rule (DECISIONS.md 2026-08-28, the refill boundary).
         region, _ = huff_identity(bytes(flags[:nflags]))
-        body = region + b"\0\0"
+        body = region + b"\0" * (6 if nflags % 4 == 0 else 2)
     if base in (3, 4):
         region, _ = huff_identity(bytes(lits))
         body += region
@@ -506,7 +512,7 @@ def phase_synth(macextract, mods, workdir, cases, seed, verbose=False):
         if want not in mods:
             continue
         name = mods[want][0]
-        agree = differ = refused = ourfail = boundary = 0
+        agree = differ = refused = ourfail = 0
         for _ in range(cases):
             ulen = rnd.choice([16, 64, 300, 1200, 5000])
             if rnd.random() < 0.5:
@@ -524,13 +530,6 @@ def phase_synth(macextract, mods, workdir, cases, seed, verbose=False):
             if a is None:
                 ourfail += 1
                 continue
-            # The boundary check comes first: where the literals are Huffman
-            # coded too (4 and 8), landing four bytes out does not decode to
-            # something wrong, it runs the module off the end and it dies.
-            # Same cause, and counting it as a refusal would hide that.
-            if on_the_refill_boundary(method, ulen):
-                boundary += 1
-                continue
             if b is None:
                 refused += 1
                 continue
@@ -547,44 +546,8 @@ def phase_synth(macextract, mods, workdir, cases, seed, verbose=False):
         results[method] = (agree, differ, refused, ourfail)
         print(f"sdmodule: method {method:2d} ({name}): {agree} agreed, "
               f"{differ} differed, {refused} refused by the module, "
-              f"{ourfail} refused by this engine"
-              + (f", {boundary} on the refill boundary" if boundary else ""))
+              f"{ourfail} refused by this engine")
     return all(r[1] == 0 and r[0] > 0 for r in results.values()) and bool(results)
-
-
-def on_the_refill_boundary(method, ulen):
-    """The one case where the two references disagree with each other.
-
-    A Huffman region's next neighbour starts at the bit reader's cursor plus
-    two, and the cursor moves in 32-bit refills. When the coded flag bitmap
-    ends EXACTLY on a refill — the reader's bit budget hits zero and nothing
-    asks for more — the 1991 self-extractor this engine follows leaves the
-    cursor there and the 1992 module has already fetched the next long, so
-    they part company by four bytes over where the literals begin. Measured
-    both ways: at ulen 64 (8 flag bytes, 64 bits) this engine reads a block
-    with two bytes of slack and the module wants six; at ulen 300 (38 bytes,
-    304 bits) they agree.
-
-    **This is reachable only through the harness's own encoder.** The flat
-    8-bit code it writes makes the bit length a fixed multiple of the byte
-    count; a real block's flags are coded (the 1991 compressor writes a
-    ONE-bit code for them), so its bit length is data-dependent and the
-    predicate below does not describe it. All 18 real blocks in reach —
-    both corpus archives and 18 blocks from Alysis's own compressor,
-    including four subjects sized on purpose for this — decode identically
-    under both readers.
-
-    So which reading is right where they differ is **open**, and it is not
-    known to cost anything. What would settle it is a real block whose coded
-    flag bitstream is a multiple of 32 bits, which has to be found by
-    MEASURING what the compressor writes rather than by choosing a subject
-    size.
-    """
-    if method not in (2, 4, 6, 8):
-        return False
-    fsize = ((ulen >> 3) + 4) & ~1
-    nflags = min((ulen + 7) >> 3, fsize)
-    return nflags % 4 == 0
 
 
 def phase_specimens(macextract, mods, workdir, verbose=False):

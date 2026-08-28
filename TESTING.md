@@ -501,6 +501,15 @@ every run under ASan, UBSan and the alignment sanitizer.
   carries one, and both period expanders reject our construction of it
   (OPEN_ITEMS.md).
 
+**Only `--emit` runs in `ci.sh`, and the rest of the file rotted behind it.**
+`build()` and the verification half of `expand()` call `header`, `cli` and
+`describe` from `diskdoubler.py`; a later refactor moved that import into a
+deferred helper and dropped the three, so both modes had raised `NameError`
+from their first line since — with the emulator results they had already
+produced still standing in FORMATS.md. Repaired 2026-08-28. A harness nobody
+can run is a claim nobody can re-check, and the mode `ci.sh` exercises is not
+the mode that grades anything.
+
 ## Several BinHex documents in one file (`tools/run_multihqx.py`, in `ci.sh`)
 
 Added 2026-08-15, with the capability it grades. Real corpus `.hqx`
@@ -1412,11 +1421,19 @@ lifts the modules out of the fixture and runs three phases.
    which must not match. A comparison that has never failed is not evidence.
 2. **The specimens Alysis's own 1991 control panel wrote**
    (`tools/vmac/sdcompress.py`), when they are in the emulator cache:
-   18 blocks of methods 1 and 6, byte-exact both ways — four of them
-   compressed on purpose (`--boundary`) to chase the one disagreement
-   below, and they closed off the way it was supposed to be reachable.
+   22 blocks of methods 1 and 6, byte-exact both ways — eight of them
+   compressed on purpose (`--boundary`), and the four added 2026-08-28
+   are the ones that found a decode defect in this engine. They were
+   sized from a MEASUREMENT of what the panel writes rather than from a
+   rule about what the harness writes (`tools/sdhuff.py`; DECISIONS.md,
+   the refill boundary).
 3. **Synthetic blocks for methods 1..9**, built from this engine's reading
-   and put through both readers.
+   and put through both readers. Until 2026-08-28 this phase SKIPPED every
+   block whose coded flag bitmap ended on a 32-bit refill, on the grounds
+   that the two references read those differently — the one case that could
+   have failed was the one case excused, and it was hiding a defect in this
+   engine rather than a disagreement between theirs. The skip is gone and
+   every method agrees 12/12.
 4. **Method 10 three ways** (added 2026-08-25, when the method was
    implemented): a stream this harness encodes, decoded by this engine and
    by SlowFastA's own module, with all three required equal. Nothing in

@@ -275,22 +275,23 @@ fixture and calls them under `qemu-m68k`. Results, in `./ci.sh`:
 | what | through both readers |
 |---|---|
 | corpus blocks (method 11) | 4, byte-exact |
-| specimens Alysis's own compressor wrote (methods 1 and 6) | 18, byte-exact |
-| synthetic blocks, methods 1-9 | byte-exact, except the refill boundary below |
+| specimens Alysis's own compressor wrote (methods 1 and 6) | 22, byte-exact |
+| synthetic blocks, methods 1-9 | byte-exact, the refill boundary included since 2026-08-28 |
 | method 10, against its module and the bytes behind it | equal three ways |
 | method 11 blocks written by Alysis's own encoder (module 20) | 5, byte-exact |
 
-The one disagreement is where a Huffman region's neighbour begins when the
-coded flag bitmap ends **exactly** on a 32-bit refill: this engine follows the
-1991 self-extractor (cursor + 2) and the 1992 module has already fetched the
-next long (cursor + 6). Measured at ulen 64 and absent at ulen 300.
-**Only the harness's own encoder reaches it** — its flat 8-bit code ties the
-bit length to the byte count, where a real block's flags are coded one bit
-each and the length is data-dependent. Four subjects were compressed by
-Alysis's own 1991 panel on purpose to look for it (`sdcompress.py
---boundary`, 2026-08-25) and all four came back byte-exact under both
-readers, as do all 18. Which reading is right where they differ is **open**
-and costs nothing so far (OPEN_ITEMS.md).
+**The one disagreement was this engine's, and it was a decode defect.** Where
+a Huffman region's neighbour begins when the coded flag bitmap ends *exactly*
+on a 32-bit refill: this engine read the literals four bytes early, so every
+literal in such a block came back wrong. The two Alysis implementations never
+disagreed — `sd_huff_bit` fetches a long only when a bit is asked for and
+theirs has already fetched it, so the cursor `sd_huff_end` adds 2 to is four
+bytes further on. **Fixed 2026-08-28** against blocks Alysis's own 1991 panel
+wrote at 160 and 256 flag bits (`sdcompress.py --boundary`): wrong from byte 0
+before, byte-exact after, with 161 and 257 unaffected either way. It reaches
+about one block in 32 of any method 2, 4, 6 or 8 fork; the corpus's two
+archives use 7 and 11 and were never affected. BLOCKERS.md has what it cost,
+DECISIONS.md how the subject was sized.
 
 **The single-file container joined on 2026-08-22.** SuperDisk! writes two
 shapes and this engine now reads both: the record-stream archive, and what
