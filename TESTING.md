@@ -1899,6 +1899,11 @@ part boundary (27 failures). Both were reverted.
    `--encrypted` covers the one path no fixture can reach — the
    password dialog — on an archive it generates, a wrong password
    first (FORMATS.md, *An encrypted archive, through the dialog*).
+   SpaceSaver is run by PATH, out of the emulator cache, since its
+   specimens cannot be committed; that run reconciles the one name an
+   in-place format produces (`archive.sit~1` on the Mac against
+   `archive.sit` on Linux) and it found a shell defect on its first
+   outing (FORMATS.md, *SpaceSaver on Mac OS 9*).
    **What this layer still cannot see** is a name the Mac cut at 31
    characters, because both sides are compared in the Mac's spelling
    (`run_names.py` is where that lives), and whether an extraction is

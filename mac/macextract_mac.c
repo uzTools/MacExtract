@@ -2660,6 +2660,15 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
          * the layer was — which is what decides whether there is another
          * one under it. */
         extractedAs = unc_sniff(&io);
+        /* SpaceSaver is the exception to the strip above: it compresses a
+         * file IN PLACE and adds no extension, so the whole name is the
+         * name and stripping one eats a real ".txt". cli/main.c has said
+         * so since SpaceSaver went in; this shell had the unconditional
+         * strip until 2026-08-28, when the Mac OS 9 tier was pointed at a
+         * SpaceSaver specimen for the first time. The sniff has to come
+         * first, which is why this is here rather than beside the strip. */
+        if (extractedAs == UNC_FORMAT_SPACESAVER)
+            opt.name_hint_len = name[0];
         ret = unc_extract_as(extractedAs, &io, &sk, &al, prog, &opt);
     }
     gPeakUsage = ma.initial - ma.lowmark;   /* engine heap high-water mark */

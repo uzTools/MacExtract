@@ -149,6 +149,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-28 (the OS 9 tier's last three keystrokes) — a run that stopped early still reported every step it took
 - 2026-08-28 (clicking a dialog that does not exist yet) — park the pointer before the thing you mean to hit appears
 - 2026-08-28 (the password dialog on Mac OS 9) — a change threshold is only as good as the rectangle it is measured over
+- 2026-08-28 (the exception one front end had) — a rule implemented in one shell is not implemented
 
 ---
 
@@ -8629,3 +8630,39 @@ A threshold answers "did enough of THIS change"; when the answer disagrees
 with a photograph, suspect the rectangle before the guest. The general form is
 this repository's oldest smell: **an aggregate cannot fail on a property it
 averages away.**
+
+## 2026-08-28 (the exception one front end had) — a rule implemented in one shell is not implemented
+
+Closing the Mac OS 9 tier's last gap meant replaying SpaceSaver there, which
+had never happened anywhere: its only specimens are the ones Aladdin's modules
+wrote under `qemu-m68k`, they cannot be committed, and the sample list can only
+name files in `fixtures/`. They can be run by path, and one boot was all it
+took — 76,800 B byte-exact (FORMATS.md).
+
+**The run found a defect in the Macintosh shell.** Formats that store no name
+get a hint from the archive's filename, "minus its last extension", which is
+what `unar` does. SpaceSaver is the exception: it compresses a file IN PLACE
+and adds no extension, so the whole name is the name and stripping one eats a
+real `.txt`. `cli/main.c` has said exactly that, in a comment, since SpaceSaver
+went in. `mac/macextract_mac.c` stripped unconditionally. So a `Report.txt`
+came out of the Macintosh application as `Report` and out of everything else as
+`Report.txt`, and no suite could see it: the engine is identical on both sides,
+the Mini vMac tiers compare summed CRCs and counts rather than names, and the
+one tier that DOES compare names had never been given a file of this format.
+
+**The lesson is the shape of the bug, not the bug.** A rule written down in one
+front end is not a rule the project implements — it is a rule that one program
+implements. The two shells compute this hint independently, ten lines apart in
+two files, and the second one has been wrong for as long as the exception has
+existed. **Where two front ends must agree, the agreement needs a test that
+fails, and the format that exercises it is the one nobody has a fixture for.**
+
+**And the reconciliation it forced is a strengthening, not an accommodation.**
+An in-place format's output is named after the archive, so on the Mac — which
+extracts BESIDE the archive — the shell's collision numbering writes
+`archive.sit~1`, while the Linux reference writes `archive.sit` into an empty
+directory. `verify_output()` now maps the one to the other, and the NOT_OUTPUT
+guard that used to refuse the whole fixture as ungradeable no longer fires.
+Both failure modes it protected are still failures: a shell that overwrote the
+archive reads as no output at all, and the extension-stripping one reads as a
+missing file and an unexpected one — which is how the defect above was seen.

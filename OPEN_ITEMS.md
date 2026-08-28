@@ -31,9 +31,9 @@ the numbers to FORMATS.md. A section that empties is the point of the file.
 
 **Decided, or impossible. Not open.** Everything here is either a boundary
 somebody chose or a property of a format that no evidence can change; nothing
-here is closed by finding a file, and what is waiting for one is Part 2,
-section 2. "Out of scope" is today's answer and not a refusal — the brief has
-grown before, on request.
+here is closed by finding a file, and what is waiting for one is Part 2's
+*"Waiting on a file this machine does not have"*. "Out of scope" is today's
+answer and not a refusal — the brief has grown before, on request.
 
 ## Out by the brief
 
@@ -73,24 +73,7 @@ unsupported either way.
 
 ---
 
-## 1. What is not verified
-
-Verification gaps — things this project has and has not checked.
-What it does not HAVE is section 2.
-
-- **SpaceSaver is absent from the Mac OS 9 sample, and that absence is
-  not a scope decision.** Its only specimens are cache-only: they
-  cannot be committed, and nothing on a clone regenerates them
-  (`tools/vmac/os9sample.txt` says so in place). Every other format in
-  the table runs there, and encryption stopped being the second gap on
-  2026-08-28 (FORMATS.md, *An encrypted archive, through the dialog*).
-  **What would close it:** a committable or regenerable SpaceSaver
-  archive — the same specimen Part 2 section 2 wants for the container
-  itself.
-
----
-
-## 2. Waiting on a file this machine does not have
+## 1. Waiting on a file this machine does not have
 
 **Not scope decisions, and not effort.** Everything here is written or
 writeable; what is missing is something to grade it against. They sit together across formats because that is how they
@@ -189,7 +172,7 @@ all** (BLOCKERS.md, the ARC 7 row, filed and disproved the same day).
 
 ---
 
-## 3. Untested code, named so it is not mistaken for tested
+## 2. Untested code, named so it is not mistaken for tested
 
 - **The Macintosh application does not read `UncEntryInfo.name_truncated`,
   and does not number a collision the way the CLI now does.** Added

@@ -833,7 +833,11 @@ def _ostype(b):
 # What the Finder and the harness put on the volume themselves; anything else
 # is output the application wrote. Applied at the volume root only — a FOLDER
 # with one of these names inside an archive is the archive's business.
-NOT_OUTPUT = {"archive.sit", "MacExtract", "Desktop DB", "Desktop DF",
+# What mkapmdisk.py writes the archive as, on every run. Named because the
+# in-place formats extract to it — see verify_output.
+ARCHIVE_ON_VOLUME = "archive.sit"
+
+NOT_OUTPUT = {ARCHIVE_ON_VOLUME, "MacExtract", "Desktop DB", "Desktop DF",
               "Desktop Folder", "TheVolumeSettingsFolder", "Trash"}
 
 
@@ -988,6 +992,28 @@ def verify_output(xfer, fixture, workdir, partial=False, password=None):
             collided[m] = [mac_of[m], e]
         mac_of[m] = e
     expected = set(mac_of)
+
+    # SpaceSaver compresses a file IN PLACE, so its one output is named after
+    # the archive — there is no other name in the container to use. The two
+    # sides then spell it differently for a reason that is not a defect: the
+    # reference extracts into its own directory and writes `archive.sit`,
+    # while the Mac extracts BESIDE the archive, where that name is taken, so
+    # the shell's collision numbering writes `archive.sit~1`. Reconciled here,
+    # and only here: until 2026-08-28 the NOT_OUTPUT guard below refused the
+    # whole fixture as ungradeable, which is why no SpaceSaver file had ever
+    # been replayed on this tier.
+    #
+    # This does not soften anything. A shell that overwrote the archive still
+    # fails (the name is in NOT_OUTPUT, so it reads as no output at all), and
+    # one that stripped the extension and wrote `archive` still fails as one
+    # MISSING and one UNEXPECTED — which is exactly the defect the first run
+    # of this fixture found in mac/macextract_mac.c.
+    if ARCHIVE_ON_VOLUME in expected:
+        mac_of[ARCHIVE_ON_VOLUME + "~1"] = mac_of.pop(ARCHIVE_ON_VOLUME)
+        expected = set(mac_of)
+        lines.append(f"in-place format: the Mac writes {ARCHIVE_ON_VOLUME}~1 "
+                     f"beside the archive it expanded, Linux writes "
+                     f"{ARCHIVE_ON_VOLUME} into an empty directory")
 
     if not expected and not names:
         # Both sides produced nothing, which for a detect-only format is the

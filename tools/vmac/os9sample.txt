@@ -45,8 +45,11 @@
 #   StuffIt SpaceSaver  the only specimens are the ones Aladdin's own
 #                       compressor modules wrote under qemu-m68k, which
 #                       live in the emulator cache and cannot be
-#                       committed or regenerated on a clone. Run it by
-#                       path instead:
+#                       committed or regenerated on a clone. It HAS been
+#                       run here, by path, on 2026-08-28 — 76,800 B
+#                       byte-exact, and that first run found a name
+#                       defect in the Mac shell (FORMATS.md, *SpaceSaver
+#                       on Mac OS 9*). Repeat it with:
 #                         os9.py ~/.cache/macextract/vmac/specimens/\
 #                                spacesaver/modules/m4.ss --launch
 #

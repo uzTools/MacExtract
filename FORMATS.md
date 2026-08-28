@@ -2766,6 +2766,30 @@ comparison rather than passing quietly. It also puts the `'MKey'` path on a
 Mac — the Mac shell reads that fork through the File Manager, where Linux only
 sees it through a MacBinary envelope.
 
+### SpaceSaver on Mac OS 9, and the extension the shell was eating (2026-08-28)
+
+The one format in the table that had never been replayed on a Macintosh
+harness, because its only specimens are the ones Aladdin's own modules wrote
+under `qemu-m68k` and those cannot be committed. They can be RUN, by path:
+
+    os9.py ~/.cache/macextract/vmac/specimens/spacesaver/modules/m4.ss --launch
+
+| | measured |
+|---|---|
+| subject | `m4.ss`, 6,656 B — method 4, the preset-dictionary one |
+| output | **76,800 B byte-exact** against `macextract x`, one boot |
+| the name | the Mac writes **`archive.sit~1`**: SpaceSaver compressed a file in place, so the output is named after the archive, and the archive is still sitting in the destination folder |
+
+**The first run of it found a defect, in the shell rather than the engine.**
+`cli/main.c` has excepted SpaceSaver from the "hint is the archive name minus
+its last extension" rule since the format went in — it compresses in place and
+adds no extension, so the whole name is the name — and
+`mac/macextract_mac.c` stripped unconditionally. A file called `Report.txt`
+therefore came out of the Macintosh application as `Report`, and as
+`Report.txt` everywhere else. Fixed the same day, and this tier is now the
+regression test: a shell that strips again fails as one MISSING and one
+UNEXPECTED name (DECISIONS.md 2026-08-28, *the exception one front end had*).
+
 ### Onto HFS+ (the same machine, the boot volume instead of the transfer disk)
 
 Everything above extracts onto the transfer volume, which is HFS. The OS 9
