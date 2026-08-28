@@ -201,6 +201,23 @@ echo "=== variant 3: release build (warnings are errors) ==="
 make BUILD=build/rel CFLAGS="-O2 -Werror" all >/dev/null || fail "release build"
 ./build/rel/unit_tests || fail "unit tests (release)"
 
+# The engine carries a container offset in unc_off_t, which is 32 bits
+# for the 68000 and 64 bits when a host defines UNC_OFF64. Two widths
+# mean two engines, so BOTH are graded here against the same fixtures
+# and the same oracle: the width that ships to a Macintosh is not
+# allowed to be the one nothing runs. (DECISIONS.md 2026-08-28, *what a
+# width costs*.)
+echo "=== variant 5: 64-bit container offsets (UNC_OFF64) ==="
+make BUILD=build/off64 \
+     CFLAGS="-O1 -g -DUNC_OFF64 -fsanitize=address,undefined,alignment -fno-sanitize-recover=all" \
+     all >/dev/null || fail "UNC_OFF64 build"
+./build/off64/unit_tests || fail "unit tests (UNC_OFF64)"
+MACEXTRACT=build/off64/macextract sh tests/run_diff.sh || fail "diff tests (UNC_OFF64)"
+MACEXTRACT=build/off64/macextract sh tests/run_robustness.sh \
+    || fail "robustness tests (UNC_OFF64)"
+python3 tools/run_sizelimits.py --macextract build/off64/macextract \
+    || fail "size-limit tests (UNC_OFF64)"
+
 echo "=== variant 4: Retro68 Mac shell (compile-only, optional) ==="
 sh tools/build_mac.sh || fail "mac build"
 

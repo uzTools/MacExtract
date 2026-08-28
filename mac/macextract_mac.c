@@ -120,7 +120,7 @@ static int32_t mio_read(void *ctx, void *buf, int32_t len)
     return (int32_t)count;
 }
 
-static int mio_seek(void *ctx, uint32_t pos)
+static int mio_seek(void *ctx, unc_off_t pos)
 {
     MacIO *io = (MacIO *)ctx;
     OSErr err = SetFPos(io->refNum, fsFromStart, (long)pos);
@@ -131,7 +131,7 @@ static int mio_seek(void *ctx, uint32_t pos)
     return (err == noErr || err == eofErr) ? 0 : -1;
 }
 
-static uint32_t mio_tell(void *ctx)
+static unc_off_t mio_tell(void *ctx)
 {
     MacIO *io = (MacIO *)ctx;
     long pos = 0;
@@ -139,7 +139,7 @@ static uint32_t mio_tell(void *ctx)
     return (uint32_t)pos;
 }
 
-static uint32_t mio_size(void *ctx)
+static unc_off_t mio_size(void *ctx)
 {
     MacIO *io = (MacIO *)ctx;
     return (uint32_t)io->size;
@@ -177,14 +177,14 @@ static int32_t xio_read(void *ctx, void *buf, int32_t len)
     m->pos += n;
     return (int32_t)n;
 }
-static int xio_seek(void *ctx, uint32_t pos)
+static int xio_seek(void *ctx, unc_off_t pos)
 {
     MemIO *m = (MemIO *)ctx;
     m->pos = (pos > m->size) ? m->size : pos;   /* clamp, like SetFPos@EOF */
     return 0;
 }
-static uint32_t xio_tell(void *ctx) { return ((MemIO *)ctx)->pos; }
-static uint32_t xio_size(void *ctx) { return ((MemIO *)ctx)->size; }
+static unc_off_t xio_tell(void *ctx) { return ((MemIO *)ctx)->pos; }
+static unc_off_t xio_size(void *ctx) { return ((MemIO *)ctx)->size; }
 
 /* ------------------------------------------------------------------ */
 /* UncIO straight off the input file — the default                     */
@@ -234,14 +234,14 @@ static int32_t fio_read(void *ctx, void *buf, int32_t len)
     if (err != noErr && err != eofErr) return (int32_t)cnt;
     return (int32_t)cnt;
 }
-static int fio_seek(void *ctx, uint32_t pos)
+static int fio_seek(void *ctx, unc_off_t pos)
 {
     FileIO *f = (FileIO *)ctx;
     f->pos = (pos > f->size) ? f->size : pos;   /* clamp, like SetFPos@EOF */
     return 0;
 }
-static uint32_t fio_tell(void *ctx) { return ((FileIO *)ctx)->pos; }
-static uint32_t fio_size(void *ctx) { return ((FileIO *)ctx)->size; }
+static unc_off_t fio_tell(void *ctx) { return ((FileIO *)ctx)->pos; }
+static unc_off_t fio_size(void *ctx) { return ((FileIO *)ctx)->size; }
 
 /* ------------------------------------------------------------------ */
 /* UncAlloc over NewPtr with a budget                                 */

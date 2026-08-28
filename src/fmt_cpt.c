@@ -62,7 +62,7 @@ UncFormat unc_cpt_probe(const uint8_t *head, int32_t len, UncIO *io)
 
     if (len < 8 || head[0] != 1) return UNC_FORMAT_UNKNOWN;
     offset = unc_get_u32be(head + 4);
-    fsize = io->size(io->ctx);
+    fsize = unc_io_size32(io);
     if (fsize != UNC_SIZE_UNKNOWN && (offset + 7 < offset || offset + 7 > fsize))
         return UNC_FORMAT_UNKNOWN;
 
@@ -531,7 +531,7 @@ int unc_cpt_extract(UncCtx *c)
     UncCrypt *cr;
     int err = UNC_OK;
 
-    fsize = c->io->size(c->io->ctx);
+    fsize = unc_io_size32(c->io);
 
     /* The index is in the LAST segment of a set — "you must open the
      * FINAL segment", the manual, and the byte that says so is the only

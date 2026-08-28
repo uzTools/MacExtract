@@ -21,16 +21,22 @@ int unc_read_full(UncIO *io, void *buf, int32_t len)
     return UNC_OK;
 }
 
-int unc_read_at(UncIO *io, uint32_t pos, void *buf, int32_t len)
+int unc_read_at(UncIO *io, unc_off_t pos, void *buf, int32_t len)
 {
     if (io->seek(io->ctx, pos) < 0) return UNC_ERR_IO;
     return unc_read_full(io, buf, len);
 }
 
+uint32_t unc_io_size32(UncIO *io)
+{
+    unc_off_t n = io->size(io->ctx);
+    return n > (unc_off_t)UNC_U32_MAX ? UNC_U32_MAX : (uint32_t)n;
+}
+
 int unc_skip(UncIO *io, uint32_t len)
 {
-    uint32_t pos = io->tell(io->ctx);
-    /* Detect wraparound: offsets are 32-bit (HFS caps at 2 GB). */
+    unc_off_t pos = io->tell(io->ctx);
+    /* Detect wraparound at whatever width offsets are carried in. */
     if (pos + len < pos) return UNC_ERR_CORRUPT;
     if (io->seek(io->ctx, pos + len) < 0) return UNC_ERR_IO;
     return UNC_OK;
@@ -338,7 +344,7 @@ void unc_bufin_init(UncBufIn *b, UncIO *io, UncProgressState *ps,
     b->cap = cap;
     b->len = b->pos = 0;
     b->lenfed = 0;
-    b->limit = UNC_OFF_MAX;
+    b->limit = UNC_U32_MAX;
     b->crypt = NULL;
     b->err = UNC_OK;
 }

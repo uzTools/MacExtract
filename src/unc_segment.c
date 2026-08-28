@@ -247,7 +247,7 @@ static int seg_open(SegJoin *j, int part)
 
     /* A part shorter than its own header carries no payload and would
      * make start[] non-monotonic. */
-    size = j->cur.size(j->cur.ctx);
+    size = unc_io_size32(&j->cur);
     if (size == UNC_SIZE_UNKNOWN || size < j->desc->head_len) {
         seg_release(j);
         return UNC_ERR_CORRUPT;
@@ -451,7 +451,7 @@ static int32_t seg_read(void *ctx, void *buf, int32_t len)
     return r;
 }
 
-static int seg_seek(void *ctx, uint32_t pos)
+static int seg_seek(void *ctx, unc_off_t pos)
 {
     SegJoin *j = (SegJoin *)ctx;
     /* Addressed mode has no flat address space to seek within, and a
@@ -459,17 +459,24 @@ static int seg_seek(void *ctx, uint32_t pos)
      * Refuse instead: the reader for this mode positions itself through
      * UncSegMap and never comes here. */
     if (j->addressed) return -1;
-    j->pos = pos;               /* lazy: the next read locates the part */
+    /* A joined set is addressed in 32 bits: its parts are files a
+     * Macintosh could hold, and their sum has never approached the
+     * ceiling. A seek past it is a caller error, not a wider set. */
+    if (pos > (unc_off_t)UNC_U32_MAX) return -1;
+    j->pos = (uint32_t)pos;     /* lazy: the next read locates the part */
     return 0;
 }
 
-static uint32_t seg_tell(void *ctx)
+static unc_off_t seg_tell(void *ctx)
 {
     const SegJoin *j = (const SegJoin *)ctx;
     return j->addressed ? j->off : j->pos;
 }
 
-static uint32_t seg_size(void *ctx)  { return ((SegJoin *)ctx)->total; }
+/* total is UNC_SIZE_UNKNOWN when the set does not state one; that
+ * value survives the widening as UNC_U32_MAX, which unc_io_size32
+ * hands back unchanged. */
+static unc_off_t seg_size(void *ctx)  { return ((SegJoin *)ctx)->total; }
 
 /* Total bytes across the set, if the host can say so for nothing.
  * Used only to give the progress callback a denominator: on a machine

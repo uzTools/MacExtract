@@ -163,11 +163,33 @@ const char *unc_strerror(int err);
  * offset type widens they stop being the same number.
  */
 
-/* The widest container offset or size UncIO expresses. `seek`, `tell`
- * and `size` are uint32, so this is the engine's addressing ceiling:
- * 4 GiB - 1. A host with a larger file passes this rather than a
- * wrapped size (FORMATS.md, *Size limits*). */
+/* The type a container offset is carried in, and the widest value it
+ * holds. 32 bits by default — the 68000 target, where a file cannot
+ * exceed 2 GB anyway — and 64 bits when the host builds with
+ * UNC_OFF64, which is what lets it address a container past 4 GiB.
+ *
+ * Only CONTAINER addressing widens. An entry's own size stays 32-bit
+ * (UncEntryInfo.data_size), because a fork past 4 GiB is a separate
+ * question and no target here can write one. */
+#ifdef UNC_OFF64
+typedef uint64_t unc_off_t;
+#define UNC_OFF_MAX      0xFFFFFFFFFFFFFFFFull
+#else
+typedef uint32_t unc_off_t;
 #define UNC_OFF_MAX      0xFFFFFFFFu
+#endif
+
+/* The largest value a 32-bit field holds. Used where a span, a budget
+ * or a saturating sum is 32-bit by DEFINITION and does not follow
+ * unc_off_t: a fork's extent, a read budget, the sum of two fork
+ * sizes. These do not widen when container addressing does. */
+#define UNC_U32_MAX      0xFFFFFFFFu
+
+/* A container whose size the host cannot state. Distinct from
+ * UNC_SIZE_UNKNOWN, which is an ENTRY's; the two are the same number
+ * at 32 bits and different numbers at 64, which is exactly why they
+ * are two names. */
+#define UNC_OFF_UNKNOWN  UNC_OFF_MAX
 
 /* The 2 GB ceiling every classic Macintosh file lives under: HFS caps
  * a fork there, and the File Manager's own position parameter is a
@@ -186,11 +208,11 @@ typedef struct UncIO {
      * or <0 on error. Short reads before EOF are allowed. */
     int32_t (*read)(void *ctx, void *buf, int32_t len);
     /* Absolute seek. Returns 0 on success, <0 on error. */
-    int (*seek)(void *ctx, uint32_t pos);
+    int (*seek)(void *ctx, unc_off_t pos);
     /* Current position. */
-    uint32_t (*tell)(void *ctx);
-    /* Total stream size, or UNC_SIZE_UNKNOWN. */
-    uint32_t (*size)(void *ctx);
+    unc_off_t (*tell)(void *ctx);
+    /* Total stream size, or UNC_OFF_UNKNOWN. */
+    unc_off_t (*size)(void *ctx);
 } UncIO;
 
 /* ------------------------------------------------------------------ */

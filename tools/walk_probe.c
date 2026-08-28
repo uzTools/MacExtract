@@ -53,17 +53,17 @@ static int32_t p_read(void *ctx, void *buf, int32_t len)
     ProbeIO *s = (ProbeIO *)ctx;
     return (int32_t)fread(buf, 1, (size_t)len, s->f);
 }
-static int p_seek(void *ctx, uint32_t pos)
+static int p_seek(void *ctx, unc_off_t pos)
 {
     ProbeIO *s = (ProbeIO *)ctx;
     return fseek(s->f, (long)pos, SEEK_SET);
 }
-static uint32_t p_tell(void *ctx)
+static unc_off_t p_tell(void *ctx)
 {
     ProbeIO *s = (ProbeIO *)ctx;
     return (uint32_t)ftell(s->f);
 }
-static uint32_t p_size(void *ctx) { return ((ProbeIO *)ctx)->size; }
+static unc_off_t p_size(void *ctx) { return ((ProbeIO *)ctx)->size; }
 
 static void *p_alloc(void *ctx, uint32_t n) { (void)ctx; return malloc(n); }
 static void  p_free(void *ctx, void *ptr)   { (void)ctx; free(ptr); }

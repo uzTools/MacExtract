@@ -282,7 +282,7 @@ int unc_extract_as(UncFormat f, UncIO *io, UncSink *sink, UncAlloc *al,
     c.al = al;
     c.segmap = NULL;              /* one file: offsets are already absolute */
     c.ps.prog = prog;
-    c.ps.total = io->size(io->ctx);
+    c.ps.total = unc_io_size32(io);
     c.ps.done = 0;
     c.ps.since_tick = 0;
     c.ps.hold = 0;

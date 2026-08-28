@@ -114,7 +114,7 @@ static int sd_records_start(UncIO *io, uint32_t *out, int *has_module)
 static int sd_end_marker_ok(UncIO *io)
 {
     uint8_t tail[8];
-    uint32_t size = io->size(io->ctx);
+    uint32_t size = unc_io_size32(io);
     int i;
     if (size == UNC_SIZE_UNKNOWN || size < 24) return 0;
     if (unc_read_at(io, size - 8, tail, 8) != UNC_OK) return 0;
@@ -986,7 +986,7 @@ int unc_superdisk_extract(UncCtx *c)
          * 2026-08-25 with a synthetic 60-byte container
          * (tools/sdmodule/). */
         uint8_t head[64];
-        uint32_t body, size = c->io->size(c->io->ctx);
+        uint32_t body, size = unc_io_size32(c->io);
         int32_t n = (int32_t)sizeof head;
         if (size != UNC_SIZE_UNKNOWN && size < sizeof head) n = (int32_t)size;
         if (n >= 40 && unc_read_at(c->io, 0, head, n) == UNC_OK) {

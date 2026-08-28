@@ -37,26 +37,27 @@
 /* ------------------------------------------------------------------ */
 
 typedef struct {
-    FILE    *f;
-    uint32_t size;
+    FILE      *f;
+    unc_off_t  size;
 } FileIO;
 
-/* `UncIO` addresses a file with a uint32 by decision (FORMATS.md, *Size
- * limits*), and (uint32_t)st_size WRAPS a larger one into a plausible
- * small file — a 4.5 GB zip looked like 237 MB of nonsense and was
- * reported as "not a recognized archive", a true refusal with a false
- * reason. Say what is actually wrong, and hand the engine the largest
- * size it can state rather than a wrapped one: a tar still lists the
- * members that live under 4 GB, which is worth more than a clean
- * refusal of the whole file. */
-static uint32_t file_size32(const struct stat *st, const char *path)
+/* `UncIO` addresses a file with unc_off_t, which is 32 bits unless the
+ * build defines UNC_OFF64. Narrowing st_size to it WRAPS a larger file
+ * into a plausible small one — a 4.5 GB zip looked like 237 MB of
+ * nonsense and was reported as "not a recognized archive", a true
+ * refusal with a false reason. Say what is actually wrong, and hand the
+ * engine the largest size it can state rather than a wrapped one: a tar
+ * still lists the members under the ceiling, which is worth more than a
+ * clean refusal of the whole file. At 64 bits the branch cannot be
+ * reached by any file a filesystem can hold. */
+static unc_off_t file_size_off(const struct stat *st, const char *path)
 {
     if ((uint64_t)st->st_size > (uint64_t)UNC_OFF_MAX) {
         fprintf(stderr, "macextract: %s: file is larger than 4 GB; this engine "
                         "addresses the first 4 GB of it\n", path);
         return UNC_OFF_MAX;
     }
-    return (uint32_t)st->st_size;
+    return (unc_off_t)st->st_size;
 }
 
 static int32_t fio_read(void *ctx, void *buf, int32_t len)
@@ -67,19 +68,19 @@ static int32_t fio_read(void *ctx, void *buf, int32_t len)
     return (int32_t)r;
 }
 
-static int fio_seek(void *ctx, uint32_t pos)
+static int fio_seek(void *ctx, unc_off_t pos)
 {
     FileIO *io = (FileIO *)ctx;
     return fseek(io->f, (long)pos, SEEK_SET) == 0 ? 0 : -1;
 }
 
-static uint32_t fio_tell(void *ctx)
+static unc_off_t fio_tell(void *ctx)
 {
     FileIO *io = (FileIO *)ctx;
     return (uint32_t)ftell(io->f);
 }
 
-static uint32_t fio_size(void *ctx)
+static unc_off_t fio_size(void *ctx)
 {
     FileIO *io = (FileIO *)ctx;
     return io->size;
@@ -1012,7 +1013,7 @@ static int env_run(const char *path, EnvSink *es)
     memset(&f, 0, sizeof f);
     f.f = fopen(path, "rb");
     if (!f.f) return 0;
-    f.size = stat(path, &st) == 0 ? (uint32_t)st.st_size : UNC_SIZE_UNKNOWN;
+    f.size = stat(path, &st) == 0 ? (unc_off_t)st.st_size : UNC_OFF_UNKNOWN;
     eio.ctx = &f;
     eio.read = fio_read;
     eio.seek = fio_seek;
@@ -1655,8 +1656,8 @@ static int seg_need(void *ctx, const UncSegmentDesc *desc, int part, UncIO *io)
     f = fopen(h->path[part], "rb");
     if (!f) return UNC_ERR_SEGMENTED;
     h->open_io.f = f;
-    h->open_io.size = stat(h->path[part], &st) == 0 ? (uint32_t)st.st_size
-                                                    : UNC_SIZE_UNKNOWN;
+    h->open_io.size = stat(h->path[part], &st) == 0 ? (unc_off_t)st.st_size
+                                                    : UNC_OFF_UNKNOWN;
     io->ctx = &h->open_io;
     io->read = fio_read;
     io->seek = fio_seek;
@@ -1805,6 +1806,10 @@ int main(int argc, char **argv)
     if (argc >= 2 && (strcmp(argv[1], "--version") == 0 ||
                       strcmp(argv[1], "-V") == 0)) {
         printf("macextract %s\n", UNC_VERSION);
+        /* Derived from the type, not declared: the ceiling a build
+         * actually has is the one a test should grade it against. */
+        printf("container offsets: %d-bit\n",
+               (int)(sizeof(unc_off_t) * 8));
         return 0;
     }
     if (argc < 3) { usage(); return 2; }
@@ -1856,7 +1861,7 @@ nextlayer:
         fprintf(stderr, "macextract: %s: %s\n", file, strerror(errno));
         return 1;
     }
-    if (stat(file, &st) == 0) fio.size = file_size32(&st, file);
+    if (stat(file, &st) == 0) fio.size = file_size_off(&st, file);
     else fio.size = UNC_SIZE_UNKNOWN;
 
     io.ctx = &fio;
@@ -2218,7 +2223,7 @@ nextlayer:
                     memset(&cio_f, 0, sizeof cio_f);
                     cio_f.f = cf;
                     cio_f.size = stat(seg.path[i2], &cst) == 0
-                                 ? (uint32_t)cst.st_size : UNC_SIZE_UNKNOWN;
+                                 ? (unc_off_t)cst.st_size : UNC_OFF_UNKNOWN;
                     cio.ctx = &cio_f;
                     cio.read = fio_read;
                     cio.seek = fio_seek;
@@ -2295,8 +2300,8 @@ nextlayer:
             }
             memset(&lio_f, 0, sizeof lio_f);
             lio_f.f = lf;
-            lio_f.size = stat(lastpath, &lst) == 0 ? (uint32_t)lst.st_size
-                                                   : UNC_SIZE_UNKNOWN;
+            lio_f.size = stat(lastpath, &lst) == 0 ? (unc_off_t)lst.st_size
+                                                   : UNC_OFF_UNKNOWN;
             lio.ctx = &lio_f;
             lio.read = fio_read;
             lio.seek = fio_seek;
@@ -2505,7 +2510,7 @@ nextlayer:
             memset(&pio_f, 0, sizeof pio_f);
             pio_f.f = pf;
             pio_f.size = stat(sink.last_ok_path, &pst) == 0
-                         ? (uint32_t)pst.st_size : UNC_SIZE_UNKNOWN;
+                         ? (unc_off_t)pst.st_size : UNC_OFF_UNKNOWN;
             pio.ctx = &pio_f;
             pio.read = fio_read;
             pio.seek = fio_seek;

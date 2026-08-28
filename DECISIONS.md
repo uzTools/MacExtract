@@ -156,6 +156,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-28 (the tree count) — a probe outside the legal range tests the range check
 - 2026-08-28 (`--only`) — an exemption keyed to a proxy is an exemption that misfires
 - 2026-08-28 (three ideas, two numbers) — a constant nobody named cannot be searched for
+- 2026-08-28 (what a width costs) — the offset type is a compile-time choice, not an architecture
 
 ---
 
@@ -8903,3 +8904,66 @@ Four literals stay raw on purpose: SuperDisk!'s three `& 0xFFFFFFFF`
 register masks and Arsenic's range-coder overflow guard are transcribed
 algorithm internals whose width is fixed by the algorithm. If the offset
 type ever widens, those are exactly the ones that must NOT follow.
+
+## 2026-08-28 (what a width costs) — the offset type is a compile-time choice, not an architecture
+
+`UncIO` now carries a container offset in `unc_off_t`: `uint32_t` by
+default, `uint64_t` when a host defines `UNC_OFF64`. **The abstraction
+costs the 68000 nothing, and the wider type costs it 0.5 %.**
+
+`m68k-apple-macos-size`, same toolchain and flags:
+
+| build | text | data |
+|---|---|---|
+| before, `uint32_t` spelled out | 138,868 | 31,440 |
+| `unc_off_t` = 32-bit — what ships | 138,864 | 31,412 |
+| `unc_off_t` = 64-bit, on 68k | 139,576 | 31,436 |
+
+Both widths pass 683 unit checks, 932 fixtures against the oracle and
+9,320 robustness variants under ASan+UBSan. A 6 GiB tar of four 1.5 GiB
+members: GNU tar lists four, the 32-bit build lists three and exits 1,
+the 64-bit build lists four and exits 0.
+
+**The objection this replaces was wrong, and worth recording as wrong.**
+"Two widths give two engines and one differential suite" assumed the
+32-bit configuration could only be tested on a Macintosh. It cannot be:
+width is a compile-time choice, so the configuration that ships to a
+68000 builds and grades on Linux against the same fixtures and the same
+oracle. `ci.sh` variant 5 does exactly that, and without it two widths
+would not be defensible.
+
+Four things the work established:
+
+- **`-Wconversion` finds only half of a widening.** It flagged 24 sites
+  where a widened value narrows into a 32-bit local — a clean worklist —
+  and cannot flag a 32-bit local passed INTO a widened `seek`, which
+  still wraps. The compiler gives interface conformance, not addressing
+  correctness. tar's walk was widened by hand for that reason.
+- **Only tar gains.** Its member positions are a running sum, so it
+  addresses as far as the type does with no format change. zip's
+  directory fields are 32-bit and its Zip64 escape is read as halves, so
+  a zip past 4 GiB is Zip64 ADDRESSING, which stays out of scope
+  (OPEN_ITEMS.md part 1).
+- **Widen only what addresses.** An entry's own size stays 32-bit — no
+  target here can write a fork past 4 GiB. The classic Macintosh formats
+  keep 32-bit addressing behind one helper, `unc_io_size32()`, which
+  clamps: a container past 4 GiB reads to them as one whose length the
+  host did not state, the same leniency a streamed container already
+  gets, and none of them can address far enough to be misled by it.
+- **A test that asserts a ceiling must ask the binary which ceiling it
+  has.** `run_sizelimits.py`'s over-4-GB case asserted the 32-bit
+  boundary and duly failed the 64-bit build. `--version` now derives the
+  width from `sizeof(unc_off_t)` and the test grades against that. Being
+  TOLD the expectation by ci.sh would have been weaker: the binary is
+  the thing that knows.
+
+Run on the hardware it is for: **69/69 on an emulated Mac Plus at 4 MB
+and 69/69 at the 1 MB floor target**, System 6.0.8, the same
+`tools/vmac/sample.txt` the shipped build passes — so the 32-bit
+configuration is verified where it runs, not only where it compiles.
+
+One build hazard surfaced and is not fixed here: **the Makefile does not
+track header dependencies**, so editing `macextract.h` leaves stale
+objects linked. It cost a build whose warnings were a previous
+compilation's. `ci.sh` runs `make clean` first, so CI never sees it;
+an interactive build does.

@@ -740,7 +740,7 @@ int unc_sit_extract(UncCtx *c)
     uint32_t iocap = UNC_IOBUF, ocap = UNC_IOBUF;
     int err = UNC_OK;
 
-    fsize = c->io->size(c->io->ctx);
+    fsize = unc_io_size32(c->io);
 
     if (unc_read_at(c->io, 0, hdr, 22) != UNC_OK) return UNC_ERR_FORMAT;
     if (!unc_sit_probe(hdr, 22, NULL)) return UNC_ERR_FORMAT;

@@ -161,7 +161,7 @@ UncFormat unc_zipseg_probe(const uint8_t *head, int32_t len, UncIO *io)
     uint32_t fsize, at, disknum, cddisk;
 
     if (!io) return UNC_FORMAT_UNKNOWN;
-    fsize = io->size(io->ctx);
+    fsize = unc_io_size32(io);
     if (fsize == UNC_SIZE_UNKNOWN) return UNC_FORMAT_UNKNOWN;
 
     if (zs_find_eocd(io, fsize, &at) == UNC_OK) {
@@ -186,7 +186,7 @@ int unc_zipseg_describe(UncIO *io, UncSegmentDesc *desc)
     int32_t i;
 
     if (!io || !desc) return UNC_ERR_FORMAT;
-    fsize = io->size(io->ctx);
+    fsize = unc_io_size32(io);
     if (fsize == UNC_SIZE_UNKNOWN) return UNC_ERR_FORMAT;
     if (zs_find_eocd(io, fsize, &at) != UNC_OK) return UNC_ERR_FORMAT;
     if (zs_read_eocd(io, at, &disknum, &cddisk) != UNC_OK) return UNC_ERR_FORMAT;

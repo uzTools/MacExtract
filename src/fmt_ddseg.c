@@ -205,7 +205,7 @@ int unc_ddseg_extract(UncCtx *c)
     if (err != UNC_OK) return err;
     if (desc.nparts != 1 || desc.part != 1) return UNC_ERR_SEGMENTED;
 
-    size = c->io->size(c->io->ctx);
+    size = unc_io_size32(c->io);
     if (size == UNC_SIZE_UNKNOWN || size < UNC_DDSEG_HEAD)
         return UNC_ERR_SEGMENTED;
     if (size - UNC_DDSEG_HEAD < desc.total) return UNC_ERR_SEGMENTED;
