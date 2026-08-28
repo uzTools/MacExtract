@@ -1150,7 +1150,7 @@ static int dd_archive(UncCtx *c)
         uint32_t magic, datasize, rsrcsize, start;
         uint32_t nlen;
         UncEntryInfo e;
-        int isdir, enddir;
+        int isdir, enddir, sret;
 
         if (c->io->seek(c->io->ctx, at) < 0) return UNC_ERR_IO;
         err = unc_read_full(c->io, hdr, 4);
@@ -1187,8 +1187,13 @@ static int dd_archive(UncCtx *c)
             e.is_dir = 1;
             e.create_date = unc_get_u32be(hdr + 78);
             e.mod_date    = unc_get_u32be(hdr + 82);
-            if (c->sink->begin_entry(c->sink->ctx, &e) < 0) return UNC_ERR_SINK;
-            if (c->sink->end_entry(c->sink->ctx, UNC_OK) < 0) return UNC_ERR_SINK;
+            /* A skipped entry gets no end_entry — the contract in
+             * macextract.h, which this said nothing about until a host
+             * skipped a FOLDER rather than a file (2026-08-28). */
+            sret = c->sink->begin_entry(c->sink->ctx, &e);
+            if (sret < 0) return UNC_ERR_SINK;
+            if (sret == 0 && c->sink->end_entry(c->sink->ctx, UNC_OK) < 0)
+                return UNC_ERR_SINK;
             at = start;
             continue;
         }
@@ -1245,7 +1250,7 @@ static int dd_archive2(UncCtx *c)
 
     for (;;) {
         uint32_t start = at, totalsize, nlen;
-        int entrytype, dirlevel;
+        int entrytype, dirlevel, sret;
         UncEntryInfo e;
 
         if (c->io->seek(c->io->ctx, at) < 0) return UNC_ERR_IO;
@@ -1278,8 +1283,10 @@ static int dd_archive2(UncCtx *c)
             e.is_dir = 1;
             e.create_date = unc_get_u32be(hdr + 54);
             e.mod_date    = unc_get_u32be(hdr + 58);
-            if (c->sink->begin_entry(c->sink->ctx, &e) < 0) return UNC_ERR_SINK;
-            if (c->sink->end_entry(c->sink->ctx, UNC_OK) < 0) return UNC_ERR_SINK;
+            sret = c->sink->begin_entry(c->sink->ctx, &e);
+            if (sret < 0) return UNC_ERR_SINK;
+            if (sret == 0 && c->sink->end_entry(c->sink->ctx, UNC_OK) < 0)
+                return UNC_ERR_SINK;
             at = start + totalsize;
             continue;
         }

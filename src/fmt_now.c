@@ -708,8 +708,12 @@ int unc_now_extract(UncCtx *c)
 
         if (flags & 0x10) {                       /* directory */
             e.is_dir = 1;
-            if (c->sink->begin_entry(c->sink->ctx, &e) < 0) { err = UNC_ERR_SINK; break; }
-            if (c->sink->end_entry(c->sink->ctx, UNC_OK) < 0) { err = UNC_ERR_SINK; break; }
+            sret = c->sink->begin_entry(c->sink->ctx, &e);
+            if (sret < 0) { err = UNC_ERR_SINK; break; }
+            if (sret == 0 && c->sink->end_entry(c->sink->ctx, UNC_OK) < 0) {
+                err = UNC_ERR_SINK;
+                break;
+            }
         } else {
             e.data_size = datasize;
             e.rsrc_size = rsrcsize;
