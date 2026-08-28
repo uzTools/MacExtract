@@ -6,6 +6,15 @@ CFLAGS  ?= -O2
 WARN     = -std=c99 -Wall -Wextra -Wshadow -Wconversion -Wvla -pedantic
 INC      = -Iinclude
 
+# A container offset is 64-bit on a host that can address that far, so the
+# CLI reads a tar past 4 GB. The Macintosh build does not set this and stays
+# 32-bit (mac/CMakeLists.txt); both widths are graded by ci.sh. Build the
+# 32-bit configuration with `make OFFDEFS=`.
+#
+# NOTE: make tracks timestamps, not flags. Changing OFFDEFS does not
+# invalidate existing objects — `make clean` first, or the link mixes widths.
+OFFDEFS ?= -DUNC_OFF64
+
 BUILD  ?= build
 
 ENGINE_SRC = $(wildcard src/*.c)
@@ -32,7 +41,7 @@ $(BUILD):
 ENGINE_HDR = include/macextract.h $(wildcard src/*.h)
 
 $(BUILD)/%.o: src/%.c $(ENGINE_HDR) | $(BUILD)
-	$(CC) $(WARN) $(CFLAGS) $(INC) -c $< -o $@
+	$(CC) $(WARN) $(CFLAGS) $(OFFDEFS) $(INC) -c $< -o $@
 
 # third_party is exempt from our warning set (vendored code).
 #
@@ -54,22 +63,22 @@ $(BUILD)/zlib_%.o: third_party/zlib/%.c | $(BUILD)
 	$(CC) -std=c99 $(CFLAGS) -DZ_TESTW=0 -DNO_GZIP -Ithird_party/zlib -c $< -o $@
 
 $(CLI_BIN): cli/main.c $(ENGINE_OBJ) $(THIRD_OBJ) | $(BUILD)
-	$(CC) $(WARN) $(CFLAGS) $(INC) cli/main.c $(ENGINE_OBJ) $(THIRD_OBJ) -o $@
+	$(CC) $(WARN) $(CFLAGS) $(OFFDEFS) $(INC) cli/main.c $(ENGINE_OBJ) $(THIRD_OBJ) -o $@
 
 $(TEST_BIN): tests/unit_main.c tests/unit_formats.c $(ENGINE_OBJ) $(THIRD_OBJ) | $(BUILD)
-	$(CC) $(WARN) $(CFLAGS) $(INC) -Isrc tests/unit_main.c $(ENGINE_OBJ) $(THIRD_OBJ) -o $@
+	$(CC) $(WARN) $(CFLAGS) $(OFFDEFS) $(INC) -Isrc tests/unit_main.c $(ENGINE_OBJ) $(THIRD_OBJ) -o $@
 
 # Measures the progress callback rather than the bytes — the one engine
 # property no other suite here can see. tools/run_ticks.py applies the rule.
 $(TICK_BIN): tools/tick_probe.c $(ENGINE_OBJ) $(THIRD_OBJ) | $(BUILD)
-	$(CC) $(WARN) $(CFLAGS) $(INC) tools/tick_probe.c $(ENGINE_OBJ) $(THIRD_OBJ) -o $@
+	$(CC) $(WARN) $(CFLAGS) $(OFFDEFS) $(INC) tools/tick_probe.c $(ENGINE_OBJ) $(THIRD_OBJ) -o $@
 
 # Holds the listing walk, the extracting walk and a SKIPPING one against
 # each other — the one engine property that comparing output cannot see,
 # because each of those comparisons watches a single walk.
 # tools/run_walk.py applies the rule.
 $(WALK_BIN): tools/walk_probe.c $(ENGINE_OBJ) $(THIRD_OBJ) | $(BUILD)
-	$(CC) $(WARN) $(CFLAGS) $(INC) tools/walk_probe.c $(ENGINE_OBJ) $(THIRD_OBJ) -o $@
+	$(CC) $(WARN) $(CFLAGS) $(OFFDEFS) $(INC) tools/walk_probe.c $(ENGINE_OBJ) $(THIRD_OBJ) -o $@
 
 test: all
 	$(TEST_BIN)

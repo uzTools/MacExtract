@@ -979,7 +979,7 @@ UncFormat unc_mime_probe(const uint8_t *head, int32_t len, UncIO *io)
             !mime_ci_prefix(head, e, "from ")) return UNC_FORMAT_UNKNOWN;
     }
 
-    size = io->size(io->ctx);
+    size = unc_io_size32(io);
     if (size == UNC_SIZE_UNKNOWN) size = MIME_SCAN_MAX;
     if (size > MIME_SCAN_MAX) size = MIME_SCAN_MAX;
 

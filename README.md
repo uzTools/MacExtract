@@ -48,7 +48,7 @@ one, because parts are recognised by what is inside them:
 ## Download
 
 **[Latest release](https://github.com/jarreboum/MacExtract/releases/latest)** —
-currently **v0.24.0**. If the release page shows anything older, the publish
+currently **v0.25.0**. If the release page shows anything older, the publish
 step did not run. Or take it straight from the tree:
 
 | | |

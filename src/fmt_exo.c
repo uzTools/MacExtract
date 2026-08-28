@@ -182,7 +182,7 @@ int unc_compressz_extract(UncCtx *c)
         unc_bufin_init(&in, c->io, &c->ps, iobuf, iocap);
         if (c->io->seek(c->io->ctx, 3) < 0) { err = UNC_ERR_IO; goto out; }
         {   /* Size the table from the stream, less the 3-byte header. */
-            uint32_t insize = c->io->size(c->io->ctx);
+            uint32_t insize = unc_io_size32(c->io);
             insize = (insize == UNC_SIZE_UNKNOWN || insize < 3)
                    ? 0 : insize - 3;
             est = unc_lzw_init(&z, c->al, &in, maxbits, blockmode, insize);
@@ -284,7 +284,7 @@ UncFormat unc_tar_probe(const uint8_t *head, int32_t len, UncIO *io)
 int unc_tar_extract(UncCtx *c)
 {
     uint8_t h[512];
-    uint32_t pos = 0, fsize;
+    unc_off_t pos = 0, fsize;
     int seen = 0;
     int err = UNC_OK;
     uint8_t *iobuf;
@@ -363,8 +363,10 @@ int unc_tar_extract(UncCtx *c)
         }
         if (plen == 0 && isdir) {
             /* The "./" root entry itself: nothing to create. */
-            if (next > (int64_t)UNC_OFF_MAX) { err = UNC_ERR_CORRUPT; break; }
-            pos = (uint32_t)next;
+            if (next < 0 || (uint64_t)next > (uint64_t)UNC_OFF_MAX) {
+                err = UNC_ERR_CORRUPT; break;
+            }
+            pos = (unc_off_t)next;
             continue;
         }
 
@@ -394,7 +396,8 @@ int unc_tar_extract(UncCtx *c)
             if (sret == 0) {
                 est = UNC_OK;
                 if (!c->opt.list_only) {
-                    uint32_t left = datalen, at = pos + 512;
+                    uint32_t left = datalen;
+                    unc_off_t at = pos + 512;
                     if (fsize != UNC_SIZE_UNKNOWN && at + datalen > fsize) {
                         est = UNC_ERR_TRUNCATED;
                     } else if (c->io->seek(c->io->ctx, at) < 0) {
@@ -440,8 +443,10 @@ int unc_tar_extract(UncCtx *c)
             }
         }
 
-        if (next > (int64_t)UNC_OFF_MAX) { err = UNC_ERR_CORRUPT; break; }
-        pos = (uint32_t)next;
+        if (next < 0 || (uint64_t)next > (uint64_t)UNC_OFF_MAX) {
+            err = UNC_ERR_CORRUPT; break;
+        }
+        pos = (unc_off_t)next;
     }
 
     unc_free(c->al, iobuf);
@@ -654,7 +659,7 @@ int unc_zip_extract(UncCtx *c)
         lastpart0 = (uint32_t)c->segmap->nparts - 1u;
         scanend = c->segmap->part_size(c->segmap->ctx, c->segmap->nparts);
     } else {
-        scanend = c->io->size(c->io->ctx);
+        scanend = unc_io_size32(c->io);
     }
     if (scanend == UNC_SIZE_UNKNOWN || scanend < 22) return UNC_ERR_FORMAT;
 

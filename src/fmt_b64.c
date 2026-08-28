@@ -158,7 +158,7 @@ static int b64_bare_probe(const uint8_t *head, int32_t len, UncIO *io)
     /* The tail. A stream that ends mid-group, or on a line that is not
      * base64 at all, is not a bare base64 file. */
     if (!io) return 0;
-    size = io->size(io->ctx);
+    size = unc_io_size32(io);
     if (size == UNC_SIZE_UNKNOWN || size == 0) return 0;
     got = (int32_t)(size < sizeof tail ? size : sizeof tail);
     if (unc_read_at(io, size - (uint32_t)got, tail, got) != UNC_OK) return 0;

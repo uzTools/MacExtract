@@ -62,7 +62,17 @@ static inline uint32_t unc_get_u32le(const uint8_t *p)
 int unc_read_full(UncIO *io, void *buf, int32_t len);
 
 /* Read exactly len bytes at absolute offset pos. */
-int unc_read_at(UncIO *io, uint32_t pos, void *buf, int32_t len);
+int unc_read_at(UncIO *io, unc_off_t pos, void *buf, int32_t len);
+
+/* The container's size as a format that addresses 32 bits sees it.
+ * Clamped to UNC_U32_MAX, which is exactly as tight a bound as the
+ * true size for every offset such a format can form — and which is
+ * UNC_SIZE_UNKNOWN, so a container past 4 GiB reads to these parsers
+ * as one whose length the host did not state. That is the same
+ * leniency a streamed container gets, and none of them can address
+ * far enough to be misled by it. A format that CAN address further
+ * (zip, tar) calls io->size directly and carries unc_off_t. */
+uint32_t unc_io_size32(UncIO *io);
 
 /* Skip len bytes forward from the current position (via seek). */
 int unc_skip(UncIO *io, uint32_t len);

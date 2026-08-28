@@ -201,6 +201,25 @@ echo "=== variant 3: release build (warnings are errors) ==="
 make BUILD=build/rel CFLAGS="-O2 -Werror" all >/dev/null || fail "release build"
 ./build/rel/unit_tests || fail "unit tests (release)"
 
+# The engine carries a container offset in unc_off_t. Every lane above
+# builds the host default, 64 bits; the MACINTOSH build is 32 bits and
+# is the one that ships on a floppy, so it is graded here against the
+# same fixtures and the same oracle. The width that ships to a Mac is
+# not allowed to be the width nothing runs. (DECISIONS.md 2026-08-28,
+# *what a width costs*.)
+echo "=== variant 5: 32-bit container offsets (the Macintosh width) ==="
+make BUILD=build/off32 OFFDEFS= \
+     CFLAGS="-O1 -g -fsanitize=address,undefined,alignment -fno-sanitize-recover=all" \
+     all >/dev/null || fail "32-bit offset build"
+./build/off32/macextract --version | grep -q "offsets: 32-bit" \
+    || fail "variant 5 did not build the 32-bit configuration"
+./build/off32/unit_tests || fail "unit tests (32-bit offsets)"
+MACEXTRACT=build/off32/macextract sh tests/run_diff.sh || fail "diff tests (32-bit offsets)"
+MACEXTRACT=build/off32/macextract sh tests/run_robustness.sh \
+    || fail "robustness tests (32-bit offsets)"
+python3 tools/run_sizelimits.py --macextract build/off32/macextract \
+    || fail "size-limit tests (32-bit offsets)"
+
 echo "=== variant 4: Retro68 Mac shell (compile-only, optional) ==="
 sh tools/build_mac.sh || fail "mac build"
 

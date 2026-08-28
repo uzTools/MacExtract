@@ -40,16 +40,16 @@ static int32_t mio_read(void *ctx, void *buf, int32_t len)
     return (int32_t)n;
 }
 
-static int mio_seek(void *ctx, uint32_t pos)
+static int mio_seek(void *ctx, unc_off_t pos)
 {
     MemIO *m = (MemIO *)ctx;
-    if (pos > m->size) return -1;
-    m->pos = pos;
+    if (pos > (unc_off_t)m->size) return -1;
+    m->pos = (uint32_t)pos;
     return 0;
 }
 
-static uint32_t mio_tell(void *ctx) { return ((MemIO *)ctx)->pos; }
-static uint32_t mio_size(void *ctx) { return ((MemIO *)ctx)->size; }
+static unc_off_t mio_tell(void *ctx) { return ((MemIO *)ctx)->pos; }
+static unc_off_t mio_size(void *ctx) { return ((MemIO *)ctx)->size; }
 
 void test_make_memio(UncIO *io, MemIO *m, const uint8_t *data, uint32_t size)
 {

@@ -31,6 +31,7 @@ import argparse
 import os
 import shutil
 import subprocess
+import re
 import sys
 import tempfile
 
@@ -104,6 +105,17 @@ def sparse_ok(tmp):
     blocks = os.stat(p).st_blocks
     os.remove(p)
     return blocks * 512 < 1024 * 1024
+
+
+def off_bits(macextract):
+    """The container-offset width this binary was built with, asked of
+    the binary rather than assumed: `--version` derives it from
+    sizeof(unc_off_t), so the boundary graded here is the one that
+    build actually has."""
+    r = subprocess.run([macextract, "--version"], capture_output=True,
+                       text=True)
+    m = re.search(r"container offsets: (\d+)-bit", r.stdout)
+    return int(m.group(1)) if m else 32
 
 
 def main():
@@ -188,8 +200,19 @@ def main():
                   ("c.bin", 3 * GIB // 2), ("d.bin", 5)])
         want = tar_names(p)
         got, rc = ours_list(args.macextract, p)
+        bits = off_bits(args.macextract)
         if want is None or len(want) != 4:
             problems.append("over4g.tar: GNU tar says %s" % (want,))
+        elif bits >= 64:
+            # This build addresses past 4 GB, so the fourth member is
+            # reachable and the walk is clean. Same subject, same
+            # assertion shape, the ceiling this binary actually has.
+            if [n for n, _ in got] != want:
+                problems.append("over4g.tar (%d-bit): listed %s, wanted %s"
+                                % (bits, [n for n, _ in got], want))
+            elif rc != 0:
+                problems.append("over4g.tar (%d-bit): a reachable member "
+                                "made the walk exit %d" % (bits, rc))
         elif [n for n, _ in got] != want[:3]:
             problems.append("over4g.tar: listed %s, wanted the first three "
                             "of %s" % ([n for n, _ in got], want))

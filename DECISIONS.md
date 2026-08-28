@@ -156,6 +156,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-28 (the tree count) — a probe outside the legal range tests the range check
 - 2026-08-28 (`--only`) — an exemption keyed to a proxy is an exemption that misfires
 - 2026-08-28 (three ideas, two numbers) — a constant nobody named cannot be searched for
+- 2026-08-28 (what a width costs) — the offset type is a compile-time choice, not an architecture
 - 2026-08-28 (the certificate painted first) — a completion marker that goes down first certifies nothing
 
 ---
@@ -8904,6 +8905,100 @@ Four literals stay raw on purpose: SuperDisk!'s three `& 0xFFFFFFFF`
 register masks and Arsenic's range-coder overflow guard are transcribed
 algorithm internals whose width is fixed by the algorithm. If the offset
 type ever widens, those are exactly the ones that must NOT follow.
+
+## 2026-08-28 (what a width costs) — the offset type is a compile-time choice, not an architecture
+
+`UncIO` now carries a container offset in `unc_off_t`: `uint32_t` by
+default, `uint64_t` when a host defines `UNC_OFF64`. **The abstraction
+costs the 68000 nothing, and the wider type costs it 0.5 %.**
+
+`m68k-apple-macos-size`, same toolchain and flags:
+
+| build | text | data |
+|---|---|---|
+| before, `uint32_t` spelled out | 138,868 | 31,440 |
+| `unc_off_t` = 32-bit — what ships | 138,864 | 31,412 |
+| `unc_off_t` = 64-bit, on 68k | 139,576 | 31,436 |
+
+Both widths pass 683 unit checks, 932 fixtures against the oracle and
+9,320 robustness variants under ASan+UBSan. A 6 GiB tar of four 1.5 GiB
+members: GNU tar lists four, the 32-bit build lists three and exits 1,
+the 64-bit build lists four and exits 0.
+
+**The objection this replaces was wrong, and worth recording as wrong.**
+"Two widths give two engines and one differential suite" assumed the
+32-bit configuration could only be tested on a Macintosh. It cannot be:
+width is a compile-time choice, so the configuration that ships to a
+68000 builds and grades on Linux against the same fixtures and the same
+oracle. `ci.sh` variant 5 does exactly that, and without it two widths
+would not be defensible.
+
+Four things the work established:
+
+- **`-Wconversion` finds only half of a widening.** It flagged 24 sites
+  where a widened value narrows into a 32-bit local — a clean worklist —
+  and cannot flag a 32-bit local passed INTO a widened `seek`, which
+  still wraps. The compiler gives interface conformance, not addressing
+  correctness. tar's walk was widened by hand for that reason.
+- **Only tar gains.** Its member positions are a running sum, so it
+  addresses as far as the type does with no format change. zip's
+  directory fields are 32-bit and its Zip64 escape is read as halves, so
+  a zip past 4 GiB is Zip64 ADDRESSING, which stays out of scope
+  (OPEN_ITEMS.md part 1).
+- **Widen only what addresses.** An entry's own size stays 32-bit — no
+  target here can write a fork past 4 GiB. The classic Macintosh formats
+  keep 32-bit addressing behind one helper, `unc_io_size32()`, which
+  clamps: a container past 4 GiB reads to them as one whose length the
+  host did not state, the same leniency a streamed container already
+  gets, and none of them can address far enough to be misled by it.
+- **A test that asserts a ceiling must ask the binary which ceiling it
+  has.** `run_sizelimits.py`'s over-4-GB case asserted the 32-bit
+  boundary and duly failed the 64-bit build. `--version` now derives the
+  width from `sizeof(unc_off_t)` and the test grades against that. Being
+  TOLD the expectation by ci.sh would have been weaker: the binary is
+  the thing that knows.
+
+Run on the hardware it is for: **69/69 on an emulated Mac Plus at 4 MB
+and 69/69 at the 1 MB floor target**, System 6.0.8, the same
+`tools/vmac/sample.txt` the shipped build passes — so the 32-bit
+configuration is verified where it runs, not only where it compiles.
+
+**And it runs on a 68000.** `UNC_OFF64` on an emulated Mac Plus:
+**69/69 PASS**, with **identical peak heap on every one of the 69** and
+identical result grids — file counts, summed CRCs, data and resource
+byte totals. Those come off the application's own grid as integers, so
+that comparison is exact rather than poll-quantised. 64-bit arithmetic
+on a 68000 means libgcc helper calls in a no-libc, 4 KB-stack
+environment, and the claim that it would never be run there was a scope
+statement wearing a technical one: the question was cheap and worth
+asking. `mac/CMakeLists.txt` carries the switch so it can be asked again.
+
+**Time is the one thing not measured, and the instrument is why.**
+`macburger-helper.hqx` at 1x, four runs alternating 32/64/32/64:
+**104.0, 104.0, 104.1, 104.1 s** — the spread between widths equals the
+spread within one. But `run.py` timestamps at poll instants, so the
+figure is quantised to the 3 s poll however reproducible it looks:
+**the result is "no difference above 3 %", not a stopwatch.** Every
+subject this harness can reach is decode-dominated — the parser touches
+offsets a few dozen times per archive while the codec loops millions of
+times — and the one shape that would isolate the parser, an archive of
+tens of thousands of entries, does not fit on a 1440 KB floppy. On the
+host, 500,000 entries LISTED (parser only, no decode) cost 0.17-0.18 s
+at either width; that says the widening is free algorithmically, and
+says nothing about m68k, where a 64-bit add is not one instruction.
+So the true 68k cost sits somewhere under 3 %, with +0.51 % of text as
+the only hard number pointing into that range.
+
+One build hazard surfaced and is not fixed here, and the first diagnosis
+of it was wrong. It is NOT that the Makefile ignores header
+dependencies — `ENGINE_HDR` lists `include/macextract.h` and every
+generated header, and has since 2026-08-23. It is that **make tracks
+timestamps, not flags**: objects compiled without `UNC_OFF64` are not
+rebuilt when the flag is added, so a width switch without `make clean`
+links a mixed build. It cost one build whose warnings belonged to the
+previous compilation. `ci.sh` cleans between variants, so CI never sees
+it; an interactive build does, and the Makefile now says so where
+`OFFDEFS` is defined.
 
 ## 2026-08-28 (the certificate painted first) — a completion marker that goes down first certifies nothing
 

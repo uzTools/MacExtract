@@ -1,4 +1,4 @@
-MacExtract v0.24.0 — bootstrap distribution
+MacExtract v0.25.0 — bootstrap distribution
 ==========================================
 
 A bare Classic Mac has no way to open a .sit/.cpt/.hqx until it HAS an
@@ -100,7 +100,7 @@ instead — those two schemes put nothing inside the files that says which set
 they belong to, so keep the names they came with.
 
 Every archive in the test sample extracts byte-exact on a 1 MB Mac Plus,
-StuffIt 5 (Arsenic) included. Arsenic is slow on a 68000 — 13 minutes for a
+StuffIt 5 (Arsenic) included. Arsenic is slow on a 68000 — 12 minutes for a
 200 KB archive, 21 for the largest tested — and the progress dialog
 shows a time estimate for that reason. Everything else takes seconds to a few
 minutes. If an entry genuinely will not fit, that entry is skipped with a

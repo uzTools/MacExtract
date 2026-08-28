@@ -87,7 +87,7 @@ int unc_appledouble_extract(UncCtx *c)
     else if (magic == AS_MAGIC_SINGLE_LE || magic == AS_MAGIC_DOUBLE_LE) be = 0;
     else return UNC_ERR_FORMAT;
 
-    filesize = c->io->size(c->io->ctx);
+    filesize = unc_io_size32(c->io);
 
     n = be ? unc_get_u16be(hdr + 24) : unc_get_u16le(hdr + 24);
     if (n > AS_MAX_ENTRIES) n = AS_MAX_ENTRIES;  /* ignore the excess */

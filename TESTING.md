@@ -971,11 +971,19 @@ the offset cases politely where the filesystem has no sparse files.
 
 ## Size limits (`tools/run_sizelimits.py`, in `ci.sh`)
 
-Added 2026-08-27. Two boundaries live in `UncIO`'s `uint32` and they are not
-the same boundary: a MEMBER over 2 GB cannot be extracted, and a POSITION
-over 4 GB cannot be addressed at all. Until that date the first behaved like
-the second — one oversized tar member ended the whole walk, losing every
+Added 2026-08-27. Two boundaries live here and they are not the same
+boundary: a MEMBER over 2 GB cannot be extracted, and a POSITION past
+`unc_off_t` cannot be addressed at all. Until that date the first behaved
+like the second — one oversized tar member ended the whole walk, losing every
 member behind it (FORMATS.md, *Size limits*).
+
+**Since 2026-08-28 the second boundary depends on the build**, so the suite
+asks the binary rather than assuming: `--version` reports the width derived
+from `sizeof(unc_off_t)`, and the over-4-GB case expects a truncated walk at
+32 bits and a complete one at 64. Being TOLD the expectation by `ci.sh` would
+have been weaker — the binary is the thing that knows. That case caught the
+first `UNC_OFF64` build precisely because it had been written against the
+32-bit ceiling.
 
 The subjects are generated, because nothing in the corpus is remotely this
 large, and **sparse**: an oversized member is a hole, so a 4.5 GB archive
@@ -997,6 +1005,30 @@ three of the four cases fail.
 multi-gigabyte entry is still unexercised — on the Mac target it is
 unreachable anyway, since HFS caps a fork at 2 GB. Skips politely where there
 is no `tar` or no sparse files.
+
+## Both offset widths (`ci.sh` variant 5, added 2026-08-28)
+
+`unc_off_t` is 64-bit in the host build and 32-bit in the Macintosh one, so
+there are two engines and they cannot share one grading. Variant 5 builds the
+**32-bit** configuration — `make OFFDEFS=` — under the same sanitizers as
+variant 1 and runs the unit tests, all 932 fixtures against the oracle, the
+9,320 robustness variants and the size limits through it. The lanes above it
+cover the 64-bit default.
+
+Width is a compile-time choice and not an architecture, which is the whole
+reason this is possible: the configuration that ships to a 68000 builds and
+grades on Linux. Without this lane the shipped Macintosh width would be the
+one nothing runs, and two widths would not be defensible (DECISIONS.md
+2026-08-28, *what a width costs*).
+
+**Established that it can fail**: the lane asserts `--version` reports
+`offsets: 32-bit` before running anything, because `make` tracks timestamps
+and not flags — a stale `build/off32` would otherwise re-grade the default
+width and pass for the wrong reason.
+
+**What it cannot see.** Only the two widths that exist; nothing checks that a
+third would work. And it grades the 32-bit ENGINE on x86-64, not on a 68000 —
+that is the Mini vMac tier's job, where both widths ran 69/69.
 
 ## Over-long names (`tools/run_names.py`, in `ci.sh`)
 
