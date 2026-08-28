@@ -103,7 +103,7 @@ static void lzh_out_start(UncForkOut *o, UncCtx *c, uint8_t *buf, int write)
 {
     unc_fork_out(o, c, UNC_FORK_DATA, write, UNC_CK_CRC16_ARC,
                  buf, UNC_STAGE);
-    unc_fork_split(o, 0, 0xFFFFFFFFu, 0, 0);
+    unc_fork_split(o, 0, UNC_OFF_MAX, 0, 0);
 }
 
 static int lzh_put(void *ctx, uint8_t b)

@@ -338,7 +338,7 @@ void unc_bufin_init(UncBufIn *b, UncIO *io, UncProgressState *ps,
     b->cap = cap;
     b->len = b->pos = 0;
     b->lenfed = 0;
-    b->limit = 0xFFFFFFFFu;
+    b->limit = UNC_OFF_MAX;
     b->crypt = NULL;
     b->err = UNC_OK;
 }

@@ -752,7 +752,7 @@ int unc_arsenic_decode(UncBufIn *in, UncAlloc *al, uint32_t outlen,
     a->repeat = 0;
     a->count = 0;
     a->last = 0;
-    a->crc = 0xFFFFFFFFu;
+    a->crc = UNC_CRC32_INIT;
     a->compcrc = 0;
     a->has_compcrc = 0;
     a->randomized = 0;

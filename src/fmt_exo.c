@@ -112,7 +112,7 @@ int unc_gzip_extract(UncCtx *c)
     if (sret > 0) goto out;
 
     if (!c->opt.list_only) {
-        uint32_t produced = 0, crc = 0xFFFFFFFFu;
+        uint32_t produced = 0, crc = UNC_CRC32_INIT;
         es.c = c;
         est = unc_inflate_raw(&in, c->al, obuf, ocap, UNC_SIZE_UNKNOWN,
                               &produced, &crc, exo_emit, &es);
@@ -126,7 +126,7 @@ int unc_gzip_extract(UncCtx *c)
                 tr[i] = (uint8_t)b;
             }
             if (est == UNC_OK) {
-                if (unc_get_u32le(tr) != (crc ^ 0xFFFFFFFFu)) est = UNC_ERR_CRC;
+                if (unc_get_u32le(tr) != ~crc) est = UNC_ERR_CRC;
                 else if (unc_get_u32le(tr + 4) != produced) est = UNC_ERR_CRC;
             }
         }
@@ -329,7 +329,7 @@ int unc_tar_extract(UncCtx *c)
          * which is every format's (FORMATS.md, *Size limits*), and it
          * is checked after this member is reported rather than before,
          * so the last one a header describes is still named. */
-        oversize = size > 0x7FFFFFFF;
+        oversize = size > UNC_MAC_MAX;
         datalen = oversize ? UNC_SIZE_UNKNOWN : (uint32_t)size;
         next = (int64_t)pos + 512 + ((size + 511) & ~(int64_t)511);
 
@@ -363,7 +363,7 @@ int unc_tar_extract(UncCtx *c)
         }
         if (plen == 0 && isdir) {
             /* The "./" root entry itself: nothing to create. */
-            if (next > (int64_t)0xFFFFFFFFu) { err = UNC_ERR_CORRUPT; break; }
+            if (next > (int64_t)UNC_OFF_MAX) { err = UNC_ERR_CORRUPT; break; }
             pos = (uint32_t)next;
             continue;
         }
@@ -440,7 +440,7 @@ int unc_tar_extract(UncCtx *c)
             }
         }
 
-        if (next > (int64_t)0xFFFFFFFFu) { err = UNC_ERR_CORRUPT; break; }
+        if (next > (int64_t)UNC_OFF_MAX) { err = UNC_ERR_CORRUPT; break; }
         pos = (uint32_t)next;
     }
 
@@ -555,6 +555,11 @@ static int zip_decode(UncCtx *c, UncBufIn *in, ExoSink *es, uint32_t method,
     return est;
 }
 
+/* The value a central-directory field carries when the real one is in
+ * the Zip64 extra field instead. Not a ceiling: the format's own
+ * escape, which happens to be all-ones. */
+#define ZIP64_ESC32 0xFFFFFFFFu
+
 /* One central-directory record's extra fields. Two matter here: WinZip's
  * AES (0x9901) and Zip64 (0x0001).
  *
@@ -590,17 +595,17 @@ static void zip_extra_scan(const uint8_t *ex, uint32_t exlen,
         if (sz + 4u > exlen) break;
         if (id == 0x0001) {
             uint32_t at = 4;
-            if (z->usize == 0xFFFFFFFFu && at + 8u <= sz + 4u) {
+            if (z->usize == ZIP64_ESC32 && at + 8u <= sz + 4u) {
                 if (unc_get_u32le(ex + at + 4)) z->err = UNC_ERR_TOOLARGE;
                 else z->usize = unc_get_u32le(ex + at);
                 at += 8;
             }
-            if (z->csize == 0xFFFFFFFFu && at + 8u <= sz + 4u) {
+            if (z->csize == ZIP64_ESC32 && at + 8u <= sz + 4u) {
                 if (unc_get_u32le(ex + at + 4)) z->err = UNC_ERR_TOOLARGE;
                 else z->csize = unc_get_u32le(ex + at);
                 at += 8;
             }
-            if (z->lhoffs == 0xFFFFFFFFu && at + 8u <= sz + 4u) {
+            if (z->lhoffs == ZIP64_ESC32 && at + 8u <= sz + 4u) {
                 if (unc_get_u32le(ex + at + 4)) z->err = UNC_ERR_TOOLARGE;
                 else z->lhoffs = unc_get_u32le(ex + at);
                 at += 8;
@@ -791,7 +796,7 @@ int unc_zip_extract(UncCtx *c)
      * The bound is the allocator's, not a number invented here: if the
      * directory does not fit in the budget, the reader falls back to
      * fetching one record at a time, exactly as it used to. */
-    if (cdsize && cdsize <= 0x7FFFFFFFu) {
+    if (cdsize && cdsize <= UNC_READ_MAX) {
         cdbuf = (uint8_t *)unc_alloc(c->al, cdsize);
         if (cdbuf) {
             if (zip_seek(c, cddisk, cdoffs) != UNC_OK ||
@@ -975,7 +980,7 @@ int unc_zip_extract(UncCtx *c)
                         est = UNC_ERR_CORRUPT;
                     } else {
                         UncBufIn in;
-                        uint32_t crc = 0xFFFFFFFFu;
+                        uint32_t crc = UNC_CRC32_INIT;
                         ExoSink es;
                         es.c = c;
                         /* The data follows the header's own name and
@@ -1031,7 +1036,7 @@ int unc_zip_extract(UncCtx *c)
                                 }
                             }
                             if (est == UNC_OK && aesversion == 1 &&
-                                (crc ^ 0xFFFFFFFFu) != wantcrc)
+                                ~crc != wantcrc)
                                 est = UNC_ERR_CRC;
                             goto entry_done;
                         }
@@ -1071,7 +1076,7 @@ int unc_zip_extract(UncCtx *c)
                                     est = zip_decode(c, &in, &es, method,
                                                      usize, &crc, obuf, ocap);
                                 if (est == UNC_OK &&
-                                    (crc ^ 0xFFFFFFFFu) != wantcrc)
+                                    ~crc != wantcrc)
                                     est = UNC_ERR_CRC;
                             }
                             goto entry_done;
@@ -1083,7 +1088,7 @@ int unc_zip_extract(UncCtx *c)
                                              &crc, obuf, ocap);
                         }
                         if (est == UNC_OK &&
-                            (crc ^ 0xFFFFFFFFu) != wantcrc)
+                            ~crc != wantcrc)
                             est = UNC_ERR_CRC;
                     }
                 }

@@ -151,6 +151,33 @@ const char *unc_strerror(int err);
 /* I/O abstraction                                                    */
 /* ------------------------------------------------------------------ */
 
+/* Three ceilings, named because they are three different ideas that
+ * currently share two numbers. Naming them is what makes every place
+ * with an opinion about a limit greppable, and what a host uses to
+ * state the same limit without repeating a literal.
+ *
+ * UNC_OFF_MAX and UNC_SIZE_UNKNOWN are the SAME VALUE today: a size
+ * field of all-ones reads both as "unknown" and as "the largest
+ * offset this engine can address". Nothing depends on the
+ * coincidence, and they are separate names because the day the
+ * offset type widens they stop being the same number.
+ */
+
+/* The widest container offset or size UncIO expresses. `seek`, `tell`
+ * and `size` are uint32, so this is the engine's addressing ceiling:
+ * 4 GiB - 1. A host with a larger file passes this rather than a
+ * wrapped size (FORMATS.md, *Size limits*). */
+#define UNC_OFF_MAX      0xFFFFFFFFu
+
+/* The 2 GB ceiling every classic Macintosh file lives under: HFS caps
+ * a fork there, and the File Manager's own position parameter is a
+ * signed 32-bit long. A declared fork size, a declared entry size or
+ * an offset inside a Macintosh container past this is not a file any
+ * target could hold, and is refused where it is read. */
+#define UNC_MAC_MAX      0x7FFFFFFFu
+
+/* A size field that states nothing: a streamed entry whose length is
+ * not known until it ends. */
 #define UNC_SIZE_UNKNOWN 0xFFFFFFFFu
 
 typedef struct UncIO {

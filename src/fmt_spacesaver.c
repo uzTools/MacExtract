@@ -138,7 +138,7 @@ static int ss_head_ok(const SsHead *o)
     if (o->version == 0 || o->version > 3) return 0;
     for (i = 0; i < 2; i++) {
         const SsFork *f = &o->fork[i];
-        if (f->clen > 0x7FFFFFFFu || f->ulen > 0x7FFFFFFFu) return 0;
+        if (f->clen > UNC_MAC_MAX || f->ulen > UNC_MAC_MAX) return 0;
         if (f->ulen == 0) {
             /* SetupAFork @0x53d4 clears the method and the parameter
              * set with the length; a fork that claims neither bytes nor
@@ -147,7 +147,7 @@ static int ss_head_ok(const SsHead *o)
             continue;
         }
         if (f->clen == 0) return 0;
-        if (f->off < SS_HDRLEN || f->off > 0x7FFFFFFFu) return 0;
+        if (f->off < SS_HDRLEN || f->off > UNC_MAC_MAX) return 0;
         if (f->off + f->clen < f->off) return 0;
         /* The compressor byte is deliberately NOT checked. A file whose
          * method this engine does not know is still a SpaceSaver file

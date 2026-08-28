@@ -51,10 +51,10 @@ typedef struct {
  * refusal of the whole file. */
 static uint32_t file_size32(const struct stat *st, const char *path)
 {
-    if ((uint64_t)st->st_size > 0xFFFFFFFFu) {
+    if ((uint64_t)st->st_size > (uint64_t)UNC_OFF_MAX) {
         fprintf(stderr, "macextract: %s: file is larger than 4 GB; this engine "
                         "addresses the first 4 GB of it\n", path);
-        return 0xFFFFFFFFu;
+        return UNC_OFF_MAX;
     }
     return (uint32_t)st->st_size;
 }

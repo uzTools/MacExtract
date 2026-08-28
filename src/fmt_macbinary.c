@@ -79,8 +79,8 @@ static int mb_version(const uint8_t *b, int32_t len)
 
     /* MacBinary I heuristics. */
     for (i = 99; i <= 125; i++) if (b[i] != 0) return 0;
-    if (unc_get_u32be(b + 83) > 0x7FFFFFFFu) return 0; /* data fork size */
-    if (unc_get_u32be(b + 87) > 0x7FFFFFFFu) return 0; /* rsrc fork size */
+    if (unc_get_u32be(b + 83) > UNC_MAC_MAX) return 0; /* data fork size */
+    if (unc_get_u32be(b + 87) > UNC_MAC_MAX) return 0; /* rsrc fork size */
     if (unc_get_u32be(b + 91) == 0) return 0;          /* creation date  */
     if (unc_get_u32be(b + 95) == 0) return 0;          /* mod date       */
     return 1;

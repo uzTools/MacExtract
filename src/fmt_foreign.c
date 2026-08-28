@@ -56,7 +56,7 @@ static int arj_at_zero(const uint8_t *head, int32_t len)
     if (size < 32 || size > 2600) return 0;
     if (4 + size + 4 > len) return 0;
     return unc_get_u32le(head + 4 + size) ==
-           ~unc_crc32(0xFFFFFFFFu, head + 4, size);
+           ~unc_crc32(UNC_CRC32_INIT, head + 4, size);
 }
 
 /* bzip2: "BZh" + a level digit, then either a block header or the

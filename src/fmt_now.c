@@ -636,7 +636,7 @@ int unc_now_extract(UncCtx *c)
             r = unc_get_u32be(hdr + 90);
             /* Saturate rather than wrap: a damaged header can declare
              * anything, and the two ceilings below clamp it anyway. */
-            if (d > 0xFFFFFFFFu - r) d = 0xFFFFFFFFu - r;
+            if (d > UNC_OFF_MAX - r) d = UNC_OFF_MAX - r;
             if (d + r > maxout) maxout = d + r;
         }
         st.hist   = maxout < NOW_HISTORY ? maxout : NOW_HISTORY;

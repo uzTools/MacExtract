@@ -104,7 +104,7 @@ static int ddseg_parse(const uint8_t *h, int32_t len, UncSegmentDesc *desc)
     rsrc   = unc_get_u32be(h + DS_RSRCLEN);
     paylen = unc_get_u32be(h + DS_PAYLEN);
     /* HFS caps a fork at 2 GB and the engine is 32-bit throughout. */
-    if (data > 0x7FFFFFFFu || rsrc > 0x7FFFFFFFu) return UNC_ERR_FORMAT;
+    if (data > UNC_MAC_MAX || rsrc > UNC_MAC_MAX) return UNC_ERR_FORMAT;
     /* One part cannot hold more than the whole file. */
     if (paylen > data + rsrc) return UNC_ERR_FORMAT;
 

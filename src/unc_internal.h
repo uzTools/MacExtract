@@ -52,6 +52,11 @@ static inline uint32_t unc_get_u32le(const uint8_t *p)
 /* I/O helpers                                                        */
 /* ------------------------------------------------------------------ */
 
+/* The largest single read the engine expresses. UncIO.read takes an
+ * int32_t length, so a buffer to be filled in one call is bounded here
+ * — the same number as UNC_MAC_MAX and a different idea from it. */
+#define UNC_READ_MAX 0x7FFFFFFFu
+
 /* Read exactly len bytes or fail. Returns UNC_OK, UNC_ERR_TRUNCATED
  * (clean EOF hit first) or UNC_ERR_IO. */
 int unc_read_full(UncIO *io, void *buf, int32_t len);
@@ -531,6 +536,11 @@ uint16_t unc_crc16_arc(uint16_t crc, const uint8_t *buf, int32_t len);
  * Used by Arsenic, gzip, zip.
  * Source: reference/XADMaster/CRC.m (XADCRCReverseTable usage). */
 uint32_t unc_crc32(uint32_t crc, const uint8_t *buf, int32_t len);
+
+/* The initial value that definition calls for. The final xor is the
+ * same number and is written `~crc` at the call sites; neither is a
+ * ceiling, and naming this one keeps it out of a search for one. */
+#define UNC_CRC32_INIT 0xFFFFFFFFu
 
 /* ------------------------------------------------------------------ */
 /* Sink helpers                                                       */

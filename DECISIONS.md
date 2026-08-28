@@ -155,6 +155,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-28 (the refill boundary) — the specimen that could not be made, made
 - 2026-08-28 (the tree count) — a probe outside the legal range tests the range check
 - 2026-08-28 (`--only`) — an exemption keyed to a proxy is an exemption that misfires
+- 2026-08-28 (three ideas, two numbers) — a constant nobody named cannot be searched for
 
 ---
 
@@ -8845,3 +8846,60 @@ DiskDoubler calling `end_entry` for a skipped folder against the
 contract in `macextract.h`. The question "has anything ever returned
 this?" is one grep of two files, and it was worth spending before
 planning around the answer.
+
+## 2026-08-28 (three ideas, two numbers) — a constant nobody named cannot be searched for
+
+The engine had **42 raw `0xFFFFFFFF` / `0x7FFFFFFF` literals across 14
+source files** and exactly one named ceiling, `UNC_SIZE_UNKNOWN`. A
+search for "every place with an opinion about a limit" therefore could
+not be run: `grep 0xFFFFFFFF` returned CRC-32's initial value, a zip
+escape, a StuffIt 5 marker, three algorithm register masks and the
+engine's addressing ceiling, undifferentiated.
+
+They are three ceilings, and they are now named apart:
+
+| name | value | the idea |
+|---|---|---|
+| `UNC_OFF_MAX` | 0xFFFFFFFF | what `UncIO` can address — `seek`/`tell`/`size` are `uint32` |
+| `UNC_MAC_MAX` | 0x7FFFFFFF | what a classic Macintosh file can be — HFS caps a fork at 2 GB, and the File Manager's position parameter is a signed long |
+| `UNC_READ_MAX` | 0x7FFFFFFF | the largest single read the engine expresses — `UncIO.read` takes an `int32_t` |
+
+Plus three things that are not limits at all and were indistinguishable
+from one: `UNC_CRC32_INIT`, `ZIP64_ESC32` (the format's own escape) and
+`SIT5_DATALEN_NONE` (the marker after every directory entry).
+
+Two things the naming showed that the literals had hidden:
+
+- **`UNC_SIZE_UNKNOWN` and `UNC_OFF_MAX` are the same number.** "This
+  entry's length is not known" and "the largest offset this engine can
+  address" are indistinguishable at every comparison in the engine.
+  Nothing depends on the coincidence today, and it is the first thing a
+  widened offset type would break — silently, because the two would stop
+  being equal while every `==` still compiled.
+- **`0x7FFFFFFF` meant two unrelated things inside one file.** In
+  `fmt_exo.c` it bounded a tar member (a fork ceiling) and a
+  central-directory buffer (a read length). Same number, opposite
+  reasons to change.
+
+Behaviour is unchanged by construction, which is the point: the 932-fixture
+suite can prove this refactor and structurally could not prove the
+widening it prepares for. A `unc_off_t` that is 64-bit on Linux and
+32-bit on 68k yields **two engines and one differential suite** — every
+fixture exercises the 64-bit build, the Mac tiers sample 69 and 20
+fixtures nowhere near a boundary, and each `high half is set` guard
+becomes a branch that is compiled out on the machine that tests it and
+live on the machine that ships.
+
+One measurement worth keeping for that decision: **no codec file
+mentions `UncIO` at all** — not `unc_inflate.c`, `unc_lzw.c`,
+`unc_lzah.c`, `unc_lzdyn.c`, `unc_huffman.c`, `sit_arsenic.c` or
+`unc_crypt.c`. All ~64 `seek`/`tell`/`size` call sites are in the format
+parsers, a handful per entry rather than per byte, so the 68000 cost of a
+wider offset type is not in the decompressors. That is a narrower claim
+than the one OPEN_ITEMS.md's Zip64 row rests on, and the scope decision
+does not turn on it: the verification cost above is the expensive half.
+
+Four literals stay raw on purpose: SuperDisk!'s three `& 0xFFFFFFFF`
+register masks and Arsenic's range-coder overflow guard are transcribed
+algorithm internals whose width is fixed by the algorithm. If the offset
+type ever widens, those are exactly the ones that must NOT follow.

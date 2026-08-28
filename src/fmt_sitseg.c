@@ -72,7 +72,7 @@ static int sitseg_parse(const uint8_t *h, int32_t len, UncSegmentDesc *desc)
         /* HFS caps a fork at 2 GB and the engine is 32-bit throughout;
          * a sum that wraps would make `total` describe less than the
          * forks it is the total of. */
-        if (rsrc > 0x7FFFFFFFu || data > 0x7FFFFFFFu) return UNC_ERR_FORMAT;
+        if (rsrc > UNC_MAC_MAX || data > UNC_MAC_MAX) return UNC_ERR_FORMAT;
 
         desc->scheme   = UNC_FORMAT_SITSEG;
         desc->part     = h[SS_PART];

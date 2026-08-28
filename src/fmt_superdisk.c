@@ -138,8 +138,8 @@ uint32_t unc_superdisk_single_body(const uint8_t *head, int32_t len)
     total = unc_get_u32be(head);
     dlen  = unc_get_u32be(head + 4);
     rlen  = unc_get_u32be(head + 8);
-    if (total == 0 || total > 0x7FFFFFFFu) return 0;
-    if (dlen > 0x7FFFFFFFu || rlen > 0x7FFFFFFFu) return 0;
+    if (total == 0 || total > UNC_MAC_MAX) return 0;
+    if (dlen > UNC_MAC_MAX || rlen > UNC_MAC_MAX) return 0;
     if (total != dlen + rlen) return 0;
     nlen = head[30];
     if (nlen == 0 || nlen > 31) return 0;

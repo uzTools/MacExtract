@@ -68,7 +68,7 @@ UncFormat unc_cpt_probe(const uint8_t *head, int32_t len, UncIO *io)
 
     if (unc_read_at(io, offset, buf, 7) != UNC_OK) return UNC_FORMAT_UNKNOWN;
     storedcrc = unc_get_u32be(buf);
-    crc = unc_crc32(0xFFFFFFFFu, buf + 4, 3);
+    crc = unc_crc32(UNC_CRC32_INIT, buf + 4, 3);
     nentries = unc_get_u16be(buf + 4);
     commentlen = buf[6];
 
@@ -484,7 +484,7 @@ static int cpt_encrypted_entry(UncCtx *c, uint32_t vol,
     for (;;) {
         est = unc_password(c, attempt > 0);
         if (est != UNC_OK) return est;      /* nothing (more) to try */
-        crc = 0xFFFFFFFFu;
+        crc = UNC_CRC32_INIT;
         unc_crypt_cpt(cr, c->pw, c->pwlen);
         est = cpt_entry_forks(c, vol, at, rcomp, dcomp, rsrclen, datalen,
                               flags, &crc, iobuf, iocap, obuf, ocap,
@@ -497,7 +497,7 @@ static int cpt_encrypted_entry(UncCtx *c, uint32_t vol,
     }
     if (c->opt.test_only) return UNC_OK;    /* that pass WAS the test */
 
-    crc = 0xFFFFFFFFu;
+    crc = UNC_CRC32_INIT;
     unc_crypt_cpt(cr, c->pw, c->pwlen);
     est = cpt_entry_forks(c, vol, at, rcomp, dcomp, rsrclen, datalen,
                           flags, &crc, iobuf, iocap, obuf, ocap,
@@ -735,7 +735,7 @@ int unc_cpt_extract(UncCtx *c)
                  * read, which cannot roll past the last part. */
                 est = UNC_ERR_CORRUPT;            /* forks outside file */
             } else {
-                crc = 0xFFFFFFFFu;
+                crc = UNC_CRC32_INIT;
                 est = cpt_entry_forks(c, filevol, fileoffs, rcomp, dcomp,
                                       rsrclen, datalen, flags, &crc,
                                       iobuf, iocap, obuf, ocap, hz, window,

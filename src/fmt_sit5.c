@@ -27,7 +27,7 @@
  * Fork data follows the header: rsrc fork first, then data fork.
  *
  * Quirk (from the reference): after every directory entry an extra
- * entry with datalen == 0xFFFFFFFF appears; it is skipped and does
+ * entry with datalen == SIT5_DATALEN_NONE appears; it is skipped and does
  * not count against the entry total. Directory entries add their
  * (recursive) child count to the total. Parent chains are tracked by
  * header offset (diroffs), not by nesting order.
@@ -35,6 +35,10 @@
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
 #include "unc_internal.h"
+
+/* The datalen of the extra entry that follows every directory entry —
+ * the format's own marker, not a ceiling. */
+#define SIT5_DATALEN_NONE 0xFFFFFFFFu
 
 #define SIT5_ID          0xA5A5A5A5u
 #define SIT5_DIRECTORY   0x40
@@ -225,7 +229,7 @@ int unc_sit5_extract(UncCtx *c)
             }
             dirfiles = unc_get_u16be(hdr);
             hpos += 2;
-            if (datalen == 0xFFFFFFFFu) {
+            if (datalen == SIT5_DATALEN_NONE) {
                 /* Mystery entry after each directory: skip, does not
                  * count (XADStuffIt5Parser.m). */
                 numentries++;

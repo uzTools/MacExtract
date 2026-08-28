@@ -1186,7 +1186,7 @@ static int arc_entry_trimmed(UncCtx *c, UncBufIn *in, uint32_t outsize,
 
     unc_fork_out(&t.out, c, UNC_FORK_DATA, write, UNC_CK_CRC16_ARC,
                  t.buf, UNC_STAGE);
-    unc_fork_split(&t.out, 0, dsplit, dsplit, 0xFFFFFFFFu);
+    unc_fork_split(&t.out, 0, dsplit, dsplit, UNC_OFF_MAX);
     t.outsize = outsize;
     unc_rle90_init(&t.rle, 1);
 
@@ -1229,7 +1229,7 @@ static int arc_entry_data(UncCtx *c, UncBufIn *in, int method,
 
     unc_fork_out(&o, c, UNC_FORK_DATA, write, UNC_CK_CRC16_ARC,
                  out, UNC_STAGE);
-    unc_fork_split(&o, 0, dsplit, dsplit, 0xFFFFFFFFu);
+    unc_fork_split(&o, 0, dsplit, dsplit, UNC_OFF_MAX);
 
     for (;;) {
         int b;
