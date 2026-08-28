@@ -2919,10 +2919,27 @@ static void at_report(const uint32_t *vals, int nvals)
     at_fill(base, rb, 464, 32, 488, 56, 1);     /* calibration TR (476,44) */
     at_fill(base, rb, 24, 288, 48, 312, 1);     /* calibration BL (36,300) */
 
-    for (b = 15; b >= 0; b--) at_cell(base, rb, idx++, (0xA55A >> b) & 1);
+    /* Values first, sync word LAST — same layout, deliberate order.
+     *
+     * The sync word is the only thing that tells the host a grid is
+     * complete, and painting it first meant a HALF-painted grid decoded
+     * cleanly: the screen is erased to white above, so cells not yet
+     * reached read as zero, and the host saw a valid sync, a plausible
+     * ret and a truncated tail. That is the false FAIL of 2026-08-28 —
+     * derived-PackIt.pit reported totalRsrcLen 0x00008000 where the
+     * truth is 0x0000DB05, which is exactly that value with painting
+     * stopped after its 17th bit, and peakBytes 0 because painting
+     * never reached it.
+     *
+     * Painted last, the sync is a completion certificate: a screenshot
+     * taken mid-paint has no sync, decode_grid.py rejects it, and the
+     * host simply looks again. */
+    idx = 16;
     for (i = 0; i < nvals; i++)
         for (b = 31; b >= 0; b--)
             at_cell(base, rb, idx++, (int)((vals[i] >> b) & 1u));
+    idx = 0;
+    for (b = 15; b >= 0; b--) at_cell(base, rb, idx++, (0xA55A >> b) & 1);
 }
 
 /* Idle so the host can screenshot the framebuffer, then kill the emulator. */

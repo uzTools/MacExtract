@@ -156,6 +156,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-28 (the tree count) — a probe outside the legal range tests the range check
 - 2026-08-28 (`--only`) — an exemption keyed to a proxy is an exemption that misfires
 - 2026-08-28 (three ideas, two numbers) — a constant nobody named cannot be searched for
+- 2026-08-28 (the certificate painted first) — a completion marker that goes down first certifies nothing
 
 ---
 
@@ -8903,3 +8904,47 @@ Four literals stay raw on purpose: SuperDisk!'s three `& 0xFFFFFFFF`
 register masks and Arsenic's range-coder overflow guard are transcribed
 algorithm internals whose width is fixed by the algorithm. If the offset
 type ever widens, those are exactly the ones that must NOT follow.
+
+## 2026-08-28 (the certificate painted first) — a completion marker that goes down first certifies nothing
+
+Two of thirteen fixtures reported FAIL at `--poll 3` on a 4 MB Mac Plus
+while passing at `--poll 20` and all out. The harness's README already
+carried a hypothesis for a similar 1 MB failure — a poll landing while
+the app was still painting — and said the short 4 MB runs were "a
+different regime" where `--poll 3` is fine. Both halves were wrong: the
+regime is the same, and the cause is not a race that a slower poll
+avoids.
+
+`at_report` erases the screen to white, paints three calibration squares,
+then the 16-bit sync word, then eight 32-bit values MSB-first. **The sync
+word went down first.** So a screenshot taken part-way through decoded
+perfectly: calibration squares found, sync valid, early values final, and
+every cell not yet reached reading as zero because the erase left it
+white.
+
+The kept frame is the proof, and it is exact. `derived-PackIt.pit`
+reported `totalRsrcLen` **0x00008000** where the truth is **0x0000DB05** —
+that value with painting stopped after its 17th bit — and `peakBytes` 0
+because painting never arrived. `ret` was already 0, which is why the
+host took the frame as final.
+
+**The sync word is now painted last**, same grid layout, deliberate
+order. It becomes a completion certificate rather than a header: a
+mid-paint screenshot has no sync, `decode_grid.py` rejects it, and the
+host looks again. Both fixtures now pass at `--poll 3` and at `--poll 1`.
+
+Three things worth carrying:
+
+- **A marker that says "this is complete" must be written after the thing
+  it describes.** Written first it is a header, and a header cannot
+  distinguish complete from interrupted. The same shape appears wherever
+  a length or a magic precedes its payload.
+- **"Poll more slowly" was a workaround that hid a defect for weeks**,
+  and it cost accuracy in the direction that mattered: the two rows it
+  forced to `--poll 20` are the coarsest in FORMATS.md's timing table.
+  A tolerance widened to make a symptom go away is worth re-opening.
+- **The image was worth looking at.** The values alone said
+  "part-painted" and that was already in the docs as an inference. What
+  turned it into a mechanism — erase-to-white plus forward paint plus
+  sync-first, with 0x8000 as the arithmetic to check it — came from
+  decoding the one frame the harness had kept all along.

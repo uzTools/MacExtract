@@ -202,16 +202,24 @@ at `--poll 20`. **Use `--poll 20` for the Arsenic fixtures**; the timings in
 FORMATS.md were taken there. The likely cause is a poll landing while the app
 is still painting its "alive" grid, so `ret` holds neither a result nor the
 running sentinel and run.py takes it as final — that is a **hypothesis**, and
-the failure pattern is what is measured. **`--poll 3` is NOT safe at 4 MB either**, which this
-paragraph claimed until 2026-08-28: re-measuring `timing.txt` at 4 MB,
-`popper-1.7.tar.Z` and `derived-PackIt.pit` both reported FAIL with a
-TRUNCATED total and `peak heap 0 B` — 2 of 13 fixtures — and both pass at
-`--poll 20` with the right numbers, and pass all out at 4 MB and at 1 MB.
-That is a different shape from the 1 MB failure above: the run takes its full
-time and the file count is right, so what is read is a grid caught
-PART-PAINTED rather than one never painted. **Use `--poll 20` unless a run is
-short enough that 20 s of quantisation ruins it**, and treat a FAIL whose peak
-heap is 0 as the harness's rather than the engine's.
+the failure pattern is what is measured. **FIXED 2026-08-28, and `--poll 1` now passes.** `--poll 3` was not safe
+at 4 MB either — re-measuring `timing.txt`, `popper-1.7.tar.Z` and
+`derived-PackIt.pit` both reported FAIL with a truncated total and
+`peak heap 0 B`, 2 of 13, while passing at `--poll 20` and all out at both
+memory sizes. The cause is not a race to be avoided by polling slowly:
+`at_report` erases the screen to white and paints FORWARD, and it painted the
+sync word FIRST, so a screenshot taken mid-paint decoded cleanly with the
+unpainted tail reading as zeros. The kept frame proves it —
+`derived-PackIt.pit` reported `totalRsrcLen` 0x00008000 where the truth is
+0x0000DB05, which is that value with painting stopped after its 17th bit.
+The sync word is now painted LAST, so it certifies completion: a mid-paint
+screenshot has no sync, `decode_grid.py` rejects it, and the host looks
+again. Both fixtures pass at `--poll 3` and at `--poll 1`.
+
+**What still argues for a slower poll is CPU, not correctness.**
+`decode_grid.py` costs ~50 ms a call — mostly Python parsing an ASCII PGM of
+every pixel — so `--poll 1` spends ~5 % of the core the 1x emulator is
+pacing against. Crop the region and emit binary `P5` and that goes away.
 
 **Two 22-minute runs were spent finding this out**, on an A/B that then could
 not be resolved: `-Os` and `-O2` builds of `sit_arsenic.c` came out exactly

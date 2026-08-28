@@ -2263,8 +2263,11 @@ coarser ruler. The table carried a 30 s boot for `macburger-helper.hqx` until
 the same commands: `macburger-helper.hqx` was 150 s and is 104 s. The engine
 got faster and the table was not re-run.
 
-**Two rows need `--poll 20`**: at `--poll 3` they report a truncated total and
-a FAIL that is the harness's, not the engine's (`tools/vmac/README.md`).
+**Two rows were measured at `--poll 20` because `--poll 3` mis-read them**,
+which was a harness defect and was fixed the same day — the grid's sync word
+is now painted last, and both fixtures pass at `--poll 1`
+(`tools/vmac/README.md`). Those two rows are the coarsest here and are worth
+re-measuring; the rest stand.
 
 **StuffIt 5 / Arsenic at 1x — and it is in a class of its own.** The list
 above samples StuffIt 5 with a 4,611 B fixture, far too small to reach the
