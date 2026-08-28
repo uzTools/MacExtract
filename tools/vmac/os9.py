@@ -109,7 +109,7 @@ DISK_SHA1 = "a6e39e049d99c56d0a2c08bf2631079f6f14bd56"
 
 
 class Qemu:
-    def __init__(self, disks, monitor, tablet=True):
+    def __init__(self, disks, monitor, tablet=True, pointer=False):
         # -device usb-tablet makes an ABSOLUTE pointer available, so the
         # monitor's `mouse_move X Y` means "go to X, Y" rather than "move by
         # X, Y". mac99's built-in pointer is an ADB mouse, which is relative —
@@ -123,14 +123,22 @@ class Qemu:
         # reason to assume it binds an absolute tablet. Do not treat either
         # setting as known-good without a pointer-movement probe —
         # tools/vmac/os9probe.py measures it.
+        #
+        # `pointer=True` asks for the configuration os9mouse.py measured
+        # instead: no tablet, one `usb-mouse`, driven by RELATIVE deltas and
+        # a closed loop. It is what --cancel-click needs, and nothing else
+        # here does — every other route is keyboard-only.
         argv = ["qemu-system-ppc", "-M", "mac99,via=pmu", "-m", "512",
                 "-boot", "c", "-g", "1024x768x32", "-display", "none",
                 "-monitor", f"unix:{monitor},server,nowait"]
-        if tablet:
+        if pointer:
+            argv[-2:-2] = ["-device", "usb-mouse"]
+        elif tablet:
             argv[-2:-2] = ["-device", "usb-tablet"]
         for i, d in enumerate(disks):
             argv += ["-drive", f"file={d},format=raw,media=disk,index={i}"]
         self.mon_path = monitor
+        self._scratchdir = os.path.dirname(monitor)   # where frame() writes
         if os.path.exists(monitor):
             os.remove(monitor)
         self.proc = subprocess.Popen(argv, stdout=subprocess.PIPE,
@@ -215,6 +223,45 @@ class Qemu:
         s.sendall((cmd + "\n").encode())
         time.sleep(wait)
         s.close()
+
+    def burst(self, cmds, gap=0.03, wait=0.4):
+        """Several monitor commands down ONE connection.
+
+        `mon()` opens a socket and sleeps 0.3 s per command, which is fine for
+        a keystroke and useless for a pointer: one `goto()` sends dozens of
+        `mouse_move`s, and the two halves of a click have to be closer
+        together than the Mac's double-click threshold. This is the interface
+        os9mouse.Pointer drives."""
+        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        s.connect(self.mon_path)
+        time.sleep(0.25)
+        try:
+            s.recv(65536)
+        except OSError:
+            pass
+        for c in cmds:
+            s.sendall((c + "\n").encode())
+            time.sleep(gap)
+        time.sleep(wait)
+        s.close()
+
+    def frame(self, tag, workdir=None):
+        """A screenshot as (w, h, pixels), which is what Pointer diffs.
+
+        Straight from QEMU's PPM: the pointer code compares pixels, so the
+        ImageMagick conversion shot() does for the human-readable screenshots
+        would only be a round trip through a second format."""
+        import os9mouse
+        d = workdir or self._scratchdir
+        p = os.path.join(d, "." + tag + ".ppm")
+        if os.path.exists(p):
+            os.remove(p)
+        self.mon(f"screendump {p}", 0.8)
+        for _ in range(25):
+            if os.path.exists(p) and os.path.getsize(p) > 100000:
+                break
+            time.sleep(0.3)
+        return os9mouse.readppm(p)
 
     def shot(self, path):
         """QEMU writes PPM; convert so the result is viewable like the rest.
@@ -431,8 +478,17 @@ PROGRESS_TITLE = (300, 24, 90, 86)
 # 1024x768 frame — which is what the 8-bit-name photograph is for.
 VOLUME_WINDOW = (460, 260, 0, 18)
 
+# The middle of the progress dialog's Cancel BUTTON, in screen pixels.
+# Computed from the resources rather than eyeballed: 'DLOG' 128 is at global
+# (80,80)-(400,190) and does not autocentre, and the button is item 1 of
+# 'DITL' 128 at local (220,78)-(300,98) — so (80+260, 80+88). Confirmed
+# against 15-progress.png, where the button's frame runs x=300..380,
+# y=158..178. Re-derive it from mac/macextract.r if the dialog moves.
+CANCEL_BUTTON = (340, 168)
 
-def launch_by_keyboard(q, outdir, wait=240.0, cancel=False):
+
+def launch_by_keyboard(q, outdir, wait=240.0, cancel=False, click=False,
+                       click_at=CANCEL_BUTTON):
     """Drive the Finder to launch the application and extract, using no mouse.
 
     Every step here was measured by tools/vmac/os9probe.py on 2026-08-02 and
@@ -476,6 +532,14 @@ def launch_by_keyboard(q, outdir, wait=240.0, cancel=False):
     being waited out, which is the route the Mini vMac tiers have driven since
     M10 and this one had never been asked for. The pass condition is then a
     strict, non-empty subset of the entries — see verify_output(partial).
+
+    `click=True` cancels through the BUTTON instead of the chord. They are two
+    different branches of ProgressPump() — the chord is its own keyDown test,
+    the button is the DialogSelect beside it — and until this route existed
+    only the chord had ever run here. The pointer is parked on the button
+    while the DESTINATION dialog is still up, because positioning costs ~40 s
+    and the progress dialog exists only while the extraction does; the click
+    itself is then instant and needs no move.
 
     Returns the list of (label, screenshot) pairs it captured."""
     shots = []
@@ -569,6 +633,23 @@ def launch_by_keyboard(q, outdir, wait=240.0, cancel=False):
     step(sfg, "destination dialog opened", wait)
     dest = shot("14-destination")
 
+    ptr = None
+    if click:
+        # Park the cursor on the Cancel button NOW, while a modal dialog that
+        # waits forever is on screen. The progress dialog is up only while the
+        # extraction runs — seconds, on this machine — and goto() is a closed
+        # loop that costs ~40 s, so aiming after the fact cannot work. The
+        # SFPutFile name field blinks a caret; Pointer masks it (os9mouse.py).
+        sys.path.insert(0, HERE)
+        import os9mouse
+        ptr = os9mouse.Pointer(q.burst, lambda t: q.frame(t, outdir))
+        got = ptr.goto(*click_at)
+        if got is None or abs(got[0]-click_at[0]) > 4 \
+                or abs(got[1]-click_at[1]) > 4:
+            print(f"os9: the cursor is at {got}, not at {click_at}  <- a "
+                  f"click from here is not the click this run means to make")
+        shot("14b-parked")
+
     q.key("ret")                                 # Save: extract beside it
     if cancel:
         # Poll fast here and shoot at once: the window to reach the progress
@@ -587,10 +668,22 @@ def launch_by_keyboard(q, outdir, wait=240.0, cancel=False):
         # progress callback was found here (DECISIONS.md 2026-08-28,
         # tools/run_ticks.py). 1 means the first landed, more means the
         # early ones were lost, none prints "Cmd-. DID NOT CANCEL".
+        #
+        # A click is counted the same way, for the same reason: an application
+        # that is not pumping events cannot see one either, and a button press
+        # into a frozen dialog looks exactly like a button that does nothing.
+        what = "click" if click else "Cmd-."
         sent, hit = 0, 0.0
         deadline = time.time() + wait
         while time.time() < deadline:
-            chord("meta_l-dot")
+            if click:
+                # No move: the cursor has been on the button since before the
+                # extraction started. The button is held down (Pointer.press)
+                # so DialogSelect's TrackControl still sees it down when the
+                # progress callback gets round to dequeuing the mouseDown.
+                ptr.press(hold=0.9)
+            else:
+                chord("meta_l-dot")
             sent += 1
             hit = replaced(prog, 6.0)
             if hit:
@@ -599,12 +692,12 @@ def launch_by_keyboard(q, outdir, wait=240.0, cancel=False):
             # Replaced is not the same as cancelled: an extraction that
             # finishes on its own replaces the dialog too. Which one happened
             # is read off the volume, never off this line.
-            print(f"os9: the progress dialog was replaced after {sent} Cmd-. "
-                  f"({hit:.4f} of the title line changed) — cancelled or "
-                  f"finished, the volume says which")
+            print(f"os9: the progress dialog was replaced after {sent} "
+                  f"{what} ({hit:.4f} of the title line changed) — cancelled "
+                  f"or finished, the volume says which")
         else:
-            print(f"os9: {sent} Cmd-. sent and the progress dialog is still "
-                  f"up  <- Cmd-. DID NOT CANCEL")
+            print(f"os9: {sent} {what} sent and the progress dialog is still "
+                  f"up  <- {what.upper()} DID NOT CANCEL")
     else:
         still("extraction finished", wait)
     alert = shot("16-result")
@@ -628,6 +721,9 @@ def launch_by_keyboard(q, outdir, wait=240.0, cancel=False):
         shots.append(("19-names", crop))
     if os.path.exists(scratch):
         os.remove(scratch)
+    for f in os.listdir(outdir):            # frame()'s PPMs: 2.3 MB apiece
+        if f.startswith(".") and f.endswith(".ppm"):
+            os.remove(os.path.join(outdir, f))
     return shots
 
 
@@ -1354,7 +1450,8 @@ def run_one(fixture, appbin, outdir, args):
 
     verify_disk()
     boot = boot_copy(outdir)
-    q = Qemu([boot, xfer], os.path.join(outdir, "mon.sock"))
+    q = Qemu([boot, xfer], os.path.join(outdir, "mon.sock"),
+             pointer=args.cancel_click)
     try:
         # use_absolute_pointer() is deliberately NOT called. It succeeds — QEMU
         # really does offer the tablet and really does select it — and it buys
@@ -1380,7 +1477,9 @@ def run_one(fixture, appbin, outdir, args):
             # there is a way to avoid the mouse, which is just as well, because
             # the mouse does not work in this guest. See XFER_VOLUME_ICON.
             launch_by_keyboard(q, outdir, wait=args.launch_wait,
-                               cancel=args.cancel)
+                               cancel=args.cancel or args.cancel_click,
+                               click=args.cancel_click,
+                               click_at=args.click_at)
         if os.path.exists(scratch):
             os.remove(scratch)
     finally:
@@ -1402,10 +1501,12 @@ def run_one(fixture, appbin, outdir, args):
     # what the same engine writes on Linux. This is also the check on whether
     # the guest flushed — an unflushed volume shows up here as a failed mount
     # or a missing file, not as a silent pass.
-    ok, lines = verify_output(xfer, fixture, outdir, partial=args.cancel)
+    cancelled = args.cancel or args.cancel_click
+    ok, lines = verify_output(xfer, fixture, outdir, partial=cancelled)
     print(f"\nos9: {'PASS' if ok else 'FAIL'} — "
           f"{os.path.basename(fixture)} on Mac OS 9.2"
-          f"{', cancelled part way' if args.cancel else ''}")
+          f"{', cancelled part way' if cancelled else ''}"
+          f"{' (the BUTTON)' if args.cancel_click else ''}")
     for l in lines:
         print("os9: " + l)
     print(f"os9: screenshots in {outdir}")
@@ -1459,6 +1560,22 @@ def main():
                          "entry fails as a useless test rather than passing. "
                          "Needs an archive slow enough to catch — seconds is "
                          "not enough on this machine")
+    ap.add_argument("--cancel-click", action="store_true",
+                    help="like --cancel, but through the progress dialog's "
+                         "Cancel BUTTON instead of Cmd-. — a different branch "
+                         "of ProgressPump(). Boots with a relative usb-mouse "
+                         "and parks the cursor on the button while the "
+                         "destination dialog is still up, because positioning "
+                         "costs ~40 s and the progress dialog does not last "
+                         "that long. Same pass condition as --cancel")
+    ap.add_argument("--click-at", metavar="X,Y", default=None,
+                    help="with --cancel-click: click somewhere OTHER than the "
+                         "Cancel button. This is the control, and it is the "
+                         "only thing that establishes the test can fail: "
+                         "`--click-at 150,168` presses the progress dialog's "
+                         "blank background, the extraction must then run to "
+                         "completion, and the run must FAIL as a cancel that "
+                         "arrived too late")
     ap.add_argument("--launch-wait", type=float, default=240.0,
                     help="seconds to allow each of the application launch and "
                          "the extraction; the 68LC040 emulator makes both "
@@ -1476,11 +1593,26 @@ def main():
         return 0
     if not (args.fixture or args.list):
         ap.error("give a fixture, --list, or --setup")
-    if args.cancel and not args.launch:
+    if (args.cancel or args.cancel_click) and not args.launch:
         ap.error("--cancel drives the application, so it needs --launch")
-    if args.cancel and args.hfsplus:
+    if (args.cancel or args.cancel_click) and args.hfsplus:
         ap.error("--cancel drives the INTERACTIVE application; --hfsplus "
                  "runs the autotest build, which has no progress dialog")
+    if args.click_at and not args.cancel_click:
+        ap.error("--click-at is the control for --cancel-click, and means "
+                 "nothing without it")
+    if args.click_at:
+        try:
+            x, y = (int(v) for v in args.click_at.split(","))
+        except ValueError:
+            ap.error("--click-at wants X,Y in screen pixels, e.g. 150,168")
+        args.click_at = (x, y)
+    else:
+        args.click_at = CANCEL_BUTTON
+    if args.cancel and args.cancel_click:
+        ap.error("--cancel and --cancel-click are two routes to the same "
+                 "cancel; run them one at a time so the log says which one "
+                 "was tested")
     if not os.path.exists(DISK):
         raise SystemExit("os9: no Mac OS 9 disk — run tools/vmac/os9.py --setup")
 

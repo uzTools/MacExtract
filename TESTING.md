@@ -1893,7 +1893,9 @@ part boundary (27 failures). Both were reverted.
    dismissed, SFGetFile is checked to repaint, and Cmd-. quits the
    application — and `--cancel` interrupts the extraction instead of
    waiting it out, with a strict non-empty subset of the entries as the
-   pass condition (FORMATS.md, *Cancelling, and an 8-bit name*).
+   pass condition. `--cancel-click` does the same through the Cancel
+   BUTTON, with `--click-at` as the control that establishes the test
+   can fail (FORMATS.md, *Cancelling, and an 8-bit name*).
    **What this layer still cannot see** is a name the Mac cut at 31
    characters, because both sides are compared in the Mac's spelling
    (`run_names.py` is where that lives), and whether an extraction is
@@ -1947,12 +1949,13 @@ part boundary (27 failures). Both were reverted.
     Cmd-. through the keyDown check beside it, and the SFGetFile
     repaint afterwards. Its fixture is chosen with 8-bit names, so the
     same run also photographs System 7 drawing MacRoman — the one
-    thing the byte comparisons cannot see. **Mac OS 9 covers both of
+    thing the byte comparisons cannot see. **Mac OS 9 covers all of
     those since 2026-08-28**, through `os9.py` rather than this driver:
-    `--cancel` for Cmd-. and the repaint behind it, and `19-names.png`
-    for the glyphs. What is still Mini vMac's alone there is the Cancel
-    BUTTON, which needs the pointer (`os9mouse.py`) rather than the
-    keyboard route a fixture run uses.
+    `--cancel` for Cmd-. and the repaint behind it, `19-names.png` for
+    the glyphs, and `--cancel-click` for the BUTTON, which needs the
+    pointer (`os9mouse.Pointer`) rather than the keyboard route a
+    fixture run uses. Nothing on this tier is Mini vMac's alone any
+    more.
 
 **What each layer can see is not the same, and that matters.** Layer 7
 compares a count, two summed CRC-32s and two summed lengths. A summed

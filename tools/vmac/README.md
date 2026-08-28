@@ -1069,6 +1069,44 @@ quiet pass. Waiting on `PROGRESS_TITLE` between sends is what makes the count
 meaningful: a progress dialog reading "0%  estimating time left" is perfectly
 still, and `still()` read that as a finished extraction 14 s into a 30 s one.
 
+**`--cancel-click` cancels through the BUTTON**, which is the other branch of
+`ProgressPump()` — the chord is its own keyDown test, the button is the
+`DialogSelect` beside it — and needs the pointer:
+
+    os9.py fixtures/derived-Library_ISBN_Barcoder.sit -o <dir> --launch \
+           --cancel-click
+    os9.py ... --cancel-click --click-at 150,168     # the control
+
+Three things make it work, and each is a way it failed to:
+
+- **The cursor is parked before the dialog exists.** `goto()` is a closed loop
+  costing ~40 s and the progress dialog lasts as long as the extraction, so
+  aiming at it once it is up cannot work. The parking happens while SFPutFile
+  is still on screen — a modal dialog waits forever — and `14b-parked.png` is
+  the photograph of the cursor sitting where the button will be. The Return
+  that starts the extraction moves nothing.
+- **The button is HELD down**, `Pointer.press(hold=0.9)`. An application that
+  pumps events only from its progress callback dequeues the mouseDown up to a
+  tick late, and `DialogSelect` then calls `TrackControl`, which asks whether
+  the button is still down: a 60 ms tap that is already over reads as a click
+  released outside the control and hits no item.
+- **The guest gets a relative `usb-mouse`** (`Qemu(pointer=True)`), never the
+  absolute tablet a fixture run leaves attached and unused.
+
+`CANCEL_BUTTON` is computed from `mac/macextract.r` rather than eyeballed:
+`DLOG` 128 sits at global (80,80)-(400,190) and does not autocentre, and item
+1 of `DITL` 128 is at local (220,78)-(300,98), so the middle is (340,168) —
+which is where `15-progress.png` draws it.
+
+**The control is what makes the pass mean anything.** `--click-at 150,168`
+presses the same dialog's blank background, 190 px from the button, and
+everything else about the run is identical. Measured 2026-08-28, one boot
+each, `derived-Library_ISBN_Barcoder.sit`: the button cancels on the first
+press, 1 of 34 entries written and byte-exact; the background press does not,
+all 34 entries are written, and the run FAILS as a cancel that arrived too
+late. Without that second boot, "the extraction stopped early" is equally
+consistent with any mouse press waking the application up.
+
 **`19-names.png` is the photograph of an 8-bit name.** Every tier checks the
 BYTES of a MacRoman filename and no tier had ever shown the GLYPHS on Mac
 OS 9. `synth-packit-2.pit` carries one: `App` followed by MacRoman `CC A9`,
@@ -1116,7 +1154,10 @@ RC4*).
                 m = os9mouse.Mac(cd=True); m.settle(); m.png('desk')"
 
 It is a module rather than a command because every session is a different
-dozen steps. The pieces:
+dozen steps. The positioning algorithm itself is `Pointer`, which takes a
+"send these monitor commands" and a "give me a frame" and belongs to neither
+guest: `Mac` hands it its own, and `os9.py` hands it `Qemu`'s for
+`--cancel-click`. The pieces:
 
 | call | does |
 |---|---|

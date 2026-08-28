@@ -147,6 +147,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-27 (what the tables left behind) — the profile moves, and the next thing is never the thing on the list
 - 2026-08-27 (the path builder's own cap) — the bytes were still in the walk
 - 2026-08-28 (the OS 9 tier's last three keystrokes) — a run that stopped early still reported every step it took
+- 2026-08-28 (clicking a dialog that does not exist yet) — park the pointer before the thing you mean to hit appears
 
 ---
 
@@ -8548,3 +8549,49 @@ draws it as `AppÃ©` in the Finder's icon view and again in Standard File's
 list, the same two characters the Linux CLI prints as UTF-8. **The step that
 was missing from the harness and the observation that was missing from the
 tier turned out to be the same step.**
+
+## 2026-08-28 (clicking a dialog that does not exist yet) — park the pointer before the thing you mean to hit appears
+
+The Mac OS 9 tier's last open item was the progress dialog's Cancel BUTTON,
+never clicked here: Cmd-. is one branch of `ProgressPump()` and the button is
+the `DialogSelect` beside it, and the keyboard route a fixture run uses cannot
+reach the second. What kept it open was a timing argument that looked like a
+wall — `goto()` is a closed loop costing ~40 s, and the dialog it would aim at
+exists only while the extraction runs, which is seconds here.
+
+**The wall is only there if the cursor has to be aimed at the dialog.** It
+does not: the button's position is known from `mac/macextract.r` before the
+application is even launched (`DLOG` 128 does not autocentre, so item 1 of
+`DITL` 128 is at (340,168) on screen), and the modal dialog BEFORE it — the
+destination dialog — waits forever. So the pointer is parked on the button's
+coordinates while SFPutFile is up, the Return that starts the extraction moves
+nothing, and the click is then instantaneous. **When positioning is expensive
+and the target is short-lived, position early against a stationary predecessor
+rather than faster against the target.**
+
+Two smaller things had to be right, and each would have failed as "the button
+does nothing":
+
+- **The press is HELD, 0.9 s.** `DialogSelect` calls `TrackControl`, which
+  asks whether the button is still down; an application that pumps events only
+  from its progress callback dequeues the mouseDown a tick late, by which time
+  a 60 ms tap has ended and reads as a click released outside the control. The
+  Finder is fast enough that os9mouse's taps never exposed this.
+- **The guest gets a relative `usb-mouse`.** The tablet a fixture run attaches
+  is inert here (BLOCKERS.md, *Withdrawn claims*), so the click configuration
+  is os9mouse's, not os9.py's default.
+
+**The control is the whole result.** A cancel that fires proves nothing on its
+own — "the extraction stopped early after a mouse press" is equally consistent
+with any press waking a stalled application. So `--click-at 150,168` presses
+the same dialog's blank background, 190 px away, with everything else
+identical: the button cancels on the first press (1 of 34 entries, byte-exact)
+and the background press does not (34 of 34, and the run fails as a cancel
+that arrived too late). One extra boot, and it is what separates "the button
+works" from "a click works". Numbers in FORMATS.md, *Cancelling, and an 8-bit
+name*; how to re-run in `tools/vmac/README.md`.
+
+The positioning code moved rather than being copied: it is `os9mouse.Pointer`
+now, given a "send these monitor commands" and a "give me a frame", and both
+guests hand it their own. A second copy of the four measured facts in that
+module's docstring would have been a second copy to get wrong.

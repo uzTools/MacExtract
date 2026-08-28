@@ -189,6 +189,126 @@ def find_not_yet(frame):
     return best
 
 
+class Pointer:
+    """Closed-loop positioning, against anything this repository can
+    screenshot and send monitor commands to.
+
+    `Mac` is one such guest; `os9.py`'s `Qemu` is another, and it needs the
+    pointer for exactly one thing — clicking the progress dialog's Cancel
+    button, which no keyboard route reaches. A second copy of the four facts
+    in this module's docstring would be a second copy to get wrong, so the
+    algorithm lives here and both callers hand it their own plumbing:
+
+      * `burst(cmds, gap=, wait=)` — monitor commands down ONE connection,
+        which is what keeps the two halves of a click inside the Mac's
+        double-click threshold;
+      * `frame(tag)` — a screenshot as `(w, h, pixels)`.
+    """
+
+    def __init__(self, burst, frame):
+        self.burst = burst
+        self.frame = frame
+        self.pos = None
+
+    def park(self):
+        self.burst(["mouse_move 60 60"] * 45, gap=0.02)
+        self.pos = (W - 1, H - 1)
+
+    def step(self, dx, dy, size=40):
+        cmds = []
+        while dx or dy:
+            sx = max(-size, min(size, dx)); sy = max(-size, min(size, dy))
+            cmds.append(f"mouse_move {sx} {sy}")
+            dx -= sx; dy -= sy
+        self.burst(cmds, gap=0.02)
+
+    def reference(self, tag="_ref"):
+        """A frame with the cursor parked, plus a mask of what blinks."""
+        f = [self.frame(tag)]
+        for i in (1, 2):
+            time.sleep(0.8)
+            f.append(self.frame(tag))
+        return f[-1], noise_mask(f)
+
+    def locate(self, ref, predicted=None, radius=260, tag="loc"):
+        """Where is the cursor? Only pixels that differ from `ref` in THREE
+        successive frames count.
+
+        A cursor is static; a blinking caret, a ticking clock and a spinning
+        progress bar are not. Two frames are not enough -- the caret's phase
+        can alias with the sampling interval, which is exactly how a dialog
+        with a text field defeated the two-frame version. The search is also
+        confined to a box around where the step should have landed, which
+        makes it both faster and blind to anything moving elsewhere."""
+        base = ref[0] if isinstance(ref, tuple) and len(ref) == 2 else ref
+        mask = ref[1] if isinstance(ref, tuple) and len(ref) == 2 else None
+        if predicted:
+            box = (max(0, predicted[0]-radius), max(0, predicted[1]-radius),
+                   min(W, predicted[0]+radius), min(H, predicted[1]+radius))
+        else:
+            box = (0, 0, W, H)
+        hits = None
+        cur = None
+        for i in range(3):
+            if i:
+                time.sleep(0.6)
+            cur = self.frame(tag)
+            pts = diff_points(base, cur, box, ignore=PARK, mask=mask)
+            hits = pts if hits is None else (hits & pts)
+            if not hits:
+                return (None, cur)
+        blob = largest_blob(hits)
+        if not blob:
+            return (None, cur)
+        xs = [p[0] for p in blob]; ys = [p[1] for p in blob]
+        if max(xs)-min(xs) > 64 or max(ys)-min(ys) > 64:
+            return (None, cur)
+        return ((min(xs), min(ys)), cur)
+
+    def goto(self, x, y, tries=6, verbose=True):
+        """Closed-loop positioning: move, look, correct."""
+        self.park()
+        ref = self.reference("_ref")
+        pos = self.pos
+        for i in range(tries):
+            self.step(x - pos[0], y - pos[1])
+            got, _ = self.locate(ref, predicted=(x, y), tag="_loc")
+            if got is None:
+                if verbose: print(f"    goto({x},{y}): cursor not seen", flush=True)
+                return None
+            pos = got
+            if abs(got[0]-x) <= 4 and abs(got[1]-y) <= 4:
+                if verbose: print(f"    goto({x},{y}) -> {got}", flush=True)
+                self.pos = got
+                return got
+        if verbose: print(f"    goto({x},{y}) -> closest {pos}", flush=True)
+        self.pos = pos
+        return pos
+
+    def press(self, double=False, hold=0.08, settle=1.5):
+        """Click where the cursor already IS, holding the button down for
+        `hold` seconds.
+
+        The hold is the whole reason this is not one 60 ms tap. An application
+        that only pumps events from a progress callback dequeues a mouseDown
+        up to a tick after it arrives, and `DialogSelect` then calls
+        `TrackControl`, which asks whether the button is STILL down: a tap
+        that is already over reads as a click that ended outside the button
+        and returns no item. The Finder is fast enough not to care; the
+        progress dialog is not necessarily."""
+        cmds = []
+        for i in range(2 if double else 1):
+            cmds += ["mouse_button 1", "mouse_button 0"]
+        self.burst(cmds, gap=hold, wait=settle)
+        return True
+
+    def click(self, x=None, y=None, double=False, settle=1.5, hold=0.08):
+        if x is not None:
+            if self.goto(x, y) is None:
+                return False
+        return self.press(double=double, hold=hold, settle=settle)
+
+
 class Mac:
     """Either boots a guest, or ATTACHES to one already running.
 
@@ -198,11 +318,11 @@ class Mac:
     steps that each need a look at a screenshot before the next one."""
 
     def __init__(self, cd=True, fresh=False, attach=False, xfer=True):
+        self.ptr = Pointer(self.burst, self.shot)
         if attach:
             if not os.path.exists(MON):
                 raise SystemExit("no guest is running (no monitor socket)")
             self.proc = None
-            self.pos = None
             return
         os.makedirs(CACHE, exist_ok=True)
         os.makedirs(SHOTS, exist_ok=True)
@@ -300,95 +420,33 @@ class Mac:
                 self.burst([f"sendkey {k}"], wait=wait)
 
     # ---- pointer ----------------------------------------------------
+    # The algorithm is Pointer's, above; these forward to it so the calls
+    # documented in tools/vmac/README.md keep working unchanged.
+    @property
+    def pos(self):
+        return self.ptr.pos
+
+    @pos.setter
+    def pos(self, v):
+        self.ptr.pos = v
+
     def park(self):
-        self.burst(["mouse_move 60 60"] * 45, gap=0.02)
-        self.pos = (1023, 767)
+        return self.ptr.park()
 
     def step(self, dx, dy, size=40):
-        cmds = []
-        while dx or dy:
-            sx = max(-size, min(size, dx)); sy = max(-size, min(size, dy))
-            cmds.append(f"mouse_move {sx} {sy}")
-            dx -= sx; dy -= sy
-        self.burst(cmds, gap=0.02)
+        return self.ptr.step(dx, dy, size)
 
     def reference(self, tag="_ref"):
-        """A frame with the cursor parked, plus a mask of what blinks."""
-        f = [self.shot(tag)]
-        for i in (1, 2):
-            time.sleep(0.8)
-            f.append(self.shot(tag))
-        return f[-1], noise_mask(f)
+        return self.ptr.reference(tag)
 
     def locate(self, ref, predicted=None, radius=260, tag="loc"):
-        """Where is the cursor? Only pixels that differ from `ref` in THREE
-        successive frames count.
-
-        A cursor is static; a blinking caret, a ticking clock and a spinning
-        progress bar are not. Two frames are not enough -- the caret's phase
-        can alias with the sampling interval, which is exactly how a dialog
-        with a text field defeated the two-frame version. The search is also
-        confined to a box around where the step should have landed, which
-        makes it both faster and blind to anything moving elsewhere."""
-        base = ref[0] if isinstance(ref, tuple) and len(ref) == 2 else ref
-        mask = ref[1] if isinstance(ref, tuple) and len(ref) == 2 else None
-        if predicted:
-            box = (max(0, predicted[0]-radius), max(0, predicted[1]-radius),
-                   min(W, predicted[0]+radius), min(H, predicted[1]+radius))
-        else:
-            box = (0, 0, W, H)
-        hits = None
-        cur = None
-        for i in range(3):
-            if i:
-                time.sleep(0.6)
-            cur = self.shot(tag)
-            pts = diff_points(base, cur, box, ignore=PARK, mask=mask)
-            hits = pts if hits is None else (hits & pts)
-            if not hits:
-                return (None, cur)
-        blob = largest_blob(hits)
-        if not blob:
-            return (None, cur)
-        xs = [p[0] for p in blob]; ys = [p[1] for p in blob]
-        if max(xs)-min(xs) > 64 or max(ys)-min(ys) > 64:
-            return (None, cur)
-        return ((min(xs), min(ys)), cur)
+        return self.ptr.locate(ref, predicted=predicted, radius=radius, tag=tag)
 
     def goto(self, x, y, tries=6, verbose=True):
-        """Closed-loop positioning: move, look, correct."""
-        self.park()
-        ref = self.reference("_ref")
-        pos = self.pos
-        for i in range(tries):
-            self.step(x - pos[0], y - pos[1])
-            got, _ = self.locate(ref, predicted=(x, y), tag="_loc")
-            if got is None:
-                if verbose: print(f"    goto({x},{y}): cursor not seen", flush=True)
-                return None
-            pos = got
-            if abs(got[0]-x) <= 4 and abs(got[1]-y) <= 4:
-                if verbose: print(f"    goto({x},{y}) -> {got}", flush=True)
-                self.pos = got
-                return got
-        if verbose: print(f"    goto({x},{y}) -> closest {pos}", flush=True)
-        self.pos = pos
-        return pos
+        return self.ptr.goto(x, y, tries=tries, verbose=verbose)
 
     def click(self, x=None, y=None, double=False, settle=1.5):
-        if x is not None:
-            if self.goto(x, y) is None:
-                return False
-        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        s.connect(MON); time.sleep(0.25)
-        try: s.recv(65536)
-        except OSError: pass
-        for i in range(2 if double else 1):
-            if i: time.sleep(0.16)
-            s.sendall(b"mouse_button 1\n"); time.sleep(0.07)
-            s.sendall(b"mouse_button 0\n"); time.sleep(0.07)
-        time.sleep(settle); s.close()
-        return True
+        return self.ptr.click(x, y, double=double, settle=settle)
 
     # ---- waiting ----------------------------------------------------
     def settle(self, tag="settle", floor=80, limit=420, quiet_px=3000, need=2):

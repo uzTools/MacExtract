@@ -2706,6 +2706,22 @@ The pass condition is a strict, non-empty subset — a cancel that arrives after
 the last entry, or before the first one lands, fails as a useless test rather
 than passing (`tools/vmac/README.md`).
 
+**The Cancel BUTTON was clicked here on 2026-08-28**, which closed the last
+route this tier had never driven; it is the `DialogSelect` branch of
+`ProgressPump()`, where the chord is the keyDown test beside it. Same fixture,
+one boot each:
+
+| | measured |
+|---|---|
+| `--cancel-click`, on the button at (340,168) | cancels on the **first** press: **1 of 34** entries, 1,381 B byte-exact |
+| the control, `--click-at 150,168` (blank dialog background) | does **not** cancel: **34 of 34** written, and the run FAILS as a cancel that arrived too late |
+| what the alert reads | "Extraction cancelled." (`16-result.png`, cursor still on the button in `15-progress.png`) |
+
+The control is the measurement. The pointer is parked on the button while the
+DESTINATION dialog is still up, because positioning costs ~40 s and the
+progress dialog does not last that long (DECISIONS.md 2026-08-28, *clicking a
+dialog that does not exist yet*).
+
 **The test found a defect on its first outing.** A different archive ignored
 three Cmd-. in twenty seconds, and the dialog behind them was frozen rather
 than slow: Now Compress never called the engine's progress callback, so the

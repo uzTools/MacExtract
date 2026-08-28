@@ -78,26 +78,16 @@ unsupported either way.
 Verification gaps — things this project has and has not checked.
 What it does not HAVE is section 2.
 
-- **The progress dialog's Cancel BUTTON has never been clicked on Mac
-  OS 9.** Cmd-. cancels there since 2026-08-28, and the alert, the
-  SFGetFile repaint behind it and the strict-subset grading of the
-  volume all come with it (FORMATS.md, *Cancelling, and an 8-bit
-  name*) — but that route is the keyDown check in `ProgressPump()`,
-  and the button is `DialogSelect` beside it: two branches, one
-  tested. Both run on the Mini vMac tiers (TESTING.md, layer 10).
-  **What would close it:** a click, which needs `os9mouse.py`'s
-  stepped pointer rather than the keyboard route a fixture run uses,
-  and a way to be on the button in time — positioning costs ~40 s and
-  the dialog only exists while the extraction does, so the cursor
-  would have to be parked on the button's coordinates while the
-  DESTINATION dialog is still up.
-
-  Two formats are also absent from the sample for reasons that are not
-  scope: **SpaceSaver**, whose only specimens are cache-only and cannot
-  be committed or regenerated on a clone, and an **encrypted entry**,
-  because the application asks for the password in a dialog and the
-  harness drives the Finder rather than the application
-  (`tools/vmac/os9sample.txt` says both in place).
+- **Two formats are absent from the Mac OS 9 sample, and neither
+  absence is a scope decision.** **SpaceSaver**, whose only specimens
+  are cache-only and cannot be committed or regenerated on a clone,
+  and an **encrypted entry**, because the application asks for the
+  password in a dialog and a fixture run drives the Finder from the
+  keyboard, never the application (`tools/vmac/os9sample.txt` says
+  both in place). **What would close them:** a committable SpaceSaver
+  specimen for the first; for the second, a harness step that answers
+  the password dialog — the pointer that `--cancel-click` now uses
+  reaches it (TESTING.md, layer 8).
 
 ---
 
