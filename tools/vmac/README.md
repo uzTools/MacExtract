@@ -202,8 +202,16 @@ at `--poll 20`. **Use `--poll 20` for the Arsenic fixtures**; the timings in
 FORMATS.md were taken there. The likely cause is a poll landing while the app
 is still painting its "alive" grid, so `ret` holds neither a result nor the
 running sentinel and run.py takes it as final — that is a **hypothesis**, and
-the failure pattern is what is measured. The short 4 MB runs are a different
-regime and `--poll 3` is fine for them (`timing.txt` uses it).
+the failure pattern is what is measured. **`--poll 3` is NOT safe at 4 MB either**, which this
+paragraph claimed until 2026-08-28: re-measuring `timing.txt` at 4 MB,
+`popper-1.7.tar.Z` and `derived-PackIt.pit` both reported FAIL with a
+TRUNCATED total and `peak heap 0 B` — 2 of 13 fixtures — and both pass at
+`--poll 20` with the right numbers, and pass all out at 4 MB and at 1 MB.
+That is a different shape from the 1 MB failure above: the run takes its full
+time and the file count is right, so what is read is a grid caught
+PART-PAINTED rather than one never painted. **Use `--poll 20` unless a run is
+short enough that 20 s of quantisation ruins it**, and treat a FAIL whose peak
+heap is 0 as the harness's rather than the engine's.
 
 **Two 22-minute runs were spent finding this out**, on an A/B that then could
 not be resolved: `-Os` and `-O2` builds of `sit_arsenic.c` came out exactly

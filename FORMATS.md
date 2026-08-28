@@ -2225,23 +2225,46 @@ re-try without a newer toolchain.
 
 ## Measured on a 7 MHz Mac Plus (Mini vMac 1x, System 6.0.8, 4 MB)
 
-The first absolute timings this project has ever had. `run.py --emu mv-4M-1x`
-separates boot from extraction — the application paints its "alive" grid
-before touching a disk — so the extract column is the archive alone. Poll
-interval 5 s, so that column is quantised to 5 s; it is an upper bound at this
-resolution, not a stopwatch.
+`run.py --emu mv-4M-1x` separates boot from extraction — the application
+paints its "alive" grid before touching a disk — so the extract column is the
+archive alone. The set is `tools/vmac/timing.txt`: one fixture per format,
+chosen large rather than typical, so each figure is an upper bound a user can
+plan around. **Re-measured 2026-08-28.**
 
-| Fixture | Format | In | Boot | Extract |
+**Every figure is quantised to the poll interval**, which is why the poll is a
+column: the harness timestamps at poll instants at both ends, so a row is
+accurate to ±one poll however reproducible it looks.
+
+| Fixture | Format | In | Extract | Poll |
 |---|---|---|---|---|
-| derived-Export.sit | StuffIt | 1.6 KB | 10 s | 5 s |
-| synth-packit-2.pit | PackIt | 3.4 KB | 10 s | 5 s |
-| derived-keyAhead.cpt | Compact Pro | 0.9 KB | 10 s | <5 s |
-| export-hc.hqx | BinHex | 3.1 KB | 10 s | 5 s |
-| stuffit151mstr.bin | MacBinary | 0.5 KB | 10 s | <5 s |
-| synth-exo-zip-store.zip | Zip | 8.4 KB | 10 s | 5 s |
-| synth-exo-tar.tar | Tar | 20 KB | 10 s | 5 s |
-| synth-exo-gz.gz | Gzip | 0.1 KB | 10 s | <5 s |
-| macburger-helper.hqx | BinHex | 306 KB | 30 s | **150 s** |
+| `derived-Export.sit` | StuffIt | 1.6 KB | 3 s | 3 s |
+| `derived-PackIt.pit` | PackIt | 62 KB | 20 s | 20 s |
+| `derived-KeyGraphics.sit` | StuffIt 5 | 4.6 KB | 25 s | 3 s |
+| `derived-Expand_Now_1.0.1.sea` | Now Compress | 62 KB | 34 s | 3 s |
+| `popper-1.7.tar.Z` | compress | 59 KB | 40 s | 20 s |
+| `derived-PCCTS.tar` | Tar | 287 KB | 46 s | 3 s |
+| `kermitut9test.bin` | MacBinary | 304 KB | 52 s | 3 s |
+| `PCCTS.tar.gz` | gzip | 64 KB | 58 s | 3 s |
+| `macburger-helper.hqx` | BinHex | 306 KB | **104 s** | 3 s |
+| `derived-MUSFMT10.ZIP` | Zip | 172 KB | 111 s | 3 s |
+| `derived-EmpireBuilderDemo.sit` | StuffIt | 278 KB | 141 s | 3 s |
+| `derived-MacPass390.sea` | DiskDoubler | 156 KB | 142 s | 3 s |
+| `derived-XferIt_1.5b4.sea` | Compact Pro | 285 KB | 333 s | 3 s |
+| `derived-a2basic.dmg.sit` | StuffIt 5 (Arsenic) | 153 KB | 542 s | 20 s |
+| `derived-Library_ISBN_Barcoder.sit` | StuffIt 5 (Arsenic) | 202 KB | 722 s | 20 s |
+
+**There is no boot column, because this harness cannot measure boot.** It
+reports the first poll at which the grid is visible, so every fixture reads
+9.2 s at `--poll 3` and 20.1 s at `--poll 20` — the same boot through a
+coarser ruler. The table carried a 30 s boot for `macburger-helper.hqx` until
+2026-08-28; boot does not depend on the fixture, so that was six polls.
+
+**The times fell by up to 31 % when re-measured**, on the same emulator with
+the same commands: `macburger-helper.hqx` was 150 s and is 104 s. The engine
+got faster and the table was not re-run.
+
+**Two rows need `--poll 20`**: at `--poll 3` they report a truncated total and
+a FAIL that is the harness's, not the engine's (`tools/vmac/README.md`).
 
 **StuffIt 5 / Arsenic at 1x — and it is in a class of its own.** The list
 above samples StuffIt 5 with a 4,611 B fixture, far too small to reach the
@@ -2252,10 +2275,10 @@ extract time only, on a purpose-built 1 MB 1x emulator (`build_mv mv-1M-1x
 
 | Fixture | Output | 4 MB — transform table | 1 MB — sampled index | ratio |
 |---|---|---|---|---|
-| `derived-a2basic.dmg.sit` | 205,019 B | **587 s** (peak 1,031,525 B) | **762 s** (peak 482,345 B) | 1.30x |
-| `derived-Library_ISBN_Barcoder.sit` | 641,115 B | **768 s** (peak 1,682,142 B) | **1,284 s** (peak 559,805 B) | 1.67x |
+| `derived-a2basic.dmg.sit` | 205,019 B | **542 s** (peak 1,032,484 B) | **742 s** (peak 482,861 B) | 1.37x |
+| `derived-Library_ISBN_Barcoder.sit` | 641,115 B | **722 s** (peak 1,683,101 B) | **1,284 s** (peak 559,805 B) | 1.78x |
 
-**The fallback costs 1.30x to 1.67x, and Arsenic is still the slow one.**
+**The fallback costs 1.37x to 1.78x, and Arsenic is still the slow one.**
 Ten minutes for a 205 KB output is what the *fast* path costs a 7 MHz 68000;
 before 2026-08-07 a 1 MB machine could not extract either entry at all. The
 ratio widens with block fill, and neither the x86 ratio nor one fixture scaled
@@ -2269,8 +2292,13 @@ index's sample positions went from four bytes to three. Both are byte-exact by
 construction; DECISIONS.md 2026-08-24 has the reasoning and BLOCKERS.md the
 proposal the same measurement killed.
 
-**The 4 MB column did NOT change and was not re-measured**: those runs take
-the transform vector and never touch the sampled index or its scan.
+**Both columns were re-measured on 2026-08-28**, and the ratio widened
+because the 4 MB column moved and the 1 MB one barely did: 587 s and 768 s
+became 542 s and 722 s, while 762 s became 742 s and 1,284 s came back
+identical, peak heap included. The 4 MB column had stood since 2026-08-07
+under the note that it "did NOT change and was not re-measured" — those runs
+take the transform vector and never touch the sampled index, so nothing in
+the 2026-08-24 pass was expected to reach them. Something else did.
 
 Both 1 MB figures were re-run on the build that first carried them, and
 everything landed since moves the ISBN fixture by **0.2 % on Linux** —

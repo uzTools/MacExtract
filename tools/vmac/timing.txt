@@ -38,11 +38,13 @@ derived-Export.sit                         # StuffIt         1615 B
 # The list above samples StuffIt 5 with derived-KeyGraphics.sit (4,611 B),
 # which is far too small to make the decoder fall back to its low-memory
 # inverse BWT — so it measured the fast path and nothing else. These two do
-# reach the fallback at 1 MB. Measured extract times, both paths:
+# reach the fallback at 1 MB.
 #
-#                                    4 MB (table)   1 MB (sampled)
-#   derived-a2basic.dmg.sit               587 s          966 s
-#   derived-Library_ISBN_Barcoder.sit     768 s        1,898 s
+# Measured extract times for both paths live in FORMATS.md, "StuffIt 5 /
+# Arsenic at 1x" — one home, because the copy that used to sit here went
+# stale twice: it still read 966 s and 1,898 s after the 2026-08-24
+# performance pass rewrote them, and again after the 2026-08-28 re-measure.
+# Both Arsenic rows need --poll 20 (tools/vmac/README.md).
 #
 #   run.py --emu mv-4M-1x --mem 4M ...   /   --emu mv-1M-1x --mem 1M ...
 #
