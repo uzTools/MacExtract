@@ -30,7 +30,7 @@ MACEXTRACT=build/san/macextract sh tests/run_robustness.sh || fail "robustness t
 # the whole run, with both Cancel routes out of reach — which Now
 # Compress did until 2026-08-28, found on an emulated Mac.
 python3 tools/run_ticks.py --probe build/san/tick_probe \
-    || fail "progress-callback coverage"
+    --macextract build/san/macextract || fail "progress-callback coverage"
 python3 tools/run_unwrap.py build/san/macextract || fail "envelope unwrap tests"
 python3 tools/run_multihqx.py --macextract build/san/macextract \
     || fail "multi-document BinHex tests"

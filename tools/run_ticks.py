@@ -9,7 +9,14 @@ enforced it until 2026-08-28, when Now Compress turned out never to have
 called it at all — found on an emulated Mac, three Cmd-. into a 9.9 MB
 entry that ignored all of them (DECISIONS.md 2026-08-28).
 
-Two rules, applied to every fixture in the corpus:
+Envelopes are peeled on the way in (`tools/envelopes.py`), because 419
+of the 932 fixtures are a wrapper around the archive that matters:
+until 2026-08-28 this suite asked BinHex whether it ticks, over and
+over, and never reached the StuffIt walk inside. That is the same blind
+spot the rule below is about — a check that cannot fail on a property it
+never looks at.
+
+Two rules, applied to every archive the corpus holds, at every layer:
 
   1. an archive the engine EXTRACTS (ret == UNC_OK) that is larger than
      MIN_SIZE must tick at least once. Below that a tick may never come
@@ -26,11 +33,16 @@ than a margin: everything else in the corpus comes in at 8,192 B.
 """
 import argparse
 import os
+import shutil
 import subprocess
 import sys
+import tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
+
+sys.path.insert(0, HERE)
+from envelopes import layers                            # noqa: E402
 
 MIN_SIZE = 64 * 1024
 MAX_GAP = 32 * 1024
@@ -67,11 +79,16 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--probe", default=os.path.join(REPO, "build", "tick_probe"))
+    ap.add_argument("--macextract",
+                    default=os.path.join(REPO, "build", "macextract"))
     ap.add_argument("--fixtures", default=os.path.join(REPO, "fixtures"))
     args = ap.parse_args()
 
     if not os.path.exists(args.probe):
         print(f"run_ticks: no probe at {args.probe} — skipping")
+        return 0
+    if not os.path.exists(args.macextract):
+        print(f"run_ticks: no {args.macextract} — skipping")
         return 0
     if not os.path.isdir(args.fixtures):
         print("run_ticks: no fixtures — skipping")
@@ -85,7 +102,25 @@ def main():
         print("run_ticks: no fixtures — skipping")
         return 0
 
-    rows = measure(args.probe, paths)
+    # One layer at a time, and the peeled files are removed as soon as
+    # they have been measured: peeling the whole corpus first would put
+    # a second copy of it on disk.
+    rows = []
+    peeled = 0
+    tmp = tempfile.mkdtemp()
+    try:
+        for p in paths:
+            work = os.path.join(tmp, "w")
+            os.mkdir(work)
+            try:
+                chain = layers(args.macextract, p, work)
+                peeled += len(chain) - 1
+                rows += measure(args.probe, chain)
+            finally:
+                shutil.rmtree(work, ignore_errors=True)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
     silent = [r for r in rows if r[1] == 0 and r[4] > MIN_SIZE and r[2] == 0]
     wide = [r for r in rows if r[3] > MAX_GAP]
     worst = max((r[3] for r in rows), default=0)
@@ -97,8 +132,8 @@ def main():
     for path, ret, ticks, gap, size in wide:
         print(f"run_ticks: FAIL {os.path.basename(path)}: {gap} B between "
               f"progress callbacks, over the {MAX_GAP} B bound")
-    print(f"run_ticks: {len(rows)} fixtures, "
-          f"{sum(1 for r in rows if r[2])} of them ticking, "
+    print(f"run_ticks: {len(rows)} archives ({peeled} of them peeled out of "
+          f"an envelope), {sum(1 for r in rows if r[2])} of them ticking, "
           f"widest gap {worst} B (bound {MAX_GAP} B)")
     return 1 if silent or wide else 0
 

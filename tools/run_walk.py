@@ -30,11 +30,10 @@ Why it is worth a suite of its own:
     it is the assertion with no other home: every format's skip branch
     is now exercised on every archive in the corpus.
 
-Envelopes are unwrapped on the way in, because a fixture like
-`Archive.sit.bin` is a ONE-entry MacBinary wrapper and probing it says
-nothing about the StuffIt walk inside. Each layer is probed, and the
-descent stops where a layer yields something other than exactly one
-recognised archive.
+Envelopes are unwrapped on the way in (`tools/envelopes.py`), because a
+fixture like `Archive.sit.bin` is a ONE-entry MacBinary wrapper and
+probing it says nothing about the StuffIt walk inside. Each layer is
+probed.
 
 What this CANNOT see:
 
@@ -63,43 +62,8 @@ import tempfile
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
 
-MAX_DEPTH = 8
-
-
-def sniff(mac, path):
-    """The format name, or None when nothing is recognised."""
-    r = subprocess.run([mac, "sniff", path], capture_output=True, text=True)
-    name = r.stdout.strip()
-    return name if r.returncode == 0 and name and name != "unknown" else None
-
-
-def layers(mac, path, tmp):
-    """`path` and every archive found by peeling envelopes off it.
-
-    The descent is by RESULT, not by a list of envelope formats: a layer
-    that yields exactly one file which is itself a recognised archive is
-    an envelope, whatever it is called. -nr stops the CLI doing the same
-    thing itself, one layer at a time, so each is probed."""
-    out = [path]
-    cur = path
-    for depth in range(MAX_DEPTH):
-        if sniff(mac, cur) is None:
-            break
-        into = os.path.join(tmp, "peel%d" % depth)
-        os.mkdir(into)
-        subprocess.run([mac, "x", "-nr", cur, "-o", into],
-                       capture_output=True)
-        got = []
-        for root, _, files in os.walk(into):
-            got += [os.path.join(root, f) for f in files]
-        # Exactly one file, and it is an archive: an envelope. A
-        # resource-fork sidecar is part of the same one file.
-        got = [g for g in got if not g.endswith(".rsrc")]
-        if len(got) != 1 or sniff(mac, got[0]) is None:
-            break
-        cur = got[0]
-        out.append(cur)
-    return out
+sys.path.insert(0, HERE)
+from envelopes import layers                            # noqa: E402
 
 
 def probe(binary, paths):

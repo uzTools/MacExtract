@@ -1211,6 +1211,17 @@ everything else in the corpus comes in at 8,192 B.
 fail on `derived-SyntheticReferences2.0.sea`, and the corpus's widest gap
 drops to 16,172 B.
 
+**Envelopes are peeled on the way in since 2026-08-28**
+(`tools/envelopes.py`, shared with the walk suite). Until then this swept
+the fixtures as they sit on disk, and 419 of the 932 are a wrapper around
+the archive that matters — so for those it asked BinHex or MacBinary
+whether it ticks, over and over, and never reached the StuffIt or Compact
+Pro walk inside. 944 files became **1,363 archives**. Nothing was hiding
+there: no new failure, and the widest gap is unchanged at 30,634 B, which
+was already visible on a Now Compress `.sea` that needed no unwrapping.
+A blind spot that turns out to be empty is still worth closing — it was
+not empty by anybody's evidence, only by nobody having looked.
+
 **What it cannot see:** how long a gap takes. It counts input bytes, so a
 decoder that spends a minute inside one 8 KB step passes — Arsenic's
 sampled inverse BWT is exactly that shape, and it reports its own
