@@ -145,6 +145,23 @@ all** (BLOCKERS.md, the ARC 7 row, filed and disproved the same day).
   format (DECISIONS.md 2026-08-23). **What is missing is a specimen**,
   which answers both.
 
+- **A DiskDoubler fork of method 3, 4 or 5 that this project did not
+  write.** Missing: a **gradeable specimen**. All three decode byte-exact
+  through Salient's own 1991 expander, which grades our reading of the
+  FORMAT; what nothing grades is the encodings our encoder does not emit —
+  other run lengths, other tree shapes, other contexts. It cannot be
+  manufactured here: 3.1.2 and 3.7 offer two software methods from a menu,
+  and 4.1.1 answers *Unknown compression method* on 3 and 4, so no
+  application in reach can be driven into writing one. Searched 2026-08-21
+  and again 2026-08-28 — WinWorld's 3.1.2 (1991) is the oldest release
+  anywhere reachable, Macintosh Garden and Macintosh Repository carry 3.2
+  upward plus DDExpand 2.03 (an expander), and archive.org has the 3.1 and
+  3.7.1 floppies and paper. **What would close it:** a DiskDoubler 1.x or
+  2.x compressor, or any `.dd` a user wrote with one. The other route is
+  not a file: Salient's own decoders are in `CODE` 11 and its siblings on
+  the 3.1.2 disk, and reading that code answered method 5's tree count in
+  one sitting (DECISIONS.md 2026-08-28, the tree count).
+
 - **A MIME message written by a MACINTOSH.** Every message the reader is
   graded against was built by `tools/run_mime.py` or read by munpack on
   Linux (TESTING.md, *base64 and MIME*). The independent specimen would be
@@ -204,16 +221,3 @@ all** (BLOCKERS.md, the ARC 7 row, filed and disproved the same day).
   emulated Mac, which has never been handed a stream this project
   wrote.
 
-- **DiskDoubler's methods 3, 4 and 5 have never decoded a fork this project
-  did not write.** All three are byte-exact through Salient's own 1991
-  expander, which grades the reading of the format rather than the decoder
-  (DECISIONS.md, methods 3, 4 and 5); what is untested is every encoding our
-  own encoder does not emit. **What would change it:** one real fork of any of
-  the three.
-- **DiskDoubler method 5's tree-count byte is only confirmed at 0.** 0 means
-  256 and expands byte-exact under both the 1991 and the 4.1.1 expander; a
-  count of 16 is rejected by both, and encoder and decoder here share one
-  reading, so either that shared reading of the non-zero case is wrong or
-  non-zero counts do not occur. The branch is kept because it is XADMaster's
-  reading and it fails as a per-entry checksum error rather than silently.
-  **What would change it:** a method 5 fork with a non-zero count.

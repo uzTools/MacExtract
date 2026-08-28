@@ -510,6 +510,14 @@ produced still standing in FORMATS.md. Repaired 2026-08-28. A harness nobody
 can run is a claim nobody can re-check, and the mode `ci.sh` exercises is not
 the mode that grades anything.
 
+**Five subjects since 2026-08-28, and one of them passes by being refused.**
+`Splay128` is method 5 with a tree-count byte of 128, which Salient's own 1991
+expander turned back into the subject byte-exact; `Splay16` carries a count of
+16, which that expander's validator rejects before decoding a bit, so a
+refusal is what this case asserts. Which values are legal — 32, 64, 128, 256 —
+was read out of the expander itself rather than guessed (FORMATS.md, the
+method table; DECISIONS.md 2026-08-28, the tree count).
+
 ## Several BinHex documents in one file (`tools/run_multihqx.py`, in `ci.sh`)
 
 Added 2026-08-15, with the capability it grades. Real corpus `.hqx`

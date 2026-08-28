@@ -76,7 +76,7 @@ claims*):
 | 2, splay Huffman | DiskDoubler 1.x-3.1.x | **one**: `XCMD.h` on the 3.1.2 disk, 564 → 386 B (2026-08-21) | the fork's own 16-bit sum, and the output is legible 1990 Salient C |
 | 3, RLE90 | DiskDoubler 1.x-2.x | **none** | Salient's 1991 expander, on a fork this project encoded (below) |
 | 4, StuffIt Huffman | DiskDoubler 1.x-2.x | **none** | the same |
-| 5, splay Huffman, tree count in the stream | DiskDoubler 1.x-2.x | **none** | the same, and DiskDoubler 4.1.1 agrees |
+| 5, splay Huffman, tree count in the stream | DiskDoubler 1.x-2.x | **none** | the same, at 256 trees and at 128, and DiskDoubler 4.1.1 agrees |
 
 **Methods 3, 4 and 5 joined on 2026-08-21, graded without a specimen.**
 `tools/vmac/ddencode.py` writes a fork with our own encoder and hands it to
@@ -92,8 +92,15 @@ measured that neither reference states —
 - **DiskDoubler 4.1.1 has dropped methods 3 and 4** — it answers *Unknown
   compression method. The file was probably created by a more recent version
   of DiskDoubler* on a 1990 format;
-- **only a tree-count byte of 0 (meaning 256) is confirmed for method 5.**
-  Both expanders reject a count of 16 with *Checksum failed* (OPEN_ITEMS.md).
+- **method 5's tree-count byte takes four values and no others**, read out
+  of Salient's own expander on 2026-08-28: `CODE` 11 of the 1991
+  `DiskDoubler™ App` validates it against **32, 64, 128 and 256** at 0x1dfc,
+  turns 0 into 256 at 0x228c, refuses anything else before decoding a bit,
+  refuses a count larger than the trees it could allocate, and masks the next
+  context with `count - 1` at 0x1fbc — which is `byte % count` for every legal
+  value. A 128-tree fork this project wrote came back **byte-exact from that
+  expander**; the count of 16 it rejects is an illegal value, not a
+  disagreement (DECISIONS.md 2026-08-28).
 
 **Method 2 joined on 2026-08-21**, when Salient's own 3.1.2 distribution
 floppy turned up on WinWorld — older than any DiskDoubler this project had

@@ -153,6 +153,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-28 (the walk nobody had descended) — writing the container is what tests the walk
 - 2026-08-28 (the front end that was already doing it) — read the shell, not the flag
 - 2026-08-28 (the refill boundary) — the specimen that could not be made, made
+- 2026-08-28 (the tree count) — a probe outside the legal range tests the range check
 
 ---
 
@@ -8765,3 +8766,40 @@ boundary, and that skip was the one case that would have caught this. And a
 measurement missing its target is not evidence about the target — four
 subjects sized by the wrong rule missed by 2 to 5 bits, and the miss was
 written up as a property of the format rather than of the arithmetic.
+
+
+## 2026-08-28 (the tree count) — a probe outside the legal range tests the range check
+
+Method 5's leading byte was confirmed at 0 and nowhere else, and the evidence
+for the doubt was that "a count of 16 is rejected by both expanders". Encoder
+and decoder here share one reading of the non-zero case, so the rejection was
+read as *possibly our reading is wrong* — a live branch in shipping code with
+no way to tell.
+
+**It was neither.** `CODE` 11 of the 1991 `DiskDoubler™ App`, on the 3.1.2
+floppy this project already keeps, is the splay codec, and it validates the
+count before decoding anything:
+
+    1dfc:  cmpiw #32   -> valid      1e10:  cmpiw #128  -> valid
+    1e08:  cmpiw #64   -> valid      1e18:  cmpiw #256  -> valid
+                                     else   moveq #0    -> invalid
+
+The decompressor at 0x228c turns 0 into 256, calls that validator, answers
+-20999 when it says no, answers -20998 when the count exceeds the trees it
+managed to allocate — it allocates `count * 1536` and HALVES the count down to
+32 while the allocation fails — and masks the next context with `count - 1` at
+0x1fbc, which is `byte % count` for all four legal values and is exactly what
+`enc_splay` writes.
+
+So 16 was never a count this format can carry. A 128-tree fork written here
+came back **byte-exact from that same expander** (`ddencode.py --expand`), and
+the 16-tree one is now asserted to be REFUSED — the case passes by being
+turned down.
+
+**The lesson is about what a failing probe measures.** A value outside the
+legal range exercises the range check, and says nothing about the reading it
+was aimed at. The check was there to be read: the same disassembly that
+answered this took twenty minutes, on a disk image the repository has had
+since 2026-08-21, and the item had been open with "what would change it: a
+method 5 fork with a non-zero count" — a specimen nobody could produce — while
+the answer sat in the expander that was already being used as the oracle.

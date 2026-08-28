@@ -305,6 +305,13 @@ SUBJECT = (b"DiskDoubler method probe. " * 12 +
 SUBJECTS = [("Rle", 3, 256), ("Huff", 4, 256), ("Splay", 5, 256),
             ("Splay128", 5, 128), ("Splay16", 5, 16)]
 
+# The one subject the expander must NOT take: 16 is outside the four
+# counts the validator allows, so a refusal is this case passing. It is
+# the range check being exercised and not the codec, and reading it as a
+# failure was what made "only a count of 0 is confirmed" look like a
+# question about our decoder (DECISIONS.md 2026-08-28).
+REFUSED = {"Splay16"}
+
 
 def build(outdir=None):
     """Write one container per method and read each back with our own
@@ -607,8 +614,18 @@ def expand(keep=False, era="1991"):
         # finding, and the first run of this mode threw them away.
         open(os.path.join(s.shots, name + ".out"), "wb").write(data)
         if header(data):
+            refused_ok = name in REFUSED
             print("ddencode: %-8s method %d — still compressed, %s/%s: the "
-                  "expander did not take it" % (name, method, ftype, creator))
+                  "expander did not take it%s"
+                  % (name, method, ftype, creator,
+                     " (the count is illegal, which is this case passing)"
+                     if refused_ok else ""))
+            bad += not refused_ok
+        elif name in REFUSED:
+            print("ddencode: %-8s method %d — EXPANDED, and it should not "
+                  "have been: %d is not one of the counts the validator "
+                  "allows" % (name, method, dict((n, t) for n, _m, t
+                                                 in SUBJECTS)[name]))
             bad += 1
         elif data == SUBJECT:
             print("ddencode: %-8s method %d — EXPANDED BY 1991, byte-exact "
