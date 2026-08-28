@@ -154,6 +154,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-28 (the front end that was already doing it) — read the shell, not the flag
 - 2026-08-28 (the refill boundary) — the specimen that could not be made, made
 - 2026-08-28 (the tree count) — a probe outside the legal range tests the range check
+- 2026-08-28 (`--only`) — an exemption keyed to a proxy is an exemption that misfires
 
 ---
 
@@ -8803,3 +8804,44 @@ answered this took twenty minutes, on a disk image the repository has had
 since 2026-08-21, and the item had been open with "what would change it: a
 method 5 fork with a non-zero count" — a specimen nobody could produce — while
 the answer sat in the expander that was already being used as the oracle.
+
+## 2026-08-28 (`--only`) — an exemption keyed to a proxy is an exemption that misfires
+
+`--only NAME` restricts `l`, `x` and `t` to the entries named. Three
+decisions in it are worth keeping.
+
+**The selector is the name `l` prints, not the archive's bytes.** The
+comparison happens after `name_to_fs`, so a row copied out of a listing
+is a selector and the two commands compose. It also means a selector can
+carry whatever the name carries: the Finder's custom-icon file is
+`Icon\r`, and selecting it needs the CR.
+
+**A selector that matches nothing is an error.** Otherwise a mistyped
+name extracts nothing, says nothing and exits 0 — the worst of the three
+possible answers. Every match is recorded rather than the first, because
+the flags are what make the report possible.
+
+**The exemption for envelope layers is the unwrap GATE, not the
+format.** `x` peels `.hqx`/`.bin`/`.gz` on the way to the archive, and
+filtering a layer that holds one file on that path would extract nothing
+at all — so a layer about to be unwrapped is exempt. The first version
+asked `layer_unwraps(fmt)`, which is the format alone; but `l` and `t`
+never unwrap anything, so for them the envelope's single entry IS the
+listing, and the exemption made `--only` silently inert there. A typo'd
+selector on `macextract t archive.sit.bin` exited 0. The condition is
+now the same expression the auto-unwrap uses, and both call one helper
+so they cannot drift. **An exemption must be keyed to the condition it
+exists to protect, not to something that is usually true when that
+condition holds.**
+
+One claim was corrected before it was built on. "No host has ever
+returned >0 from `begin_entry`" was wrong twice over: listing returns it
+for every entry, and BOTH hosts return it for every directory
+(`cli/main.c` `sink_begin`, `mac/macextract_mac.c` `sink_begin`), so the
+branch was live in all 25 format files. What had never happened is the
+MIXED case — >0 for some entries and 0 for others while writing — which
+is the shape a selection has, and which is what found Now Compress and
+DiskDoubler calling `end_entry` for a skipped folder against the
+contract in `macextract.h`. The question "has anything ever returned
+this?" is one grep of two files, and it was worth spending before
+planning around the answer.

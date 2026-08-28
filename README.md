@@ -176,6 +176,7 @@ entries too big to fit are named, one message each, and the rest extract.
 make
 build/macextract l archive.sit           # list
 build/macextract x archive.sit -o out    # extract
+build/macextract x archive.sit -o out --only "Read Me"   # just that one
 build/macextract sniff mystery.bin       # what is this?
 build/macextract x secret.sit -p hunter2 # password-protected
 ```

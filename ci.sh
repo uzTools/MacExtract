@@ -70,6 +70,13 @@ python3 tools/run_sizelimits.py --macextract build/san/macextract \
 # bytes.
 python3 tools/run_names.py --macextract build/san/macextract \
     || fail "over-long name tests"
+# --only: acting on the entries the user named. `unar` has no per-file
+# selection, so the reference side is this engine's own FULL extraction
+# — which the diff suite above grades against `unar`. The assertion that
+# can fail is the strict subset: an --only that did nothing would pass
+# every byte comparison.
+python3 tools/run_only.py --macextract build/san/macextract \
+    || fail "--only (selective extraction) tests"
 # Now Compress has exactly one REAL fixture, and it reaches two of the
 # five shapes a block can have. The rest — and the offset-delta search,
 # and folders, and several files in one archive — are generated the same

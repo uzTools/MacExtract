@@ -1077,6 +1077,43 @@ that container to grade a generated one (OPEN_ITEMS.md). The Mac
 application consumes none of it and says nothing on screen; what it does
 instead is graded in the next section.
 
+## Selective extraction (`tools/run_only.py`, in `ci.sh`)
+
+Added 2026-08-28, with `--only`. There is no oracle for a subset:
+`unar` has no per-file selection, so nothing else on this machine can be
+asked what extracting two entries out of forty should produce.
+
+What stands in for one is the engine's own FULL extraction of the same
+archive, which the differential suite grades against `unar` — so a
+selected entry being byte-identical to that same entry from the full run
+is transitive to the oracle rather than circular. Every fork is
+compared, sidecar included.
+
+**The assertion that can fail is the strict subset.** An `--only` that
+did nothing at all — every entry extracted, every time — satisfies every
+byte comparison above it, because a superset contains each file it is
+held against. Requiring strictly fewer files is what catches that, and
+it was checked by disabling the filter: 362 failures, all three
+generated formats and every swept fixture.
+
+Four generated cases and a sampled corpus sweep. The generated ones are
+a zip (exact names, a folder selector that takes what is in it, two
+selectors at once, a name that matches nothing, one hit beside one miss,
+and `l`/`t` taking the same option), then DiskDoubler in both its
+containers and Now Compress — chosen because each holds a FOLDER, which
+is the entry both hosts have always skipped and the one those two
+formats reported the end of anyway until the same day.
+
+**What it cannot see.** Whether a skip SAVED anything: a format that
+seeks past a skipped entry and one that must decode and discard it —
+PackIt, whose compressed entries state no end — pass identically, and
+nothing here times either. A defect that corrupts the full extraction
+and the selective one alike is invisible by construction; the diff suite
+is what grades that side. The sweep passes over any fixture whose names
+the filesystem shortened, because the path on disk is then not the name
+`--only` matches against. Encrypted entries and segmented sets are not
+reached. Neither is the Mac application, which has no selection UI.
+
 ## The Macintosh shell's names (`tools/run_macnames.py`, in `ci.sh`)
 
 Added 2026-08-28. The section above grades the CLI's answer to a name

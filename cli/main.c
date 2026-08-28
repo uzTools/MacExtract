@@ -11,6 +11,7 @@
  *   --raw-names    emit raw MacRoman bytes instead of UTF-8 names
  *   --forks <visible|hidden>  resource-fork sidecar naming
  *   --overwrite    write over existing output files (default: refuse)
+ *   --only <name>  restrict the command to these entries (repeatable)
  *   --no-comment   do not save the archive's own comment
  *   --preset <f>   SpaceSaver's preset dictionary ('PrAm' -4048)
  *   -f <format>    force format (the name `sniff` prints)
@@ -237,6 +238,10 @@ static char *name_to_text(const uint8_t *name, size_t len, int mac_encoding,
  * resource-fork convention and slack. */
 #define PATHBUF 4200
 
+/* How many entries one --only run may name. A ceiling of ours, like
+ * --part's: nothing in any format says anything about it. */
+#define ONLY_MAX 256
+
 /* ---- fitting a name to what the filesystem takes --------------------
  *
  * The engine cuts a name at UNC_NAME_MAX and says so (UncEntryInfo).
@@ -314,6 +319,12 @@ typedef struct {
     int         overwrite;      /* write over existing output files    */
     int         clobber;        /* last open refused: path existed     */
     const char *unwrap_src;     /* envelope being unwrapped, or NULL   */
+    /* --only: the entries the user named, and one flag each recording
+     * whether anything matched. NULL/0 means "every entry", which is
+     * what every run did before 2026-08-28. */
+    const char **only;
+    unsigned char *only_hit;
+    int         nonly;
     int         mac_encoding;   /* names are MacRoman */
     int         verbose;
     const char *archive;        /* the archive's own filename: the
@@ -493,17 +504,45 @@ static char *sink_orig_name(DiskSink *s, const UncEntryInfo *info)
                         s->mac_encoding, s->raw_names);
 }
 
+/* --only: did the user name this entry? It matches a selector exactly,
+ * or lies under one — naming a folder takes what is in it — and the
+ * comparison is against the name `l` prints, so a row copied out of a
+ * listing is a selector.
+ *
+ * Every match is recorded rather than the first, because the flags are
+ * what let the run report a selector that matched NOTHING: a mistyped
+ * name would otherwise extract nothing and say nothing, and exit 0. */
+static int only_wanted(DiskSink *s, const char *name)
+{
+    int i, want = 0;
+
+    if (!s->nonly) return 1;
+    for (i = 0; i < s->nonly; i++) {
+        size_t n = strlen(s->only[i]);
+        if (strcmp(name, s->only[i]) == 0 ||
+            (strncmp(name, s->only[i], n) == 0 && name[n] == '/')) {
+            s->only_hit[i] = 1;
+            want = 1;
+        }
+    }
+    return want;
+}
+
 static int sink_begin(void *ctx, const UncEntryInfo *info)
 {
     DiskSink *s = (DiskSink *)ctx;
     char name[FS_NAME_MAX];
 
+    name_to_fs(info->name, info->name_len, s->mac_encoding, s->raw_names,
+               name, sizeof name);
+
+    /* Not asked for: skipped before it counts, so the tallies at the end
+     * describe the SELECTION rather than the archive. */
+    if (!only_wanted(s, name)) return 1;
+
     s->cur = *info;
     s->data_written = s->rsrc_written = 0;
     s->entries++;
-
-    name_to_fs(info->name, info->name_len, s->mac_encoding, s->raw_names,
-               name, sizeof name);
 
     if (s->list_only) {
         char t[13], c[13];
@@ -1661,6 +1700,17 @@ static UncFormat format_by_name(const char *s)
     return UNC_FORMAT_UNKNOWN;
 }
 
+/* Does a layer of this format hold ANOTHER archive, rather than the
+ * entries the user came for? An envelope does by definition; so do the
+ * three segmented schemes that join their parts into one file first.
+ * Both the auto-unwrap below and --only's exemption from these layers
+ * ask this question, and they must not answer it differently. */
+static int layer_unwraps(UncFormat f)
+{
+    return unc_format_is_envelope(f) || f == UNC_FORMAT_SITSEG ||
+           f == UNC_FORMAT_SPLIT || f == UNC_FORMAT_DDSEG;
+}
+
 static void usage(void)
 {
     fprintf(stderr,
@@ -1677,6 +1727,13 @@ static void usage(void)
         "(default) or ._NAME\n"
         "  --overwrite    write over existing output files "
         "(default: per-entry error)\n"
+        "  --only <name>  act on this entry only; repeatable. The name is\n"
+        "                 the one `l` prints, and naming a folder takes\n"
+        "                 what is in it. Applies to l, x and t alike; a\n"
+        "                 name that matches nothing is an error. Envelope\n"
+        "                 layers (.hqx, .bin, .gz ...) are always unwrapped\n"
+        "                 whole, so --only names entries of the archive\n"
+        "                 inside them\n"
         "  -nr            do not auto-unwrap envelope layers (.sit.hqx, ...)\n"
         "  --part <file>  another part of a segmented archive (repeatable);\n"
         "                 parts are also looked for beside the one given.\n"
@@ -1737,6 +1794,13 @@ int main(int argc, char **argv)
      * on what --preset will read, not a size anybody declared. */
     static uint8_t presetbuf[64 * 1024];
     int nparts = 0, no_parts = 0, ask = 0;
+    /* --only. The flags outlive one layer on purpose: the selectors are
+     * judged once, at the end of the run. */
+    const char *only[ONLY_MAX];
+    unsigned char only_hit[ONLY_MAX];
+    int nonly = 0, onlymiss = 0;
+
+    memset(only_hit, 0, sizeof only_hit);
 
     if (argc >= 2 && (strcmp(argv[1], "--version") == 0 ||
                       strcmp(argv[1], "-V") == 0)) {
@@ -1762,6 +1826,10 @@ int main(int argc, char **argv)
         else if (strcmp(argv[i], "--part") == 0 && i + 1 < argc) {
             if (nparts < UNC_SEG_MAX_PARTS) partargs[nparts++] = argv[++i];
             else { fprintf(stderr, "macextract: too many --part\n"); return 2; }
+        }
+        else if (strcmp(argv[i], "--only") == 0 && i + 1 < argc) {
+            if (nonly < ONLY_MAX) only[nonly++] = argv[++i];
+            else { fprintf(stderr, "macextract: too many --only\n"); return 2; }
         }
         else if (strcmp(argv[i], "--no-parts") == 0) no_parts = 1;
         else if (strcmp(argv[i], "--ask") == 0) ask = 1;
@@ -1901,6 +1969,20 @@ nextlayer:
             (split_family_present(file) ||
              split_part_offered(file, partargs, nparts)))
             fmt = UNC_FORMAT_SPLIT;
+    }
+
+    /* --only names the entries the user can SEE. A layer this run is
+     * about to unwrap is not one of them: it holds one file on the way
+     * to the archive, and filtering it would extract nothing at all.
+     * The condition is the unwrap gate below, not the format — `l` and
+     * `t` never unwrap, so for them an envelope's single entry IS the
+     * listing, and exempting it made --only silently do nothing.
+     * A layer that filters is a layer that does not recurse, which is
+     * what makes the report at the end fire exactly once. */
+    if (nonly && !(strcmp(cmd, "x") == 0 && !no_recurse && layer_unwraps(fmt))) {
+        sink.only     = only;
+        sink.only_hit = only_hit;
+        sink.nonly    = nonly;
     }
 
     /* Mac formats carry MacRoman names; zip/tar/gzip do not — nor does
@@ -2373,6 +2455,16 @@ nextlayer:
                 "macextract: is exactly what is needed to add support.\n");
     }
     sink_report_cuts(&sink);
+    /* A selector that matched nothing is a typo, and a typo must not
+     * extract nothing and exit 0. */
+    if (sink.nonly) {
+        for (i = 0; i < nonly; i++)
+            if (!only_hit[i]) {
+                fprintf(stderr, "macextract: --only \"%s\": no entry of this "
+                        "archive has that name\n", only[i]);
+                onlymiss++;
+            }
+    }
     if (sink.errors) {
         fprintf(stderr, "macextract: %d of %d entries failed\n",
                 sink.errors, sink.entries);
@@ -2385,6 +2477,7 @@ nextlayer:
                             "been needed\n", (unsigned)ba.shortby);
         return 1;
     }
+    if (onlymiss) return 1;
 
     /* This layer extracted cleanly: the previous layer's envelope file
      * (if any) is no longer needed. */
@@ -2400,9 +2493,7 @@ nextlayer:
      * .cpt.bin, .tar.Z ...): when an envelope format yielded exactly
      * one file, sniff it and extract in place. -nr disables. */
     if (strcmp(cmd, "x") == 0 && !no_recurse && depth < 8 &&
-        (unc_format_is_envelope(fmt) ||
-         fmt == UNC_FORMAT_SITSEG || fmt == UNC_FORMAT_SPLIT ||
-         fmt == UNC_FORMAT_DDSEG) &&
+        layer_unwraps(fmt) &&
         sink.file_count == 1 && sink.dir_count == 0 &&
         sink.last_ok_path[0]) {
         FILE *pf = fopen(sink.last_ok_path, "rb");
