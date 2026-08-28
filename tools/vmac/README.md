@@ -1107,6 +1107,28 @@ all 34 entries are written, and the run FAILS as a cancel that arrived too
 late. Without that second boot, "the extraction stopped early" is equally
 consistent with any mouse press waking the application up.
 
+**`--encrypted` answers the password dialog**, and brings its own archive:
+
+    os9.py --encrypted --launch -o <dir>          # no fixture: it makes one
+
+Nothing in the corpus is encrypted, so the subject is built by
+`tools/synth_crypt.py` (StuffIt classic DES, three entries, password
+`hushnow`) and put on the volume as **MacBinary** — `'MKey'` 0, which verifies
+the password, is in the archive's resource fork, so a data fork alone cannot
+be decrypted by anything. `verify_output()` is given the same password for the
+reference side; without that every entry reads as "missing on Linux".
+
+A **wrong** password is typed first and must be refused, because the retry is
+the path a user meets and because an application that ignored what was typed
+would pass a single-password run. Both dialogs are keyboard work —
+`PassFilter` maps Return to OK and Escape to Cancel — so this needs no pointer.
+
+**Wait over the right rectangle.** The refusal changes the dialog's MESSAGE and
+nothing else, and the dialog is a small part of `WINDOW_RECT`: measured over
+the window, one rewrapped paragraph moved 0.43 % in 123 s and printed "NO
+CHANGE" about a dialog that had changed. `PASSWORD_MSG` is the message area
+from `DITL` 132, and over that the same event is 19 % in 4 s.
+
 **`19-names.png` is the photograph of an 8-bit name.** Every tier checks the
 BYTES of a MacRoman filename and no tier had ever shown the GLYPHS on Mac
 OS 9. `synth-packit-2.pit` carries one: `App` followed by MacRoman `CC A9`,

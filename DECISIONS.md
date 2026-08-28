@@ -148,6 +148,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-27 (the path builder's own cap) — the bytes were still in the walk
 - 2026-08-28 (the OS 9 tier's last three keystrokes) — a run that stopped early still reported every step it took
 - 2026-08-28 (clicking a dialog that does not exist yet) — park the pointer before the thing you mean to hit appears
+- 2026-08-28 (the password dialog on Mac OS 9) — a change threshold is only as good as the rectangle it is measured over
 
 ---
 
@@ -8595,3 +8596,36 @@ The positioning code moved rather than being copied: it is `os9mouse.Pointer`
 now, given a "send these monitor commands" and a "give me a frame", and both
 guests hand it their own. A second copy of the four measured facts in that
 module's docstring would have been a second copy to get wrong.
+
+## 2026-08-28 (the password dialog on Mac OS 9) — a change threshold is only as good as the rectangle it is measured over
+
+The last thing the Mac OS 9 tier had never done was decrypt something. It was
+filed as a harness limitation — the application asks for the password in a
+dialog and a fixture run drives the Finder — but the dialog is keyboard work:
+`PassFilter` maps Return to OK and Escape to Cancel, and everything else
+typed goes into the buffer. What actually stood in the way was the SUBJECT.
+**Nothing in the corpus is encrypted**, measured (FORMATS.md, *Encryption*),
+so there is no fixture to add to the sample; `--encrypted` therefore generates
+its archive the way `interactive.py --password` already did, and StuffIt
+classic's DES is the one worth carrying here because its verifier `'MKey'` 0
+lives in the archive's RESOURCE fork. On Linux that fork arrives inside a
+MacBinary envelope; on the Mac the shell reads it through the File Manager.
+Both decrypt, and the three entries came off the volume byte-exact, resource
+forks included.
+
+**The wrong password goes first.** An application that ignored what was typed
+and decrypted anyway would pass a run that only ever gives the right one, and
+the retry is what a user meets. It is photographed: eight bullets for
+`wrongone`, then the dialog again reading "That password was refused."
+
+**And the part worth transferring.** That refusal step reported *"NO CHANGE,
+continuing anyway"* on the first run — 0.43 % of the rectangle changed, over a
+120 s timeout — while the screenshot taken two lines later showed the refusal
+plainly. Nothing was wrong with the application or with the 2 % threshold: the
+rectangle was `WINDOW_RECT`, 600x500, and the whole password dialog is a small
+part of it, of which the refusal moves one rewrapped paragraph. Measured over
+the message area from `DITL` 132 instead, the same event is **19 % in 4 s**.
+A threshold answers "did enough of THIS change"; when the answer disagrees
+with a photograph, suspect the rectangle before the guest. The general form is
+this repository's oldest smell: **an aggregate cannot fail on a property it
+averages away.**

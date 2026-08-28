@@ -78,16 +78,15 @@ unsupported either way.
 Verification gaps — things this project has and has not checked.
 What it does not HAVE is section 2.
 
-- **Two formats are absent from the Mac OS 9 sample, and neither
-  absence is a scope decision.** **SpaceSaver**, whose only specimens
-  are cache-only and cannot be committed or regenerated on a clone,
-  and an **encrypted entry**, because the application asks for the
-  password in a dialog and a fixture run drives the Finder from the
-  keyboard, never the application (`tools/vmac/os9sample.txt` says
-  both in place). **What would close them:** a committable SpaceSaver
-  specimen for the first; for the second, a harness step that answers
-  the password dialog — the pointer that `--cancel-click` now uses
-  reaches it (TESTING.md, layer 8).
+- **SpaceSaver is absent from the Mac OS 9 sample, and that absence is
+  not a scope decision.** Its only specimens are cache-only: they
+  cannot be committed, and nothing on a clone regenerates them
+  (`tools/vmac/os9sample.txt` says so in place). Every other format in
+  the table runs there, and encryption stopped being the second gap on
+  2026-08-28 (FORMATS.md, *An encrypted archive, through the dialog*).
+  **What would close it:** a committable or regenerable SpaceSaver
+  archive — the same specimen Part 2 section 2 wants for the container
+  itself.
 
 ---
 

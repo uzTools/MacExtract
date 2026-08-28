@@ -1896,6 +1896,9 @@ part boundary (27 failures). Both were reverted.
    pass condition. `--cancel-click` does the same through the Cancel
    BUTTON, with `--click-at` as the control that establishes the test
    can fail (FORMATS.md, *Cancelling, and an 8-bit name*).
+   `--encrypted` covers the one path no fixture can reach — the
+   password dialog — on an archive it generates, a wrong password
+   first (FORMATS.md, *An encrypted archive, through the dialog*).
    **What this layer still cannot see** is a name the Mac cut at 31
    characters, because both sides are compared in the Mac's spelling
    (`run_names.py` is where that lives), and whether an extraction is

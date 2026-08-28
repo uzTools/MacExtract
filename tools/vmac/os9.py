@@ -486,9 +486,21 @@ VOLUME_WINDOW = (460, 260, 0, 18)
 # y=158..178. Re-derive it from mac/macextract.r if the dialog moves.
 CANCEL_BUTTON = (340, 168)
 
+# The password dialog's MESSAGE area — item 4 of 'DITL' 132, local
+# (20,10)-(372,64) inside a 'DLOG' at global (60,80)-(452,214), so
+# (80,90)+352x54. It is what the refusal changes: the second ask prepends
+# "That password was refused. " and the text rewraps from two lines to three.
+# WINDOW_RECT cannot see that — the whole dialog is a small part of it, and one
+# rewrapped message moved 0.43 % of it, under the 2 % threshold, so the wait
+# ran to its 120 s timeout and printed "NO CHANGE" about a dialog that had in
+# fact changed (measured 2026-08-28, `15c-refused.png`). **A change threshold
+# is only as good as the rectangle it is measured over.**
+PASSWORD_MSG = (352, 54, 80, 90)
+
 
 def launch_by_keyboard(q, outdir, wait=240.0, cancel=False, click=False,
-                       click_at=CANCEL_BUTTON):
+                       click_at=CANCEL_BUTTON, password=None,
+                       wrong_first="wrongone"):
     """Drive the Finder to launch the application and extract, using no mouse.
 
     Every step here was measured by tools/vmac/os9probe.py on 2026-08-02 and
@@ -533,6 +545,15 @@ def launch_by_keyboard(q, outdir, wait=240.0, cancel=False, click=False,
     M10 and this one had never been asked for. The pass condition is then a
     strict, non-empty subset of the entries — see verify_output(partial).
 
+    With `password` the archive is encrypted, and step 5 becomes a dialog
+    rather than a wait: the engine asks its host for a password only when an
+    entry turns out to need one, so this is the one path that cannot be
+    reached by choosing a fixture. `wrong_first` is typed and refused before
+    the real one, because the retry is the path a user actually meets — and
+    because an application that ignored what was typed and decrypted anyway
+    would pass a single-password run. Both dialogs are keyboard work:
+    `PassFilter` maps Return to OK and Escape to Cancel.
+
     `click=True` cancels through the BUTTON instead of the chord. They are two
     different branches of ProgressPump() — the chord is its own keyDown test,
     the button is the DialogSelect beside it — and until this route existed
@@ -552,7 +573,7 @@ def launch_by_keyboard(q, outdir, wait=240.0, cancel=False, click=False,
 
     scratch = os.path.join(outdir, ".wait.png")
 
-    def step(before, label, timeout, poll=5.0):
+    def step(before, label, timeout, poll=5.0, rect=WINDOW_RECT):
         """Wait for the screen to react, and say so either way.
 
         A step that times out does NOT stop the run: the screenshots are worth
@@ -560,7 +581,7 @@ def launch_by_keyboard(q, outdir, wait=240.0, cancel=False, click=False,
         not from a pixel threshold. But it must be visible in the log, because
         "the next screenshot looks wrong" is exactly the non-observation this
         harness spent five boots learning not to reason from."""
-        frac, secs = q.wait_change(before, WINDOW_RECT, scratch,
+        frac, secs = q.wait_change(before, rect, scratch,
                                    timeout=timeout, poll=poll)
         verdict = "" if frac >= 0.02 else "  <- NO CHANGE, continuing anyway"
         print(f"os9: {label} ({frac:.4f} changed in {secs:.0f}s){verdict}")
@@ -651,7 +672,26 @@ def launch_by_keyboard(q, outdir, wait=240.0, cancel=False, click=False,
         shot("14b-parked")
 
     q.key("ret")                                 # Save: extract beside it
-    if cancel:
+    if password:
+        # The password dialog hides the progress dialog behind it
+        # (MacAskPassword's HideWindow), so waiting for one rectangle to
+        # change is exact here in a way it is not for the progress dialog.
+        step(dest, "password dialog up", wait, poll=2.0)
+        asked = shot("15-password")
+        for ch in wrong_first:                   # refused on purpose
+            q.key(ch)
+        shot("15b-typed-wrong")
+        q.key("ret")
+        # Over the MESSAGE, not the window: the refusal is a rewrapped
+        # paragraph inside a dialog that is otherwise identical.
+        step(asked, "asked again after the wrong password", 120.0, poll=2.0,
+             rect=PASSWORD_MSG)
+        shot("15c-refused")
+        for ch in password:
+            q.key(ch)
+        q.key("ret")
+        still("extraction finished", wait)
+    elif cancel:
         # Poll fast here and shoot at once: the window to reach the progress
         # dialog is the whole extraction, and on this machine that is seconds
         # for anything small. A cancel that arrives after the last entry is
@@ -861,7 +901,7 @@ def mac_dir_to_rel(mac_dir):
     return mac_dir.strip(":").replace(":", "/")
 
 
-def verify_output(xfer, fixture, workdir, partial=False):
+def verify_output(xfer, fixture, workdir, partial=False, password=None):
     """Compare what the Mac wrote against the same engine's Linux output.
 
     Returns (ok, list of report lines). With `partial` the run was CANCELLED
@@ -912,8 +952,11 @@ def verify_output(xfer, fixture, workdir, partial=False):
     asmac = os.path.join(workdir, "as-the-mac-saw-it", "archive.sit")
     os.makedirs(os.path.dirname(asmac), exist_ok=True)
     shutil.copyfile(fixture, asmac)
-    subprocess.run([cli, "x", "--forks", "hidden", asmac, "-o", ref],
-                   capture_output=True)
+    # `-p` where the Mac was given one in its dialog: the reference has to
+    # decrypt the same entries, or every one of them is "missing on Linux".
+    subprocess.run([cli, "x", "--forks", "hidden"]
+                   + (["-p", password] if password else [])
+                   + [asmac, "-o", ref], capture_output=True)
 
     # Everything the reference wrote, as relative paths. The reference is
     # extracted with `--forks hidden`, so a "._" file is a resource fork and
@@ -1372,6 +1415,34 @@ def verify_hfsplus(xfer, fixture, workdir, wrapper=None, expect_refusal=False):
     return ok, lines
 
 
+ENCRYPTED_PW = "hushnow"
+
+
+def build_encrypted(workdir):
+    """The encrypted subject, written here rather than taken from `fixtures/`.
+
+    Nothing in the corpus is encrypted — measured, `lsar -j` over every
+    fixture (FORMATS.md, *Encryption*) — so the only way to reach the
+    application's password dialog is to generate the archive, exactly as the
+    Mini vMac phase does (`interactive.py --password`). StuffIt classic's
+    DES is the right one to bring here: its verifier, `'MKey'` 0, lives in the
+    archive's RESOURCE fork, so this also asks whether the Mac shell finds key
+    material in a fork that Linux only sees through an envelope.
+
+    Returns the MacBinary file to put on the transfer volume, both forks in
+    it. Regenerable on a clone, which the cached DropStuff specimens are not.
+    """
+    sys.path.insert(0, os.path.join(R.REPO, "tools"))
+    import synth_crypt as SC
+    import synth_wrapped as W
+    sit, rsrc = SC.build_sit_des(ENCRYPTED_PW.encode("mac_roman"))
+    path = os.path.join(workdir, "secret.bin")
+    os.makedirs(workdir, exist_ok=True)
+    with open(path, "wb") as f:
+        f.write(W.macbinary("archive.sit", sit, rsrc, b"SIT!", b"SIT!"))
+    return path
+
+
 def sha1(path):
     import hashlib
     h = hashlib.sha1()
@@ -1443,10 +1514,14 @@ def run_one(fixture, appbin, outdir, args):
     the master drifted from upstream before verify_disk() existed."""
     os.makedirs(outdir, exist_ok=True)
     xfer = os.path.join(outdir, "transfer.img")
+    # An encrypted StuffIt classic keeps its verifier in the archive's
+    # RESOURCE fork, so that subject goes onto the volume as MacBinary; every
+    # other fixture is a data fork and nothing else.
+    carry = (["--macbinary", f"{fixture}:archive.sit"] if args.encrypted
+             else ["--data", f"{fixture}:archive.sit"])
     R.sh(sys.executable, os.path.join(HERE, "mkapmdisk.py"), DISK, xfer,
          "32", "MacExtract",
-         "--macbinary", f"{appbin}:MacExtract",
-         "--data", f"{fixture}:archive.sit")
+         "--macbinary", f"{appbin}:MacExtract", *carry)
 
     verify_disk()
     boot = boot_copy(outdir)
@@ -1479,7 +1554,8 @@ def run_one(fixture, appbin, outdir, args):
             launch_by_keyboard(q, outdir, wait=args.launch_wait,
                                cancel=args.cancel or args.cancel_click,
                                click=args.cancel_click,
-                               click_at=args.click_at)
+                               click_at=args.click_at,
+                               password=ENCRYPTED_PW if args.encrypted else None)
         if os.path.exists(scratch):
             os.remove(scratch)
     finally:
@@ -1502,11 +1578,13 @@ def run_one(fixture, appbin, outdir, args):
     # the guest flushed — an unflushed volume shows up here as a failed mount
     # or a missing file, not as a silent pass.
     cancelled = args.cancel or args.cancel_click
-    ok, lines = verify_output(xfer, fixture, outdir, partial=cancelled)
+    ok, lines = verify_output(xfer, fixture, outdir, partial=cancelled,
+                              password=ENCRYPTED_PW if args.encrypted else None)
     print(f"\nos9: {'PASS' if ok else 'FAIL'} — "
           f"{os.path.basename(fixture)} on Mac OS 9.2"
           f"{', cancelled part way' if cancelled else ''}"
-          f"{' (the BUTTON)' if args.cancel_click else ''}")
+          f"{' (the BUTTON)' if args.cancel_click else ''}"
+          f"{', decrypted through the password dialog' if args.encrypted else ''}")
     for l in lines:
         print("os9: " + l)
     print(f"os9: screenshots in {outdir}")
@@ -1568,6 +1646,14 @@ def main():
                          "destination dialog is still up, because positioning "
                          "costs ~40 s and the progress dialog does not last "
                          "that long. Same pass condition as --cancel")
+    ap.add_argument("--encrypted", action="store_true",
+                    help="with --launch: extract an ENCRYPTED archive and "
+                         "answer the application's password dialog. Needs no "
+                         "fixture — nothing in the corpus is encrypted, so the "
+                         "subject is generated by tools/synth_crypt.py: a "
+                         "StuffIt classic whose verifier is in its RESOURCE "
+                         "fork, carried onto the volume as MacBinary. A WRONG "
+                         "password is typed and refused first")
     ap.add_argument("--click-at", metavar="X,Y", default=None,
                     help="with --cancel-click: click somewhere OTHER than the "
                          "Cancel button. This is the control, and it is the "
@@ -1591,8 +1677,19 @@ def main():
     if args.setup:
         setup(args.force)
         return 0
-    if not (args.fixture or args.list):
-        ap.error("give a fixture, --list, or --setup")
+    if not (args.fixture or args.list or args.encrypted):
+        ap.error("give a fixture, --list, --encrypted or --setup")
+    if args.encrypted:
+        if not args.launch:
+            ap.error("--encrypted drives the password dialog, so it needs "
+                     "--launch")
+        if args.hfsplus or args.cancel or args.cancel_click:
+            ap.error("--encrypted brings its own subject and runs it to "
+                     "completion; it does not combine with --hfsplus or "
+                     "either cancel route")
+        if args.fixture or args.list:
+            ap.error("--encrypted generates its own archive — nothing in the "
+                     "corpus is encrypted — so it takes no fixture")
     if (args.cancel or args.cancel_click) and not args.launch:
         ap.error("--cancel drives the application, so it needs --launch")
     if (args.cancel or args.cancel_click) and args.hfsplus:
@@ -1617,6 +1714,8 @@ def main():
         raise SystemExit("os9: no Mac OS 9 disk — run tools/vmac/os9.py --setup")
 
     fixtures = [args.fixture] if args.fixture else []
+    if args.encrypted:
+        fixtures = [build_encrypted(args.outdir)]
     if args.list:
         with open(args.list) as f:
             for line in f:

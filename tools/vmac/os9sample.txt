@@ -40,7 +40,7 @@
 # directory — so tools/synth_os9.py writes one of each into fixtures/,
 # and SOURCES.md regenerates them.
 #
-# Two formats are deliberately NOT here, and neither is a scope decision:
+# One format is NOT here, and it is not a scope decision:
 #
 #   StuffIt SpaceSaver  the only specimens are the ones Aladdin's own
 #                       compressor modules wrote under qemu-m68k, which
@@ -49,10 +49,12 @@
 #                       path instead:
 #                         os9.py ~/.cache/macextract/vmac/specimens/\
 #                                spacesaver/modules/m4.ss --launch
-#   an encrypted entry  the application asks for a password in a dialog,
-#                       and launch_by_keyboard() drives the Finder, not
-#                       the application. The password dialog is driven
-#                       on both Mini vMac tiers (TESTING.md, layer 10).
+#
+# An encrypted entry is not in this list either, and does not belong in
+# one: nothing in the corpus is encrypted, so `os9.py --encrypted`
+# generates its own archive and answers the password dialog from the
+# keyboard (2026-08-28; FORMATS.md, *An encrypted archive, through the
+# dialog*). It is a run of its own, not a row here.
 
 export-hc.hqx                              # BinHex, 3127 B
 derived-keyAhead.cpt                       # Compact Pro, 863 B
