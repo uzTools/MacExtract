@@ -8962,6 +8962,32 @@ and 69/69 at the 1 MB floor target**, System 6.0.8, the same
 `tools/vmac/sample.txt` the shipped build passes — so the 32-bit
 configuration is verified where it runs, not only where it compiles.
 
+**And it runs on a 68000.** `UNC_OFF64` on an emulated Mac Plus:
+**69/69 PASS**, with **identical peak heap on every one of the 69** and
+identical result grids — file counts, summed CRCs, data and resource
+byte totals. Those come off the application's own grid as integers, so
+that comparison is exact rather than poll-quantised. 64-bit arithmetic
+on a 68000 means libgcc helper calls in a no-libc, 4 KB-stack
+environment, and the claim that it would never be run there was a scope
+statement wearing a technical one: the question was cheap and worth
+asking. `mac/CMakeLists.txt` carries the switch so it can be asked again.
+
+**Time is the one thing not measured, and the instrument is why.**
+`macburger-helper.hqx` at 1x, four runs alternating 32/64/32/64:
+**104.0, 104.0, 104.1, 104.1 s** — the spread between widths equals the
+spread within one. But `run.py` timestamps at poll instants, so the
+figure is quantised to the 3 s poll however reproducible it looks:
+**the result is "no difference above 3 %", not a stopwatch.** Every
+subject this harness can reach is decode-dominated — the parser touches
+offsets a few dozen times per archive while the codec loops millions of
+times — and the one shape that would isolate the parser, an archive of
+tens of thousands of entries, does not fit on a 1440 KB floppy. On the
+host, 500,000 entries LISTED (parser only, no decode) cost 0.17-0.18 s
+at either width; that says the widening is free algorithmically, and
+says nothing about m68k, where a 64-bit add is not one instruction.
+So the true 68k cost sits somewhere under 3 %, with +0.51 % of text as
+the only hard number pointing into that range.
+
 One build hazard surfaced and is not fixed here: **the Makefile does not
 track header dependencies**, so editing `macextract.h` leaves stale
 objects linked. It cost a build whose warnings were a previous

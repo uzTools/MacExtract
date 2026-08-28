@@ -59,6 +59,13 @@ target_compile_options(MacExtract PRIVATE -mcpu=68000 -Os -Wno-multichar
                        # (no SFGetFile/alerts) used by the Mini vMac harness in
                        # tools/; see tools/vmac/README.md. Normal builds omit it.
                        $<$<BOOL:$ENV{UNC_MAC_AUTOTEST}>:-DUNC_MAC_AUTOTEST>
+                       # UNC_OFF64: carry a container offset in 64 bits on the
+                       # 68000 itself. Not a switch any release uses — the Mac
+                       # cannot hold a file past 2 GB — but the only way to
+                       # find out what the wider type does on a real 68000,
+                       # where it means libgcc helper calls (DECISIONS.md
+                       # 2026-08-28, *what a width costs*).
+                       $<$<BOOL:$ENV{UNC_OFF64}>:-DUNC_OFF64>
                        # UNC_AT_META: autotest reports the first file's on-Mac
                        # type/creator/Finder-flags instead of the CRC aggregate
                        # (the "launches by double-click" E2E check).
