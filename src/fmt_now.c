@@ -522,6 +522,19 @@ static int now_next_block(NowStream *st)
     }
     if (out < 0) return err;
 
+    /* One tick per block. This reader seeks to each block and pulls it
+     * whole with unc_read_full, which is the raw UncIO and not the
+     * shared buffered reader — the only thing in the engine that drives
+     * the progress pump. So until 2026-08-28 Now Compress never called
+     * the progress callback AT ALL, against the contract in
+     * include/macextract.h, and on the Mac that froze the progress
+     * dialog at 0 % and put both Cancel routes out of reach for the
+     * whole extraction: measured on Mac OS 9, where three Cmd-. in
+     * twenty seconds did nothing to a 9.9 MB entry (DECISIONS.md
+     * 2026-08-28). A block's input is at most NOW_INBLOCK. */
+    err = unc_progress_add(&c->ps, length);
+    if (err != UNC_OK) return err;
+
     /* The window slides by the block's length: what was written at
      * outstart ends up just below it, and the last 32 KB become the
      * history for the next block. */

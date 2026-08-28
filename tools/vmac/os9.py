@@ -414,8 +414,25 @@ class Qemu:
 # alert all land. Clear of the menu bar and of the right-hand icon column.
 WINDOW_RECT = (600, 500, 200, 100)
 
+# The progress dialog's title line — "Extracting archive.sit" — measured off
+# 15-progress.png: the dialog is at (80,65)-(405,195) and the line sits at
+# y=86..110. It is the one part of that dialog that does NOT repaint while the
+# extraction runs, which is what makes it a state signature: it changes when
+# the dialog is REPLACED, by the result alert or by the cancelled one, and at
+# no other time. Waiting for the screen to go still cannot do this job — a
+# progress dialog reading "0%  estimating time left" is perfectly still for as
+# long as the first percent takes, and on 2026-08-28 that read as a finished
+# extraction 14 s into a 30 s one.
+PROGRESS_TITLE = (300, 24, 90, 86)
 
-def launch_by_keyboard(q, outdir, wait=240.0):
+# The transfer volume's Finder window, measured off 12-volume-open.png: title
+# bar at y=25, bottom edge at y=270, left edge at x=8. Cropped out of the last
+# screenshot so the extracted NAMES are legible without opening the full
+# 1024x768 frame — which is what the 8-bit-name photograph is for.
+VOLUME_WINDOW = (460, 260, 0, 18)
+
+
+def launch_by_keyboard(q, outdir, wait=240.0, cancel=False):
     """Drive the Finder to launch the application and extract, using no mouse.
 
     Every step here was measured by tools/vmac/os9probe.py on 2026-08-02 and
@@ -433,7 +450,32 @@ def launch_by_keyboard(q, outdir, wait=240.0):
       3. Inside the volume window the same two keystrokes launch the
          application, whose SFGetFile opens with `archive.sit` already
          selected — it sorts first — so Return opens it.
-      4. Return again dismisses the result alert, and Cmd-Q quits.
+      4. Return opens the SFPutFile destination dialog, and a SECOND Return
+         accepts it: "Extract here", beside the archive.
+      5. The extraction runs. NOT waited for with one changed rectangle:
+         the progress dialog repaints ten times a second, so the first
+         change after the destination dialog is that dialog appearing and
+         never the result. The default path waits for the screen to go
+         still, which is a proxy and says so (`still()`); the --cancel path
+         watches PROGRESS_TITLE instead, which is exact.
+      6. Return dismisses the result alert, which puts SFGetFile back up —
+         the repaint is a step of its own — and Cmd-. is Standard File's
+         Cancel, which ends the application's SFGetFile loop and quits it.
+         Cmd-Q does not: Standard File is modal and never sees it.
+
+    Until 2026-08-28 this stopped at step 4 with three keystrokes: one Return
+    for the archive, one for what the code called "the alert", and a Cmd-Q
+    that was swallowed by the modal dialog. So `14-result.png` photographed
+    the DESTINATION dialog under the name of the result, `15-quit.png` caught
+    the alert the run had not waited for, the application never quit, and the
+    step that reported "extraction reported" had timed the destination dialog
+    opening. Nothing was wrong with the extraction — the verdict comes from
+    the disk — but every screenshot in the tier was one step behind its label.
+
+    With `cancel=True` the extraction is interrupted with Cmd-. instead of
+    being waited out, which is the route the Mini vMac tiers have driven since
+    M10 and this one had never been asked for. The pass condition is then a
+    strict, non-empty subset of the entries — see verify_output(partial).
 
     Returns the list of (label, screenshot) pairs it captured."""
     shots = []
@@ -446,7 +488,7 @@ def launch_by_keyboard(q, outdir, wait=240.0):
 
     scratch = os.path.join(outdir, ".wait.png")
 
-    def step(before, label, timeout):
+    def step(before, label, timeout, poll=5.0):
         """Wait for the screen to react, and say so either way.
 
         A step that times out does NOT stop the run: the screenshots are worth
@@ -454,9 +496,60 @@ def launch_by_keyboard(q, outdir, wait=240.0):
         not from a pixel threshold. But it must be visible in the log, because
         "the next screenshot looks wrong" is exactly the non-observation this
         harness spent five boots learning not to reason from."""
-        frac, secs = q.wait_change(before, WINDOW_RECT, scratch, timeout=timeout)
+        frac, secs = q.wait_change(before, WINDOW_RECT, scratch,
+                                   timeout=timeout, poll=poll)
         verdict = "" if frac >= 0.02 else "  <- NO CHANGE, continuing anyway"
         print(f"os9: {label} ({frac:.4f} changed in {secs:.0f}s){verdict}")
+
+    def chord(name):
+        """Send a Command-key chord and check the monitor did not reject it.
+
+        `key()` writes down a monitor connection and never reads the reply, so
+        a keycode name QEMU does not know is indistinguishable from a
+        keystroke the guest ignored — and the whole cancel route rests on one
+        chord being real. HMP answers an unknown name with an error, so this
+        asks rather than tells."""
+        reply = q.ask(f"sendkey {name}")
+        if re.search(r"unknown|invalid|not found", reply, re.I):
+            print(f"os9: sendkey {name} REJECTED by the monitor: "
+                  f"{reply.strip()}  <- the keystroke never reached the guest")
+        return reply
+
+    def replaced(before, timeout, poll=3.0):
+        """Has the progress dialog been replaced by an alert?
+
+        Returns the fraction of PROGRESS_TITLE that changed, 0.0 if it never
+        did. Exact where `still()` is a proxy: see PROGRESS_TITLE."""
+        base = q.region(before, PROGRESS_TITLE)
+        started = time.time()
+        while time.time() - started < timeout:
+            time.sleep(poll)
+            if not q.shot(scratch):
+                continue
+            cur = q.region(scratch, PROGRESS_TITLE)
+            if not cur or len(cur) != len(base):
+                continue
+            frac = sum(a != b for a, b in zip(base, cur)) / len(base)
+            if frac >= 0.02:
+                return frac
+        return 0.0
+
+    def still(label, timeout):
+        """Wait for the screen to STOP changing, and report how long it took.
+
+        What ends an extraction is an alert, and what precedes it is a
+        progress dialog repainting continuously; the first is a still screen
+        and the second is not, so this is the only wait that can tell them
+        apart. The number is a measurement worth keeping — how long a 68k
+        extraction takes under the 68LC040 emulator is not derivable from the
+        Mac Plus figures in FORMATS.md."""
+        secs = q.settle(scratch, interval=5.0, timeout=timeout)
+        if secs is None:
+            print(f"os9: {label} — STILL MOVING after {timeout:.0f}s, "
+                  f"continuing anyway")
+        else:
+            print(f"os9: {label} (screen still after ~{secs:.0f}s)")
+        return secs
 
     shot("10-desktop")
 
@@ -473,14 +566,66 @@ def launch_by_keyboard(q, outdir, wait=240.0):
     sfg = shot("13-sfgetfile")
 
     q.key("ret")                                 # open the selected archive
-    step(sfg, "extraction reported", wait)
-    shot("14-result")
+    step(sfg, "destination dialog opened", wait)
+    dest = shot("14-destination")
+
+    q.key("ret")                                 # Save: extract beside it
+    if cancel:
+        # Poll fast here and shoot at once: the window to reach the progress
+        # dialog is the whole extraction, and on this machine that is seconds
+        # for anything small. A cancel that arrives after the last entry is
+        # not a failed application, it is a failed TEST, and verify_output()
+        # says so rather than passing.
+        step(dest, "progress dialog up", 120.0, poll=1.0)
+        prog = shot("15-progress")
+        # Cmd-. is sent until the dialog goes away, not once, and the
+        # COUNT is printed. ProgressPump() runs only from prog_tick, which
+        # the engine calls per 8-16 KB of input consumed, so an application
+        # decoding a format that does not tick is not pumping at all and a
+        # chord into it is indistinguishable from a chord that does not
+        # work. That is not a hypothesis: it is how Now Compress's missing
+        # progress callback was found here (DECISIONS.md 2026-08-28,
+        # tools/run_ticks.py). 1 means the first landed, more means the
+        # early ones were lost, none prints "Cmd-. DID NOT CANCEL".
+        sent, hit = 0, 0.0
+        deadline = time.time() + wait
+        while time.time() < deadline:
+            chord("meta_l-dot")
+            sent += 1
+            hit = replaced(prog, 6.0)
+            if hit:
+                break
+        if hit:
+            # Replaced is not the same as cancelled: an extraction that
+            # finishes on its own replaces the dialog too. Which one happened
+            # is read off the volume, never off this line.
+            print(f"os9: the progress dialog was replaced after {sent} Cmd-. "
+                  f"({hit:.4f} of the title line changed) — cancelled or "
+                  f"finished, the volume says which")
+        else:
+            print(f"os9: {sent} Cmd-. sent and the progress dialog is still "
+                  f"up  <- Cmd-. DID NOT CANCEL")
+    else:
+        still("extraction finished", wait)
+    alert = shot("16-result")
 
     q.key("ret")                                 # dismiss the alert
-    time.sleep(3)
-    q.key("meta_l-q")                            # quit the application
-    time.sleep(8)
-    shot("15-quit")
+    step(alert, "SFGetFile repainted", 120.0)
+    back = shot("17-back")
+
+    chord("meta_l-dot")                          # Standard File Cancel: quit
+    step(back, "application quit", 120.0)
+    fin = shot("18-finder")
+
+    # The names the Mac wrote, as the Finder draws them. Every tier checks the
+    # BYTES of an 8-bit MacRoman name; only a photograph says what the glyphs
+    # look like, and this tier had never taken one.
+    crop = os.path.join(outdir, "19-names.png")
+    w, h, x, y = VOLUME_WINDOW
+    if fin and subprocess.run(["convert", fin, "-crop", f"{w}x{h}+{x}+{y}",
+                               "+repage", crop],
+                              capture_output=True).returncode == 0:
+        shots.append(("19-names", crop))
     if os.path.exists(scratch):
         os.remove(scratch)
     return shots
@@ -620,10 +765,17 @@ def mac_dir_to_rel(mac_dir):
     return mac_dir.strip(":").replace(":", "/")
 
 
-def verify_output(xfer, fixture, workdir):
+def verify_output(xfer, fixture, workdir, partial=False):
     """Compare what the Mac wrote against the same engine's Linux output.
 
-    Returns (ok, list of report lines). The reference is `macextract x`,
+    Returns (ok, list of report lines). With `partial` the run was CANCELLED
+    part way through, so the pass condition changes and does not soften: what
+    the Mac wrote must be a strict, NON-EMPTY subset of the entries, and every
+    file in it must still be byte-exact. A complete set means the cancel
+    arrived after the last entry and tested nothing; an empty one means it
+    arrived before the first finished, and neither can distinguish a working
+    Cancel from a dead keystroke. Both are reported as failures of the TEST,
+    with the fixture to change, rather than as failures of the application. The reference is `macextract x`,
     with the auto-unwrap loop ON, because THIS harness launches the
     INTERACTIVE build and that one takes envelopes off (`ExtractOne` in
     mac/macextract_mac.c). It ran `-nr` until 2026-08-27, copied from
@@ -713,6 +865,12 @@ def verify_output(xfer, fixture, workdir):
         return True, lines
     if not names:
         run("humount")
+        if partial:
+            return False, lines + [
+                "the cancel landed before the first entry was written, so "
+                "nothing came off the volume to compare. That is legal "
+                "behaviour and a useless test: use a bigger archive, or one "
+                "with more entries."]
         return False, lines + ["the Mac wrote no output files, but Linux wrote "
                                + ", ".join(sorted(expected))]
     lines.append(f"{len(names)} file(s) on the Mac volume: "
@@ -739,7 +897,17 @@ def verify_output(xfer, fixture, workdir):
             f"cannot say which."]
     missing = expected - set(names)
     extra = set(names) - expected
-    if missing:
+    if partial and not missing:
+        ok = False
+        lines.append("the cancel arrived too late: all "
+                     f"{len(expected)} entries were written, so nothing was "
+                     "interrupted and this run tested nothing. Use a bigger "
+                     "archive.")
+    elif partial:
+        lines.append(f"cancelled with {len(names)} of {len(expected)} entries "
+                     f"written and {len(missing)} never started — a strict "
+                     f"subset, which is the result being tested")
+    elif missing:
         ok = False
         lines.append(f"MISSING on the Mac: {', '.join(sorted(missing))}")
     if extra:
@@ -1211,7 +1379,8 @@ def run_one(fixture, appbin, outdir, args):
             # cannot be placed in Startup Items offline (BLOCKERS.md) — but
             # there is a way to avoid the mouse, which is just as well, because
             # the mouse does not work in this guest. See XFER_VOLUME_ICON.
-            launch_by_keyboard(q, outdir, wait=args.launch_wait)
+            launch_by_keyboard(q, outdir, wait=args.launch_wait,
+                               cancel=args.cancel)
         if os.path.exists(scratch):
             os.remove(scratch)
     finally:
@@ -1233,9 +1402,10 @@ def run_one(fixture, appbin, outdir, args):
     # what the same engine writes on Linux. This is also the check on whether
     # the guest flushed — an unflushed volume shows up here as a failed mount
     # or a missing file, not as a silent pass.
-    ok, lines = verify_output(xfer, fixture, outdir)
+    ok, lines = verify_output(xfer, fixture, outdir, partial=args.cancel)
     print(f"\nos9: {'PASS' if ok else 'FAIL'} — "
-          f"{os.path.basename(fixture)} on Mac OS 9.2")
+          f"{os.path.basename(fixture)} on Mac OS 9.2"
+          f"{', cancelled part way' if args.cancel else ''}")
     for l in lines:
         print("os9: " + l)
     print(f"os9: screenshots in {outdir}")
@@ -1280,6 +1450,15 @@ def main():
                          "the archive, and then compare both forks of what it "
                          "wrote against the same engine's Linux output. Exits "
                          "non-zero on a mismatch")
+    ap.add_argument("--cancel", action="store_true",
+                    help="with --launch: interrupt the extraction with Cmd-. "
+                         "while the progress dialog is up, instead of waiting "
+                         "it out. PASSES when what the Mac wrote is a strict, "
+                         "non-empty subset of the entries and every file in it "
+                         "is byte-exact; a cancel that arrives after the last "
+                         "entry fails as a useless test rather than passing. "
+                         "Needs an archive slow enough to catch — seconds is "
+                         "not enough on this machine")
     ap.add_argument("--launch-wait", type=float, default=240.0,
                     help="seconds to allow each of the application launch and "
                          "the extraction; the 68LC040 emulator makes both "
@@ -1297,6 +1476,11 @@ def main():
         return 0
     if not (args.fixture or args.list):
         ap.error("give a fixture, --list, or --setup")
+    if args.cancel and not args.launch:
+        ap.error("--cancel drives the application, so it needs --launch")
+    if args.cancel and args.hfsplus:
+        ap.error("--cancel drives the INTERACTIVE application; --hfsplus "
+                 "runs the autotest build, which has no progress dialog")
     if not os.path.exists(DISK):
         raise SystemExit("os9: no Mac OS 9 disk — run tools/vmac/os9.py --setup")
 

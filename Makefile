@@ -16,8 +16,9 @@ THIRD_OBJ = $(patsubst third_party/zlib/%.c,$(BUILD)/zlib_%.o,$(THIRD_SRC))
 
 CLI_BIN   = $(BUILD)/macextract
 TEST_BIN  = $(BUILD)/unit_tests
+TICK_BIN  = $(BUILD)/tick_probe
 
-all: $(CLI_BIN) $(TEST_BIN)
+all: $(CLI_BIN) $(TEST_BIN) $(TICK_BIN)
 
 $(BUILD):
 	mkdir -p $(BUILD)
@@ -56,6 +57,11 @@ $(CLI_BIN): cli/main.c $(ENGINE_OBJ) $(THIRD_OBJ) | $(BUILD)
 
 $(TEST_BIN): tests/unit_main.c tests/unit_formats.c $(ENGINE_OBJ) $(THIRD_OBJ) | $(BUILD)
 	$(CC) $(WARN) $(CFLAGS) $(INC) -Isrc tests/unit_main.c $(ENGINE_OBJ) $(THIRD_OBJ) -o $@
+
+# Measures the progress callback rather than the bytes — the one engine
+# property no other suite here can see. tools/run_ticks.py applies the rule.
+$(TICK_BIN): tools/tick_probe.c $(ENGINE_OBJ) $(THIRD_OBJ) | $(BUILD)
+	$(CC) $(WARN) $(CFLAGS) $(INC) tools/tick_probe.c $(ENGINE_OBJ) $(THIRD_OBJ) -o $@
 
 test: all
 	$(TEST_BIN)

@@ -146,6 +146,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-27 (the tree that was walked a bit at a time) — ARC's Squeeze and Distilled get a first-bits table
 - 2026-08-27 (what the tables left behind) — the profile moves, and the next thing is never the thing on the list
 - 2026-08-27 (the path builder's own cap) — the bytes were still in the walk
+- 2026-08-28 (the OS 9 tier's last three keystrokes) — a run that stopped early still reported every step it took
 
 ---
 
@@ -8456,3 +8457,94 @@ not see it said so in its own docstring (*"nothing here synthesises such
 a container"*). **A named blind spot in a passing suite is a bug report
 with no reproduction attached.** `tools/synth_now.py` writes the
 container; `unar`, which has no cap, gives the path that was meant.
+
+## 2026-08-28 (the OS 9 tier's last three keystrokes) — a run that stopped early still reported every step it took
+
+The Mac OS 9 harness had never driven the application past the destination
+dialog, and said nothing about it. After the launch it sent Return, Return,
+Cmd-Q. The second Return is what accepts the **destination** dialog, so
+`14-result.png` was a photograph of SFPutFile under the name of the result,
+the step printing "extraction reported" had timed that dialog opening in 7 s,
+and Cmd-Q was typed into a modal dialog that never sees it — Standard File is
+where Cmd-. means Cancel, and Cmd-Q means nothing at all. The application was
+still running, with its result alert up, when the emulator was killed.
+
+**Nothing about the extraction was wrong**, because this tier reads its
+verdict off the volume rather than off the screen; 20/20 stood and still
+stands. What was wrong was every claim the run made about where it had got to.
+**A harness that stops early still reports every step it did take**, each with
+a plausible number beside a plausible name — which is why the labels were
+believed for as long as the tier existed. The fix is not more waits, it is
+naming a shot after what is in it and adding the steps that were missing: the
+alert dismissed, SFGetFile checked to repaint, and Cmd-. to leave.
+
+**The completion wait had to change with it, and the reason generalises.**
+`wait_change` cannot wait for the result, because the progress dialog repaints
+ten times a second and is therefore the first thing to change after the
+destination dialog. The obvious replacement — wait for the screen to go STILL
+— was written, and it misreported a 30 s extraction as finished 14 s in: a
+progress dialog reading "0%  estimating time left" is perfectly still until
+the first percent lands. **Stillness is a proxy for "done", and a proxy is not
+the thing** — the same lesson `settle()` learned in 2026-08-02 against a
+startup splash. What replaced it is a state signature: the dialog's TITLE LINE,
+the one part of it that does not repaint while the extraction runs, so it
+changes when the dialog is replaced and at no other time.
+
+**One keystroke is not a test of a keystroke — and the second archive was
+not a second try, it was the control.** The first cancel run sent a single
+Cmd-. two seconds after the progress dialog appeared and the archive extracted
+to completion, which reads as "Cmd-. does not cancel on Mac OS 9". Sent again
+on a DIFFERENT archive, the first chord cancelled and the volume proved it: 1
+of 34 entries written, byte-exact, 33 never started. Sent three times over
+twenty seconds on the original archive, still nothing. So the variable was the
+archive, not the keystroke — and the two differ by format.
+
+**The cause was in the engine, and it had been there since the format was
+written.** `ProgressPump()` runs only from `prog_tick`, which runs only from
+the engine's progress callback; `src/fmt_now.c` pulls each compressed block
+with `unc_read_full` — the raw `UncIO`, not the shared buffered reader that
+drives the pump — so **Now Compress never called the callback at all**. The
+progress dialog therefore sat at "0%  estimating time left" for the whole
+extraction (photographed), no events were pumped, and both Cancel routes were
+unreachable for as long as it took. On a Mac Plus, that 9.9 MB entry is not
+twenty seconds. One `unc_progress_add` per block fixes it; the interval is
+then one block, at most `NOW_INBLOCK` = 32 KB, which is now what
+include/macextract.h says. **Confirmed the way it was found**: the same
+archive, the same harness, the fixed engine — the first Cmd-. cancels, 1 of 2
+entries written and byte-exact.
+
+**Nothing here could have seen it, and that is the part worth keeping.** Every
+suite in `ci.sh` grades bytes, and a decoder that never yields produces
+perfectly correct bytes. The contract was in the public header, the rule was
+in CLAUDE.md, and 946 fixtures passed without either being checked once.
+`tools/tick_probe.c` and `tools/run_ticks.py` now measure it — every fixture
+the engine extracts, one line each: it fails on the pre-fix engine and passes
+on this one, and it reports the widest gap in the corpus (30,634 B with Now
+Compress's block tick; 16,172 B without it, which is what the other twenty-odd
+formats have always been doing). **A property nothing measures is not a
+property the suite protects, however many times it is written down.**
+
+The harness changed with it: it sends Cmd-. until the dialog goes away, prints
+the count, and prints "Cmd-. DID NOT CANCEL" when none lands. **A test whose
+negative result is indistinguishable from a lost keystroke is not a test; make
+the count part of the output.**
+
+**The pass condition is what makes the cancel gradeable.** A cancelled run has
+no oracle — there is no correct number of entries to stop at — so what is
+asserted is the shape: a **strict, non-empty subset** of the entries, every
+file in it byte-exact, and nothing left behind by the entry that was in flight.
+Both degenerate outcomes fail as a broken TEST rather than passing, and say
+which archive to use instead: a cancel that arrives after the last entry has
+interrupted nothing, and one that arrives before the first cannot tell a
+working Cancel from a dead keystroke.
+
+**And the cheap thing that was sitting there the whole time.** Every tier
+compares the BYTES of an 8-bit MacRoman filename; only the two Mini vMac ones
+had ever photographed the glyphs. The fixture was already in the OS 9 sample —
+PackIt's `App` + MacRoman `CC A9` — and the shot cost one crop of a screenshot
+the run was taking anyway, at the moment the run had never reached before:
+after the application quits, with the Finder window open behind it. Mac OS 9
+draws it as `AppÃ©` in the Finder's icon view and again in Standard File's
+list, the same two characters the Linux CLI prints as UTF-8. **The step that
+was missing from the harness and the observation that was missing from the
+tier turned out to be the same step.**

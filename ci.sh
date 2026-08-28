@@ -24,6 +24,13 @@ make BUILD=build/san \
 ./build/san/unit_tests || fail "unit tests (sanitizers)"
 MACEXTRACT=build/san/macextract sh tests/run_diff.sh || fail "diff tests (sanitizers)"
 MACEXTRACT=build/san/macextract sh tests/run_robustness.sh || fail "robustness tests (sanitizers)"
+# The one engine property the byte comparisons cannot see: whether a
+# decoder ever lets its caller breathe. A format that never calls the
+# progress callback extracts perfectly and freezes the Mac's dialog for
+# the whole run, with both Cancel routes out of reach — which Now
+# Compress did until 2026-08-28, found on an emulated Mac.
+python3 tools/run_ticks.py --probe build/san/tick_probe \
+    || fail "progress-callback coverage"
 python3 tools/run_unwrap.py build/san/macextract || fail "envelope unwrap tests"
 python3 tools/run_multihqx.py --macextract build/san/macextract \
     || fail "multi-document BinHex tests"

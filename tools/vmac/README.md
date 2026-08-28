@@ -32,7 +32,7 @@ measured on a different list:
 |---|---|---|
 | System 6.0.8, 1 MB, 55 fixtures | `run.py --mem 1M --list sample.txt` | ~5.1 s per fixture, one boot each |
 | System 7.0.1, 4 MB, 55 fixtures | `run.py --system Sys7.img --list sample.txt` | ~5.1 s per fixture, one boot each |
-| Mac OS 9.2, 13 fixtures | `os9.py --list os9sample.txt --launch` | tens of minutes — one full PowerPC boot per fixture |
+| Mac OS 9.2, 20 fixtures | `os9.py --list os9sample.txt --launch` | tens of minutes — one full PowerPC boot per fixture |
 
 **Stagger the start by a few seconds when the application has changed.** The
 display race below is fixed, but the two runs still share one CMake build
@@ -1002,6 +1002,82 @@ the BinHex, then the StuffIt inside it, and written the HyperCard stack byte
 for byte. **When a harness changes what it drives, its oracle is part of what
 changed.**
 
+**Every screenshot in this tier was one step behind its label until
+2026-08-28.** The sequence sent three keystrokes after the application was up:
+one Return for the archive, one for what the code called "the alert", and a
+Cmd-Q to quit. The second Return is in fact what accepts the DESTINATION
+dialog, so `14-result.png` photographed SFPutFile under the name of the
+result, the step that printed "extraction reported" had timed that dialog
+opening, and Cmd-Q was typed into a modal dialog that never sees it — the
+application was still running when the emulator was killed. The extraction
+itself was never in question; it is read off the volume, which is why 20/20
+stood. **A harness that stops before the end still reports every step it did
+take.**
+
+It now runs to the end and says what it waited for at each point:
+
+| shot | what it is | how it is waited for |
+|---|---|---|
+| `13-sfgetfile` | SFGetFile, `archive.sit` selected | one rectangle changes |
+| `14-destination` | SFPutFile, "Extract into this folder:" | one rectangle changes |
+| `15-progress` | the progress dialog (`--cancel` only) | one rectangle changes, polled every second |
+| `16-result` | "Extraction complete." or "Extraction cancelled." | the screen goes STILL |
+| `17-back` | SFGetFile repainted, with the output now listed | one rectangle changes |
+| `18-finder` | the Finder, application gone | one rectangle changes |
+| `19-names` | a crop of `18-finder` on the volume window | — |
+
+The result is the only one that cannot be waited for with `wait_change`: the
+progress dialog repaints ten times a second, so the first change after the
+destination dialog is that dialog appearing and never the alert behind it.
+`still()` waits for the screen to stop instead, and prints how long it took —
+`synth-packit-2.pit` finishes within 13 s of the Return that starts it, on a
+machine where the whole boot takes ~130 s. **Cmd-. is what quits the
+application**, not Cmd-Q: it is Standard File's Cancel, and the SFGetFile loop
+in `ExtractOne`'s caller ends on `!reply.good`. It is sent through `ask()`
+rather than `key()` so a keycode name QEMU does not know is reported instead
+of looking like a keystroke the guest ignored.
+
+**`--cancel` interrupts the extraction instead of waiting it out**, which is
+the one thing the Mini vMac tiers have driven since M10 and this one never
+had:
+
+    os9.py fixtures/derived-Library_ISBN_Barcoder.sit -o <dir> --launch --cancel
+
+Cmd-. reaches `ProgressPump()`'s own keyDown check, the application deletes
+the entry it had in flight and puts up "Extraction cancelled.", and the pass
+condition is then a **strict, non-empty subset**: every file that IS on the
+volume must still be byte-exact, at least one entry must be missing, and at
+least one must be there. Both degenerate outcomes fail as a broken TEST rather
+than passing — a cancel that arrives after the last entry has tested nothing,
+and one that arrives before the first cannot tell a working Cancel from a dead
+keystroke. **Pick a slow archive**: this machine extracts
+`derived-XferIt_1.5b4.sea`, the largest fixture in the format sample, in under
+ten seconds. `derived-Library_ISBN_Barcoder.sit` is the subject the result
+below was measured on — StuffIt 5, 34 entries, no name in it that the Mac
+shortens into a collision.
+
+**The chord is sent until the dialog goes away, and the count is the
+measurement.** `ProgressPump()` runs only from `prog_tick`, which the engine
+calls per 8-16 KB of input consumed — so an application decoding a format that
+never ticks is not pumping at all, and a chord into it looks exactly like a
+chord that does not work. **That is how Now Compress's missing progress
+callback was found**: one Cmd-. did nothing, then three did nothing, on the
+one format in the corpus that never called back (DECISIONS.md 2026-08-28;
+`tools/run_ticks.py` now fails on it). The loop prints how many it took — 1
+means the first landed, none prints **"Cmd-. DID NOT CANCEL"** rather than a
+quiet pass. Waiting on `PROGRESS_TITLE` between sends is what makes the count
+meaningful: a progress dialog reading "0%  estimating time left" is perfectly
+still, and `still()` read that as a finished extraction 14 s into a 30 s one.
+
+**`19-names.png` is the photograph of an 8-bit name.** Every tier checks the
+BYTES of a MacRoman filename and no tier had ever shown the GLYPHS on Mac
+OS 9. `synth-packit-2.pit` carries one: `App` followed by MacRoman `CC A9`,
+which the Finder and Standard File both draw as `AppÃ©` — the same two
+characters the Linux CLI prints, which converts MacRoman to UTF-8 on its way
+out (`cli/main.c`, `macroman_high`). Look at `17-back.png` too: Standard File
+lists the extracted files, so the name is drawn twice by two different pieces
+of the Toolbox.
+
 **The two sides spell some names differently, and both are right.** The Mac
 writes each component as `ComponentToStr63()` does — the engine's `':'` back to
 `'/'`, cut at 31 characters — so `SD! Utilities : MacWrite` on Linux is
@@ -1019,8 +1095,9 @@ plain host file. After the emulator exits, `verify_output()` lifts the
 Apple_HFS partition out, mounts it with hfsutils, pulls each extracted file
 off as MacBinary (`hcopy -m`, which is the only way to get a resource fork
 through hfsutils) and compares **both forks byte for byte** against
-`macextract x -nr`. A mismatch names the file and the fork; a volume the guest
-never flushed fails to mount rather than passing quietly.
+`macextract x`, unwrap loop on — the reference above, not the autotest one.
+A mismatch names the file and the fork; a volume the guest never flushed fails
+to mount rather than passing quietly.
 
 `mkapmdisk.py` clones its partition map and drivers from a disk Mac OS 9
 already mounts and repoints only the `Apple_HFS` entry. A map built by hand
@@ -1685,11 +1762,12 @@ Pick a payload with no resource fork: the phase compares the Linux CLI's
 directory listing, where a fork is a `.rsrc` sidecar the Mac does not have.
 
 **Which reference a phase grades against follows from which build it runs.**
-`run.py`, `checkdisk.py` and `os9.py` drive the autotest build and compare
-against `macextract x -nr`; `interactive.py` drives the shipped application
-and compares against the CLI with recursion left on, plus the `Comments`
-mapping checkdisk.py makes. `expected_names` had the autotest form until
-2026-08-27 (DECISIONS.md).
+`run.py`, `checkdisk.py` and `os9.py --hfsplus` drive the autotest build and
+compare against `macextract x -nr`; `interactive.py` and `os9.py --launch`
+drive the shipped application and compare against the CLI with recursion left
+on, plus the `Comments` mapping checkdisk.py makes. `expected_names` had the
+autotest form until 2026-08-27, and so did os9.py's own reference
+(DECISIONS.md).
 
 ### Putting a disk in while the Mac is running
 

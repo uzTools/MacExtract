@@ -78,19 +78,19 @@ unsupported either way.
 Verification gaps — things this project has and has not checked.
 What it does not HAVE is section 2.
 
-- **Two things only the Mac OS 9 tier can show, and it has never been
-  asked for either.** The interactive UI's cancel routes — Cmd-., the
-  Cancel button, the dialog repainting afterwards — run on System 6.0.8
-  and, since 2026-08-25, on System 7.0.1 (TESTING.md, layer 10); on Mac
-  OS 9 the application has only ever been driven to completion, which
-  the 2026-08-27 sweep did not change. And how an 8-bit MacRoman
-  filename LOOKS there is unphotographed: the bytes are checked on every
-  tier, the glyphs on the two Mini vMac ones. **What would close it:**
-  `os9.py` already drives the Finder and the Standard File dialog by
-  keyboard, so the cancel routes need a variant of `launch_by_keyboard`
-  that presses Cmd-. rather than Return, and the glyph question needs a
-  fixture with an 8-bit name in the OS 9 sample — `derived-Education7.1.cpt`
-  or PackIt's `Appé`, which is already there and was never photographed.
+- **The progress dialog's Cancel BUTTON has never been clicked on Mac
+  OS 9.** Cmd-. cancels there since 2026-08-28, and the alert, the
+  SFGetFile repaint behind it and the strict-subset grading of the
+  volume all come with it (FORMATS.md, *Cancelling, and an 8-bit
+  name*) — but that route is the keyDown check in `ProgressPump()`,
+  and the button is `DialogSelect` beside it: two branches, one
+  tested. Both run on the Mini vMac tiers (TESTING.md, layer 10).
+  **What would close it:** a click, which needs `os9mouse.py`'s
+  stepped pointer rather than the keyboard route a fixture run uses,
+  and a way to be on the button in time — positioning costs ~40 s and
+  the dialog only exists while the extraction does, so the cursor
+  would have to be parked on the button's coordinates while the
+  DESTINATION dialog is still up.
 
   Two formats are also absent from the sample for reasons that are not
   scope: **SpaceSaver**, whose only specimens are cache-only and cannot

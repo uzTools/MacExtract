@@ -2670,7 +2670,7 @@ photographed out of the same run's ordinary screenshots (DECISIONS.md
 
 This tier reads its result **off the disk rather than the screen** — both forks
 of every extracted file lifted out with hfsutils and compared byte for byte
-against `macextract x -nr` — so unlike the Mini vMac tiers it compares **names,
+against `macextract x` — so unlike the Mini vMac tiers it compares **names,
 folder structure and 8-bit characters** too, which is how it caught the gzip/.Z
 fallback-name defect on its first sweep (TESTING.md for what each layer can and
 cannot see). `derived-XferIt_1.5b4.sea` alone lands 10 files three folders deep,
@@ -2685,6 +2685,49 @@ on a 512 MB machine.
 coordinates. The pointer works too — stepped, and never through the absolute
 `usb-tablet` (`tools/vmac/os9mouse.py`); the older "five primitives at zero
 effect" reading is withdrawn, BLOCKERS.md.
+
+### Cancelling, and an 8-bit name, on Mac OS 9 (2026-08-28)
+
+Until this date the application had only ever been driven to COMPLETION here;
+the cancel routes ran on the two Mini vMac tiers alone. `--cancel` interrupts
+the extraction with Cmd-., which `ProgressPump()` catches by hand:
+
+| | measured |
+|---|---|
+| subject | `derived-Library_ISBN_Barcoder.sit` — StuffIt 5, 34 entries |
+| Cmd-. chords needed | **1** |
+| entries written | **1 of 34**, `Contents/Info.plist`, **1,381 B byte-exact** |
+| entries never started | 33 |
+| the entry in flight | left **nothing** on the volume |
+| alert | "Extraction cancelled." |
+| afterwards | SFGetFile repaints, and Cmd-. there quits the application |
+
+The pass condition is a strict, non-empty subset — a cancel that arrives after
+the last entry, or before the first one lands, fails as a useless test rather
+than passing (`tools/vmac/README.md`).
+
+**The test found a defect on its first outing.** A different archive ignored
+three Cmd-. in twenty seconds, and the dialog behind them was frozen rather
+than slow: Now Compress never called the engine's progress callback, so the
+application was not pumping events at all for the whole extraction. Fixed the
+same day, and now measured by a suite of its own (BLOCKERS.md, *withdrawn
+claims*; TESTING.md, *The progress callback*). **The same archive, re-run on
+the fixed engine, cancels on the FIRST chord** — 1 of 2 entries written and
+byte-exact, `derived-SyntheticReferences2.0.sea`, 2026-08-28.
+
+**`19-names.png` photographs an 8-bit name**, which no tier had done here: the
+bytes of a MacRoman filename are compared on every tier and the GLYPHS on the
+two Mini vMac ones. `synth-packit-2.pit` carries `App` + MacRoman `CC A9`, and
+Mac OS 9 draws it as `AppÃ©` twice over — in the Finder's icon view and in
+Standard File's list — which is the same pair of characters the Linux CLI
+prints, since it converts MacRoman to UTF-8 on the way out.
+
+**Two measurements fell out of the same runs.** A whole extraction of
+`synth-packit-2.pit` — five entries, both forks — completes within 13 s of the
+Return that starts it, against a ~110-130 s boot. And
+`derived-SyntheticReferences2.0.sea` extracts byte-exact here, including a
+**9,949,696-byte data fork**: the largest single fork this project has ever
+compared off a Macintosh volume, four times the whole HFS+ run's output.
 
 ### Onto HFS+ (the same machine, the boot volume instead of the transfer disk)
 

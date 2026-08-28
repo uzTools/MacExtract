@@ -11,7 +11,7 @@ system the project claims:
 | System 6.0.8, 4 MB Mac Plus (Mini vMac, a true 68000) | **69/69** sampled fixtures |
 | System 6.0.8, **1 MB** — the floor target | **69/69**; no memory-budget refusals remain, and DiskDoubler method 5's 396 KB allocation succeeds here |
 | System 7.0.1, 4 MB | **69/69** |
-| Mac OS 9.2 (QEMU PowerPC, 68LC040 emulation) | **20/20** sampled fixtures, re-run 2026-08-27 after standing at 13/13 since M12; plus HFS+ and the `SIZE` partition |
+| Mac OS 9.2 (QEMU PowerPC, 68LC040 emulation) | **20/20** sampled fixtures, re-run 2026-08-27 after standing at 13/13 since M12; plus HFS+, the `SIZE` partition, and — since 2026-08-28 — the Cmd-. cancel route and an 8-bit name photographed (FORMATS.md) |
 
 All three Mini vMac tiers re-run **2026-08-22**, with M15–M23's codecs in
 and three fixtures added to the sample for them — DiskDoubler methods 3, 4
@@ -798,6 +798,42 @@ a harness can click is not the same list.
   the fix: "tighten the looser check" would have changed a line of a
   decoder graded against Aladdin's own compressor, to no effect,
   and left a comment claiming a difference that was never there.
+
+- **"The engine calls the progress callback every 8-16 KB."** True of
+  every format but one. `src/fmt_now.c` pulls each compressed block with
+  `unc_read_full` — the raw `UncIO`, not the shared buffered reader that
+  drives the pump — so **Now Compress never called it at all**, from the
+  day the format was written (M12, 2026-08-15) until 2026-08-28. The
+  claim is in `include/macextract.h` as a contract and in CLAUDE.md as a
+  rule, and 946 fixtures passed for six weeks without either being
+  checked once: every suite here grades bytes, and a decoder that never
+  yields produces perfectly correct bytes. **Cost:** on a Mac, every Now
+  Compress extraction ran with a progress dialog frozen at 0 % and both
+  Cancel routes unreachable — including a 9.9 MB entry, which on a Mac
+  Plus is not a short wait. Found by the Mac OS 9 cancel test, which
+  read as "Cmd-. does not work here" until the second archive cancelled
+  on the first chord (DECISIONS.md 2026-08-28). **Why it survived:** it
+  was written down in two places and measured in none.
+  `tools/run_ticks.py` measures it now, and fails on the pre-fix engine.
+
+- **"The Mac OS 9 run launches the application, extracts and quits."**
+  The last third was never true, and every screenshot after the launch
+  was one step behind its label. The run sent Return, Return, Cmd-Q;
+  the second Return is what accepts the DESTINATION dialog, so
+  `14-result.png` photographed SFPutFile, the step printing "extraction
+  reported" had timed that dialog opening, and Cmd-Q went into a modal
+  dialog that never sees it — the application was still running, with
+  the result alert up, when the emulator was killed. Withdrawn
+  2026-08-28, when the sequence was driven to the end (DECISIONS.md;
+  `tools/vmac/README.md` has the step table). **Cost:** nothing to the
+  20/20, which is read off the volume and not off the screen — but for
+  as long as the tier existed nothing had waited for the result alert,
+  no OS 9 run had ever left the application, and the two steps that
+  would have said so did not exist. **Why it survived:** every step
+  reported a plausible number against a plausible name, and a
+  screenshot of the wrong dialog is indistinguishable from a screenshot
+  of the right one unless somebody looks. The label came from whoever
+  wrote the keystroke, not from what the screen did.
 
 ### Corrected figures and superseded write-ups
 

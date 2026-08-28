@@ -271,9 +271,15 @@ typedef struct UncSink {
 
 typedef struct UncProgress {
     void *ctx;
-    /* Invoked at bounded intervals (every <=16 KB of input consumed).
-     * Return nonzero to continue, 0 to abort cleanly (UNC_ERR_ABORTED).
-     * On classic Mac OS this is where the event loop breathes. */
+    /* Invoked at bounded intervals: every <=16 KB of input consumed
+     * through the shared reader, and for a format that pulls a whole
+     * compressed BLOCK at a time, once per block — Now Compress's is at
+     * most 32 KB, the largest interval any format here has. Return
+     * nonzero to continue, 0 to abort cleanly (UNC_ERR_ABORTED).
+     * On classic Mac OS this is where the event loop breathes, so a
+     * decoder that never calls it freezes the progress dialog and puts
+     * both Cancel routes out of reach — which Now Compress did until
+     * 2026-08-28, measured on Mac OS 9 rather than deduced. */
     int (*tick)(void *ctx, uint32_t bytes_done, uint32_t bytes_total);
 } UncProgress;
 

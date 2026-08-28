@@ -13,6 +13,16 @@
    never a crash, hang, or sanitizer trip. Run under
    ASan+UBSan+`-fsanitize=alignment` with `-fno-sanitize-recover=all`,
    so any violation is fatal and caught.
+4. **Progress-callback coverage** (`tools/tick_probe.c` +
+   `tools/run_ticks.py`): the one engine property the byte comparisons
+   cannot see. A decoder that never yields to its caller produces
+   perfectly correct output and freezes the Mac's progress dialog for the
+   whole extraction, with both Cancel routes out of reach. Every fixture
+   the engine extracts must call back at least once, and no gap between
+   calls may exceed 32 KB. **What it cannot see:** how long a gap TAKES —
+   it counts input bytes, not time, so a decoder that spends a minute on
+   8 KB passes. The Mac OS 9 tier is where that would show
+   (`os9.py --cancel`).
 0. **Documentation invariants** (`tools/check_docs.py`): DECISIONS.md's
    Contents index must list every `## ` entry in file order, no
    document may cite another by line number, the version agrees in the
@@ -1024,6 +1034,36 @@ never reach the cap here — no fixture nests that deep and nothing
 writes either container (OPEN_ITEMS.md). The Mac application does not
 consume the flag at all, and does not number collisions.
 
+## The progress callback (`tools/run_ticks.py`, in `ci.sh`)
+
+`UncProgress.tick` is the engine's only cooperative yield, and on classic
+Mac OS it is the whole user interface: the application pumps events there,
+so a format that does not call it freezes the progress dialog and disables
+Cmd-. and the Cancel button for as long as the extraction takes.
+
+**Now Compress never called it**, from the day the format was written until
+2026-08-28. Nothing in `ci.sh` could tell — every other suite grades bytes,
+and a decoder that never yields produces perfectly correct bytes. It was
+found on an emulated Mac, where three Cmd-. in twenty seconds did nothing
+to a 9.9 MB entry (DECISIONS.md 2026-08-28).
+
+`tick_probe.c` extracts a file with a counting callback and a sink that
+keeps nothing, printing `ret`, the number of calls and the widest gap in
+`bytes_done` between them. `run_ticks.py` sweeps the corpus and applies two
+rules: an archive over 64 KB that extracts must tick at least once, and no
+gap may exceed 32 KB. Both numbers are measured rather than chosen — the
+32 KB is `NOW_INBLOCK`, the largest block any format here reads whole, and
+everything else in the corpus comes in at 8,192 B.
+
+**It can fail**: reverting the one-line fix in `src/fmt_now.c` makes it
+fail on `derived-SyntheticReferences2.0.sea`, and the corpus's widest gap
+drops to 16,172 B.
+
+**What it cannot see:** how long a gap takes. It counts input bytes, so a
+decoder that spends a minute inside one 8 KB step passes — Arsenic's
+sampled inverse BWT is exactly that shape, and it reports its own
+interpolated position for the purpose (`unc_progress_at`).
+
 ## Decryption (`tools/run_crypt.py`, in `ci.sh`)
 
 Added 2026-08-23, when decryption came into scope. **Nothing in the
@@ -1848,7 +1888,19 @@ part boundary (27 failures). Both were reverted.
    this harness launches the INTERACTIVE build, which takes envelopes
    off. (It used `-nr` until 2026-08-27, which is right only for the
    autotest build; `tools/vmac/README.md` has what that cost.)
-   **20/20 on the committed sample**, 2026-08-27.
+   **20/20 on the committed sample**, 2026-08-27. Since 2026-08-28 the
+   run also goes to the END of the interaction — the result alert is
+   dismissed, SFGetFile is checked to repaint, and Cmd-. quits the
+   application — and `--cancel` interrupts the extraction instead of
+   waiting it out, with a strict non-empty subset of the entries as the
+   pass condition (FORMATS.md, *Cancelling, and an 8-bit name*).
+   **What this layer still cannot see** is a name the Mac cut at 31
+   characters, because both sides are compared in the Mac's spelling
+   (`run_names.py` is where that lives), and whether an extraction is
+   finished or merely paused at 0%: the completion wait is the screen
+   going still, which a progress dialog that has not reached 1 % also
+   satisfies. Nothing on this tier's sample takes long enough for that
+   to fire, and when it does misfire the disk comparison still decides.
 
 9. **Reading the Mini vMac Out volume** (`tools/vmac/run.py --keep-disks`
    then `tools/vmac/checkdisk.py /tmp/vmacrun-*/`): the same comparison
@@ -1895,9 +1947,12 @@ part boundary (27 failures). Both were reverted.
     Cmd-. through the keyDown check beside it, and the SFGetFile
     repaint afterwards. Its fixture is chosen with 8-bit names, so the
     same run also photographs System 7 drawing MacRoman — the one
-    thing the byte comparisons cannot see. What it does NOT cover is
-    Mac OS 9, where the application has only ever been driven to
-    completion (OPEN_ITEMS.md, section 1).
+    thing the byte comparisons cannot see. **Mac OS 9 covers both of
+    those since 2026-08-28**, through `os9.py` rather than this driver:
+    `--cancel` for Cmd-. and the repaint behind it, and `19-names.png`
+    for the glyphs. What is still Mini vMac's alone there is the Cancel
+    BUTTON, which needs the pointer (`os9mouse.py`) rather than the
+    keyboard route a fixture run uses.
 
 **What each layer can see is not the same, and that matters.** Layer 7
 compares a count, two summed CRC-32s and two summed lengths. A summed
