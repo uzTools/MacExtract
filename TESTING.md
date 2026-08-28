@@ -1114,6 +1114,44 @@ the filesystem shortened, because the path on disk is then not the name
 `--only` matches against. Encrypted entries and segmented sets are not
 reached. Neither is the Mac application, which has no selection UI.
 
+## The three walks agree (`tools/walk_probe.c`, `tools/run_walk.py`, in `ci.sh`)
+
+Added 2026-08-28. Every other suite here compares the OUTPUT of one
+walk. Three exist, and nothing had ever held them against each other:
+`list_only`, an ordinary extraction, and one that SKIPS every second
+entry — the shape a selection has, and one no host produced before
+`--only`.
+
+The rule is that all three offer `begin_entry` the same entries, with
+the same name, `is_dir`, type, creator and both fork sizes, in the same
+order. The probe measures and `run_walk.py` applies it, as with the
+progress callback.
+
+**Envelopes are peeled on the way in.** A fixture named `Archive.sit.bin`
+is a one-entry MacBinary wrapper, and probing it says nothing about the
+StuffIt walk inside; the descent is by result rather than by a list of
+formats — a layer yielding exactly one file that is itself a recognised
+archive is an envelope, whatever it is called. 932 fixtures become
+**1,349 archives walked three ways**, 419 of them behind a wrapper. The
+whole sweep costs about 10 s, because what makes the differential suite
+slow is running `unar` and comparing files rather than our own decode.
+
+Both assertions were made to fail first, separately: a listing that
+reports `data_size + 1` gives 461 failures across the corpus, and a
+PackIt skip that does not consume the entry's bytes — the one format
+whose compressed entries state no end, so a skip there must decode and
+discard — desynchronises the walk on all four `.pit` archives and ends
+it with `UNC_ERR_CORRUPT`.
+
+**What it cannot see.** Whether the entries are RIGHT: it holds three of
+our own walks against each other, and their agreeing on a wrong name is
+the differential suite's subject, not this one's. Nor the decoded bytes
+— `run_only.py` is what compares a selection against a full extraction.
+Segmented sets agree trivially, ending with `UNC_ERR_SEGMENTED` and no
+entries, because the probe builds no volume source. And the skip pattern
+is positional, so a walk that lost its place in a way that repeated
+every two entries would pass.
+
 ## The Macintosh shell's names (`tools/run_macnames.py`, in `ci.sh`)
 
 Added 2026-08-28. The section above grades the CLI's answer to a name

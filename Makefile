@@ -17,8 +17,9 @@ THIRD_OBJ = $(patsubst third_party/zlib/%.c,$(BUILD)/zlib_%.o,$(THIRD_SRC))
 CLI_BIN   = $(BUILD)/macextract
 TEST_BIN  = $(BUILD)/unit_tests
 TICK_BIN  = $(BUILD)/tick_probe
+WALK_BIN  = $(BUILD)/walk_probe
 
-all: $(CLI_BIN) $(TEST_BIN) $(TICK_BIN)
+all: $(CLI_BIN) $(TEST_BIN) $(TICK_BIN) $(WALK_BIN)
 
 $(BUILD):
 	mkdir -p $(BUILD)
@@ -62,6 +63,13 @@ $(TEST_BIN): tests/unit_main.c tests/unit_formats.c $(ENGINE_OBJ) $(THIRD_OBJ) |
 # property no other suite here can see. tools/run_ticks.py applies the rule.
 $(TICK_BIN): tools/tick_probe.c $(ENGINE_OBJ) $(THIRD_OBJ) | $(BUILD)
 	$(CC) $(WARN) $(CFLAGS) $(INC) tools/tick_probe.c $(ENGINE_OBJ) $(THIRD_OBJ) -o $@
+
+# Holds the listing walk, the extracting walk and a SKIPPING one against
+# each other — the one engine property that comparing output cannot see,
+# because each of those comparisons watches a single walk.
+# tools/run_walk.py applies the rule.
+$(WALK_BIN): tools/walk_probe.c $(ENGINE_OBJ) $(THIRD_OBJ) | $(BUILD)
+	$(CC) $(WARN) $(CFLAGS) $(INC) tools/walk_probe.c $(ENGINE_OBJ) $(THIRD_OBJ) -o $@
 
 test: all
 	$(TEST_BIN)

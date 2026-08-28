@@ -77,6 +77,14 @@ python3 tools/run_names.py --macextract build/san/macextract \
 # every byte comparison.
 python3 tools/run_only.py --macextract build/san/macextract \
     || fail "--only (selective extraction) tests"
+# The three walks — listing, extracting, and one that SKIPS every second
+# entry — must offer the same entries in the same order. Nothing else
+# here compares walks with each other: every other suite watches the
+# output of ONE. Envelopes are peeled on the way in, or a .sit.bin would
+# only ever test the MacBinary wrapper. Both assertions were made to
+# fail before they were believed (TESTING.md).
+python3 tools/run_walk.py --probe build/san/walk_probe \
+    --macextract build/san/macextract || fail "walk-agreement tests"
 # Now Compress has exactly one REAL fixture, and it reaches two of the
 # five shapes a block can have. The rest — and the offset-delta search,
 # and folders, and several files in one archive — are generated the same
