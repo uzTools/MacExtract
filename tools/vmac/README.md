@@ -1143,8 +1143,9 @@ writes each component as `ComponentToStr63()` does — the engine's `':'` back t
 `'/'`, cut at 31 characters — so `SD! Utilities : MacWrite` on Linux is
 `SD! Utilities / MacWrite` on the volume. `verify_output()` maps the reference
 names through `mac_leaf()` before comparing (the HFS+ path always did) and
-fails the fixture outright when two of them map to ONE Mac name, because the
-shell does not number a collision and the file that lost is simply gone.
+fails the fixture outright when two of them map to ONE Mac name: the shell
+numbers the second `~1` (`tools/run_macnames.py`, 2026-08-28), so both files
+are there and the harness cannot say which reference file either one is.
 **What this costs**: a name the Mac cut at 31 characters now compares equal to
 the whole one, so this tier cannot see an over-long name. Nothing in the
 sample has one; `run_names.py` is where that lives.

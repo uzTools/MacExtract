@@ -994,7 +994,7 @@ suite nor its variants could reach either limit. They are graded by
 CPython's `zipfile` and `tarfile`, which wrote them and have no such
 limit, and by `unzip -l` and `tar tf` where those exist.
 
-Ten cases over five carriers, the allocator's budget and the output
+Fourteen cases over six carriers, the allocator's budget and the output
 directory: a zip whose long
 entry is extracted under the shortened name while the entry beside it is
 untouched; two zip entries that differ only past the cut, which must both
@@ -1024,15 +1024,75 @@ must carry every byte of it. `lsar`, which has no such cap, is asked for
 the same path. What this grades for Now Compress is `unc_path_leaf`,
 which DiskDoubler and SuperDisk! also run.
 
+The sixth is DiskDoubler, added 2026-08-28, and it is there for the
+header walks rather than for the helper: the four real `DDAR` archives
+are flat and the five real `DDA2` ones hold one folder at one level, so
+`DDAR`'s isdir/enddir records and `DDA2`'s dirlevel counter had never
+descended anything. `tools/synth_dd.py` writes both containers — the
+archive-header CRC-16/XModem included, without which `unar` does not
+recognise the file at all — and each walk gets two archives. A TREE
+(folders inside folders, a file after a folder closes, one at the root
+after that, a resource fork, and `DDAR`'s stored-in-the-record shape),
+whose every path and every fork must come back, and which `lsar` is
+asked to walk as well. And a DEEP chain of the longest component the
+format has, 63 bytes for `DDAR` and 31 for `DDA2`, sized so the folder
+above the leaf lands on EXACTLY 255: the folder is then the longest path
+that fits, the leaf under it is cut onto the folder's own path, and what
+saves the file is the `~1` numbering.
+
 **Established that it can fail**: against the engine and CLI of two
 commits earlier, nineteen assertions fail; the nested-path case fails
 three ways against the commit before it, including a reported length of
-287 bytes for a 296-byte path.
+287 bytes for a 296-byte path. The DiskDoubler cases were failed the
+same way, by breaking the generator rather than the engine: dropping
+every `DDAR` enddir record fails five assertions, squashing the `DDA2`
+dirlevels fails five, and both mismatches are seen by `lsar` too.
+Shifting every `DDA2` dirlevel by one fails NOTHING, and correctly —
+the walks compare levels only with each other, so a uniform shift is
+the same tree in both implementations.
 
-**What it cannot see.** DiskDoubler's and SuperDisk!'s own header walks
-never reach the cap here — no fixture nests that deep and nothing
-writes either container (OPEN_ITEMS.md). The Mac application does not
-consume the flag at all, and does not number collisions.
+**What it cannot see.** Whether DiskDoubler itself writes the trees the
+generator writes: both readers agree on what the records mean, and only
+a deep archive written by DiskDoubler would say the records are what it
+would have written. SuperDisk!'s header walk still never reaches the cap
+here — no fixture nests that deep, and nothing off the Macintosh reads
+that container to grade a generated one (OPEN_ITEMS.md). The Mac
+application consumes none of it and says nothing on screen; what it does
+instead is graded in the next section.
+
+## The Macintosh shell's names (`tools/run_macnames.py`, in `ci.sh`)
+
+Added 2026-08-28. The section above grades the CLI's answer to a name
+that does not fit; this one grades the Macintosh shell's, which is
+different code and had no test at all. `mac/macextract_mac.c` cuts every
+path component to 31 characters — HFS's limit, so this happens to
+ordinary long Mac names and not only to remarkable ones — and resolves
+the collision that cutting creates in `BumpName`, off the File Manager's
+`dupFNErr` rather than off the engine's flag.
+
+The code under test is the shell itself, through the mock Toolbox of
+`tests/mac_sink_test.c`; the subjects are DiskDoubler archives from
+`tools/synth_dd.py`, because both caps have to be reached in one archive
+shape to see which one acted. Four cases: two files whose names are the
+same for 31 characters, which must both come out with the second
+numbered; two FOLDERS in the same position, which merge into one and must
+keep both their files; four 63-byte folders summing to exactly the
+engine's 255-byte cap, where the leaf's cut path lands on its own folder
+and the numbering is the only reason the file survives; and the edges of
+the cut — 31 characters written whole, 40 cut to 31, and a nameless entry
+written as `_`.
+
+**Established that it can fail**: against three one-line breakages of the
+shell — the cap raised to 63 fails five assertions, the numbering removed
+fails six (and loses a file, and stops the run), and the empty-name
+fallback removed fails one.
+
+**What it cannot see.** A name holding a '/', which HFS takes and which
+reaches the shell as ':' for it to swap back: the mock builds a Linux path
+out of the leaf, so the create fails there for a reason the real File
+Manager does not have. Nor anything on screen — the shell reports no
+shortened name to the user at all, which is the open half of this
+(OPEN_ITEMS.md).
 
 ## The progress callback (`tools/run_ticks.py`, in `ci.sh`)
 

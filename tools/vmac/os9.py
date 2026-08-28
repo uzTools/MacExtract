@@ -1057,9 +1057,9 @@ def verify_output(xfer, fixture, workdir, partial=False, password=None):
         run("humount")
         return False, lines + [
             f"cannot check this fixture: {sorted(collided.values())} shorten "
-            f"to one name on the Mac, and the shell does not number a "
-            f"collision (OPEN_ITEMS.md), so one file is lost and the harness "
-            f"cannot say which."]
+            f"to one name on the Mac, where the shell numbers the second `~1`, "
+            f"so the harness cannot say which reference file either one is. "
+            f"Pick another fixture."]
     missing = expected - set(names)
     extra = set(names) - expected
     if partial and not missing:

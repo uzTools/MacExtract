@@ -150,6 +150,8 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-28 (clicking a dialog that does not exist yet) — park the pointer before the thing you mean to hit appears
 - 2026-08-28 (the password dialog on Mac OS 9) — a change threshold is only as good as the rectangle it is measured over
 - 2026-08-28 (the exception one front end had) — a rule implemented in one shell is not implemented
+- 2026-08-28 (the walk nobody had descended) — writing the container is what tests the walk
+- 2026-08-28 (the front end that was already doing it) — read the shell, not the flag
 
 ---
 
@@ -8666,3 +8668,61 @@ guard that used to refuse the whole fixture as ungradeable no longer fires.
 Both failure modes it protected are still failures: a shell that overwrote the
 archive reads as no output at all, and the extension-stripping one reads as a
 missing file and an unexpected one — which is how the defect above was seen.
+
+
+## 2026-08-28 (the walk nobody had descended) — writing the container is what tests the walk
+
+`src/fmt_dd.c` has two directory walks: `DDAR`'s isdir/enddir records and
+`DDA2`'s dirlevel counter, one folder deep between the nine real archives in
+the corpus. Both were transcribed from XADMaster and neither had ever descended
+a tree, which OPEN_ITEMS.md had said in a bullet whose remedy it also named —
+"`unar` reads the first, so DiskDoubler's is a writer away from being graded".
+
+`tools/synth_dd.py` is that writer, and the writing is where the work was. The
+records themselves are twenty lines of `struct.pack`; what the reference does
+NOT document, and what a reader of the format never has to compute, is the
+CRC-16/XModem over the first 76 bytes (`DDAR`), 60 (`DDA2`) or 82 (a
+0xABCD0054 file header) that `recognizeFileWithHandle` checks. Without it
+`unar` answers *Couldn't recognize the archive format* — so the generator
+would have graded nothing while looking like it worked, and this engine, which
+recognises by magic alone, would have read every archive perfectly. **A
+generator has to satisfy the oracle's recogniser, which is a part of the format
+the extractor is free to ignore.** The algorithm came out of the specimens:
+XADMaster's table is the 0x1021 table byte-swapped and it byte-swaps the stored
+value before comparing, which is a plain XModem CRC stored big-endian, and it
+verifies on all nine.
+
+**What the exercise found was in the other half of the same bullet.** It named
+SuperDisk!'s up-directory record as untested too — and `super-disk-utility.hqx`
+walks two folders, pops between them and is adjudicated path by path against
+its own self-extractor (`tools/run_superdisk.py`). The record was tested before
+the bullet was written. What is untested there is only DEPTH, which is a
+different sentence with a different remedy (BLOCKERS.md). **An "untested" claim
+is a claim about the corpus, so it expires when the corpus does; this one was
+disproved by a fixture that had been in `ci.sh` for a week.**
+
+
+## 2026-08-28 (the front end that was already doing it) — read the shell, not the flag
+
+The same audit that closed DiskDoubler's walks left OPEN_ITEMS.md naming a
+remedy for the Macintosh shell: "`~1` numbering in `mac/macextract_mac.c`".
+That code has been there since M10. The shell numbers off the File Manager's
+`dupFNErr`, which catches every collision the 31-character cut creates without
+needing the engine's flag at all — so the bullet, written from the flag's point
+of view, described a gap the shell did not have (BLOCKERS.md).
+
+**What the shell really lacks is the notice, and that is a screen decision**
+rather than a code one, which is why it stays open. Two behaviours it has no
+way to report were measured while establishing this: two FOLDERS whose names
+shorten alike MERGE (`EnsureDir` descends into what already exists, which is
+also what the Finder would do), and a path the engine had to cut lands on its
+own parent folder and is numbered. Nothing is lost either way; the path is
+simply not the archive's, and nobody is told.
+
+**The lesson is where the test went.** `tests/mac_sink_test.c` has run the real
+shell against real archives since M10, so the shell's name path could have been
+tested for as long as the harness has existed; what was missing was an archive
+that reaches the caps, and by then `tools/synth_dd.py` existed to write one. **A front end
+without a test is not tested by reading it** — three one-line breakages of the
+shell fail this suite in three different ways, and the first of them is the
+line the bullet said to write.

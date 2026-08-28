@@ -62,7 +62,13 @@ verify ./build/mac_sink_asan ram   # exercise the Mac app's RAM-slurp/xio_* path
 # The figure the low-memory alert quotes. UI cannot be tested here; the
 # arithmetic behind it can, and it is the half that can go wrong quietly.
 ./build/mac_sink_asan --shortfall || { echo "mac-sink: shortfall FAILED"; exit 1; }
-echo "mac-sink: native OK (file + RAM paths + cancel cleanup + shortfall)"
+# What the shell does to a name HFS cannot take as it stands: 31 characters
+# per component, and the collision that cutting creates numbered ~1. Its
+# own code, and until 2026-08-28 it had no test — the subjects are
+# generated, because no fixture reaches either cap (TESTING.md).
+python3 tools/run_macnames.py --sink ./build/mac_sink_asan || {
+    echo "mac-sink: name-shortening FAILED"; exit 1; }
+echo "mac-sink: native OK (file + RAM paths + cancel cleanup + shortfall + names)"
 
 # The alternative write path. The default streams each chunk straight to the
 # File Manager; UNC_MAC_STAGE_WRITES accumulates whole forks in RAM and writes

@@ -835,6 +835,41 @@ a harness can click is not the same list.
   of the right one unless somebody looks. The label came from whoever
   wrote the keystroke, not from what the screen did.
 
+- **"SuperDisk!'s up-directory record is untested."** Filed in
+  OPEN_ITEMS.md beside a true statement about DiskDoubler's walks and
+  withdrawn 2026-08-28, when the DiskDoubler half was closed and the
+  SuperDisk! half was read properly. `super-disk-utility.hqx` holds
+  `Read Me and More/Application/...` and `Read Me and More/PLEASE
+  READ/...`: two folders, a pop between them, and every one of those
+  paths adjudicated against the archive's OWN self-extractor on an
+  emulated Mac and replayed by content in `ci.sh`
+  (`tools/run_superdisk.py`). What is untested is only DEPTH — no path
+  in either fixture is a fifth of the 255-byte cap. **Cost:** nothing;
+  filed and disproved a week apart, and the correction narrows an open
+  item rather than reopening anything. **Why it survived:** it was
+  written as one bullet about two formats, and the half that was true
+  carried the half that was not. An "untested" claim is a claim about
+  the corpus and expires when the corpus grows — the fixture that
+  disproved this one was already in the suite that the same sentence
+  cited.
+
+- **"The Macintosh application does not number a collision the way the
+  CLI does."** Filed in OPEN_ITEMS.md on 2026-08-27 with the flag it was
+  really about, withdrawn 2026-08-28 by the first test the shell's name
+  path has ever had. `mac/macextract_mac.c` numbers `~1`..`~9` in
+  `BumpName`, off the File Manager's `dupFNErr` — so two entries whose
+  names are the same for 31 characters both come out, and removing the
+  numbering loses one of them and stops the run (`tools/run_macnames.py`
+  fails six assertions on that build). What is true is the half the
+  bullet led with: the shell reads no `name_truncated` and says nothing
+  on screen. **Cost:** nothing yet — but the remedy the bullet named was
+  "`~1` numbering in `mac/macextract_mac.c`", which is code that has been
+  there since M10 and which a reader of the file would have written
+  again. **Why it survived:** the flag was new, and a front end that does
+  not read a new flag was assumed not to do the thing the flag reports.
+  The shell was doing it by another route, which is what the source
+  comment beside it says.
+
 ### Corrected figures and superseded write-ups
 
 - **The OS 9 boot time** was recorded as "about four minutes", then "20-45

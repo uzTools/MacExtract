@@ -37,18 +37,23 @@ Graded by readers with no such limit: CPython's `zipfile` and `tarfile`,
 which wrote the archives and give the names that were meant, and
 `unzip -l` / `tar tf` where they are installed.
 
-Four carriers, because a name is cut in four different places: zip's
+Six carriers, because a name is cut in six different places: zip's
 central directory, tar's `prefix + '/' + name` (155 + 1 + 100 = 256, one
 byte over the engine's cap — which the FORMAT can express and the engine
 cannot), uuencode's `begin` line, cut by a 96-byte LINE buffer before
-the cap is reached and reported the same way, and AppleSingle's real
-name, whose MacRoman expands past what one directory entry takes.
+the cap is reached and reported the same way, AppleSingle's real name,
+whose MacRoman expands past what one directory entry takes, and the two
+Macintosh archive formats that reach the cap by SUMMING a path rather
+than by holding one long name: Now Compress (`tools/synth_now.py`) and
+DiskDoubler, in both its containers (`tools/synth_dd.py`, 2026-08-28).
 
-What this CANNOT see: the Macintosh formats' own path builders reach the
-engine's cap only by nesting folders deep enough to sum past 255 bytes,
-and nothing here synthesises such a container. The Mac application does
-not consume the flag at all — it shortens every name to 31 characters
-per component by policy, and does not number collisions (OPEN_ITEMS.md).
+What this CANNOT see: SuperDisk!'s path builder, which no fixture nests
+deep enough to reach the cap with and which nothing off the Macintosh
+reads, so a generated container could only be graded against our own
+transcription of it. The Mac application consumes none of this: it
+cuts every component at 31 characters and numbers the collision that
+creates off the File Manager's `dupFNErr`, telling nobody either way
+(`tools/run_macnames.py`).
 """
 import argparse
 import os
@@ -310,6 +315,124 @@ def nested_folder_case(macextract, tmp, problems):
     return 1
 
 
+def dd_tree_cases(macextract, tmp, problems):
+    """DiskDoubler's two directory walks, which no fixture exercises: the
+    four real `DDAR` archives are flat and the five real `DDA2` ones hold
+    one folder at one level, so `DDAR`'s isdir/enddir records and
+    `DDA2`'s dirlevel counter were read from the reference and never run
+    against a tree (OPEN_ITEMS.md, closed 2026-08-28).
+
+    Two archives per walk. A TREE — folders inside folders, a file after
+    a folder closes, a file at the root after that, a resource fork, and
+    `DDAR`'s stored-in-the-record shape — which says the walk descends
+    and pops where the reference does. And a DEEP chain of the longest
+    component each format has, 63 bytes for `DDAR` and 31 for `DDA2`,
+    which is the only way these formats reach the engine's 255-byte cap:
+    every name in them is ordinary and it is the PATH that is too long.
+
+    Written by tools/synth_dd.py and graded by `unar`, the implementation
+    fmt_dd.c was transcribed from (second_reader() below)."""
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import synth_dd                                           # noqa: E402
+
+    ran = 0
+    payload = b"deep in a DiskDoubler tree\n"
+    tree = [
+        synth_dd.folder("Alpha", [
+            synth_dd.file("one.txt", data=b"one\n"),
+            synth_dd.folder("Beta", [
+                synth_dd.file("two.txt", data=b"two\n", stored=True),
+                synth_dd.file("forked", data=b"data\n", rsrc=b"rsrc\n"),
+            ]),
+            synth_dd.file("three.txt", data=b"three\n"),
+        ]),
+        synth_dd.file("root.txt", data=b"root\n"),
+        synth_dd.folder("Gamma", [
+            synth_dd.file("four.txt", data=b"four\n", stored=True),
+        ]),
+    ]
+
+    for kind, comp, depth in (("ddar", "f" * 63, 4), ("dda2", "g" * 31, 8)):
+        p, want = synth_dd.write_one(tmp, "tree-dd-" + kind, tree, kind)
+        out = os.path.join(tmp, "treeout-" + kind)
+        os.mkdir(out)
+        names, _, lrc = ours(macextract, ["l", p])
+        _, err, rc = ours(macextract, ["x", "-o", out, p])
+        check(problems, rc == 0 and lrc == 0,
+              "tree-dd-%s: exit was %d listing, %d extracting"
+              % (kind, lrc, rc))
+        check(problems, sorted(names) == sorted(want),
+              "tree-dd-%s: listed %r, wanted %r"
+              % (kind, sorted(names), sorted(want)))
+        for path, forks in sorted(want.items()):
+            here = os.path.join(out, path)
+            if forks is None:
+                check(problems, os.path.isdir(here),
+                      "tree-dd-%s: %s is not a directory" % (kind, path))
+                continue
+            data, rsrc = forks
+            check(problems, os.path.exists(here)
+                  and open(here, "rb").read() == data,
+                  "tree-dd-%s: %s is not the data fork that went in"
+                  % (kind, path))
+            if rsrc:
+                check(problems, os.path.exists(here + ".rsrc")
+                      and open(here + ".rsrc", "rb").read() == rsrc,
+                      "tree-dd-%s: %s has no resource fork" % (kind, path))
+        ran += 1
+
+        # The deep chain. `depth` components of `comp` sum to exactly the
+        # cap, so the folder above the leaf is the longest path that fits
+        # and the leaf under it is the first that does not — the same
+        # place the Now Compress tree lands, reached through a different
+        # header walk.
+        node = synth_dd.file("leaf.txt", data=payload)
+        for _ in range(depth):
+            node = synth_dd.folder(comp, [node])
+        p, want = synth_dd.write_one(tmp, "deep-dd-" + kind, [node], kind)
+        full = [n for n in want if want[n] is not None][0]
+        if not check(problems, len(full) > CAP,
+                     "deep-dd-%s: the generated path is only %d bytes"
+                     % (kind, len(full))):
+            ran += 1
+            continue
+        out = os.path.join(tmp, "deepout-" + kind)
+        os.mkdir(out)
+        _, err, rc = ours(macextract, ["x", "-o", out, p])
+        got = written(out)
+        check(problems, len(got) == 1 and open(os.path.join(out, got[0]),
+                                               "rb").read() == payload,
+              "deep-dd-%s: wrote %r, wanted the one file" % (kind, got))
+        check(problems, got and max(len(c.encode("utf-8"))
+                                    for c in got[0].split("/")) <= 255,
+              "deep-dd-%s: wrote a component longer than a directory entry"
+              % kind)
+        # The chain sums to EXACTLY the cap at the folder above the
+        # leaf, so the folder is the longest path that still fits and
+        # only the leaf is cut — and cutting it lands it on the folder's
+        # own path, so what makes the file survive at all is the
+        # numbering.
+        check(problems, len(noted(err)) == 1,
+              "deep-dd-%s: the notice listed %d name(s), wanted the leaf"
+              % (kind, len(noted(err))))
+        check(problems, got and got[0].endswith("~1"),
+              "deep-dd-%s: the leaf collided with the folder it is in and "
+              "was not numbered: %r" % (kind, got))
+        check(problems, "numbered" in err,
+              "deep-dd-%s: the notice does not say a name was numbered"
+              % kind)
+        check(problems, rc == 0, "deep-dd-%s: exit was %d" % (kind, rc))
+        check(problems, full in err,
+              "deep-dd-%s: the notice does not carry the whole %d-byte "
+              "path; it says %r" % (kind, len(full), noted(err)))
+        check(problems, "cut before it reached us" not in err,
+              "deep-dd-%s: the path is in the headers the walk is holding, "
+              "so it is not one the engine can only report the length of"
+              % kind)
+        ran += 1
+    return ran
+
+
 def applesingle_case(macextract, tmp, problems):
     """A name the ENGINE carries whole and the FILESYSTEM cannot: 200
     bytes of MacRoman are 400 bytes of UTF-8, and one directory entry
@@ -443,6 +566,32 @@ def second_reader(tmp, problems):
         out = r.stdout.decode("utf-8", "replace")
         check(problems, ("f" * 31 + "/") * 9 + "leaf.txt" in out,
               "deep-now.now: lsar does not see the nested path we wrote")
+    # Both DiskDoubler walks, from the same implementation fmt_dd.c was
+    # transcribed from: it lists the tree it descended and the whole deep
+    # path, and a disagreement about either is a disagreement between two
+    # implementations rather than with the generator.
+    for kind, comp, depth in (("ddar", "f" * 63, 4), ("dda2", "g" * 31, 8)):
+        p = os.path.join(tmp, "tree-dd-%s.dd" % kind)
+        if not shutil.which("lsar") or not os.path.exists(p):
+            continue
+        out = subprocess.run(["lsar", p],
+                             capture_output=True).stdout.decode("utf-8",
+                                                                "replace")
+        listed = [ln.rstrip("/") for ln in out.splitlines()[1:]]
+        # A resource fork is a second entry of the same name to `unar`
+        # and one entry with two forks here, so the comparison is by set.
+        want = {"Alpha", "Alpha/one.txt", "Alpha/Beta", "Alpha/Beta/two.txt",
+                "Alpha/Beta/forked", "Alpha/three.txt", "root.txt",
+                "Gamma", "Gamma/four.txt"}
+        check(problems, set(listed) == want,
+              "tree-dd-%s: lsar walked %r" % (kind, sorted(set(listed))))
+        p = os.path.join(tmp, "deep-dd-%s.dd" % kind)
+        out = subprocess.run(["lsar", p],
+                             capture_output=True).stdout.decode("utf-8",
+                                                                "replace")
+        check(problems, (comp + "/") * depth + "leaf.txt" in out,
+              "deep-dd-%s: lsar does not see the nested path we wrote"
+              % kind)
 
 
 def main():
@@ -458,6 +607,7 @@ def main():
         ran += tar_case(args.macextract, tmp, problems)
         ran += uu_case(args.macextract, tmp, problems)
         ran += nested_folder_case(args.macextract, tmp, problems)
+        ran += dd_tree_cases(args.macextract, tmp, problems)
         ran += applesingle_case(args.macextract, tmp, problems)
         ran += streamed_directory_case(args.macextract, tmp, problems)
         ran += outdir_cases(args.macextract, tmp, problems)

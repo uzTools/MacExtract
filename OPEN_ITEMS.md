@@ -174,30 +174,35 @@ all** (BLOCKERS.md, the ARC 7 row, filed and disproved the same day).
 
 ## 2. Untested code, named so it is not mistaken for tested
 
-- **The Macintosh application does not read `UncEntryInfo.name_truncated`,
-  and does not number a collision the way the CLI now does.** Added
-  2026-08-27, when the engine started reporting a name it had to cut. The
-  Mac shell shortens every name to 31 characters per component anyway, so
-  it behaves exactly as it did before — which is defensible and undecided
-  rather than done. Two entries whose names shorten alike still collide
-  there, and a folder tree deep enough to sum past 255 bytes still puts a
-  file under a name that is not the archive's, silently. **What would close
-  it:** a decision about where the notice belongs on a Mac screen, `~1`
-  numbering in `mac/macextract_mac.c`, and a tier run against a synthetic
-  deep-tree `.sit`, which nothing in the corpus provides (FORMATS.md,
+- **The Macintosh application never tells the user that a name changed.**
+  It does not read `UncEntryInfo.name_truncated` (added 2026-08-27, when
+  the engine started reporting a name it had to cut), so the CLI's
+  end-of-run notice has no counterpart on a Mac screen. What the shell
+  DOES is tested since 2026-08-28 and loses no file: every component is
+  cut to 31 characters, HFS's limit, and a collision the cutting creates
+  is numbered `~1` off `dupFNErr` (`tools/run_macnames.py`; the claim
+  that it did not number at all is withdrawn, BLOCKERS.md). What has no
+  notice to carry it is two silent path changes — two FOLDERS whose names
+  shorten alike merge into one, and a folder tree summing past 255 bytes
+  puts its file under the numbered name the engine's cut landed on.
+  **What would close it:** a decision about where a notice belongs on a
+  screen with no scrollback, and a tier run to photograph it (FORMATS.md,
   *Name limits*).
 
-- **DiskDoubler and SuperDisk! reach the path cap through code that is
-  tested, in a container nothing here writes.** `unc_path_leaf` keeps the
-  uncut path since 2026-08-27 (DECISIONS.md, *the path builder's own
-  cap*), and `tools/run_names.py` grades it on a nine-deep Now Compress
-  tree against `unar`. The other two formats run that same helper, and
-  neither has a fixture whose path sums past 255 bytes: what is untested
-  is their own header walks — DiskDoubler's 63-byte components and two
-  level schemes, SuperDisk!'s up-directory record — not the assembly.
-  **What would close it:** a deep-tree `DDAR` and a deep-tree SuperDisk!
-  record stream. Nothing here writes either container, and `unar` reads
-  the first, so DiskDoubler's is a writer away from being graded.
+- **SuperDisk! reaches the path cap through code that is tested, in a
+  container nothing here writes.** `unc_path_leaf` keeps the uncut path
+  since 2026-08-27 (DECISIONS.md, *the path builder's own cap*), and
+  `tools/run_names.py` grades it on generated Now Compress and
+  DiskDoubler trees against `unar`. SuperDisk! runs that same helper and
+  walks folders in both its fixtures, up-directory record included; what
+  no fixture has is a path that SUMS past 255 bytes, so its own header
+  walk has never been the thing that reached the cap. **What would close
+  it:** a SuperDisk! archive nested deep enough. A generated record
+  stream would not: nothing off the Macintosh reads this container, so it
+  could only be graded against the same transcription that wrote it. The
+  one second reader that exists is an archive's own self-extractor on an
+  emulated Mac, which has never been handed a stream this project
+  wrote.
 
 - **SuperDisk!, where a Huffman region's neighbour begins.** The two Alysis
   implementations disagree by one 32-bit refill when a coded flag bitmap ends
