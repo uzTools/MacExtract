@@ -78,6 +78,7 @@ oracle and will lose it to `./ci.sh`'s `make clean`.
 | `sdcompress.py` | the other half: Alysis's 1991 **SuperDisk! control panel**, which COMPRESSES. It wrote the five specimens the single-file container was derived from, and `--verify` re-grades them |
 | `maclha.py` | **MacLHA 2.00**, out of the corpus (`derived-MacLHa_2.00.sit`), driven to write a `.lzh` holding a file with a real resource fork — the specimen no MacLHA archive in reach is. `--setup` builds the volume, `--make` drives the application (keyboard where it has a shortcut; its Header and Type menus are HIERARCHICAL and cannot be used here, and nothing needs them because `MacBinary` is already checked), `--check` grades both forks with our CLI. **The Type menu was worth reading anyway, and it is now**: `LHa`, `LHarc`, `None` — `-lh5-`, `-lh1-`, `-lh0-` — so it cannot write the `-lh2-`/`-lh3-` specimen OPEN_ITEMS.md wants, and the inaccessible submenu costs nothing (read out of `MENU` 134 with `hcopy`, no emulator) |
 | `expander.py` | **the yardstick**: StuffIt Expander 4.0.2 and this application on one Mac Plus, over one archive, timed by one instrument. `--fetch` downloads Aladdin's distribution and unpacks the application out of it; `--sizes` reads both memory partitions without booting anything |
+| `macmime.py` | **a MIME message written BY a Macintosh**, with mpack's own Macintosh port: `tools/macmime/` compiles `encode_applefile()` and `encode()` out of `reference/mpack` unmodified, and this boots System 6.0.8 into them. `--make` writes the specimen, `--check` grades it (18/18) — see below before changing it, because two of its three failure modes were in the HARNESS |
 | `mkcollide.py` | build an archive whose names collide on HFS, and verify what `BumpName` did with them — nothing in the corpus collides |
 
 `tools/quickdraw-repro/` is a sibling that reuses `mkboot.py` and this
@@ -880,6 +881,42 @@ Four things this one has that the others do not:
 - **Use 1991, not 4.1.1, for methods 3 and 4.** 4.1.1 has dropped them and
   answers *Unknown compression method*. `--era 411` is worth running anyway:
   it is a second opinion on method 5.
+
+## A Macintosh writes a MIME message — `macmime.py`
+
+`src/fmt_mime.c` is transcribed from mpack 1.6 and had only ever been graded
+against messages made on Linux. mpack's Macintosh PORT is in the same
+reference tree, so the specimen is made here rather than waited for
+(DECISIONS.md 2026-08-29, *a Macintosh wrote a MIME message*).
+
+    tools/vmac/macmime.py --make     boot System 6.0.8 and write it
+    tools/vmac/macmime.py --check    grade what came off the disk
+    tools/vmac/macmime.py            both
+
+`--make` boots straight into the encoder — no Finder, no mouse — and reads
+`Out.mime` back off the image. `--check` needs no emulator and can be re-run
+over the kept specimen at will.
+
+Four things this one has that the others do not:
+
+- **Retro68's newlib file I/O cannot be used on System 6.0.8.** A bare
+  `open()` never returns there, so every `FILE *` mpack touches is built with
+  `funopen()` over hand-filled HFS param blocks. If a future harness wants
+  stdio on a Mac, this is the reason it will not get it.
+- **The subject lives in the System Folder, not at the root.** `mkboot.py`
+  puts a shell application in the blessed folder and that is the default
+  directory it starts in; a subject at the root gets −43.
+- **`hcopy -m` does not carry the Finder flags onto the volume.** They are set
+  on the Mac with `PBHSetFInfoSync` and the catalogue is re-read afterwards,
+  so what the applefile carries is what the volume holds.
+- **The application draws its progress on screen**, one line per step, and the
+  frames are kept in `$UNC_VMAC_HOME/specimens/macmime/shots/`. Every failure
+  above was diagnosed from a frame rather than from a timeout.
+
+What it cannot see: one message from one encoder, and it cannot settle line
+endings — the specimen is LF-terminated because of the C library the port was
+compiled against, not because of anything a Macintosh decided. FORMATS.md,
+*base64 and MIME*, says so where the result is.
 
 ## Grading SuperDisk! with SuperDisk! — `superdisk.py`
 

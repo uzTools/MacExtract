@@ -1162,11 +1162,29 @@ for a generated file, so `run.py` reports FAIL and the grid is the
 result, the same way SuperDisk!'s two archives are read
 (`tools/vmac/README.md`).
 
-**No corpus file, and no Macintosh specimen.** The sniff sweep claims
-none of the 940 fixture files, so every case is generated and graded by
-two other implementations — munpack 1.6 and deark (TESTING.md, *base64
-and MIME*). What is still missing is a message a MACINTOSH wrote
-(OPEN_ITEMS.md).
+**No corpus file.** The sniff sweep claims none of the 940 fixture
+files, so every generated case is graded by two other implementations —
+munpack 1.6 and deark (TESTING.md, *base64 and MIME*).
+
+**A message a Macintosh wrote — 2026-08-29, 18/18.** mpack's own
+Macintosh port is in `reference/mpack`, so the specimen was made rather
+than waited for: `encode_applefile()` and `encode()` compiled unmodified
+for a 68000 and run on System 6.0.8, writing a 1,912-byte
+multipart/appledouble from a real HFS file with a 407-byte resource fork
+(`tools/vmac/macmime.py`). Everything the Macintosh half decides is as
+this engine reads it — magic `00051607`, version `00020000`, five
+entries in macfile.c's order (rsrc, name, comment, dates, Finder info),
+the name entry `Subject`, the Finder-info entry 32 bytes of
+`TEXTttxt` + flags `0x0100`, and the resource-fork entry equal to the
+fork byte for byte. `macextract` returns both forks byte-exact and
+munpack reads the same file.
+
+◇ **It does not settle line endings**, and nothing about the format
+could: the specimen is LF-terminated because Retro68's newlib does not
+do the `\n`→CR translation THINK C's text mode did, so the ending is a
+property of the C library the port was compiled against.
+`tools/run_mime.py` grades CR, CRLF and LF separately, which is where
+that question lives.
 
 ## Encryption
 

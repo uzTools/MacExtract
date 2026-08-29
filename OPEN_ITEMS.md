@@ -173,15 +173,6 @@ all** (BLOCKERS.md, the ARC 7 row, filed and disproved the same day).
   format (DECISIONS.md 2026-08-23). **What is missing is a specimen**,
   which answers both.
 
-- **A MIME message written by a MACINTOSH.** Every message the reader is
-  graded against was built by `tools/run_mime.py` or read by munpack on
-  Linux (TESTING.md, *base64 and MIME*). The independent specimen would be
-  one written on the machine this is for — by mpack's own Macintosh port,
-  by Eudora (1.2 is in the corpus as `eudora12qa.bin`), or by Claris
-  Emailer — because what it would settle is the half no Unix tool has: how
-  a real Mac laid out the `application/applefile` part, and what it put in
-  the Finder-info entry. **What is missing is a gradeable specimen.**
-
 
 ---
 

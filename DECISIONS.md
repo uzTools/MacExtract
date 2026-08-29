@@ -165,6 +165,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-29 (the end-of-run report) — what the run cost, on a screen with no scrollback
 - 2026-08-29 (a cut archive) — where the archive ends and where the file ends
 - 2026-08-29 (two MIME gaps) — the item described our own binary, and nobody had run it
+- 2026-08-29 (a Macintosh wrote a MIME message) — the port was in the reference tree
 
 ---
 
@@ -9508,3 +9509,82 @@ therefore the one most likely to have been written rather than run.** Both
 items had been filed under *waiting on a file*, which is a decision to stop
 looking; neither was ever blocked on a file. The section they were moved to
 names its oracle instead of its shortage.
+
+## 2026-08-29 (a Macintosh wrote a MIME message) — the port was in the reference tree
+
+`src/fmt_mime.c` is transcribed from mpack 1.6, and every message it had ever
+been graded against was made on Linux. OPEN_ITEMS.md filed the gap as a wait:
+what was missing was a message a MACINTOSH wrote, because the half no Unix
+tool has is the layout of the `application/applefile` part and what a real Mac
+put in the Finder-info entry.
+
+The entry named the thing that would settle it — "mpack's own Macintosh port"
+— and that port is in `reference/mpack`, in the tree `tools/build_mpack.sh`
+had been building munpack out of since M36. `tools/macmime/` compiles
+`encode_applefile()` and `encode()` out of it unmodified for a 68000, adds the
+host glue THINK C used to supply, and `tools/vmac/macmime.py` runs the result
+on System 6.0.8. The message is 1,912 bytes and passes 18/18, both forks
+byte-exact through this engine and readable by munpack.
+
+**What is mpack's and what is ours.** Everything that decides a byte is
+mpack's: encode.c, macfile.c, codes.c, magic.c, md5c.c, xmalloc.c, compiled as
+they lie. Ours is the Toolbox glue and two `os_` entry points. The boundary
+moved a byte in exactly one place, and it is named in FORMATS.md rather than
+here: line endings are the C library's, so this specimen cannot settle them.
+
+Three things cost a run each, and all three transfer.
+
+### Retro68's newlib cannot open a file on System 6.0.8
+
+mpack speaks nothing but `FILE *`, so the first build used stdio. It hung —
+silently, with the window drawn and no bomb. Two runs went into finding out
+where, and the answer was the first call: a bare
+`open("Probe1.tmp", O_WRONLY|O_CREAT|O_TRUNC, 0666)` **never returns**,
+photographed at 40 s and again at 80 s with only the banner line on screen.
+Not stdio, then — the POSIX layer under it.
+
+**This is a symptom and not an attribution.** Retro68's `_open_r`
+(`libretro/syscalls.c`) does `HCreate(0,0,…)`, then `HOpenDF(0,0,…)`, then
+`HOpen` if that answered `paramErr`; which of the three hangs has not been
+reduced to a reproduction, so it is not a finding and it is not filed as one.
+It sits beside something this project HAS reduced: `OpenDF`/`HOpenDF` return
+`paramErr` on System 6 (`tools/retro68-hopen-repro/`).
+
+The fix needs none of that settled. newlib's `funopen()` builds a `FILE *` out
+of four callbacks, so every byte mpack reads or writes goes through the same
+fully-zeroed HFS param blocks the shipping application uses — and mpack reads
+the LIVE forks, which is what macos.c's `Macopen()` gave it by reaching into
+THINK C's `FILE` internals. The engine's "no libc" rule bought the same
+immunity for the application years earlier, for reasons nobody had connected
+to this.
+
+### A harness that could not put a Finder flag on the volume
+
+The first complete run failed one check of eighteen: the Finder flags in the
+applefile were `0x0000` where the subject was built with `0x0100`. The subject
+was wrong, not the applefile — **`hcopy -m` does not carry the Finder flags**,
+measured off the Mac in one command: a MacBinary whose byte 73 is `0x01`
+round-trips out of the image as `0x00`. So the flag was zero before the
+Macintosh ever saw the file, and a run that trusted the transfer would have
+been grading the encoder against a word nothing had set.
+
+They are set on the Mac now, with `PBHSetFInfoSync`, and the catalogue is read
+AGAIN afterwards so that what reaches mpack is what the volume holds rather
+than what the harness intended. The general form is the one this file keeps
+finding: **a fixture is not what you built, it is what arrived** — and the
+transfer is part of the experiment.
+
+### The subject has to be in the blessed folder
+
+`mkboot.py` puts a shell application in the System Folder, and a shell
+application's default directory is its own. The subject went to the volume
+root, which is where every other harness here puts one, and `PBGetCatInfo`
+answered −43. Two runs; the frame said so the first time, which is the whole
+argument for a harness that draws its progress on screen.
+
+### What it does not do
+
+One message from one encoder. It establishes what mpack's Macintosh port
+writes; Eudora 1.2 is in the corpus and Claris Emailer is not, and neither has
+been run. That is a different specimen and not an open item — the layout
+question this one was filed for is answered.
