@@ -2433,6 +2433,17 @@ everything else within half a percent. That is the price of one fork writer
 and one RLE90 filter in place of nine and five; three cheaper shapes were
 tried first and were worse (DECISIONS.md, *the fork writer and the filter*).
 
+**The LZW chain is walked once since 2026-08-29.** `lzw_firstbyte` walked a
+symbol's parent chain for the new table entry's postfix byte, and the
+expansion then walked the same parents again; the byte it wanted is the last
+one the expansion writes. Over the formats that share `unc_lzw`:
+`popper-1.7.tar.Z` **−16.3 %**, `ddtf-dd377dda-testfile.TIF` (DiskDoubler
+method 1) −14.7 %, `a2ps.V4.3.tar.Z` −13.3 %, `derived-EmpireBuilderDemo.sit`
+−5.3 %, `derived-xmasbeeps.sit` −4.8 %, `synth-arc-mixed.arc` −1.4 %, and
+**0.00 %** on six fixtures that never reach the decoder — Compact Pro, BinHex,
+zip, gzip, DDn and ARC's Distilled. No heap, no table (DECISIONS.md
+2026-08-29, *the chain that was walked twice*).
+
 **The LSB fast path took 2.26 % off the same 48**, the same day and more
 than paying for it. `unc_canon_decode`'s table was MSB-only, so StuffIt
 classic — the one format that both uses `UncCanon` and reads LSB-first —
@@ -2671,21 +2682,24 @@ release build:
 | derived-MUSFMT10.ZIP | Zip (deflate) | 168 | 498 | 3.9 | 42,704 |
 | popper-1.7.tar.Z | Compress | 58 | — | 2.0 | 29,526 |
 | PCCTS.tar.gz | Gzip | 62 | — | 2.0 | 31,162 |
-| derived-EmpireBuilderDemo.sit | StuffIt (13) | 272 | 407 | 9.0 | 30,204 |
+| derived-EmpireBuilderDemo.sit | StuffIt (2 LZW, 3 Huffman) | 272 | 407 | 9.0 | 30,204 |
 | derived-XferIt_1.5b4.sea | Compact Pro | 279 | 926 | 18.2 | 15,351 |
 | derived-KeyGraphics.sit | StuffIt 5 (Arsenic) | 5 | 33 | 1.6 | 2,859 |
 
 The ordering is the useful part: envelope formats (MacBinary, tar) are
 essentially a copy; BinHex costs a few times that; the real compressors —
-StuffIt 13 and Compact Pro's LZH — are 15-30x the cost of a copy per input
+StuffIt's LZW and Compact Pro's LZH — are 15-30x the cost of a copy per input
 byte; and Arsenic is in a class of its own, two orders of magnitude off the
 top of the table, which is consistent with its memory profile.
 
 **This is not a Mac Plus timing.** It says a Compact Pro archive costs roughly
 six times what a BinHex of the same size costs, on any CPU. The one authentic
 1x measurement that exists — `derived-EmpireBuilderDemo.sit`, ~134 s for
-278 KB — is in the StuffIt-13 row, so the ratios can be used to reason about
-the others, cautiously and from a single anchor.
+278 KB — is in the StuffIt row, so the ratios can be used to reason about
+the others, cautiously and from a single anchor. **That row said "StuffIt
+(13)" until 2026-08-29 and no fork in that archive uses method 13**: its three
+forks are methods 2 and 3, which is what its profile has always shown
+(`unc_huff_decode`'s own comment names it as a method-3 run).
 
 ## Real-hardware verification (Mini vMac — System 6.0.8, 4 MB Mac Plus, 68000)
 

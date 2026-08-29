@@ -156,11 +156,33 @@ static int32_t lzw_code(UncLzw *z, int n)
     }
 }
 
-static uint8_t lzw_firstbyte(const UncLzw *z, int32_t symbol)
+/* Expand symbol into z->chain, reversed — chain[n-1] is the FIRST output
+ * byte — starting at index `at`. Returns the end index, or -1 if the
+ * chain does not terminate inside the buffer.
+ *
+ * The last byte written is the chain's root, which is also its first
+ * output byte, so a caller that needs that byte reads it here instead of
+ * walking the same parents a second time (see unc_lzw_read). */
+static int32_t lzw_chain(UncLzw *z, int32_t symbol, int32_t at)
 {
-    while (z->parent[symbol] != UNC_LZW_NOPARENT)
-        symbol = z->parent[symbol];
-    return z->chr[symbol];
+    /* The three fields the walk reads are held in locals: a 68000 reloads
+     * a struct field from memory on every use, and this loop is one of
+     * the two that move every byte of an LZW stream. */
+    const uint16_t *parent = z->parent;
+    const uint8_t *chr = z->chr;
+    int32_t cap = z->capsymbols;
+    int32_t n = at;
+
+    while (symbol >= 0 && n < cap) {
+        z->chain[n++] = chr[symbol];
+        symbol = parent[symbol] == UNC_LZW_NOPARENT ? -1
+                                                    : (int32_t)parent[symbol];
+    }
+    /* Bounded by the chain buffer, which is capsymbols long. A
+     * well-formed chain is strictly decreasing and ends in the 0..255
+     * roots, so it cannot reach that. */
+    if (n >= cap) return -1;
+    return n;
 }
 
 /* Decode into out, up to want bytes. Returns bytes produced (0 only at
@@ -177,8 +199,14 @@ int32_t unc_lzw_read(UncLzw *z, uint8_t *out, int32_t want)
          * fifth of a StuffIt classic run on the two-condition form. */
         if (z->chainpos > 0) {
             int32_t n = z->chainpos;
+            const uint8_t *src = z->chain + z->chainpos;
+            uint8_t *dst = out + produced;
             if (n > want - produced) n = want - produced;
-            while (n-- > 0) out[produced++] = z->chain[--z->chainpos];
+            /* Pointers rather than three indices into the struct: the
+             * chain is written once and read once, and this is the read. */
+            produced += n;
+            z->chainpos -= n;
+            while (n-- > 0) *dst++ = *--src;
         }
         if (produced == want) break;
 
@@ -217,26 +245,46 @@ int32_t unc_lzw_read(UncLzw *z, uint8_t *out, int32_t want)
                 } else break;
             }
 
-            /* Transcription of LZW.c NextLZWSymbol. */
+            /* Transcription of LZW.c NextLZWSymbol. The chain is built
+             * BEFORE the new table entry, which is what lets the entry's
+             * postfix byte come out of the walk rather than out of a
+             * second walk over the same parents. */
             if (z->prevsymbol < 0) {
                 if (symbol >= z->numsymbols) return UNC_ERR_CORRUPT;
                 z->prevsymbol = symbol;
+                n = lzw_chain(z, symbol, 0);
+                if (n < 0) return UNC_ERR_CORRUPT;
             } else {
-                if (symbol < z->numsymbols)
-                    postfix = lzw_firstbyte(z, symbol);
-                else if (symbol == z->numsymbols)
-                    postfix = lzw_firstbyte(z, z->prevsymbol);
-                else
-                    return UNC_ERR_CORRUPT;
-
+                if (symbol > z->numsymbols) return UNC_ERR_CORRUPT;
                 parent = z->prevsymbol;
+
+                /* Grow first: it moves the whole block, chain included,
+                 * so a chain built before it would not survive. Same
+                 * condition and same moment in the sequence as before —
+                 * nothing between here and the add depends on it. */
+                if (z->numsymbols < z->maxsymbols &&
+                    z->numsymbols >= z->capsymbols) {
+                    int gerr = lzw_grow(z);
+                    if (gerr != UNC_OK) return gerr;
+                }
+
+                if (symbol < z->numsymbols) {
+                    n = lzw_chain(z, symbol, 0);
+                    if (n < 0) return UNC_ERR_CORRUPT;
+                } else {
+                    /* KwKwK: this symbol is the one about to be added,
+                     * so its expansion is the previous one's followed by
+                     * that expansion's own first byte. Reversed, that
+                     * byte comes first — chain[0] — and the rest is the
+                     * previous symbol's chain one slot up. */
+                    n = lzw_chain(z, parent, 1);
+                    if (n < 0) return UNC_ERR_CORRUPT;
+                    z->chain[0] = z->chain[n - 1];
+                }
+                postfix = z->chain[n - 1];   /* the chain's root byte */
                 z->prevsymbol = symbol;
 
                 if (z->numsymbols < z->maxsymbols) {
-                    if (z->numsymbols >= z->capsymbols) {
-                        int gerr = lzw_grow(z);
-                        if (gerr != UNC_OK) return gerr;
-                    }
                     z->parent[z->numsymbols] = (uint16_t)parent;
                     z->chr[z->numsymbols] = (uint8_t)postfix;
                     z->numsymbols++;
@@ -249,20 +297,6 @@ int32_t unc_lzw_read(UncLzw *z, uint8_t *out, int32_t want)
                  * XADCompressHandle only checks for InvalidCode). */
             }
 
-            /* Emit prevsymbol's chain, reversed into z->chain. */
-            n = 0;
-            {
-                int32_t s = z->prevsymbol;
-                while (s >= 0 && n < z->capsymbols) {
-                    z->chain[n++] = z->chr[s];
-                    s = z->parent[s] == UNC_LZW_NOPARENT ? -1
-                                                         : (int32_t)z->parent[s];
-                }
-                /* Bounded by the chain buffer, which is capsymbols long.
-                 * A well-formed chain is strictly decreasing and ends in
-                 * the 0..255 roots, so it cannot reach that. */
-                if (n >= z->capsymbols) return UNC_ERR_CORRUPT;
-            }
             z->chainpos = z->chainlen = n;
         }
     }

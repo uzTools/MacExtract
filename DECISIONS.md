@@ -168,6 +168,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-29 (a Macintosh wrote a MIME message) — the port was in the reference tree
 - 2026-08-29 (a part that hid its message) — the strongest scan is not the strongest claim
 - 2026-08-29 (a message in several files) — the sixth join scheme, and the first whose parts are text
+- 2026-08-29 (the chain that was walked twice) — the postfix byte was the last one the walk wrote
 
 ---
 
@@ -9704,3 +9705,65 @@ and an aggregate cannot fail on that.
 twice — a joiner calling a format reader that reads back through the joiner —
 so it was measured rather than assumed: 2,796 B on a 68000, second only to
 DiskDoubler's 3,386 B, against a 4 KB rule (FORMATS.md, *Stack*).
+
+---
+
+## 2026-08-29 (the chain that was walked twice) — the postfix byte was the last one the walk wrote
+
+Asked why StuffIt Expander 4.0.2 unstuffs `derived-EmpireBuilderDemo.sit` in
+three quarters of our time (FORMATS.md, *Timed on the same Mac Plus*). The
+answer to THAT question is not this entry — but profiling the archive to ask
+it found two things.
+
+**The fixture the comparison lost on has no method 13 in it.** Its three forks
+are methods 2 and 3, out of the entry headers, and the profile agrees: 58 %
+`unc_lzw_read`, 26 % `unc_huff_decode`, 7.7 % `unc_crc16_arc`. FORMATS.md's
+decode-cost table had called that row "StuffIt (13)" and its prose reasoned
+from the label, while `unc_huff_decode`'s own comment three files away names
+the same fixture as "a StuffIt method-3 run". **Two files disagreed and the
+one nobody was reading was right** — corrected in place.
+
+**And LZW walked every symbol's parents twice.** `lzw_firstbyte` walked the
+chain to find the byte the new table entry gets as its postfix; the expansion
+that follows walks the same parents to emit the symbol. The chain is written
+reversed, so its LAST element is the root — which is exactly the byte
+`lzw_firstbyte` went looking for. Build the chain first and the postfix is
+`chain[n-1]`, free.
+
+**Why it survived M29's pass.** It is a faithful transcription of `LZW.c`'s
+`NextLZWSymbol`, where the two walks sit in different functions and neither
+looks redundant beside the other. The profile named `unc_lzw_read` as the hot
+function and it WAS the hot function; what was wrong was the order of two
+steps inside it, and a profile does not report ordering. **A duplicated walk
+reads as one walk each in every measurement that attributes cost to
+functions.**
+
+Three details the change turns on:
+
+- **KwKwK costs a slot, not a walk.** When the code is the one about to be
+  added, its expansion is the previous symbol's followed by that expansion's
+  own first byte. Reversed, that byte comes FIRST, so the previous symbol's
+  chain goes in one slot up and `chain[0]` takes the root the walk found. One
+  walk, one extra store.
+- **`lzw_grow` had to move up with it.** It reallocates the block the chain
+  lives in and resets the chain, so a chain built before it would not survive.
+  Its condition is unchanged and nothing between it and the table add reads
+  what it moves, so it now runs before the walk rather than after.
+- **Both hot loops read the struct on every byte.** The walk reloaded
+  `z->parent`, `z->chr` and `z->capsymbols` per step and the drain updated
+  `z->chainpos` and `produced` per byte. Locals and two pointers: that half is
+  worth more than the walk on the short chains this corpus actually has
+  (2.9 bytes a code on the StuffIt fixture).
+
+**Measured, and it is the shape that makes it safe.** −16.3 % on
+`popper-1.7.tar.Z` down to −1.4 % on `synth-arc-mixed.arc`, and **0.00 % —
+not "within noise", identical instruction counts** — on six fixtures whose
+formats never reach this decoder. The full table is in FORMATS.md, *Decode
+cost*. Heap is unmoved: no table was added, and `unc_lzw`'s allocation is the
+same layout it was.
+
+**The branch is graded.** A counter build over all 946 fixtures reports the
+KwKwK path taken in **111** of them, `.Z`, DiskDoubler method 1 and StuffIt
+method 2 alike — so the restructured half is inside the differential suite
+rather than beside it. Establishing that before trusting the green run is the
+same rule as *a test that passes may not be testing anything*.
