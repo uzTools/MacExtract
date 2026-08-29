@@ -414,8 +414,15 @@ static int dd_rle(DdFork *o, UncBufIn *in, uint32_t complen, int xorval)
     uint32_t left = complen;
     int err;
 
-    /* Lenient on ESC 1: macutils' dd_rle emits nothing for it rather
-     * than failing (unc_internal.h, RLE90). */
+    /* STRICT on ESC 1, like the other five RLE90 call sites. This one
+     * was lenient after macutils' dd_rle, which emits nothing for that
+     * token; XADRLE90Handle calls it an error, and the tie is broken by
+     * the vendor. Salient's own 1991 expander refuses a fork containing
+     * one, at offset 0 and 1,800 bytes in, on forks that SHRINK — so not
+     * its refusal of a fork that grew (tools/vmac/ddencode.py, RleEsc1 /
+     * RleEsc1Mid / RleGrow, 2026-08-29). All 91 DiskDoubler fixtures are
+     * byte-exact either way, which is what a token no valid file carries
+     * looks like. BLOCKERS.md has what the leniency cost. */
     unc_rle90_init(&r, 1);
 
     while (o->left > 0) {
