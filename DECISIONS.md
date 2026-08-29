@@ -494,7 +494,8 @@ which fails CI if it drifts from the headings below it.
   at 4 MB, 39/44 at 1 MB), and its interactive UI has been driven end to
   end (`tools/vmac/interactive.py`, MANUAL_TESTS.md). Of the three
   known-risk items listed here, only the System 7+ `SFReply`
-  working-directory semantics remain untested — see OPEN_ITEMS.md.
+  working-directory semantics remain untested — tested without a
+  Finder on 2026-08-01, below.
 - **The engine compiled for m68k without a single change** — the M0
   discipline (no libc, no unaligned access, callbacks for everything,
   C99 with 32-bit arithmetic) held from the first decoder to the
@@ -3064,8 +3065,8 @@ Three things came out of it that were not visible from inside:
   spot.** Expander claims multipart BinHex — several documents in one text
   file, the shape comp.binaries.mac produced. We take the first document
   and exit 0; `unar` does the same, so 179 BinHex fixtures and a
-  differential suite could never have caught it. It is filed in
-  OPEN_ITEMS.md, *Remedies ruled out by measurement*, with the reproduction. The lesson generalises
+  differential suite could never have caught it. It was fixed the same
+  day, with the reproduction — the entry below. The lesson generalises
   past BinHex: **the differential suite can only find defects the oracle
   does not share**, and the cheapest way to find the shared ones is to ask
   what some THIRD implementation claims. That is the same move that closed
@@ -7513,7 +7514,8 @@ list rather than the fixture you added.
 The two things still unnamed are **compressed** images, and the NDIF one is
 measured rather than assumed: the one NDIF file here opens straight into
 compressed data, its chunk map is a `bcem` resource, and its fork is not even
-a whole number of sectors. UDIF wants a reference (OPEN_ITEMS.md, part 2).
+a whole number of sectors. UDIF wants a reference — and the entry below
+then took disk images out of scope altogether (OPEN_ITEMS.md, part 1).
 
 ## 2026-08-26 — a name is only worth something inside the frame the user came with
 
@@ -8009,8 +8011,8 @@ should stay that way, and it is the **scaffolding around them** — the
 thing that stages decoded bytes, checksums them and hands them to the
 sink, the thing that maintains a folder path, the thing that decides
 whether an error is fatal to the walk — that is written once per format.
-The inventory and what would close each is OPEN_ITEMS.md, part 2 section
-4; this entry is the why.
+The inventory and what closed each is the two entries that follow; this
+entry is the why.
 
 **How it accumulated, which is not carelessness.** Every format arrived
 as a milestone graded against an oracle, and the cheapest correct move

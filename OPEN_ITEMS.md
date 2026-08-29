@@ -2,9 +2,9 @@
 
 Two kinds of thing live here, and they are kept apart on purpose:
 
-1. **Out of scope** — decided, recorded so nobody re-litigates it, and the
-   first section below because it is the thing a session most needs to know
-   before starting work on a format.
+1. **Out of scope** — decided or impossible, recorded so nobody re-litigates
+   it, and the first section below because it is the thing a session most
+   needs to know before starting work on a format.
 2. **Open items** — a standing audit of the gaps: things not done, things done
    but not verified, and things this repository asserts more confidently than
    the evidence supports. Each says what would close it.
@@ -41,19 +41,19 @@ answer and not a refusal — the brief has grown before, on request.
 |---|---|---|
 | Compression | not implemented | this is an extractor |
 | StuffIt X (`.sitx`) | **detect-only** | out by the brief |
-| PKWARE "strong encryption" in a zip (flag 0x40) | **named, refused per entry** | its key material is in a record nothing here parses, and XADMaster refuses it too. Every OTHER encryption these formats have — including WinZip's AES, which postdates the machines by a decade and is read anyway — is decrypted since 2026-08-23 (FORMATS.md, *Encryption*) |
-| Disk images (`.image`, `.img`, `.iso`, `.cdr`, `.toast`, `.dmg`, `.smi`) | **not recognised**, since 2026-08-26, and not extracted | extracting one means a filesystem rather than a codec, and naming one is worth nothing either: a disk image is not an archive, so the name leaves a user exactly where "not recognized" does. Disk Copy 4.2 went the same day, for the same reason. The probes are complete, graded and kept in `attic/` (DECISIONS.md 2026-08-26) |
-| PMarc (`-pm0-`, `-pm1-`, `-pm2-`) and `-lhx-` | **not recognised** | a different family behind an LZH-shaped header. PMarc is a Japanese PC format with its own coders, `-lhx-` is UNLHA32's extension; neither reached a Macintosh, and LZH itself only just did (2026-08-23) |
+| PKWARE "strong encryption" in a zip (flag 0x40) | **named, refused per entry** | its key material is in a record nothing here parses, and XADMaster refuses it too. Every OTHER encryption these formats have is decrypted, including WinZip's AES (FORMATS.md, *Encryption*) |
+| Disk images (`.image`, `.img`, `.iso`, `.cdr`, `.toast`, `.dmg`, `.smi`), and Disk Copy 4.2 | **not recognised**, and not extracted | extracting one means a filesystem rather than a codec, and naming one is worth nothing either: a disk image is not an archive, so the name leaves a user exactly where "not recognized" does. The probes are complete, graded and kept in `attic/` (DECISIONS.md 2026-08-26, *read the volume, not the extension*) |
+| PMarc (`-pm0-`, `-pm1-`, `-pm2-`) and `-lhx-` | **not recognised** | a different family behind an LZH-shaped header. PMarc is a Japanese PC format with its own coders, `-lhx-` is UNLHA32's extension; neither reached a Macintosh |
 | Self-extracting LZH (an executable with an archive behind it) | **not recognised** | the archive sits behind DOS, Amiga, Atari or X68000 machine code, and finding it means knowing each of those loaders. `unar` has a parser per platform; here the answer is to hand the `.lzh` itself to the extractor |
-| RAR, 7z, bzip2, xz, Cabinet, Zoo, ar/`.deb`, cpio, ARJ | **named since 2026-08-26, never extracted** | none is a Macintosh archive format, none carries a resource fork or Finder metadata, and every one is served by a maintained extractor on any machine that can run one (raised 2026-08-25, Macintosh Garden forum, *Archive formats*). NAMING them is in — the name is an instruction inside the frame the user arrived with (DECISIONS.md 2026-08-26; FORMATS.md, *Archives named but not extracted*) |
-| Alysis SuperDisk! method 13 | **not implemented, and no specimen is wanted** | its module compresses and REFUSES to decompress — `_Debugger` at its own 0xd4 — so no Alysis expander in reach can read what it writes, and nor can this engine or any other module in the library. Streams can be made here at will since 2026-08-29 and there is nothing whatever to grade one against. It is reachable from Alysis's own compress path (level 11 of INIT 32's table at +0xf2e), so a file COULD exist; reading one would mean inverting that compressor with no second reader anywhere, for a codec no archive in the corpus uses and whose framing is not this container's (FORMATS.md, *Module 13*; DECISIONS.md 2026-08-29) |
-| Zip64 for files larger than 4 GB | **the counts are read since 2026-08-25 and the per-ENTRY escape since 2026-08-27; over-4-GB fields are refused, per archive or per entry**, and `unc_zipseg_describe` still answers `UNC_ERR_UNSUPPORTED` for a spanned set | the entry count, central-directory size and offset come from the Zip64 record as `uint32` halves, and so does an entry's own size and offset from extra field 0x0001 — which is what makes a 70,000-entry archive extract, and a 3.4 GB one (FORMATS.md, *Size limits*). A field whose high half is set returns `UNC_ERR_UNSUPPORTED` for the archive or `UNC_ERR_TOOLARGE` for the entry. **The reason this stayed out was withdrawn on 2026-08-28** — "every format would pay 64-bit offsets on a 68000" was measured at +0.51 % of text and 0 bytes of heap, and `UncIO` now carries `unc_off_t`, 64-bit in the CLI. What keeps Zip64 out is now only zip's own shape: its directory fields are 32-bit and the escape is read as halves, so reading it properly is a format change rather than a type change. tar, whose positions are a running sum, reaches past 4 GB today (2026-08-14, revised 2026-08-25, 2026-08-27 and 2026-08-28) |
+| RAR, 7z, bzip2, xz, Cabinet, Zoo, ar/`.deb`, cpio, ARJ | **named, never extracted** | none is a Macintosh archive format, none carries a resource fork or Finder metadata, and every one is served by a maintained extractor on any machine that can run one. NAMING them is in scope (DECISIONS.md 2026-08-26, *a name is only worth something inside the frame the user came with*; FORMATS.md, *Archives named but not extracted*) |
+| Alysis SuperDisk! method 13 | **not implemented, and no specimen is wanted** | its module compresses and REFUSES to decompress — `_Debugger` at its own 0xd4 — so no Alysis expander in reach can read what it writes, and nor can this engine or any other module in the library. Streams can be made here at will and there is nothing whatever to grade one against. It is reachable from Alysis's own compress path (level 11 of INIT 32's table at +0xf2e), so a file COULD exist; reading one would mean inverting that compressor with no second reader anywhere, for a codec no archive in the corpus uses (FORMATS.md, *Module 13*; DECISIONS.md 2026-08-29, *the specimen that would have settled nothing*) |
+| Zip64 addressing past 4 GB | **the counts and the per-ENTRY escape are read; over-4-GB fields are refused** — `UNC_ERR_UNSUPPORTED` per archive, `UNC_ERR_TOOLARGE` per entry — and `unc_zipseg_describe` still answers `UNC_ERR_UNSUPPORTED` for a spanned set | zip's own shape is what keeps it out: the directory fields are 32-bit and the Zip64 escape is read as `uint32` halves, so reading past 4 GB properly is a format change rather than a type change. The type is not the obstacle — `UncIO` carries `unc_off_t`, 64-bit in the CLI, for +0.51 % of text and 0 bytes of heap (DECISIONS.md 2026-08-28, *what a width costs*). Reading the halves is what makes a 70,000-entry archive extract, and a 3.4 GB one (FORMATS.md, *Size limits*); tar, whose positions are a running sum, reaches past 4 GB today |
 
 Everything detect-only is **named** by `unc_sniff`, and both front ends say
 the name: the CLI prints *"recognized as RAR, which v1 cannot extract"* and
 the Macintosh application's alert reads *"MacExtract cannot open RAR files."*
-(photographed on System 6.0.8, 2026-08-26). Extraction returns cleanly
-unsupported either way.
+(photographed on System 6.0.8). Extraction returns cleanly unsupported either
+way.
 
 ## Limits of the formats themselves
 
@@ -61,11 +61,11 @@ unsupported either way.
   7932 section 9.1 is its entire stream header: one to seven bits of WBITS,
   and nothing else. No magic number, no signature, no version byte, no
   length. So `unc_sniff` will never name a `.br`, and the reason is the
-  format rather than a missing reference — which is where it was filed until
-  2026-08-29. **What would change it:** nothing in the format. A host that
-  trusts the filename could act on `.br`, which is a naming question and not
-  an identifying one. `reference/notes/brotli_rfc7932.txt` is kept as the
-  evidence for a negative.
+  format rather than a missing reference. **What would change it:** nothing
+  in the format. A host that trusts the filename could act on `.br`, which
+  is a naming question and not an identifying one.
+  `reference/notes/brotli_rfc7932.txt` is kept as the evidence for a
+  negative.
 
 - **A cut tar cannot be noticed, by this or any program.** A tar has no
   directory, no entry count and no length of its own, so a file that
@@ -81,16 +81,16 @@ unsupported either way.
   transfer and not about the archive.
 
 - **One 46-byte window of a DiskDoubler DDA2 archive is ambiguous.** A
-  DDA2 archive normally ends with a 0xBBBB record, and since 2026-08-29
-  a walk that never reaches one is reported truncated — except that an
-  archive may legitimately end without it, leaving fewer than the 46
-  bytes one record needs after its last entry. `derived-DD_Expand.sea`
-  ends exactly so and `unar` reads it, so a cut that lands in that same
-  window is byte-for-byte a valid ending; `ddtf-ddpro411dd3.dd` cut to a
-  fifth is the measured case, and every other cut point in the corpus is
-  caught. **What would change it:** nothing in the format — the two
-  files are identical there. The rule that tries is DECISIONS.md
-  2026-08-29, *a cut archive*.
+  DDA2 archive normally ends with a 0xBBBB record, and a walk that never
+  reaches one is reported truncated — except that an archive may
+  legitimately end without it, leaving fewer than the 46 bytes one record
+  needs after its last entry. `derived-DD_Expand.sea` ends exactly so and
+  `unar` reads it, so a cut that lands in that same window is
+  byte-for-byte a valid ending; `ddtf-ddpro411dd3.dd` cut to a fifth is
+  the measured case, and every other cut point in the corpus is caught.
+  **What would change it:** nothing in the format — the two files are
+  identical there. The rule that tries is DECISIONS.md 2026-08-29, *a cut
+  archive*.
 
 - **Two folders that merge cannot be told from one folder visited
   twice, in a format that carries no directory entries.** The Macintosh
@@ -122,13 +122,13 @@ unsupported either way.
 
 ---
 
-## 1. Waiting on a file this machine does not have
+## Waiting on a file this machine does not have
 
 **Not scope decisions, and not effort.** Everything here is written or
-writeable; what is missing is something to grade it against. They sit together across formats because that is how they
-close — by somebody finding a file, and the finding usually arrives from
-outside the format it settles. The question to bring here is *what did I just
-find?*
+writeable; what is missing is something to grade it against. They sit together
+across formats because that is how they close — by somebody finding a file,
+and the finding usually arrives from outside the format it settles. The
+question to bring here is *what did I just find?*
 
 Each says which of the two is missing, because the searches are different:
 
@@ -146,12 +146,9 @@ somebody's **search** (BLOCKERS.md, SuperDisk!'s compressor); does the search
 name the **right tool** (BLOCKERS.md 2026-08-25); and **have you looked at
 all** (BLOCKERS.md, the ARC 7 row, filed and disproved the same day).
 
-- **Apple Archive (`.aar`) is unnamed for want of a reference.** The other
-  five in this bullet closed on 2026-08-29: zstd, lrzip, WIM and lzip are
-  named (FORMATS.md, *Archives named but not extracted*), and brotli moved
-  to part 1 because it cannot be identified at all. Extraction stays out of
-  scope either way. **What would close it:** an implementation or spec in
-  `reference/`.
+- **Apple Archive (`.aar`) is unnamed for want of a reference.** Extraction
+  is out of scope either way. Missing: a **reference** — an implementation
+  or spec in `reference/`.
 
 - **A SpaceSaver file written by SpaceSaver.** Every codec is graded against
   Aladdin's own modules (FORMATS.md, *StuffIt SpaceSaver*), so what rests on
@@ -165,22 +162,21 @@ all** (BLOCKERS.md, the ARC 7 row, filed and disproved the same day).
   beside it.
 
 - **AppleLink `.pkg`: one file, which would settle two questions.**
-  Named since 2026-08-23 from Aladdin's own recogniser (FORMATS.md,
-  *AppleLink packages*), and detect-only because nothing here can grade
-  a decoder. Three measured things suggest there is nothing to decode —
-  that a package is a transfer manifest naming files beside it rather
-  than a container — in which case this closes as a property of the
-  format (DECISIONS.md 2026-08-23). **What is missing is a specimen**,
+  Named from Aladdin's own recogniser (FORMATS.md, *AppleLink packages*),
+  and detect-only because nothing here can grade a decoder. Three measured
+  things suggest there is nothing to decode — that a package is a transfer
+  manifest naming files beside it rather than a container — in which case
+  this closes as a property of the format (DECISIONS.md 2026-08-23,
+  *AppleLink `.pkg`, named at last*). Missing: a **gradeable specimen**,
   which answers both.
-
 
 ---
 
-## 2. Untested code, named so it is not mistaken for tested
+## Untested code, named so it is not mistaken for tested
 
 - **SuperDisk! reaches the path cap through code that is tested, in a
   container nothing here writes.** `unc_path_leaf` keeps the uncut path
-  since 2026-08-27 (DECISIONS.md, *the path builder's own cap*), and
+  (DECISIONS.md 2026-08-27, *the path builder's own cap*), and
   `tools/run_names.py` grades it on generated Now Compress and
   DiskDoubler trees against `unar`. SuperDisk! runs that same helper and
   walks folders in both its fixtures, up-directory record included; what
