@@ -182,21 +182,6 @@ all** (BLOCKERS.md, the ARC 7 row, filed and disproved the same day).
   a real Mac laid out the `application/applefile` part, and what it put in
   the Finder-info entry. **What is missing is a gradeable specimen.**
 
-- **A MIME part encoded `x-uuencode`, inside a multipart.** mpack decodes
-  those; this does not. A uuencoded body posted to mail IS read — the
-  uuencode probe runs before the MIME one and steps over the headers
-  (FORMATS.md, *uuencode*) — so what is missing is only the case where one
-  part of a MULTIPART message is uuencoded and another part is what the
-  user wants. No specimen has been seen; the decoder is the uu one, which
-  already exists.
-
-- **`message/partial`: a message split across several FILES is not
-  reassembled.** munpack does it, keyed by the `id` parameter and a
-  reassembly directory. Here each file decodes on its own, and a part that
-  is half an attachment yields half a file. The engine already joins
-  multi-file sets four other ways (FORMATS.md, *Segmented archives*), so
-  what is missing is a specimen to grade the fifth against, not a
-  mechanism.
 
 ---
 
@@ -216,3 +201,32 @@ all** (BLOCKERS.md, the ARC 7 row, filed and disproved the same day).
   one second reader that exists is an archive's own self-extractor on an
   emulated Mac, which has never been handed a stream this project
   wrote.
+
+---
+
+## 3. Not written, and not waiting for anything
+
+**The oracle is already on this machine.** Each of these is work nobody has
+done, and each names the second implementation that grades it. They are kept
+out of section 1 because the question to bring here is *when*, not *what did I
+just find?* — both arrived here on 2026-08-29 from section 1, where they had
+been filed on descriptions of this engine's own behaviour that nobody had run
+(BLOCKERS.md, withdrawn claims).
+
+- **A multipart whose uuencoded part hides the rest of the message.** The
+  uuencode probe runs before the MIME one, so a message holding a uuencoded
+  part AND a base64 attachment yields only the first: measured, `macextract
+  l` lists `uupart.txt` alone where munpack writes both it and `wanted.bin`.
+  A uuencoded part that is the ONLY thing in a multipart already decodes
+  byte-exact — and munpack does not decode one at all. **What would close
+  it:** a sniff precedence that lets the MIME walk claim a message whose
+  parts it can enumerate, graded against munpack over a specimen built here.
+
+- **`message/partial`: a message split across several FILES is not
+  reassembled**, and today no part of such a set yields anything — part 1
+  fails *"not a recognized archive"*, parts 2..n are *"format not
+  recognized"*. The engine joins multi-file sets five other ways already
+  (FORMATS.md, *Segmented archives*). **What would close it:** the join,
+  graded against munpack over sets mpack itself writes with `-m`;
+  DECISIONS.md 2026-08-29 (*two MIME gaps*) has the two quirks a harness on
+  it has to know.

@@ -164,6 +164,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-29 (four more names) — one of the five references was already here
 - 2026-08-29 (the end-of-run report) — what the run cost, on a screen with no scrollback
 - 2026-08-29 (a cut archive) — where the archive ends and where the file ends
+- 2026-08-29 (two MIME gaps) — the item described our own binary, and nobody had run it
 
 ---
 
@@ -9451,3 +9452,59 @@ single-file archives with no walk in them. The suite was written with the same
 bug, passed against a deliberately broken build, and was fixed to choose the
 most-entried fixtures. A check that cannot fail is worth exactly what it
 costs to run.
+
+## 2026-08-29 (two MIME gaps) — the item described our own binary, and nobody had run it
+
+OPEN_ITEMS.md's *"Waiting on a file this machine does not have"* carried two
+MIME entries from M36. Between them they made four statements about what mpack
+does and what this engine does. Three are false, and every one was one command
+from being checked.
+
+**`x-uuencode` inside a multipart.** The entry read *"mpack decodes those; this
+does not"*, and both halves are wrong.
+
+- munpack does not decode it. Its encoding enum is `enc_none, enc_qp,
+  enc_base64` (`reference/mpack/decode.c`), an unknown Content-Transfer-Encoding
+  warns and falls through as `enc_none`, and `handleUuencode` is reached only
+  for a depth-0 `text/*` part carrying no encoding, no `filename` and no
+  `name`. Fed a multipart whose part is `Content-Transfer-Encoding:
+  x-uuencode`, it prints *"ignoring unknown content transfer encoding"* and
+  writes the uuencoded TEXT out as the file.
+- This engine decodes it, and always did: the uu probe wins the sniff and steps
+  over the boundary lines, so `macextract x` writes the 36-byte payload
+  byte-exact.
+
+The real defect is the one the entry did not state. Where a multipart holds a
+uuencoded part AND something else, the uu probe shadows the MIME walk and the
+rest is dropped — measured on a two-part message, this engine lists
+`uupart.txt` alone where munpack writes both it and the base64 `wanted.bin`.
+Which means the oracle exists for the half that matters: munpack reads every
+part a uu part is hiding, and this machine writes the specimen.
+
+**`message/partial`.** The entry said the specimen was missing. mpack writes
+it: `mpack -m 10000 -o out.mime payload.bin` cuts 30,000 bytes into
+`out.mime.01`…`.04`, each a `message/partial`, and munpack reassembles them
+byte-exact. Two things a harness on that has to know, both of which cost a run
+here:
+
+- munpack reassembles through a fixed directory, `/usr/tmp/m-prts-$USER`, and
+  does not create it;
+- mpack stamps `total=` on EVERY part, and `handlePartial` creates that
+  directory's `CT` file with `os_createnewfile` — `O_EXCL` — so parts 2..n die
+  with *"CT: File exists"* unless `CT` is removed between invocations. This is
+  mpack failing to round-trip with its own twin, not a defect in either.
+
+The entry also described this engine as decoding "each file on its own", a part
+that is half an attachment yielding half a file. None of the four parts decodes
+at all: part 1 sniffs as a MIME message and then fails *"not a recognized
+archive"*, parts 2–4 are *"format not recognized"*, and `src/fmt_mime.c` does
+not contain the word *partial*.
+
+**What transfers.** BLOCKERS.md already keeps *"ask what evidence a tolerance
+rests on; if the answer is our own output, it cannot fail"*. This is its
+neighbour and it is now in that list: **an open item that describes what our
+own binary does is the cheapest claim in the repository to check, and is
+therefore the one most likely to have been written rather than run.** Both
+items had been filed under *waiting on a file*, which is a decision to stop
+looking; neither was ever blocked on a file. The section they were moved to
+names its oracle instead of its shortage.
