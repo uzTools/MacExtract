@@ -949,6 +949,23 @@ a harness can click is not the same list.
   other way. A comment naming its source reads as sourced; nobody asked
   whether the source was the vendor.
 
+- **"Five archive formats are still unnamed for want of a reference: zstd,
+  lzip, brotli, lrzip and WIM — no implementation or spec for them is in
+  `reference/`."** Written 2026-08-26, withdrawn 2026-08-29. For lzip it was
+  false the day it was written: deark's `modules/unsupported.c` tests `LZIP`
+  at offset 0, and deark had been in `reference/` since 2026-08-25, cloned
+  for ARC's Distilled method. The module's whole purpose — naming formats it
+  will not open — is `fmt_foreign.c`'s purpose, so it is the first place to
+  have looked. **Cost:** three days of a `.lz` reading as "not recognized"
+  when the constant was in the tree, and the other four sitting behind a
+  sentence that made all five look equally blocked. **Why it survived:** it
+  is the mechanism this list already names — a limitation stated about the
+  environment that is really a claim about somebody's search — and the search
+  had been for "a spec for lzip" rather than for "a file in reference/ that
+  names formats". The fifth, brotli, turned out not to be a search at all:
+  RFC 7932 gives it no magic number, so it cannot be identified by anything
+  (OPEN_ITEMS.md, part 1).
+
 ### Corrected figures and superseded write-ups
 
 - **The OS 9 boot time** was recorded as "about four minutes", then "20-45

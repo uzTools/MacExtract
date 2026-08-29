@@ -37,7 +37,7 @@ whole corpus for that format (engine allocations only, via
 | StuffIt SpaceSaver (`SPSV`) | extract | **every method the format has**: 0 stored, 1 and 2 (the "Original" LZSS pair), 3 "Alg 3" (Huffman + LZ77), 4 "Alg 4" — the last two starting their window loaded with a preset dictionary that ships inside SpaceSaver✦✦ | no oracle and no fixture, but **Aladdin's own compressors run under `qemu-m68k` and 44 forks they wrote read back byte-exact** (`tools/ssmodule/`, 2026-08-25), plus 160 corrupted variants, a synthetic round-trip and unit tests✦✦ | 4 KB stored, 8 KB method 1, 84 KB method 2, 41 KB method 3, **36 KB** for what SpaceSaver writes (measured on a Mac Plus); 68 KB is the ceiling the width byte allows. The dictionary is 9.7 KB of static data, not heap | full |
 | LZH / LHA (.lzh, .lha) | extract | -lh0- store, -lh1- (LHarc's adaptive Huffman, shared with StuffIt method 5), **-lh2- (both codes adaptive, the position tree growing with the output)**, **-lh3- (static, rebuilt per block)**, -lh4-/-lh5-/-lh6-/-lh7- (static Huffman over a 4/8/32/64 KB window), -lhd- directories, LArc's -lz4-/-lz5-/-lzs-; header levels 0, 1, 2 and 3; **MacLHA's MacBinary payload unwrapped into two forks**; every method the format has except PMarc✵ | 8 fixtures (1 real Amiga archive + 7 of lhasa's) + **182 archives from fourteen writers**, each graded against `unar` and against lhasa, + 12 sets written by LHa 1.14i itself, + 15 -lh2- and 6 -lh3- entries generated for the purpose✵ | 4–74 KB✵ | full |
 | AppleLink package (.pkg) | detect only | — | no specimen anywhere: the probe is Aladdin's own recogniser, at 0 false positives across 928 fixtures (*AppleLink packages*, below) | — | — |
-| RAR, RAR 5, 7-Zip, xz, bzip2, Cabinet, Zoo, ar/.deb, cpio, ARJ | **named only**, never extracted | — | archives written here by bzip2, xz, 7z, cpio and ar and confirmed by p7zip; real RAR, RAR 5 and CAB out of libarchive's test suite; synthetic Zoo, ARJ and Cabinet identified by deark; 0 false positives in 940 fixtures (*Archives named but not extracted*, below) | — | — |
+| RAR, RAR 5, 7-Zip, xz, bzip2, Cabinet, Zoo, ar/.deb, cpio, ARJ, Zstandard, lzip, lrzip, WIM | **named only**, never extracted | — | archives written here by bzip2, xz, 7z, cpio and ar and confirmed by p7zip; real RAR, RAR 5 and CAB out of libarchive's test suite; synthetic Zoo, ARJ and Cabinet identified by deark; 0 false positives in 940 fixtures (*Archives named but not extracted*, below) | — | — |
 
 ✦ **DiskDoubler, in scope since 2026-08-15** (M12), where every status file
 here used to call it detect-only. Three containers — a single compressed file
@@ -1389,7 +1389,7 @@ put in front of it.
 ## Archives named but not extracted
 
 **Named since 2026-08-26**, extraction still out by the brief (OPEN_ITEMS.md,
-part 1). Nine PC-side families, one probe, `src/fmt_foreign.c`:
+part 1). Thirteen PC-side families, one probe, `src/fmt_foreign.c`:
 
 | format | test | source |
 |---|---|---|
@@ -1404,6 +1404,10 @@ part 1). Nine PC-side families, one probe, `src/fmt_foreign.c`:
 | ar / `.deb` | `!<arch>` 0a | deark `ar.c`, `de_identify_ar` |
 | cpio | `070707`, `070701`, `070702`, or the binary magic in either byte order | deark `cpio.c`, `identify_cpio_internal` |
 | ARJ | 60 ea at 0, header size 32..2600, header CRC-32 | XADMaster `XADARJParser.m` (the CRC), deark `arj.c` (the bounds) |
+| Zstandard | 28 b5 2f fd, **or** a skippable frame 5x 2a 4d 18 | RFC 8878 §3.1.1 and §3.1.2, `reference/notes/zstd_rfc8878.txt` |
+| lrzip | `LRZI` and at least `MAGIC_LEN` = 24 bytes | `write_magic`/`get_magic`, `reference/lrzip/lrzip.c` |
+| WIM | `MSWIM` 00 00 00, header size at +8 = 208 | `WIM_MAGIC`, `WIM_HEADER_DISK_SIZE`, `reference/wimlib/include/wimlib/header.h` |
+| lzip | `LZIP`, and nothing to corroborate it with | deark `unsupported.c`, `get_fmt` — which rates it **50** where it rates xz 90 |
 
 **What grades them** (`tools/run_foreign.py`, in `ci.sh`): archives written
 here by bzip2, xz, 7z, cpio in its three header shapes and ar — each one then
@@ -1429,12 +1433,30 @@ cannot open RAR files."**, photographed on System 6.0.8 on 2026-08-26
 sentence is the point of the whole file: the archive is intact, and the next
 move is a program that opens it.
 
-**Five are still unnamed** — zstd, lzip, brotli, lrzip and WIM — because no
-implementation or spec for them is in `reference/`, and rule #1 does not bend
-for a constant that would be easy to look up (OPEN_ITEMS.md, part 2). A
-`.zipx` needs nothing: it is a zip, the zip probe claims it, and its entries
+**Four joined on 2026-08-29**, when their references were fetched — and one
+of the four, lzip, had been sitting in `reference/deark` since deark was
+cloned for ARC's Distilled method. The item that tracked them read *"no
+implementation or spec for them is in `reference/`"*, and for lzip that was
+never true (BLOCKERS.md).
+
+**lzip is the weakest probe in this file and is ordered last for it.** Four
+ASCII bytes with nothing behind them: a text file that opens with the word
+LZIPPER is claimed, which is measured rather than feared. deark rates it 50
+against xz's 90 for the same reason, and this engine has no confidence to
+report — so it is tested after every corroborated magic, and only a file that
+matched nothing else can reach it.
+
+**brotli is not on that list and never will be.** RFC 7932 §9.1 is the entire
+stream header — one to seven bits of WBITS, no magic, no signature, no
+version byte — so a raw brotli stream cannot be identified from its contents
+by this or any other program. That is a property of the format, not a missing
+reference, and it moved to OPEN_ITEMS.md part 1 on 2026-08-29.
+`reference/notes/brotli_rfc7932.txt` is kept as the evidence for a negative.
+
+A `.zipx` needs nothing: it is a zip, the zip probe claims it, and its entries
 are refused one at a time by method. A `.cpgz` is gzip, the gzip layer unwraps
-to the cpio inside it, and that cpio is now named too.
+to the cpio inside it, and that cpio is now named too. Apple Archive (`.aar`)
+is the one family left wanting a reference.
 
 ## Envelope auto-unwrap
 

@@ -161,6 +161,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-29 (the yardstick) — the free tool, run at last
 - 2026-08-29 (SuperDisk! method 13) — the specimen that would have settled nothing
 - 2026-08-29 (methods 3, 4 and 5, graded across the format) — the gap was in our encoder
+- 2026-08-29 (four more names) — one of the five references was already here
 
 ---
 
@@ -9235,3 +9236,45 @@ reference reads as sourced, and nobody asked whether that reference was the
 vendor. Salient's is, and it refuses. The engine now refuses too, and 91/91
 DiskDoubler fixtures are unchanged — no real fork carries the token, which
 is exactly what a vendor expander rejecting it predicts.
+
+## 2026-08-29 (four more names) — one of the five references was already here
+
+OPEN_ITEMS.md carried *"Five archive formats are still unnamed for want of a
+reference: zstd, lzip, brotli, lrzip and WIM"*, with the note that rule #1
+does not bend for a constant that is easy to look up. Four are named now and
+the fifth never can be. Two things are worth keeping about how that went.
+
+**lzip's reference was in `reference/deark` the whole time.** deark's
+`unsupported.c` — a module whose entire job is naming formats it will not
+open, which is exactly this file's job — tests `LZIP` at offset 0 and has
+since deark was cloned for ARC's Distilled method on 2026-08-25. The item
+said no implementation or spec was in `reference/`; for one of its five that
+was false on the day it was written. **A "we have no reference for X" list is
+a search, and a search is a claim about somebody's looking** (BLOCKERS.md
+names that mechanism; this is the fourth time it has fired here).
+
+**brotli cannot be identified, and that is a finding rather than a gap.** RFC
+7932 section 9.1 is the whole stream header: one to seven bits of WBITS. No
+magic, no signature, no version, no length. Every other format in
+`fmt_foreign.c` was waiting for somebody to look up a constant; this one has
+no constant to look up, so it moves to part 1 with the RFC kept as evidence
+for a negative. Filing it beside four that WERE lookups is what made it look
+like the same kind of thing for three days.
+
+### What the weakest probe is allowed to be
+
+lzip's magic is four ASCII bytes with nothing behind them, and deark rates it
+50 against xz's 90 for that reason. This engine reports no confidence — a
+sniff returns one answer — so the confidence had to be spent somewhere, and
+it was spent on ORDER: lzip is tested after every corroborated magic in the
+file, so only a file that matched nothing else reaches it. The false positive
+is real and is measured rather than feared: a text file opening with the word
+LZIPPER is claimed as an lzip archive. That is the honest cost of naming it
+at all, and naming it is still worth more to somebody holding a `.lz` than
+"not recognized" is.
+
+The other three each had something to corroborate the magic with, and each
+corroboration is tested by removing it: zstd's skippable-frame range has one
+value above and one below it, lrzip's `MAGIC_LEN` rejects a 23-byte file that
+starts with `LRZI`, and WIM's header-size field rejects 207 where wimlib
+accepts only 208.

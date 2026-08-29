@@ -17,11 +17,15 @@
  * attic/fmt_diskimage.c and DECISIONS.md 2026-08-27.)
  *
  * The rule for what is in this file: a magic number from a reference
- * implementation in `reference/`, and nothing invented. Formats with no
- * reference here — zstd, lzip, brotli, lrzip, WIM, AAR — are left
- * UNKNOWN and named in OPEN_ITEMS.md instead. A `.zipx` needs nothing:
- * it is a zip, the zip probe claims it, and its entries are refused one
- * at a time by method.
+ * implementation in `reference/`, and nothing invented. Four more were
+ * added on 2026-08-29 once their references were fetched — and one of
+ * them, lzip, had been in `reference/deark` the whole time. What is
+ * still left out is AAR, for want of a reference, and **brotli, which
+ * cannot be identified at all**: RFC 7932 section 9.1 is its entire
+ * stream header, one to seven bits of WBITS, with no magic, no
+ * signature and no version byte (OPEN_ITEMS.md, part 1). A `.zipx`
+ * needs nothing: it is a zip, the zip probe claims it, and its entries
+ * are refused one at a time by method.
  *
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
@@ -133,6 +137,40 @@ UncFormat unc_foreign_probe(const uint8_t *head, int32_t len,
 
     if (cpio_head(head, len)) return UNC_FORMAT_CPIO;
     if (arj_at_zero(head, len)) return UNC_FORMAT_ARJ;
+
+    /* Zstandard, both frame kinds: the ordinary one is magic 0xFD2FB528
+     * and a stream may also OPEN with a skippable frame, whose magic is
+     * any of 0x184D2A50..0x184D2A5F. Both little-endian.
+     * Source: reference/notes/zstd_rfc8878.txt, sections 3.1.1 and
+     * 3.1.2 (RFC 8878). */
+    if (len >= 4) {
+        if (head[0] == 0x28 && head[1] == 0xb5 && head[2] == 0x2f &&
+            head[3] == 0xfd)
+            return UNC_FORMAT_ZSTD;
+        if ((head[0] & 0xf0) == 0x50 && head[1] == 0x2a &&
+            head[2] == 0x4d && head[3] == 0x18)
+            return UNC_FORMAT_ZSTD;
+    }
+
+    /* lrzip: "LRZI", then a major and a minor version byte, in a header
+     * the writer always emits whole. The 24 is `MAGIC_LEN`, which is
+     * what stops four ASCII letters in a text file from being claimed.
+     * Source: reference/lrzip/lrzip.c, write_magic and get_magic. */
+    if (len >= 24 && mem_is(head, "LRZI", 4)) return UNC_FORMAT_LRZIP;
+
+    /* Microsoft's WIM. The magic is eight bytes and the header size at
+     * +8 corroborates it: wimlib accepts one value, 208.
+     * Source: reference/wimlib/include/wimlib/header.h, WIM_MAGIC and
+     * WIM_HEADER_DISK_SIZE. */
+    if (len >= 12 && mem_is(head, "MSWIM\0\0\0", 8) &&
+        unc_get_u32le(head + 8) == 208u)
+        return UNC_FORMAT_WIM;
+
+    /* lzip. Four ASCII bytes and nothing to corroborate them with —
+     * which is why deark, the reference, gives it a confidence of 50
+     * where it gives xz and 7z 90. It is last for that reason.
+     * Source: reference/deark/modules/unsupported.c, get_fmt. */
+    if (len >= 4 && mem_is(head, "LZIP", 4)) return UNC_FORMAT_LZIP;
 
     return UNC_FORMAT_UNKNOWN;
 }

@@ -3208,6 +3208,42 @@ static void test_foreign(void)
         fgn_is(arj, (int32_t)sizeof arj, UNC_FORMAT_UNKNOWN);
     }
 
+    /* Zstandard: the ordinary frame magic, and the skippable-frame range
+     * 0x184D2A50..5F, which is sixteen valid magics and one that is not.
+     * Source: reference/notes/zstd_rfc8878.txt, 3.1.1 and 3.1.2. */
+    fgn_sig("\x28\xb5\x2f\xfd", 4, UNC_FORMAT_ZSTD);
+    fgn_sig("\x50\x2a\x4d\x18", 4, UNC_FORMAT_ZSTD);
+    fgn_sig("\x5f\x2a\x4d\x18", 4, UNC_FORMAT_ZSTD);
+    fgn_sig("\x60\x2a\x4d\x18", 4, UNC_FORMAT_UNKNOWN);
+    fgn_sig("\x4f\x2a\x4d\x18", 4, UNC_FORMAT_UNKNOWN);
+    fgn_sig("\x28\xb5\x2f\xfe", 4, UNC_FORMAT_UNKNOWN);
+
+    /* lzip: four ASCII bytes and nothing else to check, which is why
+     * deark rates it 50 where it rates xz 90. */
+    fgn_sig("LZIP", 4, UNC_FORMAT_LZIP);
+    fgn_sig("LZIQ", 4, UNC_FORMAT_UNKNOWN);
+
+    /* lrzip: "LRZI" plus a header the writer always emits whole, so a
+     * file shorter than MAGIC_LEN is not one however it starts. */
+    fgn_sig("LRZI\x00\x06", 6, UNC_FORMAT_LRZIP);
+    {
+        uint8_t lrz[23];                              /* one short of 24 */
+        for (i = 0; i < (int32_t)sizeof lrz; i++) lrz[i] = 0;
+        lrz[0] = 'L'; lrz[1] = 'R'; lrz[2] = 'Z'; lrz[3] = 'I';
+        fgn_is(lrz, (int32_t)sizeof lrz, UNC_FORMAT_UNKNOWN);
+    }
+
+    /* WIM: eight bytes of magic, corroborated by the one header size
+     * wimlib accepts. */
+    for (i = 0; i < (int32_t)sizeof buf; i++) buf[i] = 0;
+    buf[0] = 'M'; buf[1] = 'S'; buf[2] = 'W'; buf[3] = 'I'; buf[4] = 'M';
+    buf[8] = 208;
+    fgn_is(buf, (int32_t)sizeof buf, UNC_FORMAT_WIM);
+    buf[8] = 207;
+    fgn_is(buf, (int32_t)sizeof buf, UNC_FORMAT_UNKNOWN);
+    buf[8] = 208; buf[5] = 1;                         /* magic is 8 bytes */
+    fgn_is(buf, (int32_t)sizeof buf, UNC_FORMAT_UNKNOWN);
+
     /* Named, and refused without writing anything. */
     {
         UncIO io;

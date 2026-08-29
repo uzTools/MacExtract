@@ -84,6 +84,10 @@ static const UncFormatDesc unc_formats[] = {
     { UNC_FORMAT_AR,          "ar archive",          0, 0, NULL },
     { UNC_FORMAT_CPIO,        "cpio",                0, 0, NULL },
     { UNC_FORMAT_ARJ,         "ARJ",                 0, 0, NULL },
+    { UNC_FORMAT_ZSTD,        "Zstandard",           0, 0, NULL },
+    { UNC_FORMAT_LZIP,        "lzip",                0, 0, NULL },
+    { UNC_FORMAT_LRZIP,       "lrzip",               0, 0, NULL },
+    { UNC_FORMAT_WIM,         "WIM",                 0, 0, NULL },
 };
 
 static const UncFormatDesc *unc_desc(UncFormat f)

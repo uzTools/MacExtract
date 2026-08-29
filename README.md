@@ -91,8 +91,9 @@ keeps half its key in the file's resource fork, so a copy that lost the fork
 cannot be opened by anything.
 
 **Recognises but does not extract:** StuffIt X, AppleLink packages
-(`.pkg`), and the PC-side archives — RAR, 7-Zip, xz, bzip2, Cabinet, Zoo,
-ARJ, cpio and `ar`/`.deb`. You get *"MacExtract cannot open RAR files."*
+(`.pkg`), and the PC-side archives — RAR, 7-Zip, xz, bzip2, Zstandard, lzip,
+lrzip, Cabinet, WIM, Zoo, ARJ, cpio and `ar`/`.deb`. You get
+*"MacExtract cannot open RAR files."*
 rather than something that looks like a damaged download: the archive is
 fine, and a modern unarchiver will open it.
 

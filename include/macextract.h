@@ -107,6 +107,10 @@ typedef enum UncFormat {
     UNC_FORMAT_AR,            /* ar / .deb                              */
     UNC_FORMAT_CPIO,          /* .cpio, and the payload of a .cpgz      */
     UNC_FORMAT_ARJ,           /* .arj                                   */
+    UNC_FORMAT_ZSTD,          /* .zst — Zstandard                       */
+    UNC_FORMAT_LZIP,          /* .lz                                    */
+    UNC_FORMAT_LRZIP,         /* .lrz                                   */
+    UNC_FORMAT_WIM,           /* .wim — Windows Imaging                 */
 
     UNC_FORMAT__COUNT
 } UncFormat;

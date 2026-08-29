@@ -57,6 +57,16 @@ unsupported either way.
 
 ## Limits of the formats themselves
 
+- **A raw brotli stream cannot be identified, by this or any program.** RFC
+  7932 section 9.1 is its entire stream header: one to seven bits of WBITS,
+  and nothing else. No magic number, no signature, no version byte, no
+  length. So `unc_sniff` will never name a `.br`, and the reason is the
+  format rather than a missing reference — which is where it was filed until
+  2026-08-29. **What would change it:** nothing in the format. A host that
+  trusts the filename could act on `.br`, which is a naming question and not
+  an identifying one. `reference/notes/brotli_rfc7932.txt` is kept as the
+  evidence for a negative.
+
 - **A uuencoded set missing a MIDDLE part decodes short, and silently.** A
   document posted in several parts joins and decodes — the mail headers
   between parts are stepped over — but uuencode carries no length and no
@@ -98,13 +108,12 @@ somebody's **search** (BLOCKERS.md, SuperDisk!'s compressor); does the search
 name the **right tool** (BLOCKERS.md 2026-08-25); and **have you looked at
 all** (BLOCKERS.md, the ARC 7 row, filed and disproved the same day).
 
-- **Five archive formats are still unnamed for want of a reference:
-  zstd, lzip, brotli, lrzip and WIM.** Missing: a **reference**. Nine
-  others were named on 2026-08-26 out of `reference/XADMaster` and
-  `reference/deark` (FORMATS.md, *Archives named but not extracted*); rule #1
-  does not bend for a constant that is easy to look up. Extraction stays out
-  of scope either way (Part 1). **What would close it:** an implementation or
-  spec in `reference/` for any of them.
+- **Apple Archive (`.aar`) is unnamed for want of a reference.** The other
+  five in this bullet closed on 2026-08-29: zstd, lrzip, WIM and lzip are
+  named (FORMATS.md, *Archives named but not extracted*), and brotli moved
+  to part 1 because it cannot be identified at all. Extraction stays out of
+  scope either way. **What would close it:** an implementation or spec in
+  `reference/`.
 
 - **A SpaceSaver file written by SpaceSaver.** Every codec is graded against
   Aladdin's own modules (FORMATS.md, *StuffIt SpaceSaver*), so what rests on

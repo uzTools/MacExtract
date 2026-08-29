@@ -155,3 +155,41 @@ open('cpt_users_guide.txt', 'w').write(re.sub(r'\n{3,}', '\n\n', ''.join(out)))
     rm -f /tmp/cpt_guide.pdf
 fi
 echo "references ready"
+
+# zstd — RFC 8878, the Zstandard frame format. The only reference this
+# project needs for it: the frame magic (0xFD2FB528, little-endian) and
+# the skippable-frame range 0x184D2A50..5F, both in section 3.1.1/3.1.2.
+[ -f reference/notes/zstd_rfc8878.txt ] || \
+    curl -sL -o reference/notes/zstd_rfc8878.txt \
+        "https://www.rfc-editor.org/rfc/rfc8878.txt"
+
+# brotli — RFC 7932, kept for what it does NOT contain. Section 9.1 is the
+# whole stream header: 1 to 7 bits of WBITS and nothing else. There is no
+# magic number, no signature, no version byte, so a raw brotli stream
+# cannot be identified from its contents by anything (OPEN_ITEMS.md,
+# part 1). This file is the evidence for that.
+[ -f reference/notes/brotli_rfc7932.txt ] || \
+    curl -sL -o reference/notes/brotli_rfc7932.txt \
+        "https://www.rfc-editor.org/rfc/rfc7932.txt"
+
+# lrzip (Con Kolivas) — `write_magic` and `get_magic` in lrzip.c are the
+# format's header: "LRZI", a major and a minor version byte, in a 24-byte
+# MAGIC_LEN block.
+if [ ! -d reference/lrzip ]; then
+    mkdir -p reference/lrzip
+    curl -sL -o /tmp/lrzip.tar.gz \
+        "http://deb.debian.org/debian/pool/main/l/lrzip/lrzip_0.660.orig.tar.gz"
+    tar xzf /tmp/lrzip.tar.gz -C reference/lrzip --strip-components=1
+    rm -f /tmp/lrzip.tar.gz
+fi
+
+# wimlib (Eric Biggers) — the only complete reading of Microsoft's WIM
+# there is; `include/wimlib/header.h` carries WIM_MAGIC ("MSWIM\0\0\0")
+# and WIM_HEADER_DISK_SIZE, which is what corroborates it.
+if [ ! -d reference/wimlib ]; then
+    mkdir -p reference/wimlib
+    curl -sL -o /tmp/wimlib.tar.gz \
+        "http://deb.debian.org/debian/pool/main/w/wimlib/wimlib_1.14.5.orig.tar.gz"
+    tar xzf /tmp/wimlib.tar.gz -C reference/wimlib --strip-components=1
+    rm -f /tmp/wimlib.tar.gz
+fi
