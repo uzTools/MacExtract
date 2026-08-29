@@ -1536,6 +1536,20 @@ static int sink_end(void *ctx, int status)
  * less than the files that can be, so every error returns 0 and the
  * walk goes on. It is not counted in fileCount either — that count is
  * what ExtractOne reads to decide whether a layer was an envelope. */
+/* The archive's own note is not an entry, so nothing counted it and
+ * nothing said so when it could not be written: it was dropped in
+ * silence, which is the one thing this report exists to stop. It still
+ * does not fail the archive — it is worth less than the files — but it
+ * is now something that did not come out, and it is listed and counted
+ * like anything else that did not (2026-08-29). */
+static void RepCommentLost(MacSink *s)
+{
+    if (RepNew(1))
+        RepCat("The note this archive carries could not be written "
+               "to the disk");
+    s->errors++;
+}
+
 static int sink_comment(void *ctx, const uint8_t *buf, uint16_t len)
 {
     MacSink *s = (MacSink *)ctx;
@@ -1553,7 +1567,10 @@ static int sink_comment(void *ctx, const uint8_t *buf, uint16_t len)
     for (attempt = 0; ; attempt++) {
         err = MyHCreate(s->vRefNum, s->rootDirID, name);
         if (err == noErr) break;
-        if (err != dupFNErr || attempt >= 9) return 0;
+        if (err != dupFNErr || attempt >= 9) {
+            RepCommentLost(s);
+            return 0;
+        }
         BlockMoveData(base, name, base[0] + 1);
         BumpName(name, attempt + 1);
         if (attempt == 0)
@@ -1564,12 +1581,14 @@ static int sink_comment(void *ctx, const uint8_t *buf, uint16_t len)
     if (MyOpenFork(s->vRefNum, s->rootDirID, name, fsWrPerm, 0,
                    &ref) != noErr) {
         MyHDelete(s->vRefNum, s->rootDirID, name);
+        RepCommentLost(s);
         return 0;
     }
     if (len && (FSWrite(ref, &count, (Ptr)buf) != noErr ||
                 count != (long)len)) {
         FSClose(ref);
         MyHDelete(s->vRefNum, s->rootDirID, name);
+        RepCommentLost(s);
         return 0;
     }
     FSClose(ref);
@@ -4503,17 +4522,34 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
         PStrCat(outcome, unc_format_name(topFmt));
         PStrCat(outcome, " files.");
     }
+    else if (ret != UNC_OK && entries > 0)
+        /* The archive stopped being readable part way down, and what
+         * was read is on the disk: "this file could not be extracted"
+         * is what the user was told until 2026-08-29, about a file that
+         * had just given them entries. What is NOT listed here is
+         * whatever lay beyond the point where the walk stopped — the
+         * engine never saw those entries either, so nothing can name
+         * them (FORMATS.md, *Name limits*). */
+        PStrCat(outcome, "Extraction stopped part way through this "
+                         "archive.");
     else if (ret != UNC_OK)
         PStrCat(outcome, "This file could not be extracted.");
+    /* A run that finished with something behind it. WHERE THE LIST IS
+     * BEING SHOWN the verdict says only that — every entry that failed
+     * is named a row above it, with what is wrong with it, and a
+     * sentence that repeats the list in the vaguest possible terms is
+     * worth less than the word that distinguishes this from a clean
+     * run. Without the list those sentences are all the user gets, so
+     * they stay: two lines, because the alert wraps between 32 and 36
+     * characters and a third sits level with the OK button
+     * (tools/vmac/README.md). */
     else if (gUnsupported)
-        /* Ahead of the generic one: this is the failure whose answer is
-         * the FILE, and a user who knows that can send it. Two lines —
-         * the alert wraps between 32 and 36 characters and a third line
-         * sits level with the OK button (tools/vmac/README.md). */
-        PStrCat(outcome, "Some entries use a method this version "
-                         "cannot read yet.");
+        PStrCat(outcome, gRepN ? "Extraction finished."
+                               : "Some entries use a method this version "
+                                 "cannot read yet.");
     else if (errors)
-        PStrCat(outcome, "Some entries could not be extracted.");
+        PStrCat(outcome, gRepN ? "Extraction finished."
+                               : "Some entries could not be extracted.");
     else {
         PStrCat(outcome, "Extraction complete.");
         alrt = kDoneALRT;

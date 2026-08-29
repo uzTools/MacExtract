@@ -738,14 +738,23 @@ int unc_sit_extract(UncCtx *c)
     uint8_t *iobuf, *obuf;
     UncCrypt *cr;
     uint32_t iocap = UNC_IOBUF, ocap = UNC_IOBUF;
-    int err = UNC_OK;
+    int err = UNC_OK, cut = 0;
 
     fsize = unc_io_size32(c->io);
 
     if (unc_read_at(c->io, 0, hdr, 22) != UNC_OK) return UNC_ERR_FORMAT;
     if (!unc_sit_probe(hdr, 22, NULL)) return UNC_ERR_FORMAT;
+    /* The archive states its own length. A file SHORTER than that is
+     * cut, and clamping the walk to what is there — which is what keeps
+     * it inside the file — is exactly the step that used to erase the
+     * evidence: the loop then ended tidily at the new end and the run
+     * reported success with the entries beyond the cut missing. Clamp,
+     * and remember (2026-08-29; BLOCKERS.md). */
     totalsize = unc_get_u32be(hdr + 6);
-    if (fsize != UNC_SIZE_UNKNOWN && totalsize > fsize) totalsize = fsize;
+    if (fsize != UNC_SIZE_UNKNOWN && totalsize > fsize) {
+        totalsize = fsize;
+        cut = 1;
+    }
     pos = 22;
 
     iobuf = (uint8_t *)unc_alloc(c->al, iocap + ocap + (uint32_t)sizeof *cr);
@@ -884,5 +893,10 @@ int unc_sit_extract(UncCtx *c)
 
 out:
     unc_free(c->al, iobuf);
+    /* A walk that finished tidily over a file shorter than the archive
+     * says it is finished over half an archive. What was decoded stands
+     * — it is on the disk and it is correct — but the run is not
+     * complete, and until 2026-08-29 it said it was. */
+    if (err == UNC_OK && cut) err = UNC_ERR_TRUNCATED;
     return err;
 }

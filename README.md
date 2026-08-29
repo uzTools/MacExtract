@@ -46,7 +46,7 @@ out — you are told which, both names in full, with the result underneath
 rather than in place of it. **Save as Text** files the whole list as a
 document, because a Mac Plus screen has no scrollback:
 
-![A scrolling list: MyQuarterlyReportForTheBoard.rtf renamed to MyQuarterlyReportForTheBoar.rtf, Notes.txt renamed to Notes~1.txt, two folders combined, an entry damaged, and eighteen photographs each named in full with what it became; under the list, in bold, Some entries could not be extracted, and the buttons Save as Text and OK](docs/screens/4b-report.png)
+![A scrolling list: MyQuarterlyReportForTheBoard.rtf renamed to MyQuarterlyReportForTheBoar.rtf, Notes.txt renamed to Notes~1.txt, two folders combined, an entry damaged, and eighteen photographs each named in full with what it became; under the list, in bold, Extraction finished, and the buttons Save as Text and OK](docs/screens/4b-report.png)
 
 If an archive was split across floppies and a part is not where the first one
 was, you are asked for it — and told straight away if you point at the wrong

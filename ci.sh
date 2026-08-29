@@ -24,6 +24,12 @@ make BUILD=build/san \
 ./build/san/unit_tests || fail "unit tests (sanitizers)"
 MACEXTRACT=build/san/macextract sh tests/run_diff.sh || fail "diff tests (sanitizers)"
 MACEXTRACT=build/san/macextract sh tests/run_robustness.sh || fail "robustness tests (sanitizers)"
+# The property run_robustness.sh cannot have: it accepts exit 0 on a
+# truncated archive, so a walk that hands over the entries before the cut
+# and reports success passes it 9,320 variants clean. This asks the
+# oracle instead — where unar calls a cut archive broken, so must we.
+python3 tools/run_truncation.py --bin build/san/macextract \
+    || fail "truncation tests"
 # The one engine property the byte comparisons cannot see: whether a
 # decoder ever lets its caller breathe. A format that never calls the
 # progress callback extracts perfectly and freezes the Mac's dialog for

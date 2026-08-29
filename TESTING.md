@@ -1250,6 +1250,49 @@ Manager does not have. Nor the BOX those lines are drawn in: whether it
 is legible, scrolls and saves is `interactive.py --report` on an emulated
 Mac (`tools/vmac/README.md`).
 
+## A cut archive is NOTICED (`tools/run_truncation.py`, in `ci.sh`)
+
+Added 2026-08-29, and it exists because the suite next to it cannot ask
+this question. `run_robustness.py` truncates every fixture at 25, 50, 75
+and 98 % and requires the program to "terminate quickly with a normal
+exit code" — **and exit 0 is a normal exit code**. So a walk that reads
+the entries before the cut, hands them over and reports success passes
+it, 9,320 variants clean, while the user is told a run is complete that
+is missing half its files. Two formats did exactly that (BLOCKERS.md).
+
+The question here is a disagreement: when `unar` calls a cut archive
+broken, do we? The most-entried two fixtures of each format are cut to
+25, 50 and 75 % — 87 archives across 15 formats — and a fixture where
+`lsar` reports a parse failure and `macextract t` exits 0 is a failure
+of this suite.
+
+**Established that it can fail** against both defects it was written
+for: putting the DiskDoubler walk's clean-end rule back fails it on
+`ddtf-*.dd`, and removing StuffIt's clamp report fails it four times on
+two `.sit` fixtures.
+
+**It was passing for the wrong reason first.** The fixtures were the
+first two of each format alphabetically, which for DiskDoubler is two
+SINGLE-FILE `.dd` archives — no walk to cut, no way to fail, and the
+check went green against a build with the defect deliberately restored.
+The fixtures are chosen by entry count now.
+
+**What it cannot see.** A format that CANNOT notice: a tar has no
+directory and no end marker, so a cut tar is indistinguishable from a
+short one — `unar` accepts those too, and the row says nothing about
+tar. Nor one CUT POINT that DiskDoubler cannot notice either: a DDA2
+archive may legitimately end without its 0xBBBB marker, leaving less
+than one record after the last entry (`derived-DD_Expand.sea` does, and
+`unar` reads it), so a cut that lands in that same window is
+byte-for-byte a valid ending — `ddtf-ddpro411dd3.dd` cut to a fifth is
+the measured case (DECISIONS.md 2026-08-29, *a cut archive*). A format `unar` cannot read at all (SuperDisk!, Now Compress,
+SpaceSaver): it fails on the whole archive as well, so its failure is
+not evidence about the cut one. And WHERE the cut falls — three
+fractions per fixture, so a hole that only opens at one offset is not
+found by three. A wider sweep is not in `ci.sh` but has been run: all
+932 fixtures at the same three fractions, 2,796 cut archives, none
+silent (2026-08-29).
+
 ## The progress callback (`tools/run_ticks.py`, in `ci.sh`)
 
 `UncProgress.tick` is the engine's only cooperative yield, and on classic

@@ -872,6 +872,32 @@ a harness can click is not the same list.
   closed on 2026-08-29, when the run report replaced the alert
   (FORMATS.md, *Name limits*).
 
+- **"9,320 robustness variants clean"** — read, for two years of
+  commits, as *damaged input is handled*. Withdrawn 2026-08-29: what
+  the suite requires of a truncated archive is that the program
+  "terminate quickly with a normal exit code", and **exit 0 is one**.
+  A walk that reads the entries before the cut, hands them over and
+  reports SUCCESS passes every variant. Two formats did: a DiskDoubler
+  archive cut to three fifths extracted the entries before the cut and
+  said "Extraction complete." (DDAR ends at EOF, so a header that would
+  not read was its end; DDA2 has an end marker and never reaching it
+  was not checked), and a StuffIt archive shorter than its own header
+  says it is had that length **clamped to the file** — the step that
+  keeps the walk inside the file is the step that erased the evidence.
+  `unar` calls all of those files broken. **Cost:** a user extracting a
+  half-downloaded archive was told the run was complete, for both of the
+  formats this project exists for — DiskDoubler since M13 and StuffIt
+  since M1 — and no suite here could have said otherwise. Found by a
+  question about what the end-of-run box can and cannot tell the user.
+  Both are fixed and `tools/run_truncation.py` now asks the oracle;
+  the corpus-wide sweep is 2,796 cut archives, none silent. **Why it
+  survived:** the number was the claim. 9,320 is a big number attached
+  to the word "clean", and nobody asked what the suite compares — it
+  compares nothing, by design, because the same suite also feeds
+  bit-flips where any answer is defensible. This is the tenth smell in
+  the list below, an aggregate that cannot fail on the property it never
+  aggregates, in the file that names it.
+
 - **"The Mac shell numbers a collision `~1`..`~9`, so two entries whose
   names are the same for 31 characters both come out."** Written
   2026-08-28 in the entry above, from the test that had just been added;

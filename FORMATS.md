@@ -1905,6 +1905,10 @@ that arrived WITH a suffix generally came off a machine that has neither
 — no resource fork, no Finder types in the archive — so the suffix is
 the only thing that says what opens it (DECISIONS.md 2026-08-29).
 
+The archive's own note is in it too: a comment that could not be written
+was dropped in silence until 2026-08-29 and is now listed and counted
+like anything else that did not come out.
+
 | the report holds | measured |
 |---|---|
 | lines kept | 64, of which the last **16 are reserved for failures** — 100 renames must not push out the one line to act on |
@@ -1912,12 +1916,22 @@ the only thing that says what opens it (DECISIONS.md 2026-08-29).
 | rows a line takes | as many as the box needs, wrapped at a measured width and **broken after the name** where it has to wrap, so one row is what the archive called it and the next is what became of it |
 | rows visible at once | 20, Geneva 9 on 11-point rows, in a 460×300 box at (30,26) — the whole of it on a 512×342 Mac Plus screen. A list longer than that scrolls under the last two, which hold a blank line and the outcome |
 | static cost | 6,144 B of lines + 1,632 B of folder memo, against the ~64 KB the 1 MB floor target has spare (*the PAK methods*, 2026-08-25) |
-| the application | 184,320 B of MacBinary, from 178,944 B before it |
+| the application | 184,576 B of MacBinary, from 178,944 B before it |
 
 The outcome — *"Extraction complete."*, and every other sentence the
 alert used to carry — is the list's LAST LINE, after a blank one and in
 bold, and is pinned to the bottom row whenever the list scrolls, so it
-cannot be scrolled out of sight; **Save as Text** writes the same lines,
+cannot be scrolled out of sight. A run that finished with entries that
+failed reads **"Extraction finished."** where the list is shown, and
+keeps the old *"Some entries could not be extracted."* where it is not;
+a run whose ARCHIVE stopped being readable part way reads **"Extraction
+stopped part way through this archive."** — photographed on System 6.0.8
+over a `.sit` cut to 60 %, which said *"Extraction complete."* until
+2026-08-29 (BLOCKERS.md, *9,320 robustness variants clean*). Where the
+list is shown:
+with every failure named a row above, a sentence that restates the list
+in vaguer terms is worth less than the word that tells this from a clean
+run. Then: **Save as Text** writes the same lines,
 blank line and outcome as a `TEXT`/`ttxt` document, which is what a
 screen with no scrollback needs. A run with nothing per-entry to say
 still ends in the one-line alert. Reasoning: DECISIONS.md 2026-08-29,
@@ -2710,9 +2724,10 @@ extracts byte-exact on a 1 MB Mac Plus. The six StuffIt 5 rows, which were the
 last to arrive, with peak heap as the Mac itself reports it.
 
 **The three heaviest were re-run at 1 MB on 2026-08-29**, after the
-end-of-run report took ~8 KB of static RAM and 4.6 KB of application off
-this machine's margin (*Name limits*): **3/3 byte-exact**, at 472,137 B,
-559,805 B and 482,861 B of peak heap — Troi-ClipSave, Library_ISBN and
+end-of-run report took ~8 KB of static RAM and 5.6 KB of application off
+this machine's margin (*Name limits*), and again on the binary that
+ships: **3/3 byte-exact both times**, at 472,137 B, 559,805 B and
+482,861 B of peak heap — identical to the byte between the two runs — Troi-ClipSave, Library_ISBN and
 a2basic in that order. **What was NOT re-run:** the other 66 fixtures of
 the sample, at either size; the 2,048 B growth of M33 is the precedent
 for that and the 20 KB growth of 2026-08-23 is the precedent for when a

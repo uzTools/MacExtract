@@ -163,6 +163,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-29 (methods 3, 4 and 5, graded across the format) — the gap was in our encoder
 - 2026-08-29 (four more names) — one of the five references was already here
 - 2026-08-29 (the end-of-run report) — what the run cost, on a screen with no scrollback
+- 2026-08-29 (a cut archive) — where the archive ends and where the file ends
 
 ---
 
@@ -9325,6 +9326,14 @@ shell to stamp, and the suffix is the only thing left that says what opens it.
 A `.txt` from a zip is the case, and it is not a rare one. The CLI never had
 the question: 255 bytes rarely needs the room.
 
+**The verdict is worded for whether the list is there.** "Some entries could
+not be extracted." was the whole of what a user was told, so it had to carry
+the news. Above a list that names each failure and what is wrong with it, it
+restates that list in the vaguest terms available; what is left worth saying
+is the one word that tells this run from a clean one, so the box reads
+"Extraction finished." and the alert — where there is no list, and the
+sentence is still all there is — is unchanged.
+
 **A name goes in whole, and the box wraps it.** The lines were fixed-width
 records with the names elided at 36 characters, which is fine until an
 archive holds eighteen photographs whose names differ at character 34: the
@@ -9384,3 +9393,61 @@ fixtures, no two names alike for 31 characters, nothing damaged) or by the
 mock (which refused nothing). What reached them was **an archive built to
 make the interface say every sentence it has**, which is a different
 instrument from a fixture built to be decoded correctly.
+
+
+## 2026-08-29 (a cut archive) — where the archive ends and where the file ends
+
+The end-of-run box lists what did not come out. That invites the question the
+maintainer asked of it — *is there a way to know what hasn't been extracted?*
+— and answering it honestly meant checking, rather than asserting, that every
+entry the engine declines reaches the sink. Every one does. What does not is
+an entry the walk never reaches, and two formats were ending their walks at
+the wrong place:
+
+- **DiskDoubler DDAR ends where the FILE ends**, because the format has no
+  end marker, so a header that would not read was taken for the end. A cut
+  download therefore extracted the entries before the cut and reported
+  success. The end is now the file's END exactly: arriving anywhere else —
+  short of it, or past it because an entry's data was stepped over — is
+  truncation. Inside the file every entry position must hold a `DDAR` magic,
+  so a position that does not is damage as well.
+- **DiskDoubler DDA2 has an end marker and never checked for it.** Falling out
+  of the loop any other way now returns `UNC_ERR_TRUNCATED` — with one
+  exception the corpus supplied within the hour: `derived-DD_Expand.sea` ends
+  after its last entry with 38 bytes and no marker at all, and `unar` reads
+  it, so a walk that runs out of file INSIDE the file with less than a record
+  left has reached a real ending. Being sent PAST the end is what a cut looks
+  like. The residue is a cut that lands in that same 46-byte window, which is
+  indistinguishable from the valid ending and is written down as such
+  (TESTING.md) rather than guessed at. The first version of this rule called
+  that `.sea` truncated and `./ci.sh` failed on it — 931/932 — which is the
+  whole reason the fixture corpus is the arbiter of a rule like this and not
+  the format documentation.
+- **StuffIt clamps the archive's stated length to the file's actual length.**
+  That clamp is what keeps the walk inside the file, and it is the same step
+  that erased the evidence: the loop then ended tidily at the new end. It
+  clamps and REMEMBERS now, and a walk that finished under a clamp returns
+  truncated.
+
+The general shape, which is what transfers: **a walk's end condition has to
+distinguish "the archive said it was over" from "the bytes ran out".** Every
+format here answers that differently — an end marker, a stated length, an
+entry count, or simply EOF — and wherever the two answers were folded into
+one branch, a cut file became a complete run.
+
+### The suite that could not have caught it, and the one that does
+
+`run_robustness.py` has truncated every fixture at four fractions since M2. It
+requires "a normal exit code", and exit 0 is one — so it passed 9,320 variants
+over both defects. That is the tenth smell in BLOCKERS.md's list (an aggregate
+that cannot fail on a property it never aggregates) in the suite whose whole
+subject is damaged input.
+
+`tools/run_truncation.py` asks the oracle instead: where `unar` calls a cut
+archive broken, so must we. It found the StuffIt defect immediately, which the
+hand scan that found the DiskDoubler one had missed — **because the hand scan
+picked its fixtures alphabetically**, and for DiskDoubler that is two
+single-file archives with no walk in them. The suite was written with the same
+bug, passed against a deliberately broken build, and was fixed to choose the
+most-entried fixtures. A check that cannot fail is worth exactly what it
+costs to run.

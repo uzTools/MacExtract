@@ -67,6 +67,44 @@ unsupported either way.
   an identifying one. `reference/notes/brotli_rfc7932.txt` is kept as the
   evidence for a negative.
 
+- **A cut tar cannot be noticed, by this or any program.** A tar has no
+  directory, no entry count and no length of its own, so a file that
+  stops after five members reads exactly as a tar with five members. The
+  two 512-byte zero blocks that POSIX ends an archive with would be the
+  evidence — and they are not reliably there: `derived-popper-1.7.tar`,
+  a real corpus archive, ends with **zero** trailing zero bytes, so
+  requiring them would call it truncated. `unar` accepts a cut tar too.
+  Every other format in the corpus notices a cut at three sampled cut
+  points (`tools/run_truncation.py`, in `ci.sh`). **What would change
+  it:** nothing in the format. A host that knows what the download was
+  SUPPOSED to weigh could compare, which is a question about the
+  transfer and not about the archive.
+
+- **One 46-byte window of a DiskDoubler DDA2 archive is ambiguous.** A
+  DDA2 archive normally ends with a 0xBBBB record, and since 2026-08-29
+  a walk that never reaches one is reported truncated — except that an
+  archive may legitimately end without it, leaving fewer than the 46
+  bytes one record needs after its last entry. `derived-DD_Expand.sea`
+  ends exactly so and `unar` reads it, so a cut that lands in that same
+  window is byte-for-byte a valid ending; `ddtf-ddpro411dd3.dd` cut to a
+  fifth is the measured case, and every other cut point in the corpus is
+  caught. **What would change it:** nothing in the format — the two
+  files are identical there. The rule that tries is DECISIONS.md
+  2026-08-29, *a cut archive*.
+
+- **Two folders that merge cannot be told from one folder visited
+  twice, in a format that carries no directory entries.** The Macintosh
+  shell shortens every path component to 31 characters, so two folders
+  whose names agree that far become one; where the archive declares each
+  folder as an entry of its own (DiskDoubler, SuperDisk!, StuffIt
+  hierarchies) that is reported as *"combined with"*, because the
+  declaration is what makes the second one distinguishable. Where
+  folders exist only inside the paths of the files in them, the second
+  arrival looks exactly like the first folder being revisited.
+  **What would change it:** nothing in the format. Remembering every
+  long name ever seen would, at a cost this shell will not pay on a
+  1 MB machine — it remembers 24 (FORMATS.md, *Name limits*).
+
 - **A uuencoded set missing a MIDDLE part decodes short, and silently.** A
   document posted in several parts joins and decodes — the mail headers
   between parts are stepped over — but uuencode carries no length and no

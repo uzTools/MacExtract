@@ -643,7 +643,9 @@ def phase_report(args, appbin, workdir, shot):
     missing = [w for w in want_lines if w not in lines]
     if not any(" combined with " in l for l in lines):
         missing.append("<a folder reported as combined with another>")
-    if not lines or "Some entries could not be extracted." not in lines[-1]:
+    # "finished", not "complete": entries failed, and not "some entries
+    # could not be extracted" either — they are named above, one line each.
+    if not lines or "Extraction finished." not in lines[-1]:
         missing.append("<the outcome, on the last line of the document>")
     for m in missing:
         print("interactive: NOT in the saved report: " + m)

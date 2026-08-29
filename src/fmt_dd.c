@@ -1161,14 +1161,36 @@ static int dd_archive(UncCtx *c)
 
         if (c->io->seek(c->io->ctx, at) < 0) return UNC_ERR_IO;
         err = unc_read_full(c->io, hdr, 4);
-        if (err != UNC_OK) break;                 /* end of archive */
+        if (err != UNC_OK) {
+            /* A DDAR archive ends where the FILE ends — there is no end
+             * marker to look for — so running out of bytes here is the
+             * end of the archive only when the walk arrived exactly at
+             * the end of the file. Bytes still ahead mean a header that
+             * stops part way; a position PAST the end means an entry
+             * whose data was cut off and stepped over. Neither is an
+             * end:
+             * until 2026-08-29 both came out as a clean walk, so an
+             * archive cut in half extracted the entries before the cut
+             * and reported success (unar calls the same file broken;
+             * BLOCKERS.md). */
+            if ((unc_off_t)at != c->io->size(c->io->ctx))
+                return UNC_ERR_TRUNCATED;
+            break;                                /* end of archive */
+        }
         magic = unc_get_u32be(hdr);
         if (magic == DD_MAGIC) { at += 84; continue; }  /* stray header */
-        if (magic != DD_DDAR) break;
+        /* Four bytes read from inside the file that are not a header:
+         * every entry position in a DDAR archive is one, so this is a
+         * cut or a corrupted archive rather than its end — the end is
+         * where the FILE ends, and is taken above. */
+        if (magic != DD_DDAR) return UNC_ERR_TRUNCATED;
 
         /* 120 bytes: the entry header is 124 including its magic, and
-         * the last field in it (rsrccrc) sits at byte 120. */
-        if (unc_read_full(c->io, hdr, 120) != UNC_OK) break;
+         * the last field in it (rsrccrc) sits at byte 120. A header
+         * whose magic is there and whose body is not is truncation, and
+         * nothing else: there is no reading of this file in which those
+         * four bytes are the last thing in it. */
+        if (unc_read_full(c->io, hdr, 120) != UNC_OK) return UNC_ERR_TRUNCATED;
         nlen = hdr[4];
         if (nlen > 63) nlen = 63;
         isdir  = hdr[68];
@@ -1228,11 +1250,17 @@ static int dd_archive(UncCtx *c)
             continue;
         }
 
-        /* Otherwise a full file header follows. */
+        /* Otherwise a full file header follows. The entry's own record
+         * has already said this file is here, so a header that runs out
+         * mid-way is a cut archive rather than the end of one — it
+         * broke out of the walk and returned success until 2026-08-29,
+         * which is how a file cut to a fifth of itself extracted two
+         * entries of five and called the run complete. */
         if (c->io->seek(c->io->ctx, start) < 0) return UNC_ERR_IO;
-        if (unc_read_full(c->io, hdr, 4) != UNC_OK) break;
+        if (unc_read_full(c->io, hdr, 4) != UNC_OK) return UNC_ERR_TRUNCATED;
         if (unc_get_u32be(hdr) != DD_MAGIC) return UNC_ERR_CORRUPT;
-        if (unc_read_full(c->io, hdr, DD_FILEHDR) != UNC_OK) break;
+        if (unc_read_full(c->io, hdr, DD_FILEHDR) != UNC_OK)
+            return UNC_ERR_TRUNCATED;
         {
             DdFile f;
             dd_parse_filehdr(hdr, &f);
@@ -1250,6 +1278,7 @@ static int dd_archive2(UncCtx *c)
 {
     UncPath path;
     uint8_t hdr[96];
+    int sawend = 0;        /* the 0xBBBB record: this archive's own end */
     uint32_t at = 62;      /* 'DDA2' + 58 header bytes */
     int lastlevel = 0, err;
 
@@ -1259,13 +1288,27 @@ static int dd_archive2(UncCtx *c)
         uint32_t start = at, totalsize, nlen;
         int entrytype, dirlevel, sret;
         UncEntryInfo e;
+        unc_off_t fsize = c->io->size(c->io->ctx);
 
         if (c->io->seek(c->io->ctx, at) < 0) return UNC_ERR_IO;
-        if (unc_read_full(c->io, hdr, 46) != UNC_OK) break;
+        if (unc_read_full(c->io, hdr, 46) != UNC_OK) {
+            /* A record that will not read is the end of the archive only
+             * in one shape: the walk arrived INSIDE the file with less
+             * than a record left over. `derived-DD_Expand.sea` ends
+             * exactly so — 38 bytes after its last entry, no end marker
+             * — and `unar` reads it, so this is a real archive's ending
+             * and not a cut one. Being sent PAST the end is different:
+             * a record said the next one begins where the file no
+             * longer goes, which is a download that stopped
+             * (2026-08-29). */
+            if ((unc_off_t)at <= fsize && fsize - (unc_off_t)at < 46)
+                sawend = 1;
+            break;
+        }
         if (unc_get_u32be(hdr) != DD_DDA2) break;
 
         entrytype = (int)unc_get_u16be(hdr + 4);
-        if (entrytype == 0xBBBB) break;            /* end of archive */
+        if (entrytype == 0xBBBB) { sawend = 1; break; }   /* end marker */
         nlen = hdr[6];
         if (nlen > 31) nlen = 31;
         dirlevel  = (int)unc_get_u32be(hdr + 38) - 2;
@@ -1358,7 +1401,20 @@ static int dd_archive2(UncCtx *c)
         }
         at = start + totalsize;
     }
-    return UNC_OK;
+    /* A DDA2 archive normally says where it ends. A walk that fell out
+     * of the loop without that marker AND without running out of file
+     * ran off something that stops early — a record whose magic is not
+     * there, a length of zero, a header that reads short in the middle
+     * of the file. Every one of those returned success until
+     * 2026-08-29 and took the entries beyond the cut with it, silently
+     * (BLOCKERS.md).
+     *
+     * WHAT THIS STILL CANNOT SEE: an archive cut so that the last whole
+     * record lands within 46 bytes of the new end. That is
+     * byte-for-byte the shape of the marker-less ending above, and
+     * nothing in the format tells them apart — measured on
+     * `ddtf-ddpro411dd3.dd` cut to a fifth (TESTING.md). */
+    return sawend ? UNC_OK : UNC_ERR_TRUNCATED;
 }
 
 /* ------------------------------------------------------------------ */
