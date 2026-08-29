@@ -77,6 +77,7 @@ oracle and will lose it to `./ci.sh`'s `make clean`.
 | `spacesaver.py` | Aladdin's **SpaceSaver**, off the StuffIt Deluxe 5.0.1 CD. 3.5.1 runs; 5.0 does not run on 7.0.1. `--layout` reads the format out of it without booting anything — see below before spending a boot on it |
 | `sdcompress.py` | the other half: Alysis's 1991 **SuperDisk! control panel**, which COMPRESSES. It wrote the five specimens the single-file container was derived from, and `--verify` re-grades them |
 | `maclha.py` | **MacLHA 2.00**, out of the corpus (`derived-MacLHa_2.00.sit`), driven to write a `.lzh` holding a file with a real resource fork — the specimen no MacLHA archive in reach is. `--setup` builds the volume, `--make` drives the application (keyboard where it has a shortcut; its Header and Type menus are HIERARCHICAL and cannot be used here, and nothing needs them because `MacBinary` is already checked), `--check` grades both forks with our CLI. **The Type menu was worth reading anyway, and it is now**: `LHa`, `LHarc`, `None` — `-lh5-`, `-lh1-`, `-lh0-` — so it cannot write the `-lh2-`/`-lh3-` specimen OPEN_ITEMS.md wants, and the inaccessible submenu costs nothing (read out of `MENU` 134 with `hcopy`, no emulator) |
+| `expander.py` | **the yardstick**: StuffIt Expander 4.0.2 and this application on one Mac Plus, over one archive, timed by one instrument. `--fetch` downloads Aladdin's distribution and unpacks the application out of it; `--sizes` reads both memory partitions without booting anything |
 | `mkcollide.py` | build an archive whose names collide on HFS, and verify what `BumpName` did with them — nothing in the corpus collides |
 
 `tools/quickdraw-repro/` is a sibling that reuses `mkboot.py` and this
@@ -932,6 +933,75 @@ the same engine's Linux aggregate:
 over a `macextract x -nr --forks hidden` of the same payload. Both archives
 matched at 4 MB and at 1 MB on 2026-08-20; the numbers are in FORMATS.md,
 "SuperDisk! on the Mac".
+
+## The yardstick — `expander.py`
+
+**Every other Mac Plus figure this project publishes is absolute, and absolute
+is the wrong shape.** What a user weighs is whether this is faster or slower
+than the free tool they would otherwise run on that machine. This boots both
+applications on the same emulated Mac Plus, at authentic 7 MHz, over the same
+archive on the same volume.
+
+    tools/vmac/expander.py --fetch          # download 4.0.2 and unpack the app
+    tools/vmac/expander.py --sizes          # both SIZE resources; no emulator
+    tools/vmac/expander.py --quiet 60 --json y.json fixtures/derived-Export.sit
+
+Results and the ratio: FORMATS.md, *Timed against StuffIt Expander 4.0.2*.
+**One emulator at a time, and nothing else on the box** — the 1x rule above.
+
+`--fetch` takes Macintosh Garden's `stuffit_expander_4.0.2.sea_.bin`, checks
+its SHA-256, walks MacBinary → self-extracting StuffIt → 400K disk image with
+our own CLI, and copies the application off that image. Two things about that:
+
+- **Garden signs its download URLs and answers a bare GET with HTTP 418.** The
+  page is fetched first and its cookie jar reused for the file. `arcmac.py`
+  does the same two-step; it does not need the jar on the page request and
+  this does.
+- **hfsutils refuses a volume "smaller than 800K"**, and the distribution
+  image is 400K. Padding a temporary copy to 800K mounts it, and reading only
+  ever follows the MDB's own extents, so the padding is never looked at. That
+  refusal was the whole of "an HFS reader this machine does not have"
+  (BLOCKERS.md, withdrawn claims).
+
+**The instrument.** Both applications are driven to a Standard File dialog
+with the archive selected, then timed from the keystroke or click that starts
+the work to the last screenshot that differed from the one before it. Expander
+cannot be asked what it took, so the only clock that is fair to both is one
+outside them; ours would flatter us by exactly the interference the other one
+pays. Each figure is therefore a lower bound with a one-poll error, both sides
+pay the same quantisation and the same ~50 ms per poll of stolen CPU, and
+**the ratio is the durable part of the result**. Do not quote the seconds as
+Mac Plus times — `run.py --emu mv-4M-1x` is what those come from.
+
+**Three things cost a run each, and not one of them failed loudly:**
+
+- **Expander's dialog is not the stock one.** Aladdin's DLOG puts the file
+  list ~48 px higher, so the row `interactive.py` measured lands below the last
+  item: the click selected `System Folder`, Return opened it, and the run
+  reported three seconds and expanded nothing. The file list is not clicked at
+  all now — the first row is preselected — and the Expand button is pressed at
+  a coordinate measured off this harness's own frame. Return would probably do
+  as well; it was tried, looked dead, and the volume it left empty is explained
+  by the flush below rather than by the key, so it is untested and not
+  disproved.
+- **Nothing had assigned X keyboard focus.** `settle()` only screenshots, and
+  the focus call lives in `origin()`, so Command-E went to the root window —
+  the same trap the three lessons above describe, in its "the Mac ignores one
+  particular key" disguise.
+- **Expander's output is not on the image until it quits.** Our sink calls
+  `FlushVol` after closing each fork, so its files are on the host image the
+  moment the alert goes up; Expander leaves its writes in the File Manager's
+  cache, and SIGKILLing the emulator throws them away. A 278 KB archive
+  expanded for 56 s, with the progress window photographed mid-run, and the
+  image afterwards held nothing at all. The harness sends Command-Q after the
+  measurement has ended, so it costs the comparison nothing.
+
+**What it cannot see.** Whether Expander's output is CORRECT: a run is graded
+on having produced files at all, and nothing here compares its bytes with
+ours. And nothing outside the four families 4.0.2 opens by itself — zip, gzip,
+tar, uuencode and the rest need DropStuff with Expander Enhancer, System 7 and
+not free, so timing those would be measuring a configuration a System 6 user
+does not have.
 
 ## The downloads, and why none of them are committed
 

@@ -894,6 +894,23 @@ a harness can click is not the same list.
   bits and the size CAN be aimed), and all nine methods now agree 12/12
   with no skip.
 
+- **"StuffIt Expander's memory partition cannot be measured here — reading
+  the application's `SIZE` resource needs an HFS reader this machine does
+  not have."** Written 2026-08-15, withdrawn 2026-08-29. The reader is
+  `hfsutils`, which `tools/vmac/` has required since M10 and which
+  `mkboot.py` uses on every boot image it builds. What hfsutils refuses is
+  the size of the VOLUME, not the file: Expander's distribution image is
+  400K and it declines anything "smaller than 800K". Padding a temporary
+  copy to 800K mounts it — reading only ever follows the MDB's own extents,
+  so the padding is never looked at — and `hcopy -m` then hands over both
+  forks. 4.0.2 asks for **512 KB preferred, 384 KB minimum** (FORMATS.md,
+  *Compared with StuffIt Expander 4.0.2*). **Cost:** the one row of that
+  capability table a 1 MB user actually needs, blank for two weeks, and it
+  is the row that says whether the free tool fits on the floor target at
+  all. **Why it survived:** it is the mechanism this list already names —
+  a limitation stated about the environment that was true of one tool, in
+  one configuration, and was never re-read for the name of the tool.
+
 ### Corrected figures and superseded write-ups
 
 - **The OS 9 boot time** was recorded as "about four minutes", then "20-45

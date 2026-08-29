@@ -2900,9 +2900,11 @@ silicon, like real 68k silicon, remains untouched.
 
 The free tool a user would otherwise run on the machine itself, and the only
 external yardstick this project has (why it was worth applying: DECISIONS.md
-2026-08-15). **This is its documentation against our measurements: Expander
-has never been RUN here**, and no row below is a head-to-head observation of
-its behaviour.
+2026-08-15). **The coverage and capability tables below are its documentation
+against our measurements** — no row in either is a head-to-head observation of
+its behaviour. The TIMES are: since 2026-08-29 both applications run on the
+same emulated Mac Plus, over the same archive, timed by one instrument
+(*Timed on the same Mac Plus*, below).
 
 **Where the Expander column comes from.** Its own distribution,
 `stuffit_expander_4.0.2.sea_.bin` from Macintosh Garden: MacBinary around a
@@ -2977,12 +2979,57 @@ with this archive."*
 | System 7 conveniences | drag-and-drop of files, folders and whole disks; watch folders; background expansion; Apple events | none; Standard File, one archive at a time |
 | Verification | none published | 932 fixtures byte-exact against `unar`/`macunpack` — bar the one uuencode fixture, which `unar` cannot read at all and whose ground truth is its generator's input, with `hexbin` agreeing |
 | Licence | free, closed | free, LGPL-2.1-or-later |
-| Memory partition | **not measured** — reading the app's `SIZE` resource needs an HFS reader this machine does not have | engine peak heap per format in the matrix above |
+| Memory partition | **512 KB preferred, 384 KB minimum** (`SIZE` (-1), measured 2026-08-29 — the claim that this could not be read here is withdrawn, BLOCKERS.md) | 4,096 KB preferred, 400 KB minimum; engine peak heap per format in the matrix above |
+
+### Timed on the same Mac Plus (2026-08-29)
+
+Both applications booted on Mini vMac `mv-4M-1x` — authentic 7 MHz, 4 MB,
+System 6.0.8 — over the same archive on the same volume, driven to a Standard
+File dialog and timed from the action that starts the work to the last frame
+that changed. `tools/vmac/expander.py --quiet 60`; the instrument and what it
+cannot see are in `tools/vmac/README.md`.
+
+| Fixture | Format | In | MacExtract | Expander 4.0.2 | Expander ÷ ours |
+|---|---|---|---|---|---|
+| `derived-Export.sit` | StuffIt | 1.6 KB | 3 s | 3 s | both at the poll floor |
+| `derived-EmpireBuilderDemo.sit` | StuffIt | 278 KB | 76 s | **56 s** | **0.74x** |
+| `derived-FirstClass_Demo.cpt` | Compact Pro | 249 KB | **133 s** | 156 s | **1.18x** |
+| `macburger-helper.hqx` | BinHex → StuffIt | 307 KB | **269 s** | 426 s | **1.58x** |
+
+**Neither is faster.** Expander unstuffs a StuffIt archive in three quarters of
+our time; we expand a Compact Pro archive in five sixths of its, and a BinHex
+envelope with an archive inside it in under two thirds. On this evidence a user
+choosing between them on speed alone is choosing by format.
+
+**Every figure is a lower bound with a ±3 s poll error, and the RATIO is what
+transfers**: both sides pay the same quantisation and the same stolen CPU, and
+neither absolute column belongs beside *Measured on a 7 MHz Mac Plus* above —
+that table is the autotest build, which calls `RunExtract` once and CRC-reads
+both forks back off the volume, so it measures neither the same layers nor the
+same work. `macburger-helper.hqx` is the clearest case: 104 s there is the
+BinHex decode alone, 269 s here is that plus the 312-file archive inside it.
+
+**They wrote the same names.** On every fixture the two output sets are
+identical, which is what makes the times comparable at all — two applications
+that did different amounts of work would not be. Three differences, all of
+them each application's own default and none of them affecting the above:
+Expander gathers a multi-item archive into a `<archive> Folder` where we
+extract beside the archive; Expander writes a preferences file into the System
+Folder; and on the chain **Expander leaves the intermediate
+`MacburgerHelper.sit` on the volume**, where the shell deletes each envelope
+once the next layer is out.
+
+**Our figures include a `FlushVol` after every fork and Expander's include
+none.** That is not an instrument artefact, it is the two designs: Expander's
+output is not on the disk at all until it quits — the harness had to send it
+Command-Q to read a volume that a 56 s expansion had left empty
+(`tools/vmac/README.md`).
 
 ### Sources
 
 - The application itself, extracted as described above: `Read Me`, `What's new
-  in Expander`, and the alert strings in `StuffIt Expander 4.0.2`.
+  in Expander`, and the alert strings in `StuffIt Expander 4.0.2`; its `SIZE`
+  and `MENU` resources, and its behaviour under `tools/vmac/expander.py`.
 - [Gryphel Project — Stuffit Expander](https://www.gryphel.com/c/sw/archive/stuffexp/),
   for which versions run under Mini vMac and on which systems.
 - [Macintosh Garden — StuffIt Expander 4.0.2](https://macintoshgarden.org/apps/stuffit-expander-402),

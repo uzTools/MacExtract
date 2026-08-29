@@ -158,6 +158,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-28 (three ideas, two numbers) — a constant nobody named cannot be searched for
 - 2026-08-28 (what a width costs) — the offset type is a compile-time choice, not an architecture
 - 2026-08-28 (the certificate painted first) — a completion marker that goes down first certifies nothing
+- 2026-08-29 (the yardstick) — the free tool, run at last
 
 ---
 
@@ -9043,3 +9044,50 @@ Three things worth carrying:
   turned it into a mechanism — erase-to-white plus forward paint plus
   sync-first, with 0x8000 as the arithmetic to check it — came from
   decoding the one frame the harness had kept all along.
+
+## 2026-08-29 (the yardstick) — the free tool, run at last
+
+Every Mac Plus figure this project publishes was absolute, and absolute is the
+wrong shape for the one number a user actually weighs. The comparison with
+StuffIt Expander 4.0.2 had been Aladdin's documentation against our
+measurements for two weeks, and said so honestly, while what was missing was a
+download and about forty minutes of emulator. Results: FORMATS.md, *Timed on
+the same Mac Plus*. Three things are worth keeping.
+
+**The clock has to be outside both applications, and the quiet period is not
+part of the answer.** Ours can be asked what it took — it already keeps
+`startTicks` for the progress ETA — and Expander cannot be asked anything. A
+comparison that used our own clock for our side and screen polling for the
+other would have credited us with the difference between an instrument that
+costs nothing and one that costs ~50 ms a poll, which is a measurement of the
+harness. So both are timed the same way, by screenshot. What each run reports
+is the timestamp of the **last frame that differed from the one before it**,
+not the total wait: proving that the work stopped takes a minute of unchanged
+screen, and counting that minute would make the number an artefact of how
+patient the harness is. The residual error is one poll interval, paid equally
+by both, which is why the ratio is quoted and the seconds are not.
+
+**"The volume is empty" was a fact about our own sink.** Expander expanded a
+278 KB archive for 56 seconds, with its progress window photographed at
+"Items remaining to UnStuff: 3", and the disk image afterwards held nothing at
+all. Our sink calls `FlushVol` after closing each fork, so its output is on
+the host image the moment the alert goes up; Expander leaves its writes in the
+File Manager's cache, and SIGKILLing the emulator throws them away. The
+harness had never had to ask whether output reaches the image, because the
+only program it had ever measured answered the question by construction —
+**an instrument inherits its assumptions from the one subject it has always
+had**, and this one presented a working program as a broken one with the
+evidence sitting in the same directory. Command-Q after the measurement fixed
+it and costs the comparison nothing. The same cache is already documented one
+screen away, in the shipped application's own envelope loop, which flushes
+after deleting an intermediate for exactly this reason.
+
+**Mixed was the useful outcome.** Expander unstuffs StuffIt in three quarters
+of our time; we expand Compact Pro in five sixths of its, and a BinHex
+envelope with an archive inside it in under two thirds. Neither number would
+have been safe to guess from the other, and one fixture would have supported
+whichever conclusion it happened to land on — which is the argument for the
+set being one per format rather than one that is representative. What makes
+the times comparable at all is that both applications wrote the same output
+names on every fixture; a speed comparison between two programs doing
+different amounts of work is arithmetic, not evidence.

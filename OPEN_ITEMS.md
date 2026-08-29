@@ -220,26 +220,3 @@ all** (BLOCKERS.md, the ARC 7 row, filed and disproved the same day).
   one second reader that exists is an archive's own self-extractor on an
   emulated Mac, which has never been handed a stream this project
   wrote.
-
-- **No time this project measures has ever been placed beside the
-  software a user would otherwise run.** FORMATS.md's *Compared with
-  StuffIt Expander 4.0.2* is that tool's documentation against our
-  measurements; Expander has never been executed here. So there are
-  absolute Mac Plus timings and nothing to compare them with, which is
-  the one number a user actually weighs. Missing: a **yardstick**, and
-  it is a download away — the harness already fetches and drives seven
-  period applications from Macintosh Garden, and `interactive.py`
-  already drives our own UI (`tools/vmac/README.md`), so the plumbing is
-  not the gap. **What would close it:** Expander 4.0.2 on the transfer
-  volume, the same fixtures through both applications at the same memory
-  size on the same emulator, and one clock that is fair to both — which
-  is the catch. Our own application can be ASKED what it took: it
-  already keeps `startTicks` for its progress ETA and could paint
-  `TickCount()` into the result grid, giving 1/60 s with no
-  interference. Expander cannot be asked, so a comparison has to time
-  both through the harness's screen polling, which is quantised to the
-  poll interval and steals CPU from the very thing it measures. The
-  result is therefore a ratio with a bound, not two figures — and worth
-  having either way: a table in README.md if this engine is faster, and
-  a goalpost if it is not.
-

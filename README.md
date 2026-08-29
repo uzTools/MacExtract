@@ -132,9 +132,15 @@ each one opens:
 | What you install | the application, a StuffIt Engine extension, and the add-on for anything above | one application |
 | Source | free, closed | free, open (LGPL) |
 
+**Speed is a wash**, and both were timed on one 7 MHz Mac Plus over the same
+archives to find that out. Expander unstuffs a StuffIt archive in about three
+quarters of our time; we open a Compact Pro archive, or a `.hqx` with an
+archive inside it, faster than it does.
+
 Under System 7 Expander also has drag-and-drop, watch folders and background
-expansion; under System 6 both are menu-driven. The full table, with sources,
-is in [FORMATS.md](FORMATS.md) under "Compared with StuffIt Expander 4.0.2".
+expansion; under System 6 both are menu-driven. The full table, the timings
+and their sources are in [FORMATS.md](FORMATS.md) under "Compared with StuffIt
+Expander 4.0.2".
 
 ## What you need
 
