@@ -31,7 +31,7 @@ whole corpus for that format (engine allocations only, via
 | ARC / ArcMac (.arc) | extract | 1/2 store, 3 RLE90, 4 squeeze+RLE90, 5/6/7 crunch, 8 12-bit LZW+RLE90, 9 13-bit LZW, **0x0a crushed (PAK) and 0x0b distilled since 2026-08-25, 0x0a trimmed (ARC 7.x) and the ARC 7 container since 2026-08-25**, 0x7f compress; ArcMac's two-fork payload since 2026-08-16★★★; **garbled (password-XORed) members decrypted** | 10 generated archives (methods 1-9, adjudicated by `unar`) + 3 written by Debian's `arc` 5.21q; **2 real PAK specimens + 7 archives PAK 2.51 wrote under DOSBox** (`tools/pak.py`); `synth-arc-mixed.arc`, `arc2pak1.pak` and `derived-INTRECHO.pak` have manifests and are in the differential suite | 4–46.5 KB★ | full |
 | btoa (`xbtoa`/`.ascii`) | extract | — (base-85 ASCII armour; both the `xbtoa5` and the older `xbtoa Begin` framings)◆ | no corpus file and no second reader: graded against **btoa 5.2.1 itself**, which encodes the subjects `tools/run_btoa.py` decodes, **plus a stream written by Aladdin's own `btoa/atob Translator`** on an emulated Mac (`sitcrypt.py --btoa-send`)◆ | 12 KB | full |
 | base64 (`.b64`, `.mime`) | extract | — (bare, and the `begin-base64`/`====` framing sharutils writes; several documents in one file)◇ | no corpus file and no Macintosh specimen: graded against **deark** and, through the messages that carry it, **munpack 1.6** | 5 KB◇ | full |
-| MIME message (`.mim`, `.eml`) | extract | — (multipart to 4 levels, base64, quoted-printable and 7bit/8bit parts, a uuencoded part pasted into one, and **multipart/appledouble**, which carries both forks and the Finder info)◇ | no corpus file: graded against **munpack 1.6**, the implementation `src/fmt_mime.c` is transcribed from, over 56 generated cases | 8 KB◇ | full |
+| MIME message (`.mim`, `.eml`) | extract | — (multipart to 4 levels, base64, quoted-printable and 7bit/8bit parts, a uuencoded part pasted into one, **multipart/appledouble**, which carries both forks and the Finder info, and `message/partial` across several files)◇ | no corpus file: graded against **munpack 1.6**, the implementation `src/fmt_mime.c` is transcribed from, over 65 generated cases | 8 KB◇ | full |
 | uuencode (.uu, incl. UUTool) | extract | — (plain uu, UUTool's two-fork "MU" shape, and documents posted in several parts★★) | 7 generated cases, the two-fork ones adjudicated by macutils' `hexbin`; `synth-uu-mac.uu` is in the differential suite | 4 KB | full |
 | Alysis SuperDisk! (.X, .x) | extract | **both containers** (record-stream archive and single file); methods 1-4 and 5-8 (a finite-context predictor over a 13- or 16-bit context, with the flag bitmap and/or the literals Huffman-coded), 9 Huffman, 10 SlowFastA and 11 SlowFastB (LZSS); 13 declined per entry, and 20 is an encoder for 11 rather than a method of its own✧✧ | 2 fixtures, 5 forks, adjudicated by the archives' OWN self-extractors on an emulated Mac, + 11 single-file specimens written by Alysis's own control panel (methods 1 and 6) and graded against their inputs, + every method 1..9 through Alysis's own Add-In Modules under qemu-m68k (`tools/sdmodule/`) | 72–84 KB✧✧ | full |
 | StuffIt SpaceSaver (`SPSV`) | extract | **every method the format has**: 0 stored, 1 and 2 (the "Original" LZSS pair), 3 "Alg 3" (Huffman + LZ77), 4 "Alg 4" — the last two starting their window loaded with a preset dictionary that ships inside SpaceSaver✦✦ | no oracle and no fixture, but **Aladdin's own compressors run under `qemu-m68k` and 44 forks they wrote read back byte-exact** (`tools/ssmodule/`, 2026-08-25), plus 160 corrupted variants, a synthetic round-trip and unit tests✦✦ | 4 KB stored, 8 KB method 1, 84 KB method 2, 41 KB method 3, **36 KB** for what SpaceSaver writes (measured on a Mac Plus); 68 KB is the ceiling the width byte allows. The dictionary is 9.7 KB of static data, not heap | full |
@@ -1195,6 +1195,12 @@ the name entry `Subject`, the Finder-info entry 32 bytes of
 fork byte for byte. `macextract` returns both forks byte-exact and
 munpack reads the same file.
 
+**A message split across several FILES** — `message/partial` — joins
+since 2026-08-29 and is the sixth entry under *Segmented archives*
+above, not a shape of this reader: the parts are files, so the host
+opens them and the joiner sequences them, and what the MIME walk sees
+is one message.
+
 ◇ **It does not settle line endings**, and nothing about the format
 could: the specimen is LF-terminated because Retro68's newlib does not
 do the `\n`→CR translation THINK C's text mode did, so the ending is a
@@ -1509,12 +1515,13 @@ archive the same recursion continues into it.
 
 ## Segmented archives (multi-part sets)
 
-One logical file cut across several, one per floppy. **Five schemes
-are implemented**: StuffIt segments, Compact Pro segments, spanned
-("split") zip, plain `.NNN` splits and DiskDoubler's `SPLT`. They differ
-in how much a part can prove about itself, and everything else follows
-from that (DECISIONS.md 2026-08-08, 2026-08-09, 2026-08-10, 2026-08-14
-and 2026-08-21).
+One logical file cut across several, one per floppy — or, for the
+sixth, one per mail message. **Six schemes are implemented**: StuffIt
+segments, Compact Pro segments, spanned ("split") zip, plain `.NNN`
+splits, DiskDoubler's `SPLT` and `message/partial`. They differ in how
+much a part can prove about itself, and everything else follows from
+that (DECISIONS.md 2026-08-08, 2026-08-09, 2026-08-10, 2026-08-14,
+2026-08-21 and 2026-08-29).
 
 ### StuffIt segments
 
@@ -1634,6 +1641,58 @@ fetching one directory record at a time — same bytes out, at 16 opens
 instead of 6 — so the bound is the allocator's rather than a constant
 chosen here. Both paths are exercised in `ci.sh`.
 
+### `message/partial` — a message split across several FILES
+
+**In scope since 2026-08-29.** RFC 2046 section 5.2.2, which is how a
+file too big for a mail gateway crossed one: each part is a message of
+its own whose body is a slice, and `Content-Type: message/partial`
+carries an `id` every part of the set repeats, this part's `number` and
+the set's `total`. `src/fmt_mimeseg.c` reads that header;
+`reference/mpack/decode.c` `handlePartial()` is the source, and mpack
+writes the sets `tools/run_mime.py` grades against munpack.
+
+Two things are unlike every other scheme here:
+
+- **A part's header is its own mail headers, so each part's is a
+  different length.** Every other scheme has one header length for the
+  set, in the descriptor; this one asks the part (`unc_mimeseg_head`,
+  the joiner's `hdr` hook), which re-proves the part's number and id
+  while it is in there.
+- **The set states a part COUNT and no byte total**, so the joiner
+  learns the length when it opens the last part. Nothing in the format
+  says how many bytes the message weighs.
+
+**Identity is content, not name**: the parts are matched on the `id`,
+so a set whose files are called anything at all joins, and two sets in
+one directory do not mix — both asserted. A part is identified by
+`unc_segment_describe` rather than `unc_segment_match`, which is the
+only scheme that needs the difference: mail headers are longer than the
+100 bytes that call is given. `total` is required only on the LAST part,
+so a set opened anywhere else asks the parts it found — the same
+question a Compact Pro set asks about its final segment.
+
+**What is joined is the part bodies, and nothing else.** mpack composes
+a standalone message out of the enclosing headers as well; part 1's body
+already begins with the enclosed message's own headers, so the joined
+stream is a message and the MIME walk reads it directly — no file is
+written in between, and a `multipart/appledouble` split across files
+comes out with both forks (DECISIONS.md 2026-08-29, *a message in
+several files*).
+
+A missing part is REFUSED, before anything is written: the set counts
+its parts, which is what a uuencoded posting missing one cannot do
+(OPEN_ITEMS.md, part 1).
+
+**Joined on a Mac Plus, 2026-08-29**, at 4 MB and at the 1 MB floor:
+four `message/partial` files named nothing alike, carrying a
+`multipart/appledouble`, become one Macintosh file with both forks —
+773 B of data and a 406 B resource fork, read back off the Out volume
+and compared byte for byte, with the on-screen grid agreeing
+(`tools/vmac/segcheck.py --case mimeseg`). The Mac shell needed the same
+two additions the CLI did: a candidate identified with
+`unc_segment_describe` where 100 bytes cannot decide, and the count
+taken from whichever part carries `total`.
+
 ### Segmented sets on a real emulated Mac Plus (System 6.0.8)
 
 **M11's four schemes join on the Mac** as of 2026-08-14, and so does a set
@@ -1648,6 +1707,7 @@ there on 2026-08-21** and is in the table. The StuffIt table below is from
 | Compact Pro, last segment withheld | same | 0 files, refused — the negative control |
 | Spanned zip, 4 MB and **1 MB** | `interactive.py --named zip`, opened at part 1 of 5 through Standard File | joined file **byte-exact**, 278,294 B |
 | `.NNN` split, 4 MB and **1 MB** | `interactive.py --named split`, opened at part 1 of 3 | joined file **byte-exact** |
+| `message/partial`, 4 MB and **1 MB** (2026-08-29) | `segcheck.py --case mimeseg`, four parts named nothing alike | one file, **both forks byte-exact** — 773 B data, 406 B rsrc |
 | Parts inside envelopes, 4 MB and **1 MB** | `interactive.py --wrapped`: part 1 as `Apart.sit.1.hqx`, part 2 as `zzz-download.bin`, part 3 as `Other.9.hqx` | same contents as the Linux CLI on the same three files, and no decoded parts left on the volume |
 | A chained file (`.sit.hqx`), 4 MB and **1 MB** | `interactive.py --chain` | every layer comes off and the intermediate is removed — which this application did NOT do before 2026-08-14 (BLOCKERS.md) |
 | A chained file, three layers deep, 4 MB | `interactive.py --chain` on `chain.dd.ascii` and `chain.dd.uu` — btoa and uuencode around a MacBinary around a DiskDoubler archive | both come all the way down to `Doc`, the same one file the Linux CLI produces, with both intermediates deleted (2026-08-27) |
@@ -2235,6 +2295,16 @@ near the machine: `mac/macextract_mac.c` runs
 `SetApplLimit(LMGetApplLimit() - kStackBump)` with `kStackBump` = 24 KB, so
 the shell has **32 KB of stack**, not the 8 KB default. The rule is what keeps
 the engine portable to a host that did not ask for more.
+
+The deepest chain the sixth join scheme adds is **2,796 B**, measured
+the same way on 2026-08-29 and second only to the DiskDoubler one:
+`unc_extract_segments` → `unc_mime_extract` → `mime_emit` →
+`mime_dec_run` → `mime_dec_next` → `seg_read` → `seg_open` →
+`unc_mimeseg_head` → `mseg_scan` (1,256 B of it, a 512-byte read window
+and a 512-byte unfolded header) → `unc_read_at`. A joiner that calls a
+format reader that reads back through the joiner is the only chain here
+that goes through the engine twice, which is why it was measured rather
+than assumed.
 
 That 3,290 B became 3,330 B on 2026-08-27: `dd_fork` gained 44 bytes to the
 shared fork writer and gave 4 back when its prologue was hoisted out of nine

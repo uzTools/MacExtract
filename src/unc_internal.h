@@ -1123,6 +1123,14 @@ int unc_b64_extract(UncCtx *c);
 
 /* MIME messages (fmt_mime.c). The probe scans past the mail headers,
  * which are longer than the sniff window, so it takes io. */
+/* Shared with fmt_mimeseg.c: the header and parameter rules, once. */
+int32_t unc_mime_ci_prefix(const uint8_t *s, int32_t len, const char *pfx);
+uint32_t unc_mime_param(const uint8_t *h, int32_t hlen, const char *key,
+                        uint8_t *out, uint32_t cap, int *trunc);
+void unc_mime_ctype_of(const uint8_t *h, int32_t hlen, uint8_t *out,
+                       uint32_t cap);
+int unc_mime_is_header(const uint8_t *s, int32_t len);
+
 UncFormat unc_mime_probe(const uint8_t *head, int32_t len, UncIO *io);
 /* The same probe, restricted to a message that declares a multipart
  * with a boundary — parts the walk can ENUMERATE. unc_sniff runs this
@@ -1135,6 +1143,17 @@ int unc_mime_extract(UncCtx *c);
 
 /* ARC / ArcMac (fmt_arc.c). The probe reads the next header to place
  * this one, so it takes io. */
+/* message/partial: a message split across several FILES (fmt_mimeseg.c).
+ * The parts are mail messages, so the probe reads on through io past
+ * the sniff window, as the MIME probe does. */
+UncFormat unc_mimeseg_probe(const uint8_t *head, int32_t len, UncIO *io);
+int unc_mimeseg_describe(UncIO *io, UncSegmentDesc *desc);
+/* This part's OWN header length — they differ from part to part, which
+ * no other scheme's do — and the check that it is the part the joiner
+ * asked for. */
+int unc_mimeseg_head(const UncSegmentDesc *d, UncIO *io, int part,
+                     uint32_t size, uint32_t *out);
+
 UncFormat unc_arc_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_arc_extract(UncCtx *c);
 

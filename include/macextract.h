@@ -28,7 +28,7 @@ extern "C" {
  * tools/make_dist.sh do now, and tools/check_docs.py fails the build if
  * this, README.md and dist/README.txt disagree. A constant nobody reads
  * is a constant that is wrong. */
-#define UNC_VERSION "0.25.0"
+#define UNC_VERSION "0.26.0"
 
 /* ------------------------------------------------------------------ */
 /* Formats                                                            */
@@ -111,6 +111,10 @@ typedef enum UncFormat {
     UNC_FORMAT_LZIP,          /* .lz                                    */
     UNC_FORMAT_LRZIP,         /* .lrz                                   */
     UNC_FORMAT_WIM,           /* .wim — Windows Imaging                 */
+
+    /* One part of a message/partial set — a message split across
+     * several FILES. Joined, never extracted on its own. */
+    UNC_FORMAT_MIMESEG,
 
     UNC_FORMAT__COUNT
 } UncFormat;
@@ -524,6 +528,22 @@ int unc_extract_as(UncFormat f, UncIO *io, UncSink *sink, UncAlloc *al,
 /*      the DATA fork first, then the resource fork, which is the      */
 /*      opposite of StuffIt's. DERIVED from specimens, not             */
 /*      transcribed: src/fmt_ddseg.c.                                  */
+/*                                                                    */
+/*  UNC_FORMAT_MIMESEG A message split across several FILES:           */
+/*      message/partial (RFC 2046 5.2.2), which is how a file too big  */
+/*      for a mail gateway crossed one. Every part names the set (an   */
+/*      `id` parameter that they all repeat) and numbers itself, so a  */
+/*      part is identified BY CONTENT like a StuffIt one — but a mail  */
+/*      header is longer than the 100 bytes unc_segment_match is       */
+/*      given, so that call answers 0 for this scheme and a host       */
+/*      identifies a candidate with unc_segment_describe instead.      */
+/*      Two things are unlike every other scheme: a part's header is   */
+/*      its own mail headers, so each part's is a DIFFERENT length,    */
+/*      and the set states a part COUNT but no byte total, so the      */
+/*      joiner learns the length when it opens the last part. What is  */
+/*      joined is the part BODIES, in number order; part 1's body      */
+/*      begins with the enclosed message's own headers, so the joined  */
+/*      stream is a message and the MIME walk reads it directly.       */
 /*                                                                    */
 /* The engine sequences the parts; the host opens them. That keeps     */
 /* every file operation on the caller's side (engine discipline) and   */

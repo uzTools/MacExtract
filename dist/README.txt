@@ -1,4 +1,4 @@
-MacExtract v0.25.0 — bootstrap distribution
+MacExtract v0.26.0 — bootstrap distribution
 ==========================================
 
 A bare Classic Mac has no way to open a .sit/.cpt/.hqx until it HAS an
@@ -108,6 +108,11 @@ joined the same way, and you can open any part of one. Archives split into
 NAME.z01/.z02/.zip, or into plain NAME.001/.002 pieces, are joined by name
 instead — those two schemes put nothing inside the files that says which set
 they belong to, so keep the names they came with.
+
+A file that arrived as several mail messages is joined too. Mail gateways
+used to cut anything large into numbered pieces (message/partial); open any
+one of them and the rest are found beside it, whatever they are called, and
+a Macintosh file mailed that way comes back with both its forks.
 
 Every archive in the test sample extracts byte-exact on a 1 MB Mac Plus,
 StuffIt 5 (Arsenic) included. Arsenic is slow on a 68000 — 12 minutes for a

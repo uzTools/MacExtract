@@ -58,7 +58,7 @@ oracle and will lose it to `./ci.sh`'s `make clean`.
 
 | file | role |
 |---|---|
-| `segcheck.py` | **replay every segmented-archive scenario in one command** — the four joining schemes, parts inside envelopes, and a chained file, across both harnesses |
+| `segcheck.py` | **replay every segmented-archive scenario in one command** — the six joining schemes, parts inside envelopes, and a chained file, across both harnesses |
 | `setup.sh` | fetch + build the emulator, the ROM and a System 6.0.8 image into `$UNC_VMAC_HOME` (default `~/.cache/macextract/vmac/`) |
 | `mkboot.py` | strip that image to System + Finder and make it boot straight into the application |
 | `run.py` | build the disks, boot, screenshot, decode, check. `--out-kb` sizes the DESTINATION volume, which is how the full-disk path is reached at all — see below |

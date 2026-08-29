@@ -1087,6 +1087,41 @@ int unc_mime_extract(UncCtx *c)
 }
 
 /* ------------------------------------------------------------------ */
+/* What fmt_mimeseg.c reads through                                   */
+/*                                                                    */
+/* A part of a message/partial set is a mail message like any other,  */
+/* and its Content-Type parameters are parsed by the same getParam()  */
+/* transcription as everything here. Wrappers rather than a second    */
+/* copy: two transcriptions of one rule disagree eventually.          */
+/* ------------------------------------------------------------------ */
+
+int32_t unc_mime_ci_prefix(const uint8_t *s, int32_t len, const char *pfx)
+{
+    return mime_ci_prefix(s, len, pfx);
+}
+
+uint32_t unc_mime_param(const uint8_t *h, int32_t hlen, const char *key,
+                        uint8_t *out, uint32_t cap, int *trunc)
+{
+    return mime_param(h, hlen, key, out, cap, trunc);
+}
+
+/* `cap` is the caller's buffer, which must hold MIME_CTYPE_MAX + 1;
+ * the argument is there so a caller declaring less fails to compile
+ * rather than at run time. */
+void unc_mime_ctype_of(const uint8_t *h, int32_t hlen, uint8_t *out,
+                       uint32_t cap)
+{
+    if (cap < MIME_CTYPE_MAX) { out[0] = 0; return; }
+    mime_ctype_of(h, hlen, out);
+}
+
+int unc_mime_is_header(const uint8_t *s, int32_t len)
+{
+    return mime_is_header(s, len);
+}
+
+/* ------------------------------------------------------------------ */
 /* Probe                                                              */
 /* ------------------------------------------------------------------ */
 

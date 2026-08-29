@@ -154,6 +154,67 @@ def munpack_files(munpack, path):
         shutil.rmtree(out, ignore_errors=True)
 
 
+def partial_set(msg, ident, n, eol=b"\r\n"):
+    """Cut `msg` into `n` message/partial parts by hand, the way
+    reference/mpack/encode.c writes one: the body of part k is the kth
+    slice, and the enclosing headers carry number, total and a shared
+    id. Returns a list of complete part messages.
+
+    `total` is on EVERY part here, which is what mpack does; the RFC
+    requires it only on the last, and one case below strips it from all
+    but that one."""
+    step = (len(msg) + n - 1) // n
+    out = []
+    for k in range(n):
+        body = msg[k * step:(k + 1) * step]
+        hdr = (b"From: mac@example" + eol +
+               b"Subject: split (%02d/%02d)" % (k + 1, n) + eol +
+               b"MIME-Version: 1.0" + eol +
+               b'Content-Type: message/partial; number=%d; total=%d;' % (k + 1, n)
+               + eol + b'\t id="' + ident + b'"' + eol + eol)
+        out.append(hdr + body)
+    return out
+
+
+def munpack_partial(munpack, paths):
+    """Reassemble a set with munpack, which is the oracle for the join.
+
+    Two quirks, both of which cost a run here and are written up in
+    DECISIONS.md 2026-08-29: munpack reassembles through a FIXED
+    directory, /usr/tmp/m-prts-$USER, which it does not create; and it
+    creates that directory's `CT` file with O_EXCL, so a part after the
+    first dies with "CT: File exists" unless it is removed in between.
+    That is mpack failing to round-trip with its own twin.
+
+    Returns the files it wrote, or None where the machine has no
+    /usr/tmp to reassemble through."""
+    root = "/usr/tmp/m-prts-" + (os.environ.get("USER") or "nobody")
+    try:
+        os.makedirs(root, exist_ok=True)
+    except OSError:
+        return None
+    for sub in os.listdir(root):
+        shutil.rmtree(os.path.join(root, sub), ignore_errors=True)
+    out = tempfile.mkdtemp()
+    try:
+        for p in paths:
+            for sub in os.listdir(root):
+                try:
+                    os.remove(os.path.join(root, sub, "CT"))
+                except OSError:
+                    pass
+            subprocess.run([munpack, "-f", os.path.abspath(p)], cwd=out,
+                           capture_output=True)
+        got = {}
+        for f in os.listdir(out):
+            if f.endswith(".desc"):
+                continue
+            got[f] = open(os.path.join(out, f), "rb").read()
+        return got
+    finally:
+        shutil.rmtree(out, ignore_errors=True)
+
+
 def deark_bytes(deark, path, module=None):
     out = tempfile.mkdtemp()
     try:
@@ -536,6 +597,104 @@ def main():
         got = extract(macextract, write("prosepart.mim", prosepart))
         check("a note that says \"begin\" is still a note",
               got == {"also.bin": DATA},
+              "wrote %r" % {k: len(v) for k, v in got.items()})
+
+        # ---------------------------------------------------------- #
+        # message/partial: a message split across several FILES        #
+        # ---------------------------------------------------------- #
+        # The sixth join scheme (FORMATS.md, Segmented archives). mpack
+        # writes the set and munpack reassembles it, so both ends of
+        # this are somebody else's: what is graded is that the engine
+        # joins the same parts into the same bytes.
+        mpack = os.path.join(os.path.dirname(munpack), "mpack")
+        pdir = os.path.join(tmp, "partial")
+        os.mkdir(pdir)
+        subject = write("partial/subject.bin", DATA * 12)   # 15,468 B
+        made = subprocess.run([mpack, "-m", "4000", "-o", "set.mime",
+                               "-s", "split", "subject.bin"],
+                              cwd=pdir, capture_output=True)
+        parts = sorted(os.path.join(pdir, f) for f in os.listdir(pdir)
+                       if f.startswith("set.mime."))
+        check("mpack -m wrote a multi-file set", len(parts) >= 3,
+              "wrote %r (%s)" % (sorted(os.listdir(pdir)),
+                                 made.stderr.decode(errors="replace")[:80]))
+
+        if len(parts) >= 3:
+            want = {"subject.bin": DATA * 12}
+            # Anchored at part 1, and at a MIDDLE part: every part
+            # carries the set's id and its own number, so which one the
+            # user happens to open decides nothing.
+            for anchor_at in (0, len(parts) // 2, len(parts) - 1):
+                got = extract(macextract, parts[anchor_at])
+                check("message/partial: joined from part %d of %d"
+                      % (anchor_at + 1, len(parts)), got == want,
+                      "wrote %r" % {k: len(v) for k, v in got.items()})
+
+            mp = munpack_partial(munpack, parts)
+            if mp is None:
+                print("run_mime: message/partial vs munpack SKIPPED "
+                      "(no writable /usr/tmp to reassemble through)")
+            else:
+                check("message/partial: munpack joins it the same way",
+                      list(mp.values()) == [DATA * 12],
+                      "munpack wrote %r" % {k: len(v) for k, v in mp.items()})
+
+            # A missing MIDDLE part is refused, and nothing is written.
+            # Unlike a uuencoded posting missing one, this set counts
+            # its parts, so the gap is visible (OPEN_ITEMS.md part 1).
+            gapdir = os.path.join(tmp, "gap")
+            os.mkdir(gapdir)
+            for i, p2 in enumerate(parts):
+                if i == 1:
+                    continue
+                shutil.copy(p2, gapdir)
+            r = subprocess.run([macextract, "x", "-o", tmp + "/gapout",
+                                os.path.join(gapdir, os.path.basename(parts[0]))],
+                               capture_output=True)
+            check("message/partial: a missing part is refused",
+                  r.returncode != 0 and not os.listdir(tmp + "/gapout"),
+                  "rc=%d %r" % (r.returncode, r.stderr[:120]))
+
+        # Two sets in one directory. Parts are placed by the `id` every
+        # part of a set repeats — never by filename — so interleaving
+        # them changes nothing.
+        two = os.path.join(tmp, "twosets")
+        os.mkdir(two)
+        adm = message([(b'Content-Type: application/applefile; name="Split Mac File"\r\n'
+                        b"Content-Transfer-Encoding: base64\r\n",
+                        b64(applefile(b"Split Mac File", RSRC))),
+                       (b'Content-Type: application/octet-stream; name="Split Mac File"\r\n'
+                        b"Content-Transfer-Encoding: base64\r\n", b64(DATA))],
+                      ctype=b'multipart/appledouble; name="Split Mac File"')
+        other = message([(b'Content-Type: application/octet-stream; name="other.bin"\r\n'
+                          b"Content-Transfer-Encoding: base64\r\n", b64(RSRC))])
+        for i, part in enumerate(partial_set(adm, b"alpha@example", 3)):
+            open(os.path.join(two, "a%d.txt" % (i + 1)), "wb").write(part)
+        for i, part in enumerate(partial_set(other, b"beta@example", 2)):
+            open(os.path.join(two, "b%d.txt" % (i + 1)), "wb").write(part)
+        got = extract(macextract, os.path.join(two, "a2.txt"))
+        check("message/partial: both forks through the join",
+              got.get("Split Mac File") == DATA and
+              got.get("Split Mac File.rsrc") == RSRC,
+              "wrote %r" % {k: len(v) for k, v in got.items()})
+        got = extract(macextract, os.path.join(two, "b1.txt"))
+        check("message/partial: the other set in the same directory",
+              got == {"other.bin": RSRC},
+              "wrote %r" % {k: len(v) for k, v in got.items()})
+
+        # `total` is required only on the LAST part (RFC 2046 5.2.2),
+        # and a set opened at any other one then has to ask around for
+        # its count — the shape a Compact Pro set has.
+        lastonly = os.path.join(tmp, "lastonly")
+        os.mkdir(lastonly)
+        ps = partial_set(other, b"gamma@example", 3)
+        for i, part in enumerate(ps):
+            if i != len(ps) - 1:
+                part = part.replace(b"; total=3", b"")
+            open(os.path.join(lastonly, "g%d.txt" % (i + 1)), "wb").write(part)
+        got = extract(macextract, os.path.join(lastonly, "g1.txt"))
+        check("message/partial: only the last part says how many there are",
+              got == {"other.bin": RSRC},
               "wrote %r" % {k: len(v) for k, v in got.items()})
 
         # ---------------------------------------------------------- #

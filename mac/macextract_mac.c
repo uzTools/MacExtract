@@ -1687,6 +1687,34 @@ static int SegPartOf(SegHost *h, short vol, long dir, ConstStr255Param name)
     int part;
 
     if (MyOpenFork(vol, dir, name, fsRdPerm, 0, &ref) != noErr) return 0;
+    /* A message/partial part says which set it belongs to in its mail
+     * headers, which are longer than the 100 bytes unc_segment_match
+     * is given — so the candidate is DESCRIBED instead. Still identity
+     * by content: what is compared is the `id` every part repeats. The
+     * Linux CLI does the same (macextract.h, UNC_FORMAT_MIMESEG). */
+    if (h->desc.scheme == UNC_FORMAT_MIMESEG) {
+        UncSegmentDesc cand;
+        FileIO probe;
+        UncIO pio;
+        long eof = 0;
+        int ok, i;
+        GetEOF(ref, &eof);
+        probe.refNum = ref;
+        probe.size = (uint32_t)eof;
+        probe.pos = 0;
+        pio.ctx = &probe;
+        pio.read = fio_read;
+        pio.seek = fio_seek;
+        pio.tell = fio_tell;
+        pio.size = fio_size;
+        ok = unc_segment_describe(&pio, &cand) == UNC_OK &&
+             cand.scheme == UNC_FORMAT_MIMESEG;
+        if (ok)
+            for (i = 0; i < UNC_SEG_FP_LEN; i++)
+                if (cand.fp[i] != h->desc.fp[i]) { ok = 0; break; }
+        FSClose(ref);
+        return ok ? (int)cand.part : 0;
+    }
     count = (long)sizeof head;
     err = FSRead(ref, &count, head);
     FSClose(ref);
@@ -2093,7 +2121,11 @@ static void SegPeelClean(SegHost *h)
     h->peeled = 0;
 }
 
-/* Compact Pro: which of these is the LAST segment?
+/* Which of these parts knows how many there are?
+ *
+ * Two schemes need this and for the same reason — Compact Pro, where
+ * only the last segment carries the index, and message/partial, where
+ * only the last part must carry `total`.
  *
  * Only the last one carries the index, and only the index says how many
  * segments there are — so a set opened at any other segment has no
@@ -2816,7 +2848,8 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
              * The opened part's is all there is, minus the ".N" that
              * numbers it — for the output file, never for matching:
              * the parts are found by content like a StuffIt set's. */
-            if (desc.scheme == UNC_FORMAT_DDSEG) {
+            if (desc.scheme == UNC_FORMAT_DDSEG ||
+                desc.scheme == UNC_FORMAT_MIMESEG) {
                 short n = name[0], d, i;
                 if (n > UNC_NAME_MAX) n = UNC_NAME_MAX;
                 d = n;
@@ -2846,6 +2879,14 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
                     SegScanWrapped(sh, origVol, origDir, &al);
                 SegScanWrapped(sh, inVol, inDir, &al);
             }
+            /* A message/partial set is required to state its part
+             * count only on the LAST part (RFC 2046 5.2.2), so a set
+             * opened anywhere else asks the parts it found — the same
+             * question SegFindLast answers for Compact Pro, and the
+             * same answer: the desc of whichever part knows. */
+            if (sh->desc.nparts == 0 &&
+                sh->desc.scheme == UNC_FORMAT_MIMESEG)
+                SegFindLast(sh);
             /* A Compact Pro set opened anywhere but its last segment
              * does not yet know how many segments it has. */
             if (sh->desc.nparts == 0 &&

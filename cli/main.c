@@ -1107,9 +1107,64 @@ static int seg_part_of(const SegHost *h, const char *path)
     if (stat(path, &st) != 0 || !S_ISREG(st.st_mode)) return 0;
     f = fopen(path, "rb");
     if (!f) return 0;
+    /* message/partial identifies a part in its mail headers, which are
+     * longer than the 100 bytes unc_segment_match is given — so the
+     * candidate is DESCRIBED instead, which reads as much of it as it
+     * needs. Still identity by content: what is compared is the set's
+     * `id`, and the filename decides nothing (macextract.h). */
+    if (h->desc.scheme == UNC_FORMAT_MIMESEG) {
+        UncSegmentDesc cand;
+        FileIO cf;
+        UncIO cio;
+        int ok;
+        memset(&cf, 0, sizeof cf);
+        cf.f = f;
+        cf.size = (unc_off_t)st.st_size;
+        cio.ctx = &cf;
+        cio.read = fio_read;
+        cio.seek = fio_seek;
+        cio.tell = fio_tell;
+        cio.size = fio_size;
+        ok = unc_segment_describe(&cio, &cand) == UNC_OK &&
+             cand.scheme == UNC_FORMAT_MIMESEG &&
+             memcmp(cand.fp, h->desc.fp, UNC_SEG_FP_LEN) == 0;
+        fclose(f);
+        return ok ? (int)cand.part : 0;
+    }
     got = fread(head, 1, sizeof head, f);
     fclose(f);
     return unc_segment_match(&h->desc, head, (int32_t)got);
+}
+
+/* How many parts a message/partial part says its set has, or 0. Only
+ * the LAST part is required to carry `total` (RFC 2046 5.2.2), so a
+ * set opened anywhere else has to ask around for its count — the same
+ * shape a Compact Pro set has, where only the final segment knows. */
+static int mimeseg_nparts_of(const char *path)
+{
+    UncSegmentDesc cand;
+    FileIO cf;
+    UncIO cio;
+    struct stat st;
+    FILE *f;
+    int n = 0;
+
+    if (stat(path, &st) != 0 || !S_ISREG(st.st_mode)) return 0;
+    f = fopen(path, "rb");
+    if (!f) return 0;
+    memset(&cf, 0, sizeof cf);
+    cf.f = f;
+    cf.size = (unc_off_t)st.st_size;
+    cio.ctx = &cf;
+    cio.read = fio_read;
+    cio.seek = fio_seek;
+    cio.tell = fio_tell;
+    cio.size = fio_size;
+    if (unc_segment_describe(&cio, &cand) == UNC_OK &&
+        cand.scheme == UNC_FORMAT_MIMESEG)
+        n = (int)cand.nparts;
+    fclose(f);
+    return n;
 }
 
 /* strdup is POSIX, and this file builds -std=c99 -pedantic. */
@@ -2085,7 +2140,7 @@ nextlayer:
 
     if ((fmt == UNC_FORMAT_SITSEG || fmt == UNC_FORMAT_ZIPSEG ||
          fmt == UNC_FORMAT_SPLIT || fmt == UNC_FORMAT_CPTSEG ||
-         fmt == UNC_FORMAT_DDSEG) && !no_parts) {
+         fmt == UNC_FORMAT_DDSEG || fmt == UNC_FORMAT_MIMESEG) && !no_parts) {
         UncVolumeSource vs;
         void *scratch;
 
@@ -2348,7 +2403,7 @@ nextlayer:
              * minus the ".N" that numbers it — and because the parts
              * are matched by CONTENT, that name is for display and for
              * the output file, never evidence. */
-            if (fmt == UNC_FORMAT_DDSEG) {
+            if (fmt == UNC_FORMAT_DDSEG || fmt == UNC_FORMAT_MIMESEG) {
                 const char *base = strrchr(file, '/');
                 const char *dot;
                 size_t n;
@@ -2394,7 +2449,36 @@ nextlayer:
              * set that is complete never opens a single file beside it,
              * and one that is short pays a hundred decoded bytes per
              * envelope rather than failing. */
-            if (!seg_have_all(&seg)) {
+            if (fmt == UNC_FORMAT_MIMESEG) {
+                /* The count, from whichever part carries it, and then
+                 * the gap check the joiner would otherwise report as
+                 * "a part the host could not produce". No envelope
+                 * scan: nothing wraps one of these, and a wrapped part
+                 * would be a guess (see seg_wrapped_part_of). */
+                int p;
+                if (seg.desc.nparts == 0) {
+                    for (p = 1; p <= UNC_SEG_MAX_PARTS; p++) {
+                        int n2;
+                        if (!seg.path[p]) continue;
+                        n2 = mimeseg_nparts_of(seg.path[p]);
+                        if (n2 > 0) { seg.desc.nparts = (uint16_t)n2; break; }
+                    }
+                }
+                if (seg.desc.nparts == 0) {
+                    fprintf(stderr, "macextract: %s: no part of this set says "
+                            "how many parts it has\n", file);
+                    fclose(fio.f);
+                    return 1;
+                }
+                for (p = 1; p <= (int)seg.desc.nparts; p++) {
+                    if (seg.path[p]) continue;
+                    if (ask && seg_ask(&seg, p)) continue;
+                    fprintf(stderr, "macextract: part %d of %d is missing\n",
+                            p, (int)seg.desc.nparts);
+                    fclose(fio.f);
+                    return 1;
+                }
+            } else if (!seg_have_all(&seg)) {
                 if (depth > 0)
                     seg_scan_dir(&seg, origfile, 1);
                 seg_scan_dir(&seg, file, 1);

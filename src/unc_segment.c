@@ -81,6 +81,13 @@ typedef struct SegScheme {
     /* The CRC a part stores over its own payload, checked for free when
      * the part is read straight through. NULL for none. */
     uint16_t (*stored_crc)(const uint8_t *head);
+    /* How many bytes this part spends on its header, when that is not
+     * the same for every part of the set. NULL means desc->head_len,
+     * which is every scheme but message/partial: mail headers differ
+     * in length from part to part, and the hook re-proves the part's
+     * identity while it is in there. */
+    int      (*hdr)(const UncSegmentDesc *d, UncIO *io, int part,
+                    uint32_t size, uint32_t *out);
     uint32_t  head_len;      /* bytes the two hooks above want read */
     /* The reader for a scheme whose parts hold an ARCHIVE. NULL when
      * they join into one FILE, which unc_sitseg_emit writes. */
@@ -91,26 +98,33 @@ static const SegScheme seg_schemes[] = {
     /* StuffIt first: it decides on 100 bytes at offset 0, where the zip
      * scheme has to hunt backwards from the end of the file. */
     { UNC_FORMAT_SITSEG, 0, 0, 0, unc_sitseg_describe, unc_sitseg_match,
-      NULL, NULL, 0, NULL },
+      NULL, NULL, NULL, 0, NULL },
     /* Compact Pro next: like StuffIt it decides on a header at offset 0,
      * where the zip scheme has to hunt backwards from the end. Unlike
      * StuffIt, a part that is not the LAST one answers with nparts == 0
      * - it knows the set it belongs to but not how big the set is, and
      * the host is expected to go and find the final segment. */
     { UNC_FORMAT_CPTSEG, 1, 0, 0, unc_cptseg_describe, unc_cptseg_match,
-      NULL, NULL, 0, unc_cpt_extract },
+      NULL, NULL, NULL, 0, unc_cpt_extract },
     /* DiskDoubler's `SPLT`, also decided on a header at offset 0 - and
      * on a second copy of its magic at offset 90, so it is the cheapest
      * of the four to refuse. It is also the only scheme whose parts
      * state their own payload length and check their own CRC. */
     { UNC_FORMAT_DDSEG, 0, 1, 0, unc_ddseg_describe, unc_ddseg_match,
-      unc_ddseg_payload, unc_ddseg_stored_crc, UNC_DDSEG_HEAD, NULL },
+      unc_ddseg_payload, unc_ddseg_stored_crc, NULL, UNC_DDSEG_HEAD, NULL },
     { UNC_FORMAT_ZIPSEG, 1, 0, 0, unc_zipseg_describe, NULL,
-      NULL, NULL, 0, unc_zip_extract },
+      NULL, NULL, NULL, 0, unc_zip_extract },
+    /* message/partial, whose describe() reads a mail header block and
+     * is therefore the dearest of them: it goes after every scheme
+     * that decides on a magic at offset 0. The parts join into a
+     * MESSAGE, so the reader for the joined stream is the MIME walk
+     * — no file is emitted in between. */
+    { UNC_FORMAT_MIMESEG, 0, 0, 0, unc_mimeseg_describe, NULL,
+      NULL, NULL, unc_mimeseg_head, 0, unc_mime_extract },
     /* SPLIT last and describe-less: a part of a plain NAME.001 split is
      * an anonymous slice of bytes, so nothing here can recognise one.
      * A host that has decided by name builds the descriptor itself. */
-    { UNC_FORMAT_SPLIT, 0, 0, 1, NULL, NULL, NULL, NULL, 0, NULL }
+    { UNC_FORMAT_SPLIT, 0, 0, 1, NULL, NULL, NULL, NULL, NULL, 0, NULL }
 };
 
 static const SegScheme *seg_scheme(UncFormat f)
@@ -136,6 +150,9 @@ typedef struct SegJoin {
     UncIO    cur;                  /* stream of the open part, if any */
     int      curpart;              /* 0 = none open */
     uint32_t cursize;              /* length of that part */
+    uint32_t curhdr;               /* and what its header costs, which is
+                                    * desc->head_len for every scheme
+                                    * whose parts agree on that */
 
     int      addressed;            /* mode: see the header comment */
 
@@ -248,14 +265,21 @@ static int seg_open(SegJoin *j, int part)
     /* A part shorter than its own header carries no payload and would
      * make start[] non-monotonic. */
     size = unc_io_size32(&j->cur);
-    if (size == UNC_SIZE_UNKNOWN || size < j->desc->head_len) {
+    j->curhdr = j->desc->head_len;
+    if (j->sc->hdr && size != UNC_SIZE_UNKNOWN) {
+        uint32_t h = j->curhdr;
+        int e = j->sc->hdr(j->desc, &j->cur, part, size, &h);
+        if (e != UNC_OK) { seg_release(j); return e; }
+        j->curhdr = h;
+    }
+    if (size == UNC_SIZE_UNKNOWN || size < j->curhdr) {
         seg_release(j);
         return UNC_ERR_CORRUPT;
     }
     j->cursize = size;
     if (j->addressed) return UNC_OK;
     if (part == j->known) {
-        uint32_t payload = size - j->desc->head_len;
+        uint32_t payload = size - j->curhdr;
         uint32_t end;
         /* A `SPLT` part declares its own payload length, so the file's
          * size is a bound on it and not a measurement of it — and the
@@ -274,6 +298,13 @@ static int seg_open(SegJoin *j, int part)
         if (end < j->start[part]) { seg_release(j); return UNC_ERR_CORRUPT; }
         j->start[part + 1] = end;
         j->known = part + 1;
+        /* A scheme that declares a part COUNT and no byte total knows
+         * its length here and nowhere earlier: the last part has just
+         * been measured. Without this the flat walk would run off the
+         * end of the map and report the set as missing a part, which
+         * is what it says when the host cannot produce one. */
+        if (j->total == UNC_SIZE_UNKNOWN && part == j->last)
+            j->total = end;
     }
     /* A freshly opened part starts a fresh running CRC, whether it was
      * opened for the first time or re-opened after a backward seek. */
@@ -415,7 +446,7 @@ static int32_t seg_read(void *ctx, void *buf, int32_t len)
     if (len <= 0) return 0;
 
     if (j->cur.seek(j->cur.ctx,
-                    j->desc->head_len + (j->pos - j->start[j->curpart])) < 0) {
+                    j->curhdr + (j->pos - j->start[j->curpart])) < 0) {
         j->err = UNC_ERR_IO;
         return -1;
     }
@@ -520,6 +551,7 @@ int unc_extract_segments(const UncSegmentDesc *desc, UncVolumeSource *vs,
     j->vs = vs;
     j->curpart = 0;
     j->cursize = 0;
+    j->curhdr = desc->head_len;
     j->addressed = j->sc->addressed;
     j->start[1] = 0;
     j->known = 1;

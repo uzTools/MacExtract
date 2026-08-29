@@ -167,6 +167,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-29 (two MIME gaps) — the item described our own binary, and nobody had run it
 - 2026-08-29 (a Macintosh wrote a MIME message) — the port was in the reference tree
 - 2026-08-29 (a part that hid its message) — the strongest scan is not the strongest claim
+- 2026-08-29 (a message in several files) — the sixth join scheme, and the first whose parts are text
 
 ---
 
@@ -9638,3 +9639,66 @@ finds a document is indeed strong evidence that a document is there. It is no
 evidence at all about what ELSE is there, and the format that can answer that
 question was running last. **Ask what a probe's evidence bounds, not just how
 strong it is**: a marker found by scanning bounds a region, never a file.
+
+## 2026-08-29 (a message in several files) — the sixth join scheme, and the first whose parts are text
+
+`message/partial` (RFC 2046 5.2.2) was the last item in OPEN_ITEMS.md's
+*"not written, and not waiting for anything"*: the oracle was on this machine
+already — mpack writes the sets with `-m`, munpack puts them back — and no
+part of one yielded anything here.
+
+**Why it is a join scheme and not a shape of the MIME reader.** The parts are
+FILES. The engine never opens a file (engine discipline), so the host has to
+produce them and the joiner has to sequence them, which is exactly what the
+five existing schemes do. What made this one fit at all is that the joined
+stream needs no intermediate file: part 1's body already begins with the
+enclosed message's own headers, so the concatenation IS a message and the
+scheme's reader is `unc_mime_extract`. mpack composes something larger for its
+own output — the enclosing headers minus `Content-*` and `Message-ID`, then
+the inner ones — because its result is a file somebody may read. Ours is a
+stream somebody parses.
+
+**Two properties no other scheme has**, and both cost a change to the joiner
+rather than a row in its table:
+
+- **Every part's header is a different length**, because a part's header is
+  its own mail headers. `UncSegmentDesc.head_len` is one number for the set,
+  and five schemes were right to keep it there; the joiner now asks a `hdr`
+  hook per part where a scheme has one, keeps the answer for the OPEN part
+  only (`SegJoin.curhdr`), and reads the payload from it. The hook re-proves
+  the part's `number` and `id` while it has the header in hand, which is the
+  structural check this scheme gets in place of a fingerprint comparison the
+  host could not make.
+- **The set declares a part COUNT and no byte total.** The flat walk stops at
+  `total`, and a `total` of UNKNOWN made it run off the end of the map and
+  report a set that had simply ENDED as one missing a part. So the joiner
+  learns the total when it opens the last part, which is the first moment the
+  number exists.
+
+**Identity by content, through a different call.** A part names its set in an
+`id` parameter every part repeats — content, not filename, like StuffIt and
+Compact Pro. But `unc_segment_match` is given 100 bytes and mail headers are
+longer than that, so both hosts identify a candidate with
+`unc_segment_describe` instead. That is the second existing shape reused
+rather than invented: only the LAST part must carry `total`, so a set opened
+anywhere else asks around for its count exactly as a Compact Pro set asks
+which segment holds the index — the Mac shell's `SegFindLast` now answers for
+both.
+
+**What the oracle cost.** munpack reassembles through a fixed directory it
+does not create, and refuses to overwrite its own `CT` file, so a set fed to
+it part by part dies on part 2 unless that file is removed in between. Both
+quirks are in `tools/run_mime.py` and TESTING.md; neither is a defect in this
+engine, and both would have been read as one by a harness that only checked
+the exit status.
+
+**It joined on a Mac Plus the same day**, at 4 MB and at the 1 MB floor, and
+that run is a case in `tools/vmac/segcheck.py` rather than a command somebody
+typed once. The check is the Out volume, not the on-screen grid: what is being
+tested is that four TEXT files became one Macintosh file with a resource fork,
+and an aggregate cannot fail on that.
+
+**Stack.** This is the only chain in the engine that goes through the engine
+twice — a joiner calling a format reader that reads back through the joiner —
+so it was measured rather than assumed: 2,796 B on a 68000, second only to
+DiskDoubler's 3,386 B, against a 4 KB rule (FORMATS.md, *Stack*).

@@ -850,7 +850,7 @@ other implementations grade instead:
 - **deark**, an independent base64 implementation, built by
   `tools/build_deark.sh` — already the third oracle for ARC 0x0b.
 
-56 cases. The base64 half: four lengths around a group boundary (the
+65 cases. The base64 half: four lengths around a group boundary (the
 last group padded with none, one or two `=`), every byte value, a
 one-byte file, two documents in one file, and the same document with
 CR, LF and CRLF line endings. The MIME half: a single base64
@@ -874,6 +874,28 @@ sniffs as uuencode. Each of the first three and the BinHex one was run
 against a build with `unc_mime_probe_multipart` removed from
 `unc_sniff` first, and fails there — an established failure, not a
 green tick.
+
+**`message/partial`** (2026-08-29) is nine more, and the only ones
+where BOTH ends are somebody else's: `mpack -m 4000` writes the
+multi-file set and munpack reassembles it, so what is graded is that
+this engine joins the same parts into the same bytes. The set is joined
+from part 1, from a middle part and from the last; a set missing a
+middle part is refused with nothing written; two sets in one directory
+do not mix, because the parts are placed by the `id` they repeat and
+never by filename; a `multipart/appledouble` split across files comes
+out with both forks; and a set that carries `total` only on its LAST
+part — which is all RFC 2046 requires — still joins. Six of the nine
+were run against a build with `unc_mimeseg_probe` removed from
+`unc_sniff` and fail there.
+
+Two things about munpack as an oracle for this, both of which cost a
+run: it reassembles through a FIXED directory, `/usr/tmp/m-prts-$USER`,
+which it does not create; and it creates that directory's `CT` file
+with `O_EXCL`, so a part after the first dies with *"CT: File exists"*
+unless it is removed in between — mpack failing to round-trip with its
+own twin (DECISIONS.md 2026-08-29). The harness does both, and where
+there is no writable `/usr/tmp` it says the comparison was skipped and
+still grades this engine against itself.
 
 **The three places the oracle is wrong**, each with a reproduction in
 DECISIONS.md 2026-08-26: munpack never uses a `Content-Disposition`

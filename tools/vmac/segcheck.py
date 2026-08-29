@@ -61,6 +61,11 @@ CASES = {
                 "interactive:--wrapped"),
     "chain": ("a chained .sit.hqx: every layer off, intermediate removed",
               "interactive:--chain"),
+    "mimeseg": (
+        "a MESSAGE split across four files (message/partial), carrying a "
+        "Macintosh file with both forks: the sixth join scheme, and the "
+        "only one whose parts are text",
+        "run"),
     "ddseg-real": (
         "a DiskDoubler `SPLT` set CUT BY DISKDOUBLER ITSELF, both forks: "
         "the one scheme the Mac had never joined",
@@ -113,6 +118,84 @@ def cut_cpt(fixture, workdir, anchor_name, drop_last=False):
         paths = paths[:-1]
     anchor = os.path.join(workdir, anchor_name)
     return anchor, [p for p in paths if p != anchor]
+
+
+# The file the message/partial case carries, and what it is called
+# inside the message. Both forks, because a multipart/appledouble is the
+# only mail shape that has two and joining it is the point.
+MIMESEG_NAME = "Joined Mac File"
+MIMESEG_DATA = bytes(range(256)) * 3 + b"tail\r"
+MIMESEG_RSRC = b"RESOURCE FORK " * 29
+
+
+def cut_mimeseg(workdir, anchor_name):
+    """A multipart/appledouble message split into four message/partial
+    files, built with the same helpers tools/run_mime.py grades against
+    munpack — so what runs on the Mac is what the Linux suite runs."""
+    sys.path.insert(0, os.path.join(REPO, "tools"))
+    import run_mime as M                                   # noqa: E402
+    af = M.applefile(MIMESEG_NAME.encode(), MIMESEG_RSRC)
+    msg = M.message(
+        [(b'Content-Type: application/applefile; name="%s"\r\n'
+          % MIMESEG_NAME.encode() +
+          b"Content-Transfer-Encoding: base64\r\n", M.b64(af)),
+         (b'Content-Type: application/octet-stream; name="%s"\r\n'
+          % MIMESEG_NAME.encode() +
+          b"Content-Transfer-Encoding: base64\r\n", M.b64(MIMESEG_DATA))],
+        ctype=b'multipart/appledouble; name="%s"' % MIMESEG_NAME.encode())
+    parts = M.partial_set(msg, b"segcheck.1@example", 4)
+    names = [anchor_name, "second-piece", "zz-third", "LAST.BIT"]
+    out = []
+    for nm, body in zip(names, parts):
+        p = os.path.join(workdir, nm)
+        open(p, "wb").write(body)
+        out.append(p)
+    return out[0], out[1:]
+
+
+def run_mimeseg(case, mem, workdir):
+    """The set joined on the Mac, graded on the Out volume.
+
+    The grid cannot carry this on its own: it aggregates, and what is
+    being tested is that four TEXT files became one Macintosh file with
+    a resource fork. So the disk is read as well, as the `SPLT` case
+    reads it, and both forks are compared with what went in.
+    """
+    d = os.path.join(workdir, case)
+    os.makedirs(d)
+    anchor, extras = cut_mimeseg(d, "archive-part-one")
+    argv = [sys.executable, os.path.join(HERE, "run.py"), anchor,
+            "--mem", mem, "--expect", "--keep-disks"]
+    for e in extras:
+        # Named nothing alike: a part is placed by the `id` every part
+        # of the set repeats, never by its filename.
+        argv += ["--extra-file", f"{e}:{os.path.basename(e)}"]
+    r = subprocess.run(argv, capture_output=True, text=True)
+    out = r.stdout + r.stderr
+    kept = [l.split("disks kept in", 1)[1].strip()
+            for l in out.splitlines() if "disks kept in" in l]
+    if not kept:
+        return False, "run.py kept no disks to read"
+    got, gotr = read_out_volume_forks(kept[0], MIMESEG_NAME)
+    shutil.rmtree(kept[0], ignore_errors=True)
+    if got is None:
+        return False, ("the joined file is not on the Out volume as %r; "
+                       "run.py said: %s" % (MIMESEG_NAME,
+                                            out.strip()[-200:]))
+    from vmac_check import mask_reserved                    # noqa: E402
+    bad = []
+    if got != MIMESEG_DATA:
+        bad.append("data %d B (want %d)" % (len(got), len(MIMESEG_DATA)))
+    if mask_reserved(gotr) != mask_reserved(MIMESEG_RSRC):
+        bad.append("rsrc %d B (want %d)" % (len(gotr), len(MIMESEG_RSRC)))
+    if bad:
+        return False, "the joined file differs: " + ", ".join(bad)
+    grid = r.returncode == 0
+    return grid, ("four message/partial files joined on the Mac into one "
+                  "file, %d B data + %d B rsrc, and the grid agrees"
+                  % (len(MIMESEG_DATA), len(MIMESEG_RSRC)) if grid else
+                  "the file is right but the grid did not agree: " +
+                  out.strip()[-200:])
 
 
 def read_out_volume_forks(rundir, name):
@@ -243,6 +326,8 @@ def run_ddseg_real(case, mem, workdir):
 def run_scheme(case, mem, workdir):
     if case == "ddseg-real":
         return run_ddseg_real(case, mem, workdir)
+    if case == "mimeseg":
+        return run_mimeseg(case, mem, workdir)
     fixture = {"sit-scattered": "derived-Downer.sit"}.get(
         case, "derived-Education7.1.cpt")
     src = os.path.join(FIX, fixture)

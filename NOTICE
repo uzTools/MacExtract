@@ -53,10 +53,13 @@ This project's decoders are transcriptions/ports of algorithms from:
     be used in advertising or publicity pertaining to distribution of
     the software without specific, written prior permission."
     `src/fmt_mime.c` is transcribed from `decode.c` (the header and
-    parameter rules, parseEncoding, from64, fromqp, and the order a
-    filename is looked for in), `part.c` (the boundary rule), and
-    `macfile.c` (the applefile entry ids); `src/fmt_b64.c` follows the
-    same from64 alongside deark. Where this project deviates it is
+    parameter rules, parseEncoding, from64, fromqp, the order a
+    filename is looked for in, and handleUuencode's test for a document
+    pasted into a text part), `part.c` (the boundary rule), and
+    `macfile.c` (the applefile entry ids); `src/fmt_mimeseg.c` from
+    `handlePartial` (the message/partial parameters, their checks, and
+    the reassembly); `src/fmt_b64.c` follows the same from64 alongside
+    deark. Where this project deviates it is
     recorded and reproduced (DECISIONS.md 2026-08-26). A build of
     munpack is also the second oracle for those formats in the test
     suite (TESTING.md, tools/build_mpack.sh): test-time only, never

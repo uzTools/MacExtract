@@ -64,6 +64,10 @@ static const UncFormatDesc unc_formats[] = {
      * and calls unc_extract_segments. */
     { UNC_FORMAT_SPLIT,       "Split file",          1, 0, NULL },
     { UNC_FORMAT_CPTSEG,      "Compact Pro segment", 1, 0, NULL },
+    /* Extractable only as a SET, like the two rows above: one part of a
+     * message/partial set is half a message, and unc_extract_as has no
+     * case for it. */
+    { UNC_FORMAT_MIMESEG,     "message/partial part", 1, 0, NULL },
     { UNC_FORMAT_UU,          "uuencode",            1, 1, unc_uu_extract },
     { UNC_FORMAT_ARC,         "ARC",                 1, 0, unc_arc_extract },
     { UNC_FORMAT_SUPERDISK,   "SuperDisk!",          1, 0, unc_superdisk_extract },
@@ -242,6 +246,11 @@ static const UncProbe unc_sniff_order[] = {
      * message). Only a message declaring a multipart WITH a boundary is
      * claimed here; a posting whose body is one uuencoded or BinHex
      * document has no boundary and still belongs to its own format. */
+    /* A part of a SET before the whole it resembles, which is the same
+     * rule the spanned-zip and Compact Pro segment probes sit under:
+     * part 1 of a message/partial set is a message and would be read
+     * as the one it is a slice of. */
+    unc_mimeseg_probe,
     unc_mime_probe_multipart,
     unc_btoa_probe,
     unc_uu_probe,

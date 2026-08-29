@@ -192,25 +192,3 @@ all** (BLOCKERS.md, the ARC 7 row, filed and disproved the same day).
   one second reader that exists is an archive's own self-extractor on an
   emulated Mac, which has never been handed a stream this project
   wrote.
-
----
-
-## 3. Not written, and not waiting for anything
-
-**The oracle is already on this machine.** Each of these is work nobody has
-done, and each names the second implementation that grades it. They are kept
-out of section 1 because the question to bring here is *when*, not *what did I
-just find?* — it arrived here on 2026-08-29 from section 1, where it had
-been filed on a description of this engine's own behaviour that nobody had run
-(BLOCKERS.md, withdrawn claims). The other one that arrived with it — a
-uuencoded part hiding the rest of its multipart — closed the same day
-(FORMATS.md, *base64 and MIME*).
-
-- **`message/partial`: a message split across several FILES is not
-  reassembled**, and today no part of such a set yields anything — part 1
-  fails *"not a recognized archive"*, parts 2..n are *"format not
-  recognized"*. The engine joins multi-file sets five other ways already
-  (FORMATS.md, *Segmented archives*). **What would close it:** the join,
-  graded against munpack over sets mpack itself writes with `-m`;
-  DECISIONS.md 2026-08-29 (*two MIME gaps*) has the two quirks a harness on
-  it has to know.

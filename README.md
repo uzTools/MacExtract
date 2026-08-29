@@ -57,7 +57,7 @@ one, because parts are recognised by what is inside them:
 ## Download
 
 **[Latest release](https://github.com/jarreboum/MacExtract/releases/latest)** —
-currently **v0.25.0**. If the release page shows anything older, the publish
+currently **v0.26.0**. If the release page shows anything older, the publish
 step did not run. Or take it straight from the tree:
 
 | | |
@@ -108,12 +108,13 @@ fine, and a modern unarchiver will open it.
 
 **Archives split across floppies** are joined for you: StuffIt, Compact Pro
 and DiskDoubler `SPLT` sets, spanned zip (`.z01` … `.zip`) and plain
-`.001`/`.002` splits. Open the first part and the rest are found beside it; if
-one is elsewhere you are asked to point at it, and putting the disk in is
-enough — the part is picked up as soon as it appears, with nothing to click.
-The Mac-format sets recognise each other by what is inside them, so names and
-folders do not matter; for zip and `.NNN` sets the names are all there is, so
-keep them. Parts still wrapped individually (`Archive.sit.1.hqx`) are joined
+`.001`/`.002` splits — and so is a file that arrived as several mail messages,
+which is how anything large used to cross a mail gateway. Open the first part
+and the rest are found beside it; if one is elsewhere you are asked to point
+at it, and putting the disk in is enough — the part is picked up as soon as it
+appears, with nothing to click. The Mac-format sets and the mailed ones
+recognise each other by what is inside them, so names and folders do not
+matter; for zip and `.NNN` sets the names are all there is, so keep them. Parts still wrapped individually (`Archive.sit.1.hqx`) are joined
 too. Send the output to a different disk from the parts, which is the only
 thing that works when you are swapping floppies.
 
@@ -129,7 +130,7 @@ each one opens:
 | StuffIt 5 archives | no — needs Expander 5 or later | yes |
 | zip, gzip, tar, `.Z` | only with a paid add-on, System 7 only | yes |
 | PackIt (`.pit`) | not listed | yes |
-| Sets split across floppies | StuffIt sets, with the same add-on | StuffIt, Compact Pro, DiskDoubler, zip and `.001` sets |
+| Sets split across floppies | StuffIt sets, with the same add-on | StuffIt, Compact Pro, DiskDoubler, zip and `.001` sets, and mail split into several messages |
 | Split zip or Compact Pro sets | "cannot expand" — its own Read Me | yes |
 | Encrypted archives | yes, if you know the password | yes, and Compact Pro's too, which nothing else reads |
 | Several files posted in one BinHex message | yes | yes |
