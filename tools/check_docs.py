@@ -3,9 +3,11 @@
 
 Four of them, all cheap enough to run first in ci.sh:
 
-1. DECISIONS.md's Contents index lists every `## ` entry, in order. An index
-   nobody regenerates is worse than no index, because it reads as complete.
-   `--fix` rewrites it from the headings.
+1. DECISIONS.md's and FORMATS.md's Contents indexes list every `## ` entry,
+   in order. An index nobody regenerates is worse than no index, because it
+   reads as complete. `--fix` rewrites either from the headings. FORMATS.md
+   joined on 2026-08-29, when 753 lines of it turned out to carry no heading
+   at all and the one pointer into them was in a table row GitHub drops.
 2. No document cites another document by line number. Line numbers drift
    without anyone noticing; CLAUDE.md requires citing the section by name.
    Source files (`foo.c:41`) are fine - only `*.md:NN` is checked.
@@ -34,7 +36,7 @@ import tempfile
 import pathlib
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-DECISIONS = ROOT / "DECISIONS.md"
+INDEXED = ("DECISIONS.md", "FORMATS.md")
 INDEX_HEAD = "## Contents\n"
 MD_LINE_CITE = re.compile(r"\b[A-Za-z_][\w./-]*\.md:\d+")
 
@@ -49,8 +51,9 @@ def indexed(text):
     return [l[2:].strip() for l in body.split("\n") if l.startswith("- ")]
 
 
-def check_index(fix):
-    text = DECISIONS.read_text()
+def check_one_index(name, fix):
+    path = ROOT / name
+    text = path.read_text()
     want, have = entries(text), indexed(text)
     if want == have:
         return []
@@ -59,19 +62,23 @@ def check_index(fix):
         preamble, tail = rest.split("\n---\n", 1)
         keep = "\n".join(l for l in preamble.split("\n")
                          if l and not l.startswith("- "))
-        new = "\n".join(f"- {e}" for e in want)
-        DECISIONS.write_text(f"{head}{INDEX_HEAD}{keep}\n\n{new}\n\n---\n{tail}")
-        print(f"check_docs: rewrote DECISIONS.md index ({len(want)} entries)")
+        body = "\n".join(f"- {e}" for e in want)
+        path.write_text(f"{head}{INDEX_HEAD}{keep}\n\n{body}\n\n---\n{tail}")
+        print(f"check_docs: rewrote {name} index ({len(want)} entries)")
         return []
     missing = [e for e in want if e not in have]
     extra = [e for e in have if e not in want]
-    out = ["DECISIONS.md: Contents index is out of date "
+    out = [f"{name}: Contents index is out of date "
            "(run tools/check_docs.py --fix)"]
     out += [f"  not indexed: {e}" for e in missing]
     out += [f"  indexed but gone: {e}" for e in extra]
     if not missing and not extra:
         out.append("  same entries, wrong order")
     return out
+
+
+def check_index(fix):
+    return [p for name in INDEXED for p in check_one_index(name, fix)]
 
 
 VERSION_RE = re.compile(r'#define UNC_VERSION "([0-9][^"]*)"')

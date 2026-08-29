@@ -149,9 +149,9 @@ quarters of our time; we open a Compact Pro archive, or a `.hqx` with an
 archive inside it, faster than it does.
 
 Under System 7 Expander also has drag-and-drop, watch folders and background
-expansion; under System 6 both are menu-driven. The full table, the timings
-and their sources are in [FORMATS.md](FORMATS.md) under "Compared with StuffIt
-Expander 4.0.2".
+expansion; under System 6 both are menu-driven. The full table is in [FORMATS.md](FORMATS.md) under "Compared with
+StuffIt Expander 4.0.2", and the four timed archives are under "Timed on
+the same Mac Plus" inside it.
 
 ## What you need
 
@@ -202,9 +202,8 @@ build/macextract x secret.sit -p hunter2 # password-protected
 
 It is checked against [The Unarchiver](https://theunarchiver.com/) on 932 real
 archives, byte for byte, both forks. The Macintosh application is checked the
-same way *while running on* an emulated Mac Plus and a System 7 machine — not
-only on Linux. It runs on Mac OS 9 too, but that check last ran before eight
-of the formats above were added.
+same way *while running on* an emulated Mac Plus, a System 7 machine and a
+Mac OS 9 machine — not only on Linux.
 
 No physical Macintosh has ever run it. Emulation is evidence, not proof.
 
