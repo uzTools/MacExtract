@@ -911,6 +911,26 @@ a harness can click is not the same list.
   a limitation stated about the environment that was true of one tool, in
   one configuration, and was never re-read for the name of the tool.
 
+- **"Module 13 runs now: it wanted a 64 KB working buffer and one Toolbox
+  trap, `_BlockMove`, which the runner answers."** Written 2026-08-25,
+  withdrawn 2026-08-29. Given exactly those two things it segfaults on
+  every input — four for four, `signal=11`. The 65,536 it compares
+  `workingBufferSize` against (@0xa2) is a FLOOR inside its own code; what
+  it needs is the long at +0x1E of its module header, **229,618 B**, which
+  is the number Alysis's own extension checks (INIT 32 @0x51a2) and
+  refuses with -4 below. Sized from the header the module compresses four
+  inputs cleanly. **Cost:** the method 13 item stayed filed as "waiting on
+  a gradeable specimen" for four days after the tool that manufactures
+  specimens was already in the tree, and the sentence three paragraphs
+  above it in the same FORMATS.md section still read "13's traps on an
+  A-line instruction under the runner" — one section, two accounts, both
+  wrong. **Why it survived:** a requirement was read out of a guard in the
+  code instead of out of the field the vendor's own loader checks. A guard
+  says "not below this"; a manifest says "this much". Satisfying the guard
+  satisfied the assertion and not the module — and the crash that followed
+  looked like the module's problem rather than the harness's, because the
+  previous sentence about this module had also blamed the module.
+
 ### Corrected figures and superseded write-ups
 
 - **The OS 9 boot time** was recorded as "about four minutes", then "20-45

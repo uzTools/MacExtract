@@ -337,22 +337,39 @@ method 11**, which nothing else here has: `tools/sdmodule/` now grades the
 SlowFastB decoder against blocks Alysis's own encoder wrote, where before it
 had the corpus's four.
 
-Module 13 is the same shape — command 2 only, `_Debugger` on anything else —
-and it writes its own eight-byte header (`length+8`, the word 13, then a
-32-bit uncompressed length) which is not the six-byte block header this
-container uses. So a method 13 block, if one exists, is not shaped like the
-ones here. It runs now: it wanted a 64 KB working buffer (it compares
-`workingBufferSize` against 65536 and DEBUGGERs below it) and one Toolbox
-trap, `_BlockMove`, which the runner answers.
+✧✧ **Module 13 is the same shape and not the same answer, measured
+2026-08-29.** It compresses on command 2, and what it writes declares
+**13** — in a header of its own: a word of length, the word 13, then a
+THIRTY-TWO-bit uncompressed length, where every block in this container has
+a six-byte header with a 16-bit one. On the decompress command it executes
+`_Debugger`, at its own 0xd4, so **no software in reach has a method 13
+decoder**: Alysis's extension hands method 9 and up to the module of that
+number (INIT 32 @0x50c8), which for 13 is this one. Four streams written
+here read back as no method this engine knows, and as none of the other
+modules' either (`tools/sdmodule/`, phase 6).
+
+It runs, having been given the working buffer **its own header declares** —
+229,618 B, the long at +0x1E that INIT 32 checks at @0x51a2. The 64 KB it
+had before is a floor inside its code (@0xa2), not its requirement; at that
+size it wrote past the mapping and died on every input, and the claim that
+it ran is withdrawn (BLOCKERS.md).
+
+**A file could carry one**, which is what the compress path settles. INIT
+32's (@0x5232) indexes an eleven-entry table at +0xf2e, eight bytes each, by
+a setting word, and calls the module of each number in turn: the methods
+named are 1, 11, 17, 2, 18, 12, 1, 11, 11, 1 and **13** — level 11. Three of
+them (12, 17, 18) have no module in this product at all, so that table is
+the whole Alysis library's menu rather than this expander's.
 
 The corpus's two archives use 7 and 11. The method table is not guesswork:
 decoding method 11 yields Disk Expander 1.2's own resource fork, whose `Cmpr`
 resources are one module per method, each stating its number and its name
 (DECISIONS.md, "SuperDisk!, read out of SuperDisk!"). 13 and 20 are declined
-because no fixture uses them and neither module can be run end to end here:
-13's traps on an A-line instruction under the runner, and 20's is a
-COMPRESSOR — it answers `badCommandError` to the decompress command, and no
-expander for it exists in any Alysis product in reach. Their modules are in
+because both are COMPRESSORS, and each refuses the decompress command — 20
+with `badCommandError`, 13 by breaking into the debugger — so no expander
+for either exists in any Alysis product in reach. 20's output declares
+method 11 and needed nothing; 13's declares 13 and can be graded by
+nothing (✧✧ above). Their modules are in
 hand and named by `tools/sdmodule/run_sdmodule.py --list`.
 
 **There is no oracle but the archives themselves.** `unar` and `macunpack`

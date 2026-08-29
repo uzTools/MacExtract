@@ -46,6 +46,7 @@ answer and not a refusal — the brief has grown before, on request.
 | PMarc (`-pm0-`, `-pm1-`, `-pm2-`) and `-lhx-` | **not recognised** | a different family behind an LZH-shaped header. PMarc is a Japanese PC format with its own coders, `-lhx-` is UNLHA32's extension; neither reached a Macintosh, and LZH itself only just did (2026-08-23) |
 | Self-extracting LZH (an executable with an archive behind it) | **not recognised** | the archive sits behind DOS, Amiga, Atari or X68000 machine code, and finding it means knowing each of those loaders. `unar` has a parser per platform; here the answer is to hand the `.lzh` itself to the extractor |
 | RAR, 7z, bzip2, xz, Cabinet, Zoo, ar/`.deb`, cpio, ARJ | **named since 2026-08-26, never extracted** | none is a Macintosh archive format, none carries a resource fork or Finder metadata, and every one is served by a maintained extractor on any machine that can run one (raised 2026-08-25, Macintosh Garden forum, *Archive formats*). NAMING them is in — the name is an instruction inside the frame the user arrived with (DECISIONS.md 2026-08-26; FORMATS.md, *Archives named but not extracted*) |
+| Alysis SuperDisk! method 13 | **not implemented, and no specimen is wanted** | its module compresses and REFUSES to decompress — `_Debugger` at its own 0xd4 — so no Alysis expander in reach can read what it writes, and nor can this engine or any other module in the library. Streams can be made here at will since 2026-08-29 and there is nothing whatever to grade one against. It is reachable from Alysis's own compress path (level 11 of INIT 32's table at +0xf2e), so a file COULD exist; reading one would mean inverting that compressor with no second reader anywhere, for a codec no archive in the corpus uses and whose framing is not this container's (FORMATS.md, *Alysis SuperDisk!* ✧✧; DECISIONS.md 2026-08-29) |
 | Zip64 for files larger than 4 GB | **the counts are read since 2026-08-25 and the per-ENTRY escape since 2026-08-27; over-4-GB fields are refused, per archive or per entry**, and `unc_zipseg_describe` still answers `UNC_ERR_UNSUPPORTED` for a spanned set | the entry count, central-directory size and offset come from the Zip64 record as `uint32` halves, and so does an entry's own size and offset from extra field 0x0001 — which is what makes a 70,000-entry archive extract, and a 3.4 GB one (FORMATS.md, *Size limits*). A field whose high half is set returns `UNC_ERR_UNSUPPORTED` for the archive or `UNC_ERR_TOOLARGE` for the entry. **The reason this stayed out was withdrawn on 2026-08-28** — "every format would pay 64-bit offsets on a 68000" was measured at +0.51 % of text and 0 bytes of heap, and `UncIO` now carries `unc_off_t`, 64-bit in the CLI. What keeps Zip64 out is now only zip's own shape: its directory fields are 32-bit and the escape is read as halves, so reading it properly is a format change rather than a type change. tar, whose positions are a running sum, reaches past 4 GB today (2026-08-14, revised 2026-08-25, 2026-08-27 and 2026-08-28) |
 
 Everything detect-only is **named** by `unc_sniff`, and both front ends say
@@ -104,26 +105,6 @@ all** (BLOCKERS.md, the ARC 7 row, filed and disproved the same day).
   does not bend for a constant that is easy to look up. Extraction stays out
   of scope either way (Part 1). **What would close it:** an implementation or
   spec in `reference/` for any of them.
-
-- **SuperDisk! method 13.** No corpus fixture uses it, and every setting of
-  Alysis's own control panel produces method 1 or 6 (`sdcompress.py --sweep`).
-  Its module is command-2 only, like method 20's, and its output is not shaped
-  like a block here: it writes `length+8`, the word 13, then a **32-bit**
-  uncompressed length, where every block this container holds has a six-byte
-  header with a 16-bit one. The module itself is no longer the obstacle — it
-  runs, given the 64 KB working buffer it demands and the one `_BlockMove` the
-  runner now answers. **What would close it:** a file that actually contains
-  one, which would say whether method 13 lives in a different container or
-  whether the block header has a shape this project has not seen.
-
-  Missing: a **gradeable specimen**. The writer was searched for on 2026-08-25
-  and not found — SuperDisk! 2.x is on no archive this project can reach, the
-  two surviving 1.x releases have no module loader in them at all, and of the
-  later Alysis products that carry the module library, Alysis Resource
-  Compressor 2.0 compresses into Apple's container and eDisk 1.2 and More Disk
-  Space 1.1 carry only methods 1, 11 and a 13 named " Copy" (DECISIONS.md
-  2026-08-25; `tools/vmac/rescomp.py`). One lead not followed: Disk Expander
-  1.2's `INIT 32` has a compress path walking a method table.
 
 - **A SpaceSaver file written by SpaceSaver.** Every codec is graded against
   Aladdin's own modules (FORMATS.md, *StuffIt SpaceSaver*), so what rests on

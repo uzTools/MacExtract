@@ -159,6 +159,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-28 (what a width costs) — the offset type is a compile-time choice, not an architecture
 - 2026-08-28 (the certificate painted first) — a completion marker that goes down first certifies nothing
 - 2026-08-29 (the yardstick) — the free tool, run at last
+- 2026-08-29 (SuperDisk! method 13) — the specimen that would have settled nothing
 
 ---
 
@@ -9091,3 +9092,57 @@ set being one per format rather than one that is representative. What makes
 the times comparable at all is that both applications wrote the same output
 names on every fixture; a speed comparison between two programs doing
 different amounts of work is arithmetic, not evidence.
+
+## 2026-08-29 (SuperDisk! method 13) — the specimen that would have settled nothing
+
+OPEN_ITEMS.md filed method 13 under *"waiting on a file this machine does not
+have"*, and named what would close it: **"a file that actually contains one"**.
+That line was wrong twice over, and the lead beside it — *"Disk Expander 1.2's
+`INIT 32` has a compress path walking a method table"* — is what showed it.
+
+**The method table is real, and 13 is in it.** INIT 32's compress path
+(@0x5232) reads a setting word, indexes an eleven-entry table at +0xf2e, eight
+bytes per entry, and calls the module of each number in turn: 1, 11, 17, 2, 18,
+12, 1, 11, 11, 1 and **13**. So the premise held — Alysis's own compressor can
+be asked for method 13, and a file could carry one. Three of the numbers in
+that table (12, 17, 18) have no module in this product at all, which is a
+second reading of the same lesson method 20 taught: **the number identifies a
+codec in a library, and the library is not this product's.**
+
+**But the file would have settled nothing, because there is nothing to grade it
+against.** Module 13 answers command 2 and executes `_Debugger` on the
+decompress command, at its own 0xd4 — reproduced as SIGILL under the runner.
+Alysis's extension hands method 9 and up to the module of that number, so no
+expander that ever shipped in reach can read a method 13 block. Four streams
+written here decode as no method this engine knows and as none of the other
+modules' either. A specimen is only worth having when a second reader can say
+whether what came out is right; for this codec there is no second reader, and
+after today there is no shortage of specimens either — they can be made at
+will.
+
+So the item moves to Part 1, out of scope. Not because it is impossible:
+module 13 IS a reference implementation of its own format, and inverting a
+compressor is legitimate under rule #1. It is out because the work would
+produce a decoder for a codec no Alysis expander can read, that no archive in
+the corpus uses, whose framing is not this container's — with nothing to check
+the result against at any point.
+
+### The transferable part: a guard is not a requirement
+
+Getting the module to run at all meant undoing a wrong number, and the wrong
+number came from the right place. FORMATS.md said module 13 "wanted a 64 KB
+working buffer (it compares `workingBufferSize` against 65536 and DEBUGGERs
+below it)" — which is true, and is a floor written into the module's own code.
+What the module actually needs is the long at +0x1E of its header, 229,618
+bytes, and that is the field INIT 32 checks before calling anything (@0x51a2,
+refusing with -4 below). Given 64 KB it ran past the mapping and died on every
+input.
+
+**A guard says "not below this"; a manifest says "this much".** Reading the
+requirement out of the code's own assertion satisfied the assertion and not the
+module — and the crash then read as the module's fault, because the previous
+sentence in the same document had already blamed the module ("13's traps on an
+A-line instruction under the runner"). Two accounts of one module in one
+section of one file, both wrong, four days apart. The runner now takes the
+larger of its own heuristic and what the module declares, which changes nothing
+for methods 1-11 and is the whole of the difference for 13.

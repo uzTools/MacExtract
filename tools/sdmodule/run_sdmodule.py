@@ -35,9 +35,12 @@ dispatcher as well as a loader.
 
 What it CANNOT see, and each of these is a real gap:
 
-  - **Methods 10, 13 and 20 have a module and nothing to feed it.** Their
-    codecs are here and this engine does not implement them, so all this
-    harness can say about those three is that the modules load.
+  - **Method 13's output cannot be checked by anything.** Its module
+    compresses and has no decoder — no other module here reads what it
+    writes, and neither does this engine — so all that can be asserted is
+    the framing and that the decompress command breaks into the debugger.
+    Methods 10 and 20 were in this bullet until 2026-08-25 and 2026-08-29;
+    both turned out to be answerable.
   - **A synthetic block only exercises what this engine's reading can
     build.** The Huffman regions are written with a flat 8-bit table (an
     identity code), so tree shapes a real encoder would emit are untested —
@@ -768,6 +771,97 @@ def phase_tennessee(macextract, mods, workdir, verbose=False):
     return bad == 0 and ok > 0
 
 
+def phase_slowfastc(macextract, mods, workdir, verbose=False):
+    """Method 13: a compressor whose output nothing in reach can read.
+
+    Module 13 ("Faster", 5,030 B) is the third command-2-only module, and
+    the second whose number was read as a block method for months. It is
+    not method 20's story: 20 wrote blocks declaring method 11, so there
+    was nothing to implement. 13 declares **13**, in a header of its own —
+    a word of length, the word 13, then a THIRTY-TWO-bit uncompressed
+    length, where every block in this container has a six-byte header with
+    a 16-bit one.
+
+    What this asserts, all of it measured:
+
+      1. command 1 answers 0 — the module is alive;
+      2. command 2 compresses, and the eight bytes it writes carry 13 and
+         the input's length;
+      3. **command 3 executes `_Debugger`** at the module's own 0xd4. There
+         is no decompressor. Alysis's own extension hands method 9 and up
+         to the module of that number (INIT 32 @0x50c8), so nothing that
+         ever shipped can read a method 13 block either;
+      4. this engine refuses its payload as every method it knows, and so
+         does every other Alysis module here.
+
+    (4) is what settles the scope question, and it is why the specimen
+    OPEN_ITEMS.md waited for would not have helped: specimens can be made
+    here now, and there is nothing to grade one against.
+
+    It had to be given the working buffer its own header declares — 229,618
+    bytes at +0x1E, which INIT 32 checks at @0x51a2 — before any of this
+    could be seen. At 64 KB it wrote past the mapping and died, which is
+    what "13 traps on an A-line instruction" was (BLOCKERS.md).
+    """
+    if 13 not in mods:
+        print("sdmodule: no method 13 module — skipping")
+        return True
+    rnd = random.Random(5)
+    cases = [
+        ("zeros", b"\x00" * 4096),
+        ("text", b"the quick brown fox. " * 300),
+        ("counting", bytes(range(256)) * 16),
+        ("runs", b"".join(bytes([rnd.randrange(256)]) * rnd.randrange(1, 40)
+                          for _ in range(300))),
+    ]
+    bad = ok = 0
+
+    _, status = run_module(mods, 13, b"x" * 64, 64, selector=1)
+    if status != 0:
+        bad += 1
+        print(f"sdmodule: module 13 does not answer command 1: {status}")
+
+    # The decompress command, which is the whole question. `_Debugger` is
+    # an A-line word: a real Mac drops into MacsBug, qemu raises SIGILL.
+    _, status = run_module(mods, 13, b"\0" * 64, 4096, selector=3)
+    if not (isinstance(status, str) and "signal=4" in status):
+        bad += 1
+        print(f"sdmodule: module 13 answered the DECOMPRESS command with "
+              f"{status} — it has a decoder after all, and method 13 is "
+              f"implementable; OPEN_ITEMS.md says it is not")
+
+    for name, data in cases:
+        out, status = run_module(mods, 13, data, len(data), selector=2)
+        if out is None or len(out) < 8:
+            bad += 1
+            print(f"sdmodule: module 13 failed to compress {name}: {status}")
+            continue
+        _, method, ulen = struct.unpack(">HHI", out[:8])
+        if method != 13 or ulen != len(data):
+            bad += 1
+            print(f"sdmodule: module 13 wrote method {method}, ulen {ulen} "
+                  f"for {name} ({len(data)} B in)")
+            continue
+        # Nothing reads it. A hit here is not a failure — it is the answer
+        # to the open question, and it must be looked at rather than passed.
+        payload = out[8:]
+        for m in range(12):
+            block = struct.pack(">HHH", 6 + len(payload), len(data), m) + payload
+            if ours(macextract, block, len(data), workdir) == data:
+                bad += 1
+                print(f"sdmodule: method 13's {name} payload decodes as "
+                      f"method {m} — 13 is an ENCODER like 20, and "
+                      f"OPEN_ITEMS.md is wrong about it")
+        ok += 1
+        if verbose:
+            print(f"sdmodule: module 13 {name}: {len(data)} -> {len(payload)} B, "
+                  f"header method 13, ulen {ulen}")
+    print(f"sdmodule: method 13 (Faster) is a COMPRESSOR with no decoder: "
+          f"{ok} stream(s) written, all declaring method 13, none readable "
+          f"by this engine or by any other module here, {bad} wrong")
+    return bad == 0 and ok > 0
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--macextract", default=os.path.join(REPO, "build", "macextract"))
@@ -802,7 +896,8 @@ def main():
         e = phase_method10(args.macextract, mods, workdir, args.cases,
                            args.seed, args.verbose)
         f = phase_tennessee(args.macextract, mods, workdir, args.verbose)
-        return 0 if (a and b and c and e and f) else 1
+        g = phase_slowfastc(args.macextract, mods, workdir, args.verbose)
+        return 0 if (a and b and c and e and f and g) else 1
     finally:
         shutil.rmtree(workdir, ignore_errors=True)
 

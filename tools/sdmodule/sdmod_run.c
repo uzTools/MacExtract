@@ -304,6 +304,20 @@ int main(int argc, char **argv)
      * that "traps on an A-line instruction". */
     tablesize = (method >= 5) ? 0x10000u : 0x2000u;
 
+    /* ...and then the module is ASKED, because the two sizes above are this
+     * harness's reading of what the block methods index and the module
+     * carries Alysis's own number: a long at +0x1E of its header, which
+     * INIT 32 compares against the caller's workingBufferSize (@0x51a2) and
+     * refuses with -4 below. Taking the larger of the two changes nothing
+     * for methods 1-11, which declare 0x2000, 0x8000 or zero, and is the
+     * difference between a segfault and a run for module 13, which asks for
+     * 229,618 B — six times what "modules 9 and up want 64K" allowed it.
+     * g_code is the module the call is FOR: run_sdmodule.py puts it first. */
+    if (g_code && g_codelen > 0x22) {
+        unsigned long want = get32((const unsigned char *)g_code + 0x1E);
+        if (want > tablesize && want < 0x400000u) tablesize = want;
+    }
+
     /* Source and destination live in ONE mapping, because the modules hand
      * each other buffers and the output can come back in either. The source
      * gets slack of its own: a module that decodes into its input needs the
@@ -312,11 +326,11 @@ int main(int argc, char **argv)
     dstroom = prelen + cap + SLACK;
     arena = mmap(NULL, srcroom + dstroom, PROT_READ | PROT_WRITE,
                  MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-    table = mmap(NULL, 0x20000, PROT_READ | PROT_WRITE,
+    table = mmap(NULL, tablesize + SLACK, PROT_READ | PROT_WRITE,
                  MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     if (arena == MAP_FAILED || table == MAP_FAILED) { perror("mmap"); return 2; }
     memset(arena, 0, srcroom + dstroom);
-    memset(table, 0, 0x20000);
+    memset(table, 0, tablesize + SLACK);
     memcpy(arena, src, srclen);
     dst = arena + srcroom;
     if (prelen) { memcpy(dst, pre, prelen); dst += prelen; }

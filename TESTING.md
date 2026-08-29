@@ -1572,6 +1572,15 @@ lifts the modules out of the fixture and runs three phases.
    back here to the bytes that went in. That is also the only compressor
    for method 11 in reach — the corpus has four such blocks, and this
    makes as many as wanted.
+6. **Method 13** (added 2026-08-29), which is the other compressor and
+   is not the same story: the four streams it writes must declare
+   method 13 and carry the input's length in a 32-bit field, its
+   decompress command must break into the debugger, and **no method this
+   engine knows may read the payload**. That last one is an assertion
+   that today passes by finding nothing, and it is the one that matters:
+   the day a decoder appears it fails and says so. Falsified on purpose
+   by handing the phase module 20 under 13's number — three of its four
+   checks fire.
 
 **The callback is the part to know about.** "Tighter" decodes methods 2, 3,
 4, 6, 7 and 8, and it hands its Huffman regions back to its CALLER to decode
@@ -1583,14 +1592,17 @@ three methods this suite can only load: Alysis Resource Compressor 2.0
 (1993) carries the whole codec library, and `--modules` lists it without an
 emulator. What it settled is negative and worth keeping — driven under Mini
 vMac it compresses into Apple's resource container, not a `Cmpr` stream, so
-it is not the writer of methods 10, 13 and 20 either (OPEN_ITEMS.md).
+it is not the writer of method 10 either (OPEN_ITEMS.md). For 13 and 20 the
+question dissolved: both modules ARE writers, and both now run here.
 
 **What it cannot see.** A synthetic Huffman region is written with a flat
 8-bit table, so no real tree shape is exercised: what is graded is the
 framing, the flag bitmap and the context predictor. Method 10's cases are
 one block each, so the history carried BETWEEN blocks is exercised only by
-the code it shares with SlowFastB; 13 and 20 have modules that cannot be
-run end to end here at all (OPEN_ITEMS.md). And agreement is not correctness
+the code it shares with SlowFastB. **Method 13's output cannot be checked
+by anything**, because no decoder for it exists in any software in reach —
+the phase can assert its framing and cannot say whether the bytes inside
+are well formed. And agreement is not correctness
 where both sides came from one reading — a framing error shows up, a
 misreading of what the original COMPRESSOR emits does not. The one
 disagreement the two references have with each other is counted separately
