@@ -1080,6 +1080,24 @@ int unc_btoa_extract(UncCtx *c);
 UncFormat unc_uu_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_uu_extract(UncCtx *c);
 
+/* The line-level half of uuencode, shared with fmt_mime.c: a uuencoded
+ * body inside a multipart is decoded by the MIME walk, and decoding it
+ * a second time there is how two transcriptions of one format come to
+ * disagree. UNC_UU_LINE_MAX is a full line (45 payload bytes = 60
+ * characters, plus the length character and slack); a decoded line
+ * needs UNC_UU_DEC_MAX. */
+#define UNC_UU_LINE_MAX   96
+#define UNC_UU_DEC_MAX    48    /* ((45/3)+1)*3, mu_convert's obuf bound */
+
+/* Decoded bytes (0..45), or -1 for a line that cannot be one. */
+int32_t unc_uu_decode_line(const uint8_t *buf, int32_t len, uint8_t *out);
+/* Can this line be uu data at all? Its first character declares how
+ * many bytes it encodes, so the length has to agree. */
+int unc_uu_line_is_data(const uint8_t *p, int32_t len);
+/* Where the name sits inside a "begin" line. */
+void unc_uu_name_span(const uint8_t *buf, int32_t len, int32_t *soff,
+                      int32_t *eoff);
+
 /* base64 (fmt_b64.c), and the streaming decoder MIME shares with it.
  *
  * Source: reference/mpack/decode.c from64() and
@@ -1106,6 +1124,13 @@ int unc_b64_extract(UncCtx *c);
 /* MIME messages (fmt_mime.c). The probe scans past the mail headers,
  * which are longer than the sniff window, so it takes io. */
 UncFormat unc_mime_probe(const uint8_t *head, int32_t len, UncIO *io);
+/* The same probe, restricted to a message that declares a multipart
+ * with a boundary — parts the walk can ENUMERATE. unc_sniff runs this
+ * one before uuencode, btoa and BinHex, whose scans would otherwise
+ * claim a whole message on the strength of one part of it and drop the
+ * rest (DECISIONS.md 2026-08-29, a part that hid its message). */
+UncFormat unc_mime_probe_multipart(const uint8_t *head, int32_t len,
+                                   UncIO *io);
 int unc_mime_extract(UncCtx *c);
 
 /* ARC / ArcMac (fmt_arc.c). The probe reads the next header to place

@@ -850,7 +850,7 @@ other implementations grade instead:
 - **deark**, an independent base64 implementation, built by
   `tools/build_deark.sh` — already the third oracle for ARC 0x0b.
 
-48 cases. The base64 half: four lengths around a group boundary (the
+56 cases. The base64 half: four lengths around a group boundary (the
 last group padded with none, one or two `=`), every byte value, a
 one-byte file, two documents in one file, and the same document with
 CR, LF and CRLF line endings. The MIME half: a single base64
@@ -860,6 +860,20 @@ all (`part1`, which is what munpack calls it), an LF-only message —
 and **multipart/appledouble**, both forks, the type and creator, the
 resource-only case with no data part, and one nested inside a
 `multipart/mixed`.
+
+**A document pasted into a part** (2026-08-29) is six of those cases:
+a multipart holding a uuencoded part AND a base64 attachment, where
+munpack is the oracle for the attachment the uu part used to hide; the
+same message with `Content-Transfer-Encoding: x-uuencode`, which
+neither implementation knows; a multipart whose only part is uuencoded,
+which decoded before the sniff order changed and says the change cost
+nothing; a pasted BinHex document, kept undecoded and recognised as
+BinHex when handed back; a note that merely begins with the word
+"begin"; and a uuencoded POSTING, which has no boundary and still
+sniffs as uuencode. Each of the first three and the BinHex one was run
+against a build with `unc_mime_probe_multipart` removed from
+`unc_sniff` first, and fails there — an established failure, not a
+green tick.
 
 **The three places the oracle is wrong**, each with a reproduction in
 DECISIONS.md 2026-08-26: munpack never uses a `Content-Disposition`

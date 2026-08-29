@@ -42,8 +42,9 @@
 /* A uu line holds at most 45 payload bytes = 60 encoded characters,
  * plus the length character. Mailers wrap nothing shorter, but a line
  * longer than this is not a uu line at all. */
-#define UU_LINE_MAX   96
-#define UU_DEC_MAX    48   /* ((45/3)+1)*3, mu_convert's obuf bound */
+/* Both are unc_internal.h's, because fmt_mime.c decodes uu lines too. */
+#define UU_LINE_MAX   UNC_UU_LINE_MAX
+#define UU_DEC_MAX    UNC_UU_DEC_MAX
 
 /* How far into a file the "begin " line may sit. hexbin skips lines
  * until it finds one; the probe needs a bound, and BinHex's own banner
@@ -138,20 +139,20 @@ static int uu_readline(UncBufIn *in, uint32_t base, UuLine *l)
 
 /* Decode one data line into out (>= UU_DEC_MAX bytes). Returns the
  * payload length (0..45), or -1 if the line cannot be one. */
-static int32_t uu_decode_line(const UuLine *l, uint8_t *out)
+int32_t unc_uu_decode_line(const uint8_t *buf, int32_t len, uint8_t *out)
 {
     uint8_t ib[UU_LINE_MAX + 4];
     int32_t outcount, incount, n, i;
 
-    if (l->len < 1) return -1;
-    outcount = UU_SIXB(l->buf[0]);
+    if (len < 1) return -1;
+    outcount = UU_SIXB(buf[0]);
     if (outcount > 45) return -1;
     incount = ((outcount / 3) + 1) * 4;
     if (incount > UU_LINE_MAX) return -1;
 
     /* "restore lost spaces" — mailers strip trailing whitespace, so a
      * short line is padded back out to the length its count implies. */
-    for (i = 0; i < l->len && i <= incount; i++) ib[i] = l->buf[i];
+    for (i = 0; i < len && i <= incount; i++) ib[i] = buf[i];
     for (; i <= incount; i++) ib[i] = ' ';
 
     n = 0;
@@ -164,6 +165,11 @@ static int32_t uu_decode_line(const UuLine *l, uint8_t *out)
         n += 3;
     }
     return outcount;
+}
+
+static int32_t uu_decode_line(const UuLine *l, uint8_t *out)
+{
+    return unc_uu_decode_line(l->buf, l->len, out);
 }
 
 /* Does this line open a section? */
@@ -199,8 +205,8 @@ static int uu_tag_is(const UuLine *l, const char *tag)
 /* Where the name sits inside a "begin" line. Takes the bytes rather
  * than the UuLine, so it can run over the whole line kept in the host's
  * buffer as well as over the first UU_LINE_MAX of it. */
-static void uu_name_span(const uint8_t *buf, int32_t len, int32_t *soff,
-                         int32_t *eoff)
+void unc_uu_name_span(const uint8_t *buf, int32_t len, int32_t *soff,
+                      int32_t *eoff)
 {
     int32_t i, s, e;
 
@@ -225,7 +231,7 @@ static void uu_name_from_begin(const UuLine *l, const uint8_t **name,
                                uint32_t *len)
 {
     int32_t s, e;
-    uu_name_span(l->buf, l->len, &s, &e);
+    unc_uu_name_span(l->buf, l->len, &s, &e);
     *name = l->buf + s;
     *len  = (uint32_t)(e - s);
 }
@@ -237,7 +243,7 @@ static void uu_name_from_begin(const UuLine *l, const uint8_t **name,
 /* A "begin " line alone is far too weak — it occurs in English prose
  * and in shell scripts. What makes it a uu file is the line AFTER it:
  * a length character that agrees with the encoded length. */
-static int uu_line_is_data(const uint8_t *p, int32_t len)
+int unc_uu_line_is_data(const uint8_t *p, int32_t len)
 {
     int32_t outcount, incount, i;
 
@@ -277,7 +283,7 @@ UncFormat unc_uu_probe(const uint8_t *head, int32_t len, UncIO *io)
                 ne = i;
                 while (i < len && (head[i] == '\n' || head[i] == '\r')) i++;
                 if (ne == ns) continue;                 /* blank */
-                return (uu_line_is_data(head + ns, ne - ns))
+                return (unc_uu_line_is_data(head + ns, ne - ns))
            ? UNC_FORMAT_UU : UNC_FORMAT_UNKNOWN;
             }
             return UNC_FORMAT_UNKNOWN;   /* begin line, but the file ends there */
@@ -354,7 +360,7 @@ static int uu_section(UncCtx *c, UncBufIn *in, uint32_t base, UuLine *l,
              * set missing its MIDDLE part decodes to a short file with
              * nothing to object to. A missing LAST part is still caught:
              * the terminator and "end" live there. OPEN_ITEMS.md. */
-            if (n < 0 || !uu_line_is_data(l->buf, l->len)) continue;
+            if (n < 0 || !unc_uu_line_is_data(l->buf, l->len)) continue;
             *bytes += (uint32_t)n;
             if (write) {
                 if (c->sink->write(c->sink->ctx, fork, dec, n) != 0)
@@ -402,7 +408,7 @@ static int uu_scan_doc(UncCtx *c, UncBufIn *in, uint32_t base, UuLine *l,
              * the host's buffer and hold it there, so the data lines
              * behind it do not write over it. */
             int32_t s2, e2;
-            uu_name_span(l->over, (int32_t)l->over_len, &s2, &e2);
+            unc_uu_name_span(l->over, (int32_t)l->over_len, &s2, &e2);
             if (e2 > s2) {
                 uint32_t k, n2 = (uint32_t)(e2 - s2);
                 for (k = 0; k < n2; k++) l->over[k] = l->over[(uint32_t)s2 + k];

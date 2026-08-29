@@ -25,6 +25,7 @@ the same words.
 Skips cleanly, and says so, when the references are not there.
 """
 import base64
+import binascii
 import os
 import shutil
 import struct
@@ -50,6 +51,17 @@ def build(script, binary):
 
 def b64(data, eol=b"\r\n"):
     return base64.encodebytes(data).replace(b"\n", eol)
+
+
+def uu(name, data, eol=b"\r\n"):
+    """A uuencoded document, as uuencode(1) writes one: the "begin" line
+    with mode and name, 45 payload bytes per line, the zero-length line,
+    "end"."""
+    out = [b"begin 644 " + name]
+    for i in range(0, len(data), 45):
+        out.append(binascii.b2a_uu(data[i:i + 45]).rstrip(b"\n"))
+    out += [b"`", b"end", b""]
+    return eol.join(out)
 
 
 def qp(data):
@@ -434,6 +446,99 @@ def main():
               "wrote %r" % {k: len(v) for k, v in got.items()})
 
         # ---------------------------------------------------------- #
+        # A document pasted into a part                                #
+        # ---------------------------------------------------------- #
+        # Mail carried files inside its text long before it carried
+        # attachments, and a message can hold both. Until 2026-08-29 the
+        # uuencode probe claimed such a message whole and the rest of it
+        # was dropped: `l` listed the uuencoded file alone where munpack
+        # wrote the attachment (DECISIONS.md, a part that hid its
+        # message). munpack is the oracle for the half that matters —
+        # it reads every part the uu document was hiding, and does not
+        # decode the uu document itself.
+        UUP = b"a file somebody pasted into a message\r\n" * 3
+        both = message([(b"Content-Type: text/plain\r\n", uu(b"pasted.txt", UUP)),
+                        (b'Content-Type: application/octet-stream; name="also.bin"\r\n'
+                         b"Content-Transfer-Encoding: base64\r\n", b64(DATA))],
+                       ctype=b"multipart/mixed")
+        p = write("uupart.mim", both)
+        got = extract(macextract, p)
+        check("a uuencoded part no longer hides the rest of its message",
+              got == {"pasted.txt": UUP, "also.bin": DATA},
+              "wrote %r" % {k: len(v) for k, v in got.items()})
+        mp = munpack_files(munpack, write("lf_uupart.mim",
+                                          both.replace(b"\r\n", b"\n")))
+        check("a uuencoded part: munpack gets the attachment, and so do we",
+              [v for v in mp.values() if v == DATA.replace(b"\r\n", b"\n")] != []
+              or DATA in mp.values(),
+              "munpack wrote %r" % {k: len(v) for k, v in mp.items()})
+
+        # The same message with the encoding NAMED. mpack has no such
+        # value — parseEncoding warns and falls through to enc_none —
+        # so the header changes nothing here either: the body decides.
+        named = message([(b"Content-Type: text/plain\r\n"
+                          b"Content-Transfer-Encoding: x-uuencode\r\n",
+                          uu(b"pasted.txt", UUP)),
+                         (b'Content-Type: application/octet-stream; name="also.bin"\r\n'
+                          b"Content-Transfer-Encoding: base64\r\n", b64(DATA))],
+                        ctype=b"multipart/mixed")
+        got = extract(macextract, write("uunamed.mim", named))
+        check("x-uuencode names an encoding no implementation knows",
+              got == {"pasted.txt": UUP, "also.bin": DATA},
+              "wrote %r" % {k: len(v) for k, v in got.items()})
+
+        # A multipart whose ONLY part is uuencoded. This one already
+        # decoded before the sniff order changed — through the uuencode
+        # walk, which stepped over the boundary lines — so it is the
+        # case that says the change cost nothing.
+        only = message([(b"Content-Type: text/plain\r\n",
+                         uu(b"alone.txt", UUP))], ctype=b"multipart/mixed")
+        got = extract(macextract, write("uuonly.mim", only))
+        check("a multipart holding nothing but a uuencoded part",
+              got == {"alone.txt": UUP},
+              "wrote %r" % {k: len(v) for k, v in got.items()})
+
+        # A BinHex document in the same position is kept as it lies:
+        # this walk has no BinHex decoder, and saving the bytes is what
+        # keeps the sniff change from costing what the BinHex probe used
+        # to do with the message. The saved part is a .hqx, and the
+        # extractor says so when it is handed back.
+        HQX = (b"(This file must be converted with BinHex 4.0)\r\n"
+               b":#R4bB@a[E'8ZFQpY,R0cmr$8!*!%!3#3\"!d0!*!$%J!!N!3\"!!!:\r\n")
+        withhqx = message([(b"Content-Type: text/plain\r\n", HQX),
+                           (b'Content-Type: application/octet-stream; name="also.bin"\r\n'
+                            b"Content-Transfer-Encoding: base64\r\n", b64(DATA))],
+                          ctype=b"multipart/mixed")
+        got = extract(macextract, write("hqxpart.mim", withhqx))
+        # Less the CRLF in front of the boundary, which belongs to the
+        # boundary and not to the part (RFC 2046; mpack's part.c).
+        body = HQX[:-2]
+        check("a BinHex document pasted into a part is kept, not dropped",
+              sorted(got.values()) == sorted([body, DATA]),
+              "wrote %r" % {k: len(v) for k, v in got.items()})
+        kept = [k for k, v in got.items() if v == body]
+        if kept:
+            r = subprocess.run([macextract, "sniff",
+                                write("kept.hqx", got[kept[0]])],
+                               capture_output=True)
+            check("the kept part is a BinHex file", b"BinHex" in r.stdout,
+                  r.stdout.decode(errors="replace").strip())
+
+        # ...and a note that merely says "begin" is still a note. The
+        # test for a pasted document is the line AFTER the begin line,
+        # exactly as the uuencode probe's is.
+        prosepart = message([(b"Content-Type: text/plain\r\n",
+                              b"begin the meeting at ten, and bring\r\n"
+                              b"the file we discussed yesterday.\r\n"),
+                             (b'Content-Type: application/octet-stream; name="also.bin"\r\n'
+                              b"Content-Transfer-Encoding: base64\r\n", b64(DATA))],
+                            ctype=b"multipart/mixed")
+        got = extract(macextract, write("prosepart.mim", prosepart))
+        check("a note that says \"begin\" is still a note",
+              got == {"also.bin": DATA},
+              "wrote %r" % {k: len(v) for k, v in got.items()})
+
+        # ---------------------------------------------------------- #
         # What must NOT be claimed                                     #
         # ---------------------------------------------------------- #
         # A BinHex posting has mail headers too, and it is a BinHex file
@@ -446,6 +551,17 @@ def main():
                     b":#R4bB@a[E'8ZFQpY,R0cmr$8!*!%!3#3\"!d0!*!$%J!!N!3\"!!!:\r\n")
         r = subprocess.run([macextract, "sniff", hqx], capture_output=True)
         check("a BinHex posting is still BinHex", b"BinHex" in r.stdout,
+              r.stdout.decode(errors="replace").strip())
+
+        # The same for a uuencoded posting: no boundary, no multipart,
+        # nothing for the MIME walk to enumerate, so the strict probe
+        # unc_sniff runs before the uuencode one declines it.
+        uupost = write("posted.uu",
+                       b"From: someone\r\nSubject: here it is\r\n"
+                       b"MIME-Version: 1.0\r\nContent-Type: text/plain\r\n\r\n"
+                       + uu(b"posted.bin", DATA))
+        r = subprocess.run([macextract, "sniff", uupost], capture_output=True)
+        check("a uuencode posting is still uuencode", b"uuencode" in r.stdout,
               r.stdout.decode(errors="replace").strip())
 
         # A message with nothing to extract is not an archive.

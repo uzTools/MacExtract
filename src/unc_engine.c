@@ -234,6 +234,15 @@ static const UncProbe unc_sniff_order[] = {
      * and neither of those has one to find. btoa goes first of the
      * three: its marker is a whole word at the start of a line, where
      * uuencode's is a "begin" that prose contains. */
+    /* Before those three, and not after: each of them scans for a
+     * document ANYWHERE in a file, so a multipart message holding one
+     * as a part would be claimed whole on the strength of that part,
+     * and every other part dropped — measured, and the reason this
+     * entry exists (DECISIONS.md 2026-08-29, a part that hid its
+     * message). Only a message declaring a multipart WITH a boundary is
+     * claimed here; a posting whose body is one uuencoded or BinHex
+     * document has no boundary and still belongs to its own format. */
+    unc_mime_probe_multipart,
     unc_btoa_probe,
     unc_uu_probe,
     unc_binhex_probe,

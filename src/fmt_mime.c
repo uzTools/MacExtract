@@ -32,6 +32,13 @@
  *       that arrived on its own.
  *   reference/mpack/unixos.c  — os_newtypedfile(): a part with no
  *       filename is called "part1", "part2", ...
+ *   reference/mpack/decode.c  — handleUuencode(): a text part with no
+ *       encoding and no filename may still BE a file, pasted into the
+ *       message; mpack tests for that at the top level only, and this
+ *       walk runs the same test at every depth (see mime_body_nested).
+ *   reference/mpack/uudecode.c — uudecodeline(), the 4-into-3 loop
+ *       src/fmt_uu.c transcribes and this file calls rather than
+ *       transcribing a second time.
  *
  * mpack recurses through nested multiparts. This walks them with an
  * explicit stack of at most MIME_MAX_DEPTH boundaries, because nothing
@@ -51,8 +58,18 @@
 #define MIME_AF_PREFIX   512     /* of an applefile part, decoded       */
 #define MIME_AF_ENTRIES  16
 #define MIME_SCAN_MAX    16384u  /* how far the probe looks for a header */
+#define MIME_NEST_SCAN   4096u   /* how far into a body part the test for a
+                                  * pasted document looks */
 
-enum { MIME_CTE_NONE = 0, MIME_CTE_QP, MIME_CTE_B64 };
+/* MIME_CTE_UU is not a Content-Transfer-Encoding: no header names it
+ * here. mpack has no such value either — an encoding it does not know
+ * warns and falls through as `enc_none` (parseEncoding) — so a part
+ * that says "x-uuencode" arrives here as NONE like any other, and it
+ * is the BODY that decides. */
+enum { MIME_CTE_NONE = 0, MIME_CTE_QP, MIME_CTE_B64, MIME_CTE_UU };
+
+/* What a body part the walk would otherwise drop turns out to hold. */
+enum { MIME_NEST_NONE = 0, MIME_NEST_UU, MIME_NEST_DOC };
 
 /* Entry ids inside an application/applefile part.
  * Source: reference/mpack/macfile.c, and src/fmt_applesingle.c. */
@@ -114,6 +131,9 @@ typedef struct MimeCtx {
     uint8_t *line;               /* MIME_LINE_MAX + 1               */
     uint8_t *hdr;                /* MIME_HDR_MAX + 1                */
     uint8_t *afbuf;              /* MIME_AF_PREFIX                  */
+    uint8_t *uub;                /* UNC_UU_DEC_MAX: one decoded uu line */
+    uint8_t  nname[UNC_NAME_MAX + 1];  /* a "begin" line's name */
+    uint32_t nnamelen;
     uint8_t  bnd[MIME_MAX_DEPTH][MIME_BND_MAX + 1];
     int32_t  bndlen[MIME_MAX_DEPTH];
     int      appledouble[MIME_MAX_DEPTH];
@@ -496,6 +516,11 @@ typedef struct MimeDec {
     uint8_t  out[3];
     int      nout, iout;
     int      flushed;
+    /* uuencode: one decoded line at a time, in the walker's buffer
+     * rather than this frame's — 45 bytes on a 4 KB stack budget. */
+    uint8_t *ub;
+    int      unout, uiout;
+    int      udone;
 } MimeDec;
 
 static int mime_dec_open(MimeDec *d, MimeCtx *m, const MimePart *p,
@@ -505,6 +530,9 @@ static int mime_dec_open(MimeDec *d, MimeCtx *m, const MimePart *p,
     d->cte = p->cte;
     d->nout = d->iout = 0;
     d->flushed = 0;
+    d->ub = m->uub;
+    d->unout = d->uiout = 0;
+    d->udone = 0;
     unc_b64_reset(&d->b64);
     if (m->c->io->seek(m->c->io->ctx, p->start) < 0) return UNC_ERR_IO;
     unc_bufin_init(&d->in, m->c->io, &m->c->ps, iobuf, MIME_IOBUF);
@@ -521,10 +549,45 @@ static int mime_hex(int c)
     return -1;
 }
 
+/* Does this line end a uu document? Source: reference/macutils/hexbin,
+ * as src/fmt_uu.c reads it — the word "end" on a line of its own. */
+static int mime_uu_is_end(const uint8_t *l, int32_t len)
+{
+    return len >= 3 && l[0] == 'e' && l[1] == 'n' && l[2] == 'd';
+}
+
+/* One uuencoded line at a time, through the same two helpers fmt_uu.c
+ * decodes a file with. A line that cannot be uu data is skipped rather
+ * than refused: what sits between the lines of a posted document is
+ * mail, not data (the reasoning is fmt_uu.c's uu_section). */
+static int mime_uu_next(MimeDec *d)
+{
+    if (d->uiout < d->unout) return d->ub[d->uiout++];
+
+    while (!d->udone) {
+        int32_t llen = 0, n;
+        int eof = 0;
+
+        if (unc_readline(&d->in, d->m->line, UNC_UU_LINE_MAX + 1,
+                         &llen, &eof) != UNC_OK) break;
+        if (mime_uu_is_end(d->m->line, llen)) break;
+        n = unc_uu_decode_line(d->m->line, llen, d->ub);
+        if (n > 0 && unc_uu_line_is_data(d->m->line, llen)) {
+            d->unout = (int)n;
+            d->uiout = 1;
+            return d->ub[0];
+        }
+        if (eof) break;
+    }
+    d->udone = 1;
+    return -1;
+}
+
 /* The next decoded byte, or -1 when the part ends (or on error, which
  * `d->in.err` then holds). */
 static int mime_dec_next(MimeDec *d)
 {
+    if (d->cte == MIME_CTE_UU) return mime_uu_next(d);
     if (d->iout < d->nout) return d->out[d->iout++];
 
     for (;;) {
@@ -722,6 +785,9 @@ static int mime_emit(MimeCtx *m, const MimeHdrs *h, const MimePart *data,
         unc_entry_set_name(&e, h->name, h->namelen);
         if (h->name_trunc) e.name_truncated = 1;
     }
+    else if (data && data->cte == MIME_CTE_UU && m->nnamelen) {
+        unc_entry_set_name(&e, m->nname, m->nnamelen);   /* "begin" line */
+    }
     else if (m->depth > 0 && m->mnamelen[m->depth - 1]) {
         unc_entry_set_name(&e, m->mname[m->depth - 1],
                            m->mnamelen[m->depth - 1]);
@@ -778,6 +844,93 @@ static int mime_emit(MimeCtx *m, const MimeHdrs *h, const MimePart *data,
 /* The walk                                                           */
 /* ------------------------------------------------------------------ */
 
+/* Is this part TEXT, in mpack's sense: a `text/...` type, or none at
+ * all — decode.c's defaultContentType is "text/plain". */
+static int mime_is_text(const MimeHdrs *h)
+{
+    int32_t n = mime_len(h->ctype);
+    if (n == 0) return 1;
+    return mime_ci_prefix(h->ctype, n, "text/") ? 1 : 0;
+}
+
+/* A text part with no filename is the note the sender typed — except
+ * when it is a file somebody pasted into the message, which is a shape
+ * mail carried for as long as it carried attachments. mpack tests for
+ * exactly one such document and only at the top level: handleUuencode()
+ * runs for a depth-0 text part with no encoding, no `filename` and no
+ * `name` (reference/mpack/decode.c). This walk runs that test at EVERY
+ * depth, because since 2026-08-29 a multipart holding a uuencoded part
+ * is claimed here rather than by the uuencode walk, and dropping the
+ * part as a note would lose the file that walk used to write.
+ *
+ * A BinHex or btoa document in the same position is emitted as it
+ * lies, undecoded: its own extractor reads the file this writes, and
+ * saving the bytes is what keeps the change from costing a capability.
+ * The two markers are the ones src/fmt_binhex.c and src/fmt_btoa.c
+ * identify their formats by.
+ *
+ * Returns MIME_NEST_*, and for a uu document the offset its data
+ * starts at; the name off the "begin" line is left in m->nname. */
+static int mime_body_nested(MimeCtx *m, uint32_t start, uint32_t end,
+                            uint32_t *data_at)
+{
+    static const char bh_banner[] =
+        "(This file must be converted with BinHex";
+    uint32_t stop = start + MIME_NEST_SCAN;
+
+    m->nnamelen = 0;
+    if (end <= start) return MIME_NEST_NONE;
+    if (stop > end) stop = end;
+    if (mime_seek(m, start) != UNC_OK) return MIME_NEST_NONE;
+    m->in.limit = end - start;
+
+    for (;;) {
+        int32_t llen = 0;
+        int eof = 0;
+
+        if (mime_tell(m) >= stop) break;
+        if (unc_readline(&m->in, m->line, MIME_LINE_MAX + 1,
+                         &llen, &eof) != UNC_OK) break;
+
+        if (mime_ci_prefix(m->line, llen, bh_banner) ||
+            mime_ci_prefix(m->line, llen, "xbtoa Begin") ||
+            mime_ci_prefix(m->line, llen, "xbtoa5 "))
+            return MIME_NEST_DOC;
+
+        if (llen >= 6 && mime_ci_prefix(m->line, llen, "begin ")) {
+            int32_t so, eo, k;
+            uint32_t at;
+
+            /* The name first: the next readline writes over it. */
+            unc_uu_name_span(m->line, llen, &so, &eo);
+            for (k = 0; k < eo - so && k < (int32_t)UNC_NAME_MAX; k++)
+                m->nname[k] = m->line[so + k];
+            m->nnamelen = (uint32_t)k;
+            at = mime_tell(m);
+
+            /* A "begin" line alone occurs in prose. What makes it a uu
+             * document is the line after it (unc_uu_line_is_data). */
+            for (;;) {
+                if (unc_readline(&m->in, m->line, UNC_UU_LINE_MAX + 1,
+                                 &llen, &eof) != UNC_OK) break;
+                if (llen == 0) {
+                    if (eof) break;
+                    continue;                      /* mailers wrap */
+                }
+                if (unc_uu_line_is_data(m->line, llen)) {
+                    *data_at = at;
+                    return MIME_NEST_UU;
+                }
+                break;
+            }
+            m->nnamelen = 0;
+            return MIME_NEST_NONE;
+        }
+        if (eof) break;
+    }
+    return MIME_NEST_NONE;
+}
+
 /* Is this part an attachment, or the message body? Source: mpack's
  * handleMessage — a `text/...` part with no filename of its own is the
  * note the sender typed, and munpack does not write it out. */
@@ -805,7 +958,8 @@ int unc_mime_extract(UncCtx *c)
 
     blk = (uint8_t *)unc_alloc(c->al, (uint32_t)sizeof(MimeCtx) +
                                       MIME_IOBUF + MIME_LINE_MAX + 1 +
-                                      MIME_HDR_MAX + 1 + MIME_AF_PREFIX);
+                                      MIME_HDR_MAX + 1 + MIME_AF_PREFIX +
+                                      UNC_UU_DEC_MAX);
     if (!blk) return UNC_ERR_MEM;
     m = (MimeCtx *)(void *)blk;
     buf = blk + sizeof(MimeCtx);
@@ -815,6 +969,8 @@ int unc_mime_extract(UncCtx *c)
     m->line  = buf + MIME_IOBUF;
     m->hdr   = m->line + MIME_LINE_MAX + 1;
     m->afbuf = m->hdr + MIME_HDR_MAX + 1;
+    m->uub   = m->afbuf + MIME_AF_PREFIX;
+    m->nnamelen = 0;
     m->depth = 0;
     m->partno = 0;
     m->base = 0;
@@ -885,8 +1041,21 @@ int unc_mime_extract(UncCtx *c)
                 af_level = -1;
                 if (err != UNC_OK) break;
             } else if (mime_is_attachment(&m->h)) {
+                m->nnamelen = 0;
                 err = mime_emit(m, &m->h, &part, NULL, &any);
                 if (err != UNC_OK) break;
+            } else if (m->h.cte == MIME_CTE_NONE && m->h.namelen == 0 &&
+                       mime_is_text(&m->h)) {
+                uint32_t at = part.start;
+                int nest = mime_body_nested(m, part.start, part.end, &at);
+                if (nest == MIME_NEST_UU) {
+                    part.cte = MIME_CTE_UU;
+                    part.start = at;
+                }
+                if (nest != MIME_NEST_NONE) {
+                    err = mime_emit(m, &m->h, &part, NULL, &any);
+                    if (err != UNC_OK) break;
+                }
             }
         }
 
@@ -929,32 +1098,48 @@ int unc_mime_extract(UncCtx *c)
  *
  * The interesting header can sit well past the 512-byte sniff window
  * (Received: and DKIM lines are long), so this reads on through io. */
-/* One unfolded header. Sets the two flags; returns nonzero once both
- * are set, which is when the file is a MIME message worth opening. */
+/* What the headers scanned so far have shown. */
+typedef struct MimeSigns {
+    int ctype;                   /* a Content-Type at all      */
+    int signal;                  /* something to extract       */
+    int bnd;                     /* a multipart WITH a boundary */
+} MimeSigns;
+
+/* One unfolded header. Sets the flags; returns nonzero once the file is
+ * a MIME message worth opening — which in `strict` mode means a
+ * multipart whose parts this walk can enumerate, and otherwise any
+ * message carrying something to extract. */
 static int mime_probe_header(const uint8_t *h, int32_t hlen, uint8_t *pb,
-                             int *saw_ctype, int *saw_signal)
+                             MimeSigns *f, int strict)
 {
     int32_t k;
 
-    if (mime_ci_prefix(h, hlen, "content-type:")) {
-        *saw_ctype = 1;
+    if ((k = mime_ci_prefix(h, hlen, "content-type:"))) {
+        int have_bnd = mime_param(h, hlen, "boundary", pb,
+                                  MIME_BND_MAX, NULL) > 0;
+        f->ctype = 1;
         /* A boundary, or a part that names a file: either is something
          * to extract. A Content-Type alone is not — every mail message
          * has one. */
-        if (mime_param(h, hlen, "boundary", pb, MIME_BND_MAX, NULL) > 0 ||
-            mime_param(h, hlen, "name", pb, MIME_BND_MAX, NULL) > 0)
-            *saw_signal = 1;
+        if (have_bnd || mime_param(h, hlen, "name", pb, MIME_BND_MAX, NULL) > 0)
+            f->signal = 1;
+        if (have_bnd) {
+            int32_t j = k;
+            while (j < hlen && mime_is_space(h[j])) j++;
+            if (mime_ci_prefix(h + j, hlen - j, "multipart/")) f->bnd = 1;
+        }
     } else if (mime_ci_prefix(h, hlen, "content-disposition:")) {
         if (mime_param(h, hlen, "filename", pb, MIME_BND_MAX, NULL) > 0)
-            *saw_signal = 1;
+            f->signal = 1;
     } else if ((k = mime_ci_prefix(h, hlen, "content-transfer-encoding:"))) {
         if (mime_cte_of(h + k, hlen - k) != MIME_CTE_NONE)
-            *saw_signal = 1;
+            f->signal = 1;
     }
-    return *saw_ctype && *saw_signal;
+    return strict ? f->bnd : (f->ctype && f->signal);
 }
 
-UncFormat unc_mime_probe(const uint8_t *head, int32_t len, UncIO *io)
+static UncFormat mime_probe(const uint8_t *head, int32_t len, UncIO *io,
+                            int strict)
 {
     /* Deliberately small: this frame is on the sniff path, which every
      * file that reaches the end of unc_sniff pays for. 512 bytes of
@@ -966,7 +1151,9 @@ UncFormat unc_mime_probe(const uint8_t *head, int32_t len, UncIO *io)
     int32_t hn = 0;
     uint32_t pos = 0, size;
     int32_t n = 0, i = 0;
-    int saw_ctype = 0, saw_signal = 0;
+    MimeSigns f;
+
+    f.ctype = f.signal = f.bnd = 0;
 
     if (len < 16 || !io) return UNC_FORMAT_UNKNOWN;
 
@@ -1019,7 +1206,7 @@ UncFormat unc_mime_probe(const uint8_t *head, int32_t len, UncIO *io)
                 continue;
             }
             if (hn > 0) {
-                if (mime_probe_header(hb, hn, pb, &saw_ctype, &saw_signal))
+                if (mime_probe_header(hb, hn, pb, &f, strict))
                     return UNC_FORMAT_MIME;
                 hn = 0;
             }
@@ -1031,8 +1218,24 @@ UncFormat unc_mime_probe(const uint8_t *head, int32_t len, UncIO *io)
         }
         pos += (uint32_t)n;
     }
-    if (hn > 0 && mime_probe_header(hb, hn, pb, &saw_ctype, &saw_signal))
+    if (hn > 0 && mime_probe_header(hb, hn, pb, &f, strict))
         return UNC_FORMAT_MIME;
 
     return UNC_FORMAT_UNKNOWN;
+}
+
+UncFormat unc_mime_probe(const uint8_t *head, int32_t len, UncIO *io)
+{
+    return mime_probe(head, len, io, 0);
+}
+
+/* The strict half, which unc_sniff runs BEFORE uuencode, btoa and
+ * BinHex: a message that declares a multipart with a boundary has parts
+ * this walk can enumerate, and one of them being a document those three
+ * scans recognise is no reason to hand them the whole message and drop
+ * the others (DECISIONS.md 2026-08-29). */
+UncFormat unc_mime_probe_multipart(const uint8_t *head, int32_t len,
+                                   UncIO *io)
+{
+    return mime_probe(head, len, io, 1);
 }

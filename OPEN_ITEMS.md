@@ -200,18 +200,11 @@ all** (BLOCKERS.md, the ARC 7 row, filed and disproved the same day).
 **The oracle is already on this machine.** Each of these is work nobody has
 done, and each names the second implementation that grades it. They are kept
 out of section 1 because the question to bring here is *when*, not *what did I
-just find?* — both arrived here on 2026-08-29 from section 1, where they had
-been filed on descriptions of this engine's own behaviour that nobody had run
-(BLOCKERS.md, withdrawn claims).
-
-- **A multipart whose uuencoded part hides the rest of the message.** The
-  uuencode probe runs before the MIME one, so a message holding a uuencoded
-  part AND a base64 attachment yields only the first: measured, `macextract
-  l` lists `uupart.txt` alone where munpack writes both it and `wanted.bin`.
-  A uuencoded part that is the ONLY thing in a multipart already decodes
-  byte-exact — and munpack does not decode one at all. **What would close
-  it:** a sniff precedence that lets the MIME walk claim a message whose
-  parts it can enumerate, graded against munpack over a specimen built here.
+just find?* — it arrived here on 2026-08-29 from section 1, where it had
+been filed on a description of this engine's own behaviour that nobody had run
+(BLOCKERS.md, withdrawn claims). The other one that arrived with it — a
+uuencoded part hiding the rest of its multipart — closed the same day
+(FORMATS.md, *base64 and MIME*).
 
 - **`message/partial`: a message split across several FILES is not
   reassembled**, and today no part of such a set yields anything — part 1

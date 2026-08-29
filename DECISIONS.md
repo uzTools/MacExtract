@@ -166,6 +166,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-29 (a cut archive) — where the archive ends and where the file ends
 - 2026-08-29 (two MIME gaps) — the item described our own binary, and nobody had run it
 - 2026-08-29 (a Macintosh wrote a MIME message) — the port was in the reference tree
+- 2026-08-29 (a part that hid its message) — the strongest scan is not the strongest claim
 
 ---
 
@@ -9588,3 +9589,52 @@ One message from one encoder. It establishes what mpack's Macintosh port
 writes; Eudora 1.2 is in the corpus and Claris Emailer is not, and neither has
 been run. That is a different specimen and not an open item — the layout
 question this one was filed for is answered.
+
+## 2026-08-29 (a part that hid its message) — the strongest scan is not the strongest claim
+
+`unc_sniff` runs the uuencode, btoa and BinHex probes before the MIME one,
+because a posting whose body is one BinHex document is a BinHex file that
+happens to have mail headers, not a message with an attachment. That rule is
+right for a posting and wrong for a multipart: those three probes scan for a
+document ANYWHERE in the file, so a message holding a uuencoded part AND a
+base64 attachment was claimed whole by the uuencode walk, which stepped over
+the boundary lines, decoded the uu part and never saw the rest. Measured, and
+the measurement is the previous entry's: `macextract l` listed `uupart.txt`
+alone where munpack wrote `wanted.bin`.
+
+**What changed.** `unc_mime_probe_multipart` — the same probe, refusing
+anything that does not declare a `multipart/*` WITH a boundary — runs before
+those three. A boundary is the evidence that this walk can enumerate the
+parts; without one, nothing is taken away from the format that has a marker of
+its own, and a `.hqx` or `.uu` posting still belongs to it. That is asserted
+both ways in `tools/run_mime.py`.
+
+**The half that could have cost a capability.** Claiming the message means the
+MIME walk has to produce everything the uuencode walk used to, and mpack's own
+rule drops it: a `text/*` part with no filename is the note the sender typed
+(`handleMessage`). So the walk now runs mpack's OTHER rule at every depth
+instead of only at the top. `handleUuencode()` fires for a depth-0 text part
+with no encoding, no `filename` and no `name`, and looks at the BODY; the same
+test at any depth is `mime_body_nested()`. A uuencoded part is decoded through
+the two helpers `fmt_uu.c` already had — exported rather than transcribed a
+second time, because two transcriptions of one format disagree eventually —
+and named from its `begin` line.
+
+`Content-Transfer-Encoding: x-uuencode` is not what decides. mpack has no such
+value (`parseEncoding` warns and falls through to `enc_none`), this engine now
+follows it there, and the body decides in both. A header that lies costs
+nothing either way.
+
+**A BinHex or btoa document in that position is kept as it lies**, undecoded,
+named `partN`. This walk has no decoder for either and is not getting one; what
+it must not do is drop the bytes, which is exactly what the sniff change would
+otherwise have done to the one shape the BinHex probe used to claim. The saved
+part is a `.hqx` and `macextract` says so when it is handed back — two steps
+where there was one, against a part that used to be dropped entirely.
+
+**What transfers.** The probe order was documented as a hierarchy of
+CONFIDENCE — "a stronger claim on the same kind of file" — and a scan that
+finds a document is indeed strong evidence that a document is there. It is no
+evidence at all about what ELSE is there, and the format that can answer that
+question was running last. **Ask what a probe's evidence bounds, not just how
+strong it is**: a marker found by scanning bounds a region, never a file.
