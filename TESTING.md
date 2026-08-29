@@ -489,17 +489,26 @@ every run under ASan, UBSan and the alignment sanitizer.
   `ddencode.py --expand`, which hands the same encodings to Salient's own
   1991 DiskDoubler under Mini vMac; that is not in `ci.sh` and needs an
   emulator.
-- **It only covers encodings our encoder emits.** A real fork may hold
-  constructs ours never produces. The known ones have been checked by hand
-  and behave: a method 4 stream whose Huffman root is a LEAF (a one-symbol
-  fork, zero-bit codes) decodes correctly; a method 3 `ESC 1` emits no repeat,
-  which is macutils' reading where `XADRLE90Handle` calls it an error — **the
-  two references disagree and this engine follows macutils**; and a fork
+- **It only covers encodings our encoder emits** — which since 2026-08-29 is
+  most of the space, because that was the thing to fix. `--expand` now writes
+  twelve forks rather than five: method 5 at all four counts its own validator
+  allows, a method 4 tree with a leaf at depth 1 and leaves at depth 10, and
+  method 3 at run length 2. All byte-exact through the 1991 expander
+  (FORMATS.md, *What the 1991 expander accepts*). A method 4 stream whose
+  Huffman root is a LEAF still has no case — `enc_huffman` adds a second
+  symbol rather than emit one — and is checked by hand only.
+- **`ESC 1` is the one the two references disagree about, and the vendor
+  broke the tie.** `XADRLE90Handle` calls it an error, macutils emits no
+  repeat, and this engine followed macutils until 2026-08-29 — alone among
+  its six RLE90 call sites. Salient's own 1991 expander refuses such a fork,
+  at offset 0 and mid-stream; `dd_rle` now passes `strict = 1` like the other
+  five, and all 91 DiskDoubler fixtures are unchanged (BLOCKERS.md). A fork
   opening with `ESC`, which no compressor can legitimately emit, yields zeros
   from a deterministic `last = 0` rather than macutils' uninitialised read.
-- **It says nothing about method 5's tree-count byte above 0** — no fixture
-  carries one, and both period expanders reject our construction of it
-  (OPEN_ITEMS.md).
+- **A fork whose compressed size exceeds its original is refused by the 1991
+  expander**, measured with a control that uses no token an accepted fork does
+  not (`RleGrow`). It is why the first `ESC 2` run read as a codec
+  disagreement and was not one.
 
 **Only `--emit` runs in `ci.sh`, and the rest of the file rotted behind it.**
 `build()` and the verification half of `expand()` call `header`, `cli` and

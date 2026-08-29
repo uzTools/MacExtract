@@ -74,9 +74,9 @@ claims*):
 | 1, Unix compress | DiskDoubler 3.7, "Method A (fastest)" | `subject-A.dd`, both forks; one more on the 3.1.2 disk | the bytes that went IN, on the emulated Mac; `unar` agrees |
 | 7, Stac LZS | the Sigma Designs card DiskDoubler 3.x drove | the two THINK C libraries on the 3.7 disk, 2,226 B each, **and 22 forks on the 3.1.2 disk, up to 97,906 B in 8 chunks** | the fork's own XOR checksum; `unar` agrees byte for byte |
 | 2, splay Huffman | DiskDoubler 1.x-3.1.x | **one**: `XCMD.h` on the 3.1.2 disk, 564 → 386 B (2026-08-21) | the fork's own 16-bit sum, and the output is legible 1990 Salient C |
-| 3, RLE90 | DiskDoubler 1.x-2.x | **none** | Salient's 1991 expander, on a fork this project encoded (below) |
-| 4, StuffIt Huffman | DiskDoubler 1.x-2.x | **none** | the same |
-| 5, splay Huffman, tree count in the stream | DiskDoubler 1.x-2.x | **none** | the same, at 256 trees and at 128, and DiskDoubler 4.1.1 agrees |
+| 3, RLE90 | DiskDoubler 1.x-2.x | **none** | Salient's 1991 expander, on forks this project encoded (below), at run lengths 3-255 and at **2**, the shortest the format expresses |
+| 4, StuffIt Huffman | DiskDoubler 1.x-2.x | **none** | the same, on two trees: one 2-11 levels deep and one over all 256 symbols with **a leaf at depth 1** |
+| 5, splay Huffman, tree count in the stream | DiskDoubler 1.x-2.x | **none** | the same, at **every count the format allows** — 256, 128, 64 and 32 — and DiskDoubler 4.1.1 agrees on 256 |
 
 **Methods 3, 4 and 5 joined on 2026-08-21, graded without a specimen.**
 `tools/vmac/ddencode.py` writes a fork with our own encoder and hands it to
@@ -93,7 +93,8 @@ measured that neither reference states —
   compression method. The file was probably created by a more recent version
   of DiskDoubler* on a 1990 format;
 - **method 5's tree-count byte takes four values and no others**, read out
-  of Salient's own expander on 2026-08-28: `CODE` 11 of the 1991
+  of Salient's own expander on 2026-08-28 and all four exercised on
+  2026-08-29: `CODE` 11 of the 1991
   `DiskDoubler™ App` validates it against **32, 64, 128 and 256** at 0x1dfc,
   turns 0 into 256 at 0x228c, refuses anything else before decoding a bit,
   refuses a count larger than the trees it could allocate, and masks the next
@@ -101,6 +102,34 @@ measured that neither reference states —
   value. A 128-tree fork this project wrote came back **byte-exact from that
   expander**; the count of 16 it rejects is an illegal value, not a
   disagreement (DECISIONS.md 2026-08-28).
+
+**What the 1991 expander accepts, measured 2026-08-29 by making our
+encoder emit it.** The gap these three methods carried was never the
+specimen supply — Salient's expander does not care who wrote the stream,
+so every shape `ddencode.py` can be made to write is a shape it will
+grade. Twelve forks, one boot:
+
+| asked | answer |
+|---|---|
+| method 5 at 32 and 64 trees | **byte-exact**; all four legal counts now exercised, where only 256 and 128 ever had been |
+| method 4 over all 256 symbols, skewed | **byte-exact**; a leaf at depth 1 and leaves at depth 10, where the older subject's tree is 2-11 |
+| method 3 with `ESC 2`, the shortest run | **byte-exact** — no encoder writes it, because at 2 the escape costs what it saves, so nothing had ever graded our shortest run |
+| method 3 with `ESC 1`, at offset 0 and 1,800 bytes in | **refused, both times** — so it is the token and not an escape with nothing to repeat |
+| a fork whose compressed size EXCEEDS its original | **refused** — the control, using no token the accepted case does not |
+
+The last two are why the control exists. `ESC 2` and `ESC 1` were both
+refused on the first run and both forks had GROWN; reading that as "`ESC 2`
+is illegal" would have been the Splay16 mistake again — a size check
+reported as a disagreement about the codec. Made to shrink, `ESC 2` is
+taken and `ESC 1` still is not.
+
+**`ESC 1` cost this engine a divergence.** `dd_rle` passed `strict = 0` to
+the shared RLE90 filter, lenient after macutils, and it was **the only one
+of six call sites that did** — StuffIt, ARC twice and BinHex twice all
+pass 1. Salient's own expander refuses such a fork; the engine now does
+too, and all 91 DiskDoubler fixtures stay byte-exact, which is the
+evidence that no real fork contains one (BLOCKERS.md; DECISIONS.md
+2026-08-29).
 
 **Method 2 joined on 2026-08-21**, when Salient's own 3.1.2 distribution
 floppy turned up on WinWorld — older than any DiskDoubler this project had

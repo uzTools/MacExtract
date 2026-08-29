@@ -24,11 +24,22 @@ same file closes the triangle.
 **What this grades and what it does not.** It grades our reading of the
 FORMAT against the vendor: a wrong escape byte, a wrong tree
 serialization, a wrong checksum base or a wrong bit order all make the
-expander refuse or produce different bytes. It does NOT grade our
-decoder against encodings our encoder never emits — a real file may use
-run lengths, tree shapes or contexts ours does not. That is why the
-subjects below are chosen to be awkward rather than convenient, and why
-this stays labelled weaker than a specimen.
+expander refuse or produce different bytes.
+
+Until 2026-08-29 it also did not grade the encodings our encoder never
+emitted — and that was a property of the ENCODER, not of the specimen
+supply. The expander does not care who wrote the stream, so every shape
+this file can be made to write is a shape Salient's own 1991 expander
+will grade. The cases below now cover all four legal method 5 tree
+counts, a method 4 tree with a leaf at depth 1 and leaves at depth 10,
+and the shortest run method 3 can express. One of them found a real
+divergence: `ESC 1`, which this engine used to accept leniently and the
+1991 expander refuses (DECISIONS.md 2026-08-29, BLOCKERS.md).
+
+**A real 1.x or 2.x file would still say what Salient's COMPRESSOR chose
+to emit** — which run lengths, which tree counts. It would not grade the
+decoder any further: one file exercises one set of shapes, and these
+exercise the range.
 """
 import argparse
 import os
@@ -82,11 +93,31 @@ def crc16_xmodem(data, crc=0):
 # The encoders
 # ------------------------------------------------------------------
 
-def enc_rle(data):
+def enc_rle(data, minrun=3, stray_esc1=None):
     """RLE90 on 0x90: ESC 0 is a literal escape, ESC n is n copies of the
-    byte already emitted. Runs are emitted at length 3 and up, because at
-    2 the escape costs as much as the byte it saves."""
+    byte already emitted. Runs are emitted at length `minrun` and up.
+
+    `minrun` is 3 by default because at 2 the escape costs as much as the
+    byte it saves — so no sane encoder writes `ESC 2` and this one never
+    did, which left our decoder's shortest run UNGRADED by anything.
+    `minrun=2` writes it on purpose; the expander that shipped in 1991 is
+    what says whether the reading is right.
+
+    `stray_esc1` is where to put an `ESC 1`, the one token whose meaning
+    the two references leave open: macutils emits nothing for it and so
+    do we (`unc_rle90_feed`, lenient). Our encoder cannot produce one, so
+    until 2026-08-29 nothing had ever asked Salient what it does with it.
+    It is a SOURCE offset to split at — 0 puts the token before any
+    literal, which is a different question from putting it mid-stream,
+    and telling those two apart is why the offset exists rather than a
+    flag. Either way the decoded bytes are unchanged, because `ESC 1`
+    emits nothing and leaves `last` alone."""
+    if stray_esc1 is not None and stray_esc1 > 0:
+        return (enc_rle(data[:stray_esc1], minrun) + bytes([RLE_ESC, 1])
+                + enc_rle(data[stray_esc1:], minrun))
     out = bytearray()
+    if stray_esc1 == 0:
+        out += bytes([RLE_ESC, 1])
     i = 0
     while i < len(data):
         b = data[i]
@@ -98,7 +129,7 @@ def enc_rle(data):
             i += 1
             continue
         out.append(b)
-        if run >= 3:
+        if run >= minrun:
             out += bytes([RLE_ESC, run])
             i += run
         else:
@@ -236,12 +267,12 @@ def enc_splay(data, ntrees=256):
 XOR_METHODS = (1, 2, 5)
 
 
-def encode(data, method, ntrees=256):
+def encode(data, method, ntrees=256, minrun=3, stray_esc1=None):
     """The compressed DATA FORK for one method."""
     x = XOR if method in XOR_METHODS else 0
     plain = bytes(b ^ x for b in data)        # what the codec sees
     if method == 3:
-        return enc_rle(plain)
+        return enc_rle(plain, minrun, stray_esc1)
     if method == 4:
         return enc_huffman(plain)
     if method == 2:
@@ -255,7 +286,8 @@ def encode(data, method, ntrees=256):
 # The container
 # ------------------------------------------------------------------
 
-def container(data, method, ntrees=256, ftype="UNCL", creator="UNCL"):
+def container(data, method, ntrees=256, ftype="UNCL", creator="UNCL",
+              minrun=3, stray_esc1=None):
     """A 0xABCD0054 single-file container holding one data fork.
 
     Field offsets are `dd_parse_filehdr`'s, counted from the magic:
@@ -264,7 +296,7 @@ def container(data, method, ntrees=256, ftype="UNCL", creator="UNCL"):
     over its first 82 bytes at +82 — which `unc_diskdoubler_probe`
     checks, so a container with a stale one is not recognised at all.
     """
-    comp = encode(data, method, ntrees)
+    comp = encode(data, method, ntrees, minrun, stray_esc1)
     h = bytearray(84)
     h[0:4] = b"\xab\xcd\x00\x54"
     struct.pack_into(">IIII", h, 4, len(data), len(comp), 0, 0)
@@ -302,15 +334,97 @@ SUBJECT = (b"DiskDoubler method probe. " * 12 +
 # every legal value, and what `enc_splay` writes. So `Splay16` is
 # refused by design and not by disagreement (DECISIONS.md 2026-08-28),
 # and `Splay128` is the non-zero count the format actually allows.
-SUBJECTS = [("Rle", 3, 256), ("Huff", 4, 256), ("Splay", 5, 256),
-            ("Splay128", 5, 128), ("Splay16", 5, 16)]
+# A second subject, for the tree SHAPES the first one cannot make: every
+# byte value present, with frequencies skewed hard enough that the rare
+# ones sit deep. The first subject's Huffman tree is a dozen levels of
+# nothing in particular; this one has a leaf at depth 1 and leaves at the
+# bottom, which is the range a real encoder's trees live in.
+SUBJECT_ALL = (bytes(range(256)) + b"\x00" * 1200 + b"\x01" * 400 +
+               b"\x02" * 130 + b"\x03" * 40 + bytes(range(256)) +
+               b"\x90\x90" + bytes(range(255, -1, -1)))
+
+# Runs of exactly two, which `minrun=3` never encodes as runs at all.
+#
+# The long run at the front is not decoration. The first version of this
+# subject was 564 bytes that `minrun=2` encoded to 767, and Salient's
+# expander refused it — which says nothing about `ESC 2`, because a fork
+# whose "compressed" size exceeds its original is a thing no DiskDoubler
+# ever wrote and the expander is entitled to refuse on that alone. The
+# run makes the fork shrink, so a refusal now IS about the token.
+# `RleGrow` below is the control that decides which of the two it was.
+SUBJECT_RUNS2 = (b"Q" * 3000 +
+                 b"DiskDoubler run-of-two probe. " * 3 +
+                 b"aabbccddeeffgghh" * 25 + b"\x90\x90" +
+                 bytes(range(64)) + b"ZZ" + b"Q" * 4 + b"YY")
+
+# A fork that GROWS under RLE and uses no token the plain `Rle` case does
+# not: every 0x90 costs `ESC 0`, and nothing else repeats. If the 1991
+# expander refuses this too, then refusing a grown fork is what it does
+# and the `Rle2`/`RleEsc1` refusals of 2026-08-29 were about size.
+SUBJECT_GROW = bytes([0x90]) * 400 + b"the quick brown fox " * 5
+
+
+class Case:
+    """One synthetic fork: what to encode, how, and what the 1991
+    expander is expected to do with it.
+
+    `expect` is "match" (the bytes must come back), "refused" (the
+    expander must NOT take it — a range check being exercised), or
+    None, which means *nobody has asked yet*. **None must not survive a
+    run**: the point of a probe is to be replaced by its answer, and a
+    case that cannot fail is not a test (CLAUDE.md).
+    """
+
+    def __init__(self, name, method, ntrees=256, data=None, minrun=3,
+                 stray_esc1=None, expect="match", note=""):
+        self.name, self.method, self.ntrees = name, method, ntrees
+        self.data = SUBJECT if data is None else data
+        self.minrun, self.stray_esc1 = minrun, stray_esc1
+        self.expect, self.note = expect, note
+
+    def blob(self):
+        return container(self.data, self.method, self.ntrees,
+                         minrun=self.minrun, stray_esc1=self.stray_esc1)
+
+
+SUBJECTS = [
+    Case("Rle", 3),
+    Case("Huff", 4),
+    Case("Splay", 5, 256),
+    Case("Splay128", 5, 128),
+    Case("Splay16", 5, 16, expect="refused",
+         note="16 is outside the four counts the validator allows"),
+    # Added 2026-08-29, one per encoding this encoder had never emitted.
+    Case("Splay32", 5, 32,
+         note="a legal tree count nothing had ever written"),
+    Case("Splay64", 5, 64,
+         note="the other one"),
+    Case("HuffDeep", 4, data=SUBJECT_ALL,
+         note="all 256 symbols, skewed: a leaf at depth 1 and leaves at "
+              "the bottom"),
+    Case("Rle2", 3, data=SUBJECT_RUNS2, minrun=2,
+         note="ESC 2, the shortest run the format can express and the one "
+              "no encoder emits: taken byte-exact by the 1991 expander "
+              "2026-08-29, once the fork was made to shrink"),
+    Case("RleEsc1", 3, data=SUBJECT_RUNS2, stray_esc1=0, expect="refused",
+         note="ESC 1 before any literal — refused, and the fork shrinks, so "
+              "not the size check RleGrow measures"),
+    Case("RleEsc1Mid", 3, data=SUBJECT_RUNS2, stray_esc1=1800,
+         expect="refused",
+         note="the same token 1,800 bytes in, after plenty of literals — "
+              "also refused, so it is the TOKEN and not an escape with "
+              "nothing yet to repeat"),
+    Case("RleGrow", 3, data=SUBJECT_GROW, expect="refused",
+         note="the control: a fork whose compressed size exceeds its "
+              "original, using no token the accepted Rle case does not"),
+]
 
 # The one subject the expander must NOT take: 16 is outside the four
 # counts the validator allows, so a refusal is this case passing. It is
 # the range check being exercised and not the codec, and reading it as a
 # failure was what made "only a count of 0 is confirmed" look like a
 # question about our decoder (DECISIONS.md 2026-08-28).
-REFUSED = {"Splay16"}
+REFUSED = {c.name for c in SUBJECTS if c.expect == "refused"}
 
 
 def build(outdir=None):
@@ -322,8 +436,9 @@ def build(outdir=None):
     outdir = outdir or tempfile.mkdtemp(prefix="ddenc-")
     os.makedirs(outdir, exist_ok=True)
     bad = 0
-    for name, method, ntrees in SUBJECTS:
-        blob = container(SUBJECT, method, ntrees)
+    for c in SUBJECTS:
+        name, method, ntrees = c.name, c.method, c.ntrees
+        blob = c.blob()
         path = os.path.join(outdir, name)
         open(path, "wb").write(blob)
         h = header(blob)
@@ -334,7 +449,7 @@ def build(outdir=None):
         for f in os.listdir(tmp):
             if not f.endswith(".rsrc"):
                 got = open(os.path.join(tmp, f), "rb").read()
-        ok = r.returncode == 0 and got == SUBJECT
+        ok = r.returncode == 0 and got == c.data
         print("ddencode: %-8s method %d%s  %s  %s"
               % (name, method,
                  "" if ntrees == 256 else " (%d trees)" % ntrees,
@@ -437,8 +552,9 @@ def session(tag, era="1991"):
     mb = os.path.join(work, "plain.bin")
     open(mb, "wb").write(macbinary("Plain", "TEXT", "ttxt", PLAIN, b""))
     mbs.append(mb)
-    for i, (name, method, ntrees) in enumerate(SUBJECTS):
-        blob = container(SUBJECT, method, ntrees)
+    for i, c in enumerate(SUBJECTS):
+        name = c.name
+        blob = c.blob()
         p = os.path.join(work, "s%d.bin" % i)
         # The type is what makes the Finder hand it to DiskDoubler; the
         # 3.1.2 disk's own compressed files carry DDF2/DDAP.
@@ -571,9 +687,11 @@ def expand(keep=False, era="1991"):
         # 2. open each compressed file. The INIT registered the DDF2
         #    icons, which the --probe frame shows, so the Finder hands
         #    them to DiskDoubler.
-        for prefix, tag in (("Rle", "rle"), ("Huff", "huff"),
-                            ("Splay16", "splay16"), ("Splay128", "splay128"),
-                            ("Splay", "splay")):
+        # Type-select matches the first name in ALPHABETICAL order that
+        # starts with what is typed, so an exact name always wins over the
+        # longer ones sharing it ("Rle" sorts before "Rle2"). Every case
+        # is opened, in the order they are declared.
+        for prefix, tag in ((c.name, c.name.lower()) for c in SUBJECTS):
             # Click the window's title bar first. After the previous file
             # the front application may not be the Finder, and a Cmd-O
             # sent to whatever IS front opens ITS Open dialog — which is
@@ -600,7 +718,8 @@ def expand(keep=False, era="1991"):
     got = read_forks(img)
     bad = 0
     os.makedirs(s.shots, exist_ok=True)
-    for name, method, ntrees in SUBJECTS:
+    for c in SUBJECTS:
+        name, method = c.name, c.method
         found = None
         for path, (ftype, creator, data, rsrc) in got.items():
             if path[-1] == name:
@@ -614,26 +733,33 @@ def expand(keep=False, era="1991"):
         # finding, and the first run of this mode threw them away.
         open(os.path.join(s.shots, name + ".out"), "wb").write(data)
         if header(data):
-            refused_ok = name in REFUSED
-            print("ddencode: %-8s method %d — still compressed, %s/%s: the "
+            refused_ok = c.expect == "refused"
+            print("ddencode: %-9s method %d — still compressed, %s/%s: the "
                   "expander did not take it%s"
                   % (name, method, ftype, creator,
-                     " (the count is illegal, which is this case passing)"
+                     " (which is this case passing: %s)" % c.note
                      if refused_ok else ""))
-            bad += not refused_ok
-        elif name in REFUSED:
-            print("ddencode: %-8s method %d — EXPANDED, and it should not "
-                  "have been: %d is not one of the counts the validator "
-                  "allows" % (name, method, dict((n, t) for n, _m, t
-                                                 in SUBJECTS)[name]))
+            bad += 0 if refused_ok else (0 if c.expect is None else 1)
+            if c.expect is None:
+                print("ddencode: %-9s ^^ ASKED, not asserted — write the "
+                      "answer into its Case and take `expect=None` out"
+                      % name)
+        elif c.expect == "refused":
+            print("ddencode: %-9s method %d — EXPANDED, and it should not "
+                  "have been: %s" % (name, method, c.note))
             bad += 1
-        elif data == SUBJECT:
-            print("ddencode: %-8s method %d — EXPANDED BY 1991, byte-exact "
-                  "(%d B)" % (name, method, len(data)))
+        elif data == c.data:
+            print("ddencode: %-9s method %d — EXPANDED BY 1991, byte-exact "
+                  "(%d B)%s" % (name, method, len(data),
+                                "  [%s]" % c.note if c.note else ""))
+            if c.expect is None:
+                print("ddencode: %-9s ^^ ASKED, not asserted — write the "
+                      "answer into its Case and take `expect=None` out"
+                      % name)
         else:
-            print("ddencode: %-8s method %d — expanded to %d B, DIFFERS from "
+            print("ddencode: %-9s method %d — expanded to %d B, DIFFERS from "
                   "the %d B that went in" % (name, method, len(data),
-                                             len(SUBJECT)))
+                                             len(c.data)))
             bad += 1
     print("ddencode: %d of %d confirmed by the %s expander"
           % (len(SUBJECTS) - bad, len(SUBJECTS),

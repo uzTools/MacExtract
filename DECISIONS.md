@@ -160,6 +160,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-28 (the certificate painted first) — a completion marker that goes down first certifies nothing
 - 2026-08-29 (the yardstick) — the free tool, run at last
 - 2026-08-29 (SuperDisk! method 13) — the specimen that would have settled nothing
+- 2026-08-29 (methods 3, 4 and 5, graded across the format) — the gap was in our encoder
 
 ---
 
@@ -9180,3 +9181,57 @@ A-line instruction under the runner"). Two accounts of one module in one
 section of one file, both wrong, four days apart. The runner now takes the
 larger of its own heuristic and what the module declares, which changes nothing
 for methods 1-11 and is the whole of the difference for 13.
+
+## 2026-08-29 (methods 3, 4 and 5, graded across the format) — the gap was in our encoder
+
+OPEN_ITEMS.md wanted *"a DiskDoubler fork of method 3, 4 or 5 that this
+project did not write"*, because what nothing graded was "the encodings our
+encoder does not emit — other run lengths, other tree shapes, other
+contexts". Both halves of that were true and the conclusion drawn from them
+was wrong: **the missing encodings were missing from our ENCODER, and the
+expander does not care who wrote the stream.**
+
+`ddencode.py` has handed forks to Salient's own 1991 DiskDoubler since
+2026-08-21. Every shape it can be made to write is a shape that expander
+will grade. So the fix was not to find a file; it was to enumerate what our
+encoder had never emitted and emit it. Five cases, one boot, and the
+results are in FORMATS.md (*What the 1991 expander accepts*): method 5 at 32
+and 64 trees — the two legal counts nothing had ever written — and a method
+4 tree with a leaf at depth 1, all byte-exact; `ESC 2`, the shortest run the
+format expresses, byte-exact; `ESC 1` refused twice.
+
+**A specimen would have graded one set of shapes. This grades the range.**
+That is the general form, and it is the second time this month the
+*"what would close it"* line was the thing that was wrong rather than the
+thing that was missing (SuperDisk! method 13, above).
+
+### The control is the whole reason the first answer is not in the docs
+
+The first run refused BOTH new method 3 cases, and the obvious reading —
+`ESC 2` is illegal — would have been wrong. Both forks had GROWN: 564 bytes
+in, 767 and 567 out, which is a thing no DiskDoubler ever wrote and an
+expander is entitled to refuse on sight. That is the Splay16 mistake exactly
+(DECISIONS.md 2026-08-28): a range check exercised and reported as a
+disagreement about the codec.
+
+So the subjects were given a 3,000-byte run to make them shrink, and
+`RleGrow` was added: a fork that grows and uses **no token the
+already-accepted case does not**. Second run: `Rle2` byte-exact, `RleGrow`
+refused, `ESC 1` still refused. Three facts where there had been one guess.
+**When a probe and a control disagree about which property is being
+measured, the control is cheaper than the argument.**
+
+### And the one that was a real divergence
+
+`ESC 1` was refused at offset 0. That is two hypotheses, not one — the token
+might be illegal, or an escape before any literal might be. `RleEsc1Mid`
+puts the same token 1,800 bytes in; it is refused too, so it is the token.
+
+`dd_rle` passed `strict = 0` to the shared RLE90 filter, lenient on `ESC 1`
+after macutils, **and it was the only one of six call sites that did**.
+StuffIt, ARC twice and BinHex twice all pass 1. The comment above it named
+its source, which is what made it look settled: a comment that cites a
+reference reads as sourced, and nobody asked whether that reference was the
+vendor. Salient's is, and it refuses. The engine now refuses too, and 91/91
+DiskDoubler fixtures are unchanged — no real fork carries the token, which
+is exactly what a vendor expander rejecting it predicts.

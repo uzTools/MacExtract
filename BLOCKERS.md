@@ -931,6 +931,24 @@ a harness can click is not the same list.
   looked like the module's problem rather than the harness's, because the
   previous sentence about this module had also blamed the module.
 
+- **"Lenient on `ESC 1`: macutils' `dd_rle` emits nothing for it rather
+  than failing."** Written with `dd_rle` and withdrawn 2026-08-29.
+  Salient's own 1991 expander refuses a method 3 fork containing that
+  token — at offset 0 and again 1,800 bytes in, on forks that SHRINK, so
+  not the size check the `RleGrow` control measures. `fmt_dd.c` passed
+  `strict = 0` to the shared RLE90 filter and was **the only one of six
+  call sites that did**: `fmt_sit.c`, `fmt_arc.c` twice and
+  `fmt_binhex.c` twice all pass 1. It now passes 1, and all 91
+  DiskDoubler fixtures stay byte-exact — which is the evidence that no
+  real fork carries one. **Cost:** this engine accepted, silently and
+  with a plausible answer, a fork the format's only shipped expander
+  rejects; five years of corpus never noticed because no valid file can
+  contain the token. **Why it survived:** the leniency was inherited from
+  a third-party reimplementation and written into a comment as its
+  justification, next to five call sites that had already decided the
+  other way. A comment naming its source reads as sourced; nobody asked
+  whether the source was the vendor.
+
 ### Corrected figures and superseded write-ups
 
 - **The OS 9 boot time** was recorded as "about four minutes", then "20-45

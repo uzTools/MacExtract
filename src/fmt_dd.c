@@ -416,7 +416,7 @@ static int dd_rle(DdFork *o, UncBufIn *in, uint32_t complen, int xorval)
 
     /* Lenient on ESC 1: macutils' dd_rle emits nothing for it rather
      * than failing (unc_internal.h, RLE90). */
-    unc_rle90_init(&r, 0);
+    unc_rle90_init(&r, 1);
 
     while (o->left > 0) {
         int v = unc_rle90_take(&r);
