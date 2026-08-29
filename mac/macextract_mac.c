@@ -644,28 +644,48 @@ typedef struct {
 /* name for an entry is gone by the time the walk moves on, and a     */
 /* failed entry's file has been deleted by then.                      */
 /*                                                                    */
+/* Names go in WHOLE. The list exists to say which file became which, */
+/* and eighteen photographs whose names differ at character 34 are    */
+/* one line repeated eighteen times if the names are cut to fit a     */
+/* row (2026-08-29). So the text is packed end to end in one pool     */
+/* and the box wraps it; what a line costs is what its names are,     */
+/* not a per-line ceiling every short line pays for.                  */
+/*                                                                    */
 /* A fixed pool rather than the heap: the engine's budget is derived  */
 /* from FreeMem() once, at the start of the run, so anything          */
 /* allocated during it is taken out of the reserve the Toolbox and    */
-/* File Manager are holding. 64 lines is 5 KB of it; past that the    */
-/* lines are COUNTED and the count is shown, so the report never      */
-/* presents itself as complete when it is not.                        */
+/* File Manager are holding. When either the lines or the bytes run   */
+/* out the rest are COUNTED and the count is shown, so the report     */
+/* never presents itself as complete when it is not.                  */
 /* ------------------------------------------------------------------ */
 
-#define kRepMax    64          /* lines kept */
-#define kRepWidth  96          /* bytes per line; [0] is the length */
-#define kRepNameW  36          /* of one name, before it is elided   */
-#define kRepEllip  0xC9        /* MacRoman '…' */
+#define kRepMax    64          /* lines */
+#define kRepPool   6144        /* bytes of text, packed end to end */
+/* The last lines and the last bytes are FAILURES' to take. An archive
+ * with more long names than the pool holds is ordinary — the crowd of
+ * renames would otherwise fill it and push out the one line the user
+ * has to act on, which is what happened the first time this ran against
+ * 100 alike names. */
+#define kRepKeep   16          /* lines held back */
+#define kRepKeepB  1024        /* bytes held back */
 
-static unsigned char gRep[kRepMax][kRepWidth];
-static short gRepN;            /* lines kept */
-static long  gRepMore;         /* lines the pool had no room for */
+static unsigned char gRepBuf[kRepPool];
+static short gRepStart[kRepMax];    /* first byte of line i, in gRepBuf */
+static short gRepLen[kRepMax];
+/* Where the line would rather be broken if it has to be: after the
+ * archive's own name, so a wrapped line reads as the name on one row
+ * and what became of it on the next. 0 = anywhere. */
+static short gRepBreak[kRepMax];
+static short gRepN;                 /* lines kept */
+static short gRepUsed;              /* bytes of the pool in use */
+static short gRepCur;               /* the line being appended to, or -1 */
+static long  gRepMore;              /* lines there was no room for */
 
 /* Folders this run created, so a folder that turns up ALREADY there can
  * be told from one this walk made a moment ago. Only the archive's own
- * name is remembered, and only the first kRepWidth-1 bytes of it: two
- * names that agree that far shorten alike, so they would be
- * indistinguishable on disk anyway. */
+ * name is remembered, and only its first 63 bytes: two names that agree
+ * that far shorten alike, so they would be indistinguishable on disk
+ * anyway. */
 #define kDirMemo 24
 
 static struct { long dir; unsigned char name[64]; } gDirMemo[kDirMemo];
@@ -674,62 +694,64 @@ static short gDirMemoN;
 static void RepReset(void)
 {
     gRepN = 0;
+    gRepUsed = 0;
+    gRepCur = -1;
     gRepMore = 0;
     gDirMemoN = 0;
 }
 
-/* The last kRepKeep lines are FAILURES' to take. An archive with more
- * long names than the pool holds is ordinary — the crowd of renames
- * would otherwise fill it and push out the one line the user has to
- * act on, which is exactly what happened the first time this ran
- * against 100 alike names. */
-#define kRepKeep 16
-
-static unsigned char *RepNew(int urgent)
+/* Start a line. `urgent` is a failure, which may take from the reserve. */
+static int RepNew(int urgent)
 {
-    unsigned char *l;
-    if (gRepN >= (urgent ? kRepMax : kRepMax - kRepKeep)) {
+    gRepCur = -1;
+    if (gRepN >= (urgent ? kRepMax : kRepMax - kRepKeep) ||
+        gRepUsed >= (urgent ? kRepPool - 16 : kRepPool - kRepKeepB)) {
         gRepMore++;
-        return NULL;
+        return 0;
     }
-    l = gRep[gRepN++];
-    l[0] = 0;
-    return l;
+    gRepStart[gRepN] = gRepUsed;
+    gRepLen[gRepN] = 0;
+    gRepBreak[gRepN] = 0;
+    gRepCur = gRepN++;
+    return 1;
 }
 
-static void RepCat(unsigned char *l, const char *s)
+static void RepPut(unsigned char c)
 {
-    if (!l) return;
-    while (*s && l[0] < kRepWidth - 1) l[++l[0]] = (unsigned char)*s++;
+    if (gRepCur < 0 || gRepUsed >= kRepPool) return;
+    gRepBuf[gRepUsed++] = c;
+    gRepLen[gRepCur]++;
 }
 
-/* One name, elided at kRepNameW so that a long one cannot push the rest
- * of the line off the end of the buffer. */
-static void RepCatP(unsigned char *l, const unsigned char *p)
+static void RepCat(const char *s)
 {
-    short i, n;
-    if (!l) return;
-    n = (short)p[0];
-    if (n > kRepNameW) n = kRepNameW;
-    for (i = 1; i <= n && l[0] < kRepWidth - 1; i++) l[++l[0]] = p[i];
-    if ((short)p[0] > n && l[0] < kRepWidth - 1) l[++l[0]] = kRepEllip;
+    while (*s) RepPut((unsigned char)*s++);
 }
 
-/* The same for raw engine bytes: one path component, MacRoman, with the
- * engine's reversible '/'->':' swap undone so the line shows the name
- * the archive meant rather than the one the engine carries. */
-static void RepCatBytes(unsigned char *l, const uint8_t *b, int len)
+/* A Pascal name, whole. */
+static void RepCatP(const unsigned char *p)
 {
-    int i, n = len;
-    if (!l) return;
+    short i;
+    for (i = 1; i <= (short)p[0]; i++) RepPut(p[i]);
+}
+
+/* Raw engine bytes: one path component, MacRoman, with the engine's
+ * reversible '/'->':' swap undone so the line shows the name the archive
+ * meant rather than the one the engine carries. */
+/* Mark the end of the name: where this line prefers to wrap. */
+static void RepMarkBreak(void)
+{
+    if (gRepCur >= 0) gRepBreak[gRepCur] = gRepLen[gRepCur];
+}
+
+static void RepCatBytes(const uint8_t *b, int len)
+{
+    int i;
     if (len == 0) {                  /* an entry the archive did not name */
-        RepCat(l, "An unnamed entry");
+        RepCat("An unnamed entry");
         return;
     }
-    if (n > kRepNameW) n = kRepNameW;
-    for (i = 0; i < n && l[0] < kRepWidth - 1; i++)
-        l[++l[0]] = b[i] == ':' ? '/' : b[i];
-    if (len > n && l[0] < kRepWidth - 1) l[++l[0]] = kRepEllip;
+    for (i = 0; i < len; i++) RepPut(b[i] == ':' ? '/' : b[i]);
 }
 
 /* "<archive's name> renamed to <what is on the disk>" — the line this
@@ -737,12 +759,12 @@ static void RepCatBytes(unsigned char *l, const uint8_t *b, int len)
 static void RepRenamed(const char *what, const uint8_t *orig, int olen,
                        const unsigned char *now, const char *verb)
 {
-    unsigned char *l = RepNew(0);
-    if (!l) return;
-    RepCat(l, what);
-    RepCatBytes(l, orig, olen);
-    RepCat(l, verb);
-    RepCatP(l, now);
+    if (!RepNew(0)) return;
+    RepCat(what);
+    RepCatBytes(orig, olen);
+    RepMarkBreak();
+    RepCat(verb);
+    RepCatP(now);
 }
 
 static void RepDirMemo(long dir, const uint8_t *orig, int olen)
@@ -787,48 +809,48 @@ static int RepDirMerged(long dir, const uint8_t *orig, int olen)
  * output is deleted. */
 static void RepEntryFailed(const uint8_t *orig, int olen, const char *why)
 {
-    unsigned char *l = RepNew(1);
-    if (!l) return;
-    RepCatBytes(l, orig, olen);
-    RepCat(l, why);
+    if (!RepNew(1)) return;
+    RepCatBytes(orig, olen);
+    RepMarkBreak();
+    RepCat(why);
 }
 
 /* The same, for the failure the engine reports once the entry has been
- * accepted. The reason is what the user can act on, so each says what
- * is wrong rather than naming the error. */
+ * accepted. The reason is what the user can act on, so each says what is
+ * wrong rather than naming the error. */
 static void RepFailed(const uint8_t *orig, int olen, int status)
 {
-    unsigned char *l = RepNew(1);
-    if (!l) return;
-    RepCatBytes(l, orig, olen);
+    if (!RepNew(1)) return;
+    RepCatBytes(orig, olen);
+    RepMarkBreak();
     switch (status) {
     case UNC_ERR_TOOLARGE:
-        RepCat(l, " is too large for this version and was not extracted");
+        RepCat(" is too large for this version and was not extracted");
         break;
     case UNC_ERR_MEM:
-        RepCat(l, " needs more memory than was free");
+        RepCat(" needs more memory than was free");
         break;
     case UNC_ERR_UNSUPPORTED:
-        RepCat(l, " uses a method this version cannot read");
+        RepCat(" uses a method this version cannot read");
         break;
     case UNC_ERR_CRC:
-        RepCat(l, " is damaged: its checksum does not match");
+        RepCat(" is damaged: its checksum does not match");
         break;
     case UNC_ERR_TRUNCATED:
-        RepCat(l, " ends early: the archive is incomplete");
+        RepCat(" ends early: the archive is incomplete");
         break;
     case UNC_ERR_ENCRYPTED:
     case UNC_ERR_PASSWORD:
-        RepCat(l, " is encrypted and was skipped");
+        RepCat(" is encrypted and was skipped");
         break;
     case UNC_ERR_SINK:
-        RepCat(l, " could not be written to the disk");
+        RepCat(" could not be written to the disk");
         break;
     case UNC_ERR_IO:
-        RepCat(l, " could not be read from the archive");
+        RepCat(" could not be read from the archive");
         break;
     default:
-        RepCat(l, " could not be extracted");
+        RepCat(" could not be extracted");
         break;
     }
 }
@@ -854,57 +876,74 @@ static int ExtStart(const unsigned char *b, int len)
 }
 
 /* One engine path component -> Pascal Str63: undo the '/'->':' swap,
- * strip any stray ':' (illegal in an HFS name), cap at 31 chars.
- * Returns nonzero when the result is NOT the archive's own name, which
- * is what puts a line in the report.
+ * strip any stray ':' (illegal in an HFS name), fit it into 31 chars.
  *
- * A name too long for HFS loses its EXTENSION first, and the rest of it
- * afterwards: on a Macintosh what opens a file is the type and creator
- * sink_end stamps on it, so a suffix is decoration — and cutting the
- * name at 31 bytes would leave a mangled half of one anyway
- * ("...Statement.rt" for a ".rtf"), which reads as a corrupted name
- * rather than a shortened one. */
+ * THE EXTENSION IS KEPT and the stem is what gets cut, so
+ * `LongDocumentName.txt` becomes `LongDocumen.txt` and never
+ * `LongDocumentName.tx`. A Macintosh file is opened by the type and
+ * creator sink_end stamps on it — but a file that arrived WITH a suffix
+ * generally came off a machine that has neither, and carries no fork
+ * and no Finder types for this shell to stamp, so the suffix is the
+ * only thing that says what opens it (2026-08-29, at the maintainer's
+ * ask; it was the first thing cut for a few hours, which was backwards).
+ *
+ * Returns nonzero when the result is NOT the archive's own name, which
+ * is what puts a line in the report. */
 static int ComponentToStr63(const uint8_t *comp, int len, Str63 out)
 {
-    int i, o = 0, keep = len;
+    int i, o = 0, stem = len, ext = -1;
+
     if (len > 31) {
-        int dot = ExtStart(comp, len);
-        if (dot > 0) keep = dot;
+        ext = ExtStart(comp, len);
+        /* 31 minus the suffix has to leave a stem to cut down to. */
+        if (ext > 0 && 31 - (len - ext) >= 1) stem = 31 - (len - ext);
+        else ext = -1;
     }
-    for (i = 0; i < keep && o < 31; i++) {
+    for (i = 0; i < stem && o < 31; i++) {
         unsigned char b = comp[i];
         if (b == ':') b = '/';           /* reversible swap undone */
         out[++o] = b;
     }
+    if (ext > 0)
+        for (i = ext; i < len && o < 31; i++) {
+            unsigned char b = comp[i];
+            if (b == ':') b = '/';
+            out[++o] = b;
+        }
     if (o == 0) out[++o] = '_';
     out[0] = (unsigned char)o;
     return o != len;
 }
 
-/* Append a collision suffix "~1".."~99" within 31 chars. The extension
- * goes here too, and for the same reason: "~1" after it would leave a
- * name that no longer reads as one of a numbered pair.
+/* Insert a collision suffix "~1".."~99" BEFORE the extension, within 31
+ * chars: `bababibibo.txt` numbers to `bababibibo~1.txt`, and a name with
+ * no room left for the whole stem loses stem rather than suffix. The
+ * extension survives here for the same reason it survives the cut above.
  *
- * TWO digits since 2026-08-29, because one is not enough: names that
- * are alike for 31 characters differ after it, and an archive holding
+ * TWO digits since 2026-08-29, because one is not enough: names that are
+ * alike for 31 characters differ after it, and an archive holding
  * eighteen photographs called "Photograph Of The Summer Of 1994 noNN"
- * ran out at "~9" — measured on a Mac Plus, where it then took the
- * whole extraction down with it (BLOCKERS.md). */
+ * ran out at "~9" — measured on a Mac Plus, where it then took the whole
+ * extraction down with it (BLOCKERS.md). */
 static void BumpName(Str63 name, int attempt)
 {
+    Str63 tmp;
     int len = name[0];
-    int dot = ExtStart(name + 1, len);
-    int wide = attempt > 9;
-    if (dot > 0) len = dot;
-    if (len > (wide ? 28 : 29)) len = wide ? 28 : 29;
-    name[len + 1] = '~';
-    if (wide) {
-        name[len + 2] = (unsigned char)('0' + attempt / 10);
-        name[len + 3] = (unsigned char)('0' + attempt % 10);
-    } else {
-        name[len + 2] = (unsigned char)('0' + attempt);
-    }
-    name[0] = (unsigned char)(len + (wide ? 3 : 2));
+    int ext = ExtStart(name + 1, len);
+    int extlen = ext > 0 ? len - ext : 0;
+    int sufflen = attempt > 9 ? 3 : 2;
+    int stem = ext > 0 ? ext : len;
+    int o = 0, i;
+
+    if (31 - extlen - sufflen < 1) { extlen = 0; ext = -1; }  /* no room */
+    if (stem > 31 - extlen - sufflen) stem = 31 - extlen - sufflen;
+    for (i = 0; i < stem; i++) tmp[++o] = name[i + 1];
+    tmp[++o] = '~';
+    if (sufflen == 3) tmp[++o] = (unsigned char)('0' + attempt / 10);
+    tmp[++o] = (unsigned char)('0' + attempt % 10);
+    for (i = 0; i < extlen; i++) tmp[++o] = name[ext + i + 1];
+    tmp[0] = (unsigned char)o;
+    BlockMoveData(tmp, name, o + 1);
 }
 
 /* DirCreate via the parameter-block call (the Multiversal interfaces
@@ -1113,12 +1152,9 @@ static int sink_begin(void *ctx, const UncEntryInfo *info)
     if (leafChanged)
         RepRenamed("", info->name + leafStart, leafLen, s->curName,
                    " renamed to ");
-    else if (info->name_truncated) {
-        unsigned char *l = RepNew(0);
-        if (l) {
-            RepCatP(l, s->curName);
-            RepCat(l, " is in a folder whose path had to be shortened");
-        }
+    else if (info->name_truncated && RepNew(0)) {
+        RepCatP(s->curName);
+        RepCat(" is in a folder whose path had to be shortened");
     }
 #ifndef UNC_MAC_STAGE_WRITES
     return 0;                        /* nothing to pre-allocate: we stream */
@@ -3906,37 +3942,92 @@ static void ShowNote(short alrtID, const unsigned char *msg)
 /* The last two rows are the blank and the outcome, held there whenever
  * the list is longer than the box. */
 #define kRepScroll    (kRepVisible - 2)
+#define kRepIndent    14        /* a wrapped line's continuation rows */
+
+/* A name goes into the report whole, so a line is as long as the two
+ * names in it and the box wraps it over as many rows as that takes.
+ * The rows are worked out once, when the box opens, because measuring
+ * text is a Toolbox call and scrolling must not pay for it. */
+#define kRepRowMax    320
+
+static short gRowLine[kRepRowMax];   /* which report line the row is from */
+static short gRowOff[kRepRowMax];    /* its first byte within that line */
+static short gRowLen[kRepRowMax];
+static short gRowN;
 
 static Str255        gRepOutcome;   /* the run's result: the last line */
-static short         gRepTop;       /* index of the first line shown */
+static short         gRepTop;       /* index of the first row shown */
 static ControlHandle gRepBar;
 static DialogPtr     gRepDlg;       /* the scroll action proc's only route */
 
-/* The pool, and then the count of what did not fit. The outcome is not
- * counted here: it is drawn after them, and RepListDraw decides where. */
-static short RepTotal(void)
+/* Rows, not lines: the "and N more" line is one of them. */
+static short RepRows(void)
 {
-    return (short)(gRepN + (gRepMore ? 1 : 0));
+    return (short)(gRowN + (gRepMore ? 1 : 0));
 }
 
-static void RepLineAt(short n, Str255 out)
+static void RepMoreLine(Str255 out)
 {
     out[0] = 0;
-    if (n < gRepN) {
-        BlockMoveData(gRep[n], out, gRep[n][0] + 1);
-        return;
-    }
-    if (n == gRepN && gRepMore) {
-        PStrCat(out, "and ");
-        PStrCatNum(out, gRepMore);
-        PStrCat(out, " more, which this list had no room for");
+    PStrCat(out, "and ");
+    PStrCatNum(out, gRepMore);
+    PStrCat(out, " more, which this list had no room for");
+}
+
+/* How many of `len` bytes fit in `width`, broken at a space where there
+ * is one to break at. The first guess is proportional, so the loops
+ * that follow it run a few times rather than once per character — this
+ * is a 68000 and TextWidth is a trap. */
+static short RepFit(const unsigned char *p, short len, short width)
+{
+    short n, w, sp;
+    if (len <= 0) return 0;
+    w = TextWidth((Ptr)p, 0, len);
+    if (w <= width) return len;
+    n = (short)((long)len * width / (w > 0 ? w : 1));
+    if (n < 1) n = 1;
+    if (n > len) n = len;
+    while (n > 1 && TextWidth((Ptr)p, 0, n) > width) n--;
+    while (n < len && TextWidth((Ptr)p, 0, (short)(n + 1)) <= width) n++;
+    for (sp = n; sp > n / 2; sp--)
+        if (p[sp - 1] == ' ') return sp;
+    return n;
+}
+
+/* Wrap every line into rows. The port's font must already be the list's
+ * (TextWidth measures in it), so this is called from ShowReport after
+ * the dialog is up. */
+static void RepBuildRows(short width)
+{
+    short i;
+    gRowN = 0;
+    for (i = 0; i < gRepN && gRowN < kRepRowMax; i++) {
+        const unsigned char *p = gRepBuf + gRepStart[i];
+        short len = gRepLen[i], off = 0;
+        do {
+            short avail = (short)(off ? width - kRepIndent : width);
+            short fit = RepFit(p + off, (short)(len - off), avail);
+            if (fit <= 0) fit = 1;
+            /* A line that has to wrap wraps after the name, when the
+             * name itself fits a row: "<what the archive calls it>" and
+             * then "renamed to <what is on the disk>". */
+            if (off == 0 && fit < len && gRepBreak[i] > 0 &&
+                gRepBreak[i] <= fit)
+                fit = gRepBreak[i];
+            gRowLine[gRowN] = i;
+            gRowOff[gRowN] = off;
+            gRowLen[gRowN] = fit;
+            gRowN++;
+            off = (short)(off + fit);
+            while (off < len && p[off] == ' ') off++;   /* the break ate it */
+        } while (off < len && gRowN < kRepRowMax);
     }
 }
 
 static void RepListDraw(DialogPtr dlg)
 {
     Rect box, clip;
-    short kind, i, total, rows, fits;
+    short kind, i, rows, total, fits;
     Handle h;
     GrafPtr save;
     RgnHandle saveClip;
@@ -3955,19 +4046,27 @@ static void RepListDraw(DialogPtr dlg)
      * about 60 characters across the box and a rename line wants 80. */
     TextFont(3);
     TextSize(9);
-    total = RepTotal();
-    /* Everything fits: the outcome follows the last line and a blank
-     * one, where a reader ends up anyway. It does not: the list scrolls
-     * under a blank row and the outcome, which stay on the bottom two
-     * rows — the one thing here that must not be somewhere the reader
-     * has to go and find. */
+    total = RepRows();
+    /* Everything fits: the outcome follows the last row and a blank one,
+     * where a reader ends up anyway. It does not: the rows scroll under
+     * a blank row and the outcome, which stay on the bottom two — the
+     * one thing here that must not be somewhere the reader has to go
+     * and find. */
     fits = (short)(total + 2 <= kRepVisible);
     rows = fits ? total : (short)kRepScroll;
     for (i = 0; i < rows && gRepTop + i < total; i++) {
-        Str255 line;
-        RepLineAt((short)(gRepTop + i), line);
+        short r = (short)(gRepTop + i), line;
         MoveTo(box.left + 5, box.top + 2 + (i + 1) * kRepLineH);
-        DrawString(line);
+        if (r >= gRowN) {                      /* the "and N more" row */
+            Str255 more;
+            RepMoreLine(more);
+            DrawString(more);
+            continue;
+        }
+        line = gRowLine[r];
+        if (gRowOff[r]) Move(kRepIndent, 0);   /* a wrapped continuation */
+        DrawText((Ptr)gRepBuf, (short)(gRepStart[line] + gRowOff[r]),
+                 gRowLen[r]);
     }
     TextFace(bold);              /* the verdict, in the document's font */
     MoveTo(box.left + 5,
@@ -4005,7 +4104,7 @@ static pascal void RepRingItemProc(WindowPtr w, short item)
 
 static void RepSetTop(short top)
 {
-    short max = (short)(RepTotal() - kRepScroll);
+    short max = (short)(RepRows() - kRepScroll);
     if (max < 0) max = 0;
     if (top > max) top = max;
     if (top < 0) top = 0;
@@ -4032,15 +4131,16 @@ static pascal void RepScrollAction(ControlHandle c, short part)
 
 static ControlActionUPP gRepActionUPP;
 
-/* The same lines, as a document. A Macintosh screen has no scrollback
- * and this list can be long, so the run that is worth acting on later
- * can be filed: TEXT/ttxt, CR-separated, opened by TeachText and
- * SimpleText on every system this application runs on. */
+/* The same lines, as a document: whole, unwrapped, and ending in the
+ * outcome. A Macintosh screen has no scrollback and this list can be
+ * long, so the run that is worth acting on later can be filed —
+ * TEXT/ttxt, CR-separated, opened by TeachText and SimpleText on every
+ * system this application runs on. */
 static void RepSaveAsText(void)
 {
     Point where;
     SFReply reply;
-    short ref = 0, i, total;
+    short ref = 0, i;
     char cr = '\r';
 
     where.h = 100;
@@ -4057,15 +4157,25 @@ static void RepSaveAsText(void)
         MyHDelete(reply.vRefNum, 0, reply.fName);
         return;
     }
-    total = (short)(RepTotal() + 2);      /* a blank, then the outcome */
-    for (i = 0; i < total; i++) {
+    for (i = 0; i < gRepN + (gRepMore ? 1 : 0) + 2; i++) {
         Str255 line;
+        const unsigned char *p;
         long count;
-        if (i < RepTotal()) RepLineAt(i, line);
-        else if (i == RepTotal()) line[0] = 0;
-        else BlockMoveData(gRepOutcome, line, gRepOutcome[0] + 1);
-        count = line[0];
-        if (count && FSWrite(ref, &count, (Ptr)&line[1]) != noErr) break;
+        if (i < gRepN) {
+            p = gRepBuf + gRepStart[i];
+            count = gRepLen[i];
+        } else if (i == gRepN && gRepMore) {
+            RepMoreLine(line);
+            p = line + 1;
+            count = line[0];
+        } else if (i == gRepN + (gRepMore ? 1 : 0)) {
+            p = line;                     /* the blank line */
+            count = 0;
+        } else {
+            p = gRepOutcome + 1;
+            count = gRepOutcome[0];
+        }
+        if (count && FSWrite(ref, &count, (Ptr)p) != noErr) break;
         count = 1;
         if (FSWrite(ref, &count, (Ptr)&cr) != noErr) break;
     }
@@ -4122,7 +4232,7 @@ static pascal Boolean RepFilter(DialogPtr dlg, EventRecord *ev, short *item)
     case 11: RepSetTop((short)(gRepTop - kRepScroll)); return true;  /* PgUp */
     case 12: RepSetTop((short)(gRepTop + kRepScroll)); return true;  /* PgDn */
     case 1:  RepSetTop(0); return true;                              /* Home */
-    case 4:  RepSetTop(RepTotal()); return true;                      /* End */
+    case 4:  RepSetTop(RepRows()); return true;                       /* End */
     default: break;
     }
     return false;
@@ -4150,7 +4260,13 @@ static void ShowReport(const unsigned char *outcome)
     GetDialogItem(dlg, kRepListItem, &kind, &h, &box);
     SetDialogItem(dlg, kRepListItem, kind,
                   (Handle)NewUserItemUPP(RepListItemProc), &box);
-    max = (short)(RepTotal() - kRepScroll);
+    /* Wrap the lines to the box, in the font they are drawn in. */
+    TextFont(3);
+    TextSize(9);
+    RepBuildRows((short)(box.right - box.left - 12));
+    TextFont(0);
+    TextSize(12);
+    max = (short)(RepRows() - kRepScroll);
     if (max < 0) max = 0;
     {
         Rect bar;

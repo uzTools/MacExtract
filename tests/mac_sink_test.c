@@ -427,7 +427,8 @@ int main(int argc, char **argv)
     {
         short i;
         for (i = 0; i < gRepN; i++)
-            fprintf(stderr, "report: %.*s\n", (int)gRep[i][0], gRep[i] + 1);
+            fprintf(stderr, "report: %.*s\n", (int)gRepLen[i],
+                    gRepBuf + gRepStart[i]);
         if (gRepMore)
             fprintf(stderr, "report-more: %ld\n", gRepMore);
     }

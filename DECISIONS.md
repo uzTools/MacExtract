@@ -9310,16 +9310,34 @@ font, bold; drawn where the text ends when everything fits, and held on the
 bottom row when the list is longer than the box. The saved document simply
 ends with it.
 
-**The extension goes before the name does.** Asked for, and it survives a
-second reason: cutting `MyQuarterlyReportForTheBoard.rtf` at 31 bytes leaves
-`...ForTheBoard.rt`, which reads as a corrupted name rather than a shortened
-one, and appending `~1` after a suffix leaves a name that no longer reads as
-one of a numbered pair. On a Macintosh the type and creator open a file —
-`sink_end` stamps both — so the suffix is decoration, and it is the first
-thing to spend. The CLI keeps its own rule: on Linux the extension is how a
-file opens, and 255 bytes rarely needs the room.
+**The extension is KEPT and the stem is cut**, and the collision number goes
+before it: `LongDocumentName.txt` → `LongDocumen.txt`, `dup.txt` → `dup~1.txt`.
+Cutting at 31 bytes leaves `...ForTheBoard.rt`, which reads as a corrupted
+name rather than a shortened one, and `dup.txt~1` no longer reads as one of a
+numbered pair — so something had to give either way. **This was decided
+backwards first**, for a few hours on the same day: the argument was that a
+Macintosh opens a file by the type and creator `sink_end` stamps on it, which
+makes a suffix decoration and the first thing to spend. The correction is that
+it is not this machine's convention that matters, it is the FILE's: a name
+that arrived carrying a suffix generally came off a system that has no
+resource forks and no Finder types, so the archive holds neither for the
+shell to stamp, and the suffix is the only thing left that says what opens it.
+A `.txt` from a zip is the case, and it is not a rare one. The CLI never had
+the question: 255 bytes rarely needs the room.
 
-**Failures have 16 of the 64 lines reserved.** The pool is fixed (the
+**A name goes in whole, and the box wraps it.** The lines were fixed-width
+records with the names elided at 36 characters, which is fine until an
+archive holds eighteen photographs whose names differ at character 34: the
+list then says the same thing eighteen times and cannot answer the one
+question it exists for, which is *which file became `~11`*. So the text is
+packed end to end in one pool — a line costs what its names are, not a
+per-line ceiling every short line pays for — and the box measures and wraps
+it at draw time, preferring to break after the name so one row is what the
+archive called it and the next is what became of it. Wrapping is worked out
+once, when the box opens, because `TextWidth` is a trap call and scrolling
+must not pay for it.
+
+**Failures have 16 of the 64 lines reserved, and 1 KB of the pool.** The pool is fixed (the
 engine's budget is taken from `FreeMem()` once, so anything allocated during
 a run comes out of the Toolbox's reserve), and the first version simply
 filled it in order. An archive with 100 alike names then filled all 64 with

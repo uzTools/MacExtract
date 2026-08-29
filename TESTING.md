@@ -1215,9 +1215,9 @@ and the numbering is the only reason the file survives; the edges of
 the cut — 31 characters written whole, 40 cut to 31, and a nameless entry
 written as `_`; and four added 2026-08-29 with the end-of-run report:
 
-- **the extension goes first** — a name that fits once its suffix is
-  dropped keeps its whole stem, a name too long even then is simply cut,
-  and a numbered name loses the suffix rather than carrying `~1` after it;
+- **the extension is kept and the stem is cut** — `...ForTheBoard.rtf`
+  keeps its `.rtf` and loses a character of name, and a numbered name
+  takes the `~1` before the suffix rather than after it;
 - **the report's lines**, which are what the Macintosh box lists: a
   renamed file names itself twice, a merged folder says *combined with*
   and a renamed one says *renamed to*, and an entry whose name was
@@ -1230,7 +1230,8 @@ written as `_`; and four added 2026-08-29 with the end-of-run report:
 **Established that it can fail**: against five one-line breakages of the
 shell — the cap raised to 63 fails five assertions, the numbering removed
 fails six (and loses a file, and stops the run), the empty-name
-fallback removed fails one, the extension strip removed fails four, and
+fallback removed fails one, the extension cut the other way fails four
+(which is how it was written for a few hours), and
 the numbering restored to its `~9` limit fails four, one of which is the
 file that never came out.
 

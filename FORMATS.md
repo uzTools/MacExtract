@@ -1889,21 +1889,30 @@ shortening of a name makes a path shorter than the directory it goes in.
 Reasoning: DECISIONS.md 2026-08-27, *the name cap*.
 
 **The Macintosh application's policy is a filesystem's too, and since
-2026-08-29 it says so on screen.** Every component is cut to 31 bytes,
-HFS's limit; a name that would not fit **loses its extension first**, so
-a 32-character `.rtf` keeps its whole stem rather than ending in `.rt`;
-a collision the cutting creates is numbered `~1`..`~99` off `dupFNErr`,
-and a name that still cannot be made unique fails **its own entry** and
-nothing else. It reads `name_truncated` as well, which is how a path the
-ENGINE cut is reported by a shell whose own cut did not fire.
+2026-08-29 it says so on screen.** Every component is fitted to 31
+bytes, HFS's limit, and **the extension is kept while the stem is cut**:
+`LongDocumentName.txt` becomes `LongDocumen.txt`, never
+`LongDocumentName.tx`. A collision the cutting creates is numbered
+`~1`..`~99` off `dupFNErr`, with the number going **before** the
+extension (`dup.txt` → `dup~1.txt`), and a name that still cannot be
+made unique fails **its own entry** and nothing else. It reads
+`name_truncated` as well, which is how a path the ENGINE cut is reported
+by a shell whose own cut did not fire.
+
+Why the suffix survives when 31 bytes are all there is: a Macintosh file
+is opened by the type and creator `sink_end` stamps on it, but a file
+that arrived WITH a suffix generally came off a machine that has neither
+— no resource fork, no Finder types in the archive — so the suffix is
+the only thing that says what opens it (DECISIONS.md 2026-08-29).
 
 | the report holds | measured |
 |---|---|
 | lines kept | 64, of which the last **16 are reserved for failures** — 100 renames must not push out the one line to act on |
-| bytes a line | 96, one name elided at 36 with `…`; the widest line the shell builds is 80 |
+| text | 6,144 B packed end to end, 1 KB of it likewise reserved. **Names go in whole**: eighteen photographs whose names differ at character 34 are one line repeated eighteen times if the name is cut to a row, and the list exists to say which file became which |
+| rows a line takes | as many as the box needs, wrapped at a measured width and **broken after the name** where it has to wrap, so one row is what the archive called it and the next is what became of it |
 | rows visible at once | 20, Geneva 9 on 11-point rows, in a 460×300 box at (30,26) — the whole of it on a 512×342 Mac Plus screen. A list longer than that scrolls under the last two, which hold a blank line and the outcome |
 | static cost | 6,144 B of lines + 1,632 B of folder memo, against the ~64 KB the 1 MB floor target has spare (*the PAK methods*, 2026-08-25) |
-| the application | 183,552 B of MacBinary, from 178,944 B before it |
+| the application | 184,320 B of MacBinary, from 178,944 B before it |
 
 The outcome — *"Extraction complete."*, and every other sentence the
 alert used to carry — is the list's LAST LINE, after a blank one and in

@@ -70,9 +70,10 @@ That second dialog opens in the archive's own folder, so pressing Return
 puts them next to it; click Drive to send them to another disk instead.
 
 When a run ends, anything that had to change on the way is listed: a name too
-long for HFS -- it stops at 31 characters, and the extension is the first
-thing dropped -- two folders that ended up sharing a shortened name, an entry
-that could not be extracted and what was wrong with it. The result of the run
+long for HFS -- it stops at 31 characters, and it is the middle of the name
+that goes, never the .txt on the end -- two folders that ended up sharing a
+shortened name, an entry that could not be extracted and what was wrong with
+it. Both names are given in full, so you can tell which file is which. The result of the run
 is under that list rather than in place of it, and Save as Text files the
 whole thing as a document, because a Mac Plus screen has no scrollback. A run
 with nothing to report just says so, as before.

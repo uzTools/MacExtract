@@ -625,15 +625,20 @@ def phase_report(args, appbin, workdir, shot):
         print("interactive: report | " + l)
 
     want_lines = [
-        # the extension goes before the name is cut
+        # the stem is cut and the extension kept
         "MyQuarterlyReportForTheBoard.rtf renamed to "
-        "MyQuarterlyReportForTheBoard",
-        # a duplicate is numbered, and loses its extension doing it
-        "Notes.txt renamed to Notes~1",
+        "MyQuarterlyReportForTheBoar.rtf",
+        # a duplicate is numbered BEFORE the extension
+        "Notes.txt renamed to Notes~1.txt",
         # the damaged entry, named as the ARCHIVE names it — the file
         # this shell would have written was deleted when it failed
         "BrokenBecauseItsChecksumIsWrong.txt is damaged: "
         "its checksum does not match",
+        # and the line only a WHOLE name can carry: eighteen photographs
+        # whose names differ at character 34, each said in full, so which
+        # one became ~11 is answerable
+        "Photograph Of The Summer Of 1994 no11.pict renamed to "
+        "Photograph Of The Summe~11.pict",
     ]
     missing = [w for w in want_lines if w not in lines]
     if not any(" combined with " in l for l in lines):
@@ -644,10 +649,10 @@ def phase_report(args, appbin, workdir, shot):
         print("interactive: NOT in the saved report: " + m)
     # And the names the report claims: they have to be what is on disk.
     # `names` are checkdisk paths (":Name" at the volume root).
-    for n in ("MyQuarterlyReportForTheBoard", "Notes~1",
-              # 28 characters and a three-character suffix: the eighteenth
-              # photograph is the one that proves the numbering goes past ~9
-              "Photograph Of The Summer Of ~17"):
+    for n in ("MyQuarterlyReportForTheBoar.rtf", "Notes~1.txt",
+              # the eighteenth photograph proves the numbering goes past ~9,
+              # and keeps its suffix while doing it
+              "Photograph Of The Summe~17.pict"):
         if ":" + n not in names:
             missing.append(n)
             print(f"interactive: the report names {n}, the volume does not")

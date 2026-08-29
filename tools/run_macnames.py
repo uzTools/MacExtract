@@ -102,7 +102,7 @@ def collision_case(sink, tmp, problems):
     check(problems, sorted(got.values()) == [b"first\n", b"second\n"],
           "collide: the bytes are not the two entries: %r"
           % sorted(got.values()))
-    check(problems, any(n.endswith("~1") for n in got),
+    check(problems, any("~1." in n for n in got),
           "collide: the second name was not numbered: %r" % sorted(got))
     check(problems, all(len(n) <= HFS for n in got),
           "collide: wrote a name longer than an HFS name: %r"
@@ -148,7 +148,7 @@ def engine_cap_case(sink, tmp, problems):
           "deep: wrote %r, wanted the one file" % sorted(got))
     if got:
         leaf = sorted(got)[0]
-        check(problems, leaf.endswith("~1"),
+        check(problems, "~1" in leaf,
               "deep: the cut path landed on its own folder and was not "
               "numbered: %r" % leaf)
         check(problems, all(len(c) <= HFS for c in leaf.split("/")),
@@ -175,46 +175,35 @@ def edge_cases(sink, tmp, problems):
     return 1
 
 
-def elide(name):
-    """A name as the report LINE carries it: the box is 460 points wide
-    and a rename names two files, so one name is elided at 36
-    characters (kRepNameW in mac/macextract_mac.c)."""
-    return name if len(name) <= 36 else name[:36] + "\u2026"
-
-
 def extension_case(sink, tmp, problems):
-    """A name too long for HFS loses its EXTENSION first, and a name
-    that has to be numbered loses it too. Cutting at 31 bytes instead
-    would leave the mangled half of a suffix ("...Board.rt"), which
-    reads as a corrupted name rather than a shortened one; on a
-    Macintosh what opens a file is the type and creator sink_end stamps
-    on it. Asked for 2026-08-29.
-
-    A name still too long once the suffix is gone is then simply cut,
-    which is the third file here: there is no suffix left to preserve
-    and nothing else to do."""
-    fits = "MyQuarterlyReportForTheBoard.rtf"      # 32; 28 without ".rtf"
-    huge = "MyQuarterlyReportForTheBoardOfDirectors.rtf"
+    """A name too long for HFS keeps its EXTENSION and loses stem, and a
+    name that has to be numbered takes the `~1` BEFORE the extension.
+    Cutting the other way leaves `...ForTheBoard.rt`, and `dup.txt~1`
+    leaves a name that no longer says what opens it — which matters
+    because a file that arrived with a suffix generally came off a
+    machine that has no forks and no type or creator, so the suffix is
+    all there is (2026-08-29; it was the first thing cut for a few
+    hours, which was backwards)."""
+    fits = "MyQuarterlyReportForTheBoard.rtf"        # 32; 31 without 1 stem
+    huge = "AnotherVeryLongDocumentNameIndeedYesReally.rtf"
     got, rc, rep = case(sink, tmp, "macname-ext",
                         [synth_dd.file(fits, data=b"rtf\n"),
                          synth_dd.file(huge, data=b"big\n"),
                          synth_dd.file("dup.txt", data=b"d1\n"),
                          synth_dd.file("dup.txt", data=b"d2\n")])
     check(problems, rc == 0, "ext: exit was %d" % rc)
-    check(problems, fits[:-4] in got,
-          "ext: a name that fits without its extension was cut instead: %r"
-          % sorted(got))
-    check(problems, huge[:31] in got,
-          "ext: a name too long even without its extension was not cut: %r"
-          % sorted(got))
-    check(problems, "dup~1" in got,
-          "ext: a numbered name kept its extension: %r" % sorted(got))
+    check(problems, fits[:27] + ".rtf" in got,
+          "ext: the stem was not what got cut: %r" % sorted(got))
+    check(problems, huge[:27] + ".rtf" in got,
+          "ext: a much longer name lost its extension: %r" % sorted(got))
+    check(problems, "dup~1.txt" in got,
+          "ext: the number did not go before the extension: %r" % sorted(got))
     check(problems, sorted(got.values()) == [b"big\n", b"d1\n", b"d2\n",
                                              b"rtf\n"],
           "ext: a file was lost: %r" % sorted(got.values()))
-    check(problems, any(" renamed to dup~1" in l for l in rep),
+    check(problems, "dup.txt renamed to dup~1.txt" in rep,
           "ext: the numbered file is not in the report: %r" % rep)
-    check(problems, (elide(fits) + " renamed to " + fits[:-4]) in rep,
+    check(problems, (fits + " renamed to " + fits[:27] + ".rtf") in rep,
           "ext: the shortened name is not in the report: %r" % rep)
     return 1
 
@@ -235,11 +224,13 @@ def report_case(sink, tmp, problems):
     check(problems, rc == 0, "report: exit was %d" % rc)
     renamed = [l for l in rep if " renamed to " in l]
     merged = [l for l in rep if " combined with " in l]
-    check(problems, renamed == ["Folder " + elide(a) + " renamed to " + a[:31]],
+    check(problems, renamed == ["Folder " + a + " renamed to " + a[:31]],
           "report: the first folder is not reported once as renamed: %r" % rep)
-    check(problems,
-          merged == ["Folder " + elide(b) + " combined with " + b[:31]],
+    check(problems, merged == ["Folder " + b + " combined with " + b[:31]],
           "report: the merged folder is not reported once as merged: %r" % rep)
+    check(problems, all(len(l) > 60 for l in rep),
+          "report: a name was cut short of what the archive calls it — the "
+          "list exists to say which file became which: %r" % rep)
     # The files in it are NOT reported: their own names were writable.
     check(problems, len(rep) == 2,
           "report: something with an untouched name was reported: %r" % rep)
