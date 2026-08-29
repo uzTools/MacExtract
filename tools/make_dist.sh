@@ -114,6 +114,14 @@ Using it: open an archive, then say which folder the files should go into.
 That second dialog opens in the archive's own folder, so pressing Return
 puts them next to it; click Drive to send them to another disk instead.
 
+When a run ends, anything that had to change on the way is listed: a name too
+long for HFS -- it stops at 31 characters, and the extension is the first
+thing dropped -- two folders that ended up sharing a shortened name, an entry
+that could not be extracted and what was wrong with it. The result of the run
+is under that list rather than in place of it, and Save as Text files the
+whole thing as a document, because a Mac Plus screen has no scrollback. A run
+with nothing to report just says so, as before.
+
 If a Compact Pro or zip archive carries a note -- the comment whoever
 made it typed in -- it is written into that folder as a text file called
 Comments, rather than thrown away with the wrapper.

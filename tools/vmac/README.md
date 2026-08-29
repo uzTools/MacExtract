@@ -1545,12 +1545,43 @@ three runs of guessing in one frame — `entries = 0` said the archive had
 never been opened, which no amount of staring at the shipped wording could
 have told anyone.
 
+### The end-of-run report — `interactive.py --report`
+
+    tools/vmac/interactive.py --report --emu mv-4M -o shots fixtures/anything.sit
+
+Ignores the fixture: the archive is generated (`report_archive`), because
+nothing in the corpus can make this box say anything. It holds names too long
+for HFS, one that fits only once its extension goes, a duplicate, two folders
+that shorten to the same name, eighteen photographs alike for 31 characters,
+and one entry whose checksum is broken by a single bit — so the box lists a
+rename, a merge, a numbered name and a per-entry failure at once, and is long
+enough that the scroll bar is live.
+
+Five frames: the box, the box scrolled six lines, Standard File over it after
+**Save as Text**, the box redrawn once that is dismissed (which is what proves
+the default ring and the list come back), and SFGetFile afterwards.
+
+**It asserts, and the assertion is the saved DOCUMENT**, read back off the
+volume with `hcopy -t` and checked line by line — a photograph of a box full
+of text cannot fail, and a missing line in that file can. It also checks the
+names the report CLAIMS against the names on the volume.
+
+`--emu mv-4M` rather than the 1x default: nothing here is timed, and the
+archive is a few hundred bytes.
+
+The box's three click targets are constants measured off `DLOG 133` in
+`mac/macextract.r` (`REPORT_OK`, `REPORT_SAVE`, `REPORT_DOWN`). **Re-measure
+them if that resource moves** — this is the harness that clicks fixed
+coordinates.
+
 ### Driving the real UI
 
     interactive.py                  # progress dialog, Cancel, Cmd-., at 1x
     interactive.py --system Sys7.img  # the same, on the System 7 tier
     interactive.py --e2e            # Finder desktop: double-click launch, SFGetFile,
                                     # volume navigation, an extracted APPL launching
+    interactive.py --report         # the end-of-run report box: renames,
+                                    # failures, scrolling, Save as Text
     interactive.py --segments       # the "locate part N" alert for a split archive
     interactive.py --named zip      # a spanned zip set, opened through Standard File
     interactive.py --named split    # a plain .NNN split, likewise

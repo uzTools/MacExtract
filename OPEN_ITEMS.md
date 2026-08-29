@@ -164,21 +164,6 @@ all** (BLOCKERS.md, the ARC 7 row, filed and disproved the same day).
 
 ## 2. Untested code, named so it is not mistaken for tested
 
-- **The Macintosh application never tells the user that a name changed.**
-  It does not read `UncEntryInfo.name_truncated` (added 2026-08-27, when
-  the engine started reporting a name it had to cut), so the CLI's
-  end-of-run notice has no counterpart on a Mac screen. What the shell
-  DOES is tested since 2026-08-28 and loses no file: every component is
-  cut to 31 characters, HFS's limit, and a collision the cutting creates
-  is numbered `~1` off `dupFNErr` (`tools/run_macnames.py`; the claim
-  that it did not number at all is withdrawn, BLOCKERS.md). What has no
-  notice to carry it is two silent path changes — two FOLDERS whose names
-  shorten alike merge into one, and a folder tree summing past 255 bytes
-  puts its file under the numbered name the engine's cut landed on.
-  **What would close it:** a decision about where a notice belongs on a
-  screen with no scrollback, and a tier run to photograph it (FORMATS.md,
-  *Name limits*).
-
 - **SuperDisk! reaches the path cap through code that is tested, in a
   container nothing here writes.** `unc_path_leaf` keeps the uncut path
   since 2026-08-27 (DECISIONS.md, *the path builder's own cap*), and

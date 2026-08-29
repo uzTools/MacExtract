@@ -162,6 +162,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-29 (SuperDisk! method 13) — the specimen that would have settled nothing
 - 2026-08-29 (methods 3, 4 and 5, graded across the format) — the gap was in our encoder
 - 2026-08-29 (four more names) — one of the five references was already here
+- 2026-08-29 (the end-of-run report) — what the run cost, on a screen with no scrollback
 
 ---
 
@@ -9278,3 +9279,90 @@ corroboration is tested by removing it: zstd's skippable-frame range has one
 value above and one below it, lrzip's `MAGIC_LEN` rejects a 23-byte file that
 starts with `LRZI`, and WIM's header-size field rejects 207 where wimlib
 accepts only 208.
+
+
+## 2026-08-29 (the end-of-run report) — what the run cost, on a screen with no scrollback
+
+The Macintosh application ended every run in one sentence. "Extraction
+complete." was true and said nothing about the names it had changed to get
+there; "Some entries could not be extracted." named neither the entry nor
+what was wrong with it. The CLI had listed both since 2026-08-27. The
+request was to give the Mac the same thing — renames AND the failures that
+do not stop the archive — in one box.
+
+**A box, and only when there is something to say.** A run with nothing per
+entry to report still ends in the alert it always did: a list holding one
+line, behind a button the user has to find before the familiar one, is a
+worse answer to the common case. What the two share is the SENTENCE — the
+outcome chain that picks it is one `if` ladder now, and the box and the
+alert are two ways of showing its answer.
+
+**The outcome is the list's last line, and it is pinned.** It reads as one
+document ending in its verdict, which is what it is. The first attempt was an
+ordinary last line, and a Mac Plus photographed the cost: an archive of
+eighteen photographs put "Extraction complete." nine rows below the fold,
+behind a scroll bar nobody has a reason to drag — on a screen with no
+scrollback the conclusion cannot be somewhere the reader has to go and find.
+The second attempt moved it out of the list into a static item below the
+frame, which fixed that and broke the reading: the box stopped being one
+document. What ships is both — after a blank line, in the same frame and
+font, bold; drawn where the text ends when everything fits, and held on the
+bottom row when the list is longer than the box. The saved document simply
+ends with it.
+
+**The extension goes before the name does.** Asked for, and it survives a
+second reason: cutting `MyQuarterlyReportForTheBoard.rtf` at 31 bytes leaves
+`...ForTheBoard.rt`, which reads as a corrupted name rather than a shortened
+one, and appending `~1` after a suffix leaves a name that no longer reads as
+one of a numbered pair. On a Macintosh the type and creator open a file —
+`sink_end` stamps both — so the suffix is decoration, and it is the first
+thing to spend. The CLI keeps its own rule: on Linux the extension is how a
+file opens, and 255 bytes rarely needs the room.
+
+**Failures have 16 of the 64 lines reserved.** The pool is fixed (the
+engine's budget is taken from `FreeMem()` once, so anything allocated during
+a run comes out of the Toolbox's reserve), and the first version simply
+filled it in order. An archive with 100 alike names then filled all 64 with
+renames and pushed out the two lines that mattered — the entries that could
+not be written at all. A report that drops the actionable line to make room
+for the hundredth cosmetic one is worse than no report.
+
+**A folder MERGED into another is reported, but only where the archive
+declares the folder.** Two folders whose names shorten alike become one, and
+nothing is lost but the path is not the archive's. Telling that from a
+folder merely revisited needs to know the name the folder was CREATED for,
+so the shell remembers the first 63 bytes of the archive's name for up to 24
+folders it made itself; a folder that no entry declares — the formats
+without directory entries, where folders exist only inside the paths of the
+files in them — cannot be told apart and is not guessed at. Exact where it
+fires, silent where it cannot be.
+
+### Two defects, found by driving the box rather than by testing the lines
+
+`interactive.py --report` builds an archive designed to make the report TALK
+— names too long, one that fits only without its suffix, a duplicate, two
+folders that shorten alike, eighteen photographs alike for 31 characters,
+one damaged entry — extracts it on an emulated Mac Plus, photographs the
+box, scrolls it, saves it as a document, and reads that document back off
+the volume. The first run of it found:
+
+- **the tenth alike name ended the extraction.** `BumpName` numbered
+  `~1`..`~9`, and the loop that calls it returned -1 on running out, which
+  the engine reads as *abort the archive*. Live since M10; the archive of 26
+  entries produced 10 files (BLOCKERS.md). Numbering goes to `~99` now, and
+  a name that still cannot be placed fails **its own entry** — which is the
+  same rule this project already had for allocation failures, applied to the
+  other resource an entry needs.
+- **the mock Toolbox never refused anything.** `PBDirCreateSync` tolerated
+  `EEXIST` and handed back a fresh directory id; `PBGetCatInfoSync` returned
+  `noErr` over an untouched param block. So `EnsureDir`'s dupFNErr branch —
+  the one the real File Manager takes whenever a folder is already there —
+  had never run under test, and the merge it stands for could not be
+  detected at all. Both are honest now, and the folder-collision case that
+  has passed since 2026-08-28 was passing for the wrong reason.
+
+The transferable half: neither defect was reachable by the corpus (932
+fixtures, no two names alike for 31 characters, nothing damaged) or by the
+mock (which refused nothing). What reached them was **an archive built to
+make the interface say every sentence it has**, which is a different
+instrument from a fixture built to be decoded correctly.

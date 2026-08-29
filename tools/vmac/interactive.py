@@ -490,6 +490,172 @@ def expected_names(fixture, workdir):
     return want
 
 
+# The end-of-run report box, measured off its own resource
+# (mac/macextract.r, DLOG 133 at {30,26,330,486} with the items inside it).
+# Re-measure all three if that resource moves.
+REPORT_OK   = (437, 304)     # the OK button
+REPORT_SAVE = (322, 304)     # "Save as Text..."
+REPORT_DOWN = (462, 268)     # the scroll bar's down arrow
+
+
+def report_archive(path):
+    """A DiskDoubler archive built to make the report say everything it
+    can say, and nothing that needs a big file: names too long for HFS,
+    one that fits only once its extension goes, a duplicate that has to
+    be numbered, two folders that shorten to the same name, and one
+    entry whose checksum is broken so a per-entry FAILURE is listed
+    beside the renames. Enough entries to overflow the box, so the
+    scroll bar is live and can be photographed doing something.
+
+    Generated rather than taken from the corpus: the longest name in 932
+    fixtures is 120 bytes but none of them collides, and nothing in the
+    corpus is damaged (TESTING.md).
+    """
+    sys.path.insert(0, os.path.join(R.REPO, "tools"))
+    import synth_dd                                          # noqa: E402
+    tree = [synth_dd.file("MyQuarterlyReportForTheBoard.rtf", data=b"rtf\n"),
+            synth_dd.file("Chapter One Draft Revised Final Version.txt",
+                          data=b"draft\n"),
+            synth_dd.file("Notes.txt", data=b"first\n"),
+            synth_dd.file("Notes.txt", data=b"second\n"),
+            synth_dd.folder("Correspondence With The Publisher A",
+                            [synth_dd.file("letter.txt", data=b"A\n")]),
+            synth_dd.folder("Correspondence With The Publisher B",
+                            [synth_dd.file("letter.txt", data=b"B\n")]),
+            synth_dd.file("BrokenBecauseItsChecksumIsWrong.txt",
+                          data=b"DAMAGEDDAMAGED\n", stored=True)]
+    for i in range(18):
+        tree.append(synth_dd.file("Photograph Of The Summer Of 1994 no%d.pict"
+                                  % i, data=b"pict\n"))
+    tmp = tempfile.mkdtemp(prefix="report-")
+    built, _ = synth_dd.write_one(tmp, "report", tree)
+    raw = bytearray(open(built, "rb").read())
+    at = raw.find(b"DAMAGEDDAMAGED")
+    assert at > 0, "the payload to damage is not in the archive"
+    raw[at] ^= 0x01                    # one bit: its checksum, nothing else
+    open(path, "wb").write(bytes(raw))
+    shutil.rmtree(tmp, ignore_errors=True)
+
+
+def volume_text(img, name):
+    """One TEXT file's contents, read off an HFS image as lines."""
+    home = tempfile.mkdtemp(prefix="hfs-")
+    env = dict(os.environ, HOME=home)
+    dst = os.path.join(home, "out.txt")
+    try:
+        if CD.hfs(env, "hmount", img).returncode != 0:
+            return None
+        got = CD.hfs(env, "hcopy", "-t", name, dst)
+        CD.hfs(env, "humount")
+        if got.returncode != 0 or not os.path.exists(dst):
+            return None
+        with open(dst, "rb") as f:
+            return f.read().decode("mac_roman").splitlines()
+    finally:
+        shutil.rmtree(home, ignore_errors=True)
+
+
+def phase_report(args, appbin, workdir, shot):
+    """The end-of-run report: what was renamed, what failed, and the
+    outcome last. It replaces the "Extraction complete." alert on any
+    run that has something per-entry to say.
+
+    Five things are photographed and one is asserted. The photographs
+    are the box, the box scrolled six lines, Standard File over it after
+    "Save as Text", the box redrawn once that is dismissed — which is
+    what proves the list and the default ring come back — and SFGetFile
+    afterwards. A screen with no scrollback is the whole reason that
+    button exists. The assertion
+    is the SAVED DOCUMENT, read back off the volume the Mac wrote it to:
+    it must hold the rename lines for the names this archive was built
+    to bend, and the line for the entry that failed. A photograph of a
+    box full of text cannot fail; a missing line in that file can.
+
+    Ignores the fixture argument — the archive is generated.
+    """
+    stock = os.path.join(R.VMAC_HOME, args.system)
+    bootimg = os.path.join(workdir, "boot-report.hfv")
+    arch = os.path.join(workdir, "report.dd")
+    report_archive(arch)
+    R.sh(sys.executable, os.path.join(HERE, "mkboot.py"), stock, appbin, bootimg,
+         "--data", f"{arch}:archive.sit")
+
+    scratch = os.path.join(args.outdir, ".settle.png")
+    mac = Mac(bootimg, args.emu, workdir)
+    try:
+        if mac.settle(scratch, interval=5.0, timeout=args.boot_timeout) is None:
+            raise SystemExit("interactive: the machine never settled")
+        sf_to_volume_root(mac, args.system)
+        mac.click(*SF_FIRST_ROW)
+        mac.key("Return")
+        accept_destination(mac)
+        mac.settle(scratch, interval=5.0, quiet=EXTRACT_QUIET,
+                   timeout=args.complete_timeout)
+        shot(mac, "report-1-box.png")          # the list, the outcome last
+
+        for _ in range(6):                     # the scroll bar's down arrow
+            mac.click(*REPORT_DOWN)
+            time.sleep(0.4)
+        time.sleep(1.5)
+        shot(mac, "report-2-scrolled.png")
+
+        mac.click(*REPORT_SAVE)                # "Save as Text..."
+        time.sleep(4.0)
+        shot(mac, "report-3-save.png")         # Standard File, over the box
+        mac.key("Return")                      # Save, under the offered name
+        time.sleep(5.0)
+        shot(mac, "report-4-saved.png")        # the box again, ring and all
+
+        mac.click(*REPORT_OK)
+        time.sleep(3.0)
+        shot(mac, "report-5-back.png")         # back at SFGetFile
+    finally:
+        mac.close()
+        if os.path.exists(scratch):
+            os.remove(scratch)
+
+    written = os.path.join(workdir, "boot.hfv")     # Mac()'s private copy
+    names = {CD.mac_path(n) for n in volume_names(written)}
+    lines = volume_text(written, "Extraction Report")
+    print("interactive: the volume holds " + ", ".join(sorted(names)))
+    if lines is None:
+        print("interactive: NO saved report on the volume")
+        return False
+    for l in lines:
+        print("interactive: report | " + l)
+
+    want_lines = [
+        # the extension goes before the name is cut
+        "MyQuarterlyReportForTheBoard.rtf renamed to "
+        "MyQuarterlyReportForTheBoard",
+        # a duplicate is numbered, and loses its extension doing it
+        "Notes.txt renamed to Notes~1",
+        # the damaged entry, named as the ARCHIVE names it — the file
+        # this shell would have written was deleted when it failed
+        "BrokenBecauseItsChecksumIsWrong.txt is damaged: "
+        "its checksum does not match",
+    ]
+    missing = [w for w in want_lines if w not in lines]
+    if not any(" combined with " in l for l in lines):
+        missing.append("<a folder reported as combined with another>")
+    if not lines or "Some entries could not be extracted." not in lines[-1]:
+        missing.append("<the outcome, on the last line of the document>")
+    for m in missing:
+        print("interactive: NOT in the saved report: " + m)
+    # And the names the report claims: they have to be what is on disk.
+    # `names` are checkdisk paths (":Name" at the volume root).
+    for n in ("MyQuarterlyReportForTheBoard", "Notes~1",
+              # 28 characters and a three-character suffix: the eighteenth
+              # photograph is the one that proves the numbering goes past ~9
+              "Photograph Of The Summer Of ~17"):
+        if ":" + n not in names:
+            missing.append(n)
+            print(f"interactive: the report names {n}, the volume does not")
+    ok = not missing
+    print("interactive: report " + ("COMPLETE" if ok else "WRONG"))
+    return ok
+
+
 def phase_dest(args, appbin, workdir, shot):
     """Does choosing a different folder actually send the files there?
 
@@ -1469,6 +1635,13 @@ def main():
                          "Ignores the fixture argument: the archive is "
                          "generated, because nothing in the corpus is "
                          "encrypted.")
+    ap.add_argument("--report", action="store_true",
+                    help="the end-of-run report phase: extract a generated "
+                         "archive whose names cannot be written as they "
+                         "stand and one of whose entries is damaged, "
+                         "photograph the report box, scroll it, save it as "
+                         "a document, and read that document back off the "
+                         "volume. Ignores the fixture argument.")
     ap.add_argument("--e2e", action="store_true",
                     help="run the Finder end-to-end phase INSTEAD of the "
                          "cancel phases: launch by double-click, navigate "
@@ -1491,6 +1664,14 @@ def main():
         # for dialog text, not decoded, and a 512x342 1bpp screen is hard work
         # at native size.
         mac.shot(os.path.join(args.outdir, name), scale="200%" if args.e2e else None)
+
+    if args.report:
+        try:
+            ok = phase_report(args, appbin, workdir, shot)
+        finally:
+            shutil.rmtree(workdir, ignore_errors=True)
+        print(f"interactive: screenshots in {args.outdir} — LOOK AT THEM.")
+        return 0 if ok else 1
 
     if args.diskswap:
         try:

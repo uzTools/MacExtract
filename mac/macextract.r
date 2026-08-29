@@ -112,6 +112,57 @@ resource 'DITL' (132, purgeable) {
     }
 };
 
+/* The end-of-run report. It replaces the "Extraction complete" alert on
+ * any run that has something to say per entry: every name that had to
+ * change and every entry that failed on its own, one line each, with
+ * the one-line outcome under them — where the alert used to be, and
+ * where a reader ends up after reading the list.
+ *
+ * Five items, in the order the code tests them (kRepOKItem..):
+ *
+ *   1  OK          dismisses; Return and Enter take it
+ *   2  Save as Text  writes the same lines to a TEXT file, for a run
+ *                  that is worth acting on later. A screen with no
+ *                  scrollback is the whole reason this button exists
+ *   3  userItem    the list; drawn by RepListDraw, so it repaints on
+ *                  update events as well as on every scroll
+ *   4  userItem    the default button's ring. A userItem rather than
+ *                  three lines after GetNewDialog, because the Save
+ *                  button puts Standard File over this box and the ring
+ *                  has to come back with the rest of it
+ *
+ * The outcome is not an item: it is the LAST LINE of the list, after a
+ * blank one, and RepListDraw pins it to the bottom row when the list is
+ * long enough to scroll. It reads as one document ending in its verdict
+ * — which is what it is — and it cannot be scrolled out of sight, which
+ * an ordinary last line can: photographed on a Mac Plus with 26 things
+ * to say, "Extraction complete." was nine rows below the fold.
+ *
+ * The scroll bar is NOT an item: it is made with NewControl beside the
+ * list, from the list item's own rectangle, and tracked in RepFilter.
+ * Retro68's Rez has no Controls.r and so no 'CNTL' type to declare one
+ * with, and a hand-assembled resource would be this project inventing a
+ * layout it has no reference for. ModalDialog could not have tracked
+ * the arrows and page regions anyway.
+ *
+ * 300 x 460 at (30,26): the bottom edge lands at 330 and the right at
+ * 486, so the whole of it sits on a 512x342 Mac Plus screen with the
+ * menu bar above it. Nothing here is ever centered on a bigger screen,
+ * which is this application's existing habit (noAutoCenter). */
+resource 'DLOG' (133, purgeable) {
+    { 30, 26, 330, 486 }, dBoxProc, visible, noGoAway, 0, 133, "",
+    noAutoCenter
+};
+
+resource 'DITL' (133, purgeable) {
+    {
+        { 264, 376, 284, 446 }, Button     { enabled, "OK" };
+        { 264, 236, 284, 356 }, Button     { enabled, "Save as Text\0xC9" };
+        {  12,  12, 246, 428 }, UserItem   { disabled };
+        { 260, 372, 288, 450 }, UserItem   { disabled };
+    }
+};
+
 /* MultiFinder/System 7 friendliness; System 6 Finder ignores it (there the
  * app just gets all free RAM). Preferred 4 MB lets the engine use a large
  * runtime budget on a roomy machine (Arsenic/SIT5 needs ~2.6 MB); minimum

@@ -868,7 +868,29 @@ a harness can click is not the same list.
   again. **Why it survived:** the flag was new, and a front end that does
   not read a new flag was assumed not to do the thing the flag reports.
   The shell was doing it by another route, which is what the source
-  comment beside it says.
+  comment beside it says. The half that was true — nothing on screen —
+  closed on 2026-08-29, when the run report replaced the alert
+  (FORMATS.md, *Name limits*).
+
+- **"The Mac shell numbers a collision `~1`..`~9`, so two entries whose
+  names are the same for 31 characters both come out."** Written
+  2026-08-28 in the entry above, from the test that had just been added;
+  withdrawn 2026-08-29. True for nine. The TENTH such name returns -1
+  from `begin_entry`, which the engine reads as *abort the archive*, so
+  every entry after it is silently never written and the user is told
+  "This file could not be extracted." **Cost:** live from M10 until
+  2026-08-29 — an archive holding ten files whose names are alike for 31
+  characters lost everything after the tenth, and the run reported a
+  failure about the archive rather than about the names. Measured on a
+  Mac Plus: a generated archive of 26 entries produced 10 files.
+  Numbering goes to `~99` now, and a name that still cannot be made
+  unique fails its own entry (`tools/run_macnames.py`, the crowd case).
+  **Why it survived:** the test that established the claim used exactly
+  two colliding names, which is the number the claim was about. The
+  abort is one line below the numbering in the same loop and cannot fire
+  until the numbering runs out — so the assertion could not reach it,
+  and the sentence written from that assertion described the loop's
+  first nine iterations as though they were all of it.
 
 - **"The two Alysis implementations disagree about where a Huffman
   region's neighbour begins, and only the harness's own encoder reaches

@@ -1617,6 +1617,7 @@ there on 2026-08-21** and is in the table. The StuffIt table below is from
 | Parts inside envelopes, 4 MB and **1 MB** | `interactive.py --wrapped`: part 1 as `Apart.sit.1.hqx`, part 2 as `zzz-download.bin`, part 3 as `Other.9.hqx` | same contents as the Linux CLI on the same three files, and no decoded parts left on the volume |
 | A chained file (`.sit.hqx`), 4 MB and **1 MB** | `interactive.py --chain` | every layer comes off and the intermediate is removed — which this application did NOT do before 2026-08-14 (BLOCKERS.md) |
 | A chained file, three layers deep, 4 MB | `interactive.py --chain` on `chain.dd.ascii` and `chain.dd.uu` — btoa and uuencode around a MacBinary around a DiskDoubler archive | both come all the way down to `Doc`, the same one file the Linux CLI produces, with both intermediates deleted (2026-08-27) |
+| The end-of-run report, 4 MB | `interactive.py --report` on a generated DiskDoubler archive: names too long for HFS, one that fits only without its extension, a duplicate, two folders that shorten alike, eighteen photographs alike for 31 characters, and one damaged entry | every rename and the failure listed, the outcome under the list, the box scrolled and saved as a document — and that document read back off the volume and checked line by line (2026-08-29) |
 | DiskDoubler `SPLT`, 4 MB | `segcheck.py --case ddseg-real`: two parts **cut by DiskDoubler Pro 4.1.1 itself**, part 2 on the volume as `zzz-piece2` | the joined file off the Out volume equals the file the corpus publishes — 15,918 B data + 342 B resource fork, the latter with the OS-stamped header bytes masked — and the grid agrees, peak heap 8,208 B |
 
 The two name-placed schemes go through the real UI rather than the
@@ -1885,9 +1886,33 @@ listed in a notice at the end of the run, with the length the archive
 stated where the format knows it. The run still exits 0 — nothing
 failed. Only a path past `_PC_PATH_MAX` is refused per entry, because no
 shortening of a name makes a path shorter than the directory it goes in.
-The Macintosh application shortens to 31 characters per component by its
-own rule and does not consume the flag (OPEN_ITEMS.md). Reasoning:
-DECISIONS.md 2026-08-27, *the name cap*.
+Reasoning: DECISIONS.md 2026-08-27, *the name cap*.
+
+**The Macintosh application's policy is a filesystem's too, and since
+2026-08-29 it says so on screen.** Every component is cut to 31 bytes,
+HFS's limit; a name that would not fit **loses its extension first**, so
+a 32-character `.rtf` keeps its whole stem rather than ending in `.rt`;
+a collision the cutting creates is numbered `~1`..`~99` off `dupFNErr`,
+and a name that still cannot be made unique fails **its own entry** and
+nothing else. It reads `name_truncated` as well, which is how a path the
+ENGINE cut is reported by a shell whose own cut did not fire.
+
+| the report holds | measured |
+|---|---|
+| lines kept | 64, of which the last **16 are reserved for failures** — 100 renames must not push out the one line to act on |
+| bytes a line | 96, one name elided at 36 with `…`; the widest line the shell builds is 80 |
+| rows visible at once | 20, Geneva 9 on 11-point rows, in a 460×300 box at (30,26) — the whole of it on a 512×342 Mac Plus screen. A list longer than that scrolls under the last two, which hold a blank line and the outcome |
+| static cost | 6,144 B of lines + 1,632 B of folder memo, against the ~64 KB the 1 MB floor target has spare (*the PAK methods*, 2026-08-25) |
+| the application | 183,552 B of MacBinary, from 178,944 B before it |
+
+The outcome — *"Extraction complete."*, and every other sentence the
+alert used to carry — is the list's LAST LINE, after a blank one and in
+bold, and is pinned to the bottom row whenever the list scrolls, so it
+cannot be scrolled out of sight; **Save as Text** writes the same lines,
+blank line and outcome as a `TEXT`/`ttxt` document, which is what a
+screen with no scrollback needs. A run with nothing per-entry to say
+still ends in the one-line alert. Reasoning: DECISIONS.md 2026-08-29,
+*the end-of-run report*.
 
 One cap was removed rather than reported: the CLI turned a name into a
 filesystem name through a 512-byte buffer, which is short of the 765 an
@@ -2673,7 +2698,20 @@ duplicate lines until 2026-08-21, so those runs were 63, 61 and 55 files
 long — BLOCKERS.md). There are no memory-budget refusals
 left at the floor target: every fixture in the sample, in every format,
 extracts byte-exact on a 1 MB Mac Plus. The six StuffIt 5 rows, which were the
-last to arrive, with peak heap as the Mac itself reports it:
+last to arrive, with peak heap as the Mac itself reports it.
+
+**The three heaviest were re-run at 1 MB on 2026-08-29**, after the
+end-of-run report took ~8 KB of static RAM and 4.6 KB of application off
+this machine's margin (*Name limits*): **3/3 byte-exact**, at 472,137 B,
+559,805 B and 482,861 B of peak heap — Troi-ClipSave, Library_ISBN and
+a2basic in that order. **What was NOT re-run:** the other 66 fixtures of
+the sample, at either size; the 2,048 B growth of M33 is the precedent
+for that and the 20 KB growth of 2026-08-23 is the precedent for when a
+full sweep is owed. Those three peaks are BELOW the rows in the table,
+which are from 2026-08-26 — a **hypothesis, not measured**: Arsenic
+picks its transform strategy from what the allocator will give it, so a
+smaller budget moving the peak down a doubling step is what that design
+does on purpose. Nothing here establishes it.
 
 | Fixture | Format | Outcome at 1 MB | Peak heap |
 |---|---|---|---|

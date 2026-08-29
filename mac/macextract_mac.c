@@ -634,28 +634,277 @@ typedef struct {
 #endif
 } MacSink;
 
-/* One engine path component -> Pascal Str63: undo the '/'->':' swap,
- * strip any stray ':' (illegal in an HFS name), cap at 31 chars. */
-static void ComponentToStr63(const uint8_t *comp, int len, Str63 out)
+/* ------------------------------------------------------------------ */
+/* The run report                                                     */
+/*                                                                    */
+/* What the user is told at the end of a run, above the one-line      */
+/* outcome: every name this shell had to change, and every entry that */
+/* failed without stopping the archive. Both are collected AS THEY    */
+/* HAPPEN, because neither can be recovered afterwards — the engine's */
+/* name for an entry is gone by the time the walk moves on, and a     */
+/* failed entry's file has been deleted by then.                      */
+/*                                                                    */
+/* A fixed pool rather than the heap: the engine's budget is derived  */
+/* from FreeMem() once, at the start of the run, so anything          */
+/* allocated during it is taken out of the reserve the Toolbox and    */
+/* File Manager are holding. 64 lines is 5 KB of it; past that the    */
+/* lines are COUNTED and the count is shown, so the report never      */
+/* presents itself as complete when it is not.                        */
+/* ------------------------------------------------------------------ */
+
+#define kRepMax    64          /* lines kept */
+#define kRepWidth  96          /* bytes per line; [0] is the length */
+#define kRepNameW  36          /* of one name, before it is elided   */
+#define kRepEllip  0xC9        /* MacRoman '…' */
+
+static unsigned char gRep[kRepMax][kRepWidth];
+static short gRepN;            /* lines kept */
+static long  gRepMore;         /* lines the pool had no room for */
+
+/* Folders this run created, so a folder that turns up ALREADY there can
+ * be told from one this walk made a moment ago. Only the archive's own
+ * name is remembered, and only the first kRepWidth-1 bytes of it: two
+ * names that agree that far shorten alike, so they would be
+ * indistinguishable on disk anyway. */
+#define kDirMemo 24
+
+static struct { long dir; unsigned char name[64]; } gDirMemo[kDirMemo];
+static short gDirMemoN;
+
+static void RepReset(void)
 {
-    int i, o = 0;
-    for (i = 0; i < len && o < 31; i++) {
+    gRepN = 0;
+    gRepMore = 0;
+    gDirMemoN = 0;
+}
+
+/* The last kRepKeep lines are FAILURES' to take. An archive with more
+ * long names than the pool holds is ordinary — the crowd of renames
+ * would otherwise fill it and push out the one line the user has to
+ * act on, which is exactly what happened the first time this ran
+ * against 100 alike names. */
+#define kRepKeep 16
+
+static unsigned char *RepNew(int urgent)
+{
+    unsigned char *l;
+    if (gRepN >= (urgent ? kRepMax : kRepMax - kRepKeep)) {
+        gRepMore++;
+        return NULL;
+    }
+    l = gRep[gRepN++];
+    l[0] = 0;
+    return l;
+}
+
+static void RepCat(unsigned char *l, const char *s)
+{
+    if (!l) return;
+    while (*s && l[0] < kRepWidth - 1) l[++l[0]] = (unsigned char)*s++;
+}
+
+/* One name, elided at kRepNameW so that a long one cannot push the rest
+ * of the line off the end of the buffer. */
+static void RepCatP(unsigned char *l, const unsigned char *p)
+{
+    short i, n;
+    if (!l) return;
+    n = (short)p[0];
+    if (n > kRepNameW) n = kRepNameW;
+    for (i = 1; i <= n && l[0] < kRepWidth - 1; i++) l[++l[0]] = p[i];
+    if ((short)p[0] > n && l[0] < kRepWidth - 1) l[++l[0]] = kRepEllip;
+}
+
+/* The same for raw engine bytes: one path component, MacRoman, with the
+ * engine's reversible '/'->':' swap undone so the line shows the name
+ * the archive meant rather than the one the engine carries. */
+static void RepCatBytes(unsigned char *l, const uint8_t *b, int len)
+{
+    int i, n = len;
+    if (!l) return;
+    if (len == 0) {                  /* an entry the archive did not name */
+        RepCat(l, "An unnamed entry");
+        return;
+    }
+    if (n > kRepNameW) n = kRepNameW;
+    for (i = 0; i < n && l[0] < kRepWidth - 1; i++)
+        l[++l[0]] = b[i] == ':' ? '/' : b[i];
+    if (len > n && l[0] < kRepWidth - 1) l[++l[0]] = kRepEllip;
+}
+
+/* "<archive's name> renamed to <what is on the disk>" — the line this
+ * whole report exists for. `what` prefixes it for a folder. */
+static void RepRenamed(const char *what, const uint8_t *orig, int olen,
+                       const unsigned char *now, const char *verb)
+{
+    unsigned char *l = RepNew(0);
+    if (!l) return;
+    RepCat(l, what);
+    RepCatBytes(l, orig, olen);
+    RepCat(l, verb);
+    RepCatP(l, now);
+}
+
+static void RepDirMemo(long dir, const uint8_t *orig, int olen)
+{
+    short i, n = (short)olen;
+    if (gDirMemoN >= kDirMemo) return;      /* full: it says nothing, ever */
+    if (n > 63) n = 63;
+    gDirMemo[gDirMemoN].dir = dir;
+    gDirMemo[gDirMemoN].name[0] = (unsigned char)n;
+    for (i = 0; i < n; i++)
+        gDirMemo[gDirMemoN].name[i + 1] = orig[i] == ':' ? '/' : orig[i];
+    gDirMemoN++;
+}
+
+/* Did this run create `dir` for a DIFFERENT archive name than this one?
+ * That — and only that — is a merge: two folders whose names shorten
+ * alike become one, and everything they hold ends up together.
+ *
+ * WHAT THIS CANNOT SEE: a folder that no entry of its own declares.
+ * Where a format carries no directory entries the folders are made
+ * along the way by the paths of the files in them, and two such folders
+ * merging is indistinguishable from one folder visited twice. */
+static int RepDirMerged(long dir, const uint8_t *orig, int olen)
+{
+    short i, j, n = (short)olen;
+    if (n > 63) n = 63;
+    for (i = 0; i < gDirMemoN; i++) {
+        if (gDirMemo[i].dir != dir) continue;
+        if ((short)gDirMemo[i].name[0] != n) return 1;
+        for (j = 0; j < n; j++) {
+            unsigned char c = orig[j] == ':' ? '/' : orig[j];
+            if (gDirMemo[i].name[j + 1] != c) return 1;
+        }
+        return 0;                            /* the same folder again */
+    }
+    return 0;                                /* not ours: say nothing */
+}
+
+/* An entry that failed on its own without stopping the archive, named
+ * as the ARCHIVE names it — the file this shell would have written is
+ * not on the disk to be looked for, because a failed entry's partial
+ * output is deleted. */
+static void RepEntryFailed(const uint8_t *orig, int olen, const char *why)
+{
+    unsigned char *l = RepNew(1);
+    if (!l) return;
+    RepCatBytes(l, orig, olen);
+    RepCat(l, why);
+}
+
+/* The same, for the failure the engine reports once the entry has been
+ * accepted. The reason is what the user can act on, so each says what
+ * is wrong rather than naming the error. */
+static void RepFailed(const uint8_t *orig, int olen, int status)
+{
+    unsigned char *l = RepNew(1);
+    if (!l) return;
+    RepCatBytes(l, orig, olen);
+    switch (status) {
+    case UNC_ERR_TOOLARGE:
+        RepCat(l, " is too large for this version and was not extracted");
+        break;
+    case UNC_ERR_MEM:
+        RepCat(l, " needs more memory than was free");
+        break;
+    case UNC_ERR_UNSUPPORTED:
+        RepCat(l, " uses a method this version cannot read");
+        break;
+    case UNC_ERR_CRC:
+        RepCat(l, " is damaged: its checksum does not match");
+        break;
+    case UNC_ERR_TRUNCATED:
+        RepCat(l, " ends early: the archive is incomplete");
+        break;
+    case UNC_ERR_ENCRYPTED:
+    case UNC_ERR_PASSWORD:
+        RepCat(l, " is encrypted and was skipped");
+        break;
+    case UNC_ERR_SINK:
+        RepCat(l, " could not be written to the disk");
+        break;
+    case UNC_ERR_IO:
+        RepCat(l, " could not be read from the archive");
+        break;
+    default:
+        RepCat(l, " could not be extracted");
+        break;
+    }
+}
+
+/* The last '.' of a name, when what follows it is a 1..4 character
+ * alphanumeric extension: its offset, or -1 for a name that has none. */
+static int ExtStart(const unsigned char *b, int len)
+{
+    int i, j, tail;
+    for (i = len - 1; i > 0; i--) {
+        if (b[i] != '.') continue;
+        tail = len - i - 1;
+        if (tail < 1 || tail > 4) return -1;
+        for (j = i + 1; j < len; j++) {
+            unsigned char c = b[j];
+            if (!((c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') ||
+                  (c >= 'a' && c <= 'z')))
+                return -1;
+        }
+        return i;
+    }
+    return -1;
+}
+
+/* One engine path component -> Pascal Str63: undo the '/'->':' swap,
+ * strip any stray ':' (illegal in an HFS name), cap at 31 chars.
+ * Returns nonzero when the result is NOT the archive's own name, which
+ * is what puts a line in the report.
+ *
+ * A name too long for HFS loses its EXTENSION first, and the rest of it
+ * afterwards: on a Macintosh what opens a file is the type and creator
+ * sink_end stamps on it, so a suffix is decoration — and cutting the
+ * name at 31 bytes would leave a mangled half of one anyway
+ * ("...Statement.rt" for a ".rtf"), which reads as a corrupted name
+ * rather than a shortened one. */
+static int ComponentToStr63(const uint8_t *comp, int len, Str63 out)
+{
+    int i, o = 0, keep = len;
+    if (len > 31) {
+        int dot = ExtStart(comp, len);
+        if (dot > 0) keep = dot;
+    }
+    for (i = 0; i < keep && o < 31; i++) {
         unsigned char b = comp[i];
         if (b == ':') b = '/';           /* reversible swap undone */
         out[++o] = b;
     }
     if (o == 0) out[++o] = '_';
     out[0] = (unsigned char)o;
+    return o != len;
 }
 
-/* Append a collision suffix "~1".."~9" within 31 chars. */
+/* Append a collision suffix "~1".."~99" within 31 chars. The extension
+ * goes here too, and for the same reason: "~1" after it would leave a
+ * name that no longer reads as one of a numbered pair.
+ *
+ * TWO digits since 2026-08-29, because one is not enough: names that
+ * are alike for 31 characters differ after it, and an archive holding
+ * eighteen photographs called "Photograph Of The Summer Of 1994 noNN"
+ * ran out at "~9" — measured on a Mac Plus, where it then took the
+ * whole extraction down with it (BLOCKERS.md). */
 static void BumpName(Str63 name, int attempt)
 {
     int len = name[0];
-    if (len > 29) len = 29;
+    int dot = ExtStart(name + 1, len);
+    int wide = attempt > 9;
+    if (dot > 0) len = dot;
+    if (len > (wide ? 28 : 29)) len = wide ? 28 : 29;
     name[len + 1] = '~';
-    name[len + 2] = (unsigned char)('0' + attempt);
-    name[0] = (unsigned char)(len + 2);
+    if (wide) {
+        name[len + 2] = (unsigned char)('0' + attempt / 10);
+        name[len + 3] = (unsigned char)('0' + attempt % 10);
+    } else {
+        name[len + 2] = (unsigned char)('0' + attempt);
+    }
+    name[0] = (unsigned char)(len + (wide ? 3 : 2));
 }
 
 /* DirCreate via the parameter-block call (the Multiversal interfaces
@@ -675,13 +924,18 @@ static OSErr MyDirCreate(short vRefNum, long parent, StringPtr name,
     return err;
 }
 
-/* Create (or descend into) one directory level. */
-static OSErr EnsureDir(short vRefNum, long parent, Str63 name, long *dirID)
+/* Create (or descend into) one directory level. `*isNew` says which of
+ * the two happened, which is how a folder MERGED into one that is
+ * already there is told from one this walk just made. */
+static OSErr EnsureDir(short vRefNum, long parent, Str63 name, long *dirID,
+                       int *isNew)
 {
     long created;
     OSErr err = MyDirCreate(vRefNum, parent, name, &created);
+    *isNew = 0;
     if (err == noErr) {
         *dirID = created;
+        *isNew = 1;
         return noErr;
     }
     if (err == dupFNErr) {
@@ -766,6 +1020,7 @@ static int sink_begin(void *ctx, const UncEntryInfo *info)
     MacSink *s = (MacSink *)ctx;
     long dir = s->rootDirID;
     int start = 0, i, attempt;
+    int leafStart = 0, leafLen = 0, leafChanged = 0;
     OSErr err;
 
     s->cur = *info;
@@ -786,13 +1041,38 @@ static int sink_begin(void *ctx, const UncEntryInfo *info)
     for (i = 0; i <= info->name_len; i++) {
         if (i == info->name_len || info->name[i] == '/') {
             Str63 comp;
-            ComponentToStr63(info->name + start, i - start, comp);
+            int changed = ComponentToStr63(info->name + start, i - start, comp);
             if (i == info->name_len && !info->is_dir) {
                 BlockMoveData(comp, s->curName, comp[0] + 1);
                 s->curDirID = dir;
+                leafStart = start;
+                leafLen = i - start;
+                leafChanged = changed;
             } else {
-                if (EnsureDir(s->vRefNum, dir, comp, &dir) != noErr)
-                    return -1;
+                int isNew = 0;
+                OSErr derr = EnsureDir(s->vRefNum, dir, comp, &dir, &isNew);
+                if (derr != noErr) {
+                    if (derr == dskFulErr) return -1;   /* the run is over */
+                    RepEntryFailed(info->name + start, i - start,
+                                   " could not be made on the disk");
+                    s->errors++;
+                    return 1;                           /* this entry only */
+                }
+                /* A folder is reported once, where it is made: at the
+                 * moment of creation for a name that had to change, and
+                 * — for a folder the archive declares as an entry of its
+                 * own — where the name it shortened to was already
+                 * taken by another folder of this same run. */
+                if (isNew) {
+                    if (changed)
+                        RepRenamed("Folder ", info->name + start, i - start,
+                                   comp, " renamed to ");
+                    RepDirMemo(dir, info->name + start, i - start);
+                } else if (changed && info->is_dir && i == info->name_len &&
+                           RepDirMerged(dir, info->name + start, i - start)) {
+                    RepRenamed("Folder ", info->name + start, i - start,
+                               comp, " combined with ");
+                }
                 if (i == info->name_len) return 1;   /* dir entry done */
             }
             start = i + 1;
@@ -806,9 +1086,38 @@ static int sink_begin(void *ctx, const UncEntryInfo *info)
         for (attempt = 0; ; attempt++) {
             err = MyHCreate(s->vRefNum, s->curDirID, s->curName);
             if (err == noErr) break;
-            if (err != dupFNErr || attempt >= 9) return -1;
+            if (err == dskFulErr) return -1;     /* nothing else will fit */
+            if (err != dupFNErr || attempt >= 99) {
+                /* One entry's name, not the archive's run: until
+                 * 2026-08-29 this returned -1, which the engine reads as
+                 * "abort", so the eleventh file whose name shortened
+                 * alike ended the extraction and everything after it was
+                 * never written (BLOCKERS.md). */
+                RepEntryFailed(info->name + leafStart, leafLen,
+                               err == dupFNErr
+                               ? " could not be given a name of its own"
+                               : " could not be created on the disk");
+                s->errors++;
+                return 1;
+            }
             BlockMoveData(base, s->curName, base[0] + 1);
             BumpName(s->curName, attempt + 1);
+            leafChanged = 1;
+        }
+    }
+
+    /* The line the user reads at the end. `name_truncated` is the
+     * ENGINE's own cut — a path that summed past its 255-byte cap — and
+     * it is reported even where this shell then left the leaf alone,
+     * because the file is not where the archive said it was. */
+    if (leafChanged)
+        RepRenamed("", info->name + leafStart, leafLen, s->curName,
+                   " renamed to ");
+    else if (info->name_truncated) {
+        unsigned char *l = RepNew(0);
+        if (l) {
+            RepCatP(l, s->curName);
+            RepCat(l, " is in a folder whose path had to be shortened");
         }
     }
 #ifndef UNC_MAC_STAGE_WRITES
@@ -1156,6 +1465,17 @@ static int sink_end(void *ctx, int status)
         MyHDelete(s->vRefNum, s->curDirID, s->curName);
     }
     if (status != UNC_OK) s->errors++;
+    /* Every failure that does not stop the archive goes in the report,
+     * named: "some entries could not be extracted" is what the user was
+     * told before 2026-08-29, and it names neither the entry nor the
+     * one thing to do about it. UNC_ERR_ABORTED is the user's own
+     * Cancel and is the outcome line's business, not a failure. */
+    if (status != UNC_OK && status != UNC_ERR_ABORTED) {
+        int b = 0, k;
+        for (k = 0; k < (int)s->cur.name_len; k++)
+            if (s->cur.name[k] == '/') b = k + 1;
+        RepFailed(s->cur.name + b, (int)s->cur.name_len - b, status);
+    }
     /* Kept apart from the rest: an entry this build cannot read YET is
      * the one failure whose answer is the file itself, and the alert
      * says so rather than "some entries could not be extracted". */
@@ -1200,6 +1520,9 @@ static int sink_comment(void *ctx, const uint8_t *buf, uint16_t len)
         if (err != dupFNErr || attempt >= 9) return 0;
         BlockMoveData(base, name, base[0] + 1);
         BumpName(name, attempt + 1);
+        if (attempt == 0)
+            RepRenamed("The archive's comment: ", (const uint8_t *)kName,
+                       (int)sizeof kName - 1, name, " written as ");
     }
 
     if (MyOpenFork(s->vRefNum, s->rootDirID, name, fsWrPerm, 0,
@@ -3552,6 +3875,311 @@ static void ShowNote(short alrtID, const unsigned char *msg)
     NoteAlert(alrtID, NULL);
 }
 
+/* ------------------------------------------------------------------ */
+/* The end-of-run report                                              */
+/*                                                                    */
+/* A run that had something to say about individual entries ends in   */
+/* this box instead of the one-line alert: the names that changed and */
+/* the entries that failed, one line each, and the outcome LAST — so  */
+/* "Extraction complete" still has the last word, with what it cost   */
+/* above it rather than lost.                                         */
+/*                                                                    */
+/* A run with nothing to report still ends in the alert. A list box   */
+/* holding one line, behind a button the user must find before the    */
+/* familiar one, would be a worse answer to the common case.          */
+/*                                                                    */
+/* The list is drawn rather than built out of TextEdit: the lines are */
+/* already Pascal strings in a fixed pool, nothing here is editable   */
+/* or selectable, and a TERec would put a second copy of the text in  */
+/* a heap the engine has just finished stretching.                    */
+/* ------------------------------------------------------------------ */
+
+#define kReportDLOG   133
+#define kRepOKItem    1
+#define kRepSaveItem  2
+#define kRepListItem  3
+#define kRepRingItem  4
+#define kRepBarWidth  16        /* one scroll bar, drawn beside the list */
+
+#define kRepLineH     11        /* Geneva 9 on 11: 20 rows in the box */
+#define kRepVisible   20
+/* The last two rows are the blank and the outcome, held there whenever
+ * the list is longer than the box. */
+#define kRepScroll    (kRepVisible - 2)
+
+static Str255        gRepOutcome;   /* the run's result: the last line */
+static short         gRepTop;       /* index of the first line shown */
+static ControlHandle gRepBar;
+static DialogPtr     gRepDlg;       /* the scroll action proc's only route */
+
+/* The pool, and then the count of what did not fit. The outcome is not
+ * counted here: it is drawn after them, and RepListDraw decides where. */
+static short RepTotal(void)
+{
+    return (short)(gRepN + (gRepMore ? 1 : 0));
+}
+
+static void RepLineAt(short n, Str255 out)
+{
+    out[0] = 0;
+    if (n < gRepN) {
+        BlockMoveData(gRep[n], out, gRep[n][0] + 1);
+        return;
+    }
+    if (n == gRepN && gRepMore) {
+        PStrCat(out, "and ");
+        PStrCatNum(out, gRepMore);
+        PStrCat(out, " more, which this list had no room for");
+    }
+}
+
+static void RepListDraw(DialogPtr dlg)
+{
+    Rect box, clip;
+    short kind, i, total, rows, fits;
+    Handle h;
+    GrafPtr save;
+    RgnHandle saveClip;
+
+    GetPort(&save);
+    SetPort((GrafPtr)dlg);
+    GetDialogItem(dlg, kRepListItem, &kind, &h, &box);
+    EraseRect(&box);
+    FrameRect(&box);
+    clip = box;
+    InsetRect(&clip, 1, 1);
+    saveClip = NewRgn();
+    if (saveClip) GetClip(saveClip);
+    ClipRect(&clip);
+    /* Geneva 9: this is a list of names, not a message. Chicago 12 fits
+     * about 60 characters across the box and a rename line wants 80. */
+    TextFont(3);
+    TextSize(9);
+    total = RepTotal();
+    /* Everything fits: the outcome follows the last line and a blank
+     * one, where a reader ends up anyway. It does not: the list scrolls
+     * under a blank row and the outcome, which stay on the bottom two
+     * rows — the one thing here that must not be somewhere the reader
+     * has to go and find. */
+    fits = (short)(total + 2 <= kRepVisible);
+    rows = fits ? total : (short)kRepScroll;
+    for (i = 0; i < rows && gRepTop + i < total; i++) {
+        Str255 line;
+        RepLineAt((short)(gRepTop + i), line);
+        MoveTo(box.left + 5, box.top + 2 + (i + 1) * kRepLineH);
+        DrawString(line);
+    }
+    TextFace(bold);              /* the verdict, in the document's font */
+    MoveTo(box.left + 5,
+           box.top + 2 + (short)((fits ? total + 2 : kRepVisible) * kRepLineH));
+    DrawString(gRepOutcome);
+    TextFace(normal);
+    TextFont(0);
+    TextSize(12);
+    if (saveClip) { SetClip(saveClip); DisposeRgn(saveClip); }
+    /* The bar is not a dialog item (macextract.r), so nothing else
+     * repaints it when the list under it is redrawn. */
+    if (gRepBar) Draw1Control(gRepBar);
+    SetPort(save);
+}
+
+static pascal void RepListItemProc(WindowPtr w, short item)
+{
+    (void)item;
+    RepListDraw((DialogPtr)w);
+}
+
+/* The default button's ring, as an item of its own so that it is redrawn
+ * with everything else after Standard File has been over the box. */
+static pascal void RepRingItemProc(WindowPtr w, short item)
+{
+    short kind;
+    Handle h;
+    Rect box;
+    GetDialogItem((DialogPtr)w, kRepOKItem, &kind, &h, &box);
+    InsetRect(&box, -4, -4);
+    PenSize(3, 3);
+    FrameRoundRect(&box, 16, 16);
+    PenSize(1, 1);
+}
+
+static void RepSetTop(short top)
+{
+    short max = (short)(RepTotal() - kRepScroll);
+    if (max < 0) max = 0;
+    if (top > max) top = max;
+    if (top < 0) top = 0;
+    if (top == gRepTop) return;
+    gRepTop = top;
+    if (gRepBar) SetControlValue(gRepBar, top);
+    if (gRepDlg) RepListDraw(gRepDlg);
+}
+
+/* Live tracking for the arrows and the page regions. TrackControl calls
+ * this repeatedly while the button is held, which is the whole reason
+ * the scroll bar is not left to ModalDialog. */
+static pascal void RepScrollAction(ControlHandle c, short part)
+{
+    if (c != gRepBar) return;
+    switch (part) {
+    case inUpButton:   RepSetTop((short)(gRepTop - 1)); break;
+    case inDownButton: RepSetTop((short)(gRepTop + 1)); break;
+    case inPageUp:     RepSetTop((short)(gRepTop - kRepScroll)); break;
+    case inPageDown:   RepSetTop((short)(gRepTop + kRepScroll)); break;
+    default: break;
+    }
+}
+
+static ControlActionUPP gRepActionUPP;
+
+/* The same lines, as a document. A Macintosh screen has no scrollback
+ * and this list can be long, so the run that is worth acting on later
+ * can be filed: TEXT/ttxt, CR-separated, opened by TeachText and
+ * SimpleText on every system this application runs on. */
+static void RepSaveAsText(void)
+{
+    Point where;
+    SFReply reply;
+    short ref = 0, i, total;
+    char cr = '\r';
+
+    where.h = 100;
+    where.v = 100;
+    SFPutFile(where, "\pSave the report as:", "\pExtraction Report",
+              NULL, &reply);
+    if (!reply.good) return;
+
+    /* Standard File has already asked about replacing it. */
+    MyHDelete(reply.vRefNum, 0, reply.fName);
+    if (MyHCreate(reply.vRefNum, 0, reply.fName) != noErr) return;
+    if (MyOpenFork(reply.vRefNum, 0, reply.fName, fsWrPerm, 0,
+                   &ref) != noErr) {
+        MyHDelete(reply.vRefNum, 0, reply.fName);
+        return;
+    }
+    total = (short)(RepTotal() + 2);      /* a blank, then the outcome */
+    for (i = 0; i < total; i++) {
+        Str255 line;
+        long count;
+        if (i < RepTotal()) RepLineAt(i, line);
+        else if (i == RepTotal()) line[0] = 0;
+        else BlockMoveData(gRepOutcome, line, gRepOutcome[0] + 1);
+        count = line[0];
+        if (count && FSWrite(ref, &count, (Ptr)&line[1]) != noErr) break;
+        count = 1;
+        if (FSWrite(ref, &count, (Ptr)&cr) != noErr) break;
+    }
+    FSClose(ref);
+    FlushVol(NULL, reply.vRefNum);
+    {
+        CInfoPBRec pb;
+        Str63 nm;
+        BlockMoveData(reply.fName, nm, reply.fName[0] + 1);
+        pb.hFileInfo.ioNamePtr = nm;
+        pb.hFileInfo.ioVRefNum = reply.vRefNum;
+        pb.hFileInfo.ioDirID = 0;
+        pb.hFileInfo.ioFDirIndex = 0;
+        if (PBGetCatInfoSync(&pb) == noErr) {
+            pb.hFileInfo.ioFlFndrInfo.fdType = 0x54455854L;      /* TEXT */
+            pb.hFileInfo.ioFlFndrInfo.fdCreator = 0x74747874L;   /* ttxt */
+            pb.hFileInfo.ioDirID = 0;    /* PBGetCatInfo clobbers it */
+            PBSetCatInfoSync(&pb);
+        }
+    }
+}
+
+static pascal Boolean RepFilter(DialogPtr dlg, EventRecord *ev, short *item)
+{
+    char ch;
+
+    if (ev->what == mouseDown) {
+        Point p = ev->where;
+        ControlHandle c = NULL;
+        short part;
+        GrafPtr save;
+        if (!gRepBar) return false;
+        GetPort(&save);
+        SetPort((GrafPtr)dlg);
+        GlobalToLocal(&p);
+        SetPort(save);
+        part = FindControl(p, (WindowPtr)dlg, &c);
+        if (c != gRepBar || part == 0) return false;   /* a button: go on */
+        if (part == inThumb) {
+            if (TrackControl(c, p, NULL))
+                RepSetTop(GetControlValue(c));
+        } else {
+            TrackControl(c, p, gRepActionUPP);
+        }
+        return true;
+    }
+    if (ev->what != keyDown && ev->what != autoKey) return false;
+    ch = (char)(ev->message & charCodeMask);
+    if ((ev->modifiers & cmdKey) != 0) return false;
+    if (ch == '\r' || ch == 3) { *item = kRepOKItem; return true; }
+    switch (ch) {
+    case 30: RepSetTop((short)(gRepTop - 1)); return true;             /* up */
+    case 31: RepSetTop((short)(gRepTop + 1)); return true;           /* down */
+    case 11: RepSetTop((short)(gRepTop - kRepScroll)); return true;  /* PgUp */
+    case 12: RepSetTop((short)(gRepTop + kRepScroll)); return true;  /* PgDn */
+    case 1:  RepSetTop(0); return true;                              /* Home */
+    case 4:  RepSetTop(RepTotal()); return true;                      /* End */
+    default: break;
+    }
+    return false;
+}
+
+/* `outcome` is the line the alert would have carried on its own. */
+static void ShowReport(const unsigned char *outcome)
+{
+    DialogPtr dlg;
+    short hit, kind, max;
+    Handle h;
+    Rect box;
+    ModalFilterUPP filter;
+
+    BlockMoveData(outcome, gRepOutcome, outcome[0] + 1);
+    dlg = GetNewDialog(kReportDLOG, NULL, (WindowPtr)-1);
+    if (!dlg) {                       /* no room for it: the line still gets said */
+        ShowNote(kDoneALRT, outcome);
+        return;
+    }
+    gRepDlg = dlg;
+    gRepTop = 0;
+    SetPort((GrafPtr)dlg);
+
+    GetDialogItem(dlg, kRepListItem, &kind, &h, &box);
+    SetDialogItem(dlg, kRepListItem, kind,
+                  (Handle)NewUserItemUPP(RepListItemProc), &box);
+    max = (short)(RepTotal() - kRepScroll);
+    if (max < 0) max = 0;
+    {
+        Rect bar;
+        bar.top = box.top;
+        bar.bottom = box.bottom;
+        bar.left = box.right;
+        bar.right = (short)(box.right + kRepBarWidth);
+        gRepBar = NewControl((WindowPtr)dlg, &bar, "\p", true, 0, 0, max,
+                             scrollBarProc, 0);
+        if (gRepBar && max == 0)
+            HiliteControl(gRepBar, 255);             /* nothing to scroll */
+    }
+    if (!gRepActionUPP) gRepActionUPP = NewControlActionUPP(RepScrollAction);
+
+    GetDialogItem(dlg, kRepRingItem, &kind, &h, &box);
+    SetDialogItem(dlg, kRepRingItem, kind,
+                  (Handle)NewUserItemUPP(RepRingItemProc), &box);
+    DrawDialog(dlg);
+
+    filter = NewModalFilterUPP(RepFilter);
+    do {
+        ModalDialog(filter, &hit);
+        if (hit == kRepSaveItem) RepSaveAsText();
+    } while (hit != kRepOKItem);
+    DisposeDialog(dlg);
+    gRepBar = NULL;
+    gRepDlg = NULL;
+}
+
 static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
                        short outVol, long outDir)
 {
@@ -3559,7 +4187,10 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
     UncProgress prog;
     int ret, entries, errors;
     UncFormat topFmt = UNC_FORMAT_UNKNOWN;
+    Str255 outcome;
+    short alrt;
 
+    RepReset();          /* this file's report, not the last one's */
     pr.dlg = GetNewDialog(kProgressDLOG, NULL, (WindowPtr)-1);
     pr.cancelled = false;
     pr.lastTicks = 0;
@@ -3699,23 +4330,33 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
 
     if (pr.dlg) DisposeDialog(pr.dlg);
 
+    /* One line says how the run ENDED. Where entries have something of
+     * their own to report — a name that had to change, a failure that
+     * did not stop the archive — that line is the last of a list rather
+     * than an alert of its own (ShowReport). The wording is the same
+     * either way, and so is the order these are tested in: the most
+     * specific answer wins, because it is the one the user can act on. */
+    outcome[0] = 0;
+    alrt = kErrorALRT;
     if (gLastWriteErr == dskFulErr)
         /* The engine has already stopped the run — every extractor treats a
          * sink failure as the end of the archive — so all that was missing
          * was being able to say WHICH failure. Before this the OSErr was
          * dropped at the `!= noErr` test and a full disk read as "this file
          * could not be extracted". */
-        ShowNote(kErrorALRT, "\pThe disk is full. Free up some space "
-                             "and try again.");
-    else if (pr.cancelled || ret == UNC_ERR_ABORTED)
-        ShowNote(kDoneALRT, "\pExtraction cancelled.");
+        PStrCat(outcome, "The disk is full. Free up some space "
+                         "and try again.");
+    else if (pr.cancelled || ret == UNC_ERR_ABORTED) {
+        PStrCat(outcome, "Extraction cancelled.");
+        alrt = kDoneALRT;
+    }
     else if (ret == UNC_ERR_SEGMENTED)
         /* A part of a segmented set was never located. Whatever the parts
          * on hand did decode has been written and is worth saying so. */
-        ShowNote(kErrorALRT, "\pThis archive has more parts. "
-                             "Find them and try again.");
+        PStrCat(outcome, "This archive has more parts. "
+                         "Find them and try again.");
     else if (ret == UNC_ERR_IO && entries == 0)
-        ShowNote(kErrorALRT, "\pCould not open the archive.");
+        PStrCat(outcome, "Could not open the archive.");
     else if (gShortBy > 0) {
         /* Ahead of the two generic messages, and covering both of them: a
          * memory shortfall is the same answer whether one entry failed or
@@ -3724,18 +4365,15 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
          * did not work" into one thing to go and do — it is exactly what
          * the memory size in Get Info has to grow by. Rounded UP to the
          * next 8K, so it is round enough to type and never short. */
-        Str255 s;
-        s[0] = 0;
-        PStrCat(s, "Needs ");
-        PStrCatNum(s, (gShortBy + 8191L) / 8192L * 8L);
-        PStrCat(s, "K more memory. Give MacExtract more in Get Info.");
-        ShowNote(kErrorALRT, s);
+        PStrCat(outcome, "Needs ");
+        PStrCatNum(outcome, (gShortBy + 8191L) / 8192L * 8L);
+        PStrCat(outcome, "K more memory. Give MacExtract more in Get Info.");
     }
     else if (gShortPiece)
         /* The budget had room and the Memory Manager still could not find
          * one piece that big, so a bigger memory size need not help. */
-        ShowNote(kErrorALRT, "\pMemory is too broken up. "
-                             "Quit other programs and try again.");
+        PStrCat(outcome, "Memory is too broken up. "
+                         "Quit other programs and try again.");
     else if (ret == UNC_ERR_UNSUPPORTED && entries == 0 &&
              topFmt != UNC_FORMAT_UNKNOWN && !unc_format_extractable(topFmt)) {
         /* Ahead of the generic message, and the reason detect-only exists
@@ -3745,26 +4383,28 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
          * will never extract (DECISIONS.md 2026-08-27). Kept short: the
          * alert wraps between 32 and 36 characters, and the longest name
          * in the table makes 46. */
-        Str255 s;
-        s[0] = 0;
-        PStrCat(s, "MacExtract cannot open ");
-        PStrCat(s, unc_format_name(topFmt));
-        PStrCat(s, " files.");
-        ShowNote(kErrorALRT, s);
+        PStrCat(outcome, "MacExtract cannot open ");
+        PStrCat(outcome, unc_format_name(topFmt));
+        PStrCat(outcome, " files.");
     }
     else if (ret != UNC_OK)
-        ShowNote(kErrorALRT, "\pThis file could not be extracted.");
+        PStrCat(outcome, "This file could not be extracted.");
     else if (gUnsupported)
         /* Ahead of the generic one: this is the failure whose answer is
          * the FILE, and a user who knows that can send it. Two lines —
          * the alert wraps between 32 and 36 characters and a third line
          * sits level with the OK button (tools/vmac/README.md). */
-        ShowNote(kErrorALRT, "\pSome entries use a method this version "
-                             "cannot read yet.");
+        PStrCat(outcome, "Some entries use a method this version "
+                         "cannot read yet.");
     else if (errors)
-        ShowNote(kErrorALRT, "\pSome entries could not be extracted.");
-    else
-        ShowNote(kDoneALRT, "\pExtraction complete.");
+        PStrCat(outcome, "Some entries could not be extracted.");
+    else {
+        PStrCat(outcome, "Extraction complete.");
+        alrt = kDoneALRT;
+    }
+
+    if (gRepN) ShowReport(outcome);
+    else ShowNote(alrt, outcome);
 }
 
 int main(void)

@@ -1206,26 +1206,48 @@ the collision that cutting creates in `BumpName`, off the File Manager's
 The code under test is the shell itself, through the mock Toolbox of
 `tests/mac_sink_test.c`; the subjects are DiskDoubler archives from
 `tools/synth_dd.py`, because both caps have to be reached in one archive
-shape to see which one acted. Four cases: two files whose names are the
+shape to see which one acted. Eight cases: two files whose names are the
 same for 31 characters, which must both come out with the second
 numbered; two FOLDERS in the same position, which merge into one and must
 keep both their files; four 63-byte folders summing to exactly the
 engine's 255-byte cap, where the leaf's cut path lands on its own folder
-and the numbering is the only reason the file survives; and the edges of
+and the numbering is the only reason the file survives; the edges of
 the cut — 31 characters written whole, 40 cut to 31, and a nameless entry
-written as `_`.
+written as `_`; and four added 2026-08-29 with the end-of-run report:
 
-**Established that it can fail**: against three one-line breakages of the
+- **the extension goes first** — a name that fits once its suffix is
+  dropped keeps its whole stem, a name too long even then is simply cut,
+  and a numbered name loses the suffix rather than carrying `~1` after it;
+- **the report's lines**, which are what the Macintosh box lists: a
+  renamed file names itself twice, a merged folder says *combined with*
+  and a renamed one says *renamed to*, and an entry whose name was
+  writable is not mentioned at all;
+- **a per-entry failure**, from an archive whose one damaged entry is
+  named in the report while the sound one still comes out;
+- **more alike names than the numbering has digits for** — 102 of them,
+  and one file after them whose survival is the assertion.
+
+**Established that it can fail**: against five one-line breakages of the
 shell — the cap raised to 63 fails five assertions, the numbering removed
-fails six (and loses a file, and stops the run), and the empty-name
-fallback removed fails one.
+fails six (and loses a file, and stops the run), the empty-name
+fallback removed fails one, the extension strip removed fails four, and
+the numbering restored to its `~9` limit fails four, one of which is the
+file that never came out.
+
+**The mock's directory calls had to be made honest first.**
+`PBDirCreateSync` tolerated `EEXIST` and minted a fresh directory id, and
+`PBGetCatInfoSync` returned `noErr` over an untouched param block — so
+`EnsureDir`'s dupFNErr branch, the one the real File Manager takes
+whenever a folder is already there, ran against stack garbage in the
+mock and was never exercised at all. Both are real enough to answer now
+(2026-08-29).
 
 **What it cannot see.** A name holding a '/', which HFS takes and which
 reaches the shell as ':' for it to swap back: the mock builds a Linux path
 out of the leaf, so the create fails there for a reason the real File
-Manager does not have. Nor anything on screen — the shell reports no
-shortened name to the user at all, which is the open half of this
-(OPEN_ITEMS.md).
+Manager does not have. Nor the BOX those lines are drawn in: whether it
+is legible, scrolls and saves is `interactive.py --report` on an emulated
+Mac (`tools/vmac/README.md`).
 
 ## The progress callback (`tools/run_ticks.py`, in `ci.sh`)
 

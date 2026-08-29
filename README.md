@@ -11,7 +11,7 @@ There is a Linux command-line version too, built from the same engine.
 
 ## What it looks like
 
-It arrives looking like this — one 179K application on an 800K floppy, an open
+It arrives looking like this — one 180K application on an 800K floppy, an open
 carton lettered EXTRACT, drawn for 1-bit, 16-colour and 256-colour screens:
 
 ![The floppy image open on a System 6 desktop, holding one item: MacExtract](docs/screens/0-icon.png)
@@ -38,6 +38,14 @@ is cleaned up:
 Or let it finish:
 
 ![Alert reading Extraction complete.](docs/screens/4-complete.png)
+
+If anything had to change on the way — a name HFS cannot keep (it stops at 31
+characters), a folder that ended up sharing a shortened name, an entry that
+would not come out — you are told which, with the result underneath rather
+than in place of it. **Save as Text** files the whole list as a document,
+because a Mac Plus screen has no scrollback:
+
+![A list headed with renamed files: MyQuarterlyReportForTheBoard.rtf renamed to MyQuarterlyReportForTheBoard, folders combined, an entry damaged; under it the line Some entries could not be extracted, and the buttons Save as Text and OK](docs/screens/4b-report.png)
 
 If an archive was split across floppies and a part is not where the first one
 was, you are asked for it — and told straight away if you point at the wrong

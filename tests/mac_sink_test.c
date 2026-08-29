@@ -17,6 +17,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <errno.h>
 
 #include "../mac/mac_mocks.h"
 #include "macextract.h"
@@ -202,18 +203,52 @@ OSErr SetEOF(short ref, long eof)
     return ftruncate(gFiles[ref].fd, eof) < 0 ? -1 : noErr;
 }
 OSErr FlushVol(ConstStringPtr v, short r) { (void)v; (void)r; return noErr; }
-OSErr PBGetCatInfoSync(CInfoPBRec *pb) { (void)pb; return noErr; }
+/* The id this mock knows for `path`, registering it if it is new. */
+static int dir_id_for(const char *path)
+{
+    int i;
+    for (i = 0; i < gNumDirs; i++)
+        if (strcmp(gDirs[i], path) == 0) return i;
+    if (gNumDirs >= MAX_DIRS) return 0;
+    snprintf(gDirs[gNumDirs], sizeof gDirs[0], "%s", path);
+    return gNumDirs++;
+}
+
+/* Enough of PBGetCatInfo for what the shell asks it: does this name
+ * exist, and is it a FOLDER? EnsureDir asks exactly that, of a name
+ * PBDirCreateSync has just refused, and until 2026-08-29 this returned
+ * noErr over an untouched param block — so the shell read a dir bit and
+ * a directory id out of stack garbage on the one path the real File
+ * Manager takes whenever a folder is already there. */
+OSErr PBGetCatInfoSync(CInfoPBRec *pb)
+{
+    char path[800];
+    struct stat st;
+    full_path(pb->dirInfo.ioDrDirID, pb->dirInfo.ioNamePtr, 0, path,
+              sizeof path);
+    if (stat(path, &st) != 0) return fnfErr;
+    if (S_ISDIR(st.st_mode)) {
+        pb->dirInfo.ioFlAttrib |= 0x10;            /* ioDirMask */
+        pb->dirInfo.ioDrDirID = dir_id_for(path);
+    } else {
+        pb->hFileInfo.ioFlAttrib &= (SignedByte)~0x10;
+    }
+    return noErr;
+}
 OSErr PBSetCatInfoSync(CInfoPBRec *pb) { (void)pb; return noErr; }
 OSErr PBDirCreateSync(HParamBlockRec *pb)
 {
     char path[800];
     full_path(pb->fileParam.ioDirID, pb->fileParam.ioNamePtr, 0, path,
               sizeof path);
-    mkdir(path, 0755);                 /* tolerate EEXIST */
-    if (gNumDirs >= MAX_DIRS) return noErr;
-    snprintf(gDirs[gNumDirs], sizeof gDirs[0], "%s", path);
-    pb->fileParam.ioDirID = gNumDirs;  /* hand back the new dir id */
-    gNumDirs++;
+    /* dupFNErr for a name that is already taken, as the File Manager
+     * does: that is what tells the shell a folder was MERGED into one
+     * that was already there rather than created. */
+    if (mkdir(path, 0755) != 0) {
+        if (errno == EEXIST) return dupFNErr;
+        return ioErr;
+    }
+    pb->fileParam.ioDirID = dir_id_for(path);      /* the new dir id */
     return noErr;
 }
 
@@ -385,5 +420,16 @@ int main(int argc, char **argv)
     ret = unc_extract(&io, &sk, &al, NULL, &opt);
     fprintf(stderr, "unc_extract -> %d, entries=%d errors=%d\n",
             ret, sink.entries, sink.errors);
+    /* The run report, exactly as the Macintosh box would list it: what
+     * this shell renamed and what failed per entry. The box itself
+     * cannot be tested here — its lines can, and they are the half that
+     * says something wrong (tools/run_macnames.py). */
+    {
+        short i;
+        for (i = 0; i < gRepN; i++)
+            fprintf(stderr, "report: %.*s\n", (int)gRep[i][0], gRep[i] + 1);
+        if (gRepMore)
+            fprintf(stderr, "report-more: %ld\n", gRepMore);
+    }
     return ret == UNC_OK && sink.errors == 0 ? 0 : 1;
 }
