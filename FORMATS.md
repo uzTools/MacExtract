@@ -354,6 +354,22 @@ had before is a floor inside its code (@0xa2), not its requirement; at that
 size it wrote past the mapping and died on every input, and the claim that
 it ran is withdrawn (BLOCKERS.md).
 
+**"Method 13" is not one codec, and the number is not the format's.** Verified
+2026-08-29 out of three products' resources. In Disk Expander 1.2 module 13 is
+5,030 B, declares a 229,618 B working buffer, and has two names in two fields:
+its `Cmpr` resource is called **SlowFastC** and its own module-name field at
++0x3C says **" Faster"** — the same name module 1 carries. In **eDisk 1.2**
+(Alysis, 1993, Macintosh Garden, md5 `b6e12548edd0baa5cfb79441a3cdffcd`) the
+module numbered 13 is a different program altogether: resource name `JC`,
+module name **" Copy"**, 310 B and 290 B in two builds, no working buffer, and
+an unrolled `MOVE.B (A0)+,(A1)+` loop — a byte copier. **More Disk Space 1.1**
+(md5 `ca5c80f5ff2c6738c8ac27a8b1ce8d43`) carries no modules in its application
+at all; its `Alysis Preferences` file carries 1, 2, 9, 10, 11 twice and a
+`Cmpr` 26 named SlowFastC declaring the same 5,030 B — Disk Expander's module,
+not eDisk's. So the same number is a byte copier in one product and a
+229,618-byte codec in two others, which is the third reading of the lesson
+method 20 taught (DECISIONS.md 2026-08-25 and 2026-08-29).
+
 **A file could carry one**, which is what the compress path settles. INIT
 32's (@0x5232) indexes an eleven-entry table at +0xf2e, eight bytes each, by
 a setting word, and calls the module of each number in turn: the methods

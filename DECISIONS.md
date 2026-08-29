@@ -3783,7 +3783,12 @@ There turned out to be three of them, each better than the last:
   resources are the whole codec set, one module per method, each with its
   method number at offset 0x1c and its name at 0x3c: 1 " Faster", 2
   " Tighter", 9 "30% Solution", 10 "SlowFastA", 11 "SlowFastB" (twice, a
-  small implementation and a fast one), 13 "SlowFastC", 20 "Tennessee".
+  small implementation and a fast one), 13 " Faster" again, 20 "Tennessee".
+  **Corrected 2026-08-29: 13 was listed here as "SlowFastC", which is its
+  `Cmpr` RESOURCE's name and not the module's own** — one name in this list
+  came from a different field from all the others, and the module numbered
+  13 shares module 1's name. FORMATS.md keeps both, and what else answers
+  to 13 in other Alysis products.
   **Implementing one method printed the method table for all of them.**
 
 ### What only running it could settle
@@ -9126,6 +9131,35 @@ compressor is legitimate under rule #1. It is out because the work would
 produce a decoder for a codec no Alysis expander can read, that no archive in
 the corpus uses, whose framing is not this container's — with nothing to check
 the result against at any point.
+
+### Verified afterwards: the number is a slot, and eDisk proves it
+
+The entry deleted from OPEN_ITEMS.md carried one more claim — that eDisk 1.2
+and More Disk Space 1.1 "carry only methods 1, 11 and a 13 named ' Copy'" —
+cited to DECISIONS.md 2026-08-25 and `tools/vmac/rescomp.py`. **Neither
+source mentions either product.** Checked by downloading both (Macintosh
+Garden, md5s in FORMATS.md) and reading their resources:
+
+- **eDisk 1.2's module 13 is real and is a byte copier.** `Cmpr` 0 and 1,
+  resource name `JC`, module name " Copy", 310 B and 290 B, working buffer
+  zero, an unrolled `MOVE.B (A0)+,(A1)+`. Nothing like Disk Expander's
+  5,030-byte module 13.
+- **More Disk Space 1.1 is where the claim was wrong.** Its application
+  carries one module, and its `Alysis Preferences` file carries 1, 2, 9, 10,
+  11 twice and a `Cmpr` 26 named SlowFastC declaring 5,030 B — Disk
+  Expander's module 13, not eDisk's.
+
+So the substance held and the sourcing did not, and the sourcing is the part
+worth noticing: **a claim can be true and still have no evidence behind it
+where it says it does.** A citation is checkable in seconds and this one had
+been wrong since it was written; the fact it named was worth keeping and had
+been sitting in a file nobody could confirm it from.
+
+The finding it supports is the same one twice over now. In 1992 Alysis wrote
+a byte copier into slot 13; by 1993, in a different product, slot 13 held a
+codec wanting 229,618 bytes of working buffer. A block header carrying "13"
+means nothing without knowing which library wrote it — and this project read
+that field as a method for six days.
 
 ### The transferable part: a guard is not a requirement
 
