@@ -2211,6 +2211,24 @@ That is why the CODE resource is not segmented (BLOCKERS.md, *Withdrawn
 claims*), and why moving `ss_dict.h` or the StuffIt tables out of the A5 world
 would buy nothing at launch: they are data, so they carry no relocations.
 
+### The Linux budget check under-reads the Mac
+
+**`--budget N` on Linux is necessary and NOT sufficient.** MEASURED
+2026-08-30. `derived-XMenu.dmg.sit` needs 566,009 B under a Linux cap and
+**16 KB more than that** on a 1 MB Mac Plus; `derived-EasyFind.dmg.sit` needs
+the same 566,009 on Linux and **more than 598,932** on the Mac — a gap of over
+33 KB. Both refusals are budget refusals (`gRefusedWhy` = 1), not
+fragmentation. The Mac allocator charges 16 bytes a block, so a decoder that
+allocates often pays a toll the Linux run does not.
+
+**Consequence: "passes `ci.sh`'s budget cap" does not mean "extracts on the
+Mac", and the gap is not a constant** — it is 16 KB on one fixture and 33 KB
+on another. Every `--budget` figure in this file inherits that caveat. The
+only sufficient check is the on-Mac replay with its CRC read-back
+(`tools/vmac/run.py`). *This does not contradict the "agree to a constant 32 B"
+note under Unix compress:* that is about PEAK HEAP on a fixture that fits,
+which is a different quantity from the THRESHOLD at which one stops fitting.
+
 ### What the application costs the engine
 
 **Only CODE costs anything. Data, globals and resources are free.** MEASURED
@@ -2242,9 +2260,26 @@ enforces a ratchet on code size for this reason.
 
 ### Budget
 
-**What a 1 MB Mac Plus actually leaves the engine is 565,176 B** — measured
+**What a 1 MB Mac Plus actually leaves the engine is 598,932 B** — measured
 **2026-08-30** with `run.py --mem 1M -D UNC_AT_BUDGET`, which reports
-`FreeMem()` at **647,096 B** and the shell's reserve at its 80 KB cap.
+`FreeMem()` at **648,084 B** and the shell's reserve at its cap.
+
+**The cap was 80 KB and is now 48 KB, because 80 KB was never priced.** It
+began as a flat constant and nothing had measured what the shell actually
+needs. `-D UNC_AT_RESERVE` prints a `FreeMem()` low-water mark across a run:
+with the engine holding its budget and the progress dialog up, the shell and
+Toolbox used **13,242 B** (559,136 B low-water against 647,096 free, engine
+peak 74,718). 48 KB is over three times that. **The 32 KB released goes to the
+engine at 1:1**, which is forty times what the size flags above bought, at no
+cost in speed at all — the reserve only decides how the heap is divided. The
+69-fixture 1 MB tier is **69/69** on it and the heaviest peaks are unchanged,
+so no decoder simply spends what it is offered.
+
+**Pricing it needs a fixture that FITS and is heavy**, which took three
+attempts: a 3.7 KB archive never fires the progress pump, and an archive too
+big for the budget has its big allocation REFUSED before it happens, so the
+heap is never stressed and the mark stays high (596,362 B on one such run —
+nothing had used more than 50,734 B).
 
 **It was 597,036 B on 2026-08-24, and 31,860 B of code is where the difference
 went** (*What the application costs the engine*). Nothing failed when it fell,

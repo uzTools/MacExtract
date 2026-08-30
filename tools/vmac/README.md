@@ -1422,6 +1422,7 @@ Results are not repeated here; each line says where they live.
 | switch | answers | where the result is |
 |---|---|---|
 | `UNC_AT_BUDGET` | why an entry was refused: over budget, or `NewPtr` failed | DECISIONS.md 2026-08-06, OPEN_ITEMS.md section 5 |
+| `UNC_AT_RESERVE` | what the shell actually needs of the heap kept back from the engine — a `FreeMem()` low-water mark, printed on the completion alert. It priced `kMemReserveMax` from 80 KB down to 48 KB (13,242 B measured). **Needs a fixture that FITS and is heavy**: a small one never fires the progress pump, and one too big has its allocation refused before the heap is stressed | FORMATS.md, *Budget* |
 | `UNC_AT_HANDLES` | does `MoveHHi` move an engine block, and does it help | OPEN_ITEMS.md section 5 (do-not-retry) |
 | `UNC_AT_INTERLEAVE` | do reads return zeros while output is written to the same volume | BLOCKERS.md *Withdrawn claims* |
 | `UNC_AT_SAMEVOL` | does extraction onto the archive's own volume work | DECISIONS.md 2026-08-02 |

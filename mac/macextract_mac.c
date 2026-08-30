@@ -78,7 +78,15 @@
  * AppleShare volume all cost more, and the reserve also has to cover a
  * dialog or an alert drawn while the engine holds its peak. MANUAL_TESTS.md
  * carries this as something only real hardware can settle. */
-#define kMemReserveMax  (80L * 1024)
+/* MEASURED 2026-08-30, not inherited. The shell and Toolbox used 13,242 B
+ * at their worst while the engine held its budget and the progress dialog was
+ * up (`-D UNC_AT_RESERVE`, which prints a FreeMem low-water mark: 559,136 B
+ * against 647,096 free with a 74,718 B engine peak, 1 MB System 6.0.8). 80 KB
+ * was the flat constant this began as and nothing had ever priced it; 48 KB is
+ * over three times what was measured, and the 32 KB floor below still applies
+ * on small machines. The 32 KB released goes straight to the engine at 1:1 on
+ * a 1 MB Mac (FORMATS.md, *What the application costs the engine*). */
+#define kMemReserveMax  (48L * 1024)
 #define kMemReserveMin  (32L * 1024)
 
 #ifndef ioDirMask
@@ -379,6 +387,29 @@ typedef struct {
     long lowmark;   /* lowest budget ever seen => peak = initial - lowmark */
 } MacAlloc;
 
+#ifdef UNC_AT_RESERVE
+/* Low-water mark of FreeMem() across a whole run — the instrument that priced
+ * kMemReserveMax. The engine is capped at its budget, so what this sees is the
+ * UNUSED remainder of the reserve: the part held back for the Toolbox, the
+ * File Manager and the dialogs and never touched. Sampled at every engine
+ * allocation and in the progress pump.
+ *
+ * Read it off the completion alert, where it is PREPENDED — the report window
+ * clips a long line at its right edge, which cost one run. And note what the
+ * first two runs taught: with a 3.7 KB fixture the pump never fires, and with
+ * an archive too big for the budget the engine's allocation is REFUSED before
+ * it happens, so the heap is never stressed and the mark stays high. Price the
+ * reserve with a fixture that FITS and is heavy (FORMATS.md, *Budget*). */
+static long gMinFree = 0x7FFFFFFFL;
+static void ReserveSample(void)
+{
+    long f = FreeMem();
+    if (f < gMinFree) gMinFree = f;
+}
+#else
+#define ReserveSample() ((void)0)
+#endif
+
 static void *mal_alloc(void *ctx, uint32_t size)
 {
     MacAlloc *a = (MacAlloc *)ctx;
@@ -423,6 +454,7 @@ static void *mal_alloc(void *ctx, uint32_t size)
         return NULL;
     }
     *(long *)p = (long)size;
+    ReserveSample();
     a->budget -= (long)size + 16;
     if (a->budget < a->lowmark) a->lowmark = a->budget;  /* track peak usage */
 #ifdef UNC_AT_BUDGET
@@ -512,6 +544,7 @@ static void PStrCatNum(Str255 d, long n)
 
 static void ProgressPump(Progress *pr)
 {
+    ReserveSample();
     EventRecord ev;
     Boolean got;
 
@@ -4697,6 +4730,20 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
         alrt = kDoneALRT;
     }
 
+#ifdef UNC_AT_RESERVE
+    {   /* On EVERY outcome: a run that ends in the report never reaches the
+         * completion alert. Prepended, because the report window clips. */
+        unsigned char n[32], tmp[256];
+        short i;
+        NumToString(gMinFree, n);
+        tmp[0] = 0;
+        PStrCat(tmp, "mf=");
+        for (i = 1; i <= n[0]; i++) tmp[++tmp[0]] = n[i];
+        PStrCat(tmp, " ");
+        for (i = 1; i <= outcome[0]; i++) tmp[++tmp[0]] = outcome[i];
+        for (i = 0; i <= tmp[0]; i++) outcome[i] = tmp[i];
+    }
+#endif
     if (gRepN) ShowReport(outcome);
     else ShowNote(alrt, outcome);
 }

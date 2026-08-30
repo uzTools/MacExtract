@@ -67,9 +67,16 @@ from mkboot import LISTING_DATE                              # noqa: E402
 import checkdisk as CD                                       # noqa: E402
 
 
-def build_interactive_app():
-    """Build the normal (non-autotest) application, returning its MacBinary."""
-    bdir = os.path.join(R.REPO, "build", "mac-interactive")
+def build_interactive_app(defines=()):
+    """Build the normal (non-autotest) application, returning its MacBinary.
+
+    `defines` are probe switches (`-D UNC_AT_RESERVE`), each turned into a -D
+    by mac/CMakeLists.txt. The environment is otherwise stripped of UNC_MAC_*
+    and UNC_AT_* so that a stray export cannot silently change what is being
+    driven; each combination gets its own build directory, because CMake reads
+    these at CONFIGURE time and reusing one would keep the first for ever."""
+    tag = "-".join(["interactive"] + sorted(d.lower() for d in defines))
+    bdir = os.path.join(R.REPO, "build", "mac-" + tag)
     toolchain = os.environ.get("RETRO68", "/opt/Retro68-build/toolchain")
     cmakefile = os.path.join(toolchain, "m68k-apple-macos", "cmake",
                              "retro68.toolchain.cmake")
@@ -77,6 +84,8 @@ def build_interactive_app():
         raise SystemExit(f"interactive: no Retro68 toolchain at {toolchain}")
     env = {k: v for k, v in os.environ.items()
            if not k.startswith(("UNC_MAC_", "UNC_AT_"))}   # plain build
+    for d in defines:
+        env[d] = "1"
     subprocess.run(["cmake", "-B", bdir, "-S", os.path.join(R.REPO, "mac"),
                     f"-DCMAKE_TOOLCHAIN_FILE={cmakefile}",
                     "-DCMAKE_BUILD_TYPE=Release"],
@@ -1681,6 +1690,8 @@ def main():
                          "photograph the report box, scroll it, save it as "
                          "a document, and read that document back off the "
                          "volume. Ignores the fixture argument.")
+    ap.add_argument("-D", dest="defines", action="append", default=[],
+                    help="probe build switch (repeatable), e.g. -D UNC_AT_RESERVE")
     ap.add_argument("--e2e", action="store_true",
                     help="run the Finder end-to-end phase INSTEAD of the "
                          "cancel phases: launch by double-click, navigate "
@@ -1691,7 +1702,7 @@ def main():
 
     calibrate(args.system)
     os.makedirs(args.outdir, exist_ok=True)
-    appbin = build_interactive_app()
+    appbin = build_interactive_app(tuple(args.defines))
     workdir = tempfile.mkdtemp(prefix="vmac-interactive-")
     bootimg = os.path.join(workdir, "boot-interactive.hfv")
     stock = os.path.join(R.VMAC_HOME, args.system)

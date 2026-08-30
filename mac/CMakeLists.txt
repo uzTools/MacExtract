@@ -117,6 +117,11 @@ target_compile_options(MacExtract PRIVATE -mcpu=68000 -Os -Wno-multichar
                        # UNC_AT_META: autotest reports the first file's on-Mac
                        # type/creator/Finder-flags instead of the CRC aggregate
                        # (the "launches by double-click" E2E check).
+                       # UNC_AT_RESERVE: track the low-water mark of FreeMem()
+                       # across a run and print it in the completion alert, to
+                       # price kMemReserveMax against what the shell actually
+                       # uses. A probe, never shipped.
+                       $<$<BOOL:$ENV{UNC_AT_RESERVE}>:-DUNC_AT_RESERVE>
                        $<$<BOOL:$ENV{UNC_AT_META}>:-DUNC_AT_META>
                        # UNC_AT_SEPARATE_BLOCKS: force the two-separate-NewPtr
                        # staging path (re-tests the old "3 blocks bomb" claim).

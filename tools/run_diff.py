@@ -381,9 +381,13 @@ def main():
                          "2026-08-30: FreeMem() at launch, 647,096 B, LESS "
                          "the shell's 80 KB reserve. Do not use the FreeMem "
                          "figure alone; that mistake sat here for weeks "
-                         "(BLOCKERS.md). And RE-MEASURE it: this figure falls "
-                         "as the application's CODE grows, which is how it "
-                         "went stale twice (FORMATS.md, *Budget*).")
+                         "(BLOCKERS.md). RE-MEASURE it: it falls as the "
+                         "application's CODE grows, which is how it went "
+                         "stale twice. And it is NOT SUFFICIENT: the Mac "
+                         "needs 16-33 KB more than this cap predicts, by a "
+                         "margin that is not constant, so passing here does "
+                         "not mean it extracts on the machine (FORMATS.md, "
+                         "*The Linux budget check under-reads the Mac*).")
     ap.add_argument("--max-size", type=int, default=0,
                     help="only fixtures at most this many bytes. For build "
                          "variants that are correct but slow, where the point "
