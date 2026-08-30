@@ -641,18 +641,28 @@ same dates.
 
 ### Unix compress: the `.Z` peak §
 
-**It used to be a flat 274,432 B for every input, and is now
-sized from the input.** MEASURED 2026-08-03. `compress(1)` writes `maxbits=16`
-whatever it compressed, so a 488-byte `.Z` declared a 65,536-entry table it
-filled a few hundred entries of; the table is now bounded from the input by
-`symbols <= 256 + reserved + insize * 8 / 9` (DECISIONS.md 2026-08-03):
+**It used to be a flat 274,432 B for every input, and is now sized from the
+input — twice.** MEASURED 2026-08-03 and again **2026-08-30**. `compress(1)`
+writes `maxbits=16` whatever it compressed, so a 488-byte `.Z` declared a
+65,536-entry table it filled a few hundred entries of. The first bound was
+`symbols <= 256 + reserved + insize * 8 / 9` (DECISIONS.md 2026-08-03); the
+second walks the CODE-WIDTH SCHEDULE instead of assuming every code is the
+minimum 9 bits, which is worth a third of the table on inputs big enough to
+widen (DECISIONS.md 2026-08-30, *a byte buys fewer symbols the further in it
+sits*):
 
-| fixture | in | was | now |
-|---|---|---|---|
-| `synth-exo-Z.Z` | 488 B | 274,432 B | 15,044 B |
-| `synth-exo-tar-Z.tar.Z` | 5,465 B | 274,432 B | 32,740 B |
-| `a2ps.V4.3.tar.Z` | 30,255 B | 274,432 B | 120,880 B |
-| `popper-1.7.tar.Z` | 59,323 B | 274,432 B | 224,232 B |
+| fixture | in | flat | 8/9 bound | width schedule |
+|---|---|---|---|---|
+| `synth-exo-Z.Z` | 488 B | 274,432 B | 15,044 B | 15,044 B |
+| `synth-exo-tar-Z.tar.Z` | 5,465 B | 274,432 B | 32,740 B | 29,373 B |
+| `a2ps.V4.3.tar.Z` | 30,255 B | 274,432 B | 120,880 B | **86,080 B** |
+| `popper-1.7.tar.Z` | 59,323 B | 274,432 B | 224,232 B | **147,796 B** |
+
+The last column is the on-Mac peak, and the last row is the point: 224,232 B
+did not fit on a 512 KB Macintosh and 147,796 B does, so that fixture went
+from a refusal to a byte-exact extraction without the machine changing
+(*512 KB machines*). Small inputs are unaffected — a stream that never widens
+past 9 bits was already bounded exactly.
 
 StuffIt classic method 2 is bounded the same way from the entry's compressed
 size; 50 fixtures improved corpus-wide, none regressed, and the sampled
@@ -3094,33 +3104,39 @@ Sys30.img`, ~133 s of emulated Mac Plus time on
 
 ### 512 KB machines: the RAM is enough, the ROM is not
 
-**A Macintosh 512Ke — 512 KB, the Plus's 128K ROM — runs it: 64/69 under
+**A Macintosh 512Ke — 512 KB, the Plus's 128K ROM — runs it: 65/69 under
 System 3.0 with the Finder resident** (**2026-08-30**,
-`sys30.py --emu mv-512Ke`). The five that do not pass fail as the design says
-they must, per entry and not per archive: `derived-Library_ISBN_Barcoder.sit`
-writes 33 of its 34 entries with one entry errored,
-`derived-Troi-ClipSave-Plug-in1.1.sit` 11 of 13 with two, and
-`derived-a2basic.dmg.sit`, `synth-dd-m5.dd` and `popper-1.7.tar.Z` are
-single-entry archives whose one entry is refused. Peak heap reaches 163,861 B
-and no further — that is what 512 KB leaves after System 3.0 and the Finder.
+`sys30.py --emu mv-512Ke`; 64/69 before the LZW bound below recovered
+`popper-1.7.tar.Z` the same day). The four that do not pass fail as the design
+says they must, per entry and not per archive:
+`derived-Library_ISBN_Barcoder.sit` writes 33 of its 34 entries with one entry
+errored, `derived-Troi-ClipSave-Plug-in1.1.sit` 11 of 13 with two, and
+`derived-a2basic.dmg.sit` and `synth-dd-m5.dd` are single-entry archives whose
+one entry is refused. **The budget is 163,656 B** of a 218,208 B free heap,
+measured on the machine (`sys30.py --emu mv-512Ke -D UNC_AT_BUDGET`, slots
+swapped per `tools/vmac/README.md`); the shell holds the other 54,552 B.
 `synth-dd-m5.dd` is the clean illustration: DiskDoubler method 5 asks for one
 405,520 B block on every tier, and here it cannot have it.
+
+**Three of the four are StuffIt 5, and the other three StuffIt 5 fixtures in
+the sample pass** — at 141,400 B, 161,725 B and 162,567 B, hard against the
+budget. So the line is the archive's BLOCK SIZE, which its compressor chose,
+and not the format: `derived-Troi-ClipSave-Plug-in1.1.sit` needs 168,878 B
+against 163,656 B and misses by **5,222 bytes**, with `gRefusedWhy` = 1
+naming the budget rather than a fragmented heap.
 
 **What is refused is one entry's working set, and never the archive.**
 `derived-XferIt_1.5b4.sea` writes 948,175 B across 10 files on this machine at
 24,217 B of peak heap. The demand is a property of the codec and the stream's
-own parameters: `synth-dd-m5.dd` produces 1,145 B of output and asks for
-405,520 B in one block whatever the tier, and the two Unix compress fixtures —
-both `maxbits=16` — split on input size alone, `a2ps.V4.3.tar.Z` (30,255 B in)
-passing at 120,912 B and `popper-1.7.tar.Z` (59,323 B in) refused at 224,264 B,
-because the table is sized from the input (*Unix compress: the `.Z` peak*).
+own parameters rather than of any file's size: `synth-dd-m5.dd` produces
+1,145 B of output and asks for 405,520 B in one block whatever the tier.
 
 **And the boundary is not a number.** `derived-PuzzleGetter_0.8.sit` wants
-270,043 B on a 1 MB machine and PASSES here at 162,567 B; `popper-1.7.tar.Z`
-wants 224,264 B and is refused having reached 12,304 B. The first renegotiates
-its block downward and the second cannot, because there the table IS the
-allocation and a smaller one decodes a different stream (DECISIONS.md
-2026-08-03).
+270,043 B on a 1 MB machine and passes here at 162,567 B, because StuffIt 5's
+block renegotiates downward; `derived-a2basic.dmg.sit` wants 247,687 B and is
+refused having reached 37,372 B, because renegotiating has a floor and that
+archive's block is under it. What a codec CAN give back decides more than what
+it asks for.
 
 **The same machine under System 6.0.8 manages 58/69** — and that run has no
 Finder in memory at all, because System 6 honours the shell name and

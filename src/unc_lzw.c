@@ -29,21 +29,58 @@
  * capsymbols is sized from the INPUT, not from maxbits. compress(1)
  * writes maxbits=16 by default whatever it compressed, so a 488-byte .Z
  * declares a 65536-entry table it fills a few hundred entries of. Every
- * input code defines at most one new symbol and codes are at least 9
- * bits wide, so
+ * input code defines at most one new symbol, so the input bounds the
+ * table however large maxbits claims.
  *
- *     symbols <= 256 + reserved + insize * 8 / 9
+ * The bound walks the CODE-WIDTH SCHEDULE rather than assuming every
+ * code is the minimum 9 bits. A code is 9 bits only while numsymbols is
+ * under 512, 10 bits under 1024, and so on — the same rule the decode
+ * loop applies below — so a byte buys progressively fewer symbols the
+ * further in the stream it sits, and `insize * 8 / 9` overpays badly on
+ * inputs big enough to widen. On popper-1.7.tar.Z, 59,323 B in, it is
+ * 52,988 entries against 33,870: 211,952 B of table against 135,480 B,
+ * which is the difference between refusing that file on a 512 KB
+ * Macintosh and extracting it (FORMATS.md, *512 KB machines*).
  *
- * however large maxbits claims. The bound is strict: reaching entry
- * 256+reserved+k needs k+1 codes, so the table cannot fill even when
- * every code is the minimum width — which is what lets maxsymbols keep
- * its declared value and the decode stay bit-identical.
+ * Still strict, for three reasons that all cut the same way. Creating
+ * the symbol that takes numsymbols to k costs a code at the width in
+ * force at the time, which is what lzw_cap_from_input sums. The first
+ * code of a stream creates nothing. And in block mode a clear resets
+ * numsymbols AND the width to 9, so the bits are split between
+ * generations — the reachable maximum is per generation, and one
+ * generation holding every bit dominates any split, because the
+ * schedule is increasing in the bits it is given.
  *
  * Sized once, up front: growth by copy has an unavoidable old+new
  * transient, and where the table IS the allocation that transient
  * becomes the peak (measured: popper-1.7.tar.Z 274,432 -> 405,504 B
  * under doubling). lzw_grow below is a safety net for an under-estimate,
  * not a strategy; with a correct bound it never runs. */
+
+/* How many symbols `insize` bytes can define, walking the width schedule.
+ * Returns the count including the initial 256 + reserved. */
+static uint32_t lzw_cap_from_input(uint32_t insize, uint32_t start,
+                                   int maxbits)
+{
+    uint32_t bits, sym;
+    int width;
+
+    /* insize * 8 must not wrap. Anything this large bounds nothing
+     * anyway: 2^29 bytes buys every symbol at any maxbits <= 16. */
+    if (insize > 0x1FFFFFFFu) insize = 0x1FFFFFFFu;
+    bits = insize * 8u;
+    sym = start;
+    for (width = 9; width <= maxbits; width++) {
+        /* Creations still to come at this width, and what they cost.
+         * room <= 1 << 16 and width <= 16, so the product is small. */
+        uint32_t room = (1u << width) - sym;
+        uint32_t cost = room * (uint32_t)width;
+        if (cost > bits) return sym + bits / (uint32_t)width;
+        bits -= cost;
+        sym += room;
+    }
+    return sym;
+}
 
 /* Point the three arrays into a capsymbols-entry block. */
 static void lzw_layout(UncLzw *z, uint8_t *mem, uint32_t cap)
@@ -66,12 +103,12 @@ int unc_lzw_init(UncLzw *z, UncAlloc *al, UncBufIn *in,
 
     cap = maxsym;
     if (insize > 0) {
-        /* floor(insize * 8 / 9) without overflowing 32 bits. */
-        uint32_t codes = insize / 9 * 8 + insize % 9 * 8 / 9;
-        if (codes < maxsym) {
-            uint32_t want = 257 + (blockmode ? 1u : 0u) + codes;
-            if (want < cap) cap = want;
-        }
+        /* +1 keeps the slack the old bound carried: the sizing is an
+         * upper bound on symbols DEFINED, and lzw_grow is the net if it
+         * were ever short. */
+        uint32_t want = lzw_cap_from_input(
+            insize, 256u + (blockmode ? 1u : 0u), maxbits) + 1u;
+        if (want < cap) cap = want;
     }
 #ifdef UNC_LZW_TINY_TABLE
     /* Deliberately under-estimate so lzw_grow runs on every stream that

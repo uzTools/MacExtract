@@ -10,7 +10,7 @@ system the project claims:
 |---|---|
 | System 3.0 / Finder 5.1, 4 MB Mac Plus (Mini vMac, a true 68000) | **69/69** sampled fixtures, with the FINDER resident — System 3.0 ignores the boot blocks' shell name, so the application cannot replace it and is double-clicked instead |
 | System 3.0 / Finder 5.1, **1 MB** — the oldest system, at the same RAM floor | **69/69**; the application driven end to end there too, where Cmd-. does not cancel Standard File and the Cancel button does (FORMATS.md, *System 3.0 tier*) |
-| System 3.0, **512 KB** Macintosh 512Ke | **64/69**; the five shortfalls are per-entry memory refusals, not failures — 163 KB is all a 512 KB machine leaves. The same machine under System 6.0.8, with no Finder at all, does 58/69, and 3.0's failures are a strict subset of 6's (FORMATS.md, *512 KB machines*) |
+| System 3.0, **512 KB** Macintosh 512Ke | **65/69**; the four shortfalls are per-entry memory refusals, not failures — the budget there is 163,656 B, measured. The same machine under System 6.0.8, with no Finder at all, does 58/69, and 3.0's failures are a strict subset of 6's (FORMATS.md, *512 KB machines*) |
 | System 6.0.8, 4 MB Mac Plus (Mini vMac, a true 68000) | **69/69** sampled fixtures |
 | System 6.0.8, **1 MB** — the RAM floor | **69/69**; no memory-budget refusals remain, and DiskDoubler method 5's 396 KB allocation succeeds here |
 | System 7.0.1, 4 MB | **69/69** |

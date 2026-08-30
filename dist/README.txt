@@ -1,4 +1,4 @@
-MacExtract v0.27.0 — bootstrap distribution
+MacExtract v0.28.0 — bootstrap distribution
 ==========================================
 
 A bare Classic Mac has no way to open a .sit/.cpt/.hqx until it HAS an
@@ -16,13 +16,17 @@ unarchiver, so MacExtract ships in two forms that need no unarchiver:
                   startup disk.
 
 Floor target: System 3.0 on a 1 MB Mac Plus (68000) -- the system the Plus
-shipped with in January 1986. It also runs in 512 KB, on a Macintosh 512Ke,
-where the largest archives are refused entry by entry and the rest still
-comes out. The same binary runs unchanged through Mac OS 9
-and adapts its memory use to the machine at runtime, so there is one download
-for every Mac. One difference on System 3.0: that system's Open dialog ignores
-Command-period, so close it with the Cancel button. Command-period stops an
-extraction everywhere.
+shipped with in January 1986. It also runs in 512 KB, on a Macintosh 512Ke.
+The same binary runs unchanged through Mac OS 9 and adapts its memory use to
+the machine at runtime, so there is one download for every Mac.
+
+Two things to know about the smallest machines. On System 3.0 the Open dialog
+ignores Command-period, so close it with the Cancel button; Command-period
+still stops an extraction everywhere. And in 512 KB, a StuffIt 5 archive
+written with large blocks will not fit -- a block has to be in memory whole,
+and its size was fixed when the archive was made. Those entries are skipped
+with a message and the rest of the archive still comes out. Every other format
+fits in 512 KB, and with 1 MB the question does not arise.
 
 What it opens: StuffIt (.sit, classic and 5.x), Compact Pro (.cpt), BinHex
 (.hqx), MacBinary, PackIt (.pit), DiskDoubler (.dd, DDAR, DDA2), Now Compress,
@@ -75,13 +79,10 @@ That second dialog opens in the archive's own folder, so pressing Return
 puts them next to it; click Drive to send them to another disk instead.
 
 When a run ends, anything that had to change on the way is listed: a name too
-long for HFS -- it stops at 31 characters, and it is the middle of the name
-that goes, never the .txt on the end -- two folders that ended up sharing a
+long for HFS (31 characters max), two folders that ended up sharing a
 shortened name, an entry that could not be extracted and what was wrong with
-it. Both names are given in full, so you can tell which file is which. The result of the run
-is under that list rather than in place of it, and Save as Text files the
-whole thing as a document, because a Mac Plus screen has no scrollback. A run
-with nothing to report just says so, as before.
+it. Save as Text files the whole thing as a document. A run with nothing to
+report just says so, as before.
 
 If a Compact Pro or zip archive carries a note -- the comment whoever
 made it typed in -- it is written into that folder as a text file called

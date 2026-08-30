@@ -49,7 +49,7 @@ one, because parts are recognised by what is inside them:
 ## Download
 
 **[Latest release](https://github.com/jarreboum/MacExtract/releases/latest)** —
-currently **v0.27.0**. Or take it straight from the tree:
+currently **v0.28.0**. Or take it straight from the tree:
 
 | | |
 |---|---|
@@ -143,9 +143,18 @@ them comparable at all. The full capability table and the unrounded figures are 
 | | |
 |---|---|
 | Minimum | System 3.0, 68000, **512 KB of RAM** — a Macintosh 512Ke, or a Plus with the system it shipped with in January 1986 |
-| For everything | **1 MB** — at 512 KB the biggest archives are refused entry by entry, and the rest of the archive still comes out |
+| For everything | **1 MB** — see the StuffIt 5 note below |
 | Also runs on | System 6, System 7, Mac OS 8 and 9, PowerPC via the built-in 68k emulator |
 | Disk | one 800K floppy |
+
+**StuffIt 5 on a 512 KB machine.** A `.sit` written by StuffIt 5 is
+compressed in blocks, and the whole block has to be in memory to unpack it.
+Small ones are fine — half the StuffIt 5 archives tested fit in 512 KB — but a
+big block will not, and there is nothing the application can do about it: the
+size was chosen when the archive was made, on a machine with memory to spare.
+Those entries are skipped with a message and the rest of the archive still
+comes out. Every other format tested fits in 512 KB. With 1 MB the question
+does not arise.
 
 On System 3.0 the Open dialog does not close on Command-period — that system's
 Standard File ignores it. Click Cancel instead. System 6 and later are

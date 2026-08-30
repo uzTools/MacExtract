@@ -173,6 +173,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-30 (the flag that was never measured on these files) — 70.4 s to 52.6 s, and a kilobyte
 - 2026-08-30 (the shell name System 3.0 does not read) — the oldest system a Mac Plus boots, and a NOGRID that meant nothing
 - 2026-08-30 (512 KB, and the machine that cannot be reached) — the RAM was never the boundary
+- 2026-08-30 (a byte buys fewer symbols the further in it sits) — a third off the LZW table, and a fixture back
 
 ---
 
@@ -9962,11 +9963,14 @@ the volume — and the reason that ROM cannot read it is HFS, which arrived with
 its successor.
 
 **Which codecs survive 512 KB is decided by adaptivity, not by appetite.**
-`derived-PuzzleGetter_0.8.sit` asks for 270,043 B and fits; `popper-1.7.tar.Z`
-asks for 224,264 B and does not, having allocated 12,304 B when it gave up.
-That is 2026-08-03's finding arriving on a smaller machine: growth-on-demand
-rescued the Arsenic block and did nothing for the LZW table, and 512 KB is
-where the difference stops being academic.
+`derived-PuzzleGetter_0.8.sit` asks for 270,043 B and fits, renegotiating its
+block down; `derived-a2basic.dmg.sit` asks for 247,687 B and does not, having
+reached 37,372 B when it gave up. That is 2026-08-03's finding arriving on a
+smaller machine: growth-on-demand rescued the Arsenic block and did nothing
+for the LZW table, and 512 KB is where the difference stops being academic.
+*(This entry first made the point with `popper-1.7.tar.Z`, which was refused
+at 224,264 B. It is no longer refused — the entry below tightened the bound
+that sized that table, and the corrected figures are in FORMATS.md.)*
 
 **What is NOT claimed.** That the Sad Mac's cause has been reduced to a
 minimal reproduction: it has not, and the trap-level explanation is labelled a
@@ -9974,3 +9978,39 @@ hypothesis in FORMATS.md. It does not change the outcome, because
 `TrapAvailable` calls `NGetTrapAddress` and every file operation here goes
 through an HFS parameter block, and neither exists in a 64K ROM. A machine
 that could boot would still not run this.
+
+## 2026-08-30 (a byte buys fewer symbols the further in it sits) — a third off the LZW table, and a fixture back
+
+**Claim: the Unix compress table was a third larger than the input can
+justify, and `popper-1.7.tar.Z` extracts on a 512 KB Macintosh now.** 225,170 B
+of budget before, 148,408 B after, measured by binary search on Linux; on the
+machine itself 224,232 B became 147,796 B and a refusal became a byte-exact
+extraction, taking that tier from 64/69 to 65/69 (FORMATS.md, *Unix compress:
+the `.Z` peak*, *512 KB machines*).
+
+**The old bound assumed every code is the minimum width.** `compress(1)`
+declares `maxbits=16` whatever it compressed, so the table was sized from the
+input instead — `256 + reserved + insize * 8 / 9`, one symbol per 9 bits. But
+codes are 9 bits only while the table is under 512 entries, 10 under 1024, and
+so on: a byte late in a big stream buys a sixteenth of a symbol, not a ninth.
+Walking that schedule is the same bound done exactly, and on 59,323 B of input
+it is 33,870 entries rather than 52,988.
+
+**It is still strict, for three reasons that all cut the same way.** Creating
+the symbol that takes the table to k costs one code at the width in force,
+which is what the walk sums; the first code of a stream creates nothing; and a
+block-mode clear resets both the table and the width, so the bits are split
+between generations and one generation holding every bit dominates any split
+— the schedule is increasing in the bits it is given.
+
+**What made it cheap to attempt.** The table already had `lzw_grow` behind it
+as a net for an under-estimate, and `ci.sh` already builds a
+`UNC_LZW_TINY_TABLE` variant that under-sizes the table deliberately so that
+net runs on every stream. A bound that got this wrong would produce slow
+output, not wrong output, and the 932-fixture suite adjudicates it either way.
+
+**What is NOT claimed.** That this helps the archives that actually matter on
+a small machine. The three fixtures still refused at 512 KB are StuffIt 5, and
+their limit is a BWT block whose size their compressor chose; this touched
+none of them. Small `.Z` streams that never widen past 9 bits are unchanged,
+because they were already bounded exactly.

@@ -158,6 +158,9 @@ def main():
     ap.add_argument("-o", "--outdir", default="sys30-shots",
                     help="where each run's final screenshot is kept")
     ap.add_argument("--json", help="write per-fixture results here")
+    ap.add_argument("-D", dest="defines", action="append", default=[],
+                    help="extra UNC_* build switch (repeatable), e.g. "
+                         "-D UNC_AT_BUDGET — same meaning as run.py's")
     a = ap.parse_args()
 
     fixdir = os.path.join(R.REPO, "fixtures")
@@ -173,7 +176,7 @@ def main():
     os.makedirs(a.outdir, exist_ok=True)
     work = tempfile.mkdtemp(prefix="sys30-boot-")
     bootimg = os.path.join(work, "boot30.hfv")
-    build_boot(R.build_autotest_app(), bootimg)
+    build_boot(R.build_autotest_app(tuple(a.defines)), bootimg)
     emu_dir = a.emu or f"mv-{a.mem}"
     # The machine is the EMULATOR BUILD, not --mem: --emu overrides it, and a
     # summary that reports --mem's default while a different machine ran is
