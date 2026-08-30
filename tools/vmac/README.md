@@ -32,8 +32,9 @@ does NOT work.** That system ignores the boot blocks' shell name, so
 `mkboot.py`'s usual shell replacement launches nothing and every fixture comes
 back NOGRID — which reads exactly like an application that will not start
 (DECISIONS.md 2026-08-30, *the shell name System 3.0 does not read*).
-`sys30.py` boots to the Finder and double-clicks the application instead, so
-the Finder is resident in everything that tier measures. `interactive.py
+`sys30.py` boots to the Finder and double-clicks the application instead.
+That changes how a run starts and not what it has — launching unloads the
+Finder, 12 bytes' worth (FORMATS.md, *512 KB machines*). `interactive.py
 --system Sys30.img --e2e` covers the user interface there; both its Standard
 File row and its Finder icon positions are per-system tables, because System
 3.0 leaves a different number of items in the volume window and lists the

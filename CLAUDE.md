@@ -21,9 +21,9 @@ each at 4 MB and at the 1 MB RAM floor** (69/69 sampled fixtures every time),
 on System 7.0.1, and on Mac OS 9.2 under QEMU including HFS+ — **20/20 there
 since 2026-08-27**, when that tier was re-run for the first time since M12 and
 grew to cover the eight formats it predated. The System 3.0 tier arrived
-2026-08-30 and needed no source change; it is the only one whose figures were
-taken with the FINDER resident, because that system ignores the boot blocks'
-shell name (FORMATS.md, *System 3.0 tier*). The interactive UI is driven end to
+2026-08-30 and needed no source change; that system ignores the boot blocks'
+shell name, so it is the only one launched by double-click (FORMATS.md,
+*System 3.0 tier*). The interactive UI is driven end to
 end on System 3.0 and on System 6; above those the UI is deliberate scope, not
 an open item.
 

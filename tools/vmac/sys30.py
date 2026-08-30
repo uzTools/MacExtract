@@ -16,15 +16,16 @@ blessed folder, and one with it at the volume root all boot to the Finder with
 a byte-identical framebuffer (measured 2026-08-30; DECISIONS.md, *the shell
 name System 3.0 does not read*). So the application is launched the way a
 person launches it — boot to the Finder, double-click the volume,
-double-click the application — and the Finder stays resident while it runs.
+double-click the application.
 
-Two consequences worth knowing before reading a number off this:
+Two things worth knowing before reading a number off this:
 
-- **The Finder is in memory here and is not in `run.py`'s runs.** At 1 MB
-  that is the interesting difference and not a flaw: it is what a user's
-  machine looks like. It does mean the heap left to the engine is smaller
-  than the same tier under `run.py`, so peak-heap figures are comparable
-  ACROSS this harness's own runs and not against run.py's.
+- **The Finder is NOT in memory while the engine works**, here or anywhere
+  else. Single-tasking Mac OS unloads it when an application launches: on
+  System 6.0.8 a boot-shell launch and a double-click launch differ by 12
+  bytes of free heap (FORMATS.md, *512 KB machines*). Peak-heap figures are
+  therefore comparable against `run.py`'s. What differs between systems is
+  the SYSTEM heap.
 - **The clicks are fixed coordinates**, measured off the volume window this
   harness's own boot image opens. They are stable because that image is
   rebuilt identically every run; they are wrong the moment the volume's

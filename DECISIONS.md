@@ -9919,9 +9919,10 @@ about nothing else.
 
 **Consequence: it is launched the way a person launches it** — boot to the
 Finder, double-click the volume, double-click the application
-(`tools/vmac/sys30.py`). The Finder therefore stays resident while the engine
-works, which no other tier measures, and the numbers came out equal to the
-tiers that have the machine to themselves.
+(`tools/vmac/sys30.py`). *(This entry first said the Finder therefore stays
+resident while the engine works. It does not: launching an application unloads
+it. The claim and what it cost are in BLOCKERS.md, `the Finder that was never
+there`.)*
 
 **And a second chord that "did nothing".** Cmd-. does not cancel Standard File
 on System 3.0: the frame after it is the Open dialog unchanged. This file
@@ -9942,16 +9943,16 @@ application uses — so that is a different question and not a smaller one.
 ## 2026-08-30 (512 KB, and the machine that cannot be reached) — the RAM was never the boundary
 
 **Claim: 512 KB of RAM is enough, and a 64 KB ROM is not.** A Macintosh 512Ke
-runs the application under System 3.0 with the Finder resident, 64/69 of the
-sample byte-exact, the other five refused per entry (FORMATS.md, *512 KB
-machines*). A true Macintosh 512K never reaches the application at all.
+runs the application under System 3.0, 65/69 of the sample byte-exact, the rest
+refused per entry (FORMATS.md, *512 KB machines*). A true Macintosh 512K never
+reaches the application at all.
 
 **The interesting number is which SYSTEM.** On the same 512 KB machine System
-3.0 keeps the Finder in memory and still passes 64; System 6.0.8, having given
-up its Finder to the boot-shell trick, passes 58, and its failures are a strict
-superset. On one fixture that is 163,332 B of heap against 89,613 B. The
-lesson is not "old is small" but that **the floor was set by the system, not by
-the machine**, and nobody had varied the system.
+3.0 passes 65 and System 6.0.8 passes 58, its failures a strict superset. The
+mechanism is the SYSTEM HEAP: free heap when extraction starts is 218,208 B
+against 122,808 B, a 95,400 B gap, against System files of 181,913 B and
+1,221,287 B. The lesson is not "old is small" but that **the floor was set by
+the system, not by the machine**, and nobody had varied the system.
 
 **The negative was attributed before it was reported**, which is the part worth
 keeping. The 512K boots to a Sad Mac `0F0064` on our System 3.0 floppy. Three

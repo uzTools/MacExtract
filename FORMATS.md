@@ -3072,12 +3072,14 @@ January 1986: System Tools 1.0, an 800K HFS floppy. **69/69 byte-exact PASS at
 same on-Mac CRC-32 read-back as every row above, replayed by
 `tools/vmac/sys30.py`.
 
-**The Finder is resident in every figure here, and in no other tier.** System
-3.0 ignores the boot blocks' shell name, so the application cannot replace the
+**The application is launched the way a user launches it, by double-click.**
+System 3.0 ignores the boot blocks' shell name, so it cannot replace the
 Finder the way `mkboot.py` replaces it everywhere else (DECISIONS.md
-2026-08-30, *the shell name System 3.0 does not read*); it is launched by
-double-click and the Finder stays in memory while it works. That makes this
-the only tier measured on a machine arranged the way a user's machine is.
+2026-08-30, *the shell name System 3.0 does not read*). That changes how the
+run STARTS and not what it has: single-tasking Mac OS unloads the Finder when
+an application launches, measured at **12 bytes** of difference on System
+6.0.8 between a boot-shell launch and a double-click one (*512 KB machines*).
+No tier here has a Finder in memory while the engine works.
 
 The four heaviest allocations, as the Mac itself reports them:
 
@@ -3091,8 +3093,9 @@ The four heaviest allocations, as the Mac itself reports them:
 The largest output on the tier is `derived-XferIt_1.5b4.sea`, 948,175 B across
 10 files, at 24,217 B of peak heap. `derived-Troi-ClipSave-Plug-in1.1.sit`
 takes **472,137 B at 1 MB here, the same figure to the byte as the System
-6.0.8 floor target** (*Floor target verification*) — measured, and not
-explained: this machine has a Finder in memory and that one does not.
+6.0.8 floor target** (*Floor target verification*) — which is what the budget
+being derived from `FreeMem` predicts once the two systems leave the engine
+the same room.
 
 **The application, not just the engine**, on the same system: launched from
 the Finder, Standard File listing the archive, the Drive button, the
@@ -3105,7 +3108,7 @@ Sys30.img`, ~133 s of emulated Mac Plus time on
 ### 512 KB machines: the RAM is enough, the ROM is not
 
 **A Macintosh 512Ke — 512 KB, the Plus's 128K ROM — runs it: 65/69 under
-System 3.0 with the Finder resident** (**2026-08-30**,
+System 3.0** (**2026-08-30**,
 `sys30.py --emu mv-512Ke`; 64/69 before the LZW bound below recovered
 `popper-1.7.tar.Z` the same day). The four that do not pass fail as the design
 says they must, per entry and not per archive:
@@ -3138,10 +3141,22 @@ refused having reached 37,372 B, because renegotiating has a floor and that
 archive's block is under it. What a codec CAN give back decides more than what
 it asks for.
 
-**The same machine under System 6.0.8 manages 58/69** — and that run has no
-Finder in memory at all, because System 6 honours the shell name and
-`run.py --emu mv-512Ke --system System6.hfv` replaces the Finder with the
-application. **System 3.0's failures are a strict subset of System 6's.** The
+**The same machine under System 6.0.8 manages 58/69**
+(`run.py --emu mv-512Ke --system System6.hfv`), and **System 3.0's failures
+are a strict subset of System 6's.** The difference is the SYSTEM HEAP and
+nothing else: free heap when extraction starts is **218,208 B** under System
+3.0 against **122,808 B** under System 6.0.8, a gap of 95,400 B, against
+System files of 181,913 B and 1,221,287 B. The Finder is not part of it —
+launching an application unloads it, measured at **12 bytes** between a System
+6.0.8 boot-shell launch (122,808 B free) and a double-click launch from a
+booted Finder (122,796 B).
+
+The reserve explains the rest: `budget = FreeMem() - FreeMem()/4`, clamped to
+32–80 KB. At 218,208 B the quarter is 54,552 B and uncapped, so System 3.0's
+budget is 163,656 B; at 122,808 B the quarter falls under the 32 KB floor and
+System 6.0.8's is 90,040 B. **On this machine a kilobyte of application costs
+the engine three quarters of a kilobyte** — on a 1 MB machine the reserve caps
+out and the exchange is 1:1. The
 six extra are `a2ps.V4.3.tar.Z`, `derived-PuzzleGetter_0.8.sit` and four
 self-extracting archives (`derived-DD_Expand.sea`,
 `derived-Expand_Now_1.0.1.sea`, `derived-LHA_Expander_1.0.3.sea`,
