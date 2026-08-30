@@ -174,6 +174,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-30 (the shell name System 3.0 does not read) — the oldest system a Mac Plus boots, and a NOGRID that meant nothing
 - 2026-08-30 (512 KB, and the machine that cannot be reached) — the RAM was never the boundary
 - 2026-08-30 (a byte buys fewer symbols the further in it sits) — a third off the LZW table, and a fixture back
+- 2026-08-30 (the Desktop file the password phase needed) — a harness reported a working feature as broken, and a bisect agreed with it
 
 ---
 
@@ -10015,3 +10016,44 @@ a small machine. The three fixtures still refused at 512 KB are StuffIt 5, and
 their limit is a BWT block whose size their compressor chose; this touched
 none of them. Small `.Z` streams that never widen past 9 bits are unchanged,
 because they were already bounded exactly.
+
+## 2026-08-30 (the Desktop file the password phase needed) — a harness reported a working feature as broken, and a bisect agreed with it
+
+**Claim: encrypted StuffIt archives extract on the Macintosh, and always did.
+What broke on 2026-08-24 was the harness that checks them.**
+`interactive.py --password` began failing when `mkboot.py` started deleting the
+boot volume's invisible `Desktop` file — one line, added so the Finder would
+stop drawing a stale icon (`d3907fc`). Under the boot-shell arrangement, where
+no Finder runs at all, deleting its cache stops the encrypted archive's
+resource-only entry reaching the volume. Fixed by dropping the file only when
+a Finder is going to run.
+
+***The mechanism is not understood, and that is written into `mkboot.py`.***
+No Finder is running; why its cache should matter is exactly the question. The
+fix is justified by the bisect, not by a causal story, and the next person is
+told so rather than handed an invented explanation.
+
+**What the isolation cost, and why it was worth it.** Bisect alone named a
+commit; it did not say whether the application or the harness had broken.
+Holding the application constant at the bad commit and reverting `mkboot.py`
+alone answered that in one run — and the answer inverted the finding, from "an
+advertised capability is broken" to "the test is". **Always ask which side of
+the instrument moved.**
+
+**And the bisect before it was worthless, for a reason worth carrying.**
+`git bisect start <bad> <good>` takes the GOOD end **on trust**. Mine came
+from a DECISIONS entry recording that the password path worked — on the
+**Mac OS 9** tier, while I was testing **System 6**. Evidence about a
+different machine, used as a starting axiom. The bisect then converged, over
+five emulator runs, on a commit that touches only documentation and one new
+harness file: an answer that was confidently wrong and looked authoritative.
+The re-run, with both ends measured rather than assumed, found the real commit
+108 revisions earlier. **A bisect is only as good as its good end, and the
+good end is the one thing bisect will never check for you.**
+
+**What let it hide for six releases.** No emulator phase runs in `ci.sh` —
+none can, they need an X server and minutes per fixture — and `run.py`'s
+69-fixture sample contains no encrypted archive, because nothing in the corpus
+is encrypted (FORMATS.md, *Encryption*). So the only check on this path is a
+phase somebody has to run by hand, and between 2026-08-24 and 2026-08-30
+nobody did.

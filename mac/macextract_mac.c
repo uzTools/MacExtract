@@ -86,7 +86,7 @@
  * over three times what was measured, and the 32 KB floor below still applies
  * on small machines. The 32 KB released goes straight to the engine at 1:1 on
  * a 1 MB Mac (FORMATS.md, *What the application costs the engine*). */
-#define kMemReserveMax  (48L * 1024)
+#define kMemReserveMax  (32L * 1024)
 #define kMemReserveMin  (32L * 1024)
 
 #ifndef ioDirMask
