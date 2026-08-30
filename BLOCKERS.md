@@ -17,12 +17,27 @@ fork plus its `.rsrc`) and `Secret Memo`, exit 0. So the DES path, the key
 schedule and the archive itself are all sound, and what differs is the
 Macintosh.
 
-***Hypothesis, not a finding:*** the suspect is the Mac-side read of the
-archive's own RESOURCE FORK, where StuffIt keeps half the key as `MKey`. The
-CLI gets that fork from a companion `NAME.rsrc` file; the Macintosh must open
-the real fork on the volume. Those are different code paths and only one of
-them fails. **This has not been reduced to a minimal reproduction and must not
-be reported as the cause until it has.**
+**The harness is not at fault either: the resource fork IS on the volume.**
+`phase_password` transfers the archive with `mkboot.py --macbin`, and building
+that volume offline and listing it shows `SIT!/SIT!  318  1622  Secret.sit` —
+`hdir` prints the RESOURCE fork first, so that is rsrc 318 / data 1622, which
+is exactly what `synth_crypt.build_sit_des` produced. (Column order confirmed
+against the System file and the application, both resource-heavy with tiny
+data forks. It reads the wrong way round at a glance and nearly cost an hour.)
+
+***Hypothesis, not a finding:*** what is left is the Macintosh's own path —
+`LoadMKey` in `mac/macextract_mac.c`, which opens the archive's resource fork
+with `MyOpenFork(..., rsrc=1)`, reads it whole, and calls `unc_resfork_find`
+for `MKey` 0. It returns 0 — no key, so no decryption — on any of: the fork
+not opening, `GetEOF` giving 0 or more than its 32 KB cap, `NewPtr` failing,
+a short `FSRead`, `unc_resfork_find` not finding `MKey`, or a length that is
+not 8. **Nothing distinguishes those yet**, and this must not be reported as
+the cause until one of them is shown.
+
+**Note for whoever picks this up:** `LoadMKey` is compiled only into the
+INTERACTIVE build (it sits above `#endif /* !UNC_MAC_AUTOTEST */`), so
+`run.py`'s autotest harness cannot exercise it at all. That is a second reason
+nothing caught this.
 
 It reproduces on clean `main` with no probe build, and is not caused by the
 `selective-loading` branch where it was first seen — identical output on
@@ -33,9 +48,25 @@ both.
 is `run.py`'s, which has no encrypted fixture with a resource-fork key.
 Encryption is advertised in `README.md` and `dist/README.txt`.
 
-**What would close it:** a Macintosh probe that opens the archive's resource
-fork and reports whether `MKey` is found and what it holds — which is the one
-step the Linux run cannot stand in for.
+**What would close it — the next step, concretely.** A probe build
+(`UNC_AT_MKEY`, alongside the other `UNC_AT_*` switches in
+`mac/CMakeLists.txt`) that calls `LoadMKey` on the archive and reports, in an
+alert or the grid, *which* of its six exits was taken and the eight bytes if
+it found them. That separates "the fork would not open" from "`MKey` was not
+in it" from "the key was found and decryption still failed" — three different
+bugs sharing one symptom.
+
+**How to reproduce, exactly:**
+
+    # fails on the Mac (both branches, no probe needed)
+    tools/vmac/interactive.py --password --emu mv-1M -o /tmp/pw fixtures/adobenumbers.sit
+    #   -> "This file could not be extracted." and
+    #      "interactive: 'Rsrc only' is not on the volume"
+    #   (the fixture argument is IGNORED: the phase builds its own archive)
+
+    # the same archive succeeds on Linux
+    python3 tools/synth_crypt.py --kind sit-des --password hushnow -o /tmp/enc.sit
+    build/rel/macextract x -p hushnow -o /tmp/encout /tmp/enc.sit   # exit 0, 3 files
 
 **Everything else stands.** The engine and Linux CLI were never affected by anything
 in this file. The Retro68 Mac shell runs and extracts byte-exact on every
