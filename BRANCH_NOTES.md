@@ -1,9 +1,39 @@
 # Branch `selective-loading` — load only the decoder the archive needs
 
-**Status: priced and designed, NOT built.** This branch contains no working
-implementation. It contains the measurement that says whether the architecture
-is worth building, and the map of what stands in the way — both of which were
-missing when the idea was first proposed and dismissed.
+**Status: the loading mechanism is BUILT and PROVEN ON THE MACHINE. The
+decoders are not ported yet.** The hard part — getting code that is not
+resident to run on a 68000 and call back into the application — works. What
+remains is a registration refactor and porting decoders in behind it.
+
+## The mechanism, proven 2026-08-30
+
+`tools/overlay/` builds a flat, position-independent image, carried as an
+`OVLY` resource and loaded only when wanted. Run on an emulated Mac Plus with
+`-D UNC_AT_OVERLAY`, the grid came back:
+
+| slot | value | meaning |
+|---|---|---|
+| `nfiles` | **20299** = `0x4F4B` | the blob read its own PC-relative table |
+| `errors` | **66** | `GetHandleSize`, matching the built blob exactly |
+| `ret` | **2541233361** | a callback through the host vector table, byte-identical to what `unc_crc32` returns for the same bytes on Linux |
+
+So all five links hold: a `-mpcrel` image with **zero** relocations; stored as
+a resource; `GetResource`d on demand; jumped to at the start of a **locked**
+handle; reading its own data; and calling back into the application through a
+vector table.
+
+**Why -mpcrel is the whole trick.** It turns internal references into
+PC-relative ones the *linker* resolves, so nothing is left to patch at run
+time — no relocation format, no loader beyond `GetResource` + `HLock`. The
+price is the ±32 KB that PC-relative addressing reaches, which bounds an
+overlay and is checked by `mkoverlay.sh`.
+
+**What the build refuses**, because each would fail silently on the Mac
+otherwise: any surviving relocation, any `.data` or `.bss` (an overlay has no
+A5 world of its own), and any image over 32 KB.
+
+**The shipping application carries no overlay.** `OVERLAY_R` is empty unless
+`UNC_AT_OVERLAY` is set, and the code ceiling is unmoved at 147,268 B.
 
 ## Why the idea came back
 
@@ -92,7 +122,21 @@ zlib + inflate (~10,263 B, only zip and gzip) are genuinely independent and
 would prove the mechanism on ~25 KB before anything harder is attempted. If
 the loader works, the format decoders follow behind a registration refactor.
 
-## What would have to be true before building it
+## What is left
+
+- **`unc_crypt` as the first real overlay.** It has only five external
+  references — `__divsi3`, `__modsi3`, `__mulsi3`, `__umodsi3` and
+  `unc_crc32`. The libgcc four link into the blob (`mkoverlay.sh` already
+  passes `-print-libgcc-file-name`); `unc_crc32` goes through the host
+  vector. 14,674 B of code, and nothing else in the engine calls into it.
+- **zlib + inflate second**, ~10,263 B, whose externals are `inflate`,
+  `inflateEnd`, `inflateInit2_`, `unc_bufin_next_slow` and `unc_crc32` —
+  the first three live inside the same overlay, so the vector needs two
+  entries.
+- **Then the registration refactor**, which is what the three dispatch tables
+  make necessary before format decoders can follow.
+
+## What would have to be true before going further
 
 - A registration mechanism replacing the three tables, so a format is one
   translation unit that registers itself and can simply be absent.

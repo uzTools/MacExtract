@@ -13,6 +13,16 @@ set(ENGINE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/..)
 file(GLOB ENGINE_SRC ${ENGINE_DIR}/src/*.c)
 file(GLOB ZLIB_SRC ${ENGINE_DIR}/third_party/zlib/*.c)
 
+# UNC_AT_OVERLAY — the selective-loading experiment (branch
+# selective-loading). A flat position-independent blob carried as an 'OVLY'
+# resource and loaded only when needed, so its CODE is not resident. Empty in
+# a normal build: the shipping application carries no overlay yet.
+# BRANCH_NOTES.md has the measurement and the design.
+set(OVERLAY_R "")
+if(DEFINED ENV{UNC_AT_OVERLAY})
+    set(OVERLAY_R ${CMAKE_CURRENT_BINARY_DIR}/ovl_probe.r)
+endif()
+
 # CREATOR is not decoration: the Finder binds an icon family to an
 # application by matching the 'BNDL' owner to the application's creator
 # code, and Retro68 defaults that to '????'. Without this the icons are in
@@ -27,9 +37,21 @@ add_application(MacExtract
     # Icon family + 'FREF'/'BNDL', generated. A SEPARATE file from
     # macextract.r, which holds the dialogs, the alerts and 'SIZE'.
     macextract_icons.r
+    ${OVERLAY_R}
 )
 
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/ovl_probe.r
+    COMMAND sh ${ENGINE_DIR}/tools/overlay/mkoverlay.sh
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_probe.r
+            ${ENGINE_DIR}/tools/overlay/ovl_probe.c
+    DEPENDS ${ENGINE_DIR}/tools/overlay/ovl_probe.c
+            ${ENGINE_DIR}/tools/overlay/overlay.h
+            ${ENGINE_DIR}/tools/overlay/overlay.ld
+            ${ENGINE_DIR}/tools/overlay/mkoverlay.sh)
+
 target_include_directories(MacExtract PRIVATE
+    ${ENGINE_DIR}/tools/overlay
     ${ENGINE_DIR}/include
     ${ENGINE_DIR}/src
     ${ENGINE_DIR}/third_party/zlib
@@ -122,6 +144,7 @@ target_compile_options(MacExtract PRIVATE -mcpu=68000 -Os -Wno-multichar
                        # price kMemReserveMax against what the shell actually
                        # uses. A probe, never shipped.
                        $<$<BOOL:$ENV{UNC_AT_RESERVE}>:-DUNC_AT_RESERVE>
+                       $<$<BOOL:$ENV{UNC_AT_OVERLAY}>:-DUNC_AT_OVERLAY>
                        $<$<BOOL:$ENV{UNC_AT_META}>:-DUNC_AT_META>
                        # UNC_AT_SEPARATE_BLOCKS: force the two-separate-NewPtr
                        # staging path (re-tests the old "3 blocks bomb" claim).
