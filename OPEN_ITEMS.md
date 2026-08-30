@@ -55,6 +55,26 @@ the Macintosh application's alert reads *"MacExtract cannot open RAR files."*
 (photographed on System 6.0.8). Extraction returns cleanly unsupported either
 way.
 
+## Joining a segmented set costs far more memory than the same archive whole
+
+**MEASURED 2026-08-30, and not yet explained.** On a 1 MB Mac Plus,
+`derived-Troi-ClipSave-Plug-in1.1.sit` extracts whole at a 472,137 B peak but
+is refused when joined from three parts, asking for 64 KB beyond a 615,348 B
+budget; `derived-Library_ISBN_Barcoder.sit` is 559,805 B whole and asks for
+over a megabyte more when joined. Three attempts, three refusals.
+
+**Why it matters to somebody rather than to a tuning parameter:** a person
+with a three-floppy set on the machine this project is designed around may be
+unable to join what they could have extracted in one piece — and floppy sets
+are exactly why segmented archives exist. `run.py` never sees it because the
+autotest build finds every part by folder scan and the tier fixtures are not
+cut.
+
+**What would close it:** find where the join path allocates beyond the
+single-archive path — whether parts are buffered whole rather than streamed —
+and stream it if they are. `tools/vmac/interactive.py --segments` reproduces
+it in one run.
+
 ## Limits of the formats themselves
 
 - **A raw brotli stream cannot be identified, by this or any program.** RFC

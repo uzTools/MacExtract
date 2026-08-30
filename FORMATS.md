@@ -2211,6 +2211,33 @@ That is why the CODE resource is not segmented (BLOCKERS.md, *Withdrawn
 claims*), and why moving `ss_dict.h` or the StuffIt tables out of the A5 world
 would buy nothing at launch: they are data, so they carry no relocations.
 
+### What the reserve is NOT proven against
+
+**Every reserve figure here measures VOLUME. The reserve's real job is
+CONTIGUITY** — `GetNewDialog` needs one block, not *n* free bytes — and the
+case that would test it is unreachable with the fixtures this project has.
+
+Mid-run dialogs only happen on two paths: the password prompt, whose archive
+is 1,622 B and leaves the heap nearly empty, and the "locate part N" prompt,
+which needs a segmented set. **Joining a set costs far more than extracting
+the same archive whole** — `derived-Troi-ClipSave-Plug-in1.1.sit` is 472,137 B
+straight and over 680,000 B joined; `derived-Library_ISBN_Barcoder.sit` is
+559,805 B straight and over 1.6 MB joined — so a big enough archive is REFUSED
+before the heap fills, and the engine never takes what it is allowed. Three
+attempts, three refusals (2026-08-30).
+
+**What was established instead:** dialogs opened and were driven with **73,376
+B** and **161,078 B** of free heap, on genuinely loaded heaps rather than the
+near-empty ones the appetite figures come from. Both are far clear of 32 KB.
+And the 512 KB machine has run on a 32 KB reserve since it existed, including
+the password path. **Well supported; not proven at the limit.**
+
+**A trap in the instrument, which is why it took three tries.**
+`-D UNC_AT_RESERVE` can only see the heap get tight when an allocation
+SUCCEEDS. An engine request over budget is refused and never allocated, so the
+run that fails hardest stresses the heap least and reports a comfortable
+low-water mark. Price the reserve with a job that just barely FITS.
+
 ### The Linux budget check under-reads the Mac
 
 **`--budget N` on Linux is necessary and NOT sufficient.** MEASURED
@@ -2260,17 +2287,23 @@ enforces a ratchet on code size for this reason.
 
 ### Budget
 
-**What a 1 MB Mac Plus actually leaves the engine is 598,932 B** — measured
+**What a 1 MB Mac Plus actually leaves the engine is 615,348 B** — measured
 **2026-08-30** with `run.py --mem 1M -D UNC_AT_BUDGET`, which reports
-`FreeMem()` at **648,084 B** and the shell's reserve at its cap.
+`FreeMem()` at **648,084 B** and the shell's reserve at a flat 32 KB.
 
-**The cap was 80 KB and is now 48 KB, because 80 KB was never priced.** It
+**The reserve was 80 KB, is now a flat 32 KB, and 80 KB was never priced.**
+`kMemReserveMax` equals `kMemReserveMin`, so the quarter-of-free rule no longer
+bites anywhere. **49 KB of budget recovered at no cost in speed** — for scale,
+a day of compiler size flags bought 780 B and cost 0.82 % of every extraction
+(*Size flags, priced in both currencies*). It
 began as a flat constant and nothing had measured what the shell actually
 needs. `-D UNC_AT_RESERVE` prints a `FreeMem()` low-water mark across a run:
 with the engine holding its budget and the progress dialog up, the shell and
 Toolbox used **13,242 B** (559,136 B low-water against 647,096 free, engine
-peak 74,718). 48 KB is over three times that. **The 32 KB released goes to the
-engine at 1:1**, which is forty times what the size flags above bought, at no
+peak 74,718). The shell's own appetite is measured twice and agrees:
+**13,242 B** there, and **22,508 B** of TOTAL heap — engine and shell together
+— on the password path, which is the most dialog-heavy moment this application
+has. **The released heap goes to the engine at 1:1**, which is forty times what the size flags above bought, at no
 cost in speed at all — the reserve only decides how the heap is divided. The
 69-fixture 1 MB tier is **69/69** on it and the heaviest peaks are unchanged,
 so no decoder simply spends what it is offered.
