@@ -30,5 +30,49 @@ cmake -B build/mac -S mac \
       -DCMAKE_BUILD_TYPE=Release >/dev/null
 cmake --build build/mac -- -j"$(nproc)"
 ls -la build/mac/MacExtract.APPL build/mac/MacExtract.bin build/mac/MacExtract.dsk
+
+# ---- the code ceiling -------------------------------------------------------
+#
+# CODE is the only part of this application that costs the engine anything.
+# Measured 2026-08-30 by ballast, on a 1 MB Mac Plus under System 6.0.8, with
+# the ballast VERIFIED present in the binary that ran (three earlier attempts
+# measured nothing because --gc-sections had dropped it, or because it sat in
+# the other main):
+#
+#   +11,308 B of code  -> FreeMem 647,096 -> 635,768   (1:1)
+#   + 6,132 B of .data -> FreeMem 647,096 -> 647,096   (free)
+#
+# CODE resources are handles INSIDE the heap FreeMem() reports; the A5 global
+# world is outside it. So tables, strings and globals are free, and every byte
+# of compiled code comes off every extraction:
+#
+#   budget = 708,100 - code        (autotest build, 1 MB, System 6.0.8)
+#
+# This is a RATCHET, not a budget. It is set at the code size on the day it
+# was introduced, so growth has to be a decision rather than an accident:
+# raise it deliberately, knowing that each byte is a byte off the budget on
+# the smallest supported machine. Between 2026-08-24 and 2026-08-30 code grew
+# ~32,000 B unnoticed, the budget fell from 597,036 to 565,176, and three
+# corpus archives stopped fitting on a 1 MB Mac Plus with nothing failing.
+# That is what this is here to stop happening again.
+UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-147260}
+SIZE="$TOOLCHAIN/bin/m68k-apple-macos-size"
+GDB=build/mac/MacExtract.code.bin.gdb
+if [ -x "$SIZE" ] && [ -f "$GDB" ]; then
+    code=$("$SIZE" "$GDB" | awk 'NR==2 {print $1}')
+    echo "mac: code $code B (ceiling $UNC_MAC_MAX_CODE B; data and globals are free)"
+    if [ "$code" -gt "$UNC_MAC_MAX_CODE" ]; then
+        over=$((code - UNC_MAC_MAX_CODE))
+        echo "mac: FAIL — code is $over B over the ceiling." >&2
+        echo "mac: that is $over B off every extraction's budget on a 1 MB Mac" >&2
+        echo "mac: Plus. Raise UNC_MAC_MAX_CODE deliberately, or put the new" >&2
+        echo "mac: material in resources or tables, which cost nothing." >&2
+        echo "mac: FORMATS.md, *What the application costs the engine*." >&2
+        exit 1
+    fi
+else
+    echo "mac: no m68k size tool — code ceiling NOT checked"
+fi
+
 echo "mac: OK — this only proves it compiles. tools/vmac/run.py replays fixtures"
 echo "mac: on a real emulated Mac Plus; tools/vmac/README.md is how to run it."

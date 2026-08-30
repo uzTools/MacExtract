@@ -205,6 +205,20 @@ def out_of_scope(entry):
     return bool(m) and all(x in ORACLE_OUT_OF_SCOPE for x in m)
 
 
+# Archives that do NOT fit on a 1 MB Mac Plus as the application stands.
+#
+# Empty, and kept because it was not: on 2026-08-30 three StuffIt 5 archives
+# needed 566,009 B against a budget of 565,176 and were refused per entry —
+# correct behaviour, but a capability the application had lost by growing.
+# 988 B of code came back the same day and they fit again, by 155 B
+# (FORMATS.md, *Budget*).
+#
+# Anything listed here is PINNED, not skipped: a fixture here that passes
+# fails this run as STALE, and one not here that fails is a regression. The
+# way to empty it is less CODE — data and globals cost the budget nothing.
+OVER_BUDGET_1MB = set()      # empty: every corpus archive fits again
+
+
 def check_fixture(macextract, man, verbose, budget=0):
     fx = os.path.join(FIXDIR, man["fixture"])
     cap = ["--budget", str(budget)] if budget else []
@@ -362,11 +376,14 @@ def main():
     ap.add_argument("--format", help="only fixtures of this lsar format")
     ap.add_argument("--budget", type=int, default=0,
                     help="run under an allocation cap, in bytes: every "
-                         "fixture must still come out byte-exact. 597036 is "
-                         "what a 1 MB Mac Plus leaves the engine: FreeMem() "
-                         "at launch, 678,956 B, LESS the shell's 80 KB "
-                         "kMemReserve. Do not use the FreeMem figure alone; "
-                         "that mistake sat here for weeks (BLOCKERS.md).")
+                         "fixture must still come out byte-exact. 565176 is "
+                         "what a 1 MB Mac Plus leaves the engine as of "
+                         "2026-08-30: FreeMem() at launch, 647,096 B, LESS "
+                         "the shell's 80 KB reserve. Do not use the FreeMem "
+                         "figure alone; that mistake sat here for weeks "
+                         "(BLOCKERS.md). And RE-MEASURE it: this figure falls "
+                         "as the application's CODE grows, which is how it "
+                         "went stale twice (FORMATS.md, *Budget*).")
     ap.add_argument("--max-size", type=int, default=0,
                     help="only fixtures at most this many bytes. For build "
                          "variants that are correct but slow, where the point "
@@ -379,6 +396,7 @@ def main():
 
     ran = passed = skipped_fmt = skipped_missing = 0
     detect_ran = detect_bad = 0
+    over_budget = 0
     unadj_forks = unadj_fixtures = oos_entries = unadj_masked = 0
     fails = []
     for mf in manifests:
@@ -416,6 +434,27 @@ def main():
         if unadj:
             unadj_forks += unadj
             unadj_fixtures += 1
+        pinned = args.budget and man["fixture"] in OVER_BUDGET_1MB
+        if pinned:
+            # Must fail, and must fail for MEMORY — a wrong byte here would
+            # otherwise hide behind an expected failure.
+            mem = any("memory" in str(p) or "budget" in str(p) for p in problems)
+            if not problems:
+                fails.append((man["fixture"], ["pinned as over budget, but it "
+                                               "PASSED — the list is stale"]))
+                print(f"PIN STALE {man['fixture']} ({fmt}) — now fits; "
+                      f"remove it from OVER_BUDGET_1MB")
+            elif not mem:
+                fails.append((man["fixture"], problems))
+                print(f"DIFF FAIL {man['fixture']} ({fmt}) — pinned as over "
+                      f"budget, but this is not a memory refusal")
+                for p in problems[:8]:
+                    print(f"    {p}")
+            else:
+                over_budget += 1
+                if args.verbose:
+                    print(f"over budget (expected): {man['fixture']} ({fmt})")
+            continue
         if problems:
             fails.append((man["fixture"], problems))
             print(f"DIFF FAIL {man['fixture']} ({fmt})")
@@ -432,6 +471,10 @@ def main():
     cap += f" (fixtures <= {args.max_size} B)" if args.max_size else ""
     print(f"diff{cap}: {passed}/{ran} fixtures ok "
           f"({skipped_fmt} formats pending, {skipped_missing} fixtures absent)")
+    if over_budget:
+        print(f"  over budget: {over_budget} archive(s) need more than a 1 MB "
+              f"Mac Plus has and are refused per entry, as pinned in "
+              f"OVER_BUDGET_1MB (FORMATS.md, *Budget*)")
     if detect_ran:
         print(f"  detect-only: {detect_ran - detect_bad}/{detect_ran} named as "
               f"the oracle names them, and refused cleanly")

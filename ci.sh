@@ -174,7 +174,7 @@ MACEXTRACT=build/ars/macextract sh tests/run_diff.sh || fail "diff tests (forced
 MACEXTRACT=build/ars/macextract sh tests/run_robustness.sh \
     || fail "robustness tests (forced sampled)"
 python3 tools/run_diff.py --macextract build/san/macextract \
-    --format "StuffIt 5" --budget 597036 || fail "StuffIt 5 diff under 1 MB budget"
+    --format "StuffIt 5" --budget 566164 || fail "StuffIt 5 diff under 1 MB budget"
 
 # The deep end of the sampling dial, which neither run above reaches: a
 # budget big enough to hold the block at all is big enough to keep `target`

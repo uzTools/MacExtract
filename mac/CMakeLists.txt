@@ -68,7 +68,28 @@ set_source_files_properties(
 # that measurement was taken on that file rather than inherited.
 
 # Plain 68000 floor: no 68020+ instructions.
+# Size flags, each MEASURED on this application on 2026-08-30 rather than
+# taken on reputation — code is the only thing that costs the engine budget
+# (FORMATS.md, *What the application costs the engine*), so a byte here is a
+# byte the engine gets on a 1 MB Mac Plus:
+#
+#   baseline                              148,048 B
+#   -fno-tree-loop-distribute-patterns    147,608   -440
+#   -freorder-blocks-algorithm=simple     147,712   -336
+#   -fipa-icf                             148,048      0   (alone)
+#   the three together, -fno-early-inlining
+#                                         147,260   -788
+#
+# Measured and REJECTED: -fno-inline-functions-called-once (+2,444),
+# -fconserve-stack (+1,064), -flto (does not link on this toolchain),
+# -Wl,--relax (no effect on this target), alignment flags (no effect),
+# -fno-asynchronous-unwind-tables / -fmerge-all-constants / -fno-ident
+# (no effect). -fno-inline-small-functions is a further -248 and is NOT
+# taken: it reaches the UNC_HOT decoders and nothing has timed it.
 target_compile_options(MacExtract PRIVATE -mcpu=68000 -Os -Wno-multichar
+                       -fno-tree-loop-distribute-patterns
+                       -freorder-blocks-algorithm=simple
+                       -fipa-icf -fno-early-inlining
                        -ffunction-sections
                        # UNC_MAC_AUTOTEST builds a headless self-driving variant
                        # (no SFGetFile/alerts) used by the Mini vMac harness in

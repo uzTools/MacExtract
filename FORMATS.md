@@ -2183,13 +2183,56 @@ That is why the CODE resource is not segmented (BLOCKERS.md, *Withdrawn
 claims*), and why moving `ss_dict.h` or the StuffIt tables out of the A5 world
 would buy nothing at launch: they are data, so they carry no relocations.
 
+### What the application costs the engine
+
+**Only CODE costs anything. Data, globals and resources are free.** MEASURED
+2026-08-30 by ballast on a 1 MB Mac Plus under System 6.0.8, with the ballast
+verified present in the binary that actually ran:
+
+| ballast | free heap | budget |
+|---|---|---|
+| none | 647,096 B | 565,176 B |
+| **+11,308 B of code** | 635,768 B | 553,848 B |
+| **+6,132 B of `.data`** | 647,096 B | 565,176 B |
+
+Code moves it one for one; data does not move it at all. The reason is the
+classic layout: `CODE` resources are handles **inside** the heap `FreeMem()`
+reports, while the A5 global world sits outside it. So
+
+    budget = 708,100 - code        (autotest build, 1 MB, System 6.0.8)
+
+which reproduces every figure below. **Three of the four ballast runs measured
+nothing** before this came out — twice `--gc-sections` had dropped the ballast,
+once it was referenced only from the other `main()` — so check the symbol is in
+the binary before believing a null result (`tools/build_mac.sh` records the
+method).
+
+**Consequence for the Macintosh shell: put material in resources and tables,
+not in C.** A dialog defined in a `DITL` costs the engine nothing; the same
+dialog built in code costs its own size on every extraction. `tools/build_mac.sh`
+enforces a ratchet on code size for this reason.
+
 ### Budget
 
-**What a 1 MB Mac Plus actually leaves the engine is 597,036 B** — measured
-2026-08-24 with `run.py --mem 1M -D UNC_AT_BUDGET`, which reports
-`FreeMem()` at **678,956 B** and the shell's `kMemReserve` at 80 KB. This is
-the number `ci.sh` caps the StuffIt 5 run at and the number every `--budget`
-figure in this file is drawn from.
+**What a 1 MB Mac Plus actually leaves the engine is 565,176 B** — measured
+**2026-08-30** with `run.py --mem 1M -D UNC_AT_BUDGET`, which reports
+`FreeMem()` at **647,096 B** and the shell's reserve at its 80 KB cap.
+
+**It was 597,036 B on 2026-08-24, and 31,860 B of code is where the difference
+went** (*What the application costs the engine*). Nothing failed when it fell,
+because nothing was watching the application's size — the same shape as the
+91 KB error of 2026-08-24, one level up. **Three corpus archives stopped
+fitting on a 1 MB Mac Plus in that window**: `derived-Domino_v1.4.sit`,
+`derived-EasyFind.dmg.sit` and `derived-XMenu.dmg.sit`, each needing exactly
+566,009 B. They were refused per entry, which is the designed behaviour, and
+none is in the on-Mac sample, so no tier result changed.
+
+**They fit again as of 2026-08-30**, after 788 B of measured compiler size
+flags took code from 148,048 to 147,260 B (`mac/CMakeLists.txt` lists what was
+tried and rejected) and the budget from 565,176 to **566,164 B**, measured on
+the machine. **The margin is 155 bytes** — the whole corpus fits, and 156 B of
+new code would undo it. `tools/build_mac.sh` ratchets code size for exactly
+that reason.
 
 **It was 678,392 B everywhere until then, and that was 91 KB too generous.**
 Two fixtures now agree with the Mac to 48 bytes at 597,036 (*Floor target
