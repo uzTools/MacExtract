@@ -2,73 +2,9 @@
 
 ## Status
 
-**One open blocker, found 2026-08-30: the password path does not extract.**
-`tools/vmac/interactive.py --password` fails on `main` at 1 MB — the
-application shows *"This file could not be extracted."* and the phase's own
-read-back reports `'Rsrc only' is not on the volume`. The archive is the
-encrypted StuffIt classic one `tools/synth_crypt.py` writes, whose key
-material is half in the file's RESOURCE fork; the phase asks wrongly once,
-then correctly, and the correct password still yields nothing.
-
-**Halved in one command: the cipher is not the problem.** The same archive
-`tools/synth_crypt.py --kind sit-des --password hushnow` writes, with the same
-password, extracts on the Linux CLI — `Both Forks`, `Rsrc only` (empty data
-fork plus its `.rsrc`) and `Secret Memo`, exit 0. So the DES path, the key
-schedule and the archive itself are all sound, and what differs is the
-Macintosh.
-
-**The harness is not at fault either: the resource fork IS on the volume.**
-`phase_password` transfers the archive with `mkboot.py --macbin`, and building
-that volume offline and listing it shows `SIT!/SIT!  318  1622  Secret.sit` —
-`hdir` prints the RESOURCE fork first, so that is rsrc 318 / data 1622, which
-is exactly what `synth_crypt.build_sit_des` produced. (Column order confirmed
-against the System file and the application, both resource-heavy with tiny
-data forks. It reads the wrong way round at a glance and nearly cost an hour.)
-
-***Hypothesis, not a finding:*** what is left is the Macintosh's own path —
-`LoadMKey` in `mac/macextract_mac.c`, which opens the archive's resource fork
-with `MyOpenFork(..., rsrc=1)`, reads it whole, and calls `unc_resfork_find`
-for `MKey` 0. It returns 0 — no key, so no decryption — on any of: the fork
-not opening, `GetEOF` giving 0 or more than its 32 KB cap, `NewPtr` failing,
-a short `FSRead`, `unc_resfork_find` not finding `MKey`, or a length that is
-not 8. **Nothing distinguishes those yet**, and this must not be reported as
-the cause until one of them is shown.
-
-**Note for whoever picks this up:** `LoadMKey` is compiled only into the
-INTERACTIVE build (it sits above `#endif /* !UNC_MAC_AUTOTEST */`), so
-`run.py`'s autotest harness cannot exercise it at all. That is a second reason
-nothing caught this.
-
-It reproduces on clean `main` with no probe build, and is not caused by the
-`selective-loading` branch where it was first seen — identical output on
-both.
-
-**Why it went unseen:** nothing runs this phase routinely. It is not in
-`ci.sh` — no emulator phase is — and the on-Mac sample it would have to join
-is `run.py`'s, which has no encrypted fixture with a resource-fork key.
-Encryption is advertised in `README.md` and `dist/README.txt`.
-
-**What would close it — the next step, concretely.** A probe build
-(`UNC_AT_MKEY`, alongside the other `UNC_AT_*` switches in
-`mac/CMakeLists.txt`) that calls `LoadMKey` on the archive and reports, in an
-alert or the grid, *which* of its six exits was taken and the eight bytes if
-it found them. That separates "the fork would not open" from "`MKey` was not
-in it" from "the key was found and decryption still failed" — three different
-bugs sharing one symptom.
-
-**How to reproduce, exactly:**
-
-    # fails on the Mac (both branches, no probe needed)
-    tools/vmac/interactive.py --password --emu mv-1M -o /tmp/pw fixtures/adobenumbers.sit
-    #   -> "This file could not be extracted." and
-    #      "interactive: 'Rsrc only' is not on the volume"
-    #   (the fixture argument is IGNORED: the phase builds its own archive)
-
-    # the same archive succeeds on Linux
-    python3 tools/synth_crypt.py --kind sit-des --password hushnow -o /tmp/enc.sit
-    build/rel/macextract x -p hushnow -o /tmp/encout /tmp/enc.sit   # exit 0, 3 files
-
-**Everything else stands.** The engine and Linux CLI were never affected by anything
+**No open blockers.** The engine and Linux CLI were never affected by anything
+in this file. The Retro68 Mac shell runs and extracts byte-exact on every
+system the project claims: The engine and Linux CLI were never affected by anything
 in this file. The Retro68 Mac shell runs and extracts byte-exact on every
 system the project claims:
 
@@ -331,6 +267,8 @@ line is what makes the next one worth re-testing.
 | Every archive in the 922-fixture corpus fits on a 1 MB Mac Plus again (after 780 B of code came back) | Verified under a LINUX `--budget` cap, never on the machine. On the Mac two of the three still failed, and one needed **16 KB** more than the cap predicted while another needed **33 KB** more — the Mac allocator charges 16 bytes a block. Cutting the reserve later fixed two of the three; `derived-EasyFind.dmg.sit` still does not extract there. **Cost: a capability claim published in a commit message and in FORMATS.md on the strength of a proxy**, when the on-Mac replay that would have disproved it is one command and was used elsewhere in the same session. The proxy's error is not a constant, so no correction factor rescues it (FORMATS.md, *The Linux budget check under-reads the Mac*) | 2026-08-30 |
 | The compiler size flags cost no speed — "no capability lost, no speed traded" | They cost **+49 ticks, 1.55 %**, deterministic over three runs per build. Priced per flag afterwards: one of the four (`-freorder-blocks-algorithm=simple`) carried 26 of the 49 ticks, and one (`-fno-early-inlining`) was **worse on both axes** — 8 bytes bigger AND 2 ticks slower — and had been shipped. **Cost: a false claim in a pushed commit message and in `mac/CMakeLists.txt`, and a harmful flag in the shipping build for one commit.** The reasoning was available at the time and was applied selectively: `-fno-inline-small-functions` was rejected *because nothing had timed it*, while four flags reaching the same `UNC_HOT` code were taken without timing. `mac/CMakeLists.txt` had already said, of an earlier attempt, "do not re-try it without a harness that resolves better than 20 s on a 22-minute run" | 2026-08-30 |
 | The application's RESIDENT SIZE — code plus data plus bss — is what costs the engine its budget, so moving big tables (`ss_dict0`, the DES S-boxes, the report pool) out of the A5 world would buy it back | Only CODE costs anything. Ballast, verified present in the binary that ran: +11,308 B of code moved FreeMem 647,096 -> 635,768, one for one; +6,132 B of `.data` moved it not at all. `CODE` resources are handles inside the heap `FreeMem()` reports and the A5 world is outside it (FORMATS.md, *What the application costs the engine*). **Cost: a whole line of proposed work aimed at the wrong bytes** — three candidate tables costing 23,887 B between them, every one of them free already — and one shipped-code change (the report pool allocated on first use) written, measured at ZERO gain, and reverted. The formula was fitted to ONE data point and generalised; the first thing that would have disproved it was the second point. **Three of the four ballast runs measured nothing**, twice because `--gc-sections` dropped the ballast and once because it was referenced only from the other `main()`, so a null result here means "check the symbol is in the binary" before it means anything about memory | 2026-08-30 |
+| An advertised capability does not work on the Mac: encrypted StuffIt extracts nothing | **Encryption works. The HARNESS was broken.** `interactive.py --password` failed because `mkboot.py` deleted the boot volume's invisible `Desktop` file under the boot-shell arrangement — one line added on 2026-08-24 (`d3907fc`, the icon commit). Bisected with BOTH endpoints verified by running them, then isolated by holding the application constant at the bad commit and reverting `mkboot.py` alone: five runs, both ways. Fixed by dropping the Desktop file only when a Finder will actually run. **Cost: a working feature was published as a broken one**, in a commit on `main` and in this file, and a `LoadMKey` hypothesis was recorded that the evidence already contradicted — two of the three entries decrypted, so the key was plainly being found, and I had read 'one entry missing' as 'nothing extracts'. **The mechanism is still not understood** and is the open question below | 2026-08-30 |
+| A `git bisect` over 28 commits named `42cfda3` as the first bad commit | That commit touches only documentation and one new harness file — it cannot break an application. `git bisect start <bad> <good>` takes the GOOD end **on trust**, and mine came from a DECISIONS entry about the Mac OS 9 tier while I was testing System 6 — evidence about a different machine. The re-run with both ends measured found `d3907fc`, 108 commits earlier. **Cost: ~20 minutes of emulator time and a confident wrong answer**, which is worse than no answer because it looked authoritative | 2026-08-30 |
 | The System 3.0 tier's figures were taken "with the FINDER resident", which is why that system beats System 6.0.8 on a 512 KB machine | Single-tasking Mac OS UNLOADS the Finder when an application launches. Measured on System 6.0.8 at 512 KB: a boot-shell launch leaves 122,808 B free and a double-click launch from a booted Finder leaves 122,796 B — **12 bytes**, not 56 KB. The real mechanism is the system heap, 218,208 B free under System 3.0 against 122,808 B. The RESULTS were never in doubt; the explanation for them was. **Cost: the wrong mechanism reached seven files and the v0.28.0 tag message inside one session**, because "resident" was written once and then re-narrated rather than checked, and a tag is immutable — the correction can only live here. What caught it was arithmetic that does not close: 512 KB cannot hold a 183 KB application, a ~22 KB screen, System 3.0 AND a 56 KB Finder and still leave the 218,208 B that was measured | 2026-08-30 |
 | A MIME message written by a Macintosh is waiting on a gradeable specimen somebody else has to send | mpack's Macintosh PORT is in `reference/mpack` and always was — README.mac, macfile.c, the lot. `encode_applefile()` and `encode()` compile unmodified for a 68000 and run on System 6.0.8, and the message they write there passes **18/18** including both forks byte-exact through this engine (`tools/vmac/macmime.py`; FORMATS.md, *base64 and MIME*). **Cost: three days as a wait, filed one bullet below its own answer** — the entry named "mpack's own Macintosh port" as the thing that would settle it, in a tree this project had already built munpack out of | 2026-08-29 |
 | A MIME part encoded `x-uuencode` inside a multipart is decoded by mpack, and not by this engine | wrong in both halves, both run. munpack's encoding enum is `enc_none, enc_qp, enc_base64`; an unknown Content-Transfer-Encoding warns and falls through, and its `handleUuencode` is reached only for a depth-0 `text/*` part with no encoding and no name — fed such a multipart it prints *"ignoring unknown content transfer encoding"* and writes the uuencoded TEXT out as the file. This engine decodes it byte-exact, and always did, because the uu probe wins the sniff. **Cost: three days in the waiting-on-a-file section, and the real defect went unnamed the whole time** — a uu part SHADOWED the rest of its multipart, a sniff-precedence bug with munpack sitting here to grade it, fixed the same day (DECISIONS.md 2026-08-29, *a part that hid its message*) | 2026-08-29 |
