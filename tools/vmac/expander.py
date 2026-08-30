@@ -313,6 +313,20 @@ def names_on(img):
         shutil.rmtree(home, ignore_errors=True)
 
 
+def live_names(workdir, before):
+    """What the RUNNING emulator has already written to its image.
+
+    A copy is mounted rather than the file itself: hfsutils would open the
+    image the emulator is writing, and the run is the thing being measured.
+    """
+    live = os.path.join(workdir, "live.hfv")
+    shutil.copyfile(os.path.join(workdir, "boot.hfv"), live)
+    try:
+        return [n for n in names_on(live) if n not in before]
+    finally:
+        os.remove(live)
+
+
 def run_one(which, appbin, fixture, args, workdir, shots):
     """Boot one application on one archive and time the extraction."""
     typed, macname, fmt = typed_copy(fixture, workdir)
@@ -331,7 +345,9 @@ def run_one(which, appbin, fixture, args, workdir, shots):
     scratch = os.path.join(shots, f".{which}.png")
     shot = lambda n: mac.shot(os.path.join(shots, f"{which}-{n}.png"))  # noqa: E731
     mac = Mac(boot, args.emu, workdir)
-    elapsed = None
+    elapsed = quitsecs = None
+    mid = post = None
+    quitdrew = flush = None
     try:
         if mac.settle(scratch, interval=5.0, timeout=args.boot_timeout) is None:
             raise SystemExit(f"expander: the {which} machine never booted")
@@ -366,20 +382,61 @@ def run_one(which, appbin, fixture, args, workdir, shots):
                               args.timeout,
                               first=os.path.join(shots, f"{which}-2b-started.png"))
         shot("3-finished")
+        # Is the output on the host image BEFORE the application is told to
+        # quit? Nothing had ever asked: the volume was only ever read after
+        # the emulator had been killed, so "Expander's writes are still in
+        # the File Manager's cache" was an inference from one empty image
+        # and not an observation of when the bytes land. The emulator writes
+        # to workdir/boot.hfv as it runs, so a read-only mount of a COPY
+        # answers it and cannot disturb the run.
+        mid = live_names(workdir, before)
+        # The quit, timed — because the two applications do not have their
+        # output in the same place when the clock above stops.
+        #
+        # Our sink calls FlushVol after closing each fork
+        # (mac/macextract_mac.c), so its files are on the image the moment
+        # the alert goes up. Expander leaves its writes in the File
+        # Manager's cache: a 278 KB archive expanded for 56 s, progress
+        # window photographed every step of it, and the image afterwards
+        # held nothing at all. So `seconds` is "the screen stopped
+        # changing" for both, and it is ALSO "the output is on the volume"
+        # for one of them only.
+        #
+        # Quitting is what commits the other one, and how long that takes
+        # is the size of the asymmetry. It is timed the same way as the
+        # extraction and reported separately: `seconds` keeps the meaning
+        # every published figure was taken with, `quit` is new, and the
+        # comparison a user cares about — archive in, files on disk — is
+        # the sum.
         if which == "expander":
-            # Quit, or the host reads an empty volume. Our own sink calls
-            # FlushVol after closing each fork (mac/macextract_mac.c), so its
-            # output is on the image the moment the alert goes up; Expander
-            # leaves its writes in the File Manager's cache, and SIGKILLing
-            # the emulator throws them away. A 278 KB archive expanded for
-            # 56 s — the progress window photographed every step of it — and
-            # the image afterwards held nothing at all.
-            #
-            # This is AFTER the measurement, which ends at the last frame
-            # that changed, so it costs the comparison nothing.
             mac.command_key("q")
-            mac.settle(scratch, interval=3.0, stable=3, timeout=120.0)
-            shot("4-quit")
+        else:
+            mac.key("Return")            # dismiss the alert or the report
+            time.sleep(2.0)
+            mac.command_key(".")         # Cancel the next SFGetFile -> quit
+        # How long the commit itself takes, watched on the host rather than
+        # on the screen: Expander's writes land at the quit and the screen
+        # never repaints, so the only instrument that can see this one is
+        # the image file. Ours is already complete here and returns 0.
+        flush = None
+        if not mid:
+            t0 = time.time()
+            while time.time() - t0 < 180.0:
+                if live_names(workdir, before):
+                    flush = round(time.time() - t0, 1)
+                    break
+                time.sleep(2.0)
+        else:
+            flush = 0.0
+        quitsecs = last_change(mac, scratch, args.poll, args.quiet,
+                               min(args.timeout, 600.0))
+        shot("4-quit")
+        post = live_names(workdir, before)
+        # Whether the quit key did anything at all. An application that is
+        # still running photographs identically, and a quit that never
+        # happened would otherwise be read as a quit that cost nothing.
+        quitdrew = open(os.path.join(shots, f"{which}-3-finished.png"), "rb").read() \
+            != open(os.path.join(shots, f"{which}-4-quit.png"), "rb").read()
     finally:
         mac.close()
         if os.path.exists(scratch):
@@ -389,6 +446,13 @@ def run_one(which, appbin, fixture, args, workdir, shots):
     produced = [n for n in written if n not in before]
     return {"app": which, "fixture": os.path.basename(fixture), "format": fmt,
             "seconds": None if elapsed is None else round(elapsed, 1),
+            "quit": None if quitsecs is None else round(quitsecs, 1),
+            "to_disk": None if elapsed is None or quitsecs is None
+                       else round(elapsed + quitsecs, 1),
+            "on_disk_before_quit": mid,
+            "on_disk_after_quit": post,
+            "quit_redrew": quitdrew,
+            "flush_seconds": flush,
             "output": produced}
 
 
@@ -474,28 +538,36 @@ def main():
             # every one.
             out = row["output"]
             shown = ", ".join(out[:3]) + (" ..." if len(out) > 3 else "")
-            print("expander: %-9s %-34s %-12s %8s   wrote %d: %s"
-                  % (which, row["fixture"], row["format"], secs,
+            q = "" if row["quit"] is None else " (+%.0f s to quit)" % row["quit"]
+            print("expander: %-9s %-34s %-12s %8s%s   wrote %d: %s"
+                  % (which, row["fixture"], row["format"], secs, q,
                      len(out), shown or "NOTHING"))
 
     print()
-    print("%-34s %-12s %10s %10s %7s" % ("Fixture", "Format", "MacExtract",
-                                         "Expander", "ratio"))
+    hdr = ("Fixture", "Format", "MacExtract", "Expander", "ratio",
+           "+disk us", "+disk them", "ratio")
+    print("%-30s %-11s %9s %9s %6s %9s %10s %6s" % hdr)
     ok = True
     for fixture in args.fixtures:
         base = os.path.basename(fixture)
         got = {r["app"]: r for r in rows if r["fixture"] == base}
         a = got.get("ours", {}).get("seconds")
         b = got.get("expander", {}).get("seconds")
+        c = got.get("ours", {}).get("to_disk")
+        d = got.get("expander", {}).get("to_disk")
         for r in got.values():
             if r["seconds"] is None or not r["output"]:
                 ok = False
-        ratio = "%.2fx" % (b / a) if a and b else "-"
-        print("%-34s %-12s %10s %10s %7s"
-              % (base[:34], got.get("ours", got.get("expander"))["format"],
-                 "%.0f s" % a if a else "-", "%.0f s" % b if b else "-", ratio))
+        f = lambda v: "%.0f s" % v if v else "-"           # noqa: E731
+        print("%-30s %-11s %9s %9s %6s %9s %10s %6s"
+              % (base[:30], got.get("ours", got.get("expander"))["format"],
+                 f(a), f(b), "%.2fx" % (b / a) if a and b else "-",
+                 f(c), f(d), "%.2fx" % (d / c) if c and d else "-"))
     print("\nratio > 1 means Expander took longer. Both figures are lower "
           "bounds, accurate to the %.0f s poll." % args.poll)
+    print("The first ratio is to the last frame that changed; the second is "
+          "to the output being on the volume, which for Expander is after "
+          "its quit.")
     if args.json:
         json.dump(rows, open(args.json, "w"), indent=1)
     return 0 if ok else 1

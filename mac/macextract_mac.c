@@ -87,6 +87,30 @@
 #endif
 
 /* ------------------------------------------------------------------ */
+/* UNC_AT_TIMING — where an extraction's seconds go, on the Mac itself */
+/*                                                                    */
+/* A Linux profile sees the decoders and nothing else; a screenshot    */
+/* clock sees the whole run and nothing inside it. This splits the run */
+/* into File Manager reads, File Manager writes, the rest of the File  */
+/* Manager (create, SetEOF, close, FlushVol, catalog) and what is left */
+/* over, which is the engine. Autotest builds only.                    */
+/*                                                                    */
+/* TickCount is 60 Hz and most of these calls are shorter than a tick, */
+/* so each measurement rounds to 0 or 1 — but where the boundary falls */
+/* is independent of the call, so the SUM is unbiased and its error    */
+/* grows as the square root of the call count. At ~200 calls that is   */
+/* under half a second on a 70-second run.                             */
+/* ------------------------------------------------------------------ */
+#ifdef UNC_AT_TIMING
+static long gTkRun, gTkRead, gTkWrite, gTkMeta;
+#define TK_T0        long tk0_ = TickCount()
+#define TK_ADD(acc)  ((acc) += TickCount() - tk0_)
+#else
+#define TK_T0        ((void)0)
+#define TK_ADD(acc)  ((void)0)
+#endif
+
+/* ------------------------------------------------------------------ */
 /* Runtime environment checks                                         */
 /* ------------------------------------------------------------------ */
 
@@ -225,9 +249,13 @@ static int32_t fio_read(void *ctx, void *buf, int32_t len)
     OSErr err;
 
     if (n == 0) return 0;
+    {
+    TK_T0;
     if (SetFPos(f->refNum, fsFromStart, (long)f->pos) != noErr) return 0;
     cnt = (long)n;
     err = FSRead(f->refNum, &cnt, buf);
+    TK_ADD(gTkRead);
+    }
     if (cnt < 0) cnt = 0;
     f->pos += (uint32_t)cnt;
     /* eofErr with bytes delivered is a normal short read, not a failure. */
@@ -1054,7 +1082,27 @@ static OSErr MyHDelete(short vol, long dir, ConstStr255Param name)
     return PBHDeleteSync(&pb);
 }
 
+/* Under UNC_AT_TIMING only, the two entry points that do catalog work are
+ * wrapped so their ticks are billed to the File Manager rather than to the
+ * engine. The shipping build has no wrapper and no extra frame: the sink
+ * runs inside a measured call-depth budget (FORMATS.md, *Stack*). */
+#ifdef UNC_AT_TIMING
+static int sink_begin_inner(void *ctx, const UncEntryInfo *info);
 static int sink_begin(void *ctx, const UncEntryInfo *info)
+{
+    TK_T0;
+    {
+        int r = sink_begin_inner(ctx, info);
+        TK_ADD(gTkMeta);
+        return r;
+    }
+}
+#define SINK_BEGIN sink_begin_inner
+#else
+#define SINK_BEGIN sink_begin
+#endif
+
+static int SINK_BEGIN(void *ctx, const UncEntryInfo *info)
 {
     MacSink *s = (MacSink *)ctx;
     long dir = s->rootDirID;
@@ -1335,7 +1383,12 @@ static int sink_write(void *ctx, UncFork fork, const void *buf, int32_t len)
     if (len <= 0) return 0;
     if (s->wrErr) return -1;
     {
-        OSErr serr = StreamSelect(s, fork == UNC_FORK_RSRC);
+        OSErr serr;
+        {
+            TK_T0;
+            serr = StreamSelect(s, fork == UNC_FORK_RSRC);
+            TK_ADD(gTkMeta);
+        }
         if (serr != noErr) {
             s->wrErr = 1;
             if (s->wrOSErr == noErr) s->wrOSErr = serr;
@@ -1349,8 +1402,13 @@ static int sink_write(void *ctx, UncFork fork, const void *buf, int32_t len)
     while (todo > 0) {
         long count = (long)(todo < 8192u ? todo : 8192u);
         long want = count;
-        OSErr werr = FSWrite(s->openRef, &count,
-                             (Ptr)((const char *)buf + off));
+        OSErr werr;
+        {
+            TK_T0;
+            werr = FSWrite(s->openRef, &count,
+                           (Ptr)((const char *)buf + off));
+            TK_ADD(gTkWrite);
+        }
         if (werr != noErr || count != want) {
             s->wrErr = 1;
             /* Keep the FIRST OSErr. The grid and the alert could not tell
@@ -1430,7 +1488,23 @@ static OSErr StageFlush(MacSink *s, UncFork fork)
 }
 #endif  /* !UNC_MAC_STAGE_WRITES */
 
+#ifdef UNC_AT_TIMING
+static int sink_end_inner(void *ctx, int status);
 static int sink_end(void *ctx, int status)
+{
+    TK_T0;
+    {
+        int r = sink_end_inner(ctx, status);
+        TK_ADD(gTkMeta);
+        return r;
+    }
+}
+#define SINK_END sink_end_inner
+#else
+#define SINK_END sink_end
+#endif
+
+static int SINK_END(void *ctx, int status)
 {
     MacSink *s = (MacSink *)ctx;
 
@@ -3870,9 +3944,13 @@ int main(void)
                          &prog, &entries, &errors, NULL);
     }
 #else
-    ret = RunExtract(inVol, fsRtDirID, "\parchive.sit",
-                     outVol, fsRtDirID, inVol, fsRtDirID,
-                     NULL, &entries, &errors, NULL);
+    {
+        TK_T0;
+        ret = RunExtract(inVol, fsRtDirID, "\parchive.sit",
+                         outVol, fsRtDirID, inVol, fsRtDirID,
+                         NULL, &entries, &errors, NULL);
+        TK_ADD(gTkRun);
+    }
 #endif
 
     /* Read every extracted file's forks back through the real File Manager,
@@ -3946,8 +4024,23 @@ int main(void)
             }
         }
 #endif
+#ifdef UNC_AT_TIMING
+        {
+            uint32_t tv[12];
+            int k;
+            for (k = 0; k < 8; k++) tv[k] = vals[k];
+            tv[8]  = (uint32_t)gTkRun;     /* the whole extraction        */
+            tv[9]  = (uint32_t)gTkRead;    /* SetFPos + FSRead, archive   */
+            tv[10] = (uint32_t)gTkWrite;   /* FSWrite, both forks         */
+            tv[11] = (uint32_t)gTkMeta;    /* create, SetEOF, close,      */
+                                           /* FlushVol, catalog           */
+            at_report(vals, 8);
+            at_report_file(tv, 12);
+        }
+#else
         at_report(vals, 8);
         at_report_file(vals, 8);
+#endif
     }
     (void)entries;
 

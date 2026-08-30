@@ -169,6 +169,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-29 (a part that hid its message) — the strongest scan is not the strongest claim
 - 2026-08-29 (a message in several files) — the sixth join scheme, and the first whose parts are text
 - 2026-08-29 (the chain that was walked twice) — the postfix byte was the last one the walk wrote
+- 2026-08-30 (the flush that was not the answer) — a screen cannot see a commit
 
 ---
 
@@ -9767,3 +9768,52 @@ KwKwK path taken in **111** of them, `.Z`, DiskDoubler method 1 and StuffIt
 method 2 alike — so the restructured half is inside the differential suite
 rather than beside it. Establishing that before trusting the green run is the
 same rule as *a test that passes may not be testing anything*.
+
+---
+
+## 2026-08-30 (the flush that was not the answer) — a screen cannot see a commit
+
+*"Expander's 56 s and our 76 s do not cover the same work"* was the best
+candidate for the one row the yardstick loses (FORMATS.md, *Timed on the same
+Mac Plus*): our sink flushes after every fork and Expander's output was known
+to be absent from the volume until it quits, so up to 415 KB of writing sat
+outside its number and inside ours. Tested on 2026-08-30. **It is real, it is
+under a second, and it explains none of the gap.**
+
+**The first instrument measured nothing and said "3 s".** The obvious test —
+send Command-Q, time it the way the extraction is timed — came back at exactly
+the poll floor for both applications and for a 1.6 KB control, which read as
+"quitting is free". It is not: Expander's frames either side of Command-Q are
+**byte-identical**, so the timer was watching an event that never reaches the
+screen. The reading was consistent, reproducible, and about nothing. **An
+instrument that can only see repaints reports the floor for everything that
+does not repaint, and the floor looks like a small number rather than a
+missing one.**
+
+**The image is the instrument.** The emulator writes `boot.hfv` on the host
+while it runs, so a copy of it can be mounted mid-run without touching the
+machine. Three reads — at the last changed frame, after the quit key, after
+the kill — settle it directly: our three files are on the volume when the
+clock stops; Expander's four are **not there at all** and appear within a
+second of the keystroke. The claim this project had carried since 2026-08-29
+was right about WHAT and had never been asked HOW MUCH; the answer is that on
+this emulator a commit is a host `memcpy` with no seek time behind it.
+
+**Which is the honest limit of the result.** A real Mac Plus writing 415 KB to
+a floppy or a SCSI disk would not be paying zero, so the ratio a user on
+hardware sees is not this one. That is a MANUAL_TESTS.md question and stays
+there rather than becoming a hypothesis in a status file.
+
+**And it cost one wrong inference of mine on the way**, worth recording
+because the shape recurs: identical frames plus a Finder on the boot volume
+said "Command-Q did not quit". The image probe then found the files landing at
+exactly that keystroke. **Two explanations fit "the screen did not change" —
+nothing happened, and something happened invisibly — and only the second
+instrument can tell them apart.**
+
+**What is left of the original question.** Expander unstuffs that archive in
+57 s against our 73 s, both applications' output equally on the disk, so the
+remainder is decode and I/O rather than accounting. On Linux that archive is
+58 % `unc_lzw_read`, 26 % `unc_huff_decode` and 8 % `unc_crc16_arc` — and the
+last of those is the 2-3x table this project has twice measured and twice
+declined to buy with 3 KB of code (2026-08-27, *what the tables left behind*).

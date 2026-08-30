@@ -1033,6 +1033,24 @@ Mac Plus times — `run.py --emu mv-4M-1x` is what those come from.
   image afterwards held nothing at all. The harness sends Command-Q after the
   measurement has ended, so it costs the comparison nothing.
 
+  **Measured rather than inferred since 2026-08-30**, by mounting a copy of
+  the `boot.hfv` the emulator is writing — `live_names()`, at three points:
+  when the screen stops changing, after the quit key, and after the kill. Our
+  files are there at the first; Expander's appear at the second, **within a
+  second of the keystroke** and with no repaint at all. `--json` carries
+  `on_disk_before_quit`, `on_disk_after_quit`, `flush_seconds` and
+  `quit_redrew`, and FORMATS.md (*Timed on the same Mac Plus*) has what it
+  means for the ratio.
+
+**What the SCREEN cannot see, and why the image probe exists.** Command-Q
+commits Expander's writes and **repaints nothing**: the frames either side of
+it are byte-identical. A screen-timed quit therefore reports one poll interval
+whether the application quit, flushed 415 KB, or ignored the key entirely —
+which is what the harness did report for one afternoon, until the frames were
+hashed and the number turned out to be the floor rather than a measurement.
+`quit` and `to_disk` in the JSON are screen figures and inherit that; the
+`on_disk_*` lists are the ones that observed anything.
+
 **What it cannot see.** Whether Expander's output is CORRECT: a run is graded
 on having produced files at all, and nothing here compares its bytes with
 ours. And nothing outside the four families 4.0.2 opens by itself — zip, gzip,

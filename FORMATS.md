@@ -3320,7 +3320,7 @@ with this archive."*
 | Licence | free, closed | free, LGPL-2.1-or-later |
 | Memory partition | **512 KB preferred, 384 KB minimum** (`SIZE` (-1), measured 2026-08-29 — the claim that this could not be read here is withdrawn, BLOCKERS.md) | 4,096 KB preferred, 400 KB minimum; engine peak heap per format in the matrix above |
 
-### Timed on the same Mac Plus (2026-08-29)
+### Timed on the same Mac Plus (2026-08-29, one row re-run 2026-08-30)
 
 Both applications booted on Mini vMac `mv-4M-1x` — authentic 7 MHz, 4 MB,
 System 6.0.8 — over the same archive on the same volume, driven to a Standard
@@ -3331,7 +3331,7 @@ cannot see are in `tools/vmac/README.md`.
 | Fixture | Format | In | MacExtract | Expander 4.0.2 | Expander ÷ ours |
 |---|---|---|---|---|---|
 | `derived-Export.sit` | StuffIt | 1.6 KB | 3 s | 3 s | both at the poll floor |
-| `derived-EmpireBuilderDemo.sit` | StuffIt | 278 KB | 76 s | **56 s** | **0.74x** |
+| `derived-EmpireBuilderDemo.sit` | StuffIt | 278 KB | 73 s | **57 s** | **0.77x** |
 | `derived-FirstClass_Demo.cpt` | Compact Pro | 249 KB | **133 s** | 156 s | **1.18x** |
 | `macburger-helper.hqx` | BinHex → StuffIt | 307 KB | **269 s** | 426 s | **1.58x** |
 
@@ -3359,10 +3359,25 @@ Folder; and on the chain **Expander leaves the intermediate
 once the next layer is out.
 
 **Our figures include a `FlushVol` after every fork and Expander's include
-none.** That is not an instrument artefact, it is the two designs: Expander's
-output is not on the disk at all until it quits — the harness had to send it
-Command-Q to read a volume that a 56 s expansion had left empty
-(`tools/vmac/README.md`).
+none.** That is not an instrument artefact, it is the two designs. Both halves
+were measured on 2026-08-30 by reading the image the emulator is writing,
+rather than inferred from an empty volume after a kill: when the screen stops
+changing our three files are on the volume and Expander's are **not there at
+all**, and its four appear when it is sent Command-Q — which commits them
+**within a second**, without repainting anything.
+
+**So the asymmetry is real and it is not the explanation.** Under a second of
+415 KB does not close a 16 s gap. Read it as a fact about this emulator, whose
+disk is a host file with no seek time; a real Mac Plus committing that much to
+a floppy or a SCSI disk would not be free, and nothing here can measure that
+(MANUAL_TESTS.md).
+
+**The StuffIt row was re-run on 2026-08-30** and moved 76 s → 73 s, with
+Expander's 56 s → 57 s and the ratio 0.74x → 0.77x. Our column is consistent
+with the LZW change landed that day (−5.3 % on this archive, *Decode cost*
+above) but 3 s is one poll interval, so it is consistent-with and not measured.
+The other three rows are unaffected by that change — 0.00 % on Compact Pro and
+on `macburger-helper.hqx` — and stand as taken.
 
 ### Sources
 
