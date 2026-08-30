@@ -15,9 +15,12 @@ unarchiver, so MacExtract ships in two forms that need no unarchiver:
                   Basilisk II, SheepShaver), then drag MacExtract onto your
                   startup disk.
 
-Floor target: System 6.0.x on a 1 MB Mac Plus (68000). The same binary runs
-unchanged through Mac OS 9 and adapts its memory use to the machine at runtime,
-so there is one download for every Mac.
+Floor target: System 3.0 on a 1 MB Mac Plus (68000) -- the system the Plus
+shipped with in January 1986. The same binary runs unchanged through Mac OS 9
+and adapts its memory use to the machine at runtime, so there is one download
+for every Mac. One difference on System 3.0: that system's Open dialog ignores
+Command-period, so close it with the Cancel button. Command-period stops an
+extraction everywhere.
 
 What it opens: StuffIt (.sit, classic and 5.x), Compact Pro (.cpt), BinHex
 (.hqx), MacBinary, PackIt (.pit), DiskDoubler (.dd, DDAR, DDA2), Now Compress,
@@ -123,9 +126,10 @@ is what StuffIt Expander 4.0.2 takes on the same machine and the same file. If
 an entry genuinely will not fit, that entry is skipped with a message and the
 rest of the archive still extracts.
 
-Verified on emulators only: System 6.0.8 and System 7.0.1 on a Mac Plus under
-Mini vMac, and Mac OS 9.2 on emulated PowerPC, where every extraction is
-checked byte for byte against the same engine on Linux. No physical Macintosh
-has ever run it. Worth knowing before you commit a floppy to it.
+Verified on emulators only: System 3.0, System 6.0.8 and System 7.0.1 on a Mac
+Plus under Mini vMac, and Mac OS 9.2 on emulated PowerPC, where every
+extraction is checked byte for byte against the same engine on Linux. No
+physical Macintosh has ever run it. Worth knowing before you commit a floppy
+to it.
 
 License: LGPL-2.1-or-later. See LICENSE and NOTICE in the source tree.

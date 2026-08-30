@@ -2202,10 +2202,12 @@ part boundary (27 failures). Both were reverted.
 ## On-Mac layers (not in `ci.sh` — they need an emulator)
 
 7. **Mini vMac replay** (`tools/vmac/run.py`, System 6.0.8 and 7.0.1 on a
-   Mac Plus): the autotest build CRC-32s both forks after reading them
-   back through the real File Manager and paints an aggregate to the
-   framebuffer; the host decodes the screenshot and compares against the
-   same engine's Linux output (`tools/vmac_check.py`).
+   Mac Plus; `tools/vmac/sys30.py` for System 3.0, which needs its own
+   driver because that system reads no boot-block shell name): the autotest
+   build CRC-32s both forks after reading them back through the real File
+   Manager and paints an aggregate to the framebuffer; the host decodes the
+   screenshot and compares against the same engine's Linux output
+   (`tools/vmac_check.py`).
 8. **Mac OS 9 replay** (`tools/vmac/os9.py --launch`, QEMU PowerPC): the
    application is launched from the Finder by keyboard, and afterwards
    the transfer volume — a plain file on the host — is mounted with

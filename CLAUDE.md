@@ -5,24 +5,27 @@
 ## Mission
 
 1. **`libmacextract`** — a portable, dependency-free C99 extraction engine for classic Macintosh archive and encoding formats, plus a Linux CLI (`macextract`).
-2. **A Retro68 Toolbox application** wrapping the same engine. Floor target: **System 6.0.x, 68000, 1 MB RAM**; the same binary must run unchanged through Mac OS 9.
+2. **A Retro68 Toolbox application** wrapping the same engine. Floor target: **System 3.0, 68000, 1 MB RAM** — the system a Macintosh Plus shipped with in January 1986; the same binary must run unchanged through Mac OS 9.
 
 The engine is the product. The Mac app is a thin shell.
 
 ## Where things stand
 
-**M0–M43 are DONE and nothing is in flight.** Every Macintosh archive family
+**M0–M45 are DONE and nothing is in flight.** Every Macintosh archive family
 in FORMATS.md's table extracts, and the rest of that table is named-only or
 detect-only by decision — that table is the count, and this file does not keep
 a copy of it. The engine passes a **932-fixture** differential suite against
 `unar` and, where `unar` fails, `macunpack`, plus 9,320 robustness variants.
-The Macintosh application extracts byte-exact on **System 6.0.8 at 4 MB and at
-the 1 MB floor target** (69/69 sampled fixtures each), on System 7.0.1, and on
-Mac OS 9.2 under QEMU including HFS+ — **20/20 there since 2026-08-27**, when
-that tier was re-run for the first time since M12 and grew to cover the eight
-formats it predated. System 6 is the target for
-the interactive UI and is driven there end to end; above it the UI is
-deliberate scope, not an open item.
+The Macintosh application extracts byte-exact on **System 3.0 and System 6.0.8,
+each at 4 MB and at the 1 MB RAM floor** (69/69 sampled fixtures every time),
+on System 7.0.1, and on Mac OS 9.2 under QEMU including HFS+ — **20/20 there
+since 2026-08-27**, when that tier was re-run for the first time since M12 and
+grew to cover the eight formats it predated. The System 3.0 tier arrived
+2026-08-30 and needed no source change; it is the only one whose figures were
+taken with the FINDER resident, because that system ignores the boot blocks'
+shell name (FORMATS.md, *System 3.0 tier*). The interactive UI is driven end to
+end on System 3.0 and on System 6; above those the UI is deliberate scope, not
+an open item.
 
 **Do not re-plan or re-run completed milestones.** The authoritative status is:
 

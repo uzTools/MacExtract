@@ -53,11 +53,12 @@ explaining itself belongs in DECISIONS.md instead.
 | M43 The two MIME gaps | Both items whose oracle was already on this machine: a multipart's uuencoded part no longer hides the rest of the message, and `message/partial` — a message split across several FILES — becomes the sixth join scheme, graded against munpack over sets mpack writes | FORMATS.md (*base64 and MIME*, *Segmented archives*), DECISIONS.md 2026-08-29 (a part that hid its message; a message in several files) |
 
 | M44 Level with the yardstick | `UNC_AT_TIMING` split an extraction on the Mac itself — **98.5 % engine, 1.1 s of File Manager** — and `UNC_HOT` marks the six functions that time lives in, at `-O3` inside an `-Os` build: 70.4 s → 52.6 s on a 7 MHz Mac Plus for **+1,024 B**, and StuffIt Expander 4.0.2's 20 s lead on `derived-EmpireBuilderDemo.sit` becomes 56 s each | FORMATS.md (*What -O3 is worth, and where*), DECISIONS.md 2026-08-30 (the flag that was never measured on these files), BLOCKERS.md (*Withdrawn claims*) |
+| M45 System 3.0 tier | The same binary on the oldest system a Macintosh Plus boots — System 3.0 / Finder 5.1, January 1986 — **69/69 at 4 MB and 69/69 at 1 MB**, with the Finder resident because that system ignores the boot blocks' shell name, plus the interactive UI driven end to end there. No source change | FORMATS.md (*System 3.0 tier*), DECISIONS.md 2026-08-30 (the shell name System 3.0 does not read), `tools/vmac/sys30.py` |
 
 **The suite is 932 fixtures**, byte-exact against `unar` and, where `unar`
 fails, `macunpack`; 9,320 robustness variants clean. The Mac shell replays a
-69-fixture sample byte-exact at 4 MB and at the 1 MB floor on System 6.0.8,
-and on System 7.0.1 — all three re-run twice on 2026-08-26, for M37 and again
+69-fixture sample byte-exact at 4 MB and at the 1 MB floor on System 3.0 and
+on System 6.0.8, and on System 7.0.1 — all three re-run twice on 2026-08-26, for M37 and again
 for M38, and those were the first sweeps to cover the whole sample
 (BLOCKERS.md, the tier table). The **Mac OS 9.2 tier is 20/20** since
 2026-08-27, its first run since M12 and its first over every format.

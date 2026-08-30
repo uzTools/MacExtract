@@ -171,6 +171,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-29 (the chain that was walked twice) — the postfix byte was the last one the walk wrote
 - 2026-08-30 (the flush that was not the answer) — a screen cannot see a commit
 - 2026-08-30 (the flag that was never measured on these files) — 70.4 s to 52.6 s, and a kilobyte
+- 2026-08-30 (the shell name System 3.0 does not read) — the oldest system a Mac Plus boots, and a NOGRID that meant nothing
 
 ---
 
@@ -9887,3 +9888,51 @@ measured list for one archive plus the two shared primitives, and every other
 format's inner loop is still at `-Os`. And that `sit_arsenic.c` should join
 them: that file's own measurement says otherwise and was not re-taken, which
 is the same discipline this entry is about.
+
+## 2026-08-30 (the shell name System 3.0 does not read) — the oldest system a Mac Plus boots, and a NOGRID that meant nothing
+
+**Claim: the application runs unchanged on System 3.0 / Finder 5.1, the system
+the Macintosh Plus shipped with in January 1986.** 69/69 byte-exact at 4 MB and
+69/69 at 1 MB, plus the interactive application driven end to end
+(FORMATS.md, *System 3.0 tier*). No source change; the same binary.
+
+The first run said the opposite, and the way it was wrong is the transferable
+part.
+
+**A harness assumption, inherited by every tier.** `run.py --system Sys30.img`
+reported `NOGRID` — "the app never painted its 'alive' grid, so it did not
+launch or bombed before starting". That sentence is true about the frame and
+false about the application. Every harness here installs the application as the
+boot shell by rewriting the boot blocks' `bbShellName` (`mkboot.py`, offset
+0x1A), which works on System 6.0.8 and 7.0.1 and had therefore never been
+questioned.
+
+**The disproof cost one boot.** Set the shell name to `NoSuchApp` and boot: if
+the field is read, a missing shell must produce *something* different. The
+framebuffer was byte-identical to the `MacExtract` boot — same MD5 — and so was
+a third boot with the application at the volume root rather than in the blessed
+folder. System 3.0 does not act on that field at all. Nothing had been launched
+in any of the three, so the first result was evidence about `mkboot.py` and
+about nothing else.
+
+**Consequence: it is launched the way a person launches it** — boot to the
+Finder, double-click the volume, double-click the application
+(`tools/vmac/sys30.py`). The Finder therefore stays resident while the engine
+works, which no other tier measures, and the numbers came out equal to the
+tiers that have the machine to themselves.
+
+**And a second chord that "did nothing".** Cmd-. does not cancel Standard File
+on System 3.0: the frame after it is the Open dialog unchanged. This file
+already records a failure that looked exactly like that and was really a
+chord the emulator never delivered (`interactive.py`, `command_key`), so the
+claim needed a discriminator rather than a repetition. The one to hand was our
+own code: the same chord, in the same run, cancelled an extraction through the
+application's progress dialog and produced *"Extraction cancelled."* The chord
+arrives; old Standard File ignores it. The Cancel button quits normally, and
+the frame after it is byte-identical to the Finder window the application was
+launched from.
+
+**What is NOT claimed.** That System 3.0 is the oldest system that could work,
+only the oldest a Macintosh Plus can boot. Anything older than the Plus means a
+64K ROM, which has no HFS and no `NGetTrapAddress` — both of which this
+application uses — so that is a different question and not a smaller one.

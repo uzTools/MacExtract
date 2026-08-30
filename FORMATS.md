@@ -34,6 +34,7 @@ under *Table notes*.
 - Real-hardware verification (Mini vMac — System 6.0.8, 4 MB Mac Plus, 68000)
 - System 7 tier (Mini vMac — System 7.0.1, 4 MB Mac Plus, 68000)
 - Floor target verification (Mini vMac — System 6.0.8, **1 MB** Mac Plus, 68000)
+- System 3.0 tier (Mini vMac — System 3.0 / Finder 5.1, Mac Plus, 68000)
 - Mac OS 9 tier (QEMU PowerPC — Mac OS 9.2, `mac99`, 512 MB, 68LC040 emulation)
 - Compared with StuffIt Expander 4.0.2 (Aladdin, April 1996)
 
@@ -3052,6 +3053,53 @@ unchanged; the old path stays buildable as `UNC_MAC_STAGE_WRITES` and both are
 byte-exact through the qemu-m68k mock in CI. BLOCKERS.md, *Corrected figures*,
 and DECISIONS.md for the HFS param-block rewrite that unblocked it — and for the
 `HOpen` attribution that was withdrawn.
+
+## System 3.0 tier (Mini vMac — System 3.0 / Finder 5.1, Mac Plus, 68000)
+
+The oldest system a Macintosh Plus can boot, and the one it shipped with in
+January 1986: System Tools 1.0, an 800K HFS floppy. **69/69 byte-exact PASS at
+4 MB and 69/69 at 1 MB** (**2026-08-30**), the same committed sample and the
+same on-Mac CRC-32 read-back as every row above, replayed by
+`tools/vmac/sys30.py`.
+
+**The Finder is resident in every figure here, and in no other tier.** System
+3.0 ignores the boot blocks' shell name, so the application cannot replace the
+Finder the way `mkboot.py` replaces it everywhere else (DECISIONS.md
+2026-08-30, *the shell name System 3.0 does not read*); it is launched by
+double-click and the Finder stays in memory while it works. That makes this
+the only tier measured on a machine arranged the way a user's machine is.
+
+The four heaviest allocations, as the Mac itself reports them:
+
+| fixture | 4 MB peak | 1 MB peak | out |
+|---|---|---|---|
+| `derived-Library_ISBN_Barcoder.sit` | 1,683,101 B | 650,786 B | 34 files, 641,115 B |
+| `derived-a2basic.dmg.sit` | 1,032,484 B | 482,861 B | 205,019 B |
+| `derived-Troi-ClipSave-Plug-in1.1.sit` | 661,221 B | 472,137 B | 13 files, 796,486 B |
+| `synth-dd-m5.dd` | 405,520 B | 405,520 B | 1,145 B |
+
+The largest output on the tier is `derived-XferIt_1.5b4.sea`, 948,175 B across
+10 files, at 24,217 B of peak heap. `derived-Troi-ClipSave-Plug-in1.1.sit`
+takes **472,137 B at 1 MB here, the same figure to the byte as the System
+6.0.8 floor target** (*Floor target verification*) — measured, and not
+explained: this machine has a Finder in memory and that one does not.
+
+**The application, not just the engine**, on the same system: launched from
+the Finder, Standard File listing the archive, the Drive button, the
+destination dialog, the progress dialog, *"Extraction cancelled."* from Cmd-.
+and *"Extraction complete."* from a full run, then the extracted application
+double-clicked from the Finder — `tools/vmac/interactive.py --e2e --system
+Sys30.img`, ~133 s of emulated Mac Plus time on
+`derived-ScrollbarPattern.sit`.
+
+**One thing behaves differently, and it is the System rather than this
+application: Cmd-. does not cancel Standard File on System 3.0.** The frame
+after the chord is the Open dialog unchanged, byte-identical to the frame
+before it. The chord is arriving — the same chord, in the same run, cancels an
+extraction through this application's own progress dialog — so old Standard
+File simply does not act on it. The Cancel BUTTON quits normally: the frame
+after it is byte-identical to the Finder window the application was launched
+from. On System 6.0.8 the same chord closes the same dialog.
 
 ## Mac OS 9 tier (QEMU PowerPC — Mac OS 9.2, `mac99`, 512 MB, 68LC040 emulation)
 

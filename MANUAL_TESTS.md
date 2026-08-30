@@ -2,7 +2,7 @@
 
 **Status: none of it has been done.** No physical Macintosh has ever run this
 application. Everything the repository claims was observed under emulation —
-Mini vMac for System 6.0.8 and 7.0.1, QEMU for Mac OS 9.2 — and emulation is
+Mini vMac for System 3.0, 6.0.8 and 7.0.1, QEMU for Mac OS 9.2 — and emulation is
 evidence, not proof.
 
 This file is the to-do list for whoever has what this machine does not — the
@@ -43,7 +43,7 @@ Everything that *can* be automated already is, and lives elsewhere:
 
 ---
 
-## 1. A real Mac Plus, System 6.0.x, 1 MB — the floor target
+## 1. A real Mac Plus, System 3.0 or 6.0.x, 1 MB — the floor target
 
 This is the machine the project is designed around, and the one where an
 emulator is least trustworthy. Do these first.

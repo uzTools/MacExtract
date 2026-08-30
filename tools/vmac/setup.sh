@@ -13,6 +13,7 @@
 #     vMac.ROM          128 KB Macintosh Plus ROM (checksum 4D1F8172)
 #     System6.hfv       20 MB System 6.0.8 hard-disk image
 #     Sys7.img          10 MB System 7.0.1 hard-disk image (the System 7 tier)
+#     Sys30.img         800 KB System 3.0 / Finder 5.1 floppy (the System 3 tier)
 #     mv-4M/minivmac    4 MB Mac Plus, all out
 #     mv-1M/minivmac    1 MB Mac Plus, all out (the floor target)
 #     mv-4M-1x/minivmac 4 MB Mac Plus, authentic 7 MHz
@@ -69,9 +70,19 @@ fetch() {   # fetch <url> <dest> <sha256>
     mv "$2.part" "$2"
 }
 
+# System Tools 1.0: System 3.0 / Finder 5.1, the disk the Macintosh Plus
+# shipped with in January 1986 and the oldest system a Plus can boot. An 800K
+# HFS floppy, not a hard-disk image — that is what this system came on, and
+# tools/vmac/sys30.py boots the application from it. System 3.0 IGNORES the
+# boot blocks' shell name, so that harness launches by double-click instead
+# of by mkboot.py's usual shell replacement; its header says why.
+SYS30_URL=https://archive.org/download/30_20230725/30.img
+SYS30_SHA=73048ab3edc772619f4fdf3e9e2c61bcb9ad55fa6c10732c980bd17da427646c
+
 fetch "$MV_URL"  minivmac.src.tgz "$MV_SHA"
 fetch "$SYS_URL"  System6.hfv     "$SYS_SHA"
 fetch "$SYS7_URL" Sys7.img       "$SYS7_SHA"
+fetch "$SYS30_URL" Sys30.img     "$SYS30_SHA"
 
 if [ -f vMac.ROM ] && check vMac.ROM "$ROM_SHA"; then
     echo "have vMac.ROM"

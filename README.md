@@ -145,9 +145,13 @@ them comparable at all. The full capability table and the unrounded figures are 
 
 | | |
 |---|---|
-| Minimum | System 6.0.8, 68000, **1 MB of RAM** |
-| Also runs on | System 7, Mac OS 8 and 9, PowerPC via the built-in 68k emulator |
+| Minimum | System 3.0, 68000, **1 MB of RAM** — the system a Macintosh Plus shipped with in January 1986 |
+| Also runs on | System 6, System 7, Mac OS 8 and 9, PowerPC via the built-in 68k emulator |
 | Disk | one 800K floppy |
+
+On System 3.0 the Open dialog does not close on Command-period — that system's
+Standard File ignores it. Click Cancel instead. System 6 and later are
+unaffected, and Command-period stops an extraction on every system.
 
 The same binary adapts to whatever machine it finds itself on, so the download
 above is the only one. On a 1 MB Mac Plus, the slowest machine supported:

@@ -8,8 +8,10 @@ system the project claims:
 
 | tier | result |
 |---|---|
+| System 3.0 / Finder 5.1, 4 MB Mac Plus (Mini vMac, a true 68000) | **69/69** sampled fixtures, with the FINDER resident — System 3.0 ignores the boot blocks' shell name, so the application cannot replace it and is double-clicked instead |
+| System 3.0 / Finder 5.1, **1 MB** — the oldest system, at the same RAM floor | **69/69**; the application driven end to end there too, where Cmd-. does not cancel Standard File and the Cancel button does (FORMATS.md, *System 3.0 tier*) |
 | System 6.0.8, 4 MB Mac Plus (Mini vMac, a true 68000) | **69/69** sampled fixtures |
-| System 6.0.8, **1 MB** — the floor target | **69/69**; no memory-budget refusals remain, and DiskDoubler method 5's 396 KB allocation succeeds here |
+| System 6.0.8, **1 MB** — the RAM floor | **69/69**; no memory-budget refusals remain, and DiskDoubler method 5's 396 KB allocation succeeds here |
 | System 7.0.1, 4 MB | **69/69** |
 | Mac OS 9.2 (QEMU PowerPC, 68LC040 emulation) | **20/20** sampled fixtures, re-run 2026-08-27 after standing at 13/13 since M12; plus HFS+, the `SIZE` partition, and — since 2026-08-28 — both cancel routes, the Cmd-. chord and the Cancel BUTTON clicked with the pointer, an 8-bit name photographed, an encrypted archive decrypted through the password dialog after a wrong password was refused, and SpaceSaver replayed by path — the format no Macintosh tier had ever run, whose first run found a name defect in the shell (FORMATS.md) |
 

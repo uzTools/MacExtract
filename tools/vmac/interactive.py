@@ -254,7 +254,12 @@ SF_ROW_HEIGHT = 16      # one Standard File row, at the system font size
 # run came to report UNC_ERR_FORMAT about a file that is not an archive
 # (DECISIONS.md 2026-08-24, the low-memory message). Measured off this
 # harness's own frames, one per system.
-SF_ROWS = {"System6.hfv": (150, 137), "Sys7.img": (150, 127)}
+SF_ROWS = {"System6.hfv": (150, 137), "Sys7.img": (150, 127),
+           # System 3.0 puts it where System 6 does: the application places
+           # this dialog itself, at SFGetFile's `where`. What differs is the
+           # LISTING — 3.0 shows the invisible `DeskTop` file, so the second
+           # row is not what it is on 6. The first row is still the archive.
+           "Sys30.img": (150, 137)}
 
 # System 7's Desktop button, which System 6's dialog does not have. Measured
 # off the same frame.
@@ -269,6 +274,7 @@ def calibrate(system):
     geometry is exactly the failure this exists to stop.
     """
     global SF_FIRST_ROW, SF_SUBFOLDER_ROW, SF_SECOND_ROW
+    global FINDER_VOLUME_ICON, FINDER_APP_ICON, FINDER_EXTRACTED_APPL
     row = SF_ROWS.get(system)
     if row is None:
         raise SystemExit(f"interactive: no Standard File geometry for {system} "
@@ -276,6 +282,14 @@ def calibrate(system):
                          f"its first row to SF_ROWS")
     SF_FIRST_ROW = SF_SUBFOLDER_ROW = row
     SF_SECOND_ROW = (row[0], row[1] + SF_ROW_HEIGHT)
+    # The Finder coordinates only matter to --e2e, which is the only phase
+    # that keeps the Finder; leave them alone rather than failing a phase
+    # that never clicks one. phase_e2e refuses on its own if they are absent.
+    icons = FINDER_ICONS.get(system)
+    if icons:
+        FINDER_VOLUME_ICON = icons["volume"]
+        FINDER_APP_ICON = icons["app"]
+        FINDER_EXTRACTED_APPL = icons["extracted"]
 
 
 def sf_to_volume_root(mac, system):
@@ -351,16 +365,29 @@ SF_DRIVE = (377, 192)
 # that mode writes; they are stable because the boot image is rebuilt
 # identically each run, and re-measuring them from the shots is the fix if the
 # volume's contents ever change.
-FINDER_VOLUME_ICON = (480, 40)      # boot disk, top right of the desktop
-# Fourth of the four items in the open volume window, whose order is
-# System Folder, archive.sit, an empty folder mkboot.py cannot delete, then
-# the application. Measured off e2e-2-volume.png.
-FINDER_APP_ICON = (240, 110)
-# The extracted application, sixth and last item once the run has finished
-# (System Folder, archive.sit, that empty folder, macextract, then the two
-# entries of derived-ScrollbarPattern.sit). Measured off e2e-7; a different
-# fixture puts it somewhere else.
-FINDER_EXTRACTED_APPL = (367, 104)
+# One row per system, for the same reason WD_ICONS is a table: each system
+# remembers its own window placement and each leaves a different number of
+# items in the volume, so a constant is silently wrong on the other one.
+# `volume` is the boot disk on the desktop, `app` is MacExtract in the open
+# volume window, `extracted` is the application the run itself extracts.
+#
+# System 6 opens a window of FOUR items — System Folder, archive.sit, an empty
+# folder mkboot.py cannot delete, the application — and `extracted` is the
+# sixth and last once the two entries of derived-ScrollbarPattern.sit are
+# there. System 3.0 has no leftover folder, so the same window holds THREE and
+# every icon after the first sits one place to the left. Measured off each
+# system's own e2e-2-volume.png and e2e-7-back-in-finder.png; a different
+# fixture moves `extracted`.
+FINDER_ICONS = {
+    "System6.hfv": {"volume": (480, 40), "app": (240, 110),
+                    "extracted": (367, 104)},
+    "Sys30.img":   {"volume": (472, 45), "app": (237, 97),
+                    "extracted": (170, 168)},
+}
+
+FINDER_VOLUME_ICON = FINDER_ICONS["System6.hfv"]["volume"]
+FINDER_APP_ICON = FINDER_ICONS["System6.hfv"]["app"]
+FINDER_EXTRACTED_APPL = FINDER_ICONS["System6.hfv"]["extracted"]
 
 
 # The working-directory phase's own coordinates. SF_SUBFOLDER_ROW is the row
@@ -849,6 +876,11 @@ def phase_e2e(args, appbin, workdir, shot):
         open -> progress dialog -> "Extraction complete." -> quit ->
         double-click the extracted application
     """
+    if args.system not in FINDER_ICONS:
+        raise SystemExit(f"interactive: no Finder icon geometry for "
+                         f"{args.system} — boot it once with --e2e on a "
+                         f"system that has some, look at e2e-2-volume.png, "
+                         f"and add its icons to FINDER_ICONS")
     stock = os.path.join(R.VMAC_HOME, args.system)
     bootimg = os.path.join(workdir, "boot-e2e.hfv")
     R.sh(sys.executable, os.path.join(HERE, "mkboot.py"), stock, appbin, bootimg,

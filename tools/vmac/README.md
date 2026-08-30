@@ -3,20 +3,32 @@
 Everything in FORMATS.md and BLOCKERS.md that claims the Macintosh shell
 "runs on real System 6" was produced by this harness — on an emulator.
 MANUAL_TESTS.md is the complement: what only silicon can answer. It boots the Retro68
-application on Mini vMac emulating a **68000 Mac Plus under System 6.0.8 or
-System 7.0.1**, extracts one fixture per boot, and cross-checks the result
-against the same engine's Linux output.
+application on Mini vMac emulating a **68000 Mac Plus under System 3.0, System
+6.0.8 or System 7.0.1**, extracts one fixture per boot, and cross-checks the
+result against the same engine's Linux output.
 
     tools/vmac/setup.sh                                  # once
     tools/vmac/run.py fixtures/adobenumbers.sit          # 4 MB machine
-    tools/vmac/run.py --mem 1M fixtures/adobenumbers.sit # 1 MB floor target
+    tools/vmac/run.py --mem 1M fixtures/adobenumbers.sit # 1 MB RAM floor
     tools/vmac/run.py --system Sys7.img ...              # the System 7 tier
+    tools/vmac/sys30.py --mem 1M ...                     # the System 3.0 tier
 
-`--system` picks the boot system: `System6.hfv` (6.0.8, the floor target) or
-`Sys7.img` (7.0.1). System 7 is where `SFReply.vRefNum` becomes a working
-directory and the Process Manager starts honouring the `SIZE` partition, so it
-is a different set of code paths, not just a different splash screen. Run the
-System 7 tier at 4 MB.
+`--system` picks the boot system: `System6.hfv` (6.0.8) or `Sys7.img` (7.0.1).
+System 7 is where `SFReply.vRefNum` becomes a working directory and the Process
+Manager starts honouring the `SIZE` partition, so it is a different set of code
+paths, not just a different splash screen. Run the System 7 tier at 4 MB.
+
+**System 3.0 has its own driver, `sys30.py`, and `run.py --system Sys30.img`
+does NOT work.** That system ignores the boot blocks' shell name, so
+`mkboot.py`'s usual shell replacement launches nothing and every fixture comes
+back NOGRID — which reads exactly like an application that will not start
+(DECISIONS.md 2026-08-30, *the shell name System 3.0 does not read*).
+`sys30.py` boots to the Finder and double-clicks the application instead, so
+the Finder is resident in everything that tier measures. `interactive.py
+--system Sys30.img --e2e` covers the user interface there; both its Standard
+File row and its Finder icon positions are per-system tables, because System
+3.0 leaves a different number of items in the volume window and lists the
+invisible `DeskTop` file that System 6 hides.
 
 Nothing here runs in `./ci.sh`: it needs ~80 MB of downloads, an X server and
 minutes per fixture. It is a deliberate, on-demand check.
@@ -59,7 +71,8 @@ oracle and will lose it to `./ci.sh`'s `make clean`.
 | file | role |
 |---|---|
 | `segcheck.py` | **replay every segmented-archive scenario in one command** — the six joining schemes, parts inside envelopes, and a chained file, across both harnesses |
-| `setup.sh` | fetch + build the emulator, the ROM and a System 6.0.8 image into `$UNC_VMAC_HOME` (default `~/.cache/macextract/vmac/`) |
+| `setup.sh` | fetch + build the emulator, the ROM and the System 3.0, 6.0.8 and 7.0.1 images into `$UNC_VMAC_HOME` (default `~/.cache/macextract/vmac/`) |
+| `sys30.py` | the **System 3.0 / Finder 5.1** tier: same disks, same grid, same grader as `run.py`, but launched by double-click because that system reads no shell name — see above |
 | `mkboot.py` | strip that image to System + Finder and make it boot straight into the application |
 | `run.py` | build the disks, boot, screenshot, decode, check. `--out-kb` sizes the DESTINATION volume, which is how the full-disk path is reached at all — see below |
 | `interactive.py` | drive the real UI (SFGetFile, progress dialog, Cancel, Cmd-., the password dialog) and photograph each step |
