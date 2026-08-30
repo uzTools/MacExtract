@@ -55,7 +55,7 @@ ls -la build/mac/MacExtract.APPL build/mac/MacExtract.bin build/mac/MacExtract.d
 # ~32,000 B unnoticed, the budget fell from 597,036 to 565,176, and three
 # corpus archives stopped fitting on a 1 MB Mac Plus with nothing failing.
 # That is what this is here to stop happening again.
-UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-147260}
+UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-147268}
 SIZE="$TOOLCHAIN/bin/m68k-apple-macos-size"
 GDB=build/mac/MacExtract.code.bin.gdb
 if [ -x "$SIZE" ] && [ -f "$GDB" ]; then

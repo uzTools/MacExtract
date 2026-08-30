@@ -68,28 +68,40 @@ set_source_files_properties(
 # that measurement was taken on that file rather than inherited.
 
 # Plain 68000 floor: no 68020+ instructions.
-# Size flags, each MEASURED on this application on 2026-08-30 rather than
-# taken on reputation — code is the only thing that costs the engine budget
-# (FORMATS.md, *What the application costs the engine*), so a byte here is a
-# byte the engine gets on a 1 MB Mac Plus:
+# Size flags. CODE is the only part of this application that costs the engine
+# budget (FORMATS.md, *What the application costs the engine*), so bytes here
+# are bytes the engine gets on a 1 MB Mac Plus — but they are NOT free, and
+# each was priced in BOTH currencies on 2026-08-30. Bytes from
+# `m68k-apple-macos-size`; ticks are gTkRun from `-D UNC_AT_TIMING` on
+# derived-EmpireBuilderDemo.sit at authentic 7 MHz, which is DETERMINISTIC
+# here — three runs per build gave identical counts — so one run prices a
+# configuration. Baseline 148,048 B / 3,158 ticks (52.63 s):
 #
-#   baseline                              148,048 B
-#   -fno-tree-loop-distribute-patterns    147,608   -440
-#   -freorder-blocks-algorithm=simple     147,712   -336
-#   -fipa-icf                             148,048      0   (alone)
-#   the three together, -fno-early-inlining
-#                                         147,260   -788
+#   -fno-tree-loop-distribute-patterns   -440 B    +1 tick   kept
+#   -freorder-blocks-algorithm=simple    -336 B   +26 ticks  kept, and it is
+#                                                            the whole cost
+#   -fipa-icf                               0 B    0 ticks   kept: worth ~12 B
+#                                                            only in combination
+#   -fno-early-inlining                    +8 B    +2 ticks  REJECTED — worse
+#                                                            on both axes
 #
-# Measured and REJECTED: -fno-inline-functions-called-once (+2,444),
-# -fconserve-stack (+1,064), -flto (does not link on this toolchain),
-# -Wl,--relax (no effect on this target), alignment flags (no effect),
-# -fno-asynchronous-unwind-tables / -fmerge-all-constants / -fno-ident
-# (no effect). -fno-inline-small-functions is a further -248 and is NOT
-# taken: it reaches the UNC_HOT decoders and nothing has timed it.
+# Together: 147,268 B / 3,184 ticks — 780 B for +0.82 % of an extraction. That
+# 780 B is what puts the budget at 566,164 B and brings the corpus's heaviest
+# three archives (566,009 B) back inside a 1 MB Mac Plus, by 155 bytes. It is a
+# real trade and it was made deliberately: an archive that will not open is a
+# worse outcome than one that opens 0.4 s later on a 52.6 s job.
+#
+# Measured and rejected on size alone: -fno-inline-functions-called-once
+# (+2,444 B), -fconserve-stack (+1,064 B), -flto (does not link on this
+# toolchain), -Wl,--relax (no effect on this target), alignment flags,
+# -fno-asynchronous-unwind-tables, -fmerge-all-constants, -fno-ident (no
+# effect). -fno-inline-small-functions is a further 248 B and is NOT taken:
+# nothing has timed it, and this block exists because that reasoning was
+# applied to one flag and not to the four beside it (BLOCKERS.md).
 target_compile_options(MacExtract PRIVATE -mcpu=68000 -Os -Wno-multichar
                        -fno-tree-loop-distribute-patterns
                        -freorder-blocks-algorithm=simple
-                       -fipa-icf -fno-early-inlining
+                       -fipa-icf
                        -ffunction-sections
                        # UNC_MAC_AUTOTEST builds a headless self-driving variant
                        # (no SFGetFile/alerts) used by the Mini vMac harness in

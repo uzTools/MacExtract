@@ -2160,6 +2160,34 @@ The five largest objects are `unc_crypt.c` (7,654 + 7,032),
 all of it `ss_dict.h`), `inflate.c` (7,824 + 2,675) and `fmt_dd.c`
 (10,194 + 12).
 
+### Size flags, priced in both currencies (2026-08-30)
+
+**Bytes off the application are not free.** Same fixture and instrument as the
+`-O3` rows above — `gTkRun` from `-D UNC_AT_TIMING` on
+`derived-EmpireBuilderDemo.sit` at authentic 7 MHz. **The count is
+deterministic**: three runs per build gave identical ticks, so one run prices a
+configuration, which is what made per-flag pricing affordable at all.
+
+| flag | code | ticks | |
+|---|---|---|---|
+| baseline | 148,048 B | 3,158 (52.63 s) | |
+| `-fno-tree-loop-distribute-patterns` | −440 B | +1 | kept |
+| `-freorder-blocks-algorithm=simple` | −336 B | **+26** | kept; the whole cost |
+| `-fipa-icf` | 0 B | 0 | kept: ~12 B in combination only |
+| `-fno-early-inlining` | **+8 B** | **+2** | rejected, worse both ways |
+| the three kept | 147,268 B | 3,184 (53.07 s) | **−780 B for +0.82 %** |
+
+That 780 B is what carries the budget to 566,164 B and brings the corpus's
+three heaviest archives (566,009 B) back inside a 1 MB Mac Plus, by 155 bytes.
+**One flag decides it**: without `-freorder-blocks-algorithm=simple` the
+reclaim is ~440 B and those archives do not fit. An archive that will not open
+was judged worse than one that opens 0.4 s later on a 52.6 s job.
+
+**An 8-byte code change moved the budget not at all** — the shipped four-flag
+set was 147,260 B and the three-flag set is 147,268 B, and both measure
+566,164 B on the machine. Heap allocation is granular; do not read single-digit
+byte differences as budget.
+
 ### Launch
 
 **A kilobyte of code is not a kilobyte of launch time; a RELOCATION is.**
