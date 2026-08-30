@@ -277,7 +277,7 @@ static const uint16_t unc_crc16_arc_table[256] = {
     0x8201, 0x42c0, 0x4380, 0x8341, 0x4100, 0x81c1, 0x8081, 0x4040,
 };
 
-uint16_t unc_crc16_arc(uint16_t crc, const uint8_t *buf, int32_t len)
+UNC_HOT uint16_t unc_crc16_arc(uint16_t crc, const uint8_t *buf, int32_t len)
 {
     while (len >= 4) {
         crc = (uint16_t)((crc >> 8) ^ unc_crc16_arc_table[(crc ^ *buf++) & 0xFF]);

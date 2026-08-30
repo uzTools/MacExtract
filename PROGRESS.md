@@ -52,6 +52,8 @@ explaining itself belongs in DECISIONS.md instead.
 | M42 A cut archive is not a complete one | DiskDoubler and StuffIt reported SUCCESS on a truncated archive, handing over the entries before the cut: the walks now tell "the archive ended" from "the bytes ran out", and `run_truncation.py` grades that against `unar` for every format | BLOCKERS.md (*9,320 robustness variants clean*), DECISIONS.md 2026-08-29 (a cut archive), TESTING.md (*A cut archive is NOTICED*) |
 | M43 The two MIME gaps | Both items whose oracle was already on this machine: a multipart's uuencoded part no longer hides the rest of the message, and `message/partial` — a message split across several FILES — becomes the sixth join scheme, graded against munpack over sets mpack writes | FORMATS.md (*base64 and MIME*, *Segmented archives*), DECISIONS.md 2026-08-29 (a part that hid its message; a message in several files) |
 
+| M44 Level with the yardstick | `UNC_AT_TIMING` split an extraction on the Mac itself — **98.5 % engine, 1.1 s of File Manager** — and `UNC_HOT` marks the six functions that time lives in, at `-O3` inside an `-Os` build: 70.4 s → 52.6 s on a 7 MHz Mac Plus for **+1,024 B**, and StuffIt Expander 4.0.2's 20 s lead on `derived-EmpireBuilderDemo.sit` becomes 56 s each | FORMATS.md (*What -O3 is worth, and where*), DECISIONS.md 2026-08-30 (the flag that was never measured on these files), BLOCKERS.md (*Withdrawn claims*) |
+
 **The suite is 932 fixtures**, byte-exact against `unar` and, where `unar`
 fails, `macunpack`; 9,320 robustness variants clean. The Mac shell replays a
 69-fixture sample byte-exact at 4 MB and at the 1 MB floor on System 6.0.8,

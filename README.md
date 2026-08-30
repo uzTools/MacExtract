@@ -51,7 +51,7 @@ one, because parts are recognised by what is inside them:
 ## Download
 
 **[Latest release](https://github.com/jarreboum/MacExtract/releases/latest)** —
-currently **v0.26.0**. If the release page shows anything older, the publish
+currently **v0.27.0**. If the release page shows anything older, the publish
 step did not run. Or take it straight from the tree:
 
 | | |
@@ -131,13 +131,13 @@ same archives on the same disk, and timed by the same instrument:
 | Archive | MacExtract | Expander 4.0.2 |
 |---|---|---|
 | A few KB of StuffIt | 3 seconds | 3 seconds — too quick to tell apart |
-| 280 KB StuffIt | 1¼ minutes | **1 minute** |
+| 280 KB StuffIt | 1 minute | 1 minute — level |
 | 250 KB Compact Pro | **2¼ minutes** | 2½ minutes |
 | 300 KB BinHex with a StuffIt archive inside | **4½ minutes** | 7 minutes |
 
-Choosing between them on speed alone is choosing by format. Times are to the
-nearest few seconds, and both wrote the same files — which is what makes them
-comparable at all. The full capability table and the unrounded figures are in
+Choosing between them on speed alone gives you nothing to choose by. Times are
+to the nearest few seconds, and both wrote the same files — which is what makes
+them comparable at all. The full capability table and the unrounded figures are in
 [FORMATS.md](FORMATS.md), under "Compared with StuffIt Expander 4.0.2" and
 "Timed on the same Mac Plus" inside it.
 

@@ -29,6 +29,7 @@ under *Table notes*.
 - Resident memory, stack and launch (Mac target)
 - Decode cost, before and after the 2026-08-24 pass (Linux, callgrind `Ir`)
 - Measured on a 7 MHz Mac Plus (Mini vMac 1x, System 6.0.8, 4 MB)
+- What -O3 is worth, and where
 - Relative decode cost per format (Linux, same engine)
 - Real-hardware verification (Mini vMac — System 6.0.8, 4 MB Mac Plus, 68000)
 - System 7 tier (Mini vMac — System 7.0.1, 4 MB Mac Plus, 68000)
@@ -2551,7 +2552,14 @@ re-try without a newer toolchain.
 paints its "alive" grid before touching a disk — so the extract column is the
 archive alone. The set is `tools/vmac/timing.txt`: one fixture per format,
 chosen large rather than typical, so each figure is an upper bound a user can
-plan around. **Re-measured 2026-08-28.**
+plan around. **Thirteen rows re-measured 2026-08-30**, on the shipping
+`UNC_HOT` build (*What -O3 is worth, and where*, below): StuffIt 141 s → 119 s,
+Compact Pro 333 s → 321 s, DiskDoubler 142 s → 135 s, PackIt 20 s → 18 s, and
+the rest within a poll of what they were. `popper-1.7.tar.Z` moved from
+`--poll 20` to `--poll 3` and reads the same 40 s through the finer ruler.
+**The two Arsenic rows below were NOT re-run** — `sit_arsenic.c` carries no
+`UNC_HOT`, but `unc_crc16_arc` does, so they may have moved a little and
+nothing here has looked.
 
 **Every figure is quantised to the poll interval**, which is why the poll is a
 column: the harness timestamps at poll instants at both ends, so a row is
@@ -2560,18 +2568,18 @@ accurate to ±one poll however reproducible it looks.
 | Fixture | Format | In | Extract | Poll |
 |---|---|---|---|---|
 | `derived-Export.sit` | StuffIt | 1.6 KB | 3 s | 3 s |
-| `derived-PackIt.pit` | PackIt | 62 KB | 20 s | 20 s |
-| `derived-KeyGraphics.sit` | StuffIt 5 | 4.6 KB | 25 s | 3 s |
+| `derived-PackIt.pit` | PackIt | 62 KB | 18 s | 3 s |
+| `derived-KeyGraphics.sit` | StuffIt 5 | 4.6 KB | 24 s | 3 s |
 | `derived-Expand_Now_1.0.1.sea` | Now Compress | 62 KB | 34 s | 3 s |
-| `popper-1.7.tar.Z` | compress | 59 KB | 40 s | 20 s |
+| `popper-1.7.tar.Z` | compress | 59 KB | 40 s | 3 s |
 | `derived-PCCTS.tar` | Tar | 287 KB | 46 s | 3 s |
 | `kermitut9test.bin` | MacBinary | 304 KB | 52 s | 3 s |
 | `PCCTS.tar.gz` | gzip | 64 KB | 58 s | 3 s |
-| `macburger-helper.hqx` | BinHex | 306 KB | **104 s** | 3 s |
-| `derived-MUSFMT10.ZIP` | Zip | 172 KB | 111 s | 3 s |
-| `derived-EmpireBuilderDemo.sit` | StuffIt | 278 KB | 141 s | 3 s |
-| `derived-MacPass390.sea` | DiskDoubler | 156 KB | 142 s | 3 s |
-| `derived-XferIt_1.5b4.sea` | Compact Pro | 285 KB | 333 s | 3 s |
+| `macburger-helper.hqx` | BinHex | 306 KB | 107 s | 3 s |
+| `derived-MUSFMT10.ZIP` | Zip | 172 KB | 110 s | 3 s |
+| `derived-EmpireBuilderDemo.sit` | StuffIt | 278 KB | **119 s** | 3 s |
+| `derived-MacPass390.sea` | DiskDoubler | 156 KB | 135 s | 3 s |
+| `derived-XferIt_1.5b4.sea` | Compact Pro | 285 KB | 321 s | 3 s |
 | `derived-a2basic.dmg.sit` | StuffIt 5 (Arsenic) | 153 KB | 542 s | 20 s |
 | `derived-Library_ISBN_Barcoder.sit` | StuffIt 5 (Arsenic) | 202 KB | 722 s | 20 s |
 
@@ -2665,6 +2673,51 @@ megabyte is a couple of minutes.
 150 s; the rate is very non-uniform (16% of the input in the first seven
 minutes, the last 205 KB in a hundred seconds), which is what made the
 timeouts chosen for it mislead three times. BLOCKERS.md.
+
+## What -O3 is worth, and where
+
+Two measurements, 2026-08-30, both on `derived-EmpireBuilderDemo.sit` at
+authentic Mac Plus speed (`run.py --emu mv-4M-1x -D UNC_AT_TIMING`, which
+reports the extraction in TICKS rather than through a screenshot poll).
+
+**Where an extraction's seconds go.** The probe bills File Manager time by
+kind and leaves the engine as the remainder:
+
+| phase | ticks | seconds | share |
+|---|---|---|---|
+| File Manager reads | 34 | 0.6 s | 0.8 % |
+| File Manager writes | 16 | 0.3 s | 0.4 % |
+| create, `SetEOF`, close, `FlushVol`, catalog | 12 | 0.2 s | 0.3 % |
+| **the engine** | 4,164 | **69.4 s** | **98.5 %** |
+
+So the streaming writer's 4 KB pieces, the `SetFPos` before every read and the
+`FlushVol` after every fork cost **1.1 s between them** on this machine. Any
+plan that trades one of those for speed is trading a rounding error.
+
+**What the optimiser is worth on the four files that matter**, and why the
+answer is a list of functions rather than a flag:
+
+| build | extract | application |
+|---|---|---|
+| `-Os` everywhere | 70.4 s | 182,144 B |
+| `-O2`, `unc_lzw.c` + `unc_huffman.c` | 58.8 s | +1,536 B |
+| `-O2`, those plus `unc_util.c` + `fmt_sit.c` | 56.2 s | +5,504 B |
+| `-O2`, the whole engine bar `sit_arsenic.c` | 56.0 s | +40,192 B |
+| `-O3`, the same four files | 52.5 s | +8,320 B |
+| **`UNC_HOT` — six functions, `-O3`** | **52.6 s** | **+1,024 B** |
+
+The last two rows are the point. `-O3` on whole files spent 8,850 B of text,
+the largest single item being `unc_huff_read_tree` at +2,428 B — a function
+that is 0.44 % of the run. `UNC_HOT` (`src/unc_internal.h`) marks
+`unc_lzw_read`, `lzw_code`, `lzw_chain`, `unc_huff_decode`,
+`unc_canon_decode`, `unc_crc16_arc` and StuffIt's two hot method decoders,
+and gets the same time for an eighth of the size. `unc_sit_decode_fork` came
+out 226 B SMALLER than at `-Os`, because GCC will not inline across differing
+optimisation attributes and the two marked decoders stopped being copies
+inside it.
+
+Verified byte-exact on both Mini vMac tiers with `UNC_HOT` in: **69/69 at
+4 MB and 69/69 at the 1 MB floor** (2026-08-30).
 
 ## Relative decode cost per format (Linux, same engine)
 
@@ -3331,14 +3384,20 @@ cannot see are in `tools/vmac/README.md`.
 | Fixture | Format | In | MacExtract | Expander 4.0.2 | Expander ÷ ours |
 |---|---|---|---|---|---|
 | `derived-Export.sit` | StuffIt | 1.6 KB | 3 s | 3 s | both at the poll floor |
-| `derived-EmpireBuilderDemo.sit` | StuffIt | 278 KB | 73 s | **57 s** | **0.77x** |
+| `derived-EmpireBuilderDemo.sit` | StuffIt | 278 KB | 56 s | 56 s | **1.00x** |
 | `derived-FirstClass_Demo.cpt` | Compact Pro | 249 KB | **133 s** | 156 s | **1.18x** |
 | `macburger-helper.hqx` | BinHex → StuffIt | 307 KB | **269 s** | 426 s | **1.58x** |
 
-**Neither is faster.** Expander unstuffs a StuffIt archive in three quarters of
-our time; we expand a Compact Pro archive in five sixths of its, and a BinHex
-envelope with an archive inside it in under two thirds. On this evidence a user
-choosing between them on speed alone is choosing by format.
+**Neither is faster.** The two are level on StuffIt — 56 s each, which at a
+±3 s poll means indistinguishable — and we expand a Compact Pro archive in five
+sixths of Expander's time and a BinHex envelope with an archive inside it in
+under two thirds. On this evidence a user choosing between them on speed alone
+has nothing to choose by.
+
+**That row was 76 s against 56 s on 2026-08-29**, and 73 s after the LZW
+change; what closed it was `UNC_HOT`, below. The Compact Pro and BinHex rows
+predate it and are therefore pessimistic about us by some unmeasured amount —
+both share `unc_canon_decode` and `unc_crc16_arc` with the row that moved.
 
 **Every figure is a lower bound with a ±3 s poll error, and the RATIO is what
 transfers**: both sides pay the same quantisation and the same stolen CPU, and

@@ -170,6 +170,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-29 (a message in several files) — the sixth join scheme, and the first whose parts are text
 - 2026-08-29 (the chain that was walked twice) — the postfix byte was the last one the walk wrote
 - 2026-08-30 (the flush that was not the answer) — a screen cannot see a commit
+- 2026-08-30 (the flag that was never measured on these files) — 70.4 s to 52.6 s, and a kilobyte
 
 ---
 
@@ -9817,3 +9818,72 @@ remainder is decode and I/O rather than accounting. On Linux that archive is
 58 % `unc_lzw_read`, 26 % `unc_huff_decode` and 8 % `unc_crc16_arc` — and the
 last of those is the 2-3x table this project has twice measured and twice
 declined to buy with 3 KB of code (2026-08-27, *what the tables left behind*).
+
+---
+
+## 2026-08-30 (the flag that was never measured on these files) — 70.4 s to 52.6 s, and a kilobyte
+
+Asked to make this at least as fast as StuffIt Expander 4.0.2 on the one
+archive it wins. It is level now — 56 s each — and not one line of decoder
+changed. What changed was which functions the optimiser was allowed to work
+on.
+
+**First, the probe, because the profile everyone had was the wrong machine.**
+Linux callgrind sees decoders and nothing else; the screenshot clock sees the
+whole run and nothing inside it. `UNC_AT_TIMING` bills File Manager time by
+kind on the Mac itself and leaves the engine as the remainder: reads 0.6 s,
+writes 0.3 s, create/`SetEOF`/close/`FlushVol`/catalog 0.2 s, **engine 69.4 s
+of 70.4** (FORMATS.md, *What -O3 is worth, and where*). **Every I/O idea on
+the list was worth 1.1 s in total** — including dropping the per-fork
+`FlushVol`, which would have spent the guarantee that our output is on the
+disk when the alert goes up to buy a fifth of a second.
+
+**Then the flag.** `mac/CMakeLists.txt` built everything at `-Os`, and said
+so with a measurement: `-O2` on `sit_arsenic.c` cost 1,536 B and was SLOWER,
+1,304 s against 1,284 s. That measurement is sound and still is. What was
+wrong is that a conclusion drawn on one file had been applied to forty, and
+the note beside it said the question could not be re-asked "without a harness
+that resolves better than 20 s on a 22-minute run" — which the tick probe now
+is. On the four files a StuffIt run actually lives in, `-O3` is **−25.4 %**.
+
+**A rule proved on one file is a rule about that file.** The engine has ~40
+files and one of them was ever measured. The cost of not re-asking was a fifth
+of every StuffIt, DiskDoubler and PackIt extraction, for as long as those
+files have existed.
+
+**The knee is real and it argued for a list.** `-O2` on the whole engine bar
+Arsenic is 56.0 s for +40,192 B against 56.2 s for +5,504 B on four files:
+0.4 % more speed for 35 KB more application, on a machine whose engine budget
+is stated to the byte. A blanket flag would have been the easy call and the
+wrong one.
+
+**The maintainer's question was the best move of the day.** Asked whether
+buying speed with size argued for hand-written assembly. It argued instead for
+aiming the optimiser: `__attribute__((optimize("O3")))` on six functions is
+**52.6 s for +1,024 B**, against 52.5 s for +8,320 B. The file-level flag had
+been paying for `unc_huff_read_tree` — +2,428 B for 0.44 % of the run — and
+for every cold path beside it.
+
+Three things fell out that were not the point:
+
+- **Marking functions puts them under the oracle.** A flag in
+  `mac/CMakeLists.txt` optimises code that no Linux run ever executes, so the
+  most aggressively compiled code in the project was the one thing the
+  932-fixture differential suite could not see. `UNC_HOT` lives in `src/`, so
+  every fixture now decodes through it on both machines.
+- **The attribute made a function smaller.** `unc_sit_decode_fork` is 226 B
+  under its `-Os` size, because GCC will not inline across differing
+  optimisation attributes and the two marked method decoders stopped being
+  copies inside it.
+- **Assembly is still on the table and the case for it has to be made
+  differently.** It would now have to beat a `-O3` inner loop rather than an
+  `-Os` one, and it would cost exactly the coverage the point above just
+  bought. The `qemu-m68k` harnesses that already run Alysis's and Aladdin's
+  modules are the shape a graded asm routine would need, and that harness has
+  to exist before the first instruction, not after.
+
+**What is NOT claimed.** That `UNC_HOT` is the right list — it is the
+measured list for one archive plus the two shared primitives, and every other
+format's inner loop is still at `-Os`. And that `sit_arsenic.c` should join
+them: that file's own measurement says otherwise and was not re-taken, which
+is the same discipline this entry is about.

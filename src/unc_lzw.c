@@ -140,7 +140,7 @@ static int lzw_grow(UncLzw *z)
 }
 
 /* Next LSB-first n-bit code, or -1 on input end/error. */
-static int32_t lzw_code(UncLzw *z, int n)
+static UNC_HOT int32_t lzw_code(UncLzw *z, int n)
 {
     while (z->nbits < n) {
         int b = unc_bufin_next(z->in);
@@ -163,7 +163,7 @@ static int32_t lzw_code(UncLzw *z, int n)
  * The last byte written is the chain's root, which is also its first
  * output byte, so a caller that needs that byte reads it here instead of
  * walking the same parents a second time (see unc_lzw_read). */
-static int32_t lzw_chain(UncLzw *z, int32_t symbol, int32_t at)
+static UNC_HOT int32_t lzw_chain(UncLzw *z, int32_t symbol, int32_t at)
 {
     /* The three fields the walk reads are held in locals: a 68000 reloads
      * a struct field from memory on every use, and this loop is one of
@@ -187,7 +187,7 @@ static int32_t lzw_chain(UncLzw *z, int32_t symbol, int32_t at)
 
 /* Decode into out, up to want bytes. Returns bytes produced (0 only at
  * clean end of stream), or a negative UNC_ERR_*. */
-int32_t unc_lzw_read(UncLzw *z, uint8_t *out, int32_t want)
+UNC_HOT int32_t unc_lzw_read(UncLzw *z, uint8_t *out, int32_t want)
 {
     int32_t produced = 0;
 

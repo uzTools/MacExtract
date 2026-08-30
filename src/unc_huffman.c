@@ -179,7 +179,7 @@ int unc_huff_read_tree(UncHuff *h, UncBitIn *bi)
     }
 }
 
-int unc_huff_decode(const UncHuff *h, UncBitIn *bi)
+UNC_HOT int unc_huff_decode(const UncHuff *h, UncBitIn *bi)
 {
     int16_t cur = h->root;
     int32_t guard = 0;
@@ -337,7 +337,7 @@ static uint32_t unc_rev_fast(uint32_t v)
     return r >> (16 - UNC_CANON_FAST_BITS);
 }
 
-int unc_canon_decode(const UncCanon *c, UncBitIn *bi)
+UNC_HOT int unc_canon_decode(const UncCanon *c, UncBitIn *bi)
 {
     uint32_t code = 0, base = 0;
     int l;

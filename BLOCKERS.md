@@ -152,6 +152,12 @@ keep finding the next one, and two of them need no insight at all:
   written LF. Twenty-one cases therefore agreed on a property none of them
   chose. Ask what the generator never varies — for a text format read on a
   Macintosh, the line ending is the first thing to ask about (below).
+- **a rule proved on one file and applied to the other forty.** Added
+  2026-08-30: "everything builds at `-Os`, and that was TESTED" cited a real
+  measurement — on one file, whose profile is unlike every other file's. The
+  citation is what made it look settled. **Ask what the measurement's subject
+  actually was**, and whether the claim is about that subject or about the
+  category it belongs to (below).
 - **a difference you read rather than ran.** Added 2026-08-27: two
   checks were called "the same test, one of them weaker" on the strength
   of how they were WRITTEN — different variable, different constant.
@@ -252,6 +258,7 @@ line is what makes the next one worth re-testing.
 
 | claim | disproved by | withdrawn |
 |---|---|---|
+| Everything builds at `-Os`, and that was TESTED rather than assumed | tested on ONE file. `-O2` on `sit_arsenic.c` really is slower, and that result was applied to the other ~40 files, none of them measured. On the four a StuffIt run lives in, `-O3` is **−25.4 %** on a 7 MHz Mac Plus — 70.4 s → 52.5 s — and per-function `UNC_HOT` gets the same time for +1,024 B instead of +8,320 B. **Cost: a fifth of every StuffIt, DiskDoubler and PackIt extraction for as long as those files have existed**, and the note beside the rule said the question could not be re-asked "without a harness that resolves better than 20 s on a 22-minute run" — which was true of the screenshot clock and not of the tick probe that was one afternoon away (FORMATS.md, *What -O3 is worth, and where*) | 2026-08-30 |
 | A MIME message written by a Macintosh is waiting on a gradeable specimen somebody else has to send | mpack's Macintosh PORT is in `reference/mpack` and always was — README.mac, macfile.c, the lot. `encode_applefile()` and `encode()` compile unmodified for a 68000 and run on System 6.0.8, and the message they write there passes **18/18** including both forks byte-exact through this engine (`tools/vmac/macmime.py`; FORMATS.md, *base64 and MIME*). **Cost: three days as a wait, filed one bullet below its own answer** — the entry named "mpack's own Macintosh port" as the thing that would settle it, in a tree this project had already built munpack out of | 2026-08-29 |
 | A MIME part encoded `x-uuencode` inside a multipart is decoded by mpack, and not by this engine | wrong in both halves, both run. munpack's encoding enum is `enc_none, enc_qp, enc_base64`; an unknown Content-Transfer-Encoding warns and falls through, and its `handleUuencode` is reached only for a depth-0 `text/*` part with no encoding and no name — fed such a multipart it prints *"ignoring unknown content transfer encoding"* and writes the uuencoded TEXT out as the file. This engine decodes it byte-exact, and always did, because the uu probe wins the sniff. **Cost: three days in the waiting-on-a-file section, and the real defect went unnamed the whole time** — a uu part SHADOWED the rest of its multipart, a sniff-precedence bug with munpack sitting here to grade it, fixed the same day (DECISIONS.md 2026-08-29, *a part that hid its message*) | 2026-08-29 |
 | `message/partial` is waiting on a specimen this machine does not have, and meanwhile each part decodes on its own into half a file | mpack writes the specimen: `mpack -m 10000 -o out.mime payload.bin` cuts 30,000 bytes into four `message/partial` files and munpack puts them back byte-exact. And no part decodes at all — part 1 sniffs as a MIME message then fails *"not a recognized archive"*, parts 2–4 are *"format not recognized"*, and `src/fmt_mime.c` does not contain the word *partial*. The stated behaviour had never been run. **Cost: three days, and a sentence about our own binary that was written from the code's shape** | 2026-08-29 |

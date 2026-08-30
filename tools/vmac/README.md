@@ -1407,6 +1407,7 @@ Results are not repeated here; each line says where they live.
 | `UNC_AT_NOHIDECURSOR` | is `HideCursor()` before painting the grid necessary | yes — BLOCKERS.md; two things must be right before the test means anything: the pointer must be INSIDE the emulator window (at (144,129) on the 800x600 Xvfb) and the drag must cross cell CENTRES, since a path between rows disturbs nothing. `UNC_VMAC_PARK` overrides the parking position |
 | `UNC_AT_PROGRESS` | how fast is the engine actually going, mid-run | BLOCKERS.md "Timing on a 7 MHz Mac Plus" |
 | `UNC_MAC_SLURP_ARCHIVE` | rebuilds the old read-whole-archive-into-RAM path | DECISIONS.md 2026-08-02 |
+| `UNC_AT_TIMING` | split the extraction into File Manager reads, writes, the rest of the File Manager and the engine, in TICKS, in grid slots 3-6 (so the CRC check FAILS by construction — read the numbers, not the verdict). The instrument that showed 98.5 % of a StuffIt run is the engine, and the one that resolves an optimiser change: FORMATS.md, *What -O3 is worth, and where* | FORMATS.md |
 | `UNC_MAC_STAGE_WRITES` | the older whole-fork staging write path (also in `ci.sh`) | TESTING.md |
 
 ### Filling the destination on purpose — `--out-kb`

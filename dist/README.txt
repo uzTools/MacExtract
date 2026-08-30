@@ -1,4 +1,4 @@
-MacExtract v0.26.0 — bootstrap distribution
+MacExtract v0.27.0 — bootstrap distribution
 ==========================================
 
 A bare Classic Mac has no way to open a .sit/.cpt/.hqx until it HAS an
@@ -118,8 +118,10 @@ Every archive in the test sample extracts byte-exact on a 1 MB Mac Plus,
 StuffIt 5 (Arsenic) included. Arsenic is slow on a 68000 — 12 minutes for a
 200 KB archive, 21 for the largest tested — and the progress dialog
 shows a time estimate for that reason. Everything else takes seconds to a few
-minutes. If an entry genuinely will not fit, that entry is skipped with a
-message and the rest of the archive still extracts.
+minutes: a 280 KB StuffIt archive is about a minute on a 7 MHz Mac Plus, which
+is what StuffIt Expander 4.0.2 takes on the same machine and the same file. If
+an entry genuinely will not fit, that entry is skipped with a message and the
+rest of the archive still extracts.
 
 Verified on emulators only: System 6.0.8 and System 7.0.1 on a Mac Plus under
 Mini vMac, and Mac OS 9.2 on emulated PowerPC, where every extraction is

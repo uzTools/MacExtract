@@ -52,6 +52,21 @@ set_source_files_properties(
     ${ZLIB_SRC} TARGET_DIRECTORY MacExtract
     PROPERTIES COMPILE_DEFINITIONS "Z_TESTW=0;NO_GZIP")
 
+# The functions an extraction spends its time in carry UNC_HOT
+# (src/unc_internal.h), which builds THEM at -O3 and leaves the rest of
+# each file at -Os. What that is worth, on a 7 MHz Mac Plus over
+# derived-EmpireBuilderDemo.sit (FORMATS.md, *What -O3 is worth, and
+# where*):
+#
+#   -Os everywhere            70.4 s   182,144 B
+#   -O2 unc_lzw + unc_huffman 58.8 s   +1,536 B   -16.5 %
+#   -O2 four whole files      56.2 s   +5,504 B   -20.2 %
+#   -O2 the whole engine      56.0 s  +40,192 B   -20.6 %
+#   -O3 four whole files      52.5 s   +8,320 B   -25.4 %
+#
+# sit_arsenic.c has no UNC_HOT in it: -O2 was measured SLOWER there, and
+# that measurement was taken on that file rather than inherited.
+
 # Plain 68000 floor: no 68020+ instructions.
 target_compile_options(MacExtract PRIVATE -mcpu=68000 -Os -Wno-multichar
                        -ffunction-sections
@@ -115,6 +130,12 @@ target_compile_options(MacExtract PRIVATE -mcpu=68000 -Os -Wno-multichar
                        # report MaxBlock either side of MoveHHi. Tests whether
                        # MoveHHi does anything under System 6 at all.
                        $<$<BOOL:$ENV{UNC_AT_HANDLES}>:-DUNC_AT_HANDLES>
+                       # UNC_AT_TIMING: split the extraction into File
+                       # Manager reads, File Manager writes, the rest of the
+                       # File Manager and what is left over — the engine — and
+                       # put the four tick counts in the grid. A Linux profile
+                       # sees only the last of the four.
+                       $<$<BOOL:$ENV{UNC_AT_TIMING}>:-DUNC_AT_TIMING>
                        # UNC_MAC_STAGE_WRITES: go back to accumulating each
                        # whole fork in RAM and writing it in sink_end. The
                        # default streams straight to the File Manager; this

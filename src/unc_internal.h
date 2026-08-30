@@ -855,6 +855,31 @@ enum {
  * a different one says so with a constant of its own. */
 #define UNC_IOBUF 4096u
 
+/* UNC_HOT — compile this ONE function for speed, whatever the rest of the
+ * translation unit is built at.
+ *
+ * The Macintosh application builds at -Os because the application is
+ * resident and the floor target is a 1 MB machine. That is right for the
+ * ~40 functions in a file and wrong for the two or three an extraction
+ * actually spends its time in: on a 7 MHz 68000, -O3 on four whole files
+ * took derived-EmpireBuilderDemo.sit from 70.4 s to 52.5 s and cost
+ * 8,850 B of text, of which the largest single item was
+ * unc_huff_read_tree — a function that is 0.44 % of that run
+ * (mac/CMakeLists.txt has the table; DECISIONS.md 2026-08-30).
+ *
+ * Marking the functions instead of the files also puts them under the
+ * differential suite: every one of the 932 fixtures on Linux then decodes
+ * through the same aggressively optimised code the Mac runs, which a flag
+ * that lives in mac/CMakeLists.txt cannot arrange.
+ *
+ * GCC only. Clang parses `optimize` and ignores it with a warning, and no
+ * other compiler this builds under has an equivalent worth guessing at. */
+#if defined(__GNUC__) && !defined(__clang__)
+#define UNC_HOT __attribute__((optimize("O3")))
+#else
+#define UNC_HOT
+#endif
+
 typedef struct UncForkOut {
     UncCtx  *c;
     UncFork  fork;       /* destination, unless `split` is set        */

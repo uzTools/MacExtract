@@ -100,7 +100,7 @@ static int sit_rle90(UncForkOut *f, UncBufIn *in, uint32_t outlen)
 
 /* Method 2: compress LZW, 14-bit codes, block mode (flags 0x8e in
  * XADStuffItParser.m). */
-static int sit_lzw(UncForkOut *f, UncBufIn *in, uint32_t outlen, uint32_t complen,
+static UNC_HOT int sit_lzw(UncForkOut *f, UncBufIn *in, uint32_t outlen, uint32_t complen,
                    UncAlloc *al)
 {
     UncLzw z;
@@ -124,7 +124,7 @@ out:
 
 /* Method 3: Huffman with the bit-serialized tree (shared with
  * PackIt; source XADStuffItHuffmanHandle.m). */
-static int sit_huffman(UncForkOut *f, UncBufIn *in, uint32_t outlen,
+static UNC_HOT int sit_huffman(UncForkOut *f, UncBufIn *in, uint32_t outlen,
                        UncAlloc *al)
 {
     UncBitIn bi;

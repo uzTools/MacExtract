@@ -4025,6 +4025,10 @@ int main(void)
         }
 #endif
 #ifdef UNC_AT_TIMING
+        /* Overwrite four of the eight slots, the way UNC_AT_BUDGET and
+         * UNC_AT_META do: the GRID is the channel the Mini vMac harness
+         * reads, and a probe build is not graded on its CRCs. Ticks, 60 Hz.
+         * The file report keeps all twelve for anything that can read it. */
         {
             uint32_t tv[12];
             int k;
@@ -4034,6 +4038,10 @@ int main(void)
             tv[10] = (uint32_t)gTkWrite;   /* FSWrite, both forks         */
             tv[11] = (uint32_t)gTkMeta;    /* create, SetEOF, close,      */
                                            /* FlushVol, catalog           */
+            vals[3] = tv[8];
+            vals[4] = tv[9];
+            vals[5] = tv[10];
+            vals[6] = tv[11];
             at_report(vals, 8);
             at_report_file(tv, 12);
         }
