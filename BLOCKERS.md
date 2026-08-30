@@ -2,7 +2,42 @@
 
 ## Status
 
-**No open blockers.** The engine and Linux CLI were never affected by anything
+**One open blocker, found 2026-08-30: the password path does not extract.**
+`tools/vmac/interactive.py --password` fails on `main` at 1 MB — the
+application shows *"This file could not be extracted."* and the phase's own
+read-back reports `'Rsrc only' is not on the volume`. The archive is the
+encrypted StuffIt classic one `tools/synth_crypt.py` writes, whose key
+material is half in the file's RESOURCE fork; the phase asks wrongly once,
+then correctly, and the correct password still yields nothing.
+
+**Halved in one command: the cipher is not the problem.** The same archive
+`tools/synth_crypt.py --kind sit-des --password hushnow` writes, with the same
+password, extracts on the Linux CLI — `Both Forks`, `Rsrc only` (empty data
+fork plus its `.rsrc`) and `Secret Memo`, exit 0. So the DES path, the key
+schedule and the archive itself are all sound, and what differs is the
+Macintosh.
+
+***Hypothesis, not a finding:*** the suspect is the Mac-side read of the
+archive's own RESOURCE FORK, where StuffIt keeps half the key as `MKey`. The
+CLI gets that fork from a companion `NAME.rsrc` file; the Macintosh must open
+the real fork on the volume. Those are different code paths and only one of
+them fails. **This has not been reduced to a minimal reproduction and must not
+be reported as the cause until it has.**
+
+It reproduces on clean `main` with no probe build, and is not caused by the
+`selective-loading` branch where it was first seen — identical output on
+both.
+
+**Why it went unseen:** nothing runs this phase routinely. It is not in
+`ci.sh` — no emulator phase is — and the on-Mac sample it would have to join
+is `run.py`'s, which has no encrypted fixture with a resource-fork key.
+Encryption is advertised in `README.md` and `dist/README.txt`.
+
+**What would close it:** a Macintosh probe that opens the archive's resource
+fork and reports whether `MKey` is found and what it holds — which is the one
+step the Linux run cannot stand in for.
+
+**Everything else stands.** The engine and Linux CLI were never affected by anything
 in this file. The Retro68 Mac shell runs and extracts byte-exact on every
 system the project claims:
 
