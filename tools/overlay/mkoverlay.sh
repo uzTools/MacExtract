@@ -30,10 +30,14 @@ done
 left=$("$T/m68k-apple-macos-objdump" -r "$TMP/ovl.elf" | grep -c R_68K || true)
 [ "$left" = 0 ] || { echo "mkoverlay: $left unresolved relocation(s) — an" >&2
                      echo "mkoverlay: overlay must be position-independent" >&2; exit 1; }
-for sec in .data .bss; do
-    sz=$("$T/m68k-apple-macos-size" -A "$TMP/ovl.elf" | awk -v s="$sec" '$1==s{print $2}')
-    [ -z "$sz" ] || [ "$sz" = 0 ] || { echo "mkoverlay: $sec is $sz B — an overlay has no A5 world" >&2; exit 1; }
-done
+# .bss is refused and .data is allowed, and the difference matters: objcopy
+# writes .data INTO the image, where it lands inside the locked Handle and is
+# writable, while .bss is only a SIZE and lives past the image end — a blob
+# writing there would corrupt the heap. So an overlay's mutable state must be
+# initialised. (This check found exactly that bug on the first real overlay.)
+sz=$("$T/m68k-apple-macos-size" -A "$TMP/ovl.elf" | awk '$1==".bss"{print $2}')
+[ -z "$sz" ] || [ "$sz" = 0 ] || { echo "mkoverlay: .bss is $sz B — it lives past the image end;" >&2
+                                  echo "mkoverlay: initialise the static so it lands in .data" >&2; exit 1; }
 "$T/m68k-apple-macos-objcopy" -O binary "$TMP/ovl.elf" "$TMP/ovl.bin"
 n=$(wc -c < "$TMP/ovl.bin")
 [ "$n" -le 32768 ] || { echo "mkoverlay: $n B exceeds the 32 KB PC-relative reach" >&2; exit 1; }

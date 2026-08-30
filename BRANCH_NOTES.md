@@ -122,6 +122,28 @@ zlib + inflate (~10,263 B, only zip and gzip) are genuinely independent and
 would prove the mechanism on ~25 KB before anything harder is attempted. If
 the loader works, the format decoders follow behind a registration refactor.
 
+## The first real overlay, built 2026-08-30
+
+`tools/overlay/ovl_crypt.c` compiles `src/unc_crypt.c` **unmodified** into a
+**14,996 B** blob: 0 relocations, entry at offset 0, inside the 32 KB reach.
+libgcc's `__divsi3`/`__modsi3`/`__mulsi3`/`__umodsi3` link into the image and
+`unc_crc32` — the only call back into the application — goes through the host
+vector.
+
+**It is BUILT, not INTEGRATED.** The application still links `unc_crypt`, so
+nothing has got smaller yet. Integration needs a 19-entry dispatch:
+`unc_crypt.c` exports 19 symbols and 7 engine files call them, including
+`unc_bufin_next_slow` on the buffer-refill path.
+
+**What building it taught, at the cost of one failed build:** an overlay's
+mutable state must be INITIALISED. An uninitialised static lands in `.bss`,
+which `objcopy` leaves out of the image — the blob would write past its own
+end and into the heap. An initialised one lands in `.data`, inside the image,
+which is a locked `Handle` and therefore writable. `mkoverlay.sh` now refuses
+`.bss` and allows `.data` for exactly that reason; the rule it had before
+("an overlay has no A5 world") was written from theory and was wrong in a way
+that would have corrupted memory silently on the Mac.
+
 ## What is left
 
 - **`unc_crypt` as the first real overlay.** It has only five external

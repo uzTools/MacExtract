@@ -34,5 +34,14 @@ typedef int32_t (*OverlayEntry)(const OverlayHost *host, int32_t which,
 
 #define OVL_SELFTEST 0      /* returns 0x4F4B ('OK') — proves the mechanism */
 #define OVL_CRC_VIA_HOST 1  /* calls back through the host vector           */
+#define OVL_CRYPT_APPLY  2  /* unc_crypt_apply, in the cipher overlay       */
+
+/* Arguments travel in a struct: a resource has one start address, so every
+ * entry point shares one signature. */
+typedef struct OvlCryptArgs {
+    void    *cr;         /* UncCrypt *, opaque to the application */
+    uint8_t *buf;
+    int32_t  len;
+} OvlCryptArgs;
 
 #endif
