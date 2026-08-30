@@ -3092,6 +3092,61 @@ double-clicked from the Finder — `tools/vmac/interactive.py --e2e --system
 Sys30.img`, ~133 s of emulated Mac Plus time on
 `derived-ScrollbarPattern.sit`.
 
+### 512 KB machines: the RAM is enough, the ROM is not
+
+**A Macintosh 512Ke — 512 KB, the Plus's 128K ROM — runs it: 64/69 under
+System 3.0 with the Finder resident** (**2026-08-30**,
+`sys30.py --emu mv-512Ke`). The five that do not pass fail as the design says
+they must, per entry and not per archive: `derived-Library_ISBN_Barcoder.sit`
+writes 33 of its 34 entries with one entry errored,
+`derived-Troi-ClipSave-Plug-in1.1.sit` 11 of 13 with two, and
+`derived-a2basic.dmg.sit`, `synth-dd-m5.dd` and `popper-1.7.tar.Z` are
+single-entry archives whose one entry is refused. Peak heap reaches 163,861 B
+and no further — that is what 512 KB leaves after System 3.0 and the Finder.
+`synth-dd-m5.dd` is the clean illustration: DiskDoubler method 5 asks for one
+405,520 B block on every tier, and here it cannot have it.
+
+**What is refused is one entry's working set, and never the archive.**
+`derived-XferIt_1.5b4.sea` writes 948,175 B across 10 files on this machine at
+24,217 B of peak heap. The demand is a property of the codec and the stream's
+own parameters: `synth-dd-m5.dd` produces 1,145 B of output and asks for
+405,520 B in one block whatever the tier, and the two Unix compress fixtures —
+both `maxbits=16` — split on input size alone, `a2ps.V4.3.tar.Z` (30,255 B in)
+passing at 120,912 B and `popper-1.7.tar.Z` (59,323 B in) refused at 224,264 B,
+because the table is sized from the input (*Unix compress: the `.Z` peak*).
+
+**And the boundary is not a number.** `derived-PuzzleGetter_0.8.sit` wants
+270,043 B on a 1 MB machine and PASSES here at 162,567 B; `popper-1.7.tar.Z`
+wants 224,264 B and is refused having reached 12,304 B. The first renegotiates
+its block downward and the second cannot, because there the table IS the
+allocation and a smaller one decodes a different stream (DECISIONS.md
+2026-08-03).
+
+**The same machine under System 6.0.8 manages 58/69** — and that run has no
+Finder in memory at all, because System 6 honours the shell name and
+`run.py --emu mv-512Ke --system System6.hfv` replaces the Finder with the
+application. **System 3.0's failures are a strict subset of System 6's.** The
+six extra are `a2ps.V4.3.tar.Z`, `derived-PuzzleGetter_0.8.sit` and four
+self-extracting archives (`derived-DD_Expand.sea`,
+`derived-Expand_Now_1.0.1.sea`, `derived-LHA_Expander_1.0.3.sea`,
+`derived-Terrainman_2.0__.sea`). On `derived-Troi-ClipSave-Plug-in1.1.sit` the
+two systems are 11 entries at 163,332 B against 6 entries at 89,613 B: the
+1986 system leaves the engine ~74 KB more than System 6 does, while also
+keeping a Finder that System 6 had to give up.
+
+**A true Macintosh 512K — 64 KB of ROM — cannot be reached at all, and the
+RAM is not why.** Booted with no disk it behaves exactly like the Mac Plus:
+blinking floppy icon, framebuffer byte-identical to the Plus control. Booted
+from the System 3.0 floppy it dies at startup, **Sad Mac `0F0064`**, with
+Apple's 128K ROM and with the 512K's own `28BA4E50` alike — so it is neither
+the RAM nor the ROM revision, it is the volume. *Hypothesis, not measured:*
+that ROM predates HFS, and System Tools 1.0's boot code calls traps it does
+not have, which is the exception class the code reports. Two of this
+application's own dependencies are 128K-ROM-and-later anyway —
+`NGetTrapAddress` in `TrapAvailable`, and every file operation going through
+HFS parameter blocks — so a 64K-ROM machine is out on the ROM regardless of
+how the disk question resolves.
+
 **One thing behaves differently, and it is the System rather than this
 application: Cmd-. does not cancel Standard File on System 3.0.** The frame
 after the chord is the Open dialog unchanged, byte-identical to the frame

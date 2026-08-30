@@ -18,6 +18,15 @@ System 7 is where `SFReply.vRefNum` becomes a working directory and the Process
 Manager starts honouring the `SIZE` partition, so it is a different set of code
 paths, not just a different splash screen. Run the System 7 tier at 4 MB.
 
+**512 KB machines.** `--emu mv-512Ke` on either driver boots a Macintosh
+512Ke, the smallest machine this application runs on: `sys30.py --emu
+mv-512Ke` is 64/69, `run.py --emu mv-512Ke --system System6.hfv` is 58/69
+(FORMATS.md, *512 KB machines*). A **true** Macintosh 512K has a 64 KB ROM,
+no HFS and none of the traps this application needs; `Mac512K.ROM` is fetched
+so that negative stays reproducible, and `-m 128K -mem 512K` is the model it
+needs — Mini vMac has no plain `512K`. It Sad Macs on any HFS volume, so
+nothing here drives it.
+
 **System 3.0 has its own driver, `sys30.py`, and `run.py --system Sys30.img`
 does NOT work.** That system ignores the boot blocks' shell name, so
 `mkboot.py`'s usual shell replacement launches nothing and every fixture comes

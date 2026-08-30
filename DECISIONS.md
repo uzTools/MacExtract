@@ -172,6 +172,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-30 (the flush that was not the answer) — a screen cannot see a commit
 - 2026-08-30 (the flag that was never measured on these files) — 70.4 s to 52.6 s, and a kilobyte
 - 2026-08-30 (the shell name System 3.0 does not read) — the oldest system a Mac Plus boots, and a NOGRID that meant nothing
+- 2026-08-30 (512 KB, and the machine that cannot be reached) — the RAM was never the boundary
 
 ---
 
@@ -9936,3 +9937,40 @@ launched from.
 only the oldest a Macintosh Plus can boot. Anything older than the Plus means a
 64K ROM, which has no HFS and no `NGetTrapAddress` — both of which this
 application uses — so that is a different question and not a smaller one.
+
+## 2026-08-30 (512 KB, and the machine that cannot be reached) — the RAM was never the boundary
+
+**Claim: 512 KB of RAM is enough, and a 64 KB ROM is not.** A Macintosh 512Ke
+runs the application under System 3.0 with the Finder resident, 64/69 of the
+sample byte-exact, the other five refused per entry (FORMATS.md, *512 KB
+machines*). A true Macintosh 512K never reaches the application at all.
+
+**The interesting number is which SYSTEM.** On the same 512 KB machine System
+3.0 keeps the Finder in memory and still passes 64; System 6.0.8, having given
+up its Finder to the boot-shell trick, passes 58, and its failures are a strict
+superset. On one fixture that is 163,332 B of heap against 89,613 B. The
+lesson is not "old is small" but that **the floor was set by the system, not by
+the machine**, and nobody had varied the system.
+
+**The negative was attributed before it was reported**, which is the part worth
+keeping. The 512K boots to a Sad Mac `0F0064` on our System 3.0 floppy. Three
+cheap A/Bs said what that meant: the same ROM with no disk gives the blinking
+floppy icon and a framebuffer byte-identical to the Mac Plus control, so the
+machine is healthy; Apple's own 128K ROM (`28BA61CE`) and the 512K's
+(`28BA4E50`) fail identically, so it is not the ROM revision. What is left is
+the volume — and the reason that ROM cannot read it is HFS, which arrived with
+its successor.
+
+**Which codecs survive 512 KB is decided by adaptivity, not by appetite.**
+`derived-PuzzleGetter_0.8.sit` asks for 270,043 B and fits; `popper-1.7.tar.Z`
+asks for 224,264 B and does not, having allocated 12,304 B when it gave up.
+That is 2026-08-03's finding arriving on a smaller machine: growth-on-demand
+rescued the Arsenic block and did nothing for the LZW table, and 512 KB is
+where the difference stops being academic.
+
+**What is NOT claimed.** That the Sad Mac's cause has been reduced to a
+minimal reproduction: it has not, and the trap-level explanation is labelled a
+hypothesis in FORMATS.md. It does not change the outcome, because
+`TrapAvailable` calls `NGetTrapAddress` and every file operation here goes
+through an HFS parameter block, and neither exists in a 64K ROM. A machine
+that could boot would still not run this.

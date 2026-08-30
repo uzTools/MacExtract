@@ -175,6 +175,10 @@ def main():
     bootimg = os.path.join(work, "boot30.hfv")
     build_boot(R.build_autotest_app(), bootimg)
     emu_dir = a.emu or f"mv-{a.mem}"
+    # The machine is the EMULATOR BUILD, not --mem: --emu overrides it, and a
+    # summary that reports --mem's default while a different machine ran is
+    # how a 512 KB result gets filed as a 4 MB one.
+    machine = emu_dir.replace("mv-", "")
     manifests = os.path.join(fixdir, "manifests")
 
     results, npass, nbad = [], 0, 0
@@ -208,7 +212,7 @@ def main():
     finally:
         shutil.rmtree(work, ignore_errors=True)
 
-    print(f"\n{npass}/{len(fixtures)} PASS on System 3.0 at {a.mem}")
+    print(f"\n{npass}/{len(fixtures)} PASS on System 3.0 ({machine})")
     if a.json:
         with open(a.json, "w") as f:
             json.dump(results, f, indent=1)

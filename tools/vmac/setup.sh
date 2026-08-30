@@ -18,6 +18,8 @@
 #     mv-1M/minivmac    1 MB Mac Plus, all out (the floor target)
 #     mv-4M-1x/minivmac 4 MB Mac Plus, authentic 7 MHz
 #     mv-1M-1x/minivmac 1 MB Mac Plus, authentic 7 MHz
+#     mv-512Ke/minivmac 512 KB Macintosh 512Ke, all out (the 512 KB tier)
+#     Mac512K.ROM       64 KB Macintosh 512K ROM (checksum 28BA4E50)
 #
 # Four emulator builds exist because BOTH RAM size and speed are COMPILE-time
 # options in Mini vMac, and this project makes claims along both axes: 1 MB is
@@ -98,7 +100,18 @@ PY
     rm -f macroms.zip
 fi
 
-# ---- build the four emulators ---------------------------------------------
+# The 64 KB ROM of a real Macintosh 512K. Kept because the NEGATIVE needs to be
+# reproducible: that machine boots normally with no disk and Sad Macs on an HFS
+# volume, which is how "512 KB is enough, 64 KB of ROM is not" was established
+# (FORMATS.md, *512 KB machines*). Nothing routine uses it. Fetched as one
+# member of the same collection the Plus ROM comes from, by direct URL — the
+# whole 55 MB zip is not needed for it.
+ROM512_URL="https://archive.org/download/mac_rom_archive_-_as_of_8-19-2011/mac_rom_archive_-_as_of_8-19-2011.zip/28BA4E50%20-%20Macintosh-512k.ROM"
+ROM512_SHA=fe6a1ceff5b3eefe32f20efea967cdf8cd4cada291ede040600e7f6c9e2dfc0e
+
+fetch "$ROM512_URL" Mac512K.ROM "$ROM512_SHA"
+
+# ---- build the emulators --------------------------------------------------
 # Mini vMac's setup tool emits a shell script that writes the config headers
 # and a Makefile; -speed a is "all out" (see run.py --speed for why the
 # default is NOT authentic 1x).
@@ -136,5 +149,24 @@ build_mv mv-4M-1x 4M z
 # cannot be timed on mv-1M either, which is all-out. Both existing 1x claims
 # and both existing 1 MB claims needed this fourth combination.
 build_mv mv-1M-1x 1M z
+
+# A Macintosh 512Ke: 512 KB and the same Plus ROM, which is the smallest
+# machine this application runs on at all. `-m 512Ke` is a different MODEL, not
+# just a smaller memory size, so build_mv cannot make it.
+if [ -x mv-512Ke/minivmac ]; then
+    echo "have mv-512Ke/minivmac"
+else
+    rm -rf mv-512Ke
+    mkdir -p mv-512Ke
+    tar xzf minivmac.src.tgz -C mv-512Ke --strip-components=1
+    ( cd mv-512Ke
+      gcc -o setup_t setup/tool.c
+      ./setup_t -t lx64 -m 512Ke -mem 512K -speed a -as 0 -bg 1 \
+                -sound 0 -magnify 0 -drives 6 -n "macextract-512Ke" > setup.sh
+      bash setup.sh >/dev/null
+      make >/dev/null 2>&1 )
+    [ -x mv-512Ke/minivmac ] || { echo "setup: failed to build mv-512Ke" >&2; exit 1; }
+    echo "built mv-512Ke/minivmac"
+fi
 
 echo "setup: ready in $VMAC_HOME"

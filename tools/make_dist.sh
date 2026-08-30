@@ -61,7 +61,9 @@ unarchiver, so MacExtract ships in two forms that need no unarchiver:
                   startup disk.
 
 Floor target: System 3.0 on a 1 MB Mac Plus (68000) -- the system the Plus
-shipped with in January 1986. The same binary runs unchanged through Mac OS 9
+shipped with in January 1986. It also runs in 512 KB, on a Macintosh 512Ke,
+where the largest archives are refused entry by entry and the rest still
+comes out. The same binary runs unchanged through Mac OS 9
 and adapts its memory use to the machine at runtime, so there is one download
 for every Mac. One difference on System 3.0: that system's Open dialog ignores
 Command-period, so close it with the Cancel button. Command-period stops an

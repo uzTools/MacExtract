@@ -24,8 +24,8 @@ away:
 ![Standard File save dialog headed Extract into this folder:](docs/screens/1b-destination.png)
 
 Watch it work — with a real estimate, because on a Mac Plus some archives take
-twenty minutes. Change your mind at any point, with the button or Cmd-.;
-anything half-written is cleaned up:
+twenty minutes. Change your mind at any point; anything half-written is
+cleaned up:
 
 ![Progress dialog: Extracting archive.sit, 13%, about 1 minute left](docs/screens/2-extracting.png)
 
@@ -33,12 +33,10 @@ anything half-written is cleaned up:
 
 ![Alert reading Extraction complete.](docs/screens/4-complete.png)
 
-If anything had to change on the way — a name HFS cannot keep (it stops at 31
-characters, and it is the middle that goes, not the `.txt` on the end), a
-folder that ended up sharing a shortened name, an entry that would not come
-out — you are told which, both names in full, with the result underneath
-rather than in place of it. **Save as Text** files the whole list as a
-document, because a Mac Plus screen has no scrollback:
+If anything had to change on the way — a name HFS cannot keep (31 characters
+max), a folder that ended up sharing a shortened name, an entry that would not
+come out — you are told which. **Save as Text** files the whole list as a
+document:
 
 ![A scrolling list: MyQuarterlyReportForTheBoard.rtf renamed to MyQuarterlyReportForTheBoar.rtf, Notes.txt renamed to Notes~1.txt, two folders combined, an entry damaged, and eighteen photographs each named in full with what it became; under the list, in bold, Extraction finished, and the buttons Save as Text and OK](docs/screens/4b-report.png)
 
@@ -51,8 +49,7 @@ one, because parts are recognised by what is inside them:
 ## Download
 
 **[Latest release](https://github.com/jarreboum/MacExtract/releases/latest)** —
-currently **v0.27.0**. If the release page shows anything older, the publish
-step did not run. Or take it straight from the tree:
+currently **v0.27.0**. Or take it straight from the tree:
 
 | | |
 |---|---|
@@ -145,7 +142,8 @@ them comparable at all. The full capability table and the unrounded figures are 
 
 | | |
 |---|---|
-| Minimum | System 3.0, 68000, **1 MB of RAM** — the system a Macintosh Plus shipped with in January 1986 |
+| Minimum | System 3.0, 68000, **512 KB of RAM** — a Macintosh 512Ke, or a Plus with the system it shipped with in January 1986 |
+| For everything | **1 MB** — at 512 KB the biggest archives are refused entry by entry, and the rest of the archive still comes out |
 | Also runs on | System 6, System 7, Mac OS 8 and 9, PowerPC via the built-in 68k emulator |
 | Disk | one 800K floppy |
 
