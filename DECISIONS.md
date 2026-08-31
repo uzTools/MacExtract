@@ -175,6 +175,8 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-30 (512 KB, and the machine that cannot be reached) — the RAM was never the boundary
 - 2026-08-30 (a byte buys fewer symbols the further in it sits) — a third off the LZW table, and a fixture back
 - 2026-08-30 (the Desktop file the password phase needed) — a harness reported a working feature as broken, and a bisect agreed with it
+- 2026-08-31 (the overlay that works and is not worth it) — a lifetime argument, and a 6 KB prize
+- 2026-08-31 (the message that failed a successful extraction) — the allocator cannot know which refusals matter
 
 ---
 
@@ -10057,3 +10059,141 @@ none can, they need an X server and minutes per fixture — and `run.py`'s
 is encrypted (FORMATS.md, *Encryption*). So the only check on this path is a
 phase somebody has to run by hand, and between 2026-08-24 and 2026-08-30
 nobody did.
+
+## 2026-08-31 (the overlay that works and is not worth it) — a lifetime argument, and a 6 KB prize
+
+**Claim: loading part of the engine on demand works, and buys about one
+archive.** Two branches carry it, both built and both run on a 1 MB Mac Plus:
+`selective-loading` makes the ciphers an overlay fetched from a resource when
+a format wants them, and `overlay-eager` loads the same overlay at launch
+instead. **Parked, neither merged**, and the branches are kept as a working
+mechanism rather than as a proposal.
+
+**The evidence, in the order it changed the answer:**
+
+- **The prize is 6,140 B**, for six formats and not for StuffIt. Against a
+  corpus whose headroom study puts roughly one archive per 6–7 KB of budget,
+  that is one archive in 922, and it is not
+  `derived-EasyFind.dmg.sit` — neither branch reaches the ones still out.
+  For scale, re-pricing one constant in the memory reserve the same week was
+  worth 49 KB (FORMATS.md, *Budget*).
+- **StuffIt cannot be one of the six, and that is inherent.** A format is
+  disqualified if it may carry an encrypted entry, or if it is an envelope
+  whose contents are not yet known — a `.sit.hqx` sniffs as BinHex, so
+  releasing on the outer format strands the StuffIt inside it. Freeing the
+  memory and guaranteeing no disk access are in direct opposition unless you
+  know before extracting whether an entry is encrypted, and for StuffIt you
+  cannot: it is per entry, discovered as the entry is read, and the only
+  signal is `UNC_ERR_PASSWORD`, which arrives too late.
+- **The disk dependency cannot be removed, only moved.** A lazy `GetResource`
+  touches the application's own floppy AFTER the archive is chosen, and a Mac
+  Plus with one drive may have had it swapped by then. Loading at launch
+  confines that to a moment when the boot disk is certainly in — but the
+  release is per archive while the application lives per session, so a later
+  archive reloads and pays the same access, later and less predictably.
+  `selective-loading` pays it on the first encrypted archive; `overlay-eager`
+  pays it on the second.
+
+**Consequence: an end user trades a disk swap, or a stall, for one archive's
+worth of memory.** That is the wrong side of a trade this project has always
+taken the other way — an archive that will not open beats an archive that
+opens 0.4 s later (FORMATS.md, *Size flags, priced in both currencies*), but
+neither branch OPENS anything new. Scope status: OPEN_ITEMS.md, Part 1.
+
+### The transferable part: a release lifetime is an argument about scope, and it can be wrong silently
+
+`overlay-eager` shipped a bug for one commit that is worth keeping. The
+release ran after each archive's sniff while the "already tried" flag was
+global, so the overlay never reloaded: extract an LZH, then an encrypted
+`.sit` in the same session, and the ciphers were gone — cipher kind cleared,
+the entry failing, **a capability disappearing because of what was opened
+before it**. Not a prompt and not a delay; a silent loss. The reasoning was
+about the wrong scope, and the comment said so plainly: *"if it was released
+the format cannot want it"* is true within one archive and false across a
+session. The fix — allow the reload — concedes the branch's own argument.
+
+**So: if something later needs tens of kilobytes, the loader exists.** Nobody
+should have to rediscover `-mpcrel`, the `.bss`/`.data` distinction, the three
+dispatch tables or the `--gc-sections` correction; `BRANCH_NOTES.md` on either
+branch has them, along with the three ways to know whether an entry is
+encrypted and what each costs.
+
+## 2026-08-31 (the message that failed a successful extraction) — the allocator cannot know which refusals matter
+
+**Claim: a memory shortfall is not a failure, and the shell had been treating
+it as one.** `derived-Troi-ClipSave-Plug-in1.1.sit` extracts **completely** on
+a 1 MB Mac Plus and ended with *"Needs 48K more memory."* Measured through
+`interactive.py`, no segments involved, the harness reporting *phase 2 output
+COMPLETE* in the same run.
+
+**Why it happens.** `mal_alloc` sets `gShortBy` whenever a request exceeds the
+budget, and it has no way to know what the engine will do about it. StuffIt 5's
+inverse BWT asks for `numbytes * 4` **expecting** to be refused on a small
+machine: declined, it builds a sampled occurrence index instead, which is
+slower and byte-identical, and is the whole reason the format fits at 1 MB
+(2026-08-07). So the archives that exercise the designed fallback are exactly
+the ones that were told they had failed.
+
+**The fix is where the knowledge is.** The allocator cannot tell an optional
+request from a required one; the outcome can, because a request that mattered
+leaves an errored entry behind. The message is now gated on
+`errors > 0 || ret != UNC_OK`.
+
+**Consequence, and it is the reusable half:** the shortfall was reported by the
+component that could measure it rather than the one that could interpret it.
+`gShortBy` is a true number — the largest amount by which some request exceeded
+the budget — attached to a sentence it does not support.
+
+### How it was found, which is not how it was looked for
+
+It was found while investigating something else, and the something else was not
+real. OPEN_ITEMS.md carried *"joining a segmented set costs far more memory
+than the same archive whole"*, filed with two numbers: 472,137 B for the
+archive whole, and a refusal 64 KB beyond budget for the same archive joined
+from three parts.
+
+**Those two numbers came from different instruments.** The first is peak heap
+from the autotest replay — what the engine USED. The second is an alert
+reporting `gShortBy` — what it ASKED for and was refused. Nothing was measured
+twice the same way, and the conclusion was drawn from the difference.
+
+Two checks settled it, both cheap and neither needing the emulator first:
+
+- **On Linux, join and whole are identical.** `macextract x --stats` on a
+  three-part set prints two high-water marks — **8,192 B** for the join and
+  **661,173 B** for the inner extraction — and the whole file prints
+  **661,173 B**. The join costs 8 KB and nothing else.
+- **The sizes name their own source.** `derived-Library_ISBN_Barcoder.sit`
+  peaks at 1,683,101 B with memory to spare, and 1,683,101 − 615,348 is the
+  "over a megabyte more" the item reported. That is the transform vector,
+  which exists on both paths.
+
+Then one emulator run: the same archive, whole, through the same UI. It
+extracted and it printed the same message. **The variable was never the
+join.**
+
+**What to take from it:** when two figures disagree, check that they are the
+same measurement before believing the difference. And a withdrawn claim can be
+worth more than it cost — this one was pointing at joining, which few users
+do, while hiding a defect on the path almost every StuffIt 5 user on a small
+Mac takes. BLOCKERS.md, *Withdrawn claims*.
+
+### `gHasWNE` does not mean MultiFinder, and the first fix used it
+
+The advice attached to that message was *"Give MacExtract more in Get Info"*,
+which names a control that does not exist without a partition — wrong on
+precisely the machine this application is designed around. The first attempt
+chose between wordings on `gHasWNE`, reasoning that `WaitNextEvent` is what
+MultiFinder adds.
+
+**It is not.** On System 6.0.8 booted straight into this application, with no
+MultiFinder anywhere on the volume, `TrapAvailable(_WaitNextEvent)` is TRUE —
+the trap is in the System file whether the Process Manager is loaded or not.
+The screenshot that proved the message bug also showed the new wording taking
+the wrong branch, in the same frame.
+
+What answers it is the SHAPE of the heap rather than a trap: an application
+with the machine to itself has a zone reaching most of RAM, one in a partition
+has a zone far smaller than RAM. Both configurations are far from the line —
+~700 KB of a 1 MB MemTop against ~400 KB of 4 MB — and a 512 KB Macintosh
+(~220 KB of 512 KB) is on the correct side too.

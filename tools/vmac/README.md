@@ -20,7 +20,9 @@ paths, not just a different splash screen. Run the System 7 tier at 4 MB.
 
 **512 KB machines.** `--emu mv-512Ke` on either driver boots a Macintosh
 512Ke, the smallest machine this application runs on: `sys30.py --emu
-mv-512Ke` is 64/69, `run.py --emu mv-512Ke --system System6.hfv` is 58/69
+mv-512Ke` is **66/69** (2026-08-31; 65/69 before the reserve went flat,
+64/69 before the LZW bound), `run.py --emu mv-512Ke --system System6.hfv`
+is 58/69
 (FORMATS.md, *512 KB machines*). A **true** Macintosh 512K has a 64 KB ROM,
 no HFS and none of the traps this application needs; `Mac512K.ROM` is fetched
 so that negative stays reproducible, and `-m 128K -mem 512K` is the model it
@@ -1423,6 +1425,7 @@ Results are not repeated here; each line says where they live.
 |---|---|---|
 | `UNC_AT_BUDGET` | why an entry was refused: over budget, or `NewPtr` failed | DECISIONS.md 2026-08-06, OPEN_ITEMS.md section 5 |
 | `UNC_AT_RESERVE` | what the shell actually needs of the heap kept back from the engine — a `FreeMem()` low-water mark, printed on the completion alert. It priced `kMemReserveMax` from 80 KB down to 48 KB (13,242 B measured). **Needs a fixture that FITS and is heavy**: a small one never fires the progress pump, and one too big has its allocation refused before the heap is stressed | FORMATS.md, *Budget* |
+| `UNC_AT_STACK` | what `kStackBump` is actually worth. Paints the whole region between ApplLimit and the stack base at launch and reads back how far down anything wrote. **Read the watermark, not the first transition**: a frame is made by moving the stack pointer, so a frame holding an uninitialised buffer leaves clean longs INSIDE the region it used, and two earlier versions of this probe — scan up for the first dirty long, scan down for the first clean one — both reported the same number for a 3 KB BinHex file and a 34-entry StuffIt 5 archive. Autotest under-reads the shipped build, which has the dialogs | FORMATS.md, *Stack* |
 | `UNC_AT_HANDLES` | does `MoveHHi` move an engine block, and does it help | OPEN_ITEMS.md section 5 (do-not-retry) |
 | `UNC_AT_INTERLEAVE` | do reads return zeros while output is written to the same volume | BLOCKERS.md *Withdrawn claims* |
 | `UNC_AT_SAMEVOL` | does extraction onto the archive's own volume work | DECISIONS.md 2026-08-02 |
@@ -1467,11 +1470,18 @@ probe overwrites four slots:
 
 | grid slot | carries |
 |---|---|
-| `nfiles`, `ret`, `sumDataCRC`, `peak heap` | addresses of the 4 largest live blocks, biggest first |
+| `nfiles`, `ret` | addresses of the 2 largest live blocks, biggest first |
+| `sumDataCRC` | `FreeMem()` at the start of the run, before the reserve |
+| `peak heap` | **the budget** — what the engine was actually given |
 | `errors` | `MaxBlock()` at the first refusal |
 | `totalDataLen` | application zone bottom (`ApplicationZone()`) |
 | `sumRsrcCRC` | 1 = over budget, 2 = `NewPtr` returned NULL |
 | `totalRsrcLen` | `ApplLimit` |
+
+**Corrected 2026-08-31.** The free figure and the budget were written into two
+slots and then overwritten by the zone bounds two lines later, so the budget
+never reached the grid and reading it meant editing the source. They have
+their own slots now, taken from the third and fourth block addresses.
 
 `FreeMem()` minus `MaxBlock()`, both sampled **at the refusal**, is the
 fragmentation; sampling free heap at the start of the run does not give it, and

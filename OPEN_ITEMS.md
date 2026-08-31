@@ -55,25 +55,27 @@ the Macintosh application's alert reads *"MacExtract cannot open RAR files."*
 (photographed on System 6.0.8). Extraction returns cleanly unsupported either
 way.
 
-## Joining a segmented set costs far more memory than the same archive whole
+## Overlays and selective loading: built, measured, parked
 
-**MEASURED 2026-08-30, and not yet explained.** On a 1 MB Mac Plus,
-`derived-Troi-ClipSave-Plug-in1.1.sit` extracts whole at a 472,137 B peak but
-is refused when joined from three parts, asking for 64 KB beyond a 615,348 B
-budget; `derived-Library_ISBN_Barcoder.sit` is 559,805 B whole and asks for
-over a megabyte more when joined. Three attempts, three refusals.
+**Not open, and not untried.** Loading part of the engine from a resource on
+demand works and runs on a 1 MB Mac Plus. Two branches keep it —
+`selective-loading` (the ciphers fetched when a format wants them) and
+`overlay-eager` (the same overlay loaded at launch) — and **neither is
+merged**.
 
-**Why it matters to somebody rather than to a tuning parameter:** a person
-with a three-floppy set on the machine this project is designed around may be
-unable to join what they could have extracted in one piece — and floppy sets
-are exactly why segmented archives exist. `run.py` never sees it because the
-autotest build finds every part by folder scan and the tier fixtures are not
-cut.
+Three measurements decided it: the prize is **6,140 B**, about one archive in
+922 at the corpus's headroom density, and not one of the archives still out of
+reach; **StuffIt can never be one of the formats it helps**, because an
+encrypted entry is discovered as the entry is read; and the disk dependency
+**cannot be removed, only moved** — one branch pays a mid-run access on the
+first encrypted archive, the other on the second, on a machine with one floppy
+drive. What an end user would trade is a disk swap or a stall for memory that
+opens nothing new. DECISIONS.md 2026-08-31, *the overlay that works and is not
+worth it*.
 
-**What would close it:** find where the join path allocates beyond the
-single-archive path — whether parts are buffered whole rather than streamed —
-and stream it if they are. `tools/vmac/interactive.py --segments` reproduces
-it in one run.
+**What would reopen it:** something needing tens of kilobytes rather than six.
+The mechanism and its traps are written up in `BRANCH_NOTES.md` on either
+branch, so reopening it is a merge and not a rediscovery.
 
 ## Limits of the formats themselves
 

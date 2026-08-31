@@ -122,6 +122,17 @@ target_compile_options(MacExtract PRIVATE -mcpu=68000 -Os -Wno-multichar
                        # price kMemReserveMax against what the shell actually
                        # uses. A probe, never shipped.
                        $<$<BOOL:$ENV{UNC_AT_RESERVE}>:-DUNC_AT_RESERVE>
+                       # UNC_AT_STACK: paint the unused stack at launch and
+                       # read the watermark back at the end — what kStackBump
+                       # is actually worth, in a currency the engine spends.
+                       # FORMATS.md, *Stack*.
+                       $<$<BOOL:$ENV{UNC_AT_STACK}>:-DUNC_AT_STACK>
+                       # UNC_STACK_BUMP_KB: kStackBump in KB, so the stack
+                       # size can be SWEPT without editing source. A
+                       # requirement does not move when the stack does; a
+                       # measurement that tracks the stack size is measuring
+                       # the stack size. FORMATS.md, *Stack*.
+                       $<$<BOOL:$ENV{UNC_STACK_BUMP_KB}>:-DUNC_STACK_BUMP_KB=$ENV{UNC_STACK_BUMP_KB}>
                        $<$<BOOL:$ENV{UNC_AT_META}>:-DUNC_AT_META>
                        # UNC_AT_SEPARATE_BLOCKS: force the two-separate-NewPtr
                        # staging path (re-tests the old "3 blocks bomb" claim).
