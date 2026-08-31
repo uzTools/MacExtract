@@ -122,7 +122,48 @@ zlib + inflate (~10,263 B, only zip and gzip) are genuinely independent and
 would prove the mechanism on ~25 KB before anything harder is attempted. If
 the loader works, the format decoders follow behind a registration refactor.
 
-## The first real overlay, built 2026-08-30
+## The cipher overlay, WORKING on the machine — 2026-08-31
+
+`src/unc_crypt.c` is out of the link. `mac/ovl_shim.c` provides the thirteen
+symbols the engine calls, loads an `OVLY` resource on first use and dispatches
+into it; `tools/overlay/ovl_crypt.c` is the other side. **The engine is
+unmodified.**
+
+**Verified where it counts:** `interactive.py --password --emu mv-1M -D
+UNC_AT_OVERLAY` — *"password dialog WORKS — every entry decrypted"*, with the
+phase's byte-for-byte read-back off the volume. That one run crosses the
+boundary for `unc_password` (prompt and retry), `unc_resfork_find` (`MKey` out
+of the archive's resource fork), `unc_crypt_sit` (key schedule) and
+`unc_crypt_apply` (every buffer refill). Ordinary archives never load it:
+5/5 on a mixed set at 1 MB.
+
+**What it is worth, measured on the shipping build:**
+
+| | code | data | budget |
+|---|---|---|---|
+| ciphers linked in | 147,240 B | 32,492 B | 560,860 |
+| ciphers as an overlay | **141,100 B** | 25,476 B | **567,000** |
+
+**−6,140 B of code**, so ~6 KB of budget, and 7,016 B off the download.
+
+**That is far less than `unc_crypt.c`'s 14,674 B, and the gap is the lesson.**
+`--gc-sections` was already collecting every cipher entry point nothing
+reachable calls, so the module's RESIDENT cost was never its object size.
+**Every estimate in this file built from object sizes — including the ~103 KB
+for a full per-format split — is therefore optimistic by a factor nobody has
+measured.** Treat them as upper bounds, not forecasts.
+
+**For scale, on the same machine and the same day:** re-pricing one constant
+in the memory reserve was worth **49 KB**; this overlay, with a dispatch, a
+shim, a loader and a build step, is worth **6 KB**.
+
+**Failure to load is handled, not ignored.** Where a signature allows it the
+shim returns `UNC_ERR_MEM`; where it does not, it clears the cipher kind so
+the entry decodes undecrypted and fails its CRC — a per-entry error, which is
+what this engine does with every allocation failure. What it must never do is
+return with a cipher half-initialised.
+
+## The first overlay, built 2026-08-30
 
 `tools/overlay/ovl_crypt.c` compiles `src/unc_crypt.c` **unmodified** into a
 **14,996 B** blob: 0 relocations, entry at offset 0, inside the 32 KB reach.

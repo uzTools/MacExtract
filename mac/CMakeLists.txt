@@ -19,8 +19,14 @@ file(GLOB ZLIB_SRC ${ENGINE_DIR}/third_party/zlib/*.c)
 # a normal build: the shipping application carries no overlay yet.
 # BRANCH_NOTES.md has the measurement and the design.
 set(OVERLAY_R "")
+set(OVERLAY_SHIM "")
 if(DEFINED ENV{UNC_AT_OVERLAY})
-    set(OVERLAY_R ${CMAKE_CURRENT_BINARY_DIR}/ovl_probe.r)
+    # The ciphers move out of resident code and into an 'OVLY' resource:
+    # src/unc_crypt.c leaves the link, mac/ovl_shim.c takes its place, and the
+    # engine is unchanged. BRANCH_NOTES.md.
+    set(OVERLAY_R ${CMAKE_CURRENT_BINARY_DIR}/ovl_crypt.r)
+    set(OVERLAY_SHIM ovl_shim.c)
+    list(FILTER ENGINE_SRC EXCLUDE REGEX "unc_crypt\\.c$")
 endif()
 
 # CREATOR is not decoration: the Finder binds an icon family to an
@@ -37,15 +43,18 @@ add_application(MacExtract
     # Icon family + 'FREF'/'BNDL', generated. A SEPARATE file from
     # macextract.r, which holds the dialogs, the alerts and 'SIZE'.
     macextract_icons.r
+    ${OVERLAY_SHIM}
     ${OVERLAY_R}
 )
 
 add_custom_command(
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/ovl_probe.r
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/ovl_crypt.r
     COMMAND sh ${ENGINE_DIR}/tools/overlay/mkoverlay.sh
-            ${CMAKE_CURRENT_BINARY_DIR}/ovl_probe.r
-            ${ENGINE_DIR}/tools/overlay/ovl_probe.c
-    DEPENDS ${ENGINE_DIR}/tools/overlay/ovl_probe.c
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_crypt.r
+            ${ENGINE_DIR}/tools/overlay/ovl_crypt.c
+            ${ENGINE_DIR}/src/unc_crypt.c
+    DEPENDS ${ENGINE_DIR}/tools/overlay/ovl_crypt.c
+            ${ENGINE_DIR}/src/unc_crypt.c
             ${ENGINE_DIR}/tools/overlay/overlay.h
             ${ENGINE_DIR}/tools/overlay/overlay.ld
             ${ENGINE_DIR}/tools/overlay/mkoverlay.sh)

@@ -411,39 +411,6 @@ static void ReserveSample(void)
 #endif
 
 
-#ifdef UNC_AT_OVERLAY
-#include "overlay.h"
-#include "unc_internal.h"   /* unc_crc32 */
-/* Load the overlay and call it. The proof this needs to give is narrow and
- * specific: that a flat -mpcrel blob, stored as a resource and jumped to at
- * the start of a LOCKED handle, runs on a 68000 and can call back into the
- * application through a vector table. Everything else about selective loading
- * is porting decoders in behind that. */
-static uint32_t ovl_host_crc32(uint32_t c, const uint8_t *p, uint32_t n)
-{
-    return unc_crc32(c, p, n);
-}
-static void OverlayProbe(uint32_t *vals)
-{
-    OverlayHost host;
-    OverlayEntry entry;
-    unsigned char buf[4];
-    Handle h = GetResource('OVLY', 128);
-
-    if (h == NULL || *h == NULL) { vals[0] = 0xDEAD0001u; return; }
-    host.crc32 = ovl_host_crc32;
-    host.alloc = NULL; host.free = NULL; host.alloc_ctx = NULL;
-
-    HLock(h);
-    entry = (OverlayEntry)(void *)*h;
-    vals[0] = (uint32_t)entry(&host, OVL_SELFTEST, NULL, NULL);
-    buf[0] = 1; buf[1] = 2; buf[2] = 3; buf[3] = 4;
-    vals[1] = (uint32_t)entry(&host, OVL_CRC_VIA_HOST, buf, NULL);
-    vals[2] = (uint32_t)GetHandleSize(h);
-    HUnlock(h);
-    ReleaseResource(h);
-}
-#endif
 
 static void *mal_alloc(void *ctx, uint32_t size)
 {
@@ -4050,9 +4017,6 @@ int main(void)
         vals[5] = sumRsrcCRC;
         vals[6] = (uint32_t)totalRsrcLen;
         vals[7] = (uint32_t)gPeakUsage;
-#ifdef UNC_AT_OVERLAY
-        OverlayProbe(vals);
-#endif
 #ifdef UNC_AT_BUDGET
         /* Overwrite the two length slots — same trick UNC_AT_META uses.
          * vals[7] still carries peak, so the three numbers that decide a

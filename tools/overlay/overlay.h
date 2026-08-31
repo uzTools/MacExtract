@@ -32,16 +32,38 @@ typedef struct OverlayHost {
 typedef int32_t (*OverlayEntry)(const OverlayHost *host, int32_t which,
                                 void *a, void *b);
 
-#define OVL_SELFTEST 0      /* returns 0x4F4B ('OK') — proves the mechanism */
+#define OVL_SELFTEST     0  /* returns 0x4F4B ('OK') — proves the mechanism */
 #define OVL_CRC_VIA_HOST 1  /* calls back through the host vector           */
-#define OVL_CRYPT_APPLY  2  /* unc_crypt_apply, in the cipher overlay       */
 
-/* Arguments travel in a struct: a resource has one start address, so every
- * entry point shares one signature. */
-typedef struct OvlCryptArgs {
-    void    *cr;         /* UncCrypt *, opaque to the application */
-    uint8_t *buf;
-    int32_t  len;
-} OvlCryptArgs;
+/* The cipher overlay's entry points. One resource has one start address, so
+ * every one of these arrives through ovl_main with a `which` and a struct;
+ * the shims in mac/ovl_shim.c are what the engine actually links against. */
+#define OVL_CRYPT_APPLY       10
+#define OVL_CRYPT_CPT         11
+#define OVL_CRYPT_PACKIT_DES  12
+#define OVL_CRYPT_PACKIT_XOR  13
+#define OVL_CRYPT_RC4         14
+#define OVL_CRYPT_SIT         15
+#define OVL_CRYPT_SIT5_KEY    16
+#define OVL_CRYPT_WINZIP_AES  17
+#define OVL_CRYPT_XOR         18
+#define OVL_CRYPT_ZIP         19
+#define OVL_HMAC_FINAL        20
+#define OVL_PASSWORD          21
+#define OVL_RESFORK_FIND      22
+
+/* One struct for every entry, because the entry signature is fixed. Fields
+ * are named for their role rather than their type so a reader can follow a
+ * call across the boundary without holding both sides in mind. */
+typedef struct OvlArgs {
+    void       *obj;      /* UncCrypt*, UncHmac* or UncCtx* */
+    const void *in;       /* password, key or fork bytes    */
+    void       *out;      /* result buffer, where there is one */
+    uint32_t    len;      /* bytes in `in`, or buffer length   */
+    uint32_t    pos;      /* stream position, or a second length */
+    uint32_t    extra;    /* whatever one entry needs and the rest do not */
+    uint32_t   *off_out;  /* unc_resfork_find's two outputs */
+    uint32_t   *len_out;
+} OvlArgs;
 
 #endif
