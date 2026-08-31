@@ -1660,6 +1660,10 @@ def phase_drop(args, appbin, workdir, shot):
                               anything, because the drag was never delivered
         drop-5-dropped.png    the archive dragged onto the application's icon
         drop-6-after-wait.png the same, after a launch's worth of seconds
+        drop-7-extracted.png  the destination dialog accepted and the
+                              extraction run, so the frame says the
+                              application was handed the right FILE rather
+                              than merely woken up
 
     **What this cannot see.** It photographs; it reads nothing off the volume.
     A frame showing Standard File proves the application launched, but not
@@ -1734,6 +1738,20 @@ def phase_drop(args, appbin, workdir, shot):
             shot(mac, "drop-5-dropped.png")
             time.sleep(args.launch_wait)
             shot(mac, "drop-6-after-wait.png")
+
+            # If it launched, it went straight to the DESTINATION dialog —
+            # the Open dialog is what the dropped document replaces. Let it
+            # extract, so the run says the application was handed the right
+            # file and not merely woken up. Harmless when nothing launched:
+            # Return goes to a Finder with nothing selected.
+            mac.key("Return")
+            time.sleep(2.0)
+            elapsed = mac.settle(os.path.join(args.outdir, ".settle.png"),
+                                 interval=5.0, quiet=EXTRACT_QUIET,
+                                 timeout=args.complete_timeout)
+            shot(mac, "drop-7-extracted.png")
+            print(f"interactive: drop settled after "
+                  f"~{elapsed if elapsed is None else round(elapsed)}s")
 
     finally:
         mac.close()

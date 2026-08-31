@@ -179,6 +179,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-31 (the message that failed a successful extraction) — the allocator cannot know which refusals matter
 - 2026-08-31 (the joined archive that was never meant to survive) — a harness expectation, three hours old and already documented
 - 2026-08-31 (the drop the Finder does not make, and the version it does show) — a gesture measured on three Finders
+- 2026-08-31 (the drop, taken) — 128 bytes, one Rez line, and a partition that stopped asking
 
 ---
 
@@ -10327,3 +10328,63 @@ titled "MacExtract Info" and draws the name on the line above, so it said the
 name twice and the version once; the strings are now the version alone, and
 System 6.0.8's box was re-photographed to say so — `MacExtract` on one line,
 `0.29.0` on the next, `Version: 0.29.0` below.
+
+## 2026-08-31 (the drop, taken) — 128 bytes, one Rez line, and a partition that stopped asking
+
+The measurement is the entry above; this is what was done with it.
+
+**The wildcard is documented, not just observed.** Inside Macintosh: Macintosh
+Toolbox Essentials, Finder Interface: *"You can create a file reference
+resource that specifies '****' as the file type to allow users to drag all
+file types--including applications, system extensions, documents, and so on,
+but not including disks or folders--to your application icon."* The same
+chapter says the Finder reads `FREF`s *"in system software versions 7.0 and
+later"*, which is the emulator result in Apple's own words. `'disk'` and
+`'fold'` are the other two wildcards and neither is wanted: this application
+extracts one file.
+
+`'****'` is the right shape here rather than a list of archive types, because
+the files this program is FOR are the ones whose type is wrong — a `.hqx` is
+`TEXT`, a raw download is `'????'` — and an enumeration would have refused
+exactly those. `fType` is read and thrown away: the Finder matched it to
+decide whether to offer the drop, and what the file HOLDS is `unc_sniff`'s
+business.
+
+**128 bytes, and the alternative cost 344.** `AppParmHandle` is read where it
+lives; `CountAppFiles`/`GetAppFiles`/`ClrAppFiles` are glue rather than traps
+in the Multiversal libraries, and linking them costs 216 B more for less —
+`GetAppFiles` also spins forever at index ≥ 2 (`glue.c`, `while(index)` with
+no decrement), which a walk of our own does not. Every document is taken, one
+per pass of the existing loop, so dropping three archives extracts three; the
+loop falls back to Standard File when the list runs out rather than quitting.
+The ratchet in `tools/build_mac.sh` moved 147,296 → 147,424 to pay for it, and
+the 512 KB machine pays those bytes for a gesture its Finder does not have.
+
+Driven end to end on System 7.0.1: a file typed `'????'` dropped on the icon,
+no Open dialog, the destination dialog straight away, *"Extraction complete."*
+and both entries of `derived-ScrollbarPattern.sit` on the desktop behind it.
+
+### The partition that had been asking all along
+
+`SIZE` asked for 4 MB, so a 4 MB Macintosh — a generous one for this program —
+met *"MacExtract prefers 4,096K of memory. 3,089K is available."* on every
+launch. **Nothing here had ever seen it**, because every harness in this
+repository installs the application as the BOOT SHELL, which gets all of
+memory; it turned up in the first Finder launch this project has done on
+System 7, while testing something else entirely. Preferred is now 2 MB, which
+clears the alert with about a megabyte of margin.
+
+**The baseline is the part worth keeping.** The obvious sentence to write was
+"this costs `derived-EasyFind.dmg.sit`, which needs 2,658,721 B" — and it is
+false. Measured at 4 MB preferred, on the same machine, EasyFind is refused
+there too: a 4 MB Macintosh has ~3 MB free, so the partition was never 4 MB
+and the archive never fit. What the change actually costs is archives needing
+between ~1.9 MB and ~3.8 MB on a machine with more than 2 MB free — an 8 MB
+Macintosh, which no emulator build here can boot. The heaviest fixture in the
+sample passes: `derived-Library_ISBN_Barcoder.sit`, byte-exact at a peak of
+1,683,101 B inside the 2 MB partition.
+
+**A cost you cannot measure is not a cost you may assert.** One extra run
+against the OLD value turned a confident regression note into an honest
+"unreachable from here", and it is the same discipline that killed the stack
+watermark: change the thing being measured and see whether the number moves.

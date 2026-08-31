@@ -1758,10 +1758,12 @@ measuring speed and the phase waits out `EXTRACT_QUIET` at the end.
     interactive.py <fixture> --drop --system System6.hfv --emu mv-4M
     interactive.py <fixture> --drop --system Sys7.img --emu mv-4M
 
-Six frames: the desktop, the open volume, **Get Info on the application**, a
+Seven frames: the desktop, the open volume, **Get Info on the application**, a
 CONTROL drag to empty space, the archive dropped on the application's icon,
-and the same after a launch's worth of seconds. `--emu mv-4M` because nothing
-here is timed.
+the same after a launch's worth of seconds, and the extraction that follows
+when the drop worked — the last one is what says the application was handed
+the right FILE rather than merely woken up. `--emu mv-4M` because nothing here
+is timed.
 
 The answer, and what it decides, is DECISIONS.md 2026-08-31, *the drop the
 Finder does not make*. Three things about running it:

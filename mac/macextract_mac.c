@@ -5160,6 +5160,69 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
     else ShowNote(alrt, outcome);
 }
 
+/* ---------------------------------------------------------------- */
+/* Documents handed over by the Finder                               */
+/* ---------------------------------------------------------------- */
+
+/* Dropping an archive on the application's icon, or double-clicking one
+ * whose creator is ours, launches the application with the Finder's list
+ * of documents in AppParmHandle. There is no Apple event in it: this
+ * binary is `notHighLevelEventAware` in its 'SIZE', so even Mac OS 9's
+ * Finder uses the mechanism the 128K ROM had.
+ *
+ * Source: Inside Macintosh: Macintosh Toolbox Essentials, Finder
+ * Interface — "the Finder launches your application with a request to
+ * open that document"; and Segment Loader, which lays the handle out as
+ *
+ *     message   INTEGER    0 = appOpen, 1 = appPrint
+ *     count     INTEGER    how many documents follow
+ *     then per document:
+ *     vRefNum   INTEGER    volume, or a working directory on HFS
+ *     fType     OSType     what the Finder matched against our 'FREF's
+ *     versNum   INTEGER
+ *     fName     Str255     the leaf name, the record padded to even
+ *
+ * Read here rather than through CountAppFiles/GetAppFiles because those
+ * are glue in the Multiversal libraries rather than traps, and cost 216
+ * bytes of code more than this does — on a 512 KB machine that is 216
+ * bytes off the engine's budget, for a feature that machine's Finder
+ * does not have (DECISIONS.md 2026-08-31, *the drop the Finder does not
+ * make*). ClrAppFiles is not called for the same reason it is not
+ * needed: nothing reads the list twice.
+ *
+ * fType is deliberately IGNORED. The Finder matched it to decide whether
+ * to offer the drop; what the file actually holds is unc_sniff's
+ * business, and the whole point of the '****' file reference is to be
+ * handed files whose type is wrong. */
+static const unsigned char *gDropNext;   /* the next record, or NULL */
+static short gDropLeft;                  /* records not yet taken    */
+
+static void DropInit(void)
+{
+    Handle h = LMGetAppParmHandle();
+    const unsigned char *q;
+    if (!h || !*h) return;
+    q = (const unsigned char *)*h;
+    if (q[0] || q[1]) return;                     /* appPrint: not ours */
+    gDropLeft = (short)((q[2] << 8) | q[3]);
+    if (gDropLeft > 0) gDropNext = q + 4;
+}
+
+/* The next document, into the two fields SFGetFile would have filled.
+ * Returns 0 when the list is exhausted. */
+static int DropNext(short *vol, Str63 name)
+{
+    const unsigned char *q = gDropNext;
+    short len;
+    if (gDropLeft <= 0 || !q) return 0;
+    *vol = (short)((q[0] << 8) | q[1]);
+    len = (short)q[8];
+    BlockMoveData(q + 8, name, (long)len + 1);
+    gDropNext = q + ((8 + 1 + len + 1) & ~1);
+    gDropLeft--;
+    return 1;
+}
+
 int main(void)
 {
     Point where, dwhere;
@@ -5190,6 +5253,7 @@ int main(void)
     FlushEvents(everyEvent, 0);
 
     gHasWNE = TrapAvailable(_WaitNextEvent);
+    DropInit();
 
     where.h = 82;
     where.v = 90;
@@ -5221,13 +5285,20 @@ int main(void)
          * a customized dialog template. Only SFPutFile's dialog has a
          * usable prompt item, which is why the two are told apart by
          * POSITION below. DECISIONS.md, 2026-08-09. */
+        /* A document the Finder handed over takes the place of the
+         * Open dialog, one per pass: dropping three archives extracts
+         * three, and the loop falls back to Standard File when the
+         * list runs out rather than quitting, so the application is
+         * still there to be given another file. */
+        if (!DropNext(&reply.vRefNum, reply.fName)) {
 #ifdef UNC_AT_STACK
-        SFPGetFile(where, "\p", NULL, -1, NULL, NewDlgHookProc(SFHook),
-                   &reply, getDlgID, NULL);
+            SFPGetFile(where, "\p", NULL, -1, NULL, NewDlgHookProc(SFHook),
+                       &reply, getDlgID, NULL);
 #else
-        SFGetFile(where, "\p", NULL, -1, NULL, NULL, &reply);
+            SFGetFile(where, "\p", NULL, -1, NULL, NULL, &reply);
 #endif
-        if (!reply.good) break;
+            if (!reply.good) break;
+        }
 
         /* Where should the files go? Standard File keeps ONE current
          * folder across SFGetFile and SFPutFile, so this opens in the

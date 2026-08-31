@@ -194,10 +194,32 @@ resource 'ics8' (128, "MacExtract") {
    with the creator set in the build and in the 'SIZE' resource.          */
 
 resource 'FREF' (128) { 'APPL', 0, "" };
+
+/* '****' is the Finder's wildcard: every file type, whatever it says it is.
+   Source: Inside Macintosh: Macintosh Toolbox Essentials, Finder Interface —
+   "You can create a file reference resource that specifies '****' as the file
+   type to allow users to drag all file types--including applications, system
+   extensions, documents, and so on, but not including disks or folders--to
+   your application icon." ('disk' and 'fold' are the other two, and neither
+   is wanted: this application extracts one file.)
+
+   The wildcard rather than a list of archive types, because the files this
+   program is FOR are the ones whose type is wrong — a .hqx is 'TEXT', a raw
+   download is '????' — and an enumeration would have refused exactly those.
+   What is inside is unc_sniff's business, not the Finder's.
+
+   Measured as well as read: with this resource and a file typed '????', the
+   drop launches the application on System 7.0.1, and without it the same
+   drag only moves the icon. Nothing below System 7 has the gesture at all
+   (DECISIONS.md 2026-08-31). Local ID 1 maps to the same 'ICN#' as the
+   application: a document this program can open keeps its own icon, because
+   the Finder draws icons by CREATOR, and nothing anywhere carries ours. */
+resource 'FREF' (129) { '****', 1, "" };
+
 resource 'BNDL' (128) {
     'MExt', 0,
-    { 'ICN#', { 0, 128 },
-       'FREF', { 0, 128 } }
+    { 'ICN#', { 0, 128, 1, 128 },
+       'FREF', { 0, 128, 1, 129 } }
 };
 
 /* The SIGNATURE resource: type = the creator code, ID 0. The Finder wants

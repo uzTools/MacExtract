@@ -164,12 +164,39 @@ resource 'DITL' (133, purgeable) {
 };
 
 /* MultiFinder/System 7 friendliness; System 6 Finder ignores it (there the
- * app just gets all free RAM). Preferred 4 MB lets the engine use a large
- * runtime budget on a roomy machine (Arsenic/SIT5 needs ~2.6 MB); minimum
- * 400 KB still launches on a small Mac, where big blocks fail per-entry
- * ("block too large for memory budget") rather than refusing to run. The
- * actual budget is derived at runtime from FreeMem(), so ONE binary adapts
- * from a 1 MB Plus to a G3.
+ * app just gets all free RAM). The actual budget is derived at runtime from
+ * FreeMem(), so ONE binary adapts from a 1 MB Plus to a G3.
+ *
+ * PREFERRED IS 2 MB, AND IT WAS 4 MB UNTIL 2026-08-31. A partition larger
+ * than the free memory does not fail — the Process Manager puts up "MacExtract
+ * prefers 4,096K of memory. 3,089K is available. Do you want to open it using
+ * the available memory?" and launches with what there is when the user says
+ * OK. That alert is on the path a real user takes and on no test's: every
+ * harness here installs the application as the BOOT SHELL, which gets all of
+ * memory and never sees it. It was photographed for the first time on
+ * 2026-08-31, by the first Finder launch this project has ever done on System
+ * 7, and a 4 MB Macintosh — a generous one for this application — meets it on
+ * every launch.
+ *
+ * 2 MB clears it on any machine that can run System 7 at all, with about a
+ * megabyte of margin, and still holds the heaviest fixture in the sample:
+ * `derived-Library_ISBN_Barcoder.sit` replays byte-exact on System 7.0.1 at a
+ * peak of 1,683,101 B inside the 2 MB partition (2026-08-31).
+ *
+ * WHAT IT COSTS CANNOT BE DEMONSTRATED ON ANY MACHINE HERE, and the baseline
+ * is why: `derived-EasyFind.dmg.sit` needs 2,658,721 B and is refused per
+ * entry at 4 MB preferred as well as at 2 MB, because a 4 MB Macintosh has
+ * only ~3 MB free and the partition was never 4 MB. The largest emulator
+ * build in tools/vmac is 4 MB. So the price is paid by archives needing
+ * between ~1.9 MB and ~3.8 MB on a machine with more than 2 MB free — an
+ * 8 MB Macintosh, which nothing here can boot. EasyFind is one of them.
+ * Whoever has such a machine can raise the partition back: the application
+ * already says "Needs NNNK more memory. Give MacExtract more in Get Info",
+ * which is the same box this alert was pointing at.
+ *
+ * Minimum 400 KB still launches on a small Mac, where big blocks fail
+ * per-entry ("block too large for memory budget") rather than refusing to
+ * run.
  *
  * VERIFIED 2026-08-02, both halves of that claim: rebuilt with a 600 KB
  * preferred partition, System 7.0.1's Process Manager honoured it and the
@@ -183,5 +210,5 @@ resource 'SIZE' (-1) {
     dontGetFrontClicks, ignoreChildDiedEvents, not32BitCompatible,
     notHighLevelEventAware, onlyLocalHLEvents, notStationeryAware,
     dontUseTextEditServices, reserved, reserved, reserved,
-    4096 * 1024, 400 * 1024
+    2048 * 1024, 400 * 1024
 };
