@@ -2233,9 +2233,18 @@ dialog opens BETWEEN entries, after the previous entry's blocks have been
 freed. Contiguity was guarding a case this application's shape does not
 produce.
 
-**So the reserve is 24 KB**, 1.81x the 13,242 B the shell and Toolbox have
-ever been measured using, and the 8,192 B released went to the engine
-(*Budget*). Verified byte-exact at that size on all four tiers — 69/69 at
+**So the reserve is 20 KB**, 1.5x the 13,242 B the shell and Toolbox have
+ever been measured using, and the 12,288 B released went to the engine
+(*Budget*).
+
+**And what it covers is narrower than it looks.** The progress dialog is
+created BEFORE the budget is taken, so it is already out of `FreeMem()` and
+the reserve never pays for it; what is left is only what the shell allocates
+DURING extraction — File Manager buffers, and a dialog that opens mid-run. On
+a heavy 1 MB extraction (`derived-Troi-ClipSave-Plug-in1.1.sit`, engine peak
+472,137 B) the shell's share at the tightest moment measured **−33 B**:
+nothing beyond the engine, to within the skew between the two samples. The
+13,242 B worst case comes from a lighter run where a dialog was up. Verified byte-exact at that size on all four tiers — 69/69 at
 1 MB, 66/69 at 512 KB, 69/69 on System 7.0.1, 20/20 on Mac OS 9.2 — and the
 password and report dialog phases driven end to end, the password one on the
 512 KB machine where the heap is tightest.
@@ -2295,23 +2304,23 @@ enforces a ratchet on code size for this reason.
 
 ### Budget
 
-**What a 1 MB Mac Plus actually leaves the engine is 644,004 B** — measured
+**What a 1 MB Mac Plus actually leaves the engine is 648,100 B** — measured
 **2026-08-31** with `run.py --mem 1M -D UNC_AT_BUDGET`, which reports
-`FreeMem()` at **668,580 B** and the shell's reserve at a flat 24 KB.
+`FreeMem()` at **668,580 B** and the shell's reserve at a flat 20 KB.
 
 **It has moved three times in two days, every time by re-pricing a constant
 nobody had measured, and none of them cost a millisecond:** 566,164 →
 615,348 B when the reserve went flat (49,184 B), → 635,812 B when the stack
-was priced (20,464 B, *Stack*), → **644,004 B** when the reserve itself was
-re-priced against the thing it is actually for (8,192 B, below). Together
-**77,840 B**, against the 780 B a full day of compiler size flags bought at
+was priced (20,464 B, *Stack*), → **648,100 B** when the reserve itself was
+re-priced twice against the things it is actually for (12,288 B, below).
+Together **81,936 B**, against the 780 B a full day of compiler size flags bought at
 0.82 % of every extraction (*Size flags, priced in both currencies*) — **a
 hundred times as much, for nothing**. The stack cut
 was made, reverted the same day on a bad instrument, and re-made once a
 second instrument disagreed with the first — BLOCKERS.md, *Withdrawn claims*,
 has that round trip and what it cost.
 
-**The reserve was 80 KB, is now a flat 24 KB, and 80 KB was never priced.**
+**The reserve was 80 KB, is now a flat 20 KB, and 80 KB was never priced.**
 `kMemReserveMax` equals `kMemReserveMin`, so the quarter-of-free rule no longer
 bites anywhere. **49 KB of budget recovered at no cost in speed** — for scale,
 a day of compiler size flags bought 780 B and cost 0.82 % of every extraction
@@ -2404,8 +2413,8 @@ measured on the roomy one says nothing about the tight one:
 
 | | free | reserve | budget |
 |---|---|---|---|
-| System 6.0.8, 1 MB, no MultiFinder (whole machine) | 668,580 B | 24 KB | **644,004 B** (measured) |
-| System 7 / MultiFinder at the declared 400 KB minimum | 211,960 B | 24 KB | **187,384 B** (derived) |
+| System 6.0.8, 1 MB, no MultiFinder (whole machine) | 668,580 B | 20 KB | **648,100 B** (measured) |
+| System 7 / MultiFinder at the declared 400 KB minimum | 211,960 B | 20 KB | **191,480 B** (derived) |
 
 Both are `FreeMem()` less the reserve, taken when extraction begins. The
 second row is **arithmetic, not a measurement**: the free figure is measured
@@ -2414,14 +2423,15 @@ the reserve went flat. It was **158,970 B** under the quarter rule.
 **What would settle it:** one `-D UNC_AT_BUDGET` run on System 7.0.1 with the
 preferred size built down to 400 KB, which is how the 212,056 B came.
 
-**The reserve is a flat 24 KB, was a flat 32 KB on 2026-08-30/31, a quarter of
+**The reserve is a flat 20 KB, was 24 KB and before that a flat 32 KB on 2026-08-30/31, a quarter of
 free clamped to [32 KB, 80 KB] between 2026-08-24 and 2026-08-30, and a flat
 80 KB before that.** Each step was a re-pricing of the same unmeasured constant, and each
 went entirely to the engine: 80 KB → the quarter rule was worth 28,834 B in
 the minimum partition, which is what took Now Compress from opening none of
 its fixtures there to opening all three (*Budget sweep*); the quarter rule →
-a flat 32 KB is worth 49,184 B on a 1 MB Mac Plus, and 32 → 24 KB another
-8,192 B once contiguity was measured rather than assumed.
+a flat 32 KB is worth 49,184 B on a 1 MB Mac Plus, and 32 → 20 KB another
+12,288 B once contiguity, and then what the reserve actually pays for, were
+measured rather than assumed.
 
 **What the reserve is worth was measured, for the first time.** A probe
 recording the lowest `FreeMem()` seen during writes, over all 67 fixtures of
@@ -2440,7 +2450,7 @@ engine holds its peak. MANUAL_TESTS.md carries it.
 closes PLANNED_WORK.md's proposal to try): the next `target` rung for the
 slowest fixture needs a 650,222 B peak, and a 1 MB Mac Plus has **648,084 B**
 free before any reserve at all. The 2026-08-30 re-pricing spent the whole
-argument — the reserve fell 80 KB → 24 KB and the rung is still out of reach
+argument — the reserve fell 80 KB → 20 KB and the rung is still out of reach
 by more than the reserve now is. Whatever the reserve is worth, it is not a
 rung.
 
@@ -2452,16 +2462,20 @@ rather than sampled:
 
 | | budget | partition |
 |---|---|---|
-| every archive at least OPENS — entries named, folders made, each failure per entry | **27,596 B** | ~252 KB |
-| every fixture EXTRACTS FULLY — nothing budget-limited at all | **566,009 B** | **~826 KB** |
+| every archive at least OPENS — entries named, folders made, each failure per entry | **27,596 B** | ~223 KB |
+| every fixture EXTRACTS FULLY — nothing budget-limited at all | **566,009 B** | **~798 KB** |
 
-The partition column is `budget + reserve + 197,640 B`, and that overhead —
-the application's own code, its 32 KB stack and the A5 world — is measured,
-not modelled: 409,600 − 211,960 at a 400 KB partition and 870,400 − 672,760
-at an 850 KB one, **197,640 both times**.
+The partition column is `budget + reserve + overhead`, where the overhead —
+the application's own code, its stack and the A5 world — was measured at
+**197,640 B**, not modelled: 409,600 − 211,960 at a 400 KB partition and
+870,400 − 672,760 at an 850 KB one, the same both times. **That measurement
+was taken with a 32 KB stack**; the stack is 12 KB since 2026-08-31, so the
+overhead is **177,176 B** and both partition figures fall by 20,464 B.
+Derived, not re-measured — the two budget floors either side of it are
+measured, and the arithmetic between them is `SetApplLimit`.
 
-**So: give it about 850 KB in Get Info and everything in the corpus comes
-out whole.** At the declared 400 KB minimum every archive still opens and
+**So: give it about 800 KB in Get Info and everything in the corpus comes
+out whole** — it was 850 KB until the stack was re-priced. At the declared 400 KB minimum every archive still opens and
 lists; 16 of 31 StuffIt 5 fixtures and two others fail per entry, with a
 message naming each.
 
@@ -3421,8 +3435,8 @@ launching an application unloads it, measured at **12 bytes** between a System
 6.0.8 boot-shell launch (122,808 B free) and a double-click launch from a
 booted Finder (122,796 B).
 
-The reserve explains the rest, and it is now a flat 24 KB on every tier:
-`budget = FreeMem() - 24,576`. **Measured 2026-08-31** on the 512Ke under
+The reserve explains the rest, and it is now a flat 20 KB on every tier:
+`budget = FreeMem() - 20,480`. **Measured 2026-08-31** on the 512Ke under
 System 3.0 with `-D UNC_AT_BUDGET`, while the reserve was still 32 KB:
 `FreeMem()` **219,212 B**, budget **186,444 B**, exactly 32,768 apart; the
 same machine gains 8,192 B and another 20,464 B from the stack. Under the quarter rule that budget was

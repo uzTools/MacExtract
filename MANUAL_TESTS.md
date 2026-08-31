@@ -58,9 +58,16 @@ emulator is least trustworthy. Do these first.
       with a Chooser extension or two has less, and every 1 MB number in
       FORMATS.md is derived from that budget.
 - [ ] **How much heap the Toolbox really needs while the engine is at its
-      peak.** The reserve held back from the engine is a flat **32 KB**
-      (`kMemReserveMin`/`Max` in `mac/macextract_mac.c`); it was a quarter of
-      `FreeMem()` clamped to [32 KB, 80 KB] until 2026-08-30. Measured under Mini vMac, the Toolbox and File
+      peak.** The reserve held back from the engine is a flat **20 KB**
+      (`kMemReserveMin`/`Max` in `mac/macextract_mac.c`); it was 80 KB, then a
+      quarter of `FreeMem()` clamped to [32 KB, 80 KB], then 32 and 24 KB, all
+      within two days of measurement. **Contiguity is no longer the open
+      question** — `MaxBlock()` at every dialog creation is essentially the
+      whole free heap (FORMATS.md, *What the reserve is for*). What is left is
+      VOLUME on iron, and specifically **a real floppy's File Manager buffers
+      during writes**, which a RAM-backed emulated disk cannot produce. That is
+      now the single measurement standing between this and a smaller reserve
+      still. Measured under Mini vMac, the Toolbox and File
       Manager took **under 1 KB** at the tightest moment of all 67 sample
       fixtures — but that is a stripped System Folder with no INITs, a
       RAM-backed disk and no fragmentation. Do the same on iron with a

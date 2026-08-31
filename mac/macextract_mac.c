@@ -101,10 +101,20 @@
 #define kStackBump      ((long)UNC_STACK_BUMP_KB * 1024L)
 /* Heap kept back from the engine for the Toolbox and File Manager.
  *
- * A FLAT 24 KB: kMemReserveMax equals kMemReserveMin, so the quarter-of-free
+ * A FLAT 20 KB: kMemReserveMax equals kMemReserveMin, so the quarter-of-free
  * rule this held between 2026-08-24 and 2026-08-30 bites nowhere, and the
  * 80 KB it was a flat constant of before that is gone. 32 KB from 2026-08-30
- * to 2026-08-31, when the thing it is FOR was measured at last.
+ * to 2026-08-31, when the thing it is FOR was measured at last, then 24 KB,
+ * then this.
+ *
+ * WHAT THE RESERVE ACTUALLY COVERS, measured 2026-08-31 and narrower than it
+ * looks: the progress dialog is created BEFORE the budget is taken, so it is
+ * already out of FreeMem() and the reserve never pays for it. What is left is
+ * only what the shell allocates DURING extraction — File Manager buffers, and
+ * a dialog that opens mid-run. On a heavy 1 MB extraction (engine peak
+ * 472,137 B) the shell's share at the tightest moment measured **-33 B**:
+ * nothing beyond the engine, to within sampling skew. The largest figure ever
+ * recorded is 13,242 B, and 20 KB is 1.5x that.
  * Both earlier values were unmeasured. Budget on a 1 MB Mac Plus:
  * 566,164 -> 615,348 B, measured on the machine, at no cost in speed —
  * the reserve only decides how the heap is divided, and what is released
@@ -142,8 +152,8 @@
  * attempts: a 3.7 KB archive never fires the progress pump, and an
  * archive too big for the budget has its big allocation REFUSED before it
  * happens, so the run that fails hardest stresses the heap least. */
-#define kMemReserveMax  (24L * 1024)
-#define kMemReserveMin  (24L * 1024)
+#define kMemReserveMax  (20L * 1024)
+#define kMemReserveMin  (20L * 1024)
 
 #ifndef ioDirMask
 #define ioDirMask 0x10   /* ioFlAttrib bit 4 = "is a directory"
@@ -5130,9 +5140,16 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
          * completion alert. Prepended, because the report window clips. */
         unsigned char n[32], tmp[256];
         short i;
-        NumToString(gFreeAtStart - gMinFree, n);   /* peak TOTAL heap used */
+        /* SHELL appetite, which is what the reserve actually has to cover:
+         * total heap used at the tightest moment, less what the engine held
+         * then. Readable only on a run where the engine reaches its cap — on
+         * a small archive this says nothing. */
+        NumToString(gFreeAtStart - gMinFree - gPeakUsage, n);
         tmp[0] = 0;
-        PStrCat(tmp, "used=");
+        PStrCat(tmp, "shell=");
+        for (i = 1; i <= n[0]; i++) tmp[++tmp[0]] = n[i];
+        PStrCat(tmp, " eng=");
+        NumToString(gPeakUsage, n);
         for (i = 1; i <= n[0]; i++) tmp[++tmp[0]] = n[i];
         PStrCat(tmp, " ");
         for (i = 1; i <= outcome[0]; i++) tmp[++tmp[0]] = outcome[i];
