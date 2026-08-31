@@ -1491,43 +1491,33 @@ def phase_segments(args, appbin, workdir, shot):
         if os.path.exists(scratch):
             os.remove(scratch)
 
-    # The bytes, not the screenshot. Read the joined file back off the
-    # volume the Mac actually wrote to — which is Mac()'s private COPY of
-    # the boot image, not the image handed to it. Reading the template
-    # instead reports "not found" for a run that worked perfectly, which
-    # is how this was first written.
-    written = os.path.join(workdir, "boot.hfv")
-    out = os.path.join(workdir, "joined.bin")
-    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
-    verdict, listing = "NOT FOUND", ""
-    try:
-        subprocess.run(["hmount", written], check=True, capture_output=True,
-                       env=env)
-        got = subprocess.run(["hcopy", "-r", ":" + name.decode("mac_roman"), out],
-                             capture_output=True, env=env)
-        if got.returncode != 0:
-            # Say what IS on the volume: "not found" on its own cannot
-            # distinguish a wrong name from a failed extraction. Decoded
-            # as MacRoman, not as text=True: the volume holds `StuffIt
-            # Expander™ 4.0.1 Folder`, so a UTF-8 decode raises — and it
-            # raises only on the path that runs when the run has ALREADY
-            # failed, taking the diagnostic down with it.
-            listing = subprocess.run(["hls", "-l"], capture_output=True,
-                                     env=env).stdout.decode("mac_roman").strip()
-        subprocess.run(["humount", written], capture_output=True, env=env)
-        if got.returncode == 0 and os.path.exists(out):
-            verdict = ("BYTE-EXACT" if open(out, "rb").read() == original
-                       else "DIFFERS")
-    finally:
-        shutil.rmtree(env["HOME"], ignore_errors=True)
-
-    print(f"interactive: joined file read back off the boot volume: {verdict} "
-          f"({len(original)} B expected)")
-    if listing:
-        print("interactive: the volume holds:\n" + listing)
+    # The bytes, not the screenshot — but the RIGHT bytes, which took a
+    # correction. This phase used to read back a file named after the
+    # original archive and compare it to the archive the parts were cut
+    # from. That file never appears: the shipped application unwraps
+    # envelope chains, so the joined `.sit` is consumed and its CONTENTS
+    # are what land on the volume. The check therefore failed on every run
+    # while the Mac was doing exactly the right thing — the same shape of
+    # error `expected_names` documents for chained fixtures, and in the
+    # same direction, "looks like an application bug" (DECISIONS.md
+    # 2026-08-27). Verified 2026-08-31: the volume held `Cal 3.02`,
+    # `Cal.Intro` and `Calendar Tools`, both forks and type/creator intact.
+    written = os.path.join(workdir, "boot.hfv")     # Mac()'s private copy
+    want = expected_names(args.fixture, workdir)
+    if not want:
+        return False
+    on_boot = volume_names(written)
+    missing = sorted(n for n in want if n not in on_boot)
+    print(f"interactive: the joined archive's contents on the boot volume: "
+          f"{sorted(CD.mac_path(n) for n in on_boot)}")
+    if missing:
+        print("interactive: MISSING after the join: "
+              + ", ".join(CD.mac_path(n) for n in missing))
     if elapsed is not None:
         print(f"interactive: settled ~{elapsed:.0f}s after the part was given")
-    return verdict == "BYTE-EXACT"
+    print("interactive: joined set extracted: "
+          + ("COMPLETE" if not missing else "INCOMPLETE"))
+    return not missing
 
 
 def phase_password(args, appbin, workdir, shot):

@@ -177,6 +177,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-30 (the Desktop file the password phase needed) — a harness reported a working feature as broken, and a bisect agreed with it
 - 2026-08-31 (the overlay that works and is not worth it) — a lifetime argument, and a 6 KB prize
 - 2026-08-31 (the message that failed a successful extraction) — the allocator cannot know which refusals matter
+- 2026-08-31 (the joined archive that was never meant to survive) — a harness expectation, three hours old and already documented
 
 ---
 
@@ -10197,3 +10198,52 @@ with the machine to itself has a zone reaching most of RAM, one in a partition
 has a zone far smaller than RAM. Both configurations are far from the line —
 ~700 KB of a 1 MB MemTop against ~400 KB of 4 MB — and a 512 KB Macintosh
 (~220 KB of 512 KB) is on the correct side too.
+
+## 2026-08-31 (the joined archive that was never meant to survive) — a harness expectation, three hours old and already documented
+
+**Claim: the Macintosh segment join is fine, and the check on it was asking
+for a file the application is supposed to consume.**
+
+`interactive.py --segments` drives the "locate part N" dialog correctly, ends
+on *"Extraction complete."*, and then failed its own byte check with `NOT
+FOUND (50205 B expected)`. It reproduced identically at the commit this
+session started from, so it was not today's memory work — and for a few hours
+it sat in OPEN_ITEMS.md as *"completes and writes nothing where it is
+checked"*, with both readings still open.
+
+**What the volume actually held settles it.** Not the joined `derived-Cal.sit`
+the phase looked for, but its CONTENTS:
+
+    f  DFIL/DMOV     27545         0  Cal 3.02
+    f  TEXT/MACA         0      2739  Cal.Intro
+    f  APPL/C0tl     39884         0  Calendar Tools
+
+Both forks, type and creator intact. The Mac joined three parts, unwrapped the
+joined archive and extracted it. **The shipped application has unwrapped
+envelope chains since 2026-08-14**, so a joined `.sit` is an intermediate that
+never reaches the disk, and a check that looks for it can only fail.
+
+**The lesson was already written down, in the file the fix belongs in.**
+`expected_names()`'s own docstring says a single-level reference *"says a
+chained fixture should leave `boogers152.sit` on the volume, where the
+application leaves the two files inside it — so every phase using this would
+have failed on any chained fixture, in the direction that looks like an
+application bug"*, dated 2026-08-27. Every phase was converted to that helper
+then except this one, which kept its bespoke check and so kept the defect the
+conversion existed to remove. `phase_segments` now uses `expected_names()`
+like the others.
+
+### What it cost, and the part worth transferring
+
+An hour, a worktree bisect against `bba32c5`, and a false entry in
+OPEN_ITEMS.md naming a user-facing failure that did not exist — the second
+time in one session that a phantom defect was filed from an instrument rather
+than from the machine (BLOCKERS.md, *Withdrawn claims*, the segmented-join
+memory row).
+
+**Both had the same shape: a check whose expectation was written before a
+behaviour changed, failing in the direction that looks like an application
+bug.** A harness that is not run for three weeks does not merely go stale, it
+starts LYING, and it lies in the most expensive direction — nobody
+investigates a passing test. This phase's last recorded run was 2026-08-09 and
+the behaviour it mis-describes arrived on 2026-08-14, five days later.

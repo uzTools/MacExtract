@@ -77,35 +77,6 @@ worth it*.
 The mechanism and its traps are written up in `BRANCH_NOTES.md` on either
 branch, so reopening it is a merge and not a rediscovery.
 
-## The segmented-set UI phase completes and writes nothing where it is checked
-
-**MEASURED 2026-08-31, and it is NOT today's memory work** — it reproduces
-identically at `bba32c5`, the commit this session started from, and at HEAD.
-Verified in a worktree with the same fixture and the same command.
-
-`interactive.py fixtures/derived-Cal.sit --segments` drives the dialog exactly
-as FORMATS.md's *The "locate part N" dialog* describes — the alert reads *"Part
-2 of "derived-Cal.sit" has not been found. About 33K still to read"*, the wrong
-part is refused by fingerprint, the right one resumes the run, and the Mac says
-**"Extraction complete."** But the joined file is not on the boot volume
-afterwards: the harness reports `NOT FOUND (50205 B expected)` and the volume
-holds only part 1. The same happens with a larger subject.
-
-**Why it matters:** that phase's whole point is that it ends on a byte
-comparison rather than a screenshot, and the byte comparison is failing while
-every screenshot looks right. Either the application writes the joined file
-somewhere the harness does not read — the destination is chosen through
-Standard File, and the run switches volumes to locate part 2 — or the join
-writes nothing at all and the "complete" is wrong. **The screenshots cannot
-tell those apart**, which is precisely the case the byte check exists for.
-
-**What would close it:** read the OTHER volume (the parts floppy) after the run
-before concluding anything about the engine; `checkdisk.py` already reads a
-volume's forks. If the file is there, the harness is looking in the wrong
-place and this is a one-line fix. If it is on neither volume, the Macintosh
-segment join is broken and has been for some time — nothing runs this phase in
-`ci.sh`, and the last recorded run is 2026-08-09.
-
 ## Limits of the formats themselves
 
 - **A raw brotli stream cannot be identified, by this or any program.** RFC
