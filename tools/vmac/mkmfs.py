@@ -30,6 +30,7 @@ from reference/XADMaster/XADMacArchiveParser.m.
     mkmfs.py --list out.img
     mkmfs.py --extract System Sys11.img System.bin       # lift a file out
     mkmfs.py out.img --boot Sys11.img --shell TrapTest System.bin app.bin
+    mkmfs.py out.img --boot Sys30.img System.bin probe.bin:Finder
 """
 
 import argparse
@@ -299,7 +300,10 @@ def dump(path):
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("image")
-    ap.add_argument("files", nargs="*", help="MacBinary files to put on it")
+    ap.add_argument("files", nargs="*",
+                    help="MacBinary files to put on it, each optionally "
+                         "PATH:MACNAME to land under a different name — the "
+                         "same spelling mkboot.py uses")
     ap.add_argument("--name", default="Untitled", help="volume name")
     ap.add_argument("--boot", help="image to copy logical blocks 0-1 from, "
                                    "which is what makes the volume bootable")
@@ -333,7 +337,10 @@ def main():
         boot = bytes(boot)
     elif a.shell:
         raise SystemExit("mkmfs: --shell needs --boot")
-    files = [MacFile.from_macbinary(p) for p in a.files]
+    files = []
+    for spec in a.files:
+        path, _, macname = spec.partition(":")
+        files.append(MacFile.from_macbinary(path, macname or None))
     open(a.image, "wb").write(build(files, a.name, boot))
     print(f"mkmfs: wrote {a.image} — {len(files)} file(s), volume {a.name!r}")
     return 0

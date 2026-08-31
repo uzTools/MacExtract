@@ -3508,7 +3508,7 @@ boot code. On **MFS** the same machine boots normally:
 | `Sys30.img` — Apple's 800K HFS System 3.0 floppy | Sad Mac `0F0064` |
 | `Sys11.img` — Apple's 400K MFS System 1.1 floppy | boots to Finder 1.1 |
 | `Sys11clone.img` — the same two files, volume rebuilt by `mkmfs.py` | boots to Finder 1.1 |
-| `Sys30Boot.img` — System 3.0 + Finder 5.1 lifted out of `Sys30.img` onto MFS | **boots the floor system** |
+| `Sys30Boot.img` — System 3.0 + Finder 5.1 lifted out of `Sys30.img` onto MFS, with `Sys30.img`'s own boot blocks | **boots the floor system** |
 
 **The application launches there, and bombs: `ID = 03`.** `mkmfs.py` writes a
 400K MFS volume holding `dist/MacExtract.bin`; the Finder mounts it, shows the
@@ -3517,27 +3517,34 @@ the same `ID = 03` under System 1.1 and under System 3.0, so the System is not
 the variable and the machine is.
 
 **Both stated reasons for the ROM verdict were wrong.** `tools/vmac/traptest`
-paints a mark, makes one call, paints the next mark, and runs as the boot
-shell so that no Finder is in the way. On the 512K it paints three marks and
-stops:
+paints a mark, makes one call, paints the next mark, and never returns. Both
+columns below are one disk — System 3.0 and the probe, the probe named
+`Finder` so that the System launches it and no real Finder is in the way —
+booted on the two machines that differ in nothing but their ROM:
 
-| call | 64 KB ROM |
-|---|---|
-| `NGetTrapAddress` (what `TrapAvailable` uses), twice | returns |
-| `PBHGetVInfoSync` — an HFS parameter block | returns |
-| `PBGetCatInfoSync` | **bomb, `ID = 12`, unimplemented core routine** |
+| call | 512Ke, 128 KB ROM | 512K, 64 KB ROM |
+|---|---|---|
+| `NGetTrapAddress` (what `TrapAvailable` uses), twice | returns | returns |
+| `PBHGetVInfoSync` — an HFS parameter block | returns | returns |
+| `PBGetCatInfoSync` | returns | **bomb, `ID = 12`, unimplemented core routine** |
+| marks painted | **4, no bomb** | 3 |
 
-So `TrapAvailable` is not the blocker, and neither is "every file operation
-going through HFS parameter blocks". What a 64K ROM does not have is the
-`_HFSDispatch` selector behind `PBGetCatInfo`, which this application uses in
-five places to walk a directory and to size a file. The verdict is unchanged
-and now measured: **a 64K-ROM Macintosh cannot run this.** Why the application
-itself stops at `ID = 03` instead of reaching `ID = 12` is *not identified*.
+The 512Ke column is the control, and it is the reason the 512K column means
+anything: a probe that stops one call early proves nothing until the same
+probe, on the same volume, has been seen to finish. So `TrapAvailable` is not
+the blocker, and neither is "every file operation going through HFS parameter
+blocks". What a 64K ROM does not have is the `_HFSDispatch` selector behind
+`PBGetCatInfo`, which this application uses in five places to walk a directory
+and to size a file. The verdict is unchanged and now measured: **a 64K-ROM
+Macintosh cannot run this.** Why the application itself stops at `ID = 03`
+instead of reaching `ID = 12` is *not identified*.
 
-One harness fact fell out of it: **System 1.1 honours the boot blocks' shell
-name** — `mkmfs.py --shell TrapTest` launched the probe on a volume with no
-Finder on it at all — which is the opposite of System 3.0, and is why that
-probe is deterministic where a double-click is not (*System 3.0 tier*).
+Two harness facts fell out of it. **System 3.0 ignores the boot blocks' shell
+name on MFS exactly as it does on HFS** (*System 3.0 tier*), so the probe is
+launched by being NAMED `Finder` — `mkmfs.py ... probe.bin:Finder` — which is
+deterministic where a double-click is not. **System 1.1 does honour that
+field**, measured with `mkmfs.py --shell TrapTest`; it is the only system here
+that does.
 
 **One thing behaves differently, and it is the System rather than this
 application: Cmd-. does not cancel Standard File on System 3.0.** The frame

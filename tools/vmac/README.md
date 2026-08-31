@@ -38,29 +38,39 @@ Everything below wants a display and is watched by eye. `$V` is
     $V/mv-512K/minivmac -r $V/Mac512K.ROM $V/Sys11.img    # MFS:  boots to Finder 1.1
 
 **`mkmfs.py` writes the MFS volumes**, because Retro68's `.dsk` is always
-800K HFS. It builds, lists and extracts, and `--shell` rewrites the boot
-blocks the way `mkboot.py` does for HFS — which works here, since System 1.1
-reads that field and System 3.0 does not:
+800K HFS. It builds, lists and extracts:
 
     mkmfs.py $V/AppMFS.img --name MacExtract dist/MacExtract.bin
     mkmfs.py --list $V/AppMFS.img
     mkmfs.py --extract System $V/Sys11.img /tmp/System11.bin
-    mkmfs.py $V/TrapBoot.img --boot $V/Sys11.img --shell TrapTest \
-             --name TrapTest /tmp/System11.bin build/traptest/TrapTest.bin
+
+**Use System 3.0, not System 1.1.** 3.0 is the floor this project tests
+everywhere else, and it boots the 64K-ROM machine off MFS with its own boot
+blocks. Lift its System and Finder out with `hcopy -m` and hand them to
+`mkmfs.py`:
+
+    hmount Sys30.img; hcd "System Folder"
+    hcopy -m System /tmp/System30.bin; hcopy -m Finder /tmp/Finder30.bin
+    mkmfs.py $V/Sys30Boot.img --boot $V/Sys30.img --name "System Tools" \
+             /tmp/System30.bin /tmp/Finder30.bin
+
+To launch something without a Finder in the frame, put it on as `Finder`:
+System 3.0 ignores the boot blocks' shell name on MFS just as it does on HFS,
+so `--shell` is for System 1.1, which is the one system here that reads it.
+
+    mkmfs.py $V/TrapBoot30.img --boot $V/Sys30.img --name "System Tools" \
+             /tmp/System30.bin build/traptest/TrapTest.bin:Finder
 
 A volume with no `Desktop` file makes the Finder offer "minor repairs" on
-first open; click OK and it rebuilds one. Getting System 3.0 onto MFS is the
-same two steps through `hcopy -m`, and it boots:
-
-    hmount Sys30.img; hcd "System Folder"; hcopy -m System /tmp/System30.bin
-    mkmfs.py $V/Sys30Boot.img --boot $V/Sys11.img --name "System Tools" \
-             /tmp/System30.bin /tmp/Finder30.bin
+first open; click OK and it rebuilds one.
 
 **`traptest/` is the minimal reproduction** for what the 64K ROM actually
 lacks: it paints a mark, makes one call, paints the next, and never returns —
 a probe that exits has its marks erased by the desktop repaint before a
-screenshot can be taken. Build it by hand, put it on a volume as the boot
-shell, and read the marks:
+screenshot can be taken. Build it by hand, put it on the volume above as
+`Finder`, and read the marks — **on `mv-512Ke` as well as `mv-512K`**, because
+a probe that stops early says nothing until the same probe has been seen to
+finish somewhere (four marks on the 128K ROM, three on the 64K one):
 
     cmake -B build/traptest -S tools/vmac/traptest \
           -DCMAKE_TOOLCHAIN_FILE=$RETRO68/m68k-apple-macos/cmake/retro68.toolchain.cmake
