@@ -78,9 +78,23 @@ void ovl_release_if_unwanted(UncFormat fmt)
 
 static OverlayEntry ovl_entry(void)
 {
-    /* Never reloads. If it was released the format cannot want it, and a
-     * reload would be the mid-run disk access this design exists to avoid. */
-    if (!gOvlTried) ovl_preload();
+    /* RELOADS if it was released, and that is not a detail. The release is
+     * per ARCHIVE; this application loops back to Standard File and opens
+     * another. Extract an LZH, then an encrypted .sit in the same session,
+     * and a shim that refused to reload would find the ciphers gone — the
+     * cipher kind cleared, the entry failing, a capability disappearing
+     * because of what was opened BEFORE it. Not a prompt, not a delay: a
+     * silent loss.
+     *
+     * So a reload is allowed, and it costs what this branch was trying to
+     * avoid — a disk access after an archive has been chosen. That is the
+     * honest price of releasing at all, and it is why neither overlay branch
+     * is obviously worth merging for 6 KB (BRANCH_NOTES.md). */
+    if (!gOvlTried || (gOvlReleased && gOvl == NULL)) {
+        gOvlTried = 0;
+        gOvlReleased = 0;
+        ovl_preload();
+    }
     return gOvl ? (OverlayEntry)(void *)*gOvl : NULL;
 }
 

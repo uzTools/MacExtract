@@ -27,6 +27,24 @@ are not yet known.
 **So it does not pay for StuffIt**, which is the common case and the reason
 this project exists.
 
+## The release is per ARCHIVE; the application's life is per SESSION
+
+**A bug this branch shipped for one commit, and the reason it matters more
+than the fix.** The release ran after each archive's sniff, but the "already
+tried" flag was global, so `ovl_entry` never reloaded. Extract an LZH, then an
+encrypted `.sit` in the same session, and the ciphers were gone — the cipher
+kind cleared, the entry failing, **a capability disappearing because of what
+was opened before it.** Not a prompt, not a delay: a silent loss. Fixed by
+allowing the reload; encryption re-verified at 1 MB afterwards.
+
+**And the fix concedes the branch's own argument.** A reload is exactly the
+mid-run disk access this lifetime was chosen to avoid, so `overlay-eager` does
+not escape the trade — it defers it to the second archive, where it is less
+predictable. A user who opens several archives in a session meets the same
+prompt, later.
+
+**Neither overlay branch avoids the disk dependency. They move it.**
+
 ## The conflict is inherent, not an implementation gap
 
 Freeing the cipher memory and guaranteeing no mid-run disk access are in
@@ -51,7 +69,13 @@ Three ways to know, and what each costs:
    ones pay a read at the moment they are already interrupting the user with
    a dialog.
 
-**Weigh any of it against the prize, which is 6 KB.** Re-pricing one constant
+**And weigh all of it against the prize, which is 6 KB — about ONE archive.**
+The corpus headroom study puts the density near the line at roughly one
+archive per 6–7 KB of budget (FORMATS.md), so 6 KB is one file in 922, and
+not `derived-EasyFind.dmg.sit`, which needs more than 615,348 B by an
+unmeasured margin. Against that: a dispatch, a shim, a loader, a build step, a
+new resource type, three branches, and a class of bug that does not exist when
+the code is simply linked in. Re-pricing one constant
 in the memory reserve, the same week, was worth **49 KB** (FORMATS.md,
 *Budget*). Extending a public API for six kilobytes is not obviously right.
 
