@@ -20,12 +20,22 @@ paths, not just a different splash screen. Run the System 7 tier at 4 MB.
 
 **512 KB machines.** `--emu mv-512Ke` on either driver boots a Macintosh
 512Ke, the smallest machine this application runs on: `sys30.py --emu
-mv-512Ke` is 64/69, `run.py --emu mv-512Ke --system System6.hfv` is 58/69
+mv-512Ke` is **66/69** (2026-08-31; 65/69 before the reserve went flat,
+64/69 before the LZW bound), `run.py --emu mv-512Ke --system System6.hfv`
+is 58/69
 (FORMATS.md, *512 KB machines*). A **true** Macintosh 512K has a 64 KB ROM,
-no HFS and none of the traps this application needs; `Mac512K.ROM` is fetched
-so that negative stays reproducible, and `-m 128K -mem 512K` is the model it
-needs — Mini vMac has no plain `512K`. It Sad Macs on any HFS volume, so
-nothing here drives it.
+no HFS and none of the traps this application needs. It never reaches the
+application, so no driver here boots it; `setup.sh` builds `mv-512K` and
+fetches both 64 KB ROMs anyway, so that the negative can be re-taken rather
+than quoted. Three commands are the whole of it — each wants a display, and
+each is watched by eye:
+
+    $V/mv-512K/minivmac -r $V/Mac512K.ROM $V/Sys30.img   # Sad Mac 0F0064
+    $V/mv-512K/minivmac -r $V/Mac128K.ROM $V/Sys30.img   # identical: not the ROM
+    $V/mv-512K/minivmac -r $V/Mac512K.ROM                # blinking floppy: healthy
+
+`$V` is `$UNC_VMAC_HOME`. A blank 800 KB HFS volume in place of `Sys30.img`
+gives the third frame, not the first, which is how the media was ruled out.
 
 **System 3.0 has its own driver, `sys30.py`, and `run.py --system Sys30.img`
 does NOT work.** That system ignores the boot blocks' shell name, so
@@ -1423,6 +1433,7 @@ Results are not repeated here; each line says where they live.
 |---|---|---|
 | `UNC_AT_BUDGET` | why an entry was refused: over budget, or `NewPtr` failed | DECISIONS.md 2026-08-06, OPEN_ITEMS.md section 5 |
 | `UNC_AT_RESERVE` | what the shell actually needs of the heap kept back from the engine — a `FreeMem()` low-water mark, printed on the completion alert. It priced `kMemReserveMax` from 80 KB down to 48 KB (13,242 B measured). **Needs a fixture that FITS and is heavy**: a small one never fires the progress pump, and one too big has its allocation refused before the heap is stressed | FORMATS.md, *Budget* |
+| `UNC_AT_STACK` | what `kStackBump` is actually worth. Paints the whole region between ApplLimit and the stack base at launch and reads back how far down anything wrote. **Read the watermark, not the first transition**: a frame is made by moving the stack pointer, so a frame holding an uninitialised buffer leaves clean longs INSIDE the region it used, and two earlier versions of this probe — scan up for the first dirty long, scan down for the first clean one — both reported the same number for a 3 KB BinHex file and a 34-entry StuffIt 5 archive. Autotest under-reads the shipped build, which has the dialogs | FORMATS.md, *Stack* |
 | `UNC_AT_HANDLES` | does `MoveHHi` move an engine block, and does it help | OPEN_ITEMS.md section 5 (do-not-retry) |
 | `UNC_AT_INTERLEAVE` | do reads return zeros while output is written to the same volume | BLOCKERS.md *Withdrawn claims* |
 | `UNC_AT_SAMEVOL` | does extraction onto the archive's own volume work | DECISIONS.md 2026-08-02 |
@@ -1467,11 +1478,19 @@ probe overwrites four slots:
 
 | grid slot | carries |
 |---|---|
-| `nfiles`, `ret`, `sumDataCRC`, `peak heap` | addresses of the 4 largest live blocks, biggest first |
+| `nfiles` | address of the largest live block |
+| `ret` | **`gShortBy`** — how much more budget the first refused request needed |
+| `sumDataCRC` | `FreeMem()` at the start of the run, before the reserve |
+| `peak heap` | **the budget** — what the engine was actually given |
 | `errors` | `MaxBlock()` at the first refusal |
 | `totalDataLen` | application zone bottom (`ApplicationZone()`) |
 | `sumRsrcCRC` | 1 = over budget, 2 = `NewPtr` returned NULL |
 | `totalRsrcLen` | `ApplLimit` |
+
+**Corrected 2026-08-31.** The free figure and the budget were written into two
+slots and then overwritten by the zone bounds two lines later, so the budget
+never reached the grid and reading it meant editing the source. They have
+their own slots now, taken from the third and fourth block addresses.
 
 `FreeMem()` minus `MaxBlock()`, both sampled **at the refusal**, is the
 fragmentation; sampling free heap at the start of the run does not give it, and
@@ -1670,6 +1689,8 @@ coordinates.
     interactive.py --wd             # output lands in the archive's folder, not at /
     interactive.py --dest           # output lands on the volume the user CHOSE
     interactive.py --diskswap       # insert the missing part's disk mid-run
+    interactive.py --drop           # drag an archive onto the application's
+                                    # icon: what does the FINDER do?
 
 Run them one at a time (see "This box has one core", above).
 
@@ -1738,6 +1759,44 @@ than SFGetFile's, so `SF_DRIVE` misses), and then a read of **both** volumes.
 Every output name must be on the chosen volume and none on the archive's. Give
 it a small fixture with a folder in it, `derived-Downer.sit`; nothing here is
 measuring speed and the phase waits out `EXTRACT_QUIET` at the end.
+
+### What the Finder does with a dropped archive — `interactive.py --drop`
+
+    interactive.py <fixture> --drop --system Sys30.img --emu mv-4M
+    interactive.py <fixture> --drop --system System6.hfv --emu mv-4M
+    interactive.py <fixture> --drop --system Sys7.img --emu mv-4M
+
+Seven frames: the desktop, the open volume, **Get Info on the application**, a
+CONTROL drag to empty space, the archive dropped on the application's icon,
+the same after a launch's worth of seconds, and the extraction that follows
+when the drop worked — the last one is what says the application was handed
+the right FILE rather than merely woken up. `--emu mv-4M` because nothing here
+is timed.
+
+The answer, and what it decides, is DECISIONS.md 2026-08-31, *the drop the
+Finder does not make*. Three things about running it:
+
+- **The control frame is what makes the negatives mean anything.** Every
+  refusal looks exactly like a drag that was never delivered. `drop-4` is the
+  archive dragged to empty space; if it did not move, stop reading the run.
+- **The phase sets the archive's TYPE with `hattrib`**, because `mkboot.py
+  --data` leaves hfsutils' default and a Finder that gates on the
+  application's `FREF` list cannot match a type nobody declared. The first
+  System 7 run was a false negative for exactly this. `--drop-type '????'` is
+  the other half of the wildcard experiment: a type nobody declared, against a
+  `FREF` that claims everything.
+- **Get Info is taken before the drags**, because a successful drop parks the
+  archive on top of the icon the Get Info click is aimed at, and the wrong
+  file's Info window looks like the right one.
+
+Icon coordinates live in `FINDER_ICONS`, per system, `archive` alongside
+`app`; System 7 opens its volume window near the BOTTOM of the screen, so the
+control drag moves up there rather than down.
+
+**What it cannot see.** It photographs; it reads nothing off the volume. A
+launch proves the Finder accepted the drop, not that the application was told
+WHICH file — nothing in the application reads `AppParmHandle`, so that half
+cannot be tested until the receiving code exists.
 
 ### Making a segmented Compact Pro archive — `cptsegment.py`
 

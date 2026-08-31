@@ -55,7 +55,20 @@ ls -la build/mac/MacExtract.APPL build/mac/MacExtract.bin build/mac/MacExtract.d
 # ~32,000 B unnoticed, the budget fell from 597,036 to 565,176, and three
 # corpus archives stopped fitting on a 1 MB Mac Plus with nothing failing.
 # That is what this is here to stop happening again.
-UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-147268}
+# Raised 2026-08-31 from 147,268 to 147,296: +16 B for the memory message
+# that depends on whether there is a partition to grow, and +8 B for the test
+# that stops a SUCCESSFUL extraction reporting a memory failure. Paid for many
+# times over by the same day's stack re-pricing, which returned 12,272 B —
+# but recorded here rather than absorbed, because that is the point of a
+# ratchet.
+# Raised again 2026-08-31 from 147,296 to 147,424: +128 B to take the
+# documents the Finder hands over in AppParmHandle, so an archive dropped on
+# the icon extracts. Bought deliberately and with a measured alternative
+# refused: CountAppFiles/GetAppFiles are glue rather than traps in the
+# Multiversal libraries and cost 344 B for less (DECISIONS.md 2026-08-31,
+# *the drop the Finder does not make*). The 512 KB machine, whose Finder has
+# no such gesture, pays the 128 B for nothing — which is the trade, stated.
+UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-147424}
 SIZE="$TOOLCHAIN/bin/m68k-apple-macos-size"
 GDB=build/mac/MacExtract.code.bin.gdb
 if [ -x "$SIZE" ] && [ -f "$GDB" ]; then

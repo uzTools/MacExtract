@@ -194,10 +194,32 @@ resource 'ics8' (128, "MacExtract") {
    with the creator set in the build and in the 'SIZE' resource.          */
 
 resource 'FREF' (128) { 'APPL', 0, "" };
+
+/* '****' is the Finder's wildcard: every file type, whatever it says it is.
+   Source: Inside Macintosh: Macintosh Toolbox Essentials, Finder Interface —
+   "You can create a file reference resource that specifies '****' as the file
+   type to allow users to drag all file types--including applications, system
+   extensions, documents, and so on, but not including disks or folders--to
+   your application icon." ('disk' and 'fold' are the other two, and neither
+   is wanted: this application extracts one file.)
+
+   The wildcard rather than a list of archive types, because the files this
+   program is FOR are the ones whose type is wrong — a .hqx is 'TEXT', a raw
+   download is '????' — and an enumeration would have refused exactly those.
+   What is inside is unc_sniff's business, not the Finder's.
+
+   Measured as well as read: with this resource and a file typed '????', the
+   drop launches the application on System 7.0.1, and without it the same
+   drag only moves the icon. Nothing below System 7 has the gesture at all
+   (DECISIONS.md 2026-08-31). Local ID 1 maps to the same 'ICN#' as the
+   application: a document this program can open keeps its own icon, because
+   the Finder draws icons by CREATOR, and nothing anywhere carries ours. */
+resource 'FREF' (129) { '****', 1, "" };
+
 resource 'BNDL' (128) {
     'MExt', 0,
-    { 'ICN#', { 0, 128 },
-       'FREF', { 0, 128 } }
+    { 'ICN#', { 0, 128, 1, 128 },
+       'FREF', { 0, 128, 1, 129 } }
 };
 
 /* The SIGNATURE resource: type = the creator code, ID 0. The Finder wants
@@ -208,4 +230,45 @@ resource 'BNDL' (128) {
    Pascal string describing the application. */
 data 'MExt' (0, "MacExtract") {
     $"0A4D616345787472616374"
+};
+
+/* The version the FINDER shows, and the only place a user meets a version
+   number without a command line. 'vers' 1 is the file's own version — Get
+   Info's "Version:" line, and the Version column in a System 7 list view;
+   'vers' 2 is the version of the package the file belongs to, which for a
+   one-file distribution is the same number.
+
+   Costs the application nothing: no code here opens these, so they are read
+   by the Finder out of the resource fork and never enter this application's
+   heap (BLOCKERS.md, the ballast row — only CODE is charged to the engine's
+   budget).
+
+   WHICH Finders display it is NOT measured here. System 7 and later do;
+   whether Finder 5.1 under System 3.0 has a version line at all is open.
+
+   Get Info shows the LONG string, and it is the VERSION — not the name. The
+   box is already titled "MacExtract Info" and draws the name above the line,
+   so "MacExtract 0.29.0" said it twice (photographed on System 6.0.8 and
+   System 7.0.1 before this was fixed). The slot conventionally carries a
+   copyright notice after the number; this one carries the number alone.
+
+   The four numeric bytes are for programmatic comparison and are not what
+   is displayed. Byte 2 carries the minor and bug-fix numbers as one BCD
+   digit each (Multiverse.r declares the layout; the stage constants are its
+   own names), so a minor of 29 does not fit and 0x29 is written for a reader
+   that takes the byte whole. The STRINGS carry the real number, and
+   tools/check_docs.py holds both of them against UNC_VERSION — this file is
+   the fourth place the version is written, after include/macextract.h,
+   README.md and dist/README.txt. */
+
+resource 'vers' (1, "MacExtract") {
+    0x00, 0x29, release, 0x00, verUS,
+    "0.29.0",
+    "0.29.0"
+};
+
+resource 'vers' (2, "MacExtract") {
+    0x00, 0x29, release, 0x00, verUS,
+    "0.29.0",
+    "0.29.0"
 };

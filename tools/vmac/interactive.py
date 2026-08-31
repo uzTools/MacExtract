@@ -26,7 +26,9 @@ sharing its core with a second emulator drops below 1x and desynchronises the
 whole choreography without anything failing.
 
 Five phases, because they need different machines: the default, `--e2e`,
-`--wd`, `--dest` and `--segments`. `--help` describes the last three.
+`--wd`, `--dest` and `--segments`. `--help` describes the last three, and
+`--drop`, which photographs what the FINDER does with an archive dragged onto
+the application's icon.
 
 The default one installs the application as the boot shell (as every other
 harness here does) and concentrates on cancelling:
@@ -154,6 +156,29 @@ class Mac:
         self._xdo("click", "--repeat", "2" if double else "1",
                   "--delay", "80", "1")
         time.sleep(0.4)
+
+    def drag(self, x0, y0, x1, y1, steps=12):
+        """Drag from one Mac-screen point to another, with the button held.
+
+        Stepped rather than one jump: the emulated Mac samples its mouse once
+        a tick, so a press and a release at two different places with nothing
+        in between is read as a click at the second one — which for a Finder
+        icon is "selected", not "dragged", and the two are told apart only by
+        a screenshot nobody would question. The same ±63 px ADB limit that
+        bites the Mac OS 9 harness does not apply here (Mini vMac sets the
+        position directly), but the tick sampling does."""
+        ox, oy = self.origin()
+        self._xdo("mousemove", str(ox + x0), str(oy + y0))
+        time.sleep(0.5)
+        self._xdo("mousedown", "1")
+        time.sleep(0.5)
+        for i in range(1, steps + 1):
+            self._xdo("mousemove", str(ox + x0 + (x1 - x0) * i // steps),
+                      str(oy + y0 + (y1 - y0) * i // steps))
+            time.sleep(0.12)
+        time.sleep(0.5)
+        self._xdo("mouseup", "1")
+        time.sleep(1.0)
 
     def key(self, keys):
         self._xdo("key", "--delay", "60", keys)
@@ -298,7 +323,9 @@ def calibrate(system):
     if icons:
         FINDER_VOLUME_ICON = icons["volume"]
         FINDER_APP_ICON = icons["app"]
-        FINDER_EXTRACTED_APPL = icons["extracted"]
+        # `extracted` is --e2e's alone; --drop never clicks it, and a system
+        # whose geometry was measured for one phase should not fail the other.
+        FINDER_EXTRACTED_APPL = icons.get("extracted", FINDER_EXTRACTED_APPL)
 
 
 def sf_to_volume_root(mac, system):
@@ -389,9 +416,14 @@ SF_DRIVE = (377, 192)
 # fixture moves `extracted`.
 FINDER_ICONS = {
     "System6.hfv": {"volume": (480, 40), "app": (240, 110),
-                    "extracted": (367, 104)},
+                    "archive": (111, 103), "extracted": (367, 104)},
     "Sys30.img":   {"volume": (472, 45), "app": (237, 97),
-                    "extracted": (170, 168)},
+                    "archive": (175, 92), "extracted": (170, 168)},
+    # System 7.0.1 opens its volume window near the BOTTOM of the screen,
+    # so these are nothing like the other two and the control drag has to
+    # move up rather than down (see phase_drop).
+    "Sys7.img":    {"volume": (480, 40), "app": (221, 310),
+                    "archive": (157, 310)},
 }
 
 FINDER_VOLUME_ICON = FINDER_ICONS["System6.hfv"]["volume"]
@@ -1491,43 +1523,33 @@ def phase_segments(args, appbin, workdir, shot):
         if os.path.exists(scratch):
             os.remove(scratch)
 
-    # The bytes, not the screenshot. Read the joined file back off the
-    # volume the Mac actually wrote to — which is Mac()'s private COPY of
-    # the boot image, not the image handed to it. Reading the template
-    # instead reports "not found" for a run that worked perfectly, which
-    # is how this was first written.
-    written = os.path.join(workdir, "boot.hfv")
-    out = os.path.join(workdir, "joined.bin")
-    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
-    verdict, listing = "NOT FOUND", ""
-    try:
-        subprocess.run(["hmount", written], check=True, capture_output=True,
-                       env=env)
-        got = subprocess.run(["hcopy", "-r", ":" + name.decode("mac_roman"), out],
-                             capture_output=True, env=env)
-        if got.returncode != 0:
-            # Say what IS on the volume: "not found" on its own cannot
-            # distinguish a wrong name from a failed extraction. Decoded
-            # as MacRoman, not as text=True: the volume holds `StuffIt
-            # Expander™ 4.0.1 Folder`, so a UTF-8 decode raises — and it
-            # raises only on the path that runs when the run has ALREADY
-            # failed, taking the diagnostic down with it.
-            listing = subprocess.run(["hls", "-l"], capture_output=True,
-                                     env=env).stdout.decode("mac_roman").strip()
-        subprocess.run(["humount", written], capture_output=True, env=env)
-        if got.returncode == 0 and os.path.exists(out):
-            verdict = ("BYTE-EXACT" if open(out, "rb").read() == original
-                       else "DIFFERS")
-    finally:
-        shutil.rmtree(env["HOME"], ignore_errors=True)
-
-    print(f"interactive: joined file read back off the boot volume: {verdict} "
-          f"({len(original)} B expected)")
-    if listing:
-        print("interactive: the volume holds:\n" + listing)
+    # The bytes, not the screenshot — but the RIGHT bytes, which took a
+    # correction. This phase used to read back a file named after the
+    # original archive and compare it to the archive the parts were cut
+    # from. That file never appears: the shipped application unwraps
+    # envelope chains, so the joined `.sit` is consumed and its CONTENTS
+    # are what land on the volume. The check therefore failed on every run
+    # while the Mac was doing exactly the right thing — the same shape of
+    # error `expected_names` documents for chained fixtures, and in the
+    # same direction, "looks like an application bug" (DECISIONS.md
+    # 2026-08-27). Verified 2026-08-31: the volume held `Cal 3.02`,
+    # `Cal.Intro` and `Calendar Tools`, both forks and type/creator intact.
+    written = os.path.join(workdir, "boot.hfv")     # Mac()'s private copy
+    want = expected_names(args.fixture, workdir)
+    if not want:
+        return False
+    on_boot = volume_names(written)
+    missing = sorted(n for n in want if n not in on_boot)
+    print(f"interactive: the joined archive's contents on the boot volume: "
+          f"{sorted(CD.mac_path(n) for n in on_boot)}")
+    if missing:
+        print("interactive: MISSING after the join: "
+              + ", ".join(CD.mac_path(n) for n in missing))
     if elapsed is not None:
         print(f"interactive: settled ~{elapsed:.0f}s after the part was given")
-    return verdict == "BYTE-EXACT"
+    print("interactive: joined set extracted: "
+          + ("COMPLETE" if not missing else "INCOMPLETE"))
+    return not missing
 
 
 def phase_password(args, appbin, workdir, shot):
@@ -1614,6 +1636,132 @@ def phase_password(args, appbin, workdir, shot):
     return bad == 0
 
 
+def phase_drop(args, appbin, workdir, shot):
+    """Does the FINDER hand a dropped document to this application?
+
+    The application has no code to receive one — nothing here reads
+    AppParmHandle — so what this measures is the FINDER's half: whether
+    dropping an archive on the application's icon launches it at all, on the
+    system being booted. That is the question that decides whether the
+    receiving code is worth its bytes, and it is a property of the system
+    rather than of anything in this repository.
+
+    Get Info is photographed in the same boot, because the 'vers' resources
+    have never been seen displayed either (OPEN_ITEMS.md, *No Finder has been
+    seen displaying the version*).
+
+        drop-1-desktop.png    booted to the Finder
+        drop-2-volume.png     boot volume open: the archive and the application
+        drop-3-getinfo.png    Get Info on the application: the version line,
+                              taken FIRST because the drop lands the archive
+                              on top of the icon this clicks
+        drop-4-control.png    THE CONTROL — the archive icon dragged to empty
+                              space. If it did not move, no later frame means
+                              anything, because the drag was never delivered
+        drop-5-dropped.png    the archive dragged onto the application's icon
+        drop-6-after-wait.png the same, after a launch's worth of seconds
+        drop-7-extracted.png  the destination dialog accepted and the
+                              extraction run, so the frame says the
+                              application was handed the right FILE rather
+                              than merely woken up
+
+    **What this cannot see.** It photographs; it reads nothing off the volume.
+    A frame showing Standard File proves the application launched, but not
+    that it was told WHICH file — nothing in the application looks, so that
+    half cannot be tested until the receiving code exists. A frame showing the
+    desktop unchanged is only evidence once drop-3 shows the control drag
+    moved the icon."""
+    if args.system not in FINDER_ICONS:
+        raise SystemExit(f"interactive: no Finder icon geometry for "
+                         f"{args.system} — boot it once with --e2e, look at "
+                         f"e2e-2-volume.png, and add its icons to FINDER_ICONS")
+    icons = FINDER_ICONS[args.system]
+    bootimg = os.path.join(workdir, "boot-drop.hfv")
+    R.sh(sys.executable, os.path.join(HERE, "mkboot.py"), stock_image(args),
+         appbin, bootimg, "--finder", "--data", f"{args.fixture}:archive.sit")
+
+    # The archive has to LOOK like one to the Finder. mkboot's --data copies
+    # a data fork and nothing else, so the file lands with hfsutils' default
+    # type — and a Finder that gates a drop on the application's 'FREF' list
+    # would refuse a type nobody declared, which is indistinguishable from a
+    # Finder that has no such gesture at all. 'SIT!' is what StuffIt itself
+    # writes and what a downloaded .sit carries.
+    import mkboot as MB
+    hfs = MB.HFS(bootimg)
+    hfs.run("hattrib", "-t", args.drop_type, "-c", "SIT!",
+            hfs.path("archive.sit"))
+    hfs.run("humount", bootimg, check=False)
+
+    mac = Mac(bootimg, args.emu, workdir)
+    try:
+        if mac.settle(os.path.join(args.outdir, ".settle.png"),
+                      interval=5.0, timeout=args.boot_timeout) is None:
+            raise SystemExit("interactive: the machine never reached the Finder")
+        shot(mac, "drop-1-desktop.png")
+
+        mac.click(*icons["volume"], double=True)          # open the boot volume
+        time.sleep(4.0)
+        shot(mac, "drop-2-volume.png")
+
+        # Get Info BEFORE anything is dragged. After the drop the archive
+        # sits ON TOP of the application's icon, so a click there selects
+        # the archive and photographs the wrong file's Info window — which
+        # is exactly what the first System 7 run did.
+        mac.click(*icons["app"])
+        time.sleep(1.0)
+        mac.command_key("i")
+        time.sleep(4.0)
+        shot(mac, "drop-3-getinfo.png")
+        mac.command_key("w")                              # close the Info window
+        time.sleep(2.0)
+
+        arc = icons.get("archive")
+        if arc is None:
+            print("interactive: no `archive` icon coordinate for "
+                  f"{args.system} — read it off drop-2-volume.png and add it "
+                  "to FINDER_ICONS; doing Get Info only")
+        else:
+            # The control: does a drag reach the Finder at all? Move the
+            # archive a little way into empty space and photograph that it
+            # went there. Without this frame, an application that fails to
+            # launch and a drag that never happened are the same picture.
+            # Down, unless the window sits low enough that down is off the
+            # screen — System 7 opens its volume window near the bottom edge.
+            dy = -70 if arc[1] > 200 else 70
+            mac.drag(arc[0], arc[1], arc[0], arc[1] + dy)
+            time.sleep(2.0)
+            shot(mac, "drop-4-control.png")
+
+            # And the question: the same gesture, onto the application.
+            mac.drag(arc[0], arc[1] + dy, *icons["app"])
+            time.sleep(2.0)
+            shot(mac, "drop-5-dropped.png")
+            time.sleep(args.launch_wait)
+            shot(mac, "drop-6-after-wait.png")
+
+            # If it launched, it went straight to the DESTINATION dialog —
+            # the Open dialog is what the dropped document replaces. Let it
+            # extract, so the run says the application was handed the right
+            # file and not merely woken up. Harmless when nothing launched:
+            # Return goes to a Finder with nothing selected.
+            mac.key("Return")
+            time.sleep(2.0)
+            elapsed = mac.settle(os.path.join(args.outdir, ".settle.png"),
+                                 interval=5.0, quiet=EXTRACT_QUIET,
+                                 timeout=args.complete_timeout)
+            shot(mac, "drop-7-extracted.png")
+            print(f"interactive: drop settled after "
+                  f"~{elapsed if elapsed is None else round(elapsed)}s")
+
+    finally:
+        mac.close()
+    return True
+
+
+def stock_image(args):
+    return os.path.join(R.VMAC_HOME, args.system)
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -1690,6 +1838,18 @@ def main():
                          "photograph the report box, scroll it, save it as "
                          "a document, and read that document back off the "
                          "volume. Ignores the fixture argument.")
+    ap.add_argument("--drop-type", default="SIT!",
+                    help="the four-character TYPE to give the archive in the "
+                         "--drop phase. The Finder matches this against the "
+                         "application's 'FREF' list, so it is half the "
+                         "experiment; '????' is what a raw download carries "
+                         "and matches no declared type.")
+    ap.add_argument("--drop", action="store_true",
+                    help="the Finder-drop phase: drag an archive onto the "
+                         "application's icon and photograph what the FINDER "
+                         "does, with a control drag first so a drag that was "
+                         "never delivered cannot pass for a refusal. "
+                         "Photographs Get Info in the same boot.")
     ap.add_argument("-D", dest="defines", action="append", default=[],
                     help="probe build switch (repeatable), e.g. -D UNC_AT_RESERVE")
     ap.add_argument("--e2e", action="store_true",
@@ -1713,7 +1873,16 @@ def main():
         # e2e shots are upscaled: they are read for Finder icon positions and
         # for dialog text, not decoded, and a 512x342 1bpp screen is hard work
         # at native size.
-        mac.shot(os.path.join(args.outdir, name), scale="200%" if args.e2e else None)
+        mac.shot(os.path.join(args.outdir, name),
+                 scale="200%" if (args.e2e or args.drop) else None)
+
+    if args.drop:
+        try:
+            ok = phase_drop(args, appbin, workdir, shot)
+        finally:
+            shutil.rmtree(workdir, ignore_errors=True)
+        print(f"interactive: screenshots in {args.outdir} — LOOK AT THEM.")
+        return 0 if ok else 1
 
     if args.report:
         try:

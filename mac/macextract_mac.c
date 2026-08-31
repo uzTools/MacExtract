@@ -52,42 +52,108 @@
 #define kBarItem        3
 #define kDetailItem     4
 
-#define kStackBump      (24L * 1024)   /* extra stack over the 8 KB default */
+/* Extra stack over the 8 KB default, giving a 12 KB stack.
+ *
+ * It is not free: SetApplLimit lowers ApplLimit and MaxApplZone then grows
+ * the heap up to it, so a byte of stack is a byte off FreeMem() and therefore
+ * off the engine's budget, at the same 1:1 rate CODE costs it (FORMATS.md,
+ * *What the application costs the engine*). It was 24 KB, unpriced, and
+ * cutting it to 12 KB returned **12,272 B** to every extraction on every
+ * machine, at no cost in speed.
+ *
+ * MEASURED 2026-08-31, and it took two instruments because the first one was
+ * wrong. `-D UNC_AT_STACK` now reports both:
+ *
+ *   SAMPLE — the stack POINTER, taken in the progress pump, the sink, the
+ *     allocator and inside the Dialog Manager's own filter and user-item
+ *     procs, where the Toolbox's frames are below us. **5,200 B** on the
+ *     heaviest fixture in the corpus, **3,134 B** through the password
+ *     dialog, and CONSTANT as the stack is swept 16/20/24/32 KB.
+ *
+ *   PAINT — the region painted at launch and read back. Rejected as a stack
+ *     measurement: it tracks the SIZE of the region (9,288 -> 25,392 over
+ *     that same sweep) and its lowest dirty word sits a near-constant 5-7 KB
+ *     above ApplLimit. The stack is anchored at the TOP of the region, so
+ *     depth-from-top would be the constant if this were the stack; instead
+ *     offset-from-ApplLimit is. It is not the stack.
+ *
+ * The heap is not the writer either: the zone's bkLim and ApplLimit are the
+ * same address, measured. *Hypothesis, not measured:* a ROM routine sizing a
+ * stack buffer from the space available, which would explain both the
+ * anchoring and the tracking — and which is safe under a smaller stack by
+ * construction, because such a routine takes less when there is less.
+ *
+ * SWEPT DOWN as well, which is what set the size. As the stack shrinks the
+ * PAINT figure CONVERGES on the SAMPLE — 9,288 -> 6,828 -> 5,604 at 16, 12
+ * and 10 KB against a SAMPLE that never moves off 5,200 — so the adaptive
+ * consumer is squeezed out and what is left is the real requirement, about
+ * 5,600 B. Both paths still ran correctly at 10 KB.
+ *
+ * 12 KB is 2.1x that, and 24 -> 4 KB of bump is **20,464 B** returned to the
+ * engine. Verified byte-exact at this size on every tier: 1 MB, 512 KB,
+ * System 7 and Mac OS 9. What the measurement cannot see is a real Macintosh
+ * with INITs loaded and a fragmented System heap, where the Toolbox may want
+ * more than an emulator with a stripped System Folder does — MANUAL_TESTS.md
+ * carries that, as it does for the memory reserve. */
+#ifndef UNC_STACK_BUMP_KB
+#define UNC_STACK_BUMP_KB 4
+#endif
+#define kStackBump      ((long)UNC_STACK_BUMP_KB * 1024L)
 /* Heap kept back from the engine for the Toolbox and File Manager.
  *
- * A QUARTER of what is free, between a 32 KB floor and the 80 KB this was
- * a flat constant of until 2026-08-24, because the two configurations this
- * application runs in are four and a half times apart and one constant
- * cannot suit both. On a 1 MB Mac Plus with the machine to itself
- * FreeMem() is ~681 KB and a quarter is over 80 KB, so the cap holds and
- * nothing changes there — every verified figure on that tier stays exactly
- * as measured. Under MultiFinder at the 400 KB minimum partition
- * `macextract.r` declares, FreeMem() is 212,056 B, and a flat 80 KB is
- * 38 % of the heap held back from a machine that has none to spare.
+ * A FLAT 20 KB: kMemReserveMax equals kMemReserveMin, so the quarter-of-free
+ * rule this held between 2026-08-24 and 2026-08-30 bites nowhere, and the
+ * 80 KB it was a flat constant of before that is gone. 32 KB from 2026-08-30
+ * to 2026-08-31, when the thing it is FOR was measured at last, then 24 KB,
+ * then this.
  *
- * What it is worth keeping back was measured rather than assumed: with a
- * probe recording the lowest FreeMem() seen during writes across all 67
- * fixtures of the 1 MB sample, the tightest moment left **121 KB** free,
- * and the Toolbox and File Manager together took **under 1 KB** while the
- * engine was at its peak. So even the floor is generous by that evidence.
+ * WHAT THE RESERVE ACTUALLY COVERS, measured 2026-08-31 and narrower than it
+ * looks: the progress dialog is created BEFORE the budget is taken, so it is
+ * already out of FreeMem() and the reserve never pays for it. What is left is
+ * only what the shell allocates DURING extraction — File Manager buffers, and
+ * a dialog that opens mid-run. On a heavy 1 MB extraction (engine peak
+ * 472,137 B) the shell's share at the tightest moment measured **-33 B**:
+ * nothing beyond the engine, to within sampling skew. The largest figure ever
+ * recorded is 13,242 B, and 20 KB is 1.5x that.
+ * Both earlier values were unmeasured. Budget on a 1 MB Mac Plus:
+ * 566,164 -> 615,348 B, measured on the machine, at no cost in speed —
+ * the reserve only decides how the heap is divided, and what is released
+ * goes to the engine 1:1 (FORMATS.md, *What the application costs the
+ * engine*).
  *
- * WHAT THAT EVIDENCE CANNOT SEE, and why the floor is 32 KB rather than
- * the kilobyte measured: a stripped System Folder with no INITs, a
- * RAM-backed emulated disk, and no fragmentation pressure. A real Plus
- * with a Chooser extension, a floppy's File Manager buffers or an
- * AppleShare volume all cost more, and the reserve also has to cover a
- * dialog or an alert drawn while the engine holds its peak. MANUAL_TESTS.md
- * carries this as something only real hardware can settle. */
-/* MEASURED 2026-08-30, not inherited. The shell and Toolbox used 13,242 B
- * at their worst while the engine held its budget and the progress dialog was
- * up (`-D UNC_AT_RESERVE`, which prints a FreeMem low-water mark: 559,136 B
- * against 647,096 free with a 74,718 B engine peak, 1 MB System 6.0.8). 80 KB
- * was the flat constant this began as and nothing had ever priced it; 48 KB is
- * over three times what was measured, and the 32 KB floor below still applies
- * on small machines. The 32 KB released goes straight to the engine at 1:1 on
- * a 1 MB Mac (FORMATS.md, *What the application costs the engine*). */
-#define kMemReserveMax  (32L * 1024)
-#define kMemReserveMin  (32L * 1024)
+ * What it is worth keeping back was measured rather than assumed, twice
+ * and in two currencies. With `-D UNC_AT_RESERVE`, which prints a
+ * FreeMem() low-water mark, the shell and Toolbox used **13,242 B** at
+ * their worst with the engine holding its budget and the progress dialog
+ * up (559,136 B against 647,096 free, engine peak 74,718, 1 MB System
+ * 6.0.8); the password path — the most dialog-heavy moment this
+ * application has — used **22,508 B** of total heap, engine and shell
+ * together. Over all 67 fixtures of the 1 MB sample the tightest moment
+ * during writes left 121 KB free, with the Toolbox and File Manager
+ * together taking under 1 KB while the engine sat at its peak.
+ *
+ * CONTIGUITY IS NO LONGER THE UNKNOWN. Every figure above measures VOLUME,
+ * while the reserve's real job is one contiguous block — GetNewDialog needs
+ * a block, not n free bytes. `-D UNC_AT_CONTIG` samples MaxBlock() at the
+ * moment each dialog and alert is created, and the smallest ever seen is
+ * **118,508 B on a 512 KB Macintosh** (against 122,808 B of free heap) and
+ * **652,112 B at 1 MB**: the whole free heap, near enough, every time. The
+ * structural reason is that no dialog is created while the engine holds a
+ * big allocation — the progress dialog goes up before extraction starts, and
+ * a password or "locate part" dialog opens BETWEEN entries, after the
+ * previous entry's blocks are freed. Contiguity was guarding a case this
+ * application's shape does not produce. Nor can it see a stripped System Folder with no INITs, a
+ * RAM-backed emulated disk, or the absence of fragmentation pressure. A
+ * real Plus with a Chooser extension, a floppy's File Manager buffers or
+ * an AppleShare volume all cost more. MANUAL_TESTS.md carries this as
+ * something only real hardware can settle.
+ *
+ * PRICING IT NEEDS A JOB THAT JUST BARELY FITS, which took three
+ * attempts: a 3.7 KB archive never fires the progress pump, and an
+ * archive too big for the budget has its big allocation REFUSED before it
+ * happens, so the run that fails hardest stresses the heap least. */
+#define kMemReserveMax  (20L * 1024)
+#define kMemReserveMin  (20L * 1024)
 
 #ifndef ioDirMask
 #define ioDirMask 0x10   /* ioFlAttrib bit 4 = "is a directory"
@@ -124,6 +190,56 @@ static long gTkRun, gTkRead, gTkWrite, gTkMeta;
 
 #ifndef UNC_SINK_TEST
 static Boolean gHasWNE;
+
+#ifdef UNC_AT_CONTIG
+/* The reserve's real job, measured for the first time.
+ *
+ * Every reserve figure this project has is a VOLUME — FreeMem() low-water
+ * marks, appetite in bytes. But GetNewDialog needs ONE BLOCK, and a heap with
+ * 100 KB free in scraps cannot open a dialog that wants 4 KB contiguous. The
+ * reserve exists for that, and until now nothing had measured it: FORMATS.md,
+ * *What the reserve is NOT proven against*.
+ *
+ * MaxBlock() is the answer — the largest contiguous block the Memory Manager
+ * could hand out — sampled at the moment each dialog and alert is created,
+ * which is precisely when it matters. The lowest such sample across a run is
+ * what the reserve has to cover. */
+static long gMinContig = 0x7FFFFFFFL;
+static long gContigN;
+static void ContigSample(void)
+{
+    long m = MaxBlock();
+    gContigN++;
+    if (m < gMinContig) gMinContig = m;
+}
+#else
+#define ContigSample() ((void)0)
+#endif
+
+/* Does this application have a PARTITION, or the whole machine? The two
+ * memory messages depend on it: "give MacExtract more in Get Info" is the
+ * fix inside a partition and points at a control that does not exist
+ * outside one.
+ *
+ * gHasWNE is NOT the test, and the run that disproved it is worth keeping:
+ * on System 6.0.8 booted straight into this application, with no MultiFinder
+ * anywhere on the volume, TrapAvailable(_WaitNextEvent) is TRUE — the trap
+ * is in the System file whether the Process Manager is loaded or not. Advice
+ * chosen from it told the owner of a plain 1 MB Mac Plus to raise a memory
+ * size that machine has not got (2026-08-31).
+ *
+ * What answers it is the SHAPE of the heap. An application with the machine
+ * to itself has a zone reaching most of RAM; one inside a partition has a
+ * zone far smaller than RAM, whatever the machine. Both configurations this
+ * runs in are far from the line: a 1 MB Plus with no MultiFinder is a
+ * ~700 KB zone under a 1 MB MemTop, and System 7 at the declared 400 KB
+ * minimum is a ~400 KB zone under 4 MB. A 512 KB Macintosh, where the zone
+ * is ~220 KB of 512 KB, is on the correct side of it too. */
+static int HasPartition(void)
+{
+    long zone = (long)LMGetApplLimit() - (long)ApplicationZone();
+    return zone + 512L * 1024L < (long)LMGetMemTop();
+}
 
 static Boolean TrapAvailable(short trap)
 {
@@ -303,6 +419,9 @@ static int  gShortPiece;   /* NewPtr failed though the budget allowed it   */
  * above, and reset by RunExtract. */
 static int  gUnsupported;
 
+#if defined(UNC_AT_BUDGET) && !defined(UNC_AT_RESERVE)
+static long gFreeAtStart;  /* FreeMem() before the reserve is taken off */
+#endif
 #ifdef UNC_AT_BUDGET
 /* The result grid reports what the engine USED and never what it was
  * ALLOWED, so a budget refusal and a genuine shortage look identical on
@@ -310,7 +429,6 @@ static int  gUnsupported;
  * budget said no, or NewPtr itself failed — and those have opposite
  * fixes ("the reserve is too big" vs "the heap is fragmented"). These
  * make both visible. See tools/vmac/README.md. */
-static long gFreeAtStart;   /* FreeMem() before the reserve is taken off */
 static long gBudget;        /* what the engine was actually given        */
 static long gRefusedSize;   /* size of the FIRST refused allocation      */
 static long gRefusedWhy;    /* 1 = over budget, 2 = NewPtr returned NULL */
@@ -400,6 +518,7 @@ typedef struct {
  * an archive too big for the budget the engine's allocation is REFUSED before
  * it happens, so the heap is never stressed and the mark stays high. Price the
  * reserve with a fixture that FITS and is heavy (FORMATS.md, *Budget*). */
+static long gFreeAtStart;  /* FreeMem() before the reserve is taken off */
 static long gMinFree = 0x7FFFFFFFL;
 static void ReserveSample(void)
 {
@@ -410,10 +529,170 @@ static void ReserveSample(void)
 #define ReserveSample() ((void)0)
 #endif
 
+#ifdef UNC_AT_STACK
+/* What the 32 KB stack is actually worth, measured rather than assumed.
+ *
+ * kStackBump raises the stack from the 8 KB default to 32 KB and had never
+ * been priced. It is not free: SetApplLimit lowers ApplLimit and MaxApplZone
+ * then grows the heap up to it, so every byte of stack is a byte off
+ * FreeMem() and therefore off the engine's budget — the same 1:1 rate CODE
+ * costs it (FORMATS.md, *What the application costs the engine*).
+ *
+ * The region between ApplLimit and the stack base belongs to the stack alone,
+ * because the heap may not grow past ApplLimit. So painting it at launch and
+ * reading it back at the end gives the deepest the stack ever went. The CPU
+ * runs in supervisor mode here, so interrupt frames land on this same stack
+ * and are counted with everything else.
+ *
+ * WHAT IT CANNOT SEE: a path no fixture took. This is a watermark over the
+ * archives actually replayed, not a bound over the call graph — FORMATS.md's
+ * *Stack* has the static bound, and the two answer different questions. Read
+ * them together or neither. */
+#define kStackPaint 0x5A5A5A5AL
+static long gStkLimit;   /* ApplLimit after the bump: the floor the stack has */
+static long gStkTop;     /* SP inside main(), one frame below the stack base  */
+static long gStkDeep;    /* lowest address the paint was overwritten at       */
+
+/* The other instrument, and the one the paint should always have been read
+ * against. The paint records bytes WRITTEN, which is a lower bound on how far
+ * the stack pointer went; this records the pointer itself, which is exact at
+ * the moment it is sampled. Neither is sufficient alone:
+ *
+ *   - the paint sees everywhere, including inside a Toolbox call this code
+ *     cannot sample from, but cannot tell a stack write from anything else;
+ *   - the sample is unambiguous, but only at the points it is taken.
+ *
+ * Sampled where the deep chains actually are: the progress pump, which every
+ * decoder calls from inside its own recursion, the sink write path, and the
+ * allocator. Cost is a compare and a store. */
+static long gStkMinSP = 0x7FFFFFFFL;
+static void StackSample(void)
+{
+    long here;
+    if ((long)&here < gStkMinSP) gStkMinSP = (long)&here;
+}
+#ifdef UNC_AT_STACK
+/* Standard File is the biggest blind spot the SAMPLE has: its modal loop is
+ * the Toolbox's own and has no filter of ours in it, so a deep excursion
+ * inside SFGetFile goes unseen while the paint — which does see it — cannot
+ * say whether a write was the stack. SFPGetFile takes a dialog hook, called
+ * on every pass of that loop with the File Manager's and Dialog Manager's
+ * frames below us, which is exactly where to sample.
+ *
+ * Probe builds only: the shipped path stays SFGetFile, because a hook is
+ * shell code and shell code costs the engine its budget one for one. */
+static pascal short SFHook(short item, DialogPtr dlg)
+{
+    (void)dlg;
+    StackSample();
+    return item;
+}
+#endif
+
+static void StackPaint(void)
+{
+    long probe;
+    long lo = (((long)LMGetApplLimit()) + 3) & ~3L;
+    long hi = (((long)&probe) - 256) & ~3L;   /* this frame, plus slack */
+    long *p;
+
+    gStkLimit = lo;
+    gStkTop   = (long)&probe;
+    gStkDeep  = lo;
+    for (p = (long *)lo; (long)p < hi; p++) *p = kStackPaint;
+}
+
+/* COUNTED, not scanned to the first transition, and the two dead ends are
+ * worth keeping because each looked like an answer:
+ *
+ *   - scanning UP from ApplLimit for the first dirty long gave the same
+ *     31,680 B for a 3 KB BinHex file and a 34-entry StuffIt 5 archive;
+ *   - scanning DOWN from the stack base for the first CLEAN long gave 724 B
+ *     for both, which is less than one measured frame in the shell.
+ *
+ * Both are wrong for the same reason: a frame is made by MOVING the stack
+ * pointer, and a frame holding an uninitialised buffer never writes most of
+ * itself. So clean longs sit INSIDE the region the stack used, and dirty
+ * longs sit below anything else that writes down there. A single transition
+ * finds a hole, not a boundary.
+ *
+ * What survives that: the LOWEST dirty long is a true lower bound on how far
+ * something went, and the COUNT of dirty longs says whether that something
+ * covered the region or poked one word into it. */
+static long gStkDirty;      /* dirty longs in the whole painted region      */
+static long gStkLowest;     /* lowest dirty long, as an offset above ApplLimit */
+static long gStkBand[4];    /* dirty longs per quarter, band 3 = nearest the
+                             * stack base. A stack dirties from the TOP down,
+                             * so band 3 carries its use and anything alone in
+                             * band 0 is somebody else's write. */
+static long gStkFirst[4];   /* the four lowest dirty offsets: the six words
+                             * that are dirty in EVERY run, at the same place,
+                             * whatever the archive */
+static long gStkFirstVal;   /* and what the lowest one CONTAINS. Three
+                             * derived metrics in a row measured the wrong
+                             * thing here, so this reports the bytes and lets
+                             * the reader decide: a value that looks like an
+                             * address in the application zone names its
+                             * writer, and a value that looks like anything
+                             * else rules the heap out. */
+static long gStkMark;       /* lowest dirty offset in band 3 = the watermark */
+static void StackRead(void)
+{
+    long *p = (long *)gStkLimit;
+    long *top = (long *)((gStkTop - 256) & ~3L);
+    long span = ((long)top - gStkLimit) / 4;
+    int b;
+
+    gStkDirty = 0;
+    gStkLowest = -1;
+    gStkMark = -1;
+    for (b = 0; b < 4; b++) { gStkBand[b] = 0; gStkFirst[b] = -1; }
+    for (; p < top; p++) {
+        if (*p != kStackPaint) {
+            long off = (long)p - gStkLimit;
+            if (gStkDirty == 0) gStkFirstVal = *p;
+            if (gStkDirty < 4) gStkFirst[gStkDirty] = off;
+            gStkDirty++;
+            if (gStkLowest < 0) gStkLowest = off;
+            b = (int)(off / span);
+            if (b > 3) b = 3;
+            gStkBand[b]++;
+            /* The watermark is the lowest dirty long that is NOT one of the
+             * words System 6 and System 3.0 write about 1 KB above ApplLimit
+             * (System 7 writes none). 4 KB is the cut: those sit at 1,020 to
+             * 1,036 whatever the stack size — they move WITH ApplLimit, so
+             * they are relative to it and shrinking the stack does not strand
+             * them in the heap. An earlier version took "lowest dirty in the
+             * top quarter" instead and saturated at the quarter boundary the
+             * moment the stack was made smaller than four times the depth. */
+            if (off >= 4096 && gStkMark < 0) gStkMark = off;
+        }
+    }
+    gStkDeep = gStkTop;
+}
+
+/* Two checkpoints, because the first run of this probe reported the SAME
+ * watermark for a 3 KB BinHex file and a 34-entry StuffIt 5 archive — which
+ * means the writer is not the decoder. gStkSelf reads the region back the
+ * instant after painting it (it must be 0, or the instrument is broken) and
+ * gStkInit reads it once the Toolbox is up but before any archive is opened. */
+static long gStkSelf, gStkInit;
+static void StackMark(long *where)
+{
+    StackRead();
+    *where = gStkDirty;
+}
+#else
+#define StackPaint() ((void)0)
+#define StackRead()  ((void)0)
+#define StackMark(w)  ((void)0)
+#define StackSample() ((void)0)
+#endif
 
 
 static void *mal_alloc(void *ctx, uint32_t size)
 {
+    StackSample();
     MacAlloc *a = (MacAlloc *)ctx;
     Ptr p;
     if ((long)size + 16 > a->budget) {
@@ -522,6 +801,7 @@ static void BarDraw(const Rect *box)
 
 static pascal void BarUserItem(WindowPtr w, short item)
 {
+    StackSample();   /* inside ModalDialog: the Toolbox's frames are below us */
     short kind;
     Handle h;
     Rect box;
@@ -574,6 +854,7 @@ static void ProgressPump(Progress *pr)
 
 static int prog_tick(void *ctx, uint32_t done, uint32_t total)
 {
+    StackSample();
     Progress *pr = (Progress *)ctx;
     long now = TickCount();
     short pct;
@@ -1410,6 +1691,7 @@ static void StreamTrim(MacSink *s, int isRsrc)
  * Toolbox call) and sink_end does the writing at shallow depth. */
 static int sink_write(void *ctx, UncFork fork, const void *buf, int32_t len)
 {
+    StackSample();
     MacSink *s = (MacSink *)ctx;
 #ifndef UNC_MAC_STAGE_WRITES
     uint32_t *pos = fork == UNC_FORK_DATA ? &s->dataPos : &s->rsrcPos;
@@ -2375,6 +2657,7 @@ static void SegScanDrive(SegHost *h, short drive)
 static pascal Boolean SegDiskFilter(DialogPtr dlg, EventRecord *evt,
                                     INTEGER *itemHit)
 {
+    StackSample();   /* inside ModalDialog: the Toolbox's frames are below us */
     EventRecord de;
 
     (void)dlg;
@@ -2488,6 +2771,7 @@ static int SegAskUser(SegHost *h, int part)
         savedMask = LMGetSysEvtMask();
         LMSetSysEvtMask(savedMask | diskMask);
         gSegNextPoll = 0;
+        ContigSample();
         hit = CautionAlert(kSegALRT, NewModalFilterUPP(SegDiskFilter));
         LMSetSysEvtMask(savedMask);
         gSegAsking = NULL;
@@ -2503,7 +2787,12 @@ static int SegAskUser(SegHost *h, int part)
         if (hit == kSegFindItem) {
             SetPt(&where, 90, 90);
             reply.good = false;
-            SFGetFile(where, "\p", NULL, -1, NULL, NULL, &reply);
+    #ifdef UNC_AT_STACK
+        SFPGetFile(where, "\p", NULL, -1, NULL, NewDlgHookProc(SFHook),
+                   &reply, getDlgID, NULL);
+#else
+        SFGetFile(where, "\p", NULL, -1, NULL, NULL, &reply);
+#endif
             if (reply.good) {
                 int got;
                 /* A spanned zip part and a split part cannot prove
@@ -2596,6 +2885,9 @@ static void seg_release(void *ctx, UncIO *io)
 }
 
 static long gPeakUsage;   /* engine heap high-water mark from the last RunExtract */
+#if defined(UNC_AT_BUDGET) && !defined(UNC_AT_RESERVE)
+static long gFreeAtStart;  /* FreeMem() before the reserve is taken off */
+#endif
 #ifdef UNC_AT_BUDGET
 /* The result grid reports what the engine USED and never what it was
  * ALLOWED, so a budget refusal and a genuine shortage look identical on
@@ -2647,6 +2939,7 @@ static Str63 gPassBuf;         /* what was actually typed */
 
 static pascal Boolean PassFilter(DialogPtr dlg, EventRecord *ev, short *item)
 {
+    StackSample();   /* inside ModalDialog: the Toolbox's frames are below us */
     char ch;
     (void)dlg;
     if (ev->what == mouseDown) {
@@ -2710,6 +3003,7 @@ static int MacAskPassword(void *ctx, uint8_t *buf, uint16_t cap,
     ParamText(msg, "\p", "\p", "\p");
 
     if (ph->hide) HideWindow(ph->hide);
+    ContigSample();
     dlg = GetNewDialog(kPassDLOG, NULL, (WindowPtr)-1);
     if (!dlg) {
         if (ph->hide) ShowWindow(ph->hide);
@@ -3065,7 +3359,7 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
         long reserve = freenow / 4;
         if (reserve > kMemReserveMax) reserve = kMemReserveMax;
         if (reserve < kMemReserveMin) reserve = kMemReserveMin;
-#ifdef UNC_AT_BUDGET
+#if defined(UNC_AT_BUDGET) || defined(UNC_AT_RESERVE)
         gFreeAtStart = freenow;
 #endif
         ma.budget = freenow - reserve;
@@ -3651,6 +3945,7 @@ static long gATlastReport;      /* TickCount of the last progress grid */
 
 static int at_prog_tick(void *ctx, uint32_t done, uint32_t total)
 {
+    StackSample();
     uint32_t vals[8];
     int i;
     long now = TickCount();
@@ -3687,6 +3982,8 @@ int main(void)
     SetApplLimit((Ptr)((long)LMGetApplLimit() - kStackBump));
     MaxApplZone();
     { int i; for (i = 0; i < 12; i++) MoreMasters(); }
+    StackPaint();
+    StackMark(&gStkSelf);
 
     InitGraf(&qd.thePort);
     InitFonts();
@@ -3697,6 +3994,7 @@ int main(void)
     InitCursor();
     FlushEvents(everyEvent, 0);
     gHasWNE = TrapAvailable(_WaitNextEvent);
+    StackMark(&gStkInit);
 
     at_status(kAtRunning);   /* "I am alive" — see the kAt* codes above */
 
@@ -4017,20 +4315,53 @@ int main(void)
         vals[5] = sumRsrcCRC;
         vals[6] = (uint32_t)totalRsrcLen;
         vals[7] = (uint32_t)gPeakUsage;
+#ifdef UNC_AT_STACK
+        /* Overwrite three slots, the way UNC_AT_BUDGET and UNC_AT_TIMING do:
+         * the grid is the channel the Mini vMac harness reads, and a probe
+         * build is not graded on its CRCs. The count and the error count are
+         * left alone, so a run that measured nothing still says so. */
+        StackRead();
+        vals[0] = (uint32_t)gStkFirstVal;    /* what the lowest dirty long HOLDS */
+        vals[6] = (uint32_t)(gStkTop - gStkLimit);        /* the whole stack  */
+        vals[1] = (uint32_t)gStkFirst[0];    /* lowest dirty offset           */
+        /* The last unknown: WHO writes down there. If the application zone's
+         * bkLim is above ApplLimit, the heap overlaps the region this probe
+         * calls "the stack" and every paint figure is heap, not stack. */
+        vals[2] = (uint32_t)(long)(ApplicationZone()->bkLim);
+        vals[3] = (uint32_t)gStkLimit;       /* ApplLimit, for comparison     */
+        /* The two instruments, side by side, which is the only way either is
+         * worth reading: PAINT is the deepest byte anything WROTE, a lower
+         * bound polluted by whatever else writes down there; SAMPLE is the
+         * deepest the stack POINTER was seen, exact at the pump, the sink and
+         * the allocator, and blind between them. */
+        vals[4] = (uint32_t)(gStkTop - gStkLimit - gStkMark);   /* PAINT  */
+        vals[5] = (uint32_t)(gStkTop - gStkMinSP);              /* SAMPLE */
+#endif
 #ifdef UNC_AT_BUDGET
         /* Overwrite the two length slots — same trick UNC_AT_META uses.
          * vals[7] still carries peak, so the three numbers that decide a
          * refusal (free, allowed, used) are on screen together. */
         vals[0] = (uint32_t)gSnapAddr[0];  /* largest live block, by address */
-        vals[1] = (uint32_t)gSnapAddr[1];
-        vals[3] = (uint32_t)gSnapAddr[2];
-        vals[4] = (uint32_t)gFreeAtStart;
+        /* How much more the budget would have had to be for the first
+         * refused request to succeed — the question "what would it take to
+         * extract this archive on this machine" answered as a number rather
+         * than as a verdict. Takes the second block address's slot; one
+         * address is enough to see fragmentation. */
+        vals[1] = (uint32_t)gShortBy;
         vals[2] = (uint32_t)gRefusedMaxBlk;
-        vals[5] = (uint32_t)gRefusedWhy;
-        vals[6] = (uint32_t)gBudget;
         vals[4] = (uint32_t)gZoneLo;       /* application zone bottom */
+        vals[5] = (uint32_t)gRefusedWhy;
         vals[6] = (uint32_t)gZoneHi;       /* ApplLimit                */
-        vals[7] = (uint32_t)gSnapAddr[3];
+        /* The two numbers this probe is named for. They used to be written
+         * into slots 4 and 6 and then overwritten by gZoneLo and gZoneHi two
+         * lines later, so the BUDGET — the thing the switch exists to report
+         * — never reached the grid at all, and reading it meant editing this
+         * block by hand. They now have slots of their own, taken from the
+         * third and fourth largest block addresses: two addresses are enough
+         * to see fragmentation, and the budget is what every figure in
+         * FORMATS.md's *Budget* rests on. */
+        vals[3] = (uint32_t)gFreeAtStart;  /* FreeMem() before the reserve */
+        vals[7] = (uint32_t)gBudget;       /* what the engine was given    */
 #ifdef UNC_AT_HANDLES
         vals[4] = (uint32_t)gMoveBefore;   /* MaxBlock before MoveHHi */
         vals[6] = (uint32_t)gMoveAfter;    /* MaxBlock after  MoveHHi */
@@ -4097,6 +4428,7 @@ int main(void)
 #endif /* UNC_MAC_AUTOTEST */
 
 /* ================================================================== */
+
 /* Interactive app: SFGetFile loop + progress dialog + result alerts. */
 /* ================================================================== */
 #if !defined(UNC_SINK_TEST) && !defined(UNC_MAC_AUTOTEST)
@@ -4104,6 +4436,7 @@ int main(void)
 static void ShowNote(short alrtID, const unsigned char *msg)
 {
     ParamText(msg, "\p", "\p", "\p");
+    ContigSample();
     NoteAlert(alrtID, NULL);
 }
 
@@ -4280,6 +4613,7 @@ static void RepListDraw(DialogPtr dlg)
 
 static pascal void RepListItemProc(WindowPtr w, short item)
 {
+    StackSample();   /* inside ModalDialog: the Toolbox's frames are below us */
     (void)item;
     RepListDraw((DialogPtr)w);
 }
@@ -4315,6 +4649,7 @@ static void RepSetTop(short top)
  * the scroll bar is not left to ModalDialog. */
 static pascal void RepScrollAction(ControlHandle c, short part)
 {
+    StackSample();   /* inside ModalDialog: the Toolbox's frames are below us */
     if (c != gRepBar) return;
     switch (part) {
     case inUpButton:   RepSetTop((short)(gRepTop - 1)); break;
@@ -4396,6 +4731,7 @@ static void RepSaveAsText(void)
 
 static pascal Boolean RepFilter(DialogPtr dlg, EventRecord *ev, short *item)
 {
+    StackSample();   /* inside ModalDialog: the Toolbox's frames are below us */
     char ch;
 
     if (ev->what == mouseDown) {
@@ -4444,6 +4780,7 @@ static void ShowReport(const unsigned char *outcome)
     ModalFilterUPP filter;
 
     BlockMoveData(outcome, gRepOutcome, outcome[0] + 1);
+    ContigSample();
     dlg = GetNewDialog(kReportDLOG, NULL, (WindowPtr)-1);
     if (!dlg) {                       /* no room for it: the line still gets said */
         ShowNote(kDoneALRT, outcome);
@@ -4503,6 +4840,7 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
     short alrt;
 
     RepReset();          /* this file's report, not the last one's */
+    ContigSample();
     pr.dlg = GetNewDialog(kProgressDLOG, NULL, (WindowPtr)-1);
     pr.cancelled = false;
     pr.lastTicks = 0;
@@ -4669,17 +5007,34 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
                          "Find them and try again.");
     else if (ret == UNC_ERR_IO && entries == 0)
         PStrCat(outcome, "Could not open the archive.");
-    else if (gShortBy > 0) {
+    else if (gShortBy > 0 && (errors > 0 || ret != UNC_OK)) {
         /* Ahead of the two generic messages, and covering both of them: a
          * memory shortfall is the same answer whether one entry failed or
          * the whole archive did, and it is the only failure here the user
          * can actually do something about. The number is what turns "it
-         * did not work" into one thing to go and do — it is exactly what
-         * the memory size in Get Info has to grow by. Rounded UP to the
-         * next 8K, so it is round enough to type and never short. */
+         * did not work" into one thing to go and do. Rounded UP to the
+         * next 8K, so it is round enough to type and never short.
+         *
+         * GATED ON SOMETHING ACTUALLY HAVING FAILED, since 2026-08-31, and
+         * that is the whole point of the test: gShortBy is set by the
+         * allocator on EVERY over-budget request, and the engine makes
+         * requests it is perfectly happy to be refused. StuffIt 5's inverse
+         * BWT asks for numbytes*4 and builds a sampled occurrence index
+         * instead when that is declined — slower, byte-identical, and the
+         * designed behaviour that makes the format fit on a 1 MB machine at
+         * all. Before this test, `derived-Troi-ClipSave-Plug-in1.1.sit`
+         * extracted COMPLETELY on a 1 MB Mac Plus and said "Needs 48K more
+         * memory" (BLOCKERS.md, *Withdrawn claims*). The allocator cannot
+         * know which requests are optional; the outcome can, because a
+         * request that mattered leaves an errored entry behind. */
         PStrCat(outcome, "Needs ");
         PStrCatNum(outcome, (gShortBy + 8191L) / 8192L * 8L);
-        PStrCat(outcome, "K more memory. Give MacExtract more in Get Info.");
+        /* WHICH advice, from whether there is a partition to grow at all. */
+        if (HasPartition())
+            PStrCat(outcome, "K more memory. Give MacExtract more in "
+                             "Get Info, or start up without MultiFinder.");
+        else
+            PStrCat(outcome, "K more memory than this Macintosh has free.");
     }
     else if (gShortPiece)
         /* The budget had room and the Memory Manager still could not find
@@ -4732,14 +5087,69 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
         alrt = kDoneALRT;
     }
 
+#ifdef UNC_AT_STACK
+    {   /* Prepended for the same reason UNC_AT_RESERVE is: the report window
+         * clips a long line at its right edge. "su" is the watermark — the
+         * deepest the stack went — and "sd" is how many bytes inside that it
+         * actually wrote. The gap between them is frames holding buffers
+         * nothing filled. */
+        unsigned char n[32], tmp[256];
+        short i, b;
+        StackRead();
+        tmp[0] = 0;
+        PStrCat(tmp, "sp=");
+        NumToString(gStkTop - gStkMinSP, n);   /* SAMPLE: the pointer itself */
+        for (i = 1; i <= n[0]; i++) tmp[++tmp[0]] = n[i];
+        PStrCat(tmp, " pt=");
+        NumToString(gStkTop - gStkLimit - gStkMark, n);    /* PAINT         */
+        for (i = 1; i <= n[0]; i++) tmp[++tmp[0]] = n[i];
+        PStrCat(tmp, "/");
+        NumToString(gStkTop - gStkLimit, n);              /* of this much  */
+        for (i = 1; i <= n[0]; i++) tmp[++tmp[0]] = n[i];
+        PStrCat(tmp, " lo=");
+        for (b = 0; b < 4; b++) {                 /* the four lowest dirty */
+            if (b) PStrCat(tmp, ",");
+            NumToString(gStkFirst[b], n);
+            for (i = 1; i <= n[0]; i++) tmp[++tmp[0]] = n[i];
+        }
+        PStrCat(tmp, " ");
+        for (i = 1; i <= outcome[0]; i++) tmp[++tmp[0]] = outcome[i];
+        for (i = 0; i <= tmp[0]; i++) outcome[i] = tmp[i];
+    }
+#endif
+#ifdef UNC_AT_CONTIG
+    {   /* "mb" is the smallest contiguous block available at any moment a
+         * dialog or alert was created, and "n" is how many were created.
+         * Prepended, because the report window clips at its right edge. */
+        unsigned char n[32], tmp[256];
+        short i;
+        tmp[0] = 0;
+        PStrCat(tmp, "mb=");
+        NumToString(gMinContig, n);
+        for (i = 1; i <= n[0]; i++) tmp[++tmp[0]] = n[i];
+        PStrCat(tmp, " n=");
+        NumToString(gContigN, n);
+        for (i = 1; i <= n[0]; i++) tmp[++tmp[0]] = n[i];
+        PStrCat(tmp, " ");
+        for (i = 1; i <= outcome[0]; i++) tmp[++tmp[0]] = outcome[i];
+        for (i = 0; i <= tmp[0]; i++) outcome[i] = tmp[i];
+    }
+#endif
 #ifdef UNC_AT_RESERVE
     {   /* On EVERY outcome: a run that ends in the report never reaches the
          * completion alert. Prepended, because the report window clips. */
         unsigned char n[32], tmp[256];
         short i;
-        NumToString(gMinFree, n);
+        /* SHELL appetite, which is what the reserve actually has to cover:
+         * total heap used at the tightest moment, less what the engine held
+         * then. Readable only on a run where the engine reaches its cap — on
+         * a small archive this says nothing. */
+        NumToString(gFreeAtStart - gMinFree - gPeakUsage, n);
         tmp[0] = 0;
-        PStrCat(tmp, "mf=");
+        PStrCat(tmp, "shell=");
+        for (i = 1; i <= n[0]; i++) tmp[++tmp[0]] = n[i];
+        PStrCat(tmp, " eng=");
+        NumToString(gPeakUsage, n);
         for (i = 1; i <= n[0]; i++) tmp[++tmp[0]] = n[i];
         PStrCat(tmp, " ");
         for (i = 1; i <= outcome[0]; i++) tmp[++tmp[0]] = outcome[i];
@@ -4748,6 +5158,69 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
 #endif
     if (gRepN) ShowReport(outcome);
     else ShowNote(alrt, outcome);
+}
+
+/* ---------------------------------------------------------------- */
+/* Documents handed over by the Finder                               */
+/* ---------------------------------------------------------------- */
+
+/* Dropping an archive on the application's icon, or double-clicking one
+ * whose creator is ours, launches the application with the Finder's list
+ * of documents in AppParmHandle. There is no Apple event in it: this
+ * binary is `notHighLevelEventAware` in its 'SIZE', so even Mac OS 9's
+ * Finder uses the mechanism the 128K ROM had.
+ *
+ * Source: Inside Macintosh: Macintosh Toolbox Essentials, Finder
+ * Interface — "the Finder launches your application with a request to
+ * open that document"; and Segment Loader, which lays the handle out as
+ *
+ *     message   INTEGER    0 = appOpen, 1 = appPrint
+ *     count     INTEGER    how many documents follow
+ *     then per document:
+ *     vRefNum   INTEGER    volume, or a working directory on HFS
+ *     fType     OSType     what the Finder matched against our 'FREF's
+ *     versNum   INTEGER
+ *     fName     Str255     the leaf name, the record padded to even
+ *
+ * Read here rather than through CountAppFiles/GetAppFiles because those
+ * are glue in the Multiversal libraries rather than traps, and cost 216
+ * bytes of code more than this does — on a 512 KB machine that is 216
+ * bytes off the engine's budget, for a feature that machine's Finder
+ * does not have (DECISIONS.md 2026-08-31, *the drop the Finder does not
+ * make*). ClrAppFiles is not called for the same reason it is not
+ * needed: nothing reads the list twice.
+ *
+ * fType is deliberately IGNORED. The Finder matched it to decide whether
+ * to offer the drop; what the file actually holds is unc_sniff's
+ * business, and the whole point of the '****' file reference is to be
+ * handed files whose type is wrong. */
+static const unsigned char *gDropNext;   /* the next record, or NULL */
+static short gDropLeft;                  /* records not yet taken    */
+
+static void DropInit(void)
+{
+    Handle h = LMGetAppParmHandle();
+    const unsigned char *q;
+    if (!h || !*h) return;
+    q = (const unsigned char *)*h;
+    if (q[0] || q[1]) return;                     /* appPrint: not ours */
+    gDropLeft = (short)((q[2] << 8) | q[3]);
+    if (gDropLeft > 0) gDropNext = q + 4;
+}
+
+/* The next document, into the two fields SFGetFile would have filled.
+ * Returns 0 when the list is exhausted. */
+static int DropNext(short *vol, Str63 name)
+{
+    const unsigned char *q = gDropNext;
+    short len;
+    if (gDropLeft <= 0 || !q) return 0;
+    *vol = (short)((q[0] << 8) | q[1]);
+    len = (short)q[8];
+    BlockMoveData(q + 8, name, (long)len + 1);
+    gDropNext = q + ((8 + 1 + len + 1) & ~1);
+    gDropLeft--;
+    return 1;
 }
 
 int main(void)
@@ -4768,6 +5241,7 @@ int main(void)
         int i;
         for (i = 0; i < 12; i++) MoreMasters();
     }
+    StackPaint();
 
     InitGraf(&qd.thePort);
     InitFonts();
@@ -4779,6 +5253,7 @@ int main(void)
     FlushEvents(everyEvent, 0);
 
     gHasWNE = TrapAvailable(_WaitNextEvent);
+    DropInit();
 
     where.h = 82;
     where.v = 90;
@@ -4810,8 +5285,20 @@ int main(void)
          * a customized dialog template. Only SFPutFile's dialog has a
          * usable prompt item, which is why the two are told apart by
          * POSITION below. DECISIONS.md, 2026-08-09. */
-        SFGetFile(where, "\p", NULL, -1, NULL, NULL, &reply);
-        if (!reply.good) break;
+        /* A document the Finder handed over takes the place of the
+         * Open dialog, one per pass: dropping three archives extracts
+         * three, and the loop falls back to Standard File when the
+         * list runs out rather than quitting, so the application is
+         * still there to be given another file. */
+        if (!DropNext(&reply.vRefNum, reply.fName)) {
+#ifdef UNC_AT_STACK
+            SFPGetFile(where, "\p", NULL, -1, NULL, NewDlgHookProc(SFHook),
+                       &reply, getDlgID, NULL);
+#else
+            SFGetFile(where, "\p", NULL, -1, NULL, NULL, &reply);
+#endif
+            if (!reply.good) break;
+        }
 
         /* Where should the files go? Standard File keeps ONE current
          * folder across SFGetFile and SFPutFile, so this opens in the

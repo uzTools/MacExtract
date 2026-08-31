@@ -126,9 +126,20 @@ set_source_files_properties(
 # (+2,444 B), -fconserve-stack (+1,064 B), -flto (does not link on this
 # toolchain), -Wl,--relax (no effect on this target), alignment flags,
 # -fno-asynchronous-unwind-tables, -fmerge-all-constants, -fno-ident (no
-# effect). -fno-inline-small-functions is a further 248 B and is NOT taken:
-# nothing has timed it, and this block exists because that reasoning was
-# applied to one flag and not to the four beside it (BLOCKERS.md).
+# effect).
+#
+# -fno-inline-small-functions IS TIMED NOW, 2026-08-31, and it is the worst
+# trade in this file: -248 B for **+448 ticks, +14.1 %** — 53.1 s to 60.5 s on
+# the same fixture and instrument as the rows above, against the four kept
+# flags' 780 B for +0.82 % between them. Rejected on measurement rather than
+# on the absence of one, which is what BLOCKERS.md had recorded against it.
+#
+# Inlining is already at its size optimum here and pushing it either way
+# costs: -finline-limit=30 is +8 B, =60 is -28 B, --param
+# max-inline-insns-single=50 is -16 B, and none of them stack with anything —
+# every combination lands on the same byte. Functions called once are inlined
+# and that is what makes dd_fork 5,136 B and ExtractOne 5,884 B; separating
+# them is the +2,444 B row above.
 target_compile_options(MacExtract PRIVATE -mcpu=68000 -Os -Wno-multichar
                        -fno-tree-loop-distribute-patterns
                        -freorder-blocks-algorithm=simple
@@ -153,6 +164,22 @@ target_compile_options(MacExtract PRIVATE -mcpu=68000 -Os -Wno-multichar
                        # price kMemReserveMax against what the shell actually
                        # uses. A probe, never shipped.
                        $<$<BOOL:$ENV{UNC_AT_RESERVE}>:-DUNC_AT_RESERVE>
+                       # UNC_AT_STACK: paint the unused stack at launch and
+                       # read the watermark back at the end — what kStackBump
+                       # is actually worth, in a currency the engine spends.
+                       # FORMATS.md, *Stack*.
+                       $<$<BOOL:$ENV{UNC_AT_STACK}>:-DUNC_AT_STACK>
+                       # UNC_AT_CONTIG: MaxBlock() at the moment each dialog
+                       # is created — the reserve's real job is one contiguous
+                       # block, and every other reserve figure measures volume.
+                       # FORMATS.md, *What the reserve is NOT proven against*.
+                       $<$<BOOL:$ENV{UNC_AT_CONTIG}>:-DUNC_AT_CONTIG>
+                       # UNC_STACK_BUMP_KB: kStackBump in KB, so the stack
+                       # size can be SWEPT without editing source. A
+                       # requirement does not move when the stack does; a
+                       # measurement that tracks the stack size is measuring
+                       # the stack size. FORMATS.md, *Stack*.
+                       $<$<BOOL:$ENV{UNC_STACK_BUMP_KB}>:-DUNC_STACK_BUMP_KB=$ENV{UNC_STACK_BUMP_KB}>
                        $<$<BOOL:$ENV{UNC_AT_OVERLAY}>:-DUNC_AT_OVERLAY>
                        $<$<BOOL:$ENV{UNC_AT_META}>:-DUNC_AT_META>
                        # UNC_AT_SEPARATE_BLOCKS: force the two-separate-NewPtr

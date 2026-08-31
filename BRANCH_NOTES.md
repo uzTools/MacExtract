@@ -64,10 +64,18 @@ the engine core, the shared codecs, and the envelope readers (`fmt_binhex`,
 `fmt_macbinary`, `fmt_applesingle`) — because a `.sit.hqx` must be unwrapped
 before anyone knows it is a StuffIt archive.
 
-**~103 KB of budget** is the prize, against 598,932 B today. That is three
-times what this author estimated before measuring, and it is the only lever
-large enough to reach `derived-EasyFind.dmg.sit`, which needs more than
-598,932 B on the machine and which neither the flags nor the reserve reached.
+**~103 KB of budget** is the prize, against **648,100 B** today (main,
+2026-08-31; it was 598,932 B when this was measured, and the re-pricings that
+moved it are FORMATS.md, *Budget*). That is three times what this author
+estimated before measuring.
+
+**Withdrawn: "the only lever large enough to reach `derived-EasyFind.dmg.sit`".**
+Written here before that fixture's refusal was priced. It is short by
+**2,031,101 B** — the largest single request it makes, nearly two megabytes
+past what a 1 MB Macintosh has at all, so it is DECODER-shaped and no amount
+of shedding resident code reaches it (FORMATS.md, *Budget*). The prize is
+still ~103 KB; what it buys is more of the corpus near the line, not the
+fixtures that are out.
 
 ## What stands in the way — found by trying it
 
@@ -146,6 +154,11 @@ of the archive's resource fork), `unc_crypt_sit` (key schedule) and
 
 **−6,140 B of code**, so ~6 KB of budget, and 7,016 B off the download.
 
+**The budget column is pre-merge** — measured 2026-08-31 before main re-priced
+the stack and the reserve, which moved the shipped budget to 648,100 B
+(FORMATS.md, *Budget*). The −6,140 B is a CODE delta and does not move with it:
+code comes off the budget one byte for one byte, whatever the budget is.
+
 **That is far less than `unc_crypt.c`'s 14,674 B, and the gap is the lesson.**
 `--gc-sections` was already collecting every cipher entry point nothing
 reachable calls, so the module's RESIDENT cost was never its object size.
@@ -154,8 +167,9 @@ for a full per-format split — is therefore optimistic by a factor nobody has
 measured.** Treat them as upper bounds, not forecasts.
 
 **For scale, on the same machine and the same day:** re-pricing one constant
-in the memory reserve was worth **49 KB**; this overlay, with a dispatch, a
-shim, a loader and a build step, is worth **6 KB**.
+in the memory reserve was worth **49 KB**, and three such re-pricings together
+have since been worth **81,936 B** (FORMATS.md, *Budget*); this overlay, with a
+dispatch, a shim, a loader and a build step, is worth **6 KB**.
 
 **Failure to load is handled, not ignored.** Where a signature allows it the
 shim returns `UNC_ERR_MEM`; where it does not, it clears the cipher kind so
