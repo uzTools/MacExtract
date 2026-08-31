@@ -58,9 +58,9 @@ emulator is least trustworthy. Do these first.
       with a Chooser extension or two has less, and every 1 MB number in
       FORMATS.md is derived from that budget.
 - [ ] **How much heap the Toolbox really needs while the engine is at its
-      peak.** The reserve held back from the engine is a quarter of
-      `FreeMem()`, clamped to [32 KB, 80 KB] (`kMemReserveMin`/`Max` in
-      `mac/macextract_mac.c`). Measured under Mini vMac, the Toolbox and File
+      peak.** The reserve held back from the engine is a flat **32 KB**
+      (`kMemReserveMin`/`Max` in `mac/macextract_mac.c`); it was a quarter of
+      `FreeMem()` clamped to [32 KB, 80 KB] until 2026-08-30. Measured under Mini vMac, the Toolbox and File
       Manager took **under 1 KB** at the tightest moment of all 67 sample
       fixtures — but that is a stripped System Folder with no INITs, a
       RAM-backed disk and no fragmentation. Do the same on iron with a
@@ -84,12 +84,25 @@ emulator is least trustworthy. Do these first.
       stays alive and continues with the next entry.
 - [ ] **A full disk.** Extract something larger than the free space. Same
       expectation as above; no crash, no hang.
-- [ ] **The stack against a real 32 KB.** `kStackBump` takes 24 KB off
-      `ApplLimit` on top of the 8 KB default, so the shell runs on 32 KB
-      (FORMATS.md, *Stack*), against a deepest measured chain of 3,290 B. On
-      silicon the ROM's own stack use sits underneath that. Extract a deeply
-      nested archive (a `.cpt` with folders, e.g. `derived-Education7.1.cpt`)
-      and confirm no crash.
+- [ ] **The stack against a real 12 KB, and this one got much tighter on
+      2026-08-31.** `kStackBump` now takes only 4 KB off `ApplLimit` on top of
+      the 8 KB default, so the shell runs on **12 KB** where it used to have
+      32 KB — 20,464 B went to the engine. The requirement was measured two
+      ways and swept across seven stack sizes: the stack POINTER never goes
+      deeper than **5,200 B** and the deepest byte ever written is
+      **5,604 B** (FORMATS.md, *Stack*). **What that cannot see is silicon.**
+      Every figure comes from an emulator with a stripped System Folder, no
+      INITs and a RAM-backed disk; a real Macintosh runs ROM routines with a
+      Chooser extension loaded, a floppy's drivers and a fragmented System
+      heap underneath our frames, and one of those routines demonstrably
+      sizes a stack buffer from the space available. Extract a deeply nested
+      archive (a `.cpt` with folders, e.g. `derived-Education7.1.cpt`), a
+      StuffIt 5 archive (the deepest decoder chain), and drive Standard File
+      and the password dialog. A stack overflow here does not raise an error
+      — it writes into the heap in silence — so the symptom to watch for is a
+      wrong byte or a crash minutes later, not a message. If anything at all
+      looks off, `UNC_STACK_BUMP_KB` rebuilds at any size and 8 KB or 12 KB
+      of bump restores the old headroom.
 - [ ] **Address errors.** A real 68000 traps unaligned word access; x86 and the
       emulator tolerate patterns it would not. CI's `-fsanitize=alignment` and
       the qemu-m68k mock are the current defence and neither is the CPU. Any

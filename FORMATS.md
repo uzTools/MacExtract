@@ -2287,18 +2287,19 @@ enforces a ratchet on code size for this reason.
 
 ### Budget
 
-**What a 1 MB Mac Plus actually leaves the engine is 627,620 B** — measured
+**What a 1 MB Mac Plus actually leaves the engine is 635,812 B** — measured
 **2026-08-31** with `run.py --mem 1M -D UNC_AT_BUDGET`, which reports
-`FreeMem()` at **660,388 B** and the shell's reserve at a flat 32 KB.
+`FreeMem()` at **668,580 B** and the shell's reserve at a flat 32 KB.
 
 **It has moved twice in two days, both times by re-pricing a constant nobody
 had measured, and neither cost a millisecond:** 566,164 → 615,348 B when the
-reserve went flat (49,184 B), and 615,348 → 627,620 B when the stack did
-(12,272 B, *Stack*). Together **61,456 B**, against the 780 B a full day of
+reserve went flat (49,184 B), and 615,348 → 635,812 B when the stack did
+(20,464 B, *Stack*). Together **69,648 B**, against the 780 B a full day of
 compiler size flags bought at 0.82 % of every extraction (*Size flags, priced
-in both currencies*). The stack cut was made, reverted the same day on a bad
-instrument, and re-made once a second instrument disagreed with the first —
-BLOCKERS.md, *Withdrawn claims*, has that round trip and what it cost.
+in both currencies*) — **ninety times as much, for nothing**. The stack cut
+was made, reverted the same day on a bad instrument, and re-made once a
+second instrument disagreed with the first — BLOCKERS.md, *Withdrawn claims*,
+has that round trip and what it cost.
 
 **The reserve was 80 KB, is now a flat 32 KB, and 80 KB was never priced.**
 `kMemReserveMax` equals `kMemReserveMin`, so the quarter-of-free rule no longer
@@ -2342,6 +2343,17 @@ for resting on the proxy (BLOCKERS.md, *Withdrawn claims*). Replayed at 1 MB on
 | `derived-Domino_v1.4.sit` | **extracts**, 2 files byte-exact | 614,018 B |
 | `derived-XMenu.dmg.sit` | **extracts**, 1 file byte-exact | 600,692 B |
 | `derived-EasyFind.dmg.sit` | **still refused**, per entry | reached 600,500 B |
+
+**What EasyFind would take is 2,031,101 B more** (`-D UNC_AT_BUDGET`,
+2026-08-31; `gRefusedWhy` = 1, so budget and not fragmentation). That is the
+largest single request it makes, and it is nearly two megabytes past what a
+1 MB Macintosh has at all — so this fixture is DECODER-shaped, not
+budget-shaped, and no re-pricing of a shell constant reaches it. Note also
+that it is refused at 627,620 B on the Mac while `run_budget.py` bisects its
+Linux minimum at 565,062 B: a gap of over 62 KB, against the 16 KB and 33 KB
+measured on the other two. **The Linux proxy's error is not a constant** and
+this is the third fixture to say so (*The Linux budget check under-reads the
+Mac*).
 
 So the corpus is not all inside a 1 MB Mac Plus, and **Domino clears the
 shipped budget by 13,602 bytes**. `tools/build_mac.sh` ratchets code size
@@ -2559,28 +2571,38 @@ worth saying why two: the first one on its own was wrong.
   launch and read back. Sees everywhere, including inside a Toolbox call, but
   cannot tell a stack write from anything else.
 
-**Swept across four stack sizes on a 1 MB Mac Plus, 2026-08-31**
+**Swept across seven stack sizes on a 1 MB Mac Plus, 2026-08-31**
 (`UNC_STACK_BUMP_KB` rebuilds at any size, so this is a sweep and not a
 sample), on `derived-Library_ISBN_Barcoder.sit`, the heaviest fixture there
 is:
 
-| stack | SAMPLE | PAINT | lowest dirty word, above ApplLimit |
+| stack | SAMPLE | PAINT | floor left untouched |
 |---|---|---|---|
+| 10,172 B | **5,200** | 5,604 | 4,568 |
+| 12,220 B | **5,200** | 6,828 | 5,392 |
 | 16,316 B | **5,200** | 9,288 | 7,028 |
 | 20,412 B | **5,200** | 15,568 | 4,844 |
 | 24,508 B | **5,200** | 18,840 | 5,668 |
 | 32,700 B | **5,200** | 25,392 | 7,308 |
 
-**SAMPLE is constant and PAINT tracks the size of the region**, which is what
+**SAMPLE never moves and PAINT tracks the size of the region**, which is what
 settles it: a requirement does not change when the thing holding it changes.
-Through the real UI — Standard File, the progress dialog and the password
-dialog, with the Dialog Manager sampled from inside `ModalDialog` — SAMPLE is
-**3,134 B** at both 16 KB and 32 KB, so the dialogs are not deeper than the
-decoders.
+Peak heap is 559,805 B at every one of those sizes, so the extraction did the
+same work each time.
 
-**So `kStackBump` is 12 KB, a 20 KB stack** — 3.8x the largest SAMPLE — and
-the 12,272 B released went to the engine (*Budget*). Re-run at exactly that
-size: **69/69 at 1 MB**, **66/69 at 512 KB**.
+**Sweeping DOWN is what set the size**, and it is the more useful direction:
+PAINT *converges on* SAMPLE as the room runs out — 9,288 → 6,828 → 5,604
+against a constant 5,200 — so whatever was helping itself to the spare room
+is squeezed out and what remains is the real requirement, **about 5,600 B**.
+Through the real UI — Standard File (sampled via `SFPGetFile`'s dialog hook,
+which is the Toolbox's own modal loop), the progress dialog and the password
+dialog — SAMPLE is **3,134 B** and does not move either, at 10 KB or at
+32 KB, and the password dialog drove correctly at every size down to 10 KB.
+
+**So `kStackBump` is 4 KB, a 12 KB stack** — 2.1x the deepest write ever
+observed — and **20,464 B** has gone to the engine (*Budget*). Verified
+byte-exact at exactly that size on every tier: **69/69 at 1 MB**, 512 KB,
+System 7 and Mac OS 9.
 
 **PAINT is not a stack measurement, and this is how that was established.**
 Its lowest dirty word sits a near-constant 5–7 KB above ApplLimit at every
@@ -3098,6 +3120,11 @@ before the sample grew) — the same committed sample, the same on-Mac CRC-32
 read-back. The 2026-08-21 run is the first on this tier since M12, M13 and M14,
 so it is the first that includes DiskDoubler, Now Compress, ARC and uuencode
 here; every one passed, 5.1 s a fixture, one boot each:
+
+**Re-run 2026-08-31 at the 20 KB stack: 69/69 again**, which is the tier
+that closes the stack change — System 7 is where the Process Manager honours
+the `SIZE` partition, so it exercises a different memory arrangement from the
+whole-machine tiers (*Stack*).
 
     tools/vmac/run.py --system Sys7.img --list tools/vmac/sample.txt
 

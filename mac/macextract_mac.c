@@ -52,7 +52,7 @@
 #define kBarItem        3
 #define kDetailItem     4
 
-/* Extra stack over the 8 KB default, giving a 20 KB stack.
+/* Extra stack over the 8 KB default, giving a 12 KB stack.
  *
  * It is not free: SetApplLimit lowers ApplLimit and MaxApplZone then grows
  * the heap up to it, so a byte of stack is a byte off FreeMem() and therefore
@@ -83,12 +83,20 @@
  * anchoring and the tracking — and which is safe under a smaller stack by
  * construction, because such a routine takes less when there is less.
  *
- * 20 KB is 3.8x the largest SAMPLE. The tiers were re-run at exactly this
- * size: **69/69 at 1 MB** and **66/69 at 512 KB**, and the three heaviest
- * corpus archives have byte-identical peaks at this budget and at the old
- * one, so no decoder simply spends what it is offered. */
+ * SWEPT DOWN as well, which is what set the size. As the stack shrinks the
+ * PAINT figure CONVERGES on the SAMPLE — 9,288 -> 6,828 -> 5,604 at 16, 12
+ * and 10 KB against a SAMPLE that never moves off 5,200 — so the adaptive
+ * consumer is squeezed out and what is left is the real requirement, about
+ * 5,600 B. Both paths still ran correctly at 10 KB.
+ *
+ * 12 KB is 2.1x that, and 24 -> 4 KB of bump is **20,464 B** returned to the
+ * engine. Verified byte-exact at this size on every tier: 1 MB, 512 KB,
+ * System 7 and Mac OS 9. What the measurement cannot see is a real Macintosh
+ * with INITs loaded and a fragmented System heap, where the Toolbox may want
+ * more than an emulator with a stripped System Folder does — MANUAL_TESTS.md
+ * carries that, as it does for the memory reserve. */
 #ifndef UNC_STACK_BUMP_KB
-#define UNC_STACK_BUMP_KB 12
+#define UNC_STACK_BUMP_KB 4
 #endif
 #define kStackBump      ((long)UNC_STACK_BUMP_KB * 1024L)
 /* Heap kept back from the engine for the Toolbox and File Manager.
@@ -519,6 +527,23 @@ static void StackSample(void)
     long here;
     if ((long)&here < gStkMinSP) gStkMinSP = (long)&here;
 }
+#ifdef UNC_AT_STACK
+/* Standard File is the biggest blind spot the SAMPLE has: its modal loop is
+ * the Toolbox's own and has no filter of ours in it, so a deep excursion
+ * inside SFGetFile goes unseen while the paint — which does see it — cannot
+ * say whether a write was the stack. SFPGetFile takes a dialog hook, called
+ * on every pass of that loop with the File Manager's and Dialog Manager's
+ * frames below us, which is exactly where to sample.
+ *
+ * Probe builds only: the shipped path stays SFGetFile, because a hook is
+ * shell code and shell code costs the engine its budget one for one. */
+static pascal short SFHook(short item, DialogPtr dlg)
+{
+    (void)dlg;
+    StackSample();
+    return item;
+}
+#endif
 
 static void StackPaint(void)
 {
@@ -2717,7 +2742,12 @@ static int SegAskUser(SegHost *h, int part)
         if (hit == kSegFindItem) {
             SetPt(&where, 90, 90);
             reply.good = false;
-            SFGetFile(where, "\p", NULL, -1, NULL, NULL, &reply);
+    #ifdef UNC_AT_STACK
+        SFPGetFile(where, "\p", NULL, -1, NULL, NewDlgHookProc(SFHook),
+                   &reply, getDlgID, NULL);
+#else
+        SFGetFile(where, "\p", NULL, -1, NULL, NULL, &reply);
+#endif
             if (reply.good) {
                 int got;
                 /* A spanned zip part and a split part cannot prove
@@ -4263,7 +4293,12 @@ int main(void)
          * vals[7] still carries peak, so the three numbers that decide a
          * refusal (free, allowed, used) are on screen together. */
         vals[0] = (uint32_t)gSnapAddr[0];  /* largest live block, by address */
-        vals[1] = (uint32_t)gSnapAddr[1];
+        /* How much more the budget would have had to be for the first
+         * refused request to succeed — the question "what would it take to
+         * extract this archive on this machine" answered as a number rather
+         * than as a verdict. Takes the second block address's slot; one
+         * address is enough to see fragmentation. */
+        vals[1] = (uint32_t)gShortBy;
         vals[2] = (uint32_t)gRefusedMaxBlk;
         vals[4] = (uint32_t)gZoneLo;       /* application zone bottom */
         vals[5] = (uint32_t)gRefusedWhy;
@@ -4344,6 +4379,7 @@ int main(void)
 #endif /* UNC_MAC_AUTOTEST */
 
 /* ================================================================== */
+
 /* Interactive app: SFGetFile loop + progress dialog + result alerts. */
 /* ================================================================== */
 #if !defined(UNC_SINK_TEST) && !defined(UNC_MAC_AUTOTEST)
@@ -5108,7 +5144,12 @@ int main(void)
          * a customized dialog template. Only SFPutFile's dialog has a
          * usable prompt item, which is why the two are told apart by
          * POSITION below. DECISIONS.md, 2026-08-09. */
+#ifdef UNC_AT_STACK
+        SFPGetFile(where, "\p", NULL, -1, NULL, NewDlgHookProc(SFHook),
+                   &reply, getDlgID, NULL);
+#else
         SFGetFile(where, "\p", NULL, -1, NULL, NULL, &reply);
+#endif
         if (!reply.good) break;
 
         /* Where should the files go? Standard File keeps ONE current

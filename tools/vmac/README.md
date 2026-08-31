@@ -1470,7 +1470,8 @@ probe overwrites four slots:
 
 | grid slot | carries |
 |---|---|
-| `nfiles`, `ret` | addresses of the 2 largest live blocks, biggest first |
+| `nfiles` | address of the largest live block |
+| `ret` | **`gShortBy`** — how much more budget the first refused request needed |
 | `sumDataCRC` | `FreeMem()` at the start of the run, before the reserve |
 | `peak heap` | **the budget** — what the engine was actually given |
 | `errors` | `MaxBlock()` at the first refusal |
