@@ -2188,6 +2188,43 @@ set was 147,260 B and the three-flag set is 147,268 B, and both measure
 566,164 B on the machine. Heap allocation is granular; do not read single-digit
 byte differences as budget.
 
+### Where the bytes are, and why the flags are finished
+
+**MEASURED 2026-08-31.** The linked image is **147,276 B** of code sections
+against **32,568 B** of A5 world; only the first costs the engine (*What the
+application costs the engine*). Summed function symbols are **138,686 B**, and
+the remaining ~8.6 KB is Retro68's startup section and padding, not material
+anything here can move.
+
+The biggest functions, `-Os` on a 68000:
+
+| function | bytes |
+|---|---|
+| `ExtractOne.constprop.0` (shell) | 5,884 |
+| `dd_fork` | 5,136 |
+| `unc_spacesaver_extract` | 4,154 |
+| `unc_zip_extract` | 3,492 |
+| `unc_sit_decode_fork` | 2,478 |
+| `unc_arsenic_decode` | 2,344 |
+
+**None of them is a long switch worth flattening, and the reason matters.**
+`dd_fork`'s own dispatch is a few hundred bytes; its 5,136 B is the eleven
+method bodies INLINED into it, because each is called exactly once. Turning
+them back into separate functions is `-fno-inline-functions-called-once`,
+measured at **+2,444 B**. The same goes for `ExtractOne.constprop.0`, whose
+suffix says the compiler already cloned it with its arguments folded in.
+
+**The top 25 functions are ~55 KB of 138 KB**, so there is no single
+structural win here — only many small ones, each with correctness risk against
+a 932-fixture suite, for a few hundred bytes apiece.
+
+**And the functions where the BYTES are are disjoint from the functions where
+the TIME is.** The `UNC_HOT` set — `sit_lzw`, `sit_huffman`,
+`unc_huff_decode`, `unc_canon_decode`, `lzw_code`, `lzw_chain`,
+`unc_lzw_read`, `unc_crc16_arc` — appears nowhere in the table above. So
+shrinking the big ones would cost no measured speed; there is simply not much
+to shrink.
+
 ### Launch
 
 **A kilobyte of code is not a kilobyte of launch time; a RELOCATION is.**
