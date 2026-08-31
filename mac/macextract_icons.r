@@ -224,6 +224,12 @@ data 'MExt' (0, "MacExtract") {
    WHICH Finders display it is NOT measured here. System 7 and later do;
    whether Finder 5.1 under System 3.0 has a version line at all is open.
 
+   Get Info shows the LONG string, and it is the VERSION — not the name. The
+   box is already titled "MacExtract Info" and draws the name above the line,
+   so "MacExtract 0.29.0" said it twice (photographed on System 6.0.8 and
+   System 7.0.1 before this was fixed). The slot conventionally carries a
+   copyright notice after the number; this one carries the number alone.
+
    The four numeric bytes are for programmatic comparison and are not what
    is displayed. Byte 2 carries the minor and bug-fix numbers as one BCD
    digit each (Multiverse.r declares the layout; the stage constants are its
@@ -236,11 +242,11 @@ data 'MExt' (0, "MacExtract") {
 resource 'vers' (1, "MacExtract") {
     0x00, 0x29, release, 0x00, verUS,
     "0.29.0",
-    "MacExtract 0.29.0"
+    "0.29.0"
 };
 
 resource 'vers' (2, "MacExtract") {
     0x00, 0x29, release, 0x00, verUS,
     "0.29.0",
-    "MacExtract 0.29.0"
+    "0.29.0"
 };

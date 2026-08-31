@@ -178,6 +178,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-31 (the overlay that works and is not worth it) — a lifetime argument, and a 6 KB prize
 - 2026-08-31 (the message that failed a successful extraction) — the allocator cannot know which refusals matter
 - 2026-08-31 (the joined archive that was never meant to survive) — a harness expectation, three hours old and already documented
+- 2026-08-31 (the drop the Finder does not make, and the version it does show) — a gesture measured on three Finders
 
 ---
 
@@ -10247,3 +10248,82 @@ bug.** A harness that is not run for three weeks does not merely go stale, it
 starts LYING, and it lies in the most expensive direction — nobody
 investigates a passing test. This phase's last recorded run was 2026-08-09 and
 the behaviour it mis-describes arrived on 2026-08-14, five days later.
+
+## 2026-08-31 (the drop the Finder does not make, and the version it does show) — a gesture measured on three Finders
+
+Two questions about the Macintosh shell were answered from memory in the same
+session, so both were put on the machine. `tools/vmac/interactive.py --drop`
+drags an archive onto the application's icon and photographs what the Finder
+does, then reads Get Info.
+
+**The drop is a System 7 gesture, and an `FREF` is what enables it.** Six runs,
+one variable at a time, on `derived-ScrollbarPattern.sit` under `mv-4M`:
+
+| system | `FREF` for the type | the file's type | what happened |
+|---|---|---|---|
+| System 3.0 / Finder 5.1 | yes | `SIT!` | icon moved, nothing launched |
+| System 6.0.8 | yes | `SIT!` | icon moved, nothing launched |
+| System 7.0.1 | no | hfsutils' default | icon moved, nothing launched |
+| System 7.0.1 | no | `SIT!` | icon moved, nothing launched |
+| System 7.0.1 | yes | hfsutils' default | icon moved, nothing launched |
+| System 7.0.1 | **yes** | **`SIT!`** | **the application launched** |
+
+So on System 7 the `FREF` is necessary and sufficient, and it is a RESOURCE —
+free in the only currency that is scarce here.
+
+**And `'****'` is a wildcard.** With one `FREF` declaring that type and the
+archive's type set to `'????'` — matching nothing anyone declared — the drop
+launched the application. That matters more here than it would anywhere else:
+this program exists because names and types LIE, its own front door is
+`unc_sniff`, and the files its users have are the ones that arrived as `TEXT`
+(a `.hqx`) or `'????'` (a raw FTP download). An enumeration of `SIT!`, `CPT!`
+and the rest would have made exactly the well-behaved files droppable and
+refused the awkward ones the program is FOR. One line of Rez covers all of
+them.
+
+A single `'*'` is not a wildcard and not even a mistake Rez reports: it
+compiles to the OSType `\0\0\0*` — right-aligned, null-padded, checked in the
+built `FREF` — which matches nothing, and the drop was refused. Below System 7 no arrangement
+of resources produces the gesture at all: it is the Finder that does not have
+it. Which means the ~344 B of code that would read `AppParmHandle` (measured
+by building it and reverting) buys nothing on the floor target, and the pair
+is worth adding only together — a `FREF` without the receiving code makes the
+Finder launch the application and hand it a file it does not look at.
+
+**Neither is committed.** What is committed is the harness, so the next person
+to wonder does not re-derive it.
+
+### The control is the whole experiment
+
+Every frame here is "the icon moved and nothing else happened", which is also
+what a drag that was never delivered looks like — the failure this repository
+keeps meeting, most recently when a mouse harness pressed 140 px from its
+target and photographed a plausible screen (BLOCKERS.md, *a coordinate in a
+vmac harness is right if the run completes*). So each run drags the archive to
+empty space FIRST and photographs that it went there. Without that frame the
+three negatives are worth nothing, and with it they are worth as much as the
+positive.
+
+The first System 7 run was a false negative for a reason worth keeping:
+`mkboot.py --data` copies a data fork and leaves hfsutils' default type, so the
+file was not a `SIT!` at all and the `FREF` under test could not match it. The
+phase now sets the type with `hattrib` — **the subject of the experiment has to
+be the thing the experiment is about**, and a file that merely has the right
+NAME is not.
+
+### And the version
+
+`vers` 1 and 2 shipped earlier the same day with nothing having seen them.
+Get Info displays them **twice on System 6.0.8 and on System 7.0.1** — once
+under the name, once on the `Version:` line — and **System 3.0's "Information
+about MacExtract" has no version line at all**: Kind, Size, Where, Created,
+Modified, Locked, comment box, and nothing else. The System 7 box proves the
+field reads `vers` rather than the file: Get Info on the archive beside it
+says `Version: n/a`.
+
+Both boxes read *"MacExtract 0.29.0"* when they were first photographed,
+because the long string carried the name as well as the number. The box is
+titled "MacExtract Info" and draws the name on the line above, so it said the
+name twice and the version once; the strings are now the version alone, and
+System 6.0.8's box was re-photographed to say so — `MacExtract` on one line,
+`0.29.0` on the next, `Version: 0.29.0` below.

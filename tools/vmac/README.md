@@ -1681,6 +1681,8 @@ coordinates.
     interactive.py --wd             # output lands in the archive's folder, not at /
     interactive.py --dest           # output lands on the volume the user CHOSE
     interactive.py --diskswap       # insert the missing part's disk mid-run
+    interactive.py --drop           # drag an archive onto the application's
+                                    # icon: what does the FINDER do?
 
 Run them one at a time (see "This box has one core", above).
 
@@ -1749,6 +1751,42 @@ than SFGetFile's, so `SF_DRIVE` misses), and then a read of **both** volumes.
 Every output name must be on the chosen volume and none on the archive's. Give
 it a small fixture with a folder in it, `derived-Downer.sit`; nothing here is
 measuring speed and the phase waits out `EXTRACT_QUIET` at the end.
+
+### What the Finder does with a dropped archive — `interactive.py --drop`
+
+    interactive.py <fixture> --drop --system Sys30.img --emu mv-4M
+    interactive.py <fixture> --drop --system System6.hfv --emu mv-4M
+    interactive.py <fixture> --drop --system Sys7.img --emu mv-4M
+
+Six frames: the desktop, the open volume, **Get Info on the application**, a
+CONTROL drag to empty space, the archive dropped on the application's icon,
+and the same after a launch's worth of seconds. `--emu mv-4M` because nothing
+here is timed.
+
+The answer, and what it decides, is DECISIONS.md 2026-08-31, *the drop the
+Finder does not make*. Three things about running it:
+
+- **The control frame is what makes the negatives mean anything.** Every
+  refusal looks exactly like a drag that was never delivered. `drop-4` is the
+  archive dragged to empty space; if it did not move, stop reading the run.
+- **The phase sets the archive's TYPE with `hattrib`**, because `mkboot.py
+  --data` leaves hfsutils' default and a Finder that gates on the
+  application's `FREF` list cannot match a type nobody declared. The first
+  System 7 run was a false negative for exactly this. `--drop-type '????'` is
+  the other half of the wildcard experiment: a type nobody declared, against a
+  `FREF` that claims everything.
+- **Get Info is taken before the drags**, because a successful drop parks the
+  archive on top of the icon the Get Info click is aimed at, and the wrong
+  file's Info window looks like the right one.
+
+Icon coordinates live in `FINDER_ICONS`, per system, `archive` alongside
+`app`; System 7 opens its volume window near the BOTTOM of the screen, so the
+control drag moves up there rather than down.
+
+**What it cannot see.** It photographs; it reads nothing off the volume. A
+launch proves the Finder accepted the drop, not that the application was told
+WHICH file — nothing in the application reads `AppParmHandle`, so that half
+cannot be tested until the receiving code exists.
 
 ### Making a segmented Compact Pro archive — `cptsegment.py`
 

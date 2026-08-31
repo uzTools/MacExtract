@@ -211,11 +211,3 @@ all** (BLOCKERS.md, the ARC 7 row, filed and disproved the same day).
   emulated Mac, which has never been handed a stream this project
   wrote.
 
-- **No Finder has been seen displaying the version.** `mac/macextract_icons.r`
-  carries `vers` 1 and 2, held against `UNC_VERSION` by `tools/check_docs.py`,
-  and both strings are in the built application — 0 bytes of code, +128 B of
-  file, since nothing in the application opens them. What no run has shown is
-  Get Info displaying either string on any tier, and whether Finder 5.1 under
-  System 3.0 has a version line at all is unknown. **What would close it:** one
-  Get Info screenshot per tier; `tools/vmac/interactive.py` already drives the
-  Finder to the application's icon.
