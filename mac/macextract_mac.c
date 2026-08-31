@@ -101,9 +101,10 @@
 #define kStackBump      ((long)UNC_STACK_BUMP_KB * 1024L)
 /* Heap kept back from the engine for the Toolbox and File Manager.
  *
- * A FLAT 32 KB since 2026-08-30: kMemReserveMax equals kMemReserveMin, so
- * the quarter-of-free rule this held between 2026-08-24 and then bites
- * nowhere, and the 80 KB it was a flat constant of before that is gone.
+ * A FLAT 24 KB: kMemReserveMax equals kMemReserveMin, so the quarter-of-free
+ * rule this held between 2026-08-24 and 2026-08-30 bites nowhere, and the
+ * 80 KB it was a flat constant of before that is gone. 32 KB from 2026-08-30
+ * to 2026-08-31, when the thing it is FOR was measured at last.
  * Both earlier values were unmeasured. Budget on a 1 MB Mac Plus:
  * 566,164 -> 615,348 B, measured on the machine, at no cost in speed —
  * the reserve only decides how the heap is divided, and what is released
@@ -121,12 +122,17 @@
  * during writes left 121 KB free, with the Toolbox and File Manager
  * together taking under 1 KB while the engine sat at its peak.
  *
- * WHAT THAT EVIDENCE CANNOT SEE, and why this is 32 KB rather than the
- * kilobyte measured: every figure above measures VOLUME, and the
- * reserve's real job is CONTIGUITY — GetNewDialog needs one block, not n
- * free bytes, and the case that would test it is unreachable with the
- * fixtures this project has (FORMATS.md, *What the reserve is NOT proven
- * against*). Nor can it see a stripped System Folder with no INITs, a
+ * CONTIGUITY IS NO LONGER THE UNKNOWN. Every figure above measures VOLUME,
+ * while the reserve's real job is one contiguous block — GetNewDialog needs
+ * a block, not n free bytes. `-D UNC_AT_CONTIG` samples MaxBlock() at the
+ * moment each dialog and alert is created, and the smallest ever seen is
+ * **118,508 B on a 512 KB Macintosh** (against 122,808 B of free heap) and
+ * **652,112 B at 1 MB**: the whole free heap, near enough, every time. The
+ * structural reason is that no dialog is created while the engine holds a
+ * big allocation — the progress dialog goes up before extraction starts, and
+ * a password or "locate part" dialog opens BETWEEN entries, after the
+ * previous entry's blocks are freed. Contiguity was guarding a case this
+ * application's shape does not produce. Nor can it see a stripped System Folder with no INITs, a
  * RAM-backed emulated disk, or the absence of fragmentation pressure. A
  * real Plus with a Chooser extension, a floppy's File Manager buffers or
  * an AppleShare volume all cost more. MANUAL_TESTS.md carries this as
@@ -136,8 +142,8 @@
  * attempts: a 3.7 KB archive never fires the progress pump, and an
  * archive too big for the budget has its big allocation REFUSED before it
  * happens, so the run that fails hardest stresses the heap least. */
-#define kMemReserveMax  (32L * 1024)
-#define kMemReserveMin  (32L * 1024)
+#define kMemReserveMax  (24L * 1024)
+#define kMemReserveMin  (24L * 1024)
 
 #ifndef ioDirMask
 #define ioDirMask 0x10   /* ioFlAttrib bit 4 = "is a directory"
@@ -174,6 +180,31 @@ static long gTkRun, gTkRead, gTkWrite, gTkMeta;
 
 #ifndef UNC_SINK_TEST
 static Boolean gHasWNE;
+
+#ifdef UNC_AT_CONTIG
+/* The reserve's real job, measured for the first time.
+ *
+ * Every reserve figure this project has is a VOLUME — FreeMem() low-water
+ * marks, appetite in bytes. But GetNewDialog needs ONE BLOCK, and a heap with
+ * 100 KB free in scraps cannot open a dialog that wants 4 KB contiguous. The
+ * reserve exists for that, and until now nothing had measured it: FORMATS.md,
+ * *What the reserve is NOT proven against*.
+ *
+ * MaxBlock() is the answer — the largest contiguous block the Memory Manager
+ * could hand out — sampled at the moment each dialog and alert is created,
+ * which is precisely when it matters. The lowest such sample across a run is
+ * what the reserve has to cover. */
+static long gMinContig = 0x7FFFFFFFL;
+static long gContigN;
+static void ContigSample(void)
+{
+    long m = MaxBlock();
+    gContigN++;
+    if (m < gMinContig) gMinContig = m;
+}
+#else
+#define ContigSample() ((void)0)
+#endif
 
 /* Does this application have a PARTITION, or the whole machine? The two
  * memory messages depend on it: "give MacExtract more in Get Info" is the
@@ -378,6 +409,9 @@ static int  gShortPiece;   /* NewPtr failed though the budget allowed it   */
  * above, and reset by RunExtract. */
 static int  gUnsupported;
 
+#if defined(UNC_AT_BUDGET) && !defined(UNC_AT_RESERVE)
+static long gFreeAtStart;  /* FreeMem() before the reserve is taken off */
+#endif
 #ifdef UNC_AT_BUDGET
 /* The result grid reports what the engine USED and never what it was
  * ALLOWED, so a budget refusal and a genuine shortage look identical on
@@ -385,7 +419,6 @@ static int  gUnsupported;
  * budget said no, or NewPtr itself failed — and those have opposite
  * fixes ("the reserve is too big" vs "the heap is fragmented"). These
  * make both visible. See tools/vmac/README.md. */
-static long gFreeAtStart;   /* FreeMem() before the reserve is taken off */
 static long gBudget;        /* what the engine was actually given        */
 static long gRefusedSize;   /* size of the FIRST refused allocation      */
 static long gRefusedWhy;    /* 1 = over budget, 2 = NewPtr returned NULL */
@@ -475,6 +508,7 @@ typedef struct {
  * an archive too big for the budget the engine's allocation is REFUSED before
  * it happens, so the heap is never stressed and the mark stays high. Price the
  * reserve with a fixture that FITS and is heavy (FORMATS.md, *Budget*). */
+static long gFreeAtStart;  /* FreeMem() before the reserve is taken off */
 static long gMinFree = 0x7FFFFFFFL;
 static void ReserveSample(void)
 {
@@ -2727,6 +2761,7 @@ static int SegAskUser(SegHost *h, int part)
         savedMask = LMGetSysEvtMask();
         LMSetSysEvtMask(savedMask | diskMask);
         gSegNextPoll = 0;
+        ContigSample();
         hit = CautionAlert(kSegALRT, NewModalFilterUPP(SegDiskFilter));
         LMSetSysEvtMask(savedMask);
         gSegAsking = NULL;
@@ -2840,6 +2875,9 @@ static void seg_release(void *ctx, UncIO *io)
 }
 
 static long gPeakUsage;   /* engine heap high-water mark from the last RunExtract */
+#if defined(UNC_AT_BUDGET) && !defined(UNC_AT_RESERVE)
+static long gFreeAtStart;  /* FreeMem() before the reserve is taken off */
+#endif
 #ifdef UNC_AT_BUDGET
 /* The result grid reports what the engine USED and never what it was
  * ALLOWED, so a budget refusal and a genuine shortage look identical on
@@ -2955,6 +2993,7 @@ static int MacAskPassword(void *ctx, uint8_t *buf, uint16_t cap,
     ParamText(msg, "\p", "\p", "\p");
 
     if (ph->hide) HideWindow(ph->hide);
+    ContigSample();
     dlg = GetNewDialog(kPassDLOG, NULL, (WindowPtr)-1);
     if (!dlg) {
         if (ph->hide) ShowWindow(ph->hide);
@@ -3310,7 +3349,7 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
         long reserve = freenow / 4;
         if (reserve > kMemReserveMax) reserve = kMemReserveMax;
         if (reserve < kMemReserveMin) reserve = kMemReserveMin;
-#ifdef UNC_AT_BUDGET
+#if defined(UNC_AT_BUDGET) || defined(UNC_AT_RESERVE)
         gFreeAtStart = freenow;
 #endif
         ma.budget = freenow - reserve;
@@ -4387,6 +4426,7 @@ int main(void)
 static void ShowNote(short alrtID, const unsigned char *msg)
 {
     ParamText(msg, "\p", "\p", "\p");
+    ContigSample();
     NoteAlert(alrtID, NULL);
 }
 
@@ -4730,6 +4770,7 @@ static void ShowReport(const unsigned char *outcome)
     ModalFilterUPP filter;
 
     BlockMoveData(outcome, gRepOutcome, outcome[0] + 1);
+    ContigSample();
     dlg = GetNewDialog(kReportDLOG, NULL, (WindowPtr)-1);
     if (!dlg) {                       /* no room for it: the line still gets said */
         ShowNote(kDoneALRT, outcome);
@@ -4789,6 +4830,7 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
     short alrt;
 
     RepReset();          /* this file's report, not the last one's */
+    ContigSample();
     pr.dlg = GetNewDialog(kProgressDLOG, NULL, (WindowPtr)-1);
     pr.cancelled = false;
     pr.lastTicks = 0;
@@ -5065,14 +5107,32 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
         for (i = 0; i <= tmp[0]; i++) outcome[i] = tmp[i];
     }
 #endif
+#ifdef UNC_AT_CONTIG
+    {   /* "mb" is the smallest contiguous block available at any moment a
+         * dialog or alert was created, and "n" is how many were created.
+         * Prepended, because the report window clips at its right edge. */
+        unsigned char n[32], tmp[256];
+        short i;
+        tmp[0] = 0;
+        PStrCat(tmp, "mb=");
+        NumToString(gMinContig, n);
+        for (i = 1; i <= n[0]; i++) tmp[++tmp[0]] = n[i];
+        PStrCat(tmp, " n=");
+        NumToString(gContigN, n);
+        for (i = 1; i <= n[0]; i++) tmp[++tmp[0]] = n[i];
+        PStrCat(tmp, " ");
+        for (i = 1; i <= outcome[0]; i++) tmp[++tmp[0]] = outcome[i];
+        for (i = 0; i <= tmp[0]; i++) outcome[i] = tmp[i];
+    }
+#endif
 #ifdef UNC_AT_RESERVE
     {   /* On EVERY outcome: a run that ends in the report never reaches the
          * completion alert. Prepended, because the report window clips. */
         unsigned char n[32], tmp[256];
         short i;
-        NumToString(gMinFree, n);
+        NumToString(gFreeAtStart - gMinFree, n);   /* peak TOTAL heap used */
         tmp[0] = 0;
-        PStrCat(tmp, "mf=");
+        PStrCat(tmp, "used=");
         for (i = 1; i <= n[0]; i++) tmp[++tmp[0]] = n[i];
         PStrCat(tmp, " ");
         for (i = 1; i <= outcome[0]; i++) tmp[++tmp[0]] = outcome[i];
