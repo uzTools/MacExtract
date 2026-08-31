@@ -3496,10 +3496,15 @@ keeping a Finder that System 6 had to give up.
 RAM is not why.** Booted with no disk it behaves exactly like the Mac Plus:
 blinking floppy icon, framebuffer byte-identical to the Plus control. Booted
 from the System 3.0 floppy it dies at startup, **Sad Mac `0F0064`**, with
-Apple's 128K ROM and with the 512K's own `28BA4E50` alike — so it is neither
-the RAM nor the ROM revision, it is the volume. *Hypothesis, not measured:*
-that ROM predates HFS, and System Tools 1.0's boot code calls traps it does
-not have, which is the exception class the code reports. Two of this
+Apple's 128K ROM (`28BA61CE`) and with the 512K's own `28BA4E50` alike — so it
+is neither the RAM nor the ROM revision, it is what the volume RUNS. Not the
+media either: a blank 800 KB HFS volume, same size and same filesystem but no
+boot blocks, leaves the frame byte-identical to the no-disk one, so the drive
+reads 800K and declines to boot it rather than dying on it. Only a volume
+whose boot blocks execute Sad Macs. *Hypothesis, not measured:* that ROM
+predates HFS, and System Tools 1.0's boot code calls traps it does not have,
+which is the exception class the code reports. Re-taken **2026-08-31** from a
+scratch `mv-512K` build; `tools/vmac/README.md` has the three commands. Two of this
 application's own dependencies are 128K-ROM-and-later anyway —
 `NGetTrapAddress` in `TrapAvailable`, and every file operation going through
 HFS parameter blocks — so a 64K-ROM machine is out on the ROM regardless of

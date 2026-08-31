@@ -9961,13 +9961,15 @@ against 122,808 B, a 95,400 B gap, against System files of 181,913 B and
 the system, not by the machine**, and nobody had varied the system.
 
 **The negative was attributed before it was reported**, which is the part worth
-keeping. The 512K boots to a Sad Mac `0F0064` on our System 3.0 floppy. Three
-cheap A/Bs said what that meant: the same ROM with no disk gives the blinking
+keeping. The 512K boots to a Sad Mac `0F0064` on our System 3.0 floppy. Cheap
+A/Bs said what that meant: the same ROM with no disk gives the blinking
 floppy icon and a framebuffer byte-identical to the Mac Plus control, so the
 machine is healthy; Apple's own 128K ROM (`28BA61CE`) and the 512K's
-(`28BA4E50`) fail identically, so it is not the ROM revision. What is left is
-the volume — and the reason that ROM cannot read it is HFS, which arrived with
-its successor.
+(`28BA4E50`) fail identically, so it is not the ROM revision; and a blank
+800 KB HFS volume — same media, same filesystem, no boot blocks — gives the
+no-disk frame rather than the Sad Mac (added 2026-08-31), so the drive reads
+the disk and it is the boot code that dies. What is left is the volume — and
+the reason that ROM cannot boot it is HFS, which arrived with its successor.
 
 **Which codecs survive 512 KB is decided by adaptivity, not by appetite.**
 `derived-PuzzleGetter_0.8.sit` asks for 270,043 B and fits, renegotiating its

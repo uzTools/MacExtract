@@ -24,10 +24,18 @@ mv-512Ke` is **66/69** (2026-08-31; 65/69 before the reserve went flat,
 64/69 before the LZW bound), `run.py --emu mv-512Ke --system System6.hfv`
 is 58/69
 (FORMATS.md, *512 KB machines*). A **true** Macintosh 512K has a 64 KB ROM,
-no HFS and none of the traps this application needs; `Mac512K.ROM` is fetched
-so that negative stays reproducible, and `-m 128K -mem 512K` is the model it
-needs — Mini vMac has no plain `512K`. It Sad Macs on any HFS volume, so
-nothing here drives it.
+no HFS and none of the traps this application needs. It never reaches the
+application, so no driver here boots it; `setup.sh` builds `mv-512K` and
+fetches both 64 KB ROMs anyway, so that the negative can be re-taken rather
+than quoted. Three commands are the whole of it — each wants a display, and
+each is watched by eye:
+
+    $V/mv-512K/minivmac -r $V/Mac512K.ROM $V/Sys30.img   # Sad Mac 0F0064
+    $V/mv-512K/minivmac -r $V/Mac128K.ROM $V/Sys30.img   # identical: not the ROM
+    $V/mv-512K/minivmac -r $V/Mac512K.ROM                # blinking floppy: healthy
+
+`$V` is `$UNC_VMAC_HOME`. A blank 800 KB HFS volume in place of `Sys30.img`
+gives the third frame, not the first, which is how the media was ruled out.
 
 **System 3.0 has its own driver, `sys30.py`, and `run.py --system Sys30.img`
 does NOT work.** That system ignores the boot blocks' shell name, so

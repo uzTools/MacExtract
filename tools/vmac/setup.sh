@@ -19,11 +19,14 @@
 #     mv-4M-1x/minivmac 4 MB Mac Plus, authentic 7 MHz
 #     mv-1M-1x/minivmac 1 MB Mac Plus, authentic 7 MHz
 #     mv-512Ke/minivmac 512 KB Macintosh 512Ke, all out (the 512 KB tier)
+#     mv-512K/minivmac  512 KB Macintosh 512K, 64 KB ROM (the negative below)
 #     Mac512K.ROM       64 KB Macintosh 512K ROM (checksum 28BA4E50)
+#     Mac128K.ROM       64 KB Macintosh 128K ROM (checksum 28BA61CE)
 #
-# Four emulator builds exist because BOTH RAM size and speed are COMPILE-time
-# options in Mini vMac, and this project makes claims along both axes: 1 MB is
-# the floor target, and only a 1x build may be quoted for timing.
+# Six emulator builds exist because the MACHINE, its RAM size and its speed are
+# all COMPILE-time options in Mini vMac, and this project makes claims along
+# every one of those axes: 1 MB is the floor target, only a 1x build may be
+# quoted for timing, and the two 512 KB machines differ in their ROM alone.
 #
 # Usage:  tools/vmac/setup.sh        (idempotent; skips what is already there)
 set -e
@@ -109,7 +112,13 @@ fi
 ROM512_URL="https://archive.org/download/mac_rom_archive_-_as_of_8-19-2011/mac_rom_archive_-_as_of_8-19-2011.zip/28BA4E50%20-%20Macintosh-512k.ROM"
 ROM512_SHA=fe6a1ceff5b3eefe32f20efea967cdf8cd4cada291ede040600e7f6c9e2dfc0e
 
+# Apple's own 64 KB ROM from the machine before it, for the A/B that rules the
+# ROM REVISION out: both fail identically, so the Sad Mac is not the 512K's ROM.
+ROM128_URL="https://archive.org/download/mac_rom_archive_-_as_of_8-19-2011/mac_rom_archive_-_as_of_8-19-2011.zip/28BA61CE%20-%20Macintosh-128k.ROM"
+ROM128_SHA=13fe8312cf6167a2bb4351297b48cc1ee29c523b788e58270434742bfeda864c
+
 fetch "$ROM512_URL" Mac512K.ROM "$ROM512_SHA"
+fetch "$ROM128_URL" Mac128K.ROM "$ROM128_SHA"
 
 # ---- build the emulators --------------------------------------------------
 # Mini vMac's setup tool emits a shell script that writes the config headers
@@ -167,6 +176,27 @@ else
       make >/dev/null 2>&1 )
     [ -x mv-512Ke/minivmac ] || { echo "setup: failed to build mv-512Ke" >&2; exit 1; }
     echo "built mv-512Ke/minivmac"
+fi
+
+# A true Macintosh 512K: 512 KB of RAM behind a 64 KB ROM. Nothing routine
+# runs on it — it never reaches the application — and it is built anyway so
+# that the negative can be re-taken rather than quoted (tools/vmac/README.md,
+# *512 KB machines*). Mini vMac has no plain `512K` model: `-m 128K` is the
+# 64K-ROM machine and `-mem 512K` is what makes it a 512K rather than a 128K.
+if [ -x mv-512K/minivmac ]; then
+    echo "have mv-512K/minivmac"
+else
+    rm -rf mv-512K
+    mkdir -p mv-512K
+    tar xzf minivmac.src.tgz -C mv-512K --strip-components=1
+    ( cd mv-512K
+      gcc -o setup_t setup/tool.c
+      ./setup_t -t lx64 -m 128K -mem 512K -speed a -as 0 -bg 1 \
+                -sound 0 -magnify 0 -drives 6 -n "macextract-512K" > setup.sh
+      bash setup.sh >/dev/null
+      make >/dev/null 2>&1 )
+    [ -x mv-512K/minivmac ] || { echo "setup: failed to build mv-512K" >&2; exit 1; }
+    echo "built mv-512K/minivmac"
 fi
 
 echo "setup: ready in $VMAC_HOME"
