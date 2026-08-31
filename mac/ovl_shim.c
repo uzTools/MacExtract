@@ -30,17 +30,58 @@ static uint32_t ovl_host_crc32(uint32_t crc, const uint8_t *p, uint32_t n)
 
 static const OverlayHost gOvlHost = { ovl_host_crc32, NULL, NULL, NULL };
 
+static Handle gOvl;
+static int gOvlTried, gOvlReleased;
+
+/* EAGER, and that is the whole point of this branch. A lazy GetResource has
+ * to touch the application's own disk AFTER the archive has been chosen, and
+ * on the machine this project is designed around — a Mac Plus with one floppy
+ * drive, which "cannot mount two" (DECISIONS.md 2026-08-24) — that disk may
+ * have been swapped for the archive's by then. Loading at launch means the
+ * only disk access happens while the boot disk is certainly in.
+ *
+ * Called from main() before anything is opened. */
+void ovl_preload(void)
+{
+    if (gOvlTried) return;
+    gOvlTried = 1;
+    gOvl = GetResource('OVLY', 128);
+    if (gOvl != NULL && *gOvl != NULL) HLock(gOvl);
+    else gOvl = NULL;
+}
+
+/* Give the 15 KB back once the format says the ciphers cannot be wanted.
+ *
+ * The list is short because two things disqualify a format: it may carry an
+ * encrypted entry, or it is an ENVELOPE whose contents are not yet known — a
+ * .sit.hqx sniffs as BinHex, and releasing on that would strand the StuffIt
+ * inside it. So this pays for LZH, DiskDoubler, Now Compress, SpaceSaver,
+ * SuperDisk! and tar, and NOT for StuffIt, which is the common case.
+ * BRANCH_NOTES.md says why that limit is inherent rather than an oversight. */
+void ovl_release_if_unwanted(UncFormat fmt)
+{
+    switch (fmt) {
+    case UNC_FORMAT_LZH:         case UNC_FORMAT_DISKDOUBLER:
+    case UNC_FORMAT_NOWCOMPRESS: case UNC_FORMAT_SPACESAVER:
+    case UNC_FORMAT_SUPERDISK:   case UNC_FORMAT_TAR:
+        break;
+    default:
+        return;                      /* may encrypt, or may wrap something */
+    }
+    if (gOvl != NULL) {
+        HUnlock(gOvl);
+        ReleaseResource(gOvl);
+        gOvl = NULL;
+        gOvlReleased = 1;
+    }
+}
+
 static OverlayEntry ovl_entry(void)
 {
-    static Handle h;
-    static int tried;
-    if (!tried) {
-        tried = 1;
-        h = GetResource('OVLY', 128);
-        if (h != NULL && *h != NULL) HLock(h);
-        else h = NULL;
-    }
-    return h ? (OverlayEntry)(void *)*h : NULL;
+    /* Never reloads. If it was released the format cannot want it, and a
+     * reload would be the mid-run disk access this design exists to avoid. */
+    if (!gOvlTried) ovl_preload();
+    return gOvl ? (OverlayEntry)(void *)*gOvl : NULL;
 }
 
 #define OVL_CALL(which, gp) (e(&gOvlHost, (which), (gp), NULL))

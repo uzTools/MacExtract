@@ -3188,6 +3188,10 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
          * the layer was — which is what decides whether there is another
          * one under it. */
         extractedAs = unc_sniff(&io);
+#ifdef UNC_AT_OVERLAY
+        { extern void ovl_release_if_unwanted(UncFormat);
+          ovl_release_if_unwanted(extractedAs); }
+#endif
         /* SpaceSaver is the exception to the strip above: it compresses a
          * file IN PLACE and adds no extension, so the whole name is the
          * name and stripping one eats a real ".txt". cli/main.c has said
@@ -3684,6 +3688,9 @@ int main(void)
     short inVol, outVol;
     int ret, entries, errors;
 
+#ifdef UNC_AT_OVERLAY
+    { extern void ovl_preload(void); }
+#endif
     SetApplLimit((Ptr)((long)LMGetApplLimit() - kStackBump));
     MaxApplZone();
     { int i; for (i = 0; i < 12; i++) MoreMasters(); }
@@ -3697,6 +3704,9 @@ int main(void)
     InitCursor();
     FlushEvents(everyEvent, 0);
     gHasWNE = TrapAvailable(_WaitNextEvent);
+#ifdef UNC_AT_OVERLAY
+    { extern void ovl_preload(void); ovl_preload(); }   /* while the boot disk is in */
+#endif
 
     at_status(kAtRunning);   /* "I am alive" — see the kAt* codes above */
 

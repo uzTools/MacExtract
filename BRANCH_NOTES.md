@@ -1,3 +1,70 @@
+# Branch `overlay-eager` — load the overlay at launch, release what cannot be wanted
+
+**Branched from `selective-loading`.** Same overlay mechanism, different
+LIFETIME, for one reason: a lazy `GetResource` touches the application's own
+disk AFTER the archive has been chosen, and on a Mac Plus with one floppy
+drive — which "cannot mount two" (DECISIONS.md 2026-08-24) — that disk may
+have been swapped by then. Loading at launch confines the only disk access to
+a moment when the boot disk is certainly in.
+
+**Verified 2026-08-31 at 1 MB:** encryption still works with the overlay HELD
+(`--password`: *"every entry decrypted"*), and a releasable format, an
+envelope-free terminal one and a held one all extract — LZH, tar and Compact
+Pro, 3/3.
+
+## What it can and cannot give back
+
+**6,140 B, and only for six formats.** Two things disqualify a format from
+release: it may carry an encrypted entry, or it is an ENVELOPE whose contents
+are not yet known.
+
+| | release? |
+|---|---|
+| SIT, SIT5, Compact Pro, PackIt, Zip, ARC | no — may carry encrypted entries |
+| BinHex, MacBinary, AppleSingle, gzip, `.Z`, MIME, uu, btoa, base64 | no — envelopes; a `.sit.hqx` sniffs as BinHex |
+| LZH, DiskDoubler, Now Compress, SpaceSaver, SuperDisk!, tar | **yes** |
+
+**So it does not pay for StuffIt**, which is the common case and the reason
+this project exists.
+
+## The conflict is inherent, not an implementation gap
+
+Freeing the cipher memory and guaranteeing no mid-run disk access are in
+direct opposition unless you know BEFORE extracting whether an entry is
+encrypted. For StuffIt you cannot: encryption is per entry and discovered as
+the entry is read. The engine exposes no per-entry encryption flag; the only
+signal is `UNC_ERR_PASSWORD`, which arrives after the memory would have
+mattered.
+
+Three ways to know, and what each costs:
+
+1. **From the format** — what this branch does. Free, covers six formats.
+2. **From the archive's directory before extracting** — zip's central
+   directory carries an encryption bit per entry, Compact Pro and StuffIt 5
+   have entry tables, and StuffIt classic's archive key announces itself as
+   `MKey` in the resource fork, which the shell already reads. Needs a small
+   PUBLIC API addition and does not work for streamed formats with no
+   directory.
+3. **Lazily, paying one disk access when a password is actually needed** —
+   release before the big allocations, reload if `unc_password` is reached.
+   Unencrypted archives get the memory back with no disk access; encrypted
+   ones pay a read at the moment they are already interrupting the user with
+   a dialog.
+
+**Weigh any of it against the prize, which is 6 KB.** Re-pricing one constant
+in the memory reserve, the same week, was worth **49 KB** (FORMATS.md,
+*Budget*). Extending a public API for six kilobytes is not obviously right.
+
+## The three positions, so the choice is on the table
+
+| | ciphers cost | mid-run disk access |
+|---|---|---|
+| `main` | 6 KB, always | none |
+| `selective-loading` | nothing until needed | **yes, after the archive is chosen** |
+| `overlay-eager` (here) | nothing for six formats, 6 KB otherwise | none |
+
+---
+
 # Branch `selective-loading` — load only the decoder the archive needs
 
 **Status: the loading mechanism is BUILT and PROVEN ON THE MACHINE. The
