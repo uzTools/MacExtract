@@ -63,7 +63,7 @@ demand works and runs on a 1 MB Mac Plus. Two branches keep it —
 `overlay-eager` (the same overlay loaded at launch) — and **neither is
 merged**.
 
-Three measurements decided it: the prize is **6,140 B**, about one archive in
+Three measurements decided it: the prize is **5,988 B**, about one archive in
 922 at the corpus's headroom density, and not one of the archives still out of
 reach; **StuffIt can never be one of the formats it helps**, because an
 encrypted entry is discovered as the entry is read; and the disk dependency

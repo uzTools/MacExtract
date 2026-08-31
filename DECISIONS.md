@@ -10076,12 +10076,24 @@ mechanism rather than as a proposal.
 
 **The evidence, in the order it changed the answer:**
 
-- **The prize is 6,140 B**, for six formats and not for StuffIt. Against a
+- **The prize is 5,988 B**, for six formats and not for StuffIt. Against a
   corpus whose headroom study puts roughly one archive per 6–7 KB of budget,
   that is one archive in 922, and it is not
   `derived-EasyFind.dmg.sit` — neither branch reaches the ones still out.
   For scale, re-pricing one constant in the memory reserve the same week was
   worth 49 KB (FORMATS.md, *Budget*).
+- **It stood at 6,140 B for a day, from a pair of builds that were not the
+  same build** — the resident row a plain build, the overlay row reproducible
+  at no commit on either branch. Both sides from one build at one commit give
+  5,988 B, or 5,720 B if both are autotest builds. Corrected 2026-08-31 while
+  merging main into the branches; every version of it rounds to "about 6 KB",
+  which is exactly why nobody re-measured it. **A figure that cannot change
+  the conclusion is a figure nothing checks.**
+- **And the download does not shrink, it grows.** "7,016 B off the download"
+  was backwards: the `OVLY` resource ships inside the application, so
+  `MacExtract.bin` is 191,104 B against 188,800 B — **2,304 B bigger**. The
+  overlay buys resident heap and pays for it in disk, which is the opposite
+  trade from the one written down.
 - **StuffIt cannot be one of the six, and that is inherent.** A format is
   disqualified if it may carry an encrypted entry, or if it is an envelope
   whose contents are not yet known — a `.sit.hqx` sniffs as BinHex, so
