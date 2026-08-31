@@ -185,6 +185,31 @@ which is a locked `Handle` and therefore writable. `mkoverlay.sh` now refuses
 ("an overlay has no A5 world") was written from theory and was wrong in a way
 that would have corrupted memory silently on the Mac.
 
+## What a sibling branch found, which bears on this one
+
+`overlay-eager` loads the same overlay at launch instead of on demand, to
+avoid touching the application's floppy after an archive has been chosen — on
+a Mac Plus with one drive, which "cannot mount two", that disk may have been
+swapped. It also releases the overlay for the six formats that provably cannot
+want it.
+
+**Two things it established that apply here too.**
+
+**The disk dependency cannot be removed, only moved.** Releasing per archive
+while the application lives per session means a later archive must reload —
+which is the same mid-run disk access, later and less predictably. THIS branch
+pays it on the first encrypted archive; that one pays it on the second.
+
+**And the prize is about ONE archive.** 6,140 B of code, against a corpus
+density of roughly one archive per 6–7 KB of budget near the line
+(FORMATS.md). Neither branch reaches `derived-EasyFind.dmg.sit`.
+
+**Recommendation: merge neither for the 6 KB.** Keep both as a proven
+mechanism with its traps written down — `-mpcrel`, the `.bss`-versus-`.data`
+distinction, the three dispatch tables, the gc-sections correction — so that
+if something later needs tens of kilobytes, the loader exists and nobody has
+to rediscover any of it.
+
 ## What is left
 
 - **`unc_crypt` as the first real overlay.** It has only five external
