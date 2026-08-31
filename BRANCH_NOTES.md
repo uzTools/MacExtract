@@ -150,14 +150,30 @@ of the archive's resource fork), `unc_crypt_sit` (key schedule) and
 | | code | data | budget |
 |---|---|---|---|
 | ciphers linked in | 147,240 B | 32,492 B | 560,860 |
-| ciphers as an overlay | **141,100 B** | 25,476 B | **567,000** |
+| ciphers as an overlay | **141,252 B** | 25,476 B | **567,000** |
 
-**−6,140 B of code**, so ~6 KB of budget, and 7,016 B off the download.
+**−5,988 B of code**, so ~6 KB of budget — and the download GROWS by 2,304 B.
 
-**The budget column is pre-merge** — measured 2026-08-31 before main re-priced
-the stack and the reserve, which moved the shipped budget to 648,100 B
-(FORMATS.md, *Budget*). The −6,140 B is a CODE delta and does not move with it:
-code comes off the budget one byte for one byte, whatever the budget is.
+**Two figures corrected here, both re-measured 2026-08-31.**
+
+*The delta was published as −6,140 B, from a pair that did not match.* The
+resident row is `tools/build_mac.sh`'s plain build; the overlay row reproduces
+at no commit on either overlay branch — 141,216 B before the release fix,
+141,252 B after it, never 141,100 B. Taking both sides from the same build at
+the same commit gives **−5,988 B**, or −5,720 B if both sides are autotest
+builds (141,928 → 136,208). Every version of it rounds to "about 6 KB", which
+is why it survived unquestioned.
+
+*"7,016 B off the download" is backwards.* The `OVLY` resource ships inside
+the application, so shedding 5,988 B of code and adding a 14,996 B blob makes
+`MacExtract.bin` **191,104 B against 188,800 B** — 2,304 B BIGGER. The overlay
+buys resident heap, and it costs disk.
+
+**The merge from main moves neither.** Post-merge the same plain pair is
+147,404 → 141,416 B, −5,988 B to the byte. Code comes off the budget one byte
+for one byte, so the prize is independent of the budget itself — which is what
+makes it comparable across the re-pricings that DID move: the budget column
+above is pre-merge, and FORMATS.md, *Budget*, now says 648,100 B.
 
 **That is far less than `unc_crypt.c`'s 14,674 B, and the gap is the lesson.**
 `--gc-sections` was already collecting every cipher entry point nothing
@@ -214,7 +230,7 @@ while the application lives per session means a later archive must reload —
 which is the same mid-run disk access, later and less predictably. THIS branch
 pays it on the first encrypted archive; that one pays it on the second.
 
-**And the prize is about ONE archive.** 6,140 B of code, against a corpus
+**And the prize is about ONE archive.** 5,988 B of code, against a corpus
 density of roughly one archive per 6–7 KB of budget near the line
 (FORMATS.md). Neither branch reaches `derived-EasyFind.dmg.sit`.
 
