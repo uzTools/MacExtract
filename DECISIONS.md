@@ -175,6 +175,11 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-30 (512 KB, and the machine that cannot be reached) — the RAM was never the boundary
 - 2026-08-30 (a byte buys fewer symbols the further in it sits) — a third off the LZW table, and a fixture back
 - 2026-08-30 (the Desktop file the password phase needed) — a harness reported a working feature as broken, and a bisect agreed with it
+- 2026-08-31 (the overlay that works and is not worth it) — a lifetime argument, and a 6 KB prize
+- 2026-08-31 (the message that failed a successful extraction) — the allocator cannot know which refusals matter
+- 2026-08-31 (the joined archive that was never meant to survive) — a harness expectation, three hours old and already documented
+- 2026-08-31 (the drop the Finder does not make, and the version it does show) — a gesture measured on three Finders
+- 2026-08-31 (the drop, taken) — 128 bytes, one Rez line, and a partition that stopped asking
 
 ---
 
@@ -9956,13 +9961,15 @@ against 122,808 B, a 95,400 B gap, against System files of 181,913 B and
 the system, not by the machine**, and nobody had varied the system.
 
 **The negative was attributed before it was reported**, which is the part worth
-keeping. The 512K boots to a Sad Mac `0F0064` on our System 3.0 floppy. Three
-cheap A/Bs said what that meant: the same ROM with no disk gives the blinking
+keeping. The 512K boots to a Sad Mac `0F0064` on our System 3.0 floppy. Cheap
+A/Bs said what that meant: the same ROM with no disk gives the blinking
 floppy icon and a framebuffer byte-identical to the Mac Plus control, so the
 machine is healthy; Apple's own 128K ROM (`28BA61CE`) and the 512K's
-(`28BA4E50`) fail identically, so it is not the ROM revision. What is left is
-the volume — and the reason that ROM cannot read it is HFS, which arrived with
-its successor.
+(`28BA4E50`) fail identically, so it is not the ROM revision; and a blank
+800 KB HFS volume — same media, same filesystem, no boot blocks — gives the
+no-disk frame rather than the Sad Mac (added 2026-08-31), so the drive reads
+the disk and it is the boot code that dies. What is left is the volume — and
+the reason that ROM cannot boot it is HFS, which arrived with its successor.
 
 **Which codecs survive 512 KB is decided by adaptivity, not by appetite.**
 `derived-PuzzleGetter_0.8.sit` asks for 270,043 B and fits, renegotiating its
@@ -10057,3 +10064,329 @@ none can, they need an X server and minutes per fixture — and `run.py`'s
 is encrypted (FORMATS.md, *Encryption*). So the only check on this path is a
 phase somebody has to run by hand, and between 2026-08-24 and 2026-08-30
 nobody did.
+
+## 2026-08-31 (the overlay that works and is not worth it) — a lifetime argument, and a 6 KB prize
+
+**Claim: loading part of the engine on demand works, and buys about one
+archive.** Two branches carry it, both built and both run on a 1 MB Mac Plus:
+`selective-loading` makes the ciphers an overlay fetched from a resource when
+a format wants them, and `overlay-eager` loads the same overlay at launch
+instead. **Parked, neither merged**, and the branches are kept as a working
+mechanism rather than as a proposal.
+
+**The evidence, in the order it changed the answer:**
+
+- **The prize is 6,140 B**, for six formats and not for StuffIt. Against a
+  corpus whose headroom study puts roughly one archive per 6–7 KB of budget,
+  that is one archive in 922, and it is not
+  `derived-EasyFind.dmg.sit` — neither branch reaches the ones still out.
+  For scale, re-pricing one constant in the memory reserve the same week was
+  worth 49 KB (FORMATS.md, *Budget*).
+- **StuffIt cannot be one of the six, and that is inherent.** A format is
+  disqualified if it may carry an encrypted entry, or if it is an envelope
+  whose contents are not yet known — a `.sit.hqx` sniffs as BinHex, so
+  releasing on the outer format strands the StuffIt inside it. Freeing the
+  memory and guaranteeing no disk access are in direct opposition unless you
+  know before extracting whether an entry is encrypted, and for StuffIt you
+  cannot: it is per entry, discovered as the entry is read, and the only
+  signal is `UNC_ERR_PASSWORD`, which arrives too late.
+- **The disk dependency cannot be removed, only moved.** A lazy `GetResource`
+  touches the application's own floppy AFTER the archive is chosen, and a Mac
+  Plus with one drive may have had it swapped by then. Loading at launch
+  confines that to a moment when the boot disk is certainly in — but the
+  release is per archive while the application lives per session, so a later
+  archive reloads and pays the same access, later and less predictably.
+  `selective-loading` pays it on the first encrypted archive; `overlay-eager`
+  pays it on the second.
+
+**Consequence: an end user trades a disk swap, or a stall, for one archive's
+worth of memory.** That is the wrong side of a trade this project has always
+taken the other way — an archive that will not open beats an archive that
+opens 0.4 s later (FORMATS.md, *Size flags, priced in both currencies*), but
+neither branch OPENS anything new. Scope status: OPEN_ITEMS.md, Part 1.
+
+### The transferable part: a release lifetime is an argument about scope, and it can be wrong silently
+
+`overlay-eager` shipped a bug for one commit that is worth keeping. The
+release ran after each archive's sniff while the "already tried" flag was
+global, so the overlay never reloaded: extract an LZH, then an encrypted
+`.sit` in the same session, and the ciphers were gone — cipher kind cleared,
+the entry failing, **a capability disappearing because of what was opened
+before it**. Not a prompt and not a delay; a silent loss. The reasoning was
+about the wrong scope, and the comment said so plainly: *"if it was released
+the format cannot want it"* is true within one archive and false across a
+session. The fix — allow the reload — concedes the branch's own argument.
+
+**So: if something later needs tens of kilobytes, the loader exists.** Nobody
+should have to rediscover `-mpcrel`, the `.bss`/`.data` distinction, the three
+dispatch tables or the `--gc-sections` correction; `BRANCH_NOTES.md` on either
+branch has them, along with the three ways to know whether an entry is
+encrypted and what each costs.
+
+## 2026-08-31 (the message that failed a successful extraction) — the allocator cannot know which refusals matter
+
+**Claim: a memory shortfall is not a failure, and the shell had been treating
+it as one.** `derived-Troi-ClipSave-Plug-in1.1.sit` extracts **completely** on
+a 1 MB Mac Plus and ended with *"Needs 48K more memory."* Measured through
+`interactive.py`, no segments involved, the harness reporting *phase 2 output
+COMPLETE* in the same run.
+
+**Why it happens.** `mal_alloc` sets `gShortBy` whenever a request exceeds the
+budget, and it has no way to know what the engine will do about it. StuffIt 5's
+inverse BWT asks for `numbytes * 4` **expecting** to be refused on a small
+machine: declined, it builds a sampled occurrence index instead, which is
+slower and byte-identical, and is the whole reason the format fits at 1 MB
+(2026-08-07). So the archives that exercise the designed fallback are exactly
+the ones that were told they had failed.
+
+**The fix is where the knowledge is.** The allocator cannot tell an optional
+request from a required one; the outcome can, because a request that mattered
+leaves an errored entry behind. The message is now gated on
+`errors > 0 || ret != UNC_OK`.
+
+**Consequence, and it is the reusable half:** the shortfall was reported by the
+component that could measure it rather than the one that could interpret it.
+`gShortBy` is a true number — the largest amount by which some request exceeded
+the budget — attached to a sentence it does not support.
+
+### How it was found, which is not how it was looked for
+
+It was found while investigating something else, and the something else was not
+real. OPEN_ITEMS.md carried *"joining a segmented set costs far more memory
+than the same archive whole"*, filed with two numbers: 472,137 B for the
+archive whole, and a refusal 64 KB beyond budget for the same archive joined
+from three parts.
+
+**Those two numbers came from different instruments.** The first is peak heap
+from the autotest replay — what the engine USED. The second is an alert
+reporting `gShortBy` — what it ASKED for and was refused. Nothing was measured
+twice the same way, and the conclusion was drawn from the difference.
+
+Two checks settled it, both cheap and neither needing the emulator first:
+
+- **On Linux, join and whole are identical.** `macextract x --stats` on a
+  three-part set prints two high-water marks — **8,192 B** for the join and
+  **661,173 B** for the inner extraction — and the whole file prints
+  **661,173 B**. The join costs 8 KB and nothing else.
+- **The sizes name their own source.** `derived-Library_ISBN_Barcoder.sit`
+  peaks at 1,683,101 B with memory to spare, and 1,683,101 − 615,348 is the
+  "over a megabyte more" the item reported. That is the transform vector,
+  which exists on both paths.
+
+Then one emulator run: the same archive, whole, through the same UI. It
+extracted and it printed the same message. **The variable was never the
+join.**
+
+**What to take from it:** when two figures disagree, check that they are the
+same measurement before believing the difference. And a withdrawn claim can be
+worth more than it cost — this one was pointing at joining, which few users
+do, while hiding a defect on the path almost every StuffIt 5 user on a small
+Mac takes. BLOCKERS.md, *Withdrawn claims*.
+
+### `gHasWNE` does not mean MultiFinder, and the first fix used it
+
+The advice attached to that message was *"Give MacExtract more in Get Info"*,
+which names a control that does not exist without a partition — wrong on
+precisely the machine this application is designed around. The first attempt
+chose between wordings on `gHasWNE`, reasoning that `WaitNextEvent` is what
+MultiFinder adds.
+
+**It is not.** On System 6.0.8 booted straight into this application, with no
+MultiFinder anywhere on the volume, `TrapAvailable(_WaitNextEvent)` is TRUE —
+the trap is in the System file whether the Process Manager is loaded or not.
+The screenshot that proved the message bug also showed the new wording taking
+the wrong branch, in the same frame.
+
+What answers it is the SHAPE of the heap rather than a trap: an application
+with the machine to itself has a zone reaching most of RAM, one in a partition
+has a zone far smaller than RAM. Both configurations are far from the line —
+~700 KB of a 1 MB MemTop against ~400 KB of 4 MB — and a 512 KB Macintosh
+(~220 KB of 512 KB) is on the correct side too.
+
+## 2026-08-31 (the joined archive that was never meant to survive) — a harness expectation, three hours old and already documented
+
+**Claim: the Macintosh segment join is fine, and the check on it was asking
+for a file the application is supposed to consume.**
+
+`interactive.py --segments` drives the "locate part N" dialog correctly, ends
+on *"Extraction complete."*, and then failed its own byte check with `NOT
+FOUND (50205 B expected)`. It reproduced identically at the commit this
+session started from, so it was not today's memory work — and for a few hours
+it sat in OPEN_ITEMS.md as *"completes and writes nothing where it is
+checked"*, with both readings still open.
+
+**What the volume actually held settles it.** Not the joined `derived-Cal.sit`
+the phase looked for, but its CONTENTS:
+
+    f  DFIL/DMOV     27545         0  Cal 3.02
+    f  TEXT/MACA         0      2739  Cal.Intro
+    f  APPL/C0tl     39884         0  Calendar Tools
+
+Both forks, type and creator intact. The Mac joined three parts, unwrapped the
+joined archive and extracted it. **The shipped application has unwrapped
+envelope chains since 2026-08-14**, so a joined `.sit` is an intermediate that
+never reaches the disk, and a check that looks for it can only fail.
+
+**The lesson was already written down, in the file the fix belongs in.**
+`expected_names()`'s own docstring says a single-level reference *"says a
+chained fixture should leave `boogers152.sit` on the volume, where the
+application leaves the two files inside it — so every phase using this would
+have failed on any chained fixture, in the direction that looks like an
+application bug"*, dated 2026-08-27. Every phase was converted to that helper
+then except this one, which kept its bespoke check and so kept the defect the
+conversion existed to remove. `phase_segments` now uses `expected_names()`
+like the others.
+
+### What it cost, and the part worth transferring
+
+An hour, a worktree bisect against `bba32c5`, and a false entry in
+OPEN_ITEMS.md naming a user-facing failure that did not exist — the second
+time in one session that a phantom defect was filed from an instrument rather
+than from the machine (BLOCKERS.md, *Withdrawn claims*, the segmented-join
+memory row).
+
+**Both had the same shape: a check whose expectation was written before a
+behaviour changed, failing in the direction that looks like an application
+bug.** A harness that is not run for three weeks does not merely go stale, it
+starts LYING, and it lies in the most expensive direction — nobody
+investigates a passing test. This phase's last recorded run was 2026-08-09 and
+the behaviour it mis-describes arrived on 2026-08-14, five days later.
+
+## 2026-08-31 (the drop the Finder does not make, and the version it does show) — a gesture measured on three Finders
+
+Two questions about the Macintosh shell were answered from memory in the same
+session, so both were put on the machine. `tools/vmac/interactive.py --drop`
+drags an archive onto the application's icon and photographs what the Finder
+does, then reads Get Info.
+
+**The drop is a System 7 gesture, and an `FREF` is what enables it.** Six runs,
+one variable at a time, on `derived-ScrollbarPattern.sit` under `mv-4M`:
+
+| system | `FREF` for the type | the file's type | what happened |
+|---|---|---|---|
+| System 3.0 / Finder 5.1 | yes | `SIT!` | icon moved, nothing launched |
+| System 6.0.8 | yes | `SIT!` | icon moved, nothing launched |
+| System 7.0.1 | no | hfsutils' default | icon moved, nothing launched |
+| System 7.0.1 | no | `SIT!` | icon moved, nothing launched |
+| System 7.0.1 | yes | hfsutils' default | icon moved, nothing launched |
+| System 7.0.1 | **yes** | **`SIT!`** | **the application launched** |
+
+So on System 7 the `FREF` is necessary and sufficient, and it is a RESOURCE —
+free in the only currency that is scarce here.
+
+**And `'****'` is a wildcard.** With one `FREF` declaring that type and the
+archive's type set to `'????'` — matching nothing anyone declared — the drop
+launched the application. That matters more here than it would anywhere else:
+this program exists because names and types LIE, its own front door is
+`unc_sniff`, and the files its users have are the ones that arrived as `TEXT`
+(a `.hqx`) or `'????'` (a raw FTP download). An enumeration of `SIT!`, `CPT!`
+and the rest would have made exactly the well-behaved files droppable and
+refused the awkward ones the program is FOR. One line of Rez covers all of
+them.
+
+A single `'*'` is not a wildcard and not even a mistake Rez reports: it
+compiles to the OSType `\0\0\0*` — right-aligned, null-padded, checked in the
+built `FREF` — which matches nothing, and the drop was refused. Below System 7 no arrangement
+of resources produces the gesture at all: it is the Finder that does not have
+it. Which means the ~344 B of code that would read `AppParmHandle` (measured
+by building it and reverting) buys nothing on the floor target, and the pair
+is worth adding only together — a `FREF` without the receiving code makes the
+Finder launch the application and hand it a file it does not look at.
+
+**Neither is committed.** What is committed is the harness, so the next person
+to wonder does not re-derive it.
+
+### The control is the whole experiment
+
+Every frame here is "the icon moved and nothing else happened", which is also
+what a drag that was never delivered looks like — the failure this repository
+keeps meeting, most recently when a mouse harness pressed 140 px from its
+target and photographed a plausible screen (BLOCKERS.md, *a coordinate in a
+vmac harness is right if the run completes*). So each run drags the archive to
+empty space FIRST and photographs that it went there. Without that frame the
+three negatives are worth nothing, and with it they are worth as much as the
+positive.
+
+The first System 7 run was a false negative for a reason worth keeping:
+`mkboot.py --data` copies a data fork and leaves hfsutils' default type, so the
+file was not a `SIT!` at all and the `FREF` under test could not match it. The
+phase now sets the type with `hattrib` — **the subject of the experiment has to
+be the thing the experiment is about**, and a file that merely has the right
+NAME is not.
+
+### And the version
+
+`vers` 1 and 2 shipped earlier the same day with nothing having seen them.
+Get Info displays them **twice on System 6.0.8 and on System 7.0.1** — once
+under the name, once on the `Version:` line — and **System 3.0's "Information
+about MacExtract" has no version line at all**: Kind, Size, Where, Created,
+Modified, Locked, comment box, and nothing else. The System 7 box proves the
+field reads `vers` rather than the file: Get Info on the archive beside it
+says `Version: n/a`.
+
+Both boxes read *"MacExtract 0.29.0"* when they were first photographed,
+because the long string carried the name as well as the number. The box is
+titled "MacExtract Info" and draws the name on the line above, so it said the
+name twice and the version once; the strings are now the version alone, and
+System 6.0.8's box was re-photographed to say so — `MacExtract` on one line,
+`0.29.0` on the next, `Version: 0.29.0` below.
+
+## 2026-08-31 (the drop, taken) — 128 bytes, one Rez line, and a partition that stopped asking
+
+The measurement is the entry above; this is what was done with it.
+
+**The wildcard is documented, not just observed.** Inside Macintosh: Macintosh
+Toolbox Essentials, Finder Interface: *"You can create a file reference
+resource that specifies '****' as the file type to allow users to drag all
+file types--including applications, system extensions, documents, and so on,
+but not including disks or folders--to your application icon."* The same
+chapter says the Finder reads `FREF`s *"in system software versions 7.0 and
+later"*, which is the emulator result in Apple's own words. `'disk'` and
+`'fold'` are the other two wildcards and neither is wanted: this application
+extracts one file.
+
+`'****'` is the right shape here rather than a list of archive types, because
+the files this program is FOR are the ones whose type is wrong — a `.hqx` is
+`TEXT`, a raw download is `'????'` — and an enumeration would have refused
+exactly those. `fType` is read and thrown away: the Finder matched it to
+decide whether to offer the drop, and what the file HOLDS is `unc_sniff`'s
+business.
+
+**128 bytes, and the alternative cost 344.** `AppParmHandle` is read where it
+lives; `CountAppFiles`/`GetAppFiles`/`ClrAppFiles` are glue rather than traps
+in the Multiversal libraries, and linking them costs 216 B more for less —
+`GetAppFiles` also spins forever at index ≥ 2 (`glue.c`, `while(index)` with
+no decrement), which a walk of our own does not. Every document is taken, one
+per pass of the existing loop, so dropping three archives extracts three; the
+loop falls back to Standard File when the list runs out rather than quitting.
+The ratchet in `tools/build_mac.sh` moved 147,296 → 147,424 to pay for it, and
+the 512 KB machine pays those bytes for a gesture its Finder does not have.
+
+Driven end to end on System 7.0.1: a file typed `'????'` dropped on the icon,
+no Open dialog, the destination dialog straight away, *"Extraction complete."*
+and both entries of `derived-ScrollbarPattern.sit` on the desktop behind it.
+
+### The partition that had been asking all along
+
+`SIZE` asked for 4 MB, so a 4 MB Macintosh — a generous one for this program —
+met *"MacExtract prefers 4,096K of memory. 3,089K is available."* on every
+launch. **Nothing here had ever seen it**, because every harness in this
+repository installs the application as the BOOT SHELL, which gets all of
+memory; it turned up in the first Finder launch this project has done on
+System 7, while testing something else entirely. Preferred is now 2 MB, which
+clears the alert with about a megabyte of margin.
+
+**The baseline is the part worth keeping.** The obvious sentence to write was
+"this costs `derived-EasyFind.dmg.sit`, which needs 2,658,721 B" — and it is
+false. Measured at 4 MB preferred, on the same machine, EasyFind is refused
+there too: a 4 MB Macintosh has ~3 MB free, so the partition was never 4 MB
+and the archive never fit. What the change actually costs is archives needing
+between ~1.9 MB and ~3.8 MB on a machine with more than 2 MB free — an 8 MB
+Macintosh, which no emulator build here can boot. The heaviest fixture in the
+sample passes: `derived-Library_ISBN_Barcoder.sit`, byte-exact at a peak of
+1,683,101 B inside the 2 MB partition.
+
+**A cost you cannot measure is not a cost you may assert.** One extra run
+against the OLD value turned a confident regression note into an honest
+"unreachable from here", and it is the same discipline that killed the stack
+watermark: change the thing being measured and see whether the number moves.

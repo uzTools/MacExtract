@@ -114,7 +114,7 @@ restart holding Command and Option, and say yes to rebuilding it.
 
 If you run MultiFinder or System 7, the size in the application's Get Info
 window matters. It asks for 4 MB, runs in as little as 400 KB, and at about
-850 KB every archive in the test sample comes out whole. Below that it still
+800 KB every archive in the test sample comes out whole. Below that it still
 opens everything and lists what is inside; entries too big to fit are named,
 one message each, and the rest extract. If it does run short, it tells you
 how much more to type into that box.

@@ -17,7 +17,8 @@ for 1-bit, 16-colour and 256-colour screens:
 
 Pick an archive, then say where the files go — the archive's own folder is
 the default, so Return means "next to it", and any other disk is a Drive click
-away:
+away. On System 7 and later you can skip the first step and **drop the archive
+on the application's icon** — any file, whatever type it claims to be:
 
 ![Standard File dialog listing archive.sit](docs/screens/1-open.png)
 
@@ -49,7 +50,7 @@ one, because parts are recognised by what is inside them:
 ## Download
 
 **[Latest release](https://github.com/jarreboum/MacExtract/releases/latest)** —
-currently **v0.28.0**. Or take it straight from the tree:
+currently **v0.29.0**. Or take it straight from the tree:
 
 | | |
 |---|---|

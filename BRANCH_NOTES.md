@@ -14,7 +14,7 @@ Pro, 3/3.
 
 ## What it can and cannot give back
 
-**6,140 B, and only for six formats.** Two things disqualify a format from
+**5,988 B, and only for six formats.** Two things disqualify a format from
 release: it may carry an encrypted entry, or it is an ENVELOPE whose contents
 are not yet known.
 
@@ -72,11 +72,14 @@ Three ways to know, and what each costs:
 **And weigh all of it against the prize, which is 6 KB — about ONE archive.**
 The corpus headroom study puts the density near the line at roughly one
 archive per 6–7 KB of budget (FORMATS.md), so 6 KB is one file in 922, and
-not `derived-EasyFind.dmg.sit`, which needs more than 615,348 B by an
-unmeasured margin. Against that: a dispatch, a shim, a loader, a build step, a
+not `derived-EasyFind.dmg.sit`, whose margin is no longer unmeasured: it is
+short by **2,031,101 B** (FORMATS.md, *Budget*), which is nearly two megabytes
+past what a 1 MB Macintosh has at all, so that fixture is decoder-shaped and
+out of reach of any amount of shedding resident code. Against that: a dispatch, a shim, a loader, a build step, a
 new resource type, three branches, and a class of bug that does not exist when
 the code is simply linked in. Re-pricing one constant
-in the memory reserve, the same week, was worth **49 KB** (FORMATS.md,
+in the memory reserve, the same week, was worth **49 KB**, and three such
+re-pricings have since been worth **81,936 B** together (FORMATS.md,
 *Budget*). Extending a public API for six kilobytes is not obviously right.
 
 ## The three positions, so the choice is on the table
@@ -155,10 +158,18 @@ the engine core, the shared codecs, and the envelope readers (`fmt_binhex`,
 `fmt_macbinary`, `fmt_applesingle`) — because a `.sit.hqx` must be unwrapped
 before anyone knows it is a StuffIt archive.
 
-**~103 KB of budget** is the prize, against 598,932 B today. That is three
-times what this author estimated before measuring, and it is the only lever
-large enough to reach `derived-EasyFind.dmg.sit`, which needs more than
-598,932 B on the machine and which neither the flags nor the reserve reached.
+**~103 KB of budget** is the prize, against **648,100 B** today (main,
+2026-08-31; it was 598,932 B when this was measured, and the re-pricings that
+moved it are FORMATS.md, *Budget*). That is three times what this author
+estimated before measuring.
+
+**Withdrawn: "the only lever large enough to reach `derived-EasyFind.dmg.sit`".**
+Written here before that fixture's refusal was priced. It is short by
+**2,031,101 B** — the largest single request it makes, nearly two megabytes
+past what a 1 MB Macintosh has at all, so it is DECODER-shaped and no amount
+of shedding resident code reaches it (FORMATS.md, *Budget*). The prize is
+still ~103 KB; what it buys is more of the corpus near the line, not the
+fixtures that are out.
 
 ## What stands in the way — found by trying it
 
@@ -233,9 +244,30 @@ of the archive's resource fork), `unc_crypt_sit` (key schedule) and
 | | code | data | budget |
 |---|---|---|---|
 | ciphers linked in | 147,240 B | 32,492 B | 560,860 |
-| ciphers as an overlay | **141,100 B** | 25,476 B | **567,000** |
+| ciphers as an overlay | **141,252 B** | 25,476 B | **567,000** |
 
-**−6,140 B of code**, so ~6 KB of budget, and 7,016 B off the download.
+**−5,988 B of code**, so ~6 KB of budget — and the download GROWS by 2,304 B.
+
+**Two figures corrected here, both re-measured 2026-08-31.**
+
+*The delta was published as −6,140 B, from a pair that did not match.* The
+resident row is `tools/build_mac.sh`'s plain build; the overlay row reproduces
+at no commit on this branch — 141,216 B at `7a35327`, 141,252 B at the tip,
+never 141,100 B. Taking both sides from the same build at the same commit
+gives **−5,988 B**, or −5,720 B if both sides are autotest builds
+(141,928 → 136,208). Every version of it rounds to "about 6 KB", which is
+why it survived unquestioned.
+
+*"7,016 B off the download" is backwards.* The `OVLY` resource ships inside
+the application, so shedding 5,988 B of code and adding a 14,996 B blob makes
+`MacExtract.bin` **191,104 B against 188,800 B** — 2,304 B BIGGER. The overlay
+buys resident heap, and it costs disk.
+
+**The merge from main moves neither.** Post-merge the same plain pair is
+147,404 → 141,416 B, −5,988 B to the byte. Code comes off the budget one byte
+for one byte, so the prize is independent of the budget itself — which is what
+makes it comparable across the re-pricings that DID move: the budget column
+above is pre-merge, and FORMATS.md, *Budget*, now says 648,100 B.
 
 **That is far less than `unc_crypt.c`'s 14,674 B, and the gap is the lesson.**
 `--gc-sections` was already collecting every cipher entry point nothing
@@ -245,8 +277,9 @@ for a full per-format split — is therefore optimistic by a factor nobody has
 measured.** Treat them as upper bounds, not forecasts.
 
 **For scale, on the same machine and the same day:** re-pricing one constant
-in the memory reserve was worth **49 KB**; this overlay, with a dispatch, a
-shim, a loader and a build step, is worth **6 KB**.
+in the memory reserve was worth **49 KB**, and three such re-pricings together
+have since been worth **81,936 B** (FORMATS.md, *Budget*); this overlay, with a
+dispatch, a shim, a loader and a build step, is worth **6 KB**.
 
 **Failure to load is handled, not ignored.** Where a signature allows it the
 shim returns `UNC_ERR_MEM`; where it does not, it clears the cipher kind so

@@ -2188,6 +2188,43 @@ set was 147,260 B and the three-flag set is 147,268 B, and both measure
 566,164 B on the machine. Heap allocation is granular; do not read single-digit
 byte differences as budget.
 
+### Where the bytes are, and why the flags are finished
+
+**MEASURED 2026-08-31.** The linked image is **147,276 B** of code sections
+against **32,568 B** of A5 world; only the first costs the engine (*What the
+application costs the engine*). Summed function symbols are **138,686 B**, and
+the remaining ~8.6 KB is Retro68's startup section and padding, not material
+anything here can move.
+
+The biggest functions, `-Os` on a 68000:
+
+| function | bytes |
+|---|---|
+| `ExtractOne.constprop.0` (shell) | 5,884 |
+| `dd_fork` | 5,136 |
+| `unc_spacesaver_extract` | 4,154 |
+| `unc_zip_extract` | 3,492 |
+| `unc_sit_decode_fork` | 2,478 |
+| `unc_arsenic_decode` | 2,344 |
+
+**None of them is a long switch worth flattening, and the reason matters.**
+`dd_fork`'s own dispatch is a few hundred bytes; its 5,136 B is the eleven
+method bodies INLINED into it, because each is called exactly once. Turning
+them back into separate functions is `-fno-inline-functions-called-once`,
+measured at **+2,444 B**. The same goes for `ExtractOne.constprop.0`, whose
+suffix says the compiler already cloned it with its arguments folded in.
+
+**The top 25 functions are ~55 KB of 138 KB**, so there is no single
+structural win here — only many small ones, each with correctness risk against
+a 932-fixture suite, for a few hundred bytes apiece.
+
+**And the functions where the BYTES are are disjoint from the functions where
+the TIME is.** The `UNC_HOT` set — `sit_lzw`, `sit_huffman`,
+`unc_huff_decode`, `unc_canon_decode`, `lzw_code`, `lzw_chain`,
+`unc_lzw_read`, `unc_crc16_arc` — appears nowhere in the table above. So
+shrinking the big ones would cost no measured speed; there is simply not much
+to shrink.
+
 ### Launch
 
 **A kilobyte of code is not a kilobyte of launch time; a RELOCATION is.**
@@ -2211,32 +2248,49 @@ That is why the CODE resource is not segmented (BLOCKERS.md, *Withdrawn
 claims*), and why moving `ss_dict.h` or the StuffIt tables out of the A5 world
 would buy nothing at launch: they are data, so they carry no relocations.
 
-### What the reserve is NOT proven against
+### What the reserve is for, measured at last
 
-**Every reserve figure here measures VOLUME. The reserve's real job is
-CONTIGUITY** — `GetNewDialog` needs one block, not *n* free bytes — and the
-case that would test it is unreachable with the fixtures this project has.
+**The reserve's job is CONTIGUITY, not volume** — `GetNewDialog` needs one
+block, not *n* free bytes — and until 2026-08-31 every figure here measured
+volume. That gap is why the reserve was held at 32 KB against a 13,242 B
+appetite. **It is now measured.** `-D UNC_AT_CONTIG` samples `MaxBlock()` at
+the moment each dialog and alert is created, which is the only moment it
+matters:
 
-Mid-run dialogs only happen on two paths: the password prompt, whose archive
-is 1,622 B and leaves the heap nearly empty, and the "locate part N" prompt,
-which needs a segmented set. **Joining a set costs far more than extracting
-the same archive whole** — `derived-Troi-ClipSave-Plug-in1.1.sit` is 472,137 B
-straight and over 680,000 B joined; `derived-Library_ISBN_Barcoder.sit` is
-559,805 B straight and over 1.6 MB joined — so a big enough archive is REFUSED
-before the heap fills, and the engine never takes what it is allowed. Three
-attempts, three refusals (2026-08-30).
+| run | smallest contiguous block at any dialog | dialogs |
+|---|---|---|
+| password path, **512 KB** machine (122,808 B free heap) | **118,508 B** | 3 |
+| report path, 1 MB | **652,112 B** | 1 |
+| segmented set, 1 MB — the mid-run "locate part N" alert | **637,918 B** | 4 |
 
-**What was established instead:** dialogs opened and were driven with **73,376
-B** and **161,078 B** of free heap, on genuinely loaded heaps rather than the
-near-empty ones the appetite figures come from. Both are far clear of 32 KB.
-And the 512 KB machine has run on a 32 KB reserve since it existed, including
-the password path. **Well supported; not proven at the limit.**
+**Essentially the whole free heap, every time, and the reason is structural:
+no dialog is ever created while the engine holds a big allocation.** The
+progress dialog goes up before extraction begins; a password or "locate part"
+dialog opens BETWEEN entries, after the previous entry's blocks have been
+freed. Contiguity was guarding a case this application's shape does not
+produce.
 
-**A trap in the instrument, which is why it took three tries.**
-`-D UNC_AT_RESERVE` can only see the heap get tight when an allocation
-SUCCEEDS. An engine request over budget is refused and never allocated, so the
-run that fails hardest stresses the heap least and reports a comfortable
-low-water mark. Price the reserve with a job that just barely FITS.
+**So the reserve is 20 KB**, 1.5x the 13,242 B the shell and Toolbox have
+ever been measured using, and the 12,288 B released went to the engine
+(*Budget*).
+
+**And what it covers is narrower than it looks.** The progress dialog is
+created BEFORE the budget is taken, so it is already out of `FreeMem()` and
+the reserve never pays for it; what is left is only what the shell allocates
+DURING extraction — File Manager buffers, and a dialog that opens mid-run. On
+a heavy 1 MB extraction (`derived-Troi-ClipSave-Plug-in1.1.sit`, engine peak
+472,137 B) the shell's share at the tightest moment measured **−33 B**:
+nothing beyond the engine, to within the skew between the two samples. The
+13,242 B worst case comes from a lighter run where a dialog was up. Verified byte-exact at that size on all four tiers — 69/69 at
+1 MB, 66/69 at 512 KB, 69/69 on System 7.0.1, 20/20 on Mac OS 9.2 — and the
+password and report dialog phases driven end to end, the password one on the
+512 KB machine where the heap is tightest.
+
+**What is still not proven, and it is no longer contiguity:** every figure
+above comes from an emulator with a stripped System Folder, no INITs and a
+RAM-backed disk. A real Plus with a Chooser extension, a floppy's File
+Manager buffers or an AppleShare volume costs more, and that is the volume
+question rather than the block question. MANUAL_TESTS.md carries it.
 
 ### The Linux budget check under-reads the Mac
 
@@ -2287,11 +2341,23 @@ enforces a ratchet on code size for this reason.
 
 ### Budget
 
-**What a 1 MB Mac Plus actually leaves the engine is 615,348 B** — measured
-**2026-08-30** with `run.py --mem 1M -D UNC_AT_BUDGET`, which reports
-`FreeMem()` at **648,084 B** and the shell's reserve at a flat 32 KB.
+**What a 1 MB Mac Plus actually leaves the engine is 648,100 B** — measured
+**2026-08-31** with `run.py --mem 1M -D UNC_AT_BUDGET`, which reports
+`FreeMem()` at **668,580 B** and the shell's reserve at a flat 20 KB.
 
-**The reserve was 80 KB, is now a flat 32 KB, and 80 KB was never priced.**
+**It has moved three times in two days, every time by re-pricing a constant
+nobody had measured, and none of them cost a millisecond:** 566,164 →
+615,348 B when the reserve went flat (49,184 B), → 635,812 B when the stack
+was priced (20,464 B, *Stack*), → **648,100 B** when the reserve itself was
+re-priced twice against the things it is actually for (12,288 B, below).
+Together **81,936 B**, against the 780 B a full day of compiler size flags bought at
+0.82 % of every extraction (*Size flags, priced in both currencies*) — **a
+hundred times as much, for nothing**. The stack cut
+was made, reverted the same day on a bad instrument, and re-made once a
+second instrument disagreed with the first — BLOCKERS.md, *Withdrawn claims*,
+has that round trip and what it cost.
+
+**The reserve was 80 KB, is now a flat 20 KB, and 80 KB was never priced.**
 `kMemReserveMax` equals `kMemReserveMin`, so the quarter-of-free rule no longer
 bites anywhere. **49 KB of budget recovered at no cost in speed** — for scale,
 a day of compiler size flags bought 780 B and cost 0.82 % of every extraction
@@ -2323,12 +2389,36 @@ fitting on a 1 MB Mac Plus in that window**: `derived-Domino_v1.4.sit`,
 566,009 B. They were refused per entry, which is the designed behaviour, and
 none is in the on-Mac sample, so no tier result changed.
 
-**They fit again as of 2026-08-30**, after 788 B of measured compiler size
-flags took code from 148,048 to 147,260 B (`mac/CMakeLists.txt` lists what was
-tried and rejected) and the budget from 565,176 to **566,164 B**, measured on
-the machine. **The margin is 155 bytes** — the whole corpus fits, and 156 B of
-new code would undo it. `tools/build_mac.sh` ratchets code size for exactly
-that reason.
+**Two of the three fit again, and that was settled ON THE MACHINE rather than
+under a Linux cap** — the claim that all three did was withdrawn once already
+for resting on the proxy (BLOCKERS.md, *Withdrawn claims*). Replayed at 1 MB on
+2026-08-31, at both budgets:
+
+| fixture | on a 1 MB Mac Plus | peak |
+|---|---|---|
+| `derived-Domino_v1.4.sit` | **extracts**, 2 files byte-exact | 614,018 B |
+| `derived-XMenu.dmg.sit` | **extracts**, 1 file byte-exact | 600,692 B |
+| `derived-EasyFind.dmg.sit` | **still refused**, per entry | reached 600,500 B |
+
+**What EasyFind would take is 2,031,101 B more** (`-D UNC_AT_BUDGET`,
+2026-08-31; `gRefusedWhy` = 1, so budget and not fragmentation). That is the
+largest single request it makes, and it is nearly two megabytes past what a
+1 MB Macintosh has at all — so this fixture is DECODER-shaped, not
+budget-shaped, and no re-pricing of a shell constant reaches it. Note also
+that it is refused at 627,620 B on the Mac while `run_budget.py` bisects its
+Linux minimum at 565,062 B: a gap of over 62 KB, against the 16 KB and 33 KB
+measured on the other two. **The Linux proxy's error is not a constant** and
+this is the third fixture to say so (*The Linux budget check under-reads the
+Mac*).
+
+So the corpus is not all inside a 1 MB Mac Plus, and **Domino clears the
+shipped budget by 13,602 bytes**. `tools/build_mac.sh` ratchets code size
+because every byte of it comes straight off that margin.
+
+All three were run twice, at 615,348 B and at 627,620 B, and **all three peaks
+are identical to the byte** — 614,018, 600,500 and 600,692. A 12 KB larger
+budget changed no outcome and no peak, which is the same result the flat
+reserve gave: no decoder simply spends what it is offered.
 
 **It was 678,392 B everywhere until then, and that was 91 KB too generous.**
 Two fixtures now agree with the Mac to 48 bytes at 597,036 (*Floor target
@@ -2346,32 +2436,39 @@ index got 25 % smaller and moved the ISBN fixture onto a different rung on
 Linux but not on the Mac. **A cross-validation that agrees is not evidence
 that its input is right when the thing it drives is quantised.**
 
-**And 597,036 B is the System 6 whole-machine case, which is the ROOMY
-one.** Under MultiFinder and on System 7 and later the application gets a
-PARTITION, and `macextract.r` declares a 400 KB minimum — a user who accepts
-that in Get Info, or a machine that cannot spare the 4 MB preferred size,
-gets it. Measured 2026-08-24 on System 7.0.1 with the preferred size built
-down to 400 KB, `-D UNC_AT_BUDGET`: **`FreeMem()` 212,056 B, budget
-130,136 B.** The partition also holds the application's own ~150 KB of code
-and its 32 KB stack, which is where the rest of the 400 KB goes.
+**And the whole-machine case is the ROOMY one.** Under MultiFinder and on
+System 7 and later the application gets a PARTITION, and `macextract.r`
+declares a 400 KB minimum — a user who accepts that in Get Info, or a machine
+that cannot spare the 4 MB preferred size, gets it. Measured 2026-08-24 on
+System 7.0.1 with the preferred size built down to 400 KB, `-D UNC_AT_BUDGET`:
+**`FreeMem()` 212,056 B**. The partition also holds the application's own
+~150 KB of code and its 32 KB stack, which is where the rest of the 400 KB
+goes.
 
-**So there are two budgets, four and a half times apart**, and a figure
+**So there are two budgets, three and a half times apart**, and a figure
 measured on the roomy one says nothing about the tight one:
 
 | | free | reserve | budget |
 |---|---|---|---|
-| System 6.0.8, 1 MB, no MultiFinder (whole machine) | 678,956 B | 80 KB (cap) | **597,036 B** |
-| System 7 / MultiFinder at the declared 400 KB minimum | 211,960 B | 53,014 B | **158,970 B** |
+| System 6.0.8, 1 MB, no MultiFinder (whole machine) | 668,580 B | 20 KB | **648,100 B** (measured) |
+| System 7 / MultiFinder at the declared 400 KB minimum | 211,960 B | 20 KB | **191,480 B** (derived) |
 
-Both are `FreeMem()` less the reserve, taken when extraction begins.
+Both are `FreeMem()` less the reserve, taken when extraction begins. The
+second row is **arithmetic, not a measurement**: the free figure is measured
+and the reserve is now a constant, but no run has reported that budget since
+the reserve went flat. It was **158,970 B** under the quarter rule.
+**What would settle it:** one `-D UNC_AT_BUDGET` run on System 7.0.1 with the
+preferred size built down to 400 KB, which is how the 212,056 B came.
 
-**The reserve is a QUARTER of free, clamped to [32 KB, 80 KB]** — it was a
-flat 80 KB until 2026-08-24. On the roomy tier a quarter exceeds the cap, so
-that tier is unchanged and every figure measured on it stands. In the
-minimum partition a flat 80 KB was **38 % of the whole heap** held back from
-a machine with none to spare; the quarter rule makes it 53,014 B and the
-budget 130,136 → **158,970 B**, which is what takes Now Compress from
-opening none of its fixtures there to opening all three (*Budget sweep*).
+**The reserve is a flat 20 KB, was 24 KB and before that a flat 32 KB on 2026-08-30/31, a quarter of
+free clamped to [32 KB, 80 KB] between 2026-08-24 and 2026-08-30, and a flat
+80 KB before that.** Each step was a re-pricing of the same unmeasured constant, and each
+went entirely to the engine: 80 KB → the quarter rule was worth 28,834 B in
+the minimum partition, which is what took Now Compress from opening none of
+its fixtures there to opening all three (*Budget sweep*); the quarter rule →
+a flat 32 KB is worth 49,184 B on a 1 MB Mac Plus, and 32 → 20 KB another
+12,288 B once contiguity, and then what the reserve actually pays for, were
+measured rather than assumed.
 
 **What the reserve is worth was measured, for the first time.** A probe
 recording the lowest `FreeMem()` seen during writes, over all 67 fixtures of
@@ -2388,10 +2485,11 @@ engine holds its peak. MANUAL_TESTS.md carries it.
 
 **`kMemReserve` cannot be traded for speed** (derived from the above, and it
 closes PLANNED_WORK.md's proposal to try): the next `target` rung for the
-slowest fixture needs a 650,222 B peak, so the reserve would have to fall
-from 80 KB to under 28 KB to reach it. That is headroom the Toolbox and File
-Manager use during output writes, on the one machine nothing here can test on
-real hardware. Whatever the reserve is worth, it is not a rung.
+slowest fixture needs a 650,222 B peak, and a 1 MB Mac Plus has **648,084 B**
+free before any reserve at all. The 2026-08-30 re-pricing spent the whole
+argument — the reserve fell 80 KB → 20 KB and the rung is still out of reach
+by more than the reserve now is. Whatever the reserve is worth, it is not a
+rung.
 
 ### How low it goes
 
@@ -2401,16 +2499,20 @@ rather than sampled:
 
 | | budget | partition |
 |---|---|---|
-| every archive at least OPENS — entries named, folders made, each failure per entry | **27,596 B** | ~252 KB |
-| every fixture EXTRACTS FULLY — nothing budget-limited at all | **566,009 B** | **~826 KB** |
+| every archive at least OPENS — entries named, folders made, each failure per entry | **27,596 B** | ~223 KB |
+| every fixture EXTRACTS FULLY — nothing budget-limited at all | **566,009 B** | **~798 KB** |
 
-The partition column is `budget + reserve + 197,640 B`, and that overhead —
-the application's own code, its 32 KB stack and the A5 world — is measured,
-not modelled: 409,600 − 211,960 at a 400 KB partition and 870,400 − 672,760
-at an 850 KB one, **197,640 both times**.
+The partition column is `budget + reserve + overhead`, where the overhead —
+the application's own code, its stack and the A5 world — was measured at
+**197,640 B**, not modelled: 409,600 − 211,960 at a 400 KB partition and
+870,400 − 672,760 at an 850 KB one, the same both times. **That measurement
+was taken with a 32 KB stack**; the stack is 12 KB since 2026-08-31, so the
+overhead is **177,176 B** and both partition figures fall by 20,464 B.
+Derived, not re-measured — the two budget floors either side of it are
+measured, and the arithmetic between them is `SetApplLimit`.
 
-**So: give it about 850 KB in Get Info and everything in the corpus comes
-out whole.** At the declared 400 KB minimum every archive still opens and
+**So: give it about 800 KB in Get Info and everything in the corpus comes
+out whole** — it was 850 KB until the stack was re-priced. At the declared 400 KB minimum every archive still opens and
 lists; 16 of 31 StuffIt 5 fixtures and two others fail per entry, with a
 message naming each.
 
@@ -2514,13 +2616,85 @@ and the call graph comes from the relocations in the linked objects
 | deepest chain in the engine | 6,664 B (`unc_dd_extract` → `dd_fork` → `dd_ddn`) | **3,386 B** |
 | Now Compress chain | 5,632 B | ~1,400 B |
 | largest single frame | 3,740 B (`dd_fork`) | **2,352 B** (`ars_index_build`) |
+| largest frame in the SHELL | — | **1,480 B** (`ExtractOne`) |
 
-The 6,664 B chain **exceeded CLAUDE.md's 4 KB call-depth rule by 66 %**, for
-months, in code that ships and passes on a real 1 MB Mac Plus. It never came
-near the machine: `mac/macextract_mac.c` runs
-`SetApplLimit(LMGetApplLimit() - kStackBump)` with `kStackBump` = 24 KB, so
-the shell has **32 KB of stack**, not the 8 KB default. The rule is what keeps
-the engine portable to a host that did not ask for more.
+#### What the stack actually uses, measured two ways
+
+**The static bound above is not the number the machine needs**, because the
+Toolbox and the File Manager run on this stack too and no `-fstack-usage` pass
+sees them. `-D UNC_AT_STACK` reports two independent instruments, and it is
+worth saying why two: the first one on its own was wrong.
+
+- **SAMPLE** — the stack POINTER, taken in the progress pump, the sink write
+  path, the allocator, and inside the Dialog Manager's own filter and
+  user-item procs, where the Toolbox's frames are below us. Exact where it is
+  taken, blind between.
+- **PAINT** — the region between ApplLimit and the stack base, painted at
+  launch and read back. Sees everywhere, including inside a Toolbox call, but
+  cannot tell a stack write from anything else.
+
+**Swept across seven stack sizes on a 1 MB Mac Plus, 2026-08-31**
+(`UNC_STACK_BUMP_KB` rebuilds at any size, so this is a sweep and not a
+sample), on `derived-Library_ISBN_Barcoder.sit`, the heaviest fixture there
+is:
+
+| stack | SAMPLE | PAINT | floor left untouched |
+|---|---|---|---|
+| 10,172 B | **5,200** | 5,604 | 4,568 |
+| 12,220 B | **5,200** | 6,828 | 5,392 |
+| 16,316 B | **5,200** | 9,288 | 7,028 |
+| 20,412 B | **5,200** | 15,568 | 4,844 |
+| 24,508 B | **5,200** | 18,840 | 5,668 |
+| 32,700 B | **5,200** | 25,392 | 7,308 |
+
+**SAMPLE never moves and PAINT tracks the size of the region**, which is what
+settles it: a requirement does not change when the thing holding it changes.
+Peak heap is 559,805 B at every one of those sizes, so the extraction did the
+same work each time.
+
+**Sweeping DOWN is what set the size**, and it is the more useful direction:
+PAINT *converges on* SAMPLE as the room runs out — 9,288 → 6,828 → 5,604
+against a constant 5,200 — so whatever was helping itself to the spare room
+is squeezed out and what remains is the real requirement, **about 5,600 B**.
+Through the real UI — Standard File (sampled via `SFPGetFile`'s dialog hook,
+which is the Toolbox's own modal loop), the progress dialog and the password
+dialog — SAMPLE is **3,134 B** and does not move either, at 10 KB or at
+32 KB, and the password dialog drove correctly at every size down to 10 KB.
+
+**So `kStackBump` is 4 KB, a 12 KB stack** — 2.1x the deepest write ever
+observed — and **20,464 B** has gone to the engine (*Budget*). Verified
+byte-exact at exactly that size on every tier: **69/69 at 1 MB**, 512 KB,
+System 7 and Mac OS 9.
+
+**PAINT is not a stack measurement, and this is how that was established.**
+Its lowest dirty word sits a near-constant 5–7 KB above ApplLimit at every
+stack size. The stack is anchored at the TOP of the region, so if this were
+stack use the constant would be its depth from the top; instead the constant
+is its offset from ApplLimit. The heap is not the writer either — the
+application zone's `bkLim` and `ApplLimit` are the same address, measured, so
+the heap stops exactly where the region begins. *Hypothesis, not measured:* a
+ROM routine sizing a stack buffer from the space available, which would
+explain the anchoring and the tracking together, and which is safe under a
+smaller stack by construction because such a routine takes less when there is
+less. The word itself holds `0x0040C602`, inside the Mac Plus ROM's address
+range.
+
+**What neither instrument can see:** a path no fixture took. SAMPLE is blind
+between its sampling points — Standard File's own modal loop has no filter of
+ours in it, and the File Manager's frames during `FSWrite` are below
+`sink_write`'s sample. So this is read WITH the static table above, never
+instead of it, and the 3.8x margin is what covers the gap.
+
+**Three earlier metrics were wrong, and the ways they failed transfer.**
+Scanning up from ApplLimit for the first dirty long, and down from the stack
+base for the first clean one, both gave the same answer for a 3 KB BinHex
+file and a 34-entry StuffIt 5 archive — because a frame is made by MOVING the
+stack pointer, so a frame holding an uninitialised buffer leaves clean longs
+inside the region it used and dirty longs sit below anything else that writes
+there. A third took the lowest dirty long in the top quarter and saturated at
+the quarter boundary as soon as the stack was made smaller than four times
+the depth. **A single transition finds a hole, not a boundary**, and a metric
+with a threshold baked into it reports the threshold.
 
 The deepest chain the sixth join scheme adds is **2,796 B**, measured
 the same way on 2026-08-29 and second only to the DiskDoubler one:
@@ -3009,6 +3183,11 @@ read-back. The 2026-08-21 run is the first on this tier since M12, M13 and M14,
 so it is the first that includes DiskDoubler, Now Compress, ARC and uuencode
 here; every one passed, 5.1 s a fixture, one boot each:
 
+**Re-run 2026-08-31 at the 20 KB stack: 69/69 again**, which is the tier
+that closes the stack change — System 7 is where the Process Manager honours
+the `SIZE` partition, so it exercises a different memory arrangement from the
+whole-machine tiers (*Stack*).
+
     tools/vmac/run.py --system Sys7.img --list tools/vmac/sample.txt
 
 Engine peak heap is **identical to System 6.0.8 at the same memory size on
@@ -3246,15 +3425,18 @@ Sys30.img`, ~133 s of emulated Mac Plus time on
 
 ### 512 KB machines: the RAM is enough, the ROM is not
 
-**A Macintosh 512Ke — 512 KB, the Plus's 128K ROM — runs it: 65/69 under
-System 3.0** (**2026-08-30**,
-`sys30.py --emu mv-512Ke`; 64/69 before the LZW bound below recovered
-`popper-1.7.tar.Z` the same day). The four that do not pass fail as the design
-says they must, per entry and not per archive:
-`derived-Library_ISBN_Barcoder.sit` writes 33 of its 34 entries with one entry
-errored, `derived-Troi-ClipSave-Plug-in1.1.sit` 11 of 13 with two, and
+**A Macintosh 512Ke — 512 KB, the Plus's 128K ROM — runs it: 66/69 under
+System 3.0** (**2026-08-31**, `sys30.py --emu mv-512Ke`; 65/69 before the
+reserve went flat, 64/69 before the LZW bound below recovered
+`popper-1.7.tar.Z`). The three that do not pass fail as the design says they
+must, per entry and not per archive: `derived-Library_ISBN_Barcoder.sit`
+writes 33 of its 34 entries with one entry errored, and
 `derived-a2basic.dmg.sit` and `synth-dd-m5.dd` are single-entry archives whose
-one entry is refused. **The budget is 163,656 B** of a 218,208 B free heap,
+one entry is refused. Cutting the stack to 20 KB the same day added another
+12,272 B and moved none of the three, which is what their requirements
+predict — 247,687 B, 405,520 B and one ISBN entry, against a budget that
+1:1 arithmetic puts at 198,716 B (**derived**; the 186,444 B above is the
+measured one, taken before the stack changed). **The budget is 163,656 B** of a 218,208 B free heap,
 measured on the machine (`sys30.py --emu mv-512Ke -D UNC_AT_BUDGET`, slots
 swapped per `tools/vmac/README.md`); the shell holds the other 54,552 B.
 `synth-dd-m5.dd` is the clean illustration: DiskDoubler method 5 asks for one
@@ -3290,12 +3472,18 @@ launching an application unloads it, measured at **12 bytes** between a System
 6.0.8 boot-shell launch (122,808 B free) and a double-click launch from a
 booted Finder (122,796 B).
 
-The reserve explains the rest: `budget = FreeMem() - FreeMem()/4`, clamped to
-32–80 KB. At 218,208 B the quarter is 54,552 B and uncapped, so System 3.0's
-budget is 163,656 B; at 122,808 B the quarter falls under the 32 KB floor and
-System 6.0.8's is 90,040 B. **On this machine a kilobyte of application costs
-the engine three quarters of a kilobyte** — on a 1 MB machine the reserve caps
-out and the exchange is 1:1. The
+The reserve explains the rest, and it is now a flat 20 KB on every tier:
+`budget = FreeMem() - 20,480`. **Measured 2026-08-31** on the 512Ke under
+System 3.0 with `-D UNC_AT_BUDGET`, while the reserve was still 32 KB:
+`FreeMem()` **219,212 B**, budget **186,444 B**, exactly 32,768 apart; the
+same machine gains 8,192 B and another 20,464 B from the stack. Under the quarter rule that budget was
+163,656 B, and the 22,788 B difference is what recovered
+`derived-Troi-ClipSave-Plug-in1.1.sit` — it had missed by 5,222 bytes and now
+writes all 13 entries at a 184,590 B peak, taking this tier from 65/69 to
+**66/69**. Under System 6.0.8 the same machine has 122,808 B free, where the
+quarter always fell under the 32 KB floor, so that tier is unchanged at 58/69.
+**A kilobyte of application costs the engine a kilobyte here too**, now that
+the reserve is a constant rather than a fraction. The
 six extra are `a2ps.V4.3.tar.Z`, `derived-PuzzleGetter_0.8.sit` and four
 self-extracting archives (`derived-DD_Expand.sea`,
 `derived-Expand_Now_1.0.1.sea`, `derived-LHA_Expander_1.0.3.sea`,
@@ -3308,10 +3496,15 @@ keeping a Finder that System 6 had to give up.
 RAM is not why.** Booted with no disk it behaves exactly like the Mac Plus:
 blinking floppy icon, framebuffer byte-identical to the Plus control. Booted
 from the System 3.0 floppy it dies at startup, **Sad Mac `0F0064`**, with
-Apple's 128K ROM and with the 512K's own `28BA4E50` alike — so it is neither
-the RAM nor the ROM revision, it is the volume. *Hypothesis, not measured:*
-that ROM predates HFS, and System Tools 1.0's boot code calls traps it does
-not have, which is the exception class the code reports. Two of this
+Apple's 128K ROM (`28BA61CE`) and with the 512K's own `28BA4E50` alike — so it
+is neither the RAM nor the ROM revision, it is what the volume RUNS. Not the
+media either: a blank 800 KB HFS volume, same size and same filesystem but no
+boot blocks, leaves the frame byte-identical to the no-disk one, so the drive
+reads 800K and declines to boot it rather than dying on it. Only a volume
+whose boot blocks execute Sad Macs. *Hypothesis, not measured:* that ROM
+predates HFS, and System Tools 1.0's boot code calls traps it does not have,
+which is the exception class the code reports. Re-taken **2026-08-31** from a
+scratch `mv-512K` build; `tools/vmac/README.md` has the three commands. Two of this
 application's own dependencies are 128K-ROM-and-later anyway —
 `NGetTrapAddress` in `TrapAvailable`, and every file operation going through
 HFS parameter blocks — so a 64K-ROM machine is out on the ROM regardless of
