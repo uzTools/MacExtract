@@ -89,6 +89,15 @@ fetch "$SYS_URL"  System6.hfv     "$SYS_SHA"
 fetch "$SYS7_URL" Sys7.img       "$SYS7_SHA"
 fetch "$SYS30_URL" Sys30.img     "$SYS30_SHA"
 
+# System 1.1 (April 1984) on a 400K MFS floppy: the file system a 64K ROM has.
+# A true Macintosh 512K Sad Macs on every HFS volume and boots this one, which
+# is what makes the 64K-ROM negative measurable rather than asserted
+# (FORMATS.md, *A true Macintosh 512K*).
+SYS11_URL="https://archive.org/download/system-1.1_apr1984/System%20Disk.img"
+SYS11_SHA=b0a35cfb484dd91c70e5a5a16e382f1d1ec41b87b5f8ebeaddd8da643c8ce5ef
+
+fetch "$SYS11_URL" Sys11.img     "$SYS11_SHA"
+
 if [ -f vMac.ROM ] && check vMac.ROM "$ROM_SHA"; then
     echo "have vMac.ROM"
 else

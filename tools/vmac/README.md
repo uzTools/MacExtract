@@ -23,19 +23,48 @@ paths, not just a different splash screen. Run the System 7 tier at 4 MB.
 mv-512Ke` is **66/69** (2026-08-31; 65/69 before the reserve went flat,
 64/69 before the LZW bound), `run.py --emu mv-512Ke --system System6.hfv`
 is 58/69
-(FORMATS.md, *512 KB machines*). A **true** Macintosh 512K has a 64 KB ROM,
-no HFS and none of the traps this application needs. It never reaches the
-application, so no driver here boots it; `setup.sh` builds `mv-512K` and
-fetches both 64 KB ROMs anyway, so that the negative can be re-taken rather
-than quoted. Three commands are the whole of it — each wants a display, and
-each is watched by eye:
+(FORMATS.md, *512 KB machines*).
 
-    $V/mv-512K/minivmac -r $V/Mac512K.ROM $V/Sys30.img   # Sad Mac 0F0064
-    $V/mv-512K/minivmac -r $V/Mac128K.ROM $V/Sys30.img   # identical: not the ROM
-    $V/mv-512K/minivmac -r $V/Mac512K.ROM                # blinking floppy: healthy
+**A true Macintosh 512K — `mv-512K`, a 64 KB ROM — boots, and this
+application bombs on it.** It cannot read HFS, which is the whole of the
+negative; nothing here drives it as a tier, and `setup.sh` builds it and
+fetches both 64 KB ROMs so the frames can be re-taken rather than quoted.
+Everything below wants a display and is watched by eye. `$V` is
+`$UNC_VMAC_HOME`.
 
-`$V` is `$UNC_VMAC_HOME`. A blank 800 KB HFS volume in place of `Sys30.img`
-gives the third frame, not the first, which is how the media was ruled out.
+    $V/mv-512K/minivmac -r $V/Mac512K.ROM $V/Sys30.img    # HFS:  Sad Mac 0F0064
+    $V/mv-512K/minivmac -r $V/Mac128K.ROM $V/Sys30.img    # the other 64K ROM: identical
+    $V/mv-512K/minivmac -r $V/Mac512K.ROM                 # no disk: blinking floppy, healthy
+    $V/mv-512K/minivmac -r $V/Mac512K.ROM $V/Sys11.img    # MFS:  boots to Finder 1.1
+
+**`mkmfs.py` writes the MFS volumes**, because Retro68's `.dsk` is always
+800K HFS. It builds, lists and extracts, and `--shell` rewrites the boot
+blocks the way `mkboot.py` does for HFS — which works here, since System 1.1
+reads that field and System 3.0 does not:
+
+    mkmfs.py $V/AppMFS.img --name MacExtract dist/MacExtract.bin
+    mkmfs.py --list $V/AppMFS.img
+    mkmfs.py --extract System $V/Sys11.img /tmp/System11.bin
+    mkmfs.py $V/TrapBoot.img --boot $V/Sys11.img --shell TrapTest \
+             --name TrapTest /tmp/System11.bin build/traptest/TrapTest.bin
+
+A volume with no `Desktop` file makes the Finder offer "minor repairs" on
+first open; click OK and it rebuilds one. Getting System 3.0 onto MFS is the
+same two steps through `hcopy -m`, and it boots:
+
+    hmount Sys30.img; hcd "System Folder"; hcopy -m System /tmp/System30.bin
+    mkmfs.py $V/Sys30Boot.img --boot $V/Sys11.img --name "System Tools" \
+             /tmp/System30.bin /tmp/Finder30.bin
+
+**`traptest/` is the minimal reproduction** for what the 64K ROM actually
+lacks: it paints a mark, makes one call, paints the next, and never returns —
+a probe that exits has its marks erased by the desktop repaint before a
+screenshot can be taken. Build it by hand, put it on a volume as the boot
+shell, and read the marks:
+
+    cmake -B build/traptest -S tools/vmac/traptest \
+          -DCMAKE_TOOLCHAIN_FILE=$RETRO68/m68k-apple-macos/cmake/retro68.toolchain.cmake
+    cmake --build build/traptest
 
 **System 3.0 has its own driver, `sys30.py`, and `run.py --system Sys30.img`
 does NOT work.** That system ignores the boot blocks' shell name, so

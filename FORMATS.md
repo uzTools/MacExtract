@@ -3492,23 +3492,52 @@ two systems are 11 entries at 163,332 B against 6 entries at 89,613 B: the
 1986 system leaves the engine ~74 KB more than System 6 does, while also
 keeping a Finder that System 6 had to give up.
 
-**A true Macintosh 512K — 64 KB of ROM — cannot be reached at all, and the
-RAM is not why.** Booted with no disk it behaves exactly like the Mac Plus:
-blinking floppy icon, framebuffer byte-identical to the Plus control. Booted
-from the System 3.0 floppy it dies at startup, **Sad Mac `0F0064`**, with
-Apple's 128K ROM (`28BA61CE`) and with the 512K's own `28BA4E50` alike — so it
-is neither the RAM nor the ROM revision, it is what the volume RUNS. Not the
-media either: a blank 800 KB HFS volume, same size and same filesystem but no
-boot blocks, leaves the frame byte-identical to the no-disk one, so the drive
-reads 800K and declines to boot it rather than dying on it. Only a volume
-whose boot blocks execute Sad Macs. *Hypothesis, not measured:* that ROM
-predates HFS, and System Tools 1.0's boot code calls traps it does not have,
-which is the exception class the code reports. Re-taken **2026-08-31** from a
-scratch `mv-512K` build; `tools/vmac/README.md` has the three commands. Two of this
-application's own dependencies are 128K-ROM-and-later anyway —
-`NGetTrapAddress` in `TrapAvailable`, and every file operation going through
-HFS parameter blocks — so a 64K-ROM machine is out on the ROM regardless of
-how the disk question resolves.
+### A true Macintosh 512K: the machine boots, the application bombs
+
+**A 64 KB ROM cannot read HFS, and that was the whole of "cannot be reached at
+all"** — a claim withdrawn 2026-08-31 (BLOCKERS.md) after the one A/B nobody
+had run. On HFS the machine dies at startup, **Sad Mac `0F0064`**, with
+Apple's 128K ROM (`28BA61CE`) and the 512K's own `28BA4E50` alike, so it is
+neither the RAM nor the ROM revision; a blank 800 KB HFS volume with no boot
+blocks leaves the frame byte-identical to the no-disk one, so the drive reads
+800K and declines to boot it rather than dying on it, and what fails is the
+boot code. On **MFS** the same machine boots normally:
+
+| volume | result on `mv-512K` (64 KB ROM, 512 KB of RAM) |
+|---|---|
+| `Sys30.img` — Apple's 800K HFS System 3.0 floppy | Sad Mac `0F0064` |
+| `Sys11.img` — Apple's 400K MFS System 1.1 floppy | boots to Finder 1.1 |
+| `Sys11clone.img` — the same two files, volume rebuilt by `mkmfs.py` | boots to Finder 1.1 |
+| `Sys30Boot.img` — System 3.0 + Finder 5.1 lifted out of `Sys30.img` onto MFS | **boots the floor system** |
+
+**The application launches there, and bombs: `ID = 03`.** `mkmfs.py` writes a
+400K MFS volume holding `dist/MacExtract.bin`; the Finder mounts it, shows the
+application's own icon, and a double-click gets a bomb box within seconds —
+the same `ID = 03` under System 1.1 and under System 3.0, so the System is not
+the variable and the machine is.
+
+**Both stated reasons for the ROM verdict were wrong.** `tools/vmac/traptest`
+paints a mark, makes one call, paints the next mark, and runs as the boot
+shell so that no Finder is in the way. On the 512K it paints three marks and
+stops:
+
+| call | 64 KB ROM |
+|---|---|
+| `NGetTrapAddress` (what `TrapAvailable` uses), twice | returns |
+| `PBHGetVInfoSync` — an HFS parameter block | returns |
+| `PBGetCatInfoSync` | **bomb, `ID = 12`, unimplemented core routine** |
+
+So `TrapAvailable` is not the blocker, and neither is "every file operation
+going through HFS parameter blocks". What a 64K ROM does not have is the
+`_HFSDispatch` selector behind `PBGetCatInfo`, which this application uses in
+five places to walk a directory and to size a file. The verdict is unchanged
+and now measured: **a 64K-ROM Macintosh cannot run this.** Why the application
+itself stops at `ID = 03` instead of reaching `ID = 12` is *not identified*.
+
+One harness fact fell out of it: **System 1.1 honours the boot blocks' shell
+name** — `mkmfs.py --shell TrapTest` launched the probe on a volume with no
+Finder on it at all — which is the opposite of System 3.0, and is why that
+probe is deterministic where a double-click is not (*System 3.0 tier*).
 
 **One thing behaves differently, and it is the System rather than this
 application: Cmd-. does not cancel Standard File on System 3.0.** The frame

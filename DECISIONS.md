@@ -180,6 +180,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-31 (the joined archive that was never meant to survive) — a harness expectation, three hours old and already documented
 - 2026-08-31 (the drop the Finder does not make, and the version it does show) — a gesture measured on three Finders
 - 2026-08-31 (the drop, taken) — 128 bytes, one Rez line, and a partition that stopped asking
+- 2026-08-31 (the medium, not the machine) — the Macintosh 512K boots, and both reasons it could not were wrong
 
 ---
 
@@ -10402,3 +10403,47 @@ sample passes: `derived-Library_ISBN_Barcoder.sit`, byte-exact at a peak of
 against the OLD value turned a confident regression note into an honest
 "unreachable from here", and it is the same discipline that killed the stack
 watermark: change the thing being measured and see whether the number moves.
+
+
+## 2026-08-31 (the medium, not the machine) — the Macintosh 512K boots, and both reasons it could not were wrong
+
+**Claim: "a true Macintosh 512K cannot be reached at all" was a claim about
+HFS.** That machine boots Apple's 400K MFS System 1.1 floppy to the Finder,
+and boots System 3.0 and Finder 5.1 — the floor system — off an MFS volume
+built here. It then launches this application and bombs, `ID = 03`
+(FORMATS.md, *A true Macintosh 512K*).
+
+**The negative was one A/B short, and the missing axis was the one the
+conclusion named.** Yesterday's three A/Bs varied the ROM revision, the RAM
+and the presence of a disk; all three said "healthy machine", and the entry
+concluded "it is the volume". Nobody then varied the volume. A negative whose
+evidence never touches the variable it blames is worth exactly one more
+experiment, and this one cost a download and a boot.
+
+**What stopped that experiment being run was a sentence, not the work.** The
+same entry added that the application is "out on the ROM regardless of how the
+disk question resolves", naming `NGetTrapAddress` and HFS parameter blocks —
+written from the shape of the code rather than from a run. It is false in both
+halves: `tools/vmac/traptest` returns from `NGetTrapAddress` twice and from
+`PBHGetVInfoSync` on a 64K ROM, and bombs at `PBGetCatInfoSync` with `ID = 12`,
+unimplemented core routine. The verdict survives — this application cannot run
+on a 64K ROM, because `PBGetCatInfo` is how it walks a directory — but a
+conclusion propped up by two false premises is one nobody re-tests. **A
+"regardless" is a claim that something need not be measured; treat it as the
+most suspicious word in an entry.**
+
+**Retro68 cannot write the volume, so the volume is written here.**
+`--cc name.dsk` calls libhfs and always emits an 800K HFS image — the one
+thing that ROM refuses. `tools/vmac/mkmfs.py` builds, lists and extracts from
+400K MFS volumes: structure from Inside Macintosh Volume II, "Data
+Organization on Volumes"; the 400K geometry read off an Apple-initialized
+volume, because the book gives the format and not the parameters. It was
+validated before it was trusted — first by listing Apple's own System 1.1 disk
+(ten files, every fork chain terminating), then by rebuilding that disk from
+its own extracted files and booting the rebuild.
+
+**One thing the probe cost nothing to learn: hold the screen.** The first
+`traptest` painted its marks and returned, and the screenshots showed an empty
+desktop — at emulator speed the System repaints before any frame can be taken,
+so a probe that exits has erased its own evidence. `for (;;)` is the fix, and
+the same trap will be there for the next probe.

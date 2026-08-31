@@ -143,7 +143,7 @@ them comparable at all. The full capability table and the unrounded figures are 
 
 | | |
 |---|---|
-| Minimum | System 3.0, 68000, **512 KB of RAM** — a Macintosh 512Ke, or a Plus with the system it shipped with in January 1986 |
+| Minimum | System 3.0, 68000, **512 KB of RAM** — a Macintosh 512Ke, or a Plus with the system it shipped with in January 1986. A 64K-ROM Macintosh (the 128K and the true 512K) is out: it boots, and the application bombs on it |
 | For everything | **1 MB** — see the StuffIt 5 note below |
 | Also runs on | System 6, System 7, Mac OS 8 and 9, PowerPC via the built-in 68k emulator |
 | Disk | one 800K floppy |
