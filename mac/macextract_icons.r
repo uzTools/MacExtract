@@ -209,3 +209,38 @@ resource 'BNDL' (128) {
 data 'MExt' (0, "MacExtract") {
     $"0A4D616345787472616374"
 };
+
+/* The version the FINDER shows, and the only place a user meets a version
+   number without a command line. 'vers' 1 is the file's own version — Get
+   Info's "Version:" line, and the Version column in a System 7 list view;
+   'vers' 2 is the version of the package the file belongs to, which for a
+   one-file distribution is the same number.
+
+   Costs the application nothing: no code here opens these, so they are read
+   by the Finder out of the resource fork and never enter this application's
+   heap (BLOCKERS.md, the ballast row — only CODE is charged to the engine's
+   budget).
+
+   WHICH Finders display it is NOT measured here. System 7 and later do;
+   whether Finder 5.1 under System 3.0 has a version line at all is open.
+
+   The four numeric bytes are for programmatic comparison and are not what
+   is displayed. Byte 2 carries the minor and bug-fix numbers as one BCD
+   digit each (Multiverse.r declares the layout; the stage constants are its
+   own names), so a minor of 29 does not fit and 0x29 is written for a reader
+   that takes the byte whole. The STRINGS carry the real number, and
+   tools/check_docs.py holds both of them against UNC_VERSION — this file is
+   the fourth place the version is written, after include/macextract.h,
+   README.md and dist/README.txt. */
+
+resource 'vers' (1, "MacExtract") {
+    0x00, 0x29, release, 0x00, verUS,
+    "0.29.0",
+    "MacExtract 0.29.0"
+};
+
+resource 'vers' (2, "MacExtract") {
+    0x00, 0x29, release, 0x00, verUS,
+    "0.29.0",
+    "MacExtract 0.29.0"
+};

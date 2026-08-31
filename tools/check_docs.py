@@ -11,10 +11,12 @@ Four of them, all cheap enough to run first in ci.sh:
 2. No document cites another document by line number. Line numbers drift
    without anyone noticing; CLAUDE.md requires citing the section by name.
    Source files (`foo.c:41`) are fine - only `*.md:NN` is checked.
-3. The version agrees in all three places it is written: UNC_VERSION in
+3. The version agrees in all four places it is written: UNC_VERSION in
    include/macextract.h (the source of truth, which `macextract --version`
-   prints), the download section of README.md, and the first line of
-   dist/README.txt, which make_dist.sh generates from the header. That
+   prints), the download section of README.md, the first line of
+   dist/README.txt, which make_dist.sh generates from the header, and the
+   two 'vers' resources in mac/macextract_icons.r, which are what the
+   Finder's Get Info shows and which nothing on this machine reads. That
    constant sat at "0.4.0" through four releases because nothing read it
    and nothing checked it; a reader who sees a stale version on the
    release page now knows the publish step did not run, which is the one
@@ -82,11 +84,13 @@ def check_index(fix):
 
 
 VERSION_RE = re.compile(r'#define UNC_VERSION "([0-9][^"]*)"')
+VERS_RE = re.compile(r"resource 'vers' \((\d+)[^)]*\)\s*\{(.*?)\};",
+                     re.DOTALL)
 
 
 def check_version():
-    """UNC_VERSION, README.md's download section and dist/README.txt's
-    first line must agree."""
+    """UNC_VERSION, README.md's download section, dist/README.txt's first
+    line and the Macintosh 'vers' resources must agree."""
     bad = []
     header = (ROOT / "include" / "macextract.h").read_text()
     m = VERSION_RE.search(header)
@@ -104,6 +108,31 @@ def check_version():
         if f"v{ver}" not in first:
             bad.append(f"dist/README.txt says {first!r}, not v{ver} — "
                        f"run tools/make_dist.sh")
+
+    # The 'vers' resources are what the Finder's Get Info shows, and nothing
+    # in the application reads them — so a stale one is invisible on this
+    # machine and wrong on every Macintosh. Both strings of both resources
+    # are held against UNC_VERSION; the numeric bytes are not, because the
+    # field cannot express a minor of 29 (mac/macextract_icons.r).
+    rez = ROOT / "mac" / "macextract_icons.r"
+    found = 0
+    for rid, body in VERS_RE.findall(rez.read_text()):
+        found += 1
+        strs = re.findall(r'"([^"]*)"', body)
+        if len(strs) != 2:
+            bad.append(f"mac/macextract_icons.r: 'vers' ({rid}) has "
+                       f"{len(strs)} strings, expected 2")
+            continue
+        short, long_ = strs
+        if short != ver:
+            bad.append(f"mac/macextract_icons.r: 'vers' ({rid}) short string "
+                       f"is {short!r}, not {ver!r}")
+        if ver not in long_:
+            bad.append(f"mac/macextract_icons.r: 'vers' ({rid}) long string "
+                       f"is {long_!r}, which does not carry {ver!r}")
+    if found != 2:
+        bad.append(f"mac/macextract_icons.r: {found} 'vers' resources, "
+                   f"expected 2 (ids 1 and 2)")
     return bad
 
 
