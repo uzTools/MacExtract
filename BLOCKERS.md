@@ -4,8 +4,6 @@
 
 **No open blockers.** The engine and Linux CLI were never affected by anything
 in this file. The Retro68 Mac shell runs and extracts byte-exact on every
-system the project claims: The engine and Linux CLI were never affected by anything
-in this file. The Retro68 Mac shell runs and extracts byte-exact on every
 system the project claims:
 
 | tier | result |
