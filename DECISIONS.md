@@ -188,6 +188,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-01 (the search, not the reference) — Apple Archive, and what rewriting a probe actually buys
 - 2026-09-01 (the reader was in the sentence) — feeding SuperDisk!'s own extractor a stream we wrote, and one hypothesis that did not survive it
 - 2026-09-01 (the machine that is too small) — a 128K Macintosh, and a status row measured on the other machine
+- 2026-09-01 (no hotspot, twenty-three decoders) — where the application's code is, and two instruments that said otherwise
 
 ---
 
@@ -10834,3 +10835,40 @@ discussion in this repository starts from — would have measured the zone's
 starting size on both machines and called it a tie. **Ask what the failing
 code actually requests, then measure that**, which is the same rule as pricing
 a tolerance against something other than our own output.
+
+## 2026-09-01 (no hotspot, twenty-three decoders) — where the application's code is, and two instruments that said otherwise
+
+**Claim: the application is large because of some one thing.** It is not.
+147,568 B of `CODE`, of which **59.3 % is twenty-three format decoders**, the
+largest of them 8,860 B; the largest single file is the Macintosh shell at
+17,358 B and the two largest functions are ~5.1 KB each (FORMATS.md, *Where
+the code is*). Nothing in the binary is worth more than about 6 % of it, which
+is what "thirty-odd formats in one binary" costs when it is measured rather
+than guessed at.
+
+**The two cheap instruments both lie, in the same direction.** Summing
+`m68k-apple-macos-size` over the objects gives 178,696 B — 21 % high, because
+`--gc-sections` drops what nothing calls. Counting every `.text` and
+`.rodata` input section in the linker map gives 179,561 B, because **Retro68
+places `.rodata` in the A5 world**, so read-only tables are not in a `CODE`
+resource at all. Only the sections the map puts under a `.code*` OUTPUT
+section answer the question the budget asks, and `tools/code_map.py` checks
+its own total against `size` so a future toolchain change cannot quietly
+re-break it.
+
+**That second wrong answer is the useful one.** 32,077 B of tables — the
+SpaceSaver dictionary at 9,701 B, the cipher S-boxes, the fixed inflate
+tables — live outside `CODE` already. The ballast experiment had established
+that data is free (*What the application costs the engine*); this says WHY,
+and closes the follow-up question it always attracts: there is no large table
+hiding inside the code figure waiting to be moved out.
+
+**And it prices the parked overlay work.** The 5,988 B that
+`selective-loading` buys is the ciphers, which are 7,480 B of code, 5.1 % of
+the binary — so the branch got most of what its chosen payload was worth, and
+the reason the prize is small is that the payload is small. Every other
+candidate is a decoder worth 2.5–8.9 KB, and each brings the eligibility
+problem that entry has: an envelope does not know what is inside it, and
+StuffIt discovers encryption per entry. **A bigger prize needs a bigger
+payload, which means segmenting the decoders as a set rather than promoting
+one of them** — a different question from the one those branches answered.

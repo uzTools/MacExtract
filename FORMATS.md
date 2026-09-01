@@ -2385,6 +2385,39 @@ not in C.** A dialog defined in a `DITL` costs the engine nothing; the same
 dialog built in code costs its own size on every extraction. `tools/build_mac.sh`
 enforces a ratchet on code size for this reason.
 
+### Where the code is
+
+**147,568 B of `CODE`, and there is no hotspot in it.** MEASURED 2026-09-01
+from the linker map, `tools/code_map.py` (which says how, and checks itself
+against `size`; 74 B of link fill):
+
+| | bytes | share |
+|---|---|---|
+| Macintosh shell — UI, File Manager, memory | 17,358 | 11.8 % |
+| **format decoders, 23 files** | **87,508** | **59.3 %** |
+| shared codec machinery — Huffman, LZW, LZ, BWT | 12,564 | 8.5 % |
+| deflate (zip + gzip) | 7,442 | 5.0 % |
+| engine core, util, segment joining | 9,720 | 6.6 % |
+| encryption: ciphers and key schedules | 7,480 | 5.1 % |
+| Retro68 runtime and libc glue | 5,422 | 3.7 % |
+
+The largest single file is the shell at 17,358 B; the largest decoder is
+`fmt_dd` at 8,860 B, and the largest two FUNCTIONS are 5,136 B and 5,114 B —
+3.5 % each. Eleven decoders together make up 16,342 B. The size is the format
+count, not any one format.
+
+**A further 32,077 B of read-only tables is outside `CODE` altogether**, in
+the A5 world: `ss_dict0` (9,701 B), the cipher S-boxes, the fixed inflate
+tables. That is the linker-level form of *What the application costs the
+engine* above, and it means there is no large table hiding inside the figure
+that could be moved out to buy budget.
+
+**Two ways of counting this are wrong**, both by enough to change a decision:
+summing `size` over the objects gives 178,696 B, because `--gc-sections`
+drops 17 % of it, and counting every `.text`/`.rodata` input section gives
+179,561 B, because Retro68 places `.rodata` in the A5 world. Only the map's
+`.code*` output sections answer the question the budget asks.
+
 ### Budget
 
 **What a 1 MB Mac Plus actually leaves the engine is 648,100 B** — measured
