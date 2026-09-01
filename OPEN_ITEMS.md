@@ -152,8 +152,8 @@ on either branch.
 
 ## `CODE` segmentation is measured and not adopted
 
-**78,320 B of budget GRANTED at 1 MB, from `mac/segments.map` and no source
-change** (FORMATS.md, *Segmenting the CODE*). `derived-Domino_v1.4.sit`
+**78,320 B of budget GRANTED at 1 MB, from a segment map on the branch
+`code-segments`, no source change** (FORMATS.md, *Segmenting the CODE*). `derived-Domino_v1.4.sit`
 extracts byte-exact holding 677,591 B, 29,789 B more than the entire
 unsegmented budget, so the memory is real — but the sniff then loads a 55,104 B
 segment out of the same heap, and that run finished about 5 KB from a `NewPtr`

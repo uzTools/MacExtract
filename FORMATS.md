@@ -2422,14 +2422,15 @@ drops 17 % of it, and counting every `.text`/`.rodata` input section gives
 
 **The Segment Loader gives back 78,320 B of budget for a configuration file
 and no source change.** MEASURED 2026-09-01 at 1 MB on System 6.0.8, both
-sides built and run in one session with `-D UNC_AT_BUDGET` (a figure taken
+sides built and run in one session with `-D UNC_AT_BUDGET`, on the branch
+`code-segments` — the map is not in this build (a figure taken
 from two builds that were not the same build cost this project a day once —
 DECISIONS.md 2026-08-31, *the overlay that works and is not worth it*):
 
 | build | budget |
 |---|---|
 | one `CODE` segment, as shipped | 647,802 B |
-| `mac/segments.map`, six segments | **726,122 B** |
+| the branch `code-segments`, six segments | **726,122 B** |
 
 `CODE` 2 falls from 142,152 B to 39,432 B, and the rest becomes Archives
 55,104, Text 18,912, Deflate 15,188, Crypt 7,560 and Sets 6,356. The jump

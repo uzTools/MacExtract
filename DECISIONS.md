@@ -10898,7 +10898,7 @@ branches were built on that premise and parked because the prize was 5,988 B
 (*the overlay that works and is not worth it*). The premise was wrong: classic
 Mac OS has done this since 1984, Retro68 supports it, and the application had
 been shipping as one 142,152 B segment because nothing had asked. A segment
-map — `mac/segments.map`, six families, no source change — grants
+map — six families, no source change, on the branch `code-segments` — grants
 **78,320 B more budget at 1 MB** with the whole feature set intact
 (FORMATS.md, *Segmenting the CODE*).
 
@@ -10954,6 +10954,7 @@ behaviour — for a `NewPtr` failure at an unpredictable moment.
 calls `UnloadSeg`, and the Segment Loader will ask for the application's disk
 if a one-floppy Mac Plus has had it swapped — the same disk-access trade that
 parked the overlay branches, now on the shipping path rather than an opt-in
-one. The map is committed so the measurement can be re-taken; adopting it is a
-tier re-run away, and that is a decision with evidence behind it rather than a
+one. The map lives on `code-segments` with its own `BRANCH_NOTES.md`, so the
+measurement can be re-taken rather than remembered; adopting it is a tier
+re-run away, and that is a decision with evidence behind it rather than a
 guess.
