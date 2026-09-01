@@ -329,6 +329,16 @@ only part of the restore path that can be checked offline.
 ./ci.sh          # full matrix; must be green before every commit
 ```
 
+**A suite run by hand needs a `make` first, and `ci.sh` is why.** Its second
+step is `make clean`, which is `rm -rf $(BUILD)` with `BUILD ?= build`; every
+build after it is redirected to `build/san`, `build/ars`, `build/rel`,
+`build/m32`, `build/off32` or cmake's `build/mac`, and **nothing ever rebuilds
+the default target**. So a green `ci.sh` leaves no `build/macextract`, and the
+next `tools/run_*.py --macextract build/macextract` dies with
+`FileNotFoundError` before it runs a single check — which looks nothing like a
+suite that failed, and briefly got blamed on `make_dist.sh` on 2026-09-01
+before either half was measured.
+
 ## M9 additions
 
 4. **Envelope unwrap tests** (`tools/run_unwrap.py`, in CI): chained
