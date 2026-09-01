@@ -3508,13 +3508,21 @@ boot code. On **MFS** the same machine boots normally:
 | `Sys30.img` — Apple's 800K HFS System 3.0 floppy | Sad Mac `0F0064` |
 | `Sys11.img` — Apple's 400K MFS System 1.1 floppy | boots to Finder 1.1 |
 | `Sys11clone.img` — the same two files, volume rebuilt by `mkmfs.py` | boots to Finder 1.1 |
-| `Sys30Boot.img` — System 3.0 + Finder 5.1 lifted out of `Sys30.img` onto MFS, with `Sys30.img`'s own boot blocks | **boots the floor system** |
+| `Sys30Boot.img` — System 3.0 + Finder 5.1 lifted out of `Sys30.img` onto MFS, with `Sys30.img`'s own boot blocks | boots the floor system |
+| `Sys30MFS.img` — **the 400K MFS floppy Apple shipped System 3.0 on**, volume "System Software" | **boots the floor system**, and is what `setup.sh` fetches |
 
-**The application launches there, and bombs: `ID = 03`.** `mkmfs.py` writes a
-400K MFS volume holding `dist/MacExtract.bin`; the Finder mounts it, shows the
-application's own icon, and a double-click gets a bomb box within seconds —
-the same `ID = 03` under System 1.1 and under System 3.0, so the System is not
-the variable and the machine is.
+Apple's own MFS disk is the one to use, and `setup.sh` gets it by unpacking
+Macintosh Garden's `System_3.x.sit` with this repository's own CLI. Its System
+file is **140,299 B against the 800K HFS disk's 181,913 B** — the same version,
+41,614 B smaller, because the MFS build carries no HFS.
+
+**The application launches there, and bombs: `ID = 03`.** Three
+configurations, one result: double-clicked from an MFS volume under System
+1.1, double-clicked under System 3.0, and launched as the boot shell — named
+`Finder` — off Apple's own 400K System 3.0 disk, with no Finder on the volume
+at all. The Finder mounts the application's volume and draws its icon; the
+bomb box comes within seconds of the launch. The System is not the variable
+and the machine is.
 
 **Both stated reasons for the ROM verdict were wrong.** `tools/vmac/traptest`
 paints a mark, makes one call, paints the next mark, and never returns. Both

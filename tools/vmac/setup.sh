@@ -98,6 +98,31 @@ SYS11_SHA=b0a35cfb484dd91c70e5a5a16e382f1d1ec41b87b5f8ebeaddd8da643c8ce5ef
 
 fetch "$SYS11_URL" Sys11.img     "$SYS11_SHA"
 
+# The same System 3.0 the HFS tiers run, on the 400K MFS floppy Apple also
+# shipped it on — so the 64K-ROM machine gets the floor system rather than a
+# 1984 one. Macintosh Garden carries the three System 3.x disks inside a
+# StuffIt 5 archive, which this harness unpacks with the engine the repository
+# exists to provide.
+SYS3X_URL="https://old.mac.gdn/apps/System_3.x.sit"
+SYS3X_SHA=231cd304849aa5511be8c5fa4cfb61b50ebcb066535c41e22714d46796e3f82a
+SYS30MFS_SHA=4e2ad4e9872dccaa54acbafd2c1561d69db8aa9f802b886b87e94a46e95ab842
+
+if [ -f Sys30MFS.img ] && check Sys30MFS.img "$SYS30MFS_SHA"; then
+    echo "have Sys30MFS.img"
+else
+    fetch "$SYS3X_URL" System_3.x.sit "$SYS3X_SHA"
+    make -C "$REPO" BUILD=build/rel build/rel/macextract >/dev/null \
+        || { echo "setup: cannot build the CLI to unpack System_3.x.sit" >&2
+             exit 1; }
+    rm -rf s3x && mkdir s3x
+    "$REPO"/build/rel/macextract x System_3.x.sit -o s3x >/dev/null
+    mv "s3x/System 3/System 3.0.dsk" Sys30MFS.img
+    rm -rf s3x
+    check Sys30MFS.img "$SYS30MFS_SHA" || {
+        echo "setup: System 3.0.dsk SHA-256 mismatch" >&2; exit 1; }
+    echo "extracted Sys30MFS.img"
+fi
+
 if [ -f vMac.ROM ] && check vMac.ROM "$ROM_SHA"; then
     echo "have vMac.ROM"
 else

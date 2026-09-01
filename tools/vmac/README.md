@@ -44,10 +44,12 @@ Everything below wants a display and is watched by eye. `$V` is
     mkmfs.py --list $V/AppMFS.img
     mkmfs.py --extract System $V/Sys11.img /tmp/System11.bin
 
-**Use System 3.0, not System 1.1.** 3.0 is the floor this project tests
-everywhere else, and it boots the 64K-ROM machine off MFS with its own boot
-blocks. Lift its System and Finder out with `hcopy -m` and hand them to
-`mkmfs.py`:
+**Use System 3.0, not System 1.1**, and use Apple's own MFS disk:
+`setup.sh` fetches `Sys30MFS.img` by unpacking Macintosh Garden's
+`System_3.x.sit` with this repository's CLI, and it boots the 64K-ROM machine
+straight off. A volume built here from `Sys30.img`'s HFS copies boots too, if
+a disk with different contents is ever wanted — `hcopy -m` lifts the files out
+and the boot blocks come from the same disk:
 
     hmount Sys30.img; hcd "System Folder"
     hcopy -m System /tmp/System30.bin; hcopy -m Finder /tmp/Finder30.bin
@@ -58,8 +60,9 @@ To launch something without a Finder in the frame, put it on as `Finder`:
 System 3.0 ignores the boot blocks' shell name on MFS just as it does on HFS,
 so `--shell` is for System 1.1, which is the one system here that reads it.
 
-    mkmfs.py $V/TrapBoot30.img --boot $V/Sys30.img --name "System Tools" \
-             /tmp/System30.bin build/traptest/TrapTest.bin:Finder
+    mkmfs.py --extract System $V/Sys30MFS.img /tmp/System30mfs.bin
+    mkmfs.py $V/TrapBoot30.img --boot $V/Sys30MFS.img --name "System Software" \
+             /tmp/System30mfs.bin build/traptest/TrapTest.bin:Finder
 
 A volume with no `Desktop` file makes the Finder offer "minor repairs" on
 first open; click OK and it rebuilds one.
