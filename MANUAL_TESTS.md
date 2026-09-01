@@ -297,13 +297,15 @@ read as the branch working:
 | configuration | status |
 |---|---|
 | 64K ROM, floppies only | **starts, interface works, cannot extract** — a real archive bombs `ID = 12` on an HFS call. Measured under emulation |
-| 64K ROM **with an HD20 and its driver** | **unknown, and the reason this section exists** |
+| 64K ROM **with an HD20 and its driver** | **unknown, and the reason this section exists.** Apple says the HFS is there: the HD20 start-up software "contains a device driver for this drive and the hierarchical (128K ROM) version of the File Manager" (Inside Macintosh IV, *The Floppy Disk Interface*) — so the call that bombs should exist on that machine |
 | 64K ROM with the `Hard Disk 20` file but no drive | unknown; under emulation that file hangs the machine at an empty dialog, which is probably the driver hunting for hardware Mini vMac does not have — *hypothesis* |
 
 So the test is: put `dist/MacExtract.bin` on an **MFS floppy** —
 `tools/vmac/mkmfs.py` builds one, or copy it across on any Mac that reads
 both — boot a Macintosh 128K or 512K **with a Hard Disk 20 attached**, open an
-archive and extract it to the HD20. Record: does it extract; if it bombs, the
+archive and extract it to the HD20. An 800K HFS floppy is fair game too on
+such a machine, since the same start-up software drives an external
+double-sided drive attached through the HD20. Record: does it extract; if it bombs, the
 ID and what was on screen; and what the extracted files' sizes and dates look
 like beside the same archive extracted anywhere else.
 
