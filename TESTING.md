@@ -334,10 +334,15 @@ step is `make clean`, which is `rm -rf $(BUILD)` with `BUILD ?= build`; every
 build after it is redirected to `build/san`, `build/ars`, `build/rel`,
 `build/m32`, `build/off32` or cmake's `build/mac`, and **nothing ever rebuilds
 the default target**. So a green `ci.sh` leaves no `build/macextract`, and the
-next `tools/run_*.py --macextract build/macextract` dies with
-`FileNotFoundError` before it runs a single check — which looks nothing like a
-suite that failed, and briefly got blamed on `make_dist.sh` on 2026-09-01
-before either half was measured.
+next `tools/run_*.py --macextract build/macextract` has nothing to run.
+
+Most suites say so — `no CLI at <path>`, exit 1 — and the ones that do not
+raise `FileNotFoundError` before a single check, which looks nothing like a
+suite that failed. That is what happened on 2026-09-01, in the two suites that
+lacked the guard; both have it now, and it was briefly blamed on
+`make_dist.sh` before either half was measured. **If a suite dies with a
+traceback rather than a message, check for the binary before believing
+anything about the suite.**
 
 ## M9 additions
 
