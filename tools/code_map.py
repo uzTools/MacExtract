@@ -21,8 +21,10 @@ section, and reports the rest separately.
     cmake --build /tmp/macmap -- -j"$(nproc)"
     tools/code_map.py /tmp/mac.map
 
-The total it prints must equal `m68k-apple-macos-size`'s text column to within
-a few bytes of link fill; it says so, and says nothing else if it does not.
+Pass `--expect` the text column of `m68k-apple-macos-size` and it prints
+nothing at all unless the two agree to within 512 B: a table published under
+a warning is a table published, and the warning goes to stderr where a
+pipeline drops it.
 """
 import argparse
 import collections
@@ -101,6 +103,16 @@ def main():
     if not code:
         raise SystemExit("code_map: no .code output sections in that map")
     total = sum(code.values())
+
+    # Checked BEFORE anything is printed, and fatal. A tool that prints a
+    # table and then says not to quote it has published the table: stdout is
+    # what gets pasted into a document, and the warning was on stderr.
+    if args.expect is not None and abs(args.expect - total) > 512:
+        print("code_map: attributed %d B against size(1)'s %d B, a gap of "
+              "%d B. The map's layout has changed and this attribution is "
+              "wrong; no table printed."
+              % (total, args.expect, args.expect - total), file=sys.stderr)
+        return 1
     named = {n for _, names in GROUPS for n in names}
     named |= {n for n in code if n.endswith("[lib]")}
     decoders = sorted(((s, n) for n, s in code.items() if n not in named),
@@ -128,12 +140,8 @@ def main():
           % sum(rodata.values()))
 
     if args.expect is not None:
-        fill = args.expect - total
-        print("\nagainst size(1)'s text column: %d B of link fill" % fill)
-        if abs(fill) > 512:
-            print("code_map: attribution disagrees with size(1) by %d B — do "
-                  "not quote it" % fill, file=sys.stderr)
-            return 1
+        print("\nagainst size(1)'s text column: %d B of link fill"
+              % (args.expect - total))
     return 0
 
 

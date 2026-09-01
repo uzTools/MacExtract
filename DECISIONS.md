@@ -10872,3 +10872,20 @@ problem that entry has: an envelope does not know what is inside it, and
 StuffIt discovers encryption per entry. **A bigger prize needs a bigger
 payload, which means segmenting the decoders as a set rather than promoting
 one of them** — a different question from the one those branches answered.
+
+### The transferable part: an assertion that fires is not an assertion that protects
+
+`code_map.py` checks its own total against `size` and exits 1 when they
+disagree. Asked *can this check fail?* — the question this repository's first
+trap warns about — the answer was yes, demonstrably, with a wrong `--expect`.
+It was still broken. It printed **the entire table** and then said, on stderr,
+not to quote it: `code_map.py map --expect X > numbers.txt` wrote the disowned
+numbers into the file and dropped the disowning. The tool detected correctly,
+exited correctly, and published anyway.
+
+**The second question is what a check DOES once it has fired**, and the two
+come apart whenever the failure path still produces output. The general
+remedy is ordering: decide before printing, and produce nothing on stdout when
+the answer is no — a warning above a table does not survive a pipe, a
+redirect, or a reader in a hurry. This is not a fact about linker maps; every
+harness here that prints results and then grades them is exposed to it.
