@@ -70,18 +70,13 @@ ls -la build/mac/MacExtract.APPL build/mac/MacExtract.bin build/mac/MacExtract.d
 # no such gesture, pays the 128 B for nothing — which is the trade, stated.
 # Raised again 2026-09-01 from 147,424 to 147,588: +164 B for the Apple
 # Archive probe, once a reference for the format was found (DECISIONS.md
-# 2026-09-01, *Apple Archive, and what naming it costs a Mac Plus*).
-# Deliberate, and the trade stated: no Macintosh this application runs on
-# can meet a format Apple shipped in 2020, so the 164 B buys the Mac
-# nothing it will use — it is paid to keep ONE engine, the same trade
-# already made for RAR 5, 7-Zip, xz, zstd, WIM, lrzip and lzip. It comes
-# straight off the 1 MB Mac Plus budget, where the tightest fixture that
-# still fits, derived-Domino_v1.4.sit, clears it by 13,602 B (FORMATS.md,
-# *Budget*) — so this is 1.2 % of that margin. Two attempts at making it
-# cheaper are in the probe: the subtype set is a string constant rather
-# than sixteen comparisons (data is free, code is not), and the length
-# floor is one test rather than three. They bought 52 B of the 216 the
-# first version cost.
+# 2026-09-01, *the search, not the reference*). Bought on the same terms as
+# the rest of the named-only set: one engine, not a Macintosh subset of one.
+# Two attempts at making it cheaper are in the probe -- the subtype set is a
+# string constant rather than sixteen comparisons, and the length floor is
+# one test rather than three -- and they bought 52 B of the 216 the first
+# version cost. That 12 % is the figure worth remembering about code shape
+# on this target.
 UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-147588}
 SIZE="$TOOLCHAIN/bin/m68k-apple-macos-size"
 GDB=build/mac/MacExtract.code.bin.gdb

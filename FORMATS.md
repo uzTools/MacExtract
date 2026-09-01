@@ -1622,16 +1622,14 @@ A `.zipx` needs nothing: it is a zip, the zip probe claims it, and its entries
 are refused one at a time by method. A `.cpgz` is gzip, the gzip layer unwraps
 to the cpio inside it, and that cpio is now named too.
 
-**Apple Archive joined on 2026-09-01**, and it is the only one of the fourteen
-graded by a writer built for the purpose. libNeoAppleArchive — MIT, and not a
-reimplementation of Apple's closed libAppleArchive but a from-scratch reading
-of the format — builds here with `tools/build_neoaa.sh` and writes archives in
-all four shapes the probe has to recognise, each read back by that same library
-before the probe is asked (`tools/neoaa_write.c`). The item that tracked it
-read *"unnamed for want of a reference"*; what was missing was the search, not
-the reference (BLOCKERS.md). It is also the only probe here whose cost was
-refused once by the Macintosh ratchet: 164 B of code, against 20 B of headroom
-(*Budget*, and DECISIONS.md 2026-09-01).
+**Apple Archive joined on 2026-09-01**, graded the way bzip2 and 7z are — by
+an implementation that is not ours, writing the specimens. libNeoAppleArchive
+— MIT, and not a reimplementation of Apple's closed libAppleArchive but a
+from-scratch reading of the format — builds here with `tools/build_neoaa.sh`
+and writes archives in all four shapes the probe has to recognise, each read
+back by that same library before the probe is asked (`tools/neoaa_write.c`).
+The item that tracked it read *"unnamed for want of a reference"*; what was
+missing was the search, not the reference (BLOCKERS.md).
 
 ## Envelope auto-unwrap
 

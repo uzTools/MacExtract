@@ -185,7 +185,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-01 (two byte reads) — the guard that lets a 64K-ROM Macintosh start, and why it is not a trap test
 - 2026-09-01 (the package that cannot be handed over) — three routes into Aladdin's AppleLink expander, and the control that made an empty list mean something
 - 2026-09-01 (the tier that needed no Macintosh) — a budget sweep, a ceiling, and a number that was an artefact
-- 2026-09-01 (the search, not the reference) — Apple Archive, and what naming it costs a Mac Plus
+- 2026-09-01 (the search, not the reference) — Apple Archive, and what rewriting a probe actually buys
 - 2026-09-01 (the reader was in the sentence) — feeding SuperDisk!'s own extractor a stream we wrote, and one hypothesis that did not survive it
 
 ---
@@ -10675,7 +10675,7 @@ wrong once — M46 found it firing after a completely successful extraction
 only one the user ever reads, and nothing in a byte-comparison suite can
 fail on it.
 
-## 2026-09-01 (the search, not the reference) — Apple Archive, and what naming it costs a Mac Plus
+## 2026-09-01 (the search, not the reference) — Apple Archive, and what rewriting a probe actually buys
 
 **The claim was about a search.** `OPEN_ITEMS.md` had *"Apple Archive (`.aar`)
 is unnamed for want of a reference — missing: an implementation or spec in
@@ -10717,18 +10717,15 @@ lesson is the ratio.** Code shape is worth little here; what the code *is* is
 worth everything, which is the same finding as *Size flags, priced in both
 currencies*, where a full day of compiler flags bought 780 B.
 
-**The remaining 164 B was bought deliberately, and the trade is not flattering
-to state.** No Macintosh this application runs on — System 3.0 through Mac OS
-9 — can meet a format Apple shipped in 2020, so those bytes buy the Mac
-nothing it will ever use. They are paid to keep ONE engine rather than a
-Macintosh subset of one, which is the same trade already made for RAR 5,
-7-Zip, xz, zstd, WIM, lrzip and lzip; carving out this one format would have
-been the exception that made the rule unreadable. The price is 1.2 % of the
-13,602 B by which the tightest fixture that still fits, `derived-Domino_v1.4.sit`,
-clears the 1 MB Mac Plus budget (FORMATS.md, *Budget*). What made it a decision
-rather than an accident is that the ratchet stopped the build: this cost was
-paid in the open, where the 31,860 B that quietly moved the budget on
-2026-08-24 was not.
+**The remaining 164 B was bought on the set's existing terms.** The named-only
+formats are one decision applied uniformly (OPEN_ITEMS.md, part 1), so what
+would have needed justifying is an exception, not the cost — RAR 5, 7-Zip, xz,
+zstd, WIM, lrzip and lzip are all carried by a Macintosh that will never open
+one. The price is 1.2 % of the 13,602 B by which the tightest fixture that
+still fits, `derived-Domino_v1.4.sit`, clears the 1 MB Mac Plus budget
+(FORMATS.md, *Budget*). What made it a decision rather than an accident is
+that the ratchet stopped the build: this cost was paid in the open, where the
+31,860 B that quietly moved the budget on 2026-08-24 was not.
 
 ## 2026-09-01 (the reader was in the sentence) — feeding SuperDisk!'s own extractor a stream we wrote, and one hypothesis that did not survive it
 
