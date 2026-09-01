@@ -92,6 +92,7 @@ static const UncFormatDesc unc_formats[] = {
     { UNC_FORMAT_LZIP,        "lzip",                0, 0, NULL },
     { UNC_FORMAT_LRZIP,       "lrzip",               0, 0, NULL },
     { UNC_FORMAT_WIM,         "WIM",                 0, 0, NULL },
+    { UNC_FORMAT_AAR,         "Apple Archive",       0, 0, NULL },
 };
 
 static const UncFormatDesc *unc_desc(UncFormat f)

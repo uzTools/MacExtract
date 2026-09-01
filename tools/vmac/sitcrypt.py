@@ -75,7 +75,9 @@ BTOA_DATA = (bytes(range(256)) + bytes(48) + b"    " * 4 +
 VOLUME_ICON = (470, 110)       # SITwork; the boot volume is above it
 FOLDER_TITLE = (200, 33)       # the folder window this image boots with
 SPECIAL_X = 225
-SHUT_DOWN_Y = 123
+# 139, not 123: 123 is Restart, and this harness picked it in every run
+# it has ever made (BLOCKERS.md, withdrawn claims).
+SHUT_DOWN_Y = 139
 SF_DRIVE = (377, 192)          # Standard File's Drive button
 
 

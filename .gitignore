@@ -1,3 +1,10 @@
+# Harness screenshots. sys30.py writes every fixture's final frame to
+# ./sys30-shots by default (-o), and run.py's --keep does the same; they are
+# evidence for one run, not repository content. 69 of them were committed
+# once, inside a commit about something else.
+sys30-shots/
+shots/
+
 # Build outputs
 build/
 *.o

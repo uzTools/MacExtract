@@ -5013,7 +5013,17 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
          * the whole archive did, and it is the only failure here the user
          * can actually do something about. The number is what turns "it
          * did not work" into one thing to go and do. Rounded UP to the
-         * next 8K, so it is round enough to type and never short.
+         * next 8K, so it is round enough to type.
+         *
+         * "AT LEAST", since 2026-09-01, and the word is load-bearing:
+         * gShortBy is ONE request's shortfall, not the entry's demand.
+         * A decoder that allocates incrementally is refused at the first
+         * request that crosses the line — DiskDoubler method 5 takes
+         * 1,536 B per distinct context byte, so on a 512 KB Macintosh
+         * `synth-dd-m5.dd` is short by about a kilobyte on an entry that
+         * needs another 200 (BLOCKERS.md, *Withdrawn claims*). The old
+         * wording called the figure "never short", which is true of one
+         * allocation and false of a run.
          *
          * GATED ON SOMETHING ACTUALLY HAVING FAILED, since 2026-08-31, and
          * that is the whole point of the test: gShortBy is set by the
@@ -5027,7 +5037,7 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
          * memory" (BLOCKERS.md, *Withdrawn claims*). The allocator cannot
          * know which requests are optional; the outcome can, because a
          * request that mattered leaves an errored entry behind. */
-        PStrCat(outcome, "Needs ");
+        PStrCat(outcome, "Needs at least ");
         PStrCatNum(outcome, (gShortBy + 8191L) / 8192L * 8L);
         /* WHICH advice, from whether there is a partition to grow at all. */
         if (HasPartition())

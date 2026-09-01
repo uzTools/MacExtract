@@ -4,8 +4,6 @@
 
 **No open blockers.** The engine and Linux CLI were never affected by anything
 in this file. The Retro68 Mac shell runs and extracts byte-exact on every
-system the project claims: The engine and Linux CLI were never affected by anything
-in this file. The Retro68 Mac shell runs and extracts byte-exact on every
 system the project claims:
 
 | tier | result |
@@ -263,6 +261,9 @@ line is what makes the next one worth re-testing.
 
 | claim | disproved by | withdrawn |
 |---|---|---|
+| A true Macintosh 512K — 64 KB of ROM — **cannot be reached at all** | **It boots.** On Apple's own 400K MFS System 1.1 floppy it reaches the Finder in ~35 s, and on an MFS volume this project builds it boots **System 3.0 and Finder 5.1**, the floor system, on the 64 KB ROM. What that ROM cannot read is HFS, and HFS was the only volume ever put in front of it — the three A/Bs behind the negative varied the ROM, the RAM and the presence of a disk, and never the FILE SYSTEM, which is the one thing the conclusion named. **Cost: a day, and it very nearly cost more** — the same entry said the machine was "out on the ROM regardless of how the disk question resolves", which is what makes nobody write the MFS writer that settles it. The application does still bomb there, so no capability was lost; what was lost was the distinction between *cannot boot* and *boots and then fails*, which is the entire content of the claim (FORMATS.md, *A true Macintosh 512K*) | 2026-08-31 |
+| Two of this application's dependencies are 128K-ROM-and-later — `NGetTrapAddress` in `TrapAvailable`, and every file operation going through HFS parameter blocks | **Neither is.** `tools/vmac/traptest` paints a mark, makes one call, paints the next, and runs as the boot shell so nothing else is in the frame: on a true 512K it comes back from `NGetTrapAddress` twice and from `PBHGetVInfoSync`, and bombs at **`PBGetCatInfoSync`, `ID = 12`, unimplemented core routine**. The verdict was right and both of its reasons were wrong; the real one is the `_HFSDispatch` selector behind `PBGetCatInfo`. **Cost: it was the sentence that made the whole question look settled**, and it was written from the SHAPE of the code — two greps and an inference — in a session that had an emulator running. A minimal reproduction was ~40 lines of C and one boot (FORMATS.md, *A true Macintosh 512K*) | 2026-08-31 |
+| The guarded build starts on **64K-ROM Macintoshes**, the 128K among them — OPEN_ITEMS.md listed "the 128K and the true 512K" under one status | **Only on the 512K.** One volume, one ROM, one System, two machines: the `rom64k` `dist/` opens Standard File on a 512K and bombs `ID = 03` on a 128K. `tools/vmac/memtest` says why — the largest single block a 128K will grant is **63,744 B**, against the **142,152 B** of `CODE` 2 that the Segment Loader has to place before any of the engine runs. The claim was never measured on a 128K; it was one machine's result carrying a second machine's name, and RAM was the variable nobody had changed. **Cost: MANUAL_TESTS.md §7 spent a section asking somebody with the hardware to try either machine**, and half of that instruction could not have worked — the expensive kind of wrong, because it spends a stranger's afternoon rather than ours (FORMATS.md, *A Macintosh 128K*) | 2026-09-01 |
 | `-fno-inline-small-functions` is 248 B that has not been taken only because nothing has timed it — the last untimed size flag, recorded here as an inconsistency because four flags beside it WERE taken untimed | **Timed 2026-08-31, and it is the worst trade in the file: −248 B for +448 ticks, +14.1 %** (3,184 → 3,632 on `derived-EmpireBuilderDemo.sit` at authentic 7 MHz, the same deterministic instrument that priced the other four, whose baseline reproduced to the tick). 53.1 s becomes 60.5 s to save a quarter of a kilobyte, against 780 B for +0.82 % from the four that were kept. **Cost: nothing — this is the entry closing, not a claim failing.** Worth recording because the inconsistency was real and the resolution went the other way from the suspicion: the flag was not being unfairly withheld, it was bad, and the four beside it were lucky rather than right. Inlining is at its size optimum here and pushing it either direction costs (FORMATS.md, *Where the bytes are*) | 2026-08-31 |
 | The 32 KB stack can be cut to 20 KB for 12,272 B of budget, at a 1.9x margin over a 10,842 B watermark | **The watermark was not one.** `-D UNC_AT_STACK` painted the region between ApplLimit and the stack base and read back what was overwritten — but a frame is made by MOVING the stack pointer, and a frame holding an uninitialised buffer never writes most of itself. The same password-dialog run reported **10,842 B on a 16 KB stack and 16,266 B on a 20 KB one**, so the cut was REVERTED the same hour. Then a second instrument was built — sampling the stack POINTER in the progress pump, the sink, the allocator and inside the Dialog Manager's filter procs — and swept across four stack sizes: **5,200 B, constant**, while the paint figure ran 9,288 → 25,392 with the size of the region. The cut was RE-MADE on that evidence and then taken FURTHER by sweeping downward, which is the more useful direction: PAINT converges on SAMPLE as the room runs out (9,288 → 6,828 → 5,604 at 16, 12 and 10 KB), squeezing out whatever was helping itself to the spare room and leaving the real requirement, ~5,600 B. Final: a 12 KB stack, **20,464 B** to the engine, byte-exact on all four tiers. **Cost: about two hours of emulator time and a margin figure that stood in FORMATS.md for twenty minutes** — and the paint metric was wrong three different ways before it was abandoned (FORMATS.md, *Stack*). What caught it each time was **changing the size of the thing being measured**: a requirement does not move when its container does, and nothing in the first three measurements ever varied the container | 2026-08-31 |
 | Joining a segmented set costs far more memory than the same archive whole — `derived-Troi-ClipSave-Plug-in1.1.sit` is 472,137 B straight and asks 64 KB beyond budget joined; `derived-Library_ISBN_Barcoder.sit` asks over a megabyte more | **The join was never the variable.** Driven through the same UI with NO segments at all, `Troi-ClipSave` extracts COMPLETELY on a 1 MB Mac Plus and still says *"Needs 48K more memory"*. The two figures had different instruments: 472,137 B is a peak-heap measurement from the autotest replay — what was USED — and the refusal is an alert message reporting `gShortBy` — what was ASKED for and declined. On Linux the join costs **8,192 B** and the inner extraction is then **661,173 B**, byte-identical to the whole file. The sizes even name their own source: ISBN's unconstrained peak is 1,683,101 B, and 1,683,101 − 615,348 is the "over a megabyte". **Cost: a user-facing failure filed in OPEN_ITEMS.md that did not exist, and — far worse — it concealed a real defect for as long as it stood.** `mal_alloc` records `gShortBy` on EVERY over-budget request, and StuffIt 5's inverse BWT asks for `numbytes*4` fully expecting to be refused, falling back to a sampled occurrence index that is slower and byte-identical. So every StuffIt 5 archive big enough to decline the fast path — most of them on a small Mac — reported a memory failure after extracting perfectly. The withdrawn claim pointed at joining, which almost nobody does; the defect it hid was on the main path. Gated on an errored entry since 2026-08-31 (DECISIONS.md 2026-08-31, *the message that failed a successful extraction*) | 2026-08-31 |
@@ -337,6 +338,8 @@ line is what makes the next one worth re-testing.
 | SuperDisk!'s block header carries a 16-bit method, and method 9's Huffman region begins after that header | Alysis's own Add-In Module for method 9, run under qemu-m68k (`tools/sdmodule/`): it reads the region AT the length word, and the reference dispatches on the low byte alone (CODE 2 @0x6ba, @0x712). A real method 9 block says 0x0809 there, so this engine answered `UNC_ERR_UNSUPPORTED` to every one of them. **Cost: method 9 could not have decoded a single real block since it was written**, and nothing said so — no fixture uses it, the unit test builds stored blocks, and "transcribed, compiled and never run" was filed in OPEN_ITEMS.md as a risk rather than tested. The second implementation was inside a corpus fixture the whole time | 2026-08-25 |
 | A SuperDisk! single-file container is recognised whatever its size | the head was read as a fixed 64 bytes and a short read failed the lot, so any container under 64 B — the format's own floor is 40 — came back "archive structure is corrupt". Found by a 60-byte synthetic one; the read now asks for what is there | 2026-08-25 |
 | Widening the end-of-central-directory scan window is what makes sniffing cheaper | it is worth ~6 % of the instructions and the rest is the byte scan. A POINTER walk over the same window is -30 % of an envelope open, and moving `unc_macbinary_probe` ahead of the scan is -78 % — the scan was never run for 234 of 929 fixtures' worth of work | 2026-08-24 |
+| `spacesaver.py` and `sitcrypt.py` end their runs with Special ▸ Shut Down | 123 is **Restart** on System 7. Forty-three of their own `*-special-menu.png` highlight the band y=116..131, and the screenshot taken with 139 highlights Shut Down; `rescomp.py` had already been bitten by the same borrowed coordinate and says so in `tools/vmac/README.md`. **Cost: nothing measurable** — Restart ejects the volumes too, so the flush every one of those runs depends on did happen; what it cost `rescomp.py` once was a torn resource fork that read as a format finding | 2026-09-01 |
+| The shortfall the Macintosh reports is "round enough to type and never short" | it is ONE request's shortfall, not the entry's demand. `synth-dd-m5.dd` at the 512 KB budget reports **928 B** and needs **203,680** — the entry takes 1,536 B per distinct context byte and is refused at the first one that crosses the line, so the figure is an artefact of granularity. Both front ends now say **at least**. **Cost: the advice sent a user to Get Info for 8K on an entry that wanted 200K**, and this is the SECOND defect in the same sentence — M46 fixed it firing after a successful extraction | 2026-09-01 |
 
 **DiskDoubler methods 1–5 and 7 "cannot be graded".** Declined per entry
 since M12 on the grounds that no corpus fixture uses one and nothing reachable
@@ -1043,6 +1046,47 @@ a harness can click is not the same list.
   names formats". The fifth, brotli, turned out not to be a search at all:
   RFC 7932 gives it no magic number, so it cannot be identified by anything
   (OPEN_ITEMS.md, part 1).
+
+- **"Apple Archive (`.aar`) is unnamed for want of a reference — missing: an
+  implementation or spec in `reference/`."** Written 2026-08-29, withdrawn
+  2026-09-01. It was a claim about a search, and the search had never been
+  run: `libNeoAppleArchive` is MIT-licensed, cross-platform, from-scratch
+  rather than a reimplementation of Apple's closed library, and one query
+  away. It carries the magics, the six-byte header prologue and the closed
+  set of field subtypes; it also **builds and writes archives on this
+  machine**, so what arrived was not a spec but an oracle, and the probe is
+  graded against `AA01`, `pbze`, `pbzz` and `pbzb` files written and re-read
+  by an implementation that is not ours. **Cost:** three days of an `.aar`
+  reading as "not recognized"; small, because the format is from 2020 and
+  no Macintosh in scope can meet one. **Why it survived:** the sentence was
+  written the same day four other formats were joined *by fetching their
+  references*, so the file already showed the remedy one paragraph away —
+  the mechanism this list names as "a limitation written one paragraph from
+  its own remedy". The four questions at the head of OPEN_ITEMS.md part 2's
+  waiting-list exist to catch exactly this and were not asked of it.
+
+- **"A generated SuperDisk! record stream could only be graded against the
+  same transcription that wrote it."** Written 2026-08-27, withdrawn
+  2026-09-01. It stood in OPEN_ITEMS.md's *Untested code* section and in
+  `tools/run_names.py`'s docstring, holding open the one path-cap the engine
+  had never reached through this format's own walk. **The disproof was in the
+  same sentence**: it went on to name the second reader — "an archive's own
+  self-extractor on an emulated Mac, which has never been handed a stream this
+  project wrote" — so the file recorded both the gap and the untried route to
+  closing it, and nobody took the second half as an instruction. `SD!
+  Utilities.x` is an APPL whose data fork IS the archive; replacing that fork
+  and keeping its resource fork gives the format's own `CODE 2` any stream you
+  like. It read a 10-folder one and built all 11 files, and the uncut path
+  `unc_path_leaf` reports is the path it built (FORMATS.md, *Alysis
+  SuperDisk!*). **Cost:** the item stayed open five days, and the same
+  sentence was carried in a second file, so the claim was reinforcing itself
+  across the tree. Small in engine terms — the code was right — but it is the
+  second time in a week that "there is no oracle for this" was a fact about
+  what had been TRIED rather than about what exists (the first was
+  SpaceSaver's modules). **Why it survived:** the mechanism this list already
+  names as *a limitation written one paragraph from its own remedy*, in its
+  purest form yet — the remedy was in the same paragraph, in the same
+  sentence, as the limitation.
 
 ### Corrected figures and superseded write-ups
 

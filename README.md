@@ -98,9 +98,10 @@ there is, so keep them. Send the output to a different disk from the parts —
 the only thing that works when you are swapping floppies.
 
 **Recognises but does not extract:** StuffIt X, AppleLink packages (`.pkg`),
-and the PC-side archives — RAR, 7-Zip, xz, bzip2, Zstandard, lzip, lrzip,
-Cabinet, WIM, Zoo, ARJ, cpio and `ar`/`.deb`. You get *"MacExtract cannot open
-RAR files."*, not something that looks like a damaged download.
+and the PC-side and modern archives — RAR, 7-Zip, xz, bzip2, Zstandard, lzip,
+lrzip, Cabinet, WIM, Zoo, ARJ, cpio, `ar`/`.deb` and Apple Archive (`.aar`).
+You get *"MacExtract cannot open RAR files."*, not something that looks like
+a damaged download.
 
 ## Compared with StuffIt Expander 4.0.2
 
@@ -143,7 +144,7 @@ them comparable at all. The full capability table and the unrounded figures are 
 
 | | |
 |---|---|
-| Minimum | System 3.0, 68000, **512 KB of RAM** — a Macintosh 512Ke, or a Plus with the system it shipped with in January 1986 |
+| Minimum | System 3.0, 68000, **512 KB of RAM** — a Macintosh 512Ke, or a Plus with the system it shipped with in January 1986. A 64K-ROM Macintosh (the 128K and the true 512K) is out: this download bombs there, and the experimental build that does start is on the `rom64k` branch |
 | For everything | **1 MB** — see the StuffIt 5 note below |
 | Also runs on | System 6, System 7, Mac OS 8 and 9, PowerPC via the built-in 68k emulator |
 | Disk | one 800K floppy |

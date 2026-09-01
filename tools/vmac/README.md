@@ -23,19 +23,92 @@ paths, not just a different splash screen. Run the System 7 tier at 4 MB.
 mv-512Ke` is **66/69** (2026-08-31; 65/69 before the reserve went flat,
 64/69 before the LZW bound), `run.py --emu mv-512Ke --system System6.hfv`
 is 58/69
-(FORMATS.md, *512 KB machines*). A **true** Macintosh 512K has a 64 KB ROM,
-no HFS and none of the traps this application needs. It never reaches the
-application, so no driver here boots it; `setup.sh` builds `mv-512K` and
-fetches both 64 KB ROMs anyway, so that the negative can be re-taken rather
-than quoted. Three commands are the whole of it — each wants a display, and
-each is watched by eye:
+(FORMATS.md, *512 KB machines*).
 
-    $V/mv-512K/minivmac -r $V/Mac512K.ROM $V/Sys30.img   # Sad Mac 0F0064
-    $V/mv-512K/minivmac -r $V/Mac128K.ROM $V/Sys30.img   # identical: not the ROM
-    $V/mv-512K/minivmac -r $V/Mac512K.ROM                # blinking floppy: healthy
+**A true Macintosh 512K — `mv-512K`, a 64 KB ROM — boots, and this
+application bombs on it.** It cannot read HFS, which is the whole of the
+negative; nothing here drives it as a tier, and `setup.sh` builds it and
+fetches both 64 KB ROMs so the frames can be re-taken rather than quoted.
+Everything below wants a display and is watched by eye. `$V` is
+`$UNC_VMAC_HOME`.
 
-`$V` is `$UNC_VMAC_HOME`. A blank 800 KB HFS volume in place of `Sys30.img`
-gives the third frame, not the first, which is how the media was ruled out.
+    $V/mv-512K/minivmac -r $V/Mac512K.ROM $V/Sys30.img    # HFS:  Sad Mac 0F0064
+    $V/mv-512K/minivmac -r $V/Mac128K.ROM $V/Sys30.img    # the other 64K ROM: identical
+    $V/mv-512K/minivmac -r $V/Mac512K.ROM                 # no disk: blinking floppy, healthy
+    $V/mv-512K/minivmac -r $V/Mac512K.ROM $V/Sys11.img    # MFS:  boots to Finder 1.1
+
+**A Macintosh 128K — `mv-128K` — is too small to run it**, and that is the
+RAM rather than the ROM: same volume, same ROM, same System as the 512K above,
+`ID = 03` on launch (FORMATS.md, *A Macintosh 128K*). `tools/vmac/memtest`
+is what measures the machine instead — it prints the low-memory globals, then
+bisects the largest single `NewPtr` the heap will grant, which is the question
+the Segment Loader asks and the one `FreeMem` does not answer: `FreeMem` reads
+4,846 B on a 128K and on a 512K alike, because the zone grows on demand. Build
+it by hand like `traptest`, put it on as `Finder`, and read the numbers off
+the screen; run it on **both** machines, because a number means nothing until
+the same probe has been seen to produce a different one somewhere:
+
+    cmake -B build/memtest -S tools/vmac/memtest \
+          -DCMAKE_TOOLCHAIN_FILE=$RETRO68/m68k-apple-macos/cmake/retro68.toolchain.cmake
+    cmake --build build/memtest
+    mkmfs.py --extract System $V/Sys30MFS.img /tmp/System30mfs.bin
+    mkmfs.py $V/MemTest.img --boot $V/Sys30MFS.img --name "System Software" \
+             /tmp/System30mfs.bin build/memtest/MemTest.bin:Finder
+    $V/mv-128K/minivmac -r $V/Mac128K.ROM $V/MemTest.img
+    $V/mv-512K/minivmac -r $V/Mac128K.ROM $V/MemTest.img
+
+**What it cannot see:** it measures a machine with nothing else resident, so
+its figures are a ceiling and not a budget — the application's own globals and
+stack come out of the same span before the engine sees any of it. It also
+paints its own white ground, because digits over the desktop's 50 % grey
+cannot be read back off a screenshot.
+
+**`mkmfs.py` writes the MFS volumes**, because Retro68's `.dsk` is always
+800K HFS. It builds, lists and extracts:
+
+    mkmfs.py $V/AppMFS.img --name MacExtract dist/MacExtract.bin
+    mkmfs.py --list $V/AppMFS.img
+    mkmfs.py --extract System $V/Sys11.img /tmp/System11.bin
+
+**Use System 3.0, not System 1.1**, and use Apple's own MFS disk:
+`setup.sh` fetches `Sys30MFS.img` by unpacking Macintosh Garden's
+`System_3.x.sit` with this repository's CLI, and it boots the 64K-ROM machine
+straight off. A volume built here from `Sys30.img`'s HFS copies boots too, if
+a disk with different contents is ever wanted — `hcopy -m` lifts the files out
+and the boot blocks come from the same disk:
+
+    hmount Sys30.img; hcd "System Folder"
+    hcopy -m System /tmp/System30.bin; hcopy -m Finder /tmp/Finder30.bin
+    mkmfs.py $V/Sys30Boot.img --boot $V/Sys30.img --name "System Tools" \
+             /tmp/System30.bin /tmp/Finder30.bin
+
+To launch something without a Finder in the frame, put it on as `Finder`:
+System 3.0 ignores the boot blocks' shell name on MFS just as it does on HFS,
+so `--shell` is for System 1.1, which is the one system here that reads it.
+
+    mkmfs.py --extract System $V/Sys30MFS.img /tmp/System30mfs.bin
+    mkmfs.py $V/TrapBoot30.img --boot $V/Sys30MFS.img --name "System Software" \
+             /tmp/System30mfs.bin build/traptest/TrapTest.bin:Finder
+
+A volume with no `Desktop` file makes the Finder offer "minor repairs" on
+first open; click OK and it rebuilds one.
+
+**`traptest/` is the minimal reproduction** for what the 64K ROM actually
+lacks: it paints a mark, makes one call, paints the next, and never returns —
+a probe that exits has its marks erased by the desktop repaint before a
+screenshot can be taken. Its calls are in the order the application makes
+them, so where it stops is where the application stops; marks are eight to a
+row in the top 75 points, because the system error dialog covers the middle of
+the screen and a mark under it cannot be read from the screenshot that shows
+the bomb. `-DTRAPTEST_NO_MEM` drops the two memory calls, which is how the
+File Manager rows in FORMATS.md are reached on a 64K ROM at all. Build it by
+hand, put it on the volume above as `Finder`, and read the marks — **on
+`mv-512Ke` as well as `mv-512K`**, because a probe that stops early says
+nothing until the same probe has been seen to finish somewhere:
+
+    cmake -B build/traptest -S tools/vmac/traptest \
+          -DCMAKE_TOOLCHAIN_FILE=$RETRO68/m68k-apple-macos/cmake/retro68.toolchain.cmake
+    cmake --build build/traptest
 
 **System 3.0 has its own driver, `sys30.py`, and `run.py --system Sys30.img`
 does NOT work.** That system ignores the boot blocks' shell name, so
@@ -106,7 +179,7 @@ oracle and will lose it to `./ci.sh`'s `make clean`.
 | `ddpro.py` | the other half of the format: DiskDoubler **Pro** 4.1, which writes `DDA2` and whose Split command is the source of the `SPLT` questions still open |
 | `ddencode.py` | **grade a method by WRITING it**: encode a fork, hand it to Salient's own 1991 DiskDoubler, and see whether it comes back. How methods 3, 4 and 5 were graded with no specimen |
 | `ndd.py` | the releases nothing here had run: Salient's **3.1.2** (1991, the oldest reachable — it has the only method 2 fork), **DiskDoubler 4.0** and **Norton DiskDoubler Pro 1.1** (Symantec — whose application is 4.1.1). `--specimens`, `--harvest` and `--grade` need no emulator |
-| `superdisk.py` | grade SuperDisk! with its own self-extractors, and `--on-mac`, which replays both payloads through our application |
+| `superdisk.py` | grade SuperDisk! with its own self-extractors; `--nest`/`--stored`/`--rootfile` hand that extractor a stream written here; `--on-mac` replays both payloads through our application |
 | `spacesaver.py` | Aladdin's **SpaceSaver**, off the StuffIt Deluxe 5.0.1 CD. 3.5.1 runs; 5.0 does not run on 7.0.1. `--layout` reads the format out of it without booting anything — see below before spending a boot on it |
 | `sdcompress.py` | the other half: Alysis's 1991 **SuperDisk! control panel**, which COMPRESSES. It wrote the five specimens the single-file container was derived from, and `--verify` re-grades them |
 | `maclha.py` | **MacLHA 2.00**, out of the corpus (`derived-MacLHa_2.00.sit`), driven to write a `.lzh` holding a file with a real resource fork — the specimen no MacLHA archive in reach is. `--setup` builds the volume, `--make` drives the application (keyboard where it has a shortcut; its Header and Type menus are HIERARCHICAL and cannot be used here, and nothing needs them because `MacBinary` is already checked), `--check` grades both forks with our CLI. **The Type menu was worth reading anyway, and it is now**: `LHa`, `LHarc`, `None` — `-lh5-`, `-lh1-`, `-lh0-` — so it cannot write an `-lh2-`/`-lh3-` specimen — which `tools/run_lzh.py` grades against LHa's own encoder instead (TESTING.md) — and the inaccessible submenu costs nothing (read out of `MENU` 134 with `hcopy`, no emulator) |
@@ -156,6 +229,15 @@ whose every frame is the striped garbage screen. One of those readbacks
 became a documented fact about the format (BLOCKERS.md). Either shut
 down, or put the subjects on a second volume and Put Away (Cmd-Y) — what
 `sdcompress.py` does.
+
+**And photograph the pick, because the item is one row from a different
+one.** Shut Down is at **(225, 139)** on System 7 and at **(175, 123)** on
+System 6 — the two Special menus are not the same length, and 123 on System 7
+is **Restart**, which `spacesaver.py` and `sitcrypt.py` picked in every run
+either had ever made (measured 2026-09-01 off their own forty-three
+`*-special-menu.png`; corrected in both; BLOCKERS.md, withdrawn claims).
+Restart ejects the volumes too, which is why nothing failed and nobody
+noticed — but `rescomp.py` has the case where it tore a write, below.
 
 **The app is the boot shell.** The boot blocks' shell name (offset 0x1A) is
 rewritten from `Finder` to `macextract`, so the ROM hands control straight to
@@ -743,10 +825,16 @@ System 7.5.3**, which is the open route. DECISIONS.md 2026-08-22
                                               installed panel and engine
     tools/vmac/spacesaver.py --pkg            read AppleLink .pkg's recogniser
                                               out of the translator beside it
+    tools/vmac/spacesaver.py --pkgexpand      write packages here and offer
+                                              them to PKG Expand
+    tools/vmac/spacesaver.py --pkgexpander    the same, to StuffIt Expander
+    tools/vmac/spacesaver.py --pkgconvert     the same, to DropConvert
 
 Every mode from `--specimen` on ends with Special > Shut Down (the general
-rule at the top of this file): `ssenrolled.hfv`, made before that rule was
-followed here, does not boot.
+rule at the top of this file) — **at the right coordinate only since
+2026-09-01**: before that they picked Restart, one item above it, which
+flushes as well and so hid the mistake. `ssenrolled.hfv`, made before the
+rule was followed at all, does not boot.
 
 **`--layout` needs no emulator at all.** It lifts `~StuffIt SpaceSaver™`
 (`cdev/SMKR`) and `StuffIt Engine™` off `ssinstalled.hfv` with `hcopy`,
@@ -764,6 +852,29 @@ installation carries fourteen of Aladdin's translators, and one of them reads
 AppleLink packages — the format this project could not name until 2026-08-23.
 It prints that translator's `Name`, its vocabulary and its recogniser, with
 four witnesses; FORMATS.md, *AppleLink packages*, is what came of it.
+
+**The three `--pkg*` boot modes offer that translator a package written
+here, and all three come back empty.** Each writes five one-line packages
+into `StuffIt Deluxe™ Folder` — `Decode <item> to <destination>`, the grammar
+`--pkg` transcribed, one per Finder type so the type is a variable — plus
+`Payload.hqx`, the BinHex file they name. `--pkgexpand` drives *Translate ▸
+PKG Expand…* and also runs *CPT Expand…* over a real `.cpt` as its control;
+`--pkgexpander` drives StuffIt Expander's `⌘E`; `--pkgconvert` drives
+DropConvert's `⌘C`, whose dialog wants *type, Return to Add, then click
+Convert at (452, 289)*. Every run ends in Shut Down and reads the volume back.
+The result and what it means: DECISIONS.md 2026-09-01, *the package that
+cannot be handed over*.
+
+**What they cannot see.** Whether the packages are the problem. Each run
+proves only that Aladdin's software did nothing with the file, and the engine
+never reports anything either way, so *"this build will not take that input"*
+and *"this text is not a package"* look identical from here. **Read the
+control first**: `Payload.hqx` must have become `Widget` (Expander) or
+`Widget.sit` (DropConvert), and the report line says which — a run whose
+control did not fire says nothing about packages at all. Its resource fork
+comes back the right LENGTH and different bytes, because the Finder opens an
+extracted file to draw its icon and the Resource Manager rewrites the map's
+live fields (BLOCKERS.md 2026-08-23); the data fork is the comparison.
 
 What it cannot see: whether any of this describes a real compressed file.
 Nothing here has produced one, so every field is read from the writer, not
@@ -982,6 +1093,43 @@ Two things to know before re-running it:
 - **The run ends with Put Away, and must**, for the reason `arcmac.py`
   documents above: Mini vMac flushes the guest's writes when the volume is
   ejected, so a run killed with it still mounted reads back an empty disk.
+
+### Handing that extractor a stream written HERE — `--nest`, `--stored`, `--rootfile`
+
+Same application, different data fork. `SD! Utilities.x` is an APPL whose data
+fork IS the archive, so replacing that fork and leaving the resource fork alone
+gives the format's own `CODE 2` a record stream this project built — the only
+second reader this container has anywhere (`tools/synth_sd.py` writes them).
+
+    tools/vmac/superdisk.py --nest              a 10-folder path, past the cap
+    tools/vmac/superdisk.py --stored            the one block shape no fixture has
+    tools/vmac/superdisk.py --rootfile          a stream that opens with a file
+    tools/vmac/superdisk.py --rootfile --invented   ...with a guessed record
+
+Measured 2026-09-01, one boot each. `--nest` builds ten folders of 31
+characters, paths from 43 to 331 bytes: the Macintosh made every one of the
+eleven files, all byte-identical, and for the three past 255 bytes **the uncut
+path `unc_path_leaf` reports is the path the Macintosh built** — which is the
+whole point, since that machine creates each component through the File
+Manager and never assembles a path. `--stored` reads back byte-exact, so the
+stored-block encoding is confirmed by the extractor it was disassembled out
+of. `tools/run_names.py` replays the `--nest` verdict offline; nothing here
+runs in `ci.sh`.
+
+What these CANNOT see: whether SuperDisk! itself would ever WRITE such a
+stream. They establish what its expander reads, which is what an extractor
+needs and is not the same claim.
+
+**One run bombed and has not been reduced — treat it as a hypothesis.** The
+first `--nest` attempt died with *"unimplemented trap"* after the Save box,
+having written nothing (Mini vMac flushes on eject, so a bombed run reads back
+an empty volume). That stream differed from the ones that work in four ways,
+and each has since been run on its own and is fine: the depth (`--nest`), the
+stored blocks (`--stored`), a file as the FIRST record (`--rootfile`), and a
+file record whose fields were guessed rather than copied (`--invented`). What
+is left untested is the one combination — a root file FOLLOWED by a folder —
+and that is one boot for whoever wants it. The archive is
+`synth_sd.nest()` with `control.txt` moved to the front.
 
 ### Replaying a SuperDisk! archive through OUR Mac application
 

@@ -249,6 +249,10 @@ def main():
     ap.add_argument("--timeout", type=float, default=30.0)
     a = ap.parse_args()
 
+    if not os.path.exists(a.macextract):
+        print("superdisk: no CLI at %s" % a.macextract)
+        return 1
+
     bad = total = 0
     for fixture, entries in sorted(EXPECTED.items()):
         b, n = run_one(a.macextract, fixture, entries, a.verbose)

@@ -180,6 +180,16 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-31 (the joined archive that was never meant to survive) — a harness expectation, three hours old and already documented
 - 2026-08-31 (the drop the Finder does not make, and the version it does show) — a gesture measured on three Finders
 - 2026-08-31 (the drop, taken) — 128 bytes, one Rez line, and a partition that stopped asking
+- 2026-08-31 (the medium, not the machine) — the Macintosh 512K boots, and both reasons it could not were wrong
+- 2026-09-01 (the second Toolbox call) — what bombs a 64K ROM, and three instruments that lied on the way to it
+- 2026-09-01 (two byte reads) — the guard that lets a 64K-ROM Macintosh start, and why it is not a trap test
+- 2026-09-01 (the package that cannot be handed over) — three routes into Aladdin's AppleLink expander, and the control that made an empty list mean something
+- 2026-09-01 (the tier that needed no Macintosh) — a budget sweep, a ceiling, and a number that was an artefact
+- 2026-09-01 (the search, not the reference) — Apple Archive, and what rewriting a probe actually buys
+- 2026-09-01 (the reader was in the sentence) — feeding SuperDisk!'s own extractor a stream we wrote, and one hypothesis that did not survive it
+- 2026-09-01 (the machine that is too small) — a 128K Macintosh, and a status row measured on the other machine
+- 2026-09-01 (no hotspot, twenty-three decoders) — where the application's code is, and two instruments that said otherwise
+- 2026-09-01 (the loader that was already there) — 78,320 B the Segment Loader gives for a configuration file
 
 ---
 
@@ -10402,3 +10412,549 @@ sample passes: `derived-Library_ISBN_Barcoder.sit`, byte-exact at a peak of
 against the OLD value turned a confident regression note into an honest
 "unreachable from here", and it is the same discipline that killed the stack
 watermark: change the thing being measured and see whether the number moves.
+
+
+## 2026-08-31 (the medium, not the machine) — the Macintosh 512K boots, and both reasons it could not were wrong
+
+**Claim: "a true Macintosh 512K cannot be reached at all" was a claim about
+HFS.** That machine boots Apple's 400K MFS System 1.1 floppy to the Finder,
+and boots System 3.0 and Finder 5.1 — the floor system — off an MFS volume
+built here. It then launches this application and bombs, `ID = 03`
+(FORMATS.md, *A true Macintosh 512K*).
+
+**The negative was one A/B short, and the missing axis was the one the
+conclusion named.** Yesterday's three A/Bs varied the ROM revision, the RAM
+and the presence of a disk; all three said "healthy machine", and the entry
+concluded "it is the volume". Nobody then varied the volume. A negative whose
+evidence never touches the variable it blames is worth exactly one more
+experiment, and this one cost a download and a boot.
+
+**What stopped that experiment being run was a sentence, not the work.** The
+same entry added that the application is "out on the ROM regardless of how the
+disk question resolves", naming `NGetTrapAddress` and HFS parameter blocks —
+written from the shape of the code rather than from a run. It is false in both
+halves: `tools/vmac/traptest` returns from `NGetTrapAddress` twice and from
+`PBHGetVInfoSync` on a 64K ROM, and bombs at `PBGetCatInfoSync` with `ID = 12`,
+unimplemented core routine. The verdict survives — this application cannot run
+on a 64K ROM, because `PBGetCatInfo` is how it walks a directory — but a
+conclusion propped up by two false premises is one nobody re-tests. **A
+"regardless" is a claim that something need not be measured; treat it as the
+most suspicious word in an entry.**
+
+**Retro68 cannot write the volume, so the volume is written here.**
+`--cc name.dsk` calls libhfs and always emits an 800K HFS image — the one
+thing that ROM refuses. `tools/vmac/mkmfs.py` builds, lists and extracts from
+400K MFS volumes: structure from Inside Macintosh Volume II, "Data
+Organization on Volumes"; the 400K geometry read off an Apple-initialized
+volume, because the book gives the format and not the parameters. It was
+validated before it was trusted — first by listing Apple's own System 1.1 disk
+(ten files, every fork chain terminating), then by rebuilding that disk from
+its own extracted files and booting the rebuild.
+
+**One thing the probe cost nothing to learn: hold the screen.** The first
+`traptest` painted its marks and returned, and the screenshots showed an empty
+desktop — at emulator speed the System repaints before any frame can be taken,
+so a probe that exits has erased its own evidence. `for (;;)` is the fix, and
+the same trap will be there for the next probe.
+
+
+## 2026-09-01 (the second Toolbox call) — what bombs a 64K ROM, and three instruments that lied on the way to it
+
+**Claim: `MaxApplZone` is what bombs a true Macintosh 512K, and Apple says so.**
+Inside Macintosh II-30 marks it `[Not in ROM]`, with an assembly-language note
+telling you to call the Pascal procedure because there is no trap; the trap
+arrived with the 128K ROM, and Retro68 emits it unconditionally. Measured with
+`tools/vmac/traptest` and again by bisecting the real application:
+`SetApplLimit` returns, `MaxApplZone` does not (FORMATS.md, *A true Macintosh
+512K*).
+
+**The bomb ID was the first thing to mislead.** The application reports
+`ID = 03`, the probe `ID = 10`, an instrumented build `ID = 28` — illegal
+instruction, line 1111, and stack-into-heap. One call, three symptoms, because
+a missing trap dispatches into whatever is at that address and that moves with
+the binary. **An error code is evidence about the aftermath, not the cause;
+the call before the first missing mark is the evidence.**
+
+**The second was a mark nobody could see.** The probe's marks were laid out
+four to a row across the middle of the screen — and the system error dialog
+covers the middle of a 512x342 screen. So the run that "proved" `SetApplLimit`
+fatal had actually painted the mark saying it survived, underneath the bomb
+box. The grid is now eight to a row in the top 75 points, above anything the
+System draws. This is the harness rule in this repository's own words: an
+instrument that cannot see the region it is asked about will answer anyway.
+
+**The third was `--gc-sections`, again.** Hanging the application after a
+readout with `for (;;)` made everything past it dead code, the linker dropped
+it, and the 188,928 B binary became 10,368 B — a different heap, a different
+memory map, a different answer to the question being asked. The fix is a
+condition the compiler cannot fold (`while (LMGetScrnBase() != (Ptr)-1L)`).
+BLOCKERS.md records the same trap eating three of four ballast runs; it is
+worth checking the binary's SIZE after any change meant to freeze it.
+
+**What made the whole bisect possible was writing to screen memory.** Marks
+before `InitGraf` cannot use QuickDraw, and the phase in question is the
+Toolbox initialisation itself; `LMGetScrnBase()` and a loop over bytes need
+nothing initialised at all. The same trick painted 24-bit values as bars and
+read them back off the screenshot — that is how the trap addresses in
+FORMATS.md were obtained, with `ScrnBase` painted alongside as a known value
+so a decode that drifted could be caught. It drifted twice.
+
+**A guard built on `TrapAvailable` does not fire, and that is the transferable
+part.** The obvious fix — skip `MaxApplZone` when the trap is missing — was
+built and measured: on a 64K ROM the check says the trap is PRESENT, because
+it compares against `_Unimplemented` and that table entry is neither
+`_Unimplemented` nor a routine. **A trap-availability test cannot see a
+`[Not in ROM]` routine**; detecting these machines needs a machine test, not a
+trap test. Skipping the call unconditionally, in a throwaway build, then
+showed how much is behind it: the whole user interface, a file opened and
+sniffed, and a real extraction stopping at `ID = 12` on an HFS call
+(FORMATS.md, *A true Macintosh 512K*).
+
+**No change to the application.** A 64K-ROM Macintosh is out of scope
+(OPEN_ITEMS.md); this is a finding about why, not a defect. `MaxApplZone` is
+correct on every machine the project claims.
+
+
+## 2026-09-01 (two byte reads) — the guard that lets a 64K-ROM Macintosh start, and why it is not a trap test
+
+**Claim: one guard makes the application start on a 64K ROM, and it costs
+nothing anywhere else.** It lives on the branch `rom64k`, not on `main`: the
+guard is provably neutral on every tier this project claims, but no real
+machine has ever run the thing it enables, and a capability nobody has
+exercised does not belong in the download people are told works. `Has128KROM()` reads the ROM
+version word at `ROMBase+8` and skips the call when it positively reads as a
+64K ROM. Measured: the shipping build reaches its Standard File dialog on the
+emulated Macintosh 512K under Apple's MFS System 3.0, and the two tiers that
+would notice are unchanged — **69/69 at 1 MB on System 6.0.8** and **66/69 on
+System 3.0 at 512 KB**, the same three memory refusals as before.
+
+**Why not `TrapAvailable`, which the application already has.** It was written
+first and it does not work: on a 64K ROM it reports `_MaxApplZone` as PRESENT,
+because it compares the trap's address against `_Unimplemented` and that entry
+is neither `_Unimplemented` nor a routine. **A trap-availability test cannot
+see a `[Not in ROM]` routine** — those are library glue in the era that lacks
+them, not unimplemented traps. The test has to be of the MACHINE.
+
+**Sources, both of them Apple's.** Where the number lives: Inside Macintosh
+II, Operating System Utilities, `Environs` — its assembly-language note gives
+the ROM version as the word at `ROMBase+8`, "$00xx for the Macintosh 128K or
+512K". What the number means: Inside Macintosh IV, Preface, *Compatibility* —
+"if the version number is greater than or equal to 117 ($75), it's safe to use
+the routines and data structures described in this volume". `Environs` itself
+is `[Not in ROM]` glue, which is why the low-memory route is the one used: a
+test must not depend on the thing it is testing for.
+
+**It is written as a negative on purpose.** `!(rom[8] == 0 && rom[9] < 0x75)`
+— "not positively a 64K ROM" — so that any version word this has not surveyed
+(a Macintosh XL reads `$xxFF`; later ROMs were never checked here) leaves
+behaviour exactly as it was before the guard existed. The first draft asked
+"is this a 128K ROM?" and would have SKIPPED `MaxApplZone` on any machine
+whose word is not `$00xx`, which is a regression on every tier above the Plus
+and would not have shown up on the two 128K-ROM tiers that were run.
+
+**The size ceiling did its job.** The first version was 8 B over
+`UNC_MAC_MAX_CODE` and `build_mac.sh` refused it; comparing the low byte
+instead of composing the word saved exactly those 8 B, so the capability costs
+**0 B of the engine's budget**. The ceiling exists to make a kilobyte of code
+a deliberate purchase (FORMATS.md, *What the application costs the engine*),
+and here it turned a shrug into a free change.
+
+**What is NOT claimed.** That the application works on a 64K-ROM machine.
+Extraction needs HFS and those machines only have it with a `Hard Disk 20`,
+which Mini vMac does not emulate; what is measured is that the interface runs
+and that a non-archive is correctly refused there. The rest is
+MANUAL_TESTS.md §7, and it is now askable because the BRANCH'S DOWNLOAD does
+it — a test that needs the tester to own Retro68 is not a test anyone will
+run, which is the whole reason the guard was built rather than left as a
+finding.
+
+
+## 2026-09-01 (the package that cannot be handed over) — three routes into Aladdin's AppleLink expander, and the control that made an empty list mean something
+
+OPEN_ITEMS.md files AppleLink `.pkg` as waiting on a **gradeable specimen**.
+That is an assumption rather than a property: the grammar was transcribed out
+of `PKG Expand Translator` on 2026-08-23, so a package can be WRITTEN here,
+and the second reader — that same translator — is on the same disk image.
+Feeding an implementation something this project wrote is the technique that
+landed SuperDisk!'s codecs and SpaceSaver's (`tools/sdmodule/`,
+`tools/ssmodule/`). Seven boots say Aladdin's software will not take one.
+
+### Three routes, three controls
+
+| route | what it did with a package | its control, same boot |
+|---|---|---|
+| `Translate ▸ PKG Expand…`, StuffIt Deluxe 3.5.1 | its Standard File dialog lists **only folders**: no package is selectable, whatever the file's type | `CPT Expand…` lists the type-`PACT` files, so the dialog machinery works |
+| StuffIt Expander 4.0.2, `Expand… ⌘E` | lists every package and expands **nothing** — no output, no error, no alert | `Payload.hqx` → `Widget`, data fork byte-exact, 1,256 B |
+| `DropConvert™`, `Convert… ⌘C` | the package goes into *Items to Convert:* and `Convert` produces **nothing** | `Payload.hqx` → `Widget.sit`, 532 B, `SITD/SIT!` |
+
+The controls are the whole point. Two boots of empty file lists read as a fact
+about the packages — wrong type, wrong text — and four typings of their Finder
+info (`TEXT/ttxt`, `PACT/EXTR`, `PACT/ttxt`, `TEXT/EXTR`) changed nothing. One
+Compact Pro archive in the same dialog moved it to a fact about the command.
+
+### What that dialog is actually asking for
+
+A folder. The filter proc `PKG Expand` hands `_SFPGetFile` tests `ioFlAttrib`
+bit 4 — *is a directory* — and suppresses everything else (`Othe` 0 @0x215e),
+where the sibling CompactPro translator's tests type `PACT` (@0x2e1c), which is
+exactly why one lists files and the other does not. Two of its own resources
+say the same: `DITL 2051` carries a button reading **"Expand into selected
+folder"**, and `DITL 2052` is a *"Name of new folder:"* dialog. So does its
+`Help` resource — the translator "can extract files and folders from archives
+created by AppleLink. These archives usually have a suffix '.pkg'."
+
+That fits 2026-08-23's manifest hypothesis — you point it at what AppleLink
+delivered — and does not settle it. The dialog this build puts up is
+`DLOG 2050`, which has no such button, and Open on a folder descends into it,
+so nothing here can complete the command.
+
+### What this cannot see, and the lesson
+
+**A null result from somebody's user interface is not a fact about a format.**
+Nothing here separates *"the software will not take this input"* from *"this
+text is not a package"*: the engine never said a word either way, and one real
+`.pkg` still settles both. The open item is unchanged, and its cost is now
+written down — **seven boots** — so the next session does not spend them again.
+
+The transferable half is the one that keeps recurring: **an empty list is
+evidence about nothing until something has filled the same list.** The harness
+was two boots old before it grew a control, and the control cost four
+minutes — one archive of a sibling translator's type, put in beside the
+packages.
+
+
+## 2026-09-01 (the tier that needed no Macintosh) — a budget sweep, a ceiling, and a number that was an artefact
+
+The 512 KB tier stood at 66/69 and read like a target: three fixtures
+refused, and a history of recovering them one at a time (the Arsenic block
+took the floor target 40/44 → 41/44; a flat reserve and a 4 KB stack bump
+took this tier 65 → 66). This is what looking at it properly found.
+
+### The sweep
+
+The Mac shell's allocator is a running total against a cap, refused per
+entry. `macextract --budget N` is that same rule, so a tier's memory
+result does not need a Macintosh at all: `tools/run_tiers.py` sweeps the
+same 69-fixture sample at the tier's measured budget in **five seconds**,
+against one emulator boot per fixture. It reproduces System 3.0 / 512 KB
+**exactly** — 66/69, the same three by name — and the 1 MB floor's 69/69,
+so `ci.sh` now asserts both. What it cannot see is in TESTING.md, and the
+first item is why the System 6.0.8 / 512 KB tier comes out 59/69 here
+against the machine's 58: a budget is one number, and the Memory Manager
+also has to find one PIECE that big.
+
+### The ceiling
+
+Bisected minimum budgets: **246,734 B**, **393,869 B**, **401,408 B**,
+against 197,728 B. Two of the three ask for more in a SINGLE allocation
+than the machine has for the whole job — 205,020 B and 352,161 B, each one
+BWT block, which is the entry's whole output — and a block being inverted
+has to be resident. The third wants 1,536 B per distinct context byte and
+touches all 256; those splay trees are adaptive state, so none can be
+dropped and rebuilt. **66/69 is the ceiling of the machine, not a gap in
+the engine**, and FORMATS.md now says so with the numbers. What would move
+it is a smaller archive.
+
+### The number that was an artefact
+
+The sweep printed `synth-dd-m5.dd  short by 928` — under a kilobyte, on a
+fixture the same file says needs 405,520 B. Both are true and the second
+is the one that matters: **a shortfall is the FIRST refused request's, not
+the entry's demand.** An incremental allocator is refused at the request
+that crosses the line, and method 5's requests are 1,536 B each, so the
+figure understates the requirement by 220x here and by 3,000x at a budget
+of 300,000.
+
+That figure is not diagnostic — it is **advice**, printed on the
+Macintosh as *"Needs 8K more memory. Give MacExtract more in Get Info"*.
+A user who follows it gets the same message again. Both front ends now say
+**at least**, which is true of one allocation and of a run.
+
+The wording it replaces called itself "round enough to type and never
+short", and that is the shape worth remembering: **a claim made about a
+number by the code that computes it.** The same sentence had already been
+wrong once — M46 found it firing after a completely successful extraction
+— which is the other half of the lesson. A message is a claim, it is the
+only one the user ever reads, and nothing in a byte-comparison suite can
+fail on it.
+
+## 2026-09-01 (the search, not the reference) — Apple Archive, and what rewriting a probe actually buys
+
+**The claim was about a search.** `OPEN_ITEMS.md` had *"Apple Archive (`.aar`)
+is unnamed for want of a reference — missing: an implementation or spec in
+`reference/`."* One query found `0xilis/libNeoAppleArchive`: MIT, cross-platform,
+and explicitly **not** a reimplementation of Apple's closed `libAppleArchive`
+but a from-scratch reading of the format. It carries `AAR_MAGIC`/`YAA_MAGIC`,
+the `pbz*` set, the six-byte header prologue and the closed set of sixteen
+field subtypes. Withdrawn in `BLOCKERS.md` with what it cost.
+
+**What arrived was better than a spec: an oracle.** The library builds here
+with `gcc` once its two compression submodules are checked out — its own
+Makefile wants `clang`, Homebrew's OpenSSL and an install step, none of which
+the writer needs, so `tools/build_neoaa.sh` compiles the three core sources
+directly with `EXCLUDE_AEA_SUPPORT=1`. `tools/neoaa_write.c` then writes a
+real archive in each of the four shapes the probe must recognise and reads it
+back with the same library. That moves Apple Archive out of the "signature
+only" grade that RAR sits in and into the grade bzip2 and 7z sit in, where a
+specimen the probe rejects is known to be an archive first.
+
+**Two sources, and they disagree in a way worth recording.** The library
+defines three codec letters — `e` LZFSE, `z` zlib, `b` LZBITMAP. The
+archiveteam wiki (`reference/notes/Apple_Archive.md`) gives two more, lzma
+`x` and lz4 `4`. That is not the wiki inventing them: the library's own
+`docs/NeoAAArchiveGeneric.md` says both belong to the format and are "not yet
+added". So all five are claimed, and the two that no implementation here can
+write are marked untestable in `TESTING.md` rather than quietly counted as
+covered. `pbzx` is also the payload stream inside an Apple flat package, so
+one of those is now named an Apple Archive — the right answer for a file whose
+whole purpose is to tell the user which family a file belongs to and that it
+is not damaged.
+
+**Then the Macintosh ratchet refused it, and that was the useful part.**
+`tools/build_mac.sh` failed the build at 196 B over a ceiling with 20 B of
+headroom. Two rewrites took it to 164 B: the sixteen subtypes became a string
+constant walked by `in_set()`, because on a 68000 the string is data and free
+while the comparisons are code and are not, and three length tests became one.
+Together they bought 52 B — **12 % of what the first version cost, and the
+lesson is the ratio.** Code shape is worth little here; what the code *is* is
+worth everything, which is the same finding as *Size flags, priced in both
+currencies*, where a full day of compiler flags bought 780 B.
+
+**The remaining 164 B was bought on the set's existing terms.** The named-only
+formats are one decision applied uniformly (OPEN_ITEMS.md, part 1), so what
+would have needed justifying is an exception, not the cost — RAR 5, 7-Zip, xz,
+zstd, WIM, lrzip and lzip are all carried by a Macintosh that will never open
+one. The price is 1.2 % of the 13,602 B by which the tightest fixture that
+still fits, `derived-Domino_v1.4.sit`, clears the 1 MB Mac Plus budget
+(FORMATS.md, *Budget*). What made it a decision rather than an accident is
+that the ratchet stopped the build: this cost was paid in the open, where the
+31,860 B that quietly moved the budget on 2026-08-24 was not.
+
+## 2026-09-01 (the reader was in the sentence) — feeding SuperDisk!'s own extractor a stream we wrote, and one hypothesis that did not survive it
+
+OPEN_ITEMS.md carried SuperDisk!'s path cap as untested code for five days,
+under a sentence that both stated the problem and named its solution:
+
+> A generated record stream would not: nothing off the Macintosh reads this
+> container, so it could only be graded against the same transcription that
+> wrote it. The one second reader that exists is an archive's own
+> self-extractor on an emulated Mac, which has never been handed a stream
+> this project wrote.
+
+The second sentence is the disproof of the first, and it sat there through
+every session that read the file. BLOCKERS.md keeps the withdrawal; what is
+worth transferring is the shape of it — **"there is no oracle" was a claim
+about what had been TRIED**, and the trying was one afternoon.
+
+### The method, which generalises past this format
+
+`SD! Utilities.x` is an APPL whose data fork IS the archive and whose resource
+fork is the extractor. So the fork can be replaced and the extractor kept:
+`tools/vmac/superdisk.py` MacBinaries the application back together around a
+stream `tools/synth_sd.py` wrote, and `CODE 2` walks it. **Any
+self-extracting archive is an implementation you can feed**, not merely one
+you can run — the same bargain `--adjudicate` already made, one step further.
+
+Ten folders of 31 characters, eleven files, declared paths 43 to 331 bytes.
+The Macintosh built every one and all eleven files came back byte-identical.
+The assertion that matters is available only from that machine: it creates
+each component through the File Manager and never assembles a path, so **what
+it makes on the volume IS the uncut path** — and for the three files and two
+folders past 255 bytes, the uncut path `unc_path_leaf` reports is exactly it.
+
+### What was built rather than invented, and why the difference showed up
+
+Everything in these streams that this project does not decode is COPIED from a
+corpus archive: the eight bytes at the head of the file, a folder record's
+twenty, the four unread bytes inside a file's thirty. That is rule #1 applied
+to a test subject rather than to a parser, and the reason is not
+fastidiousness — a wrong guess in any of those fields is indistinguishable
+from the failure the run is looking for.
+
+The first run proved the point by breaking it. It used invented file records
+and, worse, STORED blocks — and it bombed, *unimplemented trap*, having
+written nothing. Checking the corpus then turned up a coverage fact nobody had
+noticed: **no stored block exists in either fixture.** All seven blocks are
+coded, methods 7 and 11, so `sd_block_head`'s bit-15 branch had never run on
+real data, and the 116 corrupted variants flip bytes inside coded blocks.
+
+### The hypothesis, and the discipline that killed it
+
+"The stored branch is wrong" was a good hypothesis and it was wrong. Put to
+the extractor on its own — the same 4,796-byte fork written coded and stored,
+in one folder, so the file record including `dlen` is byte for byte the one
+that already worked — **both came back byte-exact**. So the reading taken off
+`CODE 2` @0x614 on 2026-08-20 (a length with bit 15 set, counting its own two
+header bytes, except 0x8002) is now confirmed against the code it was
+disassembled out of, which is a better place for it than untested.
+
+Two more single-variable runs followed, and both refuted their candidate: a
+stream that OPENS with a file record is read, and so is one whose file record
+was guessed rather than copied. **Four causes, each cleared individually, and
+the bomb still unexplained** — the one combination left untried is a root file
+FOLLOWED by a folder. It is written up as a one-boot task and labelled a
+hypothesis (`tools/vmac/README.md`), because an unreduced root cause is not a
+finding; that rule is what the withdrawn `HOpen` attribution cost.
+
+The transferable half is the ordering. Had the first run used borrowed blocks,
+it would have passed, the path cap would have closed, and the stored branch
+would still be untested code that nobody had thought to name. **The broken run
+was worth more than the clean one**, and only because the difference between
+them was reduced one variable at a time instead of being fixed in a batch.
+
+## 2026-09-01 (the machine that is too small) — a 128K Macintosh, and a status row measured on the other machine
+
+**Claim: the guarded build's interface works on 64K-ROM Macintoshes — the
+128K among them.** Half of that had been measured, on a 512K. The other half
+was the same sentence with a second machine's name in it, and it is false:
+the `rom64k` `dist/` bombs `ID = 03` on a Macintosh 128K, from the same MFS
+volume, the same `Mac128K.ROM` and the same System 3.0 that reach Standard
+File on the 512K (FORMATS.md, *A Macintosh 128K*).
+
+**Nothing about the ROM changed between those two runs, which is the point.**
+`mv-128K` is `-m 128K -mem 128K`; `mv-512K` is `-m 128K -mem 512K`. The
+project had already withdrawn one claim about these machines for varying the
+ROM, the RAM and the disk but never the FILE SYSTEM (BLOCKERS.md). This is the
+same error one notch along: three variables were held and the fourth was
+carried in the machine's NAME rather than in the run.
+
+**Why the negative is stable where the 512K's was not.** The 512K's "cannot
+be reached" was a claim about a medium — change the volume and it fell. This
+one is arithmetic on the machine: `ApplLimit − ApplZone` is 78,568 B on a
+128K and the application's `CODE` totals 148,780 B, one segment of which is
+142,152 B and must be placed whole. The largest single block the machine will
+grant is 63,744 B, measured. A smaller System cannot move a ceiling that is
+RAM under the screen buffer, so there is no volume, no System and no build
+flag that reaches this one. What would reach it is a different program.
+
+**`FreeMem` would have reported the two machines as identical**, 4,846 B on
+each, because the application zone is created small and grown on demand. The
+instrument has to ask the question the code asks: the Segment Loader wants one
+contiguous block, so the probe bisects `NewPtr`. A harness that reported the
+number that was easy to read — and `FreeMem` is the number every memory
+discussion in this repository starts from — would have measured the zone's
+starting size on both machines and called it a tie. **Ask what the failing
+code actually requests, then measure that**, which is the same rule as pricing
+a tolerance against something other than our own output.
+
+## 2026-09-01 (no hotspot, twenty-three decoders) — where the application's code is, and two instruments that said otherwise
+
+**Claim: the application is large because of some one thing.** It is not.
+147,568 B of `CODE`, of which **59.3 % is twenty-three format decoders**, the
+largest of them 8,860 B; the largest single file is the Macintosh shell at
+17,358 B and the two largest functions are ~5.1 KB each (FORMATS.md, *Where
+the code is*). Nothing in the binary is worth more than about 6 % of it, which
+is what "thirty-odd formats in one binary" costs when it is measured rather
+than guessed at.
+
+**The two cheap instruments both lie, in the same direction.** Summing
+`m68k-apple-macos-size` over the objects gives 178,696 B — 21 % high, because
+`--gc-sections` drops what nothing calls. Counting every `.text` and
+`.rodata` input section in the linker map gives 179,561 B, because **Retro68
+places `.rodata` in the A5 world**, so read-only tables are not in a `CODE`
+resource at all. Only the sections the map puts under a `.code*` OUTPUT
+section answer the question the budget asks, and `tools/code_map.py` checks
+its own total against `size` so a future toolchain change cannot quietly
+re-break it.
+
+**That second wrong answer is the useful one.** 32,077 B of tables — the
+SpaceSaver dictionary at 9,701 B, the cipher S-boxes, the fixed inflate
+tables — live outside `CODE` already. The ballast experiment had established
+that data is free (*What the application costs the engine*); this says WHY,
+and closes the follow-up question it always attracts: there is no large table
+hiding inside the code figure waiting to be moved out.
+
+**And it prices the parked overlay work.** The 5,988 B that
+`selective-loading` buys is the ciphers, which are 7,480 B of code, 5.1 % of
+the binary — so the branch got most of what its chosen payload was worth, and
+the reason the prize is small is that the payload is small. Every other
+candidate is a decoder worth 2.5–8.9 KB, and each brings the eligibility
+problem that entry has: an envelope does not know what is inside it, and
+StuffIt discovers encryption per entry. **A bigger prize needs a bigger
+payload, which means segmenting the decoders as a set rather than promoting
+one of them** — a different question from the one those branches answered.
+
+### The transferable part: an assertion that fires is not an assertion that protects
+
+`code_map.py` checks its own total against `size` and exits 1 when they
+disagree. Asked *can this check fail?* — the question this repository's first
+trap warns about — the answer was yes, demonstrably, with a wrong `--expect`.
+It was still broken. It printed **the entire table** and then said, on stderr,
+not to quote it: `code_map.py map --expect X > numbers.txt` wrote the disowned
+numbers into the file and dropped the disowning. The tool detected correctly,
+exited correctly, and published anyway.
+
+**The second question is what a check DOES once it has fired**, and the two
+come apart whenever the failure path still produces output. The general
+remedy is ordering: decide before printing, and produce nothing on stdout when
+the answer is no — a warning above a table does not survive a pipe, a
+redirect, or a reader in a hurry. This is not a fact about linker maps; every
+harness here that prints results and then grades them is exposed to it.
+
+## 2026-09-01 (the loader that was already there) — 78,320 B the Segment Loader gives for a configuration file
+
+**Claim: buying resident heap on a 68000 needs a hand-rolled overlay.** Two
+branches were built on that premise and parked because the prize was 5,988 B
+(*the overlay that works and is not worth it*). The premise was wrong: classic
+Mac OS has done this since 1984, Retro68 supports it, and the application had
+been shipping as one 142,152 B segment because nothing had asked. A segment
+map — six families, no source change, on the branch `code-segments` — grants
+**78,320 B more budget at 1 MB** with the whole feature set intact
+(FORMATS.md, *Segmenting the CODE*).
+
+**Corrected the same day, and the correction is the useful part: that is not
+comparable to the overlay's 5,988 B, and this entry first said it was
+"thirteen times" it.** The overlay figure is a RELEASED steady state — memory
+given back and staying back. 78,320 B is what the budget is GRANTED before the
+sniff runs, and the sniff then loads `Archives` (55,104 B) out of the same
+heap for almost any file, because the probes travel in the same objects as the
+decoders. Reliably freed is what is never called: 48,016 B on a `.sit` run,
+29,104 B on a `.hqx` (*derived*). Still several times the overlay, and not
+thirteen. **Two figures that measure different moments are not a ratio**, and
+the shape of the error is one this file already records — comparing a number
+taken at one instant against one taken at another and calling the difference a
+gain.
+
+**Both sides measured in one session, which is the part that took the
+discipline rather than the insight.** The overlay figure was wrong for a day
+because its two rows came from two builds that were not the same build; so
+the baseline here is not the 648,100 B this file already carried but a run
+made minutes before the segmented one, on the same fixture, with the same
+instrument: 647,802 B.
+
+**And the budget alone would not have been evidence.** It is an allowance
+computed at one moment, and it reads identically for a `.sit` claimed second
+in the sniff order and a `.hqx` claimed near the end — which says the snapshot
+precedes the probes, so segments load AFTER the engine has been promised its
+budget. What settles it is an archive that spends the money:
+`derived-Domino_v1.4.sit` extracts byte-exact holding 677,591 B, 29,789 B more
+than the entire unsegmented budget. **A number that goes up is not a
+capability; the capability is a fixture that used to be refused and now is
+not.**
+
+**Why this was invisible.** The code ceiling in `tools/build_mac.sh` measures
+`size`'s text column — the whole binary — and the budget formula in this file
+is `708,100 − code`. Both are true of a single-segment application and both
+quietly assume one. Every conversation about saving code here has therefore
+been about writing less of it, when the cheaper lever was not having all of it
+resident at once. **A constant that models the system correctly can still
+encode an assumption about the system's SHAPE**, and that assumption is
+invisible precisely because the constant keeps agreeing with reality.
+
+**And the near miss says adoption needs two changes, not none.** Domino
+finished with about 5 KB of heap to spare because the engine was granted a
+budget that a later segment load spent (*derived*). The budget must be taken
+AFTER the sniff, or the segment must be loaded and locked before the budget is
+computed; and the probes belong in the resident segment, away from the
+extractors, which is what would make the granted figure the honest one.
+Without those, segmentation trades a clean per-entry refusal — the designed
+behaviour — for a `NewPtr` failure at an unpredictable moment.
+
+**Not adopted, and not on `main`'s build.** No tier has been re-run, nothing
+calls `UnloadSeg`, and the Segment Loader will ask for the application's disk
+if a one-floppy Mac Plus has had it swapped — the same disk-access trade that
+parked the overlay branches, now on the shipping path rather than an opt-in
+one. The map lives on `code-segments` with its own `BRANCH_NOTES.md`, so the
+measurement can be re-taken rather than remembered; adopting it is a tier
+re-run away, and that is a decision with evidence behind it rather than a
+guess.

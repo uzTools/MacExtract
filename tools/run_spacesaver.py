@@ -465,6 +465,10 @@ def main():
     ap.add_argument("-v", "--verbose", action="store_true")
     a = ap.parse_args()
 
+    if not os.path.exists(a.macextract):
+        print("spacesaver: no CLI at %s" % a.macextract)
+        return 1
+
     if a.emit:
         return emit(a.emit)
 

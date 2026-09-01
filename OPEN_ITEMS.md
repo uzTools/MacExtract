@@ -40,6 +40,7 @@ answer and not a refusal — the brief has grown before, on request.
 | what | status | why it stays out |
 |---|---|---|
 | Compression | not implemented | this is an extractor |
+| The Macintosh 512K — 64 KB of ROM | **the interface runs; extraction needs HFS** | measured 2026-09-01, not assumed: `MaxApplZone` is `[Not in ROM]` there (Inside Macintosh II-30) and Retro68 emits it as a trap, so the application dies on its second Toolbox call; behind that, `PBGetCatInfo` is HFS, which that ROM has no idea about. Apple's own software HFS for those machines — the `Hard Disk 20` startup disk — boots on a 128K ROM here and hangs on a 64K one, so even that route is untested (FORMATS.md, *A true Macintosh 512K*). Since 2026-09-01 the branch `rom64k` guards `MaxApplZone` with `Has128KROM()`, so its build starts there and its Standard File interface works; what remains is HFS, which a Hard Disk 20 supplies on exactly the machines where an unarchiver earns its keep. **Nobody has run it on one** — Mini vMac has no HD20, so this stays out of scope until hardware says otherwise (MANUAL_TESTS.md §7). A Macintosh **128K** is out for a second reason and that one is measured: its largest single block is 63,744 B against 142,152 B of `CODE`, so the guarded build bombs `ID = 03` on launch there (FORMATS.md, *A Macintosh 128K*) |
 | StuffIt X (`.sitx`) | **detect-only** | out by the brief |
 | PKWARE "strong encryption" in a zip (flag 0x40) | **named, refused per entry** | its key material is in a record nothing here parses, and XADMaster refuses it too. Every OTHER encryption these formats have is decrypted, including WinZip's AES (FORMATS.md, *Encryption*) |
 | Disk images (`.image`, `.img`, `.iso`, `.cdr`, `.toast`, `.dmg`, `.smi`), and Disk Copy 4.2 | **not recognised**, and not extracted | extracting one means a filesystem rather than a codec, and naming one is worth nothing either: a disk image is not an archive, so the name leaves a user exactly where "not recognized" does. The probes are complete, graded and kept in `attic/` (DECISIONS.md 2026-08-26, *read the volume, not the extension*) |
@@ -73,9 +74,14 @@ drive. What an end user would trade is a disk swap or a stall for memory that
 opens nothing new. DECISIONS.md 2026-08-31, *the overlay that works and is not
 worth it*.
 
-**What would reopen it:** something needing tens of kilobytes rather than six.
-The mechanism and its traps are written up in `BRANCH_NOTES.md` on either
-branch, so reopening it is a merge and not a rediscovery.
+**The tens of kilobytes arrived, and not by this route.** A Retro68 segment
+map splits the application into six `CODE` resources and is worth **78,320 B**
+at 1 MB — thirteen times these branches, with no source change and no feature
+given up, because the Segment Loader does natively what an overlay hand-rolls
+(FORMATS.md, *Segmenting the CODE*; DECISIONS.md 2026-09-01, *the loader that
+was already there*). These two branches stay parked: what they buy is a subset
+of it. The mechanism and its traps are still written up in `BRANCH_NOTES.md`
+on either branch.
 
 ## Limits of the formats themselves
 
@@ -144,6 +150,29 @@ branch, so reopening it is a merge and not a rediscovery.
 
 ---
 
+## `CODE` segmentation is measured and not adopted
+
+**78,320 B of budget GRANTED at 1 MB, from a segment map on the branch
+`code-segments`, no source change** (FORMATS.md, *Segmenting the CODE*). `derived-Domino_v1.4.sit`
+extracts byte-exact holding 677,591 B, 29,789 B more than the entire
+unsegmented budget, so the memory is real — but the sniff then loads a 55,104 B
+segment out of the same heap, and that run finished about 5 KB from a `NewPtr`
+failure (*derived*). Reliably freed is what is never called: 48,016 B on a
+`.sit` run, 29,104 B on a `.hqx`.
+
+**What it needs first:** the budget taken after the sniff rather than before
+it, and the probes moved into the resident segment away from the extractors —
+without those, segmentation trades a clean per-entry refusal for a `NewPtr`
+failure at an unpredictable moment.
+
+**What would then close it:** the tiers, which is what any change to how the
+application occupies memory has always needed here — 4 MB, 1 MB, 512 KB and
+System 3.0, plus the interactive UI, since a segment loads from the
+application's own disk and the one-floppy Mac Plus is the case that matters.
+Nothing calls `UnloadSeg` yet either, so a session that opens several formats
+accumulates resident segments; whether that needs fixing is a measurement, not
+a guess.
+
 ## Waiting on a file this machine does not have
 
 **Not scope decisions, and not effort.** Everything here is written or
@@ -168,10 +197,6 @@ somebody's **search** (BLOCKERS.md, SuperDisk!'s compressor); does the search
 name the **right tool** (BLOCKERS.md 2026-08-25); and **have you looked at
 all** (BLOCKERS.md, the ARC 7 row, filed and disproved the same day).
 
-- **Apple Archive (`.aar`) is unnamed for want of a reference.** Extraction
-  is out of scope either way. Missing: a **reference** — an implementation
-  or spec in `reference/`.
-
 - **A SpaceSaver file written by SpaceSaver.** Every codec is graded against
   Aladdin's own modules (FORMATS.md, *StuffIt SpaceSaver*), so what rests on
   this is the CONTAINER: the method the application picks for its CPU, the
@@ -190,24 +215,9 @@ all** (BLOCKERS.md, the ARC 7 row, filed and disproved the same day).
   manifest naming files beside it rather than a container — in which case
   this closes as a property of the format (DECISIONS.md 2026-08-23,
   *AppleLink `.pkg`, named at last*). Missing: a **gradeable specimen**,
-  which answers both.
-
----
-
-## Untested code, named so it is not mistaken for tested
-
-- **SuperDisk! reaches the path cap through code that is tested, in a
-  container nothing here writes.** `unc_path_leaf` keeps the uncut path
-  (DECISIONS.md 2026-08-27, *the path builder's own cap*), and
-  `tools/run_names.py` grades it on generated Now Compress and
-  DiskDoubler trees against `unar`. SuperDisk! runs that same helper and
-  walks folders in both its fixtures, up-directory record included; what
-  no fixture has is a path that SUMS past 255 bytes, so its own header
-  walk has never been the thing that reached the cap. **What would close
-  it:** a SuperDisk! archive nested deep enough. A generated record
-  stream would not: nothing off the Macintosh reads this container, so it
-  could only be graded against the same transcription that wrote it. The
-  one second reader that exists is an archive's own self-extractor on an
-  emulated Mac, which has never been handed a stream this project
-  wrote.
-
+  which answers both. **Not** something to be produced here: a package
+  written on this machine was offered to all three of Aladdin's own
+  commands that run a translator, each in a boot where a control
+  succeeded, and none of them read it — seven boots, and what PKG Expand
+  asks for turns out to be a FOLDER (DECISIONS.md 2026-09-01, *the
+  package that cannot be handed over*).

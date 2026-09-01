@@ -66,11 +66,11 @@ under *Table notes*.
 | base64 (`.b64`, `.mime`) | extract | — (bare, and the `begin-base64`/`====` framing sharutils writes; several documents in one file)◇ | no corpus file and no Macintosh specimen: graded against **deark** and, through the messages that carry it, **munpack 1.6** | 5 KB◇ | full |
 | MIME message (`.mim`, `.eml`) | extract | — (multipart to 4 levels, base64, quoted-printable and 7bit/8bit parts, a uuencoded part pasted into one, **multipart/appledouble**, which carries both forks and the Finder info, and `message/partial` across several files)◇ | no corpus file: graded against **munpack 1.6**, the implementation `src/fmt_mime.c` is transcribed from, over 65 generated cases | 8 KB◇ | full |
 | uuencode (.uu, incl. UUTool) | extract | — (plain uu, UUTool's two-fork "MU" shape, and documents posted in several parts★★) | 7 generated cases, the two-fork ones adjudicated by macutils' `hexbin`; `synth-uu-mac.uu` is in the differential suite | 4 KB | full |
-| Alysis SuperDisk! (.X, .x) | extract | **both containers** (record-stream archive and single file); methods 1-4 and 5-8 (a finite-context predictor over a 13- or 16-bit context, with the flag bitmap and/or the literals Huffman-coded), 9 Huffman, 10 SlowFastA and 11 SlowFastB (LZSS); 13 declined per entry, and 20 is an encoder for 11 rather than a method of its own✧✧ | 2 fixtures, 5 forks, adjudicated by the archives' OWN self-extractors on an emulated Mac, + 11 single-file specimens written by Alysis's own control panel (methods 1 and 6) and graded against their inputs, + every method 1..9 through Alysis's own Add-In Modules under qemu-m68k (`tools/sdmodule/`) | 72–84 KB✧✧ | full |
+| Alysis SuperDisk! (.X, .x) | extract | **both containers** (record-stream archive and single file); methods 1-4 and 5-8 (a finite-context predictor over a 13- or 16-bit context, with the flag bitmap and/or the literals Huffman-coded), 9 Huffman, 10 SlowFastA and 11 SlowFastB (LZSS); 13 declined per entry, and 20 is an encoder for 11 rather than a method of its own✧✧ | 2 fixtures, 5 forks, adjudicated by the archives' OWN self-extractors on an emulated Mac, + 11 single-file specimens written by Alysis's own control panel (methods 1 and 6) and graded against their inputs, + every method 1..9 through Alysis's own Add-In Modules under qemu-m68k (`tools/sdmodule/`), + 4 record streams written here and read back by an archive's own self-extractor (paths past the cap, and a stored block) | 72–84 KB✧✧ | full |
 | StuffIt SpaceSaver (`SPSV`) | extract | **every method the format has**: 0 stored, 1 and 2 (the "Original" LZSS pair), 3 "Alg 3" (Huffman + LZ77), 4 "Alg 4" — the last two starting their window loaded with a preset dictionary that ships inside SpaceSaver✦✦ | no oracle and no fixture, but **Aladdin's own compressors run under `qemu-m68k` and 44 forks they wrote read back byte-exact** (`tools/ssmodule/`, 2026-08-25), plus 160 corrupted variants, a synthetic round-trip and unit tests✦✦ | 4 KB stored, 8 KB method 1, 84 KB method 2, 41 KB method 3, **36 KB** for what SpaceSaver writes (measured on a Mac Plus); 68 KB is the ceiling the width byte allows. The dictionary is 9.7 KB of static data, not heap | full |
 | LZH / LHA (.lzh, .lha) | extract | -lh0- store, -lh1- (LHarc's adaptive Huffman, shared with StuffIt method 5), **-lh2- (both codes adaptive, the position tree growing with the output)**, **-lh3- (static, rebuilt per block)**, -lh4-/-lh5-/-lh6-/-lh7- (static Huffman over a 4/8/32/64 KB window), -lhd- directories, LArc's -lz4-/-lz5-/-lzs-; header levels 0, 1, 2 and 3; **MacLHA's MacBinary payload unwrapped into two forks**; every method the format has except PMarc✵ | 8 fixtures (1 real Amiga archive + 7 of lhasa's) + **182 archives from fourteen writers**, each graded against `unar` and against lhasa, + 12 sets written by LHa 1.14i itself, + 15 -lh2- and 6 -lh3- entries generated for the purpose✵ | 4–74 KB✵ | full |
 | AppleLink package (.pkg) | detect only | — | no specimen anywhere: the probe is Aladdin's own recogniser, at 0 false positives across 928 fixtures (*AppleLink packages*, below) | — | — |
-| RAR, RAR 5, 7-Zip, xz, bzip2, Cabinet, Zoo, ar/.deb, cpio, ARJ, Zstandard, lzip, lrzip, WIM | **named only**, never extracted | — | archives written here by bzip2, xz, 7z, cpio and ar and confirmed by p7zip; real RAR, RAR 5 and CAB out of libarchive's test suite; synthetic Zoo, ARJ and Cabinet identified by deark; 0 false positives in 940 fixtures (*Archives named but not extracted*, below) | — | — |
+| RAR, RAR 5, 7-Zip, xz, bzip2, Cabinet, Zoo, ar/.deb, cpio, ARJ, Zstandard, lzip, lrzip, WIM, Apple Archive | **named only**, never extracted | — | archives written here by bzip2, xz, 7z, cpio and ar and confirmed by p7zip, and **Apple Archives written and re-read by libNeoAppleArchive** in all four shapes; real RAR, RAR 5 and CAB out of libarchive's test suite; synthetic Zoo, ARJ and Cabinet identified by deark; 0 false positives in 940 fixtures (*Archives named but not extracted*, below) | — | — |
 
 ## Table notes
 
@@ -481,6 +481,25 @@ forks with bytes 16..127 masked, the `vmac_check.py` convention).
 corrupted variants, which nothing else covers — `t` does not unwrap envelopes,
 so the corpus-driven robustness and fuzz suites only ever reach the BinHex
 layer.
+
+**That extractor also reads streams written HERE, and since 2026-09-01 it
+grades two things no fixture could.** `SD! Utilities.x` is an APPL whose data
+fork IS the archive, so replacing that fork and keeping its resource fork
+hands the format's own `CODE 2` a record stream `tools/synth_sd.py` built
+(`tools/vmac/superdisk.py --nest`, `--stored`; how to re-run either is
+`tools/vmac/README.md`):
+
+| asked | stream | result |
+|---|---|---|
+| a path that SUMS past the 255-byte cap | 10 folders of 31 characters, 11 files, declared paths 43→331 B | **11/11 made, byte-identical**, and for the 3 files and 2 folders past the cap the UNCUT path `unc_path_leaf` reports is the path the Macintosh built |
+| a stored block, which the corpus has none of | the same 4,796 B fork coded and stored, in one folder | **both byte-exact** |
+| a stream that OPENS with a file record | one file, no folder | made |
+
+The first closes what OPEN_ITEMS.md carried as untested code. The second
+confirms `CODE 2` @0x614's stored-block encoding against the code it was
+disassembled out of: a length with bit 15 set, counting its own two header
+bytes. **All seven blocks in both fixtures are coded** — methods 7 and 11 — so
+nothing in the corpus reaches that branch (TESTING.md).
 
 Peak heap **74,220 B** for `SD! Utilities.x` and **85,943 B** for
 `Disk Expander .X` (`macextract t --stats`); both extract fully under a 400 KB
@@ -1505,18 +1524,36 @@ after itself — `.pkg` stripped, `" Folder"` appended, so `Report.pkg` becomes
 at all: it opens the file and then calls `GetResource('Eng ', 2)` in
 `StuffIt Engine™` and jumps into it (@0x334c). The translator is a driver.
 
+**What Aladdin's own expander asks for is a FOLDER.** Measured 2026-09-01,
+seven boots: `Translate ▸ PKG Expand…` puts up a Standard File dialog that
+lists **only directories** — the filter proc it hands `_SFPGetFile` tests
+`ioFlAttrib` bit 4 (`Othe` 0 @0x215e) — so a package written here cannot be
+selected at all, as `TEXT/ttxt`, `PACT/EXTR`, `PACT/ttxt` or `TEXT/EXTR`, with
+or without one selected in the application's own window. `CPT Expand…` in the
+same boot lists the type-`PACT` files, which is what makes that empty list a
+fact about the command rather than about the harness. Its own `DITL 2051`
+carries a button *"Expand into selected folder"*, `DITL 2052` is a *"Name of
+new folder:"* dialog, and its `Help` resource says the translator extracts
+"files and folders from archives created by AppleLink". The other two routes
+run a translator and do nothing with a package either: StuffIt Expander 4.0.2
+lists one and expands nothing, `DropConvert™` takes one into *Items to
+Convert:* and produces nothing — each in a boot where the BinHex control
+expanded (DECISIONS.md 2026-09-01, *the package that cannot be handed over*).
+
 **Detect only, and the reason is a specimen.** What a `Decode` line refers to
 has not been read out of the expander, and no `.pkg` file has ever reached
 this project, so there is nothing to grade a reading against. `tools/vmac/
 spacesaver.py --pkg` re-derives everything above out of the translator on the
 installed image, with four witnesses that fail if a different build is ever
-put in front of it.
+put in front of it; `--pkgexpand`, `--pkgexpander` and `--pkgconvert` are the
+three routes above.
 
 
 ## Archives named but not extracted
 
 **Named since 2026-08-26**, extraction still out by the brief (OPEN_ITEMS.md,
-part 1). Thirteen PC-side families, one probe, `src/fmt_foreign.c`:
+part 1). Fourteen PC-side and modern families, one probe,
+`src/fmt_foreign.c`:
 
 | format | test | source |
 |---|---|---|
@@ -1534,6 +1571,7 @@ part 1). Thirteen PC-side families, one probe, `src/fmt_foreign.c`:
 | Zstandard | 28 b5 2f fd, **or** a skippable frame 5x 2a 4d 18 | RFC 8878 §3.1.1 and §3.1.2, `reference/notes/zstd_rfc8878.txt` |
 | lrzip | `LRZI` and at least `MAGIC_LEN` = 24 bytes | `write_magic`/`get_magic`, `reference/lrzip/lrzip.c` |
 | WIM | `MSWIM` 00 00 00, header size at +8 = 208 | `WIM_MAGIC`, `WIM_HEADER_DISK_SIZE`, `reference/wimlib/include/wimlib/header.h` |
+| Apple Archive | `AA01` or legacy `YAA1`, header size at +4 ≥ 6, and the first field's subtype byte at +9 in a closed set of sixteen; **or** `pbz` and a codec letter `e`/`z`/`b`/`x`/`4` | `AAR_MAGIC`, `YAA_MAGIC`, `PBZ*_MAGIC` in `reference/libNeoAppleArchive/libNeoAppleArchive/libNeoAppleArchive_internal.h`; the prologue and the subtype set in `neo_aa_header.c`; the `x` and `4` letters from `reference/notes/Apple_Archive.md` |
 | lzip | `LZIP`, and nothing to corroborate it with | deark `unsupported.c`, `get_fmt` — which rates it **50** where it rates xz 90 |
 
 **What grades them** (`tools/run_foreign.py`, in `ci.sh`): archives written
@@ -1582,8 +1620,16 @@ reference, and it moved to OPEN_ITEMS.md part 1 on 2026-08-29.
 
 A `.zipx` needs nothing: it is a zip, the zip probe claims it, and its entries
 are refused one at a time by method. A `.cpgz` is gzip, the gzip layer unwraps
-to the cpio inside it, and that cpio is now named too. Apple Archive (`.aar`)
-is the one family left wanting a reference.
+to the cpio inside it, and that cpio is now named too.
+
+**Apple Archive joined on 2026-09-01**, graded the way bzip2 and 7z are — by
+an implementation that is not ours, writing the specimens. libNeoAppleArchive
+— MIT, and not a reimplementation of Apple's closed libAppleArchive but a
+from-scratch reading of the format — builds here with `tools/build_neoaa.sh`
+and writes archives in all four shapes the probe has to recognise, each read
+back by that same library before the probe is asked (`tools/neoaa_write.c`).
+The item that tracked it read *"unnamed for want of a reference"*; what was
+missing was the search, not the reference (BLOCKERS.md).
 
 ## Envelope auto-unwrap
 
@@ -2338,6 +2384,97 @@ method).
 not in C.** A dialog defined in a `DITL` costs the engine nothing; the same
 dialog built in code costs its own size on every extraction. `tools/build_mac.sh`
 enforces a ratchet on code size for this reason.
+
+### Where the code is
+
+**147,568 B of `CODE`, and there is no hotspot in it.** MEASURED 2026-09-01
+from the linker map, `tools/code_map.py` (which says how, and checks itself
+against `size`; 74 B of link fill):
+
+| | bytes | share |
+|---|---|---|
+| Macintosh shell — UI, File Manager, memory | 17,358 | 11.8 % |
+| **format decoders, 23 files** | **87,508** | **59.3 %** |
+| shared codec machinery — Huffman, LZW, LZ, BWT | 12,564 | 8.5 % |
+| deflate (zip + gzip) | 7,442 | 5.0 % |
+| engine core, util, segment joining | 9,720 | 6.6 % |
+| encryption: ciphers and key schedules | 7,480 | 5.1 % |
+| Retro68 runtime and libc glue | 5,422 | 3.7 % |
+
+The largest single file is the shell at 17,358 B; the largest decoder is
+`fmt_dd` at 8,860 B, and the largest two FUNCTIONS are 5,136 B and 5,114 B —
+3.5 % each. Eleven decoders together make up 16,342 B. The size is the format
+count, not any one format.
+
+**A further 32,077 B of read-only tables is outside `CODE` altogether**, in
+the A5 world: `ss_dict0` (9,701 B), the cipher S-boxes, the fixed inflate
+tables. That is the linker-level form of *What the application costs the
+engine* above, and it means there is no large table hiding inside the figure
+that could be moved out to buy budget.
+
+**Two ways of counting this are wrong**, both by enough to change a decision:
+summing `size` over the objects gives 178,696 B, because `--gc-sections`
+drops 17 % of it, and counting every `.text`/`.rodata` input section gives
+179,561 B, because Retro68 places `.rodata` in the A5 world. Only the map's
+`.code*` output sections answer the question the budget asks.
+
+### Segmenting the CODE
+
+**The Segment Loader gives back 78,320 B of budget for a configuration file
+and no source change.** MEASURED 2026-09-01 at 1 MB on System 6.0.8, both
+sides built and run in one session with `-D UNC_AT_BUDGET`, on the branch
+`code-segments` — the map is not in this build (a figure taken
+from two builds that were not the same build cost this project a day once —
+DECISIONS.md 2026-08-31, *the overlay that works and is not worth it*):
+
+| build | budget |
+|---|---|
+| one `CODE` segment, as shipped | 647,802 B |
+| the branch `code-segments`, six segments | **726,122 B** |
+
+`CODE` 2 falls from 142,152 B to 39,432 B, and the rest becomes Archives
+55,104, Text 18,912, Deflate 15,188, Crypt 7,560 and Sets 6,356. The jump
+table grows 688 → 1,192 B, total `CODE` grows 424 B and the download grows
+256 B.
+
+**Some of that memory is spent by the loader, not by the engine, and the
+figure above does not say how much.** The budget is taken before the sniff
+(`macextract_mac.c`, the `FreeMem()` block) and a segment loads when something
+in it is first CALLED, so a `.sit` is granted 726,122 B and then hands 55,104 B
+of it straight back when `Archives` loads during the sniff. Measured:
+`derived-Domino_v1.4.sit` extracts byte-exact holding **677,591 B of peak
+heap**, 29,789 B beyond the whole unsegmented budget, so the gain is real —
+but *derived*, it did so with about 5 KB of heap to spare, where the
+unsegmented build refuses the entry cleanly instead. **Segmentation as
+configured here trades a clean refusal for a near miss**, and that is the
+first thing a tier run would have to look at.
+
+`derived-Library_ISBN_Barcoder.sit`, `adobenumbers.sit`, `4acalc.zip` and
+`3d-terrain-modeling-017.hqx` pass unchanged, five fixtures across three
+segments.
+
+**The sustained gain is smaller than the granted one, because the probes
+travel with the decoders.** `unc_sniff` walks its order calling each probe,
+and the first five it calls live in `Archives` — so that segment loads for
+almost every file, whatever the file turns out to be. What is reliably NOT
+resident during a `.sit` run is `Text` + `Deflate` + `Crypt` + `Sets` =
+48,016 B, and during a `.hqx` run, `Deflate` + `Crypt` + `Sets` = 29,104 B
+(*derived*, from the segment sizes above). **Splitting the probes from the
+extractors is what would make the granted figure the real one**: a probe is
+tens of bytes and an extractor is thousands.
+
+**What this has NOT established**, and none of it is cheap to assume: no tier
+has been re-run at 4 MB, 1 MB, 512 KB or on System 3.0; nothing calls
+`UnloadSeg`, so a session that opens several formats accumulates resident
+segments; and the budget is taken before the sniff, so segments loaded later
+compete with a budget already granted — the failure that would show is
+`gRefusedWhy` = 2, `NewPtr` returning NULL where the budget allowed it
+(*Budget*).
+
+**It does not reach a Macintosh 128K**, which is the question that prompted
+it: segment 2 plus the runtime is 44,892 B and the A5 world is another
+44,096 B, against ~88 KB of partition (*A Macintosh 128K*). Segmentation moves
+code out of the heap; it does nothing about the A5 world.
 
 ### Budget
 
@@ -3442,6 +3579,23 @@ swapped per `tools/vmac/README.md`); the shell holds the other 54,552 B.
 `synth-dd-m5.dd` is the clean illustration: DiskDoubler method 5 asks for one
 405,520 B block on every tier, and here it cannot have it.
 
+**66/69 is the ceiling, and it is a property of the three archives.**
+Measured 2026-09-01 with `tools/run_tiers.py`, which applies the same rule on
+Linux and reproduces this tier fixture for fixture. The minimum budget each
+one needs, bisected:
+
+| fixture | needs | of which | against 197,728 B |
+|---|---|---|---|
+| `derived-a2basic.dmg.sit` | **246,734 B** | one 205,020 B BWT block — the entry's whole 205,019 B output in a single block — plus 37,356 B of walk state | 1.25x |
+| `derived-Library_ISBN_Barcoder.sit` | **393,869 B** | one 352,161 B block, same shape | 2.0x |
+| `synth-dd-m5.dd` | **401,408 B** | 1,536 B per distinct context byte, all 256 of them | 2.0x |
+
+Two of the three ask for more in a SINGLE allocation than the machine has for
+the whole job, and a block a BWT inverts has to be resident, so no allocation
+strategy reaches them; the third's 256 splay trees are adaptive state that
+cannot be discarded and rebuilt. What would move this tier is a smaller
+archive, not a smaller engine.
+
 **Three of the four are StuffIt 5, and the other three StuffIt 5 fixtures in
 the sample pass** — at 141,400 B, 161,725 B and 162,567 B, hard against the
 budget. So the line is the archive's BLOCK SIZE, which its compressor chose,
@@ -3492,23 +3646,147 @@ two systems are 11 entries at 163,332 B against 6 entries at 89,613 B: the
 1986 system leaves the engine ~74 KB more than System 6 does, while also
 keeping a Finder that System 6 had to give up.
 
-**A true Macintosh 512K — 64 KB of ROM — cannot be reached at all, and the
-RAM is not why.** Booted with no disk it behaves exactly like the Mac Plus:
-blinking floppy icon, framebuffer byte-identical to the Plus control. Booted
-from the System 3.0 floppy it dies at startup, **Sad Mac `0F0064`**, with
-Apple's 128K ROM (`28BA61CE`) and with the 512K's own `28BA4E50` alike — so it
-is neither the RAM nor the ROM revision, it is what the volume RUNS. Not the
-media either: a blank 800 KB HFS volume, same size and same filesystem but no
-boot blocks, leaves the frame byte-identical to the no-disk one, so the drive
-reads 800K and declines to boot it rather than dying on it. Only a volume
-whose boot blocks execute Sad Macs. *Hypothesis, not measured:* that ROM
-predates HFS, and System Tools 1.0's boot code calls traps it does not have,
-which is the exception class the code reports. Re-taken **2026-08-31** from a
-scratch `mv-512K` build; `tools/vmac/README.md` has the three commands. Two of this
-application's own dependencies are 128K-ROM-and-later anyway —
-`NGetTrapAddress` in `TrapAvailable`, and every file operation going through
-HFS parameter blocks — so a 64K-ROM machine is out on the ROM regardless of
-how the disk question resolves.
+### A true Macintosh 512K: the machine boots, the application bombs
+
+**A 64 KB ROM cannot read HFS, and that was the whole of "cannot be reached at
+all"** — a claim withdrawn 2026-08-31 (BLOCKERS.md) after the one A/B nobody
+had run. On HFS the machine dies at startup, **Sad Mac `0F0064`**, with
+Apple's 128K ROM (`28BA61CE`) and the 512K's own `28BA4E50` alike, so it is
+neither the RAM nor the ROM revision; a blank 800 KB HFS volume with no boot
+blocks leaves the frame byte-identical to the no-disk one, so the drive reads
+800K and declines to boot it rather than dying on it, and what fails is the
+boot code. On **MFS** the same machine boots normally:
+
+| volume | result on `mv-512K` (64 KB ROM, 512 KB of RAM) |
+|---|---|
+| `Sys30.img` — Apple's 800K HFS System 3.0 floppy | Sad Mac `0F0064` |
+| `Sys11.img` — Apple's 400K MFS System 1.1 floppy | boots to Finder 1.1 |
+| `Sys11clone.img` — the same two files, volume rebuilt by `mkmfs.py` | boots to Finder 1.1 |
+| `Sys30Boot.img` — System 3.0 + Finder 5.1 lifted out of `Sys30.img` onto MFS, with `Sys30.img`'s own boot blocks | boots the floor system |
+| `Sys30MFS.img` — **the 400K MFS floppy Apple shipped System 3.0 on**, volume "System Software" | **boots the floor system**, and is what `setup.sh` fetches |
+
+Apple's own MFS disk is the one to use, and `setup.sh` gets it by unpacking
+Macintosh Garden's `System_3.x.sit` with this repository's own CLI. Its System
+file is **140,299 B against the 800K HFS disk's 181,913 B** — the same version,
+41,614 B smaller, because the MFS build carries no HFS.
+
+**The application launches there, and bombs: `ID = 03`.** Three
+configurations, one result: double-clicked from an MFS volume under System
+1.1, double-clicked under System 3.0, and launched as the boot shell — named
+`Finder` — off Apple's own 400K System 3.0 disk, with no Finder on the volume
+at all. The Finder mounts the application's volume and draws its icon; the
+bomb box comes within seconds of the launch. The System is not the variable
+and the machine is.
+
+**What bombs is `MaxApplZone`, the application's second Toolbox call.**
+`tools/vmac/traptest` paints a mark, makes one call, paints the next mark, and
+never returns; its calls are in the order the application makes them, so where
+the probe stops is where the application stops. Both columns are one disk —
+System 3.0 and the probe, the probe named `Finder` so the System launches it —
+on the two machines that differ in nothing but their ROM:
+
+| call, in the application's order | 512Ke, 128 KB ROM | 512K, 64 KB ROM |
+|---|---|---|
+| `SetApplLimit(ApplLimit − kStackBump)` | returns | returns |
+| `MaxApplZone()` | returns | **bomb** |
+| `NGetTrapAddress` (what `TrapAvailable` uses), twice | returns | returns, and answers correctly |
+| `PBHGetVInfoSync` — an HFS parameter block | returns | returns |
+| `PBGetCatInfoSync` | returns | **bomb, `ID = 12`, unimplemented core routine** |
+
+The 512Ke column is the control, and it is the reason the 512K column means
+anything: a probe that stops early proves nothing until the same probe, on the
+same volume, has been seen to finish. The last three rows are reachable on a
+64K ROM only with `-DTRAPTEST_NO_MEM`, which drops the first two.
+
+**`MaxApplZone` is `[Not in ROM]`** — Inside Macintosh II-30, whose
+assembly-language note says to call the Pascal procedure because there is no
+trap for it. It became one with the 128K ROM, and Retro68 emits that trap
+inline and unconditionally: `pascal void MaxApplZone() M68K_INLINE(0xA063)`,
+`Multiverse.h`. **That is not a Retro68 defect and there is nothing to report
+upstream** — Retro68 targets System 6, which means a 128K ROM, where the trap
+exists; the glue Apple's 1985 interfaces carried for `[Not in ROM]` routines
+is absent because nothing Retro68 targets needs it. Writing that glue would
+also gain nothing here: the next wall, `PBGetCatInfo`, is not glue but HFS
+itself. The same bisect through the real application, marks written
+straight into screen memory, stops in the same place: `SetApplLimit` returns,
+`MaxApplZone` does not.
+
+**The bomb's ID is not evidence of anything here.** The same call reports
+`ID = 03` (illegal instruction), `ID = 10` (line 1111) or `ID = 28` (the stack
+has expanded into the heap) depending on the build — Apple's table is Inside
+Macintosh II-365 — because what a missing trap dispatches into is whatever
+happens to be at that address. The call is constant; the symptom is not.
+
+So neither of the reasons this file used to give was the reason: `TrapAvailable`
+answers correctly on a 64K ROM (`_WaitNextEvent` compares equal to
+`_Unimplemented`, so the application never calls it), and an HFS parameter
+block returns. Behind `MaxApplZone` there is a second wall, `PBGetCatInfo`'s
+`_HFSDispatch` selector, which this application uses in five places to walk a
+directory and to size a file. The verdict is unchanged and now has a
+reproduction: **a 64K-ROM Macintosh cannot run this.**
+
+**One guard makes it start on a 64K ROM, and that guard lives on the branch
+`rom64k`, not here** — nothing has run it on the machine it is for, so it is
+not in this repository's download (`BRANCH_NOTES.md` on that branch).
+`MaxApplZone` is guarded by `Has128KROM()`, two byte reads of the ROM
+version word at `ROMBase+8` — Inside Macintosh II's `Environs` note for where
+it lives, Inside Macintosh IV's preface for the threshold, `>= 117 ($75)` — so
+the call is made on every machine that has it and skipped on the one that does
+not. `TrapAvailable` cannot do this job: it reports `_MaxApplZone` as PRESENT
+on a 64K ROM, because it compares against `_Unimplemented` and that entry is
+neither.
+
+Measured on the emulated 512K under Apple's MFS System 3.0, with that
+branch's `dist/`: Standard File opens, a file is chosen, the destination
+dialog appears, and a non-archive is opened, sniffed and refused with the
+application's own alert, *"This file could not be extracted."* **Extracting a
+real StuffIt archive still bombs `ID = 12`** at an HFS call, because this
+machine has no HFS.
+
+So a 64K-ROM Macintosh is now **one call short, and that call is not ours**:
+HFS is what Apple's `Hard Disk 20` file supplies, on exactly the machines that
+have a hard disk. Whether that closes it is **untested and cannot be tested
+here** — Mini vMac has no HD20 (MANUAL_TESTS.md §7). What is measured is that
+the application no longer dies on arrival.
+
+**HFS in software is real, and it is the whole File Manager.** Inside
+Macintosh IV, *The Floppy Disk Interface*: "The external double-sided drive
+can be attached to a Macintosh 512K through the back of a Hard Disk 20. The
+Hard Disk 20 start-up software contains a device driver for this drive and the
+hierarchical (128K ROM) version of the File Manager." So on a 512K with an
+HD20, HFS is present — and an 800K drive is a supported medium there, through
+the HD20 — which is exactly the configuration MANUAL_TESTS.md §7 asks about.
+
+**Without that software there is no HFS at all**, measured twice: under
+Apple's 400K MFS System 3.0 (a 140,299 B System) and under the 182 KB System
+3.0 lifted off the 800K HFS disk, an HFS floppy in the second drive gets
+*"This is not a Macintosh disk: Do you want to initialize it?"* The extra
+41,614 B of the HFS-disk System is not hierarchical File Manager for a 64K
+ROM.
+
+**And the software cannot be loaded here.** The `Hard Disk 20` file is what
+hangs, not Apple's disk: a boot disk built here carrying System 3.0, Finder
+5.1 and that one file stops at the same empty dialog frame as Apple's own *HD
+20 Startup* disk, and stays there — frames byte-identical from 45 s to 210 s,
+so it is a deadlock and not a timeout. *Hypothesis:* the driver is hunting for
+hardware Mini vMac does not emulate.
+HFS was not only a ROM feature: Apple shipped it for 64K-ROM machines as a
+file, `Hard Disk 20`, on the *HD 20 Startup* disk — a 400K MFS floppy that
+comes in the same `System_3.x.sit` as `Sys30MFS.img`. That disk boots to the
+Finder on the 512Ke and stops on the 512K at an **empty dialog frame that
+neither Return nor a click dismisses**, unmodified and rebuilt alike.
+*Hypothesis, not measured:* Mini vMac's 128K model does not provide the Hard
+Disk 20 hardware the driver goes looking for. It would not change the verdict
+in any case: `MaxApplZone` is a Memory Manager trap and bombs before any file
+call, so the two walls are independent and the one HFS could remove is the
+second.
+
+Two harness facts fell out of it. **System 3.0 ignores the boot blocks' shell
+name on MFS exactly as it does on HFS** (*System 3.0 tier*), so the probe is
+launched by being NAMED `Finder` — `mkmfs.py ... probe.bin:Finder` — which is
+deterministic where a double-click is not. **System 1.1 does honour that
+field**, measured with `mkmfs.py --shell TrapTest`; it is the only system here
+that does.
 
 **One thing behaves differently, and it is the System rather than this
 application: Cmd-. does not cancel Standard File on System 3.0.** The frame
@@ -3518,6 +3796,64 @@ extraction through this application's own progress dialog — so old Standard
 File simply does not act on it. The Cancel BUTTON quits normally: the frame
 after it is byte-identical to the Finder window the application was launched
 from. On System 6.0.8 the same chord closes the same dialog.
+
+### A Macintosh 128K: the RAM stops it before the ROM does
+
+**The guarded build does not start on a Macintosh 128K, and the reason is
+memory rather than the 64K ROM.** MEASURED 2026-09-01. The `rom64k` `dist/`
+that reaches Standard File on a 512K bombs `ID = 03` on the same volume, the
+same ROM and the same System when the machine has 128 KB — `mv-128K`, built by
+`setup.sh` as `-m 128K -mem 128K`. The 512K run is the control and is what
+makes the 128K run mean anything: one volume, two machines, one difference.
+
+`tools/vmac/memtest` reports what the machine leaves an application, launched
+as the boot shell so nothing else is resident:
+
+| | Macintosh 128K | Macintosh 512K |
+|---|---|---|
+| `MemTop` | 131,072 | 524,288 |
+| `ApplZone` | 19,968 | 51,968 |
+| `ApplLimit` | 98,536 | 491,752 |
+| `CurStackBase` | 106,728 | 499,944 |
+| `FreeMem` | 4,846 | 4,846 |
+| **largest single `NewPtr`** | **63,744** | **424,960** |
+| a 142,152 B block — `CODE` 2 | **refused** | granted |
+
+**`CODE` 2 is 142,152 B and the machine's largest block is 63,744 B**, so the
+Segment Loader cannot place the segment the engine lives in; the application's
+`CODE` totals 148,780 B against an application heap that cannot exceed
+`ApplLimit − ApplZone` = 78,568 B. That bound is set by the RAM under the
+screen buffer, not by the System, so no smaller System moves it — and CODE is
+the one thing that costs a Macintosh anything here (*What the application
+costs the engine*). A 128K machine is short by a factor of about two before
+any archive is opened, which is why the HD20 question in MANUAL_TESTS.md §7 is
+a question about a **512K** and not about the machine it is named after.
+
+**What would fit, measured by building it.** The sniff table, the format
+table and the segment scheme table are what reference the decoders, so cutting
+rows from them and letting `--gc-sections` run is enough to price a subset
+build. Static sizes from `m68k-apple-macos-size`, MEASURED 2026-09-01:
+
+| build | code | data + bss | static total |
+|---|---|---|---|
+| shipping | 147,568 | 44,096 | 191,664 |
+| MacBinary + BinHex + StuffIt classic + Compact Pro + PackIt | 59,944 | 29,112 | 89,056 |
+| MacBinary + BinHex + StuffIt classic | 52,092 | 29,060 | 81,152 |
+| **MacBinary + BinHex** | **34,452** | **23,724** | **58,176** |
+
+Against ~88 KB between `ApplZone` and the screen buffer, from which the stack
+and every working buffer also come: the two-envelope build leaves ~30 KB for
+both and **fits** (*derived*); adding StuffIt classic leaves ~7 KB and does
+not. The shell is 17,358 B of every row and the A5 world does not fall much
+with the decoders, so the third format is not what breaks it — the fixed cost
+is. A 128K build is therefore an envelope decoder unless the shell and the A5
+world are cut too, and it would still need HFS for the File Manager calls that
+bomb on a 64K ROM (*A true Macintosh 512K*).
+
+**`FreeMem` is not the instrument**, and reads identically on both machines:
+the application zone is created small and grown on demand, so what a probe
+must ask for is the largest block `NewPtr` will actually return. A harness
+that had quoted `FreeMem` here would have reported the two machines as equal.
 
 ## Mac OS 9 tier (QEMU PowerPC — Mac OS 9.2, `mac99`, 512 MB, 68LC040 emulation)
 

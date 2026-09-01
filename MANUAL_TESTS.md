@@ -6,8 +6,8 @@ Mini vMac for System 3.0, 6.0.8 and 7.0.1, QEMU for Mac OS 9.2 — and emulation
 evidence, not proof.
 
 This file is the to-do list for whoever has what this machine does not — the
-hardware (§1–§5), a copy of the software (§6), or an account to post from
-(§7). Each item says what to do, why nothing here can answer it, and what to
+hardware (§1–§5, §7), a copy of the software (§6), or an account to post
+from (§8). Each item says what to do, why nothing here can answer it, and what to
 record. Nothing below is a known failure; it is unverified, which is a
 different thing.
 
@@ -266,7 +266,61 @@ it in the emulator's specimen directory.
 
 ---
 
-## 7. Two bug reports, written and not posted
+## 7. A Macintosh 512K with a Hard Disk 20
+
+**A Macintosh 128K cannot run this and is not what this section asks for.**
+Measured 2026-09-01: the same volume that reaches Standard File on a 512K
+bombs `ID = 03` on a 128K, whose largest single block is 63,744 B against the
+142,152 B of `CODE` the engine lives in (FORMATS.md, *A Macintosh 128K*). The
+machine below is a **512K**, with 512 KB of RAM behind its 64 KB ROM.
+
+**Why nothing here can answer it: Mini vMac does not emulate the Hard Disk
+20.** Apple's own *HD 20 Startup* disk boots on the emulated 512Ke and stops
+on the emulated 512K at an empty dialog frame nothing dismisses, so the one
+configuration that would settle this cannot be booted (FORMATS.md, *A true
+Macintosh 512K*).
+
+**Why it is worth someone's afternoon.** On a 64K-ROM machine this application
+is two calls away from working, and only one of them is ours:
+
+- `MaxApplZone` is `[Not in ROM]` (Inside Macintosh II-30) and Retro68 emits
+  it as a trap. **Skip it and the application runs**: measured on the emulated
+  512K under Apple's MFS System 3.0 — Standard File opens, a file is chosen,
+  the destination dialog appears, a non-archive is opened, sniffed and
+  correctly refused with *"This file could not be extracted."*
+- Extracting a real archive then bombs `ID = 12` at an HFS call — and HFS is
+  exactly what the `Hard Disk 20` file supplies on these machines.
+
+**Take `dist/` from the branch `rom64k`**, which is what makes this askable at
+all: there `Has128KROM()` guards `MaxApplZone`, so `dist/MacExtract.bin`
+starts on a 64K ROM and its Standard File interface works (measured under
+emulation). No toolchain needed. `main`'s download bombs on arrival on those
+machines, by design — see `BRANCH_NOTES.md` on the branch.
+
+**What is and is not already known**, because the branch starting is easy to
+read as the branch working:
+
+| configuration | status |
+|---|---|
+| 64K ROM, floppies only | **starts, interface works, cannot extract** — a real archive bombs `ID = 12` on an HFS call. Measured under emulation |
+| 64K ROM **with an HD20 and its driver** | **unknown, and the reason this section exists.** Apple says the HFS is there: the HD20 start-up software "contains a device driver for this drive and the hierarchical (128K ROM) version of the File Manager" (Inside Macintosh IV, *The Floppy Disk Interface*) — so the call that bombs should exist on that machine |
+| 64K ROM with the `Hard Disk 20` file but no drive | unknown; under emulation that file hangs the machine at an empty dialog, which is probably the driver hunting for hardware Mini vMac does not have — *hypothesis* |
+
+So the test is: put `dist/MacExtract.bin` on an **MFS floppy** —
+`tools/vmac/mkmfs.py` builds one, or copy it across on any Mac that reads
+both — boot a Macintosh 512K **with a Hard Disk 20 attached**, open an
+archive and extract it to the HD20. An 800K HFS floppy is fair game too on
+such a machine, since the same start-up software drives an external
+double-sided drive attached through the HD20. Record: does it extract; if it bombs, the
+ID and what was on screen; and what the extracted files' sizes and dates look
+like beside the same archive extracted anywhere else.
+
+**A pass would not by itself move the floor.** One machine is one machine, and
+what it would establish is that the HFS the `Hard Disk 20` file installs is
+enough for this application — after which the tiers in BLOCKERS.md would still
+have to be re-run before the claim went into README.md.
+
+## 8. Two bug reports, written and not posted
 
 Neither needs a Macintosh — they need an account. Both are reduced to a
 reproduction and written up ready to send; what is missing is somebody to post

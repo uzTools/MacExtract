@@ -68,7 +68,16 @@ ls -la build/mac/MacExtract.APPL build/mac/MacExtract.bin build/mac/MacExtract.d
 # Multiversal libraries and cost 344 B for less (DECISIONS.md 2026-08-31,
 # *the drop the Finder does not make*). The 512 KB machine, whose Finder has
 # no such gesture, pays the 128 B for nothing — which is the trade, stated.
-UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-147424}
+# Raised again 2026-09-01 from 147,424 to 147,588: +164 B for the Apple
+# Archive probe, once a reference for the format was found (DECISIONS.md
+# 2026-09-01, *the search, not the reference*). Bought on the same terms as
+# the rest of the named-only set: one engine, not a Macintosh subset of one.
+# Two attempts at making it cheaper are in the probe -- the subtype set is a
+# string constant rather than sixteen comparisons, and the length floor is
+# one test rather than three -- and they bought 52 B of the 216 the first
+# version cost. That 12 % is the figure worth remembering about code shape
+# on this target.
+UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-147588}
 SIZE="$TOOLCHAIN/bin/m68k-apple-macos-size"
 GDB=build/mac/MacExtract.code.bin.gdb
 if [ -x "$SIZE" ] && [ -f "$GDB" ]; then

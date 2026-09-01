@@ -206,6 +206,10 @@ def main():
     ap.add_argument("--macextract", default="build/macextract")
     args = ap.parse_args()
 
+    if not os.path.exists(args.macextract):
+        print("ziplarge: no CLI at %s" % args.macextract)
+        return 1
+
     problems = []
     ran = 0
     tmp = tempfile.mkdtemp()

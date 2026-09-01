@@ -84,11 +84,15 @@ def main():
     ap.add_argument("--fixtures", default=os.path.join(REPO, "fixtures"))
     args = ap.parse_args()
 
+    # The CLI is tested FIRST and is an error, not a skip: without it this
+    # suite measures nothing, and returning 0 would report success for a
+    # run that never happened. The probe and the fixtures below are real
+    # optional dependencies and do still skip.
+    if not os.path.exists(args.macextract):
+        print(f"run_ticks: no CLI at {args.macextract}")
+        return 1
     if not os.path.exists(args.probe):
         print(f"run_ticks: no probe at {args.probe} — skipping")
-        return 0
-    if not os.path.exists(args.macextract):
-        print(f"run_ticks: no {args.macextract} — skipping")
         return 0
     if not os.path.isdir(args.fixtures):
         print("run_ticks: no fixtures — skipping")
