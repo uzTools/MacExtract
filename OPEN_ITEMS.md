@@ -74,9 +74,14 @@ drive. What an end user would trade is a disk swap or a stall for memory that
 opens nothing new. DECISIONS.md 2026-08-31, *the overlay that works and is not
 worth it*.
 
-**What would reopen it:** something needing tens of kilobytes rather than six.
-The mechanism and its traps are written up in `BRANCH_NOTES.md` on either
-branch, so reopening it is a merge and not a rediscovery.
+**The tens of kilobytes arrived, and not by this route.** A Retro68 segment
+map splits the application into six `CODE` resources and is worth **78,320 B**
+at 1 MB — thirteen times these branches, with no source change and no feature
+given up, because the Segment Loader does natively what an overlay hand-rolls
+(FORMATS.md, *Segmenting the CODE*; DECISIONS.md 2026-09-01, *the loader that
+was already there*). These two branches stay parked: what they buy is a subset
+of it. The mechanism and its traps are still written up in `BRANCH_NOTES.md`
+on either branch.
 
 ## Limits of the formats themselves
 
@@ -144,6 +149,21 @@ branch, so reopening it is a merge and not a rediscovery.
 # Part 2 — Open items
 
 ---
+
+## `CODE` segmentation is measured and not adopted
+
+**78,320 B of budget at 1 MB, from `mac/segments.map` and no source change**
+(FORMATS.md, *Segmenting the CODE*). `derived-Domino_v1.4.sit` extracts
+byte-exact holding 677,591 B, which is 29,789 B more than the entire
+unsegmented budget, so the memory is usable rather than merely offered.
+
+**What would close it:** the tiers, which is what any change to how the
+application occupies memory has always needed here — 4 MB, 1 MB, 512 KB and
+System 3.0, plus the interactive UI, since a segment loads from the
+application's own disk and the one-floppy Mac Plus is the case that matters.
+Nothing calls `UnloadSeg` yet either, so a session that opens several formats
+accumulates resident segments; whether that needs fixing is a measurement, not
+a guess.
 
 ## Waiting on a file this machine does not have
 

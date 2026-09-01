@@ -189,6 +189,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-01 (the reader was in the sentence) — feeding SuperDisk!'s own extractor a stream we wrote, and one hypothesis that did not survive it
 - 2026-09-01 (the machine that is too small) — a 128K Macintosh, and a status row measured on the other machine
 - 2026-09-01 (no hotspot, twenty-three decoders) — where the application's code is, and two instruments that said otherwise
+- 2026-09-01 (the loader that was already there) — 78,320 B the Segment Loader gives for a configuration file
 
 ---
 
@@ -10889,3 +10890,48 @@ remedy is ordering: decide before printing, and produce nothing on stdout when
 the answer is no — a warning above a table does not survive a pipe, a
 redirect, or a reader in a hurry. This is not a fact about linker maps; every
 harness here that prints results and then grades them is exposed to it.
+
+## 2026-09-01 (the loader that was already there) — 78,320 B the Segment Loader gives for a configuration file
+
+**Claim: buying resident heap on a 68000 needs a hand-rolled overlay.** Two
+branches were built on that premise and parked because the prize was 5,988 B
+(*the overlay that works and is not worth it*). The premise was wrong: classic
+Mac OS has done this since 1984, Retro68 supports it, and the application had
+been shipping as one 142,152 B segment because nothing had asked. A segment
+map — `mac/segments.map`, six families, no source change — is worth
+**78,320 B of budget at 1 MB**, thirteen times the overlay branches, with the
+whole feature set intact (FORMATS.md, *Segmenting the CODE*).
+
+**Both sides measured in one session, which is the part that took the
+discipline rather than the insight.** The overlay figure was wrong for a day
+because its two rows came from two builds that were not the same build; so
+the baseline here is not the 648,100 B this file already carried but a run
+made minutes before the segmented one, on the same fixture, with the same
+instrument: 647,802 B.
+
+**And the budget alone would not have been evidence.** It is an allowance
+computed at one moment, and it reads identically for a `.sit` claimed second
+in the sniff order and a `.hqx` claimed near the end — which says the snapshot
+precedes the probes, so segments load AFTER the engine has been promised its
+budget. What settles it is an archive that spends the money:
+`derived-Domino_v1.4.sit` extracts byte-exact holding 677,591 B, 29,789 B more
+than the entire unsegmented budget. **A number that goes up is not a
+capability; the capability is a fixture that used to be refused and now is
+not.**
+
+**Why this was invisible.** The code ceiling in `tools/build_mac.sh` measures
+`size`'s text column — the whole binary — and the budget formula in this file
+is `708,100 − code`. Both are true of a single-segment application and both
+quietly assume one. Every conversation about saving code here has therefore
+been about writing less of it, when the cheaper lever was not having all of it
+resident at once. **A constant that models the system correctly can still
+encode an assumption about the system's SHAPE**, and that assumption is
+invisible precisely because the constant keeps agreeing with reality.
+
+**Not adopted, and not on `main`'s build.** No tier has been re-run, nothing
+calls `UnloadSeg`, and the Segment Loader will ask for the application's disk
+if a one-floppy Mac Plus has had it swapped — the same disk-access trade that
+parked the overlay branches, now on the shipping path rather than an opt-in
+one. The map is committed so the measurement can be re-taken; adopting it is a
+tier re-run away, and that is a decision with evidence behind it rather than a
+guess.

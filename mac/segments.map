@@ -1,0 +1,63 @@
+# mac/segments.map — one CODE resource per format family.
+#
+# NOT used by the default build. It is committed so the measurement below can
+# be re-taken rather than remembered (FORMATS.md, *Segmenting the CODE*).
+#
+# Retro68's Elf2Mac takes a segment map with --mac-segments and patches
+# _LoadSeg at run time (libretro/MultiSegApp.c), so a segment is read from the
+# application's own resource fork the first time something in it is called.
+# Segments are numbered from 3; everything unmatched lands in segment 2, and
+# the Retro68 runtime is always segment 1.
+#
+#   cmake -B /tmp/segbuild -S mac \
+#         -DCMAKE_TOOLCHAIN_FILE=$RETRO68/m68k-apple-macos/cmake/retro68.toolchain.cmake \
+#         -DCMAKE_BUILD_TYPE=Release \
+#         -DCMAKE_EXE_LINKER_FLAGS="-Wl,--mac-segments,mac/segments.map"
+#
+# The harness builds its own application and passes no linker flags, so the
+# way to put a segmented build in front of the emulator is LDFLAGS, which
+# CMake seeds CMAKE_EXE_LINKER_FLAGS from at CONFIGURE time — with a fresh
+# build directory, or the first configuration is kept for ever:
+#
+#   rm -rf build/mac-autotest
+#   LDFLAGS="-Wl,--mac-segments,mac/segments.map" \
+#       tools/vmac/run.py --mem 1M fixtures/<fixture>
+#
+# CHECK THE BINARY BEFORE BELIEVING THE RUN: a flag that did not arrive leaves
+# a single CODE 2 and a green run that measured nothing. A segmented build has
+# eight CODE resources.
+
+SEGMENT Archives
+*/fmt_sit.c.obj
+*/fmt_sit5.c.obj
+*/fmt_cpt.c.obj
+*/fmt_packit.c.obj
+*/fmt_arc.c.obj
+*/fmt_lzh.c.obj
+*/fmt_dd.c.obj
+*/fmt_now.c.obj
+*/fmt_superdisk.c.obj
+*/fmt_spacesaver.c.obj
+SEGMENT Text
+*/fmt_mime.c.obj
+*/fmt_mimeseg.c.obj
+*/fmt_uu.c.obj
+*/fmt_btoa.c.obj
+*/fmt_b64.c.obj
+*/fmt_binhex.c.obj
+SEGMENT Deflate
+*/fmt_exo.c.obj
+*/unc_inflate.c.obj
+*/inflate.c.obj
+*/inftrees.c.obj
+*/inffast.c.obj
+*/adler32.c.obj
+*/zutil.c.obj
+SEGMENT Crypt
+*/unc_crypt.c.obj
+SEGMENT Sets
+*/unc_segment.c.obj
+*/fmt_sitseg.c.obj
+*/fmt_cptseg.c.obj
+*/fmt_zipseg.c.obj
+*/fmt_ddseg.c.obj
