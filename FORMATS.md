@@ -3524,28 +3524,46 @@ at all. The Finder mounts the application's volume and draws its icon; the
 bomb box comes within seconds of the launch. The System is not the variable
 and the machine is.
 
-**Both stated reasons for the ROM verdict were wrong.** `tools/vmac/traptest`
-paints a mark, makes one call, paints the next mark, and never returns. Both
-columns below are one disk — System 3.0 and the probe, the probe named
-`Finder` so that the System launches it and no real Finder is in the way —
-booted on the two machines that differ in nothing but their ROM:
+**What bombs is `MaxApplZone`, the application's second Toolbox call.**
+`tools/vmac/traptest` paints a mark, makes one call, paints the next mark, and
+never returns; its calls are in the order the application makes them, so where
+the probe stops is where the application stops. Both columns are one disk —
+System 3.0 and the probe, the probe named `Finder` so the System launches it —
+on the two machines that differ in nothing but their ROM:
 
-| call | 512Ke, 128 KB ROM | 512K, 64 KB ROM |
+| call, in the application's order | 512Ke, 128 KB ROM | 512K, 64 KB ROM |
 |---|---|---|
-| `NGetTrapAddress` (what `TrapAvailable` uses), twice | returns | returns |
+| `SetApplLimit(ApplLimit − kStackBump)` | returns | returns |
+| `MaxApplZone()` | returns | **bomb** |
+| `NGetTrapAddress` (what `TrapAvailable` uses), twice | returns | returns, and answers correctly |
 | `PBHGetVInfoSync` — an HFS parameter block | returns | returns |
 | `PBGetCatInfoSync` | returns | **bomb, `ID = 12`, unimplemented core routine** |
-| marks painted | **4, no bomb** | 3 |
 
 The 512Ke column is the control, and it is the reason the 512K column means
-anything: a probe that stops one call early proves nothing until the same
-probe, on the same volume, has been seen to finish. So `TrapAvailable` is not
-the blocker, and neither is "every file operation going through HFS parameter
-blocks". What a 64K ROM does not have is the `_HFSDispatch` selector behind
-`PBGetCatInfo`, which this application uses in five places to walk a directory
-and to size a file. The verdict is unchanged and now measured: **a 64K-ROM
-Macintosh cannot run this.** Why the application itself stops at `ID = 03`
-instead of reaching `ID = 12` is *not identified*.
+anything: a probe that stops early proves nothing until the same probe, on the
+same volume, has been seen to finish. The last three rows are reachable on a
+64K ROM only with `-DTRAPTEST_NO_MEM`, which drops the first two.
+
+**`MaxApplZone` is `[Not in ROM]`** — Inside Macintosh II-30, whose
+assembly-language note says to call the Pascal procedure because there is no
+trap for it. It became one with the 128K ROM, and Retro68 emits that trap
+unconditionally. The same bisect through the real application, marks written
+straight into screen memory, stops in the same place: `SetApplLimit` returns,
+`MaxApplZone` does not.
+
+**The bomb's ID is not evidence of anything here.** The same call reports
+`ID = 03` (illegal instruction), `ID = 10` (line 1111) or `ID = 28` (the stack
+has expanded into the heap) depending on the build — Apple's table is Inside
+Macintosh II-365 — because what a missing trap dispatches into is whatever
+happens to be at that address. The call is constant; the symptom is not.
+
+So neither of the reasons this file used to give was the reason: `TrapAvailable`
+answers correctly on a 64K ROM (`_WaitNextEvent` compares equal to
+`_Unimplemented`, so the application never calls it), and an HFS parameter
+block returns. Behind `MaxApplZone` there is a second wall, `PBGetCatInfo`'s
+`_HFSDispatch` selector, which this application uses in five places to walk a
+directory and to size a file. The verdict is unchanged and now has a
+reproduction: **a 64K-ROM Macintosh cannot run this.**
 
 Two harness facts fell out of it. **System 3.0 ignores the boot blocks' shell
 name on MFS exactly as it does on HFS** (*System 3.0 tier*), so the probe is

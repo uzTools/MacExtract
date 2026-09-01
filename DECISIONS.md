@@ -181,6 +181,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-31 (the drop the Finder does not make, and the version it does show) — a gesture measured on three Finders
 - 2026-08-31 (the drop, taken) — 128 bytes, one Rez line, and a partition that stopped asking
 - 2026-08-31 (the medium, not the machine) — the Macintosh 512K boots, and both reasons it could not were wrong
+- 2026-09-01 (the second Toolbox call) — what bombs a 64K ROM, and three instruments that lied on the way to it
 
 ---
 
@@ -10447,3 +10448,49 @@ its own extracted files and booting the rebuild.
 desktop — at emulator speed the System repaints before any frame can be taken,
 so a probe that exits has erased its own evidence. `for (;;)` is the fix, and
 the same trap will be there for the next probe.
+
+
+## 2026-09-01 (the second Toolbox call) — what bombs a 64K ROM, and three instruments that lied on the way to it
+
+**Claim: `MaxApplZone` is what bombs a true Macintosh 512K, and Apple says so.**
+Inside Macintosh II-30 marks it `[Not in ROM]`, with an assembly-language note
+telling you to call the Pascal procedure because there is no trap; the trap
+arrived with the 128K ROM, and Retro68 emits it unconditionally. Measured with
+`tools/vmac/traptest` and again by bisecting the real application:
+`SetApplLimit` returns, `MaxApplZone` does not (FORMATS.md, *A true Macintosh
+512K*).
+
+**The bomb ID was the first thing to mislead.** The application reports
+`ID = 03`, the probe `ID = 10`, an instrumented build `ID = 28` — illegal
+instruction, line 1111, and stack-into-heap. One call, three symptoms, because
+a missing trap dispatches into whatever is at that address and that moves with
+the binary. **An error code is evidence about the aftermath, not the cause;
+the call before the first missing mark is the evidence.**
+
+**The second was a mark nobody could see.** The probe's marks were laid out
+four to a row across the middle of the screen — and the system error dialog
+covers the middle of a 512x342 screen. So the run that "proved" `SetApplLimit`
+fatal had actually painted the mark saying it survived, underneath the bomb
+box. The grid is now eight to a row in the top 75 points, above anything the
+System draws. This is the harness rule in this repository's own words: an
+instrument that cannot see the region it is asked about will answer anyway.
+
+**The third was `--gc-sections`, again.** Hanging the application after a
+readout with `for (;;)` made everything past it dead code, the linker dropped
+it, and the 188,928 B binary became 10,368 B — a different heap, a different
+memory map, a different answer to the question being asked. The fix is a
+condition the compiler cannot fold (`while (LMGetScrnBase() != (Ptr)-1L)`).
+BLOCKERS.md records the same trap eating three of four ballast runs; it is
+worth checking the binary's SIZE after any change meant to freeze it.
+
+**What made the whole bisect possible was writing to screen memory.** Marks
+before `InitGraf` cannot use QuickDraw, and the phase in question is the
+Toolbox initialisation itself; `LMGetScrnBase()` and a loop over bytes need
+nothing initialised at all. The same trick painted 24-bit values as bars and
+read them back off the screenshot — that is how the trap addresses in
+FORMATS.md were obtained, with `ScrnBase` painted alongside as a known value
+so a decode that drifted could be caught. It drifted twice.
+
+**No change to the application.** A 64K-ROM Macintosh is out of scope
+(OPEN_ITEMS.md); this is a finding about why, not a defect. `MaxApplZone` is
+correct on every machine the project claims.

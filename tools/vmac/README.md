@@ -70,10 +70,15 @@ first open; click OK and it rebuilds one.
 **`traptest/` is the minimal reproduction** for what the 64K ROM actually
 lacks: it paints a mark, makes one call, paints the next, and never returns —
 a probe that exits has its marks erased by the desktop repaint before a
-screenshot can be taken. Build it by hand, put it on the volume above as
-`Finder`, and read the marks — **on `mv-512Ke` as well as `mv-512K`**, because
-a probe that stops early says nothing until the same probe has been seen to
-finish somewhere (four marks on the 128K ROM, three on the 64K one):
+screenshot can be taken. Its calls are in the order the application makes
+them, so where it stops is where the application stops; marks are eight to a
+row in the top 75 points, because the system error dialog covers the middle of
+the screen and a mark under it cannot be read from the screenshot that shows
+the bomb. `-DTRAPTEST_NO_MEM` drops the two memory calls, which is how the
+File Manager rows in FORMATS.md are reached on a 64K ROM at all. Build it by
+hand, put it on the volume above as `Finder`, and read the marks — **on
+`mv-512Ke` as well as `mv-512K`**, because a probe that stops early says
+nothing until the same probe has been seen to finish somewhere:
 
     cmake -B build/traptest -S tools/vmac/traptest \
           -DCMAKE_TOOLCHAIN_FILE=$RETRO68/m68k-apple-macos/cmake/retro68.toolchain.cmake
