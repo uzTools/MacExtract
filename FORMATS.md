@@ -3571,7 +3571,18 @@ block returns. Behind `MaxApplZone` there is a second wall, `PBGetCatInfo`'s
 directory and to size a file. The verdict is unchanged and now has a
 reproduction: **a 64K-ROM Macintosh cannot run this.**
 
-**HFS in software does not rescue it, and cannot be tested here anyway.**
+**Behind `MaxApplZone` the application very nearly works.** Skipping that one
+call — a throwaway build, since `TrapAvailable` cannot detect the trap is
+missing — gets it, on the emulated 512K under Apple's MFS System 3.0, all the
+way to a **working user interface**: Standard File opens, a file is chosen,
+the destination dialog appears, and a non-archive is opened, sniffed and
+refused with its own alert, *"This file could not be extracted."* Extracting a
+real StuffIt archive then bombs `ID = 12` at an HFS call. So the machine is
+**two calls short, and only one of them is ours** — the other is HFS, which is
+precisely what the `Hard Disk 20` file supplies on a machine with a hard disk
+(MANUAL_TESTS.md §7).
+
+**HFS in software does not rescue it here, and cannot be tested here anyway.**
 HFS was not only a ROM feature: Apple shipped it for 64K-ROM machines as a
 file, `Hard Disk 20`, on the *HD 20 Startup* disk — a 400K MFS floppy that
 comes in the same `System_3.x.sit` as `Sys30MFS.img`. That disk boots to the

@@ -6,8 +6,8 @@ Mini vMac for System 3.0, 6.0.8 and 7.0.1, QEMU for Mac OS 9.2 — and emulation
 evidence, not proof.
 
 This file is the to-do list for whoever has what this machine does not — the
-hardware (§1–§5), a copy of the software (§6), or an account to post from
-(§7). Each item says what to do, why nothing here can answer it, and what to
+hardware (§1–§5, §7), a copy of the software (§6), or an account to post
+from (§8). Each item says what to do, why nothing here can answer it, and what to
 record. Nothing below is a known failure; it is unverified, which is a
 different thing.
 
@@ -266,7 +266,37 @@ it in the emulator's specimen directory.
 
 ---
 
-## 7. Two bug reports, written and not posted
+## 7. A Macintosh 128K or 512K with a Hard Disk 20
+
+**Why nothing here can answer it: Mini vMac does not emulate the Hard Disk
+20.** Apple's own *HD 20 Startup* disk boots on the emulated 512Ke and stops
+on the emulated 512K at an empty dialog frame nothing dismisses, so the one
+configuration that would settle this cannot be booted (FORMATS.md, *A true
+Macintosh 512K*).
+
+**Why it is worth someone's afternoon.** On a 64K-ROM machine this application
+is two calls away from working, and only one of them is ours:
+
+- `MaxApplZone` is `[Not in ROM]` (Inside Macintosh II-30) and Retro68 emits
+  it as a trap. **Skip it and the application runs**: measured on the emulated
+  512K under Apple's MFS System 3.0 — Standard File opens, a file is chosen,
+  the destination dialog appears, a non-archive is opened, sniffed and
+  correctly refused with *"This file could not be extracted."*
+- Extracting a real archive then bombs `ID = 12` at an HFS call — and HFS is
+  exactly what the `Hard Disk 20` file supplies on these machines.
+
+So the test is: build the application with `MaxApplZone` skipped, put it on an
+MFS floppy with `tools/vmac/mkmfs.py`, boot a 128K or 512K **with an HD20
+attached**, and extract something. Record whether it extracts, and if it bombs,
+the ID and what was on screen. A pass would mean the floor is not the 128K ROM
+after all.
+
+**Do not take a pass here as licence to ship it.** One machine is one machine;
+the `MaxApplZone` guard would still need a ROM test that works (`TrapAvailable`
+does not — it reports the trap as present on a 64K ROM), and every tier in
+BLOCKERS.md would have to be re-run with that guard in.
+
+## 8. Two bug reports, written and not posted
 
 Neither needs a Macintosh — they need an account. Both are reduced to a
 reproduction and written up ready to send; what is missing is somebody to post

@@ -10491,6 +10491,17 @@ read them back off the screenshot — that is how the trap addresses in
 FORMATS.md were obtained, with `ScrnBase` painted alongside as a known value
 so a decode that drifted could be caught. It drifted twice.
 
+**A guard built on `TrapAvailable` does not fire, and that is the transferable
+part.** The obvious fix — skip `MaxApplZone` when the trap is missing — was
+built and measured: on a 64K ROM the check says the trap is PRESENT, because
+it compares against `_Unimplemented` and that table entry is neither
+`_Unimplemented` nor a routine. **A trap-availability test cannot see a
+`[Not in ROM]` routine**; detecting these machines needs a machine test, not a
+trap test. Skipping the call unconditionally, in a throwaway build, then
+showed how much is behind it: the whole user interface, a file opened and
+sniffed, and a real extraction stopping at `ID = 12` on an HFS call
+(FORMATS.md, *A true Macintosh 512K*).
+
 **No change to the application.** A 64K-ROM Macintosh is out of scope
 (OPEN_ITEMS.md); this is a finding about why, not a defect. `MaxApplZone` is
 correct on every machine the project claims.
