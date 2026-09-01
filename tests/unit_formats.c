@@ -3244,6 +3244,30 @@ static void test_foreign(void)
     buf[8] = 208; buf[5] = 1;                         /* magic is 8 bytes */
     fgn_is(buf, (int32_t)sizeof buf, UNC_FORMAT_UNKNOWN);
 
+    /* Apple Archive. Raw is `AA01` or the legacy `YAA1`, then the first
+     * header's own size, which counts those six bytes and so is never
+     * below 6; where the header holds a field, the field's subtype byte
+     * at +9 is out of a closed set, which is what four letters of text
+     * fail. Compressed is `pbz` and a codec letter.
+     * Source: reference/libNeoAppleArchive, internal.h and
+     * neo_aa_header.c; the lzma and lz4 letters from
+     * reference/notes/Apple_Archive.md. */
+    fgn_sig("AA01\x06\x00", 6, UNC_FORMAT_AAR);
+    fgn_sig("YAA1\x06\x00", 6, UNC_FORMAT_AAR);
+    fgn_sig("AA01\x0a\x00TYP1", 10, UNC_FORMAT_AAR);
+    fgn_sig("AA01", 4, UNC_FORMAT_UNKNOWN);           /* size 0 */
+    fgn_sig("AA01\x05\x00", 6, UNC_FORMAT_UNKNOWN); /* size below 6 */
+    fgn_sig("AA01\x0a\x00TYP?", 10, UNC_FORMAT_UNKNOWN);  /* subtype */
+    fgn_sig("AA02\x06\x00", 6, UNC_FORMAT_UNKNOWN);
+    fgn_sig("YAA2\x06\x00", 6, UNC_FORMAT_UNKNOWN);
+    fgn_sig("pbze", 4, UNC_FORMAT_AAR);
+    fgn_sig("pbzz", 4, UNC_FORMAT_AAR);
+    fgn_sig("pbzb", 4, UNC_FORMAT_AAR);
+    fgn_sig("pbzx", 4, UNC_FORMAT_AAR);
+    fgn_sig("pbz4", 4, UNC_FORMAT_AAR);
+    fgn_sig("pbzq", 4, UNC_FORMAT_UNKNOWN);
+    fgn_sig("pbYe", 4, UNC_FORMAT_UNKNOWN);
+
     /* Named, and refused without writing anything. */
     {
         UncIO io;

@@ -169,10 +169,6 @@ somebody's **search** (BLOCKERS.md, SuperDisk!'s compressor); does the search
 name the **right tool** (BLOCKERS.md 2026-08-25); and **have you looked at
 all** (BLOCKERS.md, the ARC 7 row, filed and disproved the same day).
 
-- **Apple Archive (`.aar`) is unnamed for want of a reference.** Extraction
-  is out of scope either way. Missing: a **reference** — an implementation
-  or spec in `reference/`.
-
 - **A SpaceSaver file written by SpaceSaver.** Every codec is graded against
   Aladdin's own modules (FORMATS.md, *StuffIt SpaceSaver*), so what rests on
   this is the CONTAINER: the method the application picks for its CPU, the

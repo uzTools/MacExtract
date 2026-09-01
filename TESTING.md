@@ -1857,10 +1857,15 @@ the signature, its neighbours, and the corpus.
 python3 tools/run_foreign.py --macextract build/dev/macextract
 ```
 
-**Three grades of case, and the suite says which is which.** bzip2, xz, 7z,
+**Four grades of case, and the suite says which is which.** bzip2, xz, 7z,
 cpio (three header shapes) and ar are written by their own tools here and then
 **opened by p7zip** — a specimen that p7zip cannot parse proves nothing about
-a probe, so that check is asserted rather than assumed. Zoo, ARJ and Cabinet
+a probe, so that check is asserted rather than assumed. **Apple Archive is the
+same grade with the writer built for it**: `tools/build_neoaa.sh` compiles
+libNeoAppleArchive out of `reference/`, and `tools/neoaa_write.c` writes one
+archive per shape — raw `AA01`, `pbze`, `pbzz`, `pbzb` — then reads each back
+with that same library and exits nonzero if it will not parse, which is what
+p7zip does for the others. Zoo, ARJ and Cabinet
 are hand-built headers that **deark** must identify as `zoo`, `arj` and `cab`;
 if deark does not agree, the case is worthless and fails. RAR and RAR 5 have
 neither — no writer here, no deark module, and p7zip refuses to name a stub it
@@ -1871,8 +1876,10 @@ cannot parse — so in `ci.sh` they rest on the constants in
 **The negatives are the point of a signature file**: the eighth RAR byte, the
 7-Zip reserved byte, xz's terminator, bzip2's two stream magics and its level
 digit, Zoo's magic at offset 0 instead of 0x14, ARJ with a broken header CRC
-and with a size out of bounds, `070703`, `!<arch>!`. Each was mutation-tested
-against a probe with that field deleted.
+and with a size out of bounds, `070703`, `!<arch>!`, an Apple Archive header
+smaller than its own six-byte prologue, one whose first field subtype is
+outside the closed set, and a `pbz` stream naming a codec that is not one.
+Each was mutation-tested against a probe with that field deleted.
 
 **And the corpus is swept**: not one of the fixtures may come back as a
 foreign archive. Naming a Macintosh archive as a PC one is worse than not
@@ -1884,7 +1891,13 @@ sweep requires it to sniff as RAR and requires everything else not to.
 
 **What this cannot see.** Whether a real Zoo, ARJ or Cabinet archive is named —
 those three are graded on headers built here, which deark identifies but which
-no archiver wrote. And nothing here tests what a named-but-declined archive
+no archiver wrote. Nor whether Apple's OWN `aa` writes anything
+libNeoAppleArchive does not: every Apple Archive here comes from the one
+implementation the probe was also written from, so a shape only Apple emits
+would be invisible to both. That needs a macOS, and is MANUAL_TESTS.md's kind
+of gap, not this suite's. The `pbzx` and `pbz4` codec letters are untested for
+the same reason twice over — libNeoAppleArchive names them and does not yet
+write them. And nothing here tests what a named-but-declined archive
 does on the Macintosh: that is one alert, photographed once
 (`tools/vmac/README.md`, *Photographing the detect-only alert*).
 

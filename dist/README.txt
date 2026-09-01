@@ -39,9 +39,9 @@ inside them
 rather than trusting the name, and a .hqx holding several files -- one
 newsgroup posting, several attachments -- gives you all of them. Resource
 forks, type and creator codes and dates all survive, so an extracted
-application simply runs. StuffIt X, AppleLink packages and the PC-side
-archives -- RAR, 7-Zip, xz, bzip2, Zstandard, lzip, lrzip, Cabinet, WIM,
-Zoo, ARJ, cpio and ar --
+application simply runs. StuffIt X, AppleLink packages, Apple Archive
+(.aar, what a modern Mac writes) and the PC-side archives -- RAR, 7-Zip,
+xz, bzip2, Zstandard, lzip, lrzip, Cabinet, WIM, Zoo, ARJ, cpio and ar --
 are named rather than opened: you are told what the file is instead of
 being left with something that looks like a damaged download.
 

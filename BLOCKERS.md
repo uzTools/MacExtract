@@ -1046,6 +1046,24 @@ a harness can click is not the same list.
   RFC 7932 gives it no magic number, so it cannot be identified by anything
   (OPEN_ITEMS.md, part 1).
 
+- **"Apple Archive (`.aar`) is unnamed for want of a reference — missing: an
+  implementation or spec in `reference/`."** Written 2026-08-29, withdrawn
+  2026-09-01. It was a claim about a search, and the search had never been
+  run: `libNeoAppleArchive` is MIT-licensed, cross-platform, from-scratch
+  rather than a reimplementation of Apple's closed library, and one query
+  away. It carries the magics, the six-byte header prologue and the closed
+  set of field subtypes; it also **builds and writes archives on this
+  machine**, so what arrived was not a spec but an oracle, and the probe is
+  graded against `AA01`, `pbze`, `pbzz` and `pbzb` files written and re-read
+  by an implementation that is not ours. **Cost:** three days of an `.aar`
+  reading as "not recognized"; small, because the format is from 2020 and
+  no Macintosh in scope can meet one. **Why it survived:** the sentence was
+  written the same day four other formats were joined *by fetching their
+  references*, so the file already showed the remedy one paragraph away —
+  the mechanism this list names as "a limitation written one paragraph from
+  its own remedy". The four questions at the head of OPEN_ITEMS.md part 2's
+  waiting-list exist to catch exactly this and were not asked of it.
+
 ### Corrected figures and superseded write-ups
 
 - **The OS 9 boot time** was recorded as "about four minutes", then "20-45

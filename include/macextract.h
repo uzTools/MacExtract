@@ -111,6 +111,7 @@ typedef enum UncFormat {
     UNC_FORMAT_LZIP,          /* .lz                                    */
     UNC_FORMAT_LRZIP,         /* .lrz                                   */
     UNC_FORMAT_WIM,           /* .wim — Windows Imaging                 */
+    UNC_FORMAT_AAR,           /* .aar/.yaa — Apple Archive              */
 
     /* One part of a message/partial set — a message split across
      * several FILES. Joined, never extracted on its own. */

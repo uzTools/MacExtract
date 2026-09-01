@@ -70,7 +70,7 @@ under *Table notes*.
 | StuffIt SpaceSaver (`SPSV`) | extract | **every method the format has**: 0 stored, 1 and 2 (the "Original" LZSS pair), 3 "Alg 3" (Huffman + LZ77), 4 "Alg 4" — the last two starting their window loaded with a preset dictionary that ships inside SpaceSaver✦✦ | no oracle and no fixture, but **Aladdin's own compressors run under `qemu-m68k` and 44 forks they wrote read back byte-exact** (`tools/ssmodule/`, 2026-08-25), plus 160 corrupted variants, a synthetic round-trip and unit tests✦✦ | 4 KB stored, 8 KB method 1, 84 KB method 2, 41 KB method 3, **36 KB** for what SpaceSaver writes (measured on a Mac Plus); 68 KB is the ceiling the width byte allows. The dictionary is 9.7 KB of static data, not heap | full |
 | LZH / LHA (.lzh, .lha) | extract | -lh0- store, -lh1- (LHarc's adaptive Huffman, shared with StuffIt method 5), **-lh2- (both codes adaptive, the position tree growing with the output)**, **-lh3- (static, rebuilt per block)**, -lh4-/-lh5-/-lh6-/-lh7- (static Huffman over a 4/8/32/64 KB window), -lhd- directories, LArc's -lz4-/-lz5-/-lzs-; header levels 0, 1, 2 and 3; **MacLHA's MacBinary payload unwrapped into two forks**; every method the format has except PMarc✵ | 8 fixtures (1 real Amiga archive + 7 of lhasa's) + **182 archives from fourteen writers**, each graded against `unar` and against lhasa, + 12 sets written by LHa 1.14i itself, + 15 -lh2- and 6 -lh3- entries generated for the purpose✵ | 4–74 KB✵ | full |
 | AppleLink package (.pkg) | detect only | — | no specimen anywhere: the probe is Aladdin's own recogniser, at 0 false positives across 928 fixtures (*AppleLink packages*, below) | — | — |
-| RAR, RAR 5, 7-Zip, xz, bzip2, Cabinet, Zoo, ar/.deb, cpio, ARJ, Zstandard, lzip, lrzip, WIM | **named only**, never extracted | — | archives written here by bzip2, xz, 7z, cpio and ar and confirmed by p7zip; real RAR, RAR 5 and CAB out of libarchive's test suite; synthetic Zoo, ARJ and Cabinet identified by deark; 0 false positives in 940 fixtures (*Archives named but not extracted*, below) | — | — |
+| RAR, RAR 5, 7-Zip, xz, bzip2, Cabinet, Zoo, ar/.deb, cpio, ARJ, Zstandard, lzip, lrzip, WIM, Apple Archive | **named only**, never extracted | — | archives written here by bzip2, xz, 7z, cpio and ar and confirmed by p7zip, and **Apple Archives written and re-read by libNeoAppleArchive** in all four shapes; real RAR, RAR 5 and CAB out of libarchive's test suite; synthetic Zoo, ARJ and Cabinet identified by deark; 0 false positives in 940 fixtures (*Archives named but not extracted*, below) | — | — |
 
 ## Table notes
 
@@ -1533,7 +1533,8 @@ three routes above.
 ## Archives named but not extracted
 
 **Named since 2026-08-26**, extraction still out by the brief (OPEN_ITEMS.md,
-part 1). Thirteen PC-side families, one probe, `src/fmt_foreign.c`:
+part 1). Fourteen PC-side and modern families, one probe,
+`src/fmt_foreign.c`:
 
 | format | test | source |
 |---|---|---|
@@ -1551,6 +1552,7 @@ part 1). Thirteen PC-side families, one probe, `src/fmt_foreign.c`:
 | Zstandard | 28 b5 2f fd, **or** a skippable frame 5x 2a 4d 18 | RFC 8878 §3.1.1 and §3.1.2, `reference/notes/zstd_rfc8878.txt` |
 | lrzip | `LRZI` and at least `MAGIC_LEN` = 24 bytes | `write_magic`/`get_magic`, `reference/lrzip/lrzip.c` |
 | WIM | `MSWIM` 00 00 00, header size at +8 = 208 | `WIM_MAGIC`, `WIM_HEADER_DISK_SIZE`, `reference/wimlib/include/wimlib/header.h` |
+| Apple Archive | `AA01` or legacy `YAA1`, header size at +4 ≥ 6, and the first field's subtype byte at +9 in a closed set of sixteen; **or** `pbz` and a codec letter `e`/`z`/`b`/`x`/`4` | `AAR_MAGIC`, `YAA_MAGIC`, `PBZ*_MAGIC` in `reference/libNeoAppleArchive/libNeoAppleArchive/libNeoAppleArchive_internal.h`; the prologue and the subtype set in `neo_aa_header.c`; the `x` and `4` letters from `reference/notes/Apple_Archive.md` |
 | lzip | `LZIP`, and nothing to corroborate it with | deark `unsupported.c`, `get_fmt` — which rates it **50** where it rates xz 90 |
 
 **What grades them** (`tools/run_foreign.py`, in `ci.sh`): archives written
@@ -1599,8 +1601,18 @@ reference, and it moved to OPEN_ITEMS.md part 1 on 2026-08-29.
 
 A `.zipx` needs nothing: it is a zip, the zip probe claims it, and its entries
 are refused one at a time by method. A `.cpgz` is gzip, the gzip layer unwraps
-to the cpio inside it, and that cpio is now named too. Apple Archive (`.aar`)
-is the one family left wanting a reference.
+to the cpio inside it, and that cpio is now named too.
+
+**Apple Archive joined on 2026-09-01**, and it is the only one of the fourteen
+graded by a writer built for the purpose. libNeoAppleArchive — MIT, and not a
+reimplementation of Apple's closed libAppleArchive but a from-scratch reading
+of the format — builds here with `tools/build_neoaa.sh` and writes archives in
+all four shapes the probe has to recognise, each read back by that same library
+before the probe is asked (`tools/neoaa_write.c`). The item that tracked it
+read *"unnamed for want of a reference"*; what was missing was the search, not
+the reference (BLOCKERS.md). It is also the only probe here whose cost was
+refused once by the Macintosh ratchet: 164 B of code, against 20 B of headroom
+(*Budget*, and DECISIONS.md 2026-09-01).
 
 ## Envelope auto-unwrap
 

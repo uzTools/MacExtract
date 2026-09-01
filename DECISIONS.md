@@ -185,6 +185,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-01 (two byte reads) — the guard that lets a 64K-ROM Macintosh start, and why it is not a trap test
 - 2026-09-01 (the package that cannot be handed over) — three routes into Aladdin's AppleLink expander, and the control that made an empty list mean something
 - 2026-09-01 (the tier that needed no Macintosh) — a budget sweep, a ceiling, and a number that was an artefact
+- 2026-09-01 (the search, not the reference) — Apple Archive, and what naming it costs a Mac Plus
 
 ---
 
@@ -10672,3 +10673,58 @@ wrong once — M46 found it firing after a completely successful extraction
 — which is the other half of the lesson. A message is a claim, it is the
 only one the user ever reads, and nothing in a byte-comparison suite can
 fail on it.
+
+## 2026-09-01 (the search, not the reference) — Apple Archive, and what naming it costs a Mac Plus
+
+**The claim was about a search.** `OPEN_ITEMS.md` had *"Apple Archive (`.aar`)
+is unnamed for want of a reference — missing: an implementation or spec in
+`reference/`."* One query found `0xilis/libNeoAppleArchive`: MIT, cross-platform,
+and explicitly **not** a reimplementation of Apple's closed `libAppleArchive`
+but a from-scratch reading of the format. It carries `AAR_MAGIC`/`YAA_MAGIC`,
+the `pbz*` set, the six-byte header prologue and the closed set of sixteen
+field subtypes. Withdrawn in `BLOCKERS.md` with what it cost.
+
+**What arrived was better than a spec: an oracle.** The library builds here
+with `gcc` once its two compression submodules are checked out — its own
+Makefile wants `clang`, Homebrew's OpenSSL and an install step, none of which
+the writer needs, so `tools/build_neoaa.sh` compiles the three core sources
+directly with `EXCLUDE_AEA_SUPPORT=1`. `tools/neoaa_write.c` then writes a
+real archive in each of the four shapes the probe must recognise and reads it
+back with the same library. That moves Apple Archive out of the "signature
+only" grade that RAR sits in and into the grade bzip2 and 7z sit in, where a
+specimen the probe rejects is known to be an archive first.
+
+**Two sources, and they disagree in a way worth recording.** The library
+defines three codec letters — `e` LZFSE, `z` zlib, `b` LZBITMAP. The
+archiveteam wiki (`reference/notes/Apple_Archive.md`) gives two more, lzma
+`x` and lz4 `4`. That is not the wiki inventing them: the library's own
+`docs/NeoAAArchiveGeneric.md` says both belong to the format and are "not yet
+added". So all five are claimed, and the two that no implementation here can
+write are marked untestable in `TESTING.md` rather than quietly counted as
+covered. `pbzx` is also the payload stream inside an Apple flat package, so
+one of those is now named an Apple Archive — the right answer for a file whose
+whole purpose is to tell the user which family a file belongs to and that it
+is not damaged.
+
+**Then the Macintosh ratchet refused it, and that was the useful part.**
+`tools/build_mac.sh` failed the build at 196 B over a ceiling with 20 B of
+headroom. Two rewrites took it to 164 B: the sixteen subtypes became a string
+constant walked by `in_set()`, because on a 68000 the string is data and free
+while the comparisons are code and are not, and three length tests became one.
+Together they bought 52 B — **12 % of what the first version cost, and the
+lesson is the ratio.** Code shape is worth little here; what the code *is* is
+worth everything, which is the same finding as *Size flags, priced in both
+currencies*, where a full day of compiler flags bought 780 B.
+
+**The remaining 164 B was bought deliberately, and the trade is not flattering
+to state.** No Macintosh this application runs on — System 3.0 through Mac OS
+9 — can meet a format Apple shipped in 2020, so those bytes buy the Mac
+nothing it will ever use. They are paid to keep ONE engine rather than a
+Macintosh subset of one, which is the same trade already made for RAR 5,
+7-Zip, xz, zstd, WIM, lrzip and lzip; carving out this one format would have
+been the exception that made the rule unreadable. The price is 1.2 % of the
+13,602 B by which the tightest fixture that still fits, `derived-Domino_v1.4.sit`,
+clears the 1 MB Mac Plus budget (FORMATS.md, *Budget*). What made it a decision
+rather than an accident is that the ratchet stopped the build: this cost was
+paid in the open, where the 31,860 B that quietly moved the budget on
+2026-08-24 was not.

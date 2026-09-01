@@ -193,3 +193,23 @@ if [ ! -d reference/wimlib ]; then
     tar xzf /tmp/wimlib.tar.gz -C reference/wimlib --strip-components=1
     rm -f /tmp/wimlib.tar.gz
 fi
+
+# libNeoAppleArchive (Snoolie K, MIT) — the only open reading of Apple
+# Archive there is, and not a reimplementation of Apple's closed
+# libAppleArchive but a from-scratch one. `libNeoAppleArchive_internal.h`
+# carries the magics (AAR_MAGIC/YAA_MAGIC and the pbz* set) and
+# `neo_aa_header.c` the six-byte header prologue and the closed set of
+# field subtypes that corroborate it. Naming only: extraction stays out
+# by the brief.
+[ -d reference/libNeoAppleArchive ] || \
+    git clone --depth 1 https://github.com/0xilis/libNeoAppleArchive \
+        reference/libNeoAppleArchive
+
+# The archiveteam wiki's Apple Archive page, kept for the two codec bytes
+# libNeoAppleArchive names but does not yet write: lzma `pbzx` (70627A78)
+# and lz4 `pbz4` (70627A34). Its own docs/NeoAAArchiveGeneric.md says
+# both belong to the format and are "not yet added", so the wiki is what
+# supplies the bytes. https is refused by that host; http works.
+[ -f reference/notes/Apple_Archive.md ] || \
+    curl -sL "http://fileformats.archiveteam.org/wiki/Apple_Archive?action=raw" \
+        -o reference/notes/Apple_Archive.md

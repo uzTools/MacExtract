@@ -98,8 +98,9 @@ there is, so keep them. Send the output to a different disk from the parts —
 the only thing that works when you are swapping floppies.
 
 **Recognises but does not extract:** StuffIt X, AppleLink packages (`.pkg`),
-and the PC-side archives — RAR, 7-Zip, xz, bzip2, Zstandard, lzip, lrzip,
-Cabinet, WIM, Zoo, ARJ, cpio and `ar`/`.deb`. You get *"MacExtract cannot open
+Apple Archive (`.aar`, what a modern Mac writes), and the PC-side archives —
+RAR, 7-Zip, xz, bzip2, Zstandard, lzip, lrzip, Cabinet, WIM, Zoo, ARJ, cpio
+and `ar`/`.deb`. You get *"MacExtract cannot open
 RAR files."*, not something that looks like a damaged download.
 
 ## Compared with StuffIt Expander 4.0.2
