@@ -3571,6 +3571,18 @@ block returns. Behind `MaxApplZone` there is a second wall, `PBGetCatInfo`'s
 directory and to size a file. The verdict is unchanged and now has a
 reproduction: **a 64K-ROM Macintosh cannot run this.**
 
+**HFS in software does not rescue it, and cannot be tested here anyway.**
+HFS was not only a ROM feature: Apple shipped it for 64K-ROM machines as a
+file, `Hard Disk 20`, on the *HD 20 Startup* disk — a 400K MFS floppy that
+comes in the same `System_3.x.sit` as `Sys30MFS.img`. That disk boots to the
+Finder on the 512Ke and stops on the 512K at an **empty dialog frame that
+neither Return nor a click dismisses**, unmodified and rebuilt alike.
+*Hypothesis, not measured:* Mini vMac's 128K model does not provide the Hard
+Disk 20 hardware the driver goes looking for. It would not change the verdict
+in any case: `MaxApplZone` is a Memory Manager trap and bombs before any file
+call, so the two walls are independent and the one HFS could remove is the
+second.
+
 Two harness facts fell out of it. **System 3.0 ignores the boot blocks' shell
 name on MFS exactly as it does on HFS** (*System 3.0 tier*), so the probe is
 launched by being NAMED `Finder` — `mkmfs.py ... probe.bin:Finder` — which is
