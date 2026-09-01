@@ -3571,16 +3571,27 @@ block returns. Behind `MaxApplZone` there is a second wall, `PBGetCatInfo`'s
 directory and to size a file. The verdict is unchanged and now has a
 reproduction: **a 64K-ROM Macintosh cannot run this.**
 
-**Behind `MaxApplZone` the application very nearly works.** Skipping that one
-call — a throwaway build, since `TrapAvailable` cannot detect the trap is
-missing — gets it, on the emulated 512K under Apple's MFS System 3.0, all the
-way to a **working user interface**: Standard File opens, a file is chosen,
-the destination dialog appears, and a non-archive is opened, sniffed and
-refused with its own alert, *"This file could not be extracted."* Extracting a
-real StuffIt archive then bombs `ID = 12` at an HFS call. So the machine is
-**two calls short, and only one of them is ours** — the other is HFS, which is
-precisely what the `Hard Disk 20` file supplies on a machine with a hard disk
-(MANUAL_TESTS.md §7).
+**The shipping application now starts on a 64K ROM, and its interface works
+there.** `MaxApplZone` is guarded by `Has128KROM()`, two byte reads of the ROM
+version word at `ROMBase+8` — Inside Macintosh II's `Environs` note for where
+it lives, Inside Macintosh IV's preface for the threshold, `>= 117 ($75)` — so
+the call is made on every machine that has it and skipped on the one that does
+not. `TrapAvailable` cannot do this job: it reports `_MaxApplZone` as PRESENT
+on a 64K ROM, because it compares against `_Unimplemented` and that entry is
+neither.
+
+Measured on the emulated 512K under Apple's MFS System 3.0, with the build
+that ships in `dist/`: Standard File opens, a file is chosen, the destination
+dialog appears, and a non-archive is opened, sniffed and refused with the
+application's own alert, *"This file could not be extracted."* **Extracting a
+real StuffIt archive still bombs `ID = 12`** at an HFS call, because this
+machine has no HFS.
+
+So a 64K-ROM Macintosh is now **one call short, and that call is not ours**:
+HFS is what Apple's `Hard Disk 20` file supplies, on exactly the machines that
+have a hard disk. Whether that closes it is **untested and cannot be tested
+here** — Mini vMac has no HD20 (MANUAL_TESTS.md §7). What is measured is that
+the application no longer dies on arrival.
 
 **HFS in software does not rescue it here, and cannot be tested here anyway.**
 HFS was not only a ROM feature: Apple shipped it for 64K-ROM machines as a

@@ -17,6 +17,9 @@ unarchiver, so MacExtract ships in two forms that need no unarchiver:
 
 Floor target: System 3.0 on a 1 MB Mac Plus (68000) -- the system the Plus
 shipped with in January 1986. It also runs in 512 KB, on a Macintosh 512Ke.
+On a Macintosh 128K or 512K -- the 64K ROM -- it opens and lists a disk, but
+extracting needs HFS, which those machines have only with a Hard Disk 20
+attached; nobody has yet tried it on one.
 The same binary runs unchanged through Mac OS 9 and adapts its memory use to
 the machine at runtime, so there is one download for every Mac.
 

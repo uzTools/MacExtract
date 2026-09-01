@@ -285,16 +285,22 @@ is two calls away from working, and only one of them is ours:
 - Extracting a real archive then bombs `ID = 12` at an HFS call — and HFS is
   exactly what the `Hard Disk 20` file supplies on these machines.
 
-So the test is: build the application with `MaxApplZone` skipped, put it on an
-MFS floppy with `tools/vmac/mkmfs.py`, boot a 128K or 512K **with an HD20
-attached**, and extract something. Record whether it extracts, and if it bombs,
-the ID and what was on screen. A pass would mean the floor is not the 128K ROM
-after all.
+**Since 2026-09-01 the download itself will do**, which is what makes this
+askable at all: `Has128KROM()` guards `MaxApplZone`, so `dist/MacExtract.bin`
+starts on a 64K ROM and its Standard File interface works there (measured
+under emulation). No toolchain needed.
 
-**Do not take a pass here as licence to ship it.** One machine is one machine;
-the `MaxApplZone` guard would still need a ROM test that works (`TrapAvailable`
-does not — it reports the trap as present on a 64K ROM), and every tier in
-BLOCKERS.md would have to be re-run with that guard in.
+So the test is: put `dist/MacExtract.bin` on an **MFS floppy** —
+`tools/vmac/mkmfs.py` builds one, or copy it across on any Mac that reads
+both — boot a Macintosh 128K or 512K **with a Hard Disk 20 attached**, open an
+archive and extract it to the HD20. Record: does it extract; if it bombs, the
+ID and what was on screen; and what the extracted files' sizes and dates look
+like beside the same archive extracted anywhere else.
+
+**A pass would not by itself move the floor.** One machine is one machine, and
+what it would establish is that the HFS the `Hard Disk 20` file installs is
+enough for this application — after which the tiers in BLOCKERS.md would still
+have to be re-run before the claim went into README.md.
 
 ## 8. Two bug reports, written and not posted
 

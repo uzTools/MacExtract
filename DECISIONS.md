@@ -182,6 +182,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-31 (the drop, taken) — 128 bytes, one Rez line, and a partition that stopped asking
 - 2026-08-31 (the medium, not the machine) — the Macintosh 512K boots, and both reasons it could not were wrong
 - 2026-09-01 (the second Toolbox call) — what bombs a 64K ROM, and three instruments that lied on the way to it
+- 2026-09-01 (two byte reads) — the guard that lets a 64K-ROM Macintosh start, and why it is not a trap test
 
 ---
 
@@ -10505,3 +10506,52 @@ sniffed, and a real extraction stopping at `ID = 12` on an HFS call
 **No change to the application.** A 64K-ROM Macintosh is out of scope
 (OPEN_ITEMS.md); this is a finding about why, not a defect. `MaxApplZone` is
 correct on every machine the project claims.
+
+
+## 2026-09-01 (two byte reads) — the guard that lets a 64K-ROM Macintosh start, and why it is not a trap test
+
+**Claim: `MaxApplZone` is now guarded, the application starts on a 64K ROM,
+and the guard costs nothing anywhere else.** `Has128KROM()` reads the ROM
+version word at `ROMBase+8` and skips the call when it positively reads as a
+64K ROM. Measured: the shipping build reaches its Standard File dialog on the
+emulated Macintosh 512K under Apple's MFS System 3.0, and the two tiers that
+would notice are unchanged — **69/69 at 1 MB on System 6.0.8** and **66/69 on
+System 3.0 at 512 KB**, the same three memory refusals as before.
+
+**Why not `TrapAvailable`, which the application already has.** It was written
+first and it does not work: on a 64K ROM it reports `_MaxApplZone` as PRESENT,
+because it compares the trap's address against `_Unimplemented` and that entry
+is neither `_Unimplemented` nor a routine. **A trap-availability test cannot
+see a `[Not in ROM]` routine** — those are library glue in the era that lacks
+them, not unimplemented traps. The test has to be of the MACHINE.
+
+**Sources, both of them Apple's.** Where the number lives: Inside Macintosh
+II, Operating System Utilities, `Environs` — its assembly-language note gives
+the ROM version as the word at `ROMBase+8`, "$00xx for the Macintosh 128K or
+512K". What the number means: Inside Macintosh IV, Preface, *Compatibility* —
+"if the version number is greater than or equal to 117 ($75), it's safe to use
+the routines and data structures described in this volume". `Environs` itself
+is `[Not in ROM]` glue, which is why the low-memory route is the one used: a
+test must not depend on the thing it is testing for.
+
+**It is written as a negative on purpose.** `!(rom[8] == 0 && rom[9] < 0x75)`
+— "not positively a 64K ROM" — so that any version word this has not surveyed
+(a Macintosh XL reads `$xxFF`; later ROMs were never checked here) leaves
+behaviour exactly as it was before the guard existed. The first draft asked
+"is this a 128K ROM?" and would have SKIPPED `MaxApplZone` on any machine
+whose word is not `$00xx`, which is a regression on every tier above the Plus
+and would not have shown up on the two 128K-ROM tiers that were run.
+
+**The size ceiling did its job.** The first version was 8 B over
+`UNC_MAC_MAX_CODE` and `build_mac.sh` refused it; comparing the low byte
+instead of composing the word saved exactly those 8 B, so the capability costs
+**0 B of the engine's budget**. The ceiling exists to make a kilobyte of code
+a deliberate purchase (FORMATS.md, *What the application costs the engine*),
+and here it turned a shrug into a free change.
+
+**What is NOT claimed.** That the application works on a 64K-ROM machine.
+Extraction needs HFS and those machines only have it with a `Hard Disk 20`,
+which Mini vMac does not emulate; what is measured is that the interface runs
+and that a non-archive is correctly refused there. The rest is
+MANUAL_TESTS.md §7, and it is now askable because the DOWNLOAD does it — a
+test that needs the tester to own Retro68 is not a test anyone will run.
