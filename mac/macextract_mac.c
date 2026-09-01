@@ -241,35 +241,6 @@ static int HasPartition(void)
     return zone + 512L * 1024L < (long)LMGetMemTop();
 }
 
-/* True on a 128K ROM or later; false on the 64K ROM of a Macintosh 128K or
- * 512K. Two byte reads, no trap, so it is safe on the machine it is asking
- * about.
- *
- * Source: Inside Macintosh II, Operating System Utilities, Environs — the
- * assembly-language note gives the ROM version as the word at ROMBase+8,
- * "$00xx for the Macintosh 128K or 512K". Inside Macintosh IV, Preface,
- * "Compatibility": "if the version number is greater than or equal to 117
- * ($75), it's safe to use the routines and data structures described in this
- * volume" — that is, the 128K ROM. Environs itself is `[Not in ROM]` glue, so
- * the low-memory route is the one that cannot depend on what it is testing.
- *
- * WHY IT EXISTS: MaxApplZone is `[Not in ROM]` too (Inside Macintosh II-30)
- * and Retro68 emits it as an inline trap, so calling it on a 64K ROM bombs
- * before this application draws anything. TrapAvailable cannot be used for
- * this — it reports that trap as PRESENT on a 64K ROM, because it compares
- * against _Unimplemented and the entry is neither (FORMATS.md, *A true
- * Macintosh 512K*). Byte-wise reads, per the 68000 rules in CLAUDE.md. */
-static Boolean Has128KROM(void)
-{
-    /* The word is $00xx on the machines this distinguishes, so the version is
-     * its low byte. Written as "not positively a 64K ROM" rather than "is a
-     * 128K ROM" so that ANY word this does not recognise — a Macintosh XL
-     * reads $xxFF, and later ROMs were never surveyed here — leaves the
-     * behaviour exactly as it was before this guard existed. */
-    const unsigned char *rom = (const unsigned char *)LMGetROMBase();
-    return (Boolean)!(rom[8] == 0 && rom[9] < 0x75);
-}
-
 static Boolean TrapAvailable(short trap)
 {
     /* Multiversal names: kToolboxTrapType/kOSTrapType. */
@@ -4009,10 +3980,7 @@ int main(void)
     int ret, entries, errors;
 
     SetApplLimit((Ptr)((long)LMGetApplLimit() - kStackBump));
-    /* Guarded: `[Not in ROM]` on a 64K ROM, where the trap Retro68 emits for
-     * it bombs. See Has128KROM. */
-    if (Has128KROM())
-        MaxApplZone();
+    MaxApplZone();
     { int i; for (i = 0; i < 12; i++) MoreMasters(); }
     StackPaint();
     StackMark(&gStkSelf);
@@ -5263,10 +5231,7 @@ int main(void)
      * Multiversal import libraries; the low-memory accessor is the
      * documented equivalent (ApplLimit at 0x0130). */
     SetApplLimit((Ptr)((long)LMGetApplLimit() - kStackBump));
-    /* Guarded: `[Not in ROM]` on a 64K ROM, where the trap Retro68 emits for
-     * it bombs. See Has128KROM. */
-    if (Has128KROM())
-        MaxApplZone();
+    MaxApplZone();
     /* Pre-allocate plenty of master pointers up front. If the File
      * Manager / Dialog Manager exhaust them mid-write, the Memory
      * Manager allocates a new master-pointer block on demand, which

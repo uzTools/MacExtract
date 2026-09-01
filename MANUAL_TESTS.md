@@ -285,10 +285,11 @@ is two calls away from working, and only one of them is ours:
 - Extracting a real archive then bombs `ID = 12` at an HFS call — and HFS is
   exactly what the `Hard Disk 20` file supplies on these machines.
 
-**Since 2026-09-01 the download itself will do**, which is what makes this
-askable at all: `Has128KROM()` guards `MaxApplZone`, so `dist/MacExtract.bin`
-starts on a 64K ROM and its Standard File interface works there (measured
-under emulation). No toolchain needed.
+**Take `dist/` from the branch `rom64k`**, which is what makes this askable at
+all: there `Has128KROM()` guards `MaxApplZone`, so `dist/MacExtract.bin`
+starts on a 64K ROM and its Standard File interface works (measured under
+emulation). No toolchain needed. `main`'s download bombs on arrival on those
+machines, by design — see `BRANCH_NOTES.md` on the branch.
 
 So the test is: put `dist/MacExtract.bin` on an **MFS floppy** —
 `tools/vmac/mkmfs.py` builds one, or copy it across on any Mac that reads
