@@ -291,6 +291,15 @@ starts on a 64K ROM and its Standard File interface works (measured under
 emulation). No toolchain needed. `main`'s download bombs on arrival on those
 machines, by design — see `BRANCH_NOTES.md` on the branch.
 
+**What is and is not already known**, because the branch starting is easy to
+read as the branch working:
+
+| configuration | status |
+|---|---|
+| 64K ROM, floppies only | **starts, interface works, cannot extract** — a real archive bombs `ID = 12` on an HFS call. Measured under emulation |
+| 64K ROM **with an HD20 and its driver** | **unknown, and the reason this section exists** |
+| 64K ROM with the `Hard Disk 20` file but no drive | unknown; under emulation that file hangs the machine at an empty dialog, which is probably the driver hunting for hardware Mini vMac does not have — *hypothesis* |
+
 So the test is: put `dist/MacExtract.bin` on an **MFS floppy** —
 `tools/vmac/mkmfs.py` builds one, or copy it across on any Mac that reads
 both — boot a Macintosh 128K or 512K **with a Hard Disk 20 attached**, open an
