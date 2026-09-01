@@ -184,6 +184,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-01 (the second Toolbox call) — what bombs a 64K ROM, and three instruments that lied on the way to it
 - 2026-09-01 (two byte reads) — the guard that lets a 64K-ROM Macintosh start, and why it is not a trap test
 - 2026-09-01 (the package that cannot be handed over) — three routes into Aladdin's AppleLink expander, and the control that made an empty list mean something
+- 2026-09-01 (the tier that needed no Macintosh) — a budget sweep, a ceiling, and a number that was an artefact
 
 ---
 
@@ -10615,3 +10616,59 @@ evidence about nothing until something has filled the same list.** The harness
 was two boots old before it grew a control, and the control cost four
 minutes — one archive of a sibling translator's type, put in beside the
 packages.
+
+
+## 2026-09-01 (the tier that needed no Macintosh) — a budget sweep, a ceiling, and a number that was an artefact
+
+The 512 KB tier stood at 66/69 and read like a target: three fixtures
+refused, and a history of recovering them one at a time (the Arsenic block
+took the floor target 40/44 → 41/44; a flat reserve and a 4 KB stack bump
+took this tier 65 → 66). This is what looking at it properly found.
+
+### The sweep
+
+The Mac shell's allocator is a running total against a cap, refused per
+entry. `macextract --budget N` is that same rule, so a tier's memory
+result does not need a Macintosh at all: `tools/run_tiers.py` sweeps the
+same 69-fixture sample at the tier's measured budget in **five seconds**,
+against one emulator boot per fixture. It reproduces System 3.0 / 512 KB
+**exactly** — 66/69, the same three by name — and the 1 MB floor's 69/69,
+so `ci.sh` now asserts both. What it cannot see is in TESTING.md, and the
+first item is why the System 6.0.8 / 512 KB tier comes out 59/69 here
+against the machine's 58: a budget is one number, and the Memory Manager
+also has to find one PIECE that big.
+
+### The ceiling
+
+Bisected minimum budgets: **246,734 B**, **393,869 B**, **401,408 B**,
+against 197,728 B. Two of the three ask for more in a SINGLE allocation
+than the machine has for the whole job — 205,020 B and 352,161 B, each one
+BWT block, which is the entry's whole output — and a block being inverted
+has to be resident. The third wants 1,536 B per distinct context byte and
+touches all 256; those splay trees are adaptive state, so none can be
+dropped and rebuilt. **66/69 is the ceiling of the machine, not a gap in
+the engine**, and FORMATS.md now says so with the numbers. What would move
+it is a smaller archive.
+
+### The number that was an artefact
+
+The sweep printed `synth-dd-m5.dd  short by 928` — under a kilobyte, on a
+fixture the same file says needs 405,520 B. Both are true and the second
+is the one that matters: **a shortfall is the FIRST refused request's, not
+the entry's demand.** An incremental allocator is refused at the request
+that crosses the line, and method 5's requests are 1,536 B each, so the
+figure understates the requirement by 220x here and by 3,000x at a budget
+of 300,000.
+
+That figure is not diagnostic — it is **advice**, printed on the
+Macintosh as *"Needs 8K more memory. Give MacExtract more in Get Info"*.
+A user who follows it gets the same message again. Both front ends now say
+**at least**, which is true of one allocation and of a run.
+
+The wording it replaces called itself "round enough to type and never
+short", and that is the shape worth remembering: **a claim made about a
+number by the code that computes it.** The same sentence had already been
+wrong once — M46 found it firing after a completely successful extraction
+— which is the other half of the lesson. A message is a claim, it is the
+only one the user ever reads, and nothing in a byte-comparison suite can
+fail on it.

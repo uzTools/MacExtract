@@ -1154,6 +1154,56 @@ that container to grade a generated one (OPEN_ITEMS.md). The Mac
 application consumes none of it and says nothing on screen; what it does
 instead is graded in the next section.
 
+## The tiers a budget predicts (`tools/run_tiers.py`, in `ci.sh`)
+
+**A small Macintosh's memory result, measured on Linux in five seconds.**
+The Mac shell's allocator is a running total against a cap and refuses
+per entry; `macextract --budget N` is the same rule, so the whole
+69-fixture sample can be swept at a tier's measured budget without an
+emulator, a ROM or an X server.
+
+    tools/run_tiers.py --check                 # what ci.sh runs
+    tools/run_tiers.py --tier sys3-512K        # one tier, with shortfalls
+    tools/run_tiers.py --budget 102328         # any cap
+
+Not to be confused with `tools/run_budget.py`, the older half of the
+pair: that one sweeps the whole CORPUS at a single cap and reports per
+format (layer 5 above). This one sweeps the Mac SAMPLE at each tier's
+own budget and asserts the tallies.
+
+`--check` asserts two tallies, and only the two Mini vMac has agreed
+with independently: **69/69 at the 1 MB floor target** (648,100 B) and
+**66/69 on a 512 KB Macintosh under System 3.0** (197,728 B) — the same
+three fixtures, by name, that the machine refuses. A tally that moves is
+a memory regression or a memory win; either way the number in `EXPECT`
+is meant to be changed deliberately.
+
+**What it cannot see** (and why the emulator tiers stay):
+
+- **Fragmentation.** A budget is one number; the Memory Manager also has
+  to find one PIECE that big, which the shell reports separately
+  ("Memory is too broken up"). This is the likeliest reason the
+  System 6.0.8 / 512 KB tier comes out 59/69 here against the machine's
+  58/69 — which is why that tier is a diagnostic and is not asserted.
+- **The budget's own currency.** Each figure is `FreeMem() - 20,480`
+  measured on the machine (FORMATS.md, *Budget*), so it moves when the
+  application's size does. This file cannot notice that it has gone
+  stale.
+- **68000 struct sizes.** `derived-a2basic.dmg.sit` holds 37,356 B
+  before its block here and 37,372 B there. Tens of bytes — but a
+  fixture that missed by twenty would not be decided by this.
+- **Everything that is not memory**: names, CRCs, the File Manager, the
+  interface. Those are `tools/vmac/run.py`'s, and no budget sweep
+  replaces them.
+- **What a shortfall means.** It is the FIRST refused request's, not the
+  entry's demand, which is why both front ends say *"at least"*.
+  `synth-dd-m5.dd` reports 928 B at the 512 KB budget and wants
+  203,680 (FORMATS.md, *512 KB machines*).
+
+`UNC_TRACE_ALLOC=1` in the environment makes the CLI print every
+allocation and every refusal with the live total, which is how those
+figures are read.
+
 ## Selective extraction (`tools/run_only.py`, in `ci.sh`)
 
 Added 2026-08-28, with `--only`. There is no oracle for a subset:

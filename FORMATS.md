@@ -3459,6 +3459,23 @@ swapped per `tools/vmac/README.md`); the shell holds the other 54,552 B.
 `synth-dd-m5.dd` is the clean illustration: DiskDoubler method 5 asks for one
 405,520 B block on every tier, and here it cannot have it.
 
+**66/69 is the ceiling, and it is a property of the three archives.**
+Measured 2026-09-01 with `tools/run_tiers.py`, which applies the same rule on
+Linux and reproduces this tier fixture for fixture. The minimum budget each
+one needs, bisected:
+
+| fixture | needs | of which | against 197,728 B |
+|---|---|---|---|
+| `derived-a2basic.dmg.sit` | **246,734 B** | one 205,020 B BWT block — the entry's whole 205,019 B output in a single block — plus 37,356 B of walk state | 1.25x |
+| `derived-Library_ISBN_Barcoder.sit` | **393,869 B** | one 352,161 B block, same shape | 2.0x |
+| `synth-dd-m5.dd` | **401,408 B** | 1,536 B per distinct context byte, all 256 of them | 2.0x |
+
+Two of the three ask for more in a SINGLE allocation than the machine has for
+the whole job, and a block a BWT inverts has to be resident, so no allocation
+strategy reaches them; the third's 256 splay trees are adaptive state that
+cannot be discarded and rebuilt. What would move this tier is a smaller
+archive, not a smaller engine.
+
 **Three of the four are StuffIt 5, and the other three StuffIt 5 fixtures in
 the sample pass** — at 141,400 B, 161,725 B and 162,567 B, hard against the
 budget. So the line is the archive's BLOCK SIZE, which its compressor chose,
