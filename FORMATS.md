@@ -3547,7 +3547,13 @@ same volume, has been seen to finish. The last three rows are reachable on a
 **`MaxApplZone` is `[Not in ROM]`** — Inside Macintosh II-30, whose
 assembly-language note says to call the Pascal procedure because there is no
 trap for it. It became one with the 128K ROM, and Retro68 emits that trap
-unconditionally. The same bisect through the real application, marks written
+inline and unconditionally: `pascal void MaxApplZone() M68K_INLINE(0xA063)`,
+`Multiverse.h`. **That is not a Retro68 defect and there is nothing to report
+upstream** — Retro68 targets System 6, which means a 128K ROM, where the trap
+exists; the glue Apple's 1985 interfaces carried for `[Not in ROM]` routines
+is absent because nothing Retro68 targets needs it. Writing that glue would
+also gain nothing here: the next wall, `PBGetCatInfo`, is not glue but HFS
+itself. The same bisect through the real application, marks written
 straight into screen memory, stops in the same place: `SetApplLimit` returns,
 `MaxApplZone` does not.
 
