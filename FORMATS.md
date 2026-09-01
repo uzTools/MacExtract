@@ -3771,6 +3771,27 @@ costs the engine*). A 128K machine is short by a factor of about two before
 any archive is opened, which is why the HD20 question in MANUAL_TESTS.md §7 is
 a question about a **512K** and not about the machine it is named after.
 
+**What would fit, measured by building it.** The sniff table, the format
+table and the segment scheme table are what reference the decoders, so cutting
+rows from them and letting `--gc-sections` run is enough to price a subset
+build. Static sizes from `m68k-apple-macos-size`, MEASURED 2026-09-01:
+
+| build | code | data + bss | static total |
+|---|---|---|---|
+| shipping | 147,568 | 44,096 | 191,664 |
+| MacBinary + BinHex + StuffIt classic + Compact Pro + PackIt | 59,944 | 29,112 | 89,056 |
+| MacBinary + BinHex + StuffIt classic | 52,092 | 29,060 | 81,152 |
+| **MacBinary + BinHex** | **34,452** | **23,724** | **58,176** |
+
+Against ~88 KB between `ApplZone` and the screen buffer, from which the stack
+and every working buffer also come: the two-envelope build leaves ~30 KB for
+both and **fits** (*derived*); adding StuffIt classic leaves ~7 KB and does
+not. The shell is 17,358 B of every row and the A5 world does not fall much
+with the decoders, so the third format is not what breaks it — the fixed cost
+is. A 128K build is therefore an envelope decoder unless the shell and the A5
+world are cut too, and it would still need HFS for the File Manager calls that
+bomb on a 64K ROM (*A true Macintosh 512K*).
+
 **`FreeMem` is not the instrument**, and reads identically on both machines:
 the application zone is created small and grown on demand, so what a probe
 must ask for is the largest block `NewPtr` will actually return. A harness
