@@ -204,6 +204,15 @@ became a documented fact about the format (BLOCKERS.md). Either shut
 down, or put the subjects on a second volume and Put Away (Cmd-Y) — what
 `sdcompress.py` does.
 
+**And photograph the pick, because the item is one row from a different
+one.** Shut Down is at **(225, 139)** on System 7 and at **(175, 123)** on
+System 6 — the two Special menus are not the same length, and 123 on System 7
+is **Restart**, which `spacesaver.py` and `sitcrypt.py` picked in every run
+either had ever made (measured 2026-09-01 off their own forty-three
+`*-special-menu.png`; corrected in both; BLOCKERS.md, withdrawn claims).
+Restart ejects the volumes too, which is why nothing failed and nobody
+noticed — but `rescomp.py` has the case where it tore a write, below.
+
 **The app is the boot shell.** The boot blocks' shell name (offset 0x1A) is
 rewritten from `Finder` to `macextract`, so the ROM hands control straight to
 the application. No Finder, no synthetic double-click, no mouse automation —
@@ -790,10 +799,16 @@ System 7.5.3**, which is the open route. DECISIONS.md 2026-08-22
                                               installed panel and engine
     tools/vmac/spacesaver.py --pkg            read AppleLink .pkg's recogniser
                                               out of the translator beside it
+    tools/vmac/spacesaver.py --pkgexpand      write packages here and offer
+                                              them to PKG Expand
+    tools/vmac/spacesaver.py --pkgexpander    the same, to StuffIt Expander
+    tools/vmac/spacesaver.py --pkgconvert     the same, to DropConvert
 
 Every mode from `--specimen` on ends with Special > Shut Down (the general
-rule at the top of this file): `ssenrolled.hfv`, made before that rule was
-followed here, does not boot.
+rule at the top of this file) — **at the right coordinate only since
+2026-09-01**: before that they picked Restart, one item above it, which
+flushes as well and so hid the mistake. `ssenrolled.hfv`, made before the
+rule was followed at all, does not boot.
 
 **`--layout` needs no emulator at all.** It lifts `~StuffIt SpaceSaver™`
 (`cdev/SMKR`) and `StuffIt Engine™` off `ssinstalled.hfv` with `hcopy`,
@@ -811,6 +826,29 @@ installation carries fourteen of Aladdin's translators, and one of them reads
 AppleLink packages — the format this project could not name until 2026-08-23.
 It prints that translator's `Name`, its vocabulary and its recogniser, with
 four witnesses; FORMATS.md, *AppleLink packages*, is what came of it.
+
+**The three `--pkg*` boot modes offer that translator a package written
+here, and all three come back empty.** Each writes five one-line packages
+into `StuffIt Deluxe™ Folder` — `Decode <item> to <destination>`, the grammar
+`--pkg` transcribed, one per Finder type so the type is a variable — plus
+`Payload.hqx`, the BinHex file they name. `--pkgexpand` drives *Translate ▸
+PKG Expand…* and also runs *CPT Expand…* over a real `.cpt` as its control;
+`--pkgexpander` drives StuffIt Expander's `⌘E`; `--pkgconvert` drives
+DropConvert's `⌘C`, whose dialog wants *type, Return to Add, then click
+Convert at (452, 289)*. Every run ends in Shut Down and reads the volume back.
+The result and what it means: DECISIONS.md 2026-09-01, *the package that
+cannot be handed over*.
+
+**What they cannot see.** Whether the packages are the problem. Each run
+proves only that Aladdin's software did nothing with the file, and the engine
+never reports anything either way, so *"this build will not take that input"*
+and *"this text is not a package"* look identical from here. **Read the
+control first**: `Payload.hqx` must have become `Widget` (Expander) or
+`Widget.sit` (DropConvert), and the report line says which — a run whose
+control did not fire says nothing about packages at all. Its resource fork
+comes back the right LENGTH and different bytes, because the Finder opens an
+extracted file to draw its icon and the Resource Manager rewrites the map's
+live fields (BLOCKERS.md 2026-08-23); the data fork is the comparison.
 
 What it cannot see: whether any of this describes a real compressed file.
 Nothing here has produced one, so every field is read from the writer, not

@@ -191,7 +191,12 @@ all** (BLOCKERS.md, the ARC 7 row, filed and disproved the same day).
   manifest naming files beside it rather than a container — in which case
   this closes as a property of the format (DECISIONS.md 2026-08-23,
   *AppleLink `.pkg`, named at last*). Missing: a **gradeable specimen**,
-  which answers both.
+  which answers both. **Not** something to be produced here: a package
+  written on this machine was offered to all three of Aladdin's own
+  commands that run a translator, each in a boot where a control
+  succeeded, and none of them read it — seven boots, and what PKG Expand
+  asks for turns out to be a FOLDER (DECISIONS.md 2026-09-01, *the
+  package that cannot be handed over*).
 
 ---
 

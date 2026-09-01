@@ -183,6 +183,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-08-31 (the medium, not the machine) — the Macintosh 512K boots, and both reasons it could not were wrong
 - 2026-09-01 (the second Toolbox call) — what bombs a 64K ROM, and three instruments that lied on the way to it
 - 2026-09-01 (two byte reads) — the guard that lets a 64K-ROM Macintosh start, and why it is not a trap test
+- 2026-09-01 (the package that cannot be handed over) — three routes into Aladdin's AppleLink expander, and the control that made an empty list mean something
 
 ---
 
@@ -10560,3 +10561,57 @@ MANUAL_TESTS.md §7, and it is now askable because the BRANCH'S DOWNLOAD does
 it — a test that needs the tester to own Retro68 is not a test anyone will
 run, which is the whole reason the guard was built rather than left as a
 finding.
+
+
+## 2026-09-01 (the package that cannot be handed over) — three routes into Aladdin's AppleLink expander, and the control that made an empty list mean something
+
+OPEN_ITEMS.md files AppleLink `.pkg` as waiting on a **gradeable specimen**.
+That is an assumption rather than a property: the grammar was transcribed out
+of `PKG Expand Translator` on 2026-08-23, so a package can be WRITTEN here,
+and the second reader — that same translator — is on the same disk image.
+Feeding an implementation something this project wrote is the technique that
+landed SuperDisk!'s codecs and SpaceSaver's (`tools/sdmodule/`,
+`tools/ssmodule/`). Seven boots say Aladdin's software will not take one.
+
+### Three routes, three controls
+
+| route | what it did with a package | its control, same boot |
+|---|---|---|
+| `Translate ▸ PKG Expand…`, StuffIt Deluxe 3.5.1 | its Standard File dialog lists **only folders**: no package is selectable, whatever the file's type | `CPT Expand…` lists the type-`PACT` files, so the dialog machinery works |
+| StuffIt Expander 4.0.2, `Expand… ⌘E` | lists every package and expands **nothing** — no output, no error, no alert | `Payload.hqx` → `Widget`, data fork byte-exact, 1,256 B |
+| `DropConvert™`, `Convert… ⌘C` | the package goes into *Items to Convert:* and `Convert` produces **nothing** | `Payload.hqx` → `Widget.sit`, 532 B, `SITD/SIT!` |
+
+The controls are the whole point. Two boots of empty file lists read as a fact
+about the packages — wrong type, wrong text — and four typings of their Finder
+info (`TEXT/ttxt`, `PACT/EXTR`, `PACT/ttxt`, `TEXT/EXTR`) changed nothing. One
+Compact Pro archive in the same dialog moved it to a fact about the command.
+
+### What that dialog is actually asking for
+
+A folder. The filter proc `PKG Expand` hands `_SFPGetFile` tests `ioFlAttrib`
+bit 4 — *is a directory* — and suppresses everything else (`Othe` 0 @0x215e),
+where the sibling CompactPro translator's tests type `PACT` (@0x2e1c), which is
+exactly why one lists files and the other does not. Two of its own resources
+say the same: `DITL 2051` carries a button reading **"Expand into selected
+folder"**, and `DITL 2052` is a *"Name of new folder:"* dialog. So does its
+`Help` resource — the translator "can extract files and folders from archives
+created by AppleLink. These archives usually have a suffix '.pkg'."
+
+That fits 2026-08-23's manifest hypothesis — you point it at what AppleLink
+delivered — and does not settle it. The dialog this build puts up is
+`DLOG 2050`, which has no such button, and Open on a folder descends into it,
+so nothing here can complete the command.
+
+### What this cannot see, and the lesson
+
+**A null result from somebody's user interface is not a fact about a format.**
+Nothing here separates *"the software will not take this input"* from *"this
+text is not a package"*: the engine never said a word either way, and one real
+`.pkg` still settles both. The open item is unchanged, and its cost is now
+written down — **seven boots** — so the next session does not spend them again.
+
+The transferable half is the one that keeps recurring: **an empty list is
+evidence about nothing until something has filled the same list.** The harness
+was two boots old before it grew a control, and the control cost four
+minutes — one archive of a sibling translator's type, put in beside the
+packages.

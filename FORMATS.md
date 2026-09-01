@@ -1505,12 +1505,29 @@ after itself — `.pkg` stripped, `" Folder"` appended, so `Report.pkg` becomes
 at all: it opens the file and then calls `GetResource('Eng ', 2)` in
 `StuffIt Engine™` and jumps into it (@0x334c). The translator is a driver.
 
+**What Aladdin's own expander asks for is a FOLDER.** Measured 2026-09-01,
+seven boots: `Translate ▸ PKG Expand…` puts up a Standard File dialog that
+lists **only directories** — the filter proc it hands `_SFPGetFile` tests
+`ioFlAttrib` bit 4 (`Othe` 0 @0x215e) — so a package written here cannot be
+selected at all, as `TEXT/ttxt`, `PACT/EXTR`, `PACT/ttxt` or `TEXT/EXTR`, with
+or without one selected in the application's own window. `CPT Expand…` in the
+same boot lists the type-`PACT` files, which is what makes that empty list a
+fact about the command rather than about the harness. Its own `DITL 2051`
+carries a button *"Expand into selected folder"*, `DITL 2052` is a *"Name of
+new folder:"* dialog, and its `Help` resource says the translator extracts
+"files and folders from archives created by AppleLink". The other two routes
+run a translator and do nothing with a package either: StuffIt Expander 4.0.2
+lists one and expands nothing, `DropConvert™` takes one into *Items to
+Convert:* and produces nothing — each in a boot where the BinHex control
+expanded (DECISIONS.md 2026-09-01, *the package that cannot be handed over*).
+
 **Detect only, and the reason is a specimen.** What a `Decode` line refers to
 has not been read out of the expander, and no `.pkg` file has ever reached
 this project, so there is nothing to grade a reading against. `tools/vmac/
 spacesaver.py --pkg` re-derives everything above out of the translator on the
 installed image, with four witnesses that fail if a different build is ever
-put in front of it.
+put in front of it; `--pkgexpand`, `--pkgexpander` and `--pkgconvert` are the
+three routes above.
 
 
 ## Archives named but not extracted
