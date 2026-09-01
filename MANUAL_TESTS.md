@@ -266,7 +266,13 @@ it in the emulator's specimen directory.
 
 ---
 
-## 7. A Macintosh 128K or 512K with a Hard Disk 20
+## 7. A Macintosh 512K with a Hard Disk 20
+
+**A Macintosh 128K cannot run this and is not what this section asks for.**
+Measured 2026-09-01: the same volume that reaches Standard File on a 512K
+bombs `ID = 03` on a 128K, whose largest single block is 63,744 B against the
+142,152 B of `CODE` the engine lives in (FORMATS.md, *A Macintosh 128K*). The
+machine below is a **512K**, with 512 KB of RAM behind its 64 KB ROM.
 
 **Why nothing here can answer it: Mini vMac does not emulate the Hard Disk
 20.** Apple's own *HD 20 Startup* disk boots on the emulated 512Ke and stops
@@ -302,7 +308,7 @@ read as the branch working:
 
 So the test is: put `dist/MacExtract.bin` on an **MFS floppy** —
 `tools/vmac/mkmfs.py` builds one, or copy it across on any Mac that reads
-both — boot a Macintosh 128K or 512K **with a Hard Disk 20 attached**, open an
+both — boot a Macintosh 512K **with a Hard Disk 20 attached**, open an
 archive and extract it to the HD20. An 800K HFS floppy is fair game too on
 such a machine, since the same start-up software drives an external
 double-sided drive attached through the HD20. Record: does it extract; if it bombs, the

@@ -3706,6 +3706,43 @@ File simply does not act on it. The Cancel BUTTON quits normally: the frame
 after it is byte-identical to the Finder window the application was launched
 from. On System 6.0.8 the same chord closes the same dialog.
 
+### A Macintosh 128K: the RAM stops it before the ROM does
+
+**The guarded build does not start on a Macintosh 128K, and the reason is
+memory rather than the 64K ROM.** MEASURED 2026-09-01. The `rom64k` `dist/`
+that reaches Standard File on a 512K bombs `ID = 03` on the same volume, the
+same ROM and the same System when the machine has 128 KB — `mv-128K`, built by
+`setup.sh` as `-m 128K -mem 128K`. The 512K run is the control and is what
+makes the 128K run mean anything: one volume, two machines, one difference.
+
+`tools/vmac/memtest` reports what the machine leaves an application, launched
+as the boot shell so nothing else is resident:
+
+| | Macintosh 128K | Macintosh 512K |
+|---|---|---|
+| `MemTop` | 131,072 | 524,288 |
+| `ApplZone` | 19,968 | 51,968 |
+| `ApplLimit` | 98,536 | 491,752 |
+| `CurStackBase` | 106,728 | 499,944 |
+| `FreeMem` | 4,846 | 4,846 |
+| **largest single `NewPtr`** | **63,744** | **424,960** |
+| a 142,152 B block — `CODE` 2 | **refused** | granted |
+
+**`CODE` 2 is 142,152 B and the machine's largest block is 63,744 B**, so the
+Segment Loader cannot place the segment the engine lives in; the application's
+`CODE` totals 148,780 B against an application heap that cannot exceed
+`ApplLimit − ApplZone` = 78,568 B. That bound is set by the RAM under the
+screen buffer, not by the System, so no smaller System moves it — and CODE is
+the one thing that costs a Macintosh anything here (*What the application
+costs the engine*). A 128K machine is short by a factor of about two before
+any archive is opened, which is why the HD20 question in MANUAL_TESTS.md §7 is
+a question about a **512K** and not about the machine it is named after.
+
+**`FreeMem` is not the instrument**, and reads identically on both machines:
+the application zone is created small and grown on demand, so what a probe
+must ask for is the largest block `NewPtr` will actually return. A harness
+that had quoted `FreeMem` here would have reported the two machines as equal.
+
 ## Mac OS 9 tier (QEMU PowerPC — Mac OS 9.2, `mac99`, 512 MB, 68LC040 emulation)
 
 The third and last point of the System 6 → Mac OS 9 range the project claims,

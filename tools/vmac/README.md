@@ -37,6 +37,32 @@ Everything below wants a display and is watched by eye. `$V` is
     $V/mv-512K/minivmac -r $V/Mac512K.ROM                 # no disk: blinking floppy, healthy
     $V/mv-512K/minivmac -r $V/Mac512K.ROM $V/Sys11.img    # MFS:  boots to Finder 1.1
 
+**A Macintosh 128K — `mv-128K` — is too small to run it**, and that is the
+RAM rather than the ROM: same volume, same ROM, same System as the 512K above,
+`ID = 03` on launch (FORMATS.md, *A Macintosh 128K*). `tools/vmac/memtest`
+is what measures the machine instead — it prints the low-memory globals, then
+bisects the largest single `NewPtr` the heap will grant, which is the question
+the Segment Loader asks and the one `FreeMem` does not answer: `FreeMem` reads
+4,846 B on a 128K and on a 512K alike, because the zone grows on demand. Build
+it by hand like `traptest`, put it on as `Finder`, and read the numbers off
+the screen; run it on **both** machines, because a number means nothing until
+the same probe has been seen to produce a different one somewhere:
+
+    cmake -B build/memtest -S tools/vmac/memtest \
+          -DCMAKE_TOOLCHAIN_FILE=$RETRO68/m68k-apple-macos/cmake/retro68.toolchain.cmake
+    cmake --build build/memtest
+    mkmfs.py --extract System $V/Sys30MFS.img /tmp/System30mfs.bin
+    mkmfs.py $V/MemTest.img --boot $V/Sys30MFS.img --name "System Software" \
+             /tmp/System30mfs.bin build/memtest/MemTest.bin:Finder
+    $V/mv-128K/minivmac -r $V/Mac128K.ROM $V/MemTest.img
+    $V/mv-512K/minivmac -r $V/Mac128K.ROM $V/MemTest.img
+
+**What it cannot see:** it measures a machine with nothing else resident, so
+its figures are a ceiling and not a budget — the application's own globals and
+stack come out of the same span before the engine sees any of it. It also
+paints its own white ground, because digits over the desktop's 50 % grey
+cannot be read back off a screenshot.
+
 **`mkmfs.py` writes the MFS volumes**, because Retro68's `.dsk` is always
 800K HFS. It builds, lists and extracts:
 

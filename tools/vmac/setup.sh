@@ -20,6 +20,7 @@
 #     mv-1M-1x/minivmac 1 MB Mac Plus, authentic 7 MHz
 #     mv-512Ke/minivmac 512 KB Macintosh 512Ke, all out (the 512 KB tier)
 #     mv-512K/minivmac  512 KB Macintosh 512K, 64 KB ROM (the negative below)
+#     mv-128K/minivmac  128 KB Macintosh 128K, 64 KB ROM (too small to run it)
 #     Mac512K.ROM       64 KB Macintosh 512K ROM (checksum 28BA4E50)
 #     Mac128K.ROM       64 KB Macintosh 128K ROM (checksum 28BA61CE)
 #
@@ -231,6 +232,26 @@ else
       make >/dev/null 2>&1 )
     [ -x mv-512K/minivmac ] || { echo "setup: failed to build mv-512K" >&2; exit 1; }
     echo "built mv-512K/minivmac"
+fi
+
+# A Macintosh 128K: the same 64K-ROM model with the RAM it shipped with. It
+# cannot run the application at all — its largest single block is 63,744 B
+# against 142,152 B of CODE (FORMATS.md, *A Macintosh 128K*) — and it is built
+# so that negative, and `memtest`'s numbers behind it, can be re-taken.
+if [ -x mv-128K/minivmac ]; then
+    echo "have mv-128K/minivmac"
+else
+    rm -rf mv-128K
+    mkdir -p mv-128K
+    tar xzf minivmac.src.tgz -C mv-128K --strip-components=1
+    ( cd mv-128K
+      gcc -o setup_t setup/tool.c
+      ./setup_t -t lx64 -m 128K -mem 128K -speed a -as 0 -bg 1 \
+                -sound 0 -magnify 0 -drives 6 -n "macextract-128K" > setup.sh
+      bash setup.sh >/dev/null
+      make >/dev/null 2>&1 )
+    [ -x mv-128K/minivmac ] || { echo "setup: failed to build mv-128K" >&2; exit 1; }
+    echo "built mv-128K/minivmac"
 fi
 
 echo "setup: ready in $VMAC_HOME"

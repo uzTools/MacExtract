@@ -187,6 +187,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-01 (the tier that needed no Macintosh) — a budget sweep, a ceiling, and a number that was an artefact
 - 2026-09-01 (the search, not the reference) — Apple Archive, and what rewriting a probe actually buys
 - 2026-09-01 (the reader was in the sentence) — feeding SuperDisk!'s own extractor a stream we wrote, and one hypothesis that did not survive it
+- 2026-09-01 (the machine that is too small) — a 128K Macintosh, and a status row measured on the other machine
 
 ---
 
@@ -10798,3 +10799,38 @@ it would have passed, the path cap would have closed, and the stored branch
 would still be untested code that nobody had thought to name. **The broken run
 was worth more than the clean one**, and only because the difference between
 them was reduced one variable at a time instead of being fixed in a batch.
+
+## 2026-09-01 (the machine that is too small) — a 128K Macintosh, and a status row measured on the other machine
+
+**Claim: the guarded build's interface works on 64K-ROM Macintoshes — the
+128K among them.** Half of that had been measured, on a 512K. The other half
+was the same sentence with a second machine's name in it, and it is false:
+the `rom64k` `dist/` bombs `ID = 03` on a Macintosh 128K, from the same MFS
+volume, the same `Mac128K.ROM` and the same System 3.0 that reach Standard
+File on the 512K (FORMATS.md, *A Macintosh 128K*).
+
+**Nothing about the ROM changed between those two runs, which is the point.**
+`mv-128K` is `-m 128K -mem 128K`; `mv-512K` is `-m 128K -mem 512K`. The
+project had already withdrawn one claim about these machines for varying the
+ROM, the RAM and the disk but never the FILE SYSTEM (BLOCKERS.md). This is the
+same error one notch along: three variables were held and the fourth was
+carried in the machine's NAME rather than in the run.
+
+**Why the negative is stable where the 512K's was not.** The 512K's "cannot
+be reached" was a claim about a medium — change the volume and it fell. This
+one is arithmetic on the machine: `ApplLimit − ApplZone` is 78,568 B on a
+128K and the application's `CODE` totals 148,780 B, one segment of which is
+142,152 B and must be placed whole. The largest single block the machine will
+grant is 63,744 B, measured. A smaller System cannot move a ceiling that is
+RAM under the screen buffer, so there is no volume, no System and no build
+flag that reaches this one. What would reach it is a different program.
+
+**`FreeMem` would have reported the two machines as identical**, 4,846 B on
+each, because the application zone is created small and grown on demand. The
+instrument has to ask the question the code asks: the Segment Loader wants one
+contiguous block, so the probe bisects `NewPtr`. A harness that reported the
+number that was easy to read — and `FreeMem` is the number every memory
+discussion in this repository starts from — would have measured the zone's
+starting size on both machines and called it a tie. **Ask what the failing
+code actually requests, then measure that**, which is the same rule as pricing
+a tolerance against something other than our own output.
