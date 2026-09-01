@@ -143,7 +143,7 @@ them comparable at all. The full capability table and the unrounded figures are 
 
 | | |
 |---|---|
-| Minimum | System 3.0, 68000, **512 KB of RAM** — a Macintosh 512Ke, or a Plus with the system it shipped with in January 1986. On a 64K-ROM Macintosh (the 128K and the true 512K) it opens and lists, but extracting needs HFS, which those machines only have with a Hard Disk 20 — untried on one |
+| Minimum | System 3.0, 68000, **512 KB of RAM** — a Macintosh 512Ke, or a Plus with the system it shipped with in January 1986. This is the experimental `rom64k` build: it also STARTS on a 64K-ROM Macintosh (the 128K and the true 512K), where `main`'s does not, but extracting there needs HFS — see BRANCH_NOTES.md |
 | For everything | **1 MB** — see the StuffIt 5 note below |
 | Also runs on | System 6, System 7, Mac OS 8 and 9, PowerPC via the built-in 68k emulator |
 | Disk | one 800K floppy |

@@ -3571,8 +3571,10 @@ block returns. Behind `MaxApplZone` there is a second wall, `PBGetCatInfo`'s
 directory and to size a file. The verdict is unchanged and now has a
 reproduction: **a 64K-ROM Macintosh cannot run this.**
 
-**The shipping application now starts on a 64K ROM, and its interface works
-there.** `MaxApplZone` is guarded by `Has128KROM()`, two byte reads of the ROM
+**One guard makes it start on a 64K ROM, and on this branch it is IN** —
+`main` does not carry it, because nothing has ever run it on the machine it is
+for (`BRANCH_NOTES.md`).
+`MaxApplZone` is guarded by `Has128KROM()`, two byte reads of the ROM
 version word at `ROMBase+8` — Inside Macintosh II's `Environs` note for where
 it lives, Inside Macintosh IV's preface for the threshold, `>= 117 ($75)` — so
 the call is made on every machine that has it and skipped on the one that does
@@ -3580,8 +3582,8 @@ not. `TrapAvailable` cannot do this job: it reports `_MaxApplZone` as PRESENT
 on a 64K ROM, because it compares against `_Unimplemented` and that entry is
 neither.
 
-Measured on the emulated 512K under Apple's MFS System 3.0, with the build
-that ships in `dist/`: Standard File opens, a file is chosen, the destination
+Measured on the emulated 512K under Apple's MFS System 3.0, with this
+branch's `dist/`: Standard File opens, a file is chosen, the destination
 dialog appears, and a non-archive is opened, sniffed and refused with the
 application's own alert, *"This file could not be extracted."* **Extracting a
 real StuffIt archive still bombs `ID = 12`** at an HFS call, because this
@@ -3593,7 +3595,27 @@ have a hard disk. Whether that closes it is **untested and cannot be tested
 here** — Mini vMac has no HD20 (MANUAL_TESTS.md §7). What is measured is that
 the application no longer dies on arrival.
 
-**HFS in software does not rescue it here, and cannot be tested here anyway.**
+**HFS in software is real, and it is the whole File Manager.** Inside
+Macintosh IV, *The Floppy Disk Interface*: "The external double-sided drive
+can be attached to a Macintosh 512K through the back of a Hard Disk 20. The
+Hard Disk 20 start-up software contains a device driver for this drive and the
+hierarchical (128K ROM) version of the File Manager." So on a 512K with an
+HD20, HFS is present — and an 800K drive is a supported medium there, through
+the HD20 — which is exactly the configuration MANUAL_TESTS.md §7 asks about.
+
+**Without that software there is no HFS at all**, measured twice: under
+Apple's 400K MFS System 3.0 (a 140,299 B System) and under the 182 KB System
+3.0 lifted off the 800K HFS disk, an HFS floppy in the second drive gets
+*"This is not a Macintosh disk: Do you want to initialize it?"* The extra
+41,614 B of the HFS-disk System is not hierarchical File Manager for a 64K
+ROM.
+
+**And the software cannot be loaded here.** The `Hard Disk 20` file is what
+hangs, not Apple's disk: a boot disk built here carrying System 3.0, Finder
+5.1 and that one file stops at the same empty dialog frame as Apple's own *HD
+20 Startup* disk, and stays there — frames byte-identical from 45 s to 210 s,
+so it is a deadlock and not a timeout. *Hypothesis:* the driver is hunting for
+hardware Mini vMac does not emulate.
 HFS was not only a ROM feature: Apple shipped it for 64K-ROM machines as a
 file, `Hard Disk 20`, on the *HD 20 Startup* disk — a 400K MFS floppy that
 comes in the same `System_3.x.sit` as `Sys30MFS.img`. That disk boots to the

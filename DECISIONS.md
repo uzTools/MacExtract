@@ -10510,8 +10510,11 @@ correct on every machine the project claims.
 
 ## 2026-09-01 (two byte reads) — the guard that lets a 64K-ROM Macintosh start, and why it is not a trap test
 
-**Claim: `MaxApplZone` is now guarded, the application starts on a 64K ROM,
-and the guard costs nothing anywhere else.** `Has128KROM()` reads the ROM
+**Claim: one guard makes the application start on a 64K ROM, and it costs
+nothing anywhere else.** It lives on this branch, `rom64k`, and not on `main`: the
+guard is provably neutral on every tier this project claims, but no real
+machine has ever run the thing it enables, and a capability nobody has
+exercised does not belong in the download people are told works. `Has128KROM()` reads the ROM
 version word at `ROMBase+8` and skips the call when it positively reads as a
 64K ROM. Measured: the shipping build reaches its Standard File dialog on the
 emulated Macintosh 512K under Apple's MFS System 3.0, and the two tiers that
@@ -10553,5 +10556,7 @@ and here it turned a shrug into a free change.
 Extraction needs HFS and those machines only have it with a `Hard Disk 20`,
 which Mini vMac does not emulate; what is measured is that the interface runs
 and that a non-archive is correctly refused there. The rest is
-MANUAL_TESTS.md §7, and it is now askable because the DOWNLOAD does it — a
-test that needs the tester to own Retro68 is not a test anyone will run.
+MANUAL_TESTS.md §7, and it is now askable because the BRANCH'S DOWNLOAD does
+it — a test that needs the tester to own Retro68 is not a test anyone will
+run, which is the whole reason the guard was built rather than left as a
+finding.
