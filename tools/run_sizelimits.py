@@ -123,6 +123,10 @@ def main():
     ap.add_argument("--macextract", default="build/macextract")
     args = ap.parse_args()
 
+    if not os.path.exists(args.macextract):
+        print("sizelimits: no CLI at %s" % args.macextract)
+        return 1
+
     if not shutil.which("tar"):
         print("sizelimits: skipped (no tar to grade against)")
         return 0

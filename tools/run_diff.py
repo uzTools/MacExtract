@@ -394,6 +394,10 @@ def main():
                          "is to cover a code path rather than the corpus.")
     args = ap.parse_args()
 
+    if not os.path.exists(args.macextract):
+        print("diff: no CLI at %s" % args.macextract)
+        return 1
+
     mandir = os.path.join(FIXDIR, "manifests")
     manifests = sorted(f for f in os.listdir(mandir)
                        if f.endswith(".json")) if os.path.isdir(mandir) else []

@@ -213,6 +213,10 @@ def main():
     elif argv:
         macextract = argv[0]
 
+    if not os.path.exists(macextract):
+        print("multihqx: no CLI at %s" % macextract)
+        return 1
+
     missing = [p for p in PARTS
                if not os.path.exists(os.path.join(FIXDIR, p))]
     if missing:
