@@ -152,12 +152,20 @@ on either branch.
 
 ## `CODE` segmentation is measured and not adopted
 
-**78,320 B of budget at 1 MB, from `mac/segments.map` and no source change**
-(FORMATS.md, *Segmenting the CODE*). `derived-Domino_v1.4.sit` extracts
-byte-exact holding 677,591 B, which is 29,789 B more than the entire
-unsegmented budget, so the memory is usable rather than merely offered.
+**78,320 B of budget GRANTED at 1 MB, from `mac/segments.map` and no source
+change** (FORMATS.md, *Segmenting the CODE*). `derived-Domino_v1.4.sit`
+extracts byte-exact holding 677,591 B, 29,789 B more than the entire
+unsegmented budget, so the memory is real — but the sniff then loads a 55,104 B
+segment out of the same heap, and that run finished about 5 KB from a `NewPtr`
+failure (*derived*). Reliably freed is what is never called: 48,016 B on a
+`.sit` run, 29,104 B on a `.hqx`.
 
-**What would close it:** the tiers, which is what any change to how the
+**What it needs first:** the budget taken after the sniff rather than before
+it, and the probes moved into the resident segment away from the extractors —
+without those, segmentation trades a clean per-entry refusal for a `NewPtr`
+failure at an unpredictable moment.
+
+**What would then close it:** the tiers, which is what any change to how the
 application occupies memory has always needed here — 4 MB, 1 MB, 512 KB and
 System 3.0, plus the interactive UI, since a segment loads from the
 application's own disk and the one-floppy Mac Plus is the case that matters.

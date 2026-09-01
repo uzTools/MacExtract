@@ -10898,9 +10898,22 @@ branches were built on that premise and parked because the prize was 5,988 B
 (*the overlay that works and is not worth it*). The premise was wrong: classic
 Mac OS has done this since 1984, Retro68 supports it, and the application had
 been shipping as one 142,152 B segment because nothing had asked. A segment
-map — `mac/segments.map`, six families, no source change — is worth
-**78,320 B of budget at 1 MB**, thirteen times the overlay branches, with the
-whole feature set intact (FORMATS.md, *Segmenting the CODE*).
+map — `mac/segments.map`, six families, no source change — grants
+**78,320 B more budget at 1 MB** with the whole feature set intact
+(FORMATS.md, *Segmenting the CODE*).
+
+**Corrected the same day, and the correction is the useful part: that is not
+comparable to the overlay's 5,988 B, and this entry first said it was
+"thirteen times" it.** The overlay figure is a RELEASED steady state — memory
+given back and staying back. 78,320 B is what the budget is GRANTED before the
+sniff runs, and the sniff then loads `Archives` (55,104 B) out of the same
+heap for almost any file, because the probes travel in the same objects as the
+decoders. Reliably freed is what is never called: 48,016 B on a `.sit` run,
+29,104 B on a `.hqx` (*derived*). Still several times the overlay, and not
+thirteen. **Two figures that measure different moments are not a ratio**, and
+the shape of the error is one this file already records — comparing a number
+taken at one instant against one taken at another and calling the difference a
+gain.
 
 **Both sides measured in one session, which is the part that took the
 discipline rather than the insight.** The overlay figure was wrong for a day
@@ -10927,6 +10940,15 @@ been about writing less of it, when the cheaper lever was not having all of it
 resident at once. **A constant that models the system correctly can still
 encode an assumption about the system's SHAPE**, and that assumption is
 invisible precisely because the constant keeps agreeing with reality.
+
+**And the near miss says adoption needs two changes, not none.** Domino
+finished with about 5 KB of heap to spare because the engine was granted a
+budget that a later segment load spent (*derived*). The budget must be taken
+AFTER the sniff, or the segment must be loaded and locked before the budget is
+computed; and the probes belong in the resident segment, away from the
+extractors, which is what would make the granted figure the honest one.
+Without those, segmentation trades a clean per-entry refusal — the designed
+behaviour — for a `NewPtr` failure at an unpredictable moment.
 
 **Not adopted, and not on `main`'s build.** No tier has been re-run, nothing
 calls `UnloadSeg`, and the Segment Loader will ask for the application's disk

@@ -2436,12 +2436,31 @@ DECISIONS.md 2026-08-31, *the overlay that works and is not worth it*):
 table grows 688 → 1,192 B, total `CODE` grows 424 B and the download grows
 256 B.
 
-**The extra memory is usable and not merely offered**:
+**Some of that memory is spent by the loader, not by the engine, and the
+figure above does not say how much.** The budget is taken before the sniff
+(`macextract_mac.c`, the `FreeMem()` block) and a segment loads when something
+in it is first CALLED, so a `.sit` is granted 726,122 B and then hands 55,104 B
+of it straight back when `Archives` loads during the sniff. Measured:
 `derived-Domino_v1.4.sit` extracts byte-exact holding **677,591 B of peak
-heap** — 29,789 B beyond the whole unsegmented budget — and
+heap**, 29,789 B beyond the whole unsegmented budget, so the gain is real —
+but *derived*, it did so with about 5 KB of heap to spare, where the
+unsegmented build refuses the entry cleanly instead. **Segmentation as
+configured here trades a clean refusal for a near miss**, and that is the
+first thing a tier run would have to look at.
+
 `derived-Library_ISBN_Barcoder.sit`, `adobenumbers.sit`, `4acalc.zip` and
 `3d-terrain-modeling-017.hqx` pass unchanged, five fixtures across three
 segments.
+
+**The sustained gain is smaller than the granted one, because the probes
+travel with the decoders.** `unc_sniff` walks its order calling each probe,
+and the first five it calls live in `Archives` — so that segment loads for
+almost every file, whatever the file turns out to be. What is reliably NOT
+resident during a `.sit` run is `Text` + `Deflate` + `Crypt` + `Sets` =
+48,016 B, and during a `.hqx` run, `Deflate` + `Crypt` + `Sets` = 29,104 B
+(*derived*, from the segment sizes above). **Splitting the probes from the
+extractors is what would make the granted figure the real one**: a probe is
+tens of bytes and an extractor is thousands.
 
 **What this has NOT established**, and none of it is cheap to assume: no tier
 has been re-run at 4 MB, 1 MB, 512 KB or on System 3.0; nothing calls
