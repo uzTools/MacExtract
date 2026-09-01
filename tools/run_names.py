@@ -47,13 +47,18 @@ Macintosh archive formats that reach the cap by SUMMING a path rather
 than by holding one long name: Now Compress (`tools/synth_now.py`) and
 DiskDoubler, in both its containers (`tools/synth_dd.py`, 2026-08-28).
 
-What this CANNOT see: SuperDisk!'s path builder, which no fixture nests
-deep enough to reach the cap with and which nothing off the Macintosh
-reads, so a generated container could only be graded against our own
-transcription of it. The Mac application consumes none of this: it
-cuts every component at 31 characters and numbers the collision that
-creates off the File Manager's `dupFNErr`, telling nobody either way
-(`tools/run_macnames.py`).
+SuperDisk! joined them on 2026-09-01 and took a different route to an
+oracle, because it has none off the Macintosh: its stream is generated
+too (`tools/synth_sd.py`), and it is graded by the format's OWN
+self-extracting application, given a data fork this project wrote and
+run under Mini vMac (`tools/vmac/superdisk.py --nest`). That machine
+builds each component through the File Manager and never assembles a
+path, so what it makes IS the uncut path.
+
+What this CANNOT see: the Mac application consumes none of it. That
+shell cuts every component at 31 characters and numbers the collision
+that creates off the File Manager's `dupFNErr`, telling nobody either
+way (`tools/run_macnames.py`).
 """
 import argparse
 import os
@@ -433,6 +438,81 @@ def dd_tree_cases(macextract, tmp, problems):
     return ran
 
 
+def superdisk_tree_case(macextract, tmp, problems):
+    """The third Macintosh format that reaches the cap by SUMMING a
+    path, and the one with no oracle off the Macintosh.
+
+    `unar` and `macunpack` both stop at the BinHex envelope, so the
+    grading is the format's OWN self-extracting application, run under
+    Mini vMac on a data fork this project wrote
+    (`tools/vmac/superdisk.py --nest`, 2026-09-01). That machine creates
+    each component through the File Manager and never assembles a path,
+    so what it makes on the volume IS the uncut path — and for all
+    eleven files, at depths one to ten, it made exactly the paths this
+    archive declares. This replays that verdict offline.
+
+    The subject is built by tools/synth_sd.py from a corpus archive's
+    own fields and blocks, so the only thing in it this project invented
+    is the nesting. It is skipped, not failed, where the fixture is
+    absent."""
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import synth_sd                                           # noqa: E402
+
+    repo = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    fixture = os.path.join(repo, "fixtures", "super-disk-utility.hqx")
+    if not os.path.exists(fixture):
+        print("names: super-disk-utility.hqx is not in the corpus, skipped")
+        return 0
+
+    env = os.path.join(tmp, "sdenv")
+    r = subprocess.run([macextract, "x", "-nr", "-o", env, fixture],
+                       capture_output=True)
+    if not check(problems, r.returncode == 0,
+                 "superdisk: the envelope would not open"):
+        return 1
+    orig = open(os.path.join(env, "SD! Utilities.x"), "rb").read()
+    blob, paths, dlen = synth_sd.nest(orig)
+    p = os.path.join(tmp, "deep-sd.x")
+    open(p, "wb").write(blob)
+
+    over = [n for n in paths if len(n) > CAP]
+    if not check(problems, len(over) == 3 and max(len(n) for n in paths) > CAP,
+                 "deep-sd.x: %d path(s) past the cap, wanted 3" % len(over)):
+        return 1
+
+    out = os.path.join(tmp, "sdout")
+    os.mkdir(out)
+    _, err, rc = ours(macextract, ["x", "-o", out, p])
+    check(problems, rc == 0, "deep-sd.x: exit was %d" % rc)
+    got = written(out)
+    check(problems, len(got) == len(paths),
+          "deep-sd.x: wrote %d file(s), wanted %d" % (len(got), len(paths)))
+    # Every file carries the same borrowed fork, so one content settles
+    # all of them: the walk that reached the cap decoded as well as the
+    # walk that did not.
+    bodies = set(open(os.path.join(out, g), "rb").read() for g in got)
+    check(problems, len(bodies) == 1 and len(bodies.pop()) == dlen,
+          "deep-sd.x: the files do not all hold the one %d B fork" % dlen)
+    # The paths that fit are written as the archive declares them.
+    for n in paths:
+        if len(n) <= CAP:
+            check(problems, n in got, "deep-sd.x: %r was not written" % n[-40:])
+    # The paths that do not fit are reported UNCUT, and the uncut path is
+    # the one the Macintosh built.
+    told = noted(err)
+    for n in over:
+        check(problems, n in told,
+              "deep-sd.x: the notice does not carry the whole %d-byte path"
+              % len(n))
+    # Two FOLDERS are past the cap as well — the ninth and the tenth,
+    # at 287 and 319 bytes — and a folder cut on the way down is what
+    # makes the leaves under it wrong even where the leaf itself fitted.
+    check(problems, len(told) == len(over) + 2,
+          "deep-sd.x: the notice lists %d name(s), wanted the 3 files past "
+          "the cap and the 2 folders" % len(told))
+    return 1
+
+
 def applesingle_case(macextract, tmp, problems):
     """A name the ENGINE carries whole and the FILESYSTEM cannot: 200
     bytes of MacRoman are 400 bytes of UTF-8, and one directory entry
@@ -608,6 +688,7 @@ def main():
         ran += uu_case(args.macextract, tmp, problems)
         ran += nested_folder_case(args.macextract, tmp, problems)
         ran += dd_tree_cases(args.macextract, tmp, problems)
+        ran += superdisk_tree_case(args.macextract, tmp, problems)
         ran += applesingle_case(args.macextract, tmp, problems)
         ran += streamed_directory_case(args.macextract, tmp, problems)
         ran += outdir_cases(args.macextract, tmp, problems)

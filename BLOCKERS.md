@@ -1064,6 +1064,29 @@ a harness can click is not the same list.
   its own remedy". The four questions at the head of OPEN_ITEMS.md part 2's
   waiting-list exist to catch exactly this and were not asked of it.
 
+- **"A generated SuperDisk! record stream could only be graded against the
+  same transcription that wrote it."** Written 2026-08-27, withdrawn
+  2026-09-01. It stood in OPEN_ITEMS.md's *Untested code* section and in
+  `tools/run_names.py`'s docstring, holding open the one path-cap the engine
+  had never reached through this format's own walk. **The disproof was in the
+  same sentence**: it went on to name the second reader — "an archive's own
+  self-extractor on an emulated Mac, which has never been handed a stream this
+  project wrote" — so the file recorded both the gap and the untried route to
+  closing it, and nobody took the second half as an instruction. `SD!
+  Utilities.x` is an APPL whose data fork IS the archive; replacing that fork
+  and keeping its resource fork gives the format's own `CODE 2` any stream you
+  like. It read a 10-folder one and built all 11 files, and the uncut path
+  `unc_path_leaf` reports is the path it built (FORMATS.md, *Alysis
+  SuperDisk!*). **Cost:** the item stayed open five days, and the same
+  sentence was carried in a second file, so the claim was reinforcing itself
+  across the tree. Small in engine terms — the code was right — but it is the
+  second time in a week that "there is no oracle for this" was a fact about
+  what had been TRIED rather than about what exists (the first was
+  SpaceSaver's modules). **Why it survived:** the mechanism this list already
+  names as *a limitation written one paragraph from its own remedy*, in its
+  purest form yet — the remedy was in the same paragraph, in the same
+  sentence, as the limitation.
+
 ### Corrected figures and superseded write-ups
 
 - **The OS 9 boot time** was recorded as "about four minutes", then "20-45

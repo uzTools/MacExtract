@@ -153,7 +153,7 @@ oracle and will lose it to `./ci.sh`'s `make clean`.
 | `ddpro.py` | the other half of the format: DiskDoubler **Pro** 4.1, which writes `DDA2` and whose Split command is the source of the `SPLT` questions still open |
 | `ddencode.py` | **grade a method by WRITING it**: encode a fork, hand it to Salient's own 1991 DiskDoubler, and see whether it comes back. How methods 3, 4 and 5 were graded with no specimen |
 | `ndd.py` | the releases nothing here had run: Salient's **3.1.2** (1991, the oldest reachable — it has the only method 2 fork), **DiskDoubler 4.0** and **Norton DiskDoubler Pro 1.1** (Symantec — whose application is 4.1.1). `--specimens`, `--harvest` and `--grade` need no emulator |
-| `superdisk.py` | grade SuperDisk! with its own self-extractors, and `--on-mac`, which replays both payloads through our application |
+| `superdisk.py` | grade SuperDisk! with its own self-extractors; `--nest`/`--stored`/`--rootfile` hand that extractor a stream written here; `--on-mac` replays both payloads through our application |
 | `spacesaver.py` | Aladdin's **SpaceSaver**, off the StuffIt Deluxe 5.0.1 CD. 3.5.1 runs; 5.0 does not run on 7.0.1. `--layout` reads the format out of it without booting anything — see below before spending a boot on it |
 | `sdcompress.py` | the other half: Alysis's 1991 **SuperDisk! control panel**, which COMPRESSES. It wrote the five specimens the single-file container was derived from, and `--verify` re-grades them |
 | `maclha.py` | **MacLHA 2.00**, out of the corpus (`derived-MacLHa_2.00.sit`), driven to write a `.lzh` holding a file with a real resource fork — the specimen no MacLHA archive in reach is. `--setup` builds the volume, `--make` drives the application (keyboard where it has a shortcut; its Header and Type menus are HIERARCHICAL and cannot be used here, and nothing needs them because `MacBinary` is already checked), `--check` grades both forks with our CLI. **The Type menu was worth reading anyway, and it is now**: `LHa`, `LHarc`, `None` — `-lh5-`, `-lh1-`, `-lh0-` — so it cannot write an `-lh2-`/`-lh3-` specimen — which `tools/run_lzh.py` grades against LHa's own encoder instead (TESTING.md) — and the inaccessible submenu costs nothing (read out of `MENU` 134 with `hcopy`, no emulator) |
@@ -1067,6 +1067,43 @@ Two things to know before re-running it:
 - **The run ends with Put Away, and must**, for the reason `arcmac.py`
   documents above: Mini vMac flushes the guest's writes when the volume is
   ejected, so a run killed with it still mounted reads back an empty disk.
+
+### Handing that extractor a stream written HERE — `--nest`, `--stored`, `--rootfile`
+
+Same application, different data fork. `SD! Utilities.x` is an APPL whose data
+fork IS the archive, so replacing that fork and leaving the resource fork alone
+gives the format's own `CODE 2` a record stream this project built — the only
+second reader this container has anywhere (`tools/synth_sd.py` writes them).
+
+    tools/vmac/superdisk.py --nest              a 10-folder path, past the cap
+    tools/vmac/superdisk.py --stored            the one block shape no fixture has
+    tools/vmac/superdisk.py --rootfile          a stream that opens with a file
+    tools/vmac/superdisk.py --rootfile --invented   ...with a guessed record
+
+Measured 2026-09-01, one boot each. `--nest` builds ten folders of 31
+characters, paths from 43 to 331 bytes: the Macintosh made every one of the
+eleven files, all byte-identical, and for the three past 255 bytes **the uncut
+path `unc_path_leaf` reports is the path the Macintosh built** — which is the
+whole point, since that machine creates each component through the File
+Manager and never assembles a path. `--stored` reads back byte-exact, so the
+stored-block encoding is confirmed by the extractor it was disassembled out
+of. `tools/run_names.py` replays the `--nest` verdict offline; nothing here
+runs in `ci.sh`.
+
+What these CANNOT see: whether SuperDisk! itself would ever WRITE such a
+stream. They establish what its expander reads, which is what an extractor
+needs and is not the same claim.
+
+**One run bombed and has not been reduced — treat it as a hypothesis.** The
+first `--nest` attempt died with *"unimplemented trap"* after the Save box,
+having written nothing (Mini vMac flushes on eject, so a bombed run reads back
+an empty volume). That stream differed from the ones that work in four ways,
+and each has since been run on its own and is fine: the depth (`--nest`), the
+stored blocks (`--stored`), a file as the FIRST record (`--rootfile`), and a
+file record whose fields were guessed rather than copied (`--invented`). What
+is left untested is the one combination — a root file FOLLOWED by a folder —
+and that is one boot for whoever wants it. The archive is
+`synth_sd.nest()` with `control.txt` moved to the front.
 
 ### Replaying a SuperDisk! archive through OUR Mac application
 

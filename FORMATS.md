@@ -66,7 +66,7 @@ under *Table notes*.
 | base64 (`.b64`, `.mime`) | extract | — (bare, and the `begin-base64`/`====` framing sharutils writes; several documents in one file)◇ | no corpus file and no Macintosh specimen: graded against **deark** and, through the messages that carry it, **munpack 1.6** | 5 KB◇ | full |
 | MIME message (`.mim`, `.eml`) | extract | — (multipart to 4 levels, base64, quoted-printable and 7bit/8bit parts, a uuencoded part pasted into one, **multipart/appledouble**, which carries both forks and the Finder info, and `message/partial` across several files)◇ | no corpus file: graded against **munpack 1.6**, the implementation `src/fmt_mime.c` is transcribed from, over 65 generated cases | 8 KB◇ | full |
 | uuencode (.uu, incl. UUTool) | extract | — (plain uu, UUTool's two-fork "MU" shape, and documents posted in several parts★★) | 7 generated cases, the two-fork ones adjudicated by macutils' `hexbin`; `synth-uu-mac.uu` is in the differential suite | 4 KB | full |
-| Alysis SuperDisk! (.X, .x) | extract | **both containers** (record-stream archive and single file); methods 1-4 and 5-8 (a finite-context predictor over a 13- or 16-bit context, with the flag bitmap and/or the literals Huffman-coded), 9 Huffman, 10 SlowFastA and 11 SlowFastB (LZSS); 13 declined per entry, and 20 is an encoder for 11 rather than a method of its own✧✧ | 2 fixtures, 5 forks, adjudicated by the archives' OWN self-extractors on an emulated Mac, + 11 single-file specimens written by Alysis's own control panel (methods 1 and 6) and graded against their inputs, + every method 1..9 through Alysis's own Add-In Modules under qemu-m68k (`tools/sdmodule/`) | 72–84 KB✧✧ | full |
+| Alysis SuperDisk! (.X, .x) | extract | **both containers** (record-stream archive and single file); methods 1-4 and 5-8 (a finite-context predictor over a 13- or 16-bit context, with the flag bitmap and/or the literals Huffman-coded), 9 Huffman, 10 SlowFastA and 11 SlowFastB (LZSS); 13 declined per entry, and 20 is an encoder for 11 rather than a method of its own✧✧ | 2 fixtures, 5 forks, adjudicated by the archives' OWN self-extractors on an emulated Mac, + 11 single-file specimens written by Alysis's own control panel (methods 1 and 6) and graded against their inputs, + every method 1..9 through Alysis's own Add-In Modules under qemu-m68k (`tools/sdmodule/`), + 4 record streams written here and read back by an archive's own self-extractor (paths past the cap, and a stored block) | 72–84 KB✧✧ | full |
 | StuffIt SpaceSaver (`SPSV`) | extract | **every method the format has**: 0 stored, 1 and 2 (the "Original" LZSS pair), 3 "Alg 3" (Huffman + LZ77), 4 "Alg 4" — the last two starting their window loaded with a preset dictionary that ships inside SpaceSaver✦✦ | no oracle and no fixture, but **Aladdin's own compressors run under `qemu-m68k` and 44 forks they wrote read back byte-exact** (`tools/ssmodule/`, 2026-08-25), plus 160 corrupted variants, a synthetic round-trip and unit tests✦✦ | 4 KB stored, 8 KB method 1, 84 KB method 2, 41 KB method 3, **36 KB** for what SpaceSaver writes (measured on a Mac Plus); 68 KB is the ceiling the width byte allows. The dictionary is 9.7 KB of static data, not heap | full |
 | LZH / LHA (.lzh, .lha) | extract | -lh0- store, -lh1- (LHarc's adaptive Huffman, shared with StuffIt method 5), **-lh2- (both codes adaptive, the position tree growing with the output)**, **-lh3- (static, rebuilt per block)**, -lh4-/-lh5-/-lh6-/-lh7- (static Huffman over a 4/8/32/64 KB window), -lhd- directories, LArc's -lz4-/-lz5-/-lzs-; header levels 0, 1, 2 and 3; **MacLHA's MacBinary payload unwrapped into two forks**; every method the format has except PMarc✵ | 8 fixtures (1 real Amiga archive + 7 of lhasa's) + **182 archives from fourteen writers**, each graded against `unar` and against lhasa, + 12 sets written by LHa 1.14i itself, + 15 -lh2- and 6 -lh3- entries generated for the purpose✵ | 4–74 KB✵ | full |
 | AppleLink package (.pkg) | detect only | — | no specimen anywhere: the probe is Aladdin's own recogniser, at 0 false positives across 928 fixtures (*AppleLink packages*, below) | — | — |
@@ -481,6 +481,25 @@ forks with bytes 16..127 masked, the `vmac_check.py` convention).
 corrupted variants, which nothing else covers — `t` does not unwrap envelopes,
 so the corpus-driven robustness and fuzz suites only ever reach the BinHex
 layer.
+
+**That extractor also reads streams written HERE, and since 2026-09-01 it
+grades two things no fixture could.** `SD! Utilities.x` is an APPL whose data
+fork IS the archive, so replacing that fork and keeping its resource fork
+hands the format's own `CODE 2` a record stream `tools/synth_sd.py` built
+(`tools/vmac/superdisk.py --nest`, `--stored`; how to re-run either is
+`tools/vmac/README.md`):
+
+| asked | stream | result |
+|---|---|---|
+| a path that SUMS past the 255-byte cap | 10 folders of 31 characters, 11 files, declared paths 43→331 B | **11/11 made, byte-identical**, and for the 3 files and 2 folders past the cap the UNCUT path `unc_path_leaf` reports is the path the Macintosh built |
+| a stored block, which the corpus has none of | the same 4,796 B fork coded and stored, in one folder | **both byte-exact** |
+| a stream that OPENS with a file record | one file, no folder | made |
+
+The first closes what OPEN_ITEMS.md carried as untested code. The second
+confirms `CODE 2` @0x614's stored-block encoding against the code it was
+disassembled out of: a length with bit 15 set, counting its own two header
+bytes. **All seven blocks in both fixtures are coded** — methods 7 and 11 — so
+nothing in the corpus reaches that branch (TESTING.md).
 
 Peak heap **74,220 B** for `SD! Utilities.x` and **85,943 B** for
 `Disk Expander .X` (`macextract t --stats`); both extract fully under a 400 KB

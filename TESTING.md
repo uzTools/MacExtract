@@ -1088,7 +1088,7 @@ suite nor its variants could reach either limit. They are graded by
 CPython's `zipfile` and `tarfile`, which wrote them and have no such
 limit, and by `unzip -l` and `tar tf` where those exist.
 
-Fourteen cases over six carriers, the allocator's budget and the output
+Fifteen cases over seven carriers, the allocator's budget and the output
 directory: a zip whose long
 entry is extracted under the shortened name while the entry beside it is
 untouched; two zip entries that differ only past the cut, which must both
@@ -1117,6 +1117,18 @@ components — 296 bytes, and no name in it remarkable — and the notice
 must carry every byte of it. `lsar`, which has no such cap, is asked for
 the same path. What this grades for Now Compress is `unc_path_leaf`,
 which DiskDoubler and SuperDisk! also run.
+
+**SuperDisk! reaches that helper through its own walk since 2026-09-01,
+and it is the case here with no oracle on this machine.** `tools/synth_sd.py`
+writes a ten-deep stream — declared paths 43 to 331 bytes — out of a corpus
+archive's own folder and file records and its own method-7 blocks, so the
+only thing in it this project invented is the nesting. Nothing off the
+Macintosh reads the container, so the verdict it replays was taken on the
+emulator: the format's OWN self-extracting application, given a data fork
+built by that script (`tools/vmac/superdisk.py --nest`). That machine makes
+each component through the File Manager and never assembles a path, so what
+it built IS the uncut path, and it agreed on all eleven files. The case is
+skipped, not failed, where the fixture is absent.
 
 The sixth is DiskDoubler, added 2026-08-28, and it is there for the
 header walks rather than for the helper: the four real `DDAR` archives
@@ -1686,7 +1698,13 @@ that wrong is entries that are silently never reached.
 **What this cannot see.** The hashes were produced by this reader before they
 were confirmed on the emulator, so they are a regression fence and not an
 oracle; re-confirming them means re-running `--adjudicate`. It also grades
-two methods, 7 and 11, because that is what the two archives use. The unit
+two methods, 7 and 11, because that is what the two archives use — and it
+reaches no STORED block at all: **all seven blocks across both fixtures are
+coded**, so `sd_block_head`'s bit-15 branch is not exercised by anything in
+the corpus, nor by the 116 variants, which flip bytes inside those coded
+blocks. That branch is graded on the emulator instead, by the extractor it
+was disassembled out of (`tools/vmac/superdisk.py --stored`, byte-exact
+2026-09-01; FORMATS.md, *Alysis SuperDisk!*). The unit
 test carries what no fixture can: a two-fork file, so that fork order is asserted, and an
 undecodable method BETWEEN two decodable entries. **Every other method is
 graded by the suite below**, which did not exist until 2026-08-25.

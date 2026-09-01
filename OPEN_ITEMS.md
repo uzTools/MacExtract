@@ -193,23 +193,3 @@ all** (BLOCKERS.md, the ARC 7 row, filed and disproved the same day).
   succeeded, and none of them read it — seven boots, and what PKG Expand
   asks for turns out to be a FOLDER (DECISIONS.md 2026-09-01, *the
   package that cannot be handed over*).
-
----
-
-## Untested code, named so it is not mistaken for tested
-
-- **SuperDisk! reaches the path cap through code that is tested, in a
-  container nothing here writes.** `unc_path_leaf` keeps the uncut path
-  (DECISIONS.md 2026-08-27, *the path builder's own cap*), and
-  `tools/run_names.py` grades it on generated Now Compress and
-  DiskDoubler trees against `unar`. SuperDisk! runs that same helper and
-  walks folders in both its fixtures, up-directory record included; what
-  no fixture has is a path that SUMS past 255 bytes, so its own header
-  walk has never been the thing that reached the cap. **What would close
-  it:** a SuperDisk! archive nested deep enough. A generated record
-  stream would not: nothing off the Macintosh reads this container, so it
-  could only be graded against the same transcription that wrote it. The
-  one second reader that exists is an archive's own self-extractor on an
-  emulated Mac, which has never been handed a stream this project
-  wrote.
-

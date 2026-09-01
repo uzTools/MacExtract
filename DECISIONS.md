@@ -186,6 +186,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-01 (the package that cannot be handed over) — three routes into Aladdin's AppleLink expander, and the control that made an empty list mean something
 - 2026-09-01 (the tier that needed no Macintosh) — a budget sweep, a ceiling, and a number that was an artefact
 - 2026-09-01 (the search, not the reference) — Apple Archive, and what naming it costs a Mac Plus
+- 2026-09-01 (the reader was in the sentence) — feeding SuperDisk!'s own extractor a stream we wrote, and one hypothesis that did not survive it
 
 ---
 
@@ -10728,3 +10729,75 @@ clears the 1 MB Mac Plus budget (FORMATS.md, *Budget*). What made it a decision
 rather than an accident is that the ratchet stopped the build: this cost was
 paid in the open, where the 31,860 B that quietly moved the budget on
 2026-08-24 was not.
+
+## 2026-09-01 (the reader was in the sentence) — feeding SuperDisk!'s own extractor a stream we wrote, and one hypothesis that did not survive it
+
+OPEN_ITEMS.md carried SuperDisk!'s path cap as untested code for five days,
+under a sentence that both stated the problem and named its solution:
+
+> A generated record stream would not: nothing off the Macintosh reads this
+> container, so it could only be graded against the same transcription that
+> wrote it. The one second reader that exists is an archive's own
+> self-extractor on an emulated Mac, which has never been handed a stream
+> this project wrote.
+
+The second sentence is the disproof of the first, and it sat there through
+every session that read the file. BLOCKERS.md keeps the withdrawal; what is
+worth transferring is the shape of it — **"there is no oracle" was a claim
+about what had been TRIED**, and the trying was one afternoon.
+
+### The method, which generalises past this format
+
+`SD! Utilities.x` is an APPL whose data fork IS the archive and whose resource
+fork is the extractor. So the fork can be replaced and the extractor kept:
+`tools/vmac/superdisk.py` MacBinaries the application back together around a
+stream `tools/synth_sd.py` wrote, and `CODE 2` walks it. **Any
+self-extracting archive is an implementation you can feed**, not merely one
+you can run — the same bargain `--adjudicate` already made, one step further.
+
+Ten folders of 31 characters, eleven files, declared paths 43 to 331 bytes.
+The Macintosh built every one and all eleven files came back byte-identical.
+The assertion that matters is available only from that machine: it creates
+each component through the File Manager and never assembles a path, so **what
+it makes on the volume IS the uncut path** — and for the three files and two
+folders past 255 bytes, the uncut path `unc_path_leaf` reports is exactly it.
+
+### What was built rather than invented, and why the difference showed up
+
+Everything in these streams that this project does not decode is COPIED from a
+corpus archive: the eight bytes at the head of the file, a folder record's
+twenty, the four unread bytes inside a file's thirty. That is rule #1 applied
+to a test subject rather than to a parser, and the reason is not
+fastidiousness — a wrong guess in any of those fields is indistinguishable
+from the failure the run is looking for.
+
+The first run proved the point by breaking it. It used invented file records
+and, worse, STORED blocks — and it bombed, *unimplemented trap*, having
+written nothing. Checking the corpus then turned up a coverage fact nobody had
+noticed: **no stored block exists in either fixture.** All seven blocks are
+coded, methods 7 and 11, so `sd_block_head`'s bit-15 branch had never run on
+real data, and the 116 corrupted variants flip bytes inside coded blocks.
+
+### The hypothesis, and the discipline that killed it
+
+"The stored branch is wrong" was a good hypothesis and it was wrong. Put to
+the extractor on its own — the same 4,796-byte fork written coded and stored,
+in one folder, so the file record including `dlen` is byte for byte the one
+that already worked — **both came back byte-exact**. So the reading taken off
+`CODE 2` @0x614 on 2026-08-20 (a length with bit 15 set, counting its own two
+header bytes, except 0x8002) is now confirmed against the code it was
+disassembled out of, which is a better place for it than untested.
+
+Two more single-variable runs followed, and both refuted their candidate: a
+stream that OPENS with a file record is read, and so is one whose file record
+was guessed rather than copied. **Four causes, each cleared individually, and
+the bomb still unexplained** — the one combination left untried is a root file
+FOLLOWED by a folder. It is written up as a one-boot task and labelled a
+hypothesis (`tools/vmac/README.md`), because an unreduced root cause is not a
+finding; that rule is what the withdrawn `HOpen` attribution cost.
+
+The transferable half is the ordering. Had the first run used borrowed blocks,
+it would have passed, the path cap would have closed, and the stored branch
+would still be untested code that nobody had thought to name. **The broken run
+was worth more than the clean one**, and only because the difference between
+them was reduced one variable at a time instead of being fixed in a batch.
