@@ -2358,32 +2358,38 @@ which is a different quantity from the THRESHOLD at which one stops fitting.
 
 ### What the application costs the engine
 
-**Only CODE costs anything. Data, globals and resources are free.** MEASURED
-2026-08-30 by ballast on a 1 MB Mac Plus under System 6.0.8, with the ballast
-verified present in the binary that actually ran:
+**Code and the A5 world both cost the engine, one for one; only RESOURCES are
+free.** MEASURED 2026-09-02, and this section said the opposite until then.
 
-| ballast | free heap | budget |
-|---|---|---|
-| none | 647,096 B | 565,176 B |
-| **+11,308 B of code** | 635,768 B | 553,848 B |
-| **+6,132 B of `.data`** | 647,096 B | 565,176 B |
+| ballast | budget |
+|---|---|
+| none | 647,802 B |
+| **+16,384 B of `.data`** | 631,384 B |
 
-Code moves it one for one; data does not move it at all. The reason is the
-classic layout: `CODE` resources are handles **inside** the heap `FreeMem()`
-reports, while the A5 global world sits outside it. So
+**16,384 B of data cost 16,418 B of budget.** The mechanism is the layout: the
+A5 world sits ABOVE `ApplLimit`, so enlarging it lowers the heap's ceiling by
+its own size. `CODE` resources are handles inside that heap and cost the same
+way. What is genuinely free is a RESOURCE that is not loaded — a `DITL`, an
+`ICN#`, an `OVLY` blob nobody has asked for.
 
-    budget = 708,100 - code        (autotest build, 1 MB, System 6.0.8)
+**The 2026-08-30 measurement that said data was free is withdrawn**
+(BLOCKERS.md), and with it the claim it displaced: *resident size — code plus
+data plus bss — is what costs the engine its budget* was withdrawn on
+2026-08-30 on the strength of it, and was right all along. The ballast method
+is sound and its own warning is what this run had to obey: three of the four
+2026-08-30 runs measured nothing because `--gc-sections` dropped the ballast
+or only one `main()` referenced it, and the first attempt on 2026-09-02 was
+dropped the same way. **`nm` the binary that actually ran; a null result from
+a ballast nobody has found is not a measurement.**
 
-which reproduces every figure below. **Three of the four ballast runs measured
-nothing** before this came out — twice `--gc-sections` had dropped the ballast,
-once it was referenced only from the other `main()` — so check the symbol is in
-the binary before believing a null result (`tools/build_mac.sh` records the
-method).
+    budget ≈ 708,100 - code - A5      (autotest build, 1 MB, System 6.0.8)
 
-**Consequence for the Macintosh shell: put material in resources and tables,
-not in C.** A dialog defined in a `DITL` costs the engine nothing; the same
-dialog built in code costs its own size on every extraction. `tools/build_mac.sh`
-enforces a ratchet on code size for this reason.
+**Consequence for the Macintosh shell, corrected: put material in RESOURCES.**
+A dialog defined in a `DITL` costs the engine nothing. A table written in C
+costs its own size on every extraction whether it is `const` or not, because
+Retro68 places `.rodata` in the A5 world too (*Where the code is*). The
+`tools/build_mac.sh` ratchet watches code AND data for this reason; it watched
+only code until 2026-09-02, so 32,644 B of A5 world had grown unwatched.
 
 ### Where the code is
 
@@ -2417,64 +2423,6 @@ summing `size` over the objects gives 178,696 B, because `--gc-sections`
 drops 17 % of it, and counting every `.text`/`.rodata` input section gives
 179,561 B, because Retro68 places `.rodata` in the A5 world. Only the map's
 `.code*` output sections answer the question the budget asks.
-
-### Segmenting the CODE
-
-**The Segment Loader gives back 78,320 B of budget for a configuration file
-and no source change.** MEASURED 2026-09-01 at 1 MB on System 6.0.8, both
-sides built and run in one session with `-D UNC_AT_BUDGET`, on the branch
-`code-segments` — the map is not in this build (a figure taken
-from two builds that were not the same build cost this project a day once —
-DECISIONS.md 2026-08-31, *the overlay that works and is not worth it*):
-
-| build | budget |
-|---|---|
-| one `CODE` segment, as shipped | 647,802 B |
-| the branch `code-segments`, six segments | **726,122 B** |
-
-`CODE` 2 falls from 142,152 B to 39,432 B, and the rest becomes Archives
-55,104, Text 18,912, Deflate 15,188, Crypt 7,560 and Sets 6,356. The jump
-table grows 688 → 1,192 B, total `CODE` grows 424 B and the download grows
-256 B.
-
-**Some of that memory is spent by the loader, not by the engine, and the
-figure above does not say how much.** The budget is taken before the sniff
-(`macextract_mac.c`, the `FreeMem()` block) and a segment loads when something
-in it is first CALLED, so a `.sit` is granted 726,122 B and then hands 55,104 B
-of it straight back when `Archives` loads during the sniff. Measured:
-`derived-Domino_v1.4.sit` extracts byte-exact holding **677,591 B of peak
-heap**, 29,789 B beyond the whole unsegmented budget, so the gain is real —
-but *derived*, it did so with about 5 KB of heap to spare, where the
-unsegmented build refuses the entry cleanly instead. **Segmentation as
-configured here trades a clean refusal for a near miss**, and that is the
-first thing a tier run would have to look at.
-
-`derived-Library_ISBN_Barcoder.sit`, `adobenumbers.sit`, `4acalc.zip` and
-`3d-terrain-modeling-017.hqx` pass unchanged, five fixtures across three
-segments.
-
-**The sustained gain is smaller than the granted one, because the probes
-travel with the decoders.** `unc_sniff` walks its order calling each probe,
-and the first five it calls live in `Archives` — so that segment loads for
-almost every file, whatever the file turns out to be. What is reliably NOT
-resident during a `.sit` run is `Text` + `Deflate` + `Crypt` + `Sets` =
-48,016 B, and during a `.hqx` run, `Deflate` + `Crypt` + `Sets` = 29,104 B
-(*derived*, from the segment sizes above). **Splitting the probes from the
-extractors is what would make the granted figure the real one**: a probe is
-tens of bytes and an extractor is thousands.
-
-**What this has NOT established**, and none of it is cheap to assume: no tier
-has been re-run at 4 MB, 1 MB, 512 KB or on System 3.0; nothing calls
-`UnloadSeg`, so a session that opens several formats accumulates resident
-segments; and the budget is taken before the sniff, so segments loaded later
-compete with a budget already granted — the failure that would show is
-`gRefusedWhy` = 2, `NewPtr` returning NULL where the budget allowed it
-(*Budget*).
-
-**It does not reach a Macintosh 128K**, which is the question that prompted
-it: segment 2 plus the runtime is 44,892 B and the A5 world is another
-44,096 B, against ~88 KB of partition (*A Macintosh 128K*). Segmentation moves
-code out of the heap; it does nothing about the A5 world.
 
 ### Budget
 

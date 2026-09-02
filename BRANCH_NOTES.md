@@ -1,104 +1,55 @@
-# Branch `overlay-eager` — load the overlay at launch, release what cannot be wanted
+# Branch `overlay-eager` — one disk read at launch, then throw most of it away
 
-**Branched from `selective-loading`.** Same overlay mechanism, different
-LIFETIME, for one reason: a lazy `GetResource` touches the application's own
-disk AFTER the archive has been chosen, and on a Mac Plus with one floppy
-drive — which "cannot mount two" (DECISIONS.md 2026-08-24) — that disk may
-have been swapped by then. Loading at launch confines the only disk access to
-a moment when the boot disk is certainly in.
+**Branched from `selective-loading`**, and it carries all six of that branch's
+overlays. Same images, opposite lifetime: `selective-loading` reads the one it
+needs when it needs it; this reads **all six as a single resource while the
+boot disk is certainly still in**, and releases everything the archive cannot
+want as soon as the sniff says what the archive is.
 
-**Verified 2026-08-31 at 1 MB:** encryption still works with the overlay HELD
-(`--password`: *"every entry decrypted"*), and a releasable format, an
-envelope-free terminal one and a held one all extract — LZH, tar and Compact
-Pro, 3/3. **What that verification could not see is whether the release
-bought anything, and the answer was no until the budget fix below.**
+**Status, 2026-09-02: measured on an emulated Mac Plus at 1 MB.** A bare
+StuffIt 5 archive is granted **693,168 B** with the bundle released and only
+the ciphers kept; an LZH gets **701,688 B**, keeping only its own decoder.
+4/4 fixtures extract byte-exact across the formats that keep one image, two
+images, and none.
 
-## What it can and cannot give back
+## The bundle
 
-**5,988 B, and only for six formats.** Two things disqualify a format from
-release: it may carry an encrypted entry, or it is an ENVELOPE whose contents
-are not yet known.
+`tools/overlay/mkbundle.py` writes the six images into ONE `OVLY` resource,
+69,700 B, with a twelve-byte directory entry each: id, offset, length, all
+big-endian and read byte-wise. Six resources would be six disk reads, and
+paying the disk once is the entire argument for loading eagerly.
 
-| | release? |
-|---|---|
-| SIT, SIT5, Compact Pro, PackIt, Zip, ARC | no — may carry encrypted entries |
-| BinHex, MacBinary, AppleSingle, gzip, `.Z`, MIME, uu, btoa, base64 | no — envelopes; a `.sit.hqx` sniffs as BinHex |
-| LZH, DiskDoubler, Now Compress, SpaceSaver, SuperDisk!, tar | **yes** |
+`ovl_preload()` reads it from `main()`. `ovl_release_if_unwanted()` then copies
+out the one or two images the sniffed format can want — the decoder, and the
+ciphers where an entry might be encrypted — and releases the bundle.
 
-**So it does not pay for StuffIt**, which is the common case and the reason
-this project exists.
-
-## The release is per ARCHIVE; the application's life is per SESSION
-
-**A bug this branch shipped for one commit, and the reason it matters more
-than the fix.** The release ran after each archive's sniff, but the "already
-tried" flag was global, so `ovl_entry` never reloaded. Extract an LZH, then an
-encrypted `.sit` in the same session, and the ciphers were gone — the cipher
-kind cleared, the entry failing, **a capability disappearing because of what
-was opened before it.** Not a prompt, not a delay: a silent loss. Fixed by
-allowing the reload; encryption re-verified at 1 MB afterwards.
-
-**And the fix concedes the branch's own argument.** A reload is exactly the
-mid-run disk access this lifetime was chosen to avoid, so `overlay-eager` does
-not escape the trade — it defers it to the second archive, where it is less
-predictable. A user who opens several archives in a session meets the same
-prompt, later.
-
-**Neither overlay branch avoids the disk dependency. They move it.**
-
-## The conflict is inherent, not an implementation gap
-
-Freeing the cipher memory and guaranteeing no mid-run disk access are in
-direct opposition unless you know BEFORE extracting whether an entry is
-encrypted. For StuffIt you cannot: encryption is per entry and discovered as
-the entry is read. The engine exposes no per-entry encryption flag; the only
-signal is `UNC_ERR_PASSWORD`, which arrives after the memory would have
-mattered.
-
-Three ways to know, and what each costs:
-
-1. **From the format** — what this branch does. Free, covers six formats.
-2. **From the archive's directory before extracting** — zip's central
-   directory carries an encryption bit per entry, Compact Pro and StuffIt 5
-   have entry tables, and StuffIt classic's archive key announces itself as
-   `MKey` in the resource fork, which the shell already reads. Needs a small
-   PUBLIC API addition and does not work for streamed formats with no
-   directory.
-3. **Lazily, paying one disk access when a password is actually needed** —
-   release before the big allocations, reload if `unc_password` is reached.
-   Unencrypted archives get the memory back with no disk access; encrypted
-   ones pay a read at the moment they are already interrupting the user with
-   a dialog.
-
-**And weigh all of it against the prize, which is 6 KB — about ONE archive.**
-The corpus headroom study puts the density near the line at roughly one
-archive per 6–7 KB of budget (FORMATS.md), so 6 KB is one file in 922, and
-not `derived-EasyFind.dmg.sit`, whose margin is no longer unmeasured: it is
-short by **2,031,101 B** (FORMATS.md, *Budget*), which is nearly two megabytes
-past what a 1 MB Macintosh has at all, so that fixture is decoder-shaped and
-out of reach of any amount of shedding resident code. Against that: a dispatch, a shim, a loader, a build step, a
-new resource type, three branches, and a class of bug that does not exist when
-the code is simply linked in. Re-pricing one constant
-in the memory reserve, the same week, was worth **49 KB**, and three such
-re-pricings have since been worth **81,936 B** together (FORMATS.md,
-*Budget*). Extending a public API for six kilobytes is not obviously right.
-
-## The three positions, so the choice is on the table
-
-| | ciphers cost | mid-run disk access |
+| what the archive is | kept | released |
 |---|---|---|
-| `main` | 6 KB, always | none |
-| `selective-loading` | nothing until needed | **yes, after the archive is chosen** |
-| `overlay-eager` (here) | nothing for six formats, 6 KB otherwise | none |
+| LZH, DiskDoubler, Now Compress, SpaceSaver | that decoder | everything else |
+| Compact Pro, ARC | that decoder + ciphers | the rest |
+| StuffIt, StuffIt 5, zip, tar, … | ciphers only | all six decoders |
+| an ENVELOPE — BinHex, MacBinary, gzip, MIME … | the whole bundle | nothing |
 
----
+**An envelope keeps everything, and that is not laziness.** A `.sit.hqx`
+sniffs as BinHex: what is under it is unknown until it has been unwrapped, so
+releasing on the outer format would strand the archive inside. The shipping
+application then opens the unwrapped file as a NEW layer with its own sniff
+and its own release, so the second layer gets the memory back.
 
-# Branch `selective-loading` — load only the decoder the archive needs
+**What the harness cannot see, and it matters here.** `run.py` drives the
+autotest build, whose `main()` extracts ONE layer; the envelope chaining lives
+in `ExtractOne`, which only the interactive `main()` calls. So the
+envelope-then-release path above is **not measured** — a budget probe on a
+MacBinary-wrapped archive reports 638,696 B, the bundle held, and that is the
+harness's single layer rather than the application's behaviour. Measuring it
+needs `interactive.py` and an instrument it does not have. *Labelled
+hypothesis, not measurement.*
 
-**Status: the loading mechanism is BUILT and PROVEN ON THE MACHINE. The
-decoders are not ported yet.** The hard part — getting code that is not
-resident to run on a 68000 and call back into the application — works. What
-remains is a registration refactor and porting decoders in behind it.
+**And nothing needs crediting back.** The release runs immediately after the
+sniff, and the budget is taken at the engine's FIRST ALLOCATION
+(`mal_take_budget`), which is later — so freed heap is simply part of what the
+engine is measured against. A `mal_credit()` path was written, measured to
+change nothing, and removed: code no run executes is worse than no code.
 
 ## The mechanism, proven 2026-08-30
 
@@ -173,37 +124,132 @@ of shedding resident code reaches it (FORMATS.md, *Budget*). The prize is
 still ~103 KB; what it buys is more of the corpus near the line, not the
 fixtures that are out.
 
-## The release reached nothing until 2026-09-02, and now it does
+## Six overlays, one per format family — 2026-09-02
 
-**This branch's premise — load at launch, release what cannot be wanted —
-delivered exactly zero bytes to the engine, and the A/B that shows it is one
-line of ordering.** `ovl_release_if_unwanted` runs immediately after
-`unc_sniff`; the budget was computed before the sniff. So the release freed
-heap the engine had already been told it could not have.
+**The most expensive archive now decodes with 42,044 B less code and 17,040 B
+less A5 world resident**, because the five decoders it does not need are not
+in memory at all.
 
-Measured at 1 MB on System 6.0.8, `-D UNC_AT_BUDGET -D UNC_AT_OVERLAY`, one
-fixture whose format RELEASES the overlay (`.lzh`) against one that must HOLD
-it (`.sit`, which may carry an encrypted entry):
-
-| | budget, budget taken before the sniff | budget taken at the first allocation |
+| resident, default build | plain | six overlays |
 |---|---|---|
-| `lhasa-maclha-l1_lh5.lzh` — released | 645,182 B | **663,298 B** |
-| `adobenumbers.sit` — held | 645,182 B | 647,966 B |
+| `CODE` | 147,772 B | **105,640 B** |
+| A5 world (`.data` + `.bss`) | 44,116 B | **27,128 B** |
+| static total | 191,888 B | **132,768 B** |
 
-**Identical to the byte in the old column.** The mechanism worked, the memory
-was freed, and nothing could use it. In the new column the release is worth
-**15,332 B** against a format that holds the overlay, and **18,116 B** against
-what this branch did yesterday.
+| the blobs | |
+|---|---|
+| `OVLY` 128 crypt | 15,324 B |
+| `OVLY` 129 SpaceSaver | 17,624 B |
+| `OVLY` 130 Compact Pro + DiskDoubler | 14,736 B |
+| `OVLY` 131 LZH | 6,804 B |
+| `OVLY` 132 ARC | 9,168 B |
+| `OVLY` 133 Now Compress | 5,968 B |
 
-**So the branch's headline was the wrong figure in the wrong unit.** 5,988 B
-is CODE shed from the resident build, measured with `size`. What an end user
-gets is BUDGET, and until now that was 0. The number to quote is 18,116 B, and
-it is three times the one this branch has been parked on.
+Each is loaded only when an archive turns out to be that format. Compact Pro
+and DiskDoubler share one because `fmt_dd` calls `fmt_cpt`'s RLE and LZH fork
+readers, and an overlay calling into another overlay is a load order nobody
+has needed yet.
 
-`mal_take_budget` now runs at the engine's first allocation and reads
-`PurgeSpace` rather than `FreeMem` — a released overlay is a purgeable Handle,
-which `FreeMem` does not count. +116 B of code, ceiling raised to 147,700
-deliberately.
+**On the machine, at 1 MB on System 6.0.8** — every overlay exercised, `5/5`:
+a `.cpt`, a `.lzh`, an `.arc`, a SpaceSaver method-4 stream and a `.sit` that
+loads none of them. The two heaviest archives pass too: `derived-Domino_v1.4.sit`
+at **699,167 B** of peak heap and `derived-Library_ISBN_Barcoder.sit` at
+650,786 B.
+
+**What a StuffIt archive is granted: 650,612 → 708,916 B, +58,304 B.** That is
+the number this work was for — the budget while the most expensive format
+decodes, with every other decoder absent. Domino demonstrably spends it: its
+peak went 640,799 → 699,167 B on the same archive and the same output.
+
+### How it is put together
+
+- **`tools/overlay/mkforwards.py` generates the host vector and the forwards.**
+  A decoder overlay compiles engine source unmodified, so every helper that
+  source calls must resolve inside the blob; each is defined there as a
+  one-line forward through a table the application fills. Twelve by hand was
+  fine, forty-two is not — a wrong argument list crossing that boundary would
+  be silent. The list of symbols in that script IS the interface, and a
+  missing one fails the link loudly.
+- **Real engine types in the generated vector, not opaque ones.** `overlay.h`
+  keeps engine types out of `OverlayHost` so a blob cannot depend on their
+  layout; that argument does not reach a DECODER overlay, which compiles the
+  decoder and so depends on all of them already. What opacity would buy here
+  is casts on both sides, and a cast turns a signature mismatch from a compile
+  error into a wrong call.
+- **Probes stay resident, always.** `fmt_lzh_probe.c`, `fmt_cpt_probe.c`,
+  `fmt_arc_probe.c` and `fmt_spacesaver_probe.c` were split out;
+  Now Compress and DiskDoubler needed no split because their probes already
+  live in `fmt_stubs.c`. ARC's split also moved its constants into
+  `fmt_arc_priv.h` rather than copying them, because duplicating magic numbers
+  is what rule #1 forbids.
+- **The splits cost the DEFAULT build 72 B of code and 20 B of A5**, which is
+  a function prologue and an include per split. Both ratchets fired on it and
+  were raised deliberately, which is what they are for.
+
+## A DECODER in an overlay — done, and it runs on the Macintosh
+
+**2026-09-02: SpaceSaver's decoder is an overlay, and the emulated Mac Plus
+extracts with it.** This is what the `.data` correction unlocked; nothing else
+about the mechanism had to change.
+
+**Why SpaceSaver, measured rather than chosen:** of the eight candidate
+decoders it has the most to give (6,560 B of resident `CODE` and 9,701 B of A5
+world — `ss_dict0` is the largest single table in the binary) and the fewest
+external references (12). All eight compile `-mpcrel` with **zero** absolute
+relocations, so the ceiling was never the mechanism.
+
+| | plain build | both overlays | delta |
+|---|---|---|---|
+| `CODE` | 147,684 B | 135,792 B | **−11,892** |
+| A5 world (`.data`) | 32,656 B | 15,964 B | **−16,692** |
+| static total | 191,792 B | 163,216 B | **−28,576** |
+
+**On the machine, at 1 MB on System 6.0.8**: the three SpaceSaver specimens
+Aladdin's own compressors wrote (`tools/ssmodule/`) extract byte-exact through
+the overlay — **3/3**, including method 4, whose preset dictionary now lives
+inside the blob rather than in the A5 world. `adobenumbers.sit`,
+`3d-terrain-modeling-017.hqx` and `derived-Domino_v1.4.sit` are unchanged,
+3/3, so the crypt overlay and the ordinary paths still work beside it.
+
+**The budget, both autotest builds, one session:** 650,612 → **678,766 B**,
+**+28,154 B**. That is more than the code that left, and the reason is the
+next section.
+
+### The probe stays resident, and that is the general rule
+
+`src/fmt_spacesaver.c` was split: `unc_spacesaver_probe`, `ss_parse` and
+`ss_head_ok` moved to `src/fmt_spacesaver_probe.c`, which is never in the
+blob. `unc_sniff` calls that probe for every file it is handed, so a probe
+inside an overlay would load 16 KB of decoder in order to decide that the file
+is not a SpaceSaver document. **Separating what DECIDES from what DECODES is
+what makes on-demand loading pay**, and it is the same conclusion the
+three-dispatch-tables section reached and the retired segment experiment
+proved by failing to do it.
+
+### And the A5 world is not free after all
+
+**`main` says only `CODE` costs the engine and that data, globals and
+resources are free** (FORMATS.md, *What the application costs the engine*,
+ballast, 2026-08-30). Measured here on 2026-09-02, ballast **verified present
+with `nm`** and read from both `main()`s through a volatile so
+`--gc-sections` could not drop it:
+
+| | budget |
+|---|---|
+| both overlays | 678,766 B |
+| the same build + 16,384 B of `.data` | 662,350 B |
+
+**16,384 B of `.data` cost 16,416 B of budget** — 1:1, not free. It is the
+mechanism you would expect: the A5 world sits above `ApplLimit`, so growing it
+lowers the heap's ceiling. That also explains why the budget here rose by
+28,154 B when only 11,648 B of code left the build.
+
+**This is a contradiction with a load-bearing claim on `main`**, not just a
+branch curiosity: the code ceiling exists because code was believed to be the
+only thing that costs, and *"put material in resources and tables, not in C"*
+follows from the same belief. One run on `main` with this ballast settles
+whether the 2026-08-30 measurement or this one is wrong. **Until then neither
+number should be quoted as settled.**
 
 ## What the prize is NOT — measured 2026-09-01, on a retired experiment
 
@@ -334,11 +380,11 @@ of the archive's resource fork), `unc_crypt_sit` (key schedule) and
 
 *The delta was published as −6,140 B, from a pair that did not match.* The
 resident row is `tools/build_mac.sh`'s plain build; the overlay row reproduces
-at no commit on this branch — 141,216 B at `7a35327`, 141,252 B at the tip,
-never 141,100 B. Taking both sides from the same build at the same commit
-gives **−5,988 B**, or −5,720 B if both sides are autotest builds
-(141,928 → 136,208). Every version of it rounds to "about 6 KB", which is
-why it survived unquestioned.
+at no commit on either overlay branch — 141,216 B before the release fix,
+141,252 B after it, never 141,100 B. Taking both sides from the same build at
+the same commit gives **−5,988 B**, or −5,720 B if both sides are autotest
+builds (141,928 → 136,208). Every version of it rounds to "about 6 KB", which
+is why it survived unquestioned.
 
 *"7,016 B off the download" is backwards.* The `OVLY` resource ships inside
 the application, so shedding 5,988 B of code and adding a 14,996 B blob makes

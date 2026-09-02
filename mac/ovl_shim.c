@@ -19,6 +19,8 @@
  * never do is silently return with the cipher half-initialised.
  */
 #include "overlay.h"
+#include "ovl_host_gen.h"
+#include "ovl_host_init_gen.h"
 #include "unc_internal.h"
 #include <Resources.h>
 #include <Memory.h>
@@ -28,74 +30,162 @@ static uint32_t ovl_host_crc32(uint32_t crc, const uint8_t *p, uint32_t n)
     return unc_crc32(crc, p, (int32_t)n);
 }
 
-static const OverlayHost gOvlHost = { ovl_host_crc32, NULL, NULL, NULL };
+static const OverlayHostFns gOvlFns = OVL_HOST_FNS_INIT;
 
-static Handle gOvl;
-static int gOvlTried, gOvlReleased;
+static const OverlayHost gOvlHost = { ovl_host_crc32, NULL, NULL, NULL,
+                                      (const struct OverlayHostFns *)&gOvlFns };
 
-/* EAGER, and that is the whole point of this branch. A lazy GetResource has
- * to touch the application's own disk AFTER the archive has been chosen, and
- * on the machine this project is designed around — a Mac Plus with one floppy
- * drive, which "cannot mount two" (DECISIONS.md 2026-08-24) — that disk may
- * have been swapped for the archive's by then. Loading at launch means the
- * only disk access happens while the boot disk is certainly in.
+/* ONE resource, read ONCE, at launch — and then most of it thrown away.
  *
- * Called from main() before anything is opened. */
+ * `selective-loading` keeps one 'OVLY' per format and reads whichever the
+ * archive turns out to need, which is a disk access after the archive has
+ * been chosen; on a Mac Plus with one drive the application's floppy may have
+ * been swapped by then. This branch reads a single bundle of all six images
+ * while the boot disk is certainly in (ovl_preload, from main), and then
+ * ovl_keep_for() copies out the one or two images the sniffed format can
+ * actually want and releases the bundle. What the archive cannot want is gone
+ * before the engine takes its budget — which is the whole trade: 74 KB
+ * resident for a moment at launch, so that the decoder has room later.
+ *
+ * Bundle layout: tools/overlay/mkbundle.py. Two byte-wise big-endian reads
+ * per field, no unaligned dereference, per the 68000 rules in CLAUDE.md. */
+static Handle gBundle;          /* the whole thing, until ovl_keep_for */
+static int    gBundleTried;
+static Handle gKept[2];         /* the images we copied out, locked */
+static short  gKeptId[2];
+
+static unsigned long ovl_be32(const unsigned char *p)
+{
+    return ((unsigned long)p[0] << 24) | ((unsigned long)p[1] << 16) |
+           ((unsigned long)p[2] << 8) | (unsigned long)p[3];
+}
+
+static unsigned short ovl_be16(const unsigned char *p)
+{
+    return (unsigned short)(((unsigned short)p[0] << 8) | p[1]);
+}
+
+/* Find an image inside the bundle. Returns NULL if this bundle has no such
+ * id, which is a build mismatch rather than a run-time condition. */
+static const unsigned char *ovl_find(Handle h, short id, unsigned long *len)
+{
+    const unsigned char *p;
+    unsigned short n, i;
+    if (h == NULL || *h == NULL) return NULL;
+    p = (const unsigned char *)*h;
+    n = ovl_be16(p);
+    for (i = 0; i < n; i++) {
+        const unsigned char *e = p + 4 + (unsigned long)i * 12;
+        if (ovl_be16(e) == (unsigned short)id) {
+            *len = ovl_be32(e + 8);
+            return p + ovl_be32(e + 4);
+        }
+    }
+    return NULL;
+}
+
+/* Called from main() while the boot disk is certainly in. */
 void ovl_preload(void)
 {
-    if (gOvlTried) return;
-    gOvlTried = 1;
-    gOvl = GetResource('OVLY', 128);
-    if (gOvl != NULL && *gOvl != NULL) HLock(gOvl);
-    else gOvl = NULL;
+    if (gBundleTried) return;
+    gBundleTried = 1;
+    gBundle = GetResource('OVLY', OVL_ID_BUNDLE);
+    if (gBundle != NULL && *gBundle != NULL) HLock(gBundle);
+    else gBundle = NULL;
 }
 
-/* Give the 15 KB back once the format says the ciphers cannot be wanted.
- *
- * The list is short because two things disqualify a format: it may carry an
- * encrypted entry, or it is an ENVELOPE whose contents are not yet known — a
- * .sit.hqx sniffs as BinHex, and releasing on that would strand the StuffIt
- * inside it. So this pays for LZH, DiskDoubler, Now Compress, SpaceSaver,
- * SuperDisk! and tar, and NOT for StuffIt, which is the common case.
- * BRANCH_NOTES.md says why that limit is inherent rather than an oversight. */
-void ovl_release_if_unwanted(UncFormat fmt)
+static OverlayEntry ovl_image(short id)
 {
-    switch (fmt) {
-    case UNC_FORMAT_LZH:         case UNC_FORMAT_DISKDOUBLER:
-    case UNC_FORMAT_NOWCOMPRESS: case UNC_FORMAT_SPACESAVER:
-    case UNC_FORMAT_SUPERDISK:   case UNC_FORMAT_TAR:
-        break;
-    default:
-        return;                      /* may encrypt, or may wrap something */
-    }
-    if (gOvl != NULL) {
-        HUnlock(gOvl);
-        ReleaseResource(gOvl);
-        gOvl = NULL;
-        gOvlReleased = 1;
-    }
+    const unsigned char *p;
+    unsigned long len;
+    int i;
+    for (i = 0; i < 2; i++)
+        if (gKept[i] != NULL && gKeptId[i] == id)
+            return (OverlayEntry)(void *)*gKept[i];
+    if (gBundle == NULL) ovl_preload();     /* a reload, if it was released */
+    p = ovl_find(gBundle, id, &len);
+    return p ? (OverlayEntry)(void *)p : NULL;
 }
 
+/* The ciphers, by their id in the bundle. Kept as a named function because
+ * every cipher shim calls it and the name says which overlay is meant. */
 static OverlayEntry ovl_entry(void)
 {
-    /* RELOADS if it was released, and that is not a detail. The release is
-     * per ARCHIVE; this application loops back to Standard File and opens
-     * another. Extract an LZH, then an encrypted .sit in the same session,
-     * and a shim that refused to reload would find the ciphers gone — the
-     * cipher kind cleared, the entry failing, a capability disappearing
-     * because of what was opened BEFORE it. Not a prompt, not a delay: a
-     * silent loss.
-     *
-     * So a reload is allowed, and it costs what this branch was trying to
-     * avoid — a disk access after an archive has been chosen. That is the
-     * honest price of releasing at all, and it is why neither overlay branch
-     * is obviously worth merging for 6 KB (BRANCH_NOTES.md). */
-    if (!gOvlTried || (gOvlReleased && gOvl == NULL)) {
-        gOvlTried = 0;
-        gOvlReleased = 0;
-        ovl_preload();
+    return ovl_image(OVL_ID_CRYPT);
+}
+
+/* Keep what this format can want; release the rest. Called after the sniff.
+ *
+ * The keep set is at most two: the decoder for the format, and the ciphers
+ * where an entry might be encrypted. Encryption is discovered per ENTRY, as
+ * the entry is read, so a format that can carry one has to keep the ciphers
+ * whatever this archive turns out to hold — that is the eligibility rule this
+ * branch has always had, now applied to a bundle rather than to one blob. */
+static void ovl_keep(short id, int slot)
+{
+    unsigned long len;
+    const unsigned char *p = ovl_find(gBundle, id, &len);
+    Handle h;
+    if (p == NULL || len == 0) return;
+    h = NewHandle((Size)len);
+    if (h == NULL || *h == NULL) return;    /* keep the bundle instead */
+    BlockMoveData(p, *h, (Size)len);
+    HLock(h);
+    gKept[slot] = h;
+    gKeptId[slot] = id;
+}
+
+/* Runs immediately after the sniff and therefore BEFORE the engine's first
+ * allocation, which is where the budget is taken. So what it frees is heap
+ * the engine is simply measured against a moment later — there is nothing to
+ * credit back, and no ordering to get wrong. */
+void ovl_release_if_unwanted(UncFormat fmt)
+{
+    short want = 0;
+    int crypt = 1;
+
+    if (gBundle == NULL) return;
+
+    switch (fmt) {
+    case UNC_FORMAT_SPACESAVER:  want = OVL_ID_SPACESAVER; crypt = 0; break;
+    case UNC_FORMAT_COMPACTPRO:  want = OVL_ID_CPTDD;      break;
+    case UNC_FORMAT_DISKDOUBLER: want = OVL_ID_CPTDD;      crypt = 0; break;
+    case UNC_FORMAT_LZH:         want = OVL_ID_LZH;        crypt = 0; break;
+    case UNC_FORMAT_ARC:         want = OVL_ID_ARC;        break;
+    case UNC_FORMAT_NOWCOMPRESS: want = OVL_ID_NOW;        crypt = 0; break;
+    /* An ENVELOPE does not yet know what is under it, and a format with no
+     * overlay of its own still has to be able to reach the ciphers. Both
+     * keep the bundle whole, which costs memory and loses nothing. */
+    case UNC_FORMAT_BINHEX:      case UNC_FORMAT_MACBINARY:
+    case UNC_FORMAT_APPLESINGLE: case UNC_FORMAT_APPLEDOUBLE:
+    case UNC_FORMAT_GZIP:        case UNC_FORMAT_COMPRESS_Z:
+    case UNC_FORMAT_MIME:        case UNC_FORMAT_UU:
+    case UNC_FORMAT_BTOA:        case UNC_FORMAT_BASE64:
+        return;
+    default:
+        break;                   /* StuffIt and the rest: no overlay wanted */
     }
-    return gOvl ? (OverlayEntry)(void *)*gOvl : NULL;
+
+    if (want) ovl_keep(want, 0);
+    if (crypt) ovl_keep(OVL_ID_CRYPT, 1);
+
+    HUnlock(gBundle);
+    ReleaseResource(gBundle);
+    gBundle = NULL;
+}
+
+/* The SpaceSaver decoder, 'OVLY' 129. Its resident half is the PROBE, which
+ * lives in src/fmt_spacesaver_probe.c and is never in the blob: the sniffer
+ * calls it for every file, and an overlay loaded by sniffing would be an
+ * overlay always loaded.
+ *
+ * Failure to load is a per-entry error like any other allocation failure —
+ * UNC_ERR_MEM, and the rest of the archive still comes out. */
+int unc_spacesaver_extract(UncCtx *c)
+{
+    OverlayEntry e = ovl_image(OVL_ID_SPACESAVER);
+    if (!e) return UNC_ERR_MEM;
+    return (int)e(&gOvlHost, OVL_SPACESAVER_EXTRACT, c, NULL);
 }
 
 #define OVL_CALL(which, gp) (e(&gOvlHost, (which), (gp), NULL))
@@ -186,4 +276,54 @@ int unc_resfork_find(const uint8_t *fork, uint32_t forklen, uint32_t type,
     g.in = fork; g.len = forklen; g.pos = type; g.extra = id;
     g.off_out = off; g.len_out = len;
     return (int)OVL_CALL(OVL_RESFORK_FIND, &g);
+}
+
+/* Compact Pro. The probe stays resident (src/fmt_cpt_probe.c); this is the decoder,
+ * loaded when an archive actually turns out to be one. A load failure is a
+ * per-entry error like any other allocation failure. */
+int unc_cpt_extract(UncCtx *c)
+{
+    OverlayEntry e = ovl_image(OVL_ID_CPTDD);
+    if (!e) return UNC_ERR_MEM;
+    return (int)e(&gOvlHost, OVL_CPT_EXTRACT, c, NULL);
+}
+
+/* DiskDoubler. The probe stays resident (src/fmt_stubs.c); this is the decoder,
+ * loaded when an archive actually turns out to be one. A load failure is a
+ * per-entry error like any other allocation failure. */
+int unc_dd_extract(UncCtx *c)
+{
+    OverlayEntry e = ovl_image(OVL_ID_CPTDD);
+    if (!e) return UNC_ERR_MEM;
+    return (int)e(&gOvlHost, OVL_DD_EXTRACT, c, NULL);
+}
+
+/* LZH. The probe stays resident (src/fmt_lzh_probe.c); this is the decoder,
+ * loaded when an archive actually turns out to be one. A load failure is a
+ * per-entry error like any other allocation failure. */
+int unc_lzh_extract(UncCtx *c)
+{
+    OverlayEntry e = ovl_image(OVL_ID_LZH);
+    if (!e) return UNC_ERR_MEM;
+    return (int)e(&gOvlHost, OVL_LZH_EXTRACT, c, NULL);
+}
+
+/* ARC. The probe stays resident (src/fmt_arc_probe.c); this is the decoder,
+ * loaded when an archive actually turns out to be one. A load failure is a
+ * per-entry error like any other allocation failure. */
+int unc_arc_extract(UncCtx *c)
+{
+    OverlayEntry e = ovl_image(OVL_ID_ARC);
+    if (!e) return UNC_ERR_MEM;
+    return (int)e(&gOvlHost, OVL_ARC_EXTRACT, c, NULL);
+}
+
+/* Now Compress. The probe stays resident (src/fmt_stubs.c); this is the decoder,
+ * loaded when an archive actually turns out to be one. A load failure is a
+ * per-entry error like any other allocation failure. */
+int unc_now_extract(UncCtx *c)
+{
+    OverlayEntry e = ovl_image(OVL_ID_NOW);
+    if (!e) return UNC_ERR_MEM;
+    return (int)e(&gOvlHost, OVL_NOW_EXTRACT, c, NULL);
 }

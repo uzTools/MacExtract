@@ -3525,6 +3525,10 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
          * one under it. */
         extractedAs = unc_sniff(&io);
 #ifdef UNC_AT_OVERLAY
+        /* Before the engine's first allocation, always: the budget is taken
+         * there (mal_take_budget), so what this frees is simply part of the
+         * heap the engine is then measured against. Nothing has to be
+         * credited back, and a credit path would be code no run executes. */
         { extern void ovl_release_if_unwanted(UncFormat);
           ovl_release_if_unwanted(extractedAs); }
 #endif

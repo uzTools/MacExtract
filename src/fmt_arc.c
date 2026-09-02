@@ -52,25 +52,9 @@
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
 #include "unc_internal.h"
+#include "fmt_arc_priv.h"
 
 /* Methods. Source: XADARCParser.m and macutils' arc.h, which agree. */
-#define ARC_M_STORED_OLD  0x01
-#define ARC_M_STORED      0x02
-#define ARC_M_PACKED      0x03
-#define ARC_M_SQUEEZED    0x04
-#define ARC_M_CRUNCH5     0x05
-#define ARC_M_CRUNCH6     0x06
-#define ARC_M_CRUNCH7     0x07
-#define ARC_M_CRUNCH8     0x08
-#define ARC_M_SQUASHED    0x09
-#define ARC_M_CRUSHED     0x0a
-#define ARC_M_DISTILLED   0x0b
-#define ARC_M_INFO        0x14   /* archive info      (ARC 7.x)      */
-#define ARC_M_FILEINFO    0x15   /* extended file info                */
-#define ARC_M_OSINFO      0x16   /* OS-specific info                  */
-#define ARC_M_DIR         0x1e
-#define ARC_M_DIREND      0x1f
-#define ARC_M_COMPRESSED  0x7f
 
 /* Informational items, not members: an ordinary header whose payload
  * is metadata. ARC 7.x writes 0x14 first in every archive it makes,
@@ -78,8 +62,6 @@
  * these were walked (neither `unar` nor deark-less tooling reads one).
  * They are skipped: what they carry is a version string and per-file
  * notes this extractor has nothing to do with. */
-#define arc_is_item(m) ((m) == ARC_M_INFO || (m) == ARC_M_FILEINFO || \
-                        (m) == ARC_M_OSINFO)
 
 /* Carried in the `method` int above the byte a header holds: this
  * archive's 0x0a is ARC 7.x's Trimmed, not PAK's Crushed. The two
@@ -89,20 +71,8 @@
  * the same entry up to four times. */
 #define ARC_F_TRIMMED     0x1000
 
-#define ARC_HDR_MIN       0x1d   /* 0x1a, method, 13 name, 4+2+2+2, 4 */
-#define ARC_NAME_LEN      13
 
 /* ArcMac field offsets. Source: reference/macutils/macunpack/arc.h. */
-#define AM_MAGIC1      0
-#define AM_KIND        1
-#define AM_FNAME       2      /* 31 bytes, NUL-padded */
-#define AM_FTYPE      34
-#define AM_FAUTH      38
-#define AM_FINFO      42
-#define AM_FDATA      50      /* data fork length   */
-#define AM_FRSRC      54      /* rsrc fork length   */
-#define AM_MAGIC2     59      /* the PC ARC header starts here */
-#define AM_HDRBYTES   88
 
 /* Crunch: a 4096-entry table, addressed by hash. */
 #define ARC_CRUNCH_SIZE  4096
@@ -1039,14 +1009,6 @@ static void arc_dec_free(ArcDec *d)
 /* Header walk                                                        */
 /* ------------------------------------------------------------------ */
 
-static int arc_name_ok(const uint8_t *p)
-{
-    int i;
-    if (p[0] == 0) return 0;
-    for (i = 0; i < ARC_NAME_LEN && p[i] != 0; i++)
-        if (p[i] < 32) return 0;
-    return 1;
-}
 
 /* Trim as XADARCParser does: to the NUL, then one trailing space, then
  * one trailing dot. */
@@ -1059,54 +1021,6 @@ static uint32_t arc_name_len(const uint8_t *p)
     return n;
 }
 
-UncFormat unc_arc_probe(const uint8_t *head, int32_t len, UncIO *io)
-{
-    uint32_t compsize, uncompsize, nextoff;
-    int method;
-    uint8_t nb[1];
-
-    if (len < ARC_HDR_MIN) return UNC_FORMAT_UNKNOWN;
-
-    /* ArcMac: the Mac header, then the PC one 59 bytes in. */
-    if (head[AM_MAGIC1] == 0x1b && len >= AM_HDRBYTES &&
-        head[AM_MAGIC2] == 0x1a && head[AM_KIND] != 0 &&
-        head[AM_KIND] == head[AM_MAGIC2 + 1])
-        return UNC_FORMAT_ARC;
-
-    if (head[0] != 0x1a) return UNC_FORMAT_UNKNOWN;
-    method = head[1];
-    if (method == 0) return UNC_FORMAT_UNKNOWN;
-    if (method != ARC_M_DIR && method != ARC_M_DIREND && !arc_is_item(method) &&
-        (method & 0x7f) > ARC_M_DISTILLED && (method & 0x7f) != ARC_M_COMPRESSED)
-        return UNC_FORMAT_UNKNOWN;
-    /* An informational item's name field is empty and its uncompressed
-     * length is 0 while its payload is not, so neither the name check
-     * nor the size relation below applies to one. */
-    if (!arc_is_item(method) && !arc_name_ok(head + 2)) return UNC_FORMAT_UNKNOWN;
-
-    compsize = unc_get_u32le(head + 0x0f);
-    if (method == ARC_M_STORED_OLD) {
-        if (compsize > 0x1000000u) return UNC_FORMAT_UNKNOWN;
-        nextoff = 0x19u + compsize;
-    } else {
-        if (len < 0x1d) return UNC_FORMAT_UNKNOWN;
-        uncompsize = unc_get_u32le(head + 0x19);
-        if (compsize > 0x1000000u) return UNC_FORMAT_UNKNOWN;
-        if (uncompsize > 0x1000000u) return UNC_FORMAT_UNKNOWN;
-        if (!arc_is_item(method) && compsize > uncompsize) return UNC_FORMAT_UNKNOWN;
-        nextoff = 0x1du + compsize;
-        if (method & 0x80) nextoff += 12u;
-    }
-
-    /* The strongest thing an ARC file says about itself: the next
-     * header, or the end marker, sits exactly where the size puts it. */
-    if ((int32_t)nextoff < len) return (head[nextoff] == 0x1a)
-           ? UNC_FORMAT_ARC : UNC_FORMAT_UNKNOWN;
-    if (!io) return UNC_FORMAT_UNKNOWN;
-    if (unc_read_at(io, nextoff, nb, 1) != UNC_OK) return UNC_FORMAT_UNKNOWN;
-    return (nb[0] == 0x1a)
-           ? UNC_FORMAT_ARC : UNC_FORMAT_UNKNOWN;
-}
 
 /* Write one run of decoded bytes, splitting it across the two forks.
  *

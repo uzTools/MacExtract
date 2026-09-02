@@ -83,12 +83,45 @@ ls -la build/mac/MacExtract.APPL build/mac/MacExtract.bin build/mac/MacExtract.d
 # code that arrives after the budget was granted, that is a correctness fix
 # and not a feature — see BRANCH_NOTES.md. It is 116 B off every extraction
 # and it is bought knowingly.
-UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-147700}
+# Raised again 2026-09-02, 147,700 -> 147,772: +72 B for splitting five
+# formats' probes out of their decoders (fmt_lzh_probe.c, fmt_cpt_probe.c,
+# fmt_arc_probe.c, fmt_spacesaver_probe.c and the private headers that go with
+# them). Each split costs a function prologue and a header include in the
+# DEFAULT build, which carries both halves anyway. It is bought for what it
+# buys on the overlay build, where the decoders are not resident at all:
+# 42,044 B of code and 17,040 B of A5 world (BRANCH_NOTES.md).
+UNC_MAC_CODE_DEFAULT=147772
+# The A5 ratchet from main, added 2026-09-02 with the measurement that made it
+# necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
+# and never was (FORMATS.md, *What the application costs the engine*).
+# 44,096 -> 44,116 the same day and for the same reason: +20 B of A5 world
+# from the same five splits.
+UNC_MAC_A5_DEFAULT=44116
+# Both ceilings are for the DEFAULT build, which carries every decoder. The
+# overlay build is not measured against them and could not be: its point is
+# that six decoders are somewhere else. What it costs is in BRANCH_NOTES.md,
+# measured, and a ratchet on a configuration nobody ships would only ever
+# fire on the wrong build.
+UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}
+UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-$UNC_MAC_A5_DEFAULT}
 SIZE="$TOOLCHAIN/bin/m68k-apple-macos-size"
 GDB=build/mac/MacExtract.code.bin.gdb
 if [ -x "$SIZE" ] && [ -f "$GDB" ]; then
     code=$("$SIZE" "$GDB" | awk 'NR==2 {print $1}')
-    echo "mac: code $code B (ceiling $UNC_MAC_MAX_CODE B; data and globals are free)"
+    a5=$("$SIZE" "$GDB" | awk 'NR==2 {print $2 + $3}')
+    echo "mac: code $code B (ceiling $UNC_MAC_MAX_CODE B)"
+    echo "mac: A5   $a5 B (ceiling $UNC_MAC_MAX_A5 B) — data + bss, and it"
+    echo "mac:      costs the engine one for one, same as code" 
+    if [ "$a5" -gt "$UNC_MAC_MAX_A5" ]; then
+        over=$((a5 - UNC_MAC_MAX_A5))
+        echo "mac: FAIL — the A5 world is $over B over its ceiling." >&2
+        echo "mac: that is $over B off every extraction's budget, exactly as" >&2
+        echo "mac: code would be: the A5 world sits above ApplLimit, so it" >&2
+        echo "mac: lowers the heap's ceiling by its own size. Put the table" >&2
+        echo "mac: in a RESOURCE, which is free until it is loaded." >&2
+        echo "mac: FORMATS.md, *What the application costs the engine*." >&2
+        exit 1
+    fi
     if [ "$code" -gt "$UNC_MAC_MAX_CODE" ]; then
         over=$((code - UNC_MAC_MAX_CODE))
         echo "mac: FAIL — code is $over B over the ceiling." >&2
