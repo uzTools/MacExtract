@@ -112,6 +112,52 @@ which only the interactive `main()` calls. `-D UNC_AT_BUDGET` now prepends
 same question the grid answers — which is how the envelope row was measured
 rather than assumed.
 
+## The check that could not fail, and the defect it hid
+
+**`-mpcrel` makes an overlay's CODE position-independent. It does nothing for
+a POINTER STORED IN DATA, and for a year this branch believed otherwise.**
+
+`static const uint8_t *const sit13_firstlengths[5]` — StuffIt method 13's
+preset code tables — is an array of pointers. In an overlay those five words
+hold LINK-TIME addresses, and the blob runs wherever the Memory Manager put
+it, so they point at nothing. The same shape is in zlib's `z_errmsg`, in
+MIME's keyword tables, and in Compact Pro's.
+
+**The build could not see it.** `mkoverlay.sh` ran `objdump -r` on the FULLY
+LINKED image and required zero relocations — and a fully linked image has
+none, because the linker has already resolved them into the data. The check
+passed because it was asking a question with only one possible answer.
+
+**What it looked like on the machine**: `UNC_ERR_CORRUPT` from StuffIt method
+13, for exactly the entries small enough to use the PRESET tables — large ones
+take the dynamic path and never touch them. Four entries of one archive, one
+archive in sixty-nine. **The 1 MB tier found it; seven fixtures had not.**
+
+**The fix is to stop pretending.** `mkoverlay.sh` links with `-q`, which keeps
+the relocations, and appends the absolute ones to the image as a trailer
+(`mkreloctrailer.py`): the offsets, then the count, big-endian, at the end
+where the handle's own size finds them. `ovl_fixup()` in the shim adds the
+load address to each, once, after `HLock`. Every image carries a trailer, a
+clean one with a count of 0, so the loader needs no flag.
+
+| overlay | relocations |
+|---|---|
+| StuffIt | 15 |
+| Compact Pro + DiskDoubler, MIME + text, exo, codecs | non-zero, and silently wrong before this |
+| crypt, LZH, ARC, Now, SpaceSaver, PackIt, SuperDisk! | 0 |
+
+**Two wrong versions of the fix, both instructive.** The first fed the loader
+every `R_68K_32` `readelf` prints — including `.rela.debug_line`,
+`.rela.debug_info` and `.rela.debug_aranges`, whose offsets are offsets into
+sections `objcopy` never emits. Patching those wrote arbitrary words of the
+image: the application hung instead of extracting, which is a worse failure
+than the one being fixed. The second used `strtonum()` in `awk`, which this
+platform's `awk` does not have, and reported **0 relocations for an image with
+41** — a silent empty list, the same shape of failure as the check it was
+replacing.
+
+**After it: 69/69 at 1 MB**, where the same tier was 67/69 before.
+
 ## Thirteen overlays, and a blob that other blobs can call
 
 **2026-09-02, third pass.** `fmt_exo` moved after all, `unc_lzdyn` with it,

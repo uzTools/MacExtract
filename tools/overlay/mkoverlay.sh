@@ -37,13 +37,30 @@ done
 # own allocator. Dropping what nothing calls is both the fix and a size win
 # for every other image. The sources are already compiled with
 # -ffunction-sections -fdata-sections, which is what makes it work.
-"$T/m68k-apple-macos-ld" -T tools/overlay/overlay.ld --gc-sections \
-    --entry=ovl_main -o "$TMP/ovl.elf" $OBJS \
+"$T/m68k-apple-macos-ld" -T tools/overlay/overlay.ld ${OVL_GC:---gc-sections --entry=ovl_main} -q -o "$TMP/ovl.elf" $OBJS \
     "$("$T/m68k-apple-macos-gcc" -print-libgcc-file-name)"
 
-left=$("$T/m68k-apple-macos-objdump" -r "$TMP/ovl.elf" | grep -c R_68K || true)
-[ "$left" = 0 ] || { echo "mkoverlay: $left unresolved relocation(s) — an" >&2
-                     echo "mkoverlay: overlay must be position-independent" >&2; exit 1; }
+# ABSOLUTE relocations, and why this is no longer a refusal.
+#
+# Until 2026-09-02 this ran `objdump -r` on the FULLY LINKED image and
+# required zero, which is a check that cannot fail: the linker has already
+# resolved every relocation into the data, so there is nothing left to count.
+# It passed for a year and hid a real defect — see mkreloctrailer.py. Link
+# with -q, which KEEPS the relocations, and hand the absolute ones to the
+# loader. -mpcrel makes CODE position-independent; nothing makes a pointer
+# stored in data so.
+# ONLY the sections that end up in the image. `readelf -r` also lists
+# .rela.debug_line, .rela.debug_info and .rela.debug_aranges, whose R_68K_32
+# offsets are offsets into DEBUG sections that objcopy never emits — feeding
+# those to the loader patches arbitrary words of the image, which is a hang
+# rather than a wrong answer, and is what the first version of this did.
+RELOCS=$("$T/m68k-apple-macos-readelf" -r "$TMP/ovl.elf" 2>/dev/null \
+         | awk "/^Relocation section/ {
+                    keep = (\$3 == \"'.rela.text'\" || \$3 == \"'.rela.data'\" ||
+                            \$3 ~ /^.\\.rela\\.rodata/)
+                 }
+                 /R_68K_32/ && keep { print \$1 }" | sort | uniq)   # hex
+NREL=$(printf '%s' "$RELOCS" | grep -c . || true)
 # .bss is refused and .data is allowed, and the difference matters: objcopy
 # writes .data INTO the image, where it lands inside the locked Handle and is
 # writable, while .bss is only a SIZE and lives past the image end — a blob
@@ -53,6 +70,7 @@ sz=$("$T/m68k-apple-macos-size" -A "$TMP/ovl.elf" | awk '$1==".bss"{print $2}')
 [ -z "$sz" ] || [ "$sz" = 0 ] || { echo "mkoverlay: .bss is $sz B — it lives past the image end;" >&2
                                   echo "mkoverlay: initialise the static so it lands in .data" >&2; exit 1; }
 "$T/m68k-apple-macos-objcopy" -O binary "$TMP/ovl.elf" "$TMP/ovl.bin"
+python3 tools/overlay/mkreloctrailer.py "$TMP/ovl.bin" $RELOCS || exit 1
 n=$(wc -c < "$TMP/ovl.bin")
 [ "$n" -le 32768 ] || { echo "mkoverlay: $n B exceeds the 32 KB PC-relative reach" >&2; exit 1; }
 
@@ -61,4 +79,4 @@ n=$(wc -c < "$TMP/ovl.bin")
   od -An -tx1 -v "$TMP/ovl.bin" | tr -d ' \n' | fold -w 64 | sed 's/^/    $"/; s/$/"/'
   echo "};"
 } > "$OUT"
-echo "mkoverlay: $OUT — $n B, 0 relocations, entry at offset 0"
+echo "mkoverlay: $OUT — $n B, $NREL relocation(s) applied at load, entry at 0"

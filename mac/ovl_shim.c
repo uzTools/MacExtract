@@ -39,13 +39,63 @@ static OverlayHostFns gOvlFns = OVL_HOST_FNS_INIT;
 static const OverlayHost gOvlHost = { ovl_host_crc32, NULL, NULL, NULL,
                                       (const struct OverlayHostFns *)&gOvlFns };
 
+/* Big-endian, byte-wise: the image is a Handle, and nothing guarantees a
+ * relocation lands on an even address. */
+static unsigned long ovl_be32(const unsigned char *p)
+{
+    return ((unsigned long)p[0] << 24) | ((unsigned long)p[1] << 16) |
+           ((unsigned long)p[2] << 8) | (unsigned long)p[3];
+}
+
+/* Apply the relocation trailer, once, to an image at the address it will run
+ * at.
+ *
+ * -mpcrel makes the CODE position-independent and for a year that was taken
+ * to mean the image was. It is not: an array of POINTERS in constant data —
+ * `sit13_firstlengths`, zlib's `z_errmsg`, MIME's keyword tables — holds
+ * LINK-TIME addresses, and a blob loaded wherever the Memory Manager put it
+ * dereferences them into nowhere. What that looked like was StuffIt's
+ * method 13 returning UNC_ERR_CORRUPT for exactly the entries small enough to
+ * use its preset tables: one fixture in 69, found by the tier and by nothing
+ * before it.
+ *
+ * Layout (tools/overlay/mkreloctrailer.py): the image, then one u32 image
+ * offset per relocation, then the count. Every image carries the trailer, a
+ * clean one with a count of 0. */
+static void ovl_fixup(unsigned char *base, unsigned long size)
+{
+    unsigned long n, i, table;
+    if (size < 4) return;
+    n = ovl_be32(base + size - 4);
+    if (n == 0) return;
+    if (n > (size - 4) / 4) return;          /* not ours; leave it alone */
+    table = size - 4 - n * 4;
+    for (i = 0; i < n; i++) {
+        unsigned long off = ovl_be32(base + table + i * 4);
+        unsigned long v;
+        if (off + 4 > table) continue;       /* outside the image proper */
+        v = ovl_be32(base + off) + (unsigned long)base;
+        base[off]     = (unsigned char)(v >> 24);
+        base[off + 1] = (unsigned char)(v >> 16);
+        base[off + 2] = (unsigned char)(v >> 8);
+        base[off + 3] = (unsigned char)v;
+    }
+}
+
 static OverlayEntry ovl_load(short id, Handle *slot, int *tried)
 {
     if (!*tried) {
         *tried = 1;
         *slot = GetResource('OVLY', id);
-        if (*slot != NULL && **slot != NULL) HLock(*slot);
-        else *slot = NULL;
+        if (*slot != NULL && **slot != NULL) {
+            HLock(*slot);
+            /* AFTER HLock: the fixup writes the address the image will run
+             * at, so the image must not move afterwards. */
+            ovl_fixup((unsigned char *)**slot,
+                      (unsigned long)GetHandleSize(*slot));
+        } else {
+            *slot = NULL;
+        }
     }
     return *slot ? (OverlayEntry)(void *)**slot : NULL;
 }
