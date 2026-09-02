@@ -27,7 +27,8 @@ for src in "$@"; do
     o="$TMP/$(basename "$src" .c).o"
     "$T/m68k-apple-macos-gcc" -c -Os -mcpu=68000 -mpcrel \
         -ffunction-sections -fdata-sections -fno-builtin \
-        -Itools/overlay -Iinclude -Isrc "$src" -o "$o"
+        -Itools/overlay -Iinclude -Isrc ${OVL_INC:+-I$OVL_INC} \
+        "$src" -o "$o"
     OBJS="$OBJS $o"
 done
 "$T/m68k-apple-macos-ld" -T tools/overlay/overlay.ld -o "$TMP/ovl.elf" $OBJS \

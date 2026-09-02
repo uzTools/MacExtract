@@ -83,11 +83,20 @@ ls -la build/mac/MacExtract.APPL build/mac/MacExtract.bin build/mac/MacExtract.d
 # code that arrives after the budget was granted, that is a correctness fix
 # and not a feature — see BRANCH_NOTES.md. It is 116 B off every extraction
 # and it is bought knowingly.
-UNC_MAC_CODE_DEFAULT=147700
+# Raised again 2026-09-02, 147,700 -> 147,772: +72 B for splitting five
+# formats' probes out of their decoders (fmt_lzh_probe.c, fmt_cpt_probe.c,
+# fmt_arc_probe.c, fmt_spacesaver_probe.c and the private headers that go with
+# them). Each split costs a function prologue and a header include in the
+# DEFAULT build, which carries both halves anyway. It is bought for what it
+# buys on the overlay build, where the decoders are not resident at all:
+# 42,044 B of code and 17,040 B of A5 world (BRANCH_NOTES.md).
+UNC_MAC_CODE_DEFAULT=147772
 # The A5 ratchet from main, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*).
-UNC_MAC_A5_DEFAULT=44096
+# 44,096 -> 44,116 the same day and for the same reason: +20 B of A5 world
+# from the same five splits.
+UNC_MAC_A5_DEFAULT=44116
 # Both ceilings are for the DEFAULT build, which carries every decoder. The
 # overlay build is not measured against them and could not be: its point is
 # that six decoders are somewhere else. What it costs is in BRANCH_NOTES.md,

@@ -24,13 +24,25 @@ if(DEFINED ENV{UNC_AT_OVERLAY})
     # The ciphers move out of resident code and into an 'OVLY' resource:
     # src/unc_crypt.c leaves the link, mac/ovl_shim.c takes its place, and the
     # engine is unchanged. BRANCH_NOTES.md.
+    # One overlay per format family, so decoding the most expensive archive
+    # has the least code resident: the others are not loaded at all
+    # (BRANCH_NOTES.md). Compact Pro and DiskDoubler share one because
+    # fmt_dd calls fmt_cpt's fork readers.
     set(OVERLAY_R ${CMAKE_CURRENT_BINARY_DIR}/ovl_crypt.r
-                  ${CMAKE_CURRENT_BINARY_DIR}/ovl_spacesaver.r)
+                  ${CMAKE_CURRENT_BINARY_DIR}/ovl_spacesaver.r
+                  ${CMAKE_CURRENT_BINARY_DIR}/ovl_cptdd.r
+                  ${CMAKE_CURRENT_BINARY_DIR}/ovl_lzh.r
+                  ${CMAKE_CURRENT_BINARY_DIR}/ovl_arc.r
+                  ${CMAKE_CURRENT_BINARY_DIR}/ovl_now.r)
     set(OVERLAY_SHIM ovl_shim.c)
+    # The DECODERS leave the resident link; every probe stays in it.
     list(FILTER ENGINE_SRC EXCLUDE REGEX "unc_crypt\\.c$")
-    # The SpaceSaver DECODER leaves too, and its probe does not:
-    # fmt_spacesaver_probe.c stays in ENGINE_SRC (BRANCH_NOTES.md).
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_spacesaver\\.c$")
+    list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_cpt\\.c$")
+    list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_dd\\.c$")
+    list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_lzh\\.c$")
+    list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_arc\\.c$")
+    list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_now\\.c$")
 endif()
 
 # CREATOR is not decoration: the Finder binds an icon family to an
@@ -51,9 +63,28 @@ add_application(MacExtract
     ${OVERLAY_R}
 )
 
+# The generated host vector lands in the build directory, and ovl_shim.c
+# includes it.
+target_include_directories(MacExtract PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+
+# The host vector and its forwards are GENERATED from the engine's own
+# prototypes: forty-odd functions written by hand is how a wrong argument list
+# crosses the boundary silently (tools/overlay/mkforwards.py).
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/ovl_host_gen.h
+           ${CMAKE_CURRENT_BINARY_DIR}/ovl_host_init_gen.h
+           ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_gen.c
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}
+    COMMAND python3 ${ENGINE_DIR}/tools/overlay/mkforwards.py
+            ${CMAKE_CURRENT_BINARY_DIR}
+    DEPENDS ${ENGINE_DIR}/tools/overlay/mkforwards.py
+            ${ENGINE_DIR}/src/unc_internal.h
+            ${ENGINE_DIR}/include/macextract.h)
+
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/ovl_crypt.r
-    COMMAND sh ${ENGINE_DIR}/tools/overlay/mkoverlay.sh
+    COMMAND ${CMAKE_COMMAND} -E env OVL_INC=${CMAKE_CURRENT_BINARY_DIR}
+            sh ${ENGINE_DIR}/tools/overlay/mkoverlay.sh
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_crypt.r
             ${ENGINE_DIR}/tools/overlay/ovl_crypt.c
             ${ENGINE_DIR}/src/unc_crypt.c
@@ -66,15 +97,90 @@ add_custom_command(
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/ovl_spacesaver.r
     COMMAND ${CMAKE_COMMAND} -E env OVL_ID=129
+            OVL_INC=${CMAKE_CURRENT_BINARY_DIR}
             sh ${ENGINE_DIR}/tools/overlay/mkoverlay.sh
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_spacesaver.r
             ${ENGINE_DIR}/tools/overlay/ovl_spacesaver.c
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_gen.c
             ${ENGINE_DIR}/src/fmt_spacesaver.c
             ${ENGINE_DIR}/src/fmt_spacesaver_probe.c
     DEPENDS ${ENGINE_DIR}/tools/overlay/ovl_spacesaver.c
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_gen.c
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_host_gen.h
             ${ENGINE_DIR}/src/fmt_spacesaver.c
             ${ENGINE_DIR}/src/fmt_spacesaver_probe.c
-            ${ENGINE_DIR}/src/fmt_spacesaver_priv.h
+            ${ENGINE_DIR}/tools/overlay/overlay.h
+            ${ENGINE_DIR}/tools/overlay/overlay.ld
+            ${ENGINE_DIR}/tools/overlay/mkoverlay.sh)
+
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/ovl_cptdd.r
+    COMMAND ${CMAKE_COMMAND} -E env OVL_ID=130
+            OVL_INC=${CMAKE_CURRENT_BINARY_DIR}
+            sh ${ENGINE_DIR}/tools/overlay/mkoverlay.sh
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_cptdd.r
+            ${ENGINE_DIR}/tools/overlay/ovl_cptdd.c
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_gen.c
+            ${ENGINE_DIR}/src/fmt_cpt.c
+            ${ENGINE_DIR}/src/fmt_dd.c
+    DEPENDS ${ENGINE_DIR}/tools/overlay/ovl_cptdd.c
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_gen.c
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_host_gen.h
+            ${ENGINE_DIR}/src/fmt_cpt.c
+            ${ENGINE_DIR}/src/fmt_dd.c
+            ${ENGINE_DIR}/tools/overlay/overlay.h
+            ${ENGINE_DIR}/tools/overlay/overlay.ld
+            ${ENGINE_DIR}/tools/overlay/mkoverlay.sh)
+
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/ovl_lzh.r
+    COMMAND ${CMAKE_COMMAND} -E env OVL_ID=131
+            OVL_INC=${CMAKE_CURRENT_BINARY_DIR}
+            sh ${ENGINE_DIR}/tools/overlay/mkoverlay.sh
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_lzh.r
+            ${ENGINE_DIR}/tools/overlay/ovl_lzh.c
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_gen.c
+            ${ENGINE_DIR}/src/fmt_lzh.c
+    DEPENDS ${ENGINE_DIR}/tools/overlay/ovl_lzh.c
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_gen.c
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_host_gen.h
+            ${ENGINE_DIR}/src/fmt_lzh.c
+            ${ENGINE_DIR}/tools/overlay/overlay.h
+            ${ENGINE_DIR}/tools/overlay/overlay.ld
+            ${ENGINE_DIR}/tools/overlay/mkoverlay.sh)
+
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/ovl_arc.r
+    COMMAND ${CMAKE_COMMAND} -E env OVL_ID=132
+            OVL_INC=${CMAKE_CURRENT_BINARY_DIR}
+            sh ${ENGINE_DIR}/tools/overlay/mkoverlay.sh
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_arc.r
+            ${ENGINE_DIR}/tools/overlay/ovl_arc.c
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_gen.c
+            ${ENGINE_DIR}/src/fmt_arc.c
+            ${ENGINE_DIR}/src/fmt_arc_probe.c
+    DEPENDS ${ENGINE_DIR}/tools/overlay/ovl_arc.c
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_gen.c
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_host_gen.h
+            ${ENGINE_DIR}/src/fmt_arc.c
+            ${ENGINE_DIR}/src/fmt_arc_probe.c
+            ${ENGINE_DIR}/tools/overlay/overlay.h
+            ${ENGINE_DIR}/tools/overlay/overlay.ld
+            ${ENGINE_DIR}/tools/overlay/mkoverlay.sh)
+
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/ovl_now.r
+    COMMAND ${CMAKE_COMMAND} -E env OVL_ID=133
+            OVL_INC=${CMAKE_CURRENT_BINARY_DIR}
+            sh ${ENGINE_DIR}/tools/overlay/mkoverlay.sh
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_now.r
+            ${ENGINE_DIR}/tools/overlay/ovl_now.c
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_gen.c
+            ${ENGINE_DIR}/src/fmt_now.c
+    DEPENDS ${ENGINE_DIR}/tools/overlay/ovl_now.c
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_gen.c
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_host_gen.h
+            ${ENGINE_DIR}/src/fmt_now.c
             ${ENGINE_DIR}/tools/overlay/overlay.h
             ${ENGINE_DIR}/tools/overlay/overlay.ld
             ${ENGINE_DIR}/tools/overlay/mkoverlay.sh)

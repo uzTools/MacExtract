@@ -1,11 +1,15 @@
 # Branch `selective-loading` — load only the decoder the archive needs
 
-**Status: the mechanism is built, proven on the machine, and now carries a
-DECODER as well as the ciphers.** SpaceSaver extracts through an overlay on an
-emulated Mac Plus, 3/3 on the specimens Aladdin's own compressors wrote, for
-11,892 B of resident code and 16,692 B of A5 world. The hard part — getting code that is not
-resident to run on a 68000 and call back into the application — works. What
-remains is a registration refactor and porting decoders in behind it.
+**Status: six overlays, one per format family, all exercised on an emulated
+Mac Plus.** The decoders for SpaceSaver, Compact Pro, DiskDoubler, LZH, ARC
+and Now Compress are loaded only when an archive turns out to be one, and the
+ciphers as before. Resident code 147,772 → 105,640 B, A5 world 44,116 →
+27,128 B, and a StuffIt archive is granted **58,304 B more budget**.
+
+The hard part — getting code that is not resident to run on a 68000 and call
+back into the application — has worked since 2026-08-30; what was missing was
+the belief that a decoder could go in one, and that came from a wrong comment
+(*What the prize is NOT*, below).
 
 ## The mechanism, proven 2026-08-30
 
@@ -79,6 +83,68 @@ past what a 1 MB Macintosh has at all, so it is DECODER-shaped and no amount
 of shedding resident code reaches it (FORMATS.md, *Budget*). The prize is
 still ~103 KB; what it buys is more of the corpus near the line, not the
 fixtures that are out.
+
+## Six overlays, one per format family — 2026-09-02
+
+**The most expensive archive now decodes with 42,044 B less code and 17,040 B
+less A5 world resident**, because the five decoders it does not need are not
+in memory at all.
+
+| resident, default build | plain | six overlays |
+|---|---|---|
+| `CODE` | 147,772 B | **105,640 B** |
+| A5 world (`.data` + `.bss`) | 44,116 B | **27,128 B** |
+| static total | 191,888 B | **132,768 B** |
+
+| the blobs | |
+|---|---|
+| `OVLY` 128 crypt | 15,324 B |
+| `OVLY` 129 SpaceSaver | 17,624 B |
+| `OVLY` 130 Compact Pro + DiskDoubler | 14,736 B |
+| `OVLY` 131 LZH | 6,804 B |
+| `OVLY` 132 ARC | 9,168 B |
+| `OVLY` 133 Now Compress | 5,968 B |
+
+Each is loaded only when an archive turns out to be that format. Compact Pro
+and DiskDoubler share one because `fmt_dd` calls `fmt_cpt`'s RLE and LZH fork
+readers, and an overlay calling into another overlay is a load order nobody
+has needed yet.
+
+**On the machine, at 1 MB on System 6.0.8** — every overlay exercised, `5/5`:
+a `.cpt`, a `.lzh`, an `.arc`, a SpaceSaver method-4 stream and a `.sit` that
+loads none of them. The two heaviest archives pass too: `derived-Domino_v1.4.sit`
+at **699,167 B** of peak heap and `derived-Library_ISBN_Barcoder.sit` at
+650,786 B.
+
+**What a StuffIt archive is granted: 650,612 → 708,916 B, +58,304 B.** That is
+the number this work was for — the budget while the most expensive format
+decodes, with every other decoder absent. Domino demonstrably spends it: its
+peak went 640,799 → 699,167 B on the same archive and the same output.
+
+### How it is put together
+
+- **`tools/overlay/mkforwards.py` generates the host vector and the forwards.**
+  A decoder overlay compiles engine source unmodified, so every helper that
+  source calls must resolve inside the blob; each is defined there as a
+  one-line forward through a table the application fills. Twelve by hand was
+  fine, forty-two is not — a wrong argument list crossing that boundary would
+  be silent. The list of symbols in that script IS the interface, and a
+  missing one fails the link loudly.
+- **Real engine types in the generated vector, not opaque ones.** `overlay.h`
+  keeps engine types out of `OverlayHost` so a blob cannot depend on their
+  layout; that argument does not reach a DECODER overlay, which compiles the
+  decoder and so depends on all of them already. What opacity would buy here
+  is casts on both sides, and a cast turns a signature mismatch from a compile
+  error into a wrong call.
+- **Probes stay resident, always.** `fmt_lzh_probe.c`, `fmt_cpt_probe.c`,
+  `fmt_arc_probe.c` and `fmt_spacesaver_probe.c` were split out;
+  Now Compress and DiskDoubler needed no split because their probes already
+  live in `fmt_stubs.c`. ARC's split also moved its constants into
+  `fmt_arc_priv.h` rather than copying them, because duplicating magic numbers
+  is what rule #1 forbids.
+- **The splits cost the DEFAULT build 72 B of code and 20 B of A5**, which is
+  a function prologue and an include per split. Both ratchets fired on it and
+  were raised deliberately, which is what they are for.
 
 ## A DECODER in an overlay — done, and it runs on the Macintosh
 
