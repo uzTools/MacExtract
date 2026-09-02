@@ -28,19 +28,77 @@ static uint32_t ovl_host_crc32(uint32_t crc, const uint8_t *p, uint32_t n)
     return unc_crc32(crc, p, (int32_t)n);
 }
 
-static const OverlayHost gOvlHost = { ovl_host_crc32, NULL, NULL, NULL };
+/* unc_read_at takes an unc_off_t; the host table declares uint32_t so that
+ * overlay.h need not include the engine's headers. One thunk, so the width is
+ * converted in exactly one place. */
+static int ovl_host_read_at(struct UncIO *io, uint32_t pos, void *buf,
+                            int32_t len)
+{
+    return unc_read_at((UncIO *)io, (unc_off_t)pos, buf, len);
+}
+
+static void ovl_host_fork_out(struct UncForkOut *o, struct UncCtx *c,
+                              int fork, int write, int ck, uint8_t *buf,
+                              uint32_t cap)
+{
+    unc_fork_out((UncForkOut *)o, (UncCtx *)c, (UncFork)fork, write, ck,
+                 buf, cap);
+}
+
+static const OverlayHost gOvlHost = {
+    ovl_host_crc32, NULL, NULL, NULL,
+    /* The decoder helpers. Cast through the opaque struct tags overlay.h
+     * declares: the engine's real types are not visible there, deliberately,
+     * so that a blob cannot come to depend on their layout. */
+    (void (*)(struct UncBitIn *))unc_bitin_align,
+    (int32_t (*)(struct UncBitIn *, int))unc_bitin_bits_le,
+    (void (*)(struct UncBitIn *, struct UncBufIn *))unc_bitin_init_le,
+    (void (*)(struct UncBufIn *, struct UncIO *, struct UncProgressState *,
+              uint8_t *, uint32_t))unc_bufin_init,
+    (int (*)(struct UncBufIn *))unc_bufin_next_slow,
+    (void (*)(struct UncEntryInfo *))unc_entry_clear,
+    (int (*)(struct UncEntryInfo *, const uint8_t *, uint32_t))
+        unc_entry_set_name,
+    (void (*)(struct UncEntryInfo *, const uint8_t *, uint32_t))
+        unc_entry_set_path,
+    (int (*)(struct UncForkOut *))unc_fork_flush,
+    ovl_host_fork_out,
+    (int (*)(struct UncProgressState *, uint32_t))unc_progress_add,
+    ovl_host_read_at
+};
+
+static OverlayEntry ovl_load(short id, Handle *slot, int *tried)
+{
+    if (!*tried) {
+        *tried = 1;
+        *slot = GetResource('OVLY', id);
+        if (*slot != NULL && **slot != NULL) HLock(*slot);
+        else *slot = NULL;
+    }
+    return *slot ? (OverlayEntry)(void *)**slot : NULL;
+}
 
 static OverlayEntry ovl_entry(void)
 {
     static Handle h;
     static int tried;
-    if (!tried) {
-        tried = 1;
-        h = GetResource('OVLY', 128);
-        if (h != NULL && *h != NULL) HLock(h);
-        else h = NULL;
-    }
-    return h ? (OverlayEntry)(void *)*h : NULL;
+    return ovl_load(OVL_ID_CRYPT, &h, &tried);
+}
+
+/* The SpaceSaver decoder, 'OVLY' 129. Its resident half is the PROBE, which
+ * lives in src/fmt_spacesaver_probe.c and is never in the blob: the sniffer
+ * calls it for every file, and an overlay loaded by sniffing would be an
+ * overlay always loaded.
+ *
+ * Failure to load is a per-entry error like any other allocation failure —
+ * UNC_ERR_MEM, and the rest of the archive still comes out. */
+int unc_spacesaver_extract(UncCtx *c)
+{
+    static Handle h;
+    static int tried;
+    OverlayEntry e = ovl_load(OVL_ID_SPACESAVER, &h, &tried);
+    if (!e) return UNC_ERR_MEM;
+    return (int)e(&gOvlHost, OVL_SPACESAVER_EXTRACT, c, NULL);
 }
 
 #define OVL_CALL(which, gp) (e(&gOvlHost, (which), (gp), NULL))

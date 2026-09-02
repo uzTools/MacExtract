@@ -1,7 +1,9 @@
 # Branch `selective-loading` — load only the decoder the archive needs
 
-**Status: the loading mechanism is BUILT and PROVEN ON THE MACHINE. The
-decoders are not ported yet.** The hard part — getting code that is not
+**Status: the mechanism is built, proven on the machine, and now carries a
+DECODER as well as the ciphers.** SpaceSaver extracts through an overlay on an
+emulated Mac Plus, 3/3 on the specimens Aladdin's own compressors wrote, for
+11,892 B of resident code and 16,692 B of A5 world. The hard part — getting code that is not
 resident to run on a 68000 and call back into the application — works. What
 remains is a registration refactor and porting decoders in behind it.
 
@@ -77,6 +79,71 @@ past what a 1 MB Macintosh has at all, so it is DECODER-shaped and no amount
 of shedding resident code reaches it (FORMATS.md, *Budget*). The prize is
 still ~103 KB; what it buys is more of the corpus near the line, not the
 fixtures that are out.
+
+## A DECODER in an overlay — done, and it runs on the Macintosh
+
+**2026-09-02: SpaceSaver's decoder is an overlay, and the emulated Mac Plus
+extracts with it.** This is what the `.data` correction unlocked; nothing else
+about the mechanism had to change.
+
+**Why SpaceSaver, measured rather than chosen:** of the eight candidate
+decoders it has the most to give (6,560 B of resident `CODE` and 9,701 B of A5
+world — `ss_dict0` is the largest single table in the binary) and the fewest
+external references (12). All eight compile `-mpcrel` with **zero** absolute
+relocations, so the ceiling was never the mechanism.
+
+| | plain build | both overlays | delta |
+|---|---|---|---|
+| `CODE` | 147,684 B | 135,792 B | **−11,892** |
+| A5 world (`.data`) | 32,656 B | 15,964 B | **−16,692** |
+| static total | 191,792 B | 163,216 B | **−28,576** |
+
+**On the machine, at 1 MB on System 6.0.8**: the three SpaceSaver specimens
+Aladdin's own compressors wrote (`tools/ssmodule/`) extract byte-exact through
+the overlay — **3/3**, including method 4, whose preset dictionary now lives
+inside the blob rather than in the A5 world. `adobenumbers.sit`,
+`3d-terrain-modeling-017.hqx` and `derived-Domino_v1.4.sit` are unchanged,
+3/3, so the crypt overlay and the ordinary paths still work beside it.
+
+**The budget, both autotest builds, one session:** 650,612 → **678,766 B**,
+**+28,154 B**. That is more than the code that left, and the reason is the
+next section.
+
+### The probe stays resident, and that is the general rule
+
+`src/fmt_spacesaver.c` was split: `unc_spacesaver_probe`, `ss_parse` and
+`ss_head_ok` moved to `src/fmt_spacesaver_probe.c`, which is never in the
+blob. `unc_sniff` calls that probe for every file it is handed, so a probe
+inside an overlay would load 16 KB of decoder in order to decide that the file
+is not a SpaceSaver document. **Separating what DECIDES from what DECODES is
+what makes on-demand loading pay**, and it is the same conclusion the
+three-dispatch-tables section reached and the retired segment experiment
+proved by failing to do it.
+
+### And the A5 world is not free after all
+
+**`main` says only `CODE` costs the engine and that data, globals and
+resources are free** (FORMATS.md, *What the application costs the engine*,
+ballast, 2026-08-30). Measured here on 2026-09-02, ballast **verified present
+with `nm`** and read from both `main()`s through a volatile so
+`--gc-sections` could not drop it:
+
+| | budget |
+|---|---|
+| both overlays | 678,766 B |
+| the same build + 16,384 B of `.data` | 662,350 B |
+
+**16,384 B of `.data` cost 16,416 B of budget** — 1:1, not free. It is the
+mechanism you would expect: the A5 world sits above `ApplLimit`, so growing it
+lowers the heap's ceiling. That also explains why the budget here rose by
+28,154 B when only 11,648 B of code left the build.
+
+**This is a contradiction with a load-bearing claim on `main`**, not just a
+branch curiosity: the code ceiling exists because code was believed to be the
+only thing that costs, and *"put material in resources and tables, not in C"*
+follows from the same belief. One run on `main` with this ballast settles
+whether the 2026-08-30 measurement or this one is wrong. **Until then neither
+number should be quoted as settled.**
 
 ## What the prize is NOT — measured 2026-09-01, on a retired experiment
 

@@ -19,11 +19,42 @@
 
 #include <stdint.h>
 
+struct UncBitIn; struct UncBufIn; struct UncIO; struct UncProgressState;
+struct UncEntryInfo; struct UncForkOut; struct UncCtx;
+
 typedef struct OverlayHost {
     uint32_t (*crc32)(uint32_t crc, const uint8_t *p, uint32_t n);
     void    *(*alloc)(void *ctx, uint32_t n);
     void     (*free)(void *ctx, void *p);
     void     *alloc_ctx;
+
+    /* The engine helpers a DECODER overlay needs. The ciphers wanted one
+     * callback; a decoder wants twelve, because a decoder is not a leaf — it
+     * reads through the buffered input, writes through the fork writer and
+     * names entries. They are listed rather than pulled in because pulling
+     * them in would duplicate code that is resident anyway for other formats.
+     *
+     * The overlay does not call these directly either: `ovl_spacesaver.c`
+     * DEFINES each engine symbol as a one-line forward through this table, so
+     * the decoder source is compiled unmodified on both sides. */
+    void     (*bitin_align)(struct UncBitIn *b);
+    int32_t  (*bitin_bits_le)(struct UncBitIn *b, int n);
+    void     (*bitin_init_le)(struct UncBitIn *b, struct UncBufIn *in);
+    void     (*bufin_init)(struct UncBufIn *b, struct UncIO *io,
+                           struct UncProgressState *ps, uint8_t *storage,
+                           uint32_t cap);
+    int      (*bufin_next_slow)(struct UncBufIn *b);
+    void     (*entry_clear)(struct UncEntryInfo *e);
+    int      (*entry_set_name)(struct UncEntryInfo *e, const uint8_t *name,
+                               uint32_t len);
+    void     (*entry_set_path)(struct UncEntryInfo *e, const uint8_t *path,
+                               uint32_t len);
+    int      (*fork_flush)(struct UncForkOut *o);
+    void     (*fork_out)(struct UncForkOut *o, struct UncCtx *c, int fork,
+                         int write, int ck, uint8_t *buf, uint32_t cap);
+    int      (*progress_add)(struct UncProgressState *ps, uint32_t n);
+    int      (*read_at)(struct UncIO *io, uint32_t pos, void *buf,
+                        int32_t len);
 } OverlayHost;
 
 /* Every overlay begins with this, at offset 0 of the blob: the application
@@ -51,6 +82,14 @@ typedef int32_t (*OverlayEntry)(const OverlayHost *host, int32_t which,
 #define OVL_HMAC_FINAL        20
 #define OVL_PASSWORD          21
 #define OVL_RESFORK_FIND      22
+
+/* The SpaceSaver overlay — a DECODER rather than a cipher, and the first
+ * proof that a decoder can be one at all. It is 'OVLY' 129: a separate
+ * resource from the ciphers, because an encrypted zip has no reason to load
+ * a SpaceSaver decoder or the other way round. */
+#define OVL_ID_CRYPT         128
+#define OVL_ID_SPACESAVER    129
+#define OVL_SPACESAVER_EXTRACT 30
 
 /* One struct for every entry, because the entry signature is fixed. Fields
  * are named for their role rather than their type so a reader can follow a

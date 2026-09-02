@@ -24,9 +24,13 @@ if(DEFINED ENV{UNC_AT_OVERLAY})
     # The ciphers move out of resident code and into an 'OVLY' resource:
     # src/unc_crypt.c leaves the link, mac/ovl_shim.c takes its place, and the
     # engine is unchanged. BRANCH_NOTES.md.
-    set(OVERLAY_R ${CMAKE_CURRENT_BINARY_DIR}/ovl_crypt.r)
+    set(OVERLAY_R ${CMAKE_CURRENT_BINARY_DIR}/ovl_crypt.r
+                  ${CMAKE_CURRENT_BINARY_DIR}/ovl_spacesaver.r)
     set(OVERLAY_SHIM ovl_shim.c)
     list(FILTER ENGINE_SRC EXCLUDE REGEX "unc_crypt\\.c$")
+    # The SpaceSaver DECODER leaves too, and its probe does not:
+    # fmt_spacesaver_probe.c stays in ENGINE_SRC (BRANCH_NOTES.md).
+    list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_spacesaver\\.c$")
 endif()
 
 # CREATOR is not decoration: the Finder binds an icon family to an
@@ -55,6 +59,22 @@ add_custom_command(
             ${ENGINE_DIR}/src/unc_crypt.c
     DEPENDS ${ENGINE_DIR}/tools/overlay/ovl_crypt.c
             ${ENGINE_DIR}/src/unc_crypt.c
+            ${ENGINE_DIR}/tools/overlay/overlay.h
+            ${ENGINE_DIR}/tools/overlay/overlay.ld
+            ${ENGINE_DIR}/tools/overlay/mkoverlay.sh)
+
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/ovl_spacesaver.r
+    COMMAND ${CMAKE_COMMAND} -E env OVL_ID=129
+            sh ${ENGINE_DIR}/tools/overlay/mkoverlay.sh
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_spacesaver.r
+            ${ENGINE_DIR}/tools/overlay/ovl_spacesaver.c
+            ${ENGINE_DIR}/src/fmt_spacesaver.c
+            ${ENGINE_DIR}/src/fmt_spacesaver_probe.c
+    DEPENDS ${ENGINE_DIR}/tools/overlay/ovl_spacesaver.c
+            ${ENGINE_DIR}/src/fmt_spacesaver.c
+            ${ENGINE_DIR}/src/fmt_spacesaver_probe.c
+            ${ENGINE_DIR}/src/fmt_spacesaver_priv.h
             ${ENGINE_DIR}/tools/overlay/overlay.h
             ${ENGINE_DIR}/tools/overlay/overlay.ld
             ${ENGINE_DIR}/tools/overlay/mkoverlay.sh)
