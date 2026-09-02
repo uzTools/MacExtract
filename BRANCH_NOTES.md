@@ -12,6 +12,40 @@ the ciphers kept; an LZH gets **701,688 B**, keeping only its own decoder.
 4/4 fixtures extract byte-exact across the formats that keep one image, two
 images, and none.
 
+## The three methods, and what each leaves the decoder
+
+**Measured 2026-09-02 at 1 MB on System 6.0.8, all three built and run in one
+session, same fixtures, same instrument.** The number is what the engine is
+GRANTED — `mal_take_budget` at its first allocation, so every overlay the run
+is going to load has already loaded.
+
+| the archive | A: no overlays | B: `selective-loading` | C: this branch |
+|---|---|---|---|
+| StuffIt 5, bare | 650,548 B | **708,916 B** | 693,168 B |
+| LZH, bare | 650,548 B | **702,104 B** | 701,688 B |
+| Compact Pro, bare | 650,548 B | **694,172 B** | 678,424 B |
+| MacBinary → StuffIt, through the real UI | 647,114 B | **705,780 B** | 705,352 B |
+| disk access after the archive is chosen | none | **one, per format** | **none** |
+
+**Column A does not move with the archive**, and that is the control: with
+every decoder resident the engine gets the same heap whatever it decodes.
+Both overlay methods beat it by 44–58 KB.
+
+**Where B and C differ is the ciphers, and it is 15,748 B.** A format that MAY
+carry an encrypted entry — StuffIt, StuffIt 5, Compact Pro, ARC, zip — forces
+this branch to keep the cipher image, because it loaded everything at launch
+and must decide what to throw away before it knows whether any entry is
+encrypted. `selective-loading` never loads the ciphers unless an entry
+actually asks for them. That is the whole of the gap on the StuffIt 5 and
+Compact Pro rows; on LZH, which cannot encrypt, the two are 416 B apart.
+
+**What C buys for those 15,748 B is the disk.** `selective-loading` reads an
+overlay after the archive has been chosen, and on a Mac Plus with one drive
+the application's floppy may have been ejected by then. This branch reads
+once, at launch, while the boot disk is certainly in. **That is the trade,
+priced: about 16 KB of budget against a disk access at an unpredictable
+moment.**
+
 ## The bundle
 
 `tools/overlay/mkbundle.py` writes the six images into ONE `OVLY` resource,
@@ -36,14 +70,16 @@ releasing on the outer format would strand the archive inside. The shipping
 application then opens the unwrapped file as a NEW layer with its own sniff
 and its own release, so the second layer gets the memory back.
 
-**What the harness cannot see, and it matters here.** `run.py` drives the
-autotest build, whose `main()` extracts ONE layer; the envelope chaining lives
-in `ExtractOne`, which only the interactive `main()` calls. So the
-envelope-then-release path above is **not measured** — a budget probe on a
-MacBinary-wrapped archive reports 638,696 B, the bundle held, and that is the
-harness's single layer rather than the application's behaviour. Measuring it
-needs `interactive.py` and an instrument it does not have. *Labelled
-hypothesis, not measurement.*
+**Measured, after being a hypothesis for one commit.** `run.py` drives the
+autotest build, whose `main()` extracts ONE layer, and the envelope chaining
+lives in `ExtractOne`, which only the interactive `main()` calls — so the
+autotest reports 638,696 B for a MacBinary-wrapped archive, the bundle still
+held, and that figure is the harness rather than the application.
+`-D UNC_AT_BUDGET` now prepends `bg=` and `pk=` to the completion alert, and
+`interactive.py` driving the real UI on the same archive reports
+**705,352 B**: the second layer releases the bundle, exactly as argued. **An
+instrument that cannot reach the path is not evidence about the path**, and
+the difference between the two numbers is 66,656 B of nothing but harness.
 
 **And nothing needs crediting back.** The release runs immediately after the
 sniff, and the budget is taken at the engine's FIRST ALLOCATION
