@@ -2358,32 +2358,38 @@ which is a different quantity from the THRESHOLD at which one stops fitting.
 
 ### What the application costs the engine
 
-**Only CODE costs anything. Data, globals and resources are free.** MEASURED
-2026-08-30 by ballast on a 1 MB Mac Plus under System 6.0.8, with the ballast
-verified present in the binary that actually ran:
+**Code and the A5 world both cost the engine, one for one; only RESOURCES are
+free.** MEASURED 2026-09-02, and this section said the opposite until then.
 
-| ballast | free heap | budget |
-|---|---|---|
-| none | 647,096 B | 565,176 B |
-| **+11,308 B of code** | 635,768 B | 553,848 B |
-| **+6,132 B of `.data`** | 647,096 B | 565,176 B |
+| ballast | budget |
+|---|---|
+| none | 647,802 B |
+| **+16,384 B of `.data`** | 631,384 B |
 
-Code moves it one for one; data does not move it at all. The reason is the
-classic layout: `CODE` resources are handles **inside** the heap `FreeMem()`
-reports, while the A5 global world sits outside it. So
+**16,384 B of data cost 16,418 B of budget.** The mechanism is the layout: the
+A5 world sits ABOVE `ApplLimit`, so enlarging it lowers the heap's ceiling by
+its own size. `CODE` resources are handles inside that heap and cost the same
+way. What is genuinely free is a RESOURCE that is not loaded — a `DITL`, an
+`ICN#`, an `OVLY` blob nobody has asked for.
 
-    budget = 708,100 - code        (autotest build, 1 MB, System 6.0.8)
+**The 2026-08-30 measurement that said data was free is withdrawn**
+(BLOCKERS.md), and with it the claim it displaced: *resident size — code plus
+data plus bss — is what costs the engine its budget* was withdrawn on
+2026-08-30 on the strength of it, and was right all along. The ballast method
+is sound and its own warning is what this run had to obey: three of the four
+2026-08-30 runs measured nothing because `--gc-sections` dropped the ballast
+or only one `main()` referenced it, and the first attempt on 2026-09-02 was
+dropped the same way. **`nm` the binary that actually ran; a null result from
+a ballast nobody has found is not a measurement.**
 
-which reproduces every figure below. **Three of the four ballast runs measured
-nothing** before this came out — twice `--gc-sections` had dropped the ballast,
-once it was referenced only from the other `main()` — so check the symbol is in
-the binary before believing a null result (`tools/build_mac.sh` records the
-method).
+    budget ≈ 708,100 - code - A5      (autotest build, 1 MB, System 6.0.8)
 
-**Consequence for the Macintosh shell: put material in resources and tables,
-not in C.** A dialog defined in a `DITL` costs the engine nothing; the same
-dialog built in code costs its own size on every extraction. `tools/build_mac.sh`
-enforces a ratchet on code size for this reason.
+**Consequence for the Macintosh shell, corrected: put material in RESOURCES.**
+A dialog defined in a `DITL` costs the engine nothing. A table written in C
+costs its own size on every extraction whether it is `const` or not, because
+Retro68 places `.rodata` in the A5 world too (*Where the code is*). The
+`tools/build_mac.sh` ratchet watches code AND data for this reason; it watched
+only code until 2026-09-02, so 32,644 B of A5 world had grown unwatched.
 
 ### Where the code is
 

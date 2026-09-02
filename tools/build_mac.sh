@@ -78,11 +78,31 @@ ls -la build/mac/MacExtract.APPL build/mac/MacExtract.bin build/mac/MacExtract.d
 # version cost. That 12 % is the figure worth remembering about code shape
 # on this target.
 UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-147588}
+# The A5 ratchet, added 2026-09-02 with the measurement that made it
+# necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
+# and never was (FORMATS.md, *What the application costs the engine*; the
+# withdrawn claim is in BLOCKERS.md). Set at the size on the day, like the
+# code ceiling: 44,096 B = 32,644 data + 11,452 bss. It had grown unwatched
+# the whole time this file said data was free.
+UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-44096}
 SIZE="$TOOLCHAIN/bin/m68k-apple-macos-size"
 GDB=build/mac/MacExtract.code.bin.gdb
 if [ -x "$SIZE" ] && [ -f "$GDB" ]; then
     code=$("$SIZE" "$GDB" | awk 'NR==2 {print $1}')
-    echo "mac: code $code B (ceiling $UNC_MAC_MAX_CODE B; data and globals are free)"
+    a5=$("$SIZE" "$GDB" | awk 'NR==2 {print $2 + $3}')
+    echo "mac: code $code B (ceiling $UNC_MAC_MAX_CODE B)"
+    echo "mac: A5   $a5 B (ceiling $UNC_MAC_MAX_A5 B) — data + bss, and it"
+    echo "mac:      costs the engine one for one, same as code" 
+    if [ "$a5" -gt "$UNC_MAC_MAX_A5" ]; then
+        over=$((a5 - UNC_MAC_MAX_A5))
+        echo "mac: FAIL — the A5 world is $over B over its ceiling." >&2
+        echo "mac: that is $over B off every extraction's budget, exactly as" >&2
+        echo "mac: code would be: the A5 world sits above ApplLimit, so it" >&2
+        echo "mac: lowers the heap's ceiling by its own size. Put the table" >&2
+        echo "mac: in a RESOURCE, which is free until it is loaded." >&2
+        echo "mac: FORMATS.md, *What the application costs the engine*." >&2
+        exit 1
+    fi
     if [ "$code" -gt "$UNC_MAC_MAX_CODE" ]; then
         over=$((code - UNC_MAC_MAX_CODE))
         echo "mac: FAIL — code is $over B over the ceiling." >&2
