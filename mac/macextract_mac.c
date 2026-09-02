@@ -5169,6 +5169,29 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
         for (i = 0; i <= tmp[0]; i++) outcome[i] = tmp[i];
     }
 #endif
+#ifdef UNC_AT_BUDGET
+    {   /* "bg" is the budget the engine was actually given, and "pk" the most
+         * it held. In the AUTOTEST build these travel in grid slots; the
+         * interactive build had no way to report them at all, which is why
+         * the overlay branches' envelope path could not be measured — the
+         * chaining that opens an unwrapped file as a new layer lives in
+         * ExtractOne, and only the interactive main() calls it
+         * (BRANCH_NOTES.md). Prepended, like the probes above, because the
+         * report window clips a long line at its right edge. */
+        unsigned char n[32], tmp[256];
+        short i;
+        tmp[0] = 0;
+        PStrCat(tmp, "bg=");
+        NumToString(gBudget, n);
+        for (i = 1; i <= n[0]; i++) tmp[++tmp[0]] = n[i];
+        PStrCat(tmp, " pk=");
+        NumToString(gPeakUsage, n);
+        for (i = 1; i <= n[0]; i++) tmp[++tmp[0]] = n[i];
+        PStrCat(tmp, " ");
+        for (i = 1; i <= outcome[0]; i++) tmp[++tmp[0]] = outcome[i];
+        for (i = 0; i <= tmp[0]; i++) outcome[i] = tmp[i];
+    }
+#endif
 #ifdef UNC_AT_CONTIG
     {   /* "mb" is the smallest contiguous block available at any moment a
          * dialog or alert was created, and "n" is how many were created.

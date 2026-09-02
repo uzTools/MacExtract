@@ -84,6 +84,32 @@ of shedding resident code reaches it (FORMATS.md, *Budget*). The prize is
 still ~103 KB; what it buys is more of the corpus near the line, not the
 fixtures that are out.
 
+## What the engine is left with, against the other two methods
+
+**Measured 2026-09-02, 1 MB, System 6.0.8, all three built and run in one
+session.** The full three-way table — and what the eager lifetime costs — is
+in `BRANCH_NOTES.md` on **`overlay-eager`**, which is where the comparison
+belongs because it is the branch the trade is against. The rows for this
+branch:
+
+| archive | no overlays | this branch |
+|---|---|---|
+| StuffIt 5, bare | 650,548 B | **708,916 B** |
+| LZH, bare | 650,548 B | **702,104 B** |
+| Compact Pro, bare | 650,548 B | **694,172 B** |
+| MacBinary → StuffIt, driven through the real UI | 647,114 B | **705,780 B** |
+
+The first column does not move with the archive, which is the point of it:
+with every decoder resident the engine gets the same heap whatever it is
+decoding.
+
+**The last row needed a new instrument.** `run.py` drives the autotest build,
+whose `main()` extracts ONE layer; envelope chaining lives in `ExtractOne`,
+which only the interactive `main()` calls. `-D UNC_AT_BUDGET` now prepends
+`bg=` and `pk=` to the completion alert, so `interactive.py` can be asked the
+same question the grid answers — which is how the envelope row was measured
+rather than assumed.
+
 ## Six overlays, one per format family — 2026-09-02
 
 **The most expensive archive now decodes with 42,044 B less code and 17,040 B
