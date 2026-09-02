@@ -62,6 +62,32 @@ once, at launch, while the boot disk is certainly in. **That is the trade,
 priced: about 16 KB of budget against a disk access at an unpredictable
 moment.**
 
+## Measured limitation: a multi-part set pays for the bundle and gets nothing
+
+**A segmented archive is the one case where this branch is WORSE than no
+overlays at all.** Measured 2026-09-02, 1 MB, a four-part Compact Pro set
+(`segcheck.py`'s `cut_cpt`, opened at the first part):
+
+| | budget |
+|---|---|
+| no overlays | 650,548 B |
+| this branch, a whole Compact Pro archive | 692,988 B |
+| **this branch, the same archive cut into four parts** | **631,300 B** |
+
+It extracts correctly — 9 files, byte-exact — so this is memory rather than
+capability. The cause is structural: `ovl_release_if_unwanted` is called from
+the sniff-and-dispatch path, and a segmented set goes down the OTHER path,
+`unc_extract_segments`, which never calls it. So the bundle is read at launch
+and held for the whole run, and the 69,700 B it costs is larger than the
+59,084 B of code and A5 the overlays save.
+
+**What would fix it is small and is not done:** the segments path knows the
+joined format from its descriptor, so the same release decision can be made
+there. It is left undone deliberately — the fix is easy, but nothing has
+measured a segmented set against the tiers on any of these branches, and
+this figure is the reason to do that before adding a second release site
+rather than after.
+
 ## Withdrawn: "one disk read at launch"
 
 **It was not true in the build a user runs, for as long as this branch has had
