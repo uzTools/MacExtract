@@ -1025,6 +1025,19 @@ int unc_zipseg_describe(UncIO *io, UncSegmentDesc *desc);
 typedef int (*UncZipReadAt)(void *ctx, uint32_t off, void *buf, int32_t len);
 int unc_zip_scan_eocd(void *ctx, UncZipReadAt rd, uint32_t end, uint32_t *at);
 
+/* Does this archive hold an encrypted entry? Answered from its own directory
+ * before anything is decoded, and only for the formats that keep a per-entry
+ * flag somewhere a reader can walk: Compact Pro and zip. src/unc_encinfo.c.
+ *
+ * UNKNOWN is the answer for every other format and for a directory that could
+ * not be read, and a caller must treat it as YES. StuffIt and StuffIt 5 flag
+ * encryption per entry with no directory to consult, PackIt in each block's
+ * magic, and ARC not at all. */
+#define UNC_ENC_NO       0
+#define UNC_ENC_YES      1
+#define UNC_ENC_UNKNOWN (-1)
+int unc_archive_encrypted(UncFormat fmt, UncIO *io);
+
 /* One StuffIt fork: seek to `at`, decode `complen` -> `outlen` bytes
  * with the given method, verify the CRC-16/ARC (`wantcrc`; method 15
  * verifies its own internal CRC-32 instead). Shared by the classic

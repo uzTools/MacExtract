@@ -23,28 +23,60 @@ is going to load has already loaded.
 |---|---|---|---|
 | StuffIt 5, bare | 650,548 B | **708,916 B** | 693,168 B |
 | LZH, bare | 650,548 B | **702,104 B** | 701,688 B |
-| Compact Pro, bare | 650,548 B | **694,172 B** | 678,424 B |
-| MacBinary → StuffIt, through the real UI | 647,114 B | **705,780 B** | 705,352 B |
+| Compact Pro, bare | 650,548 B | 694,172 B | **693,212 B** |
+| MacBinary → StuffIt, through the real UI | 647,114 B | **705,780 B** | 689,108 B |
 | disk access after the archive is chosen | none | **one, per format** | **none** |
 
 **Column A does not move with the archive**, and that is the control: with
 every decoder resident the engine gets the same heap whatever it decodes.
 Both overlay methods beat it by 44–58 KB.
 
-**Where B and C differ is the ciphers, and it is 15,748 B.** A format that MAY
-carry an encrypted entry — StuffIt, StuffIt 5, Compact Pro, ARC, zip — forces
-this branch to keep the cipher image, because it loaded everything at launch
-and must decide what to throw away before it knows whether any entry is
-encrypted. `selective-loading` never loads the ciphers unless an entry
-actually asks for them. That is the whole of the gap on the StuffIt 5 and
-Compact Pro rows; on LZH, which cannot encrypt, the two are 416 B apart.
+**Where B and C differ is the ciphers.** A format that MAY carry an encrypted
+entry forces this branch to keep the cipher image, because it must decide what
+to throw away before it knows whether any entry is encrypted;
+`selective-loading` never loads the ciphers unless an entry asks. That is
+15,748 B, and **two of the five formats no longer pay it**: Compact Pro and
+zip keep a per-entry flag in a directory that can be walked before anything is
+decoded, so `unc_archive_encrypted()` answers for the whole archive and the
+ciphers are kept only when one is actually encrypted. The Compact Pro row
+closed to within **960 B** of B, which is the query's own code. StuffIt,
+StuffIt 5, PackIt and ARC still pay: the first three flag encryption per entry
+with no directory to consult, and ARC does not flag it at all.
 
-**What C buys for those 15,748 B is the disk.** `selective-loading` reads an
+**What C buys for what remains is the disk.** `selective-loading` reads an
 overlay after the archive has been chosen, and on a Mac Plus with one drive
 the application's floppy may have been ejected by then. This branch reads
 once, at launch, while the boot disk is certainly in. **That is the trade,
 priced: about 16 KB of budget against a disk access at an unpredictable
 moment.**
+
+## Withdrawn: "one disk read at launch"
+
+**It was not true in the build a user runs, for as long as this branch has had
+a bundle.** `ovl_preload()` was called from the AUTOTEST `main()` and not from
+the interactive one, so the shipping application never preloaded at all: the
+shim fetched the bundle lazily on first use — a disk access *after* the
+archive has been chosen, which is the precise thing this branch exists to
+avoid, and the thing it was measured as avoiding.
+
+**How it surfaced.** Not by review: by forbidding the reload. Once
+`ovl_image()` refused to re-read the resource fork, an encrypted StuffIt
+archive stopped decrypting, and the diagnostic said `wa=128` — the ciphers
+were wanted after the release. Three probe fields (`wa`, `kf`, `rf`) took two
+runs to say that the keep had succeeded, the release had run on the right
+format, and the bundle had nonetheless never been there.
+
+**Cost: every C-column figure taken through `interactive.py` before
+2026-09-02 was measured on a build that loaded nothing at launch**, which
+flattered it — the envelope row read 705,352 B and is **689,108 B** once the
+preload actually happens. The autotest columns were never wrong, because the
+autotest is the `main()` that had the call.
+
+**The lesson is the repository's own, one level along.** A ballast referenced
+from only one `main()` had already cost three measurements
+(FORMATS.md, *What the application costs the engine*). This target has two
+`main()`s and **"which `main()`?" is worth asking of every launch-time call**,
+not only of ballast.
 
 ## The bundle
 
@@ -53,7 +85,8 @@ moment.**
 big-endian and read byte-wise. Six resources would be six disk reads, and
 paying the disk once is the entire argument for loading eagerly.
 
-`ovl_preload()` reads it from `main()`. `ovl_release_if_unwanted()` then copies
+`ovl_preload()` reads it from **both** `main()`s — see the withdrawn claim
+above for what happened when it was in only one. `ovl_release_if_unwanted()` then copies
 out the one or two images the sniffed format can want — the decoder, and the
 ciphers where an entry might be encrypted — and releases the bundle.
 

@@ -51,6 +51,17 @@ static const OverlayHost gOvlHost = { ovl_host_crc32, NULL, NULL, NULL,
  * per field, no unaligned dereference, per the 68000 rules in CLAUDE.md. */
 static Handle gBundle;          /* the whole thing, until ovl_keep_for */
 static int    gBundleTried;
+#ifdef UNC_AT_BUDGET
+/* Diagnostics, in the probe build only, and worth keeping: they are what
+ * found the preload that was called from one main() and not the other. `wa`
+ * is an image wanted AFTER the release — which must never happen, since
+ * there is no reload — `kf` says why a keep failed, and `rf` is the format
+ * the release decided on. Printed on the completion alert. */
+short gWantedAfterRelease, gKeepFail, gRelFmt;
+#define OVL_DIAG(stmt) do { stmt; } while (0)
+#else
+#define OVL_DIAG(stmt) ((void)0)
+#endif
 static Handle gKept[2];         /* the images we copied out, locked */
 static short  gKeptId[2];
 
@@ -94,6 +105,16 @@ void ovl_preload(void)
     else gBundle = NULL;
 }
 
+/* NEVER reloads. One disk read at launch is the whole of this branch's
+ * argument, and a shim that quietly re-read the application's resource fork
+ * mid-extraction would spend exactly what the branch exists to save — on a
+ * Mac Plus with one drive, at the moment the archive's floppy is in.
+ *
+ * That makes the release decision load-bearing rather than an optimisation:
+ * an image released is gone for this archive. It is safe because nothing is
+ * released without the archive's own directory saying so — see
+ * ovl_release_if_unwanted, where anything short of a definite NO keeps the
+ * ciphers. */
 static OverlayEntry ovl_image(short id)
 {
     const unsigned char *p;
@@ -102,7 +123,7 @@ static OverlayEntry ovl_image(short id)
     for (i = 0; i < 2; i++)
         if (gKept[i] != NULL && gKeptId[i] == id)
             return (OverlayEntry)(void *)*gKept[i];
-    if (gBundle == NULL) ovl_preload();     /* a reload, if it was released */
+    if (gBundle == NULL) { OVL_DIAG(gWantedAfterRelease = id); return NULL; }
     p = ovl_find(gBundle, id, &len);
     return p ? (OverlayEntry)(void *)p : NULL;
 }
@@ -126,9 +147,9 @@ static void ovl_keep(short id, int slot)
     unsigned long len;
     const unsigned char *p = ovl_find(gBundle, id, &len);
     Handle h;
-    if (p == NULL || len == 0) return;
+    if (p == NULL || len == 0) { OVL_DIAG(gKeepFail = 1); return; }
     h = NewHandle((Size)len);
-    if (h == NULL || *h == NULL) return;    /* keep the bundle instead */
+    if (h == NULL || *h == NULL) { OVL_DIAG(gKeepFail = 2); return; }
     BlockMoveData(p, *h, (Size)len);
     HLock(h);
     gKept[slot] = h;
@@ -139,7 +160,7 @@ static void ovl_keep(short id, int slot)
  * allocation, which is where the budget is taken. So what it frees is heap
  * the engine is simply measured against a moment later — there is nothing to
  * credit back, and no ordering to get wrong. */
-void ovl_release_if_unwanted(UncFormat fmt)
+void ovl_release_if_unwanted(UncFormat fmt, UncIO *io)
 {
     short want = 0;
     int crypt = 1;
@@ -149,6 +170,7 @@ void ovl_release_if_unwanted(UncFormat fmt)
     switch (fmt) {
     case UNC_FORMAT_SPACESAVER:  want = OVL_ID_SPACESAVER; crypt = 0; break;
     case UNC_FORMAT_COMPACTPRO:  want = OVL_ID_CPTDD;      break;
+    case UNC_FORMAT_ZIP:                                   break;
     case UNC_FORMAT_DISKDOUBLER: want = OVL_ID_CPTDD;      crypt = 0; break;
     case UNC_FORMAT_LZH:         want = OVL_ID_LZH;        crypt = 0; break;
     case UNC_FORMAT_ARC:         want = OVL_ID_ARC;        break;
@@ -166,6 +188,22 @@ void ovl_release_if_unwanted(UncFormat fmt)
         break;                   /* StuffIt and the rest: no overlay wanted */
     }
 
+    /* Compact Pro and zip keep a per-entry encryption flag in a directory
+     * that can be walked before anything is decoded, so for those two the
+     * ciphers are kept only when an entry actually needs them
+     * (unc_archive_encrypted). Anything else — a format that flags encryption
+     * per entry with no directory (StuffIt, StuffIt 5, PackIt), one that does
+     * not flag it at all (ARC), or a directory that would not read — answers
+     * UNKNOWN, and UNKNOWN is treated as YES.
+     *
+     * This is the only place the answer may be acted on: there is no reload,
+     * so releasing the ciphers on a maybe would lose an entry rather than
+     * cost a disk access. */
+    if (crypt && (fmt == UNC_FORMAT_COMPACTPRO || fmt == UNC_FORMAT_ZIP) &&
+        unc_archive_encrypted(fmt, io) == UNC_ENC_NO)
+        crypt = 0;
+
+    OVL_DIAG(gRelFmt = (short)fmt);
     if (want) ovl_keep(want, 0);
     if (crypt) ovl_keep(OVL_ID_CRYPT, 1);
 

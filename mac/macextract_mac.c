@@ -3529,8 +3529,8 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
          * there (mal_take_budget), so what this frees is simply part of the
          * heap the engine is then measured against. Nothing has to be
          * credited back, and a credit path would be code no run executes. */
-        { extern void ovl_release_if_unwanted(UncFormat);
-          ovl_release_if_unwanted(extractedAs); }
+        { extern void ovl_release_if_unwanted(UncFormat, UncIO *);
+          ovl_release_if_unwanted(extractedAs, &io); }
 #endif
         /* SpaceSaver is the exception to the strip above: it compresses a
          * file IN PLACE and adds no extension, so the whole name is the
@@ -5192,6 +5192,20 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
         unsigned char n[32], tmp[256];
         short i;
         tmp[0] = 0;
+#if defined(UNC_AT_OVERLAY)
+        { extern short gWantedAfterRelease, gKeepFail, gRelFmt;
+          unsigned char w[32]; short k;
+          PStrCat(tmp, "wa=");
+          NumToString(gWantedAfterRelease, w);
+          for (k = 1; k <= w[0]; k++) tmp[++tmp[0]] = w[k];
+          PStrCat(tmp, " kf=");
+          NumToString(gKeepFail, w);
+          for (k = 1; k <= w[0]; k++) tmp[++tmp[0]] = w[k];
+          PStrCat(tmp, " rf=");
+          NumToString(gRelFmt, w);
+          for (k = 1; k <= w[0]; k++) tmp[++tmp[0]] = w[k];
+          PStrCat(tmp, " "); }
+#endif
         PStrCat(tmp, "bg=");
         NumToString(gBudget, n);
         for (i = 1; i <= n[0]; i++) tmp[++tmp[0]] = n[i];
@@ -5336,6 +5350,22 @@ int main(void)
     TEInit();
     InitDialogs(NULL);
     InitCursor();
+
+#ifdef UNC_AT_OVERLAY
+    /* The overlay bundle, read ONCE, here, while the boot disk is certainly
+     * still in — which is this branch's entire argument.
+     *
+     * It was called from the AUTOTEST main() and not from this one until
+     * 2026-09-02, so the build a user runs never preloaded at all: the shim
+     * fetched the bundle lazily on first use instead, which is a disk access
+     * after the archive has been chosen and is exactly what this branch
+     * exists to avoid. The autotest could not see it, because the autotest
+     * is the main() that had the call. Same shape as the ballast that was
+     * referenced from only one main() (FORMATS.md, *What the application
+     * costs the engine*) — on this target, "which main()?" is a question
+     * worth asking of every launch-time call. */
+    { extern void ovl_preload(void); ovl_preload(); }
+#endif
     FlushEvents(everyEvent, 0);
 
     gHasWNE = TrapAvailable(_WaitNextEvent);
