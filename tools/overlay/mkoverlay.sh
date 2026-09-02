@@ -31,7 +31,14 @@ for src in "$@"; do
         "$src" -o "$o"
     OBJS="$OBJS $o"
 done
-"$T/m68k-apple-macos-ld" -T tools/overlay/overlay.ld -o "$TMP/ovl.elf" $OBJS \
+# --gc-sections, with ovl_main as the root: an overlay links no libc, and
+# zlib reaches for memcpy/malloc/free from paths this engine never takes —
+# inflateCopy, and the zcalloc/zcfree that unc_inflate.c replaces with its
+# own allocator. Dropping what nothing calls is both the fix and a size win
+# for every other image. The sources are already compiled with
+# -ffunction-sections -fdata-sections, which is what makes it work.
+"$T/m68k-apple-macos-ld" -T tools/overlay/overlay.ld --gc-sections \
+    --entry=ovl_main -o "$TMP/ovl.elf" $OBJS \
     "$("$T/m68k-apple-macos-gcc" -print-libgcc-file-name)"
 
 left=$("$T/m68k-apple-macos-objdump" -r "$TMP/ovl.elf" | grep -c R_68K || true)

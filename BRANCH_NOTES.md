@@ -1,6 +1,9 @@
 # Branch `selective-loading` — load only the decoder the archive needs
 
-**Status: ten overlays — every decoder that can move has moved.** The decoders for SpaceSaver, Compact Pro, DiskDoubler, LZH, ARC
+**Status: thirteen overlays — every decoder, and the shared machinery too.**
+Resident code is 50,932 B against 147,772 B, the A5 world 18,828 B against
+44,116 B, and the largest single `CODE` resource — the thing a small machine
+has to find room for in one piece — is **45,480 B** against 142,152 B. The decoders for SpaceSaver, Compact Pro, DiskDoubler, LZH, ARC
 and Now Compress are loaded only when an archive turns out to be one, and the
 ciphers as before. Resident code 147,772 → 105,640 B, A5 world 44,116 →
 27,128 B, and a StuffIt archive is granted **58,304 B more budget**.
@@ -108,6 +111,66 @@ which only the interactive `main()` calls. `-D UNC_AT_BUDGET` now prepends
 `bg=` and `pk=` to the completion alert, so `interactive.py` can be asked the
 same question the grid answers — which is how the envelope row was measured
 rather than assumed.
+
+## Thirteen overlays, and a blob that other blobs can call
+
+**2026-09-02, third pass.** `fmt_exo` moved after all, `unc_lzdyn` with it,
+and then the thing that looked impossible: the shared codec machinery is an
+overlay too.
+
+| resident, default build | plain | six | ten | **thirteen** |
+|---|---|---|---|---|
+| `CODE` | 147,772 B | 105,640 B | 73,052 B | **50,932 B** |
+| A5 world | 44,116 B | 27,128 B | 22,036 B | **18,828 B** |
+| static total | 191,888 B | 132,768 B | 95,088 B | **69,760 B** |
+| largest single `CODE` resource | 142,152 B | 100,188 B | 67,600 B | **45,480 B** |
+
+**On the machine, 7/7 at 1 MB on System 6.0.8** — a `.sit`, a `.cpt`, a
+`.lzh`, an `.arc`, a SpaceSaver method-4 stream, a deflated zip and
+`derived-Domino_v1.4.sit`, all byte-exact. Domino is granted **747,638 B**,
+against 650,548 B with everything resident.
+
+### One blob calling another, which the mechanism forbids
+
+The bit reader, the Huffman and canonical coders, LZW and LZAH are called by
+six decoders between them. That is why they were resident: an overlay carries
+no relocations and reaches outside itself only through the host vector, whose
+entries the application fills with addresses of RESIDENT functions. Blob B's
+address is not known when blob A is linked, and there is nothing left to patch
+it with afterwards.
+
+**The way through is that the vector is only a struct of pointers, and nothing
+says a pointer in it has to point at resident code.** `ovl_codecs.c` is loaded
+before any decoder that needs it and, on `OVL_CODEC_EXPORTS`, writes the
+addresses of its own fifteen functions into the application's copy of the
+vector. Every decoder overlay then calls them exactly as before — through
+`g_ovl_fns` — and never learns that the target moved.
+
+**Taking those addresses in CODE is what makes it legal.** Under `-mpcrel` a
+function's address is PC-relative and costs no relocation; the same fifteen
+pointers in a static table would need one each, and `mkoverlay.sh` refuses
+any. The mechanism is three lines of generated macro.
+
+**The alternative was duplication** — compiling the machinery into each of the
+six overlays that call it, about 17 KB of extra download to save the same
+8.5 KB of RAM. This costs the mechanism and nothing else.
+
+**Failure is handled where it can be**: fifteen vector entries start NULL,
+because their implementations are not in the application at all, so every
+decoder shim calls `ovl_codecs_ready()` before dispatching and returns
+`UNC_ERR_MEM` if the overlay cannot be had. A decoder that ran with NULL codec
+pointers would not fail — it would jump to zero.
+
+### `--gc-sections`, and zlib's three libc calls
+
+The exo overlay carries zlib, which reaches for `memcpy`, `malloc` and `free`
+— and an overlay links no libc. `mkoverlay.sh` now links with `--gc-sections`
+and `--entry=ovl_main`, which drops what nothing calls (`inflateCopy`, and
+`zcalloc`/`zcfree`, whose work `src/unc_inflate.c` does with the engine's own
+allocator) and shrank every other image as well: SpaceSaver 17,904 → 16,718 B.
+`memcpy` survives because inflate really does copy its window with it, so the
+overlay carries a real one; `malloc` returns NULL and `free` does nothing,
+with the reason written where they are.
 
 ## Ten overlays: every decoder that can move has moved
 

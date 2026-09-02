@@ -30,7 +30,11 @@ static uint32_t ovl_host_crc32(uint32_t crc, const uint8_t *p, uint32_t n)
     return unc_crc32(crc, p, (int32_t)n);
 }
 
-static const OverlayHostFns gOvlFns = OVL_HOST_FNS_INIT;
+/* NOT const: the codecs overlay writes its own addresses into these fields
+ * when it loads (OVL_CODEC_EXPORTS). Fifteen of them start NULL, because
+ * their implementations are not in the application at all. */
+static OverlayHostFns gOvlFns = OVL_HOST_FNS_INIT;
+
 
 static const OverlayHost gOvlHost = { ovl_host_crc32, NULL, NULL, NULL,
                                       (const struct OverlayHostFns *)&gOvlFns };
@@ -44,6 +48,26 @@ static OverlayEntry ovl_load(short id, Handle *slot, int *tried)
         else *slot = NULL;
     }
     return *slot ? (OverlayEntry)(void *)**slot : NULL;
+}
+
+/* Load the codec machinery and let it plant itself in the vector. Every
+ * decoder shim calls this BEFORE dispatching, because a decoder that ran with
+ * NULL codec pointers would not fail — it would jump to zero.
+ *
+ * Returns 0 if the overlay could not be had, and the caller then reports a
+ * per-entry memory error, which is what this shell does with every other
+ * allocation failure. */
+static int ovl_codecs_ready(void)
+{
+    static Handle h;
+    static int tried, in;
+    OverlayEntry e;
+    if (in) return 1;
+    e = ovl_load(OVL_ID_CODECS, &h, &tried);
+    if (!e) return 0;
+    e(&gOvlHost, OVL_CODEC_EXPORTS, &gOvlFns, NULL);
+    in = 1;
+    return 1;
 }
 
 static OverlayEntry ovl_entry(void)
@@ -64,7 +88,9 @@ int unc_spacesaver_extract(UncCtx *c)
 {
     static Handle h;
     static int tried;
-    OverlayEntry e = ovl_load(OVL_ID_SPACESAVER, &h, &tried);
+    OverlayEntry e;
+    if (!ovl_codecs_ready()) return UNC_ERR_MEM;
+    e = ovl_load(OVL_ID_SPACESAVER, &h, &tried);
     if (!e) return UNC_ERR_MEM;
     return (int)e(&gOvlHost, OVL_SPACESAVER_EXTRACT, c, NULL);
 }
@@ -166,7 +192,9 @@ int unc_cpt_extract(UncCtx *c)
 {
     static Handle h;
     static int tried;
-    OverlayEntry e = ovl_load(OVL_ID_CPTDD, &h, &tried);
+    OverlayEntry e;
+    if (!ovl_codecs_ready()) return UNC_ERR_MEM;
+    e = ovl_load(OVL_ID_CPTDD, &h, &tried);
     if (!e) return UNC_ERR_MEM;
     return (int)e(&gOvlHost, OVL_CPT_EXTRACT, c, NULL);
 }
@@ -178,7 +206,9 @@ int unc_dd_extract(UncCtx *c)
 {
     static Handle h;
     static int tried;
-    OverlayEntry e = ovl_load(OVL_ID_CPTDD, &h, &tried);
+    OverlayEntry e;
+    if (!ovl_codecs_ready()) return UNC_ERR_MEM;
+    e = ovl_load(OVL_ID_CPTDD, &h, &tried);
     if (!e) return UNC_ERR_MEM;
     return (int)e(&gOvlHost, OVL_DD_EXTRACT, c, NULL);
 }
@@ -190,7 +220,9 @@ int unc_lzh_extract(UncCtx *c)
 {
     static Handle h;
     static int tried;
-    OverlayEntry e = ovl_load(OVL_ID_LZH, &h, &tried);
+    OverlayEntry e;
+    if (!ovl_codecs_ready()) return UNC_ERR_MEM;
+    e = ovl_load(OVL_ID_LZH, &h, &tried);
     if (!e) return UNC_ERR_MEM;
     return (int)e(&gOvlHost, OVL_LZH_EXTRACT, c, NULL);
 }
@@ -202,7 +234,9 @@ int unc_arc_extract(UncCtx *c)
 {
     static Handle h;
     static int tried;
-    OverlayEntry e = ovl_load(OVL_ID_ARC, &h, &tried);
+    OverlayEntry e;
+    if (!ovl_codecs_ready()) return UNC_ERR_MEM;
+    e = ovl_load(OVL_ID_ARC, &h, &tried);
     if (!e) return UNC_ERR_MEM;
     return (int)e(&gOvlHost, OVL_ARC_EXTRACT, c, NULL);
 }
@@ -214,7 +248,9 @@ int unc_now_extract(UncCtx *c)
 {
     static Handle h;
     static int tried;
-    OverlayEntry e = ovl_load(OVL_ID_NOW, &h, &tried);
+    OverlayEntry e;
+    if (!ovl_codecs_ready()) return UNC_ERR_MEM;
+    e = ovl_load(OVL_ID_NOW, &h, &tried);
     if (!e) return UNC_ERR_MEM;
     return (int)e(&gOvlHost, OVL_NOW_EXTRACT, c, NULL);
 }
@@ -224,7 +260,9 @@ int unc_superdisk_extract(UncCtx *c)
 {
     static Handle h;
     static int tried;
-    OverlayEntry e = ovl_load(OVL_ID_SUPERDISK, &h, &tried);
+    OverlayEntry e;
+    if (!ovl_codecs_ready()) return UNC_ERR_MEM;
+    e = ovl_load(OVL_ID_SUPERDISK, &h, &tried);
     if (!e) return UNC_ERR_MEM;
     return (int)e(&gOvlHost, OVL_SUPERDISK_EXTRACT, c, NULL);
 }
@@ -234,7 +272,9 @@ int unc_packit_extract(UncCtx *c)
 {
     static Handle h;
     static int tried;
-    OverlayEntry e = ovl_load(OVL_ID_PACKIT, &h, &tried);
+    OverlayEntry e;
+    if (!ovl_codecs_ready()) return UNC_ERR_MEM;
+    e = ovl_load(OVL_ID_PACKIT, &h, &tried);
     if (!e) return UNC_ERR_MEM;
     return (int)e(&gOvlHost, OVL_PACKIT_EXTRACT, c, NULL);
 }
@@ -244,7 +284,9 @@ int unc_mime_extract(UncCtx *c)
 {
     static Handle h;
     static int tried;
-    OverlayEntry e = ovl_load(OVL_ID_TEXT, &h, &tried);
+    OverlayEntry e;
+    if (!ovl_codecs_ready()) return UNC_ERR_MEM;
+    e = ovl_load(OVL_ID_TEXT, &h, &tried);
     if (!e) return UNC_ERR_MEM;
     return (int)e(&gOvlHost, OVL_MIME_EXTRACT, c, NULL);
 }
@@ -254,7 +296,9 @@ int unc_uu_extract(UncCtx *c)
 {
     static Handle h;
     static int tried;
-    OverlayEntry e = ovl_load(OVL_ID_TEXT, &h, &tried);
+    OverlayEntry e;
+    if (!ovl_codecs_ready()) return UNC_ERR_MEM;
+    e = ovl_load(OVL_ID_TEXT, &h, &tried);
     if (!e) return UNC_ERR_MEM;
     return (int)e(&gOvlHost, OVL_UU_EXTRACT, c, NULL);
 }
@@ -264,7 +308,9 @@ int unc_btoa_extract(UncCtx *c)
 {
     static Handle h;
     static int tried;
-    OverlayEntry e = ovl_load(OVL_ID_TEXT, &h, &tried);
+    OverlayEntry e;
+    if (!ovl_codecs_ready()) return UNC_ERR_MEM;
+    e = ovl_load(OVL_ID_TEXT, &h, &tried);
     if (!e) return UNC_ERR_MEM;
     return (int)e(&gOvlHost, OVL_BTOA_EXTRACT, c, NULL);
 }
@@ -274,7 +320,9 @@ int unc_b64_extract(UncCtx *c)
 {
     static Handle h;
     static int tried;
-    OverlayEntry e = ovl_load(OVL_ID_TEXT, &h, &tried);
+    OverlayEntry e;
+    if (!ovl_codecs_ready()) return UNC_ERR_MEM;
+    e = ovl_load(OVL_ID_TEXT, &h, &tried);
     if (!e) return UNC_ERR_MEM;
     return (int)e(&gOvlHost, OVL_B64_EXTRACT, c, NULL);
 }
@@ -284,7 +332,9 @@ int unc_binhex_extract(UncCtx *c)
 {
     static Handle h;
     static int tried;
-    OverlayEntry e = ovl_load(OVL_ID_TEXT, &h, &tried);
+    OverlayEntry e;
+    if (!ovl_codecs_ready()) return UNC_ERR_MEM;
+    e = ovl_load(OVL_ID_TEXT, &h, &tried);
     if (!e) return UNC_ERR_MEM;
     return (int)e(&gOvlHost, OVL_BINHEX_EXTRACT, c, NULL);
 }
@@ -294,7 +344,9 @@ int unc_sit_extract(UncCtx *c)
 {
     static Handle h;
     static int tried;
-    OverlayEntry e = ovl_load(OVL_ID_STUFFIT, &h, &tried);
+    OverlayEntry e;
+    if (!ovl_codecs_ready()) return UNC_ERR_MEM;
+    e = ovl_load(OVL_ID_STUFFIT, &h, &tried);
     if (!e) return UNC_ERR_MEM;
     return (int)e(&gOvlHost, OVL_SIT_EXTRACT, c, NULL);
 }
@@ -304,7 +356,57 @@ int unc_sit5_extract(UncCtx *c)
 {
     static Handle h;
     static int tried;
-    OverlayEntry e = ovl_load(OVL_ID_STUFFIT, &h, &tried);
+    OverlayEntry e;
+    if (!ovl_codecs_ready()) return UNC_ERR_MEM;
+    e = ovl_load(OVL_ID_STUFFIT, &h, &tried);
     if (!e) return UNC_ERR_MEM;
     return (int)e(&gOvlHost, OVL_SIT5_EXTRACT, c, NULL);
+}
+
+/* Zip. */
+int unc_zip_extract(UncCtx *c)
+{
+    static Handle h;
+    static int tried;
+    OverlayEntry e;
+    if (!ovl_codecs_ready()) return UNC_ERR_MEM;
+    e = ovl_load(OVL_ID_EXO, &h, &tried);
+    if (!e) return UNC_ERR_MEM;
+    return (int)e(&gOvlHost, OVL_ZIP_EXTRACT, c, NULL);
+}
+
+/* Gzip. */
+int unc_gzip_extract(UncCtx *c)
+{
+    static Handle h;
+    static int tried;
+    OverlayEntry e;
+    if (!ovl_codecs_ready()) return UNC_ERR_MEM;
+    e = ovl_load(OVL_ID_EXO, &h, &tried);
+    if (!e) return UNC_ERR_MEM;
+    return (int)e(&gOvlHost, OVL_GZIP_EXTRACT, c, NULL);
+}
+
+/* Unix compress. */
+int unc_compressz_extract(UncCtx *c)
+{
+    static Handle h;
+    static int tried;
+    OverlayEntry e;
+    if (!ovl_codecs_ready()) return UNC_ERR_MEM;
+    e = ovl_load(OVL_ID_EXO, &h, &tried);
+    if (!e) return UNC_ERR_MEM;
+    return (int)e(&gOvlHost, OVL_COMPRESSZ_EXTRACT, c, NULL);
+}
+
+/* Tar. */
+int unc_tar_extract(UncCtx *c)
+{
+    static Handle h;
+    static int tried;
+    OverlayEntry e;
+    if (!ovl_codecs_ready()) return UNC_ERR_MEM;
+    e = ovl_load(OVL_ID_EXO, &h, &tried);
+    if (!e) return UNC_ERR_MEM;
+    return (int)e(&gOvlHost, OVL_TAR_EXTRACT, c, NULL);
 }
