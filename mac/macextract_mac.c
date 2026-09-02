@@ -501,9 +501,36 @@ static long gMoveBefore, gMoveAfter;   /* the block's ADDRESS, not MaxBlock:
 
 typedef struct {
     long budget;    /* remaining bytes the engine may hold */
-    long initial;   /* starting budget (set at init) */
+    long initial;   /* starting budget (taken at the first allocation) */
     long lowmark;   /* lowest budget ever seen => peak = initial - lowmark */
+    char taken;     /* 0 until the budget has been computed */
 } MacAlloc;
+
+/* The budget is taken at the engine's FIRST ALLOCATION, not before the
+ * extraction starts, and on this branch that is a correctness requirement
+ * rather than a tidiness one.
+ *
+ * The ciphers live in an `OVLY` resource and are fetched when an archive
+ * turns out to be encrypted — which is DURING the extraction, long after the
+ * budget was computed. Budgeting up front therefore promises the engine heap
+ * that the overlay then takes: the engine believes it may hold N bytes, the
+ * overlay loads 5,988 of them, and what fails is a NewPtr the budget said was
+ * affordable — `gRefusedWhy` = 2, the refusal this shell deliberately
+ * distinguishes from an over-budget one because the two have opposite fixes.
+ *
+ * Measured on the `code-segments` experiment, where the same mistake was
+ * larger and therefore visible: a budget taken before the loader ran read
+ * 726,122 B against a real 650,880 B, and an archive extracted to within
+ * about 5 KB of a NewPtr failure. That branch was retired; this is the part
+ * of it worth keeping, and it applies to any mechanism that brings code in
+ * after the budget has been granted.
+ *
+ * PurgeSpace rather than FreeMem for the same reason: a released overlay is a
+ * purgeable Handle, so FreeMem understates what the engine can actually have.
+ * Source: Inside Macintosh II-42 — "the total amount of free memory that
+ * would be available if all purgeable blocks were purged". It is in the 64K
+ * ROM, so it costs the rom64k branch nothing. */
+static void mal_take_budget(MacAlloc *a);
 
 #ifdef UNC_AT_RESERVE
 /* Low-water mark of FreeMem() across a whole run — the instrument that priced
@@ -690,11 +717,37 @@ static void StackMark(long *where)
 #endif
 
 
+static void mal_take_budget(MacAlloc *a)
+{
+    /* See mal_take_budget's note above for why this is PurgeSpace. */
+    long total, contig;
+    long freenow;
+    long reserve;
+    PurgeSpace(&total, &contig);
+    freenow = total;
+    if (freenow < FreeMem()) freenow = FreeMem();   /* never below the floor */
+    reserve = freenow / 4;
+    if (reserve > kMemReserveMax) reserve = kMemReserveMax;
+    if (reserve < kMemReserveMin) reserve = kMemReserveMin;
+#if defined(UNC_AT_BUDGET) || defined(UNC_AT_RESERVE)
+    gFreeAtStart = freenow;
+#endif
+    a->budget = freenow - reserve;
+    if (a->budget < 32L * 1024) a->budget = 32L * 1024;
+    a->initial = a->budget;      /* for peak-usage = initial - lowmark */
+    a->lowmark = a->budget;
+    a->taken = 1;
+#ifdef UNC_AT_BUDGET
+    gBudget = a->initial;
+#endif
+}
+
 static void *mal_alloc(void *ctx, uint32_t size)
 {
     StackSample();
     MacAlloc *a = (MacAlloc *)ctx;
     Ptr p;
+    if (!a->taken) mal_take_budget(a);
     if ((long)size + 16 > a->budget) {
         /* How much more the budget would have had to be, at this moment.
          * The engine already holds initial - budget, so this is exactly
@@ -3350,26 +3403,15 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
     io.size = fio_size;
 #endif
 
-    /* Budget the engine against the free heap. With the archive read straight
-     * off disk there is no buffer to subtract first, so on the floor target
-     * the engine now gets the archive's size back — which is what decided
-     * which StuffIt 5 entries it could afford. */
-    {
-        long freenow = FreeMem();
-        long reserve = freenow / 4;
-        if (reserve > kMemReserveMax) reserve = kMemReserveMax;
-        if (reserve < kMemReserveMin) reserve = kMemReserveMin;
-#if defined(UNC_AT_BUDGET) || defined(UNC_AT_RESERVE)
-        gFreeAtStart = freenow;
-#endif
-        ma.budget = freenow - reserve;
-    }
-    if (ma.budget < 32L * 1024) ma.budget = 32L * 1024;
-    ma.initial = ma.budget;      /* for peak-usage = initial - lowmark */
-#ifdef UNC_AT_BUDGET
-    gBudget = ma.initial;
-#endif
-    ma.lowmark = ma.budget;
+    /* Budget the engine against the free heap — DEFERRED to the first
+     * allocation, see mal_take_budget. With the archive read straight off
+     * disk there is no buffer to subtract first, so on the floor target the
+     * engine gets the archive's size back — which is what decided which
+     * StuffIt 5 entries it could afford. */
+    ma.budget = 0;
+    ma.initial = 0;
+    ma.lowmark = 0;
+    ma.taken = 0;
     al.ctx = &ma;
     al.alloc = mal_alloc;
     al.free = mal_free;

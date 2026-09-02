@@ -127,7 +127,8 @@ otherwise: any surviving relocation, any `.data` or `.bss` (an overlay has no
 A5 world of its own), and any image over 32 KB.
 
 **The shipping application carries no overlay.** `OVERLAY_R` is empty unless
-`UNC_AT_OVERLAY` is set, and the code ceiling is unmoved at 147,268 B.
+`UNC_AT_OVERLAY` is set. The code ceiling is 147,700 B, raised from 147,588
+for the budget fix below; it was 147,268 B when this branch was cut.
 
 ## Why the idea came back
 
@@ -170,6 +171,54 @@ past what a 1 MB Macintosh has at all, so it is DECODER-shaped and no amount
 of shedding resident code reaches it (FORMATS.md, *Budget*). The prize is
 still ~103 KB; what it buys is more of the corpus near the line, not the
 fixtures that are out.
+
+## What the prize is NOT — measured 2026-09-01, on a retired experiment
+
+**The ~103 KB above is what could be ABSENT, not what a naive split delivers.**
+A third mechanism was built and retired to find this out: a Retro68 segment
+map (`--mac-segments`) splitting the whole application into six `CODE`
+resources, which is the same idea as this branch with the OS doing the
+loading. Measured at 1 MB on System 6.0.8, both sides built and run in one
+session:
+
+| budget the engine is granted | |
+|---|---|
+| unsegmented, as `main` ships | 647,802 B |
+| split, budget taken before the sniff | 726,122 B |
+| **split, budget taken at the first allocation** | **650,880 B** |
+
+**So a naive split is worth 3,078 B, not 78 KB and not 103 KB**, and the two
+reasons are both things this branch has to solve rather than avoid:
+
+1. **The probes travel with the decoders.** `unc_sniff` walks its order
+   calling each probe, and a probe of tens of bytes lives in the same object
+   as an extractor of thousands — so by the engine's first allocation almost
+   everything has been dragged in. This is the same finding as *three dispatch
+   tables* below, seen from the memory side: **the code that DECIDES has to be
+   separated from the code that DECODES, or nothing stays unloaded.**
+2. **Loaded code is locked.** `PurgeSpace` recovers 2,844 B of a 103,120 B
+   split, so what is resident stays resident. An overlay this branch RELEASES
+   is therefore worth more per byte than a segment that merely loads late.
+
+**And the budget must be taken after the on-demand code arrives.** That
+experiment granted its budget before the loader ran and an archive extracted
+to within about 5 KB of a `NewPtr` failure — `gRefusedWhy` = 2, the refusal
+that means the heap could not do what the budget said it could. **This branch
+has the same shape of bug**: the ciphers load mid-extraction, after the budget
+was computed. `mal_take_budget` now runs at the engine's first allocation and
+reads `PurgeSpace`, which also counts a released overlay because a released
+overlay is purgeable. +116 B of code, ratchet raised to 147,700 deliberately.
+
+**`.data` is allowed in an overlay, and this file said it was not.**
+`mkoverlay.sh`'s header refused `.data` while its code twenty lines down
+allowed it and explained why. That mattered more than a stale comment usually
+does: every decoder has tables, tables are `.data`, so "an overlay cannot
+carry `.data`" ruled the entire decoder set out on paper and left the ciphers
+as the only candidate — which is how a 5,988 B prize came to look like the
+ceiling. **A decoder in an overlay has never been tried, and the reason it was
+never tried was wrong.** It would also take its tables OUT OF THE A5 WORLD,
+which no segment can do and which is the wall on the smallest machines
+(FORMATS.md, *A Macintosh 128K*).
 
 ## What stands in the way — found by trying it
 
@@ -308,6 +357,31 @@ which is a locked `Handle` and therefore writable. `mkoverlay.sh` now refuses
 `.bss` and allows `.data` for exactly that reason; the rule it had before
 ("an overlay has no A5 world") was written from theory and was wrong in a way
 that would have corrupted memory silently on the Mac.
+
+## What a sibling branch found, which bears on this one
+
+`overlay-eager` loads the same overlay at launch instead of on demand, to
+avoid touching the application's floppy after an archive has been chosen — on
+a Mac Plus with one drive, which "cannot mount two", that disk may have been
+swapped. It also releases the overlay for the six formats that provably cannot
+want it.
+
+**Two things it established that apply here too.**
+
+**The disk dependency cannot be removed, only moved.** Releasing per archive
+while the application lives per session means a later archive must reload —
+which is the same mid-run disk access, later and less predictably. THIS branch
+pays it on the first encrypted archive; that one pays it on the second.
+
+**And the prize is about ONE archive.** 5,988 B of code, against a corpus
+density of roughly one archive per 6–7 KB of budget near the line
+(FORMATS.md). Neither branch reaches `derived-EasyFind.dmg.sit`.
+
+**Recommendation: merge neither for the 6 KB.** Keep both as a proven
+mechanism with its traps written down — `-mpcrel`, the `.bss`-versus-`.data`
+distinction, the three dispatch tables, the gc-sections correction — so that
+if something later needs tens of kilobytes, the loader exists and nobody has
+to rediscover any of it.
 
 ## What is left
 

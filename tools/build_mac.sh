@@ -77,7 +77,13 @@ ls -la build/mac/MacExtract.APPL build/mac/MacExtract.bin build/mac/MacExtract.d
 # one test rather than three -- and they bought 52 B of the 216 the first
 # version cost. That 12 % is the figure worth remembering about code shape
 # on this target.
-UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-147588}
+# Raised on this branch from 147,588 to 147,700: +116 B for taking the
+# engine's budget at its FIRST ALLOCATION rather than before the extraction,
+# and from PurgeSpace rather than FreeMem. On a branch whose whole point is
+# code that arrives after the budget was granted, that is a correctness fix
+# and not a feature — see BRANCH_NOTES.md. It is 116 B off every extraction
+# and it is bought knowingly.
+UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-147700}
 SIZE="$TOOLCHAIN/bin/m68k-apple-macos-size"
 GDB=build/mac/MacExtract.code.bin.gdb
 if [ -x "$SIZE" ] && [ -f "$GDB" ]; then
