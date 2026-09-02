@@ -145,6 +145,29 @@ branch, so reopening it is a merge and not a rediscovery.
 
 ---
 
+## The spanned-zip UI scenario fails, and nobody had run it since
+
+**`interactive.py --named zip` reports MISMATCH**, on `main` and on both
+overlay branches, with and without overlays — four runs, 2026-09-02. The
+application ends on *"This archive has more parts. Find them and try again"*
+where the Linux CLI, given the same set, produces `payload.bin`. The other
+five join schemes are unaffected: a Compact Pro set opened at its first part
+extracts 9 files byte-exact through the same harness on the same day.
+
+**Which half is wrong is NOT established, and that is the whole of what is
+known.** A spanned zip is the one scheme placed by NAME rather than found by
+header, so the parts must be on the volume under names the application looks
+for — and the case that fails is the one where the harness, not the engine,
+decides what those names are. *Hypothesis:* the harness places or names the
+parts in a way the application no longer matches. It has not been reduced,
+and until it is, this is not evidence of a defect in the reader.
+
+**What would close it:** run the five parts past `unc_segment_describe` on
+Linux with the names the harness writes, which needs no emulator and says in
+one command whether the engine or the harness is at fault. FORMATS.md's
+*Segmented archives* claims spanned zip extracts on the strength of five
+generated sets adjudicated four ways — all on Linux, none through the UI.
+
 ## Waiting on a file this machine does not have
 
 **Not scope decisions, and not effort.** Everything here is written or
