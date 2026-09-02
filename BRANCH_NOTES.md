@@ -23,7 +23,7 @@ is going to load has already loaded.
 |---|---|---|---|
 | StuffIt 5, bare | 650,548 B | **708,916 B** | 693,168 B |
 | LZH, bare | 650,548 B | **702,104 B** | 701,688 B |
-| Compact Pro, bare | 650,548 B | 694,172 B | **693,212 B** |
+| Compact Pro, bare | 650,548 B | 694,172 B | **692,988 B** |
 | MacBinary → StuffIt, through the real UI | 647,114 B | **705,780 B** | 689,108 B |
 | disk access after the archive is chosen | none | **one, per format** | **none** |
 
@@ -39,9 +39,21 @@ to throw away before it knows whether any entry is encrypted;
 zip keep a per-entry flag in a directory that can be walked before anything is
 decoded, so `unc_archive_encrypted()` answers for the whole archive and the
 ciphers are kept only when one is actually encrypted. The Compact Pro row
-closed to within **960 B** of B, which is the query's own code. StuffIt,
+closed to within **1,184 B** of B, which is the query's own code. StuffIt,
 StuffIt 5, PackIt and ARC still pay: the first three flag encryption per entry
 with no directory to consult, and ARC does not flag it at all.
+
+**And the query refuses to answer for a PART of a multi-part set**, which is
+the case that would have broken it. A zip keeps its directory at the END, so
+the first part — the one a user is told to open, and the only one they can be
+expected to open — has no directory at all; a Compact Pro set puts its index
+in the last segment and a first part's index offset is zero. The segment
+probes claim such files before the plain ones do, so those paths should be
+unreachable, and they are guarded anyway: the cost of being wrong is not a
+disk access but a capability, since there is no reload. `tools/run_crypt.py`
+checks nine cases including **every part of a spanned encrypted set with the
+format forced**, because sniffing alone can never reach the guard. Removing
+the guard makes that suite fail, which was checked before it was trusted.
 
 **What C buys for what remains is the disk.** `selective-loading` reads an
 overlay after the archive has been chosen, and on a Mac Plus with one drive

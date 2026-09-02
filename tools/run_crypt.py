@@ -34,6 +34,7 @@ wrote, with passwords of 8, 9 and 17 characters, say it is ceil(len/8)
 folds — which neither reference implements (BLOCKERS.md). Those three
 archives are replayed here whenever the emulator has produced them.
 """
+import glob
 import os
 import shutil
 import subprocess
@@ -134,6 +135,61 @@ def check_refusal(label, archive, macextract, problems, args=(),
 def synth(kind, path, password):
     run([sys.executable, os.path.join(ROOT, "tools", "synth_crypt.py"),
          "--kind", kind, "-o", path, "--password", password], check=True)
+
+
+def check_encinfo(_macextract, problems, tmp):
+    """unc_archive_encrypted(): does the archive's own directory say so?
+
+    The Macintosh shell releases the cipher overlay on a NO and cannot get it
+    back, so this checks both answers AND the cases that must refuse to
+    answer. The multi-part ones are the reason it exists: a zip keeps its
+    directory at the END, so the first part of a spanned set — the part a
+    user opens — has none, and answering NO there would drop the ciphers for
+    an archive that needs them.
+    """
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    probe = os.path.join(tmp, "encinfo_probe")
+    src = [os.path.join(root, "tools", "encinfo_probe.c")]
+    src += sorted(glob.glob(os.path.join(root, "src", "*.c")))
+    src += sorted(glob.glob(os.path.join(root, "third_party", "zlib", "*.c")))
+    inc = ["-I" + os.path.join(root, "include"),
+           "-I" + os.path.join(root, "src"),
+           "-I" + os.path.join(root, "third_party", "zlib")]
+    cc = subprocess.run(["cc", "-o", probe] + inc + src,
+                        capture_output=True, text=True)
+    if cc.returncode != 0:
+        problems.append("encinfo: probe did not build: "
+                        + cc.stderr.strip().split("\n")[-1])
+        return
+    payload = os.path.join(tmp, "payload.bin")
+    with open(payload, "wb") as f:
+        f.write(os.urandom(400 * 1024))
+    plain = os.path.join(tmp, "plain.zip")
+    enc = os.path.join(tmp, "enc.zip")
+    span = os.path.join(tmp, "span.zip")
+    for cmd in (["zip", "-q", "-j", plain, payload],
+                ["zip", "-q", "-j", "-P", "secret", enc, payload],
+                ["zip", "-q", "-j", "-s", "64k", "-P", "secret", span,
+                 payload]):
+        if subprocess.run(cmd, capture_output=True).returncode != 0:
+            print("run_crypt: no usable `zip`, encinfo checks skipped")
+            return
+
+    cases = [(plain, "no", ()), (enc, "yes", ())]
+    # Every part of the spanned set, with the format FORCED: the segment
+    # probe would otherwise claim them and the guard would never be reached.
+    for part in sorted(glob.glob(os.path.join(tmp, "span.z*"))):
+        cases.append((part, "unknown", ("-f", "zip")))
+
+    for path, want, extra in cases:
+        out = subprocess.run([probe] + list(extra) + [path],
+                             capture_output=True, text=True).stdout.split()
+        got = out[0] if out else "(nothing)"
+        if got != want:
+            problems.append("encinfo: %s answered %s, wanted %s"
+                            % (os.path.basename(path), got, want))
+    print("encinfo: %d case(s) checked, including %d part(s) of a spanned set"
+          % (len(cases), len(cases) - 2))
 
 
 def main():
@@ -384,6 +440,7 @@ def main():
             shutil.rmtree(src, ignore_errors=True)
         else:
             print("run_crypt: no `arc` at %s, garbled ARC skipped" % ARC_BIN)
+        check_encinfo(macextract, problems, tmp)
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 
