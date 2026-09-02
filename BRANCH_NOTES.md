@@ -10,7 +10,8 @@ a moment when the boot disk is certainly in.
 **Verified 2026-08-31 at 1 MB:** encryption still works with the overlay HELD
 (`--password`: *"every entry decrypted"*), and a releasable format, an
 envelope-free terminal one and a held one all extract — LZH, tar and Compact
-Pro, 3/3.
+Pro, 3/3. **What that verification could not see is whether the release
+bought anything, and the answer was no until the budget fix below.**
 
 ## What it can and cannot give back
 
@@ -171,6 +172,38 @@ past what a 1 MB Macintosh has at all, so it is DECODER-shaped and no amount
 of shedding resident code reaches it (FORMATS.md, *Budget*). The prize is
 still ~103 KB; what it buys is more of the corpus near the line, not the
 fixtures that are out.
+
+## The release reached nothing until 2026-09-02, and now it does
+
+**This branch's premise — load at launch, release what cannot be wanted —
+delivered exactly zero bytes to the engine, and the A/B that shows it is one
+line of ordering.** `ovl_release_if_unwanted` runs immediately after
+`unc_sniff`; the budget was computed before the sniff. So the release freed
+heap the engine had already been told it could not have.
+
+Measured at 1 MB on System 6.0.8, `-D UNC_AT_BUDGET -D UNC_AT_OVERLAY`, one
+fixture whose format RELEASES the overlay (`.lzh`) against one that must HOLD
+it (`.sit`, which may carry an encrypted entry):
+
+| | budget, budget taken before the sniff | budget taken at the first allocation |
+|---|---|---|
+| `lhasa-maclha-l1_lh5.lzh` — released | 645,182 B | **663,298 B** |
+| `adobenumbers.sit` — held | 645,182 B | 647,966 B |
+
+**Identical to the byte in the old column.** The mechanism worked, the memory
+was freed, and nothing could use it. In the new column the release is worth
+**15,332 B** against a format that holds the overlay, and **18,116 B** against
+what this branch did yesterday.
+
+**So the branch's headline was the wrong figure in the wrong unit.** 5,988 B
+is CODE shed from the resident build, measured with `size`. What an end user
+gets is BUDGET, and until now that was 0. The number to quote is 18,116 B, and
+it is three times the one this branch has been parked on.
+
+`mal_take_budget` now runs at the engine's first allocation and reads
+`PurgeSpace` rather than `FreeMem` — a released overlay is a purgeable Handle,
+which `FreeMem` does not count. +116 B of code, ceiling raised to 147,700
+deliberately.
 
 ## What the prize is NOT — measured 2026-09-01, on a retired experiment
 
