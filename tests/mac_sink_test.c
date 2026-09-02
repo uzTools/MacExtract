@@ -58,6 +58,10 @@ Ptr NewPtr(Size n)      { return (Ptr)malloc((size_t)n); }
 Ptr NewPtrClear(Size n) { return (Ptr)calloc(1, (size_t)n); }
 void DisposePtr(Ptr p)  { free(p); }
 long FreeMem(void)       { return 3800L * 1024; }   /* pretend 3.8 MB */
+/* Nothing purgeable in the mock heap, so PurgeSpace agrees with FreeMem —
+ * which is what it does on a single-segment build anyway. */
+void PurgeSpace(Size *total, Size *contig)
+{ if (total) *total = FreeMem(); if (contig) *contig = FreeMem(); }
 void BlockMoveData(const void *s, void *d, Size n) { memmove(d, s, (size_t)n); }
 void NumToString(long v, StringPtr s)
 {
@@ -338,6 +342,7 @@ int main(int argc, char **argv)
         int ok = 1;
         a.budget = a.initial = 40000L;
         a.lowmark = a.budget;
+        a.taken = 1;      /* an imposed budget: see mal_take_budget */
         gShortBy = 0;
         if (mal_alloc(&a, (uint32_t)want) != NULL) {
             fprintf(stderr, "shortfall: the over-budget request was ALLOWED\n");
@@ -402,6 +407,11 @@ int main(int argc, char **argv)
         if (reserve > kMemReserveMax) reserve = kMemReserveMax;
         if (reserve < kMemReserveMin) reserve = kMemReserveMin;
         ma.budget = FreeMem() - reserve;
+        ma.initial = ma.budget;
+        ma.lowmark = ma.budget;
+        /* This test imposes its own budget, so mal_alloc must not go and take
+         * one at the first allocation (mal_take_budget). */
+        ma.taken = 1;
     }
     al.ctx = &ma; al.alloc = mal_alloc; al.free = mal_free;
 

@@ -110,6 +110,7 @@ Ptr  NewPtr(Size n);
 Ptr  NewPtrClear(Size n);
 void DisposePtr(Ptr p);
 long FreeMem(void);
+void PurgeSpace(Size *total, Size *contig);
 void BlockMoveData(const void *src, void *dst, Size n);
 void NumToString(long v, StringPtr s);
 

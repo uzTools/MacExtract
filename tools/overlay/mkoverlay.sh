@@ -8,9 +8,15 @@
 #
 # -mpcrel is what makes it relocatable-free: internal references become
 # PC-relative and the LINKER resolves them, so nothing is left to patch at run
-# time. The build FAILS if any relocation survives, if the image needs .data or
-# .bss (an overlay has no A5 world), or if it exceeds the +-32 KB that
-# PC-relative addressing reaches.
+# time. The build FAILS if any relocation survives, if the image needs .bss,
+# or if it exceeds the +-32 KB that PC-relative addressing reaches.
+#
+# .data is ALLOWED and travels inside the image — this header said otherwise
+# until 2026-09-01, and BRANCH_NOTES.md repeated it, which mattered: it is the
+# reason nobody tried putting a DECODER in an overlay. Every decoder has
+# tables, tables are .data, and "an overlay cannot carry .data" ruled the
+# whole set out on paper. The code twenty lines below has always said the
+# opposite, and the code is right.
 set -e
 cd "$(dirname "$0")/../.."
 OUT=$1; shift
