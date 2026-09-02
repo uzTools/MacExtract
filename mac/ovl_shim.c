@@ -174,6 +174,14 @@ void ovl_release_if_unwanted(UncFormat fmt, UncIO *io)
     case UNC_FORMAT_DISKDOUBLER: want = OVL_ID_CPTDD;      crypt = 0; break;
     case UNC_FORMAT_LZH:         want = OVL_ID_LZH;        crypt = 0; break;
     case UNC_FORMAT_ARC:         want = OVL_ID_ARC;        break;
+    /* Segment SCHEMES, from the other release site. A Compact Pro set is
+     * read by the Compact Pro reader over the joined parts, so it wants that
+     * decoder; a spanned zip wants nothing, the zip reader being resident.
+     * Neither can be asked whether it is encrypted — the directory of a set
+     * lives in its LAST part and unc_archive_encrypted refuses on a part —
+     * so both keep the ciphers. */
+    case UNC_FORMAT_CPTSEG:      want = OVL_ID_CPTDD;      break;
+    case UNC_FORMAT_ZIPSEG:                                break;
     case UNC_FORMAT_NOWCOMPRESS: want = OVL_ID_NOW;        crypt = 0; break;
     /* An ENVELOPE does not yet know what is under it, and a format with no
      * overlay of its own still has to be able to reach the ciphers. Both
@@ -183,6 +191,13 @@ void ovl_release_if_unwanted(UncFormat fmt, UncIO *io)
     case UNC_FORMAT_GZIP:        case UNC_FORMAT_COMPRESS_Z:
     case UNC_FORMAT_MIME:        case UNC_FORMAT_UU:
     case UNC_FORMAT_BTOA:        case UNC_FORMAT_BASE64:
+    /* And the schemes that join to a FILE rather than to entries: a StuffIt
+     * set, a DiskDoubler `SPLT`, a plain .NNN split and a message/partial
+     * set all yield something a LATER layer sniffs, and what that turns out
+     * to be is unknown here. Releasing on the scheme would strand it, for
+     * the same reason releasing on an envelope's outer format would. */
+    case UNC_FORMAT_SITSEG:      case UNC_FORMAT_DDSEG:
+    case UNC_FORMAT_SPLIT:       case UNC_FORMAT_MIMESEG:
         return;
     default:
         break;                   /* StuffIt and the rest: no overlay wanted */

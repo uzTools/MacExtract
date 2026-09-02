@@ -62,31 +62,35 @@ once, at launch, while the boot disk is certainly in. **That is the trade,
 priced: about 16 KB of budget against a disk access at an unpredictable
 moment.**
 
-## Measured limitation: a multi-part set pays for the bundle and gets nothing
+## The second release site: multi-part sets
 
-**A segmented archive is the one case where this branch is WORSE than no
-overlays at all.** Measured 2026-09-02, 1 MB, a four-part Compact Pro set
-(`segcheck.py`'s `cut_cpt`, opened at the first part):
+**A segmented set used to pay for the bundle and get nothing back**, because
+`ovl_release_if_unwanted` was called only from the sniff-and-dispatch path and
+a set goes down `unc_extract_segments`. Measured on a four-part Compact Pro
+set (`segcheck.py`'s `cut_cpt`, opened at the first part), 1 MB:
 
 | | budget |
 |---|---|
 | no overlays | 650,548 B |
-| this branch, a whole Compact Pro archive | 692,988 B |
-| **this branch, the same archive cut into four parts** | **631,300 B** |
+| the bundle held all run — before 2026-09-02 | 631,300 B |
+| **the release called from the segments path too** | **670,836 B** |
 
-It extracts correctly — 9 files, byte-exact — so this is memory rather than
-capability. The cause is structural: `ovl_release_if_unwanted` is called from
-the sniff-and-dispatch path, and a segmented set goes down the OTHER path,
-`unc_extract_segments`, which never calls it. So the bundle is read at launch
-and held for the whole run, and the 69,700 B it costs is larger than the
-59,084 B of code and A5 the overlays save.
+It was **worse than not having the mechanism at all**, by 19,248 B, for that
+one shape of input. It now beats it by 20,288 B, and the set still extracts
+byte-exact — 9 files.
 
-**What would fix it is small and is not done:** the segments path knows the
-joined format from its descriptor, so the same release decision can be made
-there. It is left undone deliberately — the fix is easy, but nothing has
-measured a segmented set against the tiers on any of these branches, and
-this figure is the reason to do that before adding a second release site
-rather than after.
+**The SCHEME is not the format inside, and the release has to know the
+difference.** A Compact Pro or spanned-zip set is read by that format's own
+reader over the joined parts, so the first keeps the Compact Pro decoder and
+the second keeps nothing (the zip reader is resident). A StuffIt set, a
+DiskDoubler `SPLT`, a plain `.NNN` split and a `message/partial` set all join
+to a FILE that a LATER layer sniffs — what that turns out to be is unknown
+here, so they keep the whole bundle, exactly as an envelope does.
+
+**Neither set can be asked whether it is encrypted**, because a set's
+directory lives in its LAST part and `unc_archive_encrypted` refuses on a
+part. So both keep the ciphers, which is why 670,836 B is short of the
+692,988 B the same archive gets whole: two images kept instead of one.
 
 ## Withdrawn: "one disk read at launch"
 

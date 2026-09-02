@@ -3512,6 +3512,22 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
         vs.ctx = sh;
         vs.need = seg_need;
         vs.release = seg_release;
+#ifdef UNC_AT_OVERLAY
+        /* The other release site. A segmented set never came through here
+         * until 2026-09-02, so the bundle was read at launch and held for the
+         * whole run — measured at 631,300 B of budget against 650,548 B with
+         * no overlays at all, which made this branch WORSE than not having
+         * the mechanism for one shape of input (BRANCH_NOTES.md).
+         *
+         * The SCHEME is what is known here, not the format inside, and the
+         * two are not interchangeable: a Compact Pro or spanned-zip set is
+         * read by that format's own reader, while a StuffIt set, a `SPLT`
+         * and a plain .NNN split all join to a FILE that a later layer
+         * sniffs. The shim keeps everything for those, exactly as it does
+         * for an envelope. */
+        { extern void ovl_release_if_unwanted(UncFormat, UncIO *);
+          ovl_release_if_unwanted(sh->desc.scheme, &io); }
+#endif
         ret = unc_extract_segments(&sh->desc, &vs, segScratch, &sk, &al,
                                    prog, &opt);
         seg_release(sh, NULL);
