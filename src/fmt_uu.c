@@ -38,18 +38,16 @@
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
 #include "unc_internal.h"
+#include "fmt_uu_priv.h"
 
 /* A uu line holds at most 45 payload bytes = 60 encoded characters,
  * plus the length character. Mailers wrap nothing shorter, but a line
  * longer than this is not a uu line at all. */
 /* Both are unc_internal.h's, because fmt_mime.c decodes uu lines too. */
-#define UU_LINE_MAX   UNC_UU_LINE_MAX
-#define UU_DEC_MAX    UNC_UU_DEC_MAX
 
 /* How far into a file the "begin " line may sit. hexbin skips lines
  * until it finds one; the probe needs a bound, and BinHex's own banner
  * scan uses the same 512-byte sniff window. */
-#define UU_SCAN_MAX   8192u
 
 typedef struct UuLine {
     uint8_t  buf[UU_LINE_MAX + 1];
@@ -135,7 +133,6 @@ static int uu_readline(UncBufIn *in, uint32_t base, UuLine *l)
 /* Source: mu_convert() in reference/macutils/hexbin/mu.c.            */
 /* ------------------------------------------------------------------ */
 
-#define UU_SIXB(c) (((c) - 0x20) & 0x3f)
 
 /* Decode one data line into out (>= UU_DEC_MAX bytes). Returns the
  * payload length (0..45), or -1 if the line cannot be one. */
@@ -243,54 +240,9 @@ static void uu_name_from_begin(const UuLine *l, const uint8_t **name,
 /* A "begin " line alone is far too weak — it occurs in English prose
  * and in shell scripts. What makes it a uu file is the line AFTER it:
  * a length character that agrees with the encoded length. */
-int unc_uu_line_is_data(const uint8_t *p, int32_t len)
-{
-    int32_t outcount, incount, i;
-
-    if (len < 1) return 0;
-    if (p[0] < 0x20 || p[0] > 0x60) return 0;
-    outcount = UU_SIXB(p[0]);
-    if (outcount == 0 || outcount > 45) return 0;
-    incount = ((outcount / 3) + 1) * 4;
-    /* Trailing spaces may have been stripped; the line may be short,
-     * never long. Every character must be in the uu alphabet. */
-    if (len > incount + 1) return 0;
-    for (i = 1; i < len; i++)
-        if (p[i] < 0x20 || p[i] > 0x60) return 0;
-    return 1;
-}
 
 /* Shared with uu_section: a line belongs to the stream only if it can
  * be one. See the comment there for what that buys and what it costs. */
-UncFormat unc_uu_probe(const uint8_t *head, int32_t len, UncIO *io)
-{
-    (void)io;
-    int32_t i = 0;
-
-    while (i < len) {
-        int32_t ls = i, le;
-        while (i < len && head[i] != '\n' && head[i] != '\r') i++;
-        le = i;
-        while (i < len && (head[i] == '\n' || head[i] == '\r')) i++;
-
-        if (le - ls >= 6 && head[ls] == 'b' && head[ls + 1] == 'e' &&
-            head[ls + 2] == 'g' && head[ls + 3] == 'i' &&
-            head[ls + 4] == 'n' && head[ls + 5] == ' ') {
-            /* Next non-empty line must be a uu data line. */
-            while (i < len) {
-                int32_t ns = i, ne;
-                while (i < len && head[i] != '\n' && head[i] != '\r') i++;
-                ne = i;
-                while (i < len && (head[i] == '\n' || head[i] == '\r')) i++;
-                if (ne == ns) continue;                 /* blank */
-                return (unc_uu_line_is_data(head + ns, ne - ns))
-           ? UNC_FORMAT_UU : UNC_FORMAT_UNKNOWN;
-            }
-            return UNC_FORMAT_UNKNOWN;   /* begin line, but the file ends there */
-        }
-    }
-    return UNC_FORMAT_UNKNOWN;
-}
 
 /* ------------------------------------------------------------------ */
 /* Section walk                                                       */

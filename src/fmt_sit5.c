@@ -35,6 +35,7 @@
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
 #include "unc_internal.h"
+#include "fmt_sit5_priv.h"
 
 /* The datalen of the extra entry that follows every directory entry —
  * the format's own marker, not a ceiling. */
@@ -50,19 +51,7 @@
 
 /* The banner match string; \xFF bytes match anything (the four
  * digits of the second year vary). XADStuffIt5Parser.m. */
-static const char sit5_banner[] =
-    "StuffIt (c)1997-\xFF\xFF\xFF\xFF"
-    " Aladdin Systems, Inc., http://www.aladdinsys.com/StuffIt/\x0d\x0a";
 
-UncFormat unc_sit5_probe(const uint8_t *head, int32_t len, UncIO *io)
-{
-    (void)io;
-    const char *m = sit5_banner;
-    if (len < 100) return UNC_FORMAT_UNKNOWN;
-    while (*m && (*head == (uint8_t)*m || (uint8_t)*m == 0xFF)) { m++; head++; }
-    return (*m == 0)
-           ? UNC_FORMAT_SIT5 : UNC_FORMAT_UNKNOWN;
-}
 
 /* Map from directory entry offset -> its path, for parent lookup.
  * Bounded pool; archives with more directories than fit fail cleanly

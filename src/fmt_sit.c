@@ -40,21 +40,6 @@
 #define SIT_ENDFOLDER   0x21
 #define SIT_METHODMASK  0x7F  /* ~0x80 */
 
-UncFormat unc_sit_probe(const uint8_t *head, int32_t len, UncIO *io)
-{
-    (void)io;
-    /* Source: XADStuffItParser.m recognizeFileWithHandle. */
-    if (len < 14) return UNC_FORMAT_UNKNOWN;
-    if (unc_get_u32be(head + 10) != 0x724c6175u) return UNC_FORMAT_UNKNOWN;   /* 'rLau' */
-    if (unc_get_u32be(head) == 0x53495421u) return UNC_FORMAT_SIT;        /* 'SIT!' */
-    if (head[0] == 'S' && head[1] == 'T') {                  /* installers */
-        if (head[2] == 'i' &&
-            (head[3] == 'n' || (head[3] >= '0' && head[3] <= '9'))) return UNC_FORMAT_SIT;
-        if (head[2] >= '0' && head[2] <= '9' &&
-            head[3] >= '0' && head[3] <= '9') return UNC_FORMAT_SIT;
-    }
-    return UNC_FORMAT_UNKNOWN;
-}
 
 /* ------------------------------------------------------------------ */
 /* Per-method fork decoders. Each writes exactly outlen decoded bytes */

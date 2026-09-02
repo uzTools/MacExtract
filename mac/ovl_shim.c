@@ -218,3 +218,93 @@ int unc_now_extract(UncCtx *c)
     if (!e) return UNC_ERR_MEM;
     return (int)e(&gOvlHost, OVL_NOW_EXTRACT, c, NULL);
 }
+
+/* SuperDisk!. Probe resident (src/fmt_superdisk_probe.c), decoder on demand. */
+int unc_superdisk_extract(UncCtx *c)
+{
+    static Handle h;
+    static int tried;
+    OverlayEntry e = ovl_load(OVL_ID_SUPERDISK, &h, &tried);
+    if (!e) return UNC_ERR_MEM;
+    return (int)e(&gOvlHost, OVL_SUPERDISK_EXTRACT, c, NULL);
+}
+
+/* PackIt. Probe resident (src/fmt_packit_probe.c), decoder on demand. */
+int unc_packit_extract(UncCtx *c)
+{
+    static Handle h;
+    static int tried;
+    OverlayEntry e = ovl_load(OVL_ID_PACKIT, &h, &tried);
+    if (!e) return UNC_ERR_MEM;
+    return (int)e(&gOvlHost, OVL_PACKIT_EXTRACT, c, NULL);
+}
+
+/* MIME. Probe resident (src/fmt_mime_probe.c), decoder on demand. */
+int unc_mime_extract(UncCtx *c)
+{
+    static Handle h;
+    static int tried;
+    OverlayEntry e = ovl_load(OVL_ID_TEXT, &h, &tried);
+    if (!e) return UNC_ERR_MEM;
+    return (int)e(&gOvlHost, OVL_MIME_EXTRACT, c, NULL);
+}
+
+/* uuencode. Probe resident (src/fmt_uu_probe.c), decoder on demand. */
+int unc_uu_extract(UncCtx *c)
+{
+    static Handle h;
+    static int tried;
+    OverlayEntry e = ovl_load(OVL_ID_TEXT, &h, &tried);
+    if (!e) return UNC_ERR_MEM;
+    return (int)e(&gOvlHost, OVL_UU_EXTRACT, c, NULL);
+}
+
+/* btoa. Probe resident (src/fmt_btoa_probe.c), decoder on demand. */
+int unc_btoa_extract(UncCtx *c)
+{
+    static Handle h;
+    static int tried;
+    OverlayEntry e = ovl_load(OVL_ID_TEXT, &h, &tried);
+    if (!e) return UNC_ERR_MEM;
+    return (int)e(&gOvlHost, OVL_BTOA_EXTRACT, c, NULL);
+}
+
+/* base64. Probe resident (src/fmt_b64_probe.c), decoder on demand. */
+int unc_b64_extract(UncCtx *c)
+{
+    static Handle h;
+    static int tried;
+    OverlayEntry e = ovl_load(OVL_ID_TEXT, &h, &tried);
+    if (!e) return UNC_ERR_MEM;
+    return (int)e(&gOvlHost, OVL_B64_EXTRACT, c, NULL);
+}
+
+/* BinHex. Probe resident (src/fmt_binhex_probe.c), decoder on demand. */
+int unc_binhex_extract(UncCtx *c)
+{
+    static Handle h;
+    static int tried;
+    OverlayEntry e = ovl_load(OVL_ID_TEXT, &h, &tried);
+    if (!e) return UNC_ERR_MEM;
+    return (int)e(&gOvlHost, OVL_BINHEX_EXTRACT, c, NULL);
+}
+
+/* StuffIt classic. Probe resident (src/fmt_sit_probe.c), decoder on demand. */
+int unc_sit_extract(UncCtx *c)
+{
+    static Handle h;
+    static int tried;
+    OverlayEntry e = ovl_load(OVL_ID_STUFFIT, &h, &tried);
+    if (!e) return UNC_ERR_MEM;
+    return (int)e(&gOvlHost, OVL_SIT_EXTRACT, c, NULL);
+}
+
+/* StuffIt 5. Probe resident (src/fmt_sit5_probe.c), decoder on demand. */
+int unc_sit5_extract(UncCtx *c)
+{
+    static Handle h;
+    static int tried;
+    OverlayEntry e = ovl_load(OVL_ID_STUFFIT, &h, &tried);
+    if (!e) return UNC_ERR_MEM;
+    return (int)e(&gOvlHost, OVL_SIT5_EXTRACT, c, NULL);
+}

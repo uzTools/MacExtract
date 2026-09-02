@@ -73,6 +73,13 @@ typedef int32_t (*OverlayEntry)(const OverlayHost *host, int32_t which,
 #define OVL_ID_LZH           131
 #define OVL_ID_ARC           132
 #define OVL_ID_NOW           133
+#define OVL_ID_SUPERDISK     134
+#define OVL_ID_PACKIT        135
+#define OVL_ID_TEXT          136   /* MIME and the text envelopes together:
+                                    * a MIME part may be base64 or uuencoded,
+                                    * so the decoder calls into both and an
+                                    * overlay cannot call another overlay */
+#define OVL_ID_STUFFIT       137
 
 #define OVL_SPACESAVER_EXTRACT 30
 #define OVL_CPT_EXTRACT        31
@@ -80,6 +87,15 @@ typedef int32_t (*OverlayEntry)(const OverlayHost *host, int32_t which,
 #define OVL_LZH_EXTRACT        33
 #define OVL_ARC_EXTRACT        34
 #define OVL_NOW_EXTRACT        35
+#define OVL_SUPERDISK_EXTRACT  36
+#define OVL_PACKIT_EXTRACT     37
+#define OVL_MIME_EXTRACT       38
+#define OVL_UU_EXTRACT         39
+#define OVL_BTOA_EXTRACT       40
+#define OVL_B64_EXTRACT        41
+#define OVL_BINHEX_EXTRACT     42
+#define OVL_SIT_EXTRACT        43
+#define OVL_SIT5_EXTRACT       44
 
 /* One struct for every entry, because the entry signature is fixed. Fields
  * are named for their role rather than their type so a reader can follow a

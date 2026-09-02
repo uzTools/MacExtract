@@ -43,7 +43,9 @@ unc_fork_flush unc_fork_out unc_fork_split unc_huff_decode unc_huff_read_tree
 unc_io_size32 unc_lzah_decode unc_lzdyn_decode unc_lzst0_decode unc_lzw_free
 unc_lzw_init unc_lzw_read unc_macbinary_probe unc_password unc_path_init
 unc_path_leaf unc_path_pop unc_path_push unc_progress_add unc_read_at
-unc_read_full
+unc_read_full unc_crc16_arc unc_crc16_xmodem unc_progress_at
+unc_readline unc_crypt_packit_des unc_crypt_packit_xor unc_crypt_rc4
+unc_crypt_sit unc_crypt_sit5_key
 """.split()
 
 HEADERS = ("src/unc_internal.h", "include/macextract.h")
@@ -134,6 +136,15 @@ def declarations(root):
             if fp:
                 params.append((None, fp.group(2),
                                "%s(*%%s)(%s)" % (fp.group(1), fp.group(3))))
+                continue
+            # An ARRAY parameter — const uint8_t hash[UNC_SIT5_KEYLEN] —
+            # keeps its brackets after the name, which the plain pattern below
+            # cannot see. It decays to a pointer either way; what matters is
+            # that the forward's signature matches the engine's exactly.
+            ar = re.match(r"^(.*?[ *])(\w+)\s*(\[[^\]]*\])$", a)
+            if ar:
+                params.append((None, ar.group(2),
+                               "%s%%s%s" % (ar.group(1), ar.group(3))))
                 continue
             pm = re.match(r"^(.*?[ *])(\w+)$", a)
             if not pm:

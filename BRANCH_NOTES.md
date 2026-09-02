@@ -1,7 +1,6 @@
 # Branch `selective-loading` — load only the decoder the archive needs
 
-**Status: six overlays, one per format family, all exercised on an emulated
-Mac Plus.** The decoders for SpaceSaver, Compact Pro, DiskDoubler, LZH, ARC
+**Status: ten overlays — every decoder that can move has moved.** The decoders for SpaceSaver, Compact Pro, DiskDoubler, LZH, ARC
 and Now Compress are loaded only when an archive turns out to be one, and the
 ciphers as before. Resident code 147,772 → 105,640 B, A5 world 44,116 →
 27,128 B, and a StuffIt archive is granted **58,304 B more budget**.
@@ -109,6 +108,57 @@ which only the interactive `main()` calls. `-D UNC_AT_BUDGET` now prepends
 `bg=` and `pk=` to the completion alert, so `interactive.py` can be asked the
 same question the grid answers — which is how the envelope row was measured
 rather than assumed.
+
+## Ten overlays: every decoder that can move has moved
+
+**2026-09-02, second pass.** The first pass moved six because six had clean
+seams; the rest needed their probes split out, which is the work rather than
+the idea. All of them now are, except `fmt_exo`.
+
+| resident, default build | plain | six overlays | **ten overlays** |
+|---|---|---|---|
+| `CODE` | 147,772 B | 105,640 B | **73,052 B** |
+| A5 world | 44,116 B | 27,128 B | **22,036 B** |
+| static total | 191,888 B | 132,768 B | **95,088 B** |
+| largest single `CODE` resource | 142,152 B | 100,188 B | **67,600 B** |
+
+| the images | |
+|---|---|
+| 128 crypt 15,324 · 129 SpaceSaver 17,904 · 130 Compact Pro + DiskDoubler 14,736 | |
+| 131 LZH 6,804 · 132 ARC 9,168 · 133 Now Compress 6,248 | |
+| 134 SuperDisk! 8,592 · 135 PackIt 4,460 · **136 MIME + text envelopes 19,596** · 137 StuffIt 18,668 | |
+
+**MIME travels with uuencode, btoa, base64 and BinHex** because a MIME part
+may be base64 or uuencoded and the decoder calls straight into both — and an
+overlay cannot call another overlay. Grouping is decided by the call graph,
+not by taste.
+
+**On the machine, 6/6 at 1 MB on System 6.0.8**: a `.sit`, a `.hqx`, a `.cpt`,
+a `.lzh`, a SpaceSaver method-4 stream and `derived-Domino_v1.4.sit`, all
+byte-exact. The budget a StuffIt 5 archive is granted is **727,802 B** and an
+LZH **739,386 B**, against 650,548 B with no overlays — and Domino's own peak
+rose to 725,324 B, so the engine spends what it is given.
+
+### What the probe splits cost, and what they taught
+
+Ten formats needed one: `fmt_sit`, `fmt_sit5`, `fmt_packit`, `fmt_btoa`,
+`fmt_binhex`, `fmt_superdisk`, `fmt_uu`, `fmt_b64`, `fmt_mime` and (earlier)
+`fmt_lzh`, `fmt_cpt`, `fmt_arc`, `fmt_spacesaver`. Five needed a private
+header as well, because a probe and its decoder share constants, a struct or
+a helper — and copying those instead would be the duplication rule #1 forbids.
+
+**The instructive one is `fmt_mimeseg`, which STAYS resident and calls four
+MIME helpers.** A `message/partial` set is recognised and joined before
+anything knows there is a message under it, so those four helpers had to move
+to the resident probe file rather than into the overlay with the decoder.
+**What is resident is decided by who calls it, not by what it belongs to.**
+
+### `fmt_exo` is the one that did not move
+
+7,666 B — zip, gzip, Unix compress and tar in one file with four probes and
+its own tar helpers. It is the largest decoder left resident and the reason
+`CODE` 2 is 67,600 B rather than about 60,000. Nothing about it is harder in
+kind; it is four splits instead of one.
 
 ## Six overlays, one per format family — 2026-09-02
 
