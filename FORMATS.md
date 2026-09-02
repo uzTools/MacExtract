@@ -2418,64 +2418,6 @@ drops 17 % of it, and counting every `.text`/`.rodata` input section gives
 179,561 B, because Retro68 places `.rodata` in the A5 world. Only the map's
 `.code*` output sections answer the question the budget asks.
 
-### Segmenting the CODE
-
-**The Segment Loader gives back 78,320 B of budget for a configuration file
-and no source change.** MEASURED 2026-09-01 at 1 MB on System 6.0.8, both
-sides built and run in one session with `-D UNC_AT_BUDGET`, on the branch
-`code-segments` — the map is not in this build (a figure taken
-from two builds that were not the same build cost this project a day once —
-DECISIONS.md 2026-08-31, *the overlay that works and is not worth it*):
-
-| build | budget |
-|---|---|
-| one `CODE` segment, as shipped | 647,802 B |
-| the branch `code-segments`, six segments | **726,122 B** |
-
-`CODE` 2 falls from 142,152 B to 39,432 B, and the rest becomes Archives
-55,104, Text 18,912, Deflate 15,188, Crypt 7,560 and Sets 6,356. The jump
-table grows 688 → 1,192 B, total `CODE` grows 424 B and the download grows
-256 B.
-
-**Some of that memory is spent by the loader, not by the engine, and the
-figure above does not say how much.** The budget is taken before the sniff
-(`macextract_mac.c`, the `FreeMem()` block) and a segment loads when something
-in it is first CALLED, so a `.sit` is granted 726,122 B and then hands 55,104 B
-of it straight back when `Archives` loads during the sniff. Measured:
-`derived-Domino_v1.4.sit` extracts byte-exact holding **677,591 B of peak
-heap**, 29,789 B beyond the whole unsegmented budget, so the gain is real —
-but *derived*, it did so with about 5 KB of heap to spare, where the
-unsegmented build refuses the entry cleanly instead. **Segmentation as
-configured here trades a clean refusal for a near miss**, and that is the
-first thing a tier run would have to look at.
-
-`derived-Library_ISBN_Barcoder.sit`, `adobenumbers.sit`, `4acalc.zip` and
-`3d-terrain-modeling-017.hqx` pass unchanged, five fixtures across three
-segments.
-
-**The sustained gain is smaller than the granted one, because the probes
-travel with the decoders.** `unc_sniff` walks its order calling each probe,
-and the first five it calls live in `Archives` — so that segment loads for
-almost every file, whatever the file turns out to be. What is reliably NOT
-resident during a `.sit` run is `Text` + `Deflate` + `Crypt` + `Sets` =
-48,016 B, and during a `.hqx` run, `Deflate` + `Crypt` + `Sets` = 29,104 B
-(*derived*, from the segment sizes above). **Splitting the probes from the
-extractors is what would make the granted figure the real one**: a probe is
-tens of bytes and an extractor is thousands.
-
-**What this has NOT established**, and none of it is cheap to assume: no tier
-has been re-run at 4 MB, 1 MB, 512 KB or on System 3.0; nothing calls
-`UnloadSeg`, so a session that opens several formats accumulates resident
-segments; and the budget is taken before the sniff, so segments loaded later
-compete with a budget already granted — the failure that would show is
-`gRefusedWhy` = 2, `NewPtr` returning NULL where the budget allowed it
-(*Budget*).
-
-**It does not reach a Macintosh 128K**, which is the question that prompted
-it: segment 2 plus the runtime is 44,892 B and the A5 world is another
-44,096 B, against ~88 KB of partition (*A Macintosh 128K*). Segmentation moves
-code out of the heap; it does nothing about the A5 world.
-
 ### Budget
 
 **What a 1 MB Mac Plus actually leaves the engine is 648,100 B** — measured
