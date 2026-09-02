@@ -22,6 +22,10 @@ def main():
     ap.add_argument("-v", "--verbose", action="store_true")
     args = ap.parse_args()
 
+    if not os.path.exists(args.macextract):
+        print("budget: no CLI at %s" % args.macextract)
+        return 1
+
     mandir = os.path.join(FIXDIR, "manifests")
     stats = defaultdict(lambda: [0, 0, 0])   # fmt -> [ok, partial, hw-max]
     failures = []

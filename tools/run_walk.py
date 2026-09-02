@@ -98,6 +98,10 @@ def main():
                     help="stop after N fixtures (0 = all of them)")
     args = ap.parse_args()
 
+    if not os.path.exists(args.macextract):
+        print("walk: no CLI at %s" % args.macextract)
+        return 1
+
     if not os.path.isfile(args.probe):
         print("run_walk: no %s — skipping" % args.probe)
         return 0

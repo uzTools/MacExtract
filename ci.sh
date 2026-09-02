@@ -76,6 +76,15 @@ python3 tools/run_sizelimits.py --macextract build/san/macextract \
 # bytes.
 python3 tools/run_names.py --macextract build/san/macextract \
     || fail "over-long name tests"
+# What a small Macintosh refuses, decided on Linux. The Mac shell's
+# allocator is a running total against a cap, and `--budget` is the same
+# rule, so a tier's memory result can be swept here in five seconds
+# instead of one emulator boot per fixture. Only the two tiers Mini vMac
+# has independently agreed with are asserted; a tally that moves is a
+# memory regression or a memory win, and either should be deliberate
+# (TESTING.md, *The tiers a budget predicts*).
+python3 tools/run_tiers.py --check --macextract build/san/macextract \
+    || fail "memory-budget tier check"
 # --only: acting on the entries the user named. `unar` has no per-file
 # selection, so the reference side is this engine's own FULL extraction
 # — which the diff suite above grades against `unar`. The assertion that

@@ -1263,7 +1263,12 @@ def namevol(keep=False):
 # / - / Restart / Shut Down, the same eight rows `arcmac.py` picks 123
 # out of on System 6.
 SPECIAL_X = 225
-SHUT_DOWN_Y = 123
+# Shut Down is at 139. 123 is RESTART, one item above it, which is what
+# every mode here picked until 2026-09-01 — measured off the twenty-five
+# `*-special-menu.png` this file had taken, all of them highlighting the
+# band y=116..131 (BLOCKERS.md, withdrawn claims; the same trap is
+# `rescomp.py`'s, in tools/vmac/README.md).
+SHUT_DOWN_Y = 139
 
 
 def init0_gate(fork):
@@ -3954,6 +3959,504 @@ def pkg(keep=False):
     return 1 if bad else 0
 
 
+# ---------------------------------------------------------------------------
+# Running that recogniser, with a package this machine wrote.
+#
+# `--pkg` reads the grammar out of `PKG Expand Translator`; `--pkgexpand`
+# feeds it back. Nothing here invents a byte of the format: the line is
+# `Decode <item> to|into <destination>`, exactly the three tokens @0x2952
+# tests, and `STR# 129` supplies both words. What is being asked is not
+# "is our decoder right" — there is no decoder — but whether a package
+# HAS a payload at all, which is the open item (OPEN_ITEMS.md).
+
+# StuffIt Deluxe 3.5.1's Translate menu, measured off `--deluxe`'s
+# `12-menu-x300.png`: the menu box is x=262..429, its items are 16 px
+# apart from y=76, and "PKG Expand..." is the seventh below the
+# separator. Not a submenu, so Mini vMac can select it.
+TRANSLATE_X = 300
+PKG_EXPAND_Y = 171
+CPT_EXPAND_Y = 123                      # "CPT Expand...", four items above
+CONVERT_BUTTON = (452, 289)             # DropConvert's Convert button
+
+# A real Compact Pro archive, as the calibration for an empty file list.
+CPT_FIXTURE = "derived-keyAhead.cpt"
+
+# The folder the application lives in, as the raw Mac Roman bytes `hls`
+# prints: everything the run touches goes in there, so a package, its
+# item and its destination are all in one directory and no path syntax
+# is being tested by accident.
+SIT_FOLDER = b"StuffIt Deluxe\xaa Folder"
+
+PKG_INNER = "Widget"
+PKG_PAYLOAD = (b"AppleLink package probe. " * 40 +
+               bytes(bytearray(range(256))))
+PKG_FORK = b"\x1cAppleLink package probe fork"
+
+# What a package IS, to Aladdin: @0x37f0 of the translator reads the
+# candidate's Finder info and accepts it when its TYPE is 'PACT' or its
+# CREATOR is 'EXTR' — a type test, not the token test @0x2952 does. The
+# first run of this mode wrote its packages as TEXT/ttxt and PKG
+# Expand's Standard File dialog listed no files at all, only folders
+# (`01-...` through `44-...`, 2026-09-01). So the type is the gate and
+# the text is what is read after it, and both are measured.
+PKG_TYPES = {
+    "Both": ("PACT", "EXTR"),
+    "Type": ("PACT", "ttxt"),
+    "Maker": ("TEXT", "EXTR"),
+    "Plain": ("TEXT", "ttxt"),
+    "Gone": ("PACT", "EXTR"),
+}
+
+# One package per question. `Plain` is the control that must NOT appear
+# in the dialog, and `Gone` names an item that does not exist: between
+# them a run where nothing happens is told from a run where the menu was
+# never clicked, which is the whole difficulty with a null result here.
+PACKAGES = [
+    ("Both.pkg", "Bo", 'Decode "Payload.hqx" to "OutA"',
+     "type and creator both Aladdin's — the question"),
+    ("Type.pkg", "Ty", 'Decode Payload.hqx into OutB',
+     "type only, and the other two vocabulary words"),
+    ("Maker.pkg", "Ma", 'Decode "Payload.hqx" to "OutC"',
+     "creator only — @0x37f0 accepts either"),
+    ("Gone.pkg", "Go", 'Decode "Nowhere.hqx" to "OutD"',
+     "no such item — expect STR# 129 item 13"),
+    ("Plain.pkg", None, 'Decode "Payload.hqx" to "OutD"',
+     "TEXT/ttxt: must not be listed at all"),
+]
+
+
+def pkgexpand(keep=False):
+    """Hand Aladdin's own PKG Expand a package written here.
+
+    OPEN_ITEMS.md files AppleLink `.pkg` as waiting on a specimen. That
+    is an assumption, not a property: the format is TEXT whose whole
+    grammar `--pkg` transcribed, so this machine can write one, and the
+    second reader — the translator that grammar came out of — is on this
+    image. The measured hypothesis is that a package is a transfer
+    MANIFEST naming files that sit beside it (DECISIONS.md 2026-08-23),
+    and a manifest is settled by putting the named file there and
+    watching what the expander does with it.
+
+    Five packages, one boot, four of them opened: the fifth is TEXT/ttxt
+    and its result is that PKG Expand's Standard File dialog does not
+    list it (PKG_TYPES). Ends with Special > Shut Down, because Mini
+    vMac flushes a volume on eject and the read-back is half the run.
+    """
+    import glob
+    from synth_wrapped import binhex                   # noqa: E402
+    if not os.path.exists(INSTALLED):
+        raise SystemExit("spacesaver: no installed image — --keep-installed")
+    boot = os.path.join(WORK, "sspkgexpand.hfv")
+    shutil.copyfile(INSTALLED, boot)
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+    tmp = tempfile.mkdtemp(prefix="sspkg-")
+    dest = b":" + SIT_FOLDER + b":"
+    try:
+        subprocess.run(["hmount", boot], check=True, capture_output=True,
+                       env=env)
+        for d in (b"OutA", b"OutB", b"OutC", b"OutD"):
+            subprocess.run([b"hmkdir", dest + d], check=True,
+                           capture_output=True, env=env)
+        hqx = binhex(PKG_INNER, PKG_PAYLOAD, make_rsrc(PKG_FORK),
+                     ftype=b"TEXT", creator=b"ttxt")
+        q = os.path.join(tmp, "payload.bin")
+        open(q, "wb").write(macbinary("Payload.hqx", "TEXT", "ttxt", hqx))
+        subprocess.run([b"hcopy", b"-m", q.encode(), dest], check=True,
+                       capture_output=True, env=env)
+        for name, _prefix, line, _why in PACKAGES:
+            ftype, creator = PKG_TYPES[name.split(".")[0]]
+            q = os.path.join(tmp, name + ".bin")
+            open(q, "wb").write(macbinary(name, ftype, creator,
+                                          line.encode("mac-roman") + b"\r"))
+            subprocess.run([b"hcopy", b"-m", q.encode(), dest], check=True,
+                           capture_output=True, env=env)
+        cpt = os.path.join(REPO, "fixtures", CPT_FIXTURE)
+        q = os.path.join(tmp, "cpt.bin")
+        open(q, "wb").write(macbinary("Test.cpt", "PACT", "CPCT",
+                                      open(cpt, "rb").read()))
+        subprocess.run([b"hcopy", b"-m", q.encode(), dest], check=True,
+                       capture_output=True, env=env)
+        subprocess.run(["humount"], check=True, capture_output=True, env=env)
+    finally:
+        shutil.rmtree(env["HOME"], ignore_errors=True)
+        shutil.rmtree(tmp, ignore_errors=True)
+    for name, _prefix, line, why in PACKAGES:
+        ftype, creator = PKG_TYPES[name.split(".")[0]]
+        print("spacesaver: %-12s %s/%s  %-46s %s"
+              % (name, ftype, creator, line, why))
+
+    before = set(glob.glob("/tmp/dd-*/boot.hfv"))
+    s = Session(boot, [], os.path.join(SPECIMENS, "pkgexpand"))
+    try:
+        s.boot()
+        s.shot("desktop", wait=14.0)
+        # Launching the application: `--deluxe`'s sequence, which is the
+        # one that has been photographed working.
+        s.mac.click(250, 38)
+        time.sleep(2.5)
+        for _ in range(6):
+            s.mac.command_key("w")
+            time.sleep(2.0)
+        s.mac.click(470, 55, double=True)
+        s.shot("bootvol", wait=14.0)
+        s.mac.key("Escape")
+        time.sleep(0.6)
+        s.mac._xdo("type", "--delay", "120", "StuffIt D")
+        time.sleep(1.5)
+        s.mac.command_key("o")
+        s.shot("opened-folder", wait=14.0)
+        s.mac.key("Escape")
+        time.sleep(0.6)
+        s.mac._xdo("type", "--delay", "120", "StuffIt D")
+        time.sleep(1.5)
+        s.mac.command_key("o")
+        s.shot("launched", wait=40.0)
+        # Photograph the menu before picking from it: the item's y is a
+        # measurement off a screenshot and this is the control for it.
+        s.peek(TRANSLATE_X, "translate-menu")
+
+        # The calibration, and the reason it is here: PKG Expand's
+        # Standard File dialog listed NO files in two earlier runs, and
+        # an empty list is only evidence about packages if the same
+        # dialog lists something for a translator whose file is there.
+        # CPT Expand's filter is type 'PACT' (@0x2e1c of `CompactPro
+        # Translator`), and `Test.cpt` is one.
+        s.mac.key("Escape")
+        time.sleep(0.6)
+        s.mac._xdo("type", "--delay", "120", "Te")
+        time.sleep(1.5)
+        s.shot("cpt-selected", wait=0.5)
+        s.menu(TRANSLATE_X, CPT_EXPAND_Y, "cpt-pick")
+        s.shot("cpt-dialog", wait=6.0)
+        s.mac.key("Escape")
+        s.shot("cpt-cancelled", wait=4.0)
+
+        # And the question: the same command with the package SELECTED
+        # in the application's own window, which is what neither earlier
+        # run did — PKG Expand's dialog offers only FOLDERS (its filter
+        # tests ioFlAttrib bit 4, @0x215e), and `DITL 2051` carries a
+        # button reading "Expand into selected folder", so the file it
+        # works on cannot be the one that dialog asks for.
+        s.mac.key("Escape")
+        time.sleep(0.6)
+        s.mac._xdo("type", "--delay", "120", "Bo")
+        time.sleep(1.5)
+        s.shot("pkg-selected", wait=0.5)
+        s.menu(TRANSLATE_X, PKG_EXPAND_Y, "pkg-pick")
+        s.shot("pkg-dialog", wait=6.0)
+        s.mac._xdo("type", "--delay", "120", "OutA")
+        time.sleep(1.5)
+        s.shot("pkg-dest-typed", wait=0.5)
+        s.mac.key("Return")
+        s.shot("pkg-opened", wait=8.0)
+        s.shot("pkg-settled", wait=20.0)
+        s.mac.key("Return")
+        s.shot("pkg-after", wait=6.0)
+        s.mac.key("Escape")
+        s.shot("pkg-escaped", wait=4.0)
+        s.mac.command_key("q")
+        s.shot("quit", wait=20.0)
+        s.menu(SPECIAL_X, SHUT_DOWN_Y, "special-menu")
+        s.shot("shutting-down", wait=30.0)
+    finally:
+        time.sleep(8)
+        s.close()
+
+    cands = [p for p in glob.glob("/tmp/dd-*/boot.hfv") if p not in before]
+    if not cands:
+        cands = sorted(glob.glob("/tmp/dd-*/boot.hfv"),
+                       key=os.path.getmtime)[-1:]
+    out = sorted(cands, key=os.path.getmtime)[-1]
+    print("spacesaver: reading back %s" % out)
+    if keep:
+        shutil.copyfile(out, os.path.join(WORK, "sspkgexpand-run.hfv"))
+    return report_pkgexpand(out, s.shots)
+
+
+def pkgexpander(keep=False):
+    """The same packages, handed to StuffIt Expander instead.
+
+    `--pkgexpand` established what PKG Expand's own dialog will take: a
+    FOLDER and nothing else, while CPT Expand in the same application
+    and the same boot lists files. So the command that names a package
+    is not that one. StuffIt Expander 4.0.2 is on this image too, in
+    `Drag & Drop Applications`, and it shares the engine and therefore
+    the translators — its Expand dialog lists everything the engine
+    claims it can open, which is the question stated as a listing.
+
+    `Payload.hqx` goes in beside the packages as the control that must
+    SUCCEED: if BinHex does not expand, the run says nothing about the
+    packages.
+    """
+    import glob
+    from synth_wrapped import binhex                   # noqa: E402
+    if not os.path.exists(INSTALLED):
+        raise SystemExit("spacesaver: no installed image — --keep-installed")
+    boot = os.path.join(WORK, "sspkgexpander.hfv")
+    shutil.copyfile(INSTALLED, boot)
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+    tmp = tempfile.mkdtemp(prefix="sspkgx-")
+    dest = b":" + SIT_FOLDER + b":Drag & Drop Applications:"
+    try:
+        subprocess.run(["hmount", boot], check=True, capture_output=True,
+                       env=env)
+        hqx = binhex(PKG_INNER, PKG_PAYLOAD, make_rsrc(PKG_FORK),
+                     ftype=b"TEXT", creator=b"ttxt")
+        q = os.path.join(tmp, "payload.bin")
+        open(q, "wb").write(macbinary("Payload.hqx", "TEXT", "ttxt", hqx))
+        subprocess.run([b"hcopy", b"-m", q.encode(), dest], check=True,
+                       capture_output=True, env=env)
+        for name, _prefix, line, _why in PACKAGES:
+            ftype, creator = PKG_TYPES[name.split(".")[0]]
+            q = os.path.join(tmp, name + ".bin")
+            open(q, "wb").write(macbinary(name, ftype, creator,
+                                          line.encode("mac-roman") + b"\r"))
+            subprocess.run([b"hcopy", b"-m", q.encode(), dest], check=True,
+                           capture_output=True, env=env)
+        subprocess.run(["humount"], check=True, capture_output=True, env=env)
+    finally:
+        shutil.rmtree(env["HOME"], ignore_errors=True)
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    before = set(glob.glob("/tmp/dd-*/boot.hfv"))
+    s = Session(boot, [], os.path.join(SPECIMENS, "pkgexpander"))
+    try:
+        s.boot()
+        s.shot("desktop", wait=14.0)
+        s.mac.click(250, 38)
+        time.sleep(2.5)
+        for _ in range(6):
+            s.mac.command_key("w")
+            time.sleep(2.0)
+        s.mac.click(470, 55, double=True)
+        s.shot("bootvol", wait=14.0)
+        for pick in ("StuffIt D", "Drag"):
+            s.mac.key("Escape")
+            time.sleep(0.6)
+            s.mac._xdo("type", "--delay", "120", pick)
+            time.sleep(1.5)
+            s.mac.command_key("o")
+            s.shot("opened-" + pick.split()[0].lower(), wait=14.0)
+        s.mac.key("Escape")
+        time.sleep(0.6)
+        s.mac._xdo("type", "--delay", "120", "StuffIt E")
+        time.sleep(1.5)
+        s.mac.command_key("o")
+        s.shot("launched", wait=45.0)
+        # Command-E is Expand..., read out of the application's MENU 129
+        # (tools/vmac/expander.py). The DIALOG is the measurement: it
+        # lists what the engine says it can open.
+        for pick, tag in (("Payload", "control"), ("Plain", "package"),
+                          ("Both", "typed")):
+            s.mac.command_key("e")
+            s.shot(tag + "-dialog", wait=8.0)
+            s.mac._xdo("type", "--delay", "120", pick)
+            time.sleep(1.5)
+            s.shot(tag + "-typed", wait=0.5)
+            s.mac.key("Return")
+            s.shot(tag + "-started", wait=8.0)
+            s.shot(tag + "-settled", wait=20.0)
+            s.mac.key("Return")
+            s.shot(tag + "-after", wait=6.0)
+        s.mac.command_key("q")
+        s.shot("quit", wait=25.0)
+        s.menu(SPECIAL_X, SHUT_DOWN_Y, "special-menu")
+        s.shot("shutting-down", wait=30.0)
+    finally:
+        time.sleep(8)
+        s.close()
+
+    cands = [p for p in glob.glob("/tmp/dd-*/boot.hfv") if p not in before]
+    if not cands:
+        cands = sorted(glob.glob("/tmp/dd-*/boot.hfv"),
+                       key=os.path.getmtime)[-1:]
+    out = sorted(cands, key=os.path.getmtime)[-1]
+    print("spacesaver: reading back %s" % out)
+    if keep:
+        shutil.copyfile(out, os.path.join(WORK, "sspkgexpander-run.hfv"))
+    return report_pkgexpander(out, s.shots)
+
+
+def pkgconvert(keep=False):
+    """The third route: `DropConvert™`, whose whole job is translators.
+
+    PKG Expand asks for a folder and offers no way to name one
+    (`--pkgexpand`); StuffIt Expander lists a package and silently does
+    nothing with it (`--pkgexpander`). `DropConvert™` (APPL/SITC) sits
+    in the same folder and exists to run a chosen translator over a
+    file, so it is the one place left where the AppleLink module can be
+    pointed at a package this machine wrote.
+
+    A probe as much as an attempt: it photographs every menu the
+    application has before touching anything, because nothing here knows
+    its interface.
+    """
+    import glob
+    from synth_wrapped import binhex                   # noqa: E402
+    if not os.path.exists(INSTALLED):
+        raise SystemExit("spacesaver: no installed image — --keep-installed")
+    boot = os.path.join(WORK, "sspkgconvert.hfv")
+    shutil.copyfile(INSTALLED, boot)
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+    tmp = tempfile.mkdtemp(prefix="sspkgc-")
+    dest = b":" + SIT_FOLDER + b":Drag & Drop Applications:"
+    try:
+        subprocess.run(["hmount", boot], check=True, capture_output=True,
+                       env=env)
+        hqx = binhex(PKG_INNER, PKG_PAYLOAD, make_rsrc(PKG_FORK),
+                     ftype=b"TEXT", creator=b"ttxt")
+        q = os.path.join(tmp, "payload.bin")
+        open(q, "wb").write(macbinary("Payload.hqx", "TEXT", "ttxt", hqx))
+        subprocess.run([b"hcopy", b"-m", q.encode(), dest], check=True,
+                       capture_output=True, env=env)
+        for name, _prefix, line, _why in PACKAGES:
+            ftype, creator = PKG_TYPES[name.split(".")[0]]
+            q = os.path.join(tmp, name + ".bin")
+            open(q, "wb").write(macbinary(name, ftype, creator,
+                                          line.encode("mac-roman") + b"\r"))
+            subprocess.run([b"hcopy", b"-m", q.encode(), dest], check=True,
+                           capture_output=True, env=env)
+        subprocess.run(["humount"], check=True, capture_output=True, env=env)
+    finally:
+        shutil.rmtree(env["HOME"], ignore_errors=True)
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    before = set(glob.glob("/tmp/dd-*/boot.hfv"))
+    s = Session(boot, [], os.path.join(SPECIMENS, "pkgconvert"))
+    try:
+        s.boot()
+        s.shot("desktop", wait=14.0)
+        s.mac.click(250, 38)
+        time.sleep(2.5)
+        for _ in range(6):
+            s.mac.command_key("w")
+            time.sleep(2.0)
+        s.mac.click(470, 55, double=True)
+        s.shot("bootvol", wait=14.0)
+        for pick in ("StuffIt D", "Drag"):
+            s.mac.key("Escape")
+            time.sleep(0.6)
+            s.mac._xdo("type", "--delay", "120", pick)
+            time.sleep(1.5)
+            s.mac.command_key("o")
+            s.shot("opened-" + pick.split()[0].lower(), wait=14.0)
+        s.mac.key("Escape")
+        time.sleep(0.6)
+        s.mac._xdo("type", "--delay", "120", "DropCon")
+        time.sleep(1.5)
+        s.mac.command_key("o")
+        s.shot("launched", wait=45.0)
+        # Its whole menu bar is File, and File is `Convert... Cmd-C` and
+        # `Quit` — photographed 2026-09-01, which is the only reason this
+        # run presses C. `Payload.hqx` goes first as the control that
+        # must succeed.
+        s.peek(40, "file-menu")
+        # Convert... is a two-pane chooser: a file list on the left, an
+        # "Items to Convert:" list on the right, `Add >>` as the default
+        # button and `Convert` at (452, 289) — measured off
+        # `07-control-dialog.png`. So the gesture is type, Return, click.
+        for pick, tag in (("Payload", "control"), ("Plain", "package")):
+            s.mac.command_key("c")
+            s.shot(tag + "-dialog", wait=8.0)
+            s.mac._xdo("type", "--delay", "120", pick)
+            time.sleep(1.5)
+            s.shot(tag + "-typed", wait=0.5)
+            s.mac.key("Return")                  # Add >>
+            s.shot(tag + "-added", wait=4.0)
+            s.mac.click(*CONVERT_BUTTON)
+            s.shot(tag + "-converting", wait=8.0)
+            s.mac.key("Return")                  # whatever it asks next
+            s.shot(tag + "-started", wait=8.0)
+            s.shot(tag + "-settled", wait=20.0)
+            s.mac.key("Return")
+            s.shot(tag + "-after", wait=8.0)
+            s.mac.key("Escape")
+            time.sleep(1.5)
+        s.mac.command_key("q")
+        s.shot("quit", wait=25.0)
+        s.menu(SPECIAL_X, SHUT_DOWN_Y, "special-menu")
+        s.shot("shutting-down", wait=30.0)
+    finally:
+        time.sleep(8)
+        s.close()
+
+    cands = [p for p in glob.glob("/tmp/dd-*/boot.hfv") if p not in before]
+    if not cands:
+        cands = sorted(glob.glob("/tmp/dd-*/boot.hfv"),
+                       key=os.path.getmtime)[-1:]
+    out = sorted(cands, key=os.path.getmtime)[-1]
+    print("spacesaver: reading back %s" % out)
+    if keep:
+        shutil.copyfile(out, os.path.join(WORK, "sspkgconvert-run.hfv"))
+    return report_pkgexpander(out, s.shots)
+
+
+def report_pkgexpander(img, shots):
+    """Everything new in the folder the packages were put in.
+
+    The control decides whether the run means anything: `Widget` is
+    inside `Payload.hqx` and exists nowhere else, so it appears if and
+    only if the engine expanded something.
+    """
+    from superdisk import read_forks                   # noqa: E402
+    want_rsrc = make_rsrc(PKG_FORK)
+    known = {"Payload.hqx", "StuffIt Expander\u2122", "DropStuff\u2122",
+             "DropConvert\u2122", "DropCompress\u2122"}
+    known |= set(n for n, _p, _l, _w in PACKAGES)
+    control = 0
+    for path, (ftype, creator, data, rsrc) in sorted(read_forks(img).items()):
+        if "Drag & Drop Applications" not in path:
+            continue
+        if path[-1] in known:
+            continue
+        note = ""
+        if path[-1] == PKG_INNER:
+            # The DATA fork is the comparison. A resource fork read back
+            # off a Mac is never byte-identical — the Resource Manager
+            # rewrites the map's live fields when the Finder opens the
+            # file to draw its icon (BLOCKERS.md 2026-08-23) — so its
+            # LENGTH is what is checked.
+            same = data == PKG_PAYLOAD and len(rsrc) == len(want_rsrc)
+            note = ("the payload, data byte-exact, fork %d B"
+                    % len(rsrc)) if same else "the payload, DIFFERS"
+            control += same
+        print("spacesaver: %-46s %s/%s data %d rsrc %d  %s"
+              % ("/".join(path[-3:]), ftype, creator, len(data), len(rsrc),
+                 note))
+    print("spacesaver: control (BinHex) %s; screenshots in %s"
+          % ("expanded" if control else "DID NOT EXPAND — the run says "
+             "nothing about packages", shots))
+    return 0 if control else 1
+
+
+def report_pkgexpand(img, shots):
+    """Say what is in the four destination folders, and what it is.
+
+    The verdict is one thing: did `Widget` — the file inside
+    `Payload.hqx`, which exists nowhere on the volume until something
+    decodes it — appear, and does it match byte for byte. Anything else
+    is reported and decides nothing.
+    """
+    from superdisk import read_forks                   # noqa: E402
+    from synth_wrapped import binhex                   # noqa: E402
+    want_rsrc = make_rsrc(PKG_FORK)
+    hits = 0
+    for path, (ftype, creator, data, rsrc) in sorted(read_forks(img).items()):
+        if not any(c in ("OutA", "OutB", "OutC", "OutD") for c in path):
+            continue
+        verdict = "unexpected"
+        if path[-1] == PKG_INNER:
+            same = data == PKG_PAYLOAD and rsrc == want_rsrc
+            verdict = "DECODED, byte-exact" if same else "decoded, DIFFERS"
+            hits += same
+        print("spacesaver: %-40s %s/%s data %d rsrc %d  %s"
+              % ("/".join(path), ftype, creator, len(data), len(rsrc),
+                 verdict))
+    print("spacesaver: %d byte-exact payload(s) in the destinations; "
+          "screenshots in %s" % (hits, shots))
+    return 0 if hits else 1
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -4050,6 +4553,15 @@ def main():
     ap.add_argument("--pkg", action="store_true",
                     help="read AppleLink .pkg's recogniser out of the "
                          "translator beside SpaceSaver")
+    ap.add_argument("--pkgexpand", action="store_true",
+                    help="write a package here and hand it to Aladdin's own "
+                         "PKG Expand, then read the volume back")
+    ap.add_argument("--pkgexpander", action="store_true",
+                    help="hand the same packages to StuffIt Expander, whose "
+                         "Expand dialog lists what the engine can open")
+    ap.add_argument("--pkgconvert", action="store_true",
+                    help="the same packages through DropConvert, the droplet "
+                         "that exists to run a translator")
     ap.add_argument("--layout", action="store_true",
                     help="read the container layout out of the installed "
                          "control panel and engine")
@@ -4147,6 +4659,12 @@ def main():
         return patch_init(a.keep)
     elif a.pkg:
         return pkg(a.keep)
+    elif a.pkgexpand:
+        return pkgexpand(a.keep)
+    elif a.pkgexpander:
+        return pkgexpander(a.keep)
+    elif a.pkgconvert:
+        return pkgconvert(a.keep)
     elif a.layout:
         return layout()
     else:

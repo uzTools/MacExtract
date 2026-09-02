@@ -378,6 +378,10 @@ def main():
                          "SOURCES.md row and a manifest for each file")
     args = ap.parse_args()
 
+    if not os.path.exists(args.macextract):
+        print("ddtf: no CLI at %s" % args.macextract)
+        return 1
+
     if args.fetch:
         if os.path.exists(args.corpus):
             shutil.rmtree(args.corpus)

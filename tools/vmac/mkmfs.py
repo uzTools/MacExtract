@@ -5,7 +5,7 @@ MFS is the file system a 64K-ROM Macintosh has: a true Macintosh 512K reads
 nothing else, so the only way to put this application in front of one is to
 write the volume here. Retro68 cannot: `--cc name.dsk` calls libhfs and always
 produces an 800K HFS volume, which that ROM Sad Macs on
-(FORMATS.md, *512 KB machines*).
+(FORMATS.md, *A true Macintosh 512K*).
 
 Structure — Source: Inside Macintosh, Volume II (1985), "Data Organization on
 Volumes", pp. II-119..II-123, Figures 6, 7 and 8:
@@ -30,6 +30,7 @@ from reference/XADMaster/XADMacArchiveParser.m.
     mkmfs.py --list out.img
     mkmfs.py --extract System Sys11.img System.bin       # lift a file out
     mkmfs.py out.img --boot Sys11.img --shell TrapTest System.bin app.bin
+    mkmfs.py out.img --boot Sys30.img System.bin probe.bin:Finder
 """
 
 import argparse
@@ -200,7 +201,7 @@ def build(files, volname, bootblocks=None, geom=G400):
 # ---------------------------------------------------------------------- read
 
 def entries_of(img):
-    """Yield (name, type, creator, flags, dates, forks) for each file."""
+    """Yield one dict per file in the file directory."""
     dirst, bllen = struct.unpack(">HH", img[2 * BLOCK + 14:2 * BLOCK + 18])
     for i in range(bllen):
         blk = img[(dirst + i) * BLOCK:(dirst + i + 1) * BLOCK]
@@ -217,9 +218,10 @@ def entries_of(img):
 
 
 def read_fork(img, first, length):
-    (alblksiz,) = struct.unpack(">I", img[2 * BLOCK + 20:2 * BLOCK + 24])
-    alblst, = struct.unpack(">H", img[2 * BLOCK + 28:2 * BLOCK + 30])
+    """Follow one fork's chain through the block map."""
+    alblksiz, = struct.unpack(">I", img[2 * BLOCK + 20:2 * BLOCK + 24])
     nmalblks, = struct.unpack(">H", img[2 * BLOCK + 18:2 * BLOCK + 20])
+    alblst, = struct.unpack(">H", img[2 * BLOCK + 28:2 * BLOCK + 30])
     amap = map_unpack(img[2 * BLOCK + 64:4 * BLOCK], nmalblks)
     per = alblksiz // BLOCK
     out, blk = bytearray(), first
@@ -276,7 +278,6 @@ def dump(path):
     print(f"  drClpSiz {clpsiz}  drAlBlSt {alblst}  drNxtFNum {nxtfnum}  "
           f"drFreeBks {freebks}  drAtrb {atrb:#06x}")
     amap = map_unpack(img[2 * BLOCK + 64:4 * BLOCK], nmalblks)
-    per_alloc = alblksiz // BLOCK
 
     def chain(first):
         out, b = [], first
@@ -287,29 +288,22 @@ def dump(path):
                 break
         return out
 
-    for i in range(bllen):
-        blk = img[(dirst + i) * BLOCK:(dirst + i + 1) * BLOCK]
-        at = 0
-        while at + 51 <= BLOCK:
-            if not blk[at] & 0x80:
-                break
-            nlen = blk[at + 50]
-            name = blk[at + 51:at + 51 + nlen].decode("mac_roman", "replace")
-            typ, crea = blk[at + 2:at + 6], blk[at + 6:at + 10]
-            (fnum, dstart, dlen, dphys, rstart, rlen,
-             rphys) = struct.unpack(">IHIIHII", blk[at + 18:at + 42])
-            print(f"  {name:<32} {typ.decode('mac_roman')}/"
-                  f"{crea.decode('mac_roman')} #{fnum} "
-                  f"data {dlen}@{dstart}{chain(dstart) if dstart else []} "
-                  f"rsrc {rlen}@{rstart}{chain(rstart) if rstart else []}")
-            at += (51 + nlen + 1) & ~1
+    for e in entries_of(img):
+        fnum, dstart, dlen, dphys, rstart, rlen, rphys = e["nums"]
+        print(f"  {e['name']:<32} {e['type'].decode('mac_roman')}/"
+              f"{e['creator'].decode('mac_roman')} #{fnum} "
+              f"data {dlen}@{dstart}{chain(dstart) if dstart else []} "
+              f"rsrc {rlen}@{rstart}{chain(rstart) if rstart else []}")
     return 0
 
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("image")
-    ap.add_argument("files", nargs="*", help="MacBinary files to put on it")
+    ap.add_argument("files", nargs="*",
+                    help="MacBinary files to put on it, each optionally "
+                         "PATH:MACNAME to land under a different name — the "
+                         "same spelling mkboot.py uses")
     ap.add_argument("--name", default="Untitled", help="volume name")
     ap.add_argument("--boot", help="image to copy logical blocks 0-1 from, "
                                    "which is what makes the volume bootable")
@@ -343,7 +337,10 @@ def main():
         boot = bytes(boot)
     elif a.shell:
         raise SystemExit("mkmfs: --shell needs --boot")
-    files = [MacFile.from_macbinary(p) for p in a.files]
+    files = []
+    for spec in a.files:
+        path, _, macname = spec.partition(":")
+        files.append(MacFile.from_macbinary(path, macname or None))
     open(a.image, "wb").write(build(files, a.name, boot))
     print(f"mkmfs: wrote {a.image} — {len(files)} file(s), volume {a.name!r}")
     return 0

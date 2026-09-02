@@ -530,6 +530,10 @@ def main():
     ap.add_argument("-v", "--verbose", action="store_true")
     args = ap.parse_args()
 
+    if not os.path.exists(args.macextract):
+        print("ssmodule: no CLI at %s" % args.macextract)
+        return 1
+
     if not shutil.which("qemu-m68k") or not shutil.which("m68k-linux-gnu-gcc"):
         print("ssmodule: needs qemu-m68k and the m68k cross-compiler — "
               "skipping")

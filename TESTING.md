@@ -329,6 +329,21 @@ only part of the restore path that can be checked offline.
 ./ci.sh          # full matrix; must be green before every commit
 ```
 
+**A suite run by hand needs a `make` first, and `ci.sh` is why.** Its second
+step is `make clean`, which is `rm -rf $(BUILD)` with `BUILD ?= build`; every
+build after it is redirected to `build/san`, `build/ars`, `build/rel`,
+`build/m32`, `build/off32` or cmake's `build/mac`, and **nothing ever rebuilds
+the default target**. So a green `ci.sh` leaves no `build/macextract`, and the
+next `tools/run_*.py --macextract build/macextract` has nothing to run.
+
+Most suites say so — `no CLI at <path>`, exit 1 — and the ones that do not
+raise `FileNotFoundError` before a single check, which looks nothing like a
+suite that failed. That is what happened on 2026-09-01, in the two suites that
+lacked the guard; both have it now, and it was briefly blamed on
+`make_dist.sh` before either half was measured. **If a suite dies with a
+traceback rather than a message, check for the binary before believing
+anything about the suite.**
+
 ## M9 additions
 
 4. **Envelope unwrap tests** (`tools/run_unwrap.py`, in CI): chained
@@ -1088,7 +1103,7 @@ suite nor its variants could reach either limit. They are graded by
 CPython's `zipfile` and `tarfile`, which wrote them and have no such
 limit, and by `unzip -l` and `tar tf` where those exist.
 
-Fourteen cases over six carriers, the allocator's budget and the output
+Fifteen cases over seven carriers, the allocator's budget and the output
 directory: a zip whose long
 entry is extracted under the shortened name while the entry beside it is
 untouched; two zip entries that differ only past the cut, which must both
@@ -1117,6 +1132,18 @@ components — 296 bytes, and no name in it remarkable — and the notice
 must carry every byte of it. `lsar`, which has no such cap, is asked for
 the same path. What this grades for Now Compress is `unc_path_leaf`,
 which DiskDoubler and SuperDisk! also run.
+
+**SuperDisk! reaches that helper through its own walk since 2026-09-01,
+and it is the case here with no oracle on this machine.** `tools/synth_sd.py`
+writes a ten-deep stream — declared paths 43 to 331 bytes — out of a corpus
+archive's own folder and file records and its own method-7 blocks, so the
+only thing in it this project invented is the nesting. Nothing off the
+Macintosh reads the container, so the verdict it replays was taken on the
+emulator: the format's OWN self-extracting application, given a data fork
+built by that script (`tools/vmac/superdisk.py --nest`). That machine makes
+each component through the File Manager and never assembles a path, so what
+it built IS the uncut path, and it agreed on all eleven files. The case is
+skipped, not failed, where the fixture is absent.
 
 The sixth is DiskDoubler, added 2026-08-28, and it is there for the
 header walks rather than for the helper: the four real `DDAR` archives
@@ -1153,6 +1180,56 @@ here — no fixture nests that deep, and nothing off the Macintosh reads
 that container to grade a generated one (OPEN_ITEMS.md). The Mac
 application consumes none of it and says nothing on screen; what it does
 instead is graded in the next section.
+
+## The tiers a budget predicts (`tools/run_tiers.py`, in `ci.sh`)
+
+**A small Macintosh's memory result, measured on Linux in five seconds.**
+The Mac shell's allocator is a running total against a cap and refuses
+per entry; `macextract --budget N` is the same rule, so the whole
+69-fixture sample can be swept at a tier's measured budget without an
+emulator, a ROM or an X server.
+
+    tools/run_tiers.py --check                 # what ci.sh runs
+    tools/run_tiers.py --tier sys3-512K        # one tier, with shortfalls
+    tools/run_tiers.py --budget 102328         # any cap
+
+Not to be confused with `tools/run_budget.py`, the older half of the
+pair: that one sweeps the whole CORPUS at a single cap and reports per
+format (layer 5 above). This one sweeps the Mac SAMPLE at each tier's
+own budget and asserts the tallies.
+
+`--check` asserts two tallies, and only the two Mini vMac has agreed
+with independently: **69/69 at the 1 MB floor target** (648,100 B) and
+**66/69 on a 512 KB Macintosh under System 3.0** (197,728 B) — the same
+three fixtures, by name, that the machine refuses. A tally that moves is
+a memory regression or a memory win; either way the number in `EXPECT`
+is meant to be changed deliberately.
+
+**What it cannot see** (and why the emulator tiers stay):
+
+- **Fragmentation.** A budget is one number; the Memory Manager also has
+  to find one PIECE that big, which the shell reports separately
+  ("Memory is too broken up"). This is the likeliest reason the
+  System 6.0.8 / 512 KB tier comes out 59/69 here against the machine's
+  58/69 — which is why that tier is a diagnostic and is not asserted.
+- **The budget's own currency.** Each figure is `FreeMem() - 20,480`
+  measured on the machine (FORMATS.md, *Budget*), so it moves when the
+  application's size does. This file cannot notice that it has gone
+  stale.
+- **68000 struct sizes.** `derived-a2basic.dmg.sit` holds 37,356 B
+  before its block here and 37,372 B there. Tens of bytes — but a
+  fixture that missed by twenty would not be decided by this.
+- **Everything that is not memory**: names, CRCs, the File Manager, the
+  interface. Those are `tools/vmac/run.py`'s, and no budget sweep
+  replaces them.
+- **What a shortfall means.** It is the FIRST refused request's, not the
+  entry's demand, which is why both front ends say *"at least"*.
+  `synth-dd-m5.dd` reports 928 B at the 512 KB budget and wants
+  203,680 (FORMATS.md, *512 KB machines*).
+
+`UNC_TRACE_ALLOC=1` in the environment makes the CLI print every
+allocation and every refusal with the live total, which is how those
+figures are read.
 
 ## Selective extraction (`tools/run_only.py`, in `ci.sh`)
 
@@ -1636,7 +1713,13 @@ that wrong is entries that are silently never reached.
 **What this cannot see.** The hashes were produced by this reader before they
 were confirmed on the emulator, so they are a regression fence and not an
 oracle; re-confirming them means re-running `--adjudicate`. It also grades
-two methods, 7 and 11, because that is what the two archives use. The unit
+two methods, 7 and 11, because that is what the two archives use — and it
+reaches no STORED block at all: **all seven blocks across both fixtures are
+coded**, so `sd_block_head`'s bit-15 branch is not exercised by anything in
+the corpus, nor by the 116 variants, which flip bytes inside those coded
+blocks. That branch is graded on the emulator instead, by the extractor it
+was disassembled out of (`tools/vmac/superdisk.py --stored`, byte-exact
+2026-09-01; FORMATS.md, *Alysis SuperDisk!*). The unit
 test carries what no fixture can: a two-fork file, so that fork order is asserted, and an
 undecodable method BETWEEN two decodable entries. **Every other method is
 graded by the suite below**, which did not exist until 2026-08-25.
@@ -1807,10 +1890,15 @@ the signature, its neighbours, and the corpus.
 python3 tools/run_foreign.py --macextract build/dev/macextract
 ```
 
-**Three grades of case, and the suite says which is which.** bzip2, xz, 7z,
+**Four grades of case, and the suite says which is which.** bzip2, xz, 7z,
 cpio (three header shapes) and ar are written by their own tools here and then
 **opened by p7zip** — a specimen that p7zip cannot parse proves nothing about
-a probe, so that check is asserted rather than assumed. Zoo, ARJ and Cabinet
+a probe, so that check is asserted rather than assumed. **Apple Archive is the
+same grade with the writer built for it**: `tools/build_neoaa.sh` compiles
+libNeoAppleArchive out of `reference/`, and `tools/neoaa_write.c` writes one
+archive per shape — raw `AA01`, `pbze`, `pbzz`, `pbzb` — then reads each back
+with that same library and exits nonzero if it will not parse, which is what
+p7zip does for the others. Zoo, ARJ and Cabinet
 are hand-built headers that **deark** must identify as `zoo`, `arj` and `cab`;
 if deark does not agree, the case is worthless and fails. RAR and RAR 5 have
 neither — no writer here, no deark module, and p7zip refuses to name a stub it
@@ -1821,8 +1909,10 @@ cannot parse — so in `ci.sh` they rest on the constants in
 **The negatives are the point of a signature file**: the eighth RAR byte, the
 7-Zip reserved byte, xz's terminator, bzip2's two stream magics and its level
 digit, Zoo's magic at offset 0 instead of 0x14, ARJ with a broken header CRC
-and with a size out of bounds, `070703`, `!<arch>!`. Each was mutation-tested
-against a probe with that field deleted.
+and with a size out of bounds, `070703`, `!<arch>!`, an Apple Archive header
+smaller than its own six-byte prologue, one whose first field subtype is
+outside the closed set, and a `pbz` stream naming a codec that is not one.
+Each was mutation-tested against a probe with that field deleted.
 
 **And the corpus is swept**: not one of the fixtures may come back as a
 foreign archive. Naming a Macintosh archive as a PC one is worse than not
@@ -1834,7 +1924,13 @@ sweep requires it to sniff as RAR and requires everything else not to.
 
 **What this cannot see.** Whether a real Zoo, ARJ or Cabinet archive is named —
 those three are graded on headers built here, which deark identifies but which
-no archiver wrote. And nothing here tests what a named-but-declined archive
+no archiver wrote. Nor whether Apple's OWN `aa` writes anything
+libNeoAppleArchive does not: every Apple Archive here comes from the one
+implementation the probe was also written from, so a shape only Apple emits
+would be invisible to both. That needs a macOS, and is MANUAL_TESTS.md's kind
+of gap, not this suite's. The `pbzx` and `pbz4` codec letters are untested for
+the same reason twice over — libNeoAppleArchive names them and does not yet
+write them. And nothing here tests what a named-but-declined archive
 does on the Macintosh: that is one alert, photographed once
 (`tools/vmac/README.md`, *Photographing the detect-only alert*).
 

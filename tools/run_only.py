@@ -315,6 +315,10 @@ def main():
                     help="sweep every Nth fixture (1 = all of them)")
     args = ap.parse_args()
 
+    if not os.path.exists(args.macextract):
+        print("only: no CLI at %s" % args.macextract)
+        return 1
+
     problems = []
     ran = 0
     tmp = tempfile.mkdtemp()

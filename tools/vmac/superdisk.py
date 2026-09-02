@@ -11,6 +11,8 @@ this there is no oracle for the format at all.
     tools/vmac/superdisk.py --adjudicate FIXTURE.hqx  run it, compare forks
     tools/vmac/superdisk.py --on-mac                  replay both payloads
                                                       through OUR application
+    tools/vmac/superdisk.py --nest                    hand that extractor a
+                                                      stream written HERE
 
 The archive is unwrapped from its envelope with our own CLI, rebuilt as
 MacBinary and put on a 25 MB volume; System 7 boots, the application is
@@ -37,6 +39,7 @@ sys.path.insert(0, os.path.join(REPO, "tools"))
 import run as R                                       # noqa: E402
 from arcmac import macbinary                          # noqa: E402
 from nowcompress import Session                       # noqa: E402
+import synth_sd                                       # noqa: E402
 
 HOME = R.VMAC_HOME
 SHOTS = os.path.join(HOME, "specimens", "superdisk")
@@ -120,13 +123,10 @@ def read_forks(img):
     return out
 
 
-def adjudicate(fixture, keep=False):
-    from vmac_check import mask_reserved                # noqa: E402
-    work = tempfile.mkdtemp(prefix="sdadj-")
-    tag = os.path.basename(fixture).split(".")[0]
-    name, ftype, creator, data, rsrc = unwrap(fixture, work)
-    print("superdisk: %s — %s %s/%s, %d B data, %d B rsrc"
-          % (os.path.basename(fixture), name, ftype, creator, len(data), len(rsrc)))
+def run_selfextractor(work, name, ftype, creator, data, rsrc, tag):
+    """Put a self-extracting archive on a fresh volume, run it, hand back
+    the volume. Shared by --adjudicate and --nest, which differ only in
+    what data fork the application is given."""
     mb = os.path.join(work, "app.bin")
     open(mb, "wb").write(macbinary(name, ftype, creator, data, rsrc))
 
@@ -168,6 +168,17 @@ def adjudicate(fixture, keep=False):
     finally:
         time.sleep(5)
         s.close()
+    return img
+
+
+def adjudicate(fixture, keep=False):
+    from vmac_check import mask_reserved                # noqa: E402
+    work = tempfile.mkdtemp(prefix="sdadj-")
+    tag = os.path.basename(fixture).split(".")[0]
+    name, ftype, creator, data, rsrc = unwrap(fixture, work)
+    print("superdisk: %s — %s %s/%s, %d B data, %d B rsrc"
+          % (os.path.basename(fixture), name, ftype, creator, len(data), len(rsrc)))
+    img = run_selfextractor(work, name, ftype, creator, data, rsrc, tag)
 
     theirs = read_forks(img)
     ours = tempfile.mkdtemp()
@@ -202,6 +213,208 @@ def adjudicate(fixture, keep=False):
           % (seen, "all identical" if not bad and seen else "%d DIFFER" % bad))
     print("superdisk: screenshots in %s" % shots)
     return bad or not seen
+
+
+# ------------------------------------------------------------------
+# A record stream this project writes, read back by the format's own
+# extractor
+# ------------------------------------------------------------------
+
+# The 20 bytes a folder record carries after its name, and the 8 nobody
+# reads at the head of the file, are copied from a real archive rather
+# than invented: neither field is understood, and a wrong guess in
+# either would be indistinguishable from the failure this run is
+# looking for.
+
+
+def decoded(work, orig):
+    """The borrowed fork's plaintext, through our own reader — the one
+    thing a builder cannot produce, since producing it means
+    compressing."""
+    one, _dlen = synth_sd.one_file(orig)
+    arc = os.path.join(work, "one.x")
+    open(arc, "wb").write(one)
+    out = os.path.join(work, "plain")
+    subprocess.run([cli(), "x", "-o", out, arc], check=True,
+                   capture_output=True)
+    return open(os.path.join(out, "plain.txt"), "rb").read()
+
+
+def rootfile_probe(keep=False, invented=False):
+    """Does that extractor read a stream whose FIRST record is a file?
+
+    The first `--nest` run bombed with the Macintosh's *unimplemented
+    trap* on a stream that differed from the ones that work in three
+    ways at once, and two are now cleared: depth is not it (`--nest` at
+    ten folders is byte-exact) and the stored block is not it
+    (`--stored`). What is left is the record itself, and this asks the
+    half that costs nothing to build — a file at the root, before any
+    folder record, which is the one thing neither corpus archive does.
+    """
+    work = tempfile.mkdtemp(prefix="sdroot-")
+    name, ftype, creator, orig, rsrc = unwrap(
+        os.path.join(REPO, "fixtures", "super-disk-utility.hqx"), work)
+    blob, dlen = synth_sd.one_file(orig, invented)
+    print("superdisk: %d B, one %d B file and no folder at all, its record "
+          "%s" % (len(blob), dlen,
+                  "INVENTED" if invented else "borrowed from the corpus"))
+    plain = decoded(work, orig)
+    img = run_selfextractor(work, name, ftype, creator, blob, rsrc,
+                            "invented" if invented else "rootfile")
+    theirs = {"/".join(k): v[2] for k, v in read_forks(img).items()
+              if k[-1] != name}
+    got = theirs.pop("plain.txt", None)
+    state = ("MISSING" if got is None else
+             "made" if got == plain else "CONTENT DIFFERS")
+    print("  theirs plain.txt   %s" % state)
+    for extra in sorted(theirs):
+        print("  UNEXPECTED on the Mac: %s" % extra)
+    print("superdisk: %s" % ("a file at the root is read"
+                             if state == "made" else
+                             "a file at the root is NOT read"))
+    print("superdisk: screenshots in %s"
+          % os.path.join(SHOTS, "invented" if invented else "rootfile"))
+    if keep:
+        print("superdisk: kept %s" % work)
+    else:
+        shutil.rmtree(work, ignore_errors=True)
+    return 1 if state != "made" else 0
+
+
+def stored_probe(keep=False):
+    """Does the format's own extractor read a stored block at all?"""
+    work = tempfile.mkdtemp(prefix="sdstore-")
+    name, ftype, creator, orig, rsrc = unwrap(
+        os.path.join(REPO, "fixtures", "super-disk-utility.hqx"), work)
+    plain = decoded(work, orig)
+    blob, fold = synth_sd.stored_pair(orig, plain)
+    archive = os.path.join(work, "stored.x")
+    open(archive, "wb").write(blob)
+    print("superdisk: %d B, one folder holding the same %d B file coded "
+          "and stored" % (len(blob), len(plain)))
+
+    out = os.path.join(work, "ours")
+    os.makedirs(out)
+    rc, _cut = _ours(archive, out)
+    for leaf in ("coded.txt", "stored.txt"):
+        got = os.path.join(out, fold, leaf)
+        ok = os.path.isfile(got) and open(got, "rb").read() == plain
+        print("  ours   %-11s %s" % (leaf, "ok" if ok else "MISMATCH"))
+        rc |= not ok
+
+    img = run_selfextractor(work, name, ftype, creator, blob, rsrc, "stored")
+    theirs = {"/".join(k): v[2] for k, v in read_forks(img).items()
+              if k[-1] != name}
+    bad = 0
+    for leaf in ("coded.txt", "stored.txt"):
+        got = theirs.pop("%s/%s" % (fold, leaf), None)
+        state = ("MISSING" if got is None else
+                 "made" if got == plain else "CONTENT DIFFERS")
+        bad += state != "made"
+        print("  theirs %-11s %s" % (leaf, state))
+    for extra in sorted(theirs):
+        print("  UNEXPECTED on the Mac: %s" % extra)
+    print("superdisk: %s" % ("the Macintosh reads a stored block" if not bad
+                             else "the Macintosh did NOT write %d of 2" % bad))
+    print("superdisk: screenshots in %s" % os.path.join(SHOTS, "stored"))
+    if keep:
+        print("superdisk: kept %s" % work)
+    else:
+        shutil.rmtree(work, ignore_errors=True)
+    return 1 if (bad or rc) else 0
+
+
+def _ours(archive, out):
+    """Extract with our own CLI; return (paths written, {full: written})
+    from the report the host prints for names that did not fit."""
+    r = subprocess.run([cli(), "x", "--forks", "hidden", "-o", out, archive],
+                       capture_output=True, text=True)
+    cut, full = {}, None
+    for line in (r.stdout + r.stderr).splitlines():
+        if line.startswith("macextract:     written as "):
+            if full is not None:
+                cut[full] = line[len("macextract:     written as "):]
+            full = None
+        elif line.startswith("macextract:   ") and not line.endswith(":"):
+            full = line[len("macextract:   "):]
+    return r.returncode, cut
+
+
+def nest(depth=10, keep=False):
+    """Hand the format's own extractor a record stream written HERE.
+
+    OPEN_ITEMS.md carried SuperDisk!'s path cap as untested code: the
+    walk reaches `unc_path_leaf`'s 255-byte cap through a container
+    nothing off the Macintosh reads, so a generated stream could only
+    ever be graded against the transcription that wrote it. It can be
+    graded against the archives' own self-extractor instead — the same
+    second reader `--adjudicate` uses — by giving that application a
+    data fork this project built.
+
+    The Macintosh creates each component through the File Manager and
+    never assembles a path, so **what it makes on the volume IS the
+    uncut path**, which is exactly what `unc_path_leaf` reports when it
+    cuts one.
+    """
+    from vmac_check import mask_reserved                # noqa: E402
+    work = tempfile.mkdtemp(prefix="sdnest-")
+    archive = os.path.join(work, "nest.x")
+    name, ftype, creator, orig, rsrc = unwrap(
+        os.path.join(REPO, "fixtures", "super-disk-utility.hqx"), work)
+    blob, paths, dlen = synth_sd.nest(orig, depth)
+    open(archive, "wb").write(blob)
+    print("superdisk: a %d-deep record stream, %d B, %d files of %d B"
+          % (depth, len(blob), len(paths), dlen))
+
+    img = run_selfextractor(work, name, ftype, creator, blob, rsrc, "nest")
+    theirs = read_forks(img)
+
+    out = os.path.join(work, "ours")
+    os.makedirs(out)
+    rc, cut = _ours(archive, out)
+
+    made = {}
+    for path, (_ft, _cr, data, _rs) in theirs.items():
+        if path[-1] == name:
+            continue                                    # the application
+        made["/".join(path)] = data
+    want = None
+    bad = 0
+    for path in paths:
+        got = made.pop(path, None)
+        state = "made" if got is not None else "MISSING"
+        if got is not None:
+            if want is None:
+                want = got
+            if got != want or len(got) != dlen:
+                state = "CONTENT DIFFERS"
+        bad += state != "made"
+        if len(path) <= 255:
+            print("  %-14s %3d B path  %s" % (state, len(path), path[-40:]))
+        else:
+            # Past the cap: the host must have been told, and the uncut
+            # path it was told must be the one the Macintosh built.
+            told = path in cut
+            bad += not told
+            print("  %-14s %3d B path  uncut-reported=%-3s %s"
+                  % (state, len(path), "yes" if told else "NO", path[-40:]))
+    for extra in sorted(made):
+        print("  UNEXPECTED on the Mac: %s" % extra)
+        bad += 1
+    for f in sorted(cut):
+        if f not in paths and not any(p.startswith(f + "/") for p in paths):
+            print("  a cut was reported for a path the archive does not "
+                  "declare: %s" % f)
+            bad += 1
+    print("superdisk: %d file(s), %s" % (len(paths),
+                                         "the Macintosh agrees" if not bad
+                                         else "%d DISAGREE" % bad))
+    print("superdisk: screenshots in %s" % os.path.join(SHOTS, "nest"))
+    if keep:
+        print("superdisk: kept %s" % work)
+    else:
+        shutil.rmtree(work, ignore_errors=True)
+    return 1 if (bad or rc) else 0
 
 
 def listing():
@@ -263,6 +476,20 @@ def main():
                     help="list what the corpus's SuperDisk! archives hold")
     ap.add_argument("--adjudicate", metavar="FIXTURE",
                     help="run the self-extractor under System 7 and compare")
+    ap.add_argument("--nest", action="store_true",
+                    help="hand the self-extractor a deeply nested record "
+                         "stream written here, and compare what it makes")
+    ap.add_argument("--stored", action="store_true",
+                    help="ask that extractor whether it reads a STORED "
+                         "block, the one block shape no corpus archive has")
+    ap.add_argument("--rootfile", action="store_true",
+                    help="ask it whether a stream may OPEN with a file "
+                         "record, which neither corpus archive does")
+    ap.add_argument("--invented", action="store_true",
+                    help="with --rootfile: guess the file record's fields "
+                         "instead of copying them, and see what that costs")
+    ap.add_argument("--depth", type=int, default=10,
+                    help="how many 31-character folders to nest (default 10)")
     ap.add_argument("--on-mac", action="store_true",
                     help="replay both payloads through our own Mac "
                          "application, graded with run.py --expect")
@@ -275,6 +502,12 @@ def main():
         return 0
     if a.adjudicate:
         return adjudicate(a.adjudicate, a.keep)
+    if a.nest:
+        return nest(a.depth, a.keep)
+    if a.stored:
+        return stored_probe(a.keep)
+    if a.rootfile:
+        return rootfile_probe(a.keep, a.invented)
     if a.on_mac:
         return on_mac(a.mem, a.system)
     ap.print_help()

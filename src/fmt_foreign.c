@@ -19,9 +19,10 @@
  * The rule for what is in this file: a magic number from a reference
  * implementation in `reference/`, and nothing invented. Four more were
  * added on 2026-08-29 once their references were fetched — and one of
- * them, lzip, had been in `reference/deark` the whole time. What is
- * still left out is AAR, for want of a reference, and **brotli, which
- * cannot be identified at all**: RFC 7932 section 9.1 is its entire
+ * them, lzip, had been in `reference/deark` the whole time. Apple
+ * Archive joined them on 2026-09-01, once a reference was found for it
+ * too. What is still left out is **brotli, which cannot be identified
+ * at all**: RFC 7932 section 9.1 is its entire
  * stream header, one to seven bits of WBITS, with no magic, no
  * signature and no version byte (OPEN_ITEMS.md, part 1). A `.zipx`
  * needs nothing: it is a zip, the zip probe claims it, and its entries
@@ -89,6 +90,54 @@ static int cpio_head(const uint8_t *h, int32_t len)
     if (mem_is(h, "070707", 6) || mem_is(h, "070701", 6) ||
         mem_is(h, "070702", 6)) return 1;
     return (h[0] == 0xc7 && h[1] == 0x71) || (h[0] == 0x71 && h[1] == 0xc7);
+}
+
+/* Membership in a short set of bytes, as a string constant: on a 68000
+ * the string is data, which is free here, where the run of comparisons
+ * it replaces is code, which is not (FORMATS.md, *What the application
+ * costs the engine*). Written out as such, Apple Archive's sixteen
+ * field subtypes put the Macintosh build 196 B over its ceiling. */
+static int in_set(const char *set, uint8_t c)
+{
+    while (*set)
+        if ((uint8_t)*set++ == c) return 1;
+    return 0;
+}
+
+/* Apple Archive, in both of its shapes. Uncompressed is "AA01" — or the
+ * legacy "YAA1" it replaced, which is the same format — followed by the
+ * first header's size as a little-endian 16-bit count that INCLUDES
+ * those six bytes, so a value under 6 is not one; and where that header
+ * carries a field, the field's subtype byte corroborates it — three
+ * bytes of field name and a fourth out of a closed set of sixteen,
+ * which is what stops four letters of ordinary text from being
+ * claimed. A compressed archive opens "pbz" and a codec letter
+ * instead.
+ *
+ * `pbzx` is also the payload stream inside an Apple flat package, so
+ * one of those is named an Apple Archive here. That is the right answer
+ * for what this file is for — the user is told which family the file
+ * belongs to and that it is not damaged — and no worse than the rest of
+ * the set, none of which is opened either.
+ *
+ * Source: reference/libNeoAppleArchive/libNeoAppleArchive/
+ * libNeoAppleArchive_internal.h (AAR_MAGIC, YAA_MAGIC, PBZE_MAGIC,
+ * PBZZ_MAGIC, PBZB_MAGIC) and neo_aa_header.c. The two codecs that
+ * library names but does not yet write — lzma `x` and lz4 `4` — are
+ * from reference/notes/Apple_Archive.md; its own
+ * docs/NeoAAArchiveGeneric.md is what says they belong to the format. */
+static int aar_head(const uint8_t *h, int32_t len)
+{
+    uint16_t hsize;
+
+    /* 10 bytes: the six-byte prologue and the first field key. The
+     * smallest archive libNeoAppleArchive will write is 71 B. */
+    if (len < 10) return 0;
+    if (mem_is(h, "pbz", 3)) return in_set("ezbx4", h[3]);
+    if (!mem_is(h, "AA01", 4) && !mem_is(h, "YAA1", 4)) return 0;
+    hsize = unc_get_u16le(h + 4);
+    if (hsize < 6) return 0;
+    return hsize == 6 || in_set("*1248ABCFGHIJPST", h[9]);
 }
 
 /* The whole set, strongest magic first. Returns the format, or
@@ -165,6 +214,8 @@ UncFormat unc_foreign_probe(const uint8_t *head, int32_t len,
     if (len >= 12 && mem_is(head, "MSWIM\0\0\0", 8) &&
         unc_get_u32le(head + 8) == 208u)
         return UNC_FORMAT_WIM;
+
+    if (aar_head(head, len)) return UNC_FORMAT_AAR;
 
     /* lzip. Four ASCII bytes and nothing to corroborate them with —
      * which is why deark, the reference, gives it a confidence of 50

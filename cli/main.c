@@ -16,6 +16,10 @@
  *   --preset <f>   SpaceSaver's preset dictionary ('PrAm' -4048)
  *   -f <format>    force format (the name `sniff` prints)
  *
+ * UNC_TRACE_ALLOC=1 in the environment prints every allocation and every
+ * budget refusal with the live total, which is how a tier's peak is read
+ * apart into its pieces (TESTING.md, *The tiers a budget predicts*).
+ *
  * The CLI is the only place libc I/O and malloc are used; the engine
  * sees callbacks only.
  *
@@ -113,6 +117,8 @@ static void *ba_alloc(void *ctx, uint32_t size)
         uint32_t need = ba->used + size - ba->budget;
         if (need > ba->shortby) ba->shortby = need;
         ba->failed++;
+        if (getenv("UNC_TRACE_ALLOC"))
+            fprintf(stderr, "REFUSED %10u  live %10u\n", size, ba->used);
         return NULL;
     }
     p = (uint8_t *)malloc(size + BA_HDR);
@@ -120,6 +126,8 @@ static void *ba_alloc(void *ctx, uint32_t size)
     memcpy(p, &size, sizeof size);
     ba->used += size;
     if (ba->used > ba->high_water) ba->high_water = ba->used;
+    if (getenv("UNC_TRACE_ALLOC"))
+        fprintf(stderr, "alloc %10u  live %10u\n", size, ba->used);
     return p + BA_HDR;
 }
 
@@ -2561,9 +2569,17 @@ nextlayer:
          * what the harnesses read, so the number goes here rather than
          * into them. Only when a budget was actually set — without one
          * there is nothing to be short OF. */
+        /* AT LEAST, because this is one request's shortfall and not the
+         * entry's demand. A decoder that allocates incrementally is
+         * refused at the FIRST request that crosses the line, which for
+         * DiskDoubler method 5 — 1,536 B per distinct context byte, up to
+         * 256 of them — is a shortfall of about a kilobyte on an entry
+         * that needs another 200. Measured 2026-09-01: `synth-dd-m5.dd`
+         * at --budget 197728 reports 928 and wants 203,680 more — its
+         * minimum budget, bisected, is 401,408. */
         if (ba.shortby)
-            fprintf(stderr, "macextract: %u bytes more memory would have "
-                            "been needed\n", (unsigned)ba.shortby);
+            fprintf(stderr, "macextract: at least %u bytes more memory "
+                            "would have been needed\n", (unsigned)ba.shortby);
         return 1;
     }
     if (onlymiss) return 1;
