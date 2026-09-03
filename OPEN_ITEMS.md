@@ -127,6 +127,11 @@ branch, so reopening it is a merge and not a rediscovery.
   **What would change it:** nothing in the format. Remembering every
   long name ever seen would, at a cost this shell will not pay on a
   1 MB machine — it remembers 24 (FORMATS.md, *Name limits*).
+  **Both halves of that are under re-test**, in Part 2's *A folder that
+  shortens onto another is merged, where a file is numbered*: the cost
+  is the cost of whole names, and `RepDirMemo` is called for an
+  undeclared folder as well as a declared one, so the memo holds what
+  the report does not ask it.
 
 - **A uuencoded set missing a MIDDLE part decodes short, and silently.** A
   document posted in several parts joins and decodes — the mail headers
@@ -171,6 +176,69 @@ parts in a way the application no longer matches.
 command, no emulator, and it says which side is wrong. Until then FORMATS.md's
 *Segmented archives* rests on Linux adjudication and the six header-found
 schemes, which is what it says it rests on.
+
+## A folder that shortens onto another is merged, where a file is numbered
+
+**Asked for 2026-09-03.** `ComponentToStr63` cuts every path component to 31
+characters. A FILE that lands on a name already taken is numbered `~1`..`~99`
+by `BumpName`; a FOLDER is not — `EnsureDir` descends into whatever is there,
+so two folders whose names agree for 31 characters become one and their
+contents mix. The ask is that a folder be numbered like a file.
+
+**Measured 2026-09-03**, mock sink, a zip carrying two long folder names and
+no folder entries of its own: the merge is not even reported. The box says
+*"Folder …alpha renamed to …"* and says nothing whatever about the second
+folder, whose file is now inside the first one. Where a format DECLARES its
+folders the box says *"combined with"* (`tools/run_macnames.py`, the report
+case).
+
+**What it costs:** an answer, at every `EnsureDir` that takes `dupFNErr`, to
+*did this run create that directory for a different long name?* — which is
+what `gDirMemo` already answers for the report, for 24 folders at 68 bytes
+each. Numbering needs it for every folder, and a 32-bit hash of the whole
+component in place of its first 63 bytes is 8 bytes a row. **The table must
+never evict.** A row lost after its folder was numbered splits one archive
+folder across two disk folders, which is worse than the merge it replaces;
+a full table that stops numbering merges exactly as today, which is the
+direction a failure has to fall.
+
+Two decisions sit inside it: a folder that was on the volume BEFORE this run
+must still be descended into, or a second extraction into the same
+destination sprays `~1` over the first one's folders; and the wording changes
+where two suites assert it — `tools/run_macnames.py` and the report scenario
+in `tools/vmac/interactive.py`.
+
+**What would close it:** `mac/macextract_mac.c` alone — no engine change —
+graded on Linux through the mock sink, plus one emulator run for the box.
+
+## Selective extraction: the entries the user ticked, and no others
+
+**Asked for 2026-09-03**: show what is in the archive, extract what is chosen.
+
+**The engine already has both halves.** `UncOptions.list_only` walks the
+containers and reports every entry through `begin_entry` while decoding
+nothing, and a `begin_entry` that returns >0 skips its entry — the data is
+not decoded and `end_entry` is not called (`include/macextract.h`, *Sink*).
+So this is a shell and a UI item; no format and no decoder is involved.
+
+What it costs, all of it on the Macintosh side:
+
+- **a second walk of the archive**, at no decode. The LAST layer only: a
+  chain's envelopes are unwrapped to disk either way, so `.sit.hqx` is not
+  walked twice.
+- **the list, on a 1 MB machine.** The end-of-run report holds 64 lines in a
+  6 KB pool for this reason, and a 70,000-entry zip fits in nothing. A cap,
+  and *"too many entries to choose from"* falling back to extracting
+  everything, is the shape that stays honest; the choice itself is a bit per
+  entry.
+- **the two passes have to agree entry for entry.** An ordinal alone is
+  fragile — match the name too, and extract everything rather than the wrong
+  thing if they diverge.
+- **the list is hand-drawn**, like the report box: the floor is System 3.0.
+
+**What would close it:** the shell answering >0 for what was not ticked,
+graded through the mock sink, plus the list driven on screen on System 3.0
+and System 6 (`tools/vmac/interactive.py`).
 
 ## Waiting on a file this machine does not have
 
