@@ -12,6 +12,31 @@ the ciphers kept; an LZH gets **701,688 B**, keeping only its own decoder.
 4/4 fixtures extract byte-exact across the formats that keep one image, two
 images, and none.
 
+## Segmented sets, with MoveHHi and thirteen overlays
+
+**Asked because the segments path is separate code and `MoveHHi` changes where
+things land in the heap it shares.** Measured 2026-09-03:
+
+| | |
+|---|---|
+| four-part Compact Pro set, 1 MB | **PASS**, 9 files byte-exact, budget **728,270 B** |
+| the same set on a **Macintosh 512Ke** | **PASS**, 9 files byte-exact |
+| `segcheck.py`, the six cases `run.py` can stage | **6/6** — `sit-scattered`, `cpt-middle`, `cpt-truncated`, `chain`, `mimeseg`, `ddseg-real` |
+
+**A segmented set on a 512 KB machine had never been run before**, on any
+branch. It works.
+
+The budget is up from 670,836 B — the segments release site, twelve more
+images out of the resident set, and `MoveHHi`, which between them took a
+multi-part set from **worse than having no overlays at all** to 78 KB better
+than `main`.
+
+`segcheck.py`'s other three cases — `zip-named`, `split-named`, `wrapped` —
+fail here, and fail identically on `main` and without overlays. They are the
+three staged by `interactive.py` rather than `run.py`; the fault is on that
+side and is written up on `main` in OPEN_ITEMS.md, because it is not this
+branch's.
+
 ## Open, and reduced but not explained: two bytes in UncEntryInfo
 
 **Adding a field to `UncEntryInfo` makes two fixtures roughly twenty times
