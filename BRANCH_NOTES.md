@@ -115,6 +115,30 @@ which only the interactive `main()` calls. `-D UNC_AT_BUDGET` now prepends
 same question the grid answers — which is how the envelope row was measured
 rather than assumed.
 
+## Parity with `overlay-eager`, 2026-09-03
+
+Both branches carry the same thirteen overlays, the same codecs blob and the
+same relocation trailer, and differ only in lifetime — which is the point of
+having two. Same tiers, same results:
+
+| | this branch | `overlay-eager` | `main` |
+|---|---|---|---|
+| 4 MB, System 6.0.8 | 69/69 | 69/69 | 69/69 |
+| 1 MB, System 6.0.8 | 69/69 | 69/69 | 69/69 |
+| System 3.0, 1 MB | 69/69 | 69/69 | 69/69 |
+| System 3.0, 512 KB | **67/69** | **67/69** | 66/69 |
+| `segcheck.py` | 6/9 | 6/9 | 6/9 |
+
+The three `segcheck` failures are the same three on all three branches —
+`zip-named`, `split-named`, `wrapped`, the ones staged by `interactive.py`
+rather than `run.py` — and are written up on `main` in OPEN_ITEMS.md.
+
+**What is NOT shared, and should not be:** the bundle
+(`tools/overlay/mkbundle.py`), the release logic and `MoveHHi` are
+`overlay-eager`'s, because this branch copies nothing and releases nothing;
+`src/unc_encinfo.c` and its regression test are there too, for a decision
+this branch never has to make.
+
 ## The tiers, 2026-09-03 — and one archive that could not be opened before
 
 | tier | this branch | `main` |
