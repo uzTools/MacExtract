@@ -90,7 +90,17 @@ ls -la build/mac/MacExtract.APPL build/mac/MacExtract.bin build/mac/MacExtract.d
 # DEFAULT build, which carries both halves anyway. It is bought for what it
 # buys on the overlay build, where the decoders are not resident at all:
 # 42,044 B of code and 17,040 B of A5 world (BRANCH_NOTES.md).
-UNC_MAC_CODE_DEFAULT=147772
+# 147,772 -> 148,000 on 2026-09-02: +228 B for the second pass of probe
+# splits (StuffIt, StuffIt 5, PackIt, btoa, BinHex, SuperDisk!, uuencode,
+# base64, MIME). The DEFAULT build carries both halves and pays a prologue
+# and an include per split; what it buys is on the overlay build, where the
+# resident set falls to 73,052 B of code and 22,036 B of A5 world — and where
+# the largest single CODE resource, the thing a small machine has to place,
+# falls from 142,152 B to 67,600 B (BRANCH_NOTES.md).
+# 148,000 -> 148,032 on 2026-09-02: +32 B for splitting fmt_exo's four
+# probes out (gzip, Unix compress, tar, zip). The last of the splits, and the
+# one that let zlib leave the resident build with its decoder.
+UNC_MAC_CODE_DEFAULT=148032
 # The A5 ratchet from main, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*).

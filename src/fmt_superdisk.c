@@ -49,18 +49,11 @@
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
 #include "unc_internal.h"
+#include "fmt_superdisk_priv.h"
 
-#define SD_TAG_END    0x27u
-#define SD_TAG_FILE   0x28u
-#define SD_TAG_DIR    0x29u
-#define SD_TAG_UPDIR  0x2Au
 
-#define SD_BLOCKMAX   0x8000u      /* the largest ulen a block may claim */
-#define SD_WINDOW     0x10000u     /* SlowFastB reaches back 49120 bytes */
-#define SD_MODULEMAX  64u          /* modules before we call it a loop      */
 
 /* The signature every Add-In Module carries at its own offset 4. */
-static const char sd_modsig[] = "SuperDisk! Add-In Module";
 
 /* ------------------------------------------------------------------ */
 /* Where the record stream starts                                     */
@@ -76,111 +69,17 @@ static const char sd_modsig[] = "SuperDisk! Add-In Module";
  *
  * Which one a file is, is decided by the module signature rather than
  * by a version byte: a module is there or it is not. */
-static int sd_records_start(UncIO *io, uint32_t *out, int *has_module)
-{
-    uint8_t buf[32];
-    uint32_t at, len;
-    unsigned n;
-
-    *has_module = 0;
-    if (unc_read_at(io, 8, buf, 8) != UNC_OK) return UNC_ERR_FORMAT;
-    if (buf[0] == SD_TAG_FILE || buf[0] == SD_TAG_DIR) {
-        for (n = 1; n < 8; n++)
-            if (buf[n] != 0) break;
-        if (n == 8) { *out = 8u; return UNC_OK; }   /* the 1991 shape */
-    }
-    len = unc_get_u32be(buf);
-    at = 12;
-    for (n = 0; len != 0; n++) {
-        unsigned i;
-        if (n >= SD_MODULEMAX) return UNC_ERR_CORRUPT;
-        if (len < 32 || len > 0x100000u) return UNC_ERR_FORMAT;
-        if (unc_read_at(io, at + 4, buf, 24) != UNC_OK) return UNC_ERR_FORMAT;
-        for (i = 0; i < 24; i++)
-            if (buf[i] != (uint8_t)sd_modsig[i]) return UNC_ERR_FORMAT;
-        *has_module = 1;
-        at += len;
-        if (unc_read_at(io, at, buf, 4) != UNC_OK) return UNC_ERR_FORMAT;
-        len = unc_get_u32be(buf);
-        at += 4;
-    }
-    *out = *has_module ? at : 8u;
-    return UNC_OK;
-}
 
 /* An archive ends with a lone 0x27 record, so the last eight bytes are
  * a tag and seven zeros. That is what separates this from any other
  * file whose ninth byte happens to be 0x28. */
-static int sd_end_marker_ok(UncIO *io)
-{
-    uint8_t tail[8];
-    uint32_t size = unc_io_size32(io);
-    int i;
-    if (size == UNC_SIZE_UNKNOWN || size < 24) return 0;
-    if (unc_read_at(io, size - 8, tail, 8) != UNC_OK) return 0;
-    if (tail[0] != SD_TAG_END) return 0;
-    for (i = 1; i < 8; i++)
-        if (tail[i] != 0) return 0;
-    return 1;
-}
 
 /* The single-file container's body offset, or 0 if the head does not
  * look like one. `total == data + rsrc` is the load-bearing test: it is
  * a 32-bit identity that random data fails, and it is what tells this
  * container apart from an archive whose first eight bytes nobody
  * reads. */
-uint32_t unc_superdisk_single_body(const uint8_t *head, int32_t len)
-{
-    uint32_t total, dlen, rlen, body, clen, ulen;
-    uint32_t nlen;
 
-    if (len < 40) return 0;
-    total = unc_get_u32be(head);
-    dlen  = unc_get_u32be(head + 4);
-    rlen  = unc_get_u32be(head + 8);
-    if (total == 0 || total > UNC_MAC_MAX) return 0;
-    if (dlen > UNC_MAC_MAX || rlen > UNC_MAC_MAX) return 0;
-    if (total != dlen + rlen) return 0;
-    nlen = head[30];
-    if (nlen == 0 || nlen > 31) return 0;
-    body = 31u + nlen;
-    if (body & 1u) body++;
-    if ((int32_t)(body + 6u) > len) return 0;
-    /* and the first block header has to be one */
-    clen = unc_get_u16be(head + body);
-    if (clen & 0x8000u) {
-        if ((clen & 0x7FFFu) < 2 && clen != 0x8002u) return 0;
-        return body;
-    }
-    if (clen < 8) return 0;
-    ulen = unc_get_u16be(head + body + 2);
-    if (ulen == 0 || ulen > SD_BLOCKMAX) return 0;
-    return body;
-}
-
-UncFormat unc_superdisk_probe(const uint8_t *head, int32_t len, UncIO *io)
-{
-    uint32_t start;
-    int has_module, i;
-
-    if (len < 40) return UNC_FORMAT_UNKNOWN;
-    if (unc_superdisk_single_body(head, len)) return UNC_FORMAT_SUPERDISK;
-    /* Cheap rejection first: either a module signature sits where the
-     * module chain would put it, or the ninth byte opens a record. */
-    if (head[8] == SD_TAG_FILE || head[8] == SD_TAG_DIR) {
-        for (i = 9; i < 16; i++)
-            if (head[i] != 0) break;
-        if (i == 16 && head[16] >= 1 && head[16] <= 31)
-            return (sd_end_marker_ok(io))
-           ? UNC_FORMAT_SUPERDISK : UNC_FORMAT_UNKNOWN;
-        return UNC_FORMAT_UNKNOWN;
-    }
-    for (i = 0; i < 24; i++)
-        if (head[16 + i] != (uint8_t)sd_modsig[i]) return UNC_FORMAT_UNKNOWN;
-    if (sd_records_start(io, &start, &has_module) != UNC_OK) return UNC_FORMAT_UNKNOWN;
-    return (sd_end_marker_ok(io))
-           ? UNC_FORMAT_SUPERDISK : UNC_FORMAT_UNKNOWN;
-}
 
 /* ------------------------------------------------------------------ */
 /* Working storage, grown from the data rather than from a ceiling     */
@@ -234,7 +133,6 @@ static void sd_out_start(SdState *s, UncCtx *c, UncFork fork)
  * which is how the LAST length gets no limit at all and always
  * matches: that is transcribed here as an explicit infinity rather
  * than as the reference's stale scratch memory. */
-#define SD_MAXLEN 24
 
 typedef struct SdHuff {
     const uint8_t *src;

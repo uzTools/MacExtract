@@ -24,65 +24,21 @@
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
 #include "unc_internal.h"
+#include "fmt_binhex_priv.h"
 
 /* The 64-character BinHex alphabet, index = 6-bit value.
  * Source: reference/XADMaster/XADBinHexParser.m (GetBits). */
 static const char bh_alphabet[65] =
     "!\"#$%&'()*+,-012345689@ABCDEFGHIJKLMNPQRSTUVXYZ[`abcdefhijklmpqr";
 
-static const char bh_banner[40] = "(This file must be converted with BinHex";
 
 /* How far into the file we are willing to look for the banner when
  * sniffing (XADMaster inspects the first 8 KB). */
-#define BH_SNIFF_LIMIT 8192
 
 /* ------------------------------------------------------------------ */
 /* Probe: banner within the head buffer, then EOL, whitespace, ':'.   */
 /* ------------------------------------------------------------------ */
 
-UncFormat unc_binhex_probe(const uint8_t *head, int32_t len, UncIO *io)
-{
-    /* The banner can sit deep inside mail headers/digests, so scan up
-     * to BH_SNIFF_LIMIT bytes (XADMaster inspects 8 KB too): first the
-     * sniff head we were given, then onward from the io handle with a
-     * rolling 40-byte window. */
-    uint8_t window[40];
-    uint8_t chunk[256];
-    int32_t have = 0, w = 0, scanned = 0, pos = 0, clen = 0, cpos = 0;
-    int found = 0;
-
-    /* Earlier probes may have moved the position; continue after head. */
-    if (io->seek(io->ctx, (uint32_t)len) < 0) return UNC_FORMAT_UNKNOWN;
-
-    while (!found && scanned < BH_SNIFF_LIMIT) {
-        int ch;
-        int32_t i;
-        if (pos < len) {
-            ch = head[pos++];
-        } else {
-            if (cpos >= clen) {
-                clen = io->read(io->ctx, chunk, (int32_t)sizeof chunk);
-                if (clen <= 0) break;
-                cpos = 0;
-            }
-            ch = chunk[cpos++];
-        }
-        scanned++;
-        window[w] = (uint8_t)ch;
-        if (++w == 40) w = 0;
-        if (have < 40) have++;
-        if (have == 40) {
-            int32_t j = w;
-            for (i = 0; i < 40; i++) {
-                if (window[j] != (uint8_t)bh_banner[i]) break;
-                if (++j == 40) j = 0;
-            }
-            if (i == 40) found = 1;
-        }
-    }
-    return (found)
-           ? UNC_FORMAT_BINHEX : UNC_FORMAT_UNKNOWN;
-}
 
 /* ------------------------------------------------------------------ */
 /* Decoder state                                                      */

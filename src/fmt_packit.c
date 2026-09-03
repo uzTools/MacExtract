@@ -39,16 +39,6 @@
 
 #define PIT_HDR 94
 
-UncFormat unc_packit_probe(const uint8_t *head, int32_t len, UncIO *io)
-{
-    (void)io;
-    /* Source: XADPackItParser.m recognizeFileWithHandle. */
-    if (len < 4) return UNC_FORMAT_UNKNOWN;
-    if (head[0] == 'P' && head[1] == 'M' && head[2] == 'a' &&
-        (head[3] == 'g' || head[3] == '4' || head[3] == '5' || head[3] == '6'))
-        return UNC_FORMAT_PACKIT;
-    return UNC_FORMAT_UNKNOWN;
-}
 
 /* Decoder for one entry's byte stream: either raw bufin bytes (PMag)
  * or Huffman-decoded (PMa4). */

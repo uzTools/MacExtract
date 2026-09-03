@@ -430,6 +430,9 @@ static long gFreeAtStart;  /* FreeMem() before the reserve is taken off */
  * fixes ("the reserve is too big" vs "the heap is fragmented"). These
  * make both visible. See tools/vmac/README.md. */
 static long gBudget;        /* what the engine was actually given        */
+#ifdef UNC_AT_BUDGET
+short gFirstEntryErr;       /* the first per-entry status that was not OK */
+#endif
 static long gRefusedSize;   /* size of the FIRST refused allocation      */
 static long gRefusedWhy;    /* 1 = over budget, 2 = NewPtr returned NULL */
 static long gRefusedMaxBlk; /* MaxBlock() at that moment: contiguity vs total */
@@ -1944,7 +1947,17 @@ static int SINK_END(void *ctx, int status)
          * created in sink_begin, so no incomplete output is left behind. */
         MyHDelete(s->vRefNum, s->curDirID, s->curName);
     }
-    if (status != UNC_OK) s->errors++;
+    if (status != UNC_OK) {
+        s->errors++;
+#ifdef UNC_AT_BUDGET
+        /* The FIRST per-entry error code, kept for the probe. The grid
+         * carries a COUNT and the alert a summary, so a failing entry says
+         * how many and never which kind — which is exactly the question a
+         * tier failure asks. */
+        { extern short gFirstEntryErr;
+          if (!gFirstEntryErr) gFirstEntryErr = (short)status; }
+#endif
+    }
     /* Every failure that does not stop the archive goes in the report,
      * named: "some entries could not be extracted" is what the user was
      * told before 2026-08-29, and it names neither the entry nor the
@@ -5208,6 +5221,12 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
         unsigned char n[32], tmp[256];
         short i;
         tmp[0] = 0;
+        { extern short gFirstEntryErr;
+          unsigned char q[32]; short k2;
+          PStrCat(tmp, "e1=");
+          NumToString(gFirstEntryErr, q);
+          for (k2 = 1; k2 <= q[0]; k2++) tmp[++tmp[0]] = q[k2];
+          PStrCat(tmp, " "); }
 #if defined(UNC_AT_OVERLAY)
         { extern short gWantedAfterRelease, gKeepFail, gRelFmt;
           unsigned char w[32]; short k;

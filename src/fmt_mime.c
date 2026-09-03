@@ -48,25 +48,14 @@
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
 #include "unc_internal.h"
+#include "fmt_mime_priv.h"
 
-#define MIME_MAX_DEPTH   4
-#define MIME_BND_MAX     70      /* RFC 2046; reference/mpack/part.h    */
-#define MIME_LINE_MAX    1000    /* RFC 5322 caps a line at 998         */
-#define MIME_HDR_MAX     512     /* one header, continuation lines and all */
-#define MIME_CTYPE_MAX   63
-#define MIME_IOBUF       4096
-#define MIME_AF_PREFIX   512     /* of an applefile part, decoded       */
-#define MIME_AF_ENTRIES  16
-#define MIME_SCAN_MAX    16384u  /* how far the probe looks for a header */
-#define MIME_NEST_SCAN   4096u   /* how far into a body part the test for a
-                                  * pasted document looks */
 
 /* MIME_CTE_UU is not a Content-Transfer-Encoding: no header names it
  * here. mpack has no such value either — an encoding it does not know
  * warns and falls through as `enc_none` (parseEncoding) — so a part
  * that says "x-uuencode" arrives here as NONE like any other, and it
  * is the BODY that decides. */
-enum { MIME_CTE_NONE = 0, MIME_CTE_QP, MIME_CTE_B64, MIME_CTE_UU };
 
 /* What a body part the walk would otherwise drop turns out to hold. */
 enum { MIME_NEST_NONE = 0, MIME_NEST_UU, MIME_NEST_DOC };
@@ -156,33 +145,10 @@ typedef struct MimeCtx {
 /* Small text helpers                                                 */
 /* ------------------------------------------------------------------ */
 
-static int mime_lower(int c)
-{
-    return (c >= 'A' && c <= 'Z') ? c + ('a' - 'A') : c;
-}
 
 /* Length of `pfx` if it matches the start of s case-insensitively. */
-static int32_t mime_ci_prefix(const uint8_t *s, int32_t len, const char *pfx)
-{
-    int32_t i;
-    for (i = 0; pfx[i]; i++) {
-        if (i >= len) return 0;
-        if (mime_lower(s[i]) != mime_lower((unsigned char)pfx[i])) return 0;
-    }
-    return i;
-}
 
-static int mime_is_space(int c)
-{
-    return c == ' ' || c == '\t';
-}
 
-static int32_t mime_strlen(const char *s)
-{
-    int32_t n = 0;
-    while (s[n]) n++;
-    return n;
-}
 
 /* Length of a NUL-terminated field this file filled in itself. */
 static int32_t mime_len(const uint8_t *s)
@@ -194,96 +160,18 @@ static int32_t mime_len(const uint8_t *s)
 
 /* mpack's test for a header line: a run of printable, non-space
  * characters, then a colon. Source: ParseHeaders(). */
-static int mime_is_header(const uint8_t *s, int32_t len)
-{
-    int32_t i;
-    for (i = 0; i < len; i++) {
-        if (s[i] == ':') return i > 0;
-        if (s[i] <= ' ' || s[i] >= 0177) return 0;
-    }
-    return 0;
-}
 
 /* The value of parameter `key` out of a header value: `; key=value` or
  * `; key="value"`, the quoted form honouring '\' escapes.
  * Source: reference/mpack/decode.c ParseContent()/getParam(). */
-static uint32_t mime_param(const uint8_t *h, int32_t hlen, const char *key,
-                           uint8_t *out, uint32_t cap, int *trunc)
-{
-    int32_t i = 0;
-    int32_t klen = mime_strlen(key);
-
-    while (i < hlen) {
-        int32_t start;
-        /* Step to the next ';' that is not inside a quoted string. */
-        while (i < hlen && h[i] != ';') {
-            if (h[i] == '"') {
-                i++;
-                while (i < hlen && h[i] != '"') {
-                    if (h[i] == '\\' && i + 1 < hlen) i++;
-                    i++;
-                }
-            }
-            i++;
-        }
-        if (i >= hlen) break;
-        i++;                                        /* past the ';' */
-        while (i < hlen && mime_is_space(h[i])) i++;
-        start = i;
-        if (mime_ci_prefix(h + start, hlen - start, key) != klen) continue;
-        i = start + klen;
-        while (i < hlen && mime_is_space(h[i])) i++;
-        if (i >= hlen || h[i] != '=') continue;
-        i++;
-        while (i < hlen && mime_is_space(h[i])) i++;
-        {
-            uint32_t n = 0, seen = 0;
-            if (i < hlen && h[i] == '"') {
-                i++;
-                while (i < hlen && h[i] != '"') {
-                    if (h[i] == '\\' && i + 1 < hlen) i++;
-                    seen++;
-                    if (n < cap) out[n++] = h[i];
-                    i++;
-                }
-            } else {
-                while (i < hlen && h[i] != ';' && !mime_is_space(h[i])) {
-                    seen++;
-                    if (n < cap) out[n++] = h[i];
-                    i++;
-                }
-            }
-            if (trunc) *trunc = seen > n;
-            return n;
-        }
-    }
-    return 0;
-}
 
 /* The bare content type, lowercased: everything up to a ';', a space or
  * a comment. Source: ParseContent()'s "strip whitespace" loop. */
-static void mime_ctype_of(const uint8_t *h, int32_t hlen, uint8_t *out)
-{
-    int32_t i = 0, n = 0;
-    while (i < hlen && mime_is_space(h[i])) i++;
-    while (i < hlen && h[i] != ';' && !mime_is_space(h[i]) && h[i] != '(') {
-        if (n < MIME_CTYPE_MAX) out[n++] = (uint8_t)mime_lower(h[i]);
-        i++;
-    }
-    out[n] = 0;
-}
 
 /* Source: reference/mpack/decode.c parseEncoding(). Anything this does
  * not name — 7bit, 8bit, binary, x-uuencode — leaves the bytes alone;
  * a uuencoded body posted to mail is claimed by the uuencode probe
  * before this format is reached (unc_sniff). */
-static int mime_cte_of(const uint8_t *h, int32_t hlen)
-{
-    while (hlen > 0 && mime_is_space(*h)) { h++; hlen--; }
-    if (mime_ci_prefix(h, hlen, "base64")) return MIME_CTE_B64;
-    if (mime_ci_prefix(h, hlen, "quoted-printable")) return MIME_CTE_QP;
-    return MIME_CTE_NONE;
-}
 
 /* ------------------------------------------------------------------ */
 /* Positioning                                                        */
@@ -1095,31 +983,12 @@ int unc_mime_extract(UncCtx *c)
 /* copy: two transcriptions of one rule disagree eventually.          */
 /* ------------------------------------------------------------------ */
 
-int32_t unc_mime_ci_prefix(const uint8_t *s, int32_t len, const char *pfx)
-{
-    return mime_ci_prefix(s, len, pfx);
-}
 
-uint32_t unc_mime_param(const uint8_t *h, int32_t hlen, const char *key,
-                        uint8_t *out, uint32_t cap, int *trunc)
-{
-    return mime_param(h, hlen, key, out, cap, trunc);
-}
 
 /* `cap` is the caller's buffer, which must hold MIME_CTYPE_MAX + 1;
  * the argument is there so a caller declaring less fails to compile
  * rather than at run time. */
-void unc_mime_ctype_of(const uint8_t *h, int32_t hlen, uint8_t *out,
-                       uint32_t cap)
-{
-    if (cap < MIME_CTYPE_MAX) { out[0] = 0; return; }
-    mime_ctype_of(h, hlen, out);
-}
 
-int unc_mime_is_header(const uint8_t *s, int32_t len)
-{
-    return mime_is_header(s, len);
-}
 
 /* ------------------------------------------------------------------ */
 /* Probe                                                              */
@@ -1134,143 +1003,16 @@ int unc_mime_is_header(const uint8_t *s, int32_t len)
  * The interesting header can sit well past the 512-byte sniff window
  * (Received: and DKIM lines are long), so this reads on through io. */
 /* What the headers scanned so far have shown. */
-typedef struct MimeSigns {
-    int ctype;                   /* a Content-Type at all      */
-    int signal;                  /* something to extract       */
-    int bnd;                     /* a multipart WITH a boundary */
-} MimeSigns;
 
 /* One unfolded header. Sets the flags; returns nonzero once the file is
  * a MIME message worth opening — which in `strict` mode means a
  * multipart whose parts this walk can enumerate, and otherwise any
  * message carrying something to extract. */
-static int mime_probe_header(const uint8_t *h, int32_t hlen, uint8_t *pb,
-                             MimeSigns *f, int strict)
-{
-    int32_t k;
 
-    if ((k = mime_ci_prefix(h, hlen, "content-type:"))) {
-        int have_bnd = mime_param(h, hlen, "boundary", pb,
-                                  MIME_BND_MAX, NULL) > 0;
-        f->ctype = 1;
-        /* A boundary, or a part that names a file: either is something
-         * to extract. A Content-Type alone is not — every mail message
-         * has one. */
-        if (have_bnd || mime_param(h, hlen, "name", pb, MIME_BND_MAX, NULL) > 0)
-            f->signal = 1;
-        if (have_bnd) {
-            int32_t j = k;
-            while (j < hlen && mime_is_space(h[j])) j++;
-            if (mime_ci_prefix(h + j, hlen - j, "multipart/")) f->bnd = 1;
-        }
-    } else if (mime_ci_prefix(h, hlen, "content-disposition:")) {
-        if (mime_param(h, hlen, "filename", pb, MIME_BND_MAX, NULL) > 0)
-            f->signal = 1;
-    } else if ((k = mime_ci_prefix(h, hlen, "content-transfer-encoding:"))) {
-        if (mime_cte_of(h + k, hlen - k) != MIME_CTE_NONE)
-            f->signal = 1;
-    }
-    return strict ? f->bnd : (f->ctype && f->signal);
-}
 
-static UncFormat mime_probe(const uint8_t *head, int32_t len, UncIO *io,
-                            int strict)
-{
-    /* Deliberately small: this frame is on the sniff path, which every
-     * file that reaches the end of unc_sniff pays for. 512 bytes of
-     * lines and 256 of unfolded header are enough to FIND the signal —
-     * a boundary, a filename or an encoding — and a line too long for
-     * the window is skipped rather than ending the scan. */
-    uint8_t buf[512], pb[MIME_BND_MAX + 1];
-    uint8_t hb[256];
-    int32_t hn = 0;
-    uint32_t pos = 0, size;
-    int32_t n = 0, i = 0;
-    MimeSigns f;
-
-    f.ctype = f.signal = f.bnd = 0;
-
-    if (len < 16 || !io) return UNC_FORMAT_UNKNOWN;
-
-    /* The file has to START like a message: a header line, or the "From "
-     * line an mbox begins with. */
-    {
-        int32_t e = 0;
-        while (e < len && head[e] != '\n' && head[e] != '\r') e++;
-        if (!mime_is_header(head, e) &&
-            !mime_ci_prefix(head, e, "from ")) return UNC_FORMAT_UNKNOWN;
-    }
-
-    size = unc_io_size32(io);
-    if (size == UNC_SIZE_UNKNOWN) size = MIME_SCAN_MAX;
-    if (size > MIME_SCAN_MAX) size = MIME_SCAN_MAX;
-
-    while (pos < size) {
-        int32_t want = (int32_t)(size - pos);
-        if (want > (int32_t)sizeof buf) want = (int32_t)sizeof buf;
-        if (unc_read_at(io, pos, buf, want) != UNC_OK) break;
-        n = want;
-
-        /* Whole lines only: stop at the last terminator in the buffer,
-         * unless this is the end of the scan. */
-        if (pos + (uint32_t)n < size) {
-            while (n > 0 && buf[n - 1] != '\n' && buf[n - 1] != '\r') n--;
-            if (n == 0) {                       /* a line longer than buf */
-                pos += (uint32_t)want;
-                hn = 0;
-                continue;
-            }
-        }
-
-        i = 0;
-        while (i < n) {
-            int32_t s = i, e;
-            while (i < n && buf[i] != '\n' && buf[i] != '\r') i++;
-            e = i;
-            while (i < n && (buf[i] == '\n' || buf[i] == '\r')) i++;
-
-            /* Unfold, exactly as the extractor does: a
-             * "Content-Type: application/octet-stream;" whose `name`
-             * is on the next line is one header, and reading the two
-             * lines separately finds neither the name nor, for a
-             * folded Content-Transfer-Encoding, the encoding. The
-             * pending header survives across read chunks. */
-            if (hn > 0 && e > s && mime_is_space(buf[s])) {
-                int32_t k = s;
-                while (k < e && hn < (int32_t)sizeof hb - 1) hb[hn++] = buf[k++];
-                continue;
-            }
-            if (hn > 0) {
-                if (mime_probe_header(hb, hn, pb, &f, strict))
-                    return UNC_FORMAT_MIME;
-                hn = 0;
-            }
-            if (e == s) continue;               /* the end of the headers */
-            {
-                int32_t k = s;
-                while (k < e && hn < (int32_t)sizeof hb - 1) hb[hn++] = buf[k++];
-            }
-        }
-        pos += (uint32_t)n;
-    }
-    if (hn > 0 && mime_probe_header(hb, hn, pb, &f, strict))
-        return UNC_FORMAT_MIME;
-
-    return UNC_FORMAT_UNKNOWN;
-}
-
-UncFormat unc_mime_probe(const uint8_t *head, int32_t len, UncIO *io)
-{
-    return mime_probe(head, len, io, 0);
-}
 
 /* The strict half, which unc_sniff runs BEFORE uuencode, btoa and
  * BinHex: a message that declares a multipart with a boundary has parts
  * this walk can enumerate, and one of them being a document those three
  * scans recognise is no reason to hand them the whole message and drop
  * the others (DECISIONS.md 2026-08-29). */
-UncFormat unc_mime_probe_multipart(const uint8_t *head, int32_t len,
-                                   UncIO *io)
-{
-    return mime_probe(head, len, io, 1);
-}
