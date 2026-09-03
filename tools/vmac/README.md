@@ -1801,8 +1801,8 @@ nothing in the corpus can make this box say anything. It holds names too long
 for HFS, one that fits only once its extension goes, a duplicate, two folders
 that shorten to the same name, eighteen photographs alike for 31 characters,
 and one entry whose checksum is broken by a single bit — so the box lists a
-rename, a merge, a numbered name and a per-entry failure at once, and is long
-enough that the scroll bar is live.
+rename, a numbered file, a numbered FOLDER and a per-entry failure at once,
+and is long enough that the scroll bar is live.
 
 Five frames: the box, the box scrolled six lines, Standard File over it after
 **Save as Text**, the box redrawn once that is dismissed (which is what proves

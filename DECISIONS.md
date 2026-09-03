@@ -191,6 +191,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-01 (no hotspot, twenty-three decoders) — where the application's code is, and two instruments that said otherwise
 - 2026-09-03 (the binary nothing builds, twice more) — three UI failures that were one unfinished fix, and an explanation that fit six cases out of nine
 - 2026-09-03 (the struct that grew after it was measured) — 296 was the offset of the last field
+- 2026-09-03 (a folder is a name too) — numbering folders like files, and the table that made it affordable
 
 ---
 
@@ -10995,3 +10996,61 @@ a machine with no m68k compiler. Mutation-tested both ways: restoring `296`
 fails one site, and adding a field to the struct fails all three at 302. A
 historical value now has to be written outside that phrase — this entry says
 *quoted at 296 bytes*, and that is the check working rather than around it.
+
+## 2026-09-03 (a folder is a name too) — numbering folders like files, and the table that made it affordable
+
+**At the maintainer's ask.** The Macintosh shell cut every path component to
+HFS's 31 characters and numbered a FILE that landed on a name already taken —
+`dup.txt` → `dup~1.txt` — while a FOLDER in the same position was descended
+into, so two folders whose names agreed for 31 characters became one on disk
+and their contents mixed. Folders are numbered now, `~1`..`~99`, by the same
+`BumpName` the files use.
+
+**What made it look impossible was a table size, filed as a property of the
+formats.** OPEN_ITEMS.md carried it under *Limits of the formats themselves*:
+where an archive declares no folder entries — zip, tar, LZH, most of what
+anybody downloads — the folders exist only inside the paths of the files in
+them, so a second folder arriving "looks exactly like the first folder being
+revisited", and remembering every long name would cost more than a 1 MB
+machine will pay. Neither half held. `RepDirMemo` was already recording every
+directory this run created, declared or not; and the cost it was measured at
+was the cost of storing whole NAMES, 68 bytes a row for 24 folders. A 32-bit
+hash of the component answers the only question that is ever asked of the row
+— *is this directory this run's, and is it this name's?* — for 8 bytes,
+which puts **200 folders in the 1,600 B that held 24**.
+
+Three decisions inside it, each of which could have gone the other way:
+
+- **A directory this run did not make is descended into, still.** A folder the
+  user already had, or one an earlier run left, takes this archive's files;
+  numbering there would spray `~1` over the first run's work every time
+  somebody extracted the same archive twice. So the memo is what authorises a
+  rename, and its absence means merge — `tools/run_macnames.py`,
+  *folder_again_case*, holds that, and it fails on the one-line change that
+  treats an unknown directory as somebody else's.
+- **The table never evicts, and that is the load-bearing property.** A row
+  lost after its folder was numbered would send the rest of that folder's
+  files into a different directory — one archive folder SPLIT across two on
+  disk, which is worse than the merge numbering replaces. A full table stops
+  numbering and merges exactly as the shell did before, so the failure falls
+  in the direction the old behaviour already had. **The safe direction for a
+  bounded table is the behaviour it replaced**, not the one it aspires to.
+- **The merge line takes from the report's failure reserve.** Past `~99` a
+  folder really does go into another one, and it says *combined with* rather
+  than *renamed to*. An archive that reaches that has a hundred alike folder
+  names and so a hundred ordinary rename lines — exactly the crowd the
+  16-line reserve exists to keep the consequential line out of. Measured: at
+  101 folders the line was dropped without it.
+
+**The duplicate report was the one thing the design did not predict.** A
+merged folder is discovered again by every file inside it, so the first
+version announced the merge once per entry. The fix is in the same table: the
+merged folder is memoed under its own name as well, so the second arrival
+reads as *the same folder* and descends quietly. A directory may hold more
+than one row, and that is why.
+
+Cost of the old claim, and where it is recorded: BLOCKERS.md, *Withdrawn
+claims*. The measurement that opened it took one zip and one run of a mock
+sink that has been in `ci.sh` since 2026-08-28 — the claim was about our own
+binary, which is the cheapest kind here to test and the easiest to leave
+untested.

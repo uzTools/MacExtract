@@ -126,10 +126,15 @@ That second dialog opens in the archive's own folder, so pressing Return
 puts them next to it; click Drive to send them to another disk instead.
 
 When a run ends, anything that had to change on the way is listed: a name too
-long for HFS (31 characters max), two folders that ended up sharing a
-shortened name, an entry that could not be extracted and what was wrong with
-it. Save as Text files the whole thing as a document. A run with nothing to
-report just says so, as before.
+long for HFS (31 characters max) and what it became, an entry that could not
+be extracted and what was wrong with it. Save as Text files the whole thing as
+a document. A run with nothing to report just says so, as before.
+
+Two files whose names are the same for the first 31 characters do not
+overwrite each other -- the second gets a ~1 after its name, before the .txt
+or whatever the suffix is. Two FOLDERS in that position are kept apart the
+same way, so the files that were in different folders in the archive are in
+different folders on your disk.
 
 If a Compact Pro or zip archive carries a note -- the comment whoever
 made it typed in -- it is written into that folder as a text file called

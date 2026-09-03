@@ -707,10 +707,14 @@ def phase_report(args, appbin, workdir, shot):
         # one became ~11 is answerable
         "Photograph Of The Summer Of 1994 no11.pict renamed to "
         "Photograph Of The Summe~11.pict",
+        # two folders that shorten alike are TWO folders, the second
+        # numbered the way a file is (2026-09-03) — and both are named
+        "Folder Correspondence With The Publisher A renamed to "
+        "Correspondence With The Publish",
+        "Folder Correspondence With The Publisher B renamed to "
+        "Correspondence With The Publi~1",
     ]
     missing = [w for w in want_lines if w not in lines]
-    if not any(" combined with " in l for l in lines):
-        missing.append("<a folder reported as combined with another>")
     # "finished", not "complete": entries failed, and not "some entries
     # could not be extracted" either — they are named above, one line each.
     if not lines or "Extraction finished." not in lines[-1]:
@@ -722,7 +726,12 @@ def phase_report(args, appbin, workdir, shot):
     for n in ("MyQuarterlyReportForTheBoar.rtf", "Notes~1.txt",
               # the eighteenth photograph proves the numbering goes past ~9,
               # and keeps its suffix while doing it
-              "Photograph Of The Summe~17.pict"):
+              "Photograph Of The Summe~17.pict",
+              # and the two folders are TWO folders, each holding its own
+              # letter.txt — a merge would have put one letter~1.txt in
+              # the first of them (2026-09-03)
+              "Correspondence With The Publish:letter.txt",
+              "Correspondence With The Publi~1:letter.txt"):
         if ":" + n not in names:
             missing.append(n)
             print(f"interactive: the report names {n}, the volume does not")

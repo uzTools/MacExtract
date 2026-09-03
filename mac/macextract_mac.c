@@ -1025,14 +1025,25 @@ static short gRepUsed;              /* bytes of the pool in use */
 static short gRepCur;               /* the line being appended to, or -1 */
 static long  gRepMore;              /* lines there was no room for */
 
-/* Folders this run created, so a folder that turns up ALREADY there can
- * be told from one this walk made a moment ago. Only the archive's own
- * name is remembered, and only its first 63 bytes: two names that agree
- * that far shorten alike, so they would be indistinguishable on disk
- * anyway. */
-#define kDirMemo 24
+/* Folders this run created: which directory id, and a hash of the whole
+ * component name it was made for. It answers one question, asked at
+ * every folder whose shortened name is already taken — is that
+ * directory one this run made for a DIFFERENT name? — and the answer is
+ * what lets a folder be numbered `~1` the way a file is.
+ *
+ * A hash rather than the name because the table has to hold every
+ * folder of an ordinary archive rather than the first few: 8 bytes a
+ * row against 68 puts 200 folders in the 1,600 B that held 24.
+ *
+ * IT NEVER EVICTS, and that is the load-bearing property. A row lost
+ * after its folder was numbered would send the rest of that folder's
+ * files into a DIFFERENT folder — one archive folder split across two
+ * on disk, which is worse than the merge numbering replaces. A full
+ * table stops numbering and merges exactly as this shell did before
+ * 2026-09-03, which is the direction a failure has to fall. */
+#define kDirMemo 200
 
-static struct { long dir; unsigned char name[64]; } gDirMemo[kDirMemo];
+static struct { long dir; uint32_t hash; } gDirMemo[kDirMemo];
 static short gDirMemoN;
 
 static void RepReset(void)
@@ -1099,11 +1110,18 @@ static void RepCatBytes(const uint8_t *b, int len)
 }
 
 /* "<archive's name> renamed to <what is on the disk>" — the line this
- * whole report exists for. `what` prefixes it for a folder. */
-static void RepRenamed(const char *what, const uint8_t *orig, int olen,
-                       const unsigned char *now, const char *verb)
+ * whole report exists for. `what` prefixes it for a folder.
+ *
+ * `urgent` takes from the reserve the failures hold, and one line does:
+ * a folder that could not be numbered and went into another one. An
+ * archive that produces it has a hundred alike folder names and so a
+ * hundred ordinary rename lines, which is exactly the crowd the reserve
+ * exists to keep the consequential line out of (2026-09-03; measured
+ * against 101 folders, where the line was dropped without it). */
+static void RepRenamedAt(int urgent, const char *what, const uint8_t *orig,
+                         int olen, const unsigned char *now, const char *verb)
 {
-    if (!RepNew(0)) return;
+    if (!RepNew(urgent)) return;
     RepCat(what);
     RepCatBytes(orig, olen);
     RepMarkBreak();
@@ -1111,40 +1129,57 @@ static void RepRenamed(const char *what, const uint8_t *orig, int olen,
     RepCatP(now);
 }
 
-static void RepDirMemo(long dir, const uint8_t *orig, int olen)
+static void RepRenamed(const char *what, const uint8_t *orig, int olen,
+                       const unsigned char *now, const char *verb)
 {
-    short i, n = (short)olen;
+    RepRenamedAt(0, what, orig, olen, now, verb);
+}
+
+/* djb2 over one path component, raw engine bytes. Raw because a
+ * component cannot hold a '/' — that is the engine's separator — so its
+ * bytes and the name this shell writes are one to one, and any
+ * difference at all is a different folder.
+ *
+ * Shifts and adds: the 68000 has no 32x32 multiply. The length goes in
+ * at the end so that a name and the same name repeated cannot agree. */
+static uint32_t DirHash(const uint8_t *b, int len)
+{
+    uint32_t h = 5381u;
+    int i;
+    for (i = 0; i < len; i++) h = ((h << 5) + h) + (uint32_t)b[i];
+    return ((h << 5) + h) + (uint32_t)len;
+}
+
+static void RepDirMemo(long dir, uint32_t hash)
+{
     if (gDirMemoN >= kDirMemo) return;      /* full: it says nothing, ever */
-    if (n > 63) n = 63;
     gDirMemo[gDirMemoN].dir = dir;
-    gDirMemo[gDirMemoN].name[0] = (unsigned char)n;
-    for (i = 0; i < n; i++)
-        gDirMemo[gDirMemoN].name[i + 1] = orig[i] == ':' ? '/' : orig[i];
+    gDirMemo[gDirMemoN].hash = hash;
     gDirMemoN++;
 }
 
-/* Did this run create `dir` for a DIFFERENT archive name than this one?
- * That — and only that — is a merge: two folders whose names shorten
- * alike become one, and everything they hold ends up together.
+/* Is `dir` this run's, and is it this name's?
  *
- * WHAT THIS CANNOT SEE: a folder that no entry of its own declares.
- * Where a format carries no directory entries the folders are made
- * along the way by the paths of the files in them, and two such folders
- * merging is indistinguishable from one folder visited twice. */
-static int RepDirMerged(long dir, const uint8_t *orig, int olen)
+ *   0  this run did not make it, or no longer remembers — a folder that
+ *      was on the volume before the run reads the same as one the table
+ *      had no room for, and both are descended into;
+ *   1  this run made it, for a DIFFERENT name: another folder;
+ *   2  this run made it for THIS name: the same folder again.
+ *
+ * A directory can hold more than one row, because a folder that could
+ * not be numbered and went into another one is memoed under its own
+ * name as well — that is what stops it being announced again by every
+ * file inside it. */
+static int RepDirKnown(long dir, uint32_t hash)
 {
-    short i, j, n = (short)olen;
-    if (n > 63) n = 63;
+    short i;
+    int ours = 0;
     for (i = 0; i < gDirMemoN; i++) {
         if (gDirMemo[i].dir != dir) continue;
-        if ((short)gDirMemo[i].name[0] != n) return 1;
-        for (j = 0; j < n; j++) {
-            unsigned char c = orig[j] == ':' ? '/' : orig[j];
-            if (gDirMemo[i].name[j + 1] != c) return 1;
-        }
-        return 0;                            /* the same folder again */
+        if (gDirMemo[i].hash == hash) return 2;
+        ours = 1;
     }
-    return 0;                                /* not ours: say nothing */
+    return ours;
 }
 
 /* An entry that failed on its own without stopping the archive, named
@@ -1307,36 +1342,77 @@ static OSErr MyDirCreate(short vRefNum, long parent, StringPtr name,
     return err;
 }
 
-/* Create (or descend into) one directory level. `*isNew` says which of
- * the two happened, which is how a folder MERGED into one that is
- * already there is told from one this walk just made. */
-static OSErr EnsureDir(short vRefNum, long parent, Str63 name, long *dirID,
-                       int *isNew)
+/* Create (or descend into) one directory level, NUMBERING a folder whose
+ * shortened name is already taken by a different folder of this run —
+ * `Correspondence With The Publisher A` and `...B` shorten alike and
+ * become `Correspondence With The Publish` and
+ * `Correspondence With The Publ~1`, the way two files in that position
+ * are numbered by `BumpName`. Until 2026-09-03 the second folder was
+ * descended into and the two archive folders became one on disk
+ * (OPEN_ITEMS.md, at the maintainer's ask).
+ *
+ * `name` carries the number back out, so the caller reports the name
+ * that is on the disk. `*isNew` says whether this walk made the
+ * directory — a folder is reported once, where it is made — `*numbered`
+ * that the name on the disk is not the one that went in, and `*merged`
+ * that a folder went into one this run had made for another name after
+ * all, which is what happens past `~99`.
+ *
+ * A directory THIS RUN DID NOT MAKE is descended into, still: a folder
+ * the user already had, or one an earlier run left, must take this
+ * archive's files rather than sprout a `~1` beside it. */
+static OSErr EnsureDir(short vRefNum, long parent, Str63 name, uint32_t hash,
+                       long *dirID, int *isNew, int *merged, int *numbered)
 {
-    long created;
-    OSErr err = MyDirCreate(vRefNum, parent, name, &created);
+    Str63 base;
+    int attempt;
+
     *isNew = 0;
-    if (err == noErr) {
-        *dirID = created;
-        *isNew = 1;
-        return noErr;
-    }
-    if (err == dupFNErr) {
-        /* Exists: file or folder? Look it up. */
+    *merged = 0;
+    *numbered = 0;
+    BlockMoveData(name, base, name[0] + 1);
+
+    for (attempt = 0; ; attempt++) {
+        long created;
+        uint32_t seen;
         CInfoPBRec pb;
         Str63 tmp;
+        OSErr err = MyDirCreate(vRefNum, parent, name, &created);
+        if (err == noErr) {
+            *dirID = created;
+            *isNew = 1;
+            return noErr;
+        }
+        if (err != dupFNErr) return err;
+        /* Exists: file or folder? Look it up. */
         BlockMoveData(name, tmp, name[0] + 1);
         pb.dirInfo.ioNamePtr = tmp;
         pb.dirInfo.ioVRefNum = vRefNum;
         pb.dirInfo.ioDrDirID = parent;
         pb.dirInfo.ioFDirIndex = 0;
-        if (PBGetCatInfoSync(&pb) == noErr &&
-            (pb.dirInfo.ioFlAttrib & ioDirMask)) {
-            *dirID = pb.dirInfo.ioDrDirID;
+        if (PBGetCatInfoSync(&pb) != noErr ||
+            !(pb.dirInfo.ioFlAttrib & ioDirMask))
+            return err;                  /* a FILE holds the name */
+        *dirID = pb.dirInfo.ioDrDirID;
+        seen = (uint32_t)RepDirKnown(*dirID, hash);
+        if (seen != 1) return noErr;     /* not ours, or the same folder */
+        /* Ours, under another name: a different folder. Number it —
+         * unless the numbers have run out, where merging is what is
+         * left and is what this shell did with every one of them
+         * before. `BumpName` writes two digits and no more.
+         *
+         * The merged folder is memoed under its own name too, so the
+         * files inside it descend quietly instead of announcing the
+         * merge once each. */
+        if (attempt >= 99) {
+            *merged = 1;
+            RepDirMemo(*dirID, hash);
             return noErr;
         }
+        BlockMoveData(base, name, base[0] + 1);
+        BumpName(name, attempt + 1);
+        *numbered = 1;
     }
-    return err;
 }
 
 /* ------------------------------------------------------------------ */
@@ -1452,8 +1528,10 @@ static int SINK_BEGIN(void *ctx, const UncEntryInfo *info)
                 leafLen = i - start;
                 leafChanged = changed;
             } else {
-                int isNew = 0;
-                OSErr derr = EnsureDir(s->vRefNum, dir, comp, &dir, &isNew);
+                int isNew = 0, merged = 0, numbered = 0;
+                uint32_t h = DirHash(info->name + start, i - start);
+                OSErr derr = EnsureDir(s->vRefNum, dir, comp, h, &dir,
+                                       &isNew, &merged, &numbered);
                 if (derr != noErr) {
                     if (derr == dskFulErr) return -1;   /* the run is over */
                     RepEntryFailed(info->name + start, i - start,
@@ -1461,20 +1539,23 @@ static int SINK_BEGIN(void *ctx, const UncEntryInfo *info)
                     s->errors++;
                     return 1;                           /* this entry only */
                 }
-                /* A folder is reported once, where it is made: at the
-                 * moment of creation for a name that had to change, and
-                 * — for a folder the archive declares as an entry of its
-                 * own — where the name it shortened to was already
-                 * taken by another folder of this same run. */
+                /* A folder is reported once, where it is made: the name
+                 * the archive gave it and the name it is under on the
+                 * disk, whether the cut to 31 characters changed it or
+                 * the numbering did. `merged` is the one case left where
+                 * two archive folders really are one on the disk — the
+                 * numbers ran out — and it says so in different words,
+                 * because what happened to the user's files is
+                 * different: nothing is lost, but two folders are now
+                 * one. */
                 if (isNew) {
-                    if (changed)
+                    if (changed || numbered)
                         RepRenamed("Folder ", info->name + start, i - start,
                                    comp, " renamed to ");
-                    RepDirMemo(dir, info->name + start, i - start);
-                } else if (changed && info->is_dir && i == info->name_len &&
-                           RepDirMerged(dir, info->name + start, i - start)) {
-                    RepRenamed("Folder ", info->name + start, i - start,
-                               comp, " combined with ");
+                    RepDirMemo(dir, h);
+                } else if (merged) {
+                    RepRenamedAt(1, "Folder ", info->name + start, i - start,
+                                 comp, " combined with ");
                 }
                 if (i == info->name_len) return 1;   /* dir entry done */
             }

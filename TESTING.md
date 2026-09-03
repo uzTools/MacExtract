@@ -1319,10 +1319,12 @@ the collision that cutting creates in `BumpName`, off the File Manager's
 The code under test is the shell itself, through the mock Toolbox of
 `tests/mac_sink_test.c`; the subjects are DiskDoubler archives from
 `tools/synth_dd.py`, because both caps have to be reached in one archive
-shape to see which one acted. Eight cases: two files whose names are the
-same for 31 characters, which must both come out with the second
-numbered; two FOLDERS in the same position, which merge into one and must
-keep both their files; four 63-byte folders summing to exactly the
+shape to see which one acted — with one exception noted below. Twelve
+cases: two files whose names are the same for 31 characters, which must
+both come out with the second
+numbered; two FOLDERS in the same position, which since 2026-09-03 are
+two folders on the disk with the second numbered rather than one holding
+both their files; four 63-byte folders summing to exactly the
 engine's 255-byte cap, where the leaf's cut path lands on its own folder
 and the numbering is the only reason the file survives; the edges of
 the cut — 31 characters written whole, 40 cut to 31, and a nameless entry
@@ -1332,13 +1334,33 @@ written as `_`; and four added 2026-08-29 with the end-of-run report:
   keeps its `.rtf` and loses a character of name, and a numbered name
   takes the `~1` before the suffix rather than after it;
 - **the report's lines**, which are what the Macintosh box lists: a
-  renamed file names itself twice, a merged folder says *combined with*
-  and a renamed one says *renamed to*, and an entry whose name was
-  writable is not mentioned at all;
+  renamed file and a renamed folder each name themselves twice, and an
+  entry whose name was writable is not mentioned at all;
 - **a per-entry failure**, from an archive whose one damaged entry is
   named in the report while the sound one still comes out;
 - **more alike names than the numbering has digits for** — 102 of them,
   and one file after them whose survival is the assertion.
+
+Four more since 2026-09-03, when folders started being numbered like
+files (DECISIONS.md, *a folder is a name too*):
+
+- **the same two folders in a ZIP**, the one case here whose subject is
+  not a DiskDoubler archive, and deliberately: a zip declares no folders,
+  so they exist only inside the paths of the files in them — the shape
+  most archives a user downloads have, and the shape that used to merge
+  in silence;
+- **the same archive extracted TWICE into one destination**, where the
+  folder must be descended into and the FILES numbered. It is what stops
+  a numbering rule from spraying `~1` over the last run's work, and it
+  fails on the one-line change that treats a directory this run did not
+  make as somebody else's;
+- **101 folders whose names shorten alike**, where the numbering runs out
+  at `~99` and the hundred-and-first merges, is reported as *combined
+  with*, and keeps its file;
+- **250 folders against a 200-row memo**, where what is asserted is not
+  the numbering but that no folder is SPLIT — the failure that would
+  make numbering worse than merging, and the reason the table never
+  evicts.
 
 **Established that it can fail**: against five one-line breakages of the
 shell — the cap raised to 63 fails five assertions, the numbering removed
@@ -1346,7 +1368,9 @@ fails six (and loses a file, and stops the run), the empty-name
 fallback removed fails one, the extension cut the other way fails four
 (which is how it was written for a few hours), and
 the numbering restored to its `~9` limit fails four, one of which is the
-file that never came out.
+file that never came out. A sixth since 2026-09-03: treating a directory
+this run did not make as another folder's — one line in `EnsureDir` —
+fails the twice-extracted case with a `~1` folder beside the first run's.
 
 **The mock's directory calls had to be made honest first.**
 `PBDirCreateSync` tolerated `EEXIST` and minted a fresh directory id, and

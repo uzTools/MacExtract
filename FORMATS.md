@@ -2135,6 +2135,18 @@ made unique fails **its own entry** and nothing else. It reads
 `name_truncated` as well, which is how a path the ENGINE cut is reported
 by a shell whose own cut did not fire.
 
+**A FOLDER is numbered the same way, since 2026-09-03**: two folders
+whose names agree for 31 characters are two folders on the disk,
+`Correspondence With The Publish` and `Correspondence With The Publ~1`,
+where until that date the second was descended into and their contents
+mixed. What authorises the rename is the folder memo — 200 rows of
+directory id and a 32-bit hash of the name it was created for, 1,600 B —
+so a directory THIS RUN did not make is still descended into, which is
+what lets the same archive be extracted twice into one destination.
+Past `~99`, or past the 200th folder, a merge is what is left and the
+first of those says *combined with* in the report. Reasoning:
+DECISIONS.md 2026-09-03, *a folder is a name too*.
+
 Why the suffix survives when 31 bytes are all there is: a Macintosh file
 is opened by the type and creator `sink_end` stamps on it, but a file
 that arrived WITH a suffix generally came off a machine that has neither
@@ -2147,11 +2159,11 @@ like anything else that did not come out.
 
 | the report holds | measured |
 |---|---|
-| lines kept | 64, of which the last **16 are reserved for failures** — 100 renames must not push out the one line to act on |
+| lines kept | 64, of which the last **16 are reserved for failures** and for a folder that could not be numbered — 100 renames must not push out the one line to act on |
 | text | 6,144 B packed end to end, 1 KB of it likewise reserved. **Names go in whole**: eighteen photographs whose names differ at character 34 are one line repeated eighteen times if the name is cut to a row, and the list exists to say which file became which |
 | rows a line takes | as many as the box needs, wrapped at a measured width and **broken after the name** where it has to wrap, so one row is what the archive called it and the next is what became of it |
 | rows visible at once | 20, Geneva 9 on 11-point rows, in a 460×300 box at (30,26) — the whole of it on a 512×342 Mac Plus screen. A list longer than that scrolls under the last two, which hold a blank line and the outcome |
-| static cost | 6,144 B of lines + 1,632 B of folder memo, against the ~64 KB the 1 MB floor target has spare (*the PAK methods*, 2026-08-25) |
+| static cost | 6,144 B of lines + 1,600 B of folder memo (200 folders, id and name hash), against the ~64 KB the 1 MB floor target has spare (*the PAK methods*, 2026-08-25) |
 | the application | 184,576 B of MacBinary, from 178,944 B before it |
 
 The outcome — *"Extraction complete."*, and every other sentence the

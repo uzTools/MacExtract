@@ -115,24 +115,6 @@ branch, so reopening it is a merge and not a rediscovery.
   identical there. The rule that tries is DECISIONS.md 2026-08-29, *a cut
   archive*.
 
-- **Two folders that merge cannot be told from one folder visited
-  twice, in a format that carries no directory entries.** The Macintosh
-  shell shortens every path component to 31 characters, so two folders
-  whose names agree that far become one; where the archive declares each
-  folder as an entry of its own (DiskDoubler, SuperDisk!, StuffIt
-  hierarchies) that is reported as *"combined with"*, because the
-  declaration is what makes the second one distinguishable. Where
-  folders exist only inside the paths of the files in them, the second
-  arrival looks exactly like the first folder being revisited.
-  **What would change it:** nothing in the format. Remembering every
-  long name ever seen would, at a cost this shell will not pay on a
-  1 MB machine — it remembers 24 (FORMATS.md, *Name limits*).
-  **Both halves of that are under re-test**, in Part 2's *A folder that
-  shortens onto another is merged, where a file is numbered*: the cost
-  is the cost of whole names, and `RepDirMemo` is called for an
-  undeclared folder as well as a declared one, so the memo holds what
-  the report does not ask it.
-
 - **A uuencoded set missing a MIDDLE part decodes short, and silently.** A
   document posted in several parts joins and decodes — the mail headers
   between parts are stepped over — but uuencode carries no length and no
@@ -149,40 +131,6 @@ branch, so reopening it is a merge and not a rediscovery.
 # Part 2 — Open items
 
 ---
-
-## A folder that shortens onto another is merged, where a file is numbered
-
-**Asked for 2026-09-03.** `ComponentToStr63` cuts every path component to 31
-characters. A FILE that lands on a name already taken is numbered `~1`..`~99`
-by `BumpName`; a FOLDER is not — `EnsureDir` descends into whatever is there,
-so two folders whose names agree for 31 characters become one and their
-contents mix. The ask is that a folder be numbered like a file.
-
-**Measured 2026-09-03**, mock sink, a zip carrying two long folder names and
-no folder entries of its own: the merge is not even reported. The box says
-*"Folder …alpha renamed to …"* and says nothing whatever about the second
-folder, whose file is now inside the first one. Where a format DECLARES its
-folders the box says *"combined with"* (`tools/run_macnames.py`, the report
-case).
-
-**What it costs:** an answer, at every `EnsureDir` that takes `dupFNErr`, to
-*did this run create that directory for a different long name?* — which is
-what `gDirMemo` already answers for the report, for 24 folders at 68 bytes
-each. Numbering needs it for every folder, and a 32-bit hash of the whole
-component in place of its first 63 bytes is 8 bytes a row. **The table must
-never evict.** A row lost after its folder was numbered splits one archive
-folder across two disk folders, which is worse than the merge it replaces;
-a full table that stops numbering merges exactly as today, which is the
-direction a failure has to fall.
-
-Two decisions sit inside it: a folder that was on the volume BEFORE this run
-must still be descended into, or a second extraction into the same
-destination sprays `~1` over the first one's folders; and the wording changes
-where two suites assert it — `tools/run_macnames.py` and the report scenario
-in `tools/vmac/interactive.py`.
-
-**What would close it:** `mac/macextract_mac.c` alone — no engine change —
-graded on Linux through the mock sink, plus one emulator run for the box.
 
 ## Selective extraction: the entries the user ticked, and no others
 
