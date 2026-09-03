@@ -623,6 +623,137 @@ def volume_text(img, name):
         shutil.rmtree(home, ignore_errors=True)
 
 
+# The chooser box, measured off its own resource (mac/macextract.r, DLOG
+# 134 at {30,26,330,486}, same frame as the report box). Re-measure all
+# of these if that resource moves.
+CHOOSE_EXTRACT = (437, 304)     # the Extract button, and the default
+CHOOSE_CANCEL  = (349, 304)
+CHOOSE_ALL     = (73, 304)
+CHOOSE_NONE    = (153, 304)
+
+
+def choose_row(i):
+    """Where to click to tick row `i`: past the tick box, on the name.
+
+    Row i spans local y = 34 + 11i to 45 + 11i inside a list item that
+    starts at {32,12} of a dialog at (30,26) — the same 11-point line
+    the report box uses (kRepLineH).
+    """
+    return (78, 30 + 32 + 2 + 11 * i + 5)
+
+
+def phase_choose(args, appbin, workdir, shot):
+    """Selective extraction, driven on screen: untick everything, tick
+    two entries by name, extract, and read the volume back.
+
+    The photographs are the box as it opens (everything ticked), the box
+    after None, and the box with two rows ticked. THE ASSERTION IS THE
+    VOLUME: exactly the two chosen files are on it and the other four are
+    not. A photograph of a list with ticks in it cannot fail — a file
+    that should not be there can, and that is the half of this feature
+    that is worth anything.
+
+    Ignores the fixture argument: the archive is generated, so the entry
+    ORDER is known and a row can be named.
+    """
+    sys.path.insert(0, os.path.join(R.REPO, "tools"))
+    import synth_dd                                          # noqa: E402
+
+    names = ["Alpha.txt", "Bravo.txt", "Charlie.txt", "Delta.txt",
+             "Echo.txt", "Foxtrot.txt"]
+    # checkdisk's paths are volume-relative and begin with the separator,
+    # so these are compared as ":Alpha.txt" — extracted at the root of
+    # the volume, which is where accept_destination puts them.
+    want = [":Alpha.txt", ":Charlie.txt"]         # rows 0 and 2, ticked
+    unwanted = [":Bravo.txt", ":Delta.txt", ":Echo.txt", ":Foxtrot.txt"]
+    tmp = tempfile.mkdtemp(prefix="choose-")
+    built, _ = synth_dd.write_one(
+        tmp, "choose",
+        [synth_dd.file(n, data=(n + "\n").encode("mac_roman")) for n in names])
+    arch = os.path.join(workdir, "choose.dd")
+    shutil.copy(built, arch)
+    shutil.rmtree(tmp, ignore_errors=True)
+
+    stock = os.path.join(R.VMAC_HOME, args.system)
+    bootimg = os.path.join(workdir, "boot-choose.hfv")
+    # System 3.0 ignores the boot blocks' shell name and comes up in the
+    # Finder, so on that tier the application has to be launched by
+    # double-click — which means it has to be AT THE VOLUME ROOT, where
+    # `--finder` puts it, rather than in the blessed folder the boot-shell
+    # arrangement leaves it in (FORMATS.md, *System 3.0 tier*).
+    byhand = args.system == "Sys30.img"
+    R.sh(sys.executable, os.path.join(HERE, "mkboot.py"), stock, appbin, bootimg,
+         *(["--finder"] if byhand else []),
+         "--data", f"{arch}:archive.sit")
+
+    scratch = os.path.join(args.outdir, ".settle.png")
+    mac = Mac(bootimg, args.emu, workdir)
+    try:
+        if mac.settle(scratch, interval=5.0, timeout=args.boot_timeout) is None:
+            raise SystemExit("interactive: the machine never settled")
+        # System 3.0 ignores the boot blocks' shell name, so it comes up in
+        # the Finder with the application sitting on the volume rather than
+        # already running: it is the one tier that has to be launched by
+        # double-click (FORMATS.md, *System 3.0 tier*).
+        if byhand:
+            icons = FINDER_ICONS[args.system]
+            mac.click(*icons["volume"], double=True)      # open the volume
+            time.sleep(4.0)
+            shot(mac, "choose-0-volume.png")             # WHAT was clicked next
+            mac.click(*icons["app"], double=True)        # launch macextract
+            time.sleep(args.launch_wait)
+        sf_to_volume_root(mac, args.system)
+        # Opened by DOUBLE-CLICK rather than a click and Return: Return is
+        # what this box takes as Extract, so a keystroke that arrives one
+        # step early is indistinguishable from a user taking everything —
+        # which is exactly what a System 3.0 run did on 2026-09-03.
+        mac.click(*SF_FIRST_ROW, double=True)
+        accept_destination(mac)
+        # Straight away, before any settling: whether the box is even up is
+        # a different question from what it looks like once it is.
+        shot(mac, "choose-0b-after-destination.png")
+        # The listing walk, then the box. Nothing has been written yet.
+        mac.settle(scratch, interval=5.0, quiet=EXTRACT_QUIET,
+                   timeout=args.complete_timeout)
+        shot(mac, "choose-1-box.png")            # everything ticked
+
+        mac.click(*CHOOSE_NONE)
+        time.sleep(2.0)
+        shot(mac, "choose-2-none.png")           # nothing ticked, Extract off
+
+        mac.click(*choose_row(0))
+        time.sleep(1.0)
+        mac.click(*choose_row(2))
+        time.sleep(1.5)
+        shot(mac, "choose-3-ticked.png")         # Alpha and Charlie
+
+        mac.click(*CHOOSE_EXTRACT)
+        mac.settle(scratch, interval=5.0, quiet=EXTRACT_QUIET,
+                   timeout=args.complete_timeout)
+        shot(mac, "choose-4-done.png")
+        mac.key("Return")                        # dismiss the outcome
+        time.sleep(3.0)
+    finally:
+        mac.close()
+        if os.path.exists(scratch):
+            os.remove(scratch)
+
+    written = os.path.join(workdir, "boot.hfv")     # Mac()'s private copy
+    on = {CD.mac_path(n) for n in volume_names(written)}
+    print("interactive: the volume holds " + ", ".join(sorted(on)))
+    ok = True
+    for n in want:
+        if n not in on:
+            print(f"interactive: {n} was ticked and is NOT on the volume")
+            ok = False
+    for n in unwanted:
+        if n in on:
+            print(f"interactive: {n} was NOT ticked and IS on the volume")
+            ok = False
+    print("interactive: choose " + ("COMPLETE" if ok else "WRONG"))
+    return ok
+
+
 def phase_report(args, appbin, workdir, shot):
     """The end-of-run report: what was renamed, what failed, and the
     outcome last. It replaces the "Extraction complete." alert on any
@@ -1850,6 +1981,10 @@ def main():
                          "Ignores the fixture argument: the archive is "
                          "generated, because nothing in the corpus is "
                          "encrypted.")
+    ap.add_argument("--choose", action="store_true",
+                    help="selective extraction: untick everything, tick two "
+                         "entries by name, extract, and read the volume back "
+                         "— exactly those two, and no others")
     ap.add_argument("--report", action="store_true",
                     help="the end-of-run report phase: extract a generated "
                          "archive whose names cannot be written as they "
@@ -1898,6 +2033,14 @@ def main():
     if args.drop:
         try:
             ok = phase_drop(args, appbin, workdir, shot)
+        finally:
+            shutil.rmtree(workdir, ignore_errors=True)
+        print(f"interactive: screenshots in {args.outdir} — LOOK AT THEM.")
+        return 0 if ok else 1
+
+    if args.choose:
+        try:
+            ok = phase_choose(args, appbin, workdir, shot)
         finally:
             shutil.rmtree(workdir, ignore_errors=True)
         print(f"interactive: screenshots in {args.outdir} — LOOK AT THEM.")

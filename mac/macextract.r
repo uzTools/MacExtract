@@ -163,6 +163,47 @@ resource 'DITL' (133, purgeable) {
     }
 };
 
+/* The chooser: which entries of this archive should come out.
+ *
+ * Seven items, in the order the code tests them (kSelExtItem.. in
+ * macextract_mac.c):
+ *
+ *   1  Extract    the default button, so Return takes it. Disabled
+ *                 while nothing is ticked, which is the whole of what
+ *                 an empty choice has to be told
+ *   2  Cancel     nothing is extracted and the file loop goes round
+ *   3  userItem   the list, one entry a row with a tick box; drawn by
+ *                 SelListDraw, so it repaints on update events as well
+ *                 as on every scroll and every click
+ *   4  userItem   the default button's ring, for the same reason the
+ *                 report box has one
+ *   5  All        tick everything
+ *   6  None       untick everything
+ *   7  the prompt, which names the archive
+ *
+ * The scroll bar is NOT an item, for the reason given at DLOG 133: Rez
+ * here has no 'CNTL' type. It is made with NewControl beside the list
+ * and tracked in SelFilter, sharing the report box's action proc.
+ *
+ * Same 300 x 460 at (30,26) as the report, and for the same reason:
+ * the whole of it sits on a 512x342 Mac Plus screen. */
+resource 'DLOG' (134, purgeable) {
+    { 30, 26, 330, 486 }, dBoxProc, visible, noGoAway, 0, 134, "",
+    noAutoCenter
+};
+
+resource 'DITL' (134, purgeable) {
+    {
+        { 264, 376, 284, 446 }, Button     { enabled, "Extract" };
+        { 264, 288, 284, 358 }, Button     { enabled, "Cancel" };
+        {  32,  12, 246, 428 }, UserItem   { disabled };
+        { 260, 372, 288, 450 }, UserItem   { disabled };
+        { 264,  12, 284,  82 }, Button     { enabled, "All" };
+        { 264,  92, 284, 162 }, Button     { enabled, "None" };
+        {  10,  12,  26, 444 }, StaticText { disabled, "^0" };
+    }
+};
+
 /* MultiFinder/System 7 friendliness; System 6 Finder ignores it (there the
  * app just gets all free RAM). The actual budget is derived at runtime from
  * FreeMem(), so ONE binary adapts from a 1 MB Plus to a G3.

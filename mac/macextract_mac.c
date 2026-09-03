@@ -1416,6 +1416,107 @@ static OSErr EnsureDir(short vRefNum, long parent, Str63 name, uint32_t hash,
 }
 
 /* ------------------------------------------------------------------ */
+/* Selective extraction: the entries the user ticked                  */
+/* ------------------------------------------------------------------ */
+/* Two walks of the same archive. The first is `list_only`, which
+ * decodes nothing and reports every entry through begin_entry; what it
+ * collects is offered in a box; the second walk answers >0 from
+ * begin_entry for everything that was not ticked, which is the skip the
+ * engine has always had (macextract.h, *Sink*). No format and no
+ * decoder is involved, and the engine is not changed at all.
+ *
+ * THE TWO WALKS HAVE TO AGREE ENTRY FOR ENTRY. An ordinal alone is
+ * fragile — a format that lists a different set the second time round
+ * would extract the wrong files under the right names — so the name is
+ * matched as well, and any disagreement gives up on the selection and
+ * extracts EVERYTHING from that entry on. Wrong-and-complete is
+ * recoverable by hand; wrong-and-partial is not.
+ *
+ * The store is a heap block taken before the engine's budget is worked
+ * out and released before the second walk starts, so on the 1 MB floor
+ * it costs the extraction itself nothing. Only the handful of globals
+ * below sit in the A5 world, which does cost the budget one for one
+ * (FORMATS.md, *What the application costs the engine*). */
+
+#define kSelMax   128       /* entries that can be chosen from */
+#define kSelPool  3072      /* bytes of names, packed end to end */
+
+typedef struct SelList {
+    unsigned char buf[kSelPool];
+    short         start[kSelMax];
+    unsigned char len[kSelMax];    /* UNC_NAME_MAX is 255: a byte holds it */
+    unsigned char on[kSelMax];
+    short         n;
+    short         used;
+    short         over;            /* entries there was no room for */
+} SelList;
+
+static SelList *gSel;         /* NULL = extract everything, as before */
+static short    gSelSeen;     /* entries the second walk has been offered */
+static short    gSelDiverged; /* the two walks disagreed: extract it all */
+
+static void SelReset(void)
+{
+    gSelSeen = 0;
+    gSelDiverged = 0;
+}
+
+/* The listing walk's begin_entry. Records the name and skips the entry,
+ * which `list_only` would have done anyway — returning 1 costs nothing
+ * and says what is meant. */
+static int sel_list_begin(void *ctx, const UncEntryInfo *info)
+{
+    SelList *s = (SelList *)ctx;
+    short len = (short)info->name_len;
+    short i;
+    if (len > 255) len = 255;
+    if (s->n >= kSelMax || s->used + len > kSelPool) { s->over++; return 1; }
+    s->start[s->n] = s->used;
+    s->len[s->n] = (unsigned char)len;
+    s->on[s->n] = 1;                    /* everything ticked to begin with */
+    for (i = 0; i < len; i++) s->buf[s->used + i] = info->name[i];
+    s->used = (short)(s->used + len);
+    s->n++;
+    return 1;
+}
+
+/* `list_only` decodes nothing and sel_list_begin skips every entry, so
+ * neither of these can be reached (macextract.h, *Sink*: an entry that
+ * begin_entry skipped gets no write and no end_entry). They exist
+ * because a NULL through a function pointer on a 68000 is a bus error
+ * in somebody else's code, and 20 bytes is a cheap way not to depend on
+ * a contract to stay a contract. */
+static int sel_list_write(void *ctx, UncFork fork, const void *buf, int32_t len)
+{
+    (void)ctx; (void)fork; (void)buf; (void)len;
+    return -1;
+}
+
+static int sel_list_end(void *ctx, int status)
+{
+    (void)ctx; (void)status;
+    return 0;
+}
+
+/* Does the extracting walk want this entry? Called once per entry, in
+ * order, and it is the ordinal that pairs the two walks up. */
+static int SelWants(const UncEntryInfo *info)
+{
+    short i = gSelSeen++;
+    short len, k;
+    const unsigned char *p;
+    if (!gSel || gSelDiverged) return 1;
+    if (i >= gSel->n) { gSelDiverged = 1; return 1; }
+    len = (short)info->name_len;
+    if (len > 255) len = 255;
+    if (gSel->len[i] != (unsigned char)len) { gSelDiverged = 1; return 1; }
+    p = gSel->buf + gSel->start[i];
+    for (k = 0; k < len; k++)
+        if (p[k] != info->name[k]) { gSelDiverged = 1; return 1; }
+    return gSel->on[i] ? 1 : 0;
+}
+
+/* ------------------------------------------------------------------ */
 /* File Manager via explicit HFS param blocks                         */
 /* ------------------------------------------------------------------ */
 /* Drive the traps through param blocks we fill in ourselves, zeroing the whole
@@ -1501,6 +1602,11 @@ static int SINK_BEGIN(void *ctx, const UncEntryInfo *info)
     int start = 0, i, attempt;
     int leafStart = 0, leafLen = 0, leafChanged = 0;
     OSErr err;
+
+    /* Not ticked: skip the entry whole. Before any bookkeeping here, so
+     * a skipped entry is not counted, does not make its folders, and
+     * does not reach the shape the envelope loop reads. */
+    if (!SelWants(info)) return 1;
 
     s->cur = *info;
     s->entries++;
@@ -3162,6 +3268,11 @@ static int LoadMKey(short vol, long dir, ConstStr255Param name,
  * not where this layer's file is once an envelope has been taken off —
  * and it is where the other parts of a wrapped set are still sitting.
  * Pass the same as inVol/inDir when there is no chain. */
+#ifndef UNC_MAC_AUTOTEST
+/* Defined with the rest of the interactive UI, below. */
+static int ChooseEntries(ConstStr255Param name, WindowPtr hide);
+#endif
+
 static int RunExtract(short inVol, long inDir, ConstStr255Param name,
                       short outVol, long outDir,
                       short origVol, long origDir,
@@ -3187,6 +3298,12 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
     short famStemLen = 0;
     int famSplit = 0, famZip = 0;
     UncFormat extractedAs = UNC_FORMAT_UNKNOWN;
+    /* What the listing walk sniffed, so the extracting walk does not
+     * sniff again: a sniff re-walks a Compact Pro index and its CRC,
+     * which is the reason unc_segment_describe is used above instead of
+     * one. UNKNOWN means no listing walk ran and the sniff below is the
+     * only one. */
+    UncFormat preFmt = UNC_FORMAT_UNKNOWN;
 #ifndef UNC_MAC_AUTOTEST
     UncPasswordSource passSrc;
     PassHost passHost;
@@ -3194,6 +3311,8 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
 #endif
 
     *entries = *errors = 0;
+    gSel = NULL;                 /* no selection unless the box makes one */
+    SelReset();
 
     /* --- Open the archive and read from it as the engine asks. The file
      *     stays open for the whole extraction, including while output files
@@ -3431,6 +3550,125 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
     io.size = fio_size;
 #endif
 
+#if !defined(UNC_MAC_AUTOTEST) || defined(UNC_AT_LISTWALK)
+    /* --- The listing walk, and the box that comes out of it. ---
+     *
+     * Ahead of the budget below on purpose: the store is taken and, in
+     * the ordinary case, given back before the engine is told what it
+     * has, so an extraction that takes everything is the extraction
+     * this application did before the box existed — same budget, same
+     * heap, one extra walk.
+     *
+     * The LAST layer only. An envelope carries one thing and unwraps to
+     * disk either way, so `.sit.hqx` is walked once, not twice: this
+     * runs for a format that is extractable and is not an envelope, and
+     * ExtractOne comes back round with whatever fell out.
+     *
+     * A segmented set is out: its parts are fetched a disk at a time
+     * (seg_need), and a listing walk would ask for all of them before
+     * the user had chosen anything.
+     */
+    if (!sh) {
+        UncFormat listFmt = preFmt = unc_sniff(&io);
+        if (unc_format_extractable(listFmt) &&
+            !unc_format_is_envelope(listFmt) &&
+            (gSel = (SelList *)NewPtr((Size)sizeof(SelList))) != NULL) {
+            MacAlloc lma;
+            UncAlloc lal;
+            UncSink lsk;
+            UncOptions lopt;
+            int lret;
+            long z;
+
+            gSel->n = gSel->used = gSel->over = 0;
+            for (z = 0; z < (long)sizeof lopt; z++) ((char *)&lopt)[z] = 0;
+            lopt.list_only = 1;
+            /* No password source and no comment sink: nothing is
+             * decoded here, and the comment writer would put a
+             * `Comments` document in the destination folder before the
+             * user had agreed to extract anything at all. */
+            lsk.ctx = gSel;
+            lsk.begin_entry = sel_list_begin;
+            lsk.write = sel_list_write;
+            lsk.end_entry = sel_list_end;
+            lsk.comment = NULL;
+            {
+                long freenow = FreeMem();
+                long reserve = freenow / 4;
+                if (reserve > kMemReserveMax) reserve = kMemReserveMax;
+                if (reserve < kMemReserveMin) reserve = kMemReserveMin;
+                lma.budget = freenow - reserve;
+            }
+            if (lma.budget < 32L * 1024) lma.budget = 32L * 1024;
+            lma.initial = lma.budget;
+            lma.lowmark = lma.budget;
+            lal.ctx = &lma;
+            lal.alloc = mal_alloc;
+            lal.free = mal_free;
+            lret = unc_extract_as(listFmt, &io, &lsk, &lal, prog, &lopt);
+            io.seek(io.ctx, 0);
+            if (lret == UNC_ERR_ABORTED) {
+                DisposePtr((Ptr)gSel);
+                gSel = NULL;
+#ifdef UNC_MAC_SLURP_ARCHIVE
+                DisposePtr(archiveBuf);
+#else
+                FSClose(refNum);
+#endif
+                return UNC_ERR_ABORTED;
+            }
+            /* The walk found more than the store holds, so there is no
+             * honest list to offer: everything is extracted, and the
+             * report says why rather than the box quietly showing a
+             * prefix of the archive. */
+            if (gSel->over) {
+                if (RepNew(0))
+                    RepCat("Too many items to choose from, so all of them "
+                           "were extracted");
+            }
+#ifdef UNC_MAC_AUTOTEST
+            /* The autotest has no box. UNC_AT_LISTWALK is here to PRICE
+             * the extra walk on a real emulated Mac — the same fixture
+             * with the flag and without it is the measurement — so the
+             * store goes straight back and the extracting walk takes
+             * everything, exactly as it does without the flag. */
+            DisposePtr((Ptr)gSel);
+            gSel = NULL;
+#else
+            /* One entry is not a choice, and a walk that failed has
+             * nothing to show; either way the extracting walk decides,
+             * exactly as before. */
+            if (gSel->over || lret != UNC_OK || gSel->n < 2) {
+                DisposePtr((Ptr)gSel);
+                gSel = NULL;
+            } else if (!ChooseEntries(name,
+                           prog ? (WindowPtr)((Progress *)prog->ctx)->dlg
+                                : NULL)) {
+                DisposePtr((Ptr)gSel);
+                gSel = NULL;
+#ifdef UNC_MAC_SLURP_ARCHIVE
+                DisposePtr(archiveBuf);
+#else
+                FSClose(refNum);
+#endif
+                return UNC_ERR_ABORTED;
+            } else {
+                short si, allon = 1;
+                for (si = 0; si < gSel->n; si++)
+                    if (!gSel->on[si]) { allon = 0; break; }
+                /* Everything ticked is not a selection: give the store
+                 * back, and the walk below runs with the whole heap and
+                 * no per-entry test. */
+                if (allon) { DisposePtr((Ptr)gSel); gSel = NULL; }
+            }
+#endif
+        } else if (gSel) {
+            DisposePtr((Ptr)gSel);
+            gSel = NULL;
+        }
+    }
+#endif
+
     /* Budget the engine against the free heap. With the archive read straight
      * off disk there is no buffer to subtract first, so on the floor target
      * the engine now gets the archive's size back — which is what decided
@@ -3562,7 +3800,7 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
          * exactly this internally: same work, and the caller learns what
          * the layer was — which is what decides whether there is another
          * one under it. */
-        extractedAs = unc_sniff(&io);
+        extractedAs = preFmt != UNC_FORMAT_UNKNOWN ? preFmt : unc_sniff(&io);
         /* SpaceSaver is the exception to the strip above: it compresses a
          * file IN PLACE and adds no extension, so the whole name is the
          * name and stripping one eats a real ".txt". cli/main.c has said
@@ -3575,6 +3813,7 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
         ret = unc_extract_as(extractedAs, &io, &sk, &al, prog, &opt);
     }
     gPeakUsage = ma.initial - ma.lowmark;   /* engine heap high-water mark */
+    if (gSel) { DisposePtr((Ptr)gSel); gSel = NULL; }
 
 #ifdef UNC_MAC_SLURP_ARCHIVE
     if (archiveBuf) DisposePtr(archiveBuf);
@@ -4713,16 +4952,24 @@ static pascal void RepRingItemProc(WindowPtr w, short item)
     PenSize(1, 1);
 }
 
+/* The scroll bar, its action proc and this are shared with the
+ * chooser box (ChooseEntries), which is the same list machinery over a
+ * different set of rows: three globals say whose rows they are, so the
+ * tracking code exists once. */
+static short gListTotal;             /* rows in the box that is open  */
+static short gListPage;              /* rows a page scrolls by        */
+static void (*gListDraw)(DialogPtr); /* who repaints them             */
+
 static void RepSetTop(short top)
 {
-    short max = (short)(RepRows() - kRepScroll);
+    short max = (short)(gListTotal - gListPage);
     if (max < 0) max = 0;
     if (top > max) top = max;
     if (top < 0) top = 0;
     if (top == gRepTop) return;
     gRepTop = top;
     if (gRepBar) SetControlValue(gRepBar, top);
-    if (gRepDlg) RepListDraw(gRepDlg);
+    if (gRepDlg && gListDraw) gListDraw(gRepDlg);
 }
 
 /* Live tracking for the arrows and the page regions. TrackControl calls
@@ -4735,8 +4982,8 @@ static pascal void RepScrollAction(ControlHandle c, short part)
     switch (part) {
     case inUpButton:   RepSetTop((short)(gRepTop - 1)); break;
     case inDownButton: RepSetTop((short)(gRepTop + 1)); break;
-    case inPageUp:     RepSetTop((short)(gRepTop - kRepScroll)); break;
-    case inPageDown:   RepSetTop((short)(gRepTop + kRepScroll)); break;
+    case inPageUp:     RepSetTop((short)(gRepTop - gListPage)); break;
+    case inPageDown:   RepSetTop((short)(gRepTop + gListPage)); break;
     default: break;
     }
 }
@@ -4842,10 +5089,10 @@ static pascal Boolean RepFilter(DialogPtr dlg, EventRecord *ev, short *item)
     switch (ch) {
     case 30: RepSetTop((short)(gRepTop - 1)); return true;             /* up */
     case 31: RepSetTop((short)(gRepTop + 1)); return true;           /* down */
-    case 11: RepSetTop((short)(gRepTop - kRepScroll)); return true;  /* PgUp */
-    case 12: RepSetTop((short)(gRepTop + kRepScroll)); return true;  /* PgDn */
+    case 11: RepSetTop((short)(gRepTop - gListPage)); return true;   /* PgUp */
+    case 12: RepSetTop((short)(gRepTop + gListPage)); return true;   /* PgDn */
     case 1:  RepSetTop(0); return true;                              /* Home */
-    case 4:  RepSetTop(RepRows()); return true;                       /* End */
+    case 4:  RepSetTop(gListTotal); return true;                      /* End */
     default: break;
     }
     return false;
@@ -4869,6 +5116,8 @@ static void ShowReport(const unsigned char *outcome)
     }
     gRepDlg = dlg;
     gRepTop = 0;
+    gListPage = kRepScroll;
+    gListDraw = RepListDraw;
     SetPort((GrafPtr)dlg);
 
     GetDialogItem(dlg, kRepListItem, &kind, &h, &box);
@@ -4880,7 +5129,8 @@ static void ShowReport(const unsigned char *outcome)
     RepBuildRows((short)(box.right - box.left - 12));
     TextFont(0);
     TextSize(12);
-    max = (short)(RepRows() - kRepScroll);
+    gListTotal = RepRows();
+    max = (short)(gListTotal - kRepScroll);
     if (max < 0) max = 0;
     {
         Rect bar;
@@ -4908,6 +5158,232 @@ static void ShowReport(const unsigned char *outcome)
     DisposeDialog(dlg);
     gRepBar = NULL;
     gRepDlg = NULL;
+}
+
+/* ------------------------------------------------------------------ */
+/* Choosing what to extract                                           */
+/*                                                                    */
+/* The same list machinery as the report box, over the entries the     */
+/* listing walk found: a tick box a row, All and None, and Extract.    */
+/* Everything starts ticked, so Return is what the application did     */
+/* before this box existed.                                           */
+/* ------------------------------------------------------------------ */
+
+#define kChooseDLOG   134
+#define kSelExtItem   1
+#define kSelCancItem  2
+#define kSelListItem  3
+#define kSelRingItem  4
+#define kSelAllItem   5
+#define kSelNoneItem  6
+#define kSelPromptItem 7
+#define kSelTick      9        /* the tick box, square */
+#define kSelIndent    22       /* where a name starts, past the box */
+
+static short gSelRows;         /* rows the list shows at once */
+
+static short SelOnCount(void)
+{
+    short i, n = 0;
+    for (i = 0; i < gSel->n; i++) if (gSel->on[i]) n++;
+    return n;
+}
+
+/* Nothing ticked is not a run: the button says so rather than the box
+ * having to explain afterwards what it did with an empty choice. */
+static void SelHiliteExtract(DialogPtr dlg)
+{
+    short kind;
+    Handle h;
+    Rect box;
+    GetDialogItem(dlg, kSelExtItem, &kind, &h, &box);
+    if (h) HiliteControl((ControlHandle)h, SelOnCount() ? 0 : 255);
+}
+
+static void SelListDraw(DialogPtr dlg)
+{
+    Rect box, clip, tick;
+    short kind, i;
+    Handle h;
+    GrafPtr save;
+    RgnHandle saveClip;
+
+    GetPort(&save);
+    SetPort((GrafPtr)dlg);
+    GetDialogItem(dlg, kSelListItem, &kind, &h, &box);
+    EraseRect(&box);
+    FrameRect(&box);
+    clip = box;
+    InsetRect(&clip, 1, 1);
+    saveClip = NewRgn();
+    if (saveClip) GetClip(saveClip);
+    ClipRect(&clip);
+    TextFont(3);              /* Geneva 9, like the report: these are names */
+    TextSize(9);
+    for (i = 0; i < gSelRows && gRepTop + i < gSel->n; i++) {
+        short r = (short)(gRepTop + i);
+        short base = (short)(box.top + 2 + (i + 1) * kRepLineH);
+        short len = gSel->len[r], fit;
+        const unsigned char *p = gSel->buf + gSel->start[r];
+        tick.left = (short)(box.left + 5);
+        tick.bottom = (short)(base + 1);
+        tick.top = (short)(tick.bottom - kSelTick);
+        tick.right = (short)(tick.left + kSelTick);
+        FrameRect(&tick);
+        if (gSel->on[r]) {
+            MoveTo((short)(tick.left + 2), (short)(tick.top + 2));
+            LineTo((short)(tick.right - 3), (short)(tick.bottom - 3));
+            MoveTo((short)(tick.right - 3), (short)(tick.top + 2));
+            LineTo((short)(tick.left + 2), (short)(tick.bottom - 3));
+        }
+        /* A name too long for the box is CUT, not wrapped: one row per
+         * entry is what makes a tick box mean one thing. The head is
+         * kept because a path's folders come first and the box is 400
+         * points wide — 60-odd characters of Geneva 9. */
+        fit = RepFit(p, len, (short)(box.right - box.left - kSelIndent - 6));
+        MoveTo((short)(box.left + kSelIndent), base);
+        DrawText((Ptr)p, 0, fit);
+    }
+    TextFont(0);
+    TextSize(12);
+    if (saveClip) { SetClip(saveClip); DisposeRgn(saveClip); }
+    if (gRepBar) Draw1Control(gRepBar);
+    SetPort(save);
+}
+
+static pascal void SelListItemProc(WindowPtr w, short item)
+{
+    StackSample();
+    (void)item;
+    SelListDraw((DialogPtr)w);
+}
+
+static pascal Boolean SelFilter(DialogPtr dlg, EventRecord *ev, short *item)
+{
+    StackSample();
+    {
+    char ch;
+
+    if (ev->what == mouseDown) {
+        Point p = ev->where;
+        ControlHandle c = NULL;
+        short part, kind;
+        Handle h;
+        Rect box;
+        GrafPtr save;
+        GetPort(&save);
+        SetPort((GrafPtr)dlg);
+        GlobalToLocal(&p);
+        SetPort(save);
+        GetDialogItem(dlg, kSelListItem, &kind, &h, &box);
+        if (PtInRect(p, &box)) {
+            short r = (short)(gRepTop + (p.v - box.top - 2) / kRepLineH);
+            if (r >= 0 && r < gSel->n) {
+                gSel->on[r] = (unsigned char)(gSel->on[r] ? 0 : 1);
+                SelListDraw(dlg);
+                SelHiliteExtract(dlg);
+            }
+            return true;
+        }
+        if (!gRepBar) return false;
+        part = FindControl(p, (WindowPtr)dlg, &c);
+        if (c != gRepBar || part == 0) return false;   /* a button: go on */
+        if (part == inThumb) {
+            if (TrackControl(c, p, NULL)) RepSetTop(GetControlValue(c));
+        } else {
+            TrackControl(c, p, gRepActionUPP);
+        }
+        return true;
+    }
+    if (ev->what != keyDown && ev->what != autoKey) return false;
+    ch = (char)(ev->message & charCodeMask);
+    if ((ev->modifiers & cmdKey) != 0) return false;
+    if ((ch == '\r' || ch == 3) && SelOnCount()) { *item = kSelExtItem; return true; }
+    switch (ch) {
+    case 30: RepSetTop((short)(gRepTop - 1)); return true;             /* up */
+    case 31: RepSetTop((short)(gRepTop + 1)); return true;           /* down */
+    case 11: RepSetTop((short)(gRepTop - gListPage)); return true;   /* PgUp */
+    case 12: RepSetTop((short)(gRepTop + gListPage)); return true;   /* PgDn */
+    case 1:  RepSetTop(0); return true;                              /* Home */
+    case 4:  RepSetTop(gListTotal); return true;                      /* End */
+    default: break;
+    }
+    return false;
+    }
+}
+
+/* Put the list up. Returns 1 to go on with the extraction — with
+ * gSel->on saying which entries — and 0 if the user cancelled.
+ * A box that cannot be made is not a failure: everything is ticked
+ * already, so the run goes ahead exactly as it did before. */
+static int ChooseEntries(ConstStr255Param name, WindowPtr hide)
+{
+    DialogPtr dlg;
+    short hit, kind, max, i;
+    Handle h;
+    Rect box;
+    ModalFilterUPP filter;
+
+    if (hide) HideWindow(hide);
+    ContigSample();
+    dlg = GetNewDialog(kChooseDLOG, NULL, (WindowPtr)-1);
+    if (!dlg) { if (hide) ShowWindow(hide); return 1; }
+    gRepDlg = dlg;
+    gRepTop = 0;
+    SetPort((GrafPtr)dlg);
+
+    GetDialogItem(dlg, kSelPromptItem, &kind, &h, &box);
+    if (h) {
+        Str255 s;
+        s[0] = 0;
+        PStrCat(s, "Extract which items from ");
+        for (i = 1; i <= (short)name[0] && s[0] < 250; i++) s[++s[0]] = name[i];
+        PStrCat(s, "?");
+        SetDialogItemText(h, s);
+    }
+
+    GetDialogItem(dlg, kSelListItem, &kind, &h, &box);
+    SetDialogItem(dlg, kSelListItem, kind,
+                  (Handle)NewUserItemUPP(SelListItemProc), &box);
+    gSelRows = (short)((box.bottom - box.top - 4) / kRepLineH);
+    gListTotal = gSel->n;
+    gListPage = gSelRows;
+    gListDraw = SelListDraw;
+    max = (short)(gListTotal - gSelRows);
+    if (max < 0) max = 0;
+    {
+        Rect bar;
+        bar.top = box.top;
+        bar.bottom = box.bottom;
+        bar.left = box.right;
+        bar.right = (short)(box.right + kRepBarWidth);
+        gRepBar = NewControl((WindowPtr)dlg, &bar, "\p", true, 0, 0, max,
+                             scrollBarProc, 0);
+        if (gRepBar && max == 0) HiliteControl(gRepBar, 255);
+    }
+    if (!gRepActionUPP) gRepActionUPP = NewControlActionUPP(RepScrollAction);
+
+    GetDialogItem(dlg, kSelRingItem, &kind, &h, &box);
+    SetDialogItem(dlg, kSelRingItem, kind,
+                  (Handle)NewUserItemUPP(RepRingItemProc), &box);
+    DrawDialog(dlg);
+
+    filter = NewModalFilterUPP(SelFilter);
+    do {
+        ModalDialog(filter, &hit);
+        if (hit == kSelAllItem || hit == kSelNoneItem) {
+            for (i = 0; i < gSel->n; i++)
+                gSel->on[i] = (unsigned char)(hit == kSelAllItem);
+            SelListDraw(dlg);
+            SelHiliteExtract(dlg);
+        }
+    } while (hit != kSelExtItem && hit != kSelCancItem);
+    DisposeDialog(dlg);
+    if (hide) ShowWindow(hide);
+    gRepBar = NULL;
+    gRepDlg = NULL;
+    gListDraw = NULL;
+    return hit == kSelExtItem;
 }
 
 static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,

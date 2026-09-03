@@ -212,7 +212,15 @@ target_compile_options(MacExtract PRIVATE -mcpu=68000 -Os -Wno-multichar
                        # which on the floor target hands the engine back the
                        # archive's size in budget; this keeps the older path
                        # buildable for comparison.
-                       $<$<BOOL:$ENV{UNC_MAC_SLURP_ARCHIVE}>:-DUNC_MAC_SLURP_ARCHIVE>)
+                       $<$<BOOL:$ENV{UNC_MAC_SLURP_ARCHIVE}>:-DUNC_MAC_SLURP_ARCHIVE>
+                       # UNC_AT_LISTWALK: do selective extraction's LISTING
+                       # walk before the extracting one, and then extract
+                       # everything. The autotest has no box to choose in, so
+                       # what this measures is the walk itself: the same
+                       # fixture with the flag and without it is what the
+                       # second pass costs on a 68000, which no Linux timing
+                       # can stand in for.
+                       $<$<BOOL:$ENV{UNC_AT_LISTWALK}>:-DUNC_AT_LISTWALK>)
 target_link_options(MacExtract PRIVATE -Wl,-gc-sections)
 
 # The Finder ignores a 'BNDL' unless the file's hasBundle flag is set, and

@@ -77,14 +77,26 @@ ls -la build/mac/MacExtract.APPL build/mac/MacExtract.bin build/mac/MacExtract.d
 # one test rather than three -- and they bought 52 B of the 216 the first
 # version cost. That 12 % is the figure worth remembering about code shape
 # on this target.
-UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-147588}
+# Raised on this branch, 2026-09-03, from 147,588 to 150,192: +2,644 B for
+# selective extraction — the listing walk in RunExtract, the chooser box
+# (SelListDraw, SelFilter, ChooseEntries) and the per-entry test in
+# sink_begin. Deliberate and priced rather than absorbed: on a 1 MB Mac
+# Plus that is 2,644 B off EVERY extraction's budget, including the runs
+# of a user who never unticks anything. BRANCH_NOTES.md on this branch
+# has what it buys and what the alternatives cost.
+UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-150192}
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
 # withdrawn claim is in BLOCKERS.md). Set at the size on the day, like the
 # code ceiling: 44,096 B = 32,644 data + 11,452 bss. It had grown unwatched
 # the whole time this file said data was free.
-UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-44096}
+# Raised on this branch, 2026-09-03, from 44,096 to 44,160: +64 B, which is
+# the chooser's two strings and the four globals that pair the two walks
+# up. The store itself is NOT here — it is a NewPtr taken before the
+# engine's budget is worked out and given back before the extracting
+# walk, so it costs the extraction nothing (BRANCH_NOTES.md).
+UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-44160}
 SIZE="$TOOLCHAIN/bin/m68k-apple-macos-size"
 GDB=build/mac/MacExtract.code.bin.gdb
 if [ -x "$SIZE" ] && [ -f "$GDB" ]; then

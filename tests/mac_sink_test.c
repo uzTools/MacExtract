@@ -357,6 +357,87 @@ int main(int argc, char **argv)
                         "against a %ld budget\n", gShortBy, want, 40000L);
         return ok ? 0 : 1;
     }
+    /* Selective extraction, graded rather than described: list the
+     * archive with the shell's own listing sink, tick every other
+     * entry, and extract. tools/check_mac_select.py then requires that
+     * the even half and the odd half are disjoint and together are
+     * byte-for-byte the whole archive — which is the property "the
+     * entries the user ticked, and no others" actually means, and it
+     * cannot pass by extracting everything or by extracting nothing.
+     *
+     *   mac_sink_test --select even|odd <archive> <outdir>
+     */
+    if (argc >= 5 && strcmp(argv[1], "--select") == 0) {
+        int wantOdd = strcmp(argv[2], "odd") == 0;
+        MacIO lio;
+        UncIO io2;
+        UncSink lsk;
+        UncOptions lopt;
+        MacAlloc lma;
+        UncAlloc lal;
+        short i;
+
+        snprintf(gOutDir, sizeof gOutDir, "%s", argv[4]);
+        mkdir(gOutDir, 0755);
+        snprintf(gDirs[0], sizeof gDirs[0], "%s", gOutDir);
+        srcfd = open(argv[3], O_RDONLY);
+        if (srcfd < 0) { perror("open source"); return 1; }
+        fstat(srcfd, &st);
+        srcslot = alloc_slot(srcfd);
+        lio.refNum = (short)srcslot;
+        lio.size = (long)st.st_size;
+        io2.ctx = &lio; io2.read = mio_read; io2.seek = mio_seek;
+        io2.tell = mio_tell; io2.size = mio_size;
+
+        gSel = (SelList *)NewPtr((Size)sizeof(SelList));
+        if (!gSel) { fprintf(stderr, "select: no room for the store\n"); return 1; }
+        gSel->n = gSel->used = gSel->over = 0;
+        memset(&lopt, 0, sizeof lopt);
+        lopt.list_only = 1;
+        lsk.ctx = gSel; lsk.begin_entry = sel_list_begin;
+        lsk.write = sel_list_write; lsk.end_entry = sel_list_end;
+        lsk.comment = NULL;
+        lma.budget = 3800L * 1024; lma.initial = lma.budget; lma.lowmark = lma.budget;
+        lal.ctx = &lma; lal.alloc = mal_alloc; lal.free = mal_free;
+        ret = unc_extract(&io2, &lsk, &lal, NULL, &lopt);
+        fprintf(stderr, "select: listing walk -> %d, %d entries, over=%d\n",
+                ret, gSel->n, gSel->over);
+        if (ret != UNC_OK || gSel->over) return 1;
+        /* One entry is not a choice — the shell does not offer the box
+         * for it either — so say so and let the runner skip it rather
+         * than grade an empty half. */
+        if (gSel->n < 2) {
+            fprintf(stderr, "select: one entry, nothing to choose\n");
+            return 2;
+        }
+        for (i = 0; i < gSel->n; i++)
+            gSel->on[i] = (unsigned char)((i & 1) == (wantOdd ? 1 : 0));
+        mio_seek(&lio, 0);
+        SelReset();
+
+        memset(&sink, 0, sizeof sink);
+        sink.vRefNum = 1; sink.rootDirID = 0;
+        sk.ctx = &sink; sk.begin_entry = sink_begin;
+        sk.write = sink_write; sk.end_entry = sink_end;
+        /* The archive's own comment is the ARCHIVE's, not any entry's:
+         * the shell writes it on the extracting walk whatever was
+         * ticked, so both halves write it and check_mac_select.py
+         * leaves it out of the comparison. */
+        sk.comment = sink_comment;
+        memset(&opt, 0, sizeof opt);
+        ma.budget = 3800L * 1024;
+        al.ctx = &ma; al.alloc = mal_alloc; al.free = mal_free;
+        ret = unc_extract(&io2, &sk, &al, NULL, &opt);
+        fprintf(stderr, "select: %s half -> %d, entries=%d errors=%d "
+                        "(diverged=%d)\n",
+                wantOdd ? "odd" : "even", ret, sink.entries, sink.errors,
+                gSelDiverged);
+        if (gSelDiverged) {
+            fprintf(stderr, "select: the two walks disagreed\n");
+            return 1;
+        }
+        return ret == UNC_OK && sink.errors == 0 ? 0 : 1;
+    }
     if (argc < 3) { fprintf(stderr, "usage: %s <archive> <outdir>\n", argv[0]); return 2; }
     snprintf(gOutDir, sizeof gOutDir, "%s", argv[2]);
     mkdir(gOutDir, 0755);

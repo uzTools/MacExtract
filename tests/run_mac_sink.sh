@@ -34,6 +34,14 @@ FIXTURES="derived-ASCbeep.sit derived-apple.art.sit alpha401.cpt \
 BOTHFORK_FIXTURES="3d_windows.sea.bin compact-pro-134.bin \
                    ACInfo_Comm.sit.bin bitmap11.sit.bin"
 
+# Multi-entry archives across four container families, including one with
+# nested folders (an unticked FOLDER entry is still created when a ticked
+# entry inside it needs it) and one with an archive comment.
+SELECT_FIXTURES="derived-Unzip101.sit derived-resforkkiller.sit \
+                 derived-PackIt.pit synth-exo-tar.tar \
+                 derived-BootTime.cpt derived-DigSim_RAM_Circuit.cpt \
+                 derived-MUSFMT10.ZIP derived-Compact_Pro_Package"
+
 verify() {  # <runner...> [mode] [fixture-list] ; defaults to $FIXTURES
     runner="$1"
     mode="$2"        # empty = file-backed mio_*; "ram" = slurp-to-RAM xio_*
@@ -68,6 +76,35 @@ verify ./build/mac_sink_asan ram   # exercise the Mac app's RAM-slurp/xio_* path
 # generated, because no fixture reaches either cap (TESTING.md).
 python3 tools/run_macnames.py --sink ./build/mac_sink_asan || {
     echo "mac-sink: name-shortening FAILED"; exit 1; }
+# Selective extraction: the entries that were ticked, and no others.
+# Graded as two halves — even-numbered entries and odd-numbered ones —
+# which must be disjoint and together byte-for-byte the whole archive.
+# Neither "extracted everything" nor "extracted nothing" can pass that,
+# which is the point: the skip is one `return` and its failure mode is
+# silence. Archives of one entry are skipped (exit 2), because one entry
+# is not a choice and the shell does not offer the box for it.
+select_check() {
+    for fx in $SELECT_FIXTURES; do
+        [ -f "fixtures/$fx" ] || continue
+        a="$(mktemp -d)"; e="$(mktemp -d)"; o="$(mktemp -d)"
+        "$1" "fixtures/$fx" "$a" >/dev/null 2>&1
+        "$1" --select even "fixtures/$fx" "$e" >/dev/null 2>&1
+        case $? in
+            0) ;;
+            2) rm -rf "$a" "$e" "$o"; continue ;;
+            *) echo "mac-select: FAILED listing $fx"; return 1 ;;
+        esac
+        "$1" --select odd "fixtures/$fx" "$o" >/dev/null 2>&1 || {
+            echo "mac-select: FAILED extracting the odd half of $fx"
+            return 1; }
+        printf '%s: ' "$fx"
+        python3 tools/check_mac_select.py "$a" "$e" "$o" || {
+            rm -rf "$a" "$e" "$o"; return 1; }
+        rm -rf "$a" "$e" "$o"
+    done
+}
+select_check ./build/mac_sink_asan || { echo "mac-sink: selection FAILED"; exit 1; }
+
 echo "mac-sink: native OK (file + RAM paths + cancel cleanup + shortfall + names)"
 
 # The alternative write path. The default streams each chunk straight to the
