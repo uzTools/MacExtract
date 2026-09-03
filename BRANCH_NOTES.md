@@ -12,6 +12,26 @@ the ciphers kept; an LZH gets **701,688 B**, keeping only its own decoder.
 4/4 fixtures extract byte-exact across the formats that keep one image, two
 images, and none.
 
+## Parity with `selective-loading`, 2026-09-03
+
+The four tiers and the segmented sweep, run on both:
+
+| | this branch | `selective-loading` | `main` |
+|---|---|---|---|
+| 4 MB, System 6.0.8 | **69/69** | 69/69 | 69/69 |
+| 1 MB, System 6.0.8 | **69/69** | 69/69 | 69/69 |
+| System 3.0, 1 MB | **69/69** | 69/69 | 69/69 |
+| System 3.0, 512 KB | **67/69** | 67/69 | 66/69 |
+| `segcheck.py` | 6/9 | 6/9 | 6/9 |
+
+Identical, including which three `segcheck` cases fail — the ones staged by
+`interactive.py`, which fail on `main` too and are written up there.
+
+**So the lifetimes cost nothing against each other any more.** What was a
+one-archive gap at 512 KB closed with `MoveHHi`, and what is left between the
+two branches is one disk read at launch against one read per format, with the
+same formats extracting either way.
+
 ## Segmented sets, with MoveHHi and thirteen overlays
 
 **Asked because the segments path is separate code and `MoveHHi` changes where
