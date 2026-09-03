@@ -86,7 +86,14 @@ typedef int32_t (*OverlayEntry)(const OverlayHost *host, int32_t which,
                                     * overlay cannot call another overlay */
 #define OVL_ID_STUFFIT       137
 #define OVL_ID_EXO           138
-#define OVL_ID_CODECS        139   /* the shared machinery, which patches
+#define OVL_ID_CODECS        139
+/* BinHex and btoa stand alone: only MIME calls into uu and base64, so only
+ * those three have to travel together. Splitting these two out means opening
+ * a .hqx loads ~3 KB rather than the 15,864 B the whole text group cost —
+ * which is the difference between a decoder that fits a small machine and one
+ * that does not. Measured by nm over the objects, not assumed. */
+#define OVL_ID_BINHEX        140
+#define OVL_ID_BTOA          141   /* the shared machinery, which patches
                                     * itself into the host vector */   /* zip, gzip, Unix compress, tar — and
                                     * zlib, which nothing else calls */
 

@@ -271,6 +271,11 @@ void ovl_release_if_unwanted(UncFormat fmt, UncIO *io)
     /* An ENVELOPE does not yet know what is under it, and the schemes that
      * join to a FILE do not either. Both keep the whole bundle, which costs
      * memory and loses nothing. */
+    /* BinHex has its own image now, but it is still an ENVELOPE: what is
+     * under a .hqx is unknown until it has been unwrapped, so this branch
+     * keeps the whole bundle for it exactly as before. The split buys the
+     * lazy branch a smaller load; here it buys nothing, and pretending
+     * otherwise would strand the archive inside. */
     case UNC_FORMAT_BINHEX:      case UNC_FORMAT_MACBINARY:
     case UNC_FORMAT_APPLESINGLE: case UNC_FORMAT_APPLEDOUBLE:
     case UNC_FORMAT_GZIP:        case UNC_FORMAT_COMPRESS_Z:
@@ -526,7 +531,7 @@ int unc_btoa_extract(UncCtx *c)
 {
     OverlayEntry e;
     if (!ovl_codecs_ready()) return UNC_ERR_MEM;
-    e = ovl_image(OVL_ID_TEXT);
+    e = ovl_image(OVL_ID_BTOA);
     if (!e) return UNC_ERR_MEM;
     return (int)e(&gOvlHost, OVL_BTOA_EXTRACT, c, NULL);
 }
@@ -546,7 +551,7 @@ int unc_binhex_extract(UncCtx *c)
 {
     OverlayEntry e;
     if (!ovl_codecs_ready()) return UNC_ERR_MEM;
-    e = ovl_image(OVL_ID_TEXT);
+    e = ovl_image(OVL_ID_BINHEX);
     if (!e) return UNC_ERR_MEM;
     return (int)e(&gOvlHost, OVL_BINHEX_EXTRACT, c, NULL);
 }

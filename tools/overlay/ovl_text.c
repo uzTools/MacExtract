@@ -1,4 +1,4 @@
-/* ovl_text.c — MIME and the text envelopes as an overlay.
+/* ovl_text.c — MIME with uuencode and base64 — the two it calls into as an overlay.
  *
  * The decoder source is compiled in UNMODIFIED; every engine helper it calls
  * is defined by ovl_forwards_gen.c as a forward through the host vector
@@ -26,12 +26,8 @@ int32_t ovl_main(const OverlayHost *host, int32_t which, void *a, void *b)
         return (int32_t)unc_mime_extract((UncCtx *)a);
     case OVL_UU_EXTRACT:
         return (int32_t)unc_uu_extract((UncCtx *)a);
-    case OVL_BTOA_EXTRACT:
-        return (int32_t)unc_btoa_extract((UncCtx *)a);
     case OVL_B64_EXTRACT:
         return (int32_t)unc_b64_extract((UncCtx *)a);
-    case OVL_BINHEX_EXTRACT:
-        return (int32_t)unc_binhex_extract((UncCtx *)a);
     default:
         return -1;
     }

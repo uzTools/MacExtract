@@ -464,12 +464,8 @@ add_custom_command(
             ${ENGINE_DIR}/src/fmt_mime_probe.c
             ${ENGINE_DIR}/src/fmt_uu.c
             ${ENGINE_DIR}/src/fmt_uu_probe.c
-            ${ENGINE_DIR}/src/fmt_btoa.c
-            ${ENGINE_DIR}/src/fmt_btoa_probe.c
             ${ENGINE_DIR}/src/fmt_b64.c
             ${ENGINE_DIR}/src/fmt_b64_probe.c
-            ${ENGINE_DIR}/src/fmt_binhex.c
-            ${ENGINE_DIR}/src/fmt_binhex_probe.c
     DEPENDS ${ENGINE_DIR}/tools/overlay/ovl_text.c
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_gen.c
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_codecs_gen.c
@@ -478,12 +474,8 @@ add_custom_command(
             ${ENGINE_DIR}/src/fmt_mime_probe.c
             ${ENGINE_DIR}/src/fmt_uu.c
             ${ENGINE_DIR}/src/fmt_uu_probe.c
-            ${ENGINE_DIR}/src/fmt_btoa.c
-            ${ENGINE_DIR}/src/fmt_btoa_probe.c
             ${ENGINE_DIR}/src/fmt_b64.c
             ${ENGINE_DIR}/src/fmt_b64_probe.c
-            ${ENGINE_DIR}/src/fmt_binhex.c
-            ${ENGINE_DIR}/src/fmt_binhex_probe.c
             ${ENGINE_DIR}/tools/overlay/mkoverlay.sh)
 
 add_custom_command(
@@ -553,6 +545,39 @@ add_custom_command(
             ${ENGINE_DIR}/src/unc_lzah.c
             ${ENGINE_DIR}/tools/overlay/mkoverlay.sh)
 
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/ovl_binhex.r
+    COMMAND ${CMAKE_COMMAND} -E env OVL_ID=140
+            OVL_INC=${CMAKE_CURRENT_BINARY_DIR}
+            sh ${ENGINE_DIR}/tools/overlay/mkoverlay.sh
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_binhex.r
+            ${ENGINE_DIR}/tools/overlay/ovl_binhex.c
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_gen.c
+            ${ENGINE_DIR}/src/fmt_binhex.c
+            ${ENGINE_DIR}/src/fmt_binhex_probe.c
+    DEPENDS ${ENGINE_DIR}/tools/overlay/ovl_binhex.c
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_gen.c
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_host_gen.h
+            ${ENGINE_DIR}/src/fmt_binhex.c
+            ${ENGINE_DIR}/src/fmt_binhex_probe.c
+            ${ENGINE_DIR}/tools/overlay/mkoverlay.sh)
+
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/ovl_btoa.r
+    COMMAND ${CMAKE_COMMAND} -E env OVL_ID=141
+            OVL_INC=${CMAKE_CURRENT_BINARY_DIR}
+            sh ${ENGINE_DIR}/tools/overlay/mkoverlay.sh
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_btoa.r
+            ${ENGINE_DIR}/tools/overlay/ovl_btoa.c
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_gen.c
+            ${ENGINE_DIR}/src/fmt_btoa.c
+            ${ENGINE_DIR}/src/fmt_btoa_probe.c
+    DEPENDS ${ENGINE_DIR}/tools/overlay/ovl_btoa.c
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_gen.c
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_host_gen.h
+            ${ENGINE_DIR}/src/fmt_btoa.c
+            ${ENGINE_DIR}/src/fmt_btoa_probe.c
+            ${ENGINE_DIR}/tools/overlay/mkoverlay.sh)
 # The bundle. Depends on the per-format .r rules only so that their .bin
 # side-products exist; mkoverlay.sh writes <out>.bin beside <out>.r.
 add_custom_command(
@@ -571,6 +596,8 @@ add_custom_command(
             137:${CMAKE_CURRENT_BINARY_DIR}/ovl_stuffit.bin
             138:${CMAKE_CURRENT_BINARY_DIR}/ovl_exo.bin
             139:${CMAKE_CURRENT_BINARY_DIR}/ovl_codecs.bin
+            140:${CMAKE_CURRENT_BINARY_DIR}/ovl_binhex.bin
+            141:${CMAKE_CURRENT_BINARY_DIR}/ovl_btoa.bin
     DEPENDS
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_crypt.r
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_spacesaver.r
@@ -584,4 +611,6 @@ add_custom_command(
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_stuffit.r
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_exo.r
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_codecs.r
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_binhex.r
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_btoa.r
             ${ENGINE_DIR}/tools/overlay/mkbundle.py)
