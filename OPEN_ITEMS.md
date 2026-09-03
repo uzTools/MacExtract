@@ -150,33 +150,6 @@ branch, so reopening it is a merge and not a rediscovery.
 
 ---
 
-## Three segmented UI scenarios fail, and it is not the engine
-
-**`segcheck.py`'s three INTERACTIVE cases fail — `zip-named`, `split-named`
-and `wrapped` — on `main` and on both overlay branches, with and without
-overlays.** Measured 2026-09-02 and again 2026-09-03, eight runs in all. The
-six cases driven by `run.py` all pass, including on the overlay builds:
-`sit-scattered`, `cpt-middle`, `cpt-truncated`, `chain`, `mimeseg` and
-`ddseg-real`.
-
-**What separates the failures from the passes is the HARNESS, not the
-format.** The six that pass are found by HEADER, so `run.py` can put the parts
-on the volume under any names. The three that fail are the ones placed by
-NAME — a spanned zip's `.z01`, a `.NNN` split, and parts inside envelopes —
-which only `interactive.py` can stage, because the name IS the scheme. All
-three go through the same staging code.
-
-**So this is a harness fault until somebody shows otherwise.** The engine
-joins all six schemes correctly on Linux, and the Mac joins every one of them
-that `run.py` can stage. *Hypothesis:* `interactive.py` places or names those
-parts in a way the application no longer matches.
-
-**What would close it:** run the five parts of a spanned set past
-`unc_segment_describe` on Linux, with the names `interactive.py` writes. One
-command, no emulator, and it says which side is wrong. Until then FORMATS.md's
-*Segmented archives* rests on Linux adjudication and the six header-found
-schemes, which is what it says it rests on.
-
 ## A folder that shortens onto another is merged, where a file is numbered
 
 **Asked for 2026-09-03.** `ComponentToStr63` cuts every path component to 31

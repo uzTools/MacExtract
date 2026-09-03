@@ -2174,7 +2174,7 @@ one saying "That password was refused", and every entry byte-exact.
 ### Replaying the segment work — `segcheck.py`
 
     tools/vmac/segcheck.py --list
-    tools/vmac/segcheck.py                 # all seven, 4 MB
+    tools/vmac/segcheck.py                 # all nine, 4 MB
     tools/vmac/segcheck.py --mem 1M        # the floor target
     tools/vmac/segcheck.py --case cpt-middle
 

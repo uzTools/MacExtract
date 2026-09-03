@@ -189,6 +189,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-01 (the reader was in the sentence) — feeding SuperDisk!'s own extractor a stream we wrote, and one hypothesis that did not survive it
 - 2026-09-01 (the machine that is too small) — a 128K Macintosh, and a status row measured on the other machine
 - 2026-09-01 (no hotspot, twenty-three decoders) — where the application's code is, and two instruments that said otherwise
+- 2026-09-03 (the binary nothing builds, twice more) — three UI failures that were one unfinished fix, and an explanation that fit six cases out of nine
 
 ---
 
@@ -10890,3 +10891,61 @@ the answer is no — a warning above a table does not survive a pipe, a
 redirect, or a reader in a hurry. This is not a fact about linker maps; every
 harness here that prints results and then grades them is exposed to it.
 
+
+---
+
+## 2026-09-03 (the binary nothing builds, twice more) — three UI failures that were one unfinished fix, and an explanation that fit six cases out of nine
+
+`segcheck.py`'s three interactive cases — `zip-named`, `split-named`,
+`wrapped` — were recorded as failing on `main` across eight runs, with the
+application named as the likely culprit. All three pass. `phase_wrapped` and
+`phase_named` graded their results against `build/dev/macextract`, which
+nothing in this repository builds and which `make clean` (`rm -rf build`)
+removes on every `./ci.sh`. `R.sh` reaches it with no existence guard, so the
+phase raised `FileNotFoundError` after the emulator run and before any
+comparison. Given `phase_chain`'s guard and `CD.CLI`, the three cases pass:
+~155 s, ~134 s, and MATCH with nothing left on the volume.
+
+**This exact defect was found and fixed on 2026-08-27, in one of the three
+places it existed.** That commit closed with "One CLI per file now." The file
+had two more call sites. The claim was about every line of a file and was
+checked against none of them — one `grep` settles such a claim, and the cost
+of not running it was the next three failures plus a day spent attributing
+them to the application.
+
+### The transferable part: an explanation that fits the cases you looked at
+
+The offered account was that the passes are the schemes found by HEADER and
+the failures are the ones placed by NAME. It is a real distinction and it
+explained six of the nine cases. It was wrong about the other three, and each
+was cheap to check:
+
+- **`wrapped` is not placed by name.** It writes StuffIt segment headers and
+  stages them as `Apart.sit.1.hqx`, `zzz-download.bin`, `Other.9.hqx` — names
+  that share no stem and that the Mac's family scan cannot match. Its own
+  docstring says "under names that say nothing." The hypothesis contradicted
+  the code it was about, in the function it was about.
+- **`chain` is interactive and passes**, so "interactive vs `run.py`" was
+  already refuted by the case list the hypothesis was written from.
+- **FORMATS.md said all three joined byte-exact on the Mac.** A status file
+  asserting the opposite of another status file is this repository's cheapest
+  smell, and it was live for the whole investigation.
+
+**When a hypothesis partitions a set, check the members it puts on each side,
+not the ones that suggested it.** The partition that was actually true —
+which phase had its reference CLI repaired — is visible in one `git log -S`
+over the path.
+
+### And a correction to what would have closed it
+
+The item said one Linux command would settle which side was wrong: push the
+parts past `unc_segment_describe` with the harness's names. It would not have.
+**The name-based sibling search is host code, written twice** — `cli/main.c`
+(the zip family and `.NNN` run) and `mac/macextract_mac.c` (`ZipFamPartOf`,
+`SplitPartOf`, `SegScanFamily`). The engine only sequences parts the host has
+already found. A Linux run exercises the CLI's copy and is blind to a
+Mac-side naming fault by construction; the run that settles it is the
+emulator. Both copies are in fact correct here — the sets join on Linux
+(`Aset.z01` → `payload.bin`, 278,294 B; `Ablob.001` → `Downerƒ`;
+`Apart.sit.1.hqx` → `Downerƒ`) and on the Mac — but that is a result, not
+something the proposed command could have shown.

@@ -161,6 +161,12 @@ keep finding the next one, and two of them need no insight at all:
   citation is what made it look settled. **Ask what the measurement's subject
   actually was**, and whether the claim is about that subject or about the
   category it belongs to (below).
+- **a fix whose scope was asserted rather than grepped.** Added
+  2026-09-03: a commit that repaired one call site closed with "one CLI
+  per file now"; two more sites in that same file were untouched, and
+  they became the next three failures (below). **A fix that says "now
+  the whole file does X" is a claim about every line of it, and `grep`
+  settles it in a second.**
 - **a difference you read rather than ran.** Added 2026-08-27: two
   checks were called "the same test, one of them weaker" on the strength
   of how they were WRITTEN — different variable, different constant.
@@ -1088,6 +1094,35 @@ a harness can click is not the same list.
   names as *a limitation written one paragraph from its own remedy*, in its
   purest form yet — the remedy was in the same paragraph, in the same
   sentence, as the limitation.
+
+- **"Three segmented UI scenarios fail on `main`, and the split is the
+  harness: the passes are found by HEADER, the failures are placed by
+  NAME."** Written 2026-09-02, widened 2026-09-03, withdrawn the same day.
+  `segcheck.py`'s `zip-named`, `split-named` and `wrapped` were reported
+  failing across eight runs. They were: `phase_wrapped` and `phase_named`
+  graded their output against `build/dev/macextract`, a path **nothing in
+  this repository has ever built** — and `make clean` is `rm -rf build`, so
+  `./ci.sh` deletes it and never puts it back. `R.sh` reaches it with no
+  existence guard and raises `FileNotFoundError` before any comparison
+  happens. With the guard and `CD.CLI` that `phase_chain` has carried since
+  2026-08-27, all three pass: `zip-named` settled ~155 s, `split-named`
+  ~134 s, `wrapped` MATCH with nothing left on the volume. **Cost:** a day,
+  eight emulator runs at ~5 minutes each, and two commits that named the
+  application as the likely culprit while FORMATS.md's *Segmented sets on a
+  real emulated Mac Plus* said all three joined byte-exact — a cross-file
+  contradiction that stood for the whole investigation. **Why it survived:**
+  the offered explanation fit six of nine cases and was never checked
+  against the other three. `wrapped` is not placed by name at all — it is a
+  StuffIt set found by HEADER, staged under `Apart.sit.1.hqx`,
+  `zzz-download.bin` and `Other.9.hqx`, which share no stem — and `chain`
+  is driven by `interactive.py` too and passed throughout. The true
+  partition was the repair: `chain` is the one phase whose reference CLI was
+  fixed, and the three failures are the three that were missed. **The
+  proposed close could not have worked either** — "run the parts past
+  `unc_segment_describe` on Linux and it says which side is wrong" — because
+  the name-based sibling search is HOST code written twice, `cli/main.c` and
+  `mac/macextract_mac.c`; a Linux run exercises only the CLI's copy and can
+  never see a Mac-side naming fault.
 
 ### Corrected figures and superseded write-ups
 

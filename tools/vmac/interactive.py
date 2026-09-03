@@ -1239,10 +1239,16 @@ def phase_wrapped(args, appbin, workdir, shot):
             continue
         got.add(nm)
 
+    # The reference CLI, same binary and same guard as phase_chain: this
+    # named `build/dev` until 2026-09-03, which nothing builds and which
+    # `make clean` (rm -rf build) removes, so the phase died on a
+    # traceback for anyone who had run `./ci.sh` and nothing else.
+    if not os.path.exists(CD.CLI):
+        print(f"interactive: no CLI at {CD.CLI} — run `make BUILD=build/rel`")
+        return False
     ref = os.path.join(workdir, "_cli")
     os.makedirs(ref, exist_ok=True)
-    R.sh(os.path.join(R.REPO, "build", "dev", "macextract"), "x", "-o", ref,
-         os.path.join(d, "Apart.sit.1.hqx"))
+    R.sh(CD.CLI, "x", "-o", ref, os.path.join(d, "Apart.sit.1.hqx"))
     want = set(os.listdir(ref))
     left = [g for g in got if g.startswith("MacExtract part")]
     ok = got == want and not left
@@ -1402,10 +1408,14 @@ def phase_named(args, appbin, workdir, shot):
             continue
         got.add(nm)
 
+    # The reference CLI, same binary and same guard as phase_chain — see
+    # phase_wrapped for what the old `build/dev` path cost.
+    if not os.path.exists(CD.CLI):
+        print(f"interactive: no CLI at {CD.CLI} — run `make BUILD=build/rel`")
+        return False
     ref = os.path.join(workdir, "_cli")
     os.makedirs(ref, exist_ok=True)
-    R.sh(os.path.join(R.REPO, "build", "dev", "macextract"), "x", "-o", ref,
-         parts[0])
+    R.sh(CD.CLI, "x", "-o", ref, parts[0])
     want = set(os.listdir(ref))
     ok = got == want
     print(f"interactive: the volume holds {sorted(got)}")

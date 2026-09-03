@@ -1854,6 +1854,13 @@ scheme decided by filename cannot be driven that way (DECISIONS.md
 command, which is what keeps this table re-runnable rather than
 historical.
 
+The three interactive rows — spanned zip, `.NNN` split and parts inside
+envelopes — were **re-run on 2026-09-03** and pass unchanged, after a
+harness fault had been reported as three application failures for a day
+(BLOCKERS.md, *Withdrawn claims*). Nothing in the application or the
+engine changed; the reference CLI those two phases graded against was a
+path nothing builds.
+
 `derived-Cal.sit` (50,205 B) cut into three parts and put on one
 floppy, the parts named `archive.sit`, `part-two` and `zzz` — names
 that resemble neither each other nor the file inside:
