@@ -190,6 +190,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-01 (the machine that is too small) — a 128K Macintosh, and a status row measured on the other machine
 - 2026-09-01 (no hotspot, twenty-three decoders) — where the application's code is, and two instruments that said otherwise
 - 2026-09-03 (the binary nothing builds, twice more) — three UI failures that were one unfinished fix, and an explanation that fit six cases out of nine
+- 2026-09-03 (the struct that grew after it was measured) — 296 was the offset of the last field
 
 ---
 
@@ -7920,9 +7921,12 @@ one in `UncEntryInfo` itself. `name` is `UNC_NAME_MAX` (255) bytes; a
 while `unzip` showed all 457. The file written was a different file from
 the one in the archive, and nothing anywhere said so.
 
-**Why not just carry the name.** `UncEntryInfo` is 296 bytes on the
+**Why not just carry the name.** `UncEntryInfo` is 298 bytes on the
 68000 target (measured; the "280 bytes" that stood in `fmt_lzh.c` was
-never right) and it travels on a 4 KB call stack. A name field big
+never right, and the "296" this entry stated until 2026-09-03 stopped
+being right a few hours after it was written — 2026-09-03, *the struct
+that grew after it was measured*) and it travels on a 4 KB call stack.
+A name field big
 enough for zip's own maximum would be 65,535 bytes. The cap is the
 right decision; being silent about it was not.
 
@@ -10949,3 +10953,45 @@ emulator. Both copies are in fact correct here — the sets join on Linux
 (`Aset.z01` → `payload.bin`, 278,294 B; `Ablob.001` → `Downerƒ`;
 `Apart.sit.1.hqx` → `Downerƒ`) and on the Mac — but that is a result, not
 something the proposed command could have shown.
+
+## 2026-09-03 (the struct that grew after it was measured) — 296 was the offset of the last field
+
+`UncEntryInfo` was quoted at **296 bytes** on the 68000 target in three
+places — FORMATS.md (*Name limits*), the entry above (*the name cap*) and a
+comment in `src/fmt_lzh.c` explaining why the path is built into the caller's
+entry rather than a local. The target compiler says **298**
+(`m68k-apple-macos-gcc -Os`, and `m68k-linux-gnu-gcc` agrees; x86-64 is 304).
+
+**296 is not a mistyped measurement — it is the offset of `name_full_len`.**
+Both numbers were produced on 2026-08-27, hours apart. `name_truncated` closed
+the struct at 295, padded to 296, and that is what was written down; the
+maintainer's correction the same day — the notice is text, so the whole name
+goes into the host's buffer — added `name_full_len` on top of it, and nothing
+re-measured. The figure was stale before the day it was written in ended.
+
+**Nothing rested on the two bytes**, which is why it survived: the argument the
+number supports is that zip's 65,535-byte maximum name cannot travel on a 4 KB
+stack, and that holds at either value. The stack is measured separately and
+directly — 5,200 B constant, 2026-08-31 — and never consulted this figure.
+
+Two things are worth carrying:
+
+- **A measurement taken in the middle of a change describes a struct that may
+  not exist by the end of the day.** The `280` this replaced was wrong from the
+  start and was caught by measuring; the `296` was right for about four hours,
+  which is the harder case — re-measuring at the END of a change is what
+  separates them, not measuring more carefully.
+- **It hid behind a coincidence.** 296 is also, genuinely, the length of the
+  nine-deep path `tools/synth_now.py` writes, stated a few hundred lines away
+  in the same two files and dated the same day (*the path builder's own cap*).
+  A reader checking whether 296 was right found a 296 that was.
+
+**It cannot go stale silently again.** `tools/check_docs.py` gained a fifth
+invariant: every `"N bytes on the 68000 target"` in the root docs, `src/`,
+`cli/`, `mac/` and `include/` must equal `sizeof(UncEntryInfo)` as the Retro68
+compiler reports it, sized by compiling a one-line probe and reading `.size`
+off the assembly. It costs 0.2 s, and it skips out loud rather than silently on
+a machine with no m68k compiler. Mutation-tested both ways: restoring `296`
+fails one site, and adding a field to the struct fails all three at 302. A
+historical value now has to be written outside that phrase — this entry says
+*quoted at 296 bytes*, and that is the check working rather than around it.

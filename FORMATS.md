@@ -2077,7 +2077,9 @@ escape that arrives at 2 GB*) why the two Zip64 refusals differ.
 **Measured 2026-08-27.** A name meets two caps on its way to disk, and
 neither is negotiable. The ENGINE carries it in `UncEntryInfo.name`,
 `UNC_NAME_MAX` (255) bytes plus a terminator inside a struct that is
-**296 bytes on the 68000 target** and travels on a 4 KB call stack; the
+**298 bytes on the 68000 target** (corrected 2026-09-03: it was stated
+as 296, which is where the last field starts) and travels on a 4 KB
+call stack; the
 FILESYSTEM takes what `pathconf` says, which is 255 bytes per component
 and 4,096 per path on ext4 and less on others. Until this date the first
 cut names silently — a 457-byte zip path extracted as 255 bytes, exit 0,
