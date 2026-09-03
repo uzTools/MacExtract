@@ -265,18 +265,6 @@ typedef struct UncEntryInfo {
     uint32_t comp_rsrc_size;
 
     uint8_t  is_dir;        /* directory entry (no forks)     */
-    /* 1 if this entry's data is encrypted, 0 if it is not or if the format
-     * cannot say. Five formats can: StuffIt (method bit 0x80), StuffIt 5
-     * (header flag), Compact Pro (index flag), zip (general-purpose bit 0)
-     * and PackIt (its block magic). ARC cannot — it has no flag, and
-     * XADMaster says so in as many words — so an ARC entry always reports 0
-     * and a caller must not read that as "not encrypted".
-     *
-     * It exists so a HOST can ask, before extracting, whether an archive
-     * needs the ciphers at all: on `overlay-eager` that decides whether the
-     * cipher overlay must be kept, and keeping it costs an archive on a
-     * 512 KB machine (BRANCH_NOTES.md). */
-    uint8_t  encrypted;
     uint8_t  method_data;   /* format-specific method id (informational) */
     uint8_t  method_rsrc;
     /* Set when the archive's name for this entry was LONGER than

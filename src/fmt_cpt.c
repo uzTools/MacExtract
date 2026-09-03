@@ -673,10 +673,6 @@ int unc_cpt_extract(UncCtx *c)
             e.method_rsrc = (flags & 2) ? 1 : 0;   /* 1 = LZH+RLE, 0 = RLE */
             e.method_data = (flags & 4) ? 1 : 0;
 
-            /* bit 0 of the index flags. A host that must decide, before
-             * extracting, whether the ciphers will be wanted reads this. */
-            e.encrypted = (uint8_t)((flags & 1) != 0);
-
             sret = c->sink->begin_entry(c->sink->ctx, &e);
             if (sret < 0) { err = UNC_ERR_SINK; goto out; }
             if (sret > 0) continue;               /* skipped: no decode */

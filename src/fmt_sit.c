@@ -821,9 +821,6 @@ int unc_sit_extract(UncCtx *c)
         e.comp_data_size = dcomp;
         e.method_rsrc = (uint8_t)(rmeth & SIT_METHODMASK);
         e.method_data = (uint8_t)(dmeth & SIT_METHODMASK);
-        /* 0x80 in either method byte. A host that must decide, before
-         * extracting, whether the ciphers will be wanted reads this. */
-        e.encrypted = (uint8_t)(((rmeth | dmeth) & SIT_ENCRYPTED) != 0);
 
         sret = c->sink->begin_entry(c->sink->ctx, &e);
         if (sret < 0) { err = UNC_ERR_SINK; goto out; }

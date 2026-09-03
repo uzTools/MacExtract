@@ -319,7 +319,6 @@ int unc_sit5_extract(UncCtx *c)
             e.is_dir = 1;
             e.data_size = e.rsrc_size = 0;
             e.comp_data_size = e.comp_rsrc_size = 0;
-        e.encrypted = (uint8_t)(encrypted != 0);
             sret = c->sink->begin_entry(c->sink->ctx, &e);
             if (sret < 0) { err = UNC_ERR_SINK; goto out; }
             if (sret == 0 && c->sink->end_entry(c->sink->ctx, UNC_OK) < 0) {

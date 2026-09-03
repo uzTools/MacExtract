@@ -745,23 +745,6 @@ static void mal_take_budget(MacAlloc *a)
 #endif
 }
 
-/* A scratch allocator for work done BEFORE the engine's budget is taken —
- * today just the encryption walk the overlay release asks for. It must not go
- * through mal_alloc, because that would take the budget early and hand the
- * engine a figure measured while the whole overlay bundle was still
- * resident. */
-static void *scratch_alloc(void *ctx, uint32_t size)
-{
-    (void)ctx;
-    return (void *)NewPtr((Size)size);
-}
-
-static void scratch_free(void *ctx, void *p)
-{
-    (void)ctx;
-    if (p) DisposePtr((Ptr)p);
-}
-
 static void *mal_alloc(void *ctx, uint32_t size)
 {
     StackSample();
@@ -3555,12 +3538,8 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
          * and a plain .NNN split all join to a FILE that a later layer
          * sniffs. The shim keeps everything for those, exactly as it does
          * for an envelope. */
-        { extern void ovl_release_if_unwanted(UncFormat, UncIO *, UncAlloc *);
-          UncAlloc scratch;
-          scratch.ctx = NULL;
-          scratch.alloc = scratch_alloc;
-          scratch.free = scratch_free;
-          ovl_release_if_unwanted(sh->desc.scheme, &io, &scratch); }
+        { extern void ovl_release_if_unwanted(UncFormat, UncIO *);
+          ovl_release_if_unwanted(sh->desc.scheme, &io); }
 #endif
         ret = unc_extract_segments(&sh->desc, &vs, segScratch, &sk, &al,
                                    prog, &opt);
@@ -3579,12 +3558,8 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
          * there (mal_take_budget), so what this frees is simply part of the
          * heap the engine is then measured against. Nothing has to be
          * credited back, and a credit path would be code no run executes. */
-        { extern void ovl_release_if_unwanted(UncFormat, UncIO *, UncAlloc *);
-          UncAlloc scratch;
-          scratch.ctx = NULL;
-          scratch.alloc = scratch_alloc;
-          scratch.free = scratch_free;
-          ovl_release_if_unwanted(extractedAs, &io, &scratch); }
+        { extern void ovl_release_if_unwanted(UncFormat, UncIO *);
+          ovl_release_if_unwanted(extractedAs, &io); }
 #endif
         /* SpaceSaver is the exception to the strip above: it compresses a
          * file IN PLACE and adds no extension, so the whole name is the

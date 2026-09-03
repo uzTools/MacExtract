@@ -218,7 +218,6 @@ static void ovl_keep(short id, int slot)
     if (p == NULL || len == 0) { OVL_DIAG(gKeepFail = 1); return; }
     h = NewHandle((Size)len);
     if (h == NULL || *h == NULL) { OVL_DIAG(gKeepFail = 2); return; }
-<<<<<<< Updated upstream
     /* MoveHHi before the lock. These copies are locked for the rest of the
      * run, and a locked block in the middle of the heap splits it. Measured
      * on a Macintosh 512Ke: with the copies left where NewHandle put them,
@@ -226,18 +225,6 @@ static void ovl_keep(short id, int slot)
      * `gRefusedWhy` = 2, NewPtr returning NULL for a 205 KB block against a
      * largest free block of 169,298 B. The memory was there, in two pieces. */
     MoveHHi(h);
-=======
-    /* MoveHHi before the lock, which is the whole reason this is not just
-     * NewHandle + HLock.
-     *
-     * These copies are locked for the rest of the run, and a locked block in
-     * the middle of the heap splits it. Measured on a Macintosh 512Ke: with
-     * the copies left where NewHandle put them, `derived-a2basic.dmg.sit` was
-     * granted 317,838 B and still failed — `gRefusedWhy` = 2, NewPtr
-     * returning NULL for a 205 KB block against a largest free block of
-     * 169,298 B. The memory was there; it was in two pieces. */
-    /* MoveHHi(h); TEMPORARILY OUT — isolating a hang */
->>>>>>> Stashed changes
     HLock(h);
     BlockMoveData(p, *h, (Size)len);
     /* Relocated AGAIN, for the address the copy runs at: the fixup is
@@ -253,7 +240,7 @@ static void ovl_keep(short id, int slot)
  * allocation, which is where the budget is taken. So what it frees is heap
  * the engine is simply measured against a moment later — there is nothing to
  * credit back, and no ordering to get wrong. */
-void ovl_release_if_unwanted(UncFormat fmt, UncIO *io, UncAlloc *al)
+void ovl_release_if_unwanted(UncFormat fmt, UncIO *io)
 {
     short want = 0;
     int crypt = 1;
@@ -310,16 +297,8 @@ void ovl_release_if_unwanted(UncFormat fmt, UncIO *io, UncAlloc *al)
      * This is the only place the answer may be acted on: there is no reload,
      * so releasing the ciphers on a maybe would lose an entry rather than
      * cost a disk access. */
-    /* Ask the archive. unc_archive_encrypted runs a LIST pass, so the answer
-     * comes from the format's own reader rather than from a copy of its
-     * layout, and it covers every format that can know — StuffIt and
-     * StuffIt 5 among them, which is what lets a plain .sit release the
-     * ciphers. ARC cannot know and answers UNKNOWN; so does a part of a
-     * multi-part set, whose directory is in the LAST part.
-     *
-     * Only a definite NO releases them. There is no reload, so a wrong
-     * release costs an entry rather than a disk access. */
-    if (crypt && unc_archive_encrypted(fmt, io, al) == UNC_ENC_NO)
+    if (crypt && (fmt == UNC_FORMAT_COMPACTPRO || fmt == UNC_FORMAT_ZIP) &&
+        unc_archive_encrypted(fmt, io) == UNC_ENC_NO)
         crypt = 0;
 
     OVL_DIAG(gRelFmt = (short)fmt);

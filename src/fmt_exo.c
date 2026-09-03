@@ -844,8 +844,6 @@ int unc_zip_extract(UncCtx *c)
             }
             e.is_dir = (uint8_t)isdir;
         }
-        /* general-purpose bit 0, which WinZip AES entries set too. */
-        e.encrypted = (uint8_t)((flags & 0x0001) != 0);
         e.data_size = e.is_dir ? 0 : usize;
         e.comp_data_size = csize;
         e.rsrc_size = 0;
