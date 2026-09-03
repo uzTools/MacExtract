@@ -215,6 +215,8 @@ resynced:
                 }
                 base = start;
                 unc_entry_clear(&e);
+                /* 'PMa5' and 'PMa6' are the encrypted magics. */
+                e.encrypted = (uint8_t)(encrypted != 0);
                 sret = c->sink->begin_entry(c->sink->ctx, &e);
                 if (sret < 0) { err = UNC_ERR_SINK; goto out; }
                 if (sret == 0 && c->sink->end_entry(c->sink->ctx, perr) < 0) {

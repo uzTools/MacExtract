@@ -1036,7 +1036,7 @@ int unc_zip_scan_eocd(void *ctx, UncZipReadAt rd, uint32_t end, uint32_t *at);
 #define UNC_ENC_NO       0
 #define UNC_ENC_YES      1
 #define UNC_ENC_UNKNOWN (-1)
-int unc_archive_encrypted(UncFormat fmt, UncIO *io);
+int unc_archive_encrypted(UncFormat fmt, UncIO *io, UncAlloc *al);
 
 /* One StuffIt fork: seek to `at`, decode `complen` -> `outlen` bytes
  * with the given method, verify the CRC-16/ARC (`wantcrc`; method 15
