@@ -145,28 +145,32 @@ branch, so reopening it is a merge and not a rediscovery.
 
 ---
 
-## The spanned-zip UI scenario fails, and nobody had run it since
+## Three segmented UI scenarios fail, and it is not the engine
 
-**`interactive.py --named zip` reports MISMATCH**, on `main` and on both
-overlay branches, with and without overlays — four runs, 2026-09-02. The
-application ends on *"This archive has more parts. Find them and try again"*
-where the Linux CLI, given the same set, produces `payload.bin`. The other
-five join schemes are unaffected: a Compact Pro set opened at its first part
-extracts 9 files byte-exact through the same harness on the same day.
+**`segcheck.py`'s three INTERACTIVE cases fail — `zip-named`, `split-named`
+and `wrapped` — on `main` and on both overlay branches, with and without
+overlays.** Measured 2026-09-02 and again 2026-09-03, eight runs in all. The
+six cases driven by `run.py` all pass, including on the overlay builds:
+`sit-scattered`, `cpt-middle`, `cpt-truncated`, `chain`, `mimeseg` and
+`ddseg-real`.
 
-**Which half is wrong is NOT established, and that is the whole of what is
-known.** A spanned zip is the one scheme placed by NAME rather than found by
-header, so the parts must be on the volume under names the application looks
-for — and the case that fails is the one where the harness, not the engine,
-decides what those names are. *Hypothesis:* the harness places or names the
-parts in a way the application no longer matches. It has not been reduced,
-and until it is, this is not evidence of a defect in the reader.
+**What separates the failures from the passes is the HARNESS, not the
+format.** The six that pass are found by HEADER, so `run.py` can put the parts
+on the volume under any names. The three that fail are the ones placed by
+NAME — a spanned zip's `.z01`, a `.NNN` split, and parts inside envelopes —
+which only `interactive.py` can stage, because the name IS the scheme. All
+three go through the same staging code.
 
-**What would close it:** run the five parts past `unc_segment_describe` on
-Linux with the names the harness writes, which needs no emulator and says in
-one command whether the engine or the harness is at fault. FORMATS.md's
-*Segmented archives* claims spanned zip extracts on the strength of five
-generated sets adjudicated four ways — all on Linux, none through the UI.
+**So this is a harness fault until somebody shows otherwise.** The engine
+joins all six schemes correctly on Linux, and the Mac joins every one of them
+that `run.py` can stage. *Hypothesis:* `interactive.py` places or names those
+parts in a way the application no longer matches.
+
+**What would close it:** run the five parts of a spanned set past
+`unc_segment_describe` on Linux, with the names `interactive.py` writes. One
+command, no emulator, and it says which side is wrong. Until then FORMATS.md's
+*Segmented archives* rests on Linux adjudication and the six header-found
+schemes, which is what it says it rests on.
 
 ## Waiting on a file this machine does not have
 
