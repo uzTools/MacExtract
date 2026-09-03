@@ -1,6 +1,9 @@
 # Branch `selective-loading` — load only the decoder the archive needs
 
-**Status: thirteen overlays — every decoder, and the shared machinery too.**
+**Status: thirteen overlays, four tiers run, and one archive recovered.**
+69/69 at 4 MB, 69/69 at 1 MB, 69/69 on System 3.0 at 1 MB, and **67/69 at
+512 KB against `main`'s 66/69** — `derived-a2basic.dmg.sit` extracts on a
+Macintosh 512Ke for the first time.
 Resident code is 50,932 B against 147,772 B, the A5 world 18,828 B against
 44,116 B, and the largest single `CODE` resource — the thing a small machine
 has to find room for in one piece — is **45,480 B** against 142,152 B. The decoders for SpaceSaver, Compact Pro, DiskDoubler, LZH, ARC
@@ -111,6 +114,32 @@ which only the interactive `main()` calls. `-D UNC_AT_BUDGET` now prepends
 `bg=` and `pk=` to the completion alert, so `interactive.py` can be asked the
 same question the grid answers — which is how the envelope row was measured
 rather than assumed.
+
+## The tiers, 2026-09-03 — and one archive that could not be opened before
+
+| tier | this branch | `main` |
+|---|---|---|
+| 4 MB, System 6.0.8 | **69/69** | 69/69 |
+| 1 MB, System 6.0.8 | **69/69** | 69/69 |
+| System 3.0, 1 MB | **69/69** | 69/69 |
+| System 3.0, **512 KB** (Macintosh 512Ke) | **67/69** | 66/69 |
+
+**The 512 KB tier gained a fixture, which is the point of all of this.**
+`derived-a2basic.dmg.sit` extracts there now, holding **305,507 B** of peak
+heap — an archive whose one entry needs 246,734 B against a budget that was
+163,656 B, and which had been refused per entry since the tier existed
+(FORMATS.md, *512 KB machines*, on `main`). **A machine that could not open
+that archive now opens it.**
+
+The two that still fail are the other two of the documented three, and they
+fail for the reason the design says they must: `synth-dd-m5.dd` asks for one
+405,520 B block on every tier, and `derived-Library_ISBN_Barcoder.sit` for
+393,869 B — both more, in a single allocation, than a 512 KB machine has for
+the whole job. No amount of code moved out of the heap reaches those; what
+would is a smaller archive.
+
+**And the tiers are what found the relocation defect below.** 67/69 at 1 MB on
+the first run, where seven hand-picked fixtures had said 7/7.
 
 ## The check that could not fail, and the defect it hid
 
