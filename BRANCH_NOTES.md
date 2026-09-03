@@ -1,7 +1,7 @@
 # Branch `overlay-eager` — one disk read at launch, then throw most of it away
 
-**Branched from `selective-loading`**, and it carries all six of that branch's
-overlays. Same images, opposite lifetime: `selective-loading` reads the one it
+**Branched from `selective-loading`**, and it carries all thirteen of that
+branch's overlays. Same images, opposite lifetime: `selective-loading` reads the one it
 needs when it needs it; this reads **all six as a single resource while the
 boot disk is certainly still in**, and releases everything the archive cannot
 want as soon as the sniff says what the archive is.
@@ -11,6 +11,26 @@ StuffIt 5 archive is granted **693,168 B** with the bundle released and only
 the ciphers kept; an LZH gets **701,688 B**, keeping only its own decoder.
 4/4 fixtures extract byte-exact across the formats that keep one image, two
 images, and none.
+
+## The tiers, 2026-09-03: the trade costs exactly one archive
+
+| tier | `selective-loading` | **this branch** | `main` |
+|---|---|---|---|
+| 1 MB, System 6.0.8 | 69/69 | **69/69** | 69/69 |
+| System 3.0, **512 KB** | 67/69 | **66/69** | 66/69 |
+
+**`derived-a2basic.dmg.sit` extracts on a Macintosh 512Ke under
+`selective-loading` and does not under this branch.** That is the whole of the
+difference, and it is the 15,748 B this file has been calling "the ciphers"
+since 2026-09-02, now expressed as a capability rather than a number: a `.sit`
+may carry an encrypted entry, so loading eagerly means keeping the cipher
+image whatever the archive turns out to hold, and that archive needs
+246,734 B in one allocation against a machine that has barely more.
+
+So the trade is priced on both sides at last. **One disk read at launch and no
+access afterwards, against one archive in sixty-nine on the smallest machine
+this application runs on.** Which of those a user would rather have is a real
+question, and not one this repository can answer for them.
 
 ## The three methods, and what each leaves the decoder
 

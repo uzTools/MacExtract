@@ -30,16 +30,11 @@ static uint32_t ovl_host_crc32(uint32_t crc, const uint8_t *p, uint32_t n)
     return unc_crc32(crc, p, (int32_t)n);
 }
 
-/* NOT const: the codecs overlay writes its own addresses into these fields
- * when it loads (OVL_CODEC_EXPORTS). Fifteen of them start NULL, because
- * their implementations are not in the application at all. */
 static OverlayHostFns gOvlFns = OVL_HOST_FNS_INIT;
-
 
 static const OverlayHost gOvlHost = { ovl_host_crc32, NULL, NULL, NULL,
                                       (const struct OverlayHostFns *)&gOvlFns };
 
-<<<<<<< HEAD
 /* ONE resource, read ONCE, at launch — and then most of it thrown away.
  *
  * `selective-loading` keeps one 'OVLY' per format and reads whichever the
@@ -67,8 +62,8 @@ short gWantedAfterRelease, gKeepFail, gRelFmt;
 #else
 #define OVL_DIAG(stmt) ((void)0)
 #endif
-static Handle gKept[2];         /* the images we copied out, locked */
-static short  gKeptId[2];
+static Handle gKept[3];         /* the images we copied out, locked */
+static short  gKeptId[3];
 
 static unsigned long ovl_be32(const unsigned char *p)
 {
@@ -100,14 +95,59 @@ static const unsigned char *ovl_find(Handle h, short id, unsigned long *len)
     return NULL;
 }
 
+
+static void ovl_fixup(unsigned char *base, unsigned long size, long delta)
+{
+    unsigned long n, i, table;
+    if (size < 4) return;
+    n = ovl_be32(base + size - 4);
+    if (n == 0) return;
+    if (n > (size - 4) / 4) return;          /* not ours; leave it alone */
+    table = size - 4 - n * 4;
+    for (i = 0; i < n; i++) {
+        unsigned long off = ovl_be32(base + table + i * 4);
+        unsigned long v;
+        if (off + 4 > table) continue;       /* outside the image proper */
+        v = ovl_be32(base + off) + (unsigned long)delta;
+        base[off]     = (unsigned char)(v >> 24);
+        base[off + 1] = (unsigned char)(v >> 16);
+        base[off + 2] = (unsigned char)(v >> 8);
+        base[off + 3] = (unsigned char)v;
+    }
+}
+
+/* Relocate every image where it sits IN THE BUNDLE, once, at load.
+ *
+ * An image is executed in place unless it is copied out, so its relocations
+ * have to be applied at its bundle address; ovl_keep applies them again to
+ * the copy, at the copy's address. Doing it here rather than per image keeps
+ * the "exactly once" property that makes a fixup safe. */
+static void ovl_bundle_fixup(void)
+{
+    const unsigned char *p;
+    unsigned short n, i;
+    if (gBundle == NULL || *gBundle == NULL) return;
+    p = (const unsigned char *)*gBundle;
+    n = ovl_be16(p);
+    for (i = 0; i < n; i++) {
+        const unsigned char *e = p + 4 + (unsigned long)i * 12;
+        unsigned long off = ovl_be32(e + 4), len = ovl_be32(e + 8);
+        ovl_fixup((unsigned char *)p + off, len, (long)(p + off));
+    }
+}
+
 /* Called from main() while the boot disk is certainly in. */
 void ovl_preload(void)
 {
     if (gBundleTried) return;
     gBundleTried = 1;
     gBundle = GetResource('OVLY', OVL_ID_BUNDLE);
-    if (gBundle != NULL && *gBundle != NULL) HLock(gBundle);
-    else gBundle = NULL;
+    if (gBundle != NULL && *gBundle != NULL) {
+        HLock(gBundle);
+        ovl_bundle_fixup();
+    } else {
+        gBundle = NULL;
+    }
 }
 
 /* NEVER reloads. One disk read at launch is the whole of this branch's
@@ -125,7 +165,7 @@ static OverlayEntry ovl_image(short id)
     const unsigned char *p;
     unsigned long len;
     int i;
-    for (i = 0; i < 2; i++)
+    for (i = 0; i < 3; i++)
         if (gKept[i] != NULL && gKeptId[i] == id)
             return (OverlayEntry)(void *)*gKept[i];
     if (gBundle == NULL) { OVL_DIAG(gWantedAfterRelease = id); return NULL; }
@@ -135,68 +175,6 @@ static OverlayEntry ovl_image(short id)
 
 /* The ciphers, by their id in the bundle. Kept as a named function because
  * every cipher shim calls it and the name says which overlay is meant. */
-=======
-/* Big-endian, byte-wise: the image is a Handle, and nothing guarantees a
- * relocation lands on an even address. */
-static unsigned long ovl_be32(const unsigned char *p)
-{
-    return ((unsigned long)p[0] << 24) | ((unsigned long)p[1] << 16) |
-           ((unsigned long)p[2] << 8) | (unsigned long)p[3];
-}
-
-/* Apply the relocation trailer, once, to an image at the address it will run
- * at.
- *
- * -mpcrel makes the CODE position-independent and for a year that was taken
- * to mean the image was. It is not: an array of POINTERS in constant data —
- * `sit13_firstlengths`, zlib's `z_errmsg`, MIME's keyword tables — holds
- * LINK-TIME addresses, and a blob loaded wherever the Memory Manager put it
- * dereferences them into nowhere. What that looked like was StuffIt's
- * method 13 returning UNC_ERR_CORRUPT for exactly the entries small enough to
- * use its preset tables: one fixture in 69, found by the tier and by nothing
- * before it.
- *
- * Layout (tools/overlay/mkreloctrailer.py): the image, then one u32 image
- * offset per relocation, then the count. Every image carries the trailer, a
- * clean one with a count of 0. */
-static void ovl_fixup(unsigned char *base, unsigned long size)
-{
-    unsigned long n, i, table;
-    if (size < 4) return;
-    n = ovl_be32(base + size - 4);
-    if (n == 0) return;
-    if (n > (size - 4) / 4) return;          /* not ours; leave it alone */
-    table = size - 4 - n * 4;
-    for (i = 0; i < n; i++) {
-        unsigned long off = ovl_be32(base + table + i * 4);
-        unsigned long v;
-        if (off + 4 > table) continue;       /* outside the image proper */
-        v = ovl_be32(base + off) + (unsigned long)base;
-        base[off]     = (unsigned char)(v >> 24);
-        base[off + 1] = (unsigned char)(v >> 16);
-        base[off + 2] = (unsigned char)(v >> 8);
-        base[off + 3] = (unsigned char)v;
-    }
-}
-
-static OverlayEntry ovl_load(short id, Handle *slot, int *tried)
-{
-    if (!*tried) {
-        *tried = 1;
-        *slot = GetResource('OVLY', id);
-        if (*slot != NULL && **slot != NULL) {
-            HLock(*slot);
-            /* AFTER HLock: the fixup writes the address the image will run
-             * at, so the image must not move afterwards. */
-            ovl_fixup((unsigned char *)**slot,
-                      (unsigned long)GetHandleSize(*slot));
-        } else {
-            *slot = NULL;
-        }
-    }
-    return *slot ? (OverlayEntry)(void *)**slot : NULL;
-}
-
 /* Load the codec machinery and let it plant itself in the vector. Every
  * decoder shim calls this BEFORE dispatching, because a decoder that ran with
  * NULL codec pointers would not fail — it would jump to zero.
@@ -204,20 +182,22 @@ static OverlayEntry ovl_load(short id, Handle *slot, int *tried)
  * Returns 0 if the overlay could not be had, and the caller then reports a
  * per-entry memory error, which is what this shell does with every other
  * allocation failure. */
+static int gCodecsIn;   /* cleared when the bundle goes: the vector then
+                         * points into memory that has been released */
+
 static int ovl_codecs_ready(void)
 {
-    static Handle h;
-    static int tried, in;
     OverlayEntry e;
-    if (in) return 1;
-    e = ovl_load(OVL_ID_CODECS, &h, &tried);
+    if (gCodecsIn) return 1;
+    /* From the bundle, like every other image on this branch — no separate
+     * resource and no second disk read. */
+    e = ovl_image(OVL_ID_CODECS);
     if (!e) return 0;
     e(&gOvlHost, OVL_CODEC_EXPORTS, &gOvlFns, NULL);
-    in = 1;
+    gCodecsIn = 1;
     return 1;
 }
 
->>>>>>> selective-loading
 static OverlayEntry ovl_entry(void)
 {
     return ovl_image(OVL_ID_CRYPT);
@@ -240,6 +220,11 @@ static void ovl_keep(short id, int slot)
     if (h == NULL || *h == NULL) { OVL_DIAG(gKeepFail = 2); return; }
     BlockMoveData(p, *h, (Size)len);
     HLock(h);
+    /* Relocated AGAIN, for the address the copy runs at: the fixup is
+     * relative to wherever the image sits, and this one has moved. */
+    ovl_fixup((unsigned char *)*h, (unsigned long)len,
+              (long)*h - (long)p);   /* by the DIFFERENCE: p was relocated
+                                      * for its place in the bundle */
     gKept[slot] = h;
     gKeptId[slot] = id;
 }
@@ -256,39 +241,42 @@ void ovl_release_if_unwanted(UncFormat fmt, UncIO *io)
     if (gBundle == NULL) return;
 
     switch (fmt) {
+    /* Decoder, and whether an entry might be encrypted. The second column is
+     * the eligibility rule this branch has always had: a format that MAY
+     * carry an encrypted entry keeps the ciphers, because encryption is
+     * discovered per entry and this branch must decide before it knows. */
     case UNC_FORMAT_SPACESAVER:  want = OVL_ID_SPACESAVER; crypt = 0; break;
     case UNC_FORMAT_COMPACTPRO:  want = OVL_ID_CPTDD;      break;
-    case UNC_FORMAT_ZIP:                                   break;
     case UNC_FORMAT_DISKDOUBLER: want = OVL_ID_CPTDD;      crypt = 0; break;
     case UNC_FORMAT_LZH:         want = OVL_ID_LZH;        crypt = 0; break;
     case UNC_FORMAT_ARC:         want = OVL_ID_ARC;        break;
-    /* Segment SCHEMES, from the other release site. A Compact Pro set is
-     * read by the Compact Pro reader over the joined parts, so it wants that
-     * decoder; a spanned zip wants nothing, the zip reader being resident.
-     * Neither can be asked whether it is encrypted — the directory of a set
-     * lives in its LAST part and unc_archive_encrypted refuses on a part —
-     * so both keep the ciphers. */
-    case UNC_FORMAT_CPTSEG:      want = OVL_ID_CPTDD;      break;
-    case UNC_FORMAT_ZIPSEG:                                break;
     case UNC_FORMAT_NOWCOMPRESS: want = OVL_ID_NOW;        crypt = 0; break;
-    /* An ENVELOPE does not yet know what is under it, and a format with no
-     * overlay of its own still has to be able to reach the ciphers. Both
-     * keep the bundle whole, which costs memory and loses nothing. */
+    case UNC_FORMAT_SUPERDISK:   want = OVL_ID_SUPERDISK;  crypt = 0; break;
+    case UNC_FORMAT_PACKIT:      want = OVL_ID_PACKIT;     break;
+    case UNC_FORMAT_SIT:         case UNC_FORMAT_SIT5:
+        want = OVL_ID_STUFFIT;   break;
+    case UNC_FORMAT_ZIP:         want = OVL_ID_EXO;        break;
+    case UNC_FORMAT_TAR:         want = OVL_ID_EXO;        crypt = 0; break;
+    /* Segment SCHEMES, from the other release site: a Compact Pro or spanned
+     * zip set is read by that format's own reader over the joined parts. */
+    case UNC_FORMAT_CPTSEG:      want = OVL_ID_CPTDD;      break;
+    case UNC_FORMAT_ZIPSEG:      want = OVL_ID_EXO;        break;
+    /* An ENVELOPE does not yet know what is under it, and the schemes that
+     * join to a FILE do not either. Both keep the whole bundle, which costs
+     * memory and loses nothing. */
     case UNC_FORMAT_BINHEX:      case UNC_FORMAT_MACBINARY:
     case UNC_FORMAT_APPLESINGLE: case UNC_FORMAT_APPLEDOUBLE:
     case UNC_FORMAT_GZIP:        case UNC_FORMAT_COMPRESS_Z:
     case UNC_FORMAT_MIME:        case UNC_FORMAT_UU:
     case UNC_FORMAT_BTOA:        case UNC_FORMAT_BASE64:
-    /* And the schemes that join to a FILE rather than to entries: a StuffIt
-     * set, a DiskDoubler `SPLT`, a plain .NNN split and a message/partial
-     * set all yield something a LATER layer sniffs, and what that turns out
-     * to be is unknown here. Releasing on the scheme would strand it, for
-     * the same reason releasing on an envelope's outer format would. */
     case UNC_FORMAT_SITSEG:      case UNC_FORMAT_DDSEG:
     case UNC_FORMAT_SPLIT:       case UNC_FORMAT_MIMESEG:
         return;
     default:
-        break;                   /* StuffIt and the rest: no overlay wanted */
+        /* A format with no overlay of its own — or one this table has not
+         * been taught. Keeping the whole bundle is the answer that cannot be
+         * wrong, and it is what a new format gets until someone adds it. */
+        return;
     }
 
     /* Compact Pro and zip keep a per-entry encryption flag in a directory
@@ -309,6 +297,17 @@ void ovl_release_if_unwanted(UncFormat fmt, UncIO *io)
     OVL_DIAG(gRelFmt = (short)fmt);
     if (want) ovl_keep(want, 0);
     if (crypt) ovl_keep(OVL_ID_CRYPT, 1);
+    /* And ALWAYS the codecs, because every decoder calls into them: the bit
+     * reader, the Huffman and canonical coders, LZW and LZAH live there and
+     * are reached through pointers in the host vector. Releasing the bundle
+     * without keeping this image left those pointers aimed at memory that had
+     * been given back — which is not a wrong answer but no answer at all:
+     * every decoder stub failed at ovl_codecs_ready() and the archive
+     * produced nothing. */
+    ovl_keep(OVL_ID_CODECS, 2);
+    /* The vector must be re-patched to the COPY's address, so make the next
+     * caller do it. */
+    gCodecsIn = 0;
 
     HUnlock(gBundle);
     ReleaseResource(gBundle);
@@ -324,15 +323,8 @@ void ovl_release_if_unwanted(UncFormat fmt, UncIO *io)
  * UNC_ERR_MEM, and the rest of the archive still comes out. */
 int unc_spacesaver_extract(UncCtx *c)
 {
-<<<<<<< HEAD
-    OverlayEntry e = ovl_image(OVL_ID_SPACESAVER);
-=======
-    static Handle h;
-    static int tried;
-    OverlayEntry e;
     if (!ovl_codecs_ready()) return UNC_ERR_MEM;
-    e = ovl_load(OVL_ID_SPACESAVER, &h, &tried);
->>>>>>> selective-loading
+    OverlayEntry e = ovl_image(OVL_ID_SPACESAVER);
     if (!e) return UNC_ERR_MEM;
     return (int)e(&gOvlHost, OVL_SPACESAVER_EXTRACT, c, NULL);
 }
@@ -432,15 +424,8 @@ int unc_resfork_find(const uint8_t *fork, uint32_t forklen, uint32_t type,
  * per-entry error like any other allocation failure. */
 int unc_cpt_extract(UncCtx *c)
 {
-<<<<<<< HEAD
-    OverlayEntry e = ovl_image(OVL_ID_CPTDD);
-=======
-    static Handle h;
-    static int tried;
-    OverlayEntry e;
     if (!ovl_codecs_ready()) return UNC_ERR_MEM;
-    e = ovl_load(OVL_ID_CPTDD, &h, &tried);
->>>>>>> selective-loading
+    OverlayEntry e = ovl_image(OVL_ID_CPTDD);
     if (!e) return UNC_ERR_MEM;
     return (int)e(&gOvlHost, OVL_CPT_EXTRACT, c, NULL);
 }
@@ -450,15 +435,8 @@ int unc_cpt_extract(UncCtx *c)
  * per-entry error like any other allocation failure. */
 int unc_dd_extract(UncCtx *c)
 {
-<<<<<<< HEAD
-    OverlayEntry e = ovl_image(OVL_ID_CPTDD);
-=======
-    static Handle h;
-    static int tried;
-    OverlayEntry e;
     if (!ovl_codecs_ready()) return UNC_ERR_MEM;
-    e = ovl_load(OVL_ID_CPTDD, &h, &tried);
->>>>>>> selective-loading
+    OverlayEntry e = ovl_image(OVL_ID_CPTDD);
     if (!e) return UNC_ERR_MEM;
     return (int)e(&gOvlHost, OVL_DD_EXTRACT, c, NULL);
 }
@@ -468,15 +446,8 @@ int unc_dd_extract(UncCtx *c)
  * per-entry error like any other allocation failure. */
 int unc_lzh_extract(UncCtx *c)
 {
-<<<<<<< HEAD
-    OverlayEntry e = ovl_image(OVL_ID_LZH);
-=======
-    static Handle h;
-    static int tried;
-    OverlayEntry e;
     if (!ovl_codecs_ready()) return UNC_ERR_MEM;
-    e = ovl_load(OVL_ID_LZH, &h, &tried);
->>>>>>> selective-loading
+    OverlayEntry e = ovl_image(OVL_ID_LZH);
     if (!e) return UNC_ERR_MEM;
     return (int)e(&gOvlHost, OVL_LZH_EXTRACT, c, NULL);
 }
@@ -486,15 +457,8 @@ int unc_lzh_extract(UncCtx *c)
  * per-entry error like any other allocation failure. */
 int unc_arc_extract(UncCtx *c)
 {
-<<<<<<< HEAD
-    OverlayEntry e = ovl_image(OVL_ID_ARC);
-=======
-    static Handle h;
-    static int tried;
-    OverlayEntry e;
     if (!ovl_codecs_ready()) return UNC_ERR_MEM;
-    e = ovl_load(OVL_ID_ARC, &h, &tried);
->>>>>>> selective-loading
+    OverlayEntry e = ovl_image(OVL_ID_ARC);
     if (!e) return UNC_ERR_MEM;
     return (int)e(&gOvlHost, OVL_ARC_EXTRACT, c, NULL);
 }
@@ -504,171 +468,138 @@ int unc_arc_extract(UncCtx *c)
  * per-entry error like any other allocation failure. */
 int unc_now_extract(UncCtx *c)
 {
-<<<<<<< HEAD
-    OverlayEntry e = ovl_image(OVL_ID_NOW);
-=======
-    static Handle h;
-    static int tried;
-    OverlayEntry e;
     if (!ovl_codecs_ready()) return UNC_ERR_MEM;
-    e = ovl_load(OVL_ID_NOW, &h, &tried);
->>>>>>> selective-loading
+    OverlayEntry e = ovl_image(OVL_ID_NOW);
     if (!e) return UNC_ERR_MEM;
     return (int)e(&gOvlHost, OVL_NOW_EXTRACT, c, NULL);
 }
 
-/* SuperDisk!. Probe resident (src/fmt_superdisk_probe.c), decoder on demand. */
+/* SuperDisk!. Probe resident; decoder from the bundle. */
 int unc_superdisk_extract(UncCtx *c)
 {
-    static Handle h;
-    static int tried;
     OverlayEntry e;
     if (!ovl_codecs_ready()) return UNC_ERR_MEM;
-    e = ovl_load(OVL_ID_SUPERDISK, &h, &tried);
+    e = ovl_image(OVL_ID_SUPERDISK);
     if (!e) return UNC_ERR_MEM;
     return (int)e(&gOvlHost, OVL_SUPERDISK_EXTRACT, c, NULL);
 }
 
-/* PackIt. Probe resident (src/fmt_packit_probe.c), decoder on demand. */
+/* PackIt. Probe resident; decoder from the bundle. */
 int unc_packit_extract(UncCtx *c)
 {
-    static Handle h;
-    static int tried;
     OverlayEntry e;
     if (!ovl_codecs_ready()) return UNC_ERR_MEM;
-    e = ovl_load(OVL_ID_PACKIT, &h, &tried);
+    e = ovl_image(OVL_ID_PACKIT);
     if (!e) return UNC_ERR_MEM;
     return (int)e(&gOvlHost, OVL_PACKIT_EXTRACT, c, NULL);
 }
 
-/* MIME. Probe resident (src/fmt_mime_probe.c), decoder on demand. */
+/* MIME. Probe resident; decoder from the bundle. */
 int unc_mime_extract(UncCtx *c)
 {
-    static Handle h;
-    static int tried;
     OverlayEntry e;
     if (!ovl_codecs_ready()) return UNC_ERR_MEM;
-    e = ovl_load(OVL_ID_TEXT, &h, &tried);
+    e = ovl_image(OVL_ID_TEXT);
     if (!e) return UNC_ERR_MEM;
     return (int)e(&gOvlHost, OVL_MIME_EXTRACT, c, NULL);
 }
 
-/* uuencode. Probe resident (src/fmt_uu_probe.c), decoder on demand. */
+/* uuencode. Probe resident; decoder from the bundle. */
 int unc_uu_extract(UncCtx *c)
 {
-    static Handle h;
-    static int tried;
     OverlayEntry e;
     if (!ovl_codecs_ready()) return UNC_ERR_MEM;
-    e = ovl_load(OVL_ID_TEXT, &h, &tried);
+    e = ovl_image(OVL_ID_TEXT);
     if (!e) return UNC_ERR_MEM;
     return (int)e(&gOvlHost, OVL_UU_EXTRACT, c, NULL);
 }
 
-/* btoa. Probe resident (src/fmt_btoa_probe.c), decoder on demand. */
+/* btoa. Probe resident; decoder from the bundle. */
 int unc_btoa_extract(UncCtx *c)
 {
-    static Handle h;
-    static int tried;
     OverlayEntry e;
     if (!ovl_codecs_ready()) return UNC_ERR_MEM;
-    e = ovl_load(OVL_ID_TEXT, &h, &tried);
+    e = ovl_image(OVL_ID_TEXT);
     if (!e) return UNC_ERR_MEM;
     return (int)e(&gOvlHost, OVL_BTOA_EXTRACT, c, NULL);
 }
 
-/* base64. Probe resident (src/fmt_b64_probe.c), decoder on demand. */
+/* base64. Probe resident; decoder from the bundle. */
 int unc_b64_extract(UncCtx *c)
 {
-    static Handle h;
-    static int tried;
     OverlayEntry e;
     if (!ovl_codecs_ready()) return UNC_ERR_MEM;
-    e = ovl_load(OVL_ID_TEXT, &h, &tried);
+    e = ovl_image(OVL_ID_TEXT);
     if (!e) return UNC_ERR_MEM;
     return (int)e(&gOvlHost, OVL_B64_EXTRACT, c, NULL);
 }
 
-/* BinHex. Probe resident (src/fmt_binhex_probe.c), decoder on demand. */
+/* BinHex. Probe resident; decoder from the bundle. */
 int unc_binhex_extract(UncCtx *c)
 {
-    static Handle h;
-    static int tried;
     OverlayEntry e;
     if (!ovl_codecs_ready()) return UNC_ERR_MEM;
-    e = ovl_load(OVL_ID_TEXT, &h, &tried);
+    e = ovl_image(OVL_ID_TEXT);
     if (!e) return UNC_ERR_MEM;
     return (int)e(&gOvlHost, OVL_BINHEX_EXTRACT, c, NULL);
 }
 
-/* StuffIt classic. Probe resident (src/fmt_sit_probe.c), decoder on demand. */
+/* StuffIt classic. Probe resident; decoder from the bundle. */
 int unc_sit_extract(UncCtx *c)
 {
-    static Handle h;
-    static int tried;
     OverlayEntry e;
     if (!ovl_codecs_ready()) return UNC_ERR_MEM;
-    e = ovl_load(OVL_ID_STUFFIT, &h, &tried);
+    e = ovl_image(OVL_ID_STUFFIT);
     if (!e) return UNC_ERR_MEM;
     return (int)e(&gOvlHost, OVL_SIT_EXTRACT, c, NULL);
 }
 
-/* StuffIt 5. Probe resident (src/fmt_sit5_probe.c), decoder on demand. */
+/* StuffIt 5. Probe resident; decoder from the bundle. */
 int unc_sit5_extract(UncCtx *c)
 {
-    static Handle h;
-    static int tried;
     OverlayEntry e;
     if (!ovl_codecs_ready()) return UNC_ERR_MEM;
-    e = ovl_load(OVL_ID_STUFFIT, &h, &tried);
+    e = ovl_image(OVL_ID_STUFFIT);
     if (!e) return UNC_ERR_MEM;
     return (int)e(&gOvlHost, OVL_SIT5_EXTRACT, c, NULL);
 }
 
-/* Zip. */
+/* Zip. Probe resident; decoder from the bundle. */
 int unc_zip_extract(UncCtx *c)
 {
-    static Handle h;
-    static int tried;
     OverlayEntry e;
     if (!ovl_codecs_ready()) return UNC_ERR_MEM;
-    e = ovl_load(OVL_ID_EXO, &h, &tried);
+    e = ovl_image(OVL_ID_EXO);
     if (!e) return UNC_ERR_MEM;
     return (int)e(&gOvlHost, OVL_ZIP_EXTRACT, c, NULL);
 }
 
-/* Gzip. */
+/* Gzip. Probe resident; decoder from the bundle. */
 int unc_gzip_extract(UncCtx *c)
 {
-    static Handle h;
-    static int tried;
     OverlayEntry e;
     if (!ovl_codecs_ready()) return UNC_ERR_MEM;
-    e = ovl_load(OVL_ID_EXO, &h, &tried);
+    e = ovl_image(OVL_ID_EXO);
     if (!e) return UNC_ERR_MEM;
     return (int)e(&gOvlHost, OVL_GZIP_EXTRACT, c, NULL);
 }
 
-/* Unix compress. */
+/* Unix compress. Probe resident; decoder from the bundle. */
 int unc_compressz_extract(UncCtx *c)
 {
-    static Handle h;
-    static int tried;
     OverlayEntry e;
     if (!ovl_codecs_ready()) return UNC_ERR_MEM;
-    e = ovl_load(OVL_ID_EXO, &h, &tried);
+    e = ovl_image(OVL_ID_EXO);
     if (!e) return UNC_ERR_MEM;
     return (int)e(&gOvlHost, OVL_COMPRESSZ_EXTRACT, c, NULL);
 }
 
-/* Tar. */
+/* Tar. Probe resident; decoder from the bundle. */
 int unc_tar_extract(UncCtx *c)
 {
-    static Handle h;
-    static int tried;
     OverlayEntry e;
     if (!ovl_codecs_ready()) return UNC_ERR_MEM;
-    e = ovl_load(OVL_ID_EXO, &h, &tried);
+    e = ovl_image(OVL_ID_EXO);
     if (!e) return UNC_ERR_MEM;
     return (int)e(&gOvlHost, OVL_TAR_EXTRACT, c, NULL);
 }
