@@ -218,8 +218,15 @@ static void ovl_keep(short id, int slot)
     if (p == NULL || len == 0) { OVL_DIAG(gKeepFail = 1); return; }
     h = NewHandle((Size)len);
     if (h == NULL || *h == NULL) { OVL_DIAG(gKeepFail = 2); return; }
-    BlockMoveData(p, *h, (Size)len);
+    /* MoveHHi before the lock. These copies are locked for the rest of the
+     * run, and a locked block in the middle of the heap splits it. Measured
+     * on a Macintosh 512Ke: with the copies left where NewHandle put them,
+     * `derived-a2basic.dmg.sit` was granted 317,838 B and still failed —
+     * `gRefusedWhy` = 2, NewPtr returning NULL for a 205 KB block against a
+     * largest free block of 169,298 B. The memory was there, in two pieces. */
+    MoveHHi(h);
     HLock(h);
+    BlockMoveData(p, *h, (Size)len);
     /* Relocated AGAIN, for the address the copy runs at: the fixup is
      * relative to wherever the image sits, and this one has moved. */
     ovl_fixup((unsigned char *)*h, (unsigned long)len,

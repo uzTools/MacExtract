@@ -12,12 +12,85 @@ the ciphers kept; an LZH gets **701,688 B**, keeping only its own decoder.
 4/4 fixtures extract byte-exact across the formats that keep one image, two
 images, and none.
 
+## Open, and reduced but not explained: two bytes in UncEntryInfo
+
+**Adding a field to `UncEntryInfo` makes two fixtures roughly twenty times
+slower on the Macintosh, and nothing else changes.** Found while trying to let
+this branch ask an archive whether it is encrypted; the feature turned out to
+be unnecessary (see below), but the effect is real and is written down here
+because it will bite whoever adds a field next.
+
+**The reproduction**, on this branch or `selective-loading`:
+
+1. add `uint8_t encrypted;` to `UncEntryInfo` in `include/macextract.h` —
+   anywhere in the struct, and set by nobody;
+2. `rm -rf build/mac-autotest`
+3. `tools/vmac/run.py fixtures/derived-LHA_Expander_1.0.3.sea --mem 1M`
+
+Result: `TIMEOUT — app alive but still extracting after 300s`, against **5.1 s**
+without the field. `derived-Terrainman_2.0__.sea` does the same. Both are
+DiskDoubler self-extracting archives; every other fixture in the 69 is
+unaffected, at 1 MB and at 4 MB alike.
+
+**What it is not.** Not the overlays — the default build does it too. Not the
+stack: `UNC_STACK_BUMP_KB=48` changes nothing. Not layout — the field at the
+END of the struct behaves the same. Not the engine: the Linux CLI, the
+native ASan/UBSan Mac-sink build and the **big-endian m68k** build under
+`qemu-m68k` all extract it correctly and quickly.
+
+**The one clue is the size.** `uint8_t` and `uint16_t` both grow the struct by
+2 bytes after padding, and both hang. `uint32_t` grows it by 4, and **passes**.
+So the sensitivity is to the struct's total size in a way that 4 satisfies and
+2 does not, which points at the Macintosh Memory Manager's block placement
+rather than at anything in this repository's code — a shifted allocation
+landing somewhere that makes every later one compact the heap would look
+exactly like this. *Hypothesis, not measured.*
+
+**Nothing is built on it.** The `encrypted` field was reverted. A 4-byte field
+"works" and is exactly the kind of unexplained workaround this repository does
+not ship — an unreduced root cause is a hypothesis, and building on one is
+building on sand.
+
+## MoveHHi: the eager trade cost nothing after all
+
+**One line, and this branch matches `selective-loading` at 512 KB.**
+
+| tier | `selective-loading` | this branch | `main` |
+|---|---|---|---|
+| 1 MB, System 6.0.8 | 69/69 | **69/69** | 69/69 |
+| System 3.0, **512 KB** | 67/69 | **67/69** | 66/69 |
+
+`derived-a2basic.dmg.sit` extracts here now, as it does on the other branch.
+
+**The blocker was never the ciphers; it was fragmentation.** The kept images
+are locked for the rest of the run, and `NewHandle` puts them wherever it
+likes — in the middle of the heap the released bundle just vacated. Measured
+on a Macintosh 512Ke: the engine was granted **317,838 B** and the entry still
+failed, with `gRefusedWhy` = 2 — `NewPtr` returning NULL for a 205 KB block
+against a largest free block of **169,298 B**. The memory was there, in two
+pieces. `MoveHHi` before the `HLock` puts them at the top where a locked block
+belongs, and the hole below stays whole.
+
+**What that cost to find: a day chasing the wrong cause.** The gap had been
+measured at 15,748 B and attributed to the ciphers this branch must keep for a
+format that MAY encrypt, which was true and irrelevant — releasing them
+raised the budget to 317,838 B and the archive still failed. **A number that
+explains a gap is not the same as a cause**, and the budget said so all along:
+`gRefusedWhy` = 2 means the heap could not do what the budget said it could,
+which is fragmentation and not shortage. That distinction is in the shell's
+own comments, written by somebody who knew, and it took an afternoon to read
+it.
+
 ## The tiers, 2026-09-03: the trade costs exactly one archive
 
 | tier | `selective-loading` | **this branch** | `main` |
 |---|---|---|---|
 | 1 MB, System 6.0.8 | 69/69 | **69/69** | 69/69 |
 | System 3.0, **512 KB** | 67/69 | **66/69** | 66/69 |
+
+**Superseded 2026-09-03 by the section above: `MoveHHi` closed this.** What
+follows is what the tier said before that, kept because the reasoning is what
+sent the next day's work in the wrong direction.
 
 **`derived-a2basic.dmg.sit` extracts on a Macintosh 512Ke under
 `selective-loading` and does not under this branch.** That is the whole of the
