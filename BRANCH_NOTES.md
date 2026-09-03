@@ -115,6 +115,35 @@ which only the interactive `main()` calls. `-D UNC_AT_BUDGET` now prepends
 same question the grid answers — which is how the envelope row was measured
 rather than assumed.
 
+## Fifteen images: BinHex and btoa stop travelling with MIME
+
+**Opening a `.hqx` used to load 15,864 B of decoder. It now loads 2,148 B.**
+
+The text group existed because MIME decodes base64 and uuencoded parts and
+calls straight into both, and an overlay cannot call another overlay. But
+`nm` over the objects says only MIME does that: **BinHex and btoa call
+nothing and nothing calls them.** They were in the group by association, not
+by need.
+
+| image | was | now |
+|---|---|---|
+| MIME + uu + base64 | 15,864 B | **11,450 B** |
+| BinHex | — | **2,148 B** |
+| btoa | — | **2,756 B** |
+
+BinHex is the envelope a Macintosh user meets most — a `.hqx` is how nearly
+every Macintosh file crossed the internet — so it is the one image worth
+having alone. Nothing else changes: same formats, same behaviour, 254 B more
+in the download, and `main` cannot be affected because `main` has no images.
+
+**69/69 at 1 MB with the new grouping**, and a `.hqx`, a `.uu`, a `.btoa` and
+a `.sit` all extract byte-exact.
+
+**The rule this makes explicit: group by the CALL GRAPH and nothing else.**
+Measured with `nm`, not assumed — the first grouping put five formats
+together because they are all "text", which is a category in a reader's head
+rather than in the code.
+
 ## Parity with `overlay-eager`, 2026-09-03
 
 Both branches carry the same thirteen overlays, the same codecs blob and the

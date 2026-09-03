@@ -39,7 +39,9 @@ if(DEFINED ENV{UNC_AT_OVERLAY})
                   ${CMAKE_CURRENT_BINARY_DIR}/ovl_text.r
                   ${CMAKE_CURRENT_BINARY_DIR}/ovl_stuffit.r
                   ${CMAKE_CURRENT_BINARY_DIR}/ovl_exo.r
-                  ${CMAKE_CURRENT_BINARY_DIR}/ovl_codecs.r)
+                  ${CMAKE_CURRENT_BINARY_DIR}/ovl_codecs.r
+                  ${CMAKE_CURRENT_BINARY_DIR}/ovl_binhex.r
+                  ${CMAKE_CURRENT_BINARY_DIR}/ovl_btoa.r)
     set(OVERLAY_SHIM ovl_shim.c)
     # The DECODERS leave the resident link; every probe stays in it.
     list(FILTER ENGINE_SRC EXCLUDE REGEX "unc_crypt\\.c$")
@@ -471,12 +473,8 @@ add_custom_command(
             ${ENGINE_DIR}/src/fmt_mime_probe.c
             ${ENGINE_DIR}/src/fmt_uu.c
             ${ENGINE_DIR}/src/fmt_uu_probe.c
-            ${ENGINE_DIR}/src/fmt_btoa.c
-            ${ENGINE_DIR}/src/fmt_btoa_probe.c
             ${ENGINE_DIR}/src/fmt_b64.c
             ${ENGINE_DIR}/src/fmt_b64_probe.c
-            ${ENGINE_DIR}/src/fmt_binhex.c
-            ${ENGINE_DIR}/src/fmt_binhex_probe.c
     DEPENDS ${ENGINE_DIR}/tools/overlay/ovl_text.c
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_gen.c
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_codecs_gen.c
@@ -485,12 +483,8 @@ add_custom_command(
             ${ENGINE_DIR}/src/fmt_mime_probe.c
             ${ENGINE_DIR}/src/fmt_uu.c
             ${ENGINE_DIR}/src/fmt_uu_probe.c
-            ${ENGINE_DIR}/src/fmt_btoa.c
-            ${ENGINE_DIR}/src/fmt_btoa_probe.c
             ${ENGINE_DIR}/src/fmt_b64.c
             ${ENGINE_DIR}/src/fmt_b64_probe.c
-            ${ENGINE_DIR}/src/fmt_binhex.c
-            ${ENGINE_DIR}/src/fmt_binhex_probe.c
             ${ENGINE_DIR}/tools/overlay/mkoverlay.sh)
 
 add_custom_command(
@@ -558,4 +552,38 @@ add_custom_command(
             ${ENGINE_DIR}/src/unc_huffman.c
             ${ENGINE_DIR}/src/unc_lzw.c
             ${ENGINE_DIR}/src/unc_lzah.c
+            ${ENGINE_DIR}/tools/overlay/mkoverlay.sh)
+
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/ovl_binhex.r
+    COMMAND ${CMAKE_COMMAND} -E env OVL_ID=140
+            OVL_INC=${CMAKE_CURRENT_BINARY_DIR}
+            sh ${ENGINE_DIR}/tools/overlay/mkoverlay.sh
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_binhex.r
+            ${ENGINE_DIR}/tools/overlay/ovl_binhex.c
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_gen.c
+            ${ENGINE_DIR}/src/fmt_binhex.c
+            ${ENGINE_DIR}/src/fmt_binhex_probe.c
+    DEPENDS ${ENGINE_DIR}/tools/overlay/ovl_binhex.c
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_gen.c
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_host_gen.h
+            ${ENGINE_DIR}/src/fmt_binhex.c
+            ${ENGINE_DIR}/src/fmt_binhex_probe.c
+            ${ENGINE_DIR}/tools/overlay/mkoverlay.sh)
+
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/ovl_btoa.r
+    COMMAND ${CMAKE_COMMAND} -E env OVL_ID=141
+            OVL_INC=${CMAKE_CURRENT_BINARY_DIR}
+            sh ${ENGINE_DIR}/tools/overlay/mkoverlay.sh
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_btoa.r
+            ${ENGINE_DIR}/tools/overlay/ovl_btoa.c
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_gen.c
+            ${ENGINE_DIR}/src/fmt_btoa.c
+            ${ENGINE_DIR}/src/fmt_btoa_probe.c
+    DEPENDS ${ENGINE_DIR}/tools/overlay/ovl_btoa.c
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_gen.c
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_host_gen.h
+            ${ENGINE_DIR}/src/fmt_btoa.c
+            ${ENGINE_DIR}/src/fmt_btoa_probe.c
             ${ENGINE_DIR}/tools/overlay/mkoverlay.sh)

@@ -360,7 +360,7 @@ int unc_btoa_extract(UncCtx *c)
     static int tried;
     OverlayEntry e;
     if (!ovl_codecs_ready()) return UNC_ERR_MEM;
-    e = ovl_load(OVL_ID_TEXT, &h, &tried);
+    e = ovl_load(OVL_ID_BTOA, &h, &tried);
     if (!e) return UNC_ERR_MEM;
     return (int)e(&gOvlHost, OVL_BTOA_EXTRACT, c, NULL);
 }
@@ -384,7 +384,7 @@ int unc_binhex_extract(UncCtx *c)
     static int tried;
     OverlayEntry e;
     if (!ovl_codecs_ready()) return UNC_ERR_MEM;
-    e = ovl_load(OVL_ID_TEXT, &h, &tried);
+    e = ovl_load(OVL_ID_BINHEX, &h, &tried);
     if (!e) return UNC_ERR_MEM;
     return (int)e(&gOvlHost, OVL_BINHEX_EXTRACT, c, NULL);
 }
