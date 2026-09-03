@@ -161,6 +161,12 @@ What it costs, all of it on the Macintosh side:
 graded through the mock sink, plus the list driven on screen on System 3.0
 and System 6 (`tools/vmac/interactive.py`).
 
+**All of that is done on the branch `selective-extract`, and it is not
+merged** — what is left is the decision, because the price is now known:
+2,720 B off every 1 MB extraction's budget whether or not anybody unticks
+anything, and ~10 ms an entry for the second walk. BRANCHES.md, and
+`BRANCH_NOTES.md` on that branch.
+
 ## Waiting on a file this machine does not have
 
 **Not scope decisions, and not effort.** Everything here is written or
