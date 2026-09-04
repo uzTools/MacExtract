@@ -2336,7 +2336,10 @@ part boundary (27 failures). Both were reverted.
    this harness launches the INTERACTIVE build, which takes envelopes
    off. (It used `-nr` until 2026-08-27, which is right only for the
    autotest build; `tools/vmac/README.md` has what that cost.)
-   **20/20 on the committed sample**, 2026-08-27. Since 2026-08-28 the
+   **18/20 on the committed sample**, 2026-09-04 — it was 20/20 on
+   2026-08-27, and the two that now fail BOMB the application
+   (BLOCKERS.md, *Mac OS 9.2 bombs on every DiskDoubler archive*).
+   Since 2026-08-28 the
    run also goes to the END of the interaction — the result alert is
    dismissed, SFGetFile is checked to repaint, and Cmd-. quits the
    application — and `--cancel` interrupts the extraction instead of

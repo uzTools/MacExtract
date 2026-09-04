@@ -66,6 +66,6 @@ fails, `macunpack`; 9,320 robustness variants clean. The Mac shell replays a
 69-fixture sample byte-exact at 4 MB and at the 1 MB floor on System 3.0 and
 on System 6.0.8, and on System 7.0.1 — all three re-run twice on 2026-08-26, for M37 and again
 for M38, and those were the first sweeps to cover the whole sample
-(BLOCKERS.md, the tier table). The **Mac OS 9.2 tier is 20/20** since
-2026-08-27, its first run since M12 and its first over every format.
-Current figures and per-tier tables: FORMATS.md.
+(BLOCKERS.md, the tier table). The **Mac OS 9.2 tier is 18/20**, re-run
+2026-09-04: the application bombs on DiskDoubler there, which is the one open
+blocker. Current figures and per-tier tables: FORMATS.md.
