@@ -263,12 +263,12 @@ data 'MExt' (0, "MacExtract") {
 
 resource 'vers' (1, "MacExtract") {
     0x00, 0x29, release, 0x00, verUS,
-    "0.29.0",
-    "0.29.0"
+    "0.30.0",
+    "0.30.0"
 };
 
 resource 'vers' (2, "MacExtract") {
     0x00, 0x29, release, 0x00, verUS,
-    "0.29.0",
-    "0.29.0"
+    "0.30.0",
+    "0.30.0"
 };
