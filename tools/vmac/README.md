@@ -1323,6 +1323,24 @@ because the framebuffer grid is invisible on a 32-bit screen. That the output
 really landed on HFS+ is checked by mounting the volume's HFS *wrapper*: if
 the files were on plain HFS they would be visible there, and they are not.
 
+**`--autotest` is the third combination, and it exists to separate two
+things `--launch` and `--hfsplus` change together.** `--launch` runs the
+INTERACTIVE build onto a plain-HFS transfer volume; `--hfsplus` runs the
+AUTOTEST build onto the HFS+ boot volume. When one passes and the other bombs,
+the pair convicts neither the build nor the volume. `--autotest` runs the
+autotest build with a plain-HFS output volume — a third APM disk named `Out`,
+so no Finder rename is needed — which leaves the BUILD as the only difference
+from `--launch`. It is also the only route here that reads both channels at
+once: the report off `In`, and then every fork off `Out` byte for byte, which
+`--hfsplus` cannot do because no host tool opens HFS+. `-D UNC_AT_SAMEVOL`
+points the sink at the archive's own volume, the way the interactive
+application writes beside the archive; `Out` still has to be mounted, because
+`FindVolWait` looks it up before the switch redirects the sink, and the run
+checks it came back empty.
+
+    os9.py fixtures/derived-DandStoQIF2.sea --autotest -o <dir>
+    os9.py fixtures/derived-DandStoQIF2.sea --autotest -D UNC_AT_SAMEVOL -o <dir>
+
 **The reference is `macextract x`, unwrap loop ON.** This harness launches
 the INTERACTIVE build, which takes envelopes off in `ExtractOne`; `-nr` is
 right for the AUTOTEST build, which `--hfsplus` and the Mini vMac tiers use.

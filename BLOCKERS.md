@@ -77,11 +77,14 @@ evade.
 | pre-M50 (`922bada`) | bombs — so folder numbering is not it |
 | `main` with the old 24 KB `kStackBump` | bombs — so the 12 KB stack is not it |
 | the AUTOTEST build, same fixture, same machine | **PASS**, 3 files byte-exact, 16 KB peak — so the engine, the sink and the name rules are sound here |
+| the AUTOTEST build onto a **plain-HFS** `Out` volume (`--autotest`) | **PASS**, 3 files byte-exact off the volume, 16.0 KB peak — the HFS+ confound is gone: the volume was never what made the autotest run pass |
+| the same, with the sink on the **archive's own volume** (`-D UNC_AT_SAMEVOL`) | **PASS**, 3 files byte-exact, `Out` confirmed empty — so writing beside the archive, which is what the interactive build does, is not it either |
 | every Mini vMac tier, including the same INTERACTIVE build on System 6.0.8 | **PASS** |
 
 **Consequence.** The fault is in code the interactive build runs and the
-autotest build does not, during extraction. The `SIZE` partition is not a
-candidate: the fixture peaks at 16,400 B of heap against 2 MB.
+autotest build does not, during extraction — **measured 2026-09-04**, not
+inferred from the `--hfsplus` pass. The `SIZE` partition is not a candidate:
+the fixture peaks at 16,400 B of heap against 2 MB.
 
 **Two faults at two different points, moving with the binary's layout**, is
 the signature of a wild write rather than a defect in any one commit — and it
@@ -108,12 +111,21 @@ failing and the passing fixtures alike, so the segmented path is not what
 DiskDoubler enters and others do not (`/tmp/segprobe`, rebuildable from the
 entry in DECISIONS.md).
 
+**The confound named here is closed.** The `--hfsplus` pass changed the build
+and the volume together, so neither was convicted. `os9.py --autotest` now
+runs the autotest build with the output volume plain HFS as well — a third APM
+disk named `Out`, no Finder rename — and `-D UNC_AT_SAMEVOL` moves its sink
+onto the archive's own volume, which is where the interactive application
+writes. Both PASS on the fixture that bombs. Against `--launch` the remaining
+difference is the BUILD and nothing else, so what is left to search is the
+interactive shell: the event loop, the dialogs, the progress bar and Standard
+File. Both negative controls were run before the passes were believed — graded
+against the wrong fixture it reports five mismatches, and against a volume the
+Mac never wrote to it reports no report file, which is the signature a bombed
+run leaves.
+
 **What would close it:** the crash site. Every channel tried so far either
-perturbs the fault away or cannot reach Mac OS 9. What has NOT been tried:
-running the autotest build against the same fixture on the plain HFS
-transfer volume, which `os9.py` does not currently expose — that would
-separate "interactive-only code" from "the HFS+ volume the `--hfsplus`
-comparison also changed", the one confound left in the evidence above.
+perturbs the fault away or cannot reach Mac OS 9.
 
 **What it costs today:** an entire format family does not work on Mac OS 9 in
 the shipped application, and `dist/` has shipped it since at least v0.29.0.
