@@ -2349,7 +2349,7 @@ a heavy 1 MB extraction (`derived-Troi-ClipSave-Plug-in1.1.sit`, engine peak
 472,137 B) the shell's share at the tightest moment measured **−33 B**:
 nothing beyond the engine, to within the skew between the two samples. The
 13,242 B worst case comes from a lighter run where a dialog was up. Verified byte-exact at that size on all four tiers — 69/69 at
-1 MB, 66/69 at 512 KB, 69/69 on System 7.0.1, 20/20 on Mac OS 9.2 — and the
+1 MB, 66/69 at 512 KB, 69/69 on System 7.0.1, 18/20 on Mac OS 9.2 — and the
 password and report dialog phases driven end to end, the password one on the
 512 KB machine where the heap is tightest.
 
@@ -2769,8 +2769,13 @@ dialog — SAMPLE is **3,134 B** and does not move either, at 10 KB or at
 
 **So `kStackBump` is 4 KB, a 12 KB stack** — 2.1x the deepest write ever
 observed — and **20,464 B** has gone to the engine (*Budget*). Verified
-byte-exact at exactly that size on every tier: **69/69 at 1 MB**, 512 KB,
-System 7 and Mac OS 9.
+byte-exact at exactly that size on **69/69 at 1 MB**, 512 KB and System 7.
+**Not** on Mac OS 9: that tier was not run between 2026-08-27 and
+2026-09-04, so the original sentence here named a tier nobody had run at
+this stack size — corrected 2026-09-04, and the same sentence is still in
+`mac/macextract_mac.c`'s `kStackBump` comment. The 12 KB stack is not the
+Mac OS 9 defect either way: the old 24 KB bump bombs there too
+(BLOCKERS.md, *Mac OS 9.2 bombs on two fixtures*).
 
 **PAINT is not a stack measurement, and this is how that was established.**
 Its lowest dirty word sits a near-constant 5–7 KB above ApplLimit at every
@@ -3589,9 +3594,11 @@ refused having reached 37,372 B, because renegotiating has a floor and that
 archive's block is under it. What a codec CAN give back decides more than what
 it asks for.
 
-**The same machine under System 6.0.8 manages 58/69**
-(`run.py --emu mv-512Ke --system System6.hfv`), and **System 3.0's failures
-are a strict subset of System 6's.** The difference is the SYSTEM HEAP and
+**The same machine under System 6.0.8 manages 63/69**
+(`run.py --emu mv-512Ke --system System6.hfv`, re-measured 2026-09-04; 58/69
+before the stack was cut to 12 KB, which this tier's "unchanged" note had not
+accounted for — the reserve going flat could not help it, and the stack did),
+and **System 3.0's failures are a strict subset of System 6's.** The difference is the SYSTEM HEAP and
 nothing else: free heap when extraction starts is **218,208 B** under System
 3.0 against **122,808 B** under System 6.0.8, a gap of 95,400 B, against
 System files of 181,913 B and 1,221,287 B. The Finder is not part of it —
@@ -3611,10 +3618,9 @@ writes all 13 entries at a 184,590 B peak, taking this tier from 65/69 to
 quarter always fell under the 32 KB floor, so that tier is unchanged at 58/69.
 **A kilobyte of application costs the engine a kilobyte here too**, now that
 the reserve is a constant rather than a fraction. The
-six extra are `a2ps.V4.3.tar.Z`, `derived-PuzzleGetter_0.8.sit` and four
-self-extracting archives (`derived-DD_Expand.sea`,
-`derived-Expand_Now_1.0.1.sea`, `derived-LHA_Expander_1.0.3.sea`,
-`derived-Terrainman_2.0__.sea`). On `derived-Troi-ClipSave-Plug-in1.1.sit` the
+three extra are `popper-1.7.tar.Z`, `derived-Expand_Now_1.0.1.sea` and
+`derived-Troi-ClipSave-Plug-in1.1.sit` (2026-09-04; it was six before the
+stack cut). On `derived-Troi-ClipSave-Plug-in1.1.sit` the
 two systems are 11 entries at 163,332 B against 6 entries at 89,613 B: the
 1986 system leaves the engine ~74 KB more than System 6 does, while also
 keeping a Finder that System 6 had to give up.
@@ -3835,9 +3841,13 @@ and the only one where the 68k binary does not run on a 68k CPU: Mac OS 9.2 on
 emulated PowerPC executes it through the **68LC040 emulator** built into the
 system. Nothing above System 7 had ever run it.
 
-**20/20 byte-exact**, re-run 2026-08-27 — `tools/vmac/os9sample.txt`, one
-fixture per format, each in its own boot from a pristine copy of the master
-image:
+**18/20 as of 2026-09-04, and the two that fail BOMB the application** —
+`derived-DandStoQIF2.sea` and `derived-SD__Utilities.x`, a system error
+during extraction, on a tier that had read 20/20 since 2026-08-27 and had
+not been re-run in between (BLOCKERS.md, *Mac OS 9.2 bombs on two
+fixtures*). The other eighteen are byte-exact. `tools/vmac/os9sample.txt`,
+one fixture per format, each in its own boot from a pristine copy of the
+master image:
 
     tools/vmac/os9.py --setup                                   # once
     tools/vmac/os9.py --list tools/vmac/os9sample.txt -o <dir> --launch

@@ -2,19 +2,23 @@
 
 ## Status
 
-**No open blockers.** The engine and Linux CLI were never affected by anything
-in this file. The Retro68 Mac shell runs and extracts byte-exact on every
-system the project claims:
+**One open blocker: the application bombs on Mac OS 9.2, on two of the twenty
+fixtures in that tier's sample** (*Mac OS 9.2 bombs on two fixtures*, below).
+It is not new — v0.29.0, the version in `dist/`, bombs the same way — and it
+is not visible anywhere else: every Mini vMac tier is clean, and so is the
+same fixture through the same machine's AUTOTEST build. The engine and Linux
+CLI were never affected by anything in this file. The Retro68 Mac shell runs
+and extracts byte-exact on every other system the project claims:
 
 | tier | result |
 |---|---|
 | System 3.0 / Finder 5.1, 4 MB Mac Plus (Mini vMac, a true 68000) | **69/69** sampled fixtures. System 3.0 ignores the boot blocks' shell name, so the application cannot replace the Finder and is double-clicked instead — which changes how the run starts and not what it has: launching unloads the Finder, measured at 12 B (FORMATS.md, *512 KB machines*) |
 | System 3.0 / Finder 5.1, **1 MB** — the oldest system, at the same RAM floor | **69/69**; the application driven end to end there too, where Cmd-. does not cancel Standard File and the Cancel button does (FORMATS.md, *System 3.0 tier*) |
-| System 3.0, **512 KB** Macintosh 512Ke | **66/69**; the three shortfalls are per-entry memory refusals, not failures — the budget there is 197,728 B. The same machine under System 6.0.8, with no Finder at all, does 58/69, and 3.0's failures are a strict subset of 6's (FORMATS.md, *512 KB machines*) |
+| System 3.0, **512 KB** Macintosh 512Ke | **66/69**; the three shortfalls are per-entry memory refusals, not failures — the budget there is 197,728 B. The same machine under System 6.0.8, with no Finder at all, does 63/69 (re-measured 2026-09-04; 58/69 before the stack cut), and 3.0's failures are a strict subset of 6's (FORMATS.md, *512 KB machines*) |
 | System 6.0.8, 4 MB Mac Plus (Mini vMac, a true 68000) | **69/69** sampled fixtures |
 | System 6.0.8, **1 MB** — the RAM floor | **69/69**; no memory-budget refusals remain, and DiskDoubler method 5's 396 KB allocation succeeds here |
 | System 7.0.1, 4 MB | **69/69** |
-| Mac OS 9.2 (QEMU PowerPC, 68LC040 emulation) | **20/20** sampled fixtures, re-run 2026-08-27 after standing at 13/13 since M12; plus HFS+, the `SIZE` partition, and — since 2026-08-28 — both cancel routes, the Cmd-. chord and the Cancel BUTTON clicked with the pointer, an 8-bit name photographed, an encrypted archive decrypted through the password dialog after a wrong password was refused, and SpaceSaver replayed by path — the format no Macintosh tier had ever run, whose first run found a name defect in the shell (FORMATS.md) |
+| Mac OS 9.2 (QEMU PowerPC, 68LC040 emulation) | **18/20** — two fixtures bomb the application (the open blocker above); re-run 2026-09-04, and 20/20 when last run on 2026-08-27 after standing at 13/13 since M12; plus HFS+, the `SIZE` partition, and — since 2026-08-28 — both cancel routes, the Cmd-. chord and the Cancel BUTTON clicked with the pointer, an 8-bit name photographed, an encrypted archive decrypted through the password dialog after a wrong password was refused, and SpaceSaver replayed by path — the format no Macintosh tier had ever run, whose first run found a name defect in the shell (FORMATS.md) |
 
 All three Mini vMac tiers re-run **2026-08-22**, with M15–M23's codecs in
 and three fixtures added to the sample for them — DiskDoubler methods 3, 4
@@ -44,6 +48,47 @@ it: `tools/vmac/README.md`. What no emulator here can settle:
 MANUAL_TESTS.md.
 
 ---
+
+## Mac OS 9.2 bombs on two fixtures — OPEN
+
+**Claim.** The interactive application dies with a system error part way
+through extracting `derived-DandStoQIF2.sea` and `derived-SD__Utilities.x`
+on Mac OS 9.2, writing nothing or a partial entry. **Measured 2026-09-04**,
+`os9.py --list <one fixture> --launch`, six consecutive runs of the same
+build — deterministic, not flaky.
+
+**Evidence, and what each run rules out:**
+
+| run | result |
+|---|---|
+| current `main`, 6 runs | **error of type 1**, no files written |
+| **v0.29.0** — what `dist/` ships | **error of type 2**, `README` byte-exact then the next entry truncated to 0 B and the third missing |
+| pre-M50 (`922bada`) | bombs — so folder numbering is not it |
+| `main` with the old 24 KB `kStackBump` | bombs — so the 12 KB stack is not it |
+| the AUTOTEST build, same fixture, same machine | **PASS**, 3 files byte-exact, 16 KB peak — so the engine, the sink and the name rules are sound here |
+| every Mini vMac tier, including the same INTERACTIVE build on System 6.0.8 | **PASS** |
+
+**Consequence.** The fault is in code the interactive build runs and the
+autotest build does not, during extraction. The `SIZE` partition is not a
+candidate: the fixture peaks at 16,400 B of heap against 2 MB.
+
+**Two faults at two different points, moving with the binary's layout**, is
+the signature of a wild write rather than a defect in any one commit — and it
+is why a `git bisect` over the 35 commits since the tier was last green
+returned a first-bad-commit (`7be1ee9`) that does not survive retest:
+disabling any three of that commit's four sniffer probes makes the crash
+vanish, keeping all four in the binary but never executing them also makes it
+vanish, and no single probe reproduces it. **That attribution is withdrawn**
+(*Withdrawn claims*). ASan+UBSan over the shell's own sink code on the host is
+clean for both fixtures, which is expected: the mock Toolbox does not run the
+interactive paths.
+
+**What would close it:** the crash site, found on the Mac — the screen-memory
+mark technique that located `MaxApplZone` in M47 — and then a minimal
+reproduction, per the reproduction rule. Not yet attempted.
+
+**What it costs today:** the Mac OS 9 tier is 18/20 and `dist/` ships a build
+that bombs there. No release should be cut until it is understood.
 
 ## What is true, and load-bearing
 
@@ -267,6 +312,10 @@ line is what makes the next one worth re-testing.
 
 | claim | disproved by | withdrawn |
 |---|---|---|
+| **The Mac OS 9.2 tier is 20/20** — carried in BLOCKERS.md's status table and FORMATS.md since 2026-08-27 | **It is 18/20, and the two failures BOMB the application.** The tier was not run once between 2026-08-27 and 2026-09-04 while thirty-five commits touched `src/` and `mac/`, so the number described a binary nobody had run for a week. **Cost: `dist/` has shipped a build that bombs on Mac OS 9 since at least v0.29.0** — the released download, not a working copy — and the defect was found only because a tier re-run was asked for. The status table is the file read at session start, so the false number was the first thing every session saw (*Mac OS 9.2 bombs on two fixtures*) | 2026-09-04 |
+| The 12 KB stack is **"verified byte-exact at exactly that size on every tier: 69/69 at 1 MB, 512 KB, System 7 and Mac OS 9"** (FORMATS.md, *Stack*, and the `kStackBump` comment in `mac/macextract_mac.c`) | **Mac OS 9 was not run at that stack size, or at any size, on the day the stack changed** — 2026-08-31 — nor for four days either side. Three tiers were verified and a fourth was named. The 12 KB stack is not the Mac OS 9 defect (the old 24 KB bump bombs there too), so this cost nothing directly; what it cost was the four hours spent today treating the stack as a suspect it had been declared innocent of by a sentence that had never been run. **A tier named in a verification list is a claim like any other** | 2026-09-04 |
+| The System 6.0.8 / 512Ke tier is **"unchanged at 58/69"** after M46, because the flat reserve could not help a machine whose quarter-rule reserve was already under the 32 KB floor | **63/69.** The reasoning was sound and covered only the RESERVE; M46's other change, 20,464 B recovered from the STACK, lands on every machine and was never applied to this tier. Five fixtures had been coming back for four days with nobody looking. **Cost: nothing lost — the number was pessimistic — but a correct-sounding argument for why a tier could not have moved is exactly the shape that stops it being re-measured** | 2026-09-04 |
+| **`7be1ee9` is the first bad commit for the Mac OS 9 crash**, from a `git bisect run` over 35 commits | **Withdrawn the same day, by its own retest.** Disabling any three of that commit's four sniffer probes makes the crash vanish; keeping all four in the binary but never executing them also makes it vanish; no single probe reproduces it. A defect whose symptom moves with the binary's LAYOUT makes every commit look guilty, so bisection cannot address it. **Cost: about ten emulator runs, and one report to the maintainer that had to be retracted** — the lesson is that a bisect needs its answer re-tested like any other claim, and that a clean-looking bisect over a layout-sensitive fault is a machine for producing confident wrong answers | 2026-09-04 |
 | Two folders whose shortened names collide **cannot be told apart** where the archive declares no folder entries, so a merge is what a Macintosh gets — filed under OPEN_ITEMS.md's *Limits of the formats themselves*, where nothing can change it | **Both halves were wrong, and the shell's own code held the refutation.** `RepDirMemo` records every directory a run creates, declared or not, so the second folder was distinguishable all along — the report simply never asked, being gated on `info->is_dir`. And the cost that made remembering look unaffordable was the cost of whole NAMES: the only question ever asked of a row is *is this directory this run's, and is it this name's?*, which a 32-bit hash answers in 8 bytes against 68, putting 200 folders in the 1,600 B that held 24. **Cost: for every path-only format — zip, tar, LZH, the shapes most downloads have — two archive folders became one on disk and the box said nothing whatever about the second**, while the declared case at least said *combined with*; and the entry sat in the section reserved for things no evidence can change, which is where a claim goes to stop being re-tested. One zip through a mock sink that has been in `ci.sh` since 2026-08-28 disproved it (DECISIONS.md 2026-09-03, *a folder is a name too*) | 2026-09-03 |
 | A true Macintosh 512K — 64 KB of ROM — **cannot be reached at all** | **It boots.** On Apple's own 400K MFS System 1.1 floppy it reaches the Finder in ~35 s, and on an MFS volume this project builds it boots **System 3.0 and Finder 5.1**, the floor system, on the 64 KB ROM. What that ROM cannot read is HFS, and HFS was the only volume ever put in front of it — the three A/Bs behind the negative varied the ROM, the RAM and the presence of a disk, and never the FILE SYSTEM, which is the one thing the conclusion named. **Cost: a day, and it very nearly cost more** — the same entry said the machine was "out on the ROM regardless of how the disk question resolves", which is what makes nobody write the MFS writer that settles it. The application does still bomb there, so no capability was lost; what was lost was the distinction between *cannot boot* and *boots and then fails*, which is the entire content of the claim (FORMATS.md, *A true Macintosh 512K*) | 2026-08-31 |
 | Two of this application's dependencies are 128K-ROM-and-later — `NGetTrapAddress` in `TrapAvailable`, and every file operation going through HFS parameter blocks | **Neither is.** `tools/vmac/traptest` paints a mark, makes one call, paints the next, and runs as the boot shell so nothing else is in the frame: on a true 512K it comes back from `NGetTrapAddress` twice and from `PBHGetVInfoSync`, and bombs at **`PBGetCatInfoSync`, `ID = 12`, unimplemented core routine**. The verdict was right and both of its reasons were wrong; the real one is the `_HFSDispatch` selector behind `PBGetCatInfo`. **Cost: it was the sentence that made the whole question look settled**, and it was written from the SHAPE of the code — two greps and an inference — in a session that had an emulator running. A minimal reproduction was ~40 lines of C and one boot (FORMATS.md, *A true Macintosh 512K*) | 2026-08-31 |
