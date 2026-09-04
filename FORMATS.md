@@ -2775,7 +2775,7 @@ byte-exact at exactly that size on **69/69 at 1 MB**, 512 KB and System 7.
 this stack size — corrected 2026-09-04, and the same sentence is still in
 `mac/macextract_mac.c`'s `kStackBump` comment. The 12 KB stack is not the
 Mac OS 9 defect either way: the old 24 KB bump bombs there too
-(BLOCKERS.md, *Mac OS 9.2 bombs on two fixtures*).
+(BLOCKERS.md, *Mac OS 9.2 bombs on every DiskDoubler archive*).
 
 **PAINT is not a stack measurement, and this is how that was established.**
 Its lowest dirty word sits a near-constant 5–7 KB above ApplLimit at every
@@ -3844,8 +3844,9 @@ system. Nothing above System 7 had ever run it.
 **18/20 as of 2026-09-04, and the two that fail BOMB the application** —
 `derived-DandStoQIF2.sea` and `derived-SD__Utilities.x`, a system error
 during extraction, on a tier that had read 20/20 since 2026-08-27 and had
-not been re-run in between (BLOCKERS.md, *Mac OS 9.2 bombs on two
-fixtures*). The other eighteen are byte-exact. `tools/vmac/os9sample.txt`,
+not been re-run in between. **The tally understates it: all six DiskDoubler
+archives in the corpus bomb here**, and this sample holds one of them
+(BLOCKERS.md, *Mac OS 9.2 bombs on every DiskDoubler archive*). The other eighteen are byte-exact. `tools/vmac/os9sample.txt`,
 one fixture per format, each in its own boot from a pristine copy of the
 master image:
 

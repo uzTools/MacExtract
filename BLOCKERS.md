@@ -2,8 +2,8 @@
 
 ## Status
 
-**One open blocker: the application bombs on Mac OS 9.2, on two of the twenty
-fixtures in that tier's sample** (*Mac OS 9.2 bombs on two fixtures*, below).
+**One open blocker: the application bombs on Mac OS 9.2, on every DiskDoubler
+archive in the corpus and on SuperDisk!** (*Mac OS 9.2 bombs on every DiskDoubler archive*, below).
 It is not new — v0.29.0, the version in `dist/`, bombs the same way — and it
 is not visible anywhere else: every Mini vMac tier is clean, and so is the
 same fixture through the same machine's AUTOTEST build. The engine and Linux
@@ -49,19 +49,30 @@ MANUAL_TESTS.md.
 
 ---
 
-## Mac OS 9.2 bombs on two fixtures — OPEN
+## Mac OS 9.2 bombs on every DiskDoubler archive — OPEN
 
-**Claim.** The interactive application dies with a system error part way
-through extracting `derived-DandStoQIF2.sea` and `derived-SD__Utilities.x`
-on Mac OS 9.2, writing nothing or a partial entry. **Measured 2026-09-04**,
-`os9.py --list <one fixture> --launch`, six consecutive runs of the same
-build — deterministic, not flaky.
+**Claim.** The interactive application dies with a system error on Mac OS 9.2
+on **every DiskDoubler archive in the corpus — 6 of 6** — and on
+`derived-SD__Utilities.x` (SuperDisk!), writing nothing or a partial entry.
+**Measured 2026-09-04**, `os9.py --list … --launch`: six consecutive runs of
+one fixture on one build (deterministic, not flaky), then the whole
+DiskDoubler family on the byte-identical binary.
+
+**The tier read 18/20 because `os9sample.txt` holds exactly one DiskDoubler
+archive.** One fixture per format is what that sample is for, and it is the
+right design for a smoke test — but it means a broken FORMAT and a broken
+FIXTURE look identical from the tally, and this one was a format. The
+finding came from varying the INPUT while leaving the application
+byte-identical, which is the only kind of experiment this defect does not
+evade.
 
 **Evidence, and what each run rules out:**
 
 | run | result |
 |---|---|
-| current `main`, 6 runs | **error of type 1**, no files written |
+| current `main`, 6 runs, `derived-DandStoQIF2.sea` | **error of type 1**, no files written |
+| the other five DiskDoubler fixtures, same binary | **all five bomb**, no files written — `derived-MAZv143.sea`, `derived-MacPass390.sea`, `derived-DD_Expand.sea`, `derived-LHA_Expander_1.0.3.sea`, `derived-Terrainman_2.0__.sea` |
+| `derived-XferIt_1.5b4.sea` — a Compact Pro self-extractor | **PASS**, so it is not `.sea` and not self-extraction |
 | **v0.29.0** — what `dist/` ships | **error of type 2**, `README` byte-exact then the next entry truncated to 0 B and the third missing |
 | pre-M50 (`922bada`) | bombs — so folder numbering is not it |
 | `main` with the old 24 KB `kStackBump` | bombs — so the 12 KB stack is not it |
@@ -83,12 +94,32 @@ vanish, and no single probe reproduces it. **That attribution is withdrawn**
 clean for both fixtures, which is expected: the mock Toolbox does not run the
 interactive paths.
 
-**What would close it:** the crash site, found on the Mac — the screen-memory
-mark technique that located `MaxApplZone` in M47 — and then a minimal
-reproduction, per the reproduction rule. Not yet attempted.
+**Every attempt to instrument it hides it.** Checkpoint files dropped on the
+output volume and flushed as they were made — the cheapest tracer available
+here — made the same fixture extract all three entries byte-exact and quit
+cleanly. That is the fifth perturbation to mask the fault, and the marks add
+a `FlushVol` between entries, so what moved was TIMING as well as layout.
+**A tracer that changes the run cannot see this defect**, which is why the
+useful experiments have all been input-side.
 
-**What it costs today:** the Mac OS 9 tier is 18/20 and `dist/` ships a build
-that bombs there. No release should be cut until it is understood.
+**Two hypotheses tested and dead**, both on the host for nothing: the report
+pool's bounds are correct, and `unc_segment_describe` answers *no* for the
+failing and the passing fixtures alike, so the segmented path is not what
+DiskDoubler enters and others do not (`/tmp/segprobe`, rebuildable from the
+entry in DECISIONS.md).
+
+**What would close it:** the crash site. Every channel tried so far either
+perturbs the fault away or cannot reach Mac OS 9. What has NOT been tried:
+running the autotest build against the same fixture on the plain HFS
+transfer volume, which `os9.py` does not currently expose — that would
+separate "interactive-only code" from "the HFS+ volume the `--hfsplus`
+comparison also changed", the one confound left in the evidence above.
+
+**What it costs today:** an entire format family does not work on Mac OS 9 in
+the shipped application, and `dist/` has shipped it since at least v0.29.0.
+The tier tally understates it — 18/20 counts fixtures, and the truth is
+6 of 6 DiskDoubler archives plus SuperDisk!. No release should be cut until
+it is understood.
 
 ## What is true, and load-bearing
 
@@ -312,7 +343,7 @@ line is what makes the next one worth re-testing.
 
 | claim | disproved by | withdrawn |
 |---|---|---|
-| **The Mac OS 9.2 tier is 20/20** — carried in BLOCKERS.md's status table and FORMATS.md since 2026-08-27 | **It is 18/20, and the two failures BOMB the application.** The tier was not run once between 2026-08-27 and 2026-09-04 while thirty-five commits touched `src/` and `mac/`, so the number described a binary nobody had run for a week. **Cost: `dist/` has shipped a build that bombs on Mac OS 9 since at least v0.29.0** — the released download, not a working copy — and the defect was found only because a tier re-run was asked for. The status table is the file read at session start, so the false number was the first thing every session saw (*Mac OS 9.2 bombs on two fixtures*) | 2026-09-04 |
+| **The Mac OS 9.2 tier is 20/20** — carried in BLOCKERS.md's status table and FORMATS.md since 2026-08-27 | **It is 18/20, and the two failures BOMB the application.** The tier was not run once between 2026-08-27 and 2026-09-04 while thirty-five commits touched `src/` and `mac/`, so the number described a binary nobody had run for a week. **Cost: `dist/` has shipped a build that bombs on Mac OS 9 since at least v0.29.0** — the released download, not a working copy — and the defect was found only because a tier re-run was asked for. The status table is the file read at session start, so the false number was the first thing every session saw (*Mac OS 9.2 bombs on every DiskDoubler archive*) | 2026-09-04 |
 | The 12 KB stack is **"verified byte-exact at exactly that size on every tier: 69/69 at 1 MB, 512 KB, System 7 and Mac OS 9"** (FORMATS.md, *Stack*, and the `kStackBump` comment in `mac/macextract_mac.c`) | **Mac OS 9 was not run at that stack size, or at any size, on the day the stack changed** — 2026-08-31 — nor for four days either side. Three tiers were verified and a fourth was named. The 12 KB stack is not the Mac OS 9 defect (the old 24 KB bump bombs there too), so this cost nothing directly; what it cost was the four hours spent today treating the stack as a suspect it had been declared innocent of by a sentence that had never been run. **A tier named in a verification list is a claim like any other** | 2026-09-04 |
 | The System 6.0.8 / 512Ke tier is **"unchanged at 58/69"** after M46, because the flat reserve could not help a machine whose quarter-rule reserve was already under the 32 KB floor | **63/69.** The reasoning was sound and covered only the RESERVE; M46's other change, 20,464 B recovered from the STACK, lands on every machine and was never applied to this tier. Five fixtures had been coming back for four days with nobody looking. **Cost: nothing lost — the number was pessimistic — but a correct-sounding argument for why a tier could not have moved is exactly the shape that stops it being re-measured** | 2026-09-04 |
 | **`7be1ee9` is the first bad commit for the Mac OS 9 crash**, from a `git bisect run` over 35 commits | **Withdrawn the same day, by its own retest.** Disabling any three of that commit's four sniffer probes makes the crash vanish; keeping all four in the binary but never executing them also makes it vanish; no single probe reproduces it. A defect whose symptom moves with the binary's LAYOUT makes every commit look guilty, so bisection cannot address it. **Cost: about ten emulator runs, and one report to the maintainer that had to be retracted** — the lesson is that a bisect needs its answer re-tested like any other claim, and that a clean-looking bisect over a layout-sensitive fault is a machine for producing confident wrong answers | 2026-09-04 |
