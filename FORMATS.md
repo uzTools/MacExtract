@@ -3542,9 +3542,12 @@ one entry is refused. Cutting the stack to 20 KB the same day added another
 12,272 B and moved none of the three, which is what their requirements
 predict — 247,687 B, 405,520 B and one ISBN entry, against a budget that
 1:1 arithmetic puts at 198,716 B (**derived**; the 186,444 B above is the
-measured one, taken before the stack changed). **The budget is 163,656 B** of a 218,208 B free heap,
-measured on the machine (`sys30.py --emu mv-512Ke -D UNC_AT_BUDGET`, slots
-swapped per `tools/vmac/README.md`); the shell holds the other 54,552 B.
+measured one, taken before the stack changed). **The budget is 197,728 B**:
+a 218,208 B free heap measured on the machine (`sys30.py --emu mv-512Ke
+-D UNC_AT_BUDGET`, slots swapped per `tools/vmac/README.md`) less the flat
+20,480 B reserve, and the figure `tools/run_tiers.py` asserts this tier at.
+Under the quarter rule it was **163,656 B**, and what the difference
+recovered is below.
 `synth-dd-m5.dd` is the clean illustration: DiskDoubler method 5 asks for one
 405,520 B block on every tier, and here it cannot have it.
 
@@ -3565,12 +3568,13 @@ strategy reaches them; the third's 256 splay trees are adaptive state that
 cannot be discarded and rebuilt. What would move this tier is a smaller
 archive, not a smaller engine.
 
-**Three of the four are StuffIt 5, and the other three StuffIt 5 fixtures in
-the sample pass** — at 141,400 B, 161,725 B and 162,567 B, hard against the
-budget. So the line is the archive's BLOCK SIZE, which its compressor chose,
-and not the format: `derived-Troi-ClipSave-Plug-in1.1.sit` needs 168,878 B
-against 163,656 B and misses by **5,222 bytes**, with `gRefusedWhy` = 1
-naming the budget rather than a fragmented heap.
+**Two of the three are StuffIt 5, and the other four StuffIt 5 fixtures in
+the sample pass** — at 141,400 B, 161,725 B, 162,567 B and 184,590 B, the last
+of them hard against the budget. So the line is the archive's BLOCK SIZE,
+which its compressor chose, and not the format:
+`derived-Troi-ClipSave-Plug-in1.1.sit` needs 168,878 B, which the quarter
+rule's 163,656 B missed by **5,222 bytes** with `gRefusedWhy` = 1 naming the
+budget rather than a fragmented heap, and which the flat reserve covers.
 
 **What is refused is one entry's working set, and never the archive.**
 `derived-XferIt_1.5b4.sea` writes 948,175 B across 10 files on this machine at
