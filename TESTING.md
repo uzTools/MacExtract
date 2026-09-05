@@ -23,6 +23,24 @@
    it counts input bytes, not time, so a decoder that spends a minute on
    8 KB passes. The Mac OS 9 tier is where that would show
    (`os9.py --cancel`).
+5. **The Mac shell's sink, allocator and I/O through a mock Toolbox**
+   (`tests/run_mac_sink.sh` + `tests/mac_sink_test.c`): the shell's own
+   code from `mac/macextract_mac.c`, compiled on the host under
+   ASan+UBSan and again big-endian under qemu-m68k, driven by the real
+   engine over a spread of fixtures and compared byte-for-byte, both
+   forks, against the oracle manifests. **What it cannot see:**
+   `RunExtract`, `ExtractOne`, the dialogs and the Toolbox glue, which
+   the mock never calls — it builds its own `UncOptions` and hands the
+   engine the sink directly. And a read of state nobody set: ASan reports
+   writes past a block, not a load from uninitialised stack, so the
+   `UncOptions` field the shell left unassigned for eight days
+   (DECISIONS.md 2026-09-04, *the field nobody assigned*) was invisible
+   to this layer by construction, and would have been even had the mock
+   run `RunExtract`. Nor does valgrind see it: over the pre-fix unit
+   tests, whose DiskDoubler and SuperDisk! walks read the unset field 20
+   times (gdb), it reported nothing, because stack bytes an earlier call
+   had written count as initialised. That class needs MemorySanitizer
+   over the real call chain, and no host-side build here has it.
 0. **Documentation invariants** (`tools/check_docs.py`): DECISIONS.md's
    Contents index must list every `## ` entry in file order, no
    document may cite another by line number, the version agrees in the
@@ -1212,6 +1230,14 @@ is meant to be changed deliberately.
   ("Memory is too broken up"). This is the likeliest reason the
   System 6.0.8 / 512 KB tier comes out 59/69 here against the machine's
   58/69 — which is why that tier is a diagnostic and is not asserted.
+  **That comparison is stale as of 2026-09-04**: the machine now does
+  **63/69** (FORMATS.md, *512 KB machines*), so the gap is four fixtures
+  and not one. *Hypothesis, not measured:* this tier's budget constant
+  predates the 20,464 B the stack cut returned to the engine, since the
+  System 3.0 / 512 KB constant beside it was re-taken and still
+  reproduces that machine exactly. **What would settle it:** one
+  `-D UNC_AT_BUDGET` boot of the 512Ke under System 6.0.8
+  (`tools/vmac/README.md`, *Why an entry is refused*).
 - **The budget's own currency.** Each figure is `FreeMem() - 20,480`
   measured on the machine (FORMATS.md, *Budget*), so it moves when the
   application's size does. This file cannot notice that it has gone
@@ -2336,9 +2362,10 @@ part boundary (27 failures). Both were reverted.
    this harness launches the INTERACTIVE build, which takes envelopes
    off. (It used `-nr` until 2026-08-27, which is right only for the
    autotest build; `tools/vmac/README.md` has what that cost.)
-   **18/20 on the committed sample**, 2026-09-04 — it was 20/20 on
-   2026-08-27, and the two that now fail BOMB the application
-   (BLOCKERS.md, *Mac OS 9.2 bombs on every DiskDoubler archive*).
+   **21/21 on the committed sample**, 2026-09-04. It read 18/20 that
+   morning, the two failures bombing the application, and the sample
+   gained a fixture the same day (BLOCKERS.md, *Withdrawn claims*;
+   DECISIONS.md 2026-09-04, *the field nobody assigned*).
    Since 2026-08-28 the
    run also goes to the END of the interaction — the result alert is
    dismissed, SFGetFile is checked to repaint, and Cmd-. quits the

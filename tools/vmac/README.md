@@ -22,7 +22,7 @@ paths, not just a different splash screen. Run the System 7 tier at 4 MB.
 512Ke, the smallest machine this application runs on: `sys30.py --emu
 mv-512Ke` is **66/69** (2026-08-31; 65/69 before the reserve went flat,
 64/69 before the LZW bound), `run.py --emu mv-512Ke --system System6.hfv`
-is 58/69
+is 63/69 (re-measured 2026-09-04; 58/69 before the stack was cut)
 (FORMATS.md, *512 KB machines*).
 
 **A true Macintosh 512K — `mv-512K`, a 64 KB ROM — boots, and this
@@ -156,8 +156,14 @@ both runs drew on one display and screenshotted each other's emulator. Three
 fixtures "failed" with another run's numbers before anyone noticed the numbers
 belonged to a different archive. Xvfb now picks the display itself
 (`-displayfd`) and reports it back. Do NOT run
-anything else alongside `os9.py`, which uses `build/rel/macextract` as its
-oracle and will lose it to `./ci.sh`'s `make clean`.
+anything else alongside these, and **never alongside `./ci.sh`**: every
+harness here grades itself through `tools/vmac_check.py`, which shells out
+to `build/rel/macextract` as its oracle, and CI's `make clean` takes that
+binary away mid-sweep. This warning named `os9.py` alone until 2026-09-05,
+when a `run.py` floor sweep was started beside CI and came back **38/69** —
+31 fixtures the Macintosh had extracted correctly and nothing could
+compare, which reads exactly like a regression until the reason column is
+read.
 
 ## What the pieces do
 
@@ -360,9 +366,12 @@ three** — a 4 MB machine never takes the path, and both all-out builds cannot
 be quoted for time. A claim that lives at the intersection of two axes needs a
 build at that intersection.
 
-**This box has one core.** At 1x the emulator paces itself against real time,
-so anything else CPU-heavy — `./ci.sh`, a corpus sweep, a second
-`interactive.py` — inflates the number you are measuring. Run timing alone.
+**This box has two cores** (`nproc`; the host CPU has four and the container
+is limited to two — the figure here read "one core" until it was checked on
+2026-09-05). At 1x the emulator paces itself against real time, so anything
+else CPU-heavy — `./ci.sh`, a corpus sweep, a second `interactive.py`, or
+another SESSION's emulator on the same machine — inflates the number you are
+measuring. Run timing alone.
 
 **And it is not only the number.** `interactive.py` waits fixed seconds
 between clicks, so a Mac running below 1x desynchronises the whole
@@ -1582,7 +1591,12 @@ their output name from the archive's filename.
 Two hfsutils traps it hit, both worth knowing before writing anything similar:
 `hls` **hides names beginning with a dot** unless given `-a`, and every path
 argument must be encoded as **MacRoman**, not UTF-8, or any 8-bit name is a
-file that does not exist.
+file that does not exist. `os9.py` had learned the second one for `hcopy`
+and not for the `hls` its folder walk runs: a FILE with an 8-bit name at
+the root had been checked since 2026-08-28, and the first FOLDER with one
+— `Terrainman 2.0 ƒ`, on 2026-09-04 — listed as empty, so the harness
+failed a run the application had completed and the volume held whole.
+Fixed the same day (`_walk_volume`).
 
 ## On-demand probes — the `-D` switches and the one-off harnesses
 

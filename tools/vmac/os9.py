@@ -880,7 +880,16 @@ def _walk_volume(env, mac_dir="", depth=0):
     if depth > 8:                       # archives here are not this deep
         return {}
     out = {}
-    listing = subprocess.run(["hls", "-F", "-1"] + ([mac_dir] if mac_dir else []),
+    # The folder's path goes out as MacRoman bytes, like hcopy's argument in
+    # verify_output: passed as a str it is encoded UTF-8, `hls` finds no such
+    # folder, and every file inside it is reported missing while sitting on
+    # the volume. A FILE with an 8-bit name at the root had been checked
+    # since 2026-08-28; a FOLDER with one was first walked on 2026-09-04
+    # (`Terrainman 2.0 \xc4` — DiskDoubler's `derived-Terrainman_2.0__.sea`),
+    # and the harness failed a run the application had completed.
+    listing = subprocess.run(["hls", "-F", "-1"]
+                             + ([mac_dir.encode("mac_roman", "replace")]
+                                if mac_dir else []),
                              capture_output=True, env=env)
     for raw in listing.stdout.split(b"\n"):
         entry = raw.rstrip().decode("mac_roman")

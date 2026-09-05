@@ -28,7 +28,7 @@ extern "C" {
  * tools/make_dist.sh do now, and tools/check_docs.py fails the build if
  * this, README.md and dist/README.txt disagree. A constant nobody reads
  * is a constant that is wrong. */
-#define UNC_VERSION "0.30.0"
+#define UNC_VERSION "0.31.0"
 
 /* ------------------------------------------------------------------ */
 /* Formats                                                            */
@@ -417,6 +417,13 @@ typedef struct UncOptions {
      * `name_truncated` is then 2 rather than 1. NULL, and the classic
      * Mac shell passes NULL, costs nothing and loses only the text: the
      * length is still reported in `name_full_len`.
+     * A NON-NULL pointer is WRITTEN in the formats that walk folders
+     * (DiskDoubler, SuperDisk!, Now Compress) for every path component,
+     * cut or not — the uncut path accumulates here. So a host that has
+     * no buffer must pass NULL, not leave the field unset: the Mac shell
+     * left it unset from the day it was added until 2026-09-04, and
+     * three formats bombed on Mac OS 9 through whatever its stack held
+     * (DECISIONS.md 2026-09-04, *the field nobody assigned*).
      * A format that has already dropped the bytes by then — uuencode's
      * 96-byte line buffer, MIME's 512-byte header — cannot fill this,
      * and says so by leaving `name_truncated` at 1. */

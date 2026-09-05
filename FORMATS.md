@@ -2349,7 +2349,7 @@ a heavy 1 MB extraction (`derived-Troi-ClipSave-Plug-in1.1.sit`, engine peak
 472,137 B) the shell's share at the tightest moment measured **−33 B**:
 nothing beyond the engine, to within the skew between the two samples. The
 13,242 B worst case comes from a lighter run where a dialog was up. Verified byte-exact at that size on all four tiers — 69/69 at
-1 MB, 66/69 at 512 KB, 69/69 on System 7.0.1, 18/20 on Mac OS 9.2 — and the
+1 MB, 66/69 at 512 KB, 69/69 on System 7.0.1, 21/21 on Mac OS 9.2 — and the
 password and report dialog phases driven end to end, the password one on the
 512 KB machine where the heap is tightest.
 
@@ -2769,13 +2769,13 @@ dialog — SAMPLE is **3,134 B** and does not move either, at 10 KB or at
 
 **So `kStackBump` is 4 KB, a 12 KB stack** — 2.1x the deepest write ever
 observed — and **20,464 B** has gone to the engine (*Budget*). Verified
-byte-exact at exactly that size on **69/69 at 1 MB**, 512 KB and System 7.
-**Not** on Mac OS 9: that tier was not run between 2026-08-27 and
-2026-09-04, so the original sentence here named a tier nobody had run at
-this stack size — corrected 2026-09-04, and the same sentence is still in
-`mac/macextract_mac.c`'s `kStackBump` comment. The 12 KB stack is not the
-Mac OS 9 defect either way: the old 24 KB bump bombs there too
-(BLOCKERS.md, *Mac OS 9.2 bombs on every DiskDoubler archive*).
+byte-exact at exactly that size on **69/69 at 1 MB**, 512 KB and System 7,
+and on Mac OS 9.2 on 2026-09-04 — 21/21, plus the six DiskDoubler archives
+— which was the first run of that tier at this size: the sentence here had
+named it as verified for the four days before that (BLOCKERS.md, *Withdrawn
+claims*). The 12 KB stack was never the Mac OS 9 defect: the old 24 KB bump
+bombed there too, and the cause was a field nobody assigned (DECISIONS.md
+2026-09-04).
 
 **PAINT is not a stack measurement, and this is how that was established.**
 Its lowest dirty word sits a near-constant 5–7 KB above ApplLimit at every
@@ -3615,7 +3615,11 @@ same machine gains 8,192 B and another 20,464 B from the stack. Under the quarte
 `derived-Troi-ClipSave-Plug-in1.1.sit` — it had missed by 5,222 bytes and now
 writes all 13 entries at a 184,590 B peak, taking this tier from 65/69 to
 **66/69**. Under System 6.0.8 the same machine has 122,808 B free, where the
-quarter always fell under the 32 KB floor, so that tier is unchanged at 58/69.
+quarter always fell under the 32 KB floor, so the RESERVE going flat did
+nothing there — and this sentence read "so that tier is unchanged at 58/69"
+until 2026-09-04, which was a claim about the tier drawn from an argument
+about one of the two changes. The stack cut lands on every machine: that
+tier is **63/69** (above, and BLOCKERS.md, *Withdrawn claims*).
 **A kilobyte of application costs the engine a kilobyte here too**, now that
 the reserve is a constant rather than a fraction. The
 three extra are `popper-1.7.tar.Z`, `derived-Expand_Now_1.0.1.sea` and
@@ -3841,12 +3845,23 @@ and the only one where the 68k binary does not run on a 68k CPU: Mac OS 9.2 on
 emulated PowerPC executes it through the **68LC040 emulator** built into the
 system. Nothing above System 7 had ever run it.
 
-**18/20 as of 2026-09-04, and the two that fail BOMB the application** —
-`derived-DandStoQIF2.sea` and `derived-SD__Utilities.x`, a system error
-during extraction, on a tier that had read 20/20 since 2026-08-27 and had
-not been re-run in between. **The tally understates it: all six DiskDoubler
-archives in the corpus bomb here**, and this sample holds one of them
-(BLOCKERS.md, *Mac OS 9.2 bombs on every DiskDoubler archive*). The other eighteen are byte-exact. `tools/vmac/os9sample.txt`,
+**21/21 as of 2026-09-04**, re-run on the build that zeroes `UncOptions` —
+a fix that costs the smallest machine nothing: **147,548 B of code before,
+147,544 B after**, with 4 B moving to the A5 world (measured against a
+worktree of the pre-fix commit, 2026-09-05; the two currencies are
+*What the application costs the engine*).
+That morning the tier read 18/20 — `derived-DandStoQIF2.sea` and
+`derived-SD__Utilities.x` bombing the application — and behind that number
+every DiskDoubler archive in the corpus bombed: a field the shell never
+assigned, which the engine's folder-path walker writes through in exactly
+three formats (DECISIONS.md 2026-09-04, *the field nobody assigned*;
+BLOCKERS.md, *Withdrawn claims*). The sample gained `synth-now-mixed.now` the
+same day, Now Compress being the third of those formats and the one this
+tier had never run. The other five DiskDoubler archives were run too,
+off-sample: **5/5 byte-exact** — and `derived-Terrainman_2.0__.sea` first
+read as a failure because the harness could not walk a folder named with an
+8-bit character, `Terrainman 2.0 ƒ`, while the volume held all ten files
+(`tools/vmac/README.md`, *Checking a run off the disk*). `tools/vmac/os9sample.txt`,
 one fixture per format, each in its own boot from a pristine copy of the
 master image:
 
@@ -3874,10 +3889,11 @@ master image:
 | `derived-SD__Utilities.x` | Alysis SuperDisk! | 3 | 9,916 | 14,389 | ✅ byte-exact, including two names holding the `':'`/`'/'` swap |
 | `synth-os9-btoa.btoa` | btoa | 1 | 504 | 0 | ✅ byte-exact |
 | `synth-os9-mime.mim` | multipart/appledouble | 1 | 320 | 176 | ✅ byte-exact, both forks and the type |
+| `synth-now-mixed.now` | Now Compress | 1 | 15,096 | 0 | ✅ byte-exact — added 2026-09-04, the third folder-walking format |
 | `synth-os9-rar.rar` | RAR: must REFUSE | 0 | — | — | ✅ declined, and Linux declines the same file; the alert is photographed |
 
-**20/20**, 51 files, 785,150 data bytes and 349,253 resource-fork bytes
-compared. The eight formats that postdate the previous sweep — ARC, uuencode,
+**21/21**, 52 files, 800,246 data bytes and 349,253 resource-fork bytes
+compared (2026-09-04; 20/20 and 51 files before Now Compress joined). The eight formats that postdate the previous sweep — ARC, uuencode,
 SuperDisk!, btoa, LZH, base64/MIME and the named-but-declined family, plus
 DiskDoubler's promotion from refusal to extraction — all passed first time;
 the two failures in that sweep were both in the HARNESS and are written up in

@@ -69,8 +69,11 @@ SHORT = re.compile(r"at least (\d+) bytes more memory")
 # agreed with are here: `sys3-512K` matches the Mini vMac run fixture for
 # fixture (66/69, the same three), and `floor-1M` is the floor target's
 # 69/69. `sys6-512K` is a diagnostic and NOT asserted — this file puts it
-# at 59/69 where the machine says 58, and one fixture of disagreement is
-# exactly the fragmentation this cannot model. A tally that moves here is
+# at 59/69 where the machine said 58, and one fixture of disagreement was
+# exactly the fragmentation this cannot model. The machine says 63/69 since
+# 2026-09-04, so the gap is four; the budget above is probably pre-stack-cut
+# and wants one -D UNC_AT_BUDGET boot to re-take (TESTING.md, *The tiers a
+# budget predicts*). Still a diagnostic, still not asserted. A tally that moves here is
 # either a memory regression or a memory WIN; both want the number below
 # changed deliberately, which is the point of pinning it.
 EXPECT = {"floor-1M": 69, "sys3-512K": 66}

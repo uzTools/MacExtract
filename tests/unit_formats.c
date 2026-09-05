@@ -2135,6 +2135,9 @@ static void test_dd_stac(void)
     n += b.len;
     put32(one + 8, n - 84u);                   /* datacomp */
 
+    memset(&opt, 0, sizeof opt);   /* the whole struct: a field this list
+                                     * does not name is stack garbage otherwise
+                                     * (DECISIONS.md 2026-09-04) */
     opt.list_only = 0; opt.test_only = 0;
     opt.name_hint = hint;
     opt.name_hint_len = (uint16_t)(sizeof hint - 1);
@@ -2293,6 +2296,9 @@ static void test_dd_method2(void)
     put32(one + 8, b.len);                     /* datacomp */
     free(trees);
 
+    memset(&opt, 0, sizeof opt);   /* the whole struct: a field this list
+                                     * does not name is stack garbage otherwise
+                                     * (DECISIONS.md 2026-09-04) */
     opt.list_only = 0; opt.test_only = 0;
     opt.name_hint = hint;
     opt.name_hint_len = (uint16_t)(sizeof hint - 1);
@@ -2387,6 +2393,9 @@ static void dd_one_method(int method, const uint8_t *stream, uint32_t slen)
     memcpy(one + 84, stream, slen);
     n = 84 + slen;
 
+    memset(&opt, 0, sizeof opt);   /* the whole struct: a field this list
+                                     * does not name is stack garbage otherwise
+                                     * (DECISIONS.md 2026-09-04) */
     opt.list_only = 0; opt.test_only = 0;
     opt.name_hint = hint;
     opt.name_hint_len = (uint16_t)(sizeof hint - 1);
@@ -2723,6 +2732,9 @@ static void test_diskdoubler(void)
         memcpy(one + n, "RSC", 3);   n += 3;
         /* The probe accepts a zero CRC ("really old files"), which keeps
          * this synthetic file honest rather than needing one computed. */
+        memset(&opt, 0, sizeof opt);   /* the whole struct: a field this list
+                                         * does not name is stack garbage otherwise
+                                         * (DECISIONS.md 2026-09-04) */
         opt.list_only = 0; opt.test_only = 0;
         opt.name_hint = hint;
         opt.name_hint_len = (uint16_t)(sizeof hint - 1);
@@ -2797,6 +2809,9 @@ static void test_superdisk_single(void)
     one[n++] = 0x80; one[n++] = 8 + 2;
     memcpy(one + n, want_r, 8); n += 8;
 
+    memset(&opt, 0, sizeof opt);   /* the whole struct: a field this list
+                                     * does not name is stack garbage otherwise
+                                     * (DECISIONS.md 2026-09-04) */
     opt.list_only = 0; opt.test_only = 0;
     opt.name_hint = hint;
     opt.name_hint_len = (uint16_t)(sizeof hint - 1);

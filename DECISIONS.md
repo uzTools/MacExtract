@@ -192,6 +192,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-03 (the binary nothing builds, twice more) — three UI failures that were one unfinished fix, and an explanation that fit six cases out of nine
 - 2026-09-03 (the struct that grew after it was measured) — 296 was the offset of the last field
 - 2026-09-03 (a folder is a name too) — numbering folders like files, and the table that made it affordable
+- 2026-09-04 (the field nobody assigned) — a struct filled field by field, and the crash that was shaped like three formats
 
 ---
 
@@ -8525,8 +8526,8 @@ where Cmd-. means Cancel, and Cmd-Q means nothing at all. The application was
 still running, with its result alert up, when the emulator was killed.
 
 **Nothing about the extraction was wrong**, because this tier reads its
-verdict off the volume rather than off the screen; 20/20 stood and still
-stands. What was wrong was every claim the run made about where it had got to.
+verdict off the volume rather than off the screen; the 20/20 of the day
+stood. What was wrong was every claim the run made about where it had got to.
 **A harness that stops early still reports every step it did take**, each with
 a plausible number beside a plausible name — which is why the labels were
 believed for as long as the tier existed. The fix is not more waits, it is
@@ -11054,3 +11055,117 @@ claims*. The measurement that opened it took one zip and one run of a mock
 sink that has been in `ci.sh` since 2026-08-28 — the claim was about our own
 binary, which is the cheapest kind here to test and the easiest to leave
 untested.
+
+## 2026-09-04 (the field nobody assigned) — a struct filled field by field, and the crash that was shaped like three formats
+
+**Claim.** The Mac OS 9 bomb on every DiskDoubler archive and on SuperDisk!
+(BLOCKERS.md, *Withdrawn claims*) was an uninitialised pointer. `RunExtract`
+in `mac/macextract_mac.c` filled its `UncOptions` field by field, and the
+two fields that joined the struct on 2026-08-27 — `long_name` and
+`long_name_cap` — were never among them: `git grep long_name mac/` returned
+nothing. The engine's folder-path walker, `unc_path_push` →
+`path_full_add` in `src/unc_util.c`, writes **every** component through
+that pointer whenever it is non-NULL and the cap is at least 2, because the
+buffer is where the uncut name accumulates and a cut can come at any depth.
+Exactly three formats walk a tree with it: DiskDoubler, SuperDisk! and Now
+Compress. So those three wrote each folder and file name through whatever
+the interactive build's stack held at that offset, and nothing else touched
+it. **Measured**, both halves: `tools/longname-repro/` hands the engine a
+4-byte block with a 1 MB cap and lists one fixture per family under ASan —
+DiskDoubler, SuperDisk! and Now Compress die in `path_full_add` on their
+first component (`WRITE of size 1`, `unc_util.c`, via `unc_path_leaf` ←
+`dd_archive`), Compact Pro and StuffIt never touch the block, and all five
+are clean with NULL. The fix is one loop that zeroes the struct before the
+fields are set, and the Mac half of the measurement is the fixed build on
+Mac OS 9.2 (below).
+
+**Why every experiment pointed away from it, and what that teaches.**
+
+- **A symptom shaped like a format is not evidence about the format.** Six
+  DiskDoubler archives and SuperDisk! bombed; Compact Pro's own
+  self-extractor passed. That read as "these decoders do something the
+  shell cannot take", and the search went into what the *shell* does
+  differently — the dialogs, the event loop, the segmented path. The
+  productive question was the other way round: **what does the engine do
+  for these formats that involves the host?** The host surface is small —
+  `UncIO`, `UncAlloc`, `UncSink`, `UncProgress`, `UncOptions` — and one
+  `grep` over the option fields against the shell's assignments answers it
+  in a minute. Format-specific plus host-specific means a *host input* the
+  formats consume unequally.
+- **"The classic Mac shell passes NULL" was a claim about a file on this
+  disk, and nobody ran it.** It is in `include/macextract.h`, written the
+  day the field was added, describing a shell that had not been updated —
+  the tenth smell in BLOCKERS.md's list (*an open item that describes what
+  our OWN binary does*), this time in a header comment rather than a status
+  file. A comment that says what another file does is a test that has never
+  been run.
+- **An uninitialised local defeats every instrument that changes the
+  stack, which is all of them.** The value the engine saw was whatever
+  Standard File, the destination dialog and the progress dialog had left in
+  that frame. A tracer, a `-D` probe, a different `kStackBump`, a checkpoint
+  file between entries and any commit that touched a frame above it moved
+  the garbage; some values were benign (a pointer into free stack, a cap
+  below 2) and some were not. That is why `git bisect` produced a confident
+  first-bad commit whose retest could not reproduce it, why "keeping the
+  probes in the binary but never executing them" also cured it, and why the
+  two shipped versions bombed with two different error types at two
+  different entries. **A defect that moves with layout is not "a wild
+  write somewhere"; it is a specific class — a read of state nobody set —
+  and the search for it is a search for an assignment that is missing, not
+  for a write that is wrong.**
+- **The autotest build passed because its call chain is different**, so its
+  garbage was different — presumably zero, though that was never measured
+  and did not need to be once the mechanism was reduced. The Mini vMac tiers
+  passed for the same reason, which means the 69/69 on System 3.0, 6.0.8 and
+  7.0.1 were passing on luck for the three walking formats. **Inferred, not
+  measured**: no run on those tiers ever showed the fault; the fix removes
+  the dependence rather than a defect those tiers exhibited.
+- **The lesson was already in the tree, learned by the other host.**
+  `unc_extract_as` zeroes the whole struct for a NULL `opt`, with a comment
+  from 2026-08-27 saying why: a field list "written when UncOptions had nine
+  members and never revisited" had segfaulted the unit tests the day
+  `long_name` was added. The same day, the same field, the same mistake in
+  the shell — and the fix went where the crash was and nowhere else. **When
+  a lesson is learned in one host, grep the other hosts for the pattern the
+  same afternoon.** Done this time, and it paid at once: five `UncOptions`
+  in `tests/unit_formats.c` were filled field by field too, and all five
+  are in DiskDoubler and SuperDisk! tests — the walking formats. Measured
+  with gdb over the pre-fix binary: the walker read the field 20 times
+  across the unit tests and saw NULL every time, so those tests passed on
+  a host stack that happened to hold zeros. They are zeroed now. valgrind
+  over the same binary reports nothing — stack bytes an earlier call wrote
+  count as initialised — which is why that class of defect needs
+  MemorySanitizer, and no host build here has it.
+
+**What would have caught it before Mac OS 9 did.** Nothing in `ci.sh`: the
+mock Toolbox build (`tests/mac_sink_test.c`) drives the sink, allocator and
+I/O and builds its own `UncOptions`, so it never executes `RunExtract`, and
+neither ASan nor valgrind reports a read of uninitialised STACK — measured on
+the pre-fix unit tests, where valgrind is silent through 20 such reads,
+because bytes an earlier call wrote count as initialised. That is
+MemorySanitizer's job, over a path no host-side build here takes (TESTING.md,
+*mac sink*, now says so). The compiler is silent because the struct is passed
+by pointer. What does catch it is the rule the engine's own comment states:
+**zero the whole struct, then set fields** — a future field is then NULL by
+construction rather than by luck.
+
+**Consequence.** `RunExtract` zeroes `opt` before assigning it, with the
+history in a comment beside the loop. `tools/longname-repro/` keeps the host
+half of the reproduction. `tools/vmac/os9sample.txt` gains
+`synth-now-mixed.now`, because Now Compress is the third walker and the one
+this tier had never run. Mac OS 9.2 comes back **21/21**, and all six
+DiskDoubler archives in the corpus extract there byte-exact where that
+morning's binary bombed on every one.
+
+**And a harness defect, found because the fix let the run get far enough to
+hit it.** `derived-Terrainman_2.0__.sea` reported ten files missing that were
+on the volume: the verifier's folder walk passed its path to `hls` as a
+Python `str`, so an 8-bit folder name went out UTF-8 and listed as empty.
+A FILE with such a name had been checked since 2026-08-28 and a FOLDER with
+one had never been walked. **A harness that has been right about one shape of
+a thing has not been tested on the others** — and the same encoding rule was
+already written down two functions away, for `hcopy` (`tools/vmac/README.md`,
+*Checking a run off the disk*).
+
+What the claim cost is in BLOCKERS.md, *Withdrawn claims*; the numbers in
+FORMATS.md, *Mac OS 9.2*.

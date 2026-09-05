@@ -181,22 +181,11 @@ is what StuffIt Expander 4.0.2 takes on the same machine and the same file. If
 an entry genuinely will not fit, that entry is skipped with a message and the
 rest of the archive still extracts.
 
-KNOWN DEFECT — DiskDoubler archives on Mac OS 9
-----------------------------------------------
-On Mac OS 9, opening a DiskDoubler archive (.dd, and DiskDoubler .sea
-self-extractors) crashes the application with a system error. Every
-DiskDoubler archive tested does it; nothing is written, and nothing else on
-the disk is harmed. The same archives extract correctly on System 3.0,
-System 6.0.8 and System 7.0.1, which is where this program is meant to earn
-its keep. SuperDisk! archives do the same on Mac OS 9. The cause is not yet
-known; it is not new in this version. Every other format tested on Mac OS 9
-extracts byte for byte.
-
 Verified on emulators only: System 3.0, System 6.0.8 and System 7.0.1 on a Mac
 Plus under Mini vMac, and Mac OS 9.2 on emulated PowerPC, where every
-extraction is checked byte for byte against the same engine on Linux — with
-the exception named above. No physical Macintosh has ever run it. Worth
-knowing before you commit a floppy to it.
+extraction is checked byte for byte against the same engine on Linux. No
+physical Macintosh has ever run it. Worth knowing before you commit a floppy
+to it.
 
 License: LGPL-2.1-or-later. See LICENSE and NOTICE in the source tree.
 TXT
