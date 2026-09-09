@@ -41,7 +41,8 @@ if(DEFINED ENV{UNC_AT_OVERLAY})
                   ${CMAKE_CURRENT_BINARY_DIR}/ovl_exo.r
                   ${CMAKE_CURRENT_BINARY_DIR}/ovl_codecs.r
                   ${CMAKE_CURRENT_BINARY_DIR}/ovl_binhex.r
-                  ${CMAKE_CURRENT_BINARY_DIR}/ovl_btoa.r)
+                  ${CMAKE_CURRENT_BINARY_DIR}/ovl_btoa.r
+                  ${CMAKE_CURRENT_BINARY_DIR}/ovl_dart.r)
     set(OVERLAY_SHIM ovl_shim.c)
     # The DECODERS leave the resident link; every probe stays in it.
     list(FILTER ENGINE_SRC EXCLUDE REGEX "unc_crypt\\.c$")
@@ -62,6 +63,9 @@ if(DEFINED ENV{UNC_AT_OVERLAY})
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_sit5\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "sit_arsenic\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_exo\\.c$")
+    # fmt_dart_probe.c stays: DART has no signature, so its probe is
+    # the whole header reader and sniffing must not load a decoder.
+    list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_dart\\.c$")
     # zlib and the inflate wrapper go with them: fmt_exo is their only caller,
     # so nothing resident is left needing deflate.
     list(FILTER ENGINE_SRC EXCLUDE REGEX "unc_inflate\\.c$")
@@ -113,6 +117,27 @@ add_custom_command(
     DEPENDS ${ENGINE_DIR}/tools/overlay/mkforwards.py
             ${ENGINE_DIR}/src/unc_internal.h
             ${ENGINE_DIR}/include/macextract.h)
+
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/ovl_dart.r
+    COMMAND ${CMAKE_COMMAND} -E env OVL_ID=142
+            OVL_INC=${CMAKE_CURRENT_BINARY_DIR}
+            sh ${ENGINE_DIR}/tools/overlay/mkoverlay.sh
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_dart.r
+            ${ENGINE_DIR}/tools/overlay/ovl_dart.c
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_gen.c
+            ${ENGINE_DIR}/src/fmt_dart.c
+            ${ENGINE_DIR}/src/fmt_dart_probe.c
+    DEPENDS ${ENGINE_DIR}/tools/overlay/ovl_dart.c
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_gen.c
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_codecs_gen.c
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_host_gen.h
+            ${ENGINE_DIR}/src/fmt_dart.c
+            ${ENGINE_DIR}/src/fmt_dart_probe.c
+            ${ENGINE_DIR}/src/fmt_dart_priv.h
+            ${ENGINE_DIR}/tools/overlay/overlay.h
+            ${ENGINE_DIR}/tools/overlay/overlay.ld
+            ${ENGINE_DIR}/tools/overlay/mkoverlay.sh)
 
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/ovl_crypt.r

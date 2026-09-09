@@ -17,24 +17,56 @@ the belief that a decoder could go in one, and that came from a wrong comment
 (*What the prize is NOT*, below).
 
 
-## Merged with `main`, 2026-09-09 — and DART is resident
+## DART, overlaid — 2026-09-09
 
-`main` gained DART (M52), a format whose output is another disk image. It
-arrives here **resident**: there is no `tools/overlay/ovl_dart.c`, so
-`src/fmt_dart.c` is not one of the decoders this branch defers, and its
-**+2,188 B of code and +128 B of A5 are paid by every extraction** —
-exactly the cost this branch exists to avoid. Total build: 150,220 B of
-`CODE` and 44,244 B of A5, against 148,032 and 44,116 before the merge.
+`main` gained DART (M52) and it came in **resident**. It is now one of the
+deferred decoders, `OVL_ID_DART`, built by `tools/overlay/ovl_dart.c`.
 
-That is a decision left open rather than taken. Adding `ovl_dart.c`
-alongside `ovl_exo.c` looks mechanical, and DART is a good candidate — one
-self-contained file, no shared codec except `unc_lzah.c`, which
-`ovl_lzh.c` already defers. **What has NOT been checked** is whether the
-sniffer can reach a DART without the overlay resident: DART has no
-signature, and `unc_dart_probe` reads the whole block-length table and the
-file's size, which is more work in the probe than any other format here.
-`ovl_probe.c` is where that question is answered, and nobody has answered
-it.
+**Merging it in had already broken this branch's own configuration, and
+every check passed anyway.** A resident `unc_dart_extract` calls
+`unc_lzah_decode` — DART's "best" method is LZHUF — and that lives in the
+codecs overlay, so `UNC_AT_OVERLAY=1` would not LINK. `ci.sh` never built
+that configuration: it ran `tools/build_mac.sh` with no environment, which
+is the build `main` also has. **A branch whose feature is a build
+configuration has to build it**, so `ci.sh` gained variant 4b, which does.
+
+### The split, and why DART is the awkward one
+
+Every other overlaid format here has a probe that is a signature test and
+a decoder that is everything else. DART has **no signature**: the probe
+reads the whole 40- or 72-entry block-length table and checks that it adds
+up to the file's size, and the decoder needs precisely the same reader. So
+`src/fmt_dart_probe.c` holds `dart_parse`, `dart_kind` and
+`dart_chunk_bytes` and is **resident AND compiled into the overlay** —
+the arrangement `ovl_spacesaver.c` already uses. Duplicating ~400 B beats
+the two alternatives: calling back into the host for the header reader, or
+loading a decoder to decide a file is not a DART.
+
+### What it costs and what it buys
+
+| | before | after |
+|---|---|---|
+| default build, `CODE` | 150,220 B | **150,296 B** (+76) |
+| default build, A5 | 44,244 B | **44,264 B** (+20) |
+| overlay build, resident `CODE` | *would not link* | **51,756 B** |
+| overlay build, resident A5 | *would not link* | **18,948 B** |
+
+The +76/+20 on the default build is the split's own cost — the header
+reader stops being `static` and stops being inlined — and is the same kind
+of price the five earlier splits paid (`tools/build_mac.sh` records each).
+What it buys is that `src/fmt_dart.c` leaves the resident set entirely.
+
+### Proven on the machine
+
+`tools/vmac/run.py --emu mv-4M --expect -D UNC_AT_OVERLAY` over
+`test1-best` (LZHUF, so it reaches the codecs overlay from inside another
+overlay) and `Studio8_Program.dart` (RLE): **2/2 byte-exact**, 838,484 B
+each, peak heap 40,321 B and 25,072 B.
+
+**And the negative was run**: with the shim pointing at a nonexistent
+overlay id the same fixture gives 0 files and 0 bytes. There is no
+resident copy of the decoder to fall back on, so the passing run is the
+overlay running.
 
 
 ## The mechanism, proven 2026-08-30

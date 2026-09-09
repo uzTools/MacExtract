@@ -249,4 +249,13 @@ python3 tools/run_sizelimits.py --macextract build/off32/macextract \
 echo "=== variant 4: Retro68 Mac shell (compile-only, optional) ==="
 sh tools/build_mac.sh || fail "mac build"
 
+# variant 4b, added 2026-09-09 on this branch: the OVERLAY configuration,
+# which is the whole point of the branch and which nothing here built until
+# now. Merging main's DART in passed every check above and left this
+# unlinkable — a resident decoder calling unc_lzah_decode, which lives in the
+# codecs overlay — because ci.sh only ever built the configuration main also
+# has. A branch whose feature is a build configuration has to build it.
+echo "=== variant 4b: the overlay configuration (this branch) ==="
+UNC_AT_OVERLAY=1 sh tools/build_mac.sh || fail "overlay build"
+
 echo "CI: all green"

@@ -425,6 +425,20 @@ int unc_zip_extract(UncCtx *c)
     return (int)e(&gOvlHost, OVL_ZIP_EXTRACT, c, NULL);
 }
 
+/* DART. Needs the codecs overlay ready first: its "best" method is LZHUF,
+ * which is unc_lzah_decode, and that lives there. Its PROBE is resident,
+ * so a file that is not a DART never reaches this. */
+int unc_dart_extract(UncCtx *c)
+{
+    static Handle h;
+    static int tried;
+    OverlayEntry e;
+    if (!ovl_codecs_ready()) return UNC_ERR_MEM;
+    e = ovl_load(OVL_ID_DART, &h, &tried);
+    if (!e) return UNC_ERR_MEM;
+    return (int)e(&gOvlHost, OVL_DART_EXTRACT, c, NULL);
+}
+
 /* Gzip. */
 int unc_gzip_extract(UncCtx *c)
 {
