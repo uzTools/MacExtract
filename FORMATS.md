@@ -893,6 +893,29 @@ A chunk of any method may instead be marked **0xFFFF** and stored whole,
 which is what DART does when compressing it does not pay. `random_t`
 takes that branch for 18 of its 40 chunks and `Studio8_Program` for 10.
 
+### The type and creator it comes out with
+
+Creator `DART` always, and the type from the disk the archive holds.
+These are `DartIntf.h`'s own constants, and the seven pairs it names one
+for are exactly the seven this engine accepts — so there is no valid DART
+whose type would have to be invented:
+
+| srcType | size | type |
+|---|---|---|
+| 1 kMacDisk | 400 | `DMd1` |
+| 2 kLisaDisk | 400 | `DMd2` |
+| 1 kMacDisk | 800 | `DMd3` |
+| 3 kAppleIIDisk | 800 | `DMd4` |
+| 17 kMSDOSLowDDisk | 720 | `DMd5` |
+| 16 kMacHiDDisk | 1440 | `DMd6` |
+| 18 kMSDOSHiDDisk | 1440 | `DMd7` |
+
+Verified on the Macintosh rather than in the entry metadata: the Out
+volume of a Mac Plus run lists `f  DMd3/DART  0  838484  archive.dart`.
+The **Linux CLI reports the pair in `l` and writes it nowhere**, which is
+not a DART property — that host persists fork data and no Finder info,
+for every format.
+
 ### Identification, where the format has no signature at all
 
 Four bytes — a method, a disk type, a size in kilobytes — and then the
