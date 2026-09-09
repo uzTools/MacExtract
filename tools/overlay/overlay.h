@@ -93,6 +93,11 @@ typedef int32_t (*OverlayEntry)(const OverlayHost *host, int32_t which,
  * which is the difference between a decoder that fits a small machine and one
  * that does not. Measured by nm over the objects, not assumed. */
 #define OVL_ID_BINHEX        140
+#define OVL_ID_DART          142   /* DART: the decoder only. Its header
+                                   * reader is also its probe, so that half
+                                   * stays resident and is compiled into
+                                   * this image as well — the same
+                                   * arrangement SpaceSaver has.        */
 #define OVL_ID_BTOA          141   /* the shared machinery, which patches
                                     * itself into the host vector */   /* zip, gzip, Unix compress, tar — and
                                     * zlib, which nothing else calls */
@@ -116,6 +121,7 @@ typedef int32_t (*OverlayEntry)(const OverlayHost *host, int32_t which,
 #define OVL_GZIP_EXTRACT       46
 #define OVL_COMPRESSZ_EXTRACT  47
 #define OVL_TAR_EXTRACT        48
+#define OVL_DART_EXTRACT       50
 #define OVL_CODEC_EXPORTS      49
 
 /* One struct for every entry, because the entry signature is fixed. Fields

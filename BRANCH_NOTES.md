@@ -13,21 +13,58 @@ the ciphers kept; an LZH gets **701,688 B**, keeping only its own decoder.
 images, and none.
 
 
-## Merged with `main`, 2026-09-09 — and DART is resident
+## DART, overlaid — 2026-09-09
 
-`main` gained DART (M52). It arrives **resident**: there is no
-`tools/overlay/ovl_dart.c`, so it is not one of the decoders this branch
-loads and releases, and its **+2,188 B of code and +128 B of A5 are paid
-by every extraction**. Total build: 150,220 B of `CODE` and 44,244 B of
-A5, against 148,032 and 44,116 before the merge.
+`main` gained DART (M52) and it came in **resident**. It is now
+`OVL_ID_DART` in the bundle, built by `tools/overlay/ovl_dart.c`.
 
-For THIS branch that matters slightly differently from
-`selective-loading`: the eager overlay is released as soon as the archive
-proves it cannot want it, so a DART — which wants none of the overlaid
-decoders — would release the whole overlay and then pay for a resident
-decoder it does want. Whether `ovl_dart.c` belongs in the overlay or
-outside it is therefore a real question here rather than an obvious yes.
-Nobody has measured it.
+**Merging it in had already broken this branch's own configuration, and
+every check passed anyway.** A resident `unc_dart_extract` calls
+`unc_lzah_decode` — DART's "best" method is LZHUF — and that lives in the
+codecs image, so `UNC_AT_OVERLAY=1` would not LINK. `ci.sh` never built
+that configuration. It does now, as variant 4b: **a branch whose feature
+is a build configuration has to build it.**
+
+### The split
+
+DART has **no signature**, so its probe reads the whole block-length table
+and checks it against the file's size — and the decoder needs the same
+reader. `src/fmt_dart_probe.c` holds `dart_parse`, `dart_kind` and
+`dart_chunk_bytes`, and is **resident AND compiled into the image**, which
+is what `ovl_spacesaver.c` already does. ~400 B duplicated beats calling
+back into the host for a header reader, or loading a decoder to decide a
+file is not a DART.
+
+### What the release decision gains, which is this branch's own question
+
+`ovl_release_if_unwanted` had no case for DART, so it fell to `default` —
+keep the whole bundle, the answer that cannot be wrong. It now keeps
+`OVL_ID_DART` and releases the rest, with `crypt = 0`: DART carries no
+encryption of any kind, the format has no flag for one and no reference
+describes one.
+
+| | bytes |
+|---|---|
+| the fifteen images in the bundle | 148,770 |
+| a DART keeps: its own 2,632 + codecs 6,224 | **8,856** |
+| released for a DART archive | **139,914** |
+
+Codecs is kept unconditionally and has to be: LZHUF is there.
+
+| | before | after |
+|---|---|---|
+| default build, `CODE` | 150,220 B | **150,296 B** (+76) |
+| default build, A5 | 44,244 B | **44,264 B** (+20) |
+| overlay build, resident `CODE` | *would not link* | **53,004 B** |
+| overlay build, resident A5 | *would not link* | **18,804 B** |
+
+### Proven on the machine
+
+`tools/vmac/run.py --emu mv-4M --expect -D UNC_AT_OVERLAY` over
+`test1-best` (LZHUF, so it reaches the codecs image from inside another
+image) and `Studio8_Program.dart` (RLE): **2/2 byte-exact**, 838,484 B
+each. **The negative was run**: the shim pointed at a nonexistent id gives
+0 files, and there is no resident decoder to fall back on.
 
 
 ## Fifteen images: BinHex and btoa stop travelling with MIME

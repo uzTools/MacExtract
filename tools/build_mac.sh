@@ -103,14 +103,20 @@ ls -la build/mac/MacExtract.APPL build/mac/MacExtract.bin build/mac/MacExtract.d
 # 150,220 since main was merged on 2026-09-09: +2,188 B, all of it DART,
 # and all of it RESIDENT — there is no tools/overlay/ovl_dart.c, so the new
 # format is not one of the ones this branch defers. See BRANCH_NOTES.md.
-UNC_MAC_CODE_DEFAULT=150220
+# 150,220 -> 150,296 on 2026-09-09: +76 B for splitting DART's probe out.
+# DART's probe IS its header reader — the format has no signature — so
+# dart_parse, dart_kind and dart_chunk_bytes stop being static and stop
+# being inlined into the decoder. What it buys is on the overlay build,
+# where fmt_dart.c leaves the resident set entirely.
+UNC_MAC_CODE_DEFAULT=150296
 # The A5 ratchet from main, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*).
 # 44,096 -> 44,116 the same day and for the same reason: +20 B of A5 world
 # from the same five splits.
 # 44,244 since the same merge: +128 B, DART's share of the A5 world.
-UNC_MAC_A5_DEFAULT=44244
+# 44,244 -> 44,264: +20 B from the same split.
+UNC_MAC_A5_DEFAULT=44264
 # Both ceilings are for the DEFAULT build, which carries every decoder. The
 # overlay build is not measured against them and could not be: its point is
 # that six decoders are somewhere else. What it costs is in BRANCH_NOTES.md,
