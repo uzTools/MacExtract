@@ -31,6 +31,15 @@ Two numbers, and both come off the same place.
 | `CODE` | 147,548 B | 150,192 B | **+2,644 B** |
 | A5 world (data + bss) | 44,084 B | 44,160 B | **+76 B** |
 
+**Merged with `main` on 2026-09-09**, which has moved both baselines: the
+build on this branch now measures **152,420 B of `CODE` and 44,348 B of A5**,
+because `main` gained DART in the meantime (+2,168 B and +164 B of its own).
+The table above is unchanged and is still the number the decision rests on —
+it is what THIS FEATURE costs, measured against the baseline it was built on.
+Note that the merged total is not the sum of the two increments: 60 B of code
+and 24 B of A5 more than arithmetic predicts, which is why the ceilings in
+`tools/build_mac.sh` are set from a build.
+
 **Both come off every extraction's budget on a 1 MB Mac Plus, one for one**
 (FORMATS.md, *What the application costs the engine*), so the feature costs
 **2,720 B of budget on every run, including the runs of a user who never

@@ -51,7 +51,7 @@ one, because parts are recognised by what is inside them:
 ## Download
 
 **[Latest release](https://github.com/jarreboum/MacExtract/releases/latest)** —
-currently **v0.29.0**. Or take it straight from the tree:
+currently **v0.32.0**. Or take it straight from the tree:
 
 | | |
 |---|---|
@@ -80,6 +80,12 @@ SpaceSaver files are the odd ones: they look like ordinary documents, because
 SpaceSaver compressed them in place and only the Mac that made one could read
 it. `macextract` carries the table those files need, so a lone floppy is
 enough.
+
+**Compressed DART disk images** get their own answer, because a DART is not
+an archive: it holds a floppy rather than files. MacExtract expands one into
+an *uncompressed* DART, which is the shape a mounting program — MacMount, say
+— can read directly. Hand it a DART that is already uncompressed and it says
+so instead of pretending something went wrong.
 
 **Password-protected archives** are opened too — StuffIt, StuffIt 5, Compact
 Pro, PackIt, zip (the old cipher and WinZip's AES) and ARC. The Mac

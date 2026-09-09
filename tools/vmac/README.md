@@ -22,7 +22,7 @@ paths, not just a different splash screen. Run the System 7 tier at 4 MB.
 512Ke, the smallest machine this application runs on: `sys30.py --emu
 mv-512Ke` is **66/69** (2026-08-31; 65/69 before the reserve went flat,
 64/69 before the LZW bound), `run.py --emu mv-512Ke --system System6.hfv`
-is 58/69
+is 63/69 (re-measured 2026-09-04; 58/69 before the stack was cut)
 (FORMATS.md, *512 KB machines*).
 
 **A true Macintosh 512K — `mv-512K`, a 64 KB ROM — boots, and this
@@ -156,8 +156,14 @@ both runs drew on one display and screenshotted each other's emulator. Three
 fixtures "failed" with another run's numbers before anyone noticed the numbers
 belonged to a different archive. Xvfb now picks the display itself
 (`-displayfd`) and reports it back. Do NOT run
-anything else alongside `os9.py`, which uses `build/rel/macextract` as its
-oracle and will lose it to `./ci.sh`'s `make clean`.
+anything else alongside these, and **never alongside `./ci.sh`**: every
+harness here grades itself through `tools/vmac_check.py`, which shells out
+to `build/rel/macextract` as its oracle, and CI's `make clean` takes that
+binary away mid-sweep. This warning named `os9.py` alone until 2026-09-05,
+when a `run.py` floor sweep was started beside CI and came back **38/69** —
+31 fixtures the Macintosh had extracted correctly and nothing could
+compare, which reads exactly like a regression until the reason column is
+read.
 
 ## What the pieces do
 
@@ -360,9 +366,12 @@ three** — a 4 MB machine never takes the path, and both all-out builds cannot
 be quoted for time. A claim that lives at the intersection of two axes needs a
 build at that intersection.
 
-**This box has one core.** At 1x the emulator paces itself against real time,
-so anything else CPU-heavy — `./ci.sh`, a corpus sweep, a second
-`interactive.py` — inflates the number you are measuring. Run timing alone.
+**This box has two cores** (`nproc`; the host CPU has four and the container
+is limited to two — the figure here read "one core" until it was checked on
+2026-09-05). At 1x the emulator paces itself against real time, so anything
+else CPU-heavy — `./ci.sh`, a corpus sweep, a second `interactive.py`, or
+another SESSION's emulator on the same machine — inflates the number you are
+measuring. Run timing alone.
 
 **And it is not only the number.** `interactive.py` waits fixed seconds
 between clicks, so a Mac running below 1x desynchronises the whole
@@ -1323,6 +1332,24 @@ because the framebuffer grid is invisible on a 32-bit screen. That the output
 really landed on HFS+ is checked by mounting the volume's HFS *wrapper*: if
 the files were on plain HFS they would be visible there, and they are not.
 
+**`--autotest` is the third combination, and it exists to separate two
+things `--launch` and `--hfsplus` change together.** `--launch` runs the
+INTERACTIVE build onto a plain-HFS transfer volume; `--hfsplus` runs the
+AUTOTEST build onto the HFS+ boot volume. When one passes and the other bombs,
+the pair convicts neither the build nor the volume. `--autotest` runs the
+autotest build with a plain-HFS output volume — a third APM disk named `Out`,
+so no Finder rename is needed — which leaves the BUILD as the only difference
+from `--launch`. It is also the only route here that reads both channels at
+once: the report off `In`, and then every fork off `Out` byte for byte, which
+`--hfsplus` cannot do because no host tool opens HFS+. `-D UNC_AT_SAMEVOL`
+points the sink at the archive's own volume, the way the interactive
+application writes beside the archive; `Out` still has to be mounted, because
+`FindVolWait` looks it up before the switch redirects the sink, and the run
+checks it came back empty.
+
+    os9.py fixtures/derived-DandStoQIF2.sea --autotest -o <dir>
+    os9.py fixtures/derived-DandStoQIF2.sea --autotest -D UNC_AT_SAMEVOL -o <dir>
+
 **The reference is `macextract x`, unwrap loop ON.** This harness launches
 the INTERACTIVE build, which takes envelopes off in `ExtractOne`; `-nr` is
 right for the AUTOTEST build, which `--hfsplus` and the Mini vMac tiers use.
@@ -1564,7 +1591,12 @@ their output name from the archive's filename.
 Two hfsutils traps it hit, both worth knowing before writing anything similar:
 `hls` **hides names beginning with a dot** unless given `-a`, and every path
 argument must be encoded as **MacRoman**, not UTF-8, or any 8-bit name is a
-file that does not exist.
+file that does not exist. `os9.py` had learned the second one for `hcopy`
+and not for the `hls` its folder walk runs: a FILE with an 8-bit name at
+the root had been checked since 2026-08-28, and the first FOLDER with one
+— `Terrainman 2.0 ƒ`, on 2026-09-04 — listed as empty, so the harness
+failed a run the application had completed and the volume held whole.
+Fixed the same day (`_walk_volume`).
 
 ## On-demand probes — the `-D` switches and the one-off harnesses
 
@@ -1761,6 +1793,24 @@ Photographed 2026-08-26 with a RAR archive out of libarchive's test suite:
 button. Any of the named-but-declined formats does it (FORMATS.md, *Archives
 named but not extracted*); the sentence is built from `unc_format_name`, so
 the longest of them draws 46 characters and still fits two lines.
+
+**The DART refusal is the other alert of this shape**, and it is a
+different branch — the file is not detect-only, it is a format this
+engine extracts, handed a specimen with nothing in it to do:
+
+    python3 -c "import struct; CH=20960; b=20; \
+      open('/tmp/Already.dart','wb').write(
+        bytes([2,1])+struct.pack('>H',400)
+        +b''.join(struct.pack('>H',0xFFFF if i<b else 0) for i in range(40))
+        +bytes(b*CH))"
+    interactive.py --emu mv-4M -o /tmp/dartshot /tmp/Already.dart
+
+Photographed 2026-09-09: **"This DART disk image is already
+uncompressed."**, two lines, OK button clear of the text. 400K rather
+than 800K because the format fixes the size — an uncompressed 800K DART
+is 838,484 B and will not fit on the boot floppy beside the application.
+An archive that DOES have work in it goes through `run.py --expect`
+instead (TESTING.md, *DART*).
 
 **`interactive.py` exits 1 on this run and that is not a failure**: its
 phase-2 check is that the CLI and the Mac agree on extracted output, and

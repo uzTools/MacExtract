@@ -23,6 +23,24 @@
    it counts input bytes, not time, so a decoder that spends a minute on
    8 KB passes. The Mac OS 9 tier is where that would show
    (`os9.py --cancel`).
+5. **The Mac shell's sink, allocator and I/O through a mock Toolbox**
+   (`tests/run_mac_sink.sh` + `tests/mac_sink_test.c`): the shell's own
+   code from `mac/macextract_mac.c`, compiled on the host under
+   ASan+UBSan and again big-endian under qemu-m68k, driven by the real
+   engine over a spread of fixtures and compared byte-for-byte, both
+   forks, against the oracle manifests. **What it cannot see:**
+   `RunExtract`, `ExtractOne`, the dialogs and the Toolbox glue, which
+   the mock never calls — it builds its own `UncOptions` and hands the
+   engine the sink directly. And a read of state nobody set: ASan reports
+   writes past a block, not a load from uninitialised stack, so the
+   `UncOptions` field the shell left unassigned for eight days
+   (DECISIONS.md 2026-09-04, *the field nobody assigned*) was invisible
+   to this layer by construction, and would have been even had the mock
+   run `RunExtract`. Nor does valgrind see it: over the pre-fix unit
+   tests, whose DiskDoubler and SuperDisk! walks read the unset field 20
+   times (gdb), it reported nothing, because stack bytes an earlier call
+   had written count as initialised. That class needs MemorySanitizer
+   over the real call chain, and no host-side build here has it.
 0. **Documentation invariants** (`tools/check_docs.py`): DECISIONS.md's
    Contents index must list every `## ` entry in file order, no
    document may cite another by line number, the version agrees in the
@@ -1212,6 +1230,14 @@ is meant to be changed deliberately.
   ("Memory is too broken up"). This is the likeliest reason the
   System 6.0.8 / 512 KB tier comes out 59/69 here against the machine's
   58/69 — which is why that tier is a diagnostic and is not asserted.
+  **That comparison is stale as of 2026-09-04**: the machine now does
+  **63/69** (FORMATS.md, *512 KB machines*), so the gap is four fixtures
+  and not one. *Hypothesis, not measured:* this tier's budget constant
+  predates the 20,464 B the stack cut returned to the engine, since the
+  System 3.0 / 512 KB constant beside it was re-taken and still
+  reproduces that machine exactly. **What would settle it:** one
+  `-D UNC_AT_BUDGET` boot of the 512Ke under System 6.0.8
+  (`tools/vmac/README.md`, *Why an entry is refused*).
 - **The budget's own currency.** Each figure is `FreeMem() - 20,480`
   measured on the machine (FORMATS.md, *Budget*), so it moves when the
   application's size does. This file cannot notice that it has gone
@@ -1703,6 +1729,117 @@ its canonical builder accepts an incomplete code where LHa will not. So the
 suite feeds it only complete ones, and that difference is written here
 rather than discovered later: a corrupt `-lh3-` table is a per-entry error
 in LHa and garbage output here.
+
+## When a suite skips, and when it must not (2026-09-09)
+
+Six suites build their oracle out of `reference/` — munpack and deark for
+`run_mime.py`, btoa for `run_btoa.py`, lhasa and LHa for `run_lzh.py`.
+Each has to answer "is the oracle here?", and the answer has three
+values, not two:
+
+| state | verdict | why |
+|---|---|---|
+| the binary is built | run | — |
+| `reference/X` is **absent** | **skip, exit 0** | a fresh clone has no `reference/`, and `ci.sh` must still run end to end |
+| `reference/X` is **present** and will not build | **exit 1** | somebody fetched it; the differential coverage it pays for has gone, and nothing in that suite is graded against a second implementation any more |
+
+The third row used to be the second row, and that is how a real breakage
+stayed green: `run_mime.py` reported a failed munpack build as *"no
+reference/mpack"* — about a directory that was right there — and returned
+0 (DECISIONS.md 2026-09-09, *the oracle that built two times in three*).
+The message now prints what the build actually said and ends "fix the
+build, or delete `reference/X` to make this a skip", so the escape hatch
+is stated.
+
+**Both failure paths were made to fire before this was believed**:
+`reference/btoa/atob.c` moved aside, and `build_mpack.sh` reverted to the
+`cp -r` that caused the original race. Each printed the compiler's own
+words and exited 1.
+
+**What this does NOT cover.** A suite can still pass with the oracle
+built and doing nothing useful — an assertion that never runs, a sweep
+over zero files. Every suite prints its case count for that reason, and a
+count that drops is the only signal there is.
+
+## DART (`tools/run_dart.py`, in `ci.sh`)
+
+**The oracle is the encoder's input, not a second reader.** There is no
+second reader: `unar` has no DART parser and neither does `macunpack`.
+What CiderPress2 publishes instead is `TestData/dart/` — two 800K disks
+that DART 1.5.3 compressed under MAME, each in BOTH of DART's methods,
+**with the source images beside them**. `tools/fetch_references.sh`
+fetches the lot into `reference/ciderpress2/`.
+
+```sh
+sh tools/fetch_references.sh            # once
+python3 tools/run_dart.py               # ~15 s, 37 cases
+```
+
+Four assertions come out of the specimens, and each fails on a different
+kind of defect:
+
+1. **the data halves equal the source image**, byte for byte, for "fast"
+   and for "best";
+2. **the tag halves equal the source's tags** — `random_t-source.img` is
+   a Disk Copy 4.2 file and carries 9,600 of them, all random — or are
+   zero, which is what an ordinary HFS disk has;
+3. **the two methods agree with each other** over one disk, which is the
+   only assertion here that compares two DECODERS;
+4. **DART's own checksums**: `test1-best` keeps its resource fork in the
+   ZIP, so 'CKSM' 1 (tags) and 'CKSM' 2 (data), written by the
+   application in 1993, are checked against a Disk Copy 4.2 checksum of
+   what came out.
+
+`random_t` is the specimen that matters for the WALK rather than the
+codecs: its two 256KB files are incompressible junk and its tags are
+random, so 18 of its 40 chunks take the per-chunk 0xFFFF stored fallback
+— a branch nothing else reaches.
+
+**Three of the four DART files live inside the 1440K images beside them**,
+so reaching them needs `hfsutils` (`hmount`/`hcopy`). Without it the
+suite says so and grades `test1-best`, which sits in the ZIP as a plain
+member, together with everything synthetic below. It never fails for
+want of the tools.
+
+**Also here, because there is nowhere else:**
+
+- **the refusal**, which is a round trip: an uncompressed DART is exactly
+  what this engine WRITES, so the suite feeds its own output back and
+  requires `already uncompressed` — and requires the file to still be
+  RECOGNIZED as a DART, which is what makes the message possible;
+- **seven near-miss headers**, each one byte from a real archive's. The
+  format has no signature at all, so every one of them is load-bearing;
+- **a cut archive**, at a half, a fifth and a tenth;
+- **a synthetic 400K disk**, which is the only shape that exercises
+  "slots past the end of the disk are zero" — an 800K disk fills all
+  forty of its slots — plus a stored chunk among compressed ones, a zero
+  RLE count, and a chunk claiming to be longer than what it expands to.
+
+### What it cannot see
+
+- **DART is not in the fixture corpus**, and cannot be: a manifest comes
+  from `unar`, which has no idea what a DART is. So the 932-fixture diff
+  suite, `run_robustness.py` and `run_truncation.py` never meet one, and
+  the truncation and near-miss cases above are this suite's own. What
+  those three do that this does not is sweep BIT FLIPS; DART's crash
+  safety rests on `tools/fuzz.py` reaching it and on ASan over these 37
+  cases.
+- **No 1440K DART has ever been read here.** Every specimen is an 800K
+  Macintosh disk, so the 72-slot header — the other half of `dart_parse`
+  — is exercised only by the near-miss cases, which reject rather than
+  decode. The MS-DOS and Apple II disk types have never been seen at all.
+- **The Macintosh runs are not in any suite.** Both methods were replayed
+  through the Mac shell on 2026-09-09 and both are byte-exact — the
+  harness's floppies are 1440 KB, so an 838 KB output fits — but DART has
+  no committed manifest, so `--expect` is needed and neither archive is
+  in `sample.txt`:
+
+      tools/vmac/run.py --emu mv-4M --expect <dart>      # 2/2
+      tools/vmac/run.py --emu mv-1M --mem 1M --expect <dart>   # 2/2
+
+  `sys30.py` cannot grade one at all: it has no `--expect`, so the System
+  3.0 tier has never seen a DART. Nothing about that is format-specific —
+  it is the same binary — but it has not been run.
 
 ## Alysis SuperDisk! (`tools/run_superdisk.py`, in `ci.sh`)
 
@@ -2336,7 +2473,11 @@ part boundary (27 failures). Both were reverted.
    this harness launches the INTERACTIVE build, which takes envelopes
    off. (It used `-nr` until 2026-08-27, which is right only for the
    autotest build; `tools/vmac/README.md` has what that cost.)
-   **20/20 on the committed sample**, 2026-08-27. Since 2026-08-28 the
+   **21/21 on the committed sample**, 2026-09-04. It read 18/20 that
+   morning, the two failures bombing the application, and the sample
+   gained a fixture the same day (BLOCKERS.md, *Withdrawn claims*;
+   DECISIONS.md 2026-09-04, *the field nobody assigned*).
+   Since 2026-08-28 the
    run also goes to the END of the interaction — the result alert is
    dismissed, SFGetFile is checked to repaint, and Cmd-. quits the
    application — and `--cancel` interrupts the extraction instead of

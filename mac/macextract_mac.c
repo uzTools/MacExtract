@@ -90,8 +90,10 @@
  * 5,600 B. Both paths still ran correctly at 10 KB.
  *
  * 12 KB is 2.1x that, and 24 -> 4 KB of bump is **20,464 B** returned to the
- * engine. Verified byte-exact at this size on every tier: 1 MB, 512 KB,
- * System 7 and Mac OS 9. What the measurement cannot see is a real Macintosh
+ * engine. Verified byte-exact at this size on every tier: 1 MB, 512 KB and
+ * System 7 on 2026-08-31, and Mac OS 9.2 on 2026-09-04 — this sentence had
+ * named that tier for four days before it ran. What the measurement cannot
+ * see is a real Macintosh
  * with INITs loaded and a fragmented System heap, where the Toolbox may want
  * more than an emulator with a stripped System Folder does — MANUAL_TESTS.md
  * carries that, as it does for the memory reserve. */
@@ -3713,13 +3715,23 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
     sk.end_entry = sink_end;
     sk.comment = sink_comment;
 
+    /* Zero the WHOLE struct first, and only then say what this host has
+     * to say. Until 2026-09-04 it was filled field by field, and two
+     * fields that joined UncOptions on 2026-08-27 — `long_name` and
+     * `long_name_cap` — were never among them, so the engine read this
+     * frame's stack garbage as a buffer it was welcome to write into.
+     * The folder-path walker (unc_path_push) writes EVERY component
+     * through that pointer whenever it is non-NULL, and exactly three
+     * formats walk a tree with it — DiskDoubler, SuperDisk! and Now
+     * Compress — which is why those bombed on Mac OS 9 and nothing else
+     * did, and why every instrument that touched the stack made it
+     * vanish (DECISIONS.md 2026-09-04, *the field nobody assigned*). */
+    { long z; for (z = 0; z < (long)sizeof opt; z++) ((char *)&opt)[z] = 0; }
     opt.list_only = 0;
     opt.test_only = 0;
     /* SpaceSaver's preset dictionary is Aladdin's and this application
      * does not carry one, so entries whose stream reaches into it fail
-     * cleanly rather than decoding to something wrong (OPEN_ITEMS.md).
-     * Set explicitly: this struct is filled field by field, so a field
-     * nobody assigns is stack garbage. */
+     * cleanly rather than decoding to something wrong (OPEN_ITEMS.md). */
     opt.preset = NULL;
     opt.preset_len = 0;
     /* Encrypted entries. The password is asked for when one turns up,
@@ -5620,6 +5632,19 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
         PStrCat(outcome, "MacExtract cannot open ");
         PStrCat(outcome, unc_format_name(topFmt));
         PStrCat(outcome, " files.");
+    }
+    else if (ret == UNC_ERR_NOTCOMPRESSED && entries == 0 &&
+             topFmt != UNC_FORMAT_UNKNOWN) {
+        /* The opposite of the branch above, and the reason it needed a
+         * code of its own: this file is not damaged, is not a format
+         * somebody else's program opens, and is not missing anything.
+         * It is ALREADY what expanding it would produce — an
+         * uncompressed DART, which is the one a mounter reads. Saying
+         * "could not be extracted" about it sends the user looking for
+         * a fault that is not there. */
+        PStrCat(outcome, "This ");
+        PStrCat(outcome, unc_format_name(topFmt));
+        PStrCat(outcome, " disk image is already uncompressed.");
     }
     else if (ret != UNC_OK && entries > 0)
         /* The archive stopped being readable part way down, and what

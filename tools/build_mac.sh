@@ -84,7 +84,11 @@ ls -la build/mac/MacExtract.APPL build/mac/MacExtract.bin build/mac/MacExtract.d
 # Plus that is 2,644 B off EVERY extraction's budget, including the runs
 # of a user who never unticks anything. BRANCH_NOTES.md on this branch
 # has what it buys and what the alternatives cost.
-UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-150192}
+# main raised the same ceiling to 149,756 on 2026-09-09 for DART (+2,168 B).
+# Merged 2026-09-09, and the result is NOT the sum: the two increments over
+# the 147,588 baseline add to 152,360 and the merged build measures 152,420,
+# 60 B more. Ratchets are set from a build, never from arithmetic.
+UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-152420}
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -96,7 +100,10 @@ UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-150192}
 # up. The store itself is NOT here — it is a NewPtr taken before the
 # engine's budget is worked out and given back before the extracting
 # walk, so it costs the extraction nothing (BRANCH_NOTES.md).
-UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-44160}
+# main raised the same ceiling to 44,260 on 2026-09-09 for DART (+164 B).
+# As above, measured rather than added: the two increments make 44,324 and
+# the merged build is 44,348, 24 B more.
+UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-44348}
 SIZE="$TOOLCHAIN/bin/m68k-apple-macos-size"
 GDB=build/mac/MacExtract.code.bin.gdb
 if [ -x "$SIZE" ] && [ -f "$GDB" ]; then

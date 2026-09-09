@@ -1,4 +1,4 @@
-MacExtract v0.29.0 — bootstrap distribution
+MacExtract v0.32.0 — bootstrap distribution
 ==========================================
 
 A bare Classic Mac has no way to open a .sit/.cpt/.hqx until it HAS an
@@ -44,6 +44,12 @@ and modern archives -- RAR, 7-Zip, xz, bzip2, Zstandard, lzip, lrzip,
 Cabinet, WIM, Zoo, ARJ, cpio, ar and Apple Archive (.aar) --
 are named rather than opened: you are told what the file is instead of
 being left with something that looks like a damaged download.
+
+Compressed DART disk images get a different answer, because a DART is not
+an archive: it holds a whole floppy rather than files. MacExtract expands
+one into an UNCOMPRESSED DART, which is the form a mounting program can
+read straight off. Hand it one that is already uncompressed and it tells
+you so rather than pretending something went wrong.
 
 Password-protected archives open too -- StuffIt, StuffIt 5, Compact
 Pro, PackIt, zip (the old cipher and WinZip's AES) and ARC. You are

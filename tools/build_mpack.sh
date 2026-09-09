@@ -40,9 +40,38 @@ fi
 
 rm -rf "$OUT"
 mkdir -p build
-cp -r "$SRC" "$OUT"
-(cd "$OUT" && CC="gcc -std=gnu89 -w" ./configure --quiet >/dev/null 2>&1 \
-           && make >/dev/null 2>&1)
+# -p, and it is load-bearing: this tree ships a generated Makefile.in that is
+# ten minutes NEWER than the Makefile.am it came from (2003-07-21 23:49 against
+# 23:39), which is what stops automake's maintainer rule
+#
+#     $(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.in ...
+#             cd $(top_srcdir) && $(AUTOMAKE) --foreign ...
+#
+# from ever firing. A plain `cp -r` discards those dates and stamps every file
+# with the current time, so whether Makefile.am lands newer than Makefile.in
+# comes down to which side of a clock tick each one is written on. When it does,
+# make runs automake 1.17 over a 1994 tree and dies with "required file
+# './depcomp' not found", Error 63 — silently, because both the configure and
+# the make below are redirected. Measured 2026-09-09: 3 failures in 8 runs
+# without -p, 0 in 40 with it (DECISIONS.md 2026-09-09, the oracle that built
+# two times in three).
+cp -pR "$SRC" "$OUT"
+# Kept, and shown on failure. Both halves used to go to /dev/null, so the
+# timestamp defect above produced a silent exit 2 and tools/run_mime.py
+# reported it as a missing reference tree — which it then SKIPPED over,
+# green (DECISIONS.md 2026-09-09).
+LOG=$OUT.log
+if ! (cd "$OUT" && CC="gcc -std=gnu89 -w" ./configure --quiet && make) \
+        >"$LOG" 2>&1; then
+    echo "build_mpack: the build failed. Last lines of $LOG:" >&2
+    tail -20 "$LOG" >&2
+    exit 1
+fi
 
-[ -x "$BIN" ] || { echo "build_mpack: build produced no binary" >&2; exit 1; }
+[ -x "$BIN" ] || {
+    echo "build_mpack: the build reported success and produced no binary." >&2
+    echo "build_mpack: last lines of $LOG:" >&2
+    tail -20 "$LOG" >&2
+    exit 1
+}
 echo "$BIN"
