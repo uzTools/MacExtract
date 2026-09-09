@@ -1794,6 +1794,24 @@ button. Any of the named-but-declined formats does it (FORMATS.md, *Archives
 named but not extracted*); the sentence is built from `unc_format_name`, so
 the longest of them draws 46 characters and still fits two lines.
 
+**The DART refusal is the other alert of this shape**, and it is a
+different branch — the file is not detect-only, it is a format this
+engine extracts, handed a specimen with nothing in it to do:
+
+    python3 -c "import struct; CH=20960; b=20; \
+      open('/tmp/Already.dart','wb').write(
+        bytes([2,1])+struct.pack('>H',400)
+        +b''.join(struct.pack('>H',0xFFFF if i<b else 0) for i in range(40))
+        +bytes(b*CH))"
+    interactive.py --emu mv-4M -o /tmp/dartshot /tmp/Already.dart
+
+Photographed 2026-09-09: **"This DART disk image is already
+uncompressed."**, two lines, OK button clear of the text. 400K rather
+than 800K because the format fixes the size — an uncompressed 800K DART
+is 838,484 B and will not fit on the boot floppy beside the application.
+An archive that DOES have work in it goes through `run.py --expect`
+instead (TESTING.md, *DART*).
+
 **`interactive.py` exits 1 on this run and that is not a failure**: its
 phase-2 check is that the CLI and the Mac agree on extracted output, and
 there is no output to agree about. The screenshot is the result.

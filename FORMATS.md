@@ -950,6 +950,28 @@ these five: every real 800K disk has at least one chunk that barely
 compresses. A disk that is mostly empty has no such chunk, and it is the
 small machines that would meet one.
 
+### On a Macintosh
+
+Replayed through the Mac shell on an emulated Mac Plus (System 6.0.8,
+68000), 2026-09-09, graded against this engine's own Linux output:
+
+| | 4 MB | 1 MB floor |
+|---|---|---|
+| `test1-best` (LZH) | **PASS**, 838,484 B out, peak heap 40,321 B | **PASS**, the same |
+| `Studio8_Program.dart` (RLE) | **PASS**, 838,484 B out, peak heap 25,072 B | **PASS**, the same |
+
+The peaks are the Linux figures plus the Mac allocator's per-block
+overhead (40,301 and 25,056). Neither archive is in the 69-fixture tier
+sample and neither has an oracle manifest, so these are `--expect` runs
+and are not part of any suite; TESTING.md, *DART*, has the commands and
+says what has NOT been run.
+
+**The refusal is photographed**, not inferred: an uncompressed 400K DART
+handed to the application on System 6.0.8 draws *"This DART disk image is
+already uncompressed."* — two lines, the alert's OK button clear of the
+text (`tools/vmac/README.md`, *Photographing the detect-only alert*, for
+the method).
+
 ### What is NOT written
 
 The output has **no resource fork**. A DART written by the application

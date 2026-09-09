@@ -1797,9 +1797,18 @@ want of the tools.
   Macintosh disk, so the 72-slot header — the other half of `dart_parse`
   — is exercised only by the near-miss cases, which reject rather than
   decode. The MS-DOS and Apple II disk types have never been seen at all.
-- **Nothing checks the output on a Macintosh.** `tools/vmac/` has never
-  run a DART: the emulated Mac Plus samples are corpus fixtures, and an
-  838 KB output does not fit beside its input on an 800K floppy.
+- **The Macintosh runs are not in any suite.** Both methods were replayed
+  through the Mac shell on 2026-09-09 and both are byte-exact — the
+  harness's floppies are 1440 KB, so an 838 KB output fits — but DART has
+  no committed manifest, so `--expect` is needed and neither archive is
+  in `sample.txt`:
+
+      tools/vmac/run.py --emu mv-4M --expect <dart>      # 2/2
+      tools/vmac/run.py --emu mv-1M --mem 1M --expect <dart>   # 2/2
+
+  `sys30.py` cannot grade one at all: it has no `--expect`, so the System
+  3.0 tier has never seen a DART. Nothing about that is format-specific —
+  it is the same binary — but it has not been run.
 
 ## Alysis SuperDisk! (`tools/run_superdisk.py`, in `ci.sh`)
 

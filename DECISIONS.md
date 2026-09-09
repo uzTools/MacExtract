@@ -11306,5 +11306,14 @@ MacMount parses the data fork alone — and no reference says what an
 uncompressed DART's resource fork should look like, so writing a partial
 one would be invention. OPEN_ITEMS.md, part 2, has what would close it.
 
+**And it was run on the target, not only reasoned about.** Both methods
+replay through the Mac shell on an emulated Mac Plus byte-exact, at 4 MB
+and at the 1 MB floor, with peak heap matching the Linux figures plus the
+allocator's per-block overhead; the refusal was photographed on System
+6.0.8 rather than inferred from the string. The harness's floppies are
+1440 KB, which is what makes an 838 KB output possible at all — the
+earlier assumption that a DART could not be replayed there was about an
+800K floppy and was wrong.
+
 Numbers and per-specimen results: FORMATS.md, *DART*. How the suite
 runs: TESTING.md, *DART*.
