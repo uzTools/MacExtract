@@ -16,6 +16,27 @@ back into the application — has worked since 2026-08-30; what was missing was
 the belief that a decoder could go in one, and that came from a wrong comment
 (*What the prize is NOT*, below).
 
+
+## Merged with `main`, 2026-09-09 — and DART is resident
+
+`main` gained DART (M52), a format whose output is another disk image. It
+arrives here **resident**: there is no `tools/overlay/ovl_dart.c`, so
+`src/fmt_dart.c` is not one of the decoders this branch defers, and its
+**+2,188 B of code and +128 B of A5 are paid by every extraction** —
+exactly the cost this branch exists to avoid. Total build: 150,220 B of
+`CODE` and 44,244 B of A5, against 148,032 and 44,116 before the merge.
+
+That is a decision left open rather than taken. Adding `ovl_dart.c`
+alongside `ovl_exo.c` looks mechanical, and DART is a good candidate — one
+self-contained file, no shared codec except `unc_lzah.c`, which
+`ovl_lzh.c` already defers. **What has NOT been checked** is whether the
+sniffer can reach a DART without the overlay resident: DART has no
+signature, and `unc_dart_probe` reads the whole block-length table and the
+file's size, which is more work in the probe than any other format here.
+`ovl_probe.c` is where that question is answered, and nobody has answered
+it.
+
+
 ## The mechanism, proven 2026-08-30
 
 `tools/overlay/` builds a flat, position-independent image, carried as an

@@ -189,6 +189,12 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-01 (the reader was in the sentence) — feeding SuperDisk!'s own extractor a stream we wrote, and one hypothesis that did not survive it
 - 2026-09-01 (the machine that is too small) — a 128K Macintosh, and a status row measured on the other machine
 - 2026-09-01 (no hotspot, twenty-three decoders) — where the application's code is, and two instruments that said otherwise
+- 2026-09-03 (the binary nothing builds, twice more) — three UI failures that were one unfinished fix, and an explanation that fit six cases out of nine
+- 2026-09-03 (the struct that grew after it was measured) — 296 was the offset of the last field
+- 2026-09-03 (a folder is a name too) — numbering folders like files, and the table that made it affordable
+- 2026-09-04 (the field nobody assigned) — a struct filled field by field, and the crash that was shaped like three formats
+- 2026-09-09 (the disk image that is expanded and not opened) — DART, and an error code for a file with nothing wrong with it
+- 2026-09-09 (the oracle that built two times in three) — a timestamp race, and a suite that reported it as a missing reference
 
 ---
 
@@ -7919,9 +7925,12 @@ one in `UncEntryInfo` itself. `name` is `UNC_NAME_MAX` (255) bytes; a
 while `unzip` showed all 457. The file written was a different file from
 the one in the archive, and nothing anywhere said so.
 
-**Why not just carry the name.** `UncEntryInfo` is 296 bytes on the
+**Why not just carry the name.** `UncEntryInfo` is 298 bytes on the
 68000 target (measured; the "280 bytes" that stood in `fmt_lzh.c` was
-never right) and it travels on a 4 KB call stack. A name field big
+never right, and the "296" this entry stated until 2026-09-03 stopped
+being right a few hours after it was written — 2026-09-03, *the struct
+that grew after it was measured*) and it travels on a 4 KB call stack.
+A name field big
 enough for zip's own maximum would be 65,535 bytes. The cap is the
 right decision; being silent about it was not.
 
@@ -8519,8 +8528,8 @@ where Cmd-. means Cancel, and Cmd-Q means nothing at all. The application was
 still running, with its result alert up, when the emulator was killed.
 
 **Nothing about the extraction was wrong**, because this tier reads its
-verdict off the volume rather than off the screen; 20/20 stood and still
-stands. What was wrong was every claim the run made about where it had got to.
+verdict off the volume rather than off the screen; the 20/20 of the day
+stood. What was wrong was every claim the run made about where it had got to.
 **A harness that stops early still reports every step it did take**, each with
 a plausible number beside a plausible name — which is why the labels were
 believed for as long as the tier existed. The fix is not more waits, it is
@@ -10890,3 +10899,500 @@ the answer is no — a warning above a table does not survive a pipe, a
 redirect, or a reader in a hurry. This is not a fact about linker maps; every
 harness here that prints results and then grades them is exposed to it.
 
+
+---
+
+## 2026-09-03 (the binary nothing builds, twice more) — three UI failures that were one unfinished fix, and an explanation that fit six cases out of nine
+
+`segcheck.py`'s three interactive cases — `zip-named`, `split-named`,
+`wrapped` — were recorded as failing on `main` across eight runs, with the
+application named as the likely culprit. All three pass. `phase_wrapped` and
+`phase_named` graded their results against `build/dev/macextract`, which
+nothing in this repository builds and which `make clean` (`rm -rf build`)
+removes on every `./ci.sh`. `R.sh` reaches it with no existence guard, so the
+phase raised `FileNotFoundError` after the emulator run and before any
+comparison. Given `phase_chain`'s guard and `CD.CLI`, the three cases pass:
+~155 s, ~134 s, and MATCH with nothing left on the volume.
+
+**This exact defect was found and fixed on 2026-08-27, in one of the three
+places it existed.** That commit closed with "One CLI per file now." The file
+had two more call sites. The claim was about every line of a file and was
+checked against none of them — one `grep` settles such a claim, and the cost
+of not running it was the next three failures plus a day spent attributing
+them to the application.
+
+### The transferable part: an explanation that fits the cases you looked at
+
+The offered account was that the passes are the schemes found by HEADER and
+the failures are the ones placed by NAME. It is a real distinction and it
+explained six of the nine cases. It was wrong about the other three, and each
+was cheap to check:
+
+- **`wrapped` is not placed by name.** It writes StuffIt segment headers and
+  stages them as `Apart.sit.1.hqx`, `zzz-download.bin`, `Other.9.hqx` — names
+  that share no stem and that the Mac's family scan cannot match. Its own
+  docstring says "under names that say nothing." The hypothesis contradicted
+  the code it was about, in the function it was about.
+- **`chain` is interactive and passes**, so "interactive vs `run.py`" was
+  already refuted by the case list the hypothesis was written from.
+- **FORMATS.md said all three joined byte-exact on the Mac.** A status file
+  asserting the opposite of another status file is this repository's cheapest
+  smell, and it was live for the whole investigation.
+
+**When a hypothesis partitions a set, check the members it puts on each side,
+not the ones that suggested it.** The partition that was actually true —
+which phase had its reference CLI repaired — is visible in one `git log -S`
+over the path.
+
+### And a correction to what would have closed it
+
+The item said one Linux command would settle which side was wrong: push the
+parts past `unc_segment_describe` with the harness's names. It would not have.
+**The name-based sibling search is host code, written twice** — `cli/main.c`
+(the zip family and `.NNN` run) and `mac/macextract_mac.c` (`ZipFamPartOf`,
+`SplitPartOf`, `SegScanFamily`). The engine only sequences parts the host has
+already found. A Linux run exercises the CLI's copy and is blind to a
+Mac-side naming fault by construction; the run that settles it is the
+emulator. Both copies are in fact correct here — the sets join on Linux
+(`Aset.z01` → `payload.bin`, 278,294 B; `Ablob.001` → `Downerƒ`;
+`Apart.sit.1.hqx` → `Downerƒ`) and on the Mac — but that is a result, not
+something the proposed command could have shown.
+
+## 2026-09-03 (the struct that grew after it was measured) — 296 was the offset of the last field
+
+`UncEntryInfo` was quoted at **296 bytes** on the 68000 target in three
+places — FORMATS.md (*Name limits*), the entry above (*the name cap*) and a
+comment in `src/fmt_lzh.c` explaining why the path is built into the caller's
+entry rather than a local. The target compiler says **298**
+(`m68k-apple-macos-gcc -Os`, and `m68k-linux-gnu-gcc` agrees; x86-64 is 304).
+
+**296 is not a mistyped measurement — it is the offset of `name_full_len`.**
+Both numbers were produced on 2026-08-27, hours apart. `name_truncated` closed
+the struct at 295, padded to 296, and that is what was written down; the
+maintainer's correction the same day — the notice is text, so the whole name
+goes into the host's buffer — added `name_full_len` on top of it, and nothing
+re-measured. The figure was stale before the day it was written in ended.
+
+**Nothing rested on the two bytes**, which is why it survived: the argument the
+number supports is that zip's 65,535-byte maximum name cannot travel on a 4 KB
+stack, and that holds at either value. The stack is measured separately and
+directly — 5,200 B constant, 2026-08-31 — and never consulted this figure.
+
+Two things are worth carrying:
+
+- **A measurement taken in the middle of a change describes a struct that may
+  not exist by the end of the day.** The `280` this replaced was wrong from the
+  start and was caught by measuring; the `296` was right for about four hours,
+  which is the harder case — re-measuring at the END of a change is what
+  separates them, not measuring more carefully.
+- **It hid behind a coincidence.** 296 is also, genuinely, the length of the
+  nine-deep path `tools/synth_now.py` writes, stated a few hundred lines away
+  in the same two files and dated the same day (*the path builder's own cap*).
+  A reader checking whether 296 was right found a 296 that was.
+
+**It cannot go stale silently again.** `tools/check_docs.py` gained a fifth
+invariant: every `"N bytes on the 68000 target"` in the root docs, `src/`,
+`cli/`, `mac/` and `include/` must equal `sizeof(UncEntryInfo)` as the Retro68
+compiler reports it, sized by compiling a one-line probe and reading `.size`
+off the assembly. It costs 0.2 s, and it skips out loud rather than silently on
+a machine with no m68k compiler. Mutation-tested both ways: restoring `296`
+fails one site, and adding a field to the struct fails all three at 302. A
+historical value now has to be written outside that phrase — this entry says
+*quoted at 296 bytes*, and that is the check working rather than around it.
+
+## 2026-09-03 (a folder is a name too) — numbering folders like files, and the table that made it affordable
+
+**At the maintainer's ask.** The Macintosh shell cut every path component to
+HFS's 31 characters and numbered a FILE that landed on a name already taken —
+`dup.txt` → `dup~1.txt` — while a FOLDER in the same position was descended
+into, so two folders whose names agreed for 31 characters became one on disk
+and their contents mixed. Folders are numbered now, `~1`..`~99`, by the same
+`BumpName` the files use.
+
+**What made it look impossible was a table size, filed as a property of the
+formats.** OPEN_ITEMS.md carried it under *Limits of the formats themselves*:
+where an archive declares no folder entries — zip, tar, LZH, most of what
+anybody downloads — the folders exist only inside the paths of the files in
+them, so a second folder arriving "looks exactly like the first folder being
+revisited", and remembering every long name would cost more than a 1 MB
+machine will pay. Neither half held. `RepDirMemo` was already recording every
+directory this run created, declared or not; and the cost it was measured at
+was the cost of storing whole NAMES, 68 bytes a row for 24 folders. A 32-bit
+hash of the component answers the only question that is ever asked of the row
+— *is this directory this run's, and is it this name's?* — for 8 bytes,
+which puts **200 folders in the 1,600 B that held 24**.
+
+Three decisions inside it, each of which could have gone the other way:
+
+- **A directory this run did not make is descended into, still.** A folder the
+  user already had, or one an earlier run left, takes this archive's files;
+  numbering there would spray `~1` over the first run's work every time
+  somebody extracted the same archive twice. So the memo is what authorises a
+  rename, and its absence means merge — `tools/run_macnames.py`,
+  *folder_again_case*, holds that, and it fails on the one-line change that
+  treats an unknown directory as somebody else's.
+- **The table never evicts, and that is the load-bearing property.** A row
+  lost after its folder was numbered would send the rest of that folder's
+  files into a different directory — one archive folder SPLIT across two on
+  disk, which is worse than the merge numbering replaces. A full table stops
+  numbering and merges exactly as the shell did before, so the failure falls
+  in the direction the old behaviour already had. **The safe direction for a
+  bounded table is the behaviour it replaced**, not the one it aspires to.
+- **The merge line takes from the report's failure reserve.** Past `~99` a
+  folder really does go into another one, and it says *combined with* rather
+  than *renamed to*. An archive that reaches that has a hundred alike folder
+  names and so a hundred ordinary rename lines — exactly the crowd the
+  16-line reserve exists to keep the consequential line out of. Measured: at
+  101 folders the line was dropped without it.
+
+**The duplicate report was the one thing the design did not predict.** A
+merged folder is discovered again by every file inside it, so the first
+version announced the merge once per entry. The fix is in the same table: the
+merged folder is memoed under its own name as well, so the second arrival
+reads as *the same folder* and descends quietly. A directory may hold more
+than one row, and that is why.
+
+Cost of the old claim, and where it is recorded: BLOCKERS.md, *Withdrawn
+claims*. The measurement that opened it took one zip and one run of a mock
+sink that has been in `ci.sh` since 2026-08-28 — the claim was about our own
+binary, which is the cheapest kind here to test and the easiest to leave
+untested.
+
+## 2026-09-04 (the field nobody assigned) — a struct filled field by field, and the crash that was shaped like three formats
+
+**Claim.** The Mac OS 9 bomb on every DiskDoubler archive and on SuperDisk!
+(BLOCKERS.md, *Withdrawn claims*) was an uninitialised pointer. `RunExtract`
+in `mac/macextract_mac.c` filled its `UncOptions` field by field, and the
+two fields that joined the struct on 2026-08-27 — `long_name` and
+`long_name_cap` — were never among them: `git grep long_name mac/` returned
+nothing. The engine's folder-path walker, `unc_path_push` →
+`path_full_add` in `src/unc_util.c`, writes **every** component through
+that pointer whenever it is non-NULL and the cap is at least 2, because the
+buffer is where the uncut name accumulates and a cut can come at any depth.
+Exactly three formats walk a tree with it: DiskDoubler, SuperDisk! and Now
+Compress. So those three wrote each folder and file name through whatever
+the interactive build's stack held at that offset, and nothing else touched
+it. **Measured**, both halves: `tools/longname-repro/` hands the engine a
+4-byte block with a 1 MB cap and lists one fixture per family under ASan —
+DiskDoubler, SuperDisk! and Now Compress die in `path_full_add` on their
+first component (`WRITE of size 1`, `unc_util.c`, via `unc_path_leaf` ←
+`dd_archive`), Compact Pro and StuffIt never touch the block, and all five
+are clean with NULL. The fix is one loop that zeroes the struct before the
+fields are set, and the Mac half of the measurement is the fixed build on
+Mac OS 9.2 (below).
+
+**Why every experiment pointed away from it, and what that teaches.**
+
+- **A symptom shaped like a format is not evidence about the format.** Six
+  DiskDoubler archives and SuperDisk! bombed; Compact Pro's own
+  self-extractor passed. That read as "these decoders do something the
+  shell cannot take", and the search went into what the *shell* does
+  differently — the dialogs, the event loop, the segmented path. The
+  productive question was the other way round: **what does the engine do
+  for these formats that involves the host?** The host surface is small —
+  `UncIO`, `UncAlloc`, `UncSink`, `UncProgress`, `UncOptions` — and one
+  `grep` over the option fields against the shell's assignments answers it
+  in a minute. Format-specific plus host-specific means a *host input* the
+  formats consume unequally.
+- **"The classic Mac shell passes NULL" was a claim about a file on this
+  disk, and nobody ran it.** It is in `include/macextract.h`, written the
+  day the field was added, describing a shell that had not been updated —
+  the tenth smell in BLOCKERS.md's list (*an open item that describes what
+  our OWN binary does*), this time in a header comment rather than a status
+  file. A comment that says what another file does is a test that has never
+  been run.
+- **An uninitialised local defeats every instrument that changes the
+  stack, which is all of them.** The value the engine saw was whatever
+  Standard File, the destination dialog and the progress dialog had left in
+  that frame. A tracer, a `-D` probe, a different `kStackBump`, a checkpoint
+  file between entries and any commit that touched a frame above it moved
+  the garbage; some values were benign (a pointer into free stack, a cap
+  below 2) and some were not. That is why `git bisect` produced a confident
+  first-bad commit whose retest could not reproduce it, why "keeping the
+  probes in the binary but never executing them" also cured it, and why the
+  two shipped versions bombed with two different error types at two
+  different entries. **A defect that moves with layout is not "a wild
+  write somewhere"; it is a specific class — a read of state nobody set —
+  and the search for it is a search for an assignment that is missing, not
+  for a write that is wrong.**
+- **The autotest build passed because its call chain is different**, so its
+  garbage was different — presumably zero, though that was never measured
+  and did not need to be once the mechanism was reduced. The Mini vMac tiers
+  passed for the same reason, which means the 69/69 on System 3.0, 6.0.8 and
+  7.0.1 were passing on luck for the three walking formats. **Inferred, not
+  measured**: no run on those tiers ever showed the fault; the fix removes
+  the dependence rather than a defect those tiers exhibited.
+- **The lesson was already in the tree, learned by the other host.**
+  `unc_extract_as` zeroes the whole struct for a NULL `opt`, with a comment
+  from 2026-08-27 saying why: a field list "written when UncOptions had nine
+  members and never revisited" had segfaulted the unit tests the day
+  `long_name` was added. The same day, the same field, the same mistake in
+  the shell — and the fix went where the crash was and nowhere else. **When
+  a lesson is learned in one host, grep the other hosts for the pattern the
+  same afternoon.** Done this time, and it paid at once: five `UncOptions`
+  in `tests/unit_formats.c` were filled field by field too, and all five
+  are in DiskDoubler and SuperDisk! tests — the walking formats. Measured
+  with gdb over the pre-fix binary: the walker read the field 20 times
+  across the unit tests and saw NULL every time, so those tests passed on
+  a host stack that happened to hold zeros. They are zeroed now. valgrind
+  over the same binary reports nothing — stack bytes an earlier call wrote
+  count as initialised — which is why that class of defect needs
+  MemorySanitizer, and no host build here has it.
+
+**What would have caught it before Mac OS 9 did.** Nothing in `ci.sh`: the
+mock Toolbox build (`tests/mac_sink_test.c`) drives the sink, allocator and
+I/O and builds its own `UncOptions`, so it never executes `RunExtract`, and
+neither ASan nor valgrind reports a read of uninitialised STACK — measured on
+the pre-fix unit tests, where valgrind is silent through 20 such reads,
+because bytes an earlier call wrote count as initialised. That is
+MemorySanitizer's job, over a path no host-side build here takes (TESTING.md,
+*mac sink*, now says so). The compiler is silent because the struct is passed
+by pointer. What does catch it is the rule the engine's own comment states:
+**zero the whole struct, then set fields** — a future field is then NULL by
+construction rather than by luck.
+
+**Consequence.** `RunExtract` zeroes `opt` before assigning it, with the
+history in a comment beside the loop. `tools/longname-repro/` keeps the host
+half of the reproduction. `tools/vmac/os9sample.txt` gains
+`synth-now-mixed.now`, because Now Compress is the third walker and the one
+this tier had never run. Mac OS 9.2 comes back **21/21**, and all six
+DiskDoubler archives in the corpus extract there byte-exact where that
+morning's binary bombed on every one.
+
+**And a harness defect, found because the fix let the run get far enough to
+hit it.** `derived-Terrainman_2.0__.sea` reported ten files missing that were
+on the volume: the verifier's folder walk passed its path to `hls` as a
+Python `str`, so an 8-bit folder name went out UTF-8 and listed as empty.
+A FILE with such a name had been checked since 2026-08-28 and a FOLDER with
+one had never been walked. **A harness that has been right about one shape of
+a thing has not been tested on the others** — and the same encoding rule was
+already written down two functions away, for `hcopy` (`tools/vmac/README.md`,
+*Checking a run off the disk*).
+
+What the claim cost is in BLOCKERS.md, *Withdrawn claims*; the numbers in
+FORMATS.md, *Mac OS 9.2*.
+
+---
+
+## 2026-09-09 (the disk image that is expanded and not opened) — DART, and an error code for a file with nothing wrong with it
+
+**Asked for**: expand a compressed DART, and store the result as a
+decompressed DART; say so plainly when the file handed over is already
+decompressed. The reason is a sibling project: MacMount mounts an
+UNCOMPRESSED DART and refuses a compressed one by name, because mounting
+one would need the volume's bytes to exist somewhere and unpacking an
+archive is this program's job (its own `ARCHAEOLOGY.md` says exactly
+that). This closes that loop.
+
+**Why the output is a DART and not a disk image, still less the files on
+it.** Disk images are out of scope, and the reason recorded in
+OPEN_ITEMS.md is that extracting one means a filesystem rather than a
+codec, and that naming one is worth nothing because a disk image is not
+an archive. Both halves survive here. What changed is that DART's third
+method is *no compression*, so the thing a mounter can already read is a
+DART with a 2 in its first byte — which makes expanding one a codec after
+all, with an output this engine's sink can write and no volume anywhere
+in the picture. **The scope line moved by one method, not by a
+principle.**
+
+**The refusal needed a code of its own, and that is the part worth
+transferring.** Handed an already-uncompressed DART, the honest answer is
+neither `UNC_ERR_FORMAT` (it is a DART, and a valid one), nor
+`UNC_ERR_UNSUPPORTED` — which says *there is something here and this
+engine cannot read it*, the exact opposite of the truth. It is
+`UNC_ERR_NOTCOMPRESSED`: recognized, well-formed, and holding nothing to
+do. The Macintosh shell says "This DART disk image is already
+uncompressed."; the CLI says "already uncompressed: there is nothing to
+expand". Before the code existed the same file would have produced "This
+file could not be extracted", which sends a user looking for a fault
+that is not there. **An error enum is a vocabulary, and a verdict it
+cannot express becomes the nearest wrong word.**
+
+**The identification, in a format with no signature at all.** Four bytes
+and a table of chunk lengths. The three fields on their own are worth
+nothing — one byte in {0,1,2}, one in a set of six, and a size — so what
+makes the probe safe is that **the table has to add up to the rest of the
+file, to the byte**. That test is the one that settled the format for
+MacMount in the first place: reading the lengths as bytes leaves
+`Studio8_Program.dart` 300,951 short, and reading them as WORDS lands on
+811,586 exactly. It also means a cut DART is not recognized at all rather
+than half-read, which is a stronger outcome than the truncation rule the
+rest of the corpus gets.
+
+The type/size pairing is the other third, and it is deliberately
+**tighter than the second reference**. CiderPress2's `FormatToKind`
+accepts eleven combinations; Apple's `DartIntf.h` names a file type for
+seven. The four it does not name are a Lisa 800K, an Apple II 400K, a
+720K Macintosh and a 1440K MS-DOS low-density — shapes DART could not
+have written, and admitting one would mean inventing the constant its
+output should carry. **Where two references disagree about what is
+legal, the one that has to be OBEYED is the one that names a constant.**
+
+**The codec was already here, twice over.** DART's "best" is LZHUF, which
+is `-lh1-` — the coder `unc_lzah.c` has run since M5 for StuffIt method 5
+and since M28 for LZH. Apple changed two things: no leading length word
+(the caller's business) and a match window of 0x00 instead of 0x20. That
+is one new mode, `UNC_LZAH_DART`, and eight lines. **The window's start
+position does not appear**, though LZHUF's is `N - F` and this decoder's
+is 0: with a UNIFORM fill, a match reaching back before the first byte
+reads the fill byte wherever the cursor began, so the two are the same
+function. Worth stating because it looks like a discrepancy and is not.
+
+**What it is graded against, and why that is better than a second
+reader.** There is no second reader — `unar` has no DART parser and
+neither does `macunpack`. There is something better: CiderPress2
+publishes two 800K disks that DART 1.5.3 compressed under MAME, in both
+methods, **with the source images beside them**. So the oracle is the
+ENCODER's input, which cannot be wrong the way a second decoder can, and
+four independent assertions come out of it: the data halves equal the
+source images; the tag halves equal the tags the source Disk Copy file
+carries; the two methods agree with each other; and one specimen keeps
+its resource fork in the ZIP, so DART's OWN checksums from 1993 —
+'CKSM' 2 = `183F8B19` — check against a Disk Copy 4.2 checksum of what
+came out. Every one of the four was made to fail before it was believed
+(a 0x20 window, a byte-length reading, a dropped slot rule, an off-by-one
+run count), and each fails a different assertion.
+
+**A test that was wrong about a real boundary.** The first synthetic case
+encoded a chunk as all literals, which is 20,962 bytes — two MORE than
+the 20,960 it expands to — and the walk refused it. The refusal is
+right: DART marks such a chunk 0xFFFF and stores it instead, which is
+what makes "a compressed chunk may not exceed what it expands to" a rule
+of the format rather than a guess, and what bounds the buffer a chunk is
+read into. The synthetic now compresses, and the rule has an assertion of
+its own. **A cap taken from a format's fallback behaviour is worth
+asserting, because the day it is wrong the failure is "not recognized"
+and nobody looks.**
+
+**And the peak that was a constant.** The first version read a chunk into
+a 20,960-byte buffer whatever the table said, which made peak RAM the
+same number for every DART — the smell CLAUDE.md names, and here it was
+real. Sizing the buffer from the LONGEST entry in the table costs four
+lines and makes the peak vary: 24,582 B against 25,056 B on the two
+"fast" archives. Measured, the saving is 0–474 B on all five specimens,
+because every real 800K disk has a chunk that barely compresses — so on
+the evidence to hand it buys almost nothing, and it is kept anyway
+because a mostly-empty 400K disk has no such chunk and it is the small
+machines that would meet one. (The change also cost a heap overrun in the
+half hour it took to notice the staging pointer still said
+`chunk + 20960`. The suite said so on the next run, loudly.)
+
+**Cost on the Macintosh, stated rather than absorbed**: +2,168 B of code
+and +164 B of A5 world, both ratchets raised in `tools/build_mac.sh` with
+the attribution. The A5 figure was got by diffing the linked image's
+`.data` symbols, which is the only way to see it: 28 B of type table,
+20 B of format row, 4 B of probe pointer, 4 B on `unc_strerror`'s switch
+and ~100 B of message text. The type table is 28 B rather than 56 because
+each row holds the DIGIT of its file type and not the whole OSType — 8 B
+of code to save 24 B of data, which on this target both come off the same
+budget. That is the second time composing a constant beat storing one
+(2026-09-01, *two byte reads*).
+
+**A bug found on the way, in `tools/fetch_references.sh`.** The block
+that fetches the archiveteam wiki pages opened with `cd reference/notes`
+and never came back, and every block added BELOW it since names its file
+from the repository root. So on a tree that did not already have them,
+the script died at the zstd fetch under `set -e` and the last six
+references — zstd, brotli, lrzip, wimlib, libNeoAppleArchive and the
+Apple Archive page — never arrived. Nobody had noticed because every
+block is guarded by the file it fetches, and this machine has had them
+since the day each was added. Fixed by removing the `cd`; the banner,
+which printed *before* the failure, moved to the end where it belongs.
+**A script whose steps are each guarded by their own output is a script
+nobody ever runs end to end.**
+
+**What is NOT done.** The output carries no resource fork, so the
+checksums a real DART keeps there are not written. Nothing reads them —
+MacMount parses the data fork alone — and no reference says what an
+uncompressed DART's resource fork should look like, so writing a partial
+one would be invention. OPEN_ITEMS.md, part 2, has what would close it.
+
+**And it was run on the target, not only reasoned about.** Both methods
+replay through the Mac shell on an emulated Mac Plus byte-exact, at 4 MB
+and at the 1 MB floor, with peak heap matching the Linux figures plus the
+allocator's per-block overhead; the refusal was photographed on System
+6.0.8 rather than inferred from the string. The harness's floppies are
+1440 KB, which is what makes an 838 KB output possible at all — the
+earlier assumption that a DART could not be replayed there was about an
+800K floppy and was wrong.
+
+Numbers and per-specimen results: FORMATS.md, *DART*. How the suite
+runs: TESTING.md, *DART*.
+
+---
+
+## 2026-09-09 (the oracle that built two times in three) — a timestamp race, and a suite that reported it as a missing reference
+
+**Found by eye, in a CI log, on the way to something else.** `run_mime.py`
+printed *"SKIPPED — no reference/mpack (tools/fetch_references.sh)"* and
+returned 0 — in a run where `reference/mpack` was present, and where the
+same run had just built `reference/btoa` successfully. Two defects, one
+symptom, and they are worth separating because only one of them is a bug
+in a build.
+
+**The root cause, reduced.** `tools/build_mpack.sh` copies the read-only
+reference tree with `cp -r` and builds it in place. mpack 1.6's tarball
+ships `Makefile.in` **ten minutes newer** than the `Makefile.am` it was
+generated from — 2003-07-21 23:49:20 against 23:39:28 — which is exactly
+what keeps automake's maintainer rule
+
+    $(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.in ...
+            cd $(top_srcdir) && $(AUTOMAKE) --foreign ...
+
+from ever firing. `cp -r` discards those dates and stamps every file with
+the current time, so which of the two ends up newer comes down to which
+side of a clock tick each is written on. When `Makefile.am` wins, `make`
+runs **automake 1.17 over a 1994 tree** and dies — `required file
+'./depcomp' not found`, `Error 63`. Measured: **3 failures in 8 runs**
+with `cp -r`, **0 in 40** with `cp -pR`. The fix is one character of
+`cp`, and the comment beside it is longer than the change because the
+next person to see `-p` there will want to know why it is not decoration.
+
+**Why nobody saw it.** Both halves of the build were redirected to
+`/dev/null`, and `set -e` then killed the script on the failing subshell
+*before* its own "build produced no binary" message. So the script exited
+2 saying nothing at all. It now keeps `build/mpack.log` and prints its
+last twenty lines on failure, which is what turned a five-minute guess
+into the paragraph above.
+
+**The second defect is the one worth transferring.** `run_mime.py`'s
+`build()` collapsed three outcomes into two:
+
+| what happened | what it returned | what the caller said |
+|---|---|---|
+| the binary is there | the path | — |
+| `reference/mpack` was never fetched | `None` | "no reference/mpack" ✓ |
+| the tree is there and the build FAILED | `None` | "no reference/mpack" ✗ |
+
+The third row is not a skip. Somebody fetched the references; the
+differential coverage they pay for had silently gone, and the suite
+returned **0**, so `ci.sh` stayed green with nothing in that suite graded
+against a second implementation. **A skip and a failure that look the
+same in a 200-line log are the same thing in practice, and the log is
+where they are read.** The rule now, in all three suites that build an
+oracle out of `reference/`:
+
+- reference tree **absent** → skip, exit 0. A fresh clone must still run
+  `ci.sh`.
+- reference tree **present** and the oracle will not build → print what
+  the build actually said, and **exit 1**. The message ends "fix the
+  build, or delete `reference/X` to make this a skip", so the escape
+  hatch is stated rather than implied.
+
+`run_lzh.py` had already learned half of this — it checks the tree and
+the compile separately and its two messages are correct — and it still
+returned 0 on a compile failure. Changed to 1 with the others. **Getting
+the message right is not the same as getting the verdict right, and this
+file had one without the other.**
+
+**What it cost:** nothing measurable, because the MIME suite passes when
+it runs and did so on the next attempt. What it could have cost is the
+whole point — that suite is the only thing holding `src/fmt_mime.c`
+against munpack, and it was one flaky `cp` away from never running again
+without anybody noticing. The smell that found it was a **cross-file
+contradiction**: a message naming a directory that `ls` showed was there.
+
+**Still a hypothesis, and labelled:** whether the CI run that started
+this had the same cause is not proven — the log is gone and the failure
+is timing-dependent. The mechanism above is reduced and measured; the
+attribution of that one run to it is not.

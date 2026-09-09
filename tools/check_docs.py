@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Documentation invariants that would otherwise go stale silently.
 
-Four of them, all cheap enough to run first in ci.sh:
+Five of them, all cheap enough to run first in ci.sh:
 
 1. DECISIONS.md's and FORMATS.md's Contents indexes list every `## ` entry,
    in order. An index nobody regenerates is worse than no index, because it
@@ -27,11 +27,17 @@ Four of them, all cheap enough to run first in ci.sh:
    other fixture, so it never runs in ci.sh: two of the lines had been
    unrestorable since they were written, because their generators took an
    output DIRECTORY and no `-o` at all (2026-08-15).
+5. Every "N bytes on the 68000 target" states sizeof(UncEntryInfo) as the
+   target compiler reports it. That figure is the whole argument for
+   capping a name at UNC_NAME_MAX, and it read 296 for a week while the
+   struct was 298: it had been measured hours before the struct's last
+   field was added (DECISIONS.md 2026-09-03).
 """
 
 import hashlib
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -192,10 +198,73 @@ def check_synthetic():
     return bad
 
 
+TARGET_SIZE_RE = re.compile(r"(\d+) bytes on the\s+68000 target")
+PROBE_C = ('#include "macextract.h"\n'
+           "char unc_probe_entryinfo[sizeof(UncEntryInfo)];\n")
+PROBE_SIZE_RE = re.compile(r"\.size\s+unc_probe_entryinfo,\s*(\d+)")
+
+
+def m68k_cc():
+    """The Retro68 compiler, located the way tools/build_mac.sh locates
+    it, else any m68k gcc. What the number is about is the ABI — 2-byte
+    alignment — and the two agree on it, so a machine with only the
+    Debian cross-compiler still checks something real."""
+    r = os.environ.get("RETRO68")
+    for c in ([os.path.join(r, "bin", "m68k-apple-macos-gcc")] if r else []) + \
+            ["m68k-apple-macos-gcc",
+             "/opt/Retro68-build/toolchain/bin/m68k-apple-macos-gcc",
+             "m68k-linux-gnu-gcc"]:
+        if os.sep in c:
+            if os.path.exists(c):
+                return c
+        elif shutil.which(c):
+            return c
+    return None
+
+
+def check_target_struct():
+    """sizeof(UncEntryInfo) on the target, measured rather than
+    remembered. The struct is quoted by size in FORMATS.md and in a
+    comment in src/fmt_lzh.c, because its inline 256-byte name buffer is
+    why a name is capped at UNC_NAME_MAX instead of carrying zip's
+    65,535 — and a size is exactly the kind of figure that goes wrong
+    when the struct next gains a field."""
+    cc = m68k_cc()
+    stated = []
+    for path in sorted(ROOT.glob("*.md")) + sorted(ROOT.glob("src/*.c")) + \
+            sorted(ROOT.glob("cli/*.c")) + sorted(ROOT.glob("mac/*.c")) + \
+            sorted(ROOT.glob("include/*.h")):
+        # Whitespace-normalised: the sentence is line-wrapped in the docs
+        # and in the comment, and both wraps fall inside the phrase.
+        text = " ".join(path.read_text().split())
+        for hit in TARGET_SIZE_RE.findall(text):
+            stated.append((path.relative_to(ROOT), int(hit)))
+    if not stated:
+        return []
+    if cc is None:
+        print("check_docs: no m68k compiler here — "
+              f"{len(stated)} target-size claims not checked")
+        return []
+    with tempfile.TemporaryDirectory() as tmp:
+        src = os.path.join(tmp, "probe.c")
+        with open(src, "w") as f:
+            f.write(PROBE_C)
+        r = subprocess.run([cc, "-I", str(ROOT / "include"), "-Os", "-S",
+                            "-o", "-", src], capture_output=True)
+        m = PROBE_SIZE_RE.search(r.stdout.decode(errors="replace"))
+        if r.returncode != 0 or not m:
+            return [f"check_docs: {cc} could not size UncEntryInfo "
+                    f"(exit {r.returncode})"]
+        size = int(m.group(1))
+    return [f"{path}: says UncEntryInfo is {n} bytes on the 68000 target; "
+            f"{os.path.basename(cc)} says {size}"
+            for path, n in stated if n != size]
+
+
 def main():
     fix = "--fix" in sys.argv[1:]
     problems = (check_index(fix) + check_citations() + check_version() +
-                check_synthetic())
+                check_synthetic() + check_target_struct())
     for p in problems:
         print(p, file=sys.stderr)
     if problems:

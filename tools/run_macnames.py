@@ -19,7 +19,9 @@ The subjects are DiskDoubler archives from `tools/synth_dd.py`, because
 the shortening only bites at 31 bytes and the longest name in 932
 fixtures is 120 — but no fixture nests deep enough for the ENGINE's cap
 either, and both caps have to be reached in one archive shape to see
-which one acted.
+which one acted. One case uses a zip instead, and says why: a zip
+declares no folders, so its folders exist only inside the paths of the
+files in them.
 
 The code under test is `mac/macextract_mac.c` itself, through the mock
 Toolbox of `tests/mac_sink_test.c` (TESTING.md, *The Mac sink*).
@@ -43,6 +45,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import zipfile
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import synth_dd                                                # noqa: E402
@@ -111,12 +114,12 @@ def collision_case(sink, tmp, problems):
 
 
 def folder_collision_case(sink, tmp, problems):
-    """The same collision between two FOLDERS, where the answer is not
-    the same: `EnsureDir` descends into a folder that already exists, so
-    two folders shortening alike become one and their contents are
-    merged. MEASURED 2026-08-28, and it is what a Mac user would get
-    from the Finder; nothing is lost, but the path is not the
-    archive's."""
+    """The same collision between two FOLDERS, which since 2026-09-03 is
+    answered the same way: the second folder is NUMBERED rather than
+    descended into. Until then `EnsureDir` took whatever directory was
+    already there, so two folders shortening alike became one and their
+    contents mixed — nothing was lost, but the path was not the
+    archive's and neither folder was where the archive put it."""
     base = "C" * HFS
     got, rc, rep = case(sink, tmp, "macname-dircollide",
                    [synth_dd.folder(base + "folderA",
@@ -124,11 +127,99 @@ def folder_collision_case(sink, tmp, problems):
                     synth_dd.folder(base + "folderB",
                                     [synth_dd.file("y.txt", data=b"in B\n")])])
     check(problems, rc == 0, "dircollide: exit was %d" % rc)
-    check(problems, sorted(got) == [base + "/x.txt", base + "/y.txt"],
-          "dircollide: wrote %r, wanted both files in one merged folder"
+    check(problems, sorted(got) == [base + "/x.txt", base[:29] + "~1/y.txt"],
+          "dircollide: wrote %r, wanted the second folder numbered"
           % sorted(got))
     check(problems, sorted(got.values()) == [b"in A\n", b"in B\n"],
-          "dircollide: a merged folder lost a file: %r" % sorted(got.values()))
+          "dircollide: a file was lost: %r" % sorted(got.values()))
+    check(problems, all(len(c) <= HFS for n in got for c in n.split("/")),
+          "dircollide: a numbered folder is longer than an HFS name: %r"
+          % sorted(got))
+    return 1
+
+
+def path_folder_case(sink, tmp, problems):
+    """The same two folders in a format that declares NO folders of its
+    own — a zip, where the folders exist only inside the paths of the
+    files in them, which is the shape most archives a user downloads
+    have. Measured 2026-09-03: this was the WORSE case, because the box
+    reported the first folder's rename and said nothing at all about the
+    second, whose file had gone into it.
+
+    Written here rather than with `synth_dd` for exactly that reason:
+    every other case in this file uses DiskDoubler, which declares its
+    folders, and the declaration is what the old report needed."""
+    a = "D" * 33 + "alpha"
+    b = "D" * 33 + "beta"
+    p = os.path.join(tmp, "macname-pathdirs.zip")
+    with zipfile.ZipFile(p, "w") as z:
+        z.writestr(a + "/x.txt", b"in A\n")
+        z.writestr(b + "/y.txt", b"in B\n")
+    out = os.path.join(tmp, "macname-pathdirs.out")
+    os.mkdir(out)
+    got, rc, rep = run(sink, p, out)
+    check(problems, rc == 0, "pathdirs: exit was %d" % rc)
+    check(problems, sorted(got) == ["D" * 31 + "/x.txt", "D" * 29 + "~1/y.txt"],
+          "pathdirs: wrote %r, wanted the second folder numbered too — a "
+          "folder no entry declares is still a folder" % sorted(got))
+    check(problems, rep == [("Folder " + a + " renamed to " + "D" * 31),
+                            ("Folder " + b + " renamed to " + "D" * 29 + "~1")],
+          "pathdirs: both folders must be named in the report, in full: %r"
+          % rep)
+    return 1
+
+
+def folder_again_case(sink, tmp, problems):
+    """The same archive extracted TWICE into the same destination. A
+    folder that is already on the volume is not this run's to number —
+    it is the user's, or the last run's — so the second run descends
+    into it and the FILES inside are what gets numbered. Numbering the
+    folder instead would spray `~1` over the first run's work, and a
+    user who extracts an archive twice has said nothing about wanting
+    two copies of its folders."""
+    base = "H" * HFS
+    tree = [synth_dd.folder(base + "folder",
+                            [synth_dd.file("x.txt", data=b"in it\n")])]
+    p, _ = synth_dd.write_one(tmp, "macname-diragain", tree)
+    out = os.path.join(tmp, "macname-diragain.out")
+    os.mkdir(out)
+    run(sink, p, out)
+    got, rc, rep = run(sink, p, out)
+    check(problems, rc == 0, "diragain: exit was %d" % rc)
+    check(problems, sorted(got) == [base + "/x.txt", base + "/x~1.txt"],
+          "diragain: wrote %r, wanted one folder holding both runs' files"
+          % sorted(got))
+    check(problems, not any(l.startswith("Folder ") for l in rep),
+          "diragain: a folder that was already there was reported: %r" % rep)
+    return 1
+
+
+def folder_crowd_case(sink, tmp, problems):
+    """More FOLDERS alike than the numbering has digits for. `BumpName`
+    writes two, so the hundred-and-first is where numbering stops — and
+    what is left there is the old behaviour, a merge, which keeps every
+    file. The alternative would be to fail the entry, and a folder that
+    fails takes everything under it with it."""
+    base = "G" * 20 + "Correspondence no"
+    tree = [synth_dd.folder(base + "%03d" % i,
+                            [synth_dd.file("letter%03d.txt" % i,
+                                           data=b"no%03d\n" % i)])
+            for i in range(101)]
+    got, rc, rep = case(sink, tmp, "macname-dircrowd", tree)
+    check(problems, rc == 0, "dircrowd: exit was %d" % rc)
+    check(problems, len(got) == 101,
+          "dircrowd: wrote %d files, wanted every one of the 101" % len(got))
+    check(problems, len(set(os.path.dirname(n) for n in got)) == 100,
+          "dircrowd: wanted 100 folders and the last one merged, got %d"
+          % len(set(os.path.dirname(n) for n in got)))
+    check(problems, base[:28] + "~99" in set(os.path.dirname(n) for n in got),
+          "dircrowd: the folder numbering did not reach two digits: %r"
+          % sorted(set(os.path.dirname(n) for n in got))[-3:])
+    merged = [l for l in rep if " combined with " in l]
+    check(problems, len(merged) == 1 and merged[0].startswith(
+              "Folder " + base + "100 combined with "),
+          "dircrowd: the folder past the numbering is not reported as "
+          "merged: %r" % merged)
     return 1
 
 
@@ -210,10 +301,9 @@ def extension_case(sink, tmp, problems):
 
 def report_case(sink, tmp, problems):
     """What the end-of-run box lists. Every name this shell changed is
-    named twice — the archive's and the disk's — and a folder that
-    MERGED into one already there says so in different words, because
-    what happened to the user's files is different: nothing is lost, but
-    two folders are now one."""
+    named twice — the archive's and the disk's — including the SECOND of
+    two folders that shorten alike, which since 2026-09-03 is a folder
+    of its own with a number rather than a merge into the first."""
     a = "D" * 33 + "alpha"
     b = "D" * 33 + "beta"
     got, rc, rep = case(sink, tmp, "macname-report",
@@ -224,10 +314,12 @@ def report_case(sink, tmp, problems):
     check(problems, rc == 0, "report: exit was %d" % rc)
     renamed = [l for l in rep if " renamed to " in l]
     merged = [l for l in rep if " combined with " in l]
-    check(problems, renamed == ["Folder " + a + " renamed to " + a[:31]],
-          "report: the first folder is not reported once as renamed: %r" % rep)
-    check(problems, merged == ["Folder " + b + " combined with " + b[:31]],
-          "report: the merged folder is not reported once as merged: %r" % rep)
+    check(problems, renamed == ["Folder " + a + " renamed to " + a[:31],
+                                "Folder " + b + " renamed to " + b[:29] + "~1"],
+          "report: both folders are not reported once each, in full: %r" % rep)
+    check(problems, merged == [],
+          "report: a folder was merged where it could have been numbered: %r"
+          % rep)
     check(problems, all(len(l) > 60 for l in rep),
           "report: a name was cut short of what the archive calls it — the "
           "list exists to say which file became which: %r" % rep)
@@ -288,6 +380,36 @@ def crowd_case(sink, tmp, problems):
     return 1
 
 
+def folder_table_full_case(sink, tmp, problems):
+    """More folders than the memo has rows — 250 against 200 — which is
+    where numbering stops and folders merge again. The assertion is not
+    that they are numbered; it is that no folder is SPLIT. A run that
+    forgot a folder half way through would send the rest of its files
+    somewhere else, and one archive folder across two disk folders is
+    worse than the merge numbering replaces, which is why the table
+    never evicts (DECISIONS.md 2026-09-03)."""
+    base = "I" * 20 + "Chapter"
+    tree = [synth_dd.folder(base + "%03d" % i,
+                            [synth_dd.file("a%03d.txt" % i, data=b"a%03d\n" % i),
+                             synth_dd.file("b%03d.txt" % i, data=b"b%03d\n" % i)])
+            for i in range(250)]
+    got, rc, rep = case(sink, tmp, "macname-dirfull", tree)
+    check(problems, rc == 0, "dirfull: exit was %d" % rc)
+    check(problems, len(got) == 500,
+          "dirfull: wrote %d files, wanted all 500" % len(got))
+    split = [i for i in range(250)
+             if os.path.dirname(next((n for n in got
+                                      if os.path.basename(n) == "a%03d.txt" % i),
+                                     "?/?"))
+             != os.path.dirname(next((n for n in got
+                                      if os.path.basename(n) == "b%03d.txt" % i),
+                                     "!/!"))]
+    check(problems, split == [],
+          "dirfull: %d folder(s) were split across two folders on disk, "
+          "starting at %r" % (len(split), split[:3]))
+    return 1
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--sink", default="build/mac_sink_asan")
@@ -302,6 +424,10 @@ def main():
     try:
         ran += collision_case(args.sink, tmp, problems)
         ran += folder_collision_case(args.sink, tmp, problems)
+        ran += path_folder_case(args.sink, tmp, problems)
+        ran += folder_again_case(args.sink, tmp, problems)
+        ran += folder_crowd_case(args.sink, tmp, problems)
+        ran += folder_table_full_case(args.sink, tmp, problems)
         ran += engine_cap_case(args.sink, tmp, problems)
         ran += edge_cases(args.sink, tmp, problems)
         ran += extension_case(args.sink, tmp, problems)

@@ -35,11 +35,12 @@ cleaned up:
 ![Alert reading Extraction complete.](docs/screens/4-complete.png)
 
 If anything had to change on the way — a name HFS cannot keep (31 characters
-max), a folder that ended up sharing a shortened name, an entry that would not
-come out — you are told which. **Save as Text** files the whole list as a
-document:
+max), two files or two folders whose names are the same for those 31
+characters, an entry that would not come out — you are told which. Nothing is
+overwritten and nothing is folded together: the second one gets a `~1`.
+**Save as Text** files the whole list as a document:
 
-![A scrolling list: MyQuarterlyReportForTheBoard.rtf renamed to MyQuarterlyReportForTheBoar.rtf, Notes.txt renamed to Notes~1.txt, two folders combined, an entry damaged, and eighteen photographs each named in full with what it became; under the list, in bold, Extraction finished, and the buttons Save as Text and OK](docs/screens/4b-report.png)
+![A scrolling list: MyQuarterlyReportForTheBoard.rtf renamed to MyQuarterlyReportForTheBoar.rtf, Notes.txt renamed to Notes~1.txt, two folders whose names shorten alike renamed to two different folders, an entry damaged, and eighteen photographs each named in full with what it became; under the list, in bold, Extraction finished, and the buttons Save as Text and OK](docs/screens/4b-report.png)
 
 If an archive was split across floppies and a part is not where the first one
 was, you are asked for it — and told straight away if you point at the wrong
@@ -50,7 +51,7 @@ one, because parts are recognised by what is inside them:
 ## Download
 
 **[Latest release](https://github.com/jarreboum/MacExtract/releases/latest)** —
-currently **v0.29.0**. Or take it straight from the tree:
+currently **v0.32.0**. Or take it straight from the tree:
 
 | | |
 |---|---|
@@ -79,6 +80,12 @@ SpaceSaver files are the odd ones: they look like ordinary documents, because
 SpaceSaver compressed them in place and only the Mac that made one could read
 it. `macextract` carries the table those files need, so a lone floppy is
 enough.
+
+**Compressed DART disk images** get their own answer, because a DART is not
+an archive: it holds a floppy rather than files. MacExtract expands one into
+an *uncompressed* DART, which is the shape a mounting program — MacMount, say
+— can read directly. Hand it a DART that is already uncompressed and it says
+so instead of pretending something went wrong.
 
 **Password-protected archives** are opened too — StuffIt, StuffIt 5, Compact
 Pro, PackIt, zip (the old cipher and WinZip's AES) and ARC. The Mac

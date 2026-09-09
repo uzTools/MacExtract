@@ -89,6 +89,14 @@ derived-SD__Utilities.x                    # Alysis SuperDisk!, 14078 B: the
 synth-os9-btoa.btoa                        # btoa 5.2.1, version 5 framing
 synth-os9-mime.mim                         # multipart/appledouble: one file,
                                            #   both forks, type and creator
+synth-now-mixed.now                        # Now Compress, 7803 B. Added
+                                           #   2026-09-04: the third format
+                                           #   that walks folders with
+                                           #   unc_path_push, and the only
+                                           #   one of the three this tier had
+                                           #   never run — the other two are
+                                           #   the ones that bombed here
+                                           #   (DECISIONS.md 2026-09-04)
 synth-os9-rar.rar                          # NOT extracted: the alert reading
                                            #   "MacExtract cannot open RAR
                                            #   files." (M38). Both sides

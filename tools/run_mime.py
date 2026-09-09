@@ -40,13 +40,42 @@ RSRC = b"RESOURCE FORK " * 31
 TEXT = b"The note the sender typed.\r\nTwo lines of it.\r\n"
 
 
-def build(script, binary):
+def build(script, binary, srcdir):
+    """An oracle, and WHY it is not there when it is not.
+
+    Returns (path, None) when the binary is available, (None, None) when
+    the reference tree was never fetched — a fresh clone, and a real
+    skip — and (None, why) when the tree IS there and the build failed.
+    Those last two are not the same thing and this used to report them
+    as one: a build that died on a timestamp race came out as "no
+    reference/mpack" about a directory that was right there, and the
+    suite then returned 0 and CI stayed green with no second
+    implementation grading anything (DECISIONS.md 2026-09-09).
+    """
     path = os.path.abspath(os.path.join(ROOT, binary))
     if os.path.exists(path):
-        return path
+        return path, None
+    if not os.path.isdir(srcdir):
+        return None, None
     r = subprocess.run(["sh", os.path.join(ROOT, "tools", script)],
                        capture_output=True)
-    return path if r.returncode == 0 and os.path.exists(path) else None
+    if r.returncode == 0 and os.path.exists(path):
+        return path, None
+    why = (r.stderr or r.stdout).decode("utf-8", "replace").strip()
+    return None, why or "%s exited %d and said nothing" % (script,
+                                                           r.returncode)
+
+
+def oracle_gone(name, tree, why):
+    """The message for a reference that is present and will not build.
+    Shared wording, because three suites ask the same question."""
+    print("run_%s: %s is present and its oracle will not build, so "
+          "nothing here is graded against a second implementation."
+          % (name, tree))
+    for line in why.splitlines():
+        print("run_%s:   %s" % (name, line))
+    print("run_%s: fix the build, or delete %s to make this a skip."
+          % (name, tree))
 
 
 def b64(data, eol=b"\r\n"):
@@ -239,12 +268,20 @@ def main():
         print("run_mime: no CLI at %s" % macextract)
         return 1
 
-    munpack = build("build_mpack.sh", "build/mpack/munpack")
-    deark = build("build_deark.sh", "build/deark/deark")
+    munpack, why = build("build_mpack.sh", "build/mpack/munpack",
+                         os.path.join(ROOT, "reference", "mpack"))
     if not munpack:
-        print("run_mime: SKIPPED — no reference/mpack "
-              "(tools/fetch_references.sh)")
-        return 0
+        if why is None:
+            print("run_mime: SKIPPED — no reference/mpack "
+                  "(tools/fetch_references.sh)")
+            return 0
+        oracle_gone("mime", "reference/mpack", why)
+        return 1
+    deark, dwhy = build("build_deark.sh", "build/deark/deark",
+                        os.path.join(ROOT, "reference", "deark"))
+    if not deark and dwhy is not None:
+        oracle_gone("mime", "reference/deark", dwhy)
+        return 1
 
     problems, ran = [], 0
     tmp = tempfile.mkdtemp()
