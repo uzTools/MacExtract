@@ -43,7 +43,7 @@ answer and not a refusal — the brief has grown before, on request.
 | The Macintosh 512K — 64 KB of ROM | **the interface runs; extraction needs HFS** | measured 2026-09-01, not assumed: `MaxApplZone` is `[Not in ROM]` there (Inside Macintosh II-30) and Retro68 emits it as a trap, so the application dies on its second Toolbox call; behind that, `PBGetCatInfo` is HFS, which that ROM has no idea about. Apple's own software HFS for those machines — the `Hard Disk 20` startup disk — boots on a 128K ROM here and hangs on a 64K one, so even that route is untested (FORMATS.md, *A true Macintosh 512K*). Since 2026-09-01 the branch `rom64k` guards `MaxApplZone` with `Has128KROM()`, so its build starts there and its Standard File interface works; what remains is HFS, which a Hard Disk 20 supplies on exactly the machines where an unarchiver earns its keep. **Nobody has run it on one** — Mini vMac has no HD20, so this stays out of scope until hardware says otherwise (MANUAL_TESTS.md §7). A Macintosh **128K** is out for a second reason and that one is measured: its largest single block is 63,744 B against 142,152 B of `CODE`, so the guarded build bombs `ID = 03` on launch there (FORMATS.md, *A Macintosh 128K*) |
 | StuffIt X (`.sitx`) | **detect-only** | out by the brief |
 | PKWARE "strong encryption" in a zip (flag 0x40) | **named, refused per entry** | its key material is in a record nothing here parses, and XADMaster refuses it too. Every OTHER encryption these formats have is decrypted, including WinZip's AES (FORMATS.md, *Encryption*) |
-| Disk images (`.image`, `.img`, `.iso`, `.cdr`, `.toast`, `.dmg`, `.smi`), and Disk Copy 4.2 | **not recognised**, and not extracted | extracting one means a filesystem rather than a codec, and naming one is worth nothing either: a disk image is not an archive, so the name leaves a user exactly where "not recognized" does. The probes are complete, graded and kept in `attic/` (DECISIONS.md 2026-08-26, *read the volume, not the extension*) |
+| Disk images (`.image`, `.img`, `.iso`, `.cdr`, `.toast`, `.dmg`, `.smi`), and Disk Copy 4.2 | **not recognised**, and not extracted | extracting one means a filesystem rather than a codec, and naming one is worth nothing either: a disk image is not an archive, so the name leaves a user exactly where "not recognized" does. The probes are complete, graded and kept in `attic/` (DECISIONS.md 2026-08-26, *read the volume, not the extension*). **DART is the one exception, since 2026-09-09**, and it is an exception to the first clause only: a compressed DART expands to an UNCOMPRESSED DART, which is a codec with no volume anywhere in it, and no file on the disk is ever looked at. FORMATS.md, *DART* |
 | PMarc (`-pm0-`, `-pm1-`, `-pm2-`) and `-lhx-` | **not recognised** | a different family behind an LZH-shaped header. PMarc is a Japanese PC format with its own coders, `-lhx-` is UNLHA32's extension; neither reached a Macintosh |
 | Self-extracting LZH (an executable with an archive behind it) | **not recognised** | the archive sits behind DOS, Amiga, Atari or X68000 machine code, and finding it means knowing each of those loaders. `unar` has a parser per platform; here the answer is to hand the `.lzh` itself to the extractor |
 | RAR, 7z, bzip2, xz, Cabinet, Zoo, ar/`.deb`, cpio, ARJ | **named, never extracted** | none is a Macintosh archive format, none carries a resource fork or Finder metadata, and every one is served by a maintained extractor on any machine that can run one. NAMING them is in scope (DECISIONS.md 2026-08-26, *a name is only worth something inside the frame the user came with*; FORMATS.md, *Archives named but not extracted*) |
@@ -115,19 +115,6 @@ branch, so reopening it is a merge and not a rediscovery.
   identical there. The rule that tries is DECISIONS.md 2026-08-29, *a cut
   archive*.
 
-- **Two folders that merge cannot be told from one folder visited
-  twice, in a format that carries no directory entries.** The Macintosh
-  shell shortens every path component to 31 characters, so two folders
-  whose names agree that far become one; where the archive declares each
-  folder as an entry of its own (DiskDoubler, SuperDisk!, StuffIt
-  hierarchies) that is reported as *"combined with"*, because the
-  declaration is what makes the second one distinguishable. Where
-  folders exist only inside the paths of the files in them, the second
-  arrival looks exactly like the first folder being revisited.
-  **What would change it:** nothing in the format. Remembering every
-  long name ever seen would, at a cost this shell will not pay on a
-  1 MB machine — it remembers 24 (FORMATS.md, *Name limits*).
-
 - **A uuencoded set missing a MIDDLE part decodes short, and silently.** A
   document posted in several parts joins and decodes — the mail headers
   between parts are stepped over — but uuencode carries no length and no
@@ -144,6 +131,64 @@ branch, so reopening it is a merge and not a rediscovery.
 # Part 2 — Open items
 
 ---
+
+## Selective extraction: the entries the user ticked, and no others
+
+**Asked for 2026-09-03**: show what is in the archive, extract what is chosen.
+
+**The engine already has both halves.** `UncOptions.list_only` walks the
+containers and reports every entry through `begin_entry` while decoding
+nothing, and a `begin_entry` that returns >0 skips its entry — the data is
+not decoded and `end_entry` is not called (`include/macextract.h`, *Sink*).
+So this is a shell and a UI item; no format and no decoder is involved.
+
+What it costs, all of it on the Macintosh side:
+
+- **a second walk of the archive**, at no decode. The LAST layer only: a
+  chain's envelopes are unwrapped to disk either way, so `.sit.hqx` is not
+  walked twice.
+- **the list, on a 1 MB machine.** The end-of-run report holds 64 lines in a
+  6 KB pool for this reason, and a 70,000-entry zip fits in nothing. A cap,
+  and *"too many entries to choose from"* falling back to extracting
+  everything, is the shape that stays honest; the choice itself is a bit per
+  entry.
+- **the two passes have to agree entry for entry.** An ordinal alone is
+  fragile — match the name too, and extract everything rather than the wrong
+  thing if they diverge.
+- **the list is hand-drawn**, like the report box: the floor is System 3.0.
+
+**What would close it:** the shell answering >0 for what was not ticked,
+graded through the mock sink, plus the list driven on screen on System 3.0
+and System 6 (`tools/vmac/interactive.py`).
+
+**All of that is done on the branch `selective-extract`, and it is not
+merged** — what is left is the decision, because the price is now known:
+2,720 B off every 1 MB extraction's budget whether or not anybody unticks
+anything, and ~10 ms an entry for the second walk. BRANCHES.md, and
+`BRANCH_NOTES.md` on that branch.
+
+## A DART's checksums, which this writes no fork to carry
+
+**Not a scope decision and not a missing specimen: it is a missing
+reference.** An expanded DART comes out with a data fork and nothing
+else. A DART written by the application keeps its integrity check in the
+RESOURCE fork — 'CKSM' 1 over the tags, 'CKSM' 2 over the data, and a
+'DART' 0 string spelling both out — and this writes none of them
+(FORMATS.md, *DART*).
+
+Nothing currently reads them: MacMount parses the data fork alone, and
+no other reader of the format is on this machine. And the bytes are
+verified even so — `tools/run_dart.py` checks what came out against the
+checksums DART recorded in 1993, which is the same assertion from the
+other side.
+
+**What would close it:** a statement of what an UNCOMPRESSED DART's
+resource fork holds. DART 1.5.3 only ever wrote compressed files
+(DART-notes.md: "Compression is always applied by DART v1.5"), so the
+one shape this program produces is a shape no reference describes, and
+writing a partial fork would be inventing the layout. An uncompressed
+DART written by whatever produced them — an earlier version of the
+application, per the same note — would settle it.
 
 ## Waiting on a file this machine does not have
 

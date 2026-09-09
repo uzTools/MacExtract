@@ -93,6 +93,11 @@ static const UncFormatDesc unc_formats[] = {
     { UNC_FORMAT_LRZIP,       "lrzip",               0, 0, NULL },
     { UNC_FORMAT_WIM,         "WIM",                 0, 0, NULL },
     { UNC_FORMAT_AAR,         "Apple Archive",       0, 0, NULL },
+    /* Extractable, and NOT an envelope: what comes out of a DART is a
+     * disk image, and looking inside one would mean mounting a volume.
+     * The output happens to be a DART itself, which is one more reason
+     * the engine must not go round again (src/fmt_dart.c). */
+    { UNC_FORMAT_DART,        "DART",                1, 0, unc_dart_extract },
 };
 
 static const UncFormatDesc *unc_desc(UncFormat f)
@@ -138,6 +143,7 @@ const char *unc_strerror(int err)
     case UNC_ERR_SEGMENTED:   return "multi-segment archive (missing segments)";
     case UNC_ERR_PASSWORD:    return "wrong password, or none given";
     case UNC_ERR_TOOLARGE:    return "entry is past this engine's 32-bit reach";
+    case UNC_ERR_NOTCOMPRESSED: return "already uncompressed: there is nothing to expand";
     default:                  return "unknown error";
     }
 }
@@ -216,6 +222,15 @@ static const UncProbe unc_sniff_order[] = {
     unc_applesingle_probe,
 
     /* Weaker/structural probes. */
+    /* DART has no signature at all: three plausible bytes, then a table
+     * of chunk lengths. What makes it safe here is that the table has
+     * to ADD UP to the rest of the file exactly, which is a test of
+     * every byte of the header against the one number the header does
+     * not contain. It sits at the head of this group rather than with
+     * the magics because those three bytes on their own are worth
+     * nothing, and above the text formats because it costs one size
+     * call on a buffer already read. */
+    unc_dart_probe,
     /* Before the plain Compact Pro probe, and for the same reason the
      * spanned-zip probe precedes the zip one: the FINAL segment of a set
      * carries a valid index and would be claimed as a whole archive,

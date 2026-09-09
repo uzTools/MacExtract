@@ -752,8 +752,18 @@ def main():
               "(tools/fetch_references.sh)")
         return 0
     if not build_lhasa():
-        print("run_lzh: SKIPPED — reference/lhasa will not compile here")
-        return 0
+        # NOT a skip, since 2026-09-09: reference/lhasa is right there —
+        # the check above just said so — and without it nothing in the
+        # sweep below is graded against an independent reader. A suite
+        # that returns 0 with no oracle is a suite that tests nothing,
+        # which is how a broken munpack build stayed green (DECISIONS.md
+        # 2026-09-09).
+        print("run_lzh: reference/lhasa is present and will not compile "
+              "here, so nothing below is graded against an independent "
+              "reader.")
+        print("run_lzh: fix the build, or delete reference/lhasa to make "
+              "this a skip.")
+        return 1
 
     problems = []
     ran, by_unar, by_lhasa = sweep(macextract, problems)

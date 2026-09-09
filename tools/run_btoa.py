@@ -34,18 +34,28 @@ from synth_wrapped import macbinary                  # noqa: E402
 def build():
     """Compile the reference. It is 1996 K&R C, so the warnings are
     switched off rather than fixed: this is somebody else's source and
-    `reference/` is read-only."""
+    `reference/` is read-only.
+
+    Returns (True, None) when it is there, (False, None) when
+    reference/btoa was never fetched — a real skip — and (False, why)
+    when the tree IS there and the compile failed. Those were one answer
+    until 2026-09-09, and the caller reported both as a missing tree;
+    the same conflation in tools/run_mime.py hid a real breakage
+    (DECISIONS.md 2026-09-09)."""
     if os.path.exists(BIN):
-        return True
+        return True, None
     if not os.path.isdir(SRC):
-        return False
+        return False, None
     os.makedirs(os.path.dirname(BIN), exist_ok=True)
     r = subprocess.run(["gcc", "-w", "-O1", "-std=gnu89", "-o", BIN,
                         os.path.join(SRC, "btoa.c"),
                         os.path.join(SRC, "atob.c"),
                         os.path.join(SRC, "repair.c")],
                        capture_output=True)
-    return r.returncode == 0 and os.path.exists(BIN)
+    if r.returncode == 0 and os.path.exists(BIN):
+        return True, None
+    why = (r.stderr or r.stdout).decode("utf-8", "replace").strip()
+    return False, why or "gcc exited %d and said nothing" % r.returncode
 
 
 def subjects():
@@ -75,9 +85,20 @@ def main():
     if not os.path.exists(macextract):
         print("run_btoa: no CLI at %s" % macextract)
         return 1
-    if not build():
-        print("run_btoa: SKIPPED — no reference/btoa (tools/fetch_references.sh)")
-        return 0
+    ok, why = build()
+    if not ok:
+        if why is None:
+            print("run_btoa: SKIPPED — no reference/btoa "
+                  "(tools/fetch_references.sh)")
+            return 0
+        print("run_btoa: reference/btoa is present and its oracle will not "
+              "build, so nothing here is graded against the format's own "
+              "implementation.")
+        for line in why.splitlines():
+            print("run_btoa:   " + line)
+        print("run_btoa: fix the build, or delete reference/btoa to make "
+              "this a skip.")
+        return 1
 
     problems = []
     ran = 0

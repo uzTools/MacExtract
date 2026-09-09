@@ -18,9 +18,10 @@ a copy of it. The engine passes a **932-fixture** differential suite against
 `unar` and, where `unar` fails, `macunpack`, plus 9,320 robustness variants.
 The Macintosh application extracts byte-exact on **System 3.0 and System 6.0.8,
 each at 4 MB and at the 1 MB RAM floor** (69/69 sampled fixtures every time),
-on System 7.0.1, and on Mac OS 9.2 under QEMU including HFS+ — **20/20 there
-since 2026-08-27**, when that tier was re-run for the first time since M12 and
-grew to cover the eight formats it predated. The System 3.0 tier arrived
+on System 7.0.1, and on Mac OS 9.2 under QEMU including HFS+ — **21/21 there
+as of 2026-09-04**, when a `UncOptions` field the shell had never assigned,
+which had bombed three formats there, was found and the sample gained Now
+Compress (DECISIONS.md 2026-09-04). The System 3.0 tier arrived
 2026-08-30 and needed no source change; that system ignores the boot blocks'
 shell name, so it is the only one launched by double-click (FORMATS.md,
 *System 3.0 tier*). The interactive UI is driven end to
@@ -93,7 +94,10 @@ All of these cost real time here:
   `until ! pgrep ...` never exits. Use `kill -0 <captured pid>`. **`pkill -f`
   is worse**: `pkill -f "vmac/run.py"` in the same shell command as the run
   matches that shell's own command line and kills the run before it starts.
-  Match the executable (`pkill -x minivmac`) or a captured pid.
+  Match a captured pid. **Not `pkill -x minivmac` either**, which this file
+  recommended until 2026-09-05: this machine can be shared, and another
+  session was found running its own Mini vMac out of a different tree that
+  day. An executable name is not this session's process.
 - **A sentinel echoed outside the redirect never reaches the log.**
   `./ci.sh > ci.log 2>&1; echo "CI exit $?"` puts the sentinel on the shell's
   stdout, so a companion `until grep -q "CI exit" ci.log` waits forever. Put it

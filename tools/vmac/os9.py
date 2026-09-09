@@ -39,6 +39,12 @@ byte-for-byte check of the output:
     on a 32-bit screen — that reporting channel, not the filesystem, is what
     kept HFS+ untested for so long.
 
+  * `--autotest` runs that same autotest build with the output volume plain
+    HFS as well — a third APM disk named `Out` — which is the combination the
+    other two do not cover between them: against `--launch` it changes the
+    BUILD and nothing else. `-D UNC_AT_SAMEVOL` moves the sink onto the
+    archive's own volume, which is where the interactive application writes.
+
 What is still NOT covered here: names HFS+ permits that HFS does not (a 68k
 application reaching it through the classic File Manager is capped at 31
 characters either way, so they may be unreachable at all — unproven), and real
@@ -874,7 +880,16 @@ def _walk_volume(env, mac_dir="", depth=0):
     if depth > 8:                       # archives here are not this deep
         return {}
     out = {}
-    listing = subprocess.run(["hls", "-F", "-1"] + ([mac_dir] if mac_dir else []),
+    # The folder's path goes out as MacRoman bytes, like hcopy's argument in
+    # verify_output: passed as a str it is encoded UTF-8, `hls` finds no such
+    # folder, and every file inside it is reported missing while sitting on
+    # the volume. A FILE with an 8-bit name at the root had been checked
+    # since 2026-08-28; a FOLDER with one was first walked on 2026-09-04
+    # (`Terrainman 2.0 \xc4` — DiskDoubler's `derived-Terrainman_2.0__.sea`),
+    # and the harness failed a run the application had completed.
+    listing = subprocess.run(["hls", "-F", "-1"]
+                             + ([mac_dir.encode("mac_roman", "replace")]
+                                if mac_dir else []),
                              capture_output=True, env=env)
     for raw in listing.stdout.split(b"\n"):
         entry = raw.rstrip().decode("mac_roman")
@@ -1441,6 +1456,254 @@ def verify_hfsplus(xfer, fixture, workdir, wrapper=None, expect_refusal=False):
     return ok, lines
 
 
+# ---- The AUTOTEST build with BOTH volumes plain HFS ----------------------
+#
+# The one cell the Mac OS 9 DiskDoubler evidence is missing (BLOCKERS.md,
+# *Mac OS 9.2 bombs on every DiskDoubler archive*). `--launch` runs the
+# INTERACTIVE build onto a plain-HFS transfer volume and bombs; `--hfsplus`
+# runs the AUTOTEST build onto the HFS+ boot volume and passes. Those two runs
+# differ in the BUILD and in the VOLUME at once, so the pair convicts neither.
+# This one runs the autotest build with a plain-HFS output volume — a third
+# APM disk named `Out` — which leaves the build as the only difference from
+# the run that bombs.
+#
+# It needs no Finder rename, so it is also the shortest route from the desktop
+# to a running application of the three.
+
+def run_autotest_hfs(fixture, outdir, args):
+    """Autotest build, plain-HFS `In` and plain-HFS `Out`."""
+    os.makedirs(outdir, exist_ok=True)
+    sys.path.insert(0, HERE)
+    from run import build_autotest_app                       # noqa: E402
+    appbin = build_autotest_app(args.defines)
+
+    inimg = os.path.join(outdir, "in.img")
+    outimg = os.path.join(outdir, "out.img")
+    R.sh(sys.executable, os.path.join(HERE, "mkapmdisk.py"), DISK, inimg,
+         "32", "In",
+         "--macbinary", f"{appbin}:MacExtract",
+         "--data", f"{fixture}:{ARCHIVE_ON_VOLUME}")
+    # Empty, and plain HFS. This is the volume under test.
+    R.sh(sys.executable, os.path.join(HERE, "mkapmdisk.py"), DISK, outimg,
+         "32", "Out")
+
+    verify_disk()
+    boot = boot_copy(outdir)
+    q = Qemu([boot, inimg, outimg], os.path.join(outdir, "mon.sock"))
+    try:
+        scratch = os.path.join(outdir, ".settle.png")
+        waited = q.settle(scratch, timeout=args.boot_wait)
+        if waited is None:
+            raise SystemExit("os9: never reached the Finder desktop")
+        print(f"os9: desktop settled after ~{waited:.0f}s")
+
+        def shot(tag):
+            p = os.path.join(outdir, tag + ".png")
+            q.shot(p)
+            return p
+
+        shot("20-desktop")
+        q.key("meta_l-q", "ret")                  # quit the Setup Assistant
+        time.sleep(4)
+        shot("21-assistant-quit")
+
+        q.key("i", "n", "meta_l-down")            # open the In volume
+        frac, secs = q.wait_change(os.path.join(outdir, "21-assistant-quit.png"),
+                                   WINDOW_RECT, scratch, timeout=60.0)
+        print(f"os9: In volume opened ({frac:.4f} changed in {secs:.0f}s)")
+        shot("22-in-open")
+        q.key("m", "a", "c", "meta_l-down")       # launch `MacExtract`
+
+        # Wait for the REPORT FILE, not for anything on the screen: the
+        # autotest build paints nothing and its 1bpp grid is invisible on a
+        # 32-bit screen, exactly as in run_hfsplus above.
+        started = time.time()
+        seen = False
+        while time.time() - started < args.launch_wait:
+            time.sleep(10)
+            if report_present(inimg, outdir):
+                seen = True
+                print(f"os9: report file written after "
+                      f"~{time.time() - started:.0f}s")
+                break
+        if not seen:
+            print(f"os9: no report file after {args.launch_wait:.0f}s — "
+                  f"continuing, the read-back below is the verdict")
+        shot("23-reported")
+        if os.path.exists(scratch):
+            os.remove(scratch)
+    finally:
+        q.close()
+        if not args.keep_boot:
+            try:
+                os.remove(boot)
+            except OSError:
+                pass
+
+    return verify_autotest_hfs(inimg, outimg, fixture, outdir,
+                               samevol="UNC_AT_SAMEVOL" in args.defines)
+
+
+def verify_autotest_hfs(inimg, outimg, fixture, workdir, samevol=False):
+    """The report off `In`, and then every fork off `Out`, byte for byte.
+
+    Stricter than either existing Mac OS 9 path, because on this one both
+    channels are open at once: `--hfsplus` can compare only the aggregate and
+    the names, since no host tool opens HFS+, and `--launch` reads the volume
+    but has no report to cross-check it against. A run that writes the right
+    bytes to the wrong volume, or reports an aggregate its own output volume
+    does not hold, fails here and would pass there.
+
+    With `samevol` the application was built to extract onto the archive's OWN
+    volume — what the interactive build does — so the output is read off `In`
+    and `Out` is checked to be empty, which is what proves the switch took."""
+    lines, ok = [], True
+    home = os.path.join(workdir, "hfshome")
+    os.makedirs(home, exist_ok=True)
+    env = dict(os.environ, HOME=home)
+
+    inhfs = hfs_partition(inimg, os.path.join(workdir, "in.hfs"))
+    if subprocess.run(["hmount", inhfs], capture_output=True,
+                      env=env).returncode != 0:
+        return False, ["cannot mount the In volume"]
+    rep = os.path.join(workdir, "report")
+    c = subprocess.run(["hcopy", "-r", "report", rep], capture_output=True,
+                       env=env)
+    subprocess.run(["humount"], capture_output=True, env=env)
+    if c.returncode != 0:
+        return False, ["the Mac wrote no report file — it never reached the "
+                       "end of a run (screenshots in " + workdir + ")"]
+
+    vals, recs = read_report(rep)
+    nfiles, ret, errors, sdc, sdl, src, srl, peak = vals[:8]
+    ret = ret - (1 << 32) if ret >= (1 << 31) else ret
+    for code, what in ((-1001, 'no volume named "In"'),
+                       (-1002, 'no volume named "Out" — the third disk did '
+                               'not mount')):
+        if ret == code:
+            return False, [f"the application reported: {what}"]
+
+    ref = os.path.join(workdir, "linux-out")
+    shutil.rmtree(ref, ignore_errors=True)
+    os.makedirs(ref)
+    cli = os.path.join(R.REPO, "build", "rel", "macextract")
+    # `-nr`: the AUTOTEST build calls RunExtract once and takes no envelopes
+    # off, unlike the interactive build verify_output() grades.
+    subprocess.run([cli, "x", "-nr", "--forks", "hidden", fixture, "-o", ref],
+                   capture_output=True)
+
+    sys.path.insert(0, os.path.join(R.REPO, "tools"))
+    from vmac_check import aggregate_dir, mask_reserved        # noqa: E402
+    enf, esdc, esdl, esrc, esrl = aggregate_dir(ref)
+
+    lines.append(f"engine ret={ret} errors={errors}, peak heap "
+                 f"{peak/1024.0:.1f} KB")
+    for label, got, want in (("files", nfiles, enf),
+                             ("data CRC sum", sdc, esdc),
+                             ("data bytes", sdl, esdl),
+                             ("rsrc CRC sum", src, esrc),
+                             ("rsrc bytes", srl, esrl)):
+        same = got == want
+        ok = ok and same
+        lines.append(f"  {label:>13}: Mac {got}  Linux {want}"
+                     f"{'' if same else '   <- MISMATCH'}")
+    if ret != 0 or errors:
+        ok = False
+        lines.append("  the engine did not return UNC_OK with zero per-entry "
+                     "errors")
+
+    # And now the half no HFS+ run can do: read the output volume back.
+    outhfs = hfs_partition(outimg, os.path.join(workdir, "out.hfs"))
+    if subprocess.run(["hmount", outhfs], capture_output=True,
+                      env=env).returncode != 0:
+        return False, lines + ["cannot mount the Out volume"]
+    if samevol:
+        # `Out` has to be MOUNTED — FindVolWait looks it up before the switch
+        # redirects the sink — but nothing should have been written to it.
+        stray = _walk_volume(env)
+        subprocess.run(["humount"], capture_output=True, env=env)
+        if stray:
+            ok = False
+            lines.append(f"UNC_AT_SAMEVOL did not take: {len(stray)} file(s) "
+                         f"landed on the separate Out volume "
+                         f"({', '.join(sorted(stray))})")
+        else:
+            lines.append("Out is empty, so the extraction really went to the "
+                         "archive's own volume")
+        if subprocess.run(["hmount", inhfs], capture_output=True,
+                          env=env).returncode != 0:
+            return False, lines + ["cannot re-mount the In volume"]
+    names = _walk_volume(env)
+    if samevol:
+        # The report goes to the INPUT volume by design, so on this route it
+        # sits among the output and is not part of it.
+        names.pop("report", None)
+
+    expected = set()
+    for root, _d, files in os.walk(ref):
+        for f in files:
+            if f.startswith("._"):
+                continue                  # sidecar; it travels with its data
+            expected.add(os.path.relpath(os.path.join(root, f), ref))
+    expected = {unicodedata.normalize("NFC", e) for e in expected}
+    # Compare in the Mac's spelling, as verify_output() does: the shell writes
+    # each component through ComponentToStr63().
+    mac_of = {}
+    for e in sorted(expected):
+        mac_of["/".join(mac_leaf(c) for c in e.split("/"))] = e
+    expected = set(mac_of)
+
+    lines.append(f"{len(names)} file(s) on the "
+                 f"{'In' if samevol else 'Out'} volume: "
+                 f"{', '.join(sorted(names)) or '(none)'}")
+    missing = expected - set(names)
+    extra = set(names) - expected
+    if missing:
+        ok = False
+        lines.append(f"MISSING on the Mac: {', '.join(sorted(missing))}")
+    if extra:
+        ok = False
+        lines.append(f"UNEXPECTED on the Mac: {', '.join(sorted(extra))}")
+
+    for name in sorted(names):
+        mb = os.path.join(workdir, "forks", name.replace("/", "_") + ".macbin")
+        os.makedirs(os.path.dirname(mb), exist_ok=True)
+        c = subprocess.run(["hcopy", "-m",
+                            names[name].encode("mac_roman", "replace"),
+                            mb.encode()], capture_output=True, env=env)
+        if c.returncode != 0:
+            ok = False
+            lines.append(f"  {name}: cannot copy off the volume: "
+                         f"{c.stderr.decode(errors='replace').strip()}")
+            continue
+        typ, crt, data, rsrc = macbinary_forks(mb)
+        refrel = mac_of.get(name, name)     # the reference's spelling of it
+        head, _, tail = refrel.rpartition("/")
+        want_d = os.path.join(ref, refrel)
+        want_r = os.path.join(ref, head, "._" + tail) if head \
+            else os.path.join(ref, "._" + tail)
+        for label, got, path, mask in (("data", data, want_d, False),
+                                       ("rsrc", rsrc, want_r, True)):
+            if not os.path.exists(path):
+                if got:
+                    ok = False
+                    lines.append(f"  {name} {label}: Mac wrote {len(got)} B, "
+                                 f"Linux wrote no such fork")
+                continue
+            expect = open(path, "rb").read()
+            a, b = (mask_reserved(got), mask_reserved(expect)) if mask \
+                else (got, expect)
+            if a == b:
+                lines.append(f"  {name} {label}: {len(got)} B byte-exact")
+            else:
+                ok = False
+                lines.append(f"  {name} {label}: MISMATCH — Mac {len(got)} B, "
+                             f"Linux {len(expect)} B")
+        lines.append(f"  {name} type/creator: {_ostype(typ)}/{_ostype(crt)}")
+    subprocess.run(["humount"], capture_output=True, env=env)
+    return ok, lines
+
+
 ENCRYPTED_PW = "hushnow"
 
 
@@ -1635,6 +1898,18 @@ def main():
                          "Finder and running the autotest build. The result "
                          "comes back as a report FILE on the input volume, "
                          "because nothing on this host can read HFS+")
+    ap.add_argument("--autotest", action="store_true",
+                    help="run the AUTOTEST build with BOTH volumes plain HFS "
+                         "— a third disk named `Out` — instead of the "
+                         "interactive build. The one combination --launch and "
+                         "--hfsplus between them do not cover: it changes the "
+                         "BUILD and nothing else against --launch.")
+    ap.add_argument("-D", "--define", dest="defines", action="append",
+                    default=[], metavar="SWITCH",
+                    help="with --autotest: a build switch passed to "
+                         "build_autotest_app, e.g. -D UNC_AT_SAMEVOL to "
+                         "extract onto the archive's OWN volume, which is "
+                         "what the interactive application does")
     ap.add_argument("--expect-refusal", action="store_true",
                     help="with --hfsplus: PASS when the Mac DECLINES the "
                          "archive and writes nothing, provided the Linux "
@@ -1716,6 +1991,15 @@ def main():
         if args.fixture or args.list:
             ap.error("--encrypted generates its own archive — nothing in the "
                      "corpus is encrypted — so it takes no fixture")
+    if args.autotest:
+        if args.hfsplus or args.launch or args.cancel or args.cancel_click \
+                or args.encrypted:
+            ap.error("--autotest runs the autotest build on its own volumes; "
+                     "it does not combine with --launch, --hfsplus, either "
+                     "cancel route or --encrypted")
+    elif args.defines:
+        ap.error("-D is a build switch for the autotest application, so it "
+                 "means nothing without --autotest")
     if (args.cancel or args.cancel_click) and not args.launch:
         ap.error("--cancel drives the application, so it needs --launch")
     if (args.cancel or args.cancel_click) and args.hfsplus:
@@ -1755,7 +2039,7 @@ def main():
     os.makedirs(args.outdir, exist_ok=True)
     sys.path.insert(0, HERE)
     appbin = None
-    if not args.hfsplus:            # --hfsplus builds the autotest app instead
+    if not (args.hfsplus or args.autotest):   # both build the autotest app
         from interactive import build_interactive_app
         appbin = build_interactive_app()
 
@@ -1763,7 +2047,17 @@ def main():
     for fixture in fixtures:
         name = os.path.basename(fixture)
         out = args.outdir if len(fixtures) == 1 else os.path.join(args.outdir, name)
-        if args.hfsplus:
+        if args.autotest:
+            ok, lines = run_autotest_hfs(fixture, out, args)
+            where = ("the archive's own volume"
+                     if "UNC_AT_SAMEVOL" in args.defines
+                     else "a plain-HFS Out volume")
+            print(f"\nos9: {'PASS' if ok else 'FAIL'} — {name}, autotest "
+                  f"build onto {where}")
+            for l in lines:
+                print("os9: " + l)
+            print(f"os9: screenshots in {out}")
+        elif args.hfsplus:
             ok, lines = run_hfsplus(fixture, out, args)
             print(f"\nos9: {'PASS' if ok else 'FAIL'} — {name} onto HFS+")
             for l in lines:

@@ -1,4 +1,4 @@
-MacExtract v0.29.0 — bootstrap distribution
+MacExtract v0.32.0 — bootstrap distribution
 ==========================================
 
 A bare Classic Mac has no way to open a .sit/.cpt/.hqx until it HAS an
@@ -45,6 +45,12 @@ Cabinet, WIM, Zoo, ARJ, cpio, ar and Apple Archive (.aar) --
 are named rather than opened: you are told what the file is instead of
 being left with something that looks like a damaged download.
 
+Compressed DART disk images get a different answer, because a DART is not
+an archive: it holds a whole floppy rather than files. MacExtract expands
+one into an UNCOMPRESSED DART, which is the form a mounting program can
+read straight off. Hand it one that is already uncompressed and it tells
+you so rather than pretending something went wrong.
+
 Password-protected archives open too -- StuffIt, StuffIt 5, Compact
 Pro, PackIt, zip (the old cipher and WinZip's AES) and ARC. You are
 asked for the password when an entry that needs one comes up, and
@@ -81,10 +87,15 @@ That second dialog opens in the archive's own folder, so pressing Return
 puts them next to it; click Drive to send them to another disk instead.
 
 When a run ends, anything that had to change on the way is listed: a name too
-long for HFS (31 characters max), two folders that ended up sharing a
-shortened name, an entry that could not be extracted and what was wrong with
-it. Save as Text files the whole thing as a document. A run with nothing to
-report just says so, as before.
+long for HFS (31 characters max) and what it became, an entry that could not
+be extracted and what was wrong with it. Save as Text files the whole thing as
+a document. A run with nothing to report just says so, as before.
+
+Two files whose names are the same for the first 31 characters do not
+overwrite each other -- the second gets a ~1 after its name, before the .txt
+or whatever the suffix is. Two FOLDERS in that position are kept apart the
+same way, so the files that were in different folders in the archive are in
+different folders on your disk.
 
 If a Compact Pro or zip archive carries a note -- the comment whoever
 made it typed in -- it is written into that folder as a text file called

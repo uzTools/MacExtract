@@ -121,6 +121,17 @@ python3 tools/run_superdisk.py --macextract build/san/macextract \
 # Skips cleanly without qemu-m68k or the cross-compiler.
 python3 tools/sdmodule/run_sdmodule.py --macextract build/san/macextract \
     || fail "SuperDisk! module differential"
+# DART (M52). `unar` has no DART parser and neither does `macunpack`, so
+# the oracle is not a second reader but the ENCODER's input: CiderPress2
+# publishes two 800K disks compressed by DART 1.5.3 itself, in both of
+# DART's methods, WITH THE SOURCE IMAGES BESIDE THEM — plus, for one of
+# them, the resource fork holding the checksums DART wrote in 1993. The
+# suite also holds the two codecs against each other, sweeps near-miss
+# headers (the format has no signature at all) and cuts an archive,
+# because DART is not in the fixture corpus and run_truncation.py never
+# meets one. Skips cleanly without reference/.
+python3 tools/run_dart.py --macextract build/san/macextract \
+    || fail "DART tests"
 # btoa/atob (M26). No corpus file and no second reader — `unar` does not
 # know the format — so the ORIGINAL implementation is the encoder: the
 # suite compiles reference/btoa and grades our decoder against what it

@@ -12,6 +12,24 @@ the ciphers kept; an LZH gets **701,688 B**, keeping only its own decoder.
 4/4 fixtures extract byte-exact across the formats that keep one image, two
 images, and none.
 
+
+## Merged with `main`, 2026-09-09 — and DART is resident
+
+`main` gained DART (M52). It arrives **resident**: there is no
+`tools/overlay/ovl_dart.c`, so it is not one of the decoders this branch
+loads and releases, and its **+2,188 B of code and +128 B of A5 are paid
+by every extraction**. Total build: 150,220 B of `CODE` and 44,244 B of
+A5, against 148,032 and 44,116 before the merge.
+
+For THIS branch that matters slightly differently from
+`selective-loading`: the eager overlay is released as soon as the archive
+proves it cannot want it, so a DART — which wants none of the overlaid
+decoders — would release the whole overlay and then pay for a resident
+decoder it does want. Whether `ovl_dart.c` belongs in the overlay or
+outside it is therefore a real question here rather than an obvious yes.
+Nobody has measured it.
+
+
 ## Fifteen images: BinHex and btoa stop travelling with MIME
 
 **Opening a `.hqx` used to load 15,864 B of decoder. It now loads 2,148 B.**
