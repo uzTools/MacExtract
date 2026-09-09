@@ -77,14 +77,28 @@ ls -la build/mac/MacExtract.APPL build/mac/MacExtract.bin build/mac/MacExtract.d
 # one test rather than three -- and they bought 52 B of the 216 the first
 # version cost. That 12 % is the figure worth remembering about code shape
 # on this target.
-UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-147588}
+# Raised again 2026-09-09 from 147,588 to 149,756: +2,168 B for DART, the
+# first format here whose output is a file of its own format (DECISIONS.md
+# 2026-09-09). Bought on the same terms as every other format — one engine,
+# not a Macintosh subset of one — and the one that most earns it on this
+# target: what a compressed DART is FOR is mounting, and MacMount refuses
+# one until something expands it.
+UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-149756}
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
 # withdrawn claim is in BLOCKERS.md). Set at the size on the day, like the
 # code ceiling: 44,096 B = 32,644 data + 11,452 bss. It had grown unwatched
 # the whole time this file said data was free.
-UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-44096}
+# Raised 2026-09-09 from 44,096 to 44,260: +164 B for DART, attributed by
+# diffing the linked image's .data symbols — 28 B of type table, 20 B of
+# format row, 4 B of probe pointer, 4 B on unc_strerror's switch table, and
+# ~100 B of message text. The type table was 56 B in the first draft and
+# holds one DIGIT per row instead of a whole OSType, which cost 8 B of code
+# to save 24 B here: on this target both come off the same budget, so that
+# is 16 B, and it is the second time composing a constant beat storing it
+# (DECISIONS.md 2026-09-01, *two byte reads*).
+UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-44260}
 SIZE="$TOOLCHAIN/bin/m68k-apple-macos-size"
 GDB=build/mac/MacExtract.code.bin.gdb
 if [ -x "$SIZE" ] && [ -f "$GDB" ]; then

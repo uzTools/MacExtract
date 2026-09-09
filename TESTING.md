@@ -1730,6 +1730,77 @@ suite feeds it only complete ones, and that difference is written here
 rather than discovered later: a corrupt `-lh3-` table is a per-entry error
 in LHa and garbage output here.
 
+## DART (`tools/run_dart.py`, in `ci.sh`)
+
+**The oracle is the encoder's input, not a second reader.** There is no
+second reader: `unar` has no DART parser and neither does `macunpack`.
+What CiderPress2 publishes instead is `TestData/dart/` — two 800K disks
+that DART 1.5.3 compressed under MAME, each in BOTH of DART's methods,
+**with the source images beside them**. `tools/fetch_references.sh`
+fetches the lot into `reference/ciderpress2/`.
+
+```sh
+sh tools/fetch_references.sh            # once
+python3 tools/run_dart.py               # ~15 s, 37 cases
+```
+
+Four assertions come out of the specimens, and each fails on a different
+kind of defect:
+
+1. **the data halves equal the source image**, byte for byte, for "fast"
+   and for "best";
+2. **the tag halves equal the source's tags** — `random_t-source.img` is
+   a Disk Copy 4.2 file and carries 9,600 of them, all random — or are
+   zero, which is what an ordinary HFS disk has;
+3. **the two methods agree with each other** over one disk, which is the
+   only assertion here that compares two DECODERS;
+4. **DART's own checksums**: `test1-best` keeps its resource fork in the
+   ZIP, so 'CKSM' 1 (tags) and 'CKSM' 2 (data), written by the
+   application in 1993, are checked against a Disk Copy 4.2 checksum of
+   what came out.
+
+`random_t` is the specimen that matters for the WALK rather than the
+codecs: its two 256KB files are incompressible junk and its tags are
+random, so 18 of its 40 chunks take the per-chunk 0xFFFF stored fallback
+— a branch nothing else reaches.
+
+**Three of the four DART files live inside the 1440K images beside them**,
+so reaching them needs `hfsutils` (`hmount`/`hcopy`). Without it the
+suite says so and grades `test1-best`, which sits in the ZIP as a plain
+member, together with everything synthetic below. It never fails for
+want of the tools.
+
+**Also here, because there is nowhere else:**
+
+- **the refusal**, which is a round trip: an uncompressed DART is exactly
+  what this engine WRITES, so the suite feeds its own output back and
+  requires `already uncompressed` — and requires the file to still be
+  RECOGNIZED as a DART, which is what makes the message possible;
+- **seven near-miss headers**, each one byte from a real archive's. The
+  format has no signature at all, so every one of them is load-bearing;
+- **a cut archive**, at a half, a fifth and a tenth;
+- **a synthetic 400K disk**, which is the only shape that exercises
+  "slots past the end of the disk are zero" — an 800K disk fills all
+  forty of its slots — plus a stored chunk among compressed ones, a zero
+  RLE count, and a chunk claiming to be longer than what it expands to.
+
+### What it cannot see
+
+- **DART is not in the fixture corpus**, and cannot be: a manifest comes
+  from `unar`, which has no idea what a DART is. So the 932-fixture diff
+  suite, `run_robustness.py` and `run_truncation.py` never meet one, and
+  the truncation and near-miss cases above are this suite's own. What
+  those three do that this does not is sweep BIT FLIPS; DART's crash
+  safety rests on `tools/fuzz.py` reaching it and on ASan over these 37
+  cases.
+- **No 1440K DART has ever been read here.** Every specimen is an 800K
+  Macintosh disk, so the 72-slot header — the other half of `dart_parse`
+  — is exercised only by the near-miss cases, which reject rather than
+  decode. The MS-DOS and Apple II disk types have never been seen at all.
+- **Nothing checks the output on a Macintosh.** `tools/vmac/` has never
+  run a DART: the emulated Mac Plus samples are corpus fixtures, and an
+  838 KB output does not fit beside its input on an 800K floppy.
+
 ## Alysis SuperDisk! (`tools/run_superdisk.py`, in `ci.sh`)
 
 Added 2026-08-20. The corpus holds two SuperDisk! archives and no oracle

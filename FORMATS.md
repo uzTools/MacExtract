@@ -1,6 +1,6 @@
 # FORMATS.md — format support matrix
 
-Status after M0–M43. "Oracle coverage" = fixtures with byte-exact
+Status after M0–M52. "Oracle coverage" = fixtures with byte-exact
 differential manifests (built from The Unarchiver's `unar`; see
 TESTING.md); every one passes, plus 10 corruption variants each in the
 robustness suite. "Peak RAM" = allocator high-water mark across the
@@ -14,6 +14,7 @@ below it. Per-format detail that used to be an unnamed footnote is
 under *Table notes*.
 
 - Table notes
+- DART
 - StuffIt SpaceSaver
 - LZH / LHA
 - btoa, the other ASCII armour
@@ -69,6 +70,7 @@ under *Table notes*.
 | Alysis SuperDisk! (.X, .x) | extract | **both containers** (record-stream archive and single file); methods 1-4 and 5-8 (a finite-context predictor over a 13- or 16-bit context, with the flag bitmap and/or the literals Huffman-coded), 9 Huffman, 10 SlowFastA and 11 SlowFastB (LZSS); 13 declined per entry, and 20 is an encoder for 11 rather than a method of its own✧✧ | 2 fixtures, 5 forks, adjudicated by the archives' OWN self-extractors on an emulated Mac, + 11 single-file specimens written by Alysis's own control panel (methods 1 and 6) and graded against their inputs, + every method 1..9 through Alysis's own Add-In Modules under qemu-m68k (`tools/sdmodule/`), + 4 record streams written here and read back by an archive's own self-extractor (paths past the cap, and a stored block) | 72–84 KB✧✧ | full |
 | StuffIt SpaceSaver (`SPSV`) | extract | **every method the format has**: 0 stored, 1 and 2 (the "Original" LZSS pair), 3 "Alg 3" (Huffman + LZ77), 4 "Alg 4" — the last two starting their window loaded with a preset dictionary that ships inside SpaceSaver✦✦ | no oracle and no fixture, but **Aladdin's own compressors run under `qemu-m68k` and 44 forks they wrote read back byte-exact** (`tools/ssmodule/`, 2026-08-25), plus 160 corrupted variants, a synthetic round-trip and unit tests✦✦ | 4 KB stored, 8 KB method 1, 84 KB method 2, 41 KB method 3, **36 KB** for what SpaceSaver writes (measured on a Mac Plus); 68 KB is the ceiling the width byte allows. The dictionary is 9.7 KB of static data, not heap | full |
 | LZH / LHA (.lzh, .lha) | extract | -lh0- store, -lh1- (LHarc's adaptive Huffman, shared with StuffIt method 5), **-lh2- (both codes adaptive, the position tree growing with the output)**, **-lh3- (static, rebuilt per block)**, -lh4-/-lh5-/-lh6-/-lh7- (static Huffman over a 4/8/32/64 KB window), -lhd- directories, LArc's -lz4-/-lz5-/-lzs-; header levels 0, 1, 2 and 3; **MacLHA's MacBinary payload unwrapped into two forks**; every method the format has except PMarc✵ | 8 fixtures (1 real Amiga archive + 7 of lhasa's) + **182 archives from fourteen writers**, each graded against `unar` and against lhasa, + 12 sets written by LHa 1.14i itself, + 15 -lh2- and 6 -lh3- entries generated for the purpose✵ | 4–74 KB✵ | full |
+| DART (Apple's Disk Archive/Retrieval Tool) | **expand** — what comes out is an UNCOMPRESSED DART, not the files on the disk (*DART*, below) | 0 "fast" (a word-oriented RLE), 1 "best" (LZHUF over a window of zeros), and the per-chunk 0xFFFF stored fallback both of them fall back to; method 2 is **refused as already uncompressed**, which is a statement about the file rather than a failure of it | no fixture and no second reader anywhere: graded against **the disks DART 1.5.3 itself was fed** — two 800K images, each compressed BOTH ways, published beside their sources — plus the checksums DART wrote into one of them in 1993, and one real archive from 1990 (*DART*, below) | 24.6–40.6 KB | full |
 | AppleLink package (.pkg) | detect only | — | no specimen anywhere: the probe is Aladdin's own recogniser, at 0 false positives across 928 fixtures (*AppleLink packages*, below) | — | — |
 | RAR, RAR 5, 7-Zip, xz, bzip2, Cabinet, Zoo, ar/.deb, cpio, ARJ, Zstandard, lzip, lrzip, WIM, Apple Archive | **named only**, never extracted | — | archives written here by bzip2, xz, 7z, cpio and ar and confirmed by p7zip, and **Apple Archives written and re-read by libNeoAppleArchive** in all four shapes; real RAR, RAR 5 and CAB out of libarchive's test suite; synthetic Zoo, ARJ and Cabinet identified by deark; 0 false positives in 940 fixtures (*Archives named but not extracted*, below) | — | — |
 
@@ -856,6 +858,107 @@ extracts **byte-exact on a real emulated Mac Plus at 4 MB**, 1 file, 0 errors,
 encoded on an emulated Mac, decoded on one. `unar` reads none of these: it
 cannot recognise the format at all, which is why the encoder had to be the
 oracle.
+
+## DART
+
+Apple's Disk Archive/Retrieval Tool: an internal utility, never a
+product, used to ship floppy images around Apple and inside some
+support products. It cuts a disk into chunks of forty sectors,
+compresses each one on its own, and puts a table of their lengths in
+front of them.
+
+**What comes out is another DART, and that is deliberate.** Every other
+format here yields the files somebody put in; a disk image holds a
+VOLUME, and reading a volume is a file system rather than a codec —
+which is why disk images are out of scope (OPEN_ITEMS.md, part 1). What
+a user of these machines does with a DART is MOUNT it, and DART's third
+method is no compression at all: forty 512-byte sectors then their forty
+12-byte tags, chunk after chunk, which a mounter reads as a raw image
+with a gap. So this expands a compressed DART into an uncompressed one
+and stops there. The reasoning is DECISIONS.md 2026-09-09.
+
+Fed a file that is already method 2 the answer is `UNC_ERR_NOTCOMPRESSED`
+— no entry, one verdict about the archive — and both hosts say so in
+those terms.
+
+### The three methods
+
+| id | name | what it is | length unit |
+|---|---|---|---|
+| 0 | "fast" | word-oriented RLE: a signed count of 16-bit words, positive for literals and negative for a repeat of the word that follows. Zero cannot occur | **words** |
+| 1 | "best" | LZHUF (Yoshizaki/Okumura), with no leading length word and the match window filled with **0x00** instead of 0x20 — `unc_lzah.c`'s `-lh1-` coder under `UNC_LZAH_DART` | bytes |
+| 2 | "not" | nothing. This is what expanding one produces, and what is refused as input | — |
+
+A chunk of any method may instead be marked **0xFFFF** and stored whole,
+which is what DART does when compressing it does not pay. `random_t`
+takes that branch for 18 of its 40 chunks and `Studio8_Program` for 10.
+
+### Identification, where the format has no signature at all
+
+Four bytes — a method, a disk type, a size in kilobytes — and then the
+table. Three things make that safe enough to sit in a sniffer beside
+forty other formats:
+
+- the type and the size have to be one of the **seven pairs** Apple's
+  own header names a file type for (`DMd1`..`DMd7`);
+- slots past the end of the disk have to be **zero**, and slots inside
+  it non-zero;
+- **the table has to add up to the rest of the file, to the byte.**
+
+The last is the one that carries it, and it is the test that settled the
+format in the first place: a byte-length reading of `Studio8_Program`
+comes out 300,951 short, and a word-length reading lands on 811,586
+exactly. All five specimens consume to their last byte. A cut DART
+therefore is not recognized at all rather than half-read; the walk still
+reports `UNC_ERR_TRUNCATED` when it is asked directly, which is what the
+unit test checks.
+
+### What it is graded against
+
+`unar` has no DART parser and neither does `macunpack`, so there is no
+second reader on this machine. What there is instead is **the encoder's
+input**: CiderPress2 publishes two 800K disks that DART 1.5.3 compressed
+under MAME, each in both methods, with the source images beside them.
+`tools/run_dart.py` and TESTING.md have the method; the results:
+
+| specimen | method | chunks stored | expands to | agrees with |
+|---|---|---|---|---|
+| `test1-fast` | fast | 0 | 819,200 B + 19,200 B of zero tags | `test1-source.img`, byte for byte |
+| `test1-best` | best | 0 | the same | the same, **and** DART's own 'CKSM' resources: data `183F8B19`, tags `00000000` |
+| `random_t-fast` | fast | 19 | 819,200 B + 19,200 B of RANDOM tags | the Disk Copy 4.2 payload of `random_t-source.img` |
+| `random_t-best` | best | 18 | the same | the same |
+| `Studio8_Program.dart` | fast | 10 | an 800K HFS volume, "Studio/8", five files, October 1990 | mounts under `hfsutils`; no published source exists |
+
+The two methods over one disk agree with each other, which is two
+independent codecs arriving at one answer. `Studio8_Program.dart` is a
+real archive from 1990 and is the only specimen here that Apple's tool
+did not write for a test suite.
+
+### Peak RAM, and why it is not a constant
+
+| method | peak | what it is |
+|---|---|---|
+| fast | 24,582–25,056 B | the longest chunk the table states, plus 4 KB of output staging |
+| best | 40,301–40,624 B | the same, plus 15,568 B for the adaptive Huffman tree, for as long as one chunk lasts |
+
+The input buffer is sized from the **table**, not from the 20,960 a
+chunk may be. The format's own fallback caps a compressed chunk at the
+size it expands to, so a fixed buffer would have been legitimate — and
+would have made the peak the same number for every archive, which is the
+smell CLAUDE.md names. Measured, the saving is between 0 and 474 B on
+these five: every real 800K disk has at least one chunk that barely
+compresses. A disk that is mostly empty has no such chunk, and it is the
+small machines that would meet one.
+
+### What is NOT written
+
+The output has **no resource fork**. A DART written by the application
+keeps its checksums there — 'CKSM' 1 for the tags, 'CKSM' 2 for the data,
+and a 'DART' 0 string that spells both out — and this writes neither.
+Nothing reads them: MacMount's parser looks at the data fork alone, and
+`unar` has no opinion. `run_dart.py` checks our output AGAINST the ones
+DART recorded, so the bytes are verified even though the file does not
+carry the verification. OPEN_ITEMS.md has what would close it.
 
 ## StuffIt SpaceSaver
 

@@ -5157,6 +5157,19 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
         PStrCat(outcome, unc_format_name(topFmt));
         PStrCat(outcome, " files.");
     }
+    else if (ret == UNC_ERR_NOTCOMPRESSED && entries == 0 &&
+             topFmt != UNC_FORMAT_UNKNOWN) {
+        /* The opposite of the branch above, and the reason it needed a
+         * code of its own: this file is not damaged, is not a format
+         * somebody else's program opens, and is not missing anything.
+         * It is ALREADY what expanding it would produce — an
+         * uncompressed DART, which is the one a mounter reads. Saying
+         * "could not be extracted" about it sends the user looking for
+         * a fault that is not there. */
+        PStrCat(outcome, "This ");
+        PStrCat(outcome, unc_format_name(topFmt));
+        PStrCat(outcome, " disk image is already uncompressed.");
+    }
     else if (ret != UNC_OK && entries > 0)
         /* The archive stopped being readable part way down, and what
          * was read is on the disk: "this file could not be extracted"

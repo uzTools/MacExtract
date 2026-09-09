@@ -193,6 +193,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-03 (the struct that grew after it was measured) — 296 was the offset of the last field
 - 2026-09-03 (a folder is a name too) — numbering folders like files, and the table that made it affordable
 - 2026-09-04 (the field nobody assigned) — a struct filled field by field, and the crash that was shaped like three formats
+- 2026-09-09 (the disk image that is expanded and not opened) — DART, and an error code for a file with nothing wrong with it
 
 ---
 
@@ -11169,3 +11170,141 @@ already written down two functions away, for `hcopy` (`tools/vmac/README.md`,
 
 What the claim cost is in BLOCKERS.md, *Withdrawn claims*; the numbers in
 FORMATS.md, *Mac OS 9.2*.
+
+---
+
+## 2026-09-09 (the disk image that is expanded and not opened) — DART, and an error code for a file with nothing wrong with it
+
+**Asked for**: expand a compressed DART, and store the result as a
+decompressed DART; say so plainly when the file handed over is already
+decompressed. The reason is a sibling project: MacMount mounts an
+UNCOMPRESSED DART and refuses a compressed one by name, because mounting
+one would need the volume's bytes to exist somewhere and unpacking an
+archive is this program's job (its own `ARCHAEOLOGY.md` says exactly
+that). This closes that loop.
+
+**Why the output is a DART and not a disk image, still less the files on
+it.** Disk images are out of scope, and the reason recorded in
+OPEN_ITEMS.md is that extracting one means a filesystem rather than a
+codec, and that naming one is worth nothing because a disk image is not
+an archive. Both halves survive here. What changed is that DART's third
+method is *no compression*, so the thing a mounter can already read is a
+DART with a 2 in its first byte — which makes expanding one a codec after
+all, with an output this engine's sink can write and no volume anywhere
+in the picture. **The scope line moved by one method, not by a
+principle.**
+
+**The refusal needed a code of its own, and that is the part worth
+transferring.** Handed an already-uncompressed DART, the honest answer is
+neither `UNC_ERR_FORMAT` (it is a DART, and a valid one), nor
+`UNC_ERR_UNSUPPORTED` — which says *there is something here and this
+engine cannot read it*, the exact opposite of the truth. It is
+`UNC_ERR_NOTCOMPRESSED`: recognized, well-formed, and holding nothing to
+do. The Macintosh shell says "This DART disk image is already
+uncompressed."; the CLI says "already uncompressed: there is nothing to
+expand". Before the code existed the same file would have produced "This
+file could not be extracted", which sends a user looking for a fault
+that is not there. **An error enum is a vocabulary, and a verdict it
+cannot express becomes the nearest wrong word.**
+
+**The identification, in a format with no signature at all.** Four bytes
+and a table of chunk lengths. The three fields on their own are worth
+nothing — one byte in {0,1,2}, one in a set of six, and a size — so what
+makes the probe safe is that **the table has to add up to the rest of the
+file, to the byte**. That test is the one that settled the format for
+MacMount in the first place: reading the lengths as bytes leaves
+`Studio8_Program.dart` 300,951 short, and reading them as WORDS lands on
+811,586 exactly. It also means a cut DART is not recognized at all rather
+than half-read, which is a stronger outcome than the truncation rule the
+rest of the corpus gets.
+
+The type/size pairing is the other third, and it is deliberately
+**tighter than the second reference**. CiderPress2's `FormatToKind`
+accepts eleven combinations; Apple's `DartIntf.h` names a file type for
+seven. The four it does not name are a Lisa 800K, an Apple II 400K, a
+720K Macintosh and a 1440K MS-DOS low-density — shapes DART could not
+have written, and admitting one would mean inventing the constant its
+output should carry. **Where two references disagree about what is
+legal, the one that has to be OBEYED is the one that names a constant.**
+
+**The codec was already here, twice over.** DART's "best" is LZHUF, which
+is `-lh1-` — the coder `unc_lzah.c` has run since M5 for StuffIt method 5
+and since M28 for LZH. Apple changed two things: no leading length word
+(the caller's business) and a match window of 0x00 instead of 0x20. That
+is one new mode, `UNC_LZAH_DART`, and eight lines. **The window's start
+position does not appear**, though LZHUF's is `N - F` and this decoder's
+is 0: with a UNIFORM fill, a match reaching back before the first byte
+reads the fill byte wherever the cursor began, so the two are the same
+function. Worth stating because it looks like a discrepancy and is not.
+
+**What it is graded against, and why that is better than a second
+reader.** There is no second reader — `unar` has no DART parser and
+neither does `macunpack`. There is something better: CiderPress2
+publishes two 800K disks that DART 1.5.3 compressed under MAME, in both
+methods, **with the source images beside them**. So the oracle is the
+ENCODER's input, which cannot be wrong the way a second decoder can, and
+four independent assertions come out of it: the data halves equal the
+source images; the tag halves equal the tags the source Disk Copy file
+carries; the two methods agree with each other; and one specimen keeps
+its resource fork in the ZIP, so DART's OWN checksums from 1993 —
+'CKSM' 2 = `183F8B19` — check against a Disk Copy 4.2 checksum of what
+came out. Every one of the four was made to fail before it was believed
+(a 0x20 window, a byte-length reading, a dropped slot rule, an off-by-one
+run count), and each fails a different assertion.
+
+**A test that was wrong about a real boundary.** The first synthetic case
+encoded a chunk as all literals, which is 20,962 bytes — two MORE than
+the 20,960 it expands to — and the walk refused it. The refusal is
+right: DART marks such a chunk 0xFFFF and stores it instead, which is
+what makes "a compressed chunk may not exceed what it expands to" a rule
+of the format rather than a guess, and what bounds the buffer a chunk is
+read into. The synthetic now compresses, and the rule has an assertion of
+its own. **A cap taken from a format's fallback behaviour is worth
+asserting, because the day it is wrong the failure is "not recognized"
+and nobody looks.**
+
+**And the peak that was a constant.** The first version read a chunk into
+a 20,960-byte buffer whatever the table said, which made peak RAM the
+same number for every DART — the smell CLAUDE.md names, and here it was
+real. Sizing the buffer from the LONGEST entry in the table costs four
+lines and makes the peak vary: 24,582 B against 25,056 B on the two
+"fast" archives. Measured, the saving is 0–474 B on all five specimens,
+because every real 800K disk has a chunk that barely compresses — so on
+the evidence to hand it buys almost nothing, and it is kept anyway
+because a mostly-empty 400K disk has no such chunk and it is the small
+machines that would meet one. (The change also cost a heap overrun in the
+half hour it took to notice the staging pointer still said
+`chunk + 20960`. The suite said so on the next run, loudly.)
+
+**Cost on the Macintosh, stated rather than absorbed**: +2,168 B of code
+and +164 B of A5 world, both ratchets raised in `tools/build_mac.sh` with
+the attribution. The A5 figure was got by diffing the linked image's
+`.data` symbols, which is the only way to see it: 28 B of type table,
+20 B of format row, 4 B of probe pointer, 4 B on `unc_strerror`'s switch
+and ~100 B of message text. The type table is 28 B rather than 56 because
+each row holds the DIGIT of its file type and not the whole OSType — 8 B
+of code to save 24 B of data, which on this target both come off the same
+budget. That is the second time composing a constant beat storing one
+(2026-09-01, *two byte reads*).
+
+**A bug found on the way, in `tools/fetch_references.sh`.** The block
+that fetches the archiveteam wiki pages opened with `cd reference/notes`
+and never came back, and every block added BELOW it since names its file
+from the repository root. So on a tree that did not already have them,
+the script died at the zstd fetch under `set -e` and the last six
+references — zstd, brotli, lrzip, wimlib, libNeoAppleArchive and the
+Apple Archive page — never arrived. Nobody had noticed because every
+block is guarded by the file it fetches, and this machine has had them
+since the day each was added. Fixed by removing the `cd`; the banner,
+which printed *before* the failure, moved to the end where it belongs.
+**A script whose steps are each guarded by their own output is a script
+nobody ever runs end to end.**
+
+**What is NOT done.** The output carries no resource fork, so the
+checksums a real DART keeps there are not written. Nothing reads them —
+MacMount parses the data fork alone — and no reference says what an
+uncompressed DART's resource fork should look like, so writing a partial
+one would be invention. OPEN_ITEMS.md, part 2, has what would close it.
+
+Numbers and per-specimen results: FORMATS.md, *DART*. How the suite
+runs: TESTING.md, *DART*.

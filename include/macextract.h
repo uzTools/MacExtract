@@ -117,6 +117,13 @@ typedef enum UncFormat {
      * several FILES. Joined, never extracted on its own. */
     UNC_FORMAT_MIMESEG,
 
+    /* Brought in scope 2026-09-09; appended for the same ABI reason.
+     * The one format here whose output is a file of its OWN format: a
+     * compressed DART expands to an uncompressed DART, because what
+     * reads a DART is a mounter and not this program (DECISIONS.md
+     * 2026-09-09, the disk image that is expanded and not opened). */
+    UNC_FORMAT_DART,          /* Apple's Disk Archive/Retrieval Tool    */
+
     UNC_FORMAT__COUNT
 } UncFormat;
 
@@ -150,7 +157,14 @@ enum {
     UNC_ERR_CORRUPT     = -10,  /* internal structure inconsistency     */
     UNC_ERR_SEGMENTED   = -11,  /* multi-segment archive, parts missing */
     UNC_ERR_PASSWORD    = -12,  /* encrypted, and no usable password      */
-    UNC_ERR_TOOLARGE    = -13   /* entry past this engine's 32-bit reach  */
+    UNC_ERR_TOOLARGE    = -13,  /* entry past this engine's 32-bit reach  */
+    /* Recognized, well-formed, and holding nothing there is any work to
+     * do on: an uncompressed DART already IS the file that expanding
+     * one produces. The opposite of UNC_ERR_UNSUPPORTED, which says
+     * there is something here and this engine cannot read it, and the
+     * difference is the whole of what the user needs to be told
+     * (DECISIONS.md 2026-09-09).                                       */
+    UNC_ERR_NOTCOMPRESSED = -14
 };
 
 /* Human-readable message for an error code. */

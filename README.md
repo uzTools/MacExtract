@@ -81,6 +81,12 @@ SpaceSaver compressed them in place and only the Mac that made one could read
 it. `macextract` carries the table those files need, so a lone floppy is
 enough.
 
+**Compressed DART disk images** get their own answer, because a DART is not
+an archive: it holds a floppy rather than files. MacExtract expands one into
+an *uncompressed* DART, which is the shape a mounting program — MacMount, say
+— can read directly. Hand it a DART that is already uncompressed and it says
+so instead of pretending something went wrong.
+
 **Password-protected archives** are opened too — StuffIt, StuffIt 5, Compact
 Pro, PackIt, zip (the old cipher and WinZip's AES) and ARC. The Mac
 application asks when it reaches an entry that needs one; on Linux it is `-p`.
