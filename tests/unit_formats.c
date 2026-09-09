@@ -2135,6 +2135,9 @@ static void test_dd_stac(void)
     n += b.len;
     put32(one + 8, n - 84u);                   /* datacomp */
 
+    memset(&opt, 0, sizeof opt);   /* the whole struct: a field this list
+                                     * does not name is stack garbage otherwise
+                                     * (DECISIONS.md 2026-09-04) */
     opt.list_only = 0; opt.test_only = 0;
     opt.name_hint = hint;
     opt.name_hint_len = (uint16_t)(sizeof hint - 1);
@@ -2293,6 +2296,9 @@ static void test_dd_method2(void)
     put32(one + 8, b.len);                     /* datacomp */
     free(trees);
 
+    memset(&opt, 0, sizeof opt);   /* the whole struct: a field this list
+                                     * does not name is stack garbage otherwise
+                                     * (DECISIONS.md 2026-09-04) */
     opt.list_only = 0; opt.test_only = 0;
     opt.name_hint = hint;
     opt.name_hint_len = (uint16_t)(sizeof hint - 1);
@@ -2387,6 +2393,9 @@ static void dd_one_method(int method, const uint8_t *stream, uint32_t slen)
     memcpy(one + 84, stream, slen);
     n = 84 + slen;
 
+    memset(&opt, 0, sizeof opt);   /* the whole struct: a field this list
+                                     * does not name is stack garbage otherwise
+                                     * (DECISIONS.md 2026-09-04) */
     opt.list_only = 0; opt.test_only = 0;
     opt.name_hint = hint;
     opt.name_hint_len = (uint16_t)(sizeof hint - 1);
@@ -2723,6 +2732,9 @@ static void test_diskdoubler(void)
         memcpy(one + n, "RSC", 3);   n += 3;
         /* The probe accepts a zero CRC ("really old files"), which keeps
          * this synthetic file honest rather than needing one computed. */
+        memset(&opt, 0, sizeof opt);   /* the whole struct: a field this list
+                                         * does not name is stack garbage otherwise
+                                         * (DECISIONS.md 2026-09-04) */
         opt.list_only = 0; opt.test_only = 0;
         opt.name_hint = hint;
         opt.name_hint_len = (uint16_t)(sizeof hint - 1);
@@ -2797,6 +2809,9 @@ static void test_superdisk_single(void)
     one[n++] = 0x80; one[n++] = 8 + 2;
     memcpy(one + n, want_r, 8); n += 8;
 
+    memset(&opt, 0, sizeof opt);   /* the whole struct: a field this list
+                                     * does not name is stack garbage otherwise
+                                     * (DECISIONS.md 2026-09-04) */
     opt.list_only = 0; opt.test_only = 0;
     opt.name_hint = hint;
     opt.name_hint_len = (uint16_t)(sizeof hint - 1);
@@ -2854,6 +2869,195 @@ static void ss_head3(uint8_t *h, uint32_t dclen, uint32_t dulen,
     memcpy(h + 52, "TEXT", 4);
     memcpy(h + 56, "ttxt", 4);
     h[60] = 0x40; h[61] = 0x00;              /* isInvisible, restored */
+}
+
+/* ------------------------------------------------------------------ */
+/* DART                                                                */
+/* ------------------------------------------------------------------ */
+
+/* CapSink holds 4 KB a fork and a DART's output is 419,284 bytes, so
+ * this one checks the stream as it goes: the header verbatim, and every
+ * byte after it against the word the archive encodes. */
+#define DART_CHUNK 20960u
+#define DART_USED  20u
+#define DART_WORD  0xA55Au
+
+typedef struct {
+    UncEntryInfo info;
+    uint8_t      head[84];
+    uint32_t     len;
+    int          bad;          /* a byte that was not the expected one */
+    int          status;
+    int          count;
+} DartSink;
+
+static int dart_begin(void *ctx, const UncEntryInfo *info)
+{
+    ((DartSink *)ctx)->info = *info;
+    return 0;
+}
+
+static int dart_write(void *ctx, UncFork fork, const void *buf, int32_t len)
+{
+    DartSink *s = (DartSink *)ctx;
+    const uint8_t *p = (const uint8_t *)buf;
+    int32_t i;
+    if (fork != UNC_FORK_DATA) return -1;
+    for (i = 0; i < len; i++, s->len++) {
+        if (s->len < sizeof s->head) s->head[s->len] = p[i];
+        else if (p[i] != (uint8_t)((s->len & 1u) ? DART_WORD : DART_WORD >> 8))
+            s->bad = 1;
+    }
+    return 0;
+}
+
+static int dart_end(void *ctx, int status)
+{
+    DartSink *s = (DartSink *)ctx;
+    s->status = status;
+    s->count++;
+    return 0;
+}
+
+static void dart_sink(UncSink *sk, DartSink *s)
+{
+    memset(s, 0, sizeof *s);
+    sk->ctx = s;
+    sk->begin_entry = dart_begin;
+    sk->write = dart_write;
+    sk->end_entry = dart_end;
+    sk->comment = NULL;
+}
+
+/* A 400K DART: twenty chunks used, forty slots, the last twenty zero.
+ * Each chunk is one negative RLE count and the word it repeats — four
+ * bytes that expand to a whole 20,960-byte chunk, which is what makes a
+ * whole archive fit in a unit test. Layout: reference/notes/DartIntf.h,
+ * SrcInfoRec; the RLE: reference/ciderpress2/DART-notes.md. */
+static uint32_t dart_400k(uint8_t *f, uint8_t cmp, uint8_t type)
+{
+    uint32_t i, at = 84, words = DART_CHUNK / 2u;
+    int32_t count = -(int32_t)words;
+
+    memset(f, 0, 84);
+    f[0] = cmp;
+    f[1] = type;
+    f[2] = 0x01; f[3] = 0x90;                          /* 400 */
+    for (i = 0; i < DART_USED; i++) {
+        f[4 + 2 * i] = 0x00; f[5 + 2 * i] = 0x02;      /* two words */
+        f[at + 0] = (uint8_t)(((uint32_t)count >> 8) & 0xFF);
+        f[at + 1] = (uint8_t)((uint32_t)count & 0xFF);
+        f[at + 2] = (uint8_t)(DART_WORD >> 8);
+        f[at + 3] = (uint8_t)DART_WORD;
+        at += 4;
+    }
+    return at;
+}
+
+static void test_dart(void)
+{
+    /* One byte of slack past the archive: the "a byte added to the file"
+     * case below hands the reader n + 1, and the byte it may look at has
+     * to be one this array owns. */
+    uint8_t f[84 + DART_USED * 4 + 1];
+    uint8_t hint[] = "System Tools.image";
+    MemIO m;
+    UncIO io;
+    UncAlloc al;
+    UncSink sk;
+    DartSink ds;
+    UncOptions opt;
+    uint32_t n, i;
+
+    memset(&opt, 0, sizeof opt);
+    opt.name_hint = hint;
+    opt.name_hint_len = 12;            /* "System Tools", as a host strips */
+    test_make_alloc(&al);
+
+    n = dart_400k(f, 0, 1);
+    f[n] = 0;
+    test_make_memio(&io, &m, f, n);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_DART);
+    dart_sink(&sk, &ds);
+    CHECK(unc_extract_as(UNC_FORMAT_DART, &io, &sk, &al, NULL, &opt) == UNC_OK);
+    CHECK(ds.count == 1 && ds.status == UNC_OK);
+    /* What comes out is a DART again: 84 bytes of header, then twenty
+     * whole chunks of the word the archive encoded. */
+    CHECK(ds.len == 84u + DART_USED * DART_CHUNK);
+    CHECK(ds.bad == 0);
+    CHECK(ds.head[0] == 2);                            /* kNoCompress */
+    CHECK(ds.head[1] == 1 && ds.head[2] == 0x01 && ds.head[3] == 0x90);
+    for (i = 0; i < 40; i++) {
+        uint8_t want = i < DART_USED ? 0xFF : 0x00;
+        CHECK(ds.head[4 + 2 * i] == want && ds.head[5 + 2 * i] == want);
+    }
+    /* The name gets an extension back, because the file is a DART. */
+    CHECK(ds.info.name_len == 17);
+    CHECK(memcmp(ds.info.name, "System Tools.dart", 17) == 0);
+    CHECK(ds.info.type == 0x444D6431u);                /* 'DMd1', Mac 400K */
+    CHECK(ds.info.creator == 0x44415254u);             /* 'DART' */
+    CHECK(ds.info.data_size == 84u + DART_USED * DART_CHUNK);
+
+    /* Method 2 is not a failure of the file: it IS what expanding one
+     * produces, and no other format returns this code. No entry is
+     * offered, because the verdict is about the archive. */
+    {
+        static uint8_t stored[84 + DART_USED * DART_CHUNK];
+        memset(stored, 0, sizeof stored);
+        stored[0] = 2; stored[1] = 1; stored[2] = 0x01; stored[3] = 0x90;
+        for (i = 0; i < DART_USED; i++) {
+            stored[4 + 2 * i] = 0xFF; stored[5 + 2 * i] = 0xFF;
+        }
+        test_make_memio(&io, &m, stored, sizeof stored);
+        CHECK(unc_sniff(&io) == UNC_FORMAT_DART);
+        dart_sink(&sk, &ds);
+        CHECK(unc_extract_as(UNC_FORMAT_DART, &io, &sk, &al, NULL, &opt)
+              == UNC_ERR_NOTCOMPRESSED);
+        CHECK(ds.count == 0);
+    }
+
+    /* Near-misses, one byte each. There is no signature anywhere in this
+     * format, so every one of these is load-bearing. */
+    f[0] = 3;                                   /* no such method */
+    test_make_memio(&io, &m, f, n);
+    CHECK(unc_sniff(&io) != UNC_FORMAT_DART);
+    f[0] = 0;
+    f[1] = 16;                       /* kMacHiDDisk, which is never 400K */
+    test_make_memio(&io, &m, f, n);
+    CHECK(unc_sniff(&io) != UNC_FORMAT_DART);
+    f[1] = 1;
+    f[4 + 2 * 30] = 0x01;            /* a slot past the end of the disk */
+    test_make_memio(&io, &m, f, n);
+    CHECK(unc_sniff(&io) != UNC_FORMAT_DART);
+    f[4 + 2 * 30] = 0;
+    f[5] = 0x03;                     /* a length the file does not have */
+    test_make_memio(&io, &m, f, n);
+    CHECK(unc_sniff(&io) != UNC_FORMAT_DART);
+    f[5] = 0x02;
+    /* The table has to add up to the file, to the byte, and that is the
+     * whole of what makes this probe safe. */
+    test_make_memio(&io, &m, f, n - 1);
+    CHECK(unc_sniff(&io) != UNC_FORMAT_DART);
+    test_make_memio(&io, &m, f, n + 1);
+    CHECK(unc_sniff(&io) != UNC_FORMAT_DART);
+    test_make_memio(&io, &m, f, n);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_DART);
+
+    /* A cut archive: sniffing rejects it outright — the arithmetic does
+     * not close — so this asks the walk directly, where the chunk that
+     * is not there has to say so. */
+    dart_sink(&sk, &ds);
+    test_make_memio(&io, &m, f, n - 2);
+    CHECK(unc_extract_as(UNC_FORMAT_DART, &io, &sk, &al, NULL, &opt) == UNC_OK);
+    CHECK(ds.count == 1 && ds.status == UNC_ERR_TRUNCATED);
+
+    /* A zero count cannot occur in an RLE stream (DART-notes.md), and a
+     * chunk that does not expand to exactly one chunk is corrupt. */
+    dart_sink(&sk, &ds);
+    f[84] = 0; f[85] = 0;
+    test_make_memio(&io, &m, f, n);
+    CHECK(unc_extract_as(UNC_FORMAT_DART, &io, &sk, &al, NULL, &opt) == UNC_OK);
+    CHECK(ds.count == 1 && ds.status == UNC_ERR_CORRUPT);
 }
 
 static void test_spacesaver(void)
@@ -3243,6 +3447,30 @@ static void test_foreign(void)
     fgn_is(buf, (int32_t)sizeof buf, UNC_FORMAT_UNKNOWN);
     buf[8] = 208; buf[5] = 1;                         /* magic is 8 bytes */
     fgn_is(buf, (int32_t)sizeof buf, UNC_FORMAT_UNKNOWN);
+
+    /* Apple Archive. Raw is `AA01` or the legacy `YAA1`, then the first
+     * header's own size, which counts those six bytes and so is never
+     * below 6; where the header holds a field, the field's subtype byte
+     * at +9 is out of a closed set, which is what four letters of text
+     * fail. Compressed is `pbz` and a codec letter.
+     * Source: reference/libNeoAppleArchive, internal.h and
+     * neo_aa_header.c; the lzma and lz4 letters from
+     * reference/notes/Apple_Archive.md. */
+    fgn_sig("AA01\x06\x00", 6, UNC_FORMAT_AAR);
+    fgn_sig("YAA1\x06\x00", 6, UNC_FORMAT_AAR);
+    fgn_sig("AA01\x0a\x00TYP1", 10, UNC_FORMAT_AAR);
+    fgn_sig("AA01", 4, UNC_FORMAT_UNKNOWN);           /* size 0 */
+    fgn_sig("AA01\x05\x00", 6, UNC_FORMAT_UNKNOWN); /* size below 6 */
+    fgn_sig("AA01\x0a\x00TYP?", 10, UNC_FORMAT_UNKNOWN);  /* subtype */
+    fgn_sig("AA02\x06\x00", 6, UNC_FORMAT_UNKNOWN);
+    fgn_sig("YAA2\x06\x00", 6, UNC_FORMAT_UNKNOWN);
+    fgn_sig("pbze", 4, UNC_FORMAT_AAR);
+    fgn_sig("pbzz", 4, UNC_FORMAT_AAR);
+    fgn_sig("pbzb", 4, UNC_FORMAT_AAR);
+    fgn_sig("pbzx", 4, UNC_FORMAT_AAR);
+    fgn_sig("pbz4", 4, UNC_FORMAT_AAR);
+    fgn_sig("pbzq", 4, UNC_FORMAT_UNKNOWN);
+    fgn_sig("pbYe", 4, UNC_FORMAT_UNKNOWN);
 
     /* Named, and refused without writing anything. */
     {
@@ -4184,6 +4412,7 @@ void run_format_tests(void)
     test_nowcompress();
     test_applelink();
     test_foreign();
+    test_dart();
     test_spacesaver();
     test_spacesaver_alg4();
     test_spacesaver_preset();

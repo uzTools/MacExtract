@@ -691,9 +691,11 @@ static int lzh_header(UncCtx *c, uint32_t pos, LzhEnt *e, UncEntryInfo *info,
      * (0xff-separated) then the name. Without a directory header the
      * name itself may carry separators — 0xff, a DOS backslash or a
      * Unix slash. Built here rather than into a local, because an
-     * UncEntryInfo is 296 bytes on the 68000 target (measured
-     * 2026-08-27; the 280 that stood here was never right) and this
-     * call chain has a 4 KB budget (CLAUDE.md, 68000 discipline). */
+     * UncEntryInfo is 298 bytes on the 68000 target (measured
+     * 2026-09-03 with the Retro68 compiler; the 280 that stood here was
+     * never right, and the 296 that replaced it was measured hours
+     * before the struct's last field landed) and this call chain has a
+     * 4 KB budget (CLAUDE.md, 68000 discipline). */
     if (extdirlen) {
         lzh_add_path(info, extdir, extdirlen, 0);
         if (extnamelen) lzh_add_path(info, extname, extnamelen, 0);

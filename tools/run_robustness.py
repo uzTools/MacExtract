@@ -34,6 +34,10 @@ def main():
     ap.add_argument("--timeout", type=float, default=30.0)
     args = ap.parse_args()
 
+    if not os.path.exists(args.macextract):
+        print("robustness: no CLI at %s" % args.macextract)
+        return 1
+
     mandir = os.path.join(FIXDIR, "manifests")
     manifests = sorted(f for f in os.listdir(mandir)
                        if f.endswith(".json")) if os.path.isdir(mandir) else []

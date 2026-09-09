@@ -13,7 +13,12 @@ either way. Three kinds of case, and they differ in how much they prove:
    which nothing here writes. deark has a module for each, so the header
    this builds is graded by an implementation that is not ours; if deark
    does not call it a `zoo`, it is not a zoo and the case is worthless.
-3. **RAR and RAR 5, on the signature alone.** No writer here, no deark
+3. **Apple Archive**, written by libNeoAppleArchive in all four shapes
+   the probe has to recognise and read back by that same library before
+   the probe is asked — so a specimen it rejects is known to be a real
+   archive. `tools/build_neoaa.sh` says why building the header here
+   instead would have graded our reading of that source against itself.
+4. **RAR and RAR 5, on the signature alone.** No writer here, no deark
    module, and p7zip will not identify a stub it cannot parse. What
    grades those two is `reference/XADMaster` (the constants) plus a
    one-off run against real archives out of libarchive's test suite
@@ -184,6 +189,24 @@ def main():
                   "said %r" % (r.stderr.strip()[:80]))
             break        # one is enough; the path is shared
 
+        # 1b. Apple Archive, in all four shapes it is written in.
+        neoaa = build("build_neoaa.sh", "build/neoaa/neoaa_write")
+        if neoaa:
+            src = os.path.join(tmp, "aarsrc")
+            os.mkdir(src)
+            open(os.path.join(src, "a.txt"), "w").write("hello\n" * 8)
+            for algo in ("raw", "lzfse", "zlib", "lzbitmap"):
+                p = os.path.join(tmp, "t.%s.aar" % algo)
+                r = subprocess.run([neoaa, src, p, algo], capture_output=True)
+                if r.returncode != 0:
+                    skipped.append("Apple Archive %s (writer failed: %s)"
+                                   % (algo, r.stderr.decode().strip()[:60]))
+                    continue
+                named("t.%s.aar written and re-read by libNeoAppleArchive"
+                      % algo, p, "Apple Archive")
+        else:
+            skipped.append("Apple Archive (libNeoAppleArchive not built)")
+
         # 2. Synthetic headers, graded by deark.
         synth = {"s.zoo": (zoo_header(), "Zoo", "zoo"),
                  "s.arj": (arj_header(), "ARJ", "arj"),
@@ -226,6 +249,12 @@ def main():
                 b"\x60\xea" + struct.pack("<H", 3000) + bytes(64))
         unnamed("cpio-shaped digits that are not a magic", b"070703" + bytes(64))
         unnamed("ar without its terminating newline", b"!<arch>!" + bytes(64))
+        unnamed("Apple Archive whose header is smaller than its own prologue",
+                b"AA01\x05\x00" + bytes(64))
+        unnamed("Apple Archive with a field subtype outside the closed set",
+                b"AA01\x0a\x00TYP?" + bytes(64))
+        unnamed("a pbz stream naming a codec that is not one of them",
+                b"pbzq" + bytes(64))
 
         # 5. The corpus: not one Macintosh archive is a foreign one.
         #
@@ -239,7 +268,8 @@ def main():
         fixtures = os.path.join(ROOT, "fixtures")
         deliberate = {"synth-os9-rar.rar": "RAR"}
         foreign = {"RAR", "RAR 5", "7-Zip", "xz", "bzip2",
-                   "Microsoft Cabinet", "Zoo", "ar archive", "cpio", "ARJ"}
+                   "Microsoft Cabinet", "Zoo", "ar archive", "cpio", "ARJ",
+                   "Apple Archive"}
         claimed, seen = [], 0
         for name in sorted(os.listdir(fixtures)) if os.path.isdir(fixtures) \
                 else []:

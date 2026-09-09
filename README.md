@@ -35,11 +35,12 @@ cleaned up:
 ![Alert reading Extraction complete.](docs/screens/4-complete.png)
 
 If anything had to change on the way — a name HFS cannot keep (31 characters
-max), a folder that ended up sharing a shortened name, an entry that would not
-come out — you are told which. **Save as Text** files the whole list as a
-document:
+max), two files or two folders whose names are the same for those 31
+characters, an entry that would not come out — you are told which. Nothing is
+overwritten and nothing is folded together: the second one gets a `~1`.
+**Save as Text** files the whole list as a document:
 
-![A scrolling list: MyQuarterlyReportForTheBoard.rtf renamed to MyQuarterlyReportForTheBoar.rtf, Notes.txt renamed to Notes~1.txt, two folders combined, an entry damaged, and eighteen photographs each named in full with what it became; under the list, in bold, Extraction finished, and the buttons Save as Text and OK](docs/screens/4b-report.png)
+![A scrolling list: MyQuarterlyReportForTheBoard.rtf renamed to MyQuarterlyReportForTheBoar.rtf, Notes.txt renamed to Notes~1.txt, two folders whose names shorten alike renamed to two different folders, an entry damaged, and eighteen photographs each named in full with what it became; under the list, in bold, Extraction finished, and the buttons Save as Text and OK](docs/screens/4b-report.png)
 
 If an archive was split across floppies and a part is not where the first one
 was, you are asked for it — and told straight away if you point at the wrong
@@ -50,7 +51,7 @@ one, because parts are recognised by what is inside them:
 ## Download
 
 **[Latest release](https://github.com/jarreboum/MacExtract/releases/latest)** —
-currently **v0.29.0**. Or take it straight from the tree:
+currently **v0.32.0**. Or take it straight from the tree:
 
 | | |
 |---|---|
@@ -80,6 +81,12 @@ SpaceSaver compressed them in place and only the Mac that made one could read
 it. `macextract` carries the table those files need, so a lone floppy is
 enough.
 
+**Compressed DART disk images** get their own answer, because a DART is not
+an archive: it holds a floppy rather than files. MacExtract expands one into
+an *uncompressed* DART, which is the shape a mounting program — MacMount, say
+— can read directly. Hand it a DART that is already uncompressed and it says
+so instead of pretending something went wrong.
+
 **Password-protected archives** are opened too — StuffIt, StuffIt 5, Compact
 Pro, PackIt, zip (the old cipher and WinZip's AES) and ARC. The Mac
 application asks when it reaches an entry that needs one; on Linux it is `-p`.
@@ -98,9 +105,10 @@ there is, so keep them. Send the output to a different disk from the parts —
 the only thing that works when you are swapping floppies.
 
 **Recognises but does not extract:** StuffIt X, AppleLink packages (`.pkg`),
-and the PC-side archives — RAR, 7-Zip, xz, bzip2, Zstandard, lzip, lrzip,
-Cabinet, WIM, Zoo, ARJ, cpio and `ar`/`.deb`. You get *"MacExtract cannot open
-RAR files."*, not something that looks like a damaged download.
+and the PC-side and modern archives — RAR, 7-Zip, xz, bzip2, Zstandard, lzip,
+lrzip, Cabinet, WIM, Zoo, ARJ, cpio, `ar`/`.deb` and Apple Archive (`.aar`).
+You get *"MacExtract cannot open RAR files."*, not something that looks like
+a damaged download.
 
 ## Compared with StuffIt Expander 4.0.2
 
@@ -143,7 +151,7 @@ them comparable at all. The full capability table and the unrounded figures are 
 
 | | |
 |---|---|
-| Minimum | System 3.0, 68000, **512 KB of RAM** — a Macintosh 512Ke, or a Plus with the system it shipped with in January 1986. This is the experimental `rom64k` build: it also STARTS on a 64K-ROM Macintosh (the 128K and the true 512K), where `main`'s does not, but extracting there needs HFS — see BRANCH_NOTES.md |
+| Minimum | System 3.0, 68000, **512 KB of RAM** — a Macintosh 512Ke, or a Plus with the system it shipped with in January 1986. This is the experimental `rom64k` build, so it also STARTS on a true Macintosh **512K** — the 64K ROM, where `main`'s download bombs — though extracting there still needs HFS. A Macintosh **128K** is out even here, and that is measured rather than assumed: the largest single block it grants is 63,744 B against 142,152 B of `CODE`, so this build bombs on launch there too. See BRANCH_NOTES.md |
 | For everything | **1 MB** — see the StuffIt 5 note below |
 | Also runs on | System 6, System 7, Mac OS 8 and 9, PowerPC via the built-in 68k emulator |
 | Disk | one 800K floppy |

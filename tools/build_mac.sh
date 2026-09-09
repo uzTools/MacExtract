@@ -68,12 +68,61 @@ ls -la build/mac/MacExtract.APPL build/mac/MacExtract.bin build/mac/MacExtract.d
 # Multiversal libraries and cost 344 B for less (DECISIONS.md 2026-08-31,
 # *the drop the Finder does not make*). The 512 KB machine, whose Finder has
 # no such gesture, pays the 128 B for nothing — which is the trade, stated.
-UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-147424}
+# Raised again 2026-09-01 from 147,424 to 147,588: +164 B for the Apple
+# Archive probe, once a reference for the format was found (DECISIONS.md
+# 2026-09-01, *the search, not the reference*). Bought on the same terms as
+# the rest of the named-only set: one engine, not a Macintosh subset of one.
+# Two attempts at making it cheaper are in the probe -- the subtype set is a
+# string constant rather than sixteen comparisons, and the length floor is
+# one test rather than three -- and they bought 52 B of the 216 the first
+# version cost. That 12 % is the figure worth remembering about code shape
+# on this target.
+# Raised again 2026-09-09 from 147,588 to 149,756: +2,168 B for DART, the
+# first format here whose output is a file of its own format (DECISIONS.md
+# 2026-09-09). Bought on the same terms as every other format — one engine,
+# not a Macintosh subset of one — and the one that most earns it on this
+# target: what a compressed DART is FOR is mounting, and MacMount refuses
+# one until something expands it.
+# On this branch, 2026-09-09: 149,776, which is main's 149,756 plus the 20 B
+# the Has128KROM guard costs. The A5 ceiling below is 20 B LOWER than main's
+# for the same reason, so the guard is +20/-20 and nets to nothing off the
+# engine's budget — which is what M48 recorded when it was written, arrived
+# at independently here.
+UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-149776}
+# The A5 ratchet, added 2026-09-02 with the measurement that made it
+# necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
+# and never was (FORMATS.md, *What the application costs the engine*; the
+# withdrawn claim is in BLOCKERS.md). Set at the size on the day, like the
+# code ceiling: 44,096 B = 32,644 data + 11,452 bss. It had grown unwatched
+# the whole time this file said data was free.
+# Raised 2026-09-09 from 44,096 to 44,260: +164 B for DART, attributed by
+# diffing the linked image's .data symbols — 28 B of type table, 20 B of
+# format row, 4 B of probe pointer, 4 B on unc_strerror's switch table, and
+# ~100 B of message text. The type table was 56 B in the first draft and
+# holds one DIGIT per row instead of a whole OSType, which cost 8 B of code
+# to save 24 B here: on this target both come off the same budget, so that
+# is 16 B, and it is the second time composing a constant beat storing it
+# (DECISIONS.md 2026-09-01, *two byte reads*).
+# 44,240 on this branch: main's 44,260 less 20 B. See the code ceiling above.
+UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-44240}
 SIZE="$TOOLCHAIN/bin/m68k-apple-macos-size"
 GDB=build/mac/MacExtract.code.bin.gdb
 if [ -x "$SIZE" ] && [ -f "$GDB" ]; then
     code=$("$SIZE" "$GDB" | awk 'NR==2 {print $1}')
-    echo "mac: code $code B (ceiling $UNC_MAC_MAX_CODE B; data and globals are free)"
+    a5=$("$SIZE" "$GDB" | awk 'NR==2 {print $2 + $3}')
+    echo "mac: code $code B (ceiling $UNC_MAC_MAX_CODE B)"
+    echo "mac: A5   $a5 B (ceiling $UNC_MAC_MAX_A5 B) — data + bss, and it"
+    echo "mac:      costs the engine one for one, same as code" 
+    if [ "$a5" -gt "$UNC_MAC_MAX_A5" ]; then
+        over=$((a5 - UNC_MAC_MAX_A5))
+        echo "mac: FAIL — the A5 world is $over B over its ceiling." >&2
+        echo "mac: that is $over B off every extraction's budget, exactly as" >&2
+        echo "mac: code would be: the A5 world sits above ApplLimit, so it" >&2
+        echo "mac: lowers the heap's ceiling by its own size. Put the table" >&2
+        echo "mac: in a RESOURCE, which is free until it is loaded." >&2
+        echo "mac: FORMATS.md, *What the application costs the engine*." >&2
+        exit 1
+    fi
     if [ "$code" -gt "$UNC_MAC_MAX_CODE" ]; then
         over=$((code - UNC_MAC_MAX_CODE))
         echo "mac: FAIL — code is $over B over the ceiling." >&2

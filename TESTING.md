@@ -23,6 +23,24 @@
    it counts input bytes, not time, so a decoder that spends a minute on
    8 KB passes. The Mac OS 9 tier is where that would show
    (`os9.py --cancel`).
+5. **The Mac shell's sink, allocator and I/O through a mock Toolbox**
+   (`tests/run_mac_sink.sh` + `tests/mac_sink_test.c`): the shell's own
+   code from `mac/macextract_mac.c`, compiled on the host under
+   ASan+UBSan and again big-endian under qemu-m68k, driven by the real
+   engine over a spread of fixtures and compared byte-for-byte, both
+   forks, against the oracle manifests. **What it cannot see:**
+   `RunExtract`, `ExtractOne`, the dialogs and the Toolbox glue, which
+   the mock never calls — it builds its own `UncOptions` and hands the
+   engine the sink directly. And a read of state nobody set: ASan reports
+   writes past a block, not a load from uninitialised stack, so the
+   `UncOptions` field the shell left unassigned for eight days
+   (DECISIONS.md 2026-09-04, *the field nobody assigned*) was invisible
+   to this layer by construction, and would have been even had the mock
+   run `RunExtract`. Nor does valgrind see it: over the pre-fix unit
+   tests, whose DiskDoubler and SuperDisk! walks read the unset field 20
+   times (gdb), it reported nothing, because stack bytes an earlier call
+   had written count as initialised. That class needs MemorySanitizer
+   over the real call chain, and no host-side build here has it.
 0. **Documentation invariants** (`tools/check_docs.py`): DECISIONS.md's
    Contents index must list every `## ` entry in file order, no
    document may cite another by line number, the version agrees in the
@@ -328,6 +346,21 @@ only part of the restore path that can be checked offline.
 ```
 ./ci.sh          # full matrix; must be green before every commit
 ```
+
+**A suite run by hand needs a `make` first, and `ci.sh` is why.** Its second
+step is `make clean`, which is `rm -rf $(BUILD)` with `BUILD ?= build`; every
+build after it is redirected to `build/san`, `build/ars`, `build/rel`,
+`build/m32`, `build/off32` or cmake's `build/mac`, and **nothing ever rebuilds
+the default target**. So a green `ci.sh` leaves no `build/macextract`, and the
+next `tools/run_*.py --macextract build/macextract` has nothing to run.
+
+Most suites say so — `no CLI at <path>`, exit 1 — and the ones that do not
+raise `FileNotFoundError` before a single check, which looks nothing like a
+suite that failed. That is what happened on 2026-09-01, in the two suites that
+lacked the guard; both have it now, and it was briefly blamed on
+`make_dist.sh` before either half was measured. **If a suite dies with a
+traceback rather than a message, check for the binary before believing
+anything about the suite.**
 
 ## M9 additions
 
@@ -1088,7 +1121,7 @@ suite nor its variants could reach either limit. They are graded by
 CPython's `zipfile` and `tarfile`, which wrote them and have no such
 limit, and by `unzip -l` and `tar tf` where those exist.
 
-Fourteen cases over six carriers, the allocator's budget and the output
+Fifteen cases over seven carriers, the allocator's budget and the output
 directory: a zip whose long
 entry is extracted under the shortened name while the entry beside it is
 untouched; two zip entries that differ only past the cut, which must both
@@ -1117,6 +1150,18 @@ components — 296 bytes, and no name in it remarkable — and the notice
 must carry every byte of it. `lsar`, which has no such cap, is asked for
 the same path. What this grades for Now Compress is `unc_path_leaf`,
 which DiskDoubler and SuperDisk! also run.
+
+**SuperDisk! reaches that helper through its own walk since 2026-09-01,
+and it is the case here with no oracle on this machine.** `tools/synth_sd.py`
+writes a ten-deep stream — declared paths 43 to 331 bytes — out of a corpus
+archive's own folder and file records and its own method-7 blocks, so the
+only thing in it this project invented is the nesting. Nothing off the
+Macintosh reads the container, so the verdict it replays was taken on the
+emulator: the format's OWN self-extracting application, given a data fork
+built by that script (`tools/vmac/superdisk.py --nest`). That machine makes
+each component through the File Manager and never assembles a path, so what
+it built IS the uncut path, and it agreed on all eleven files. The case is
+skipped, not failed, where the fixture is absent.
 
 The sixth is DiskDoubler, added 2026-08-28, and it is there for the
 header walks rather than for the helper: the four real `DDAR` archives
@@ -1153,6 +1198,64 @@ here — no fixture nests that deep, and nothing off the Macintosh reads
 that container to grade a generated one (OPEN_ITEMS.md). The Mac
 application consumes none of it and says nothing on screen; what it does
 instead is graded in the next section.
+
+## The tiers a budget predicts (`tools/run_tiers.py`, in `ci.sh`)
+
+**A small Macintosh's memory result, measured on Linux in five seconds.**
+The Mac shell's allocator is a running total against a cap and refuses
+per entry; `macextract --budget N` is the same rule, so the whole
+69-fixture sample can be swept at a tier's measured budget without an
+emulator, a ROM or an X server.
+
+    tools/run_tiers.py --check                 # what ci.sh runs
+    tools/run_tiers.py --tier sys3-512K        # one tier, with shortfalls
+    tools/run_tiers.py --budget 102328         # any cap
+
+Not to be confused with `tools/run_budget.py`, the older half of the
+pair: that one sweeps the whole CORPUS at a single cap and reports per
+format (layer 5 above). This one sweeps the Mac SAMPLE at each tier's
+own budget and asserts the tallies.
+
+`--check` asserts two tallies, and only the two Mini vMac has agreed
+with independently: **69/69 at the 1 MB floor target** (648,100 B) and
+**66/69 on a 512 KB Macintosh under System 3.0** (197,728 B) — the same
+three fixtures, by name, that the machine refuses. A tally that moves is
+a memory regression or a memory win; either way the number in `EXPECT`
+is meant to be changed deliberately.
+
+**What it cannot see** (and why the emulator tiers stay):
+
+- **Fragmentation.** A budget is one number; the Memory Manager also has
+  to find one PIECE that big, which the shell reports separately
+  ("Memory is too broken up"). This is the likeliest reason the
+  System 6.0.8 / 512 KB tier comes out 59/69 here against the machine's
+  58/69 — which is why that tier is a diagnostic and is not asserted.
+  **That comparison is stale as of 2026-09-04**: the machine now does
+  **63/69** (FORMATS.md, *512 KB machines*), so the gap is four fixtures
+  and not one. *Hypothesis, not measured:* this tier's budget constant
+  predates the 20,464 B the stack cut returned to the engine, since the
+  System 3.0 / 512 KB constant beside it was re-taken and still
+  reproduces that machine exactly. **What would settle it:** one
+  `-D UNC_AT_BUDGET` boot of the 512Ke under System 6.0.8
+  (`tools/vmac/README.md`, *Why an entry is refused*).
+- **The budget's own currency.** Each figure is `FreeMem() - 20,480`
+  measured on the machine (FORMATS.md, *Budget*), so it moves when the
+  application's size does. This file cannot notice that it has gone
+  stale.
+- **68000 struct sizes.** `derived-a2basic.dmg.sit` holds 37,356 B
+  before its block here and 37,372 B there. Tens of bytes — but a
+  fixture that missed by twenty would not be decided by this.
+- **Everything that is not memory**: names, CRCs, the File Manager, the
+  interface. Those are `tools/vmac/run.py`'s, and no budget sweep
+  replaces them.
+- **What a shortfall means.** It is the FIRST refused request's, not the
+  entry's demand, which is why both front ends say *"at least"*.
+  `synth-dd-m5.dd` reports 928 B at the 512 KB budget and wants
+  203,680 (FORMATS.md, *512 KB machines*).
+
+`UNC_TRACE_ALLOC=1` in the environment makes the CLI print every
+allocation and every refusal with the live total, which is how those
+figures are read.
 
 ## Selective extraction (`tools/run_only.py`, in `ci.sh`)
 
@@ -1242,10 +1345,12 @@ the collision that cutting creates in `BumpName`, off the File Manager's
 The code under test is the shell itself, through the mock Toolbox of
 `tests/mac_sink_test.c`; the subjects are DiskDoubler archives from
 `tools/synth_dd.py`, because both caps have to be reached in one archive
-shape to see which one acted. Eight cases: two files whose names are the
-same for 31 characters, which must both come out with the second
-numbered; two FOLDERS in the same position, which merge into one and must
-keep both their files; four 63-byte folders summing to exactly the
+shape to see which one acted — with one exception noted below. Twelve
+cases: two files whose names are the same for 31 characters, which must
+both come out with the second
+numbered; two FOLDERS in the same position, which since 2026-09-03 are
+two folders on the disk with the second numbered rather than one holding
+both their files; four 63-byte folders summing to exactly the
 engine's 255-byte cap, where the leaf's cut path lands on its own folder
 and the numbering is the only reason the file survives; the edges of
 the cut — 31 characters written whole, 40 cut to 31, and a nameless entry
@@ -1255,13 +1360,33 @@ written as `_`; and four added 2026-08-29 with the end-of-run report:
   keeps its `.rtf` and loses a character of name, and a numbered name
   takes the `~1` before the suffix rather than after it;
 - **the report's lines**, which are what the Macintosh box lists: a
-  renamed file names itself twice, a merged folder says *combined with*
-  and a renamed one says *renamed to*, and an entry whose name was
-  writable is not mentioned at all;
+  renamed file and a renamed folder each name themselves twice, and an
+  entry whose name was writable is not mentioned at all;
 - **a per-entry failure**, from an archive whose one damaged entry is
   named in the report while the sound one still comes out;
 - **more alike names than the numbering has digits for** — 102 of them,
   and one file after them whose survival is the assertion.
+
+Four more since 2026-09-03, when folders started being numbered like
+files (DECISIONS.md, *a folder is a name too*):
+
+- **the same two folders in a ZIP**, the one case here whose subject is
+  not a DiskDoubler archive, and deliberately: a zip declares no folders,
+  so they exist only inside the paths of the files in them — the shape
+  most archives a user downloads have, and the shape that used to merge
+  in silence;
+- **the same archive extracted TWICE into one destination**, where the
+  folder must be descended into and the FILES numbered. It is what stops
+  a numbering rule from spraying `~1` over the last run's work, and it
+  fails on the one-line change that treats a directory this run did not
+  make as somebody else's;
+- **101 folders whose names shorten alike**, where the numbering runs out
+  at `~99` and the hundred-and-first merges, is reported as *combined
+  with*, and keeps its file;
+- **250 folders against a 200-row memo**, where what is asserted is not
+  the numbering but that no folder is SPLIT — the failure that would
+  make numbering worse than merging, and the reason the table never
+  evicts.
 
 **Established that it can fail**: against five one-line breakages of the
 shell — the cap raised to 63 fails five assertions, the numbering removed
@@ -1269,7 +1394,9 @@ fails six (and loses a file, and stops the run), the empty-name
 fallback removed fails one, the extension cut the other way fails four
 (which is how it was written for a few hours), and
 the numbering restored to its `~9` limit fails four, one of which is the
-file that never came out.
+file that never came out. A sixth since 2026-09-03: treating a directory
+this run did not make as another folder's — one line in `EnsureDir` —
+fails the twice-extracted case with a `~1` folder beside the first run's.
 
 **The mock's directory calls had to be made honest first.**
 `PBDirCreateSync` tolerated `EEXIST` and minted a fresh directory id, and
@@ -1603,6 +1730,117 @@ suite feeds it only complete ones, and that difference is written here
 rather than discovered later: a corrupt `-lh3-` table is a per-entry error
 in LHa and garbage output here.
 
+## When a suite skips, and when it must not (2026-09-09)
+
+Six suites build their oracle out of `reference/` — munpack and deark for
+`run_mime.py`, btoa for `run_btoa.py`, lhasa and LHa for `run_lzh.py`.
+Each has to answer "is the oracle here?", and the answer has three
+values, not two:
+
+| state | verdict | why |
+|---|---|---|
+| the binary is built | run | — |
+| `reference/X` is **absent** | **skip, exit 0** | a fresh clone has no `reference/`, and `ci.sh` must still run end to end |
+| `reference/X` is **present** and will not build | **exit 1** | somebody fetched it; the differential coverage it pays for has gone, and nothing in that suite is graded against a second implementation any more |
+
+The third row used to be the second row, and that is how a real breakage
+stayed green: `run_mime.py` reported a failed munpack build as *"no
+reference/mpack"* — about a directory that was right there — and returned
+0 (DECISIONS.md 2026-09-09, *the oracle that built two times in three*).
+The message now prints what the build actually said and ends "fix the
+build, or delete `reference/X` to make this a skip", so the escape hatch
+is stated.
+
+**Both failure paths were made to fire before this was believed**:
+`reference/btoa/atob.c` moved aside, and `build_mpack.sh` reverted to the
+`cp -r` that caused the original race. Each printed the compiler's own
+words and exited 1.
+
+**What this does NOT cover.** A suite can still pass with the oracle
+built and doing nothing useful — an assertion that never runs, a sweep
+over zero files. Every suite prints its case count for that reason, and a
+count that drops is the only signal there is.
+
+## DART (`tools/run_dart.py`, in `ci.sh`)
+
+**The oracle is the encoder's input, not a second reader.** There is no
+second reader: `unar` has no DART parser and neither does `macunpack`.
+What CiderPress2 publishes instead is `TestData/dart/` — two 800K disks
+that DART 1.5.3 compressed under MAME, each in BOTH of DART's methods,
+**with the source images beside them**. `tools/fetch_references.sh`
+fetches the lot into `reference/ciderpress2/`.
+
+```sh
+sh tools/fetch_references.sh            # once
+python3 tools/run_dart.py               # ~15 s, 37 cases
+```
+
+Four assertions come out of the specimens, and each fails on a different
+kind of defect:
+
+1. **the data halves equal the source image**, byte for byte, for "fast"
+   and for "best";
+2. **the tag halves equal the source's tags** — `random_t-source.img` is
+   a Disk Copy 4.2 file and carries 9,600 of them, all random — or are
+   zero, which is what an ordinary HFS disk has;
+3. **the two methods agree with each other** over one disk, which is the
+   only assertion here that compares two DECODERS;
+4. **DART's own checksums**: `test1-best` keeps its resource fork in the
+   ZIP, so 'CKSM' 1 (tags) and 'CKSM' 2 (data), written by the
+   application in 1993, are checked against a Disk Copy 4.2 checksum of
+   what came out.
+
+`random_t` is the specimen that matters for the WALK rather than the
+codecs: its two 256KB files are incompressible junk and its tags are
+random, so 18 of its 40 chunks take the per-chunk 0xFFFF stored fallback
+— a branch nothing else reaches.
+
+**Three of the four DART files live inside the 1440K images beside them**,
+so reaching them needs `hfsutils` (`hmount`/`hcopy`). Without it the
+suite says so and grades `test1-best`, which sits in the ZIP as a plain
+member, together with everything synthetic below. It never fails for
+want of the tools.
+
+**Also here, because there is nowhere else:**
+
+- **the refusal**, which is a round trip: an uncompressed DART is exactly
+  what this engine WRITES, so the suite feeds its own output back and
+  requires `already uncompressed` — and requires the file to still be
+  RECOGNIZED as a DART, which is what makes the message possible;
+- **seven near-miss headers**, each one byte from a real archive's. The
+  format has no signature at all, so every one of them is load-bearing;
+- **a cut archive**, at a half, a fifth and a tenth;
+- **a synthetic 400K disk**, which is the only shape that exercises
+  "slots past the end of the disk are zero" — an 800K disk fills all
+  forty of its slots — plus a stored chunk among compressed ones, a zero
+  RLE count, and a chunk claiming to be longer than what it expands to.
+
+### What it cannot see
+
+- **DART is not in the fixture corpus**, and cannot be: a manifest comes
+  from `unar`, which has no idea what a DART is. So the 932-fixture diff
+  suite, `run_robustness.py` and `run_truncation.py` never meet one, and
+  the truncation and near-miss cases above are this suite's own. What
+  those three do that this does not is sweep BIT FLIPS; DART's crash
+  safety rests on `tools/fuzz.py` reaching it and on ASan over these 37
+  cases.
+- **No 1440K DART has ever been read here.** Every specimen is an 800K
+  Macintosh disk, so the 72-slot header — the other half of `dart_parse`
+  — is exercised only by the near-miss cases, which reject rather than
+  decode. The MS-DOS and Apple II disk types have never been seen at all.
+- **The Macintosh runs are not in any suite.** Both methods were replayed
+  through the Mac shell on 2026-09-09 and both are byte-exact — the
+  harness's floppies are 1440 KB, so an 838 KB output fits — but DART has
+  no committed manifest, so `--expect` is needed and neither archive is
+  in `sample.txt`:
+
+      tools/vmac/run.py --emu mv-4M --expect <dart>      # 2/2
+      tools/vmac/run.py --emu mv-1M --mem 1M --expect <dart>   # 2/2
+
+  `sys30.py` cannot grade one at all: it has no `--expect`, so the System
+  3.0 tier has never seen a DART. Nothing about that is format-specific —
+  it is the same binary — but it has not been run.
+
 ## Alysis SuperDisk! (`tools/run_superdisk.py`, in `ci.sh`)
 
 Added 2026-08-20. The corpus holds two SuperDisk! archives and no oracle
@@ -1636,7 +1874,13 @@ that wrong is entries that are silently never reached.
 **What this cannot see.** The hashes were produced by this reader before they
 were confirmed on the emulator, so they are a regression fence and not an
 oracle; re-confirming them means re-running `--adjudicate`. It also grades
-two methods, 7 and 11, because that is what the two archives use. The unit
+two methods, 7 and 11, because that is what the two archives use — and it
+reaches no STORED block at all: **all seven blocks across both fixtures are
+coded**, so `sd_block_head`'s bit-15 branch is not exercised by anything in
+the corpus, nor by the 116 variants, which flip bytes inside those coded
+blocks. That branch is graded on the emulator instead, by the extractor it
+was disassembled out of (`tools/vmac/superdisk.py --stored`, byte-exact
+2026-09-01; FORMATS.md, *Alysis SuperDisk!*). The unit
 test carries what no fixture can: a two-fork file, so that fork order is asserted, and an
 undecodable method BETWEEN two decodable entries. **Every other method is
 graded by the suite below**, which did not exist until 2026-08-25.
@@ -1807,10 +2051,15 @@ the signature, its neighbours, and the corpus.
 python3 tools/run_foreign.py --macextract build/dev/macextract
 ```
 
-**Three grades of case, and the suite says which is which.** bzip2, xz, 7z,
+**Four grades of case, and the suite says which is which.** bzip2, xz, 7z,
 cpio (three header shapes) and ar are written by their own tools here and then
 **opened by p7zip** — a specimen that p7zip cannot parse proves nothing about
-a probe, so that check is asserted rather than assumed. Zoo, ARJ and Cabinet
+a probe, so that check is asserted rather than assumed. **Apple Archive is the
+same grade with the writer built for it**: `tools/build_neoaa.sh` compiles
+libNeoAppleArchive out of `reference/`, and `tools/neoaa_write.c` writes one
+archive per shape — raw `AA01`, `pbze`, `pbzz`, `pbzb` — then reads each back
+with that same library and exits nonzero if it will not parse, which is what
+p7zip does for the others. Zoo, ARJ and Cabinet
 are hand-built headers that **deark** must identify as `zoo`, `arj` and `cab`;
 if deark does not agree, the case is worthless and fails. RAR and RAR 5 have
 neither — no writer here, no deark module, and p7zip refuses to name a stub it
@@ -1821,8 +2070,10 @@ cannot parse — so in `ci.sh` they rest on the constants in
 **The negatives are the point of a signature file**: the eighth RAR byte, the
 7-Zip reserved byte, xz's terminator, bzip2's two stream magics and its level
 digit, Zoo's magic at offset 0 instead of 0x14, ARJ with a broken header CRC
-and with a size out of bounds, `070703`, `!<arch>!`. Each was mutation-tested
-against a probe with that field deleted.
+and with a size out of bounds, `070703`, `!<arch>!`, an Apple Archive header
+smaller than its own six-byte prologue, one whose first field subtype is
+outside the closed set, and a `pbz` stream naming a codec that is not one.
+Each was mutation-tested against a probe with that field deleted.
 
 **And the corpus is swept**: not one of the fixtures may come back as a
 foreign archive. Naming a Macintosh archive as a PC one is worse than not
@@ -1834,7 +2085,13 @@ sweep requires it to sniff as RAR and requires everything else not to.
 
 **What this cannot see.** Whether a real Zoo, ARJ or Cabinet archive is named —
 those three are graded on headers built here, which deark identifies but which
-no archiver wrote. And nothing here tests what a named-but-declined archive
+no archiver wrote. Nor whether Apple's OWN `aa` writes anything
+libNeoAppleArchive does not: every Apple Archive here comes from the one
+implementation the probe was also written from, so a shape only Apple emits
+would be invisible to both. That needs a macOS, and is MANUAL_TESTS.md's kind
+of gap, not this suite's. The `pbzx` and `pbz4` codec letters are untested for
+the same reason twice over — libNeoAppleArchive names them and does not yet
+write them. And nothing here tests what a named-but-declined archive
 does on the Macintosh: that is one alert, photographed once
 (`tools/vmac/README.md`, *Photographing the detect-only alert*).
 
@@ -2216,7 +2473,11 @@ part boundary (27 failures). Both were reverted.
    this harness launches the INTERACTIVE build, which takes envelopes
    off. (It used `-nr` until 2026-08-27, which is right only for the
    autotest build; `tools/vmac/README.md` has what that cost.)
-   **20/20 on the committed sample**, 2026-08-27. Since 2026-08-28 the
+   **21/21 on the committed sample**, 2026-09-04. It read 18/20 that
+   morning, the two failures bombing the application, and the sample
+   gained a fixture the same day (BLOCKERS.md, *Withdrawn claims*;
+   DECISIONS.md 2026-09-04, *the field nobody assigned*).
+   Since 2026-08-28 the
    run also goes to the END of the interaction — the result alert is
    dismissed, SFGetFile is checked to repaint, and Cmd-. quits the
    application — and `--cancel` interrupts the extraction instead of

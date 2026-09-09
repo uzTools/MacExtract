@@ -1,6 +1,6 @@
 # FORMATS.md — format support matrix
 
-Status after M0–M43. "Oracle coverage" = fixtures with byte-exact
+Status after M0–M52. "Oracle coverage" = fixtures with byte-exact
 differential manifests (built from The Unarchiver's `unar`; see
 TESTING.md); every one passes, plus 10 corruption variants each in the
 robustness suite. "Peak RAM" = allocator high-water mark across the
@@ -14,6 +14,7 @@ below it. Per-format detail that used to be an unnamed footnote is
 under *Table notes*.
 
 - Table notes
+- DART
 - StuffIt SpaceSaver
 - LZH / LHA
 - btoa, the other ASCII armour
@@ -66,11 +67,12 @@ under *Table notes*.
 | base64 (`.b64`, `.mime`) | extract | — (bare, and the `begin-base64`/`====` framing sharutils writes; several documents in one file)◇ | no corpus file and no Macintosh specimen: graded against **deark** and, through the messages that carry it, **munpack 1.6** | 5 KB◇ | full |
 | MIME message (`.mim`, `.eml`) | extract | — (multipart to 4 levels, base64, quoted-printable and 7bit/8bit parts, a uuencoded part pasted into one, **multipart/appledouble**, which carries both forks and the Finder info, and `message/partial` across several files)◇ | no corpus file: graded against **munpack 1.6**, the implementation `src/fmt_mime.c` is transcribed from, over 65 generated cases | 8 KB◇ | full |
 | uuencode (.uu, incl. UUTool) | extract | — (plain uu, UUTool's two-fork "MU" shape, and documents posted in several parts★★) | 7 generated cases, the two-fork ones adjudicated by macutils' `hexbin`; `synth-uu-mac.uu` is in the differential suite | 4 KB | full |
-| Alysis SuperDisk! (.X, .x) | extract | **both containers** (record-stream archive and single file); methods 1-4 and 5-8 (a finite-context predictor over a 13- or 16-bit context, with the flag bitmap and/or the literals Huffman-coded), 9 Huffman, 10 SlowFastA and 11 SlowFastB (LZSS); 13 declined per entry, and 20 is an encoder for 11 rather than a method of its own✧✧ | 2 fixtures, 5 forks, adjudicated by the archives' OWN self-extractors on an emulated Mac, + 11 single-file specimens written by Alysis's own control panel (methods 1 and 6) and graded against their inputs, + every method 1..9 through Alysis's own Add-In Modules under qemu-m68k (`tools/sdmodule/`) | 72–84 KB✧✧ | full |
+| Alysis SuperDisk! (.X, .x) | extract | **both containers** (record-stream archive and single file); methods 1-4 and 5-8 (a finite-context predictor over a 13- or 16-bit context, with the flag bitmap and/or the literals Huffman-coded), 9 Huffman, 10 SlowFastA and 11 SlowFastB (LZSS); 13 declined per entry, and 20 is an encoder for 11 rather than a method of its own✧✧ | 2 fixtures, 5 forks, adjudicated by the archives' OWN self-extractors on an emulated Mac, + 11 single-file specimens written by Alysis's own control panel (methods 1 and 6) and graded against their inputs, + every method 1..9 through Alysis's own Add-In Modules under qemu-m68k (`tools/sdmodule/`), + 4 record streams written here and read back by an archive's own self-extractor (paths past the cap, and a stored block) | 72–84 KB✧✧ | full |
 | StuffIt SpaceSaver (`SPSV`) | extract | **every method the format has**: 0 stored, 1 and 2 (the "Original" LZSS pair), 3 "Alg 3" (Huffman + LZ77), 4 "Alg 4" — the last two starting their window loaded with a preset dictionary that ships inside SpaceSaver✦✦ | no oracle and no fixture, but **Aladdin's own compressors run under `qemu-m68k` and 44 forks they wrote read back byte-exact** (`tools/ssmodule/`, 2026-08-25), plus 160 corrupted variants, a synthetic round-trip and unit tests✦✦ | 4 KB stored, 8 KB method 1, 84 KB method 2, 41 KB method 3, **36 KB** for what SpaceSaver writes (measured on a Mac Plus); 68 KB is the ceiling the width byte allows. The dictionary is 9.7 KB of static data, not heap | full |
 | LZH / LHA (.lzh, .lha) | extract | -lh0- store, -lh1- (LHarc's adaptive Huffman, shared with StuffIt method 5), **-lh2- (both codes adaptive, the position tree growing with the output)**, **-lh3- (static, rebuilt per block)**, -lh4-/-lh5-/-lh6-/-lh7- (static Huffman over a 4/8/32/64 KB window), -lhd- directories, LArc's -lz4-/-lz5-/-lzs-; header levels 0, 1, 2 and 3; **MacLHA's MacBinary payload unwrapped into two forks**; every method the format has except PMarc✵ | 8 fixtures (1 real Amiga archive + 7 of lhasa's) + **182 archives from fourteen writers**, each graded against `unar` and against lhasa, + 12 sets written by LHa 1.14i itself, + 15 -lh2- and 6 -lh3- entries generated for the purpose✵ | 4–74 KB✵ | full |
+| DART (Apple's Disk Archive/Retrieval Tool) | **expand** — what comes out is an UNCOMPRESSED DART, not the files on the disk (*DART*, below) | 0 "fast" (a word-oriented RLE), 1 "best" (LZHUF over a window of zeros), and the per-chunk 0xFFFF stored fallback both of them fall back to; method 2 is **refused as already uncompressed**, which is a statement about the file rather than a failure of it | no fixture and no second reader anywhere: graded against **the disks DART 1.5.3 itself was fed** — two 800K images, each compressed BOTH ways, published beside their sources — plus the checksums DART wrote into one of them in 1993, and one real archive from 1990 (*DART*, below) | 24.6–40.6 KB | full |
 | AppleLink package (.pkg) | detect only | — | no specimen anywhere: the probe is Aladdin's own recogniser, at 0 false positives across 928 fixtures (*AppleLink packages*, below) | — | — |
-| RAR, RAR 5, 7-Zip, xz, bzip2, Cabinet, Zoo, ar/.deb, cpio, ARJ, Zstandard, lzip, lrzip, WIM | **named only**, never extracted | — | archives written here by bzip2, xz, 7z, cpio and ar and confirmed by p7zip; real RAR, RAR 5 and CAB out of libarchive's test suite; synthetic Zoo, ARJ and Cabinet identified by deark; 0 false positives in 940 fixtures (*Archives named but not extracted*, below) | — | — |
+| RAR, RAR 5, 7-Zip, xz, bzip2, Cabinet, Zoo, ar/.deb, cpio, ARJ, Zstandard, lzip, lrzip, WIM, Apple Archive | **named only**, never extracted | — | archives written here by bzip2, xz, 7z, cpio and ar and confirmed by p7zip, and **Apple Archives written and re-read by libNeoAppleArchive** in all four shapes; real RAR, RAR 5 and CAB out of libarchive's test suite; synthetic Zoo, ARJ and Cabinet identified by deark; 0 false positives in 940 fixtures (*Archives named but not extracted*, below) | — | — |
 
 ## Table notes
 
@@ -482,6 +484,25 @@ corrupted variants, which nothing else covers — `t` does not unwrap envelopes,
 so the corpus-driven robustness and fuzz suites only ever reach the BinHex
 layer.
 
+**That extractor also reads streams written HERE, and since 2026-09-01 it
+grades two things no fixture could.** `SD! Utilities.x` is an APPL whose data
+fork IS the archive, so replacing that fork and keeping its resource fork
+hands the format's own `CODE 2` a record stream `tools/synth_sd.py` built
+(`tools/vmac/superdisk.py --nest`, `--stored`; how to re-run either is
+`tools/vmac/README.md`):
+
+| asked | stream | result |
+|---|---|---|
+| a path that SUMS past the 255-byte cap | 10 folders of 31 characters, 11 files, declared paths 43→331 B | **11/11 made, byte-identical**, and for the 3 files and 2 folders past the cap the UNCUT path `unc_path_leaf` reports is the path the Macintosh built |
+| a stored block, which the corpus has none of | the same 4,796 B fork coded and stored, in one folder | **both byte-exact** |
+| a stream that OPENS with a file record | one file, no folder | made |
+
+The first closes what OPEN_ITEMS.md carried as untested code. The second
+confirms `CODE 2` @0x614's stored-block encoding against the code it was
+disassembled out of: a length with bit 15 set, counting its own two header
+bytes. **All seven blocks in both fixtures are coded** — methods 7 and 11 — so
+nothing in the corpus reaches that branch (TESTING.md).
+
 Peak heap **74,220 B** for `SD! Utilities.x` and **85,943 B** for
 `Disk Expander .X` (`macextract t --stats`); both extract fully under a 400 KB
 budget. Neither peak is a ceiling anybody declared: the 64 KB step is the wide
@@ -837,6 +858,152 @@ extracts **byte-exact on a real emulated Mac Plus at 4 MB**, 1 file, 0 errors,
 encoded on an emulated Mac, decoded on one. `unar` reads none of these: it
 cannot recognise the format at all, which is why the encoder had to be the
 oracle.
+
+## DART
+
+Apple's Disk Archive/Retrieval Tool: an internal utility, never a
+product, used to ship floppy images around Apple and inside some
+support products. It cuts a disk into chunks of forty sectors,
+compresses each one on its own, and puts a table of their lengths in
+front of them.
+
+**What comes out is another DART, and that is deliberate.** Every other
+format here yields the files somebody put in; a disk image holds a
+VOLUME, and reading a volume is a file system rather than a codec —
+which is why disk images are out of scope (OPEN_ITEMS.md, part 1). What
+a user of these machines does with a DART is MOUNT it, and DART's third
+method is no compression at all: forty 512-byte sectors then their forty
+12-byte tags, chunk after chunk, which a mounter reads as a raw image
+with a gap. So this expands a compressed DART into an uncompressed one
+and stops there. The reasoning is DECISIONS.md 2026-09-09.
+
+Fed a file that is already method 2 the answer is `UNC_ERR_NOTCOMPRESSED`
+— no entry, one verdict about the archive — and both hosts say so in
+those terms.
+
+### The three methods
+
+| id | name | what it is | length unit |
+|---|---|---|---|
+| 0 | "fast" | word-oriented RLE: a signed count of 16-bit words, positive for literals and negative for a repeat of the word that follows. Zero cannot occur | **words** |
+| 1 | "best" | LZHUF (Yoshizaki/Okumura), with no leading length word and the match window filled with **0x00** instead of 0x20 — `unc_lzah.c`'s `-lh1-` coder under `UNC_LZAH_DART` | bytes |
+| 2 | "not" | nothing. This is what expanding one produces, and what is refused as input | — |
+
+A chunk of any method may instead be marked **0xFFFF** and stored whole,
+which is what DART does when compressing it does not pay. `random_t`
+takes that branch for 18 of its 40 chunks and `Studio8_Program` for 10.
+
+### The type and creator it comes out with
+
+Creator `DART` always, and the type from the disk the archive holds.
+These are `DartIntf.h`'s own constants, and the seven pairs it names one
+for are exactly the seven this engine accepts — so there is no valid DART
+whose type would have to be invented:
+
+| srcType | size | type |
+|---|---|---|
+| 1 kMacDisk | 400 | `DMd1` |
+| 2 kLisaDisk | 400 | `DMd2` |
+| 1 kMacDisk | 800 | `DMd3` |
+| 3 kAppleIIDisk | 800 | `DMd4` |
+| 17 kMSDOSLowDDisk | 720 | `DMd5` |
+| 16 kMacHiDDisk | 1440 | `DMd6` |
+| 18 kMSDOSHiDDisk | 1440 | `DMd7` |
+
+Verified on the Macintosh rather than in the entry metadata: the Out
+volume of a Mac Plus run lists `f  DMd3/DART  0  838484  archive.dart`.
+The **Linux CLI reports the pair in `l` and writes it nowhere**, which is
+not a DART property — that host persists fork data and no Finder info,
+for every format.
+
+### Identification, where the format has no signature at all
+
+Four bytes — a method, a disk type, a size in kilobytes — and then the
+table. Three things make that safe enough to sit in a sniffer beside
+forty other formats:
+
+- the type and the size have to be one of the **seven pairs** Apple's
+  own header names a file type for (`DMd1`..`DMd7`);
+- slots past the end of the disk have to be **zero**, and slots inside
+  it non-zero;
+- **the table has to add up to the rest of the file, to the byte.**
+
+The last is the one that carries it, and it is the test that settled the
+format in the first place: a byte-length reading of `Studio8_Program`
+comes out 300,951 short, and a word-length reading lands on 811,586
+exactly. All five specimens consume to their last byte. A cut DART
+therefore is not recognized at all rather than half-read; the walk still
+reports `UNC_ERR_TRUNCATED` when it is asked directly, which is what the
+unit test checks.
+
+### What it is graded against
+
+`unar` has no DART parser and neither does `macunpack`, so there is no
+second reader on this machine. What there is instead is **the encoder's
+input**: CiderPress2 publishes two 800K disks that DART 1.5.3 compressed
+under MAME, each in both methods, with the source images beside them.
+`tools/run_dart.py` and TESTING.md have the method; the results:
+
+| specimen | method | chunks stored | expands to | agrees with |
+|---|---|---|---|---|
+| `test1-fast` | fast | 0 | 819,200 B + 19,200 B of zero tags | `test1-source.img`, byte for byte |
+| `test1-best` | best | 0 | the same | the same, **and** DART's own 'CKSM' resources: data `183F8B19`, tags `00000000` |
+| `random_t-fast` | fast | 19 | 819,200 B + 19,200 B of RANDOM tags | the Disk Copy 4.2 payload of `random_t-source.img` |
+| `random_t-best` | best | 18 | the same | the same |
+| `Studio8_Program.dart` | fast | 10 | an 800K HFS volume, "Studio/8", five files, October 1990 | mounts under `hfsutils`; no published source exists |
+
+The two methods over one disk agree with each other, which is two
+independent codecs arriving at one answer. `Studio8_Program.dart` is a
+real archive from 1990 and is the only specimen here that Apple's tool
+did not write for a test suite.
+
+### Peak RAM, and why it is not a constant
+
+| method | peak | what it is |
+|---|---|---|
+| fast | 24,582–25,056 B | the longest chunk the table states, plus 4 KB of output staging |
+| best | 40,301–40,624 B | the same, plus 15,568 B for the adaptive Huffman tree, for as long as one chunk lasts |
+
+The input buffer is sized from the **table**, not from the 20,960 a
+chunk may be. The format's own fallback caps a compressed chunk at the
+size it expands to, so a fixed buffer would have been legitimate — and
+would have made the peak the same number for every archive, which is the
+smell CLAUDE.md names. Measured, the saving is between 0 and 474 B on
+these five: every real 800K disk has at least one chunk that barely
+compresses. A disk that is mostly empty has no such chunk, and it is the
+small machines that would meet one.
+
+### On a Macintosh
+
+Replayed through the Mac shell on an emulated Mac Plus (System 6.0.8,
+68000), 2026-09-09, graded against this engine's own Linux output:
+
+| | 4 MB | 1 MB floor |
+|---|---|---|
+| `test1-best` (LZH) | **PASS**, 838,484 B out, peak heap 40,321 B | **PASS**, the same |
+| `Studio8_Program.dart` (RLE) | **PASS**, 838,484 B out, peak heap 25,072 B | **PASS**, the same |
+
+The peaks are the Linux figures plus the Mac allocator's per-block
+overhead (40,301 and 25,056). Neither archive is in the 69-fixture tier
+sample and neither has an oracle manifest, so these are `--expect` runs
+and are not part of any suite; TESTING.md, *DART*, has the commands and
+says what has NOT been run.
+
+**The refusal is photographed**, not inferred: an uncompressed 400K DART
+handed to the application on System 6.0.8 draws *"This DART disk image is
+already uncompressed."* — two lines, the alert's OK button clear of the
+text (`tools/vmac/README.md`, *Photographing the detect-only alert*, for
+the method).
+
+### What is NOT written
+
+The output has **no resource fork**. A DART written by the application
+keeps its checksums there — 'CKSM' 1 for the tags, 'CKSM' 2 for the data,
+and a 'DART' 0 string that spells both out — and this writes neither.
+Nothing reads them: MacMount's parser looks at the data fork alone, and
+`unar` has no opinion. `run_dart.py` checks our output AGAINST the ones
+DART recorded, so the bytes are verified even though the file does not
+carry the verification. OPEN_ITEMS.md has what would close it.
 
 ## StuffIt SpaceSaver
 
@@ -1505,18 +1672,36 @@ after itself — `.pkg` stripped, `" Folder"` appended, so `Report.pkg` becomes
 at all: it opens the file and then calls `GetResource('Eng ', 2)` in
 `StuffIt Engine™` and jumps into it (@0x334c). The translator is a driver.
 
+**What Aladdin's own expander asks for is a FOLDER.** Measured 2026-09-01,
+seven boots: `Translate ▸ PKG Expand…` puts up a Standard File dialog that
+lists **only directories** — the filter proc it hands `_SFPGetFile` tests
+`ioFlAttrib` bit 4 (`Othe` 0 @0x215e) — so a package written here cannot be
+selected at all, as `TEXT/ttxt`, `PACT/EXTR`, `PACT/ttxt` or `TEXT/EXTR`, with
+or without one selected in the application's own window. `CPT Expand…` in the
+same boot lists the type-`PACT` files, which is what makes that empty list a
+fact about the command rather than about the harness. Its own `DITL 2051`
+carries a button *"Expand into selected folder"*, `DITL 2052` is a *"Name of
+new folder:"* dialog, and its `Help` resource says the translator extracts
+"files and folders from archives created by AppleLink". The other two routes
+run a translator and do nothing with a package either: StuffIt Expander 4.0.2
+lists one and expands nothing, `DropConvert™` takes one into *Items to
+Convert:* and produces nothing — each in a boot where the BinHex control
+expanded (DECISIONS.md 2026-09-01, *the package that cannot be handed over*).
+
 **Detect only, and the reason is a specimen.** What a `Decode` line refers to
 has not been read out of the expander, and no `.pkg` file has ever reached
 this project, so there is nothing to grade a reading against. `tools/vmac/
 spacesaver.py --pkg` re-derives everything above out of the translator on the
 installed image, with four witnesses that fail if a different build is ever
-put in front of it.
+put in front of it; `--pkgexpand`, `--pkgexpander` and `--pkgconvert` are the
+three routes above.
 
 
 ## Archives named but not extracted
 
 **Named since 2026-08-26**, extraction still out by the brief (OPEN_ITEMS.md,
-part 1). Thirteen PC-side families, one probe, `src/fmt_foreign.c`:
+part 1). Fourteen PC-side and modern families, one probe,
+`src/fmt_foreign.c`:
 
 | format | test | source |
 |---|---|---|
@@ -1534,6 +1719,7 @@ part 1). Thirteen PC-side families, one probe, `src/fmt_foreign.c`:
 | Zstandard | 28 b5 2f fd, **or** a skippable frame 5x 2a 4d 18 | RFC 8878 §3.1.1 and §3.1.2, `reference/notes/zstd_rfc8878.txt` |
 | lrzip | `LRZI` and at least `MAGIC_LEN` = 24 bytes | `write_magic`/`get_magic`, `reference/lrzip/lrzip.c` |
 | WIM | `MSWIM` 00 00 00, header size at +8 = 208 | `WIM_MAGIC`, `WIM_HEADER_DISK_SIZE`, `reference/wimlib/include/wimlib/header.h` |
+| Apple Archive | `AA01` or legacy `YAA1`, header size at +4 ≥ 6, and the first field's subtype byte at +9 in a closed set of sixteen; **or** `pbz` and a codec letter `e`/`z`/`b`/`x`/`4` | `AAR_MAGIC`, `YAA_MAGIC`, `PBZ*_MAGIC` in `reference/libNeoAppleArchive/libNeoAppleArchive/libNeoAppleArchive_internal.h`; the prologue and the subtype set in `neo_aa_header.c`; the `x` and `4` letters from `reference/notes/Apple_Archive.md` |
 | lzip | `LZIP`, and nothing to corroborate it with | deark `unsupported.c`, `get_fmt` — which rates it **50** where it rates xz 90 |
 
 **What grades them** (`tools/run_foreign.py`, in `ci.sh`): archives written
@@ -1582,8 +1768,16 @@ reference, and it moved to OPEN_ITEMS.md part 1 on 2026-08-29.
 
 A `.zipx` needs nothing: it is a zip, the zip probe claims it, and its entries
 are refused one at a time by method. A `.cpgz` is gzip, the gzip layer unwraps
-to the cpio inside it, and that cpio is now named too. Apple Archive (`.aar`)
-is the one family left wanting a reference.
+to the cpio inside it, and that cpio is now named too.
+
+**Apple Archive joined on 2026-09-01**, graded the way bzip2 and 7z are — by
+an implementation that is not ours, writing the specimens. libNeoAppleArchive
+— MIT, and not a reimplementation of Apple's closed libAppleArchive but a
+from-scratch reading of the format — builds here with `tools/build_neoaa.sh`
+and writes archives in all four shapes the probe has to recognise, each read
+back by that same library before the probe is asked (`tools/neoaa_write.c`).
+The item that tracked it read *"unnamed for want of a reference"*; what was
+missing was the search, not the reference (BLOCKERS.md).
 
 ## Envelope auto-unwrap
 
@@ -1808,6 +2002,13 @@ scheme decided by filename cannot be driven that way (DECISIONS.md
 command, which is what keeps this table re-runnable rather than
 historical.
 
+The three interactive rows — spanned zip, `.NNN` split and parts inside
+envelopes — were **re-run on 2026-09-03** and pass unchanged, after a
+harness fault had been reported as three application failures for a day
+(BLOCKERS.md, *Withdrawn claims*). Nothing in the application or the
+engine changed; the reference CLI those two phases graded against was a
+path nothing builds.
+
 `derived-Cal.sit` (50,205 B) cut into three parts and put on one
 floppy, the parts named `archive.sit`, `part-two` and `zzz` — names
 that resemble neither each other nor the file inside:
@@ -2024,7 +2225,9 @@ escape that arrives at 2 GB*) why the two Zip64 refusals differ.
 **Measured 2026-08-27.** A name meets two caps on its way to disk, and
 neither is negotiable. The ENGINE carries it in `UncEntryInfo.name`,
 `UNC_NAME_MAX` (255) bytes plus a terminator inside a struct that is
-**296 bytes on the 68000 target** and travels on a 4 KB call stack; the
+**298 bytes on the 68000 target** (corrected 2026-09-03: it was stated
+as 296, which is where the last field starts) and travels on a 4 KB
+call stack; the
 FILESYSTEM takes what `pathconf` says, which is 255 bytes per component
 and 4,096 per path on ext4 and less on others. Until this date the first
 cut names silently — a 457-byte zip path extracted as 255 bytes, exit 0,
@@ -2080,6 +2283,18 @@ made unique fails **its own entry** and nothing else. It reads
 `name_truncated` as well, which is how a path the ENGINE cut is reported
 by a shell whose own cut did not fire.
 
+**A FOLDER is numbered the same way, since 2026-09-03**: two folders
+whose names agree for 31 characters are two folders on the disk,
+`Correspondence With The Publish` and `Correspondence With The Publ~1`,
+where until that date the second was descended into and their contents
+mixed. What authorises the rename is the folder memo — 200 rows of
+directory id and a 32-bit hash of the name it was created for, 1,600 B —
+so a directory THIS RUN did not make is still descended into, which is
+what lets the same archive be extracted twice into one destination.
+Past `~99`, or past the 200th folder, a merge is what is left and the
+first of those says *combined with* in the report. Reasoning:
+DECISIONS.md 2026-09-03, *a folder is a name too*.
+
 Why the suffix survives when 31 bytes are all there is: a Macintosh file
 is opened by the type and creator `sink_end` stamps on it, but a file
 that arrived WITH a suffix generally came off a machine that has neither
@@ -2092,11 +2307,11 @@ like anything else that did not come out.
 
 | the report holds | measured |
 |---|---|
-| lines kept | 64, of which the last **16 are reserved for failures** — 100 renames must not push out the one line to act on |
+| lines kept | 64, of which the last **16 are reserved for failures** and for a folder that could not be numbered — 100 renames must not push out the one line to act on |
 | text | 6,144 B packed end to end, 1 KB of it likewise reserved. **Names go in whole**: eighteen photographs whose names differ at character 34 are one line repeated eighteen times if the name is cut to a row, and the list exists to say which file became which |
 | rows a line takes | as many as the box needs, wrapped at a measured width and **broken after the name** where it has to wrap, so one row is what the archive called it and the next is what became of it |
 | rows visible at once | 20, Geneva 9 on 11-point rows, in a 460×300 box at (30,26) — the whole of it on a 512×342 Mac Plus screen. A list longer than that scrolls under the last two, which hold a blank line and the outcome |
-| static cost | 6,144 B of lines + 1,632 B of folder memo, against the ~64 KB the 1 MB floor target has spare (*the PAK methods*, 2026-08-25) |
+| static cost | 6,144 B of lines + 1,600 B of folder memo (200 folders, id and name hash), against the ~64 KB the 1 MB floor target has spare (*the PAK methods*, 2026-08-25) |
 | the application | 184,576 B of MacBinary, from 178,944 B before it |
 
 The outcome — *"Extraction complete."*, and every other sentence the
@@ -2282,7 +2497,7 @@ a heavy 1 MB extraction (`derived-Troi-ClipSave-Plug-in1.1.sit`, engine peak
 472,137 B) the shell's share at the tightest moment measured **−33 B**:
 nothing beyond the engine, to within the skew between the two samples. The
 13,242 B worst case comes from a lighter run where a dialog was up. Verified byte-exact at that size on all four tiers — 69/69 at
-1 MB, 66/69 at 512 KB, 69/69 on System 7.0.1, 20/20 on Mac OS 9.2 — and the
+1 MB, 66/69 at 512 KB, 69/69 on System 7.0.1, 21/21 on Mac OS 9.2 — and the
 password and report dialog phases driven end to end, the password one on the
 512 KB machine where the heap is tightest.
 
@@ -2312,32 +2527,71 @@ which is a different quantity from the THRESHOLD at which one stops fitting.
 
 ### What the application costs the engine
 
-**Only CODE costs anything. Data, globals and resources are free.** MEASURED
-2026-08-30 by ballast on a 1 MB Mac Plus under System 6.0.8, with the ballast
-verified present in the binary that actually ran:
+**Code and the A5 world both cost the engine, one for one; only RESOURCES are
+free.** MEASURED 2026-09-02, and this section said the opposite until then.
 
-| ballast | free heap | budget |
+| ballast | budget |
+|---|---|
+| none | 647,802 B |
+| **+16,384 B of `.data`** | 631,384 B |
+
+**16,384 B of data cost 16,418 B of budget.** The mechanism is the layout: the
+A5 world sits ABOVE `ApplLimit`, so enlarging it lowers the heap's ceiling by
+its own size. `CODE` resources are handles inside that heap and cost the same
+way. What is genuinely free is a RESOURCE that is not loaded — a `DITL`, an
+`ICN#`, an `OVLY` blob nobody has asked for.
+
+**The 2026-08-30 measurement that said data was free is withdrawn**
+(BLOCKERS.md), and with it the claim it displaced: *resident size — code plus
+data plus bss — is what costs the engine its budget* was withdrawn on
+2026-08-30 on the strength of it, and was right all along. The ballast method
+is sound and its own warning is what this run had to obey: three of the four
+2026-08-30 runs measured nothing because `--gc-sections` dropped the ballast
+or only one `main()` referenced it, and the first attempt on 2026-09-02 was
+dropped the same way. **`nm` the binary that actually ran; a null result from
+a ballast nobody has found is not a measurement.**
+
+    budget ≈ 708,100 - code - A5      (autotest build, 1 MB, System 6.0.8)
+
+**Consequence for the Macintosh shell, corrected: put material in RESOURCES.**
+A dialog defined in a `DITL` costs the engine nothing. A table written in C
+costs its own size on every extraction whether it is `const` or not, because
+Retro68 places `.rodata` in the A5 world too (*Where the code is*). The
+`tools/build_mac.sh` ratchet watches code AND data for this reason; it watched
+only code until 2026-09-02, so 32,644 B of A5 world had grown unwatched.
+
+### Where the code is
+
+**147,568 B of `CODE`, and there is no hotspot in it.** MEASURED 2026-09-01
+from the linker map, `tools/code_map.py` (which says how, and checks itself
+against `size`; 74 B of link fill):
+
+| | bytes | share |
 |---|---|---|
-| none | 647,096 B | 565,176 B |
-| **+11,308 B of code** | 635,768 B | 553,848 B |
-| **+6,132 B of `.data`** | 647,096 B | 565,176 B |
+| Macintosh shell — UI, File Manager, memory | 17,358 | 11.8 % |
+| **format decoders, 23 files** | **87,508** | **59.3 %** |
+| shared codec machinery — Huffman, LZW, LZ, BWT | 12,564 | 8.5 % |
+| deflate (zip + gzip) | 7,442 | 5.0 % |
+| engine core, util, segment joining | 9,720 | 6.6 % |
+| encryption: ciphers and key schedules | 7,480 | 5.1 % |
+| Retro68 runtime and libc glue | 5,422 | 3.7 % |
 
-Code moves it one for one; data does not move it at all. The reason is the
-classic layout: `CODE` resources are handles **inside** the heap `FreeMem()`
-reports, while the A5 global world sits outside it. So
+The largest single file is the shell at 17,358 B; the largest decoder is
+`fmt_dd` at 8,860 B, and the largest two FUNCTIONS are 5,136 B and 5,114 B —
+3.5 % each. Eleven decoders together make up 16,342 B. The size is the format
+count, not any one format.
 
-    budget = 708,100 - code        (autotest build, 1 MB, System 6.0.8)
+**A further 32,077 B of read-only tables is outside `CODE` altogether**, in
+the A5 world: `ss_dict0` (9,701 B), the cipher S-boxes, the fixed inflate
+tables. That is the linker-level form of *What the application costs the
+engine* above, and it means there is no large table hiding inside the figure
+that could be moved out to buy budget.
 
-which reproduces every figure below. **Three of the four ballast runs measured
-nothing** before this came out — twice `--gc-sections` had dropped the ballast,
-once it was referenced only from the other `main()` — so check the symbol is in
-the binary before believing a null result (`tools/build_mac.sh` records the
-method).
-
-**Consequence for the Macintosh shell: put material in resources and tables,
-not in C.** A dialog defined in a `DITL` costs the engine nothing; the same
-dialog built in code costs its own size on every extraction. `tools/build_mac.sh`
-enforces a ratchet on code size for this reason.
+**Two ways of counting this are wrong**, both by enough to change a decision:
+summing `size` over the objects gives 178,696 B, because `--gc-sections`
+drops 17 % of it, and counting every `.text`/`.rodata` input section gives
+179,561 B, because Retro68 places `.rodata` in the A5 world. Only the map's
+`.code*` output sections answer the question the budget asks.
 
 ### Budget
 
@@ -2663,8 +2917,13 @@ dialog — SAMPLE is **3,134 B** and does not move either, at 10 KB or at
 
 **So `kStackBump` is 4 KB, a 12 KB stack** — 2.1x the deepest write ever
 observed — and **20,464 B** has gone to the engine (*Budget*). Verified
-byte-exact at exactly that size on every tier: **69/69 at 1 MB**, 512 KB,
-System 7 and Mac OS 9.
+byte-exact at exactly that size on **69/69 at 1 MB**, 512 KB and System 7,
+and on Mac OS 9.2 on 2026-09-04 — 21/21, plus the six DiskDoubler archives
+— which was the first run of that tier at this size: the sentence here had
+named it as verified for the four days before that (BLOCKERS.md, *Withdrawn
+claims*). The 12 KB stack was never the Mac OS 9 defect: the old 24 KB bump
+bombed there too, and the cause was a field nobody assigned (DECISIONS.md
+2026-09-04).
 
 **PAINT is not a stack measurement, and this is how that was established.**
 Its lowest dirty word sits a near-constant 5–7 KB above ApplLimit at every
@@ -3436,18 +3695,39 @@ one entry is refused. Cutting the stack to 20 KB the same day added another
 12,272 B and moved none of the three, which is what their requirements
 predict — 247,687 B, 405,520 B and one ISBN entry, against a budget that
 1:1 arithmetic puts at 198,716 B (**derived**; the 186,444 B above is the
-measured one, taken before the stack changed). **The budget is 163,656 B** of a 218,208 B free heap,
-measured on the machine (`sys30.py --emu mv-512Ke -D UNC_AT_BUDGET`, slots
-swapped per `tools/vmac/README.md`); the shell holds the other 54,552 B.
+measured one, taken before the stack changed). **The budget is 197,728 B**:
+a 218,208 B free heap measured on the machine (`sys30.py --emu mv-512Ke
+-D UNC_AT_BUDGET`, slots swapped per `tools/vmac/README.md`) less the flat
+20,480 B reserve, and the figure `tools/run_tiers.py` asserts this tier at.
+Under the quarter rule it was **163,656 B**, and what the difference
+recovered is below.
 `synth-dd-m5.dd` is the clean illustration: DiskDoubler method 5 asks for one
 405,520 B block on every tier, and here it cannot have it.
 
-**Three of the four are StuffIt 5, and the other three StuffIt 5 fixtures in
-the sample pass** — at 141,400 B, 161,725 B and 162,567 B, hard against the
-budget. So the line is the archive's BLOCK SIZE, which its compressor chose,
-and not the format: `derived-Troi-ClipSave-Plug-in1.1.sit` needs 168,878 B
-against 163,656 B and misses by **5,222 bytes**, with `gRefusedWhy` = 1
-naming the budget rather than a fragmented heap.
+**66/69 is the ceiling, and it is a property of the three archives.**
+Measured 2026-09-01 with `tools/run_tiers.py`, which applies the same rule on
+Linux and reproduces this tier fixture for fixture. The minimum budget each
+one needs, bisected:
+
+| fixture | needs | of which | against 197,728 B |
+|---|---|---|---|
+| `derived-a2basic.dmg.sit` | **246,734 B** | one 205,020 B BWT block — the entry's whole 205,019 B output in a single block — plus 37,356 B of walk state | 1.25x |
+| `derived-Library_ISBN_Barcoder.sit` | **393,869 B** | one 352,161 B block, same shape | 2.0x |
+| `synth-dd-m5.dd` | **401,408 B** | 1,536 B per distinct context byte, all 256 of them | 2.0x |
+
+Two of the three ask for more in a SINGLE allocation than the machine has for
+the whole job, and a block a BWT inverts has to be resident, so no allocation
+strategy reaches them; the third's 256 splay trees are adaptive state that
+cannot be discarded and rebuilt. What would move this tier is a smaller
+archive, not a smaller engine.
+
+**Two of the three are StuffIt 5, and the other four StuffIt 5 fixtures in
+the sample pass** — at 141,400 B, 161,725 B, 162,567 B and 184,590 B, the last
+of them hard against the budget. So the line is the archive's BLOCK SIZE,
+which its compressor chose, and not the format:
+`derived-Troi-ClipSave-Plug-in1.1.sit` needs 168,878 B, which the quarter
+rule's 163,656 B missed by **5,222 bytes** with `gRefusedWhy` = 1 naming the
+budget rather than a fragmented heap, and which the flat reserve covers.
 
 **What is refused is one entry's working set, and never the archive.**
 `derived-XferIt_1.5b4.sea` writes 948,175 B across 10 files on this machine at
@@ -3462,9 +3742,11 @@ refused having reached 37,372 B, because renegotiating has a floor and that
 archive's block is under it. What a codec CAN give back decides more than what
 it asks for.
 
-**The same machine under System 6.0.8 manages 58/69**
-(`run.py --emu mv-512Ke --system System6.hfv`), and **System 3.0's failures
-are a strict subset of System 6's.** The difference is the SYSTEM HEAP and
+**The same machine under System 6.0.8 manages 63/69**
+(`run.py --emu mv-512Ke --system System6.hfv`, re-measured 2026-09-04; 58/69
+before the stack was cut to 12 KB, which this tier's "unchanged" note had not
+accounted for — the reserve going flat could not help it, and the stack did),
+and **System 3.0's failures are a strict subset of System 6's.** The difference is the SYSTEM HEAP and
 nothing else: free heap when extraction starts is **218,208 B** under System
 3.0 against **122,808 B** under System 6.0.8, a gap of 95,400 B, against
 System files of 181,913 B and 1,221,287 B. The Finder is not part of it —
@@ -3481,13 +3763,16 @@ same machine gains 8,192 B and another 20,464 B from the stack. Under the quarte
 `derived-Troi-ClipSave-Plug-in1.1.sit` — it had missed by 5,222 bytes and now
 writes all 13 entries at a 184,590 B peak, taking this tier from 65/69 to
 **66/69**. Under System 6.0.8 the same machine has 122,808 B free, where the
-quarter always fell under the 32 KB floor, so that tier is unchanged at 58/69.
+quarter always fell under the 32 KB floor, so the RESERVE going flat did
+nothing there — and this sentence read "so that tier is unchanged at 58/69"
+until 2026-09-04, which was a claim about the tier drawn from an argument
+about one of the two changes. The stack cut lands on every machine: that
+tier is **63/69** (above, and BLOCKERS.md, *Withdrawn claims*).
 **A kilobyte of application costs the engine a kilobyte here too**, now that
 the reserve is a constant rather than a fraction. The
-six extra are `a2ps.V4.3.tar.Z`, `derived-PuzzleGetter_0.8.sit` and four
-self-extracting archives (`derived-DD_Expand.sea`,
-`derived-Expand_Now_1.0.1.sea`, `derived-LHA_Expander_1.0.3.sea`,
-`derived-Terrainman_2.0__.sea`). On `derived-Troi-ClipSave-Plug-in1.1.sit` the
+three extra are `popper-1.7.tar.Z`, `derived-Expand_Now_1.0.1.sea` and
+`derived-Troi-ClipSave-Plug-in1.1.sit` (2026-09-04; it was six before the
+stack cut). On `derived-Troi-ClipSave-Plug-in1.1.sit` the
 two systems are 11 entries at 163,332 B against 6 entries at 89,613 B: the
 1986 system leaves the engine ~74 KB more than System 6 does, while also
 keeping a Finder that System 6 had to give up.
@@ -3643,6 +3928,64 @@ File simply does not act on it. The Cancel BUTTON quits normally: the frame
 after it is byte-identical to the Finder window the application was launched
 from. On System 6.0.8 the same chord closes the same dialog.
 
+### A Macintosh 128K: the RAM stops it before the ROM does
+
+**The guarded build does not start on a Macintosh 128K, and the reason is
+memory rather than the 64K ROM.** MEASURED 2026-09-01. The `rom64k` `dist/`
+that reaches Standard File on a 512K bombs `ID = 03` on the same volume, the
+same ROM and the same System when the machine has 128 KB — `mv-128K`, built by
+`setup.sh` as `-m 128K -mem 128K`. The 512K run is the control and is what
+makes the 128K run mean anything: one volume, two machines, one difference.
+
+`tools/vmac/memtest` reports what the machine leaves an application, launched
+as the boot shell so nothing else is resident:
+
+| | Macintosh 128K | Macintosh 512K |
+|---|---|---|
+| `MemTop` | 131,072 | 524,288 |
+| `ApplZone` | 19,968 | 51,968 |
+| `ApplLimit` | 98,536 | 491,752 |
+| `CurStackBase` | 106,728 | 499,944 |
+| `FreeMem` | 4,846 | 4,846 |
+| **largest single `NewPtr`** | **63,744** | **424,960** |
+| a 142,152 B block — `CODE` 2 | **refused** | granted |
+
+**`CODE` 2 is 142,152 B and the machine's largest block is 63,744 B**, so the
+Segment Loader cannot place the segment the engine lives in; the application's
+`CODE` totals 148,780 B against an application heap that cannot exceed
+`ApplLimit − ApplZone` = 78,568 B. That bound is set by the RAM under the
+screen buffer, not by the System, so no smaller System moves it — and CODE is
+the one thing that costs a Macintosh anything here (*What the application
+costs the engine*). A 128K machine is short by a factor of about two before
+any archive is opened, which is why the HD20 question in MANUAL_TESTS.md §7 is
+a question about a **512K** and not about the machine it is named after.
+
+**What would fit, measured by building it.** The sniff table, the format
+table and the segment scheme table are what reference the decoders, so cutting
+rows from them and letting `--gc-sections` run is enough to price a subset
+build. Static sizes from `m68k-apple-macos-size`, MEASURED 2026-09-01:
+
+| build | code | data + bss | static total |
+|---|---|---|---|
+| shipping | 147,568 | 44,096 | 191,664 |
+| MacBinary + BinHex + StuffIt classic + Compact Pro + PackIt | 59,944 | 29,112 | 89,056 |
+| MacBinary + BinHex + StuffIt classic | 52,092 | 29,060 | 81,152 |
+| **MacBinary + BinHex** | **34,452** | **23,724** | **58,176** |
+
+Against ~88 KB between `ApplZone` and the screen buffer, from which the stack
+and every working buffer also come: the two-envelope build leaves ~30 KB for
+both and **fits** (*derived*); adding StuffIt classic leaves ~7 KB and does
+not. The shell is 17,358 B of every row and the A5 world does not fall much
+with the decoders, so the third format is not what breaks it — the fixed cost
+is. A 128K build is therefore an envelope decoder unless the shell and the A5
+world are cut too, and it would still need HFS for the File Manager calls that
+bomb on a 64K ROM (*A true Macintosh 512K*).
+
+**`FreeMem` is not the instrument**, and reads identically on both machines:
+the application zone is created small and grown on demand, so what a probe
+must ask for is the largest block `NewPtr` will actually return. A harness
+that had quoted `FreeMem` here would have reported the two machines as equal.
+
 ## Mac OS 9 tier (QEMU PowerPC — Mac OS 9.2, `mac99`, 512 MB, 68LC040 emulation)
 
 The third and last point of the System 6 → Mac OS 9 range the project claims,
@@ -3650,9 +3993,25 @@ and the only one where the 68k binary does not run on a 68k CPU: Mac OS 9.2 on
 emulated PowerPC executes it through the **68LC040 emulator** built into the
 system. Nothing above System 7 had ever run it.
 
-**20/20 byte-exact**, re-run 2026-08-27 — `tools/vmac/os9sample.txt`, one
-fixture per format, each in its own boot from a pristine copy of the master
-image:
+**21/21 as of 2026-09-04**, re-run on the build that zeroes `UncOptions` —
+a fix that costs the smallest machine nothing: **147,548 B of code before,
+147,544 B after**, with 4 B moving to the A5 world (measured against a
+worktree of the pre-fix commit, 2026-09-05; the two currencies are
+*What the application costs the engine*).
+That morning the tier read 18/20 — `derived-DandStoQIF2.sea` and
+`derived-SD__Utilities.x` bombing the application — and behind that number
+every DiskDoubler archive in the corpus bombed: a field the shell never
+assigned, which the engine's folder-path walker writes through in exactly
+three formats (DECISIONS.md 2026-09-04, *the field nobody assigned*;
+BLOCKERS.md, *Withdrawn claims*). The sample gained `synth-now-mixed.now` the
+same day, Now Compress being the third of those formats and the one this
+tier had never run. The other five DiskDoubler archives were run too,
+off-sample: **5/5 byte-exact** — and `derived-Terrainman_2.0__.sea` first
+read as a failure because the harness could not walk a folder named with an
+8-bit character, `Terrainman 2.0 ƒ`, while the volume held all ten files
+(`tools/vmac/README.md`, *Checking a run off the disk*). `tools/vmac/os9sample.txt`,
+one fixture per format, each in its own boot from a pristine copy of the
+master image:
 
     tools/vmac/os9.py --setup                                   # once
     tools/vmac/os9.py --list tools/vmac/os9sample.txt -o <dir> --launch
@@ -3678,10 +4037,11 @@ image:
 | `derived-SD__Utilities.x` | Alysis SuperDisk! | 3 | 9,916 | 14,389 | ✅ byte-exact, including two names holding the `':'`/`'/'` swap |
 | `synth-os9-btoa.btoa` | btoa | 1 | 504 | 0 | ✅ byte-exact |
 | `synth-os9-mime.mim` | multipart/appledouble | 1 | 320 | 176 | ✅ byte-exact, both forks and the type |
+| `synth-now-mixed.now` | Now Compress | 1 | 15,096 | 0 | ✅ byte-exact — added 2026-09-04, the third folder-walking format |
 | `synth-os9-rar.rar` | RAR: must REFUSE | 0 | — | — | ✅ declined, and Linux declines the same file; the alert is photographed |
 
-**20/20**, 51 files, 785,150 data bytes and 349,253 resource-fork bytes
-compared. The eight formats that postdate the previous sweep — ARC, uuencode,
+**21/21**, 52 files, 800,246 data bytes and 349,253 resource-fork bytes
+compared (2026-09-04; 20/20 and 51 files before Now Compress joined). The eight formats that postdate the previous sweep — ARC, uuencode,
 SuperDisk!, btoa, LZH, base64/MIME and the named-but-declined family, plus
 DiskDoubler's promotion from refusal to extraction — all passed first time;
 the two failures in that sweep were both in the HARNESS and are written up in

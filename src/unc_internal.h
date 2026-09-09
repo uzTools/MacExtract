@@ -1049,7 +1049,7 @@ int unc_lzdyn_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen,
 int unc_lzst0_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen,
                      int (*put)(void *ctx, uint8_t b), void *pctx);
 
-/* Adaptive-Huffman LZSS, in two dialects that share a tree of 314
+/* Adaptive-Huffman LZSS, in three dialects that share a tree of 314
  * leaves and differ only in what the codes above 0xff mean and in what
  * the window starts as:
  *
@@ -1062,9 +1062,22 @@ int unc_lzst0_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen,
  *                     Source: reference/deark/foreign/lzhuf.h,
  *                     lzhuf_Decode_init's is_arc_trimmed branch, and
  *                     modules/arc.c's decompressor_trimmed, which
- *                     chains RLE90 after it. */
+ *                     chains RLE90 after it.
+ *   UNC_LZAH_DART     DART's "best": -lh1-'s code exactly, over a
+ *                     window of ZEROS. Apple took Yoshizaki/Okumura's
+ *                     LZHUF and changed two things — no leading length
+ *                     word, and 0x00 where LZHUF fills 0x20 — and the
+ *                     first of those is the caller's business, not this
+ *                     function's. Source:
+ *                     reference/ciderpress2/DART.cs (UnpackLZH passes
+ *                     initVal 0x00) and DART-notes.md, *Compression*.
+ *
+ * The window fill is uniform in all three, so LZHUF's ring-buffer start
+ * of N-F does not appear here: a match reaching back before the first
+ * byte reads the fill byte wherever the cursor started. */
 #define UNC_LZAH_LH1      0
 #define UNC_LZAH_TRIMMED  1
+#define UNC_LZAH_DART     2
 
 int unc_lzah_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen, int mode,
                     int (*put)(void *ctx, uint8_t b), void *pctx);
@@ -1097,6 +1110,7 @@ int unc_dd_extract(UncCtx *c);
 int unc_now_extract(UncCtx *c);
 int unc_superdisk_extract(UncCtx *c);
 int unc_spacesaver_extract(UncCtx *c);
+int unc_dart_extract(UncCtx *c);
 
 /* uuencode, including UUTool's two-fork shape (fmt_uu.c). The probe
  * needs no io: a uu file identifies itself in its first lines. */
@@ -1197,6 +1211,7 @@ UncFormat unc_sitx_probe(const uint8_t *head, int32_t len, UncIO *io);
 UncFormat unc_nowcompress_probe(const uint8_t *head, int32_t len, UncIO *io);
 UncFormat unc_superdisk_probe(const uint8_t *head, int32_t len, UncIO *io);
 UncFormat unc_spacesaver_probe(const uint8_t *head, int32_t len, UncIO *io);
+UncFormat unc_dart_probe(const uint8_t *head, int32_t len, UncIO *io);
 UncFormat unc_applelink_probe(const uint8_t *head, int32_t len, UncIO *io);
 uint32_t unc_superdisk_single_body(const uint8_t *head, int32_t len);
 UncFormat unc_diskdoubler_probe(const uint8_t *head, int32_t len, UncIO *io);

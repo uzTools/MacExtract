@@ -76,6 +76,15 @@ python3 tools/run_sizelimits.py --macextract build/san/macextract \
 # bytes.
 python3 tools/run_names.py --macextract build/san/macextract \
     || fail "over-long name tests"
+# What a small Macintosh refuses, decided on Linux. The Mac shell's
+# allocator is a running total against a cap, and `--budget` is the same
+# rule, so a tier's memory result can be swept here in five seconds
+# instead of one emulator boot per fixture. Only the two tiers Mini vMac
+# has independently agreed with are asserted; a tally that moves is a
+# memory regression or a memory win, and either should be deliberate
+# (TESTING.md, *The tiers a budget predicts*).
+python3 tools/run_tiers.py --check --macextract build/san/macextract \
+    || fail "memory-budget tier check"
 # --only: acting on the entries the user named. `unar` has no per-file
 # selection, so the reference side is this engine's own FULL extraction
 # — which the diff suite above grades against `unar`. The assertion that
@@ -112,6 +121,17 @@ python3 tools/run_superdisk.py --macextract build/san/macextract \
 # Skips cleanly without qemu-m68k or the cross-compiler.
 python3 tools/sdmodule/run_sdmodule.py --macextract build/san/macextract \
     || fail "SuperDisk! module differential"
+# DART (M52). `unar` has no DART parser and neither does `macunpack`, so
+# the oracle is not a second reader but the ENCODER's input: CiderPress2
+# publishes two 800K disks compressed by DART 1.5.3 itself, in both of
+# DART's methods, WITH THE SOURCE IMAGES BESIDE THEM — plus, for one of
+# them, the resource fork holding the checksums DART wrote in 1993. The
+# suite also holds the two codecs against each other, sweeps near-miss
+# headers (the format has no signature at all) and cuts an archive,
+# because DART is not in the fixture corpus and run_truncation.py never
+# meets one. Skips cleanly without reference/.
+python3 tools/run_dart.py --macextract build/san/macextract \
+    || fail "DART tests"
 # btoa/atob (M26). No corpus file and no second reader — `unar` does not
 # know the format — so the ORIGINAL implementation is the encoder: the
 # suite compiles reference/btoa and grades our decoder against what it

@@ -75,24 +75,33 @@ if [ ! -d reference/macutils ]; then
     rm /tmp/macutils.tar.gz
 fi
 
-cd reference/notes
+# NOT `cd reference/notes`, which is what these blocks used to open with.
+# Every block BELOW them names its file from the repository root, so the
+# cd made all of those write into reference/notes/reference/notes/ — a
+# directory that does not exist, so `set -e` killed the script at the
+# zstd fetch and the last six references never arrived on a tree that
+# did not already have them. Found 2026-09-09 by running this script on
+# a populated tree for the first time in a while; nothing had, because
+# every block is guarded by the file it fetches.
 for p in StuffIt Compact_Pro PackIt BinHex MacBinary ArcMac; do
-    [ -f "$p.md" ] || curl -sL "http://fileformats.archiveteam.org/wiki/$p?action=raw" -o "$p.md"
+    [ -f "reference/notes/$p.md" ] || \
+        curl -sL "http://fileformats.archiveteam.org/wiki/$p?action=raw" \
+             -o "reference/notes/$p.md"
 done
 # ArcMac's own specification: the "ArcMac File Structure" section of the
 # ARCMAC.DOC that ships with every ArcMac distribution. It is the only place
 # that states the byte order of the two fork lengths ("Intel 80xxx byte sex");
 # macutils' arc.h gives the offsets and not the order. Text, CR line endings.
-if [ ! -f ArcMac.DOC ]; then
+if [ ! -f reference/notes/ArcMac.DOC ]; then
     curl -sL "https://www.sac.sk/download/pack/macarc.zip" -o /tmp/macarc.zip
     # 1988 zip, PKWARE-imploded: python3's zipfile cannot read it, unzip can.
-    unzip -p /tmp/macarc.zip ARCMAC.DOC | tr '\r' '\n' > ArcMac.DOC
+    unzip -p /tmp/macarc.zip ARCMAC.DOC | tr '\r' '\n' > reference/notes/ArcMac.DOC
     rm -f /tmp/macarc.zip
 fi
 
 # Matthew Russotto's Arsenic (StuffIt method 15) spec; russotto.net may be
 # unreachable — fall back to the Wayback Machine and strip the HTML.
-if [ ! -f arsenic_russotto.md ]; then
+if [ ! -f reference/notes/arsenic_russotto.md ]; then
     curl -sL "https://web.archive.org/web/2023/http://www.russotto.net/arseniccomp.html" \
         -o /tmp/arsenic.html
     python3 -c "
@@ -100,7 +109,7 @@ import html, re
 raw = open('/tmp/arsenic.html').read()
 raw = re.sub(r'<script.*?</script>|<style.*?</style>|<!--.*?-->', '', raw, flags=re.S)
 text = html.unescape(re.sub(r'<[^>]+>', '', raw))
-open('arsenic_russotto.md', 'w').write(re.sub(r'\n{3,}', '\n\n', text))
+open('reference/notes/arsenic_russotto.md', 'w').write(re.sub(r'\n{3,}', '\n\n', text))
 "
 fi
 
@@ -121,11 +130,11 @@ fi
 #       files to determine their proper ordering", and the FINAL segment
 #       is the one you open. https is unusable (the certificate is for
 #       another host), so this is fetched over http.
-[ -f cpt_specs_theunarchiver.md ] || \
-    curl -sL -o cpt_specs_theunarchiver.md \
+[ -f reference/notes/cpt_specs_theunarchiver.md ] || \
+    curl -sL -o reference/notes/cpt_specs_theunarchiver.md \
     "https://storage.googleapis.com/google-code-archive/v2/code.google.com/theunarchiver/wiki/CompactProSpecs.wiki"
 
-if [ ! -f cpt_users_guide.txt ]; then
+if [ ! -f reference/notes/cpt_users_guide.txt ]; then
     curl -sL -o /tmp/cpt_guide.pdf \
         "http://www.applefool.com/se30/files/Compact%20Pro%20User's%20Guide.pdf"
     # No poppler here, and the PDF is plain Flate-compressed text: pull the
@@ -150,11 +159,10 @@ for m in re.finditer(rb'stream\r?\n', d):
                    lambda o: bytes([int(o.group(1), 8) & 0xFF]), b)
         out.append(b.decode('mac_roman'))
     out.append('\n')
-open('cpt_users_guide.txt', 'w').write(re.sub(r'\n{3,}', '\n\n', ''.join(out)))
+open('reference/notes/cpt_users_guide.txt', 'w').write(re.sub(r'\n{3,}', '\n\n', ''.join(out)))
 "
     rm -f /tmp/cpt_guide.pdf
 fi
-echo "references ready"
 
 # zstd — RFC 8878, the Zstandard frame format. The only reference this
 # project needs for it: the frame magic (0xFD2FB528, little-endian) and
@@ -193,3 +201,78 @@ if [ ! -d reference/wimlib ]; then
     tar xzf /tmp/wimlib.tar.gz -C reference/wimlib --strip-components=1
     rm -f /tmp/wimlib.tar.gz
 fi
+
+# libNeoAppleArchive (Snoolie K, MIT) — the only open reading of Apple
+# Archive there is, and not a reimplementation of Apple's closed
+# libAppleArchive but a from-scratch one. `libNeoAppleArchive_internal.h`
+# carries the magics (AAR_MAGIC/YAA_MAGIC and the pbz* set) and
+# `neo_aa_header.c` the six-byte header prologue and the closed set of
+# field subtypes that corroborate it. Naming only: extraction stays out
+# by the brief.
+[ -d reference/libNeoAppleArchive ] || \
+    git clone --depth 1 https://github.com/0xilis/libNeoAppleArchive \
+        reference/libNeoAppleArchive
+
+# CiderPress2 (Andy McFadden, Apache-2.0) — the SECOND reading of DART,
+# and the only other one there is: DiskArc/Disk/DART.cs and its
+# DART-notes.md, plus DiskArc/Comp/LZHufStream.cs, which is the LZHUF
+# DART's "best" method is a dialect of. Everything src/fmt_dart.c does
+# not take from Apple's own header comes from here — the RLE's word
+# orientation, the 0xFFFF per-chunk fallback, the type/size pairs, and
+# the 0x00 window fill.
+#
+# TestData/dart/ is fetched with it and is what tools/run_dart.py grades
+# against: two 800K disks compressed by DART 1.5.3 itself under MAME,
+# each in both methods, WITH THE SOURCE IMAGES BESIDE THEM. That is the
+# encoder-side ground truth this project usually has to go to an
+# emulator for (TESTING.md, *DART*).
+if [ ! -d reference/ciderpress2 ]; then
+    mkdir -p reference/ciderpress2
+    for f in DiskArc/Disk/DART.cs DiskArc/Disk/DART-notes.md \
+             DiskArc/Comp/LZHufStream.cs DiskArc/Comp/LZHuf-notes.md \
+             TestData/dart/README.md; do
+        curl -sL -o "reference/ciderpress2/$(basename "$f")" \
+            "https://raw.githubusercontent.com/fadden/CiderPress2/HEAD/$f"
+    done
+    for z in test1 random_t; do
+        curl -sL -o "/tmp/cp2-$z.zip" \
+            "https://raw.githubusercontent.com/fadden/CiderPress2/HEAD/TestData/dart/$z.zip"
+        unzip -oq "/tmp/cp2-$z.zip" -d reference/ciderpress2
+        rm -f "/tmp/cp2-$z.zip"
+    done
+fi
+
+# Apple's own DartIntf.h, version 1.5.3, Ken McLeod, 1987-1994. DART was
+# never an Apple product and its format was never published; this header
+# is the whole of the documentation there is, and it says so ("The format
+# of a DART file is provided here for READ-ONLY use"). It survives as the
+# accepted answer to a Retrocomputing Stack Exchange question, which is
+# also where CiderPress2's notes cite it from, so it is fetched through
+# the API — the HTML page is behind a challenge this machine cannot pass.
+if [ ! -f reference/notes/DartIntf.h ]; then
+    curl -sL -o /tmp/dartintf.json \
+        "https://api.stackexchange.com/2.3/answers/31134?site=retrocomputing&filter=withbody"
+    python3 -c "
+import gzip, html, json, re
+raw = open('/tmp/dartintf.json','rb').read()
+if raw[:2] == b'\x1f\x8b':
+    raw = gzip.decompress(raw)
+d = json.loads(raw)
+body = d['items'][0]['body']
+code = '\n'.join(html.unescape(re.sub(r'<[^>]+>', '', m))
+                 for m in re.findall(r'<code>(.*?)</code>', body, re.S))
+open('reference/notes/DartIntf.h', 'w').write(code)
+"
+    rm -f /tmp/dartintf.json
+fi
+
+# The archiveteam wiki's Apple Archive page, kept for the two codec bytes
+# libNeoAppleArchive names but does not yet write: lzma `pbzx` (70627A78)
+# and lz4 `pbz4` (70627A34). Its own docs/NeoAAArchiveGeneric.md says
+# both belong to the format and are "not yet added", so the wiki is what
+# supplies the bytes. https is refused by that host; http works.
+[ -f reference/notes/Apple_Archive.md ] || \
+    curl -sL "http://fileformats.archiveteam.org/wiki/Apple_Archive?action=raw" \
+        -o reference/notes/Apple_Archive.md
+
+echo "references ready"

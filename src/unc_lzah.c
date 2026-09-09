@@ -6,7 +6,9 @@
  * Two formats here use it and they use the same one: StuffIt classic's
  * method 5 ("LZAH") and LZH's -lh1-. XADMaster runs a single handle for
  * both, which is why this is one file rather than two — the same
- * arrangement DiskDoubler method 8 has with Compact Pro's stages.
+ * arrangement DiskDoubler method 8 has with Compact Pro's stages. ARC
+ * 7.x's "Trimmed" and DART's "best" are the same coder again, each
+ * differing in one constant: see the modes in unc_internal.h.
  *
  * Source: reference/XADMaster/XADLZHDynamicHandle.m (the handle
  * XADStuffItParser and XADLZHParser both instantiate) — LGPL, see
@@ -78,7 +80,12 @@ static void lzah_reset(Lzah *h, int mode)
      * is what tells the two apart, and the entry's CRC is what says
      * so. */
     for (i = 0; i < LZAH_WINDOW; i++) h->window[i] = 0;
-    if (mode == UNC_LZAH_TRIMMED) return;
+    /* DART's "best" takes the zeros for the same reason and on its own
+     * evidence: Apple's LZHUF fills the window with 0x00 where
+     * Yoshizaki's fills 0x20 (reference/ciderpress2/DART-notes.md), and
+     * four archives DART 1.5.3 wrote decode byte-exact against their
+     * source images only this way. */
+    if (mode == UNC_LZAH_TRIMMED || mode == UNC_LZAH_DART) return;
     for (i = 0; i < 256; i++) {
         int32_t j;
         for (j = 0; j < 13; j++) h->window[i * 13 + 18 + j] = (uint8_t)i;
