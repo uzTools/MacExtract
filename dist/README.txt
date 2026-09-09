@@ -1,4 +1,4 @@
-MacExtract v0.31.0 — bootstrap distribution
+MacExtract v0.32.0 — bootstrap distribution
 ==========================================
 
 A bare Classic Mac has no way to open a .sit/.cpt/.hqx until it HAS an
