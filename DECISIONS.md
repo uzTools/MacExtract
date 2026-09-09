@@ -194,6 +194,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-03 (a folder is a name too) — numbering folders like files, and the table that made it affordable
 - 2026-09-04 (the field nobody assigned) — a struct filled field by field, and the crash that was shaped like three formats
 - 2026-09-09 (the disk image that is expanded and not opened) — DART, and an error code for a file with nothing wrong with it
+- 2026-09-09 (the oracle that built two times in three) — a timestamp race, and a suite that reported it as a missing reference
 
 ---
 
@@ -11317,3 +11318,81 @@ earlier assumption that a DART could not be replayed there was about an
 
 Numbers and per-specimen results: FORMATS.md, *DART*. How the suite
 runs: TESTING.md, *DART*.
+
+---
+
+## 2026-09-09 (the oracle that built two times in three) — a timestamp race, and a suite that reported it as a missing reference
+
+**Found by eye, in a CI log, on the way to something else.** `run_mime.py`
+printed *"SKIPPED — no reference/mpack (tools/fetch_references.sh)"* and
+returned 0 — in a run where `reference/mpack` was present, and where the
+same run had just built `reference/btoa` successfully. Two defects, one
+symptom, and they are worth separating because only one of them is a bug
+in a build.
+
+**The root cause, reduced.** `tools/build_mpack.sh` copies the read-only
+reference tree with `cp -r` and builds it in place. mpack 1.6's tarball
+ships `Makefile.in` **ten minutes newer** than the `Makefile.am` it was
+generated from — 2003-07-21 23:49:20 against 23:39:28 — which is exactly
+what keeps automake's maintainer rule
+
+    $(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.in ...
+            cd $(top_srcdir) && $(AUTOMAKE) --foreign ...
+
+from ever firing. `cp -r` discards those dates and stamps every file with
+the current time, so which of the two ends up newer comes down to which
+side of a clock tick each is written on. When `Makefile.am` wins, `make`
+runs **automake 1.17 over a 1994 tree** and dies — `required file
+'./depcomp' not found`, `Error 63`. Measured: **3 failures in 8 runs**
+with `cp -r`, **0 in 40** with `cp -pR`. The fix is one character of
+`cp`, and the comment beside it is longer than the change because the
+next person to see `-p` there will want to know why it is not decoration.
+
+**Why nobody saw it.** Both halves of the build were redirected to
+`/dev/null`, and `set -e` then killed the script on the failing subshell
+*before* its own "build produced no binary" message. So the script exited
+2 saying nothing at all. It now keeps `build/mpack.log` and prints its
+last twenty lines on failure, which is what turned a five-minute guess
+into the paragraph above.
+
+**The second defect is the one worth transferring.** `run_mime.py`'s
+`build()` collapsed three outcomes into two:
+
+| what happened | what it returned | what the caller said |
+|---|---|---|
+| the binary is there | the path | — |
+| `reference/mpack` was never fetched | `None` | "no reference/mpack" ✓ |
+| the tree is there and the build FAILED | `None` | "no reference/mpack" ✗ |
+
+The third row is not a skip. Somebody fetched the references; the
+differential coverage they pay for had silently gone, and the suite
+returned **0**, so `ci.sh` stayed green with nothing in that suite graded
+against a second implementation. **A skip and a failure that look the
+same in a 200-line log are the same thing in practice, and the log is
+where they are read.** The rule now, in all three suites that build an
+oracle out of `reference/`:
+
+- reference tree **absent** → skip, exit 0. A fresh clone must still run
+  `ci.sh`.
+- reference tree **present** and the oracle will not build → print what
+  the build actually said, and **exit 1**. The message ends "fix the
+  build, or delete `reference/X` to make this a skip", so the escape
+  hatch is stated rather than implied.
+
+`run_lzh.py` had already learned half of this — it checks the tree and
+the compile separately and its two messages are correct — and it still
+returned 0 on a compile failure. Changed to 1 with the others. **Getting
+the message right is not the same as getting the verdict right, and this
+file had one without the other.**
+
+**What it cost:** nothing measurable, because the MIME suite passes when
+it runs and did so on the next attempt. What it could have cost is the
+whole point — that suite is the only thing holding `src/fmt_mime.c`
+against munpack, and it was one flaky `cp` away from never running again
+without anybody noticing. The smell that found it was a **cross-file
+contradiction**: a message naming a directory that `ls` showed was there.
+
+**Still a hypothesis, and labelled:** whether the CI run that started
+this had the same cause is not proven — the log is gone and the failure
+is timing-dependent. The mechanism above is reduced and measured; the
+attribution of that one run to it is not.

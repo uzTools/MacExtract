@@ -1730,6 +1730,37 @@ suite feeds it only complete ones, and that difference is written here
 rather than discovered later: a corrupt `-lh3-` table is a per-entry error
 in LHa and garbage output here.
 
+## When a suite skips, and when it must not (2026-09-09)
+
+Six suites build their oracle out of `reference/` — munpack and deark for
+`run_mime.py`, btoa for `run_btoa.py`, lhasa and LHa for `run_lzh.py`.
+Each has to answer "is the oracle here?", and the answer has three
+values, not two:
+
+| state | verdict | why |
+|---|---|---|
+| the binary is built | run | — |
+| `reference/X` is **absent** | **skip, exit 0** | a fresh clone has no `reference/`, and `ci.sh` must still run end to end |
+| `reference/X` is **present** and will not build | **exit 1** | somebody fetched it; the differential coverage it pays for has gone, and nothing in that suite is graded against a second implementation any more |
+
+The third row used to be the second row, and that is how a real breakage
+stayed green: `run_mime.py` reported a failed munpack build as *"no
+reference/mpack"* — about a directory that was right there — and returned
+0 (DECISIONS.md 2026-09-09, *the oracle that built two times in three*).
+The message now prints what the build actually said and ends "fix the
+build, or delete `reference/X` to make this a skip", so the escape hatch
+is stated.
+
+**Both failure paths were made to fire before this was believed**:
+`reference/btoa/atob.c` moved aside, and `build_mpack.sh` reverted to the
+`cp -r` that caused the original race. Each printed the compiler's own
+words and exited 1.
+
+**What this does NOT cover.** A suite can still pass with the oracle
+built and doing nothing useful — an assertion that never runs, a sweep
+over zero files. Every suite prints its case count for that reason, and a
+count that drops is the only signal there is.
+
 ## DART (`tools/run_dart.py`, in `ci.sh`)
 
 **The oracle is the encoder's input, not a second reader.** There is no
