@@ -196,6 +196,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-09 (the disk image that is expanded and not opened) — DART, and an error code for a file with nothing wrong with it
 - 2026-09-09 (the oracle that built two times in three) — a timestamp race, and a suite that reported it as a missing reference
 - 2026-09-09 (the merge that deletes the branch) — bringing four parked branches up to date
+- 2026-09-18 (the byte that left through a pointer) — runs out of the window, the CRC the writer already kept, and a model half its size
 
 ---
 
@@ -11442,3 +11443,93 @@ and the branch's own were both raised, and the merged build is **60 B of
 code and 24 B of A5 MORE than the two increments add up to**. Ratchets are
 set from a build; arithmetic would have set them too low and the next
 person would have seen a failure they did not cause.
+
+---
+
+## 2026-09-18 (the byte that left through a pointer) — runs out of the window, the CRC the writer already kept, and a model half its size
+
+A review of the engine for speed, size and RAM, asked to land only what
+costs nothing on the other two axes. Four things qualified; the rest —
+a three-byte Arsenic transform vector, `UNC_HOT` on Compact Pro and Now
+Compress, a second Now Compress block slot, resident cipher tables made
+transient — each buys one currency with another and is parked for a
+decision. Everything below is graded by the 932-fixture suite and
+measured with callgrind on Linux; no Mac tick was taken.
+
+**Four decoders handed every output byte back through a function
+pointer.** `unc_lzah_decode`, `unc_lzdyn_decode`, `unc_lzst0_decode` and
+`unc_arsenic_decode` took `int (*put)(void *, uint8_t)`; the LZ three
+have a window that every byte is written into anyway, so the window IS
+the staging and a run can leave it whole. They now take a run callback
+(`UncPutRun`) and flush `[flushed, pos)` every 2 KB (4 KB for the 8 KB
+windows), which keeps the unflushed span plus the longest match inside
+the window. Arsenic has no window and its only caller is
+`unc_sit_decode_fork`, so it takes the `UncForkOut` itself and puts
+through the inline path.
+
+**And Arsenic ran `unc_crc32` on one byte at a time**, 641,115 calls
+on `derived-Library_ISBN_Barcoder.sit`, for a checksum the fork writer
+already keeps over its 512-byte flushes when asked. Method 15 now asks
+(`UNC_CK_CRC32`, seeded `UNC_CRC32_INIT`) and compares the writer's
+CRC against the stream's after the final flush. The container's CRC-16
+was never meaningful for that method and the caller already skipped it.
+
+**The model table stored a symbol that was always `first + n`.** Nine
+`ArsModel`s of 128 `(int32 symbol, int32 frequency)` pairs is 9,360 B
+inside every StuffIt 5 entry's peak; the symbol is arithmetic, so the
+slot is the frequency alone and the nine are 4,788 B. *The uint16_t
+version was tried first and rejected*: a frequency fits sixteen bits,
+but the zero-extend it put into the symbol search — the hottest loop on
+the fast path — cost that loop **+7.8 % of its instructions** on
+`derived-a2basic.dmg.sit`, and this change was not allowed to trade
+speed. Thirty-two bits, no symbol: −4,572 B and the loop unchanged.
+
+**Result, Linux Ir, same fixtures as the review:**
+
+| fixture | before | after | |
+|---|---|---|---|
+| `derived-Library_ISBN_Barcoder.sit` (Arsenic, fast path) | 200,508,178 | 181,691,663 | **−9.4 %** |
+| `derived-a2basic.dmg.sit` (Arsenic, fast path) | 151,556,773 | 145,451,251 | −4.0 % |
+| `test1-best` (DART, LZHUF) | 156,623,685 | 152,234,748 | −2.8 % |
+| `lhasa-maclha-l2_lh1.lzh` (-lh1-) | 3,079,619 | 3,005,236 | −2.4 % |
+| `derived-XferIt_1.5b4.sea` (Compact Pro, control) | 76,939,094 | 76,573,429 | −0.5 % |
+
+**One more StuffIt 5 fixture extracts fully under a 400 KB budget: 24
+of 31, was 23**, and the six bisected minimums in FORMATS.md each fell
+by 3,569 to 3,755 B — the model's 4,572 B less what the sampled index's
+target rungs give back. The Mac tiers were not re-run;
+every on-Mac peak for a StuffIt 5 fixture measured before this date is
+that much high, and FORMATS.md says so once.
+
+**What it cost, and it was not the zero promised.** The first version
+flushed at two sites per coder — the loop and the exit — and put the
+window flush in one shared function: **+468 B** of 68000 code, the
+shared six-argument call being dearer than the two copies it replaced.
+One call site at the head of the loop, which serves the end of the
+stream as well, and a static flush per file: **+76 B of `CODE`, −12 B
+of A5**, against a review that had called this "roughly 0". A run flush
+is a loop, a bounds split and a call, and on a 68000 that is not free
+even once. Nothing more is flushed on an error path; a failed entry's
+partial output was never graded by anything and both hosts discard it.
+
+**The sniffer's order moved six probes ahead of the zip pair.** The
+spanned-zip probe scans the last 64 KB of every file backwards in 1 KB
+reads, and LZH, Now Compress, DiskDoubler, AppleSingle and the two
+Compact Pro probes sat behind it — up to 65 reads before their own
+byte compares, which on a floppy is the open latency and on the RAM
+disk every tier runs from is nothing. None of the six can take a zip
+or a part of one (every zip head is `PK`; the argument is beside the
+table in `unc_engine.c`), and the reverse case — a Compact Pro archive
+carrying a stored zip part in its last 64 KB — used to be misclaimed
+and is now the archive it is. **Unmeasured on a floppy, and labelled
+so**: the gain is a hypothesis about real hardware, the safety is what
+932 fixtures, 9,320 variants and the DART specimens grade.
+
+**The transferable part is the one about the review itself.** "No
+impact on the other dimensions" was asserted from reading the code and
+was wrong twice in a day, by 468 B and by 7.8 %; both were caught by
+the same two instruments — `m68k-apple-macos-size` per object and
+callgrind per function — run before the commit rather than after. A
+cost estimated is a cost unknown, and the cheapest time to price it is
+before writing it down as zero.
+

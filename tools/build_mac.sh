@@ -83,7 +83,14 @@ ls -la build/mac/MacExtract.APPL build/mac/MacExtract.bin build/mac/MacExtract.d
 # not a Macintosh subset of one — and the one that most earns it on this
 # target: what a compressed DART is FOR is mounting, and MacMount refuses
 # one until something expands it.
-UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-149756}
+# Raised 2026-09-18 from 149,756 to 149,832: +76 B for the LZ coders that
+# hand their output back a run at a time out of their own windows instead
+# of a byte at a time through a pointer, net of 158 B Arsenic gave back by
+# writing through the fork writer (DECISIONS.md 2026-09-18). A first
+# version cost 468 B; a flush is a loop and a call, and one site per coder
+# was the difference. Bought for −2.4 to −9.4 % of instructions on the
+# formats that use them.
+UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-149832}
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the

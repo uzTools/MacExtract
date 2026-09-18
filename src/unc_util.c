@@ -532,6 +532,18 @@ static int fork_span(UncForkOut *o, UncFork fork, uint32_t start, uint32_t end)
     return UNC_OK;
 }
 
+int unc_fork_write(UncForkOut *o, const uint8_t *p, uint32_t n)
+{
+    /* The inline put, in a loop: on a 68000 a byte loop is what a copy
+     * is anyway, and this is 100 B smaller than chunking into the
+     * staging buffer (measured 2026-09-18). */
+    while (n-- > 0) {
+        int err = unc_fork_put(o, *p++);
+        if (err != UNC_OK) return err;
+    }
+    return UNC_OK;
+}
+
 int unc_fork_flush(UncForkOut *o)
 {
     int err = UNC_OK;

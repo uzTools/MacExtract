@@ -1155,25 +1155,28 @@ static int arc_trim_emit(ArcTrim *t, int b)
     return unc_fork_put(&t->out, (uint8_t)b);
 }
 
-/* One byte out of the LZH layer, through RLE90. The run count is
+/* A run out of the LZH layer, through RLE90 — the same filter the pull
+ * side above runs, driven from the other end. The run count is
  * inclusive of the byte already emitted, as arc_byte() reads it. */
-/* One byte out of the LZH layer, through RLE90 — the same filter the
- * pull side above runs, driven from the other end. */
-static int arc_trim_put(void *ctx, uint8_t b)
+static int arc_trim_put(void *ctx, const uint8_t *p, uint32_t n)
 {
     ArcTrim *t = (ArcTrim *)ctx;
-    int v = unc_rle90_feed(&t->rle, b);
-    int err;
 
-    if (v == UNC_RLE90_MORE) return UNC_OK;
-    if (v < 0) return v;
-    err = arc_trim_emit(t, v);
-    while (err == UNC_OK) {
-        v = unc_rle90_take(&t->rle);
-        if (v == UNC_RLE90_MORE) break;
+    while (n-- > 0) {
+        int v = unc_rle90_feed(&t->rle, *p++);
+        int err;
+
+        if (v == UNC_RLE90_MORE) continue;
+        if (v < 0) return v;
         err = arc_trim_emit(t, v);
+        while (err == UNC_OK) {
+            v = unc_rle90_take(&t->rle);
+            if (v == UNC_RLE90_MORE) break;
+            err = arc_trim_emit(t, v);
+        }
+        if (err != UNC_OK) return err;
     }
-    return err;
+    return UNC_OK;
 }
 
 static int arc_entry_trimmed(UncCtx *c, UncBufIn *in, uint32_t outsize,

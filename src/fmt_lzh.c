@@ -111,6 +111,12 @@ static int lzh_put(void *ctx, uint8_t b)
     return unc_fork_put((UncForkOut *)ctx, b);
 }
 
+/* The three coders in unc_lzah.c and unc_lzdyn.c hand back runs. */
+static int lzh_put_run(void *ctx, const uint8_t *p, uint32_t n)
+{
+    return unc_fork_write((UncForkOut *)ctx, p, n);
+}
+
 /* ------------------------------------------------------------------ */
 /* -lh0-, -lz4-, -pm0-: stored                                         */
 /* ------------------------------------------------------------------ */
@@ -473,17 +479,18 @@ static int lzh_decode(UncCtx *c, const LzhEnt *e, UncForkOut *o, uint8_t *iobuf,
     else if (lzh_is(e->method, "-lh2-")) {
         UncBitIn bi;
         unc_bitin_init(&bi, &in);
-        err = unc_lzdyn_decode(c->al, &bi, e->origsize, lzh_put, o);
+        err = unc_lzdyn_decode(c->al, &bi, e->origsize, lzh_put_run, o);
     }
     else if (lzh_is(e->method, "-lh3-")) {
         UncBitIn bi;
         unc_bitin_init(&bi, &in);
-        err = unc_lzst0_decode(c->al, &bi, e->origsize, lzh_put, o);
+        err = unc_lzst0_decode(c->al, &bi, e->origsize, lzh_put_run, o);
     }
     else if (lzh_is(e->method, "-lh1-")) {
         UncBitIn bi;
         unc_bitin_init(&bi, &in);
-        err = unc_lzah_decode(c->al, &bi, e->origsize, UNC_LZAH_LH1, lzh_put, o);
+        err = unc_lzah_decode(c->al, &bi, e->origsize, UNC_LZAH_LH1,
+                              lzh_put_run, o);
     }
     else if (lzh_is(e->method, "-lh4-"))
         err = lzh_static(o, &in, e->origsize, 12, c->al);

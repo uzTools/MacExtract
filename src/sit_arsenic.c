@@ -29,14 +29,20 @@
 #define ARS_ONE  (1 << (ARS_NUMBITS - 1))
 #define ARS_HALF (1 << (ARS_NUMBITS - 2))
 
-typedef struct ArsSym {
-    int32_t symbol, frequency;
-} ArsSym;
-
+/* One adaptive model. The reference keeps a (symbol, frequency) pair of
+ * ints per slot; the symbol is always `first + n`, so it is arithmetic
+ * here and the slot is the frequency alone — 532 B a model against
+ * 1,040, which is 4.6 KB off the Arsenic state that sits inside every
+ * StuffIt 5 entry's peak (2026-09-18). The frequency stays a 32-bit
+ * int: it would fit a uint16_t, and that version cost the symbol
+ * search below — the hottest loop on the fast path — a zero-extend per
+ * iteration, +7.8 % of its instructions on Linux, which is not the
+ * trade this change was allowed to make. */
 typedef struct ArsModel {
     int32_t increment, frequencylimit;
     int32_t numsymbols, totalfrequency;
-    ArsSym  symbols[128];
+    int32_t first;                  /* slot n stands for symbol first + n */
+    int32_t freq[128];
 } ArsModel;
 
 typedef struct ArsDecoder {
@@ -49,31 +55,29 @@ static void ars_model_reset(ArsModel *m)
 {
     int32_t i;
     m->totalfrequency = m->increment * m->numsymbols;
-    for (i = 0; i < m->numsymbols; i++) m->symbols[i].frequency = m->increment;
+    for (i = 0; i < m->numsymbols; i++) m->freq[i] = m->increment;
 }
 
 static void ars_model_init(ArsModel *m, int32_t first, int32_t last,
                            int32_t increment, int32_t limit)
 {
-    int32_t i;
     m->increment = increment;
     m->frequencylimit = limit;
     m->numsymbols = last - first + 1;
-    for (i = 0; i < m->numsymbols; i++) m->symbols[i].symbol = i + first;
+    m->first = first;
     ars_model_reset(m);
 }
 
 static void ars_model_bump(ArsModel *m, int32_t n)
 {
     int32_t i;
-    m->symbols[n].frequency += m->increment;
+    m->freq[n] += m->increment;
     m->totalfrequency += m->increment;
     if (m->totalfrequency > m->frequencylimit) {
         m->totalfrequency = 0;
         for (i = 0; i < m->numsymbols; i++) {
-            m->symbols[i].frequency++;
-            m->symbols[i].frequency >>= 1;
-            m->totalfrequency += m->symbols[i].frequency;
+            m->freq[i] = (m->freq[i] + 1) >> 1;
+            m->totalfrequency += m->freq[i];
         }
     }
 }
@@ -137,14 +141,13 @@ static int32_t ars_next_symbol(ArsDecoder *d, ArsModel *m)
     frequency = (int32_t)((uint32_t)d->code / (uint32_t)renorm);
     cumulative = 0;
     for (n = 0; n < m->numsymbols - 1; n++) {
-        if (cumulative + m->symbols[n].frequency > frequency) break;
-        cumulative += m->symbols[n].frequency;
+        if (cumulative + m->freq[n] > frequency) break;
+        cumulative += m->freq[n];
     }
-    ars_dec_advance(d, cumulative, m->symbols[n].frequency, m->totalfrequency,
-                    renorm);
+    ars_dec_advance(d, cumulative, m->freq[n], m->totalfrequency, renorm);
     if (d->err != UNC_OK) return -1;
     ars_model_bump(m, n);
-    return m->symbols[n].symbol;
+    return m->first + n;
 }
 
 /* n-bit string, first symbol = bit 0 (NextArithmeticBitString). */
@@ -287,7 +290,8 @@ typedef struct Arsenic {
     int32_t    randindex, randcount;
     int32_t    count, repeat;
     uint8_t    last;
-    uint32_t   crc, compcrc;
+    uint32_t   compcrc;     /* the CRC-32 the stream ends with; the
+                             * running one is the fork writer's */
     int        has_compcrc;
 } Arsenic;
 
@@ -692,7 +696,7 @@ static uint32_t ars_scale(uint32_t span, uint32_t num, uint32_t den)
 }
 
 int unc_arsenic_decode(UncBufIn *in, UncAlloc *al, uint32_t outlen,
-                       int (*put)(void *ctx, uint8_t b), void *pctx)
+                       UncForkOut *f)
 {
     Arsenic *a;
     uint32_t produced = 0;
@@ -709,6 +713,13 @@ int unc_arsenic_decode(UncBufIn *in, UncAlloc *al, uint32_t outlen,
     uint32_t phold = in->ps ? in->ps->hold : 0;
 
     if (in->ps) in->ps->hold = 1;
+
+    /* The stream's own check is a CRC-32 over the output, and the fork
+     * writer keeps one over what it stages: seeded here, read back
+     * after the final flush. The container's CRC-16 means nothing for
+     * this method and the caller does not ask for it. */
+    f->ck = UNC_CK_CRC32;
+    f->crc32 = UNC_CRC32_INIT;
 
     a = (Arsenic *)unc_alloc(al, (uint32_t)sizeof *a);
     if (!a) { if (in->ps) in->ps->hold = phold; return UNC_ERR_MEM; }
@@ -752,7 +763,6 @@ int unc_arsenic_decode(UncBufIn *in, UncAlloc *al, uint32_t outlen,
     a->repeat = 0;
     a->count = 0;
     a->last = 0;
-    a->crc = UNC_CRC32_INIT;
     a->compcrc = 0;
     a->has_compcrc = 0;
     a->randomized = 0;
@@ -820,12 +830,13 @@ retry:
             }
         }
 
-        a->crc = unc_crc32(a->crc, &outbyte, 1);
-        if (put(pctx, outbyte) != UNC_OK) { err = UNC_ERR_SINK; goto out; }
+        if ((err = unc_fork_put(f, outbyte)) != UNC_OK) goto out;
         produced++;
     }
 
-    if (a->has_compcrc && a->compcrc != ~a->crc) err = UNC_ERR_CRC;
+    err = unc_fork_flush(f);
+    if (err == UNC_OK && a->has_compcrc && a->compcrc != ~f->crc32)
+        err = UNC_ERR_CRC;
 
 out:
     unc_free(al, a->index);

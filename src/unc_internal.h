@@ -930,6 +930,20 @@ static inline int unc_fork_put(UncForkOut *o, uint8_t b)
     return UNC_OK;
 }
 
+/* A run of decoded bytes: staged in pieces the buffer can hold, and
+ * flushed as each fills. The shape the run-callback decoders below
+ * hand their output over in. */
+int unc_fork_write(UncForkOut *o, const uint8_t *p, uint32_t n);
+
+/* How the LZ decoders below hand their output back: a RUN at a time,
+ * straight out of the decoder's own window, rather than one byte at a
+ * time through a pointer. A per-byte callback was 6 % of a DART or
+ * -lh1- run on Linux (callgrind, 2026-09-18) and an indirect call is
+ * dearer still on a 68000; the window is already the staging, so a run
+ * costs no memory. Returns UNC_OK or a per-entry error, which stops
+ * the decoder. */
+typedef int (*UncPutRun)(void *ctx, const uint8_t *p, uint32_t n);
+
 /* ------------------------------------------------------------------ */
 /* Compact Pro's two decode stages, shared with DiskDoubler method 8,   */
 /* which is Compact Pro compression inside a DiskDoubler container      */
@@ -1039,15 +1053,16 @@ int unc_sit_decode_fork(UncCtx *c, UncFork fork, uint32_t at,
  * by StuffIt classic's method 5 and LZH's -lh1-, which are the same
  * scheme — XADMaster instantiates one handle for both. `bi` is an
  * MSB-first reader the caller has already positioned; `put` receives
- * every decoded byte and returns UNC_OK or a per-entry error. */
+ * the decoded bytes in runs (UncPutRun) and returns UNC_OK or a
+ * per-entry error. */
 /* LHarc's -lh2-: both codes adaptive, and the position tree grows with
  * the output. src/unc_lzdyn.c. */
 int unc_lzdyn_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen,
-                     int (*put)(void *ctx, uint8_t b), void *pctx);
+                     UncPutRun put, void *pctx);
 
 /* LHarc's -lh3-: a static code rebuilt per block. src/unc_lzdyn.c. */
 int unc_lzst0_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen,
-                     int (*put)(void *ctx, uint8_t b), void *pctx);
+                     UncPutRun put, void *pctx);
 
 /* Adaptive-Huffman LZSS, in three dialects that share a tree of 314
  * leaves and differ only in what the codes above 0xff mean and in what
@@ -1080,11 +1095,15 @@ int unc_lzst0_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen,
 #define UNC_LZAH_DART     2
 
 int unc_lzah_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen, int mode,
-                    int (*put)(void *ctx, uint8_t b), void *pctx);
+                    UncPutRun put, void *pctx);
 
-/* Arsenic (method 15) core, in sit_arsenic.c. */
+/* Arsenic (method 15) core, in sit_arsenic.c. Writes into the fork
+ * writer directly, and has it keep the CRC-32 the stream ends with:
+ * `f` comes back set to UNC_CK_CRC32, flushed, and checked. It used to
+ * take a per-byte callback and CRC each byte through unc_crc32, and the
+ * two calls were 10 % of a fast-path run (callgrind, 2026-09-18). */
 int unc_arsenic_decode(UncBufIn *in, UncAlloc *al, uint32_t outlen,
-                       int (*put)(void *ctx, uint8_t b), void *pctx);
+                       UncForkOut *f);
 
 /* Raw-deflate decode via vendored zlib (unc_inflate.c). Decodes one
  * complete deflate stream from `in`, leaving the reader positioned on

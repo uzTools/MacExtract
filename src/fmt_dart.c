@@ -247,18 +247,11 @@ static int dart_flush(DartOut *o)
                            o->base + o->inlen * o->produced / DART_CHUNK_BYTES);
 }
 
-static int dart_put(void *ctx, uint8_t b)
+/* A run: RLE, a stored chunk and the LZH coder all hand over spans, the
+ * last of them straight out of its window (UncPutRun). */
+static int dart_put_run(void *ctx, const uint8_t *p, uint32_t n)
 {
     DartOut *o = (DartOut *)ctx;
-    o->buf[o->n++] = b;
-    o->produced++;
-    if (o->n == o->cap) return dart_flush(o);
-    return UNC_OK;
-}
-
-/* The same, for a run: RLE and a stored chunk both hand over spans. */
-static int dart_put_run(DartOut *o, const uint8_t *p, uint32_t n)
-{
     while (n) {
         uint32_t take = o->cap - o->n;
         uint32_t i;
@@ -328,7 +321,7 @@ static int dart_lzh(DartOut *o, const uint8_t *in, uint32_t inlen)
     unc_bufin_init_mem(&bin, in, inlen);
     unc_bitin_init(&bi, &bin);
     return unc_lzah_decode(o->c->al, &bi, DART_CHUNK_BYTES, UNC_LZAH_DART,
-                           dart_put, o);
+                           dart_put_run, o);
 }
 
 /* ------------------------------------------------------------------ */

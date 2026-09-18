@@ -183,11 +183,40 @@ static void lzah_update(Lzah *h, int16_t node)
     }
 }
 
+/* Output leaves through the window itself, a run at a time. Bytes
+ * between `flushed` and `pos` have been written and not yet handed
+ * over; a run is at most two pieces, because the window wraps. Flushing
+ * every LZAH_FLUSH bytes keeps that span, plus the longest match that
+ * can land on top of it (60), well inside the 4 KB window, so nothing
+ * is overwritten before it is read.
+ *
+ * ONE call site, at the head of the loop, which also serves the end of
+ * the stream: a second one at the exit cost 60-190 B of 68000 code in
+ * each of the three coders that do this (measured 2026-09-18). On an
+ * error nothing more is flushed; a failed entry's partial output was
+ * never graded by anything and the hosts discard it. */
+#define LZAH_FLUSH 2048u
+
+static int lzah_flush(const Lzah *h, uint32_t *flushed, uint32_t pos,
+                      UncPutRun put, void *pctx)
+{
+    while (*flushed < pos) {
+        uint32_t at = *flushed & (LZAH_WINDOW - 1);
+        uint32_t n = pos - *flushed;
+        int err;
+        if (n > LZAH_WINDOW - at) n = LZAH_WINDOW - at;
+        *flushed += n;
+        err = put(pctx, h->window + at, n);
+        if (err != UNC_OK) return err;
+    }
+    return UNC_OK;
+}
+
 int unc_lzah_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen, int mode,
-                    int (*put)(void *ctx, uint8_t b), void *pctx)
+                    UncPutRun put, void *pctx)
 {
     Lzah *h;
-    uint32_t pos = 0;
+    uint32_t pos = 0, flushed = 0;
     int err = UNC_OK;
 
     h = (Lzah *)unc_alloc(al, (uint32_t)sizeof *h);
@@ -196,9 +225,13 @@ int unc_lzah_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen, int mode,
     err = unc_canon_build(&h->distance, lzah_distlengths, 64);
     if (err != UNC_OK) goto out;
 
-    while (pos < outlen) {
+    for (;;) {
         int16_t node = 0;   /* storage 0 is always the root */
         int lit;
+        if (pos >= outlen || pos - flushed >= LZAH_FLUSH) {
+            err = lzah_flush(h, &flushed, pos, put, pctx);
+            if (err != UNC_OK || pos >= outlen) goto out;
+        }
         while (h->st_left[node] >= 0 || h->st_right[node] >= 0) {
             int bit = unc_bitin_bit(bi);
             if (bit < 0) { err = bi->err; goto out; }
@@ -210,10 +243,10 @@ int unc_lzah_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen, int mode,
 
         if (lit < 0x100) {
             h->window[pos++ & (LZAH_WINDOW - 1)] = (uint8_t)lit;
-            err = put(pctx, (uint8_t)lit);
-            if (err != UNC_OK) goto out;
         } else if (mode == UNC_LZAH_TRIMMED && lit == 0x100) {
-            goto out;                     /* Trimmed's stop code */
+            outlen = pos;                 /* Trimmed's stop code: flush
+                                           * what there is, and leave */
+            continue;
         } else {
             int32_t mlen = lit - 0x100 + 3;
             if (mode == UNC_LZAH_TRIMMED) mlen--;   /* 0x101 is 3 */
@@ -228,8 +261,6 @@ int unc_lzah_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen, int mode,
             while (mlen-- > 0 && pos < outlen) {
                 uint8_t b = h->window[from++ & (LZAH_WINDOW - 1)];
                 h->window[pos++ & (LZAH_WINDOW - 1)] = b;
-                err = put(pctx, b);
-                if (err != UNC_OK) goto out;
             }
         }
     }

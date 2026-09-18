@@ -623,14 +623,11 @@ out:
     return err;
 }
 
-/* Method 15 put callback: one byte into the fork writer. */
-/* Byte-at-a-time output adapter, for the two decoders that live
- * outside this file: Arsenic (sit_arsenic.c) and the -lh1- coder
- * shared with LZH (unc_lzah.c). */
-static int sit_put_cb(void *ctx, uint8_t b)
+/* Output adapter for the -lh1- coder shared with LZH (unc_lzah.c),
+ * which hands its output back in runs out of its own window. */
+static int sit_put_run(void *ctx, const uint8_t *p, uint32_t n)
 {
-    UncForkOut *f = (UncForkOut *)ctx;
-    return unc_fork_put(f, b);
+    return unc_fork_write((UncForkOut *)ctx, p, n);
 }
 
 /* Decode one fork (shared with the SIT5 container). Returns a
@@ -667,14 +664,13 @@ int unc_sit_decode_fork(UncCtx *c, UncFork fork, uint32_t at,
          * function. */
         UncBitIn bi;
         unc_bitin_init(&bi, &in);
-        err = unc_lzah_decode(c->al, &bi, outlen, UNC_LZAH_LH1, sit_put_cb, &f);
+        err = unc_lzah_decode(c->al, &bi, outlen, UNC_LZAH_LH1, sit_put_run, &f);
         break;
     }
     case 6:  err = sit6_fork(&f, &in, outlen, c->al); break;
     case 8:  err = sit_mw_fork(&f, &in, outlen, c->al); break;
     case 13: err = sit13_fork(&f, &in, outlen, c->al); break;
-    case 15: err = unc_arsenic_decode(&in, c->al, outlen,
-                                      sit_put_cb, &f); break;
+    case 15: err = unc_arsenic_decode(&in, c->al, outlen, &f); break;
     default: return UNC_ERR_UNSUPPORTED;
     }
     if (err == UNC_OK) err = unc_fork_flush(&f);

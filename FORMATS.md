@@ -613,7 +613,13 @@ instrumenting the point where `sit_arsenic.c` reads `v`, not inferred.
 
 Peak heap is modelled by
 
-    peak  =  ~35 KB parser state  +  block capacity  +  4 × actual block fill
+    peak  =  ~30 KB parser state  +  block capacity  +  4 × actual block fill
+
+The parser state was ~35 KB until 2026-09-18, when the nine adaptive
+models dropped a symbol field that was always arithmetic: **4,572 B off
+every StuffIt 5 entry**, on Linux and on the Mac alike. The Mac tiers were
+not re-run for it, so every on-Mac peak for a StuffIt 5 fixture in this
+file that predates that day is 4,572 B high (DECISIONS.md 2026-09-18).
 
 because only the *block* is allocated at its declared size; the inverse-BWT
 transform vector is sized to how much of the block the entry actually fills
@@ -622,8 +628,9 @@ recover the declared block size — the earlier "128 KB (14 fixtures) / 256 KB
 (9) / 512 KB (8)" figures were inferred by dividing peak by five and are
 withdrawn (BLOCKERS.md, *Withdrawn claims*).
 
-Measured peak heap over the corpus (`macextract t --stats`): **min
-0.15 MB / median 0.59 MB / mean 0.92 MB / max 2.53 MB**, the maximum
+Measured peak heap over the corpus (`macextract t --stats`, re-measured
+2026-09-18): **min 0.15 MB / median 0.58 MB / mean 0.92 MB / max
+2.53 MB**, the maximum
 being the entries that genuinely fill a 512 KB block (35 KB + 512 KB +
 2048 KB) — **exactly two fixtures reach 524,257 B of fill**, which is the
 number that got applied to three fixtures it did not describe (BLOCKERS.md,
@@ -632,23 +639,27 @@ the case in front of you. Those are the peaks with memory to spare, where the de
 the fast inverse BWT; under a cap it takes a cheaper one and the numbers
 below apply instead.
 
-**Under a cap, since 2026-08-07: 23 of the 31 fixtures extract completely
-and byte-exact under a 400 KB budget (was 11), and all 31 fit the ~700 KB a
-1 MB Mac Plus has free (was 18).** The transform vector is no longer built
+**Under a cap, since 2026-08-07: 24 of the 31 fixtures extract completely
+and byte-exact under a 400 KB budget (was 11, and 23 until the model table
+shrank on 2026-09-18), and all 31 fit the ~700 KB a 1 MB Mac Plus has free
+(was 18).** The transform vector is no longer built
 at all when it does not fit; a sampled occurrence index answers the same
 query for a fraction of the memory and more time (DECISIONS.md 2026-08-07).
 **Peak heap under a budget is not the requirement** — the decoder spends
 whatever the cap allows, so the honest figure is the minimum at which a
 fixture still extracts fully, bisected:
 
-| fixture | needed before | minimum now |
-|---|---|---|
-| `derived-RWAsm_Folder.sit` | 160,704 | 71,996 |
-| `derived-Troi-ClipSave-Plug-in1.1.sit` | 660,200 | 167,455 |
-| `derived-a2basic.dmg.sit` | 1,031,463 | 245,897 |
-| `derived-Library_ISBN_Barcoder.sit` | 1,682,080 | 393,028 |
-| `derived-Domino_v1.4.sit` | 2,657,700 | 565,062 |
-| `derived-EasyFind.dmg.sit` | 2,657,700 | 565,062 |
+| fixture | needed before | 2026-08-07 | minimum now (2026-09-18) |
+|---|---|---|---|
+| `derived-RWAsm_Folder.sit` | 160,704 | 71,996 | 68,241 |
+| `derived-Troi-ClipSave-Plug-in1.1.sit` | 660,200 | 167,455 | 163,886 |
+| `derived-a2basic.dmg.sit` | 1,031,463 | 245,897 | 242,166 |
+| `derived-Library_ISBN_Barcoder.sit` | 1,682,080 | 393,028 | 389,301 |
+| `derived-Domino_v1.4.sit` | 2,657,700 | 565,062 | 561,441 |
+| `derived-EasyFind.dmg.sit` | 2,657,700 | 565,062 | 561,441 |
+
+The last column is the model table's 4,572 B less the sampled index's
+own granularity: 3,569 to 3,755 B per fixture, bisected on Linux.
 
 Those figures are what the corpus costs today. **Arsenic reached the 1 MB floor
 in four steps, and the per-fixture outcomes are the two Mini vMac sections
@@ -3054,6 +3065,18 @@ on `derived-SyntheticReferences2.0.sea` — and computed an absolute bit
 position through `unc_bufin_tell`. A `NowBits` is always memory-backed,
 where that call reduces to `pos`: **−2.33 %** on that fixture, −0.7 % on
 `synth-now-mixed.now`.
+
+**The byte that left through a pointer, 2026-09-18.** Four decoders
+handed every output byte back through a function pointer, and Arsenic
+also ran `unc_crc32` on one byte at a time for a checksum the fork
+writer keeps anyway. The LZ coders now flush runs straight out of their
+own windows, Arsenic writes through the inline fork put and reads the
+writer's CRC, and its model table lost a symbol field that was always
+arithmetic: `derived-Library_ISBN_Barcoder.sit` on the fast path
+**−9.4 %**, `derived-a2basic.dmg.sit` −4.0 %, DART's `test1-best`
+−2.8 %, an -lh1- entry −2.4 %, Compact Pro (a control) −0.5 %. +76 B of
+68000 code, −12 B of A5, −4,572 B of heap per StuffIt 5 entry
+(DECISIONS.md 2026-09-18). No Mac tick was taken.
 
 **Where that leaves the three tiers.** Over the same 48 fixtures,
 1,098,529,621 Ir before the harmonisation and **1,011,192,657** after all
