@@ -15,25 +15,47 @@
  *   datalen bytes of data fork, u16 CRC
  *   rsrclen bytes of rsrc fork, u16 CRC
  *
- * Everything transcribed from:
- *   Source: reference/XADMaster/XADBinHexParser.m — LGPL, see NOTICE.
- * (Alphabet string, RLE semantics incl. "count==1 is illegal",
- * banner scanning, ':'-after-whitespace start condition, fork CRCs
- * computed over the fully decoded stream.)
+ * Source: reference/notes/binhex40_lewis.txt — Peter N Lewis, "BinHex
+ * 4.0 Definition", August 1991, which is the only full statement of the
+ * format there is; and reference/notes/rfc1741.txt Appendix A, which
+ * repeats the layout, the banner and the 0x90 run encoding.
+ *
+ * The RFC is the weaker of the two and in one place it is wrong: its
+ * rendering of the alphabet carries a stray space and is 65 characters
+ * long, so a reader holding only the RFC cannot say what the 64
+ * characters are. Lewis's document also has what the RFC has not — the
+ * CRC (polynomial 0x1021, initial register zero, restarted for each of
+ * the three sections and taken over the decoded bytes) and the rule
+ * that a run count of zero means a literal 0x90.
+ *
+ * One behaviour here is in neither document and is this project's: a
+ * run count of ONE is rejected (unc_rle90's strict mode). Lewis defines
+ * counts of zero and of two-and-up and says nothing about one;
+ * macutils' hexbin emits the byte once and says nothing either.
+ * Refusing it costs nothing a real encoder writes, and turns a
+ * malformed stream into a per-entry error instead of into plausible
+ * output.
  *
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
 #include "unc_internal.h"
 
-/* The 64-character BinHex alphabet, index = 6-bit value.
- * Source: reference/XADMaster/XADBinHexParser.m (GetBits). */
+/* The 64-character BinHex alphabet, index = 6-bit value. Source:
+ * binhex40_lewis.txt, "This string defines the valid characters, in
+ * order" — not RFC 1741's copy of it, which has 65 characters in it. */
 static const char bh_alphabet[65] =
     "!\"#$%&'()*+,-012345689@ABCDEFGHIJKLMNPQRSTUVXYZ[`abcdefhijklmpqr";
 
+/* The banner, truncated exactly where the spec says to stop comparing:
+ * "when decoding, you should only check the string up to 'with
+ * BinHex'". Source: binhex40_lewis.txt. What follows is the version
+ * number, which is why it is not compared. */
 static const char bh_banner[40] = "(This file must be converted with BinHex";
 
 /* How far into the file we are willing to look for the banner when
- * sniffing (XADMaster inspects the first 8 KB). */
+ * sniffing. No specification bounds this — Lewis says only that a hqx
+ * file "begins with a description which should be ignored" — so 8 KB is
+ * a choice, and it is the same one XADMaster makes. */
 #define BH_SNIFF_LIMIT 8192
 
 /* ------------------------------------------------------------------ */
@@ -43,9 +65,8 @@ static const char bh_banner[40] = "(This file must be converted with BinHex";
 UncFormat unc_binhex_probe(const uint8_t *head, int32_t len, UncIO *io)
 {
     /* The banner can sit deep inside mail headers/digests, so scan up
-     * to BH_SNIFF_LIMIT bytes (XADMaster inspects 8 KB too): first the
-     * sniff head we were given, then onward from the io handle with a
-     * rolling 40-byte window. */
+     * to BH_SNIFF_LIMIT bytes: first the sniff head we were given, then
+     * onward from the io handle with a rolling 40-byte window. */
     uint8_t window[40];
     uint8_t chunk[256];
     int32_t have = 0, w = 0, scanned = 0, pos = 0, clen = 0, cpos = 0;
@@ -305,7 +326,10 @@ static int bh_find_banner(UncBufIn *in, int limited)
 }
 
 /* Position the 6-bit decoder start: ':' preceded by line break or
- * whitespace (source: resetByteStream in the reference). */
+ * whitespace. Source: binhex40_lewis.txt, which defines <return> to a
+ * DECODER as "any sequence of <cr>, <lf>, <tab>, <spc>" — the tab and
+ * the space "because some old programs produced these characters" —
+ * and then says to skip <return> characters and check for the colon. */
 static int bh_find_colon(UncBufIn *in)
 {
     int prev = '\n', curr;

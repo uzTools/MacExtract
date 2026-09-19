@@ -293,4 +293,113 @@ fi
     curl -sL "http://fileformats.archiveteam.org/wiki/Apple_Archive?action=raw" \
         -o reference/notes/Apple_Archive.md
 
+# ------------------------------------------------------------------
+# The container formats' own specifications.
+#
+# Everything below documents a CONTAINER — a header, an entry table, a
+# directory — rather than a compression method, and every one of them is
+# public. They were fetched on 2026-09-19 so that src/fmt_binhex.c,
+# fmt_macbinary.c, fmt_applesingle.c, fmt_exo.c, fmt_zipseg.c and
+# fmt_sitseg.c could cite the document a fact is written in instead of
+# citing XADMaster's reading of it (DECISIONS.md 2026-09-19, *the facts
+# that were somebody else's to state*). None of them is a licence
+# obligation and none is linked into anything shipped.
+# ------------------------------------------------------------------
+
+# An HTML page reduced to its text. Three of the documents below survive
+# only as web pages; the rest are plain text and are taken as they are.
+html_to_text() {
+    python3 -c "
+import html, re, sys
+s = open(sys.argv[1], encoding='utf-8', errors='replace').read()
+s = re.sub(r'(?is)<(script|style).*?</\1>', '', s)
+s = re.sub(r'(?is)<br\s*/?>|</(p|div|tr|h[1-6]|pre|li)>', '\n', s)
+s = re.sub(r'(?is)<[^>]+>', ' ', s)
+s = html.unescape(s)
+s = re.sub(r'[ \t]+', ' ', s)
+s = re.sub(r'\n[ \t]+', '\n', s)
+s = re.sub(r'\n{3,}', '\n\n', s)
+open(sys.argv[2], 'w').write(s)
+" "$1" "$2"
+}
+
+# BinHex 4.0 — RFC 1741 for the MIME type and its Appendix A, and Peter
+# N Lewis's "BinHex 4.0 Definition" (Aug 1991) for everything Appendix A
+# leaves vague. BOTH are needed and the reason is worth knowing: the
+# RFC's rendering of the 64-character alphabet contains a stray space
+# and is 65 characters long, so the RFC alone cannot say what the
+# alphabet is. Lewis's document has it right, and is also the only one
+# that states the CRC (0x1021, initial register zero) and the rule that
+# a run count of zero means a literal 0x90.
+[ -f reference/notes/rfc1741.txt ] || \
+    curl -sL -o reference/notes/rfc1741.txt \
+        "https://www.rfc-editor.org/rfc/rfc1741.txt"
+[ -f reference/notes/binhex40_lewis.txt ] || \
+    curl -sL -o reference/notes/binhex40_lewis.txt \
+        "http://files.stairways.com/other/binhex-40-specs-info.txt"
+
+# MacBinary II (the 7/24/87 revision) and MacBinary III (December 1996).
+# Between them they give the whole 128-byte header, the 128-byte fork
+# padding, the CRC over bytes 0..123, the 'mBIN' signature at 102, and —
+# this is the part nothing else writes down — the ORDER a reader is
+# meant to decide the version in, along with the stricter tests that
+# distinguish a MacBinary I header from noise. MacBinary III survives
+# only as an archived web page.
+[ -f reference/notes/macbinary_ii.txt ] || \
+    curl -sL -o reference/notes/macbinary_ii.txt \
+        "http://files.stairways.com/other/macbinaryii-standard-info.txt"
+if [ ! -f reference/notes/macbinary_iii.txt ]; then
+    curl -sL -o /tmp/mb3.html \
+        "https://web.archive.org/web/20050305044255/http://www.lazerware.com:80/formats/macbinary/macbinary_iii.html"
+    html_to_text /tmp/mb3.html reference/notes/macbinary_iii.txt
+    rm -f /tmp/mb3.html
+fi
+
+# AppleSingle / AppleDouble — RFC 1740, appendices A and B. The magic
+# numbers, the version, the 16 filler bytes, the entry count and the
+# (id, offset, length) descriptors, the predefined entry ids, and the
+# 2000-01-01 GMT epoch that entry 8's dates are counted from.
+[ -f reference/notes/rfc1740.txt ] || \
+    curl -sL -o reference/notes/rfc1740.txt \
+        "https://www.rfc-editor.org/rfc/rfc1740.txt"
+
+# gzip — RFC 1952, for the header src/fmt_exo.c walks.
+[ -f reference/notes/rfc1952.txt ] || \
+    curl -sL -o reference/notes/rfc1952.txt \
+        "https://www.rfc-editor.org/rfc/rfc1952.txt"
+
+# zip — PKWARE's APPNOTE.TXT 6.3.10, the format's own specification.
+# Sections this engine reads: 4.3.12 and 4.3.16 (central directory and
+# end-of-central-directory records), 4.3.14 and 4.3.15 (the Zip64
+# records and their signatures), 4.4.4 (the general purpose bit flag),
+# 4.5.3 (the Zip64 extra field, whose fields appear only for the
+# central-directory values that carry the escape, in a fixed order),
+# APPENDIX E (method 99 and the 0x9901 extra field), and section 8
+# (splitting and spanning, including the 0x08074b50 marker at the front
+# of a first segment).
+[ -f reference/notes/zip_appnote.txt ] || \
+    curl -sL -o reference/notes/zip_appnote.txt \
+        "https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT"
+
+# WinZip's AES specification, which APPENDIX E of APPNOTE.TXT names as
+# the published layout of the 0x9901 extra field: the vendor version,
+# the two-character vendor ID "AE", the strength byte (1, 2, 3 for 128,
+# 192, 256 bits) and the real compression method behind method 99.
+if [ ! -f reference/notes/winzip_aes.txt ]; then
+    curl -sL -o /tmp/winzip_aes.html "https://www.winzip.com/en/support/aes-encryption/"
+    html_to_text /tmp/winzip_aes.html reference/notes/winzip_aes.txt
+    rm -f /tmp/winzip_aes.html
+fi
+
+# ustar — POSIX.1-2017 (The Open Group Base Specifications Issue 7), the
+# pax utility page, whose "ustar Interchange Format" section carries the
+# 512-octet header block table src/fmt_exo.c reads, the two zero records
+# that end an archive, and the typeflag values.
+if [ ! -f reference/notes/posix_ustar.txt ]; then
+    curl -sL -o /tmp/pax.html \
+        "https://pubs.opengroup.org/onlinepubs/9699919799/utilities/pax.html"
+    html_to_text /tmp/pax.html reference/notes/posix_ustar.txt
+    rm -f /tmp/pax.html
+fi
+
 echo "references ready"

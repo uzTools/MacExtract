@@ -7,7 +7,10 @@
 #include "unc_internal.h"
 
 /* StuffIt X: 8-byte magic "StuffIt!" or "StuffIt?".
- * Source: reference/XADMaster/XADStuffItXParser.m. */
+ * Source: reference/deark/modules/unsupported.c, which recognises the
+ * same seven characters and the same two eighth ones (MIT, see NOTICE)
+ * — a second reading of a magic number Aladdin never published, and
+ * the reason this probe owes XADMaster nothing. */
 UncFormat unc_sitx_probe(const uint8_t *head, int32_t len, UncIO *io)
 {
     (void)io;
@@ -20,7 +23,9 @@ UncFormat unc_sitx_probe(const uint8_t *head, int32_t len, UncIO *io)
 
 /* Now Compress: 00 02 magic, plausible file count, Pascal name, and a
  * byte-sum checksum over bytes 24..129 stored at 130.
- * Source: reference/XADMaster/XADNowCompressParser.m. */
+ * Source: reference/XADMaster/XADNowCompressParser.m — LGPL, see
+ * NOTICE, and the sole source there is on this machine: nothing in
+ * deark or macutils knows the format at all. */
 UncFormat unc_nowcompress_probe(const uint8_t *head, int32_t len, UncIO *io)
 {
     (void)io;
@@ -41,9 +46,17 @@ UncFormat unc_nowcompress_probe(const uint8_t *head, int32_t len, UncIO *io)
 
 /* DiskDoubler: 0xABCD0054 magic + XMODEM CRC of the 82-byte header
  * (or 0 in very old files), or the 'DDAR' archive variant.
- * Source: reference/XADMaster/XADDiskDoublerParser.m — its
- * reversed-table CRC formulation equals plain CRC-16/XMODEM, see
- * DECISIONS.md M0. */
+ *
+ * Source for the first two: reference/macutils/macunpack/dd.h, which
+ * states both magics and both header shapes — MAGIC2 "\253\315\000\124"
+ * is the same four bytes, C_HDRCRC 82 in an 84-byte compressed-file
+ * header, ARCHHDRCRC 76 in a 78-byte archive header. XADMaster's
+ * XADDiskDoublerParser.m agrees and is where the CRC came from; its
+ * reversed-table formulation equals plain CRC-16/XMODEM, see
+ * DECISIONS.md M0.
+ *
+ * 'DDA2' is in neither: it is DiskDoubler Pro's, read off the CC0
+ * specimens NOTICE credits, as the SPLT container in fmt_ddseg.c was. */
 UncFormat unc_diskdoubler_probe(const uint8_t *head, int32_t len, UncIO *io)
 {
     (void)io;

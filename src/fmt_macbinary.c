@@ -2,15 +2,20 @@
  * fmt_macbinary.c — MacBinary I/II/III decoder.
  *
  * MacBinary is a flat 128-byte header + data fork + resource fork,
- * each fork zero-padded to a 128-byte boundary. All header layout and
- * validation logic transcribed from:
- *   Source: reference/XADMaster/XADMacArchiveParser.m
- *           (+macBinaryVersionForHeader:, -parseMacBinaryWithDictionary:)
- *   — LGPL, see NOTICE.
+ * each fork zero-padded to a 128-byte boundary.
+ *
+ * Source: reference/notes/macbinary_ii.txt — the MacBinary II Standard
+ * as revised 7/24/87, which states the whole header, says it "includes
+ * all necessary information needed from the original MacBinary standard
+ * document", and gives the order a reader is meant to decide the
+ * version in; and reference/notes/macbinary_iii.txt, the December 1996
+ * MacBinary III proposal, for the 'mBIN' signature at offset 102 and
+ * for the amended order that looks at it first.
  *
  * Header fields used (offsets in bytes):
  *     0  zero
- *     1  name length (1..63)
+ *     1  name length (1..63 in the II standard, which is what is
+ *        accepted; the III standard narrows it to 1..31)
  *     2  name bytes (MacRoman)
  *    65  type (4)        69  creator (4)
  *    73  Finder flags, high byte
@@ -25,9 +30,24 @@
  *   120  secondary header length (2) — data starts at 128 + pad128(it)
  *   124  CRC-16/XMODEM of bytes 0..123 (MacBinary II/III)
  *
- * MacBinary I has no CRC; it is accepted only under the stricter
- * heuristics used by XADMaster (bytes 99..125 zero, plausible sizes,
- * nonzero dates).
+ * MacBinary I has no CRC, so it is accepted only under the stricter
+ * tests the II standard sets out for exactly that case: "Offsets
+ * 101-125 ... should all be 0", the name length in 1..63, and the two
+ * fork lengths bounded. Two of those are read here more strictly than
+ * written and one less, and each difference is deliberate:
+ *
+ *   - zero is required from offset 99 rather than 101. 99 is the Get
+ *     Info comment length, which the II standard adds and then reports
+ *     that "to the best of our knowledge, no program has implemented
+ *     this feature"; a MacBinary I header has nothing there at all.
+ *   - the fork lengths are bounded by UNC_MAC_MAX (2 GB) rather than by
+ *     the standard's 0x007FFFFF. The smaller figure is a 1987 statement
+ *     about how large a Macintosh file could be, not about the format,
+ *     and this engine already refuses what it cannot address.
+ *   - nonzero creation and modification dates are required, which no
+ *     standard asks for. It is XADMaster's test and it is kept: a
+ *     MacBinary I header has no checksum, so without it the whole of
+ *     the evidence is a handful of zero bytes.
  *
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
@@ -37,10 +57,12 @@
 #define MB_PAD(n) (((n) + 127u) & ~127u)
 
 /* CRC-16 with reflected polynomial 0xA001 (CRC-16/USB when init and
- * final xor are 0xFFFF). XADMaster accepts this as a fallback header
- * checksum for files made by buggy encoders — see
- * reference/XADMaster/XADMacArchiveParser.m (XADCRCTable_a001 use).
- * Bitwise form; runs over 124 bytes only, speed is irrelevant. */
+ * final xor are 0xFFFF). The standard specifies one checksum and this
+ * is not it: XADMaster is the sole source, accepting this as a fallback
+ * for files made by encoders that reached for the wrong table — see
+ * reference/XADMaster/XADMacArchiveParser.m (XADCRCTable_a001 use),
+ * LGPL, see NOTICE. Bitwise form; runs over 124 bytes only, speed is
+ * irrelevant. */
 static uint16_t mb_crc16_a001(uint16_t crc, const uint8_t *buf, int32_t len)
 {
     int32_t i;
@@ -54,7 +76,14 @@ static uint16_t mb_crc16_a001(uint16_t crc, const uint8_t *buf, int32_t len)
 }
 
 /* Returns MacBinary version 1..3, or 0 if the header is not MacBinary.
- * Transcribed from +macBinaryVersionForHeader: (see file comment). */
+ *
+ * The III standard says to look at the 'mBIN' signature FIRST and fall
+ * back to the II procedure if it is absent. The order here is the other
+ * way round — the zero fills and the name, then the CRC, and only then
+ * 'mBIN' to tell III from II — and the two agree, because a MacBinary
+ * III header carries the II checksum as well. Reading the CRC first
+ * costs a III file nothing and buys the signature test a header that
+ * has already been checked. */
 static int mb_version(const uint8_t *b, int32_t len)
 {
     int i;
@@ -77,7 +106,8 @@ static int mb_version(const uint8_t *b, int32_t len)
         return 2;
     }
 
-    /* MacBinary I heuristics. */
+    /* MacBinary I: no checksum, so the structural tests are all the
+     * evidence there is (see file comment). */
     for (i = 99; i <= 125; i++) if (b[i] != 0) return 0;
     if (unc_get_u32be(b + 83) > UNC_MAC_MAX) return 0; /* data fork size */
     if (unc_get_u32be(b + 87) > UNC_MAC_MAX) return 0; /* rsrc fork size */

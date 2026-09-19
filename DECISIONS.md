@@ -208,6 +208,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-19 (the byte that went to two places at once) — Compact Pro's LZH and RLE stages fused, −31.7 % on a Mac Plus for +76 B
 - 2026-09-19 (the match that was walked twice) — static LZH and LArc rebuilt on lhasa, and the copy that goes to two places at once
 - 2026-09-19 (the buffer that became a length) — LZW from the public compress(1), and the array that was hiding 17.8 %
+- 2026-09-19 (the facts that were somebody else's to state) — the container parsers re-cited on their own specifications
 
 ---
 
@@ -12369,3 +12370,104 @@ still transcribe XADMaster and the engine stays LGPL-2.1-or-later
 replaced. That the 1 MB budget figure of 648,100 B has been re-measured:
 it is still the 2026-08-31 number, and this row takes 160 B of it, as
 the four rows before it today took their own.
+
+---
+
+## 2026-09-19 (the facts that were somebody else's to state) — the container parsers re-cited on their own specifications
+
+**The ask**, from the same brief as the six rows before it: shed
+XADMaster where something else can carry the same weight. This row is
+the one with no code in it. Seven files cited
+`reference/XADMaster/<file>` for things that are not algorithms and not
+XADMaster's to begin with — an alphabet, a header offset, an entry
+table, a directory record — because XADMaster was the only description
+of them on this machine. It was not the only description of them
+anywhere.
+
+**What was done.** `tools/fetch_references.sh` now fetches seven public
+documents into `reference/notes/`, and `src/fmt_binhex.c`,
+`fmt_macbinary.c`, `fmt_applesingle.c`, `fmt_exo.c` and `fmt_zipseg.c`
+cite the section of the document a fact is written in:
+
+| file | now cites | for |
+|---|---|---|
+| `fmt_binhex.c` | Peter N Lewis, "BinHex 4.0 Definition" (1991); RFC 1741 App. A | the alphabet, the banner, the 0x90 RLE, the CRC |
+| `fmt_macbinary.c` | MacBinary II Standard (7/24/87); MacBinary III Proposal (1996) | the 128-byte header, the padding, the CRC, `mBIN`, the version procedure |
+| `fmt_applesingle.c` | RFC 1740, App. A and B | magics, version, filler, entry table, entry ids, the 2000 epoch |
+| `fmt_exo.c` | RFC 1952; APPNOTE.TXT 6.3.10; POSIX.1-2017 `pax`; deark | the gzip header; zip's records, Zip64 and AES; the ustar header block; the `.Z` three-byte header |
+| `fmt_zipseg.c` | APPNOTE.TXT 4.3.12, 4.3.16, 8.5 | the (part, offset) pairs and the spanning marker |
+
+The `.Z` header is the one the LZW row handed over by name ("that is
+`fmt_exo.c`, item 6" — DECISIONS.md, *the buffer that became a
+length*); it cites the same deark file the decoder behind it now does.
+
+**MEASURED: no code moved.** A release build (`-O2 -Werror`) of this
+commit and of its parent produce byte-identical `macextract` and
+`unit_tests` — same sha256 — so nothing below the comments changed, and
+the tick probe, the size ratchet and the heap figures were not run
+because there is nothing they could have measured.
+
+**Four things came out of reading the documents rather than somebody's
+reading of them**, which is the return on a row that was supposed to
+have none.
+
+*RFC 1741 cannot define BinHex.* Its Appendix A prints the alphabet with
+a stray space in it, 65 characters where the encoding needs 64, so a
+reader holding only the RFC cannot say what the sixty-four are. Lewis's
+document has it right and is also the only one of the two that states
+the CRC and the zero-count-means-literal rule. Both are fetched, and the
+constant in the source says which one it came from.
+
+*A claim in `fmt_zipseg.c` was made false by this work.* It said the
+four bytes displacing a first segment's local header "measure 50 4B 07
+08 ... no reference in this repository documents them, so the probe does
+not require them". They are APPNOTE.TXT 8.5.3's spanning signature
+0x08074b50, and the sentence was true only for as long as APPNOTE was
+not on this machine. The BEHAVIOUR is unchanged and is now better
+argued: 8.5.4 says a one-segment split carries a different marker,
+0x30304b50, where Info-ZIP was measured here writing 0x08074b50 anyway,
+and 8.5.5 adds that the same value is a data-descriptor signature
+elsewhere. Three meanings, so the displacement stays the test and the
+marker stays unread.
+
+*MacBinary I's heuristics were never XADMaster's.* The II standard sets
+out the test for a header with no checksum — offsets 101..125 zero, the
+name length, the fork lengths bounded — and nothing here had cited it.
+Of the four tests in `mb_version`, three are the standard's, two of
+those are applied differently on purpose (zero from 99 rather than 101,
+because 99 is the Get Info comment length the same standard reports
+nobody implemented; and `UNC_MAC_MAX` rather than the standard's
+0x007FFFFF, which is a 1987 statement about Macintosh files rather than
+about the format), and only the nonzero-date test has no document behind
+it. Each difference is now written at the line that makes it.
+
+*And `fmt_stubs.c` was not the dead end its own comments said it was.*
+Three detect-only probes, all three citing XADMaster, and two of them
+did not need to. deark (MIT) recognises the same eight-byte StuffIt X
+magic. And macutils' `macunpack/dd.h` — a file this project has cited
+for years, for other formats — states DiskDoubler's two older headers
+outright: `MAGIC2 "\253\315\000\124"` is the 0xABCD0054 the probe
+tests, `C_HDRCRC 82` in an 84-byte header and `ARCHHDRCRC 76` in a
+78-byte one are the two CRC positions it checks. Nothing was looked for
+there because the comment said where the fact came from, and a citation
+is not a search. Only Now Compress is XADMaster's entire, and `DDA2` is
+neither's: it is DiskDoubler Pro's, read off the CC0 specimens NOTICE
+already credits.
+
+**What stays XADMaster's, and is marked as such where it is made:** the
+MacBinary CRC-16/0xA001 fallback for encoders that reached for the wrong
+table; the nonzero-date test above; the byte-swapped AppleSingle header,
+which the RFC positively forbids ("most significant byte first") and so
+can never be re-cited; the whole StuffIt split header in
+`fmt_sitseg.c`, which Aladdin never published and which neither deark
+nor macutils reads; and Now Compress in `fmt_stubs.c`.
+
+**What is NOT claimed.** That the licence moves — it does not, and it
+cannot until the last transcription is gone; these files carried facts,
+not code, so the LGPL grant was never resting on them and removing the
+citations frees nothing. That any behaviour changed anywhere: see the
+byte-identical binaries above. That the search for a second description
+was exhaustive: it was `reference/` and nothing else, which is deark,
+macutils, lhasa, LHa, mpack, btoa, CiderPress2 and XADMaster. And
+nothing at all about the formats' correctness, which the differential
+suites already grade and which this row did not touch.

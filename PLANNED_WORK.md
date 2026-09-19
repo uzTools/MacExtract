@@ -201,21 +201,7 @@ not up (24 KB today).
 
 ## Item 5 — LZW from Welch, and the canonical code from any textbook — DONE 2026-09-19 (DECISIONS.md, *the buffer that became a length*)
 
-## Item 6 — re-cite the container parsers
-
-**Files:** `src/fmt_binhex.c`, `fmt_macbinary.c`, `fmt_applesingle.c`,
-`fmt_exo.c`, `fmt_sitseg.c`, `fmt_zipseg.c`, `fmt_stubs.c`, `NOTICE`.
-
-These cite XADMaster for FACTS: the BinHex alphabet (RFC 1741), the
-MacBinary header (the MacBinary II/III specification), AppleSingle's
-magic and entry table (RFC 1740), zip's records (APPNOTE.TXT), gzip's
-header (RFC 1952), ustar (POSIX.1). Re-derive each cited fact from the
-public document, cite that, and keep XADMaster only where it is the sole
-source of a fact — the StuffIt segment header, the MacBinary I heuristics
-and the CRC fallback for buggy encoders, the "less than 256 parts"
-assumption. A comment change, no code, no measurement; `ci.sh` for the
-docs check. Update NOTICE's first paragraph to list what still owes
-XADMaster code once items 1–5 have moved.
+## Item 6 — re-cite the container parsers — DONE 2026-09-19 (DECISIONS.md, *the facts that were somebody else's to state*)
 
 ## Bonus — pin the two A/UX DART specimens
 
