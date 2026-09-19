@@ -9,11 +9,12 @@
  * see NOTICE. The format is documented publicly only by Matthew T.
  * Russotto's write-up (reference/notes/arsenic_russotto.md).
  *
- * Memory per fork: block + 4*block for the inverse-BWT transform
- * vector, block = 1 << (9..24) bits as encoded in the stream. Real
- * StuffIt 5 archives in the corpus use 16-bit blocks (64 KB -> ~320 KB
- * peak); the caller's allocator budget decides what is acceptable.
- * When 4 bytes per block byte is not affordable the decoder falls back
+ * Memory per fork: block + 3*block for the inverse-BWT transform
+ * vector (three bytes an entry since 2026-09-19; four before), block =
+ * 1 << (9..24) bits as encoded in the stream. Real StuffIt 5 archives
+ * in the corpus declare 512 KB blocks and fill them to taste; the
+ * caller's allocator budget decides what is acceptable.
+ * When 3 bytes per block byte is not affordable the decoder falls back
  * to a sampled occurrence index costing a fraction of that, trading
  * time for memory — see "Inverse BWT" below.
  *
@@ -277,7 +278,7 @@ typedef struct Arsenic {
     UncBitIn   bi;
 
     uint8_t   *block;       /* [blockcap], grown on demand up to blocksize */
-    uint32_t  *transform;   /* [transform_cap] inverse-BWT vector, or NULL */
+    uint8_t   *transform;   /* [transform_cap * 3] inverse-BWT vector, or NULL */
     ArsIndex  *index;       /* set instead of transform when memory is tight */
     uint32_t   blocksize;   /* the DECLARED block size, 1 << blockbits */
     uint32_t   blockcap;    /* what is actually allocated right now */
@@ -303,11 +304,11 @@ typedef struct Arsenic {
 /* (r+1)-th occurrence of the byte value c that owns k, where         */
 /* c is the value whose sorted range contains k and r = k - cum[c].   */
 /*                                                                    */
-/* ars_inverse_bwt() answers it in O(1) from a table costing 4 bytes  */
+/* ars_inverse_bwt() answers it in O(1) from a table costing 3 bytes  */
 /* per block byte. That table is the largest allocation the decoder   */
 /* makes and on a 1 MB Mac it is what puts large blocks out of reach: */
-/* a 323,384-byte block wants 1,293,536 bytes for it, against a       */
-/* ~678 KB heap budget.                                               */
+/* a 323,384-byte block wants 970,152 bytes for it, against a         */
+/* ~648 KB heap budget.                                               */
 /*                                                                    */
 /* ars_index_build() answers the same question from SAMPLES: the      */
 /* position of every (1 << shift[c])-th occurrence of each value,     */
@@ -315,7 +316,7 @@ typedef struct Arsenic {
 /* A query then scans the block forward from the nearest sample,      */
 /* counting occurrences of c. Cost:                                   */
 /*                                                                    */
-/*   memory  ~ 4 * sum over c of min(counts[c], target)               */
+/*   memory  ~ 3 * sum over c of min(counts[c], target)               */
 /*   time    ~ blocklen/target positions scanned per output byte      */
 /*                                                                    */
 /* so `target` is a pure time-for-memory dial, and it is chosen by    */
@@ -329,11 +330,39 @@ typedef struct Arsenic {
 /* afford the table pays nothing for any of this.                     */
 /* ------------------------------------------------------------------ */
 
+static inline uint32_t ars_transform_get(const uint8_t *t, uint32_t k)
+{
+    const uint8_t *p = t + k * 3u;
+    return ((uint32_t)p[0] << 16) | ((uint32_t)p[1] << 8) | (uint32_t)p[2];
+}
+
+static inline void ars_transform_put(uint8_t *t, uint32_t k, uint32_t v)
+{
+    uint8_t *p = t + k * 3u;
+    p[0] = (uint8_t)(v >> 16);
+    p[1] = (uint8_t)(v >> 8);
+    p[2] = (uint8_t)v;
+}
+
 #ifndef UNC_ARS_FORCE_SAMPLED
 /* CalculateInverseBWT (BWT.c): transform[] such that repeatedly
  * following transformindex=transform[transformindex] walks the
- * original byte order. Iterative, no recursion. */
-static void ars_inverse_bwt(uint32_t *transform, const uint8_t *block,
+ * original byte order. Iterative, no recursion.
+ *
+ * THREE bytes per entry, not four (2026-09-19). An entry is a position
+ * inside the block, and blockbits is four stream bits plus nine, so a
+ * position is at most (1 << 24) - 1 and three bytes hold it exactly —
+ * the argument the sampled index's pos[] already makes below. This is
+ * the largest allocation the engine makes, and a quarter off it moves
+ * the line between "the vector fits" and "fall back to the index": at
+ * the 1 MB budget two corpus fixtures cross it and nineteen already on
+ * this path peak 16-20 % lower. Reading an entry is three byte loads
+ * and two shifts more than a long load, once per output byte, against
+ * the arithmetic decoder's ~700 instructions for the same byte: 2.4 %
+ * of the ISBN fixture's run on Linux, and byte-wise big-endian is what
+ * the 68000 discipline wants anyway. Written and read through
+ * ars_transform_get/put so the width lives in one place. */
+static void ars_inverse_bwt(uint8_t *transform, const uint8_t *block,
                             uint32_t blocklen)
 {
     uint32_t counts[256], cumulative[256];
@@ -346,7 +375,7 @@ static void ars_inverse_bwt(uint32_t *transform, const uint8_t *block,
         counts[i] = 0;
     }
     for (i = 0; i < blocklen; i++) {
-        transform[cumulative[block[i]] + counts[block[i]]] = i;
+        ars_transform_put(transform, cumulative[block[i]] + counts[block[i]], i);
         counts[block[i]]++;
     }
 }
@@ -491,7 +520,7 @@ static uint32_t ars_index_next(const Arsenic *a, uint32_t k)
     return i < n ? i : 0;
 }
 
-/* Choose how this block's BWT will be inverted: the 4-bytes-per-byte table
+/* Choose how this block's BWT will be inverted: the 3-bytes-per-byte table
  * when the allocator affords it, the sampled index when it does not.
  *
  * The choice is made per block, and the table is kept across blocks while it
@@ -502,11 +531,11 @@ static int ars_bwt_prepare(Arsenic *a, UncAlloc *al)
 {
 #ifndef UNC_ARS_FORCE_SAMPLED
     if (a->numbytes > a->transform_cap) {
-        uint32_t *nt;
+        uint8_t *nt;
         unc_free(al, a->transform);
         a->transform = NULL;
         a->transform_cap = 0;
-        nt = (uint32_t *)unc_alloc(al, a->numbytes * 4u);
+        nt = (uint8_t *)unc_alloc(al, a->numbytes * 3u);
         if (nt) { a->transform = nt; a->transform_cap = a->numbytes; }
     }
     if (a->transform) {
@@ -536,14 +565,15 @@ static int ars_bwt_prepare(Arsenic *a, UncAlloc *al)
  * therefore spent half a megabyte to store nothing, and on the floor target
  * that was the difference between an entry being affordable and being refused:
  * the budget saw 35 KB parser + 512 KB block + 4 bytes per byte actually
- * decoded, so only ~37 KB of real data fit in a ~700 KB heap.
+ * decoded (3 since 2026-09-19), so only ~37 KB of real data fit in a
+ * ~700 KB heap.
  *
- * Growing instead makes the cost proportional to the data: ~35 KB + capacity +
- * 4x fill. The transform vector has been sized to the fill since M9 for the
+ * Growing instead makes the cost proportional to the data: ~30 KB + capacity +
+ * 3x fill. The transform vector has been sized to the fill since M9 for the
  * same reason; this is the other half of it.
  *
  * The transient during a growth is old + new = 1.5x the new capacity, which is
- * below the later peak of capacity + 4x fill, so growing never sets the high
+ * below the later peak of capacity + 3x fill, so growing never sets the high
  * water mark. There is no realloc in the allocator API by design (see
  * DECISIONS.md), hence alloc-copy-free.
  *
@@ -807,7 +837,7 @@ retry:
 
             a->transformindex = a->index
                 ? ars_index_next(a, a->transformindex)
-                : a->transform[a->transformindex];
+                : ars_transform_get(a->transform, a->transformindex);
             byte = a->block[a->transformindex];
 
             if (a->randomized && (uint32_t)a->randcount == a->bytecount) {

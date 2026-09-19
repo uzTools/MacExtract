@@ -90,7 +90,11 @@ ls -la build/mac/MacExtract.APPL build/mac/MacExtract.bin build/mac/MacExtract.d
 # version cost 468 B; a flush is a loop and a call, and one site per coder
 # was the difference. Bought for −2.4 to −9.4 % of instructions on the
 # formats that use them.
-UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-149832}
+# Raised 2026-09-19 from 149,832 to 149,868: +36 B for the three-byte
+# inverse-BWT transform vector — the two byte-wise accessors against one
+# long load. A quarter off the engine's largest allocation, two corpus
+# archives onto the fast path at 1 MB (DECISIONS.md 2026-09-19).
+UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-149868}
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the

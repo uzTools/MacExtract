@@ -49,7 +49,7 @@ under *Table notes*.
 | PackIt (.pit) | extract | store, Huffman; **PMa5 and PMa6 decrypted** (an XOR keyed by DES's PC-1, and DES) | 4 fixtures (1 real + 3 synthetic PMa4) | 9 KB | full |
 | Compact Pro (.cpt) | extract | RLE, LZH+RLE; **encrypted entries decrypted**, from a reading of the application that the application then graded, both directions (*Compact Pro's cipher*, below); the archive **comment** is saved rather than dropped | 108 fixtures | 24 KB | full |
 | StuffIt classic (.sit) | extract | 0 store, 1 RLE90*, 2 LZW, 3 Huffman, 5 LZAH, 6 fixed Huffman‡, 8 MW, 13 LZSS+Huffman; **encrypted forks decrypted** (StuffItDES, and the 'MKey' resource — *Encryption*, below) | 227 fixtures‡‡ | 8–76 KB‖ | full |
-| StuffIt 5 (.sit) | extract | 0, 13, 15 Arsenic; **encrypted forks decrypted** (RC4 under MD5(password)) | 31 fixtures | 0.15–2.53 MB† | 23 of 31 fixtures extract FULLY; the rest refuse per entry |
+| StuffIt 5 (.sit) | extract | 0, 13, 15 Arsenic; **encrypted forks decrypted** (RC4 under MD5(password)) | 31 fixtures | 0.13–2.03 MB† | 23 of 31 fixtures extract FULLY; the rest refuse per entry |
 | Zip | extract | store, deflate, **PKWARE's cipher and WinZip's AES** (128/192/256); other methods and PKWARE strong encryption are per-entry errors; the archive **comment** is saved rather than dropped (*The archive comment*, below) | 5 fixtures (2 of them PKZIP 1.x, graded on names and entry counts only — Implode is out of v1 scope, and `unar` adjudicates 5 of their 7 entries) | 12–54 KB¶ | full |
 | Gzip | extract | deflate | 3 fixtures | 51 KB | full |
 | Unix compress (.Z) | extract | LZW ≤16 bit | 4 fixtures | 219 KB§ | full |
@@ -613,26 +613,42 @@ instrumenting the point where `sit_arsenic.c` reads `v`, not inferred.
 
 Peak heap is modelled by
 
-    peak  =  ~30 KB parser state  +  block capacity  +  4 × actual block fill
+    peak  =  ~30 KB parser state  +  block capacity  +  3 × actual block fill
 
 The parser state was ~35 KB until 2026-09-18, when the nine adaptive
 models dropped a symbol field that was always arithmetic: **4,572 B off
-every StuffIt 5 entry**, on Linux and on the Mac alike. The Mac tiers were
-not re-run for it, so every on-Mac peak for a StuffIt 5 fixture in this
-file that predates that day is 4,572 B high (DECISIONS.md 2026-09-18).
+every StuffIt 5 entry**, on Linux and on the Mac alike. **And the vector
+was four bytes an entry until 2026-09-19**: a position in a block of at
+most 2^24 bytes fits three, the argument the sampled index's `pos[]` had
+already made, so the engine's largest allocation is a quarter smaller
+(DECISIONS.md 2026-09-19). At the 1 MB budget of 648,100 B that puts two
+more fixtures on the vector instead of the sampled index —
+`derived-Troi-ClipSave-Plug-in1.1.sit` at 531,968 B and
+`derived-AuthoRize_2.0.sit` at 612,943 B — and takes 16-20 % off the
+peak of the nineteen already there; the ten whose blocks want 1.4-2.1 MB
+even at three bytes stay on the index, unchanged. The price is the read:
+three byte loads and two shifts per output byte instead of one long load,
+**+4.4 % of instructions on the ISBN fixture and +1.9 % on
+`derived-a2basic.dmg.sit`** on Linux, on the fast path only, against an
+arithmetic decoder that costs ~20,000 cycles a byte on a Mac Plus. The Mac
+tiers were not re-run for either change, so every on-Mac peak for a
+StuffIt 5 fixture in this file that predates 2026-09-18 is 4,572 B high,
+and a fast-path peak that predates 2026-09-19 is a further block-fill high.
 
 because only the *block* is allocated at its declared size; the inverse-BWT
 transform vector is sized to how much of the block the entry actually fills
-(`transform = numbytes * 4`, in `ars_bwt_prepare`). Peak heap therefore cannot
+(`transform = numbytes * 3`, in `ars_bwt_prepare`; four bytes an entry until
+2026-09-19). Peak heap therefore cannot
 recover the declared block size — the earlier "128 KB (14 fixtures) / 256 KB
 (9) / 512 KB (8)" figures were inferred by dividing peak by five and are
 withdrawn (BLOCKERS.md, *Withdrawn claims*).
 
 Measured peak heap over the corpus (`macextract t --stats`, re-measured
-2026-09-18): **min 0.15 MB / median 0.58 MB / mean 0.92 MB / max
-2.53 MB**, the maximum
-being the entries that genuinely fill a 512 KB block (35 KB + 512 KB +
-2048 KB) — **exactly two fixtures reach 524,257 B of fill**, which is the
+2026-09-19 with the three-byte vector): **min 0.13 MB / median 0.47 MB /
+mean 0.74 MB / max 2.03 MB** (0.15 / 0.58 / 0.92 / 2.53 the day before),
+the maximum
+being the entries that genuinely fill a 512 KB block (30 KB + 512 KB +
+1536 KB) — **exactly two fixtures reach 524,257 B of fill**, which is the
 number that got applied to three fixtures it did not describe (BLOCKERS.md,
 *Withdrawn claims*). A true figure about the worst case is not a figure about
 the case in front of you. Those are the peaks with memory to spare, where the decoder takes
@@ -3079,6 +3095,14 @@ position through `unc_bufin_tell`. A `NowBits` is always memory-backed,
 where that call reduces to `pos`: **−2.33 %** on that fixture, −0.7 % on
 `synth-now-mixed.now`.
 
+**The three-byte transform vector, 2026-09-19.** Arsenic's fast path
+reads its inverse-BWT vector once per output byte, and an entry is now
+three bytes rather than four: `derived-Library_ISBN_Barcoder.sit` on the
+fast path **+4.4 %**, `derived-a2basic.dmg.sit` +1.9 %, for a quarter off
+the engine's largest allocation (*StuffIt 5: the Arsenic block size*).
++36 B of 68000 code, −4 B of A5. A memory change with a speed price,
+taken deliberately (DECISIONS.md 2026-09-19).
+
 **The byte that left through a pointer, 2026-09-18.** Four decoders
 handed every output byte back through a function pointer, and Arsenic
 also ran `unc_crc32` on one byte at a time for a checksum the fork
@@ -3448,7 +3472,7 @@ On-Mac engine peak heap (high-water mark) by format, matching the Linux
 | Gzip | 51 KB |
 | StuffIt classic | 19–72 KB‖ |
 | Unix compress (.Z) | 15–219 KB§ |
-| StuffIt 5 (Arsenic) | 0.63–2.53 MB (block *fill* dependent — see †) |
+| StuffIt 5 (Arsenic) | 0.63–2.53 MB when measured (block *fill* dependent — see †); the vector is three bytes an entry since 2026-09-19, not re-run |
 | LZH / LHA | 4–41 KB over the sample (4,112 B stored, 41,364 B for `-lh7-`); 74 KB is the format's ceiling, for an entry that fills a 64 KB window |
 | DiskDoubler / Now Compress | extracted and byte-exact on both Mini vMac tiers since 2026-08-15 (see above), and on Mac OS 9 since 2026-08-27 |
 
@@ -3618,7 +3642,7 @@ does on purpose. Nothing here establishes it.
 
 The last two rows are the ones that moved on 2026-08-07: `a2basic` was a clean
 per-entry refusal of its only entry, and `Library_ISBN` delivered 33 of 34.
-Both now need a *sampled* inverse BWT rather than the 4-bytes-per-byte table,
+Both now need a *sampled* inverse BWT rather than the per-byte table,
 chosen automatically because the table's allocation fails first.
 
 **What those three entries actually hold**, measured 2026-08-03 by

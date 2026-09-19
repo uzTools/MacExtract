@@ -591,7 +591,7 @@ which is the plain-split scheme rather than anything BinHex-specific.
 
 ## The sampled inverse BWT (`ci.sh` variant 1b, added 2026-08-07)
 
-The Arsenic decoder picks between a 4-bytes-per-byte transform table and a
+The Arsenic decoder picks between a 3-bytes-per-byte transform table and a
 sampled occurrence index **by trying to allocate the table and failing**
 (DECISIONS.md). Nothing an unconstrained run does reaches the fallback, so
 CI forces it three ways:

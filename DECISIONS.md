@@ -198,6 +198,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-09 (the merge that deletes the branch) — bringing four parked branches up to date
 - 2026-09-18 (the byte that left through a pointer) — runs out of the window, the CRC the writer already kept, and a model half its size
 - 2026-09-18 (the floppy that was full) — a 40-byte gap that was written up as 62 KB, and a refusal that was a full disk
+- 2026-09-19 (three bytes hold a position) — the transform vector at three bytes an entry, and the price it was allowed to have
 
 ---
 
@@ -11592,4 +11593,51 @@ against eighteen days of a caveat on every figure in the file. The rule is
 the one CLAUDE.md already states about environments: read every "the Mac
 needs more" for the name of the instrument it is really about. Here there
 were two, and neither was the Mac.
+
+---
+
+## 2026-09-19 (three bytes hold a position) — the transform vector at three bytes an entry, and the price it was allowed to have
+
+**Claim (measured).** Arsenic's inverse-BWT vector — the largest single
+allocation the engine makes, one entry per byte of a block up to 512 KB —
+is three bytes an entry instead of four. A block is `1 << (4 stream bits +
+9)`, at most 2^24 bytes, so a position in it is at most `(1 << 24) - 1` and
+three bytes hold it exactly. The sampled index's `pos[]` made this argument
+on 2026-08-24 and the vector beside it kept its `uint32_t` for another
+month. Two byte-wise accessors, `ars_transform_get` and `ars_transform_put`,
+so the width lives in one place; nothing else in the decoder changes.
+
+**What it buys.** The fast path costs `~30 KB + block + 3 × fill` instead
+of `4 × fill`. Over the 31 StuffIt 5 fixtures at the 1 MB budget of
+648,100 B: nineteen already on the vector peak 16-20 % lower; two —
+`derived-Troi-ClipSave-Plug-in1.1.sit` (531,968 B) and
+`derived-AuthoRize_2.0.sit` (612,943 B) — move off the sampled index, whose
+walk costs 1.37-1.78× the vector's on a Mac Plus at a low rung and less at
+a high one; ten stay on the index, their blocks wanting 1.4-2.1 MB at any
+width. Peaks over the corpus: min 0.13 / median 0.47 / mean 0.74 / max
+2.03 MB, from 0.15 / 0.58 / 0.92 / 2.53. All 31 verify against their
+internal CRC-32 at unlimited budget, at 648,100 B and under the 400 KB
+cap (24 of 31 fully, unchanged). The six bisected minimums do not move,
+because a minimum is a rung of the index and the vector never enters it.
+
+**What it costs, and it is more than the review said.** The walk reads one
+entry per output byte, and three byte loads with two shifts replace one
+long load: **+4.4 % of instructions on `derived-Library_ISBN_Barcoder.sit`
+and +1.9 % on `derived-a2basic.dmg.sit`**, Linux, fast path only. The
+review had quoted 2.4 %, which was the read's share of one earlier
+profile and not the whole-run delta of the change. On a Mac Plus the
+same read is a few tens of cycles against the arithmetic decoder's
+~20,000 a byte (542 s for 205,019 bytes), so the expectation is well
+under 1 % there, and it is unmeasured: no tick run was taken. +36 B of
+68000 code, −4 B of A5; the code ratchet is raised with the attribution.
+
+**Why it was taken anyway.** The cost lands only where the vector fits,
+which is the case with memory to spare; the gain lands on the 1 MB floor
+and on the 512 KB tier, where every kilobyte of headroom is an archive.
+That is the trade this project takes by default — an archive that opens
+beats one that opens a little sooner — and the maintainer chose it with
+the number in front of them. **What it is NOT: a speed fix for the large
+Arsenic archives.** The ten that take twelve to twenty-four minutes on a
+1 MB Mac Plus are untouched; their limit is the block size the
+compressor chose, and no width of vector reaches it.
 
