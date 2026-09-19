@@ -1525,6 +1525,18 @@ fork. Three are kept, with passwords of 8, 9 and 17 characters, and
 those lengths are not decoration: they are what showed that the fold
 count is ceil(len/8) and that neither reference implements it.
 
+**What this suite cannot see, and what does.** It grades StuffItDES end
+to end and says nothing about how it is written, so the 2026-09-19 fold
+onto standard DES's round is proved separately: `python3
+tools/fit_sitdes.py` checks XADMaster's `DES_SPtrans` against the
+standard table relabelled, A/Bs the old and new formulations over 20,000
+random key/block pairs and every single-bit case, and shows why the KEY
+schedule could not follow. Neither it nor `tools/gen_crypt_tables.py` —
+which asserts the same relabelling whenever `src/crypt_tables.h` is
+regenerated — runs in `ci.sh`; both are proofs about how the code was
+arrived at, and what `ci.sh` grades is the result. DECISIONS.md
+2026-09-19, *the DES that was only wearing a disguise*.
+
 **The ciphers run on a big-endian 68000 too.** `tests/run_mac_sink.sh`
 cross-compiles the unit tests with `m68k-linux-gnu-gcc -mcpu=68000` and
 runs them under `qemu-m68k`, so every cipher vector — DES, StuffItDES,

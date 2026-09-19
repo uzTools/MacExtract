@@ -31,10 +31,11 @@ Both are transcriptions, not derivations from memory:
     polynomial in both halves — and the routine at 0x40fe seeds the
     state with 0x0123456789ABCDEF. DECISIONS.md 2026-08-23.
 
-  * `unc_sitdes_sp` is DES_SPtrans from
-    reference/XADMaster/XADStuffItDESHandle.m, copied verbatim: the
-    StuffIt variant is a little-endian DES formulation and needs that
-    table's bit order, not the natural one.
+  * There is no StuffIt table any more. DES_SPtrans from
+    reference/XADMaster/XADStuffItDESHandle.m is the standard table
+    relabelled, so the StuffIt variant reads the standard one; the
+    relation is asserted below and proved in full by
+    tools/fit_sitdes.py.
 
 Run: python3 tools/gen_crypt_tables.py > src/crypt_tables.h
 """
@@ -123,39 +124,43 @@ def sit_sptrans():
 
 SITSP = sit_sptrans()
 
-# Since 2026-09-19 neither SP table is EMITTED: both are built at key setup,
-# into a 2 KB heap block that lives only while an encrypted entry is
-# decoded, from the S boxes and the inverse of P below (src/unc_crypt.c,
-# crypt_build). What this generator still does is PROVE the run-time
-# derivation against the references, because the StuffIt table's bit
-# convention was fitted rather than transcribed: DES bit k of the round
-# output sits at word bit (k - 1 + 3) mod 32 — the same rotate-by-3 the
-# handle undoes at the end of a block — and the six-bit index takes the
-# E-expansion bits in order, bit 0 first. Both derivations are asserted
-# equal to the tables XADMaster carries, entry for entry.
+# Since 2026-09-19 no SP table is EMITTED: the one that is left is built at
+# key setup, into a 2 KB heap block that lives only while an encrypted entry
+# is decoded, from the S boxes and the inverse of P below (src/unc_crypt.c,
+# crypt_build). What this generator still does is PROVE that derivation
+# against the reference, entry for entry.
 PINV = [P.index(pos) + 1 for pos in range(1, 33)]   # pre-P bit -> after P
 
 
-def sp_entry(box, v, sit):
-    if sit:
-        e = [(v >> i) & 1 for i in range(6)]
-        row = (e[0] << 1) | e[5]
-        col = (e[1] << 3) | (e[2] << 2) | (e[3] << 1) | e[4]
-    else:
-        row = ((v & 0x20) >> 4) | (v & 1)
-        col = (v >> 1) & 0xF
+def sp_entry(box, v):
+    row = ((v & 0x20) >> 4) | (v & 1)
+    col = (v >> 1) & 0xF
     out = S[box][row * 16 + col]
     word = 0
     for b in range(4):
         if out & (8 >> b):
-            dest = PINV[box * 4 + b]
-            word |= 1 << ((dest + 2) % 32) if sit else 1 << (32 - dest)
+            word |= 1 << (32 - PINV[box * 4 + b])
     return word
 
 
-assert all(sp_entry(b, v, False) == SP[b][v] for b in range(8) for v in range(64))
-assert all(sp_entry(b, v, True) == SITSP[b][v] for b in range(8) for v in range(64)), \
-    "the run-time derivation of DES_SPtrans does not match XADMaster's table"
+assert all(sp_entry(b, v) == SP[b][v] for b in range(8) for v in range(64))
+
+# And that the StuffIt variant needs no table of its own: DES_SPtrans is
+# this table with its six-bit index bit-reversed and its output word
+# bit-reversed and rotated left three — a relabelling of the round, which
+# StuffItDES applies to the state and undoes at the end of the block. That
+# is why src/unc_crypt.c has one DES and not two. The A/B of the two
+# formulations, and the reason the KEY SCHEDULE is not standard either, are
+# tools/fit_sitdes.py; DECISIONS.md 2026-09-19.
+def _rev(v, n):
+    return sum(((v >> i) & 1) << (n - 1 - i) for i in range(n))
+
+
+assert all(SITSP[b][v] ==
+           ((_rev(SP[b][_rev(v, 6)], 32) << 3) |
+            (_rev(SP[b][_rev(v, 6)], 32) >> 29)) & 0xFFFFFFFF
+           for b in range(8) for v in range(64)), \
+    "DES_SPtrans is not the standard SP table relabelled"
 
 # ---- AES, from reference/XADMaster/Crypto/aestab.c ---------------------
 def aes_sbox():

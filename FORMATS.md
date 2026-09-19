@@ -1502,7 +1502,7 @@ decryption suite*.
 
 | format | cipher | key from the password | verified before decoding? | graded by |
 |---|---|---|---|---|
-| StuffIt classic | an eight-byte feedback XOR, keyed through **StuffItDES** (a DES with its own key schedule and no initial permutation) | iterated DES over the password — **ceil(len/8) folds, measured** (below) — then the archive's `'MKey'` resource, then sixteen bytes stored at the end of each fork | **yes** — the 'MKey' block checks against itself | **StuffIt Deluxe 3.5.1 itself**, on three archives it wrote; `unar -p` on the generated ones |
+| StuffIt classic | an eight-byte feedback XOR, keyed through **StuffItDES** (standard DES's round function with no IP/FP, and its own key schedule — the round is shared with PackIt's DES since 2026-09-19) | iterated DES over the password — **ceil(len/8) folds, measured** (below) — then the archive's `'MKey'` resource, then sixteen bytes stored at the end of each fork | **yes** — the 'MKey' block checks against itself | **StuffIt Deluxe 3.5.1 itself**, on three archives it wrote; `unar -p` on the generated ones |
 | StuffIt 5 | **RC4** | MD5(password) cut to five bytes, then the fork's own five | **yes** — MD5 of that key against a hash in the archive header | **DropStuff 5.0.1 itself**, on three archives it wrote under Mac OS 9.2 (*StuffIt 5's RC4*, below); `unar -p` |
 | PackIt `PMa5` | XOR, key applied **modulo seven** over eight bytes | DES's PC-1 permutation of the first eight password bytes | in effect — the entry header is inside the ciphertext and carries a CRC | `unar -p` |
 | PackIt `PMa6` | **DES**, ECB; the operation that DECODES is DES's decrypt | the first eight password bytes | the same | `unar -p` |

@@ -102,6 +102,14 @@ This project's decoders are transcriptions/ports of algorithms from:
     S box against its own definition rather than trusting the copy.
     Each is graded in `tests/unit_formats.c` against an implementation
     that is not ours — python's hashlib and hmac, and `openssl enc`.
+    Since 2026-09-19 StuffIt's "StuffItDES" is not a second cipher: it
+    is standard DES's round function (FIPS 46-3) with no initial or
+    final permutation, so the second S-box table and the second round
+    function are gone. What `XADStuffItDESHandle.m` remains the source
+    of is the nibble KEY SCHEDULE — which reads all 64 key bits where
+    PC-1 drops eight, and so is not the standard schedule of any
+    permuted key — and the derivation of the per-file key.
+    `tools/fit_sitdes.py` proves both halves of that statement.
 
   * Compact Pro (Bill Goodman, 1990-1995). Its ENCRYPTION is the one
     scheme in this project that no reference implementation reads and

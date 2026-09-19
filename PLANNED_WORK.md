@@ -18,7 +18,7 @@ never a tag.
 From 2026-09-19 two sessions work this list in parallel. **The Fable
 session that wrote this owns item 2 (Arsenic)** and works in
 `/home/claude/unclassic` itself; it will not touch any other row's
-files. **The other session takes items 1, 3, 4, 5, 6 and the bonus**, and
+files. **The other session takes items 3, 4, 5, 6 and the bonus** (item 1 is done, 2026-09-19), and
 must NOT work in that directory:
 
     git worktree add /home/claude/unclassic-b main     # once
@@ -121,54 +121,6 @@ entry.
   writing the number down.
 
 ---
-
-## Item 1 — StuffIt's DES as standard DES around a permutation
-
-**Files:** `src/unc_crypt.c` (`sitdes_setkey`, `sitdes_round`,
-`sitdes_crypt`, `revbits`, `sit_nibble`, the `CRYPT_TAB_SITDES` branch of
-`des_sp_entry`), `tools/gen_crypt_tables.py`, `tests/unit_formats.c`.
-
-**What is known.** 2026-09-19 fitted XADMaster's `DES_SPtrans` against
-the standard S boxes and P: it IS standard DES's round tables with the
-six-bit index taking the E-expansion bits in order, bit 0 first, and
-output bit k at word bit (k − 1 + 3) mod 32 (DECISIONS.md 2026-09-19,
-*the transient tables*; the generator asserts it). So StuffIt's "little-
-endian DES" is the standard round function in a rotated, bit-reversed
-word layout, with no IP/FP. What is NOT yet known is whether
-`sitdes_setkey`'s nibble schedule equals the standard PC-1/PC-2 schedule
-of some fixed permutation of the key. Find out first.
-
-**Steps.**
-1. In Python, using `src/crypt_tables.h`'s tables and a transcription of
-   `sitdes_setkey`, test the hypothesis: for random 8-byte keys, does
-   there exist ONE bit permutation π of the 64 key bits such that the
-   standard schedule of π(key), re-laid into the rotated word order
-   (word bit (k − 1 + 3) mod 32, six-bit groups in E order), equals
-   `sitdes_setkey(key)` for all 16 rounds? Solve for π bit by bit (each
-   subkey bit is one key bit through PC-1, shifts and PC-2, so π is
-   determined by matching single-bit keys). If it exists, the whole
-   StuffIt formulation is: permute the key, standard `des_setkey`;
-   permute the block in, run the standard rounds WITHOUT IP/FP, permute
-   out. If it does not, keep `sitdes_setkey` (it is format knowledge,
-   measured on three archives StuffIt Deluxe wrote) and fold only the
-   round: one `des_round(l, r, subkey, sp)` shared by both ciphers, with
-   the StuffIt subkeys re-laid into the standard six-bit-group form once
-   at setup.
-2. Either way, `CRYPT_TAB_SITDES` disappears: one table kind, one
-   `des_sp_entry` without the `sit` branch, and the generator's SPtrans
-   assertion is rewritten as an assertion about the permutation.
-3. Grade: the unit tests' DES vectors, `tools/run_crypt.py` (35 cases,
-   three of them StuffIt Deluxe 3.5.1 archives with 8-, 9- and
-   17-character passwords), `./ci.sh`.
-4. Price: code (expect a fall — `sitdes_*` is ~80 lines and the second
-   table branch goes), heap (unchanged, one 2 KB table either way), ticks
-   (nothing measurable: encrypted entries are not in the corpus and key
-   setup is once per entry; say so rather than run one).
-
-**Acceptance:** `run_crypt.py` 35/35, `ci.sh` green, CODE not up, NOTICE's
-XADMaster paragraph no longer needs `XADStuffItDESHandle.m` for code —
-only for the fact that the format's key derivation is what it is, which
-the three real archives grade.
 
 ## Item 2 — Arsenic from the write-up — TAKEN by the Fable session, 2026-09-19
 

@@ -115,7 +115,12 @@ ls -la build/mac/MacExtract.APPL build/mac/MacExtract.bin build/mac/MacExtract.d
 # tree machinery rewritten from the published LZHUF instead of XADMaster's
 # transcription of it — and 10.1 % faster on the Plus, 6.5 KB less heap
 # (DECISIONS.md 2026-09-19, the tree that was Yoshizaki's).
-UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-151572}
+# LOWERED 2026-09-19 from 151,572 to 151,156: −416 B, StuffItDES folded onto
+# standard DES's round — one SP table kind instead of two, and revbits and
+# the second round function gone. The whole fall is inside unc_crypt.c.obj
+# (9,676 → 9,260 B); A5 and peak heap are unchanged, both measured
+# (DECISIONS.md 2026-09-19, the DES that was only wearing a disguise).
+UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-151156}
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the

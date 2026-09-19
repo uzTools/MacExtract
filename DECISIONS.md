@@ -203,6 +203,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-19 (the slide that ran every block) — Now Compress's block slots, and the `UNC_HOT` that bought nothing
 - 2026-09-19 (the transient tables) — 6 KB of cipher tables built at key setup, and a bit convention fitted rather than transcribed
 - 2026-09-19 (the tree that was Yoshizaki's) — the -lh1- coder rebuilt on the published LZHUF, measured against MacMount's, and what it bought on three axes
+- 2026-09-19 (the DES that was only wearing a disguise) — StuffItDES folded onto standard DES's round, and the half of the hypothesis that was false
 
 ---
 
@@ -11733,6 +11734,11 @@ per block is the one thing the optimiser cannot make run less often.
 
 ## 2026-09-19 (the transient tables) — 6 KB of cipher tables built at key setup, and a bit convention fitted rather than transcribed
 
+*(Corrected later the same day: there is one DES SP table, not two, and the
+fit below is what showed why — see *the DES that was only wearing a
+disguise*. Everything else here stands; the A5 figure is unchanged, because
+both tables had already left the A5 world.)*
+
 **Claim (measured).** The two DES SP tables and Compact Pro's CRC-64 table
 — 2,048 B each, `const`, and therefore in the A5 world, which the budget
 pays for one for one on every extraction — are built when a cipher is
@@ -11853,3 +11859,69 @@ Garden FTP, member SHA-256 pinned in its `tools/get_real_samples.py`) and
 are not pinned into `tools/run_dart.py`. That would be a download step
 and a `fixtures/SOURCES.md` row, and it is worth doing.
 
+
+---
+
+## 2026-09-19 (the DES that was only wearing a disguise) — StuffItDES folded onto standard DES's round, and the half of the hypothesis that was false
+
+**Claim (measured).** StuffItDES is standard DES's round function with no
+IP and no FP, keyed by its own schedule. `src/unc_crypt.c` now runs both
+its DES ciphers through one `des_core`, reading one SP table kind:
+`revbits`, `sitdes_round` and the `CRYPT_TAB_SITDES` branch are gone.
+
+| axis | before | after | |
+|---|---|---|---|
+| `tools/run_crypt.py` | 35/35 | 35/35 | 0 problems, and the three archives StuffIt Deluxe 3.5.1 wrote are three of them |
+| unit tests | 782 checks | 782 checks | including the `openssl enc -des-ecb` vector, which grades `des_core` from the other side |
+| Mac `CODE` | 151,572 B | **151,156 B** | −416 B, all of it `unc_crypt.c.obj` (9,676 → 9,260) |
+| Mac A5 | 38,668 B | 38,668 B | unchanged: one 2 KB table was already transient |
+| peak heap, encrypted `.sit` | 8,192 B | 8,192 B | `t --stats` on a `synth_crypt.py` archive, both binaries |
+
+**The hypothesis was two claims and only one held.** The brief asked
+whether the whole variant was standard DES around a permutation — permute
+the key, run the standard schedule, permute the block. The key half is
+**false, and cheaply**: `sitdes_setkey` reads all 64 key bits where PC-1
+drops eight, so no permutation π of the key can turn one schedule into the
+other. Counting the bits each schedule reads settles it without searching
+for π at all, which is the whole of step 1 of that plan. The nibble
+schedule therefore stays exactly as it was — it is format knowledge, and
+what grades it is the three real archives.
+
+**The block half holds, and it is where the code went.** Two facts, both
+machine-checked by `tools/fit_sitdes.py`: XADMaster's `DES_SPtrans[b][v]`
+is `ROL(REV(SP[b][rev6(v)]), 3)` for all 512 entries, so the second table
+was the standard one relabelled; and with the state left in the standard
+layout the subkeys fall out of the nibble schedule as plain six-bit
+groups — group 2g is `s1`'s lane 3−g, group 2g+1 is `s0`'s — which is what
+the bit reversal had been undoing. The rotate-by-3 on the way in and out
+of a block was the same relabelling applied to the state, so removing it
+from both ends removes it. The tool also A/Bs the two formulations over
+20,000 random key/block pairs and every single-bit key against every
+single-bit block, both directions: no disagreement.
+
+`tools/gen_crypt_tables.py` no longer derives a StuffIt table, because the
+engine no longer has one; it asserts the relabelling against XADMaster's
+verbatim table instead, so the fact the fold rests on is re-checked every
+time the header is regenerated.
+
+**Two redundant key setups went with it.** `unc_crypt_sit` derived the
+schedule of the folded archive key four times from bytes that had stopped
+changing. Once now.
+
+**The test was shown to fail before it was believed.** One nibble index
+moved by one in `sitdes_setkey` (`i + 14` → `i + 15`) takes `run_crypt.py`
+from 0 problems to 24, including all three Deluxe archives. Without that
+the 35/35 above would be evidence of nothing.
+
+**What is NOT claimed.** No speed change, and none was measured: key setup
+runs a handful of blocks per archive, no corpus fixture is encrypted at
+all, and a tick run on a path nothing reaches would measure the harness.
+The Mac tiers were not re-run — no format's decode path changed, and the
+code is smaller, not larger. The LICENCE does not move either: `unc_crypt.c`
+still owes XADMaster the nibble schedule and the key derivation, and the
+engine is LGPL through every other row of the inventory.
+
+**What it cost the inventory.** OPEN_ITEMS.md's `unc_crypt.c` row said
+"the StuffIt table is PROVEN to be standard DES in a rotated bit order, so
+that variant can be standard DES plus a permutation". The first clause was
+right and is now spent; the second was the false half.
