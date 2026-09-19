@@ -28,6 +28,15 @@
 #define NOW_INBLOCK   0x8000u     /* staging for a block's input        */
 #define NOW_ENTRY     110u        /* bytes per entry in the table       */
 #define NOW_MAXBLOCKS 0x2000u     /* the reference's own search bound   */
+/* Block slots after the history, tried first and halved on refusal. Four
+ * is where the tick probe put the knee on a 7 MHz Mac Plus: the window
+ * slide was 19 % of the largest Now Compress run on Linux, and with four
+ * slots derived-Expand_Now_1.0.1.sea's engine time fell 945 -> 793 ticks,
+ * -16.1 %, for +32 B of code and 96 KB more of this one per-archive
+ * allocation when the budget has it (DECISIONS.md 2026-09-19). UNC_HOT on
+ * the three hot functions was measured on the same run and bought 0.3 %
+ * for 1,152 B, so they are not marked. */
+#define NOW_SLOTS     4u
 
 /* ------------------------------------------------------------------ */
 /* Bit input over a memory block, via the shared readers               */
@@ -315,8 +324,14 @@ typedef struct NowStream {
     UncCtx  *c;
     struct NowCodes *cd;   /* code tables, off the stack — see below */
     uint8_t *inblock;      /* [incap]                                    */
-    uint8_t *outblock;     /* [hist + blkcap]                            */
+    uint8_t *outblock;     /* [hist + outcap]                            */
     uint8_t *dict;         /* [hist]                                     */
+    /* Blocks are decoded one after another at `outpos`, so that each
+     * one's history is simply the bytes before it, and the window slides
+     * only when the next block would not fit — once per `outcap / blkcap`
+     * blocks rather than once per block. See now_next_block. */
+    uint32_t outcap;       /* bytes after the history: slots * blkcap    */
+    uint32_t outpos;       /* where the next block decodes, >= hist      */
     /* Sized from the archive's largest fork rather than from the
      * format's ceilings — see unc_now_extract. hist <= NOW_HISTORY and
      * blkcap <= st->blkcap, always. */
@@ -452,10 +467,26 @@ static int now_next_block(NowStream *st)
 {
     UncCtx *c = st->c;
     uint8_t rec[8];
-    uint8_t *outstart = st->outblock + st->hist;
+    uint8_t *outstart;
     uint32_t offset, length, i;
     int32_t out;
     int flags, first, err;
+
+    /* The window slides by the block's length: what was written at
+     * outstart ends up just below it, and the last 32 KB become the
+     * history for the next block. Done HERE, before the next block, and
+     * only when that block would not fit after the last one — the
+     * previous block has been served in full by then (now_fork drains
+     * `avail` before asking for another), so nothing live is moved.
+     * With one slot this runs every block, as it always did; with more
+     * it runs once per slot-full, and the copy was 19 % of the largest
+     * run in the corpus (callgrind, 2026-09-18). */
+    if (st->outpos + st->blkcap > st->hist + st->outcap) {
+        uint8_t *from = st->outblock + st->outpos - st->hist;
+        for (i = 0; i < st->hist; i++) st->outblock[i] = from[i];
+        st->outpos = st->hist;
+    }
+    outstart = st->outblock + st->outpos;
 
     for (;;) {
         uint32_t nextoffset, padding;
@@ -482,8 +513,10 @@ static int now_next_block(NowStream *st)
     /* A block that starts a stream reaches back into the history the
      * PREVIOUS stream left behind. The reference calls this absurd and
      * does it anyway; so do we, because the bytes require it. */
-    if (first)
-        for (i = 0; i < st->hist; i++) st->outblock[i] = st->dict[i];
+    if (first) {
+        uint8_t *hist = outstart - st->hist;
+        for (i = 0; i < st->hist; i++) hist[i] = st->dict[i];
+    }
 
     if (c->io->seek(c->io->ctx, offset) < 0) return UNC_ERR_IO;
 
@@ -507,7 +540,7 @@ static int now_next_block(NowStream *st)
     } else if (flags & 0x40) {                    /* new LZSS */
         if (unc_read_full(c->io, st->inblock, (int32_t)length) != UNC_OK)
             return UNC_ERR_TRUNCATED;
-        out = now_newlzss(st->inblock, length, st->outblock, outstart,
+        out = now_newlzss(st->inblock, length, outstart - st->hist, outstart,
                           st->blkcap, st->cd, &err);
     } else if (flags & 0x1F) {                    /* LZSS only */
         if (unc_read_full(c->io, st->inblock, (int32_t)length) != UNC_OK)
@@ -535,16 +568,17 @@ static int now_next_block(NowStream *st)
     err = unc_progress_add(&c->ps, length);
     if (err != UNC_OK) return err;
 
-    /* The window slides by the block's length: what was written at
-     * outstart ends up just below it, and the last 32 KB become the
-     * history for the next block. */
-    for (i = 0; i < st->hist; i++)
-        st->outblock[i] = st->outblock[i + (uint32_t)out];
-    if (first)
-        for (i = 0; i < st->hist; i++) st->dict[i] = st->outblock[i];
+    /* The dictionary cache the NEXT stream starts from is the last
+     * `hist` bytes ending where this block ends, history included when
+     * the block is shorter than that. */
+    if (first) {
+        const uint8_t *tail = outstart + (uint32_t)out - st->hist;
+        for (i = 0; i < st->hist; i++) st->dict[i] = tail[i];
+    }
 
-    st->avail = outstart - out;
+    st->avail = outstart;
     st->availlen = (uint32_t)out;
+    st->outpos += (uint32_t)out;
     return UNC_OK;
 }
 
@@ -659,18 +693,32 @@ int unc_now_extract(UncCtx *c)
          * of headroom, on an application that grew twenty-four in two
          * versions. Now the entries are still walked and named, and each
          * one that needs the buffer fails on its own. */
+        /* Room for several blocks after the history, so the window slides
+         * once per slot-full instead of once per block (now_next_block).
+         * NOW_SLOTS first, then fewer, then one — the shape the archive
+         * always had — so a small machine pays nothing it cannot afford:
+         * every extra slot is blkcap more of this one per-archive
+         * allocation, 32 KB at the ceiling. Bought for the largest run in
+         * the corpus, where the slide was 19 % (DECISIONS.md 2026-09-19). */
         mem = NULL;
+        st.outcap = st.blkcap;
         if (!c->opt.list_only) {
-            mem = (uint8_t *)unc_alloc(c->al, (uint32_t)sizeof *st.cd
-                                       + st.incap + st.hist + st.blkcap
-                                       + st.hist);
+            uint32_t slots;
+            for (slots = NOW_SLOTS; slots >= 1; slots >>= 1) {
+                st.outcap = slots * st.blkcap;
+                mem = (uint8_t *)unc_alloc(c->al, (uint32_t)sizeof *st.cd
+                                           + st.incap + st.hist + st.outcap
+                                           + st.hist);
+                if (mem) break;
+            }
         }
         st.c = c;
+        st.outpos = st.hist;
         if (mem) {
             st.cd       = (struct NowCodes *)(void *)mem;
             st.inblock  = mem + sizeof *st.cd;
             st.outblock = st.inblock + st.incap;
-            st.dict     = st.outblock + st.hist + st.blkcap;
+            st.dict     = st.outblock + st.hist + st.outcap;
             for (i = 0; i < st.hist; i++) st.dict[i] = 0;
         } else {
             st.cd = NULL;

@@ -200,6 +200,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-18 (the floppy that was full) — a 40-byte gap that was written up as 62 KB, and a refusal that was a full disk
 - 2026-09-19 (three bytes hold a position) — the transform vector at three bytes an entry, and the price it was allowed to have
 - 2026-09-19 (the seventh that was measured) — `UNC_HOT` on Compact Pro, priced in ticks before it was bought
+- 2026-09-19 (the slide that ran every block) — Now Compress's block slots, and the `UNC_HOT` that bought nothing
 
 ---
 
@@ -11674,4 +11675,55 @@ differential suite covers the code path on Linux at the same optimisation
 level, which is the point of marking functions rather than files). And that
 Now Compress should follow: its three hot functions cost 1,152 B and its
 history slide is the larger lever there, so that one waits for the slot.
+
+---
+
+## 2026-09-19 (the slide that ran every block) — Now Compress's block slots, and the `UNC_HOT` that bought nothing
+
+**Claim (measured).** Now Compress decodes into a buffer of history plus
+room for four blocks, decoding each block directly after the last so its
+history is simply the bytes before it, and slides the window only when
+the next block would not fit. It used to slide after every block — copy
+the last 32 KB to the front, one byte at a time — and every block's
+output is at most 32 KB, so that was one byte copied per byte produced:
+19 % of `derived-SyntheticReferences2.0.sea`, the largest run in the
+corpus, on Linux (callgrind, 2026-09-18).
+
+| | Linux Ir | Mac Plus engine ticks |
+|---|---|---|
+| `derived-SyntheticReferences2.0.sea` | −15.2 % | not run: 9.9 MB out, half an hour at 7 MHz |
+| `derived-Expand_Now_1.0.1.sea` | −12.7 % | **945 → 793, −16.1 %** |
+
++32 B of 68000 code. The three Now Compress fixtures are byte-exact against
+the oracle, and `tools/run_now.py`'s thirteen generated archives — every
+block shape, the dictionary cache carried between streams, both forks in
+one stream — grade the two things this could break: a block whose history
+must be the previous stream's last 32 KB (`dict`), and a back-reference
+that reaches into the history. The reach limit passed to the decoder is
+the block's own history, not the whole buffer, so a corrupt offset is
+refused exactly where it was before.
+
+**Memory, and the shape that keeps the floor.** The buffer is the engine's
+only per-archive allocation. Four slots ask 235,568 B; when the allocator
+refuses, two slots ask 170,032 B, then one asks 137,264 B — the request the
+archive always made — so the set of archives that open is unchanged on
+every tier, and the 512 KB tier's 186 KB budget lands on two slots. The
+slot count is a fact about the machine, not the archive, and it is decided
+once per archive before any entry is read. The shell's "Needs NK more"
+message is not reached by the refused first attempts, because it is shown
+only when an entry actually failed (M46).
+
+**The `UNC_HOT` marks were measured on the same run and bought nothing.**
+`now_newlzss`, `now_next_block` and `now_fork` at -O3: 793 → 795 ticks,
++0.3 %, for +1,152 B. So Compact Pro's two functions gained 14.8 % from
+the same attribute a few hours earlier and Now Compress's three gained
+nothing, which is the rule the 2026-08-30 entry states — a result on one
+file is a result about that file — applied in the other direction. Not
+taken, and the Mac build is the same size for it.
+
+**The transferable part.** The review had ranked Now Compress's `UNC_HOT`
+beside Compact Pro's on the strength of the same profile shape; the tick
+probe separated them in six minutes. A byte-copy loop is the one thing
+`-Os` already compiles as well as `-O3` does, and a copy that runs once
+per block is the one thing the optimiser cannot make run less often.
 

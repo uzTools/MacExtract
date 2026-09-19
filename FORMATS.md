@@ -61,7 +61,7 @@ under *Table notes*.
 | Split file (plain .001/.002) | extract | — (join only; the joined file is the next layer) | 3 generated sets, adjudicated against the bytes that were cut, `unar` where it can join, and our unsplit read | 8 KB | full |
 | StuffIt X (.sitx) | detect only | — | — (no fixture) | — | — |
 | DiskDoubler (DD, DDAR, DDA2) | extract | **all eleven**: 0 store, 1 Unix compress, 2/5 splay Huffman, 3 RLE90, 4 StuffIt Huffman, 6/9 AD LZSS, 7 Stac LZS, 8 Compact Pro, 10 DDn✦ | 88 fixtures (6 harvested + 82 CC0 files graded against their own originals, in `ci.sh` since 2026-08-21) + 19 BinHexed copies of those + 28 specimens (2 written by DiskDoubler 3.7 under Mini vMac, 2 off its distribution disk, 24 off Salient's 3.1.2 disk)✦ | 8–392 KB✦ | full |
-| Now Compress | extract | stored, LZSS, Huffman, Huffman+LZSS, "new" LZSS✧ | 2 real fixtures + 13 generated archives (all five shapes, adjudicated by `unar`); `synth-now-mixed.now` also has an `unar` manifest and is in the differential suite | 134 KB✧ | full |
+| Now Compress | extract | stored, LZSS, Huffman, Huffman+LZSS, "new" LZSS✧ | 2 real fixtures + 13 generated archives (all five shapes, adjudicated by `unar`); `synth-now-mixed.now` also has an `unar` manifest and is in the differential suite | 137 KB with one block slot, 235 KB with four✧ | full |
 | ARC / ArcMac (.arc) | extract | 1/2 store, 3 RLE90, 4 squeeze+RLE90, 5/6/7 crunch, 8 12-bit LZW+RLE90, 9 13-bit LZW, **0x0a crushed (PAK) and 0x0b distilled since 2026-08-25, 0x0a trimmed (ARC 7.x) and the ARC 7 container since 2026-08-25**, 0x7f compress; ArcMac's two-fork payload since 2026-08-16★★★; **garbled (password-XORed) members decrypted** | 10 generated archives (methods 1-9, adjudicated by `unar`) + 3 written by Debian's `arc` 5.21q; **2 real PAK specimens + 7 archives PAK 2.51 wrote under DOSBox** (`tools/pak.py`); `synth-arc-mixed.arc`, `arc2pak1.pak` and `derived-INTRECHO.pak` have manifests and are in the differential suite | 4–46.5 KB★ | full |
 | btoa (`xbtoa`/`.ascii`) | extract | — (base-85 ASCII armour; both the `xbtoa5` and the older `xbtoa Begin` framings)◆ | no corpus file and no second reader: graded against **btoa 5.2.1 itself**, which encodes the subjects `tools/run_btoa.py` decodes, **plus a stream written by Aladdin's own `btoa/atob Translator`** on an emulated Mac (`sitcrypt.py --btoa-send`)◆ | 12 KB | full |
 | base64 (`.b64`, `.mime`) | extract | — (bare, and the `begin-base64`/`====` framing sharutils writes; several documents in one file)◇ | no corpus file and no Macintosh specimen: graded against **deark** and, through the messages that carry it, **munpack 1.6** | 5 KB◇ | full |
@@ -3095,6 +3095,18 @@ position through `unc_bufin_tell`. A `NowBits` is always memory-backed,
 where that call reduces to `pos`: **−2.33 %** on that fixture, −0.7 % on
 `synth-now-mixed.now`.
 
+**Now Compress's block slots, 2026-09-19.** The history window slid by
+32 KB after every block, a byte copy that was 19 % of the largest run in
+the corpus; with room for four blocks it slides once per four.
+`derived-SyntheticReferences2.0.sea` **−15.2 %** of instructions,
+`derived-Expand_Now_1.0.1.sea` −12.7 %, and on the Plus the latter's
+engine time **945 → 793 ticks, −16.1 %**. +32 B of code; the per-archive
+buffer is 235,568 B with four slots and falls back to two (170,032 B) and
+one (137,264 B, the old shape) when the budget refuses, so nothing that
+opened stops opening. `UNC_HOT` on the three hot functions, measured on
+the same run: 0.3 % for 1,152 B, not taken (DECISIONS.md 2026-09-19,
+*the slide that ran every block*).
+
 **The three-byte transform vector, 2026-09-19.** Arsenic's fast path
 reads its inverse-BWT vector once per output byte, and an entry is now
 three bytes rather than four: `derived-Library_ISBN_Barcoder.sit` on the
@@ -3568,7 +3580,7 @@ brackets:
 | `derived-DD_Expand.sea` | DiskDoubler DDn (10) | 1 | 108,610 B (was 102,432) | 0 B | 270,362 B |
 | `derived-LHA_Expander_1.0.3.sea` | DiskDoubler DDn, folders | 5 | 116,802 B (was 110,624) | 69,776 B | 82,778 B |
 | `derived-Terrainman_2.0__.sea` | DiskDoubler DDn + delta-1 | 12 | 112,706 B (was 106,528) | 95,860 B | 245,265 B |
-| `derived-Expand_Now_1.0.1.sea` | Now Compress | 1 | 137,250 B (was 131,088) | 0 B | 88,942 B |
+| `derived-Expand_Now_1.0.1.sea` | Now Compress | 1 | 137,250 B (was 131,088; 235,568 B on Linux with four block slots since 2026-09-19, not re-run) | 0 B | 88,942 B |
 
 **The 3–6 KB each row gained is the lookup tables**, and it is bought back
 many times over: those same fixtures decode 30–47 % fewer instructions

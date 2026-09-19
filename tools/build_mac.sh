@@ -99,7 +99,12 @@ ls -la build/mac/MacExtract.APPL build/mac/MacExtract.bin build/mac/MacExtract.d
 # tick probe on a 7 MHz Mac Plus: engine 10,256 -> 8,735 ticks on
 # derived-XferIt_1.5b4.sea, -14.8 % of every Compact Pro extraction and of
 # DiskDoubler method 8 (DECISIONS.md 2026-09-19, the second entry).
-UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-150896}
+# Raised 2026-09-19 from 150,896 to 150,928: +32 B for Now Compress's block
+# slots, which slide the history window once per four blocks instead of
+# once per block: engine 945 -> 793 ticks on derived-Expand_Now_1.0.1.sea,
+# -16.1 %, on a 7 MHz Mac Plus. Its UNC_HOT marks were measured on the same
+# run at 0.3 % for 1,152 B and refused (DECISIONS.md 2026-09-19, third entry).
+UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-150928}
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
