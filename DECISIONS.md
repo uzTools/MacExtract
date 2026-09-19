@@ -207,6 +207,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-19 (the rank that was walked a byte at a time) — Arsenic from the write-up, a 68000 profile at last, and −36.7 % on the Plus
 - 2026-09-19 (the byte that went to two places at once) — Compact Pro's LZH and RLE stages fused, −31.7 % on a Mac Plus for +76 B
 - 2026-09-19 (the match that was walked twice) — static LZH and LArc rebuilt on lhasa, and the copy that goes to two places at once
+- 2026-09-19 (the buffer that became a length) — LZW from the public compress(1), and the array that was hiding 17.8 %
 
 ---
 
@@ -12212,3 +12213,159 @@ LGPL-2.1-or-later (NOTICE). That `-lh2-` or `-lh3-` moved — they have no
 permissive reference and `src/unc_lzdyn.c` is untouched. That this is
 clean-room: the author had read the XADMaster transcription this
 replaces.
+
+
+## 2026-09-19 (the buffer that became a length) — LZW from the public compress(1), and the array that was hiding 17.8 %
+
+**Item 5 of the shedding list, which predicted neutral.** The inventory
+read "doubtful — the chain walk is already tight" (OPEN_ITEMS.md). The
+walk was tight. The array it walked into was not, and only writing the
+file from a description instead of reading the transcription made that
+visible.
+
+**Where the format came from.** `reference/deark/src/fmtutil-lzw.c`
+(Jason Summers, MIT), already in `reference/` as the ARC oracle, is a
+complete account of the compress(1) stream: the clear code, the point at
+which the width grows, and the padding rule — codes are written eight at
+a time at one width, so a width change mid-group leaves the rest of the
+group to discard (`delzw_unixcompress_end_bitgroup`). XADMaster
+implements the same rule with the comment "God damn, this is dumb"; the
+new file cites a source that says WHY it is there. The algorithm is
+Welch's. `LZW.c` and `XADCompressHandle.m` are no longer sources of
+`src/unc_lzw.c` (NOTICE).
+
+**What the rewrite found.** A symbol's string is stored backwards —
+`chr[s]` is its last byte and `parent[s]` names the rest — so walking it
+produces the bytes in reverse. The old decoder staged the reversed
+string in a `capsymbols`-byte array and then copied it out backwards. On
+`popper-1.7.tar.Z` that copy alone was **1,212,620 of 6,832,171
+instructions, 17.8 %**, seven per output byte, and it exists only
+because the length is not known until the walk has finished.
+
+**So store the length.** `len[sym]` takes the byte per symbol the
+staging array used, which leaves the allocation exactly what it was:
+`cap * 4`, `parent` 2 + `chr` 1 + `len` 1. With the length in hand the
+walk writes straight into the caller's buffer from the far end
+backwards, and the string lands the right way round with no second pass
+over it.
+
+Three things had to hold for that byte to be free:
+
+- **One byte is not enough for a length.** It saturates at 255, and
+  `lzw_strlen` recovers the exact figure by walking UP the parents until
+  one of them did not saturate — length−254 steps, not a second walk of
+  the whole string.
+- **The new table entry needs the string's FIRST byte**, which used to
+  be read out of the staging array. It is the last byte the walk stores,
+  so the write hands it back. For a code that names the entry it is
+  itself about to define, that byte is the PREVIOUS string's first byte,
+  already in hand from the previous write.
+- **A string longer than the caller's buffer** used to sit in the array
+  between calls. It is now re-walked with the part already handed over
+  skipped, which is quadratic in the number of pieces — so it was
+  measured rather than reasoned about. ARC reads LZW through a 64-byte
+  buffer and splits 46 of `synth-arc-mixed.arc`'s 740 codes; that
+  fixture is still −1.7 % on Linux. popper splits 16 of 33,612.
+
+**Four axes.**
+
+| | old | new | |
+|---|---|---|---|
+| `popper-1.7.tar.Z`, Mac Plus engine ticks | 713 | 646 | **−9.4 %** |
+| `derived-xmasbeeps.sit`, Mac Plus engine ticks | 2,850 | 2,801 | **−1.7 %** |
+| `popper-1.7.tar.Z`, Linux Ir | 6,832,171 | 5,260,173 | −23.0 % |
+| `a2ps.V4.3.tar.Z`, Linux Ir | 3,413,007 | 2,767,512 | −18.9 % |
+| `ddtf-dd377dda-testfile.TIF` (DiskDoubler 1), Linux Ir | 2,581,333 | 2,133,022 | −17.4 % |
+| `derived-xmasbeeps.sit`, Linux Ir | 26,689,757 | 23,452,283 | −12.1 % |
+| `derived-EmpireBuilderDemo.sit`, Linux Ir | 28,397,076 | 25,924,370 | −8.7 % |
+| `synth-arc-mixed.arc`, Linux Ir | 1,926,042 | 1,893,798 | −1.7 % |
+| `CODE` | 151,836 | 151,976 | +140 B |
+| A5 | 38,660 | 38,648 | **−12 B** |
+| peak heap, all 113 LZW fixtures | — | — | identical, to the byte |
+
+**The Mac got a fraction of what Linux promised, and that is the part
+worth transferring.** −23.0 % of x86 instructions is −9.4 % of Mac Plus
+ticks on the same fixture, and −12.1 % is −1.7 %. What the rewrite
+removes is a byte copy with two pointer increments, about the cheapest
+thing a 68000 does; what remains is an indexed load from two arrays per
+output byte, about the dearest. The trap list already said Linux counts
+overstate the Plus — by about 2x for the `-lh1-` coder. Here it is 2.4x
+and 7x, so "overstates" is not a factor anybody should carry in their
+head: the Linux count RANKS a change, the tick probe PRICES it, and
+nothing else in this file should be read as doing both.
+
+**One shape refused, one taken against the Linux number.** Carrying ONE
+pending counter (bytes left) instead of two (length and position) reads
+better and costs 40 B of code to save 8 B of A5 — 32 B the wrong way,
+since both come off the same budget here. Refused.
+
+The other is the more interesting measurement. The first build was
++280 B; folding the two `lzw_strlen` call sites into one and turning the
+continuation loop into an `if` — it can only ever run once, because the
+piece it takes is the smaller of what is left and what fits, so one of
+the two always runs out — gave **128 B back and cost 1.5 to 3.0 % of
+Linux instructions**, because the symbol and the flag are now read from
+the struct once per code instead of held in registers at each site. On
+the Plus it is **−4 ticks on popper and +6 on xmasbeeps, both inside the
+±0.5 % two runs of one build differ by**. So it was taken: 128 B of a
+1 MB machine's budget is a measurement, and 1.5 % of an x86's
+instructions on this path is not.
+
+**One fixture in the brief exercises nothing.** It named `arc2pak1.pak`
+as "ARC's LZW methods"; instrumenting the decoder and sweeping the whole
+corpus says that archive never enters it — it is Crushed and Distilled —
+and its instruction count is byte-for-byte unchanged by this work. The
+one ARC fixture here that does reach LZW is `synth-arc-mixed.arc`. A
+fixture list written from what a format CAN use is not a list of what a
+file DOES use.
+
+**How it was graded.** `ci.sh` green; and the old and new engines held
+directly against each other over the **113 fixtures that reach the LZW
+decoder** — found by instrumenting the decoder and sweeping the corpus,
+not by guessing from extensions — identical exit code, identical
+messages, every extracted byte and identical peak heap on every one. The
+holdout was shown able to fail first: three one-token changes to the new
+file gave **113, 113 and 111** mismatches.
+
+**The path no archive reaches, and what now tests it.** The longest
+string anywhere in the corpus is **223 bytes**, so `lzw_strlen`'s
+resolving walk never runs in a shipped build on any file here — a
+tolerance whose only evidence would otherwise be our own output. `ci.sh`
+builds a variant at `UNC_LZW_LEN_MAX=4`, where nearly every string takes
+it; that variant is byte-exact on all 113. And it was shown to test
+something: breaking the resolving walk by one token changes **nothing at
+255 and 112 of 113 at 4**.
+
+**The canonical Huffman half, and the bug that came free with the
+reference.** `unc_canon_build_ext` and `unc_canon_decode` now follow
+RFC 1951 section 3.2.2 and puff.c (Mark Adler, zlib licence) rather
+than `XADPrefixCode.m` and macutils' `cpt.c`, and puff.c supplies
+something the old citation only had as a remark about one encoder: an
+INCOMPLETE code set is a legal outcome with a defined meaning, not a
+Compact Pro quirk. Byte-identical on the whole corpus and **0.00 % on
+Linux** on four fixtures that use it (Compact Pro, `-lh7-`, Now
+Compress, StuffIt) — a re-derivation, not a rewrite. It is −4 B of code
+and −20 B of A5, because puff's over-subscription check carries the
+code space LEFT as a counter instead of comparing a running total
+against a shifted constant.
+
+Carried over unchanged it would have been a defect. puff.c holds that
+counter in a signed `int` and tests it below zero, which is safe at its
+`MAXBITS` of 15 and is undefined at this file's `UNC_CANON_MAX_BITS` of
+**31**: two symbols declared at length 31 take the counter to `1 << 31`.
+The corpus cannot reach it — 18 bits is the deepest anything here goes,
+which is why 944 fixtures agreeing said nothing about it — so the
+boundary is a unit test now, and the test was shown to fail: with the
+signed form restored, the sanitizer build reports "left shift of
+1073741824 by 1 places cannot be represented in type 'int'". The check
+is made before the subtraction and the counter is unsigned. **A
+reference implementation's constants are part of what it assumes**, and
+this one was read carefully enough only on the second pass.
+
+**What is NOT claimed.** That the licence moves — twenty other files
+still transcribe XADMaster and the engine stays LGPL-2.1-or-later
+(NOTICE). That the `.Z` header parsing moved: that is `fmt_exo.c`, item
+6. That this is clean-room — the author had read the transcription being
+replaced. That the 1 MB budget figure of 648,100 B has been re-measured:
+it is still the 2026-08-31 number, and this row takes 160 B of it, as
+the four rows before it today took their own.

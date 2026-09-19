@@ -529,7 +529,7 @@ typedef struct UncLzw {
     uint8_t  *mem;          /* single allocation, see unc_lzw_init */
     uint16_t *parent;       /* [capsymbols] */
     uint8_t  *chr;          /* [capsymbols] */
-    uint8_t  *chain;        /* [capsymbols] reversed-chain staging */
+    uint8_t  *len;          /* [capsymbols] string length, 255 = "or more" */
     uint32_t  bitbuf;       /* LSB-first bit accumulator */
     int32_t   nbits;
     /* maxsymbols is the DECLARED ceiling (1 << maxbits) and governs
@@ -540,7 +540,12 @@ typedef struct UncLzw {
     int32_t   prevsymbol;
     int32_t   symbolsize;   /* current code width in bits */
     uint32_t  symbolcounter;
-    int32_t   chainlen, chainpos;
+    /* A string longer than the caller's buffer is handed over in
+     * pieces: pendsym/pendn/pende say which one and how far in. */
+    int32_t   pendsym, pendn, pende;
+    int32_t   pendtop;      /* the string ends with topbyte (see unc_lzw.c) */
+    uint8_t   topbyte;
+    uint8_t   lastfirst;    /* first byte of the string last handed over */
     int       blockmode;
 } UncLzw;
 

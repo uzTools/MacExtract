@@ -171,6 +171,24 @@ fi
     curl -sL -o reference/notes/zstd_rfc8878.txt \
         "https://www.rfc-editor.org/rfc/rfc8878.txt"
 
+# DEFLATE — RFC 1951. Section 3.2.2 is the definition of a canonical
+# code-length Huffman code and the algorithm that assigns the codes, which
+# is what src/unc_huffman.c's unc_canon_build_ext follows. Nothing here
+# reads a deflate stream with it — zlib does that — it is the SPEC for a
+# code shape five of the Macintosh formats happen to use.
+[ -f reference/notes/rfc1951.txt ] || \
+    curl -sL -o reference/notes/rfc1951.txt \
+        "https://www.rfc-editor.org/rfc/rfc1951.txt"
+
+# puff.c (Mark Adler, zlib licence) — the reference deflate decoder that
+# ships in zlib's contrib/. construct() and decode() are the counts-and-
+# offsets build and the length walk in src/unc_huffman.c, and construct()
+# is also where "an incomplete code is legal, not an error" is written
+# down as a contract rather than as a remark about one encoder.
+[ -f reference/notes/puff.c ] || \
+    curl -sL -o reference/notes/puff.c \
+        "https://raw.githubusercontent.com/madler/zlib/v1.3.1/contrib/puff/puff.c"
+
 # brotli — RFC 7932, kept for what it does NOT contain. Section 9.1 is the
 # whole stream header: 1 to 7 bits of WBITS and nothing else. There is no
 # magic number, no signature, no version byte, so a raw brotli stream

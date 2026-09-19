@@ -210,6 +210,21 @@ make BUILD=build/ars1 \
 python3 tools/run_diff.py --macextract build/ars1/macextract \
     --format "StuffIt 5" --max-size 100000 || fail "StuffIt 5 diff at target=1"
 
+echo "=== variant 1c: the LZW length escape (forced) ==="
+# unc_lzw.c keeps each string's length in one byte and walks up the
+# parents when it saturates. The longest string in the corpus is 223
+# bytes, so no fixture reaches that walk: move the saturation point to 4
+# and nearly every string does. Byte-exactness is the whole test, and it
+# is a test — with the walk broken by one token this build differs on
+# 112 of the 113 LZW fixtures and the default build on none
+# (TESTING.md, *The LZW string length*).
+make BUILD=build/lzwlen CFLAGS="-O1 -g -fsanitize=address,undefined,alignment \
+     -fno-sanitize-recover=all -DUNC_LZW_LEN_MAX=4" all >/dev/null \
+     || fail "LZW length-escape build"
+./build/lzwlen/unit_tests || fail "unit tests (LZW length escape)"
+MACEXTRACT=build/lzwlen/macextract sh tests/run_diff.sh \
+    || fail "diff tests (LZW length escape)"
+
 echo "=== variant 3b: Mac sink (native ASan + big-endian m68k) ==="
 sh tests/run_mac_sink.sh || fail "mac sink tests"
 

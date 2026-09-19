@@ -149,7 +149,23 @@ ls -la build/mac/MacExtract.APPL build/mac/MacExtract.bin build/mac/MacExtract.d
 # specimens (DECISIONS.md 2026-09-19, the match that was walked twice).
 # Two cheaper shapes were measured and refused there, and UNC_HOT on the
 # new copy loop cost 416 B for 3.8 % MORE instructions.
-UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-151836}
+# Raised 2026-09-19 from 151,836 to 151,976: +140 B for the LZW decoder
+# rewritten on the public compress(1) description (and −8 B from the
+# canonical Huffman codes rewritten on RFC 1951, in the same commit). The
+# decoder knows each string's LENGTH before it walks it, so it writes
+# straight into the caller's buffer from the far end instead of staging the
+# reversed string and copying it out; that copy was 17.8 % of a `.Z` run.
+# On a 7 MHz Mac Plus, engine 713 → 646 ticks (−9.4 %) on
+# `popper-1.7.tar.Z` and 2,850 → 2,801 (−1.7 %) on `derived-xmasbeeps.sit`
+# — a fraction of the −23.0 % and −12.1 % the Linux counts showed, because
+# the byte copy removed is what a 68000 does cheapest. Peak heap identical
+# on all 113 fixtures that reach the decoder, because the length lives in
+# the byte per symbol the staging array used to be (DECISIONS.md
+# 2026-09-19, the buffer that became a length). Two shapes measured and
+# refused there; a third — 128 B cheaper here for 1.5-3 % more Linux
+# instructions and NOTHING a tick probe can see — was taken, which is what
+# this ceiling is for.
+UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-151976}
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -174,7 +190,13 @@ UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-151836}
 # 2026-09-19: NOT raised for the LZH rewrite above, which took the A5 world
 # from 38,640 to 38,660 B — 20 B of the 28 B of slack the same day's Compact
 # Pro work left under this ceiling, and the slack is what a ratchet is for.
-UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-38668}
+# LOWERED 2026-09-19 from 38,668 to 38,648 with the LZW and Huffman rewrite
+# above: +8 B from the LZW decoder's new state and −20 B from the canonical
+# Huffman build, which carries the code space left as a counter (puff.c's
+# `left`, unsigned here) instead of comparing a running total against a
+# shifted constant. Net −12 B, and a ratchet is set at the size on the day,
+# so it is locked in.
+UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-38648}
 SIZE="$TOOLCHAIN/bin/m68k-apple-macos-size"
 GDB=build/mac/MacExtract.code.bin.gdb
 # A ceiling that is not a number compares as nothing and the check passes

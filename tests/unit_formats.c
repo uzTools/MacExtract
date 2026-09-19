@@ -450,6 +450,23 @@ static void test_canon(void)
     /* Over-subscribed code -> rejected at build time. */
     lens[0] = 1; lens[1] = 1; lens[2] = 1;
     CHECK(unc_canon_build(&cn, lens, 3) == UNC_ERR_CORRUPT);
+
+    /* The deepest length the type allows. UNC_CANON_MAX_BITS is 31, so
+     * the code space reaches 1 << 31 here — which is not an int32_t, and
+     * carrying it signed the way puff.c does at 15 bits is undefined
+     * behaviour the sanitizer build catches. Two symbols at 31 bits are
+     * a legal (very incomplete) code; 1 << 31 of them would not be, and
+     * nothing can declare that many, so the check being made BEFORE the
+     * subtraction is what keeps the arithmetic in range. */
+    {
+        uint8_t deep[2];
+        deep[0] = UNC_CANON_MAX_BITS; deep[1] = UNC_CANON_MAX_BITS;
+        CHECK(unc_canon_build(&cn, deep, 2) == UNC_OK);
+        CHECK(cn.maxlen == UNC_CANON_MAX_BITS);
+        /* One length past it is refused rather than truncated. */
+        deep[0] = UNC_CANON_MAX_BITS + 1;
+        CHECK(unc_canon_build(&cn, deep, 2) == UNC_ERR_CORRUPT);
+    }
 }
 
 /* Build a one-entry RLE-only Compact Pro archive around `comp`, with

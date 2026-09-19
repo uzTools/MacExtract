@@ -1,10 +1,24 @@
 /*
- * unc_huffman.c — MSB-first bit reader + bit-serialized Huffman trees.
+ * unc_huffman.c — MSB-first bit reader, bit-serialized Huffman trees,
+ * and canonical (code-length) Huffman codes.
  *
- * Sources:
- *   reference/XADMaster/XADStuffItHuffmanHandle.m (parseTree),
- *   reference/macutils/macunpack/de_huffman.c (read_sub_tree,
- *   getbit_be) — LGPL, see NOTICE.
+ * Two unrelated things share this file because they share the bit
+ * reader, and they have different sources.
+ *
+ * The bit-serialized TREE — a node written as a bit and a leaf as a bit
+ * plus its byte — is a StuffIt and Compact Pro container fact with no
+ * public description: reference/XADMaster/XADStuffItHuffmanHandle.m
+ * (parseTree) and reference/macutils/macunpack/de_huffman.c
+ * (read_sub_tree, getbit_be) — LGPL, see NOTICE.
+ *
+ * The CANONICAL codes owe neither, since 2026-09-19. Sources:
+ *   reference/notes/rfc1951.txt section 3.2.2 — the definition: codes
+ *     of one length are consecutive in symbol order, shorter codes come
+ *     first, and the shortest is all zeros, so the code lengths alone
+ *     determine every code;
+ *   reference/notes/puff.c (Mark Adler, zlib licence) — construct() and
+ *     decode(), the counts-and-offsets build and the walk that carries
+ *     `first` and `index` along with the code.
  *
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
@@ -213,14 +227,19 @@ UNC_HOT int unc_huff_decode(const UncHuff *h, UncBitIn *bi)
 
 /* ------------------------------------------------------------------ */
 /* Canonical (code-length) Huffman codes                              */
-/* Codes assigned in (length, symbol) order, shortest code all-zeros, */
-/* decoded MSB-first. Sources:                                        */
-/*   reference/XADMaster/XADPrefixCode.m (initWithLengths:...         */
-/*   shortestCodeIsZeros:YES) and                                     */
-/*   reference/macutils/macunpack/cpt.c (cpt_readHuff: sort by        */
-/*   (BitLength, Value) then assign codes; "Compactor allows unused   */
-/*   trailing codes in its Huffman tree", i.e. incomplete codes are   */
-/*   legal and pad out the deep end) — LGPL, see NOTICE.              */
+/*                                                                    */
+/* RFC 1951 section 3.2.2 defines them and gives the assignment: count */
+/* the codes of each length, take the first code of each length as     */
+/* (previous first + previous count) << 1 starting from zero, and hand */
+/* them out in symbol order within a length. puff.c's construct() is   */
+/* the same thing with the symbol table sorted by (length, symbol) and */
+/* an over-subscription check carried as the code space left, and its  */
+/* decode() is the walk at the bottom of this file. See the file head. */
+/*                                                                    */
+/* An INCOMPLETE set — code space left over — is legal here and is not */
+/* rejected: puff.c returns it as a positive result rather than an     */
+/* error, and Compact Pro relies on it, writing trailing codes it      */
+/* never uses. What is left over simply decodes as invalid.            */
 /* ------------------------------------------------------------------ */
 
 int unc_canon_build(UncCanon *c, const uint8_t *lengths, int32_t nsyms)
@@ -237,12 +256,14 @@ int unc_canon_build_ext(UncCanon *c, const uint8_t *lengths, int32_t nsyms,
                         int16_t *symbuf, int32_t symcap)
 {
     int32_t i, l;
-    uint32_t code, space;
-    uint16_t idx[UNC_CANON_MAX_BITS + 1];
+    uint32_t code, left;
+    uint16_t offs[UNC_CANON_MAX_BITS + 1];
 
     if (nsyms > symcap) return UNC_ERR_CORRUPT;
     c->sym = symbuf;
 
+    /* Count the codes of each length. A length of zero is a symbol that
+     * does not appear and gets no code (RFC 1951 step 3). */
     for (l = 0; l <= UNC_CANON_MAX_BITS; l++) c->count[l] = 0;
     c->maxlen = 0;
     for (i = 0; i < nsyms; i++) {
@@ -253,26 +274,37 @@ int unc_canon_build_ext(UncCanon *c, const uint8_t *lengths, int32_t nsyms,
         if (len > c->maxlen) c->maxlen = (int16_t)len;
     }
 
-    /* First code value at each length (canonical, all-zeros start),
-     * and over-subscription check. Incomplete codes are allowed:
-     * leftover code space simply decodes as invalid. */
+    /* The first code of each length, and the code space. One bit doubles
+     * the codes available and the codes of this length spend that many
+     * of them; spending more than there are is over-subscription and the
+     * lengths cannot be a prefix code. Having some left is incomplete,
+     * which is allowed — see the note above.
+     *
+     * puff.c carries `left` signed and tests it below zero. Here it is
+     * UNSIGNED and the test is made before the subtraction, because
+     * UNC_CANON_MAX_BITS is 31, not puff's 15: a stream declaring a
+     * length of 31 takes `left` to 1 << 31, which is not an int32_t.
+     * The rejections are the same ones. */
     code = 0;
-    space = 0;
+    left = 1;
     for (l = 1; l <= c->maxlen; l++) {
         c->first[l] = code;
         code = (code + c->count[l]) << 1;
-        space = (space << 1) + c->count[l];
-        if (space > (1u << l)) return UNC_ERR_CORRUPT;
+        left <<= 1;
+        if (c->count[l] > left) return UNC_ERR_CORRUPT;
+        left -= c->count[l];
     }
 
-    /* Symbol table in (length, symbol) order. */
-    idx[1] = 0;
+    /* Where each length's codes start in the symbol table, then the
+     * symbols themselves in (length, symbol) order. cbase keeps those
+     * starts, which is what the fast path indexes with. */
+    offs[1] = 0;
     for (l = 1; l < c->maxlen; l++)
-        idx[l + 1] = (uint16_t)(idx[l] + c->count[l]);
-    for (l = 1; l <= c->maxlen; l++) c->cbase[l] = idx[l];
+        offs[l + 1] = (uint16_t)(offs[l] + c->count[l]);
+    for (l = 1; l <= c->maxlen; l++) c->cbase[l] = offs[l];
     for (i = 0; i < nsyms; i++) {
         int len = lengths[i];
-        if (len) c->sym[idx[len]++] = (int16_t)i;
+        if (len) c->sym[offs[len]++] = (int16_t)i;
     }
 
     /* The fast table. Codes of one length are consecutive from
@@ -386,6 +418,10 @@ UNC_HOT int unc_canon_decode(const UncCanon *c, UncBitIn *bi)
         }
     }
 
+    /* puff.c's decode(), with `first` read out of the table this build
+     * already has rather than carried along: take one more bit, and if
+     * the code is inside this length's run it names the symbol at that
+     * offset from where the length's codes start. */
     for (l = 1; l <= c->maxlen; l++) {
         int bit = unc_bitin_bit(bi);
         if (bit < 0) return -1;
@@ -394,5 +430,5 @@ UNC_HOT int unc_canon_decode(const UncCanon *c, UncBitIn *bi)
             return c->sym[base + (code - c->first[l])];
         base += c->count[l];
     }
-    return -1;   /* invalid (possibly "unused trailing") code */
+    return -1;   /* invalid: a code the incomplete set does not use */
 }

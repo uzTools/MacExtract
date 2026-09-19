@@ -621,6 +621,30 @@ input; it is Mac-side and no Linux harness observes it. (c) *The middle of
 the dial.* Only `target=1024` (forced) and `target=1` are pinned; the values
 in between are reached only incidentally by the budget run.
 
+## The LZW string length — a build at `UNC_LZW_LEN_MAX=4`
+
+Since 2026-09-19 `unc_lzw.c` stores each symbol's string length in one
+byte, saturating at 255, and `lzw_strlen` walks up the parents to
+recover the exact figure when it has. **Nothing in the corpus reaches
+that walk**: the longest string anywhere, over all 113 fixtures that use
+the decoder, is 223 bytes (measured with an instrumented build). So
+`ci.sh` builds a variant with the saturation point at 4, where nearly
+every string takes it, and requires it byte-exact:
+
+    make BUILD=build/lzwlen CFLAGS="... -DUNC_LZW_LEN_MAX=4" all
+
+**It was shown to test something.** Breaking the resolving walk by one
+token (`n += len[s]` to `n += 1`) leaves the default build byte-exact on
+all 113 fixtures and makes the `LEN_MAX=4` build differ on 112 of them.
+Without that demonstration the variant would be a minute of CI proving
+that a path nothing enters still does not.
+
+What it cannot see: the corpus has one ARC fixture that reaches LZW, so
+the re-walk that hands a long string over in pieces — ARC reads through
+a 64-byte buffer — is graded on 46 splits in `synth-arc-mixed.arc` and
+on whatever `tools/run_arc.py` generates, not on a real archive with
+long strings.
+
 ## The LZW table bound — three builds, because one proves nothing
 
 `unc_lzw_init` sizes its table from the input rather than from `maxbits`

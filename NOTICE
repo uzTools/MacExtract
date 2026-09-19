@@ -15,7 +15,14 @@ This project's decoders are transcriptions/ports of algorithms from:
     static methods: since 2026-09-19 `src/fmt_lzh.c`'s decoders for
     -lh4- .. -lh7- and for LArc's -lz5-/-lzs- are written from lhasa
     (below); XADLZHParser.m remains the source of that file's header
-    walk and CRC contract.
+    walk and CRC contract. Nor the LZW decoder: since 2026-09-19
+    `src/unc_lzw.c` is written from deark's `src/fmtutil-lzw.c` (below)
+    and Welch's algorithm, and neither `LZW.c` nor
+    `XADCompressHandle.m` is a source of it. Nor the canonical
+    code-length Huffman codes in `src/unc_huffman.c`, which follow
+    RFC 1951 section 3.2.2 and puff.c (below) rather than
+    XADPrefixCode.m; the bit-serialized TREE in that same file still
+    cites XADStuffItHuffmanHandle.m, and so does macutils.
     Files that transcribe XADMaster code carry a
     "Source: reference/XADMaster/<file>" comment.
 
@@ -63,6 +70,13 @@ This project's decoders are transcriptions/ports of algorithms from:
     states the facts it took and cites them — and deark's own
     documentation of the format (entropymine.wordpress.com,
     "ARC/PAK's Distilled compression scheme") is cited alongside it.
+    Since 2026-09-19 deark is also the source of `src/unc_lzw.c`, the
+    Unix compress(1) LZW decoder: `src/fmtutil-lzw.c` documents the
+    stream — the clear code, where the code width grows, and the rule
+    that codes are written eight at a time at one width, so a width
+    change mid-group leaves padding to discard. The algorithm is
+    Welch's. Again no code was copied, and `LZW.c` and
+    `XADCompressHandle.m` are no longer sources of that file.
     A build of deark is also the oracle for that method in the test
     suite (TESTING.md, tools/build_deark.sh): test-time only, never
     linked into anything shipped.
@@ -186,6 +200,18 @@ This project's decoders are transcriptions/ports of algorithms from:
     the only public specification of the StuffIt 5 "Arsenic"
     (BWT + MTF + arithmetic coding) method.
     http://www.russotto.net/arseniccomp.html
+
+  * RFC 1951 (DEFLATE, L. Peter Deutsch, 1996) and puff.c (Mark Adler,
+    zlib licence) — REFERENCES ONLY, for the canonical code-length
+    Huffman codes in `src/unc_huffman.c`. Section 3.2.2 defines the
+    code shape and gives the assignment; puff.c's `construct()` and
+    `decode()` are the build and the walk, and its contract that an
+    INCOMPLETE code set is a legal outcome rather than an error is what
+    Compact Pro relies on. No code was copied, neither is committed
+    (`tools/fetch_references.sh` fetches them) and neither is linked
+    into anything shipped. The bit-serialized Huffman TREE in the same
+    file is a different thing with no public description and still
+    cites XADMaster and macutils.
 
   * CiderPress2, by Andy McFadden (Apache-2.0), and Apple's own
     `DartIntf.h`, by Ken McLeod (© 1987-1994 Apple Computer, Inc.) —

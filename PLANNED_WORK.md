@@ -199,25 +199,7 @@ not up (24 KB today).
 
 ## Item 4 — static LZH from lhasa (ISC) — DONE 2026-09-19 by the session in `/home/claude/unclassic` (DECISIONS.md, *the match that was walked twice*)
 
-## Item 5 — LZW from Welch, and the canonical code from any textbook
-
-**Files:** `src/unc_lzw.c`, `src/unc_huffman.c` (`unc_canon_build_ext`,
-`unc_canon_decode`; `unc_huff_read_tree` is macutils' as much as
-XADMaster's).
-
-Licence-only; expect neutral. The compress(1) stream is public (9–16 bit
-codes, LSB-first, code 256 clears in block mode, the 8-code-group
-padding after a clear that XADMaster calls "dumb" and that is a fact
-about compress). The chain-walked-once and width-schedule sizing are ours
-and stay. Write the decoder from the algorithm, keep the interface, A/B
-against the current file on `popper-1.7.tar.Z`, `derived-xmasbeeps.sit`
-(StuffIt method 2), `arc2pak1.pak` (ARC's LZW methods), DiskDoubler
-method 1. If it is not at least equal in ticks, keep the old one and
-record the attempt.
-
-**TAKEN 2026-09-19 by the session in `/home/claude/unclassic`** (the main
-checkout, free since item 4 landed). No other session should touch
-`src/unc_lzw.c` or `src/unc_huffman.c` until this row is struck.
+## Item 5 — LZW from Welch, and the canonical code from any textbook — DONE 2026-09-19 (DECISIONS.md, *the buffer that became a length*)
 
 ## Item 6 — re-cite the container parsers
 

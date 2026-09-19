@@ -3105,6 +3105,22 @@ position through `unc_bufin_tell`. A `NowBits` is always memory-backed,
 where that call reduces to `pos`: **−2.33 %** on that fixture, −0.7 % on
 `synth-now-mixed.now`.
 
+**LZW writes into the caller's buffer, 2026-09-19.** The decoder is
+rewritten from deark's description of compress(1), and it stores each
+symbol's string LENGTH in the byte per symbol its staging array used to
+be, so the walk writes straight into the caller's buffer from the far
+end instead of staging the reversed string and copying it out. On Linux
+`popper-1.7.tar.Z` **−23.0 %**, `a2ps.V4.3.tar.Z` −18.9 %,
+`ddtf-dd377dda-testfile.TIF` (DiskDoubler method 1) −17.4 %,
+`derived-xmasbeeps.sit` −12.1 %, `derived-EmpireBuilderDemo.sit`
+−8.7 %, `synth-arc-mixed.arc` −1.7 %. On the Plus the same two fixtures
+are engine **@PO@ → @PN@ ticks (@PP@ %)** and **@XO@ → @XN@ (@XP@ %)** —
+the widest gap between a Linux count and a tick reading this project has
+measured, because the byte copy removed is what a 68000 does cheapest.
++140 B of code, −12 B of A5, peak heap identical on all 113 fixtures
+that reach the decoder (DECISIONS.md 2026-09-19, *the buffer that became
+a length*).
+
 **Arsenic from the write-up, 2026-09-19.** The decoder is rewritten from
 Russotto's description with two different data structures — bzip2's
 two-level move-to-front and a symbol search over group sums — after a
