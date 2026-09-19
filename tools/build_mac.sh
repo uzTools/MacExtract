@@ -140,7 +140,16 @@ ls -la build/mac/MacExtract.APPL build/mac/MacExtract.bin build/mac/MacExtract.d
 # threshold that the entry above says is not there and that the first commit
 # left in the file set to 1, and −8 B for making cpt_rle_emit's error sticky
 # (+8 B of A5, so that half is free rather than cheap).
-UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-151696}
+# Raised 2026-09-19 from 151,696 to 151,836: +140 B for LZH's static and
+# LArc decoders rewritten from lhasa, with the match copied into the window
+# and the writer's staging buffer in one pass instead of walked out a call
+# per byte. −17.8 % of the 68000's instructions on aminet-lha_68k.lha,
+# −20.1 % on the -lh7- fixture and −46.4 % on LArc's long.lzs, engine
+# 3,527 → 3,046 ticks (−13.6 %) on a 7 MHz Mac Plus, peak heap identical on all 168 LZH
+# specimens (DECISIONS.md 2026-09-19, the match that was walked twice).
+# Two cheaper shapes were measured and refused there, and UNC_HOT on the
+# new copy loop cost 416 B for 3.8 % MORE instructions.
+UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-151836}
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -162,6 +171,9 @@ UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-151696}
 # in, so growing back into it is a decision too.
 # Raised 2026-09-19 from 38,652 to 38,668: +16 B with the same rewrite —
 # rodata alignment around the 64-byte length table, not a new table.
+# 2026-09-19: NOT raised for the LZH rewrite above, which took the A5 world
+# from 38,640 to 38,660 B — 20 B of the 28 B of slack the same day's Compact
+# Pro work left under this ceiling, and the slack is what a ratchet is for.
 UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-38668}
 SIZE="$TOOLCHAIN/bin/m68k-apple-macos-size"
 GDB=build/mac/MacExtract.code.bin.gdb

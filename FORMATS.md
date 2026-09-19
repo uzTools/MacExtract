@@ -1208,11 +1208,14 @@ MacLHA 2.24, LHa for Amiga/OS-2/OS-9/OSK/X68000, LHarc 1.13, LArc 3.33,
 LHMelt, LHArk, UNLHA32 — and `reference/lha` is LHa for UNIX 1.14i,
 the original, which this project can compile and run as an ENCODER.
 
-**Three graders, and they are not interchangeable** (TESTING.md):
-`unar` is XADMaster, which this decoder is transcribed from, so
-agreement with it establishes only that the copy was faithful; lhasa is
-an independent reading; LHa 1.14i writes archives whose plain text is
-already known. 137 archives are graded against `unar`, 142 against
+**Three graders, and they are not interchangeable** (TESTING.md), and
+**since 2026-09-19 which is which depends on the method.** `-lh4-` ..
+`-lh7-` and LArc's `-lz5-`/`-lzs-` are written FROM lhasa, so there
+lhasa only says the reading was faithful and `unar` is the independent
+one; the header walk, `-lh1-` and `-lh2-`/`-lh3-` are the other way
+round, because `XADLZHParser.m` is still what the walk follows.
+LHa 1.14i is independent of both, and writes archives whose plain text
+is already known. 137 archives are graded against `unar`, 142 against
 lhasa, 12 generated sets against their own input.
 
 **What the independent graders were worth**, in the first afternoon:
@@ -1268,7 +1271,9 @@ stored entry, 8 KB for LArc, 16–18 KB for -lh5- and -lh1-, 41 KB for
 -lh6-, and **74,128 B** for a -lh7- entry big enough to need the whole
 64 KB window (`lh7_long.lzh`, 1.2 MB). The window is sized from the
 entry rather than from the method, the way StuffIt method 13's is, so
-the -lh7- fixtures in the corpus cost 41 KB rather than 74.
+the -lh7- fixtures in the corpus cost 41 KB rather than 74. It is
+also half what lhasa allocates, whose ring doubles as its output
+buffer; this engine stages output separately.
 
 **`-lh2-` reads since 2026-08-25, and the encoder for it is this
 project's.** Both codes are adaptive there — the literal/length tree
@@ -3432,6 +3437,22 @@ fixture — the same ratio the EmpireBuilder rows show between the tick probe
 and the screenshot clock — so the tiers were not re-run and the relative
 figure is the one to read (DECISIONS.md 2026-09-19, *the seventh that was
 measured* and *the byte that went to two places at once*).
+
+**LZH was fused the same way, later the same day**, over
+`aminet-lha_68k.lha` — an `-lh5-` archive of 5 entries and 331,234 B, the
+largest LZH output in the corpus. It carries no `UNC_HOT` mark and gained
+nothing from one (below).
+
+| build | whole run | engine | File Manager |
+|---|---|---|---|
+| shipped | 3,650 ticks | 3,527 ticks (58.8 s) | 123 ticks |
+| the static and LArc decoders rebuilt on lhasa, the match fused | **3,182 ticks** | **3,046 ticks (50.8 s)** | 136 ticks |
+
+**−13.6 % of the engine for +140 B**, where the same build is −17.8 % of
+the 68000's INSTRUCTIONS on that fixture and −46.4 % on LArc's
+`long.lzs` — instructions rank, ticks price (DECISIONS.md 2026-09-19,
+*the match that was walked twice*). `UNC_HOT` on the new copy loop was
+measured there too: **+416 B for 3.8 % MORE instructions**, and refused.
 
 The archive that shows the run-length half of the same work is
 `derived-Guy_s_Mac_Consultants.cpt`, 57.8 % of whose output comes out of

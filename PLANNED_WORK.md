@@ -197,30 +197,7 @@ baseline has one per byte, which is a different situation — measure.
 (Compact Pro segments), DiskDoubler method 8 fixtures, ticks lower, heap
 not up (24 KB today).
 
-## Item 4 — static LZH from lhasa (ISC)
-
-**Files:** `src/fmt_lzh.c` (`lzh_static`, `lzh_read_code`,
-`lzh_read_literal_code`), possibly `src/unc_lzdyn.c` for `-lzs-`/`-lz5-`
-if they live there.
-
-`reference/lhasa/lib/` implements `-lh4-`..`-lh7-`, `-lzs-`, `-lz5-` under
-the ISC licence (`lh5_decoder.c`, `lh6_decoder.c`, `lh7_decoder.c`,
-`lz5_decoder.c`, `lzs_decoder.c`, `tree_decode.c`). Write from lhasa,
-keep our `UncCanon` fast tables and bit reader (they are ours and
-measured), keep MacLHA's MacBinary split and the window sizing from the
-entry. `-lh2-`/`-lh3-` have no permissive reference (lhasa has neither;
-LHa for UNIX's licence is its own) and no corpus archive: leave
-`unc_lzdyn.c` alone.
-
-**Fixtures:** the 8 `.lzh` fixtures and `tools/run_lzh.py` (182 archives
-from fourteen writers, plus LHa 1.14i's own sets). Ticks on
-`lhasa-unix114i-h2_lh7.lzh` (41 KB peak, `-lh7-`).
-
-**TAKEN 2026-09-19 by the session in `/home/claude/unclassic`** (the main
-checkout, free since item 2 landed). No other session should touch
-`src/fmt_lzh.c` or `src/unc_lzdyn.c` until this row is struck.
-**Acceptance:** all of the above byte-exact, ticks within noise or
-better, CODE not up.
+## Item 4 — static LZH from lhasa (ISC) — DONE 2026-09-19 by the session in `/home/claude/unclassic` (DECISIONS.md, *the match that was walked twice*)
 
 ## Item 5 — LZW from Welch, and the canonical code from any textbook
 

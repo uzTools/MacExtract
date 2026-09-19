@@ -963,8 +963,8 @@ and Mac type/creator codes).
 
 | grader | what it is | what it can catch |
 |---|---|---|
-| `unar` | XADMaster, which `src/fmt_lzh.c` is transcribed FROM | a transcription error, and nothing else — agreement here says the copy was faithful, not that the reading is right |
-| `lhasa` | an independent implementation, compiled out of `reference/lhasa` | a wrong reading that XADMaster shares |
+| `unar` | XADMaster, which `src/fmt_lzh.c`'s HEADER WALK is transcribed from — but not its decoders, which have been lhasa's since 2026-09-19 | on the walk, a transcription error and nothing else; on `-lh4-` .. `-lh7-` and LArc, a wrong reading that lhasa shares |
+| `lhasa` | an independent implementation, compiled out of `reference/lhasa` — and, since 2026-09-19, the source the decoders are written from | on the walk, a wrong reading that XADMaster shares; on the decoders, a transcription error and nothing else |
 | LHa for UNIX 1.14i | the ORIGINAL program, compiled out of `reference/lha` and used as an **encoder** | a decoder that agrees with both readers and still cannot read what the format's own writer emits |
 
 The run reports how many archives each grader adjudicated (137 and 142

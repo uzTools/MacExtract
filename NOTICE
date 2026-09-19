@@ -11,7 +11,11 @@ This project's decoders are transcriptions/ports of algorithms from:
     `src/sit_arsenic.c` is written from Matthew T. Russotto's public
     description of the format (reference/notes/arsenic_russotto.md),
     with a move-to-front in the two-level shape of bzip2's (Julian
-    Seward, BSD-style licence), written from the idea.
+    Seward, BSD-style licence), written from the idea. Nor LZH's
+    static methods: since 2026-09-19 `src/fmt_lzh.c`'s decoders for
+    -lh4- .. -lh7- and for LArc's -lz5-/-lzs- are written from lhasa
+    (below); XADLZHParser.m remains the source of that file's header
+    walk and CRC contract.
     Files that transcribe XADMaster code carry a
     "Source: reference/XADMaster/<file>" comment.
 
@@ -151,21 +155,32 @@ This project's decoders are transcriptions/ports of algorithms from:
     compiles it and decodes what it encodes). The names are mentioned,
     here and in the source. DECISIONS.md 2026-08-23 (btoa's licence).
 
+  * lhasa 0.4.0, by Simon Howard — https://github.com/fragglet/lhasa,
+    ISC licence. Since 2026-09-19 `src/fmt_lzh.c`'s decoders follow it
+    rather than XADMaster: `lh_new_decoder.c` and `tree_decode.c` for
+    -lh4- .. -lh7- (the block structure, the three code tables and the
+    offset encoding), `lh5_decoder.c` and `lh7_decoder.c` for the
+    alphabet and field widths, `lz5_decoder.c` and `lzs_decoder.c` for
+    LArc's two methods with their window preloads. The canonical-code
+    table and the bit reader those feed are this project's own, as is
+    the window sizing and MacLHA's MacBinary split. The change was made
+    for speed: this engine remains LGPL through its other XADMaster
+    transcriptions, that file's header walk included.
+    lhasa is also read for the header levels and used at test time as a
+    second decoder (`tools/run_lzh.py`); it is not committed
+    (`tools/fetch_references.sh` fetches it) and not linked into
+    anything shipped. Its ~160 test archives are the specimens that put
+    the format in scope; seven are fixtures, fetched by URL and never
+    committed, like every other fixture (fixtures/SOURCES.md).
+
   * LHa for UNIX 1.14i (Yoshizaki, Tagawa, Oki, Watazaki, Okamoto,
-    1989-2000) and lhasa 0.4.0 (Simon Howard, ISC licence) — both
-    REFERENCES ONLY for `src/fmt_lzh.c` and `src/unc_lzah.c`, which are
-    transcribed from XADMaster's LZH handles as above. LHa is read as
-    the original statement of the header levels and of LArc's two
-    methods, and lhasa as an independent reading of both; the file
-    comments say which fact came from which, and three of them were
-    settled by neither but by an archive (DECISIONS.md 2026-08-23,
-    LZH). Neither is committed — `tools/fetch_references.sh` fetches
-    them — and neither is linked into anything shipped: LHa is
-    compiled at test time as an ENCODER and lhasa as a second decoder
-    (`tools/run_lzh.py`). lhasa's ~160 test archives are the specimens
-    that put the format in scope; seven are fixtures, fetched by URL
-    and never committed, like every other fixture
-    (fixtures/SOURCES.md).
+    1989-2000) — a REFERENCE ONLY for `src/fmt_lzh.c` and
+    `src/unc_lzah.c`, read as the original statement of the header
+    levels, of LArc's two methods and of the static Huffman stage; the
+    file comments say which fact came from which, and three of them
+    were settled by neither reference but by an archive (DECISIONS.md
+    2026-08-23, LZH). Not committed, and compiled at test time as an
+    ENCODER only.
 
   * "Stuffit Method 15 compression format" by Matthew T. Russotto —
     the only public specification of the StuffIt 5 "Arsenic"

@@ -206,6 +206,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-19 (the DES that was only wearing a disguise) — StuffItDES folded onto standard DES's round, and the half of the hypothesis that was false
 - 2026-09-19 (the rank that was walked a byte at a time) — Arsenic from the write-up, a 68000 profile at last, and −36.7 % on the Plus
 - 2026-09-19 (the byte that went to two places at once) — Compact Pro's LZH and RLE stages fused, −31.7 % on a Mac Plus for +76 B
+- 2026-09-19 (the match that was walked twice) — static LZH and LArc rebuilt on lhasa, and the copy that goes to two places at once
 
 ---
 
@@ -12114,3 +12115,100 @@ one-byte fast path and nothing else, and in the whole corpus the
 largest such fork is 3,897 bytes. And no claim at all about the
 `--budget` behaviour, which cannot have moved: the peak is the same
 byte count on every fixture of both formats.
+
+
+---
+
+## 2026-09-19 (the match that was walked twice) — static LZH and LArc rebuilt on lhasa, and the copy that goes to two places at once
+
+**Claim (measured).** `src/fmt_lzh.c`'s remaining decoders — `-lh4-`
+.. `-lh7-` and LArc's `-lz5-`/`-lzs-` — are written from Simon Howard's
+lhasa (ISC) rather than `XADLZHStaticHandle.m` and `XADLArcHandles.m`,
+and a match no longer leaves the window a call at a time: the byte
+reaches the window and the writer's staging buffer from one register.
+Output is identical everywhere; a 68000 does 18–46 % fewer instructions
+for it.
+
+| | before | after | |
+|---|---|---|---|
+| `aminet-lha_68k.lha` (-lh5-, 331 KB out), Plus engine ticks | 3,527 | 3,046 | **−13.6 %** |
+| the same, Plus whole run | 3,650 | 3,182 | −12.8 % |
+| `aminet-lha_68k.lha`, 68000 instructions | 32,158,062 | 26,422,696 | **−17.8 %** |
+| `lhasa-unix114i-h2_lh7.lzh` (-lh7-), 68000 instructions | 1,742,747 | 1,392,054 | **−20.1 %** |
+| `larc333/long.lzs` (-lz5-), 68000 instructions | 58,726,028 | 31,484,585 | **−46.4 %** |
+| the same three, Linux `Ir` | 24.11 / 1.301 / 37.54 M | 24.14 / 1.272 / 28.08 M | +0.1 / −2.2 / **−25.2 %** |
+| peak heap, 168 LZH specimens | | | identical on Linux; 20,048 → 20,044 B on the Mac |
+| `fmt_lzh.c.obj`, 68000 -Os | 5,718 B | 5,858 B | +140 B |
+| the application's `CODE` | 151,696 B | 151,836 B | +140 B |
+| A5 world (data + bss) | 38,640 B | 38,660 B | +20 B |
+
+**What is lhasa's now.** The block structure and the three code tables
+(`lh_new_decoder.c`: `read_temp_table`, `read_code_table`,
+`read_offset_table`, `read_length_value`, `read_skip_count`,
+`start_new_block`, `read_offset_code`), the 510-symbol command alphabet
+and the two offset-field widths (`lh5_decoder.c`, `lh7_decoder.c`), and
+both LArc coders with their preload and their two START_OFFSETs
+(`lz5_decoder.c`, `lzs_decoder.c`). lhasa decodes a symbol by walking a
+tree built in an array (`tree_decode.c`, `build_tree`), which assigns
+codes in order of length and, within a length, in symbol order — a
+canonical code, which is what `UncCanon` already builds with a 10-bit
+lookup in front of it. That table and the bit reader stay: they are
+this project's and were measured in the 2026-08-24 pass. So are the
+window sizing, the MacBinary split and the header walk, which is still
+XADMaster's and says so.
+
+**Where the instructions went.** `unc_fork_put` was 12.4 % of an
+`-lh5-` extraction on a 68000 by itself — one out-of-line call per
+decoded byte, which at `-Os` GCC declines to inline — and the match
+loop around it re-masked two indices per byte. Now a match is cut into
+pieces bounded by the match, both ends of the circular window, the
+output still owed and the staging buffer, and the piece is copied
+through three `(An)+` cursors with none of those tests inside it. The
+literal path writes the same two places inline. `unc_fork_put` does not
+appear in the profile at all any more.
+
+**LArc gained most because it had least.** `-lz5-`'s commands are two
+bytes for a match of 3–18 and its window is 4 KB, so almost every byte
+of its output used to be a call; `long.lzs` is −46.4 %.
+
+**What the four instruments disagreed about, and which was right.**
+Linux `Ir` said +0.1 % on the `-lh5-` fixture, where the 68000 said
+−17.8 % — the opposite of the `-lh1-` row a few entries above, where
+Linux promised 18–24 % and the Plus delivered 10.1 %. x86 inlines the
+per-byte put into a block move and never had the call to lose. The
+proxy ranks; the machine prices.
+
+**Two things measured and NOT taken.**
+
+- **`UNC_HOT` on the new copy loop**: +416 B of `CODE` for **+3.8 %**
+  more 68000 instructions on `aminet-lha_68k.lha` (the -O3 loop spills
+  where the -Os one does not). Refused, like the Now Compress marks.
+- **Keeping the literal path on `unc_fork_put`** instead of writing the
+  staging buffer inline: 80 B of `CODE` cheaper but 16 B of A5 dearer,
+  and 3.1 % more instructions on `-lh5-`. Refused. Folding LArc's two
+  literal paths into one WAS taken: 72 B of `CODE` for 8 B of A5 and
+  2.1 % on `-lz5-` alone, which is the rarer format.
+
+**The window fill byte, which turned out not to matter.** lhasa and LHa
+1.14i fill the `-lh4-` .. `-lh7-` dictionary with SPACES and XADMaster
+with zeros; this file followed XADMaster. Only a stream that reads
+further back than it has written can tell the difference, and **none of
+the 166 specimens in reach can**: a build with each fill is identical in
+exit code, message and every extracted byte. The two references that
+describe the format agree, so the file now says spaces — for nothing,
+which is the honest size of the finding.
+
+**How it was graded.** `tools/run_lzh.py` green (182 archives against
+`unar` and against lhasa, 12 sets written by LHa 1.14i, the MacLHA 2.00
+specimen), `ci.sh` green, and the old and new engines held directly
+against each other: **177 LZH specimens** and the **whole 950-fixture
+corpus**, identical in exit code, in every message and in every
+extracted byte. That holdout was shown to be able to fail first — three
+one-token changes to the new code produced 6, 57 and 82 mismatches.
+
+**What is NOT claimed.** That the licence moves: the header walk, and
+twenty other files, still transcribe XADMaster, and the engine stays
+LGPL-2.1-or-later (NOTICE). That `-lh2-` or `-lh3-` moved — they have no
+permissive reference and `src/unc_lzdyn.c` is untouched. That this is
+clean-room: the author had read the XADMaster transcription this
+replaces.
