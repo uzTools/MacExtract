@@ -1764,7 +1764,15 @@ count that drops is the only signal there is.
 ## DART (`tools/run_dart.py`, in `ci.sh`)
 
 **The oracle is the encoder's input, not a second reader.** There is no
-second reader: `unar` has no DART parser and neither does `macunpack`.
+second reader among the oracles: `unar` has no DART parser and neither does
+`macunpack`. **Since 2026-09-19 there is one next door**: MacMount's
+`src/mm_lzhuf.c`, written from the published LZHUF for its own parked DART
+expansion, agrees with this engine byte for byte on four real "best"
+archives and 192 blocks — its two A/UX 3.0.1 disks (one of them the first
+real 72-block, 1.4 MB archive this engine had met) and ciderpress2's two
+(DECISIONS.md 2026-09-19, *the tree that was Yoshizaki's*). It is a
+cross-check run by hand, not a suite member, because those A/UX disks are
+MacMount's fixtures and not this repository's.
 What CiderPress2 publishes instead is `TestData/dart/` — two 800K disks
 that DART 1.5.3 compressed under MAME, each in BOTH of DART's methods,
 **with the source images beside them**. `tools/fetch_references.sh`

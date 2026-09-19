@@ -202,6 +202,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-19 (the seventh that was measured) — `UNC_HOT` on Compact Pro, priced in ticks before it was bought
 - 2026-09-19 (the slide that ran every block) — Now Compress's block slots, and the `UNC_HOT` that bought nothing
 - 2026-09-19 (the transient tables) — 6 KB of cipher tables built at key setup, and a bit convention fitted rather than transcribed
+- 2026-09-19 (the tree that was Yoshizaki's) — the -lh1- coder rebuilt on the published LZHUF, measured against MacMount's, and what it bought on three axes
 
 ---
 
@@ -11779,4 +11780,76 @@ than a transcription nobody re-checks.
 encrypted entry and read exactly as before is 512 word writes against a
 decode measured in seconds, and nothing in the corpus reaches the path at
 all. The Mac tiers were not re-run.
+
+---
+
+## 2026-09-19 (the tree that was Yoshizaki's) — the -lh1- coder rebuilt on the published LZHUF, measured against MacMount's, and what it bought on three axes
+
+**Claim (measured).** `src/unc_lzah.c`'s adaptive Huffman tree follows
+the published LZHUF program — Yoshizaki 1988, Okumura's comments 1989 —
+rather than XADMaster's `XADLZHDynamicHandle.m`, and every format on it
+is faster, smaller and lighter for it: StuffIt method 5, LZH -lh1-, ARC
+7.x Trimmed and DART's "best".
+
+| | before | after | |
+|---|---|---|---|
+| `test1-best` on a 7 MHz Mac Plus, engine ticks | 18,585 | 16,700 | **−10.1 %** |
+| `test1-best`, Linux Ir | 152,236,871 | 124,321,840 | −18.3 % |
+| A/UX 1.4 MB boot disk, Linux Ir | 458,688,059 | 363,420,205 | −20.8 % |
+| `lhasa-maclha-l2_lh1.lzh`, Linux Ir | 3,007,375 | 2,683,432 | −10.8 % |
+| `derived-DEF.sit` (method 5), Linux Ir | 5,645,125 | 4,749,371 | −15.9 % |
+| working state per decode | 15,568 B | 9,000 B | −6,568 B |
+| `unc_lzah.c.obj`, 68000 -Os | 1,592 B | 1,478 B | −114 B |
+| the application's `CODE` | 151,684 B | 151,572 B | −112 B |
+
+Same output everywhere: 932/932, DART 37/37, ARC 7 4/4, 782 unit checks,
+and byte for byte MacMount's raw volumes on four real archives.
+
+**Where it came from.** The maintainer asked for MacMount's parked DART
+work to be checked out. Its `src/mm_lzhuf.c` was written from the
+published program for licence reasons of its own (MacMount is 0BSD and
+transcribes nobody), and measured against this file's XADMaster form on
+Linux it was 22–24 % fewer instructions in 9,024 B of state. The
+difference is structural: the published program keeps the tree as three
+arrays — counts sorted in place, sons, parents — and a node that
+overtakes its neighbour swaps with it; XADMaster keeps six node arrays
+plus a rank list and its inverse, so every step touches twice the
+memory, and it decodes the offset's high bits through a canonical table
+where LZHUF reads eight bits and looks them up. This file now has the
+published program's tree and lookup. Everything around them is what was
+already here: the three modes, XADMaster's window preload for -lh1- and
+StuffIt (which the archives agree with, DECISIONS.md 2026-08-23), the
+engine's inline bit reader, and the run-based output out of the window.
+
+**What the ticks say that Linux did not.** Linux promised 18–24 % and
+the Plus delivered 10.1 %. The 68000's bit reader and window copy are a
+larger share of a symbol there than on x86, and those did not change; the
+tree walk and update did. Same lesson as every tick run this week: the
+proxy ranks, the machine prices.
+
+**Provenance, stated the way the record supports it.** LZHUF.C has no
+copyright notice and no licence text; deark's `readme-lzhuf.txt` says so
+and cites Russell Marks's 2001 reconstruction of the authors' intent —
+"use, distribute, and modify this program freely" — which is the basis
+deark ships it on and now this engine too. NOTICE says exactly that,
+rather than the firmer "released by its authors" MacMount's README has.
+**None of this changes MacExtract's licence**: the engine transcribes
+XADMaster in twenty other places and is LGPL for all of them. The reason
+to take it was the table above.
+
+**Two things worth knowing about the second reader.** MacMount's decoder
+is stricter in two places this one is not — a match that would run past
+the block end and whole bytes left over in a block's stream are both
+refused there and tolerated here, as XADMaster tolerates them — and 192
+blocks never exercised either. And it drops the sector tags, which is
+right for a mounter and means `random_t`'s random tags, the specimen
+`tools/run_dart.py` cares most about, are checked here and not there.
+
+**What is NOT done.** MacMount's two A/UX disks are real gradeable
+specimens this engine had never met — the boot disk is the first real
+72-block archive through the 148-byte header path — and both expand
+byte-exact, but they are MacMount's fixtures (a StuffIt on the Macintosh
+Garden FTP, member SHA-256 pinned in its `tools/get_real_samples.py`) and
+are not pinned into `tools/run_dart.py`. That would be a download step
+and a `fixtures/SOURCES.md` row, and it is worth doing.
 

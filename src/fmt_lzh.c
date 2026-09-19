@@ -16,7 +16,8 @@
  *       maps to which window size, and the CRC contract (CRC-16/ARC
  *       over the DECODED bytes, unconditioned).
  *   reference/XADMaster/XADLZHStaticHandle.m  — -lh4- .. -lh7-.
- *   reference/XADMaster/XADLZHDynamicHandle.m — -lh1-, which is also
+ *   the published LZHUF (src/unc_lzah.c, since 2026-09-19 no longer
+ *   XADMaster's XADLZHDynamicHandle.m) — -lh1-, which is also
  *       StuffIt classic's method 5; the decoder is shared and lives in
  *       src/unc_lzah.c.
  *   reference/XADMaster/XADLArcHandles.m      — LArc's -lzs- and -lz5-.

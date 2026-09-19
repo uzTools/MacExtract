@@ -111,7 +111,11 @@ ls -la build/mac/MacExtract.APPL build/mac/MacExtract.bin build/mac/MacExtract.d
 # 2 KB of heap only while an encrypted entry is decoded (DECISIONS.md
 # 2026-09-19, the transient tables). More code than the 300 B estimated:
 # the generator is two S-box conventions and a CRC loop at -Os.
-UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-151684}
+# LOWERED 2026-09-19 from 151,684 to 151,572: −112 B, the -lh1- coder's
+# tree machinery rewritten from the published LZHUF instead of XADMaster's
+# transcription of it — and 10.1 % faster on the Plus, 6.5 KB less heap
+# (DECISIONS.md 2026-09-19, the tree that was Yoshizaki's).
+UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-151572}
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -131,7 +135,9 @@ UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-151684}
 # DECISIONS.md 2026-09-19, the transient tables). A ratchet is set at the
 # size on the day, and that cuts both ways: what was given back is locked
 # in, so growing back into it is a decision too.
-UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-38652}
+# Raised 2026-09-19 from 38,652 to 38,668: +16 B with the same rewrite —
+# rodata alignment around the 64-byte length table, not a new table.
+UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-38668}
 SIZE="$TOOLCHAIN/bin/m68k-apple-macos-size"
 GDB=build/mac/MacExtract.code.bin.gdb
 if [ -x "$SIZE" ] && [ -f "$GDB" ]; then
