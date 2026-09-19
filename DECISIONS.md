@@ -197,6 +197,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-09 (the oracle that built two times in three) — a timestamp race, and a suite that reported it as a missing reference
 - 2026-09-09 (the merge that deletes the branch) — bringing four parked branches up to date
 - 2026-09-18 (the byte that left through a pointer) — runs out of the window, the CRC the writer already kept, and a model half its size
+- 2026-09-18 (the floppy that was full) — a 40-byte gap that was written up as 62 KB, and a refusal that was a full disk
 
 ---
 
@@ -11532,4 +11533,63 @@ the same two instruments — `m68k-apple-macos-size` per object and
 callgrind per function — run before the commit rather than after. A
 cost estimated is a cost unknown, and the cheapest time to price it is
 before writing it down as zero.
+
+---
+
+## 2026-09-18 (the floppy that was full) — a 40-byte gap that was written up as 62 KB, and a refusal that was a full disk
+
+The review of the same day ranked one item above every code change: FORMATS.md
+said the Mac needed 16 KB more budget than the Linux cap on one fixture and 33
+to 62 KB more on another, blamed 16 B per block, and `derived-EasyFind.dmg.sit`
+was carried as not extracting on a 1 MB Mac Plus. Sixteen bytes a block cannot
+make 16 KB with six blocks live, so the explanation was already wrong on
+paper; what was true is what the emulator says.
+
+**The measurement.** Both fixtures, capped in a throwaway build at 562,000 B
+— 559 B above their bisected Linux minimum of 561,441 B — on the 1 MB
+machine:
+
+| fixture | Linux peak | Mac peak | verdict |
+|---|---|---|---|
+| `derived-XMenu.dmg.sit` | 561,882 | 561,922 | byte-exact, 704 s |
+| `derived-EasyFind.dmg.sit` | 561,879 | 561,919 | byte-exact, 1,427 s |
+
+**40 bytes, twice, and 40 at the shipped budget as well.** The proxy was
+never off by a kilobyte.
+
+**Two instrument errors made the gap, and the second is the one to keep.**
+The 2026-08-30 figures cited `gRefusedWhy = 1` as proof of a budget
+refusal. That variable records the FIRST refusal of a run, and a StuffIt 5
+entry's first refusal is the transform vector it asks for expecting no —
+M46 found the same thing a day later in the alert that said *Needs 48K more
+memory* after a successful extraction, and nobody went back to this
+section with it. And EasyFind's per-entry "refusal" was `UNC_ERR_SINK`,
+`ret` −9, in twenty seconds: its one entry is 1,851,907 B and `run.py`'s Out
+volume has been a 1,440 KB floppy since M10. The first run today failed the
+same way; the `ret` slot said which, and `--out-kb 2400` was already in the
+README for a smaller archive. **A per-entry failure is not a memory
+refusal until the error code has been read.** The grid carries it; the
+write-up quoted the peak beside it and not the code.
+
+**What hid it.** Both fixtures at that budget sit on a low rung of the
+sampled index, where the walk takes 12 and 24 minutes at the emulator's
+all-out speed against `run.py`'s 300 s default timeout, so the runs that
+could have disproved the gap were the ones nobody could afford to wait for.
+The check cost three boots today, one of them wasted on the floppy.
+
+**Consequences.** FORMATS.md's section is rewritten around the 40 B; the
+caveat on every `--budget` figure is gone; EasyFind's row says it extracts;
+the whole corpus is inside a 1 MB Mac Plus, on the machine and not on the
+proxy; and the 2026-08-30 withdrawn-claim row, which had recorded the true
+claim as false on the strength of the two wrong numbers, says so beside them
+(BLOCKERS.md). OPEN_ITEMS.md's overlay note no longer says there are
+archives still out of reach, because there are none.
+
+**The transferable part.** The review recommended chasing this gap first
+because 33 KB was worth more than every code change combined. It was worth
+nothing, and it cost three emulator runs to find out — which is cheap
+against eighteen days of a caveat on every figure in the file. The rule is
+the one CLAUDE.md already states about environments: read every "the Mac
+needs more" for the name of the instrument it is really about. Here there
+were two, and neither was the Mac.
 

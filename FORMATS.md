@@ -2518,23 +2518,41 @@ RAM-backed disk. A real Plus with a Chooser extension, a floppy's File
 Manager buffers or an AppleShare volume costs more, and that is the volume
 question rather than the block question. MANUAL_TESTS.md carries it.
 
-### The Linux budget check under-reads the Mac
+### The Linux budget check reads the Mac to 40 bytes
 
-**`--budget N` on Linux is necessary and NOT sufficient.** MEASURED
-2026-08-30. `derived-XMenu.dmg.sit` needs 566,009 B under a Linux cap and
-**16 KB more than that** on a 1 MB Mac Plus; `derived-EasyFind.dmg.sit` needs
-the same 566,009 on Linux and **more than 598,932** on the Mac — a gap of over
-33 KB. Both refusals are budget refusals (`gRefusedWhy` = 1), not
-fragmentation. The Mac allocator charges 16 bytes a block, so a decoder that
-allocates often pays a toll the Linux run does not.
+**`--budget N` on Linux predicts the machine to within 40 B.** MEASURED
+2026-09-18, on the two fixtures this section used to name as
+counter-examples, each capped on a 1 MB Mac Plus at **562,000 B** — 559 B
+above its bisected Linux minimum of 561,441 B:
 
-**Consequence: "passes `ci.sh`'s budget cap" does not mean "extracts on the
-Mac", and the gap is not a constant** — it is 16 KB on one fixture and 33 KB
-on another. Every `--budget` figure in this file inherits that caveat. The
-only sufficient check is the on-Mac replay with its CRC read-back
-(`tools/vmac/run.py`). *This does not contradict the "agree to a constant 32 B"
-note under Unix compress:* that is about PEAK HEAP on a fixture that fits,
-which is a different quantity from the THRESHOLD at which one stops fitting.
+| fixture | Linux peak at 562,000 | Mac peak at 562,000 | verdict | extract, all-out |
+|---|---|---|---|---|
+| `derived-XMenu.dmg.sit` | 561,882 B | 561,922 B | byte-exact | 704 s |
+| `derived-EasyFind.dmg.sit` | 561,879 B | 561,919 B | byte-exact | 1,427 s |
+
+The 40 B is the Mac allocator's 16 B per live block, less what 32-bit
+pointers save in the engine's structs — a constant, and the same constant
+the *Floor target verification* runs have always reported. Both peaks at the
+shipped 648,100 B budget agree the same way (XMenu: 631,644 B against
+631,684 B).
+
+**This section said the opposite from 2026-08-30 to 2026-09-18** — that
+XMenu needed 16 KB more than Linux, EasyFind 33 KB and later 62 KB more,
+that the gap "was not a constant", and that every `--budget` figure in this
+file inherited the caveat. All of it is withdrawn (BLOCKERS.md, *Withdrawn
+claims*; DECISIONS.md 2026-09-18, *the floppy that was full*). The
+`gRefusedWhy = 1` those figures cited was the FIRST refusal of the run,
+which for a StuffIt 5 entry is the transform vector it expects to be refused
+— the same instrument error M46 found in the memory message a day later.
+And EasyFind's "refusal" was `UNC_ERR_SINK`: its one entry is 1,851,907 B
+and the harness's Out volume is a 1,440 KB floppy, so it failed at `SetEOF`
+in twenty seconds on every run before today, whatever the budget.
+
+**What the proxy still cannot tell you is the TIME.** A fixture capped near
+its minimum sits on a low rung of the sampled index, and the walk is long:
+EasyFind at 562,000 B is 17 s on Linux and 1,427 s on the emulator at
+all-out speed, so 300 s harness timeouts read as failures there. Raise
+`--timeout`, and give the Out volume room for the output (`--out-kb`).
 
 ### What the application costs the engine
 
@@ -2663,20 +2681,15 @@ for resting on the proxy (BLOCKERS.md, *Withdrawn claims*). Replayed at 1 MB on
 |---|---|---|
 | `derived-Domino_v1.4.sit` | **extracts**, 2 files byte-exact | 614,018 B |
 | `derived-XMenu.dmg.sit` | **extracts**, 1 file byte-exact | 600,692 B |
-| `derived-EasyFind.dmg.sit` | **still refused**, per entry | reached 600,500 B |
+| `derived-EasyFind.dmg.sit` | **extracts**, 1 file byte-exact — since 2026-09-18, capped at 562,000 B with a 2,400 KB destination; the 2026-08-31 "refusal" was the harness's 1,440 KB Out floppy | 561,919 B |
 
-**What EasyFind would take is 2,031,101 B more** (`-D UNC_AT_BUDGET`,
-2026-08-31; `gRefusedWhy` = 1, so budget and not fragmentation). That is the
-largest single request it makes, and it is nearly two megabytes past what a
-1 MB Macintosh has at all — so this fixture is DECODER-shaped, not
-budget-shaped, and no re-pricing of a shell constant reaches it. Note also
-that it is refused at 627,620 B on the Mac while `run_budget.py` bisects its
-Linux minimum at 565,062 B: a gap of over 62 KB, against the 16 KB and 33 KB
-measured on the other two. **The Linux proxy's error is not a constant** and
-this is the third fixture to say so (*The Linux budget check under-reads the
-Mac*).
+**"What EasyFind would take is 2,031,101 B more" is withdrawn.** That was
+the transform vector's EXPECTED refusal, recorded as the run's first (M46,
+*the message that failed a successful extraction*), and the "62 KB gap"
+drawn from it was the Out volume, not the heap (*The Linux budget check reads
+the Mac to 40 bytes*, above).
 
-So the corpus is not all inside a 1 MB Mac Plus, and **Domino clears the
+So the whole corpus is inside a 1 MB Mac Plus since 2026-09-18, and **Domino clears the
 shipped budget by 13,602 bytes**. `tools/build_mac.sh` ratchets code size
 because every byte of it comes straight off that margin.
 

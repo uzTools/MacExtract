@@ -65,8 +65,10 @@ demand works and runs on a 1 MB Mac Plus. Two branches keep it —
 merged**.
 
 Three measurements decided it: the prize is **5,988 B**, about one archive in
-922 at the corpus's headroom density, and not one of the archives still out of
-reach; **StuffIt can never be one of the formats it helps**, because an
+922 at the corpus's headroom density, and it opens nothing — since 2026-09-18
+nothing in the corpus is out of a 1 MB Mac Plus's reach at all (FORMATS.md,
+*The Linux budget check reads the Mac to 40 bytes*); **StuffIt can never be
+one of the formats it helps**, because an
 encrypted entry is discovered as the entry is read; and the disk dependency
 **cannot be removed, only moved** — one branch pays a mid-run access on the
 first encrypted archive, the other on the second, on a machine with one floppy

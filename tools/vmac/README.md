@@ -1642,6 +1642,18 @@ claim in BLOCKERS.md that a full disk produces one error per remaining
 entry; it does not, because every extractor ends the archive on a sink
 failure.
 
+**The default is a 1,440 KB floppy, and that is a limit in the OTHER
+direction too.** A single entry larger than the volume fails at `SetEOF`
+about twenty seconds in, `ret` −9, and reads exactly like a per-entry memory
+refusal unless the `ret` slot is read: `derived-EasyFind.dmg.sit`, one entry
+of 1,851,907 B, was carried as "still refused on a 1 MB Mac Plus" for 18 days
+on runs that had never had room to write it (BLOCKERS.md, *Withdrawn
+claims*, 2026-09-18). `--out-kb 2400` is what that fixture needs. And a
+fixture capped near its memory minimum sits on a low rung of Arsenic's
+sampled index, where the walk is long even all-out — XMenu 704 s, EasyFind
+1,427 s at 562,000 B — so `--timeout 1700` rather than the default, or a
+timeout reads as a refusal as well.
+
 **What it cannot see:** the alert the user is shown. That lives in the
 interactive build, which this harness does not run — `interactive.py` does.
 The message is chosen from `gLastWriteErr`, and only the choosing is
