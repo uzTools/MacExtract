@@ -885,8 +885,9 @@ enum {
 /* UNC_HOT — compile this ONE function for speed, whatever the rest of the
  * translation unit is built at. Carried by StuffIt's two hot method
  * decoders, the LZW and Huffman primitives, unc_crc16_arc, and since
- * 2026-09-19 Compact Pro's unc_cpt_lzh_fork and cpt_rle_push (-14.8 %
- * of that format's engine time for +1,028 B, tick probe).
+ * 2026-09-19 Compact Pro's unc_cpt_lzh_fork, cpt_rle_push and the two
+ * functions its stages were fused into (-14.8 % of that format's engine
+ * time for +1,028 B when the marks went on, tick probe).
  *
  * The Macintosh application builds at -Os because the application is
  * resident and the floor target is a 1 MB machine. That is right for the
@@ -908,6 +909,16 @@ enum {
 #define UNC_HOT __attribute__((optimize("O3")))
 #else
 #define UNC_HOT
+#endif
+
+/* UNC_NOINLINE — keep this function out of its caller. Used where a cold
+ * branch's body would otherwise make its CALLER too big to inline into a
+ * hot loop, which measured worse than the branch itself ever cost
+ * (fmt_cpt.c, cpt_rle_fill). */
+#if defined(__GNUC__)
+#define UNC_NOINLINE __attribute__((noinline))
+#else
+#define UNC_NOINLINE
 #endif
 
 typedef struct UncForkOut {

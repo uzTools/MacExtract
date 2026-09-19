@@ -3420,13 +3420,22 @@ Verified byte-exact on both Mini vMac tiers with `UNC_HOT` in: **69/69 at
 |---|---|---|---|
 | shipped | 10,409 ticks | 10,256 ticks (170.9 s) | 153 ticks |
 | `UNC_HOT` on `unc_cpt_lzh_fork` and `cpt_rle_push` | 8,884 ticks | 8,735 ticks (145.6 s) | 149 ticks |
+| the LZH and RLE stages fused, same day | **6,107 ticks** | **5,970 ticks (99.5 s)** | 137 ticks |
 
-**−14.8 % for +1,028 B**, and DiskDoubler method 8 runs the same two
-functions. The whole-run tick count is about half the 321 s the wall-clock
-table above carries for this fixture — the same ratio the EmpireBuilder
-rows show between the tick probe and the screenshot clock — so the tiers
-were not re-run and the relative figure is the one to read (DECISIONS.md
-2026-09-19, *the seventh that was measured*).
+**−14.8 % for +1,028 B**, and then **−31.7 % more for +76 B**; DiskDoubler
+method 8 runs the same functions and is −47.0 % of Linux `Ir` on
+`ddtf-dd377ddb.dd`. The 8,735-tick row was re-measured on the later tree
+before the fused build was timed against it and came back 8,735 exactly,
+which is what the two figures may be compared across. The whole-run tick
+count is about half the 321 s the wall-clock table above carries for this
+fixture — the same ratio the EmpireBuilder rows show between the tick probe
+and the screenshot clock — so the tiers were not re-run and the relative
+figure is the one to read (DECISIONS.md 2026-09-19, *the seventh that was
+measured* and *the byte that went to two places at once*).
+
+The archive that shows the run-length half of the same work is
+`derived-Guy_s_Mac_Consultants.cpt`, 57.8 % of whose output comes out of
+one escape sequence or another: engine **3,536 → 2,318 ticks**, −34.4 %.
 
 ## Relative decode cost per format (Linux, same engine)
 

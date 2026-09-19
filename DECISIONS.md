@@ -205,6 +205,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-19 (the tree that was Yoshizaki's) — the -lh1- coder rebuilt on the published LZHUF, measured against MacMount's, and what it bought on three axes
 - 2026-09-19 (the DES that was only wearing a disguise) — StuffItDES folded onto standard DES's round, and the half of the hypothesis that was false
 - 2026-09-19 (the rank that was walked a byte at a time) — Arsenic from the write-up, a 68000 profile at last, and −36.7 % on the Plus
+- 2026-09-19 (the byte that went to two places at once) — Compact Pro's LZH and RLE stages fused, −31.7 % on a Mac Plus for +76 B
 
 ---
 
@@ -12002,3 +12003,101 @@ used; the peak rose 4.2 KB and one fixture fell out at the 400 KB
 budget. A 2 KB array and one pool of exactly 267 frequencies put it
 back, and the state is 1.3 KB smaller than the XADMaster form's.
 
+
+---
+
+## 2026-09-19 (the byte that went to two places at once) — Compact Pro's LZH and RLE stages fused, −31.7 % on a Mac Plus for +76 B
+
+**Claim (measured).** Compact Pro's LZ match no longer walks its output
+through a call per byte: the byte goes into the window and into the
+writer's staging buffer from the same register, and the run-length
+expansion is written as a run instead of a byte at a time. On a 7 MHz
+Mac Plus `derived-XferIt_1.5b4.sea` decodes in **engine 5,970 ticks
+where it took 8,735**, and `derived-Guy_s_Mac_Consultants.cpt` — the
+archive over half of whose output comes out of the run-length half of
+the format — in **2,318 where it took 3,536**.
+
+| | before | after | |
+|---|---|---|---|
+| XferIt, Plus engine ticks | 8,735 | 5,970 | **−31.7 %** |
+| XferIt, Plus whole run | 8,885 | 6,107 | −31.3 % |
+| Guy's Mac Consultants, Plus engine ticks | 3,536 | 2,318 | **−34.4 %** |
+| XferIt, 68000 instructions (qemu-m68k, shipped flags) | 82,825,986 | 55,513,387 | −33.0 % |
+| Guy's, 68000 instructions | 32,473,326 | 21,638,415 | −33.4 % |
+| XferIt / Guy's, Linux `Ir` | 76.6 M / 29.3 M | 52.2 M / 18.9 M | −31.9 / −35.7 % |
+| `ddtf-dd377ddb.dd`, DiskDoubler method 8, `Ir` | 4,771,312 | 2,527,660 | **−47.0 %** |
+| `derived-Terrainman_2.0__.sea`, DiskDoubler `DDn`, the control | 31,212,483 | 31,212,458 | −0.0 % |
+| peak heap, every one of the 245 Compact Pro and DiskDoubler fixtures | | | **identical** |
+| the application's `CODE` | 151,644 B | 151,720 B | +76 B |
+| A5 world (data + bss) | 38,660 B | 38,648 B | −12 B |
+
+`ci.sh` green, and old and new engines were held against each other
+directly: 945 fixtures and 560 truncated and bit-flipped variants of
+Compact Pro and DiskDoubler archives, identical in exit code, in every
+message and in every extracted byte. A single token changed in the new
+inner loop (`CPT_ESC1` → `CPT_ESC2`) takes that from 0 mismatches to 82,
+which is what says the comparison tests anything.
+
+**This row is for speed, and it moves no licence.** No non-copyleft
+description of Compact Pro exists, so `fmt_cpt.c` still owes XADMaster
+and macutils its container and its stages, and the engine stays LGPL
+(OPEN_ITEMS.md, *What is still XADMaster's*). What was rewritten is the
+shape of the loops, not the format.
+
+**Where the time was.** `tools/m68kprof.py` on the shipped flags put
+25.6 % of a Compact Pro run inside `cpt_rle_push` — of which the CALL,
+its sticky-error test and its switch were 13.8 % of the whole run
+before any RLE work was done — and another 20 % in the match's byte
+loop, which read the window, wrote the window, and called. The fix is
+that the RLE stage is the IDENTITY for every byte that is neither the
+escape nor inside an escape sequence, so a match is a copy that stops
+at the first 0x81:
+
+    do { b = *s++; *w++ = b; if (b == CPT_ESC1) break; *d++ = b; }
+    while (s < send);
+
+and a piece is cut so that the match, both ends of the circular window,
+the output still owed and the staging buffer are all bounded before the
+loop starts rather than tested inside it.
+
+**Three measurements that were not guesses, and each cost a round:**
+
+- **Indexing is not addressing.** The same loop written with one index
+  (`s[i]`, `w[i]`, `d[i]`) is ONE instruction shorter and about 45 %
+  dearer, because a 68000 reads through `(An)+` in 8 cycles and through
+  an indexed mode in 14. `m68kprof` counts instructions and says the
+  index version is better; it is the tick probe that is right. Prefer
+  the cursor form and do not let an instruction count arbitrate between
+  two addressing modes.
+- **Splitting the source run as well as the destination LOST.** Cutting
+  each piece at both window ends takes the mask out of the copy — 6
+  instructions a byte down to 5 — and costs more than it saves, because
+  the average match here is eight bytes and the extra clip is paid per
+  MATCH. +0.6 M instructions, reverted.
+- **`cpt_rle_push` had to go out of line.** Written with the run fill
+  inside it, it stopped being inlined into the LZ loop, and the loop it
+  was no longer in got 4.1 % SLOWER: with one more live value the
+  output cursor spills to the stack and every byte of every match pays
+  two instructions. Marked `UNC_NOINLINE` (new in `unc_internal.h`) the
+  escape machinery cannot reach the hot loop's register allocation at
+  all, and both fixtures reach their best figure at once. The lesson is
+  the general one: on this target an inliner decision is a performance
+  decision, and the way to stop it moving under you is to take it.
+
+**The bulk run fill is worth having and is worth a threshold — measured,
+and the threshold is NOT there.** Runs of three bytes and fewer cost
+more through the copy's setup than through the byte loop, so a
+`CPT_RUN_BULK` of 4 was written and priced: 0.1 % either way on both
+fixtures, and 244 B of code. It was taken out again. A branch that
+cannot be told from noise is not worth a quarter of a kilobyte on a
+1 MB machine.
+
+**What is NOT claimed.** That the Macintosh tiers were re-run: they were
+not, and nothing about the shell or the allocation changed — the
+differential suite runs this code at the same optimisation level on
+Linux, which is what marking functions rather than files is for. That
+the plain-RLE method (a fork with no LZ stage) got faster: it gets the
+one-byte fast path and nothing else, and in the whole corpus the
+largest such fork is 3,897 bytes. And no claim at all about the
+`--budget` behaviour, which cannot have moved: the peak is the same
+byte count on every fixture of both formats.

@@ -176,7 +176,7 @@ FORMATS.md (*StuffIt 5: the Arsenic block size*) not higher; a2basic
 ticks not higher; CODE not higher unless ticks paid for it. If it is
 merely equal, keep the OLD file: equal is not a reason to move.
 
-## Item 3 — Compact Pro's LZH and RLE stages, fused (gain only)
+## Item 3 — Compact Pro's LZH and RLE stages, fused (gain only) — DONE 2026-09-19 (DECISIONS.md, *the byte that went to two places at once*)
 
 **Files:** `src/fmt_cpt.c` (`unc_cpt_lzh_fork`, `cpt_rle_push`,
 `unc_cpt_rle_fork`), shared with `src/fmt_dd.c` method 8.

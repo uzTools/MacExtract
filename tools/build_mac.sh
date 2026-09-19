@@ -127,7 +127,16 @@ ls -la build/mac/MacExtract.APPL build/mac/MacExtract.bin build/mac/MacExtract.d
 # rank that was walked a byte at a time).
 # Rebased 2026-09-19: the two entries above landed from two sessions, and the
 # ceiling is the rebased build's measured size, not either side's number.
-UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-151644}
+# Raised 2026-09-19 from 151,644 to 151,720: +76 B for Compact Pro's LZH and
+# RLE stages fused — a match copied out of the window and run through the RLE
+# in one pass, and the run-length expansion written into the staging buffer
+# rather than a byte at a time through a call. −33 % of the 68000
+# instructions on derived-XferIt_1.5b4.sea and on
+# derived-Guy_s_Mac_Consultants.cpt, −44 to −47 % of Linux Ir on DiskDoubler
+# method 8, peak heap unchanged on all 245 fixtures of the two formats, and
+# A5 12 B LOWER (DECISIONS.md 2026-09-19, the byte that went to two places
+# at once).
+UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-151720}
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
