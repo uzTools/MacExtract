@@ -94,7 +94,12 @@ ls -la build/mac/MacExtract.APPL build/mac/MacExtract.bin build/mac/MacExtract.d
 # inverse-BWT transform vector — the two byte-wise accessors against one
 # long load. A quarter off the engine's largest allocation, two corpus
 # archives onto the fast path at 1 MB (DECISIONS.md 2026-09-19).
-UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-149868}
+# Raised 2026-09-19 from 149,868 to 150,896: +1,028 B for UNC_HOT on Compact
+# Pro's two functions, unc_cpt_lzh_fork and cpt_rle_push, priced with the
+# tick probe on a 7 MHz Mac Plus: engine 10,256 -> 8,735 ticks on
+# derived-XferIt_1.5b4.sea, -14.8 % of every Compact Pro extraction and of
+# DiskDoubler method 8 (DECISIONS.md 2026-09-19, the second entry).
+UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-150896}
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the

@@ -199,6 +199,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-18 (the byte that left through a pointer) — runs out of the window, the CRC the writer already kept, and a model half its size
 - 2026-09-18 (the floppy that was full) — a 40-byte gap that was written up as 62 KB, and a refusal that was a full disk
 - 2026-09-19 (three bytes hold a position) — the transform vector at three bytes an entry, and the price it was allowed to have
+- 2026-09-19 (the seventh that was measured) — `UNC_HOT` on Compact Pro, priced in ticks before it was bought
 
 ---
 
@@ -11640,4 +11641,37 @@ the number in front of them. **What it is NOT: a speed fix for the large
 Arsenic archives.** The ten that take twelve to twenty-four minutes on a
 1 MB Mac Plus are untouched; their limit is the block size the
 compressor chose, and no width of vector reaches it.
+
+---
+
+## 2026-09-19 (the seventh that was measured) — `UNC_HOT` on Compact Pro, priced in ticks before it was bought
+
+**Claim (measured).** `unc_cpt_lzh_fork` and `cpt_rle_push` carry
+`UNC_HOT`, and a Compact Pro extraction on a 7 MHz Mac Plus is **14.8 %
+shorter** for it: engine 10,256 → 8,735 ticks over
+`derived-XferIt_1.5b4.sea`, whole run 10,409 → 8,884, File Manager
+unchanged at ~150 ticks. +1,028 B of 68000 code, A5 unchanged. DiskDoubler
+method 8 is Compact Pro's stages inside a DiskDoubler container and runs the
+same two functions.
+
+**Why these two.** Callgrind on 2026-09-18 put 37 % of the run in the LZH
+loop and 30 % in the RLE push, an out-of-line call per output byte that gcc
+had split rather than inlined; neither was on the `UNC_HOT` list, which
+was measured on one StuffIt archive and said so. The 2026-08-30 entry named
+that as the list's limit and this is the first format to be added to it
+since.
+
+**Why it was priced first.** The size flags were kept at 780 B for 0.82 %
+and the six original `UNC_HOT` marks bought 25 % for 1,024 B; a kilobyte
+is about a sixth of an archive at the corpus's headroom density. Whether a
+seventh of the slowest ordinary format is worth a sixth of an archive is
+the maintainer's trade, and it was put to them as two tick counts, not as
+an estimate — one baseline run and one trial run, twelve minutes, the trial
+reverted before the question was asked.
+
+**What is NOT claimed.** That the tiers were re-run (they were not; the
+differential suite covers the code path on Linux at the same optimisation
+level, which is the point of marking functions rather than files). And that
+Now Compress should follow: its three hot functions cost 1,152 B and its
+history slide is the larger lever there, so that one waits for the slot.
 

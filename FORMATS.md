@@ -3362,6 +3362,21 @@ inside it.
 Verified byte-exact on both Mini vMac tiers with `UNC_HOT` in: **69/69 at
 4 MB and 69/69 at the 1 MB floor** (2026-08-30).
 
+**Compact Pro joined the list on 2026-09-19**, priced the same way over
+`derived-XferIt_1.5b4.sea`, the slowest ordinary format on this machine:
+
+| build | whole run | engine | File Manager |
+|---|---|---|---|
+| shipped | 10,409 ticks | 10,256 ticks (170.9 s) | 153 ticks |
+| `UNC_HOT` on `unc_cpt_lzh_fork` and `cpt_rle_push` | 8,884 ticks | 8,735 ticks (145.6 s) | 149 ticks |
+
+**−14.8 % for +1,028 B**, and DiskDoubler method 8 runs the same two
+functions. The whole-run tick count is about half the 321 s the wall-clock
+table above carries for this fixture — the same ratio the EmpireBuilder
+rows show between the tick probe and the screenshot clock — so the tiers
+were not re-run and the relative figure is the one to read (DECISIONS.md
+2026-09-19, *the seventh that was measured*).
+
 ## Relative decode cost per format (Linux, same engine)
 
 The engine's *relative* cost is a property of the code and transfers to any CPU

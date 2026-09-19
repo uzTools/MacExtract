@@ -856,7 +856,10 @@ enum {
 #define UNC_IOBUF 4096u
 
 /* UNC_HOT — compile this ONE function for speed, whatever the rest of the
- * translation unit is built at.
+ * translation unit is built at. Carried by StuffIt's two hot method
+ * decoders, the LZW and Huffman primitives, unc_crc16_arc, and since
+ * 2026-09-19 Compact Pro's unc_cpt_lzh_fork and cpt_rle_push (-14.8 %
+ * of that format's engine time for +1,028 B, tick probe).
  *
  * The Macintosh application builds at -Os because the application is
  * resident and the floor target is a 1 MB machine. That is right for the

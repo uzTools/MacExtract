@@ -133,8 +133,14 @@ static int cpt_rle_emit(CptRle *r, uint8_t b)
     return e;
 }
 
-/* Feed one post-LZ byte through the RLE state machine. */
-static int cpt_rle_push(CptRle *r, uint8_t ch)
+/* Feed one post-LZ byte through the RLE state machine.
+ *
+ * UNC_HOT, with unc_cpt_lzh_fork below: the two functions a Compact Pro
+ * extraction lives in, at -O3 inside the -Os build. Priced on a 7 MHz Mac
+ * Plus with the tick probe over derived-XferIt_1.5b4.sea, 2026-09-19:
+ * engine 10,256 -> 8,735 ticks, -14.8 %, for +1,028 B of code. DiskDoubler
+ * method 8 runs the same two (FORMATS.md, *What -O3 is worth, and where*). */
+static UNC_HOT int cpt_rle_push(CptRle *r, uint8_t ch)
 {
     if (r->err != UNC_OK) return r->err;
     switch (r->state) {
@@ -209,7 +215,7 @@ static int cpt_read_code(UncCanon *c, UncBufIn *in, int32_t nsyms)
 }
 
 /* Decode one LZH-compressed fork, feeding bytes through `rle`. */
-int unc_cpt_lzh_fork(CptRle *rle, UncBufIn *in, CptLzh *hz,
+UNC_HOT int unc_cpt_lzh_fork(CptRle *rle, UncBufIn *in, CptLzh *hz,
                      uint8_t *window, uint32_t blocksize)
 {
     UncBitIn bi;
