@@ -13,6 +13,34 @@ discipline, `./ci.sh` green before every commit, `dist/` rebuilt in the
 same commit as any `src/` change, small focused commits pushed to `main`,
 never a tag.
 
+## Two sessions at once — the protocol
+
+From 2026-09-19 two sessions work this list in parallel. **The Fable
+session that wrote this owns item 2 (Arsenic)** and works in
+`/home/claude/unclassic` itself; it will not touch any other row's
+files. **The other session takes items 1, 3, 4, 5, 6 and the bonus**, and
+must NOT work in that directory:
+
+    git worktree add /home/claude/unclassic-b main     # once
+    cd /home/claude/unclassic-b                          # and stay there
+
+Both push to `main`. Rebase before every push (`git pull --rebase`), and
+expect the conflicts to be in exactly four places: `tools/build_mac.sh`
+(both ratchet lines — resolve to the size of the REBASED build, measured,
+not to either side's number), `FORMATS.md`'s decode-cost section,
+`DECISIONS.md`'s index and tail, and `dist/` (never merge a binary:
+rebuild it with `sh tools/make_dist.sh` after the rebase and commit that).
+Do not edit `src/sit_arsenic.c` or `src/fmt_sit5.c` from the worktree; do
+not edit anything but those two from the main checkout.
+
+**The emulator is one machine.** Two tick probes at once contend for the
+CPU and Mini vMac at authentic speed falls behind real time, which is a
+measurement of the host and not of the decoder. Wrap every `--emu
+mv-4M-1x` or `mv-1M-1x` run in `flock /tmp/vmac-1x.lock ...` from both
+sides, and expect to wait. All-out (`mv-4M`, `mv-1M`) runs and Linux
+work are fine in parallel. The `fixtures/` directory is shared and
+read-only to both.
+
 ---
 
 ## The one rule that governs all of it
@@ -142,7 +170,7 @@ XADMaster paragraph no longer needs `XADStuffItDESHandle.m` for code —
 only for the fact that the format's key derivation is what it is, which
 the three real archives grade.
 
-## Item 2 — Arsenic from the write-up
+## Item 2 — Arsenic from the write-up — TAKEN by the Fable session, 2026-09-19
 
 **Files:** `src/sit_arsenic.c` (rewrite behind the same
 `unc_arsenic_decode(UncBufIn *, UncAlloc *, uint32_t, UncForkOut *)`),
