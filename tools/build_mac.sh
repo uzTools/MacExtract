@@ -120,7 +120,14 @@ ls -la build/mac/MacExtract.APPL build/mac/MacExtract.bin build/mac/MacExtract.d
 # the second round function gone. The whole fall is inside unc_crypt.c.obj
 # (9,676 → 9,260 B); A5 and peak heap are unchanged, both measured
 # (DECISIONS.md 2026-09-19, the DES that was only wearing a disguise).
-UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-151156}
+# Raised 2026-09-19 from 151,572 to 152,060: +488 B for Arsenic rewritten
+# from Russotto's write-up with bzip2's two-level MTF and a grouped symbol
+# search — derived-a2basic.dmg.sit's engine time on a 7 MHz Plus 29,885 ->
+# 18,922 ticks, -36.7 %, peaks 1.4 KB lower (DECISIONS.md 2026-09-19, the
+# rank that was walked a byte at a time).
+# Rebased 2026-09-19: the two entries above landed from two sessions, and the
+# ceiling is the rebased build's measured size, not either side's number.
+UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-151644}
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -145,6 +152,12 @@ UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-151156}
 UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-38668}
 SIZE="$TOOLCHAIN/bin/m68k-apple-macos-size"
 GDB=build/mac/MacExtract.code.bin.gdb
+# A ceiling that is not a number compares as nothing and the check passes
+# on it — which a rebase placeholder did once, and ci.sh went green with
+# "ceiling RATCHET B" on its screen (2026-09-19). Refuse it.
+case "$UNC_MAC_MAX_CODE$UNC_MAC_MAX_A5" in
+    *[!0-9]*) echo "mac: FAIL — a ratchet ceiling is not a number: code '$UNC_MAC_MAX_CODE', A5 '$UNC_MAC_MAX_A5'" >&2; exit 1 ;;
+esac
 if [ -x "$SIZE" ] && [ -f "$GDB" ]; then
     code=$("$SIZE" "$GDB" | awk 'NR==2 {print $1}')
     a5=$("$SIZE" "$GDB" | awk 'NR==2 {print $2 + $3}')

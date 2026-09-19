@@ -204,6 +204,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-19 (the transient tables) — 6 KB of cipher tables built at key setup, and a bit convention fitted rather than transcribed
 - 2026-09-19 (the tree that was Yoshizaki's) — the -lh1- coder rebuilt on the published LZHUF, measured against MacMount's, and what it bought on three axes
 - 2026-09-19 (the DES that was only wearing a disguise) — StuffItDES folded onto standard DES's round, and the half of the hypothesis that was false
+- 2026-09-19 (the rank that was walked a byte at a time) — Arsenic from the write-up, a 68000 profile at last, and −36.7 % on the Plus
 
 ---
 
@@ -11925,3 +11926,79 @@ engine is LGPL through every other row of the inventory.
 "the StuffIt table is PROVEN to be standard DES in a rotated bit order, so
 that variant can be standard DES plus a permutation". The first clause was
 right and is now spent; the second was the false half.
+---
+
+## 2026-09-19 (the rank that was walked a byte at a time) — Arsenic from the write-up, a 68000 profile at last, and −36.7 % on the Plus
+
+**Claim (measured).** `src/sit_arsenic.c` is written from Matthew T.
+Russotto's description of the format rather than from XADMaster's
+handle, and on a 7 MHz Mac Plus `derived-a2basic.dmg.sit` decodes in
+**315 s where it took 498** — engine 29,885 → 18,922 ticks, −36.7 %.
+
+| | before | after | |
+|---|---|---|---|
+| a2basic, Plus engine ticks | 29,885 | 18,922 | **−36.7 %** |
+| KeyGraphics, Plus engine ticks | 933 | 902 | −3.3 % |
+| a2basic, 68000 instructions (qemu-m68k, shipped flags) | 269.6 M | 162.0 M | −39.9 % |
+| ISBN, 68000 instructions | 287.9 M | 243.9 M | −15.3 % |
+| KeyGraphics, 68000 instructions | 8.14 M | 7.74 M | −4.9 % |
+| a2basic / ISBN / KeyGraphics, Linux Ir | | | −10.9 / +1.6 / +1.6 % |
+| corpus peaks, min / median / max | 132,624 / 496,200 / 2,129,848 | 131,356 / 494,932 / 2,128,580 | −1.3 KB |
+| fully extracted at 400 KB | 24 of 31 | 24 of 31 | |
+| the application's `CODE` | 151,572 B | 152,060 B | +488 B |
+
+31/31 byte-exact against the oracle at unlimited budget, at 648,100 B and
+under the 400 KB cap; `ci.sh` green including the forced-sampled variant.
+
+**The instrument came first, and it is the transferable part.** Every
+profile this project had taken was x86 callgrind, and every tick run had
+delivered less than it promised. So before writing a line: a static
+m68k-linux build of the CLI at the Mac's own flags (`-Os -mcpu=68000
+-fno-tree-loop-distribute-patterns -freorder-blocks-algorithm=simple
+-fipa-icf`), run under `qemu-m68k -d exec,nochain,in_asm`, the trace
+streamed through a fifo into a parser that sums each translated block's
+instruction count per function and per block (`tools/m68kprof.py`,
+committed with this entry). Instructions, not cycles — but 68000
+instructions, with libgcc's multiplies and divides and gcc's byte loops
+counted as what they are. It said, of a2basic: **34.5 % in the MTF's
+byte-at-a-time shift** (a 256-entry table shifted by the symbol's rank,
+and an archive that barely compresses has ranks near 128), **27 % in the
+linear symbol search**, 5 % in the divisions. Linux callgrind had shown
+the MTF as nothing: x86 inlines that shift into a block move. The x86
+figures after the change — +1.6 % on two fixtures — say the same thing
+from the other side.
+
+**The two structures**, both choices the format leaves free:
+
+- **bzip2's two-level move-to-front.** Sixteen lists of sixteen in a
+  2 KB array that grows downward and is re-spaced every ~1,800 symbols;
+  a fetch is at most sixteen moves plus one per list. Written from the
+  idea in Seward's `decompress.c` (BSD-style). It computes the same
+  permutation as a flat table, which is the only thing the format cares
+  about.
+- **A grouped symbol search.** Each model keeps a sum per sixteen
+  frequencies; the walk is over the group sums then inside one group.
+  Bump adds to one sum; halving rebuilds them.
+
+**The one thing the write-up says obliquely and the fixtures said
+loudly.** Seventeen of 31 fixtures failed the first build with "corrupt".
+`frequency = code / renorm` can equal or exceed the model's total —
+`renorm` is rounded down, so `code` can lie in `[renorm × total, range)`
+— and the format's answer is the LAST symbol. The old linear walk fell
+through to it by construction; the grouped walk had to be told to stop
+at the last non-empty group. The write-up notes this rounding as the
+difference from MACM; it does not say what a decoder must do with it.
+
+**What is NOT claimed.** That this is a clean-room rewrite: the author
+had read the XADMaster transcription, and DECISIONS.md says so where
+the licence is discussed. That the 1 MB sampled path moved: it was not
+re-timed (a2basic there is a 12-minute run at 1x), though the block
+decode it shares gained the same. That the Mac timing table is current:
+its two Arsenic rows are from the screenshot clock and predate this.
+
+**Memory, and a first draft that cost a fixture.** The first build used a
+4 KB MTF array and 128 frequencies per model, 4.6 KB of which were never
+used; the peak rose 4.2 KB and one fixture fell out at the 400 KB
+budget. A 2 KB array and one pool of exactly 267 frequencies put it
+back, and the state is 1.3 KB smaller than the XADMaster form's.
+

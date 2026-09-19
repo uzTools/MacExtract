@@ -190,7 +190,7 @@ of it the GNU software license does apply").
 | `fmt_cpt.c` | container and LZH+RLE stages, with macutils `cpt.c` | Compact Pro 1.51 itself runs here (`cptcrypt.py`) | **yes**: slowest ordinary format, RLE push was 30 % |
 | `fmt_packit.c` | container, with macutils `pit.c` | PackIt's own format is trivial; the app is not here | no |
 | `fmt_sit.c` | parser; methods **8** (`XADStuffItOldHandles.m`) and **13** (`XADStuffIt13Handle.m`) — no other reader anywhere; 2, 3, 5 use the shared coders | StuffIt Deluxe 3.5.1 runs here (`sitcrypt.py`) — an oracle, not a description | 13 is hot on `derived-Ultimate_Copland`; unknown |
-| `fmt_sit5.c`, `sit_arsenic.c` | parser, arithmetic coder, models, MTF, randomisation, inverse BWT | **Russotto's write-up** (`reference/notes/arsenic_russotto.md`) describes all of it | **yes if the model search can be reshaped**: slowest format by an order of magnitude |
+| `fmt_sit5.c` | the container parser only — `sit_arsenic.c` was rewritten from Russotto's write-up on 2026-09-19, −36.7 % of a2basic's engine ticks (DECISIONS.md, *the rank that was walked a byte at a time*) | **Russotto's write-up** describes the SIT5 container too | none: a parser |
 | `fmt_dd.c` | parser; methods 2/5 (splay, a published algorithm), 6/9 `ADn`, 10 `DDn` — the last two documented nowhere else | DiskDoubler 3.7, 4.0 and Pro 4.1 run here and graded every method | 6/9/10 unknown |
 | `fmt_now.c` | everything: `XADNowCompressHandle.m` is the only description of the format | Now Compress itself runs here (`nowcompress.py`) | after the slots, small |
 | `fmt_arc.c` | parser; Squeeze, Crunch (1-9), Crush (PAK's LZW) | **deark (MIT)** for Distilled and Trimmed, already followed; ARC 5.21 source and PAK 2.51 under DOSBox for the rest | small |

@@ -5,8 +5,13 @@ This project's decoders are transcriptions/ports of algorithms from:
 
   * XADMaster — the engine of The Unarchiver, by Dag Ågren (MacPaw).
     https://github.com/MacPaw/XADMaster — LGPL-2.1.
-    StuffIt (classic + SIT5 + Arsenic), Compact Pro, PackIt, BinHex,
+    StuffIt (classic + SIT5), Compact Pro, PackIt, BinHex,
     MacBinary and related handles were used as the primary reference.
+    Arsenic (StuffIt method 15) no longer: since 2026-09-19
+    `src/sit_arsenic.c` is written from Matthew T. Russotto's public
+    description of the format (reference/notes/arsenic_russotto.md),
+    with a move-to-front in the two-level shape of bzip2's (Julian
+    Seward, BSD-style licence), written from the idea.
     Files that transcribe XADMaster code carry a
     "Source: reference/XADMaster/<file>" comment.
 

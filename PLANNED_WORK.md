@@ -122,7 +122,7 @@ entry.
 
 ---
 
-## Item 2 — Arsenic from the write-up — TAKEN by the Fable session, 2026-09-19
+## Item 2 — Arsenic from the write-up — DONE 2026-09-19 by the Fable session (DECISIONS.md, *the rank that was walked a byte at a time*)
 
 **Files:** `src/sit_arsenic.c` (rewrite behind the same
 `unc_arsenic_decode(UncBufIn *, UncAlloc *, uint32_t, UncForkOut *)`),

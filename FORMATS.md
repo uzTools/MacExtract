@@ -613,7 +613,7 @@ instrumenting the point where `sit_arsenic.c` reads `v`, not inferred.
 
 Peak heap is modelled by
 
-    peak  =  ~30 KB parser state  +  block capacity  +  3 × actual block fill
+    peak  =  ~28 KB parser state  +  block capacity  +  3 × actual block fill
 
 The parser state was ~35 KB until 2026-09-18, when the nine adaptive
 models dropped a symbol field that was always arithmetic: **4,572 B off
@@ -3099,6 +3099,21 @@ on `derived-SyntheticReferences2.0.sea` — and computed an absolute bit
 position through `unc_bufin_tell`. A `NowBits` is always memory-backed,
 where that call reduces to `pos`: **−2.33 %** on that fixture, −0.7 % on
 `synth-now-mixed.now`.
+
+**Arsenic from the write-up, 2026-09-19.** The decoder is rewritten from
+Russotto's description with two different data structures — bzip2's
+two-level move-to-front and a symbol search over group sums — after a
+68000 instruction profile (qemu-m68k on the shipped flags, the first this
+project has taken) put 34.5 % of a2basic in the byte-at-a-time MTF shift
+and 27 % in the linear search, neither visible on x86. On the Plus,
+`derived-a2basic.dmg.sit`'s engine **29,885 → 18,922 ticks, −36.7 %**
+(498 → 315 s); `derived-KeyGraphics.sit` 933 → 902, −3.3 %. 68000
+instructions: a2basic −39.9 %, ISBN −15.3 %, KeyGraphics −4.9 %; Linux
+Ir a2basic −10.9 % and the other two +1.6 %, which is the x86 rewarding
+neither structure. +488 B of code, peaks 1.3 KB lower, 31/31 byte-exact
+(DECISIONS.md 2026-09-19, *the rank that was walked a byte at a time*).
+The Mac timing table's two Arsenic rows above predate this and were not
+re-run under the screenshot clock.
 
 **The transient cipher tables, 2026-09-19.** No speed change on anything
 in the corpus: the tables are built once per encrypted entry, 512 words,
