@@ -215,6 +215,10 @@ LHa for UNIX's licence is its own) and no corpus archive: leave
 **Fixtures:** the 8 `.lzh` fixtures and `tools/run_lzh.py` (182 archives
 from fourteen writers, plus LHa 1.14i's own sets). Ticks on
 `lhasa-unix114i-h2_lh7.lzh` (41 KB peak, `-lh7-`).
+
+**TAKEN 2026-09-19 by the session in `/home/claude/unclassic`** (the main
+checkout, free since item 2 landed). No other session should touch
+`src/fmt_lzh.c` or `src/unc_lzdyn.c` until this row is struck.
 **Acceptance:** all of the above byte-exact, ticks within noise or
 better, CODE not up.
 
