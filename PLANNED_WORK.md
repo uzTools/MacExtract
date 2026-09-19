@@ -215,6 +215,10 @@ against the current file on `popper-1.7.tar.Z`, `derived-xmasbeeps.sit`
 method 1. If it is not at least equal in ticks, keep the old one and
 record the attempt.
 
+**TAKEN 2026-09-19 by the session in `/home/claude/unclassic`** (the main
+checkout, free since item 4 landed). No other session should touch
+`src/unc_lzw.c` or `src/unc_huffman.c` until this row is struck.
+
 ## Item 6 — re-cite the container parsers
 
 **Files:** `src/fmt_binhex.c`, `fmt_macbinary.c`, `fmt_applesingle.c`,
