@@ -169,6 +169,64 @@ merged** — what is left is the decision, because the price is now known:
 anything, and ~10 ms an entry for the second walk. BRANCHES.md, and
 `BRANCH_NOTES.md` on that branch.
 
+## What is still XADMaster's, and what would have to replace it
+
+**Asked for 2026-09-19**: shed as much XADMaster-transcribed code as
+possible — for the gains where they exist, and for the licence if it ever
+adds up — **with no regression taken for the licence's sake**. The
+-lh1- coder went first (DECISIONS.md 2026-09-19, *the tree that was
+Yoshizaki's*): faster, smaller and lighter, so it would have been taken
+on its merits alone. This is the inventory the rest of that work runs
+against; the licence changes only when the last row is gone, and rows
+carrying `macutils` have the same question (its README: "for some parts
+of it the GNU software license does apply").
+
+| file | XADMaster code in it | other reference on this machine | gain plausible? |
+|---|---|---|---|
+| `unc_huffman.c` | tree parse (also macutils `de_huffman.c`), canonical codes | generic: zlib, lhasa (ISC), any textbook | no — the fast tables are ours already |
+| `unc_lzw.c` | `LZW.c`, `XADCompressHandle.m` | the compress(1) format is public; the algorithm is Welch's | doubtful — the chain walk is already tight |
+| `unc_lzdyn.c` | `-lh2-`/`-lh3-` from `XADLZHOldHandles.m` | LHa for UNIX only (its own licence); lhasa has neither | none — no corpus archive uses them |
+| `fmt_lzh.c` | `-lh4-`..`-lh7-`, `-lz5-`/`-lzs-` from `XADLZHStaticHandle.m`, `XADLArcHandles.m` | **lhasa (ISC)** implements all of them | unknown; structure is similar |
+| `fmt_cpt.c` | container and LZH+RLE stages, with macutils `cpt.c` | Compact Pro 1.51 itself runs here (`cptcrypt.py`) | **yes**: slowest ordinary format, RLE push was 30 % |
+| `fmt_packit.c` | container, with macutils `pit.c` | PackIt's own format is trivial; the app is not here | no |
+| `fmt_sit.c` | parser; methods **8** (`XADStuffItOldHandles.m`) and **13** (`XADStuffIt13Handle.m`) — no other reader anywhere; 2, 3, 5 use the shared coders | StuffIt Deluxe 3.5.1 runs here (`sitcrypt.py`) — an oracle, not a description | 13 is hot on `derived-Ultimate_Copland`; unknown |
+| `fmt_sit5.c`, `sit_arsenic.c` | parser, arithmetic coder, models, MTF, randomisation, inverse BWT | **Russotto's write-up** (`reference/notes/arsenic_russotto.md`) describes all of it | **yes if the model search can be reshaped**: slowest format by an order of magnitude |
+| `fmt_dd.c` | parser; methods 2/5 (splay, a published algorithm), 6/9 `ADn`, 10 `DDn` — the last two documented nowhere else | DiskDoubler 3.7, 4.0 and Pro 4.1 run here and graded every method | 6/9/10 unknown |
+| `fmt_now.c` | everything: `XADNowCompressHandle.m` is the only description of the format | Now Compress itself runs here (`nowcompress.py`) | after the slots, small |
+| `fmt_arc.c` | parser; Squeeze, Crunch (1-9), Crush (PAK's LZW) | **deark (MIT)** for Distilled and Trimmed, already followed; ARC 5.21 source and PAK 2.51 under DOSBox for the rest | small |
+| `unc_crypt.c` | `Crypto/des.c`, `md5.c`, `sha.c`, `aeskey.c` (public-domain or permissive in XADMaster's own tree); StuffIt's key derivation from `XADStuffItDESHandle.m` | FIPS 46-3, RFC 1321, FIPS 180, FIPS 197, RFC 2898; and since 2026-09-19 the StuffIt table is PROVEN to be standard DES in a rotated bit order, so that variant can be standard DES plus a permutation | heap: one DES not two |
+| `fmt_binhex.c`, `fmt_macbinary.c`, `fmt_applesingle.c`, `fmt_exo.c`, `fmt_sitseg.c`, `fmt_zipseg.c`, `fmt_stubs.c` | layouts, magics and quirks cited for FACTS (an alphabet, an offset, a CRC fallback) rather than code | RFC 1741, the MacBinary spec, RFC 1740, APPNOTE.TXT, RFC 1952, POSIX ustar; the segment header is documented only there | none — a re-citation, not a rewrite |
+
+**What would close it:** one row at a time, each priced with the tick
+probe before it is kept and graded by the suites that already cover the
+format — the `-lh1-` row is the template. Rows with no other description
+(StuffIt 8 and 13, Now Compress, DiskDoubler `ADn`/`DDn`) can only be
+rewritten against the original applications, which run here; that is
+reverse-engineering, not transcription, and it is how SuperDisk! and
+SpaceSaver were done.
+
+## Two real DART "best" archives, expanded byte-exact and not yet pinned
+
+**Asked for 2026-09-19.** MacMount's `fixtures/real/` holds two archives
+Apple wrote: A/UX 3.0.1's 800K *Read Me* disk (40 blocks) and its 1.4 MB
+*Installation Boot Disk* (72 blocks) — the first real 72-block, 148-byte
+header archive this engine has met. Both expand here byte-exact, agree
+with MacMount's independent decoder to the byte, walk under `hfsutils`,
+and carry Disk Copy 4.2 checksums of E257EF53 and 3DF12BA6 over the
+volume (DECISIONS.md 2026-09-19, *the tree that was Yoshizaki's*).
+
+They are MacMount's fixtures, not this repository's. Their origin is a
+StuffIt on the Macintosh Garden FTP —
+`ftp://mirror:mirror@ftp.macintosh.garden/apps/APPLE_AUX_3-0-1_RETAIL_FLOPPY_IMAGES_DART.sit`,
+member SHA-256s pinned in MacMount's `tools/get_real_samples.py` — so
+the download and the unpacking of the member can be reproduced here.
+
+**What would close it:** a fetch step alongside the ciderpress2 specimens
+(`tools/fetch_references.sh` or `tools/run_dart.py` itself), a row each in
+`fixtures/SOURCES.md`, and two cases in `tools/run_dart.py` asserting the
+raw volume's DC42 checksum and the tags' shape, so the 72-block path is
+graded by `ci.sh` rather than by one afternoon's hand run.
+
 ## A DART's checksums, which this writes no fork to carry
 
 **Not a scope decision and not a missing specimen: it is a missing
