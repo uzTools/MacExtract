@@ -104,7 +104,14 @@ ls -la build/mac/MacExtract.APPL build/mac/MacExtract.bin build/mac/MacExtract.d
 # once per block: engine 945 -> 793 ticks on derived-Expand_Now_1.0.1.sea,
 # -16.1 %, on a 7 MHz Mac Plus. Its UNC_HOT marks were measured on the same
 # run at 0.3 % for 1,152 B and refused (DECISIONS.md 2026-09-19, third entry).
-UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-150928}
+# Raised 2026-09-19 from 150,928 to 151,684: +756 B for building the two DES
+# SP tables and Compact Pro's CRC-64 table at key setup instead of carrying
+# them as const data — which took 5,588 B OUT of the A5 world (below), so
+# the budget is 4,832 B better off on every extraction and the tables cost
+# 2 KB of heap only while an encrypted entry is decoded (DECISIONS.md
+# 2026-09-19, the transient tables). More code than the 300 B estimated:
+# the generator is two S-box conventions and a CRC loop at -Os.
+UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-151684}
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -119,7 +126,12 @@ UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-150928}
 # to save 24 B here: on this target both come off the same budget, so that
 # is 16 B, and it is the second time composing a constant beat storing it
 # (DECISIONS.md 2026-09-01, *two byte reads*).
-UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-44260}
+# LOWERED 2026-09-19 from 44,260 to 38,652: −5,588 B, the two DES SP tables
+# and the CRC-64 table gone from the A5 world (built at key setup instead;
+# DECISIONS.md 2026-09-19, the transient tables). A ratchet is set at the
+# size on the day, and that cuts both ways: what was given back is locked
+# in, so growing back into it is a decision too.
+UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-38652}
 SIZE="$TOOLCHAIN/bin/m68k-apple-macos-size"
 GDB=build/mac/MacExtract.code.bin.gdb
 if [ -x "$SIZE" ] && [ -f "$GDB" ]; then

@@ -186,6 +186,7 @@ int unc_sit5_extract(UncCtx *c)
     if (!iobuf) { unc_free(c->al, dirs); return UNC_ERR_MEM; }
     obuf = iobuf + iocap;
     cr = (UncCrypt *)(void *)(obuf + ocap);
+    unc_crypt_init(cr);
 
     pos = firstoffs;
     for (i = 0; i < numentries; i++) {

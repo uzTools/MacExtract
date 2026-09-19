@@ -792,6 +792,7 @@ int unc_zip_extract(UncCtx *c)
     if (!iobuf) return UNC_ERR_MEM;
     obuf = iobuf + iocap;
     cr = (UncCrypt *)(void *)(obuf + ocap);
+    unc_crypt_init(cr);
 
     /* Read the whole central directory once, so that walking it does not
      * interleave with reading entry data. On one file that saves seeks;

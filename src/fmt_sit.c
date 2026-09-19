@@ -711,7 +711,7 @@ static int sit_fork_crypt(UncCtx *c, UncCrypt *cr, uint32_t at,
     for (;;) {
         int err = unc_password(c, attempt > 0);
         if (err != UNC_OK) return err;
-        err = unc_crypt_sit(cr, c->pw, c->pwlen, entrykey, c->opt.mkey);
+        err = unc_crypt_sit(cr, c->al, c->pw, c->pwlen, entrykey, c->opt.mkey);
         if (err == UNC_OK) return UNC_OK;
         attempt++;              /* the archive rejected it; ask again */
     }
@@ -757,6 +757,7 @@ int unc_sit_extract(UncCtx *c)
     if (!iobuf) return UNC_ERR_MEM;
     obuf = iobuf + iocap;
     cr = (UncCrypt *)(void *)(obuf + ocap);
+    unc_crypt_init(cr);
 
     while (pos + SIT_FILEHDRSIZE <= totalsize) {
         uint32_t namelen, rmeth, dmeth, rlen, dlen, rcomp, dcomp, start;
@@ -888,6 +889,7 @@ int unc_sit_extract(UncCtx *c)
     }
 
 out:
+    unc_crypt_free(cr, c->al);
     unc_free(c->al, iobuf);
     /* A walk that finished tidily over a file shorter than the archive
      * says it is finished over half an archive. What was decoded stands

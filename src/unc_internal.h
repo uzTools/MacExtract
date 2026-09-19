@@ -181,20 +181,47 @@ typedef struct UncCrypt {
     int      aesrounds;
     uint8_t  ctr[16], ctrbuf[16], ctrpos;
     UncHmac  hmac;
+    /* The one 2 KB table the two DES variants and Compact Pro's CRC-64
+     * read a round or a byte through — built at key setup into a heap
+     * block the caller frees with unc_crypt_free, from 544 B of S boxes
+     * and P. Resident as three const tables it was 6 KB of A5 world on
+     * every extraction, for entries nothing in the corpus has
+     * (DECISIONS.md 2026-09-19). Preserved across crypt_clear; the
+     * ciphers that need none leave it NULL. */
+    uint32_t *tab;
+    int      tabkind;
 } UncCrypt;
+
+/* Before the first key: no cipher, no table. Every host of a UncCrypt
+ * calls this once, because the struct usually sits inside a buffer that
+ * was never zeroed. */
+static inline void unc_crypt_init(UncCrypt *cr)
+{
+    cr->kind = UNC_CRYPT_NONE;
+    cr->tab = NULL;
+    cr->tabkind = 0;
+}
+
+/* Give the table back. Safe on a UncCrypt that never needed one. */
+void unc_crypt_free(UncCrypt *cr, UncAlloc *al);
 
 void unc_crypt_xor(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen);
 void unc_crypt_packit_xor(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen);
-void unc_crypt_packit_des(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen);
+/* The three that build a table take the allocator and can fail with
+ * UNC_ERR_MEM — per entry, like any other allocation. */
+int  unc_crypt_packit_des(UncCrypt *cr, UncAlloc *al, const uint8_t *pw,
+                          uint16_t pwlen);
 int  unc_crypt_zip(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen);
-void unc_crypt_cpt(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen);
+int  unc_crypt_cpt(UncCrypt *cr, UncAlloc *al, const uint8_t *pw,
+                   uint16_t pwlen);
 void unc_crypt_zip_update(UncCrypt *cr, uint8_t plain);
 void unc_crypt_rc4(UncCrypt *cr, const uint8_t *key, uint16_t keylen);
 int  unc_crypt_sit5_key(const uint8_t *pw, uint16_t pwlen,
                         const uint8_t hash[UNC_SIT5_KEYLEN],
                         uint8_t out[UNC_SIT5_KEYLEN]);
-int  unc_crypt_sit(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen,
-                   const uint8_t entrykey[16], const uint8_t mkey[8]);
+int  unc_crypt_sit(UncCrypt *cr, UncAlloc *al, const uint8_t *pw,
+                   uint16_t pwlen, const uint8_t entrykey[16],
+                   const uint8_t mkey[8]);
 int  unc_crypt_winzip_aes(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen,
                           const uint8_t *salt, int keybytes,
                           const uint8_t verifier[2]);

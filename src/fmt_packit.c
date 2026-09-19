@@ -163,6 +163,7 @@ int unc_packit_extract(UncCtx *c)
     if (!iobuf) return UNC_ERR_MEM;
     obuf = iobuf + iocap;
     cr = (UncCrypt *)(void *)(obuf + ocap);
+    unc_crypt_init(cr);
     huff = (UncHuff *)unc_alloc(c->al, (uint32_t)sizeof *huff);
     if (!huff) { unc_free(c->al, iobuf); return UNC_ERR_MEM; }
 
@@ -215,10 +216,15 @@ resynced:
             /* The cipher starts at the entry, so the reader has to as
              * well. PMa5 is the XOR, PMa6 is DES. */
             int perr = unc_password(c, attempt > 0);
+            /* PMa6's DES builds its table on first use, and that is an
+             * allocation: refused, the entry fails like any other. */
+            if (perr == UNC_OK && magic[3] != '5')
+                perr = unc_crypt_packit_des(cr, c->al, c->pw, c->pwlen);
             if (perr != UNC_OK) {
-                /* No password to try. Report the entry — nameless,
-                 * because its name is inside the ciphertext — and
-                 * resync: nothing here can say where it ends. */
+                /* No password to try, or no room for the cipher. Report
+                 * the entry — nameless, because its name is inside the
+                 * ciphertext — and resync: nothing here can say where
+                 * it ends. */
                 if (pit_reopen(c, &in, iobuf, iocap, start, NULL) != UNC_OK) {
                     err = UNC_ERR_IO;
                     goto out;
@@ -238,7 +244,6 @@ resynced:
                 goto resynced;
             }
             if (magic[3] == '5') unc_crypt_packit_xor(cr, c->pw, c->pwlen);
-            else                 unc_crypt_packit_des(cr, c->pw, c->pwlen);
             if (pit_reopen(c, &in, iobuf, iocap, start, cr) != UNC_OK) {
                 err = UNC_ERR_IO;
                 goto out;
@@ -363,6 +368,7 @@ resynced:
 
 out:
     unc_free(c->al, huff);
+    unc_crypt_free(cr, c->al);
     unc_free(c->al, iobuf);
     return err;
 }

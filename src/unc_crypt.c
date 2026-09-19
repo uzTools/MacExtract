@@ -81,6 +81,102 @@ static uint32_t bit_at(const uint8_t *b, int n)
     return (uint32_t)((b[(n - 1) >> 3] >> (7 - ((n - 1) & 7))) & 1);
 }
 
+/* ------------------------------------------------------------------ */
+/* The tables a round reads, built when a key is set                   */
+/*                                                                    */
+/* Standard DES and StuffIt's little-endian DES each read the S boxes  */
+/* merged with P as eight 64-entry words, and Compact Pro's cipher     */
+/* reads a 256-entry table of 64-bit CRC steps. That is 2 KB each, and */
+/* as const data it sat in the A5 world — which costs the engine its   */
+/* budget one for one, on every extraction, for entries the corpus     */
+/* does not have one of. So they are built HERE, into a 2 KB heap      */
+/* block that lives as long as the entry's other buffers, from the     */
+/* 512 B of S boxes and 32 B of inverted P that crypt_tables.h keeps.  */
+/*                                                                    */
+/* The StuffIt table's bit convention was FITTED against XADMaster's    */
+/* verbatim DES_SPtrans, and tools/gen_crypt_tables.py asserts the fit  */
+/* entry for entry every time the header is regenerated: the six-bit   */
+/* index takes the E-expansion bits in order, bit 0 first, and output  */
+/* bit k lands at word bit (k - 1 + 3) mod 32 — the rotate-by-3 that   */
+/* sitdes_crypt undoes at the end of a block. DECISIONS.md 2026-09-19. */
+/* ------------------------------------------------------------------ */
+
+#define UNC_CRYPT_TAB_WORDS 512u
+
+enum { CRYPT_TAB_NONE = 0, CRYPT_TAB_DES, CRYPT_TAB_SITDES, CRYPT_TAB_CRC64 };
+
+static uint32_t des_sp_entry(int box, int v, int sit)
+{
+    int row, col, out, b;
+    uint32_t w = 0;
+
+    if (sit) {
+        row = ((v & 1) << 1) | ((v >> 5) & 1);
+        col = (((v >> 1) & 1) << 3) | (((v >> 2) & 1) << 2) |
+              (((v >> 3) & 1) << 1) | ((v >> 4) & 1);
+    } else {
+        row = ((v & 0x20) >> 4) | (v & 1);
+        col = (v >> 1) & 0xF;
+    }
+    out = unc_des_s[box * 64 + row * 16 + col];
+    for (b = 0; b < 4; b++) {
+        if (out & (8 >> b)) {
+            int dest = unc_des_pinv[box * 4 + b];        /* 1..32 */
+            w |= sit ? (1u << ((dest + 2) & 31)) : (1u << (32 - dest));
+        }
+    }
+    return w;
+}
+
+static void crypt_build(uint32_t *tab, int kind)
+{
+    int i, j;
+
+    if (kind == CRYPT_TAB_CRC64) {
+        /* Compact Pro 1.51 `CODE` 3 @0x408e, as an algorithm: eight
+         * reflected steps of a 64-bit CRC with 0xEDB88320 in both
+         * halves, in two 32-bit registers (68000 discipline). */
+        for (i = 0; i < 256; i++) {
+            uint32_t hi = 0, lo = 0, v = (uint32_t)i;
+            for (j = 0; j < 8; j++) {
+                uint32_t fb = (lo ^ v) & 1u;
+                lo = (lo >> 1) | ((hi & 1u) << 31);
+                hi >>= 1;
+                if (fb) { hi ^= 0xEDB88320u; lo ^= 0xEDB88320u; }
+                v >>= 1;
+            }
+            tab[2 * i] = hi;
+            tab[2 * i + 1] = lo;
+        }
+    } else {
+        for (i = 0; i < 8; i++)
+            for (j = 0; j < 64; j++)
+                tab[i * 64 + j] = des_sp_entry(i, j, kind == CRYPT_TAB_SITDES);
+    }
+}
+
+/* Make sure cr->tab holds `kind`, allocating it on first use. */
+static int crypt_table(UncCrypt *cr, UncAlloc *al, int kind)
+{
+    if (!cr->tab) {
+        cr->tab = (uint32_t *)unc_alloc(al, UNC_CRYPT_TAB_WORDS * 4u);
+        if (!cr->tab) return UNC_ERR_MEM;
+        cr->tabkind = CRYPT_TAB_NONE;
+    }
+    if (cr->tabkind != kind) {
+        crypt_build(cr->tab, kind);
+        cr->tabkind = kind;
+    }
+    return UNC_OK;
+}
+
+void unc_crypt_free(UncCrypt *cr, UncAlloc *al)
+{
+    unc_free(al, cr->tab);
+    cr->tab = NULL;
+    cr->tabkind = CRYPT_TAB_NONE;
+}
+
 static void des_setkey(uint8_t ks[16][8], const uint8_t key[8])
 {
     uint32_t c = 0, d = 0;
@@ -103,7 +199,8 @@ static void des_setkey(uint8_t ks[16][8], const uint8_t key[8])
     }
 }
 
-static void des_crypt(uint8_t ks[16][8], uint8_t block[8], int decrypt)
+static void des_crypt(uint8_t ks[16][8], uint8_t block[8], int decrypt,
+                      const uint32_t *sp)
 {
     uint32_t l = 0, r = 0;
     uint8_t pre[8];
@@ -120,7 +217,7 @@ static void des_crypt(uint8_t ks[16][8], uint8_t block[8], int decrypt)
             /* The E expansion picks bits 4g, 4g+1 .. 4g+5 (1-based, and
              * 0 means 32), which is a rotate and a shift. */
             uint32_t e = (rotl32(r, (4 * g + 31) & 31) >> 26) & 0x3Fu;
-            f ^= unc_des_sp[g][e ^ sk[g]];
+            f ^= sp[g * 64 + (int)(e ^ sk[g])];
         }
         t = r;
         r = l ^ f;
@@ -191,22 +288,24 @@ static void sitdes_setkey(const uint8_t key[8], SitDesKs *ks)
     }
 }
 
-static void sitdes_round(uint32_t *left, uint32_t right, const uint32_t *subkey)
+static void sitdes_round(uint32_t *left, uint32_t right, const uint32_t *subkey,
+                         const uint32_t *sp)
 {
     uint32_t u = right ^ subkey[0];
     uint32_t t = rotr32(right, 4) ^ subkey[1];
     *left ^=
-        unc_sitdes_sp[0][(u >> 2) & 0x3f] ^
-        unc_sitdes_sp[2][(u >> 10) & 0x3f] ^
-        unc_sitdes_sp[4][(u >> 18) & 0x3f] ^
-        unc_sitdes_sp[6][(u >> 26) & 0x3f] ^
-        unc_sitdes_sp[1][(t >> 2) & 0x3f] ^
-        unc_sitdes_sp[3][(t >> 10) & 0x3f] ^
-        unc_sitdes_sp[5][(t >> 18) & 0x3f] ^
-        unc_sitdes_sp[7][(t >> 26) & 0x3f];
+        sp[0 * 64 + ((u >> 2) & 0x3f)] ^
+        sp[2 * 64 + ((u >> 10) & 0x3f)] ^
+        sp[4 * 64 + ((u >> 18) & 0x3f)] ^
+        sp[6 * 64 + ((u >> 26) & 0x3f)] ^
+        sp[1 * 64 + ((t >> 2) & 0x3f)] ^
+        sp[3 * 64 + ((t >> 10) & 0x3f)] ^
+        sp[5 * 64 + ((t >> 18) & 0x3f)] ^
+        sp[7 * 64 + ((t >> 26) & 0x3f)];
 }
 
-static void sitdes_crypt(uint8_t data[8], const SitDesKs *ks, int enc)
+static void sitdes_crypt(uint8_t data[8], const SitDesKs *ks, int enc,
+                         const uint32_t *sp)
 {
     uint32_t left = revbits(unc_get_u32be(&data[0]));
     uint32_t right = revbits(unc_get_u32be(&data[4]));
@@ -217,13 +316,13 @@ static void sitdes_crypt(uint8_t data[8], const SitDesKs *ks, int enc)
 
     if (enc) {
         for (i = 0; i < 16; i += 2) {
-            sitdes_round(&left, right, ks->subkeys[i]);
-            sitdes_round(&right, left, ks->subkeys[i + 1]);
+            sitdes_round(&left, right, ks->subkeys[i], sp);
+            sitdes_round(&right, left, ks->subkeys[i + 1], sp);
         }
     } else {
         for (i = 15; i > 0; i -= 2) {
-            sitdes_round(&left, right, ks->subkeys[i]);
-            sitdes_round(&right, left, ks->subkeys[i - 1]);
+            sitdes_round(&left, right, ks->subkeys[i], sp);
+            sitdes_round(&right, left, ks->subkeys[i - 1], sp);
         }
     }
 
@@ -572,10 +671,14 @@ int unc_crypt_winzip_aes(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen,
 static void crypt_clear(UncCrypt *cr, int kind, uint32_t blocksize)
 {
     uint8_t *p = (uint8_t *)cr;
+    uint32_t *tab = cr->tab;          /* the caller's to free, not ours */
+    int tabkind = cr->tabkind;
     uint32_t i;
     for (i = 0; i < sizeof *cr; i++) p[i] = 0;
     cr->kind = kind;
     cr->blocksize = blocksize;
+    cr->tab = tab;
+    cr->tabkind = tabkind;
 }
 
 void unc_crypt_xor(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen)
@@ -609,13 +712,16 @@ void unc_crypt_packit_xor(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen)
 }
 
 /* PackIt PMa6: DES, and the operation that DECODES is DES's decrypt. */
-void unc_crypt_packit_des(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen)
+int unc_crypt_packit_des(UncCrypt *cr, UncAlloc *al, const uint8_t *pw,
+                         uint16_t pwlen)
 {
     uint8_t key[8];
-    int i;
+    int i, err;
+    if ((err = crypt_table(cr, al, CRYPT_TAB_DES)) != UNC_OK) return err;
     crypt_clear(cr, UNC_CRYPT_PIT_DES, 8);
     for (i = 0; i < 8; i++) key[i] = i < pwlen ? pw[i] : 0;
     des_setkey(cr->ks, key);
+    return UNC_OK;
 }
 
 int unc_crypt_zip(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen)
@@ -646,11 +752,13 @@ void unc_crypt_zip_update(UncCrypt *cr, uint8_t b)
  * Those bytes are then folded into the CRC register one at a time, by
  * the same step the data uses. Source: Compact Pro 1.51 `CODE` 3
  * @0x1892 (the key) and @0x40fe (the seed and the fold). */
-void unc_crypt_cpt(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen)
+int unc_crypt_cpt(UncCrypt *cr, UncAlloc *al, const uint8_t *pw,
+                  uint16_t pwlen)
 {
     uint8_t key[9];
-    int i, n;
+    int i, n, err;
 
+    if ((err = crypt_table(cr, al, CRYPT_TAB_CRC64)) != UNC_OK) return err;
     crypt_clear(cr, UNC_CRYPT_CPT, 1);
     for (i = 0; i < 9; i++) key[i] = 0;
     for (i = 0; i < (int)pwlen; i++)
@@ -662,10 +770,11 @@ void unc_crypt_cpt(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen)
     cr->lo = 0x89abcdefu;
     for (i = 1; i <= n; i++) {
         uint32_t idx = (uint32_t)(key[i] ^ (cr->lo & 0xFF));
-        uint32_t lo = ((cr->hi << 24) | (cr->lo >> 8)) ^ unc_cpt_crc64[idx][1];
-        cr->hi = (cr->hi >> 8) ^ unc_cpt_crc64[idx][0];
+        uint32_t lo = ((cr->hi << 24) | (cr->lo >> 8)) ^ cr->tab[2 * idx + 1];
+        cr->hi = (cr->hi >> 8) ^ cr->tab[2 * idx];
         cr->lo = lo;
     }
+    return UNC_OK;
 }
 
 void unc_crypt_rc4(UncCrypt *cr, const uint8_t *key, uint16_t keylen)
@@ -708,10 +817,12 @@ int unc_crypt_sit5_key(const uint8_t *pw, uint16_t pwlen,
  * FILE key and IV, derived from the sixteen bytes stored at the end of
  * the entry's own compressed fork. Source: XADStuffItDESHandle.m
  * keyForPasswordData:entryKey:MKey:. */
-int unc_crypt_sit(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen,
-                  const uint8_t entrykey[16], const uint8_t mkey[8])
+int unc_crypt_sit(UncCrypt *cr, UncAlloc *al, const uint8_t *pw,
+                  uint16_t pwlen, const uint8_t entrykey[16],
+                  const uint8_t mkey[8])
 {
     SitDesKs ks;
+    const uint32_t *sp;
     uint8_t archivekey[8] = { 0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef };
     uint8_t archiveiv[8], verifyblock[8] = { 0, 0, 0, 0, 0, 0, 0, 4 };
     uint8_t filekey[8], fileiv[8];
@@ -733,6 +844,11 @@ int unc_crypt_sit(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen,
      * cannot, which is what the divergence looked like from here before
      * an archive existed to ask. */
     blocks = (length + 7u) >> 3;
+    {
+        int err = crypt_table(cr, al, CRYPT_TAB_SITDES);
+        if (err != UNC_OK) return err;
+    }
+    sp = cr->tab;
     sitdes_setkey(archivekey, &ks);
     for (x = 0; x < blocks; x++) {
         uint8_t passblock[8];
@@ -743,18 +859,18 @@ int unc_crypt_sit(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen,
 
         for (i = 0; i < 8; i++) archivekey[i] ^= passblock[i] & 0x7f;
 
-        sitdes_crypt(archivekey, &ks, 1);
+        sitdes_crypt(archivekey, &ks, 1, sp);
     }
 
     for (i = 0; i < 8; i++) archiveiv[i] = mkey[i];
     sitdes_setkey(archivekey, &ks);
-    sitdes_crypt(archiveiv, &ks, 0);
+    sitdes_crypt(archiveiv, &ks, 0, sp);
 
     /* Verify: encrypting the IV's first four bytes (with a trailing 4)
      * must reproduce its last four. */
     for (i = 0; i < 4; i++) verifyblock[i] = archiveiv[i];
     sitdes_setkey(archivekey, &ks);
-    sitdes_crypt(verifyblock, &ks, 1);
+    sitdes_crypt(verifyblock, &ks, 1, sp);
     for (i = 0; i < 4; i++)
         if (verifyblock[4 + i] != archiveiv[4 + i]) return UNC_ERR_PASSWORD;
 
@@ -763,10 +879,10 @@ int unc_crypt_sit(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen,
         fileiv[i] = entrykey[8 + i];
     }
     sitdes_setkey(archivekey, &ks);
-    sitdes_crypt(filekey, &ks, 0);
+    sitdes_crypt(filekey, &ks, 0, sp);
     for (i = 0; i < 8; i++) filekey[i] ^= archiveiv[i];
     sitdes_setkey(filekey, &ks);
-    sitdes_crypt(fileiv, &ks, 0);
+    sitdes_crypt(fileiv, &ks, 0, sp);
 
     crypt_clear(cr, UNC_CRYPT_SIT_DES, 8);
     cr->a = unc_get_u32be(&filekey[0]);
@@ -803,7 +919,7 @@ void unc_crypt_apply(UncCrypt *cr, uint8_t *buf, uint32_t len, uint32_t pos)
         break;
 
     case UNC_CRYPT_PIT_DES:
-        for (i = 0; i + 8 <= len; i += 8) des_crypt(cr->ks, buf + i, 1);
+        for (i = 0; i + 8 <= len; i += 8) des_crypt(cr->ks, buf + i, 1, cr->tab);
         break;
 
     case UNC_CRYPT_SIT_DES:
@@ -837,8 +953,8 @@ void unc_crypt_apply(UncCrypt *cr, uint8_t *buf, uint32_t len, uint32_t pos)
             uint32_t idx, lo;
             buf[i] ^= (uint8_t)(cr->lo >> 8);          /* keystream byte */
             idx = (uint32_t)(buf[i] ^ (cr->lo & 0xFF));/* on the PLAINtext */
-            lo = ((cr->hi << 24) | (cr->lo >> 8)) ^ unc_cpt_crc64[idx][1];
-            cr->hi = (cr->hi >> 8) ^ unc_cpt_crc64[idx][0];
+            lo = ((cr->hi << 24) | (cr->lo >> 8)) ^ cr->tab[2 * idx + 1];
+            cr->hi = (cr->hi >> 8) ^ cr->tab[2 * idx];
             cr->lo = lo;
         }
         break;

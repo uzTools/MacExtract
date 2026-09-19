@@ -4046,6 +4046,7 @@ static void test_arc(void)
 static void test_des(void)
 {
     UncCrypt cr;
+    UncAlloc al;
     /* Key 0123456789abcdef over "Now is t": the FIPS example, and what
      * `openssl enc -des-ecb -K 0123456789abcdef -nopad` produces. */
     static const uint8_t key[8] = { 0x01,0x23,0x45,0x67,0x89,0xab,0xcd,0xef };
@@ -4057,16 +4058,19 @@ static void test_des(void)
     /* PackIt decodes by DES-DECRYPTING, which is the operation
      * unc_crypt_apply performs, so the ciphertext must come back as
      * the plaintext of the same key pair. */
-    unc_crypt_packit_des(&cr, key, 8);
+    test_make_alloc(&al);
+    unc_crypt_init(&cr);
+    CHECK(unc_crypt_packit_des(&cr, &al, key, 8) == UNC_OK);
     memcpy(buf, cipher, 8);
     unc_crypt_apply(&cr, buf, 8, 0);
     CHECK(memcmp(buf, plain, 8) == 0);
 
     /* And a second block runs on the same schedule (ECB: no state). */
-    unc_crypt_packit_des(&cr, key, 8);
+    CHECK(unc_crypt_packit_des(&cr, &al, key, 8) == UNC_OK);
     for (i = 0; i < 8; i++) buf[i] = cipher[i];
     unc_crypt_apply(&cr, buf, 8, 0);
     CHECK(memcmp(buf, plain, 8) == 0);
+    unc_crypt_free(&cr, &al);
 }
 
 static void test_md5(void)
@@ -4130,11 +4134,14 @@ static void test_cpt_cipher(void)
     static const uint8_t wantlong[8] = {
         0x67,0xe9,0x32,0x46,0xc6,0x8f,0x59,0x6a };
     UncCrypt cr;
+    UncAlloc al;
     uint8_t buf[16];
     int i;
 
+    test_make_alloc(&al);
+    unc_crypt_init(&cr);
     for (i = 0; i < 16; i++) buf[i] = 0;
-    unc_crypt_cpt(&cr, (const uint8_t *)"ohsecret", 8);
+    CHECK(unc_crypt_cpt(&cr, &al, (const uint8_t *)"ohsecret", 8) == UNC_OK);
     unc_crypt_apply(&cr, buf, 16, 0);
     CHECK(memcmp(buf, want, 16) == 0);
 
@@ -4143,15 +4150,16 @@ static void test_cpt_cipher(void)
      * the register steps on the PLAINTEXT byte, so encrypting and
      * decrypting are different walks; tools/synth_cpt.py has both.) */
     for (i = 0; i < 16; i++) buf[i] = 0;
-    unc_crypt_cpt(&cr, (const uint8_t *)"ohsecret", 8);
+    CHECK(unc_crypt_cpt(&cr, &al, (const uint8_t *)"ohsecret", 8) == UNC_OK);
     unc_crypt_apply(&cr, buf, 5, 0);
     unc_crypt_apply(&cr, buf + 5, 11, 5);
     CHECK(memcmp(buf, want, 16) == 0);
 
     for (i = 0; i < 8; i++) buf[i] = 0;
-    unc_crypt_cpt(&cr, (const uint8_t *)"a-very-long-password-indeed", 27);
+    CHECK(unc_crypt_cpt(&cr, &al, (const uint8_t *)"a-very-long-password-indeed", 27) == UNC_OK);
     unc_crypt_apply(&cr, buf, 8, 0);
     CHECK(memcmp(buf, wantlong, 8) == 0);
+    unc_crypt_free(&cr, &al);
 }
 
 /* SHA-1, HMAC-SHA1, PBKDF2 and AES: the four WinZip's AES is built

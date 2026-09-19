@@ -1412,6 +1412,7 @@ int unc_arc_extract(UncCtx *c)
     iobuf = (uint8_t *)unc_alloc(c->al, iocap + (uint32_t)sizeof *cr);
     if (!iobuf) return UNC_ERR_MEM;
     cr = (UncCrypt *)(void *)(iobuf + iocap);
+    unc_crypt_init(cr);
 
     for (;;) {
         UncEntryInfo e;

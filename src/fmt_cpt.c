@@ -491,7 +491,8 @@ static int cpt_encrypted_entry(UncCtx *c, uint32_t vol,
         est = unc_password(c, attempt > 0);
         if (est != UNC_OK) return est;      /* nothing (more) to try */
         crc = UNC_CRC32_INIT;
-        unc_crypt_cpt(cr, c->pw, c->pwlen);
+        est = unc_crypt_cpt(cr, c->al, c->pw, c->pwlen);
+        if (est != UNC_OK) return est;      /* no room for the cipher */
         est = cpt_entry_forks(c, vol, at, rcomp, dcomp, rsrclen, datalen,
                               flags, &crc, iobuf, iocap, obuf, ocap,
                               hz, window, cr, 1);
@@ -504,7 +505,8 @@ static int cpt_encrypted_entry(UncCtx *c, uint32_t vol,
     if (c->opt.test_only) return UNC_OK;    /* that pass WAS the test */
 
     crc = UNC_CRC32_INIT;
-    unc_crypt_cpt(cr, c->pw, c->pwlen);
+    est = unc_crypt_cpt(cr, c->al, c->pw, c->pwlen);
+    if (est != UNC_OK) return est;
     est = cpt_entry_forks(c, vol, at, rcomp, dcomp, rsrclen, datalen,
                           flags, &crc, iobuf, iocap, obuf, ocap,
                           hz, window, cr, 0);
@@ -564,6 +566,7 @@ int unc_cpt_extract(UncCtx *c)
     obuf = iobuf + iocap;
     window = obuf + ocap;
     cr = (UncCrypt *)(void *)(window + CPT_WINDOW);
+    unc_crypt_init(cr);
     hz = (CptLzh *)unc_alloc(c->al, (uint32_t)sizeof *hz);
     if (!hz) { unc_free(c->al, iobuf); return UNC_ERR_MEM; }
 
@@ -762,6 +765,7 @@ int unc_cpt_extract(UncCtx *c)
 out:
     if (ix.buf) unc_free(c->al, ix.buf);
     unc_free(c->al, hz);
+    unc_crypt_free(cr, c->al);
     unc_free(c->al, iobuf);
     return err;
 }

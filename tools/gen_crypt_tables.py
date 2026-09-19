@@ -123,6 +123,40 @@ def sit_sptrans():
 
 SITSP = sit_sptrans()
 
+# Since 2026-09-19 neither SP table is EMITTED: both are built at key setup,
+# into a 2 KB heap block that lives only while an encrypted entry is
+# decoded, from the S boxes and the inverse of P below (src/unc_crypt.c,
+# crypt_build). What this generator still does is PROVE the run-time
+# derivation against the references, because the StuffIt table's bit
+# convention was fitted rather than transcribed: DES bit k of the round
+# output sits at word bit (k - 1 + 3) mod 32 — the same rotate-by-3 the
+# handle undoes at the end of a block — and the six-bit index takes the
+# E-expansion bits in order, bit 0 first. Both derivations are asserted
+# equal to the tables XADMaster carries, entry for entry.
+PINV = [P.index(pos) + 1 for pos in range(1, 33)]   # pre-P bit -> after P
+
+
+def sp_entry(box, v, sit):
+    if sit:
+        e = [(v >> i) & 1 for i in range(6)]
+        row = (e[0] << 1) | e[5]
+        col = (e[1] << 3) | (e[2] << 2) | (e[3] << 1) | e[4]
+    else:
+        row = ((v & 0x20) >> 4) | (v & 1)
+        col = (v >> 1) & 0xF
+    out = S[box][row * 16 + col]
+    word = 0
+    for b in range(4):
+        if out & (8 >> b):
+            dest = PINV[box * 4 + b]
+            word |= 1 << ((dest + 2) % 32) if sit else 1 << (32 - dest)
+    return word
+
+
+assert all(sp_entry(b, v, False) == SP[b][v] for b in range(8) for v in range(64))
+assert all(sp_entry(b, v, True) == SITSP[b][v] for b in range(8) for v in range(64)), \
+    "the run-time derivation of DES_SPtrans does not match XADMaster's table"
+
 # ---- AES, from reference/XADMaster/Crypto/aestab.c ---------------------
 def aes_sbox():
     src = open("reference/XADMaster/Crypto/aestab.c").read()
@@ -193,6 +227,8 @@ def cpt_crc64_table():
 
 
 CPTCRC = cpt_crc64_table()
+# Not emitted either since 2026-09-19: src/unc_crypt.c builds it at key
+# setup with the same eight-step loop, in two 32-bit halves.
 
 # ---- MD5, from reference/XADMaster/Crypto/md5.c ------------------------
 MD5REF = "reference/XADMaster/Crypto/md5.c"
@@ -247,7 +283,8 @@ def main():
     print(" * Source: reference/XADMaster/Crypto/des.c (PC-1 as bK_C/bK_D, PC-2")
     print(" * as bCD_KS, preshift, S, P, and the prose description of the")
     print(" * initial permutation) and reference/XADMaster/XADStuffItDESHandle.m")
-    print(" * (DES_SPtrans, verbatim) and Crypto/md5.c (the STEP list).")
+    print(" * (DES_SPtrans, which the generator checks its derivation against)")
+    print(" * and Crypto/md5.c (the STEP list).")
     print(" * LGPL / public domain — see NOTICE.")
     print(" */")
     print("#ifndef UNC_CRYPT_TABLES_H")
@@ -262,18 +299,17 @@ def main():
     emit_u8("unc_des_pc1d", PC1_D, 7)
     emit_u8("unc_des_pc2", PC2, 6)
     emit_u8("unc_des_shifts", SHIFTS, 16)
-    print("/* S boxes merged with the P permutation, indexed by the six-bit")
-    print(" * value the E expansion produces. */")
-    emit_u32_2d("unc_des_sp", SP)
-    print("/* The StuffIt variant's own table: a little-endian DES, so its")
-    print(" * bit order is not the one above. Verbatim from XADMaster. */")
-    emit_u32_2d("unc_sitdes_sp", SITSP)
+    print("/* The eight S boxes, box-major, 64 entries each indexed row*16+col;")
+    print(" * and the P permutation INVERTED: for pre-P bit 1..32, where P")
+    print(" * sends it. The two SP tables a round actually reads are built from")
+    print(" * these at key setup (unc_crypt.c, crypt_build): 544 B resident")
+    print(" * against 4,096 for the tables themselves. */")
+    emit_u8("unc_des_s", [v for box in S for v in box], 16)
+    emit_u8("unc_des_pinv", PINV, 8)
     print("/* AES: the substitution box. Only the FORWARD cipher is here —")
     print(" * WinZip's AES runs in counter mode, which encrypts to decrypt,")
     print(" * so the inverse box and inverse mix-columns are never used. */")
     emit_u8("unc_aes_sbox", AES_SBOX, 16)
-    print("/* Compact Pro's cipher: a 64-bit CRC, high half then low. */")
-    emit_u32_2d("unc_cpt_crc64", CPTCRC, 2)
     print("/* MD5: per-step message-word index, rotation and constant. */")
     emit_u8("unc_md5_x", MD5_X, 16)
     emit_u8("unc_md5_s", MD5_S, 16)

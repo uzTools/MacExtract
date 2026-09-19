@@ -201,6 +201,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-19 (three bytes hold a position) — the transform vector at three bytes an entry, and the price it was allowed to have
 - 2026-09-19 (the seventh that was measured) — `UNC_HOT` on Compact Pro, priced in ticks before it was bought
 - 2026-09-19 (the slide that ran every block) — Now Compress's block slots, and the `UNC_HOT` that bought nothing
+- 2026-09-19 (the transient tables) — 6 KB of cipher tables built at key setup, and a bit convention fitted rather than transcribed
 
 ---
 
@@ -11726,4 +11727,56 @@ beside Compact Pro's on the strength of the same profile shape; the tick
 probe separated them in six minutes. A byte-copy loop is the one thing
 `-Os` already compiles as well as `-O3` does, and a copy that runs once
 per block is the one thing the optimiser cannot make run less often.
+
+---
+
+## 2026-09-19 (the transient tables) — 6 KB of cipher tables built at key setup, and a bit convention fitted rather than transcribed
+
+**Claim (measured).** The two DES SP tables and Compact Pro's CRC-64 table
+— 2,048 B each, `const`, and therefore in the A5 world, which the budget
+pays for one for one on every extraction — are built when a cipher is
+keyed, into a 2 KB heap block the host frees with its buffers. Resident in
+their place: the eight S boxes as 512 bytes and the P permutation inverted
+as 32. The Mac build is **−5,588 B of A5 and +756 B of code, net −4,832 B
+of budget**, and the heap sees 2 KB more only while a PMa6, an encrypted
+StuffIt classic or an encrypted Compact Pro entry is decoded — entries the
+corpus has none of, and whose peaks sit at 9 to 76 KB. No disk is touched:
+this is arithmetic on data still compiled in, which is what separates it
+from the parked overlay (2026-08-31). The A5 ratchet is lowered to hold the
+gain.
+
+**The estimate was 300 B of code and it is 756.** Two S-box conventions,
+a CRC loop, an allocate-on-first-use wrapper and six `unc_crypt_init` calls,
+at -Os on a 68000. Recorded because the review had called this one "about
+5.5 KB back", and it is 4.8.
+
+**The part that needed proving.** Standard DES's SP table is what the
+generator already derived from S and P, so building it at run time is the
+same formula in C. StuffIt's table is XADMaster's `DES_SPtrans`, copied
+verbatim until today — a little-endian DES whose bit order the reference
+never states. Rather than transcribe a table that could not then be
+shrunk, the convention was FITTED: every permutation of the six index bits
+against three output-bit rules, checked against all 512 entries. One fits:
+the index takes the E-expansion bits in order with bit 0 first, and output
+bit k lands at word bit (k − 1 + 3) mod 32 — the rotate-by-3 that
+`sitdes_crypt` undoes at the end of a block, which is what made it
+plausible as well as unique. `tools/gen_crypt_tables.py` now asserts that
+derivation against the verbatim table entry for entry whenever the header
+is regenerated, so the fit is a checked fact and not a lucky one; the DES
+known-answer test and the Compact Pro vectors in the unit tests grade the
+C builders, and `tools/run_crypt.py`'s 35 cases grade the ciphers end to
+end.
+
+**Why the fit is safe to ship.** The engine never reads the verbatim table
+any more, so if the derivation were wrong the unit tests would say so on
+every build, and the StuffIt classic decryption fixtures — three archives
+written by StuffIt Deluxe itself with 8-, 9- and 17-character passwords —
+would fail to open. A derivation that is asserted against the reference at
+generation time and against the format at test time is better evidence
+than a transcription nobody re-checks.
+
+**What is NOT claimed.** Any speed change: a table built once per
+encrypted entry and read exactly as before is 512 word writes against a
+decode measured in seconds, and nothing in the corpus reaches the path at
+all. The Mac tiers were not re-run.
 

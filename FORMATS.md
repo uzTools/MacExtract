@@ -2626,9 +2626,14 @@ The largest single file is the shell at 17,358 B; the largest decoder is
 3.5 % each. Eleven decoders together make up 16,342 B. The size is the format
 count, not any one format.
 
-**A further 32,077 B of read-only tables is outside `CODE` altogether**, in
+**A further 32,077 B of read-only tables was outside `CODE` altogether**, in
 the A5 world: `ss_dict0` (9,701 B), the cipher S-boxes, the fixed inflate
-tables. That is the linker-level form of *What the application costs the
+tables. **26,489 B since 2026-09-19**: the two DES SP tables and Compact
+Pro's CRC-64 table, 6,144 B between them, are built at key setup into a
+2 KB heap block from 544 B of S boxes and inverted P, and the A5 world is
+5,588 B smaller for it against 756 B more code — a net 4,832 B of budget on
+every extraction, paid for by 2 KB of heap during an encrypted entry, which
+nothing in the corpus has (DECISIONS.md 2026-09-19, *the transient tables*). That is the linker-level form of *What the application costs the
 engine* above, and it means there is no large table hiding inside the figure
 that could be moved out to buy budget.
 
@@ -3094,6 +3099,11 @@ on `derived-SyntheticReferences2.0.sea` — and computed an absolute bit
 position through `unc_bufin_tell`. A `NowBits` is always memory-backed,
 where that call reduces to `pos`: **−2.33 %** on that fixture, −0.7 % on
 `synth-now-mixed.now`.
+
+**The transient cipher tables, 2026-09-19.** No speed change on anything
+in the corpus: the tables are built once per encrypted entry, 512 words,
+and read exactly as before. +756 B of code, −5,588 B of A5, net −4,832 B
+of budget. The A5 ratchet is lowered to 38,652 B to keep it.
 
 **Now Compress's block slots, 2026-09-19.** The history window slid by
 32 KB after every block, a byte copy that was 19 % of the largest run in
