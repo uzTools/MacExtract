@@ -12084,13 +12084,26 @@ loop starts rather than tested inside it.
   the general one: on this target an inliner decision is a performance
   decision, and the way to stop it moving under you is to take it.
 
-**The bulk run fill is worth having and is worth a threshold — measured,
-and the threshold is NOT there.** Runs of three bytes and fewer cost
-more through the copy's setup than through the byte loop, so a
-`CPT_RUN_BULK` of 4 was written and priced: 0.1 % either way on both
-fixtures, and 244 B of code. It was taken out again. A branch that
-cannot be told from noise is not worth a quarter of a kilobyte on a
-1 MB machine.
+**The bulk run fill is worth having and a threshold on it is not —
+measured.** Runs of three bytes and fewer cost more through the copy's
+setup than through the byte loop, so a `CPT_RUN_BULK` of 4 was written
+and priced: 0.1 % either way on both fixtures, and 244 B of code. Taken
+out again — a branch that cannot be told from noise is not worth a
+quarter of a kilobyte on a 1 MB machine. **It went in half-removed**,
+the constant left at 1 with a comment still describing the crossover it
+no longer implemented, and the file then disagreed with this entry;
+that is the second commit, with 16 B back.
+
+**A swallowed write error, and what it is NOT.** Two arms of
+`cpt_rle_push` answer `return r->err` when a write fails, and that field
+was only ever set by the closing flush — so they returned UNC_OK for a
+failed write. `cpt_rle_emit` now sets it, which costs −8 B of code for
++8 B of A5. **No reachable case was found where it changed an outcome**,
+and none is claimed: a failed flush empties the staging buffer, both
+arms stage at least one more byte after it, and the entry's closing
+flush therefore writes again and fails again. Only a sink that failed
+once and then succeeded would have lost the error, and nothing here can
+produce one. Hardening, labelled as hardening.
 
 **What is NOT claimed.** That the Macintosh tiers were re-run: they were
 not, and nothing about the shell or the allocation changed — the

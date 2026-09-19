@@ -136,7 +136,11 @@ ls -la build/mac/MacExtract.APPL build/mac/MacExtract.bin build/mac/MacExtract.d
 # method 8, peak heap unchanged on all 245 fixtures of the two formats, and
 # A5 12 B LOWER (DECISIONS.md 2026-09-19, the byte that went to two places
 # at once).
-UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-151720}
+# LOWERED 2026-09-19 from 151,720 to 151,696: −16 B for the run-length
+# threshold that the entry above says is not there and that the first commit
+# left in the file set to 1, and −8 B for making cpt_rle_emit's error sticky
+# (+8 B of A5, so that half is free rather than cheap).
+UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-151696}
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the

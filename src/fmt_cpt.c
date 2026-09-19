@@ -46,11 +46,6 @@
 #define CPT_BLOCK    0x1fff0u   /* cost units per Huffman-tree block */
 #define CPT_ESC1     0x81
 #define CPT_ESC2     0x82
-/* Runs shorter than this are emitted a byte at a time: measured on a
- * 68000, the bulk copy's setup is about twenty instructions and a byte
- * of it is about nine, so three is where they cross. */
-#define CPT_RUN_BULK 1u
-
 /* ------------------------------------------------------------------ */
 /* Probe: signature byte + full index CRC walk, as XADMaster's        */
 /* recognizeFileWithHandle does. A 1-byte magic is far too weak on    */
@@ -134,6 +129,16 @@ static int cpt_rle_emit(CptRle *r, uint8_t b)
 {
     int e = unc_fork_put(&r->out, b);
     r->remaining--;
+    /* Sticky, because cpt_rle_push's escape arms answer `return r->err`
+     * on a failed write and that field held UNC_OK, so those two arms
+     * reported a failed write as success. NOT a defect that was ever
+     * reachable, and it is not claimed as one: a swallowed failure
+     * leaves the buffer empty and at least one more byte follows it, so
+     * the entry's closing flush writes again and fails again — unless
+     * the sink's failure was transient, which nothing here can produce.
+     * What this buys is that the field says what every reader of it
+     * already assumes. Free: −8 B of code for +8 B of A5, measured. */
+    if (e != UNC_OK) r->err = e;
     return e;
 }
 
@@ -216,15 +221,14 @@ static UNC_NOINLINE UNC_HOT int cpt_rle_push(CptRle *r, uint8_t ch)
              * bytes, and on `derived-Guy_s_Mac_Consultants.cpt` it is
              * 57.8 % of the output. */
             uint32_t n = (uint32_t)ch - 1;
+            int e;
             if (n > r->remaining) n = r->remaining;
-            if (n >= CPT_RUN_BULK) {
-                int e = cpt_rle_fill(r, n);
-                if (e != UNC_OK) return e;
-                break;
-            }
-            while (n-- > 0)                 /* setting the copy up costs
-                                             * more than a short run does */
-                if (cpt_rle_emit(r, r->saved) != UNC_OK) return r->err;
+            /* Short runs through the byte loop instead, with the cross-
+             * over where the copy's setup stops costing more, was written
+             * and priced: 0.1 % either way on both timing fixtures and
+             * 244 B of code, so it is not here (DECISIONS.md 2026-09-19,
+             * the byte that went to two places at once). */
+            if ((e = cpt_rle_fill(r, n)) != UNC_OK) return e;
         } else {
             if (cpt_rle_emit(r, CPT_ESC1) != UNC_OK) return r->err;
             if (r->remaining == 0) return UNC_OK;
