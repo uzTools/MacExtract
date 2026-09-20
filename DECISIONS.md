@@ -12527,9 +12527,11 @@ both of which stopped being true on 2026-09-19, when the `-lh1-` coder
 DART borrows was rebuilt and its working state fell to 9,000 B (*the tree
 that was Yoshizaki's*). Measured on all seven specimens, "best" is now
 27,967–34,056 B and every figure is the sum of its parts exactly: longest
-chunk + 9,000 + 4,096. The Macintosh row is stale by the same 6,568 B and
-is labelled so rather than adjusted, because this machine has not re-run
-it. **A format's numbers live in the section of the format, not of the
+chunk + 9,000 + 4,096. The Macintosh row was stale by the same 6,568 B and
+was re-run the same day: **PASS at 4 MB and at the 1 MB floor**, 838,484 B
+out, peak heap **33,765 B** both times — the Linux figure plus 32 B of the
+Mac allocator's per-block overhead, where the pre-rewrite pair differed by
+20. **A format's numbers live in the section of the format, not of the
 coder** — a shared decoder rewritten under one format's row leaves the
 other's untouched, and nothing checks that.
 
@@ -12573,9 +12575,10 @@ fixture reshuffles what several suites look at.
 **What is NOT claimed.** That anything in `src/` changed: nothing did, so
 there is no tick, size or heap movement to price, and the heap figures
 above are the corrected old ones rather than new behaviour. That a
-Macintosh has expanded either disk — neither has been through the shell,
-and the boot disk's 1,509,268 B output does not fit the harness's 1,440
-KB Out volume without `--out-kb`. That the other two members of the
+Macintosh has expanded either A/UX disk — neither has been through the
+shell, and the boot disk's 1,509,268 B output does not fit the harness's
+1,440 KB Out volume without `--out-kb`. What was re-run there is
+`test1-best`, which is CiderPress2's. That the other two members of the
 StuffIt (an 800K boot disk and a 1440K *Read Me*) add anything: they are
 the same two shapes again, and are named in the generator and left where
 they are. And nothing about the MS-DOS or Apple II disk types, or a real

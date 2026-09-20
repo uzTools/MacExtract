@@ -1021,22 +1021,21 @@ written for, and it took a real one from 1993 to show what it is worth.
 ### On a Macintosh
 
 Replayed through the Mac shell on an emulated Mac Plus (System 6.0.8,
-68000), 2026-09-09, graded against this engine's own Linux output:
+68000), graded against this engine's own Linux output:
 
 | | 4 MB | 1 MB floor |
 |---|---|---|
-| `test1-best` (LZH) | **PASS**, 838,484 B out, peak heap 40,321 B | **PASS**, the same |
+| `test1-best` (LZH) | **PASS**, 838,484 B out, peak heap 33,765 B | **PASS**, the same |
 | `Studio8_Program.dart` (RLE) | **PASS**, 838,484 B out, peak heap 25,072 B | **PASS**, the same |
 
-The peaks were the Linux figures plus the Mac allocator's per-block
-overhead (40,301 and 25,056) on the day they were measured. **The LZH
-row is stale by 6,568 B** and has not been re-run: the `-lh1-` coder was
-rebuilt on 2026-09-19 and `test1-best` now peaks at 33,733 B on Linux,
-which no Macintosh has confirmed. The RLE row is untouched by that
-change. Neither archive is in the 69-fixture tier sample and neither has
-an oracle manifest, so these are `--expect` runs and are not part of any
-suite; TESTING.md, *DART*, has the commands and says what has NOT been
-run.
+The peaks are the Linux figures plus the Mac allocator's per-block
+overhead (33,733 and 25,056). The LZH row read 40,321 B until it was
+re-run on 2026-09-20, because the `-lh1-` coder was rebuilt the day
+before (*Peak RAM*, above); the RLE row is 2026-09-09's and that change
+does not reach it. Neither archive is in the 69-fixture tier sample and
+neither has an oracle manifest, so these are `--expect` runs and are not
+part of any suite; TESTING.md, *DART*, has the commands and says what has
+NOT been run.
 
 **The refusal is photographed**, not inferred: an uncompressed 400K DART
 handed to the application on System 6.0.8 draws *"This DART disk image is
