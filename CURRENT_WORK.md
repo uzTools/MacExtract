@@ -292,12 +292,13 @@ split header or the Now Compress probe turns up; leave the row.
   `derived-Library_ISBN_Barcoder.sit`, whose pair is half an hour of
   emulator. The rows that did not change are the control and should
   reproduce within ±0.5 %.
-- **The tiers have not been re-run** since the same changes
-  (`tools/run_tiers.py` is in `ci.sh` and predicts; the emulator tiers
-  in FORMATS.md, *Floor target verification* and *System 3.0 tier*, are
-  the measurement). One pass of each at 1 MB is the check that the
-  heap changes of the week — the LZHUF tree at 9,000 B, the transient
-  cipher tables, the pooled Arsenic models — did not move a refusal.
+- **The 4 MB and 512 KB tiers have not been re-run** since the
+  decoder work of 2026-09-18/19/20. Both 1 MB tiers were, on
+  2026-09-20 — System 6.0.8 and System 3.0, **69/69 each**, no refusal
+  moved (BLOCKERS.md, the tier table) — and 1 MB is the floor the
+  refusals live at, so the other two are a formality rather than a
+  question. `tools/run_tiers.py` in `ci.sh` predicts; the emulator is
+  the measurement.
 - **The SpaceSaver dictionary** is 9,679 B of constant data
   (`src/ss_dict.h`), in the CODE resource of every build (`size` puts
   all of `fmt_spacesaver.c.obj` in text); deflated at level 9 it is
