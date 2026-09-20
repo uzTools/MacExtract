@@ -152,6 +152,16 @@ times*). **Part A is otherwise empty.**
 
 # Part B — the licence rows, in the order they could possibly pay
 
+**Item 7 is done and struck, four fifths of it**: method 8 is Miller
+and Wegman's dictionary rule, derived from all four method-8 forks the
+corpus has (`docs/formats/stuffit-method-8-mw.md`,
+`tools/derive_stuffit8.py`). Three rules no specimen reaches — the
+table restart, the end-of-stream code, the 14-bit ceiling — stay
+XADMaster's and say so in the file; only a much larger fork closes
+them, and neither reader on this machine is independent of the rule in
+question (DECISIONS.md 2026-09-20, *four forks, and the three rules
+none of them reach*).
+
 **Item 10 is done and struck**: removing `-lh2-`/`-lh3-` and their two
 dispatch arms is worth **3,472 B of `CODE` and 32 B of A5**, measured
 on a build without them. The number is beside the row in OPEN_ITEMS.md
@@ -240,13 +250,6 @@ Methods 2/5 are splay, a published algorithm, and are not on this row.
 the 6 harvested and 28 specimen DiskDoubler fixtures. **Acceptance:**
 `run_ddtf.py` and `run_ddforks.py` green, ticks not higher on the
 largest method-10 fixture in FORMATS.md's DiskDoubler table.
-
-## Item 7 — StuffIt method 8 (`fmt_sit.c`, `XADStuffItOldHandles.m`)
-
-Not hot on anything; one fixture family. FORMATS.md's *Floor target
-verification* section records that method 8 has a real external oracle
-and where it came from. Licence-only; spec note first, decoder only if
-neutral.
 
 ## Item 8 — Compact Pro's container and stages, and PackIt (`fmt_cpt.c`, `fmt_packit.c`, macutils)
 

@@ -584,10 +584,24 @@ out:
 }
 
 /* ------------------------------------------------------------------ */
-/* Method 8: "MW" — an LZW variant with parent-only dictionary and    */
-/* explicit table restarts, LSB-first bits.                           */
-/* Source: reference/XADMaster/XADStuffItOldHandles.m (SIT_mw,        */
-/* SITMW_out; libxad heritage) — LGPL, see NOTICE.                    */
+/* Method 8: "MW" — Miller and Wegman's variation on Ziv-Lempel, in    */
+/* which a dictionary entry is the concatenation of two earlier ones   */
+/* rather than an entry plus a byte. LSB-first codes, 9 bits growing   */
+/* as the dictionary fills.                                           */
+/*                                                                    */
+/* Source: docs/formats/stuffit-method-8-mw.md, derived from this     */
+/* format's own output — all four method-8 forks the corpus has,       */
+/* reproduced byte for byte against the oracle                        */
+/* (tools/derive_stuffit8.py).                                        */
+/*                                                                    */
+/* TWO RULES BELOW ARE NOT IN THAT NOTE and remain                    */
+/* reference/XADMaster/XADStuffItOldHandles.m's (SIT_mw, SITMW_out;   */
+/* libxad heritage) — LGPL, see NOTICE: the table RESTART (a code      */
+/* equal to the next free one) and the END of the stream (a code       */
+/* greater than it), with the 14-bit ceiling that goes with them. No   */
+/* specimen reaches any of the three — the largest fork in the corpus  */
+/* stops at 7,347 entries and 13 bits — so they are the part of this   */
+/* row a derivation could not take.                                   */
 /* ------------------------------------------------------------------ */
 
 #define MW_DICT  16385

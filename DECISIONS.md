@@ -215,6 +215,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-20 (the window that was already the staging buffer) — method 13's per-byte put, and the call that was never inlined
 - 2026-09-20 (what a helper call costs that its count does not say) — Arsenic's two products, and a count that understated the clock by 3.6x
 - 2026-09-20 (the tree that could be measured instead) — the serialized Huffman tree, derived from three formats' output rather than rewritten
+- 2026-09-20 (four forks, and the three rules none of them reach) — StuffIt method 8 derived, and the part a derivation could not take
 
 ---
 
@@ -12922,3 +12923,59 @@ from anyone else. That the licence itself moves: it does not, and will
 not until the last row in the inventory is gone. And nothing about
 Compact Pro, whose canonical 4-bit code lengths are a different
 mechanism that left this file on 2026-09-19.
+
+## 2026-09-20 (four forks, and the three rules none of them reach) — StuffIt method 8 derived, and the part a derivation could not take
+
+**Item 7 of Part B, by the template Item 11 set**: derive the facts
+from the format's own output, verify against an oracle's own bytes,
+cite the note, leave a decoder that measures neutral alone.
+
+**What method 8 is.** An LZ coder whose dictionary entries are the
+**concatenation of two earlier entries** — the previous match followed
+by this one — rather than an entry plus one byte. That is Miller and
+Wegman's 1985 variation, which is what the "MW" in XADMaster's name
+for it stands for, and it is a published algorithm rather than a
+proprietary one. Codes are LSB-first, nine bits growing as the
+dictionary fills; the caller's byte count is what stops it.
+
+**How it was derived.** A decoder written against a family of
+hypotheses, with the parameters searched and scored by how many bytes
+of the oracle's own output came back. A full match on the first fork
+tried, and then **all four method-8 forks in the corpus**, byte for
+byte against `unar`'s sha256 — 17,005 bytes down to 1,301.
+`tools/derive_stuffit8.py`.
+
+**A fifth fork looked like a failure and was not.** `BitMapHelp.index`
+has a 286-byte resource fork that does not decode under the rule and
+is not stored either. The oracle names one method per ENTRY and
+StuffIt picks per FORK: a scratch build that prints each fork's method
+says that one is **method 5**. A miss is worth a minute of explaining
+before it is worth a sentence of hedging — and the answer here made the
+evidence stronger rather than weaker, because it accounts for the
+corpus exactly.
+
+**Three rules stay XADMaster's, and this is the useful part of the
+row.** The shipped decoder restarts the table on a code equal to the
+next free one, ends the stream on a code greater than it, and caps the
+width at 14 bits with 16,385 entries. **No specimen reaches any of
+them**: the largest fork in the corpus stops at 7,347 entries and
+13 bits. Instrumenting the derivation to report the widest code
+actually used is what turned "maximum 14" from something the note was
+about to assert into something it now lists as unestablished — the note
+first said 14 because the shipped code says 14, which is exactly the
+mistake this exercise exists to avoid.
+
+**What would close them:** a method-8 fork whose dictionary fills,
+several times larger than anything here. Synthesising one settles
+nothing, because both readings available on this machine descend from
+the rule in question — ours from XADMaster, and `unar` IS XADMaster.
+That is the distinction between a second implementation and an
+independent one, and it is why the row closes at four fifths rather
+than being written up as done.
+
+**What is NOT claimed.** That the shipped `sit_mw_fork` is independent
+expression — it is unchanged, and the rule that a neutral rewrite is
+recorded and not taken applies here as it did to the Huffman tree.
+That Miller and Wegman's paper was consulted: it was not, and the note
+cites the algorithm by name because the derivation ARRIVED at that
+dictionary rule, not because a paper supplied it.

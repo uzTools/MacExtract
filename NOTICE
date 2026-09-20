@@ -41,7 +41,14 @@ This project's decoders are transcriptions/ports of algorithms from:
     write the same one: those are
     `docs/formats/serialized-huffman-tree.md`, this project's own
     description, derived from the three formats' output by experiment
-    and reproducible with `tools/derive_huffman_tree.py`.
+    and reproducible with `tools/derive_huffman_tree.py`. StuffIt
+    method 8 went the same way that day —
+    `docs/formats/stuffit-method-8-mw.md`, Miller and Wegman's
+    dictionary rule with the parameters measured off all four method-8
+    forks in the corpus (`tools/derive_stuffit8.py`) — **except for
+    three rules no specimen reaches**: the table restart, the
+    end-of-stream code and the 14-bit ceiling, which are still
+    XADStuffItOldHandles.m's and say so where they are used.
     Files that transcribe XADMaster code carry a
     "Source: reference/XADMaster/<file>" comment.
 
